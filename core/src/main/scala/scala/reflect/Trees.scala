@@ -131,9 +131,8 @@ object Tree {
     final case class PrimaryCtor(meta: Meta, paramss: List[List[ClassParam]],
                                  implicits: List[ClassParam]) extends Nested
 
-    // ??? sharpen the type of body (only allow calls to the primary ctor)
     final case class SecondaryCtor(meta: Meta, paramss: List[List[MethodParam]],
-                                   implicits: List[MethodParam], body: Term) extends Nested
+                                   implicits: List[MethodParam], primaryCtorArgss: List[List[Term]]) extends Nested
 
     final case class Class(meta: Meta, name: TypeName, tparams: List[ClassTypeParam],
                            ctor: PrimaryCtor, templ: Template) extends TopLevel with Nested
