@@ -91,7 +91,7 @@ object Tree {
     // ??? final case class This
     // ??? final case class Super
     final case class TypeApply(typ: Type, targs: List[Type]) extends Type
-    final case class Compound(parents: List[Parent], defns: List[Defn.Nested]) extends Type
+    final case class Compound(parents: List[Type], defns: List[Defn.Nested]) extends Type
     // ??? needs sharper type for forSome. not just any defn, but just abstract val and abstract type
     final case class Existential(typ: Type, quants: List[Defn]) extends Type
     final case class Function(params: Type, res: Type) extends Type
