@@ -81,8 +81,18 @@ object build extends Build {
           Nil
       }
     } else {
-      // println("Sonatype credentials cannot be loaded: -Dmaven.settings.file is not specified.")
-      Nil
+      val mavenSettingsEnv = sys.env.get("MAVEN_SETTINGS_ENV")
+      if (mavenSettingsEnv.isDefined) {
+        println("Loading Sonatype credentials from environment variables")
+        List(Credentials(
+          sys.env("SCALAREFLECT_MAVEN_REALM"),
+          sys.env("SCALAREFLECT_MAVEN_DOMAIN"),
+          sys.env("SCALAREFLECT_MAVEN_USER"),
+          sys.env("SCALAREFLECT_MAVEN_PASSWORD")
+        ))
+      } else {
+        Nil
+      }
     }
   }
 

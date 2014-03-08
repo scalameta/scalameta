@@ -1,0 +1,19 @@
+language: scala
+script:
+  - sbt ++$TRAVIS_SCALA_VERSION clean update compile test package publish
+scala:
+  - 2.11.0-RC1
+jdk:
+  - openjdk6
+  - openjdk7
+notifications:
+  email:
+    - eugene.burmako@epfl.ch
+    - denys.shabalin@typesafe.com
+env:
+  global:
+   - MAVEN_SETTINGS_ENV=1
+   - SCALAREFLECT_MAVEN_REALM="Sonatype Nexus Repository Manager"
+   - SCALAREFLECT_MAVEN_DOMAIN="oss.sonatype.org"
+   - secure: "OaekExlDjZ4LTbgwedpf2g7L8LBhG+f1K3aNoS1ImnyNh08cfLilKL5OF6EEJJrOrxzz8nFUEf5wzHBvLOqvbnKy6w/kNILJgwEpmrHMaoYLY8V+7SNi9ckqOtPzWG0Tt9F+1Q7EhMHh44nDkovhy0V04r4hkgW5F3jLGdD4Sa4="
+   - secure: "i0seW2NOTKcra0yhDnOMn/oF5NB1Dsb6isg39HxFTZPF0HCrmzaEKhf8hge3L7kF4CPZ+bf/xxXs5QL7bHyM/J45atu7rY3s6BTamPeHV44PjAVJakNLQSsfMfGeUhByXskLhucWFtRpAlKY81100KxMiviCSIGZy4r10xHcTYc="
