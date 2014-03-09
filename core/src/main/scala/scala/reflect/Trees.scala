@@ -57,7 +57,7 @@ object Tree {
     final case class Function(params: List[FunctionParam], body: Term) extends Term
     final case class PartialFunction(cases: List[Case]) extends Term
     final case class While(expr: Term, body: Term) extends Term
-    final case class DoWhile(body: Term, expr: Term) extends Term
+    final case class Do(body: Term, expr: Term) extends Term
     final case class For(enums: List[Enumerator], body: Term) extends Term
     final case class ForYield(enums: List[Enumerator], body: Term) extends Term
     final case class New(templ: Template) extends Term
