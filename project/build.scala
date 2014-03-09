@@ -28,9 +28,24 @@ object build extends Build {
     // test <<= test in Test in tests
   )
 
+  // http://stackoverflow.com/questions/20665007/how-to-publish-only-when-on-master-branch-under-travis-and-sbt-0-13
+  val publishOnlyWhenOnMaster = taskKey[Unit]("publish task for Travis (don't publish when building pull requests, only publish when the build is triggered by merge into master)")
+  def publishOnlyWhenOnMasterImpl = Def.taskDyn {
+    import scala.util.Try
+    val travis   = Try(sys.env("TRAVIS")).getOrElse("false") == "true"
+    val pr       = Try(sys.env("TRAVIS_PULL_REQUEST")).getOrElse("false") == "true"
+    val branch   = Try(sys.env("TRAVIS_BRANCH")).getOrElse("??")
+    val snapshot = version.value.trim.endsWith("SNAPSHOT")
+    (travis, pr, branch, snapshot) match {
+      case (true, false, "master", true) => publish
+      case _                             => Def.task ()
+    }
+  }
+
   lazy val publishableSettings = sharedSettings ++ Seq(
     publishMavenStyle := true,
     publishArtifact in Compile := true,
+    publishOnlyWhenOnMaster := publishOnlyWhenOnMasterImpl.value,
     publishTo <<= version { v: String =>
       val nexus = "https://oss.sonatype.org/"
       if (v.trim.endsWith("SNAPSHOT"))
