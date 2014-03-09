@@ -37,6 +37,7 @@ object Tree {
     // ??? qual and supertyp can be empty. @xeno-by: what do you mean qual can be empty?
     final case class SuperSelect(qual: TypeName, supertyp: TypeName, selector: TermName) extends Ref
     final case class This(qual: TypeName) extends Term
+    // ??? named and default args
     final case class Apply(fun: Term, args: List[Term]) extends Term
     final case class TypeApply(fun: Term, args: List[Type]) extends Term
     final case class Assign(lhs: Term.Ref, rhs: Term) extends Term
