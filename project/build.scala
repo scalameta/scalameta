@@ -33,7 +33,7 @@ object build extends Build {
   def publishOnlyWhenOnMasterImpl = Def.taskDyn {
     import scala.util.Try
     val travis   = Try(sys.env("TRAVIS")).getOrElse("false") == "true"
-    val pr       = Try(sys.env("TRAVIS_PULL_REQUEST")).getOrElse("false") == "true"
+    val pr       = Try(sys.env("TRAVIS_PULL_REQUEST")).getOrElse("false") != "false"
     val branch   = Try(sys.env("TRAVIS_BRANCH")).getOrElse("??")
     val snapshot = version.value.trim.endsWith("SNAPSHOT")
     (travis, pr, branch, snapshot) match {
