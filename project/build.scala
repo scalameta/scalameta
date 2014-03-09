@@ -73,10 +73,10 @@ object build extends Build {
         <url>https://github.com/scalareflect/core/issues</url>
       </issueManagement>
     ),
-    credentials ++= loadCredentials()
+    credentials ++= loadCredentials().toList
   )
 
-  def loadCredentials(): List[Credentials] = {
+  def loadCredentials(): Option[Credentials] = {
     val mavenSettingsFile = System.getProperty("maven.settings.file")
     if (mavenSettingsFile != null) {
       println("Loading Sonatype credentials from " + mavenSettingsFile)
@@ -84,7 +84,7 @@ object build extends Build {
         import scala.xml._
         val settings = XML.loadFile(mavenSettingsFile)
         def readServerConfig(key: String) = (settings \\ "settings" \\ "servers" \\ "server" \\ key).head.text
-        List(Credentials(
+        Some(Credentials(
           "Sonatype Nexus Repository Manager",
           "oss.sonatype.org",
           readServerConfig("username"),
@@ -93,20 +93,17 @@ object build extends Build {
       } catch {
         case ex: Exception =>
           println("Failed to load Maven settings from " + mavenSettingsFile + ": " + ex)
-          Nil
+          None
       }
     } else {
-      val mavenSettingsEnv = sys.env.get("MAVEN_SETTINGS_ENV")
-      if (mavenSettingsEnv.isDefined) {
+      for {
+        realm <- sys.env.get("SCALAREFLECT_MAVEN_REALM")
+        domain <- sys.env.get("SCALAREFLECT_MAVEN_DOMAIN")
+        user <- sys.env.get("SCALAREFLECT_MAVEN_USER")
+        password <- sys.env.get("SCALAREFLECT_MAVEN_PASSWORD")
+      } yield {
         println("Loading Sonatype credentials from environment variables")
-        List(Credentials(
-          sys.env("SCALAREFLECT_MAVEN_REALM"),
-          sys.env("SCALAREFLECT_MAVEN_DOMAIN"),
-          sys.env("SCALAREFLECT_MAVEN_USER"),
-          sys.env("SCALAREFLECT_MAVEN_PASSWORD")
-        ))
-      } else {
-        Nil
+        Credentials(realm, domain, user, password)
       }
     }
   }
