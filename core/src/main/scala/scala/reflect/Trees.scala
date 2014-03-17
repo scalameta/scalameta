@@ -37,6 +37,7 @@ object Tree {
     // ??? qual and supertyp can be empty. @xeno-by: what do you mean qual can be empty?
     final case class SuperSelect(qual: TypeName, supertyp: TypeName, selector: TermName) extends Ref
     final case class This(qual: TypeName) extends Term
+    // ??? named and default args
     final case class Apply(fun: Term, args: List[Term]) extends Term
     final case class TypeApply(fun: Term, args: List[Type]) extends Term
     final case class Assign(lhs: Term.Ref, rhs: Term) extends Term
@@ -56,7 +57,7 @@ object Tree {
     final case class Function(params: List[FunctionParam], body: Term) extends Term
     final case class PartialFunction(cases: List[Case]) extends Term
     final case class While(expr: Term, body: Term) extends Term
-    final case class DoWhile(body: Term, expr: Term) extends Term
+    final case class Do(body: Term, expr: Term) extends Term
     final case class For(enums: List[Enumerator], body: Term) extends Term
     final case class ForYield(enums: List[Enumerator], body: Term) extends Term
     final case class New(templ: Template) extends Term
@@ -91,7 +92,7 @@ object Tree {
     // ??? final case class This
     // ??? final case class Super
     final case class TypeApply(typ: Type, targs: List[Type]) extends Type
-    final case class Compound(parents: List[Parent], defns: List[Defn.Nested]) extends Type
+    final case class Compound(parents: List[Type], defns: List[Defn.Nested]) extends Type
     // ??? needs sharper type for forSome. not just any defn, but just abstract val and abstract type
     final case class Existential(typ: Type, quants: List[Defn]) extends Type
     final case class Function(params: Type, res: Type) extends Type
@@ -131,9 +132,8 @@ object Tree {
     final case class PrimaryCtor(meta: Meta, paramss: List[List[ClassParam]],
                                  implicits: List[ClassParam]) extends Nested
 
-    // ??? sharpen the type of body (only allow calls to the primary ctor)
     final case class SecondaryCtor(meta: Meta, paramss: List[List[MethodParam]],
-                                   implicits: List[MethodParam], body: Term) extends Nested
+                                   implicits: List[MethodParam], primaryCtorArgss: List[List[Term]]) extends Nested
 
     final case class Class(meta: Meta, name: TypeName, tparams: List[ClassTypeParam],
                            ctor: PrimaryCtor, templ: Template) extends TopLevel with Nested
