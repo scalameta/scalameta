@@ -47,7 +47,7 @@ object Tree {
     final case class Throw(expr: Term) extends Term
     // ??? what about _*? @xeno-by: I suggest we have a separate tree for that
     final case class Ascribe(expr: Term, typ: Type) extends Term
-    final case class Annotate(expr: Term, props: Props.Term) extends Term
+    final case class Annotate(expr: Term, annots: Annots.Term) extends Term
     final case class Tuple(elements: List[Term]) extends Term
     // ??? blocks only allow Term, nested definitions and imports. how do we express that?
     final case class Block(stats: List[Tree]) extends Term
@@ -97,7 +97,7 @@ object Tree {
     final case class Existential(typ: Type, quants: List[Defn]) extends Type
     final case class Function(params: Type, res: Type) extends Type
     final case class Tuple(elements: List[Type]) extends Type
-    final case class Annotated(typ: Type, props: Props.Type)
+    final case class Annotated(typ: Type, annots: Annots.Type)
   }
 
   sealed trait Defn extends Tree
@@ -109,39 +109,39 @@ object Tree {
     // @xeno-by: this makes sense, because that will allow us to specify precise type for Type.Existential
     // and also will rid ourselves of Term.Empty, but that would cause pattern matching problems.
     // that would also be consistent with AbstractType vs AliasType
-    final case class Val(props: Props.Val, pats: List[Pat], typ: Type, rhs: Term) extends Nested
+    final case class Val(annots: Annots.Val, pats: List[Pat], typ: Type, rhs: Term) extends Nested
 
     // ??? var x = _
-    final case class Var(props: Props.Var, pats: List[Pat], typ: Type, rhs: Term) extends Nested
+    final case class Var(annots: Annots.Var, pats: List[Pat], typ: Type, rhs: Term) extends Nested
 
     // ??? rename to Method?
-    final case class Def(props: Props.Def, name: TermName, tparams: List[MethodTypeParam],
+    final case class Def(annots: Annots.Def, name: TermName, tparams: List[MethodTypeParam],
                          paramss: List[List[MethodParam]], implicits: List[MethodParam],
                          typ: Type, body: Term) extends Nested
 
-    final case class Macro(props: Props.Macro, name: TermName, tparams: List[MethodTypeParam],
+    final case class Macro(annots: Annots.Macro, name: TermName, tparams: List[MethodTypeParam],
                            paramss: List[List[MethodParam]], implicits: List[MethodParam],
                            typ: Type, body: Term) extends Nested
 
-    final case class AbstractType(props: Props.AbstractType, name: TypeName, tparams: List[TypeTypeParam],
+    final case class AbstractType(annots: Annots.AbstractType, name: TypeName, tparams: List[TypeTypeParam],
                                   bounds: TypeBounds) extends Nested
 
-    final case class AliasType(props: Props.AliasType, name: TypeName, tparams: List[TypeTypeParam],
+    final case class AliasType(annots: Annots.AliasType, name: TypeName, tparams: List[TypeTypeParam],
                                body: Type) extends Nested
 
-    final case class PrimaryCtor(props: Props.PrimaryCtor, paramss: List[List[ClassParam]],
+    final case class PrimaryCtor(annots: Annots.PrimaryCtor, paramss: List[List[ClassParam]],
                                  implicits: List[ClassParam]) extends Nested
 
-    final case class SecondaryCtor(props: Props.SecondaryCtor, paramss: List[List[MethodParam]],
+    final case class SecondaryCtor(annots: Annots.SecondaryCtor, paramss: List[List[MethodParam]],
                                    implicits: List[MethodParam], primaryCtorArgss: List[List[Term]]) extends Nested
 
-    final case class Class(props: Props.Class, name: TypeName, tparams: List[ClassTypeParam],
+    final case class Class(annots: Annots.Class, name: TypeName, tparams: List[ClassTypeParam],
                            ctor: PrimaryCtor, templ: Template) extends TopLevel with Nested
 
-    final case class Trait(props: Props.Trait, name: TypeName, tparams: List[TraitTypeParam],
+    final case class Trait(annots: Annots.Trait, name: TypeName, tparams: List[TraitTypeParam],
                            templ: Template) extends TopLevel with Nested
 
-    final case class Object(props: Props.Object, name: TermName,
+    final case class Object(annots: Annots.Object, name: TermName,
                             templ: Template) extends TopLevel with Nested
 
     final case class Package(ref: Term.Ref, body: List[TopLevel]) extends TopLevel
@@ -184,112 +184,97 @@ object Tree {
   final case class TypeBounds(lo: Type, hi: Type) extends Tree
 
   final case class FunctionParam(name: TermName, typ: Type) extends Tree
-  final case class MethodParam(props: Props.MethodParam, name: TermName, typ: Type, default: Term) extends Tree
-  final case class ClassParam(props: Props.ClassParam, name: TermName, typ: Type, default: Term) extends Tree
-  final case class MethodTypeParam(props: Props.MethodTypeParam, name: TypeName,
+  final case class MethodParam(annots: Annots.MethodParam, name: TermName, typ: Type, default: Term) extends Tree
+  final case class ClassParam(annots: Annots.ClassParam, name: TermName, typ: Type, default: Term) extends Tree
+  final case class MethodTypeParam(annots: Annots.MethodTypeParam, name: TypeName,
                                    tparams: List[TypeTypeParam],
                                    contextBounds: List[Type.Ref], // ??? @xeno-by: what's allowed in context bounds?
                                    viewBounds: List[Type.Ref],
                                    bounds: TypeBounds) extends Tree
-  final case class TypeTypeParam(props: Props.TypeTypeParam, name: TypeName,
+  final case class TypeTypeParam(annots: Annots.TypeTypeParam, name: TypeName,
                                  tparams: List[TypeTypeParam],
                                  bounds: TypeBounds) extends Tree // ??? @xeno-by: btw why not have context bounds for type type params?
-  final case class TraitTypeParam(props: Props.TraitTypeParam, name: TypeName,
+  final case class TraitTypeParam(annots: Annots.TraitTypeParam, name: TypeName,
                                   tparams: List[TypeTypeParam],
                                   bounds: TypeBounds) extends Tree
-  final case class ClassTypeParam(props: Props.ClassTypeParam, name: TypeName,
+  final case class ClassTypeParam(annots: Annots.ClassTypeParam, name: TypeName,
                                   tparams: List[TypeTypeParam],
                                   contextBounds: List[Type.Ref], // ??? @xeno-by: what's allowed in context bounds?
                                   viewBounds: List[Type.Ref],
                                   bounds: TypeBounds) extends Tree
 
-  final case class Props[T <: Prop](all: List[T])
-  object Props {
-    type Term = Props[Prop.Term]
-    object Term { def apply(data: Prop.Term*) = Props(data.toList) }
-    type Type = Props[Prop.Type]
-    object Type { def apply(data: Prop.Type*) = Props(data.toList) }
-    type Val = Props[Prop.Val]
-    object Val { def apply(data: Prop.Val*) = Props(data.toList) }
-    type Var = Props[Prop.Var]
-    object Var { def apply(data: Prop.Var*) = Props(data.toList) }
-    type Def = Props[Prop.Def]
-    object Def { def apply(data: Prop.Def*) = Props(data.toList) }
-    type Macro = Props[Prop.Macro]
-    object Macro { def apply(data: Prop.Macro*) = Props(data.toList) }
-    type AbstractType = Props[Prop.AbstractType]
-    object AbstractType { def apply(data: Prop.AbstractType*) = Props(data.toList) }
-    type AliasType = Props[Prop.AliasType]
-    object AliasType { def apply(data: Prop.AliasType*) = Props(data.toList) }
-    type PrimaryCtor = Props[Prop.PrimaryCtor]
-    object PrimaryCtor { def apply(data: Prop.PrimaryCtor*) = Props(data.toList) }
-    type SecondaryCtor = Props[Prop.SecondaryCtor]
-    object SecondaryCtor { def apply(data: Prop.SecondaryCtor*) = Props(data.toList) }
-    type Class = Props[Prop.Class]
-    object Class { def apply(data: Prop.Class*) = Props(data.toList) }
-    type Trait = Props[Prop.Trait]
-    object Trait { def apply(data: Prop.Trait*) = Props(data.toList) }
-    type Object = Props[Prop.Object]
-    object Object { def apply(data: Prop.Object*) = Props(data.toList) }
-    type MethodParam = Props[Prop.MethodParam]
-    object MethodParam { def apply(data: Prop.MethodParam*) = Props(data.toList) }
-    type ClassParam = Props[Prop.ClassParam]
-    object ClassParam { def apply(data: Prop.ClassParam*) = Props(data.toList) }
-    type MethodTypeParam = Props[Prop.MethodTypeParam]
-    object MethodTypeParam { def apply(data: Prop.MethodTypeParam*) = Props(data.toList) }
-    type TypeTypeParam = Props[Prop.TypeTypeParam]
-    object TypeTypeParam { def apply(data: Prop.TypeTypeParam*) = Props(data.toList) }
-    type TraitTypeParam = Props[Prop.TraitTypeParam]
-    object TraitTypeParam { def apply(data: Prop.TraitTypeParam*) = Props(data.toList) }
-    type ClassTypeParam = Props[Prop.ClassTypeParam]
-    object ClassTypeParam { def apply(data: Prop.ClassTypeParam*) = Props(data.toList) }
+  sealed trait Annots[T <: Annot] { def annots: List[T] }
+  object Annots {
+    final case class Term(annots: List[Annot.Term]) extends Annots[Annot.Term]
+    final case class Type(annots: List[Annot.Type]) extends Annots[Annot.Type]
+    final case class Val(annots: List[Annot.Val]) extends Annots[Annot.Val]
+    final case class Var(annots: List[Annot.Var]) extends Annots[Annot.Var]
+    final case class Def(annots: List[Annot.Def]) extends Annots[Annot.Def]
+    final case class Macro(annots: List[Annot.Macro]) extends Annots[Annot.Macro]
+    final case class AbstractType(annots: List[Annot.AbstractType]) extends Annots[Annot.AbstractType]
+    final case class AliasType(annots: List[Annot.AliasType]) extends Annots[Annot.AliasType]
+    final case class PrimaryCtor(annots: List[Annot.PrimaryCtor]) extends Annots[Annot.PrimaryCtor]
+    final case class SecondaryCtor(annots: List[Annot.SecondaryCtor]) extends Annots[Annot.SecondaryCtor]
+    final case class Class(annots: List[Annot.Class]) extends Annots[Annot.Class]
+    final case class Trait(annots: List[Annot.Trait]) extends Annots[Annot.Trait]
+    final case class Object(annots: List[Annot.Object]) extends Annots[Annot.Object]
+    final case class MethodParam(annots: List[Annot.MethodParam]) extends Annots[Annot.MethodParam]
+    final case class ClassParam(annots: List[Annot.ClassParam]) extends Annots[Annot.ClassParam]
+    final case class MethodTypeParam(annots: List[Annot.MethodTypeParam]) extends Annots[Annot.MethodTypeParam]
+    final case class TypeTypeParam(annots: List[Annot.TypeTypeParam]) extends Annots[Annot.TypeTypeParam]
+    final case class TraitTypeParam(annots: List[Annot.TraitTypeParam]) extends Annots[Annot.TraitTypeParam]
+    final case class ClassTypeParam(annots: List[Annot.ClassTypeParam]) extends Annots[Annot.ClassTypeParam]
   }
 
-  trait Prop
-  object Prop {
-    final case class Annot(name: Type.Ref, targs: List[Type], argss: List[List[Term]])
-                     extends Tree with All
-    final case class Private(within: Name) extends Prop with NestedDefn
-    final case class Protected(within: Name) extends Prop with NestedDefn
-    final case class Implicit() extends Prop with Val with Var with Def with Macro with Object
-    final case class Final() extends Prop with Val with Var with Def with Macro with AliasType with Class
-    final case class Sealed() extends Prop with Class with Trait
-    final case class Override() extends Prop with Val with Var with Def with Macro with AliasType with AbstractType with Object
-    final case class Case() extends Prop with Class with Object
+  sealed trait Annot extends Tree
+  object Annot {
+    sealed trait Transient extends Annot // TODO: reserved for synthetic trees (e.g. resolved implicits) and attachments
+    sealed trait Source extends Annot
+    sealed trait Mod extends Source
+
+    final case class UserDefined(name: Type.Ref, targs: List[Type], argss: List[List[Term]])
+                     extends Source with All
+    final case class Private(within: Name) extends Mod with NestedDefn
+    final case class Protected(within: Name) extends Mod with NestedDefn
+    final case class Implicit() extends Mod with Val with Var with Def with Macro with Object
+    final case class Final() extends Mod with Val with Var with Def with Macro with AliasType with Class
+    final case class Sealed() extends Mod with Class with Trait
+    final case class Override() extends Mod with Val with Var with Def with Macro with AliasType with AbstractType with Object
+    final case class Case() extends Mod with Class with Object
     // ??? @xeno-by: oopsie daisy, what do we do about AbstractType and Trait?!
-    // final case class Abstract() extends Prop
-    final case class Covariant() extends Prop with TypeTypeParam with TraitTypeParam with ClassTypeParam
-    final case class Contravariant() extends Prop with TypeTypeParam with TraitTypeParam with ClassTypeParam
+    // final case class Abstract() extends Mod
+    final case class Covariant() extends Mod with TypeTypeParam with TraitTypeParam with ClassTypeParam
+    final case class Contravariant() extends Mod with TypeTypeParam with TraitTypeParam with ClassTypeParam
     // ??? @xeno-by: `abstract override' modifier only allowed for members of traits
     // also it's unclear what can be abstract override
-    // final case class AbstractOverride() extends Prop
-    final case class Lazy() extends Prop with Val
-    final case class Doc(doc: String) extends Prop with NestedDefn
+    // final case class AbstractOverride() extends Mod
+    final case class Lazy() extends Mod with Val
+    final case class Doc(doc: String) extends Mod with NestedDefn
 
-    sealed trait Term extends Prop
-    sealed trait Type extends Prop
-    sealed trait Val extends Prop
-    sealed trait Var extends Prop
-    sealed trait Def extends Prop
-    sealed trait Macro extends Prop
-    sealed trait AbstractType extends Prop
-    sealed trait AliasType extends Prop
-    sealed trait PrimaryCtor extends Prop
-    sealed trait SecondaryCtor extends Prop
-    sealed trait Class extends Prop
-    sealed trait Trait extends Prop
-    sealed trait Object extends Prop
-    sealed trait MethodParam extends Prop
-    sealed trait ClassParam extends Prop
-    sealed trait MethodTypeParam extends Prop
-    sealed trait TypeTypeParam extends Prop
-    sealed trait TraitTypeParam extends Prop
-    sealed trait ClassTypeParam extends Prop
+    sealed trait Term extends Source
+    sealed trait Type extends Source
+    sealed trait Val extends Source
+    sealed trait Var extends Source
+    sealed trait Def extends Source
+    sealed trait Macro extends Source
+    sealed trait AbstractType extends Source
+    sealed trait AliasType extends Source
+    sealed trait PrimaryCtor extends Source
+    sealed trait SecondaryCtor extends Source
+    sealed trait Class extends Source
+    sealed trait Trait extends Source
+    sealed trait Object extends Source
+    sealed trait MethodParam extends Source
+    sealed trait ClassParam extends Source
+    sealed trait MethodTypeParam extends Source
+    sealed trait TypeTypeParam extends Source
+    sealed trait TraitTypeParam extends Source
+    sealed trait ClassTypeParam extends Source
     sealed trait NestedDefn extends Val with Var with Def with Macro
-                      with AbstractType with AliasType
-                      with PrimaryCtor with SecondaryCtor
-                      with Class with Trait with Object
-                      with ClassParam
+                            with AbstractType with AliasType
+                            with PrimaryCtor with SecondaryCtor
+                            with Class with Trait with Object
+                            with ClassParam
     sealed trait Param extends MethodParam with ClassParam with MethodTypeParam
                        with TypeTypeParam with TraitTypeParam with ClassTypeParam
     sealed trait All extends Term with Type with NestedDefn with Param
