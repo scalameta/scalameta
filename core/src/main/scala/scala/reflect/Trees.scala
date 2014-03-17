@@ -250,9 +250,7 @@ object Tree {
     final case class Annot(name: Type.Ref, targs: List[Type], argss: List[List[Term]])
                      extends Tree with All
     final case class Private(within: Name) extends Prop with NestedDefn
-    final case class PrivateThis() extends Prop with NestedDefn
     final case class Protected(within: Name) extends Prop with NestedDefn
-    final case class ProtectedThis() extends Prop with NestedDefn
     final case class Implicit() extends Prop with Val with Var with Def with Macro with Object
     final case class Final() extends Prop with Val with Var with Def with Macro with AliasType with Class
     final case class Sealed() extends Prop with Class with Trait
