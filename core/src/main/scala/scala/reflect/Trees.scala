@@ -76,16 +76,13 @@ object Tree {
 
   sealed trait Type extends Tree
   object Type {
-    // ??? bad practice: this violates safety by construction
-    // currently used in vals, defs, bounds, self type, function params
-    final case class Empty() extends Type
     sealed trait Ref extends Type with Tree.Ref
-
-    final case class Ident(name: TypeName) extends Type with Ref
+    final case class Ident(name: TypeName) extends Ref
     final case class Select(qual: Tree.Ref, name: TypeName) extends Ref
+
     // ??? needs thought about Select vs Project and kind of ref
     // @xeno-by: I suggest we separate Select and Project by Term.Ref and Type.Ref
-    // however Denys says this might cause problems with pattern matching
+    // however Denys says this might cause problems with pattern matching in quasiquotes
 
     final case class Singleton(ref: Term.Ref)  extends Type
     final case class Constant(value: Term.Lit) extends Type
@@ -97,7 +94,7 @@ object Tree {
     final case class Existential(typ: Type, quants: List[Defn]) extends Type
     final case class Function(params: Type, res: Type) extends Type
     final case class Tuple(elements: List[Type]) extends Type
-    final case class Annotated(typ: Type, annots: Annots.Type)
+    final case class Annotated(typ: Type, annots: Annots.Type) extends Type
   }
 
   sealed trait Defn extends Tree
@@ -105,19 +102,27 @@ object Tree {
     sealed trait TopLevel extends Defn
     sealed trait Nested extends Defn
 
-    // ??? AbstractVal + ConcreteVal + Val as a base class
+    // AbstractVal + ConcreteVal + TODO: base classes ???
     // @xeno-by: this makes sense, because that will allow us to specify precise type for Type.Existential
     // and also will rid ourselves of Term.Empty, but that would cause pattern matching problems.
     // that would also be consistent with AbstractType vs AliasType
-    final case class Val(annots: Annots.Val, pats: List[Pat], typ: Type, rhs: Term) extends Nested
+
+    final case class AbstractVal(annots: Annots.AbstractVal, pats: List[Pat], typ: Type) extends Nested
+
+    final case class Val(annots: Annots.Val, pats: List[Pat], typ: Option[Type], rhs: Term) extends Nested
 
     // ??? var x = _
-    final case class Var(annots: Annots.Var, pats: List[Pat], typ: Type, rhs: Term) extends Nested
+    final case class AbstractVar(annots: Annots.AbstractVar, pats: List[Pat], typ: Type) extends Nested
 
-    // ??? rename to Method?
+    final case class Var(annots: Annots.Var, pats: List[Pat], typ: Option[Type], rhs: Term) extends Nested
+
+    final case class AbstractDef(annots: Annots.AbstractDef, name: TermName, tparams: List[MethodTypeParam],
+                                 paramss: List[List[MethodParam]], implicits: List[MethodParam],
+                                 typ: Type) extends Nested
+
     final case class Def(annots: Annots.Def, name: TermName, tparams: List[MethodTypeParam],
                          paramss: List[List[MethodParam]], implicits: List[MethodParam],
-                         typ: Type, body: Term) extends Nested
+                         typ: Option[Type], body: Term) extends Nested
 
     final case class Macro(annots: Annots.Macro, name: TermName, tparams: List[MethodTypeParam],
                            paramss: List[List[MethodParam]], implicits: List[MethodParam],
@@ -177,13 +182,13 @@ object Tree {
     final case class Guard(cond: Term) extends Enumerator
   }
 
-  final case class Self(name: TermName, typ: Type) extends Tree
+  final case class Self(name: TermName, typ: Option[Type]) extends Tree
 
   final case class Parent(name: Type.Ref, targs: List[Type], argss: List[List[Term]]) extends Tree
 
-  final case class TypeBounds(lo: Type, hi: Type) extends Tree
+  final case class TypeBounds(lo: Option[Type], hi: Option[Type]) extends Tree
 
-  final case class FunctionParam(name: TermName, typ: Type) extends Tree
+  final case class FunctionParam(name: TermName, typ: Option[Type]) extends Tree
   final case class MethodParam(annots: Annots.MethodParam, name: TermName, typ: Type, default: Term) extends Tree
   final case class ClassParam(annots: Annots.ClassParam, name: TermName, typ: Type, default: Term) extends Tree
   final case class MethodTypeParam(annots: Annots.MethodTypeParam, name: TypeName,
@@ -207,8 +212,11 @@ object Tree {
   object Annots {
     final case class Term(annots: List[Annot.Term]) extends Annots[Annot.Term]
     final case class Type(annots: List[Annot.Type]) extends Annots[Annot.Type]
+    final case class AbstractVal(annots: List[Annot.AbstractVal]) extends Annots[Annot.AbstractVal]
     final case class Val(annots: List[Annot.Val]) extends Annots[Annot.Val]
+    final case class AbstractVar(annots: List[Annot.AbstractVar]) extends Annots[Annot.AbstractVar]
     final case class Var(annots: List[Annot.Var]) extends Annots[Annot.Var]
+    final case class AbstractDef(annots: List[Annot.AbstractDef]) extends Annots[Annot.AbstractDef]
     final case class Def(annots: List[Annot.Def]) extends Annots[Annot.Def]
     final case class Macro(annots: List[Annot.Macro]) extends Annots[Annot.Macro]
     final case class AbstractType(annots: List[Annot.AbstractType]) extends Annots[Annot.AbstractType]
@@ -236,13 +244,15 @@ object Tree {
                      extends Source with All
     final case class Private(within: Name) extends Mod with NestedDefn
     final case class Protected(within: Name) extends Mod with NestedDefn
-    final case class Implicit() extends Mod with Val with Var with Def with Macro with Object
+    final case class Implicit() extends Mod with Val with AbstractVal
+                                            with Var with AbstractVar
+                                            with Def with AbstractDef
+                                            with Macro with Object
     final case class Final() extends Mod with Val with Var with Def with Macro with AliasType with Class
     final case class Sealed() extends Mod with Class with Trait
     final case class Override() extends Mod with Val with Var with Def with Macro with AliasType with AbstractType with Object
     final case class Case() extends Mod with Class with Object
-    // ??? @xeno-by: oopsie daisy, what do we do about AbstractType and Trait?!
-    // final case class Abstract() extends Mod
+    final case class Abstract() extends Mod with Class
     final case class Covariant() extends Mod with TypeTypeParam with TraitTypeParam with ClassTypeParam
     final case class Contravariant() extends Mod with TypeTypeParam with TraitTypeParam with ClassTypeParam
     // ??? @xeno-by: `abstract override' modifier only allowed for members of traits
@@ -253,8 +263,11 @@ object Tree {
 
     sealed trait Term extends Source
     sealed trait Type extends Source
+    sealed trait AbstractVal extends Source
     sealed trait Val extends Source
+    sealed trait AbstractVar extends Source
     sealed trait Var extends Source
+    sealed trait AbstractDef extends Source
     sealed trait Def extends Source
     sealed trait Macro extends Source
     sealed trait AbstractType extends Source
