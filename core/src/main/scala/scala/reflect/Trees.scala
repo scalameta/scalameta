@@ -264,8 +264,6 @@ object Tree {
     // also it's unclear what can be abstract override
     // final case class AbstractOverride() extends Prop
     final case class Lazy() extends Prop with Val
-    final case class Synthetic() extends Prop with NestedDefn with Param
-    final case class Artifact() extends Prop with NestedDefn with Param
     final case class Doc(doc: String) extends Prop with NestedDefn
 
     sealed trait Term extends Prop
