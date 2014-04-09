@@ -2,10 +2,11 @@ language: scala
 script:
   - sbt ++$TRAVIS_SCALA_VERSION clean update compile test package publishOnlyWhenOnMaster
 scala:
-  - 2.11.0-RC1
+  - 2.11.0-RC3
 jdk:
   - openjdk6
   - openjdk7
+  - oraclejdk8
 notifications:
   email:
     - eugene.burmako@epfl.ch
