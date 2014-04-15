@@ -11,7 +11,8 @@ sealed trait Tree {
 object Tree {
   sealed trait Stmt extends TopLevelStmt with RefineStmt
   sealed trait TopLevelStmt extends Tree
-  sealed trait RefineStmt extends Tree
+  sealed trait RefineStmt extends ExistentialStmt
+  sealed trait ExistentialStmt extends Tree
 
   sealed trait Term extends Arg with Stmt
   object Term {
@@ -89,8 +90,7 @@ object Tree {
     final case class This(qual: Ident) extends Ref
     final case class Apply(typ: Type, targs: List[Type]) extends Simple
     final case class Compound(parents: List[Type], stmts: List[RefineStmt]) extends Type
-    // ??? needs sharper type for forSome. not just any defn, but just abstract val and abstract type
-    final case class Existential(typ: Type, quants: List[Defn]) extends Type
+    final case class Existential(typ: Type, quants: List[ExistentialStmt]) extends Type
     final case class Function(params: Type, res: Type) extends Type
     final case class Tuple(elements: List[Type]) extends Simple
     final case class Annotated(typ: Type, annots: Annots.Type) extends Type
