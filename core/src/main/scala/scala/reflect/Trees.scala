@@ -78,20 +78,21 @@ object Tree {
 
   sealed trait Type extends Tree
   object Type {
-    sealed trait Ref extends Type
+    sealed trait Simple extends Type
+    sealed trait Ref extends Simple
     final case class Ident(name: String) extends Ref
     final case class Select(qual: Term.Path, name: Type.Ident) extends Ref
-    final case class Project(qual: Type, name: Type.Ident) extends Ref // TODO: simple type?
-    final case class Singleton(ref: Term.Path)  extends Type
+    final case class SuperSelect(qual: Option[Term.Ident], supertyp: Option[Term.Ident], selector: Type.Ident) extends Ref
+    final case class Project(qual: Type.Simple, name: Type.Ident) extends Ref
+    final case class Singleton(ref: Term.Path)  extends Simple
     final case class Constant(value: Term.Lit) extends Type
-    // ??? final case class This
-    // ??? final case class Super
-    final case class Apply(typ: Type, targs: List[Type]) extends Type
+    final case class This(qual: Ident) extends Ref
+    final case class Apply(typ: Type, targs: List[Type]) extends Simple
     final case class Compound(parents: List[Type], stmts: List[RefineStmt]) extends Type
     // ??? needs sharper type for forSome. not just any defn, but just abstract val and abstract type
     final case class Existential(typ: Type, quants: List[Defn]) extends Type
     final case class Function(params: Type, res: Type) extends Type
-    final case class Tuple(elements: List[Type]) extends Type
+    final case class Tuple(elements: List[Type]) extends Simple
     final case class Annotated(typ: Type, annots: Annots.Type) extends Type
   }
 
