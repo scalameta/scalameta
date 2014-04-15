@@ -21,15 +21,10 @@ object Tree {
   sealed trait Term extends Arg with Stmt
   object Term {
     sealed trait Ref extends Term
-    sealed trait Path extends Ref
-    sealed trait StableId extends Path
-    final case class This(qual: Option[Ident]) extends Path
-    final case class Ident(name: String) extends StableId with Pat.TypedLhs { def isBackquoted = ??? }
-    trait Select { def qual: Term; def selector: Term.Ident }
-    object Select { def unapply(sel: Select): Option[(Term, Term.Ident)] = Some((sel.qual, sel.selector)) }
-    final case class SuperSelect(qual: Option[Term.Ident], supertyp: Option[Term.Ident], selector: Term.Ident) extends StableId
-    final case class StableSelect(qual: Path, selector: Term.Ident) extends StableId with Select
-    final case class UnstableSelect(qual: Term, selector: Term.Ident) extends Select with Ref
+    final case class This(qual: Option[Ident]) extends Ref
+    final case class Ident(name: String) extends Ref { def isBackquoted = ??? }
+    final case class SuperSelect(qual: Option[Term.Ident], supertyp: Option[Term.Ident], selector: Term.Ident) extends Ref
+    final case class Select(qual: Ref, selector: Term.Ident) extends Ref
 
     sealed trait Lit extends Term with Pat
     final case class Bool(value: scala.Boolean) extends Lit
@@ -70,33 +65,30 @@ object Tree {
   sealed trait Pat extends Tree
   object Pat {
     sealed trait TypedLhs extends Pat
-    final case class Wildcard() extends TypedLhs
+    final case class Wildcard() extends Pat
     final case class SequenceWildcard() extends Pat
     final case class Bind(lhs: Term.Ident, rhs: Pat) extends Pat // wishful thinking AND
     final case class Alt(lhs: Pat, rhs: Pat) extends Pat // wishful thinking OR
     final case class Tuple(elements: List[Pat]) extends Pat
-    final case class Extractor(ref: Term.StableId, elements: List[Pat]) extends Pat
+    final case class Extractor(ref: Term.Ref, elements: List[Pat]) extends Pat
     // final case class Guard(pat: Pat, cond: Term) extends Pat // wishful thinking
     final case class Interpolate(prefix: Term.Ident, parts: List[Term.String], args: List[Pat]) extends Pat
-    final case class Typed(lhs: TypedLhs, rhs: Type) extends Pat
+    final case class Typed(lhs: Pat, rhs: Type) extends Pat
   }
 
   sealed trait Type extends Tree
   object Type {
-    sealed trait Simple extends Type
-    sealed trait Ref extends Simple
-    final case class Ident(name: String) extends Ref
-    final case class Select(qual: Term.Path, name: Type.Ident) extends Ref
-    final case class SuperSelect(qual: Option[Term.Ident], supertyp: Option[Term.Ident], selector: Type.Ident) extends Ref
-    final case class Project(qual: Type.Simple, name: Type.Ident) extends Ref
-    final case class Singleton(ref: Term.Path)  extends Simple
+    final case class Ident(name: String) extends Type
+    final case class Select(qual: Term.Ref, name: Type.Ident) extends Type
+    final case class SuperSelect(qual: Option[Term.Ident], supertyp: Option[Term.Ident], selector: Type.Ident) extends Type
+    final case class Project(qual: Type, name: Type.Ident) extends Type
+    final case class Singleton(ref: Term.Ref)  extends Type
     final case class Constant(value: Term.Lit) extends Type
-    final case class This(qual: Ident) extends Ref
-    final case class Apply(typ: Type, targs: List[Type]) extends Simple
+    final case class Apply(typ: Type, targs: List[Type]) extends Type
     final case class Compound(parents: List[Type], stmts: List[Stmt.Refine]) extends Type
     final case class Existential(typ: Type, quants: List[Stmt.Existential]) extends Type
     final case class Function(params: Type, res: Type) extends Type
-    final case class Tuple(elements: List[Type]) extends Simple
+    final case class Tuple(elements: List[Type]) extends Type
     final case class Annotated(typ: Type, annots: Annots.Type) extends Type
   }
 
@@ -151,13 +143,13 @@ object Tree {
     final case class Object(annots: Annots.Object, name: Term.Ident,
                             templ: Template) extends Defn with Stmt.TopLevel
 
-    final case class Package(ref: Term.SimplePath, body: List[Stmt.TopLevel]) extends Defn with Stmt.TopLevel
+    final case class Package(ref: Term.Ref, body: List[Stmt.TopLevel]) extends Defn with Stmt.TopLevel
     final case class PackageObject(name: Term.Ident, templ: Template) extends Defn with Stmt.TopLevel
   }
 
   final case class Import(clauses: List[Import.Clause]) extends Stmt.TopLevel
   object Import {
-    final case class Clause(ref: Term.StableId, sels: List[Selector]) extends Tree
+    final case class Clause(ref: Term.Ref, sels: List[Selector]) extends Tree
 
     sealed trait Selector extends Tree
     object Selector {
@@ -191,7 +183,7 @@ object Tree {
 
   final case class Self(name: Term.Ident, typ: Option[Type]) extends Tree
 
-  final case class Parent(name: Type.Ref, targs: List[Type], argss: List[List[Term]]) extends Tree
+  final case class Parent(name: Type, targs: List[Type], argss: List[List[Term]]) extends Tree
 
   final case class TypeBounds(lo: Option[Type], hi: Option[Type]) extends Tree
 
@@ -200,19 +192,19 @@ object Tree {
   final case class ClassParam(annots: Annots.ClassParam, name: Term.Ident, typ: Type, default: Term) extends Tree
   final case class MethodTypeParam(annots: Annots.MethodTypeParam, name: Type.Ident,
                                    tparams: List[TypeTypeParam],
-                                   contextBounds: List[Type.Ref], // ??? @xeno-by: what's allowed in context bounds?
-                                   viewBounds: List[Type.Ref],
+                                   contextBounds: List[Type],
+                                   viewBounds: List[Type],
                                    bounds: TypeBounds) extends Tree
   final case class TypeTypeParam(annots: Annots.TypeTypeParam, name: Type.Ident,
                                  tparams: List[TypeTypeParam],
-                                 bounds: TypeBounds) extends Tree // ??? @xeno-by: btw why not have context bounds for type type params?
+                                 bounds: TypeBounds) extends Tree
   final case class TraitTypeParam(annots: Annots.TraitTypeParam, name: Type.Ident,
                                   tparams: List[TypeTypeParam],
                                   bounds: TypeBounds) extends Tree
   final case class ClassTypeParam(annots: Annots.ClassTypeParam, name: Type.Ident,
                                   tparams: List[TypeTypeParam],
-                                  contextBounds: List[Type.Ref], // ??? @xeno-by: what's allowed in context bounds?
-                                  viewBounds: List[Type.Ref],
+                                  contextBounds: List[Type],
+                                  viewBounds: List[Type],
                                   bounds: TypeBounds) extends Tree
 
   sealed trait Annots[T <: Annot] { def annots: List[T] }
@@ -247,7 +239,7 @@ object Tree {
     sealed trait Source extends Annot
     sealed trait Mod extends Source
 
-    final case class UserDefined(name: Type.Ref, targs: List[Type], argss: List[List[Term]])
+    final case class UserDefined(tpe: Type, argss: List[List[Term]])
                      extends Source with All
     final case class Private(within: String) extends Mod with NestedDefn
     final case class Protected(within: String) extends Mod with NestedDefn
