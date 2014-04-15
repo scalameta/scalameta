@@ -9,8 +9,9 @@ sealed trait Tree {
 }
 
 object Tree {
-  sealed trait Stmt extends TopLevelStmt
+  sealed trait Stmt extends TopLevelStmt with RefineStmt
   sealed trait TopLevelStmt extends Tree
+  sealed trait RefineStmt extends Tree
 
   sealed trait Term extends Arg with Stmt
   object Term {
@@ -86,8 +87,7 @@ object Tree {
     // ??? final case class This
     // ??? final case class Super
     final case class Apply(typ: Type, targs: List[Type]) extends Type
-    // TODO: refined stmt?
-    final case class Compound(parents: List[Type], defns: List[Defn]) extends Type
+    final case class Compound(parents: List[Type], stmts: List[RefineStmt]) extends Type
     // ??? needs sharper type for forSome. not just any defn, but just abstract val and abstract type
     final case class Existential(typ: Type, quants: List[Defn]) extends Type
     final case class Function(params: Type, res: Type) extends Type
@@ -104,18 +104,18 @@ object Tree {
     // and also will rid ourselves of Term.Empty, but that would cause pattern matching problems.
     // that would also be consistent with AbstractType vs AliasType
 
-    final case class AbstractVal(annots: Annots.AbstractVal, pats: List[Pat], typ: Type) extends Abstract
+    final case class AbstractVal(annots: Annots.AbstractVal, pats: List[Pat], typ: Type) extends Abstract with RefineStmt
 
     final case class Val(annots: Annots.Val, pats: List[Pat], typ: Option[Type], rhs: Term) extends Defn
 
     // ??? var x = _
-    final case class AbstractVar(annots: Annots.AbstractVar, pats: List[Pat], typ: Type) extends Abstract
+    final case class AbstractVar(annots: Annots.AbstractVar, pats: List[Pat], typ: Type) extends Abstract with RefineStmt
 
     final case class Var(annots: Annots.Var, pats: List[Pat], typ: Option[Type], rhs: Term) extends Defn
 
     final case class AbstractDef(annots: Annots.AbstractDef, name: Term.Ident, tparams: List[MethodTypeParam],
                                  paramss: List[List[MethodParam]], implicits: List[MethodParam],
-                                 typ: Type) extends Abstract
+                                 typ: Type) extends Abstract with RefineStmt
 
     final case class Def(annots: Annots.Def, name: Term.Ident, tparams: List[MethodTypeParam],
                          paramss: List[List[MethodParam]], implicits: List[MethodParam],
@@ -126,10 +126,10 @@ object Tree {
                            typ: Type, body: Term) extends Defn
 
     final case class AbstractType(annots: Annots.AbstractType, name: Type.Ident, tparams: List[TypeTypeParam],
-                                  bounds: TypeBounds) extends Defn
+                                  bounds: TypeBounds) extends Defn with RefineStmt
 
     final case class AliasType(annots: Annots.AliasType, name: Type.Ident, tparams: List[TypeTypeParam],
-                               body: Type) extends Defn
+                               body: Type) extends Defn with RefineStmt
 
     final case class PrimaryCtor(annots: Annots.PrimaryCtor, paramss: List[List[ClassParam]],
                                  implicits: List[ClassParam]) extends Defn
