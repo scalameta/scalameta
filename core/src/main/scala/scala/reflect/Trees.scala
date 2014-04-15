@@ -11,17 +11,15 @@ sealed trait Tree {
 }
 
 object Tree {
-  // ??? @xeno-by: do we really need to have this trait
-  sealed trait Ref extends Tree
+  trait Stmt extends TopLevelStmt
+  trait TopLevelStmt extends Tree
 
-  sealed trait Term extends Tree
+  sealed trait Term extends Arg with Stmt
   object Term {
-    // ??? bad practice: this violates safety by construction
-    // currently used in val, var, def, try, case guard
-    final case class Empty() extends Term
-    sealed trait Ref extends Term with Tree.Ref
+    sealed trait Ref extends Term
     sealed trait Lit extends Term
 
+    final case class Bool(value: scala.Bool) extends Lit
     final case class Int(value: scala.Int) extends Lit
     final case class Long(value: scala.Long) extends Lit
     final case class Float(value: scala.Float) extends Lit
@@ -32,28 +30,25 @@ object Tree {
     final case class Null() extends Lit
     final case class Unit() extends Lit
     final case class Ident(name: TermName) extends Ref
-    // ??? see below
-    final case class Select(qual: Term.Ref, name: TermName) extends Ref
-    // ??? qual and supertyp can be empty. @xeno-by: what do you mean qual can be empty?
-    final case class SuperSelect(qual: TypeName, supertyp: TypeName, selector: TermName) extends Ref
+    final case class Select(qual: Term, name: TermName) extends Ref
+    final case class SuperSelect(qual: Option[TypeName], supertyp: Option[TypeName], selector: TermName) extends Ref
     final case class This(qual: TypeName) extends Term
-    // ??? named and default args
-    final case class Apply(fun: Term, args: List[Term]) extends Term
+    final case class Interpolate(prefix: TermName, parts: List[Term.String], args: List[Term]) extends Term
+    final case class Apply(fun: Term, args: List[Arg]) extends Term
+    final case class ApplyRight(arg: Term, fun: Term) extends Term
     final case class TypeApply(fun: Term, args: List[Type]) extends Term
     final case class Assign(lhs: Term.Ref, rhs: Term) extends Term
-    // ??? List[List[Term]]. @xeno-by: scalac allows multiple argument lists for update
-    final case class Update(expr: Term, args: List[Term]) extends Term
+    final case class Update(expr: Term, args: List[List[Term]]) extends Term
     final case class Return(expr: Term) extends Term
     final case class Throw(expr: Term) extends Term
     // ??? what about _*? @xeno-by: I suggest we have a separate tree for that
     final case class Ascribe(expr: Term, typ: Type) extends Term
     final case class Annotate(expr: Term, annots: Annots.Term) extends Term
     final case class Tuple(elements: List[Term]) extends Term
-    // ??? blocks only allow Term, nested definitions and imports. how do we express that?
-    final case class Block(stats: List[Tree]) extends Term
+    final case class Block(stats: List[Stmt]) extends Term
     final case class If(cond: Term, `then`: Term, `else`: Term) extends Term
     final case class Match(scrut: Term, cases: List[Case]) extends Term
-    final case class Try(expr: Term, `catch`: List[Case], `finally`: Term) extends Term
+    final case class Try(expr: Term, `catch`: List[Case], `finally`: Option[Term]) extends Term
     final case class Function(params: List[FunctionParam], body: Term) extends Term
     final case class PartialFunction(cases: List[Case]) extends Term
     final case class While(expr: Term, body: Term) extends Term
@@ -76,14 +71,10 @@ object Tree {
 
   sealed trait Type extends Tree
   object Type {
-    sealed trait Ref extends Type with Tree.Ref
+    sealed trait Ref extends Type
     final case class Ident(name: TypeName) extends Ref
-    final case class Select(qual: Tree.Ref, name: TypeName) extends Ref
-
-    // ??? needs thought about Select vs Project and kind of ref
-    // @xeno-by: I suggest we separate Select and Project by Term.Ref and Type.Ref
-    // however Denys says this might cause problems with pattern matching in quasiquotes
-
+    final case class Select(qual: Term.Ref, name: TypeName) extends Ref
+    final case class Project(qual: Type.Ref, name: TypeName) extends Ref
     final case class Singleton(ref: Term.Ref)  extends Type
     final case class Constant(value: Term.Lit) extends Type
     // ??? final case class This
@@ -97,63 +88,60 @@ object Tree {
     final case class Annotated(typ: Type, annots: Annots.Type) extends Type
   }
 
-  sealed trait Defn extends Tree
+  sealed trait Defn extends Stmt
   object Defn {
-    sealed trait TopLevel extends Defn
-    sealed trait Nested extends Defn
-
     // AbstractVal + ConcreteVal + TODO: base classes ???
     // @xeno-by: this makes sense, because that will allow us to specify precise type for Type.Existential
     // and also will rid ourselves of Term.Empty, but that would cause pattern matching problems.
     // that would also be consistent with AbstractType vs AliasType
 
-    final case class AbstractVal(annots: Annots.AbstractVal, pats: List[Pat], typ: Type) extends Nested
+    final case class AbstractVal(annots: Annots.AbstractVal, pats: List[Pat], typ: Type) extends Defn
 
-    final case class Val(annots: Annots.Val, pats: List[Pat], typ: Option[Type], rhs: Term) extends Nested
+    final case class Val(annots: Annots.Val, pats: List[Pat], typ: Option[Type], rhs: Term) extends Defn
 
     // ??? var x = _
-    final case class AbstractVar(annots: Annots.AbstractVar, pats: List[Pat], typ: Type) extends Nested
+    final case class AbstractVar(annots: Annots.AbstractVar, pats: List[Pat], typ: Type) extends Defn
 
-    final case class Var(annots: Annots.Var, pats: List[Pat], typ: Option[Type], rhs: Term) extends Nested
+    final case class Var(annots: Annots.Var, pats: List[Pat], typ: Option[Type], rhs: Term) extends Defn
 
     final case class AbstractDef(annots: Annots.AbstractDef, name: TermName, tparams: List[MethodTypeParam],
                                  paramss: List[List[MethodParam]], implicits: List[MethodParam],
-                                 typ: Type) extends Nested
+                                 typ: Type) extends Defn
 
     final case class Def(annots: Annots.Def, name: TermName, tparams: List[MethodTypeParam],
                          paramss: List[List[MethodParam]], implicits: List[MethodParam],
-                         typ: Option[Type], body: Term) extends Nested
+                         typ: Option[Type], body: Term) extends Defn
 
     final case class Macro(annots: Annots.Macro, name: TermName, tparams: List[MethodTypeParam],
                            paramss: List[List[MethodParam]], implicits: List[MethodParam],
-                           typ: Type, body: Term) extends Nested
+                           typ: Type, body: Term) extends Defn
 
     final case class AbstractType(annots: Annots.AbstractType, name: TypeName, tparams: List[TypeTypeParam],
-                                  bounds: TypeBounds) extends Nested
+                                  bounds: TypeBounds) extends Defn
 
     final case class AliasType(annots: Annots.AliasType, name: TypeName, tparams: List[TypeTypeParam],
-                               body: Type) extends Nested
+                               body: Type) extends Defn
 
     final case class PrimaryCtor(annots: Annots.PrimaryCtor, paramss: List[List[ClassParam]],
-                                 implicits: List[ClassParam]) extends Nested
+                                 implicits: List[ClassParam]) extends Defn
 
     final case class SecondaryCtor(annots: Annots.SecondaryCtor, paramss: List[List[MethodParam]],
-                                   implicits: List[MethodParam], primaryCtorArgss: List[List[Term]]) extends Nested
+                                   implicits: List[MethodParam], primaryCtorArgss: List[List[Term]]) extends Defn
 
     final case class Class(annots: Annots.Class, name: TypeName, tparams: List[ClassTypeParam],
-                           ctor: PrimaryCtor, templ: Template) extends TopLevel with Nested
+                           ctor: PrimaryCtor, templ: Template) extends Defn with TopLevelStmt
 
     final case class Trait(annots: Annots.Trait, name: TypeName, tparams: List[TraitTypeParam],
-                           templ: Template) extends TopLevel with Nested
+                           templ: Template) extends Defn with TopLevelStmt
 
     final case class Object(annots: Annots.Object, name: TermName,
-                            templ: Template) extends TopLevel with Nested
+                            templ: Template) extends Defn with TopLevelStmt
 
-    final case class Package(ref: Term.Ref, body: List[TopLevel]) extends TopLevel
-    final case class PackageObject(name: TermName, templ: Template) extends TopLevel
+    final case class Package(ref: Term.Ref, body: List[TopLevelStmt]) extends Defn with TopLevelStmt
+    final case class PackageObject(name: TermName, templ: Template) extends Defn with TopLevelStmt
   }
 
-  final case class Import(clauses: List[Import.Clause]) extends Tree
+  final case class Import(clauses: List[Import.Clause]) extends TopLevelStmt
   object Import {
     final case class Clause(ref: Term.Ref, sels: List[Selector]) extends Tree
 
@@ -169,11 +157,13 @@ object Tree {
     }
   }
 
-  final case class Case(pat: Pat, cond: Term, body: Term) extends Tree
+  sealed trait Arg extends Tree
+  final case class NamedArg(name: TermName, arg: Term) extends Arg
 
-  // ??? sharpen the type of stats (only terms and nested defns are allowed)
+  final case class Case(pat: Pat, cond: Option[Term], body: Term) extends Tree
+
   final case class Template(early: List[Defn.Val], parents: List[Parent],
-                            self: Self, stats: List[Tree]) extends Tree
+                            self: Self, stats: List[Stmt]) extends Tree
 
   sealed trait Enumerator extends Tree
   object Enumerator {
