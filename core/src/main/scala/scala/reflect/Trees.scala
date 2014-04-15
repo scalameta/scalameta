@@ -9,10 +9,14 @@ sealed trait Tree {
 }
 
 object Tree {
-  sealed trait Stmt extends TopLevelStmt with RefineStmt
-  sealed trait TopLevelStmt extends Tree
-  sealed trait RefineStmt extends ExistentialStmt
-  sealed trait ExistentialStmt extends Tree
+  sealed trait Stmt extends Stmt.TopLevel with Stmt.Refine
+  object Stmt {
+    sealed trait TopLevel extends Tree
+    sealed trait Refine extends Existential
+    sealed trait Existential extends Tree
+  }
+
+  // TODO: wildcard (find all its usages in terms and types)
 
   sealed trait Term extends Arg with Stmt
   object Term {
@@ -89,8 +93,8 @@ object Tree {
     final case class Constant(value: Term.Lit) extends Type
     final case class This(qual: Ident) extends Ref
     final case class Apply(typ: Type, targs: List[Type]) extends Simple
-    final case class Compound(parents: List[Type], stmts: List[RefineStmt]) extends Type
-    final case class Existential(typ: Type, quants: List[ExistentialStmt]) extends Type
+    final case class Compound(parents: List[Type], stmts: List[Stmt.Refine]) extends Type
+    final case class Existential(typ: Type, quants: List[Stmt.Existential]) extends Type
     final case class Function(params: Type, res: Type) extends Type
     final case class Tuple(elements: List[Type]) extends Simple
     final case class Annotated(typ: Type, annots: Annots.Type) extends Type
@@ -105,18 +109,18 @@ object Tree {
     // and also will rid ourselves of Term.Empty, but that would cause pattern matching problems.
     // that would also be consistent with AbstractType vs AliasType
 
-    final case class AbstractVal(annots: Annots.AbstractVal, pats: List[Pat], typ: Type) extends Abstract with RefineStmt
+    final case class AbstractVal(annots: Annots.AbstractVal, pats: List[Pat], typ: Type) extends Abstract with Stmt.Refine
 
     final case class Val(annots: Annots.Val, pats: List[Pat], typ: Option[Type], rhs: Term) extends Defn
 
     // ??? var x = _
-    final case class AbstractVar(annots: Annots.AbstractVar, pats: List[Pat], typ: Type) extends Abstract with RefineStmt
+    final case class AbstractVar(annots: Annots.AbstractVar, pats: List[Pat], typ: Type) extends Abstract with Stmt.Refine
 
     final case class Var(annots: Annots.Var, pats: List[Pat], typ: Option[Type], rhs: Term) extends Defn
 
     final case class AbstractDef(annots: Annots.AbstractDef, name: Term.Ident, tparams: List[MethodTypeParam],
                                  paramss: List[List[MethodParam]], implicits: List[MethodParam],
-                                 typ: Type) extends Abstract with RefineStmt
+                                 typ: Type) extends Abstract with Stmt.Refine
 
     final case class Def(annots: Annots.Def, name: Term.Ident, tparams: List[MethodTypeParam],
                          paramss: List[List[MethodParam]], implicits: List[MethodParam],
@@ -127,10 +131,10 @@ object Tree {
                            typ: Type, body: Term) extends Defn
 
     final case class AbstractType(annots: Annots.AbstractType, name: Type.Ident, tparams: List[TypeTypeParam],
-                                  bounds: TypeBounds) extends Defn with RefineStmt
+                                  bounds: TypeBounds) extends Defn with Stmt.Refine
 
     final case class AliasType(annots: Annots.AliasType, name: Type.Ident, tparams: List[TypeTypeParam],
-                               body: Type) extends Defn with RefineStmt
+                               body: Type) extends Defn with Stmt.Refine
 
     final case class PrimaryCtor(annots: Annots.PrimaryCtor, paramss: List[List[ClassParam]],
                                  implicits: List[ClassParam]) extends Defn
@@ -139,20 +143,19 @@ object Tree {
                                    implicits: List[MethodParam], primaryCtorArgss: List[List[Term]]) extends Defn
 
     final case class Class(annots: Annots.Class, name: Type.Ident, tparams: List[ClassTypeParam],
-                           ctor: PrimaryCtor, templ: Template) extends Defn with TopLevelStmt
+                           ctor: PrimaryCtor, templ: Template) extends Defn with Stmt.TopLevel
 
     final case class Trait(annots: Annots.Trait, name: Type.Ident, tparams: List[TraitTypeParam],
-                           templ: Template) extends Defn with TopLevelStmt
+                           templ: Template) extends Defn with Stmt.TopLevel
 
     final case class Object(annots: Annots.Object, name: Term.Ident,
-                            templ: Template) extends Defn with TopLevelStmt
+                            templ: Template) extends Defn with Stmt.TopLevel
 
-    // TODO: simple path?
-    final case class Package(ref: Term.Path, body: List[TopLevelStmt]) extends Defn with TopLevelStmt
-    final case class PackageObject(name: Term.Ident, templ: Template) extends Defn with TopLevelStmt
+    final case class Package(ref: Term.SimplePath, body: List[Stmt.TopLevel]) extends Defn with Stmt.TopLevel
+    final case class PackageObject(name: Term.Ident, templ: Template) extends Defn with Stmt.TopLevel
   }
 
-  final case class Import(clauses: List[Import.Clause]) extends TopLevelStmt
+  final case class Import(clauses: List[Import.Clause]) extends Stmt.TopLevel
   object Import {
     final case class Clause(ref: Term.StableId, sels: List[Selector]) extends Tree
 
