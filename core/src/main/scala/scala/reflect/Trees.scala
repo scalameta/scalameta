@@ -60,7 +60,9 @@ object Tree {
     final case class If(cond: Term, `then`: Term, `else`: Term) extends Term
     final case class Match(scrut: Term, cases: List[Case]) extends Term
     final case class Try(expr: Term, `catch`: List[Case], `finally`: Option[Term]) extends Term
-    final case class Function(params: List[Param.Function], body: Term) extends Term
+    final case class Function(params: List[Param.Function], body: Term) extends Term {
+      // TODO: require(params.length == 1 || params.flatMap(_.annots).forAll(!_.contains(Annot.Implicit)))
+    }
     final case class PartialFunction(cases: List[Case]) extends Term
     final case class While(expr: Term, body: Term) extends Term
     final case class Do(body: Term, expr: Term) extends Term
@@ -177,7 +179,7 @@ object Tree {
 
   trait Param extends Tree
   object Param {
-    final case class Function(name: Term.Ident, typ: Option[Type]) extends Param
+    final case class Function(annots: Annots.Param.Function, name: Term.Ident, typ: Option[Type]) extends Param
     final case class Method(annots: Annots.Param.Method, name: Term.Ident, typ: Type, default: Term) extends Param
     final case class Class(annots: Annots.Param.Class, name: Term.Ident, typ: Type, default: Term) extends Param
   }
@@ -225,6 +227,7 @@ object Tree {
       final case class Object(annots: List[Annot.Defn.Object]) extends Annots[Annot.Defn.Object]
     }
     object Param {
+      final case class Function(annots: List[Annot.Param.Function]) extends Annots[Annot.Param.Function]
       final case class Method(annots: List[Annot.Param.Method]) extends Annots[Annot.Param.Method]
       final case class Class(annots: List[Annot.Param.Class]) extends Annots[Annot.Param.Class]
     }
@@ -250,6 +253,7 @@ object Tree {
                                             with Decl.Var with Defn.Var
                                             with Decl.Def with Defn.Def
                                             with Defn.Macro with Defn.Object
+                                            with Param.Function
     final case class Final() extends Mod with Defn.Val with Defn.Var with Defn.Def with Defn.Macro with Defn.Type with Defn.Class
     final case class Sealed() extends Mod with Defn.Class with Defn.Trait
     final case class Override() extends Mod with Defn.Val with Defn.Var with Defn.Def with Defn.Macro with Defn.Type with Decl.Type with Defn.Object
@@ -283,8 +287,9 @@ object Tree {
       sealed trait Trait extends Source
       sealed trait Object extends Source
     }
-    sealed trait Param extends Param.Method with Param.Class
+    sealed trait Param extends Param.Function with Param.Method with Param.Class
     object Param {
+      sealed trait Function extends Source
       sealed trait Method extends Source
       sealed trait Class extends Source
     }
