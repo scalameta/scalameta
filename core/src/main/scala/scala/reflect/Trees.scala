@@ -17,7 +17,7 @@ object Tree {
     sealed trait Existential extends Tree
   }
 
-  // TODO: wildcard (find all its usages in terms and types and defns)
+  // TODO: wildcard (find all its usages in terms and types and defns and params and type params)
 
   sealed trait Term extends Arg with Stmt.Template with Stmt.Block
   object Term {
@@ -171,6 +171,7 @@ object Tree {
     final case class Guard(cond: Term) extends Enumerator
   }
 
+  // TODO: `name` can also be `this`
   final case class Self(name: Term.Ident, typ: Option[Type]) extends Tree
 
   final case class Parent(tpe: Type, argss: List[List[Term]]) extends Tree
@@ -180,7 +181,10 @@ object Tree {
   trait Param extends Tree
   object Param {
     final case class Function(annots: Annots.Param.Function, name: Term.Ident, typ: Option[Type]) extends Param
+    // TODO: also support by-name and vararg parameters
     final case class Method(annots: Annots.Param.Method, name: Term.Ident, typ: Type, default: Term) extends Param
+    // TODO: also support by-name and vararg parameters
+    // TODO: also support `val` and `var` modifiers
     final case class Class(annots: Annots.Param.Class, name: Term.Ident, typ: Type, default: Term) extends Param
   }
 
@@ -204,6 +208,9 @@ object Tree {
                            bounds: TypeBounds) extends TypeParam
   }
 
+  // TODO: rethink annots - too much boilerplate here
+  // 1) why do we need a dedicated wrapper for annots? why not just have say Annots.Term = List[Annot.Term]?
+  // 2) Annot.Term, Annot.Type, etc is the violation of DRY. would it be possible to do something without that?
   sealed trait Annots[T <: Annot] { def annots: List[T] }
   object Annots {
     final case class Term(annots: List[Annot.Term]) extends Annots[Annot.Term]
