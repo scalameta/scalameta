@@ -39,7 +39,9 @@ object Tree {
       def isStableId: Boolean = ???
     }
     final case class This(qual: Option[Ident]) extends Ref
-    final case class Ident(name: String) extends Ref with Pat { def isBackquoted = ??? }
+    final case class Ident(name: String) extends Ref with Pat {
+      def isBackquoted = ???
+    }
     final case class SuperSelect(qual: Option[Term.Ident], supertyp: Option[Term.Ident], selector: Term.Ident) extends Ref
     final case class Select(qual: Ref, selector: Term.Ident) extends Ref with Pat
 
