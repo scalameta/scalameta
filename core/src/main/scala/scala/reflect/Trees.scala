@@ -5,7 +5,6 @@ package scala.reflect
 // TODO: parser
 // TODO: pretty printer
 // TODO: decide on entry point tree (compilation unit? package?; use-cases compile-time, runtime, presentation)
-// TODO: isModifier methods for annotations
 // TODO: think about requiring ident values to be non-keyword
 // TODO: newcase
 
@@ -61,14 +60,9 @@ object Tree {
     final case class Return(expr: Term) extends Term
     final case class Throw(expr: Term) extends Term
     final case class Ascribe(expr: Term, typ: Type) extends Term
-    final case class Annotate(expr: Term, annots: Annots.Term) extends Term
+    final case class Annotate(expr: Term, annots: List[Annot]) extends Term with Annottee
     final case class Tuple(elements: List[Term]) extends Term
-    final case class Block(stats: List[Stmt.Block]) extends Term {
-      // TODO: require(stats.flatMap(_.annots).forAll(_.isValidForBlock)))
-      // modifiers
-      //   implicit, lazy + val, var, def, type
-      //   abstract, final, sealed, implicit, lazy + class, trait, object
-    }
+    final case class Block(stats: List[Stmt.Block]) extends Term
     final case class If(cond: Term, `then`: Term, `else`: Term) extends Term
     final case class Match(scrut: Term, cases: List[Case]) extends Term
     final case class Try(expr: Term, `catch`: List[Case], `finally`: Option[Term]) extends Term
@@ -109,44 +103,44 @@ object Tree {
     final case class Existential(typ: Type, quants: List[Stmt.Existential]) extends Type
     final case class Function(params: Type, res: Type) extends Type
     final case class Tuple(elements: List[Type]) extends Type
-    final case class Annotated(typ: Type, annots: Annots.Type) extends Type
+    final case class Annotated(typ: Type, annots: List[Annot]) extends Type with Annottee
   }
 
-  sealed trait Decl extends Stmt.Template with Stmt.Refine
+  sealed trait Decl extends Stmt.Template with Stmt.Refine with Annottee
   object Decl {
-    final case class Val(annots: Annots.Decl.Val, pats: List[Pat], typ: Type) extends Decl with Stmt.Existential
-    final case class Var(annots: Annots.Decl.Var, pats: List[Pat], typ: Type) extends Decl
-    final case class Def(annots: Annots.Decl.Def, name: Term.Ident, tparams: List[TypeParam.Method],
+    final case class Val(annots: List[Annot], pats: List[Pat], typ: Type) extends Decl with Stmt.Existential
+    final case class Var(annots: List[Annot], pats: List[Pat], typ: Type) extends Decl
+    final case class Def(annots: List[Annot], name: Term.Ident, tparams: List[TypeParam.Method],
                          paramss: List[List[Param.Method]], implicits: List[Param.Method],
                          typ: Type) extends Decl
-    final case class Type(annots: Annots.Decl.Type, name: Tree.Type.Ident, tparams: List[TypeParam.Type],
+    final case class Type(annots: List[Annot], name: Tree.Type.Ident, tparams: List[TypeParam.Type],
                           bounds: TypeBounds) extends Decl with Stmt.Existential
   }
 
   sealed trait Defn extends Stmt.Template
   object Defn {
-    final case class Val(annots: Annots.Defn.Val, pats: List[Pat], typ: Option[Type], rhs: Term) extends Defn with Stmt.Block
-    final case class Var(annots: Annots.Defn.Var, pats: List[Pat], typ: Option[Type], rhs: Term) extends Defn with Stmt.Block
-    final case class Def(annots: Annots.Defn.Def, name: Term.Ident, tparams: List[TypeParam.Method],
+    final case class Val(annots: List[Annot], pats: List[Pat], typ: Option[Type], rhs: Term) extends Defn with Stmt.Block with Annottee
+    final case class Var(annots: List[Annot], pats: List[Pat], typ: Option[Type], rhs: Term) extends Defn with Stmt.Block with Annottee
+    final case class Def(annots: List[Annot], name: Term.Ident, tparams: List[TypeParam.Method],
                          paramss: List[List[Param.Method]], implicits: List[Param.Method],
-                         typ: Option[Type], body: Term) extends Defn with Stmt.Block
-    final case class Macro(annots: Annots.Defn.Macro, name: Term.Ident, tparams: List[TypeParam.Method],
+                         typ: Option[Type], body: Term) extends Defn with Stmt.Block with Annottee
+    final case class Macro(annots: List[Annot], name: Term.Ident, tparams: List[TypeParam.Method],
                            paramss: List[List[Param.Method]], implicits: List[Param.Method],
-                           typ: Type, body: Term) extends Defn with Stmt.Block
-    final case class Type(annots: Annots.Defn.Type, name: Tree.Type.Ident, tparams: List[TypeParam.Type],
-                          body: Type) extends Defn with Stmt.Refine with Stmt.Block
-    final case class PrimaryCtor(annots: Annots.Defn.PrimaryCtor, paramss: List[List[Param.Class]],
-                                 implicits: List[Param.Class]) extends Defn
-    final case class SecondaryCtor(annots: Annots.Defn.SecondaryCtor, paramss: List[List[Param.Method]],
-                                   implicits: List[Param.Method], primaryCtorArgss: List[List[Term]]) extends Defn with Stmt.Block
-    final case class Class(annots: Annots.Defn.Class, name: Tree.Type.Ident, tparams: List[TypeParam.Class],
-                           ctor: PrimaryCtor, templ: Template) extends Defn with Stmt.TopLevel with Stmt.Block
-    final case class Trait(annots: Annots.Defn.Trait, name: Tree.Type.Ident, tparams: List[TypeParam.Trait],
-                           templ: Template) extends Defn with Stmt.TopLevel with Stmt.Block {
+                           typ: Type, body: Term) extends Defn with Stmt.Block with Annottee
+    final case class Type(annots: List[Annot], name: Tree.Type.Ident, tparams: List[TypeParam.Type],
+                          body: Type) extends Defn with Stmt.Refine with Stmt.Block with Annottee
+    final case class PrimaryCtor(annots: List[Annot], paramss: List[List[Param.Class]],
+                                 implicits: List[Param.Class]) extends Defn with Annottee
+    final case class SecondaryCtor(annots: List[Annot], paramss: List[List[Param.Method]],
+                                   implicits: List[Param.Method], primaryCtorArgss: List[List[Term]]) extends Defn with Stmt.Block with Annottee
+    final case class Class(annots: List[Annot], name: Tree.Type.Ident, tparams: List[TypeParam.Class],
+                           ctor: PrimaryCtor, templ: Template) extends Defn with Stmt.TopLevel with Stmt.Block with Annottee
+    final case class Trait(annots: List[Annot], name: Tree.Type.Ident, tparams: List[TypeParam.Trait],
+                           templ: Template) extends Defn with Stmt.TopLevel with Stmt.Block with Annottee {
       def isInterface: Boolean = templ.stats.forall(_.isInstanceOf[Decl])
     }
-    final case class Object(annots: Annots.Defn.Object, name: Term.Ident,
-                            templ: Template) extends Defn with Stmt.TopLevel with Stmt.Block
+    final case class Object(annots: List[Annot], name: Term.Ident,
+                            templ: Template) extends Defn with Stmt.TopLevel with Stmt.Block with Annottee
     final case class Package(ref: Term.Ref, body: List[Stmt.TopLevel]) extends Defn with Stmt.TopLevel { require(ref.isQualId) }
     final case class PackageObject(name: Term.Ident, templ: Template) extends Defn with Stmt.TopLevel
   }
@@ -194,40 +188,46 @@ object Tree {
 
   final case class TypeBounds(lo: Option[Type], hi: Option[Type]) extends Tree
 
-  trait Param extends Tree
+  trait Param extends Tree with Annottee
   object Param {
-    final case class Function(annots: Annots.Param.Function, name: Term.Ident, typ: Option[Type]) extends Param
+    final case class Function(annots: List[Annot], name: Term.Ident, typ: Option[Type]) extends Param
     // TODO: also support by-name and vararg parameters
-    final case class Method(annots: Annots.Param.Method, name: Term.Ident, typ: Type, default: Option[Term]) extends Param
+    final case class Method(annots: List[Annot], name: Term.Ident, typ: Type, default: Option[Term]) extends Param
     // TODO: also support by-name and vararg parameters
     // TODO: also support `val` and `var` variations
-    final case class Class(annots: Annots.Param.Class, name: Term.Ident, typ: Type, default: Option[Term]) extends Param
+    final case class Class(annots: List[Annot], name: Term.Ident, typ: Type, default: Option[Term]) extends Param
   }
 
-  trait TypeParam extends Tree
+  trait TypeParam extends Tree with Annottee
   object TypeParam {
-    final case class Method(annots: Annots.TypeParam.Method, name: Tree.Type.Ident,
+    final case class Method(annots: List[Annot], name: Tree.Type.Ident,
                             tparams: List[TypeParam.Type],
                             contextBounds: List[Tree.Type],
                             viewBounds: List[Tree.Type],
                             bounds: TypeBounds) extends TypeParam
-    final case class Type(annots: Annots.TypeParam.Type, name: Tree.Type.Ident,
+    final case class Type(annots: List[Annot], name: Tree.Type.Ident,
                           tparams: List[TypeParam.Type],
                           bounds: TypeBounds) extends TypeParam
-    final case class Trait(annots: Annots.TypeParam.Trait, name: Tree.Type.Ident,
+    final case class Trait(annots: List[Annot], name: Tree.Type.Ident,
                            tparams: List[TypeParam.Type],
                            bounds: TypeBounds) extends TypeParam
-    final case class Class(annots: Annots.TypeParam.Class, name: Tree.Type.Ident,
+    final case class Class(annots: List[Annot], name: Tree.Type.Ident,
                            tparams: List[TypeParam.Type],
                            contextBounds: List[Tree.Type],
                            viewBounds: List[Tree.Type],
                            bounds: TypeBounds) extends TypeParam
   }
 
+  trait Annottee extends Tree {
+    def annots: List[Annot]
+    // TODO: https://docs.google.com/spreadsheet/ccc?key=0Ahw_zqMtW4nNdC1lRVJvc3VjTUdOX0ppMVpSYzVRSHc&usp=sharing#gid=0
+    // 1) write a script that fetches this google doc and converts it into a, say, CSV spec
+    // 2) write a test that validates the spec by generating source files and parsing them
+    // 3) write a macro that generates implementation of validateAnnots from the spec + extension methods like isImplicit
+    private[reflect] def validateAnnots(enclosing: Tree): Boolean = ???
+  }
   sealed trait Annot extends Tree {
-    // TODO: convert annotations to value objects (Liftable?)
-    // TODO: validate impossible combinations of modifiers (can't have private and protected at the same time)
-    protected[reflect] def validate(enclosing: Tree, owner: Tree, annots: List[Annot]): Boolean = ???
+    // TODO: convert annotations to value objects (Liftable? Eval?)
   }
   object Annot {
     sealed trait Transient extends Annot // TODO: reserved for synthetic trees (e.g. resolved implicits) and attachments
@@ -249,7 +249,5 @@ object Tree {
     final case class Lazy() extends Mod
     final case class Doc(doc: String) extends Mod
     final case class AbstractOverride() extends Mod
-    // can only be allowed for value members of traits
   }
 }
-
