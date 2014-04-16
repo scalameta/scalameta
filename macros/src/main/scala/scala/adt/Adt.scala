@@ -17,7 +17,7 @@ class AdtMacros(val c: Context) {
   import c.universe._
   import Flag._
 
-  def adt(annottees: c.Tree*): c.Tree = {
+  def adt(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef): ClassDef = {
       val ClassDef(mods @ Modifiers(flags, privateWithin, anns), name, tparams, impl) = cdef
       if (mods.hasFlag(SEALED)) c.abort(cdef.pos, "sealed is redundant for @adt traits")
@@ -38,7 +38,7 @@ class AdtMacros(val c: Context) {
   // 7) @NonEmpty checks
   // 8) deep immutability check (via def macros)
   // 9) deep sealedness check (via def macros as well)
-  def leaf(annottees: c.Tree*): c.Tree = {
+  def leaf(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       val q"${mods @ Modifiers(flags, privateWithin, anns)} class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
       if (mods.hasFlag(SEALED)) c.abort(cdef.pos, "sealed is redundant for @leaf classes")

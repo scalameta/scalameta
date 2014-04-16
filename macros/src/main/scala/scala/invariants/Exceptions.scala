@@ -8,7 +8,7 @@ object InvariantFailedException {
       |when verifying $invariant
       |found that ${failures.head}
     """.trim.stripMargin
-    val optionalFailures = context.tail.headOption.map(_ => "\n" + context.tail.map("and also " + _)).getOrElse("")
+    val optionalFailures = failures.tail.headOption.map(_ => "\n" + failures.tail.map("and also " + _).mkString("\n")).getOrElse("")
     val optionalContext = context.map(ctx => "\n" + "context is " + ctx).getOrElse("")
     throw new InvariantFailedException(mandatory + optionalFailures + optionalContext)
   }
