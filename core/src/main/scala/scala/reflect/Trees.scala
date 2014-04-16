@@ -21,6 +21,8 @@ sealed trait Tree {
 object Tree {
   object Stmt {
     // TODO: statements must be related through inheritence whenever possible
+    // otherwise it would be impossible to extract a statement from a template and insert it into a block
+    // (which might not be a bad thing by the way...)
     sealed trait TopLevel extends Tree
     sealed trait Template extends Tree
     sealed trait Block extends Tree
