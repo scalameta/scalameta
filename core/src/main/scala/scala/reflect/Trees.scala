@@ -1,6 +1,6 @@
 package scala.reflect
 
-import scala.invariants.{nonEmpty, require}
+import scala.invariants.{nonEmpty, require, requireNot}
 import scala.adt.{adt, leaf}
 
 // TODO: tree-based symbols and types (see https://github.com/paulbutcher/implementor/blob/f1921de2b7de3d5ea8cf7f230c8e4e9f8c7f4b26/core/src/main/scala/org/scalamock/Implement.scala)
@@ -78,7 +78,7 @@ object Tree {
     @leaf class Match(scrut: Term, cases: List[Case] @nonEmpty) extends Term
     @leaf class Try(expr: Term, `catch`: List[Case], `finally`: Option[Term]) extends Term
     @leaf class Function(params: List[Param.Function] @nonEmpty, body: Term) extends Term {
-      require(params.length == 1 || params.forall(!_.annots.contains(Tree.Annot.Implicit)))
+      requireNot(params.length != 1 && params.exists(_.annots.contains(Tree.Annot.Implicit)))
     }
     @leaf class PartialFunction(cases: List[Case] @nonEmpty) extends Term
     @leaf class While(expr: Term, body: Term) extends Term
@@ -193,7 +193,7 @@ object Tree {
 
   @leaf class Template(early: List[Defn.Val], parents: List[Parent],
                             self: Self, stats: List[Stmt.Template]) extends Tree {
-    require(parents.length == 0 || parents.tail.forall(_.argss.isEmpty))
+    requireNot(parents.length != 0 && parents.tail.exists(_.argss.nonEmpty))
   }
 
   @adt trait Enumerator extends Tree
