@@ -63,19 +63,19 @@ object Tree {
     }
     final case class Apply(fun: Term, args: List[Arg]) extends Term
     final case class ApplyRight(arg: Term, fun: Term) extends Term
-    final case class TypeApply(fun: Term, args: List[Type]) extends Term
+    final case class TypeApply(fun: Term, args: List[Type] @NonEmpty) extends Term
     final case class Assign(lhs: Term.Ref, rhs: Term) extends Term
-    final case class Update(expr: Term, args: List[List[Term]]) extends Term
+    final case class Update(expr: Term, args: List[List[Term]] @NonEmpty) extends Term
     final case class Return(expr: Term) extends Term
     final case class Throw(expr: Term) extends Term
     final case class Ascribe(expr: Term, typ: Type) extends Term
-    final case class Annotate(expr: Term, annots: List[Annot]) extends Term with Annottee
-    final case class Tuple(elements: List[Term]) extends Term
+    final case class Annotate(expr: Term, annots: List[Annot] @NonEmpty) extends Term with Annottee
+    final case class Tuple(elements: List[Term] @NonEmpty) extends Term
     final case class Block(stats: List[Stmt.Block]) extends Term
     final case class If(cond: Term, `then`: Term, `else`: Term) extends Term
-    final case class Match(scrut: Term, cases: List[Case]) extends Term
+    final case class Match(scrut: Term, cases: List[Case] @NonEmpty) extends Term
     final case class Try(expr: Term, `catch`: List[Case], `finally`: Option[Term]) extends Term
-    final case class Function(params: List[Param.Function], body: Term) extends Term {
+    final case class Function(params: List[Param.Function] @NonEmpty, body: Term) extends Term {
       require(params.length == 1 || params.forall(!_.annots.contains(Tree.Annot.Implicit)))
     }
     final case class PartialFunction(cases: List[Case] @NonEmpty) extends Term
@@ -84,7 +84,7 @@ object Tree {
     final case class For(enums: List[Enumerator] @NonEmpty, body: Term) extends Term {
       require(enums.head.isInstanceOf[Enumerator.Generator])
     }
-    final case class ForYield(enums: List[Enumerator], body: Term) extends Term
+    final case class ForYield(enums: List[Enumerator] @NonEmpty, body: Term) extends Term
     final case class New(templ: Template) extends Term
   }
 
@@ -94,11 +94,14 @@ object Tree {
     final case class SequenceWildcard() extends Pat
     final case class Bind(lhs: Term.Ident, rhs: Pat) extends Pat
     final case class Alternative(lhs: Pat, rhs: Pat) extends Pat
-    final case class Tuple(elements: List[Pat]) extends Pat
+    final case class Tuple(elements: List[Pat] @NonEmpty) extends Pat
     final case class Extractor(ref: Term.Ref, elements: List[Pat]) extends Pat {
       require(ref.isStableId)
     }
-    final case class Interpolate(prefix: Term.Ident, parts: List[Term.String], args: List[Pat]) extends Pat
+    final case class Interpolate(prefix: Term.Ident, parts: List[Term.String] @NonEmpty, args: List[Pat]) extends Pat {
+      // TODO: also check that prefix is alphanumeric
+      require(parts.length == args.length + 1)
+    }
     final case class Typed(lhs: Pat, rhs: Type) extends Pat {
       require(lhs.isInstanceOf[Pat.Wildcard] || lhs.isInstanceOf[Term.Ident])
     }
@@ -116,18 +119,18 @@ object Tree {
       require(ref.isPath)
     }
     final case class Constant(value: Term.Lit) extends Type
-    final case class Apply(typ: Type, targs: List[Type]) extends Type
-    final case class Compound(parents: List[Type], stmts: List[Stmt.Refine]) extends Type
-    final case class Existential(typ: Type, quants: List[Stmt.Existential]) extends Type
+    final case class Apply(typ: Type, targs: List[Type] @NonEmpty) extends Type
+    final case class Compound(parents: List[Type], stmts: List[Stmt.Refine] @NonEmpty) extends Type
+    final case class Existential(typ: Type, quants: List[Stmt.Existential] @NonEmpty) extends Type
     final case class Function(params: Type, res: Type) extends Type
-    final case class Tuple(elements: List[Type]) extends Type
-    final case class Annotated(typ: Type, annots: List[Annot]) extends Type with Annottee
+    final case class Tuple(elements: List[Type] @NonEmpty) extends Type
+    final case class Annotated(typ: Type, annots: List[Annot] @NonEmpty) extends Type with Annottee
   }
 
   sealed trait Decl extends Stmt.Template with Stmt.Refine with Annottee
   object Decl {
-    final case class Val(annots: List[Annot], pats: List[Pat], typ: Type) extends Decl with Stmt.Existential
-    final case class Var(annots: List[Annot], pats: List[Pat], typ: Type) extends Decl
+    final case class Val(annots: List[Annot], pats: List[Pat] @NonEmpty, typ: Type) extends Decl with Stmt.Existential
+    final case class Var(annots: List[Annot], pats: List[Pat] @NonEmpty, typ: Type) extends Decl
     final case class Def(annots: List[Annot], name: Term.Ident, tparams: List[TypeParam.Def],
                          paramss: List[List[Param.Def]], implicits: List[Param.Def],
                          typ: Type) extends Decl
@@ -137,8 +140,8 @@ object Tree {
 
   sealed trait Defn extends Stmt.Template
   object Defn {
-    final case class Val(annots: List[Annot], pats: List[Pat], typ: Option[Type], rhs: Term) extends Defn with Stmt.Block with Annottee
-    final case class Var(annots: List[Annot], pats: List[Pat], typ: Option[Type], rhs: Term) extends Defn with Stmt.Block with Annottee
+    final case class Val(annots: List[Annot], pats: List[Pat] @NonEmpty, typ: Option[Type], rhs: Term) extends Defn with Stmt.Block with Annottee
+    final case class Var(annots: List[Annot], pats: List[Pat] @NonEmpty, typ: Option[Type], rhs: Term) extends Defn with Stmt.Block with Annottee
     final case class Def(annots: List[Annot], name: Term.Ident, tparams: List[TypeParam.Def],
                          paramss: List[List[Param.Def]], implicits: List[Param.Def],
                          typ: Option[Type], body: Term) extends Defn with Stmt.Block with Annottee
@@ -163,9 +166,9 @@ object Tree {
     final case class PackageObject(name: Term.Ident, templ: Template) extends Defn with Stmt.TopLevel
   }
 
-  final case class Import(clauses: List[Import.Clause]) extends Stmt.TopLevel with Stmt.Template with Stmt.Block
+  final case class Import(clauses: List[Import.Clause] @NonEmpty) extends Stmt.TopLevel with Stmt.Template with Stmt.Block
   object Import {
-    final case class Clause(ref: Term.Ref, sels: List[Selector]) extends Tree {
+    final case class Clause(ref: Term.Ref, sels: List[Selector] @NonEmpty) extends Tree {
       require(ref.isStableId)
     }
 
