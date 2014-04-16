@@ -34,9 +34,10 @@ class AdtMacros(val c: Context) {
 
   // 4) withXXX
   // 5) def tag: Int = ...
-  // 6) inherits only from sealed
-  // 7) null checks
-  // 8) @NonEmpty checks
+  // 6) null checks
+  // 7) @NonEmpty checks
+  // 8) deep immutability check (via def macros)
+  // 9) deep sealedness check (via def macros as well)
   def leaf(annottees: c.Tree*): c.Tree = {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       val q"${mods @ Modifiers(flags, privateWithin, anns)} class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
