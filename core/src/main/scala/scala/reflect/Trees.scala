@@ -162,7 +162,9 @@ object Tree {
   final case class Case(pat: Pat, cond: Option[Term], body: Term) extends Tree
 
   final case class Template(early: List[Defn.Val], parents: List[Parent],
-                            self: Self, stats: List[Stmt.Template]) extends Tree
+                            self: Self, stats: List[Stmt.Template]) extends Tree {
+    require(parents.length == 0 || parents.tail.forall(_.argss.isEmpty))
+  }
 
   sealed trait Enumerator extends Tree
   object Enumerator {
