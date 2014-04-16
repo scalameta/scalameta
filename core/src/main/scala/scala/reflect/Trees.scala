@@ -7,7 +7,6 @@ package scala.reflect
 // TODO: decide on entry point tree (compilation unit? package?; use-cases compile-time, runtime, presentation)
 // TODO: think about requiring ident values to be non-keyword
 // TODO: newcase
-// TODO: test all requirements
 // TODO: consider adding default values for case class fields whenever applicable
 
 sealed trait Tree {
@@ -16,6 +15,7 @@ sealed trait Tree {
   // TODO: collection-like methods (see http://clang.llvm.org/docs/LibASTMatchersReference.html)
   // TODO: rewriting/transformation methods
   // TODO: add tree-specific equalities as ref_==, =:= etc
+  Invariants.check(this)
 }
 
 object Tree {
@@ -56,10 +56,7 @@ object Tree {
     final case class Null() extends Lit
     final case class Unit() extends Lit
 
-    final case class Interpolate(prefix: Ident, parts: List[Term.String], args: List[Term]) extends Term {
-      require(parts.nonEmpty, "Term.Interpolate's parts must not be empty")
-      require(parts.length == args.length + 1, "Term.Interpolate args' size must be one less than its parts")
-    }
+    final case class Interpolate(prefix: Ident, parts: List[Term.String], args: List[Term]) extends Term
     final case class Apply(fun: Term, args: List[Arg]) extends Term
     final case class ApplyRight(arg: Term, fun: Term) extends Term
     final case class TypeApply(fun: Term, args: List[Type]) extends Term
@@ -72,20 +69,12 @@ object Tree {
     final case class Tuple(elements: List[Term]) extends Term
     final case class Block(stats: List[Stmt.Block]) extends Term
     final case class If(cond: Term, `then`: Term, `else`: Term) extends Term
-    final case class Match(scrut: Term, cases: List[Case]) extends Term {
-      require(cases.nonEmpty, "Term.Match must contain at least one case")
-    }
+    final case class Match(scrut: Term, cases: List[Case]) extends Term
     final case class Try(expr: Term, `catch`: List[Case], `finally`: Option[Term]) extends Term
-    final case class Function(params: List[Param.Function], body: Term) extends Term {
-      require(params.length == 1 || params.forall(!_.annots.contains(Annot.Implicit)),
-              "function can only have one implicit param")
-    }
-    final case class PartialFunction(cases: List[Case]) extends Term {
-      require(cases.nonEmpty, "Term.PartialFunction must contain at least one case")
-    }
+    final case class Function(params: List[Param.Function], body: Term) extends Term
+    final case class PartialFunction(cases: List[Case]) extends Term
     final case class While(expr: Term, body: Term) extends Term
     final case class Do(body: Term, expr: Term) extends Term
-    // TODO: invariant: first element must be generator, at least one element
     final case class For(enums: List[Enumerator], body: Term) extends Term
     final case class ForYield(enums: List[Enumerator], body: Term) extends Term
     final case class New(templ: Template) extends Term
@@ -98,27 +87,18 @@ object Tree {
     final case class Bind(lhs: Term.Ident, rhs: Pat) extends Pat
     final case class Alternative(lhs: Pat, rhs: Pat) extends Pat
     final case class Tuple(elements: List[Pat]) extends Pat
-    final case class Extractor(ref: Term.Ref, elements: List[Pat]) extends Pat {
-      require(ref.isStableId, "extractor pattern ref must be a stable id")
-    }
+    final case class Extractor(ref: Term.Ref, elements: List[Pat]) extends Pat
     final case class Interpolate(prefix: Term.Ident, parts: List[Term.String], args: List[Pat]) extends Pat
-    final case class Typed(lhs: Pat, rhs: Type) extends Pat {
-      require(lhs.isInstanceOf[Pat.Wildcard] || lhs.isInstanceOf[Term.Ident],
-              "Pat.Type's lhs must be either Pat.Wldcard or Term.Ident")
-    }
+    final case class Typed(lhs: Pat, rhs: Type) extends Pat
   }
 
   sealed trait Type extends Tree
   object Type {
     final case class Ident(name: String) extends Type
-    final case class Select(qual: Term.Ref, name: Type.Ident) extends Type {
-      require(qual.isPath, "Type.Select's qual must be a path")
-    }
+    final case class Select(qual: Term.Ref, name: Type.Ident) extends Type
     final case class SuperSelect(qual: Option[Term.Ident], supertyp: Option[Term.Ident], selector: Type.Ident) extends Type
     final case class Project(qual: Type, name: Type.Ident) extends Type
-    final case class Singleton(ref: Term.Ref) extends Type {
-      require(ref.isPath, "Type.Singleton's ref must be a path")
-    }
+    final case class Singleton(ref: Term.Ref) extends Type
     final case class Constant(value: Term.Lit) extends Type
     final case class Apply(typ: Type, targs: List[Type]) extends Type
     final case class Compound(parents: List[Type], stmts: List[Stmt.Refine]) extends Type
@@ -163,17 +143,13 @@ object Tree {
     }
     final case class Object(annots: List[Annot], name: Term.Ident,
                             templ: Template) extends Defn with Stmt.TopLevel with Stmt.Block with Annottee
-    final case class Package(ref: Term.Ref, body: List[Stmt.TopLevel]) extends Defn with Stmt.TopLevel {
-      require(ref.isQualId, "Defn.Package's ref must be a qualifier id")
-    }
+    final case class Package(ref: Term.Ref, body: List[Stmt.TopLevel]) extends Defn with Stmt.TopLevel
     final case class PackageObject(name: Term.Ident, templ: Template) extends Defn with Stmt.TopLevel
   }
 
   final case class Import(clauses: List[Import.Clause]) extends Stmt.TopLevel with Stmt.Template with Stmt.Block
   object Import {
-    final case class Clause(ref: Term.Ref, sels: List[Selector]) extends Tree {
-      require(ref.isStableId, "Import.Clause's ref must be a stable id")
-    }
+    final case class Clause(ref: Term.Ref, sels: List[Selector]) extends Tree
 
     sealed trait Selector extends Tree
     object Selector {
@@ -193,10 +169,7 @@ object Tree {
   final case class Case(pat: Pat, cond: Option[Term], body: Term) extends Tree
 
   final case class Template(early: List[Defn.Val], parents: List[Parent],
-                            self: Self, stats: List[Stmt.Template]) extends Tree {
-    require(parents.length == 0 || parents.tail.forall(_.argss.isEmpty),
-            "only first Template parent may have value parameters")
-  }
+                            self: Self, stats: List[Stmt.Template]) extends Tree
 
   sealed trait Enumerator extends Tree
   object Enumerator {
