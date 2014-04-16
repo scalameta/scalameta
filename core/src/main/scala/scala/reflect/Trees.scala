@@ -184,10 +184,10 @@ object Tree {
   object Param {
     final case class Function(annots: Annots.Param.Function, name: Term.Ident, typ: Option[Type]) extends Param
     // TODO: also support by-name and vararg parameters
-    final case class Method(annots: Annots.Param.Method, name: Term.Ident, typ: Type, default: Term) extends Param
+    final case class Method(annots: Annots.Param.Method, name: Term.Ident, typ: Type, default: Option[Term]) extends Param
     // TODO: also support by-name and vararg parameters
     // TODO: also support `val` and `var` modifiers
-    final case class Class(annots: Annots.Param.Class, name: Term.Ident, typ: Type, default: Term) extends Param
+    final case class Class(annots: Annots.Param.Class, name: Term.Ident, typ: Type, default: Option[Term]) extends Param
   }
 
   trait TypeParam extends Tree
