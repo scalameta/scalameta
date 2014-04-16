@@ -8,14 +8,14 @@ package scala.reflect
 // TODO: think about requiring ident values to be non-keyword
 // TODO: newcase
 // TODO: test all requirements
-// TODO: consider add default values for case class fields whenver applicable
+// TODO: consider adding default values for case class fields whenever applicable
 
 sealed trait Tree {
   // TODO: trivia: whitespace, comments, etc (see http://msdn.microsoft.com/en-us/vstudio/hh500769)
   // TODO: history vs positions (can trivia be inferred from positions only?)
   // TODO: collection-like methods (see http://clang.llvm.org/docs/LibASTMatchersReference.html)
   // TODO: rewriting/transformation methods
-  // TODO: add tree-specific equalitities as ref_==, =:= etc
+  // TODO: add tree-specific equalities as ref_==, =:= etc
 }
 
 object Tree {
