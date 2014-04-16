@@ -1,7 +1,8 @@
-package scala
+package scala.adt
 
 import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
+import scala.invariants.nonEmpty
 import scala.reflect.macros.whitebox.Context
 
 class adt extends StaticAnnotation {
@@ -11,8 +12,6 @@ class adt extends StaticAnnotation {
 class leaf extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro AdtMacros.leaf
 }
-
-class nonEmpty extends StaticAnnotation
 
 class AdtMacros(val c: Context) {
   import c.universe._

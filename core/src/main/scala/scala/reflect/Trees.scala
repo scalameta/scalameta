@@ -1,5 +1,8 @@
 package scala.reflect
 
+import scala.invariants.{nonEmpty, require}
+import scala.adt.{adt, leaf}
+
 // TODO: tree-based symbols and types (see https://github.com/paulbutcher/implementor/blob/f1921de2b7de3d5ea8cf7f230c8e4e9f8c7f4b26/core/src/main/scala/org/scalamock/Implement.scala)
 // TODO: .tpe vs .signature?
 // TODO: parser

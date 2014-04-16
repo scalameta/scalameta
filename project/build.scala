@@ -116,12 +116,11 @@ object build extends Build {
   ) aggregate (core, tests)
 
   lazy val macros = Project(
-    id   = "macros",
+    id   = "core-macros",
     base = file("macros")
   ) settings (
-    sharedSettings: _*
+    publishableSettings: _*
   ) settings (
-    packagedArtifacts := Map.empty,
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided"),
     scalacOptions ++= Seq()
   )
