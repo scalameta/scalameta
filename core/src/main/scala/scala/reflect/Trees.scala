@@ -3,23 +3,22 @@ package scala.reflect
 import org.scalareflect.invariants.{nonEmpty, require}
 import org.scalareflect.adt.{branch, leaf}
 
-// TODO: tree-based symbols and types (see https://github.com/paulbutcher/implementor/blob/f1921de2b7de3d5ea8cf7f230c8e4e9f8c7f4b26/core/src/main/scala/org/scalamock/Implement.scala)
-// TODO: .tpe vs .signature?
-// TODO: parser
-// TODO: pretty printer
-// TODO: decide on entry point tree (compilation unit? package?; use-cases compile-time, runtime, presentation)
-// TODO: think about requiring ident values to be non-keyword
-// TODO: consider adding default values for case class fields whenever applicable
-// TODO: add moar requires
+// (Together) TODO: tree-based symbols and types (see https://github.com/paulbutcher/implementor/blob/f1921de2b7de3d5ea8cf7f230c8e4e9f8c7f4b26/core/src/main/scala/org/scalamock/Implement.scala)
+// (Together) TODO: .tpe vs .signature?
+// (Together) TODO: collection-like methods (see http://clang.llvm.org/docs/LibASTMatchersReference.html)
+// (Together) TODO: rewriting/transformation methods
+// (Together) TODO: decide on entry point tree (compilation unit? package?; use-cases compile-time, runtime, presentation)
+// (Together) TODO: add tree-specific equalities as ref_==, =:= etc
+// (Denys)    TODO: add moar requires
+// (Denys)    TODO: think about requiring ident values to be non-keyword
+// (Denys)    TODO: parser
+// (Together) TODO: trivia: whitespace, comments, etc (see http://msdn.microsoft.com/en-us/vstudio/hh500769)
+// (Together) TODO: history vs positions (can trivia be inferred from positions only?)
+// (Denys)    TODO: unhygienic quasiquotes
+// (Denys)    TODO: consider adding default values for case class fields whenever applicable
+// (Eugene)   TODO: pretty printer
 
-@branch trait Tree {
-  // TODO: trivia: whitespace, comments, etc (see http://msdn.microsoft.com/en-us/vstudio/hh500769)
-  // TODO: history vs positions (can trivia be inferred from positions only?)
-  // TODO: collection-like methods (see http://clang.llvm.org/docs/LibASTMatchersReference.html)
-  // TODO: rewriting/transformation methods
-  // TODO: add tree-specific equalities as ref_==, =:= etc
-}
-
+@branch trait Tree
 object Tree {
   object Stmt {
     @branch trait TopLevel extends Tree
@@ -56,7 +55,7 @@ object Tree {
     @leaf class Unit() extends Lit
 
     @leaf class Interpolate(prefix: Ident, parts: List[Term.String] @nonEmpty, args: List[Term]) extends Term {
-      // TODO: also check that prefix is alphanumeric
+      // (Denys) TODO: also check that prefix is alphanumeric
       require(parts.length == args.length + 1)
     }
     @leaf class Apply(fun: Term, args: List[Arg]) extends Term
@@ -84,7 +83,7 @@ object Tree {
     }
     @leaf class ForYield(enums: List[Enumerator] @nonEmpty, body: Term) extends Term
     @leaf class New(templ: Template) extends Term
-    // TODO: might neeed additional validation
+    // (Denys) TODO: might neeed additional validation
     @leaf class Placeholder() extends Term
     @leaf class Eta(term: Term) extends Term
   }
@@ -100,7 +99,7 @@ object Tree {
       require(ref.isStableId)
     }
     @leaf class Interpolate(prefix: Term.Ident, parts: List[Term.String] @nonEmpty, args: List[Pat]) extends Pat {
-      // TODO: also check that prefix is alphanumeric
+      // (Denys) TODO: also check that prefix is alphanumeric
       require(parts.length == args.length + 1)
     }
     @leaf class Typed(lhs: Pat, rhs: Type) extends Pat {
@@ -126,7 +125,7 @@ object Tree {
     @leaf class Function(params: Type, res: Type) extends Type
     @leaf class Tuple(elements: List[Type] @nonEmpty) extends Type
     @leaf class Annotated(typ: Type, annots: List[Annot] @nonEmpty) extends Type with Annottee
-    // TODO: might need additional validation
+    // (Denys) TODO: might need additional validation
     @leaf class Placeholder() extends Type
   }
 
@@ -209,13 +208,13 @@ object Tree {
 
   @leaf class TypeBounds(lo: Option[Type], hi: Option[Type]) extends Tree
 
-  trait Param extends Tree with Annottee
+  @branch trait Param extends Tree with Annottee
   object Param {
     @leaf class Function(annots: List[Annot], name: Option[Term.Ident], typ: Option[Type]) extends Param
     @leaf class Def(annots: List[Annot], name: Term.Ident, typ: Type, default: Option[Term]) extends Param
   }
 
-  trait TypeParam extends Tree with Annottee
+  @branch trait TypeParam extends Tree with Annottee
   object TypeParam {
     @leaf class Def(annots: List[Annot], name: Option[Tree.Type.Ident],
                     tparams: List[TypeParam.Type],
@@ -227,18 +226,18 @@ object Tree {
                      bounds: TypeBounds) extends TypeParam
   }
 
-  trait Annottee extends Tree {
+  @branch trait Annottee extends Tree {
     def annots: List[Annot]
-    // TODO: https://docs.google.com/spreadsheet/ccc?key=0Ahw_zqMtW4nNdC1lRVJvc3VjTUdOX0ppMVpSYzVRSHc&usp=sharing#gid=0
-    // 1) write a script that fetches this google doc and converts it into a, say, CSV spec
-    // 2) write a test that validates the spec by generating source files and parsing them
-    // 3) write a macro that generates implementation of validateAnnots from the spec + extension methods like isImplicit
+    // (Eugene) TODO: https://docs.google.com/spreadsheet/ccc?key=0Ahw_zqMtW4nNdC1lRVJvc3VjTUdOX0ppMVpSYzVRSHc&usp=sharing#gid=0
+    // * write a script that fetches this google doc and converts it into a, say, CSV spec
+    // * write a test that validates the spec by generating source files and parsing them
+    // * write a macro that generates implementation of validateAnnots from the spec + extension methods like isImplicit
     private[reflect] def validateAnnots(enclosing: Tree): Boolean = ???
   }
-  // TODO: convert annotations to value objects (Liftable? Eval?)
   @branch trait Annot extends Tree
   object Annot {
-    @branch trait Transient extends Annot // TODO: reserved for synthetic trees (e.g. resolved implicits) and attachments
+    @branch trait Transient extends Annot
+    // (Together) TODO: design the attachment API
 
     @branch trait Source extends Annot
     @leaf class UserDefined(tpe: Type, argss: List[List[Term]]) extends Source

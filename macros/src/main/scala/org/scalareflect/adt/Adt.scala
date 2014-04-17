@@ -5,7 +5,6 @@ import scala.annotation.StaticAnnotation
 import org.scalareflect.invariants.nonEmpty
 import scala.reflect.macros.whitebox.Context
 
-// TODO: check transitive sealedness
 class branch extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro AdtMacros.branch
 }
@@ -18,6 +17,7 @@ class AdtMacros(val c: Context) {
   import c.universe._
   import Flag._
 
+  // (Eugene) TODO: check transitive sealedness
   def branch(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef): ClassDef = {
       val ClassDef(mods @ Modifiers(flags, privateWithin, anns), name, tparams, impl) = cdef
@@ -33,12 +33,12 @@ class AdtMacros(val c: Context) {
     q"{ ..$expanded; () }"
   }
 
-  // 4) withXXX
-  // 5) def tag: Int = ...
-  // 6) null checks
-  // 7) @NonEmpty checks
-  // 8) deep immutability check (via def macros)
-  // 9) deep sealedness check (via def macros as well)
+  // (Eugene) TODO: withXXX
+  // (Eugene) TODO: def tag: Int = ...
+  // (Eugene) TODO: null checks
+  // (Eugene) TODO: @NonEmpty checks
+  // (Eugene) TODO: deep immutability check (via def macros)
+  // (Eugene) TODO: deep sealedness check (via def macros as well)
   def leaf(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       val q"${mods @ Modifiers(flags, privateWithin, anns)} class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
