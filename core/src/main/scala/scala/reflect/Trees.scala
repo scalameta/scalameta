@@ -84,6 +84,7 @@ object Tree {
     }
     @leaf class ForYield(enums: List[Enumerator] @nonEmpty, body: Term) extends Term
     @leaf class New(templ: Template) extends Term
+    // TODO: might neeed additional validation
     @leaf class Placeholder() extends Term
     @leaf class Eta(term: Term) extends Term
   }
@@ -125,6 +126,7 @@ object Tree {
     @leaf class Function(params: Type, res: Type) extends Type
     @leaf class Tuple(elements: List[Type] @nonEmpty) extends Type
     @leaf class Annotated(typ: Type, annots: List[Annot] @nonEmpty) extends Type with Annottee
+    // TODO: might need additional validation
     @leaf class Placeholder() extends Type
   }
 
