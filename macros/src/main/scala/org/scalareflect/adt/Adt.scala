@@ -5,6 +5,11 @@ import scala.annotation.StaticAnnotation
 import org.scalareflect.invariants.nonEmpty
 import scala.reflect.macros.whitebox.Context
 
+// (Eugene) TODO: think what this can mean, e.g. ensures that trees stemming from roots are disjoint
+class root extends StaticAnnotation {
+  def macroTransform(annottees: Any*): Any = macro AdtMacros.branch
+}
+
 class branch extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro AdtMacros.branch
 }
@@ -18,6 +23,7 @@ class AdtMacros(val c: Context) {
   import Flag._
 
   // (Eugene) TODO: check transitive sealedness
+  // (Eugene) TODO: check rootness
   def branch(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef): ClassDef = {
       val ClassDef(mods @ Modifiers(flags, privateWithin, anns), name, tparams, impl) = cdef
@@ -39,6 +45,7 @@ class AdtMacros(val c: Context) {
   // (Eugene) TODO: @NonEmpty checks
   // (Eugene) TODO: deep immutability check (via def macros)
   // (Eugene) TODO: deep sealedness check (via def macros as well)
+  // (Eugene) TODO: check rootness
   def leaf(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       val q"${mods @ Modifiers(flags, privateWithin, anns)} class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
