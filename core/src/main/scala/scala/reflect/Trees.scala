@@ -1,7 +1,7 @@
 package scala.reflect
 
-import org.scalareflect.invariants.{nonEmpty, require}
-import org.scalareflect.adt.{branch, leaf}
+import org.scalareflect.invariants._
+import org.scalareflect.adt._
 
 // (Together) TODO: tree-based symbols and types (see https://github.com/paulbutcher/implementor/blob/f1921de2b7de3d5ea8cf7f230c8e4e9f8c7f4b26/core/src/main/scala/org/scalamock/Implement.scala)
 // (Together) TODO: .tpe vs .signature?
