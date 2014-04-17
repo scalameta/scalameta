@@ -5,6 +5,7 @@ import scala.annotation.StaticAnnotation
 import org.scalareflect.invariants.nonEmpty
 import scala.reflect.macros.whitebox.Context
 
+// TODO: check transitive sealedness
 class branch extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro AdtMacros.branch
 }

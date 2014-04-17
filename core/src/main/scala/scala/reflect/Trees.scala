@@ -10,6 +10,7 @@ import org.scalareflect.adt.{branch, leaf}
 // TODO: decide on entry point tree (compilation unit? package?; use-cases compile-time, runtime, presentation)
 // TODO: think about requiring ident values to be non-keyword
 // TODO: consider adding default values for case class fields whenever applicable
+// TODO: add moar requires
 
 @branch trait Tree {
   // TODO: trivia: whitespace, comments, etc (see http://msdn.microsoft.com/en-us/vstudio/hh500769)
@@ -21,17 +22,12 @@ import org.scalareflect.adt.{branch, leaf}
 
 object Tree {
   object Stmt {
-    // TODO: statements must be related through inheritence whenever possible
-    // otherwise it would be impossible to extract a statement from a template and insert it into a block
-    // (which might not be a bad thing by the way...)
     @branch trait TopLevel extends Tree
-    @branch trait Template extends Tree
-    @branch trait Block extends Tree
-    @branch trait Refine extends Tree
+    @branch trait Template extends Block
+    @branch trait Block extends Refine
+    @branch trait Refine extends Existential
     @branch trait Existential extends Tree
   }
-
-  // TODO: wildcard (find all its usages in terms and types and defns and params and type params)
 
   @branch trait Term extends Arg with Stmt.Template with Stmt.Block
   object Term {
@@ -88,6 +84,9 @@ object Tree {
     }
     @leaf class ForYield(enums: List[Enumerator] @nonEmpty, body: Term) extends Term
     @leaf class New(templ: Template) extends Term
+    // TODO: might neeed additional validation
+    @leaf class Placeholder() extends Term
+    @leaf class Eta(term: Term) extends Term
   }
 
   @branch trait Pat extends Tree
@@ -127,6 +126,8 @@ object Tree {
     @leaf class Function(params: Type, res: Type) extends Type
     @leaf class Tuple(elements: List[Type] @nonEmpty) extends Type
     @leaf class Annotated(typ: Type, annots: List[Annot] @nonEmpty) extends Type with Annottee
+    // TODO: might need additional validation
+    @leaf class Placeholder() extends Type
   }
 
   @branch trait Decl extends Stmt.Template with Stmt.Refine with Annottee
@@ -143,7 +144,7 @@ object Tree {
   @branch trait Defn extends Stmt.Template
   object Defn {
     @leaf class Val(annots: List[Annot], pats: List[Pat] @nonEmpty, typ: Option[Type], rhs: Term) extends Defn with Stmt.Block with Annottee
-    @leaf class Var(annots: List[Annot], pats: List[Pat] @nonEmpty, typ: Option[Type], rhs: Term) extends Defn with Stmt.Block with Annottee
+    @leaf class Var(annots: List[Annot], pats: List[Pat] @nonEmpty, typ: Option[Type], rhs: Option[Term]) extends Defn with Stmt.Block with Annottee
     @leaf class Def(annots: List[Annot], name: Term.Ident, tparams: List[TypeParam.Def],
                     paramss: List[List[Param.Def]], implicits: List[Param.Def],
                     typ: Option[Type], body: Term) extends Defn with Stmt.Block with Annottee
@@ -210,18 +211,18 @@ object Tree {
 
   trait Param extends Tree with Annottee
   object Param {
-    @leaf class Function(annots: List[Annot], name: Term.Ident, typ: Option[Type]) extends Param
+    @leaf class Function(annots: List[Annot], name: Option[Term.Ident], typ: Option[Type]) extends Param
     @leaf class Def(annots: List[Annot], name: Term.Ident, typ: Type, default: Option[Term]) extends Param
   }
 
   trait TypeParam extends Tree with Annottee
   object TypeParam {
-    @leaf class Def(annots: List[Annot], name: Tree.Type.Ident,
+    @leaf class Def(annots: List[Annot], name: Option[Tree.Type.Ident],
                     tparams: List[TypeParam.Type],
                     contextBounds: List[Tree.Type],
                     viewBounds: List[Tree.Type],
                     bounds: TypeBounds) extends TypeParam
-    @leaf class Type(annots: List[Annot], name: Tree.Type.Ident,
+    @leaf class Type(annots: List[Annot], name: Option[Tree.Type.Ident],
                      tparams: List[TypeParam.Type],
                      bounds: TypeBounds) extends TypeParam
   }
@@ -234,9 +235,8 @@ object Tree {
     // 3) write a macro that generates implementation of validateAnnots from the spec + extension methods like isImplicit
     private[reflect] def validateAnnots(enclosing: Tree): Boolean = ???
   }
-  @branch trait Annot extends Tree {
-    // TODO: convert annotations to value objects (Liftable? Eval?)
-  }
+  // TODO: convert annotations to value objects (Liftable? Eval?)
+  @branch trait Annot extends Tree
   object Annot {
     @branch trait Transient extends Annot // TODO: reserved for synthetic trees (e.g. resolved implicits) and attachments
 
