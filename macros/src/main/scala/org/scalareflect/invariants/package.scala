@@ -5,7 +5,6 @@ import scala.reflect.macros.blackbox.Context
 
 package object invariants {
   def require[T](x: T): Unit = macro Macros.require
-  def requireNot[T](x: T): Unit = macro Macros.requireNot
 }
 
 package invariants {
@@ -178,9 +177,6 @@ package invariants {
           case (false, $failures) => org.scalareflect.invariants.InvariantFailedException.raise(${showCode(x)}, $failures, Some($enclosingClass.this))
         }
       """
-    }
-    def requireNot(x: Tree): Tree = {
-      q"org.scalareflect.invariants.require(!$x)"
     }
   }
 }
