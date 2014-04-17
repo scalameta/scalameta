@@ -1,4 +1,4 @@
-package scala
+package org.scalareflect
 
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox.Context
@@ -175,12 +175,12 @@ package invariants {
       q"""
         ${c.untypecheck(prop.emit)} match {
           case (true, _) => ()
-          case (false, $failures) => scala.invariants.InvariantFailedException.raise(${showCode(x)}, $failures, Some($enclosingClass.this))
+          case (false, $failures) => org.scalareflect.invariants.InvariantFailedException.raise(${showCode(x)}, $failures, Some($enclosingClass.this))
         }
       """
     }
     def requireNot(x: Tree): Tree = {
-      q"scala.invariants.require(!$x)"
+      q"org.scalareflect.invariants.require(!$x)"
     }
   }
 }

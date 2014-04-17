@@ -1,4 +1,4 @@
-package scala.invariants
+package org.scalareflect.invariants
 
 import scala.annotation.StaticAnnotation
 

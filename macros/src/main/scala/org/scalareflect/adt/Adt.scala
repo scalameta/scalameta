@@ -1,12 +1,12 @@
-package scala.adt
+package org.scalareflect.adt
 
 import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
-import scala.invariants.nonEmpty
+import org.scalareflect.invariants.nonEmpty
 import scala.reflect.macros.whitebox.Context
 
-class adt extends StaticAnnotation {
-  def macroTransform(annottees: Any*): Any = macro AdtMacros.adt
+class branch extends StaticAnnotation {
+  def macroTransform(annottees: Any*): Any = macro AdtMacros.branch
 }
 
 class leaf extends StaticAnnotation {
@@ -17,17 +17,17 @@ class AdtMacros(val c: Context) {
   import c.universe._
   import Flag._
 
-  def adt(annottees: Tree*): Tree = {
+  def branch(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef): ClassDef = {
       val ClassDef(mods @ Modifiers(flags, privateWithin, anns), name, tparams, impl) = cdef
-      if (mods.hasFlag(SEALED)) c.abort(cdef.pos, "sealed is redundant for @adt traits")
-      if (mods.hasFlag(FINAL)) c.abort(cdef.pos, "@adt traits cannot be final")
+      if (mods.hasFlag(SEALED)) c.abort(cdef.pos, "sealed is redundant for @branch traits")
+      if (mods.hasFlag(FINAL)) c.abort(cdef.pos, "@branch traits cannot be final")
       val flags1 = flags | SEALED
       ClassDef(Modifiers(flags1, privateWithin, anns), name, tparams, impl)
     }
     val expanded = annottees match {
       case (cdef @ ClassDef(mods, _, _, _)) :: rest if mods.hasFlag(TRAIT) => transform(cdef) :: rest
-      case annottee :: rest => c.abort(annottee.pos, "only traits can be @adt")
+      case annottee :: rest => c.abort(annottee.pos, "only traits can be @branch")
     }
     q"{ ..$expanded; () }"
   }

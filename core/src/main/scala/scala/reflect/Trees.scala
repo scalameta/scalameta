@@ -1,7 +1,7 @@
 package scala.reflect
 
-import scala.invariants.{nonEmpty, require, requireNot}
-import scala.adt.{adt, leaf}
+import org.scalareflect.invariants.{nonEmpty, require, requireNot}
+import org.scalareflect.adt.{branch, leaf}
 
 // TODO: tree-based symbols and types (see https://github.com/paulbutcher/implementor/blob/f1921de2b7de3d5ea8cf7f230c8e4e9f8c7f4b26/core/src/main/scala/org/scalamock/Implement.scala)
 // TODO: .tpe vs .signature?
@@ -11,7 +11,7 @@ import scala.adt.{adt, leaf}
 // TODO: think about requiring ident values to be non-keyword
 // TODO: consider adding default values for case class fields whenever applicable
 
-@adt trait Tree {
+@branch trait Tree {
   // TODO: trivia: whitespace, comments, etc (see http://msdn.microsoft.com/en-us/vstudio/hh500769)
   // TODO: history vs positions (can trivia be inferred from positions only?)
   // TODO: collection-like methods (see http://clang.llvm.org/docs/LibASTMatchersReference.html)
@@ -24,18 +24,18 @@ object Tree {
     // TODO: statements must be related through inheritence whenever possible
     // otherwise it would be impossible to extract a statement from a template and insert it into a block
     // (which might not be a bad thing by the way...)
-    @adt trait TopLevel extends Tree
-    @adt trait Template extends Tree
-    @adt trait Block extends Tree
-    @adt trait Refine extends Tree
-    @adt trait Existential extends Tree
+    @branch trait TopLevel extends Tree
+    @branch trait Template extends Tree
+    @branch trait Block extends Tree
+    @branch trait Refine extends Tree
+    @branch trait Existential extends Tree
   }
 
   // TODO: wildcard (find all its usages in terms and types and defns and params and type params)
 
-  @adt trait Term extends Arg with Stmt.Template with Stmt.Block
+  @branch trait Term extends Arg with Stmt.Template with Stmt.Block
   object Term {
-    @adt trait Ref extends Term {
+    @branch trait Ref extends Term {
       def isPath: Boolean = ???
       def isQualId: Boolean = ???
       def isStableId: Boolean = ???
@@ -47,7 +47,7 @@ object Tree {
     @leaf class SuperSelect(qual: Option[Term.Ident], supertyp: Option[Term.Ident], selector: Term.Ident) extends Ref
     @leaf class Select(qual: Ref, selector: Term.Ident) extends Ref with Pat
 
-    @adt trait Lit extends Term with Pat
+    @branch trait Lit extends Term with Pat
     @leaf class Bool(value: scala.Boolean) extends Lit
     @leaf class Int(value: scala.Int) extends Lit
     @leaf class Long(value: scala.Long) extends Lit
@@ -90,7 +90,7 @@ object Tree {
     @leaf class New(templ: Template) extends Term
   }
 
-  @adt trait Pat extends Tree
+  @branch trait Pat extends Tree
   object Pat {
     @leaf class Wildcard() extends Pat
     @leaf class SequenceWildcard() extends Pat
@@ -109,7 +109,7 @@ object Tree {
     }
   }
 
-  @adt trait Type extends Tree
+  @branch trait Type extends Tree
   object Type {
     @leaf class Ident(name: String) extends Type
     @leaf class Select(qual: Term.Ref, name: Type.Ident) extends Type {
@@ -129,7 +129,7 @@ object Tree {
     @leaf class Annotated(typ: Type, annots: List[Annot] @nonEmpty) extends Type with Annottee
   }
 
-  @adt trait Decl extends Stmt.Template with Stmt.Refine with Annottee
+  @branch trait Decl extends Stmt.Template with Stmt.Refine with Annottee
   object Decl {
     @leaf class Val(annots: List[Annot], pats: List[Pat] @nonEmpty, typ: Type) extends Decl with Stmt.Existential
     @leaf class Var(annots: List[Annot], pats: List[Pat] @nonEmpty, typ: Type) extends Decl
@@ -140,7 +140,7 @@ object Tree {
                           bounds: TypeBounds) extends Decl with Stmt.Existential
   }
 
-  @adt trait Defn extends Stmt.Template
+  @branch trait Defn extends Stmt.Template
   object Defn {
     @leaf class Val(annots: List[Annot], pats: List[Pat] @nonEmpty, typ: Option[Type], rhs: Term) extends Defn with Stmt.Block with Annottee
     @leaf class Var(annots: List[Annot], pats: List[Pat] @nonEmpty, typ: Option[Type], rhs: Term) extends Defn with Stmt.Block with Annottee
@@ -174,7 +174,7 @@ object Tree {
       require(ref.isStableId)
     }
 
-    @adt trait Selector extends Tree
+    @branch trait Selector extends Tree
     object Selector {
       @leaf class Wildcard() extends Selector
       @leaf class Name(name: String) extends Selector
@@ -183,7 +183,7 @@ object Tree {
     }
   }
 
-  @adt trait Arg extends Tree
+  @branch trait Arg extends Tree
   object Arg {
     @leaf class Named(name: Term.Ident, arg: Term) extends Arg
     @leaf class Sequence(arg: Term) extends Arg
@@ -196,7 +196,7 @@ object Tree {
     requireNot(parents.length != 0 && parents.tail.exists(_.argss.nonEmpty))
   }
 
-  @adt trait Enumerator extends Tree
+  @branch trait Enumerator extends Tree
   object Enumerator {
     @leaf class Generator(pat: Pat, rhs: Term) extends Enumerator
     @leaf class ValueDefinition(pat: Pat, rhs: Term) extends Enumerator
@@ -235,16 +235,16 @@ object Tree {
     // 3) write a macro that generates implementation of validateAnnots from the spec + extension methods like isImplicit
     private[reflect] def validateAnnots(enclosing: Tree): Boolean = ???
   }
-  @adt trait Annot extends Tree {
+  @branch trait Annot extends Tree {
     // TODO: convert annotations to value objects (Liftable? Eval?)
   }
   object Annot {
-    @adt trait Transient extends Annot // TODO: reserved for synthetic trees (e.g. resolved implicits) and attachments
+    @branch trait Transient extends Annot // TODO: reserved for synthetic trees (e.g. resolved implicits) and attachments
 
-    @adt trait Source extends Annot
+    @branch trait Source extends Annot
     @leaf class UserDefined(tpe: Type, argss: List[List[Term]]) extends Source
 
-    @adt trait Mod extends Source
+    @branch trait Mod extends Source
     @leaf class Private(within: String) extends Mod
     @leaf class Protected(within: String) extends Mod
     @leaf class Implicit() extends Mod
@@ -259,7 +259,7 @@ object Tree {
     @leaf class Doc(doc: String) extends Mod
     @leaf class AbstractOverride() extends Mod
 
-    @adt trait Param extends Source
+    @branch trait Param extends Source
     @leaf class ByName() extends Param
     @leaf class VarArg() extends Param
     @leaf class Val() extends Param
