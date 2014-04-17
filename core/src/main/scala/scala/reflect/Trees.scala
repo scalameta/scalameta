@@ -18,7 +18,7 @@ import org.scalareflect.adt.{branch, leaf}
 // (Denys)    TODO: consider adding default values for case class fields whenever applicable
 // (Eugene)   TODO: pretty printer
 
-@branch trait Tree
+@root trait Tree
 object Tree {
   object Stmt {
     @branch trait TopLevel extends Tree
