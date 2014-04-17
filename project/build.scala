@@ -51,7 +51,8 @@ object build extends Build {
         <system>GitHub</system>
         <url>https://github.com/scalareflect/core/issues</url>
       </issueManagement>
-    )
+    ),
+    addCompilerPlugin("org.scalamacros" % "paradise" % "2.0.0-M8" cross CrossVersion.full)
   )
 
   // http://stackoverflow.com/questions/20665007/how-to-publish-only-when-on-master-branch-under-travis-and-sbt-0-13
@@ -114,6 +115,16 @@ object build extends Build {
     packagedArtifacts := Map.empty
   ) aggregate (core, tests)
 
+  lazy val macros = Project(
+    id   = "core-macros",
+    base = file("macros")
+  ) settings (
+    publishableSettings: _*
+  ) settings (
+    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided"),
+    scalacOptions ++= Seq()
+  )
+
   lazy val core = Project(
     id   = "core",
     base = file("core")
@@ -121,7 +132,7 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     scalacOptions ++= Seq()
-  )
+  ) dependsOn (macros)
 
   lazy val sandbox = Project(
     id   = "sandbox",
