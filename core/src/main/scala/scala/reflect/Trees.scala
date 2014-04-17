@@ -134,10 +134,10 @@ object Tree {
     @leaf class Val(annots: List[Annot], pats: List[Pat] @nonEmpty, typ: Type) extends Decl with Stmt.Existential
     @leaf class Var(annots: List[Annot], pats: List[Pat] @nonEmpty, typ: Type) extends Decl
     @leaf class Def(annots: List[Annot], name: Term.Ident, tparams: List[TypeParam.Def],
-                         paramss: List[List[Param.Def]], implicits: List[Param.Def],
-                         typ: Type) extends Decl
+                    paramss: List[List[Param.Def]], implicits: List[Param.Def],
+                    typ: Type) extends Decl
     @leaf class Type(annots: List[Annot], name: Tree.Type.Ident, tparams: List[TypeParam.Type],
-                          bounds: TypeBounds) extends Decl with Stmt.Existential
+                     bounds: TypeBounds) extends Decl with Stmt.Existential
   }
 
   @branch trait Defn extends Stmt.Template
@@ -145,25 +145,24 @@ object Tree {
     @leaf class Val(annots: List[Annot], pats: List[Pat] @nonEmpty, typ: Option[Type], rhs: Term) extends Defn with Stmt.Block with Annottee
     @leaf class Var(annots: List[Annot], pats: List[Pat] @nonEmpty, typ: Option[Type], rhs: Term) extends Defn with Stmt.Block with Annottee
     @leaf class Def(annots: List[Annot], name: Term.Ident, tparams: List[TypeParam.Def],
-                         paramss: List[List[Param.Def]], implicits: List[Param.Def],
-                         typ: Option[Type], body: Term) extends Defn with Stmt.Block with Annottee
+                    paramss: List[List[Param.Def]], implicits: List[Param.Def],
+                    typ: Option[Type], body: Term) extends Defn with Stmt.Block with Annottee
     @leaf class Macro(annots: List[Annot], name: Term.Ident, tparams: List[TypeParam.Def],
-                           paramss: List[List[Param.Def]], implicits: List[Param.Def],
-                           typ: Type, body: Term) extends Defn with Stmt.Block with Annottee
+                      paramss: List[List[Param.Def]], implicits: List[Param.Def],
+                      typ: Type, body: Term) extends Defn with Stmt.Block with Annottee
     @leaf class Type(annots: List[Annot], name: Tree.Type.Ident, tparams: List[TypeParam.Type],
-                          body: Type) extends Defn with Stmt.Refine with Stmt.Block with Annottee
+                     body: Type) extends Defn with Stmt.Refine with Stmt.Block with Annottee
     @leaf class PrimaryCtor(annots: List[Annot], paramss: List[List[Param.Def]],
-                                 implicits: List[Param.Def]) extends Defn with Annottee
+                            implicits: List[Param.Def]) extends Defn with Annottee
     @leaf class SecondaryCtor(annots: List[Annot], paramss: List[List[Param.Def]],
-                                   implicits: List[Param.Def], primaryCtorArgss: List[List[Term]]) extends Defn with Stmt.Block with Annottee
+                              implicits: List[Param.Def], primaryCtorArgss: List[List[Term]]) extends Defn with Stmt.Block with Annottee
     @leaf class Class(annots: List[Annot], name: Tree.Type.Ident, tparams: List[TypeParam.Def],
-                           ctor: PrimaryCtor, templ: Template) extends Defn with Stmt.TopLevel with Stmt.Block with Annottee
+                      ctor: PrimaryCtor, templ: Template) extends Defn with Stmt.TopLevel with Stmt.Block with Annottee
     @leaf class Trait(annots: List[Annot], name: Tree.Type.Ident, tparams: List[TypeParam.Type],
-                           templ: Template) extends Defn with Stmt.TopLevel with Stmt.Block with Annottee {
+                      templ: Template) extends Defn with Stmt.TopLevel with Stmt.Block with Annottee {
       def isInterface: Boolean = templ.stats.forall(_.isInstanceOf[Decl])
     }
-    @leaf class Object(annots: List[Annot], name: Term.Ident,
-                            templ: Template) extends Defn with Stmt.TopLevel with Stmt.Block with Annottee
+    @leaf class Object(annots: List[Annot], name: Term.Ident, templ: Template) extends Defn with Stmt.TopLevel with Stmt.Block with Annottee
     @leaf class Package(ref: Term.Ref, body: List[Stmt.TopLevel]) extends Defn with Stmt.TopLevel
     @leaf class PackageObject(name: Term.Ident, templ: Template) extends Defn with Stmt.TopLevel
   }
@@ -192,7 +191,7 @@ object Tree {
   @leaf class Case(pat: Pat, cond: Option[Term], body: Term) extends Tree
 
   @leaf class Template(early: List[Defn.Val], parents: List[Parent],
-                            self: Self, stats: List[Stmt.Template]) extends Tree {
+                       self: Self, stats: List[Stmt.Template]) extends Tree {
     requireNot(parents.length != 0 && parents.tail.exists(_.argss.nonEmpty))
   }
 
@@ -218,13 +217,13 @@ object Tree {
   trait TypeParam extends Tree with Annottee
   object TypeParam {
     @leaf class Def(annots: List[Annot], name: Tree.Type.Ident,
-                         tparams: List[TypeParam.Type],
-                         contextBounds: List[Tree.Type],
-                         viewBounds: List[Tree.Type],
-                         bounds: TypeBounds) extends TypeParam
+                    tparams: List[TypeParam.Type],
+                    contextBounds: List[Tree.Type],
+                    viewBounds: List[Tree.Type],
+                    bounds: TypeBounds) extends TypeParam
     @leaf class Type(annots: List[Annot], name: Tree.Type.Ident,
-                          tparams: List[TypeParam.Type],
-                          bounds: TypeBounds) extends TypeParam
+                     tparams: List[TypeParam.Type],
+                     bounds: TypeBounds) extends TypeParam
   }
 
   trait Annottee extends Tree {
