@@ -46,6 +46,7 @@ class AdtMacros(val c: Context) {
   // (Eugene) TODO: deep immutability check (via def macros)
   // (Eugene) TODO: deep sealedness check (via def macros as well)
   // (Eugene) TODO: check rootness
+  // (Eugene) TODO: generate empty if all parameters have default values
   def leaf(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       val q"${mods @ Modifiers(flags, privateWithin, anns)} class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
