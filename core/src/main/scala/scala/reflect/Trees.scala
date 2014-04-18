@@ -28,7 +28,7 @@ object Term {
     def isStableId: Boolean = ???
   }
   @leaf class This(qual: Option[Ident]) extends Ref
-  @leaf class Ident(value: String) extends Ref with Pat {
+  @leaf class Ident(value: scala.Predef.String) extends Ref with Pat {
     def isBackquoted = ???
   }
   @leaf class SuperSelect(qual: Option[Type.Ident], supertyp: Option[Type.Ident], selector: Term.Ident) extends Ref
@@ -230,7 +230,7 @@ object TypeParam {
                    name: Option[scala.reflect.Type.Ident] = None,
                    tparams: List[TypeParam.Type] = Nil,
                    bounds: Aux.TypeBounds = Aux.TypeBounds.empty) extends TypeParam
-  object Def { val empty = Type() }
+  object Type { val empty = Type() }
 }
 
 @branch trait HasAnnots extends Tree {
