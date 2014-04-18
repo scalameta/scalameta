@@ -56,6 +56,7 @@ object Term {
   @leaf class Double(value: scala.Double) extends Lit
   @leaf class Char(value: scala.Char) extends Lit
   @leaf class String(value: Predef.String) extends Lit
+  // TODO: not all symbols are representable as literals, e.g. scala.Symbol("")
   @leaf class Symbol(value: scala.Symbol) extends Lit
   @leaf class Null() extends Lit
   @leaf class Unit() extends Lit
@@ -91,7 +92,7 @@ object Term {
   }
   @leaf class ForYield(enums: List[Enum] @nonEmpty, body: Term) extends Term
   @leaf class New(templ: Aux.Template) extends Term
-  // (Denys) TODO: might neeed additional validation
+  // (Denys) TODO: might need additional validation
   @leaf class Placeholder() extends Term
   @leaf class Eta(term: Term) extends Term
 }
@@ -131,7 +132,7 @@ object Pat {
     require(ref.isStableId)
   }
   @leaf class Interpolate(prefix: Term.Ident, parts: List[Term.String] @nonEmpty, args: List[Pat]) extends Pat {
-    // (Denys) TODO: also check that prefix is alphanumeric
+    // (Denys) TODO: check that prefix is alphanumeric
     require(parts.length == args.length + 1)
   }
   @leaf class Ascribe(lhs: Pat, rhs: Type) extends Pat {
@@ -168,14 +169,19 @@ object Defn {
   @leaf class Type(annots: List[Annot], name: core.Type.Ident,
                    tparams: List[TypeParam.Type], body: Type) extends Defn with Stmt.Refine with Stmt.Block with HasAnnots
 
-  @leaf class PrimaryCtor(annots: List[Annot] = Nil, paramss: List[List[Param.Def]] = Nil,
-                          implicits: List[Param.Def] = Nil) extends Defn with HasAnnots
-
-  @leaf class SecondaryCtor(annots: List[Annot], paramss: List[List[Param.Def]],
-                            implicits: List[Param.Def], primaryCtorArgss: List[List[Term]]) extends Defn with Stmt.Block with HasAnnots
+  @branch trait Ctor extends HasAnnots {
+    def paramss: List[List[Param.Def]]
+    def implicits: List[Param.Def]
+  }
+  object Ctor {
+    @leaf class Primary(annots: List[Annot] = Nil, paramss: List[List[Param.Def]] = Nil,
+                        implicits: List[Param.Def] = Nil) extends Ctor
+    @leaf class Secondary(annots: List[Annot], paramss: List[List[Param.Def]],
+                          implicits: List[Param.Def], primaryCtorArgss: List[List[Term]]) extends Ctor with Defn with Stmt.Template
+  }
 
   @leaf class Class(annots: List[Annot], name: core.Type.Ident, tparams: List[TypeParam.Def],
-                    ctor: PrimaryCtor, templ: Aux.Template) extends Defn with Stmt.TopLevel with Stmt.Block with HasAnnots
+                    ctor: Ctor.Primary, templ: Aux.Template) extends Defn with Stmt.TopLevel with Stmt.Block with HasAnnots
 
   @leaf class Trait(annots: List[Annot], name: core.Type.Ident, tparams: List[TypeParam.Type],
                     templ: Aux.Template) extends Defn with Stmt.TopLevel with Stmt.Block with HasAnnots {
