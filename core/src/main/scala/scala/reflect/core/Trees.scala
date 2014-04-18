@@ -169,7 +169,7 @@ object Defn {
   @leaf class Type(annots: List[Annot], name: core.Type.Ident,
                    tparams: List[TypeParam.Type], body: Type) extends Defn with Stmt.Refine with Stmt.Block with HasAnnots
 
-  @branch trait Ctor extends Defn with HasAnnots {
+  @branch trait Ctor extends HasAnnots {
     def paramss: List[List[Param.Def]]
     def implicits: List[Param.Def]
   }
@@ -177,7 +177,7 @@ object Defn {
     @leaf class Primary(annots: List[Annot] = Nil, paramss: List[List[Param.Def]] = Nil,
                         implicits: List[Param.Def] = Nil) extends Ctor
     @leaf class Secondary(annots: List[Annot], paramss: List[List[Param.Def]],
-                          implicits: List[Param.Def], primaryCtorArgss: List[List[Term]]) extends Ctor
+                          implicits: List[Param.Def], primaryCtorArgss: List[List[Term]]) extends Ctor with Defn
   }
 
   @leaf class Class(annots: List[Annot], name: core.Type.Ident, tparams: List[TypeParam.Def],
