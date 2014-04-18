@@ -1,6 +1,5 @@
 package scala.reflect
 
-import Utils.keywords
 import org.scalareflect.invariants._
 import org.scalareflect.adt._
 
@@ -24,7 +23,6 @@ import org.scalareflect.adt._
 @branch trait Ident extends Tree {
   def value: String
   def isBackquoted: Boolean = ???
-  def nonKeywordOrBackquoted = !keywords.contains(value) || isBackquote
 }
 
 @branch trait Term extends Arg with Stmt.Template with Stmt.Block
@@ -44,7 +42,7 @@ object Term {
   }
   @leaf class This(qual: Option[scala.reflect.Ident]) extends Ref
   @leaf class Ident(value: scala.Predef.String) extends scala.reflect.Ident with Ref with Pat {
-    require(nonKeywordOrBackquoted)
+    require(!Keywords.all.contains(value) || isBackquoted)
   }
   @leaf class SuperSelect(qual: Option[Type.Ident], supertyp: Option[Type.Ident], selector: Term.Ident) extends Ref
   @leaf class Select(qual: Ref, selector: Term.Ident) extends Ref with Pat
@@ -100,7 +98,7 @@ object Term {
 @branch trait Type extends Tree
 object Type {
   @leaf class Ident(value: String) extends scala.reflect.Ident with Type {
-    require(nonKeywordOrBackquoted)
+    require(!Keywords.all.contains(value) || isBackquoted)
   }
   @leaf class Select(qual: Term.Ref, name: Type.Ident) extends Type {
     require(qual.isPath)
