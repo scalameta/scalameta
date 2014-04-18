@@ -79,10 +79,10 @@ object Trees {
     @leaf class PartialFunction(cases: List[Case] @nonEmpty) extends Term
     @leaf class While(expr: Term, body: Term) extends Term
     @leaf class Do(body: Term, expr: Term) extends Term
-    @leaf class For(enums: List[Enumerator] @nonEmpty, body: Term) extends Term {
-      require(enums.head.isInstanceOf[Enumerators.Generator])
+    @leaf class For(enums: List[Enum] @nonEmpty, body: Term) extends Term {
+      require(enums.head.isInstanceOf[Enums.Generator])
     }
-    @leaf class ForYield(enums: List[Enumerator] @nonEmpty, body: Term) extends Term
+    @leaf class ForYield(enums: List[Enum] @nonEmpty, body: Term) extends Term
     @leaf class New(templ: Template) extends Term
     // (Denys) TODO: might neeed additional validation
     @leaf class Placeholder() extends Term
@@ -174,11 +174,11 @@ object Trees {
     require(parents.length == 0 || !parents.tail.exists(_.argss.nonEmpty))
   }
 
-  @branch trait Enumerator extends Tree
-  object Enumerators {
-    @leaf class Generator(pat: Pat, rhs: Term) extends Enumerator
-    @leaf class ValueDefinition(pat: Pat, rhs: Term) extends Enumerator
-    @leaf class Guard(cond: Term) extends Enumerator
+  @branch trait Enum extends Tree
+  object Enums {
+    @leaf class Generator(pat: Pat, rhs: Term) extends Enum
+    @leaf class Val(pat: Pat, rhs: Term) extends Enum
+    @leaf class Guard(cond: Term) extends Enum
   }
 
   @leaf class Self(name: Option[Terms.Ident], typ: Option[Type]) extends Tree
