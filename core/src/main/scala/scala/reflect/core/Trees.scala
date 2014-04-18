@@ -177,7 +177,7 @@ object Defn {
     @leaf class Primary(annots: List[Annot] = Nil, paramss: List[List[Param.Def]] = Nil,
                         implicits: List[Param.Def] = Nil) extends Ctor
     @leaf class Secondary(annots: List[Annot], paramss: List[List[Param.Def]],
-                          implicits: List[Param.Def], primaryCtorArgss: List[List[Term]]) extends Ctor with Defn
+                          implicits: List[Param.Def], primaryCtorArgss: List[List[Term]]) extends Ctor with Defn with Stmt.Template
   }
 
   @leaf class Class(annots: List[Annot], name: core.Type.Ident, tparams: List[TypeParam.Def],
