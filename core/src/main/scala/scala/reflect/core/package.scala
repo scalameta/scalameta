@@ -1,7 +1,7 @@
 package scala.reflect
 
-object Keywords {
-  val all = Set(
+package object core {
+  val keywords = Set(
     "abstract", "case", "do", "else", "finally", "for", "import", "lazy",
     "object", "override", "return", "sealed", "trait", "try", "var", "while",
     "catch", "class", "extends", "false", "forSome", "if", "match", "new",
