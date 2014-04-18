@@ -61,9 +61,9 @@ object Term {
   @leaf class Annotate(expr: Term, annots: List[Annot] @nonEmpty) extends Term with Annottee
   @leaf class Tuple(elements: List[Term] @nonEmpty) extends Term
   @leaf class Block(stats: List[Stmt.Block]) extends Term
-  @leaf class If(cond: Term, tru: Term, fls: Term) extends Term
+  @leaf class If(cond: Term, thenp: Term, elsep: Term) extends Term
   @leaf class Match(scrut: Term, cases: List[Case] @nonEmpty) extends Term
-  @leaf class Try(expr: Term, exn: List[Case], fin: Option[Term]) extends Term
+  @leaf class Try(expr: Term, catchp: List[Case], finallyp: Option[Term]) extends Term
   @leaf class Function(params: List[Param.Function] @nonEmpty, body: Term) extends Term {
     require(params.length == 1 || !params.exists(_.annots.contains(Annot.Implicit)))
   }
