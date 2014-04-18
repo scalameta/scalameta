@@ -40,7 +40,7 @@ object Trees {
     @leaf class Ident(name: String) extends Ref with Pat {
       def isBackquoted = ???
     }
-    @leaf class SuperSelect(qual: Option[Terms.Ident], supertyp: Option[Terms.Ident], selector: Terms.Ident) extends Ref
+    @leaf class SuperSelect(qual: Option[Types.Ident], supertyp: Option[Types.Ident], selector: Terms.Ident) extends Ref
     @leaf class Select(qual: Ref, selector: Terms.Ident) extends Ref with Pat
 
     @branch trait Lit extends Term with Pat
@@ -212,7 +212,7 @@ object Types {
   @leaf class Select(qual: Terms.Ref, name: Types.Ident) extends Type {
     require(qual.isPath)
   }
-  @leaf class SuperSelect(qual: Option[Terms.Ident], supertyp: Option[Terms.Ident], selector: Types.Ident) extends Type
+  @leaf class SuperSelect(qual: Option[Types.Ident], supertyp: Option[Types.Ident], selector: Types.Ident) extends Type
   @leaf class Project(qual: Type, name: Types.Ident) extends Type
   @leaf class Singleton(ref: Terms.Ref) extends Type {
     require(ref.isPath)
