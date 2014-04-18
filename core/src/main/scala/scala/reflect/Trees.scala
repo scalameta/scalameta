@@ -44,7 +44,7 @@ object Term {
   @leaf class Ident(value: scala.Predef.String) extends scala.reflect.Ident with Ref with Pat {
     require(!Keywords.all.contains(value) || isBackquoted)
   }
-  @leaf class SuperSelect(qual: Option[Type.Ident], supertyp: Option[Type.Ident], selector: Term.Ident) extends Ref
+  @leaf class SuperSelect(qual: Option[scala.reflect.Ident], supertyp: Option[Type.Ident], selector: Term.Ident) extends Ref
   @leaf class Select(qual: Ref, selector: Term.Ident) extends Ref with Pat
 
   @branch trait Lit extends Term with Pat
@@ -103,7 +103,7 @@ object Type {
   @leaf class Select(qual: Term.Ref, name: Type.Ident) extends Type {
     require(qual.isPath)
   }
-  @leaf class SuperSelect(qual: Option[Type.Ident], supertyp: Option[Type.Ident], selector: Type.Ident) extends Type
+  @leaf class SuperSelect(qual: Option[scala.reflect.Ident], supertyp: Option[Type.Ident], selector: Type.Ident) extends Type
   @leaf class Project(qual: Type, name: Type.Ident) extends Type
   @leaf class Singleton(ref: Term.Ref) extends Type {
     require(ref.isPath)
