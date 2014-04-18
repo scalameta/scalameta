@@ -154,7 +154,6 @@ object Defn {
 
   @leaf class PrimaryCtor(annots: List[Annot] = Nil, paramss: List[List[Param.Def]] = Nil,
                           implicits: List[Param.Def] = Nil) extends Defn with HasAnnots
-  object PrimaryCtor { val empty = PrimaryCtor() }
 
   @leaf class SecondaryCtor(annots: List[Annot], paramss: List[List[Param.Def]],
                             implicits: List[Param.Def], primaryCtorArgss: List[List[Term]]) extends Defn with Stmt.Block with HasAnnots
@@ -224,13 +223,10 @@ object TypeParam {
                   contextBounds: List[scala.reflect.Type] = Nil,
                   viewBounds: List[scala.reflect.Type] = Nil,
                   bounds: Aux.TypeBounds = Aux.TypeBounds.empty) extends TypeParam
-  object Def { val empty = Def() }
-
   @leaf class Type(annots: List[Annot] = Nil,
                    name: Option[scala.reflect.Type.Ident] = None,
                    tparams: List[TypeParam.Type] = Nil,
                    bounds: Aux.TypeBounds = Aux.TypeBounds.empty) extends TypeParam
-  object Type { val empty = Type() }
 }
 
 @branch trait HasAnnots extends Tree {
@@ -274,18 +270,11 @@ object Annot {
 
 object Aux {
   @leaf class Case(pat: Pat, cond: Option[Term] = None, body: Term = Term.Unit()) extends Tree
-
   @leaf class Parent(tpe: Type, argss: List[List[Term]] = Nil) extends Tree
-
   @leaf class Template(early: List[Defn.Val] = Nil, parents: List[Parent] = Nil,
                        self: Self = Self.empty, stats: List[Stmt.Template] = Nil) extends Tree {
     require(parents.length == 0 || !parents.tail.exists(_.argss.nonEmpty))
   }
-  object Template { val empty = Template() }
-
   @leaf class Self(name: Option[Term.Ident] = None, typ: Option[Type] = None) extends Tree
-  object Self { val empty = Self() }
-
   @leaf class TypeBounds(lo: Option[Type] = None, hi: Option[Type] = None) extends Tree
-  object TypeBounds { val empty = TypeBounds() }
 }
