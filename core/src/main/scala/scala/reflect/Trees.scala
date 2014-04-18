@@ -96,14 +96,14 @@ object Trees {
     @leaf class Bind(lhs: Terms.Ident, rhs: Pat) extends Pat
     @leaf class Alternative(lhs: Pat, rhs: Pat) extends Pat
     @leaf class Tuple(elements: List[Pat] @nonEmpty) extends Pat
-    @leaf class Extractor(ref: Terms.Ref, elements: List[Pat]) extends Pat {
+    @leaf class Extract(ref: Terms.Ref, elements: List[Pat]) extends Pat {
       require(ref.isStableId)
     }
     @leaf class Interpolate(prefix: Terms.Ident, parts: List[Terms.String] @nonEmpty, args: List[Pat]) extends Pat {
       // (Denys) TODO: also check that prefix is alphanumeric
       require(parts.length == args.length + 1)
     }
-    @leaf class Typed(lhs: Pat, rhs: Type) extends Pat {
+    @leaf class Ascribe(lhs: Pat, rhs: Type) extends Pat {
       require(lhs.isInstanceOf[Pats.Wildcard] || lhs.isInstanceOf[Terms.Ident])
     }
   }
@@ -223,7 +223,7 @@ object Types {
   @leaf class Existential(typ: Type, quants: List[Stmts.Existential] @nonEmpty) extends Type
   @leaf class Function(params: Type, res: Type) extends Type
   @leaf class Tuple(elements: List[Type] @nonEmpty) extends Type
-  @leaf class Annotated(typ: Type, annots: List[Annot] @nonEmpty) extends Type with Annottee
+  @leaf class Annotate(typ: Type, annots: List[Annot] @nonEmpty) extends Type with Annottee
   // (Denys) TODO: might need additional validation
   @leaf class Placeholder() extends Type
 }
