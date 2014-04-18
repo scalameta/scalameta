@@ -212,8 +212,6 @@ object Enum {
 @branch trait Param extends HasAnnots
 object Param {
   @leaf class Function(name: Option[Term.Ident] = None, typ: Option[Type] = None, annots: List[Annot] = Nil) extends Param
-  object Function { val empty = Function() }
-
   @leaf class Def(name: Term.Ident, typ: Type, default: Option[Term] = None, annots: List[Annot] = Nil) extends Param
 }
 
