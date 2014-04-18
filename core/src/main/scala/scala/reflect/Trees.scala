@@ -1,5 +1,6 @@
 package scala.reflect
 
+import Utils.keywords
 import org.scalareflect.invariants._
 import org.scalareflect.adt._
 
@@ -20,18 +21,30 @@ import org.scalareflect.adt._
 
 @root trait Tree
 
-@branch trait Ident extends Tree
+@branch trait Ident extends Tree {
+  def value: String
+  def isBackquoted: Boolean = ???
+  def nonKeywordOrBackquoted = !keywords.contains(value) || isBackquote
+}
 
 @branch trait Term extends Arg with Stmt.Template with Stmt.Block
 object Term {
   @branch trait Ref extends Term {
-    def isPath: Boolean = ???
-    def isQualId: Boolean = ???
-    def isStableId: Boolean = ???
+    def isPath: Boolean = isStableId || this.isInstanceOf[This]
+    def isQualId: Boolean = this match {
+      case _: Ident             => true
+      case Select(qual: Ref, _) => qual.isQualId
+      case _                    => false
+    }
+    def isStableId: Boolean = this match {
+      case _: Ident | _: SuperSelect => true
+      case Select(qual: Ref, _)      => qual.isPath
+      case _                         => false
+    }
   }
   @leaf class This(qual: Option[scala.reflect.Ident]) extends Ref
   @leaf class Ident(value: scala.Predef.String) extends scala.reflect.Ident with Ref with Pat {
-    def isBackquoted = ???
+    require(nonKeywordOrBackquoted)
   }
   @leaf class SuperSelect(qual: Option[Type.Ident], supertyp: Option[Type.Ident], selector: Term.Ident) extends Ref
   @leaf class Select(qual: Ref, selector: Term.Ident) extends Ref with Pat
@@ -86,7 +99,9 @@ object Term {
 
 @branch trait Type extends Tree
 object Type {
-  @leaf class Ident(name: String) extends scala.reflect.Ident with Type
+  @leaf class Ident(value: String) extends scala.reflect.Ident with Type {
+    require(nonKeywordOrBackquoted)
+  }
   @leaf class Select(qual: Term.Ref, name: Type.Ident) extends Type {
     require(qual.isPath)
   }
@@ -275,7 +290,7 @@ object Aux {
   @leaf class Parent(tpe: Type, argss: List[List[Term]] = Nil) extends Tree
   @leaf class Template(early: List[Defn.Val] = Nil, parents: List[Parent] = Nil,
                        self: Self = Self.empty, stats: List[Stmt.Template] = Nil) extends Tree {
-    require(parents.length == 0 || !parents.tail.exists(_.argss.nonEmpty))
+    require(parents.isEmpty || !parents.tail.exists(_.argss.nonEmpty))
   }
   @leaf class Self(name: Option[Term.Ident] = None, typ: Option[Type] = None) extends Tree
   @leaf class TypeBounds(lo: Option[Type] = None, hi: Option[Type] = None) extends Tree
