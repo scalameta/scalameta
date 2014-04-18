@@ -5,7 +5,7 @@ import scala.annotation.StaticAnnotation
 import org.scalareflect.invariants.nonEmpty
 import scala.reflect.macros.whitebox.Context
 
-// (Eugene) TODO: think what this can mean, e.g. ensures that trees stemming from roots are disjoint
+// (Eugene) TODO: think what this can mean, e.g. ensure that trees stemming from roots are disjoint
 class root extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro AdtMacros.branch
 }
@@ -46,7 +46,6 @@ class AdtMacros(val c: Context) {
   // (Eugene) TODO: deep immutability check (via def macros)
   // (Eugene) TODO: deep sealedness check (via def macros as well)
   // (Eugene) TODO: check rootness
-  // (Eugene) TODO: generate empty if all parameters have default values
   def leaf(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       val q"${mods @ Modifiers(flags, privateWithin, anns)} class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
@@ -59,7 +58,11 @@ class AdtMacros(val c: Context) {
       params.foreach(p => if (p.mods.hasFlag(MUTABLE)) c.abort(p.pos, "@leaf classes must be immutable"))
       val flags1 = flags | CASE | FINAL
       val params1 = params.map{ case q"$mods val $name: $tpt = $default" => q"val $name: $tpt = $default" }
-      List(q"${Modifiers(flags1, privateWithin, anns)} class $name[..$tparams] $ctorMods(..$params1) extends { ..$earlydefns } with ..$parents { $self => ..$stats }", mdef)
+      val cdef1 = q"${Modifiers(flags1, privateWithin, anns)} class $name[..$tparams] $ctorMods(..$params1) extends { ..$earlydefns } with ..$parents { $self => ..$stats }"
+      val ModuleDef(mmods, mname, Template(mparents, mself, mstats)) = mdef
+      val mstats1 = mstats ++ (if (params.forall(_.rhs.nonEmpty)) List(q"val empty = $mname()") else Nil)
+      val mdef1 = ModuleDef(mmods, mname, Template(mparents, mself, mstats1))
+      List(cdef1, mdef1)
     }
     val expanded = annottees match {
       case (cdef @ ClassDef(mods, _, _, _)) :: (mdef @ ModuleDef(_, _, _)) :: rest if !(mods hasFlag TRAIT) => transform(cdef, mdef) ++ rest
