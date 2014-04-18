@@ -20,6 +20,8 @@ import org.scalareflect.adt._
 
 @root trait Tree
 
+@branch trait Ident extends Tree
+
 @branch trait Term extends Arg with Stmt.Template with Stmt.Block
 object Term {
   @branch trait Ref extends Term {
@@ -27,8 +29,8 @@ object Term {
     def isQualId: Boolean = ???
     def isStableId: Boolean = ???
   }
-  @leaf class This(qual: Option[Ident]) extends Ref
-  @leaf class Ident(value: scala.Predef.String) extends Ref with Pat {
+  @leaf class This(qual: Option[scala.reflect.Ident]) extends Ref
+  @leaf class Ident(value: scala.Predef.String) extends scala.reflect.Ident with Ref with Pat {
     def isBackquoted = ???
   }
   @leaf class SuperSelect(qual: Option[Type.Ident], supertyp: Option[Type.Ident], selector: Term.Ident) extends Ref
@@ -84,7 +86,7 @@ object Term {
 
 @branch trait Type extends Tree
 object Type {
-  @leaf class Ident(name: String) extends Type
+  @leaf class Ident(name: String) extends scala.reflect.Ident with Type
   @leaf class Select(qual: Term.Ref, name: Type.Ident) extends Type {
     require(qual.isPath)
   }
