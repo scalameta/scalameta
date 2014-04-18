@@ -60,7 +60,7 @@ object Term {
   @leaf class Return(expr: Term) extends Term
   @leaf class Throw(expr: Term) extends Term
   @leaf class Ascribe(expr: Term, typ: Type) extends Term
-  @leaf class Annotate(expr: Term, annots: List[Annot] @nonEmpty) extends Term with Annotated
+  @leaf class Annotate(expr: Term, annots: List[Annot] @nonEmpty) extends Term with HasAnnots
   @leaf class Tuple(elements: List[Term] @nonEmpty) extends Term
   @leaf class Block(stats: List[Stmt.Block]) extends Term
   @leaf class If(cond: Term, thenp: Term, elsep: Term) extends Term
@@ -99,7 +99,7 @@ object Type {
   @leaf class Existential(typ: Type, quants: List[Stmt.Existential] @nonEmpty) extends Type
   @leaf class Function(params: Type, res: Type) extends Type
   @leaf class Tuple(elements: List[Type] @nonEmpty) extends Type
-  @leaf class Annotate(typ: Type, annots: List[Annot] @nonEmpty) extends Type with Annotated
+  @leaf class Annotate(typ: Type, annots: List[Annot] @nonEmpty) extends Type with HasAnnots
   // (Denys) TODO: might need additional validation
   @leaf class Placeholder() extends Type
 }
@@ -123,7 +123,7 @@ object Pat {
   }
 }
 
-@branch trait Decl extends Stmt.Template with Stmt.Refine with Annotated
+@branch trait Decl extends Stmt.Template with Stmt.Refine with HasAnnots
 object Decl {
   @leaf class Val(annots: List[Annot], pats: List[Pat] @nonEmpty, typ: Type) extends Decl with Stmt.Existential
   @leaf class Var(annots: List[Annot], pats: List[Pat] @nonEmpty, typ: Type) extends Decl
@@ -135,39 +135,39 @@ object Decl {
 
 @branch trait Defn extends Stmt.Template
 object Defn {
-  @leaf class Val(annots: List[Annot], pats: List[Pat] @nonEmpty, typ: Option[Type], rhs: Term) extends Defn with Stmt.Block with Annotated
+  @leaf class Val(annots: List[Annot], pats: List[Pat] @nonEmpty, typ: Option[Type], rhs: Term) extends Defn with Stmt.Block with HasAnnots
 
-  @leaf class Var(annots: List[Annot], pats: List[Pat] @nonEmpty, typ: Option[Type], rhs: Option[Term]) extends Defn with Stmt.Block with Annotated {
+  @leaf class Var(annots: List[Annot], pats: List[Pat] @nonEmpty, typ: Option[Type], rhs: Option[Term]) extends Defn with Stmt.Block with HasAnnots {
     require(typ.nonEmpty || rhs.nonEmpty)
   }
 
   @leaf class Def(annots: List[Annot], name: Term.Ident, tparams: List[TypeParam.Def],
                   paramss: List[List[Param.Def]], implicits: List[Param.Def],
-                  typ: Option[Type], body: Term) extends Defn with Stmt.Block with Annotated
+                  typ: Option[Type], body: Term) extends Defn with Stmt.Block with HasAnnots
 
   @leaf class Macro(annots: List[Annot], name: Term.Ident, tparams: List[TypeParam.Def],
                     paramss: List[List[Param.Def]], implicits: List[Param.Def],
-                    typ: Type, body: Term) extends Defn with Stmt.Block with Annotated
+                    typ: Type, body: Term) extends Defn with Stmt.Block with HasAnnots
 
   @leaf class Type(annots: List[Annot], name: scala.reflect.Type.Ident,
-                   tparams: List[TypeParam.Type], body: Type) extends Defn with Stmt.Refine with Stmt.Block with Annotated
+                   tparams: List[TypeParam.Type], body: Type) extends Defn with Stmt.Refine with Stmt.Block with HasAnnots
 
   @leaf class PrimaryCtor(annots: List[Annot] = Nil, paramss: List[List[Param.Def]] = Nil,
-                          implicits: List[Param.Def] = Nil) extends Defn with Annotated
+                          implicits: List[Param.Def] = Nil) extends Defn with HasAnnots
   object PrimaryCtor { val empty = PrimaryCtor() }
 
   @leaf class SecondaryCtor(annots: List[Annot], paramss: List[List[Param.Def]],
-                            implicits: List[Param.Def], primaryCtorArgss: List[List[Term]]) extends Defn with Stmt.Block with Annotated
+                            implicits: List[Param.Def], primaryCtorArgss: List[List[Term]]) extends Defn with Stmt.Block with HasAnnots
 
   @leaf class Class(annots: List[Annot], name: scala.reflect.Type.Ident, tparams: List[TypeParam.Def],
-                    ctor: PrimaryCtor, templ: Aux.Template) extends Defn with Stmt.TopLevel with Stmt.Block with Annotated
+                    ctor: PrimaryCtor, templ: Aux.Template) extends Defn with Stmt.TopLevel with Stmt.Block with HasAnnots
 
   @leaf class Trait(annots: List[Annot], name: scala.reflect.Type.Ident, tparams: List[TypeParam.Type],
-                    templ: Aux.Template) extends Defn with Stmt.TopLevel with Stmt.Block with Annotated {
+                    templ: Aux.Template) extends Defn with Stmt.TopLevel with Stmt.Block with HasAnnots {
     def isInterface: Boolean = templ.stats.forall(_.isInstanceOf[Decl])
   }
 
-  @leaf class Object(annots: List[Annot], name: Term.Ident, templ: Aux.Template) extends Defn with Stmt.TopLevel with Stmt.Block with Annotated
+  @leaf class Object(annots: List[Annot], name: Term.Ident, templ: Aux.Template) extends Defn with Stmt.TopLevel with Stmt.Block with HasAnnots
 
   @leaf class Package(ref: Term.Ref, stats: List[Stmt.TopLevel]) extends Defn with Stmt.TopLevel
 
@@ -210,13 +210,13 @@ object Enum {
   @leaf class Guard(cond: Term) extends Enum
 }
 
-@branch trait Param extends Annotated
+@branch trait Param extends HasAnnots
 object Param {
   @leaf class Function(annots: List[Annot], name: Option[Term.Ident], typ: Option[Type]) extends Param
   @leaf class Def(annots: List[Annot], name: Term.Ident, typ: Type, default: Option[Term]) extends Param
 }
 
-@branch trait TypeParam extends Annotated
+@branch trait TypeParam extends HasAnnots
 object TypeParam {
   @leaf class Def(annots: List[Annot] = Nil,
                   name: Option[scala.reflect.Type.Ident] = None,
@@ -233,7 +233,7 @@ object TypeParam {
   object Def { val empty = Type() }
 }
 
-@branch trait Annotated extends Tree {
+@branch trait HasAnnots extends Tree {
   def annots: List[Annot]
   // (Eugene) TODO: https://docs.google.com/spreadsheet/ccc?key=0Ahw_zqMtW4nNdC1lRVJvc3VjTUdOX0ppMVpSYzVRSHc&usp=sharing#gid=0
   // * write a script that fetches this google doc and converts it into a, say, CSV spec
