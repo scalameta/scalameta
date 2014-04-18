@@ -92,7 +92,7 @@ object Trees {
   @branch trait Pat extends Tree
   object Pats {
     @leaf class Wildcard() extends Pat
-    @leaf class SequenceWildcard() extends Pat
+    @leaf class SeqWildcard() extends Pat
     @leaf class Bind(lhs: Terms.Ident, rhs: Pat) extends Pat
     @leaf class Alternative(lhs: Pat, rhs: Pat) extends Pat
     @leaf class Tuple(elements: List[Pat] @nonEmpty) extends Pat
@@ -164,7 +164,7 @@ object Trees {
   @branch trait Arg extends Tree
   object Args {
     @leaf class Named(name: Terms.Ident, arg: Term) extends Arg
-    @leaf class Sequence(arg: Term) extends Arg
+    @leaf class Seq(arg: Term) extends Arg
   }
 
   @leaf class Case(pat: Pat, cond: Option[Term], body: Term) extends Tree
