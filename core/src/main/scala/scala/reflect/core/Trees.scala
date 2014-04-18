@@ -1,4 +1,5 @@
 package scala.reflect
+package core
 
 import org.scalareflect.invariants._
 import org.scalareflect.adt._
@@ -40,11 +41,11 @@ object Term {
       case _                         => false
     }
   }
-  @leaf class This(qual: Option[scala.reflect.Ident]) extends Ref
-  @leaf class Ident(value: scala.Predef.String) extends scala.reflect.Ident with Ref with Pat {
-    require(!Keywords.all.contains(value) || isBackquoted)
+  @leaf class This(qual: Option[core.Ident]) extends Ref
+  @leaf class Ident(value: scala.Predef.String) extends core.Ident with Ref with Pat {
+    require(!keywords.contains(value) || isBackquoted)
   }
-  @leaf class SuperSelect(qual: Option[scala.reflect.Ident], supertyp: Option[Type.Ident], selector: Term.Ident) extends Ref
+  @leaf class SuperSelect(qual: Option[core.Ident], supertyp: Option[Type.Ident], selector: Term.Ident) extends Ref
   @leaf class Select(qual: Ref, selector: Term.Ident) extends Ref with Pat
 
   @branch trait Lit extends Term with Pat
@@ -97,13 +98,13 @@ object Term {
 
 @branch trait Type extends Tree
 object Type {
-  @leaf class Ident(value: String) extends scala.reflect.Ident with Type {
-    require(!Keywords.all.contains(value) || isBackquoted)
+  @leaf class Ident(value: String) extends core.Ident with Type {
+    require(!keywords.contains(value) || isBackquoted)
   }
   @leaf class Select(qual: Term.Ref, name: Type.Ident) extends Type {
     require(qual.isPath)
   }
-  @leaf class SuperSelect(qual: Option[scala.reflect.Ident], supertyp: Option[Type.Ident], selector: Type.Ident) extends Type
+  @leaf class SuperSelect(qual: Option[core.Ident], supertyp: Option[Type.Ident], selector: Type.Ident) extends Type
   @leaf class Project(qual: Type, name: Type.Ident) extends Type
   @leaf class Singleton(ref: Term.Ref) extends Type {
     require(ref.isPath)
@@ -144,7 +145,7 @@ object Decl {
   @leaf class Var(annots: List[Annot], pats: List[Pat] @nonEmpty, typ: Type) extends Decl
   @leaf class Def(annots: List[Annot], name: Term.Ident, tparams: List[TypeParam.Def],
                   paramss: List[List[Param.Def]], implicits: List[Param.Def], typ: Option[Type]) extends Decl
-  @leaf class Type(annots: List[Annot], name: scala.reflect.Type.Ident, tparams: List[TypeParam.Type],
+  @leaf class Type(annots: List[Annot], name: core.Type.Ident, tparams: List[TypeParam.Type],
                    bounds: Aux.TypeBounds) extends Decl with Stmt.Existential
 }
 
@@ -164,7 +165,7 @@ object Defn {
                     paramss: List[List[Param.Def]], implicits: List[Param.Def],
                     typ: Type, body: Term) extends Defn with Stmt.Block with HasAnnots
 
-  @leaf class Type(annots: List[Annot], name: scala.reflect.Type.Ident,
+  @leaf class Type(annots: List[Annot], name: core.Type.Ident,
                    tparams: List[TypeParam.Type], body: Type) extends Defn with Stmt.Refine with Stmt.Block with HasAnnots
 
   @leaf class PrimaryCtor(annots: List[Annot] = Nil, paramss: List[List[Param.Def]] = Nil,
@@ -173,17 +174,19 @@ object Defn {
   @leaf class SecondaryCtor(annots: List[Annot], paramss: List[List[Param.Def]],
                             implicits: List[Param.Def], primaryCtorArgss: List[List[Term]]) extends Defn with Stmt.Block with HasAnnots
 
-  @leaf class Class(annots: List[Annot], name: scala.reflect.Type.Ident, tparams: List[TypeParam.Def],
+  @leaf class Class(annots: List[Annot], name: core.Type.Ident, tparams: List[TypeParam.Def],
                     ctor: PrimaryCtor, templ: Aux.Template) extends Defn with Stmt.TopLevel with Stmt.Block with HasAnnots
 
-  @leaf class Trait(annots: List[Annot], name: scala.reflect.Type.Ident, tparams: List[TypeParam.Type],
+  @leaf class Trait(annots: List[Annot], name: core.Type.Ident, tparams: List[TypeParam.Type],
                     templ: Aux.Template) extends Defn with Stmt.TopLevel with Stmt.Block with HasAnnots {
     def isInterface: Boolean = templ.stats.forall(_.isInstanceOf[Decl])
   }
 
   @leaf class Object(annots: List[Annot], name: Term.Ident, templ: Aux.Template) extends Defn with Stmt.TopLevel with Stmt.Block with HasAnnots
 
-  @leaf class Package(ref: Term.Ref, stats: List[Stmt.TopLevel]) extends Defn with Stmt.TopLevel
+  @leaf class Package(ref: Term.Ref, stats: List[Stmt.TopLevel]) extends Defn with Stmt.TopLevel {
+    require(ref.isQualId)
+  }
 
   @leaf class PackageObject(name: Term.Ident, templ: Aux.Template) extends Defn with Stmt.TopLevel
 }
@@ -233,13 +236,13 @@ object Param {
 @branch trait TypeParam extends HasAnnots
 object TypeParam {
   @leaf class Def(annots: List[Annot] = Nil,
-                  name: Option[scala.reflect.Type.Ident] = None,
+                  name: Option[core.Type.Ident] = None,
                   tparams: List[TypeParam.Type] = Nil,
-                  contextBounds: List[scala.reflect.Type] = Nil,
-                  viewBounds: List[scala.reflect.Type] = Nil,
+                  contextBounds: List[core.Type] = Nil,
+                  viewBounds: List[core.Type] = Nil,
                   bounds: Aux.TypeBounds = Aux.TypeBounds.empty) extends TypeParam
   @leaf class Type(annots: List[Annot] = Nil,
-                   name: Option[scala.reflect.Type.Ident] = None,
+                   name: Option[core.Type.Ident] = None,
                    tparams: List[TypeParam.Type] = Nil,
                    bounds: Aux.TypeBounds = Aux.TypeBounds.empty) extends TypeParam
 }
