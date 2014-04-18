@@ -2,6 +2,7 @@ package scala.reflect
 
 import org.scalareflect.invariants._
 import org.scalareflect.adt._
+import Tree._
 
 // (Together) TODO: tree-based symbols and types (see https://github.com/paulbutcher/implementor/blob/f1921de2b7de3d5ea8cf7f230c8e4e9f8c7f4b26/core/src/main/scala/org/scalamock/Implement.scala)
 // (Together) TODO: .tpe vs .signature?
@@ -73,7 +74,7 @@ object Tree {
     @leaf class Match(scrut: Term, cases: List[Case] @nonEmpty) extends Term
     @leaf class Try(expr: Term, `catch`: List[Case], `finally`: Option[Term]) extends Term
     @leaf class Function(params: List[Param.Function] @nonEmpty, body: Term) extends Term {
-      require(params.length == 1 || !params.exists(_.annots.contains(Tree.Annot.Implicit)))
+      require(params.length == 1 || !params.exists(_.annots.contains(Annot.Implicit)))
     }
     @leaf class PartialFunction(cases: List[Case] @nonEmpty) extends Term
     @leaf class While(expr: Term, body: Term) extends Term
@@ -107,28 +108,6 @@ object Tree {
     }
   }
 
-  @branch trait Type extends Tree
-  object Type {
-    @leaf class Ident(name: String) extends Type
-    @leaf class Select(qual: Term.Ref, name: Type.Ident) extends Type {
-      require(qual.isPath)
-    }
-    @leaf class SuperSelect(qual: Option[Term.Ident], supertyp: Option[Term.Ident], selector: Type.Ident) extends Type
-    @leaf class Project(qual: Type, name: Type.Ident) extends Type
-    @leaf class Singleton(ref: Term.Ref) extends Type {
-      require(ref.isPath)
-    }
-    @leaf class Constant(value: Term.Lit) extends Type
-    @leaf class Apply(typ: Type, targs: List[Type] @nonEmpty) extends Type
-    @leaf class Compound(parents: List[Type], stmts: List[Stmt.Refine] @nonEmpty) extends Type
-    @leaf class Existential(typ: Type, quants: List[Stmt.Existential] @nonEmpty) extends Type
-    @leaf class Function(params: Type, res: Type) extends Type
-    @leaf class Tuple(elements: List[Type] @nonEmpty) extends Type
-    @leaf class Annotated(typ: Type, annots: List[Annot] @nonEmpty) extends Type with Annottee
-    // (Denys) TODO: might need additional validation
-    @leaf class Placeholder() extends Type
-  }
-
   @branch trait Decl extends Stmt.Template with Stmt.Refine with Annottee
   object Decl {
     @leaf class Val(annots: List[Annot], pats: List[Pat] @nonEmpty, typ: Type) extends Decl with Stmt.Existential
@@ -136,7 +115,7 @@ object Tree {
     @leaf class Def(annots: List[Annot], name: Term.Ident, tparams: List[TypeParam.Def],
                     paramss: List[List[Param.Def]], implicits: List[Param.Def],
                     typ: Type) extends Decl
-    @leaf class Type(annots: List[Annot], name: Tree.Type.Ident, tparams: List[TypeParam.Type],
+    @leaf class Type(annots: List[Annot], name: scala.reflect.Type.Ident, tparams: List[TypeParam.Type],
                      bounds: TypeBounds) extends Decl with Stmt.Existential
   }
 
@@ -150,15 +129,15 @@ object Tree {
     @leaf class Macro(annots: List[Annot], name: Term.Ident, tparams: List[TypeParam.Def],
                       paramss: List[List[Param.Def]], implicits: List[Param.Def],
                       typ: Type, body: Term) extends Defn with Stmt.Block with Annottee
-    @leaf class Type(annots: List[Annot], name: Tree.Type.Ident, tparams: List[TypeParam.Type],
+    @leaf class Type(annots: List[Annot], name: scala.reflect.Type.Ident, tparams: List[TypeParam.Type],
                      body: Type) extends Defn with Stmt.Refine with Stmt.Block with Annottee
     @leaf class PrimaryCtor(annots: List[Annot], paramss: List[List[Param.Def]],
                             implicits: List[Param.Def]) extends Defn with Annottee
     @leaf class SecondaryCtor(annots: List[Annot], paramss: List[List[Param.Def]],
                               implicits: List[Param.Def], primaryCtorArgss: List[List[Term]]) extends Defn with Stmt.Block with Annottee
-    @leaf class Class(annots: List[Annot], name: Tree.Type.Ident, tparams: List[TypeParam.Def],
+    @leaf class Class(annots: List[Annot], name: scala.reflect.Type.Ident, tparams: List[TypeParam.Def],
                       ctor: PrimaryCtor, templ: Template) extends Defn with Stmt.TopLevel with Stmt.Block with Annottee
-    @leaf class Trait(annots: List[Annot], name: Tree.Type.Ident, tparams: List[TypeParam.Type],
+    @leaf class Trait(annots: List[Annot], name: scala.reflect.Type.Ident, tparams: List[TypeParam.Type],
                       templ: Template) extends Defn with Stmt.TopLevel with Stmt.Block with Annottee {
       def isInterface: Boolean = templ.stats.forall(_.isInstanceOf[Decl])
     }
@@ -216,51 +195,74 @@ object Tree {
 
   @branch trait TypeParam extends Tree with Annottee
   object TypeParam {
-    @leaf class Def(annots: List[Annot], name: Option[Tree.Type.Ident],
+    @leaf class Def(annots: List[Annot], name: Option[scala.reflect.Type.Ident],
                     tparams: List[TypeParam.Type],
-                    contextBounds: List[Tree.Type],
-                    viewBounds: List[Tree.Type],
+                    contextBounds: List[scala.reflect.Type],
+                    viewBounds: List[scala.reflect.Type],
                     bounds: TypeBounds) extends TypeParam
-    @leaf class Type(annots: List[Annot], name: Option[Tree.Type.Ident],
+    @leaf class Type(annots: List[Annot], name: Option[scala.reflect.Type.Ident],
                      tparams: List[TypeParam.Type],
                      bounds: TypeBounds) extends TypeParam
   }
+}
 
-  @branch trait Annottee extends Tree {
-    def annots: List[Annot]
-    // (Eugene) TODO: https://docs.google.com/spreadsheet/ccc?key=0Ahw_zqMtW4nNdC1lRVJvc3VjTUdOX0ppMVpSYzVRSHc&usp=sharing#gid=0
-    // * write a script that fetches this google doc and converts it into a, say, CSV spec
-    // * write a test that validates the spec by generating source files and parsing them
-    // * write a macro that generates implementation of validateAnnots from the spec + extension methods like isImplicit
-    private[reflect] def validateAnnots(enclosing: Tree): Boolean = ???
+@branch trait Type extends Tree
+object Type {
+  @leaf class Ident(name: String) extends Type
+  @leaf class Select(qual: Term.Ref, name: Type.Ident) extends Type {
+    require(qual.isPath)
   }
-  @branch trait Annot extends Tree
-  object Annot {
-    @branch trait Transient extends Annot
-    // (Together) TODO: design the attachment API
-
-    @branch trait Source extends Annot
-    @leaf class UserDefined(tpe: Type, argss: List[List[Term]]) extends Source
-
-    @branch trait Mod extends Source
-    @leaf class Private(within: String) extends Mod
-    @leaf class Protected(within: String) extends Mod
-    @leaf class Implicit() extends Mod
-    @leaf class Final() extends Mod
-    @leaf class Sealed() extends Mod
-    @leaf class Override() extends Mod
-    @leaf class Case() extends Mod
-    @leaf class Abstract() extends Mod
-    @leaf class Covariant() extends Mod
-    @leaf class Contravariant() extends Mod
-    @leaf class Lazy() extends Mod
-    @leaf class Doc(doc: String) extends Mod
-    @leaf class AbstractOverride() extends Mod
-
-    @branch trait Param extends Source
-    @leaf class ByName() extends Param
-    @leaf class VarArg() extends Param
-    @leaf class Val() extends Param
-    @leaf class Var() extends Param
+  @leaf class SuperSelect(qual: Option[Term.Ident], supertyp: Option[Term.Ident], selector: Type.Ident) extends Type
+  @leaf class Project(qual: Type, name: Type.Ident) extends Type
+  @leaf class Singleton(ref: Term.Ref) extends Type {
+    require(ref.isPath)
   }
+  @leaf class Constant(value: Term.Lit) extends Type
+  @leaf class Apply(typ: Type, targs: List[Type] @nonEmpty) extends Type
+  @leaf class Compound(parents: List[Type], stmts: List[Stmt.Refine] @nonEmpty) extends Type
+  @leaf class Existential(typ: Type, quants: List[Stmt.Existential] @nonEmpty) extends Type
+  @leaf class Function(params: Type, res: Type) extends Type
+  @leaf class Tuple(elements: List[Type] @nonEmpty) extends Type
+  @leaf class Annotated(typ: Type, annots: List[Annot] @nonEmpty) extends Type with Annottee
+  // (Denys) TODO: might need additional validation
+  @leaf class Placeholder() extends Type
+}
+
+@branch trait Annottee extends Tree {
+  def annots: List[Annot]
+  // (Eugene) TODO: https://docs.google.com/spreadsheet/ccc?key=0Ahw_zqMtW4nNdC1lRVJvc3VjTUdOX0ppMVpSYzVRSHc&usp=sharing#gid=0
+  // * write a script that fetches this google doc and converts it into a, say, CSV spec
+  // * write a test that validates the spec by generating source files and parsing them
+  // * write a macro that generates implementation of validateAnnots from the spec + extension methods like isImplicit
+  private[reflect] def validateAnnots(enclosing: Tree): Boolean = ???
+}
+
+@branch trait Annot extends Tree
+object Annot {
+  @branch trait Transient extends Annot
+  // (Together) TODO: design the attachment API
+
+  @branch trait Source extends Annot
+  @leaf class UserDefined(tpe: Type, argss: List[List[Term]]) extends Source
+
+  @branch trait Mod extends Source
+  @leaf class Private(within: String) extends Mod
+  @leaf class Protected(within: String) extends Mod
+  @leaf class Implicit() extends Mod
+  @leaf class Final() extends Mod
+  @leaf class Sealed() extends Mod
+  @leaf class Override() extends Mod
+  @leaf class Case() extends Mod
+  @leaf class Abstract() extends Mod
+  @leaf class Covariant() extends Mod
+  @leaf class Contravariant() extends Mod
+  @leaf class Lazy() extends Mod
+  @leaf class Doc(doc: String) extends Mod
+  @leaf class AbstractOverride() extends Mod
+
+  @branch trait Param extends Source
+  @leaf class ByName() extends Param
+  @leaf class VarArg() extends Param
+  @leaf class Val() extends Param
+  @leaf class Var() extends Param
 }
