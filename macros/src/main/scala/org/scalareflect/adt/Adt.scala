@@ -46,6 +46,7 @@ class AdtMacros(val c: Context) {
   // (Eugene) TODO: deep immutability check (via def macros)
   // (Eugene) TODO: deep sealedness check (via def macros as well)
   // (Eugene) TODO: check rootness
+  // (Eugene) TODO: precise typing for stuff like withAnnots
   def leaf(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       val q"${mods @ Modifiers(flags, privateWithin, anns)} class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
@@ -57,7 +58,12 @@ class AdtMacros(val c: Context) {
       val params = paramss.head
       params.foreach(p => if (p.mods.hasFlag(MUTABLE)) c.abort(p.pos, "@leaf classes must be immutable"))
       val flags1 = flags | CASE | FINAL
-      val params1 = params.map{ case q"$mods val $name: $tpt = $default" => q"val $name: $tpt = $default" }
+      def unprivateThis(mods: Modifiers) = {
+        val Modifiers(flags, privateWithin, anns) = mods
+        val flags1 = flags.asInstanceOf[Long] & (~scala.reflect.internal.Flags.LOCAL) & (~scala.reflect.internal.Flags.PRIVATE)
+        Modifiers(flags1.asInstanceOf[FlagSet], privateWithin, anns)
+      }
+      val params1 = params.map{ case q"$mods val $name: $tpt = $default" => q"${unprivateThis(mods)} val $name: $tpt = $default" }
       val cdef1 = q"${Modifiers(flags1, privateWithin, anns)} class $name[..$tparams] $ctorMods(..$params1) extends { ..$earlydefns } with ..$parents { $self => ..$stats }"
       val ModuleDef(mmods, mname, Template(mparents, mself, mstats)) = mdef
       val mstats1 = mstats ++ (if (params.forall(_.rhs.nonEmpty)) List(q"val empty = $mname()") else Nil)
