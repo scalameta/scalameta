@@ -18,13 +18,12 @@ trait MarkupParserCommon {
 
   protected def unreachable = scala.sys.error("Cannot be reached.")
 
-  type PositionType     // Int, Position
   type ElementType      // NodeSeq, Tree
   type NamespaceType    // NamespaceBinding, Any
   type AttributesType   // (MetaData, NamespaceBinding), mutable.Map[String, Tree]
 
   def mkAttributes(name: String, pscope: NamespaceType): AttributesType
-  def mkProcInstr(position: PositionType, name: String, text: String): ElementType
+  def mkProcInstr(name: String, text: String): ElementType
 
   /** parse a start or empty tag.
    *  [40] STag         ::= '<' Name { S Attribute } [S]
@@ -44,7 +43,7 @@ trait MarkupParserCommon {
   def xProcInstr: ElementType = {
     val n = xName
     xSpaceOpt()
-    xTakeUntil(mkProcInstr(_, n, _), () => tmppos, "?>")
+    xTakeUntil(mkProcInstr(n, _), "?>")
   }
 
   /** attribute value, terminated by either `'` or `"`. value may not contain `<`.
@@ -130,9 +129,6 @@ trait MarkupParserCommon {
   protected def ch_returning_nextch: Char
   def eof: Boolean
 
-  // def handle: HandleType
-  var tmppos: PositionType
-
   def xHandleError(that: Char, msg: String): Unit
   def reportSyntaxError(str: String): Unit
   def reportSyntaxError(pos: Int, str: String): Unit
@@ -176,18 +172,14 @@ trait MarkupParserCommon {
    *  is seen.  Once seen, the accumulated characters are passed
    *  along with the current Position to the supplied handler function.
    */
-  protected def xTakeUntil[T](
-    handler: (PositionType, String) => T,
-    positioner: () => PositionType,
-    until: String): T =
-  {
+  protected def xTakeUntil[T](handler: String => T, until: String): T = {
     val sb = new StringBuilder
     val head = until.head
     val rest = until.tail
 
     while (true) {
       if (ch == head && peek(rest))
-        return handler(positioner(), sb.toString)
+        return handler(sb.toString)
       else if (ch == SU)
         truncatedError("")  // throws TruncatedXMLControl in compiler
 

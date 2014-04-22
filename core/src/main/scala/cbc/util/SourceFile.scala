@@ -21,18 +21,10 @@ abstract class SourceFile {
   def isEndOfLine(idx: Int): Boolean
   def isSelfContained: Boolean
   def length : Int
-  def position(offset: Int): Position = {
-    assert(offset < length, file + ": " + offset + " >= " + length)
-    Position.offset(this, offset)
-  }
 
   def offsetToLine(offset: Int): Int
   def lineToOffset(index : Int): Int
 
-  /** Map a position to a position in the underlying source file.
-   *  For regular source files, simply return the argument.
-   */
-  def positionInUltimateSource(position: Position) = position
   override def toString() = file.name
   def path = file.path
 
@@ -46,8 +38,6 @@ abstract class SourceFile {
   @tailrec
   final def skipWhitespace(offset: Int): Int =
     if (content(offset).isWhitespace) skipWhitespace(offset + 1) else offset
-
-  def identifier(pos: Position): Option[String] = None
 }
 
 /** An object representing a missing source file.
@@ -99,10 +89,6 @@ object ScriptSourceFile {
 
 class ScriptSourceFile(underlying: BatchSourceFile, content: Array[Char], override val start: Int) extends BatchSourceFile(underlying.file, content) {
   override def isSelfContained = false
-
-  override def positionInUltimateSource(pos: Position) =
-    if (!pos.isDefined) super.positionInUltimateSource(pos)
-    else pos withSource underlying withShift start
 }
 
 /** a file whose contents do not change over time */
@@ -124,14 +110,6 @@ class BatchSourceFile(val file : AbstractFile, content0: Array[Char]) extends So
   val length = content.length
   def start = 0
   def isSelfContained = true
-
-  override def identifier(pos: Position) =
-    if (pos.isDefined && pos.source == this && pos.point != -1) {
-      def isOK(c: Char) = isIdentifierPart(c) || isOperatorPart(c)
-      Some(new String(content drop pos.point takeWhile isOK))
-    } else {
-      super.identifier(pos)
-    }
 
   private def charAtIsEOL(idx: Int)(p: Char => Boolean) = {
     // don't identify the CR in CR LF as a line break, since LF will do.

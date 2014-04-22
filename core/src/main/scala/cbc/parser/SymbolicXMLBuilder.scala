@@ -12,7 +12,6 @@ import cbc.TreeGen
 import cbc.Trees._
 import cbc.Names._
 import cbc.{TypeNames, TermNames, nme, tpnme}
-import cbc.Positions._
 import cbc.Constants._
 
 /** This class builds instance of `Tree` that represent XML.
@@ -87,7 +86,6 @@ abstract class SymbolicXMLBuilder(p: Parsers#Parser, preserveWS: Boolean) {
 
   /** Wildly wrong documentation deleted in favor of "self-documenting code." */
   protected def mkXML(
-    pos: Position,
     isPattern: Boolean,
     pre: Tree,
     label: Tree,
@@ -98,41 +96,41 @@ abstract class SymbolicXMLBuilder(p: Parsers#Parser, preserveWS: Boolean) {
   {
     def starArgs =
       if (children.isEmpty) Nil
-      else List(Typed(makeXMLseq(pos, children), wildStar))
+      else List(Typed(makeXMLseq(children), wildStar))
 
     def pat    = Apply(_scala_xml__Elem, List(pre, label, wild, wild) ::: convertToTextPat(children))
     def nonpat = New(_scala_xml_Elem, List(List(pre, label, attrs, scope, if (empty) Literal(Constant(true)) else Literal(Constant(false))) ::: starArgs))
 
-    atPos(pos) { if (isPattern) pat else nonpat }
+    if (isPattern) pat else nonpat
   }
 
-  final def entityRef(pos: Position, n: String) =
-    atPos(pos)( New(_scala_xml_EntityRef, LL(const(n))) )
+  final def entityRef(n: String) =
+    New(_scala_xml_EntityRef, LL(const(n)))
 
   // create scala.xml.Text here <: scala.xml.Node
-  final def text(pos: Position, txt: String): Tree = atPos(pos) {
+  final def text(txt: String): Tree = {
     if (isPattern) makeTextPat(const(txt))
     else makeText1(const(txt))
   }
 
   def makeTextPat(txt: Tree)                = Apply(_scala_xml__Text, List(txt))
   def makeText1(txt: Tree)                  = New(_scala_xml_Text, LL(txt))
-  def comment(pos: Position, text: String)  = atPos(pos)( Comment(const(text)) )
-  def charData(pos: Position, txt: String)  = atPos(pos)( makeText1(const(txt)) )
+  def comment(text: String)  = Comment(const(text))
+  def charData(txt: String)  = makeText1(const(txt))
 
-  def procInstr(pos: Position, target: String, txt: String) =
-    atPos(pos)( ProcInstr(const(target), const(txt)) )
+  def procInstr(target: String, txt: String) =
+    ProcInstr(const(target), const(txt))
 
   protected def Comment(txt: Tree)                  = New(_scala_xml_Comment, LL(txt))
   protected def ProcInstr(target: Tree, txt: Tree)  = New(_scala_xml_ProcInstr, LL(target, txt))
 
   /** @todo: attributes */
-  def makeXMLpat(pos: Position, n: String, args: Seq[Tree]): Tree = {
+  def makeXMLpat(n: String, args: Seq[Tree]): Tree = {
     val (prepat, labpat) = splitPrefix(n) match {
       case (Some(pre), rest)  => (const(pre), const(rest))
       case _                  => (wild, const(n))
     }
-    mkXML(pos, isPattern = true, prepat, labpat, null, null, empty = false, args)
+    mkXML(isPattern = true, prepat, labpat, null, null, empty = false, args)
   }
 
   protected def convertToTextPat(t: Tree): Tree = t match {
@@ -142,13 +140,13 @@ abstract class SymbolicXMLBuilder(p: Parsers#Parser, preserveWS: Boolean) {
   protected def convertToTextPat(buf: Seq[Tree]): List[Tree] =
     (buf map convertToTextPat).toList
 
-  def parseAttribute(pos: Position, s: String): Tree = {
+  def parseAttribute(s: String): Tree = {
     import xml.Utility.parseAttributeValue
 
-    parseAttributeValue(s, text(pos, _), entityRef(pos, _)) match {
+    parseAttributeValue(s, text(_), entityRef(_)) match {
       case Nil      => Select(Select(TreeGen.scalaDot(nme.collection), nme.immutable), nme.Nil)
       case t :: Nil => t
-      case ts       => makeXMLseq(pos, ts.toList)
+      case ts       => makeXMLseq(ts.toList)
     }
   }
 
@@ -158,11 +156,11 @@ abstract class SymbolicXMLBuilder(p: Parsers#Parser, preserveWS: Boolean) {
   }
 
   /** could optimize if args.length == 0, args.length == 1 AND args(0) is <: Node. */
-  def makeXMLseq(pos: Position, args: Seq[Tree]) = {
+  def makeXMLseq(args: Seq[Tree]) = {
     val buffer = ValDef(NoMods, _buf, TypeTree(), New(_scala_xml_NodeBuffer, List(Nil)))
     val applies = args filterNot isEmptyText map (t => Apply(Select(Ident(_buf), _plus), List(t)))
 
-    atPos(pos)( Block(buffer :: applies.toList, Ident(_buf)) )
+    Block(buffer :: applies.toList, Ident(_buf))
   }
 
   /** Returns (Some(prefix) | None, rest) based on position of ':' */
@@ -172,13 +170,13 @@ abstract class SymbolicXMLBuilder(p: Parsers#Parser, preserveWS: Boolean) {
   }
 
   /** Various node constructions. */
-  def group(pos: Position, args: Seq[Tree]): Tree =
-    atPos(pos)( New(_scala_xml_Group, LL(makeXMLseq(pos, args))) )
+  def group(args: Seq[Tree]): Tree =
+    New(_scala_xml_Group, LL(makeXMLseq(args)))
 
-  def unparsed(pos: Position, str: String): Tree =
-    atPos(pos)( New(_scala_xml_Unparsed, LL(const(str))) )
+  def unparsed(str: String): Tree =
+    New(_scala_xml_Unparsed, LL(const(str)))
 
-  def element(pos: Position, qname: String, attrMap: mutable.Map[String, Tree], empty: Boolean, args: Seq[Tree]): Tree = {
+  def element(qname: String, attrMap: mutable.Map[String, Tree], empty: Boolean, args: Seq[Tree]): Tree = {
     def handleNamespaceBinding(pre: String, z: String): Tree = {
       def mkAssign(t: Tree): Tree = Assign(
         Ident(_tmpscope),
@@ -209,7 +207,7 @@ abstract class SymbolicXMLBuilder(p: Parsers#Parser, preserveWS: Boolean) {
       case (None, x)    => (null, x)
     }
 
-    def mkAttributeTree(pre: String, key: String, value: Tree) = atPos(pos.makeTransparent) {
+    def mkAttributeTree(pre: String, key: String, value: Tree) = {
       // XXX this is where we'd like to put Select(value, nme.toString_) for #1787
       // after we resolve the Some(foo) situation.
       val baseArgs = List(const(key), value, Ident(_md))
@@ -243,7 +241,6 @@ abstract class SymbolicXMLBuilder(p: Parsers#Parser, preserveWS: Boolean) {
       }
 
     val body = mkXML(
-      pos.makeTransparent,
       isPattern = false,
       const(pre),
       const(newlabel),
@@ -253,6 +250,6 @@ abstract class SymbolicXMLBuilder(p: Parsers#Parser, preserveWS: Boolean) {
       args
     )
 
-    atPos(pos.makeTransparent)( Block(nsResult, Block(attrResult, body)) )
+    Block(nsResult, Block(attrResult, body))
   }
 }

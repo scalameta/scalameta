@@ -12,8 +12,7 @@ import cbc.Trees._
 import cbc.Constants._
 import cbc.Names._
 import cbc.FreshNames.{freshTermName, freshTypeName}
-import cbc.Positions._
-import cbc.util.{Position, SourceFile, FreshNameCreator}
+import cbc.util.{SourceFile, FreshNameCreator}
 
 /** Methods for building trees, used in the parser.  All the trees
  *  returned by this class must be untyped.
@@ -21,9 +20,6 @@ import cbc.util.{Position, SourceFile, FreshNameCreator}
 abstract class TreeBuilder {
   def source: SourceFile
   implicit def fresh: FreshNameCreator
-
-  def o2p(offset: Int): Position                    = Position.offset(source, offset)
-  def r2p(start: Int, mid: Int, end: Int): Position = rangePos(source, start, mid, end)
 
   def rootScalaDot(name: Name) = TreeGen.rootScalaDot(name)
   def scalaDot(name: Name)     = TreeGen.scalaDot(name)
@@ -45,23 +41,23 @@ abstract class TreeBuilder {
   def makeTupleType(elems: List[Tree]) = TreeGen.mkTupleType(elems)
 
   def stripParens(t: Tree) = t match {
-    case Parens(ts) => atPos(t.pos) { makeTupleTerm(ts) }
+    case Parens(ts) => makeTupleTerm(ts)
     case _ => t
   }
 
   def makeAnnotated(t: Tree, annot: Tree): Tree =
-    atPos(annot.pos union t.pos)(Annotated(annot, t))
+    Annotated(annot, t)
 
   def makeSelfDef(name: TermName, tpt: Tree): ValDef =
     ValDef(Modifiers(PRIVATE), name, tpt, EmptyTree)
 
   /** Create tree representing (unencoded) binary operation expression or pattern. */
-  def makeBinop(isExpr: Boolean, left: Tree, op: TermName, right: Tree, opPos: Position, targs: List[Tree] = Nil): Tree = {
+  def makeBinop(isExpr: Boolean, left: Tree, op: TermName, right: Tree, targs: List[Tree] = Nil): Tree = {
     require(isExpr || targs.isEmpty || targs.exists(_.isErroneous), s"Incompatible args to makeBinop: !isExpr but targs=$targs")
 
     def mkSelection(t: Tree) = {
-      def sel = atPos(opPos union t.pos)(Select(stripParens(t), op.encode))
-      if (targs.isEmpty) sel else atPos(left.pos)(TypeApply(sel, targs))
+      def sel = Select(stripParens(t), op.encode)
+      if (targs.isEmpty) sel else TypeApply(sel, targs)
     }
     def mkNamed(args: List[Tree]) = if (isExpr) args map TreeInfo.assignmentToMaybeNamedArg else args
     val arguments = right match {
@@ -83,19 +79,14 @@ abstract class TreeBuilder {
   }
 
   /** Tree for `od op`, start is start0 if od.pos is borked. */
-  def makePostfixSelect(start0: Int, end: Int, od: Tree, op: Name): Tree = {
-    val start = if (od.pos.isDefined) od.pos.start else start0
-    atPos(r2p(start, end, end + op.length)) { new PostfixSelect(od, op.encode) }
+  def makePostfixSelect(od: Tree, op: Name): Tree = {
+    new PostfixSelect(od, op.encode)
   }
 
   /** Create tree representing a while loop */
   def makeWhile(startPos: Int, cond: Tree, body: Tree): Tree = {
     val lname = freshTermName(nme.WHILE_PREFIX)
-    def default = wrappingPos(List(cond, body)) match {
-      case p if p.isDefined => p.end
-      case _                => startPos
-    }
-    val continu = atPos(o2p(body.pos pointOrElse default)) { Apply(Ident(lname), Nil) }
+    val continu = Apply(Ident(lname), Nil)
     val rhs = If(cond, Block(List(body), continu), Literal(Constant(())))
     LabelDef(lname, Nil, rhs)
   }
@@ -140,14 +131,14 @@ abstract class TreeBuilder {
     val pat      = Bind(binder, Typed(Ident(nme.WILDCARD), Ident(tpnme.Throwable)))
     val catchDef = ValDef(Modifiers(ARTIFACT), freshTermName("catchExpr"), TypeTree(), catchExpr)
     val catchFn  = Ident(catchDef.name)
-    val body     = atPos(catchExpr.pos.makeTransparent)(Block(
+    val body     = Block(
       List(catchDef),
       If(
         Apply(Select(catchFn, nme.isDefinedAt), List(Ident(binder))),
         Apply(Select(catchFn, nme.apply), List(Ident(binder))),
         Throw(Ident(binder))
       )
-    ))
+    )
     makeCaseDef(pat, EmptyTree, body)
   }
 

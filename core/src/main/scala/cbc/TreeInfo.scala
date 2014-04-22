@@ -5,7 +5,7 @@
 
 package cbc
 import cbc.Flags._
-import Trees._, Positions._, Names._, StdNames._
+import Trees._, Names._, StdNames._
 
 /** This class ...
  *
@@ -28,7 +28,7 @@ object TreeInfo {
    *  the lhs is a simple ident. Otherwise returns unchanged.
    */
   def assignmentToMaybeNamedArg(tree: Tree) = tree match {
-    case t @ Assign(id: Ident, rhs) => atPos(t.pos)(AssignOrNamedArg(id, rhs))
+    case t @ Assign(id: Ident, rhs) => AssignOrNamedArg(id, rhs)
     case t                          => t
   }
 

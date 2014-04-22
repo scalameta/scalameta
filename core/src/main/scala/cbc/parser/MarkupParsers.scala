@@ -11,7 +11,6 @@ import scala.util.control.ControlThrowable
 import cbc.parser.xml.{MarkupParserCommon, Utility}
 import cbc.util.CharArrayReader
 import cbc.util.Chars.{ SU, LF }
-import cbc.Positions._
 import cbc.Trees._
 import cbc.Constants._
 
@@ -42,7 +41,6 @@ trait MarkupParsers { self: Parsers =>
     import Utility.{ isNameStart, isSpace }
     import Tokens.{ LBRACE, RBRACE }
 
-    type PositionType = Position
     type InputType    = CharArrayReader
     type ElementType  = Tree
     type AttributesType = mutable.Map[String, Tree]
@@ -61,10 +59,9 @@ trait MarkupParsers { self: Parsers =>
     def lookahead(): BufferedIterator[Char] =
       (input.buf drop input.charOffset).iterator.buffered
 
-    import parser.{ symbXMLBuilder => handle, o2p, r2p }
+    import parser.{ symbXMLBuilder => handle }
 
     def curOffset : Int = input.charOffset - 1
-    var tmppos : Position = NoPosition
     def ch = input.ch
     /** this method assign the next character to ch and advances in input */
     def nextch() { input.nextChar() }
@@ -73,8 +70,8 @@ trait MarkupParsers { self: Parsers =>
       val result = ch; input.nextChar(); result
     }
 
-    def mkProcInstr(position: Position, name: String, text: String): ElementType =
-      parser.symbXMLBuilder.procInstr(position, name, text)
+    def mkProcInstr(name: String, text: String): ElementType =
+      parser.symbXMLBuilder.procInstr(name, text)
 
     var xEmbeddedBlock = false
 
@@ -118,7 +115,7 @@ trait MarkupParsers { self: Parsers =>
           case '"' | '\'' =>
             val tmp = xAttributeValue(ch_returning_nextch)
 
-            try handle.parseAttribute(r2p(start, mid, curOffset), tmp)
+            try handle.parseAttribute(tmp)
             catch {
               case e: RuntimeException =>
                 errorAndResult("error parsing attribute value", parser.errorTermTree)
@@ -151,12 +148,12 @@ trait MarkupParsers { self: Parsers =>
       val start = curOffset
       xToken("[CDATA[")
       val mid = curOffset
-      xTakeUntil(handle.charData, () => r2p(start, mid, curOffset), "]]>")
+      xTakeUntil(handle.charData, "]]>")
     }
 
     def xUnparsed: Tree = {
       val start = curOffset
-      xTakeUntil(handle.unparsed, () => r2p(start, start, curOffset), "</xml:unparsed>")
+      xTakeUntil(handle.unparsed, "</xml:unparsed>")
     }
 
     /** Comment ::= '<!--' ((Char - '-') | ('-' (Char - '-')))* '-->'
@@ -166,11 +163,11 @@ trait MarkupParsers { self: Parsers =>
     def xComment: Tree = {
       val start = curOffset - 2   // Rewinding to include "<!"
       xToken("--")
-      xTakeUntil(handle.comment, () => r2p(start, start, curOffset), "-->")
+      xTakeUntil(handle.comment, "-->")
     }
 
-    def appendText(pos: Position, ts: Buffer[Tree], txt: String): Unit = {
-      def append(t: String) = ts append handle.text(pos, t)
+    def appendText(ts: Buffer[Tree], txt: String): Unit = {
+      def append(t: String) = ts append handle.text(t)
 
       if (preserveWS) append(txt)
       else {
@@ -194,13 +191,13 @@ trait MarkupParsers { self: Parsers =>
       val toAppend = ch match {
         case '#' => // CharacterRef
           nextch()
-          val theChar = handle.text(tmppos, xCharRef)
+          val theChar = handle.text(xCharRef)
           xToken(';')
           theChar
         case _ =>   // EntityRef
           val n = xName
           xToken(';')
-          handle.entityRef(tmppos, n)
+          handle.entityRef( n)
       }
 
       ts append toAppend
@@ -210,9 +207,9 @@ trait MarkupParsers { self: Parsers =>
      *  @precond ch == '{'
      *  @postcond: xEmbeddedBlock == false!
      */
-    def content_BRACE(p: Position, ts: ArrayBuffer[Tree]): Unit =
+    def content_BRACE(ts: ArrayBuffer[Tree]): Unit =
       if (xCheckEmbeddedBlock) ts append xEmbeddedExpr
-      else appendText(p, ts, xText)
+      else appendText(ts, xText)
 
     /** Returns true if it encounters an end tag (without consuming it),
      *  appends trees to ts as side-effect.
@@ -237,17 +234,16 @@ trait MarkupParsers { self: Parsers =>
         if (xEmbeddedBlock)
           ts append xEmbeddedExpr
         else {
-          tmppos = o2p(curOffset)
           ch match {
             // end tag, cdata, comment, pi or child node
             case '<'  => nextch() ; if (content_LT(ts)) return ts
             // either the character '{' or an embedded scala block }
-            case '{'  => content_BRACE(tmppos, ts)  // }
+            case '{'  => content_BRACE(ts)  // }
             // EntityRef or CharRef
             case '&'  => content_AMP(ts)
             case SU   => return ts
             // text content - here xEmbeddedBlock might be true
-            case _    => appendText(tmppos, ts, xText)
+            case _    => appendText(ts, xText)
           }
         }
       }
@@ -262,7 +258,7 @@ trait MarkupParsers { self: Parsers =>
       val (qname, attrMap) = xTag(())
       if (ch == '/') { // empty element
         xToken("/>")
-        handle.element(r2p(start, start, curOffset), qname, attrMap, empty = true, new ListBuffer[Tree])
+        handle.element(qname, attrMap, empty = true, new ListBuffer[Tree])
       }
       else { // handle content
         xToken('>')
@@ -273,10 +269,9 @@ trait MarkupParsers { self: Parsers =>
         val ts = content
         xEndTag(qname)
         debugLastStartElement.pop()
-        val pos = r2p(start, start, curOffset)
         qname match {
-          case "xml:group" => handle.group(pos, ts)
-          case _ => handle.element(pos, qname, attrMap, empty = false, ts)
+          case "xml:group" => handle.group(ts)
+          case _ => handle.element(qname, attrMap, empty = false, ts)
         }
       }
     }
@@ -339,7 +334,6 @@ trait MarkupParsers { self: Parsers =>
 
         val ts = new ArrayBuffer[Tree]
         val start = curOffset
-        tmppos = o2p(curOffset)    // Iuli: added this line, as it seems content_LT uses tmppos when creating trees
         content_LT(ts)
 
         // parse more XML ?
@@ -350,7 +344,7 @@ trait MarkupParsers { self: Parsers =>
             ts append element
             xSpaceOpt()
           }
-          handle.makeXMLseq(r2p(start, start, curOffset), ts)
+          handle.makeXMLseq(ts)
         }
         else {
           assert(ts.length == 1)
@@ -394,7 +388,7 @@ trait MarkupParsers { self: Parsers =>
      */
     def xScalaPatterns: List[Tree] = escapeToScala(parser.xmlSeqPatterns(), "pattern")
 
-    def reportSyntaxError(pos: Int, str: String) = parser.syntaxError(pos, str)
+    def reportSyntaxError(offset: Int, str: String) = parser.syntaxError(offset, str)
     def reportSyntaxError(str: String) {
       reportSyntaxError(curOffset, "in XML literal: " + str)
       nextch()
@@ -435,7 +429,7 @@ trait MarkupParsers { self: Parsers =>
               throw TruncatedXMLControl
 
             case _    => // text
-              appendText(r2p(start1, start1, curOffset), ts, xText)
+              appendText(ts, xText)
               // here xEmbeddedBlock might be true:
               // if (xEmbeddedBlock) throw new ApplicationError("after:"+text); // assert
           }
@@ -447,7 +441,7 @@ trait MarkupParsers { self: Parsers =>
         debugLastStartElement.pop()
       }
 
-      handle.makeXMLpat(r2p(start, start, curOffset), qname, ts)
+      handle.makeXMLpat(qname, ts)
     }
   } /* class MarkupParser */
 }
