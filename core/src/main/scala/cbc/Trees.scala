@@ -8,21 +8,12 @@ package cbc
 import scala.collection.{ mutable, immutable }
 import scala.reflect.ClassTag
 import cbc.Flags._
-import cbc.util.Statistics
 import cbc.util.DocStrings._
 import Names._, StdNames._, Constants._
 
 object Trees {
-  var nodeCount = 0
-
   abstract class Tree extends TreeContextApiImpl with Product {
-    val id = nodeCount // TODO: add to attachment?
-    nodeCount += 1
-
-    if (Statistics.canEnable) Statistics.incCounter(TreesStats.nodeByType, getClass)
-
     def isDef = false
-
     def isEmpty = false
     def nonEmpty = !isEmpty
 
@@ -1663,11 +1654,5 @@ object Trees {
   implicit val UnApplyTag             = ClassTag[UnApply](classOf[UnApply])
   implicit val ValDefTag              = ClassTag[ValDef](classOf[ValDef])
   implicit val ValOrDefDefTag         = ClassTag[ValOrDefDef](classOf[ValOrDefDef])
-
-  val treeNodeCount = Statistics.newView("#created tree nodes")(nodeCount)
 }
 
-object TreesStats {
-  // statistics
-  val nodeByType = Statistics.newByClass("#created tree nodes by type")(Statistics.newCounter(""))
-}

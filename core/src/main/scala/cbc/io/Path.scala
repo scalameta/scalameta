@@ -12,7 +12,6 @@ import java.io.{
 import java.net.{ URI, URL }
 import scala.util.Random.alphanumeric
 import scala.language.implicitConversions
-import cbc.util.Statistics
 
 /** An abstraction for filesystem paths.  The differences between
  *  Path, File, and Directory are primarily to communicate intent.
@@ -58,12 +57,10 @@ object Path {
   def apply(path: String): Path = apply(new JFile(path))
   def apply(jfile: JFile): Path = try {
     def isFile = {
-      if (Statistics.canEnable) Statistics.incCounter(IOStats.fileIsFileCount)
       jfile.isFile
     }
 
     def isDirectory = {
-      if (Statistics.canEnable) Statistics.incCounter(IOStats.fileIsDirectoryCount)
       jfile.isDirectory
     }
 
@@ -198,16 +195,13 @@ class Path private[io] (val jfile: JFile) {
   def canRead = jfile.canRead()
   def canWrite = jfile.canWrite()
   def exists = {
-    if (Statistics.canEnable) Statistics.incCounter(IOStats.fileExistsCount)
     try jfile.exists() catch { case ex: SecurityException => false }
   }
 
   def isFile = {
-    if (Statistics.canEnable) Statistics.incCounter(IOStats.fileIsFileCount)
     try jfile.isFile() catch { case ex: SecurityException => false }
   }
   def isDirectory = {
-    if (Statistics.canEnable) Statistics.incCounter(IOStats.fileIsDirectoryCount)
     try jfile.isDirectory() catch { case ex: SecurityException => jfile.getPath == "." }
   }
   def isAbsolute = jfile.isAbsolute()
