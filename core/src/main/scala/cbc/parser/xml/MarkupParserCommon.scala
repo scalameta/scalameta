@@ -130,16 +130,11 @@ trait MarkupParserCommon {
   def eof: Boolean
 
   def xHandleError(that: Char, msg: String): Unit
-  def reportSyntaxError(str: String): Unit
-  def reportSyntaxError(pos: Int, str: String): Unit
+  def syntaxError(str: String): Nothing
+  def syntaxError(pos: Int, str: String): Nothing
 
   def truncatedError(msg: String): Nothing
   def errorNoEnd(tag: String): Nothing
-
-  protected def errorAndResult[T](msg: String, x: T): T = {
-    reportSyntaxError(msg)
-    x
-  }
 
   def xToken(that: Char) {
     if (ch == that) nextch()

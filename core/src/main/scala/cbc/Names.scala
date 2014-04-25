@@ -15,6 +15,9 @@ object Names {
   private final val HASH_MASK  = 0x7FFF
   private final val NAME_SIZE  = 0x20000
 
+  def freshTermName(prefix: String = ???): TermName = ???
+  def freshTypeName(prefix: String = ???): TypeName = ???
+
   final val nameDebug = false
 
   // Ideally we would just synchronize unconditionally and let HotSpot's Biased Locking

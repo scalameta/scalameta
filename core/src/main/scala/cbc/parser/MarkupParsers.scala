@@ -118,7 +118,7 @@ trait MarkupParsers { self: Parsers =>
             try handle.parseAttribute(tmp)
             catch {
               case e: RuntimeException =>
-                errorAndResult("error parsing attribute value", parser.errorTermTree)
+                syntaxError("error parsing attribute value")
             }
 
           case '{'  =>
@@ -127,7 +127,7 @@ trait MarkupParsers { self: Parsers =>
           case SU =>
             throw TruncatedXMLControl
           case _ =>
-            errorAndResult("' or \" delimited attribute value or '{' scala-expr '}' expected", Literal(Constant("<syntax-error>")))
+            syntaxError("' or \" delimited attribute value or '{' scala-expr '}' expected")
         }
         // well-formedness constraint: unique attribute names
         if (aMap contains key)
@@ -299,7 +299,7 @@ trait MarkupParsers { self: Parsers =>
     }
 
     /** Some try/catch/finally logic used by xLiteral and xLiteralPattern.  */
-    private def xLiteralCommon(f: () => Tree, ifTruncated: String => Unit): Tree = {
+    private def xLiteralCommon(f: () => Tree, ifTruncated: String => Nothing): Tree = {
       try return f()
       catch {
         case c @ TruncatedXMLControl  =>
@@ -310,8 +310,6 @@ trait MarkupParsers { self: Parsers =>
           parser.syntaxError(debugLastPos, "missing end tag in XML literal for <%s>" format debugLastElem)
       }
       finally parser.in resume Tokens.XMLSTART
-
-      parser.errorTermTree
     }
 
     /** Use a lookahead parser to run speculative body, and return the first char afterward. */

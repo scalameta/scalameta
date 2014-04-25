@@ -24,17 +24,6 @@ object TreeInfo {
     case _ => false
   }
 
-  /** Translates an Assign(_, _) node to AssignOrNamedArg(_, _) if
-   *  the lhs is a simple ident. Otherwise returns unchanged.
-   */
-  def assignmentToMaybeNamedArg(tree: Tree) = tree match {
-    case t @ Assign(id: Ident, rhs) => AssignOrNamedArg(id, rhs)
-    case t                          => t
-  }
-
-  /** Is name a left-associative operator? */
-  def isLeftAssoc(operator: Name) = operator.nonEmpty && (operator.endChar != ':')
-
   /** Is tpt a vararg type of the form T* ? */
   def isRepeatedParamType(tpt: Tree) = tpt match {
     case AppliedTypeTree(Select(_, tpnme.REPEATED_PARAM_CLASS_NAME), _)      => true

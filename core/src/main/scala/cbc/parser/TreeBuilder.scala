@@ -11,15 +11,13 @@ import cbc.Flags._
 import cbc.Trees._
 import cbc.Constants._
 import cbc.Names._
-import cbc.FreshNames.{freshTermName, freshTypeName}
-import cbc.util.{SourceFile, FreshNameCreator}
+import cbc.util.SourceFile
 
 /** Methods for building trees, used in the parser.  All the trees
  *  returned by this class must be untyped.
  */
 abstract class TreeBuilder {
   def source: SourceFile
-  implicit def fresh: FreshNameCreator
 
   def rootScalaDot(name: Name) = TreeGen.rootScalaDot(name)
   def scalaDot(name: Name)     = TreeGen.scalaDot(name)
@@ -50,33 +48,6 @@ abstract class TreeBuilder {
 
   def makeSelfDef(name: TermName, tpt: Tree): ValDef =
     ValDef(Modifiers(PRIVATE), name, tpt, EmptyTree)
-
-  /** Create tree representing (unencoded) binary operation expression or pattern. */
-  def makeBinop(isExpr: Boolean, left: Tree, op: TermName, right: Tree, targs: List[Tree] = Nil): Tree = {
-    require(isExpr || targs.isEmpty || targs.exists(_.isErroneous), s"Incompatible args to makeBinop: !isExpr but targs=$targs")
-
-    def mkSelection(t: Tree) = {
-      def sel = Select(stripParens(t), op.encode)
-      if (targs.isEmpty) sel else TypeApply(sel, targs)
-    }
-    def mkNamed(args: List[Tree]) = if (isExpr) args map TreeInfo.assignmentToMaybeNamedArg else args
-    val arguments = right match {
-      case Parens(args) => mkNamed(args)
-      case _            => List(right)
-    }
-    if (isExpr) {
-      if (TreeInfo.isLeftAssoc(op)) {
-        Apply(mkSelection(left), arguments)
-      } else {
-        val x = freshTermName()
-        Block(
-          List(ValDef(Modifiers(SYNTHETIC | ARTIFACT), x, TypeTree(), stripParens(left))),
-          Apply(mkSelection(right), List(Ident(x))))
-      }
-    } else {
-      Apply(Ident(op.encode), stripParens(left) :: arguments)
-    }
-  }
 
   /** Tree for `od op`, start is start0 if od.pos is borked. */
   def makePostfixSelect(od: Tree, op: Name): Tree = {

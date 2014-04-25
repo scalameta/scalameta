@@ -2,7 +2,7 @@ package cbc
 
 import Flags._
 import scala.collection.mutable.ListBuffer
-import StdNames._, Names._, FreshNames._, Trees._, Constants._
+import StdNames._, Names._, Trees._, Constants._
 
 object TreeGen {
   def rootId(name: Name)             = Select(Ident(nme.ROOTPKG), name)
