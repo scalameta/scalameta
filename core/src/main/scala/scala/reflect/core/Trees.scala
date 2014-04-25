@@ -17,6 +17,7 @@ list of ugliness discovered so far
 10. guess what pq"a -1" means
 11. no way to fully qualify things that are in empty package
 12. vars with default values may not contain patterns
+13. constr block
 */
 
 // (Together) TODO: tree-based symbols and types (see https://github.com/paulbutcher/implementor/blob/f1921de2b7de3d5ea8cf7f230c8e4e9f8c7f4b26/core/src/main/scala/org/scalamock/Implement.scala)
@@ -271,9 +272,11 @@ package core {
     def implicits: List[Param.Def]
   }
   object Ctor {
-    @leaf class Primary(annots: List[Annot], paramss: List[List[Param.Def]] = Nil, implicits: List[Param.Def] = Nil) extends Ctor
-    @leaf class Secondary(annots: List[Annot], paramss: List[List[Param.Def]], implicits: List[Param.Def],
-                          primaryCtorArgss: List[List[Term]]) extends Ctor with Stmt.Template
+    @leaf class Primary(annots: List[Annot] = Nil, paramss: List[List[Param.Def]] = Nil,
+                        implicits: List[Param.Def] = Nil) extends Ctor
+    @leaf class Secondary(annots: List[Annot], paramss: List[List[Param.Def]],
+                          implicits: List[Param.Def], primaryCtorArgss: List[List[Arg]],
+                          stats: List[Stmt.Block] = Nil) extends Ctor with Stmt.Template
   }
 
   object Stmt {
@@ -401,11 +404,11 @@ package core {
     @branch trait Catch extends Tree
     @leaf class Case(pat: Pat, cond: Option[Term] = None, body: Term = Lit.Unit()) extends Tree
     @leaf class Cases(cases: List[Case] @nonEmpty) extends Catch
-    // TODO: validate that tpe is one of the class types
     @leaf class Parent(tpe: Type, argss: List[List[Term]] = Nil) extends Ref
     @leaf class Template(early: List[Defn.Val] = Nil, parents: List[Parent] = Nil,
                          self: Self = Self.empty, stats: List[Stmt.Template] = Nil) extends Tree {
       require(parents.isEmpty || !parents.tail.exists(_.argss.nonEmpty))
+      // TODO: validate that trait parents can't have value parameters
     }
     @leaf class Self(name: Option[Term.Ident] = None, typ: Option[Type] = None) extends Symbol {
       def annots: List[Annot] = Nil

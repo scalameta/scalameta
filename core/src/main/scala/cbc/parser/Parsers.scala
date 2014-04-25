@@ -8,7 +8,7 @@ import cbc.util.Chars.isScalaLetter
 import cbc.parser.Tokens._
 import cbc._, Trees._, Constants._, Names._
 import scala.reflect.core.{Term, Pat, Type, Defn, Decl, Lit, Stmt,
-                           Import, Aux, Ident, Annot, Enum,
+                           Import, Aux, Ident, Annot, Enum, Ctor,
                            TypeParam, Param, Arg, Package, Symbol}
 import scala.reflect.ClassTag
 
@@ -1645,7 +1645,7 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
      *  ClassParam        ::= {Annotation}  [{Modifier} (`val' | `var')] Id [`:' ParamType] [`=' Expr]
      *  }}}
      */
-    def paramClauses(owner: Ident, contextBounds: List[Tree]): List[List[Param.Def]] = ???
+    def paramClauses[Owner <: Tree](contextBounds: List[Tree]): (List[List[Param.Def]], List[Param.Def]) = ???
     /*{
       var implicitmod = 0
       var caseParam = ofCaseClass
@@ -1886,12 +1886,10 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
       if (mods.has[Annot.Lazy] && in.token != VAL)
         syntaxError("lazy not allowed here. Only vals can be lazy")
       in.token match {
-        case VAL =>
-          patDefOrDcl(mods)
-        case VAR =>
+        case VAL | VAR =>
           patDefOrDcl(mods)
         case DEF =>
-          funDefOrDcl(mods)
+          funDefOrDclOrCtor(mods)
         case TYPE =>
           typeDefOrDcl(mods)
         case _ =>
@@ -1951,17 +1949,19 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
      *  FunSig ::= id [FunTypeParamClause] ParamClauses
      *  }}}
      */
-    def funDefOrDcl(mods: List[Annot]): Symbol.Def = {
+    def funDefOrDclOrCtor(mods: List[Annot]): Symbol with Stmt.Template = {
       in.nextToken()
       if (in.token == THIS) {
         in.skipToken()
-        val vparamss = paramClauses(nme.CONSTRUCTOR, classContextBounds, ofCaseClass = false)
+        val (vparamss, implparams) = paramClauses[Ctor](classContextBounds)
         newLineOptWhenFollowedBy(LBRACE)
-        val rhs = in.token match {
-          case LBRACE   => constrBlock(vparamss)
-          case _        => accept(EQUALS); constrExpr(vparamss)
+        val (argss, stats) = in.token match {
+          case LBRACE => constrBlock()
+          case _      => accept(EQUALS); constrExpr()
         }
-        DefDef(mods, nme.CONSTRUCTOR, List(), vparamss, TypeTree(), rhs)
+        Ctor.Secondary(annots = mods, paramss = vparamss,
+                       implicits = implparams, primaryCtorArgss = argss,
+                       stats = stats)
       }
       else {
         val nameOffset = in.offset
@@ -2017,39 +2017,38 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
      *                    |  ConstrBlock
      *  }}}
      */
-    def constrExpr(vparamss: List[List[ValDef]]): Tree =
-      if (in.token == LBRACE) constrBlock(vparamss)
-      else Block(selfInvocation(vparamss) :: Nil, Lit.Unit())
+    def constrExpr(): (List[List[Arg]], List[Stmt.Block]) =
+      if (in.token == LBRACE) constrBlock()
+      else (selfInvocation(), Nil)
 
     /** {{{
      *  SelfInvocation  ::= this ArgumentExprs {ArgumentExprs}
      *  }}}
      */
-    def selfInvocation(vparamss: List[List[ValDef]]): Tree = {
+    def selfInvocation(): List[List[Arg]] = {
       accept(THIS)
       newLineOptWhenFollowedBy(LBRACE)
-      var t = Apply(Ident(nme.CONSTRUCTOR), argumentExprs())
+      var t: List[List[Arg]] = List(argumentExprs())
       newLineOptWhenFollowedBy(LBRACE)
       while (in.token == LPAREN || in.token == LBRACE) {
-        t = Apply(t, argumentExprs())
+        t = t :+ argumentExprs()
         newLineOptWhenFollowedBy(LBRACE)
       }
-      if (classContextBounds.isEmpty) t
-      else Apply(t, vparamss.last.map(vp => Ident(vp.name)))
+      t
     }
 
     /** {{{
      *  ConstrBlock    ::=  `{' SelfInvocation {semi BlockStat} `}'
      *  }}}
      */
-    def constrBlock(vparamss: List[List[ValDef]]): Tree = {
+    def constrBlock(): (List[List[Arg]], List[Stmt.Block]) = {
       in.skipToken()
-      val stats = selfInvocation(vparamss) :: {
-        if (isStatSep) { in.nextToken(); blockStatSeq() }
-        else Nil
-      }
+      val argss = selfInvocation()
+      val stats =
+        if (!isStatSep) Nil
+        else { in.nextToken(); blockStatSeq() }
       accept(RBRACE)
-      Block(stats, Lit.Unit())
+      (argss, stats)
     }
 
     /** {{{
