@@ -41,6 +41,9 @@ trait MarkupParsers { self: Parsers =>
     import Utility.{ isNameStart, isSpace }
     import Tokens.{ LBRACE, RBRACE }
 
+    def syntaxError(msg: String) = parser.syntaxError(msg)
+    def syntaxError(offset: Int, msg: String) = parser.syntaxError(offset, msg)
+
     type InputType    = CharArrayReader
     type ElementType  = Tree
     type AttributesType = mutable.Map[String, Tree]

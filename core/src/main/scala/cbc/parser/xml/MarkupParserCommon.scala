@@ -53,7 +53,7 @@ trait MarkupParserCommon {
     val buf = new StringBuilder
     while (ch != endCh) {
       // well-formedness constraint
-      if (ch == '<') return errorAndResult("'<' not allowed in attrib value", "")
+      if (ch == '<') syntaxError("'<' not allowed in attrib value")
       else if (ch == SU) truncatedError("")
       else buf append ch_returning_nextch
     }
@@ -85,7 +85,7 @@ trait MarkupParserCommon {
     if (ch == SU)
       truncatedError("")
     else if (!isNameStart(ch))
-      return errorAndResult("name expected, but char '%s' cannot start a name" format ch, "")
+      syntaxError("name expected, but char '%s' cannot start a name" format ch)
 
     val buf = new StringBuilder
 
@@ -93,7 +93,7 @@ trait MarkupParserCommon {
     while (isNameChar(ch))
 
     if (buf.last == ':') {
-      reportSyntaxError( "name cannot end in ':'" )
+      syntaxError( "name cannot end in ':'" )
       buf.toString dropRight 1
     }
     else buf.toString
@@ -105,11 +105,11 @@ trait MarkupParserCommon {
    * see [66]
    */
   def xCharRef(ch: () => Char, nextch: () => Unit): String =
-    Utility.parseCharRef(ch, nextch, reportSyntaxError _, truncatedError _)
+    Utility.parseCharRef(ch, nextch, syntaxError _, truncatedError _)
 
   def xCharRef(it: Iterator[Char]): String = {
     var c = it.next()
-    Utility.parseCharRef(() => c, () => { c = it.next() }, reportSyntaxError _, truncatedError _)
+    Utility.parseCharRef(() => c, () => { c = it.next() }, syntaxError _, truncatedError _)
   }
 
   def xCharRef: String = xCharRef(() => ch, () => nextch())

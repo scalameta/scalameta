@@ -18,6 +18,7 @@ list of ugliness discovered so far
 11. no way to fully qualify things that are in empty package
 12. vars with default values may not contain patterns
 13. constr block
+14. q"def x { case 1 => 2 }"
 */
 
 // (Together) TODO: tree-based symbols and types (see https://github.com/paulbutcher/implementor/blob/f1921de2b7de3d5ea8cf7f230c8e4e9f8c7f4b26/core/src/main/scala/org/scalamock/Implement.scala)
@@ -38,6 +39,7 @@ list of ugliness discovered so far
 // (Together) TODO: implement scaladoc with palladium
 
 // TODO: converter: double check conversion of `(f _)(x)` (bug 46)
+// TODO: converter: need api to discern `class C` from `class C {}` as the second one has to have EmptyTree in the body
 
 package core {
 
@@ -216,9 +218,9 @@ package core {
     @branch trait Field extends Symbol
     @branch trait Val extends Field
     @branch trait Var extends Field
-    @branch trait Def extends Symbol
+    @branch trait Def extends Symbol with Stmt.Template
     @branch trait Type extends Symbol
-    @branch trait Template extends Symbol with Stmt.TopLevel
+    @branch trait Template extends Symbol with Stmt.TopLevel with Stmt.Block
   }
 
   @branch trait Decl extends Symbol with Stmt.Template with Stmt.Refine
@@ -230,6 +232,9 @@ package core {
     @leaf class Def(annots: List[Annot], name: Term.Ident, tparams: List[TypeParam.Def],
                     paramss: List[List[Param.Def]], implicits: List[Param.Def],
                     typ: Option[core.Type]) extends Decl with Symbol.Def
+    @leaf class Procedure(annots: List[Annot], name: Term.Ident,
+                          tparams: List[TypeParam.Def], paramss: List[List[Param.Def]],
+                          implicits: List[Param.Def]) extends Decl with Symbol.Def
     @leaf class Type(annots: List[Annot], name: core.Type.Ident, tparams: List[TypeParam.Type],
                      bounds: Aux.TypeBounds) extends Decl with Stmt.Existential with Symbol.Type
   }
@@ -240,20 +245,22 @@ package core {
                     typ: Option[core.Type], rhs: Term) extends Defn with Symbol.Val
     @leaf class Var(annots: List[Annot], pats: List[Pat] @nonEmpty,
                     typ: Option[core.Type], rhs: Option[Term]) extends Defn with Symbol.Var {
-      require(rhs.nonEmpty || pats.forAll(_.isInstanceOf[Term.Ident]))
+      require(rhs.nonEmpty || pats.forall(_.isInstanceOf[Term.Ident]))
       require(typ.nonEmpty || rhs.nonEmpty)
     }
     @leaf class Def(annots: List[Annot], name: Term.Ident, tparams: List[TypeParam.Def],
                     paramss: List[List[Param.Def]], implicits: List[Param.Def],
                     typ: Option[core.Type], body: Term) extends Defn with Symbol.Def
+    @leaf class Procedure(annots: List[Annot], name: Term.Ident, tparams: List[TypeParam.Def],
+                          paramss: List[List[Param.Def]], implicits: List[Param.Def],
+                          body: Term.Block) extends Defn with Symbol.Def
     @leaf class Macro(annots: List[Annot], name: Term.Ident, tparams: List[TypeParam.Def],
                       paramss: List[List[Param.Def]], implicits: List[Param.Def],
                       typ: Type, body: Term) extends Defn
     @leaf class Type(annots: List[Annot], name: core.Type.Ident, tparams: List[TypeParam.Type],
-                     body: Type) extends Defn with Stmt.Refine with Symbol.Type
+                     body: core.Type) extends Defn with Stmt.Refine with Symbol.Type
     @leaf class Class(annots: List[Annot], name: core.Type.Ident, tparams: List[TypeParam.Def],
-                      val ctor: Option[Ctor.Primary], templ: Aux.Template)
-                      extends Defn with Symbol.Template {
+                      ctor: Ctor.Primary, templ: Aux.Template) extends Defn with Symbol.Template {
       def companion: Option[Object] = ???
     }
     @leaf class Trait(annots: List[Annot], name: core.Type.Ident, tparams: List[TypeParam.Type],
@@ -392,6 +399,7 @@ package core {
     @leaf class Contravariant() extends Mod
     @leaf class Lazy() extends Mod
     @leaf class AbstractOverride() extends Mod
+    @leaf class Macro() extends Mod
 
     @branch trait Param extends Source
     @leaf class ByName() extends Param
@@ -404,7 +412,7 @@ package core {
     @branch trait Catch extends Tree
     @leaf class Case(pat: Pat, cond: Option[Term] = None, body: Term = Lit.Unit()) extends Tree
     @leaf class Cases(cases: List[Case] @nonEmpty) extends Catch
-    @leaf class Parent(tpe: Type, argss: List[List[Term]] = Nil) extends Ref
+    @leaf class Parent(tpe: Type, argss: List[List[Arg]] = Nil) extends Ref
     @leaf class Template(early: List[Defn.Val] = Nil, parents: List[Parent] = Nil,
                          self: Self = Self.empty, stats: List[Stmt.Template] = Nil) extends Tree {
       require(parents.isEmpty || !parents.tail.exists(_.argss.nonEmpty))
@@ -416,7 +424,7 @@ package core {
     @leaf class TypeBounds(lo: Option[Type] = None, hi: Option[Type] = None) extends Tree
   }
 
-  @branch trait Package extends Tree { def stats: List[Stmt.TopLevel] }
+  @branch trait Package extends Tree
 }
 
 package object core {
