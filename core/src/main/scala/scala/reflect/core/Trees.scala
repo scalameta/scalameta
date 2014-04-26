@@ -19,6 +19,7 @@ list of ugliness discovered so far
 12. vars with default values may not contain patterns
 13. constr block
 14. q"def x { case 1 => 2 }"
+15. q"trait F[T] <: Sobaka[T] with Balabaka { def bazinga } "
 */
 
 // (Together) TODO: tree-based symbols and types (see https://github.com/paulbutcher/implementor/blob/f1921de2b7de3d5ea8cf7f230c8e4e9f8c7f4b26/core/src/main/scala/org/scalamock/Implement.scala)
@@ -35,14 +36,13 @@ list of ugliness discovered so far
 // (Denys)    TODO: unhygienic quasiquotes
 // (Denys)    TODO: consider adding default values for case class fields whenever applicable
 // (Eugene)   TODO: pretty printer
-// (Together) TODO: figure out which apis need to be moved to subclasses and which apis (Tree.annots, Type.typCtor, Type.args, Symbol.companion, Type.companion) need to be added for convenience
+// (Together) TODO: figure out which apis need to be moved to subclasses and which apis (Tree.mods, Type.tpeCtor, Type.args, Symbol.companion, Type.companion) need to be added for convenience
 // (Together) TODO: implement scaladoc with palladium
 
 // TODO: converter: double check conversion of `(f _)(x)` (bug 46)
 // TODO: converter: need api to discern `class C` from `class C {}` as the second one has to have EmptyTree in the body
 
 package core {
-
   @root trait Tree extends cbc.Trees.Tree {
     def parent: Option[Tree] = ???
     override def equals(other: Any): Boolean = ???
@@ -108,9 +108,9 @@ package core {
     @leaf class Ident(value: scala.Predef.String @nonEmpty, isBackquoted: Boolean = false) extends core.Ident with Ref with Pat with Symbol {
       require(!keywords.contains(value) || isBackquoted)
       def isBinding: Boolean = ???
-      def annots: List[Annot] = Nil
+      def mods: List[Mod] = Nil
     }
-    @leaf class SuperSelect(qual: Option[core.Ident], supertyp: Option[Type.Ident], selector: Term.Ident) extends Ref
+    @leaf class SuperSelect(qual: Option[core.Ident], supertpe: Option[Type.Ident], selector: Term.Ident) extends Ref
     @leaf class Select(qual: Term, selector: Term.Ident) extends Ref with Pat
 
     @leaf class Interpolate(prefix: Ident, parts: List[Lit.String] @nonEmpty, args: List[Term]) extends Term {
@@ -129,15 +129,16 @@ package core {
     @leaf class Update(lhs: Apply, rhs: Term) extends Term
     @leaf class Return(expr: Term) extends Term
     @leaf class Throw(expr: Term) extends Term
-    @leaf class Ascribe(expr: Term, typ: Type) extends Term
-    @leaf class Annotate(expr: Term, annots: List[Annot] @nonEmpty) extends Term with HasAnnots
+    @leaf class Ascribe(expr: Term, acsribedTpe: Type) extends Term
+    @leaf class Annotate(expr: Term, mods: List[Mod] @nonEmpty) extends Term with Has.Mods
     @leaf class Tuple(elements: List[Term] @nonEmpty) extends Term
     @leaf class Block(stats: List[Stmt.Block]) extends Term
     @leaf class If(cond: Term, thenp: Term, elsep: Term) extends Term
     @leaf class Match(scrut: Term, cases: Aux.Cases @nonEmpty) extends Term
     @leaf class Try(expr: Term, catchp: Option[Aux.Catch], finallyp: Option[Term]) extends Term
-    @leaf class Function(params: List[Param.Function], body: Term) extends Term {
-      require(params.length == 1 || !params.exists(_.annots.contains(Annot.Implicit)))
+    @leaf class Function(params: List[Aux.Param], body: Term) extends Term {
+      require(params.forall(_.default.isEmpty))
+      require(params.length == 1 || !params.exists(_.mods.contains(Mod.Implicit)))
     }
     @leaf class PartialFunction(cases: Aux.Cases) extends Term
     @leaf class While(expr: Term, body: Term) extends Term
@@ -158,6 +159,8 @@ package core {
     def widen: Type = ???
     def dealias: Type = ???
     def erasure: Type = ???
+    def superclasses: List[Type] = ???
+    def subclasses: List[Type] = ???
     // TODO: can we somehow inherit certain flags from type symbols here, s.t. we can write `t"T".isCaseClass`?
     // TODO: simple type validation
   }
@@ -169,19 +172,19 @@ package core {
     @leaf class Select(qual: Term.Ref, name: Type.Ident) extends Ref {
       require(qual.isPath)
     }
-    @leaf class SuperSelect(qual: Option[core.Ident], supertyp: Option[Type.Ident], selector: Type.Ident) extends Ref
+    @leaf class SuperSelect(qual: Option[core.Ident], supertpe: Option[Type.Ident], selector: Type.Ident) extends Ref
     @leaf class Project(qual: Type, name: Type.Ident) extends Ref
     @leaf class Singleton(ref: Term.Ref) extends Ref {
       require(ref.isPath)
     }
 
-    // TODO: validate that typ can actually be applied
-    @leaf class Apply(typ: Type, args: List[Type] @nonEmpty) extends Type
+    // TODO: validate that tpe can actually be applied
+    @leaf class Apply(tpe: Type, args: List[Type] @nonEmpty) extends Type
     @leaf class Function(params: List[Type], res: Type) extends Type
     @leaf class Tuple(elements: List[Type] @nonEmpty) extends Type
-    @leaf class Compound(typs: List[Type], refinement: List[Stmt.Refine] @nonEmpty) extends Type
-    @leaf class Existential(typ: Type, quants: List[Stmt.Existential] @nonEmpty) extends Type
-    @leaf class Annotate(typ: Type, annots: List[Annot] @nonEmpty) extends Type with HasAnnots
+    @leaf class Compound(tpes: List[Type], refinement: List[Stmt.Refine] @nonEmpty) extends Type
+    @leaf class Existential(tpe: Type, quants: List[Stmt.Existential] @nonEmpty) extends Type
+    @leaf class Annotate(tpe: Type, mods: List[Mod] @nonEmpty) extends Type with Has.Mods
     // (Denys) TODO: need to validate that placeholder appears within one of allowed contexts (e.g. `type T = _` is illegal)
     @leaf class Placeholder(bounds: Aux.TypeBounds) extends Type
   }
@@ -207,83 +210,109 @@ package core {
     }
   }
 
-  @branch trait Symbol extends Tree with HasAnnots {
+  @branch trait Symbol extends Tree with Has.Mods {
     def owner: Symbol = ???
     def ref: core.Ref = ???
     def overrides: List[Symbol] = ???
+    def doc: Option[Mod.Doc] = ???
     // TODO: knownDirectSubclasses => can we replace this with an optimized query?
     // TODO: methods from Scope. do we need them here? how do we deduplicate wrt types?
   }
   object Symbol {
     @branch trait Field extends Symbol
-    @branch trait Val extends Field
-    @branch trait Var extends Field
-    @branch trait Def extends Symbol with Stmt.Template
-    @branch trait Type extends Symbol
+    @branch trait Val extends Field with Has.DeclaredType
+    @branch trait Var extends Field with Has.DeclaredType
+    @branch trait Def extends Symbol with Stmt.Template with Has.TparamClause with Has.ParamClauses
+    @branch trait Type extends Symbol with Has.TparamClause
     @branch trait Template extends Symbol with Stmt.TopLevel with Stmt.Block
   }
 
   @branch trait Decl extends Symbol with Stmt.Template with Stmt.Refine
   object Decl {
-    @leaf class Val(annots: List[Annot], pats: List[Term.Ident] @nonEmpty,
-                    typ: core.Type) extends Decl with Stmt.Existential with Symbol.Val
-    @leaf class Var(annots: List[Annot], pats: List[Term.Ident] @nonEmpty,
-                    typ: core.Type) extends Decl with Symbol.Var
-    @leaf class Def(annots: List[Annot], name: Term.Ident, tparams: List[TypeParam.Def],
-                    paramss: List[List[Param.Def]], implicits: List[Param.Def],
-                    typ: Option[core.Type]) extends Decl with Symbol.Def
-    @leaf class Procedure(annots: List[Annot], name: Term.Ident,
-                          tparams: List[TypeParam.Def], paramss: List[List[Param.Def]],
-                          implicits: List[Param.Def]) extends Decl with Symbol.Def
-    @leaf class Type(annots: List[Annot], name: core.Type.Ident, tparams: List[TypeParam.Type],
+    @leaf class Val(mods: List[Mod],
+                    pats: List[Term.Ident] @nonEmpty,
+                    declaredTpe: Option[core.Type] @nonEmpty) extends Decl with Stmt.Existential with Symbol.Val
+    @leaf class Var(mods: List[Mod],
+                    pats: List[Term.Ident] @nonEmpty,
+                    declaredTpe: Option[core.Type] @nonEmpty) extends Decl with Symbol.Var
+    @leaf class Def(mods: List[Mod],
+                    name: Term.Ident,
+                    tparamClause: Option[Aux.TypeParamClause],
+                    paramClauses: Option[Aux.ParamClauses],
+                    declaredTpe: Option[core.Type] @nonEmpty) extends Decl with Symbol.Def with Has.DeclaredType {
+      require(paramss.flatten.forall(_.declaredTpe.nonEmpty))
+    }
+    @leaf class Procedure(mods: List[Mod],
+                          name: Term.Ident,
+                          tparamClause: Option[Aux.TypeParamClause],
+                          paramClauses: Option[Aux.ParamClauses]) extends Decl with Symbol.Def
+    @leaf class Type(mods: List[Mod],
+                     name: core.Type.Ident,
+                     tparamClause: Option[Aux.TypeParamClause],
                      bounds: Aux.TypeBounds) extends Decl with Stmt.Existential with Symbol.Type
   }
 
   @branch trait Defn extends Symbol with Stmt.Block with Stmt.Template
   object Defn {
-    @leaf class Val(annots: List[Annot], pats: List[Pat] @nonEmpty,
-                    typ: Option[core.Type], rhs: Term) extends Defn with Symbol.Val
-    @leaf class Var(annots: List[Annot], pats: List[Pat] @nonEmpty,
-                    typ: Option[core.Type], rhs: Option[Term]) extends Defn with Symbol.Var {
+    @leaf class Val(mods: List[Mod],
+                    pats: List[Pat] @nonEmpty,
+                    declaredTpe: Option[core.Type],
+                    rhs: Term) extends Defn with Symbol.Val
+    @leaf class Var(mods: List[Mod],
+                    pats: List[Pat] @nonEmpty,
+                    declaredTpe: Option[core.Type],
+                    rhs: Option[Term]) extends Defn with Symbol.Var {
       require(rhs.nonEmpty || pats.forall(_.isInstanceOf[Term.Ident]))
-      require(typ.nonEmpty || rhs.nonEmpty)
+      require(declaredTpe.nonEmpty || rhs.nonEmpty)
     }
-    @leaf class Def(annots: List[Annot], name: Term.Ident, tparams: List[TypeParam.Def],
-                    paramss: List[List[Param.Def]], implicits: List[Param.Def],
-                    typ: Option[core.Type], body: Term) extends Defn with Symbol.Def
-    @leaf class Procedure(annots: List[Annot], name: Term.Ident, tparams: List[TypeParam.Def],
-                          paramss: List[List[Param.Def]], implicits: List[Param.Def],
+    @leaf class Def(mods: List[Mod],
+                    name: Term.Ident,
+                    tparamClause: Option[Aux.TypeParamClause],
+                    paramClauses: Option[Aux.ParamClauses],
+                    declaredTpe: Option[core.Type],
+                    body: Term) extends Defn with Symbol.Def with Has.DeclaredType
+    @leaf class Procedure(mods: List[Mod],
+                          name: Term.Ident,
+                          tparamClause: Option[Aux.TypeParamClause],
+                          paramClauses: Option[Aux.ParamClauses],
                           body: Term.Block) extends Defn with Symbol.Def
-    @leaf class Macro(annots: List[Annot], name: Term.Ident, tparams: List[TypeParam.Def],
-                      paramss: List[List[Param.Def]], implicits: List[Param.Def],
-                      typ: Type, body: Term) extends Defn
-    @leaf class Type(annots: List[Annot], name: core.Type.Ident, tparams: List[TypeParam.Type],
+    @leaf class Type(mods: List[Mod],
+                     name: core.Type.Ident,
+                     tparamClause: Option[Aux.TypeParamClause],
                      body: core.Type) extends Defn with Stmt.Refine with Symbol.Type
-    @leaf class Class(annots: List[Annot], name: core.Type.Ident, tparams: List[TypeParam.Def],
-                      ctor: Ctor.Primary, templ: Aux.Template) extends Defn with Symbol.Template {
+    @leaf class Class(mods: List[Mod],
+                      name: core.Type.Ident,
+                      tparamClause: Option[Aux.TypeParamClause],
+                      ctor: Ctor.Primary,
+                      templ: Aux.Template) extends Defn with Symbol.Template
+                                              with Has.TparamClause {
       def companion: Option[Object] = ???
     }
-    @leaf class Trait(annots: List[Annot], name: core.Type.Ident, tparams: List[TypeParam.Type],
-                      templ: Aux.Template) extends Defn with Symbol.Template {
+    @leaf class Trait(mods: List[Mod],
+                      name: core.Type.Ident,
+                      tparamClause: Option[Aux.TypeParamClause],
+                      templ: Aux.Template) extends Defn with Symbol.Template
+                                              with Has.TparamClause {
       def isInterface: Boolean = templ.stats.forall(_.isInstanceOf[Decl])
       def companion: Option[Object] = ???
     }
-    @leaf class Object(annots: List[Annot], name: Term.Ident, templ: Aux.Template)
-                       extends Defn with Symbol.Template {
-      def companion: Option[Defn] = ??? // TODO: Class | Trait
+    @leaf class Object(mods: List[Mod],
+                       name: Term.Ident,
+                       templ: Aux.Template) extends Defn with Symbol.Template {
+      def companion: Option[Symbol.Template] = ??? // TODO: Class | Trait
     }
   }
 
-  @branch trait Ctor extends Symbol {
-    def paramss: List[List[Param.Def]]
-    def implicits: List[Param.Def]
-  }
+  @branch trait Ctor extends Symbol with Has.ParamClauses
   object Ctor {
-    @leaf class Primary(annots: List[Annot] = Nil, paramss: List[List[Param.Def]] = Nil,
-                        implicits: List[Param.Def] = Nil) extends Ctor
-    @leaf class Secondary(annots: List[Annot], paramss: List[List[Param.Def]],
-                          implicits: List[Param.Def], primaryCtorArgss: List[List[Arg]],
-                          stats: List[Stmt.Block] = Nil) extends Ctor with Stmt.Template
+    @leaf class Primary(mods: List[Mod] = Nil,
+                        paramClauses: Option[Aux.ParamClauses] = None) extends Ctor
+    @leaf class Secondary(mods: List[Mod] = Nil,
+                          paramClauses: Option[Aux.ParamClauses] = None,
+                          primaryCtorArgss: List[List[Arg]] = Nil,
+                          declaredStats: Option[List[Stmt.Block]] = None) extends Ctor with Stmt.Template {
+      def stats: List[Stmt.Block] = declaredStats.getOrElse(Nil)
+    }
   }
 
   object Stmt {
@@ -294,11 +323,10 @@ package core {
     @branch trait Existential extends Tree
   }
 
-  @branch trait Scope extends Tree {
-    // TODO: design scopes
-    // should include parents, self, members, methods, types, etc
-    // where things like methods should be Iterable[Symbol] + have apply(ident) and apply(symbol)
-  }
+  // TODO: design scopes
+  // should include parents, self, members, methods, types, etc
+  // where things like methods should be Iterable[Symbol] + have apply(ident) and apply(symbol)
+  @branch trait Scope extends Tree
 
   @branch trait Lit extends Term with Pat
   object Lit {
@@ -349,44 +377,10 @@ package core {
     @leaf class Guard(cond: Term) extends Enum
   }
 
-  @branch trait Param extends Symbol
-  object Param {
-    @leaf class Function(annots: List[Annot] = Nil, name: Option[Term.Ident] = None, typ: Option[Type] = None) extends Param
-    @leaf class Def(annots: List[Annot] = Nil, name: Option[Term.Ident] = None, typ: Type, default: Option[Term] = None) extends Param
-  }
-
-  @branch trait TypeParam extends Symbol
-  object TypeParam {
-    @leaf class Def(annots: List[Annot] = Nil,
-                    name: Option[core.Type.Ident] = None,
-                    tparams: List[TypeParam.Type] = Nil,
-                    contextBounds: List[core.Type] = Nil,
-                    viewBounds: List[core.Type] = Nil,
-                    bounds: Aux.TypeBounds = Aux.TypeBounds.empty) extends TypeParam
-    @leaf class Type(annots: List[Annot] = Nil,
-                     name: Option[core.Type.Ident] = None,
-                     tparams: List[TypeParam.Type] = Nil,
-                     bounds: Aux.TypeBounds = Aux.TypeBounds.empty) extends TypeParam
-  }
-
-  @branch trait HasAnnots extends Tree {
-    def annots: List[Annot]
-    // (Eugene) TODO: https://docs.google.com/spreadsheet/ccc?key=0Ahw_zqMtW4nNdC1lRVJvc3VjTUdOX0ppMVpSYzVRSHc&usp=sharing#gid=0
-    // * write a script that fetches this google doc and converts it into a, say, CSV spec
-    // * write a test that validates the spec by generating source files and parsing them
-    // * write a macro that generates implementation of validateAnnots from the spec + extension methods like isImplicit
-    private[reflect] def validateAnnots(enclosing: Tree): Boolean = ???
-  }
-  @branch trait Annot extends Tree
-  object Annot {
-    @branch trait Transient extends Annot
-    // (Together) TODO: design the attachment API
-
-    @branch trait Source extends Annot
-    @leaf class UserDefined(tpe: Type, argss: List[List[Arg]]) extends Source
-    @leaf class Doc(doc: String) extends Source // TODO: design representation for scaladoc
-
-    @branch trait Mod extends Source
+  @branch trait Mod extends Tree
+  object Mod {
+    @leaf class Annot(tpe: Type, argss: List[List[Arg]]) extends Mod
+    @leaf class Doc(doc: String) extends Mod // TODO: design representation for scaladoc
     @leaf class Private(within: String) extends Mod // TODO: design a name resolution API for these and imports
     @leaf class Protected(within: String) extends Mod
     @leaf class Implicit() extends Mod
@@ -400,12 +394,10 @@ package core {
     @leaf class Lazy() extends Mod
     @leaf class AbstractOverride() extends Mod
     @leaf class Macro() extends Mod
-
-    @branch trait Param extends Source
-    @leaf class ByName() extends Param
-    @leaf class Vararg() extends Param
-    @leaf class Val() extends Param
-    @leaf class Var() extends Param
+    @leaf class ByNameParam() extends Mod
+    @leaf class VarargParam() extends Mod
+    @leaf class ValParam() extends Mod
+    @leaf class VarParam() extends Mod
   }
 
   object Aux {
@@ -414,14 +406,51 @@ package core {
     @leaf class Cases(cases: List[Case] @nonEmpty) extends Catch
     @leaf class Parent(tpe: Type, argss: List[List[Arg]] = Nil) extends Ref
     @leaf class Template(early: List[Defn.Val] = Nil, parents: List[Parent] = Nil,
-                         self: Self = Self.empty, stats: List[Stmt.Template] = Nil) extends Tree {
+                         self: Self = Self.empty, declaredStats: Option[List[Stmt.Template]] = None) extends Tree {
       require(parents.isEmpty || !parents.tail.exists(_.argss.nonEmpty))
       // TODO: validate that trait parents can't have value parameters
+      def stats: List[Stmt.Template] = declaredStats.getOrElse(Nil)
     }
-    @leaf class Self(name: Option[Term.Ident] = None, typ: Option[Type] = None) extends Symbol {
-      def annots: List[Annot] = Nil
+    @leaf class Self(name: Option[Term.Ident] = None, tpe: Option[Type] = None) extends Symbol {
+      def mods: List[Mod] = Nil
     }
+    @leaf class Param(mods: List[Mod] = Nil, name: Option[Term.Ident] = None,
+                      declaredTpe: Option[Type] = None, default: Option[Term] = None) extends Symbol
+    @leaf class ParamClauses(paramss: List[List[Param]] = Nil, implicits: List[Param] = Nil) extends Tree
+    @leaf class TypeParam(mods: List[Mod] = Nil,
+                          name: Option[core.Type.Ident] = None,
+                          tparamClause: Option[Aux.TypeParamClause] = None,
+                          contextBounds: List[core.Type] = Nil,
+                          viewBounds: List[core.Type] = Nil,
+                          bounds: Aux.TypeBounds = Aux.TypeBounds.empty) extends Symbol
+    @leaf class TypeParamClause(tparams: List[TypeParam] @nonEmpty) extends Tree
     @leaf class TypeBounds(lo: Option[Type] = None, hi: Option[Type] = None) extends Tree
+  }
+
+  object Has {
+    @branch trait ParamClauses {
+      def paramClauses: Option[Aux.ParamClauses]
+      def paramss: List[List[Aux.Param]] = paramClauses.map(pc => pc.paramss :+ pc.implicits).getOrElse(Nil)
+    }
+
+    @branch trait TparamClause {
+      def tparamClause: Option[Aux.TypeParamClause]
+      def tparams: List[Aux.TypeParam] = tparamClause.map(_.tparams).getOrElse(Nil)
+    }
+
+    @branch trait Mods extends Tree {
+      def mods: List[Mod]
+      // (Eugene) TODO: https://docs.google.com/spreadsheet/ccc?key=0Ahw_zqMtW4nNdC1lRVJvc3VjTUdOX0ppMVpSYzVRSHc&usp=sharing#gid=0
+      // * write a script that fetches this google doc and converts it into a, say, CSV spec
+      // * write a test that validates the spec by generating source files and parsing them
+      // * write a macro that generates implementation of validateAnnots from the spec + extension methods like isImplicit
+      private[reflect] def validateMods(): Boolean = ???
+    }
+
+    @branch trait DeclaredType extends Tree {
+      def declaredTpe: Option[Type]
+      def tpe: Type = ???
+    }
   }
 
   @branch trait Package extends Tree
@@ -430,10 +459,14 @@ package core {
 package object core {
   object Package {
     @leaf class Empty(stats: List[Stmt.TopLevel]) extends Package
-    @leaf class Named(name: Term.Ref, stats: List[Stmt.TopLevel]) extends Package with Stmt.TopLevel {
+    @leaf class Named(name: Term.Ref,
+                      declaredStats: Option[List[Stmt.TopLevel]]) extends Package with Stmt.TopLevel {
       require(name.isQualId)
+      def stats: List[Stmt.TopLevel] = declaredStats.getOrElse(Nil)
     }
-    @leaf class Object(annots: List[Annot], name: Term.Ident, templ: Aux.Template) extends Package with Stmt.TopLevel
+    @leaf class Object(mods: List[Mod],
+                       name: Term.Ident,
+                       templ: Aux.Template) extends Package with Stmt.TopLevel with Symbol.Template
   }
 
   val keywords = Set(
@@ -456,10 +489,13 @@ package object core {
     object pq extends api
     object fq extends api
   }
-  implicit class RichParents(val parents: List[Aux.Parent]) {
-    // TODO: not sure whether this is the best approach
-    def linearization: List[Aux.Parent] = ???
+  implicit class RichTypes(val parents: List[Type]) extends AnyVal {
+    def linearization: List[Type] = ???
   }
-  def lub(typs: Type*): Type = ???
-  def glb(typs: Type*): Type = ???
+  implicit class RichMods(val mods: List[Mod]) extends AnyVal {
+    def has[T <: Mod](implicit tag: ClassTag[T]): Boolean =
+      mods.exists { _.getClass == tag.runtimeClass }
+  }
+  def lub(tpes: Type*): Type = ???
+  def glb(tpes: Type*): Type = ???
 }

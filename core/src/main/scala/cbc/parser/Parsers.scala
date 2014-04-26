@@ -8,8 +8,8 @@ import cbc.util.Chars.isScalaLetter
 import cbc.parser.Tokens._
 import cbc._, Trees._, Constants._, Names._
 import scala.reflect.core.{Term, Pat, Type, Defn, Decl, Lit, Stmt,
-                           Import, Aux, Ident, Annot, Enum, Ctor,
-                           TypeParam, Param, Arg, Package, Symbol}
+                           Import, Aux, Ident, RichMods, Mod, Enum, Ctor,
+                           Arg, Package, Symbol}
 import scala.reflect.ClassTag
 
 trait ParsersCommon extends ScannersCommon { self =>
@@ -308,17 +308,17 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
 /* ---------- TREE CONSTRUCTION ------------------------------------------- */
 
     /** Convert tree to formal parameter list. */
-    def convertToParams(tree: Term): List[Param.Function] = tree match {
+    def convertToParams(tree: Term): List[Aux.Param] = tree match {
       case Term.Tuple(ts) => ts map convertToParam
       case _              => List(convertToParam(tree))
     }
 
     /** Convert tree to formal parameter. */
-    def convertToParam(tree: Term): Param.Function = tree match {
+    def convertToParam(tree: Term): Aux.Param = tree match {
       case id: Ident =>
-        Param.Function(name = Some(id.toTermIdent), typ = None)
+        Aux.Param(name = Some(id.toTermIdent), declaredTpe = None)
       case Term.Ascribe(id: Ident, tpt) =>
-        Param.Function(name = Some(id.toTermIdent), typ = Some(tpt))
+        Aux.Param(name = Some(id.toTermIdent), declaredTpe = Some(tpt))
       case _ =>
         syntaxError(/* tree.pos */ ???, "not a legal formal parameter")
     }
@@ -350,7 +350,7 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
     @inline final def caseSeparated[T](part: => T): List[T] =
       tokenSeparated(CASE, sepFirst = true, part)
 
-    def readUserAnnots(part: => Annot.UserDefined): List[Annot.UserDefined] =
+    def readAnnots(part: => Mod.Annot): List[Mod.Annot] =
       tokenSeparated(AT, sepFirst = true, part)
 
     def makeTuple[T <: Tree](bodyf: => List[T], zero: () => T, tuple: List[T] => T): T = {
@@ -540,7 +540,7 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
       def typeArgs(): List[Type] = inBrackets(types())
 
       /** {{{
-       *  AnnotType        ::=  SimpleType {Annotation}
+       *  ModType        ::=  SimpleType {Annotation}
        *  }}}
        */
       def annotType(): Type = annotTypeRest(simpleType())
@@ -580,7 +580,7 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
       }
 
       /** {{{
-       *  CompoundType ::= AnnotType {with AnnotType} [Refinement]
+       *  CompoundType ::= ModType {with ModType} [Refinement]
        *                |  Refinement
        *  }}}
        */
@@ -662,7 +662,7 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
     /** {{{
      *  Path       ::= StableId
      *              |  [Ident `.'] this
-     *  AnnotType ::= Path [`.' type]
+     *  ModType ::= Path [`.' type]
      *  }}}
      */
     // TODO: foo.this can be either term or type name depending on the context
@@ -853,7 +853,7 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
       else startInfixType()
 
     def annotTypeRest(t: Type): Type =
-      (t /: userAnnots(skipNewLines = false)) { case (t, annot) => Type.Annotate(t, annot :: Nil) }
+      (t /: annots(skipNewLines = false)) { case (t, annot) => Type.Annotate(t, annot :: Nil) }
 
     /** {{{
      *  WildcardType ::= `_' TypeBounds
@@ -978,7 +978,7 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
         } else if (in.token == COLON) {
           val colonPos = in.skipToken()
           if (isAnnotation) {
-            t = Term.Annotate(t, userAnnots(skipNewLines = false))
+            t = Term.Annotate(t, annots(skipNewLines = false))
           } else {
             t = {
               val tpt = typeOrInfixType(location)
@@ -1022,7 +1022,7 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
           Term.Ascribe(expr, typeOrInfixType(location))
         }
       }
-      val param = param0.copy(annots = param0.annots :+ Annot.Implicit())
+      val param = param0.copy(mods = param0.mods :+ Mod.Implicit())
       accept(ARROW)
       Term.Function(List(param), if (location != InBlock) expr() else block())
     }
@@ -1494,7 +1494,7 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
      */
     def typ(): Type      = outPattern.typ()
     def startInfixType() = outPattern.infixType(InfixMode.FirstOp)
-    def startAnnotType() = outPattern.annotType()
+    def startModType() = outPattern.annotType()
     def exprTypeArgs()   = outPattern.typeArgs()
     def exprSimpleType() = outPattern.simpleType()
 
@@ -1513,7 +1513,7 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
     /** Drop `private` modifier when followed by a qualifier.
      *  Contract `abstract` and `override` to ABSOVERRIDE
      */
-    /*private def normalizeModifers(mods: List[Annot]): List[Annot] =
+    /*private def normalizeModifers(mods: List[Mod]): List[Mod] =
       if (mods.isPrivate && mods.hasAccessBoundary)
         normalizeModifers(mods &~ Flags.PRIVATE)
       else if (mods hasAllFlags (Flags.ABSTRACT | Flags.OVERRIDE))
@@ -1521,7 +1521,7 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
       else
         mods
 
-    private def addMod(mods: List[Annot], mod: Long): List[Annot] = {
+    private def addMod(mods: List[Mod], mod: Long): List[Mod] = {
       if (mods hasFlag mod) syntaxError(in.offset, "repeated modifier")
       in.nextToken()
       (mods | mod)
@@ -1531,7 +1531,7 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
      *  AccessQualifier ::= `[' (Id | this) `]'
      *  }}}
      */
-    /*def accessQualifierOpt(mods: List[Annot]): List[Annot] = {
+    /*def accessQualifierOpt(mods: List[Mod]): List[Mod] = {
       var result = mods
       if (in.token == LBRACKET) {
         in.nextToken()
@@ -1544,23 +1544,23 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
       result
     }*/
 
-    private val flagAnnots: Map[Int, () => Annot] = Map(
-      ABSTRACT  -> (() => Annot.Abstract()),
-      FINAL     -> (() => Annot.Final()),
-      IMPLICIT  -> (() => Annot.Implicit()),
-      LAZY      -> (() => Annot.Lazy()),
-      OVERRIDE  -> (() => Annot.Override()),
-      SEALED    -> (() => Annot.Sealed())
+    private val flagMods: Map[Int, () => Mod] = Map(
+      ABSTRACT  -> (() => Mod.Abstract()),
+      FINAL     -> (() => Mod.Final()),
+      IMPLICIT  -> (() => Mod.Implicit()),
+      LAZY      -> (() => Mod.Lazy()),
+      OVERRIDE  -> (() => Mod.Override()),
+      SEALED    -> (() => Mod.Sealed())
     )
 
-    def modifiers(): List[Annot] = ???
-    def localModifiers(): List[Annot] = ???
+    def modifiers(): List[Mod] = ???
+    def localModifiers(): List[Mod] = ???
 
     /** {{{
      *  AccessModifier ::= (private | protected) [AccessQualifier]
      *  }}}
      */
-    def accessModifierOpt(): List[Annot] = ???
+    def accessModifierOpt(): List[Mod] = ???
     /*normalizeModifers {
       in.token match {
         case m @ (PRIVATE | PROTECTED)  => in.nextToken() ; accessQualifierOpt(Modifiers(flagTokens(m)))
@@ -1575,8 +1575,8 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
      *              |  override
      *  }}}
      */
-    /*def modifiers(): List[Annot] = normalizeModifers {
-      def loop(mods: List[Annot]): List[Annot] = in.token match {
+    /*def modifiers(): List[Mod] = normalizeModifers {
+      def loop(mods: List[Mod]): List[Mod] = in.token match {
         case PRIVATE | PROTECTED =>
           loop(accessQualifierOpt(addMod(mods, flagTokens(in.token))))
         case ABSTRACT | FINAL | SEALED | OVERRIDE | IMPLICIT | LAZY =>
@@ -1596,8 +1596,8 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
      *  LocalModifier  ::= abstract | final | sealed | implicit | lazy
      *  }}}
      */
-    /*def localModifiers(): List[Annot] = {
-      def loop(mods: List[Annot]): List[Annot] =
+    /*def localModifiers(): List[Mod] = {
+      def loop(mods: List[Mod]): List[Mod] =
         if (isLocalModifier) loop(addMod(mods, flagTokens(in.token)))
         else mods
 
@@ -1609,19 +1609,19 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
      *  ConsrAnnotations ::= {`@' SimpleType ArgumentExprs}
      *  }}}
      */
-    def userAnnots(skipNewLines: Boolean): List[Annot.UserDefined] = readUserAnnots {
-      val t = userAnnot()
+    def annots(skipNewLines: Boolean): List[Mod.Annot] = readAnnots {
+      val t = annot()
       if (skipNewLines) newLineOpt()
       t
     }
-    def userConstructorAnnots(): List[Annot.UserDefined] = readUserAnnots {
-      Annot.UserDefined(exprSimpleType(), argumentExprs() :: Nil)
+    def constructorAnnots(): List[Mod.Annot] = readAnnots {
+      Mod.Annot(exprSimpleType(), argumentExprs() :: Nil)
     }
 
-    def userAnnot(): Annot.UserDefined = {
+    def annot(): Mod.Annot = {
       val t = exprSimpleType()
-      if (in.token == LPAREN) Annot.UserDefined(t, multipleArgumentExprs())
-      else Annot.UserDefined(t, Nil)
+      if (in.token == LPAREN) Mod.Annot(t, multipleArgumentExprs())
+      else Mod.Annot(t, Nil)
     }
 
 /* -------- PARAMETERS ------------------------------------------- */
@@ -1637,7 +1637,7 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
      *  ClassParam        ::= {Annotation}  [{Modifier} (`val' | `var')] Id [`:' ParamType] [`=' Expr]
      *  }}}
      */
-    def paramClauses[Owner <: Tree](): (List[List[Param.Def]], List[Param.Def]) = ???
+    def paramClauses[Owner <: Tree](): Option[Aux.ParamClauses] = ???
     /*{
       var implicitmod = 0
       var caseParam = ofCaseClass
@@ -1679,26 +1679,26 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
      *  ParamType ::= Type | `=>' Type | Type `*'
      *  }}}
      */
-    def paramType(): (Type, Option[Annot.Param]) = {
+    def paramType(): (Type, Option[Mod]) = {
       val start = in.offset
       in.token match {
         case ARROW  =>
           in.nextToken()
-          (typ(), Some(Annot.ByName()))
+          (typ(), Some(Mod.ByNameParam()))
         case _      =>
           val t = typ()
           if (isRawStar) {
             in.nextToken()
-            (t, Some(Annot.Vararg()))
+            (t, Some(Mod.VarargParam()))
           }
           else (t, None)
       }
     }
 
-    def param(owner: Ident, isImplicit: Boolean): Param.Def = ???
+    def param(owner: Ident, isImplicit: Boolean): Aux.Param = ???
     /* {
       val start = in.offset
-      val annots = userAnnots(skipNewLines = false)
+      val annots = annots(skipNewLines = false)
       var mods = Modifiers(Flags.PARAM)
       if (owner.isTypeName) {
         mods = modifiers() | Flags.PARAMACCESSOR
@@ -1753,8 +1753,9 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
      *  TypeParam             ::= Id TypeParamClauseOpt TypeBounds {<% Type} {":" Type}
      *  }}}
      */
-    /*def typeParamClauseOpt(owner: Name, contextBoundBuf: ListBuffer[Tree]): List[TypeDef] = {
-      def typeParam(ms: List[Annot]): TypeDef = {
+    def typeParamClauseOpt[Owner <: Symbol](): Option[Aux.TypeParamClause] = ???
+    /*{
+      def typeParam(ms: List[Mod]): TypeDef = {
         var mods = ms | Flags.PARAM
         val start = in.offset
         if (owner.isTypeName && isIdent) {
@@ -1790,12 +1791,9 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
         param
       }
       newLineOptWhenFollowedBy(LBRACKET)
-      if (in.token == LBRACKET) inBrackets(commaSeparated(typeParam(NoMods withAnnotations userAnnots(skipNewLines = true))))
+      if (in.token == LBRACKET) inBrackets(commaSeparated(typeParam(NoMods withAnnotations annots(skipNewLines = true))))
       else Nil
     }*/
-
-    def typeTypeParamClauses(): List[TypeParam.Type] = ???
-    def defTypeParamClauses(): List[TypeParam.Def] = ???
 
     /** {{{
      *  TypeBounds ::= [`>:' Type] [`<:' Type]
@@ -1857,10 +1855,6 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
       }
     }
 
-    implicit class ModsMethods(mods: List[Annot]) {
-      def has[T](implicit tag: ClassTag[T]): Boolean =
-        mods.exists { _.getClass == tag.runtimeClass }
-    }
 
     /** {{{
      *  Def    ::= val PatDef
@@ -1874,8 +1868,8 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
      *           | type [nl] TypeDcl
      *  }}}
      */
-    def defOrDclOrCtor(mods: List[Annot]): Symbol = {
-      if (mods.has[Annot.Lazy] && in.token != VAL)
+    def defOrDclOrCtor(mods: List[Mod]): Symbol = {
+      if (mods.has[Mod.Lazy] && in.token != VAL)
         syntaxError("lazy not allowed here. Only vals can be lazy")
       in.token match {
         case VAL | VAR =>
@@ -1890,8 +1884,8 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
     }
 
     def nonLocalDefOrDcl: Symbol with Stmt.Template = {
-      val annots = userAnnots(skipNewLines = true)
-      defOrDclOrCtor(modifiers() ++ annots) match {
+      val anns = annots(skipNewLines = true)
+      defOrDclOrCtor(modifiers() ++ anns) match {
         case s: Stmt.Template => s
         case _                => syntaxError(???)
       }
@@ -1903,7 +1897,7 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
      *  VarDef ::= PatDef | Id {`,' Id} `:' Type `=' `_'
      *  }}}
      */
-    def patDefOrDcl(mods: List[Annot]): Symbol.Field = {
+    def patDefOrDcl(mods: List[Mod]): Symbol.Field = {
       val isMutable = in.token == VAR
       in.nextToken()
       val lhs: List[Pat] = commaSeparated(noSeq.pattern2())
@@ -1921,14 +1915,14 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
         if (isMutable) Defn.Var(mods, lhs, tp, rhs)
         else Defn.Val(mods, lhs, tp, rhs.get)
       } else {
-        if (mods.has[Annot.Lazy]) syntaxError("lazy values may not be abstract")
+        if (mods.has[Mod.Lazy]) syntaxError("lazy values may not be abstract")
         val ids = lhs.map {
           case id: Term.Ident => id
           case _              => syntaxError("pattern definition may not be abstract")
         }
 
-        if (isMutable) Decl.Var(mods, ids, tp.get)
-        else Decl.Var(mods, ids, tp.get)
+        if (isMutable) Decl.Var(mods, ids, tp)
+        else Decl.Var(mods, ids, tp)
       }
     }
 
@@ -1941,39 +1935,37 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
      *  FunSig ::= id [FunTypeParamClause] ParamClauses
      *  }}}
      */
-    def funDefOrDclOrCtor(mods: List[Annot]): Symbol with Stmt.Template = {
+    def funDefOrDclOrCtor(mods: List[Mod]): Symbol with Stmt.Template = {
       in.nextToken()
       if (in.token != THIS) funDefRest(mods, ident())
       else {
         in.skipToken()
-        val (vparamss, implparams) = paramClauses[Ctor]()
+        val paramss = paramClauses[Ctor]()
         newLineOptWhenFollowedBy(LBRACE)
         val (argss, stats) = in.token match {
           case LBRACE => constrBlock()
           case _      => accept(EQUALS); constrExpr()
         }
-        Ctor.Secondary(annots = mods, paramss = vparamss,
-                       implicits = implparams, primaryCtorArgss = argss,
-                       stats = stats)
+        Ctor.Secondary(mods, paramss, argss, stats)
       }
     }
 
-    def funDefRest(mods: List[Annot], name: Term.Ident): Symbol.Def = {
+    def funDefRest(mods: List[Mod], name: Term.Ident): Symbol.Def = {
       def warnProcedureDeprecation =
         deprecationWarning(in.lastOffset, s"Procedure syntax is deprecated. Convert procedure `$name` to method by adding `: Unit`.")
-      val tparams = defTypeParamClauses()
-      val (paramss, implicits) = paramClauses()
+      val tparams = typeParamClauseOpt()
+      val paramss = paramClauses()
       newLineOptWhenFollowedBy(LBRACE)
       var restype = fromWithinReturnType(typedOpt())
       if (isStatSep || in.token == RBRACE) {
         if (restype.isEmpty) {
           warnProcedureDeprecation
-          Decl.Procedure(mods, name, tparams, paramss, implicits)
+          Decl.Procedure(mods, name, tparams, paramss)
         } else
-          Decl.Def(mods, name, tparams, paramss, implicits, restype)
+          Decl.Def(mods, name, tparams, paramss, restype)
       } else if (restype.isEmpty && in.token == LBRACE) {
         warnProcedureDeprecation
-        Defn.Procedure(mods, name, tparams, paramss, implicits, block())
+        Defn.Procedure(mods, name, tparams, paramss, block())
       } else {
         var newmods = mods
         val rhs = {
@@ -1981,14 +1973,14 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
             in.nextTokenAllow(nme.MACROkw)
             if (isMacro) {
               in.nextToken()
-              newmods = newmods :+ Annot.Macro()
+              newmods = newmods :+ Mod.Macro()
             }
           } else {
             accept(EQUALS)
           }
           expr()
         }
-        Defn.Def(newmods, name, tparams, paramss, implicits, restype, rhs)
+        Defn.Def(newmods, name, tparams, paramss, restype, rhs)
       }
     }
 
@@ -1997,9 +1989,9 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
      *                    |  ConstrBlock
      *  }}}
      */
-    def constrExpr(): (List[List[Arg]], List[Stmt.Block]) =
+    def constrExpr(): (List[List[Arg]], Option[List[Stmt.Block]]) =
       if (in.token == LBRACE) constrBlock()
-      else (selfInvocation(), Nil)
+      else (selfInvocation(), None)
 
     /** {{{
      *  SelfInvocation  ::= this ArgumentExprs {ArgumentExprs}
@@ -2021,14 +2013,14 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
      *  ConstrBlock    ::=  `{' SelfInvocation {semi BlockStat} `}'
      *  }}}
      */
-    def constrBlock(): (List[List[Arg]], List[Stmt.Block]) = {
+    def constrBlock(): (List[List[Arg]], Option[List[Stmt.Block]]) = {
       in.skipToken()
       val argss = selfInvocation()
       val stats =
         if (!isStatSep) Nil
         else { in.nextToken(); blockStatSeq() }
       accept(RBRACE)
-      (argss, stats)
+      (argss, Some(stats))
     }
 
     /** {{{
@@ -2037,11 +2029,11 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
      *  TypeDcl ::= type Id [TypeParamClause] TypeBounds
      *  }}}
      */
-    def typeDefOrDcl(mods: List[Annot]): Symbol.Type = {
+    def typeDefOrDcl(mods: List[Mod]): Symbol.Type = {
       in.nextToken()
       newLinesOpt()
       val name = typeIdent()
-      val tparams = typeTypeParamClauses()
+      val tparams = typeParamClauseOpt()
       in.token match {
         case EQUALS =>
           in.nextToken()
@@ -2055,7 +2047,7 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
 
     /** Hook for IDE, for top-level classes/objects. */
     def topLevelTmplDef: Symbol.Template with Stmt.TopLevel =
-      tmplDef(userAnnots(skipNewLines = true) ++ modifiers())
+      tmplDef(annots(skipNewLines = true) ++ modifiers())
 
     /** {{{
      *  TmplDef ::= [case] class ClassDef
@@ -2063,19 +2055,19 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
      *            |  [override] trait TraitDef
      *  }}}
      */
-    def tmplDef(mods: List[Annot]): Symbol.Template = {
-      if (mods.has[Annot.Lazy]) syntaxError("classes cannot be lazy")
+    def tmplDef(mods: List[Mod]): Symbol.Template = {
+      if (mods.has[Mod.Lazy]) syntaxError("classes cannot be lazy")
       in.token match {
         case TRAIT =>
           traitDef(mods)
         case CLASS =>
           classDef(mods)
         case CASECLASS =>
-          classDef(mods :+ Annot.Case())
+          classDef(mods :+ Mod.Case())
         case OBJECT =>
           objectDef(mods)
         case CASEOBJECT =>
-          objectDef(mods :+ Annot.Case())
+          objectDef(mods :+ Mod.Case())
         case _ =>
           syntaxError("expected start of definition")
       }
@@ -2086,44 +2078,41 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
      *               [AccessModifier] ClassParamClauses RequiresTypeOpt ClassTemplateOpt
      *  }}}
      */
-    def classDef(mods: List[Annot]): Defn.Class = {
+    def classDef(mods: List[Mod]): Defn.Class = {
       in.nextToken()
-      Defn.Class(mods, typeIdent(), defTypeParamClauses(), primaryCtor(), templateOpt[Defn.Class]())
+      Defn.Class(mods, typeIdent(), typeParamClauseOpt(), primaryCtor(), templateOpt[Defn.Class]())
     }
 
-    def primaryCtor(): Ctor.Primary = {
-      val mods = userConstructorAnnots() ++ accessModifierOpt()
-      val (paramss, implicits) = paramClauses[Defn.Class]()
-      Ctor.Primary(mods, paramss, implicits)
-    }
+    def primaryCtor(): Ctor.Primary =
+      Ctor.Primary(constructorAnnots() ++ accessModifierOpt(), paramClauses[Defn.Class]())
 
     /** {{{
      *  TraitDef ::= Id [TypeParamClause] RequiresTypeOpt TraitTemplateOpt
      *  }}}
      */
-    def traitDef(mods: List[Annot]): Defn.Trait = {
+    def traitDef(mods: List[Mod]): Defn.Trait = {
       in.nextToken()
-      Defn.Trait(mods, typeIdent(), typeTypeParamClauses(), templateOpt[Defn.Trait]())
+      Defn.Trait(mods, typeIdent(), typeParamClauseOpt(), templateOpt[Defn.Trait]())
     }
 
     /** {{{
      *  ObjectDef       ::= Id ClassTemplateOpt
      *  }}}
      */
-    def objectDef(mods: List[Annot]): Defn.Object = {
+    def objectDef(mods: List[Mod]): Defn.Object = {
       in.nextToken()
       Defn.Object(mods, ident(), templateOpt[Defn.Object]())
     }
 
     /** {{{
-     *  ClassParents       ::= AnnotType {`(' [Exprs] `)'} {with AnnotType}
-     *  TraitParents       ::= AnnotType {with AnnotType}
+     *  ClassParents       ::= ModType {`(' [Exprs] `)'} {with ModType}
+     *  TraitParents       ::= ModType {with ModType}
      *  }}}
      */
     def templateParents(): List[Aux.Parent] = {
       val parents = new ListBuffer[Aux.Parent]
       def readAppliedParent() = {
-        val parentTpe = startAnnotType()
+        val parentTpe = startModType()
         parents += (in.token match {
           case LPAREN => Aux.Parent(parentTpe, multipleArgumentExprs())
           case _      => Aux.Parent(parentTpe, Nil)
@@ -2141,7 +2130,7 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
      *  EarlyDef      ::= Annotations Modifiers PatDef
      *  }}}
      */
-    def template(): (List[Defn.Val], List[Aux.Parent], Aux.Self, List[Stmt.Template]) = {
+    def template(): (List[Defn.Val], List[Aux.Parent], Aux.Self, Option[List[Stmt.Template]]) = {
       newLineOptWhenFollowedBy(LBRACE)
       if (in.token == LBRACE) {
         // @S: pre template body cannot stub like post body can!
@@ -2153,7 +2142,7 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
           val (self1, body1) = templateBodyOpt(parenMeansSyntaxError = false)
           (edefs, parents, self1, body1)
         } else {
-          (Nil, Nil, self, body)
+          (Nil, Nil, self, Some(body))
         }
       } else {
         val parents = templateParents()
@@ -2186,7 +2175,7 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
      *  }}}
      */
     def templateOpt[Owner <: Stmt.Template](): Aux.Template = {
-      val (early, parents, self, body): (List[Defn.Val], List[Aux.Parent], Aux.Self, List[Stmt.Template]) = (
+      val (early, parents, self, body): (List[Defn.Val], List[Aux.Parent], Aux.Self, Option[List[Stmt.Template]]) = (
         if (in.token == EXTENDS /* || in.token == SUBTYPE && mods.isTrait */) {
           in.nextToken()
           template()
@@ -2212,16 +2201,17 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
     def templateBody(isPre: Boolean): (Aux.Self, List[Stmt.Template]) =
       inBraces(templateStatSeq(isPre = isPre))
 
-    def templateBodyOpt(parenMeansSyntaxError: Boolean): (Aux.Self, List[Stmt.Template]) = {
+    def templateBodyOpt(parenMeansSyntaxError: Boolean): (Aux.Self, Option[List[Stmt.Template]]) = {
       newLineOptWhenFollowedBy(LBRACE)
       if (in.token == LBRACE) {
-        templateBody(isPre = false)
+        val (self, stats) = templateBody(isPre = false)
+        (self, Some(stats))
       } else {
         if (in.token == LPAREN) {
           if (parenMeansSyntaxError) syntaxError(s"traits or objects may not have parameters")
           else abort("unexpected opening parenthesis")
         }
-        (Aux.Self.empty, Nil)
+        (Aux.Self.empty, None)
       }
     }
 
@@ -2292,7 +2282,7 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
               self = Aux.Self(None, Some(tpt))
             case _ =>
               convertToParam(first) match {
-                case param @ Param.Function(_, name, tpt) =>
+                case param @ Aux.Param(_, name, tpt, _) =>
                   self = Aux.Self(name, tpt)
                 case _ =>
               }
@@ -2357,10 +2347,9 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
            else ""))
       } else None
 
-    def localDef(implicitMod: Option[Annot.Implicit]): Stmt.Block = {
-      val annots = userAnnots(skipNewLines = true)
-      val mods = localModifiers() ++ implicitMod ++ annots
-      if (mods.has[Annot.Implicit] || mods.has[Annot.Lazy]) {
+    def localDef(implicitMod: Option[Mod.Implicit]): Stmt.Block = {
+      val mods = (implicitMod ++: annots(skipNewLines = true)) ++ localModifiers()
+      if (mods.has[Mod.Implicit] || mods.has[Mod.Lazy]) {
         defOrDclOrCtor(mods) match {
           case sb: Stmt.Block => sb
           case _              => syntaxError(???)
@@ -2388,7 +2377,7 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
           if (in.token == IMPLICIT) {
             val start = in.skipToken()
             if (isIdent) stats += implicitClosure(InBlock)
-            else stats += localDef(Some(Annot.Implicit()))
+            else stats += localDef(Some(Mod.Implicit()))
           } else {
             stats += localDef(None)
           }
@@ -2414,7 +2403,7 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
       if (in.token == OBJECT)
         packageObject()
       else {
-        Package.Named(qualId(), inBracesOrNil(topStatSeq()))
+        Package.Named(qualId(), Some(inBracesOrNil(topStatSeq())))
       }
 
     def packageObject(): Package.Object = ???
@@ -2441,12 +2430,12 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
             val qid = qualId()
 
             if (in.token == EOF) {
-              ts += Package.Named(qid, List())
+              ts += Package.Named(qid, None)
             } else if (isStatSep) {
               in.nextToken()
-              ts += Package.Named(qid, packageStats())
+              ts += Package.Named(qid, Some(packageStats()))
             } else {
-              ts += inBraces(Package.Named(qid, topStatSeq()))
+              ts += inBraces(Package.Named(qid, Some(topStatSeq())))
               acceptStatSepOpt()
               ts ++= topStatSeq()
             }
