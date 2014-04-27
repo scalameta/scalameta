@@ -56,60 +56,7 @@ object ParserInfo {
 }
 import ParserInfo._
 
-trait ParsersCommon extends ScannersCommon { self =>
-  /** This is now an abstract class, only to work around the optimizer:
-   *  methods in traits are never inlined.
-   */
-  abstract class ParserCommon {
-    val in: ScannerCommon
-    def deprecationWarning(off: Offset, msg: String): Unit
-    def accept(token: Token): Unit
-
-    /** Methods inParensOrError and similar take a second argument which, should
-     *  the next token not be the expected opener (e.g. LPAREN) will be returned
-     *  instead of the contents of the groupers.  However in all cases accept(LPAREN)
-     *  will be called, so a parse error will still result.  If the grouping is
-     *  optional, in.token should be tested before calling these methods.
-     */
-    @inline final def inParens[T](body: => T): T = {
-      accept(LPAREN)
-      val ret = body
-      accept(RPAREN)
-      ret
-    }
-    @inline final def inParensOrError[T](body: => T, alt: T): T =
-      if (in.token == LPAREN) inParens(body)
-      else { accept(LPAREN) ; alt }
-
-    @inline final def inParensOrUnit[T, Ret >: Lit](body: => Ret): Ret = inParensOrError(body, Lit.Unit())
-    @inline final def inParensOrNil[T](body: => List[T]): List[T] = inParensOrError(body, Nil)
-
-    @inline final def inBraces[T](body: => T): T = {
-      accept(LBRACE)
-      val ret = body
-      accept(RBRACE)
-      ret
-    }
-    @inline final def inBracesOrError[T](body: => T, alt: T): T =
-      if (in.token == LBRACE) inBraces(body)
-      else { accept(LBRACE) ; alt }
-
-    @inline final def inBracesOrNil[T](body: => List[T]): List[T] = inBracesOrError(body, Nil)
-    @inline final def inBracesOrUnit[T](body: => Term): Term = inBracesOrError(body, Lit.Unit())
-    @inline final def dropAnyBraces[T](body: => T): T =
-      if (in.token == LBRACE) inBraces(body)
-      else body
-
-    @inline final def inBrackets[T](body: => T): T = {
-      accept(LBRACKET)
-      val ret = body
-      accept(RBRACKET)
-      ret
-    }
-  }
-}
-
-trait Parsers extends Scanners /* with MarkupParsers */ with ParsersCommon { self =>
+trait Parsers extends Scanners /* with MarkupParsers */ { self =>
   class SourceFileParser(val source: SourceFile) extends Parser {
     /** The parse starting point depends on whether the source file is self-contained:
      *  if not, the AST will be supplemented.
@@ -139,7 +86,7 @@ trait Parsers extends Scanners /* with MarkupParsers */ with ParsersCommon { sel
   final val InBlock: Location = 1
   final val InTemplate: Location = 2
 
-  abstract class Parser extends ParserCommon { parser =>
+  abstract class Parser { parser =>
     val in: Scanner
     def source: SourceFile
 
@@ -185,6 +132,50 @@ trait Parsers extends Scanners /* with MarkupParsers */ with ParsersCommon { sel
      */
     def parseStats(): List[Tree] = parseRule(_.templateStats())
 
+/* ------------- PARSER COMMON -------------------------------------------- */
+
+    /** Methods inParensOrError and similar take a second argument which, should
+     *  the next token not be the expected opener (e.g. LPAREN) will be returned
+     *  instead of the contents of the groupers.  However in all cases accept(LPAREN)
+     *  will be called, so a parse error will still result.  If the grouping is
+     *  optional, in.token should be tested before calling these methods.
+     */
+    @inline final def inParens[T](body: => T): T = {
+      accept(LPAREN)
+      val ret = body
+      accept(RPAREN)
+      ret
+    }
+    @inline final def inParensOrError[T](body: => T, alt: T): T =
+      if (in.token == LPAREN) inParens(body)
+      else { accept(LPAREN) ; alt }
+
+    @inline final def inParensOrUnit[T, Ret >: Lit](body: => Ret): Ret = inParensOrError(body, Lit.Unit())
+    @inline final def inParensOrNil[T](body: => List[T]): List[T] = inParensOrError(body, Nil)
+
+    @inline final def inBraces[T](body: => T): T = {
+      accept(LBRACE)
+      val ret = body
+      accept(RBRACE)
+      ret
+    }
+    @inline final def inBracesOrError[T](body: => T, alt: T): T =
+      if (in.token == LBRACE) inBraces(body)
+      else { accept(LBRACE) ; alt }
+
+    @inline final def inBracesOrNil[T](body: => List[T]): List[T] = inBracesOrError(body, Nil)
+    @inline final def inBracesOrUnit[T](body: => Term): Term = inBracesOrError(body, Lit.Unit())
+    @inline final def dropAnyBraces[T](body: => T): T =
+      if (in.token == LBRACE) inBraces(body)
+      else body
+
+    @inline final def inBrackets[T](body: => T): T = {
+      accept(LBRACKET)
+      val ret = body
+      accept(RBRACKET)
+      ret
+    }
+
 /* ------------- ERROR HANDLING ------------------------------------------- */
 
     val assumedClosingParens = mutable.Map(RPAREN -> 0, RBRACKET -> 0, RBRACE -> 0)
@@ -227,6 +218,8 @@ trait Parsers extends Scanners /* with MarkupParsers */ with ParsersCommon { sel
     }
 
     def warning(offset: Offset, msg: String): Unit
+    def deprecationWarning(offset: Offset, msg: String) : Unit
+
     def abort(msg: String): Nothing
     def incompleteInputError(msg: String): Nothing
     def syntaxError(offset: Offset, msg: String): Nothing
