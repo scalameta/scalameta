@@ -318,7 +318,7 @@ trait Scanners extends ScannersCommon {
        * - the current token can start a statement and the one before can end it
        * insert NEWLINES if we are past a blank line, NEWLINE otherwise
        */
-      if (!applyBracePatch() && afterLineEnd() && inLastOfStat(lastToken) && inFirstOfStat(token) &&
+      if (afterLineEnd() && inLastOfStat(lastToken) && inFirstOfStat(token) &&
           (sepRegions.isEmpty || sepRegions.head == RBRACE)) {
         next copyFrom this
         offset = if (lineStartOffset <= offset) lineStartOffset else lastLineStartOffset
@@ -1106,20 +1106,6 @@ trait Scanners extends ScannersCommon {
       case _ =>
         token2string(token)
     }
-
-    // ------------- brace counting and healing ------------------------------
-
-    /** overridden in UnitScanners:
-     *  apply brace patch if one exists for this offset
-     *  return true if subsequent end of line handling should be suppressed.
-     */
-    def applyBracePatch(): Boolean = false
-
-    /** overridden in UnitScanners */
-    def parenBalance(token: Token) = 0
-
-    /** overridden in UnitScanners */
-    def healBraces(): List[BracePatch] = List()
 
     /** Initialization method: read first char, then first token
      */
