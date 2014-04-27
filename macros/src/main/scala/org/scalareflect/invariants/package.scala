@@ -15,26 +15,6 @@ package invariants {
   class Macros(val c: Context) {
     import c.universe._
     def require(x: Tree): Tree = {
-      def showCode(x: Tree): String = {
-        var res = c.universe.showCode(x)
-        // TODO: very ugly
-        res = res.replaceAll("""(\w+)\.this\.""", "")
-        res = res.replaceAll("""(.*?).&&\((.*?)\)""", "$1 && $2")
-        res = res.replaceAll("""(.*?)\.\|\|\((.*?)\)""", "$1 || $2")
-        res = res.replaceAll("""(.*?)\.\+\((.*?)\)""", "$1 + $2")
-        res = res.replaceAll("""(.*?)\.-\((.*?)\)""", "$1 - $2")
-        res = res.replaceAll("""(.*?)\.\*\((.*?)\)""", "$1 * $2")
-        res = res.replaceAll("""(.*?)\.!=\((.*?)\)""", "$1 != $2")
-        res = res.replaceAll("""(.*?)\.==\((.*?)\)""", "$1 == $2")
-        res = res.replaceAll("""\((.*?) => (.*?)\)""", "$1 => $2")
-        res = res.replaceAll("""\(x\$\d+\) => x\$\d+""", "_")
-        res = res.replaceAll("""x\$\d+\ => x\$\d+""", "_")
-        res = res.replaceAll("""nonEmpty\.`unary_!`""", "empty")
-        res = res.replaceAll("""empty\.`unary_!`""", "nonEmpty")
-        res = res.replaceAll("""(.*?)\.`unary_!`""", "!($1)")
-        res
-      }
-
       sealed abstract class Prop {
         lazy val result = c.freshName(TermName("result"))
         lazy val failures = c.freshName(TermName("failures"))
