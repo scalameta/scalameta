@@ -39,7 +39,7 @@ class AdtMacros(val c: Context) {
     q"{ ..$expanded; () }"
   }
 
-  // (Eugene) TODO: withXXX
+  // (Eugene) TODO: withXXX, mapXXX
   // (Eugene) TODO: def tag: Int = ...
   // (Eugene) TODO: null checks
   // (Eugene) TODO: @NonEmpty checks
