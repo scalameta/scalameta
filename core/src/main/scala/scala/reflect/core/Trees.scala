@@ -39,19 +39,18 @@ list of ugliness discovered so far
 // (Together) TODO: figure out which apis need to be moved to subclasses and which apis (Tree.mods, Type.tpeCtor, Type.args, Symbol.companion, Type.companion) need to be added for convenience
 // (Together) TODO: implement scaladoc with palladium
 
-
 // TODO: invariants: tree should either have at least one non-trival token or be eq to it's empty value
 // TODO: converter: double check conversion of `(f _)(x)` (bug 46)
-// TODO: converter: need api to discern `class C` from `class C {}` as the second one has to have EmptyTree in the body
 
 package core {
-  @root trait Tree extends cbc.Trees.Tree {
+  @root trait Tree {
     def parent: Option[Tree] = ???
     override def equals(other: Any): Boolean = ???
     override def hashCode(): Int = ???
   }
 
   @branch trait Ref extends Tree {
+    // TODO: def defn: Member
     def sym: Symbol = ???
   }
 
@@ -169,7 +168,7 @@ package core {
   object Type {
     @branch trait Ref extends Type with core.Ref
     @leaf class Ident(value: String @nonEmpty, isBackquoted: Boolean = false) extends core.Ident with Ref {
-      require(!keywords.contains(value) || isBackquoted)
+      require(keywords.contains(value) ==> isBackquoted)
     }
     @leaf class Select(qual: Term.Ref, name: Type.Ident) extends Ref {
       require(qual.isPath)
@@ -179,21 +178,21 @@ package core {
     @leaf class Singleton(ref: Term.Ref) extends Ref {
       require(ref.isPath)
     }
-
     // TODO: validate that tpe can actually be applied
     @leaf class Apply(tpe: Type, args: List[Type] @nonEmpty) extends Type
     @leaf class Function(params: List[Type], res: Type) extends Type
     @leaf class Tuple(elements: List[Type] @nonEmpty) extends Type
-    @leaf class Compound(tpes: List[Type], refinement: List[Stmt.Refine] @nonEmpty) extends Type
+    @leaf class Compound(tpes: List[Type], refinement: List[Stmt.Refine]) extends Type {
+      require(refinement.isEmpty ==> tpes.length > 2)
+    }
     @leaf class Existential(tpe: Type, quants: List[Stmt.Existential] @nonEmpty) extends Type
     @leaf class Annotate(tpe: Type, mods: List[Mod] @nonEmpty) extends Type with Has.Mods
     // (Denys) TODO: need to validate that placeholder appears within one of allowed contexts (e.g. `type T = _` is illegal)
     @leaf class Placeholder(bounds: Aux.TypeBounds) extends Type
   }
 
-  @branch trait Pat extends Tree {
-    // TODO: how should tpe look like? inTpe/outTpe?
-  }
+  // TODO: how should tpe look like? inTpe/outTpe?
+  @branch trait Pat extends Tree
   object Pat {
     @leaf class Wildcard() extends Pat
     @leaf class SeqWildcard() extends Pat
@@ -212,6 +211,7 @@ package core {
     }
   }
 
+  // TODO: Member + Ident
   @branch trait Symbol extends Tree with Has.Mods {
     def owner: Symbol = ???
     def ref: core.Ref = ???
@@ -222,9 +222,9 @@ package core {
   }
   object Symbol {
     @branch trait Field extends Symbol
-    @branch trait Val extends Field with Has.DeclaredType
-    @branch trait Var extends Field with Has.DeclaredType
-    @branch trait Def extends Symbol with Stmt.Template
+    @branch trait Val extends Field
+    @branch trait Var extends Field
+    @branch trait Def extends Symbol with Stmt.Template with Has.Paramss
     @branch trait Type extends Symbol
     @branch trait Template extends Symbol with Stmt.TopLevel with Stmt.Block
   }
@@ -233,22 +233,22 @@ package core {
   object Decl {
     @leaf class Val(mods: List[Mod],
                     pats: List[Term.Ident] @nonEmpty,
-                    declTpe: Option[core.Type] @nonEmpty) extends Decl with Stmt.Existential with Symbol.Val
+                    decltpe: core.Type) extends Decl with Stmt.Existential with Symbol.Val
     @leaf class Var(mods: List[Mod],
                     pats: List[Term.Ident] @nonEmpty,
-                    declTpe: Option[core.Type] @nonEmpty) extends Decl with Symbol.Var
+                    decltpe: core.Type) extends Decl with Symbol.Var
     @leaf class Def(mods: List[Mod],
                     name: Term.Ident,
                     tparams: List[Aux.TypeParam],
-                    paramss: List[List[Aux.Param]],
+                    explicits: List[List[Aux.Param]],
                     implicits: List[Aux.Param],
-                    declTpe: Option[core.Type] @nonEmpty) extends Decl with Symbol.Def with Has.DeclaredType {
-      require((paramss :+ implicits).flatten.forall(_.declTpe.nonEmpty))
+                    decltpe: Option[core.Type] @nonEmpty) extends Decl with Symbol.Def {
+      require(paramss.flatten.forall(_.decltpe.nonEmpty))
     }
     @leaf class Procedure(mods: List[Mod],
                           name: Term.Ident,
                           tparams: List[Aux.TypeParam],
-                          paramss: List[List[Aux.Param]],
+                          explicits: List[List[Aux.Param]],
                           implicits: List[Aux.Param]) extends Decl with Symbol.Def
     @leaf class Type(mods: List[Mod],
                      name: core.Type.Ident,
@@ -260,26 +260,26 @@ package core {
   object Defn {
     @leaf class Val(mods: List[Mod],
                     pats: List[Pat] @nonEmpty,
-                    declTpe: Option[core.Type],
+                    decltpe: Option[core.Type],
                     rhs: Term) extends Defn with Symbol.Val
     @leaf class Var(mods: List[Mod],
                     pats: List[Pat] @nonEmpty,
-                    declTpe: Option[core.Type],
+                    decltpe: Option[core.Type],
                     rhs: Option[Term]) extends Defn with Symbol.Var {
       require(rhs.nonEmpty || pats.forall(_.isInstanceOf[Term.Ident]))
-      require(declTpe.nonEmpty || rhs.nonEmpty)
+      require(decltpe.nonEmpty || rhs.nonEmpty)
     }
     @leaf class Def(mods: List[Mod],
                     name: Term.Ident,
                     tparams: List[Aux.TypeParam],
-                    paramss: List[List[Aux.Param]],
+                    explicits: List[List[Aux.Param]],
                     implicits: List[Aux.Param],
-                    declTpe: Option[core.Type],
-                    body: Term) extends Defn with Symbol.Def with Has.DeclaredType
+                    decltpe: Option[core.Type],
+                    body: Term) extends Defn with Symbol.Def
     @leaf class Procedure(mods: List[Mod],
                           name: Term.Ident,
                           tparams: List[Aux.TypeParam],
-                          paramss: List[List[Aux.Param]],
+                          explicits: List[List[Aux.Param]],
                           implicits: List[Aux.Param],
                           body: Term.Block) extends Defn with Symbol.Def
     @leaf class Type(mods: List[Mod],
@@ -308,17 +308,16 @@ package core {
     }
   }
 
-  @branch trait Ctor extends Symbol
+  @branch trait Ctor extends Symbol with Has.Paramss
   object Ctor {
     @leaf class Primary(mods: List[Mod] = Nil,
-                        paramss: List[List[Aux.Param]] = Nil,
+                        explicits: List[List[Aux.Param]] = Nil,
                         implicits: List[Aux.Param] = Nil) extends Ctor
     @leaf class Secondary(mods: List[Mod] = Nil,
-                          paramss: List[List[Aux.Param]] @nonEmpty = List(Nil),
+                          explicits: List[List[Aux.Param]] @nonEmpty = List(Nil),
                           implicits: List[Aux.Param] = Nil,
                           primaryCtorArgss: List[List[Arg]] = Nil,
-                          stats: List[Stmt.Block] = Nil) extends Ctor with Stmt.Template {
-    }
+                          stats: List[Stmt.Block] = Nil) extends Ctor with Stmt.Template
   }
 
   object Stmt {
@@ -414,14 +413,13 @@ package core {
     @leaf class Template(early: List[Defn.Val] = Nil, parents: List[Parent] = Nil,
                          self: Self = Self.empty, stats: List[Stmt.Template] = Nil) extends Tree {
       require(parents.isEmpty || !parents.tail.exists(_.argss.nonEmpty))
-      def noBody: Boolean = ???
+      def hasExplicitStats: Boolean = ???
     }
     @leaf class Self(name: Option[Term.Ident] = None, tpe: Option[Type] = None) extends Symbol {
-      require(name.nonEmpty || tpe.nonEmpty)
       def mods: List[Mod] = Nil
     }
     @leaf class Param(mods: List[Mod] = Nil, name: Option[Term.Ident] = None,
-                      declTpe: Option[Type] = None, default: Option[Term] = None) extends Symbol
+                      decltpe: Option[Type] = None, default: Option[Term] = None) extends Symbol
     @leaf class TypeParam(mods: List[Mod] = Nil,
                           name: Option[core.Type.Ident] = None,
                           tparams: List[Aux.TypeParam] = Nil,
@@ -441,9 +439,12 @@ package core {
       private[reflect] def validateMods(): Boolean = ???
     }
 
-    @branch trait DeclaredType extends Tree {
-      def declTpe: Option[Type]
-      def tpe: Type = ???
+    @branch trait Paramss extends Tree {
+      def explicits: List[List[Aux.Param]]
+      def implicits: List[Aux.Param]
+      def paramss = explicits :+ implicits
+      def mapParamss = ???
+      def withParamss = ???
     }
   }
 
