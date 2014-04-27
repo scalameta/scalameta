@@ -5,6 +5,10 @@ import scala.reflect.macros.blackbox.Context
 
 package object invariants {
   def require[T](x: T): Unit = macro Macros.require
+  // TODO: add pretty printed support for implication
+  implicit class Implication(left: Boolean) {
+    def ==>(right: Boolean) = !left || right
+  }
 }
 
 package invariants {
