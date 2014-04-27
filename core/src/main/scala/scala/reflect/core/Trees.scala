@@ -39,6 +39,8 @@ list of ugliness discovered so far
 // (Together) TODO: figure out which apis need to be moved to subclasses and which apis (Tree.mods, Type.tpeCtor, Type.args, Symbol.companion, Type.companion) need to be added for convenience
 // (Together) TODO: implement scaladoc with palladium
 
+
+// TODO: invariants: tree should either have at least one non-trival token or be eq to it's empty value
 // TODO: converter: double check conversion of `(f _)(x)` (bug 46)
 // TODO: converter: need api to discern `class C` from `class C {}` as the second one has to have EmptyTree in the body
 
@@ -222,8 +224,8 @@ package core {
     @branch trait Field extends Symbol
     @branch trait Val extends Field with Has.DeclaredType
     @branch trait Var extends Field with Has.DeclaredType
-    @branch trait Def extends Symbol with Stmt.Template with Has.TparamClause with Has.ParamClauses
-    @branch trait Type extends Symbol with Has.TparamClause
+    @branch trait Def extends Symbol with Stmt.Template
+    @branch trait Type extends Symbol
     @branch trait Template extends Symbol with Stmt.TopLevel with Stmt.Block
   }
 
@@ -231,24 +233,26 @@ package core {
   object Decl {
     @leaf class Val(mods: List[Mod],
                     pats: List[Term.Ident] @nonEmpty,
-                    declaredTpe: Option[core.Type] @nonEmpty) extends Decl with Stmt.Existential with Symbol.Val
+                    declTpe: Option[core.Type] @nonEmpty) extends Decl with Stmt.Existential with Symbol.Val
     @leaf class Var(mods: List[Mod],
                     pats: List[Term.Ident] @nonEmpty,
-                    declaredTpe: Option[core.Type] @nonEmpty) extends Decl with Symbol.Var
+                    declTpe: Option[core.Type] @nonEmpty) extends Decl with Symbol.Var
     @leaf class Def(mods: List[Mod],
                     name: Term.Ident,
-                    tparamClause: Option[Aux.TypeParamClause],
-                    paramClauses: Option[Aux.ParamClauses],
-                    declaredTpe: Option[core.Type] @nonEmpty) extends Decl with Symbol.Def with Has.DeclaredType {
-      require(paramss.flatten.forall(_.declaredTpe.nonEmpty))
+                    tparams: List[Aux.TypeParam],
+                    paramss: List[List[Aux.Param]],
+                    implicits: List[Aux.Param],
+                    declTpe: Option[core.Type] @nonEmpty) extends Decl with Symbol.Def with Has.DeclaredType {
+      require((paramss :+ implicits).flatten.forall(_.declTpe.nonEmpty))
     }
     @leaf class Procedure(mods: List[Mod],
                           name: Term.Ident,
-                          tparamClause: Option[Aux.TypeParamClause],
-                          paramClauses: Option[Aux.ParamClauses]) extends Decl with Symbol.Def
+                          tparams: List[Aux.TypeParam],
+                          paramss: List[List[Aux.Param]],
+                          implicits: List[Aux.Param]) extends Decl with Symbol.Def
     @leaf class Type(mods: List[Mod],
                      name: core.Type.Ident,
-                     tparamClause: Option[Aux.TypeParamClause],
+                     tparams: List[Aux.TypeParam],
                      bounds: Aux.TypeBounds) extends Decl with Stmt.Existential with Symbol.Type
   }
 
@@ -256,43 +260,44 @@ package core {
   object Defn {
     @leaf class Val(mods: List[Mod],
                     pats: List[Pat] @nonEmpty,
-                    declaredTpe: Option[core.Type],
+                    declTpe: Option[core.Type],
                     rhs: Term) extends Defn with Symbol.Val
     @leaf class Var(mods: List[Mod],
                     pats: List[Pat] @nonEmpty,
-                    declaredTpe: Option[core.Type],
+                    declTpe: Option[core.Type],
                     rhs: Option[Term]) extends Defn with Symbol.Var {
       require(rhs.nonEmpty || pats.forall(_.isInstanceOf[Term.Ident]))
-      require(declaredTpe.nonEmpty || rhs.nonEmpty)
+      require(declTpe.nonEmpty || rhs.nonEmpty)
     }
     @leaf class Def(mods: List[Mod],
                     name: Term.Ident,
-                    tparamClause: Option[Aux.TypeParamClause],
-                    paramClauses: Option[Aux.ParamClauses],
-                    declaredTpe: Option[core.Type],
+                    tparams: List[Aux.TypeParam],
+                    paramss: List[List[Aux.Param]],
+                    implicits: List[Aux.Param],
+                    declTpe: Option[core.Type],
                     body: Term) extends Defn with Symbol.Def with Has.DeclaredType
     @leaf class Procedure(mods: List[Mod],
                           name: Term.Ident,
-                          tparamClause: Option[Aux.TypeParamClause],
-                          paramClauses: Option[Aux.ParamClauses],
+                          tparams: List[Aux.TypeParam],
+                          paramss: List[List[Aux.Param]],
+                          implicits: List[Aux.Param],
                           body: Term.Block) extends Defn with Symbol.Def
     @leaf class Type(mods: List[Mod],
                      name: core.Type.Ident,
-                     tparamClause: Option[Aux.TypeParamClause],
+                     tparams: List[Aux.TypeParam],
                      body: core.Type) extends Defn with Stmt.Refine with Symbol.Type
     @leaf class Class(mods: List[Mod],
                       name: core.Type.Ident,
-                      tparamClause: Option[Aux.TypeParamClause],
+                      tparams: List[Aux.TypeParam],
                       ctor: Ctor.Primary,
-                      templ: Aux.Template) extends Defn with Symbol.Template
-                                              with Has.TparamClause {
+                      templ: Aux.Template) extends Defn with Symbol.Template {
       def companion: Option[Object] = ???
     }
     @leaf class Trait(mods: List[Mod],
                       name: core.Type.Ident,
-                      tparamClause: Option[Aux.TypeParamClause],
-                      templ: Aux.Template) extends Defn with Symbol.Template
-                                              with Has.TparamClause {
+                      tparams: List[Aux.TypeParam],
+                      templ: Aux.Template) extends Defn with Symbol.Template {
+      require(templ.parents.forall(_.argss.isEmpty))
       def isInterface: Boolean = templ.stats.forall(_.isInstanceOf[Decl])
       def companion: Option[Object] = ???
     }
@@ -303,15 +308,16 @@ package core {
     }
   }
 
-  @branch trait Ctor extends Symbol with Has.ParamClauses
+  @branch trait Ctor extends Symbol
   object Ctor {
     @leaf class Primary(mods: List[Mod] = Nil,
-                        paramClauses: Option[Aux.ParamClauses] = None) extends Ctor
+                        paramss: List[List[Aux.Param]] = Nil,
+                        implicits: List[Aux.Param] = Nil) extends Ctor
     @leaf class Secondary(mods: List[Mod] = Nil,
-                          paramClauses: Option[Aux.ParamClauses] = None,
+                          paramss: List[List[Aux.Param]] @nonEmpty = List(Nil),
+                          implicits: List[Aux.Param] = Nil,
                           primaryCtorArgss: List[List[Arg]] = Nil,
-                          declaredStats: Option[List[Stmt.Block]] = None) extends Ctor with Stmt.Template {
-      def stats: List[Stmt.Block] = declaredStats.getOrElse(Nil)
+                          stats: List[Stmt.Block] = Nil) extends Ctor with Stmt.Template {
     }
   }
 
@@ -406,38 +412,26 @@ package core {
     @leaf class Cases(cases: List[Case] @nonEmpty) extends Catch
     @leaf class Parent(tpe: Type, argss: List[List[Arg]] = Nil) extends Ref
     @leaf class Template(early: List[Defn.Val] = Nil, parents: List[Parent] = Nil,
-                         self: Self = Self.empty, declaredStats: Option[List[Stmt.Template]] = None) extends Tree {
+                         self: Self = Self.empty, stats: List[Stmt.Template] = Nil) extends Tree {
       require(parents.isEmpty || !parents.tail.exists(_.argss.nonEmpty))
-      // TODO: validate that trait parents can't have value parameters
-      def stats: List[Stmt.Template] = declaredStats.getOrElse(Nil)
+      def noBody: Boolean = ???
     }
     @leaf class Self(name: Option[Term.Ident] = None, tpe: Option[Type] = None) extends Symbol {
+      require(name.nonEmpty || tpe.nonEmpty)
       def mods: List[Mod] = Nil
     }
     @leaf class Param(mods: List[Mod] = Nil, name: Option[Term.Ident] = None,
-                      declaredTpe: Option[Type] = None, default: Option[Term] = None) extends Symbol
-    @leaf class ParamClauses(paramss: List[List[Param]] = Nil, implicits: List[Param] = Nil) extends Tree
+                      declTpe: Option[Type] = None, default: Option[Term] = None) extends Symbol
     @leaf class TypeParam(mods: List[Mod] = Nil,
                           name: Option[core.Type.Ident] = None,
-                          tparamClause: Option[Aux.TypeParamClause] = None,
+                          tparams: List[Aux.TypeParam] = Nil,
                           contextBounds: List[core.Type] = Nil,
                           viewBounds: List[core.Type] = Nil,
                           bounds: Aux.TypeBounds = Aux.TypeBounds.empty) extends Symbol
-    @leaf class TypeParamClause(tparams: List[TypeParam] @nonEmpty) extends Tree
     @leaf class TypeBounds(lo: Option[Type] = None, hi: Option[Type] = None) extends Tree
   }
 
   object Has {
-    @branch trait ParamClauses {
-      def paramClauses: Option[Aux.ParamClauses]
-      def paramss: List[List[Aux.Param]] = paramClauses.map(pc => pc.paramss :+ pc.implicits).getOrElse(Nil)
-    }
-
-    @branch trait TparamClause {
-      def tparamClause: Option[Aux.TypeParamClause]
-      def tparams: List[Aux.TypeParam] = tparamClause.map(_.tparams).getOrElse(Nil)
-    }
-
     @branch trait Mods extends Tree {
       def mods: List[Mod]
       // (Eugene) TODO: https://docs.google.com/spreadsheet/ccc?key=0Ahw_zqMtW4nNdC1lRVJvc3VjTUdOX0ppMVpSYzVRSHc&usp=sharing#gid=0
@@ -448,7 +442,7 @@ package core {
     }
 
     @branch trait DeclaredType extends Tree {
-      def declaredTpe: Option[Type]
+      def declTpe: Option[Type]
       def tpe: Type = ???
     }
   }
@@ -460,9 +454,8 @@ package object core {
   object Package {
     @leaf class Empty(stats: List[Stmt.TopLevel]) extends Package
     @leaf class Named(name: Term.Ref,
-                      declaredStats: Option[List[Stmt.TopLevel]]) extends Package with Stmt.TopLevel {
+                      stats: List[Stmt.TopLevel]) extends Package with Stmt.TopLevel {
       require(name.isQualId)
-      def stats: List[Stmt.TopLevel] = declaredStats.getOrElse(Nil)
     }
     @leaf class Object(mods: List[Mod],
                        name: Term.Ident,

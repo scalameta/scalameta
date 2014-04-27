@@ -316,9 +316,9 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
     /** Convert tree to formal parameter. */
     def convertToParam(tree: Term): Aux.Param = tree match {
       case id: Ident =>
-        Aux.Param(name = Some(id.toTermIdent), declaredTpe = None)
+        Aux.Param(name = Some(id.toTermIdent), declTpe = None)
       case Term.Ascribe(id: Ident, tpt) =>
-        Aux.Param(name = Some(id.toTermIdent), declaredTpe = Some(tpt))
+        Aux.Param(name = Some(id.toTermIdent), declTpe = Some(tpt))
       case _ =>
         syntaxError(/* tree.pos */ ???, "not a legal formal parameter")
     }
@@ -1637,7 +1637,7 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
      *  ClassParam        ::= {Annotation}  [{Modifier} (`val' | `var')] Id [`:' ParamType] [`=' Expr]
      *  }}}
      */
-    def paramClauses[Owner <: Tree](): Option[Aux.ParamClauses] = ???
+    def paramClauses[Owner <: Tree](): (List[List[Aux.Param]], List[Aux.Param]) = ???
     /*{
       var implicitmod = 0
       var caseParam = ofCaseClass
@@ -1753,7 +1753,7 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
      *  TypeParam             ::= Id TypeParamClauseOpt TypeBounds {<% Type} {":" Type}
      *  }}}
      */
-    def typeParamClauseOpt[Owner <: Symbol](): Option[Aux.TypeParamClause] = ???
+    def typeParamClauseOpt[Owner <: Symbol](): List[Aux.TypeParam] = ???
     /*{
       def typeParam(ms: List[Mod]): TypeDef = {
         var mods = ms | Flags.PARAM
@@ -1940,13 +1940,13 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
       if (in.token != THIS) funDefRest(mods, ident())
       else {
         in.skipToken()
-        val paramss = paramClauses[Ctor]()
+        val (paramss, implicits) = paramClauses[Ctor]()
         newLineOptWhenFollowedBy(LBRACE)
         val (argss, stats) = in.token match {
           case LBRACE => constrBlock()
           case _      => accept(EQUALS); constrExpr()
         }
-        Ctor.Secondary(mods, paramss, argss, stats)
+        Ctor.Secondary(mods, paramss, implicits, argss, stats)
       }
     }
 
@@ -1954,18 +1954,18 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
       def warnProcedureDeprecation =
         deprecationWarning(in.lastOffset, s"Procedure syntax is deprecated. Convert procedure `$name` to method by adding `: Unit`.")
       val tparams = typeParamClauseOpt()
-      val paramss = paramClauses()
+      val (paramss, implicits) = paramClauses()
       newLineOptWhenFollowedBy(LBRACE)
       var restype = fromWithinReturnType(typedOpt())
       if (isStatSep || in.token == RBRACE) {
         if (restype.isEmpty) {
           warnProcedureDeprecation
-          Decl.Procedure(mods, name, tparams, paramss)
+          Decl.Procedure(mods, name, tparams, paramss, implicits)
         } else
-          Decl.Def(mods, name, tparams, paramss, restype)
+          Decl.Def(mods, name, tparams, paramss, implicits, restype)
       } else if (restype.isEmpty && in.token == LBRACE) {
         warnProcedureDeprecation
-        Defn.Procedure(mods, name, tparams, paramss, block())
+        Defn.Procedure(mods, name, tparams, paramss, implicits, block())
       } else {
         var newmods = mods
         val rhs = {
@@ -1980,7 +1980,7 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
           }
           expr()
         }
-        Defn.Def(newmods, name, tparams, paramss, restype, rhs)
+        Defn.Def(newmods, name, tparams, paramss, implicits, restype, rhs)
       }
     }
 
@@ -1989,9 +1989,9 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
      *                    |  ConstrBlock
      *  }}}
      */
-    def constrExpr(): (List[List[Arg]], Option[List[Stmt.Block]]) =
+    def constrExpr(): (List[List[Arg]], List[Stmt.Block]) =
       if (in.token == LBRACE) constrBlock()
-      else (selfInvocation(), None)
+      else (selfInvocation(), Nil)
 
     /** {{{
      *  SelfInvocation  ::= this ArgumentExprs {ArgumentExprs}
@@ -2013,14 +2013,14 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
      *  ConstrBlock    ::=  `{' SelfInvocation {semi BlockStat} `}'
      *  }}}
      */
-    def constrBlock(): (List[List[Arg]], Option[List[Stmt.Block]]) = {
+    def constrBlock(): (List[List[Arg]], List[Stmt.Block]) = {
       in.skipToken()
       val argss = selfInvocation()
       val stats =
         if (!isStatSep) Nil
         else { in.nextToken(); blockStatSeq() }
       accept(RBRACE)
-      (argss, Some(stats))
+      (argss, stats)
     }
 
     /** {{{
@@ -2083,8 +2083,11 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
       Defn.Class(mods, typeIdent(), typeParamClauseOpt(), primaryCtor(), templateOpt[Defn.Class]())
     }
 
-    def primaryCtor(): Ctor.Primary =
-      Ctor.Primary(constructorAnnots() ++ accessModifierOpt(), paramClauses[Defn.Class]())
+    def primaryCtor(): Ctor.Primary = {
+      val mods = constructorAnnots() ++ accessModifierOpt()
+      val (paramss, implicits) = paramClauses[Ctor.Primary]()
+      Ctor.Primary(mods, paramss, implicits)
+    }
 
     /** {{{
      *  TraitDef ::= Id [TypeParamClause] RequiresTypeOpt TraitTemplateOpt
@@ -2130,7 +2133,7 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
      *  EarlyDef      ::= Annotations Modifiers PatDef
      *  }}}
      */
-    def template(): (List[Defn.Val], List[Aux.Parent], Aux.Self, Option[List[Stmt.Template]]) = {
+    def template(): (List[Defn.Val], List[Aux.Parent], Aux.Self, List[Stmt.Template]) = {
       newLineOptWhenFollowedBy(LBRACE)
       if (in.token == LBRACE) {
         // @S: pre template body cannot stub like post body can!
@@ -2142,7 +2145,7 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
           val (self1, body1) = templateBodyOpt(parenMeansSyntaxError = false)
           (edefs, parents, self1, body1)
         } else {
-          (Nil, Nil, self, Some(body))
+          (Nil, Nil, self, body)
         }
       } else {
         val parents = templateParents()
@@ -2153,21 +2156,6 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
 
     def earlyDefs(): List[Defn.Val] = ???
 
-    /*def ensureEarlyDef(tree: Tree): Tree = tree match {
-      case vdef @ ValDef(mods, _, _, _) if !mods.isDeferred =>
-        copyValDef(vdef)(mods = mods | Flags.PRESUPER)
-      case tdef @ TypeDef(mods, name, tparams, rhs) =>
-        deprecationWarning( tdef.pos.point  ???, "early type members are deprecated. Move them to the regular body: the semantics are the same.")
-        treeCopy.TypeDef(tdef, mods | Flags.PRESUPER, name, tparams, rhs)
-      case docdef @ DocDef(comm, rhs) =>
-        treeCopy.DocDef(docdef, comm, rhs)
-      case stat if !stat.isEmpty =>
-        syntaxError( stat.pos  ???, "only concrete field definitions allowed in early object initialization section")
-        EmptyTree
-      case _ =>
-        EmptyTree
-    }*/
-
     /** {{{
      *  ClassTemplateOpt ::= `extends' ClassTemplate | [[`extends'] TemplateBody]
      *  TraitTemplateOpt ::= TraitExtends TraitTemplate | [[`extends'] TemplateBody] | `<:' TemplateBody
@@ -2175,7 +2163,7 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
      *  }}}
      */
     def templateOpt[Owner <: Stmt.Template](): Aux.Template = {
-      val (early, parents, self, body): (List[Defn.Val], List[Aux.Parent], Aux.Self, Option[List[Stmt.Template]]) = (
+      val (early, parents, self, body): (List[Defn.Val], List[Aux.Parent], Aux.Self, List[Stmt.Template]) = (
         if (in.token == EXTENDS /* || in.token == SUBTYPE && mods.isTrait */) {
           in.nextToken()
           template()
@@ -2201,17 +2189,17 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
     def templateBody(isPre: Boolean): (Aux.Self, List[Stmt.Template]) =
       inBraces(templateStatSeq(isPre = isPre))
 
-    def templateBodyOpt(parenMeansSyntaxError: Boolean): (Aux.Self, Option[List[Stmt.Template]]) = {
+    def templateBodyOpt(parenMeansSyntaxError: Boolean): (Aux.Self, List[Stmt.Template]) = {
       newLineOptWhenFollowedBy(LBRACE)
       if (in.token == LBRACE) {
         val (self, stats) = templateBody(isPre = false)
-        (self, Some(stats))
+        (self, stats)
       } else {
         if (in.token == LPAREN) {
           if (parenMeansSyntaxError) syntaxError(s"traits or objects may not have parameters")
           else abort("unexpected opening parenthesis")
         }
-        (Aux.Self.empty, None)
+        (Aux.Self.empty, Nil)
       }
     }
 
@@ -2403,7 +2391,7 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
       if (in.token == OBJECT)
         packageObject()
       else {
-        Package.Named(qualId(), Some(inBracesOrNil(topStatSeq())))
+        Package.Named(qualId(), inBracesOrNil(topStatSeq()))
       }
 
     def packageObject(): Package.Object = ???
@@ -2430,12 +2418,12 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
             val qid = qualId()
 
             if (in.token == EOF) {
-              ts += Package.Named(qid, None)
+              ts += Package.Named(qid, Nil)
             } else if (isStatSep) {
               in.nextToken()
-              ts += Package.Named(qid, Some(packageStats()))
+              ts += Package.Named(qid, packageStats())
             } else {
-              ts += inBraces(Package.Named(qid, Some(topStatSeq())))
+              ts += inBraces(Package.Named(qid, topStatSeq()))
               acceptStatSepOpt()
               ts ++= topStatSeq()
             }
