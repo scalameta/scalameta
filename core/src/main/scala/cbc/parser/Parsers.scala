@@ -2,15 +2,61 @@ package cbc.parser
 
 import scala.collection.{ mutable, immutable }
 import mutable.{ ListBuffer, StringBuilder }
-import cbc.{ settings, ModifierFlags => Flags }
+import cbc.settings
 import cbc.util.SourceFile
 import cbc.util.Chars.isScalaLetter
 import cbc.parser.Tokens._
-import cbc._, Trees._, Constants._, Names._
-import scala.reflect.core.{Term, Pat, Type, Defn, Decl, Lit, Stmt,
+import cbc._
+import scala.reflect.core.{Tree, Term, Pat, Type, Defn, Decl, Lit, Stmt,
                            Import, Aux, Ident, RichMods, Mod, Enum, Ctor,
                            Arg, Package, Symbol}
 import scala.reflect.ClassTag
+
+object ParserInfo {
+  val keywords = Set(
+    "abstract", "case", "do", "else", "finally", "for", "import", "lazy",
+    "object", "override", "return", "sealed", "trait", "try", "var", "while",
+    "catch", "class", "extends", "false", "forSome", "if", "match", "new",
+    "package", "private", "super", "this", "true", "type", "with", "yield",
+    "def", "final", "implicit", "null", "protected", "throw", "val", "_",
+    ":", "=", "=>", "<-", "<:", "<%", ">:", "#", "@", "\u21D2", "\u2190"
+  )
+  val unaryOps = Set("-", "+", "~", "!")
+  implicit class IdentInfo(val id: Ident) extends AnyVal {
+    import id._
+    def isRightAssocOp: Boolean = value.last != ':'
+    def isUnaryOp: Boolean = unaryOps contains value
+    def isAssignmentOp = value match {
+      case "!=" | "<=" | ">=" | "" => false
+      case _                       => (value.last == '=' && value.head != '='
+                                       && isOperatorPart(value.head))
+    }
+    // opPrecedence?
+    def precedence: Int =
+      if (isAssignmentOp) 0
+      else if (isScalaLetter(value.head)) 1
+      else (value.head: @scala.annotation.switch) match {
+        case '|'             => 2
+        case '^'             => 3
+        case '&'             => 4
+        case '=' | '!'       => 5
+        case '<' | '>'       => 6
+        case ':'             => 7
+        case '+' | '-'       => 8
+        case '*' | '/' | '%' => 9
+        case _               => 10
+      }
+    def isVarPattern: Boolean = id match {
+      case _: Term.Ident => !isBackquoted && value.head.isLower && value.head.isLetter
+      case _             => false
+    }
+    def isInterpolationId: Boolean = ???
+
+    private def isOperatorPart(ch: Char) = ???
+    private def isScalaLetter(ch: Char) = ???
+  }
+}
+import ParserInfo._
 
 trait ParsersCommon extends ScannersCommon { self =>
   /** This is now an abstract class, only to work around the optimizer:
@@ -65,7 +111,7 @@ trait ParsersCommon extends ScannersCommon { self =>
   }
 }
 
-trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
+trait Parsers extends Scanners /* with MarkupParsers */ with ParsersCommon { self =>
   class SourceFileParser(val source: SourceFile) extends Parser {
     /** The parse starting point depends on whether the source file is self-contained:
      *  if not, the AST will be supplemented.
@@ -84,8 +130,8 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
     def incompleteInputError(msg: String): Nothing = ???
 
     /** the markup parser */
-    private[this] lazy val xmlp = new MarkupParser(this, preserveWS = true)
-    object symbXMLBuilder extends SymbolicXMLBuilder(this, preserveWS = true)
+    // private[this] lazy val xmlp = new MarkupParser(this, preserveWS = true)
+    // object symbXMLBuilder extends SymbolicXMLBuilder(this, preserveWS = true)
     def xmlLiteral(): Term = ??? //xmlp.xLiteral
     def xmlLiteralPattern(): Pat = ??? // xmlp.xLiteralPattern
   }
@@ -94,21 +140,6 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
   final val Local: Location = 0
   final val InBlock: Location = 1
   final val InTemplate: Location = 2
-
-  // These symbols may not yet be loaded (e.g. in the ide) so don't go
-  // through definitions to obtain the names.
-  lazy val ScalaValueClassNames = Seq(tpnme.AnyVal,
-      tpnme.Unit,
-      tpnme.Boolean,
-      tpnme.Byte,
-      tpnme.Short,
-      tpnme.Char,
-      tpnme.Int,
-      tpnme.Long,
-      tpnme.Float,
-      tpnme.Double)
-
-  import nme.raw
 
   abstract class Parser extends ParserCommon { parser =>
     val in: Scanner
@@ -139,12 +170,6 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
       // try it, in case it is recoverable
       try tree catch { case e: Exception => pushback() ; throw e }
     }
-
-    class ParserTreeBuilder extends TreeBuilder {
-      def source = parser.source
-    }
-    val treeBuilder = new ParserTreeBuilder
-    import treeBuilder.{source => _,  _}
 
     def parseStartRule: () => Tree
 
@@ -263,15 +288,15 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
       case _ => false
     }
 
-    def isIdentExcept(except: Name) = isIdent && in.name != except
-    def isIdentOf(name: Name)       = isIdent && in.name == name
+    def isIdentExcept(except: String) = isIdent && in.name != except
+    def isIdentOf(name: String)       = isIdent && in.name == name
 
     def isUnaryOp = isIdent && ident(peek = true).isUnaryOp
-    def isRawStar = isIdent && in.name == raw.STAR
-    def isRawBar  = isIdent && in.name == raw.BAR
+    def isRawStar = isIdent && in.name == "*"
+    def isRawBar  = isIdent && in.name == "|"
 
     def isIdent = in.token == IDENTIFIER || in.token == BACKQUOTED_IDENT
-    def isMacro = in.token == IDENTIFIER && in.name == nme.MACROkw
+    def isMacro = in.token == IDENTIFIER && in.name == "macro"
 
     def isLiteralToken(token: Token) = token match {
       case CHARLIT | INTLIT | LONGLIT | FLOATLIT | DOUBLELIT |
@@ -316,9 +341,9 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
     /** Convert tree to formal parameter. */
     def convertToParam(tree: Term): Aux.Param = tree match {
       case id: Ident =>
-        Aux.Param(name = Some(id.toTermIdent), declTpe = None)
+        Aux.Param(name = Some(id.toTermIdent), decltpe = None)
       case Term.Ascribe(id: Ident, tpt) =>
-        Aux.Param(name = Some(id.toTermIdent), declTpe = Some(tpt))
+        Aux.Param(name = Some(id.toTermIdent), decltpe = Some(tpt))
       case _ =>
         syntaxError(/* tree.pos */ ???, "not a legal formal parameter")
     }
@@ -604,7 +629,7 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
       }
 
       def infixTypeRest(t: Type, mode: InfixMode.Value): Type = {
-        if (isIdent && in.name != nme.STAR) {
+        if (isIdent && in.name != "*") {
           val id = Term.Ident(in.name.toString)
           val leftAssoc = !id.isRightAssocOp
           if (mode != InfixMode.FirstOp) checkAssoc(id, leftAssoc = mode == InfixMode.LeftOp)
@@ -1383,8 +1408,8 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
           case _ => None
         }
         def loop(top: Pat): Pat = reduceStack(ctx.stack, top) match {
-          case next if isIdentExcept(raw.BAR) => ctx.push(next); loop(simplePattern(badPattern3))
-          case next                           => next
+          case next if isIdentExcept("*") => ctx.push(next); loop(simplePattern(badPattern3))
+          case next                       => next
         }
         checkWildStar getOrElse loop(top)
       }
@@ -1921,8 +1946,8 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
           case _              => syntaxError("pattern definition may not be abstract")
         }
 
-        if (isMutable) Decl.Var(mods, ids, tp)
-        else Decl.Var(mods, ids, tp)
+        if (isMutable) Decl.Var(mods, ids, tp.get)
+        else Decl.Var(mods, ids, tp.get)
       }
     }
 
@@ -1970,7 +1995,7 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
         var newmods = mods
         val rhs = {
           if (in.token == EQUALS) {
-            in.nextTokenAllow(nme.MACROkw)
+            in.nextTokenAllow("macro")
             if (isMacro) {
               in.nextToken()
               newmods = newmods :+ Mod.Macro()
@@ -2247,7 +2272,6 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
         in.skipToken()
         packageOrPackageObject()
       case IMPORT =>
-        in.flushDoc
         importStmt()
       case _ if isAnnotation || isTemplateIntro || isModifier =>
         topLevelTmplDef
@@ -2262,7 +2286,6 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
       var self: Aux.Self = Aux.Self.empty
       var firstOpt: Option[Term] = None
       if (isExprIntro) {
-        in.flushDoc
         val first = expr(InTemplate) // @S: first statement is potentially converted so cannot be stubbed.
         if (in.token == ARROW) {
           first match {
@@ -2297,12 +2320,10 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
     def templateStats(): List[Stmt.Template] = statSeq(templateStat)
     def templateStat: PartialFunction[Token, Stmt.Template] = {
       case IMPORT =>
-        in.flushDoc
         importStmt()
       case _ if isDefIntro || isModifier || isAnnotation =>
         nonLocalDefOrDcl
       case _ if isExprIntro =>
-        in.flushDoc
         expr(InTemplate)
     }
 
@@ -2414,7 +2435,6 @@ trait Parsers extends Scanners with MarkupParsers with ParsersCommon { self =>
               ts ++= topStatSeq()
             }
           } else {
-            in.flushDoc
             val qid = qualId()
 
             if (in.token == EOF) {

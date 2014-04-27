@@ -8,12 +8,10 @@ import scala.language.postfixOps
 import scala.annotation.{ switch, tailrec }
 import scala.collection.{ mutable, immutable }
 import mutable.{ ListBuffer, ArrayBuffer }
-import cbc.{settings, nme}
-import cbc.Names._
-import cbc.Trees._
+import cbc.settings
 import cbc.util._, Chars._
 import cbc.parser.Tokens._
-import cbc.parser.xml.Utility.isNameStart
+import cbc.parser.xml.Utility.isStringStart
 
 trait ScannersCommon {
   /** Offset into source character array */
@@ -23,7 +21,7 @@ trait ScannersCommon {
 
   trait CommonTokenData {
     def token: Token
-    def name: TermName
+    def name: String
   }
 
   trait ScannerCommon extends CommonTokenData {
@@ -33,8 +31,8 @@ trait ScannersCommon {
     def deprecationWarning(off: Offset, msg: String): Unit
   }
 
-  def createKeywordArray(keywords: Seq[(Name, Token)], defaultToken: Token): (Token, Array[Token]) = {
-    val names = keywords sortBy (_._1.start) map { case (k, v) => (k.start, v) }
+  def createKeywordArray(keywords: Seq[(String, Token)], defaultToken: Token): (Token, Array[Token]) = {
+    val names = keywords sortBy (_._1.head) map { case (k, v) => (k.head, v) }
     val low   = names.head._1
     val high  = names.last._1
     val arr   = Array.fill(high - low + 1)(defaultToken)
@@ -57,7 +55,7 @@ trait Scanners extends ScannersCommon {
     var lastOffset: Offset = 0
 
     /** the name of an identifier */
-    var name: TermName = null
+    var name: String = null
 
     /** the string value of a literal */
     var strVal: String = null
@@ -153,7 +151,6 @@ trait Scanners extends ScannersCommon {
       case '/' | '*' => skipToCommentEnd(isLineComment = ch == '/') ; true
       case _         => false
     }
-    def flushDoc(): DocComment = null
 
     /** To prevent doc comments attached to expressions from leaking out of scope
      *  onto the next documentable entity, they are discarded upon passing a right
@@ -188,16 +185,16 @@ trait Scanners extends ScannersCommon {
     protected def emitIdentifierDeprecationWarnings = true
 
     /** Clear buffer and set name and token */
-    private def finishNamed(idtoken: Token = IDENTIFIER) {
-      name = newTermName(cbuf.toString)
+    private def finishStringd(idtoken: Token = IDENTIFIER) {
+      name = cbuf.toString
       cbuf.clear()
       token = idtoken
       if (idtoken == IDENTIFIER) {
-        val idx = name.start - kwOffset
+        val idx = name.head - kwOffset
         if (idx >= 0 && idx < kwArray.length) {
           token = kwArray(idx)
           if (token == IDENTIFIER && allowIdent != name) {
-            if (name == nme.MACROkw)
+            if (name == "macro")
               syntaxError(s"$name is now a reserved word; usage as an identifier is disallowed")
             else if (emitIdentifierDeprecationWarnings)
               deprecationWarning(s"$name is now a reserved word; usage as an identifier is deprecated")
@@ -247,10 +244,10 @@ trait Scanners extends ScannersCommon {
     }
 
     /** Allow an otherwise deprecated ident here */
-    private var allowIdent: Name = nme.EMPTY
+    private var allowIdent: String = ""
 
     /** Get next token, and allow the otherwise deprecated ident `name`  */
-    def nextTokenAllow(name: Name) = {
+    def nextTokenAllow(name: String) = {
       val prev = allowIdent
       allowIdent = name
       try {
@@ -420,7 +417,7 @@ trait Scanners extends ScannersCommon {
             val last = if (charOffset >= 2) buf(charOffset - 2) else ' '
             nextChar()
             last match {
-              case ' ' | '\t' | '\n' | '{' | '(' | '>' if isNameStart(ch) || ch == '!' || ch == '?' =>
+              case ' ' | '\t' | '\n' | '{' | '(' | '>' if isStringStart(ch) || ch == '!' || ch == '?' =>
                 token = XMLSTART
               case _ =>
                 // Console.println("found '<', but last is '"+in.last+"'"); // DEBUG
@@ -601,7 +598,7 @@ trait Scanners extends ScannersCommon {
       getLitChars('`')
       if (ch == '`') {
         nextChar()
-        finishNamed(BACKQUOTED_IDENT)
+        finishStringd(BACKQUOTED_IDENT)
         if (name.length == 0) syntaxError("empty quoted identifier")
       }
       else syntaxError("unclosed quoted identifier")
@@ -630,14 +627,14 @@ trait Scanners extends ScannersCommon {
         nextChar()
         getIdentOrOperatorRest()
       case SU => // strangely enough, Character.isUnicodeIdentifierPart(SU) returns true!
-        finishNamed()
+        finishStringd()
       case _ =>
         if (Character.isUnicodeIdentifierPart(ch)) {
           putChar(ch)
           nextChar()
           getIdentRest()
         } else {
-          finishNamed()
+          finishStringd()
         }
     }
 
@@ -649,11 +646,11 @@ trait Scanners extends ScannersCommon {
         putChar(ch); nextChar(); getOperatorRest()
       case '/' =>
         nextChar()
-        if (skipComment()) finishNamed()
+        if (skipComment()) finishStringd()
         else { putChar('/'); getOperatorRest() }
       case _ =>
         if (isSpecial(ch)) { putChar(ch); nextChar(); getOperatorRest() }
-        else finishNamed()
+        else finishStringd()
     }
 
     private def getIdentOrOperatorRest() {
@@ -667,7 +664,7 @@ trait Scanners extends ScannersCommon {
           getOperatorRest()
         case _ =>
           if (isSpecial(ch)) getOperatorRest()
-          else finishNamed()
+          else finishStringd()
       }
     }
 
@@ -741,9 +738,9 @@ trait Scanners extends ScannersCommon {
             nextRawChar()
           } while (ch != SU && Character.isUnicodeIdentifierPart(ch))
           next.token = IDENTIFIER
-          next.name = newTermName(cbuf.toString)
+          next.name = cbuf.toString
           cbuf.clear()
-          val idx = next.name.start - kwOffset
+          val idx = next.name.head - kwOffset
           if (idx >= 0 && idx < kwArray.length) {
             next.token = kwArray(idx)
           }
@@ -1134,59 +1131,59 @@ trait Scanners extends ScannersCommon {
 
   // ------------- keyword configuration -----------------------------------
 
-  private val allKeywords = List[(Name, Token)](
-    nme.ABSTRACTkw  -> ABSTRACT,
-    nme.CASEkw      -> CASE,
-    nme.CATCHkw     -> CATCH,
-    nme.CLASSkw     -> CLASS,
-    nme.DEFkw       -> DEF,
-    nme.DOkw        -> DO,
-    nme.ELSEkw      -> ELSE,
-    nme.EXTENDSkw   -> EXTENDS,
-    nme.FALSEkw     -> FALSE,
-    nme.FINALkw     -> FINAL,
-    nme.FINALLYkw   -> FINALLY,
-    nme.FORkw       -> FOR,
-    nme.FORSOMEkw   -> FORSOME,
-    nme.IFkw        -> IF,
-    nme.IMPLICITkw  -> IMPLICIT,
-    nme.IMPORTkw    -> IMPORT,
-    nme.LAZYkw      -> LAZY,
-    nme.MATCHkw     -> MATCH,
-    nme.NEWkw       -> NEW,
-    nme.NULLkw      -> NULL,
-    nme.OBJECTkw    -> OBJECT,
-    nme.OVERRIDEkw  -> OVERRIDE,
-    nme.PACKAGEkw   -> PACKAGE,
-    nme.PRIVATEkw   -> PRIVATE,
-    nme.PROTECTEDkw -> PROTECTED,
-    nme.RETURNkw    -> RETURN,
-    nme.SEALEDkw    -> SEALED,
-    nme.SUPERkw     -> SUPER,
-    nme.THISkw      -> THIS,
-    nme.THROWkw     -> THROW,
-    nme.TRAITkw     -> TRAIT,
-    nme.TRUEkw      -> TRUE,
-    nme.TRYkw       -> TRY,
-    nme.TYPEkw      -> TYPE,
-    nme.VALkw       -> VAL,
-    nme.VARkw       -> VAR,
-    nme.WHILEkw     -> WHILE,
-    nme.WITHkw      -> WITH,
-    nme.YIELDkw     -> YIELD,
-    nme.DOTkw       -> DOT,
-    nme.USCOREkw    -> USCORE,
-    nme.COLONkw     -> COLON,
-    nme.EQUALSkw    -> EQUALS,
-    nme.ARROWkw     -> ARROW,
-    nme.LARROWkw    -> LARROW,
-    nme.SUBTYPEkw   -> SUBTYPE,
-    nme.VIEWBOUNDkw -> VIEWBOUND,
-    nme.SUPERTYPEkw -> SUPERTYPE,
-    nme.HASHkw      -> HASH,
-    nme.ATkw        -> AT,
-    nme.MACROkw     -> IDENTIFIER,
-    nme.THENkw      -> IDENTIFIER)
+  private val allKeywords = List[(String, Token)](
+    "abstract" -> ABSTRACT,
+    "case"      -> CASE,
+    "catch"     -> CATCH,
+    "class"     -> CLASS,
+    "def"       -> DEF,
+    "do"        -> DO,
+    "else"      -> ELSE,
+    "extends"   -> EXTENDS,
+    "false"     -> FALSE,
+    "final"     -> FINAL,
+    "finally"   -> FINALLY,
+    "for"       -> FOR,
+    "forSome"   -> FORSOME,
+    "if"        -> IF,
+    "implicit"  -> IMPLICIT,
+    "import"    -> IMPORT,
+    "lazy"      -> LAZY,
+    "match"     -> MATCH,
+    "new"       -> NEW,
+    "null"      -> NULL,
+    "object"    -> OBJECT,
+    "override"  -> OVERRIDE,
+    "package"   -> PACKAGE,
+    "private"   -> PRIVATE,
+    "protected" -> PROTECTED,
+    "return"    -> RETURN,
+    "sealed"    -> SEALED,
+    "super"     -> SUPER,
+    "this"      -> THIS,
+    "throw"     -> THROW,
+    "trait"     -> TRAIT,
+    "true"      -> TRUE,
+    "try"       -> TRY,
+    "type"      -> TYPE,
+    "val"       -> VAL,
+    "var"       -> VAR,
+    "while"     -> WHILE,
+    "with"      -> WITH,
+    "yield"     -> YIELD,
+    "."         -> DOT,
+    "_"         -> USCORE,
+    ":"         -> COLON,
+    "="         -> EQUALS,
+    "=>"        -> ARROW,
+    "<-"        -> LARROW,
+    "<:"        -> SUBTYPE,
+    "<%"        -> VIEWBOUND,
+    ">:"        -> SUPERTYPE,
+    "#"         -> HASH,
+    "@"         -> AT,
+    "macro"     -> IDENTIFIER,
+    "then"      -> IDENTIFIER)
 
   private var kwOffset: Offset = -1
   private val kwArray: Array[Token] = {

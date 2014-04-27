@@ -57,35 +57,7 @@ package core {
   @branch trait Ident extends Ref {
     def value: String
     def isBackquoted: Boolean
-    def isRightAssocOp: Boolean = value.last != ':'
-    def isUnaryOp: Boolean = unaryOps contains value
-    def isAssignmentOp = value match {
-      case "!=" | "<=" | ">=" | "" => false
-      case _                       => value.last == '=' && value.head != '=' && isOperatorPart(value.head)
-    }
-    // opPrecedence?
-    def precedence: Int =
-      if (isAssignmentOp) 0
-      else if (isScalaLetter(value.head)) 1
-      else (value.head: @scala.annotation.switch) match {
-        case '|'             => 2
-        case '^'             => 3
-        case '&'             => 4
-        case '=' | '!'       => 5
-        case '<' | '>'       => 6
-        case ':'             => 7
-        case '+' | '-'       => 8
-        case '*' | '/' | '%' => 9
-        case _               => 10
-      }
-    def isVarPattern: Boolean = this match {
-      case _: Term.Ident => !isBackquoted && value.head.isLower && value.head.isLetter
-      case _             => false
-    }
-    def isInterpolationId: Boolean = ???
 
-    private def isOperatorPart(ch: Char) = ???
-    private def isScalaLetter(ch: Char) = ???
   }
 
   @branch trait Term extends Arg with Stmt.Template with Stmt.Block with Aux.Catch {
@@ -107,7 +79,7 @@ package core {
     }
     @leaf class This(qual: Option[core.Ident]) extends Ref
     @leaf class Ident(value: scala.Predef.String @nonEmpty, isBackquoted: Boolean = false) extends core.Ident with Ref with Pat with Symbol {
-      require(!keywords.contains(value) || isBackquoted)
+      // TODO: require(!keywords.contains(value) || isBackquoted)
       def isBinding: Boolean = ???
       def mods: List[Mod] = Nil
     }
@@ -115,16 +87,16 @@ package core {
     @leaf class Select(qual: Term, selector: Term.Ident) extends Ref with Pat
 
     @leaf class Interpolate(prefix: Ident, parts: List[Lit.String] @nonEmpty, args: List[Term]) extends Term {
-      require(prefix.isInterpolationId)
+      // TODO: require(prefix.isInterpolationId)
       require(parts.length == args.length + 1)
     }
     @leaf class Apply(fun: Term, args: List[Arg]) extends Term
     @leaf class ApplyType(fun: Term, args: List[Type] @nonEmpty) extends Term
     @leaf class ApplyRight(lhs: Term, op: Ident, targs: List[Type], rhs: Term) extends Term {
-      require(op.isRightAssocOp)
+      // TODO: require(op.isRightAssocOp)
     }
     @leaf class ApplyUnary(op: Ident, arg: Term) extends Term {
-      require(op.isUnaryOp)
+      // TODO: require(op.isUnaryOp)
     }
     @leaf class Assign(lhs: Term.Ref, rhs: Term) extends Term
     @leaf class Update(lhs: Apply, rhs: Term) extends Term
@@ -168,7 +140,7 @@ package core {
   object Type {
     @branch trait Ref extends Type with core.Ref
     @leaf class Ident(value: String @nonEmpty, isBackquoted: Boolean = false) extends core.Ident with Ref {
-      require(keywords.contains(value) ==> isBackquoted)
+      // TODO: require(keywords.contains(value) ==> isBackquoted)
     }
     @leaf class Select(qual: Term.Ref, name: Type.Ident) extends Ref {
       require(qual.isPath)
@@ -203,7 +175,7 @@ package core {
       require(ref.isStableId)
     }
     @leaf class Interpolate(prefix: Term.Ident, parts: List[Lit.String] @nonEmpty, args: List[Pat]) extends Pat {
-      require(prefix.isInterpolationId)
+      // TODO: require(prefix.isInterpolationId)
       require(parts.length == args.length + 1)
     }
     @leaf class Typed(lhs: Pat, rhs: Type) extends Pat {
@@ -463,15 +435,6 @@ package object core {
                        templ: Aux.Template) extends Package with Stmt.TopLevel with Symbol.Template
   }
 
-  val keywords = Set(
-    "abstract", "case", "do", "else", "finally", "for", "import", "lazy",
-    "object", "override", "return", "sealed", "trait", "try", "var", "while",
-    "catch", "class", "extends", "false", "forSome", "if", "match", "new",
-    "package", "private", "super", "this", "true", "type", "with", "yield",
-    "def", "final", "implicit", "null", "protected", "throw", "val", "_",
-    ":", "=", "=>", "<-", "<:", "<%", ">:", "#", "@", "\u21D2", "\u2190"
-  )
-  val unaryOps = Set("-", "+", "~", "!")
   implicit class Quasiquotes(ctx: StringContext) {
     protected trait api {
       def apply[T](args: T*): Tree = macro ???
