@@ -3,7 +3,7 @@
 // * @author Burak Emir
 // */
 //
-//package cbc.parser
+//package cbc.xml
 //
 //import scala.collection.mutable
 //import mutable.{ Buffer, ArrayBuffer, ListBuffer }

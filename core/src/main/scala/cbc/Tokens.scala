@@ -5,30 +5,59 @@
 
 package cbc
 
-object Tokens extends CommonTokens {
+object Tokens {
+  def isIdentifier(code: Int) = code == IDENTIFIER || code == BACKQUOTED_IDENT // used by ide
+  def isLiteral(code: Int) = code >= CHARLIT && code <= INTERPOLATIONID
+
+  /** special tokens */
+  final val EMPTY = -3
+  final val UNDEF = -2
+  final val ERROR = -1
+  final val EOF = 0
+
+  /** literals */
+  final val CHARLIT = 1
+  final val INTLIT = 2
+  final val LONGLIT = 3
+  final val FLOATLIT = 4
+  final val DOUBLELIT = 5
+  final val STRINGLIT = 6
   final val STRINGPART = 7 // a part of an interpolated string
   final val SYMBOLLIT = 8
   final val INTERPOLATIONID = 9 // the lead identifier of an interpolated string
 
-  def isLiteral(code: Int) = code >= CHARLIT && code <= INTERPOLATIONID
-
   /** identifiers */
   final val IDENTIFIER = 10
   final val BACKQUOTED_IDENT = 11
-  def isIdentifier(code: Int) = code == IDENTIFIER || code == BACKQUOTED_IDENT // used by ide
+
+  /** keywords */
+  final val NEW = 20
+  final val THIS = 21
+  final val SUPER = 23
+  final val NULL = 24
+  final val TRUE = 25
+  final val FALSE = 26
 
   /** modifiers */
   final val IMPLICIT = 40
   final val OVERRIDE = 41
+  final val PROTECTED = 43
+  final val PRIVATE = 44
+  final val ABSTRACT = 46
+  final val FINAL = 49
   final val SEALED = 45
   final val LAZY = 55
   final val MACRO = 57
 
   /** templates */
+  final val PACKAGE = 60
+  final val IMPORT = 61
+  final val CLASS = 62
   final val CASECLASS = 63
   final val OBJECT = 64
   final val CASEOBJECT = 65
   final val TRAIT = 66
+  final val EXTENDS = 68
   final val WITH = 69
   final val TYPE = 70
   final val FORSOME = 71
@@ -37,9 +66,36 @@ object Tokens extends CommonTokens {
   final val VAR = 74
 
   /** control structures */
+  final val IF = 80
   final val THEN = 81
+  final val ELSE = 82
+  final val WHILE = 83
+  final val DO = 84
+  final val FOR = 85
   final val YIELD = 86
+  final val THROW = 90
+  final val TRY = 91
+  final val CATCH = 92
+  final val FINALLY = 93
+  final val CASE = 96
+  final val RETURN = 97
   final val MATCH = 95
+
+  /** parenthesis */
+  final val LPAREN = 100
+  final val RPAREN = 101
+  final val LBRACKET = 102
+  final val RBRACKET = 103
+  final val LBRACE = 104
+  final val RBRACE = 105
+
+  /** special symbols */
+  final val COMMA = 120
+  final val SEMI = 121
+  final val DOT = 122
+  final val COLON = 123
+  final val EQUALS = 124
+  final val AT = 125
 
   /** special symbols */
   final val HASH = 130
