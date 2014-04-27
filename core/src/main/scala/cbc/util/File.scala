@@ -8,7 +8,7 @@
 
 
 package cbc
-package io
+package util
 
 import java.io.{
   FileInputStream, FileOutputStream, BufferedReader, BufferedWriter, InputStreamReader, OutputStreamWriter,

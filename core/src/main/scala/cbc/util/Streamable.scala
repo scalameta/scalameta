@@ -4,7 +4,7 @@
  */
 
 package cbc
-package io
+package util
 
 import java.net.{ URI, URL }
 import java.io.{ BufferedInputStream, InputStream, PrintStream }

@@ -4,7 +4,7 @@
  */
 
 package cbc
-package io
+package util
 
 import java.io.{
   FileInputStream, FileOutputStream, BufferedReader, BufferedWriter, InputStreamReader, OutputStreamWriter,
@@ -70,8 +70,8 @@ object Path {
   } catch { case ex: SecurityException => new Path(jfile) }
 
   /** Avoiding any shell/path issues by only using alphanumerics. */
-  private[io] def randomPrefix = alphanumeric take 6 mkString ""
-  private[io] def fail(msg: String) = throw FileOperationException(msg)
+  private[util] def randomPrefix = alphanumeric take 6 mkString ""
+  private[util] def fail(msg: String) = throw FileOperationException(msg)
 }
 import Path._
 
@@ -80,7 +80,7 @@ import Path._
  *
  *  ''Note:  This library is considered experimental and should not be used unless you know what you are doing.''
  */
-class Path private[io] (val jfile: JFile) {
+class Path private[util] (val jfile: JFile) {
   val separator = java.io.File.separatorChar
   val separatorStr = java.io.File.separator
 

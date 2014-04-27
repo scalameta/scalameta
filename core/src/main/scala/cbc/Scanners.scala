@@ -2,16 +2,15 @@
  * Copyright 2005-2013 LAMP/EPFL
  * @author  Martin Odersky
  */
-package cbc.parser
+package cbc
 
 import scala.language.postfixOps
 import scala.annotation.{ switch, tailrec }
 import scala.collection.{ mutable, immutable }
 import mutable.{ ListBuffer, ArrayBuffer }
-import cbc.settings
 import cbc.util._, Chars._
-import cbc.parser.Tokens._
-import cbc.parser.xml.Utility.isStringStart
+import cbc.Tokens._
+import cbc.xml.Utility.isStringStart
 
 trait ScannersCommon {
   /** Offset into source character array */

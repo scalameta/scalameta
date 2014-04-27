@@ -4,7 +4,7 @@
  */
 
 package cbc
-package io
+package util
 
 import java.io.{ ByteArrayInputStream, ByteArrayOutputStream, InputStream, OutputStream, File => JFile }
 

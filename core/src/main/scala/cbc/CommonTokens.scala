@@ -1,4 +1,4 @@
-package cbc.parser
+package cbc
 
 /** Common code between Scala's Tokens and JavaTokens. */
 abstract class CommonTokens {

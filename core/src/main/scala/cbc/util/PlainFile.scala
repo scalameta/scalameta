@@ -4,7 +4,7 @@
  */
 
 package cbc
-package io
+package util
 
 import java.io.{ FileInputStream, FileOutputStream, IOException }
 
@@ -59,7 +59,7 @@ class PlainFile(val givenPath: Path) extends AbstractFile {
     // Optimization: Assume that the file was not deleted and did not have permissions changed
     // between the call to `list` and the iteration. This saves a call to `exists`.
     def existsFast(path: Path) = path match {
-      case (_: Directory | _: io.File) => true
+      case (_: Directory | _: util.File) => true
       case _                           => path.exists
     }
     if (!isDirectory) Iterator.empty

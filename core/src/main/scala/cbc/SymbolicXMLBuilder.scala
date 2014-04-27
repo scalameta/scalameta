@@ -3,7 +3,7 @@
 // * @author Burak Emir
 // */
 //
-//package cbc.parser
+//package cbc
 //
 //import scala.collection.{ mutable, immutable }
 //import cbc.Flags.MUTABLE

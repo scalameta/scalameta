@@ -3,7 +3,7 @@
  */
 
 package cbc
-package io
+package util
 
 import scala.collection.mutable
 

@@ -6,7 +6,6 @@
 
 package cbc.util
 
-import cbc.io.{ AbstractFile, VirtualFile }
 import cbc.util.Chars._
 import scala.collection.mutable.ArrayBuffer
 import scala.annotation.tailrec

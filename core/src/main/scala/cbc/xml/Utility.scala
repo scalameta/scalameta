@@ -6,7 +6,7 @@
 **                          |/                                          **
 \*                                                                      */
 
-package cbc.parser.xml
+package cbc.xml
 
 import scala.collection.mutable
 

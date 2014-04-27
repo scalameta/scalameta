@@ -5,7 +5,7 @@
 
 
 package cbc
-package io
+package util
 
 import java.io.{ FileOutputStream, IOException, InputStream, OutputStream, BufferedOutputStream, ByteArrayOutputStream }
 import java.io.{ File => JFile }

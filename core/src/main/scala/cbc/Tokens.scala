@@ -3,7 +3,7 @@
  * @author  Martin Odersky
  */
 
-package cbc.parser
+package cbc
 
 object Tokens extends CommonTokens {
   final val STRINGPART = 7 // a part of an interpolated string

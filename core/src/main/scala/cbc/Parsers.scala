@@ -1,12 +1,10 @@
-package cbc.parser
+package cbc
 
 import scala.collection.{ mutable, immutable }
 import mutable.{ ListBuffer, StringBuilder }
-import cbc.settings
-import cbc.util.SourceFile
+import cbc.util.{settings, SourceFile}
 import cbc.util.Chars.isScalaLetter
-import cbc.parser.Tokens._
-import cbc._
+import cbc.Tokens._
 import scala.reflect.core.{Tree, Term, Pat, Type, Defn, Decl, Lit, Stmt,
                            Import, Aux, Ident, RichMods, Mod, Enum, Ctor,
                            Arg, Package, Symbol}

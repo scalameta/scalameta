@@ -7,7 +7,7 @@
 \*                                                                      */
 
 package cbc
-package io
+package util
 
 import java.io.{ File => JFile }
 /**

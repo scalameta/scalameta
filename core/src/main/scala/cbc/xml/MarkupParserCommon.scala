@@ -6,7 +6,7 @@
 **                          |/                                          **
 \*                                                                      */
 
-package cbc.parser.xml
+package cbc.xml
 
 /** This is not a public trait - it contains common code shared
  *  between the library level XML parser and the compiler's.

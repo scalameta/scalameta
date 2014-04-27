@@ -4,7 +4,7 @@
  */
 
 package cbc
-package io
+package util
 
 import java.net.URL
 import java.io.{ IOException, InputStream, ByteArrayInputStream, FilterInputStream }

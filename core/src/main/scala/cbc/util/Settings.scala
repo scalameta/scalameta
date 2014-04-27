@@ -1,4 +1,4 @@
-package cbc
+package cbc.util
 
 object settings {
   val Xposdebug = false
