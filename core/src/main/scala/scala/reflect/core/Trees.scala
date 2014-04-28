@@ -44,8 +44,9 @@ list of ugliness discovered so far
 package core {
   @root trait Tree {
     def parent: Option[Tree] = ???
-    override def equals(other: Any): Boolean = ???
-    override def hashCode(): Int = ???
+    // TODO: hygienic equality
+    // override def equals(other: Any): Boolean = ???
+    // override def hashCode(): Int = ???
   }
 
   @branch trait Ref extends Tree {

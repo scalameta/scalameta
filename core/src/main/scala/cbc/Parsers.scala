@@ -3,7 +3,7 @@ package cbc
 import scala.collection.{ mutable, immutable }
 import mutable.{ ListBuffer, StringBuilder }
 import cbc.util.settings
-import cbc.util.Chars.isScalaLetter
+import cbc.util.Chars.{isOperatorPart, isScalaLetter}
 import cbc.Tokens._
 import cbc.TokenInfo._
 import scala.reflect.core.{Tree, Term, Pat, Type, Defn, Decl, Lit, Stmt,
@@ -21,10 +21,11 @@ object ParserInfo {
     ":", "=", "=>", "<-", "<:", "<%", ">:", "#", "@", "\u21D2", "\u2190"
   )
   val unaryOps = Set("-", "+", "~", "!")
+  def isUnaryOp(s: String): Boolean = unaryOps contains s
   implicit class IdentInfo(val id: Ident) extends AnyVal {
     import id._
     def isRightAssocOp: Boolean = value.last != ':'
-    def isUnaryOp: Boolean = unaryOps contains value
+    def isUnaryOp: Boolean = ParserInfo.isUnaryOp(value)
     def isAssignmentOp = value match {
       case "!=" | "<=" | ">=" | "" => false
       case _                       => (value.last == '=' && value.head != '='
@@ -50,14 +51,16 @@ object ParserInfo {
       case _             => false
     }
     def isInterpolationId: Boolean = ???
-
-    private def isOperatorPart(ch: Char) = ???
-    private def isScalaLetter(ch: Char) = ???
   }
 }
 import ParserInfo._
 
+case class ParseAbort(msg: String) extends Exception(s"abort: $msg")
+case class ParseSyntaxError(offset: Offset, msg: String) extends Exception(s"syntax error at $offset: $msg")
+case class ParseIncompleteInputError(msg: String) extends Exception("incomplete input: $msg")
+
 class SourceParser(val source: Source) extends Parser {
+  def this(code: String) = this(StringSource(code))
   /** The parse starting point depends on whether the source file is self-contained:
    *  if not, the AST will be supplemented.
    */
@@ -70,9 +73,9 @@ class SourceParser(val source: Source) extends Parser {
   def deprecationWarning(offset: Offset, msg: String): Unit = ???
 
   // errors do
-  def abort(msg: String): Nothing = ???
-  def syntaxError(offset: Offset, msg: String): Nothing = ???
-  def incompleteInputError(msg: String): Nothing = ???
+  def abort(msg: String): Nothing = throw ParseAbort(msg)
+  def syntaxError(offset: Offset, msg: String): Nothing = throw ParseSyntaxError(offset, msg)
+  def incompleteInputError(msg: String): Nothing = throw ParseIncompleteInputError(msg)
 
   /** the markup parser */
   // private[this] lazy val xmlp = new MarkupParser(this, preserveWS = true)
@@ -285,7 +288,7 @@ abstract class Parser { parser =>
   def isIdentExcept(except: String) = isIdent && in.name != except
   def isIdentOf(name: String)       = isIdent && in.name == name
 
-  def isUnaryOp = isIdent && ident(peek = true).isUnaryOp
+  def isUnaryOp = isIdent && ParserInfo.isUnaryOp(in.name)
   def isRawStar = isIdent && in.name == "*"
   def isRawBar  = isIdent && in.name == "|"
 
@@ -338,17 +341,11 @@ abstract class Parser { parser =>
       Aux.Param(name = Some(id.toTermIdent), decltpe = None)
     case Term.Ascribe(id: Ident, tpt) =>
       Aux.Param(name = Some(id.toTermIdent), decltpe = Some(tpt))
+    case Term.Placeholder() =>
+      Aux.Param.empty
     case _ =>
-      syntaxError(/* tree.pos */ ???, "not a legal formal parameter")
+      syntaxError("not a legal formal parameter")
   }
-
-  /** Convert (qual)ident to type identifier. */
-  /*def convertToTypeId(tree: Tree): Tree = {
-    convertToTypeName(tree) getOrElse {
-      syntaxError(/* tree.pos */ ???, "identifier expected")
-      errorTypeTree()
-    }
-  }*/
 
   /** {{{ part { `sep` part } }}},or if sepFirst is true, {{{ { `sep` part } }}}. */
   final def tokenSeparated[T](separator: Token, sepFirst: Boolean, part: => T): List[T] = {
@@ -421,7 +418,7 @@ abstract class Parser { parser =>
           case Term.Tuple(args) => args map assignmentToMaybeNamedArg
           case _                => List(rhs)
         }
-        if (opinfo.operator.isRightAssocOp) {
+        if (!opinfo.operator.isRightAssocOp) {
           Term.ApplyRight(opinfo.lhs, opinfo.operator, opinfo.targs, rhs)
         } else {
           val select = Term.Select(opinfo.lhs, opinfo.operator)
@@ -452,7 +449,7 @@ abstract class Parser { parser =>
 
   def checkAssoc(op: Ident, leftAssoc: Boolean): Unit = (
     if (op.isRightAssocOp == leftAssoc)
-      syntaxError(???, "left- and right-associative operators with same precedence may not be mixed")
+      syntaxError("left- and right-associative operators with same precedence may not be mixed")
   )
 
   def finishPostfixOp(base: List[OpInfo[Term]], opinfo: OpInfo[Term]): Term =
@@ -664,19 +661,18 @@ abstract class Parser { parser =>
     }
   }
 
-  def ident(peek: Boolean = false): Term.Ident =
+  def ident(): Term.Ident =
     if (!isIdent) syntaxError(expectedMsg(IDENTIFIER))
     else {
       val name = in.name
       val isBackquoted = in.token == BACKQUOTED_IDENT
-      if (!peek) in.nextToken()
+      in.nextToken()
       Term.Ident(name, isBackquoted)
     }
 
   /** For when it's known already to be a type name. */
-  def typeIdent(peek: Boolean = false): Type.Ident = ident(peek).toTypeIdent
+  def typeIdent(): Type.Ident = ident().toTypeIdent
 
-  def selector(t: Term): Term.Select = Term.Select(t, ident())
 
   /** {{{
    *  Path       ::= StableId
@@ -686,13 +682,13 @@ abstract class Parser { parser =>
    */
   // TODO: foo.this can be either term or type name depending on the context
   // TODO: this has to be rewritten
-  /*def path(thisOK: Boolean, typeOK: Boolean): Tree =
+  def path(thisOK: Boolean = true): Term.Ref =
     if (in.token == THIS) {
       in.nextToken()
       val thisnone = Term.This(None)
       if (!thisOK || in.token == DOT) {
         accept(DOT)
-        selectors(thisnone, typeOK)
+        selectors(thisnone)
       } else {
         thisnone
       }
@@ -703,7 +699,7 @@ abstract class Parser { parser =>
       val supersel = Term.SuperSelect(None, mixinQual, ident())
       if (in.token == DOT) {
         in.skipToken()
-        selectors(supersel, typeOK)
+        selectors(supersel)
       } else {
         supersel
       }
@@ -711,13 +707,14 @@ abstract class Parser { parser =>
       val id = ident()
       if (in.token != DOT) id
       else {
+        in.nextToken()
         if (in.token == THIS) {
           in.nextToken()
           val thisid = Term.This(Some(id.toTypeIdent))
           if (thisOK && in.token != DOT) thisid
           else {
             accept(DOT)
-            selectors(thisid, typeOK)
+            selectors(thisid)
           }
         } else if (in.token == SUPER) {
           in.nextToken()
@@ -727,24 +724,23 @@ abstract class Parser { parser =>
           if (in.token != DOT) supersel
           else {
             in.skipToken()
-            selectors(supersel, typeOK)
+            selectors(supersel)
           }
         } else {
-          selectors(id, typeOK)
+          selectors(id)
         }
       }
-    }*/
-
-  /*def selectors(t: Term.Ref, typeOK: Boolean): Tree =
-    if (typeOK && in.token == TYPE) {
-      in.nextToken()
-      SingletonTypeTree(t)
     }
-    else {
-      val t1 = selector(t)
-      if (in.token == DOT) { selectors(t1, typeOK) }
-      else t1
-    }*/
+
+  def selector(t: Term): Term.Select = Term.Select(t, ident())
+  def selectors(t: Term.Ref): Term.Ref ={
+    val t1 = selector(t)
+    if (in.token == DOT) {
+      in.nextToken()
+      selectors(t1)
+    }
+    else t1
+  }
 
   /** {{{
   *   MixinQualifier ::= `[' Id `]'
@@ -760,8 +756,8 @@ abstract class Parser { parser =>
    *            |  [id `.'] super [`[' id `]']`.' id
    *  }}}
    */
-  def stableId(): Term.Ref = ???
-  //  path(thisOK = false, typeOK = false)
+  def stableId(): Term.Ref =
+    path(thisOK = false)
 
   /** {{{
   *   QualId ::= Id {`.' Id}
@@ -804,7 +800,7 @@ abstract class Parser { parser =>
 
   def interpolate[Ctx, Ret](arg: () => Ctx, result: (Term.Ident, List[Lit.String], List[Ctx]) => Ret): Ret = {
     def part() =
-      if (in.token != STRINGLIT) syntaxError(expectedMsg(STRINGLIT))
+      if (in.token != STRINGPART && in.token != STRINGLIT) syntaxError(expectedMsg(STRINGPART))
       else {
         val lit = Lit.String(in.strVal.intern())
         in.nextToken()
@@ -1041,7 +1037,7 @@ abstract class Parser { parser =>
         Term.Ascribe(expr, typeOrInfixType(location))
       }
     }
-    val param = param0.copy(mods = param0.mods :+ Mod.Implicit())
+    val param = param0.copy(mods = Mod.Implicit() :: param0.mods)
     accept(ARROW)
     Term.Function(List(param), if (location != InBlock) expr() else block())
   }
@@ -1106,10 +1102,10 @@ abstract class Parser { parser =>
           interpolateTerm()
         case XMLSTART =>
           xmlLiteral()
-        // TODO: term path
-        // case IDENTIFIER | BACKQUOTED_IDENT | THIS | SUPER =>
-        //  path(thisOK = true, typeOK = false)
+        case IDENTIFIER | BACKQUOTED_IDENT | THIS | SUPER =>
+          path()
         case USCORE =>
+          in.nextToken()
           Term.Placeholder()
         case LPAREN =>
           makeTupleTerm(commaSeparated(expr()))
@@ -2378,7 +2374,7 @@ abstract class Parser { parser =>
       }
       else if (isDefIntro || isLocalModifier || isAnnotation) {
         if (in.token == IMPLICIT) {
-          val start = in.skipToken()
+          in.skipToken()
           if (isIdent) stats += implicitClosure(InBlock)
           else stats += localDef(Some(Mod.Implicit()))
         } else {
