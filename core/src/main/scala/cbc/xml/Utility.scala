@@ -160,6 +160,4 @@ object Utility {
       case _                                   => ch == '_'
     }
   }
-
-  def isStringStart(ch: Char): Boolean = ???
 }

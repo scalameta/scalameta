@@ -1,6 +1,6 @@
 import org.scalatest.FunSuite
 import cbc.util.BatchSourceFile
-import cbc.Parsers.SourceFileParser
+import cbc.SourceFileParser
 
 class ParseSuite extends FunSuite {
   def parse[T](rule: SourceFileParser => T): String => T = { (code: String) =>

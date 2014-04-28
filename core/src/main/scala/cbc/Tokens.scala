@@ -115,3 +115,96 @@ object Tokens {
   final val IGNORE = 202
   final val ESCAPE = 203
 }
+
+object TokenInfo {
+  import Tokens._
+
+  val kw2token = Map[String, Token](
+    "abstract"  -> ABSTRACT,
+    "case"      -> CASE,
+    "catch"     -> CATCH,
+    "class"     -> CLASS,
+    "def"       -> DEF,
+    "do"        -> DO,
+    "else"      -> ELSE,
+    "extends"   -> EXTENDS,
+    "false"     -> FALSE,
+    "final"     -> FINAL,
+    "finally"   -> FINALLY,
+    "for"       -> FOR,
+    "forSome"   -> FORSOME,
+    "if"        -> IF,
+    "implicit"  -> IMPLICIT,
+    "import"    -> IMPORT,
+    "lazy"      -> LAZY,
+    "match"     -> MATCH,
+    "new"       -> NEW,
+    "null"      -> NULL,
+    "object"    -> OBJECT,
+    "override"  -> OVERRIDE,
+    "package"   -> PACKAGE,
+    "private"   -> PRIVATE,
+    "protected" -> PROTECTED,
+    "return"    -> RETURN,
+    "sealed"    -> SEALED,
+    "super"     -> SUPER,
+    "this"      -> THIS,
+    "throw"     -> THROW,
+    "trait"     -> TRAIT,
+    "true"      -> TRUE,
+    "try"       -> TRY,
+    "type"      -> TYPE,
+    "val"       -> VAL,
+    "var"       -> VAR,
+    "while"     -> WHILE,
+    "with"      -> WITH,
+    "yield"     -> YIELD,
+    "."         -> DOT,
+    "_"         -> USCORE,
+    ":"         -> COLON,
+    "="         -> EQUALS,
+    "=>"        -> ARROW,
+    "<-"        -> LARROW,
+    "<:"        -> SUBTYPE,
+    "<%"        -> VIEWBOUND,
+    ">:"        -> SUPERTYPE,
+    "#"         -> HASH,
+    "@"         -> AT,
+    "macro"     -> IDENTIFIER,
+    "then"      -> IDENTIFIER
+  )
+
+  val token2name = (kw2token map (_.swap)).toMap
+
+  /** Returns the string representation of given token. */
+  def token2string(token: Token): String = (token: @scala.annotation.switch) match {
+    case IDENTIFIER | BACKQUOTED_IDENT => "identifier"
+    case CHARLIT => "character literal"
+    case INTLIT => "integer literal"
+    case LONGLIT => "long literal"
+    case FLOATLIT => "float literal"
+    case DOUBLELIT => "double literal"
+    case STRINGLIT | STRINGPART | INTERPOLATIONID => "string literal"
+    case SYMBOLLIT => "symbol literal"
+    case LPAREN => "'('"
+    case RPAREN => "')'"
+    case LBRACE => "'{'"
+    case RBRACE => "'}'"
+    case LBRACKET => "'['"
+    case RBRACKET => "']'"
+    case EOF => "eof"
+    case ERROR => "something"
+    case SEMI => "';'"
+    case NEWLINE => "';'"
+    case NEWLINES => "';'"
+    case COMMA => "','"
+    case CASECLASS => "case class"
+    case CASEOBJECT => "case object"
+    case XMLSTART => "$XMLSTART$<"
+    case _ =>
+      (token2name get token) match {
+        case Some(name) => "'" + name + "'"
+        case _          => "'<" + token + ">'"
+      }
+  }
+}
