@@ -2,7 +2,7 @@ package cbc
 
 import scala.collection.{ mutable, immutable }
 import mutable.{ ListBuffer, StringBuilder }
-import cbc.util.{settings, SourceFile}
+import cbc.util.settings
 import cbc.util.Chars.isScalaLetter
 import cbc.Tokens._
 import cbc.TokenInfo._
@@ -57,7 +57,7 @@ object ParserInfo {
 }
 import ParserInfo._
 
-class SourceFileParser(val source: SourceFile) extends Parser {
+class SourceParser(val source: Source) extends Parser {
   /** The parse starting point depends on whether the source file is self-contained:
    *  if not, the AST will be supplemented.
    */
@@ -91,7 +91,7 @@ import Location.{ Local, InBlock, InTemplate }
 
 abstract class Parser { parser =>
   val in: Scanner
-  def source: SourceFile
+  def source: Source
 
   /** Scoping operator used to temporarily look into the future.
    *  Backs up scanner data before evaluating a block and restores it after.

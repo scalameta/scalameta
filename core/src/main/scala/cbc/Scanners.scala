@@ -1094,7 +1094,7 @@ class MalformedInput(val offset: Offset, val msg: String) extends Exception
 /** A scanner for a given source file not necessarily attached to a compilation unit.
  *  Useful for looking inside source files that aren not currently compiled to see what's there
  */
-class SourceFileScanner(val source: SourceFile) extends Scanner {
+class SourceFileScanner(val source: Source) extends Scanner {
   val buf = source.content
   override val decodeUni: Boolean = !settings.nouescape
 
