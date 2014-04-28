@@ -4,14 +4,18 @@
  */
 package cbc
 
-import scala.language.postfixOps
 import scala.annotation.{ switch, tailrec }
 import scala.collection.{ mutable, immutable }
+import scala.language.postfixOps
 import mutable.{ ListBuffer, ArrayBuffer }
-import cbc.util._, Chars._
-import cbc.Tokens._
-import cbc.xml.Utility.isStringStart
+import cbc.xml.Utility.isNameStart
+import cbc.util.{ CharArrayReader, CharArrayReaderData }
+import cbc.util._
+import cbc.util.Chars._
+import Tokens._
 
+/** See Parsers.scala / ParsersCommon for some explanation of ScannersCommon.
+ */
 trait ScannersCommon {
   /** Offset into source character array */
   type Offset = Int
@@ -28,16 +32,6 @@ trait ScannersCommon {
     def error(off: Offset, msg: String): Unit
     def incompleteInputError(off: Offset, msg: String): Unit
     def deprecationWarning(off: Offset, msg: String): Unit
-  }
-
-  def createKeywordArray(keywords: Seq[(String, Token)], defaultToken: Token): (Token, Array[Token]) = {
-    val names = keywords sortBy (_._1.head) map { case (k, v) => (k.head, v) }
-    val low   = names.head._1
-    val high  = names.last._1
-    val arr   = Array.fill(high - low + 1)(defaultToken)
-
-    names foreach { case (k, v) => arr(k + low) = v }
-    (low, arr)
   }
 }
 
@@ -150,6 +144,7 @@ trait Scanners extends ScannersCommon {
       case '/' | '*' => skipToCommentEnd(isLineComment = ch == '/') ; true
       case _         => false
     }
+    def flushDoc(): Unit = ()
 
     /** To prevent doc comments attached to expressions from leaking out of scope
      *  onto the next documentable entity, they are discarded upon passing a right
@@ -184,14 +179,13 @@ trait Scanners extends ScannersCommon {
     protected def emitIdentifierDeprecationWarnings = true
 
     /** Clear buffer and set name and token */
-    private def finishStringd(idtoken: Token = IDENTIFIER) {
+    private def finishNamed(idtoken: Token = IDENTIFIER) {
       name = cbuf.toString
       cbuf.clear()
       token = idtoken
       if (idtoken == IDENTIFIER) {
-        val idx = name.head - kwOffset
-        if (idx >= 0 && idx < kwArray.length) {
-          token = kwArray(idx)
+        if (kwMap contains name) {
+          token = kwMap(name)
           if (token == IDENTIFIER && allowIdent != name) {
             if (name == "macro")
               syntaxError(s"$name is now a reserved word; usage as an identifier is disallowed")
@@ -416,7 +410,7 @@ trait Scanners extends ScannersCommon {
             val last = if (charOffset >= 2) buf(charOffset - 2) else ' '
             nextChar()
             last match {
-              case ' ' | '\t' | '\n' | '{' | '(' | '>' if isStringStart(ch) || ch == '!' || ch == '?' =>
+              case ' ' | '\t' | '\n' | '{' | '(' | '>' if isNameStart(ch) || ch == '!' || ch == '?' =>
                 token = XMLSTART
               case _ =>
                 // Console.println("found '<', but last is '"+in.last+"'"); // DEBUG
@@ -597,7 +591,7 @@ trait Scanners extends ScannersCommon {
       getLitChars('`')
       if (ch == '`') {
         nextChar()
-        finishStringd(BACKQUOTED_IDENT)
+        finishNamed(BACKQUOTED_IDENT)
         if (name.length == 0) syntaxError("empty quoted identifier")
       }
       else syntaxError("unclosed quoted identifier")
@@ -626,14 +620,14 @@ trait Scanners extends ScannersCommon {
         nextChar()
         getIdentOrOperatorRest()
       case SU => // strangely enough, Character.isUnicodeIdentifierPart(SU) returns true!
-        finishStringd()
+        finishNamed()
       case _ =>
         if (Character.isUnicodeIdentifierPart(ch)) {
           putChar(ch)
           nextChar()
           getIdentRest()
         } else {
-          finishStringd()
+          finishNamed()
         }
     }
 
@@ -645,11 +639,11 @@ trait Scanners extends ScannersCommon {
         putChar(ch); nextChar(); getOperatorRest()
       case '/' =>
         nextChar()
-        if (skipComment()) finishStringd()
+        if (skipComment()) finishNamed()
         else { putChar('/'); getOperatorRest() }
       case _ =>
         if (isSpecial(ch)) { putChar(ch); nextChar(); getOperatorRest() }
-        else finishStringd()
+        else finishNamed()
     }
 
     private def getIdentOrOperatorRest() {
@@ -663,7 +657,7 @@ trait Scanners extends ScannersCommon {
           getOperatorRest()
         case _ =>
           if (isSpecial(ch)) getOperatorRest()
-          else finishStringd()
+          else finishNamed()
       }
     }
 
@@ -739,9 +733,8 @@ trait Scanners extends ScannersCommon {
           next.token = IDENTIFIER
           next.name = cbuf.toString
           cbuf.clear()
-          val idx = next.name.head - kwOffset
-          if (idx >= 0 && idx < kwArray.length) {
-            next.token = kwArray(idx)
+          if (kwMap contains next.name) {
+            next.token = kwMap(next.name)
           }
         } else {
           syntaxError("invalid string interpolation: `$$', `$'ident or `$'BlockExpr expected")
@@ -1112,12 +1105,12 @@ trait Scanners extends ScannersCommon {
       nextChar()
       nextToken()
     }
-  } // end Scanner
+  }
 
   // ------------- keyword configuration -----------------------------------
 
-  private val allKeywords = List[(String, Token)](
-    "abstract" -> ABSTRACT,
+  private val kwMap = Map[String, Token](
+    "abstract"  -> ABSTRACT,
     "case"      -> CASE,
     "catch"     -> CATCH,
     "class"     -> CLASS,
@@ -1170,14 +1163,7 @@ trait Scanners extends ScannersCommon {
     "macro"     -> IDENTIFIER,
     "then"      -> IDENTIFIER)
 
-  private var kwOffset: Offset = -1
-  private val kwArray: Array[Token] = {
-    val (offset, arr) = createKeywordArray(allKeywords, IDENTIFIER)
-    kwOffset = offset
-    arr
-  }
-
-  final val token2name = (allKeywords map (_.swap)).toMap
+  final val token2name = (kwMap map (_.swap)).toMap
 
 // Token representation ----------------------------------------------------
 

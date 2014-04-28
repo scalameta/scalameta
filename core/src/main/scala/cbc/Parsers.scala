@@ -7,7 +7,7 @@ import cbc.util.Chars.isScalaLetter
 import cbc.Tokens._
 import scala.reflect.core.{Tree, Term, Pat, Type, Defn, Decl, Lit, Stmt,
                            Import, Aux, Ident, RichMods, Mod, Enum, Ctor,
-                           Arg, Package, Symbol}
+                           Arg, Pkg, Symbol}
 import scala.reflect.ClassTag
 
 object ParserInfo {
@@ -458,7 +458,7 @@ trait Parsers extends Scanners /* with MarkupParsers */ { self =>
     def finishBinaryOp[T: OpCtx](opinfo: OpInfo[T], rhs: T): T = opctx.binop(opinfo, rhs)
 
     def reduceStack[T: OpCtx](base: List[OpInfo[T]], top: T): T = {
-      val id           = Term.Ident(in.name.toString)
+      val id           = Term.Ident(in.name)
       val opPrecedence = if (isIdent) id.precedence else 0
       val leftAssoc    = !isIdent || !id.isRightAssocOp
 
@@ -621,7 +621,7 @@ trait Parsers extends Scanners /* with MarkupParsers */ { self =>
 
       def infixTypeRest(t: Type, mode: InfixMode.Value): Type = {
         if (isIdent && in.name != "*") {
-          val id = Term.Ident(in.name.toString)
+          val id = Term.Ident(in.name)
           val leftAssoc = !id.isRightAssocOp
           if (mode != InfixMode.FirstOp) checkAssoc(id, leftAssoc = mode == InfixMode.LeftOp)
           val op = typeIdent()
@@ -664,7 +664,7 @@ trait Parsers extends Scanners /* with MarkupParsers */ { self =>
     def ident(peek: Boolean = false): Term.Ident =
       if (!isIdent) syntaxError(expectedMsg(IDENTIFIER))
       else {
-        val name = in.name.toString
+        val name = in.name
         val isBackquoted = in.token == BACKQUOTED_IDENT
         if (!peek) in.nextToken()
         Term.Ident(name, isBackquoted)
@@ -807,7 +807,7 @@ trait Parsers extends Scanners /* with MarkupParsers */ { self =>
           in.nextToken()
           lit
         }
-      val interpolator = Term.Ident(in.name.toString) // ident() for INTERPOLATIONID
+      val interpolator = Term.Ident(in.name) // ident() for INTERPOLATIONID
       in.nextToken()
       val partsBuf = new ListBuffer[Lit.String]
       val argsBuf = new ListBuffer[Ctx]
@@ -2399,21 +2399,21 @@ trait Parsers extends Scanners /* with MarkupParsers */ { self =>
     }
 
 
-    def packageOrPackageObject(): Package with Stmt.TopLevel =
+    def packageOrPackageObject(): Pkg with Stmt.TopLevel =
       if (in.token == OBJECT)
         packageObject()
       else {
-        Package.Named(qualId(), inBracesOrNil(topStatSeq()))
+        Pkg.Named(qualId(), inBracesOrNil(topStatSeq()))
       }
 
-    def packageObject(): Package.Object = ???
+    def packageObject(): Pkg.Object = ???
     // makePackageObject(objectDef(NoMods))
 
     /** {{{
      *  CompilationUnit ::= {package QualId semi} TopStatSeq
      *  }}}
      */
-    def compilationUnit(): Package = {
+    def compilationUnit(): Pkg = {
       def packageStats(): List[Stmt.TopLevel] = {
         val ts = new ListBuffer[Stmt.TopLevel]
         while (in.token == SEMI) in.nextToken()
@@ -2429,12 +2429,12 @@ trait Parsers extends Scanners /* with MarkupParsers */ { self =>
             val qid = qualId()
 
             if (in.token == EOF) {
-              ts += Package.Named(qid, Nil)
+              ts += Pkg.Named(qid, Nil)
             } else if (isStatSep) {
               in.nextToken()
-              ts += Package.Named(qid, packageStats())
+              ts += Pkg.Named(qid, packageStats())
             } else {
-              ts += inBraces(Package.Named(qid, topStatSeq()))
+              ts += inBraces(Pkg.Named(qid, topStatSeq()))
               acceptStatSepOpt()
               ts ++= topStatSeq()
             }
@@ -2446,8 +2446,8 @@ trait Parsers extends Scanners /* with MarkupParsers */ { self =>
       }
 
       packageStats() match {
-        case (stat: Package) :: Nil => stat
-        case stats                  => Package.Empty(stats)
+        case (stat: Pkg) :: Nil => stat
+        case stats                  => Pkg.Empty(stats)
       }
     }
   }

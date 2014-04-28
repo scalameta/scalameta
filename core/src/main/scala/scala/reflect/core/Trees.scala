@@ -1,6 +1,5 @@
 package scala.reflect
 
-import scala.language.experimental.{macros => prettyPlease}
 import org.scalareflect.invariants._
 import org.scalareflect.adt._
 
@@ -420,39 +419,15 @@ package core {
     }
   }
 
-  @branch trait Package extends Tree
-}
-
-package object core {
-  object Package {
-    @leaf class Empty(stats: List[Stmt.TopLevel]) extends Package
+  @branch trait Pkg extends Tree
+  object Pkg {
+    @leaf class Empty(stats: List[Stmt.TopLevel]) extends Pkg
     @leaf class Named(name: Term.Ref,
-                      stats: List[Stmt.TopLevel]) extends Package with Stmt.TopLevel {
+                      stats: List[Stmt.TopLevel]) extends Pkg with Stmt.TopLevel {
       require(name.isQualId)
     }
     @leaf class Object(mods: List[Mod],
                        name: Term.Ident,
-                       templ: Aux.Template) extends Package with Stmt.TopLevel with Symbol.Template
+                       templ: Aux.Template) extends Pkg with Stmt.TopLevel with Symbol.Template
   }
-
-  implicit class Quasiquotes(ctx: StringContext) {
-    protected trait api {
-      def apply[T](args: T*): Tree = macro ???
-      def unapply(scrutinee: Any): Any = macro ???
-    }
-    object q extends api
-    object tq extends api
-    object cq extends api
-    object pq extends api
-    object fq extends api
-  }
-  implicit class RichTypes(val parents: List[Type]) extends AnyVal {
-    def linearization: List[Type] = ???
-  }
-  implicit class RichMods(val mods: List[Mod]) extends AnyVal {
-    def has[T <: Mod](implicit tag: ClassTag[T]): Boolean =
-      mods.exists { _.getClass == tag.runtimeClass }
-  }
-  def lub(tpes: Type*): Type = ???
-  def glb(tpes: Type*): Type = ???
 }
