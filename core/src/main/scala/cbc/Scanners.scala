@@ -325,7 +325,7 @@ abstract class Scanner extends CharArrayReader with TokenData with ScannerData {
       }
     }
 
-//      print("["+this+"]")
+    // print("["+this+"]")
   }
 
   /** Is current token first one after a newline? */

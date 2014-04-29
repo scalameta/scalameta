@@ -232,6 +232,7 @@ abstract class Parser { parser =>
 
   def syntaxError(msg: String): Nothing = syntaxError(in.offset, msg)
   def warning(msg: String): Unit = warning(in.offset, msg)
+  def deprecationWarning(msg: String): Unit = deprecationWarning(in.offset, msg)
 
   def expectedMsgTemplate(exp: String, fnd: String) = s"$exp expected but $fnd found."
   def expectedMsg(token: Token): String = expectedMsgTemplate(token2string(token), token2string(in.token))
@@ -1272,8 +1273,8 @@ abstract class Parser { parser =>
     val hasEq = in.token == EQUALS
 
     if (hasVal) {
-      if (hasEq) deprecationWarning(in.offset, "val keyword in for comprehension is deprecated")
-      else syntaxError(in.offset, "val in for comprehension must be followed by assignment")
+      if (hasEq) deprecationWarning("val keyword in for comprehension is deprecated")
+      else syntaxError("val in for comprehension must be followed by assignment")
     }
 
     if (hasEq && eqOK) in.nextToken()
@@ -1345,7 +1346,7 @@ abstract class Parser { parser =>
     def pattern1(): Pat = pattern2() match {
       case id: Term.Ident if in.token == COLON =>
         if (!id.isVarPattern)
-          syntaxError(in.offset, "Pattern variables must start with a lower-case letter. (SLS 8.1.1.)")
+          syntaxError("Pattern variables must start with a lower-case letter. (SLS 8.1.1.)")
         else {
           in.skipToken()
           Pat.Typed(id, compoundType())
@@ -1398,7 +1399,7 @@ abstract class Parser { parser =>
         case _ => None
       }
       def loop(top: Pat): Pat = reduceStack(ctx.stack, top) match {
-        case next if isIdentExcept("*") => ctx.push(next); loop(simplePattern(badPattern3))
+        case next if isIdentExcept("|") => ctx.push(next); loop(simplePattern(badPattern3))
         case next                       => next
       }
       checkWildStar getOrElse loop(top)
@@ -1445,41 +1446,42 @@ abstract class Parser { parser =>
     def simplePattern(): Pat =
       // simple diagnostics for this entry point
       simplePattern(() => syntaxError("illegal start of simple pattern"))
-    def simplePattern(onError: () => Nothing): Pat = {
-      in.token match {
-        case IDENTIFIER | BACKQUOTED_IDENT | THIS =>
-          val sid = stableId()
-          in.token match {
-            case INTLIT | LONGLIT | FLOATLIT | DOUBLELIT =>
-              sid match {
-                case Term.Ident("-", _) =>
-                  return literal(isNegated = true)
-                case _ =>
-              }
-            case _ =>
-          }
-          val targs = in.token match {
-            case LBRACKET => typeArgs()
-            case _        => Nil
-          }
-          in.token match {
-            case LPAREN => Pat.Extract(sid, targs, argumentPatterns())
-            case _      => syntaxError("pattern must be a value")
-          }
-        case USCORE =>
-          in.nextToken()
-          Pat.Wildcard()
-        case CHARLIT | INTLIT | LONGLIT | FLOATLIT | DOUBLELIT |
-             STRINGLIT | INTERPOLATIONID | SYMBOLLIT | TRUE | FALSE | NULL =>
-          literal()
-        case LPAREN =>
-          makeTuplePat(noSeq.patterns())
-        // TODO: xml support
-        // case XMLSTART =>
-        //   xmlLiteralPattern()
-        case _ =>
-          onError()
-      }
+    def simplePattern(onError: () => Nothing): Pat = in.token match {
+      case IDENTIFIER | BACKQUOTED_IDENT | THIS =>
+        val sid = stableId()
+        in.token match {
+          case INTLIT | LONGLIT | FLOATLIT | DOUBLELIT =>
+            sid match {
+              case Term.Ident("-", _) =>
+                return literal(isNegated = true)
+              case _ =>
+            }
+          case _ =>
+        }
+        val targs = in.token match {
+          case LBRACKET => typeArgs()
+          case _        => Nil
+        }
+        (in.token, sid) match {
+          case (LPAREN, _)                 => Pat.Extract(sid, targs, argumentPatterns())
+          case (_, _) if targs.nonEmpty    => syntaxError("pattern must be a value")
+          case (_, sid: Term.Ref with Pat) => sid
+          case _                           => abort("unreachable")
+        }
+      case USCORE =>
+        in.nextToken()
+        Pat.Wildcard()
+      case CHARLIT | INTLIT | LONGLIT | FLOATLIT | DOUBLELIT |
+           STRINGLIT | SYMBOLLIT | TRUE | FALSE | NULL =>
+        literal()
+      case INTERPOLATIONID =>
+        interpolatePat()
+      case LPAREN =>
+        makeTuplePat(noSeq.patterns())
+      case XMLSTART =>
+        xmlLiteralPattern()
+      case _ =>
+        onError()
     }
   }
   /** The implementation of the context sensitive methods for parsing outside of patterns. */
@@ -1537,7 +1539,7 @@ abstract class Parser { parser =>
       mods
 
   private def addMod(mods: List[Mod], mod: Long): List[Mod] = {
-    if (mods hasFlag mod) syntaxError(in.offset, "repeated modifier")
+    if (mods hasFlag mod) syntaxError("repeated modifier")
     in.nextToken()
     (mods | mod)
   }*/
@@ -1682,7 +1684,7 @@ abstract class Parser { parser =>
     val result = vds.toList
     if (owner == nme.CONSTRUCTOR && (result.isEmpty || (result.head take 1 exists (_.mods.isImplicit)))) {
       in.token match {
-        case LBRACKET   => syntaxError(in.offset, "no type parameters allowed here")
+        case LBRACKET   => syntaxError("no type parameters allowed here")
         case EOF        => incompleteInputError("auxiliary constructor needs non-implicit parameter list")
         case _          => syntaxError(start, "auxiliary constructor needs non-implicit parameter list")
       }
@@ -1695,7 +1697,6 @@ abstract class Parser { parser =>
    *  }}}
    */
   def paramType(): (Type, Option[Mod]) = {
-    val start = in.offset
     in.token match {
       case ARROW  =>
         in.nextToken()
@@ -1739,13 +1740,10 @@ abstract class Parser { parser =>
         if (in.token == ARROW) {
           if (owner.isTypeName && !mods.isLocalToThis)
             syntaxError(
-              in.offset,
               (if (mods.isMutable) "`var'" else "`val'") +
               " parameters may not be call-by-name")
           else if (implicitmod != 0)
-            syntaxError(
-              in.offset,
-              "implicit parameters may not be call-by-name")
+            syntaxError("implicit parameters may not be call-by-name")
           else bynamemod = Flags.BYNAMEPARAM
         }
         paramType()
@@ -1792,7 +1790,7 @@ abstract class Parser { parser =>
         while (in.token == VIEWBOUND) {
           val msg = "Use an implicit parameter instead.\nExample: Instead of `def f[A <% Int](a: A)` use `def f[A](a: A)(implicit ev: A => Int)`."
           if (settings.future)
-            deprecationWarning(in.offset, s"View bounds are deprecated. $msg")
+            deprecationWarning(s"View bounds are deprecated. $msg")
           in.skipToken()
           contextBoundBuf += Type.Function(List(Ident(pname)), typ())
         }

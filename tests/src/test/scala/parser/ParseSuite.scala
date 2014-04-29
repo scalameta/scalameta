@@ -1,4 +1,4 @@
-import org.scalatest.FunSuite
+import org.scalatest._
 import cbc._
 
 class ParseSuite extends FunSuite {
