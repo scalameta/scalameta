@@ -922,8 +922,8 @@ abstract class Parser { parser =>
       val cond = condExpr()
       newLinesOpt()
       val thenp = expr()
-      val elsep = if (in.token == ELSE) { in.nextToken(); expr() }
-                  else Lit.Unit()
+      val elsep = if (in.token == ELSE) { in.nextToken(); Some(expr()) }
+                  else None
       Term.If(cond, thenp, elsep)
     case TRY =>
       in.skipToken()
@@ -936,10 +936,10 @@ abstract class Parser { parser =>
         if (in.token != CATCH) None
         else {
           in.nextToken()
-          Some {
-            if (in.token != LBRACE) expr()
-            else if (in.token == CASE) Aux.Cases(inBracesOrNil(caseClauses()))
-            else inBracesOrNil(List(expr())).head
+          if (in.token != LBRACE) Some(expr())
+          else inBraces {
+            if (in.token == CASE) Some(Aux.Cases(caseClauses()))
+            else Some(expr())
           }
         }
       val finallyp: Option[Term] = in.token match {
@@ -1225,9 +1225,13 @@ abstract class Parser { parser =>
   }
 
   // IDE HOOK (so we can memoize case blocks) // needed?
-  def caseBlock(): Term = {
+  def caseBlock(): Option[Term] = {
     accept(ARROW)
-    block()
+    blockStatSeq() match {
+      case Nil                 => None
+      case (stat: Term) :: Nil => Some(stat)
+      case stats               => Some(Term.Block(stats))
+    }
   }
 
   /** {{{

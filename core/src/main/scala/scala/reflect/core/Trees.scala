@@ -87,7 +87,7 @@ package core {
     @leaf class Select(qual: Term, selector: Term.Ident) extends Ref with Pat
 
     @leaf class Interpolate(prefix: Ident, parts: List[Lit.String] @nonEmpty, args: List[Term]) extends Term {
-      // TODO: require(prefix.isInterpolationId)
+      require(parts.nonEmpty)
       require(parts.length == args.length + 1)
     }
     @leaf class Apply(fun: Term, args: List[Arg]) extends Term
@@ -106,7 +106,7 @@ package core {
     @leaf class Annotate(expr: Term, mods: List[Mod] @nonEmpty) extends Term with Has.Mods
     @leaf class Tuple(elements: List[Term] @nonEmpty) extends Term
     @leaf class Block(stats: List[Stmt.Block]) extends Term
-    @leaf class If(cond: Term, thenp: Term, elsep: Term) extends Term
+    @leaf class If(cond: Term, thenp: Term, elsep: Option[Term]) extends Term
     @leaf class Match(scrut: Term, cases: Aux.Cases @nonEmpty) extends Term
     @leaf class Try(expr: Term, catchp: Option[Aux.Catch], finallyp: Option[Term]) extends Term
     @leaf class Function(params: List[Aux.Param], body: Term) extends Term {
@@ -379,7 +379,7 @@ package core {
 
   object Aux {
     @branch trait Catch extends Tree
-    @leaf class Case(pat: Pat, cond: Option[Term] = None, body: Term = Lit.Unit()) extends Tree
+    @leaf class Case(pat: Pat, cond: Option[Term] = None, body: Option[Term] = None) extends Tree
     @leaf class Cases(cases: List[Case] @nonEmpty) extends Catch
     @leaf class Parent(tpe: Type, argss: List[List[Arg]] = Nil) extends Ref
     @leaf class Template(early: List[Defn.Val] = Nil, parents: List[Parent] = Nil,

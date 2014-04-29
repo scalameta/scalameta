@@ -89,12 +89,11 @@ class TermSuite extends ParseSuite {
   }
 
   test("if (true) true else false") {
-    val If(Lit.True(), Lit.True(), Lit.False()) = term("if (true) true else false")
+    val If(Lit.True(), Lit.True(), Some(Lit.False())) = term("if (true) true else false")
   }
 
-  // TODO: synthetic unit is not good enough
   test("if (true) true") {
-    val If(Lit.True(), Lit.True(), Lit.Unit()) = term("if (true) true")
+    val If(Lit.True(), Lit.True(), None) = term("if (true) true")
   }
 
   test("(x => x)") {
@@ -119,10 +118,46 @@ class TermSuite extends ParseSuite {
                        Block(Lit.Unit() :: Nil)) :: Nil) = term("{ implicit x => () }")
   }
 
-  // TODO:
-  // test("match") { }
-  // test("try") { }
-  // test("partial function") { }
+  test("1 match { case 1 => true }") {
+    val Term.Match(Lit.Int(1),
+                   Aux.Cases(Aux.Case(Lit.Int(1), None, Some(Lit.True())) :: Nil)) =
+      term("1 match { case 1 => true }")
+  }
+
+  test("1 match { case 1 => }") {
+    val Term.Match(Lit.Int(1),
+                   Aux.Cases(Aux.Case(Lit.Int(1), None, None) :: Nil)) =
+      term("1 match { case 1 => }")
+  }
+
+  test("1 match { case 1 if true => }") {
+    val Term.Match(Lit.Int(1),
+                   Aux.Cases(Aux.Case(Lit.Int(1), Some(Lit.True()), None) :: Nil)) =
+      term("1 match { case 1 if true => }")
+  }
+
+  test("try 1") {
+    val Term.Try(Lit.Int(1), None, None) = term("try 1")
+  }
+
+  test("try 1 catch 1") {
+    val Term.Try(Lit.Int(1), Some(Lit.Int(1)), None) = term("try 1 catch 1")
+  }
+
+  test("try 1 catch { case _ => }") {
+    val Term.Try(Lit.Int(1),
+                 Some(Aux.Cases(Aux.Case(Pat.Wildcard(), None, None) :: Nil)), None) =
+      term("try 1 catch { case _ => }")
+  }
+
+  test("try 1 finally 1") {
+    val Term.Try(Lit.Int(1), None, Some(Lit.Int(1))) = term("try 1 finally 1")
+  }
+
+  test("{ case 1 => () }") {
+    val Term.PartialFunction(Aux.Cases(Aux.Case(Lit.Int(1), None, Some(Lit.Unit())) :: Nil)) =
+      term("{ case 1 => () }")
+  }
 
   test("while (true) false") {
     val While(Lit.True(), Lit.False()) = term("while (true) false")
