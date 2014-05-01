@@ -115,7 +115,7 @@ object build extends Build {
   ) settings (
     test in Test := (test in tests in Test).value,
     packagedArtifacts := Map.empty
-  ) aggregate (core, tests)
+  ) aggregate (reflection, tests)
 
   lazy val foundation = Project(
     id   = "foundation",
@@ -128,9 +128,9 @@ object build extends Build {
     scalacOptions ++= Seq()
   )
 
-  lazy val core = Project(
+  lazy val reflection = Project(
     id   = "core",
-    base = file("core")
+    base = file("reflection")
   ) settings (
     publishableSettings: _*
   ) settings (
@@ -146,7 +146,7 @@ object build extends Build {
   ) settings (
     scalaSource in Compile <<= (baseDirectory in Compile)(base => base),
     scalacOptions ++= Seq()
-  ) dependsOn (core)
+  ) dependsOn (reflection)
 
   lazy val tests = Project(
     id   = "tests",
@@ -158,5 +158,5 @@ object build extends Build {
     libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
     packagedArtifacts := Map.empty,
     scalacOptions ++= Seq()
-  ) dependsOn (core)
+  ) dependsOn (reflection)
 }
