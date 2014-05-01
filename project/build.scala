@@ -10,6 +10,8 @@ object build extends Build {
     description := "Reflection core of Project Palladium",
     resolvers += Resolver.sonatypeRepo("snapshots"),
     resolvers += Resolver.sonatypeRepo("releases"),
+    scalaSource in Compile <<= (baseDirectory in Compile)(base => base / "src"),
+    scalaSource in Test <<= (baseDirectory in Test)(base => base / "test"),
     publishMavenStyle := true,
     publishArtifact in Compile := false,
     publishArtifact in Test := false,
@@ -121,6 +123,7 @@ object build extends Build {
   ) settings (
     publishableSettings: _*
   ) settings (
+    scalaSource in Compile <<= (baseDirectory in Compile)(base => base),
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided"),
     scalacOptions ++= Seq()
   )
@@ -131,6 +134,7 @@ object build extends Build {
   ) settings (
     publishableSettings: _*
   ) settings (
+    scalaSource in Compile <<= (baseDirectory in Compile)(base => base),
     scalacOptions ++= Seq()
   ) dependsOn (foundation)
 
@@ -140,6 +144,7 @@ object build extends Build {
   ) settings (
     sharedSettings: _*
   ) settings (
+    scalaSource in Compile <<= (baseDirectory in Compile)(base => base),
     scalacOptions ++= Seq()
   ) dependsOn (core)
 
