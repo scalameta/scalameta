@@ -60,7 +60,7 @@ package core {
 
   }
 
-  @branch trait Term extends Arg with Stmt.Template with Stmt.Block with Aux.Catch {
+  @branch trait Term extends Arg with Stmt.Template with Stmt.Block {
     def tpe: Type = ???
   }
   object Term {
@@ -107,13 +107,13 @@ package core {
     @leaf class Tuple(elements: List[Term] @nonEmpty) extends Term
     @leaf class Block(stats: List[Stmt.Block]) extends Term
     @leaf class If(cond: Term, thenp: Term, elsep: Option[Term]) extends Term
-    @leaf class Match(scrut: Term, cases: Aux.Cases @nonEmpty) extends Term
-    @leaf class Try(expr: Term, catchp: Option[Aux.Catch], finallyp: Option[Term]) extends Term
+    @leaf class Match(scrut: Term, cases: Cases) extends Term
+    @leaf class Try(expr: Term, catchp: Option[Term], finallyp: Option[Term]) extends Term
     @leaf class Function(params: List[Aux.Param], body: Term) extends Term {
       require(params.forall(_.default.isEmpty))
       require(params.length == 1 || !params.exists(_.mods.contains(Mod.Implicit)))
     }
-    @leaf class PartialFunction(cases: Aux.Cases) extends Term
+    @leaf class Cases(cases: List[Aux.Case]) extends Term { def isPartialFunction = ??? }
     @leaf class While(expr: Term, body: Term) extends Term
     @leaf class Do(body: Term, expr: Term) extends Term
     @leaf class For(enums: List[Enum] @nonEmpty, body: Term) extends Term {
@@ -378,9 +378,7 @@ package core {
   }
 
   object Aux {
-    @branch trait Catch extends Tree
     @leaf class Case(pat: Pat, cond: Option[Term] = None, body: Option[Term] = None) extends Tree
-    @leaf class Cases(cases: List[Case] @nonEmpty) extends Catch
     @leaf class Parent(tpe: Type, argss: List[List[Arg]] = Nil) extends Ref
     @leaf class Template(early: List[Defn.Val] = Nil, parents: List[Parent] = Nil,
                          self: Self = Self.empty, stats: List[Stmt.Template] = Nil) extends Tree {

@@ -932,21 +932,21 @@ abstract class Parser { parser =>
         case LPAREN => inParensOrUnit(expr())
         case _      => expr()
       }
-      val catchp: Option[Aux.Catch] =
+      val catchopt =
         if (in.token != CATCH) None
         else {
           in.nextToken()
           if (in.token != LBRACE) Some(expr())
           else inBraces {
-            if (in.token == CASE) Some(Aux.Cases(caseClauses()))
+            if (in.token == CASE) Some(Term.Cases(caseClauses()))
             else Some(expr())
           }
         }
-      val finallyp: Option[Term] = in.token match {
+      val finallyopt = in.token match {
         case FINALLY => in.nextToken(); Some(expr())
         case _       => None
       }
-      Term.Try(body, catchp, finallyp)
+      Term.Try(body, catchopt, finallyopt)
     case WHILE =>
       in.skipToken()
       val cond = condExpr()
@@ -961,6 +961,7 @@ abstract class Parser { parser =>
       val cond = condExpr()
       Term.Do(body, cond)
     case FOR =>
+      in.nextToken()
       val enums =
         if (in.token == LBRACE) inBracesOrNil(enumerators())
         else inParensOrNil(enumerators())
@@ -1005,7 +1006,7 @@ abstract class Parser { parser =>
         }
       } else if (in.token == MATCH) {
         in.skipToken()
-        t = Term.Match(t, Aux.Cases(inBracesOrNil(caseClauses())))
+        t = Term.Match(t, Term.Cases(inBracesOrNil(caseClauses())))
       }
       // in order to allow anonymous functions as statements (as opposed to expressions) inside
       // templates, we have to disambiguate them from self type declarations - bug #1565
@@ -1197,7 +1198,7 @@ abstract class Parser { parser =>
    */
   def blockExpr(): Term = {
     inBraces {
-      if (in.token == CASE) Term.PartialFunction(Aux.Cases(caseClauses()))
+      if (in.token == CASE) Term.Cases(caseClauses())
       else block()
     }
   }

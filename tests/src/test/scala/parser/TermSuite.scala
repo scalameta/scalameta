@@ -120,19 +120,19 @@ class TermSuite extends ParseSuite {
 
   test("1 match { case 1 => true }") {
     val Term.Match(Lit.Int(1),
-                   Aux.Cases(Aux.Case(Lit.Int(1), None, Some(Lit.True())) :: Nil)) =
+                   Term.Cases(Aux.Case(Lit.Int(1), None, Some(Lit.True())) :: Nil)) =
       term("1 match { case 1 => true }")
   }
 
   test("1 match { case 1 => }") {
     val Term.Match(Lit.Int(1),
-                   Aux.Cases(Aux.Case(Lit.Int(1), None, None) :: Nil)) =
+                   Term.Cases(Aux.Case(Lit.Int(1), None, None) :: Nil)) =
       term("1 match { case 1 => }")
   }
 
   test("1 match { case 1 if true => }") {
     val Term.Match(Lit.Int(1),
-                   Aux.Cases(Aux.Case(Lit.Int(1), Some(Lit.True()), None) :: Nil)) =
+                   Term.Cases(Aux.Case(Lit.Int(1), Some(Lit.True()), None) :: Nil)) =
       term("1 match { case 1 if true => }")
   }
 
@@ -146,7 +146,7 @@ class TermSuite extends ParseSuite {
 
   test("try 1 catch { case _ => }") {
     val Term.Try(Lit.Int(1),
-                 Some(Aux.Cases(Aux.Case(Pat.Wildcard(), None, None) :: Nil)), None) =
+                 Some(Term.Cases(Aux.Case(Pat.Wildcard(), None, None) :: Nil)), None) =
       term("try 1 catch { case _ => }")
   }
 
@@ -155,7 +155,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("{ case 1 => () }") {
-    val Term.PartialFunction(Aux.Cases(Aux.Case(Lit.Int(1), None, Some(Lit.Unit())) :: Nil)) =
+    val Term.Cases(Aux.Case(Lit.Int(1), None, Some(Lit.Unit())) :: Nil) =
       term("{ case 1 => () }")
   }
 
@@ -167,9 +167,19 @@ class TermSuite extends ParseSuite {
     val Do(Lit.False(), Lit.True()) = term("do false while(true)")
   }
 
-  // TODO:
-  // test("for") { }
-  // test("for yield") { }
+  test("for") {
+    val For(List(Enum.Generator(Ident("a", false), Ident("b", false)),
+                 Enum.Guard(Ident("c", false)),
+                 Enum.Val(Ident("x", false), Ident("a", false))),
+            Ident("x", false)) = term("for (a <- b; if c; x = a) x")
+
+  }
+  test("for yield") {
+    val ForYield(List(Enum.Generator(Ident("a", false), Ident("b", false)),
+                      Enum.Guard(Ident("c", false)),
+                      Enum.Val(Ident("x", false), Ident("a", false))),
+                 Ident("x", false)) = term("for (a <- b; if c; x = a) yield x")
+  }
 
   // TODO:
   // test("new") { }
