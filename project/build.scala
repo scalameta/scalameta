@@ -115,9 +115,9 @@ object build extends Build {
     packagedArtifacts := Map.empty
   ) aggregate (core, tests)
 
-  lazy val macros = Project(
-    id   = "core-macros",
-    base = file("macros")
+  lazy val foundation = Project(
+    id   = "foundation",
+    base = file("foundation")
   ) settings (
     publishableSettings: _*
   ) settings (
@@ -132,7 +132,7 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     scalacOptions ++= Seq()
-  ) dependsOn (macros)
+  ) dependsOn (foundation)
 
   lazy val sandbox = Project(
     id   = "sandbox",
