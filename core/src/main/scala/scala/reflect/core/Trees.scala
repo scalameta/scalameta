@@ -155,9 +155,7 @@ package core {
     @leaf class Apply(tpe: Type, args: List[Type] @nonEmpty) extends Type
     @leaf class Function(params: List[Type], res: Type) extends Type
     @leaf class Tuple(elements: List[Type] @nonEmpty) extends Type
-    @leaf class Compound(tpes: List[Type], refinement: List[Stmt.Refine]) extends Type {
-      require(refinement.isEmpty ==> tpes.length > 2)
-    }
+    @leaf class Compound(tpes: List[Type], refinement: List[Stmt.Refine]) extends Type
     @leaf class Existential(tpe: Type, quants: List[Stmt.Existential] @nonEmpty) extends Type
     @leaf class Annotate(tpe: Type, mods: List[Mod] @nonEmpty) extends Type with Has.Mods
     // (Denys) TODO: need to validate that placeholder appears within one of allowed contexts (e.g. `type T = _` is illegal)
@@ -215,7 +213,7 @@ package core {
                     tparams: List[Aux.TypeParam],
                     explicits: List[List[Aux.Param]],
                     implicits: List[Aux.Param],
-                    decltpe: Option[core.Type] @nonEmpty) extends Decl with Symbol.Def {
+                    decltpe: core.Type) extends Decl with Symbol.Def {
       require(paramss.flatten.forall(_.decltpe.nonEmpty))
     }
     @leaf class Procedure(mods: List[Mod],

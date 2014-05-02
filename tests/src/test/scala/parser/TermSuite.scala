@@ -19,12 +19,12 @@ class TermSuite extends ParseSuite {
 
   test("a.super[b].c") {
     val SuperSelect(Some(Type.Ident("a", false)), Some(Type.Ident("b", false)),
-                    Term.Ident("c", false)) = term("a.super[b].c")
+                    Ident("c", false)) = term("a.super[b].c")
     val SuperSelect(None, Some(Type.Ident("b", false)),
-                    Term.Ident("c", false)) = term("super[b].c")
+                    Ident("c", false)) = term("super[b].c")
     val SuperSelect(Some(Type.Ident("a", false)), None,
-                    Term.Ident("c", false)) = term("a.super.c")
-    val SuperSelect(None, None, Term.Ident("c", false)) = term("super.c")
+                    Ident("c", false)) = term("a.super.c")
+    val SuperSelect(None, None, Ident("c", false)) = term("super.c")
   }
 
   test("s\"a$bc\"") {
@@ -65,15 +65,13 @@ class TermSuite extends ParseSuite {
     val Throw(Lit.Int(1)) = term("throw 1")
   }
 
-  // TODO:
-  // test("1: Int`) {
-  //  val Ascribe(Term.Int(1), Type.Ident("Int")) = term("1: Int")
-  // }
+  test("1: Int") {
+    val Ascribe(Lit.Int(1), Type.Ident("Int", false)) = term("1: Int")
+  }
 
-  // TODO:
-  // test("1: @foo") {
-  //   val Annotate(Lit.Int(1), Mod.Annot(Type.Ident("foo", false), Nil) :: Nil) = term("1: @foo")
-  // }
+  test("1: @foo") {
+    val Annotate(Lit.Int(1), Mod.Annot(Type.Ident("foo", false), Nil) :: Nil) = term("1: @foo")
+  }
 
   test("(true, false)") {
     val Tuple(Lit.True() :: Lit.False() :: Nil) = term("(true, false)")
@@ -101,12 +99,15 @@ class TermSuite extends ParseSuite {
                  Ident("x", false)) = term("(x => x)")
   }
 
-  // TODO:
-  // test("(x: Int) => x") {
-  //   val Function(Param(Nil, Some(Ident("x", false)), Some(Type.Ident("Int", false)), None) :: Nil,
-  //                Ident("x", false)) = term("(x: Int) => x")
-  // }
-  // test("(_: Int) => x") { }
+  test("(x: Int) => x") {
+    val Function(Param(Nil, Some(Ident("x", false)), Some(Type.Ident("Int", false)), None) :: Nil,
+                 Ident("x", false)) = term("(x: Int) => x")
+  }
+
+  test("(_: Int) => x") {
+    val Function(Param(Nil, None, Some(Type.Ident("Int", false)), None) :: Nil,
+                 Ident("x", false)) = term("(_: Int) => x")
+  }
 
   test("_ => ()") {
     val Function(Param.empty :: Nil, Lit.Unit()) = term("_ => ()")
@@ -119,43 +120,39 @@ class TermSuite extends ParseSuite {
   }
 
   test("1 match { case 1 => true }") {
-    val Term.Match(Lit.Int(1),
-                   Term.Cases(Aux.Case(Lit.Int(1), None, Some(Lit.True())) :: Nil)) =
+    val Match(Lit.Int(1), Cases(Case(Lit.Int(1), None, Some(Lit.True())) :: Nil)) =
       term("1 match { case 1 => true }")
   }
 
   test("1 match { case 1 => }") {
-    val Term.Match(Lit.Int(1),
-                   Term.Cases(Aux.Case(Lit.Int(1), None, None) :: Nil)) =
+    val Match(Lit.Int(1), Cases(Case(Lit.Int(1), None, None) :: Nil)) =
       term("1 match { case 1 => }")
   }
 
   test("1 match { case 1 if true => }") {
-    val Term.Match(Lit.Int(1),
-                   Term.Cases(Aux.Case(Lit.Int(1), Some(Lit.True()), None) :: Nil)) =
+    val Match(Lit.Int(1), Cases(Case(Lit.Int(1), Some(Lit.True()), None) :: Nil)) =
       term("1 match { case 1 if true => }")
   }
 
   test("try 1") {
-    val Term.Try(Lit.Int(1), None, None) = term("try 1")
+    val Try(Lit.Int(1), None, None) = term("try 1")
   }
 
   test("try 1 catch 1") {
-    val Term.Try(Lit.Int(1), Some(Lit.Int(1)), None) = term("try 1 catch 1")
+    val Try(Lit.Int(1), Some(Lit.Int(1)), None) = term("try 1 catch 1")
   }
 
   test("try 1 catch { case _ => }") {
-    val Term.Try(Lit.Int(1),
-                 Some(Term.Cases(Aux.Case(Pat.Wildcard(), None, None) :: Nil)), None) =
+    val Try(Lit.Int(1), Some(Cases(Case(Pat.Wildcard(), None, None) :: Nil)), None) =
       term("try 1 catch { case _ => }")
   }
 
   test("try 1 finally 1") {
-    val Term.Try(Lit.Int(1), None, Some(Lit.Int(1))) = term("try 1 finally 1")
+    val Try(Lit.Int(1), None, Some(Lit.Int(1))) = term("try 1 finally 1")
   }
 
   test("{ case 1 => () }") {
-    val Term.Cases(Aux.Case(Lit.Int(1), None, Some(Lit.Unit())) :: Nil) =
+    val Cases(Case(Lit.Int(1), None, Some(Lit.Unit())) :: Nil) =
       term("{ case 1 => () }")
   }
 

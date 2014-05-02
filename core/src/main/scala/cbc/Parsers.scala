@@ -340,12 +340,25 @@ abstract class Parser { parser =>
   def convertToParam(tree: Term): Aux.Param = tree match {
     case id: Ident =>
       Aux.Param(name = Some(id.toTermIdent), decltpe = None)
-    case Term.Ascribe(id: Ident, tpt) =>
-      Aux.Param(name = Some(id.toTermIdent), decltpe = Some(tpt))
     case Term.Placeholder() =>
       Aux.Param.empty
+    case Term.Ascribe(id: Ident, tpt) =>
+      Aux.Param(name = Some(id.toTermIdent), decltpe = Some(tpt))
+    case Term.Ascribe(Term.Placeholder(), tpt) =>
+      Aux.Param(decltpe = Some(tpt))
     case _ =>
       syntaxError("not a legal formal parameter")
+  }
+
+  def convertToTypeId(ref: Term.Ref): Option[Type] = ref match {
+    case Term.Select(qual: Term.Ref, name) =>
+      Some(Type.Select(qual, name.toTypeIdent))
+    case Term.SuperSelect(qual, supertpe, selector) =>
+      Some(Type.SuperSelect(qual, supertpe, selector.toTypeIdent))
+    case id: Term.Ident =>
+      Some(id.toTypeIdent)
+    case _ =>
+      None
   }
 
   /** {{{ part { `sep` part } }}},or if sepFirst is true, {{{ { `sep` part } }}}. */
@@ -574,15 +587,16 @@ abstract class Parser { parser =>
     def simpleType(): Type = {
       simpleTypeRest(in.token match {
         case LPAREN   => Type.Tuple(inParens(types()))
-        case USCORE   => wildcardType()
+        case USCORE   => in.nextToken(); wildcardType()
         case _        =>
-          /*
-          path(thisOK = false, typeOK = true) match {
-            case r @ SingletonTypeTree(_) => r
-            case r => convertToTypeId(r)
+          val ref: Term.Ref = path()
+          if (in.token != DOT)
+            convertToTypeId(ref) getOrElse { syntaxError("identifier expected") }
+          else {
+            in.nextToken()
+            accept(TYPE)
+            Type.Singleton(ref)
           }
-          */
-          ???
       })
     }
 
@@ -606,7 +620,6 @@ abstract class Parser { parser =>
       else Some(annotType())
     )
 
-
     // TODO: warn about def f: Unit { } case
     def compoundTypeRest(t: Option[Type]): Type = {
       val ts = new ListBuffer[Type] ++ t
@@ -617,7 +630,10 @@ abstract class Parser { parser =>
       newLineOptWhenFollowedBy(LBRACE)
       val types         = ts.toList
       val refinements   = if (in.token == LBRACE) refinement() else Nil
-      Type.Compound(ts.toList, refinements)
+      (types, refinements) match {
+        case (typ :: Nil, Nil) => typ
+        case _                 => Type.Compound(types, refinements)
+      }
     }
 
     def infixTypeRest(t: Type, mode: InfixMode.Value): Type = {
@@ -674,7 +690,6 @@ abstract class Parser { parser =>
   /** For when it's known already to be a type name. */
   def typeIdent(): Type.Ident = ident().toTypeIdent
 
-
   /** {{{
    *  Path       ::= StableId
    *              |  [Ident `.'] this
@@ -706,7 +721,7 @@ abstract class Parser { parser =>
       }
     } else {
       val id = ident()
-      if (in.token != DOT) id
+      if (in.token != DOT || lookingAhead { in.token == TYPE }) id
       else {
         in.nextToken()
         if (in.token == THIS) {
@@ -1868,6 +1883,7 @@ abstract class Parser { parser =>
         importWildcardOrName() match {
           case to: Sel.Name     => Sel.Rename(from.name, to.name)
           case to: Sel.Wildcard => Sel.Unimport(from.name)
+          case _                => abort("unreachable")
         }
       case other => other
     }
@@ -1980,7 +1996,7 @@ abstract class Parser { parser =>
         warnProcedureDeprecation
         Decl.Procedure(mods, name, tparams, paramss, implicits)
       } else
-        Decl.Def(mods, name, tparams, paramss, implicits, restype)
+        Decl.Def(mods, name, tparams, paramss, implicits, restype.get)
     } else if (restype.isEmpty && in.token == LBRACE) {
       warnProcedureDeprecation
       Defn.Procedure(mods, name, tparams, paramss, implicits, block())
