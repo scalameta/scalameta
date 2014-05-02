@@ -1,7 +1,7 @@
 import scala.reflect.core._
 
 class TypeSuite extends ParseSuite {
-  import Type._
+  import Type._, Aux._
 
   test("T") {
     val Ident("T", false) = tpe("T")
@@ -63,32 +63,32 @@ class TypeSuite extends ParseSuite {
 
   test("F[_ >: lo <: hi]") {
     val Apply(Ident("F", false),
-              Placeholder(Aux.TypeBounds(Some(Type.Ident("lo", false)),
-                                         Some(Type.Ident("hi", false)))) :: Nil) =
+              Placeholder(TypeBounds(Some(Type.Ident("lo", false)),
+                                     Some(Type.Ident("hi", false)))) :: Nil) =
       tpe("F[_ >: lo <: hi]")
   }
 
   test("F[_ >: lo") {
     val Apply(Ident("F", false),
-              Placeholder(Aux.TypeBounds(Some(Type.Ident("lo", false)), None)) :: Nil) =
+              Placeholder(TypeBounds(Some(Type.Ident("lo", false)), None)) :: Nil) =
       tpe("F[_ >: lo]")
   }
 
   test("F[_ <: hi]") {
     val Apply(Ident("F", false),
-              Placeholder(Aux.TypeBounds(None, Some(Type.Ident("hi", false)))) :: Nil) =
+              Placeholder(TypeBounds(None, Some(Type.Ident("hi", false)))) :: Nil) =
       tpe("F[_ <: hi]")
   }
 
   test("F[_]") {
-    val Apply(Ident("F", false), Placeholder(Aux.TypeBounds.empty) :: Nil) =
+    val Apply(Ident("F", false), Placeholder(TypeBounds.empty) :: Nil) =
       tpe("F[_]")
   }
 
   // TODO:
   // test("F[T] forSome { type T }") {
   //  val Existential(Apply(Ident("F", false), Ident("T", false) :: Nil),
-  //                  Decl.Type(Nil, Ident("T", false), Nil, Aux.TypeBounds.empty) :: Nil) =
+  //                  Decl.Type(Nil, Ident("T", false), Nil, TypeBounds.empty) :: Nil) =
   //    tpe("F[T] forSome { type T }")
   // }
 }

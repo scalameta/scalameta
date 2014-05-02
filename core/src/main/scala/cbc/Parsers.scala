@@ -1547,63 +1547,38 @@ abstract class Parser { parser =>
 
 /* -------- MODIFIERS and ANNOTATIONS ------------------------------------------- */
 
-  /** Drop `private` modifier when followed by a qualifier.
-   *  Contract `abstract` and `override` to ABSOVERRIDE
-   */
-  /*private def normalizeModifers(mods: List[Mod]): List[Mod] =
-    if (mods.isPrivate && mods.hasAccessBoundary)
-      normalizeModifers(mods &~ Flags.PRIVATE)
-    else if (mods hasAllFlags (Flags.ABSTRACT | Flags.OVERRIDE))
-      normalizeModifers(mods &~ (Flags.ABSTRACT | Flags.OVERRIDE) | Flags.ABSOVERRIDE)
-    else
-      mods
-
-  private def addMod(mods: List[Mod], mod: Long): List[Mod] = {
-    if (mods hasFlag mod) syntaxError("repeated modifier")
+  private def addMod(mods: List[Mod], mod: Mod): List[Mod] = {
+    if (mods exists (_ == mod)) syntaxError("repeated modifier")
     in.nextToken()
-    (mods | mod)
-  }*/
+    mods :+ mod
+  }
+  private def addMod(mods: List[Mod], optmod: Option[Mod]): List[Mod] =
+    optmod.map(mods :+ _).getOrElse(mods)
 
   /** {{{
    *  AccessQualifier ::= `[' (Id | this) `]'
    *  }}}
    */
-  /*def accessQualifierOpt(mods: List[Mod]): List[Mod] = {
-    var result = mods
-    if (in.token == LBRACKET) {
+  def accessQualifierOpt(): Option[Mod.AccessQualifier] = {
+    if (in.token != LBRACKET) None
+    else {
       in.nextToken()
-      if (mods.hasAccessBoundary)
-        syntaxError("duplicate private/protected qualifier")
-      result = if (in.token == THIS) { in.nextToken(); mods | Flags.LOCAL }
-               else Modifiers(mods.flags, identForType())
+      val res = if (in.token != THIS) typeIdent()
+                else { in.nextToken(); Term.This(None) }
       accept(RBRACKET)
+      Some(res)
     }
-    result
-  }*/
-
-  private val flagMods: Map[Int, () => Mod] = Map(
-    ABSTRACT  -> (() => Mod.Abstract()),
-    FINAL     -> (() => Mod.Final()),
-    IMPLICIT  -> (() => Mod.Implicit()),
-    LAZY      -> (() => Mod.Lazy()),
-    OVERRIDE  -> (() => Mod.Override()),
-    SEALED    -> (() => Mod.Sealed())
-  )
-
-  def modifiers(): List[Mod] = ???
-  def localModifiers(): List[Mod] = ???
+  }
 
   /** {{{
    *  AccessModifier ::= (private | protected) [AccessQualifier]
    *  }}}
    */
-  def accessModifierOpt(): List[Mod] = ???
-  /*normalizeModifers {
-    in.token match {
-      case m @ (PRIVATE | PROTECTED)  => in.nextToken() ; accessQualifierOpt(Modifiers(flagTokens(m)))
-      case _                          => NoMods
-    }
-  }*/
+  def accessModifierOpt(): Option[Mod] = in.token match {
+    case PRIVATE   => in.nextToken(); Some(Mod.Private(accessQualifierOpt()) )
+    case PROTECTED => in.nextToken(); Some(Mod.Protected(accessQualifierOpt()) )
+    case _         => None
+  }
 
   /** {{{
    *  Modifiers ::= {Modifier}
@@ -1612,34 +1587,33 @@ abstract class Parser { parser =>
    *              |  override
    *  }}}
    */
-  /*def modifiers(): List[Mod] = normalizeModifers {
-    def loop(mods: List[Mod]): List[Mod] = in.token match {
-      case PRIVATE | PROTECTED =>
-        loop(accessQualifierOpt(addMod(mods, flagTokens(in.token))))
-      case ABSTRACT | FINAL | SEALED | OVERRIDE | IMPLICIT | LAZY =>
-        loop(addMod(mods, flagTokens(in.token)))
-      case NEWLINE =>
-        in.nextToken()
-        loop(mods)
-      case _ =>
-        mods
-    }
-    loop(NoMods)
-  }*/
-
+  def modifiers(isLocal: Boolean = false): List[Mod] = {
+    def acceptable = if (isLocal) isLocalModifier else true
+    def loop(mods: List[Mod]): List[Mod] =
+      if (!acceptable) mods
+      else (in.token match {
+        case ABSTRACT            => loop(addMod(mods, Mod.Abstract()))
+        case FINAL               => loop(addMod(mods, Mod.Final()))
+        case SEALED              => loop(addMod(mods, Mod.Sealed()))
+        case IMPLICIT            => loop(addMod(mods, Mod.Implicit()))
+        case LAZY                => loop(addMod(mods, Mod.Lazy()))
+        case OVERRIDE            => loop(addMod(mods, Mod.Override()))
+        case PRIVATE | PROTECTED =>
+          if (mods exists { _.isInstanceOf[Mod.Access] })
+            syntaxError("duplicate private/protected qualifier")
+          loop(addMod(mods, accessModifierOpt()))
+        case NEWLINE if !isLocal => in.nextToken(); loop(mods)
+        case _                   => mods
+      })
+    loop(Nil)
+  }
 
   /** {{{
    *  LocalModifiers ::= {LocalModifier}
    *  LocalModifier  ::= abstract | final | sealed | implicit | lazy
    *  }}}
    */
-  /*def localModifiers(): List[Mod] = {
-    def loop(mods: List[Mod]): List[Mod] =
-      if (isLocalModifier) loop(addMod(mods, flagTokens(in.token)))
-      else mods
-
-    loop(NoMods)
-  }*/
+  def localModifiers(): List[Mod] = modifiers(isLocal = true)
 
   /** {{{
    *  Annotations      ::= {`@' SimpleType {ArgumentExprs}}
@@ -1956,7 +1930,7 @@ abstract class Parser { parser =>
       }
 
       if (isMutable) Decl.Var(mods, ids, tp.get)
-      else Decl.Var(mods, ids, tp.get)
+      else Decl.Val(mods, ids, tp.get)
     }
   }
 

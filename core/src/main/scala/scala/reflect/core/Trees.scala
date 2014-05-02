@@ -54,10 +54,9 @@ package core {
     def sym: Symbol = ???
   }
 
-  @branch trait Ident extends Ref {
+  @branch trait Ident extends Ref with Mod.AccessQualifier {
     def value: String
     def isBackquoted: Boolean
-
   }
 
   @branch trait Term extends Arg with Stmt.Template with Stmt.Block {
@@ -77,7 +76,7 @@ package core {
         case _                         => false
       }
     }
-    @leaf class This(qual: Option[core.Ident]) extends Ref
+    @leaf class This(qual: Option[core.Ident]) extends Ref with Mod.AccessQualifier
     @leaf class Ident(value: scala.Predef.String @nonEmpty, isBackquoted: Boolean = false) extends core.Ident with Ref with Pat with Symbol {
       // TODO: require(!keywords.contains(value) || isBackquoted)
       def isBinding: Boolean = ???
@@ -357,8 +356,15 @@ package core {
   object Mod {
     @leaf class Annot(tpe: Type, argss: List[List[Arg]]) extends Mod
     @leaf class Doc(doc: String) extends Mod // TODO: design representation for scaladoc
-    @leaf class Private(within: String) extends Mod // TODO: design a name resolution API for these and imports
-    @leaf class Protected(within: String) extends Mod
+    @branch trait Access extends Mod { def within: Option[AccessQualifier] }
+    // TODO: design a name resolution API for these
+    @branch trait AccessQualifier extends Tree
+    @leaf class Private(within: Option[AccessQualifier]) extends Access {
+      require(within.map { case Term.This(opt) => opt.nonEmpty; case _ => true }.getOrElse(true))
+    }
+    @leaf class Protected(within: Option[AccessQualifier]) extends Access {
+      require(within.map { case Term.This(opt) => opt.nonEmpty; case _ => true }.getOrElse(true))
+    }
     @leaf class Implicit() extends Mod
     @leaf class Final() extends Mod
     @leaf class Sealed() extends Mod
