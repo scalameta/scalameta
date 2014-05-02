@@ -25,16 +25,17 @@ class AdtMacros(val c: Context) {
   // (Eugene) TODO: check transitive sealedness
   // (Eugene) TODO: check rootness
   def branch(annottees: Tree*): Tree = {
+    val q"new $annotationName().macroTransform(..$_)" = c.macroApplication
     def transform(cdef: ClassDef): ClassDef = {
       val ClassDef(mods @ Modifiers(flags, privateWithin, anns), name, tparams, impl) = cdef
-      if (mods.hasFlag(SEALED)) c.abort(cdef.pos, "sealed is redundant for @branch traits")
-      if (mods.hasFlag(FINAL)) c.abort(cdef.pos, "@branch traits cannot be final")
+      if (mods.hasFlag(SEALED)) c.abort(cdef.pos, "sealed is redundant for @" + annotationName + " traits")
+      if (mods.hasFlag(FINAL)) c.abort(cdef.pos, "@" + annotationName + " traits cannot be final")
       val flags1 = flags | SEALED
       ClassDef(Modifiers(flags1, privateWithin, anns), name, tparams, impl)
     }
     val expanded = annottees match {
       case (cdef @ ClassDef(mods, _, _, _)) :: rest if mods.hasFlag(TRAIT) => transform(cdef) :: rest
-      case annottee :: rest => c.abort(annottee.pos, "only traits can be @branch")
+      case annottee :: rest => c.abort(annottee.pos, "only traits can be @" + annotationName)
     }
     q"{ ..$expanded; () }"
   }
@@ -73,6 +74,7 @@ class AdtMacros(val c: Context) {
     val expanded = annottees match {
       case (cdef @ ClassDef(mods, _, _, _)) :: (mdef @ ModuleDef(_, _, _)) :: rest if !(mods hasFlag TRAIT) => transform(cdef, mdef) ++ rest
       case (cdef @ ClassDef(mods, name, _, _)) :: rest if !mods.hasFlag(TRAIT) => transform(cdef, q"object ${name.toTermName}") ++ rest
+      case (mdef @ ModuleDef(_, _, _)) :: rest => mdef :: rest // TODO: this is obviously incomplete
       case annottee :: rest => c.abort(annottee.pos, "only classes can be @leaf")
     }
     q"{ ..$expanded; () }"
