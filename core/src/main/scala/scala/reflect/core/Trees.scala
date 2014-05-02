@@ -137,6 +137,7 @@ package core {
     // TODO: can we somehow inherit certain flags from type symbols here, s.t. we can write `t"T".isCaseClass`?
     // TODO: simple type validation
   }
+
   object Type {
     @branch trait Ref extends Type with core.Ref
     @leaf class Ident(value: String @nonEmpty, isBackquoted: Boolean = false) extends core.Ident with Ref {

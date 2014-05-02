@@ -8,10 +8,9 @@ package object core {
       def unapply(scrutinee: Any): Any = macro ???
     }
     object q extends api
-    object tq extends api
-    object cq extends api
-    object pq extends api
-    object fq extends api
+    object t extends api
+    object p extends api
+    // consider also adding templ, param, tparam, parent, self, case, enum, mod, arg interpolators
   }
   implicit class RichTypes(val parents: List[Type]) extends AnyVal {
     def linearization: List[Type] = ???
