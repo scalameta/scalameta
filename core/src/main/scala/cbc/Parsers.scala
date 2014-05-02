@@ -318,7 +318,8 @@ abstract class Parser { parser =>
     case _ => false
   }
 
-  def isStatSeqEnd = in.token == RBRACE || in.token == EOF
+  def isStatSeqEnd: Boolean = isStatSeqEnd(in.token)
+  def isStatSeqEnd(tok: Token): Boolean = tok == RBRACE || tok == EOF
 
   def isCaseDefEnd = in.token == RBRACE || in.token == CASE || in.token == EOF
 
@@ -1547,14 +1548,6 @@ abstract class Parser { parser =>
 
 /* -------- MODIFIERS and ANNOTATIONS ------------------------------------------- */
 
-  private def addMod(mods: List[Mod], mod: Mod): List[Mod] = {
-    if (mods exists (_ == mod)) syntaxError("repeated modifier")
-    in.nextToken()
-    mods :+ mod
-  }
-  private def addMod(mods: List[Mod], optmod: Option[Mod]): List[Mod] =
-    optmod.map(mods :+ _).getOrElse(mods)
-
   /** {{{
    *  AccessQualifier ::= `[' (Id | this) `]'
    *  }}}
@@ -1588,6 +1581,11 @@ abstract class Parser { parser =>
    *  }}}
    */
   def modifiers(isLocal: Boolean = false): List[Mod] = {
+    def addMod(mods: List[Mod], mod: Mod): List[Mod] = {
+      if (mods exists (_ == mod)) syntaxError("repeated modifier")
+      in.nextToken()
+      mods :+ mod
+    }
     def acceptable = if (isLocal) isLocalModifier else true
     def loop(mods: List[Mod]): List[Mod] =
       if (!acceptable) mods
@@ -1601,7 +1599,8 @@ abstract class Parser { parser =>
         case PRIVATE | PROTECTED =>
           if (mods exists { _.isInstanceOf[Mod.Access] })
             syntaxError("duplicate private/protected qualifier")
-          loop(addMod(mods, accessModifierOpt()))
+          val optmod = accessModifierOpt()
+          optmod.map { mod => loop(addMod(mods, mod)) }.getOrElse(mods)
         case NEWLINE if !isLocal => in.nextToken(); loop(mods)
         case _                   => mods
       })
@@ -1648,7 +1647,7 @@ abstract class Parser { parser =>
    *  ClassParam        ::= {Annotation}  [{Modifier} (`val' | `var')] Id [`:' ParamType] [`=' Expr]
    *  }}}
    */
-  def paramClauses[Owner <: Tree](): (List[List[Aux.Param]], List[Aux.Param]) = ???
+  def paramClauses[Owner <: Tree](): (List[List[Aux.Param]], List[Aux.Param]) = (Nil, Nil)
   /*{
     var implicitmod = 0
     var caseParam = ofCaseClass
@@ -1760,7 +1759,7 @@ abstract class Parser { parser =>
    *  TypeParam             ::= Id TypeParamClauseOpt TypeBounds {<% Type} {":" Type}
    *  }}}
    */
-  def typeParamClauseOpt[Owner <: Symbol](): List[Aux.TypeParam] = ???
+  def typeParamClauseOpt[Owner <: Symbol](): List[Aux.TypeParam] = Nil
   /*{
     def typeParam(ms: List[Mod]): TypeDef = {
       var mods = ms | Flags.PARAM
@@ -2046,7 +2045,7 @@ abstract class Parser { parser =>
       case EQUALS =>
         in.nextToken()
         Defn.Type(mods, name, tparams, typ())
-      case t if t == SUPERTYPE || t == SUBTYPE || t == COMMA || t == RBRACE || isStatSep(t) =>
+      case t if t == SUPERTYPE || t == SUBTYPE || t == COMMA || t == RBRACE || isStatSep(t) || isStatSeqEnd(t) =>
         Decl.Type(mods, name, tparams, typeBounds())
       case _ =>
         syntaxError("`=', `>:', or `<:' expected")
