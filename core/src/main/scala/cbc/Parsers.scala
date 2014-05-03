@@ -8,7 +8,7 @@ import cbc.Tokens._
 import cbc.TokenInfo._
 import scala.reflect.core.{Tree, Term, Pat, Type, Defn, Decl, Lit, Stmt,
                            Import, Aux, Ident, RichMods, Mod, Enum, Ctor,
-                           Arg, Pkg, Symbol}
+                           Arg, Pkg, Symbol, ParamType}
 import scala.reflect.ClassTag
 
 object ParserInfo {
@@ -69,8 +69,9 @@ class SourceParser(val source: Source) extends Parser {
   lazy val in = { val s = new SourceFileScanner(source); s.init(); s }
 
   // warning don't stop parsing
-  def warning(offset: Offset, msg: String): Unit = ???
-  def deprecationWarning(offset: Offset, msg: String): Unit = ???
+  // TODO:
+  def warning(offset: Offset, msg: String): Unit = ()
+  def deprecationWarning(offset: Offset, msg: String): Unit = ()
 
   // errors do
   def abort(msg: String): Nothing = throw ParseAbort(msg)
@@ -324,7 +325,7 @@ abstract class Parser { parser =>
   def isCaseDefEnd = in.token == RBRACE || in.token == CASE || in.token == EOF
 
   def isStatSep(token: Token): Boolean =
-    token == NEWLINE || token == NEWLINES || token == SEMI
+    token == NEWLINE || token == NEWLINES || token == SEMI || in.token == EOF
 
   def isStatSep: Boolean = isStatSep(in.token)
 
@@ -511,7 +512,7 @@ abstract class Parser { parser =>
      *  }}}
      */
     def argType(): Type
-    def functionArgType(): Type
+    def functionArgType(): ParamType
 
     private def tupleInfixType(): Type = {
       in.nextToken()
@@ -527,7 +528,11 @@ abstract class Parser { parser =>
           in.skipToken()
           Type.Function(ts, typ())
         } else {
-          val tuple = Type.Tuple(ts)
+          val tuple = Type.Tuple(ts map {
+            case _: ParamType.ByName   => syntaxError("by name type not allowed here")
+            case _: ParamType.Repeated => syntaxError("repeated type not alloed here")
+            case t: Type               => t
+          })
           infixTypeRest(
             compoundTypeRest(Some(
               annotTypeRest(
@@ -664,7 +669,7 @@ abstract class Parser { parser =>
      *  }}}
      */
     def types(): List[Type] = commaSeparated(argType())
-    def functionTypes(): List[Type] = commaSeparated(functionArgType())
+    def functionTypes(): List[ParamType] = commaSeparated(functionArgType())
   }
 
   // TODO: can we get away without this?
@@ -1329,11 +1334,7 @@ abstract class Parser { parser =>
     // are we in an XML pattern?
     def isXML: Boolean = false
 
-    def functionArgType(): Type = {
-      // TODO: why to do with annot here?
-      val (t, annot) = paramType()
-      t
-    }
+    def functionArgType(): ParamType = paramType()
     def argType(): Type = typ()
 
     /** {{{
@@ -1508,11 +1509,7 @@ abstract class Parser { parser =>
   /** The implementation of the context sensitive methods for parsing outside of patterns. */
   object outPattern extends PatternContextSensitive {
     def argType(): Type = typ()
-    def functionArgType(): Type = {
-      // TODO: what to do with annot here?
-      val (t, annot) = paramType()
-      t
-    }
+    def functionArgType(): ParamType = paramType()
   }
   /** The implementation for parsing inside of patterns at points where sequences are allowed. */
   object seqOK extends SeqContextSensitive {
@@ -1647,108 +1644,85 @@ abstract class Parser { parser =>
    *  ClassParam        ::= {Annotation}  [{Modifier} (`val' | `var')] Id [`:' ParamType] [`=' Expr]
    *  }}}
    */
-  def paramClauses[Owner <: Tree](): (List[List[Aux.Param]], List[Aux.Param]) = (Nil, Nil)
-  /*{
-    var implicitmod = 0
-    var caseParam = ofCaseClass
-    def paramClause(): List[ValDef] = {
+  def paramClauses(ownerIsType: Boolean): (List[List[Aux.Param]], List[Aux.Param]) = {
+    var parsedImplicits = false
+    def paramClause(): List[Aux.Param] = {
       if (in.token == RPAREN)
         return Nil
 
       if (in.token == IMPLICIT) {
         in.nextToken()
-        implicitmod = Flags.IMPLICIT
+        parsedImplicits = true
       }
-      commaSeparated(param(owner, implicitmod, caseParam  ))
+      commaSeparated(param(ownerIsType, isImplicit = parsedImplicits))
     }
-    val vds = new ListBuffer[List[ValDef]]
-    val start = in.offset
+    val paramss = new ListBuffer[List[Aux.Param]]
+    var implicits = List.empty[Aux.Param]
     newLineOptWhenFollowedBy(LPAREN)
-    if (ofCaseClass && in.token != LPAREN)
-      syntaxError(in.lastOffset, "case classes without a parameter list are not allowed;\n"+
-                                 "use either case objects or case classes with an explicit `()' as a parameter list.")
-    while (implicitmod == 0 && in.token == LPAREN) {
+    while (!parsedImplicits && in.token == LPAREN) {
       in.nextToken()
-      vds += paramClause()
+      val clause = paramClause()
+      if (!parsedImplicits)
+        paramss += clause
+      else
+        implicits = clause
       accept(RPAREN)
-      caseParam = false
       newLineOptWhenFollowedBy(LPAREN)
     }
-    val result = vds.toList
-    if (owner == nme.CONSTRUCTOR && (result.isEmpty || (result.head take 1 exists (_.mods.isImplicit)))) {
-      in.token match {
-        case LBRACKET   => syntaxError("no type parameters allowed here")
-        case EOF        => incompleteInputError("auxiliary constructor needs non-implicit parameter list")
-        case _          => syntaxError(start, "auxiliary constructor needs non-implicit parameter list")
-      }
-    }
-    addEvidenceParams(owner, result, contextBounds)
-  }*/
+    (paramss.toList, implicits)
+  }
 
   /** {{{
    *  ParamType ::= Type | `=>' Type | Type `*'
    *  }}}
    */
-  def paramType(): (Type, Option[Mod]) = {
-    in.token match {
-      case ARROW  =>
+  def paramType(): ParamType = in.token match {
+    case ARROW =>
+      in.nextToken()
+      ParamType.ByName(typ())
+    case _ =>
+      val t = typ()
+      if (!isRawStar) t
+      else {
         in.nextToken()
-        (typ(), Some(Mod.ByNameParam()))
-      case _      =>
-        val t = typ()
-        if (isRawStar) {
-          in.nextToken()
-          (t, Some(Mod.VarargParam()))
-        }
-        else (t, None)
-    }
+        ParamType.Repeated(t)
+      }
   }
 
-  def param(owner: Ident, isImplicit: Boolean): Aux.Param = ???
-  /* {
-    val start = in.offset
-    val annots = annots(skipNewLines = false)
-    var mods = Modifiers(Flags.PARAM)
-    if (owner.isTypeName) {
-      mods = modifiers() | Flags.PARAMACCESSOR
-      if (mods.isLazy) syntaxError("lazy modifier not allowed here. Use call-by-name parameters instead")
+  def param(ownerIsType: Boolean, isImplicit: Boolean): Aux.Param = {
+    var mods: List[Mod] = annots(skipNewLines = false)
+    if (ownerIsType) {
+      mods ++= modifiers()
+      if (mods.has[Mod.Lazy]) syntaxError("lazy modifier not allowed here. Use call-by-name parameters instead")
       in.token match {
-        case v @ (VAL | VAR) =>
-          if (v == VAR) mods |= Flags.MUTABLE
-          in.nextToken()
-        case _ =>
-          if (mods.flags != Flags.PARAMACCESSOR) accept(VAL)
-          if (!caseParam) mods |= Flags.PrivateLocal
+        case VAL => mods = mods :+ Mod.ValParam(); in.nextToken()
+        case VAR => mods = mods :+ Mod.VarParam(); in.nextToken()
       }
-      if (caseParam) mods |= Flags.CASEACCESSOR
     }
-    val nameOffset = in.offset
     val name = ident()
-    var bynamemod = 0
-    val tpt =
-      if ((settings.YmethodInfer && !owner.isTypeName) && in.token != COLON) {
-        TypeTree()
-      } else { // XX-METHOD-INFER
-        accept(COLON)
-        if (in.token == ARROW) {
-          if (owner.isTypeName && !mods.isLocalToThis)
-            syntaxError(
-              (if (mods.isMutable) "`var'" else "`val'") +
-              " parameters may not be call-by-name")
-          else if (implicitmod != 0)
-            syntaxError("implicit parameters may not be call-by-name")
-          else bynamemod = Flags.BYNAMEPARAM
-        }
-        paramType()
+    val tpt = {
+      accept(COLON)
+      val tpt = paramType()
+      if (tpt.isInstanceOf[ParamType.ByName]) {
+        def mayNotBeByName(subj: String) =
+          syntaxError(s"$subj parameters may not be call-by-name")
+        if (ownerIsType && !mods.has[Mod.ValParam])
+          mayNotBeByName("`val'")
+        else if (ownerIsType && !mods.has[Mod.VarParam])
+          mayNotBeByName("`var'")
+        else if (isImplicit)
+          mayNotBeByName("implicit")
       }
+      tpt
+    }
     val default =
-      if (in.token == EQUALS) {
+      if (in.token != EQUALS) None
+      else {
         in.nextToken()
-        mods |= Flags.DEFAULTPARAM
-        expr()
-      } else EmptyTree
-    ValDef((mods | implicitmod.toLong | bynamemod) withAnnotations annots, name.toTermName, tpt, default)
-  }*/
+        Some(expr())
+      }
+    Aux.Param(mods, Some(name), Some(tpt), default)
+  }
 
   /** {{{
    *  TypeParamClauseOpt    ::= [TypeParamClause]
@@ -1768,18 +1742,18 @@ abstract class Parser { parser =>
     })
   }
 
-  def typeParam(mods: List[Mod], ownerIsType: Boolean, ctxBoundsAllowed: Boolean): Aux.TypeParam = {
-    val mods1 =
+  def typeParam(annots: List[Mod.Annot], ownerIsType: Boolean, ctxBoundsAllowed: Boolean): Aux.TypeParam = {
+    val mods =
       if (ownerIsType && isIdent) {
         if (in.name == "+") {
           in.nextToken()
-          mods :+ Mod.Covariant()
+          annots :+ Mod.Covariant()
         } else if (in.name == "-") {
           in.nextToken()
-          mods :+ Mod.Contravariant()
-        } else mods
-      } else mods
-    val nameopt: Option[Type.Ident] =
+          annots :+ Mod.Contravariant()
+        } else annots
+      } else annots
+    val nameopt =
       if (isIdent) Some(typeIdent())
       else if (in.token == USCORE) { in.nextToken(); None }
       else syntaxError("identifier or `_' expected")
@@ -1788,7 +1762,7 @@ abstract class Parser { parser =>
     if (ctxBoundsAllowed) {
       while (in.token == VIEWBOUND) {
         if (settings.future) {
-          val msg = ("Use an implicit parameter instead. " +
+          val msg = ("Use an implicit parameter instead.\n" +
                      "Example: Instead of `def f[A <% Int](a: A)` " +
                      "use `def f[A](a: A)(implicit ev: A => Int)`.")
           deprecationWarning(s"View bounds are deprecated. $msg")
@@ -1803,7 +1777,7 @@ abstract class Parser { parser =>
     }
     val tparams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
     val bounds = typeBounds()
-    Aux.TypeParam(mods1, nameopt, tparams, contextBounds.toList, viewBounds.toList, bounds)
+    Aux.TypeParam(mods, nameopt, tparams, contextBounds.toList, viewBounds.toList, bounds)
   }
 
   /** {{{
@@ -1957,7 +1931,7 @@ abstract class Parser { parser =>
     if (in.token != THIS) funDefRest(mods, ident())
     else {
       in.skipToken()
-      val (paramss, implicits) = paramClauses[Ctor]()
+      val (paramss, implicits) = paramClauses(ownerIsType = true)
       newLineOptWhenFollowedBy(LBRACE)
       val (argss, stats) = in.token match {
         case LBRACE => constrBlock()
@@ -1971,7 +1945,7 @@ abstract class Parser { parser =>
     def warnProcedureDeprecation =
       deprecationWarning(in.lastOffset, s"Procedure syntax is deprecated. Convert procedure `$name` to method by adding `: Unit`.")
     val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
-    val (paramss, implicits) = paramClauses()
+    val (paramss, implicits) = paramClauses(ownerIsType = false)
     newLineOptWhenFollowedBy(LBRACE)
     var restype = fromWithinReturnType(typedOpt())
     if (isStatSep || in.token == RBRACE) {
@@ -2055,7 +2029,7 @@ abstract class Parser { parser =>
       case EQUALS =>
         in.nextToken()
         Defn.Type(mods, name, tparams, typ())
-      case t if t == SUPERTYPE || t == SUBTYPE || t == COMMA || t == RBRACE || isStatSep(t) || isStatSeqEnd(t) =>
+      case t if t == SUPERTYPE || t == SUBTYPE || t == COMMA || t == RBRACE || isStatSep(t) =>
         Decl.Type(mods, name, tparams, typeBounds())
       case _ =>
         syntaxError("`=', `>:', or `<:' expected")
@@ -2097,6 +2071,19 @@ abstract class Parser { parser =>
    */
   def classDef(mods: List[Mod]): Defn.Class = {
     in.nextToken()
+    // TODO:
+    // if (ofCaseClass && in.token != LPAREN)
+    //  syntaxError(in.lastOffset, "case classes without a parameter list are not allowed;\n"+
+    //                             "use either case objects or case classes with an explicit `()' as a parameter list.")
+    // TODO:
+    // if (owner == nme.CONSTRUCTOR && (result.isEmpty || (result.head take 1 exists (_.mods.isImplicit)))) {
+    //  in.token match {
+    //    case LBRACKET   => syntaxError("no type parameters allowed here")
+    //    case EOF        => incompleteInputError("auxiliary constructor needs non-implicit parameter list")
+    //    case _          => syntaxError(start, "auxiliary constructor needs non-implicit parameter list")
+    //  }
+    // }
+
     Defn.Class(mods, typeIdent(),
                typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = true),
                primaryCtor(), templateOpt[Defn.Class]())
@@ -2104,7 +2091,7 @@ abstract class Parser { parser =>
 
   def primaryCtor(): Ctor.Primary = {
     val mods = constructorAnnots() ++ accessModifierOpt()
-    val (paramss, implicits) = paramClauses[Ctor.Primary]()
+    val (paramss, implicits) = paramClauses(ownerIsType = true)
     Ctor.Primary(mods, paramss, implicits)
   }
 
@@ -2285,14 +2272,17 @@ abstract class Parser { parser =>
       val first = expr(InTemplate) // @S: first statement is potentially converted so cannot be stubbed.
       if (in.token == ARROW) {
         first match {
+          case Term.Placeholder() =>
+            self = Aux.Self.empty
+          case id: Ident =>
+            self = Aux.Self(Some(id.toTermIdent), None)
+          case Term.Ascribe(id: Ident, tpt) =>
+            self = Aux.Self(Some(id.toTermIdent), Some(tpt))
+          case Term.Ascribe(Term.Placeholder(), tpt) =>
+            self = Aux.Self(None, Some(tpt))
           case Term.Ascribe(tree @ Term.This(None), tpt) =>
             self = Aux.Self(None, Some(tpt))
           case _ =>
-            convertToParam(first) match {
-              case param @ Aux.Param(_, name, tpt, _) =>
-                self = Aux.Self(name, tpt)
-              case _ =>
-            }
         }
         in.nextToken()
       } else {

@@ -125,7 +125,14 @@ package core {
     @leaf class Eta(term: Term) extends Term
   }
 
-  @branch trait Type extends Tree {
+
+  @branch trait ParamType extends Tree
+  object ParamType {
+    @leaf class ByName(tpe: Type) extends ParamType
+    @leaf class Repeated(tpe: Type) extends ParamType
+  }
+
+  @branch trait Type extends ParamType {
     def <:< (other: Type): Boolean = ???
     def weak_<:<(other: Type): Boolean = ???
     def widen: Type = ???
@@ -152,13 +159,14 @@ package core {
     }
     // TODO: validate that tpe can actually be applied
     @leaf class Apply(tpe: Type, args: List[Type] @nonEmpty) extends Type
-    @leaf class Function(params: List[Type], res: Type) extends Type
+    @leaf class Function(params: List[ParamType], res: Type) extends Type
     @leaf class Tuple(elements: List[Type] @nonEmpty) extends Type
     @leaf class Compound(tpes: List[Type], refinement: List[Stmt.Refine]) extends Type
     @leaf class Existential(tpe: Type, quants: List[Stmt.Existential] @nonEmpty) extends Type
     @leaf class Annotate(tpe: Type, mods: List[Mod] @nonEmpty) extends Type with Has.Mods
     // (Denys) TODO: need to validate that placeholder appears within one of allowed contexts (e.g. `type T = _` is illegal)
     @leaf class Placeholder(bounds: Aux.TypeBounds) extends Type
+
   }
 
   // TODO: how should tpe look like? inTpe/outTpe?
@@ -376,8 +384,6 @@ package core {
     @leaf class Lazy() extends Mod
     @leaf class AbstractOverride() extends Mod
     @leaf class Macro() extends Mod
-    @leaf class ByNameParam() extends Mod
-    @leaf class VarargParam() extends Mod
     @leaf class ValParam() extends Mod
     @leaf class VarParam() extends Mod
   }
@@ -394,7 +400,7 @@ package core {
       def mods: List[Mod] = Nil
     }
     @leaf class Param(mods: List[Mod] = Nil, name: Option[Term.Ident] = None,
-                      decltpe: Option[Type] = None, default: Option[Term] = None) extends Symbol
+                      decltpe: Option[ParamType] = None, default: Option[Term] = None) extends Symbol
     @leaf class TypeParam(mods: List[Mod] = Nil,
                           name: Option[core.Type.Ident] = None,
                           tparams: List[Aux.TypeParam] = Nil,

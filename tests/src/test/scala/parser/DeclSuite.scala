@@ -74,4 +74,58 @@ class DeclSuite extends ParseSuite {
                             Nil, Nil, Nil, TypeBounds.empty) :: Nil,
                   TypeBounds.empty) = templStat("type F[-T]")
   }
+
+  test("def f") {
+    val Decl.Procedure(Nil, Term.Ident("f", false), Nil, Nil, Nil) =
+      templStat("def f")
+  }
+
+  test("def f(x: Int)") {
+    val Decl.Procedure(Nil, Term.Ident("f", false), Nil,
+                       (Param(Nil,
+                              Some(Term.Ident("x", false)),
+                              Some(Type.Ident("Int", false)),
+                              None) :: Nil) :: Nil, Nil) =
+      templStat("def f(x: Int)")
+  }
+
+  test("def f(x: Int*)") {
+    val Decl.Procedure(Nil, Term.Ident("f", false), Nil,
+                       (Param(Nil,
+                              Some(Term.Ident("x", false)),
+                              Some(ParamType.Repeated(Type.Ident("Int", false))),
+                              None) :: Nil) :: Nil, Nil) =
+      templStat("def f(x: Int*)")
+  }
+
+  test("def f(x: => Int)") {
+    val Decl.Procedure(Nil, Term.Ident("f", false), Nil,
+                       (Param(Nil,
+                              Some(Term.Ident("x", false)),
+                              Some(ParamType.ByName(Type.Ident("Int", false))),
+                              None) :: Nil) :: Nil, Nil) =
+      templStat("def f(x: => Int)")
+  }
+
+
+  test("def f(implicit x: Int)") {
+    val Decl.Procedure(Nil, Term.Ident("f", false), Nil, Nil,
+                       Param(Nil,
+                              Some(Term.Ident("x", false)),
+                              Some(Type.Ident("Int", false)),
+                              None) :: Nil) =
+      templStat("def f(implicit x: Int)")
+  }
+
+  test("def f: X") {
+    val Decl.Def(Nil, Term.Ident("f", false), Nil, Nil, Nil, Type.Ident("X", false)) =
+      templStat("def f: X")
+  }
+
+  test("def f[T]: T") {
+    val Decl.Def(Nil, Term.Ident("f", false),
+                 TypeParam(Nil, Some(Type.Ident("T", false)), Nil, Nil, Nil, TypeBounds.empty) :: Nil,
+                 Nil, Nil, Type.Ident("T", false)) =
+      templStat("def f[T]: T")
+  }
 }
