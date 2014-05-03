@@ -1759,53 +1759,63 @@ abstract class Parser { parser =>
    *  TypeParam             ::= Id TypeParamClauseOpt TypeBounds {<% Type} {":" Type}
    *  }}}
    */
-  def typeParamClauseOpt[Owner <: Symbol](): List[Aux.TypeParam] = Nil
-  /*{
-    def typeParam(ms: List[Mod]): TypeDef = {
-      var mods = ms | Flags.PARAM
-      val start = in.offset
-      if (owner.isTypeName && isIdent) {
-        if (in.name == raw.PLUS) {
-          in.nextToken()
-          mods |= Flags.COVARIANT
-        } else if (in.name == raw.MINUS) {
-          in.nextToken()
-          mods |= Flags.CONTRAVARIANT
-        }
-      }
-      val nameOffset = in.offset
-      val pname: TypeName = wildcardOrIdent().toTypeName
-      val param = {
-        val tparams = typeParamClauseOpt(pname, null) // @M TODO null --> no higher-order context bounds for now
-        TypeDef(mods, pname, tparams, typeBounds())
-      }
-      if (contextBoundBuf ne null) {
-        while (in.token == VIEWBOUND) {
-          val msg = "Use an implicit parameter instead.\nExample: Instead of `def f[A <% Int](a: A)` use `def f[A](a: A)(implicit ev: A => Int)`."
-          if (settings.future)
-            deprecationWarning(s"View bounds are deprecated. $msg")
-          in.skipToken()
-          contextBoundBuf += Type.Function(List(Ident(pname)), typ())
-        }
-        while (in.token == COLON) {
-          in.skipToken()
-          contextBoundBuf += {
-            AppliedTypeTree(typ(), List(Ident(pname)))
-          }
-        }
-      }
-      param
-    }
+  def typeParamClauseOpt(ownerIsType: Boolean, ctxBoundsAllowed: Boolean): List[Aux.TypeParam] = {
     newLineOptWhenFollowedBy(LBRACKET)
-    if (in.token == LBRACKET) inBrackets(commaSeparated(typeParam(NoMods withAnnotations annots(skipNewLines = true))))
-    else Nil
-  }*/
+    if (in.token != LBRACKET) Nil
+    else inBrackets(commaSeparated {
+      val mods = annots(skipNewLines = true)
+      typeParam(mods, ownerIsType, ctxBoundsAllowed)
+    })
+  }
+
+  def typeParam(mods: List[Mod], ownerIsType: Boolean, ctxBoundsAllowed: Boolean): Aux.TypeParam = {
+    val mods1 =
+      if (ownerIsType && isIdent) {
+        if (in.name == "+") {
+          in.nextToken()
+          mods :+ Mod.Covariant()
+        } else if (in.name == "-") {
+          in.nextToken()
+          mods :+ Mod.Contravariant()
+        } else mods
+      } else mods
+    val nameopt: Option[Type.Ident] =
+      if (isIdent) Some(typeIdent())
+      else if (in.token == USCORE) { in.nextToken(); None }
+      else syntaxError("identifier or `_' expected")
+    val contextBounds = new ListBuffer[Type]
+    val viewBounds = new ListBuffer[Type]
+    if (ctxBoundsAllowed) {
+      while (in.token == VIEWBOUND) {
+        if (settings.future) {
+          val msg = ("Use an implicit parameter instead. " +
+                     "Example: Instead of `def f[A <% Int](a: A)` " +
+                     "use `def f[A](a: A)(implicit ev: A => Int)`.")
+          deprecationWarning(s"View bounds are deprecated. $msg")
+        }
+        in.nextToken()
+        viewBounds += typ()
+      }
+      while (in.token == COLON) {
+        in.nextToken()
+        contextBounds += typ()
+      }
+    }
+    val tparams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
+    val bounds = typeBounds()
+    Aux.TypeParam(mods1, nameopt, tparams, contextBounds.toList, viewBounds.toList, bounds)
+  }
 
   /** {{{
    *  TypeBounds ::= [`>:' Type] [`<:' Type]
    *  }}}
    */
-  def typeBounds(): Aux.TypeBounds = Aux.TypeBounds(bound(SUPERTYPE), bound(SUBTYPE))
+  def typeBounds(): Aux.TypeBounds = {
+    val lo = bound(SUPERTYPE)
+    val hi = bound(SUBTYPE)
+    if (lo.nonEmpty || hi.nonEmpty) Aux.TypeBounds(lo, hi)
+    else Aux.TypeBounds.empty
+  }
 
   def bound(tok: Token): Option[Type] =
     if (in.token == tok) { in.nextToken(); Some(typ()) } else None
@@ -1960,7 +1970,7 @@ abstract class Parser { parser =>
   def funDefRest(mods: List[Mod], name: Term.Ident): Symbol.Def = {
     def warnProcedureDeprecation =
       deprecationWarning(in.lastOffset, s"Procedure syntax is deprecated. Convert procedure `$name` to method by adding `: Unit`.")
-    val tparams = typeParamClauseOpt()
+    val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
     val (paramss, implicits) = paramClauses()
     newLineOptWhenFollowedBy(LBRACE)
     var restype = fromWithinReturnType(typedOpt())
@@ -2040,7 +2050,7 @@ abstract class Parser { parser =>
     in.nextToken()
     newLinesOpt()
     val name = typeIdent()
-    val tparams = typeParamClauseOpt()
+    val tparams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
     in.token match {
       case EQUALS =>
         in.nextToken()
@@ -2087,7 +2097,9 @@ abstract class Parser { parser =>
    */
   def classDef(mods: List[Mod]): Defn.Class = {
     in.nextToken()
-    Defn.Class(mods, typeIdent(), typeParamClauseOpt(), primaryCtor(), templateOpt[Defn.Class]())
+    Defn.Class(mods, typeIdent(),
+               typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = true),
+               primaryCtor(), templateOpt[Defn.Class]())
   }
 
   def primaryCtor(): Ctor.Primary = {
@@ -2102,7 +2114,9 @@ abstract class Parser { parser =>
    */
   def traitDef(mods: List[Mod]): Defn.Trait = {
     in.nextToken()
-    Defn.Trait(mods, typeIdent(), typeParamClauseOpt(), templateOpt[Defn.Trait]())
+    Defn.Trait(mods, typeIdent(),
+               typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false),
+               templateOpt[Defn.Trait]())
   }
 
   /** {{{

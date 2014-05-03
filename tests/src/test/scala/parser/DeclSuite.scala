@@ -43,14 +43,35 @@ class DeclSuite extends ParseSuite {
                              Some(Type.Ident("hi", false)))) = templStat("type T >: lo <: hi")
   }
 
-  // TODO:
-  // test("type F[T]") {
-  //  val Decl.Type(Nil, Type.Ident("T", false),
-  //                TypeParam(Nil, Some(Type.Ident("T", false)), Nil, Nil, Nil, TypeBounds.empty) :: Nil,
-  //                TypeBounds.empty) = templStat("type F[T]")
-  // }
+  test("type F[T]") {
+   val Decl.Type(Nil, Type.Ident("F", false),
+                 TypeParam(Nil, Some(Type.Ident("T", false)),
+                           Nil, Nil, Nil, TypeBounds.empty) :: Nil,
+                 TypeBounds.empty) = templStat("type F[T]")
+  }
 
-  // TODO: type F[_]
-  // TODO: type F[A <: B]
-  // TODO: type F[+T]
+  test("type F[_]") {
+    val Decl.Type(Nil, Type.Ident("F", false),
+                  TypeParam(Nil, None, Nil, Nil, Nil, TypeBounds.empty) :: Nil,
+                  TypeBounds.empty) = templStat("type F[_]")
+  }
+
+  test("type F[A <: B]") {
+    val Decl.Type(Nil, Type.Ident("F", false),
+                  TypeParam(Nil, Some(Type.Ident("T", false)),
+                            Nil, Nil, Nil,
+                            TypeBounds(None, Some(Type.Ident("B", false)))) :: Nil,
+                  TypeBounds.empty) = templStat("type F[T <: B]")
+  }
+
+  test("type F[+T]") {
+    val Decl.Type(Nil, Type.Ident("F", false),
+                  TypeParam(Mod.Covariant() :: Nil, Some(Type.Ident("T", false)),
+                            Nil, Nil, Nil, TypeBounds.empty) :: Nil,
+                  TypeBounds.empty) = templStat("type F[+T]")
+    val Decl.Type(Nil, Type.Ident("F", false),
+                  TypeParam(Mod.Contravariant() :: Nil, Some(Type.Ident("T", false)),
+                            Nil, Nil, Nil, TypeBounds.empty) :: Nil,
+                  TypeBounds.empty) = templStat("type F[-T]")
+  }
 }
