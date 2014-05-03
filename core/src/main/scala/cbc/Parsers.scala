@@ -704,36 +704,35 @@ abstract class Parser { parser =>
    */
   // TODO: foo.this can be either term or type name depending on the context
   // TODO: this has to be rewritten
-  def path(thisOK: Boolean = true): Term.Ref =
+  def path(thisOK: Boolean = true): Term.Ref = {
+    def stop = in.token != DOT || lookingAhead { in.token != THIS && in.token != SUPER && !isIdent }
     if (in.token == THIS) {
       in.nextToken()
       val thisnone = Term.This(None)
-      if (!thisOK || in.token == DOT) {
+      if (stop && thisOK) thisnone
+      else {
         accept(DOT)
         selectors(thisnone)
-      } else {
-        thisnone
       }
     } else if (in.token == SUPER) {
       in.nextToken()
       val mixinQual = mixinQualifierOpt()
       accept(DOT)
       val supersel = Term.SuperSelect(None, mixinQual, ident())
-      if (in.token == DOT) {
+      if (stop) supersel
+      else {
         in.skipToken()
         selectors(supersel)
-      } else {
-        supersel
       }
     } else {
       val id = ident()
-      if (in.token != DOT || lookingAhead { in.token == TYPE }) id
+      if (stop) id
       else {
         in.nextToken()
         if (in.token == THIS) {
           in.nextToken()
           val thisid = Term.This(Some(id.toTypeIdent))
-          if (thisOK && in.token != DOT) thisid
+          if (stop && thisOK) thisid
           else {
             accept(DOT)
             selectors(thisid)
@@ -743,7 +742,7 @@ abstract class Parser { parser =>
           val mixinQual = mixinQualifierOpt()
           accept(DOT)
           val supersel = Term.SuperSelect(Some(id.toTypeIdent), mixinQual, ident())
-          if (in.token != DOT) supersel
+          if (stop) supersel
           else {
             in.skipToken()
             selectors(supersel)
@@ -753,11 +752,12 @@ abstract class Parser { parser =>
         }
       }
     }
+  }
 
   def selector(t: Term): Term.Select = Term.Select(t, ident())
   def selectors(t: Term.Ref): Term.Ref ={
     val t1 = selector(t)
-    if (in.token == DOT) {
+    if (in.token == DOT && lookingAhead { isIdent }) {
       in.nextToken()
       selectors(t1)
     }
@@ -1816,8 +1816,13 @@ abstract class Parser { parser =>
    */
   def importClause(): Import.Clause = {
     val sid = stableId()
-    accept(DOT)
-    Import.Clause(sid, importSelectors())
+    def dotselectors = { accept(DOT); Import.Clause(sid, importSelectors()) }
+    sid match {
+      case Term.Select(sid: Term.Ref, id: Term.Ident) if sid.isStableId =>
+        if (in.token == DOT) dotselectors
+        else Import.Clause(sid, Import.Selector.Name(id.value) :: Nil)
+      case _ => dotselectors
+    }
   }
 
   /** {{{
