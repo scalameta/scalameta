@@ -104,6 +104,7 @@ package core {
     @leaf class Ascribe(expr: Term, acsribedTpe: Type) extends Term
     @leaf class Annotate(expr: Term, mods: List[Mod] @nonEmpty) extends Term with Has.Mods
     @leaf class Tuple(elements: List[Term] @nonEmpty) extends Term
+    // TODO: automatically flatten blocks with just a single term?
     @leaf class Block(stats: List[Stmt.Block]) extends Term
     @leaf class If(cond: Term, thenp: Term, elsep: Option[Term]) extends Term
     @leaf class Match(scrut: Term, cases: Cases) extends Term
@@ -120,7 +121,7 @@ package core {
     }
     @leaf class ForYield(enums: List[Enum] @nonEmpty, body: Term) extends Term
     @leaf class New(templ: Aux.Template) extends Term
-    // (Denys) TODO: might need additional validation
+    // (Denys) TODO: needs additional validation
     @leaf class Placeholder() extends Term
     @leaf class Eta(term: Term) extends Term
   }
@@ -259,7 +260,7 @@ package core {
                           tparams: List[Aux.TypeParam],
                           explicits: List[List[Aux.Param]],
                           implicits: List[Aux.Param],
-                          body: Term.Block) extends Defn with Symbol.Def
+                          body: Term) extends Defn with Symbol.Def
     @leaf class Type(mods: List[Mod],
                      name: core.Type.Ident,
                      tparams: List[Aux.TypeParam],

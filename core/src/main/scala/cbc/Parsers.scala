@@ -1224,12 +1224,17 @@ abstract class Parser { parser =>
     }
   }
 
+  def mkBlock(stats: List[Stmt.Block]): Term = stats match {
+    case (t: Term) :: Nil => t
+    case _                => Term.Block(stats)
+  }
+
   /** {{{
    *  Block ::= BlockStatSeq
    *  }}}
    *  @note  Return tree does not carry position.
    */
-  def block(): Term.Block = Term.Block(blockStatSeq())
+  def block(): Term = mkBlock(blockStatSeq())
 
   def caseClause(): Aux.Case =
     Aux.Case(pattern(), guard(), caseBlock())
@@ -1250,9 +1255,8 @@ abstract class Parser { parser =>
   def caseBlock(): Option[Term] = {
     accept(ARROW)
     blockStatSeq() match {
-      case Nil                 => None
-      case (stat: Term) :: Nil => Some(stat)
-      case stats               => Some(Term.Block(stats))
+      case Nil   => None
+      case stats => Some(mkBlock(stats))
     }
   }
 

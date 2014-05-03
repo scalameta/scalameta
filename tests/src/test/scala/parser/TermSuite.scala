@@ -81,9 +81,8 @@ class TermSuite extends ParseSuite {
     val Block(Lit.True() :: Lit.False() :: Nil) = term("{ true; false }")
   }
 
-  // TODO: collapse single-element blocks as trivia?
   test("{ true }") {
-    val Block(Lit.True() :: Nil) = term("{ true }")
+    val Lit.True() = term("{ true }")
   }
 
   test("if (true) true else false") {
@@ -113,10 +112,9 @@ class TermSuite extends ParseSuite {
     val Function(Param.empty :: Nil, Lit.Unit()) = term("_ => ()")
   }
 
-  // TODO: too much blocks?
   test("implicit x => ()") {
-    val Block(Function(Param(Mod.Implicit() :: Nil, Some(Ident("x", false)), None, None) :: Nil,
-                       Block(Lit.Unit() :: Nil)) :: Nil) = term("{ implicit x => () }")
+    val Function(Param(Mod.Implicit() :: Nil, Some(Ident("x", false)), None, None) :: Nil,
+                       Lit.Unit()) = term("{ implicit x => () }")
   }
 
   test("1 match { case 1 => true }") {
