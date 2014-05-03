@@ -24,7 +24,7 @@ object ParserInfo {
   def isUnaryOp(s: String): Boolean = unaryOps contains s
   implicit class IdentInfo(val id: Ident) extends AnyVal {
     import id._
-    def isRightAssocOp: Boolean = value.last != ':'
+    def isLeftAssoc: Boolean = value.last != ':'
     def isUnaryOp: Boolean = ParserInfo.isUnaryOp(value)
     def isAssignmentOp = value match {
       case "!=" | "<=" | ">=" | "" => false
@@ -434,7 +434,7 @@ abstract class Parser { parser =>
           case Term.Tuple(args) => args map assignmentToMaybeNamedArg
           case _                => List(rhs)
         }
-        if (!opinfo.operator.isRightAssocOp) {
+        if (!opinfo.operator.isLeftAssoc) {
           Term.ApplyRight(opinfo.lhs, opinfo.operator, opinfo.targs, rhs)
         } else {
           val select = Term.Select(opinfo.lhs, opinfo.operator)
@@ -464,7 +464,7 @@ abstract class Parser { parser =>
   def checkHeadAssoc[T: OpCtx](leftAssoc: Boolean) = checkAssoc(opctx.head.operator, leftAssoc)
 
   def checkAssoc(op: Ident, leftAssoc: Boolean): Unit = (
-    if (op.isRightAssocOp == leftAssoc)
+    if (op.isLeftAssoc != leftAssoc)
       syntaxError("left- and right-associative operators with same precedence may not be mixed")
   )
 
@@ -476,7 +476,7 @@ abstract class Parser { parser =>
   def reduceStack[T: OpCtx](base: List[OpInfo[T]], top: T): T = {
     val id           = Term.Ident(in.name)
     val opPrecedence = if (isIdent) id.precedence else 0
-    val leftAssoc    = !isIdent || !id.isRightAssocOp
+    val leftAssoc    = !isIdent || id.isLeftAssoc
 
     reduceStack(base, top, opPrecedence, leftAssoc)
   }
@@ -645,7 +645,7 @@ abstract class Parser { parser =>
     def infixTypeRest(t: Type, mode: InfixMode.Value): Type = {
       if (isIdent && in.name != "*") {
         val id = Term.Ident(in.name)
-        val leftAssoc = !id.isRightAssocOp
+        val leftAssoc = id.isLeftAssoc
         if (mode != InfixMode.FirstOp) checkAssoc(id, leftAssoc = mode == InfixMode.LeftOp)
         val op = typeIdent()
         newLineOptWhenFollowing(isTypeIntroToken)

@@ -5,6 +5,9 @@ class TermSuite extends ParseSuite {
 
   test("x") {
     val Ident("x", false) = term("x")
+  }
+
+  test("`x`") {
     val Ident("x", true) = term("`x`")
   }
 
@@ -14,16 +17,28 @@ class TermSuite extends ParseSuite {
 
   test("foo.this") {
     val This(Some(Type.Ident("foo", false))) = term("foo.this")
+  }
+
+  test("this") {
     val This(None) = term("this")
   }
 
   test("a.super[b].c") {
     val SuperSelect(Some(Type.Ident("a", false)), Some(Type.Ident("b", false)),
                     Ident("c", false)) = term("a.super[b].c")
+  }
+
+  test("super[b].c") {
     val SuperSelect(None, Some(Type.Ident("b", false)),
                     Ident("c", false)) = term("super[b].c")
+  }
+
+  test("a.super.c") {
     val SuperSelect(Some(Type.Ident("a", false)), None,
                     Ident("c", false)) = term("a.super.c")
+  }
+
+  test("super.c") {
     val SuperSelect(None, None, Ident("c", false)) = term("super.c")
   }
 
@@ -41,8 +56,17 @@ class TermSuite extends ParseSuite {
               Ident("b", false) :: Nil) = term("a + b")
   }
 
+  test("a + b + c") {
+    val Apply(Select(Apply(Select(Ident("a", false), Ident("+", false)), Ident("b", false) :: Nil), Ident("+", false)), Ident("c", false) :: Nil) = term("a + b + c")
+  }
+
   test("a :: b") {
     val ApplyRight(Ident("a", false), Ident("::", false), Nil, Ident("b", false)) = term("a :: b")
+  }
+
+  test("a :: b :: c") {
+    val ApplyRight(Ident("a", false), Ident("::", false), Nil,
+                   ApplyRight(Ident("b", false), Ident("::", false), Nil, Ident("c", false))) = term("a :: b :: c")
   }
 
   test("!a") {
