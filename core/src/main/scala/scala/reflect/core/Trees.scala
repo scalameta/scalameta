@@ -244,7 +244,7 @@ package core {
                     pats: List[Pat] @nonEmpty,
                     decltpe: Option[core.Type],
                     rhs: Option[Term]) extends Defn with Symbol.Var {
-      require(rhs.nonEmpty || pats.forall(_.isInstanceOf[Term.Ident]))
+      require(rhs.isEmpty ==> pats.forall(_.isInstanceOf[Term.Ident]))
       require(decltpe.nonEmpty || rhs.nonEmpty)
     }
     @leaf class Def(mods: List[Mod],
@@ -399,6 +399,7 @@ package core {
     @leaf class Self(name: Option[Term.Ident] = None, tpe: Option[Type] = None) extends Symbol {
       def mods: List[Mod] = Nil
     }
+    // TODO: only non-implicit non-val/var parameters may be by name
     @leaf class Param(mods: List[Mod] = Nil, name: Option[Term.Ident] = None,
                       decltpe: Option[ParamType] = None, default: Option[Term] = None) extends Symbol
     @leaf class TypeParam(mods: List[Mod] = Nil,

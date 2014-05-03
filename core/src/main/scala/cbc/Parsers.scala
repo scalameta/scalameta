@@ -1897,8 +1897,7 @@ abstract class Parser { parser =>
     if (tp.isEmpty || in.token == EQUALS) {
       accept(EQUALS)
       val rhs =
-        if (in.token == USCORE && !tp.isEmpty && isMutable &&
-            (lhs.toList forall (_.isInstanceOf[Term.Ident]))) {
+        if (in.token == USCORE && tp.nonEmpty && isMutable && lhs.forall(_.isInstanceOf[Term.Ident])) {
           in.nextToken()
           None
         } else Some(expr())
