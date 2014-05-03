@@ -15,9 +15,17 @@ class PatSuite extends ParseSuite {
     val Ident("a", false) = pat("a")
   }
 
-  // TODO:
-  // test("a: Int") { }
-  // test("_: Foo[t]") { }
+  test("a: Int") {
+    val Typed(Ident("a", false), Type.Ident("Int", false)) = pat("a: Int")
+  }
+
+  test("_: Int") {
+    val Typed(Wildcard(), Type.Ident("Int", false)) = pat("_: Int")
+  }
+
+  test("_: F[t]") {
+    val Typed(Wildcard(), Type.Apply(Type.Ident("F", false), Type.Ident("t", false) :: Nil)) = pat("_: F[t]")
+  }
 
   test("foo(x)") {
     val Extract(Ident("foo", false), Nil, Ident("x", false) :: Nil) = pat("foo(x)")

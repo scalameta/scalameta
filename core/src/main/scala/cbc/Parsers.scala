@@ -1370,13 +1370,14 @@ abstract class Parser { parser =>
      *  }}}
      */
     def pattern1(): Pat = pattern2() match {
-      case id: Term.Ident if in.token == COLON =>
-        if (!id.isVarPattern)
-          syntaxError("Pattern variables must start with a lower-case letter. (SLS 8.1.1.)")
-        else {
-          in.skipToken()
-          Pat.Typed(id, compoundType())
+      case p @ (_: Term.Ident | _: Pat.Wildcard) if in.token == COLON =>
+        p match {
+          case id: Term.Ident if !id.isVarPattern =>
+            syntaxError("Pattern variables must start with a lower-case letter. (SLS 8.1.1.)")
+          case _ =>
         }
+        in.nextToken()
+        Pat.Typed(p, compoundType())
       case p => p
     }
 
