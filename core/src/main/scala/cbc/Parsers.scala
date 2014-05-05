@@ -1148,7 +1148,7 @@ abstract class Parser { parser =>
         case NEW =>
           canApply = false
           // TODO: right entry point for templates?
-          Term.New(templateOpt())
+          Term.New(templateOpt(OwnedByClass))
         case _ =>
           syntaxError("illegal start of simple expression")
       }
@@ -1715,6 +1715,7 @@ abstract class Parser { parser =>
       in.token match {
         case VAL => mods = mods :+ Mod.ValParam(); in.nextToken()
         case VAR => mods = mods :+ Mod.VarParam(); in.nextToken()
+        case _   =>
       }
     }
     val name = ident()
@@ -2109,7 +2110,7 @@ abstract class Parser { parser =>
 
     Defn.Class(mods, typeIdent(),
                typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = true),
-               primaryCtor(), templateOpt[Defn.Class]())
+               primaryCtor(), templateOpt(OwnedByClass))
   }
 
   def primaryCtor(): Ctor.Primary = {
@@ -2126,8 +2127,16 @@ abstract class Parser { parser =>
     in.nextToken()
     Defn.Trait(mods, typeIdent(),
                typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false),
-               templateOpt[Defn.Trait]())
+               templateOpt(OwnedByTrait))
   }
+
+  sealed trait TemplateOwner {
+    def isTerm = this eq OwnedByObject
+    def isTrait = this eq OwnedByTrait
+  }
+  object OwnedByTrait extends TemplateOwner
+  object OwnedByClass extends TemplateOwner
+  object OwnedByObject extends TemplateOwner
 
   /** {{{
    *  ObjectDef       ::= Id ClassTemplateOpt
@@ -2135,7 +2144,7 @@ abstract class Parser { parser =>
    */
   def objectDef(mods: List[Mod]): Defn.Object = {
     in.nextToken()
-    Defn.Object(mods, ident(), templateOpt[Defn.Object]())
+    Defn.Object(mods, ident(), templateOpt(OwnedByObject))
   }
 
   /** {{{
@@ -2170,7 +2179,7 @@ abstract class Parser { parser =>
       // @S: pre template body cannot stub like post body can!
       val (self, body) = templateBody(isPre = true)
       if (in.token == WITH && (self eq Aux.Self.empty)) {
-        val edefs: List[Defn.Val] = earlyDefs()
+        val edefs: List[Defn.Val] = body.map(ensureEarlyDef)
         in.nextToken()
         val parents = templateParents()
         val (self1, body1) = templateBodyOpt(parenMeansSyntaxError = false)
@@ -2185,7 +2194,14 @@ abstract class Parser { parser =>
     }
   }
 
-  def earlyDefs(): List[Defn.Val] = ???
+  def ensureEarlyDef(tree: Stmt.Template): Defn.Val = tree match {
+    case v: Defn.Val => v
+    case t: Defn.Type =>
+      syntaxError(t, "early type members are not allowed any longer. " +
+                     "Move them to the regular body: the semantics are the same.")
+    case other =>
+      syntaxError(other, "not a valid early definition")
+  }
 
   /** {{{
    *  ClassTemplateOpt ::= `extends' ClassTemplate | [[`extends'] TemplateBody]
@@ -2193,21 +2209,22 @@ abstract class Parser { parser =>
    *  TraitExtends     ::= `extends' | `<:'
    *  }}}
    */
-  def templateOpt[Owner <: Stmt.Template](): Aux.Template = {
-    val (early, parents, self, body): (List[Defn.Val], List[Aux.Parent], Aux.Self, List[Stmt.Template]) = (
+  def templateOpt(owner: TemplateOwner): Aux.Template = {
+    val (early, parents, self, body) = (
       if (in.token == EXTENDS /* || in.token == SUBTYPE && mods.isTrait */) {
         in.nextToken()
         template()
       }
       else {
         newLineOptWhenFollowedBy(LBRACE)
-        val (self, body) = templateBodyOpt(parenMeansSyntaxError = ??? /* mods.isTrait || name.isTermName */)
+        val (self, body) = templateBodyOpt(parenMeansSyntaxError = owner.isTrait || owner.isTerm)
         // TODO: validate that nils here corerspond to the source code
         (Nil, Nil, self, body)
       }
     )
 
-    Aux.Template(early, parents, self, body)
+    if (early.isEmpty && parents.isEmpty && (self eq Aux.Self.empty) && body.isEmpty) Aux.Template.empty
+    else Aux.Template(early, parents, self, body)
   }
 
 /* -------- TEMPLATES ------------------------------------------- */

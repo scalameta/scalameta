@@ -91,4 +91,10 @@ class TypeSuite extends ParseSuite {
                     Decl.Type(Nil, Ident("T", false), Nil, TypeBounds.empty) :: Nil) =
       tpe("F[T] forSome { type T }")
   }
+
+  test("a.T forSome { val a: A }") {
+    val Existential(Select(Term.Ident("a", false), Type.Ident("T", false)),
+                    Decl.Val(Nil, Term.Ident("a", false) :: Nil, Type.Ident("A", false)) :: Nil) =
+      tpe("a.T forSome { val a: A }")
+  }
 }

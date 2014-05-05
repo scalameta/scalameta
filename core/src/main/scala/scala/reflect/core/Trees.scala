@@ -276,6 +276,7 @@ package core {
                       name: core.Type.Ident,
                       tparams: List[Aux.TypeParam],
                       templ: Aux.Template) extends Defn with Symbol.Template {
+      require(templ.stats.forall(!_.isInstanceOf[Ctor]))
       require(templ.parents.forall(_.argss.isEmpty))
       def isInterface: Boolean = templ.stats.forall(_.isInstanceOf[Decl])
       def companion: Option[Object] = ???
