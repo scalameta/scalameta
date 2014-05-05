@@ -9,12 +9,6 @@ class ParseSuite extends FunSuite {
   def tpe = parse(_.typ())
   def topStat = parse(p => p.topStat(p.in.token))
   def templStat = parse(p => p.templateStat(p.in.token))
-  def localStat = parse { p =>
-    p.blockStatSeq() match {
-      case stat :: Nil => stat
-      case _           => throw new Exception("got too many statements")
-    }
-  }
-  def refineStat = ???
-  def existentialStat = ???
+  def compUnit = parse(_.compilationUnit())
+
 }

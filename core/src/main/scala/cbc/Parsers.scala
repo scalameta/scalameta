@@ -795,16 +795,14 @@ abstract class Parser { parser =>
   *   QualId ::= Id {`.' Id}
   *   }}}
   */
-  def qualId(): Term.Ref = ???
-  /*{
-    val start = in.offset
+  def qualId(): Term.Ref = {
     val id = ident()
-    if (in.token == DOT) {
+    if (in.token != DOT) id
+    else {
       in.skipToken()
-      selectors(id, typeOK = false)
+      selectors(id)
     }
-    else id
-  }*/
+  }
 
   /** {{{
    *  SimpleExpr    ::= literal
@@ -2430,14 +2428,15 @@ abstract class Parser { parser =>
 
 
   def packageOrPackageObject(): Pkg with Stmt.TopLevel =
-    if (in.token == OBJECT)
+    if (in.token == OBJECT) {
+      in.nextToken()
       packageObject()
-    else {
+    } else {
       Pkg.Named(qualId(), inBracesOrNil(topStatSeq()))
     }
 
-  def packageObject(): Pkg.Object = ???
-  // makePackageObject(objectDef(NoMods))
+  def packageObject(): Pkg.Object =
+    Pkg.Object(Nil, ident(), templateOpt(OwnedByObject))
 
   /** {{{
    *  CompilationUnit ::= {package QualId semi} TopStatSeq
@@ -2450,6 +2449,7 @@ abstract class Parser { parser =>
       if (in.token == PACKAGE) {
         in.nextToken()
         if (in.token == OBJECT) {
+          in.nextToken()
           ts += packageObject()
           if (in.token != EOF) {
             acceptStatSep()
