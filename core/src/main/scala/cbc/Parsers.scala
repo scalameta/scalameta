@@ -7,7 +7,7 @@ import cbc.util.Chars.{isOperatorPart, isScalaLetter}
 import cbc.Tokens._
 import cbc.TokenInfo._
 import scala.reflect.core.{Tree, Term, Pat, Type, Defn, Decl, Lit, Stmt,
-                           Import, Aux, Ident, RichMods, Mod, Enum, Ctor,
+                           Import, Aux, Ident, Mod, Enum, Ctor,
                            Arg, Pkg, Symbol, ParamType}
 import scala.reflect.ClassTag
 
@@ -51,6 +51,12 @@ object ParserInfo {
       case _             => false
     }
     def isInterpolationId: Boolean = ???
+  }
+  implicit class RichMods(val mods: List[Mod]) extends AnyVal {
+    def has[T <: Mod](implicit tag: ClassTag[T]): Boolean =
+      mods.exists { _.getClass == tag.runtimeClass }
+    def getAll[T <: Mod](implicit tag: ClassTag[T]): List[T] =
+      mods.collect { case m if m.getClass == tag.runtimeClass => m.asInstanceOf[T] }
   }
 }
 import ParserInfo._
@@ -235,6 +241,10 @@ abstract class Parser { parser =>
   def warning(msg: String): Unit = warning(in.offset, msg)
   def deprecationWarning(msg: String): Unit = deprecationWarning(in.offset, msg)
 
+  // TODO: get offset out of tree once we have positions
+  def syntaxError(tree: Tree, msg: String): Nothing = syntaxError(msg)
+  def warning(tree: Tree, msg: String): Unit = deprecationWarning(msg)
+
   def expectedMsgTemplate(exp: String, fnd: String) = s"$exp expected but $fnd found."
   def expectedMsg(token: Token): String = expectedMsgTemplate(token2string(token), token2string(in.token))
 
@@ -348,8 +358,8 @@ abstract class Parser { parser =>
       Aux.Param(name = Some(id.toTermIdent), decltpe = Some(tpt))
     case Term.Ascribe(Term.Placeholder(), tpt) =>
       Aux.Param(decltpe = Some(tpt))
-    case _ =>
-      syntaxError("not a legal formal parameter")
+    case other =>
+      syntaxError(other, "not a legal formal parameter")
   }
 
   def convertToTypeId(ref: Term.Ref): Option[Type] = ref match {
@@ -398,7 +408,7 @@ abstract class Parser { parser =>
     makeTuple[Term](bodyf, () => Lit.Unit(), Term.Tuple(_))
 
   def makeTupleType(bodyf: => List[Type]): Type =
-    makeTuple[Type](bodyf, () => syntaxError(???), Type.Tuple(_))
+    makeTuple[Type](bodyf, () => abort("unreachable"), Type.Tuple(_))
 
   def makeTuplePat(bodyf: => List[Pat]): Pat =
     makeTuple[Pat](bodyf, () => Lit.Unit(), Pat.Tuple(_))
@@ -529,9 +539,9 @@ abstract class Parser { parser =>
           Type.Function(ts, typ())
         } else {
           val tuple = Type.Tuple(ts map {
-            case _: ParamType.ByName   => syntaxError("by name type not allowed here")
-            case _: ParamType.Repeated => syntaxError("repeated type not alloed here")
             case t: Type               => t
+            case p: ParamType.ByName   => syntaxError(p, "by name type not allowed here")
+            case p: ParamType.Repeated => syntaxError(p, "repeated type not alloed here")
           })
           infixTypeRest(
             compoundTypeRest(Some(
@@ -1584,7 +1594,7 @@ abstract class Parser { parser =>
    */
   def modifiers(isLocal: Boolean = false): List[Mod] = {
     def addMod(mods: List[Mod], mod: Mod): List[Mod] = {
-      if (mods exists (_ == mod)) syntaxError("repeated modifier")
+      mods.foreach { m => if (m == mod) syntaxError(m, "repeated modifier") }
       in.nextToken()
       mods :+ mod
     }
@@ -1599,8 +1609,9 @@ abstract class Parser { parser =>
         case LAZY                => loop(addMod(mods, Mod.Lazy()))
         case OVERRIDE            => loop(addMod(mods, Mod.Override()))
         case PRIVATE | PROTECTED =>
-          if (mods exists { _.isInstanceOf[Mod.Access] })
-            syntaxError("duplicate private/protected qualifier")
+          mods.foreach { m =>
+            if(m.isInstanceOf[Mod.Access]) syntaxError("duplicate private/protected qualifier")
+          }
           val optmod = accessModifierOpt()
           optmod.map { mod => loop(addMod(mods, mod)) }.getOrElse(mods)
         case NEWLINE if !isLocal => in.nextToken(); loop(mods)
@@ -1698,7 +1709,9 @@ abstract class Parser { parser =>
     var mods: List[Mod] = annots(skipNewLines = false)
     if (ownerIsType) {
       mods ++= modifiers()
-      if (mods.has[Mod.Lazy]) syntaxError("lazy modifier not allowed here. Use call-by-name parameters instead")
+      mods.getAll[Mod.Lazy].foreach { m =>
+        syntaxError(m, "lazy modifier not allowed here. Use call-by-name parameters instead")
+      }
       in.token match {
         case VAL => mods = mods :+ Mod.ValParam(); in.nextToken()
         case VAR => mods = mods :+ Mod.VarParam(); in.nextToken()
@@ -1870,8 +1883,9 @@ abstract class Parser { parser =>
    *  }}}
    */
   def defOrDclOrCtor(mods: List[Mod]): Symbol = {
-    if (mods.has[Mod.Lazy] && in.token != VAL)
-      syntaxError("lazy not allowed here. Only vals can be lazy")
+    mods.getAll[Mod.Lazy].foreach { m =>
+      if (in.token != VAL) syntaxError(m, "lazy not allowed here. Only vals can be lazy")
+    }
     in.token match {
       case VAL | VAR =>
         patDefOrDcl(mods)
@@ -1888,7 +1902,7 @@ abstract class Parser { parser =>
     val anns = annots(skipNewLines = true)
     defOrDclOrCtor(modifiers() ++ anns) match {
       case s: Stmt.Template => s
-      case _                => syntaxError(???)
+      case other            => syntaxError(other, "is not a valid template statement")
     }
   }
 
@@ -1915,10 +1929,10 @@ abstract class Parser { parser =>
       if (isMutable) Defn.Var(mods, lhs, tp, rhs)
       else Defn.Val(mods, lhs, tp, rhs.get)
     } else {
-      if (mods.has[Mod.Lazy]) syntaxError("lazy values may not be abstract")
+      mods.getAll[Mod.Lazy].foreach { syntaxError(_, "lazy values may not be abstract") }
       val ids = lhs.map {
         case id: Term.Ident => id
-        case _              => syntaxError("pattern definition may not be abstract")
+        case other          => syntaxError(other, "pattern definition may not be abstract")
       }
 
       if (isMutable) Decl.Var(mods, ids, tp.get)
@@ -2056,7 +2070,7 @@ abstract class Parser { parser =>
    *  }}}
    */
   def tmplDef(mods: List[Mod]): Symbol.Template = {
-    if (mods.has[Mod.Lazy]) syntaxError("classes cannot be lazy")
+    mods.getAll[Mod.Lazy].foreach { syntaxError(_, "classes cannot be lazy") }
     in.token match {
       case TRAIT =>
         traitDef(mods)
@@ -2213,7 +2227,7 @@ abstract class Parser { parser =>
       (self, stats)
     } else {
       if (in.token == LPAREN) {
-        if (parenMeansSyntaxError) syntaxError(s"traits or objects may not have parameters")
+        if (parenMeansSyntaxError) syntaxError("traits or objects may not have parameters")
         else abort("unexpected opening parenthesis")
       }
       (Aux.Self.empty, Nil)
@@ -2226,15 +2240,10 @@ abstract class Parser { parser =>
    */
   def refinement(): List[Stmt.Refine] = inBraces(refineStatSeq())
 
-  def existentialStats(): List[Stmt.Existential] = ???
-  /* used to be:
-  refinement() flatMap {
-        case t @ TypeDef(_, _, _, TypeBoundsTree(_, _)) => Some(t)
-        case t @ ValDef(_, _, _, EmptyTree) => Some(t)
-        case EmptyTree => None
-        case _ => syntaxError(/* t.pos */ ???, "not a legal existential clause"); None
-      }
-  */
+  def existentialStats(): List[Stmt.Existential] = refinement() map {
+    case stmt: Stmt.Refine => stmt
+    case other             => syntaxError(other, "not a legal existential clause")
+  }
 
 /* -------- STATSEQS ------------------------------------------- */
 
@@ -2342,7 +2351,7 @@ abstract class Parser { parser =>
     if (isDclIntro) {
       defOrDclOrCtor(Nil) match {
         case sr: Stmt.Refine => Some(sr)
-        case _               => syntaxError(???)
+        case other           => syntaxError(other, "is not a valid refinement declaration")
       }
     } else if (!isStatSep) {
       syntaxError(
@@ -2356,7 +2365,7 @@ abstract class Parser { parser =>
     if (mods.has[Mod.Implicit] || mods.has[Mod.Lazy]) {
       defOrDclOrCtor(mods) match {
         case sb: Stmt.Block => sb
-        case _              => syntaxError(???)
+        case other          => syntaxError(other, "is not a valid block statement")
       }
     } else tmplDef(mods)
   }

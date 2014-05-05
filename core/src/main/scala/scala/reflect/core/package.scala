@@ -15,10 +15,7 @@ package object core {
   implicit class RichTypes(val parents: List[Type]) extends AnyVal {
     def linearization: List[Type] = ???
   }
-  implicit class RichMods(val mods: List[Mod]) extends AnyVal {
-    def has[T <: Mod](implicit tag: ClassTag[T]): Boolean =
-      mods.exists { _.getClass == tag.runtimeClass }
-  }
+
   def lub(tpes: Type*): Type = ???
   def glb(tpes: Type*): Type = ???
 }

@@ -53,13 +53,14 @@ class TypeSuite extends ParseSuite {
     val Compound(Nil, Nil) = tpe("{}")
   }
 
-  // TODO:
-  // test("A { def x: Int }") {
-  //  val Compound(Type.Ident("A", false) :: Nil,
-  //               Decl.Def(Nil, Term.Ident("x", false),
-  //                        Nil, Nil, Nil, Type.Ident("Int", false)) :: Nil) =
-  //    tpe("A { def x: Int }")
-  // }
+  test("A { def x: A; val y: B; type C }") {
+    val Compound(Type.Ident("A", false) :: Nil,
+                 Decl.Def(Nil, Term.Ident("x", false),
+                          Nil, Nil, Nil, Type.Ident("Int", false)) ::
+                 Decl.Val(Nil, List(Term.Ident("y", false)), Type.Ident("B", false)) ::
+                 Decl.Type(Nil, Type.Ident("C", false), Nil, TypeBounds.empty) :: Nil) =
+      tpe("A { def x: Int; val y: B; type C }")
+  }
 
   test("F[_ >: lo <: hi]") {
     val Apply(Ident("F", false),
@@ -85,10 +86,9 @@ class TypeSuite extends ParseSuite {
       tpe("F[_]")
   }
 
-  // TODO:
-  // test("F[T] forSome { type T }") {
-  //  val Existential(Apply(Ident("F", false), Ident("T", false) :: Nil),
-  //                  Decl.Type(Nil, Ident("T", false), Nil, TypeBounds.empty) :: Nil) =
-  //    tpe("F[T] forSome { type T }")
-  // }
+  test("F[T] forSome { type T }") {
+    val Existential(Apply(Ident("F", false), Ident("T", false) :: Nil),
+                    Decl.Type(Nil, Ident("T", false), Nil, TypeBounds.empty) :: Nil) =
+      tpe("F[T] forSome { type T }")
+  }
 }

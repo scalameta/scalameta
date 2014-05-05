@@ -42,7 +42,7 @@ class TermSuite extends ParseSuite {
     val SuperSelect(None, None, Ident("c", false)) = term("super.c")
   }
 
-  test("s\"a$bc\"") {
+  test("s\"a $b c\"") {
     val Interpolate(Ident("s", false), Lit.String("a ") :: Lit.String(" c") :: Nil,
                     Ident("b", false) :: Nil) = term("s\"a $b c\"")
   }
