@@ -636,7 +636,7 @@ abstract class Parser { parser =>
       else Some(annotType())
     )
 
-    // TODO: warn about def f: Unit { } case
+    // TODO: warn about def f: Unit { } case?
     def compoundTypeRest(t: Option[Type]): Type = {
       val ts = new ListBuffer[Type] ++ t
       while (in.token == WITH) {
@@ -712,7 +712,6 @@ abstract class Parser { parser =>
    *  ModType ::= Path [`.' type]
    *  }}}
    */
-  // TODO: foo.this can be either term or type name depending on the context
   // TODO: this has to be rewritten
   def path(thisOK: Boolean = true): Term.Ref = {
     def stop = in.token != DOT || lookingAhead { in.token != THIS && in.token != SUPER && !isIdent }
@@ -1145,8 +1144,9 @@ abstract class Parser { parser =>
           blockExpr()
         case NEW =>
           canApply = false
-          // TODO: right entry point for templates?
-          Term.New(templateOpt(OwnedByClass))
+          in.nextToken()
+          val (edefs, parents, self, stats) = template()
+          Term.New(Aux.Template(edefs, parents, self, stats))
         case _ =>
           syntaxError("illegal start of simple expression")
       }
@@ -1427,7 +1427,7 @@ abstract class Parser { parser =>
       }
       def checkWildStar: Option[Pat.SeqWildcard] = top match {
         case Pat.Wildcard() if isSequenceOK && isRawStar => peekingAhead (
-          // TODO: used to be Start(top) | EmptyTree, why start had param?
+          // TODO: used to be Star(top) | EmptyTree, why start had param?
           if (isCloseDelim) Some(Pat.SeqWildcard())
           else None
         )
@@ -2216,7 +2216,6 @@ abstract class Parser { parser =>
       else {
         newLineOptWhenFollowedBy(LBRACE)
         val (self, body) = templateBodyOpt(parenMeansSyntaxError = owner.isTrait || owner.isTerm)
-        // TODO: validate that nils here corerspond to the source code
         (Nil, Nil, self, body)
       }
     )

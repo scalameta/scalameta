@@ -1,8 +1,6 @@
-import scala.reflect.core._
+import scala.reflect.core._, Aux._
 
 class DefnSuite extends ParseSuite {
-  import Aux._
-
   test("val x = 2") {
     val Defn.Val(Nil, Term.Ident("x", false) :: Nil, None, Lit.Int(2)) = templStat("val x = 2")
   }

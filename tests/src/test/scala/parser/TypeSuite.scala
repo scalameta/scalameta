@@ -1,8 +1,6 @@
-import scala.reflect.core._
+import scala.reflect.core._, Type._, Aux._
 
 class TypeSuite extends ParseSuite {
-  import Type._, Aux._
-
   test("T") {
     val Ident("T", false) = tpe("T")
   }

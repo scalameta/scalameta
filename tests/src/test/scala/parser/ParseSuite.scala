@@ -10,5 +10,4 @@ class ParseSuite extends FunSuite {
   def topStat = parse(p => p.topStat(p.in.token))
   def templStat = parse(p => p.templateStat(p.in.token))
   def compUnit = parse(_.compilationUnit())
-
 }

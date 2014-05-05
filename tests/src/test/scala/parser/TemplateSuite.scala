@@ -1,8 +1,6 @@
-import scala.reflect.core._
+import scala.reflect.core._, Aux._, Defn.{Trait, Object, Class}
 
 class TemplateSuite extends ParseSuite {
-  import Aux._, Defn.{Trait, Object, Class}
-
   test("trait T") {
     val Trait(Nil, Type.Ident("T", false), Nil, Template.empty) = templStat("trait T")
   }

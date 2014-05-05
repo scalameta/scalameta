@@ -1,8 +1,6 @@
-import scala.reflect.core._
+import scala.reflect.core._, Term._, Aux._
 
 class TermSuite extends ParseSuite {
-  import Term._, Aux._
-
   test("x") {
     val Ident("x", false) = term("x")
   }
@@ -186,22 +184,19 @@ class TermSuite extends ParseSuite {
     val Do(Lit.False(), Lit.True()) = term("do false while(true)")
   }
 
-  test("for") {
+  test("for (a <- b; if c; x = a) x") {
     val For(List(Enum.Generator(Ident("a", false), Ident("b", false)),
                  Enum.Guard(Ident("c", false)),
                  Enum.Val(Ident("x", false), Ident("a", false))),
             Ident("x", false)) = term("for (a <- b; if c; x = a) x")
 
   }
-  test("for yield") {
+  test("for (a <- b; if c; x = a) yield x") {
     val ForYield(List(Enum.Generator(Ident("a", false), Ident("b", false)),
                       Enum.Guard(Ident("c", false)),
                       Enum.Val(Ident("x", false), Ident("a", false))),
                  Ident("x", false)) = term("for (a <- b; if c; x = a) yield x")
   }
-
-  // TODO:
-  // test("new") { }
 
   test("f(_)") {
     val Apply(Ident("f", false), List(Placeholder())) = term("f(_)")
@@ -214,5 +209,31 @@ class TermSuite extends ParseSuite {
 
   test("f _") {
     val Eta(Ident("f", false)) = term("f _")
+  }
+
+  test("new {}") {
+    val New(Template.empty) = term("new {}")
+  }
+
+  test("new A") {
+    val New(Template(Nil, Parent(Type.Ident("A", false), Nil) :: Nil, Self.empty, Nil)) = term("new A")
+  }
+
+  test("new A with B") {
+    val New(Template(Nil, Parent(Type.Ident("A", false), Nil) ::
+                          Parent(Type.Ident("B", false), Nil) :: Nil,
+                     Self.empty, Nil)) =
+      term("new A with B")
+  }
+
+  test("new { val x: Int = 1 } with A") {
+    val New(Template(Defn.Val(Nil, List(Term.Ident("x", false)), Some(Type.Ident("Int", false)), Lit.Int(1)) :: Nil,
+                     Parent(Type.Ident("A", false), Nil) :: Nil, Self.empty, Nil)) =
+      term("new { val x: Int = 1 } with A")
+  }
+
+  test("new { self: T => }") {
+    val New(Template(Nil, Nil, Self(Some(Term.Ident("self", false)), Some(Type.Ident("T", false))), Nil)) =
+      term("new { self: T => }")
   }
 }

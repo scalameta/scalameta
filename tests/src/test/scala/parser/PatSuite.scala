@@ -1,8 +1,6 @@
-import scala.reflect.core._
+import scala.reflect.core._, Pat._, Term.Ident
 
 class PatSuite extends ParseSuite {
-  import Pat._, Term.Ident
-
   test("_") {
     val Wildcard() = pat("_")
   }

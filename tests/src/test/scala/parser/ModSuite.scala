@@ -1,8 +1,6 @@
-import scala.reflect.core._
+import scala.reflect.core._, Aux._
 
 class ModSuite extends ParseSuite {
-  import Aux._
-
   // TODO: implicit
   // TODO: final
   // TODO: sealed
