@@ -49,6 +49,14 @@ class TermSuite extends ParseSuite {
     val Apply(Ident("f", false), Lit.Int(0) :: Nil) = term("f(0)")
   }
 
+  test("f(x = 0)") {
+    val Apply(Ident("f", false), Arg.Named(Term.Ident("x", false), Lit.Int(0)) :: Nil) = term("f(x = 0)")
+  }
+
+  test("f(x: _*)") {
+    val Apply(Ident("f", false), Arg.Repeated(Term.Ident("x", false)) :: Nil) = term("f(x: _*)")
+  }
+
   test("a + b") {
     val Apply(Select(Ident("a", false), Ident("+", false)),
               Ident("b", false) :: Nil) = term("a + b")

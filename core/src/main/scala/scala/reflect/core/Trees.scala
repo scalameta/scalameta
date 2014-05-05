@@ -352,7 +352,7 @@ package core {
   @branch trait Arg extends Tree
   object Arg {
     @leaf class Named(name: Term.Ident, arg: Term) extends Arg
-    @leaf class Seq(arg: Term) extends Arg
+    @leaf class Repeated(arg: Term) extends Arg
   }
 
   @branch trait Enum extends Tree

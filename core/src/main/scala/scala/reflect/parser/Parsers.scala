@@ -50,7 +50,6 @@ object ParserInfo {
       case _: Term.Ident => !isBackquoted && value.head.isLower && value.head.isLetter
       case _             => false
     }
-    def isInterpolationId: Boolean = ???
   }
   implicit class RichMods(val mods: List[Mod]) extends AnyVal {
     def has[T <: Mod](implicit tag: ClassTag[T]): Boolean =
@@ -1194,27 +1193,24 @@ abstract class Parser { parser =>
    *  }}}
    */
   def argumentExprs(): List[Arg] = {
-    def args(): List[Arg] = commaSeparated(
-      if (isIdent) assignmentToMaybeNamedArg(expr()) else expr()
-    )
+    def args(): List[Arg] = commaSeparated {
+      expr() match {
+        case Term.Ascribe(t, Type.Placeholder(Aux.TypeBounds.empty)) if isIdent && in.name == "*" =>
+          in.nextToken()
+          Arg.Repeated(t)
+        case Term.Assign(t: Term.Ident, rhs) =>
+          Arg.Named(t, rhs)
+        case other =>
+          other
+      }
+    }
     in.token match {
       case LBRACE   => List(blockExpr())
       case LPAREN   => inParens(if (in.token == RPAREN) Nil else args())
       case _        => Nil
     }
-    // TODO: handle var args
-    /*
-        if (in.token == USCORE) {
-          //todo: need to handle case where USCORE is a wildcard in a type
-          val uscorePos = in.skipToken()
-          if (isIdent && in.name == nme.STAR) {
-            in.nextToken()
-            t = Term.Ascribe(t, Ident(tpnme.WILDCARD_STAR))
-          } else {
-            syntaxError("`*' expected")
-          }
-    */
   }
+
   /** A succession of argument lists. */
   def multipleArgumentExprs(): List[List[Arg]] = {
     if (in.token != LPAREN) Nil
