@@ -3,7 +3,7 @@
  * @author  Martin Odersky
  */
 
-package cbc
+package scala.reflect.parser
 
 object Tokens {
   def isIdentifier(code: Int) = code == IDENTIFIER || code == BACKQUOTED_IDENT // used by ide

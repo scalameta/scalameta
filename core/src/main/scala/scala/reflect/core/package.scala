@@ -1,17 +1,24 @@
 package scala.reflect
 import scala.language.experimental.{macros => prettyPlease}
+import scala.reflect.quasiquotes.quasiquote
 
 package object core {
-  implicit class Quasiquotes(ctx: StringContext) {
-    protected trait api {
-      def apply[T](args: T*): Tree = macro ???
-      def unapply(scrutinee: Any): Any = macro ???
-    }
-    object q extends api
-    object t extends api
-    object p extends api
-    // consider also adding templ, param, tparam, parent, self, case, enum, mod, arg interpolators
-  }
+  // three primary quasiquotes
+  @quasiquote('q)      implicit class TermQuote(ctx: StringContext)
+  @quasiquote('t)      implicit class TypeQuote(ctx: StringContext)
+  @quasiquote('p)      implicit class PatternQuote(ctx: StringContext)
+
+  // auxilary quasiquotes
+  @quasiquote('templ)  implicit class TemplateQuote(ctx: StringContext)
+  @quasiquote('param)  implicit class ParamQuote(ctx: StringContext)
+  @quasiquote('tparam) implicit class TypeParamQuote(ctx: StringContext)
+  @quasiquote('parent) implicit class ParentQuote(ctx: StringContext)
+  @quasiquote('self)   implicit class SelfQuote(ctx: StringContext)
+  @quasiquote('enum)   implicit class EnumQuote(ctx: StringContext)
+  @quasiquote('mod)    implicit class ModQuote(ctx: StringContext)
+  @quasiquote('arg)    implicit class ArgQuote(ctx: StringContext)
+  @quasiquote('cas)    implicit class CaseQuote(ctx: StringContext)
+
   implicit class RichTypes(val parents: List[Type]) extends AnyVal {
     def linearization: List[Type] = ???
   }

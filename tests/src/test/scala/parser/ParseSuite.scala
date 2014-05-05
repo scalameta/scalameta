@@ -1,5 +1,5 @@
 import org.scalatest._
-import cbc._
+import scala.reflect.parser._
 
 class ParseSuite extends FunSuite {
   def parse[T](rule: SourceParser => T): String => T =

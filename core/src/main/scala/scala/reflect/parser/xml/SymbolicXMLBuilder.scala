@@ -3,16 +3,11 @@
 // * @author Burak Emir
 // */
 //
-//package cbc.xml
+//package scala.reflect.parser.xml
 //
 //import scala.collection.{ mutable, immutable }
-//import cbc.Flags.MUTABLE
-//import cbc.util.StringOps.splitWhere
-//import cbc.TreeGen
-//import cbc.Trees._
-//import cbc.Names._
-//import cbc.{TypeNames, TermNames, nme, tpnme}
-//import cbc.Constants._
+//import scala.reflect.parser.Flags.MUTABLE
+//import scala.reflect.parser.util.StringOps.splitWhere
 //
 ///** This class builds instance of `Tree` that represent XML.
 // *

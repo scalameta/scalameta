@@ -2,18 +2,18 @@
  * Copyright 2005-2013 LAMP/EPFL
  * @author  Martin Odersky
  */
-package cbc
+package scala.reflect.parser
 
 import scala.annotation.{ switch, tailrec }
 import scala.collection.{ mutable, immutable }
 import scala.language.postfixOps
 import mutable.{ ListBuffer, ArrayBuffer }
-import cbc.xml.Utility.isNameStart
-import cbc.util.{ CharArrayReader, CharArrayReaderData }
-import cbc.util._
-import cbc.util.Chars._
-import Tokens._
-import TokenInfo._
+import scala.reflect.parser.xml.Utility.isNameStart
+import scala.reflect.parser.util.{ CharArrayReader, CharArrayReaderData }
+import scala.reflect.parser.util._
+import scala.reflect.parser.util.Chars._
+import scala.reflect.parser.Tokens._
+import scala.reflect.parser.TokenInfo._
 
 trait TokenData {
   /** the next token */

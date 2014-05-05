@@ -1,4 +1,4 @@
-package cbc
+package scala.reflect.parser
 
 import scala.language.existentials // SI-6541
 

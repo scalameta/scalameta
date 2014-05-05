@@ -6,16 +6,16 @@
 **                          |/                                          **
 \*                                                                      */
 
-package cbc.xml
+package scla.reflect.parser.xml
+
+import scala.reflect.parser.xml.Utility, Utility._
+import scala.reflect.parser.util.Chars.SU
 
 /** This is not a public trait - it contains common code shared
  *  between the library level XML parser and the compiler's.
  *  All members should be accessed through those.
  */
 trait MarkupParserCommon {
-  import Utility._
-  import cbc.util.Chars.SU
-
   protected def unreachable = scala.sys.error("Cannot be reached.")
 
   type ElementType      // NodeSeq, Tree

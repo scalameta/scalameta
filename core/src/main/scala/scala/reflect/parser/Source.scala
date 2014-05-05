@@ -1,4 +1,4 @@
-package cbc
+package scala.reflect.parser
 
 sealed trait Source {
   def content: Array[Char]

@@ -6,7 +6,7 @@
 **                          |/                                          **
 \*                                                                      */
 
-package cbc.util
+package scala.reflect.parser.util
 
 import scala.compat.Platform.EOL
 

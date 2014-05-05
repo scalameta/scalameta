@@ -3,7 +3,7 @@
  * @author  Martin Odersky
  */
 
-package cbc.util
+package scala.reflect.parser.util
 
 import Chars._
 

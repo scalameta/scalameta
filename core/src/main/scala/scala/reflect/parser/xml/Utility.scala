@@ -6,10 +6,10 @@
 **                          |/                                          **
 \*                                                                      */
 
-package cbc.xml
+package scala.reflect.parser.xml
 
 import scala.collection.mutable
-
+import scala.reflect.parser.util.Chars.SU
 
 /**
  * The `Utility` object provides utility functions for processing instances
@@ -18,8 +18,6 @@ import scala.collection.mutable
  * @author Burak Emir
  */
 object Utility {
-  import cbc.util.Chars.SU
-
   private val unescMap = Map(
     "lt"    -> '<',
     "gt"    -> '>',

@@ -1,4 +1,4 @@
-package cbc.util
+package scala.reflect.parser.util
 
 object settings {
   val future = false
