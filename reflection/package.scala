@@ -3,11 +3,13 @@ package scala.reflect
 import scala.language.experimental.{macros => prettyPlease}
 import org.scalareflect.adt._
 import org.scalareflect.errors._
+import scala.reflect.core.errors.{wrapHosted, wrapMacrohosted}
+import org.scalareflect.annotations._
 
 package object core {
-  def root: Pkg.Root = ???
+  @hosted def root: Pkg.Root = delegate
 
-  def languageProfile: LanguageProfile = ???
+  @hosted def languageProfile: LanguageProfile = delegate
   final case class LanguageProfile(
     dynamics: Boolean,
     postfixOps: Boolean,
@@ -30,29 +32,59 @@ package object core {
     // consider also adding templ, param, tparam, parent, self, case, enum, mod, arg interpolators
   }
 
+  @hosted private[core] def supertypesToMembers(tpes: List[Type]): List[Member.Template] = {
+    def extractTemplate(ref: Type.Ref) = {
+      for {
+        defn <- ref.defn
+        result <- defn match {
+          case t: Member.Template => eh.succeed(t)
+          case d => eh.fail(ReflectionException(s"unexpected ref $ref to $d returned from supertypes"))
+        }
+      } yield result
+    }
+    implicit class RichList[T](list: List[T]) {
+      def ehMap[U, E](f: T => eh.Result[U, E]): eh.Result[List[U], E] = {
+        list match {
+          case hd :: tl => for {
+            fhd <- f(hd)
+            ftl <- tl.ehMap(f)
+          } yield fhd :: ftl
+          case Nil => eh.succeed(Nil)
+        }
+      }
+    }
+    tpes ehMap {
+      case ref: Type.Ref => extractTemplate(ref)
+      case Type.Apply(ref: Type.Ref, _) => extractTemplate(ref)
+      case tpe => eh.fail(ReflectionException(s"unexpected type $tpe returned from supertypes"))
+    }
+  }
   implicit class RichTemplates(val parents: List[Member.Template]) extends AnyVal {
-    def linearization: List[Member.Template] = ???
+    @hosted def linearization: List[Member.Template] = {
+      val linearization = parents.map(p => ??? : Type).linearization // TODO: t"${p.ref}"
+      linearization.flatMap(tpes => supertypesToMembers(tpes))
+    }
   }
   implicit class RichTypes(val parents: List[Type]) extends AnyVal {
-    def linearization: List[Type] = ???
+    @hosted def linearization: List[Type] = wrapHosted(_.linearization(parents))
   }
-  def lub(tpes: Type*): Type = ???
-  def glb(tpes: Type*): Type = ???
+  @hosted def lub(tpes: Type*): Type = delegate
+  @hosted def glb(tpes: Type*): Type = delegate
 
   object c {
-    def macroApplication: Tree = ???
+    @hosted(macroApi = true) def macroApplication: Tree = delegate
     // TODO: design a way to specify positions here
-    def warning(msg: String): Unit = ???
-    def error(msg: String): Unit = ???
-    def abort(msg: String): Nothing = ???
-    final case class Resource(url: String) {
-      def read(implicit codec: scala.io.Codec): String = ???
+    @hosted(macroApi = true) def warning(msg: String): Unit = delegate
+    @hosted(macroApi = true) def error(msg: String): Unit = delegate
+    @hosted(macroApi = true) def abort(msg: String): Nothing = delegate
+    final case class Resource(url: String)(implicit mc: MacroContext) {
+      @mayFail def read(implicit codec: scala.io.Codec): String = wrapMacrohosted(_.readResource(url, codec))
     }
-    class Resources(urls: List[String]) extends Iterable[Resource] {
-      def iterator: Iterator[Resource] = ???
-      def apply(url: String)(implicit codec: scala.io.Codec): String = ???
+    class Resources(urls: List[String])(implicit mc: MacroContext) extends Iterable[Resource] {
+      def iterator: Iterator[Resource] = urls.map(url => new Resource(url)).iterator
+      @mayFail def apply(url: String)(implicit codec: scala.io.Codec): String = new Resource(url).read
     }
-    def resources: Resources = ???
+    @hosted(macroApi = true) def resources: Resources = wrapMacrohosted(mc => new Resources(mc.listResources))
   }
 
   // TODO: trivia: whitespace, comments, etc (see http://msdn.microsoft.com/en-us/vstudio/hh500769)
@@ -67,5 +99,17 @@ package core {
   package object errors {
     implicit val throwExceptions = handlers.throwExceptions
     implicit val returnTries = handlers.returnTries
+
+    def wrapHosted = new Wrap[HostContext]
+    def wrapMacrohosted = new Wrap[MacroContext]
+    class Wrap[C <: HostContext] {
+      def apply[T](f: C => T)(implicit c: C, eh: ErrorHandler) = {
+        try eh.succeed(f(c))
+        catch {
+          case ex: ReflectionException => eh.fail(ex)
+          case ex: Exception => eh.fail(ReflectionException(ex.toString))
+        }
+      }
+    }
   }
 }
