@@ -13,6 +13,11 @@ class TypeSuite extends ParseSuite {
     val Project(Ident("F", false), Ident("T", false)) = tpe("F#T")
   }
 
+  // TODO:
+  // test("A * B") {
+  //   val Apply(Ident("*", false), Ident("A", false) :: Ident("B", false) :: Nil) = tpe("A * B")
+  // }
+
   test("f.T") {
     val Select(Term.Ident("f", false), Type.Ident("T", false)) = tpe("f.T")
   }

@@ -19,6 +19,7 @@ list of ugliness discovered so far
 13. constr block
 14. q"def x { case 1 => 2 }"
 15. q"trait F[T] <: Sobaka[T] with Balabaka { def bazinga } "
+16. * is ambigious ident vs seq wildcard in most contexts
 */
 
 // (Together) TODO: tree-based symbols and types (see https://github.com/paulbutcher/implementor/blob/f1921de2b7de3d5ea8cf7f230c8e4e9f8c7f4b26/core/src/main/scala/org/scalamock/Implement.scala)

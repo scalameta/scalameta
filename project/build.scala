@@ -131,6 +131,7 @@ object build extends Build {
   ) settings (
     publishableSettings: _*
   ) settings (
+    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided"),
     scalacOptions ++= Seq()
   ) dependsOn (macros)
 
