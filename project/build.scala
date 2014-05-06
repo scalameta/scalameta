@@ -135,6 +135,7 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     scalaSource in Compile <<= (baseDirectory in Compile)(base => base),
+    // scalacOptions ++= Seq("-Xprint:typer")
     scalacOptions ++= Seq()
   ) dependsOn (foundation)
 
