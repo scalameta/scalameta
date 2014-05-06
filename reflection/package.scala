@@ -45,10 +45,11 @@ package object core {
     implicit class RichList[T](list: List[T]) {
       def ehMap[U, E](f: T => eh.Result[U, E]): eh.Result[List[U], E] = {
         list match {
-          case hd :: tl => for {
-            fhd <- f(hd)
-            ftl <- tl.ehMap(f)
-          } yield fhd :: ftl
+          case hd :: tl =>
+            for {
+              fhd <- f(hd)
+              ftl <- tl.ehMap(f)
+            } yield fhd :: ftl
           case Nil => eh.succeed(Nil)
         }
       }
