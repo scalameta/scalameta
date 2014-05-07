@@ -430,25 +430,12 @@ object Stmt {
   }
 }
 object Scope {
-  @branch trait TopLevel extends Scope {
+  @branch trait TopLevel extends Scope with Block {
     @hosted def packages: Seq[Pkg.Named] = members.map(_.collect { case pkg: Pkg.Named => pkg })
     @hosted def packages(name: Ident): Pkg.Named = packages.flatMap(_.findUnique(name))
     @hosted def packages(name: String): Pkg.Named = packages.flatMap(_.findUnique(name))
     @hosted def packages(name: scala.Symbol): Pkg.Named = packages.flatMap(_.findUnique(name))
-    @hosted def classes: Seq[Defn.Class] = members.map(_.collect { case cls: Defn.Class => cls })
-    @hosted def classes(name: Ident): Defn.Class = classes.flatMap(_.findUnique(name))
-    @hosted def classes(name: String): Defn.Class = classes.flatMap(_.findUnique(name))
-    @hosted def classes(name: scala.Symbol): Defn.Class = classes.flatMap(_.findUnique(name))
-    @hosted def traits: Seq[Defn.Trait] = members.map(_.collect { case trt: Defn.Trait => trt })
-    @hosted def traits(name: Ident): Defn.Trait = traits.flatMap(_.findUnique(name))
-    @hosted def traits(name: String): Defn.Trait = traits.flatMap(_.findUnique(name))
-    @hosted def traits(name: scala.Symbol): Defn.Trait = traits.flatMap(_.findUnique(name))
-    @hosted def objects: Seq[Defn.Object] = members.map(_.collect { case obj: Defn.Object => obj })
-    @hosted def objects(name: Ident): Defn.Object = objects.flatMap(_.findUnique(name))
-    @hosted def objects(name: String): Defn.Object = objects.flatMap(_.findUnique(name))
-    @hosted def objects(name: scala.Symbol): Defn.Object = objects.flatMap(_.findUnique(name))
     @hosted def pkgobject: Pkg.Object = members.flatMap(_.collect { case pkgobject: Pkg.Object => pkgobject }.findUnique)
-    // TODO: consider extending Template in order to bring contents of package objects in
   }
   @branch trait Template extends Block with Params {
     // TODO: directSuperclasses and others
