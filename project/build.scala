@@ -10,6 +10,8 @@ object build extends Build {
     description := "Reflection core of Project Palladium",
     resolvers += Resolver.sonatypeRepo("snapshots"),
     resolvers += Resolver.sonatypeRepo("releases"),
+    scalaSource in Compile <<= (baseDirectory in Compile)(base => base / "src"),
+    scalaSource in Test <<= (baseDirectory in Test)(base => base / "test"),
     publishMavenStyle := true,
     publishArtifact in Compile := false,
     publishArtifact in Test := false,
@@ -52,7 +54,7 @@ object build extends Build {
         <url>https://github.com/scalareflect/core/issues</url>
       </issueManagement>
     ),
-    addCompilerPlugin("org.scalamacros" % "paradise" % "2.0.0" cross CrossVersion.full)
+    addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0-M1" cross CrossVersion.full)
   )
 
   // http://stackoverflow.com/questions/20665007/how-to-publish-only-when-on-master-branch-under-travis-and-sbt-0-13
@@ -113,26 +115,29 @@ object build extends Build {
   ) settings (
     test in Test := (test in tests in Test).value,
     packagedArtifacts := Map.empty
-  ) aggregate (core, tests)
+  ) aggregate (reflection, tests)
 
-  lazy val macros = Project(
-    id   = "core-macros",
-    base = file("macros")
+  lazy val foundation = Project(
+    id   = "foundation",
+    base = file("foundation")
   ) settings (
     publishableSettings: _*
   ) settings (
+    scalaSource in Compile <<= (baseDirectory in Compile)(base => base),
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided"),
     scalacOptions ++= Seq()
   )
 
-  lazy val core = Project(
+  lazy val reflection = Project(
     id   = "core",
-    base = file("core")
+    base = file("reflection")
   ) settings (
     publishableSettings: _*
   ) settings (
+    scalaSource in Compile <<= (baseDirectory in Compile)(base => base),
+    // scalacOptions ++= Seq("-Xprint:typer")
     scalacOptions ++= Seq()
-  ) dependsOn (macros)
+  ) dependsOn (foundation)
 
   lazy val sandbox = Project(
     id   = "sandbox",
@@ -140,8 +145,9 @@ object build extends Build {
   ) settings (
     sharedSettings: _*
   ) settings (
+    scalaSource in Compile <<= (baseDirectory in Compile)(base => base),
     scalacOptions ++= Seq()
-  ) dependsOn (core)
+  ) dependsOn (reflection)
 
   lazy val tests = Project(
     id   = "tests",
@@ -153,5 +159,5 @@ object build extends Build {
     libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
     packagedArtifacts := Map.empty,
     scalacOptions ++= Seq()
-  ) dependsOn (core)
+  ) dependsOn (reflection)
 }
