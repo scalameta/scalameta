@@ -171,8 +171,7 @@ object Type {
   @ast class Function(params: List[Type], res: Type) extends Type
   @ast class Tuple(elements: List[Type] @nonEmpty) extends Type
   @ast class Compound(tpes: List[Type], refinement: List[Stmt.Refine]) extends Type with Scope.Refine {
-    require(tpes.length == 1 ==> hasExplicitRefinement)
-    def hasExplicitRefinement: Boolean = ??? // TODO: trivia
+    // TODO: require(tpes.length == 1 ==> hasExplicitRefinement)
   }
   @ast class Existential(tpe: Type, quants: List[Stmt.Existential] @nonEmpty) extends Type with Scope.Existential
   @ast class Annotate(tpe: Type, annots: List[Mod.Annot] @nonEmpty) extends Type with Has.Mods {
@@ -608,7 +607,6 @@ object Aux {
     @hosted def superclasses: List[Member.Template] = tpe.flatMap(_.superclasses)
     @hosted def supertypes: List[Type] = tpe.flatMap(_.supertypes)
     @hosted def self: Self = succeed(declself)
-    def hasExplicitStats: Boolean = ??? // TODO: trivia
   }
   @ast class Self(ident: Option[Term.Ident] = None, decltpe: Option[Type] = None) extends Member.Term {
     def mods: List[Mod] = Nil
