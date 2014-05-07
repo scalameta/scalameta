@@ -82,12 +82,9 @@ object Term {
     // TODO: if not backquoted, then not all values should be allowed
     def ident: Ident = this
     def mods: List[Mod] = Nil
-    @hosted override def tpe: Type = internalTpe
   }
   @ast class SuperSelect(qual: Option[core.Ident], supertpe: Option[Type.Ident], selector: Term.Ident) extends Ref
-  @ast class Select(qual: Term, selector: Term.Ident) extends Ref with Pat {
-    @hosted override def tpe: Type = internalTpe
-  }
+  @ast class Select(qual: Term, selector: Term.Ident) extends Ref with Pat
 
   @ast class Interpolate(prefix: Ident, parts: List[Lit.String] @nonEmpty, args: List[Term]) extends Term {
     // TODO: require(prefix.isInterpolationId)
@@ -181,9 +178,7 @@ object Type {
   @ast class Placeholder(bounds: Aux.TypeBounds) extends Type
 }
 
-@branch trait Pat extends Tree {
-  @hosted def tpe: Type = internalTpe
-}
+@branch trait Pat extends Tree
 object Pat {
   @ast class Wildcard() extends Pat
   @ast class SeqWildcard() extends Pat
@@ -514,9 +509,7 @@ object Scope {
   }
 }
 
-@branch trait Lit extends Term with Pat {
-  @hosted override def tpe: Type = super[Term].tpe
-}
+@branch trait Lit extends Term with Pat
 object Lit {
   // TODO: maybe add overloaded apply(value)
   // TODO: maybe add unapply(lit): Option[Any]
