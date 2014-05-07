@@ -16,7 +16,7 @@ class ContextfulMacros(val c: Context) {
     def mkContextParameter(): ValDef = {
       val prefix = if (t.toString.contains("SourceContext")) "src" else "c"
       val name = c.freshName(TermName(prefix))
-      q"implicit val $name: $t"
+      q"$SYNTHETIC implicit val $name: $t"
     }
     def transformMods(mods: Modifiers): Modifiers = {
       val footprint = q"new _root_.org.scalareflect.annotations.internal.contextful[$t]"

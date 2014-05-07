@@ -70,10 +70,9 @@ class AdtMacros(val c: Context) {
       if (mods.hasFlag(FINAL)) c.abort(cdef.pos, "final is redundant for @leaf classes")
       if (mods.hasFlag(CASE)) c.abort(cdef.pos, "case is redundant for @leaf classes")
       if (mods.hasFlag(ABSTRACT)) c.abort(cdef.pos, "@leaf classes cannot be abstract")
-      val nonImplicitParamss = paramss.filter(_.forall(!_.mods.hasFlag(IMPLICIT)))
-      if (nonImplicitParamss.length != 1) c.abort(cdef.pos, "@leaf classes must have exactly one non-implicit parameter list")
+      val nonSyntheticParamss = paramss.filter(_.forall(!_.mods.hasFlag(SYNTHETIC)))
+      if (nonSyntheticParamss.length != 1) c.abort(cdef.pos, "@leaf classes must have exactly one parameter list")
       val params = paramss.head
-      params.foreach(p => if (p.mods.hasFlag(MUTABLE)) c.abort(p.pos, "@leaf classes must be immutable"))
       val flags1 = flags | CASE | FINAL
       def unprivateThis(mods: Modifiers) = {
         val Modifiers(flags, privateWithin, anns) = mods
@@ -97,7 +96,7 @@ class AdtMacros(val c: Context) {
       val immutabilityCheck = q"$Internal.immutabilityCheck[${cdef.name}]"
       val stats1 = (thisType +: tag +: hierarchyCheck +: immutabilityCheck +: stats) ++ withes ++ maps ++ nullChecks ++ emptyChecks
       val anns1 = q"new $Internal.leaf" +: anns
-      val cdef1 = q"${Modifiers(flags1, privateWithin, anns1)} class $name[..$tparams] $ctorMods(..$params1) extends { ..$earlydefns } with ..$parents { $self => ..$stats1 }"
+      val cdef1 = q"${Modifiers(flags1, privateWithin, anns1)} class $name[..$tparams] $ctorMods(..$params1)(...${paramss.tail}) extends { ..$earlydefns } with ..$parents { $self => ..$stats1 }"
       val ModuleDef(mmods @ Modifiers(mflags, mprivateWithin, manns), mname, Template(mparents, mself, mstats)) = mdef
       val empties = if (params.nonEmpty && params.forall(_.rhs.nonEmpty)) List(q"val empty = $mname()(_root_.scala.reflect.core.SourceContext.None)") else Nil
       val mstats1 = (mstats ++ empties) :+ tag

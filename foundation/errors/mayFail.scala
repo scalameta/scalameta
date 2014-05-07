@@ -10,6 +10,7 @@ class mayFail[T] extends StaticAnnotation {
 
 class MayFailMacros(val c: Context) {
   import c.universe._
+  import Flag._
   def mayFail(annottees: c.Tree*): c.Tree = {
     val exnTpe = c.macroApplication match {
       case q"new $_().macroTransform(..$_)" => tq"_root_.scala.reflect.core.ReflectionException"
@@ -19,7 +20,7 @@ class MayFailMacros(val c: Context) {
       val q"$mods def $name[..$tparams](...$paramss)(implicit ..$implparamss): $tpt = $body" = ddef
       if (tpt.isEmpty) c.abort(ddef.pos, "@mayFail methods must explicitly specify return type")
       val pname = c.freshName(TermName("eh"))
-      val implparamss1 = implparamss :+ q"val $pname: _root_.org.scalareflect.errors.ErrorHandler"
+      val implparamss1 = implparamss :+ q"$SYNTHETIC val $pname: _root_.org.scalareflect.errors.ErrorHandler"
       val tpt1 = tq"$pname.Result[$tpt, $exnTpe]"
       val body1 = if (body.nonEmpty) q"""
         import _root_.org.scalareflect.errors.{succeed, fail}
