@@ -139,7 +139,10 @@ object Term {
   @hosted def dealias: Type = delegate
   @hosted def erasure: Type = delegate
   @hosted def companion: Type.Ref = this match {
-    case ref: Type.Ref => ref.defn.flatMap(_.companion).map(_.ref.toTypeRef)
+    case ref: Type.Ref => ref.defn.flatMap {
+      case t: Member.Template => t.companion
+      case _ => fail(ReflectionException(s"companion not found"))
+    }.map(_.ref.toTypeRef)
     case _ => fail(ReflectionException(s"companion not found"))
   }
   // TODO: directSuperclasses and others
@@ -200,7 +203,6 @@ object Pat {
 @branch trait Member extends Tree with Has.Mods {
   def ref: Ref
   @hosted def overrides: List[Member]
-  @hosted def companion: Member
   def annots: List[Mod.Annot] = mods.collect{ case annot: Mod.Annot => annot }
   def doc: Option[Mod.Doc] = mods.collect{ case doc: Mod.Doc => doc }.headOption
   def isVal: Boolean = this.isInstanceOf[Term.Ident] && (this.parent.isInstanceOf[Decl.Val] || this.parent.isInstanceOf[Defn.Val])
@@ -236,12 +238,10 @@ object Member {
   @branch trait Term extends Member {
     def ref: Term.Ref
     @hosted def overrides: List[Member.Term] = delegate
-    @hosted def companion: Member.Type = fail(ReflectionException(s"companion not found"))
   }
   @branch trait Type extends Member {
     def ref: Type.Ref
     @hosted def overrides: List[Member.Type] = delegate
-    @hosted def companion: Member.Term = fail(ReflectionException(s"companion not found"))
   }
   @branch trait Def extends Term with Has.TermName with Stmt.Template with Has.Paramss with Scope.Params {
     def tparams: List[Aux.TypeParam]
@@ -261,16 +261,15 @@ object Member {
     @hosted def supertypes: List[core.Type] = ref.toTypeRef.supertypes
     @hosted def subclasses: List[Member.Template] = ref.toTypeRef.subclasses
     @hosted def self: Aux.Self = templ.self
-    @hosted def companion: CompanionType = {
+    @hosted def companion: Member.Template
+    @hosted protected def findCompanion[T <: Member.Template](f: PartialFunction[Member, T]): T = {
       val companionId = if (name.isInstanceOf[core.Term.Ident]) core.Type.Ident(name.value) else core.Term.Ident(name.value)
       val candidates = owner.members(name)
       candidates.flatMap(candidates => {
-        val relevant = findCompanion(candidates.alts)
+        val relevant = candidates.alts.collect(f).headOption
         relevant.map(result => succeed(result)).getOrElse(fail(ReflectionException(s"companion not found")))
       })
     }
-    protected type CompanionType <: Member
-    protected def findCompanion(alts: List[Member]): Option[CompanionType]
   }
 }
 case class Overload[+A <: Member](alts: List[A]) {
@@ -355,9 +354,7 @@ object Defn {
                    declctor: Ctor.Primary,
                    templ: Aux.Template) extends Defn with Member.Template with Member.Type with Has.TypeName {
     @hosted override def ctor: Ctor.Primary = succeed(declctor)
-    protected type CompanionType = Object
-    protected def findCompanion(alts: List[Member]) = alts.collect{ case x: Object => x }.headOption
-    @hosted override def companion: CompanionType = super[Template].companion
+    @hosted override def companion: Object = findCompanion{ case x: Object => x }
   }
   @ast class Trait(mods: List[Mod],
                    name: core.Type.Ident,
@@ -365,16 +362,12 @@ object Defn {
                    templ: Aux.Template) extends Defn with Member.Template with Member.Type with Has.TypeName {
     require(templ.parents.forall(_.argss.isEmpty))
     def isInterface: Boolean = templ.stats.forall(_.isInstanceOf[Decl])
-    protected type CompanionType = Object
-    protected def findCompanion(alts: List[Member]) = alts.collect{ case x: Object => x }.headOption
-    @hosted override def companion: CompanionType = super[Template].companion
+    @hosted override def companion: Object = findCompanion{ case x: Object => x }
   }
   @ast class Object(mods: List[Mod],
                     name: Term.Ident,
                     templ: Aux.Template) extends Defn with Member.Template with Member.Term with Has.TermName {
-    protected type CompanionType = Member.Template with Member.Type
-    protected def findCompanion(alts: List[Member]) = alts.collect{ case x: Class => x; case x: Trait => x }.headOption
-    @hosted override def companion: CompanionType = super[Template].companion
+    @hosted override def companion: Member.Template with Member.Type = findCompanion{ case x: Class => x; case x: Trait => x }
   }
 }
 
@@ -392,9 +385,7 @@ object Pkg {
   @ast class Object(mods: List[Mod],
                     name: Term.Ident,
                     templ: Aux.Template) extends Tree with Stmt.TopLevel with Member.Template with Member.Term with Has.TermName {
-    protected type CompanionType = Member.Template with Member.Type
-    protected def findCompanion(alts: List[Member]) = None
-    @hosted override def companion: CompanionType = super[Template].companion
+    @hosted override def companion: Member.Template with Member.Type = fail(ReflectionException("companion not found"))
   }
 }
 
