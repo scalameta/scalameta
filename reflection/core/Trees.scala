@@ -55,7 +55,8 @@ list of ugliness discovered so far
   // TODO: we also need some sort of host-specific metadata in trees
   def src: SourceContext
   def owner: Scope = parent match { case owner: Scope => owner; case tree => tree.owner }
-  def parent: Tree = ??? // TODO: We still need to figure out how to implement this - either going the Roslyn route or the by-name arguments route.
+  // TODO: we still need to figure out how to implement this - either going the Roslyn route or the by-name arguments route.
+  def parent: Tree = ???
 }
 
 @branch trait Ref extends Tree
@@ -455,15 +456,7 @@ object Has {
     def paramss: Seq[Seq[Aux.Param.Named]] = explicits :+ implicits
   }
 
-  @branch trait Name extends Member {
-    def name: core.Name
-  }
-
-  @branch trait TermName extends Member.Term with Has.Name {
-    def name: Term.Name
-  }
-
-  @branch trait TypeName extends Member.Type with Has.Name {
-    def name: Type.Name
-  }
+  @branch trait Name extends Member { def name: core.Name }
+  @branch trait TermName extends Member.Term with Has.Name { def name: Term.Name }
+  @branch trait TypeName extends Member.Type with Has.Name { def name: Type.Name }
 }
