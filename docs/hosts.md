@@ -27,3 +27,46 @@ Hosts are, however, required to create instances of Palladium trees to be return
     1. Again, if we look into existing reflection facilities of Scala, we'll observe that trees begin their lives naked (just syntax) and then get attributed by the typechecker (i.e. have their `var tpe: Type` and `var symbol: Symbol` fields assigned, typically in place). Semantic operations are only available for attributed trees, and there are some operations that are only available on unattributed trees, which means that the users need to be aware of the distinction. Palladium unifies these concepts, exposing semantic methods like `Type.<:<` or `Scope.members` that take care of attribution transparently from the user and providing `Tree.attrs` that can be used to ask the host for type information. As a host implementor, you will most probably want to cache the results of semantic operations used the API mentioned above. Also, in order to correctly implement attribution, for every tree you will need to track the context in which it lives using the facilities described below.
 
   1. Finally, trees are aware of their context. First of all, there's the `Tree.parent` method that can go up the tree structure if the given tree is a part of a bigger tree (exact mechanism of implementing that is TBD until 11 May 2014). Also, there's the notion of hygiene (not yet implemented) that postulates that trees should generally remember the lexical context of their creation site and respect that context even when they are put into parent that comes from a different context.
+
+### HostContext
+
+| Method                                                 | Notes
+|--------------------------------------------------------|-----------------------------------------------------------------
+| `def syntaxProfile: SyntaxProfile`                     | Universally accepted syntactically significant compiler / IDE flags. Currently empty (one can only return `SyntaxProfile()`, but later on when we add support for different versions of Scala, we will expand this data structure.
+| `def semanticProfile: SemanticProfile`                 | Universally accepted semantically significant compiler / IDE flags. Again this will grow over time. At the moment only contains `-language:XXX` compiler flags.
+| `def root: Pkg.Root`                                   | Entry point into whole-program introspection. Should contain everything in sources (if applicable) + on the classpath. Contents of packages can be loaded lazily via the mechanism described in the next documentation entry. Later on we'll have a dedicated tree traversal API to conveniently navigate this entry point.
+| `def stats(scope: Scope): Seq[Tree]`                   | This isn't actually a method in `HostContext`, and it's here only to emphasize a peculiarity of our API. This particular method in unnecessary, because all lists in trees (e.g. the list of statements in a block or a list of declarations in a package or a class) are actually `Seq`'s, which means that the host can choose between eager and lazy population of scope contents when returning trees to the user of the Palladium API (e.g. in `root`).
+| `def members(scope: Scope): Seq[Member]`               | Returns all members (aka symbols, aka named definitions) belonging to the specified scope. This API could query something as simple as parameters of a method or as complex as all members of a given class (accounting for inherited members and overriding). When called on a `Type` (types can be viewed as scopes as well), this method should return members that are adjusted to the type's type arguments and self type. E.g. `t"List".members` should return `Seq(q"def head: A = ...", ...)`, whereas `t"List[Int]".members` should return `Seq(q"def head: Int = ...", ...)`.
+| `def members(scope: Scope, name: Name): Seq[Member]`   | Same as the previous method, but indexed by name, which can be either `Term.Name` or `Type.Name`.
+| `def ctors(scope: Scope): Seq[Ctor]`                   | Same as previous methods, but for constructors. In Palladium API, constructors are not members, because they can't be referenced by name, so we need this method as a dedicated entity.
+| `def defn(term: Term.Ref): Seq[Member.Term]`           | Goes from a reference to a term to the definition of that term. Might have to return multiple results to account for overloading. Overloads can be resolved via `Overload.resolve` or `term.attrs`.
+| `def defn(tpe: Type.Ref): Member`                      | Same as the previous method, but for types. Types can't be overloaded, so we don't have the added complexity.
+| `def overrides(member: Member.Term): Seq[Member.Term]` | Computes all term definitions that are overridden by a given definition. If the provided member has been obtained by instantiating certain type parameters, then the results of this method should also have corresponding type parameters instantiated.
+| `def overrides(member: Member.Type): Seq[Member.Type]` | Same as the previous method, but for types.
+| `def <:<(tpe1: Type, tpe2: Type): Boolean`             | Subtyping check.
+| `def weak_<:<(tpe1: Type, tpe2: Type): Boolean`        | Same as the previous method, but returns true when numeric widening is applicable (e.g. `Int <:< Long` is `false`, but `Int weak_<:< Long` is `true`.
+| `def supertypes(tpe: Type): Seq[Type]`                 | All supertypes of a given type in linearization order, with type arguments instantiated accordingly.
+| `def linearization(tpes: Seq[Type]): Seq[Type]`        | Linearization of a given sequence of types.
+| `def subclasses(tpe: Type): Seq[Member.Template]`      | All subclasses of a given type in the closed world reflected by the host.
+| `def self(tpe: Type): Aux.Self`                        | Self type of a given type, again with type arguments instantiated accordingly.
+| `def lub(tpes: Seq[Type]): Type`                       | Least upper bound.
+| `def glb(tpes: Seq[Type]): Type`                       | Greatest lower bound.
+| `def widen(tpe: Type): Type`                           | Goes from a singleton type to a type underlying that singleton. E.g. `t"x.type".widen` in a context that features `val x = 2` should return `t"Int"`. Widenings should be performed shallowly (i.e. `List[x.type]` shouldn't be changed), but to the maximum possible extent (e.g. for `val x = 2; val y: x.type = x`, `t"y.type".widen` should return `t"Int"`, not `t"x.type"`).
+| `def dealias(tpe: Type): Type`                         | Goes from a type alias or an application of a type alias to the underlying type. Again, this should work shallowly, but to the maximum possible extent.
+| `def erasure(tpe: Type): Type`                         | Erasure.
+| `def attrs(tree: Tree): Seq[Attribute]`                | Computes and returns semantic information for a given tree: resolved, i.e. non-overloaded reference to a definition, type, inferred type and value arguments, macro expansion, etc.
+
+### MacroContext
+
+| Method                                                 | Notes                                                           |
+|--------------------------------------------------------|-----------------------------------------------------------------|
+| `def application: Tree`                                | The entire macro application being expanded.
+| `def warning(msg: String): Unit`                       | Produces a warning with a given message at the position of the macro application. Host is free to choose the presentation for warnings.
+| `def error(msg: String): Unit`                         | Produces an error with a given message at the position of the macro application. Host is free to choose the presentation for errors as long as they eventually fail the build.
+| `def abort(msg: String): Nothing`                      | Does the same as `error`, additionally terminating expansion of the macro provided in `MacroContext.application`.
+| `def resources: Seq[String]`                           | Returns a list of urls of build resources. Hosts are advised to strive for compatibility between each other. If the same project is compiled, say, by SBT and then by Intellij IDEA plugin, then it is very desireable for urls emitted by `resources` to be the same.
+| `def resourceAsBytes(url: String): Array[Byte]`        | Reads the specified resource into an array of byte. Users of the Palladium API will then decide whether/how to convert these bytes into strings or something else.
+
+### Error handling
+
+Palladium expects hosts to signal errors by throwing exceptions derived from `scala.reflect.core.ReflectionException`. Users of Palladium might be shielded from these exceptions by an additional error handling layer inside Palladium, but that shouldn't be a concern for host implementors. At the moment, we don't expose any exception hierarchy, and the only way for the host to elaborate on the details of emitted errors is passing a custom error message. This might change later.
