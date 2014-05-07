@@ -105,7 +105,7 @@ object Term {
   @ast class Update(lhs: Apply, rhs: Term) extends Term
   @ast class Return(expr: Term) extends Term
   @ast class Throw(expr: Term) extends Term
-  @ast class Ascribe(expr: Term, ascribedTpe: Type) extends Term
+  @ast class Ascribe(expr: Term, decltpe: Type) extends Term
   @ast class Annotate(expr: Term, annots: List[Mod.Annot] @nonEmpty) extends Term with Has.Mods {
     def mods: List[Mod] = annots
   }
