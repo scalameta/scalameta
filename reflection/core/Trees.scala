@@ -2,12 +2,11 @@ package scala.reflect
 package core
 
 import org.scalareflect.invariants._
-import org.scalareflect.adt._
 import org.scalareflect.errors._
+import org.scalareflect.adt._
 import org.scalareflect.annotations._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
-import scala.reflect.core.errors.wrapHosted
 
 /*
 list of ugliness discovered so far
@@ -54,32 +53,21 @@ list of ugliness discovered so far
 // the lexical context of newly created trees is assumed to be the one of the macro expansion site.
 @root trait Tree {
   // TODO: we also need some sort of host-specific metadata in trees
-  implicit def src: SourceContext
+  def src: SourceContext
   def owner: Scope = parent match { case owner: Scope => owner; case tree => tree.owner }
   def parent: Tree = ??? // TODO: We still need to figure out how to implement this - either going the Roslyn route or the by-name arguments route.
-  @hosted def attrs: Seq[Attribute] = delegate
-  @hosted protected def internalTpe: Type = attrs.flatMap(_.collect{ case tpe: Attribute.Type => tpe } match {
-    case Attribute.Type(tpe) :: Nil => succeed(tpe)
-    case _ => fail(ReflectionException("typecheck has failed"))
-  })
 }
 
-@branch trait Ref extends Tree {
-  private[core] def toTypeRef: Type.Ref = ??? // TODO: t"$this"
-}
+@branch trait Ref extends Tree
 
 @branch trait Name extends Ref {
   def value: String
   def isBackquoted: Boolean
 }
 
-@branch trait Term extends Arg with Stmt.Template with Stmt.Block {
-  @hosted def tpe: Type = internalTpe
-}
+@branch trait Term extends Arg with Stmt.Template with Stmt.Block
 object Term {
-  @branch trait Ref extends Term with core.Ref {
-    @hosted def defn: Overload[Member.Term] = wrapHosted(_.defn(this)).map(Overload.apply)
-  }
+  @branch trait Ref extends Term with core.Ref
   @ast class This(qual: Option[core.Name]) extends Ref
   @ast class Name(value: scala.Predef.String @nonEmpty, isBackquoted: Boolean = false) extends core.Name with Ref with Pat with Member with Has.TermName {
     // TODO: require(!keywords.contains(value) || isBackquoted)
@@ -119,7 +107,7 @@ object Term {
   @ast class Try(expr: Term, catchp: Option[Term], finallyp: Option[Term]) extends Term
   @ast class Function(params: Seq[Aux.Param], body: Term) extends Term with Scope.Params {
     require(params.forall(_.default.isEmpty))
-    require(params.exists(_.mods.contains(Mod.Implicit)) ==> (params.length == 1))
+    require(params.exists(_.mods.exists(_.isInstanceOf[Mod.Implicit])) ==> (params.length == 1))
   }
   @ast class Cases(cases: Seq[Aux.Case]) extends Term {
     def isPartialFunction = !parent.isInstanceOf[Match]
@@ -137,29 +125,10 @@ object Term {
 }
 
 @branch trait Type extends Tree with Scope.Template {
-  @hosted def <:<(other: Type): Boolean = delegate
-  @hosted def weak_<:<(other: Type): Boolean = delegate
-  @hosted def widen: Type = delegate
-  @hosted def dealias: Type = delegate
-  @hosted def erasure: Type = delegate
-  @hosted def companion: Type.Ref = this match {
-    case ref: Type.Ref => ref.defn.flatMap {
-      case t: Member.Template => t.companion
-      case _ => fail(ReflectionException(s"companion not found"))
-    }.map(_.ref.toTypeRef)
-    case _ => fail(ReflectionException(s"companion not found"))
-  }
-  // TODO: directSuperclasses and others
-  @hosted override def superclasses: Seq[Member.Template] = supertypes.flatMap(tpes => supertypesToMembers(tpes))
-  @hosted override def supertypes: Seq[Type] = delegate
-  @hosted override def self: Aux.Self = delegate
-  @hosted def subclasses: Seq[Member.Template] = delegate
   // TODO: simple type validation
 }
 object Type {
-  @branch trait Ref extends Type with core.Ref {
-    @hosted def defn: Member = delegate
-  }
+  @branch trait Ref extends Type with core.Ref
   @ast class Name(value: String @nonEmpty, isBackquoted: Boolean = false) extends core.Name with Ref {
     // TODO: require(keywords.contains(value) ==> isBackquoted)
   }
@@ -204,52 +173,12 @@ object Pat {
   }
 }
 
-@branch trait Member extends Tree with Has.Mods {
-  def ref: Ref
-  @hosted def overrides: Seq[Member]
-  def annots: Seq[Mod.Annot] = mods.collect{ case annot: Mod.Annot => annot }
-  def doc: Option[Mod.Doc] = mods.collect{ case doc: Mod.Doc => doc }.headOption
-  def isVal: Boolean = this.isInstanceOf[Term.Name] && (this.parent.isInstanceOf[Decl.Val] || this.parent.isInstanceOf[Defn.Val])
-  def isVar: Boolean = this.isInstanceOf[Term.Name] && (this.parent.isInstanceOf[Decl.Var] || this.parent.isInstanceOf[Defn.Var])
-  def isDef: Boolean = this.isInstanceOf[Member.Def]
-  def isType: Boolean = this.isInstanceOf[Member.AbstractOrAliasType]
-  def isClass: Boolean = this.isInstanceOf[Defn.Class]
-  def isTrait: Boolean = this.isInstanceOf[Defn.Trait]
-  def isObject: Boolean = this.isInstanceOf[Defn.Object]
-  def isPkg: Boolean = this.isInstanceOf[Pkg]
-  def isPkgObject: Boolean = this.isInstanceOf[Pkg.Object]
-  def isJava: Boolean = ??? // TODO: need special trees for Java artifacts
-  def isPrivate: Boolean = mods.exists(_.isInstanceOf[Mod.Private])
-  def isProtected: Boolean = mods.exists(_.isInstanceOf[Mod.Protected])
-  def isPublic: Boolean = !isPrivate && !isProtected
-  def isImplicit: Boolean = mods.exists(_.isInstanceOf[Mod.Implicit])
-  def isFinal: Boolean = mods.exists(_.isInstanceOf[Mod.Final])
-  def isSealed: Boolean = mods.exists(_.isInstanceOf[Mod.Sealed])
-  @hosted def isOverride: Boolean = overrides.map(_.nonEmpty)
-  def isCase: Boolean = mods.exists(_.isInstanceOf[Mod.Case])
-  def isAbstract: Boolean = mods.exists(_.isInstanceOf[Mod.Abstract]) || this.isInstanceOf[Decl]
-  def isCovariant: Boolean = mods.exists(_.isInstanceOf[Mod.Covariant])
-  def isContravariant: Boolean = mods.exists(_.isInstanceOf[Mod.Contravariant])
-  def isLazy: Boolean = mods.exists(_.isInstanceOf[Mod.Lazy])
-  def isAbstractOverride: Boolean = mods.exists(_.isInstanceOf[Mod.AbstractOverride])
-  def isMacro: Boolean = mods.exists(_.isInstanceOf[Mod.Macro])
-  def isByNameParam: Boolean = mods.exists(_.isInstanceOf[Mod.ByNameParam])
-  def isVarargParam: Boolean = mods.exists(_.isInstanceOf[Mod.VarargParam])
-  def isValParam: Boolean = mods.exists(_.isInstanceOf[Mod.ValParam])
-  def isVarParam: Boolean = mods.exists(_.isInstanceOf[Mod.VarParam])
-}
+@branch trait Member extends Tree with Has.Mods
 object Member {
-  @branch trait Term extends Member {
-    def ref: Term.Ref
-    @hosted def overrides: Seq[Member.Term] = delegate
-  }
-  @branch trait Type extends Member {
-    def ref: Type.Ref
-    @hosted def overrides: Seq[Member.Type] = delegate
-  }
+  @branch trait Term extends Member
+  @branch trait Type extends Member
   @branch trait Def extends Term with Has.TermName with Stmt.Template with Has.Paramss with Scope.Params {
     def tparams: Seq[Aux.TypeParam]
-    @hosted def tpe: core.Type
   }
   @branch trait AbstractOrAliasType extends Type with Has.TypeName {
     def name: core.Type.Name
@@ -261,19 +190,7 @@ object Member {
     def implicits: Seq[Aux.Param.Named] = Nil
     def tparams: Seq[Aux.TypeParam] = Nil
     def templ: Aux.Template
-    @hosted def superclasses: Seq[Member.Template] = ref.toTypeRef.superclasses
-    @hosted def supertypes: Seq[core.Type] = ref.toTypeRef.supertypes
-    @hosted def subclasses: Seq[Member.Template] = ref.toTypeRef.subclasses
-    @hosted def self: Aux.Self = templ.self
-    @hosted def companion: Member.Template
-    @hosted protected def findCompanion[T <: Member.Template](f: PartialFunction[Member, T]): T = {
-      val companionId = if (name.isInstanceOf[core.Term.Name]) core.Type.Name(name.value) else core.Term.Name(name.value)
-      val candidates = owner.members(name)
-      candidates.flatMap{candidates =>
-        val relevant = candidates.alts.collect(f).headOption
-        relevant.map(result => succeed(result)).getOrElse(fail(ReflectionException(s"companion not found")))
-      }
-    }
+    @mayFail def ctor: Ctor.Primary = fail(ReflectionException("no constructor found"))
   }
 }
 final case class Overload[+A <: Member](alts: Seq[A]) {
@@ -284,29 +201,21 @@ final case class Overload[+A <: Member](alts: Seq[A]) {
 object Decl {
   @ast class Val(mods: Seq[Mod],
                  pats: Seq[Term.Name] @nonEmpty,
-                 decltpe: core.Type) extends Decl with Stmt.Existential with Has.Mods {
-    @hosted def tpe: core.Type = succeed(decltpe)
-  }
+                 decltpe: core.Type) extends Decl with Stmt.Existential with Has.Mods
   @ast class Var(mods: Seq[Mod],
                  pats: Seq[Term.Name] @nonEmpty,
-                 decltpe: core.Type) extends Decl with Has.Mods {
-    @hosted def tpe: core.Type = succeed(decltpe)
-  }
+                 decltpe: core.Type) extends Decl with Has.Mods
   @ast class Def(mods: Seq[Mod],
                  name: Term.Name,
                  tparams: Seq[Aux.TypeParam],
                  explicits: Seq[Seq[Aux.Param.Named]],
                  implicits: Seq[Aux.Param.Named],
-                 decltpe: core.Type) extends Decl with Member.Def {
-    @hosted def tpe: core.Type = succeed(decltpe)
-  }
+                 decltpe: core.Type) extends Decl with Member.Def
   @ast class Procedure(mods: Seq[Mod],
                        name: Term.Name,
                        tparams: Seq[Aux.TypeParam],
                        explicits: Seq[Seq[Aux.Param.Named]],
-                       implicits: Seq[Aux.Param.Named]) extends Decl with Member.Def {
-    @hosted def tpe: core.Type = ??? // TODO: t"Unit"
-  }
+                       implicits: Seq[Aux.Param.Named]) extends Decl with Member.Def
   @ast class Type(mods: Seq[Mod],
                   name: core.Type.Name,
                   tparams: Seq[Aux.TypeParam],
@@ -318,16 +227,13 @@ object Defn {
   @ast class Val(mods: Seq[Mod],
                  pats: Seq[Pat] @nonEmpty,
                  decltpe: Option[core.Type],
-                 rhs: Term) extends Defn with Has.Mods {
-    @hosted def tpe: core.Type = rhs.tpe
-  }
+                 rhs: Term) extends Defn with Has.Mods
   @ast class Var(mods: Seq[Mod],
                  pats: Seq[Pat] @nonEmpty,
                  decltpe: Option[core.Type],
                  rhs: Option[Term]) extends Defn with Has.Mods {
     require(rhs.nonEmpty || pats.forall(_.isInstanceOf[Term.Name]))
     require(decltpe.nonEmpty || rhs.nonEmpty)
-    @hosted def tpe: core.Type = rhs.map(_.tpe).getOrElse(succeed(decltpe.get))
   }
   @ast class Def(mods: Seq[Mod],
                  name: Term.Name,
@@ -336,8 +242,7 @@ object Defn {
                  implicits: Seq[Aux.Param.Named],
                  decltpe: Option[core.Type],
                  body: Term) extends Defn with Member.Def {
-    require(isMacro ==> decltpe.nonEmpty)
-    @hosted def tpe: core.Type = body.tpe
+    require(mods.exists(_.isInstanceOf[Mod.Macro]) ==> decltpe.nonEmpty)
   }
   @ast class Procedure(mods: Seq[Mod],
                        name: Term.Name,
@@ -345,7 +250,6 @@ object Defn {
                        explicits: Seq[Seq[Aux.Param.Named]],
                        implicits: Seq[Aux.Param.Named],
                        body: Term.Block) extends Defn with Member.Def {
-    @hosted def tpe: core.Type = ??? // TODO: t"Unit"
   }
   @ast class Type(mods: Seq[Mod],
                   name: core.Type.Name,
@@ -356,21 +260,17 @@ object Defn {
                    override val tparams: Seq[Aux.TypeParam],
                    declctor: Ctor.Primary,
                    templ: Aux.Template) extends Defn with Member.Template with Member.Type with Has.TypeName {
-    @hosted override def ctor: Ctor.Primary = succeed(declctor)
-    @hosted override def companion: Object = findCompanion{ case x: Object => x }
+    @mayFail override def ctor: Ctor.Primary = succeed(declctor)
   }
   @ast class Trait(mods: Seq[Mod],
                    name: core.Type.Name,
                    override val tparams: Seq[Aux.TypeParam],
                    templ: Aux.Template) extends Defn with Member.Template with Member.Type with Has.TypeName {
     require(templ.parents.forall(_.argss.isEmpty))
-    def isInterface: Boolean = templ.stats.forall(_.isInstanceOf[Decl])
-    @hosted override def companion: Object = findCompanion{ case x: Object => x }
   }
   @ast class Object(mods: Seq[Mod],
                     name: Term.Name,
                     templ: Aux.Template) extends Defn with Member.Template with Member.Term with Has.TermName {
-    @hosted override def companion: Member.Template with Member.Type = findCompanion{ case x: Class => x; case x: Trait => x }
   }
 }
 
@@ -380,21 +280,22 @@ object Defn {
 object Pkg {
   @ast class Root private[core] (stats: Seq[Stmt.TopLevel]) extends Pkg with Scope.TopLevel
   @ast class Empty(stats: Seq[Stmt.TopLevel]) extends Pkg with Scope.TopLevel
-  @ast class Named(override val ref: Term.Ref,
-                   stats: Seq[Stmt.TopLevel]) extends Pkg with Stmt.TopLevel with Scope.TopLevel with Member.Term {
+  @ast class Named(ref: Term.Ref,
+                   stats: Seq[Stmt.TopLevel]) extends Pkg with Stmt.TopLevel with Scope.TopLevel with Member.Term with Has.TermName {
     // TODO: require(ref.isQualId)
     def mods: Seq[Mod] = Nil
+    def name: Term.Name = ref match {
+      case name: Term.Name => name
+      case Term.Select(_, name) => name
+      case _ => sys.error("this shouldn't have happened")
+    }
   }
   @ast class Object(mods: Seq[Mod],
                     name: Term.Name,
-                    templ: Aux.Template) extends Tree with Stmt.TopLevel with Member.Template with Member.Term with Has.TermName {
-    @hosted override def companion: Member.Template with Member.Type = fail(ReflectionException("companion not found"))
-  }
+                    templ: Aux.Template) extends Tree with Stmt.TopLevel with Member.Template with Member.Term with Has.TermName
 }
 
-@branch trait Ctor extends Tree with Has.Mods with Has.Paramss {
-  @hosted def tpe: Type = internalTpe
-}
+@branch trait Ctor extends Tree with Has.Mods with Has.Paramss
 object Ctor {
   @ast class Primary(mods: Seq[Mod] = Nil,
                      explicits: Seq[Seq[Aux.Param.Named]] = Nil,
@@ -414,85 +315,14 @@ object Stmt {
   @branch trait Existential extends Tree
 }
 
-@branch trait Scope extends Tree {
-  @hosted def members: Seq[Member] = delegate
-  @hosted def members(name: Name): Overload[Member] = wrapHosted(_.members(this)).map(Overload.apply)
-  @hosted protected def allMembers[T: ClassTag]: Seq[T] = {
-    members.map(_.collect { case x: T => x })
-  }
-  @hosted protected def uniqueMember[T: ClassTag](s_name: String): T = {
-    val isTerm = classOf[Member.Term].isAssignableFrom(classTag[T].runtimeClass)
-    val name = if (isTerm) Term.Name(s_name) else Type.Name(s_name)
-    members(name).map(_.alts).map(_.collect { case x: T => x }).flatMap(_.findUnique)
-  }
-  protected implicit class RichIterable[T](val members: Seq[T]) {
-    @hosted def findUnique: T = members match {
-      case Seq(unique) => succeed(unique)
-      case Seq() => fail(ReflectionException("no members found"))
-      case _ => fail(ReflectionException("multiple members found"))
-    }
-  }
-}
+@branch trait Scope extends Tree
 object Scope {
-  @branch trait TopLevel extends Scope with Block {
-    @hosted def packages: Seq[Pkg.Named] = allMembers[Pkg.Named]
-    @hosted def packages(name: Name): Pkg.Named = uniqueMember[Pkg.Named](name.toString)
-    @hosted def packages(name: String): Pkg.Named = uniqueMember[Pkg.Named](name.toString)
-    @hosted def packages(name: scala.Symbol): Pkg.Named = uniqueMember[Pkg.Named](name.toString)
-    @hosted def pkgobject: Pkg.Object = allMembers[Pkg.Object].flatMap(_.findUnique)
-  }
-  @branch trait Template extends Block with Params {
-    // TODO: directSuperclasses and others
-    @hosted def superclasses: Seq[Member.Template]
-    @hosted def supertypes: Seq[Type]
-    @hosted def self: Aux.Self
-    @hosted def ctor: Ctor.Primary = ctors.flatMap(_.collect { case prim: Ctor.Primary => prim }.findUnique)
-    @hosted def ctors: Seq[Ctor] = delegate
-  }
-  @branch trait Block extends Refine {
-    @hosted def classes: Seq[Defn.Class] = allMembers[Defn.Class]
-    @hosted def classes(name: Name): Defn.Class = uniqueMember[Defn.Class](name.toString)
-    @hosted def classes(name: String): Defn.Class = uniqueMember[Defn.Class](name.toString)
-    @hosted def classes(name: scala.Symbol): Defn.Class = uniqueMember[Defn.Class](name.toString)
-    @hosted def traits: Seq[Defn.Trait] = allMembers[Defn.Trait]
-    @hosted def traits(name: Name): Defn.Trait = uniqueMember[Defn.Trait](name.toString)
-    @hosted def traits(name: String): Defn.Trait = uniqueMember[Defn.Trait](name.toString)
-    @hosted def traits(name: scala.Symbol): Defn.Trait = uniqueMember[Defn.Trait](name.toString)
-    @hosted def objects: Seq[Defn.Object] = allMembers[Defn.Object]
-    @hosted def objects(name: Name): Defn.Object = uniqueMember[Defn.Object](name.toString)
-    @hosted def objects(name: String): Defn.Object = uniqueMember[Defn.Object](name.toString)
-    @hosted def objects(name: scala.Symbol): Defn.Object = uniqueMember[Defn.Object](name.toString)
-    @hosted def vars: Seq[Term.Name] = allMembers[Term.Name]
-    @hosted def vars(name: Name): Term.Name = uniqueMember[Term.Name](name.toString)
-    @hosted def vars(name: String): Term.Name = uniqueMember[Term.Name](name.toString)
-    @hosted def vars(name: scala.Symbol): Term.Name = uniqueMember[Term.Name](name.toString)
-  }
-  @branch trait Refine extends Existential {
-    @hosted def defs: Seq[Member.Def] = allMembers[Member.Def]
-    @hosted def defs(name: Name): Member.Def = uniqueMember[Member.Def](name.toString)
-    @hosted def defs(name: String): Member.Def = uniqueMember[Member.Def](name.toString)
-    @hosted def defs(name: scala.Symbol): Member.Def = uniqueMember[Member.Def](name.toString)
-  }
-  @branch trait Existential extends Scope {
-    @hosted def vals: Seq[Term.Name] = allMembers[Term.Name]
-    @hosted def vals(name: Name): Term.Name = uniqueMember[Term.Name](name.toString)
-    @hosted def vals(name: String): Term.Name = uniqueMember[Term.Name](name.toString)
-    @hosted def vals(name: scala.Symbol): Term.Name = uniqueMember[Term.Name](name.toString)
-    @hosted def types: Seq[Member.AbstractOrAliasType] = allMembers[Member.AbstractOrAliasType]
-    @hosted def types(name: Name): Member.AbstractOrAliasType = uniqueMember[Member.AbstractOrAliasType](name.toString)
-    @hosted def types(name: String): Member.AbstractOrAliasType = uniqueMember[Member.AbstractOrAliasType](name.toString)
-    @hosted def types(name: scala.Symbol): Member.AbstractOrAliasType = uniqueMember[Member.AbstractOrAliasType](name.toString)
-  }
-  @branch trait Params extends Scope {
-    @hosted def params: Seq[Aux.Param.Named] = allMembers[Aux.Param.Named]
-    @hosted def params(name: Name): Aux.Param.Named = uniqueMember[Aux.Param.Named](name.toString)
-    @hosted def params(name: String): Aux.Param.Named = uniqueMember[Aux.Param.Named](name.toString)
-    @hosted def params(name: scala.Symbol): Aux.Param.Named = uniqueMember[Aux.Param.Named](name.toString)
-    @hosted def tparams: Seq[Aux.TypeParam.Named] = allMembers[Aux.TypeParam.Named]
-    @hosted def tparams(name: Name): Aux.TypeParam.Named = uniqueMember[Aux.TypeParam.Named](name.toString)
-    @hosted def tparams(name: String): Aux.TypeParam.Named = uniqueMember[Aux.TypeParam.Named](name.toString)
-    @hosted def tparams(name: scala.Symbol): Aux.TypeParam.Named = uniqueMember[Aux.TypeParam.Named](name.toString)
-  }
+  @branch trait TopLevel extends Scope with Block
+  @branch trait Template extends Block with Params
+  @branch trait Block extends Refine
+  @branch trait Refine extends Existential
+  @branch trait Existential extends Scope
+  @branch trait Params extends Scope
 }
 
 @branch trait Lit extends Term with Pat
@@ -565,38 +395,17 @@ object Mod {
   @ast class VarParam() extends Mod
 }
 
-@branch trait Attribute extends Tree
-object Attribute {
-  @ast class Ref(ref: Tree) extends Attribute
-  @ast class Type(tpe: core.Type) extends Attribute
-  @ast class InferredTargs(targs: Seq[core.Type]) extends Attribute
-  @ast class InferredVargs(vargs: Seq[core.Term]) extends Attribute
-  @ast class MacroExpansion(tree: core.Tree) extends Attribute
-}
-
 object Aux {
   @ast class Case(pat: Pat, cond: Option[Term] = None, body: Option[Term] = None) extends Tree with Scope
-  @ast class Parent(tpe: Type, argss: Seq[Seq[Arg]] = Nil) extends Ref {
-    @hosted def ctor: Ctor = attrs.flatMap(_.collect{ case ref: Attribute.Ref => ref } match {
-      case Attribute.Ref(ref: Ctor) :: Nil => succeed(ref)
-      case _ => fail(ReflectionException("typecheck has failed"))
-    })
-  }
+  @ast class Parent(tpe: Type, argss: Seq[Seq[Arg]] = Nil) extends Ref
   @ast class Template(early: Seq[Defn.Val] = Nil, parents: Seq[Parent] = Nil,
                       declself: Self = Self.empty, stats: Seq[Stmt.Template] = Nil) extends Tree with Scope.Template {
     require(parents.isEmpty || !parents.tail.exists(_.argss.nonEmpty))
-    @hosted def tpe: Type = internalTpe
-    @hosted def superclasses: Seq[Member.Template] = tpe.flatMap(_.superclasses)
-    @hosted def supertypes: Seq[Type] = tpe.flatMap(_.supertypes)
-    @hosted def self: Self = succeed(declself)
   }
   @ast class Self(name: Option[Term.Name] = None, decltpe: Option[Type] = None) extends Member.Term {
     def mods: Seq[Mod] = Nil
-    @hosted def tpe: Type = internalTpe
-    def ref: Term.Ref = name.getOrElse(Term.This(None))
   }
   @branch trait Param extends Tree with Has.Mods {
-    @hosted def tpe: Type = internalTpe
     def default: Option[Term]
   }
   object Param {
@@ -650,13 +459,11 @@ object Has {
     def name: core.Name
   }
 
-  @branch trait TermName extends Member.Term {
+  @branch trait TermName extends Member.Term with Has.Name {
     def name: Term.Name
-    def ref: Term.Ref = name
   }
 
-  @branch trait TypeName extends Member.Type {
+  @branch trait TypeName extends Member.Type with Has.Name {
     def name: Type.Name
-    def ref: Type.Ref = name
   }
 }

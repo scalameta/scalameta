@@ -1,12 +1,13 @@
 package scala.reflect
 package semantic
 
-import core._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
+import scala.reflect.core._
 
 trait HostContext {
-  def languageProfile: LanguageProfile
+  def syntaxProfile: SyntaxProfile
+  def semanticProfile: SemanticProfile
 
   def root: Pkg.Root
   // NOTE: def stats(scope: Scope): Seq[Tree] is implicit in signatures of Template and Pkg

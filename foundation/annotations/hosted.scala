@@ -19,7 +19,7 @@ class HostedMacros(val c: Context) {
     val mayFail = args.collect{ case q"mayFail = false" => true }.isEmpty
     val exnTpe = tq"_root_.scala.reflect.core.ReflectionException"
     val contextTpe = if (macroApi) tq"_root_.scala.reflect.semantic.MacroContext" else tq"_root_.scala.reflect.semantic.HostContext"
-    val failWrapper = if (macroApi) q"_root_.scala.reflect.core.errors.wrapMacrohosted" else q"_root_.scala.reflect.core.errors.wrapHosted"
+    val failWrapper = if (macroApi) q"_root_.scala.reflect.semantic.errors.wrapMacrohosted" else q"_root_.scala.reflect.semantic.errors.wrapHosted"
     def transform(ddef: DefDef): DefDef = {
       val DefDef(mods, name, tparams, vparamss, tpt, body) = ddef
       val mayFails = if (mayFail) List(q"new _root_.org.scalareflect.errors.mayFail[$exnTpe]") else Nil
@@ -29,7 +29,8 @@ class HostedMacros(val c: Context) {
       val autoBody = body match { case q"delegate" => true; case _ => false }
       val body1 = if (autoBody) {
         val owner = c.internal.enclosingOwner
-        val isInPackageObject = owner.isModuleClass && owner.name == typeNames.PACKAGE
+        val isInPackageObject = (owner.isModuleClass && owner.name == typeNames.PACKAGE) || (owner.name.toString.endsWith("Ops"))
+        val isInImplicitClass = owner.isClass && owner.isImplicit
         def paramRef(p: ValDef) = {
           val isVararg = p.tpt match {
             case tq"$_.$name[..$_]" if name == definitions.RepeatedParamClass.name => true
@@ -38,12 +39,14 @@ class HostedMacros(val c: Context) {
           if (isVararg) q"${p.name}: _*" else q"${p.name}"
         }
         var args = vparamss.map(_.map(paramRef))
-        if (!isInPackageObject && !macroApi) {
+        def prependArg(arg: Tree): Unit = {
           args = args match {
-            case hd :: tl => (q"this" +: hd) :: tl
-            case Nil => List(List(q"this"))
+            case hd :: tl => (arg +: hd) :: tl
+            case Nil => List(List(arg))
           }
         }
+        if (!isInPackageObject && !isInImplicitClass && !macroApi) prependArg(q"this")
+        if (isInImplicitClass && !macroApi) prependArg(q"tree")
         if (mayFail) q"$failWrapper(_.$name(...$args))"
         else q"implicitly[$contextTpe].$name(...$args)"
       } else body
