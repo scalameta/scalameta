@@ -8,24 +8,6 @@ import org.scalareflect.annotations._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 
-/*
-list of ugliness discovered so far
-1. function parameters can not be annotated
-2. try expr catch expr syntax
-3. package objects don't have annotations
-4. lambdas can not be disambiguated from self type in template
-5. patterns in vals are parsed inconsistently
-7. awkward meaning of infix patterns: `a infix (b, c)` means `infix(a, b, c)`
-8. pq"_: F[_]" is something completely different from pq"_: F[_ >: lo <: hi]"
-9. pq"a[b]" is a legal pattern
-10. guess what pq"a -1" means
-11. no way to fully qualify things that are in empty package
-12. vars with default values may not contain patterns
-13. constr block
-14. q"def x { case 1 => 2 }"
-15. q"trait F[T] <: Sobaka[T] with Balabaka { def bazinga } "
-*/
-
 // TODO: collection-like methods (see http://clang.llvm.org/docs/LibASTMatchersReference.html)
 // TODO: rewriting/transformation methods
 // TODO: parser
