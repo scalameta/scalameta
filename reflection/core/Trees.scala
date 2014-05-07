@@ -294,7 +294,6 @@ object Decl {
                  explicits: List[List[Aux.Param.Named]],
                  implicits: List[Aux.Param.Named],
                  declret: core.Type) extends Decl with Member.Def {
-    require(!isMacro)
     @hosted def ret: core.Type = succeed(declret)
   }
   @ast class Procedure(mods: List[Mod],
