@@ -38,5 +38,5 @@ trait MacroContext extends HostContext {
   def error(msg: String): Unit
   def abort(msg: String): Nothing
   def listResources: Seq[String]
-  def readResource(url: String, codec: scala.io.Codec): String
+  def readResource(url: String): Array[Byte]
 }
