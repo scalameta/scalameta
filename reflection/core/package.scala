@@ -3,7 +3,8 @@ package scala.reflect
 import scala.language.experimental.{macros => prettyPlease}
 import org.scalareflect.adt._
 import org.scalareflect.errors._
-import scala.reflect.core.errors.{wrapHosted, wrapMacrohosted}
+import core.errors.{wrapHosted, wrapMacrohosted}
+import semantic.{HostContext, MacroContext}
 import org.scalareflect.annotations._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq

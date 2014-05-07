@@ -1,6 +1,7 @@
 package scala.reflect
-package core
+package semantic
 
+import core._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 
