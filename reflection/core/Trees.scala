@@ -7,6 +7,7 @@ import org.scalareflect.errors._
 import org.scalareflect.annotations._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
+import scala.reflect.core.errors.wrapHosted
 
 /*
 list of ugliness discovered so far
@@ -77,7 +78,7 @@ list of ugliness discovered so far
 }
 object Term {
   @branch trait Ref extends Term with core.Ref {
-    @hosted def defn: Overload[Member.Term] = delegate
+    @hosted def defn: Overload[Member.Term] = wrapHosted(_.defn(this)).map(Overload.apply)
   }
   @ast class This(qual: Option[core.Name]) extends Ref
   @ast class Name(value: scala.Predef.String @nonEmpty, isBackquoted: Boolean = false) extends core.Name with Ref with Pat with Member with Has.TermName {
@@ -415,7 +416,7 @@ object Stmt {
 
 @branch trait Scope extends Tree {
   @hosted def members: Seq[Member] = delegate
-  @hosted def members(name: Name): Overload[Member] = delegate
+  @hosted def members(name: Name): Overload[Member] = wrapHosted(_.members(this)).map(Overload.apply)
   @hosted protected def allMembers[T: ClassTag]: Seq[T] = {
     members.map(_.collect { case x: T => x })
   }
