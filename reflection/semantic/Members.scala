@@ -9,7 +9,7 @@ import scala.reflect.core._
 import scala.reflect.semantic.errors.wrapHosted
 
 trait MemberOps {
-  implicit class RichMember(tree: Member) {
+  implicit class SemanticMemberOps(tree: Member) {
     def ref: Ref = tree match {
       case self: Aux.Self => self.name.getOrElse(Term.This(None)(SourceContext.None))
       case named: Has.Name => named.name
@@ -50,17 +50,17 @@ trait MemberOps {
     def isVarParam: Boolean = tree.mods.exists(_.isInstanceOf[Mod.VarParam])
   }
 
-  implicit class RichTermMember(tree: Member.Term) {
-    def ref: Term.Ref = new RichMember(tree).ref.asInstanceOf[Term.Ref]
-    @hosted def overrides: Seq[Member.Term] = new RichMember(tree).overrides.map(_.asInstanceOf[Seq[Member.Term]])
+  implicit class SemanticTermMemberOps(tree: Member.Term) {
+    def ref: Term.Ref = new SemanticMemberOps(tree).ref.asInstanceOf[Term.Ref]
+    @hosted def overrides: Seq[Member.Term] = new SemanticMemberOps(tree).overrides.map(_.asInstanceOf[Seq[Member.Term]])
   }
 
-  implicit class RichTypeMember(tree: Member.Type) {
-    def ref: Type.Ref = new RichMember(tree).ref.asInstanceOf[Type.Ref]
-    @hosted def overrides: Seq[Member.Type] = new RichMember(tree).overrides.map(_.asInstanceOf[Seq[Member.Type]])
+  implicit class SemanticTypeMemberOps(tree: Member.Type) {
+    def ref: Type.Ref = new SemanticMemberOps(tree).ref.asInstanceOf[Type.Ref]
+    @hosted def overrides: Seq[Member.Type] = new SemanticMemberOps(tree).overrides.map(_.asInstanceOf[Seq[Member.Type]])
   }
 
-  implicit class RichDefMember(tree: Member.Def) {
+  implicit class SemanticDefMemberOps(tree: Member.Def) {
     @hosted def tpe: core.Type = tree match {
       case x: Decl.Def => succeed(x.decltpe)
       case x: Decl.Procedure => ??? // TODO: t"Unit"
@@ -69,11 +69,11 @@ trait MemberOps {
     }
   }
 
-  implicit class RichTemplateMember(tree: Member.Template) {
+  implicit class SemanticTemplateMemberOps(tree: Member.Template) {
     @hosted def superclasses: Seq[Member.Template] = tree.ref.toTypeRef.superclasses
     @hosted def supertypes: Seq[core.Type] = tree.ref.toTypeRef.supertypes
     @hosted def subclasses: Seq[Member.Template] = tree.ref.toTypeRef.subclasses
-    @hosted def self: Aux.Self = tree.templ.self
+    @hosted def self: Aux.Self = succeed(tree.templ.self)
     @hosted def companion: Member.Template = tree match {
       case _: Defn.Class => findCompanion{ case x: Defn.Object => x }
       case _: Defn.Trait => findCompanion{ case x: Defn.Object => x }
@@ -90,56 +90,55 @@ trait MemberOps {
     }
   }
 
-  implicit class RichDeclVal(tree: Decl.Val) {
+  implicit class SemanticDeclValOps(tree: Decl.Val) {
     @hosted def tpe: core.Type = succeed(tree.decltpe)
   }
 
-  implicit class RichDeclVar(tree: Decl.Var) {
+  implicit class SemanticDeclVarOps(tree: Decl.Var) {
     @hosted def tpe: core.Type = succeed(tree.decltpe)
   }
 
-  implicit class RichDefnVal(tree: Defn.Val) {
+  implicit class SemanticDefnValOps(tree: Defn.Val) {
     @hosted def tpe: core.Type = tree.rhs.tpe
   }
 
-  implicit class RichDefnVar(tree: Defn.Var) {
+  implicit class SemanticDefnVarOps(tree: Defn.Var) {
     @hosted def tpe: core.Type = tree.rhs.map(_.tpe).getOrElse(succeed(tree.decltpe.get))
   }
 
-  implicit class RichDefnClass(tree: Defn.Class) {
-    @hosted def companion: Object = new RichTemplateMember(tree).companion.map(_.asInstanceOf[Object])
+  implicit class SemanticDefnClassOps(tree: Defn.Class) {
+    @hosted def companion: Object = new SemanticTemplateMemberOps(tree).companion.map(_.asInstanceOf[Object])
   }
 
-  implicit class RichDefnTrait(tree: Defn.Trait) {
-    @hosted def companion: Object = new RichTemplateMember(tree).companion.map(_.asInstanceOf[Object])
+  implicit class SemanticDefnTraitOps(tree: Defn.Trait) {
+    @hosted def companion: Object = new SemanticTemplateMemberOps(tree).companion.map(_.asInstanceOf[Object])
   }
 
-  implicit class RichDefnObject(tree: Defn.Object) {
-    @hosted def companion: Member.Template with Member.Type = new RichTemplateMember(tree).companion.map(_.asInstanceOf[Member.Template with Member.Type])
+  implicit class SemanticDefnObjectOps(tree: Defn.Object) {
+    @hosted def companion: Member.Template with Member.Type = new SemanticTemplateMemberOps(tree).companion.map(_.asInstanceOf[Member.Template with Member.Type])
   }
 
-  implicit class RichPkgObject(tree: Defn.Object) {
-    @hosted def companion: Member.Template with Member.Type = new RichTemplateMember(tree).companion.map(_.asInstanceOf[Member.Template with Member.Type])
+  implicit class SemanticPkgObjectOps(tree: Defn.Object) {
+    @hosted def companion: Member.Template with Member.Type = new SemanticTemplateMemberOps(tree).companion.map(_.asInstanceOf[Member.Template with Member.Type])
   }
 
-  implicit class RichCtor(tree: Ctor) {
+  implicit class SemanticCtorOps(tree: Ctor) {
     @hosted def tpe: core.Type = tree.internalTpe
   }
 
-  implicit class RichParent(tree: Aux.Param) {
+  implicit class SemanticParentOps(tree: Aux.Param) {
     @hosted def ctor: Ctor = tree.attrs.flatMap(_.collect{ case ref: Attribute.Ref => ref } match {
       case Attribute.Ref(ref: Ctor) :: Nil => succeed(ref)
       case _ => fail(ReflectionException("typecheck has failed"))
     })
   }
 
-  implicit class RichSelf(tree: Aux.Self) {
-    def ref: Term.This = new RichMember(tree).ref.asInstanceOf[Term.This]
+  implicit class SemanticSelfOps(tree: Aux.Self) {
+    def ref: Term.This = new SemanticMemberOps(tree).ref.asInstanceOf[Term.This]
     @hosted def tpe: Type = tree.internalTpe
   }
 
-  implicit class RichParam(tree: Aux.Param) {
+  implicit class SemanticParamOps(tree: Aux.Param) {
     @hosted def tpe: Type = tree.internalTpe
   }
 }
-object MemberOps extends MemberOps

@@ -9,7 +9,7 @@ import scala.reflect.core._
 import scala.reflect.semantic.errors.wrapHosted
 
 trait ScopeOps {
-  private[semantic] implicit class RichIterable[T](val members: Seq[T]) {
+  private[semantic] implicit class SemanticIterableOps[T](val members: Seq[T]) {
     @hosted def findUnique: T = members match {
       case Seq(unique) => succeed(unique)
       case Seq() => fail(ReflectionException("no members found"))
@@ -17,7 +17,7 @@ trait ScopeOps {
     }
   }
 
-  implicit class RichScope(tree: Scope) {
+  implicit class SemanticScopeOps(tree: Scope) {
     @hosted def members: Seq[Member] = delegate
     @hosted def members(name: Name): Overload[Member] = wrapHosted(_.members(tree)).map(Overload.apply)
     @hosted private[semantic] def allMembers[T: ClassTag]: Seq[T] = {
@@ -30,7 +30,7 @@ trait ScopeOps {
     }
   }
 
-  implicit class RichTopLevelScope(tree: Scope.TopLevel) {
+  implicit class SemanticTopLevelScopeOps(tree: Scope.TopLevel) {
     @hosted def packages: Seq[Pkg.Named] = tree.allMembers[Pkg.Named]
     @hosted def packages(name: Name): Pkg.Named = tree.uniqueMember[Pkg.Named](name.toString)
     @hosted def packages(name: String): Pkg.Named = tree.uniqueMember[Pkg.Named](name.toString)
@@ -38,7 +38,7 @@ trait ScopeOps {
     @hosted def pkgobject: Pkg.Object = tree.allMembers[Pkg.Object].flatMap(_.findUnique)
   }
 
-  implicit class RichTemplateScope(tree: Scope.Template) {
+  implicit class SemanticTemplateScopeOps(tree: Scope.Template) {
     // TODO: directSuperclasses and others
     @hosted def superclasses: Seq[Member.Template] = tree match {
       case x: Aux.Template => x.tpe.flatMap(_.superclasses)
@@ -52,7 +52,7 @@ trait ScopeOps {
     }
     @hosted def self: Aux.Self = tree match {
       case x: Aux.Template => succeed(x.self)
-      case x: Member.Template => x.templ.self
+      case x: Member.Template => succeed(x.templ.self)
       case x: Type => wrapHosted(_.self(x))
     }
     @hosted def subclasses: Seq[Member.Template] = tree match {
@@ -64,7 +64,7 @@ trait ScopeOps {
     @hosted def ctors: Seq[Ctor] = delegate
   }
 
-  implicit class RichBlockScope(tree: Scope.Block) {
+  implicit class SemanticBlockScopeOps(tree: Scope.Block) {
     @hosted def classes: Seq[Defn.Class] = tree.allMembers[Defn.Class]
     @hosted def classes(name: Name): Defn.Class = tree.uniqueMember[Defn.Class](name.toString)
     @hosted def classes(name: String): Defn.Class = tree.uniqueMember[Defn.Class](name.toString)
@@ -83,14 +83,14 @@ trait ScopeOps {
     @hosted def vars(name: scala.Symbol): Term.Name = tree.uniqueMember[Term.Name](name.toString)
   }
 
-  implicit class RichRefineScope(tree: Scope.Refine) {
+  implicit class SemanticRefineScopeOps(tree: Scope.Refine) {
     @hosted def defs: Seq[Member.Def] = tree.allMembers[Member.Def]
     @hosted def defs(name: Name): Member.Def = tree.uniqueMember[Member.Def](name.toString)
     @hosted def defs(name: String): Member.Def = tree.uniqueMember[Member.Def](name.toString)
     @hosted def defs(name: scala.Symbol): Member.Def = tree.uniqueMember[Member.Def](name.toString)
   }
 
-  implicit class RichExistentialScope(tree: Scope.Existential) {
+  implicit class SemanticExistentialScopeOps(tree: Scope.Existential) {
     @hosted def vals: Seq[Term.Name] = tree.allMembers[Term.Name]
     @hosted def vals(name: Name): Term.Name = tree.uniqueMember[Term.Name](name.toString)
     @hosted def vals(name: String): Term.Name = tree.uniqueMember[Term.Name](name.toString)
@@ -101,7 +101,7 @@ trait ScopeOps {
     @hosted def types(name: scala.Symbol): Member.AbstractOrAliasType = tree.uniqueMember[Member.AbstractOrAliasType](name.toString)
   }
 
-  implicit class RichParamsScope(tree: Scope.Params) {
+  implicit class SemanticParamsScopeOps(tree: Scope.Params) {
     @hosted def params: Seq[Aux.Param.Named] = tree.allMembers[Aux.Param.Named]
     @hosted def params(name: Name): Aux.Param.Named = tree.uniqueMember[Aux.Param.Named](name.toString)
     @hosted def params(name: String): Aux.Param.Named = tree.uniqueMember[Aux.Param.Named](name.toString)
@@ -112,8 +112,7 @@ trait ScopeOps {
     @hosted def tparams(name: scala.Symbol): Aux.TypeParam.Named = tree.uniqueMember[Aux.TypeParam.Named](name.toString)
   }
 
-  implicit class RichTemplate(tree: Aux.Template) {
+  implicit class SemanticTemplateOps(tree: Aux.Template) {
     @hosted def tpe: Type = tree.internalTpe
   }
 }
-object ScopeOps extends ScopeOps

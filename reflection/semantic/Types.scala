@@ -9,7 +9,7 @@ import scala.reflect.core._
 import scala.reflect.semantic.errors.wrapHosted
 
 trait TypeOps {
-  implicit class RichType(tree: Type) {
+  implicit class SemanticTypeOps(tree: Type) {
     @hosted def <:<(other: Type): Boolean = delegate
     @hosted def weak_<:<(other: Type): Boolean = delegate
     @hosted def widen: Type = delegate
@@ -24,11 +24,11 @@ trait TypeOps {
     }
   }
 
-  implicit class RichRef(tree: Ref) {
+  implicit class SemanticRefOps(tree: Ref) {
     private[semantic] def toTypeRef: Type.Ref = ??? // TODO: t"$tree"
   }
 
-  implicit class RichTypeRef(tree: Type.Ref) {
+  implicit class SemanticTypeRefOps(tree: Type.Ref) {
     @hosted def defn: Member = delegate
   }
 
@@ -48,18 +48,17 @@ trait TypeOps {
       case tpe => fail(ReflectionException(s"unexpected type $tpe returned from supertypes"))
     }
   }
-  implicit class RichTemplates(val parents: Seq[Member.Template]) {
+  implicit class SemanticTemplatesOps(val parents: Seq[Member.Template]) {
     @hosted def linearization: Seq[Member.Template] = {
       val linearization = parents.map(_.ref.toTypeRef).linearization
       linearization.flatMap(tpes => supertypesToMembers(tpes))
     }
   }
 
-  implicit class RichTypes(val parents: Seq[Type]) {
+  implicit class SemanticTypesOps(val parents: Seq[Type]) {
     @hosted def linearization: Seq[Type] = wrapHosted(_.linearization(parents))
   }
 
   @hosted def lub(tpes: Seq[Type]): Type = delegate
   @hosted def glb(tpes: Seq[Type]): Type = delegate
 }
-object TypeOps extends TypeOps

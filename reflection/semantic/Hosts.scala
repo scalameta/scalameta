@@ -36,7 +36,7 @@ trait HostContext {
 }
 
 trait MacroContext extends HostContext {
-  def macroApplication: Tree
+  def application: Tree
   def warning(msg: String): Unit
   def error(msg: String): Unit
   def abort(msg: String): Nothing

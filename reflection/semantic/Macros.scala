@@ -7,7 +7,7 @@ import scala.collection.immutable.Seq
 import scala.reflect.core._
 
 object c {
-  @hosted(macroApi = true) def macroApplication: Tree = delegate
+  @hosted(macroApi = true) def application: Tree = delegate
   // TODO: design a way to specify positions here
   @hosted(macroApi = true) def warning(msg: String): Unit = delegate
   @hosted(macroApi = true) def error(msg: String): Unit = delegate
