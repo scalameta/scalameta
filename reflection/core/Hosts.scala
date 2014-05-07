@@ -10,6 +10,7 @@ trait HostContext {
   def root: Pkg.Root
   // NOTE: def stats(scope: Scope): Seq[Tree] is implicit in signatures of Template and Pkg
   def members(scope: Scope): Seq[Member]
+  def members(scope: Scope, name: Name): Overload[Member]
   def ctors(scope: Scope): Seq[Ctor]
 
   def defn(term: Term.Ref): Overload[Member.Term]

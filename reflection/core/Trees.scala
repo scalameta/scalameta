@@ -80,7 +80,7 @@ object Term {
     @hosted def defn: Overload[Member.Term] = delegate
   }
   @ast class This(qual: Option[core.Name]) extends Ref
-  @ast class Name(value: scala.Predef.String @nonEmpty, isBackquoted: Boolean = false) extends core.Name with Ref with Pat with Has.TermName {
+  @ast class Name(value: scala.Predef.String @nonEmpty, isBackquoted: Boolean = false) extends core.Name with Ref with Pat with Member with Has.TermName {
     // TODO: require(!keywords.contains(value) || isBackquoted)
     // TODO: if not backquoted, then not all values should be allowed
     def name: Name = this
@@ -415,26 +415,30 @@ object Stmt {
 
 @branch trait Scope extends Tree {
   @hosted def members: Seq[Member] = delegate
-  @hosted def members(name: Name): Overload[Member] = members.flatMap(_.findOverloaded(name))
-  protected implicit class RichIterable[T](val members: Seq[T]) {
-    @hosted def findUnique: T = ???
-    @hosted def findUnique(name: Name): T = ???
-    @hosted def findUnique(name: String): T = ???
-    @hosted def findUnique(name: scala.Symbol): T = ???
+  @hosted def members(name: Name): Overload[Member] = delegate
+  @hosted protected def allMembers[T: ClassTag]: Seq[T] = {
+    members.map(_.collect { case x: T => x })
   }
-  protected implicit class RichMembers[T <: Member](val members: Seq[T]) {
-    @hosted def findOverloaded(name: Name): Overload[T] = ???
-    @hosted def findOverloaded(name: String): Overload[T] = ???
-    @hosted def findOverloaded(name: scala.Symbol): Overload[T] = ???
+  @hosted protected def uniqueMember[T: ClassTag](s_name: String): T = {
+    val isTerm = classOf[Member.Term].isAssignableFrom(classTag[T].runtimeClass)
+    val name = if (isTerm) Term.Name(s_name) else Type.Name(s_name)
+    members(name).map(_.alts).map(_.collect { case x: T => x }).flatMap(_.findUnique)
+  }
+  protected implicit class RichIterable[T](val members: Seq[T]) {
+    @hosted def findUnique: T = members match {
+      case Seq(unique) => succeed(unique)
+      case Seq() => fail(ReflectionException("no members found"))
+      case _ => fail(ReflectionException("multiple members found"))
+    }
   }
 }
 object Scope {
   @branch trait TopLevel extends Scope with Block {
-    @hosted def packages: Seq[Pkg.Named] = members.map(_.collect { case pkg: Pkg.Named => pkg })
-    @hosted def packages(name: Name): Pkg.Named = packages.flatMap(_.findUnique(name))
-    @hosted def packages(name: String): Pkg.Named = packages.flatMap(_.findUnique(name))
-    @hosted def packages(name: scala.Symbol): Pkg.Named = packages.flatMap(_.findUnique(name))
-    @hosted def pkgobject: Pkg.Object = members.flatMap(_.collect { case pkgobject: Pkg.Object => pkgobject }.findUnique)
+    @hosted def packages: Seq[Pkg.Named] = allMembers[Pkg.Named]
+    @hosted def packages(name: Name): Pkg.Named = uniqueMember[Pkg.Named](name.toString)
+    @hosted def packages(name: String): Pkg.Named = uniqueMember[Pkg.Named](name.toString)
+    @hosted def packages(name: scala.Symbol): Pkg.Named = uniqueMember[Pkg.Named](name.toString)
+    @hosted def pkgobject: Pkg.Object = allMembers[Pkg.Object].flatMap(_.findUnique)
   }
   @branch trait Template extends Block with Params {
     // TODO: directSuperclasses and others
@@ -445,48 +449,48 @@ object Scope {
     @hosted def ctors: Seq[Ctor] = delegate
   }
   @branch trait Block extends Refine {
-    @hosted def classes: Seq[Defn.Class] = members.map(_.collect { case cls: Defn.Class => cls })
-    @hosted def classes(name: Name): Defn.Class = classes.flatMap(_.findUnique(name))
-    @hosted def classes(name: String): Defn.Class = classes.flatMap(_.findUnique(name))
-    @hosted def classes(name: scala.Symbol): Defn.Class = classes.flatMap(_.findUnique(name))
-    @hosted def traits: Seq[Defn.Trait] = members.map(_.collect { case trt: Defn.Trait => trt })
-    @hosted def traits(name: Name): Defn.Trait = traits.flatMap(_.findUnique(name))
-    @hosted def traits(name: String): Defn.Trait = traits.flatMap(_.findUnique(name))
-    @hosted def traits(name: scala.Symbol): Defn.Trait = traits.flatMap(_.findUnique(name))
-    @hosted def objects: Seq[Defn.Object] = members.map(_.collect { case obj: Defn.Object => obj })
-    @hosted def objects(name: Name): Defn.Object = objects.flatMap(_.findUnique(name))
-    @hosted def objects(name: String): Defn.Object = objects.flatMap(_.findUnique(name))
-    @hosted def objects(name: scala.Symbol): Defn.Object = objects.flatMap(_.findUnique(name))
-    @hosted def vars: Seq[Term.Name] = members.map(_.collect { case obj: Term.Name => obj })
-    @hosted def vars(name: Name): Term.Name = vars.flatMap(_.findUnique(name))
-    @hosted def vars(name: String): Term.Name = vars.flatMap(_.findUnique(name))
-    @hosted def vars(name: scala.Symbol): Term.Name = vars.flatMap(_.findUnique(name))
+    @hosted def classes: Seq[Defn.Class] = allMembers[Defn.Class]
+    @hosted def classes(name: Name): Defn.Class = uniqueMember[Defn.Class](name.toString)
+    @hosted def classes(name: String): Defn.Class = uniqueMember[Defn.Class](name.toString)
+    @hosted def classes(name: scala.Symbol): Defn.Class = uniqueMember[Defn.Class](name.toString)
+    @hosted def traits: Seq[Defn.Trait] = allMembers[Defn.Trait]
+    @hosted def traits(name: Name): Defn.Trait = uniqueMember[Defn.Trait](name.toString)
+    @hosted def traits(name: String): Defn.Trait = uniqueMember[Defn.Trait](name.toString)
+    @hosted def traits(name: scala.Symbol): Defn.Trait = uniqueMember[Defn.Trait](name.toString)
+    @hosted def objects: Seq[Defn.Object] = allMembers[Defn.Object]
+    @hosted def objects(name: Name): Defn.Object = uniqueMember[Defn.Object](name.toString)
+    @hosted def objects(name: String): Defn.Object = uniqueMember[Defn.Object](name.toString)
+    @hosted def objects(name: scala.Symbol): Defn.Object = uniqueMember[Defn.Object](name.toString)
+    @hosted def vars: Seq[Term.Name] = allMembers[Term.Name]
+    @hosted def vars(name: Name): Term.Name = uniqueMember[Term.Name](name.toString)
+    @hosted def vars(name: String): Term.Name = uniqueMember[Term.Name](name.toString)
+    @hosted def vars(name: scala.Symbol): Term.Name = uniqueMember[Term.Name](name.toString)
   }
   @branch trait Refine extends Existential {
-    @hosted def defs: Seq[Member.Def] = members.map(_.collect { case obj: Member.Def => obj })
-    @hosted def defs(name: Name): Member.Def = defs.flatMap(_.findUnique(name))
-    @hosted def defs(name: String): Member.Def = defs.flatMap(_.findUnique(name))
-    @hosted def defs(name: scala.Symbol): Member.Def = defs.flatMap(_.findUnique(name))
+    @hosted def defs: Seq[Member.Def] = allMembers[Member.Def]
+    @hosted def defs(name: Name): Member.Def = uniqueMember[Member.Def](name.toString)
+    @hosted def defs(name: String): Member.Def = uniqueMember[Member.Def](name.toString)
+    @hosted def defs(name: scala.Symbol): Member.Def = uniqueMember[Member.Def](name.toString)
   }
   @branch trait Existential extends Scope {
-    @hosted def vals: Seq[Term.Name] = members.map(_.collect { case obj: Term.Name => obj })
-    @hosted def vals(name: Name): Term.Name = vals.flatMap(_.findUnique(name))
-    @hosted def vals(name: String): Term.Name = vals.flatMap(_.findUnique(name))
-    @hosted def vals(name: scala.Symbol): Term.Name = vals.flatMap(_.findUnique(name))
-    @hosted def types: Seq[Member.AbstractOrAliasType] = members.map(_.collect { case obj: Member.AbstractOrAliasType => obj })
-    @hosted def types(name: Name): Member.AbstractOrAliasType = types.flatMap(_.findUnique(name))
-    @hosted def types(name: String): Member.AbstractOrAliasType = types.flatMap(_.findUnique(name))
-    @hosted def types(name: scala.Symbol): Member.AbstractOrAliasType = types.flatMap(_.findUnique(name))
+    @hosted def vals: Seq[Term.Name] = allMembers[Term.Name]
+    @hosted def vals(name: Name): Term.Name = uniqueMember[Term.Name](name.toString)
+    @hosted def vals(name: String): Term.Name = uniqueMember[Term.Name](name.toString)
+    @hosted def vals(name: scala.Symbol): Term.Name = uniqueMember[Term.Name](name.toString)
+    @hosted def types: Seq[Member.AbstractOrAliasType] = allMembers[Member.AbstractOrAliasType]
+    @hosted def types(name: Name): Member.AbstractOrAliasType = uniqueMember[Member.AbstractOrAliasType](name.toString)
+    @hosted def types(name: String): Member.AbstractOrAliasType = uniqueMember[Member.AbstractOrAliasType](name.toString)
+    @hosted def types(name: scala.Symbol): Member.AbstractOrAliasType = uniqueMember[Member.AbstractOrAliasType](name.toString)
   }
   @branch trait Params extends Scope {
-    @hosted def params: Seq[Aux.Param.Named] = members.map(_.collect { case obj: Aux.Param.Named => obj })
-    @hosted def params(name: Name): Aux.Param.Named = params.flatMap(_.findUnique(name))
-    @hosted def params(name: String): Aux.Param.Named = params.flatMap(_.findUnique(name))
-    @hosted def params(name: scala.Symbol): Aux.Param.Named = params.flatMap(_.findUnique(name))
-    @hosted def tparams: Seq[Aux.TypeParam.Named] = members.map(_.collect { case obj: Aux.TypeParam.Named => obj })
-    @hosted def tparams(name: Name): Aux.TypeParam.Named = tparams.flatMap(_.findUnique(name))
-    @hosted def tparams(name: String): Aux.TypeParam.Named = tparams.flatMap(_.findUnique(name))
-    @hosted def tparams(name: scala.Symbol): Aux.TypeParam.Named = tparams.flatMap(_.findUnique(name))
+    @hosted def params: Seq[Aux.Param.Named] = allMembers[Aux.Param.Named]
+    @hosted def params(name: Name): Aux.Param.Named = uniqueMember[Aux.Param.Named](name.toString)
+    @hosted def params(name: String): Aux.Param.Named = uniqueMember[Aux.Param.Named](name.toString)
+    @hosted def params(name: scala.Symbol): Aux.Param.Named = uniqueMember[Aux.Param.Named](name.toString)
+    @hosted def tparams: Seq[Aux.TypeParam.Named] = allMembers[Aux.TypeParam.Named]
+    @hosted def tparams(name: Name): Aux.TypeParam.Named = uniqueMember[Aux.TypeParam.Named](name.toString)
+    @hosted def tparams(name: String): Aux.TypeParam.Named = uniqueMember[Aux.TypeParam.Named](name.toString)
+    @hosted def tparams(name: scala.Symbol): Aux.TypeParam.Named = uniqueMember[Aux.TypeParam.Named](name.toString)
   }
 }
 
