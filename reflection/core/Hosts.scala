@@ -13,7 +13,7 @@ trait HostContext {
   def ctors(scope: Scope): Seq[Ctor]
 
   def defn(term: Term.Ref): Overload[Member.Term]
-  def defn(ref: Type.Ref): Member
+  def defn(tpe: Type.Ref): Member
   def overrides(member: Member.Term): Seq[Member.Term]
   def overrides(member: Member.Type): Seq[Member.Type]
 
