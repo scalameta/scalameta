@@ -150,7 +150,6 @@ object Term {
   @hosted override def supertypes: List[Type] = delegate
   @hosted override def self: Aux.Self = delegate
   @hosted def subclasses: List[Member.Template] = delegate
-  @hosted def inferImplicit: Term = ??? // TODO: typecheck q"implicitly[$this]" and fetch the resulting implicit argument
   // TODO: simple type validation
 }
 object Type {
@@ -287,7 +286,7 @@ object Member {
   }
 }
 case class Overload[+A <: Member](alts: List[A]) {
-  @hosted def resolve(tpes: core.Type*): A = delegate
+  def resolve(tpes: core.Type*): A = ??? // TODO: implement this in terms of Tree.attrs and Attribute.Ref
 }
 
 @branch trait Decl extends Stmt.Template with Stmt.Refine

@@ -26,8 +26,6 @@ trait HostContext {
   def dealias(tpe: Type): Type
   def erasure(tpe: Type): Type
 
-  // TODO: if we keep typecheck, then we don't really need all those `tpe` methods
-  def resolve[T <: Member](overload: Overload[T], tpes: Type*): T
   def attrs(tree: Tree): List[Attribute]
 }
 
