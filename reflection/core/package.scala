@@ -65,15 +65,9 @@ package object core {
     @hosted(macroApi = true) def warning(msg: String): Unit = delegate
     @hosted(macroApi = true) def error(msg: String): Unit = delegate
     @hosted(macroApi = true) def abort(msg: String): Nothing = delegate
-    final case class Resource(url: String)(implicit mc: MacroContext) {
-      @mayFail def readBytes: Array[Byte] = wrapMacrohosted(_.readResource(url))
-      @mayFail def readString: String = readBytes.map(bytes => new java.lang.String(bytes))
-    }
-    class Resources(urls: Seq[String])(implicit mc: MacroContext) extends Iterable[Resource] {
-      def iterator: Iterator[Resource] = urls.map(url => new Resource(url)).iterator
-      @mayFail def apply(url: String): String = new Resource(url).readString
-    }
-    @hosted(macroApi = true) def resources: Resources = wrapMacrohosted(mc => new Resources(mc.listResources))
+    @hosted(macroApi = true) def resources: Seq[String] = delegate
+    @hosted(macroApi = true) def resourceAsBytes(url: String): Array[Byte] = delegate
+    @hosted(macroApi = true) def resourceAsUtf8(url: String): String = resourceAsBytes(url).map(bytes => new String(bytes))
   }
 
   // TODO: trivia: whitespace, comments, etc (see http://msdn.microsoft.com/en-us/vstudio/hh500769)

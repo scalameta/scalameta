@@ -37,6 +37,6 @@ trait MacroContext extends HostContext {
   def warning(msg: String): Unit
   def error(msg: String): Unit
   def abort(msg: String): Nothing
-  def listResources: Seq[String]
-  def readResource(url: String): Array[Byte]
+  def resources: Seq[String]
+  def resourceAsBytes(url: String): Array[Byte]
 }
