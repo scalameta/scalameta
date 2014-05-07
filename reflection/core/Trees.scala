@@ -480,8 +480,14 @@ object Scope {
     @hosted def types(name: scala.Symbol): Member.AbstractOrAliasType = types.flatMap(_.findUnique(name))
   }
   @branch trait Params extends Scope {
-    // TODO: might be nice to have `params("x")` or `tparams("T")`
-    // but I've no idea how to marry this with pre-existing `paramss` and `tparams`
+    @hosted def params: Seq[Aux.Param.Named] = members.map(_.collect { case obj: Aux.Param.Named => obj })
+    @hosted def params(name: Ident): Aux.Param.Named = params.flatMap(_.findUnique(name))
+    @hosted def params(name: String): Aux.Param.Named = params.flatMap(_.findUnique(name))
+    @hosted def params(name: scala.Symbol): Aux.Param.Named = params.flatMap(_.findUnique(name))
+    @hosted def tparams: Seq[Aux.TypeParam.Named] = members.map(_.collect { case obj: Aux.TypeParam.Named => obj })
+    @hosted def tparams(name: Ident): Aux.TypeParam.Named = tparams.flatMap(_.findUnique(name))
+    @hosted def tparams(name: String): Aux.TypeParam.Named = tparams.flatMap(_.findUnique(name))
+    @hosted def tparams(name: scala.Symbol): Aux.TypeParam.Named = tparams.flatMap(_.findUnique(name))
   }
 }
 
