@@ -18,9 +18,15 @@ class MayFailMacros(val c: Context) {
     def transform(ddef: DefDef): DefDef = {
       val q"$mods def $name[..$tparams](...$paramss)(implicit ..$implparamss): $tpt = $body" = ddef
       if (tpt.isEmpty) c.abort(ddef.pos, "@mayFail methods must explicitly specify return type")
-      val implparamss1 = implparamss :+ q"val eh: _root_.org.scalareflect.errors.ErrorHandler"
-      val tpt1 = tq"eh.Result[$tpt, $exnTpe]"
-      val body1 = if (body.nonEmpty) q"{ import eh.MonadicOps; $body }" else body
+      val pname = c.freshName(TermName("eh"))
+      val implparamss1 = implparamss :+ q"val $pname: _root_.org.scalareflect.errors.ErrorHandler"
+      val tpt1 = tq"$pname.Result[$tpt, $exnTpe]"
+      val body1 = if (body.nonEmpty) q"""
+        import _root_.org.scalareflect.errors.{succeed, fail}
+        import $pname.MonadicOps
+        import $pname.MonadicListOps
+        $body
+      """ else body
       q"$mods def $name[..$tparams](...$paramss)(implicit ..$implparamss1): $tpt1 = $body1"
     }
     val expanded = annottees match {

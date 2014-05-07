@@ -43,8 +43,8 @@ list of ugliness discovered so far
   def parent: Tree = ??? // TODO: what's the semantics of this?
   @hosted def typecheck: List[Attribute] = delegate // TODO: what's the semantics of this?
   @hosted protected def internalTpe: Type = typecheck.flatMap(_.collect{ case tpe: Attribute.Type => tpe } match {
-    case Attribute.Type(tpe) :: Nil => eh.succeed(tpe)
-    case _ => eh.fail(ReflectionException("typecheck has failed"))
+    case Attribute.Type(tpe) :: Nil => succeed(tpe)
+    case _ => fail(ReflectionException("typecheck has failed"))
   })
   // TODO: hygienic equality
 }
@@ -132,7 +132,7 @@ object Term {
   @hosted def erasure: Type = delegate
   @hosted def companion: Type.Ref = this match {
     case ref: Type.Ref => ref.defn.flatMap(_.companion).map(_.ref.toTypeRef)
-    case _ => eh.fail(ReflectionException(s"companion not found"))
+    case _ => fail(ReflectionException(s"companion not found"))
   }
   // TODO: directSuperclasses and others
   @hosted override def superclasses: List[Member.Template] = supertypes.flatMap(tpes => supertypesToMembers(tpes))
@@ -232,11 +232,11 @@ object Pat {
 object Member {
   @branch trait Term extends Member {
     @hosted def overrides: List[Member.Term] = delegate
-    @hosted def companion: Member.Type = eh.fail(ReflectionException(s"companion not found"))
+    @hosted def companion: Member.Type = fail(ReflectionException(s"companion not found"))
   }
   @branch trait Type extends Member {
     @hosted def overrides: List[Member.Type] = delegate
-    @hosted def companion: Member.Term = eh.fail(ReflectionException(s"companion not found"))
+    @hosted def companion: Member.Term = fail(ReflectionException(s"companion not found"))
   }
   case class Overloaded[+A <: Member](alts: List[A]) {
     @hosted def resolve(tpes: core.Type*): A = delegate
@@ -271,7 +271,7 @@ object Member {
       val candidates = owner.members(ident)
       candidates.flatMap(candidates => {
         val relevant = findCompanion(candidates.alts)
-        relevant.map(result => eh.succeed(result)).getOrElse(eh.fail(ReflectionException(s"companion not found")))
+        relevant.map(result => succeed(result)).getOrElse(fail(ReflectionException(s"companion not found")))
       })
     }
     protected type CompanionType <: Member
@@ -284,12 +284,12 @@ object Decl {
   @ast class Val(mods: List[Mod],
                  pats: List[Term.Ident] @nonEmpty,
                  decltpe: core.Type) extends Decl with Stmt.Existential with Has.Mods {
-    @hosted def tpe: core.Type = eh.succeed(decltpe)
+    @hosted def tpe: core.Type = succeed(decltpe)
   }
   @ast class Var(mods: List[Mod],
                  pats: List[Term.Ident] @nonEmpty,
                  decltpe: core.Type) extends Decl with Has.Mods {
-    @hosted def tpe: core.Type = eh.succeed(decltpe)
+    @hosted def tpe: core.Type = succeed(decltpe)
   }
   @ast class Def(mods: List[Mod],
                  ident: Term.Ident,
@@ -298,7 +298,7 @@ object Decl {
                  implicits: List[Aux.Param.Named],
                  declret: core.Type) extends Decl with Member.Def {
     require(!isMacro)
-    @hosted def ret: core.Type = eh.succeed(declret)
+    @hosted def ret: core.Type = succeed(declret)
   }
   @ast class Procedure(mods: List[Mod],
                        ident: Term.Ident,
@@ -327,7 +327,7 @@ object Defn {
                  rhs: Option[Term]) extends Defn with Has.Mods {
     require(rhs.nonEmpty || pats.forall(_.isInstanceOf[Term.Ident]))
     require(decltpe.nonEmpty || rhs.nonEmpty)
-    @hosted def tpe: core.Type = rhs.map(_.tpe).getOrElse(eh.succeed(decltpe.get))
+    @hosted def tpe: core.Type = rhs.map(_.tpe).getOrElse(succeed(decltpe.get))
   }
   @ast class Def(mods: List[Mod],
                  ident: Term.Ident,
@@ -356,7 +356,7 @@ object Defn {
                    override val tparams: List[Aux.TypeParam],
                    declctor: Ctor.Primary,
                    templ: Aux.Template) extends Defn with Member.Template with Member.Type {
-    @hosted override def ctor: Ctor.Primary = eh.succeed(declctor)
+    @hosted override def ctor: Ctor.Primary = succeed(declctor)
     protected type CompanionType = Object
     protected def findCompanion(alts: List[Member]) = alts.collect{ case x: Object => x }.headOption
     @hosted override def companion: CompanionType = super[Template].companion
@@ -597,7 +597,7 @@ object Aux {
     @hosted def tpe: Type = internalTpe
     @hosted def superclasses: List[Member.Template] = tpe.flatMap(_.superclasses)
     @hosted def supertypes: List[Type] = tpe.flatMap(_.supertypes)
-    @hosted def self: Self = eh.succeed(declself)
+    @hosted def self: Self = succeed(declself)
     def hasExplicitStats: Boolean = ??? // TODO: trivia
   }
   @ast class Self(ident: Option[Term.Ident] = None, decltpe: Option[Type] = None) extends Member.Term {

@@ -37,27 +37,15 @@ package object core {
       for {
         defn <- ref.defn
         result <- defn match {
-          case t: Member.Template => eh.succeed(t)
-          case d => eh.fail(ReflectionException(s"unexpected ref $ref to $d returned from supertypes"))
+          case t: Member.Template => succeed(t)
+          case d => fail(ReflectionException(s"unexpected ref $ref to $d returned from supertypes"))
         }
       } yield result
     }
-    implicit class RichList[T](list: List[T]) {
-      def ehMap[U, E](f: T => eh.Result[U, E]): eh.Result[List[U], E] = {
-        list match {
-          case hd :: tl =>
-            for {
-              fhd <- f(hd)
-              ftl <- tl.ehMap(f)
-            } yield fhd :: ftl
-          case Nil => eh.succeed(Nil)
-        }
-      }
-    }
-    tpes ehMap {
+    succeed(tpes) mmap {
       case ref: Type.Ref => extractTemplate(ref)
       case Type.Apply(ref: Type.Ref, _) => extractTemplate(ref)
-      case tpe => eh.fail(ReflectionException(s"unexpected type $tpe returned from supertypes"))
+      case tpe => fail(ReflectionException(s"unexpected type $tpe returned from supertypes"))
     }
   }
   implicit class RichTemplates(val parents: List[Member.Template]) extends AnyVal {
@@ -100,6 +88,9 @@ package core {
   package object errors {
     implicit val throwExceptions = handlers.throwExceptions
     implicit val returnTries = handlers.returnTries
+
+    def succeed[S](x: S)(implicit eh: ErrorHandler): eh.Success[S] = eh.succeed(x)
+    def fail[E <: Exception](x: E)(implicit eh: ErrorHandler): eh.Failure[E] = eh.fail(x)
 
     def wrapHosted = new Wrap[HostContext]
     def wrapMacrohosted = new Wrap[MacroContext]
