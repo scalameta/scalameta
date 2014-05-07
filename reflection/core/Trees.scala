@@ -36,11 +36,17 @@ list of ugliness discovered so far
 // TODO: invariants: tree should either have at least one non-trival token or be eq to it's empty value
 // TODO: converter: double check conversion of `(f _)(x)` (bug 46)
 
+// Some notes on Tree APIs:
+// 1) Tree.parent is supposed to automatically track references to tree parents without the user doing anything.
+// If a tree has just been created, then its parent is Pkg.Root.
+// If a tree has been inserted into another tree, then its parent is updated accordingly (in a copy-on-write fashion, no mutability).
+// If a tree comes from host, then it's the host's responsibility to set the parent according to the tree's place in the program's AST.
+// With the only exception: If a tree is a macro application, then its parent is Root. That's done to prevent non-local expansions.
 @root trait Tree {
   // TODO: we also need some sort of host-specific metadata in trees
   implicit def src: SourceContext
   def owner: Scope = parent match { case owner: Scope => owner; case tree => tree.owner }
-  def parent: Tree = ??? // TODO: what's the semantics of this?
+  def parent: Tree = ??? // TODO: We still need to figure out how to implement this - either going the Roslyn route or the by-name arguments route.
   @hosted def typecheck: List[Attribute] = delegate // TODO: what's the semantics of this?
   @hosted protected def internalTpe: Type = typecheck.flatMap(_.collect{ case tpe: Attribute.Type => tpe } match {
     case Attribute.Type(tpe) :: Nil => succeed(tpe)
