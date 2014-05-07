@@ -198,7 +198,7 @@ object Pat {
 }
 
 @branch trait Member extends Tree with Has.Mods {
-  def ref: Ref = ??? // TODO: discuss the implementation of this method
+  def ref: Ref
   @hosted def overrides: List[Member]
   @hosted def companion: Member
   def annots: List[Mod.Annot] = mods.collect{ case annot: Mod.Annot => annot }
@@ -234,25 +234,25 @@ object Pat {
 }
 object Member {
   @branch trait Term extends Member {
+    def ref: Term.Ref
     @hosted def overrides: List[Member.Term] = delegate
     @hosted def companion: Member.Type = fail(ReflectionException(s"companion not found"))
   }
   @branch trait Type extends Member {
+    def ref: Type.Ref
     @hosted def overrides: List[Member.Type] = delegate
     @hosted def companion: Member.Term = fail(ReflectionException(s"companion not found"))
   }
-  @branch trait Field extends Term with Has.Name {
-    def name: core.Term.Ident
+  @branch trait Field extends Term with Has.TermName {
     @hosted def tpe: core.Type
   }
   @branch trait Val extends Field
   @branch trait Var extends Field
-  @branch trait Def extends Term with Has.Name with Stmt.Template with Has.Paramss with Scope.Params {
-    def name: core.Term.Ident
+  @branch trait Def extends Term with Has.TermName with Stmt.Template with Has.Paramss with Scope.Params {
     def tparams: List[Aux.TypeParam]
     @hosted def ret: core.Type
   }
-  @branch trait AbstractOrAliasType extends Type {
+  @branch trait AbstractOrAliasType extends Type with Has.TypeName {
     def name: core.Type.Ident
     def tparams: List[Aux.TypeParam]
   }
@@ -358,7 +358,7 @@ object Defn {
                    name: core.Type.Ident,
                    override val tparams: List[Aux.TypeParam],
                    declctor: Ctor.Primary,
-                   templ: Aux.Template) extends Defn with Member.Template with Member.Type {
+                   templ: Aux.Template) extends Defn with Member.Template with Member.Type with Has.TypeName {
     @hosted override def ctor: Ctor.Primary = succeed(declctor)
     protected type CompanionType = Object
     protected def findCompanion(alts: List[Member]) = alts.collect{ case x: Object => x }.headOption
@@ -367,7 +367,7 @@ object Defn {
   @ast class Trait(mods: List[Mod],
                    name: core.Type.Ident,
                    override val tparams: List[Aux.TypeParam],
-                   templ: Aux.Template) extends Defn with Member.Template with Member.Type {
+                   templ: Aux.Template) extends Defn with Member.Template with Member.Type with Has.TypeName {
     require(templ.parents.forall(_.argss.isEmpty))
     def isInterface: Boolean = templ.stats.forall(_.isInstanceOf[Decl])
     protected type CompanionType = Object
@@ -376,7 +376,7 @@ object Defn {
   }
   @ast class Object(mods: List[Mod],
                     name: Term.Ident,
-                    templ: Aux.Template) extends Defn with Member.Template with Member.Term {
+                    templ: Aux.Template) extends Defn with Member.Template with Member.Term with Has.TermName {
     protected type CompanionType = Member.Template with Member.Type
     protected def findCompanion(alts: List[Member]) = alts.collect{ case x: Class => x; case x: Trait => x }.headOption
     @hosted override def companion: CompanionType = super[Template].companion
@@ -396,7 +396,7 @@ object Pkg {
   }
   @ast class Object(mods: List[Mod],
                     name: Term.Ident,
-                    templ: Aux.Template) extends Tree with Stmt.TopLevel with Member.Template with Member.Term {
+                    templ: Aux.Template) extends Tree with Stmt.TopLevel with Member.Template with Member.Term with Has.TermName {
     protected type CompanionType = Member.Template with Member.Type
     protected def findCompanion(alts: List[Member]) = None
     @hosted override def companion: CompanionType = super[Template].companion
@@ -603,6 +603,7 @@ object Aux {
   @ast class Self(name: Option[Term.Ident] = None, decltpe: Option[Type] = None) extends Member.Term {
     def mods: List[Mod] = Nil
     @hosted def tpe: Type = internalTpe
+    def ref: Term.Ref = name.getOrElse(Term.This(None))
   }
   @branch trait Param extends Tree with Has.Mods {
     @hosted def tpe: Type = internalTpe
@@ -615,7 +616,7 @@ object Aux {
     @ast class Named(name: Term.Ident,
                      decltpe: Type,
                      mods: List[Mod] = Nil,
-                     default: Option[Term] = None) extends Param with Member.Term with Has.Name
+                     default: Option[Term] = None) extends Param with Member.Term with Has.TermName
   }
   @branch trait TypeParam extends Tree with Has.Mods {
     def tparams: List[Aux.TypeParam]
@@ -634,7 +635,7 @@ object Aux {
                      tparams: List[Aux.TypeParam] = Nil,
                      contextBounds: List[core.Type] = Nil,
                      viewBounds: List[core.Type] = Nil,
-                     bounds: Aux.TypeBounds = Aux.TypeBounds.empty) extends TypeParam with Member.Type with Has.Name
+                     bounds: Aux.TypeBounds = Aux.TypeBounds.empty) extends TypeParam with Member.Type with Has.TypeName
   }
   @ast class TypeBounds(lo: Option[Type] = None, hi: Option[Type] = None) extends Tree
 }
@@ -655,7 +656,17 @@ object Has {
     def paramss: List[List[Aux.Param.Named]] = explicits :+ implicits
   }
 
-  @branch trait Name extends Tree {
+  @branch trait Name extends Member {
     def name: Ident
+  }
+
+  @branch trait TermName extends Member.Term {
+    def name: Term.Ident
+    def ref: Term.Ref = name
+  }
+
+  @branch trait TypeName extends Member.Type {
+    def name: Type.Ident
+    def ref: Type.Ref = name
   }
 }
