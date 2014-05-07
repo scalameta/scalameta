@@ -12,15 +12,13 @@ package object core {
   @hosted def root: Pkg.Root = delegate
 
   @hosted def languageProfile: LanguageProfile = delegate
-  final case class LanguageProfile(
-    dynamics: Boolean,
-    postfixOps: Boolean,
-    reflectiveCalls: Boolean,
-    implicitConversions: Boolean,
-    higherKinds: Boolean,
-    existentials: Boolean,
-    macros: Boolean
-  )
+  final case class LanguageProfile(dynamics: Boolean,
+                                   postfixOps: Boolean,
+                                   reflectiveCalls: Boolean,
+                                   implicitConversions: Boolean,
+                                   higherKinds: Boolean,
+                                   existentials: Boolean,
+                                   macros: Boolean)
 
   implicit class Quasiquotes(ctx: StringContext) {
     protected trait api {
