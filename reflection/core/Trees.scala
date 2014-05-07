@@ -42,13 +42,18 @@ list of ugliness discovered so far
 // If a tree has been inserted into another tree, then its parent is updated accordingly (in a copy-on-write fashion, no mutability).
 // If a tree comes from host, then it's the host's responsibility to set the parent according to the tree's place in the program's AST.
 // With the only exception: If a tree is a macro application, then its parent is Root. That's done to prevent non-local expansions.
+// 2) Tree.attrs is supposed to provide the users with semantic info about the given tree respecting the parent chain
+// Thus, if a tree has been inserted into a bigger tree, its attrs should take into account lexical context of the bigger tree.
+// In order to achieve that, host is free to either typecheck the entire tree every time or to typecheck it once and cache the results.
+// For the time being, while we don't have hygiene and while our only supported flavor or host contexts is MacroContext,
+// the lexical context of newly created trees is assumed to be the one of the macro expansion site.
 @root trait Tree {
   // TODO: we also need some sort of host-specific metadata in trees
   implicit def src: SourceContext
   def owner: Scope = parent match { case owner: Scope => owner; case tree => tree.owner }
   def parent: Tree = ??? // TODO: We still need to figure out how to implement this - either going the Roslyn route or the by-name arguments route.
-  @hosted def typecheck: List[Attribute] = delegate // TODO: what's the semantics of this?
-  @hosted protected def internalTpe: Type = typecheck.flatMap(_.collect{ case tpe: Attribute.Type => tpe } match {
+  @hosted def attrs: List[Attribute] = delegate
+  @hosted protected def internalTpe: Type = attrs.flatMap(_.collect{ case tpe: Attribute.Type => tpe } match {
     case Attribute.Type(tpe) :: Nil => succeed(tpe)
     case _ => fail(ReflectionException("typecheck has failed"))
   })

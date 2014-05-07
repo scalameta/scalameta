@@ -28,7 +28,7 @@ trait HostContext {
 
   // TODO: if we keep typecheck, then we don't really need all those `tpe` methods
   def resolve[T <: Member](overloaded: Member.Overloaded[T], tpes: Type*): T
-  def typecheck(tree: Tree): List[Attribute]
+  def attrs(tree: Tree): List[Attribute]
 }
 
 trait MacroContext extends HostContext {
