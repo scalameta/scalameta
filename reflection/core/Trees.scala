@@ -77,7 +77,7 @@ object Term {
     @hosted def defn: Overload[Member.Term] = delegate
   }
   @ast class This(qual: Option[core.Ident]) extends Ref
-  @ast class Ident(value: scala.Predef.String @nonEmpty, isBackquoted: Boolean = false) extends core.Ident with Ref with Pat with Member with Member.Val with Member.Var {
+  @ast class Ident(value: scala.Predef.String @nonEmpty, isBackquoted: Boolean = false) extends core.Ident with Ref with Pat with Has.TermName {
     // TODO: require(!keywords.contains(value) || isBackquoted)
     // TODO: if not backquoted, then not all values should be allowed
     def name: Ident = this
@@ -203,8 +203,8 @@ object Pat {
   @hosted def companion: Member
   def annots: List[Mod.Annot] = mods.collect{ case annot: Mod.Annot => annot }
   def doc: Option[Mod.Doc] = mods.collect{ case doc: Mod.Doc => doc }.headOption
-  def isVal: Boolean = this.isInstanceOf[Member.Val]
-  def isVar: Boolean = this.isInstanceOf[Member.Var]
+  def isVal: Boolean = this.isInstanceOf[Term.Ident] && (this.parent.isInstanceOf[Decl.Val] || this.parent.isInstanceOf[Defn.Val])
+  def isVar: Boolean = this.isInstanceOf[Term.Ident] && (this.parent.isInstanceOf[Decl.Var] || this.parent.isInstanceOf[Defn.Var])
   def isDef: Boolean = this.isInstanceOf[Member.Def]
   def isType: Boolean = this.isInstanceOf[Member.AbstractOrAliasType]
   def isClass: Boolean = this.isInstanceOf[Defn.Class]
@@ -243,11 +243,6 @@ object Member {
     @hosted def overrides: List[Member.Type] = delegate
     @hosted def companion: Member.Term = fail(ReflectionException(s"companion not found"))
   }
-  @branch trait Field extends Term with Has.TermName {
-    @hosted def tpe: core.Type
-  }
-  @branch trait Val extends Field
-  @branch trait Var extends Field
   @branch trait Def extends Term with Has.TermName with Stmt.Template with Has.Paramss with Scope.Params {
     def tparams: List[Aux.TypeParam]
     @hosted def ret: core.Type
@@ -481,10 +476,10 @@ object Scope {
     @hosted def objects(name: Ident): Defn.Object = objects.flatMap(_.findUnique(name))
     @hosted def objects(name: String): Defn.Object = objects.flatMap(_.findUnique(name))
     @hosted def objects(name: scala.Symbol): Defn.Object = objects.flatMap(_.findUnique(name))
-    @hosted def vars: Seq[Member.Var] = members.map(_.collect { case obj: Member.Var => obj })
-    @hosted def vars(name: Ident): Member.Var = vars.flatMap(_.findUnique(name))
-    @hosted def vars(name: String): Member.Var = vars.flatMap(_.findUnique(name))
-    @hosted def vars(name: scala.Symbol): Member.Var = vars.flatMap(_.findUnique(name))
+    @hosted def vars: Seq[Term.Ident] = members.map(_.collect { case obj: Term.Ident => obj })
+    @hosted def vars(name: Ident): Term.Ident = vars.flatMap(_.findUnique(name))
+    @hosted def vars(name: String): Term.Ident = vars.flatMap(_.findUnique(name))
+    @hosted def vars(name: scala.Symbol): Term.Ident = vars.flatMap(_.findUnique(name))
   }
   @branch trait Refine extends Existential {
     @hosted def defs: Seq[Member.Def] = members.map(_.collect { case obj: Member.Def => obj })
@@ -493,10 +488,10 @@ object Scope {
     @hosted def defs(name: scala.Symbol): Member.Def = defs.flatMap(_.findUnique(name))
   }
   @branch trait Existential extends Scope {
-    @hosted def vals: Seq[Member.Val] = members.map(_.collect { case obj: Member.Val => obj })
-    @hosted def vals(name: Ident): Member.Val = vals.flatMap(_.findUnique(name))
-    @hosted def vals(name: String): Member.Val = vals.flatMap(_.findUnique(name))
-    @hosted def vals(name: scala.Symbol): Member.Val = vals.flatMap(_.findUnique(name))
+    @hosted def vals: Seq[Term.Ident] = members.map(_.collect { case obj: Term.Ident => obj })
+    @hosted def vals(name: Ident): Term.Ident = vals.flatMap(_.findUnique(name))
+    @hosted def vals(name: String): Term.Ident = vals.flatMap(_.findUnique(name))
+    @hosted def vals(name: scala.Symbol): Term.Ident = vals.flatMap(_.findUnique(name))
     @hosted def types: Seq[Member.AbstractOrAliasType] = members.map(_.collect { case obj: Member.AbstractOrAliasType => obj })
     @hosted def types(name: Ident): Member.AbstractOrAliasType = types.flatMap(_.findUnique(name))
     @hosted def types(name: String): Member.AbstractOrAliasType = types.flatMap(_.findUnique(name))
