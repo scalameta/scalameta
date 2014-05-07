@@ -80,7 +80,7 @@ object Term {
   @ast class Ident(value: scala.Predef.String @nonEmpty, isBackquoted: Boolean = false) extends core.Ident with Ref with Pat with Member with Member.Val with Member.Var {
     // TODO: require(!keywords.contains(value) || isBackquoted)
     // TODO: if not backquoted, then not all values should be allowed
-    def ident: Ident = this
+    def name: Ident = this
     def mods: List[Mod] = Nil
   }
   @ast class SuperSelect(qual: Option[core.Ident], supertpe: Option[Type.Ident], selector: Term.Ident) extends Ref
@@ -156,11 +156,11 @@ object Type {
   @ast class Ident(value: String @nonEmpty, isBackquoted: Boolean = false) extends core.Ident with Ref {
     // TODO: require(keywords.contains(value) ==> isBackquoted)
   }
-  @ast class Select(qual: Term.Ref, ident: Type.Ident) extends Ref {
+  @ast class Select(qual: Term.Ref, name: Type.Ident) extends Ref {
     // TODO: require(qual.isPath)
   }
   @ast class SuperSelect(qual: Option[core.Ident], supertpe: Option[Type.Ident], selector: Type.Ident) extends Ref
-  @ast class Project(qual: Type, ident: Type.Ident) extends Ref
+  @ast class Project(qual: Type, name: Type.Ident) extends Ref
   @ast class Singleton(ref: Term.Ref) extends Ref {
     // TODO: require(ref.isPath)
   }
@@ -198,7 +198,6 @@ object Pat {
 }
 
 @branch trait Member extends Tree with Has.Mods {
-  def name: String = ??? // TODO: discuss how we want to see this method
   def ref: Ref = ??? // TODO: discuss the implementation of this method
   @hosted def overrides: List[Member]
   @hosted def companion: Member
@@ -242,23 +241,23 @@ object Member {
     @hosted def overrides: List[Member.Type] = delegate
     @hosted def companion: Member.Term = fail(ReflectionException(s"companion not found"))
   }
-  @branch trait Field extends Term {
-    def ident: core.Term.Ident
+  @branch trait Field extends Term with Has.Name {
+    def name: core.Term.Ident
     @hosted def tpe: core.Type
   }
   @branch trait Val extends Field
   @branch trait Var extends Field
-  @branch trait Def extends Term with Stmt.Template with Has.Paramss with Scope.Params {
-    def ident: core.Term.Ident
+  @branch trait Def extends Term with Has.Name with Stmt.Template with Has.Paramss with Scope.Params {
+    def name: core.Term.Ident
     def tparams: List[Aux.TypeParam]
     @hosted def ret: core.Type
   }
   @branch trait AbstractOrAliasType extends Type {
-    def ident: core.Type.Ident
+    def name: core.Type.Ident
     def tparams: List[Aux.TypeParam]
   }
-  @branch trait Template extends Member with Stmt.TopLevel with Stmt.Block with Has.Paramss with Scope.Template {
-    def ident: core.Ident
+  @branch trait Template extends Member with Has.Name with Stmt.TopLevel with Stmt.Block with Has.Paramss with Scope.Template {
+    def name: core.Ident
     def explicits: List[List[Aux.Param.Named]] = Nil
     def implicits: List[Aux.Param.Named] = Nil
     def tparams: List[Aux.TypeParam] = Nil
@@ -268,8 +267,8 @@ object Member {
     @hosted def subclasses: List[Member.Template] = ref.toTypeRef.subclasses
     @hosted def self: Aux.Self = templ.self
     @hosted def companion: CompanionType = {
-      val companionId = if (ident.isInstanceOf[core.Term.Ident]) core.Type.Ident(ident.value) else core.Term.Ident(ident.value)
-      val candidates = owner.members(ident)
+      val companionId = if (name.isInstanceOf[core.Term.Ident]) core.Type.Ident(name.value) else core.Term.Ident(name.value)
+      val candidates = owner.members(name)
       candidates.flatMap(candidates => {
         val relevant = findCompanion(candidates.alts)
         relevant.map(result => succeed(result)).getOrElse(fail(ReflectionException(s"companion not found")))
@@ -296,7 +295,7 @@ object Decl {
     @hosted def tpe: core.Type = succeed(decltpe)
   }
   @ast class Def(mods: List[Mod],
-                 ident: Term.Ident,
+                 name: Term.Ident,
                  tparams: List[Aux.TypeParam],
                  explicits: List[List[Aux.Param.Named]],
                  implicits: List[Aux.Param.Named],
@@ -305,14 +304,14 @@ object Decl {
     @hosted def ret: core.Type = succeed(declret)
   }
   @ast class Procedure(mods: List[Mod],
-                       ident: Term.Ident,
+                       name: Term.Ident,
                        tparams: List[Aux.TypeParam],
                        explicits: List[List[Aux.Param.Named]],
                        implicits: List[Aux.Param.Named]) extends Decl with Member.Def {
     @hosted def ret: core.Type = ??? // TODO: t"Unit"
   }
   @ast class Type(mods: List[Mod],
-                  ident: core.Type.Ident,
+                  name: core.Type.Ident,
                   tparams: List[Aux.TypeParam],
                   bounds: Aux.TypeBounds) extends Decl with Stmt.Existential with Member.AbstractOrAliasType
 }
@@ -334,7 +333,7 @@ object Defn {
     @hosted def tpe: core.Type = rhs.map(_.tpe).getOrElse(succeed(decltpe.get))
   }
   @ast class Def(mods: List[Mod],
-                 ident: Term.Ident,
+                 name: Term.Ident,
                  tparams: List[Aux.TypeParam],
                  explicits: List[List[Aux.Param.Named]],
                  implicits: List[Aux.Param.Named],
@@ -344,7 +343,7 @@ object Defn {
     @hosted def ret: core.Type = body.tpe
   }
   @ast class Procedure(mods: List[Mod],
-                       ident: Term.Ident,
+                       name: Term.Ident,
                        tparams: List[Aux.TypeParam],
                        explicits: List[List[Aux.Param.Named]],
                        implicits: List[Aux.Param.Named],
@@ -352,11 +351,11 @@ object Defn {
     @hosted def ret: core.Type = ??? // TODO: t"Unit"
   }
   @ast class Type(mods: List[Mod],
-                  ident: core.Type.Ident,
+                  name: core.Type.Ident,
                   tparams: List[Aux.TypeParam],
                   body: core.Type) extends Defn with Stmt.Refine with Member.AbstractOrAliasType
   @ast class Class(mods: List[Mod],
-                   ident: core.Type.Ident,
+                   name: core.Type.Ident,
                    override val tparams: List[Aux.TypeParam],
                    declctor: Ctor.Primary,
                    templ: Aux.Template) extends Defn with Member.Template with Member.Type {
@@ -366,7 +365,7 @@ object Defn {
     @hosted override def companion: CompanionType = super[Template].companion
   }
   @ast class Trait(mods: List[Mod],
-                   ident: core.Type.Ident,
+                   name: core.Type.Ident,
                    override val tparams: List[Aux.TypeParam],
                    templ: Aux.Template) extends Defn with Member.Template with Member.Type {
     require(templ.parents.forall(_.argss.isEmpty))
@@ -376,7 +375,7 @@ object Defn {
     @hosted override def companion: CompanionType = super[Template].companion
   }
   @ast class Object(mods: List[Mod],
-                    ident: Term.Ident,
+                    name: Term.Ident,
                     templ: Aux.Template) extends Defn with Member.Template with Member.Term {
     protected type CompanionType = Member.Template with Member.Type
     protected def findCompanion(alts: List[Member]) = alts.collect{ case x: Class => x; case x: Trait => x }.headOption
@@ -396,7 +395,7 @@ object Pkg {
     def mods: List[Mod] = Nil
   }
   @ast class Object(mods: List[Mod],
-                    ident: Term.Ident,
+                    name: Term.Ident,
                     templ: Aux.Template) extends Tree with Stmt.TopLevel with Member.Template with Member.Term {
     protected type CompanionType = Member.Template with Member.Type
     protected def findCompanion(alts: List[Member]) = None
@@ -601,7 +600,7 @@ object Aux {
     @hosted def supertypes: List[Type] = tpe.flatMap(_.supertypes)
     @hosted def self: Self = succeed(declself)
   }
-  @ast class Self(ident: Option[Term.Ident] = None, decltpe: Option[Type] = None) extends Member.Term {
+  @ast class Self(name: Option[Term.Ident] = None, decltpe: Option[Type] = None) extends Member.Term {
     def mods: List[Mod] = Nil
     @hosted def tpe: Type = internalTpe
   }
@@ -613,10 +612,10 @@ object Aux {
     @ast class Anonymous(decltpe: Option[Type] = None,
                          mods: List[Mod] = Nil,
                          default: Option[Term] = None) extends Param
-    @ast class Named(ident: Term.Ident,
+    @ast class Named(name: Term.Ident,
                      decltpe: Type,
                      mods: List[Mod] = Nil,
-                     default: Option[Term] = None) extends Param with Member.Term
+                     default: Option[Term] = None) extends Param with Member.Term with Has.Name
   }
   @branch trait TypeParam extends Tree with Has.Mods {
     def tparams: List[Aux.TypeParam]
@@ -630,12 +629,12 @@ object Aux {
                          contextBounds: List[core.Type] = Nil,
                          viewBounds: List[core.Type] = Nil,
                          bounds: Aux.TypeBounds = Aux.TypeBounds.empty) extends TypeParam
-    @ast class Named(ident: core.Type.Ident,
+    @ast class Named(name: core.Type.Ident,
                      mods: List[Mod] = Nil,
                      tparams: List[Aux.TypeParam] = Nil,
                      contextBounds: List[core.Type] = Nil,
                      viewBounds: List[core.Type] = Nil,
-                     bounds: Aux.TypeBounds = Aux.TypeBounds.empty) extends TypeParam with Member.Type
+                     bounds: Aux.TypeBounds = Aux.TypeBounds.empty) extends TypeParam with Member.Type with Has.Name
   }
   @ast class TypeBounds(lo: Option[Type] = None, hi: Option[Type] = None) extends Tree
 }
@@ -654,5 +653,9 @@ object Has {
     def explicits: List[List[Aux.Param.Named]]
     def implicits: List[Aux.Param.Named]
     def paramss: List[List[Aux.Param.Named]] = explicits :+ implicits
+  }
+
+  @branch trait Name extends Tree {
+    def name: Ident
   }
 }
