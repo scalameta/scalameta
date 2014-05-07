@@ -248,7 +248,7 @@ object Member {
   }
   @branch trait Def extends Term with Has.TermName with Stmt.Template with Has.Paramss with Scope.Params {
     def tparams: Seq[Aux.TypeParam]
-    @hosted def ret: core.Type
+    @hosted def tpe: core.Type
   }
   @branch trait AbstractOrAliasType extends Type with Has.TypeName {
     def name: core.Type.Name
@@ -296,15 +296,15 @@ object Decl {
                  tparams: Seq[Aux.TypeParam],
                  explicits: Seq[Seq[Aux.Param.Named]],
                  implicits: Seq[Aux.Param.Named],
-                 declret: core.Type) extends Decl with Member.Def {
-    @hosted def ret: core.Type = succeed(declret)
+                 decltpe: core.Type) extends Decl with Member.Def {
+    @hosted def tpe: core.Type = succeed(decltpe)
   }
   @ast class Procedure(mods: Seq[Mod],
                        name: Term.Name,
                        tparams: Seq[Aux.TypeParam],
                        explicits: Seq[Seq[Aux.Param.Named]],
                        implicits: Seq[Aux.Param.Named]) extends Decl with Member.Def {
-    @hosted def ret: core.Type = ??? // TODO: t"Unit"
+    @hosted def tpe: core.Type = ??? // TODO: t"Unit"
   }
   @ast class Type(mods: Seq[Mod],
                   name: core.Type.Name,
@@ -333,10 +333,10 @@ object Defn {
                  tparams: Seq[Aux.TypeParam],
                  explicits: Seq[Seq[Aux.Param.Named]],
                  implicits: Seq[Aux.Param.Named],
-                 declret: Option[core.Type],
+                 decltpe: Option[core.Type],
                  body: Term) extends Defn with Member.Def {
-    require(isMacro ==> declret.nonEmpty)
-    @hosted def ret: core.Type = body.tpe
+    require(isMacro ==> decltpe.nonEmpty)
+    @hosted def tpe: core.Type = body.tpe
   }
   @ast class Procedure(mods: Seq[Mod],
                        name: Term.Name,
@@ -344,7 +344,7 @@ object Defn {
                        explicits: Seq[Seq[Aux.Param.Named]],
                        implicits: Seq[Aux.Param.Named],
                        body: Term.Block) extends Defn with Member.Def {
-    @hosted def ret: core.Type = ??? // TODO: t"Unit"
+    @hosted def tpe: core.Type = ??? // TODO: t"Unit"
   }
   @ast class Type(mods: Seq[Mod],
                   name: core.Type.Name,
