@@ -30,7 +30,7 @@ class AdtMacros(val c: Context) {
       if (mods.hasFlag(SEALED)) c.abort(cdef.pos, "sealed is redundant for @root traits")
       if (mods.hasFlag(FINAL)) c.abort(cdef.pos, "@root traits cannot be final")
       val flags1 = flags | SEALED
-      val tag = q"def tag: _root_.scala.Int"
+      val tag = q"def $$tag: _root_.scala.Int"
       val thisType = q"type ThisType <: ${cdef.name}"
       val hierarchyCheck = q"$Internal.hierarchyCheck[${cdef.name}]"
       val stats1 = tag +: thisType +: hierarchyCheck +: stats
@@ -82,7 +82,7 @@ class AdtMacros(val c: Context) {
       }
       val params1 = params.map{ case q"$mods val $name: $tpt = $default" => q"${unprivateThis(mods)} val $name: $tpt = $default" }
       val thisType = q"override type ThisType = ${cdef.name}"
-      val tag = q"def tag: _root_.scala.Int = $Internal.calculateTag[${cdef.name}]"
+      val tag = q"def $$tag: _root_.scala.Int = $Internal.calculateTag[${cdef.name}]"
       val withes = params.map(p => {
         val withName = TermName("with" + p.name.toString.capitalize)
         q"def $withName(${p.name}: ${p.tpt}): ThisType = this.copy(${p.name} = ${p.name})"
