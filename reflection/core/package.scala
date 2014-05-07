@@ -20,7 +20,6 @@ package object core {
     higherKinds: Boolean,
     existentials: Boolean,
     macros: Boolean
-    // TODO: do we support Scala 2.10 and 2.11?
   )
 
   implicit class Quasiquotes(ctx: StringContext) {

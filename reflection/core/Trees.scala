@@ -30,7 +30,7 @@ list of ugliness discovered so far
 // TODO: rewriting/transformation methods
 // TODO: parser
 // TODO: unhygienic quasiquotes
-// TODO: hygiene
+// TODO: hygiene + hygienic tree equality
 // TODO: what to do with references to particular overloads?
 // TODO: consider adding default values for case class fields whenever applicable
 // TODO: prettyprinter
@@ -61,7 +61,6 @@ list of ugliness discovered so far
     case Attribute.Type(tpe) :: Nil => succeed(tpe)
     case _ => fail(ReflectionException("typecheck has failed"))
   })
-  // TODO: hygienic equality
 }
 
 @branch trait Ref extends Tree {
@@ -131,7 +130,7 @@ object Term {
   }
   @ast class ForYield(enums: Seq[Enum] @nonEmpty, body: Term) extends Term
   @ast class New(templ: Aux.Template) extends Term
-  // (Denys) TODO: might need additional validation
+  // TODO: validate that placeholder is put into correct context
   @ast class Placeholder() extends Term
   @ast class Eta(term: Term) extends Term
 }
@@ -181,7 +180,7 @@ object Type {
   @ast class Annotate(tpe: Type, annots: Seq[Mod.Annot] @nonEmpty) extends Type with Has.Mods {
     def mods: Seq[Mod] = annots
   }
-  // (Denys) TODO: need to validate that placeholder appears within one of allowed contexts (e.g. `type T = _` is illegal)
+  // TODO: need to validate that placeholder appears within one of allowed contexts (e.g. `type T = _` is illegal)
   @ast class Placeholder(bounds: Aux.TypeBounds) extends Type
 }
 
@@ -493,8 +492,6 @@ object Scope {
 
 @branch trait Lit extends Term with Pat
 object Lit {
-  // TODO: maybe add overloaded apply(value)
-  // TODO: maybe add unapply(lit): Option[Any]
   @branch trait Bool extends Lit
   @ast class True() extends Bool
   @ast class False() extends Bool
@@ -504,7 +501,7 @@ object Lit {
   @ast class Double(value: scala.Double) extends Lit with Type
   @ast class Char(value: scala.Char) extends Lit with Type
   @ast class String(value: Predef.String) extends Lit with Type
-  // TODO: not all symbols are representable as literals, e.g. scala.Symbol("")
+  // TODO: validate that not all symbols are representable as literals, e.g. scala.Symbol("")
   @ast class Symbol(value: scala.Symbol) extends Lit with Type
   @ast class Null() extends Lit
   @ast class Unit() extends Lit
@@ -631,7 +628,7 @@ object Aux {
 object Has {
   @branch trait Mods extends Tree {
     def mods: Seq[Mod]
-    // (Eugene) TODO: https://docs.google.com/spreadsheet/ccc?key=0Ahw_zqMtW4nNdC1lRVJvc3VjTUdOX0ppMVpSYzVRSHc&usp=sharing#gid=0
+    // TODO: https://docs.google.com/spreadsheet/ccc?key=0Ahw_zqMtW4nNdC1lRVJvc3VjTUdOX0ppMVpSYzVRSHc&usp=sharing#gid=0
     // * write a script that fetches this google doc and converts it into a, say, CSV spec
     // * write a test that validates the spec by generating source files and parsing them
     // * write a macro that generates implementation of validateAnnots from the spec + extension methods like isImplicit
