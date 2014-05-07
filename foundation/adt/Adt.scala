@@ -83,14 +83,14 @@ class AdtMacros(val c: Context) {
       val params1 = params.map{ case q"$mods val $name: $tpt = $default" => q"${unprivateThis(mods)} val $name: $tpt = $default" }
       val thisType = q"override type ThisType = ${cdef.name}"
       val tag = q"def $$tag: _root_.scala.Int = $Internal.calculateTag[${cdef.name}]"
-      val withes = params.map(p => {
+      val withes = params.map{p =>
         val withName = TermName("with" + p.name.toString.capitalize)
         q"def $withName(${p.name}: ${p.tpt}): ThisType = this.copy(${p.name} = ${p.name})"
-      })
-      val maps = params.map(p => {
+      }
+      val maps = params.map{p =>
         val mapName = TermName("map" + p.name.toString.capitalize)
         q"def $mapName(f: ${p.tpt} => ${p.tpt}): ThisType = this.copy(${p.name} = f(this.${p.name}))"
-      })
+      }
       val nullChecks = params.map(p => q"$Internal.nullCheck(this.${p.name})")
       val emptyChecks = params.map(p => q"$Internal.emptyCheck(this.${p.name})")
       val hierarchyCheck = q"$Internal.hierarchyCheck[${cdef.name}]"
@@ -178,7 +178,7 @@ class AdtHelperMacros(val c: Context) {
     if (roots.length == 0) c.abort(c.enclosingPosition, s"rootless $designation is disallowed")
     else if (roots.length > 1) c.abort(c.enclosingPosition, s"multiple roots for a $designation: " + (roots.map(_.fullName).init.mkString(", ")) + " and " + roots.last.fullName)
     val root = roots.head
-    sym.baseClasses.map(_.asClass).foreach(bsym => {
+    sym.baseClasses.map(_.asClass).foreach{bsym =>
       val exempt =
         bsym == ObjectClass ||
         bsym == AnyClass ||
@@ -189,7 +189,7 @@ class AdtHelperMacros(val c: Context) {
         root.info.baseClasses.contains(bsym)
       if (!exempt && !bsym.isRoot && !bsym.isBranch && !bsym.isLeaf) c.abort(c.enclosingPosition, s"outsider parent of a $designation: ${bsym.fullName}")
       if (!exempt && !bsym.isSealed && !bsym.isFinal) c.abort(c.enclosingPosition, s"unsealed parent of a $designation: ${bsym.fullName}")
-    })
+    }
     q""
   }
 

@@ -268,14 +268,14 @@ object Member {
     @hosted protected def findCompanion[T <: Member.Template](f: PartialFunction[Member, T]): T = {
       val companionId = if (name.isInstanceOf[core.Term.Name]) core.Type.Name(name.value) else core.Term.Name(name.value)
       val candidates = owner.members(name)
-      candidates.flatMap(candidates => {
+      candidates.flatMap{candidates =>
         val relevant = candidates.alts.collect(f).headOption
         relevant.map(result => succeed(result)).getOrElse(fail(ReflectionException(s"companion not found")))
-      })
+      }
     }
   }
 }
-case class Overload[+A <: Member](alts: Seq[A]) {
+final case class Overload[+A <: Member](alts: Seq[A]) {
   def resolve(tpes: core.Type*): A = ??? // TODO: implement this in terms of Tree.attrs and Attribute.Ref
 }
 
