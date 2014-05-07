@@ -95,7 +95,7 @@ object Term {
   @ast class Update(lhs: Apply, rhs: Term) extends Term
   @ast class Return(expr: Term) extends Term
   @ast class Throw(expr: Term) extends Term
-  @ast class Ascribe(expr: Term, decltpe: Type) extends Term
+  @ast class Ascribe(expr: Term, tpe: Type) extends Term
   @ast class Annotate(expr: Term, annots: Seq[Mod.Annot] @nonEmpty) extends Term with Has.Mods {
     def mods: Seq[Mod] = annots
   }
@@ -400,7 +400,7 @@ object Aux {
   @ast class Case(pat: Pat, cond: Option[Term] = None, body: Option[Term] = None) extends Tree with Scope
   @ast class Parent(tpe: Type, argss: Seq[Seq[Arg]] = Nil) extends Ref
   @ast class Template(early: Seq[Defn.Val] = Nil, parents: Seq[Parent] = Nil,
-                      declself: Self = Self.empty, stats: Seq[Stmt.Template] = Nil) extends Tree with Scope.Template {
+                      self: Self = Self.empty, stats: Seq[Stmt.Template] = Nil) extends Tree with Scope.Template {
     require(parents.isEmpty || !parents.tail.exists(_.argss.nonEmpty))
   }
   @ast class Self(name: Option[Term.Name] = None, decltpe: Option[Type] = None) extends Member.Term {

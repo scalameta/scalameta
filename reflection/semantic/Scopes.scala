@@ -51,7 +51,7 @@ trait ScopeOps {
       case x: Type => wrapHosted(_.supertypes(x))
     }
     @hosted def self: Aux.Self = tree match {
-      case x: Aux.Template => succeed(x.declself)
+      case x: Aux.Template => succeed(x.self)
       case x: Member.Template => x.templ.self
       case x: Type => wrapHosted(_.self(x))
     }
