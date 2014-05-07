@@ -276,7 +276,7 @@ object Member {
   }
 }
 final case class Overload[+A <: Member](alts: Seq[A]) {
-  def resolve(tpes: core.Type*): A = ??? // TODO: implement this in terms of Tree.attrs and Attribute.Ref
+  def resolve(tpes: Seq[core.Type]): A = ??? // TODO: implement this in terms of Tree.attrs and Attribute.Ref
 }
 
 @branch trait Decl extends Stmt.Template with Stmt.Refine

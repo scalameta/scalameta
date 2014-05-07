@@ -58,8 +58,8 @@ package object core {
   implicit class RichTypes(val parents: Seq[Type]) extends AnyVal {
     @hosted def linearization: Seq[Type] = wrapHosted(_.linearization(parents))
   }
-  @hosted def lub(tpes: Type*): Type = delegate
-  @hosted def glb(tpes: Type*): Type = delegate
+  @hosted def lub(tpes: Seq[Type]): Type = delegate
+  @hosted def glb(tpes: Seq[Type]): Type = delegate
 
   object c {
     @hosted(macroApi = true) def macroApplication: Tree = delegate
