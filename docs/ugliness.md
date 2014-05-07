@@ -1,4 +1,4 @@
-### List of syntax warts discovered so far
+### List of Scala syntax warts discovered so far
 
   1. Function parameters can not be annotated
   1. `try expr catch expr` syntax
