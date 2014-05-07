@@ -376,7 +376,7 @@ object Defn {
   def stats: Seq[Stmt.TopLevel]
 }
 object Pkg {
-  @ast class Root(stats: Seq[Stmt.TopLevel]) extends Pkg with Scope.TopLevel
+  @ast class Root private[core] (stats: Seq[Stmt.TopLevel]) extends Pkg with Scope.TopLevel
   @ast class Empty(stats: Seq[Stmt.TopLevel]) extends Pkg with Scope.TopLevel
   @ast class Named(override val ref: Term.Ref,
                    stats: Seq[Stmt.TopLevel]) extends Pkg with Stmt.TopLevel with Scope.TopLevel with Member.Term {
