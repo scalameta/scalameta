@@ -9,7 +9,7 @@ trait HostContext {
   def members(scope: Scope): Seq[Member]
   def ctors(scope: Scope): Seq[Ctor]
 
-  def defn(term: Term.Ref): Member.Overloaded[Member.Term]
+  def defn(term: Term.Ref): Overload[Member.Term]
   def defn(ref: Type.Ref): Member
   def overrides(member: Member.Term): List[Member.Term]
   def overrides(member: Member.Type): List[Member.Type]
@@ -27,7 +27,7 @@ trait HostContext {
   def erasure(tpe: Type): Type
 
   // TODO: if we keep typecheck, then we don't really need all those `tpe` methods
-  def resolve[T <: Member](overloaded: Member.Overloaded[T], tpes: Type*): T
+  def resolve[T <: Member](overload: Overload[T], tpes: Type*): T
   def attrs(tree: Tree): List[Attribute]
 }
 

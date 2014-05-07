@@ -74,7 +74,7 @@ list of ugliness discovered so far
 }
 object Term {
   @branch trait Ref extends Term with core.Ref {
-    @hosted def defn: Member.Overloaded[Member.Term] = delegate
+    @hosted def defn: Overload[Member.Term] = delegate
   }
   @ast class This(qual: Option[core.Ident]) extends Ref
   @ast class Ident(value: scala.Predef.String @nonEmpty, isBackquoted: Boolean = false) extends core.Ident with Ref with Pat with Member with Member.Val with Member.Var {
@@ -249,9 +249,6 @@ object Member {
     @hosted def overrides: List[Member.Type] = delegate
     @hosted def companion: Member.Term = fail(ReflectionException(s"companion not found"))
   }
-  case class Overloaded[+A <: Member](alts: List[A]) {
-    @hosted def resolve(tpes: core.Type*): A = delegate
-  }
   @branch trait Field extends Term {
     def ident: core.Term.Ident
     @hosted def tpe: core.Type
@@ -288,6 +285,9 @@ object Member {
     protected type CompanionType <: Member
     protected def findCompanion(alts: List[Member]): Option[CompanionType]
   }
+}
+case class Overload[+A <: Member](alts: List[A]) {
+  @hosted def resolve(tpes: core.Type*): A = delegate
 }
 
 @branch trait Decl extends Stmt.Template with Stmt.Refine
@@ -434,7 +434,7 @@ object Stmt {
 
 @branch trait Scope extends Tree {
   @hosted def members: Seq[Member] = delegate
-  @hosted def members(name: Ident): Member.Overloaded[Member] = members.flatMap(_.findOverloaded(name))
+  @hosted def members(name: Ident): Overload[Member] = members.flatMap(_.findOverloaded(name))
   protected implicit class RichIterable[T](val members: Seq[T]) {
     @hosted def findUnique: T = ???
     @hosted def findUnique(name: Ident): T = ???
@@ -442,9 +442,9 @@ object Stmt {
     @hosted def findUnique(name: scala.Symbol): T = ???
   }
   protected implicit class RichMembers[T <: Member](val members: Seq[T]) {
-    @hosted def findOverloaded(name: Ident): Member.Overloaded[T] = ???
-    @hosted def findOverloaded(name: String): Member.Overloaded[T] = ???
-    @hosted def findOverloaded(name: scala.Symbol): Member.Overloaded[T] = ???
+    @hosted def findOverloaded(name: Ident): Overload[T] = ???
+    @hosted def findOverloaded(name: String): Overload[T] = ???
+    @hosted def findOverloaded(name: scala.Symbol): Overload[T] = ???
   }
 }
 object Scope {
