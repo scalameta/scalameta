@@ -5,6 +5,8 @@ import org.scalareflect.adt._
 import org.scalareflect.errors._
 import scala.reflect.core.errors.{wrapHosted, wrapMacrohosted}
 import org.scalareflect.annotations._
+import scala.{Seq => _}
+import scala.collection.immutable.Seq
 
 package object core {
   @hosted def root: Pkg.Root = delegate
@@ -32,7 +34,7 @@ package object core {
     // consider also adding templ, param, tparam, parent, self, case, enum, mod, arg interpolators
   }
 
-  @hosted private[core] def supertypesToMembers(tpes: List[Type]): List[Member.Template] = {
+  @hosted private[core] def supertypesToMembers(tpes: Seq[Type]): Seq[Member.Template] = {
     def extractTemplate(ref: Type.Ref) = {
       for {
         defn <- ref.defn
@@ -48,14 +50,14 @@ package object core {
       case tpe => fail(ReflectionException(s"unexpected type $tpe returned from supertypes"))
     }
   }
-  implicit class RichTemplates(val parents: List[Member.Template]) extends AnyVal {
-    @hosted def linearization: List[Member.Template] = {
+  implicit class RichTemplates(val parents: Seq[Member.Template]) extends AnyVal {
+    @hosted def linearization: Seq[Member.Template] = {
       val linearization = parents.map(p => ??? : Type).linearization // TODO: t"${p.ref}"
       linearization.flatMap(tpes => supertypesToMembers(tpes))
     }
   }
-  implicit class RichTypes(val parents: List[Type]) extends AnyVal {
-    @hosted def linearization: List[Type] = wrapHosted(_.linearization(parents))
+  implicit class RichTypes(val parents: Seq[Type]) extends AnyVal {
+    @hosted def linearization: Seq[Type] = wrapHosted(_.linearization(parents))
   }
   @hosted def lub(tpes: Type*): Type = delegate
   @hosted def glb(tpes: Type*): Type = delegate
@@ -69,7 +71,7 @@ package object core {
     final case class Resource(url: String)(implicit mc: MacroContext) {
       @mayFail def read(implicit codec: scala.io.Codec): String = wrapMacrohosted(_.readResource(url, codec))
     }
-    class Resources(urls: List[String])(implicit mc: MacroContext) extends Iterable[Resource] {
+    class Resources(urls: Seq[String])(implicit mc: MacroContext) extends Iterable[Resource] {
       def iterator: Iterator[Resource] = urls.map(url => new Resource(url)).iterator
       @mayFail def apply(url: String)(implicit codec: scala.io.Codec): String = new Resource(url).read
     }

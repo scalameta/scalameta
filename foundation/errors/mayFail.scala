@@ -24,7 +24,7 @@ class MayFailMacros(val c: Context) {
       val body1 = if (body.nonEmpty) q"""
         import _root_.org.scalareflect.errors.{succeed, fail}
         import $pname.MonadicOps
-        import $pname.MonadicListOps
+        import $pname.MonadicSeqOps
         $body
       """ else body
       q"$mods def $name[..$tparams](...$paramss)(implicit ..$implparamss1): $tpt1 = $body1"

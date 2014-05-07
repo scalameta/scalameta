@@ -1,6 +1,9 @@
 package scala.reflect
 package core
 
+import scala.{Seq => _}
+import scala.collection.immutable.Seq
+
 trait HostContext {
   def languageProfile: LanguageProfile
 
@@ -11,14 +14,14 @@ trait HostContext {
 
   def defn(term: Term.Ref): Overload[Member.Term]
   def defn(ref: Type.Ref): Member
-  def overrides(member: Member.Term): List[Member.Term]
-  def overrides(member: Member.Type): List[Member.Type]
+  def overrides(member: Member.Term): Seq[Member.Term]
+  def overrides(member: Member.Type): Seq[Member.Type]
 
   def <:<(tpe1: Type, tpe2: Type): Boolean
   def weak_<:<(tpe1: Type, tpe2: Type): Boolean
-  def supertypes(tpe: Type): List[Type]
-  def linearization(tpes: List[Type]): List[Type]
-  def subclasses(tpe: Type): List[Member.Template]
+  def supertypes(tpe: Type): Seq[Type]
+  def linearization(tpes: Seq[Type]): Seq[Type]
+  def subclasses(tpe: Type): Seq[Member.Template]
   def self(tpe: Type): Aux.Self
   def lub(tpes: Type*): Type
   def glb(tpes: Type*): Type
@@ -26,7 +29,7 @@ trait HostContext {
   def dealias(tpe: Type): Type
   def erasure(tpe: Type): Type
 
-  def attrs(tree: Tree): List[Attribute]
+  def attrs(tree: Tree): Seq[Attribute]
 }
 
 trait MacroContext extends HostContext {
@@ -34,6 +37,6 @@ trait MacroContext extends HostContext {
   def warning(msg: String): Unit
   def error(msg: String): Unit
   def abort(msg: String): Nothing
-  def listResources: List[String]
+  def listResources: Seq[String]
   def readResource(url: String, codec: scala.io.Codec): String
 }

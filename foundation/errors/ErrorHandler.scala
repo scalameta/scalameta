@@ -2,6 +2,8 @@ package org.scalareflect
 
 import scala.language.higherKinds
 import scala.util.{Try, Success => TrySuccess, Failure => TryFailure}
+import scala.{Seq => _}
+import scala.collection.immutable.Seq
 
 package errors {
   trait ErrorHandler {
@@ -10,15 +12,15 @@ package errors {
       def map[S1](f: S => S1): Result[S1, E] = ErrorHandler.this.map(r, f)
       def flatMap[S1, E1](f: S => Result[S1, E1]): Result[S1, E1] = ErrorHandler.this.flatMap(r, f)
     }
-    implicit class MonadicListOps[+S, +E](r: Result[List[S], E]) extends MonadicOps(r) {
-      def mmap[S1, E1](f: S => Result[S1, E1]): Result[List[S1], E1] = {
-        def loop(list: List[S]): Result[List[S1], E1] = {
+    implicit class MonadicSeqOps[+S, +E](r: Result[Seq[S], E]) extends MonadicOps(r) {
+      def mmap[S1, E1](f: S => Result[S1, E1]): Result[Seq[S1], E1] = {
+        def loop(list: Seq[S]): Result[Seq[S1], E1] = {
           list match {
             case hd :: tl =>
               for {
                 fhd <- f(hd)
                 ftl <- loop(tl)
-              } yield fhd :: ftl
+              } yield fhd +: ftl
             case Nil => succeed(Nil)
           }
         }
