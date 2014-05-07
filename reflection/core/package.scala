@@ -79,8 +79,7 @@ package object core {
 
   // TODO: trivia: whitespace, comments, etc (see http://msdn.microsoft.com/en-us/vstudio/hh500769)
   // TODO: history vs positions (can trivia be inferred from positions only?)
-  @root trait SourceContext {
-  }
+  @root trait SourceContext
 
   final case class ReflectionException(msg: String) extends Exception(msg)
 }

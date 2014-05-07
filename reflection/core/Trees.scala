@@ -80,7 +80,7 @@ object Term {
     @hosted def defn: Overload[Member.Term] = delegate
   }
   @ast class This(qual: Option[core.Ident]) extends Ref
-  @ast class Ident(value: scala.Predef.String @nonEmpty, isBackquoted: Boolean = false) extends core.Ident with Ref with Pat with Has.TermName {
+  @ast class Ident(value: scala.Predef.String @nonEmpty, isBackquoted: Boolean = false) extends core.Ident with Ref with Pat with Has.TermIdent {
     // TODO: require(!keywords.contains(value) || isBackquoted)
     // TODO: if not backquoted, then not all values should be allowed
     def name: Ident = this
@@ -246,15 +246,15 @@ object Member {
     def ref: Type.Ref
     @hosted def overrides: Seq[Member.Type] = delegate
   }
-  @branch trait Def extends Term with Has.TermName with Stmt.Template with Has.Paramss with Scope.Params {
+  @branch trait Def extends Term with Has.TermIdent with Stmt.Template with Has.Paramss with Scope.Params {
     def tparams: Seq[Aux.TypeParam]
     @hosted def ret: core.Type
   }
-  @branch trait AbstractOrAliasType extends Type with Has.TypeName {
+  @branch trait AbstractOrAliasType extends Type with Has.TypeIdent {
     def name: core.Type.Ident
     def tparams: Seq[Aux.TypeParam]
   }
-  @branch trait Template extends Member with Has.Name with Stmt.TopLevel with Stmt.Block with Has.Paramss with Scope.Template {
+  @branch trait Template extends Member with Has.Ident with Stmt.TopLevel with Stmt.Block with Has.Paramss with Scope.Template {
     def name: core.Ident
     def explicits: Seq[Seq[Aux.Param.Named]] = Nil
     def implicits: Seq[Aux.Param.Named] = Nil
@@ -354,21 +354,21 @@ object Defn {
                    name: core.Type.Ident,
                    override val tparams: Seq[Aux.TypeParam],
                    declctor: Ctor.Primary,
-                   templ: Aux.Template) extends Defn with Member.Template with Member.Type with Has.TypeName {
+                   templ: Aux.Template) extends Defn with Member.Template with Member.Type with Has.TypeIdent {
     @hosted override def ctor: Ctor.Primary = succeed(declctor)
     @hosted override def companion: Object = findCompanion{ case x: Object => x }
   }
   @ast class Trait(mods: Seq[Mod],
                    name: core.Type.Ident,
                    override val tparams: Seq[Aux.TypeParam],
-                   templ: Aux.Template) extends Defn with Member.Template with Member.Type with Has.TypeName {
+                   templ: Aux.Template) extends Defn with Member.Template with Member.Type with Has.TypeIdent {
     require(templ.parents.forall(_.argss.isEmpty))
     def isInterface: Boolean = templ.stats.forall(_.isInstanceOf[Decl])
     @hosted override def companion: Object = findCompanion{ case x: Object => x }
   }
   @ast class Object(mods: Seq[Mod],
                     name: Term.Ident,
-                    templ: Aux.Template) extends Defn with Member.Template with Member.Term with Has.TermName {
+                    templ: Aux.Template) extends Defn with Member.Template with Member.Term with Has.TermIdent {
     @hosted override def companion: Member.Template with Member.Type = findCompanion{ case x: Class => x; case x: Trait => x }
   }
 }
@@ -386,7 +386,7 @@ object Pkg {
   }
   @ast class Object(mods: Seq[Mod],
                     name: Term.Ident,
-                    templ: Aux.Template) extends Tree with Stmt.TopLevel with Member.Template with Member.Term with Has.TermName {
+                    templ: Aux.Template) extends Tree with Stmt.TopLevel with Member.Template with Member.Term with Has.TermIdent {
     @hosted override def companion: Member.Template with Member.Type = fail(ReflectionException("companion not found"))
   }
 }
@@ -601,7 +601,7 @@ object Aux {
     @ast class Named(name: Term.Ident,
                      decltpe: Type,
                      mods: Seq[Mod] = Nil,
-                     default: Option[Term] = None) extends Param with Member.Term with Has.TermName
+                     default: Option[Term] = None) extends Param with Member.Term with Has.TermIdent
   }
   @branch trait TypeParam extends Tree with Has.Mods {
     def tparams: Seq[Aux.TypeParam]
@@ -620,7 +620,7 @@ object Aux {
                      tparams: Seq[Aux.TypeParam] = Nil,
                      contextBounds: Seq[core.Type] = Nil,
                      viewBounds: Seq[core.Type] = Nil,
-                     bounds: Aux.TypeBounds = Aux.TypeBounds.empty) extends TypeParam with Member.Type with Has.TypeName
+                     bounds: Aux.TypeBounds = Aux.TypeBounds.empty) extends TypeParam with Member.Type with Has.TypeIdent
   }
   @ast class TypeBounds(lo: Option[Type] = None, hi: Option[Type] = None) extends Tree
 }
@@ -632,7 +632,7 @@ object Has {
     // * write a script that fetches this google doc and converts it into a, say, CSV spec
     // * write a test that validates the spec by generating source files and parsing them
     // * write a macro that generates implementation of validateAnnots from the spec + extension methods like isImplicit
-    private[core] def validateMods(): Either[Exception, Unit] = ???
+    private[core] def validateMods(): Unit = ???
   }
 
   @branch trait Paramss extends Tree {
@@ -641,16 +641,16 @@ object Has {
     def paramss: Seq[Seq[Aux.Param.Named]] = explicits :+ implicits
   }
 
-  @branch trait Name extends Member {
+  @branch trait Ident extends Member {
     def name: Ident
   }
 
-  @branch trait TermName extends Member.Term {
+  @branch trait TermIdent extends Member.Term {
     def name: Term.Ident
     def ref: Term.Ref = name
   }
 
-  @branch trait TypeName extends Member.Type {
+  @branch trait TypeIdent extends Member.Type {
     def name: Type.Ident
     def ref: Type.Ref = name
   }
