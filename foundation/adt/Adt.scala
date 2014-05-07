@@ -64,7 +64,7 @@ class AdtMacros(val c: Context) {
   }
 
   def leaf(annottees: Tree*): Tree = {
-    def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
+    def transformLeafClass(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       val q"${mods @ Modifiers(flags, privateWithin, anns)} class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
       if (mods.hasFlag(SEALED)) c.abort(cdef.pos, "sealed is redundant for @leaf classes")
       if (mods.hasFlag(FINAL)) c.abort(cdef.pos, "final is redundant for @leaf classes")
@@ -99,17 +99,26 @@ class AdtMacros(val c: Context) {
       val anns1 = q"new $Internal.leaf" +: anns
       val cdef1 = q"${Modifiers(flags1, privateWithin, anns1)} class $name[..$tparams] $ctorMods(..$params1) extends { ..$earlydefns } with ..$parents { $self => ..$stats1 }"
       val ModuleDef(mmods @ Modifiers(mflags, mprivateWithin, manns), mname, Template(mparents, mself, mstats)) = mdef
-      // TODO: need to decide what to do with contexts for empty trees
-      val empties = if (params.nonEmpty && params.forall(_.rhs.nonEmpty)) List(q"val empty = $mname()(null)") else Nil
+      val empties = if (params.nonEmpty && params.forall(_.rhs.nonEmpty)) List(q"val empty = $mname()(_root_.scala.reflect.core.SourceContext.None)") else Nil
       val mstats1 = (mstats ++ empties) :+ tag
       val manns1 = q"new $Internal.leaf" +: manns
       val mdef1 = ModuleDef(Modifiers(mflags, mprivateWithin, manns1), mname, Template(mparents, mself, mstats1))
       List(cdef1, mdef1)
     }
+    def transformLeafModule(mdef: ModuleDef): ModuleDef = {
+      val ModuleDef(mods @ Modifiers(flags, privateWithin, anns), name, Template(parents, self, stats)) = mdef
+      val thisType = q"override type ThisType = $name.type"
+      val tag = q"def $$tag: _root_.scala.Int = $Internal.calculateTag[$name.type]"
+      val hierarchyCheck = q"$Internal.hierarchyCheck[$name.type]"
+      val immutabilityCheck = q"$Internal.immutabilityCheck[$name.type]"
+      val stats1 = stats :+ thisType :+ tag :+ hierarchyCheck :+ immutabilityCheck
+      val anns1 = q"new $Internal.leaf" +: anns
+      ModuleDef(Modifiers(flags, privateWithin, anns1), name, Template(parents, self, stats1))
+    }
     val expanded = annottees match {
-      case (cdef @ ClassDef(mods, _, _, _)) :: (mdef @ ModuleDef(_, _, _)) :: rest if !(mods hasFlag TRAIT) => transform(cdef, mdef) ++ rest
-      case (cdef @ ClassDef(mods, name, _, _)) :: rest if !mods.hasFlag(TRAIT) => transform(cdef, q"object ${name.toTermName}") ++ rest
-      // NOTE: if you allow objects to be @leaf, you'll need to update all the checks
+      case (cdef @ ClassDef(mods, _, _, _)) :: (mdef @ ModuleDef(_, _, _)) :: rest if !(mods hasFlag TRAIT) => transformLeafClass(cdef, mdef) ++ rest
+      case (cdef @ ClassDef(mods, name, _, _)) :: rest if !mods.hasFlag(TRAIT) => transformLeafClass(cdef, q"object ${name.toTermName}") ++ rest
+      case (mdef @ ModuleDef(_, _, _)) :: rest => transformLeafModule(mdef) +: rest
       case annottee :: rest => c.abort(annottee.pos, "only classes can be @leaf")
     }
     q"{ ..$expanded; () }"
@@ -180,6 +189,7 @@ class AdtHelperMacros(val c: Context) {
     val root = roots.head
     sym.baseClasses.map(_.asClass).foreach{bsym =>
       val exempt =
+        bsym.isModuleClass ||
         bsym == ObjectClass ||
         bsym == AnyClass ||
         bsym == symbolOf[scala.Serializable] ||
