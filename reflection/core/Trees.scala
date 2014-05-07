@@ -30,6 +30,8 @@ list of ugliness discovered so far
 // TODO: rewriting/transformation methods
 // TODO: parser
 // TODO: unhygienic quasiquotes
+// TODO: hygiene
+// TODO: what to do with references to particular overloads?
 // TODO: consider adding default values for case class fields whenever applicable
 // TODO: prettyprinter
 // TODO: implement srewrite with palladium
@@ -390,8 +392,9 @@ object Pkg {
   }
 }
 
-// TODO: how do we ref a constructor?
-@branch trait Ctor extends Tree with Has.Mods with Has.Paramss
+@branch trait Ctor extends Tree with Has.Mods with Has.Paramss {
+  @hosted def tpe: Type = internalTpe
+}
 object Ctor {
   @ast class Primary(mods: Seq[Mod] = Nil,
                      explicits: Seq[Seq[Aux.Param.Named]] = Nil,
@@ -569,7 +572,7 @@ object Mod {
 
 @branch trait Attribute extends Tree
 object Attribute {
-  @ast class Ref(ref: core.Ref) extends Attribute
+  @ast class Ref(ref: Tree) extends Attribute
   @ast class Type(tpe: core.Type) extends Attribute
   @ast class InferredTargs(targs: Seq[core.Type]) extends Attribute
   @ast class InferredVargs(vargs: Seq[core.Term]) extends Attribute
@@ -578,7 +581,12 @@ object Attribute {
 
 object Aux {
   @ast class Case(pat: Pat, cond: Option[Term] = None, body: Option[Term] = None) extends Tree with Scope
-  @ast class Parent(tpe: Type, argss: Seq[Seq[Arg]] = Nil) extends Ref
+  @ast class Parent(tpe: Type, argss: Seq[Seq[Arg]] = Nil) extends Ref {
+    @hosted def ctor: Ctor = attrs.flatMap(_.collect{ case ref: Attribute.Ref => ref } match {
+      case Attribute.Ref(ref: Ctor) :: Nil => succeed(ref)
+      case _ => fail(ReflectionException("typecheck has failed"))
+    })
+  }
   @ast class Template(early: Seq[Defn.Val] = Nil, parents: Seq[Parent] = Nil,
                       declself: Self = Self.empty, stats: Seq[Stmt.Template] = Nil) extends Tree with Scope.Template {
     require(parents.isEmpty || !parents.tail.exists(_.argss.nonEmpty))
