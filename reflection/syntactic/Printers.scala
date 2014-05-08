@@ -69,7 +69,7 @@ object Printers {
     case t: Lit              => printLit(t)
     case t: Term.Ref         => printTermRef(t)
     case t: Term.Apply       => p(t.fun, t.args)
-    case t: Term.ApplyRight  => p(t.lhs, " ", t.op, t.targs, " ", t.rhs)
+    case t: Term.ApplyInfix  => p(t.lhs, " ", t.op, t.targs, " ", t.rhs)
     case t: Term.ApplyType   => p(t.fun, t.targs)
     case t: Term.ApplyUnary  => p(t.op, t.arg)
     case t: Term.Assign      => p(t.lhs, " = ", t.rhs)

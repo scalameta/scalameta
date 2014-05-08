@@ -71,13 +71,13 @@ class DefnSuite extends ParseSuite {
     val Defn.Def(Nil, Term.Name("f", false), Nil,
                  (Param.Named(Term.Name("a", false), Some(Type.Name("Int", false)), None, Nil) :: Nil) :: Nil,
                  (Param.Named(Term.Name("b", false), Some(Type.Name("Int", false)), None, Nil) :: Nil), None,
-                 Term.Apply(Term.Select(Term.Name("a", false), Term.Name("+", false)), Term.Name("b", false) :: Nil)) =
+                 Term.ApplyInfix(Term.Name("a", false), Term.Name("+", false), Nil, Term.Name("b", false))) =
       templStat("def f(a: Int)(implicit b: Int) = a + b")
   }
 
   test("def proc { return 42 }") {
     val Defn.Procedure(Nil, Term.Name("proc", false), Nil, Nil, Nil,
-                       Term.Return(Lit.Int(42))) = templStat("def proc { return 42 }")
+                       Term.Return(Lit.Int(42)) :: Nil) = templStat("def proc { return 42 }")
 
   }
 }

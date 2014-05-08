@@ -447,17 +447,7 @@ abstract class Parser { parser =>
         OpInfo(tree, name, targs)
       }
       def binop(opinfo: OpInfo[Term], rhs: Term): Term = {
-        val arguments: List[Arg] = rhs match {
-          case Term.Tuple(args) => args.toList map assignmentToMaybeNamedArg
-          case _                => List(rhs)
-        }
-        if (!opinfo.operator.isLeftAssoc) {
-          Term.ApplyRight(opinfo.lhs, opinfo.operator, opinfo.targs, rhs)
-        } else {
-          val select = Term.Select(opinfo.lhs, opinfo.operator)
-          val selectTargs = if (opinfo.targs.isEmpty) select else Term.ApplyType(select, opinfo.targs)
-          Term.Apply(selectTargs, arguments)
-        }
+        Term.ApplyInfix(opinfo.lhs, opinfo.operator, opinfo.targs, rhs)
       }
     }
     implicit object `Pat Context` extends OpCtx[Pat] {
