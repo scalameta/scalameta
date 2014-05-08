@@ -224,7 +224,7 @@ object Defn {
                        tparams: Seq[Aux.TypeParam],
                        explicits: Seq[Seq[Aux.Param.Named]],
                        implicits: Seq[Aux.Param.Named],
-                       body: Term) extends Defn with Member.Def {
+                       stats: Seq[Stmt.Block]) extends Defn with Member.Def {
   }
   @ast class Type(mods: Seq[Mod],
                   name: core.Type.Name,

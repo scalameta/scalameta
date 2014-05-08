@@ -79,14 +79,14 @@ object Printers {
     case t: Term.Ascribe     => p(t.expr, ": ", t.tpe)
     case t: Term.Annotate    => p(t.expr, ": ", t.mods)
     case t: Term.Tuple       => p("(", r(t.elements, ", "), ")")
-    case t: Term.Block       => p("{ ", r(t.stats, "; "), " }")
+    case t: Term.Block       => if (t.stats.isEmpty) "{}" else p("{ ", r(t.stats, "; "), " }")
     case t: Term.Cases       => p("{ ", r(t.cases, "; "), " }")
     case t: Term.While       => p("while (", t.expr, ") ", t.body)
     case t: Term.Do          => p("do ", t.body, " while (", t.expr, ")")
     case t: Term.For         => p("for (", r(t.enums, "; "), ") ", t.body)
     case t: Term.ForYield    => p("for (", r(t.enums, "; "), ") yield ", t.body)
     case t: Term.New         => p("new", t.templ)
-    case t: Term.Placeholder => "_"
+    case _: Term.Placeholder => "_"
     case t: Term.Eta         => p(t.term, " _")
     case t: Term.Match       => p(t.scrut, " match ", t.cases)
     case t: Term.Try         =>
@@ -163,11 +163,7 @@ object Printers {
     case t: Defn.Class     => p(t.mods, "class ", t.name, t.tparams, t.ctor, t.templ)
     case t: Defn.Trait     => p(t.mods, "trait ", t.name, t.tparams, t.templ)
     case t: Defn.Object    => p(t.mods, "object ", t.name, t.templ)
-    case t: Defn.Procedure =>
-      p(t.mods, "def ", t.name, t.tparams, (t.explicits, t.implicits), t.body match {
-        case b: Term.Block => p(b)
-        case other: Term   => p("{ ", other, " }")
-      })
+    case t: Defn.Procedure => p(t.mods, "def ", t.name, t.tparams, (t.explicits, t.implicits), " { ", r(t.stats, "; "), " }")
   }
   implicit val printDecl: Print[Decl] = Print {
     case t: Decl.Val       => p(t.mods, "val ", r(t.pats, ", "), ": ", t.decltpe )
@@ -216,7 +212,7 @@ object Printers {
     case t: Self            =>
       if (t.name.isEmpty && t.decltpe.isEmpty) ""
       else p(t.name, t.decltpe, " => ")
-    case t: Template        =>
+    case t: Template =>
       if (t eq Template.empty) ""
       else {
         val searly = if (t.early.isEmpty) "" else p("{ ", r(t.early, "; "), " } with ")
@@ -224,7 +220,7 @@ object Printers {
                     else p("{ ", t.self, r(t.stats, "; "), " }")
         p(" ", searly, r(t.parents, " with "), sbody)
       }
-    case t: TypeBounds      =>
+    case t: TypeBounds =>
       p(t.lo.map { lo => p(" >: ", lo) }.getOrElse(""),
         t.hi.map { hi => p(" <: ", hi) }.getOrElse(""))
     case t: Case            =>

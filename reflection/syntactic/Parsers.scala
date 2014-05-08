@@ -1985,7 +1985,12 @@ abstract class Parser { parser =>
         Decl.Def(mods, name, tparams, paramss, implicits, restype.get)
     } else if (restype.isEmpty && in.token == LBRACE) {
       warnProcedureDeprecation
-      Defn.Procedure(mods, name, tparams, paramss, implicits, block())
+      Defn.Procedure(mods, name, tparams, paramss, implicits, {
+        accept(LBRACE)
+        var r = blockStatSeq()
+        accept(RBRACE)
+        r
+      })
     } else {
       var newmods = mods
       val rhs = {
