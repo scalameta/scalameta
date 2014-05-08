@@ -27,7 +27,7 @@ class LiftableMaterializerImpl(val c: Context) { import c.universe._
     else if (isBranch(sym)) sym.knownDirectSubclasses.toList.flatMap { case cs: ClassSymbol => cs.info; leafs(cs) }
     else unreachable
 
-  def materialize(sym: ClassSymbol): (c.Tree, List[ClassSymbol]) = {
+  def materialize(sym: ClassSymbol): (Tree, List[ClassSymbol]) = {
     sym.info
     val (body, deps) =
       if (isBranch(sym)) {
@@ -67,8 +67,8 @@ class LiftableMaterializerImpl(val c: Context) { import c.universe._
     (expansion, deps)
   }
 
-  def recursivelyMaterialize(rootSym: ClassSymbol): List[c.Tree] = {
-    def loop(toExpand: List[ClassSymbol], alreadyExpanded: Set[ClassSymbol]): List[c.Tree] = toExpand match {
+  def recursivelyMaterialize(rootSym: ClassSymbol): List[Tree] = {
+    def loop(toExpand: List[ClassSymbol], alreadyExpanded: Set[ClassSymbol]): List[Tree] = toExpand match {
       case Nil => Nil
       case head :: tail =>
         val (expansion, deps) = materialize(head)
@@ -79,7 +79,7 @@ class LiftableMaterializerImpl(val c: Context) { import c.universe._
     loop(rootSym :: Nil, Set.empty)
   }
 
-  def expand[T: c.WeakTypeTag]: c.Tree = {
+  def expand[T: WeakTypeTag]: Tree = {
     val instances = recursivelyMaterialize(weakTypeOf[T].typeSymbol.asClass)
     q"new { import $u._; ..$instances }"
   }

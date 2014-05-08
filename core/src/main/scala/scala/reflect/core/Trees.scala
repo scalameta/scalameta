@@ -91,7 +91,7 @@ package core {
       require(parts.length == args.length + 1)
     }
     @leaf class Apply(fun: Term, args: List[Arg]) extends Term
-    @leaf class ApplyType(fun: Term, args: List[Type] @nonEmpty) extends Term
+    @leaf class ApplyType(fun: Term, targs: List[Type] @nonEmpty) extends Term
     @leaf class ApplyRight(lhs: Term, op: Ident, targs: List[Type], rhs: Term) extends Term {
       // TODO: require(op.isRightAssocOp)
     }
@@ -102,9 +102,11 @@ package core {
     @leaf class Update(lhs: Apply, rhs: Term) extends Term
     @leaf class Return(expr: Term) extends Term
     @leaf class Throw(expr: Term) extends Term
-    @leaf class Ascribe(expr: Term, acsribedTpe: Type) extends Term
+    @leaf class Ascribe(expr: Term, ascribedTpe: Type) extends Term
     @leaf class Annotate(expr: Term, mods: List[Mod] @nonEmpty) extends Term with Has.Mods
-    @leaf class Tuple(elements: List[Term] @nonEmpty) extends Term
+    @leaf class Tuple(elements: List[Term] @nonEmpty) extends Term {
+      require(elements.length > 1)
+    }
     // TODO: automatically flatten blocks with just a single term?
     @leaf class Block(stats: List[Stmt.Block]) extends Term
     @leaf class If(cond: Term, thenp: Term, elsep: Option[Term]) extends Term
@@ -162,7 +164,9 @@ package core {
     // TODO: validate that tpe can actually be applied
     @leaf class Apply(tpe: Type, args: List[Type] @nonEmpty) extends Type
     @leaf class Function(params: List[ParamType], res: Type) extends Type
-    @leaf class Tuple(elements: List[Type] @nonEmpty) extends Type
+    @leaf class Tuple(elements: List[Type] @nonEmpty) extends Type {
+      require(elements.length > 1)
+    }
     @leaf class Compound(tpes: List[Type], refinement: List[Stmt.Refine]) extends Type
     @leaf class Existential(tpe: Type, quants: List[Stmt.Existential] @nonEmpty) extends Type
     @leaf class Annotate(tpe: Type, mods: List[Mod] @nonEmpty) extends Type with Has.Mods
@@ -318,7 +322,7 @@ package core {
   object Lit {
     // TODO: maybe add overloaded apply(value)
     // TODO: maybe add unapply(lit): Option[Any]
-    @branch trait Bool extends Lit
+    @branch trait Bool extends Lit with Type
     @leaf class True() extends Bool
     @leaf class False() extends Bool
     @leaf class Int(value: scala.Int) extends Lit with Type
@@ -352,7 +356,7 @@ package core {
 
   @branch trait Arg extends Tree
   object Arg {
-    @leaf class Named(name: Term.Ident, arg: Term) extends Arg
+    @leaf class Named(name: Term.Ident, rhs: Term) extends Arg
     @leaf class Repeated(arg: Term) extends Arg
   }
 
@@ -385,7 +389,6 @@ package core {
     @leaf class Covariant() extends Mod
     @leaf class Contravariant() extends Mod
     @leaf class Lazy() extends Mod
-    @leaf class AbstractOverride() extends Mod
     @leaf class Macro() extends Mod
     @leaf class ValParam() extends Mod
     @leaf class VarParam() extends Mod
@@ -393,7 +396,7 @@ package core {
 
   object Aux {
     @leaf class Case(pat: Pat, cond: Option[Term] = None, body: Option[Term] = None) extends Tree
-    @leaf class Parent(tpe: Type, argss: List[List[Arg]] = Nil) extends Ref
+    @leaf class Parent(tpe: Type, argss: List[List[Arg]] = Nil) extends Tree
     @leaf class Template(early: List[Defn.Val] = Nil, parents: List[Parent] = Nil,
                          self: Self = Self.empty, stats: List[Stmt.Template] = Nil) extends Tree {
       require(parents.isEmpty || !parents.tail.exists(_.argss.nonEmpty))
