@@ -400,8 +400,7 @@ object Printers {
     })
   }
   implicit val printDefnClass: Print[Defn.Class] = Print { t =>
-    import scala.reflect.semantic.errors.returnTries
-    p(t.mods, "class ", t.name, t.tparams, t.ctor.get, t.templ)
+    p(t.mods, "class ", t.name, t.tparams, t.ctor, t.templ)
   }
   implicit val printDefnTrait: Print[Defn.Trait] = Print { t =>
     p(t.mods, "trait ", t.name, t.tparams, t.templ)

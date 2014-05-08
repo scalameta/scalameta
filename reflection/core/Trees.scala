@@ -166,7 +166,6 @@ object Member {
     def implicits: Seq[Aux.Param.Named] = Nil
     def tparams: Seq[Aux.TypeParam] = Nil
     def templ: Aux.Template
-    @mayFail def ctor: Ctor.Primary = fail(ReflectionException("no constructor found"))
   }
 }
 final case class Overload[+A <: Member](alts: Seq[A]) {
@@ -234,10 +233,8 @@ object Defn {
   @ast class Class(mods: Seq[Mod],
                    name: core.Type.Name,
                    override val tparams: Seq[Aux.TypeParam],
-                   declctor: Ctor.Primary,
-                   templ: Aux.Template) extends Defn with Member.Template with Member.Type with Has.TypeName {
-    @mayFail override def ctor: Ctor.Primary = succeed(declctor)
-  }
+                   ctor: Ctor.Primary,
+                   templ: Aux.Template) extends Defn with Member.Template with Member.Type with Has.TypeName
   @ast class Trait(mods: Seq[Mod],
                    name: core.Type.Name,
                    override val tparams: Seq[Aux.TypeParam],
