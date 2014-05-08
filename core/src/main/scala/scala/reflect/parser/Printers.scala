@@ -62,7 +62,7 @@ object NaivePrinters {
     p("{ ", r(block.stats, "; "), " }")
   }
   implicit val printTermIf: Print[Term.If] = Print { tif =>
-    p("if (", tif.cond, ") ", tif.thenp, tif.elsep.map { t => p(t) }.getOrElse(""))
+    p("if (", tif.cond, ") ", tif.thenp, tif.elsep.map { t => p(" then ", t) }.getOrElse(""))
   }
   implicit val printTermMatch: Print[Term.Match] = Print { tmatch =>
     p(tmatch.scrut, " match ", tmatch.cases)
