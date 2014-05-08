@@ -98,7 +98,7 @@ class SourceParser(val source: Source) extends Parser {
 
   /** the markup parser */
   // private[this] lazy val xmlp = new MarkupParser(this, preserveWS = true)
-  // object symbXMLBuilder extends MembericXMLBuilder(this, preserveWS = true)
+  // object symbXMLBuilder extends SymbolicXMLBuilder(this, preserveWS = true)
   // TODO: implement XML support
   def xmlLiteral(): Term = ??? //xmlp.xLiteral
   def xmlLiteralPattern(): Pat = ??? // xmlp.xLiteralPattern
@@ -450,7 +450,7 @@ abstract class Parser { parser =>
   object OpCtx {
     implicit object `Term Context` extends OpCtx[Term] {
       def opinfo(tree: Term): OpInfo[Term] = {
-        val name = Name()
+        val name = termName()
         val targs = if (in.token == LBRACKET) exprTypeArgs() else Nil
         OpInfo(tree, name, targs)
       }
@@ -470,7 +470,7 @@ abstract class Parser { parser =>
     }
     implicit object `Pat Context` extends OpCtx[Pat] {
       def opinfo(tree: Pat): OpInfo[Pat] = {
-        val name = Name()
+        val name = termName()
         if (in.token == LBRACKET) syntaxError("infix patterns cannot have type arguments")
         OpInfo(tree, name, Nil)
       }
@@ -622,7 +622,7 @@ abstract class Parser { parser =>
         case _        =>
           val ref: Term.Ref = path()
           if (in.token != DOT)
-            convertToTypeId(ref) getOrElse { syntaxError("IDENTIFIER expected") }
+            convertToTypeId(ref) getOrElse { syntaxError("identifier expected") }
           else {
             in.nextToken()
             accept(TYPE)
@@ -683,7 +683,7 @@ abstract class Parser { parser =>
     }
 
     /** {{{
-     *  InfixType ::= CompoundType {name [nl] CompoundType}
+     *  InfixType ::= CompoundType {id [nl] CompoundType}
      *  }}}
      */
     def infixType(mode: InfixMode.Value): Type =
@@ -709,7 +709,7 @@ abstract class Parser { parser =>
     }
   }
 
-  def Name(): Term.Name =
+  def termName(): Term.Name =
     if (!isName) syntaxError(expectedMsg(IDENTIFIER))
     else {
       val name = in.name
@@ -719,11 +719,11 @@ abstract class Parser { parser =>
     }
 
   /** For when it's known already to be a type name. */
-  def typeName(): Type.Name = Name().toTypeName
+  def typeName(): Type.Name = termName().toTypeName
 
   /** {{{
    *  Path       ::= StableId
-   *              |  [Name `.'] this
+   *              |  [Ident `.'] this
    *  ModType ::= Path [`.' type]
    *  }}}
    */
@@ -742,14 +742,14 @@ abstract class Parser { parser =>
       in.nextToken()
       val mixinQual = mixinQualifierOpt()
       accept(DOT)
-      val supersel = Term.SuperSelect(None, mixinQual, Name())
+      val supersel = Term.SuperSelect(None, mixinQual, termName())
       if (stop) supersel
       else {
         in.skipToken()
         selectors(supersel)
       }
     } else {
-      val name = Name()
+      val name = termName()
       if (stop) name
       else {
         in.nextToken()
@@ -765,7 +765,7 @@ abstract class Parser { parser =>
           in.nextToken()
           val mixinQual = mixinQualifierOpt()
           accept(DOT)
-          val supersel = Term.SuperSelect(Some(name.toTypeName), mixinQual, Name())
+          val supersel = Term.SuperSelect(Some(name.toTypeName), mixinQual, termName())
           if (stop) supersel
           else {
             in.skipToken()
@@ -778,7 +778,7 @@ abstract class Parser { parser =>
     }
   }
 
-  def selector(t: Term): Term.Select = Term.Select(t, Name())
+  def selector(t: Term): Term.Select = Term.Select(t, termName())
   def selectors(t: Term.Ref): Term.Ref ={
     val t1 = selector(t)
     if (in.token == DOT && lookingAhead { isName }) {
@@ -799,7 +799,7 @@ abstract class Parser { parser =>
   /** {{{
    *  StableId ::= Id
    *            |  Path `.' Id
-   *            |  [name `.'] super [`[' name `]']`.' name
+   *            |  [id `.'] super [`[' id `]']`.' id
    *  }}}
    */
   def stableId(): Term.Ref =
@@ -810,7 +810,7 @@ abstract class Parser { parser =>
   *   }}}
   */
   def qualId(): Term.Ref = {
-    val name = Name()
+    val name = termName()
     if (in.token != DOT) name
     else {
       in.skipToken()
@@ -820,7 +820,7 @@ abstract class Parser { parser =>
 
   /** {{{
    *  SimpleExpr    ::= literal
-   *                  | Member
+   *                  | symbol
    *                  | null
    *  }}}
    */
@@ -850,7 +850,7 @@ abstract class Parser { parser =>
         in.nextToken()
         lit
       }
-    val interpolator = Term.Name(in.name) // Name() for INTERPOLATIONID
+    val interpolator = Term.Name(in.name) // termName() for INTERPOLATIONID
     in.nextToken()
     val partsBuf = new ListBuffer[Lit.String]
     val argsBuf = new ListBuffer[Ctx]
@@ -865,11 +865,11 @@ abstract class Parser { parser =>
   def interpolateTerm(): Term.Interpolate =
     interpolate[Term, Term.Interpolate](arg = { () =>
       in.token match {
-        case IDENTIFIER => Name()
+        case IDENTIFIER => termName()
         //case USCORE   => freshPlaceholder()  // ifonly etapolation
         case LBRACE     => expr()              // dropAnyBraces(expr0(Local))
         case THIS       => in.nextToken(); Term.This(None)
-        case _          => syntaxError("error in interpolated string: IDENTIFIER or block expected")
+        case _          => syntaxError("error in interpolated string: identifier or block expected")
       }
     }, result = Term.Interpolate(_, _, _))
 
@@ -1075,7 +1075,7 @@ abstract class Parser { parser =>
 
   def implicitClosure(location: Location): Term.Function = {
     val param0 = convertToParam {
-      val name = Name()
+      val name = termName()
       if (in.token != COLON) name
       else {
         in.nextToken()
@@ -1116,7 +1116,7 @@ abstract class Parser { parser =>
   def prefixExpr(): Term =
     if (!isUnaryOp) simpleExpr()
     else {
-      val op = Name()
+      val op = termName()
       if (op.value == "-" && isNumericLit)
         simpleExprRest(literal(isNegated = true), canApply = true)
       else
@@ -1196,7 +1196,7 @@ abstract class Parser { parser =>
   }
 
   /** Translates an Assign(_, _) node to AssignOrNamedArg(_, _) if
-   *  the lhs is a simple Name. Otherwise returns unchanged.
+   *  the lhs is a simple ident. Otherwise returns unchanged.
    */
   def assignmentToMaybeNamedArg(tree: Term): Arg = tree match {
     case Term.Assign(name: Term.Name, rhs) => Arg.Named(name, rhs)
@@ -1728,7 +1728,7 @@ abstract class Parser { parser =>
         case _   =>
       }
     }
-    val name = Name()
+    val name = termName()
     val tpt = {
       accept(COLON)
       val tpt = paramType()
@@ -1785,7 +1785,7 @@ abstract class Parser { parser =>
     val nameopt =
       if (isName) Some(typeName())
       else if (in.token == USCORE) { in.nextToken(); None }
-      else syntaxError("IDENTIFIER or `_' expected")
+      else syntaxError("identifier or `_' expected")
     val contextBounds = new ListBuffer[Type]
     val viewBounds = new ListBuffer[Type]
     if (ctxBoundsAllowed) {
@@ -1863,7 +1863,7 @@ abstract class Parser { parser =>
 
   def importWildcardOrName(): Import.Selector =
     if (in.token == USCORE) { in.nextToken(); Import.Selector.Wildcard() }
-    else Import.Selector.Name(Name().value)
+    else Import.Selector.Name(termName().value)
 
   /** {{{
    *  ImportSelector ::= Id [`=>' Id | `=>' `_']
@@ -1960,12 +1960,12 @@ abstract class Parser { parser =>
    *          |  `this' ParamClause ParamClauses
    *                 (`=' ConstrExpr | [nl] ConstrBlock)
    *  FunDcl ::= FunSig [`:' Type]
-   *  FunSig ::= name [FunTypeParamClause] ParamClauses
+   *  FunSig ::= id [FunTypeParamClause] ParamClauses
    *  }}}
    */
   def funDefOrDclOrCtor(mods: List[Mod]): Stmt.Template = {
     in.nextToken()
-    if (in.token != THIS) funDefRest(mods, Name())
+    if (in.token != THIS) funDefRest(mods, termName())
     else {
       in.skipToken()
       val (paramss, implicits) = paramClauses(ownerIsType = true)
@@ -2158,7 +2158,7 @@ abstract class Parser { parser =>
    */
   def objectDef(mods: List[Mod]): Defn.Object = {
     in.nextToken()
-    Defn.Object(mods, Name(), templateOpt(OwnedByObject))
+    Defn.Object(mods, termName(), templateOpt(OwnedByObject))
   }
 
   /** {{{
@@ -2309,7 +2309,7 @@ abstract class Parser { parser =>
   }
 
   /** {{{
-   *  TemplateStatSeq  ::= [name [`:' Type] `=>'] TemplateStats
+   *  TemplateStatSeq  ::= [id [`:' Type] `=>'] TemplateStats
    *  }}}
    * @param isPre specifies whether in early initializer (true) or not (false)
    */
@@ -2442,7 +2442,7 @@ abstract class Parser { parser =>
   }
 
 
-  def packageOrPackageObject(): Stmt.TopLevel =
+  def packageOrPackageObject(): Pkg with Stmt.TopLevel =
     if (in.token == OBJECT) {
       in.nextToken()
       packageObject()
@@ -2451,7 +2451,7 @@ abstract class Parser { parser =>
     }
 
   def packageObject(): Pkg.Object =
-    Pkg.Object(Nil, Name(), templateOpt(OwnedByObject))
+    Pkg.Object(Nil, termName(), templateOpt(OwnedByObject))
 
   /** {{{
    *  CompilationUnit ::= {package QualId semi} TopStatSeq
