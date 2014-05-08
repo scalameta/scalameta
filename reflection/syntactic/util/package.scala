@@ -1,4 +1,4 @@
-package scala.reflect.syntactic.parser.util
+package scala.reflect.syntactic.util
 
 import scala.language.existentials // SI-6541
 

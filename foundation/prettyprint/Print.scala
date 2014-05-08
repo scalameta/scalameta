@@ -6,7 +6,7 @@ import scala.language.experimental.macros
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 
-trait Print[T] { def apply(t: T): String }
+trait Print[-T] { def apply(t: T): String }
 object Print {
   def apply[T](f: T => String): Print[T] =
     new Print[T] { def apply(input: T): String = f(input) }

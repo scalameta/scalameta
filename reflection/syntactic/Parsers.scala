@@ -1,31 +1,23 @@
 package scala.reflect
-package syntactic.parser
+package syntactic
 
 import scala.collection.{ mutable, immutable }
 import mutable.{ ListBuffer, StringBuilder }
-import scala.reflect.syntactic.parser.util.settings
-import scala.reflect.syntactic.parser.util.Chars.{isOperatorPart, isScalaLetter}
-import scala.reflect.syntactic.parser.Tokens._
-import scala.reflect.syntactic.parser.TokenInfo._
+import scala.reflect.syntactic.util.settings
+import scala.reflect.syntactic.util.Chars.{isOperatorPart, isScalaLetter}
+import scala.reflect.syntactic.Tokens._
+import scala.reflect.syntactic.TokenInfo._
 import scala.reflect.core._, Aux._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 
-object ParserInfo {
-  val keywords = Set(
-    "abstract", "case", "do", "else", "finally", "for", "import", "lazy",
-    "object", "override", "return", "sealed", "trait", "try", "var", "while",
-    "catch", "class", "extends", "false", "forSome", "if", "match", "new",
-    "package", "private", "super", "this", "true", "type", "with", "yield",
-    "def", "final", "implicit", "null", "protected", "throw", "val", "_",
-    ":", "=", "=>", "<-", "<:", "<%", ">:", "#", "@", "\u21D2", "\u2190"
-  )
-  val unaryOps = Set("-", "+", "~", "!")
-  def isUnaryOp(s: String): Boolean = unaryOps contains s
-  implicit class NameInfo(val name: Name) extends AnyVal {
+object SyntacticInfo {
+  private[reflect] val unaryOps = Set("-", "+", "~", "!")
+  private[reflect] def isUnaryOp(s: String): Boolean = unaryOps contains s
+  implicit class SyntacticNameOps(val name: Name) extends AnyVal {
     import name._
     def isLeftAssoc: Boolean = value.last != ':'
-    def isUnaryOp: Boolean = ParserInfo.isUnaryOp(value)
+    def isUnaryOp: Boolean = SyntacticInfo.isUnaryOp(value)
     def isAssignmentOp = value match {
       case "!=" | "<=" | ">=" | "" => false
       case _                       => (value.last == '=' && value.head != '='
@@ -51,7 +43,7 @@ object ParserInfo {
       case _            => false
     }
   }
-  implicit class RichTermRef(val tree: Term.Ref) extends AnyVal {
+  implicit class SyntacticTermRefOps(val tree: Term.Ref) extends AnyVal {
     def isPath: Boolean = tree.isStableId || tree.isInstanceOf[Term.This]
     def isQualId: Boolean = tree match {
       case _: Term.Name                   => true
@@ -71,7 +63,7 @@ object ParserInfo {
       mods.collect { case m if m.getClass == tag.runtimeClass => m.asInstanceOf[T] }
   }
 }
-import ParserInfo._
+import SyntacticInfo._
 
 case class ParseAbort(msg: String) extends Exception(s"abort: $msg")
 case class ParseSyntaxError(offset: Offset, msg: String) extends Exception(s"syntax error at $offset: $msg")
@@ -314,7 +306,7 @@ abstract class Parser { parser =>
   def isNameExcept(except: String) = isName && in.name != except
   def isNameOf(name: String)       = isName && in.name == name
 
-  def isUnaryOp = isName && ParserInfo.isUnaryOp(in.name)
+  def isUnaryOp = isName && SyntacticInfo.isUnaryOp(in.name)
   def isRawStar = isName && in.name == "*"
   def isRawBar  = isName && in.name == "|"
 
@@ -2083,7 +2075,7 @@ abstract class Parser { parser =>
    *            |  [override] trait TraitDef
    *  }}}
    */
-  def tmplDef(mods: List[Mod]): Member.Template = {
+  def tmplDef(mods: List[Mod]): Member.Template with Stmt.Template = {
     mods.getAll[Mod.Lazy].foreach { syntaxError(_, "classes cannot be lazy") }
     in.token match {
       case TRAIT =>
@@ -2271,8 +2263,8 @@ abstract class Parser { parser =>
   def refinement(): List[Stmt.Refine] = inBraces(refineStatSeq())
 
   def existentialStats(): List[Stmt.Existential] = refinement() map {
-    case stmt: Stmt.Refine => stmt
-    case other             => syntaxError(other, "not a legal existential clause")
+    case stmt: Stmt.Existential => stmt
+    case other                  => syntaxError(other, "not a legal existential clause")
   }
 
 /* -------- STATSEQS ------------------------------------------- */
@@ -2397,7 +2389,11 @@ abstract class Parser { parser =>
         case sb: Stmt.Block => sb
         case other          => syntaxError(other, "is not a valid block statement")
       }
-    } else tmplDef(mods)
+    } else
+      (tmplDef(mods) match {
+        case sb: Stmt.Block => sb
+        case other          => syntaxError(other, "is not a valid block statement")
+      })
   }
 
   /** {{{

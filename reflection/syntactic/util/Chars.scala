@@ -2,7 +2,7 @@
  * Copyright 2006-2013 LAMP/EPFL
  * @author  Martin Odersky
  */
-package scala.reflect.syntactic.parser.util
+package scala.reflect.syntactic.util
 
 import scala.annotation.{ tailrec, switch }
 import java.lang.{ Character => JCharacter }

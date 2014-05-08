@@ -1,4 +1,4 @@
-package scala.reflect.syntactic.parser.util
+package scala.reflect.syntactic.util
 
 object settings {
   val future = false

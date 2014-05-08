@@ -6,7 +6,7 @@
 **                          |/                                          **
 \*                                                                      */
 
-package scala.reflect.syntactic.parser.util
+package scala.reflect.syntactic.util
 
 import scala.compat.Platform.EOL
 

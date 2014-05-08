@@ -3,17 +3,17 @@
  * @author  Martin Odersky
  */
 package scala.reflect
-package syntactic.parser
+package syntactic
 
 import scala.annotation.{ switch, tailrec }
 import scala.collection.{ mutable, immutable }
 import scala.language.postfixOps
 import mutable.{ ListBuffer, ArrayBuffer }
-import scala.reflect.syntactic.parser.util.{ CharArrayReader, CharArrayReaderData }
-import scala.reflect.syntactic.parser.util._
-import scala.reflect.syntactic.parser.util.Chars._
-import scala.reflect.syntactic.parser.Tokens._
-import scala.reflect.syntactic.parser.TokenInfo._
+import scala.reflect.syntactic.util.{ CharArrayReader, CharArrayReaderData }
+import scala.reflect.syntactic.util._
+import scala.reflect.syntactic.util.Chars._
+import scala.reflect.syntactic.Tokens._
+import scala.reflect.syntactic.TokenInfo._
 import scala.reflect.core.Source
 
 trait TokenData {

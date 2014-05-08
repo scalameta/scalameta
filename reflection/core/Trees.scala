@@ -160,7 +160,7 @@ object Member {
     def name: core.Type.Name
     def tparams: Seq[Aux.TypeParam]
   }
-  @branch trait Template extends Member with Has.Name with Stmt.TopLevel with Stmt.Template with Has.Paramss with Scope.Template {
+  @branch trait Template extends Member with Has.Name with Stmt.TopLevel with Has.Paramss with Scope.Template {
     def name: core.Name
     def explicits: Seq[Seq[Aux.Param.Named]] = Nil
     def implicits: Seq[Aux.Param.Named] = Nil
@@ -282,10 +282,10 @@ object Ctor {
 // TODO: this inheritance is wrong. `Stmt.Template` can't be inserted into places where `Stmt.Block` is expected
 object Stmt {
   @branch trait TopLevel extends Tree
-  @branch trait Template extends Block
-  @branch trait Block extends Refine
-  @branch trait Refine extends Existential
-  @branch trait Existential extends Tree
+  @branch trait Template extends Tree
+  @branch trait Block extends Template
+  @branch trait Refine extends Template
+  @branch trait Existential extends Refine
 }
 
 // TODO: this inheritance is most likely wrong as well
@@ -299,19 +299,19 @@ object Scope {
   @branch trait Params extends Scope
 }
 
-@branch trait Lit extends Term with Pat
+@branch trait Lit extends Term with Pat with Type
 object Lit {
-  @branch trait Bool extends Lit with Type
+  @branch trait Bool extends Lit
   @ast class True() extends Bool
   @ast class False() extends Bool
-  @ast class Int(value: scala.Int) extends Lit with Type
-  @ast class Long(value: scala.Long) extends Lit with Type
-  @ast class Float(value: scala.Float) extends Lit with Type
-  @ast class Double(value: scala.Double) extends Lit with Type
-  @ast class Char(value: scala.Char) extends Lit with Type
-  @ast class String(value: Predef.String) extends Lit with Type
+  @ast class Int(value: scala.Int) extends Lit
+  @ast class Long(value: scala.Long) extends Lit
+  @ast class Float(value: scala.Float) extends Lit
+  @ast class Double(value: scala.Double) extends Lit
+  @ast class Char(value: scala.Char) extends Lit
+  @ast class String(value: Predef.String) extends Lit
   // TODO: validate that not all symbols are representable as literals, e.g. scala.Symbol("")
-  @ast class Symbol(value: scala.Symbol) extends Lit with Type
+  @ast class Symbol(value: scala.Symbol) extends Lit
   @ast class Null() extends Lit
   @ast class Unit() extends Lit
 }
@@ -375,7 +375,7 @@ object Mod {
 
 object Aux {
   @ast class Case(pat: Pat, cond: Option[Term] = None, body: Option[Term] = None) extends Tree with Scope
-  @ast class Parent(tpe: Type, argss: Seq[Seq[Arg]] = Nil) extends Ref
+  @ast class Parent(tpe: Type, argss: Seq[Seq[Arg]] = Nil) extends Tree
   @ast class Template(early: Seq[Defn.Val] = Nil, parents: Seq[Parent] = Nil,
                       self: Self = Self.empty, stats: Seq[Stmt.Template] = Nil) extends Tree with Scope.Template {
     require(parents.isEmpty || !parents.tail.exists(_.argss.nonEmpty))
