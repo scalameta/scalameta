@@ -1413,6 +1413,7 @@ abstract class Parser { parser =>
     def pattern3(): Pat = {
       val top: Pat = simplePattern(badPattern3)
       val ctx = opctx[Pat]
+      val base = ctx.stack
       // See SI-3189, SI-4832 for motivation. Cf SI-3480 for counter-motivation.
       def isCloseDelim = in.token match {
         case RBRACE => isXML
@@ -1427,7 +1428,7 @@ abstract class Parser { parser =>
         )
         case _ => None
       }
-      def loop(top: Pat): Pat = reduceStack(ctx.stack, top) match {
+      def loop(top: Pat): Pat = reduceStack(base, top) match {
         case next if isNameExcept("|") => ctx.push(next); loop(simplePattern(badPattern3))
         case next                       => next
       }

@@ -38,6 +38,10 @@ class PatSuite extends ParseSuite {
                 Bind(Name("x", false), SeqWildcard()) :: Nil) = pat("foo(x @ _*)")
   }
 
+  test("a :: b") {
+    val Extract(Name("::", false), Nil, Name("a", false) :: Name("b", false) :: Nil) = pat("a :: b")
+  }
+
   test("1 | 2 | 3") {
     val Alternative(Lit.Int(1), Lit.Int(2)) = pat("1 | 2")
     val Alternative(Lit.Int(1), Alternative(Lit.Int(2), Lit.Int(3))) = pat("1 | 2 | 3")
