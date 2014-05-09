@@ -68,9 +68,7 @@ object Printers {
   implicit val printTerm: Print[Term] = Print {
     case t: Lit              => printLit(t)
     case t: Term.Ref         => printTermRef(t)
-    case t: Term.Apply       => p(t.fun, t.args)
-    case t: Term.ApplyInfix  => p(t.lhs, " ", t.op, t.targs, " ", t.rhs)
-    case t: Term.ApplyType   => p(t.fun, t.targs)
+
     case t: Term.ApplyUnary  => p(t.op, t.arg)
     case t: Term.Assign      => p(t.lhs, " = ", t.rhs)
     case t: Term.Update      => p(t.lhs, " = ", t.rhs)
@@ -89,6 +87,13 @@ object Printers {
     case _: Term.Placeholder => "_"
     case t: Term.Eta         => p(t.term, " _")
     case t: Term.Match       => p(t.scrut, " match ", t.cases)
+    case t: Term.Apply       => p(t.fun, t.args)
+    case t: Term.ApplyType   => p(t.fun, t.targs)
+    case t: Term.ApplyInfix  =>
+      p(t.lhs, " ", t.op, t.targs, " ", t.args match {
+        case (arg: Term) :: Nil => p(arg)
+        case args               => p(args)
+      })
     case t: Term.Try         =>
       p("try ", t.expr,
         t.catchp.map { catchp => p(" catch ", catchp) }.getOrElse(""),

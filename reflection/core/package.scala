@@ -30,15 +30,24 @@ package object core {
   @root trait Source { def content: Array[Char] }
   object Source {
     @leaf object None extends Source { def content = new Array[Char](0) }
-    @leaf class String(s: scala.Predef.String) extends Source { lazy val content = s.toArray }
-    @leaf class File(f: java.io.File) extends Source { lazy val content = scala.io.Source.fromFile(f).mkString.toArray }
+    @leaf class String(s: scala.Predef.String) extends Source {
+      lazy val content = s.toArray
+    }
+    @leaf class File(f: java.io.File) extends Source {
+      lazy val content = scala.io.Source.fromFile(f).mkString.toArray
+    }
   }
   @root trait SourceContext {
     def source: Source
   }
   object SourceContext {
-    @leaf object None extends SourceContext { def source = Source.None }
-    @leaf class Some(source: Source) extends SourceContext
+    @leaf object None extends SourceContext {
+      def source = Source.None
+      override def toString = ""
+    }
+    @leaf class Some(source: Source) extends SourceContext {
+      override def toString = ""
+    }
   }
 
   final case class ReflectionException(msg: String) extends Exception(msg)

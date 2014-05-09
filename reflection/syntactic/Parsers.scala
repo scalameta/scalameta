@@ -447,7 +447,11 @@ abstract class Parser { parser =>
         OpInfo(tree, name, targs)
       }
       def binop(opinfo: OpInfo[Term], rhs: Term): Term = {
-        Term.ApplyInfix(opinfo.lhs, opinfo.operator, opinfo.targs, rhs)
+        val args: List[Arg] = rhs match {
+          case Term.Tuple(args) => args.toList map assignmentToMaybeNamedArg
+          case _                => List(assignmentToMaybeNamedArg(rhs))
+        }
+        Term.ApplyInfix(opinfo.lhs, opinfo.operator, opinfo.targs, args)
       }
     }
     implicit object `Pat Context` extends OpCtx[Pat] {
@@ -457,11 +461,11 @@ abstract class Parser { parser =>
         OpInfo(tree, name, Nil)
       }
       def binop(opinfo: OpInfo[Pat], rhs: Pat): Pat = {
-        val arguments = rhs match {
+        val args = rhs match {
           case Pat.Tuple(args) => args.toList
           case _               => List(rhs)
         }
-        Pat.Extract(opinfo.operator, Nil, opinfo.lhs :: arguments)
+        Pat.Extract(opinfo.operator, Nil, opinfo.lhs :: args)
       }
     }
   }

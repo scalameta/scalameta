@@ -1,4 +1,4 @@
-### List of Scala syntax warts discovered so far
+### List of Scala syntax / Scala parser warts discovered so far
 
   1. Function parameters can not be annotated
   1. `try expr catch expr` syntax
@@ -15,3 +15,4 @@
   1. `q"def x { case 1 => 2 }"`
   1. `q"trait F[T] <: Sobaka[T] with Balabaka { def bazinga } "`
   1. `*` is ambigious (ident vs seq wildcard) in most contexts
+  1. `1 + (y = 2)` is equiv to `1.+(y = 2)` but `1 + (y: _*)` doesn't work

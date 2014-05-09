@@ -71,7 +71,7 @@ class DefnSuite extends ParseSuite {
     val Defn.Def(Nil, Term.Name("f", false), Nil,
                  (Param.Named(Term.Name("a", false), Some(Type.Name("Int", false)), None, Nil) :: Nil) :: Nil,
                  (Param.Named(Term.Name("b", false), Some(Type.Name("Int", false)), None, Nil) :: Nil), None,
-                 Term.ApplyInfix(Term.Name("a", false), Term.Name("+", false), Nil, Term.Name("b", false))) =
+                 Term.ApplyInfix(Term.Name("a", false), Term.Name("+", false), Nil, Term.Name("b", false) :: Nil)) =
       templStat("def f(a: Int)(implicit b: Int) = a + b")
   }
 

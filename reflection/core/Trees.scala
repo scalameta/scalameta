@@ -56,7 +56,7 @@ object Term {
   }
   @ast class Apply(fun: Term, args: Seq[Arg]) extends Term
   @ast class ApplyType(fun: Term, targs: Seq[Type] @nonEmpty) extends Term
-  @ast class ApplyInfix(lhs: Term, op: Name, targs: Seq[Type], rhs: Term) extends Term
+  @ast class ApplyInfix(lhs: Term, op: Name, targs: Seq[Type], args: List[Arg]) extends Term
   @ast class ApplyUnary(op: Name, arg: Term) extends Term {
     // TODO: require(op.isUnaryOp)
   }

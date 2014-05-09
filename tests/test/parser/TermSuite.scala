@@ -58,21 +58,21 @@ class TermSuite extends ParseSuite {
   }
 
   test("a + b") {
-    val ApplyInfix(Name("a", false), Name("+", false), Nil, Name("b", false)) = term("a + b")
+    val ApplyInfix(Name("a", false), Name("+", false), Nil, Name("b", false) :: Nil) = term("a + b")
   }
 
   test("a + b + c") {
-    val ApplyInfix(ApplyInfix(Name("a", false), Name("+", false), Nil, Name("b", false)),
-                   Name("+", false), Nil, Name("c", false)) = term("a + b + c")
+    val ApplyInfix(ApplyInfix(Name("a", false), Name("+", false), Nil, Name("b", false) :: Nil),
+                   Name("+", false), Nil, Name("c", false) :: Nil) = term("a + b + c")
   }
 
   test("a :: b") {
-    val ApplyInfix(Name("a", false), Name("::", false), Nil, Name("b", false)) = term("a :: b")
+    val ApplyInfix(Name("a", false), Name("::", false), Nil, Name("b", false) :: Nil) = term("a :: b")
   }
 
   test("a :: b :: c") {
     val ApplyInfix(Name("a", false), Name("::", false), Nil,
-                   ApplyInfix(Name("b", false), Name("::", false), Nil, Name("c", false))) = term("a :: b :: c")
+                   ApplyInfix(Name("b", false), Name("::", false), Nil, Name("c", false) :: Nil) :: Nil) = term("a :: b :: c")
   }
 
   test("!a") {
@@ -211,11 +211,11 @@ class TermSuite extends ParseSuite {
   }
 
   test("_ + 1") {
-    val ApplyInfix(Placeholder(), Name("+", false), Nil, Lit.Int(1)) = term("_ + 1")
+    val ApplyInfix(Placeholder(), Name("+", false), Nil, Lit.Int(1) :: Nil) = term("_ + 1")
   }
 
   test("1 + _") {
-    val ApplyInfix(Lit.Int(1), Name("+", false), Nil, Placeholder()) = term("1 + _")
+    val ApplyInfix(Lit.Int(1), Name("+", false), Nil, Placeholder() :: Nil) = term("1 + _")
   }
 
   test("f _") {
