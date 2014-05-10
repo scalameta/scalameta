@@ -465,7 +465,7 @@ abstract class Parser { parser =>
           case Pat.Tuple(args) => args.toList
           case _               => List(rhs)
         }
-        Pat.Extract(opinfo.operator, Nil, opinfo.lhs :: args)
+        Pat.ExtractInfix(opinfo.lhs, opinfo.operator, args)
       }
     }
   }
@@ -660,7 +660,7 @@ abstract class Parser { parser =>
         if (mode != InfixMode.FirstOp) checkAssoc(name, leftAssoc = mode == InfixMode.LeftOp)
         val op = typeName()
         newLineOptWhenFollowing(isTypeIntroToken)
-        def mkOp(t1: Type) = Type.Apply(op, List(t, t1))
+        def mkOp(t1: Type) = Type.ApplyInfix(t, op, t1)
         if (leftAssoc)
           infixTypeRest(mkOp(compoundType()), InfixMode.LeftOp)
         else

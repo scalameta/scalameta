@@ -18,6 +18,10 @@ class TypeSuite extends ParseSuite {
   //   val Apply(Name("*", false), Name("A", false) :: Name("B", false) :: Nil) = tpe("A * B")
   // }
 
+  test("A \\/ B") {
+    val ApplyInfix(Name("A", false), Name("\\/", false), Name("B", false)) = tpe("A \\/ B")
+  }
+
   test("f.T") {
     val Select(Term.Name("f", false), Type.Name("T", false)) = tpe("f.T")
   }

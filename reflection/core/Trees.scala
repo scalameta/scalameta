@@ -56,7 +56,7 @@ object Term {
   }
   @ast class Apply(fun: Term, args: Seq[Arg]) extends Term
   @ast class ApplyType(fun: Term, targs: Seq[Type] @nonEmpty) extends Term
-  @ast class ApplyInfix(lhs: Term, op: Name, targs: Seq[Type], args: List[Arg]) extends Term
+  @ast class ApplyInfix(lhs: Term, op: Name, targs: Seq[Type], args: List[Arg] @nonEmpty) extends Term
   @ast class ApplyUnary(op: Name, arg: Term) extends Term {
     // TODO: require(op.isUnaryOp)
   }
@@ -113,6 +113,7 @@ object Type {
     // TODO: require(ref.isPath)
   }
   @ast class Apply(tpe: Type, args: Seq[Type] @nonEmpty) extends Type
+  @ast class ApplyInfix(lhs: Type, op: Type, rhs: Type) extends Type
   @ast class Function(params: List[Aux.ParamType], res: Type) extends Type
   @ast class Tuple(elements: Seq[Type] @nonEmpty) extends Type {
     require(elements.length > 1)
@@ -138,6 +139,7 @@ object Pat {
   @ast class Extract(ref: Term.Ref, targs: Seq[Type], elements: Seq[Pat]) extends Pat {
     // TODO: require(ref.isStableId)
   }
+  @ast class ExtractInfix(lhs: Pat, ref: Term.Ref, rhs: Seq[Pat] @nonEmpty) extends Pat // TODO: require ref is stable id
   @ast class Interpolate(prefix: Term.Name, parts: Seq[Lit.String] @nonEmpty, args: Seq[Pat]) extends Pat {
     // TODO: require(prefix.isInterpolationId)
     require(parts.length == args.length + 1)

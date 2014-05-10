@@ -39,7 +39,7 @@ class PatSuite extends ParseSuite {
   }
 
   test("a :: b") {
-    val Extract(Name("::", false), Nil, Name("a", false) :: Name("b", false) :: Nil) = pat("a :: b")
+    val ExtractInfix(Name("a", false), Name("::", false), Name("b", false) :: Nil) = pat("a :: b")
   }
 
   test("1 | 2 | 3") {

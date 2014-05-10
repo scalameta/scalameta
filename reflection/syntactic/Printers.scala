@@ -34,6 +34,7 @@ object Printers {
     case t: Type.Ref         => printTypeRef(t)
     case t: Type.Annotate    => p(t.tpe, " ", t.mods)
     case t: Type.Apply       => p(t.tpe, "[", r(t.args, ", "), "]")
+    case t: Type.ApplyInfix  => p(t.lhs, " ", t.op, " ", t.rhs)
     case t: Type.Compound    => p(r(t.tpes, " with "), " { ", r(t.refinement, "; "), " }")
     case t: Type.Existential => p(t.tpe, " forSome { ", r(t.quants, "; "), " }")
     case t: Type.Function    => p("(", r(t.params, ", "), ") => ", t.res)
@@ -121,16 +122,21 @@ object Printers {
     case t: Term.Ref => printTermRef(t)
   }
   implicit val printPat: Print[Pat] = Print {
-    case t: Lit             => printLit(t)
-    case t: Term.Ref        => printTermRef(t)
-    case t: Pat.Alternative => p(t.lhs, " | ", t.rhs)
-    case t: Pat.Bind        => p(t.lhs, " @ ", t.rhs)
-    case t: Pat.Extract     => p(t.ref, t.targs, t.elements)
-    case t: Pat.Tuple       => p(t.elements)
-    case _: Pat.SeqWildcard => "_*"
-    case t: Pat.Typed       => p(t.lhs, ": ", t.rhs)
-    case _: Pat.Wildcard    => "_"
-    case t: Pat.Interpolate =>
+    case t: Lit              => printLit(t)
+    case t: Term.Ref         => printTermRef(t)
+    case t: Pat.Alternative  => p(t.lhs, " | ", t.rhs)
+    case t: Pat.Bind         => p(t.lhs, " @ ", t.rhs)
+    case t: Pat.Tuple        => p(t.elements)
+    case _: Pat.SeqWildcard  => "_*"
+    case t: Pat.Typed        => p(t.lhs, ": ", t.rhs)
+    case _: Pat.Wildcard     => "_"
+    case t: Pat.Extract      => p(t.ref, t.targs, t.elements)
+    case t: Pat.ExtractInfix =>
+      p(t.lhs, " ", t.ref, " ", t.rhs match {
+        case pat :: Nil => p(pat)
+        case pats       => p(pats)
+      })
+    case t: Pat.Interpolate  =>
       val zipped = t.parts.zip(t.args).map {
         case (part, id: Name) if !id.isBackquoted => p(part, "$", id.value)
         case (part, arg)                          => p(part, "${", arg, "}")
