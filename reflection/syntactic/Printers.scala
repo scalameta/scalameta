@@ -213,7 +213,10 @@ object Printers {
       p(t.lo.map { lo => p(" >: ", lo) }.getOrElse(p()),
         t.hi.map { hi => p(" <: ", hi) }.getOrElse(p()))
     case t: Case  =>
-      p("case ", t.pat, t.cond.map { cond => p(" if ", cond) }.getOrElse(p()), " =>", t.body.map(p(" ", _)).getOrElse(p()))
+      p("case ", t.pat, t.cond.map { cond => p(" if ", cond) }.getOrElse(p()), " =>", t.body.map {
+        case block: Term.Block => p(" ", r(block.stats.map(i(_)), ";"))
+        case other             => p(" ", i(other))
+      }.getOrElse(p()))
     case t: Param.Anonymous => p(t.mods, "_", t.decltpe)
     case t: Param.Named => p(t.mods, t.name, t.decltpe, t.default.map(p(" = ", _)).getOrElse(p()))
     case t: TypeParam.Anonymous =>
