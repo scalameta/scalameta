@@ -28,6 +28,7 @@ import scala.collection.immutable.Seq
   def owner: Scope = parent match { case owner: Scope => owner; case tree => tree.owner }
   // TODO: we still need to figure out how to implement this - either going the Roslyn route or the by-name arguments route.
   def parent: Tree = ???
+  override def toString = syntactic.Printers.printTree(this).toString
 }
 
 @branch trait Ref extends Tree

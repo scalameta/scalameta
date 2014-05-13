@@ -350,22 +350,24 @@ abstract class Parser { parser =>
 
   /** Convert tree to formal parameter list. */
   def convertToParams(tree: Term): List[Aux.Param] = tree match {
-    case Term.Tuple(ts) => ts.toList map convertToParam
-    case _              => List(convertToParam(tree))
+    case Term.Tuple(ts) => ts.toList flatMap convertToParam
+    case _              => List(convertToParam(tree)).flatten
   }
 
   /** Convert tree to formal parameter. */
-  def convertToParam(tree: Term): Aux.Param = tree match {
+  def convertToParam(tree: Term): Option[Aux.Param] = tree match {
     case name: Name =>
-      Aux.Param.Named(name = name.toTermName, decltpe = None)
+      Some(Aux.Param.Named(name = name.toTermName, decltpe = None))
     case Term.Placeholder() =>
-      Aux.Param.Anonymous.empty
+      Some(Aux.Param.Anonymous.empty)
     case Term.Ascribe(name: Name, tpt) =>
-      Aux.Param.Named(name = name.toTermName, decltpe = Some(tpt))
+      Some(Aux.Param.Named(name = name.toTermName, decltpe = Some(tpt)))
     case Term.Ascribe(Term.Placeholder(), tpt) =>
-      Aux.Param.Anonymous(decltpe = Some(tpt))
+      Some(Aux.Param.Anonymous(decltpe = Some(tpt)))
+    case Lit.Unit() =>
+      None
     case other =>
-      syntaxError(other, "not a legal formal parameter")
+      syntaxError(other, s"$other, not a legal formal parameter")
   }
 
   def convertToTypeId(ref: Term.Ref): Option[Type] = ref match {
@@ -1067,7 +1069,7 @@ abstract class Parser { parser =>
         in.nextToken()
         Term.Ascribe(expr, typeOrInfixType(location))
       }
-    }
+    }.get
     val param = param0.mapMods(Mod.Implicit() +: _)
     accept(ARROW)
     Term.Function(List(param), if (location != InBlock) expr() else block())
@@ -1590,9 +1592,9 @@ abstract class Parser { parser =>
    *  }}}
    */
   def modifiers(isLocal: Boolean = false): List[Mod] = {
-    def addMod(mods: List[Mod], mod: Mod): List[Mod] = {
+    def addMod(mods: List[Mod], mod: Mod, advance: Boolean = true): List[Mod] = {
       mods.foreach { m => if (m == mod) syntaxError(m, "repeated modifier") }
-      in.nextToken()
+      if (advance) in.nextToken()
       mods :+ mod
     }
     def acceptable = if (isLocal) isLocalModifier else true
@@ -1610,7 +1612,7 @@ abstract class Parser { parser =>
             if(m.isInstanceOf[Mod.Access]) syntaxError("duplicate private/protected qualifier")
           }
           val optmod = accessModifierOpt()
-          optmod.map { mod => loop(addMod(mods, mod)) }.getOrElse(mods)
+          optmod.map { mod => loop(addMod(mods, mod, advance = false)) }.getOrElse(mods)
         case NEWLINE if !isLocal => in.nextToken(); loop(mods)
         case _                   => mods
       })
@@ -1901,7 +1903,8 @@ abstract class Parser { parser =>
 
   def nonLocalDefOrDcl: Stmt.Template = {
     val anns = annots(skipNewLines = true)
-    defOrDclOrCtor(modifiers() ++ anns) match {
+    val mods = anns ++ modifiers()
+    defOrDclOrCtor(mods) match {
       case s: Stmt.Template => s
       case other            => syntaxError(other, "is not a valid template statement")
     }
@@ -2089,7 +2092,7 @@ abstract class Parser { parser =>
       case CASEOBJECT =>
         objectDef(mods :+ Mod.Case())
       case _ =>
-        syntaxError("expected start of definition")
+        syntaxError(s"expected start of definition (got ${token2string(in.token)}, ${in.token == VAL}, ${in.name}, mods = $mods)")
     }
   }
 
@@ -2384,12 +2387,12 @@ abstract class Parser { parser =>
 
   def localDef(implicitMod: Option[Mod.Implicit]): Stmt.Block = {
     val mods = (implicitMod ++: annots(skipNewLines = true)) ++ localModifiers()
-    if (mods.has[Mod.Implicit] || mods.has[Mod.Lazy]) {
-      defOrDclOrCtor(mods) match {
+    if (mods forall { case _: Mod.Implicit | _: Mod.Lazy | _: Mod.Annot => true; case _ => false })
+      (defOrDclOrCtor(mods) match {
         case sb: Stmt.Block => sb
         case other          => syntaxError(other, "is not a valid block statement")
-      }
-    } else
+      })
+    else
       (tmplDef(mods) match {
         case sb: Stmt.Block => sb
         case other          => syntaxError(other, "is not a valid block statement")

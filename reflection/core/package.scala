@@ -36,6 +36,7 @@ package object core {
     @leaf class File(f: java.io.File) extends Source {
       lazy val content = scala.io.Source.fromFile(f).mkString.toArray
     }
+    object File { def apply(path: Predef.String): Source.File = Source.File(new java.io.File(path)) }
   }
   @root trait SourceContext {
     def source: Source

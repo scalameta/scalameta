@@ -14,15 +14,28 @@ object Print {
   sealed abstract class Result {
     override def toString = {
       val sb = new StringBuilder
+      var indentation = 0
       def loop(result: Result): Unit = result match {
-        case Empty                     => ()
-        case Str(value)                => sb.append(value)
-        case Sequence(xs @ _*)         => xs.foreach(loop)
-        case Indent(res)               => loop(res)
-        case Repeat(Nil, sep)          => ()
+        case Empty => ()
+        case Str(value) => sb.append(value)
+        case Sequence(xs @ _*) => xs.foreach(loop)
+        case Repeat(Nil, sep) => ()
         case Repeat(init :+ last, sep) =>
-          init.foreach { x => loop(x); sb.append(sep) }
+          init.foreach { x =>
+            loop(x)
+            sb.append(sep)
+          }
           loop(last)
+        case Indent(res) =>
+          indentation += 1
+          sb.append("\n")
+          sb.append("  " * indentation)
+          loop(res)
+          indentation -= 1
+        case Newline(res) =>
+          sb.append("\n")
+          sb.append("  " * indentation)
+          loop(res)
       }
       loop(this)
       sb.toString
@@ -31,15 +44,18 @@ object Print {
   final case object Empty extends Result
   final case class Str(value: String) extends Result
   final case class Sequence(xs: Result*) extends Result
-  final case class Indent(res: Result) extends Result
   final case class Repeat(xs: Seq[Result], sep: String) extends Result
+  final case class Indent(res: Result) extends Result
+  final case class Newline(res: Result) extends Result
 
-  def seq[T](xs: T*): Result = macro PrintMacros.seq[T]
+  def sequence[T](xs: T*): Result = macro PrintMacros.seq[T]
 
-  def rep[T](xs: Seq[T], sep: String)(implicit print: Print[T]): Repeat =
+  def indent[T](x: T)(implicit print: Print[T]): Indent = Indent(print(x))
+
+  def repeat[T](xs: Seq[T], sep: String)(implicit print: Print[T]): Repeat =
     Repeat(xs.map(print(_)), sep)
 
-  def ind[T](x: T)(implicit print: Print[T]): Indent = Indent(print(x))
+  def newline[T](x: T)(implicit print: Print[T]): Newline = Newline(print(x))
 
   implicit def printResult[R <: Result]: Print[R] = Print(identity)
   implicit def printString[T <: String]: Print[T] = Print { Print.Str(_) }
