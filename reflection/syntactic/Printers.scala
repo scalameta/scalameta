@@ -3,7 +3,7 @@ package syntactic
 
 import scala.reflect.core._, Aux._
 import org.scalareflect.prettyprint.Print
-import org.scalareflect.prettyprint.Print.{ seq => p, rep => r }
+import org.scalareflect.prettyprint.Print.{ seq => p, rep => r, ind }
 import scala.reflect.syntactic.SyntacticInfo._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
@@ -14,7 +14,7 @@ import scala.collection.immutable.Seq
 
 object Printers {
   // Branches
-  implicit val printTypeRef: Print[Type.Ref] = Print {
+  implicit def printTypeRef[T <: Type.Ref]: Print[T] = Print {
     case t: Type.Name        => printName(t)
     case t: Type.Project     => p(t.qual, "#", t.name)
     case t: Type.Select      => p(t.qual, ".", t.name)
@@ -24,12 +24,12 @@ object Printers {
         "super", t.supertpe.map { st => p("[", st, "]") }.getOrElse(p()),
         ".", t.selector)
   }
-  implicit val printParamType: Print[ParamType] = Print {
+  implicit def printParamType[T <: ParamType]: Print[T] = Print {
     case t: Type               => printType(t)
     case t: ParamType.Repeated => p(t.tpe, "*")
     case t: ParamType.ByName   => p("=> ", t.tpe)
   }
-  implicit val printType: Print[Type] = Print {
+  implicit def printType[T <: Type]: Print[T] = Print {
     case t: Lit              => printLit(t)
     case t: Type.Ref         => printTypeRef(t)
     case t: Type.Annotate    => p(t.tpe, " ", t.mods)
@@ -41,7 +41,7 @@ object Printers {
     case t: Type.Placeholder => p("_", t.bounds)
     case t: Type.Tuple       => p("(", r(t.elements, ", "), ")")
   }
-  implicit val printLit: Print[Lit] = Print {
+  implicit def printLit[T <: Lit]: Print[T] = Print {
     case _: Lit.True   => p("true")
     case _: Lit.False  => p("false")
     case t: Lit.Int    => p(t.value.toString)
@@ -54,11 +54,11 @@ object Printers {
     case _: Lit.Null   => p("null")
     case _: Lit.Unit   => p("()")
   }
-  implicit val printTermRefWithPat: Print[Term.Ref with Pat] = Print {
+  implicit def printTermRefWithPat[T <: Term.Ref with Pat]: Print[T] = Print {
     case t: Term.Name        => printName(t)
     case t: Term.Select      => p(t.qual, ".", t.selector)
   }
-  implicit val printTermRef: Print[Term.Ref] = Print {
+  implicit def printTermRef[T <: Term.Ref]: Print[T] = Print {
     case t: Pat              => printTermRefWithPat(t)
     case t: Term.This        => p(t.qual.map { qual => p(qual, ".") }.getOrElse(p()), "this")
     case t: Term.SuperSelect =>
@@ -66,7 +66,7 @@ object Printers {
         "super", t.supertpe.map { st => p("[", st, "]") }.getOrElse(p()),
         ".", t.selector)
   }
-  implicit val printTerm: Print[Term] = Print {
+  implicit def printTerm[T <: Term]: Print[T] = Print {
     case t: Lit              => printLit(t)
     case t: Term.Ref         => printTermRef(t)
 
@@ -117,11 +117,11 @@ object Printers {
       }
       p(t.prefix, "\"", r(zipped, ""), t.parts.last, "\"")
   }
-  implicit val printRef: Print[Ref] = Print {
+  implicit def printRef[T <: Ref]: Print[T] = Print {
     case t: Type.Ref => printTypeRef(t)
     case t: Term.Ref => printTermRef(t)
   }
-  implicit val printPat: Print[Pat] = Print {
+  implicit def printPat[T <: Pat]: Print[T] = Print {
     case t: Lit              => printLit(t)
     case t: Term.Ref         => printTermRef(t)
     case t: Pat.Alternative  => p(t.lhs, " | ", t.rhs)
@@ -143,12 +143,12 @@ object Printers {
       }
       p(t.prefix, "\"", r(zipped, ""), t.parts.last, "\"")
   }
-  implicit val printArg: Print[Arg] = Print {
+  implicit def printArg[T <: Arg]: Print[T] = Print {
     case t: Term         => printTerm(t)
     case t: Arg.Named    => p(t.name, " = ", t.rhs)
     case t: Arg.Repeated => p(t.arg, ": _*")
   }
-  implicit val printMod: Print[Mod] = Print {
+  implicit def printMod[T <: Mod]: Print[T] = Print {
     case t: Mod.Annot         => p("@", t.tpe, t.argss)
     case _: Mod.Abstract      => p("abstract")
     case _: Mod.Case          => p("case")
@@ -166,7 +166,7 @@ object Printers {
     case _: Mod.ValParam      => p("val")
     case _: Mod.VarParam      => p("var")
   }
-  implicit val printDefn: Print[Defn] = Print {
+  implicit def printDefn[T <: Defn]: Print[T] = Print {
     case t: Defn.Val       => p(t.mods, "val ", r(t.pats, ", "), t.decltpe, " = ", t.rhs)
     case t: Defn.Var       => p(t.mods, "var ", r(t.pats, ", "), t.decltpe, " = ", t.rhs.map(p(_)).getOrElse(p("_")))
     case t: Defn.Type      => p(t.mods, "type ", t.name, t.tparams, " = ", t.body)
@@ -176,20 +176,20 @@ object Printers {
     case t: Defn.Object    => p(t.mods, "object ", t.name, t.templ)
     case t: Defn.Procedure => p(t.mods, "def ", t.name, t.tparams, (t.explicits, t.implicits), " { ", r(t.stats, "; "), " }")
   }
-  implicit val printDecl: Print[Decl] = Print {
+  implicit def printDecl[T <: Decl]: Print[T] = Print {
     case t: Decl.Val       => p(t.mods, "val ", r(t.pats, ", "), ": ", t.decltpe )
     case t: Decl.Var       => p(t.mods, "var ", r(t.pats, ", "), ": ", t.decltpe )
     case t: Decl.Type      => p(t.mods, "type ", t.name, t.tparams, t.bounds)
     case t: Decl.Def       => p(t.mods, "def ", t.name, t.tparams, (t.explicits, t.implicits), ": ", t.decltpe)
     case t: Decl.Procedure => p(t.mods, "def ", t.name, t.tparams, (t.explicits, t.implicits))
   }
-  implicit val printPkg: Print[Pkg] = Print {
+  implicit def printPkg[T <: Pkg]: Print[T] = Print {
     case t: Pkg.Root   => p("package root { ", r(t.stats, "; "), " }")
     case t: Pkg.Empty  => r(t.stats, "; ")
     case t: Pkg.Named  => p("package ", t.name, " { ", r(t.stats, "; "), " }")
     case t: Pkg.Object => p(t.mods, " package object ", t.name, " extends ", t.templ)
   }
-  implicit val printCtor: Print[Ctor] = Print {
+  implicit def printCtor[T <: Ctor]: Print[T] = Print {
     case t: Ctor.Primary   => p(t.mods, (t.explicits, t.implicits))
     case t: Ctor.Secondary =>
       p(t.mods, "def this", (t.explicits, t.implicits), t.stats match {
@@ -197,13 +197,13 @@ object Printers {
         case stats => p("{ this", t.primaryCtorArgss, ";", r(stats, "; "), " }")
       })
   }
-  implicit def printEnum: Print[Enum] = Print {
+  implicit def printEnum[T <: Enum]: Print[T] = Print {
     case t: Enum.Val       => p(t.pat, " = ", t.rhs)
     case t: Enum.Generator => p(t.pat, " <- ", t.rhs)
     case t: Enum.Guard     => p("if ", t.cond)
   }
 
-  implicit val printTree: Print[Tree] = Print {
+  implicit def printTree[T <: Tree]: Print[T] = Print {
     case t: Term            => printTerm(t)
     case t: Pat             => printPat(t)
     case t: ParamType       => printParamType(t)
@@ -237,17 +237,17 @@ object Printers {
     case t: Case            =>
       p("case ", t.pat, t.cond.map { cond => p("if ", cond, " ") }.getOrElse(p()), " =>", t.body.map(p(" ", _)).getOrElse(p()))
   }
-  implicit val printImportSelector: Print[Import.Selector] = Print {
+  implicit def printImportSelector[T <: Import.Selector]: Print[T] = Print {
     case t: Import.Selector.Rename   => p(t.from, " => ", t.to)
     case t: Import.Selector.Name     => p(t.name)
     case t: Import.Selector.Unimport => p(t.name, " => _")
     case _: Import.Selector.Wildcard => p("_")
   }
-  implicit val printParam: Print[Param] = Print {
+  implicit def printParam[T <: Param]: Print[T] = Print {
     case t: Param.Anonymous => p(t.mods, "_", t.decltpe)
     case t: Param.Named     => p(t.mods, t.name, t.decltpe, t.default.map(p(" = ", _)).getOrElse(p()))
   }
-  implicit val printTypeParam: Print[TypeParam] = Print {
+  implicit def printTypeParam[T <: TypeParam]: Print[T] = Print {
     case t: TypeParam.Anonymous =>
       val cbounds = r(t.contextBounds.map { p(": ", _) }, "")
       val vbounds = r(t.contextBounds.map { p("<% ", _) }, "")
@@ -257,39 +257,8 @@ object Printers {
       val vbounds = r(t.contextBounds.map { p("<% ", _) }, "")
       p(t.mods, t.name, t.tparams, cbounds, vbounds, t.bounds)
   }
-  implicit val printAccessQualifier: Print[Mod.AccessQualifier] = Print {
-    case t: Term.This => p(t)
-    case t: Name => p(t)
-  }
-  // something is broken around there
-  implicit def printStmtBlock: Print[Stmt.Block] = Print {
-    case t: Import => printTree(t)
-    case t: Term   => printTerm(t)
-    case t: Defn   => printDefn(t)
-  }
-  implicit def printStmtRefine: Print[Stmt.Refine] = Print {
-    case t: Decl      => printDecl(t)
-    case t: Defn.Type => printDefn(t)
-  }
-  implicit def printStmtExistential: Print[Stmt.Existential] = Print {
-    case t: Decl.Val  => printDecl(t)
-    case t: Decl.Type => printDecl(t)
-  }
-  implicit def printStmtTopLevel: Print[Stmt.TopLevel] = Print {
-    case t: Pkg    => printPkg(t)
-    case t: Defn   => printDefn(t)
-    case t: Import => printTree(t)
-  }
-  implicit def printStmtTemplate: Print[Stmt.Template] = Print {
-    case t: Defn           => printDefn(t)
-    case t: Decl           => printDecl(t)
-    case t: Ctor.Secondary => printCtor(t)
-    case t: Term           => printTerm(t)
-    case t: Import         => printTree(t)
-  }
 
   // Base cases, multiples and optionals
-  implicit val printString: Print[String] = Print { Print.Str(_) }
   implicit val printName: Print[Name] = Print { t => if (t.isBackquoted) p("`", t.value, "`") else p(t.value) }
   implicit val printAccessQualifierOpt: Print[Option[Mod.AccessQualifier]] = Print { t =>
     t.map { qual => p("[", qual, "]") }.getOrElse(p())
@@ -308,13 +277,11 @@ object Printers {
   implicit val printMods: Print[Seq[Mod]] = Print { mods =>
     if (mods.nonEmpty) p(r(mods, " "), " ") else p()
   }
-  implicit val printParams: Print[Seq[Param]] = Print { params => p("(", r(params, ", "), ")") }
-  implicit val printNamedParams: Print[Seq[Param.Named]] = Print { params => p("(", r(params, ", "), ")") }
-  implicit val printAnonymousParams: Print[Seq[Param.Anonymous]] = Print { params => p("(", r(params, ", "), ")") }
+  implicit def printParams[P <: Param]: Print[Seq[P]] = Print { params => p("(", r(params, ", "), ")") }
   implicit val printTparams: Print[Seq[TypeParam]] = Print { tparams =>
     if (tparams.nonEmpty) p("[", r(tparams, ", "), "]") else p()
   }
-  implicit val printParamLists: Print[(Seq[Seq[Param]], Seq[Param])] = Print { case (expl, impl) =>
+  implicit def printParamLists[P <: Param]: Print[(Seq[Seq[P]], Seq[P])] = Print { case (expl, impl) =>
     p(r(expl, ""),
       if (impl.isEmpty) p()
       else p("(implicit ", r(impl, ", "), ")"))

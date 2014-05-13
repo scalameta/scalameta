@@ -6,7 +6,7 @@ import scala.language.experimental.macros
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 
-trait Print[-T] { def apply(t: T): Print.Result }
+trait Print[T] { def apply(t: T): Print.Result }
 object Print {
   def apply[T](f: T => Result): Print[T] =
     new Print[T] { def apply(input: T): Result = f(input) }
@@ -15,11 +15,12 @@ object Print {
     override def toString = {
       val sb = new StringBuilder
       def loop(result: Result): Unit = result match {
-        case Empty              => ()
-        case Str(value)         => sb.append(value)
-        case Sequence(xs @ _*)  => xs.foreach(loop)
-        case Repeated(Nil, sep) => ()
-        case Repeated(init :+ last, sep) =>
+        case Empty                     => ()
+        case Str(value)                => sb.append(value)
+        case Sequence(xs @ _*)         => xs.foreach(loop)
+        case Indent(res)               => loop(res)
+        case Repeat(Nil, sep)          => ()
+        case Repeat(init :+ last, sep) =>
           init.foreach { x => loop(x); sb.append(sep) }
           loop(last)
       }
@@ -30,13 +31,18 @@ object Print {
   final case object Empty extends Result
   final case class Str(value: String) extends Result
   final case class Sequence(xs: Result*) extends Result
-  final case class Repeated(xs: Seq[Result], sep: String) extends Result
+  final case class Indent(res: Result) extends Result
+  final case class Repeat(xs: Seq[Result], sep: String) extends Result
 
   def seq[T](xs: T*): Result = macro PrintMacros.seq[T]
-  def rep[T](xs: Seq[T], sep: String)(implicit print: Print[T]): Repeated =
-    Repeated(xs.map(print(_)), sep)
 
-  implicit val printResult: Print[Result] = Print(identity)
+  def rep[T](xs: Seq[T], sep: String)(implicit print: Print[T]): Repeat =
+    Repeat(xs.map(print(_)), sep)
+
+  def ind[T](x: T)(implicit print: Print[T]): Indent = Indent(print(x))
+
+  implicit def printResult[R <: Result]: Print[R] = Print(identity)
+  implicit def printString[T <: String]: Print[T] = Print { Print.Str(_) }
 }
 
 class PrintMacros(val c: Context) {
