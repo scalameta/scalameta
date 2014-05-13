@@ -56,7 +56,7 @@ object Term {
   }
   @ast class Apply(fun: Term, args: Seq[Arg]) extends Term
   @ast class ApplyType(fun: Term, targs: Seq[Type] @nonEmpty) extends Term
-  @ast class ApplyInfix(lhs: Term, op: Name, targs: Seq[Type], args: List[Arg] @nonEmpty) extends Term
+  @ast class ApplyInfix(lhs: Term, op: Name, targs: Seq[Type], args: Seq[Arg] @nonEmpty) extends Term
   @ast class ApplyUnary(op: Name, arg: Term) extends Term {
     // TODO: require(op.isUnaryOp)
   }
@@ -114,7 +114,7 @@ object Type {
   }
   @ast class Apply(tpe: Type, args: Seq[Type] @nonEmpty) extends Type
   @ast class ApplyInfix(lhs: Type, op: Type, rhs: Type) extends Type
-  @ast class Function(params: List[Aux.ParamType], res: Type) extends Type
+  @ast class Function(params: Seq[Aux.ParamType], res: Type) extends Type
   @ast class Tuple(elements: Seq[Type] @nonEmpty) extends Type {
     require(elements.length > 1)
   }

@@ -20,8 +20,8 @@ object Printers {
     case t: Type.Select      => p(t.qual, ".", t.name)
     case t: Type.Singleton   => p(t.ref, ".type")
     case t: Type.SuperSelect =>
-      p(t.qual.map { qual => p(qual, ".") }.getOrElse(""),
-        "super", t.supertpe.map { st => p("[", st, "]") }.getOrElse(""),
+      p(t.qual.map { qual => p(qual, ".") }.getOrElse(p()),
+        "super", t.supertpe.map { st => p("[", st, "]") }.getOrElse(p()),
         ".", t.selector)
   }
   implicit val printParamType: Print[ParamType] = Print {
@@ -42,17 +42,17 @@ object Printers {
     case t: Type.Tuple       => p("(", r(t.elements, ", "), ")")
   }
   implicit val printLit: Print[Lit] = Print {
-    case _: Lit.True   => "true"
-    case _: Lit.False  => "true"
-    case t: Lit.Int    => t.value.toString
-    case t: Lit.Long   => t.value.toString
-    case t: Lit.Float  => t.value.toString
-    case t: Lit.Double => t.value.toString
-    case t: Lit.Char   => t.value.toString
-    case t: Lit.String => t.value
+    case _: Lit.True   => p("true")
+    case _: Lit.False  => p("false")
+    case t: Lit.Int    => p(t.value.toString)
+    case t: Lit.Long   => p(t.value.toString)
+    case t: Lit.Float  => p(t.value.toString)
+    case t: Lit.Double => p(t.value.toString)
+    case t: Lit.Char   => p(t.value.toString)
+    case t: Lit.String => p(t.value)
     case t: Lit.Symbol => p("'", t.value.name)
-    case _: Lit.Null   => "null"
-    case _: Lit.Unit   => "()"
+    case _: Lit.Null   => p("null")
+    case _: Lit.Unit   => p("()")
   }
   implicit val printTermRefWithPat: Print[Term.Ref with Pat] = Print {
     case t: Term.Name        => printName(t)
@@ -60,10 +60,10 @@ object Printers {
   }
   implicit val printTermRef: Print[Term.Ref] = Print {
     case t: Pat              => printTermRefWithPat(t)
-    case t: Term.This        => p(t.qual.map { qual => p(qual, ".") }.getOrElse(""), "this")
+    case t: Term.This        => p(t.qual.map { qual => p(qual, ".") }.getOrElse(p()), "this")
     case t: Term.SuperSelect =>
-      p(t.qual.map { qual => p(qual, ".") }.getOrElse(""),
-        "super", t.supertpe.map { st => p("[", st, "]") }.getOrElse(""),
+      p(t.qual.map { qual => p(qual, ".") }.getOrElse(p()),
+        "super", t.supertpe.map { st => p("[", st, "]") }.getOrElse(p()),
         ".", t.selector)
   }
   implicit val printTerm: Print[Term] = Print {
@@ -78,14 +78,14 @@ object Printers {
     case t: Term.Ascribe     => p(t.expr, ": ", t.tpe)
     case t: Term.Annotate    => p(t.expr, ": ", t.mods)
     case t: Term.Tuple       => p("(", r(t.elements, ", "), ")")
-    case t: Term.Block       => if (t.stats.isEmpty) "{}" else p("{ ", r(t.stats, "; "), " }")
+    case t: Term.Block       => if (t.stats.isEmpty) p("{}") else p("{ ", r(t.stats, "; "), " }")
     case t: Term.Cases       => p("{ ", r(t.cases, "; "), " }")
     case t: Term.While       => p("while (", t.expr, ") ", t.body)
     case t: Term.Do          => p("do ", t.body, " while (", t.expr, ")")
     case t: Term.For         => p("for (", r(t.enums, "; "), ") ", t.body)
     case t: Term.ForYield    => p("for (", r(t.enums, "; "), ") yield ", t.body)
     case t: Term.New         => p("new", t.templ)
-    case _: Term.Placeholder => "_"
+    case _: Term.Placeholder => p("_")
     case t: Term.Eta         => p(t.term, " _")
     case t: Term.Match       => p(t.scrut, " match ", t.cases)
     case t: Term.Apply       => p(t.fun, t.args)
@@ -97,14 +97,14 @@ object Printers {
       })
     case t: Term.Try         =>
       p("try ", t.expr,
-        t.catchp.map { catchp => p(" catch ", catchp) }.getOrElse(""),
-        t.finallyp.map { finallyp => p(" finally ", finallyp) }.getOrElse(""))
+        t.catchp.map { catchp => p(" catch ", catchp) }.getOrElse(p()),
+        t.finallyp.map { finallyp => p(" finally ", finallyp) }.getOrElse(p()))
     case t: Term.If =>
-      p("if (", t.cond, ") ", t.thenp, t.elsep.map { thenp => p(" then ", thenp) }.getOrElse(""))
+      p("if (", t.cond, ") ", t.thenp, t.elsep.map { thenp => p(" then ", thenp) }.getOrElse(p()))
     case t: Term.Function =>
       t match {
         case Term.Function(Param.Named(name, tptopt, _, mods) :: Nil, body) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
-          p("{ implicit ", name, tptopt.map { tpt => p(": ", tpt) }.getOrElse(""), body)
+          p("{ implicit ", name, tptopt.map { tpt => p(": ", tpt) }.getOrElse(p()), body)
         case Term.Function(Param.Anonymous(_, _) :: Nil, body) =>
           p("_ => ", body)
         case Term.Function(params, body) =>
@@ -127,9 +127,9 @@ object Printers {
     case t: Pat.Alternative  => p(t.lhs, " | ", t.rhs)
     case t: Pat.Bind         => p(t.lhs, " @ ", t.rhs)
     case t: Pat.Tuple        => p(t.elements)
-    case _: Pat.SeqWildcard  => "_*"
+    case _: Pat.SeqWildcard  => p("_*")
     case t: Pat.Typed        => p(t.lhs, ": ", t.rhs)
-    case _: Pat.Wildcard     => "_"
+    case _: Pat.Wildcard     => p("_")
     case t: Pat.Extract      => p(t.ref, t.targs, t.elements)
     case t: Pat.ExtractInfix =>
       p(t.lhs, " ", t.ref, " ", t.rhs match {
@@ -150,25 +150,25 @@ object Printers {
   }
   implicit val printMod: Print[Mod] = Print {
     case t: Mod.Annot         => p("@", t.tpe, t.argss)
-    case _: Mod.Abstract      => "abstract"
-    case _: Mod.Case          => "case"
-    case _: Mod.Covariant     => "+"
-    case _: Mod.Contravariant => "-"
+    case _: Mod.Abstract      => p("abstract")
+    case _: Mod.Case          => p("case")
+    case _: Mod.Covariant     => p("+")
+    case _: Mod.Contravariant => p("-")
     case _: Mod.Doc           => ???
-    case _: Mod.Final         => "final"
-    case _: Mod.Implicit      => "implicit"
-    case _: Mod.Lazy          => "lazy"
-    case _: Mod.Macro         => "macro"
-    case _: Mod.Override      => "override"
-    case _: Mod.Sealed        => "sealed"
+    case _: Mod.Final         => p("final")
+    case _: Mod.Implicit      => p("implicit")
+    case _: Mod.Lazy          => p("lazy")
+    case _: Mod.Macro         => p("macro")
+    case _: Mod.Override      => p("override")
+    case _: Mod.Sealed        => p("sealed")
     case t: Mod.Private       => p("private", t.within)
     case t: Mod.Protected     => p("protected", t.within)
-    case _: Mod.ValParam      => "val"
-    case _: Mod.VarParam      => "var"
+    case _: Mod.ValParam      => p("val")
+    case _: Mod.VarParam      => p("var")
   }
   implicit val printDefn: Print[Defn] = Print {
     case t: Defn.Val       => p(t.mods, "val ", r(t.pats, ", "), t.decltpe, " = ", t.rhs)
-    case t: Defn.Var       => p(t.mods, "var ", r(t.pats, ", "), t.decltpe, " = ", t.rhs.map(p(_)).getOrElse("_"))
+    case t: Defn.Var       => p(t.mods, "var ", r(t.pats, ", "), t.decltpe, " = ", t.rhs.map(p(_)).getOrElse(p("_")))
     case t: Defn.Type      => p(t.mods, "type ", t.name, t.tparams, " = ", t.body)
     case t: Defn.Def       => p(t.mods, "def ", t.name, t.tparams, (t.explicits, t.implicits), ": ", t.decltpe, " = ", t.body)
     case t: Defn.Class     => p(t.mods, "class ", t.name, t.tparams, t.ctor, t.templ)
@@ -221,31 +221,31 @@ object Printers {
     case t: Import          => p("import ", r(t.clauses, ", "))
     case t: Parent          => p(t.tpe, t.argss)
     case t: Self            =>
-      if (t.name.isEmpty && t.decltpe.isEmpty) ""
+      if (t.name.isEmpty && t.decltpe.isEmpty) p()
       else p(t.name, t.decltpe, " => ")
     case t: Template =>
-      if (t eq Template.empty) ""
+      if (t eq Template.empty) p()
       else {
-        val searly = if (t.early.isEmpty) "" else p("{ ", r(t.early, "; "), " } with ")
-        val sbody = if ((t.self eq Self.empty) && t.stats.isEmpty) ""
+        val searly = if (t.early.isEmpty) p() else p("{ ", r(t.early, "; "), " } with ")
+        val sbody = if ((t.self eq Self.empty) && t.stats.isEmpty) p()
                     else p("{ ", t.self, r(t.stats, "; "), " }")
         p(" ", searly, r(t.parents, " with "), sbody)
       }
     case t: TypeBounds =>
-      p(t.lo.map { lo => p(" >: ", lo) }.getOrElse(""),
-        t.hi.map { hi => p(" <: ", hi) }.getOrElse(""))
+      p(t.lo.map { lo => p(" >: ", lo) }.getOrElse(p()),
+        t.hi.map { hi => p(" <: ", hi) }.getOrElse(p()))
     case t: Case            =>
-      p("case ", t.pat, t.cond.map { cond => p("if ", cond, " ") }.getOrElse(""), " =>", t.body.map(p(" ", _)).getOrElse(""))
+      p("case ", t.pat, t.cond.map { cond => p("if ", cond, " ") }.getOrElse(p()), " =>", t.body.map(p(" ", _)).getOrElse(p()))
   }
   implicit val printImportSelector: Print[Import.Selector] = Print {
     case t: Import.Selector.Rename   => p(t.from, " => ", t.to)
-    case t: Import.Selector.Name     => t.name
+    case t: Import.Selector.Name     => p(t.name)
     case t: Import.Selector.Unimport => p(t.name, " => _")
-    case t: Import.Selector.Wildcard => "_"
+    case _: Import.Selector.Wildcard => p("_")
   }
   implicit val printParam: Print[Param] = Print {
     case t: Param.Anonymous => p(t.mods, "_", t.decltpe)
-    case t: Param.Named     => p(t.mods, t.name, t.decltpe, t.default.map(p(" = ", _)).getOrElse(""))
+    case t: Param.Named     => p(t.mods, t.name, t.decltpe, t.default.map(p(" = ", _)).getOrElse(p()))
   }
   implicit val printTypeParam: Print[TypeParam] = Print {
     case t: TypeParam.Anonymous =>
@@ -289,39 +289,39 @@ object Printers {
   }
 
   // Base cases, multiples and optionals
-  implicit val printString: Print[String] = Print { Predef.identity }
-  implicit val printName: Print[Name] = Print { t => if (t.isBackquoted) p("`", t.value, "`") else t.value }
+  implicit val printString: Print[String] = Print { Print.Str(_) }
+  implicit val printName: Print[Name] = Print { t => if (t.isBackquoted) p("`", t.value, "`") else p(t.value) }
   implicit val printAccessQualifierOpt: Print[Option[Mod.AccessQualifier]] = Print { t =>
-    t.map { qual => p("[", qual, "]") }.getOrElse("")
+    t.map { qual => p("[", qual, "]") }.getOrElse(p())
   }
   implicit val printArgs: Print[Seq[Arg]] = Print { args =>
     p("(", r(args, ", "), ")")
   }
   implicit val printArgss: Print[Seq[Seq[Arg]]] = Print { r(_, "") }
   implicit val printTargs: Print[Seq[Type]] = Print { targs =>
-    if (targs.isEmpty) ""
+    if (targs.isEmpty) p()
     else p("[", r(targs, ", "), "]")
   }
   implicit val printPats: Print[Seq[Pat]] = Print { pats =>
     p("(", r(pats, ", "), ")")
   }
   implicit val printMods: Print[Seq[Mod]] = Print { mods =>
-    if (mods.nonEmpty) p(r(mods, " "), " ") else ""
+    if (mods.nonEmpty) p(r(mods, " "), " ") else p()
   }
   implicit val printParams: Print[Seq[Param]] = Print { params => p("(", r(params, ", "), ")") }
   implicit val printNamedParams: Print[Seq[Param.Named]] = Print { params => p("(", r(params, ", "), ")") }
   implicit val printAnonymousParams: Print[Seq[Param.Anonymous]] = Print { params => p("(", r(params, ", "), ")") }
   implicit val printTparams: Print[Seq[TypeParam]] = Print { tparams =>
-    if (tparams.nonEmpty) p("[", r(tparams, ", "), "]") else ""
+    if (tparams.nonEmpty) p("[", r(tparams, ", "), "]") else p()
   }
   implicit val printParamLists: Print[(Seq[Seq[Param]], Seq[Param])] = Print { case (expl, impl) =>
     p(r(expl, ""),
-      if (impl.isEmpty) ""
+      if (impl.isEmpty) p()
       else p("(implicit ", r(impl, ", "), ")"))
   }
-  implicit val printParamTypeOpt: Print[Option[ParamType]] = Print { _.map { t => p(": ", t) }.getOrElse("") }
-  implicit val printTypeOpt: Print[Option[Type]] = Print { _.map { t => p(": ", t) }.getOrElse("") }
-  implicit val printTermNameOpt: Print[Option[Term.Name]] = Print { _.map(p(_)).getOrElse(")") }
+  implicit val printParamTypeOpt: Print[Option[ParamType]] = Print { _.map { t => p(": ", t) }.getOrElse(p()) }
+  implicit val printTypeOpt: Print[Option[Type]] = Print { _.map { t => p(": ", t) }.getOrElse(p()) }
+  implicit val printTermNameOpt: Print[Option[Term.Name]] = Print { _.map(p(_)).getOrElse(p(")")) }
   implicit val printImportSels: Print[Seq[Import.Selector]] = Print {
     case (t: Import.Selector.Name) :: Nil     => printImportSelector(t)
     case (t: Import.Selector.Wildcard) :: Nil => printImportSelector(t)
