@@ -88,7 +88,13 @@ object Printers {
         t.catchp.map { catchp => p(" catch ", catchp) }.getOrElse(p()),
         t.finallyp.map { finallyp => p(" finally ", finallyp) }.getOrElse(p()))
     case t: Term.If =>
-      p("if (", t.cond, ") ", t.thenp, t.elsep.map { thenp => p(" then ", thenp) }.getOrElse(p()))
+      p("if (", t.cond, ") ", t.thenp, {
+        val elsep = t.elsep.map(p("else ", _)).getOrElse(p())
+        t.thenp match {
+          case _: Term.Block => p(" ", elsep)
+          case _ => if (elsep != p()) n(elsep) else p()
+        }
+      })
     case t: Term.Function =>
       t match {
         case Term.Function(Param.Named(name, tptopt, _, mods) :: Nil, body) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
