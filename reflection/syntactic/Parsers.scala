@@ -2456,8 +2456,9 @@ abstract class Parser { parser =>
    *  CompilationUnit ::= {package QualId semi} TopStatSeq
    *  }}}
    */
-  def compilationUnit(): Pkg = {
-    def packageStats(): List[Stmt.TopLevel] = {
+  def compilationUnit(): CompUnit = {
+    def packageStats(): (List[Term.Ref], List[Stmt.TopLevel])  = {
+      val refs = new ListBuffer[Term.Ref]
       val ts = new ListBuffer[Stmt.TopLevel]
       while (in.token == SEMI) in.nextToken()
       if (in.token == PACKAGE) {
@@ -2473,10 +2474,13 @@ abstract class Parser { parser =>
           val qid = qualId()
 
           if (in.token == EOF) {
-            ts += Pkg.Named(qid, Nil)
+            refs += qid
           } else if (isStatSep) {
             in.nextToken()
-            ts += Pkg.Named(qid, packageStats())
+            refs += qid
+            val (nrefs, nstats) = packageStats()
+            refs ++= nrefs
+            ts ++= nstats
           } else {
             ts += inBraces(Pkg.Named(qid, topStatSeq()))
             acceptStatSepOpt()
@@ -2486,12 +2490,10 @@ abstract class Parser { parser =>
       } else {
         ts ++= topStatSeq()
       }
-      ts.toList
+      (refs.toList, ts.toList)
     }
 
-    packageStats() match {
-      case (stat: Pkg) :: Nil => stat
-      case stats                  => Pkg.Empty(stats)
-    }
+    val (refs,stats) = packageStats()
+    CompUnit(refs, stats)
   }
 }

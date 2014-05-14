@@ -252,7 +252,6 @@ object Defn {
 @branch trait Pkg extends Tree
 object Pkg {
   @ast class Root private[reflect] (stats: Seq[Stmt.TopLevel]) extends Pkg with Scope.TopLevel
-  @ast class Empty(stats: Seq[Stmt.TopLevel]) extends Pkg with Scope.TopLevel
   @ast class Named(ref: Term.Ref,
                    stats: Seq[Stmt.TopLevel]) extends Pkg with Stmt.TopLevel with Scope.TopLevel with Member.Term with Has.TermName {
     // TODO: require(ref.isQualId)
@@ -267,6 +266,8 @@ object Pkg {
                     name: Term.Name,
                     templ: Aux.Template) extends Pkg with Stmt.TopLevel with Member.Template with Member.Term with Has.TermName
 }
+
+@ast class CompUnit(refs: Seq[Term.Ref], stats: Seq[Stmt.TopLevel]) extends Tree
 
 @branch trait Ctor extends Tree with Has.Mods with Has.Paramss
 object Ctor {
@@ -380,6 +381,7 @@ object Aux {
   @ast class Template(early: Seq[Defn.Val] = Nil, parents: Seq[Parent] = Nil,
                       self: Self = Self.empty, stats: Seq[Stmt.Template] = Nil) extends Tree with Scope.Template {
     require(parents.isEmpty || !parents.tail.exists(_.argss.nonEmpty))
+    require(early.nonEmpty ==> parents.nonEmpty)
   }
   @ast class Self(name: Option[Term.Name] = None, decltpe: Option[Type] = None) extends Member.Term {
     def mods: Seq[Mod] = Nil

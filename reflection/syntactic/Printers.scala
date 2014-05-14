@@ -13,6 +13,15 @@ import scala.collection.immutable.Seq
 // TODO: make Print[T] invariant but generate instances based on generic cases
 
 object Printers {
+  def rhs(body: Term) = body match {
+    case _: Term.Block | _: Term.Match | _: Term.Cases => p(body)
+    case _                                             => i(body)
+  }
+  def templ(templ: Template) =
+    if (templ eq Template.empty) p()
+    else if (templ.parents.nonEmpty || templ.early.nonEmpty) p(" extends ", templ)
+    else p(" ", templ)
+
   // Branches
   implicit def printTree[T <: Tree]: Print[T] = Print {
     case t: Name => if (t.isBackquoted) p("`", t.value, "`") else p(t.value)
@@ -154,17 +163,14 @@ object Printers {
     case _: Mod.VarParam      => p("var")
 
     // Defn
-    case t: Defn.Val       => p(t.mods, "val ", r(t.pats, ", "), t.decltpe, " = ", t.rhs)
-    case t: Defn.Var       => p(t.mods, "var ", r(t.pats, ", "), t.decltpe, " = ", t.rhs.map(p(_)).getOrElse(p("_")))
+    case t: Defn.Val       => p(t.mods, "val ", r(t.pats, ", "), t.decltpe, " = ", rhs(t.rhs))
+    case t: Defn.Var       => p(t.mods, "var ", r(t.pats, ", "), t.decltpe, " = ", t.rhs.map(rhs(_)).getOrElse(p("_")))
     case t: Defn.Type      => p(t.mods, "type ", t.name, t.tparams, " = ", t.body)
-    case t: Defn.Class     => p(t.mods, "class ", t.name, t.tparams, t.ctor, t.templ)
-    case t: Defn.Trait     => p(t.mods, "trait ", t.name, t.tparams, t.templ)
-    case t: Defn.Object    => p(t.mods, "object ", t.name, t.templ)
+    case t: Defn.Class     => p(t.mods, "class ", t.name, t.tparams, t.ctor, templ(t.templ))
+    case t: Defn.Trait     => p(t.mods, "trait ", t.name, t.tparams, templ(t.templ))
+    case t: Defn.Object    => p(t.mods, "object ", t.name, templ(t.templ))
     case t: Defn.Def       =>
-      p(t.mods, "def ", t.name, t.tparams, (t.explicits, t.implicits), t.decltpe, " = ", t.body match {
-        case _: Term.Block | _: Term.Match | _: Term.Cases => p(t.body)
-        case _                                             => i(t.body)
-      })
+      p(t.mods, "def ", t.name, t.tparams, (t.explicits, t.implicits), t.decltpe, " = ", rhs(t.body))
     case t: Defn.Procedure =>
       p(t.mods, "def ", t.name, t.tparams, (t.explicits, t.implicits), " { ", r(t.stats.map(i(_)), ";"), n("}"))
 
@@ -176,10 +182,9 @@ object Printers {
     case t: Decl.Procedure => p(t.mods, "def ", t.name, t.tparams, (t.explicits, t.implicits))
 
     // Pkg
-    case t: Pkg.Root   => ???
-    case t: Pkg.Empty  => r(t.stats, "; ")
-    case t: Pkg.Named  => p("package ", t.name, " { ", r(t.stats.map(i(_)), ";"), n("}"))
-    case t: Pkg.Object => p(t.mods, " package object ", t.name, " extends ", t.templ)
+    case t: CompUnit   => p(r(t.refs.map(r => p("package ", r)), "\n"), r(t.stats, "\n"))
+    case t: Pkg.Named  => p("package ", t.name, " { ", r(t.stats.map(i(_)), "\n"), n("}"))
+    case t: Pkg.Object => p(t.mods, " package object ", t.name, templ(t.templ))
 
     // Ctor
     case t: Ctor.Primary   => p(t.mods, (t.explicits, t.implicits))
@@ -210,10 +215,11 @@ object Printers {
     case t: Template =>
       if (t eq Template.empty) p()
       else {
-        val searly = if (t.early.isEmpty) p() else p("{ ", r(t.early, "; "), " } with ")
-        val sbody = if ((t.self eq Self.empty) && t.stats.isEmpty) p()
+        val pearly = if (t.early.isEmpty) p() else p("{ ", r(t.early, "; "), " } with ")
+        val pbody = if ((t.self eq Self.empty) && t.stats.isEmpty) p()
                     else p("{", t.self, r(t.stats.map(i(_)), ";"), n("}"))
-        p(" ", searly, r(t.parents, " with "), sbody)
+        val pparents = if (t.parents.nonEmpty) p(r(t.parents, " with "), " ") else p()
+        p(pearly, pparents, pbody)
       }
     case t: TypeBounds =>
       p(t.lo.map { lo => p(" >: ", lo) }.getOrElse(p()),
