@@ -52,7 +52,7 @@ object Print {
 
   def indent[T](x: T)(implicit print: Print[T]): Indent = Indent(print(x))
 
-  def repeat[T](xs: Seq[T], sep: String)(implicit print: Print[T]): Repeat =
+  def repeat[T](xs: Seq[T], sep: String = "")(implicit print: Print[T]): Repeat =
     Repeat(xs.map(print(_)), sep)
 
   def newline[T](x: T)(implicit print: Print[T]): Newline = Newline(print(x))

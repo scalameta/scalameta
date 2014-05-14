@@ -87,8 +87,12 @@ class TermSuite extends ParseSuite {
     val Update(Apply(Name("a", false), Lit.Int(0) :: Nil), Lit.True()) = term("a(0) = true")
   }
 
+  test("return") {
+    val Return(None) = term("return")
+  }
+
   test("return 1") {
-    val Return(Lit.Int(1)) = term("return 1")
+    val Return(Some(Lit.Int(1))) = term("return 1")
   }
 
   test("throw 1") {
@@ -112,7 +116,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("{ true }") {
-    val Lit.True() = term("{ true }")
+    val Block(Lit.True() :: Nil) = term("{ true }")
   }
 
   test("if (true) true else false") {
@@ -142,23 +146,23 @@ class TermSuite extends ParseSuite {
     val Function(Param.Anonymous.empty :: Nil, Lit.Unit()) = term("_ => ()")
   }
 
-  test("implicit x => ()") {
-    val Function(Param.Named(Name("x", false), None, None, Mod.Implicit() :: Nil) :: Nil,
-                       Lit.Unit()) = term("{ implicit x => () }")
+  test("{ implicit x => () }") {
+    val Block(Function(Param.Named(Name("x", false), None, None, Mod.Implicit() :: Nil) :: Nil,
+                       Block(Lit.Unit() :: Nil)) :: Nil) = term("{ implicit x => () }")
   }
 
   test("1 match { case 1 => true }") {
-    val Match(Lit.Int(1), Cases(Case(Lit.Int(1), None, Some(Lit.True())) :: Nil)) =
+    val Match(Lit.Int(1), Cases(Case(Lit.Int(1), None, Lit.True() :: Nil) :: Nil)) =
       term("1 match { case 1 => true }")
   }
 
   test("1 match { case 1 => }") {
-    val Match(Lit.Int(1), Cases(Case(Lit.Int(1), None, None) :: Nil)) =
+    val Match(Lit.Int(1), Cases(Case(Lit.Int(1), None, Nil) :: Nil)) =
       term("1 match { case 1 => }")
   }
 
   test("1 match { case 1 if true => }") {
-    val Match(Lit.Int(1), Cases(Case(Lit.Int(1), Some(Lit.True()), None) :: Nil)) =
+    val Match(Lit.Int(1), Cases(Case(Lit.Int(1), Some(Lit.True()), Nil) :: Nil)) =
       term("1 match { case 1 if true => }")
   }
 
@@ -171,7 +175,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("try 1 catch { case _ => }") {
-    val Try(Lit.Int(1), Some(Cases(Case(Pat.Wildcard(), None, None) :: Nil)), None) =
+    val Try(Lit.Int(1), Some(Cases(Case(Pat.Wildcard(), None, Nil) :: Nil)), None) =
       term("try 1 catch { case _ => }")
   }
 
@@ -180,7 +184,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("{ case 1 => () }") {
-    val Cases(Case(Lit.Int(1), None, Some(Lit.Unit())) :: Nil) =
+    val Cases(Case(Lit.Int(1), None, Lit.Unit() :: Nil) :: Nil) =
       term("{ case 1 => () }")
   }
 

@@ -1005,7 +1005,7 @@ abstract class Parser { parser =>
       }
     case RETURN =>
       in.skipToken()
-      Term.Return(if (isExprIntro) expr() else Lit.Unit())
+      Term.Return(if (isExprIntro) Some(expr()) else None)
     case THROW =>
       in.skipToken()
       Term.Throw(expr())
@@ -1232,10 +1232,7 @@ abstract class Parser { parser =>
     }
   }
 
-  def mkBlock(stats: List[Stmt.Block]): Term = stats match {
-    case (t: Term) :: Nil => t
-    case _                => Term.Block(stats)
-  }
+  def mkBlock(stats: List[Stmt.Block]): Term = Term.Block(stats)
 
   /** {{{
    *  Block ::= BlockStatSeq
@@ -1245,7 +1242,7 @@ abstract class Parser { parser =>
   def block(): Term = mkBlock(blockStatSeq())
 
   def caseClause(): Aux.Case =
-    Aux.Case(pattern(), guard(), caseBlock())
+    Aux.Case(pattern(), guard(), { accept(ARROW); blockStatSeq() })
 
   /** {{{
    *  CaseClauses ::= CaseClause {CaseClause}
@@ -1257,15 +1254,6 @@ abstract class Parser { parser =>
     if (cases.isEmpty)  // trigger error if there are no cases
       accept(CASE)
     cases
-  }
-
-  // IDE HOOK (so we can memoize case blocks) // needed?
-  def caseBlock(): Option[Term] = {
-    accept(ARROW)
-    blockStatSeq() match {
-      case Nil   => None
-      case stats => Some(mkBlock(stats))
-    }
   }
 
   /** {{{

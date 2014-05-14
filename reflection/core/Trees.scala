@@ -28,7 +28,7 @@ import scala.collection.immutable.Seq
   def owner: Scope = parent match { case owner: Scope => owner; case tree => tree.owner }
   // TODO: we still need to figure out how to implement this - either going the Roslyn route or the by-name arguments route.
   def parent: Tree = ???
-  override def toString = syntactic.Printers.printTree(this).toString
+  def print: String = syntactic.Printers.printTree(this).toString
 }
 
 @branch trait Ref extends Tree
@@ -63,7 +63,7 @@ object Term {
   }
   @ast class Assign(lhs: Term.Ref, rhs: Term) extends Term
   @ast class Update(lhs: Apply, rhs: Term) extends Term
-  @ast class Return(expr: Term) extends Term
+  @ast class Return(expr: Option[Term]) extends Term
   @ast class Throw(expr: Term) extends Term
   @ast class Ascribe(expr: Term, tpe: Type) extends Term
   @ast class Annotate(expr: Term, annots: Seq[Mod.Annot] @nonEmpty) extends Term with Has.Mods {
@@ -376,7 +376,7 @@ object Mod {
 }
 
 object Aux {
-  @ast class Case(pat: Pat, cond: Option[Term] = None, body: Option[Term] = None) extends Tree with Scope
+  @ast class Case(pat: Pat, cond: Option[Term] = None, stats: Seq[Stmt.Template]) extends Tree with Scope
   @ast class Parent(tpe: Type, argss: Seq[Seq[Arg]] = Nil) extends Tree
   @ast class Template(early: Seq[Defn.Val] = Nil, parents: Seq[Parent] = Nil,
                       self: Self = Self.empty, stats: Seq[Stmt.Template] = Nil) extends Tree with Scope.Template {
