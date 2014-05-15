@@ -158,7 +158,7 @@ package invariants {
       q"""
         ${c.untypecheck(prop.emit)} match {
           case (true, _) => ()
-          case (false, $failures) => org.scalareflect.invariants.InvariantFailedException.raise(${showCode(x)}, $failures, Some($enclosingClass.this))
+          case (false, $failures) => org.scalareflect.invariants.InvariantFailedException.raise(${showCode(x)}, $failures, scala.Some($enclosingClass.this))
         }
       """
     }

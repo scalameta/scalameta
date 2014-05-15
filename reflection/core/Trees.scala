@@ -21,6 +21,7 @@ import scala.collection.immutable.Seq
 // TODO: add moar requires
 // TODO: invariants: tree should either have at least one non-trival token or be eq to it's empty value
 // TODO: converter: double check conversion of `(f _)(x)` (bug 46)
+// TODO: add tree for comments
 
 @root trait Tree {
   // TODO: we also need some sort of host-specific metadata in trees
@@ -28,11 +29,13 @@ import scala.collection.immutable.Seq
   def owner: Scope = parent match { case owner: Scope => owner; case tree => tree.owner }
   // TODO: we still need to figure out how to implement this - either going the Roslyn route or the by-name arguments route.
   def parent: Tree = ???
+  def showCode: String = syntactic.ShowCode.showTree(this).toString
+  def showRaw: String = ??? // syntactic.ShowRaw.showTree(this).toString
 }
 
 @branch trait Ref extends Tree
 
-@branch trait Name extends Ref {
+@branch trait Name extends Ref with Mod.AccessQualifier {
   def value: String
   def isBackquoted: Boolean
 }
@@ -40,7 +43,7 @@ import scala.collection.immutable.Seq
 @branch trait Term extends Arg with Stmt.Template with Stmt.Block
 object Term {
   @branch trait Ref extends Term with core.Ref
-  @ast class This(qual: Option[core.Name]) extends Ref
+  @ast class This(qual: Option[core.Name]) extends Ref with Mod.AccessQualifier
   @ast class Name(value: scala.Predef.String @nonEmpty, isBackquoted: Boolean = false) extends core.Name with Ref with Pat with Member with Has.TermName {
     // TODO: require(!keywords.contains(value) || isBackquoted)
     // TODO: if not backquoted, then not all values should be allowed
@@ -55,30 +58,37 @@ object Term {
     require(parts.length == args.length + 1)
   }
   @ast class Apply(fun: Term, args: Seq[Arg]) extends Term
-  @ast class ApplyType(fun: Term, args: Seq[Type] @nonEmpty) extends Term
-  @ast class ApplyRight(lhs: Term, op: Name, targs: Seq[Type], rhs: Term) extends Term {
-    // TODO: require(op.isRightAssocOp)
-  }
+  @ast class ApplyType(fun: Term, targs: Seq[Type] @nonEmpty) extends Term
+  @ast class ApplyInfix(lhs: Term, op: Name, targs: Seq[Type], args: Seq[Arg] @nonEmpty) extends Term
   @ast class ApplyUnary(op: Name, arg: Term) extends Term {
     // TODO: require(op.isUnaryOp)
   }
   @ast class Assign(lhs: Term.Ref, rhs: Term) extends Term
   @ast class Update(lhs: Apply, rhs: Term) extends Term
-  @ast class Return(expr: Term) extends Term
+  @ast class Return(expr: Option[Term]) extends Term
   @ast class Throw(expr: Term) extends Term
   @ast class Ascribe(expr: Term, tpe: Type) extends Term
   @ast class Annotate(expr: Term, annots: Seq[Mod.Annot] @nonEmpty) extends Term with Has.Mods {
     def mods: Seq[Mod] = annots
   }
-  @ast class Tuple(elements: Seq[Term] @nonEmpty) extends Term
+  @ast class Tuple(elements: Seq[Term] @nonEmpty) extends Term {
+    require(elements.length > 1)
+  }
+  // TODO: automatically flatten blocks with just a single term?
   @ast class Block(stats: Seq[Stmt.Block]) extends Term with Scope {
     require(stats.collect{ case v: Defn.Var => v }.forall(_.rhs.isDefined))
   }
-  @ast class If(cond: Term, thenp: Term, elsep: Option[Term]) extends Term
+
+  @branch trait If extends Term { def cond: Term; def thenp: Term; def elsep: Term }
+  object If {
+    @ast class Then(cond: Term, thenp: Term) extends If { def elsep: Term = Lit.Unit() }
+    @ast class ThenElse(cond: Term, thenp: Term, elsep: Term) extends If
+  }
+
   @ast class Match(scrut: Term, cases: Cases) extends Term
   @ast class Try(expr: Term, catchp: Option[Term], finallyp: Option[Term]) extends Term
   @ast class Function(params: Seq[Aux.Param], body: Term) extends Term with Scope.Params {
-    require(params.forall(_.default.isEmpty))
+    require(params.collect{ case named: Aux.Param.Named => named }.forall(_.default.isEmpty))
     require(params.exists(_.mods.exists(_.isInstanceOf[Mod.Implicit])) ==> (params.length == 1))
   }
   @ast class Cases(cases: Seq[Aux.Case]) extends Term {
@@ -96,9 +106,8 @@ object Term {
   @ast class Eta(term: Term) extends Term
 }
 
-@branch trait Type extends Tree with Scope.Template {
-  // TODO: simple type validation
-}
+// TODO: simple type validation
+@branch trait Type extends Tree with Aux.ParamType with Scope.Template
 object Type {
   @branch trait Ref extends Type with core.Ref
   @ast class Name(value: String @nonEmpty, isBackquoted: Boolean = false) extends core.Name with Ref {
@@ -113,8 +122,11 @@ object Type {
     // TODO: require(ref.isPath)
   }
   @ast class Apply(tpe: Type, args: Seq[Type] @nonEmpty) extends Type
-  @ast class Function(params: Seq[Type], res: Type) extends Type
-  @ast class Tuple(elements: Seq[Type] @nonEmpty) extends Type
+  @ast class ApplyInfix(lhs: Type, op: Type, rhs: Type) extends Type
+  @ast class Function(params: Seq[Aux.ParamType], res: Type) extends Type
+  @ast class Tuple(elements: Seq[Type] @nonEmpty) extends Type {
+    require(elements.length > 1)
+  }
   @ast class Compound(tpes: Seq[Type], refinement: Seq[Stmt.Refine]) extends Type with Scope.Refine {
     // TODO: require(tpes.length == 1 ==> hasExplicitRefinement)
   }
@@ -136,6 +148,7 @@ object Pat {
   @ast class Extract(ref: Term.Ref, targs: Seq[Type], elements: Seq[Pat]) extends Pat {
     // TODO: require(ref.isStableId)
   }
+  @ast class ExtractInfix(lhs: Pat, ref: Term.Ref, rhs: Seq[Pat] @nonEmpty) extends Pat // TODO: require ref is stable id
   @ast class Interpolate(prefix: Term.Name, parts: Seq[Lit.String] @nonEmpty, args: Seq[Pat]) extends Pat {
     // TODO: require(prefix.isInterpolationId)
     require(parts.length == args.length + 1)
@@ -152,17 +165,16 @@ object Member {
   @branch trait Def extends Term with Has.TermName with Stmt.Template with Has.Paramss with Scope.Params {
     def tparams: Seq[Aux.TypeParam]
   }
-  @branch trait AbstractOrAliasType extends Type with Has.TypeName {
+  @branch trait AbstractOrAliasType extends Type with Has.TypeName with Stmt.Template {
     def name: core.Type.Name
     def tparams: Seq[Aux.TypeParam]
   }
-  @branch trait Template extends Member with Has.Name with Stmt.TopLevel with Stmt.Block with Has.Paramss with Scope.Template {
+  @branch trait Template extends Member with Has.Name with Stmt.TopLevel with Has.Paramss with Scope.Template {
     def name: core.Name
     def explicits: Seq[Seq[Aux.Param.Named]] = Nil
     def implicits: Seq[Aux.Param.Named] = Nil
     def tparams: Seq[Aux.TypeParam] = Nil
     def templ: Aux.Template
-    @mayFail def ctor: Ctor.Primary = fail(ReflectionException("no constructor found"))
   }
 }
 final case class Overload[+A <: Member](alts: Seq[A]) {
@@ -204,7 +216,7 @@ object Defn {
                  pats: Seq[Pat] @nonEmpty,
                  decltpe: Option[core.Type],
                  rhs: Option[Term]) extends Defn with Has.Mods {
-    require(rhs.nonEmpty || pats.forall(_.isInstanceOf[Term.Name]))
+    require(rhs.isEmpty ==> pats.forall(_.isInstanceOf[Term.Name]))
     require(decltpe.nonEmpty || rhs.nonEmpty)
   }
   @ast class Def(mods: Seq[Mod],
@@ -221,7 +233,7 @@ object Defn {
                        tparams: Seq[Aux.TypeParam],
                        explicits: Seq[Seq[Aux.Param.Named]],
                        implicits: Seq[Aux.Param.Named],
-                       body: Term.Block) extends Defn with Member.Def {
+                       stats: Seq[Stmt.Block]) extends Defn with Member.Def {
   }
   @ast class Type(mods: Seq[Mod],
                   name: core.Type.Name,
@@ -230,14 +242,13 @@ object Defn {
   @ast class Class(mods: Seq[Mod],
                    name: core.Type.Name,
                    override val tparams: Seq[Aux.TypeParam],
-                   declctor: Ctor.Primary,
-                   templ: Aux.Template) extends Defn with Member.Template with Member.Type with Has.TypeName {
-    @mayFail override def ctor: Ctor.Primary = succeed(declctor)
-  }
+                   ctor: Ctor.Primary,
+                   templ: Aux.Template) extends Defn with Member.Template with Member.Type with Has.TypeName
   @ast class Trait(mods: Seq[Mod],
                    name: core.Type.Name,
                    override val tparams: Seq[Aux.TypeParam],
                    templ: Aux.Template) extends Defn with Member.Template with Member.Type with Has.TypeName {
+    require(templ.stats.forall(!_.isInstanceOf[Ctor]))
     require(templ.parents.forall(_.argss.isEmpty))
   }
   @ast class Object(mods: Seq[Mod],
@@ -246,26 +257,26 @@ object Defn {
   }
 }
 
-@branch trait Pkg extends Tree {
+@branch trait Pkg extends Stmt.TopLevel with Scope.TopLevel with Member.Term with Has.TermName {
+  // TODO: require(ref.isQualId)
+  // TODO: validate nestedness of header pkgs vs named packages
+  def ref: Term.Ref
   def stats: Seq[Stmt.TopLevel]
+  def mods: Seq[Mod] = Nil
+  def name: Term.Name = ref match {
+    case name: Term.Name      => name
+    case Term.Select(_, name) => name
+    case _                    => sys.error("this shouldn't have happened")
+  }
 }
 object Pkg {
-  @ast class Root private[core] (stats: Seq[Stmt.TopLevel]) extends Pkg with Scope.TopLevel
-  @ast class Empty(stats: Seq[Stmt.TopLevel]) extends Pkg with Scope.TopLevel
-  @ast class Named(ref: Term.Ref,
-                   stats: Seq[Stmt.TopLevel]) extends Pkg with Stmt.TopLevel with Scope.TopLevel with Member.Term with Has.TermName {
-    // TODO: require(ref.isQualId)
-    def mods: Seq[Mod] = Nil
-    def name: Term.Name = ref match {
-      case name: Term.Name => name
-      case Term.Select(_, name) => name
-      case _ => sys.error("this shouldn't have happened")
-    }
-  }
+  @ast class Header(ref: Term.Ref, stats: Seq[Stmt.TopLevel]) extends Pkg
+  @ast class Named(ref: Term.Ref, stats: Seq[Stmt.TopLevel]) extends Pkg
   @ast class Object(mods: Seq[Mod],
                     name: Term.Name,
-                    templ: Aux.Template) extends Tree with Stmt.TopLevel with Member.Template with Member.Term with Has.TermName
+                    templ: Aux.Template) extends Stmt.TopLevel with Member.Template with Member.Term with Has.TermName
 }
+
 
 @branch trait Ctor extends Tree with Has.Mods with Has.Paramss
 object Ctor {
@@ -281,10 +292,10 @@ object Ctor {
 
 object Stmt {
   @branch trait TopLevel extends Tree
-  @branch trait Template extends Block
-  @branch trait Block extends Refine
-  @branch trait Refine extends Existential
-  @branch trait Existential extends Tree
+  @branch trait Template extends Tree
+  @branch trait Block extends Template
+  @branch trait Refine extends Template
+  @branch trait Existential extends Refine
 }
 
 @branch trait Scope extends Tree
@@ -297,19 +308,19 @@ object Scope {
   @branch trait Params extends Scope
 }
 
-@branch trait Lit extends Term with Pat
+@branch trait Lit extends Term with Pat with Type
 object Lit {
   @branch trait Bool extends Lit
   @ast class True() extends Bool
   @ast class False() extends Bool
-  @ast class Int(value: scala.Int) extends Lit with Type
-  @ast class Long(value: scala.Long) extends Lit with Type
-  @ast class Float(value: scala.Float) extends Lit with Type
-  @ast class Double(value: scala.Double) extends Lit with Type
-  @ast class Char(value: scala.Char) extends Lit with Type
-  @ast class String(value: Predef.String) extends Lit with Type
+  @ast class Int(value: scala.Int) extends Lit
+  @ast class Long(value: scala.Long) extends Lit
+  @ast class Float(value: scala.Float) extends Lit
+  @ast class Double(value: scala.Double) extends Lit
+  @ast class Char(value: scala.Char) extends Lit
+  @ast class String(value: Predef.String) extends Lit
   // TODO: validate that not all symbols are representable as literals, e.g. scala.Symbol("")
-  @ast class Symbol(value: scala.Symbol) extends Lit with Type
+  @ast class Symbol(value: scala.Symbol) extends Lit
   @ast class Null() extends Lit
   @ast class Unit() extends Lit
 }
@@ -333,8 +344,8 @@ object Import {
 
 @branch trait Arg extends Tree
 object Arg {
-  @ast class Named(name: Term.Name, arg: Term) extends Arg
-  @ast class Seq(arg: Term) extends Arg
+  @ast class Named(name: Term.Name, rhs: Term) extends Arg
+  @ast class Repeated(arg: Term) extends Arg
 }
 
 @branch trait Enum extends Tree
@@ -348,8 +359,14 @@ object Enum {
 object Mod {
   @ast class Annot(tpe: Type, argss: Seq[Seq[Arg]]) extends Mod
   @ast class Doc(doc: String) extends Mod // TODO: design representation for scaladoc
-  @ast class Private(within: String) extends Mod // TODO: design a name resolution API for these and imports
-  @ast class Protected(within: String) extends Mod
+  // TODO: design a name resolution API for these and imports
+  @branch trait Access extends Mod {
+    require(within.nonEmpty ==> (within match { case Some(Term.This(Some(_))) => false; case _ => true }))
+    def within: Option[AccessQualifier]
+  }
+  @branch trait AccessQualifier extends Tree
+  @ast class Private(within: Option[AccessQualifier]) extends Access
+  @ast class Protected(within: Option[AccessQualifier]) extends Access
   @ast class Implicit() extends Mod
   @ast class Final() extends Mod
   @ast class Sealed() extends Mod
@@ -359,54 +376,62 @@ object Mod {
   @ast class Covariant() extends Mod
   @ast class Contravariant() extends Mod
   @ast class Lazy() extends Mod
-  @ast class AbstractOverride() extends Mod
   @ast class Macro() extends Mod
-  @ast class ByNameParam() extends Mod
-  @ast class VarargParam() extends Mod
   @ast class ValParam() extends Mod
   @ast class VarParam() extends Mod
 }
 
 object Aux {
-  @ast class Case(pat: Pat, cond: Option[Term] = None, body: Option[Term] = None) extends Tree with Scope
-  @ast class Parent(tpe: Type, argss: Seq[Seq[Arg]] = Nil) extends Ref
+  @ast class CompUnit(stats: Seq[Stmt.TopLevel]) extends Tree
+  @ast class Case(pat: Pat, cond: Option[Term] = None, stats: Seq[Stmt.Template]) extends Tree with Scope
+  @ast class Parent(tpe: Type, argss: Seq[Seq[Arg]] = Nil) extends Tree
   @ast class Template(early: Seq[Defn.Val] = Nil, parents: Seq[Parent] = Nil,
                       self: Self = Self.empty, stats: Seq[Stmt.Template] = Nil) extends Tree with Scope.Template {
     require(parents.isEmpty || !parents.tail.exists(_.argss.nonEmpty))
+    require(early.nonEmpty ==> parents.nonEmpty)
   }
   @ast class Self(name: Option[Term.Name] = None, decltpe: Option[Type] = None) extends Member.Term {
     def mods: Seq[Mod] = Nil
   }
+  @branch trait ParamType extends Tree
+  object ParamType {
+    @ast class ByName(tpe: Type) extends ParamType
+    @ast class Repeated(tpe: Type) extends ParamType
+  }
+  // TODO: only non-implicit non-val/var parameters may be by name
   @branch trait Param extends Tree with Has.Mods {
-    def default: Option[Term]
+    def decltpe: Option[ParamType]
+    def withMods(mods: Seq[Mod]): ThisType
+    def mapMods(mods: Seq[Mod] => Seq[Mod]): ThisType
   }
   object Param {
-    @ast class Anonymous(decltpe: Option[Type] = None,
-                         mods: Seq[Mod] = Nil,
-                         default: Option[Term] = None) extends Param
+    @ast class Anonymous(decltpe: Option[ParamType] = None,
+                         mods: Seq[Mod] = Nil) extends Param
     @ast class Named(name: Term.Name,
-                     decltpe: Type,
-                     mods: Seq[Mod] = Nil,
-                     default: Option[Term] = None) extends Param with Member.Term with Has.TermName
+                     decltpe: Option[ParamType] = None,
+                     default: Option[Term] = None,
+                     mods: Seq[Mod] = Nil) extends Param with Member.Term with Has.TermName
   }
   @branch trait TypeParam extends Tree with Has.Mods {
     def tparams: Seq[Aux.TypeParam]
     def contextBounds: Seq[core.Type]
     def viewBounds: Seq[core.Type]
     def bounds: Aux.TypeBounds
+    def withMods(mods: Seq[Mod]): ThisType
+    def mapMods(mods: Seq[Mod] => Seq[Mod]): ThisType
   }
   object TypeParam {
-    @ast class Anonymous(mods: Seq[Mod] = Nil,
-                         tparams: Seq[Aux.TypeParam] = Nil,
+    @ast class Anonymous(tparams: Seq[Aux.TypeParam] = Nil,
                          contextBounds: Seq[core.Type] = Nil,
                          viewBounds: Seq[core.Type] = Nil,
-                         bounds: Aux.TypeBounds = Aux.TypeBounds.empty) extends TypeParam
+                         bounds: Aux.TypeBounds = Aux.TypeBounds.empty,
+                         mods: Seq[Mod] = Nil) extends TypeParam
     @ast class Named(name: core.Type.Name,
-                     mods: Seq[Mod] = Nil,
                      tparams: Seq[Aux.TypeParam] = Nil,
                      contextBounds: Seq[core.Type] = Nil,
                      viewBounds: Seq[core.Type] = Nil,
-                     bounds: Aux.TypeBounds = Aux.TypeBounds.empty) extends TypeParam with Member.Type with Has.TypeName
+                     bounds: Aux.TypeBounds = Aux.TypeBounds.empty,
+                     mods: Seq[Mod] = Nil) extends TypeParam with Member.Type with Has.TypeName
   }
   @ast class TypeBounds(lo: Option[Type] = None, hi: Option[Type] = None) extends Tree
 }
@@ -418,7 +443,7 @@ object Has {
     // * write a script that fetches this google doc and converts it into a, say, CSV spec
     // * write a test that validates the spec by generating source files and parsing them
     // * write a macro that generates implementation of validateAnnots from the spec + extension methods like isImplicit
-    private[core] def validateMods(): Unit = ???
+    private[reflect] def validateMods(): Unit = ???
   }
 
   @branch trait Paramss extends Tree {

@@ -39,14 +39,14 @@ trait MemberOps {
     def isSealed: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Sealed])
     @hosted def isOverride: Boolean = tree.overrides.map(_.nonEmpty)
     def isCase: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Case])
-    def isAbstract: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Abstract]) || tree.isInstanceOf[Decl]
+    def isAbstract: Boolean = (tree.mods.exists(_.isInstanceOf[Mod.Abstract]) || tree.isInstanceOf[Decl]) && !isAbstractOverride
     def isCovariant: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Covariant])
     def isContravariant: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Contravariant])
     def isLazy: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Lazy])
-    def isAbstractOverride: Boolean = tree.mods.exists(_.isInstanceOf[Mod.AbstractOverride])
+    def isAbstractOverride: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Abstract]) && tree.mods.exists(_.isInstanceOf[Mod.Override])
     def isMacro: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Macro])
-    def isByNameParam: Boolean = tree.mods.exists(_.isInstanceOf[Mod.ByNameParam])
-    def isVarargParam: Boolean = tree.mods.exists(_.isInstanceOf[Mod.VarargParam])
+    def isByNameParam: Boolean = ???
+    def isVarargParam: Boolean = ???
     def isValParam: Boolean = tree.mods.exists(_.isInstanceOf[Mod.ValParam])
     def isVarParam: Boolean = tree.mods.exists(_.isInstanceOf[Mod.VarParam])
   }
@@ -140,6 +140,6 @@ trait MemberOps {
   }
 
   implicit class SemanticParamOps(tree: Aux.Param) {
-    @hosted def tpe: Type = tree.internalTpe
+    @hosted def tpe: Aux.ParamType = tree.internalParamTpe
   }
 }

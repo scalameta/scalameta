@@ -15,7 +15,7 @@ object build extends Build {
     publishMavenStyle := true,
     publishArtifact in Compile := false,
     publishArtifact in Test := false,
-    scalacOptions ++= Seq("-deprecation", "-feature", "-optimise"),
+    scalacOptions ++= Seq("-deprecation", "-feature", "-optimise", "-unchecked"),
     parallelExecution in Test := false, // hello, reflection sync!!
     logBuffered := false,
     scalaHome := {
@@ -135,6 +135,7 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     scalaSource in Compile <<= (baseDirectory in Compile)(base => base),
+    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided"),
     // scalacOptions ++= Seq("-Xprint:typer")
     scalacOptions ++= Seq()
   ) dependsOn (foundation)
