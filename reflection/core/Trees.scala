@@ -21,6 +21,7 @@ import scala.collection.immutable.Seq
 // TODO: add moar requires
 // TODO: invariants: tree should either have at least one non-trival token or be eq to it's empty value
 // TODO: converter: double check conversion of `(f _)(x)` (bug 46)
+// TODO: add tree for comments
 
 @root trait Tree {
   // TODO: we also need some sort of host-specific metadata in trees
@@ -28,7 +29,8 @@ import scala.collection.immutable.Seq
   def owner: Scope = parent match { case owner: Scope => owner; case tree => tree.owner }
   // TODO: we still need to figure out how to implement this - either going the Roslyn route or the by-name arguments route.
   def parent: Tree = ???
-  def print: String = syntactic.Printers.printTree(this).toString
+  def showCode: String = syntactic.ShowCode.showTree(this).toString
+  def showRaw: String = ??? // syntactic.ShowRaw.showTree(this).toString
 }
 
 @branch trait Ref extends Tree

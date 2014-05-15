@@ -16,3 +16,4 @@
   1. `q"trait F[T] <: Sobaka[T] with Balabaka { def bazinga } "`
   1. `*` is ambigious (ident vs seq wildcard) in most contexts
   1. `1 + (y = 2)` is equiv to `1.+(y = 2)` but `1 + (y: _*)` doesn't work
+  1. floating scala doc
