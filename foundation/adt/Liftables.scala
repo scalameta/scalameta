@@ -6,7 +6,7 @@ import scala.language.experimental.macros
 
 trait Liftables {
   val u: Universe
-  def materialize[T <: Adt]: Any = macro LiftableImpl.expand[T]
+  def materialize[T]: Any = macro LiftableImpl.expand[T]
 }
 
 class LiftableImpl(val c: Context) { import c.universe._

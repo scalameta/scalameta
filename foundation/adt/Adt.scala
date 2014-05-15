@@ -30,12 +30,12 @@ class AdtMacros(val c: Context) {
       if (mods.hasFlag(SEALED)) c.abort(cdef.pos, "sealed is redundant for @root traits")
       if (mods.hasFlag(FINAL)) c.abort(cdef.pos, "@root traits cannot be final")
       val flags1 = flags | SEALED
+      val tag = q"private[reflect] def tag: _root_.scala.Int"
       val thisType = q"type ThisType <: ${cdef.name}"
       val hierarchyCheck = q"$Internal.hierarchyCheck[${cdef.name}]"
-      val stats1 = thisType +: hierarchyCheck +: stats
+      val stats1 = tag +: thisType +: hierarchyCheck +: stats
       val anns1 = q"new $Internal.root" +: anns
-      val parents1 = parents :+ tq"_root_.org.scalareflect.adt.Adt"
-      ClassDef(Modifiers(flags1, privateWithin, anns1), name, tparams, Template(parents1, self, stats1))
+      ClassDef(Modifiers(flags1, privateWithin, anns1), name, tparams, Template(parents, self, stats1))
     }
     val expanded = annottees match {
       case (cdef @ ClassDef(mods, _, _, _)) :: rest if mods.hasFlag(TRAIT) => transform(cdef) :: rest
@@ -50,10 +50,9 @@ class AdtMacros(val c: Context) {
       if (mods.hasFlag(SEALED)) c.abort(cdef.pos, "sealed is redundant for @branch traits")
       if (mods.hasFlag(FINAL)) c.abort(cdef.pos, "@branch traits cannot be final")
       val flags1 = flags | SEALED
-      val tag = q"private[reflect] def tag: _root_.scala.Int"
       val thisType = q"override type ThisType <: ${cdef.name}"
       val hierarchyCheck = q"$Internal.hierarchyCheck[${cdef.name}]"
-      val stats1 = tag +: thisType +: hierarchyCheck +: stats
+      val stats1 = thisType +: hierarchyCheck +: stats
       val anns1 = q"new $Internal.branch" +: anns
       ClassDef(Modifiers(flags1, privateWithin, anns1), name, tparams, Template(parents, self, stats1))
     }
@@ -125,8 +124,6 @@ class AdtMacros(val c: Context) {
   }
 }
 
-trait Adt
-
 object Internal {
   class root extends StaticAnnotation
   class branch extends StaticAnnotation
@@ -173,14 +170,12 @@ class AdtHelperMacros(val c: Context) {
   }
 
   def nullCheck(x: c.Tree): c.Tree = {
-    val turnOff = c.internal.enclosingOwner.owner.name.toString.endsWith("Name")
-    if (!turnOff && x.tpe.baseClasses.contains(ObjectClass)) q"_root_.org.scalareflect.invariants.require($x != null)"
+    if (x.tpe.baseClasses.contains(ObjectClass)) q"_root_.org.scalareflect.invariants.require($x != null)"
     else q""
   }
 
   def emptyCheck(x: c.Tree): c.Tree = {
-    val turnOff = c.internal.enclosingOwner.owner.name.toString.endsWith("Name")
-    if (!turnOff && x.symbol.asTerm.accessed.nonEmpty) q"_root_.org.scalareflect.invariants.require($x.nonEmpty)"
+    if (x.symbol.asTerm.accessed.nonEmpty) q"_root_.org.scalareflect.invariants.require($x.nonEmpty)"
     else q""
   }
 

@@ -487,9 +487,8 @@ abstract class Parser { parser =>
   def finishBinaryOp[T: OpCtx](opinfo: OpInfo[T], rhs: T): T = opctx.binop(opinfo, rhs)
 
   def reduceStack[T: OpCtx](base: List[OpInfo[T]], top: T): T = {
-    val name           = Term.Name(in.name)
-    val opPrecedence = if (isName) name.precedence else 0
-    val leftAssoc    = !isName || name.isLeftAssoc
+    val opPrecedence = if (isName) Term.Name(in.name).precedence else 0
+    val leftAssoc    = !isName || Term.Name(in.name).isLeftAssoc
 
     reduceStack(base, top, opPrecedence, leftAssoc)
   }
