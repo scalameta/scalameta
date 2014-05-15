@@ -360,14 +360,13 @@ object Mod {
   @ast class Annot(tpe: Type, argss: Seq[Seq[Arg]]) extends Mod
   @ast class Doc(doc: String) extends Mod // TODO: design representation for scaladoc
   // TODO: design a name resolution API for these and imports
-  @branch trait Access extends Mod { def within: Option[AccessQualifier] }
+  @branch trait Access extends Mod {
+    require(within.nonEmpty ==> (within match { case Some(Term.This(Some(_))) => false; case _ => true }))
+    def within: Option[AccessQualifier]
+  }
   @branch trait AccessQualifier extends Tree
-  @ast class Private(within: Option[AccessQualifier]) extends Access {
-    require(within.nonEmpty ==> (within match { case Some(Term.This(Some(_))) => false; case _ => true }))
-  }
-  @ast class Protected(within: Option[AccessQualifier]) extends Access {
-    require(within.nonEmpty ==> (within match { case Some(Term.This(Some(_))) => false; case _ => true }))
-  }
+  @ast class Private(within: Option[AccessQualifier]) extends Access
+  @ast class Protected(within: Option[AccessQualifier]) extends Access
   @ast class Implicit() extends Mod
   @ast class Final() extends Mod
   @ast class Sealed() extends Mod
