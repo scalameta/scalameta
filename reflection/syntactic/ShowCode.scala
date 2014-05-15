@@ -26,7 +26,7 @@ object ShowCode {
   }
 
   // Branches
-  implicit def showTree[T <: Tree]: Show[T] = Show {
+  implicit def showTree[T <: Tree]: Show[T] = Show { x => (x: Tree) match {
     case t: Name => if (t.isBackquoted) s("`", t.value, "`") else s(t.value)
 
     // ParamType
@@ -197,7 +197,8 @@ object ShowCode {
     case t: Decl.Procedure => s(t.mods, "def ", t.name, t.tparams, (t.explicits, t.implicits))
 
     // Pkg
-    case t: CompUnit   => s(r(t.refs.map(r => s("package ", r)), "\n"), "\n", r(t.stats, "\n"))
+    case t: CompUnit   => r(t.stats)
+    case t: Pkg.Header => s("package ", t.name, r(t.stats.map(n(_))))
     case t: Pkg.Named  => s("package ", t.name, " { ", r(t.stats.map(i(_)), "\n"), n("}"))
     case t: Pkg.Object => s(t.mods, " package object ", t.name, templ(t.templ))
 
@@ -251,7 +252,7 @@ object ShowCode {
       val cbounds = r(t.contextBounds.map { s(": ", _) })
       val vbounds = r(t.contextBounds.map { s("<% ", _) })
       s(t.mods, t.name, t.tparams, cbounds, vbounds, t.bounds)
-  }
+  } }
 
   // Multiples and optionals
   implicit val showAccessQualifierOpt: Show[Option[Mod.AccessQualifier]] = Show { t =>

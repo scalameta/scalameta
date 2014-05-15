@@ -7,8 +7,6 @@ import scala.{Seq => _}
 import scala.collection.immutable.Seq
 
 package object core {
-  @hosted def root: Pkg.Root = delegate
-
   @hosted def syntaxProfile: SyntaxProfile = delegate
   final case class SyntaxProfile()
 

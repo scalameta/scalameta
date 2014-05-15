@@ -2427,7 +2427,7 @@ abstract class Parser { parser =>
   }
 
 
-  def packageOrPackageObject(): Pkg with Stmt.TopLevel =
+  def packageOrPackageObject(): Stmt.TopLevel =
     if (in.token == OBJECT) {
       in.nextToken()
       packageObject()
@@ -2479,7 +2479,10 @@ abstract class Parser { parser =>
       (refs.toList, ts.toList)
     }
 
-    val (refs,stats) = packageStats()
-    CompUnit(refs, stats)
+    val (refs, stats) = packageStats()
+    refs match {
+      case Nil          => CompUnit(stats)
+      case init :+ last => CompUnit(init.foldLeft(Pkg.Header(last, stats)) { (acc, ref) => Pkg.Header(ref, acc :: Nil) } :: Nil)
+    }
   }
 }

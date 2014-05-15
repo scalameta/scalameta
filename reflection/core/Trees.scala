@@ -79,7 +79,7 @@ object Term {
     require(stats.collect{ case v: Defn.Var => v }.forall(_.rhs.isDefined))
   }
 
-  @branch trait If extends Term{ def cond: Term; def thenp: Term; def elsep: Term }
+  @branch trait If extends Term { def cond: Term; def thenp: Term; def elsep: Term }
   object If {
     @ast class Then(cond: Term, thenp: Term) extends If { def elsep: Term = Lit.Unit() }
     @ast class ThenElse(cond: Term, thenp: Term, elsep: Term) extends If
@@ -257,25 +257,27 @@ object Defn {
   }
 }
 
-@branch trait Pkg extends Tree
-object Pkg {
-  @ast class Root private[reflect] (stats: Seq[Stmt.TopLevel]) extends Pkg with Scope.TopLevel
-  @ast class Named(ref: Term.Ref,
-                   stats: Seq[Stmt.TopLevel]) extends Pkg with Stmt.TopLevel with Scope.TopLevel with Member.Term with Has.TermName {
-    // TODO: require(ref.isQualId)
-    def mods: Seq[Mod] = Nil
-    def name: Term.Name = ref match {
-      case name: Term.Name => name
-      case Term.Select(_, name) => name
-      case _ => sys.error("this shouldn't have happened")
-    }
+@branch trait Pkg extends Stmt.TopLevel with Scope.TopLevel with Member.Term with Has.TermName {
+  // TODO: require(ref.isQualId)
+  // TODO: validate nestedness of header pkgs vs named packages
+  def ref: Term.Ref
+  def stats: Seq[Stmt.TopLevel]
+  def mods: Seq[Mod] = Nil
+  def name: Term.Name = ref match {
+    case name: Term.Name      => name
+    case Term.Select(_, name) => name
+    case _                    => sys.error("this shouldn't have happened")
   }
+}
+object Pkg {
+  @ast class Header(ref: Term.Ref, stats: Seq[Stmt.TopLevel]) extends Pkg
+  @ast class Named(ref: Term.Ref, stats: Seq[Stmt.TopLevel]) extends Pkg
   @ast class Object(mods: Seq[Mod],
                     name: Term.Name,
-                    templ: Aux.Template) extends Pkg with Stmt.TopLevel with Member.Template with Member.Term with Has.TermName
+                    templ: Aux.Template) extends Stmt.TopLevel with Member.Template with Member.Term with Has.TermName
 }
 
-@ast class CompUnit(refs: Seq[Term.Ref], stats: Seq[Stmt.TopLevel]) extends Tree
+@ast class CompUnit(stats: Seq[Stmt.TopLevel]) extends Tree
 
 @branch trait Ctor extends Tree with Has.Mods with Has.Paramss
 object Ctor {
