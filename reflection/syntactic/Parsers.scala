@@ -2481,8 +2481,8 @@ abstract class Parser { parser =>
 
     val (refs, stats) = packageStats()
     refs match {
-      case Nil          => CompUnit(stats)
-      case init :+ last => CompUnit(init.foldLeft(Pkg.Header(last, stats)) { (acc, ref) => Pkg.Header(ref, acc :: Nil) } :: Nil)
+      case Nil          => Aux.CompUnit(stats)
+      case init :+ last => Aux.CompUnit(init.foldLeft(Pkg.Header(last, stats)) { (acc, ref) => Pkg.Header(ref, acc :: Nil) } :: Nil)
     }
   }
 }

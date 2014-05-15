@@ -277,7 +277,6 @@ object Pkg {
                     templ: Aux.Template) extends Stmt.TopLevel with Member.Template with Member.Term with Has.TermName
 }
 
-@ast class CompUnit(stats: Seq[Stmt.TopLevel]) extends Tree
 
 @branch trait Ctor extends Tree with Has.Mods with Has.Paramss
 object Ctor {
@@ -384,6 +383,7 @@ object Mod {
 }
 
 object Aux {
+  @ast class CompUnit(stats: Seq[Stmt.TopLevel]) extends Tree
   @ast class Case(pat: Pat, cond: Option[Term] = None, stats: Seq[Stmt.Template]) extends Tree with Scope
   @ast class Parent(tpe: Type, argss: Seq[Seq[Arg]] = Nil) extends Tree
   @ast class Template(early: Seq[Defn.Val] = Nil, parents: Seq[Parent] = Nil,
