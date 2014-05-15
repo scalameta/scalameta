@@ -281,7 +281,6 @@ object Ctor {
                        stats: Seq[Stmt.Block] = Nil) extends Ctor with Stmt.Template with Scope.Params
 }
 
-// TODO: this inheritance is wrong. `Stmt.Template` can't be inserted into places where `Stmt.Block` is expected
 object Stmt {
   @branch trait TopLevel extends Tree
   @branch trait Template extends Tree
@@ -290,7 +289,7 @@ object Stmt {
   @branch trait Existential extends Refine
 }
 
-// TODO: this inheritance is most likely wrong as well
+// TODO: revise inhertitance, it's probably wrong here
 @branch trait Scope extends Tree
 object Scope {
   @branch trait TopLevel extends Scope with Block

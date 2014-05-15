@@ -8,12 +8,11 @@ import scala.reflect.syntactic.SyntacticInfo._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 
-// TODO: " ;"
-
-
-// TODO: what about Print[Member] and likes?
-// TODO: also having independent instances makes it very difficult to communicate stuff like indentation
-// TODO: make Print[T] invariant but generate instances based on generic cases
+// TODO: occasional " ;" is annoying
+// TODO: needs way more parens, esp in types and patterns
+// TODO: soft wrapping
+// TODO: one mega instance for tree isn't nice, maybe separate instances for leafs and inferred instances for branches
+// TODO: strings and string interpolation needs to be smarter wrt " vs """
 
 object Printers {
   def templ(templ: Template) =
@@ -25,7 +24,6 @@ object Printers {
     case _: Lit | _: Term.Ref | _: Term.Placeholder | _: Term.Tuple => p(t)
     case _ => p("(", t, ")")
   }
-  def parens(t: Type) = p("(", t, ")")
 
   // Branches
   implicit def printTree[T <: Tree]: Print[T] = Print {
@@ -292,12 +290,4 @@ object Printers {
     case (t: Import.Selector.Wildcard) :: Nil => p(t)
     case sels                                 => p("{ ", r(sels, ", "), " }")
   }
-}
-
-object Test extends App {
-  val source = Source.File("/Users/Den/Proj/scala/v2.11.0/src/compiler/scala/tools/nsc/typechecker/Typers.scala")
-  val tree = (new SourceParser(source)).parse()
-  val out = new java.io.PrintWriter("out.scala")
-  try out.print(tree.print)
-  finally out.close()
 }
