@@ -39,7 +39,7 @@ trait MemberOps {
     def isSealed: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Sealed])
     @hosted def isOverride: Boolean = tree.overrides.map(_.nonEmpty)
     def isCase: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Case])
-    def isAbstract: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Abstract]) || tree.isInstanceOf[Decl]
+    def isAbstract: Boolean = (tree.mods.exists(_.isInstanceOf[Mod.Abstract]) || tree.isInstanceOf[Decl]) && !isAbstractOverride
     def isCovariant: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Covariant])
     def isContravariant: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Contravariant])
     def isLazy: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Lazy])
