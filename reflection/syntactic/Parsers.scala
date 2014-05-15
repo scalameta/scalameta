@@ -952,9 +952,8 @@ abstract class Parser { parser =>
       val cond = condExpr()
       newLinesOpt()
       val thenp = expr()
-      val elsep = if (in.token == ELSE) { in.nextToken(); Some(expr()) }
-                  else None
-      Term.If(cond, thenp, elsep)
+      if (in.token == ELSE) { in.nextToken(); Term.If.ThenElse(cond, thenp, expr()) }
+      else { Term.If.Then(cond, thenp) }
     case TRY =>
       in.skipToken()
       val body: Term = in.token match {

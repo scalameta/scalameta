@@ -120,11 +120,11 @@ class TermSuite extends ParseSuite {
   }
 
   test("if (true) true else false") {
-    val If(Lit.True(), Lit.True(), Some(Lit.False())) = term("if (true) true else false")
+    val If.ThenElse(Lit.True(), Lit.True(), Lit.False()) = term("if (true) true else false")
   }
 
   test("if (true) true") {
-    val If(Lit.True(), Lit.True(), None) = term("if (true) true")
+    val If.Then(Lit.True(), Lit.True()) = term("if (true) true")
   }
 
   test("(x => x)") {

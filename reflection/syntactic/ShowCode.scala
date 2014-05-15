@@ -115,9 +115,8 @@ object ShowCode {
       s("try ", t.expr,
         t.catchp.map { catchp => s(" catch ", catchp) }.getOrElse(s()),
         t.finallyp.map { finallyp => s(" finally ", finallyp) }.getOrElse(s()))
-    case t: Term.If =>
-      s("if (", t.cond, ") ", t.thenp,
-        t.elsep.map { s(" else ", _) }.getOrElse(s()))
+    case t: Term.If.Then     => s("if (", t.cond, ") ", t.thenp)
+    case t: Term.If.ThenElse => s("if (", t.cond, ") ", t.thenp, " else ", t.elsep)
     case t: Term.Function =>
       t match {
         case Term.Function(Param.Named(name, tptopt, _, mods) :: Nil, body) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
