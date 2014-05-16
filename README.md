@@ -4,4 +4,4 @@ Reflection core of [Project Palladium](http://scalamacros.org/news/2014/03/02/pr
 
 ### How to use
 
-The project is in a very early stage, so it's not supposed to be useful just yet. However, if you're brave enough, we have a nightly build that publishes artifacts to Sonatype at `"org.scalareflect" % "core_2.11.0-RC3" % "0.1.0-SNAPSHOT"`.
+The project is in a very early stage, so it's not supposed to be useful just yet. However, if you're brave enough, we have a nightly build that publishes artifacts to Sonatype at `"org.scalareflect" % "core_2.11" % "0.1.0-SNAPSHOT"`.
