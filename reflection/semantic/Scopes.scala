@@ -25,7 +25,7 @@ trait ScopeOps {
     }
     @hosted private[semantic] def uniqueMember[T: ClassTag](s_name: String): T = {
       val isTerm = classOf[Member.Term].isAssignableFrom(classTag[T].runtimeClass)
-      val name = if (isTerm) Term.Name(s_name)(SourceContext.None) else Type.Name(s_name)(SourceContext.None)
+      val name = if (isTerm) Term.Name(s_name)(Origin.Synthetic) else Type.Name(s_name)(Origin.Synthetic)
       members(name).map(_.alts).map(_.collect { case x: T => x }).flatMap(_.findUnique)
     }
   }

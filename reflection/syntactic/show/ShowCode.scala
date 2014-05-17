@@ -1,5 +1,5 @@
 package scala.reflect
-package syntactic
+package syntactic.show
 
 import scala.reflect.core._, Aux._
 import org.scalareflect.show.Show
@@ -201,6 +201,7 @@ object ShowCode {
     case t: Pkg.Header => s("package ", t.name, r(t.stats.map(n(_))))
     case t: Pkg.Named  => s("package ", t.name, " { ", r(t.stats.map(i(_)), "\n"), n("}"))
     case t: Pkg.Object => s(t.mods, " package object ", t.name, templ(t.templ))
+    case `root` => s("ROOT")
 
     // Ctor
     case t: Ctor.Primary   => s(t.mods, (t.explicits, t.implicits))

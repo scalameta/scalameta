@@ -36,16 +36,23 @@ package object core {
     }
     object File { def apply(path: Predef.String): Source.File = Source.File(new java.io.File(path)) }
   }
-  @root trait SourceContext {
-    def source: Source
+  @root trait Position
+  object Position {
+    @leaf object None extends Position
   }
-  object SourceContext {
-    @leaf object None extends SourceContext {
-      def source = Source.None
-      override def toString = ""
+  @root trait Origin {
+    def src: Source
+    def pos: Position
+  }
+  object Origin {
+    @leaf object Synthetic extends Origin {
+      def src = core.Source.None
+      def pos = core.Position.None
     }
-    @leaf class Some(source: Source) extends SourceContext {
-      override def toString = ""
+    @leaf class Source(src: core.Source, pos: Position) extends Origin
+    @leaf class Transform(proto: Tree, origin: Origin) extends Origin {
+      def src = origin.src
+      def pos = origin.pos
     }
   }
 

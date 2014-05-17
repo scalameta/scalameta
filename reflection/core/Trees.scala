@@ -5,8 +5,10 @@ import org.scalareflect.invariants._
 import org.scalareflect.errors._
 import org.scalareflect.adt._
 import org.scalareflect.annotations._
+import org.scalareflect.annotations.internal.ast.AstHelperMacros
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
+import scala.language.experimental.macros
 
 // TODO: collection-like methods (see http://clang.llvm.org/docs/LibASTMatchersReference.html)
 // TODO: rewriting/transformation methods
@@ -23,14 +25,28 @@ import scala.collection.immutable.Seq
 // TODO: converter: double check conversion of `(f _)(x)` (bug 46)
 // TODO: add tree for comments
 
-@root trait Tree {
-  // TODO: we also need some sort of host-specific metadata in trees
-  def src: SourceContext
+@root trait Tree extends Product {
+  type ThisType <: Tree
+
+  def origin: Origin
+  def withOrigin(origin: Origin): ThisType
+  def mapOrigin(f: Origin => Origin): ThisType
+
   def owner: Scope = parent match { case owner: Scope => owner; case tree => tree.owner }
-  // TODO: we still need to figure out how to implement this - either going the Roslyn route or the by-name arguments route.
-  def parent: Tree = ???
-  def showCode: String = syntactic.ShowCode.showTree(this).toString
-  def showRaw: String = ??? // syntactic.ShowRaw.showTree(this).toString
+  def parent: Tree
+  def parent_=(x: Tree): Unit = macro AstHelperMacros.parentIsImmutable
+  def withParent(x: Tree): ThisType = macro AstHelperMacros.parentIsImmutable
+  private[reflect] def internalWithParent(x: Tree): ThisType
+  def mapParent(x: Tree => Tree): ThisType = macro AstHelperMacros.parentIsImmutable
+
+  private[reflect] def scratchpad: Any
+  private[reflect] def scratchpad_=(x: Tree): Unit = macro AstHelperMacros.payloadIsImmutable
+  private[reflect] def withScratchpad(scratchpad: Any): ThisType
+  private[reflect] def mapScratchpad(f: Any => Any): ThisType
+
+  def showCode: String = syntactic.show.ShowCode.showTree(this).toString
+  def showRaw: String = syntactic.show.ShowRaw.showTree(this).toString
+  final override def toString: String = showRaw
 }
 
 @branch trait Ref extends Tree
@@ -81,7 +97,7 @@ object Term {
 
   @branch trait If extends Term { def cond: Term; def thenp: Term; def elsep: Term }
   object If {
-    @ast class Then(cond: Term, thenp: Term) extends If { def elsep: Term = Lit.Unit() }
+    @ast class Then(cond: Term, thenp: Term) extends If { def elsep: Term = Lit.Unit()(Origin.Synthetic) }
     @ast class ThenElse(cond: Term, thenp: Term, elsep: Term) extends If
   }
 
@@ -276,7 +292,17 @@ object Pkg {
                     name: Term.Name,
                     templ: Aux.Template) extends Stmt.TopLevel with Member.Template with Member.Term with Has.TermName
 }
-
+@leaf object root extends Scope.TopLevel {
+  private def unsupported = sys.error("this shouldn't have happened")
+  def parent: scala.reflect.core.Tree = this
+  private[reflect] def internalWithParent(x: Tree): ThisType = unsupported
+  def origin: Origin = Origin.Synthetic
+  def mapOrigin(f: Origin => Origin): ThisType = unsupported
+  def withOrigin(origin: Origin): ThisType = unsupported
+  private[reflect] def scratchpad: Any = unsupported
+  private[reflect] def mapScratchpad(f: Any => Any): ThisType = unsupported
+  private[reflect] def withScratchpad(scratchpad: Any): ThisType = unsupported
+}
 
 @branch trait Ctor extends Tree with Has.Mods with Has.Paramss
 object Ctor {
@@ -336,9 +362,9 @@ object Import {
   object Selector {
     @ast class Wildcard() extends Selector
     // TODO: needs some kind of idents here but they can neither be term nor type
-    @ast class Name(name: String) extends Selector
-    @ast class Rename(from: String, to: String) extends Selector
-    @ast class Unimport(name: String) extends Selector
+    @ast class Name(name: String @nonEmpty) extends Selector
+    @ast class Rename(from: String @nonEmpty, to: String @nonEmpty) extends Selector
+    @ast class Unimport(name: String @nonEmpty) extends Selector
   }
 }
 
@@ -360,13 +386,15 @@ object Mod {
   @ast class Annot(tpe: Type, argss: Seq[Seq[Arg]]) extends Mod
   @ast class Doc(doc: String) extends Mod // TODO: design representation for scaladoc
   // TODO: design a name resolution API for these and imports
-  @branch trait Access extends Mod {
-    require(within.nonEmpty ==> (within match { case Some(Term.This(Some(_))) => false; case _ => true }))
-    def within: Option[AccessQualifier]
-  }
+  @branch trait Access extends Mod { def within: Option[AccessQualifier] }
   @branch trait AccessQualifier extends Tree
-  @ast class Private(within: Option[AccessQualifier]) extends Access
-  @ast class Protected(within: Option[AccessQualifier]) extends Access
+  @ast class Private(within: Option[AccessQualifier]) extends Access {
+    // TODO: deduplicate this wrt Protected
+    require(within.nonEmpty ==> (within match { case Some(acc: Term.This) => acc.qual.isEmpty; case _ => true }))
+  }
+  @ast class Protected(within: Option[AccessQualifier]) extends Access {
+    require(within.nonEmpty ==> (within match { case Some(acc: Term.This) => acc.qual.isEmpty; case _ => true }))
+  }
   @ast class Implicit() extends Mod
   @ast class Final() extends Mod
   @ast class Sealed() extends Mod
@@ -383,7 +411,7 @@ object Mod {
 
 object Aux {
   @ast class CompUnit(stats: Seq[Stmt.TopLevel]) extends Tree
-  @ast class Case(pat: Pat, cond: Option[Term] = None, stats: Seq[Stmt.Template]) extends Tree with Scope
+  @ast class Case(pat: Pat, cond: Option[Term] = None, stats: Seq[Stmt.Template] = Nil) extends Tree with Scope
   @ast class Parent(tpe: Type, argss: Seq[Seq[Arg]] = Nil) extends Tree
   @ast class Template(early: Seq[Defn.Val] = Nil, parents: Seq[Parent] = Nil,
                       self: Self = Self.empty, stats: Seq[Stmt.Template] = Nil) extends Tree with Scope.Template {
@@ -401,8 +429,8 @@ object Aux {
   // TODO: only non-implicit non-val/var parameters may be by name
   @branch trait Param extends Tree with Has.Mods {
     def decltpe: Option[ParamType]
-    def withMods(mods: Seq[Mod]): ThisType
-    def mapMods(mods: Seq[Mod] => Seq[Mod]): ThisType
+    def withMods(mods: Seq[Mod])(implicit origin: Origin): ThisType
+    def mapMods(mods: Seq[Mod] => Seq[Mod])(implicit origin: Origin): ThisType
   }
   object Param {
     @ast class Anonymous(decltpe: Option[ParamType] = None,
@@ -417,8 +445,8 @@ object Aux {
     def contextBounds: Seq[core.Type]
     def viewBounds: Seq[core.Type]
     def bounds: Aux.TypeBounds
-    def withMods(mods: Seq[Mod]): ThisType
-    def mapMods(mods: Seq[Mod] => Seq[Mod]): ThisType
+    def withMods(mods: Seq[Mod])(implicit origin: Origin): ThisType
+    def mapMods(mods: Seq[Mod] => Seq[Mod])(implicit origin: Origin): ThisType
   }
   object TypeParam {
     @ast class Anonymous(tparams: Seq[Aux.TypeParam] = Nil,

@@ -6,10 +6,11 @@ import scala.collection.immutable.Seq
 import scala.reflect.core._
 
 trait HostContext {
+  def isThreadsafe: Boolean
+
   def syntaxProfile: SyntaxProfile
   def semanticProfile: SemanticProfile
 
-  def root: Scope.TopLevel
   // NOTE: def stats(scope: Scope): Seq[Tree] is implicit in signatures of Template and Pkg
   def members(scope: Scope): Seq[Member]
   def members(scope: Scope, name: Name): Seq[Member]
