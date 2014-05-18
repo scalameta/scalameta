@@ -3,7 +3,7 @@ import scala.reflect.syntactic._
 
 class ParseSuite extends FunSuite {
   def parse[T](rule: SourceParser => T): String => T =
-    code => (new SourceParser(code)).parseRule(rule)
+    code => new SourceParser(code).parseRule(rule)
   def term = parse(_.expr())
   def pat = parse(_.pattern())
   def tpe = parse(_.typ())

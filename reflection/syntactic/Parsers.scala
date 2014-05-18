@@ -360,7 +360,7 @@ abstract class Parser { parser =>
     case name: Name =>
       Some(Aux.Param.Named(name = name.toTermName, decltpe = None))
     case Term.Placeholder() =>
-      Some(Aux.Param.Anonymous.empty)
+      Some(Aux.Param.Anonymous())
     case Term.Ascribe(name: Name, tpt) =>
       Some(Aux.Param.Named(name = name.toTermName, decltpe = Some(tpt)))
     case Term.Ascribe(Term.Placeholder(), tpt) =>
@@ -1198,7 +1198,7 @@ abstract class Parser { parser =>
   def argumentExprs(): List[Arg] = {
     def args(): List[Arg] = commaSeparated {
       expr() match {
-        case Term.Ascribe(t, Type.Placeholder(Aux.TypeBounds.empty)) if isName && in.name == "*" =>
+        case Term.Ascribe(t, Type.Placeholder(Aux.TypeBounds(None, None))) if isName && in.name == "*" =>
           in.nextToken()
           Arg.Repeated(t)
         case Term.Assign(t: Term.Name, rhs) =>
@@ -1796,7 +1796,7 @@ abstract class Parser { parser =>
     val lo = bound(SUPERTYPE)
     val hi = bound(SUBTYPE)
     if (lo.nonEmpty || hi.nonEmpty) Aux.TypeBounds(lo, hi)
-    else Aux.TypeBounds.empty
+    else Aux.TypeBounds()
   }
 
   def bound(tok: Token): Option[Type] =
@@ -2111,8 +2111,7 @@ abstract class Parser { parser =>
   def primaryCtor(): Ctor.Primary = {
     val mods = constructorAnnots() ++ accessModifierOpt()
     val (paramss, implicits) = paramClauses(ownerIsType = true)
-    if (mods.isEmpty && paramss.isEmpty && implicits.isEmpty) Ctor.Primary.empty
-    else Ctor.Primary(mods, paramss, implicits)
+    Ctor.Primary(mods, paramss, implicits)
   }
 
   /** {{{
@@ -2174,7 +2173,7 @@ abstract class Parser { parser =>
     if (in.token == LBRACE) {
       // @S: pre template body cannot stub like post body can!
       val (self, body) = templateBody(isPre = true)
-      if (in.token == WITH && (self eq Aux.Self.empty)) {
+      if (in.token == WITH && self.name.isEmpty && self.decltpe.isEmpty) {
         val edefs: List[Defn.Val] = body.map(ensureEarlyDef)
         in.nextToken()
         val parents = templateParents()
@@ -2217,9 +2216,7 @@ abstract class Parser { parser =>
         (Nil, Nil, self, body)
       }
     )
-
-    if (early.isEmpty && parents.isEmpty && (self eq Aux.Self.empty) && body.isEmpty) Aux.Template.empty
-    else Aux.Template(early, parents, self, body)
+    Aux.Template(early, parents, self, body)
   }
 
 /* -------- TEMPLATES ------------------------------------------- */
@@ -2242,7 +2239,7 @@ abstract class Parser { parser =>
         if (parenMeansSyntaxError) syntaxError("traits or objects may not have parameters")
         else abort("unexpected opening parenthesis")
       }
-      (Aux.Self.empty, Nil)
+      (Aux.Self(), Nil)
     }
   }
 
@@ -2296,14 +2293,14 @@ abstract class Parser { parser =>
    * @param isPre specifies whether in early initializer (true) or not (false)
    */
   def templateStatSeq(isPre : Boolean): (Aux.Self, List[Stmt.Template]) = {
-    var self: Aux.Self = Aux.Self.empty
+    var self: Aux.Self = Aux.Self()
     var firstOpt: Option[Term] = None
     if (isExprIntro) {
       val first = expr(InTemplate) // @S: first statement is potentially converted so cannot be stubbed.
       if (in.token == ARROW) {
         first match {
           case Term.Placeholder() =>
-            self = Aux.Self.empty
+            self = Aux.Self()
           case name: Name =>
             self = Aux.Self(Some(name.toTermName), None)
           case Term.Ascribe(name: Name, tpt) =>

@@ -65,7 +65,7 @@ class TypeSuite extends ParseSuite {
                  Decl.Def(Nil, Term.Name("x", false),
                           Nil, Nil, Nil, Type.Name("Int", false)) ::
                  Decl.Val(Nil, List(Term.Name("y", false)), Type.Name("B", false)) ::
-                 Decl.Type(Nil, Type.Name("C", false), Nil, TypeBounds.empty) :: Nil) =
+                 Decl.Type(Nil, Type.Name("C", false), Nil, TypeBounds(None, None)) :: Nil) =
       tpe("A { def x: Int; val y: B; type C }")
   }
 
@@ -89,13 +89,13 @@ class TypeSuite extends ParseSuite {
   }
 
   test("F[_]") {
-    val Apply(Name("F", false), Placeholder(TypeBounds.empty) :: Nil) =
+    val Apply(Name("F", false), Placeholder(TypeBounds(None, None)) :: Nil) =
       tpe("F[_]")
   }
 
   test("F[T] forSome { type T }") {
     val Existential(Apply(Name("F", false), Name("T", false) :: Nil),
-                    Decl.Type(Nil, Name("T", false), Nil, TypeBounds.empty) :: Nil) =
+                    Decl.Type(Nil, Name("T", false), Nil, TypeBounds(None, None)) :: Nil) =
       tpe("F[T] forSome { type T }")
   }
 

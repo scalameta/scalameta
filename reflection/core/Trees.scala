@@ -97,7 +97,7 @@ object Term {
 
   @branch trait If extends Term { def cond: Term; def thenp: Term; def elsep: Term }
   object If {
-    @ast class Then(cond: Term, thenp: Term) extends If { def elsep: Term = Lit.Unit()(Origin.Synthetic) }
+    @ast class Then(cond: Term, thenp: Term) extends If { def elsep: Term = Lit.Unit()(Origin.Synthetic) } // TODO: should this inherit the origin from the caller?
     @ast class ThenElse(cond: Term, thenp: Term, elsep: Term) extends If
   }
 
@@ -414,7 +414,8 @@ object Aux {
   @ast class Case(pat: Pat, cond: Option[Term] = None, stats: Seq[Stmt.Template] = Nil) extends Tree with Scope
   @ast class Parent(tpe: Type, argss: Seq[Seq[Arg]] = Nil) extends Tree
   @ast class Template(early: Seq[Defn.Val] = Nil, parents: Seq[Parent] = Nil,
-                      self: Self = Self.empty, stats: Seq[Stmt.Template] = Nil) extends Tree with Scope.Template {
+                      self: Self = Self()(Origin.Synthetic), stats: Seq[Stmt.Template] = Nil) extends Tree with Scope.Template {
+                      // TODO: should self inherit the origin from the caller?
     require(parents.isEmpty || !parents.tail.exists(_.argss.nonEmpty))
     require(early.nonEmpty ==> parents.nonEmpty)
   }
@@ -452,13 +453,13 @@ object Aux {
     @ast class Anonymous(tparams: Seq[Aux.TypeParam] = Nil,
                          contextBounds: Seq[core.Type] = Nil,
                          viewBounds: Seq[core.Type] = Nil,
-                         bounds: Aux.TypeBounds = Aux.TypeBounds.empty,
+                         bounds: Aux.TypeBounds = Aux.TypeBounds()(Origin.Synthetic), // TODO: should this inherit the origin from the caller?
                          mods: Seq[Mod] = Nil) extends TypeParam
     @ast class Named(name: core.Type.Name,
                      tparams: Seq[Aux.TypeParam] = Nil,
                      contextBounds: Seq[core.Type] = Nil,
                      viewBounds: Seq[core.Type] = Nil,
-                     bounds: Aux.TypeBounds = Aux.TypeBounds.empty,
+                     bounds: Aux.TypeBounds = Aux.TypeBounds()(Origin.Synthetic), // TODO: should this inherit the origin from the caller?
                      mods: Seq[Mod] = Nil) extends TypeParam with Member.Type with Has.TypeName
   }
   @ast class TypeBounds(lo: Option[Type] = None, hi: Option[Type] = None) extends Tree

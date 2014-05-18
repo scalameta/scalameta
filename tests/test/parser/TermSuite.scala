@@ -143,7 +143,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("_ => ()") {
-    val Function(Param.Anonymous.empty :: Nil, Lit.Unit()) = term("_ => ()")
+    val Function(Param.Anonymous(None, Nil) :: Nil, Lit.Unit()) = term("_ => ()")
   }
 
   test("{ implicit x => () }") {
@@ -227,23 +227,23 @@ class TermSuite extends ParseSuite {
   }
 
   test("new {}") {
-    val New(Template(Nil, Nil, Self.empty, Nil)) = term("new {}")
+    val New(Template(Nil, Nil, Self(None, None), Nil)) = term("new {}")
   }
 
   test("new A") {
-    val New(Template(Nil, Parent(Type.Name("A", false), Nil) :: Nil, Self.empty, Nil)) = term("new A")
+    val New(Template(Nil, Parent(Type.Name("A", false), Nil) :: Nil, Self(None, None), Nil)) = term("new A")
   }
 
   test("new A with B") {
     val New(Template(Nil, Parent(Type.Name("A", false), Nil) ::
                           Parent(Type.Name("B", false), Nil) :: Nil,
-                     Self.empty, Nil)) =
+                     Self(None, None), Nil)) =
       term("new A with B")
   }
 
   test("new { val x: Int = 1 } with A") {
     val New(Template(Defn.Val(Nil, List(Term.Name("x", false)), Some(Type.Name("Int", false)), Lit.Int(1)) :: Nil,
-                     Parent(Type.Name("A", false), Nil) :: Nil, Self.empty, Nil)) =
+                     Parent(Type.Name("A", false), Nil) :: Nil, Self(None, None), Nil)) =
       term("new { val x: Int = 1 } with A")
   }
 

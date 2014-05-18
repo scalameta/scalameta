@@ -118,26 +118,19 @@ class AstMacros(val c: Context) {
       stats1 += q"private def semanticHashCode: _root_.scala.Int = _root_.java.lang.System.identityHashCode(this)"
       stats1 += q"private def structuralHashCode: _root_.scala.Int = _root_.scala.runtime.ScalaRunTime._hashCode(this)"
 
-      // step 8: generate Companion.empty if necessary
-      val needsEmpty = params.nonEmpty && params.forall(_.rhs.nonEmpty)
-      if (needsEmpty) mstats1 += q"val empty = $mname()(_root_.scala.reflect.core.Origin.Synthetic)"
+      // step 8: generate Companion.apply
+      val applyParams = params.map(p => q"@..${mods.annotations} val ${p.name}: ${p.tpt} = ${p.rhs}")
+      val applyBody = ListBuffer[Tree]()
+      applyBody ++= params.map(p => q"$AdtInternal.nullCheck(${p.name})")
+      applyBody ++= params.map(p => q"$AdtInternal.emptyCheck(${p.name})")
+      applyBody ++= requires
+      val paramInits = params.map(p => q"$AstInternal.initParam(${p.name})")
+      applyBody += q"val node = new $name(..$paramInits, prototype = null, parent = _root_.scala.reflect.core.root, scratchpad = null, origin = origin)"
+      applyBody ++= params.map(p => q"$AstInternal.storeField(node.${internalize(p)}, ${p.name})")
+      applyBody += q"node"
+      mstats1 += q"def apply(..$applyParams)(implicit origin: _root_.scala.reflect.core.Origin): $name = { ..$applyBody }"
 
-      // step 9: generate Companion.apply
-      val needsApply = !mstats.exists(stat => stat match { case DefDef(_, TermName("apply"), _, _, _, _) => true; case _ => false })
-      if (needsApply) {
-        val applyParams = params.map(p => q"@..${mods.annotations} val ${p.name}: ${p.tpt} = ${p.rhs}")
-        val applyBody = ListBuffer[Tree]()
-        applyBody ++= params.map(p => q"$AdtInternal.nullCheck(${p.name})")
-        applyBody ++= params.map(p => q"$AdtInternal.emptyCheck(${p.name})")
-        applyBody ++= requires
-        val paramInits = params.map(p => q"$AstInternal.initParam(${p.name})")
-        applyBody += q"val node = new $name(..$paramInits, prototype = null, parent = _root_.scala.reflect.core.root, scratchpad = null, origin = origin)"
-        applyBody ++= params.map(p => q"$AstInternal.storeField(node.${internalize(p)}, ${p.name})")
-        applyBody += q"node"
-        mstats1 += q"def apply(..$applyParams)(implicit origin: _root_.scala.reflect.core.Origin): $name = { ..$applyBody }"
-      }
-
-      // step 10: generate Companion.unapply
+      // step 9: generate Companion.unapply
       // TODO: migrate to name-based pattern matching
       val needsUnapply = !mstats.exists(stat => stat match { case DefDef(_, TermName("unapply"), _, _, _, _) => true; case _ => false })
       if (needsUnapply) {

@@ -22,7 +22,7 @@ class DeclSuite extends ParseSuite {
   }
 
   test("type T") {
-    val Decl.Type(Nil, Type.Name("T", false), Nil, TypeBounds.empty) = templStat("type T")
+    val Decl.Type(Nil, Type.Name("T", false), Nil, TypeBounds(None, None)) = templStat("type T")
   }
 
   test("type T <: hi") {
@@ -44,14 +44,14 @@ class DeclSuite extends ParseSuite {
   test("type F[T]") {
    val Decl.Type(Nil, Type.Name("F", false),
                  TypeParam.Named(Type.Name("T", false),
-                                 Nil, Nil, Nil, TypeBounds.empty, Nil) :: Nil,
-                 TypeBounds.empty) = templStat("type F[T]")
+                                 Nil, Nil, Nil, TypeBounds(None, None), Nil) :: Nil,
+                 TypeBounds(None, None)) = templStat("type F[T]")
   }
 
   test("type F[_]") {
     val Decl.Type(Nil, Type.Name("F", false),
-                  TypeParam.Anonymous(Nil, Nil, Nil, TypeBounds.empty, Nil) :: Nil,
-                  TypeBounds.empty) = templStat("type F[_]")
+                  TypeParam.Anonymous(Nil, Nil, Nil, TypeBounds(None, None), Nil) :: Nil,
+                  TypeBounds(None, None)) = templStat("type F[_]")
   }
 
   test("type F[A <: B]") {
@@ -59,18 +59,18 @@ class DeclSuite extends ParseSuite {
                   TypeParam.Named(Type.Name("T", false),
                                   Nil, Nil, Nil,
                                   TypeBounds(None, Some(Type.Name("B", false))), Nil) :: Nil,
-                  TypeBounds.empty) = templStat("type F[T <: B]")
+                  TypeBounds(None, None)) = templStat("type F[T <: B]")
   }
 
   test("type F[+T]") {
     val Decl.Type(Nil, Type.Name("F", false),
                   TypeParam.Named(Type.Name("T", false),
-                                  Nil, Nil, Nil, TypeBounds.empty, Mod.Covariant() :: Nil) :: Nil,
-                  TypeBounds.empty) = templStat("type F[+T]")
+                                  Nil, Nil, Nil, TypeBounds(None, None), Mod.Covariant() :: Nil) :: Nil,
+                  TypeBounds(None, None)) = templStat("type F[+T]")
     val Decl.Type(Nil, Type.Name("F", false),
                   TypeParam.Named(Type.Name("T", false),
-                                  Nil, Nil, Nil, TypeBounds.empty, Mod.Contravariant() :: Nil) :: Nil,
-                  TypeBounds.empty) = templStat("type F[-T]")
+                                  Nil, Nil, Nil, TypeBounds(None, None), Mod.Contravariant() :: Nil) :: Nil,
+                  TypeBounds(None, None)) = templStat("type F[-T]")
   }
 
   test("def f") {
@@ -118,7 +118,7 @@ class DeclSuite extends ParseSuite {
 
   test("def f[T]: T") {
     val Decl.Def(Nil, Term.Name("f", false),
-                 TypeParam.Named(Type.Name("T", false), Nil, Nil, Nil, TypeBounds.empty, Nil) :: Nil,
+                 TypeParam.Named(Type.Name("T", false), Nil, Nil, Nil, TypeBounds(None, None), Nil) :: Nil,
                  Nil, Nil, Type.Name("T", false)) =
       templStat("def f[T]: T")
   }

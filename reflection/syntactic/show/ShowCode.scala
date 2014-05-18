@@ -16,7 +16,7 @@ import scala.collection.immutable.Seq
 
 object ShowCode {
   def templ(templ: Template) =
-    if (templ eq Template.empty) s()
+    if (templ.early.isEmpty && templ.parents.isEmpty && templ.self.name.isEmpty && templ.self.decltpe.isEmpty && templ.stats.isEmpty) s()
     else if (templ.parents.nonEmpty || templ.early.nonEmpty) s(" extends ", templ)
     else s(" ", templ)
 
@@ -230,10 +230,10 @@ object ShowCode {
       if (t.name.isEmpty && t.decltpe.isEmpty) s()
       else s(" ", t.name, t.decltpe, " => ")
     case t: Template =>
-      if (t eq Template.empty) s()
+      if (t.early.isEmpty && t.parents.isEmpty && t.self.name.isEmpty && t.self.decltpe.isEmpty && t.stats.isEmpty) s()
       else {
         val pearly = if (t.early.isEmpty) s() else s("{ ", r(t.early, "; "), " } with ")
-        val pbody = if ((t.self eq Self.empty) && t.stats.isEmpty) s()
+        val pbody = if (t.self.name.isEmpty && t.self.decltpe.isEmpty && t.stats.isEmpty) s()
                     else s("{", t.self, r(t.stats.map(i(_)), ";"), n("}"))
         val pparents = if (t.parents.nonEmpty) s(r(t.parents, " with "), " ") else s()
         s(pearly, pparents, pbody)
