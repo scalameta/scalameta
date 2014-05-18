@@ -1,5 +1,8 @@
 import sbt._
 import Keys._
+import sbtassembly.Plugin._
+import AssemblyKeys._
+import com.typesafe.sbt.pgp.PgpKeys._
 
 object build extends Build {
   lazy val sharedSettings = Defaults.defaultSettings ++ Seq(
@@ -130,11 +133,33 @@ object build extends Build {
     id   = "scalahost",
     base = file("plugin")
   ) settings (
-    publishableSettings: _*
+    publishableSettings ++ assemblySettings: _*
   ) settings (
     scalaSource in Compile <<= (baseDirectory in Compile)(base => base / "src"),
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _),
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _),
+    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided"),
+    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _ % "provided"),
+    libraryDependencies += "org.scalareflect" % "core_2.11" % "0.1.0-SNAPSHOT",
+    libraryDependencies += "org.scalareflect" % "interpreter_2.11" % "0.1.0-SNAPSHOT",
+    test in assembly := {},
+    jarName in assembly := name.value + "_" + scalaVersion.value + "-" + version.value + "-assembly.jar",
+    assemblyOption in assembly ~= { _.copy(includeScala = false) },
+    Keys.`package` in Compile := {
+      val slimJar = (Keys.`package` in Compile).value
+      val fatJar = new File(crossTarget.value + "/" + (jarName in assembly).value)
+      val _ = assembly.value
+      IO.copy(List(fatJar -> slimJar), overwrite = true)
+      println("package: merged scalahost and its dependencies and produced a fat JAR")
+      slimJar
+    },
+    packagedArtifact in Compile in packageBin := {
+      val temp = (packagedArtifact in Compile in packageBin).value
+      val (art, slimJar) = temp
+      val fatJar = new File(crossTarget.value + "/" + (jarName in assembly).value)
+      val _ = assembly.value
+      IO.copy(List(fatJar -> slimJar), overwrite = true)
+      println("packagedArtifact: merged scalahost and its dependencies and produced a fat JAR")
+      (art, slimJar)
+    },
     scalacOptions ++= Seq()
   )
 
@@ -144,6 +169,7 @@ object build extends Build {
   ) settings (
     sharedSettings ++ usePluginSettings: _*
   ) settings (
+    libraryDependencies += "org.scalareflect" % "core_2.11" % "0.1.0-SNAPSHOT",
     scalacOptions ++= Seq()
   )
 
@@ -153,8 +179,7 @@ object build extends Build {
   ) settings (
     sharedSettings ++ usePluginSettings: _*
   ) settings (
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _),
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _),
+    libraryDependencies += "org.scalareflect" % "core_2.11" % "0.1.0-SNAPSHOT",
     libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.3" % "test",
     libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
     packagedArtifacts := Map.empty,
