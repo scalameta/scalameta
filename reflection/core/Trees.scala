@@ -286,13 +286,14 @@ object Defn {
   }
 }
 object Pkg {
-  @ast class Header(ref: Term.Ref, stats: Seq[Stmt.TopLevel]) extends Pkg
-  @ast class Named(ref: Term.Ref, stats: Seq[Stmt.TopLevel]) extends Pkg
+  @ast class Header(ref: Term.Ref,
+                    stats: Seq[Stmt.TopLevel]) extends Pkg
+  @ast class Template(ref: Term.Ref,
+                      stats: Seq[Stmt.TopLevel]) extends Pkg
   @ast class Object(mods: Seq[Mod],
                     name: Term.Name,
                     templ: Aux.Template) extends Stmt.TopLevel with Member.Template with Member.Term with Has.TermName
 }
-private[reflect] object root extends Scope.TopLevel
 
 @branch trait Ctor extends Tree with Has.Mods with Has.Paramss
 object Ctor {
@@ -314,7 +315,7 @@ object Stmt {
   @branch trait Existential extends Refine
 }
 
-@branch trait Scope
+@branch trait Scope extends Tree
 object Scope {
   @branch trait TopLevel extends Scope with Block
   @branch trait Template extends Block with Params

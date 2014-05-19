@@ -17,7 +17,7 @@ class PackageSuite extends ParseSuite {
   }
 
   test("package foo { class C }") {
-    val CompUnit(Pkg.Named(Term.Name("foo", false),
+    val CompUnit(Pkg.Template(Term.Name("foo", false),
                            Class(Nil, Type.Name("C", false), Nil,
                                  Ctor.Primary(Nil, Nil, Nil),
                                  Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil) :: Nil) =
@@ -34,7 +34,7 @@ class PackageSuite extends ParseSuite {
   }
 
   test("package foo.bar { class C }") {
-    val CompUnit(Pkg.Named(Term.Select(Term.Name("foo", false), Term.Name("bar", false)),
+    val CompUnit(Pkg.Template(Term.Select(Term.Name("foo", false), Term.Name("bar", false)),
                            Class(Nil, Type.Name("C", false), Nil,
                                  Ctor.Primary(Nil, Nil, Nil),
                                  Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil) :: Nil) =
@@ -51,8 +51,8 @@ class PackageSuite extends ParseSuite {
   }
 
   test("package foo { package bar { class C } }") {
-    val CompUnit(Pkg.Named(Term.Name("foo", false),
-                           Pkg.Named(Term.Name("bar", false),
+    val CompUnit(Pkg.Template(Term.Name("foo", false),
+                           Pkg.Template(Term.Name("bar", false),
                                      Class(Nil, Type.Name("C", false), Nil,
                                            Ctor.Primary(Nil, Nil, Nil),
                                            Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil) :: Nil) :: Nil) =
@@ -60,8 +60,8 @@ class PackageSuite extends ParseSuite {
   }
 
   test("package foo {}; package bar {}") {
-    val CompUnit(Pkg.Named(Term.Name("foo", false), Nil) ::
-                 Pkg.Named(Term.Name("bar", false), Nil) :: Nil) =
+    val CompUnit(Pkg.Template(Term.Name("foo", false), Nil) ::
+                 Pkg.Template(Term.Name("bar", false), Nil) :: Nil) =
       compUnit("package foo {}; package bar {}")
   }
 

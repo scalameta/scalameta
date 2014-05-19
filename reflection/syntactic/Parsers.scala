@@ -2429,7 +2429,7 @@ abstract class Parser { parser =>
       in.nextToken()
       packageObject()
     } else {
-      Pkg.Named(qualId(), inBracesOrNil(topStatSeq()))
+      Pkg.Template(qualId(), inBracesOrNil(topStatSeq()))
     }
 
   def packageObject(): Pkg.Object =
@@ -2465,7 +2465,7 @@ abstract class Parser { parser =>
             refs ++= nrefs
             ts ++= nstats
           } else {
-            ts += inBraces(Pkg.Named(qid, topStatSeq()))
+            ts += inBraces(Pkg.Template(qid, topStatSeq()))
             acceptStatSepOpt()
             ts ++= topStatSeq()
           }

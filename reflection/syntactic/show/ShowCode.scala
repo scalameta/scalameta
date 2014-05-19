@@ -199,7 +199,7 @@ object ShowCode {
     // Pkg
     case t: CompUnit   => r(t.stats)
     case t: Pkg.Header => s("package ", t.name, r(t.stats.map(n(_))))
-    case t: Pkg.Named  => s("package ", t.name, " { ", r(t.stats.map(i(_)), "\n"), n("}"))
+    case t: Pkg.Template  => s("package ", t.name, " { ", r(t.stats.map(i(_)), "\n"), n("}"))
     case t: Pkg.Object => s(t.mods, " package object ", t.name, templ(t.templ))
 
     // Ctor

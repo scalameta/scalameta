@@ -39,10 +39,10 @@ trait ScopeOps {
   }
 
   implicit class SemanticTopLevelScopeOps(tree: Scope.TopLevel) {
-    @hosted def packages: Seq[Pkg.Named] = tree.allMembers[Pkg.Named]
-    @hosted def packages(name: Name): Pkg.Named = tree.uniqueMember[Pkg.Named](name.toString)
-    @hosted def packages(name: String): Pkg.Named = tree.uniqueMember[Pkg.Named](name.toString)
-    @hosted def packages(name: scala.Symbol): Pkg.Named = tree.uniqueMember[Pkg.Named](name.toString)
+    @hosted def packages: Seq[Pkg.Template] = tree.allMembers[Pkg.Template]
+    @hosted def packages(name: Name): Pkg.Template = tree.uniqueMember[Pkg.Template](name.toString)
+    @hosted def packages(name: String): Pkg.Template = tree.uniqueMember[Pkg.Template](name.toString)
+    @hosted def packages(name: scala.Symbol): Pkg.Template = tree.uniqueMember[Pkg.Template](name.toString)
     @hosted def pkgobject: Pkg.Object = tree.allMembers[Pkg.Object].flatMap(_.findUnique)
   }
 

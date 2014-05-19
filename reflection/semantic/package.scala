@@ -8,7 +8,7 @@ import scala.collection.immutable.Seq
 import scala.reflect.core._
 
 package object semantic extends MemberOps with ScopeOps with TermOps with TypeOps {
-  val root = scala.reflect.core.root
+  def root = Pkg.Template(Term.Name("_root_")(Origin.None), Nil)(Origin.None)
 
   @hosted def semanticProfile: SemanticProfile = delegate
   final case class SemanticProfile(dynamics: Boolean,
