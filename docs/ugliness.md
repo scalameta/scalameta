@@ -15,5 +15,12 @@
   1. `q"def x { case 1 => 2 }"`
   1. `q"trait F[T] <: Sobaka[T] with Balabaka { def bazinga } "`
   1. `*` is ambigious (ident vs seq wildcard) in most contexts
-  1. `1 + (y = 2)` is equiv to `1.+(y = 2)` but `1 + (y: _*)` doesn't work
   1. floating scala doc
+  1. `(x = 2) + (y = 3)` here x = 2 is assign but y = 3 is named argument
+  1. `x + ()` is `x.+()` but not `x.+(())`
+
+## Syntax spec bugs
+
+  1. Annotations can have multiple argument lists
+  1. Infix expressions can have type arguments
+  1. Right hand side of infix expression should be ::= SimpleExpr | ArgumentExprs
