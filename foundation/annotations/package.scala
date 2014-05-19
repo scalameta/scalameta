@@ -27,6 +27,9 @@ package object annotations {
           val mapName = "map" + fieldName.capitalize
           c.abort(c.enclosingPosition, s"trees are immutable, so $fieldName can't be mutated. Use $withName or $mapName to create a copy of the tree with $fieldName updated.")
         }
+        def scratchpadIsImmutable(x: c.Tree)(h: c.Tree) = {
+          c.abort(c.enclosingPosition, s"trees are immutable, so scratchpad can't be mutated. Use withScratchpad or mapScratchpad to create a copy of the tree with scratchpad updated.")
+        }
         def productPrefix[T](implicit T: c.WeakTypeTag[T]) = {
           def loop(sym: Symbol): String = {
             if (sym.owner.isPackageClass) sym.name.toString

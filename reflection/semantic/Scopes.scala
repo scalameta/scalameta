@@ -17,6 +17,14 @@ trait ScopeOps {
     }
   }
 
+  implicit class SemanticTreeOps(tree: Tree) {
+    def owner: Scope = tree.parent match {
+      case Some(parent: Scope) => owner
+      case Some(parent) => parent.owner
+      case None => root
+    }
+  }
+
   implicit class SemanticScopeOps(tree: Scope) {
     @hosted def members: Seq[Member] = delegate
     @hosted def members(name: Name): Overload[Member] = wrapHosted(_.members(tree)).map(Overload.apply)
@@ -25,7 +33,7 @@ trait ScopeOps {
     }
     @hosted private[semantic] def uniqueMember[T: ClassTag](s_name: String): T = {
       val isTerm = classOf[Member.Term].isAssignableFrom(classTag[T].runtimeClass)
-      val name = if (isTerm) Term.Name(s_name)(Origin.Synthetic) else Type.Name(s_name)(Origin.Synthetic)
+      val name = if (isTerm) Term.Name(s_name)(Origin.None) else Type.Name(s_name)(Origin.None)
       members(name).map(_.alts).map(_.collect { case x: T => x }).flatMap(_.findUnique)
     }
   }

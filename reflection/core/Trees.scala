@@ -9,6 +9,7 @@ import org.scalareflect.annotations.internal.ast.AstHelperMacros
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.language.experimental.macros
+import scala.reflect.semantic.HostContext
 
 // TODO: collection-like methods (see http://clang.llvm.org/docs/LibASTMatchersReference.html)
 // TODO: rewriting/transformation methods
@@ -32,17 +33,16 @@ import scala.language.experimental.macros
   def withOrigin(origin: Origin): ThisType
   def mapOrigin(f: Origin => Origin): ThisType
 
-  def owner: Scope = parent match { case owner: Scope => owner; case tree => tree.owner }
-  def parent: Tree
+  def parent: Option[Tree]
   def parent_=(x: Tree): Unit = macro AstHelperMacros.parentIsImmutable
   def withParent(x: Tree): ThisType = macro AstHelperMacros.parentIsImmutable
   private[reflect] def internalWithParent(x: Tree): ThisType
   def mapParent(x: Tree => Tree): ThisType = macro AstHelperMacros.parentIsImmutable
 
-  private[reflect] def scratchpad: Any
-  private[reflect] def scratchpad_=(x: Tree): Unit = macro AstHelperMacros.payloadIsImmutable
-  private[reflect] def withScratchpad(scratchpad: Any): ThisType
-  private[reflect] def mapScratchpad(f: Any => Any): ThisType
+  private[reflect] def scratchpad(implicit h: HostContext): Option[Any]
+  private[reflect] def scratchpad_=(x: Any)(implicit h: HostContext): Unit = macro AstHelperMacros.scratchpadIsImmutable
+  private[reflect] def withScratchpad(scratchpad: Any)(implicit h: HostContext): ThisType
+  private[reflect] def mapScratchpad(f: Option[Any] => Any)(implicit h: HostContext): ThisType
 
   def showCode: String = syntactic.show.ShowCode.showTree(this).toString
   def showRaw: String = syntactic.show.ShowRaw.showTree(this).toString
@@ -97,7 +97,7 @@ object Term {
 
   @branch trait If extends Term { def cond: Term; def thenp: Term; def elsep: Term }
   object If {
-    @ast class Then(cond: Term, thenp: Term) extends If { def elsep: Term = Lit.Unit()(Origin.Synthetic) } // TODO: should this inherit the origin from the caller?
+    @ast class Then(cond: Term, thenp: Term) extends If { def elsep: Term = Lit.Unit()(Origin.None) } // TODO: should this inherit the origin from the caller?
     @ast class ThenElse(cond: Term, thenp: Term, elsep: Term) extends If
   }
 
@@ -108,7 +108,7 @@ object Term {
     require(params.exists(_.mods.exists(_.isInstanceOf[Mod.Implicit])) ==> (params.length == 1))
   }
   @ast class Cases(cases: Seq[Aux.Case]) extends Term {
-    def isPartialFunction = !parent.isInstanceOf[Match]
+    def isPartialFunction = !parent.map(_.isInstanceOf[Match]).getOrElse(false)
   }
   @ast class While(expr: Term, body: Term) extends Term
   @ast class Do(body: Term, expr: Term) extends Term
@@ -292,17 +292,7 @@ object Pkg {
                     name: Term.Name,
                     templ: Aux.Template) extends Stmt.TopLevel with Member.Template with Member.Term with Has.TermName
 }
-@leaf object root extends Scope.TopLevel {
-  private def unsupported = sys.error("this shouldn't have happened")
-  def parent: scala.reflect.core.Tree = this
-  private[reflect] def internalWithParent(x: Tree): ThisType = unsupported
-  def origin: Origin = Origin.Synthetic
-  def mapOrigin(f: Origin => Origin): ThisType = unsupported
-  def withOrigin(origin: Origin): ThisType = unsupported
-  private[reflect] def scratchpad: Any = unsupported
-  private[reflect] def mapScratchpad(f: Any => Any): ThisType = unsupported
-  private[reflect] def withScratchpad(scratchpad: Any): ThisType = unsupported
-}
+private[reflect] object root extends Scope.TopLevel
 
 @branch trait Ctor extends Tree with Has.Mods with Has.Paramss
 object Ctor {
@@ -324,7 +314,7 @@ object Stmt {
   @branch trait Existential extends Refine
 }
 
-@branch trait Scope extends Tree
+@branch trait Scope
 object Scope {
   @branch trait TopLevel extends Scope with Block
   @branch trait Template extends Block with Params
@@ -414,7 +404,7 @@ object Aux {
   @ast class Case(pat: Pat, cond: Option[Term] = None, stats: Seq[Stmt.Template] = Nil) extends Tree with Scope
   @ast class Parent(tpe: Type, argss: Seq[Seq[Arg]] = Nil) extends Tree
   @ast class Template(early: Seq[Defn.Val] = Nil, parents: Seq[Parent] = Nil,
-                      self: Self = Self()(Origin.Synthetic), stats: Seq[Stmt.Template] = Nil) extends Tree with Scope.Template {
+                      self: Self = Self()(Origin.None), stats: Seq[Stmt.Template] = Nil) extends Tree with Scope.Template {
                       // TODO: should self inherit the origin from the caller?
     require(parents.isEmpty || !parents.tail.exists(_.argss.nonEmpty))
     require(early.nonEmpty ==> parents.nonEmpty)
@@ -453,13 +443,13 @@ object Aux {
     @ast class Anonymous(tparams: Seq[Aux.TypeParam] = Nil,
                          contextBounds: Seq[core.Type] = Nil,
                          viewBounds: Seq[core.Type] = Nil,
-                         bounds: Aux.TypeBounds = Aux.TypeBounds()(Origin.Synthetic), // TODO: should this inherit the origin from the caller?
+                         bounds: Aux.TypeBounds = Aux.TypeBounds()(Origin.None), // TODO: should this inherit the origin from the caller?
                          mods: Seq[Mod] = Nil) extends TypeParam
     @ast class Named(name: core.Type.Name,
                      tparams: Seq[Aux.TypeParam] = Nil,
                      contextBounds: Seq[core.Type] = Nil,
                      viewBounds: Seq[core.Type] = Nil,
-                     bounds: Aux.TypeBounds = Aux.TypeBounds()(Origin.Synthetic), // TODO: should this inherit the origin from the caller?
+                     bounds: Aux.TypeBounds = Aux.TypeBounds()(Origin.None), // TODO: should this inherit the origin from the caller?
                      mods: Seq[Mod] = Nil) extends TypeParam with Member.Type with Has.TypeName
   }
   @ast class TypeBounds(lo: Option[Type] = None, hi: Option[Type] = None) extends Tree

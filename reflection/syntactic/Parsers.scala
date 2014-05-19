@@ -107,8 +107,7 @@ import Location.{ Local, InBlock, InTemplate }
 abstract class Parser { parser =>
   val in: Scanner
   val source: Source
-  implicit def origin(implicit pos: Position): Origin = Origin.Source(source, pos)
-  implicit lazy val pos: Position = Position.None
+  implicit val origin: Origin = Origin.Source(source)
 
   /** Scoping operator used to temporarily look into the future.
    *  Backs up scanner data before evaluating a block and restores it after.

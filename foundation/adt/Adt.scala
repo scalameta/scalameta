@@ -51,7 +51,7 @@ class AdtMacros(val c: Context) {
       if (mods.hasFlag(SEALED)) c.abort(cdef.pos, "sealed is redundant for @branch traits")
       if (mods.hasFlag(FINAL)) c.abort(cdef.pos, "@branch traits cannot be final")
       val flags1 = flags | SEALED
-      val thisType = q"override type ThisType <: ${cdef.name}"
+      val thisType = q"type ThisType <: ${cdef.name}"
       val hierarchyCheck = q"$Internal.hierarchyCheck[${cdef.name}]"
       val stats1 = thisType +: hierarchyCheck +: stats
       val anns1 = q"new $Internal.branch" +: anns
@@ -209,9 +209,9 @@ class AdtHelperMacros(val c: Context) {
     val sym = T.tpe.typeSymbol.asClass
     val designation = if (sym.isRoot) "root" else if (sym.isBranch) "branch" else if (sym.isLeaf) "leaf" else ???
     val roots = sym.baseClasses.filter(_.isRoot)
-    if (roots.length == 0) c.abort(c.enclosingPosition, s"rootless $designation is disallowed")
+    if (roots.length == 0 && sym.isLeaf) c.abort(c.enclosingPosition, s"rootless leaf is disallowed")
     else if (roots.length > 1) c.abort(c.enclosingPosition, s"multiple roots for a $designation: " + (roots.map(_.fullName).init.mkString(", ")) + " and " + roots.last.fullName)
-    val root = roots.head
+    val root = roots.headOption.getOrElse(NoSymbol)
     sym.baseClasses.map(_.asClass).foreach{bsym =>
       val exempt =
         bsym.isModuleClass ||

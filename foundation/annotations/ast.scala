@@ -70,25 +70,26 @@ class AstMacros(val c: Context) {
       }
       val copyParams = params.map(p => q"val ${p.name}: ${p.tpt} = this.${p.name}")
       val copyArgs = params.map(p => q"${p.name}")
+      // TODO: would be useful to turn copy, mapXXX and withXXX into macros, so that their calls are guaranteed to be inlined
       stats1 += q"def copy(..$copyParams)(implicit origin: _root_.scala.reflect.core.Origin): ThisType = $mname.apply(..$copyArgs)(_root_.scala.reflect.core.Origin.Transform(this, this.origin))"
 
       // step 4: generate boilerplate parameters
       params1 += q"private val prototype: $name"
-      params1 += q"val parent: Tree"
+      params1 += q"private val internalParent: Tree"
+      stats1 += q"def parent: Option[Tree] = if (internalParent != null) _root_.scala.Some(internalParent) else _root_.scala.None"
       val fieldInits = params.map(p => q"$AstInternal.initField(this.${internalize(p)})")
-      stats1 += q"private[reflect] def internalWithParent(parent: Tree): ThisType = new ThisType(..$fieldInits, this, parent, scratchpad, origin)"
-      params1 += q"private[reflect] val scratchpad: Any"
-      stats1 += q"private[reflect] def withScratchpad(scratchpad: Any): ThisType = new ThisType(..$fieldInits, this, parent, scratchpad, origin)"
-      stats1 += q"private[reflect] def mapScratchpad(f: Any => Any): ThisType = new ThisType(..$fieldInits, this, parent, f(scratchpad), origin)"
+      stats1 += q"private[reflect] def internalWithParent(internalParent: Tree): ThisType = new ThisType(..$fieldInits, this, internalParent, scratchpads, origin)"
+      params1 += q"private val scratchpads: _root_.scala.collection.immutable.Map[_root_.scala.reflect.semantic.HostContext, Any]"
+      stats1 += q"private[reflect] def scratchpad(implicit h: _root_.scala.reflect.semantic.HostContext): _root_.scala.Option[Any] = scratchpads.get(h)"
+      stats1 += q"private[reflect] def withScratchpad(scratchpad: Any)(implicit h: _root_.scala.reflect.semantic.HostContext): ThisType = new ThisType(..$fieldInits, this, internalParent, scratchpads + (h -> scratchpad), origin)"
+      stats1 += q"private[reflect] def mapScratchpad(f: _root_.scala.Option[Any] => Any)(implicit h: _root_.scala.reflect.semantic.HostContext): ThisType = new ThisType(..$fieldInits, this, internalParent, scratchpads + (h -> f(scratchpads.get(h))), origin)"
       params1 += q"val origin: _root_.scala.reflect.core.Origin"
-      stats1 += q"def withOrigin(origin: Origin): ThisType = new ThisType(..$fieldInits, this, parent, scratchpad, origin)"
-      stats1 += q"def mapOrigin(f: Origin => Origin): ThisType = new ThisType(..$fieldInits, this, parent, scratchpad, f(origin))"
+      stats1 += q"def withOrigin(origin: Origin): ThisType = new ThisType(..$fieldInits, this, internalParent, scratchpads, origin)"
+      stats1 += q"def mapOrigin(f: Origin => Origin): ThisType = new ThisType(..$fieldInits, this, internalParent, scratchpads, f(origin))"
 
       // step 5: generate boilerplate required by the @adt infrastructure
       stats1 += q"override type ThisType = $name"
       stats1 += q"private[reflect] def tag: _root_.scala.Int = $AdtInternal.calculateTag[ThisType]"
-      stats1 += q"$AdtInternal.hierarchyCheck[ThisType]"
-      // stats1 += q"$AdtInternal.immutabilityCheck[ThisType]"
       anns1 += q"new $AdtInternal.leaf"
       manns1 += q"new $AdtInternal.leaf"
 
@@ -104,28 +105,19 @@ class AstMacros(val c: Context) {
 
       // step 7: implement equality
       stats1 += q"override def canEqual(that: _root_.scala.Any): _root_.scala.Boolean = that.isInstanceOf[ThisType]"
-      stats1 += q"override def equals(that: _root_.scala.Any): _root_.scala.Boolean = (this eq that.asInstanceOf[AnyRef]) || (semanticallyEqual(that) && structurallyEqual(that))"
-      stats1 += q"private def semanticallyEqual(that: _root_.scala.Any): _root_.scala.Boolean = false"
-      val equalityClauses = params.map(p => q"this.${p.name} == that.${p.name}")
-      val equalityCondition = equalityClauses.foldLeft(q"true": Tree)((acc, clause) => q"$clause && $acc")
-      stats1 += q"""
-        private def structurallyEqual(that: _root_.scala.Any): _root_.scala.Boolean = that match {
-          case that: ThisType => ..$equalityCondition
-          case _ => false
-        }
-      """
-      stats1 += q"override def hashCode: _root_.scala.Int = semanticHashCode ^ structuralHashCode"
-      stats1 += q"private def semanticHashCode: _root_.scala.Int = _root_.java.lang.System.identityHashCode(this)"
-      stats1 += q"private def structuralHashCode: _root_.scala.Int = _root_.scala.runtime.ScalaRunTime._hashCode(this)"
+      stats1 += q"override def equals(that: _root_.scala.Any): _root_.scala.Boolean = this eq that.asInstanceOf[AnyRef]"
+      stats1 += q"override def hashCode: _root_.scala.Int = _root_.java.lang.System.identityHashCode(this)"
 
       // step 8: generate Companion.apply
       val applyParams = params.map(p => q"@..${mods.annotations} val ${p.name}: ${p.tpt} = ${p.rhs}")
       val applyBody = ListBuffer[Tree]()
+      applyBody += q"$AdtInternal.hierarchyCheck[$name]"
+      // applyBody += q"$AdtInternal.immutabilityCheck[$name]"
       applyBody ++= params.map(p => q"$AdtInternal.nullCheck(${p.name})")
       applyBody ++= params.map(p => q"$AdtInternal.emptyCheck(${p.name})")
       applyBody ++= requires
       val paramInits = params.map(p => q"$AstInternal.initParam(${p.name})")
-      applyBody += q"val node = new $name(..$paramInits, prototype = null, parent = _root_.scala.reflect.core.root, scratchpad = null, origin = origin)"
+      applyBody += q"val node = new $name(..$paramInits, prototype = null, internalParent = null, scratchpads = _root_.scala.collection.immutable.Map(), origin = origin)"
       applyBody ++= params.map(p => q"$AstInternal.storeField(node.${internalize(p)}, ${p.name})")
       applyBody += q"node"
       mstats1 += q"def apply(..$applyParams)(implicit origin: _root_.scala.reflect.core.Origin): $name = { ..$applyBody }"

@@ -12,7 +12,7 @@ trait MemberOps {
   implicit class SemanticMemberOps(tree: Member) {
     // TODO: expose type parameter instantiation facilities, e.g. `def foo[T]: T = ...` => `def foo: Int = ...`
     def ref: Ref = tree match {
-      case self: Aux.Self => self.name.getOrElse(Term.This(None)(Origin.Synthetic)) // TODO: should this inherit the origin from the caller?
+      case self: Aux.Self => self.name.getOrElse(Term.This(None)(Origin.None)) // TODO: should this inherit the origin from the caller?
       case named: Has.Name => named.name
     }
     @hosted def overrides: Seq[Member] = tree match {
@@ -21,8 +21,8 @@ trait MemberOps {
     }
     def annots: Seq[Mod.Annot] = tree.mods.collect{ case annot: Mod.Annot => annot }
     def doc: Option[Mod.Doc] = tree.mods.collect{ case doc: Mod.Doc => doc }.headOption
-    def isVal: Boolean = tree.isInstanceOf[Term.Name] && (tree.parent.isInstanceOf[Decl.Val] || tree.parent.isInstanceOf[Defn.Val])
-    def isVar: Boolean = tree.isInstanceOf[Term.Name] && (tree.parent.isInstanceOf[Decl.Var] || tree.parent.isInstanceOf[Defn.Var])
+    def isVal: Boolean = tree.isInstanceOf[Term.Name] && (tree.parent.map(parent => parent.isInstanceOf[Decl.Val] || parent.isInstanceOf[Defn.Val]).getOrElse(false))
+    def isVar: Boolean = tree.isInstanceOf[Term.Name] && (tree.parent.map(parent => parent.isInstanceOf[Decl.Var] || parent.isInstanceOf[Defn.Var]).getOrElse(false))
     def isDef: Boolean = tree.isInstanceOf[Member.Def]
     def isType: Boolean = tree.isInstanceOf[Member.AbstractOrAliasType]
     def isClass: Boolean = tree.isInstanceOf[Defn.Class]
@@ -82,7 +82,7 @@ trait MemberOps {
       case _: Pkg.Object => fail(ReflectionException("companion not found"))
     }
     @hosted private[semantic] def findCompanion[T <: Member.Template](f: PartialFunction[Member, T]): T = {
-      val companionName = if (tree.name.isInstanceOf[core.Term.Name]) core.Type.Name(tree.name.value)(Origin.Synthetic) else core.Term.Name(tree.name.value)(Origin.Synthetic)
+      val companionName = if (tree.name.isInstanceOf[core.Term.Name]) core.Type.Name(tree.name.value)(Origin.None) else core.Term.Name(tree.name.value)(Origin.None)
       val candidates = tree.owner.members(companionName)
       candidates.flatMap{candidates =>
         val relevant = candidates.alts.collect(f).headOption
