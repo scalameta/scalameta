@@ -459,7 +459,7 @@ abstract class Parser { parser =>
       def binop(opinfo: OpInfo[List[Arg]], rhs: List[Arg]): List[Arg] = {
         val lhs = makeTupleTerm(opinfo.lhs map {
           case t: Term => t
-          case other   => syntaxError(other, "is not allowed in term position")
+          case other   => abort("unreachable")
         })
         Term.ApplyInfix(lhs, opinfo.operator, opinfo.targs, rhs) :: Nil
       }
