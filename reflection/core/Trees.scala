@@ -100,7 +100,7 @@ object Term {
 
   @branch trait If extends Term { def cond: Term; def thenp: Term; def elsep: Term }
   object If {
-    @ast class Then(cond: Term, thenp: Term) extends If { def elsep: Term = Lit.Unit()(Origin.None) }
+    @ast class Then(cond: Term, thenp: Term) extends If { def elsep: Term = Lit.Unit() }
     @ast class ThenElse(cond: Term, thenp: Term, elsep: Term) extends If
   }
 

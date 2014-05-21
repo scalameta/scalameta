@@ -12,7 +12,7 @@ trait MemberOps {
   implicit class SemanticMemberOps(tree: Member) {
     // TODO: expose type parameter instantiation facilities, e.g. `def foo[T]: T = ...` => `def foo: Int = ...`
     def ref: Ref = tree match {
-      case self: Aux.Self => self.name.getOrElse(Term.This(None)(Origin.None)) // TODO: should this inherit the origin from the caller?
+      case self: Aux.Self => self.name.getOrElse(Term.This(None))
       case named: Has.Name => named.name
     }
     @hosted def overrides: Seq[Member] = tree match {
@@ -82,8 +82,8 @@ trait MemberOps {
     }
     @hosted private[semantic] def findCompanion[T <: Member.Template](f: PartialFunction[Member, T]): T = {
       val companionName = {
-        if (tree.name.isInstanceOf[core.Term.Name]) core.Type.Name(tree.name.value)(isBackquoted = false)(Origin.None) else
-        core.Term.Name(tree.name.value)(isBackquoted = false)(Origin.None)
+        if (tree.name.isInstanceOf[core.Term.Name]) core.Type.Name(tree.name.value)(isBackquoted = false) else
+        core.Term.Name(tree.name.value)(isBackquoted = false)
       }
       val candidates = tree.owner.members(companionName)
       candidates.flatMap{candidates =>
