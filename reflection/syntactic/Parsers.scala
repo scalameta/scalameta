@@ -2482,7 +2482,7 @@ abstract class Parser { parser =>
     }
 
   def packageObject(): Defn.Object =
-    Defn.Object(Mod.PkgObject() :: Nil, termName(), templateOpt(OwnedByObject))
+    Defn.Object(Mod.Package() :: Nil, termName(), templateOpt(OwnedByObject))
 
   /** {{{
    *  CompilationUnit ::= {package QualId semi} TopStatSeq

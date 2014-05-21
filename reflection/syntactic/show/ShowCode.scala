@@ -28,6 +28,7 @@ object ShowCode {
   }
 
   // Branches
+  // TODO: this match is not exhaustive: if I remove Mod.Package, then I get no warning
   implicit def showTree[T <: Tree]: Show[T] = Show { x => (x: Tree) match {
     case t: Name => if (t.isBackquoted) s("`", t.value, "`") else s(t.value)
 
@@ -179,6 +180,7 @@ object ShowCode {
     case t: Mod.Protected     => s("protected", t.within, " ")
     case _: Mod.ValParam      => s("val ")
     case _: Mod.VarParam      => s("var ")
+    case _: Mod.Package       => s("package ")
 
     // Defn
     case t: Defn.Val       => s(t.mods, "val ", r(t.pats, ", "), t.decltpe, " = ", t.rhs)
@@ -186,7 +188,6 @@ object ShowCode {
     case t: Defn.Type      => s(t.mods, "type ", t.name, t.tparams, " = ", t.body)
     case t: Defn.Class     => s(t.mods, "class ", t.name, t.tparams, t.ctor, templ(t.templ))
     case t: Defn.Trait     => s(t.mods, "trait ", t.name, t.tparams, templ(t.templ))
-    case t: Defn.Object if t.isPkgObject => s(t.mods, "package object ", t.name, templ(t.templ))
     case t: Defn.Object    => s(t.mods, "object ", t.name, templ(t.templ))
     case t: Defn.Def       =>
       s(t.mods, "def ", t.name, t.tparams, (t.explicits, t.implicits), t.decltpe, " = ", t.body)
@@ -235,6 +236,7 @@ object ShowCode {
       if (t.early.isEmpty && t.parents.isEmpty && t.self.name.isEmpty && t.self.decltpe.isEmpty && t.stats.isEmpty) s()
       else {
         val pearly = if (t.early.isEmpty) s() else s("{ ", r(t.early, "; "), " } with ")
+        // TODO: use Template.hasExplicitBody
         val pbody = if (t.self.name.isEmpty && t.self.decltpe.isEmpty && t.stats.isEmpty) s()
                     else s("{", t.self, r(t.stats.map(i(_)), ";"), n("}"))
         val pparents = if (t.parents.nonEmpty) s(r(t.parents, " with "), " ") else s()

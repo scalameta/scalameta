@@ -29,7 +29,7 @@ trait MemberOps {
     def isTrait: Boolean = tree.isInstanceOf[Defn.Trait]
     def isObject: Boolean = tree.isInstanceOf[Defn.Object]
     def isPkg: Boolean = tree.isInstanceOf[Pkg]
-    def isPkgObject: Boolean = tree.mods.exists(_.isInstanceOf[Mod.PkgObject])
+    def isPkgObject: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Package])
     def isJava: Boolean = ??? // TODO: need special trees for Java artifacts
     def isPrivate: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Private])
     def isProtected: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Protected])

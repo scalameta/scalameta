@@ -100,6 +100,7 @@ object Term {
 
   @branch trait If extends Term { def cond: Term; def thenp: Term; def elsep: Term }
   object If {
+    // TODO: maybe merge Then and ThenElse using flags?
     @ast class Then(cond: Term, thenp: Term) extends If { def elsep: Term = Lit.Unit() }
     @ast class ThenElse(cond: Term, thenp: Term, elsep: Term) extends If
   }
@@ -212,6 +213,7 @@ object Decl {
   @ast class Var(mods: Seq[Mod],
                  pats: Seq[Term.Name] @nonEmpty,
                  decltpe: core.Type) extends Decl with Has.Mods
+  // TODO: maybe merge Def and Procedure using flags?
   @ast class Def(mods: Seq[Mod],
                  name: Term.Name,
                  tparams: Seq[Aux.TypeParam],
@@ -402,7 +404,7 @@ object Mod {
   @ast class Macro() extends Mod
   @ast class ValParam() extends Mod
   @ast class VarParam() extends Mod
-  @ast class PkgObject() extends Mod
+  @ast class Package() extends Mod
 }
 
 object Aux {
