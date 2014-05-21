@@ -281,9 +281,9 @@ object Defn {
   }
 }
 
-@ast class Pkg(ref: Term.Ref, stats: Seq[Stmt.TopLevel])(hasHeader: Boolean)
+@ast class Pkg(ref: Term.Ref, stats: Seq[Stmt.TopLevel])(hasBraces: Boolean)
      extends Stmt.TopLevel with Scope.TopLevel with Member.Term with Has.TermName {
-  // TODO: validate nestedness of header pkgs vs named packages
+  // TODO: validate nestedness of packages with and without braces
   require(ref.isQualId)
   def mods: Seq[Mod] = Nil
   def name: Term.Name = ref match {

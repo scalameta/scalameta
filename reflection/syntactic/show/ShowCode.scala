@@ -201,8 +201,8 @@ object ShowCode {
 
     // Pkg
     case t: CompUnit           => r(t.stats)
-    case t: Pkg if t.hasHeader => s("package ", t.name, r(t.stats.map(n(_))))
-    case t: Pkg                => s("package ", t.name, " { ", r(t.stats.map(i(_)), "\n"), n("}"))
+    case t: Pkg if t.hasBraces => s("package ", t.name, " { ", r(t.stats.map(i(_)), "\n"), n("}"))
+    case t: Pkg                => s("package ", t.name, r(t.stats.map(n(_))))
 
     // Ctor
     case t: Ctor.Primary   => s(t.mods, (t.explicits, t.implicits))

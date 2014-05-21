@@ -13,7 +13,7 @@ class PackageSuite extends ParseSuite {
                                      Ctor.Primary(Nil, Nil, Nil),
                                      Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil)) :: Nil) =
       compUnit("package foo; class C")
-    assert(pkgfoo.hasHeader === true)
+    assert(pkgfoo.hasBraces === false)
   }
 
   test("package foo { class C }") {
@@ -22,7 +22,7 @@ class PackageSuite extends ParseSuite {
                                     Ctor.Primary(Nil, Nil, Nil),
                                     Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil)) :: Nil) =
       compUnit("package foo { class C }")
-    assert(pkgfoo.hasHeader === false)
+    assert(pkgfoo.hasBraces === true)
   }
 
   test("package foo.bar; class C") {
@@ -31,7 +31,7 @@ class PackageSuite extends ParseSuite {
                                         Ctor.Primary(Nil, Nil, Nil),
                                         Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil)) :: Nil) =
       compUnit("package foo.bar; class C")
-    assert(pkgfoobar.hasHeader === true)
+    assert(pkgfoobar.hasBraces === false)
   }
 
   test("package foo.bar { class C }") {
@@ -40,7 +40,7 @@ class PackageSuite extends ParseSuite {
                                         Ctor.Primary(Nil, Nil, Nil),
                                         Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil)) :: Nil) =
       compUnit("package foo.bar { class C }")
-    assert(pkgfoobar.hasHeader === false)
+    assert(pkgfoobar.hasBraces === true)
   }
 
   test("package foo; package bar; class C") {
@@ -50,8 +50,8 @@ class PackageSuite extends ParseSuite {
                                                    Ctor.Primary(Nil, Nil, Nil),
                                                    Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil)) :: Nil)) :: Nil) =
       compUnit("package foo; package bar; class C")
-    assert(pkgfoo.hasHeader === true)
-    assert(pkgbar.hasHeader === true)
+    assert(pkgfoo.hasBraces === false)
+    assert(pkgbar.hasBraces === false)
   }
 
   test("package foo { package bar { class C } }") {
@@ -61,16 +61,16 @@ class PackageSuite extends ParseSuite {
                                                    Ctor.Primary(Nil, Nil, Nil),
                                                    Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil)) :: Nil)) :: Nil) =
       compUnit("package foo { package bar { class C } }")
-    assert(pkgfoo.hasHeader === false)
-    assert(pkgbar.hasHeader === false)
+    assert(pkgfoo.hasBraces === true)
+    assert(pkgbar.hasBraces === true)
   }
 
   test("package foo {}; package bar {}") {
     val CompUnit((pkgfoo @ Pkg(Term.Name("foo"), Nil)) ::
                  (pkgbar @ Pkg(Term.Name("bar"), Nil)) :: Nil) =
       compUnit("package foo {}; package bar {}")
-    assert(pkgfoo.hasHeader === false)
-    assert(pkgbar.hasHeader === false)
+    assert(pkgfoo.hasBraces === true)
+    assert(pkgbar.hasBraces === true)
   }
 
   test("package object foo") {
