@@ -1162,8 +1162,8 @@ abstract class Parser { parser =>
         case NEW =>
           canApply = false
           in.nextToken()
-          val (edefs, parents, self, stats) = template()
-          Term.New(Aux.Template(edefs, parents, self, stats))
+          val (edefs, parents, self, stats, hasExplicitBody) = template()
+          Term.New(Aux.Template(edefs, parents, self, stats)(hasExplicitBody = hasExplicitBody))
         case _ =>
           syntaxError("illegal start of simple expression")
       }
@@ -2214,7 +2214,7 @@ abstract class Parser { parser =>
    *  EarlyDef      ::= Annotations Modifiers PatDef
    *  }}}
    */
-  def template(): (List[Stmt.Early], List[Aux.Parent], Aux.Self, List[Stmt.Template]) = {
+  def template(): (List[Stmt.Early], List[Aux.Parent], Aux.Self, List[Stmt.Template], Boolean) = {
     newLineOptWhenFollowedBy(LBRACE)
     if (in.token == LBRACE) {
       // @S: pre template body cannot stub like post body can!
@@ -2224,14 +2224,14 @@ abstract class Parser { parser =>
         in.nextToken()
         val parents = templateParents()
         val (self1, body1) = templateBodyOpt(parenMeansSyntaxError = false)
-        (edefs, parents, self1, body1)
+        (edefs, parents, self1, body1, true)
       } else {
-        (Nil, Nil, self, body)
+        (Nil, Nil, self, body, true)
       }
     } else {
       val parents = templateParents()
       val (self, body) = templateBodyOpt(parenMeansSyntaxError = false)
-      (Nil, parents, self, body)
+      (Nil, parents, self, body, false)
     }
   }
 
@@ -2252,18 +2252,19 @@ abstract class Parser { parser =>
    *  }}}
    */
   def templateOpt(owner: TemplateOwner): Aux.Template = {
-    val (early, parents, self, body) = (
+    val (early, parents, self, body, hasExplicitBody) = (
       if (in.token == EXTENDS /* || in.token == SUBTYPE && mods.isTrait */) {
         in.nextToken()
         template()
       }
       else {
         newLineOptWhenFollowedBy(LBRACE)
+        val hasExplicitBody = in.token == LBRACE
         val (self, body) = templateBodyOpt(parenMeansSyntaxError = owner.isTrait || owner.isTerm)
-        (Nil, Nil, self, body)
+        (Nil, Nil, self, body, hasExplicitBody)
       }
     )
-    Aux.Template(early, parents, self, body)
+    Aux.Template(early, parents, self, body)(hasExplicitBody = hasExplicitBody)
   }
 
 /* -------- TEMPLATES ------------------------------------------- */

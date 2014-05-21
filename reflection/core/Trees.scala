@@ -405,8 +405,10 @@ object Aux {
   @ast class CompUnit(stats: Seq[Stmt.TopLevel]) extends Tree
   @ast class Case(pat: Pat, cond: Option[Term], stats: Seq[Stmt.Template]) extends Tree with Scope
   @ast class Parent(tpe: Type, argss: Seq[Seq[Arg]]) extends Tree
-  @ast class Template(early: Seq[Stmt.Early], parents: Seq[Parent],
-                      self: Self, stats: Seq[Stmt.Template]) extends Tree with Scope.Template {
+  @ast class Template(early: Seq[Stmt.Early],
+                      parents: Seq[Parent],
+                      self: Self,
+                      stats: Seq[Stmt.Template])(hasExplicitBody: Boolean) extends Tree with Scope.Template {
     require(parents.isEmpty || !parents.tail.exists(_.argss.nonEmpty))
     require(early.nonEmpty ==> parents.nonEmpty)
   }
