@@ -55,7 +55,6 @@ object build extends Build {
       </issueManagement>
     ),
     addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0-M1" cross CrossVersion.full)
-    // scalacOptions += "-Xplugin:/Users/xeno_by/Projects/Paradise2110/plugin/target/scala-2.11/paradise_2.11.0-2.1.0-SNAPSHOT.jar"
   )
 
   // http://stackoverflow.com/questions/20665007/how-to-publish-only-when-on-master-branch-under-travis-and-sbt-0-13
@@ -141,7 +140,6 @@ object build extends Build {
       standard.replace("reflection_", "core_")
     },
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided"),
-    // scalaHome := Some(file("/Users/xeno_by/Projects/Scala2110/build/pack")),
     // scalacOptions ++= Seq("-Xprint:typer"),
     scalacOptions ++= Seq()
   ) dependsOn (foundation)
