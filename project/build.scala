@@ -130,12 +130,16 @@ object build extends Build {
   )
 
   lazy val reflection = Project(
-    id   = "core",
+    id   = "reflection",
     base = file("reflection")
   ) settings (
     publishableSettings: _*
   ) settings (
     scalaSource in Compile <<= (baseDirectory in Compile)(base => base),
+    artifactName := { (sv: ScalaVersion, module: ModuleID, artifact: Artifact) =>
+      val standard = artifactName.value(sv, module, artifact)
+      standard.replace("reflection_", "core_")
+    },
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided"),
     // scalaHome := Some(file("/Users/xeno_by/Projects/Scala2110/build/pack")),
     // scalacOptions ++= Seq("-Xprint:typer"),
