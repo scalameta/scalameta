@@ -10,6 +10,7 @@ import scala.reflect.syntactic.TokenInfo._
 import scala.reflect.core._, Aux._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
+import org.scalareflect.unreachable
 
 object SyntacticInfo {
   private[reflect] val unaryOps = Set("-", "+", "~", "!")
@@ -422,7 +423,7 @@ abstract class Parser { parser =>
 
   // TODO: make zero tuple for types Lit.Unit() too?
   def makeTupleType(body: List[Type]): Type =
-    makeTuple[Type](body, () => abort("unreachable"), Type.Tuple(_))
+    makeTuple[Type](body, () => unreachable, Type.Tuple(_))
 
   def makeTuplePatParens(bodyf: => List[Pat]): Pat = {
     val body = inParens(if (in.token == RPAREN) Nil else bodyf)
@@ -459,7 +460,7 @@ abstract class Parser { parser =>
       def binop(opinfo: OpInfo[List[Arg]], rhs: List[Arg]): List[Arg] = {
         val lhs = makeTupleTerm(opinfo.lhs map {
           case t: Term => t
-          case other   => abort("unreachable")
+          case other   => unreachable
         })
         Term.ApplyInfix(lhs, opinfo.operator, opinfo.targs, rhs) :: Nil
       }
@@ -492,7 +493,7 @@ abstract class Parser { parser =>
   def finishPostfixOp(base: List[OpInfo[List[Arg]]], opinfo: OpInfo[List[Arg]]): List[Arg] =
     Term.Select(reduceStack(base, opinfo.lhs) match {
       case (t: Term) :: Nil => t
-      case _                => abort("unreachable")
+      case _                => unreachable
     }, opinfo.operator) :: Nil
 
   def finishBinaryOp[T: OpCtx](opinfo: OpInfo[T], rhs: T): T = opctx.binop(opinfo, rhs)
@@ -1105,7 +1106,7 @@ abstract class Parser { parser =>
 
     reduceStack(base, loop(prefixExpr() :: Nil)) match {
       case (t: Term) :: Nil => t
-      case _                => abort("unreachable")
+      case _                => unreachable
     }
   }
 
@@ -1524,7 +1525,7 @@ abstract class Parser { parser =>
           case (LPAREN, _)                 => Pat.Extract(sid, targs, argumentPatterns())
           case (_, _) if targs.nonEmpty    => syntaxError("pattern must be a value")
           case (_, sid: Term.Ref with Pat) => sid
-          case _                           => abort("unreachable")
+          case _                           => unreachable
         }
       case USCORE =>
         in.nextToken()
@@ -1898,7 +1899,7 @@ abstract class Parser { parser =>
         importWildcardOrName() match {
           case to: Sel.Name     => Sel.Rename(from.name, to.name)
           case to: Sel.Wildcard => Sel.Unimport(from.name)
-          case _                => abort("unreachable")
+          case _                => unreachable
         }
       case other => other
     }

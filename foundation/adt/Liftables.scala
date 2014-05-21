@@ -3,6 +3,7 @@ package org.scalareflect.adt
 import scala.reflect.api.Universe
 import scala.reflect.macros.whitebox.Context
 import scala.language.experimental.macros
+import org.scalareflect.unreachable
 
 trait Liftables {
   val u: Universe
@@ -12,8 +13,6 @@ trait Liftables {
 class LiftableImpl(val c: Context) { import c.universe._
   val q"$prefix.materialize[..$_]" = c.macroApplication
   val u = q"$prefix.u"
-
-  def unreachable: Nothing = c.abort(c.macroApplication.pos, "unreachable")
 
   def fieldNames(sym: ClassSymbol) =
     sym.info.decls.collectFirst {
