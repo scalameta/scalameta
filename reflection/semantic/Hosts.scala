@@ -6,8 +6,6 @@ import scala.collection.immutable.Seq
 import scala.reflect.core._
 
 trait HostContext {
-  def isThreadsafe: Boolean
-
   def syntaxProfile: SyntaxProfile
   def semanticProfile: SemanticProfile
 

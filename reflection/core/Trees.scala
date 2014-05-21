@@ -40,6 +40,8 @@ import scala.reflect.syntactic.SyntacticInfo._
   def parent: Option[Tree]
   private[reflect] def internalWithParent(x: Tree): ThisType
 
+  // TODO: these APIs will most likely change in the future
+  // because we would like to make sure that trees are fully immutable
   private[reflect] def scratchpad(implicit h: HostContext): Option[Any]
   private[reflect] def withScratchpad(scratchpad: Any)(implicit h: HostContext): ThisType
   private[reflect] def mapScratchpad(f: Option[Any] => Any)(implicit h: HostContext): ThisType
@@ -60,6 +62,7 @@ import scala.reflect.syntactic.SyntacticInfo._
 object Term {
   @branch trait Ref extends Term with core.Ref
   @ast class This(qual: Option[core.Name]) extends Ref with Mod.AccessQualifier
+  // TODO: isBackquoted might use a default value or some sorts (or an overloaded apply)
   @ast class Name(value: scala.Predef.String @nonEmpty)(isBackquoted: Boolean) extends core.Name with Ref with Pat with Member with Has.TermName {
     require(keywords.contains(value) ==> isBackquoted)
     def name: Name = this

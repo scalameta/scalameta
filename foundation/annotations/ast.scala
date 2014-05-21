@@ -140,6 +140,7 @@ class AstMacros(val c: Context) {
         }
       }
 
+      // TODO: swap bparams1 and paramss1
       val cdef1 = q"${finalize(mods1)} class $name[..$tparams] ${privatize(ctorMods)}(...${bparams1 +: paramss1}) extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
       val mdef1 = q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
       List(cdef1, mdef1)

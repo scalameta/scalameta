@@ -13,9 +13,8 @@ class TypeSuite extends ParseSuite {
     val Project(Name("F"), Name("T")) = tpe("F#T")
   }
 
-  // TODO:
   // test("A * B") {
-  //   val Apply(Name("*"), Name("A") :: Name("B") :: Nil) = tpe("A * B")
+  //   val ApplyInfix(Name("A"), Name("*"), Name("B")) = tpe("A * B")
   // }
 
   test("A \\/ B") {
