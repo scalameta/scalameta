@@ -50,7 +50,7 @@ class AstMacros(val c: Context) {
       bparams1 += q"private val prototype: $name"
       bparams1 += q"private val internalParent: Tree"
       stats1 += q"def parent: Option[Tree] = if (internalParent != null) _root_.scala.Some(internalParent) else _root_.scala.None"
-      def internalize(p: ValDef) = TermName("internal" + p.name.toString.capitalize)
+      def internalize(p: ValDef) = TermName("_" + p.name.toString)
       val fieldInitss = paramss.map(_.map(p => q"$AstInternal.initField(this.${internalize(p)})"))
       stats1 += q"private[reflect] def internalWithParent(internalParent: Tree): ThisType = new ThisType(this, internalParent, scratchpads, origin)(...$fieldInitss)"
       bparams1 += q"private val scratchpads: _root_.scala.collection.immutable.Map[_root_.scala.reflect.semantic.HostContext, Any]"

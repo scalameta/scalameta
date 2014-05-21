@@ -40,7 +40,7 @@ package object annotations {
         def loadField(f: c.Tree) = {
           val q"this.$finternalName" = f
           def uncapitalize(s: String) = if (s.length == 0) "" else { val chars = s.toCharArray; chars(0) = chars(0).toLower; new String(chars) }
-          val fname = TermName(uncapitalize(finternalName.toString.stripPrefix("internal")))
+          val fname = TermName(finternalName.toString.stripPrefix("_"))
           def lazyLoad(fn: c.Tree => c.Tree) = {
             q"""
               if ($f == null) {
