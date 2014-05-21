@@ -129,11 +129,12 @@ object build extends Build {
   )
 
   lazy val reflection = Project(
-    id   = "core",
+    id   = "reflection",
     base = file("reflection")
   ) settings (
     publishableSettings: _*
   ) settings (
+    name := "core",
     scalaSource in Compile <<= (baseDirectory in Compile)(base => base),
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided"),
     // scalacOptions ++= Seq("-Xprint:typer"),
