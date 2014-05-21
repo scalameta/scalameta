@@ -2476,7 +2476,7 @@ abstract class Parser { parser =>
       in.nextToken()
       packageObject()
     } else {
-      Pkg.Template(qualId(), inBracesOrNil(topStatSeq()))
+      Pkg(qualId(), inBracesOrNil(topStatSeq()))(hasHeader = false)
     }
 
   def packageObject(): Pkg.Object =
@@ -2512,7 +2512,7 @@ abstract class Parser { parser =>
             refs ++= nrefs
             ts ++= nstats
           } else {
-            ts += inBraces(Pkg.Template(qid, topStatSeq()))
+            ts += inBraces(Pkg(qid, topStatSeq())(hasHeader = false))
             acceptStatSepOpt()
             ts ++= topStatSeq()
           }
@@ -2526,7 +2526,7 @@ abstract class Parser { parser =>
     val (refs, stats) = packageStats()
     refs match {
       case Nil          => Aux.CompUnit(stats)
-      case init :+ last => Aux.CompUnit(init.foldLeft(Pkg.Header(last, stats)) { (acc, ref) => Pkg.Header(ref, acc :: Nil) } :: Nil)
+      case init :+ last => Aux.CompUnit(init.foldLeft(Pkg(last, stats)(hasHeader = true)) { (acc, ref) => Pkg(ref, acc :: Nil)(hasHeader = true) } :: Nil)
     }
   }
 }

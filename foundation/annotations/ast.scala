@@ -39,6 +39,7 @@ class AstMacros(val c: Context) {
       if (mods.hasFlag(CASE)) c.abort(cdef.pos, "case is redundant for @ast classes")
       if (mods.hasFlag(ABSTRACT)) c.abort(cdef.pos, "@ast classes cannot be abstract")
       if (ctorMods.flags != NoFlags) c.abort(cdef.pos, "@ast classes must define a public primary constructor")
+      if (paramss.length == 0) c.abort(cdef.pos, "@leaf classes must define a non-empty parameter list")
 
       // step 2: validate the body of the class
       val (defns, rest) = stats.partition(_.isDef)
@@ -64,22 +65,29 @@ class AstMacros(val c: Context) {
       // step 4: turn all parameters into private internal vars, create getters and setters
       paramss1 ++= paramss.map(_.map{ case p @ q"$mods val $name: $tpt = $default" => q"${undefault(unoverride(privatize(varify(mods))))} val ${internalize(p)}: $tpt" })
       stats1 += q"import scala.language.experimental.macros"
-      stats1 ++= paramss.flatten.flatMap{p =>
-        val pstats = ListBuffer[Tree]()
-        val pinternal = internalize(p)
-        val pmods = if (p.mods.hasFlag(OVERRIDE)) Modifiers(OVERRIDE) else NoMods
-        pstats += q"""
-          $pmods def ${p.name}: ${p.tpt} = {
-            $AstInternal.loadField(this.$pinternal)
-            this.$pinternal
+      stats1 ++= paramss.zipWithIndex.flatMap { case (params, i) =>
+        params.flatMap { p =>
+          val pstats = ListBuffer[Tree]()
+          val pinternal = internalize(p)
+          val pmods = if (p.mods.hasFlag(OVERRIDE)) Modifiers(OVERRIDE) else NoMods
+          pstats += q"""
+            $pmods def ${p.name}: ${p.tpt} = {
+              $AstInternal.loadField(this.$pinternal)
+              this.$pinternal
+            }
+          """
+          pstats += q"def ${TermName(p.name + "_=")}(x: Tree): Unit = macro $AstInternal.AstHelperMacros.payloadIsImmutable"
+          def generateCow(cowName: TermName, cowParam: ValDef, action: Tree => Tree): Tree = {
+            val preArgss = paramss.take(i).map(_.map(p => q"this.${p.name}"))
+            val cowArgs = List(AssignOrNamedArg(q"${p.name}", action(q"this.${p.name}")))
+            val postArgss = paramss.drop(i + 1).map(_.map(p => q"this.${p.name}"))
+            val cowArgss = preArgss ++ List(cowArgs) ++ postArgss
+            q"def $cowName($cowParam)(implicit origin: _root_.scala.reflect.core.Origin): ThisType = this.copy(...$cowArgss)"
           }
-        """
-        pstats += q"def ${TermName(p.name + "_=")}(x: Tree): Unit = macro $AstInternal.AstHelperMacros.payloadIsImmutable"
-        val withName = TermName("with" + p.name.toString.capitalize)
-        pstats += q"def $withName(${p.name}: ${p.tpt})(implicit origin: _root_.scala.reflect.core.Origin): ThisType = this.copy(${p.name} = ${p.name})"
-        val mapName = TermName("map" + p.name.toString.capitalize)
-        pstats += q"def $mapName(f: ${p.tpt} => ${p.tpt})(implicit origin: _root_.scala.reflect.core.Origin): ThisType = this.copy(${p.name} = f(this.${p.name}))"
-        pstats.toList
+          pstats += generateCow(TermName("with" + p.name.toString.capitalize), q"val ${p.name}: ${p.tpt}", pref => pref)
+          pstats += generateCow(TermName("map" + p.name.toString.capitalize), q"val f: ${p.tpt} => ${p.tpt}", pref => q"f($pref)")
+          pstats.toList
+        }
       }
       val copyParamss = paramss.map(_.map(p => q"val ${p.name}: ${p.tpt} = this.${p.name}"))
       val copyArgss = paramss.map(_.map(p => q"${p.name}"))

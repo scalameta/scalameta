@@ -10,6 +10,7 @@ import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.language.experimental.macros
 import scala.reflect.semantic.HostContext
+import org.scalareflect.unreachable
 
 // TODO: collection-like methods (see http://clang.llvm.org/docs/LibASTMatchersReference.html)
 // TODO: rewriting/transformation methods
@@ -275,23 +276,18 @@ object Defn {
   }
 }
 
-@branch trait Pkg extends Stmt.TopLevel with Scope.TopLevel with Member.Term with Has.TermName {
+@ast class Pkg(ref: Term.Ref, stats: Seq[Stmt.TopLevel])(hasHeader: Boolean)
+     extends Stmt.TopLevel with Scope.TopLevel with Member.Term with Has.TermName {
   // TODO: require(ref.isQualId)
   // TODO: validate nestedness of header pkgs vs named packages
-  def ref: Term.Ref
-  def stats: Seq[Stmt.TopLevel]
   def mods: Seq[Mod] = Nil
   def name: Term.Name = ref match {
     case name: Term.Name      => name
     case Term.Select(_, name) => name
-    case _                    => sys.error("this shouldn't have happened")
+    case _                    => unreachable
   }
 }
 object Pkg {
-  @ast class Header(ref: Term.Ref,
-                    stats: Seq[Stmt.TopLevel]) extends Pkg
-  @ast class Template(ref: Term.Ref,
-                      stats: Seq[Stmt.TopLevel]) extends Pkg
   @ast class Object(mods: Seq[Mod],
                     name: Term.Name,
                     templ: Aux.Template) extends Stmt.TopLevel with Member.Template with Member.Term with Has.TermName

@@ -197,10 +197,10 @@ object ShowCode {
     case t: Decl.Procedure => s(t.mods, "def ", t.name, t.tparams, (t.explicits, t.implicits))
 
     // Pkg
-    case t: CompUnit   => r(t.stats)
-    case t: Pkg.Header => s("package ", t.name, r(t.stats.map(n(_))))
-    case t: Pkg.Template  => s("package ", t.name, " { ", r(t.stats.map(i(_)), "\n"), n("}"))
-    case t: Pkg.Object => s(t.mods, " package object ", t.name, templ(t.templ))
+    case t: CompUnit           => r(t.stats)
+    case t: Pkg if t.hasHeader => s("package ", t.name, r(t.stats.map(n(_))))
+    case t: Pkg                => s("package ", t.name, " { ", r(t.stats.map(i(_)), "\n"), n("}"))
+    case t: Pkg.Object         => s(t.mods, " package object ", t.name, templ(t.templ))
 
     // Ctor
     case t: Ctor.Primary   => s(t.mods, (t.explicits, t.implicits))

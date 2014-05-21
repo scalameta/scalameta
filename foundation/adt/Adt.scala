@@ -84,16 +84,23 @@ class AdtMacros(val c: Context) {
       if (mods.hasFlag(CASE)) c.abort(cdef.pos, "case is redundant for @leaf classes")
       if (mods.hasFlag(ABSTRACT)) c.abort(cdef.pos, "@leaf classes cannot be abstract")
       if (ctorMods.flags != NoFlags) c.abort(cdef.pos, "@leaf classes must define a public primary constructor")
+      if (paramss.length == 0) c.abort(cdef.pos, "@leaf classes must define a non-empty parameter list")
 
       // step 2: unprivate parameters, create copy-on-write helpers, generate validation checks
       val paramss1 = paramss.map(_.map{ case q"$mods val $name: $tpt = $default" => q"${unprivate(mods)} val $name: $tpt = $default" })
-      stats1 ++= paramss.flatten.map{p =>
-        val withName = TermName("with" + p.name.toString.capitalize)
-        q"def $withName(${p.name}: ${p.tpt}): ThisType = this.copy(${p.name} = ${p.name})"
-      }
-      stats1 ++= paramss.flatten.map{p =>
-        val mapName = TermName("map" + p.name.toString.capitalize)
-        q"def $mapName(f: ${p.tpt} => ${p.tpt}): ThisType = this.copy(${p.name} = f(this.${p.name}))"
+      stats1 ++= paramss.zipWithIndex.flatten { case (params, i) =>
+        params.flatMap { p =>
+          def generateCow(cowName: TermName, cowParam: ValDef, action: Tree => Tree): Tree = {
+            val preArgss = paramss.take(i).map(_.map(p => q"this.${p.name}"))
+            val cowArgs = List(AssignOrNamedArg(q"${p.name}", action(q"this.${p.name}")))
+            val postArgss = paramss.drop(i + 1).map(_.map(p => q"this.${p.name}"))
+            val cowArgss = preArgss ++ List(cowArgs) ++ postArgss
+            q"def $cowName($cowParam): ThisType = this.copy(...$cowArgss)"
+          }
+          val withParam = generateCow(TermName("with" + p.name.toString.capitalize), q"val ${p.name}: ${p.tpt}", pref => pref)
+          val mapParam = generateCow(TermName("map" + p.name.toString.capitalize), q"val f: ${p.tpt} => ${p.tpt}", pref => q"f($pref)")
+          List(withParam, mapParam)
+        }
       }
       stats1 ++= paramss.flatten.map(p => q"$Internal.nullCheck(this.${p.name})")
       stats1 ++= paramss.flatten.map(p => q"$Internal.emptyCheck(this.${p.name})")

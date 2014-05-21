@@ -8,61 +8,69 @@ class PackageSuite extends ParseSuite {
   }
 
   test("package foo; class C") {
-    val CompUnit(Pkg.Header(Term.Name("foo", false),
-                            Class(Nil, Type.Name("C", false), Nil,
-                                  Ctor.Primary(Nil, Nil, Nil),
-                                  Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil) :: Nil) =
+    val CompUnit((pkgfoo @ Pkg(Term.Name("foo", false),
+                               Class(Nil, Type.Name("C", false), Nil,
+                                     Ctor.Primary(Nil, Nil, Nil),
+                                     Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil)) :: Nil) =
       compUnit("package foo; class C")
-
+    assert(pkgfoo.hasHeader === true)
   }
 
   test("package foo { class C }") {
-    val CompUnit(Pkg.Template(Term.Name("foo", false),
-                           Class(Nil, Type.Name("C", false), Nil,
-                                 Ctor.Primary(Nil, Nil, Nil),
-                                 Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil) :: Nil) =
+    val CompUnit((pkgfoo @Pkg(Term.Name("foo", false),
+                              Class(Nil, Type.Name("C", false), Nil,
+                                    Ctor.Primary(Nil, Nil, Nil),
+                                    Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil)) :: Nil) =
       compUnit("package foo { class C }")
-
+    assert(pkgfoo.hasHeader === false)
   }
 
   test("package foo.bar; class C") {
-    val CompUnit(Pkg.Header(Term.Select(Term.Name("foo", false), Term.Name("bar", false)),
-                            Class(Nil, Type.Name("C", false), Nil,
-                                  Ctor.Primary(Nil, Nil, Nil),
-                                  Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil) :: Nil) =
+    val CompUnit((pkgfoobar @ Pkg(Term.Select(Term.Name("foo", false), Term.Name("bar", false)),
+                                  Class(Nil, Type.Name("C", false), Nil,
+                                        Ctor.Primary(Nil, Nil, Nil),
+                                        Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil)) :: Nil) =
       compUnit("package foo.bar; class C")
+    assert(pkgfoobar.hasHeader === true)
   }
 
   test("package foo.bar { class C }") {
-    val CompUnit(Pkg.Template(Term.Select(Term.Name("foo", false), Term.Name("bar", false)),
-                           Class(Nil, Type.Name("C", false), Nil,
-                                 Ctor.Primary(Nil, Nil, Nil),
-                                 Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil) :: Nil) =
+    val CompUnit((pkgfoobar @ Pkg(Term.Select(Term.Name("foo", false), Term.Name("bar", false)),
+                                  Class(Nil, Type.Name("C", false), Nil,
+                                        Ctor.Primary(Nil, Nil, Nil),
+                                        Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil)) :: Nil) =
       compUnit("package foo.bar { class C }")
+    assert(pkgfoobar.hasHeader === false)
   }
 
   test("package foo; package bar; class C") {
-    val CompUnit(Pkg.Header(Term.Name("foo", false),
-                            Pkg.Header(Term.Name("bar", false),
-                                       Class(Nil, Type.Name("C", false), Nil,
-                                             Ctor.Primary(Nil, Nil, Nil),
-                                             Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil) :: Nil) :: Nil) =
+    val CompUnit((pkgfoo @ Pkg(Term.Name("foo", false),
+                               (pkgbar @ Pkg(Term.Name("bar", false),
+                                             Class(Nil, Type.Name("C", false), Nil,
+                                                   Ctor.Primary(Nil, Nil, Nil),
+                                                   Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil)) :: Nil)) :: Nil) =
       compUnit("package foo; package bar; class C")
+    assert(pkgfoo.hasHeader === true)
+    assert(pkgbar.hasHeader === true)
   }
 
   test("package foo { package bar { class C } }") {
-    val CompUnit(Pkg.Template(Term.Name("foo", false),
-                           Pkg.Template(Term.Name("bar", false),
-                                     Class(Nil, Type.Name("C", false), Nil,
-                                           Ctor.Primary(Nil, Nil, Nil),
-                                           Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil) :: Nil) :: Nil) =
+    val CompUnit((pkgfoo @ Pkg(Term.Name("foo", false),
+                               (pkgbar @ Pkg(Term.Name("bar", false),
+                                             Class(Nil, Type.Name("C", false), Nil,
+                                                   Ctor.Primary(Nil, Nil, Nil),
+                                                   Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil)) :: Nil)) :: Nil) =
       compUnit("package foo { package bar { class C } }")
+    assert(pkgfoo.hasHeader === false)
+    assert(pkgbar.hasHeader === false)
   }
 
   test("package foo {}; package bar {}") {
-    val CompUnit(Pkg.Template(Term.Name("foo", false), Nil) ::
-                 Pkg.Template(Term.Name("bar", false), Nil) :: Nil) =
+    val CompUnit((pkgfoo @ Pkg(Term.Name("foo", false), Nil)) ::
+                 (pkgbar @ Pkg(Term.Name("bar", false), Nil)) :: Nil) =
       compUnit("package foo {}; package bar {}")
+    assert(pkgfoo.hasHeader === false)
+    assert(pkgbar.hasHeader === false)
   }
 
   test("package object foo") {
