@@ -43,7 +43,7 @@ trait ScopeOps {
     @hosted def packages(name: Name): Pkg = tree.uniqueMember[Pkg](name.toString)
     @hosted def packages(name: String): Pkg = tree.uniqueMember[Pkg](name.toString)
     @hosted def packages(name: scala.Symbol): Pkg = tree.uniqueMember[Pkg](name.toString)
-    @hosted def pkgobject: Pkg.Object = tree.allMembers[Pkg.Object].flatMap(_.findUnique)
+    @hosted def pkgobject: Defn.Object = tree.allMembers[Defn.Object].map(_.filter(_.isPkgObject)).flatMap(_.findUnique)
   }
 
   implicit class SemanticTemplateScopeOps(tree: Scope.Template) {

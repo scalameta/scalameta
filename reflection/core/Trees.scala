@@ -11,6 +11,7 @@ import scala.collection.immutable.Seq
 import scala.language.experimental.macros
 import scala.reflect.semantic.HostContext
 import org.scalareflect.unreachable
+import scala.reflect.semantic._
 
 // TODO: collection-like methods (see http://clang.llvm.org/docs/LibASTMatchersReference.html)
 // TODO: rewriting/transformation methods
@@ -93,7 +94,8 @@ object Term {
   }
   // TODO: automatically flatten blocks with just a single term?
   @ast class Block(stats: Seq[Stmt.Block]) extends Term with Scope {
-    require(stats.collect{ case v: Defn.Var => v }.forall(_.rhs.isDefined))
+    require(stats.collect { case v: Defn.Var => v }.forall(_.rhs.isDefined))
+    require(stats.collect { case m: Member if m.isPkgObject => m }.isEmpty)
   }
 
   @branch trait If extends Term { def cond: Term; def thenp: Term; def elsep: Term }
@@ -117,7 +119,7 @@ object Term {
   @ast class For(enums: Seq[Enum] @nonEmpty, body: Term) extends Term with Scope {
     require(enums.head.isInstanceOf[Enum.Generator])
   }
-  @ast class ForYield(enums: Seq[Enum] @nonEmpty, body: Term) extends Term
+  @ast class ForYield(enums: Seq[Enum] @nonEmpty, body: Term) extends Term with Scope
   @ast class New(templ: Aux.Template) extends Term
   // TODO: validate that placeholder is put into correct context
   @ast class Placeholder() extends Term
@@ -253,6 +255,7 @@ object Defn {
                        explicits: Seq[Seq[Aux.Param.Named]],
                        implicits: Seq[Aux.Param.Named],
                        stats: Seq[Stmt.Block]) extends Defn with Member.Def {
+    require(stats.collect { case m: Member if m.isPkgObject => m }.isEmpty)
   }
   @ast class Type(mods: Seq[Mod],
                   name: core.Type.Name,
@@ -287,11 +290,6 @@ object Defn {
     case _                    => unreachable
   }
 }
-object Pkg {
-  @ast class Object(mods: Seq[Mod],
-                    name: Term.Name,
-                    templ: Aux.Template) extends Stmt.TopLevel with Member.Template with Member.Term with Has.TermName
-}
 
 @branch trait Ctor extends Tree with Has.Mods with Has.Paramss
 object Ctor {
@@ -302,7 +300,9 @@ object Ctor {
                        explicits: Seq[Seq[Aux.Param.Named]] @nonEmpty,
                        implicits: Seq[Aux.Param.Named],
                        primaryCtorArgss: Seq[Seq[Arg]],
-                       stats: Seq[Stmt.Block]) extends Ctor with Stmt.Template with Scope.Params
+                       stats: Seq[Stmt.Block]) extends Ctor with Stmt.Template with Scope.Params {
+    require(stats.collect { case m: Member if m.isPkgObject => m }.isEmpty)
+  }
 }
 
 object Stmt {
@@ -399,11 +399,14 @@ object Mod {
   @ast class Macro() extends Mod
   @ast class ValParam() extends Mod
   @ast class VarParam() extends Mod
+  @ast class PkgObject() extends Mod
 }
 
 object Aux {
   @ast class CompUnit(stats: Seq[Stmt.TopLevel]) extends Tree
-  @ast class Case(pat: Pat, cond: Option[Term], stats: Seq[Stmt.Template]) extends Tree with Scope
+  @ast class Case(pat: Pat, cond: Option[Term], stats: Seq[Stmt.Template]) extends Tree with Scope {
+    require(stats.collect { case m: Member if m.isPkgObject => m }.isEmpty)
+  }
   @ast class Parent(tpe: Type, argss: Seq[Seq[Arg]]) extends Tree
   @ast class Template(early: Seq[Stmt.Early],
                       parents: Seq[Parent],
@@ -411,6 +414,7 @@ object Aux {
                       stats: Seq[Stmt.Template])(hasExplicitBody: Boolean) extends Tree with Scope.Template {
     require(parents.isEmpty || !parents.tail.exists(_.argss.nonEmpty))
     require(early.nonEmpty ==> parents.nonEmpty)
+    require(stats.collect { case m: Member if m.isPkgObject => m }.isEmpty)
   }
   @ast class Self(name: Option[Term.Name], decltpe: Option[Type]) extends Member.Term {
     def mods: Seq[Mod] = Nil

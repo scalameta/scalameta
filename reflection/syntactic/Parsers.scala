@@ -2481,8 +2481,8 @@ abstract class Parser { parser =>
       Pkg(qualId(), inBracesOrNil(topStatSeq()))(hasHeader = false)
     }
 
-  def packageObject(): Pkg.Object =
-    Pkg.Object(Nil, termName(), templateOpt(OwnedByObject))
+  def packageObject(): Defn.Object =
+    Defn.Object(Mod.PkgObject() :: Nil, termName(), templateOpt(OwnedByObject))
 
   /** {{{
    *  CompilationUnit ::= {package QualId semi} TopStatSeq

@@ -74,13 +74,13 @@ class PackageSuite extends ParseSuite {
   }
 
   test("package object foo") {
-    val CompUnit(Pkg.Object(Nil, Term.Name("foo"),
-                            Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil) = compUnit("package object foo")
+    val CompUnit(Defn.Object(Mod.PkgObject() :: Nil, Term.Name("foo"),
+                             Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil) = compUnit("package object foo")
   }
 
   test("import foo.bar; package object baz") {
     val CompUnit(Import(Import.Clause(Term.Name("foo"), Import.Selector.Name("bar") :: Nil) :: Nil) ::
-                 Pkg.Object(Nil, Term.Name("baz"), Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil) =
+                 Defn.Object(Mod.PkgObject() :: Nil, Term.Name("baz"), Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil) =
       compUnit("import foo.bar; package object baz")
   }
 }

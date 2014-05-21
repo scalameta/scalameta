@@ -5,6 +5,7 @@ import scala.reflect.core._, Aux._
 import org.scalareflect.show.Show
 import Show.{ sequence => s, repeat => r, indent => i, newline => n }
 import scala.reflect.syntactic.SyntacticInfo._
+import scala.reflect.semantic._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 
@@ -184,6 +185,7 @@ object ShowCode {
     case t: Defn.Type      => s(t.mods, "type ", t.name, t.tparams, " = ", t.body)
     case t: Defn.Class     => s(t.mods, "class ", t.name, t.tparams, t.ctor, templ(t.templ))
     case t: Defn.Trait     => s(t.mods, "trait ", t.name, t.tparams, templ(t.templ))
+    case t: Defn.Object if t.isPkgObject => s(t.mods, "package object ", t.name, templ(t.templ))
     case t: Defn.Object    => s(t.mods, "object ", t.name, templ(t.templ))
     case t: Defn.Def       =>
       s(t.mods, "def ", t.name, t.tparams, (t.explicits, t.implicits), t.decltpe, " = ", t.body)
@@ -201,7 +203,6 @@ object ShowCode {
     case t: CompUnit           => r(t.stats)
     case t: Pkg if t.hasHeader => s("package ", t.name, r(t.stats.map(n(_))))
     case t: Pkg                => s("package ", t.name, " { ", r(t.stats.map(i(_)), "\n"), n("}"))
-    case t: Pkg.Object         => s(t.mods, " package object ", t.name, templ(t.templ))
 
     // Ctor
     case t: Ctor.Primary   => s(t.mods, (t.explicits, t.implicits))

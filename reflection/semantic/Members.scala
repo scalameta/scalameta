@@ -29,7 +29,7 @@ trait MemberOps {
     def isTrait: Boolean = tree.isInstanceOf[Defn.Trait]
     def isObject: Boolean = tree.isInstanceOf[Defn.Object]
     def isPkg: Boolean = tree.isInstanceOf[Pkg]
-    def isPkgObject: Boolean = tree.isInstanceOf[Pkg.Object]
+    def isPkgObject: Boolean = tree.mods.exists(_.isInstanceOf[Mod.PkgObject])
     def isJava: Boolean = ??? // TODO: need special trees for Java artifacts
     def isPrivate: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Private])
     def isProtected: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Protected])
@@ -79,7 +79,6 @@ trait MemberOps {
       case _: Defn.Class => findCompanion{ case x: Defn.Object => x }
       case _: Defn.Trait => findCompanion{ case x: Defn.Object => x }
       case _: Defn.Object => findCompanion{ case x: Defn.Class => x; case x: Defn.Trait => x }
-      case _: Pkg.Object => fail(ReflectionException("companion not found"))
     }
     @hosted private[semantic] def findCompanion[T <: Member.Template](f: PartialFunction[Member, T]): T = {
       val companionName = {
