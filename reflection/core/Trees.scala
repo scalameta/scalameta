@@ -332,6 +332,9 @@ object Scope {
 @branch trait Lit extends Term with Pat with Type
 object Lit {
   @branch trait Bool extends Lit
+  object Bool {
+    def apply(value: Boolean): Bool = if (value) True() else False()
+  }
   @ast class True() extends Bool
   @ast class False() extends Bool
   @ast class Int(value: scala.Int) extends Lit
