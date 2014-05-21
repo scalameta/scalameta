@@ -97,7 +97,7 @@ object Term {
 
   @branch trait If extends Term { def cond: Term; def thenp: Term; def elsep: Term }
   object If {
-    @ast class Then(cond: Term, thenp: Term) extends If { def elsep: Term = Lit.Unit()(Origin.None) } // TODO: should this inherit the origin from the caller?
+    @ast class Then(cond: Term, thenp: Term) extends If { def elsep: Term = Lit.Unit()(Origin.None) }
     @ast class ThenElse(cond: Term, thenp: Term, elsep: Term) extends If
   }
 
@@ -298,14 +298,14 @@ object Pkg {
 
 @branch trait Ctor extends Tree with Has.Mods with Has.Paramss
 object Ctor {
-  @ast class Primary(mods: Seq[Mod] = Nil,
-                     explicits: Seq[Seq[Aux.Param.Named]] = Nil,
-                     implicits: Seq[Aux.Param.Named] = Nil) extends Ctor
-  @ast class Secondary(mods: Seq[Mod] = Nil,
-                       explicits: Seq[Seq[Aux.Param.Named]] @nonEmpty = List(Nil),
-                       implicits: Seq[Aux.Param.Named] = Nil,
-                       primaryCtorArgss: Seq[Seq[Arg]] = Nil,
-                       stats: Seq[Stmt.Block] = Nil) extends Ctor with Stmt.Template with Scope.Params
+  @ast class Primary(mods: Seq[Mod],
+                     explicits: Seq[Seq[Aux.Param.Named]],
+                     implicits: Seq[Aux.Param.Named]) extends Ctor
+  @ast class Secondary(mods: Seq[Mod],
+                       explicits: Seq[Seq[Aux.Param.Named]] @nonEmpty,
+                       implicits: Seq[Aux.Param.Named],
+                       primaryCtorArgss: Seq[Seq[Arg]],
+                       stats: Seq[Stmt.Block]) extends Ctor with Stmt.Template with Scope.Params
 }
 
 object Stmt {
@@ -404,14 +404,14 @@ object Mod {
 
 object Aux {
   @ast class CompUnit(stats: Seq[Stmt.TopLevel]) extends Tree
-  @ast class Case(pat: Pat, cond: Option[Term] = None, stats: Seq[Stmt.Template] = Nil) extends Tree with Scope
-  @ast class Parent(tpe: Type, argss: Seq[Seq[Arg]] = Nil) extends Tree
-  @ast class Template(early: Seq[Stmt.Early] = Nil, parents: Seq[Parent] = Nil,
-                      self: Self = Self()(Origin.None), stats: Seq[Stmt.Template] = Nil) extends Tree with Scope.Template {
+  @ast class Case(pat: Pat, cond: Option[Term], stats: Seq[Stmt.Template]) extends Tree with Scope
+  @ast class Parent(tpe: Type, argss: Seq[Seq[Arg]]) extends Tree
+  @ast class Template(early: Seq[Stmt.Early], parents: Seq[Parent],
+                      self: Self, stats: Seq[Stmt.Template]) extends Tree with Scope.Template {
     require(parents.isEmpty || !parents.tail.exists(_.argss.nonEmpty))
     require(early.nonEmpty ==> parents.nonEmpty)
   }
-  @ast class Self(name: Option[Term.Name] = None, decltpe: Option[Type] = None) extends Member.Term {
+  @ast class Self(name: Option[Term.Name], decltpe: Option[Type]) extends Member.Term {
     def mods: Seq[Mod] = Nil
   }
   @branch trait ParamType extends Tree
@@ -426,12 +426,12 @@ object Aux {
     def mapMods(mods: Seq[Mod] => Seq[Mod])(implicit origin: Origin): ThisType
   }
   object Param {
-    @ast class Anonymous(decltpe: Option[ParamType] = None,
-                         mods: Seq[Mod] = Nil) extends Param
+    @ast class Anonymous(decltpe: Option[ParamType],
+                         mods: Seq[Mod]) extends Param
     @ast class Named(name: Term.Name,
-                     decltpe: Option[ParamType] = None,
-                     default: Option[Term] = None,
-                     mods: Seq[Mod] = Nil) extends Param with Member.Term with Has.TermName
+                     decltpe: Option[ParamType],
+                     default: Option[Term],
+                     mods: Seq[Mod]) extends Param with Member.Term with Has.TermName
   }
   @branch trait TypeParam extends Tree with Has.Mods {
     def tparams: Seq[Aux.TypeParam]
@@ -442,19 +442,19 @@ object Aux {
     def mapMods(mods: Seq[Mod] => Seq[Mod])(implicit origin: Origin): ThisType
   }
   object TypeParam {
-    @ast class Anonymous(tparams: Seq[Aux.TypeParam] = Nil,
-                         contextBounds: Seq[core.Type] = Nil,
-                         viewBounds: Seq[core.Type] = Nil,
-                         bounds: Aux.TypeBounds = Aux.TypeBounds()(Origin.None), // TODO: should this inherit the origin from the caller?
-                         mods: Seq[Mod] = Nil) extends TypeParam
+    @ast class Anonymous(tparams: Seq[Aux.TypeParam],
+                         contextBounds: Seq[core.Type],
+                         viewBounds: Seq[core.Type],
+                         bounds: Aux.TypeBounds,
+                         mods: Seq[Mod]) extends TypeParam
     @ast class Named(name: core.Type.Name,
-                     tparams: Seq[Aux.TypeParam] = Nil,
-                     contextBounds: Seq[core.Type] = Nil,
-                     viewBounds: Seq[core.Type] = Nil,
-                     bounds: Aux.TypeBounds = Aux.TypeBounds()(Origin.None), // TODO: should this inherit the origin from the caller?
-                     mods: Seq[Mod] = Nil) extends TypeParam with Member.Type with Has.TypeName
+                     tparams: Seq[Aux.TypeParam],
+                     contextBounds: Seq[core.Type],
+                     viewBounds: Seq[core.Type],
+                     bounds: Aux.TypeBounds,
+                     mods: Seq[Mod]) extends TypeParam with Member.Type with Has.TypeName
   }
-  @ast class TypeBounds(lo: Option[Type] = None, hi: Option[Type] = None) extends Tree
+  @ast class TypeBounds(lo: Option[Type], hi: Option[Type]) extends Tree
 }
 
 object Has {

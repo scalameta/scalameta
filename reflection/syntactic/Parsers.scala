@@ -362,13 +362,13 @@ abstract class Parser { parser =>
   /** Convert tree to formal parameter. */
   def convertToParam(tree: Term): Option[Aux.Param] = tree match {
     case name: Name =>
-      Some(Aux.Param.Named(name = name.toTermName, decltpe = None))
+      Some(Aux.Param.Named(name.toTermName, None, None, Nil))
     case Term.Placeholder() =>
-      Some(Aux.Param.Anonymous())
+      Some(Aux.Param.Anonymous(None, Nil))
     case Term.Ascribe(name: Name, tpt) =>
-      Some(Aux.Param.Named(name = name.toTermName, decltpe = Some(tpt)))
+      Some(Aux.Param.Named(name.toTermName, Some(tpt), None, Nil))
     case Term.Ascribe(Term.Placeholder(), tpt) =>
-      Some(Aux.Param.Anonymous(decltpe = Some(tpt)))
+      Some(Aux.Param.Anonymous(Some(tpt), Nil))
     case Lit.Unit() =>
       None
     case other =>
@@ -1841,8 +1841,7 @@ abstract class Parser { parser =>
   def typeBounds(): Aux.TypeBounds = {
     val lo = bound(SUPERTYPE)
     val hi = bound(SUBTYPE)
-    if (lo.nonEmpty || hi.nonEmpty) Aux.TypeBounds(lo, hi)
-    else Aux.TypeBounds()
+    Aux.TypeBounds(lo, hi)
   }
 
   def bound(tok: Token): Option[Type] =
@@ -2286,7 +2285,7 @@ abstract class Parser { parser =>
         if (parenMeansSyntaxError) syntaxError("traits or objects may not have parameters")
         else abort("unexpected opening parenthesis")
       }
-      (Aux.Self(), Nil)
+      (Aux.Self(None, None), Nil)
     }
   }
 
@@ -2340,14 +2339,14 @@ abstract class Parser { parser =>
    * @param isPre specifies whether in early initializer (true) or not (false)
    */
   def templateStatSeq(isPre : Boolean): (Aux.Self, List[Stmt.Template]) = {
-    var self: Aux.Self = Aux.Self()
+    var self: Aux.Self = Aux.Self(None, None)
     var firstOpt: Option[Term] = None
     if (isExprIntro) {
       val first = expr(InTemplate) // @S: first statement is potentially converted so cannot be stubbed.
       if (in.token == ARROW) {
         first match {
           case Term.Placeholder() =>
-            self = Aux.Self()
+            self = Aux.Self(None, None)
           case name: Name =>
             self = Aux.Self(Some(name.toTermName), None)
           case Term.Ascribe(name: Name, tpt) =>
