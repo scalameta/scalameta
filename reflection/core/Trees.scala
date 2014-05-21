@@ -429,12 +429,12 @@ object Aux {
     def mapMods(mods: Seq[Mod] => Seq[Mod])(implicit origin: Origin): ThisType
   }
   object Param {
-    @ast class Anonymous(decltpe: Option[ParamType],
-                         mods: Seq[Mod]) extends Param
-    @ast class Named(name: Term.Name,
+    @ast class Anonymous(mods: Seq[Mod],
+                         decltpe: Option[ParamType]) extends Param
+    @ast class Named(mods: Seq[Mod],
+                     name: Term.Name,
                      decltpe: Option[ParamType],
-                     default: Option[Term],
-                     mods: Seq[Mod]) extends Param with Member.Term with Has.TermName
+                     default: Option[Term]) extends Param with Member.Term with Has.TermName
   }
   @branch trait TypeParam extends Tree with Has.Mods {
     def tparams: Seq[Aux.TypeParam]
@@ -445,17 +445,17 @@ object Aux {
     def mapMods(mods: Seq[Mod] => Seq[Mod])(implicit origin: Origin): ThisType
   }
   object TypeParam {
-    @ast class Anonymous(tparams: Seq[Aux.TypeParam],
+    @ast class Anonymous(mods: Seq[Mod],
+                         tparams: Seq[Aux.TypeParam],
                          contextBounds: Seq[core.Type],
                          viewBounds: Seq[core.Type],
-                         bounds: Aux.TypeBounds,
-                         mods: Seq[Mod]) extends TypeParam
-    @ast class Named(name: core.Type.Name,
+                         bounds: Aux.TypeBounds) extends TypeParam
+    @ast class Named(mods: Seq[Mod],
+                     name: core.Type.Name,
                      tparams: Seq[Aux.TypeParam],
                      contextBounds: Seq[core.Type],
                      viewBounds: Seq[core.Type],
-                     bounds: Aux.TypeBounds,
-                     mods: Seq[Mod]) extends TypeParam with Member.Type with Has.TypeName
+                     bounds: Aux.TypeBounds) extends TypeParam with Member.Type with Has.TypeName
   }
   @ast class TypeBounds(lo: Option[Type], hi: Option[Type]) extends Tree
 }

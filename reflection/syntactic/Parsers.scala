@@ -362,13 +362,13 @@ abstract class Parser { parser =>
   /** Convert tree to formal parameter. */
   def convertToParam(tree: Term): Option[Aux.Param] = tree match {
     case name: Name =>
-      Some(Aux.Param.Named(name.toTermName, None, None, Nil))
+      Some(Aux.Param.Named(Nil, name.toTermName, None, None))
     case Term.Placeholder() =>
-      Some(Aux.Param.Anonymous(None, Nil))
+      Some(Aux.Param.Anonymous(Nil, None))
     case Term.Ascribe(name: Name, tpt) =>
-      Some(Aux.Param.Named(name.toTermName, Some(tpt), None, Nil))
+      Some(Aux.Param.Named(Nil, name.toTermName, Some(tpt), None))
     case Term.Ascribe(Term.Placeholder(), tpt) =>
-      Some(Aux.Param.Anonymous(Some(tpt), Nil))
+      Some(Aux.Param.Anonymous(Nil, Some(tpt)))
     case Lit.Unit() =>
       None
     case other =>
@@ -1772,7 +1772,7 @@ abstract class Parser { parser =>
         in.nextToken()
         Some(expr())
       }
-    Aux.Param.Named(name, Some(tpt), default, mods)
+    Aux.Param.Named(mods, name, Some(tpt), default)
   }
 
   /** {{{
@@ -1829,8 +1829,8 @@ abstract class Parser { parser =>
       }
     }
     nameopt match {
-      case Some(name) => Aux.TypeParam.Named(name, tparams, contextBounds.toList, viewBounds.toList, bounds, mods)
-      case None => Aux.TypeParam.Anonymous(tparams, contextBounds.toList, viewBounds.toList, bounds, mods)
+      case Some(name) => Aux.TypeParam.Named(mods, name, tparams, contextBounds.toList, viewBounds.toList, bounds)
+      case None => Aux.TypeParam.Anonymous(mods, tparams, contextBounds.toList, viewBounds.toList, bounds)
     }
   }
 

@@ -83,9 +83,9 @@ object ShowCode {
       import Term.{Block, Function}
       def pstats(s: Seq[Stmt.Block]) = r(s.map(i(_)), ";")
       t match {
-        case Block(Function(Param.Named(name, tptopt, _, mods) :: Nil, Block(stats)) :: Nil) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
+        case Block(Function(Param.Named(mods, name, tptopt, _) :: Nil, Block(stats)) :: Nil) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
           s("{ implicit ", name, tptopt.map { tpt => s(": ", tpt) }.getOrElse(s()), " => ", pstats(stats), n("}"))
-        case Block(Function(Param.Named(name, None, _, mods) :: Nil, Block(stats)) :: Nil) =>
+        case Block(Function(Param.Named(mods, name, None, _) :: Nil, Block(stats)) :: Nil) =>
           s("{ ", name, " => ", pstats(stats), n("}"))
         case Block(Function(Param.Anonymous(_, _) :: Nil, Block(stats)) :: Nil) =>
           s("{ _ => ", pstats(stats), n("}"))
@@ -119,9 +119,9 @@ object ShowCode {
     case t: Term.If.ThenElse => s("if (", t.cond, ") ", t.thenp, " else ", t.elsep)
     case t: Term.Function =>
       t match {
-        case Term.Function(Param.Named(name, tptopt, _, mods) :: Nil, body) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
+        case Term.Function(Param.Named(mods, name, tptopt, _) :: Nil, body) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
           s("implicit ", name, tptopt.map { tpt => s(": ", tpt) }.getOrElse(s()), " => ", body)
-        case Term.Function(Param.Named(name, None, _, mods) :: Nil, body) =>
+        case Term.Function(Param.Named(mods, name, None, _) :: Nil, body) =>
           s(name, " => ", body)
         case Term.Function(Param.Anonymous(_, _) :: Nil, body) =>
           s("_ => ", body)

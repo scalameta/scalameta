@@ -128,26 +128,26 @@ class TermSuite extends ParseSuite {
   }
 
   test("(x => x)") {
-    val Function(Param.Named(Name("x", false), None, None, Nil) :: Nil,
+    val Function(Param.Named(Nil, Name("x", false), None, None) :: Nil,
                  Name("x", false)) = term("(x => x)")
   }
 
   test("(x: Int) => x") {
-    val Function(Param.Named(Name("x", false), Some(Type.Name("Int", false)), None, Nil) :: Nil,
+    val Function(Param.Named(Nil, Name("x", false), Some(Type.Name("Int", false)), None) :: Nil,
                  Name("x", false)) = term("(x: Int) => x")
   }
 
   test("(_: Int) => x") {
-    val Function(Param.Anonymous(Some(Type.Name("Int", false)), Nil) :: Nil,
+    val Function(Param.Anonymous(Nil, Some(Type.Name("Int", false))) :: Nil,
                  Name("x", false)) = term("(_: Int) => x")
   }
 
   test("_ => ()") {
-    val Function(Param.Anonymous(None, Nil) :: Nil, Lit.Unit()) = term("_ => ()")
+    val Function(Param.Anonymous(Nil, None) :: Nil, Lit.Unit()) = term("_ => ()")
   }
 
   test("{ implicit x => () }") {
-    val Block(Function(Param.Named(Name("x", false), None, None, Mod.Implicit() :: Nil) :: Nil,
+    val Block(Function(Param.Named(Mod.Implicit() :: Nil, Name("x", false), None, None) :: Nil,
                        Block(Lit.Unit() :: Nil)) :: Nil) = term("{ implicit x => () }")
   }
 

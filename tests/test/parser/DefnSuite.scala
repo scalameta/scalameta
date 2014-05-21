@@ -35,7 +35,7 @@ class DefnSuite extends ParseSuite {
 
   test("type F[T] = List[T]") {
     val Defn.Type(Nil, Type.Name("F", false),
-                  TypeParam.Named(Type.Name("T", false), Nil, Nil, Nil, TypeBounds(None, None), Nil) :: Nil,
+                  TypeParam.Named(Nil, Type.Name("T", false), Nil, Nil, Nil, TypeBounds(None, None)) :: Nil,
                   Type.Apply(Type.Name("List", false), Type.Name("T", false) :: Nil)) = templStat("type F[T] = List[T]")
   }
 
@@ -45,32 +45,32 @@ class DefnSuite extends ParseSuite {
 
   test("def x[A <: B] = 2") {
     val Defn.Def(Nil, Term.Name("x", false),
-                 TypeParam.Named(Type.Name("A", false), Nil, Nil, Nil,
-                                 TypeBounds(None, Some(Type.Name("B", false))), Nil) :: Nil,
+                 TypeParam.Named(Nil, Type.Name("A", false), Nil, Nil, Nil,
+                                 TypeBounds(None, Some(Type.Name("B", false)))) :: Nil,
                  Nil, Nil, None, Lit.Int(2)) = templStat("def x[A <: B] = 2")
   }
 
   test("def x[A <% B] = 2") {
     val Defn.Def(Nil, Term.Name("x", false),
-                 TypeParam.Named(Type.Name("A", false), Nil, Nil,
+                 TypeParam.Named(Nil, Type.Name("A", false), Nil, Nil,
                                  Type.Name("B", false) :: Nil,
-                                 TypeBounds(None, None), Nil) :: Nil,
+                                 TypeBounds(None, None)) :: Nil,
                  Nil, Nil, None, Lit.Int(2)) = templStat("def x[A <% B] = 2")
   }
 
 
   test("def x[A: B] = 2") {
     val Defn.Def(Nil, Term.Name("x", false),
-                 TypeParam.Named(Type.Name("A", false), Nil,
+                 TypeParam.Named(Nil, Type.Name("A", false), Nil,
                                  Type.Name("B", false) :: Nil,
-                                 Nil, TypeBounds(None, None), Nil) :: Nil,
+                                 Nil, TypeBounds(None, None)) :: Nil,
                  Nil, Nil, None, Lit.Int(2)) = templStat("def x[A: B] = 2")
   }
 
   test("def f(a: Int)(implicit b: Int) = a + b") {
     val Defn.Def(Nil, Term.Name("f", false), Nil,
-                 (Param.Named(Term.Name("a", false), Some(Type.Name("Int", false)), None, Nil) :: Nil) :: Nil,
-                 (Param.Named(Term.Name("b", false), Some(Type.Name("Int", false)), None, Nil) :: Nil), None,
+                 (Param.Named(Nil, Term.Name("a", false), Some(Type.Name("Int", false)), None) :: Nil) :: Nil,
+                 (Param.Named(Nil, Term.Name("b", false), Some(Type.Name("Int", false)), None) :: Nil), None,
                  Term.ApplyInfix(Term.Name("a", false), Term.Name("+", false), Nil, Term.Name("b", false) :: Nil)) =
       templStat("def f(a: Int)(implicit b: Int) = a + b")
   }
