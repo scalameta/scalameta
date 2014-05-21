@@ -106,6 +106,7 @@ object Term {
 
   @ast class Match(scrut: Term, cases: Cases) extends Term
   @ast class Try(expr: Term, catchp: Option[Term], finallyp: Option[Term]) extends Term
+  // TODO: we could add a flag that distinguishes { x => ... } and (x => { ... })
   @ast class Function(params: Seq[Aux.Param], body: Term) extends Term with Scope.Params {
     require(params.collect{ case named: Aux.Param.Named => named }.forall(_.default.isEmpty))
     require(params.exists(_.mods.exists(_.isInstanceOf[Mod.Implicit])) ==> (params.length == 1))

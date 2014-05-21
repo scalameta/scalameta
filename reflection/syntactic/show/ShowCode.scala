@@ -17,6 +17,7 @@ import scala.collection.immutable.Seq
 
 object ShowCode {
   def templ(templ: Template) =
+    // TODO: consider XXX.isEmpty
     if (templ.early.isEmpty && templ.parents.isEmpty && templ.self.name.isEmpty && templ.self.decltpe.isEmpty && templ.stats.isEmpty) s()
     else if (templ.parents.nonEmpty || templ.early.nonEmpty) s(" extends ", templ)
     else s(" ", templ)
