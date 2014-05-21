@@ -38,7 +38,7 @@ import scala.reflect.syntactic.SyntacticInfo._
   def mapOrigin(f: Origin => Origin): ThisType
 
   def parent: Option[Tree]
-  private[reflect] def internalWithParent(x: Tree): ThisType
+  private[core] def internalWithParent(x: Tree): ThisType
 
   // TODO: these APIs will most likely change in the future
   // because we would like to make sure that trees are fully immutable

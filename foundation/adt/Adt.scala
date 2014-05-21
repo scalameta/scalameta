@@ -31,7 +31,7 @@ class AdtMacros(val c: Context) {
       if (mods.hasFlag(SEALED)) c.abort(cdef.pos, "sealed is redundant for @root traits")
       if (mods.hasFlag(FINAL)) c.abort(cdef.pos, "@root traits cannot be final")
       val flags1 = flags | SEALED
-      val tag = q"private[reflect] def tag: _root_.scala.Int"
+      val tag = q"def $$tag: _root_.scala.Int"
       val thisType = if (stats.collect{ case TypeDef(_, TypeName("ThisType"), _, _) => () }.isEmpty) q"type ThisType <: ${cdef.name}" else q""
       val hierarchyCheck = q"$Internal.hierarchyCheck[${cdef.name}]"
       val stats1 = tag +: thisType +: hierarchyCheck +: stats
@@ -107,7 +107,7 @@ class AdtMacros(val c: Context) {
 
       // step 3: generate boilerplate required by the @adt infrastructure
       stats1 += q"override type ThisType = $name"
-      stats1 += q"private[reflect] def tag: _root_.scala.Int = $Internal.calculateTag[ThisType]"
+      stats1 += q"override def $$tag: _root_.scala.Int = $Internal.calculateTag[ThisType]"
       stats1 += q"$Internal.hierarchyCheck[ThisType]"
       stats1 += q"$Internal.immutabilityCheck[ThisType]"
       anns1 += q"new $Internal.leaf"
@@ -133,7 +133,7 @@ class AdtMacros(val c: Context) {
 
       // step 2: generate boilerplate required by the @adt infrastructure
       mstats1 += q"override type ThisType = $mname.type"
-      mstats1 += q"private[reflect] def tag: _root_.scala.Int = $Internal.calculateTag[ThisType]"
+      mstats1 += q"override def $$tag: _root_.scala.Int = $Internal.calculateTag[ThisType]"
       mstats1 += q"$Internal.hierarchyCheck[ThisType]"
       mstats1 += q"$Internal.immutabilityCheck[ThisType]"
       manns1 += q"new $Internal.leaf"

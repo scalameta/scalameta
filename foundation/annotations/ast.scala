@@ -53,7 +53,7 @@ class AstMacros(val c: Context) {
       stats1 += q"def parent: Option[Tree] = if (internalParent != null) _root_.scala.Some(internalParent) else _root_.scala.None"
       def internalize(p: ValDef) = TermName("_" + p.name.toString)
       val fieldInitss = paramss.map(_.map(p => q"$AstInternal.initField(this.${internalize(p)})"))
-      stats1 += q"private[reflect] def internalWithParent(internalParent: Tree): ThisType = new ThisType(this, internalParent, scratchpads, origin)(...$fieldInitss)"
+      stats1 += q"private[core] def internalWithParent(internalParent: Tree): ThisType = new ThisType(this, internalParent, scratchpads, origin)(...$fieldInitss)"
       bparams1 += q"private val scratchpads: _root_.scala.collection.immutable.Map[_root_.scala.reflect.semantic.HostContext, Any]"
       stats1 += q"private[reflect] def scratchpad(implicit h: _root_.scala.reflect.semantic.HostContext): _root_.scala.Option[Any] = scratchpads.get(h)"
       stats1 += q"private[reflect] def withScratchpad(scratchpad: Any)(implicit h: _root_.scala.reflect.semantic.HostContext): ThisType = new ThisType(this, internalParent, scratchpads + (h -> scratchpad), origin)(...$fieldInitss)"
@@ -95,7 +95,7 @@ class AstMacros(val c: Context) {
 
       // step 5: generate boilerplate required by the @adt infrastructure
       stats1 += q"override type ThisType = $name"
-      stats1 += q"private[reflect] def tag: _root_.scala.Int = $AdtInternal.calculateTag[ThisType]"
+      stats1 += q"def $$tag: _root_.scala.Int = $AdtInternal.calculateTag[ThisType]"
       anns1 += q"new $AdtInternal.leaf"
       manns1 += q"new $AdtInternal.leaf"
 
