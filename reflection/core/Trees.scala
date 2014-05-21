@@ -36,13 +36,9 @@ import scala.reflect.semantic._
   def mapOrigin(f: Origin => Origin): ThisType
 
   def parent: Option[Tree]
-  def parent_=(x: Tree): Unit = macro AstHelperMacros.parentIsImmutable
-  def withParent(x: Tree): ThisType = macro AstHelperMacros.parentIsImmutable
   private[reflect] def internalWithParent(x: Tree): ThisType
-  def mapParent(x: Tree => Tree): ThisType = macro AstHelperMacros.parentIsImmutable
 
   private[reflect] def scratchpad(implicit h: HostContext): Option[Any]
-  private[reflect] def scratchpad_=(x: Any)(implicit h: HostContext): Unit = macro AstHelperMacros.scratchpadIsImmutable
   private[reflect] def withScratchpad(scratchpad: Any)(implicit h: HostContext): ThisType
   private[reflect] def mapScratchpad(f: Option[Any] => Any)(implicit h: HostContext): ThisType
 

@@ -17,19 +17,6 @@ package object annotations {
       class AstHelperMacros(val c: Context) {
         import c.universe._
         import definitions._
-        def parentIsImmutable(x: c.Tree) = {
-          c.abort(c.enclosingPosition, s"parent can't be set directly. Insert a tree into another tree to have its parent updated automatically.")
-        }
-        def payloadIsImmutable(x: c.Tree) = {
-          val q"$_.$setterName(...$args)" = c.macroApplication
-          val fieldName = setterName.toString.stripSuffix("_$eq")
-          val withName = "with" + fieldName.capitalize
-          val mapName = "map" + fieldName.capitalize
-          c.abort(c.enclosingPosition, s"trees are immutable, so $fieldName can't be mutated. Use $withName or $mapName to create a copy of the tree with $fieldName updated.")
-        }
-        def scratchpadIsImmutable(x: c.Tree)(h: c.Tree) = {
-          c.abort(c.enclosingPosition, s"trees are immutable, so scratchpad can't be mutated. Use withScratchpad or mapScratchpad to create a copy of the tree with scratchpad updated.")
-        }
         def productPrefix[T](implicit T: c.WeakTypeTag[T]) = {
           def loop(sym: Symbol): String = {
             if (sym.owner.isPackageClass) sym.name.toString

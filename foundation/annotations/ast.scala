@@ -76,7 +76,6 @@ class AstMacros(val c: Context) {
               this.$pinternal
             }
           """
-          pstats += q"def ${TermName(p.name + "_=")}(x: Tree): Unit = macro $AstInternal.AstHelperMacros.payloadIsImmutable"
           def generateCow(cowName: TermName, cowParam: ValDef, action: Tree => Tree): Tree = {
             val preArgss = paramss.take(i).map(_.map(p => q"this.${p.name}"))
             val cowArgs = List(AssignOrNamedArg(q"${p.name}", action(q"this.${p.name}")))
