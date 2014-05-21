@@ -82,7 +82,10 @@ trait MemberOps {
       case _: Pkg.Object => fail(ReflectionException("companion not found"))
     }
     @hosted private[semantic] def findCompanion[T <: Member.Template](f: PartialFunction[Member, T]): T = {
-      val companionName = if (tree.name.isInstanceOf[core.Term.Name]) core.Type.Name(tree.name.value)(Origin.None) else core.Term.Name(tree.name.value)(Origin.None)
+      val companionName = {
+        if (tree.name.isInstanceOf[core.Term.Name]) core.Type.Name(tree.name.value)(isBackquoted = false)(Origin.None) else
+        core.Term.Name(tree.name.value)(isBackquoted = false)(Origin.None)
+      }
       val candidates = tree.owner.members(companionName)
       candidates.flatMap{candidates =>
         val relevant = candidates.alts.collect(f).headOption

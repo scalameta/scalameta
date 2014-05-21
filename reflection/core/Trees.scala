@@ -61,7 +61,7 @@ import org.scalareflect.unreachable
 object Term {
   @branch trait Ref extends Term with core.Ref
   @ast class This(qual: Option[core.Name]) extends Ref with Mod.AccessQualifier
-  @ast class Name(value: scala.Predef.String @nonEmpty, isBackquoted: Boolean = false) extends core.Name with Ref with Pat with Member with Has.TermName {
+  @ast class Name(value: scala.Predef.String @nonEmpty)(isBackquoted: Boolean) extends core.Name with Ref with Pat with Member with Has.TermName {
     // TODO: require(!keywords.contains(value) || isBackquoted)
     // TODO: if not backquoted, then not all values should be allowed
     def name: Name = this
@@ -128,7 +128,7 @@ object Term {
 @branch trait Type extends Tree with Aux.ParamType with Scope.Template
 object Type {
   @branch trait Ref extends Type with core.Ref
-  @ast class Name(value: String @nonEmpty, isBackquoted: Boolean = false) extends core.Name with Ref {
+  @ast class Name(value: String @nonEmpty)(isBackquoted: Boolean) extends core.Name with Ref {
     // TODO: require(keywords.contains(value) ==> isBackquoted)
   }
   @ast class Select(qual: Term.Ref, name: Type.Name) extends Ref {

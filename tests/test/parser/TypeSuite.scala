@@ -2,58 +2,58 @@ import scala.reflect.core._, Type._, Aux._
 
 class TypeSuite extends ParseSuite {
   test("T") {
-    val Name("T", false) = tpe("T")
+    val Name("T") = tpe("T")
   }
 
   test("F[T]") {
-    val Apply(Name("F", false), Name("T", false) :: Nil) = tpe("F[T]")
+    val Apply(Name("F"), Name("T") :: Nil) = tpe("F[T]")
   }
 
   test("F#T") {
-    val Project(Name("F", false), Name("T", false)) = tpe("F#T")
+    val Project(Name("F"), Name("T")) = tpe("F#T")
   }
 
   // TODO:
   // test("A * B") {
-  //   val Apply(Name("*", false), Name("A", false) :: Name("B", false) :: Nil) = tpe("A * B")
+  //   val Apply(Name("*"), Name("A") :: Name("B") :: Nil) = tpe("A * B")
   // }
 
   test("A \\/ B") {
-    val ApplyInfix(Name("A", false), Name("\\/", false), Name("B", false)) = tpe("A \\/ B")
+    val ApplyInfix(Name("A"), Name("\\/"), Name("B")) = tpe("A \\/ B")
   }
 
   test("f.T") {
-    val Select(Term.Name("f", false), Type.Name("T", false)) = tpe("f.T")
+    val Select(Term.Name("f"), Type.Name("T")) = tpe("f.T")
   }
 
   test("f.type") {
-    val Singleton(Term.Name("f", false)) = tpe("f.type")
+    val Singleton(Term.Name("f")) = tpe("f.type")
   }
 
   test("super.T") {
-    val SuperSelect(None, None, Name("T", false)) = tpe("super.T")
+    val SuperSelect(None, None, Name("T")) = tpe("super.T")
   }
 
   test("this.T") {
-    val Select(Term.This(None), Name("T", false)) = tpe("this.T")
+    val Select(Term.This(None), Name("T")) = tpe("this.T")
   }
 
   test("(A, B)") {
-    val Tuple(Type.Name("A", false) :: Type.Name("B", false) :: Nil) = tpe("(A, B)")
+    val Tuple(Type.Name("A") :: Type.Name("B") :: Nil) = tpe("(A, B)")
   }
 
   test("(A, B) => C") {
-    val Function(Type.Name("A", false) :: Type.Name("B", false) :: Nil, Type.Name("C", false)) =
+    val Function(Type.Name("A") :: Type.Name("B") :: Nil, Type.Name("C")) =
       tpe("(A, B) => C")
   }
 
   test("T @foo") {
-    val Annotate(Type.Name("T", false), Mod.Annot(Type.Name("foo", false), Nil) :: Nil) =
+    val Annotate(Type.Name("T"), Mod.Annot(Type.Name("foo"), Nil) :: Nil) =
       tpe("T @foo")
   }
 
   test("A with B") {
-    val Compound(Type.Name("A", false) :: Type.Name("B", false) :: Nil, Nil) = tpe("A with B")
+    val Compound(Type.Name("A") :: Type.Name("B") :: Nil, Nil) = tpe("A with B")
   }
 
   test("{}") {
@@ -61,47 +61,47 @@ class TypeSuite extends ParseSuite {
   }
 
   test("A { def x: A; val y: B; type C }") {
-    val Compound(Type.Name("A", false) :: Nil,
-                 Decl.Def(Nil, Term.Name("x", false),
-                          Nil, Nil, Nil, Type.Name("Int", false)) ::
-                 Decl.Val(Nil, List(Term.Name("y", false)), Type.Name("B", false)) ::
-                 Decl.Type(Nil, Type.Name("C", false), Nil, TypeBounds(None, None)) :: Nil) =
+    val Compound(Type.Name("A") :: Nil,
+                 Decl.Def(Nil, Term.Name("x"),
+                          Nil, Nil, Nil, Type.Name("Int")) ::
+                 Decl.Val(Nil, List(Term.Name("y")), Type.Name("B")) ::
+                 Decl.Type(Nil, Type.Name("C"), Nil, TypeBounds(None, None)) :: Nil) =
       tpe("A { def x: Int; val y: B; type C }")
   }
 
   test("F[_ >: lo <: hi]") {
-    val Apply(Name("F", false),
-              Placeholder(TypeBounds(Some(Type.Name("lo", false)),
-                                     Some(Type.Name("hi", false)))) :: Nil) =
+    val Apply(Name("F"),
+              Placeholder(TypeBounds(Some(Type.Name("lo")),
+                                     Some(Type.Name("hi")))) :: Nil) =
       tpe("F[_ >: lo <: hi]")
   }
 
   test("F[_ >: lo") {
-    val Apply(Name("F", false),
-              Placeholder(TypeBounds(Some(Type.Name("lo", false)), None)) :: Nil) =
+    val Apply(Name("F"),
+              Placeholder(TypeBounds(Some(Type.Name("lo")), None)) :: Nil) =
       tpe("F[_ >: lo]")
   }
 
   test("F[_ <: hi]") {
-    val Apply(Name("F", false),
-              Placeholder(TypeBounds(None, Some(Type.Name("hi", false)))) :: Nil) =
+    val Apply(Name("F"),
+              Placeholder(TypeBounds(None, Some(Type.Name("hi")))) :: Nil) =
       tpe("F[_ <: hi]")
   }
 
   test("F[_]") {
-    val Apply(Name("F", false), Placeholder(TypeBounds(None, None)) :: Nil) =
+    val Apply(Name("F"), Placeholder(TypeBounds(None, None)) :: Nil) =
       tpe("F[_]")
   }
 
   test("F[T] forSome { type T }") {
-    val Existential(Apply(Name("F", false), Name("T", false) :: Nil),
-                    Decl.Type(Nil, Name("T", false), Nil, TypeBounds(None, None)) :: Nil) =
+    val Existential(Apply(Name("F"), Name("T") :: Nil),
+                    Decl.Type(Nil, Name("T"), Nil, TypeBounds(None, None)) :: Nil) =
       tpe("F[T] forSome { type T }")
   }
 
   test("a.T forSome { val a: A }") {
-    val Existential(Select(Term.Name("a", false), Type.Name("T", false)),
-                    Decl.Val(Nil, Term.Name("a", false) :: Nil, Type.Name("A", false)) :: Nil) =
+    val Existential(Select(Term.Name("a"), Type.Name("T")),
+                    Decl.Val(Nil, Term.Name("a") :: Nil, Type.Name("A")) :: Nil) =
       tpe("a.T forSome { val a: A }")
   }
 }

@@ -499,8 +499,8 @@ abstract class Parser { parser =>
   def finishBinaryOp[T: OpCtx](opinfo: OpInfo[T], rhs: T): T = opctx.binop(opinfo, rhs)
 
   def reduceStack[T: OpCtx](base: List[OpInfo[T]], top: T): T = {
-    val opPrecedence = if (isName) Term.Name(in.name).precedence else 0
-    val leftAssoc    = !isName || Term.Name(in.name).isLeftAssoc
+    val opPrecedence = if (isName) Term.Name(in.name)(isBackquoted = false).precedence else 0
+    val leftAssoc    = !isName || Term.Name(in.name)(isBackquoted = false).isLeftAssoc
 
     reduceStack(base, top, opPrecedence, leftAssoc)
   }
@@ -668,7 +668,7 @@ abstract class Parser { parser =>
 
     def infixTypeRest(t: Type, mode: InfixMode.Value): Type = {
       if (isName && in.name != "*") {
-        val name = Term.Name(in.name)
+        val name = Term.Name(in.name)(isBackquoted = false)
         val leftAssoc = name.isLeftAssoc
         if (mode != InfixMode.FirstOp) checkAssoc(name, leftAssoc = mode == InfixMode.LeftOp)
         val op = typeName()
@@ -700,11 +700,11 @@ abstract class Parser { parser =>
   implicit class NameToName(name: Name) {
     def toTypeName: Type.Name = name match {
       case name: Type.Name => name
-      case _              => Type.Name(name.value, name.isBackquoted)
+      case _              => Type.Name(name.value)(name.isBackquoted)
     }
     def toTermName: Term.Name = name match {
       case name: Term.Name => name
-      case _              => Term.Name(name.value, name.isBackquoted)
+      case _              => Term.Name(name.value)(name.isBackquoted)
     }
   }
 
@@ -714,7 +714,7 @@ abstract class Parser { parser =>
       val name = in.name
       val isBackquoted = in.token == BACKQUOTED_IDENT
       in.nextToken()
-      Term.Name(name, isBackquoted)
+      Term.Name(name)(isBackquoted)
     }
 
   /** For when it's known already to be a type name. */
@@ -849,7 +849,7 @@ abstract class Parser { parser =>
         in.nextToken()
         lit
       }
-    val interpolator = Term.Name(in.name) // termName() for INTERPOLATIONID
+    val interpolator = Term.Name(in.name)(isBackquoted = false) // termName() for INTERPOLATIONID
     in.nextToken()
     val partsBuf = new ListBuffer[Lit.String]
     val argsBuf = new ListBuffer[Ctx]
@@ -1469,9 +1469,9 @@ abstract class Parser { parser =>
       def isDelimiter            = in.token == RPAREN || in.token == RBRACE
       def isCommaOrDelimiter     = isComma || isDelimiter
       val (isUnderscore, isStar) = opctx[Pat].stack match {
-        case OpInfo(Pat.Wildcard(), Term.Name("*", _), _) :: _ => (true,   true)
-        case OpInfo(_, Term.Name("*", _), _) :: _              => (false,  true)
-        case _                                                  => (false, false)
+        case OpInfo(Pat.Wildcard(), Term.Name("*"), _) :: _ => (true,   true)
+        case OpInfo(_, Term.Name("*"), _) :: _              => (false,  true)
+        case _                                              => (false, false)
       }
       def isSeqPatternClose = isUnderscore && isStar && isSequenceOK && isDelimiter
       val preamble = "bad simple pattern:"
@@ -1511,7 +1511,7 @@ abstract class Parser { parser =>
         in.token match {
           case INTLIT | LONGLIT | FLOATLIT | DOUBLELIT =>
             sid match {
-              case Term.Name("-", _) =>
+              case Term.Name("-") =>
                 return literal(isNegated = true)
               case _ =>
             }
