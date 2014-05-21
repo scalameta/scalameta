@@ -75,7 +75,7 @@ object Term {
   }
   @ast class Apply(fun: Term, args: Seq[Arg]) extends Term
   @ast class ApplyType(fun: Term, targs: Seq[Type] @nonEmpty) extends Term
-  @ast class ApplyInfix(lhs: Term, op: Name, targs: Seq[Type], args: Seq[Arg] @nonEmpty) extends Term
+  @ast class ApplyInfix(lhs: Term, op: Name, targs: Seq[Type], args: Seq[Arg]) extends Term
   @ast class ApplyUnary(op: Name, arg: Term) extends Term {
     // TODO: require(op.isUnaryOp)
   }
@@ -227,11 +227,11 @@ object Defn {
   @ast class Val(mods: Seq[Mod],
                  pats: Seq[Pat] @nonEmpty,
                  decltpe: Option[core.Type],
-                 rhs: Term) extends Defn with Has.Mods
+                 rhs: Term) extends Defn with Has.Mods with Stmt.Early
   @ast class Var(mods: Seq[Mod],
                  pats: Seq[Pat] @nonEmpty,
                  decltpe: Option[core.Type],
-                 rhs: Option[Term]) extends Defn with Has.Mods {
+                 rhs: Option[Term]) extends Defn with Has.Mods with Stmt.Early{
     require(rhs.isEmpty ==> pats.forall(_.isInstanceOf[Term.Name]))
     require(decltpe.nonEmpty || rhs.nonEmpty)
   }
@@ -242,7 +242,8 @@ object Defn {
                  implicits: Seq[Aux.Param.Named],
                  decltpe: Option[core.Type],
                  body: Term) extends Defn with Member.Def {
-    require(mods.exists(_.isInstanceOf[Mod.Macro]) ==> decltpe.nonEmpty)
+    // TODO: syntax profile
+    // require(mods.exists(_.isInstanceOf[Mod.Macro]) ==> decltpe.nonEmpty)
   }
   @ast class Procedure(mods: Seq[Mod],
                        name: Term.Name,
@@ -313,6 +314,7 @@ object Stmt {
   @branch trait Block extends Template
   @branch trait Refine extends Template
   @branch trait Existential extends Refine
+  @branch trait Early extends Block
 }
 
 @branch trait Scope extends Tree
@@ -404,9 +406,8 @@ object Aux {
   @ast class CompUnit(stats: Seq[Stmt.TopLevel]) extends Tree
   @ast class Case(pat: Pat, cond: Option[Term] = None, stats: Seq[Stmt.Template] = Nil) extends Tree with Scope
   @ast class Parent(tpe: Type, argss: Seq[Seq[Arg]] = Nil) extends Tree
-  @ast class Template(early: Seq[Defn.Val] = Nil, parents: Seq[Parent] = Nil,
+  @ast class Template(early: Seq[Stmt.Early] = Nil, parents: Seq[Parent] = Nil,
                       self: Self = Self()(Origin.None), stats: Seq[Stmt.Template] = Nil) extends Tree with Scope.Template {
-                      // TODO: should self inherit the origin from the caller?
     require(parents.isEmpty || !parents.tail.exists(_.argss.nonEmpty))
     require(early.nonEmpty ==> parents.nonEmpty)
   }

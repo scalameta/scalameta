@@ -251,4 +251,25 @@ class TermSuite extends ParseSuite {
     val New(Template(Nil, Nil, Self(Some(Term.Name("self", false)), Some(Type.Name("T", false))), Nil)) =
       term("new { self: T => }")
   }
+
+  test("a + (b = c)") {
+    val ApplyInfix(Name("a", false), Name("+", false), Nil,
+                   Arg.Named(Name("b", false), Name("c", false)) :: Nil) = term("a + (b = c)")
+  }
+
+  test("(a = b) + c") {
+    val ApplyInfix(Assign(Name("a", false), Name("b", false)), Name("+", false), Nil,
+                   Name("c", false) :: Nil) = term("(a = b) + c")
+  }
+
+  test("a + (b = c).d") {
+    val ApplyInfix(Name("a", false), Name("+", false), Nil,
+                   Select(Assign(Name("b", false), Name("c", false)), Name("d", false)) :: Nil) =
+      term("a + (b = c).d")
+  }
+
+  test("a + (b: _*)") {
+    val ApplyInfix(Name("a", false), Name("+", false), Nil,
+                   Arg.Repeated(Name("b", false)) :: Nil) = term("a + (b: _*)")
+  }
 }
