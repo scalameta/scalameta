@@ -84,21 +84,19 @@ class AdtMacros(val c: Context) {
       if (mods.hasFlag(CASE)) c.abort(cdef.pos, "case is redundant for @leaf classes")
       if (mods.hasFlag(ABSTRACT)) c.abort(cdef.pos, "@leaf classes cannot be abstract")
       if (ctorMods.flags != NoFlags) c.abort(cdef.pos, "@leaf classes must define a public primary constructor")
-      if (paramss.length != 1) c.abort(cdef.pos, "@leaf classes must define exactly one parameter list")
 
       // step 2: unprivate parameters, create copy-on-write helpers, generate validation checks
-      val params :: Nil = paramss
-      val params1 = params.map{ case q"$mods val $name: $tpt = $default" => q"${unprivate(mods)} val $name: $tpt = $default" }
-      stats1 ++= params.map{p =>
+      val paramss1 = paramss.map(_.map{ case q"$mods val $name: $tpt = $default" => q"${unprivate(mods)} val $name: $tpt = $default" })
+      stats1 ++= paramss.flatten.map{p =>
         val withName = TermName("with" + p.name.toString.capitalize)
         q"def $withName(${p.name}: ${p.tpt}): ThisType = this.copy(${p.name} = ${p.name})"
       }
-      stats1 ++= params.map{p =>
+      stats1 ++= paramss.flatten.map{p =>
         val mapName = TermName("map" + p.name.toString.capitalize)
         q"def $mapName(f: ${p.tpt} => ${p.tpt}): ThisType = this.copy(${p.name} = f(this.${p.name}))"
       }
-      stats1 ++= params.map(p => q"$Internal.nullCheck(this.${p.name})")
-      stats1 ++= params.map(p => q"$Internal.emptyCheck(this.${p.name})")
+      stats1 ++= paramss.flatten.map(p => q"$Internal.nullCheck(this.${p.name})")
+      stats1 ++= paramss.flatten.map(p => q"$Internal.emptyCheck(this.${p.name})")
 
       // step 3: generate boilerplate required by the @adt infrastructure
       stats1 += q"override type ThisType = $name"
@@ -109,7 +107,7 @@ class AdtMacros(val c: Context) {
       manns1 += q"new $Internal.leaf"
       parents1 += tq"_root_.scala.Product"
 
-      val cdef1 = q"${casify(finalize(mods1))} class $name[..$tparams] $ctorMods(..$params1) extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
+      val cdef1 = q"${casify(finalize(mods1))} class $name[..$tparams] $ctorMods(...$paramss1) extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
       val mdef1 = q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }"
       List(cdef1, mdef1)
     }

@@ -18,7 +18,8 @@ class AstMacros(val c: Context) {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       val q"$mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
       val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" = mdef
-      val params1 = ListBuffer[ValDef]()
+      val bparams1 = ListBuffer[ValDef]() // boilerplate params
+      val paramss1 = ListBuffer[List[ValDef]]() // payload params
       val stats1 = ListBuffer[Tree]()
       val anns1 = ListBuffer[Tree]() ++ mods.annotations
       def mods1 = mods.mapAnnotations(_ => anns1.toList)
@@ -38,7 +39,6 @@ class AstMacros(val c: Context) {
       if (mods.hasFlag(CASE)) c.abort(cdef.pos, "case is redundant for @ast classes")
       if (mods.hasFlag(ABSTRACT)) c.abort(cdef.pos, "@ast classes cannot be abstract")
       if (ctorMods.flags != NoFlags) c.abort(cdef.pos, "@ast classes must define a public primary constructor")
-      if (paramss.length != 1) c.abort(cdef.pos, "@ast classes must define exactly one parameter list")
 
       // step 2: validate the body of the class
       val (defns, rest) = stats.partition(_.isDef)
@@ -46,12 +46,25 @@ class AstMacros(val c: Context) {
       val (requires, illegal) = rest.partition(_ match { case q"require($what)" => true; case _ => false })
       illegal.foreach(stmt => c.abort(stmt.pos, "only invariants and definitions are allowed in @ast classes"))
 
-      // step 3: turn all parameters into private internal vars, create getters and setters
-      val params :: Nil = paramss
+      // step 3: generate boilerplate parameters
+      bparams1 += q"private val prototype: $name"
+      bparams1 += q"private val internalParent: Tree"
+      stats1 += q"def parent: Option[Tree] = if (internalParent != null) _root_.scala.Some(internalParent) else _root_.scala.None"
       def internalize(p: ValDef) = TermName("internal" + p.name.toString.capitalize)
-      params1 ++= params.map { case p @ q"$mods val $name: $tpt = $default" => q"${undefault(unoverride(privatize(varify(mods))))} val ${internalize(p)}: $tpt" }
+      val fieldInitss = paramss.map(_.map(p => q"$AstInternal.initField(this.${internalize(p)})"))
+      stats1 += q"private[reflect] def internalWithParent(internalParent: Tree): ThisType = new ThisType(this, internalParent, scratchpads, origin)(...$fieldInitss)"
+      bparams1 += q"private val scratchpads: _root_.scala.collection.immutable.Map[_root_.scala.reflect.semantic.HostContext, Any]"
+      stats1 += q"private[reflect] def scratchpad(implicit h: _root_.scala.reflect.semantic.HostContext): _root_.scala.Option[Any] = scratchpads.get(h)"
+      stats1 += q"private[reflect] def withScratchpad(scratchpad: Any)(implicit h: _root_.scala.reflect.semantic.HostContext): ThisType = new ThisType(this, internalParent, scratchpads + (h -> scratchpad), origin)(...$fieldInitss)"
+      stats1 += q"private[reflect] def mapScratchpad(f: _root_.scala.Option[Any] => Any)(implicit h: _root_.scala.reflect.semantic.HostContext): ThisType = new ThisType(this, internalParent, scratchpads + (h -> f(scratchpads.get(h))), origin)(...$fieldInitss)"
+      bparams1 += q"val origin: _root_.scala.reflect.core.Origin"
+      stats1 += q"def withOrigin(origin: Origin): ThisType = new ThisType(this, internalParent, scratchpads, origin)(...$fieldInitss)"
+      stats1 += q"def mapOrigin(f: Origin => Origin): ThisType = new ThisType(this, internalParent, scratchpads, f(origin))(...$fieldInitss)"
+
+      // step 4: turn all parameters into private internal vars, create getters and setters
+      paramss1 ++= paramss.map(_.map{ case p @ q"$mods val $name: $tpt = $default" => q"${undefault(unoverride(privatize(varify(mods))))} val ${internalize(p)}: $tpt" })
       stats1 += q"import scala.language.experimental.macros"
-      stats1 ++= params.flatMap{p =>
+      stats1 ++= paramss.flatten.flatMap{p =>
         val pstats = ListBuffer[Tree]()
         val pinternal = internalize(p)
         val pmods = if (p.mods.hasFlag(OVERRIDE)) Modifiers(OVERRIDE) else NoMods
@@ -68,24 +81,10 @@ class AstMacros(val c: Context) {
         pstats += q"def $mapName(f: ${p.tpt} => ${p.tpt})(implicit origin: _root_.scala.reflect.core.Origin): ThisType = this.copy(${p.name} = f(this.${p.name}))"
         pstats.toList
       }
-      val copyParams = params.map(p => q"val ${p.name}: ${p.tpt} = this.${p.name}")
-      val copyArgs = params.map(p => q"${p.name}")
+      val copyParamss = paramss.map(_.map(p => q"val ${p.name}: ${p.tpt} = this.${p.name}"))
+      val copyArgss = paramss.map(_.map(p => q"${p.name}"))
       // TODO: would be useful to turn copy, mapXXX and withXXX into macros, so that their calls are guaranteed to be inlined
-      stats1 += q"def copy(..$copyParams)(implicit origin: _root_.scala.reflect.core.Origin): ThisType = $mname.apply(..$copyArgs)(_root_.scala.reflect.core.Origin.Transform(this, this.origin))"
-
-      // step 4: generate boilerplate parameters
-      params1 += q"private val prototype: $name"
-      params1 += q"private val internalParent: Tree"
-      stats1 += q"def parent: Option[Tree] = if (internalParent != null) _root_.scala.Some(internalParent) else _root_.scala.None"
-      val fieldInits = params.map(p => q"$AstInternal.initField(this.${internalize(p)})")
-      stats1 += q"private[reflect] def internalWithParent(internalParent: Tree): ThisType = new ThisType(..$fieldInits, this, internalParent, scratchpads, origin)"
-      params1 += q"private val scratchpads: _root_.scala.collection.immutable.Map[_root_.scala.reflect.semantic.HostContext, Any]"
-      stats1 += q"private[reflect] def scratchpad(implicit h: _root_.scala.reflect.semantic.HostContext): _root_.scala.Option[Any] = scratchpads.get(h)"
-      stats1 += q"private[reflect] def withScratchpad(scratchpad: Any)(implicit h: _root_.scala.reflect.semantic.HostContext): ThisType = new ThisType(..$fieldInits, this, internalParent, scratchpads + (h -> scratchpad), origin)"
-      stats1 += q"private[reflect] def mapScratchpad(f: _root_.scala.Option[Any] => Any)(implicit h: _root_.scala.reflect.semantic.HostContext): ThisType = new ThisType(..$fieldInits, this, internalParent, scratchpads + (h -> f(scratchpads.get(h))), origin)"
-      params1 += q"val origin: _root_.scala.reflect.core.Origin"
-      stats1 += q"def withOrigin(origin: Origin): ThisType = new ThisType(..$fieldInits, this, internalParent, scratchpads, origin)"
-      stats1 += q"def mapOrigin(f: Origin => Origin): ThisType = new ThisType(..$fieldInits, this, internalParent, scratchpads, f(origin))"
+      stats1 += q"def copy(...$copyParamss)(implicit origin: _root_.scala.reflect.core.Origin): ThisType = $mname.apply(...$copyArgss)(_root_.scala.reflect.core.Origin.Transform(this, this.origin))"
 
       // step 5: generate boilerplate required by the @adt infrastructure
       stats1 += q"override type ThisType = $name"
@@ -96,9 +95,9 @@ class AstMacros(val c: Context) {
       // step 6: implement Product
       parents1 += tq"_root_.scala.Product"
       stats1 += q"override def productPrefix: _root_.scala.Predef.String = $AstInternal.productPrefix[ThisType]"
-      stats1 += q"override def productArity: _root_.scala.Int = ${params.length}"
+      stats1 += q"override def productArity: _root_.scala.Int = ${paramss.head.length}"
       val pelClauses = ListBuffer[Tree]()
-      pelClauses ++= 0.to(params.length - 1).map(i => cq"$i => this.${params(i).name}")
+      pelClauses ++= 0.to(paramss.head.length - 1).map(i => cq"$i => this.${paramss.head(i).name}")
       pelClauses += cq"_ => throw new _root_.scala.IndexOutOfBoundsException(n.toString)"
       stats1 += q"override def productElement(n: _root_.scala.Int): Any = n match { case ..$pelClauses }"
       stats1 += q"override def productIterator: _root_.scala.Iterator[_root_.scala.Any] = _root_.scala.runtime.ScalaRunTime.typedProductIterator(this)"
@@ -109,32 +108,32 @@ class AstMacros(val c: Context) {
       stats1 += q"override def hashCode: _root_.scala.Int = _root_.java.lang.System.identityHashCode(this)"
 
       // step 8: generate Companion.apply
-      val applyParams = params.map(p => q"@..${mods.annotations} val ${p.name}: ${p.tpt} = ${p.rhs}")
+      val applyParamss = paramss.map(_.map(p => q"@..${p.mods.annotations} val ${p.name}: ${p.tpt} = ${p.rhs}"))
       val applyBody = ListBuffer[Tree]()
       applyBody += q"$AdtInternal.hierarchyCheck[$name]"
       // applyBody += q"$AdtInternal.immutabilityCheck[$name]"
-      applyBody ++= params.map(p => q"$AdtInternal.nullCheck(${p.name})")
-      applyBody ++= params.map(p => q"$AdtInternal.emptyCheck(${p.name})")
+      applyBody ++= paramss.flatten.map(p => q"$AdtInternal.nullCheck(${p.name})")
+      applyBody ++= paramss.flatten.map(p => q"$AdtInternal.emptyCheck(${p.name})")
       applyBody ++= requires
-      val paramInits = params.map(p => q"$AstInternal.initParam(${p.name})")
-      applyBody += q"val node = new $name(..$paramInits, prototype = null, internalParent = null, scratchpads = _root_.scala.collection.immutable.Map(), origin = origin)"
-      applyBody ++= params.map(p => q"$AstInternal.storeField(node.${internalize(p)}, ${p.name})")
+      val paramInitss = paramss.map(_.map(p => q"$AstInternal.initParam(${p.name})"))
+      applyBody += q"val node = new $name(prototype = null, internalParent = null, scratchpads = _root_.scala.collection.immutable.Map(), origin = origin)(...$paramInitss)"
+      applyBody ++= paramss.flatten.map(p => q"$AstInternal.storeField(node.${internalize(p)}, ${p.name})")
       applyBody += q"node"
-      mstats1 += q"def apply(..$applyParams)(implicit origin: _root_.scala.reflect.core.Origin): $name = { ..$applyBody }"
+      mstats1 += q"def apply(...$applyParamss)(implicit origin: _root_.scala.reflect.core.Origin): $name = { ..$applyBody }"
 
       // step 9: generate Companion.unapply
       // TODO: migrate to name-based pattern matching
       val needsUnapply = !mstats.exists(stat => stat match { case DefDef(_, TermName("unapply"), _, _, _, _) => true; case _ => false })
       if (needsUnapply) {
-        if (params.isEmpty) mstats1 += q"def unapply(x: $name): Boolean = true"
+        if (paramss.head.isEmpty) mstats1 += q"def unapply(x: $name): Boolean = true"
         else {
-          val successTargs = tq"(..${params.map(p => p.tpt)})"
-          val successArgs = q"(..${params.map(p => q"x.${p.name}")})"
+          val successTargs = tq"(..${paramss.head.map(p => p.tpt)})"
+          val successArgs = q"(..${paramss.head.map(p => q"x.${p.name}")})"
           mstats1 += q"def unapply(x: $name): Option[$successTargs] = if (x == null) _root_.scala.None else _root_.scala.Some($successArgs)"
         }
       }
 
-      val cdef1 = q"${finalize(mods1)} class $name[..$tparams] ${privatize(ctorMods)}(..$params1) extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
+      val cdef1 = q"${finalize(mods1)} class $name[..$tparams] ${privatize(ctorMods)}(...${bparams1 +: paramss1}) extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
       val mdef1 = q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
       List(cdef1, mdef1)
     }
