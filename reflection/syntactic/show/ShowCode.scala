@@ -1,10 +1,11 @@
 package scala.reflect
-package syntactic
+package syntactic.show
 
 import scala.reflect.core._, Aux._
 import org.scalareflect.show.Show
 import Show.{ sequence => s, repeat => r, indent => i, newline => n }
 import scala.reflect.syntactic.SyntacticInfo._
+import scala.reflect.semantic._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 
@@ -16,7 +17,8 @@ import scala.collection.immutable.Seq
 
 object ShowCode {
   def templ(templ: Template) =
-    if (templ eq Template.empty) s()
+    // TODO: consider XXX.isEmpty
+    if (templ.early.isEmpty && templ.parents.isEmpty && templ.self.name.isEmpty && templ.self.decltpe.isEmpty && templ.stats.isEmpty) s()
     else if (templ.parents.nonEmpty || templ.early.nonEmpty) s(" extends ", templ)
     else s(" ", templ)
 
@@ -26,6 +28,7 @@ object ShowCode {
   }
 
   // Branches
+  // TODO: this match is not exhaustive: if I remove Mod.Package, then I get no warning
   implicit def showTree[T <: Tree]: Show[T] = Show { x => (x: Tree) match {
     case t: Name => if (t.isBackquoted) s("`", t.value, "`") else s(t.value)
 
@@ -44,7 +47,8 @@ object ShowCode {
     case t: Type.Annotate    => s(t.tpe, " ", t.mods)
     case t: Type.Apply       => s(t.tpe, "[", r(t.args, ", "), "]")
     case t: Type.ApplyInfix  => s(t.lhs, " ", t.op, " ", t.rhs)
-    case t: Type.Compound    => s(r(t.tpes, " with "), " { ", r(t.refinement, "; "), " }")
+    case t: Type.Compound if t.hasExplicitRefinement => s(r(t.tpes, " with "), " { ", r(t.refinement, "; "), " }")
+    case t: Type.Compound    => r(t.tpes, "with")
     case t: Type.Existential => s(t.tpe, " forSome { ", r(t.quants, "; "), " }")
     case t: Type.Placeholder => s("_", t.bounds)
     case t: Type.Tuple       => s("(", r(t.elements, ", "), ")")
@@ -83,9 +87,9 @@ object ShowCode {
       import Term.{Block, Function}
       def pstats(s: Seq[Stmt.Block]) = r(s.map(i(_)), ";")
       t match {
-        case Block(Function(Param.Named(name, tptopt, _, mods) :: Nil, Block(stats)) :: Nil) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
+        case Block(Function(Param.Named(mods, name, tptopt, _) :: Nil, Block(stats)) :: Nil) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
           s("{ implicit ", name, tptopt.map { tpt => s(": ", tpt) }.getOrElse(s()), " => ", pstats(stats), n("}"))
-        case Block(Function(Param.Named(name, None, _, mods) :: Nil, Block(stats)) :: Nil) =>
+        case Block(Function(Param.Named(mods, name, None, _) :: Nil, Block(stats)) :: Nil) =>
           s("{ ", name, " => ", pstats(stats), n("}"))
         case Block(Function(Param.Anonymous(_, _) :: Nil, Block(stats)) :: Nil) =>
           s("{ _ => ", pstats(stats), n("}"))
@@ -119,9 +123,9 @@ object ShowCode {
     case t: Term.If.ThenElse => s("if (", t.cond, ") ", t.thenp, " else ", t.elsep)
     case t: Term.Function =>
       t match {
-        case Term.Function(Param.Named(name, tptopt, _, mods) :: Nil, body) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
+        case Term.Function(Param.Named(mods, name, tptopt, _) :: Nil, body) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
           s("implicit ", name, tptopt.map { tpt => s(": ", tpt) }.getOrElse(s()), " => ", body)
-        case Term.Function(Param.Named(name, None, _, mods) :: Nil, body) =>
+        case Term.Function(Param.Named(mods, name, None, _) :: Nil, body) =>
           s(name, " => ", body)
         case Term.Function(Param.Anonymous(_, _) :: Nil, body) =>
           s("_ => ", body)
@@ -176,6 +180,7 @@ object ShowCode {
     case t: Mod.Protected     => s("protected", t.within, " ")
     case _: Mod.ValParam      => s("val ")
     case _: Mod.VarParam      => s("var ")
+    case _: Mod.Package       => s("package ")
 
     // Defn
     case t: Defn.Val       => s(t.mods, "val ", r(t.pats, ", "), t.decltpe, " = ", t.rhs)
@@ -197,10 +202,9 @@ object ShowCode {
     case t: Decl.Procedure => s(t.mods, "def ", t.name, t.tparams, (t.explicits, t.implicits))
 
     // Pkg
-    case t: CompUnit   => r(t.stats)
-    case t: Pkg.Header => s("package ", t.name, r(t.stats.map(n(_))))
-    case t: Pkg.Named  => s("package ", t.name, " { ", r(t.stats.map(i(_)), "\n"), n("}"))
-    case t: Pkg.Object => s(t.mods, " package object ", t.name, templ(t.templ))
+    case t: CompUnit           => r(t.stats)
+    case t: Pkg if t.hasBraces => s("package ", t.name, " { ", r(t.stats.map(i(_)), "\n"), n("}"))
+    case t: Pkg                => s("package ", t.name, r(t.stats.map(n(_))))
 
     // Ctor
     case t: Ctor.Primary   => s(t.mods, (t.explicits, t.implicits))
@@ -229,10 +233,11 @@ object ShowCode {
       if (t.name.isEmpty && t.decltpe.isEmpty) s()
       else s(" ", t.name, t.decltpe, " => ")
     case t: Template =>
-      if (t eq Template.empty) s()
+      if (t.early.isEmpty && t.parents.isEmpty && t.self.name.isEmpty && t.self.decltpe.isEmpty && t.stats.isEmpty) s()
       else {
         val pearly = if (t.early.isEmpty) s() else s("{ ", r(t.early, "; "), " } with ")
-        val pbody = if ((t.self eq Self.empty) && t.stats.isEmpty) s()
+        // TODO: use Template.hasExplicitBody
+        val pbody = if (t.self.name.isEmpty && t.self.decltpe.isEmpty && t.stats.isEmpty) s()
                     else s("{", t.self, r(t.stats.map(i(_)), ";"), n("}"))
         val pparents = if (t.parents.nonEmpty) s(r(t.parents, " with "), " ") else s()
         s(pearly, pparents, pbody)

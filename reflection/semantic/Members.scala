@@ -12,7 +12,7 @@ trait MemberOps {
   implicit class SemanticMemberOps(tree: Member) {
     // TODO: expose type parameter instantiation facilities, e.g. `def foo[T]: T = ...` => `def foo: Int = ...`
     def ref: Ref = tree match {
-      case self: Aux.Self => self.name.getOrElse(Term.This(None)(SourceContext.None))
+      case self: Aux.Self => self.name.getOrElse(Term.This(None))
       case named: Has.Name => named.name
     }
     @hosted def overrides: Seq[Member] = tree match {
@@ -21,15 +21,15 @@ trait MemberOps {
     }
     def annots: Seq[Mod.Annot] = tree.mods.collect{ case annot: Mod.Annot => annot }
     def doc: Option[Mod.Doc] = tree.mods.collect{ case doc: Mod.Doc => doc }.headOption
-    def isVal: Boolean = tree.isInstanceOf[Term.Name] && (tree.parent.isInstanceOf[Decl.Val] || tree.parent.isInstanceOf[Defn.Val])
-    def isVar: Boolean = tree.isInstanceOf[Term.Name] && (tree.parent.isInstanceOf[Decl.Var] || tree.parent.isInstanceOf[Defn.Var])
+    def isVal: Boolean = tree.isInstanceOf[Term.Name] && (tree.parent.map(parent => parent.isInstanceOf[Decl.Val] || parent.isInstanceOf[Defn.Val]).getOrElse(false))
+    def isVar: Boolean = tree.isInstanceOf[Term.Name] && (tree.parent.map(parent => parent.isInstanceOf[Decl.Var] || parent.isInstanceOf[Defn.Var]).getOrElse(false))
     def isDef: Boolean = tree.isInstanceOf[Member.Def]
     def isType: Boolean = tree.isInstanceOf[Member.AbstractOrAliasType]
     def isClass: Boolean = tree.isInstanceOf[Defn.Class]
     def isTrait: Boolean = tree.isInstanceOf[Defn.Trait]
     def isObject: Boolean = tree.isInstanceOf[Defn.Object]
     def isPkg: Boolean = tree.isInstanceOf[Pkg]
-    def isPkgObject: Boolean = tree.isInstanceOf[Pkg.Object]
+    def isPkgObject: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Package])
     def isJava: Boolean = ??? // TODO: need special trees for Java artifacts
     def isPrivate: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Private])
     def isProtected: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Protected])
@@ -79,10 +79,12 @@ trait MemberOps {
       case _: Defn.Class => findCompanion{ case x: Defn.Object => x }
       case _: Defn.Trait => findCompanion{ case x: Defn.Object => x }
       case _: Defn.Object => findCompanion{ case x: Defn.Class => x; case x: Defn.Trait => x }
-      case _: Pkg.Object => fail(ReflectionException("companion not found"))
     }
     @hosted private[semantic] def findCompanion[T <: Member.Template](f: PartialFunction[Member, T]): T = {
-      val companionName = if (tree.name.isInstanceOf[core.Term.Name]) core.Type.Name(tree.name.value)(SourceContext.None) else core.Term.Name(tree.name.value)(SourceContext.None)
+      val companionName = {
+        if (tree.name.isInstanceOf[core.Term.Name]) core.Type.Name(tree.name.value)(isBackquoted = false) else
+        core.Term.Name(tree.name.value)(isBackquoted = false)
+      }
       val candidates = tree.owner.members(companionName)
       candidates.flatMap{candidates =>
         val relevant = candidates.alts.collect(f).headOption

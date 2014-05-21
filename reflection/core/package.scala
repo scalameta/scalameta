@@ -25,6 +25,8 @@ package object core {
 
   // TODO: trivia: whitespace, comments, etc (see http://msdn.microsoft.com/en-us/vstudio/hh500769)
   // TODO: history vs positions (can trivia be inferred from positions only?)
+  // TODO: what should be there in transform? what should be the signature of mapXXX and withXXX?
+  // TODO: also there's the question of what origin should SemanticMemberOps.ref produce for empty This
   @root trait Source { def content: Array[Char] }
   object Source {
     @leaf object None extends Source { def content = new Array[Char](0) }
@@ -36,17 +38,12 @@ package object core {
     }
     object File { def apply(path: Predef.String): Source.File = Source.File(new java.io.File(path)) }
   }
-  @root trait SourceContext {
-    def source: Source
-  }
-  object SourceContext {
-    @leaf object None extends SourceContext {
-      def source = Source.None
-      override def toString = ""
-    }
-    @leaf class Some(source: Source) extends SourceContext {
-      override def toString = ""
-    }
+  @root trait Origin { def src: Source }
+  object Origin {
+    @leaf object None extends Origin { def src = core.Source.None }
+    @leaf class Source(src: core.Source) extends Origin
+    @leaf class Transform(proto: Tree, origin: Origin) extends Origin { def src = origin.src }
+    implicit def defaultOriginIsNone: Origin = None
   }
 
   final case class ReflectionException(msg: String) extends Exception(msg)

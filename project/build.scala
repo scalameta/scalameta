@@ -115,7 +115,7 @@ object build extends Build {
   ) settings (
     test in Test := (test in tests in Test).value,
     packagedArtifacts := Map.empty
-  ) aggregate (reflection, tests)
+  ) aggregate (reflection, foundation, tests)
 
   lazy val foundation = Project(
     id   = "foundation",
@@ -129,14 +129,18 @@ object build extends Build {
   )
 
   lazy val reflection = Project(
-    id   = "core",
+    id   = "reflection",
     base = file("reflection")
   ) settings (
     publishableSettings: _*
   ) settings (
     scalaSource in Compile <<= (baseDirectory in Compile)(base => base),
+    artifactName := { (sv: ScalaVersion, module: ModuleID, artifact: Artifact) =>
+      val standard = artifactName.value(sv, module, artifact)
+      standard.replace("reflection_", "core_")
+    },
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided"),
-    // scalacOptions ++= Seq("-Xprint:typer")
+    // scalacOptions ++= Seq("-Xprint:typer"),
     scalacOptions ++= Seq()
   ) dependsOn (foundation)
 

@@ -5,8 +5,15 @@ import org.scalareflect.invariants._
 import org.scalareflect.errors._
 import org.scalareflect.adt._
 import org.scalareflect.annotations._
+import org.scalareflect.annotations.internal.ast.AstHelperMacros
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
+import scala.language.experimental.macros
+import scala.reflect.semantic.HostContext
+import org.scalareflect.unreachable
+import scala.reflect.semantic._
+import scala.reflect.syntactic._
+import scala.reflect.syntactic.SyntacticInfo._
 
 // TODO: collection-like methods (see http://clang.llvm.org/docs/LibASTMatchersReference.html)
 // TODO: rewriting/transformation methods
@@ -23,14 +30,25 @@ import scala.collection.immutable.Seq
 // TODO: converter: double check conversion of `(f _)(x)` (bug 46)
 // TODO: add tree for comments
 
-@root trait Tree {
-  // TODO: we also need some sort of host-specific metadata in trees
-  def src: SourceContext
-  def owner: Scope = parent match { case owner: Scope => owner; case tree => tree.owner }
-  // TODO: we still need to figure out how to implement this - either going the Roslyn route or the by-name arguments route.
-  def parent: Tree = ???
-  def showCode: String = syntactic.ShowCode.showTree(this).toString
-  def showRaw: String = ??? // syntactic.ShowRaw.showTree(this).toString
+@root trait Tree extends Product {
+  type ThisType <: Tree
+
+  def origin: Origin
+  def withOrigin(origin: Origin): ThisType
+  def mapOrigin(f: Origin => Origin): ThisType
+
+  def parent: Option[Tree]
+  private[reflect] def internalWithParent(x: Tree): ThisType
+
+  // TODO: these APIs will most likely change in the future
+  // because we would like to make sure that trees are fully immutable
+  private[reflect] def scratchpad(implicit h: HostContext): Option[Any]
+  private[reflect] def withScratchpad(scratchpad: Any)(implicit h: HostContext): ThisType
+  private[reflect] def mapScratchpad(f: Option[Any] => Any)(implicit h: HostContext): ThisType
+
+  def showCode: String = syntactic.show.ShowCode.showTree(this).toString
+  def showRaw: String = syntactic.show.ShowRaw.showTree(this).toString
+  final override def toString: String = showRaw
 }
 
 @branch trait Ref extends Tree
@@ -44,9 +62,9 @@ import scala.collection.immutable.Seq
 object Term {
   @branch trait Ref extends Term with core.Ref
   @ast class This(qual: Option[core.Name]) extends Ref with Mod.AccessQualifier
-  @ast class Name(value: scala.Predef.String @nonEmpty, isBackquoted: Boolean = false) extends core.Name with Ref with Pat with Member with Has.TermName {
-    // TODO: require(!keywords.contains(value) || isBackquoted)
-    // TODO: if not backquoted, then not all values should be allowed
+  // TODO: isBackquoted might use a default value or some sorts (or an overloaded apply)
+  @ast class Name(value: scala.Predef.String @nonEmpty)(isBackquoted: Boolean) extends core.Name with Ref with Pat with Member with Has.TermName {
+    require(keywords.contains(value) ==> isBackquoted)
     def name: Name = this
     def mods: Seq[Mod] = Nil
   }
@@ -61,7 +79,7 @@ object Term {
   @ast class ApplyType(fun: Term, targs: Seq[Type] @nonEmpty) extends Term
   @ast class ApplyInfix(lhs: Term, op: Name, targs: Seq[Type], args: Seq[Arg]) extends Term
   @ast class ApplyUnary(op: Name, arg: Term) extends Term {
-    // TODO: require(op.isUnaryOp)
+    require(op.isUnaryOp)
   }
   @ast class Assign(lhs: Term.Ref, rhs: Term) extends Term
   @ast class Update(lhs: Apply, rhs: Term) extends Term
@@ -76,30 +94,34 @@ object Term {
   }
   // TODO: automatically flatten blocks with just a single term?
   @ast class Block(stats: Seq[Stmt.Block]) extends Term with Scope {
-    require(stats.collect{ case v: Defn.Var => v }.forall(_.rhs.isDefined))
+    require(stats.collect { case v: Defn.Var => v }.forall(_.rhs.isDefined))
+    require(stats.collect { case m: Member if m.isPkgObject => m }.isEmpty)
   }
 
   @branch trait If extends Term { def cond: Term; def thenp: Term; def elsep: Term }
   object If {
+    // TODO: maybe merge Then and ThenElse using flags?
     @ast class Then(cond: Term, thenp: Term) extends If { def elsep: Term = Lit.Unit() }
     @ast class ThenElse(cond: Term, thenp: Term, elsep: Term) extends If
   }
 
   @ast class Match(scrut: Term, cases: Cases) extends Term
   @ast class Try(expr: Term, catchp: Option[Term], finallyp: Option[Term]) extends Term
+  // TODO: we could add a flag that distinguishes { x => ... } and (x => { ... })
   @ast class Function(params: Seq[Aux.Param], body: Term) extends Term with Scope.Params {
     require(params.collect{ case named: Aux.Param.Named => named }.forall(_.default.isEmpty))
     require(params.exists(_.mods.exists(_.isInstanceOf[Mod.Implicit])) ==> (params.length == 1))
   }
   @ast class Cases(cases: Seq[Aux.Case]) extends Term {
-    def isPartialFunction = !parent.isInstanceOf[Match]
+    // TODO: we might want to revisit this
+    def isPartialFunction = !parent.map(_ match { case _: Match => false; case _: Try => false; case _ => true }).getOrElse(false)
   }
   @ast class While(expr: Term, body: Term) extends Term
   @ast class Do(body: Term, expr: Term) extends Term
   @ast class For(enums: Seq[Enum] @nonEmpty, body: Term) extends Term with Scope {
     require(enums.head.isInstanceOf[Enum.Generator])
   }
-  @ast class ForYield(enums: Seq[Enum] @nonEmpty, body: Term) extends Term
+  @ast class ForYield(enums: Seq[Enum] @nonEmpty, body: Term) extends Term with Scope
   @ast class New(templ: Aux.Template) extends Term
   // TODO: validate that placeholder is put into correct context
   @ast class Placeholder() extends Term
@@ -110,16 +132,16 @@ object Term {
 @branch trait Type extends Tree with Aux.ParamType with Scope.Template
 object Type {
   @branch trait Ref extends Type with core.Ref
-  @ast class Name(value: String @nonEmpty, isBackquoted: Boolean = false) extends core.Name with Ref {
-    // TODO: require(keywords.contains(value) ==> isBackquoted)
+  @ast class Name(value: String @nonEmpty)(isBackquoted: Boolean) extends core.Name with Ref {
+    require(keywords.contains(value) ==> isBackquoted)
   }
   @ast class Select(qual: Term.Ref, name: Type.Name) extends Ref {
-    // TODO: require(qual.isPath)
+    require(qual.isPath)
   }
   @ast class SuperSelect(qual: Option[core.Name], supertpe: Option[Type.Name], selector: Type.Name) extends Ref
   @ast class Project(qual: Type, name: Type.Name) extends Ref
   @ast class Singleton(ref: Term.Ref) extends Ref {
-    // TODO: require(ref.isPath)
+    require(ref.isPath)
   }
   @ast class Apply(tpe: Type, args: Seq[Type] @nonEmpty) extends Type
   @ast class ApplyInfix(lhs: Type, op: Type, rhs: Type) extends Type
@@ -127,8 +149,8 @@ object Type {
   @ast class Tuple(elements: Seq[Type] @nonEmpty) extends Type {
     require(elements.length > 1)
   }
-  @ast class Compound(tpes: Seq[Type], refinement: Seq[Stmt.Refine]) extends Type with Scope.Refine {
-    // TODO: require(tpes.length == 1 ==> hasExplicitRefinement)
+  @ast class Compound(tpes: Seq[Type], refinement: Seq[Stmt.Refine])(hasExplicitRefinement: Boolean) extends Type with Scope.Refine {
+    require(tpes.length == 1 ==> hasExplicitRefinement)
   }
   @ast class Existential(tpe: Type, quants: Seq[Stmt.Existential] @nonEmpty) extends Type with Scope.Existential
   @ast class Annotate(tpe: Type, annots: Seq[Mod.Annot] @nonEmpty) extends Type with Has.Mods {
@@ -146,9 +168,11 @@ object Pat {
   @ast class Alternative(lhs: Pat, rhs: Pat) extends Pat
   @ast class Tuple(elements: Seq[Pat] @nonEmpty) extends Pat
   @ast class Extract(ref: Term.Ref, targs: Seq[Type], elements: Seq[Pat]) extends Pat {
-    // TODO: require(ref.isStableId)
+    require(ref.isStableId)
   }
-  @ast class ExtractInfix(lhs: Pat, ref: Term.Ref, rhs: Seq[Pat] @nonEmpty) extends Pat // TODO: require ref is stable id
+  @ast class ExtractInfix(lhs: Pat, ref: Term.Ref, rhs: Seq[Pat] @nonEmpty) extends Pat {
+    require(ref.isStableId)
+  }
   @ast class Interpolate(prefix: Term.Name, parts: Seq[Lit.String] @nonEmpty, args: Seq[Pat]) extends Pat {
     // TODO: require(prefix.isInterpolationId)
     require(parts.length == args.length + 1)
@@ -189,6 +213,7 @@ object Decl {
   @ast class Var(mods: Seq[Mod],
                  pats: Seq[Term.Name] @nonEmpty,
                  decltpe: core.Type) extends Decl with Has.Mods
+  // TODO: maybe merge Def and Procedure using flags?
   @ast class Def(mods: Seq[Mod],
                  name: Term.Name,
                  tparams: Seq[Aux.TypeParam],
@@ -235,6 +260,7 @@ object Defn {
                        explicits: Seq[Seq[Aux.Param.Named]],
                        implicits: Seq[Aux.Param.Named],
                        stats: Seq[Stmt.Block]) extends Defn with Member.Def {
+    require(stats.collect { case m: Member if m.isPkgObject => m }.isEmpty)
   }
   @ast class Type(mods: Seq[Mod],
                   name: core.Type.Name,
@@ -258,37 +284,30 @@ object Defn {
   }
 }
 
-@branch trait Pkg extends Stmt.TopLevel with Scope.TopLevel with Member.Term with Has.TermName {
-  // TODO: require(ref.isQualId)
-  // TODO: validate nestedness of header pkgs vs named packages
-  def ref: Term.Ref
-  def stats: Seq[Stmt.TopLevel]
+@ast class Pkg(ref: Term.Ref, stats: Seq[Stmt.TopLevel])(hasBraces: Boolean)
+     extends Stmt.TopLevel with Scope.TopLevel with Member.Term with Has.TermName {
+  // TODO: validate nestedness of packages with and without braces
+  require(ref.isQualId)
   def mods: Seq[Mod] = Nil
   def name: Term.Name = ref match {
     case name: Term.Name      => name
     case Term.Select(_, name) => name
-    case _                    => sys.error("this shouldn't have happened")
+    case _                    => unreachable
   }
 }
-object Pkg {
-  @ast class Header(ref: Term.Ref, stats: Seq[Stmt.TopLevel]) extends Pkg
-  @ast class Named(ref: Term.Ref, stats: Seq[Stmt.TopLevel]) extends Pkg
-  @ast class Object(mods: Seq[Mod],
-                    name: Term.Name,
-                    templ: Aux.Template) extends Stmt.TopLevel with Member.Template with Member.Term with Has.TermName
-}
-
 
 @branch trait Ctor extends Tree with Has.Mods with Has.Paramss
 object Ctor {
-  @ast class Primary(mods: Seq[Mod] = Nil,
-                     explicits: Seq[Seq[Aux.Param.Named]] = Nil,
-                     implicits: Seq[Aux.Param.Named] = Nil) extends Ctor
-  @ast class Secondary(mods: Seq[Mod] = Nil,
-                       explicits: Seq[Seq[Aux.Param.Named]] @nonEmpty = List(Nil),
-                       implicits: Seq[Aux.Param.Named] = Nil,
-                       primaryCtorArgss: Seq[Seq[Arg]] = Nil,
-                       stats: Seq[Stmt.Block] = Nil) extends Ctor with Stmt.Template with Scope.Params
+  @ast class Primary(mods: Seq[Mod],
+                     explicits: Seq[Seq[Aux.Param.Named]],
+                     implicits: Seq[Aux.Param.Named]) extends Ctor
+  @ast class Secondary(mods: Seq[Mod],
+                       explicits: Seq[Seq[Aux.Param.Named]] @nonEmpty,
+                       implicits: Seq[Aux.Param.Named],
+                       primaryCtorArgss: Seq[Seq[Arg]],
+                       stats: Seq[Stmt.Block]) extends Ctor with Stmt.Template with Scope.Params {
+    require(stats.collect { case m: Member if m.isPkgObject => m }.isEmpty)
+  }
 }
 
 object Stmt {
@@ -331,16 +350,16 @@ object Lit {
 object Import {
   // TODO: validate that wildcard import can only be the last one in the list of sels
   @ast class Clause(ref: Term.Ref, sels: Seq[Selector] @nonEmpty) extends Tree {
-    // TODO: require(ref.isStableId)
+    require(ref.isStableId)
   }
 
   @branch trait Selector extends Tree
   object Selector {
     @ast class Wildcard() extends Selector
     // TODO: needs some kind of idents here but they can neither be term nor type
-    @ast class Name(name: String) extends Selector
-    @ast class Rename(from: String, to: String) extends Selector
-    @ast class Unimport(name: String) extends Selector
+    @ast class Name(name: String @nonEmpty) extends Selector
+    @ast class Rename(from: String @nonEmpty, to: String @nonEmpty) extends Selector
+    @ast class Unimport(name: String @nonEmpty) extends Selector
   }
 }
 
@@ -362,13 +381,17 @@ object Mod {
   @ast class Annot(tpe: Type, argss: Seq[Seq[Arg]]) extends Mod
   @ast class Doc(doc: String) extends Mod // TODO: design representation for scaladoc
   // TODO: design a name resolution API for these and imports
-  @branch trait Access extends Mod {
-    require(within.nonEmpty ==> (within match { case Some(Term.This(Some(_))) => false; case _ => true }))
-    def within: Option[AccessQualifier]
-  }
+  @branch trait Access extends Mod { def within: Option[AccessQualifier] }
   @branch trait AccessQualifier extends Tree
-  @ast class Private(within: Option[AccessQualifier]) extends Access
-  @ast class Protected(within: Option[AccessQualifier]) extends Access
+  @ast class Private(within: Option[AccessQualifier]) extends Access {
+    // TODO: there is obvious duplication wrt Protected, but it's not as easy as it looks
+    // the thing is that @ast moves all requires to Companion.apply, which means that we can't just use inheritance to abstract this way
+    // let's revisit this later and think about how we can improve here
+    require(within.nonEmpty ==> (within match { case Some(acc: Term.This) => acc.qual.isEmpty; case _ => true }))
+  }
+  @ast class Protected(within: Option[AccessQualifier]) extends Access {
+    require(within.nonEmpty ==> (within match { case Some(acc: Term.This) => acc.qual.isEmpty; case _ => true }))
+  }
   @ast class Implicit() extends Mod
   @ast class Final() extends Mod
   @ast class Sealed() extends Mod
@@ -381,18 +404,24 @@ object Mod {
   @ast class Macro() extends Mod
   @ast class ValParam() extends Mod
   @ast class VarParam() extends Mod
+  @ast class Package() extends Mod
 }
 
 object Aux {
   @ast class CompUnit(stats: Seq[Stmt.TopLevel]) extends Tree
-  @ast class Case(pat: Pat, cond: Option[Term] = None, stats: Seq[Stmt.Template]) extends Tree with Scope
-  @ast class Parent(tpe: Type, argss: Seq[Seq[Arg]] = Nil) extends Tree
-  @ast class Template(early: Seq[Stmt.Early] = Nil, parents: Seq[Parent] = Nil,
-                      self: Self = Self.empty, stats: Seq[Stmt.Template] = Nil) extends Tree with Scope.Template {
+  @ast class Case(pat: Pat, cond: Option[Term], stats: Seq[Stmt.Template]) extends Tree with Scope {
+    require(stats.collect { case m: Member if m.isPkgObject => m }.isEmpty)
+  }
+  @ast class Parent(tpe: Type, argss: Seq[Seq[Arg]]) extends Tree
+  @ast class Template(early: Seq[Stmt.Early],
+                      parents: Seq[Parent],
+                      self: Self,
+                      stats: Seq[Stmt.Template])(hasExplicitBody: Boolean) extends Tree with Scope.Template {
     require(parents.isEmpty || !parents.tail.exists(_.argss.nonEmpty))
     require(early.nonEmpty ==> parents.nonEmpty)
+    require(stats.collect { case m: Member if m.isPkgObject => m }.isEmpty)
   }
-  @ast class Self(name: Option[Term.Name] = None, decltpe: Option[Type] = None) extends Member.Term {
+  @ast class Self(name: Option[Term.Name], decltpe: Option[Type]) extends Member.Term {
     def mods: Seq[Mod] = Nil
   }
   @branch trait ParamType extends Tree
@@ -403,39 +432,39 @@ object Aux {
   // TODO: only non-implicit non-val/var parameters may be by name
   @branch trait Param extends Tree with Has.Mods {
     def decltpe: Option[ParamType]
-    def withMods(mods: Seq[Mod]): ThisType
-    def mapMods(mods: Seq[Mod] => Seq[Mod]): ThisType
+    def withMods(mods: Seq[Mod])(implicit origin: Origin): ThisType
+    def mapMods(mods: Seq[Mod] => Seq[Mod])(implicit origin: Origin): ThisType
   }
   object Param {
-    @ast class Anonymous(decltpe: Option[ParamType] = None,
-                         mods: Seq[Mod] = Nil) extends Param
-    @ast class Named(name: Term.Name,
-                     decltpe: Option[ParamType] = None,
-                     default: Option[Term] = None,
-                     mods: Seq[Mod] = Nil) extends Param with Member.Term with Has.TermName
+    @ast class Anonymous(mods: Seq[Mod],
+                         decltpe: Option[ParamType]) extends Param
+    @ast class Named(mods: Seq[Mod],
+                     name: Term.Name,
+                     decltpe: Option[ParamType],
+                     default: Option[Term]) extends Param with Member.Term with Has.TermName
   }
   @branch trait TypeParam extends Tree with Has.Mods {
     def tparams: Seq[Aux.TypeParam]
     def contextBounds: Seq[core.Type]
     def viewBounds: Seq[core.Type]
     def bounds: Aux.TypeBounds
-    def withMods(mods: Seq[Mod]): ThisType
-    def mapMods(mods: Seq[Mod] => Seq[Mod]): ThisType
+    def withMods(mods: Seq[Mod])(implicit origin: Origin): ThisType
+    def mapMods(mods: Seq[Mod] => Seq[Mod])(implicit origin: Origin): ThisType
   }
   object TypeParam {
-    @ast class Anonymous(tparams: Seq[Aux.TypeParam] = Nil,
-                         contextBounds: Seq[core.Type] = Nil,
-                         viewBounds: Seq[core.Type] = Nil,
-                         bounds: Aux.TypeBounds = Aux.TypeBounds.empty,
-                         mods: Seq[Mod] = Nil) extends TypeParam
-    @ast class Named(name: core.Type.Name,
-                     tparams: Seq[Aux.TypeParam] = Nil,
-                     contextBounds: Seq[core.Type] = Nil,
-                     viewBounds: Seq[core.Type] = Nil,
-                     bounds: Aux.TypeBounds = Aux.TypeBounds.empty,
-                     mods: Seq[Mod] = Nil) extends TypeParam with Member.Type with Has.TypeName
+    @ast class Anonymous(mods: Seq[Mod],
+                         tparams: Seq[Aux.TypeParam],
+                         contextBounds: Seq[core.Type],
+                         viewBounds: Seq[core.Type],
+                         bounds: Aux.TypeBounds) extends TypeParam
+    @ast class Named(mods: Seq[Mod],
+                     name: core.Type.Name,
+                     tparams: Seq[Aux.TypeParam],
+                     contextBounds: Seq[core.Type],
+                     viewBounds: Seq[core.Type],
+                     bounds: Aux.TypeBounds) extends TypeParam with Member.Type with Has.TypeName
   }
-  @ast class TypeBounds(lo: Option[Type] = None, hi: Option[Type] = None) extends Tree
+  @ast class TypeBounds(lo: Option[Type], hi: Option[Type]) extends Tree
 }
 
 object Has {

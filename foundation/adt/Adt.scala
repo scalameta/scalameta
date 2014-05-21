@@ -4,6 +4,7 @@ import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
 import org.scalareflect.invariants.nonEmpty
 import scala.reflect.macros.whitebox.Context
+import scala.collection.mutable.ListBuffer
 
 class root extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro AdtMacros.root
@@ -31,7 +32,7 @@ class AdtMacros(val c: Context) {
       if (mods.hasFlag(FINAL)) c.abort(cdef.pos, "@root traits cannot be final")
       val flags1 = flags | SEALED
       val tag = q"private[reflect] def tag: _root_.scala.Int"
-      val thisType = q"type ThisType <: ${cdef.name}"
+      val thisType = if (stats.collect{ case TypeDef(_, TypeName("ThisType"), _, _) => () }.isEmpty) q"type ThisType <: ${cdef.name}" else q""
       val hierarchyCheck = q"$Internal.hierarchyCheck[${cdef.name}]"
       val stats1 = tag +: thisType +: hierarchyCheck +: stats
       val anns1 = q"new $Internal.root" +: anns
@@ -50,7 +51,7 @@ class AdtMacros(val c: Context) {
       if (mods.hasFlag(SEALED)) c.abort(cdef.pos, "sealed is redundant for @branch traits")
       if (mods.hasFlag(FINAL)) c.abort(cdef.pos, "@branch traits cannot be final")
       val flags1 = flags | SEALED
-      val thisType = q"override type ThisType <: ${cdef.name}"
+      val thisType = q"type ThisType <: ${cdef.name}"
       val hierarchyCheck = q"$Internal.hierarchyCheck[${cdef.name}]"
       val stats1 = thisType +: hierarchyCheck +: stats
       val anns1 = q"new $Internal.branch" +: anns
@@ -65,55 +66,82 @@ class AdtMacros(val c: Context) {
 
   def leaf(annottees: Tree*): Tree = {
     def transformLeafClass(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
-      val q"${mods @ Modifiers(flags, privateWithin, anns)} class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
+      val q"$mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
+      val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" = mdef
+      val parents1 = ListBuffer[Tree]() ++ parents
+      val stats1 = ListBuffer[Tree]() ++ stats
+      val anns1 = ListBuffer[Tree]() ++ mods.annotations
+      def mods1 = mods.mapAnnotations(_ => anns1.toList)
+      val manns1 = ListBuffer[Tree]() ++ mmods.annotations
+      def mmods1 = mmods.mapAnnotations(_ => manns1.toList)
+      def unprivate(mods: Modifiers) = Modifiers((mods.flags.asInstanceOf[Long] & (~scala.reflect.internal.Flags.LOCAL) & (~scala.reflect.internal.Flags.PRIVATE)).asInstanceOf[FlagSet], mods.privateWithin, mods.annotations)
+      def casify(mods: Modifiers) = Modifiers(mods.flags | CASE, mods.privateWithin, mods.annotations)
+      def finalize(mods: Modifiers) = Modifiers(mods.flags | FINAL, mods.privateWithin, mods.annotations)
+
+      // step 1: validate the shape of the class
       if (mods.hasFlag(SEALED)) c.abort(cdef.pos, "sealed is redundant for @leaf classes")
       if (mods.hasFlag(FINAL)) c.abort(cdef.pos, "final is redundant for @leaf classes")
       if (mods.hasFlag(CASE)) c.abort(cdef.pos, "case is redundant for @leaf classes")
       if (mods.hasFlag(ABSTRACT)) c.abort(cdef.pos, "@leaf classes cannot be abstract")
-      val nonSyntheticParamss = paramss.filter(_.forall(!_.mods.hasFlag(SYNTHETIC)))
-      if (nonSyntheticParamss.length != 1) c.abort(cdef.pos, "@leaf classes must have exactly one parameter list")
-      val params = paramss.head
-      val flags1 = flags | CASE | FINAL
-      def unprivateThis(mods: Modifiers) = {
-        val Modifiers(flags, privateWithin, anns) = mods
-        val flags1 = flags.asInstanceOf[Long] & (~scala.reflect.internal.Flags.LOCAL) & (~scala.reflect.internal.Flags.PRIVATE)
-        Modifiers(flags1.asInstanceOf[FlagSet], privateWithin, anns)
+      if (ctorMods.flags != NoFlags) c.abort(cdef.pos, "@leaf classes must define a public primary constructor")
+      if (paramss.length == 0) c.abort(cdef.pos, "@leaf classes must define a non-empty parameter list")
+
+      // step 2: unprivate parameters, create copy-on-write helpers, generate validation checks
+      val paramss1 = paramss.map(_.map{ case q"$mods val $name: $tpt = $default" => q"${unprivate(mods)} val $name: $tpt = $default" })
+      stats1 ++= paramss.zipWithIndex.flatten { case (params, i) =>
+        params.flatMap { p =>
+          def generateCow(cowName: TermName, cowParam: ValDef, action: Tree => Tree): Tree = {
+            val preArgss = paramss.take(i).map(_.map(p => q"this.${p.name}"))
+            val cowArgs = List(AssignOrNamedArg(q"${p.name}", action(q"this.${p.name}")))
+            val postArgss = paramss.drop(i + 1).map(_.map(p => q"this.${p.name}"))
+            val cowArgss = preArgss ++ List(cowArgs) ++ postArgss
+            q"def $cowName($cowParam): ThisType = this.copy(...$cowArgss)"
+          }
+          val withParam = generateCow(TermName("with" + p.name.toString.capitalize), q"val ${p.name}: ${p.tpt}", pref => pref)
+          val mapParam = generateCow(TermName("map" + p.name.toString.capitalize), q"val f: ${p.tpt} => ${p.tpt}", pref => q"f($pref)")
+          List(withParam, mapParam)
+        }
       }
-      val params1 = params.map{ case q"$mods val $name: $tpt = $default" => q"${unprivateThis(mods)} val $name: $tpt = $default" }
-      val thisType = q"override type ThisType = ${cdef.name}"
-      val tag = q"private[reflect] def tag: _root_.scala.Int = $Internal.calculateTag[${cdef.name}]"
-      val withes = params.map{p =>
-        val withName = TermName("with" + p.name.toString.capitalize)
-        q"def $withName(${p.name}: ${p.tpt}): ThisType = this.copy(${p.name} = ${p.name})"
-      }
-      val maps = params.map{p =>
-        val mapName = TermName("map" + p.name.toString.capitalize)
-        q"def $mapName(f: ${p.tpt} => ${p.tpt}): ThisType = this.copy(${p.name} = f(this.${p.name}))"
-      }
-      val nullChecks = params.map(p => q"$Internal.nullCheck(this.${p.name})")
-      val emptyChecks = params.map(p => q"$Internal.emptyCheck(this.${p.name})")
-      val hierarchyCheck = q"$Internal.hierarchyCheck[${cdef.name}]"
-      val immutabilityCheck = q"$Internal.immutabilityCheck[${cdef.name}]"
-      val stats1 = (thisType +: tag +: hierarchyCheck +: immutabilityCheck +: stats) ++ withes ++ maps ++ nullChecks ++ emptyChecks
-      val anns1 = q"new $Internal.leaf" +: anns
-      val cdef1 = q"${Modifiers(flags1, privateWithin, anns1)} class $name[..$tparams] $ctorMods(..$params1)(...${paramss.tail}) extends { ..$earlydefns } with ..$parents { $self => ..$stats1 }"
-      val ModuleDef(mmods @ Modifiers(mflags, mprivateWithin, manns), mname, Template(mparents, mself, mstats)) = mdef
-      val empties = if (params.nonEmpty && params.forall(_.rhs.nonEmpty)) List(q"val empty = $mname()(_root_.scala.reflect.core.SourceContext.None)") else Nil
-      val mstats1 = (mstats ++ empties) :+ tag
-      val manns1 = q"new $Internal.leaf" +: manns
-      val mdef1 = ModuleDef(Modifiers(mflags, mprivateWithin, manns1), mname, Template(mparents, mself, mstats1))
+      stats1 ++= paramss.flatten.map(p => q"$Internal.nullCheck(this.${p.name})")
+      stats1 ++= paramss.flatten.map(p => q"$Internal.emptyCheck(this.${p.name})")
+
+      // step 3: generate boilerplate required by the @adt infrastructure
+      stats1 += q"override type ThisType = $name"
+      stats1 += q"private[reflect] def tag: _root_.scala.Int = $Internal.calculateTag[ThisType]"
+      stats1 += q"$Internal.hierarchyCheck[ThisType]"
+      stats1 += q"$Internal.immutabilityCheck[ThisType]"
+      anns1 += q"new $Internal.leaf"
+      manns1 += q"new $Internal.leaf"
+      parents1 += tq"_root_.scala.Product"
+
+      val cdef1 = q"${casify(finalize(mods1))} class $name[..$tparams] $ctorMods(...$paramss1) extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
+      val mdef1 = q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }"
       List(cdef1, mdef1)
     }
+
     def transformLeafModule(mdef: ModuleDef): ModuleDef = {
-      val ModuleDef(mods @ Modifiers(flags, privateWithin, anns), name, Template(parents, self, stats)) = mdef
-      val thisType = q"override type ThisType = $name.type"
-      val tag = q"private[reflect] def tag: _root_.scala.Int = $Internal.calculateTag[$name.type]"
-      val hierarchyCheck = q"$Internal.hierarchyCheck[$name.type]"
-      val immutabilityCheck = q"$Internal.immutabilityCheck[$name.type]"
-      val stats1 = stats :+ thisType :+ tag :+ hierarchyCheck :+ immutabilityCheck
-      val anns1 = q"new $Internal.leaf" +: anns
-      ModuleDef(Modifiers(flags, privateWithin, anns1), name, Template(parents, self, stats1))
+      val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" = mdef
+      val manns1 = ListBuffer[Tree]() ++ mmods.annotations
+      def mmods1 = mmods.mapAnnotations(_ => manns1.toList)
+      val mparents1 = ListBuffer[Tree]() ++ mparents
+      val mstats1 = ListBuffer[Tree]() ++ mstats
+      def casify(mods: Modifiers) = Modifiers(mods.flags | CASE, mods.privateWithin, mods.annotations)
+
+      // step 1: validate the shape of the module
+      if (mmods.hasFlag(FINAL)) c.abort(mdef.pos, "final is redundant for @leaf classes")
+      if (mmods.hasFlag(CASE)) c.abort(mdef.pos, "case is redundant for @leaf classes")
+
+      // step 2: generate boilerplate required by the @adt infrastructure
+      mstats1 += q"override type ThisType = $mname.type"
+      mstats1 += q"private[reflect] def tag: _root_.scala.Int = $Internal.calculateTag[ThisType]"
+      mstats1 += q"$Internal.hierarchyCheck[ThisType]"
+      mstats1 += q"$Internal.immutabilityCheck[ThisType]"
+      manns1 += q"new $Internal.leaf"
+      mparents1 += tq"_root_.scala.Product"
+
+      q"${casify(mmods1)} object $mname extends { ..$mearlydefns } with ..$mparents1 { $mself => ..$mstats1 }"
     }
+
     val expanded = annottees match {
       case (cdef @ ClassDef(mods, _, _, _)) :: (mdef @ ModuleDef(_, _, _)) :: rest if !(mods hasFlag TRAIT) => transformLeafClass(cdef, mdef) ++ rest
       case (cdef @ ClassDef(mods, name, _, _)) :: rest if !mods.hasFlag(TRAIT) => transformLeafClass(cdef, q"object ${name.toTermName}") ++ rest
@@ -175,7 +203,10 @@ class AdtHelperMacros(val c: Context) {
   }
 
   def emptyCheck(x: c.Tree): c.Tree = {
-    if (x.symbol.asTerm.accessed.nonEmpty) q"_root_.org.scalareflect.invariants.require($x.nonEmpty)"
+    val emptyCheckRequested =
+      try x.symbol.asTerm.accessed.nonEmpty
+      catch { case _: AssertionError => x.symbol.nonEmpty }
+    if (emptyCheckRequested) q"_root_.org.scalareflect.invariants.require($x.nonEmpty)"
     else q""
   }
 
@@ -183,9 +214,9 @@ class AdtHelperMacros(val c: Context) {
     val sym = T.tpe.typeSymbol.asClass
     val designation = if (sym.isRoot) "root" else if (sym.isBranch) "branch" else if (sym.isLeaf) "leaf" else ???
     val roots = sym.baseClasses.filter(_.isRoot)
-    if (roots.length == 0) c.abort(c.enclosingPosition, s"rootless $designation is disallowed")
+    if (roots.length == 0 && sym.isLeaf) c.abort(c.enclosingPosition, s"rootless leaf is disallowed")
     else if (roots.length > 1) c.abort(c.enclosingPosition, s"multiple roots for a $designation: " + (roots.map(_.fullName).init.mkString(", ")) + " and " + roots.last.fullName)
-    val root = roots.head
+    val root = roots.headOption.getOrElse(NoSymbol)
     sym.baseClasses.map(_.asClass).foreach{bsym =>
       val exempt =
         bsym.isModuleClass ||

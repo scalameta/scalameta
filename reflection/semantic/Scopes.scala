@@ -17,6 +17,14 @@ trait ScopeOps {
     }
   }
 
+  implicit class SemanticTreeOps(tree: Tree) {
+    def owner: Scope = tree.parent match {
+      case Some(parent: Scope) => owner
+      case Some(parent) => parent.owner
+      case None => ??? // TODO: lexical context
+    }
+  }
+
   implicit class SemanticScopeOps(tree: Scope) {
     @hosted def members: Seq[Member] = delegate
     @hosted def members(name: Name): Overload[Member] = wrapHosted(_.members(tree)).map(Overload.apply)
@@ -25,17 +33,17 @@ trait ScopeOps {
     }
     @hosted private[semantic] def uniqueMember[T: ClassTag](s_name: String): T = {
       val isTerm = classOf[Member.Term].isAssignableFrom(classTag[T].runtimeClass)
-      val name = if (isTerm) Term.Name(s_name)(SourceContext.None) else Type.Name(s_name)(SourceContext.None)
+      val name = if (isTerm) Term.Name(s_name)(isBackquoted = false) else Type.Name(s_name)(isBackquoted = false)
       members(name).map(_.alts).map(_.collect { case x: T => x }).flatMap(_.findUnique)
     }
   }
 
   implicit class SemanticTopLevelScopeOps(tree: Scope.TopLevel) {
-    @hosted def packages: Seq[Pkg.Named] = tree.allMembers[Pkg.Named]
-    @hosted def packages(name: Name): Pkg.Named = tree.uniqueMember[Pkg.Named](name.toString)
-    @hosted def packages(name: String): Pkg.Named = tree.uniqueMember[Pkg.Named](name.toString)
-    @hosted def packages(name: scala.Symbol): Pkg.Named = tree.uniqueMember[Pkg.Named](name.toString)
-    @hosted def pkgobject: Pkg.Object = tree.allMembers[Pkg.Object].flatMap(_.findUnique)
+    @hosted def packages: Seq[Pkg] = tree.allMembers[Pkg]
+    @hosted def packages(name: Name): Pkg = tree.uniqueMember[Pkg](name.toString)
+    @hosted def packages(name: String): Pkg = tree.uniqueMember[Pkg](name.toString)
+    @hosted def packages(name: scala.Symbol): Pkg = tree.uniqueMember[Pkg](name.toString)
+    @hosted def pkgobject: Defn.Object = tree.allMembers[Defn.Object].map(_.filter(_.isPkgObject)).flatMap(_.findUnique)
   }
 
   implicit class SemanticTemplateScopeOps(tree: Scope.Template) {

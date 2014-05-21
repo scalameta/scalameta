@@ -6,40 +6,40 @@ class PatSuite extends ParseSuite {
   }
 
   test("a @ _") {
-    val Bind(Name("a", false), Wildcard()) = pat("a @ _")
+    val Bind(Name("a"), Wildcard()) = pat("a @ _")
   }
 
   test("a") {
-    val Name("a", false) = pat("a")
+    val Name("a") = pat("a")
   }
 
   test("a: Int") {
-    val Typed(Name("a", false), Type.Name("Int", false)) = pat("a: Int")
+    val Typed(Name("a"), Type.Name("Int")) = pat("a: Int")
   }
 
   test("_: Int") {
-    val Typed(Wildcard(), Type.Name("Int", false)) = pat("_: Int")
+    val Typed(Wildcard(), Type.Name("Int")) = pat("_: Int")
   }
 
   test("_: F[t]") {
-    val Typed(Wildcard(), Type.Apply(Type.Name("F", false), Type.Name("t", false) :: Nil)) = pat("_: F[t]")
+    val Typed(Wildcard(), Type.Apply(Type.Name("F"), Type.Name("t") :: Nil)) = pat("_: F[t]")
   }
 
   test("foo(x)") {
-    val Extract(Name("foo", false), Nil, Name("x", false) :: Nil) = pat("foo(x)")
+    val Extract(Name("foo"), Nil, Name("x") :: Nil) = pat("foo(x)")
   }
 
   test("foo(_*)") {
-    val Extract(Name("foo", false), Nil, SeqWildcard() :: Nil) = pat("foo(_*)")
+    val Extract(Name("foo"), Nil, SeqWildcard() :: Nil) = pat("foo(_*)")
   }
 
   test("foo(x @ _*)") {
-    val Extract(Name("foo", false), Nil,
-                Bind(Name("x", false), SeqWildcard()) :: Nil) = pat("foo(x @ _*)")
+    val Extract(Name("foo"), Nil,
+                Bind(Name("x"), SeqWildcard()) :: Nil) = pat("foo(x @ _*)")
   }
 
   test("a :: b") {
-    val ExtractInfix(Name("a", false), Name("::", false), Name("b", false) :: Nil) = pat("a :: b")
+    val ExtractInfix(Name("a"), Name("::"), Name("b") :: Nil) = pat("a :: b")
   }
 
   test("1 | 2 | 3") {
@@ -52,21 +52,21 @@ class PatSuite extends ParseSuite {
   }
 
   test("foo\"bar\"") {
-    val Interpolate(Name("foo", false),
+    val Interpolate(Name("foo"),
                     Lit.String("bar") :: Nil, Nil) = pat("foo\"bar\"")
   }
 
   test("foo\"a $b c\"") {
-    val Interpolate(Name("foo", false),
+    val Interpolate(Name("foo"),
                     Lit.String("a ") :: Lit.String(" c") :: Nil,
-                    Name("b", false) :: Nil) = pat("foo\"a $b c\"")
+                    Name("b") :: Nil) = pat("foo\"a $b c\"")
   }
 
   test("foo\"${b @ foo()}\"") {
-    val Interpolate(Name("foo", false),
+    val Interpolate(Name("foo"),
                     Lit.String("") :: Lit.String("") :: Nil,
-                    Bind(Name("b", false),
-                         Extract(Name("foo", false), Nil, Nil)) :: Nil) = pat("foo\"${b @ foo()}\"")
+                    Bind(Name("b"),
+                         Extract(Name("foo"), Nil, Nil)) :: Nil) = pat("foo\"${b @ foo()}\"")
 
   }
 }
