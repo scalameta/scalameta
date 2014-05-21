@@ -21,7 +21,7 @@ trait ScopeOps {
     def owner: Scope = tree.parent match {
       case Some(parent: Scope) => owner
       case Some(parent) => parent.owner
-      case None => root
+      case None => ??? // TODO: lexical context
     }
   }
 
