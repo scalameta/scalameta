@@ -108,6 +108,7 @@ object Term {
     require(params.exists(_.mods.exists(_.isInstanceOf[Mod.Implicit])) ==> (params.length == 1))
   }
   @ast class Cases(cases: Seq[Aux.Case]) extends Term {
+    // TODO: we might want to revisit this
     def isPartialFunction = !parent.map(_ match { case _: Match => false; case _: Try => false; case _ => true }).getOrElse(false)
   }
   @ast class While(expr: Term, body: Term) extends Term
@@ -382,7 +383,9 @@ object Mod {
   @branch trait Access extends Mod { def within: Option[AccessQualifier] }
   @branch trait AccessQualifier extends Tree
   @ast class Private(within: Option[AccessQualifier]) extends Access {
-    // TODO: deduplicate this wrt Protected
+    // TODO: there is obvious duplication wrt Protected, but it's not as easy as it looks
+    // the thing is that @ast moves all requires to Companion.apply, which means that we can't just use inheritance to abstract this way
+    // let's revisit this later and think about how we can improve here
     require(within.nonEmpty ==> (within match { case Some(acc: Term.This) => acc.qual.isEmpty; case _ => true }))
   }
   @ast class Protected(within: Option[AccessQualifier]) extends Access {
