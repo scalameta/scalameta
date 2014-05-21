@@ -16,8 +16,6 @@ Hosts are, however, required to create instances of Palladium trees to be return
 
   NB! Since trees can't be mutated in-place, reference equality (`Tree.eq` and `Tree.ne`) should not be used to work with trees. The only reliable way of comparing trees for equality is `Tree.==` and `Tree.!=`.
 
-  NB! Syntactic APIs are guaranteed to be thread-safe. Semantic APIs are only thread-safe if the underlying host is thread-safe. For example, scalac's compile-time reflection is highly mutable and hence thread-unsafe. This means that code analyses powered by scalac-based hosts won't be parallelizable.
-
   1. Trees strongly emphasize safety by construction in the sense that they disallow creation of syntactically invalid language constructs (e.g. it's impossible to create trees that represent classes without primary constructors or applications of types to terms). As much validation as possible is pushed to compile time via precise types of tree fields, and some leftovers whose validation was too heavyweight to encode in types are verified at runtime. For you as a host implementor this means that you'll have to be really precise in arguments that you provide to our tree creation facilities.
 
   1. Palladium strives for fully faithful representation of language concepts in its reflection API. Among other things, this means that our trees comprehensively describe all syntactic sugar defined by Scala spec. For instance, `(x, y)` in `val (x, y) = 2` remains `(x, y)`, not a pair of `x` and `y` split over two vals, and `List[_]` is actually represented as a type application to `Type.Placeholder`, not as a `Type.Existential`. Depending on the amount of desugarings performed by your host, this aspect of Palladium might be either trivial or extremely challenging.
@@ -30,11 +28,18 @@ Hosts are, however, required to create instances of Palladium trees to be return
 
   1. Finally, trees are aware of their context. First of all, there's the `Tree.parent` method that can go up the tree structure if the given tree is a part of a bigger tree (as a host implementor, you don't need to worry about maintaining `parent` at all - it is maintained automatically by Palladium's infrastructure when a tree is inserted into another tree). Also, there's the notion of hygiene (not yet implemented) that postulates that trees should generally remember the lexical context of their creation site and respect that context even when they are put into parent that comes from a different context.
 
+### Guarantees
+
+One of the main design goals of Palladium is to provide a purely functional API to metaprogramming.
+
+Native Palladium services (parsing, quasiquotes - essentially, everything syntactic) either don't have mutable state at all or have it localized to areas that don't affect publicly observable behavior.
+
+The same level of robustness is expected from hosts. Concretely: 1) semantic operations provided by hosts must be thread-safe, 2) data associated with trees using the scratchpad API must not be mutable. At the moment `scratchpad` and `withScratchpad` use `Any`, but later on we might refine the type signature or reshape the API altogether.
+
 ### HostContext
 
 | Method                                                 | Notes
 |--------------------------------------------------------|-----------------------------------------------------------------
-| `def isThreadsafe: Boolean`                            | Indicates whether semantic operations are safe to perform concurrently.
 | `def syntaxProfile: SyntaxProfile`                     | Universally accepted syntactically significant compiler / IDE flags. Currently empty (one can only return `SyntaxProfile()`, but later on when we add support for different versions of Scala, we will expand this data structure.
 | `def semanticProfile: SemanticProfile`                 | Universally accepted semantically significant compiler / IDE flags. Again this will grow over time. At the moment only contains `-language:XXX` compiler flags.
 | `def stats(scope: Scope): Seq[Tree]`                   | This isn't actually a method in `HostContext`, and it's here only to emphasize a peculiarity of our API. This particular method in unnecessary, because all lists in trees (e.g. the list of statements in a block or a list of declarations in a package or a class) are actually `Seq`'s, which means that the host can choose between eager and lazy population of scope contents when returning trees to the user of the Palladium API (e.g. in `root`).
