@@ -145,8 +145,8 @@ object Type {
   @ast class Tuple(elements: Seq[Type] @nonEmpty) extends Type {
     require(elements.length > 1)
   }
-  @ast class Compound(tpes: Seq[Type], refinement: Seq[Stmt.Refine]) extends Type with Scope.Refine {
-    // TODO: require(tpes.length == 1 ==> hasExplicitRefinement)
+  @ast class Compound(tpes: Seq[Type], refinement: Seq[Stmt.Refine])(hasExplicitRefinement: Boolean) extends Type with Scope.Refine {
+    require(tpes.length == 1 ==> hasExplicitRefinement)
   }
   @ast class Existential(tpe: Type, quants: Seq[Stmt.Existential] @nonEmpty) extends Type with Scope.Existential
   @ast class Annotate(tpe: Type, annots: Seq[Mod.Annot] @nonEmpty) extends Type with Has.Mods {

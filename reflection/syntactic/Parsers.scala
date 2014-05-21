@@ -658,11 +658,12 @@ abstract class Parser { parser =>
         ts += annotType()
       }
       newLineOptWhenFollowedBy(LBRACE)
-      val types         = ts.toList
-      val refinements   = if (in.token == LBRACE) refinement() else Nil
+      val types                 = ts.toList
+      val hasExplicitRefinement = in.token == LBRACE
+      val refinements           = if (in.token == LBRACE) refinement() else Nil
       (types, refinements) match {
         case (typ :: Nil, Nil) => typ
-        case _                 => Type.Compound(types, refinements)
+        case _                 => Type.Compound(types, refinements)(hasExplicitRefinement)
       }
     }
 
