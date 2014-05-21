@@ -12,6 +12,8 @@ import scala.language.experimental.macros
 import scala.reflect.semantic.HostContext
 import org.scalareflect.unreachable
 import scala.reflect.semantic._
+import scala.reflect.syntactic._
+import scala.reflect.syntactic.SyntacticInfo._
 
 // TODO: collection-like methods (see http://clang.llvm.org/docs/LibASTMatchersReference.html)
 // TODO: rewriting/transformation methods
@@ -59,8 +61,7 @@ object Term {
   @branch trait Ref extends Term with core.Ref
   @ast class This(qual: Option[core.Name]) extends Ref with Mod.AccessQualifier
   @ast class Name(value: scala.Predef.String @nonEmpty)(isBackquoted: Boolean) extends core.Name with Ref with Pat with Member with Has.TermName {
-    // TODO: require(!keywords.contains(value) || isBackquoted)
-    // TODO: if not backquoted, then not all values should be allowed
+    require(keywords.contains(value) ==> isBackquoted)
     def name: Name = this
     def mods: Seq[Mod] = Nil
   }
@@ -75,7 +76,7 @@ object Term {
   @ast class ApplyType(fun: Term, targs: Seq[Type] @nonEmpty) extends Term
   @ast class ApplyInfix(lhs: Term, op: Name, targs: Seq[Type], args: Seq[Arg]) extends Term
   @ast class ApplyUnary(op: Name, arg: Term) extends Term {
-    // TODO: require(op.isUnaryOp)
+    require(op.isUnaryOp)
   }
   @ast class Assign(lhs: Term.Ref, rhs: Term) extends Term
   @ast class Update(lhs: Apply, rhs: Term) extends Term
@@ -127,15 +128,15 @@ object Term {
 object Type {
   @branch trait Ref extends Type with core.Ref
   @ast class Name(value: String @nonEmpty)(isBackquoted: Boolean) extends core.Name with Ref {
-    // TODO: require(keywords.contains(value) ==> isBackquoted)
+    require(keywords.contains(value) ==> isBackquoted)
   }
   @ast class Select(qual: Term.Ref, name: Type.Name) extends Ref {
-    // TODO: require(qual.isPath)
+    require(qual.isPath)
   }
   @ast class SuperSelect(qual: Option[core.Name], supertpe: Option[Type.Name], selector: Type.Name) extends Ref
   @ast class Project(qual: Type, name: Type.Name) extends Ref
   @ast class Singleton(ref: Term.Ref) extends Ref {
-    // TODO: require(ref.isPath)
+    require(ref.isPath)
   }
   @ast class Apply(tpe: Type, args: Seq[Type] @nonEmpty) extends Type
   @ast class ApplyInfix(lhs: Type, op: Type, rhs: Type) extends Type
@@ -162,9 +163,11 @@ object Pat {
   @ast class Alternative(lhs: Pat, rhs: Pat) extends Pat
   @ast class Tuple(elements: Seq[Pat] @nonEmpty) extends Pat
   @ast class Extract(ref: Term.Ref, targs: Seq[Type], elements: Seq[Pat]) extends Pat {
-    // TODO: require(ref.isStableId)
+    require(ref.isStableId)
   }
-  @ast class ExtractInfix(lhs: Pat, ref: Term.Ref, rhs: Seq[Pat] @nonEmpty) extends Pat // TODO: require ref is stable id
+  @ast class ExtractInfix(lhs: Pat, ref: Term.Ref, rhs: Seq[Pat] @nonEmpty) extends Pat {
+    require(ref.isStableId)
+  }
   @ast class Interpolate(prefix: Term.Name, parts: Seq[Lit.String] @nonEmpty, args: Seq[Pat]) extends Pat {
     // TODO: require(prefix.isInterpolationId)
     require(parts.length == args.length + 1)
@@ -277,8 +280,8 @@ object Defn {
 
 @ast class Pkg(ref: Term.Ref, stats: Seq[Stmt.TopLevel])(hasHeader: Boolean)
      extends Stmt.TopLevel with Scope.TopLevel with Member.Term with Has.TermName {
-  // TODO: require(ref.isQualId)
   // TODO: validate nestedness of header pkgs vs named packages
+  require(ref.isQualId)
   def mods: Seq[Mod] = Nil
   def name: Term.Name = ref match {
     case name: Term.Name      => name
@@ -341,7 +344,7 @@ object Lit {
 object Import {
   // TODO: validate that wildcard import can only be the last one in the list of sels
   @ast class Clause(ref: Term.Ref, sels: Seq[Selector] @nonEmpty) extends Tree {
-    // TODO: require(ref.isStableId)
+    require(ref.isStableId)
   }
 
   @branch trait Selector extends Tree
