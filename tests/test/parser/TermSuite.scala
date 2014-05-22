@@ -81,11 +81,11 @@ class TermSuite extends ParseSuite {
   }
 
   test("a = true") {
-    val Assign(Name("a"), Lit.True()) = term("a = true")
+    val Assign(Name("a"), Lit.Bool(true)) = term("a = true")
   }
 
   test("a(0) = true") {
-    val Update(Apply(Name("a"), Lit.Int(0) :: Nil), Lit.True()) = term("a(0) = true")
+    val Update(Apply(Name("a"), Lit.Int(0) :: Nil), Lit.Bool(true)) = term("a(0) = true")
   }
 
   test("return") {
@@ -109,23 +109,23 @@ class TermSuite extends ParseSuite {
   }
 
   test("(true, false)") {
-    val Tuple(Lit.True() :: Lit.False() :: Nil) = term("(true, false)")
+    val Tuple(Lit.Bool(true) :: Lit.Bool(false) :: Nil) = term("(true, false)")
   }
 
   test("{ true; false }") {
-    val Block(Lit.True() :: Lit.False() :: Nil) = term("{ true; false }")
+    val Block(Lit.Bool(true) :: Lit.Bool(false) :: Nil) = term("{ true; false }")
   }
 
   test("{ true }") {
-    val Block(Lit.True() :: Nil) = term("{ true }")
+    val Block(Lit.Bool(true) :: Nil) = term("{ true }")
   }
 
   test("if (true) true else false") {
-    val If.ThenElse(Lit.True(), Lit.True(), Lit.False()) = term("if (true) true else false")
+    val If.ThenElse(Lit.Bool(true), Lit.Bool(true), Lit.Bool(false)) = term("if (true) true else false")
   }
 
   test("if (true) true") {
-    val If.Then(Lit.True(), Lit.True()) = term("if (true) true")
+    val If.Then(Lit.Bool(true), Lit.Bool(true)) = term("if (true) true")
   }
 
   test("(x => x)") {
@@ -153,7 +153,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("1 match { case 1 => true }") {
-    val Match(Lit.Int(1), Cases(Case(Lit.Int(1), None, Lit.True() :: Nil) :: Nil)) =
+    val Match(Lit.Int(1), Cases(Case(Lit.Int(1), None, Lit.Bool(true) :: Nil) :: Nil)) =
       term("1 match { case 1 => true }")
   }
 
@@ -163,7 +163,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("1 match { case 1 if true => }") {
-    val Match(Lit.Int(1), Cases(Case(Lit.Int(1), Some(Lit.True()), Nil) :: Nil)) =
+    val Match(Lit.Int(1), Cases(Case(Lit.Int(1), Some(Lit.Bool(true)), Nil) :: Nil)) =
       term("1 match { case 1 if true => }")
   }
 
@@ -190,11 +190,11 @@ class TermSuite extends ParseSuite {
   }
 
   test("while (true) false") {
-    val While(Lit.True(), Lit.False()) = term("while (true) false")
+    val While(Lit.Bool(true), Lit.Bool(false)) = term("while (true) false")
   }
 
   test("do false while(true)") {
-    val Do(Lit.False(), Lit.True()) = term("do false while(true)")
+    val Do(Lit.Bool(false), Lit.Bool(true)) = term("do false while(true)")
   }
 
   test("for (a <- b; if c; x = a) x") {

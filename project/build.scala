@@ -134,11 +134,8 @@ object build extends Build {
   ) settings (
     publishableSettings: _*
   ) settings (
+    name := "core",
     scalaSource in Compile <<= (baseDirectory in Compile)(base => base),
-    artifactName := { (sv: ScalaVersion, module: ModuleID, artifact: Artifact) =>
-      val standard = artifactName.value(sv, module, artifact)
-      standard.replace("reflection_", "core_")
-    },
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided"),
     // scalacOptions ++= Seq("-Xprint:typer"),
     scalacOptions ++= Seq()

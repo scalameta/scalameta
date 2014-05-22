@@ -38,7 +38,7 @@ import scala.reflect.syntactic.SyntacticInfo._
   def mapOrigin(f: Origin => Origin): ThisType
 
   def parent: Option[Tree]
-  private[reflect] def internalWithParent(x: Tree): ThisType
+  private[core] def internalWithParent(x: Tree): ThisType
 
   // TODO: these APIs will most likely change in the future
   // because we would like to make sure that trees are fully immutable
@@ -331,9 +331,7 @@ object Scope {
 
 @branch trait Lit extends Term with Pat with Type
 object Lit {
-  @branch trait Bool extends Lit
-  @ast class True() extends Bool
-  @ast class False() extends Bool
+  @ast class Bool(value: scala.Boolean) extends Lit
   @ast class Int(value: scala.Int) extends Lit
   @ast class Long(value: scala.Long) extends Lit
   @ast class Float(value: scala.Float) extends Lit

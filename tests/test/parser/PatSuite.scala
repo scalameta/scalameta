@@ -48,7 +48,7 @@ class PatSuite extends ParseSuite {
   }
 
   test("(true, false)") {
-    val Tuple(Lit.True() :: Lit.False() :: Nil) = pat("(true, false)")
+    val Tuple(Lit.Bool(true) :: Lit.Bool(false) :: Nil) = pat("(true, false)")
   }
 
   test("foo\"bar\"") {
