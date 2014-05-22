@@ -129,7 +129,7 @@ trait MacroPlugin {
             private def macroExpandWithRuntime(c: ScalaContext): Any = {
               import global.{Tree => ScalaTree, TermTree => ScalaTerm}
               import scala.reflect.core.{Tree => PalladiumTree, Term => PalladiumTerm}
-              import scala.reflect.eval.{eval => palladiumEval}
+              import scala.reflect.internal.eval.{eval => palladiumEval}
               import org.scalareflect.unreachable
               val palladiumContext: PalladiumContext with Scalahost = new Scalahost(c)
               // val applied @ Applied(core, targs, argss) = dissectApplied(expandee)
