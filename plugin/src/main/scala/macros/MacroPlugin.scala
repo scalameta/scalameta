@@ -1,4 +1,4 @@
-package scala.reflect.hosts
+package scala.reflect.internal.hosts
 package scalacompiler
 package macros
 
@@ -14,8 +14,8 @@ import scala.util.control.ControlThrowable
 import scala.collection.mutable
 import scala.reflect.macros.contexts.{Context => ScalaContext}
 import scala.reflect.semantic.{MacroContext => PalladiumContext}
-import scala.reflect.hosts.scalacompiler.scalahost.Scalahost
-import scala.reflect.hosts.scalacompiler.{Plugin => PalladiumPlugin}
+import scalahost.Scalahost
+import scalacompiler.{Plugin => PalladiumPlugin}
 
 trait MacroPlugin extends Common {
   self: PalladiumPlugin =>

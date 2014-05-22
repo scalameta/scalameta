@@ -1,11 +1,11 @@
-package scala.reflect.hosts
+package scala.reflect.internal.hosts
 package scalacompiler
 package parser
 
 import scala.tools.nsc.{Global, Phase, SubComponent}
 import scala.tools.nsc.plugins.{Plugin => NscPlugin, PluginComponent => NscPluginComponent}
 import scala.collection.mutable
-import scala.reflect.hosts.scalacompiler.parser.{SyntaxAnalyzer => PalladiumSyntaxAnalyzer}
+import parser.{SyntaxAnalyzer => PalladiumSyntaxAnalyzer}
 
 trait HijackSyntaxAnalyzer {
   self: NscPlugin =>

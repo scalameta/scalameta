@@ -1,4 +1,4 @@
 <plugin>
   <name>scalahost</name>
-  <classname>scala.reflect.hosts.scalacompiler.Plugin</classname>
+  <classname>scala.reflect.internal.hosts.scalacompiler.Plugin</classname>
 </plugin>

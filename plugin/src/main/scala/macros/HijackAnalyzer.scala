@@ -1,12 +1,12 @@
-package scala.reflect.hosts
+package scala.reflect.internal.hosts
 package scalacompiler
 package macros
 
 import scala.tools.nsc.{Global, Phase, SubComponent}
 import scala.tools.nsc.plugins.{Plugin => NscPlugin, PluginComponent => NscPluginComponent}
 import scala.collection.mutable
-import scala.reflect.hosts.scalacompiler.{Plugin => PalladiumPlugin}
-import scala.reflect.hosts.scalacompiler.macros.{Analyzer => PalladiumAnalyzer}
+import macros.{Analyzer => PalladiumAnalyzer}
+import scalacompiler.{Plugin => PalladiumPlugin}
 
 trait HijackAnalyzer {
   self: PalladiumPlugin =>

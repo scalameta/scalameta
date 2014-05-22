@@ -1,4 +1,4 @@
-package scala.reflect.hosts
+package scala.reflect.internal.hosts
 package scalacompiler
 package parser
 
@@ -8,7 +8,7 @@ import scala.tools.nsc.ast.parser.Tokens._
 import scala.tools.nsc.{Global, Phase, SubComponent}
 import scala.reflect.internal.Flags
 import scala.collection.mutable.ListBuffer
-import scala.reflect.hosts.scalacompiler.macros.Common
+import macros.Common
 
 abstract class SyntaxAnalyzer extends NscSyntaxAnalyzer with Common {
   import global._

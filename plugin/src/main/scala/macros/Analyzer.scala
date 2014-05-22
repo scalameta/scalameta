@@ -1,9 +1,9 @@
-package scala.reflect.hosts
+package scala.reflect.internal.hosts
 package scalacompiler
 package macros
 
 import scala.tools.nsc.typechecker.{Analyzer => NscAnalyzer}
-import scala.reflect.hosts.scalacompiler.{Plugin => PalladiumPlugin}
+import scalacompiler.{Plugin => PalladiumPlugin}
 
 // TODO: it's a shame that we have to hijack the analyzer to override isBlackbox
 // instead we should extend the MacroPlugin API with `pluginsIsBlackbox(macroDef: Symbol): Boolean`

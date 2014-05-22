@@ -1,4 +1,4 @@
-package scala.reflect.hosts
+package scala.reflect.internal.hosts
 package scalacompiler
 package macros
 
