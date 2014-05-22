@@ -832,8 +832,8 @@ abstract class Parser { parser =>
       case FLOATLIT               => Lit.Float(in.floatVal(isNegated).toFloat)
       case DOUBLELIT              => Lit.Double(in.floatVal(isNegated))
       case STRINGLIT | STRINGPART => Lit.String(in.strVal.intern())
-      case TRUE                   => Lit.True()
-      case FALSE                  => Lit.False()
+      case TRUE                   => Lit.Bool(true)
+      case FALSE                  => Lit.Bool(false)
       case NULL                   => Lit.Null()
       case SYMBOLLIT              => Lit.Symbol(scala.Symbol(in.strVal))
       case _                      => syntaxError("illegal literal")
@@ -930,7 +930,7 @@ abstract class Parser { parser =>
       r
     } else {
       accept(LPAREN)
-      Lit.True()
+      Lit.Bool(true)
     }
   }
 

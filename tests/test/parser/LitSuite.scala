@@ -2,11 +2,11 @@ import scala.reflect.core._
 
 class LitSuite extends ParseSuite {
   test("true") {
-    val Lit.True() = term("true")
+    val Lit.Bool(true) = term("true")
   }
 
   test("false") {
-    val Lit.False() = term("false")
+    val Lit.Bool(false) = term("false")
   }
 
   test("42") {

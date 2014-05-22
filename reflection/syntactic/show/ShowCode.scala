@@ -57,17 +57,17 @@ object ShowCode {
       s(pparams, " => ", t.res)
 
     // Lit
-    case _: Lit.True   => s("true")
-    case _: Lit.False  => s("false")
-    case t: Lit.Int    => s(t.value.toString)
-    case t: Lit.Long   => s(t.value.toString)
-    case t: Lit.Float  => s(t.value.toString)
-    case t: Lit.Double => s(t.value.toString)
-    case t: Lit.Char   => s(t.value.toString)
-    case t: Lit.String => s("\"", t.value, "\"")
-    case t: Lit.Symbol => s("'", t.value.name)
-    case _: Lit.Null   => s("null")
-    case _: Lit.Unit   => s("()")
+    case Lit.Bool(true)  => s("true")
+    case Lit.Bool(false) => s("true")
+    case t: Lit.Int      => s(t.value.toString)
+    case t: Lit.Long     => s(t.value.toString)
+    case t: Lit.Float    => s(t.value.toString)
+    case t: Lit.Double   => s(t.value.toString)
+    case t: Lit.Char     => s(t.value.toString)
+    case t: Lit.String   => s("\"", t.value, "\"")
+    case t: Lit.Symbol   => s("'", t.value.name)
+    case _: Lit.Null     => s("null")
+    case _: Lit.Unit     => s("()")
 
     // Term
     case t: Term.This        => s(t.qual.map { qual => s(qual, ".") }.getOrElse(s()), "this")
