@@ -23,7 +23,10 @@ abstract class SyntaxAnalyzer extends NscSyntaxAnalyzer with Common {
     else new PalladiumUnitParser(unit).smartParse()
   }
 
+  def newUnitScanner(unit: CompilationUnit): UnitScanner = new PalladiumUnitScanner(unit)
   private class PalladiumUnitScanner(unit: CompilationUnit, patches: List[BracePatch]) extends UnitScanner(unit, patches) {
+    def this(unit: CompilationUnit) = this(unit, List())
+
     val allowIdentSetter = classOf[scala.tools.nsc.ast.parser.SyntaxAnalyzer#Scanner].getDeclaredMethods().filter(_.getName == "allowIdent_$eq").head
     allowIdentSetter.setAccessible(true)
     allowIdentSetter.invoke(this, nme.MACROkw)
@@ -39,7 +42,8 @@ abstract class SyntaxAnalyzer extends NscSyntaxAnalyzer with Common {
     }
   }
 
-  private class PalladiumUnitParser(unit: global.CompilationUnit, patches: List[BracePatch]) extends UnitParser(unit, Nil) {
+  def newUnitParser(unit: CompilationUnit): UnitParser = new PalladiumUnitParser(unit)
+  private class PalladiumUnitParser(unit: global.CompilationUnit, patches: List[BracePatch]) extends UnitParser(unit, patches) {
     def this(unit: global.CompilationUnit) = this(unit, Nil)
     override def withPatches(patches: List[BracePatch]): UnitParser = new UnitParser(unit, patches)
     override def newScanner() = new PalladiumUnitScanner(unit, patches)
