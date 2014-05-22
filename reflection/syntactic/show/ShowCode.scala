@@ -57,8 +57,7 @@ object ShowCode {
       s(pparams, " => ", t.res)
 
     // Lit
-    case Lit.Bool(true)  => s("true")
-    case Lit.Bool(false) => s("true")
+    case t: Lit.Bool     => s(t.value.toString)
     case t: Lit.Int      => s(t.value.toString)
     case t: Lit.Long     => s(t.value.toString)
     case t: Lit.Float    => s(t.value.toString)
