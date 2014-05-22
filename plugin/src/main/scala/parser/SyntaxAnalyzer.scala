@@ -8,8 +8,9 @@ import scala.tools.nsc.ast.parser.Tokens._
 import scala.tools.nsc.{Global, Phase, SubComponent}
 import scala.reflect.internal.Flags
 import scala.collection.mutable.ListBuffer
+import scala.reflect.hosts.scalacompiler.macros.Common
 
-abstract class SyntaxAnalyzer extends NscSyntaxAnalyzer {
+abstract class SyntaxAnalyzer extends NscSyntaxAnalyzer with Common {
   import global._
 
   val runsAfter = List[String]()
@@ -65,8 +66,7 @@ abstract class SyntaxAnalyzer extends NscSyntaxAnalyzer {
           else { accept(COLON); (true, typ()) }
         }
         accept(EQUALS)
-        val rhs = q"palladiumMacro(isBlackbox = $isBlackbox)(${expr()})"
-        DefDef(mods, name.toTermName, tparams, vparamss, restype, rhs)
+        PalladiumMacro(mods, name.toTermName, tparams, vparamss, isBlackbox, restype, expr())
       }
       signalParseProgress(result.pos)
       result

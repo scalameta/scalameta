@@ -17,7 +17,7 @@ import scala.reflect.semantic.{MacroContext => PalladiumContext}
 import scala.reflect.hosts.scalacompiler.scalahost.Scalahost
 import scala.reflect.hosts.scalacompiler.{Plugin => PalladiumPlugin}
 
-trait MacroPlugin {
+trait MacroPlugin extends Common {
   self: PalladiumPlugin =>
 
   import global._
@@ -26,73 +26,31 @@ trait MacroPlugin {
   import analyzer.{MacroPlugin => NscMacroPlugin, _}
 
   object palladiumMacroPlugin extends NscMacroPlugin {
-    def macroEngine = "Palladium experimental macro engine"
-    // NOTE: this fixup is necessary for signatures to be accepted as annotations
-    // if we don't set types in annotations, then pickler is going to crash
-    // apart from constants, it doesn't really matter what types we assign, so we just go for NoType
-    trait FixupSignature {
-      protected def fixup(tree: Tree): Tree = {
-        new Transformer {
-          override def transform(tree: Tree) = {
-            tree match {
-              case Literal(const @ Constant(x)) if tree.tpe == null => tree setType ConstantType(const)
-              case _ if tree.tpe == null => tree setType NoType
-              case _ => ;
-            }
-            super.transform(tree)
-          }
-        }.transform(tree)
-      }
-    }
-    object LegacySignature extends FixupSignature {
-      def apply(): Tree = fixup(Apply(Ident(TermName("macro")), List(Assign(Literal(Constant("macroEngine")), Literal(Constant(macroEngine))))))
-    }
-    object PalladiumSignature extends FixupSignature {
-      def apply(isBlackbox: Boolean, implDdef: DefDef): Tree = {
-        fixup(Apply(Ident(TermName("palladiumMacro")), List(
-          Assign(Literal(Constant("isBlackbox")), Literal(Constant(isBlackbox))),
-          Assign(Literal(Constant("implDdef")), implDdef))))
-      }
-      def unapply(tree: Tree): Option[(Boolean, DefDef)] = {
-        tree match {
-          case Apply(Ident(TermName("palladiumMacro")), List(
-            Assign(Literal(Constant("isBlackbox")), Literal(Constant(isBlackbox: Boolean))),
-            Assign(Literal(Constant("implDdef")), (implDdef: DefDef)))) => Some((isBlackbox, implDdef))
-          case _ => None
-        }
-      }
-    }
     override def pluginsTypedMacroBody(typer: Typer, ddef: DefDef): Option[Tree] = {
-      def typecheckPalladiumMacro(isBlackbox: Boolean, body: Tree): Tree = {
-        val q"$_ def $name[..$tparams](...$paramss): $_ = $_" = ddef
-        def cleanupMods(mods: Modifiers) = mods &~ IMPLICIT
-        val paramss1 = mmap(paramss){
-          case p @ q"$mods val $pname: $_ = $_" =>
-            val p1 = atPos(p.pos)(q"${cleanupMods(mods)} val $pname: _root_.scala.reflect.core.Term")
-            if (isRepeated(p.symbol)) copyValDef(p1)(tpt = tq"_root_.scala.<repeated>[${p1.tpt}]") else p1
-        }
-        val c = q"implicit val ${TermName("c$" + globalFreshNameCreator.newName(""))}: _root_.scala.reflect.semantic.MacroContext"
-        val implDdef = atPos(ddef.pos)(q"def $name[..$tparams](...$paramss1)(implicit $c): _root_.scala.reflect.core.Term = $body")
-        val q"{ ${typedImplDdef: DefDef}; () }" = typer.typed(q"{ $implDdef; () }")
-        if (typedImplDdef.exists(_.isErroneous)) {
-          if (ddef.symbol != null) ddef.symbol setFlag IS_ERROR
-          ddef setType ErrorType
-        } else {
-          // NOTE: order is actually very important here, because at the end of the day
-          // we need the legacy annotation to come first so that it can be picked up by the 2.11.0 macro engine
-          // (otherwise half of standard macro infrastructure will cease to function)
-          ddef.symbol.addAnnotation(MacroImplAnnotation, PalladiumSignature(isBlackbox, typedImplDdef))
-          ddef.symbol.addAnnotation(MacroImplAnnotation, LegacySignature())
-        }
-        EmptyTree
-      }
-      ddef.rhs match {
-        // NOTE: palladiumMacro(...) is the shape of the body emitted by our plugin when it parses Palladium-style macros
-        // this is just a stub that's meant to communicate information from the parser
-        // `palladiumMacro` doesn't have any semantic meaning. it's not a function that's defined anywhere - it's just a carrier
-        // typechecking is going to deconstruct this stub and then replace it with an empty tree
-        case q"palladiumMacro(isBlackbox = ${isBlackbox: Boolean})($body)" => Some(typecheckPalladiumMacro(isBlackbox, body))
-        case _ => None
+      ddef match {
+        case PalladiumMacro(_, name, tparams, paramss, isBlackbox, _, body) =>
+          def cleanupMods(mods: Modifiers) = mods &~ IMPLICIT
+          val paramss1 = mmap(paramss){
+            case p @ q"$mods val $pname: $_ = $_" =>
+              val p1 = atPos(p.pos)(q"${cleanupMods(mods)} val $pname: _root_.scala.reflect.core.Term")
+              if (isRepeated(p.symbol)) copyValDef(p1)(tpt = tq"_root_.scala.<repeated>[${p1.tpt}]") else p1
+          }
+          val c = q"implicit val ${TermName("c$" + globalFreshNameCreator.newName(""))}: _root_.scala.reflect.semantic.MacroContext"
+          val implDdef = atPos(ddef.pos)(q"def $name[..$tparams](...$paramss1)(implicit $c): _root_.scala.reflect.core.Term = $body")
+          val q"{ ${typedImplDdef: DefDef}; () }" = typer.typed(q"{ $implDdef; () }")
+          if (typedImplDdef.exists(_.isErroneous)) {
+            if (ddef.symbol != null) ddef.symbol setFlag IS_ERROR
+            ddef setType ErrorType
+          } else {
+            // NOTE: order is actually very important here, because at the end of the day
+            // we need the legacy annotation to come first so that it can be picked up by the 2.11.0 macro engine
+            // (otherwise half of standard macro infrastructure will cease to function)
+            ddef.symbol.addAnnotation(MacroImplAnnotation, PalladiumSignature(isBlackbox, typedImplDdef))
+            ddef.symbol.addAnnotation(MacroImplAnnotation, LegacySignature())
+          }
+          Some(EmptyTree)
+        case _ =>
+          None
       }
     }
     override def pluginsMacroExpand(typer: Typer, expandee: Tree, mode: Mode, pt: Type): Option[Tree] = {
