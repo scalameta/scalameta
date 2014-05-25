@@ -6,12 +6,17 @@ import scala.tools.nsc.plugins.{Plugin => NscPlugin, PluginComponent => NscPlugi
 import parser.HijackSyntaxAnalyzer
 import macros.HijackAnalyzer
 import macros.{MacroPlugin => PalladiumMacroPlugin}
+import persistence.PersistencePhase
 
-class Plugin(val global: Global) extends NscPlugin with HijackSyntaxAnalyzer with HijackAnalyzer with PalladiumMacroPlugin {
+class Plugin(val global: Global) extends NscPlugin
+                                    with HijackSyntaxAnalyzer
+                                    with HijackAnalyzer
+                                    with PalladiumMacroPlugin
+                                    with PersistencePhase {
   val name = "scalahost"
-  val description = """Hosts Project Palladium macros in scalac.
+  val description = """Hosts Project Palladium in scalac.
   For more information visit https://github.com/scalareflect/scalahost"""
-  val components = List[NscPluginComponent]()
+  val components = List[NscPluginComponent](PersistenceComponent)
   hijackSyntaxAnalyzer()
   hijackAnalyzer()
   global.analyzer.addMacroPlugin(palladiumMacroPlugin)

@@ -37,6 +37,12 @@ trait HijackAnalyzer {
       def subcomponentNamed(name: String) = phasesSet.find(_.phaseName == name).head
       val oldScs @ List(oldNamer, oldPackageobjects, oldTyper) = List(subcomponentNamed("namer"), subcomponentNamed("packageobjects"), subcomponentNamed("typer"))
       val newScs = List(analyzer.namerFactory, analyzer.packageObjects, analyzer.typerFactory)
+      def hijackDescription(pt: SubComponent, sc: SubComponent) = {
+        val phasesDescMapGetter = classOf[NscGlobal].getDeclaredMethod("phasesDescMap")
+        val phasesDescMap = phasesDescMapGetter.invoke(global).asInstanceOf[mutable.Map[SubComponent, String]]
+        phasesDescMap(sc) = phasesDescMap(pt)
+      }
+      oldScs zip newScs foreach { case (pt, sc) => hijackDescription(pt, sc) }
       phasesSet --= oldScs
       phasesSet ++= newScs
     }
