@@ -13,8 +13,8 @@ import scala.reflect.macros.runtime.AbortMacroException
 import scala.util.control.ControlThrowable
 import scala.collection.mutable
 import scala.reflect.macros.contexts.{Context => ScalaContext}
-import scala.reflect.semantic.{MacroContext => PalladiumContext}
-import scalahost.Scalahost
+import scala.reflect.semantic.{MacroContext => PalladiumMacroContext}
+import scalahost.{Scalahost, MacroContext => OurMacroContext}
 import scalacompiler.{Plugin => PalladiumPlugin}
 
 trait MacroPlugin extends Common {
@@ -89,7 +89,7 @@ trait MacroPlugin extends Common {
               import scala.reflect.core.{Tree => PalladiumTree, Term => PalladiumTerm}
               import scala.reflect.internal.eval.{eval => palladiumEval}
               import org.scalareflect.unreachable
-              val palladiumContext: PalladiumContext with Scalahost = new Scalahost(c)
+              val palladiumContext = Scalahost[global.type](c)
               // val applied @ Applied(core, targs, argss) = dissectApplied(expandee)
               // val implCore = q"${implDdef.symbol}" setType core.tpe
               // val implTapplied = q"$implCore[..$targs]" setType applied.callee.tpe
@@ -97,7 +97,7 @@ trait MacroPlugin extends Common {
               // val implApplied = q"$implTapplied(...$margss)" setType expandee.tpe
               // val scalaInvocation = q"{ $implDdef; $implApplied }" setType expandee.tpe
               val scalaInvocation: ScalaTerm = implDdef.rhs.asInstanceOf[ScalaTerm] // TODO: this is just a toy
-              val palladiumInvocation: PalladiumTree = palladiumContext.toPalladium(scalaInvocation.asInstanceOf[palladiumContext.scalaContext.global.Tree])
+              val palladiumInvocation: PalladiumTree = palladiumContext.toPalladium(scalaInvocation)
               val palladiumResult: Any = palladiumInvocation match {
                 case term: PalladiumTerm => palladiumEval(term)
                 case _ => unreachable
