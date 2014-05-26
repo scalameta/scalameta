@@ -97,13 +97,13 @@ trait MacroPlugin extends Common {
               // val implApplied = q"$implTapplied(...$margss)" setType expandee.tpe
               // val scalaInvocation = q"{ $implDdef; $implApplied }" setType expandee.tpe
               val scalaInvocation: ScalaTerm = implDdef.rhs.asInstanceOf[ScalaTerm] // TODO: this is just a toy
-              val palladiumInvocation: PalladiumTree = palladiumContext.toPalladium(scalaInvocation)
+              val palladiumInvocation: PalladiumTree = ??? // palladiumContext.toPalladium(scalaInvocation)
               val palladiumResult: Any = palladiumInvocation match {
                 case term: PalladiumTerm => palladiumEval(term)
                 case _ => unreachable
               }
               val scalaResult: Any = palladiumResult match {
-                case tree: PalladiumTree => palladiumContext.fromPalladium(tree)
+                case tree: PalladiumTree => ??? // palladiumContext.fromPalladium(tree)
                 case other => other
               }
               scalaResult

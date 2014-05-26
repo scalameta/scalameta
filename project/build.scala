@@ -54,7 +54,8 @@ object build extends Build {
         <system>GitHub</system>
         <url>https://github.com/scalareflect/scalahost/issues</url>
       </issueManagement>
-    )
+    ),
+    addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0-M1" cross CrossVersion.full)
   )
 
   // http://stackoverflow.com/questions/20665007/how-to-publish-only-when-on-master-branch-under-travis-and-sbt-0-13
@@ -129,6 +130,18 @@ object build extends Build {
     packagedArtifacts := Map.empty
   ) aggregate (plugin, tests)
 
+  lazy val foundation = Project(
+    id   = "scalahost-foundation",
+    base = file("foundation")
+  ) settings (
+    publishableSettings: _*
+  ) settings (
+    scalaSource in Compile <<= (baseDirectory in Compile)(base => base),
+    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided"),
+    packagedArtifacts := Map.empty,
+    scalacOptions ++= Seq()
+  )
+
   lazy val plugin = Project(
     id   = "scalahost",
     base = file("plugin")
@@ -139,6 +152,7 @@ object build extends Build {
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided"),
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _ % "provided"),
     libraryDependencies += "org.scalareflect" % "core_2.11" % "0.1.0-SNAPSHOT",
+    libraryDependencies += "org.scalareflect" % "foundation_2.11" % "0.1.0-SNAPSHOT",
     libraryDependencies += "org.scalareflect" % "interpreter_2.11" % "0.1.0-SNAPSHOT",
     test in assembly := {},
     jarName in assembly := name.value + "_" + scalaVersion.value + "-" + version.value + "-assembly.jar",
@@ -161,7 +175,7 @@ object build extends Build {
       (art, slimJar)
     },
     scalacOptions ++= Seq()
-  )
+  ) dependsOn (foundation)
 
   lazy val sandbox = Project(
     id   = "sandbox",

@@ -6,6 +6,7 @@ import scala.tools.nsc.{Global, Phase, SubComponent}
 import scala.tools.nsc.plugins.{Plugin => NscPlugin, PluginComponent => NscPluginComponent}
 import scalacompiler.{Plugin => PalladiumPlugin}
 import scalahost.Scalahost
+import scala.reflect.io.AbstractFile
 
 trait PersistencePhase {
   self: PalladiumPlugin =>
@@ -28,7 +29,17 @@ trait PersistencePhase {
     implicit val h = Scalahost[global.type](global)
 
     override def newPhase(prev: Phase): StdPhase = new StdPhase(prev) {
+      private def target(unit: CompilationUnit): AbstractFile = {
+        // TODO: this method does abstract away the real vs virtual input business
+        // but unfortunately it isn't of terrible use for REPL at the moment
+        // because the paths we get there are the trivial (memory)/<init> and (memory)/<console>
+        val targetDir = settings.outputDirs.outputDirFor(unit.source.file)
+        targetDir.fileNamed(unit.source.file.name.replace(".scala", "") + ".ast")
+      }
+
       override def apply(unit: CompilationUnit) {
+        // val pbody = h.toPalladium(unit.body)
+        // ???
       }
     }
   }
