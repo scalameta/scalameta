@@ -1,4 +1,4 @@
-import scala.reflect.core._, Import._, Selector.{Name => SelectorName, _}, Term.{This, Name => TermName, SuperSelect, Select}
+import scala.reflect.core._, Import._, Selector.{Name => SelectorName, _}, Term.{This, Name => TermName, Select}, Aux.Super
 
 class ImportSuite extends ParseSuite {
   test("import foo.bar") {
@@ -11,7 +11,7 @@ class ImportSuite extends ParseSuite {
   }
 
   test("import super.foo.bar") {
-    val Import(Clause(SuperSelect(None, None, TermName("foo")), SelectorName("bar") :: Nil) :: Nil) =
+    val Import(Clause(Select(Super(None, None), TermName("foo")), SelectorName("bar") :: Nil) :: Nil) =
       templStat("import super.foo.bar")
   }
 
@@ -26,7 +26,7 @@ class ImportSuite extends ParseSuite {
   }
 
   test("import super.foo._") {
-    val Import(Clause(SuperSelect(None, None, TermName("foo")), Wildcard() :: Nil) :: Nil) =
+    val Import(Clause(Select(Super(None, None), TermName("foo")), Wildcard() :: Nil) :: Nil) =
       templStat("import super.foo._")
   }
 

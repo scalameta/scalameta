@@ -18,6 +18,7 @@
   1. Floating scala doc
   1. `(x = 2) + (y = 3)` here x = 2 is assign but y = 3 is named argument
   1. `x + ()` is `x.+()` but not `x.+(())`
+  1. `A.super[B]` could very well be allow to be an expression on its own
 
 ## Syntax spec bugs
 

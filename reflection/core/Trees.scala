@@ -26,8 +26,6 @@ import scala.reflect.syntactic.SyntacticInfo._
 // TODO: implement srewrite with palladium
 // TODO: implement scaladoc with palladium
 // TODO: add moar requires
-// TODO: invariants: tree should either have at least one non-trival token or be eq to it's empty value
-// TODO: converter: double check conversion of `(f _)(x)` (bug 46)
 // TODO: add tree for comments
 
 @root trait Tree extends Product {
@@ -58,7 +56,7 @@ import scala.reflect.syntactic.SyntacticInfo._
   def isBackquoted: Boolean
 }
 
-@branch trait Term extends Arg with Stmt.Template with Stmt.Block
+@branch trait Term extends Arg with Stmt.Template with Stmt.Block with Aux.Qualifier
 object Term {
   @branch trait Ref extends Term with core.Ref
   @ast class This(qual: Option[core.Name]) extends Ref with Mod.AccessQualifier
@@ -68,8 +66,7 @@ object Term {
     def name: Name = this
     def mods: Seq[Mod] = Nil
   }
-  @ast class SuperSelect(qual: Option[core.Name], supertpe: Option[Type.Name], selector: Term.Name) extends Ref
-  @ast class Select(qual: Term, selector: Term.Name) extends Ref with Pat
+  @ast class Select(qual: Aux.Qualifier, selector: Term.Name) extends Ref with Pat
 
   @ast class Interpolate(prefix: Name, parts: Seq[Lit.String] @nonEmpty, args: Seq[Term]) extends Term {
     // TODO: require(prefix.isInterpolationId)
@@ -135,13 +132,14 @@ object Type {
   @ast class Name(value: String @nonEmpty)(isBackquoted: Boolean) extends core.Name with Ref {
     require(keywords.contains(value) ==> isBackquoted)
   }
-  @ast class Select(qual: Term.Ref, name: Type.Name) extends Ref {
-    require(qual.isPath)
+  @ast class Select(qual: Aux.Qualifier, selector: Type.Name) extends Ref {
+    require(qual.isInstanceOf[Term.Ref] || qual.isInstanceOf[Aux.Super])
+    require(qual match { case qual: Term.Ref => qual.isPath; case qual: Aux.Super => true; case _ => unreachable })
   }
-  @ast class SuperSelect(qual: Option[core.Name], supertpe: Option[Type.Name], selector: Type.Name) extends Ref
-  @ast class Project(qual: Type, name: Type.Name) extends Ref
-  @ast class Singleton(ref: Term.Ref) extends Ref {
-    require(ref.isPath)
+  @ast class Project(qual: Type, selector: Type.Name) extends Ref
+  @ast class Singleton(ref: Aux.Qualifier) extends Ref {
+    require(ref.isInstanceOf[Term.Ref] || ref.isInstanceOf[Aux.Super])
+    require(ref match { case ref: Term.Ref => ref.isPath; case ref: Aux.Super => true; case _ => unreachable })
   }
   @ast class Apply(tpe: Type, args: Seq[Type] @nonEmpty) extends Type
   @ast class ApplyInfix(lhs: Type, op: Type, rhs: Type) extends Type
@@ -463,6 +461,8 @@ object Aux {
                      bounds: Aux.TypeBounds) extends TypeParam with Member.Type with Has.TypeName
   }
   @ast class TypeBounds(lo: Option[Type], hi: Option[Type]) extends Tree
+  @branch trait Qualifier extends Tree
+  @ast class Super(thisp: Option[core.Name], superp: Option[Type.Name]) extends Tree with Qualifier
 }
 
 object Has {

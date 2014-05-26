@@ -23,22 +23,22 @@ class TermSuite extends ParseSuite {
   }
 
   test("a.super[b].c") {
-    val SuperSelect(Some(Type.Name("a")), Some(Type.Name("b")),
-                    Name("c")) = term("a.super[b].c")
+    val Select(Super(Some(Type.Name("a")), Some(Type.Name("b"))),
+               Name("c")) = term("a.super[b].c")
   }
 
   test("super[b].c") {
-    val SuperSelect(None, Some(Type.Name("b")),
-                    Name("c")) = term("super[b].c")
+    val Select(Super(None, Some(Type.Name("b"))),
+               Name("c")) = term("super[b].c")
   }
 
   test("a.super.c") {
-    val SuperSelect(Some(Type.Name("a")), None,
-                    Name("c")) = term("a.super.c")
+    val Select(Super(Some(Type.Name("a")), None),
+               Name("c")) = term("a.super.c")
   }
 
   test("super.c") {
-    val SuperSelect(None, None, Name("c")) = term("super.c")
+    val Select(Super(None, None), Name("c")) = term("super.c")
   }
 
   test("s\"a $b c\"") {

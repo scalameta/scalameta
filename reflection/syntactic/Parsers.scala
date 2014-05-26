@@ -52,9 +52,10 @@ object SyntacticInfo {
       case _                              => false
     }
     def isStableId: Boolean = tree match {
-      case _: Term.Name | _: Term.SuperSelect => true
-      case Term.Select(qual: Term.Ref, _)     => qual.isPath
-      case _                                  => false
+      case _: Term.Name                    => true
+      case Term.Select(qual: Term.Ref, _)  => qual.isPath
+      case Term.Select(qual: Aux.Super, _) => true
+      case _                               => false
     }
   }
   implicit class RichMods(val mods: List[Mod]) extends AnyVal {
@@ -376,10 +377,8 @@ abstract class Parser { parser =>
   }
 
   def convertToTypeId(ref: Term.Ref): Option[Type] = ref match {
-    case Term.Select(qual: Term.Ref, name) =>
+    case Term.Select(qual, name) =>
       Some(Type.Select(qual, name.toTypeName))
-    case Term.SuperSelect(qual, supertpe, selector) =>
-      Some(Type.SuperSelect(qual, supertpe, selector.toTypeName))
     case name: Term.Name =>
       Some(name.toTypeName)
     case _ =>
@@ -740,9 +739,9 @@ abstract class Parser { parser =>
       }
     } else if (in.token == SUPER) {
       in.nextToken()
-      val mixinQual = mixinQualifierOpt()
+      val superp = Aux.Super(None, mixinQualifierOpt())
       accept(DOT)
-      val supersel = Term.SuperSelect(None, mixinQual, termName())
+      val supersel = Term.Select(superp, termName())
       if (stop) supersel
       else {
         in.skipToken()
@@ -763,9 +762,9 @@ abstract class Parser { parser =>
           }
         } else if (in.token == SUPER) {
           in.nextToken()
-          val mixinQual = mixinQualifierOpt()
+          val superp = Aux.Super(Some(name.toTypeName), mixinQualifierOpt())
           accept(DOT)
-          val supersel = Term.SuperSelect(Some(name.toTypeName), mixinQual, termName())
+          val supersel = Term.Select(superp, termName())
           if (stop) supersel
           else {
             in.skipToken()
@@ -1178,7 +1177,7 @@ abstract class Parser { parser =>
         simpleExprRest(selector(t), canApply = true)
       case LBRACKET =>
         t match {
-          case _: Term.Name | _: Term.Select | _: Term.SuperSelect | _: Term.Apply =>
+          case _: Term.Name | _: Term.Select | _: Term.Apply =>
             var app: Term = t
             while (in.token == LBRACKET)
               app = Term.ApplyType(app, exprTypeArgs())
