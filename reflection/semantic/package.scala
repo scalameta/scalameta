@@ -36,5 +36,6 @@ package object semantic extends MemberOps with ScopeOps with TermOps with TypeOp
     @leaf class InferredTargs(targs: Seq[core.Type]) extends Attribute
     @leaf class InferredVargs(vargs: Seq[core.Term]) extends Attribute
     @leaf class MacroExpansion(tree: core.Tree) extends Attribute
+    // TODO: what about desugarings like auto-inserted apply/unapply/unapplySeq/xxxDynamic, expanded for loops, constant folding, etc?
   }
 }
