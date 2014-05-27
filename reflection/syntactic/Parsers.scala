@@ -754,7 +754,7 @@ abstract class Parser { parser =>
         in.nextToken()
         if (in.token == THIS) {
           in.nextToken()
-          val thisid = Term.This(Some(name.toTypeName))
+          val thisid = Term.This(Some(DualName.Sum(name)))
           if (stop && thisOK) thisid
           else {
             accept(DOT)
@@ -762,7 +762,7 @@ abstract class Parser { parser =>
           }
         } else if (in.token == SUPER) {
           in.nextToken()
-          val superp = Aux.Super(Some(name.toTypeName), mixinQualifierOpt())
+          val superp = Aux.Super(Some(DualName.Sum(name)), mixinQualifierOpt())
           accept(DOT)
           val supersel = Term.Select(superp, termName())
           if (stop) supersel
@@ -1590,7 +1590,7 @@ abstract class Parser { parser =>
     if (in.token != LBRACKET) None
     else {
       in.nextToken()
-      val res = if (in.token != THIS) typeName()
+      val res = if (in.token != THIS) DualName.Sum(termName())
                 else { in.nextToken(); Term.This(None) }
       accept(RBRACKET)
       Some(res)
@@ -1869,7 +1869,7 @@ abstract class Parser { parser =>
     sid match {
       case Term.Select(sid: Term.Ref, name: Term.Name) if sid.isStableId =>
         if (in.token == DOT) dotselectors
-        else Import.Clause(sid, Import.Selector.Name(name.value) :: Nil)
+        else Import.Clause(sid, Import.Selector.Name(DualName.Product(name)) :: Nil)
       case _ => dotselectors
     }
   }
@@ -1884,7 +1884,7 @@ abstract class Parser { parser =>
 
   def importWildcardOrName(): Import.Selector =
     if (in.token == USCORE) { in.nextToken(); Import.Selector.Wildcard() }
-    else Import.Selector.Name(termName().value)
+    else Import.Selector.Name(DualName.Product(termName()))
 
   /** {{{
    *  ImportSelector ::= Id [`=>' Id | `=>' `_']

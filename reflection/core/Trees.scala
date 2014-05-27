@@ -51,7 +51,7 @@ import scala.reflect.syntactic.SyntacticInfo._
 
 @branch trait Ref extends Tree
 
-@branch trait Name extends Ref with Mod.AccessQualifier {
+@branch trait Name extends Ref {
   def value: String
   def isBackquoted: Boolean
 }
@@ -59,7 +59,7 @@ import scala.reflect.syntactic.SyntacticInfo._
 @branch trait Term extends Arg with Stmt.Template with Stmt.Block with Aux.Qualifier
 object Term {
   @branch trait Ref extends Term with core.Ref
-  @ast class This(qual: Option[core.Name]) extends Ref with Mod.AccessQualifier
+  @ast class This(qual: Option[Aux.DualName.Sum]) extends Ref with Mod.AccessQualifier
   // TODO: isBackquoted might use a default value or some sorts (or an overloaded apply)
   @ast class Name(value: scala.Predef.String @nonEmpty)(isBackquoted: Boolean) extends core.Name with Ref with Pat with Member with Has.TermName {
     require(keywords.contains(value) ==> isBackquoted)
@@ -352,10 +352,9 @@ object Import {
   @branch trait Selector extends Tree
   object Selector {
     @ast class Wildcard() extends Selector
-    // TODO: needs some kind of idents here but they can neither be term nor type
-    @ast class Name(name: String @nonEmpty) extends Selector
-    @ast class Rename(from: String @nonEmpty, to: String @nonEmpty) extends Selector
-    @ast class Unimport(name: String @nonEmpty) extends Selector
+    @ast class Name(name: Aux.DualName.Product) extends Selector
+    @ast class Rename(from: Aux.DualName.Product, to: Aux.DualName.Product) extends Selector
+    @ast class Unimport(name: Aux.DualName.Product) extends Selector
   }
 }
 
@@ -376,7 +375,6 @@ object Enum {
 object Mod {
   @ast class Annot(tpe: Type, argss: Seq[Seq[Arg]]) extends Mod
   @ast class Doc(doc: String) extends Mod // TODO: design representation for scaladoc
-  // TODO: design a name resolution API for these and imports
   @branch trait Access extends Mod { def within: Option[AccessQualifier] }
   @branch trait AccessQualifier extends Tree
   @ast class Private(within: Option[AccessQualifier]) extends Access {
@@ -462,7 +460,40 @@ object Aux {
   }
   @ast class TypeBounds(lo: Option[Type], hi: Option[Type]) extends Tree
   @branch trait Qualifier extends Tree
-  @ast class Super(thisp: Option[core.Name], superp: Option[Type.Name]) extends Tree with Qualifier
+  @ast class Super(thisp: Option[Aux.DualName.Sum], superp: Option[Type.Name]) extends Tree with Qualifier
+  @branch trait DualName extends Tree {
+    def term: Term.Name
+    def tpe: Type.Name
+    def withName(name: core.Name)(implicit orig: Origin): ThisType
+    def mapName(f: core.Name => core.Name)(implicit orig: Origin): ThisType
+  }
+  object DualName {
+    @ast class Product(term: Term.Name, tpe: Type.Name) extends DualName {
+      require(term.value == tpe.value)
+      def withName(name: core.Name)(implicit orig: Origin): ThisType = copy(term.copy(name.value)(name.isBackquoted), tpe.copy(name.value)(name.isBackquoted))
+      def mapName(f: core.Name => core.Name)(implicit orig: Origin): ThisType = copy(term.copy(f(term).value)(f(term).isBackquoted), tpe.copy(f(tpe).value)(f(tpe).isBackquoted))
+    }
+    object Product {
+      def apply(name: core.Name)(implicit orig: Origin): Product = {
+        val term = Term.Name(name.value)(isBackquoted = name.isBackquoted)
+        val tpe = Type.Name(name.value)(isBackquoted = name.isBackquoted)
+        Product(term, tpe)
+      }
+    }
+    @ast class Sum(term: Term.Name, tpe: Type.Name) extends DualName with Mod.AccessQualifier {
+      require(term.value == tpe.value)
+      def withName(name: core.Name)(implicit orig: Origin): ThisType = copy(term.copy(name.value)(name.isBackquoted), tpe.copy(name.value)(name.isBackquoted))
+      def mapName(f: core.Name => core.Name)(implicit orig: Origin): ThisType = copy(term.copy(f(term).value)(f(term).isBackquoted), tpe.copy(f(tpe).value)(f(tpe).isBackquoted))
+    }
+    object Sum {
+      def apply(name: core.Name)(implicit orig: Origin): Sum = {
+        val term = Term.Name(name.value)(isBackquoted = name.isBackquoted)
+        val tpe = Type.Name(name.value)(isBackquoted = name.isBackquoted)
+        Sum(term, tpe)
+      }
+    }
+    def unapply(DualName: DualName): Some[String] = Some(DualName.term.value)
+  }
 }
 
 object Has {
