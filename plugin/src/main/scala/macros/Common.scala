@@ -8,6 +8,8 @@ trait Common {
   val global: Global
   import global._
 
+  // TODO: think what to do with importers
+  // ImportableAttachment is kinda screwed up, so I didn't implement it right off the bat
   private case class PalladiumMacroAttachment(isBlackbox: Boolean, rhs: Tree)
 
   object PalladiumMacro {
