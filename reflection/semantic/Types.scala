@@ -24,14 +24,6 @@ trait TypeOps {
     }
   }
 
-  implicit class SemanticRefOps(tree: Ref) {
-    private[semantic] def toTypeRef: Type.Ref = ??? // TODO: t"$tree"
-  }
-
-  implicit class SemanticTypeRefOps(tree: Type.Ref) {
-    @hosted def defn: Member = delegate
-  }
-
   @hosted private[semantic] def supertypesToMembers(tpes: Seq[Type]): Seq[Member.Template] = {
     def extractTemplate(ref: Type.Ref) = {
       for {

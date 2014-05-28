@@ -7,7 +7,7 @@ import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.reflect.core._
 
-package object semantic extends MemberOps with ScopeOps with TermOps with TypeOps {
+package object semantic extends MemberOps with ScopeOps with TermOps with TypeOps with RefOps {
   @hosted def semanticProfile: SemanticProfile = delegate
   final case class SemanticProfile(dynamics: Boolean,
                                    postfixOps: Boolean,
