@@ -38,6 +38,8 @@ The same level of robustness is expected from hosts. Concretely: 1) semantic ope
 
 ### HostContext
 
+<!-- TODO: explain ordering guarantees for all Seq[T] results both in HostContext and in all our APIs -->
+
 | Method                                                 | Notes
 |--------------------------------------------------------|-----------------------------------------------------------------
 | `def syntaxProfile: SyntaxProfile`                     | Universally accepted syntactically significant compiler / IDE flags. Currently empty (one can only return `SyntaxProfile()`, but later on when we add support for different versions of Scala, we will expand this data structure.
