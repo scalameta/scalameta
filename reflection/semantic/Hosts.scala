@@ -9,6 +9,7 @@ trait HostContext {
   def syntaxProfile: SyntaxProfile
   def semanticProfile: SemanticProfile
 
+  def owner(tree: Tree): Scope
   // NOTE: def stats(scope: Scope): Seq[Tree] is implicit in signatures of Template and Pkg
   def members(scope: Scope): Seq[Member]
   def members(scope: Scope, name: Name): Seq[Member]
