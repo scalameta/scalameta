@@ -14,7 +14,7 @@ trait TypeOps {
     @hosted def dealias: Type = delegate
     @hosted def erasure: Type = delegate
     @hosted def companion: Type.Ref = tree match {
-      case ref: Type.Ref => ref.defns.flatMap {
+      case ref: Type.Ref => ref.alts.flatMap {
         case Seq(t: Member.Template) => t.companion
         case _ => fail("companion not found")
       }.map(_.ref.toTypeRef)
@@ -25,8 +25,8 @@ trait TypeOps {
   @hosted private[semantic] def supertypesToMembers(tpes: Seq[Type]): Seq[Member.Template] = {
     def extractTemplate(ref: Type.Ref) = {
       for {
-        defns <- ref.defns
-        result <- defns match {
+        alts <- ref.alts
+        result <- alts match {
           case Seq(t: Member.Template) => succeed(t)
           case d => fail(s"unexpected ref $ref to $d returned from supertypes")
         }
