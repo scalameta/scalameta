@@ -130,8 +130,8 @@ trait MemberOps {
   }
 
   implicit class SemanticParentOps(tree: Aux.Param) {
-    @hosted def ctor: Ctor = tree.attrs.flatMap(_.collect{ case ref: Attribute.Ref => ref } match {
-      case Attribute.Ref(ref: Ctor) :: Nil => succeed(ref)
+    @hosted def ctor: Ctor = tree.attrs.flatMap(_.collect{ case defn: Attribute.Defn => defn } match {
+      case Attribute.Defn(defn: Ctor) :: Nil => succeed(defn)
       case _ => fail(ReflectionException("typecheck has failed"))
     })
   }
