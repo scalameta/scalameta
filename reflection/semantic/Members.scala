@@ -85,7 +85,7 @@ trait MemberOps {
         if (tree.name.isInstanceOf[core.Term.Name]) core.Type.Name(tree.name.value)(isBackquoted = false) else
         core.Term.Name(tree.name.value)(isBackquoted = false)
       }
-      val candidates = tree.owner.members(companionName)
+      val candidates = tree.owner.flatMap(_.members(companionName))
       candidates.flatMap{candidates =>
         val relevant = candidates.collect(f).headOption
         relevant.map(result => succeed(result)).getOrElse(fail(ReflectionException(s"companion not found")))

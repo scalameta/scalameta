@@ -18,11 +18,7 @@ trait ScopeOps {
   }
 
   implicit class SemanticTreeOps(tree: Tree) {
-    def owner: Scope = tree.parent match {
-      case Some(parent: Scope) => owner
-      case Some(parent) => parent.owner
-      case None => ??? // TODO: lexical context
-    }
+    @hosted def owner: Scope = wrapHosted(_.owner(tree))
   }
 
   implicit class SemanticScopeOps(tree: Scope) {
