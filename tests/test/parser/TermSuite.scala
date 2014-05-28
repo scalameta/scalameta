@@ -1,21 +1,21 @@
-import scala.reflect.core._, Term._, Aux._
+import scala.reflect.core._, Term.{Name => TermName, _}, Type.{Name => TypeName}, Aux._, Name.Either
 
 class TermSuite extends ParseSuite {
   test("x") {
-    val Name("x") = term("x")
+    val TermName("x") = term("x")
   }
 
   test("`x`") {
-    val name @ Name("x") = term("`x`")
+    val name @ TermName("x") = term("`x`")
     assert(name.isBackquoted === true)
   }
 
   test("a.b.c") {
-    val Select(Select(Name("a"), Name("b")), Name("c")) = term("a.b.c")
+    val Select(Select(TermName("a"), TermName("b")), TermName("c")) = term("a.b.c")
   }
 
   test("foo.this") {
-    val This(Some(DualName("foo"))) = term("foo.this")
+    val This(Some(Either("foo"))) = term("foo.this")
   }
 
   test("this") {
@@ -23,69 +23,69 @@ class TermSuite extends ParseSuite {
   }
 
   test("a.super[b].c") {
-    val Select(Super(Some(DualName("a")), Some(Type.Name("b"))),
-               Name("c")) = term("a.super[b].c")
+    val Select(Super(Some(Either("a")), Some(TypeName("b"))),
+               TermName("c")) = term("a.super[b].c")
   }
 
   test("super[b].c") {
-    val Select(Super(None, Some(Type.Name("b"))),
-               Name("c")) = term("super[b].c")
+    val Select(Super(None, Some(TypeName("b"))),
+               TermName("c")) = term("super[b].c")
   }
 
   test("a.super.c") {
-    val Select(Super(Some(DualName("a")), None),
-               Name("c")) = term("a.super.c")
+    val Select(Super(Some(Either("a")), None),
+               TermName("c")) = term("a.super.c")
   }
 
   test("super.c") {
-    val Select(Super(None, None), Name("c")) = term("super.c")
+    val Select(Super(None, None), TermName("c")) = term("super.c")
   }
 
   test("s\"a $b c\"") {
-    val Interpolate(Name("s"), Lit.String("a ") :: Lit.String(" c") :: Nil,
-                    Name("b") :: Nil) = term("s\"a $b c\"")
+    val Interpolate(TermName("s"), Lit.String("a ") :: Lit.String(" c") :: Nil,
+                    TermName("b") :: Nil) = term("s\"a $b c\"")
   }
 
   test("f(0)") {
-    val Apply(Name("f"), Lit.Int(0) :: Nil) = term("f(0)")
+    val Apply(TermName("f"), Lit.Int(0) :: Nil) = term("f(0)")
   }
 
   test("f(x = 0)") {
-    val Apply(Name("f"), Arg.Named(Term.Name("x"), Lit.Int(0)) :: Nil) = term("f(x = 0)")
+    val Apply(TermName("f"), Arg.Named(TermName("x"), Lit.Int(0)) :: Nil) = term("f(x = 0)")
   }
 
   test("f(x: _*)") {
-    val Apply(Name("f"), Arg.Repeated(Term.Name("x")) :: Nil) = term("f(x: _*)")
+    val Apply(TermName("f"), Arg.Repeated(TermName("x")) :: Nil) = term("f(x: _*)")
   }
 
   test("a + b") {
-    val ApplyInfix(Name("a"), Name("+"), Nil, Name("b") :: Nil) = term("a + b")
+    val ApplyInfix(TermName("a"), TermName("+"), Nil, TermName("b") :: Nil) = term("a + b")
   }
 
   test("a + b + c") {
-    val ApplyInfix(ApplyInfix(Name("a"), Name("+"), Nil, Name("b") :: Nil),
-                   Name("+"), Nil, Name("c") :: Nil) = term("a + b + c")
+    val ApplyInfix(ApplyInfix(TermName("a"), TermName("+"), Nil, TermName("b") :: Nil),
+                   TermName("+"), Nil, TermName("c") :: Nil) = term("a + b + c")
   }
 
   test("a :: b") {
-    val ApplyInfix(Name("a"), Name("::"), Nil, Name("b") :: Nil) = term("a :: b")
+    val ApplyInfix(TermName("a"), TermName("::"), Nil, TermName("b") :: Nil) = term("a :: b")
   }
 
   test("a :: b :: c") {
-    val ApplyInfix(Name("a"), Name("::"), Nil,
-                   ApplyInfix(Name("b"), Name("::"), Nil, Name("c") :: Nil) :: Nil) = term("a :: b :: c")
+    val ApplyInfix(TermName("a"), TermName("::"), Nil,
+                   ApplyInfix(TermName("b"), TermName("::"), Nil, TermName("c") :: Nil) :: Nil) = term("a :: b :: c")
   }
 
   test("!a") {
-    val ApplyUnary(Name("!"), Name("a")) = term("!a")
+    val ApplyUnary(TermName("!"), TermName("a")) = term("!a")
   }
 
   test("a = true") {
-    val Assign(Name("a"), Lit.Bool(true)) = term("a = true")
+    val Assign(TermName("a"), Lit.Bool(true)) = term("a = true")
   }
 
   test("a(0) = true") {
-    val Update(Apply(Name("a"), Lit.Int(0) :: Nil), Lit.Bool(true)) = term("a(0) = true")
+    val Update(Apply(TermName("a"), Lit.Int(0) :: Nil), Lit.Bool(true)) = term("a(0) = true")
   }
 
   test("return") {
@@ -101,11 +101,11 @@ class TermSuite extends ParseSuite {
   }
 
   test("1: Int") {
-    val Ascribe(Lit.Int(1), Type.Name("Int")) = term("1: Int")
+    val Ascribe(Lit.Int(1), TypeName("Int")) = term("1: Int")
   }
 
   test("1: @foo") {
-    val Annotate(Lit.Int(1), Mod.Annot(Type.Name("foo"), Nil) :: Nil) = term("1: @foo")
+    val Annotate(Lit.Int(1), Mod.Annot(TypeName("foo"), Nil) :: Nil) = term("1: @foo")
   }
 
   test("(true, false)") {
@@ -129,18 +129,18 @@ class TermSuite extends ParseSuite {
   }
 
   test("(x => x)") {
-    val Function(Param.Named(Nil, Name("x"), None, None) :: Nil,
-                 Name("x")) = term("(x => x)")
+    val Function(Param.Named(Nil, TermName("x"), None, None) :: Nil,
+                 TermName("x")) = term("(x => x)")
   }
 
   test("(x: Int) => x") {
-    val Function(Param.Named(Nil, Name("x"), Some(Type.Name("Int")), None) :: Nil,
-                 Name("x")) = term("(x: Int) => x")
+    val Function(Param.Named(Nil, TermName("x"), Some(TypeName("Int")), None) :: Nil,
+                 TermName("x")) = term("(x: Int) => x")
   }
 
   test("(_: Int) => x") {
-    val Function(Param.Anonymous(Nil, Some(Type.Name("Int"))) :: Nil,
-                 Name("x")) = term("(_: Int) => x")
+    val Function(Param.Anonymous(Nil, Some(TypeName("Int"))) :: Nil,
+                 TermName("x")) = term("(_: Int) => x")
   }
 
   test("_ => ()") {
@@ -148,7 +148,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("{ implicit x => () }") {
-    val Block(Function(Param.Named(Mod.Implicit() :: Nil, Name("x"), None, None) :: Nil,
+    val Block(Function(Param.Named(Mod.Implicit() :: Nil, TermName("x"), None, None) :: Nil,
                        Block(Lit.Unit() :: Nil)) :: Nil) = term("{ implicit x => () }")
   }
 
@@ -198,33 +198,33 @@ class TermSuite extends ParseSuite {
   }
 
   test("for (a <- b; if c; x = a) x") {
-    val For(List(Enum.Generator(Name("a"), Name("b")),
-                 Enum.Guard(Name("c")),
-                 Enum.Val(Name("x"), Name("a"))),
-            Name("x")) = term("for (a <- b; if c; x = a) x")
+    val For(List(Enum.Generator(TermName("a"), TermName("b")),
+                 Enum.Guard(TermName("c")),
+                 Enum.Val(TermName("x"), TermName("a"))),
+            TermName("x")) = term("for (a <- b; if c; x = a) x")
 
   }
   test("for (a <- b; if c; x = a) yield x") {
-    val ForYield(List(Enum.Generator(Name("a"), Name("b")),
-                      Enum.Guard(Name("c")),
-                      Enum.Val(Name("x"), Name("a"))),
-                 Name("x")) = term("for (a <- b; if c; x = a) yield x")
+    val ForYield(List(Enum.Generator(TermName("a"), TermName("b")),
+                      Enum.Guard(TermName("c")),
+                      Enum.Val(TermName("x"), TermName("a"))),
+                 TermName("x")) = term("for (a <- b; if c; x = a) yield x")
   }
 
   test("f(_)") {
-    val Apply(Name("f"), List(Placeholder())) = term("f(_)")
+    val Apply(TermName("f"), List(Placeholder())) = term("f(_)")
   }
 
   test("_ + 1") {
-    val ApplyInfix(Placeholder(), Name("+"), Nil, Lit.Int(1) :: Nil) = term("_ + 1")
+    val ApplyInfix(Placeholder(), TermName("+"), Nil, Lit.Int(1) :: Nil) = term("_ + 1")
   }
 
   test("1 + _") {
-    val ApplyInfix(Lit.Int(1), Name("+"), Nil, Placeholder() :: Nil) = term("1 + _")
+    val ApplyInfix(Lit.Int(1), TermName("+"), Nil, Placeholder() :: Nil) = term("1 + _")
   }
 
   test("f _") {
-    val Eta(Name("f")) = term("f _")
+    val Eta(TermName("f")) = term("f _")
   }
 
   test("new {}") {
@@ -232,51 +232,51 @@ class TermSuite extends ParseSuite {
   }
 
   test("new A") {
-    val New(templ @ Template(Nil, Parent(Type.Name("A"), Nil) :: Nil, Self(None, None), Nil)) = term("new A")
+    val New(templ @ Template(Nil, Parent(TypeName("A"), Nil) :: Nil, Self(None, None), Nil)) = term("new A")
     assert(templ.hasExplicitBody === false)
   }
 
   test("new A {}") {
-    val New(templ @ Template(Nil, Parent(Type.Name("A"), Nil) :: Nil, Self(None, None), Nil)) = term("new A {}")
+    val New(templ @ Template(Nil, Parent(TypeName("A"), Nil) :: Nil, Self(None, None), Nil)) = term("new A {}")
     assert(templ.hasExplicitBody === true) // TODO: fix this
   }
 
   test("new A with B") {
-    val New(Template(Nil, Parent(Type.Name("A"), Nil) ::
-                          Parent(Type.Name("B"), Nil) :: Nil,
+    val New(Template(Nil, Parent(TypeName("A"), Nil) ::
+                          Parent(TypeName("B"), Nil) :: Nil,
                      Self(None, None), Nil)) =
       term("new A with B")
   }
 
   test("new { val x: Int = 1 } with A") {
-    val New(Template(Defn.Val(Nil, List(Term.Name("x")), Some(Type.Name("Int")), Lit.Int(1)) :: Nil,
-                     Parent(Type.Name("A"), Nil) :: Nil, Self(None, None), Nil)) =
+    val New(Template(Defn.Val(Nil, List(TermName("x")), Some(TypeName("Int")), Lit.Int(1)) :: Nil,
+                     Parent(TypeName("A"), Nil) :: Nil, Self(None, None), Nil)) =
       term("new { val x: Int = 1 } with A")
   }
 
   test("new { self: T => }") {
-    val New(Template(Nil, Nil, Self(Some(Term.Name("self")), Some(Type.Name("T"))), Nil)) =
+    val New(Template(Nil, Nil, Self(Some(TermName("self")), Some(TypeName("T"))), Nil)) =
       term("new { self: T => }")
   }
 
   test("a + (b = c)") {
-    val ApplyInfix(Name("a"), Name("+"), Nil,
-                   Arg.Named(Name("b"), Name("c")) :: Nil) = term("a + (b = c)")
+    val ApplyInfix(TermName("a"), TermName("+"), Nil,
+                   Arg.Named(TermName("b"), TermName("c")) :: Nil) = term("a + (b = c)")
   }
 
   test("(a = b) + c") {
-    val ApplyInfix(Assign(Name("a"), Name("b")), Name("+"), Nil,
-                   Name("c") :: Nil) = term("(a = b) + c")
+    val ApplyInfix(Assign(TermName("a"), TermName("b")), TermName("+"), Nil,
+                   TermName("c") :: Nil) = term("(a = b) + c")
   }
 
   test("a + (b = c).d") {
-    val ApplyInfix(Name("a"), Name("+"), Nil,
-                   Select(Assign(Name("b"), Name("c")), Name("d")) :: Nil) =
+    val ApplyInfix(TermName("a"), TermName("+"), Nil,
+                   Select(Assign(TermName("b"), TermName("c")), TermName("d")) :: Nil) =
       term("a + (b = c).d")
   }
 
   test("a + (b: _*)") {
-    val ApplyInfix(Name("a"), Name("+"), Nil,
-                   Arg.Repeated(Name("b")) :: Nil) = term("a + (b: _*)")
+    val ApplyInfix(TermName("a"), TermName("+"), Nil,
+                   Arg.Repeated(TermName("b")) :: Nil) = term("a + (b: _*)")
   }
 }

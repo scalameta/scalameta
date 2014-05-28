@@ -754,7 +754,7 @@ abstract class Parser { parser =>
         in.nextToken()
         if (in.token == THIS) {
           in.nextToken()
-          val thisid = Term.This(Some(DualName.Sum(name)))
+          val thisid = Term.This(Some(Name.Either(name.value)(name.isBackquoted)))
           if (stop && thisOK) thisid
           else {
             accept(DOT)
@@ -762,7 +762,7 @@ abstract class Parser { parser =>
           }
         } else if (in.token == SUPER) {
           in.nextToken()
-          val superp = Aux.Super(Some(DualName.Sum(name)), mixinQualifierOpt())
+          val superp = Aux.Super(Some(Name.Either(name.value)(name.isBackquoted)), mixinQualifierOpt())
           accept(DOT)
           val supersel = Term.Select(superp, termName())
           if (stop) supersel
@@ -1590,7 +1590,7 @@ abstract class Parser { parser =>
     if (in.token != LBRACKET) None
     else {
       in.nextToken()
-      val res = if (in.token != THIS) DualName.Sum(termName())
+      val res = if (in.token != THIS) { val name = termName(); Name.Either(name.value)(name.isBackquoted) }
                 else { in.nextToken(); Term.This(None) }
       accept(RBRACKET)
       Some(res)
@@ -1869,7 +1869,7 @@ abstract class Parser { parser =>
     sid match {
       case Term.Select(sid: Term.Ref, name: Term.Name) if sid.isStableId =>
         if (in.token == DOT) dotselectors
-        else Import.Clause(sid, Import.Selector.Name(DualName.Product(name)) :: Nil)
+        else Import.Clause(sid, Import.Selector.Name(Name.Both(name.value)(name.isBackquoted)) :: Nil)
       case _ => dotselectors
     }
   }
@@ -1884,7 +1884,7 @@ abstract class Parser { parser =>
 
   def importWildcardOrName(): Import.Selector =
     if (in.token == USCORE) { in.nextToken(); Import.Selector.Wildcard() }
-    else Import.Selector.Name(DualName.Product(termName()))
+    else { val name = termName(); Import.Selector.Name(Name.Both(name.value)(name.isBackquoted)) }
 
   /** {{{
    *  ImportSelector ::= Id [`=>' Id | `=>' `_']
