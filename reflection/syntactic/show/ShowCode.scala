@@ -22,8 +22,8 @@ object ShowCode {
     else if (templ.parents.nonEmpty || templ.early.nonEmpty) s(" extends ", templ)
     else s(" ", templ)
 
-  def parens(t: Term) = t match {
-    case _: Lit | _: Term.Ref | _: Term.Placeholder | _: Term.Tuple => s(t)
+  def parens(t: Term.Qualifier) = t match {
+    case _: Lit | _: Term.Ref | _: Term.Placeholder | _: Term.Tuple | _: Aux.Super => s(t)
     case _ => s("(", t, ")")
   }
 
@@ -37,13 +37,9 @@ object ShowCode {
     case t: ParamType.ByName   => s("=> ", t.tpe)
 
     // Type
-    case t: Type.Project     => s(t.qual, "#", t.name)
-    case t: Type.Select      => s(t.qual, ".", t.name)
+    case t: Type.Project     => s(t.qual, "#", t.selector)
+    case t: Type.Select      => s(t.qual, ".", t.selector)
     case t: Type.Singleton   => s(t.ref, ".type")
-    case t: Type.SuperSelect =>
-      s(t.qual.map { qual => s(qual, ".") }.getOrElse(s()),
-        "super", t.supertpe.map { st => s("[", st, "]") }.getOrElse(s()),
-        ".", t.selector)
     case t: Type.Annotate    => s(t.tpe, " ", t.mods)
     case t: Type.Apply       => s(t.tpe, "[", r(t.args, ", "), "]")
     case t: Type.ApplyInfix  => s(t.lhs, " ", t.op, " ", t.rhs)
@@ -71,10 +67,6 @@ object ShowCode {
     // Term
     case t: Term.This        => s(t.qual.map { qual => s(qual, ".") }.getOrElse(s()), "this")
     case t: Term.Select      => s(parens(t.qual), ".", t.selector)
-    case t: Term.SuperSelect =>
-      s(t.qual.map { qual => s(qual, ".") }.getOrElse(s()),
-        "super", t.supertpe.map { st => s("[", st, "]") }.getOrElse(s()),
-        ".", t.selector)
     case t: Term.Assign      => s(parens(t.lhs), " = ", t.rhs)
     case t: Term.Update      => s(parens(t.lhs), " = ", t.rhs)
     case t: Term.Return      => s("return ", t.expr.map(s(_)).getOrElse(s()))
@@ -256,6 +248,9 @@ object ShowCode {
       val cbounds = r(t.contextBounds.map { s(": ", _) })
       val vbounds = r(t.contextBounds.map { s("<% ", _) })
       s(t.mods, t.name, t.tparams, cbounds, vbounds, t.bounds)
+    case t: Super =>
+      s(t.thisp.map { thisp => s(thisp, ".") }.getOrElse(s()),
+        "super", t.superp.map { st => s("[", st, "]") }.getOrElse(s()))
   } }
 
   // Multiples and optionals

@@ -7,7 +7,7 @@ import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.reflect.core._
 
-package object semantic extends MemberOps with ScopeOps with TermOps with TypeOps {
+package object semantic extends MemberOps with ScopeOps with TermOps with TypeOps with RefOps {
   @hosted def semanticProfile: SemanticProfile = delegate
   final case class SemanticProfile(dynamics: Boolean,
                                    postfixOps: Boolean,
@@ -31,10 +31,11 @@ package object semantic extends MemberOps with ScopeOps with TermOps with TypeOp
 
   @root trait Attribute
   object Attribute {
-    @leaf class Ref(ref: core.Tree) extends Attribute
+    @leaf class Defn(defn: core.Tree) extends Attribute
     @leaf class Type(tpe: core.Aux.ParamType) extends Attribute
     @leaf class InferredTargs(targs: Seq[core.Type]) extends Attribute
     @leaf class InferredVargs(vargs: Seq[core.Term]) extends Attribute
     @leaf class MacroExpansion(tree: core.Tree) extends Attribute
+    // TODO: what about desugarings like auto-inserted apply/unapply/unapplySeq/xxxDynamic, expanded for loops, constant folding, etc?
   }
 }

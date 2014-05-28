@@ -52,9 +52,10 @@ object SyntacticInfo {
       case _                              => false
     }
     def isStableId: Boolean = tree match {
-      case _: Term.Name | _: Term.SuperSelect => true
-      case Term.Select(qual: Term.Ref, _)     => qual.isPath
-      case _                                  => false
+      case _: Term.Name                    => true
+      case Term.Select(qual: Term.Ref, _)  => qual.isPath
+      case Term.Select(qual: Aux.Super, _) => true
+      case _                               => false
     }
   }
   implicit class RichMods(val mods: List[Mod]) extends AnyVal {
@@ -376,10 +377,8 @@ abstract class Parser { parser =>
   }
 
   def convertToTypeId(ref: Term.Ref): Option[Type] = ref match {
-    case Term.Select(qual: Term.Ref, name) =>
+    case Term.Select(qual: Type.Qualifier, name) =>
       Some(Type.Select(qual, name.toTypeName))
-    case Term.SuperSelect(qual, supertpe, selector) =>
-      Some(Type.SuperSelect(qual, supertpe, selector.toTypeName))
     case name: Term.Name =>
       Some(name.toTypeName)
     case _ =>
@@ -707,6 +706,14 @@ abstract class Parser { parser =>
       case name: Term.Name => name
       case _              => Term.Name(name.value)(name.isBackquoted)
     }
+    def toEitherName: Name.Either = name match {
+      case name: Name.Either => name
+      case _                 => Name.Either(name.value)(name.isBackquoted)
+    }
+    def toBothName: Name.Both = name match {
+      case name: Name.Both => name
+      case _               => Name.Both(name.value)(name.isBackquoted)
+    }
   }
 
   def termName(): Term.Name =
@@ -740,9 +747,9 @@ abstract class Parser { parser =>
       }
     } else if (in.token == SUPER) {
       in.nextToken()
-      val mixinQual = mixinQualifierOpt()
+      val superp = Aux.Super(None, mixinQualifierOpt())
       accept(DOT)
-      val supersel = Term.SuperSelect(None, mixinQual, termName())
+      val supersel = Term.Select(superp, termName())
       if (stop) supersel
       else {
         in.skipToken()
@@ -755,7 +762,7 @@ abstract class Parser { parser =>
         in.nextToken()
         if (in.token == THIS) {
           in.nextToken()
-          val thisid = Term.This(Some(name.toTypeName))
+          val thisid = Term.This(Some(name.toEitherName))
           if (stop && thisOK) thisid
           else {
             accept(DOT)
@@ -763,9 +770,9 @@ abstract class Parser { parser =>
           }
         } else if (in.token == SUPER) {
           in.nextToken()
-          val mixinQual = mixinQualifierOpt()
+          val superp = Aux.Super(Some(name.toEitherName), mixinQualifierOpt())
           accept(DOT)
-          val supersel = Term.SuperSelect(Some(name.toTypeName), mixinQual, termName())
+          val supersel = Term.Select(superp, termName())
           if (stop) supersel
           else {
             in.skipToken()
@@ -1178,7 +1185,7 @@ abstract class Parser { parser =>
         simpleExprRest(selector(t), canApply = true)
       case LBRACKET =>
         t match {
-          case _: Term.Name | _: Term.Select | _: Term.SuperSelect | _: Term.Apply =>
+          case _: Term.Name | _: Term.Select | _: Term.Apply =>
             var app: Term = t
             while (in.token == LBRACKET)
               app = Term.ApplyType(app, exprTypeArgs())
@@ -1591,7 +1598,7 @@ abstract class Parser { parser =>
     if (in.token != LBRACKET) None
     else {
       in.nextToken()
-      val res = if (in.token != THIS) typeName()
+      val res = if (in.token != THIS) termName().toEitherName
                 else { in.nextToken(); Term.This(None) }
       accept(RBRACKET)
       Some(res)
@@ -1870,7 +1877,7 @@ abstract class Parser { parser =>
     sid match {
       case Term.Select(sid: Term.Ref, name: Term.Name) if sid.isStableId =>
         if (in.token == DOT) dotselectors
-        else Import.Clause(sid, Import.Selector.Name(name.value) :: Nil)
+        else Import.Clause(sid, Import.Selector.Name(name.toBothName) :: Nil)
       case _ => dotselectors
     }
   }
@@ -1885,7 +1892,7 @@ abstract class Parser { parser =>
 
   def importWildcardOrName(): Import.Selector =
     if (in.token == USCORE) { in.nextToken(); Import.Selector.Wildcard() }
-    else Import.Selector.Name(termName().value)
+    else { val name = termName(); Import.Selector.Name(name.toBothName) }
 
   /** {{{
    *  ImportSelector ::= Id [`=>' Id | `=>' `_']

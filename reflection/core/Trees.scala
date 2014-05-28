@@ -26,8 +26,6 @@ import scala.reflect.syntactic.SyntacticInfo._
 // TODO: implement srewrite with palladium
 // TODO: implement scaladoc with palladium
 // TODO: add moar requires
-// TODO: invariants: tree should either have at least one non-trival token or be eq to it's empty value
-// TODO: converter: double check conversion of `(f _)(x)` (bug 46)
 // TODO: add tree for comments
 
 @root trait Tree extends Product {
@@ -53,23 +51,27 @@ import scala.reflect.syntactic.SyntacticInfo._
 
 @branch trait Ref extends Tree
 
-@branch trait Name extends Ref with Mod.AccessQualifier {
+@branch trait Name extends Ref {
   def value: String
   def isBackquoted: Boolean
 }
+object Name {
+  @ast class Both(value: String)(isBackquoted: Boolean) extends Name
+  @ast class Either(value: String)(isBackquoted: Boolean) extends Name with Mod.AccessQualifier
+}
 
-@branch trait Term extends Arg with Stmt.Template with Stmt.Block
+@branch trait Term extends Arg with Stmt.Template with Stmt.Block with Term.Qualifier
 object Term {
-  @branch trait Ref extends Term with core.Ref
-  @ast class This(qual: Option[core.Name]) extends Ref with Mod.AccessQualifier
+  @branch trait Qualifier extends Tree
+  @branch trait Ref extends Term with core.Ref with Type.Qualifier
+  @ast class This(qual: Option[core.Name.Either]) extends Ref with Mod.AccessQualifier
   // TODO: isBackquoted might use a default value or some sorts (or an overloaded apply)
   @ast class Name(value: scala.Predef.String @nonEmpty)(isBackquoted: Boolean) extends core.Name with Ref with Pat with Member with Has.TermName {
     require(keywords.contains(value) ==> isBackquoted)
     def name: Name = this
     def mods: Seq[Mod] = Nil
   }
-  @ast class SuperSelect(qual: Option[core.Name], supertpe: Option[Type.Name], selector: Term.Name) extends Ref
-  @ast class Select(qual: Term, selector: Term.Name) extends Ref with Pat
+  @ast class Select(qual: Qualifier, selector: Term.Name) extends Ref with Pat
 
   @ast class Interpolate(prefix: Name, parts: Seq[Lit.String] @nonEmpty, args: Seq[Term]) extends Term {
     // TODO: require(prefix.isInterpolationId)
@@ -131,17 +133,17 @@ object Term {
 // TODO: simple type validation
 @branch trait Type extends Tree with Aux.ParamType with Scope.Template
 object Type {
+  @branch trait Qualifier extends Tree with Term.Qualifier
   @branch trait Ref extends Type with core.Ref
   @ast class Name(value: String @nonEmpty)(isBackquoted: Boolean) extends core.Name with Ref {
     require(keywords.contains(value) ==> isBackquoted)
   }
-  @ast class Select(qual: Term.Ref, name: Type.Name) extends Ref {
-    require(qual.isPath)
+  @ast class Select(qual: Qualifier, selector: Type.Name) extends Ref {
+    require(qual match { case qual: Term.Ref => qual.isPath; case qual: Aux.Super => true; case _ => unreachable })
   }
-  @ast class SuperSelect(qual: Option[core.Name], supertpe: Option[Type.Name], selector: Type.Name) extends Ref
-  @ast class Project(qual: Type, name: Type.Name) extends Ref
-  @ast class Singleton(ref: Term.Ref) extends Ref {
-    require(ref.isPath)
+  @ast class Project(qual: Type, selector: Type.Name) extends Ref
+  @ast class Singleton(ref: Qualifier) extends Ref {
+    require(ref match { case ref: Term.Ref => ref.isPath; case ref: Aux.Super => true; case _ => unreachable })
   }
   @ast class Apply(tpe: Type, args: Seq[Type] @nonEmpty) extends Type
   @ast class ApplyInfix(lhs: Type, op: Type, rhs: Type) extends Type
@@ -200,9 +202,6 @@ object Member {
     def tparams: Seq[Aux.TypeParam] = Nil
     def templ: Aux.Template
   }
-}
-final case class Overload[+A <: Member](alts: Seq[A]) {
-  def resolve(tpes: Seq[core.Type]): A = ??? // TODO: implement this in terms of Tree.attrs and Attribute.Ref
 }
 
 @branch trait Decl extends Stmt.Template with Stmt.Refine
@@ -354,10 +353,9 @@ object Import {
   @branch trait Selector extends Tree
   object Selector {
     @ast class Wildcard() extends Selector
-    // TODO: needs some kind of idents here but they can neither be term nor type
-    @ast class Name(name: String @nonEmpty) extends Selector
-    @ast class Rename(from: String @nonEmpty, to: String @nonEmpty) extends Selector
-    @ast class Unimport(name: String @nonEmpty) extends Selector
+    @ast class Name(name: core.Name.Both) extends Selector
+    @ast class Rename(from: core.Name.Both, to: core.Name.Both) extends Selector
+    @ast class Unimport(name: core.Name.Both) extends Selector
   }
 }
 
@@ -378,7 +376,6 @@ object Enum {
 object Mod {
   @ast class Annot(tpe: Type, argss: Seq[Seq[Arg]]) extends Mod
   @ast class Doc(doc: String) extends Mod // TODO: design representation for scaladoc
-  // TODO: design a name resolution API for these and imports
   @branch trait Access extends Mod { def within: Option[AccessQualifier] }
   @branch trait AccessQualifier extends Tree
   @ast class Private(within: Option[AccessQualifier]) extends Access {
@@ -407,7 +404,7 @@ object Mod {
 
 object Aux {
   @ast class CompUnit(stats: Seq[Stmt.TopLevel]) extends Tree
-  @ast class Case(pat: Pat, cond: Option[Term], stats: Seq[Stmt.Template]) extends Tree with Scope {
+  @ast class Case(pat: Pat, cond: Option[Term], stats: Seq[Stmt.Block]) extends Tree with Scope {
     require(stats.collect { case m: Member if m.isPkgObject => m }.isEmpty)
   }
   @ast class Parent(tpe: Type, argss: Seq[Seq[Arg]]) extends Tree
@@ -463,6 +460,7 @@ object Aux {
                      bounds: Aux.TypeBounds) extends TypeParam with Member.Type with Has.TypeName
   }
   @ast class TypeBounds(lo: Option[Type], hi: Option[Type]) extends Tree
+  @ast class Super(thisp: Option[core.Name.Either], superp: Option[Type.Name]) extends Tree with Term.Qualifier with Type.Qualifier
 }
 
 object Has {

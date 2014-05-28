@@ -38,6 +38,8 @@ The same level of robustness is expected from hosts. Concretely: 1) semantic ope
 
 ### HostContext
 
+<!-- TODO: explain ordering guarantees for all Seq[T] results both in HostContext and in all our APIs -->
+
 | Method                                                 | Notes
 |--------------------------------------------------------|-----------------------------------------------------------------
 | `def syntaxProfile: SyntaxProfile`                     | Universally accepted syntactically significant compiler / IDE flags. Currently empty (one can only return `SyntaxProfile()`, but later on when we add support for different versions of Scala, we will expand this data structure.
@@ -46,8 +48,7 @@ The same level of robustness is expected from hosts. Concretely: 1) semantic ope
 | `def members(scope: Scope): Seq[Member]`               | Returns all members (aka symbols, aka named definitions) belonging to the specified scope. This API could query something as simple as parameters of a method or as complex as all members of a given class (accounting for inherited members and overriding). When called on a `Type` (types can be viewed as scopes as well), this method should return members that are adjusted to the type's type arguments and self type. E.g. `t"List".members` should return `Seq(q"def head: A = ...", ...)`, whereas `t"List[Int]".members` should return `Seq(q"def head: Int = ...", ...)`.
 | `def members(scope: Scope, name: Name): Seq[Member]`   | Same as the previous method, but indexed by name, which can be either `Term.Name` or `Type.Name`.
 | `def ctors(scope: Scope): Seq[Ctor]`                   | Same as previous methods, but for constructors. In Palladium API, constructors are not members, because they can't be referenced by name, so we need this method as a dedicated entity.
-| `def defn(term: Term.Ref): Seq[Member.Term]`           | Goes from a reference to a term to the definition of that term. Might have to return multiple results to account for overloading. Overloads can be resolved via `Overload.resolve` or `term.attrs`.
-| `def defn(tpe: Type.Ref): Member`                      | Same as the previous method, but for types. Types can't be overloaded, so we don't have the added complexity.
+| `def defns(ref: Ref): Seq[Member]`                     | Goes from a reference to the associated definiton or definitions. Might have to return multiple results to account for overloading or situations like imports, super/this qualifiers and accessibility boundaries. If necessary, overloads can be resolved later via `Overload.resolve` or `term.attrs`.
 | `def overrides(member: Member.Term): Seq[Member.Term]` | Computes all term definitions that are overridden by a given definition. If the provided member has been obtained by instantiating certain type parameters, then the results of this method should also have corresponding type parameters instantiated.
 | `def overrides(member: Member.Type): Seq[Member.Type]` | Same as the previous method, but for types.
 | `def <:<(tpe1: Type, tpe2: Type): Boolean`             | Subtyping check.

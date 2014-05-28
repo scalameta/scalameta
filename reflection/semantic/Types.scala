@@ -16,28 +16,20 @@ trait TypeOps {
     @hosted def dealias: Type = delegate
     @hosted def erasure: Type = delegate
     @hosted def companion: Type.Ref = tree match {
-      case ref: Type.Ref => ref.defn.flatMap {
-        case t: Member.Template => t.companion
+      case ref: Type.Ref => ref.defns.flatMap {
+        case Seq(t: Member.Template) => t.companion
         case _ => fail(ReflectionException(s"companion not found"))
       }.map(_.ref.toTypeRef)
       case _ => fail(ReflectionException(s"companion not found"))
     }
   }
 
-  implicit class SemanticRefOps(tree: Ref) {
-    private[semantic] def toTypeRef: Type.Ref = ??? // TODO: t"$tree"
-  }
-
-  implicit class SemanticTypeRefOps(tree: Type.Ref) {
-    @hosted def defn: Member = delegate
-  }
-
   @hosted private[semantic] def supertypesToMembers(tpes: Seq[Type]): Seq[Member.Template] = {
     def extractTemplate(ref: Type.Ref) = {
       for {
-        defn <- ref.defn
-        result <- defn match {
-          case t: Member.Template => succeed(t)
+        defns <- ref.defns
+        result <- defns match {
+          case Seq(t: Member.Template) => succeed(t)
           case d => fail(ReflectionException(s"unexpected ref $ref to $d returned from supertypes"))
         }
       } yield result
