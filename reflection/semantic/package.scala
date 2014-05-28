@@ -31,7 +31,7 @@ package object semantic extends MemberOps with ScopeOps with TermOps with TypeOp
 
   @root trait Attribute
   object Attribute {
-    @leaf class Ref(ref: core.Tree) extends Attribute
+    @leaf class Defn(defn: core.Tree) extends Attribute
     @leaf class Type(tpe: core.Aux.ParamType) extends Attribute
     @leaf class InferredTargs(targs: Seq[core.Type]) extends Attribute
     @leaf class InferredVargs(vargs: Seq[core.Term]) extends Attribute
