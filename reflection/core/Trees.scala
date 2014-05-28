@@ -403,7 +403,7 @@ object Mod {
 
 object Aux {
   @ast class CompUnit(stats: Seq[Stmt.TopLevel]) extends Tree
-  @ast class Case(pat: Pat, cond: Option[Term], stats: Seq[Stmt.Template]) extends Tree with Scope {
+  @ast class Case(pat: Pat, cond: Option[Term], stats: Seq[Stmt.Block]) extends Tree with Scope {
     require(stats.collect { case m: Member if m.isPkgObject => m }.isEmpty)
   }
   @ast class Parent(tpe: Type, argss: Seq[Seq[Arg]]) extends Tree
