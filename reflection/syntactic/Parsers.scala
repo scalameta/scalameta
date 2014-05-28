@@ -706,6 +706,14 @@ abstract class Parser { parser =>
       case name: Term.Name => name
       case _              => Term.Name(name.value)(name.isBackquoted)
     }
+    def toEitherName: Name.Either = name match {
+      case name: Name.Either => name
+      case _                 => Name.Either(name.value)(name.isBackquoted)
+    }
+    def toBothName: Name.Both = name match {
+      case name: Name.Both => name
+      case _               => Name.Both(name.value)(name.isBackquoted)
+    }
   }
 
   def termName(): Term.Name =
@@ -754,7 +762,7 @@ abstract class Parser { parser =>
         in.nextToken()
         if (in.token == THIS) {
           in.nextToken()
-          val thisid = Term.This(Some(Name.Either(name.value)(name.isBackquoted)))
+          val thisid = Term.This(Some(name.toEitherName))
           if (stop && thisOK) thisid
           else {
             accept(DOT)
@@ -762,7 +770,7 @@ abstract class Parser { parser =>
           }
         } else if (in.token == SUPER) {
           in.nextToken()
-          val superp = Aux.Super(Some(Name.Either(name.value)(name.isBackquoted)), mixinQualifierOpt())
+          val superp = Aux.Super(Some(name.toEitherName), mixinQualifierOpt())
           accept(DOT)
           val supersel = Term.Select(superp, termName())
           if (stop) supersel
@@ -1590,7 +1598,7 @@ abstract class Parser { parser =>
     if (in.token != LBRACKET) None
     else {
       in.nextToken()
-      val res = if (in.token != THIS) { val name = termName(); Name.Either(name.value)(name.isBackquoted) }
+      val res = if (in.token != THIS) termName().toEitherName
                 else { in.nextToken(); Term.This(None) }
       accept(RBRACKET)
       Some(res)
@@ -1869,7 +1877,7 @@ abstract class Parser { parser =>
     sid match {
       case Term.Select(sid: Term.Ref, name: Term.Name) if sid.isStableId =>
         if (in.token == DOT) dotselectors
-        else Import.Clause(sid, Import.Selector.Name(Name.Both(name.value)(name.isBackquoted)) :: Nil)
+        else Import.Clause(sid, Import.Selector.Name(name.toBothName) :: Nil)
       case _ => dotselectors
     }
   }
@@ -1884,7 +1892,7 @@ abstract class Parser { parser =>
 
   def importWildcardOrName(): Import.Selector =
     if (in.token == USCORE) { in.nextToken(); Import.Selector.Wildcard() }
-    else { val name = termName(); Import.Selector.Name(Name.Both(name.value)(name.isBackquoted)) }
+    else { val name = termName(); Import.Selector.Name(name.toBothName) }
 
   /** {{{
    *  ImportSelector ::= Id [`=>' Id | `=>' `_']
