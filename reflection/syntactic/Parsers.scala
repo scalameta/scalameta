@@ -52,10 +52,9 @@ object SyntacticInfo {
       case _                              => false
     }
     def isStableId: Boolean = tree match {
-      case _: Term.Name                    => true
-      case Term.Select(qual: Term.Ref, _)  => qual.isPath
-      case Term.Select(qual: Aux.Super, _) => true
-      case _                               => false
+      case _: Term.Name | Term.Select(_: Aux.Super, _) => true
+      case Term.Select(qual: Term.Ref, _)              => qual.isPath
+      case _                                           => false
     }
   }
   implicit class RichMods(val mods: List[Mod]) extends AnyVal {

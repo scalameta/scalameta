@@ -460,7 +460,7 @@ object Aux {
                      bounds: Aux.TypeBounds) extends TypeParam with Member.Type with Has.TypeName
   }
   @ast class TypeBounds(lo: Option[Type], hi: Option[Type]) extends Tree
-  @ast class Super(thisp: Option[core.Name.Either], superp: Option[Type.Name]) extends Tree with Term.Qualifier with Type.Qualifier
+  @ast class Super(thisp: Option[core.Name.Either], superp: Option[Type.Name]) extends Term.Qualifier with Type.Qualifier
 }
 
 object Has {
