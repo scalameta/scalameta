@@ -22,7 +22,7 @@ object ShowCode {
     else if (templ.parents.nonEmpty || templ.early.nonEmpty) s(" extends ", templ)
     else s(" ", templ)
 
-  def parens(t: Aux.Qualifier) = t match {
+  def parens(t: Term.Qualifier) = t match {
     case _: Lit | _: Term.Ref | _: Term.Placeholder | _: Term.Tuple | _: Aux.Super => s(t)
     case _ => s("(", t, ")")
   }

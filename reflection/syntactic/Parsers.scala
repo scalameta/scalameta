@@ -377,7 +377,7 @@ abstract class Parser { parser =>
   }
 
   def convertToTypeId(ref: Term.Ref): Option[Type] = ref match {
-    case Term.Select(qual, name) =>
+    case Term.Select(qual: Type.Qualifier, name) =>
       Some(Type.Select(qual, name.toTypeName))
     case name: Term.Name =>
       Some(name.toTypeName)
