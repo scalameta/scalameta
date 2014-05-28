@@ -2292,7 +2292,7 @@ abstract class Parser { parser =>
         if (parenMeansSyntaxError) syntaxError("traits or objects may not have parameters")
         else abort("unexpected opening parenthesis")
       }
-      (Aux.Self(None, None), Nil, false)
+      (Aux.Self(None, None)(hasThis = false), Nil, false)
     }
   }
 
@@ -2346,22 +2346,24 @@ abstract class Parser { parser =>
    * @param isPre specifies whether in early initializer (true) or not (false)
    */
   def templateStatSeq(isPre : Boolean): (Aux.Self, List[Stmt.Template]) = {
-    var self: Aux.Self = Aux.Self(None, None)
+    var self: Aux.Self = Aux.Self(None, None)(hasThis = false)
     var firstOpt: Option[Term] = None
     if (isExprIntro) {
       val first = expr(InTemplate) // @S: first statement is potentially converted so cannot be stubbed.
       if (in.token == ARROW) {
         first match {
-          case Term.Placeholder() =>
-            self = Aux.Self(None, None)
           case name: Name =>
-            self = Aux.Self(Some(name.toTermName), None)
+            self = Aux.Self(Some(name.toTermName), None)(hasThis = false)
+          case Term.Placeholder() =>
+            self = Aux.Self(None, None)(hasThis = false)
+          case Term.This(None) =>
+            self = Aux.Self(None, None)(hasThis = true)
           case Term.Ascribe(name: Name, tpt) =>
-            self = Aux.Self(Some(name.toTermName), Some(tpt))
+            self = Aux.Self(Some(name.toTermName), Some(tpt))(hasThis = false)
           case Term.Ascribe(Term.Placeholder(), tpt) =>
-            self = Aux.Self(None, Some(tpt))
+            self = Aux.Self(None, Some(tpt))(hasThis = false)
           case Term.Ascribe(tree @ Term.This(None), tpt) =>
-            self = Aux.Self(None, Some(tpt))
+            self = Aux.Self(None, Some(tpt))(hasThis = true)
           case _ =>
         }
         in.nextToken()

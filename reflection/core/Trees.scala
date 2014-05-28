@@ -415,7 +415,7 @@ object Aux {
     require(early.nonEmpty ==> parents.nonEmpty)
     require(stats.collect { case m: Member if m.isPkgObject => m }.isEmpty)
   }
-  @ast class Self(name: Option[Term.Name], decltpe: Option[Type]) extends Member.Term {
+  @ast class Self(name: Option[Term.Name], decltpe: Option[Type])(hasThis: Boolean) extends Member.Term {
     def mods: Seq[Mod] = Nil
   }
   @branch trait ParamType extends Tree

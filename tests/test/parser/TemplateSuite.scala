@@ -75,6 +75,13 @@ class TemplateSuite extends ParseSuite {
       templStat("class A { self: B => }")
   }
 
+  test("class A { this => }") {
+    val Class(Nil, Type.Name("A"), Nil, Ctor.Primary(Nil, Nil, Nil),
+              Template(Nil, Nil, self @ Self(None, None), Nil)) =
+      templStat("class A { this => }")
+    assert(self.hasThis == true)
+  }
+
   test("class C { def x: Int }") {
     val Class(Nil, Type.Name("C"), Nil, Ctor.Primary(Nil, Nil, Nil),
               Template(Nil, Nil, Self(None, None),
