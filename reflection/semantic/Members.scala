@@ -87,7 +87,7 @@ trait MemberOps {
       }
       val candidates = tree.owner.members(companionName)
       candidates.flatMap{candidates =>
-        val relevant = candidates.alts.collect(f).headOption
+        val relevant = candidates.collect(f).headOption
         relevant.map(result => succeed(result)).getOrElse(fail(ReflectionException(s"companion not found")))
       }
     }

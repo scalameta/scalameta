@@ -27,14 +27,14 @@ trait ScopeOps {
 
   implicit class SemanticScopeOps(tree: Scope) {
     @hosted def members: Seq[Member] = delegate
-    @hosted def members(name: Name): Overload[Member] = wrapHosted(_.members(tree)).map(Overload.apply)
+    @hosted def members(name: Name): Seq[Member] = wrapHosted(_.members(tree))
     @hosted private[semantic] def allMembers[T: ClassTag]: Seq[T] = {
       members.map(_.collect { case x: T => x })
     }
     @hosted private[semantic] def uniqueMember[T: ClassTag](s_name: String): T = {
       val isTerm = classOf[Member.Term].isAssignableFrom(classTag[T].runtimeClass)
       val name = if (isTerm) Term.Name(s_name)(isBackquoted = false) else Type.Name(s_name)(isBackquoted = false)
-      members(name).map(_.alts).map(_.collect { case x: T => x }).flatMap(_.findUnique)
+      members(name).map(_.collect { case x: T => x }).flatMap(_.findUnique)
     }
   }
 
