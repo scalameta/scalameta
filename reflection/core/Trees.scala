@@ -2,7 +2,6 @@ package scala.reflect
 package core
 
 import org.scalareflect.invariants._
-import org.scalareflect.errors._
 import org.scalareflect.adt._
 import org.scalareflect.annotations._
 import org.scalareflect.annotations.internal.ast.AstHelperMacros

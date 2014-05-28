@@ -2,11 +2,9 @@ package scala.reflect
 package semantic
 
 import org.scalareflect.annotations._
-import org.scalareflect.errors._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.reflect.core._
-import scala.reflect.semantic.errors.wrapHosted
 
 trait MemberOps {
   implicit class SemanticMemberOps(tree: Member) {
@@ -88,7 +86,7 @@ trait MemberOps {
       val candidates = tree.owner.flatMap(_.members(companionName))
       candidates.flatMap{candidates =>
         val relevant = candidates.collect(f).headOption
-        relevant.map(result => succeed(result)).getOrElse(fail(ReflectionException(s"companion not found")))
+        relevant.map(result => succeed(result)).getOrElse(fail("companion not found"))
       }
     }
   }
@@ -132,7 +130,7 @@ trait MemberOps {
   implicit class SemanticParentOps(tree: Aux.Param) {
     @hosted def ctor: Ctor = tree.attrs.flatMap(_.collect{ case defn: Attribute.Defn => defn } match {
       case Attribute.Defn(defn: Ctor) :: Nil => succeed(defn)
-      case _ => fail(ReflectionException("typecheck has failed"))
+      case _ => fail("typecheck has failed")
     })
   }
 

@@ -2,18 +2,16 @@ package scala.reflect
 package semantic
 
 import org.scalareflect.annotations._
-import org.scalareflect.errors._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.reflect.core._
-import scala.reflect.semantic.errors.wrapHosted
 
 trait ScopeOps {
   private[semantic] implicit class SemanticIterableOps[T](val members: Seq[T]) {
     @hosted def findUnique: T = members match {
       case Seq(unique) => succeed(unique)
-      case Seq() => fail(ReflectionException("no members found"))
-      case _ => fail(ReflectionException("multiple members found"))
+      case Seq() => fail("no members found")
+      case _ => fail("multiple members found")
     }
   }
 

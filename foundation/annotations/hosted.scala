@@ -50,7 +50,11 @@ class HostedMacros(val c: Context) {
         if (mayFail) q"$failWrapper(_.$name(...$args))"
         else q"implicitly[$contextTpe].$name(...$args)"
       } else body
-      DefDef(mods1, name, tparams, vparamss, tpt, body1)
+      val body2 = if (autoBody) body1 else q"""
+        import _root_.scala.reflect.semantic.errors.{fail, succeed, wrapHosted, wrapMacrohosted}
+        $body
+      """
+      DefDef(mods1, name, tparams, vparamss, tpt, body2)
     }
     val expanded = annottees match {
       case (ddef: DefDef) :: rest => transform(ddef) :: rest
