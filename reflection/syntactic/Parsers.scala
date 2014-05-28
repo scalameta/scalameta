@@ -2229,15 +2229,15 @@ abstract class Parser { parser =>
         val edefs = body.map(ensureEarlyDef)
         in.nextToken()
         val parents = templateParents()
-        val (self1, body1) = templateBodyOpt(parenMeansSyntaxError = false)
-        (edefs, parents, self1, body1, true)
+        val (self1, body1, hasBraces) = templateBodyOpt(parenMeansSyntaxError = false)
+        (edefs, parents, self1, body1, hasBraces)
       } else {
-        (Nil, Nil, self, body, true)
+        (Nil, Nil, self, body, false)
       }
     } else {
       val parents = templateParents()
-      val (self, body) = templateBodyOpt(parenMeansSyntaxError = false)
-      (Nil, parents, self, body, false)
+      val (self, body, hasBraces) = templateBodyOpt(parenMeansSyntaxError = false)
+      (Nil, parents, self, body, hasBraces)
     }
   }
 
@@ -2265,8 +2265,7 @@ abstract class Parser { parser =>
       }
       else {
         newLineOptWhenFollowedBy(LBRACE)
-        val hasExplicitBody = in.token == LBRACE
-        val (self, body) = templateBodyOpt(parenMeansSyntaxError = owner.isTrait || owner.isTerm)
+        val (self, body, hasExplicitBody) = templateBodyOpt(parenMeansSyntaxError = owner.isTrait || owner.isTerm)
         (Nil, Nil, self, body, hasExplicitBody)
       }
     )
@@ -2283,17 +2282,17 @@ abstract class Parser { parser =>
   def templateBody(isPre: Boolean): (Aux.Self, List[Stmt.Template]) =
     inBraces(templateStatSeq(isPre = isPre))
 
-  def templateBodyOpt(parenMeansSyntaxError: Boolean): (Aux.Self, List[Stmt.Template]) = {
+  def templateBodyOpt(parenMeansSyntaxError: Boolean): (Aux.Self, List[Stmt.Template], Boolean) = {
     newLineOptWhenFollowedBy(LBRACE)
     if (in.token == LBRACE) {
       val (self, stats) = templateBody(isPre = false)
-      (self, stats)
+      (self, stats, true)
     } else {
       if (in.token == LPAREN) {
         if (parenMeansSyntaxError) syntaxError("traits or objects may not have parameters")
         else abort("unexpected opening parenthesis")
       }
-      (Aux.Self(None, None), Nil)
+      (Aux.Self(None, None), Nil, false)
     }
   }
 
