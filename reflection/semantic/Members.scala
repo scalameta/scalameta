@@ -10,6 +10,7 @@ trait MemberOps {
   implicit class SemanticMemberOps(tree: Member) {
     // TODO: expose type parameter instantiation facilities, e.g. `def foo[T]: T = ...` => `def foo: Int = ...`
     def ref: Ref = tree match {
+      // TODO: this logic is not enough. if a member is a synthetic typeSignatureIn'd thing, we also need to remember its prefix
       case self: Aux.Self => self.name.getOrElse(Term.This(None))
       case named: Has.Name => named.name
     }
