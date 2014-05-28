@@ -43,7 +43,7 @@ object ShowCode {
     case t: Type.Annotate    => s(t.tpe, " ", t.mods)
     case t: Type.Apply       => s(t.tpe, "[", r(t.args, ", "), "]")
     case t: Type.ApplyInfix  => s(t.lhs, " ", t.op, " ", t.rhs)
-    case t: Type.Compound if t.hasExplicitRefinement => s(r(t.tpes, " with "), " { ", r(t.refinement, "; "), " }")
+    case t: Type.Compound if t.hasBraces => s(r(t.tpes, " with "), " { ", r(t.refinement, "; "), " }")
     case t: Type.Compound    => r(t.tpes, "with")
     case t: Type.Existential => s(t.tpe, " forSome { ", r(t.quants, "; "), " }")
     case t: Type.Placeholder => s("_", t.bounds)
@@ -227,7 +227,7 @@ object ShowCode {
       if (t.early.isEmpty && t.parents.isEmpty && t.self.name.isEmpty && t.self.decltpe.isEmpty && t.stats.isEmpty) s()
       else {
         val pearly = if (t.early.isEmpty) s() else s("{ ", r(t.early, "; "), " } with ")
-        // TODO: use Template.hasExplicitBody
+        // TODO: use Template.hasBraces
         val pbody = if (t.self.name.isEmpty && t.self.decltpe.isEmpty && t.stats.isEmpty) s()
                     else s("{", t.self, r(t.stats.map(i(_)), ";"), n("}"))
         val pparents = if (t.parents.nonEmpty) s(r(t.parents, " with "), " ") else s()

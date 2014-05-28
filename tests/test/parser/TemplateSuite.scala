@@ -3,12 +3,12 @@ import scala.reflect.core._, Aux._, Defn.{Trait, Object, Class}
 class TemplateSuite extends ParseSuite {
   test("trait T") {
     val Trait(Nil, Type.Name("T"), Nil, templ @ Aux.Template(Nil, Nil, Self(None, None), Nil)) = templStat("trait T")
-    assert(templ.hasExplicitBody === false)
+    assert(templ.hasBraces === false)
   }
 
   test("trait T {}") {
     val Trait(Nil, Type.Name("T"), Nil, templ @ Aux.Template(Nil, Nil, Self(None, None), Nil)) = templStat("trait T {}")
-    assert(templ.hasExplicitBody === true)
+    assert(templ.hasBraces === true)
   }
 
   test("trait F[T]") {

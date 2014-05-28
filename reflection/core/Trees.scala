@@ -150,8 +150,8 @@ object Type {
   @ast class Tuple(elements: Seq[Type] @nonEmpty) extends Type {
     require(elements.length > 1)
   }
-  @ast class Compound(tpes: Seq[Type], refinement: Seq[Stmt.Refine])(hasExplicitRefinement: Boolean) extends Type with Scope.Refine {
-    require(tpes.length == 1 ==> hasExplicitRefinement)
+  @ast class Compound(tpes: Seq[Type], refinement: Seq[Stmt.Refine])(hasBraces: Boolean) extends Type with Scope.Refine {
+    require(tpes.length == 1 ==> hasBraces)
   }
   @ast class Existential(tpe: Type, quants: Seq[Stmt.Existential] @nonEmpty) extends Type with Scope.Existential
   @ast class Annotate(tpe: Type, annots: Seq[Mod.Annot] @nonEmpty) extends Type with Has.Mods {
@@ -410,7 +410,7 @@ object Aux {
   @ast class Template(early: Seq[Stmt.Early],
                       parents: Seq[Parent],
                       self: Self,
-                      stats: Seq[Stmt.Template])(hasExplicitBody: Boolean) extends Tree with Scope.Template {
+                      stats: Seq[Stmt.Template])(hasBraces: Boolean) extends Tree with Scope.Template {
     require(parents.isEmpty || !parents.tail.exists(_.argss.nonEmpty))
     require(early.nonEmpty ==> parents.nonEmpty)
     require(stats.collect { case m: Member if m.isPkgObject => m }.isEmpty)

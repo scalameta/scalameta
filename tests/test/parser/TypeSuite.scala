@@ -53,17 +53,17 @@ class TypeSuite extends ParseSuite {
 
   test("A with B") {
     val comp @ Compound(TypeName("A") :: TypeName("B") :: Nil, Nil) = tpe("A with B")
-    assert(comp.hasExplicitRefinement == false)
+    assert(comp.hasBraces == false)
   }
 
   test("A with B {}") {
     val comp @ Compound(TypeName("A") :: TypeName("B") :: Nil, Nil) = tpe("A with B {}")
-    assert(comp.hasExplicitRefinement == true)
+    assert(comp.hasBraces == true)
   }
 
   test("{}") {
     val comp @ Compound(Nil, Nil) = tpe("{}")
-    assert(comp.hasExplicitRefinement == true)
+    assert(comp.hasBraces == true)
   }
 
   test("A { def x: A; val y: B; type C }") {

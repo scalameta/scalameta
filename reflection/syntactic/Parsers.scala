@@ -656,12 +656,12 @@ abstract class Parser { parser =>
         ts += annotType()
       }
       newLineOptWhenFollowedBy(LBRACE)
-      val types                 = ts.toList
-      val hasExplicitRefinement = in.token == LBRACE
-      val refinements           = if (in.token == LBRACE) refinement() else Nil
+      val types       = ts.toList
+      val hasBraces   = in.token == LBRACE
+      val refinements = if (in.token == LBRACE) refinement() else Nil
       (types, refinements) match {
         case (typ :: Nil, Nil) => typ
-        case _                 => Type.Compound(types, refinements)(hasExplicitRefinement)
+        case _                 => Type.Compound(types, refinements)(hasBraces)
       }
     }
 
@@ -1168,8 +1168,8 @@ abstract class Parser { parser =>
         case NEW =>
           canApply = false
           in.nextToken()
-          val (edefs, parents, self, stats, hasExplicitBody) = template()
-          Term.New(Aux.Template(edefs, parents, self, stats)(hasExplicitBody = hasExplicitBody))
+          val (edefs, parents, self, stats, hasBraces) = template()
+          Term.New(Aux.Template(edefs, parents, self, stats)(hasBraces))
         case _ =>
           syntaxError("illegal start of simple expression")
       }
@@ -2258,18 +2258,18 @@ abstract class Parser { parser =>
    *  }}}
    */
   def templateOpt(owner: TemplateOwner): Aux.Template = {
-    val (early, parents, self, body, hasExplicitBody) = (
+    val (early, parents, self, body, hasBraces) = (
       if (in.token == EXTENDS /* || in.token == SUBTYPE && mods.isTrait */) {
         in.nextToken()
         template()
       }
       else {
         newLineOptWhenFollowedBy(LBRACE)
-        val (self, body, hasExplicitBody) = templateBodyOpt(parenMeansSyntaxError = owner.isTrait || owner.isTerm)
-        (Nil, Nil, self, body, hasExplicitBody)
+        val (self, body, hasBraces) = templateBodyOpt(parenMeansSyntaxError = owner.isTrait || owner.isTerm)
+        (Nil, Nil, self, body, hasBraces)
       }
     )
-    Aux.Template(early, parents, self, body)(hasExplicitBody = hasExplicitBody)
+    Aux.Template(early, parents, self, body)(hasBraces)
   }
 
 /* -------- TEMPLATES ------------------------------------------- */
