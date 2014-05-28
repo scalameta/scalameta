@@ -21,7 +21,7 @@ trait RefOps {
 
   implicit class SemanticTermRefOps(tree: Term.Ref) {
     @hosted def defns: Seq[Member.Type] = ???
-    // TODO: I guarantee that we'll need Type.Ref.defn here
+    // TODO: I guarantee that we'll need Term.Ref.defn here
   }
 
   implicit class SemanticMembers[A <: Member.Term](tree: Seq[A]) {
