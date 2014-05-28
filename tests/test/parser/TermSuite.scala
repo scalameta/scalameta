@@ -238,7 +238,7 @@ class TermSuite extends ParseSuite {
 
   test("new A {}") {
     val New(templ @ Template(Nil, Parent(TypeName("A"), Nil) :: Nil, Self(None, None), Nil)) = term("new A {}")
-    assert(templ.hasExplicitBody === true) // TODO: fix this
+    assert(templ.hasExplicitBody === true)
   }
 
   test("new A with B") {
