@@ -4,7 +4,11 @@ import scala.annotation._
 
 package convert {
   trait Cvt[T, U] {
-    def cvt(x: T): U
+    def apply(x: T): U
+  }
+
+  object Cvt {
+    def apply[T, U](f: T => U): Cvt[T, U] = new Cvt[T, U] { def apply(x: T): U = f(x) }
   }
 
   trait CvtOps {

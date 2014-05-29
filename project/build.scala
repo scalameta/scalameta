@@ -137,7 +137,9 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     scalaSource in Compile <<= (baseDirectory in Compile)(base => base),
+    libraryDependencies += "org.scalareflect" % "core-foundation_2.11" % "0.1.0-SNAPSHOT",
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided"),
+    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _ % "provided"),
     packagedArtifacts := Map.empty,
     scalacOptions ++= Seq()
   )
@@ -174,6 +176,7 @@ object build extends Build {
       println("packagedArtifact: merged scalahost and its dependencies and produced a fat JAR")
       (art, slimJar)
     },
+    // scalacOptions ++= Seq("-Xprint:typer"),
     scalacOptions ++= Seq()
   ) dependsOn (foundation)
 
