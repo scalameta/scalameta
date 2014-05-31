@@ -194,7 +194,7 @@ object Member {
     def name: core.Type.Name
     def tparams: Seq[Aux.TypeParam]
   }
-  @branch trait Template extends Member with Has.Name with Stmt.TopLevel with Has.Paramss with Scope.Template {
+  @branch trait Template extends Defn with Has.Name with Stmt.TopLevel with Has.Paramss with Scope.Template {
     def name: core.Name
     def explicits: Seq[Seq[Aux.Param.Named]] = Nil
     def implicits: Seq[Aux.Param.Named] = Nil
