@@ -187,30 +187,32 @@ object Pat {
 object Member {
   @branch trait Term extends Member
   @branch trait Type extends Member
-  @branch trait Def extends Term with Has.TermName with Stmt.Template with Has.Paramss with Scope.Params {
+  @branch trait Def extends Term with Has.TermName with Stmt.Refine with Has.Paramss with Scope.Params {
     def tparams: Seq[Aux.TypeParam]
   }
-  @branch trait AbstractOrAliasType extends Type with Has.TypeName with Stmt.Template {
+  @branch trait AbstractOrAliasType extends Type with Has.TypeName with Stmt.Refine {
     def name: core.Type.Name
     def tparams: Seq[Aux.TypeParam]
   }
-  @branch trait Template extends Defn with Has.Name with Stmt.TopLevel with Has.Paramss with Scope.Template {
+  @branch trait Template extends Defn with Has.Name with Stmt.TopLevel with Stmt.Block with Has.Paramss with Scope.Template {
     def name: core.Name
     def explicits: Seq[Seq[Aux.Param.Named]] = Nil
     def implicits: Seq[Aux.Param.Named] = Nil
     def tparams: Seq[Aux.TypeParam] = Nil
     def templ: Aux.Template
   }
+  @branch trait TermTemplate extends Template with Has.TermName
+  @branch trait TypeTemplate extends Template with Has.TypeName
 }
 
 @branch trait Decl extends Stmt.Template with Stmt.Refine
 object Decl {
   @ast class Val(mods: Seq[Mod],
                  pats: Seq[Term.Name] @nonEmpty,
-                 decltpe: core.Type) extends Decl with Stmt.Existential with Has.Mods
+                 decltpe: core.Type) extends Decl with Aux.ValOrVar with Stmt.Existential
   @ast class Var(mods: Seq[Mod],
                  pats: Seq[Term.Name] @nonEmpty,
-                 decltpe: core.Type) extends Decl with Has.Mods
+                 decltpe: core.Type) extends Decl with Aux.ValOrVar
   // TODO: maybe merge Def and Procedure using flags?
   @ast class Def(mods: Seq[Mod],
                  name: Term.Name,
@@ -234,11 +236,11 @@ object Defn {
   @ast class Val(mods: Seq[Mod],
                  pats: Seq[Pat] @nonEmpty,
                  decltpe: Option[core.Type],
-                 rhs: Term) extends Defn with Has.Mods with Stmt.Early
+                 rhs: Term) extends Defn with Aux.ValOrVar with Stmt.Early
   @ast class Var(mods: Seq[Mod],
                  pats: Seq[Pat] @nonEmpty,
                  decltpe: Option[core.Type],
-                 rhs: Option[Term]) extends Defn with Has.Mods with Stmt.Early{
+                 rhs: Option[Term]) extends Defn with Aux.ValOrVar with Stmt.Early {
     require(rhs.isEmpty ==> pats.forall(_.isInstanceOf[Term.Name]))
     require(decltpe.nonEmpty || rhs.nonEmpty)
   }
@@ -268,17 +270,17 @@ object Defn {
                    name: core.Type.Name,
                    override val tparams: Seq[Aux.TypeParam],
                    ctor: Ctor.Primary,
-                   templ: Aux.Template) extends Defn with Member.Template with Member.Type with Has.TypeName
+                   templ: Aux.Template) extends Defn with Member.TypeTemplate
   @ast class Trait(mods: Seq[Mod],
                    name: core.Type.Name,
                    override val tparams: Seq[Aux.TypeParam],
-                   templ: Aux.Template) extends Defn with Member.Template with Member.Type with Has.TypeName {
+                   templ: Aux.Template) extends Defn with Member.TypeTemplate {
     require(templ.stats.forall(!_.isInstanceOf[Ctor]))
     require(templ.parents.forall(_.argss.isEmpty))
   }
   @ast class Object(mods: Seq[Mod],
                     name: Term.Name,
-                    templ: Aux.Template) extends Defn with Member.Template with Member.Term with Has.TermName {
+                    templ: Aux.Template) extends Defn with Member.TermTemplate {
   }
 }
 
@@ -460,6 +462,7 @@ object Aux {
   }
   @ast class TypeBounds(lo: Option[Type], hi: Option[Type]) extends Tree
   @ast class Super(thisp: Option[core.Name.Either], superp: Option[Type.Name]) extends Term.Qualifier with Type.Qualifier
+  @branch trait ValOrVar extends Stmt.Template with Has.Mods // NOTE: vals and vars are not members!
 }
 
 object Has {
