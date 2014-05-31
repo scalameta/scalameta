@@ -11,7 +11,15 @@ class TermSuite extends ParseSuite {
   }
 
   test("a.b.c") {
-    val Select(Select(TermName("a"), TermName("b")), TermName("c")) = term("a.b.c")
+    val outer @ Select(inner @ Select(TermName("a"), TermName("b")), TermName("c")) = term("a.b.c")
+    assert(outer.isPostfix === false)
+    assert(inner.isPostfix === false)
+  }
+
+  test("a.b c") {
+    val outer @ Select(inner @ Select(TermName("a"), TermName("b")), TermName("c")) = term("a.b c")
+    assert(outer.isPostfix === true)
+    assert(inner.isPostfix === false)
   }
 
   test("foo.this") {

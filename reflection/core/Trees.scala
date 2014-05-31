@@ -70,7 +70,7 @@ object Term {
     def name: Name = this
     def mods: Seq[Mod] = Nil
   }
-  @ast class Select(qual: Qualifier, selector: Term.Name) extends Ref with Pat
+  @ast class Select(qual: Qualifier, selector: Term.Name)(isPostfix: Boolean) extends Ref with Pat
 
   @ast class Interpolate(prefix: Name, parts: Seq[Lit.String] @nonEmpty, args: Seq[Term]) extends Term {
     // TODO: require(prefix.isInterpolationId)

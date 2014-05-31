@@ -66,7 +66,7 @@ object ShowCode {
 
     // Term
     case t: Term.This        => s(t.qual.map { qual => s(qual, ".") }.getOrElse(s()), "this")
-    case t: Term.Select      => s(parens(t.qual), ".", t.selector)
+    case t: Term.Select      => s(parens(t.qual), if (t.isPostfix) " " else ".", t.selector)
     case t: Term.Assign      => s(parens(t.lhs), " = ", t.rhs)
     case t: Term.Update      => s(parens(t.lhs), " = ", t.rhs)
     case t: Term.Return      => s("return ", t.expr.map(s(_)).getOrElse(s()))

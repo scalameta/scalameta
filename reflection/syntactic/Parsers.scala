@@ -492,7 +492,7 @@ abstract class Parser { parser =>
     Term.Select(reduceStack(base, opinfo.lhs) match {
       case (t: Term) :: Nil => t
       case _                => unreachable
-    }, opinfo.operator) :: Nil
+    }, opinfo.operator)(isPostfix = true) :: Nil
 
   def finishBinaryOp[T: OpCtx](opinfo: OpInfo[T], rhs: T): T = opctx.binop(opinfo, rhs)
 
@@ -748,7 +748,7 @@ abstract class Parser { parser =>
       in.nextToken()
       val superp = Aux.Super(None, mixinQualifierOpt())
       accept(DOT)
-      val supersel = Term.Select(superp, termName())
+      val supersel = Term.Select(superp, termName())(isPostfix = false)
       if (stop) supersel
       else {
         in.skipToken()
@@ -771,7 +771,7 @@ abstract class Parser { parser =>
           in.nextToken()
           val superp = Aux.Super(Some(name.toEitherName), mixinQualifierOpt())
           accept(DOT)
-          val supersel = Term.Select(superp, termName())
+          val supersel = Term.Select(superp, termName())(isPostfix = false)
           if (stop) supersel
           else {
             in.skipToken()
@@ -784,7 +784,7 @@ abstract class Parser { parser =>
     }
   }
 
-  def selector(t: Term): Term.Select = Term.Select(t, termName())
+  def selector(t: Term): Term.Select = Term.Select(t, termName())(isPostfix = false)
   def selectors(t: Term.Ref): Term.Ref ={
     val t1 = selector(t)
     if (in.token == DOT && lookingAhead { isName }) {
