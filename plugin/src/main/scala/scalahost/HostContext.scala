@@ -167,7 +167,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
       }
       def ptparams(gsyms: List[g.Symbol]): Seq[p.Aux.TypeParam] = gsyms.map(ptparam)
       def pvparamtpe(gtpe: g.Type): p.Aux.ParamType = {
-        val ptpe = gtpe.cvt.asInstanceOf[p.Type]
+        val ptpe = (gtpe.cvt: p.Type)
         if (g.definitions.isRepeatedParamType(gtpe)) p.Aux.ParamType.Repeated(ptpe)
         else if (g.definitions.isByNameParamType(gtpe)) p.Aux.ParamType.ByName(ptpe)
         else ptpe
@@ -185,7 +185,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
       private def pclassof(gtype: g.Type): p.Term.ApplyType = {
         val mothershipCore = g.gen.mkAttributedRef(g.currentRun.runDefinitions.Predef_classOf)
         val orig = g.TypeApply(mothershipCore, List(g.TypeTree(gtype))).setType(g.appliedType(mothershipCore.tpe, gtype))
-        orig.cvt.asInstanceOf[p.Term.ApplyType]
+        (orig.cvt: p.Term.ApplyType)
       }
       def pconst(gconst: g.Constant): p.Term = gconst.value match {
         case null => p.Lit.Null()
@@ -227,7 +227,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         require(in.symbol.isTerm)
         val isAnonymous = in.symbol.name.toString.startsWith("x$")
         val ptpe = if (!tpt.wasEmpty) Some(pvparamtpe(tpt.tpe)) else None
-        val pdefault = if (rhs.nonEmpty) Some(rhs.cvt.asInstanceOf[p.Term]) else None
+        val pdefault = if (rhs.nonEmpty) Some((rhs.cvt: p.Term)) else None
         require(isAnonymous ==> pdefault.isEmpty)
         if (isAnonymous) p.Aux.Param.Anonymous(pmods(in.symbol), ptpe)
         else p.Aux.Param.Named(pmods(in.symbol), in.symbol.asTerm.rawcvt(in), ptpe, pdefault)
@@ -319,7 +319,8 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
       case g.Block(stats, expr) =>
         p.Term.Block((stats :+ expr).cvt)
       case g.CaseDef(pat, guard, body) =>
-        p.Aux.Case(pat.cvt, if (guard.nonEmpty) Some(guard.cvt) else None, body.cvt)
+        val q"..$stats" = body
+        p.Aux.Case(pat.cvt, if (guard.nonEmpty) Some((guard.cvt: p.Term)) else None, stats.cvt)
       case g.Alternative(fst :: snd :: Nil) =>
         p.Pat.Alternative(fst.cvt, snd.cvt)
       case in @ g.Alternative(hd :: rest) =>
@@ -368,7 +369,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
       case g.Try(block, catches, finalizer) =>
         // TODO: undo desugarings of `try foo catch bar`
         val catchp = if (catches.nonEmpty) Some(p.Term.Cases(catches.cvt)) else None
-        val finallyp = if (finalizer.nonEmpty) Some(finalizer.cvt) else None
+        val finallyp = if (finalizer.nonEmpty) Some((finalizer.cvt: p.Term)) else None
         p.Term.Try(block.cvt, catchp, finallyp)
       case g.Throw(expr) =>
         p.Term.Throw(expr.cvt)
@@ -408,7 +409,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
           case g.Apply(fun, args) => p.Term.Apply(loopVanilla(fun), args.cvt).withScratchpad(in)
           case g.TypeApply(fun, targs) if targs exists { case tt: g.TypeTree => tt.wasEmpty } => loopVanilla(fun)
           case g.TypeApply(fun, targs) => p.Term.ApplyType(loopVanilla(fun), targs.cvt).withScratchpad(in)
-          case _ => in.cvt
+          case _ => (in.cvt: p.Term)
         }
         val in1 = in.asInstanceOf[g.Tree]
         val core = g.treeInfo.dissectApplied(in1).core
@@ -450,7 +451,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         // 1) some originals are attributed only partially
         // 2) some originals are incomplete (e.g. for compound types iirc)
         // therefore I think we shouldn't use originals at the moment, so I'm marking g.TypTree as unreachable
-        in.tpe.cvt.asInstanceOf[p.Type]
+        (in.tpe.cvt: p.Type)
       case g.TypeTreeWithDeferredRefCheck() =>
         ???
       case _: g.TypTree =>
@@ -467,7 +468,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         p.Type.Singleton(g.This(sym).cvt)
       case g.SuperType(thistpe, supertpe) =>
         // TODO: infer whether supertpe originally corresponded to Some or None
-        val p.Type.Singleton(p.Term.This(pthis)) = thistpe.cvt
+        val p.Type.Singleton(p.Term.This(pthis)) = thistpe.cvt.asInstanceOf[p.Type.Singleton]
         require(supertpe.typeSymbol.isType)
         val supersym = supertpe.typeSymbol.asType
         p.Type.Singleton(p.Aux.Super(pthis, Some(supersym.rawcvt(g.Ident(supersym)).withScratchpad(in))))
@@ -478,7 +479,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
           case g.NoPrefix =>
             sym.asTerm.rawcvt(g.Ident(sym))
           case _: g.SingletonType =>
-            val p.Type.Singleton(preref) = pre.cvt
+            val p.Type.Singleton(preref) = pre.cvt.asInstanceOf[p.Type.Singleton]
             p.Term.Select(preref, sym.asTerm.precvt(pre, g.Ident(sym)))(isPostfix = false) // TODO: figure out isPostfix
           case _ =>
             unreachable
@@ -497,7 +498,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
           case g.NoPrefix =>
             sym.asType.rawcvt(g.Ident(sym))
           case _: g.SingletonType =>
-            val p.Type.Singleton(preref) = pre.cvt
+            val p.Type.Singleton(preref) = pre.cvt.asInstanceOf[p.Type.Singleton]
             p.Type.Select(preref, sym.asType.precvt(pre, g.Ident(sym)))
           case _ =>
             p.Type.Project(pre.cvt, sym.asType.precvt(pre, g.Ident(sym)))
