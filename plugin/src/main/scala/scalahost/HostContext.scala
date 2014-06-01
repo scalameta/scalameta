@@ -163,13 +163,20 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         require(gsym.isType)
         val isAnonymous = gsym.name == g.tpnme.WILDCARD
         if (isAnonymous) p.Aux.TypeParam.Anonymous(pmods(gsym), ptparams(gsym.typeParams), Nil, Nil, gsym.info.depoly.cvt)
-        else p.Aux.TypeParam.Named(pmods(gsym), gsym.asType.cvt, ptparams(gsym.typeParams), Nil, Nil, gsym.info.depoly.cvt)
+        else p.Aux.TypeParam.Named(pmods(gsym), gsym.asType.rawcvt(g.Ident(gsym)), ptparams(gsym.typeParams), Nil, Nil, gsym.info.depoly.cvt)
       }
       def ptparams(gsyms: List[g.Symbol]): Seq[p.Aux.TypeParam] = gsyms.map(ptparam)
-      // TODO: somehow figure out the default argument from a parameter symbol if it is specified
+      def pvparamtpe(gtpe: g.Type): p.Aux.ParamType = {
+        val ptpe = gtpe.cvt.asInstanceOf[p.Type]
+        if (g.definitions.isRepeatedParamType(gtpe)) p.Aux.ParamType.Repeated(ptpe)
+        else if (g.definitions.isByNameParamType(gtpe)) p.Aux.ParamType.ByName(ptpe)
+        else ptpe
+      }
       private def pvparam(gsym: g.Symbol): p.Aux.Param.Named = {
         require(gsym.isTerm)
-        p.Aux.Param.Named(pmods(gsym), gsym.asTerm.cvt, gsym.info.depoly.cvt, None)
+        // TODO: discern inferred and explicitly specified vparamtpe
+        // TODO: somehow figure out the default argument from a parameter symbol if it is specified
+        p.Aux.Param.Named(pmods(gsym), gsym.asTerm.rawcvt(g.Ident(gsym)), Some(pvparamtpe(gsym.info.depoly)), None)
       }
       private def pvparams(gsyms: List[g.Symbol]): Seq[p.Aux.Param.Named] = gsyms.map(pvparam)
       private def pvparamss(gsymss: List[List[g.Symbol]]): Seq[Seq[p.Aux.Param.Named]] = gsymss.map(pvparams)
@@ -219,13 +226,8 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
       case in @ g.ValDef(_, _, tpt @ g.TypeTree(), rhs) if pt <:< typeOf[p.Aux.Param] =>
         require(in.symbol.isTerm)
         val isAnonymous = in.symbol.name.toString.startsWith("x$")
-        val ptpe = {
-          val ptpe = if (!tpt.wasEmpty) Some[p.Type](tpt.cvt) else None
-          if (g.definitions.isRepeatedParamType(tpt.tpe)) ptpe.map(ptpe => p.Aux.ParamType.Repeated(ptpe))
-          else if (g.definitions.isByNameParamType(tpt.tpe)) ptpe.map(ptpe => p.Aux.ParamType.ByName(ptpe))
-          else ptpe
-        }
-        val pdefault = if (rhs.nonEmpty) Some(rhs.cvt) else None
+        val ptpe = if (!tpt.wasEmpty) Some(pvparamtpe(tpt.tpe)) else None
+        val pdefault = if (rhs.nonEmpty) Some(rhs.cvt.asInstanceOf[p.Term]) else None
         require(isAnonymous ==> pdefault.isEmpty)
         if (isAnonymous) p.Aux.Param.Anonymous(pmods(in.symbol), ptpe)
         else p.Aux.Param.Named(pmods(in.symbol), in.symbol.asTerm.rawcvt(in), ptpe, pdefault)
@@ -249,7 +251,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
       case in @ g.DefDef(_, _, _, _, _, _) =>
         // TODO: figure out procedures
         require(in.symbol.isMethod)
-        val q"$_ def $_[..$tparams](..$explicitss)(implicit ..$implicits): $tpt = $body" = in
+        val q"$_ def $_[..$tparams](...$explicitss)(implicit ..$implicits): $tpt = $body" = in
         require(in.symbol.isDeferred ==> body.isEmpty)
         if (in.symbol.isConstructor) {
           require(!in.symbol.isPrimaryConstructor)
@@ -411,10 +413,10 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         if (core.isTerm) loopVanilla(in1) else loopParent(in1, Nil)
       case in @ g.ApplyDynamic(_, _) =>
         unreachable
-      case in @ g.Super(qual, mix) =>
+      case in @ g.Super(qual @ g.This(_), mix) =>
         require(in.symbol.isClass)
         val pthis = if (qual != g.tpnme.EMPTY) Some(qual.cvt) else None
-        val psuper = if (mix != g.tpnme.EMPTY) Some(in.symbol.asClass.cvt) else None
+        val psuper = if (mix != g.tpnme.EMPTY) Some(in.symbol.asClass.rawcvt(in)) else None
         p.Aux.Super(pthis, psuper)
       case in @ g.This(qual) =>
         p.Term.This(if (qual != g.tpnme.EMPTY) Some(in.symbol.eithercvt(in)) else None)
@@ -446,7 +448,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         // 1) some originals are attributed only partially
         // 2) some originals are incomplete (e.g. for compound types iirc)
         // therefore I think we shouldn't use originals at the moment, so I'm marking g.TypTree as unreachable
-        in.tpe.cvt
+        in.tpe.cvt.asInstanceOf[p.Type]
       case g.TypeTreeWithDeferredRefCheck() =>
         ???
       case _: g.TypTree =>
