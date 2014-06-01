@@ -240,25 +240,26 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         p.Aux.Self(pname, ptpe)(hasThis = false) // TODO: figure out hasThis
       case in @ g.ValDef(_, _, tpt @ g.TypeTree(), rhs) if pt <:< typeOf[p.Member] =>
         // TODO: collapse desugared representations of pattern-based vals and vars
+        // TODO: figure out whether a var def has an explicitly written underscore as its body or not
         require(in.symbol.isTerm)
         require(in.symbol.isDeferred ==> rhs.isEmpty)
         (in.symbol.isDeferred, in.symbol.isMutable) match {
           case (true, false) => p.Decl.Val(pmods(in.symbol), List(in.symbol.asTerm.rawcvt(in)), tpt.cvt)
           case (true, true) => p.Decl.Var(pmods(in.symbol), List(in.symbol.asTerm.rawcvt(in)), tpt.cvt)
           case (false, false) => p.Defn.Val(pmods(in.symbol), List(in.symbol.asTerm.rawcvt(in)), if (!tpt.wasEmpty) Some(tpt.cvt) else None, rhs.cvt)
-          case (false, true) => p.Defn.Var(pmods(in.symbol), List(in.symbol.asTerm.rawcvt(in)), if (!tpt.wasEmpty) Some(tpt.cvt) else None, rhs.cvt)
+          case (false, true) => p.Defn.Var(pmods(in.symbol), List(in.symbol.asTerm.rawcvt(in)), if (!tpt.wasEmpty) Some(tpt.cvt) else None, Some(rhs.cvt))
         }
       case in @ g.DefDef(_, _, _, _, _, _) =>
         // TODO: figure out procedures
         require(in.symbol.isMethod)
-        val q"$_ def $_[..$tparams](...$explicitss)(implicit ..$implicits): $tpt = $body" = in
+        val q"$_ def $_[..$tparams](...$explicitss)(implicit ..$implicits): ${tpt: g.TypeTree} = $body" = in
         require(in.symbol.isDeferred ==> body.isEmpty)
         if (in.symbol.isConstructor) {
           require(!in.symbol.isPrimaryConstructor)
           val q"{ $_(...$argss); ..$stats; () }" = body
           p.Ctor.Secondary(pmods(in.symbol), explicitss.cvt, implicits.cvt, argss.cvt, stats.cvt)
         } else if (in.symbol.isDeferred) p.Decl.Def(pmods(in.symbol), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt, implicits.cvt, tpt.cvt) // TODO: infer procedures
-        else p.Defn.Def(pmods(in.symbol), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt, implicits.cvt, tpt.cvt, body.cvt)
+        else p.Defn.Def(pmods(in.symbol), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt, implicits.cvt, if (!tpt.wasEmpty) Some(tpt.cvt) else None, body.cvt)
       case in @ g.TypeDef(_, _, tparams, tpt @ g.TypeTree()) if pt <:< typeOf[p.Aux.TypeParam] =>
         // TODO: undo desugarings of context and view bounds
         require(in.symbol.isType)
@@ -362,7 +363,8 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         // TODO: it's cute that Term.Cases is a Term, but what tpe shall we return for it? :)
         p.Term.Match(selector.cvt, p.Term.Cases(cases.cvt))
       case g.Return(expr) =>
-        p.Term.Return(expr.cvt)
+        // TODO: figure out whether the return expression was specified explicitly by the user
+        p.Term.Return(Some(expr.cvt))
       case g.Try(block, catches, finalizer) =>
         // TODO: undo desugarings of `try foo catch bar`
         val catchp = if (catches.nonEmpty) Some(p.Term.Cases(catches.cvt)) else None
@@ -453,6 +455,9 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         ???
       case _: g.TypTree =>
         unreachable
+      // NOTE: this derivation is ambiguous because of g.ValDef, g.TypeDef and g.Typed
+      // case _: g.Tree =>
+      //   derive
       case g.NoPrefix =>
         unreachable
       case g.NoType =>
@@ -556,6 +561,8 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         unreachable
       case g.ErrorType =>
         unreachable
+      case _: g.Type =>
+        derive
     }
   }
 }

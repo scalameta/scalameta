@@ -67,7 +67,7 @@ class ConverterMacros(val c: Context) {
         case q"pt <:< typeOf[$tpe]" => tpe
         case _ => tq"p.Tree"
       }
-      case class Instance(in: Tree, out: Tree, clauses: List[Tree], isStub: Boolean) {
+      case class Instance(in: Tree, out: Tree, clauses: List[Tree], notImplemented: Boolean) {
         private val prefix = in.toString.replace(".", "") + "2" + out.toString.replace(".", "")
         lazy val decl = c.freshName(TermName(prefix))
         lazy val impl = c.freshName(TermName(prefix))
@@ -79,10 +79,10 @@ class ConverterMacros(val c: Context) {
           val in = intpe(pat)
           val out = outpe(guard)
           val guardlessClause = atPos(clause.pos)(cq"$pat => $body")
-          val isStub = body match { case q"unreachable" => true; case q"???" => true; case _ => false }
+          val notImplemented = body match { case q"unreachable" => true; case q"???" => true; case _ => false }
           val i = instances.indexWhere{ case Instance(iin, iout, _, _) => in.toString == iin.toString && out.toString == iout.toString }
-          if (i == -1) instances += Instance(in, out, List(guardlessClause), isStub)
-          else instances(i) = Instance(in, out, instances(i).clauses :+ guardlessClause, isStub)
+          if (i == -1) instances += Instance(in, out, List(guardlessClause), notImplemented)
+          else instances(i) = Instance(in, out, instances(i).clauses :+ guardlessClause, notImplemented)
       })
       val precomputeParts = instances.map({
         case Instance(_, _, Nil, _) => unreachable
@@ -91,7 +91,7 @@ class ConverterMacros(val c: Context) {
       })
       val precompute = atPos(ddef.pos)(q"""
         _root_.org.scalareflect.convert.internal.precompute($wrapper){
-          @_root_.org.scalareflect.convert.internal.names(..${instances.filter(!_.isStub).map(_.impl.toString)})
+          @_root_.org.scalareflect.convert.internal.names(..${instances.filter(!_.notImplemented).map(_.impl.toString)})
           def dummy(in: Any): Any = {
             ..$rawprelude
             in match { case ..$precomputeParts }
@@ -99,14 +99,14 @@ class ConverterMacros(val c: Context) {
           ()
         }
       """)
-      val instanceDecls = instances.filter(!_.isStub).map(instance => atPos(instance.pos)(
+      val instanceDecls = instances.filter(!_.notImplemented).map(instance => atPos(instance.pos)(
         q"""
           implicit val ${instance.decl} = ${companion.toTypeName}.this.apply((in: ${instance.in}) => {
             ${wrapper.toTypeName}.this.${instance.impl}(in)
           })
         """
       ))
-      val instanceImpls = instances.filter(!_.isStub).map(instance => atPos(instance.pos)(
+      val instanceImpls = instances.filter(!_.notImplemented).map(instance => atPos(instance.pos)(
         q"""
           private def ${instance.impl}(in: ${instance.in}) = _root_.org.scalareflect.convert.internal.connect($wrapper) {
             val $helperInstance = new $helperClass(in)
@@ -155,6 +155,9 @@ package object internal {
     import definitions._
     import c.internal._
     import decorators._
+    val unreachableMeth = typeOf[org.scalareflect.`package`.type].member(TermName("unreachable")).asMethod
+    val qqqMeth = typeOf[Predef.type].member(TermName("$qmark$qmark$qmark")).asMethod
+    val deriveMeth = typeOf[org.scalareflect.convert.`package`.type].member(TermName("derive")).asMethod
     def materialize[In: WeakTypeTag, Out: WeakTypeTag]: Tree = {
       ???
     }
@@ -162,25 +165,37 @@ package object internal {
       import c.internal._, decorators._
       val q"{ ${dummy @ q"def $_(in: $_): $_ = { ..$prelude; in match { case ..$clauses } }"}; () }" = x
       def toPalladiumConverters: List[Converter] = {
-        def precisetpe(tree: Tree): Type = {
-          // NOTE: postprocessing is not mandatory, but it's sort of necessary to simplify types
-          // due to the fact that we have `type ThisType` in every root, branch and leaf node
-          // lubs of node types can have really baroque ThisType refinements :)
-          def postprocess(lub: Type): Type = removeThisTypeFromRefinement(lub)
-          tree match {
-            case If(_, thenp, elsep) => postprocess(lub(List(precisetpe(thenp), precisetpe(elsep))))
-            case Match(_, cases) => postprocess(lub(cases.map(tree => precisetpe(tree.body))))
-            case Block(_, expr) => precisetpe(expr)
-            case tree => tree.tpe
-          }
+        def precisetpe(tree: Tree): Type = tree match {
+          case If(_, thenp, elsep) => cleanLub(List(precisetpe(thenp), precisetpe(elsep)))
+          case Match(_, cases) => cleanLub(cases.map(tree => precisetpe(tree.body)))
+          case Block(_, expr) => precisetpe(expr)
+          case tree => tree.tpe
         }
-        def validateAllowedPattern(clause: CaseDef): CaseDef = {
-          val in = clause.pat.tpe.typeSymbol.asClass
-          if (in.baseClasses.exists(sym => sym.fullName == "scala.reflect.internal.Trees.Tree" ||
-                                           sym.fullName == "scala.reflect.internal.Types.Type")) clause
-          else c.abort(clause.pos, "must only convert from Scala trees and types")
+        def validateAllowedInputs(): Boolean = {
+          var isValid = true
+          clauses.foreach(clause => {
+            val in = clause.pat.tpe.typeSymbol.asClass
+            val inIsTreeOrType = in.baseClasses.exists(sym => sym.fullName == "scala.reflect.internal.Trees.Tree" ||
+                                                              sym.fullName == "scala.reflect.internal.Types.Type")
+            if (!inIsTreeOrType) {
+              c.error(clause.pos, s"must only convert from Scala trees and types, found $in")
+              isValid = false
+            }
+          })
+          isValid
         }
-        def validateExhaustiveInputs(): Unit = {
+        def validateAllowedOutputs(): Boolean = {
+          var isValid = true
+          clauses.foreach(clause => {
+            val body = clause.body
+            if (body.symbol != unreachableMeth && body.symbol != qqqMeth && body.symbol != deriveMeth) {
+              if (body.tpe =:= NothingTpe) { isValid = false; c.error(clause.pos, "must not convert to Nothing") }
+              if (!(precisetpe(body) <:< typeOf[scala.reflect.core.Tree])) { isValid = false; c.error(clause.pos, s"must only convert to Palladium trees, found ${precisetpe(body)}") }
+            }
+          })
+          isValid
+        }
+        def validateExhaustiveInputs(): Boolean = {
           val root = typeOf[scala.tools.nsc.Global]
           def ref(sym: Symbol): Type = sym match {
             case csym: ClassSymbol => csym.toType
@@ -191,9 +206,10 @@ package object internal {
           val expected = sortOfAllSubclassesOf(typeOf[scala.reflect.internal.Trees#Tree]) ++ sortOfAllSubclassesOf(typeOf[scala.reflect.internal.Types#Type])
           val inputs = clauses.map(_.pat.tpe).map(tpe => tpe.termSymbol.orElse(tpe.typeSymbol)).map(sym => root.member(sym.name))
           val unmatched = expected.filter(exp => !inputs.exists(pat => ref(exp) <:< ref(pat)))
-          if (unmatched.nonEmpty) c.abort(c.enclosingPosition, "@converter is not exhaustive in its inputs; missing: " + unmatched)
+          if (unmatched.nonEmpty) c.error(c.enclosingPosition, "@converter is not exhaustive in its inputs; missing: " + unmatched)
+          unmatched.isEmpty
         }
-        def validateExhaustiveOutputs(): Unit = {
+        def validateExhaustiveOutputs(): Boolean = {
           val root = typeOf[scala.reflect.core.Tree].typeSymbol.asClass
           def allLeafCompanions(csym: ClassSymbol): List[Symbol] = {
             val _ = csym.info // workaround for a knownDirectSubclasses bug
@@ -245,26 +261,27 @@ package object internal {
             sym.fullName != "scala.reflect.core.Type.Placeholder" &&
             sym.fullName != "scala.reflect.core.Type.Tuple"
           })
-          if (unmatched.nonEmpty) c.abort(c.enclosingPosition, "@converter is not exhaustive in its outputs; missing: " + unmatched)
+          if (unmatched.nonEmpty) c.error(c.enclosingPosition, "@converter is not exhaustive in its outputs; missing: " + unmatched)
+          unmatched.isEmpty
         }
         // val tups = clauses.map{ case CaseDef(pat, _, body) => (pat.tpe.toString.replace("HostContext.this.", ""), precisetpe(body).toString.replace("scala.reflect.core.", "p.")) }
         // val max = tups.map(_._1.length).max
         // tups.foreach{ case (f1, f2) => println(f1 + (" " * (max - f1.length + 5)) + f2) }
-        clauses.foreach(validateAllowedPattern)
-        validateExhaustiveInputs()
-        validateExhaustiveOutputs()
-        val unreachableMeth = typeOf[org.scalareflect.`package`.type].member(TermName("unreachable"))
-        val qqqMeth = typeOf[Predef.type].member(TermName("$qmark$qmark$qmark"))
-        val relevantClauses = clauses.filter(clause => clause.body.symbol != unreachableMeth && clause.body.symbol != qqqMeth)
-        val ins = relevantClauses.map(_.pat.tpe)
-        val outs = relevantClauses.map(_.body).map(precisetpe)
-        val methods = dummy.symbol.annotations.head.scalaArgs.map{
-          case Literal(Constant(s: String)) =>
-            val methodSym = wrapper.symbol.info.member(TermName(s)).orElse(c.abort(c.enclosingPosition, s"something went wrong: can't resolve $s in $wrapper"))
-            q"$wrapper.$methodSym".duplicate
+        val isValid = List(validateAllowedInputs(), validateAllowedOutputs(), validateExhaustiveInputs(), validateExhaustiveOutputs()).forall(Predef.identity)
+        if (isValid) {
+          val nontrivialClauses = clauses.filter(clause => clause.body.symbol != unreachableMeth && clause.body.symbol != qqqMeth)
+          val ins = nontrivialClauses.map(_.pat.tpe)
+          val outs = nontrivialClauses.map(_.body).map(body => if (body.symbol != deriveMeth) precisetpe(body) else NoType)
+          val methods = dummy.symbol.annotations.head.scalaArgs.map{
+            case Literal(Constant(s: String)) =>
+              val methodSym = wrapper.symbol.info.member(TermName(s)).orElse(c.abort(c.enclosingPosition, s"something went wrong: can't resolve $s in $wrapper"))
+              q"$wrapper.$methodSym".duplicate
+          }
+          if (ins.length != outs.length || outs.length != methods.length) c.abort(c.enclosingPosition, s"something went wrong: can't create converters from ${ins.length}, ${outs.length} and ${methods.length}")
+          ins.zip(outs).zip(methods).map{ case ((in, out), method) => Converter(in, out, method) }
+        } else {
+          Nil
         }
-        if (ins.length != outs.length || outs.length != methods.length) c.abort(c.enclosingPosition, s"something went wrong: can't create converters from ${ins.length}, ${outs.length} and ${methods.length}")
-        ins.zip(outs).zip(methods).map{ case ((in, out), method) => Converter(in, out, method) }
       }
       val target = wrapper.symbol.asModule.moduleClass.orElse(c.abort(c.enclosingPosition, s"something went wrong: unexpected wrapper $wrapper"))
       val converters = target.name.toString match {
@@ -288,70 +305,92 @@ package object internal {
       if (converters.isEmpty) {
         if (c.hasErrors) x
         else c.abort(c.enclosingPosition, "something went wrong: can't obtain PrecomputeAttachment")
-      }
-      object transformer {
-        val Predef_??? = typeOf[Predef.type].member(TermName("$qmark$qmark$qmark")).asMethod
-        val List_apply = typeOf[List.type].member(TermName("apply")).asMethod
-        val Some_apply = typeOf[Some.type].member(TermName("apply")).asMethod
-        def mkAttributedApply(m: MethodSymbol, arg: Tree): Apply = {
-          val owner = if (m.owner.isModuleClass) m.owner.asClass.module else m.owner
-          val pre = gen.mkAttributedRef(owner)
-          val polysel = gen.mkAttributedSelect(pre, m)
-          val sel = TypeApply(polysel, List(TypeTree(arg.tpe))).setType(appliedType(polysel.tpe, arg.tpe))
-          Apply(sel, List(arg)).setType(sel.tpe.finalResultType)
+      } else if (x.exists(_.symbol == deriveMeth)) {
+        val q"{ ..$_; in match { case ..$clauses } }" = x
+        if (clauses.length != 1) c.abort(c.enclosingPosition, "can't derive a converter encompassing multiple clauses")
+        val in = c.typecheck(Ident(TermName("in"))).tpe
+        val matching = converters.filter(c => (c.in <:< in) && (c.out != NoType))
+        if (matching.isEmpty) c.abort(c.enclosingPosition, s"can't derive a converter for $in because no matching converters were found")
+        if (matching.map(_.in).length > matching.map(_.in).distinct.length) {
+          val ambiguous = matching.groupBy(_.in).filter(_._2.length > 1).map(_._1)
+          c.abort(c.enclosingPosition, s"can't derive a converter for $in because $ambiguous each can be converted in multiple ways")
         }
-        var pt: Type = NoType
-        def refinePt(upperbound: Type): Unit = {
-          if (pt != NoType) pt = removeThisTypeFromRefinement(lub(List(pt, upperbound)))
-          else if (upperbound != NothingTpe) pt = upperbound
-          else pt = NoType
+        val cases = matching.map(c => cq"in: ${c.in} => ${c.method}(in)")
+        q"""
+          _root_.org.scalareflect.convert.internal.connect($wrapper)(in match {
+            case null => sys.error("error converting from " + ${in.toString} + " to " + ${cleanLub(matching.map(_.out)).toString} + ": unexpected input null")
+            case ..$cases
+            case in => sys.error("error converting from " + ${in.toString} + " to " + ${cleanLub(matching.map(_.out)).toString} + ": unexpected input " + in.getClass.toString + ": " + in)
+          })
+        """
+      } else {
+        object transformer {
+          val Predef_??? = typeOf[Predef.type].member(TermName("$qmark$qmark$qmark")).asMethod
+          val List_apply = typeOf[List.type].member(TermName("apply")).asMethod
+          val Some_apply = typeOf[Some.type].member(TermName("apply")).asMethod
+          def mkAttributedApply(m: MethodSymbol, arg: Tree): Apply = {
+            val owner = if (m.owner.isModuleClass) m.owner.asClass.module else m.owner
+            val pre = gen.mkAttributedRef(owner)
+            val polysel = gen.mkAttributedSelect(pre, m)
+            val sel = TypeApply(polysel, List(TypeTree(arg.tpe))).setType(appliedType(polysel.tpe, arg.tpe))
+            Apply(sel, List(arg)).setType(sel.tpe.finalResultType)
+          }
+          var pt: Type = NoType
+          def refinePt(upperbound: Type): Unit = {
+            if (pt != NoType) pt = cleanLub(List(pt, upperbound))
+            else if (upperbound != NothingTpe) pt = upperbound
+            else pt = NoType
+          }
+          def transform(tree: Tree): Tree = typingTransform(tree)((tree, api) => {
+            def convert(convertee: Tree): Tree = {
+              println(convertee.tpe.widen + " -> " + pt)
+              gen.mkAttributedRef(Predef_???).setType(NothingTpe)
+            }
+            def transformApplyCalculatingPts(app: Apply): Apply = {
+              treeCopy.Apply(app, api.recur(app.fun), app.args.zipWithIndex.map({ case (arg, i) =>
+                val params = app.fun.tpe.paramss.head
+                def isVararg = i >= params.length - 1 && params.last.info.typeSymbol == RepeatedParamClass
+                def unVararg(tpe: Type) = tpe.typeArgs.head
+                pt = if (isVararg) unVararg(params.last.info) else params(i).info
+                val result = api.recur(arg)
+                pt = NoType
+                result
+              }))
+            }
+            // TODO: think whether we can rebind polymorphic usages of cvt in a generic fashion
+            // without hardcoding to every type constructor we're going to use
+            tree match {
+              case q"$_.List.apply[${t: Type}]($_($convertee).cvt)" =>
+                pt = if (pt != NoType) pt.typeArgs.head else pt
+                refinePt(t)
+                mkAttributedApply(List_apply, convert(convertee))
+              case q"$_.Some.apply[${t: Type}]($_($convertee).cvt)" =>
+                pt = if (pt != NoType) pt.typeArgs.head else pt
+                refinePt(t)
+                mkAttributedApply(Some_apply, convert(convertee))
+              case q"$_($convertee).cvt.asInstanceOf[${t: Type}]" =>
+                refinePt(t)
+                convert(convertee)
+              case q"$_($convertee).cvt" =>
+                convert(convertee)
+              case app: Apply =>
+                transformApplyCalculatingPts(app)
+              case _ =>
+                pt = NoType
+                api.default(tree)
+            }
+          })
         }
-        def transform(tree: Tree): Tree = typingTransform(tree)((tree, api) => {
-          def convert(convertee: Tree): Tree = {
-            println(convertee.tpe.widen + " -> " + pt)
-            gen.mkAttributedRef(Predef_???).setType(NothingTpe)
-          }
-          def transformApplyCalculatingPts(app: Apply): Apply = {
-            treeCopy.Apply(app, api.recur(app.fun), app.args.zipWithIndex.map({ case (arg, i) =>
-              val params = app.fun.tpe.paramss.head
-              def isVararg = i >= params.length - 1 && params.last.info.typeSymbol == RepeatedParamClass
-              def unVararg(tpe: Type) = tpe.typeArgs.head
-              pt = if (isVararg) unVararg(params.last.info) else params(i).info
-              val result = api.recur(arg)
-              pt = NoType
-              result
-            }))
-          }
-          // TODO: think whether we can rebind polymorphic usages of cvt in a generic fashion
-          // without hardcoding to every type constructor we're going to use
-          tree match {
-            case q"$_.List.apply[${t: Type}]($_($convertee).cvt)" =>
-              pt = if (pt != NoType) pt.typeArgs.head else pt
-              refinePt(t)
-              mkAttributedApply(List_apply, convert(convertee))
-            case q"$_.Some.apply[${t: Type}]($_($convertee).cvt)" =>
-              pt = if (pt != NoType) pt.typeArgs.head else pt
-              refinePt(t)
-              mkAttributedApply(Some_apply, convert(convertee))
-            case q"$_($convertee).cvt.asInstanceOf[${t: Type}]" =>
-              refinePt(t)
-              convert(convertee)
-            case q"$_($convertee).cvt" =>
-              convert(convertee)
-            case app: Apply =>
-              transformApplyCalculatingPts(app)
-            case _ =>
-              pt = NoType
-              api.default(tree)
-          }
-        })
+        transformer.transform(x).setType(cleanLub(x.tpe :: Nil))
       }
-      transformer.transform(x).setType(removeThisTypeFromRefinement(x.tpe))
     }
-    def removeThisTypeFromRefinement(tpe: Type): Type = {
+    // NOTE: postprocessing is not mandatory, but it's sort of necessary to simplify types
+    // due to the fact that we have `type ThisType` in every root, branch and leaf node
+    // lubs of node types can have really baroque ThisType refinements :)
+    def cleanLub(tpes: List[Type]): Type = {
       object Scope { def unapplySeq(scope: Scope): Some[Seq[Symbol]] = Some(scope.toList) }
       object ThisType { def unapply(sym: Symbol): Boolean = sym.name == TypeName("ThisType") }
-      tpe match {
+      lub(tpes) match {
         case RefinedType(underlying :: Nil, Scope(ThisType())) => underlying
         case RefinedType(parents, Scope(ThisType())) => refinedType(parents, newScopeWith())
         case lub => lub

@@ -19,6 +19,9 @@ package convert {
       @compileTimeOnly("!!! isn't meant to be used outside @converter methods")
       def !!! : Nothing = ???
     }
+
+    @compileTimeOnly("derive isn't meant to be used outside @converter methods")
+    def derive: Nothing = ???
   }
 }
 
