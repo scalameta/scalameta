@@ -53,7 +53,6 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
   // 13) make sure that a cvt that unwraps and calls another cvt collects both original trees => don't use withScratchpad!
   // 14) some scratchpads might contain an attributed tree, some - a tree with just a symbol, some - a type
   // 15) structured scratchpads, not just tree/symbol/type, but actually meaningful case classes
-  // 16) don't emit instances for unreachable nodes
 
   // NOTE: we only handle trees and types
   // NOTE: can't use MemberDef.mods, because they get their annotations erased and moved to Symbol.annotations during typechecking

@@ -13,6 +13,7 @@ class converter extends StaticAnnotation {
 
 class ConverterMacros(val c: Context) {
   import c.universe._
+  import internal._
 
   def converter(annottees: Tree*): Tree = {
     def transform(ddef: DefDef): ModuleDef = {
@@ -56,7 +57,7 @@ class ConverterMacros(val c: Context) {
         case q"pt <:< typeOf[$tpe]" => tpe
         case _ => tq"p.Tree"
       }
-      case class Instance(in: Tree, out: Tree, clauses: List[Tree]) {
+      case class Instance(in: Tree, out: Tree, clauses: List[Tree], isStub: Boolean) {
         private val prefix = in.toString.replace(".", "") + "2" + out.toString.replace(".", "")
         lazy val decl = c.freshName(TermName(prefix))
         lazy val impl = c.freshName(TermName(prefix))
@@ -67,17 +68,18 @@ class ConverterMacros(val c: Context) {
           val in = intpe(pat)
           val out = outpe(guard)
           val clause = cq"$pat => $body"
-          val i = instances.indexWhere{ case Instance(iin, iout, _) => in.toString == iin.toString && out.toString == iout.toString }
-          if (i == -1) instances += Instance(in, out, List(clause))
-          else instances(i) = Instance(in, out, instances(i).clauses :+ clause)
+          val isStub = body match { case q"unreachable" => true; case q"???" => true; case _ => false }
+          val i = instances.indexWhere{ case Instance(iin, iout, _, _) => in.toString == iin.toString && out.toString == iout.toString }
+          if (i == -1) instances += Instance(in, out, List(clause), isStub)
+          else instances(i) = Instance(in, out, instances(i).clauses :+ clause, isStub)
       })
       val precomputeParts = instances.map({
-        case Instance(_, _, Nil) => unreachable
-        case Instance(_, _, clause :: Nil) => clause
-        case Instance(in, _, clauses) => cq"in: $in => in match { case ..$clauses }"
+        case Instance(_, _, Nil, _) => unreachable
+        case Instance(_, _, clause :: Nil, _) => clause
+        case Instance(in, _, clauses, _) => cq"in: $in => in match { case ..$clauses }"
       })
       val precompute = q"""
-        _root_.org.scalareflect.convert.ConvertInternal.precompute[$wrapper.type]({
+        _root_.org.scalareflect.convert.ConvertInternal.precompute[$wrapper.type, ${constantType(Constant(instances.filter(!_.isStub).length))}]({
           def $name(in: Any): Any = {
             ..$prelude
             in match { case ..$precomputeParts }
@@ -85,14 +87,14 @@ class ConverterMacros(val c: Context) {
           ()
         })
       """
-      val instanceDecls = instances.map({ instance =>
+      val instanceDecls = instances.filter(!_.isStub).map({ instance =>
         q"""
           implicit val ${instance.decl} = ${companion.toTypeName}.this.apply((in: ${instance.in}) => {
             ${wrapper.toTypeName}.this.${instance.impl}(in)
           })
         """
       })
-      val instanceImpls = instances.map({ case instance =>
+      val instanceImpls = instances.filter(!_.isStub).map({ case instance =>
         q"""
           private def ${instance.impl}(in: ${instance.in}) = {
             val $helperInstance = new $helperClass(in)
@@ -130,14 +132,14 @@ class ConverterMacros(val c: Context) {
 
 case class PrecomputeAttachment(outs: List[Any])
 object ConvertInternal {
-  def precompute[T](x: Any): Unit = macro ConvertInternalMacro.precompute[T]
+  def precompute[T, U](x: Any): Unit = macro ConvertInternalMacro.precompute[T, U]
 }
 class ConvertInternalMacro(val c: Context) {
   import c.universe._
   def materialize[In: WeakTypeTag, Out: WeakTypeTag]: Tree = {
     ???
   }
-  def precompute[T: WeakTypeTag](x: Tree): Tree = {
+  def precompute[T: WeakTypeTag, U: WeakTypeTag](x: Tree): Tree = {
     import c.internal._, decorators._
     val q"{ def $_(in: $_): $_ = { ..$prelude; in match { case ..$clauses } }; () }" = x
     def toPalladiumTpes: List[Type] = {
@@ -235,15 +237,21 @@ class ConvertInternalMacro(val c: Context) {
       // val tups = clauses.map{ case CaseDef(pat, _, body) => (pat.tpe.toString.replace("HostContext.this.", ""), precisetpe(body).toString.replace("scala.reflect.core.", "p.")) }
       // val max = tups.map(_._1.length).max
       // tups.foreach{ case (f1, f2) => println(f1 + (" " * (max - f1.length + 5)) + f2) }
+      clauses.foreach(validateAllowedPattern)
       validateExhaustiveInputs()
       validateExhaustiveOutputs()
-      clauses.map(validateAllowedPattern).map(_.body).map(precisetpe)
+      val unreachableMeth = typeOf[org.scalareflect.`package`.type].member(TermName("unreachable"))
+      val qqqMeth = typeOf[Predef.type].member(TermName("$qmark$qmark$qmark"))
+      val relevantClauses = clauses.filter(clause => clause.body.symbol != unreachableMeth && clause.body.symbol != qqqMeth)
+      relevantClauses.map(_.body).map(precisetpe)
     }
     val target = weakTypeOf[T].typeSymbol
     val tpes = target.name.toString match {
       case "toPalladium" => toPalladiumTpes
       case _ => c.abort(c.enclosingPosition, "unknown target: " + target.name)
     }
+    val expectedTpesLength = weakTypeOf[U].asInstanceOf[ConstantType].value.value.asInstanceOf[Int]
+    if (tpes.length != expectedTpesLength) c.abort(c.enclosingPosition, "something went wrong: expected $expectedTpesLength tpes, actual ${tpes.length} tpes")
     target.updateAttachment(PrecomputeAttachment(tpes))
     q""
   }
