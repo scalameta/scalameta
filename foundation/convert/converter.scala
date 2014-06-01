@@ -139,7 +139,7 @@ class ConvertInternalMacro(val c: Context) {
   }
   def precompute[T: WeakTypeTag](x: Tree): Tree = {
     import c.internal._, decorators._
-    val q"{ def $_(in: $_): $_ = { ..$_; in match { case ..$clauses } }; () }" = x
+    val q"{ def $_(in: $_): $_ = { ..$prelude; in match { case ..$clauses } }; () }" = x
     def toPalladiumTpes: List[Type] = {
       def precisetpe(tree: Tree): Type = {
         // NOTE: postprocessing is not mandatory, but it's sort of necessary to simplify types
@@ -165,23 +165,78 @@ class ConvertInternalMacro(val c: Context) {
                                          sym.fullName == "scala.reflect.internal.Types.Type")) clause
         else c.abort(clause.pos, "must only convert from Scala trees and types")
       }
-      def validateExhaustivePatterns(): Unit = {
+      def validateExhaustiveInputs(): Unit = {
         val root = typeOf[scala.tools.nsc.Global]
-        def ref(sym: GSymbol): Type = sym match {
+        def ref(sym: Symbol): Type = sym match {
           case csym: ClassSymbol => csym.toType
           case msym: ModuleSymbol => msym.info
           case _ => NoType
         }
-        def sortOfAllSubclassesOf(tpe: Type): List[Symbol] = root.members.toList.flatMap(sym => if (ref(sym) <:< tpe) Some(sym) else None)
+        def sortOfAllSubclassesOf(tpe: Type): List[Symbol] = root.members.toList.flatMap(sym => if ((ref(sym) <:< tpe) && !sym.isAbstract) Some(sym) else None)
         val expected = sortOfAllSubclassesOf(typeOf[scala.reflect.internal.Trees#Tree]) ++ sortOfAllSubclassesOf(typeOf[scala.reflect.internal.Types#Type])
-        val patterns = clauses.map(_.pat.tpe).map(tpe => tpe.termSymbol.orElse(tpe.typeSymbol)).map(sym => root.member(sym.name))
-        val unmatched = expected.filter(exp => !patterns.exists(pat => ref(exp) <:< ref(pat)))
-        unmatched foreach println
+        val inputs = clauses.map(_.pat.tpe).map(tpe => tpe.termSymbol.orElse(tpe.typeSymbol)).map(sym => root.member(sym.name))
+        val unmatched = expected.filter(exp => !inputs.exists(pat => ref(exp) <:< ref(pat)))
+        if (unmatched.nonEmpty) c.abort(c.enclosingPosition, "@converter is not exhaustive in its inputs; missing: " + unmatched)
+      }
+      def validateExhaustiveOutputs(): Unit = {
+        val root = typeOf[scala.reflect.core.Tree].typeSymbol.asClass
+        def allLeafCompanions(csym: ClassSymbol): List[Symbol] = {
+          val _ = csym.info // workaround for a knownDirectSubclasses bug
+          if (csym.isSealed) csym.knownDirectSubclasses.toList.map(_.asClass).flatMap(allLeafCompanions)
+          else if (csym.isFinal) {
+            // somehow calling companionSymbol on results of knownDirectSubclasses is flaky
+            val companionSymbol = csym.owner.info.member(csym.name.toTermName)
+            if (companionSymbol == NoSymbol) c.abort(c.enclosingPosition, "companionless leaf in @root hierarchy")
+            List(csym.companionSymbol)
+          } else if (csym.isModuleClass) {
+            // haven't encountered bugs here, but just in case
+            if (csym.module == NoSymbol) c.abort(c.enclosingPosition, "moduleless leaf in @root hierarchy")
+            List(csym.module)
+          } else c.abort(c.enclosingPosition, "open class in a @root hierarchy: " + csym)
+        }
+        val expected = mutable.Set(allLeafCompanions(root).distinct: _*)
+        (prelude ++ clauses).foreach(_.foreach(sub => if (sub.symbol != null) expected -= sub.symbol))
+        val unmatched = expected.filter(sym => {
+          sym.fullName != "scala.reflect.core.Arg.Named" &&
+          sym.fullName != "scala.reflect.core.Arg.Repeated" &&
+          sym.fullName != "scala.reflect.core.Aux.CompUnit" &&
+          sym.fullName != "scala.reflect.core.Decl.Procedure" &&
+          sym.fullName != "scala.reflect.core.Defn.Procedure" &&
+          sym.fullName != "scala.reflect.core.Enum.Generator" &&
+          sym.fullName != "scala.reflect.core.Enum.Guard" &&
+          sym.fullName != "scala.reflect.core.Enum.Val" &&
+          sym.fullName != "scala.reflect.core.Lit.Symbol" &&
+          sym.fullName != "scala.reflect.core.Mod.Doc" &&
+          sym.fullName != "scala.reflect.core.Mod.ValParam" &&
+          sym.fullName != "scala.reflect.core.Mod.VarParam" &&
+          sym.fullName != "scala.reflect.core.Pat.ExtractInfix" &&
+          sym.fullName != "scala.reflect.core.Pat.Interpolate" &&
+          sym.fullName != "scala.reflect.core.Pat.Tuple" &&
+          sym.fullName != "scala.reflect.core.Term.Annotate" &&
+          sym.fullName != "scala.reflect.core.Term.ApplyInfix" &&
+          sym.fullName != "scala.reflect.core.Term.ApplyUnary" &&
+          sym.fullName != "scala.reflect.core.Term.Do" &&
+          sym.fullName != "scala.reflect.core.Term.Eta" &&
+          sym.fullName != "scala.reflect.core.Term.For" &&
+          sym.fullName != "scala.reflect.core.Term.ForYield" &&
+          sym.fullName != "scala.reflect.core.Term.If.Then" &&
+          sym.fullName != "scala.reflect.core.Term.Interpolate" &&
+          sym.fullName != "scala.reflect.core.Term.Placeholder" &&
+          sym.fullName != "scala.reflect.core.Term.Tuple" &&
+          sym.fullName != "scala.reflect.core.Term.Update" &&
+          sym.fullName != "scala.reflect.core.Term.While" &&
+          sym.fullName != "scala.reflect.core.Type.ApplyInfix" &&
+          sym.fullName != "scala.reflect.core.Type.Function" &&
+          sym.fullName != "scala.reflect.core.Type.Placeholder" &&
+          sym.fullName != "scala.reflect.core.Type.Tuple"
+        })
+        if (unmatched.nonEmpty) c.abort(c.enclosingPosition, "@converter is not exhaustive in its outputs; missing: " + unmatched)
       }
       // val tups = clauses.map{ case CaseDef(pat, _, body) => (pat.tpe.toString.replace("HostContext.this.", ""), precisetpe(body).toString.replace("scala.reflect.core.", "p.")) }
       // val max = tups.map(_._1.length).max
       // tups.foreach{ case (f1, f2) => println(f1 + (" " * (max - f1.length + 5)) + f2) }
-      validateExhaustivePatterns()
+      validateExhaustiveInputs()
+      validateExhaustiveOutputs()
       clauses.map(validateAllowedPattern).map(_.body).map(precisetpe)
     }
     val target = weakTypeOf[T].typeSymbol

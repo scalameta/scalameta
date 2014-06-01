@@ -49,12 +49,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
   def attrs(tree: Tree): Seq[Attribute] = ???
 
   // TODO:
-  // 2) check that all palladium trees are converted to
-  // 3) check that all scala trees are converted from
   // 4) ensure that `in` is attributed before doing any pattern match
-  // 5) ensure that `p.Aux.Param` also matches `p.Aux.Param.Named`
-  // 7) derive typeclass instances for branches
-  // 12) make sure we only handle trees, symbols and types
   // 13) make sure that a cvt that unwraps and calls another cvt collects both original trees => don't use withScratchpad!
   // 14) some scratchpads might contain an attributed tree, some - a tree with just a symbol, some - a type
   // 15) structured scratchpads, not just tree/symbol/type, but actually meaningful case classes
@@ -206,6 +201,8 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
     in match {
       case g.EmptyTree =>
         unreachable
+      case g.UnmappableTree =>
+        unreachable
       case g.PackageDef(pid, stats) =>
         p.Pkg(pid.cvt, stats.cvt)(hasBraces = true) // TODO: infer hasBraces
       case in @ g.ClassDef(_, _, tparams, templ) =>
@@ -223,7 +220,12 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
       case in @ g.ValDef(_, _, tpt @ g.TypeTree(), rhs) if pt <:< typeOf[p.Aux.Param] =>
         require(in.symbol.isTerm)
         val isAnonymous = in.symbol.name.toString.startsWith("x$")
-        val ptpe = if (!tpt.wasEmpty) Some(tpt.cvt) else None
+        val ptpe = {
+          val ptpe = if (!tpt.wasEmpty) Some[p.Type](tpt.cvt) else None
+          if (g.definitions.isRepeatedParamType(tpt.tpe)) ptpe.map(ptpe => p.Aux.ParamType.Repeated(ptpe))
+          else if (g.definitions.isByNameParamType(tpt.tpe)) ptpe.map(ptpe => p.Aux.ParamType.ByName(ptpe))
+          else ptpe
+        }
         val pdefault = if (rhs.nonEmpty) Some(rhs.cvt) else None
         require(isAnonymous ==> pdefault.isEmpty)
         if (isAnonymous) p.Aux.Param.Anonymous(pmods(in.symbol), ptpe)
@@ -246,10 +248,15 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
           case (false, true) => p.Defn.Var(pmods(in.symbol), List(in.symbol.asTerm.rawcvt(in)), if (!tpt.wasEmpty) Some(tpt.cvt) else None, rhs.cvt)
         }
       case in @ g.DefDef(_, _, _, _, _, _) =>
+        // TODO: figure out procedures
         require(in.symbol.isMethod)
         val q"$_ def $_[..$tparams](..$explicitss)(implicit ..$implicits): $tpt = $body" = in
         require(in.symbol.isDeferred ==> body.isEmpty)
-        if (in.symbol.isDeferred) p.Decl.Def(pmods(in.symbol), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt, implicits.cvt, tpt.cvt) // TODO: infer procedures
+        if (in.symbol.isConstructor) {
+          require(!in.symbol.isPrimaryConstructor)
+          val q"{ $_(...$argss); ..$stats; () }" = body
+          p.Ctor.Secondary(pmods(in.symbol), explicitss.cvt, implicits.cvt, argss.cvt, stats.cvt)
+        } else if (in.symbol.isDeferred) p.Decl.Def(pmods(in.symbol), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt, implicits.cvt, tpt.cvt) // TODO: infer procedures
         else p.Defn.Def(pmods(in.symbol), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt, implicits.cvt, tpt.cvt, body.cvt)
       case in @ g.TypeDef(_, _, tparams, tpt @ g.TypeTree()) if pt <:< typeOf[p.Aux.TypeParam] =>
         // TODO: undo desugarings of context and view bounds
@@ -263,7 +270,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         else p.Defn.Type(pmods(in.symbol), in.symbol.asType.rawcvt(in), tparams.cvt, tpt.cvt)
       case g.LabelDef(_, _, _) =>
         // TODO: preprocess the input so that we don't have LabelDefs
-        unreachable
+        ???
       case g.Import(expr, selectors) =>
         // TODO: collapse desugared chains of imports
         // TODO: distinguish `import foo.x` from `import foo.{x => x}`
@@ -315,6 +322,8 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         p.Pat.Alternative(fst.cvt, snd.cvt)
       case in @ g.Alternative(hd :: rest) =>
         p.Pat.Alternative(hd.cvt, g.Alternative(rest).setType(in.tpe).cvt)
+      case g.Ident(g.nme.WILDCARD) =>
+        p.Pat.Wildcard()
       case g.Star(g.Ident(g.nme.WILDCARD)) =>
         p.Pat.SeqWildcard()
       case in @ g.Bind(_, g.nme.WILDCARD) =>
@@ -333,6 +342,8 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         p.Pat.Bind(in.symbol.asTerm.rawcvt(in), tree.cvt)
       case in @ g.UnApply(q"$ref.$unapply[..$targs](`<unapply-selector>`)", args) =>
         // TODO: infer Extract vs ExtractInfix
+        // TODO: infer whether it was an application or a Tuple
+        // TODO: also figure out Interpolate
         require(unapply == g.TermName("unapply") || unapply == g.TermName("unapplySeq"))
         p.Pat.Extract(ref.cvt, targs.cvt, args.cvt).withScratchpad(in.symbol)
       case g.Function(params, body) =>
@@ -381,6 +392,9 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         // TODO: recover names and defaults (https://github.com/scala/scala/pull/3753/files#diff-269d2d5528eed96b476aded2ea039444R617)
         // TODO: strip off inferred type arguments in loopParent
         // TODO: infer whether implicit arguments were provided explicitly and don't remove them if so
+        // TODO: undo the for desugaring
+        // TODO: undo the Lit.Symbol desugaring
+        // TODO: undo the interpolate desugaring
         def loopParent(in: g.Tree, argss: List[List[p.Term]]): p.Tree = in match {
           case g.Apply(fun, args) if g.isImplicitMethodType(fun.tpe) => loopParent(fun, argss)
           case g.Apply(fun, args) => loopParent(fun, argss :+ args.cvt)
@@ -396,6 +410,8 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         val in1 = in.asInstanceOf[g.Tree]
         val core = g.treeInfo.dissectApplied(in1).core
         if (core.isTerm) loopVanilla(in1) else loopParent(in1, Nil)
+      case in @ g.ApplyDynamic(_, _) =>
+        unreachable
       case in @ g.Super(qual, mix) =>
         require(in.symbol.isClass)
         val pthis = if (qual != g.tpnme.EMPTY) Some(qual.cvt) else None
@@ -403,14 +419,28 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         p.Aux.Super(pthis, psuper)
       case in @ g.This(qual) =>
         p.Term.This(if (qual != g.tpnme.EMPTY) Some(in.symbol.eithercvt(in)) else None)
+      case in: g.PostfixSelect =>
+        unreachable
       case in @ g.Select(qual, name) =>
         require(in.symbol.isTerm)
         p.Term.Select(qual.cvt, in.symbol.asTerm.precvt(qual.tpe, in))(isPostfix = false) // TODO: figure out isPostfix
       case in @ g.Ident(name) =>
         in.symbol.rawcvt(in)
+      case g.ReferenceToBoxed(_) =>
+        ???
       case g.Literal(const) =>
         pconst(const)
+      case g.Parens(_) =>
+        unreachable
+      case g.DocDef(_, _) =>
+        unreachable
       case g.Annotated(_, _) =>
+        unreachable
+      case g.ArrayValue(_, _) =>
+        unreachable
+      case g.InjectDerivedValue(_) =>
+        unreachable
+      case g.SelectFromArray(_, _, _) =>
         unreachable
       case in @ g.TypeTree() =>
         // TODO: iirc there were two problems with originals that we faced when developing reify:
@@ -418,8 +448,9 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         // 2) some originals are incomplete (e.g. for compound types iirc)
         // therefore I think we shouldn't use originals at the moment, so I'm marking g.TypTree as unreachable
         in.tpe.cvt
+      case g.TypeTreeWithDeferredRefCheck() =>
+        ???
       case _: g.TypTree =>
-        // TODO: handle TypeTreeWithDeferredRefCheck
         unreachable
       case g.NoPrefix =>
         unreachable
@@ -505,6 +536,24 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
       case g.WildcardType =>
         unreachable
       case g.BoundedWildcardType(_) =>
+        unreachable
+      case in: g.UniqueErasedValueType =>
+        unreachable
+      case in: g.RepeatedType =>
+        unreachable
+      case in: g.NamedType =>
+        unreachable
+      case in: g.AppliedTypeVar =>
+        unreachable
+      case in: g.HKTypeVar =>
+        unreachable
+      case in: g.AntiPolyType =>
+        unreachable
+      case in: g.ImportType =>
+        unreachable
+      case in: g.OverloadedType =>
+        unreachable
+      case g.ErrorType =>
         unreachable
     }
   }
