@@ -277,12 +277,18 @@ package object internal {
     def connect(wrapper: Tree)(x: Tree): Tree = {
       case class Converter(in: Type, out: Type, method: Tree)
       def obtainConverters(sym: Symbol): List[Converter] = {
-        if (sym == NoSymbol) c.abort(c.enclosingPosition, "something went wrong: can't obtain PrecomputeAttachment")
-        val att = sym.attachments.get[PrecomputeAttachment]
-        val result = att.map(_.converters.map(cvtr => Converter(cvtr.in.asInstanceOf[Type], cvtr.out.asInstanceOf[Type], cvtr.method.asInstanceOf[Tree])))
-        result.getOrElse(obtainConverters(sym.owner))
+        if (sym == NoSymbol) Nil
+        else {
+          val att = sym.attachments.get[PrecomputeAttachment]
+          val result = att.map(_.converters.map(cvtr => Converter(cvtr.in.asInstanceOf[Type], cvtr.out.asInstanceOf[Type], cvtr.method.asInstanceOf[Tree])))
+          result.getOrElse(obtainConverters(sym.owner))
+        }
       }
       val converters = obtainConverters(wrapper.symbol.asModule.moduleClass)
+      if (converters.isEmpty) {
+        if (c.hasErrors) x
+        else c.abort(c.enclosingPosition, "something went wrong: can't obtain PrecomputeAttachment")
+      }
       object transformer {
         val Predef_??? = typeOf[Predef.type].member(TermName("$qmark$qmark$qmark")).asMethod
         val List_apply = typeOf[List.type].member(TermName("apply")).asMethod
