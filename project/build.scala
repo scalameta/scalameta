@@ -155,7 +155,7 @@ object build extends Build {
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided"),
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _ % "provided"),
     libraryDependencies += "org.scalareflect" % "core_2.11" % "0.1.0-SNAPSHOT",
-    libraryDependencies += "org.scalareflect" % "foundation_2.11" % "0.1.0-SNAPSHOT",
+    libraryDependencies += "org.scalareflect" % "core-foundation_2.11" % "0.1.0-SNAPSHOT",
     libraryDependencies += "org.scalareflect" % "interpreter_2.11" % "0.1.0-SNAPSHOT",
     test in assembly := {},
     jarName in assembly := name.value + "_" + scalaVersion.value + "-" + version.value + "-assembly.jar",

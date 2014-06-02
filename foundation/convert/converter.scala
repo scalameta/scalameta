@@ -35,6 +35,7 @@ class ConverterMacros(val c: whitebox.Context) {
       }
 
       val wrapper = name
+      val dummy = c.freshName(TermName("dummy"))
       val typeclass = TypeName(name.toString.capitalize + "Cvt")
       val companion = typeclass.toTermName
       val helperClass = c.freshName(TypeName(name.toString.capitalize + "Helper"))
@@ -73,6 +74,7 @@ class ConverterMacros(val c: whitebox.Context) {
         private val prefix = in.toString.replace(".", "") + "2" + (if (notBounded) "Wildcard" else out.toString.replace(".", ""))
         lazy val decl = c.freshName(TermName(prefix))
         lazy val impl = c.freshName(TermName(prefix))
+        lazy val sig = c.freshName(TermName("Sig"))
         def pos = clauses.head.pos
       }
       val instances = mutable.ListBuffer[Instance]()
@@ -89,11 +91,14 @@ class ConverterMacros(val c: whitebox.Context) {
       })
       val computeParts = instances.map({
         case Instance(_, _, Nil, _, _) => unreachable
-        case Instance(_, _, clause :: Nil, _, _) => clause
+        case Instance(_, _, List(clause), _, _) => clause
         case Instance(in, _, clauses, _, _) => atPos(clauses.head.pos)(cq"in: $in => in match { case ..$clauses }")
       })
+      // NOTE: having this as an rhs of a dummy val rather than as a statement in the template is important
+      // because template statements get typechecked after val synthesis take place
+      // and we can't afford this, because we need to get these converters computed before anything else takes place
       val computeConverters = atPos(ddef.pos)(q"""
-        _root_.org.scalareflect.convert.internal.computeConverters($wrapper){
+        val $dummy = _root_.org.scalareflect.convert.internal.computeConverters($wrapper){
           @_root_.org.scalareflect.convert.internal.names(..${instances.filter(!_.notImplemented).map(_.impl.toString)})
           def dummy(in: Any): Any = {
             ..$rawprelude
@@ -102,16 +107,21 @@ class ConverterMacros(val c: whitebox.Context) {
           ()
         }
       """)
+      val instanceSigs = instances.filter(!_.notImplemented).map(instance => atPos(instance.pos)(
+        q"""
+          lazy val ${instance.sig} = _root_.org.scalareflect.convert.internal.lookupConverters[${instance.in}, ${instance.out}]
+        """
+      ))
       val instanceDecls = instances.filter(!_.notImplemented).map(instance => atPos(instance.pos)(
         q"""
-          implicit val ${instance.decl} = ${companion.toTypeName}.this.apply((in: ${instance.in}) => {
+          implicit val ${instance.decl}: $typeclass[${instance.sig}.In, ${instance.sig}.Out] = ${companion.toTypeName}.this.apply((in: ${instance.in}) => {
             ${wrapper.toTypeName}.this.${instance.impl}(in)
           })
         """
       ))
       val instanceImpls = instances.filter(!_.notImplemented).map(instance => atPos(instance.pos)(
         q"""
-          private def ${instance.impl}(in: ${instance.in}) = _root_.org.scalareflect.convert.internal.connectConverters {
+          private def ${instance.impl}(in: ${instance.in}): $companion.${instance.sig}.Out = _root_.org.scalareflect.convert.internal.connectConverters {
             val $helperInstance = new $helperClass(in)
             import $helperInstance._
             ..${prelude.collect { case imp: Import => imp }}
@@ -129,6 +139,7 @@ class ConverterMacros(val c: whitebox.Context) {
             def apply[In, Out](f: In => Out): $typeclass[In, Out] = new $typeclass[In, Out] { def apply(in: In): Out = f(in) }
             import _root_.scala.language.experimental.macros
             implicit def materialize[In, Out]: $typeclass[In, Out] = macro _root_.org.scalareflect.convert.internal.BlackboxMacros.materialize[In, Out]
+            ..$instanceSigs
             ..$instanceDecls
           }
           ..$instanceImpls
@@ -151,6 +162,7 @@ package object internal {
 
   class names(xs: String*) extends scala.annotation.StaticAnnotation
   def computeConverters[T](wrapper: Any)(x: T): Unit = macro WhiteboxMacros.computeConverters
+  def lookupConverters[T, U]: Any = macro WhiteboxMacros.lookupConverters[T, U]
   def connectConverters[T](x: T): Any = macro WhiteboxMacros.connectConverters
 
   class BlackboxMacros(val c: blackbox.Context) {
@@ -167,6 +179,7 @@ package object internal {
     import definitions._
     import c.internal._
     import decorators._
+    import Flag._
     val Predef_??? = typeOf[Predef.type].member(TermName("$qmark$qmark$qmark")).asMethod
     val List_apply = typeOf[List.type].member(TermName("apply")).asMethod
     val Some_apply = typeOf[Some.type].member(TermName("apply")).asMethod
@@ -190,7 +203,7 @@ package object internal {
           def unapply(x: Tree): Option[(Tree, Type)] = x match {
             case Typed(x, tpt) =>
               tpt.tpe match {
-                case AnnotatedType(unchecked :: Nil, nothing) if unchecked.tree.tpe =:= typeOf[unchecked] && nothing =:= NothingTpe =>
+                case AnnotatedType(List(unchecked), nothing) if unchecked.tree.tpe =:= typeOf[unchecked] && nothing =:= NothingTpe =>
                   Some((x, WildcardType))
                 case pt =>
                   Some((x, pt))
@@ -327,7 +340,7 @@ package object internal {
           if (unmatched.nonEmpty) c.error(c.enclosingPosition, "@converter is not exhaustive in its outputs; missing: " + unmatched)
           unmatched.isEmpty
         }
-        // val tups = clauses.map{ case CaseDef(pat, _, body) => (pat.tpe.toString.replace("HostContext.this.", ""), cleanLub(precisetpe(body) :: Nil).toString.replace("scala.reflect.core.", "p."), precisetpe(body).toString.replace("scala.reflect.core.", "p.")) }
+        // val tups = clauses.map{ case CaseDef(pat, _, body) => (pat.tpe.toString.replace("HostContext.this.", ""), cleanLub(List(precisetpe(body))).toString.replace("scala.reflect.core.", "p."), precisetpe(body).toString.replace("scala.reflect.core.", "p.")) }
         // val max1 = tups.map(_._1.length).max
         // val max2 = tups.map(_._2.length).max
         // tups.foreach{ case (f1, f2, f3) => println(f1 + (" " * (max1 - f1.length + 5)) + f2 + (" " * (max2 - f2.length + 5)) + f3) }
@@ -348,8 +361,9 @@ package object internal {
           })
           val methods = dummy.symbol.annotations.head.scalaArgs.map({
             case Literal(Constant(s: String)) =>
+              val qual = wrapper.duplicate
               val methodSym = wrapper.symbol.info.member(TermName(s)).orElse(c.abort(c.enclosingPosition, s"something went wrong: can't resolve $s in $wrapper"))
-              q"$wrapper.$methodSym".duplicate
+              q"$qual.$methodSym"
           })
           val deriveds = nontrivialClauses.map(_.body.symbol == Convert_derive)
           if (ins.length != pts.length || pts.length != outs.length || outs.length != methods.length || methods.length != deriveds.length) c.abort(c.enclosingPosition, s"something went wrong: can't create converters from ${ins.length}, ${pts.length}, ${outs.length}, ${methods.length} and ${deriveds.length}")
@@ -363,7 +377,7 @@ package object internal {
         case "toPalladium" => toPalladiumConverters
         case _ => c.abort(c.enclosingPosition, "unknown target: " + target.name)
       }
-      // val tups = converters.map{ case SharedConverter(in: Type, out: Type, method: Tree, derived) => ((if (derived) "*" else "") + in.toString.replace("HostContext.this.", ""), cleanLub(out :: Nil).toString.replace("scala.reflect.core.", "p."), out.toString.replace("scala.reflect.core.", "p."), method) }
+      // val tups = converters.map{ case SharedConverter(in: Type, out: Type, method: Tree, derived) => ((if (derived) "*" else "") + in.toString.replace("HostContext.this.", ""), cleanLub(List(out)).toString.replace("scala.reflect.core.", "p."), out.toString.replace("scala.reflect.core.", "p."), method) }
       // val max1 = tups.map(_._1.length).max
       // val max2 = tups.map(_._2.length).max
       // val max3 = tups.map(_._3.length).max
@@ -371,7 +385,7 @@ package object internal {
       // ???
       target.updateAttachment(ComputedConvertersAttachment(converters))
       // TODO: also persist the converters in an annotation on target in order to support separate compilation
-      q""
+      q"()"
     }
     def loadConverters(): List[Converter] = {
       def loop(sym: Symbol): List[Converter] = {
@@ -383,7 +397,12 @@ package object internal {
           result.getOrElse(next.flatMap(loop))
         }
       }
-      loop(enclosingOwner)
+      val converters = loop(enclosingOwner)
+      if (converters.isEmpty && !c.hasErrors) {
+        c.abort(c.enclosingPosition, "something went wrong: can't load converters")
+      } else {
+        converters
+      }
     }
     def convert(x: Tree, in: Type, out: Type, allowDerived: Boolean, allowDowncasts: Boolean): Tree = {
       def fail(reason: String) = { c.error(x.pos, s"can't derive a converter from $in to $out because $reason"); gen.mkAttributedRef(Predef_???).setType(NothingTpe) }
@@ -407,7 +426,7 @@ package object internal {
         matching = matching.filter(c1 => !matching.exists(c2 => c1 != c2 && !(c1.in =:= c2.in) && (c1.in <:< c2.in)))
         var result = matching match {
           case Nil => fail(s"no suitable patterns were found");
-          case Converter(cin, _, _, method, _) :: Nil if in <:< cin => q"$method($x)"
+          case List(Converter(cin, _, _, method, _)) if in <:< cin => q"$method($x)"
           case matching =>
             if (matching.map(_.in).length > matching.map(_.in).distinct.length) {
               val (ambin, ambout) = matching.groupBy(_.in).toList.sortBy(_._1.toString).filter(_._2.length > 1).head
@@ -430,14 +449,29 @@ package object internal {
             case out => sys.error("error converting from " + ${in.toString} + " to " + ${out.toString} + ": unexpected output " + out.getClass.toString + ": " + out)
           }
         """
-        q"_root_.org.scalareflect.convert.internal.connectConverters($result)"
+        atPos(x.pos)(q"_root_.org.scalareflect.convert.internal.connectConverters($result)")
       }
+    }
+    def lookupConverters[T: WeakTypeTag, U: WeakTypeTag]: Tree = {
+      val converters = loadConverters()
+      val in = weakTypeOf[T]
+      val pt = weakTypeOf[U]
+      val out = {
+        if (converters.isEmpty) pt
+        else {
+          val matching = converters.filter(c => (c.in =:= in) && (c.out <:< pt))
+          matching match {
+            case List(success) => cleanLub(List(success.out))
+            case _ => c.abort(c.enclosingPosition, s"something went wrong: can't load converter signature for $in => $pt")
+          }
+        }
+      }
+      q"new { type In = $in; type Out = $out }"
     }
     def connectConverters(x: Tree): Tree = {
       val converters = loadConverters()
       if (converters.isEmpty) {
-        if (c.hasErrors) x
-        else c.abort(c.enclosingPosition, "something went wrong: can't obtain ComputedConvertersAttachment")
+        x
       } else if (x.exists(_.symbol == Convert_derive)) {
         val q"{ ..$_; in match { case ..$clauses } }" = x
         if (clauses.length != 1) c.abort(c.enclosingPosition, "can't derive a converter encompassing multiple clauses")
@@ -493,7 +527,12 @@ package object internal {
             }
           })
         }
-        transformer.transform(x).setType(cleanLub(x.tpe :: Nil))
+        def shouldCleanRet(x: Tree): Boolean = x match {
+          case Block(_, expr) => shouldCleanRet(expr)
+          case _ => x.symbol != Any_asInstanceOf
+        }
+        val ret = if (shouldCleanRet(x)) cleanLub(List(x.tpe)) else x.tpe
+        transformer.transform(x).setType(ret)
       }
     }
     // NOTE: postprocessing is not mandatory, but it's sort of necessary to simplify types
@@ -502,8 +541,8 @@ package object internal {
     def cleanLub(tpes: List[Type]): Type = {
       object Scope { def unapplySeq(scope: Scope): Some[Seq[Symbol]] = Some(scope.toList) }
       object ThisType { def unapply(sym: Symbol): Boolean = sym.name == TypeName("ThisType") }
-      lub(tpes) match {
-        case RefinedType(underlying :: Nil, Scope(ThisType())) => underlying
+      lub(tpes).dealias match {
+        case RefinedType(List(underlying), Scope(ThisType())) => underlying
         case RefinedType(parents, Scope(ThisType())) => cleanLub(parents)
         case lub => lub
       }

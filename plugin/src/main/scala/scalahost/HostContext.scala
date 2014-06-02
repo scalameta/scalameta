@@ -88,9 +88,9 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
           gsym.rawcvt(in).withScratchpad(pre).asInstanceOf[pTermOrTypeName]
         }
         def rawcvt(in: g.Tree): pTermOrTypeName = {
-          if (gsym.isTerm) p.Term.Name(alias(in))(isBackquoted = isBackquoted(in)).withScratchpad(gsym).asInstanceOf[pTermOrTypeName]
-          else if (gsym.isType) p.Type.Name(alias(in))(isBackquoted = isBackquoted(in)).withScratchpad(gsym).asInstanceOf[pTermOrTypeName]
-          else unreachable
+          (if (gsym.isTerm) p.Term.Name(alias(in))(isBackquoted = isBackquoted(in)).withScratchpad(gsym)
+          else if (gsym.isType) p.Type.Name(alias(in))(isBackquoted = isBackquoted(in)).withScratchpad(gsym)
+          else unreachable).asInstanceOf[pTermOrTypeName]
         }
         def eithercvt(in: g.Tree): p.Name.Either = {
           require(gsym != g.NoSymbol)
@@ -248,7 +248,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         val ptpe = if (!tpt.wasEmpty) Some(tpt.cvt) else None
         require(rhs.isEmpty)
         p.Aux.Self(pname, ptpe)(hasThis = false) // TODO: figure out hasThis
-      case in @ g.ValDef(_, _, tpt @ g.TypeTree(), rhs) if pt <:< typeOf[p.AuxValOrVar] =>
+      case in @ g.ValDef(_, _, tpt @ g.TypeTree(), rhs) if pt <:< typeOf[p.Aux.ValOrVar] =>
         // TODO: collapse desugared representations of pattern-based vals and vars
         // TODO: figure out whether a var def has an explicitly written underscore as its body or not
         require(in.symbol.isTerm)
