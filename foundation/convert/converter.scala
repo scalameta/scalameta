@@ -144,7 +144,7 @@ class ConverterMacros(val c: Context) {
 }
 
 package object internal {
-  case class Converter(in: Any, out: Any, method: Any)
+  case class Converter(in: Any, out: Any, method: Any, derived: Boolean)
   case class ComputedConvertersAttachment(converters: List[Converter])
 
   class names(xs: String*) extends scala.annotation.StaticAnnotation
@@ -197,7 +197,7 @@ package object internal {
     def materialize[In: WeakTypeTag, Out: WeakTypeTag]: Tree = {
       ???
     }
-    case class Converter(in: Type, out: Type, method: Tree)
+    case class Converter(in: Type, out: Type, method: Tree, derived: Boolean)
     type SharedConverter = org.scalareflect.convert.internal.Converter
     val SharedConverter = org.scalareflect.convert.internal.Converter
     def computeConverters(wrapper: Tree)(x: Tree): Tree = {
@@ -318,14 +318,19 @@ package object internal {
         if (isValid) {
           val nontrivialClauses = clauses.filter(clause => clause.body.symbol != Scalareflect_unreachable && clause.body.symbol != Predef_???)
           val ins = nontrivialClauses.map(_.pat.tpe)
-          val outs = nontrivialClauses.map(_.body).map(body => if (body.symbol != Convert_derive) precisetpe(body) else NoType)
-          val methods = dummy.symbol.annotations.head.scalaArgs.map{
+          val underivedOuts = nontrivialClauses.map(_.body).map(body => if (body.symbol != Convert_derive) precisetpe(body) else NoType)
+          val outs = nontrivialClauses.map({ case CaseDef(pat, _, body) =>
+            if (body.symbol != Convert_derive) precisetpe(body)
+            else lub(ins.zip(underivedOuts).collect{ case (in, out) if (in <:< pat.tpe) && (out != NoType) => out })
+          })
+          val methods = dummy.symbol.annotations.head.scalaArgs.map({
             case Literal(Constant(s: String)) =>
               val methodSym = wrapper.symbol.info.member(TermName(s)).orElse(c.abort(c.enclosingPosition, s"something went wrong: can't resolve $s in $wrapper"))
               q"$wrapper.$methodSym".duplicate
-          }
-          if (ins.length != outs.length || outs.length != methods.length) c.abort(c.enclosingPosition, s"something went wrong: can't create converters from ${ins.length}, ${outs.length} and ${methods.length}")
-          ins.zip(outs).zip(methods).map{ case ((in, out), method) => SharedConverter(in, out, method) }
+          })
+          val deriveds = nontrivialClauses.map(_.body.symbol == Convert_derive)
+          if (ins.length != outs.length || outs.length != methods.length || methods.length != deriveds.length) c.abort(c.enclosingPosition, s"something went wrong: can't create converters from ${ins.length}, ${outs.length}, ${methods.length} and ${deriveds.length}")
+          ins.zip(outs).zip(methods).zip(deriveds).map{ case (((in, out), method), derived) => SharedConverter(in, out, method, derived) }
         } else {
           Nil
         }
@@ -335,6 +340,12 @@ package object internal {
         case "toPalladium" => toPalladiumConverters
         case _ => c.abort(c.enclosingPosition, "unknown target: " + target.name)
       }
+      // val tups = converters.map{ case SharedConverter(in: Type, out: Type, method: Tree, derived) => ((if (derived) "*" else "") + in.toString.replace("HostContext.this.", ""), cleanLub(out :: Nil).toString.replace("scala.reflect.core.", "p."), out.toString.replace("scala.reflect.core.", "p."), method) }
+      // val max1 = tups.map(_._1.length).max
+      // val max2 = tups.map(_._2.length).max
+      // val max3 = tups.map(_._3.length).max
+      // tups.foreach{ case (f1, f2, f3, f4) => println(f1 + (" " * (max1 - f1.length + 5)) + f2 + (" " * (max2 - f2.length + 5)) + f3 + (" " * (max3 - f3.length + 5)) + f4) }
+      // ???
       target.updateAttachment(ComputedConvertersAttachment(converters))
       // TODO: also persist the converters in an annotation on target in order to support separate compilation
       q""
@@ -344,7 +355,7 @@ package object internal {
         if (sym == NoSymbol) Nil
         else {
           val att = sym.attachments.get[ComputedConvertersAttachment]
-          val result = att.map(_.converters.map(cvtr => Converter(cvtr.in.asInstanceOf[Type], cvtr.out.asInstanceOf[Type], cvtr.method.asInstanceOf[Tree])))
+          val result = att.map(_.converters.map(cvtr => Converter(cvtr.in.asInstanceOf[Type], cvtr.out.asInstanceOf[Type], cvtr.method.asInstanceOf[Tree], cvtr.derived)))
           val next = List(sym.owner) ++ (if (sym.isModule) List(sym.asModule.moduleClass) else Nil)
           result.getOrElse(next.flatMap(loop))
         }
@@ -364,19 +375,13 @@ package object internal {
         }
       } else {
         val converters = loadConverters()
-        def matchesIn(c: Converter) = c.in <:< in
-        def matchesOut(c: Converter) = {
-          if (out == WildcardType) c.out != NoType
-          else {
-            val cout = c.out.orElse(cleanLub(converters.filter(c1 => (c1.in <:< c.in) && (c1.out != NoType)).map(_.out)))
-            (cout <:< out) || (allowDowncasts && (out <:< cout))
-          }
-        }
-        var matching = converters.filter(c => c.out != NoType || alsoLookIntoDerived).filter(c => matchesIn(c) && matchesOut(c))
+        def matchesIn(c: Converter) = (in <:< c.in) || (allowDowncasts && (c.in <:< in))
+        def matchesOut(c: Converter) = (c.out <:< out) || (allowDowncasts && (out <:< c.out))
+        var matching = converters.filter(c => !c.derived || alsoLookIntoDerived).filter(c => matchesIn(c) && matchesOut(c))
         matching = matching.filter(c1 => !matching.exists(c2 => c1 != c2 && !(c1.in =:= c2.in) && (c1.in <:< c2.in)))
         matching match {
           case Nil => fail(s"no suitable patterns were found");
-          case Converter(_, _, method) :: Nil => q"$method($x)"
+          case Converter(_, _, method, _) :: Nil => q"$method($x)"
           case matching =>
             if (matching.map(_.in).length > matching.map(_.in).distinct.length) {
               val (ambin, ambout) = matching.groupBy(_.in).toList.sortBy(_._1.toString).filter(_._2.length > 1).head
@@ -403,7 +408,7 @@ package object internal {
         val q"{ ..$_; in match { case ..$clauses } }" = x
         if (clauses.length != 1) c.abort(c.enclosingPosition, "can't derive a converter encompassing multiple clauses")
         val in = atPos(x.pos)(c.typecheck(Ident(TermName("in"))))
-        convert(in, in.tpe, WildcardType, alsoLookIntoDerived = false, allowDowncasts = false)
+        convert(in, in.tpe, WildcardType, alsoLookIntoDerived = false, allowDowncasts = true)
       } else {
         object transformer {
           var pt: Type = WildcardType
@@ -414,7 +419,8 @@ package object internal {
           }
           def transform(tree: Tree): Tree = typingTransform(tree)((tree, api) => {
             def connect(convertee: Tree, force: Boolean): Tree = {
-              println(convertee.tpe.widen + " -> " + pt)
+              println(convertee.tpe.widen + " -> " + pt + (if (force) " !!!" else ""))
+              if (force) ???
               convert(convertee, convertee.tpe.widen, pt, alsoLookIntoDerived = true, allowDowncasts = force)
               gen.mkAttributedRef(Predef_???).setType(NothingTpe)
             }

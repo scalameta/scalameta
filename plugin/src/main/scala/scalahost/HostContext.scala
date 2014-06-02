@@ -150,21 +150,28 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         if (gsym.isPackageObject) pmods += p.Mod.Package()
         pmods.toList
       }
-      private def pann(ann: g.AnnotationInfo): p.Mod.Annot = {
+      private def pann(gann: g.AnnotationInfo): p.Mod.Annot = {
         // TODO: recover names and defaults (https://github.com/scala/scala/pull/3753/files#diff-269d2d5528eed96b476aded2ea039444R617)
         // TODO: recover multiple argument lists (?!)
         // TODO: infer the difference between @foo and @foo()
         // TODO: support classfile annotation args
-        val g.AnnotationInfo(atp, args, assocs) = ann
-        p.Mod.Annot(atp.cvt, List(args.cvt))
+        val g.AnnotationInfo(gatp, gargs, gassocs) = gann
+        p.Mod.Annot(gatp.cvt, List(gargs.cvt))
       }
-      def panns(anns: List[g.AnnotationInfo]): Seq[p.Mod.Annot] = anns.map(pann)
+      def panns(ganns: List[g.AnnotationInfo]): Seq[p.Mod.Annot] = ganns.map(pann)
+      def pbounds(gtpe: g.Type): p.Aux.TypeBounds = gtpe match {
+        case g.TypeBounds(glo, ghi) =>
+          // TODO: infer which of the bounds were specified explicitly by the user
+          p.Aux.TypeBounds(Some(glo.cvt), Some(ghi.cvt))
+        case _ =>
+          unreachable
+      }
       private def ptparam(gsym: g.Symbol): p.Aux.TypeParam = {
         // TODO: undo desugarings of context and view bounds
         require(gsym.isType)
         val isAnonymous = gsym.name == g.tpnme.WILDCARD
-        if (isAnonymous) p.Aux.TypeParam.Anonymous(pmods(gsym), ptparams(gsym.typeParams), Nil, Nil, gsym.info.depoly.cvt)
-        else p.Aux.TypeParam.Named(pmods(gsym), gsym.asType.rawcvt(g.Ident(gsym)), ptparams(gsym.typeParams), Nil, Nil, gsym.info.depoly.cvt)
+        if (isAnonymous) p.Aux.TypeParam.Anonymous(pmods(gsym), ptparams(gsym.typeParams), Nil, Nil, pbounds(gsym.info.depoly))
+        else p.Aux.TypeParam.Named(pmods(gsym), gsym.asType.rawcvt(g.Ident(gsym)), ptparams(gsym.typeParams), Nil, Nil, pbounds(gsym.info.depoly))
       }
       def ptparams(gsyms: List[g.Symbol]): Seq[p.Aux.TypeParam] = gsyms.map(ptparam)
       def pvparamtpe(gtpe: g.Type): p.Aux.ParamType = {
@@ -267,11 +274,11 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         // TODO: undo desugarings of context and view bounds
         require(in.symbol.isType)
         val isAnonymous = in.symbol.name == g.tpnme.WILDCARD
-        if (isAnonymous) p.Aux.TypeParam.Anonymous(pmods(in.symbol), tparams.cvt, Nil, Nil, tpt.cvt)
-        else p.Aux.TypeParam.Named(pmods(in.symbol), in.symbol.asType.rawcvt(in), tparams.cvt, Nil, Nil, tpt.cvt)
+        if (isAnonymous) p.Aux.TypeParam.Anonymous(pmods(in.symbol), tparams.cvt, Nil, Nil, pbounds(tpt.tpe))
+        else p.Aux.TypeParam.Named(pmods(in.symbol), in.symbol.asType.rawcvt(in), tparams.cvt, Nil, Nil, pbounds(tpt.tpe))
       case in @ g.TypeDef(_, _, tparams, tpt @ g.TypeTree()) if pt <:< typeOf[p.Member] =>
         require(in.symbol.isType)
-        if (in.symbol.isDeferred) p.Decl.Type(pmods(in.symbol), in.symbol.asType.rawcvt(in), tparams.cvt, tpt.cvt)
+        if (in.symbol.isDeferred) p.Decl.Type(pmods(in.symbol), in.symbol.asType.rawcvt(in), tparams.cvt, pbounds(tpt.tpe))
         else p.Defn.Type(pmods(in.symbol), in.symbol.asType.rawcvt(in), tparams.cvt, tpt.cvt)
       case g.LabelDef(_, _, _) =>
         // TODO: preprocess the input so that we don't have LabelDefs
@@ -486,7 +493,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         p.Type.Singleton(g.This(sym).cvt)
       case g.SuperType(thistpe, supertpe) =>
         // TODO: infer whether supertpe originally corresponded to Some or None
-        val p.Type.Singleton(p.Term.This(pthis)) = thistpe.cvt.asInstanceOf[p.Type.Singleton]
+        val p.Type.Singleton(p.Term.This(pthis)) = (thistpe.cvt: p.Type.Singleton)
         require(supertpe.typeSymbol.isType)
         val supersym = supertpe.typeSymbol.asType
         p.Type.Singleton(p.Aux.Super(pthis, Some(supersym.rawcvt(g.Ident(supersym)).withScratchpad(in))))
@@ -497,7 +504,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
           case g.NoPrefix =>
             sym.asTerm.rawcvt(g.Ident(sym))
           case _: g.SingletonType =>
-            val p.Type.Singleton(preref) = pre.cvt.asInstanceOf[p.Type.Singleton]
+            val p.Type.Singleton(preref) = (pre.cvt: p.Type.Singleton)
             p.Term.Select(preref, sym.asTerm.precvt(pre, g.Ident(sym)))(isPostfix = false) // TODO: figure out isPostfix
           case _ =>
             unreachable
@@ -516,7 +523,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
           case g.NoPrefix =>
             sym.asType.rawcvt(g.Ident(sym))
           case _: g.SingletonType =>
-            val p.Type.Singleton(preref) = pre.cvt.asInstanceOf[p.Type.Singleton]
+            val p.Type.Singleton(preref) = (pre.cvt: p.Type.Singleton)
             p.Type.Select(preref, sym.asType.precvt(pre, g.Ident(sym))).withScratchpad(in)
           case _ =>
             p.Type.Project(pre.cvt, sym.asType.precvt(pre, g.Ident(sym))).withScratchpad(in)
@@ -531,7 +538,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
           case VarSymbol(sym) if !sym.isMethod && !sym.isModule && sym.isMutable => p.Decl.Var(pmods(sym), List(sym.rawcvt(g.ValDef(sym))), sym.info.depoly.cvt)
           // TODO: infer the difference between Defs and Procedures
           case DefSymbol(sym) => p.Decl.Def(pmods(sym), sym.rawcvt(g.DefDef(sym, g.EmptyTree)), ptparams(sym.typeParams), pexplicitss(sym), pimplicits(sym), sym.info.finalResultType.cvt)
-          case AbstractTypeSymbol(sym) => p.Decl.Type(pmods(sym), sym.rawcvt(g.TypeDef(sym)), ptparams(sym.typeParams), sym.info.depoly.cvt)
+          case AbstractTypeSymbol(sym) => p.Decl.Type(pmods(sym), sym.rawcvt(g.TypeDef(sym)), ptparams(sym.typeParams), pbounds(sym.info.depoly))
           case AliasTypeSymbol(sym) => p.Defn.Type(pmods(sym), sym.rawcvt(g.TypeDef(sym, g.TypeTree(sym.info))), ptparams(sym.typeParams), sym.info.depoly.cvt)
         })
         p.Type.Compound(parents.cvt, pstmts)(hasBraces = true) // TODO: infer hasBraces
@@ -539,14 +546,13 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         // TODO: infer type placeholders where they were specified explicitly
         val pstmts: Seq[p.Stmt.Existential] = quantified.map({
           case ValSymbol(sym) => p.Decl.Val(pmods(sym), List(sym.rawcvt(g.ValDef(sym))), sym.info.depoly.cvt)
-          case AbstractTypeSymbol(sym) => p.Decl.Type(pmods(sym), sym.rawcvt(g.TypeDef(sym)), ptparams(sym.typeParams), sym.info.depoly.cvt)
+          case AbstractTypeSymbol(sym) => p.Decl.Type(pmods(sym), sym.rawcvt(g.TypeDef(sym)), ptparams(sym.typeParams), pbounds(sym.info.depoly))
         })
         p.Type.Existential(underlying.cvt, pstmts)
       case g.AnnotatedType(anns, underlying) =>
         p.Type.Annotate(underlying.cvt, panns(anns))
       case g.TypeBounds(lo, hi) =>
-        // TODO: infer which of the bounds were specified explicitly by the user
-        p.Aux.TypeBounds(Some(lo.cvt), Some(hi.cvt))
+        unreachable
       // NOTE: these types have no equivalent in Palladium
       // e.g. q"List.apply".tpe is not some mysterious MethodType, but is an error, because List.apply is actually not a well-formed term
       // if one wants to analyze q"List.apply" in e.g. q"List.apply(2)", then it's possible to do Term.defn
@@ -558,6 +564,8 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         unreachable
       case g.PolyType(_, _) =>
         unreachable
+      // NOTE: the types below are only used internally by the typechecker
+      // as far as I understand, it's impossible for them to linger past typer
       case g.WildcardType =>
         unreachable
       case g.BoundedWildcardType(_) =>
