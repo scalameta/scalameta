@@ -248,7 +248,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         val ptpe = if (!tpt.wasEmpty) Some(tpt.cvt) else None
         require(rhs.isEmpty)
         p.Aux.Self(pname, ptpe)(hasThis = false) // TODO: figure out hasThis
-      case in @ g.ValDef(_, _, tpt @ g.TypeTree(), rhs) if pt <:< typeOf[p.Member] =>
+      case in @ g.ValDef(_, _, tpt @ g.TypeTree(), rhs) if pt <:< typeOf[p.AuxValOrVar] =>
         // TODO: collapse desugared representations of pattern-based vals and vars
         // TODO: figure out whether a var def has an explicitly written underscore as its body or not
         require(in.symbol.isTerm)
@@ -363,12 +363,18 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         require(in.symbol.isTerm)
         require(name == in.symbol.name)
         p.Pat.Bind(in.symbol.asTerm.rawcvt(in), tree.cvt_!)
+      case in @ g.Apply(tpt @ g.TypeTree(), args) =>
+        val companion = tpt.tpe.typeSymbol.companionSymbol
+        assert(companion.isTerm)
+        // TODO: figure out whether targs were explicitly specified or not
+        p.Pat.Extract(companion.asTerm.rawcvt(g.Ident(companion)), tpt.tpe.typeArgs.cvt, args.cvt_!)
       case in @ g.UnApply(q"$ref.$unapply[..$targs](`<unapply-selector>`)", args) =>
         // TODO: infer Extract vs ExtractInfix
         // TODO: infer whether it was an application or a Tuple
         // TODO: also figure out Interpolate
+        // TODO: figure out whether targs were explicitly specified or not
         require(unapply == g.TermName("unapply") || unapply == g.TermName("unapplySeq"))
-        p.Pat.Extract(ref.cvt_!, targs.map(_.asInstanceOf[g.TypeTree]).cvt, args.cvt_!).withScratchpad(in.symbol)
+        p.Pat.Extract(ref.cvt_!, targs.map(_.asInstanceOf[g.TypeTree]).cvt, args.cvt_!)
       case g.Function(params, body) =>
         // TODO: recover eta-expansions that typer desugars to lambdas
         // TODO: recover shorthand function syntax
