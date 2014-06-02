@@ -191,9 +191,9 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
       def pexplicitss(gsym: g.Symbol): Seq[Seq[p.Aux.Param.Named]] = if (pimplicits(gsym).nonEmpty) pvparamss(gsym.info.paramss).dropRight(1) else pvparamss(gsym.info.paramss)
       def pimplicits(gsym: g.Symbol): Seq[p.Aux.Param.Named] = pvparams(gsym.info.paramss.flatten.filter(_.isImplicit))
       private def pclassof(gtype: g.Type): p.Term.ApplyType = {
-        val mothershipCore = g.gen.mkAttributedRef(g.currentRun.runDefinitions.Predef_classOf)
-        val orig = g.TypeApply(mothershipCore, List(g.TypeTree(gtype))).setType(g.appliedType(mothershipCore.tpe, gtype))
-        (orig.cvt: p.Term.ApplyType)
+        val mothershipCore = g.gen.mkAttributedRef(g.currentRun.runDefinitions.Predef_classOf).asInstanceOf[g.Select]
+        val scratchpad = g.TypeApply(mothershipCore, List(g.TypeTree(gtype))).setType(g.appliedType(mothershipCore.tpe, gtype))
+        p.Term.ApplyType(mothershipCore.cvt, List(gtype.cvt)).withScratchpad(scratchpad)
       }
       type pScalaLitType = p.Lit{type ThisType >: p.Lit.Bool with p.Lit.Int with p.Lit.Long with p.Lit.Float with p.Lit.Double with p.Lit.String with p.Lit.Char <: p.Lit}
       type pScalaConst = p.Term{type ThisType >: p.Lit.Null with p.Lit.Unit with p.Lit.Bool with p.Lit.Int with p.Lit.Long with p.Lit.Float with p.Lit.Double with p.Lit.String with p.Lit.Char with p.Term.ApplyType <: p.Term}
@@ -267,6 +267,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         if (in.symbol.isConstructor) {
           require(!in.symbol.isPrimaryConstructor)
           val q"{ $_(...$argss); ..$stats; () }" = body
+          // TODO: recover named/default arguments
           p.Ctor.Secondary(pmods(in.symbol), explicitss.cvt, implicits.cvt, argss.cvt, stats.cvt)
         } else if (in.symbol.isDeferred) p.Decl.Def(pmods(in.symbol), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt, implicits.cvt, tpt.cvt) // TODO: infer procedures
         else p.Defn.Def(pmods(in.symbol), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt, implicits.cvt, if (!tpt.wasEmpty) Some(tpt.cvt) else None, body.cvt)
@@ -329,8 +330,8 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
               incompleteParents
           }
           parents map {
-            // TODO: recover names and defaults (https://github.com/scala/scala/pull/3753/files#diff-269d2d5528eed96b476aded2ea039444R617)
-            case q"${tpt: g.TypeTree}(...$argss)" => p.Aux.Parent(tpt.cvt, (argss.cvt: Seq[Seq[p.Term]]))
+            // TODO: recover names and defaults
+            case q"${tpt: g.TypeTree}(...$argss)" => p.Aux.Parent(tpt.cvt, argss.cvt)
             case _ => unreachable
           }
         }
@@ -412,8 +413,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         // TODO: recover names and defaults (https://github.com/scala/scala/pull/3753/files#diff-269d2d5528eed96b476aded2ea039444R617)
         // TODO: figure out whether type arguments were inferred or not
         val q"new $tpt(...$argss)" = in
-        val supertpt = tpt.duplicate.setSymbol(in.symbol)
-        val supercall = p.Aux.Parent(supertpt.cvt, argss.cvt).withScratchpad(in)
+        val supercall = p.Aux.Parent(tpt.tpe.cvt, argss.cvt).withScratchpad(in)
         val self = p.Aux.Self(None, None)(hasThis = false).withScratchpad(tpt)
         val templ = p.Aux.Template(Nil, List(supercall), self, stats = Nil)(hasBraces = false).withScratchpad(in)
         p.Term.New(templ)
@@ -490,7 +490,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         unreachable
       case g.ThisType(sym) =>
         // TODO: infer whether thistpe originally corresponded to Some or None
-        p.Type.Singleton(g.This(sym).cvt)
+        p.Type.Singleton(g.This(sym).asInstanceOf[g.This].cvt)
       case g.SuperType(thistpe, supertpe) =>
         // TODO: infer whether supertpe originally corresponded to Some or None
         val p.Type.Singleton(p.Term.This(pthis)) = (thistpe.cvt: p.Type.Singleton)
