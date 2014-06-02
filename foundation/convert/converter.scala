@@ -453,9 +453,10 @@ package object internal {
           }
           def transform(tree: Tree): Tree = typingTransform(tree)((tree, api) => {
             def connect(convertee: Tree, force: Boolean): Tree = {
-              println(convertee.tpe.widen + " -> " + pt + (if (force) " !!!" else ""))
-              println(convert(convertee, convertee.tpe.widen, pt, allowDerived = true, allowDowncasts = force))
-              gen.mkAttributedRef(Predef_???).setType(NothingTpe)
+              // println(convertee.tpe.widen + " -> " + pt + (if (force) " !!!" else ""))
+              // println(convert(convertee, convertee.tpe.widen, pt, allowDerived = true, allowDowncasts = force))
+              // gen.mkAttributedRef(Predef_???).setType(NothingTpe)
+              api.typecheck(convert(convertee, convertee.tpe.widen, pt, allowDerived = true, allowDowncasts = force))
             }
             def transformApplyRememberingPts(app: Apply): Apply = {
               treeCopy.Apply(app, api.recur(app.fun), app.args.zipWithIndex.map({ case (arg, i) =>
