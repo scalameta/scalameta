@@ -3,7 +3,8 @@ package convert
 
 import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
-import scala.reflect.macros.whitebox.Context
+import scala.reflect.macros.blackbox
+import scala.reflect.macros.whitebox
 import scala.collection.mutable
 import org.scalareflect.unreachable
 
@@ -11,7 +12,7 @@ class converter extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro ConverterMacros.converter
 }
 
-class ConverterMacros(val c: Context) {
+class ConverterMacros(val c: whitebox.Context) {
   import c.universe._
   import internal._
 
@@ -126,7 +127,7 @@ class ConverterMacros(val c: Context) {
           object $companion {
             def apply[In, Out](f: In => Out): $typeclass[In, Out] = new $typeclass[In, Out] { def apply(in: In): Out = f(in) }
             import _root_.scala.language.experimental.macros
-            implicit def materialize[In, Out]: $typeclass[In, Out] = macro _root_.org.scalareflect.convert.internal.Macros.materialize[In, Out]
+            implicit def materialize[In, Out]: $typeclass[In, Out] = macro _root_.org.scalareflect.convert.internal.BlackboxMacros.materialize[In, Out]
             ..$instanceDecls
           }
           ..$instanceImpls
@@ -148,10 +149,19 @@ package object internal {
   case class ComputedConvertersAttachment(converters: List[Converter])
 
   class names(xs: String*) extends scala.annotation.StaticAnnotation
-  def computeConverters[T](wrapper: Any)(x: T): Unit = macro Macros.computeConverters
-  def connectConverters[T](x: T): Any = macro Macros.connectConverters
+  def computeConverters[T](wrapper: Any)(x: T): Unit = macro WhiteboxMacros.computeConverters
+  def connectConverters[T](x: T): Any = macro WhiteboxMacros.connectConverters
 
-  class Macros(val c: Context) {
+  class BlackboxMacros(val c: blackbox.Context) {
+    import c.universe._
+    def materialize[In: WeakTypeTag, Out: WeakTypeTag]: Tree = {
+      val helper = new WhiteboxMacros(c.asInstanceOf[whitebox.Context])
+      val result = helper.materialize[In, Out](c.weakTypeTag[In].asInstanceOf[helper.c.WeakTypeTag[In]], c.weakTypeTag[Out].asInstanceOf[helper.c.WeakTypeTag[Out]])
+      result.asInstanceOf[Tree]
+    }
+  }
+
+  class WhiteboxMacros(val c: whitebox.Context) {
     import c.universe._
     import definitions._
     import c.internal._
