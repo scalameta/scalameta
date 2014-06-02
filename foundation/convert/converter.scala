@@ -393,7 +393,10 @@ package object internal {
       } else {
         val converters = loadConverters()
         def matchesIn(c: Converter) = (in <:< c.in) || (allowDowncasts && (c.in <:< in))
-        def matchesOut(c: Converter) = (c.out <:< out) || (allowDowncasts && (out <:< c.out))
+        def matchesOut(c: Converter) = {
+          def matchesOutTpe(cout: Type) = (cout <:< out) || (allowDowncasts && (out <:< cout))
+          extractIntersections(c.out).exists(matchesOutTpe)
+        }
         var matching = converters.filter(c => !c.derived || alsoLookIntoDerived).filter(c => matchesIn(c) && matchesOut(c))
         matching = matching.filter(c1 => !matching.exists(c2 => c1 != c2 && !(c1.in =:= c2.in) && (c1.in <:< c2.in)))
         matching match {
@@ -437,7 +440,7 @@ package object internal {
           def transform(tree: Tree): Tree = typingTransform(tree)((tree, api) => {
             def connect(convertee: Tree, force: Boolean): Tree = {
               println(convertee.tpe.widen + " -> " + pt + (if (force) " !!!" else ""))
-              if (!force) convert(convertee, convertee.tpe.widen, pt, alsoLookIntoDerived = true, allowDowncasts = force)
+              convert(convertee, convertee.tpe.widen, pt, alsoLookIntoDerived = true, allowDowncasts = force)
               gen.mkAttributedRef(Predef_???).setType(NothingTpe)
             }
             def transformApplyRememberingPts(app: Apply): Apply = {
@@ -454,12 +457,14 @@ package object internal {
             // TODO: think whether we can rebind polymorphic usages of cvt in a generic fashion
             // without hardcoding to every type constructor we're going to use
             tree match {
-              case q"$_.List.apply[$_](${Cvt(convertee, cvtPt, force)})" =>
+              case q"$_.List.apply[${wrappingPt: Type}](${Cvt(convertee, cvtPt, force)})" =>
                 pt = if (pt != WildcardType) pt.typeArgs.head else pt
+                refinePt(wrappingPt)
                 refinePt(cvtPt)
                 mkAttributedApply(List_apply, connect(convertee, force))
-              case q"$_.Some.apply[$_](${Cvt(convertee, cvtPt, force)})" =>
+              case q"$_.Some.apply[${wrappingPt: Type}](${Cvt(convertee, cvtPt, force)})" =>
                 pt = if (pt != WildcardType) pt.typeArgs.head else pt
+                refinePt(wrappingPt)
                 refinePt(cvtPt)
                 mkAttributedApply(Some_apply, connect(convertee, force))
               case Cvt(convertee, cvtPt, force) =>

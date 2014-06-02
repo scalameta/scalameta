@@ -257,7 +257,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
           case (true, false) => p.Decl.Val(pmods(in.symbol), List(in.symbol.asTerm.rawcvt(in)), tpt.cvt)
           case (true, true) => p.Decl.Var(pmods(in.symbol), List(in.symbol.asTerm.rawcvt(in)), tpt.cvt)
           case (false, false) => p.Defn.Val(pmods(in.symbol), List(in.symbol.asTerm.rawcvt(in)), if (!tpt.wasEmpty) Some(tpt.cvt) else None, rhs.cvt_!)
-          case (false, true) => p.Defn.Var(pmods(in.symbol), List(in.symbol.asTerm.rawcvt(in)), if (!tpt.wasEmpty) Some(tpt.cvt) else None, if (!rhs.isEmpty) Some(rhs.cvt_!) else None)
+          case (false, true) => p.Defn.Var(pmods(in.symbol), List(in.symbol.asTerm.rawcvt(in)), if (!tpt.wasEmpty) Some(tpt.cvt) else None, if (!rhs.isEmpty) Some[p.Term](rhs.cvt_!) else None)
         }
       case in @ g.DefDef(_, _, _, _, _, _) =>
         // TODO: figure out procedures
@@ -340,11 +340,13 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         p.Term.Block((stats :+ expr).cvt_!)
       case g.CaseDef(pat, guard, body) =>
         val q"..$stats" = body
-        p.Aux.Case(pat.cvt_!, if (guard.nonEmpty) Some(guard.cvt_!) else None, stats.cvt_!)
+        p.Aux.Case(pat.cvt_!, if (guard.nonEmpty) Some[p.Term](guard.cvt_!) else None, stats.cvt_!)
       case g.Alternative(fst :: snd :: Nil) =>
         p.Pat.Alternative(fst.cvt_!, snd.cvt_!)
       case in @ g.Alternative(hd :: rest) =>
         p.Pat.Alternative(hd.cvt_!, g.Alternative(rest).setType(in.tpe).asInstanceOf[g.Alternative].cvt)
+      case g.Ident(g.nme.WILDCARD) =>
+        p.Pat.Wildcard()
       case g.Star(g.Ident(g.nme.WILDCARD)) =>
         p.Pat.SeqWildcard()
       case in @ g.Bind(_, g.nme.WILDCARD) =>
@@ -449,9 +451,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
       case in @ g.Select(qual, _) =>
         require(in.symbol.isTerm) // NOTE: typename selections are impossible, because all TypTrees have already been converted to TypeTrees
         p.Term.Select(qual.cvt_!, in.symbol.asTerm.precvt(qual.tpe, in))(isPostfix = false) // TODO: figure out isPostfix
-      case g.Ident(g.nme.WILDCARD) if pt <:< typeOf[p.Pat] =>
-        p.Pat.Wildcard()
-      case in @ g.Ident(_) if pt <:< typeOf[p.Term] =>
+      case in @ g.Ident(_) =>
         require(in.symbol.isTerm) // NOTE: see the g.Select note
         in.symbol.asTerm.rawcvt(in)
       case g.ReferenceToBoxed(_) =>
