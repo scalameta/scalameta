@@ -173,19 +173,27 @@ package object internal {
     val Convert_derive = typeOf[org.scalareflect.convert.`package`.type].member(TermName("derive")).asMethod
     val SeqClass = symbolOf[scala.collection.immutable.Seq[_]]
     val RichCvt_cvt = typeOf[org.scalareflect.convert.`package`.RichCvt].member(TermName("cvt")).asMethod
+    val RichCvt_cvtbang = typeOf[org.scalareflect.convert.`package`.RichCvt].member(TermName("cvt_$bang")).asMethod
     val Any_asInstanceOf = AnyTpe.member(TermName("asInstanceOf")).asMethod
     val LeafAnnotation = symbolOf[org.scalareflect.adt.Internal.leaf]
     object Cvt {
       def unapply(x: Tree): Option[(Tree, Type, Boolean)] = {
         object RawCvt {
-          def unapply(x: Tree): Option[Tree] = x match {
-            case q"$_($convertee).$_" if x.symbol == RichCvt_cvt => Some(convertee)
+          def unapply(x: Tree): Option[(Tree, Boolean)] = x match {
+            case q"$_($convertee).$_" if x.symbol == RichCvt_cvt => Some((convertee, false))
+            case q"$_($convertee).$_" if x.symbol == RichCvt_cvtbang => Some((convertee, true))
             case _ => None
           }
         }
         object Ascribe {
           def unapply(x: Tree): Option[(Tree, Type)] = x match {
-            case Typed(x, pt) => Some((x, pt.tpe))
+            case Typed(x, tpt) =>
+              tpt.tpe match {
+                case AnnotatedType(unchecked :: Nil, nothing) if unchecked.tree.tpe =:= typeOf[unchecked] && nothing =:= NothingTpe =>
+                  Some((x, WildcardType))
+                case pt =>
+                  Some((x, pt))
+              }
             case _ => None
           }
         }
@@ -196,10 +204,9 @@ package object internal {
           }
         }
         x match {
-          case RawCvt(convertee) => Some((convertee, WildcardType, false))
-          case Ascribe(RawCvt(convertee), pt) => Some((convertee, pt, false))
-          case Cast(RawCvt(convertee), pt) => Some((convertee, pt, false))
-          case q"$_($convertee).$_: ${t: Type}" if x.symbol == RichCvt_cvt => Some((convertee, WildcardType, false))
+          case RawCvt(convertee, force) => Some((convertee, WildcardType, force))
+          case Ascribe(RawCvt(convertee, force), pt) => Some((convertee, pt, force))
+          case Cast(RawCvt(convertee, _), pt) => Some((convertee, pt, true))
           case _ => None
         }
       }
@@ -430,8 +437,7 @@ package object internal {
           def transform(tree: Tree): Tree = typingTransform(tree)((tree, api) => {
             def connect(convertee: Tree, force: Boolean): Tree = {
               println(convertee.tpe.widen + " -> " + pt + (if (force) " !!!" else ""))
-              if (force) ???
-              convert(convertee, convertee.tpe.widen, pt, alsoLookIntoDerived = true, allowDowncasts = force)
+              if (!force) convert(convertee, convertee.tpe.widen, pt, alsoLookIntoDerived = true, allowDowncasts = force)
               gen.mkAttributedRef(Predef_???).setType(NothingTpe)
             }
             def transformApplyRememberingPts(app: Apply): Apply = {
