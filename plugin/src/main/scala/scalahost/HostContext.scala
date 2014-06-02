@@ -83,12 +83,13 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         case _ => false
       }
       implicit class RichSymbol(gsym: g.Symbol) {
-        def precvt(pre: g.Type, in: g.Tree): p.Name = {
-          gsym.rawcvt(in).withScratchpad(pre)
+        type pTermOrTypeName = p.Name{type ThisType >: p.Term.Name with p.Type.Name <: p.Name}
+        def precvt(pre: g.Type, in: g.Tree): pTermOrTypeName = {
+          gsym.rawcvt(in).withScratchpad(pre).asInstanceOf[pTermOrTypeName]
         }
-        def rawcvt(in: g.Tree): p.Name = {
-          if (gsym.isTerm) p.Term.Name(alias(in))(isBackquoted = isBackquoted(in)).withScratchpad(gsym)
-          else if (gsym.isType) p.Type.Name(alias(in))(isBackquoted = isBackquoted(in)).withScratchpad(gsym)
+        def rawcvt(in: g.Tree): pTermOrTypeName = {
+          if (gsym.isTerm) p.Term.Name(alias(in))(isBackquoted = isBackquoted(in)).withScratchpad(gsym).asInstanceOf[pTermOrTypeName]
+          else if (gsym.isType) p.Type.Name(alias(in))(isBackquoted = isBackquoted(in)).withScratchpad(gsym).asInstanceOf[pTermOrTypeName]
           else unreachable
         }
         def eithercvt(in: g.Tree): p.Name.Either = {
@@ -187,7 +188,9 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         val orig = g.TypeApply(mothershipCore, List(g.TypeTree(gtype))).setType(g.appliedType(mothershipCore.tpe, gtype))
         (orig.cvt: p.Term.ApplyType)
       }
-      def pconst(gconst: g.Constant): p.Term = gconst.value match {
+      type pScalaLitType = p.Lit{type ThisType >: p.Lit.Bool with p.Lit.Int with p.Lit.Long with p.Lit.Float with p.Lit.Double with p.Lit.String with p.Lit.Char <: p.Lit}
+      type pScalaConst = p.Term{type ThisType >: p.Lit.Null with p.Lit.Unit with p.Lit.Bool with p.Lit.Int with p.Lit.Long with p.Lit.Float with p.Lit.Double with p.Lit.String with p.Lit.Char with p.Term.ApplyType <: p.Term}
+      def pconst(gconst: g.Constant): pScalaConst = (gconst.value match {
         case null => p.Lit.Null()
         case () => p.Lit.Unit()
         case v: Boolean => p.Lit.Bool(v)
@@ -201,7 +204,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         case v: Char => p.Lit.Char(v)
         case v: g.Type => pclassof(v)
         case v: g.Symbol => ??? // TODO: this is a super-crazy corner case that only appears in arguments of java annotations that refer to java enums
-      }
+      }).asInstanceOf[pScalaConst]
     }
     import Helpers._
     in match {
@@ -296,12 +299,16 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         // NOTE: SyntacticTemplate (based on UnMkTemplate, the basis of SyntacticClassDef and friends)
         // returns incorrect parents if input is typechecked, so we have to work around
         val SyntacticTemplate(earlydefns, _, self, stats) = in
-        val parents = {
+        val pparents = {
           // TODO: discern `... extends C()` and `... extends C`
-          val incompleteParents = in.parents.map(tpe => g.Apply(tpe, Nil))
-          g.treeInfo.firstConstructor(rawstats) match {
+          // TODO: figure out whether type arguments were inferred or not
+          val incompleteParents = in.parents.map(tpe => {
+            require(tpe.isInstanceOf[g.TypeTree])
+            g.Apply(tpe, Nil)
+          })
+          val parents = g.treeInfo.firstConstructor(rawstats) match {
             case g.DefDef(_, _, _, _, _, rawinit) =>
-              val rawsupercall = rawinit.collect { case app @ g.treeInfo.Applied(g.Select(g.Super(_, _), _), _, _) => app }.head
+              val gsupercall = rawinit.collect { case app @ g.treeInfo.Applied(g.Select(g.Super(_, _), _), _, _) => app }.head
               object prettifier extends g.Transformer {
                 override def transform(tree: g.Tree): g.Tree = tree match {
                   case g.TypeApply(g.Select(g.Super(_, _), _), _) | g.Select(g.Super(_, _), _) =>
@@ -310,12 +317,17 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
                     super.transform(tree)
                 }
               }
-              prettifier.transform(rawsupercall) +: incompleteParents.drop(1)
+              prettifier.transform(gsupercall) +: incompleteParents.drop(1)
             case g.EmptyTree =>
               incompleteParents
           }
+          parents map {
+            // TODO: recover names and defaults (https://github.com/scala/scala/pull/3753/files#diff-269d2d5528eed96b476aded2ea039444R617)
+            case q"${tpt: g.TypeTree}(...$argss)" => p.Aux.Parent(tpt.cvt, (argss.cvt: Seq[Seq[p.Term]]))
+            case _ => unreachable
+          }
         }
-        p.Aux.Template(earlydefns.cvt, parents.cvt, self.cvt, stats.cvt)(hasBraces = true) // TODO: infer hasBraces
+        p.Aux.Template(earlydefns.cvt, pparents, self.cvt, stats.cvt)(hasBraces = true) // TODO: infer hasBraces
       case g.Block(stats, expr) =>
         p.Term.Block((stats :+ expr).cvt)
       case g.CaseDef(pat, guard, body) =>
@@ -325,8 +337,6 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         p.Pat.Alternative(fst.cvt, snd.cvt)
       case in @ g.Alternative(hd :: rest) =>
         p.Pat.Alternative(hd.cvt, g.Alternative(rest).setType(in.tpe).cvt)
-      case g.Ident(g.nme.WILDCARD) =>
-        p.Pat.Wildcard()
       case g.Star(g.Ident(g.nme.WILDCARD)) =>
         p.Pat.SeqWildcard()
       case in @ g.Bind(_, g.nme.WILDCARD) =>
@@ -359,7 +369,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         unreachable
       case g.If(cond, thenp, elsep) =>
         // TODO: infer the difference between If.Then and If.ThenElse
-        p.Term.If.ThenElse(cond.cvt, thenp.cvt, elsep.cvt): p.Term.If
+        p.Term.If.ThenElse(cond.cvt, thenp.cvt, elsep.cvt)
       case g.Match(selector, cases) =>
         // TODO: it's cute that Term.Cases is a Term, but what tpe shall we return for it? :)
         p.Term.Match(selector.cvt, p.Term.Cases(cases.cvt))
@@ -375,22 +385,32 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         p.Term.Throw(expr.cvt)
       case g.New(_) =>
         unreachable
+      case g.Typed(expr, tpt @ g.TypeTree()) if pt <:< typeOf[p.Term] =>
+        // TODO: infer the difference between Ascribe and Annotate
+        p.Term.Ascribe(expr.cvt, tpt.cvt)
+      case g.Typed(expr, tpt @ g.TypeTree()) if pt <:< typeOf[p.Pat] =>
+        p.Pat.Typed(expr.cvt, tpt.cvt)
+      case in @ g.TypeApply(fn, targs) =>
+        val pfn = fn match {
+          case fn @ g.Ident(_) => fn.symbol.asTerm.rawcvt(fn)
+          case fn @ g.Select(_, _) => (fn.cvt: p.Term.Select)
+          case _ => unreachable
+        }
+        if (targs.exists{ case tt: g.TypeTree => tt.wasEmpty }) pfn
+        else p.Term.ApplyType(pfn, targs.map(_.asInstanceOf[g.TypeTree]).cvt)
       case in @ g.Apply(g.Select(g.New(_), g.nme.CONSTRUCTOR), _) =>
         // TODO: infer the difference between `new X` vs `new X()`
         // TODO: undo desugarings of stuff like `new X {}`
         // TODO: strip off inferred type and value arguments (but be careful to not remove explicitly provided arguments!)
+        // TODO: recover names and defaults (https://github.com/scala/scala/pull/3753/files#diff-269d2d5528eed96b476aded2ea039444R617)
+        // TODO: figure out whether type arguments were inferred or not
         val q"new $tpt(...$argss)" = in
         val supertpt = tpt.duplicate.setSymbol(in.symbol)
         val supercall = p.Aux.Parent(supertpt.cvt, argss.cvt).withScratchpad(in)
         val self = p.Aux.Self(None, None)(hasThis = false).withScratchpad(tpt)
         val templ = p.Aux.Template(Nil, List(supercall), self, stats = Nil)(hasBraces = false).withScratchpad(in)
         p.Term.New(templ)
-      case g.Typed(expr, tpt @ g.TypeTree()) if pt <:< typeOf[p.Term] =>
-        // TODO: infer the difference between Ascribe and Annotate
-        p.Term.Ascribe(expr.cvt, tpt.cvt)
-      case g.Typed(expr, tpt @ g.TypeTree()) if pt <:< typeOf[p.Pat] =>
-        p.Pat.Typed(expr.cvt, tpt.cvt)
-      case _: g.Apply | _: g.TypeApply =>
+      case in @ g.Apply(_, _) =>
         // TODO: infer the difference between Apply, ApplyInfix, ApplyUnary and Update
         // TODO: infer whether it was an application or a Tuple
         // TODO: recover names and defaults (https://github.com/scala/scala/pull/3753/files#diff-269d2d5528eed96b476aded2ea039444R617)
@@ -399,21 +419,15 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         // TODO: undo the for desugaring
         // TODO: undo the Lit.Symbol desugaring
         // TODO: undo the interpolate desugaring
-        def loopParent(in: g.Tree, argss: List[List[p.Term]]): p.Tree = in match {
-          case g.Apply(fun, args) if g.isImplicitMethodType(fun.tpe) => loopParent(fun, argss)
-          case g.Apply(fun, args) => loopParent(fun, argss :+ args.cvt)
-          case g.TypeTree() => p.Aux.Parent(in.cvt, argss)
+        type pScalaApply = p.Term{ type ThisType >: p.Term.Name with p.Term.Select with p.Term.Apply with p.Term.ApplyType <: p.Term }
+        def loop(in: g.Tree): pScalaApply = in match {
+          case g.Apply(fn, args) if g.isImplicitMethodType(fn.tpe) => loop(fn).withScratchpad(in).asInstanceOf[pScalaApply]
+          case g.Apply(fn, args) => p.Term.Apply(loop(fn), args.cvt).withScratchpad(in)
+          case in: g.TypeApply => in.cvt
+          case in: g.Ident => in.symbol.asTerm.rawcvt(in)
+          case in: g.Select => in.cvt
         }
-        def loopVanilla(in: g.Tree): p.Term = in match {
-          case g.Apply(fun, args) if g.isImplicitMethodType(fun.tpe) => loopVanilla(fun)
-          case g.Apply(fun, args) => p.Term.Apply(loopVanilla(fun), args.cvt).withScratchpad(in)
-          case g.TypeApply(fun, targs) if targs exists { case tt: g.TypeTree => tt.wasEmpty } => loopVanilla(fun)
-          case g.TypeApply(fun, targs) => p.Term.ApplyType(loopVanilla(fun), targs.cvt).withScratchpad(in)
-          case _ => (in.cvt: p.Term)
-        }
-        val in1 = in.asInstanceOf[g.Tree]
-        val core = g.treeInfo.dissectApplied(in1).core
-        if (core.isTerm) loopVanilla(in1) else loopParent(in1, Nil)
+        loop(in)
       case in @ g.ApplyDynamic(_, _) =>
         unreachable
       case in @ g.Super(qual @ g.This(_), mix) =>
@@ -425,11 +439,14 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         p.Term.This(if (qual != g.tpnme.EMPTY) Some(in.symbol.eithercvt(in)) else None)
       case in: g.PostfixSelect =>
         unreachable
-      case in @ g.Select(qual, name) =>
-        require(in.symbol.isTerm)
+      case in @ g.Select(qual, _) =>
+        require(in.symbol.isTerm) // NOTE: typename selections are impossible, because all TypTrees have already been converted to TypeTrees
         p.Term.Select(qual.cvt, in.symbol.asTerm.precvt(qual.tpe, in))(isPostfix = false) // TODO: figure out isPostfix
-      case in @ g.Ident(name) =>
-        in.symbol.rawcvt(in)
+      case g.Ident(g.nme.WILDCARD) if pt <:< typeOf[p.Pat] =>
+        p.Pat.Wildcard()
+      case in @ g.Ident(_) if pt <:< typeOf[p.Term] =>
+        require(in.symbol.isTerm) // NOTE: see the g.Select note
+        in.symbol.asTerm.rawcvt(in)
       case g.ReferenceToBoxed(_) =>
         ???
       case g.Literal(const) =>
@@ -451,7 +468,8 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         // 1) some originals are attributed only partially
         // 2) some originals are incomplete (e.g. for compound types iirc)
         // therefore I think we shouldn't use originals at the moment, so I'm marking g.TypTree as unreachable
-        (in.tpe.cvt: p.Type)
+        type pScalaType = p.Type{ type ThisType >: p.Type.Name with p.Type.Select with p.Type.Project with p.Type.Singleton with p.Type.Apply with p.Type.Compound with p.Type.Existential with p.Type.Annotate with p.Lit.Bool with p.Lit.Int with p.Lit.Long with p.Lit.Float with p.Lit.Double with p.Lit.String with p.Lit.Char <: p.Type }
+        (in.tpe.cvt: pScalaType)
       case g.TypeTreeWithDeferredRefCheck() =>
         ???
       case _: g.TypTree =>
@@ -487,22 +505,22 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         p.Type.Singleton(ref)
       case g.ConstantType(const) =>
         pconst(const) match {
-          case lit: p.Lit => lit
+          case lit: p.Lit => lit.asInstanceOf[pScalaLitType]
           // TODO: can Literal(Constant(_: Type)) or Literal(Constant(_: Symbol)) ever end up in patterns?
           case _ => unreachable
         }
       case g.TypeRef(pre, sym, args) =>
         // TODO: this loses information if sym was brought into scope with a renaming import
         require(sym.isType)
-        val ref = (pre match {
+        val ref = pre match {
           case g.NoPrefix =>
             sym.asType.rawcvt(g.Ident(sym))
           case _: g.SingletonType =>
             val p.Type.Singleton(preref) = pre.cvt.asInstanceOf[p.Type.Singleton]
-            p.Type.Select(preref, sym.asType.precvt(pre, g.Ident(sym)))
+            p.Type.Select(preref, sym.asType.precvt(pre, g.Ident(sym))).withScratchpad(in)
           case _ =>
-            p.Type.Project(pre.cvt, sym.asType.precvt(pre, g.Ident(sym)))
-        }).withScratchpad(in)
+            p.Type.Project(pre.cvt, sym.asType.precvt(pre, g.Ident(sym))).withScratchpad(in)
+        }
         // TODO: infer whether that was Apply, Function or Tuple
         // TODO: discern Apply and ApplyInfix
         if (args.isEmpty) ref

@@ -88,7 +88,7 @@ class ConverterMacros(val c: Context) {
       val computeParts = instances.map({
         case Instance(_, _, Nil, _, _) => unreachable
         case Instance(_, _, clause :: Nil, _, _) => clause
-        case Instance(in, _, clauses, _, _) => cq"in: $in => in match { case ..$clauses }"
+        case Instance(in, _, clauses, _, _) => atPos(clauses.head.pos)(cq"in: $in => in match { case ..$clauses }")
       })
       val computeConverters = atPos(ddef.pos)(q"""
         _root_.org.scalareflect.convert.internal.computeConverters($wrapper){
@@ -164,6 +164,7 @@ package object internal {
     val SeqClass = symbolOf[scala.collection.immutable.Seq[_]]
     val RichCvt_cvt = typeOf[org.scalareflect.convert.`package`.RichCvt].member(TermName("cvt")).asMethod
     val Any_asInstanceOf = AnyTpe.member(TermName("asInstanceOf")).asMethod
+    val LeafAnnotation = symbolOf[org.scalareflect.adt.Internal.leaf]
     object Cvt {
       def unapply(x: Tree): Option[(Tree, Type, Boolean)] = {
         object RawCvt {
@@ -204,8 +205,8 @@ package object internal {
       val q"{ ${dummy @ q"def $_(in: $_): $_ = { ..$prelude; in match { case ..$clauses } }"}; () }" = x
       def toPalladiumConverters: List[SharedConverter] = {
         def precisetpe(tree: Tree): Type = tree match {
-          case If(_, thenp, elsep) => cleanLub(List(precisetpe(thenp), precisetpe(elsep)))
-          case Match(_, cases) => cleanLub(cases.map(tree => precisetpe(tree.body)))
+          case If(_, thenp, elsep) => lub(List(precisetpe(thenp), precisetpe(elsep)))
+          case Match(_, cases) => lub(cases.map(tree => precisetpe(tree.body)))
           case Block(_, expr) => precisetpe(expr)
           case tree => tree.tpe
         }
@@ -227,8 +228,14 @@ package object internal {
           clauses.foreach(clause => {
             val body = clause.body
             if (body.symbol != Scalareflect_unreachable && body.symbol != Predef_??? && body.symbol != Convert_derive) {
-              if (body.tpe =:= NothingTpe) { isValid = false; c.error(clause.pos, "must not convert to Nothing") }
-              if (!(precisetpe(body) <:< typeOf[scala.reflect.core.Tree])) { isValid = false; c.error(clause.pos, s"must only convert to Palladium trees, found ${precisetpe(body)}") }
+              val tpe = precisetpe(body)
+              if (tpe =:= NothingTpe) { isValid = false; c.error(clause.pos, "must not convert to Nothing") }
+              if (!(tpe <:< typeOf[scala.reflect.core.Tree])) { isValid = false; c.error(clause.pos, s"must only convert to Palladium trees, found ${precisetpe(body)}") }
+              val components = extractIntersections(tpe)
+              components.foreach(component => {
+                val isLeaf = component.typeSymbol.annotations.exists(_.tree.tpe.typeSymbol == LeafAnnotation)
+                if (!isLeaf) { isValid = false; c.error(clause.pos, s"must only convert to @ast classes or intersections thereof, found $tpe") }
+              })
             }
           })
           isValid
@@ -302,9 +309,11 @@ package object internal {
           if (unmatched.nonEmpty) c.error(c.enclosingPosition, "@converter is not exhaustive in its outputs; missing: " + unmatched)
           unmatched.isEmpty
         }
-        // val tups = clauses.map{ case CaseDef(pat, _, body) => (pat.tpe.toString.replace("HostContext.this.", ""), precisetpe(body).toString.replace("scala.reflect.core.", "p.")) }
-        // val max = tups.map(_._1.length).max
-        // tups.foreach{ case (f1, f2) => println(f1 + (" " * (max - f1.length + 5)) + f2) }
+        // val tups = clauses.map{ case CaseDef(pat, _, body) => (pat.tpe.toString.replace("HostContext.this.", ""), cleanLub(precisetpe(body) :: Nil).toString.replace("scala.reflect.core.", "p."), precisetpe(body).toString.replace("scala.reflect.core.", "p.")) }
+        // val max1 = tups.map(_._1.length).max
+        // val max2 = tups.map(_._2.length).max
+        // tups.foreach{ case (f1, f2, f3) => println(f1 + (" " * (max1 - f1.length + 5)) + f2 + (" " * (max2 - f2.length + 5)) + f3) }
+        // ???
         val isValid = List(validateAllowedInputs(), validateAllowedOutputs(), validateExhaustiveInputs(), validateExhaustiveOutputs()).forall(Predef.identity)
         if (isValid) {
           val nontrivialClauses = clauses.filter(clause => clause.body.symbol != Scalareflect_unreachable && clause.body.symbol != Predef_???)
@@ -327,6 +336,7 @@ package object internal {
         case _ => c.abort(c.enclosingPosition, "unknown target: " + target.name)
       }
       target.updateAttachment(ComputedConvertersAttachment(converters))
+      // TODO: also persist the converters in an annotation on target in order to support separate compilation
       q""
     }
     def loadConverters(): List[Converter] = {
@@ -452,8 +462,22 @@ package object internal {
       object ThisType { def unapply(sym: Symbol): Boolean = sym.name == TypeName("ThisType") }
       lub(tpes) match {
         case RefinedType(underlying :: Nil, Scope(ThisType())) => underlying
-        case RefinedType(parents, Scope(ThisType())) => refinedType(parents, newScopeWith())
+        case RefinedType(parents, Scope(ThisType())) => cleanLub(parents)
         case lub => lub
+      }
+    }
+    def extractIntersections(tpe: Type): List[Type] = {
+      object Scope { def unapplySeq(scope: Scope): Some[Seq[Symbol]] = Some(scope.toList) }
+      object ThisType { def unapply(sym: Symbol): Option[Symbol] = if (sym.name == TypeName("ThisType")) Some(sym) else None }
+      tpe.dealias match {
+        case RefinedType(_, Scope(ThisType(sym))) =>
+          sym.info match {
+            case TypeBounds(RefinedType(parents, Scope()), _) => parents
+            case TypeBounds(parent, _) => List(parent)
+            case _ => unreachable
+          }
+        case tpe =>
+          List(tpe)
       }
     }
     def mkAttributedApply(m: MethodSymbol, arg: Tree): Apply = {
