@@ -48,9 +48,6 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
 
   def attrs(tree: Tree): Seq[Attribute] = ???
 
-  // TODO:
-  // 4) ensure that `in` is attributed before doing any pattern match
-
   // NOTE: we only handle trees and types
   // NOTE: can't use MemberDef.mods, because they get their annotations erased and moved to Symbol.annotations during typechecking
   // NOTE: can't convert symbols, because that's quite unsafe: a lot of symbols don't make sense without prefixes
@@ -215,8 +212,17 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         case v: g.Type => pclassof(v)
         case v: g.Symbol => ??? // TODO: this is a super-crazy corner case that only appears in arguments of java annotations that refer to java enums
       }).asInstanceOf[pScalaConst]
+      def isFullyAttributed(in: Any): Boolean = in match {
+        case gtree: g.Tree => gtree.forAll(sub => {
+          !sub.isErroneous &&
+          (sub.canHaveAttrs ==> (sub.tpe != null)) &&
+          ((sub.canHaveAttrs && sub.hasSymbolField) ==> (sub.symbol != null && sub.symbol != g.NoSymbol))
+        })
+        case _ => true
+      }
     }
     import Helpers._
+    if (!isFullyAttributed(in)) sys.error(s"can't convert not fully attributed Scala tree to Palladium: $in")
     in match {
       case g.EmptyTree =>
         unreachable

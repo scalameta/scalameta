@@ -121,11 +121,14 @@ class ConverterMacros(val c: whitebox.Context) {
       ))
       val instanceImpls = instances.filter(!_.notImplemented).map(instance => atPos(instance.pos)(
         q"""
-          private def ${instance.impl}(in: ${instance.in}): $companion.${instance.sig}.Out = _root_.org.scalareflect.convert.internal.connectConverters {
-            val $helperInstance = new $helperClass(in)
-            import $helperInstance._
-            ..${prelude.collect { case imp: Import => imp }}
-            in match { case ..${instance.clauses} }
+          private def ${instance.impl}(in: ${instance.in}): $companion.${instance.sig}.Out = {
+            val out = _root_.org.scalareflect.convert.internal.connectConverters {
+              val $helperInstance = new $helperClass(in)
+              import $helperInstance._
+              ..${prelude.collect { case imp: Import => imp }}
+              in match { case ..${instance.clauses} }
+            }
+            out.appendScratchpad(in)
           }
         """
       ))
