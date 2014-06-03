@@ -97,11 +97,11 @@ class TermSuite extends ParseSuite {
   }
 
   test("return") {
-    val Return(None) = term("return")
+    val Return.Unit() = term("return")
   }
 
   test("return 1") {
-    val Return(Some(Lit.Int(1))) = term("return 1")
+    val Return.Expr(Lit.Int(1)) = term("return 1")
   }
 
   test("throw 1") {

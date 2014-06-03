@@ -1022,7 +1022,8 @@ abstract class Parser { parser =>
       }
     case RETURN =>
       in.skipToken()
-      Term.Return(if (isExprIntro) Some(expr()) else None)
+      if (isExprIntro) Term.Return.Expr(expr())
+      else Term.Return.Unit()
     case THROW =>
       in.skipToken()
       Term.Throw(expr())

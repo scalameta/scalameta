@@ -85,7 +85,11 @@ object Term {
   }
   @ast class Assign(lhs: Term.Ref, rhs: Term) extends Term
   @ast class Update(lhs: Apply, rhs: Term) extends Term
-  @ast class Return(expr: Option[Term]) extends Term
+  @branch trait Return extends Term { def expr: Term }
+  object Return {
+    @ast class Unit() extends Return { def expr: Term = Lit.Unit() }
+    @ast class Expr(expr: Term) extends Return
+  }
   @ast class Throw(expr: Term) extends Term
   @ast class Ascribe(expr: Term, tpe: Type) extends Term
   @ast class Annotate(expr: Term, annots: Seq[Mod.Annot] @nonEmpty) extends Term with Has.Mods {
