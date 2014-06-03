@@ -26,6 +26,14 @@ import scala.reflect.syntactic.SyntacticInfo._
 // TODO: implement scaladoc with palladium
 // TODO: add moar requires
 // TODO: add tree for comments
+// TODO: If, Try, Return, TypeBounds => can we provide a completely transparent option-last interface for them
+//       i.e. `If(cond, then)` should work, `If(_, _, _: Term)` should work either, but `if.else` and `if.hasElse` should be Option-based
+//       would that make sense? would that be okay to implement?
+// NOTE: other fields that don't have syntactically reasonable defaults:
+//          * This.qual, Super.thisp, Super.superp
+//          * Private.within, Protected.within
+//          * Case.cond, Named.default, Self.name
+//          * XXX.decltpe
 
 @root trait Tree extends Product {
   type ThisType <: Tree
@@ -467,7 +475,9 @@ object Aux {
   }
   @ast class TypeBounds(decllo: Option[Type], declhi: Option[Type]) extends Tree {
     def lo: Type = decllo.getOrElse(???) // TODO: t"Nothing"
+    def hasLo: Boolean = decllo.isDefined
     def hi: Type = declhi.getOrElse(???) // TODO: t"Any"
+    def hasHi: Boolean = declhi.isDefined
   }
   @ast class Super(thisp: Option[core.Name.Either], superp: Option[Type.Name]) extends Term.Qualifier with Type.Qualifier
   @branch trait ValOrVar extends Stmt.Template with Has.Mods // NOTE: vals and vars are not members!
