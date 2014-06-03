@@ -234,8 +234,8 @@ object ShowCode {
         s(pearly, pparents, pbody)
       }
     case t: TypeBounds =>
-      s(t.lo.map { lo => s(" >: ", lo) }.getOrElse(s()),
-        t.hi.map { hi => s(" <: ", hi) }.getOrElse(s()))
+      s(t.decllo.map { lo => s(" >: ", lo) }.getOrElse(s()),
+        t.declhi.map { hi => s(" <: ", hi) }.getOrElse(s()))
     case t: Case  =>
       s("case ", t.pat, t.cond.map { cond => s(" if ", cond) }.getOrElse(s()), " =>", r(t.stats.map(i(_)), ";"))
     case t: Param.Anonymous => s(t.mods, "_", t.decltpe)

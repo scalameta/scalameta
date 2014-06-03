@@ -461,7 +461,10 @@ object Aux {
                      viewBounds: Seq[core.Type],
                      bounds: Aux.TypeBounds) extends TypeParam with Member.Type with Has.TypeName
   }
-  @ast class TypeBounds(lo: Option[Type], hi: Option[Type]) extends Tree
+  @ast class TypeBounds(decllo: Option[Type], declhi: Option[Type]) extends Tree {
+    def lo: Type = decllo.getOrElse(???) // TODO: t"Nothing"
+    def hi: Type = declhi.getOrElse(???) // TODO: t"Any"
+  }
   @ast class Super(thisp: Option[core.Name.Either], superp: Option[Type.Name]) extends Term.Qualifier with Type.Qualifier
   @branch trait ValOrVar extends Stmt.Template with Has.Mods // NOTE: vals and vars are not members!
 }
