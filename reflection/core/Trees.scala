@@ -85,10 +85,10 @@ object Term {
   }
   @ast class Assign(lhs: Term.Ref, rhs: Term) extends Term
   @ast class Update(lhs: Apply, rhs: Term) extends Term
-  @branch trait Return extends Term { def expr: Term }
+  @branch trait Return extends Term { def expr: Term; def hasExpr: Boolean }
   object Return {
-    @ast class Unit() extends Return { def expr: Term = Lit.Unit() }
-    @ast class Expr(expr: Term) extends Return
+    @ast class Unit() extends Return { def expr: Term = Lit.Unit(); def hasExpr: Boolean = false }
+    @ast class Expr(expr: Term) extends Return { def hasExpr: Boolean = true }
   }
   @ast class Throw(expr: Term) extends Term
   @ast class Ascribe(expr: Term, tpe: Type) extends Term
@@ -104,11 +104,11 @@ object Term {
     require(stats.collect { case m: Member if m.isPkgObject => m }.isEmpty)
   }
 
-  @branch trait If extends Term { def cond: Term; def thenp: Term; def elsep: Term }
+  @branch trait If extends Term { def cond: Term; def thenp: Term; def elsep: Term; def hasElse: Boolean }
   object If {
     // TODO: maybe merge Then and ThenElse using flags?
-    @ast class Then(cond: Term, thenp: Term) extends If { def elsep: Term = Lit.Unit() }
-    @ast class ThenElse(cond: Term, thenp: Term, elsep: Term) extends If
+    @ast class Then(cond: Term, thenp: Term) extends If { def elsep: Term = Lit.Unit(); def hasElse: Boolean = false }
+    @ast class ThenElse(cond: Term, thenp: Term, elsep: Term) extends If { def hasElse: Boolean = true }
   }
 
   @ast class Match(scrut: Term, cases: Cases) extends Term
