@@ -50,9 +50,6 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
 
   // TODO:
   // 4) ensure that `in` is attributed before doing any pattern match
-  // 13) make sure that a cvt that unwraps and calls another cvt collects both original trees => don't use withScratchpad!
-  // 14) some scratchpads might contain an attributed tree, some - a tree with just a symbol, some - a type
-  // 15) structured scratchpads, not just tree/symbol/type, but actually meaningful case classes
 
   // NOTE: we only handle trees and types
   // NOTE: can't use MemberDef.mods, because they get their annotations erased and moved to Symbol.annotations during typechecking
@@ -61,6 +58,12 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
   // TODO: remember positions. actually, in scalac they are quite accurate, so it would be a shame to discard them
   @converter def toPalladium(in: Any, pt: Pt): Any = {
     object Helpers extends g.ReificationSupportImpl { self =>
+      // implicit class RichPalladiumTree[T <: p.Tree](val ptree: T) {
+      //   def appendScratchpad(x: Any): ptree.ThisType = ptree.mapScratchpad(_.map({
+      //     case xs: List[_] => xs :+ x
+      //     case y => sys.error(s"unexpected scratchpad $y for $ptree")
+      //   }).getOrElse(Nil))
+      // }
       object SyntacticTemplate {
         def unapply(templ: g.Template): Option[(List[g.Tree], List[g.Tree], g.ValDef, List[g.Tree])] = {
           self.UnMkTemplate.unapply(templ).map { case (parents, self, ctorMods, pvparamss, earlydefns, stats) => (earlydefns, parents, self, stats) }
@@ -85,11 +88,11 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
       implicit class RichSymbol(gsym: g.Symbol) {
         type pTermOrTypeName = p.Name{type ThisType >: p.Term.Name with p.Type.Name <: p.Name}
         def precvt(pre: g.Type, in: g.Tree): pTermOrTypeName = {
-          gsym.rawcvt(in).withScratchpad(pre).asInstanceOf[pTermOrTypeName]
+          gsym.rawcvt(in).appendScratchpad(pre).asInstanceOf[pTermOrTypeName]
         }
         def rawcvt(in: g.Tree): pTermOrTypeName = {
-          (if (gsym.isTerm) p.Term.Name(alias(in))(isBackquoted = isBackquoted(in)).withScratchpad(gsym)
-          else if (gsym.isType) p.Type.Name(alias(in))(isBackquoted = isBackquoted(in)).withScratchpad(gsym)
+          (if (gsym.isTerm) p.Term.Name(alias(in))(isBackquoted = isBackquoted(in)).appendScratchpad(gsym)
+          else if (gsym.isType) p.Type.Name(alias(in))(isBackquoted = isBackquoted(in)).appendScratchpad(gsym)
           else unreachable).asInstanceOf[pTermOrTypeName]
         }
         def eithercvt(in: g.Tree): p.Name.Either = {
@@ -98,7 +101,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
             if (gsym.isModuleClass) List(gsym.sourceModule.asModule, g.NoSymbol)
             else List(g.NoSymbol, gsym.asClass)
           }
-          p.Name.Either(alias(in))(isBackquoted(in)).withScratchpad(gsyms)
+          p.Name.Either(alias(in))(isBackquoted(in)).appendScratchpad(gsyms)
         }
       }
       implicit class RichSymbols(gsyms: List[g.Symbol]) {
@@ -107,7 +110,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
           require(gterm != g.NoSymbol || gtype != g.NoSymbol)
           require(gterm != g.NoSymbol ==> gterm.isTerm)
           require(gtype != g.NoSymbol ==> gtype.isType)
-          p.Name.Both(alias(in))(isBackquoted(in)).withScratchpad(gsyms)
+          p.Name.Both(alias(in))(isBackquoted(in)).appendScratchpad(gsyms)
         }
       }
       implicit class RichTermSymbol(gsym: g.TermSymbol) {
@@ -193,7 +196,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
       private def pclassof(gtype: g.Type): p.Term.ApplyType = {
         val mothershipCore = g.gen.mkAttributedRef(g.currentRun.runDefinitions.Predef_classOf).asInstanceOf[g.Select]
         val scratchpad = g.TypeApply(mothershipCore, List(g.TypeTree(gtype))).setType(g.appliedType(mothershipCore.tpe, gtype))
-        p.Term.ApplyType(mothershipCore.cvt, List(gtype.cvt)).withScratchpad(scratchpad)
+        p.Term.ApplyType(mothershipCore.cvt, List(gtype.cvt)).appendScratchpad(scratchpad)
       }
       type pScalaLitType = p.Lit{type ThisType >: p.Lit.Bool with p.Lit.Int with p.Lit.Long with p.Lit.Float with p.Lit.Double with p.Lit.String with p.Lit.Char <: p.Lit}
       type pScalaConst = p.Term{type ThisType >: p.Lit.Null with p.Lit.Unit with p.Lit.Bool with p.Lit.Int with p.Lit.Long with p.Lit.Float with p.Lit.Double with p.Lit.String with p.Lit.Char with p.Term.ApplyType <: p.Term}
@@ -225,7 +228,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         require(in.symbol.isClass)
         in match {
           case q"$_ class $_[..$_] $_(...$explicits)(implicit ..$implicits) extends { ..$_ } with ..$_ { $_ => ..$_ }" =>
-            val ctor = p.Ctor.Primary(pmods(in.symbol.primaryConstructor), explicits.cvt_!, implicits.cvt_!).withScratchpad(in.symbol.primaryConstructor)
+            val ctor = p.Ctor.Primary(pmods(in.symbol.primaryConstructor), explicits.cvt_!, implicits.cvt_!).appendScratchpad(in.symbol.primaryConstructor)
             p.Defn.Class(pmods(in.symbol), in.symbol.asClass.rawcvt(in), tparams.cvt, ctor, templ.cvt)
           case q"$_ trait $_[..$_] extends { ..$_ } with ..$_ { $_ => ..$_ }" =>
             p.Defn.Trait(pmods(in.symbol), in.symbol.asClass.rawcvt(in), tparams.cvt, templ.cvt)
@@ -421,9 +424,9 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         // TODO: recover names and defaults (https://github.com/scala/scala/pull/3753/files#diff-269d2d5528eed96b476aded2ea039444R617)
         // TODO: figure out whether type arguments were inferred or not
         val q"new $tpt(...$argss)" = in
-        val supercall = p.Aux.Parent(tpt.tpe.cvt, argss.cvt_!).withScratchpad(in)
-        val self = p.Aux.Self(None, None)(hasThis = false).withScratchpad(tpt)
-        val templ = p.Aux.Template(Nil, List(supercall), self, stats = Nil)(hasBraces = false).withScratchpad(in)
+        val supercall = p.Aux.Parent(tpt.tpe.cvt, argss.cvt_!).appendScratchpad(in)
+        val self = p.Aux.Self(None, None)(hasThis = false).appendScratchpad(tpt)
+        val templ = p.Aux.Template(Nil, List(supercall), self, stats = Nil)(hasBraces = false).appendScratchpad(in)
         p.Term.New(templ)
       case in @ g.Apply(_, _) =>
         // TODO: infer the difference between Apply, ApplyInfix, ApplyUnary and Update
@@ -436,8 +439,8 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         // TODO: undo the interpolate desugaring
         type pScalaApply = p.Term{ type ThisType >: p.Term.Name with p.Term.Select with p.Term.Apply with p.Term.ApplyType <: p.Term }
         def loop(in: g.Tree): pScalaApply = in match {
-          case g.Apply(fn, args) if g.isImplicitMethodType(fn.tpe) => loop(fn).withScratchpad(in).asInstanceOf[pScalaApply]
-          case g.Apply(fn, args) => p.Term.Apply(loop(fn), args.cvt_!).withScratchpad(in)
+          case g.Apply(fn, args) if g.isImplicitMethodType(fn.tpe) => loop(fn).appendScratchpad(in).asInstanceOf[pScalaApply]
+          case g.Apply(fn, args) => p.Term.Apply(loop(fn), args.cvt_!).appendScratchpad(in)
           case in: g.TypeApply => in.cvt
           case in: g.Ident => in.symbol.asTerm.rawcvt(in)
           case in: g.Select => in.cvt
@@ -502,7 +505,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         val p.Type.Singleton(p.Term.This(pthis)) = thistpe.cvt
         require(supertpe.typeSymbol.isType)
         val supersym = supertpe.typeSymbol.asType
-        p.Type.Singleton(p.Aux.Super(pthis, Some(supersym.rawcvt(g.Ident(supersym)).withScratchpad(in))))
+        p.Type.Singleton(p.Aux.Super(pthis, Some(supersym.rawcvt(g.Ident(supersym)).appendScratchpad(in))))
       case g.SingleType(pre, sym) =>
         // TODO: this loses information if sym was brought into scope with a renaming import
         require(sym.isTerm)
@@ -514,7 +517,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
             p.Term.Select(preref, sym.asTerm.precvt(pre, g.Ident(sym)))(isPostfix = false) // TODO: figure out isPostfix
           case _ =>
             unreachable
-        }).withScratchpad(in)
+        }).appendScratchpad(in)
         p.Type.Singleton(ref)
       case g.ConstantType(const) =>
         pconst(const) match {
@@ -530,9 +533,9 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
             sym.asType.rawcvt(g.Ident(sym))
           case _: g.SingletonType =>
             val p.Type.Singleton(preref) = pre.cvt
-            p.Type.Select(preref, sym.asType.precvt(pre, g.Ident(sym))).withScratchpad(in)
+            p.Type.Select(preref, sym.asType.precvt(pre, g.Ident(sym))).appendScratchpad(in)
           case _ =>
-            p.Type.Project(pre.cvt, sym.asType.precvt(pre, g.Ident(sym))).withScratchpad(in)
+            p.Type.Project(pre.cvt, sym.asType.precvt(pre, g.Ident(sym))).appendScratchpad(in)
         }
         // TODO: infer whether that was Apply, Function or Tuple
         // TODO: discern Apply and ApplyInfix
