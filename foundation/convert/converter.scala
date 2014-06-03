@@ -332,6 +332,7 @@ package object internal {
             sym.fullName != "scala.reflect.core.Term.If.Then" &&
             sym.fullName != "scala.reflect.core.Term.Interpolate" &&
             sym.fullName != "scala.reflect.core.Term.Placeholder" &&
+            sym.fullName != "scala.reflect.core.Term.Return.Unit" &&
             sym.fullName != "scala.reflect.core.Term.Tuple" &&
             sym.fullName != "scala.reflect.core.Term.Update" &&
             sym.fullName != "scala.reflect.core.Term.While" &&

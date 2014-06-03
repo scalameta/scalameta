@@ -400,7 +400,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         p.Term.Match(selector.cvt_!, p.Term.Cases(cases.cvt))
       case g.Return(expr) =>
         // TODO: figure out whether the return expression was specified explicitly by the user
-        p.Term.Return(Some(expr.cvt_!))
+        p.Term.Return.Expr(expr.cvt_!)
       case g.Try(body, catches, finalizer) =>
         // TODO: undo desugarings of `try foo catch bar`
         val catchp = if (catches.nonEmpty) Some(p.Term.Cases(catches.cvt)) else None
