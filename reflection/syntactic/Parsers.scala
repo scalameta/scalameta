@@ -354,21 +354,21 @@ abstract class Parser { parser =>
 /* ---------- TREE CONSTRUCTION ------------------------------------------- */
 
   /** Convert tree to formal parameter list. */
-  def convertToParams(tree: Term): List[Aux.Param] = tree match {
+  def convertToParams(tree: Term): List[Param] = tree match {
     case Term.Tuple(ts) => ts.toList flatMap convertToParam
     case _              => List(convertToParam(tree)).flatten
   }
 
   /** Convert tree to formal parameter. */
-  def convertToParam(tree: Term): Option[Aux.Param] = tree match {
+  def convertToParam(tree: Term): Option[Param] = tree match {
     case name: Name =>
-      Some(Aux.Param.Named(Nil, name.toTermName, None, None))
+      Some(Param.Named(Nil, name.toTermName, None, None))
     case Term.Placeholder() =>
-      Some(Aux.Param.Anonymous(Nil, None))
+      Some(Param.Anonymous(Nil, None))
     case Term.Ascribe(name: Name, tpt) =>
-      Some(Aux.Param.Named(Nil, name.toTermName, Some(tpt), None))
+      Some(Param.Named(Nil, name.toTermName, Some(tpt), None))
     case Term.Ascribe(Term.Placeholder(), tpt) =>
-      Some(Aux.Param.Anonymous(Nil, Some(tpt)))
+      Some(Param.Anonymous(Nil, Some(tpt)))
     case Lit.Unit() =>
       None
     case other =>
@@ -534,7 +534,7 @@ abstract class Parser { parser =>
      *  }}}
      */
     def argType(): Type
-    def functionArgType(): ParamType
+    def functionArgType(): Param.Type
 
     private def tupleInfixType(): Type = {
       in.nextToken()
@@ -551,9 +551,9 @@ abstract class Parser { parser =>
           Type.Function(ts, typ())
         } else {
           val tuple = makeTupleType(ts map {
-            case t: Type               => t
-            case p: ParamType.ByName   => syntaxError(p, "by name type not allowed here")
-            case p: ParamType.Repeated => syntaxError(p, "repeated type not alloed here")
+            case t: Type                => t
+            case p: Param.Type.ByName   => syntaxError(p, "by name type not allowed here")
+            case p: Param.Type.Repeated => syntaxError(p, "repeated type not alloed here")
           })
           infixTypeRest(
             compoundTypeRest(Some(
@@ -692,7 +692,7 @@ abstract class Parser { parser =>
      *  }}}
      */
     def types(): List[Type] = commaSeparated(argType())
-    def functionTypes(): List[ParamType] = commaSeparated(functionArgType())
+    def functionTypes(): List[Param.Type] = commaSeparated(functionArgType())
   }
 
   // TODO: can we get away without this?
@@ -1377,7 +1377,7 @@ abstract class Parser { parser =>
     // are we in an XML pattern?
     def isXML: Boolean = false
 
-    def functionArgType(): ParamType = paramType()
+    def functionArgType(): Param.Type = paramType()
     def argType(): Type = typ()
 
     /** {{{
@@ -1554,7 +1554,7 @@ abstract class Parser { parser =>
   /** The implementation of the context sensitive methods for parsing outside of patterns. */
   object outPattern extends PatternContextSensitive {
     def argType(): Type = typ()
-    def functionArgType(): ParamType = paramType()
+    def functionArgType(): Param.Type = paramType()
   }
   /** The implementation for parsing inside of patterns at points where sequences are allowed. */
   object seqOK extends SeqContextSensitive {
@@ -1690,9 +1690,9 @@ abstract class Parser { parser =>
    *  ClassParam        ::= {Annotation}  [{Modifier} (`val' | `var')] Id [`:' ParamType] [`=' Expr]
    *  }}}
    */
-  def paramClauses(ownerIsType: Boolean, ownerIsCase: Boolean = false): (List[List[Aux.Param.Named]], List[Aux.Param.Named]) = {
+  def paramClauses(ownerIsType: Boolean, ownerIsCase: Boolean = false): (List[List[Param.Named]], List[Param.Named]) = {
     var parsedImplicits = false
-    def paramClause(): List[Aux.Param.Named] = {
+    def paramClause(): List[Param.Named] = {
       if (in.token == RPAREN)
         return Nil
 
@@ -1702,8 +1702,8 @@ abstract class Parser { parser =>
       }
       commaSeparated(param(ownerIsCase, ownerIsType, isImplicit = parsedImplicits))
     }
-    val paramss = new ListBuffer[List[Aux.Param.Named]]
-    var implicits = List.empty[Aux.Param.Named]
+    val paramss = new ListBuffer[List[Param.Named]]
+    var implicits = List.empty[Param.Named]
     newLineOptWhenFollowedBy(LPAREN)
     while (!parsedImplicits && in.token == LPAREN) {
       in.nextToken()
@@ -1722,20 +1722,20 @@ abstract class Parser { parser =>
    *  ParamType ::= Type | `=>' Type | Type `*'
    *  }}}
    */
-  def paramType(): ParamType = in.token match {
+  def paramType(): Param.Type = in.token match {
     case ARROW =>
       in.nextToken()
-      ParamType.ByName(typ())
+      Param.Type.ByName(typ())
     case _ =>
       val t = typ()
       if (!isRawStar) t
       else {
         in.nextToken()
-        ParamType.Repeated(t)
+        Param.Type.Repeated(t)
       }
   }
 
-  def param(ownerIsCase: Boolean, ownerIsType: Boolean, isImplicit: Boolean): Aux.Param.Named = {
+  def param(ownerIsCase: Boolean, ownerIsType: Boolean, isImplicit: Boolean): Param.Named = {
     var mods: List[Mod] = annots(skipNewLines = false)
     if (ownerIsType) {
       mods ++= modifiers()
@@ -1752,7 +1752,7 @@ abstract class Parser { parser =>
     val tpt = {
       accept(COLON)
       val tpt = paramType()
-      if (tpt.isInstanceOf[ParamType.ByName]) {
+      if (tpt.isInstanceOf[Param.Type.ByName]) {
         def mayNotBeByName(subj: String) =
           syntaxError(s"$subj parameters may not be call-by-name")
         val isLocalToThis: Boolean =
@@ -1780,7 +1780,7 @@ abstract class Parser { parser =>
         in.nextToken()
         Some(expr())
       }
-    Aux.Param.Named(mods, name, Some(tpt), default)
+    Param.Named(mods, name, Some(tpt), default)
   }
 
   /** {{{
@@ -1792,7 +1792,7 @@ abstract class Parser { parser =>
    *  TypeParam             ::= Id TypeParamClauseOpt TypeBounds {<% Type} {":" Type}
    *  }}}
    */
-  def typeParamClauseOpt(ownerIsType: Boolean, ctxBoundsAllowed: Boolean): List[Aux.TypeParam] = {
+  def typeParamClauseOpt(ownerIsType: Boolean, ctxBoundsAllowed: Boolean): List[TypeParam] = {
     newLineOptWhenFollowedBy(LBRACKET)
     if (in.token != LBRACKET) Nil
     else inBrackets(commaSeparated {
@@ -1801,7 +1801,7 @@ abstract class Parser { parser =>
     })
   }
 
-  def typeParam(annots: List[Mod.Annot], ownerIsType: Boolean, ctxBoundsAllowed: Boolean): Aux.TypeParam = {
+  def typeParam(annots: List[Mod.Annot], ownerIsType: Boolean, ctxBoundsAllowed: Boolean): TypeParam = {
     val mods =
       if (ownerIsType && isName) {
         if (in.name == "+") {
@@ -1837,8 +1837,8 @@ abstract class Parser { parser =>
       }
     }
     nameopt match {
-      case Some(name) => Aux.TypeParam.Named(mods, name, tparams, contextBounds.toList, viewBounds.toList, bounds)
-      case None => Aux.TypeParam.Anonymous(mods, tparams, contextBounds.toList, viewBounds.toList, bounds)
+      case Some(name) => TypeParam.Named(mods, name, tparams, contextBounds.toList, viewBounds.toList, bounds)
+      case None => TypeParam.Anonymous(mods, tparams, contextBounds.toList, viewBounds.toList, bounds)
     }
   }
 

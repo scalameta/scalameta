@@ -10,6 +10,7 @@ package object errors {
 
   def succeed[S](x: S)(implicit eh: ErrorHandler): eh.Success[S] = eh.succeed(x)
   def fail(message: String)(implicit eh: ErrorHandler): eh.Failure[ReflectionException] = eh.fail(ReflectionException(message))
+  def fail(ex: ReflectionException)(implicit eh: ErrorHandler): eh.Failure[ReflectionException] = eh.fail(ex)
 
   def wrapHosted = new Wrap[HostContext]
   def wrapMacrohosted = new Wrap[MacroContext]

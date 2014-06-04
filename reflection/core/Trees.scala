@@ -110,8 +110,8 @@ object Term {
   @ast class Match(scrut: Term, cases: Cases) extends Term
   @ast class Try(expr: Term, catchp: Option[Term], finallyp: Option[Term]) extends Term
   // TODO: we could add a flag that distinguishes { x => ... } and (x => { ... })
-  @ast class Function(params: Seq[Aux.Param], body: Term) extends Term with Scope.Params {
-    require(params.collect{ case named: Aux.Param.Named => named }.forall(_.default.isEmpty))
+  @ast class Function(params: Seq[Param], body: Term) extends Term with Scope.Params {
+    require(params.collect{ case named: Param.Named => named }.forall(_.default.isEmpty))
     require(params.exists(_.mods.exists(_.isInstanceOf[Mod.Implicit])) ==> (params.length == 1))
   }
   @ast class Cases(cases: Seq[Aux.Case] @nonEmpty) extends Term {
@@ -131,7 +131,7 @@ object Term {
 }
 
 // TODO: simple type validation
-@branch trait Type extends Tree with Aux.ParamType with Scope.Template
+@branch trait Type extends Tree with Param.Type with Scope.Template
 object Type {
   @branch trait Qualifier extends Tree with Term.Qualifier
   @branch trait Ref extends Type with core.Ref
@@ -147,7 +147,7 @@ object Type {
   }
   @ast class Apply(tpe: Type, args: Seq[Type] @nonEmpty) extends Type
   @ast class ApplyInfix(lhs: Type, op: Type, rhs: Type) extends Type
-  @ast class Function(params: Seq[Aux.ParamType], res: Type) extends Type
+  @ast class Function(params: Seq[Param.Type], res: Type) extends Type
   @ast class Tuple(elements: Seq[Type] @nonEmpty) extends Type {
     require(elements.length > 1)
   }
@@ -190,21 +190,19 @@ object Member {
   @branch trait Term extends Member
   @branch trait Type extends Member
   @branch trait Def extends Term with Has.TermName with Stmt.Refine with Has.Paramss with Scope.Params {
-    def tparams: Seq[Aux.TypeParam]
+    def tparams: Seq[TypeParam]
   }
   @branch trait AbstractOrAliasType extends Type with Has.TypeName with Stmt.Refine {
     def name: core.Type.Name
-    def tparams: Seq[Aux.TypeParam]
+    def tparams: Seq[TypeParam]
   }
   @branch trait Template extends Defn with Has.Name with Stmt.TopLevel with Stmt.Block with Has.Paramss with Scope.Template {
     def name: core.Name
-    def explicits: Seq[Seq[Aux.Param.Named]] = Nil
-    def implicits: Seq[Aux.Param.Named] = Nil
-    def tparams: Seq[Aux.TypeParam] = Nil
+    def explicits: Seq[Seq[Param.Named]] = Nil
+    def implicits: Seq[Param.Named] = Nil
+    def tparams: Seq[TypeParam] = Nil
     def templ: Aux.Template
   }
-  @branch trait TermTemplate extends Template with Has.TermName
-  @branch trait TypeTemplate extends Template with Has.TypeName
 }
 
 @branch trait Decl extends Stmt.Template with Stmt.Refine
@@ -218,18 +216,18 @@ object Decl {
   // TODO: maybe merge Def and Procedure using flags?
   @ast class Def(mods: Seq[Mod],
                  name: Term.Name,
-                 tparams: Seq[Aux.TypeParam],
-                 explicits: Seq[Seq[Aux.Param.Named]],
-                 implicits: Seq[Aux.Param.Named],
+                 tparams: Seq[TypeParam],
+                 explicits: Seq[Seq[Param.Named]],
+                 implicits: Seq[Param.Named],
                  decltpe: core.Type) extends Decl with Member.Def
   @ast class Procedure(mods: Seq[Mod],
                        name: Term.Name,
-                       tparams: Seq[Aux.TypeParam],
-                       explicits: Seq[Seq[Aux.Param.Named]],
-                       implicits: Seq[Aux.Param.Named]) extends Decl with Member.Def
+                       tparams: Seq[TypeParam],
+                       explicits: Seq[Seq[Param.Named]],
+                       implicits: Seq[Param.Named]) extends Decl with Member.Def
   @ast class Type(mods: Seq[Mod],
                   name: core.Type.Name,
-                  tparams: Seq[Aux.TypeParam],
+                  tparams: Seq[TypeParam],
                   bounds: Aux.TypeBounds) extends Decl with Stmt.Existential with Member.AbstractOrAliasType
 }
 
@@ -248,9 +246,9 @@ object Defn {
   }
   @ast class Def(mods: Seq[Mod],
                  name: Term.Name,
-                 tparams: Seq[Aux.TypeParam],
-                 explicits: Seq[Seq[Aux.Param.Named]],
-                 implicits: Seq[Aux.Param.Named],
+                 tparams: Seq[TypeParam],
+                 explicits: Seq[Seq[Param.Named]],
+                 implicits: Seq[Param.Named],
                  decltpe: Option[core.Type],
                  body: Term) extends Defn with Member.Def {
     // TODO: syntax profile
@@ -258,31 +256,31 @@ object Defn {
   }
   @ast class Procedure(mods: Seq[Mod],
                        name: Term.Name,
-                       tparams: Seq[Aux.TypeParam],
-                       explicits: Seq[Seq[Aux.Param.Named]],
-                       implicits: Seq[Aux.Param.Named],
+                       tparams: Seq[TypeParam],
+                       explicits: Seq[Seq[Param.Named]],
+                       implicits: Seq[Param.Named],
                        stats: Seq[Stmt.Block]) extends Defn with Member.Def {
     require(stats.collect { case m: Member if m.isPkgObject => m }.isEmpty)
   }
   @ast class Type(mods: Seq[Mod],
                   name: core.Type.Name,
-                  tparams: Seq[Aux.TypeParam],
+                  tparams: Seq[TypeParam],
                   body: core.Type) extends Defn with Stmt.Refine with Member.AbstractOrAliasType
   @ast class Class(mods: Seq[Mod],
                    name: core.Type.Name,
-                   override val tparams: Seq[Aux.TypeParam],
+                   override val tparams: Seq[TypeParam],
                    ctor: Ctor.Primary,
-                   templ: Aux.Template) extends Defn with Member.TypeTemplate
+                   templ: Aux.Template) extends Defn with Member.Template with Has.TypeName
   @ast class Trait(mods: Seq[Mod],
                    name: core.Type.Name,
-                   override val tparams: Seq[Aux.TypeParam],
-                   templ: Aux.Template) extends Defn with Member.TypeTemplate {
+                   override val tparams: Seq[TypeParam],
+                   templ: Aux.Template) extends Defn with Member.Template with Has.TypeName {
     require(templ.stats.forall(!_.isInstanceOf[Ctor]))
     require(templ.parents.forall(_.argss.isEmpty))
   }
   @ast class Object(mods: Seq[Mod],
                     name: Term.Name,
-                    templ: Aux.Template) extends Defn with Member.TermTemplate {
+                    templ: Aux.Template) extends Defn with Member.Template with Has.TermName {
   }
 }
 
@@ -301,11 +299,11 @@ object Defn {
 @branch trait Ctor extends Tree with Has.Mods with Has.Paramss
 object Ctor {
   @ast class Primary(mods: Seq[Mod],
-                     explicits: Seq[Seq[Aux.Param.Named]],
-                     implicits: Seq[Aux.Param.Named]) extends Ctor
+                     explicits: Seq[Seq[Param.Named]],
+                     implicits: Seq[Param.Named]) extends Ctor
   @ast class Secondary(mods: Seq[Mod],
-                       explicits: Seq[Seq[Aux.Param.Named]] @nonEmpty,
-                       implicits: Seq[Aux.Param.Named],
+                       explicits: Seq[Seq[Param.Named]] @nonEmpty,
+                       implicits: Seq[Param.Named],
                        primaryCtorArgss: Seq[Seq[Arg]],
                        stats: Seq[Stmt.Block]) extends Ctor with Stmt.Template with Scope.Params {
     require(stats.collect { case m: Member if m.isPkgObject => m }.isEmpty)
@@ -360,6 +358,48 @@ object Import {
     @ast class Rename(from: core.Name.Both, to: core.Name.Both) extends Selector
     @ast class Unimport(name: core.Name.Both) extends Selector
   }
+}
+
+// TODO: only non-implicit non-val/var parameters may be by name
+@branch trait Param extends Tree with Has.Mods {
+  def decltpe: Option[Param.Type]
+  def withMods(mods: Seq[Mod])(implicit origin: Origin): ThisType
+  def mapMods(mods: Seq[Mod] => Seq[Mod])(implicit origin: Origin): ThisType
+}
+object Param {
+  @branch trait Type extends Tree
+  object Type {
+    @ast class ByName(tpe: Type) extends Type
+    @ast class Repeated(tpe: Type) extends Type
+  }
+  @ast class Anonymous(mods: Seq[Mod],
+                       decltpe: Option[Type]) extends Param
+  @ast class Named(mods: Seq[Mod],
+                   name: Term.Name,
+                   decltpe: Option[Type],
+                   default: Option[Term]) extends Param with Member.Term with Has.TermName
+}
+
+@branch trait TypeParam extends Tree with Has.Mods {
+  def tparams: Seq[TypeParam]
+  def contextBounds: Seq[core.Type]
+  def viewBounds: Seq[core.Type]
+  def bounds: Aux.TypeBounds
+  def withMods(mods: Seq[Mod])(implicit origin: Origin): ThisType
+  def mapMods(mods: Seq[Mod] => Seq[Mod])(implicit origin: Origin): ThisType
+}
+object TypeParam {
+  @ast class Anonymous(mods: Seq[Mod],
+                       tparams: Seq[TypeParam],
+                       contextBounds: Seq[core.Type],
+                       viewBounds: Seq[core.Type],
+                       bounds: Aux.TypeBounds) extends TypeParam
+  @ast class Named(mods: Seq[Mod],
+                   name: core.Type.Name,
+                   tparams: Seq[TypeParam],
+                   contextBounds: Seq[core.Type],
+                   viewBounds: Seq[core.Type],
+                   bounds: Aux.TypeBounds) extends TypeParam with Member.Type with Has.TypeName
 }
 
 @branch trait Arg extends Tree
@@ -424,46 +464,6 @@ object Aux {
   @ast class Self(name: Option[Term.Name], decltpe: Option[Type])(hasThis: Boolean) extends Member.Term {
     def mods: Seq[Mod] = Nil
   }
-  @branch trait ParamType extends Tree
-  object ParamType {
-    @ast class ByName(tpe: Type) extends ParamType
-    @ast class Repeated(tpe: Type) extends ParamType
-  }
-  // TODO: only non-implicit non-val/var parameters may be by name
-  @branch trait Param extends Tree with Has.Mods {
-    def decltpe: Option[ParamType]
-    def withMods(mods: Seq[Mod])(implicit origin: Origin): ThisType
-    def mapMods(mods: Seq[Mod] => Seq[Mod])(implicit origin: Origin): ThisType
-  }
-  object Param {
-    @ast class Anonymous(mods: Seq[Mod],
-                         decltpe: Option[ParamType]) extends Param
-    @ast class Named(mods: Seq[Mod],
-                     name: Term.Name,
-                     decltpe: Option[ParamType],
-                     default: Option[Term]) extends Param with Member.Term with Has.TermName
-  }
-  @branch trait TypeParam extends Tree with Has.Mods {
-    def tparams: Seq[Aux.TypeParam]
-    def contextBounds: Seq[core.Type]
-    def viewBounds: Seq[core.Type]
-    def bounds: Aux.TypeBounds
-    def withMods(mods: Seq[Mod])(implicit origin: Origin): ThisType
-    def mapMods(mods: Seq[Mod] => Seq[Mod])(implicit origin: Origin): ThisType
-  }
-  object TypeParam {
-    @ast class Anonymous(mods: Seq[Mod],
-                         tparams: Seq[Aux.TypeParam],
-                         contextBounds: Seq[core.Type],
-                         viewBounds: Seq[core.Type],
-                         bounds: Aux.TypeBounds) extends TypeParam
-    @ast class Named(mods: Seq[Mod],
-                     name: core.Type.Name,
-                     tparams: Seq[Aux.TypeParam],
-                     contextBounds: Seq[core.Type],
-                     viewBounds: Seq[core.Type],
-                     bounds: Aux.TypeBounds) extends TypeParam with Member.Type with Has.TypeName
-  }
   // TODO: require that lo/hi and hasLo/hasHi are consistent
   @ast class TypeBounds(lo: Type, hi: Type)(hasLo: Boolean, hasHi: Boolean) extends Tree
   @ast class Super(thisp: Option[core.Name.Either], superp: Option[Type.Name]) extends Term.Qualifier with Type.Qualifier
@@ -481,9 +481,9 @@ object Has {
   }
 
   @branch trait Paramss extends Tree {
-    def explicits: Seq[Seq[Aux.Param.Named]]
-    def implicits: Seq[Aux.Param.Named]
-    def paramss: Seq[Seq[Aux.Param.Named]] = explicits :+ implicits
+    def explicits: Seq[Seq[Param.Named]]
+    def implicits: Seq[Param.Named]
+    def paramss: Seq[Seq[Param.Named]] = explicits :+ implicits
   }
 
   @branch trait Name extends Member { def name: core.Name }

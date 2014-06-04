@@ -32,9 +32,9 @@ object ShowCode {
   implicit def showTree[T <: Tree]: Show[T] = Show { x => (x: Tree) match {
     case t: Name => if (t.isBackquoted) s("`", t.value, "`") else s(t.value)
 
-    // ParamType
-    case t: ParamType.Repeated => s(t.tpe, "*")
-    case t: ParamType.ByName   => s("=> ", t.tpe)
+    // Param.Type
+    case t: Param.Type.Repeated => s(t.tpe, "*")
+    case t: Param.Type.ByName   => s("=> ", t.tpe)
 
     // Type
     case t: Type.Project     => s(t.qual, "#", t.selector)
@@ -279,7 +279,7 @@ object ShowCode {
       if (impl.isEmpty) s()
       else s("(implicit ", r(impl, ", "), ")"))
   }
-  implicit val showParamTypeOpt: Show[Option[ParamType]] = Show { _.map { t => s(": ", t) }.getOrElse(s()) }
+  implicit val showParamTypeOpt: Show[Option[Param.Type]] = Show { _.map { t => s(": ", t) }.getOrElse(s()) }
   implicit val showTypeOpt: Show[Option[Type]] = Show { _.map { t => s(": ", t) }.getOrElse(s()) }
   implicit val showTermNameOpt: Show[Option[Term.Name]] = Show { _.map(s(_)).getOrElse(s(")")) }
   implicit val showImportSels: Show[Seq[Import.Selector]] = Show {

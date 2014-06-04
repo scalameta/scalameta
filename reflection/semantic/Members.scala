@@ -128,7 +128,7 @@ trait MemberOps {
     @hosted def tpe: core.Type = tree.internalTpe
   }
 
-  implicit class SemanticParentOps(tree: Aux.Param) {
+  implicit class SemanticParentOps(tree: Param) {
     @hosted def ctor: Ctor = tree.attrs.flatMap(_.collect{ case defn: Attribute.Defn => defn } match {
       case Attribute.Defn(defn: Ctor) :: Nil => succeed(defn)
       case _ => fail("typecheck has failed")
@@ -140,7 +140,7 @@ trait MemberOps {
     @hosted def tpe: Type = tree.internalTpe
   }
 
-  implicit class SemanticParamOps(tree: Aux.Param) {
-    @hosted def tpe: Aux.ParamType = tree.internalParamTpe
+  implicit class SemanticParamOps(tree: Param) {
+    @hosted def tpe: Param.Type = tree.internalParamTpe
   }
 }
