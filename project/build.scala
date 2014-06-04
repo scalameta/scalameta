@@ -54,7 +54,8 @@ object build extends Build {
         <url>https://github.com/scalareflect/core/issues</url>
       </issueManagement>
     ),
-    addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0-M1" cross CrossVersion.full)
+    addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0-M1" cross CrossVersion.full),
+    publishArtifact in (Compile, packageDoc) := false
   )
 
   // http://stackoverflow.com/questions/20665007/how-to-publish-only-when-on-master-branch-under-travis-and-sbt-0-13
