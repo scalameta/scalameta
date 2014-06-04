@@ -311,9 +311,10 @@ object Ctor {
   }
 }
 
+@branch trait Stmt extends Tree
 object Stmt {
-  @branch trait TopLevel extends Tree
-  @branch trait Template extends Tree
+  @branch trait TopLevel extends Stmt
+  @branch trait Template extends Stmt
   @branch trait Block extends Template
   @branch trait Refine extends Template
   @branch trait Existential extends Refine
