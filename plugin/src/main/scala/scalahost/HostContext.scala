@@ -88,8 +88,8 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
           gsym.rawcvt(in).appendScratchpad(pre).asInstanceOf[pTermOrTypeName]
         }
         def rawcvt(in: g.Tree): pTermOrTypeName = {
-          (if (gsym.isTerm) p.Term.Name(alias(in))(isBackquoted = isBackquoted(in)).appendScratchpad(gsym)
-          else if (gsym.isType) p.Type.Name(alias(in))(isBackquoted = isBackquoted(in)).appendScratchpad(gsym)
+          (if (gsym.isTerm) p.Term.Name(alias(in), isBackquoted(in)).appendScratchpad(gsym)
+          else if (gsym.isType) p.Type.Name(alias(in), isBackquoted(in)).appendScratchpad(gsym)
           else unreachable).asInstanceOf[pTermOrTypeName]
         }
         def eithercvt(in: g.Tree): p.Name.Either = {
@@ -98,7 +98,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
             if (gsym.isModuleClass) List(gsym.sourceModule.asModule, g.NoSymbol)
             else List(g.NoSymbol, gsym.asClass)
           }
-          p.Name.Either(alias(in))(isBackquoted(in)).appendScratchpad(gsyms)
+          p.Name.Either(alias(in), isBackquoted(in)).appendScratchpad(gsyms)
         }
       }
       implicit class RichSymbols(gsyms: List[g.Symbol]) {
@@ -107,7 +107,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
           require(gterm != g.NoSymbol || gtype != g.NoSymbol)
           require(gterm != g.NoSymbol ==> gterm.isTerm)
           require(gtype != g.NoSymbol ==> gtype.isType)
-          p.Name.Both(alias(in))(isBackquoted(in)).appendScratchpad(gsyms)
+          p.Name.Both(alias(in), isBackquoted(in)).appendScratchpad(gsyms)
         }
       }
       implicit class RichTermSymbol(gsym: g.TermSymbol) {
@@ -162,7 +162,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
       def pbounds(gtpe: g.Type): p.Aux.TypeBounds = gtpe match {
         case g.TypeBounds(glo, ghi) =>
           // TODO: infer which of the bounds were specified explicitly by the user
-          p.Aux.TypeBounds(glo.cvt, ghi.cvt)(hasLo = true, hasHi = true)
+          p.Aux.TypeBounds(glo.cvt, ghi.cvt)
         case _ =>
           unreachable
       }
@@ -229,7 +229,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
       case g.UnmappableTree =>
         unreachable
       case g.PackageDef(pid, stats) =>
-        p.Pkg(pid.cvt_!, stats.cvt_!)(hasBraces = true) // TODO: infer hasBraces
+        p.Pkg(pid.cvt_!, stats.cvt_!, hasBraces = true) // TODO: infer hasBraces
       case in @ g.ClassDef(_, _, tparams, templ) =>
         require(in.symbol.isClass)
         in match {
@@ -256,7 +256,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         val pname = if (!isAnonymous) Some(in.symbol.asTerm.rawcvt(in)) else None
         val ptpe = if (!tpt.wasEmpty) Some(tpt.cvt) else None
         require(rhs.isEmpty)
-        p.Aux.Self(pname, ptpe)(hasThis = false) // TODO: figure out hasThis
+        p.Aux.Self(pname, ptpe, hasThis = false) // TODO: figure out hasThis
       case in @ g.ValDef(_, _, tpt @ g.TypeTree(), rhs) if pt <:< typeOf[p.Member.ValOrVar] =>
         // TODO: collapse desugared representations of pattern-based vals and vars
         // TODO: figure out whether a var def has an explicitly written underscore as its body or not
@@ -344,7 +344,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
             case _ => unreachable
           }
         }
-        p.Aux.Template(earlydefns.cvt_!, pparents, self.cvt, stats.cvt_!)(hasBraces = true) // TODO: infer hasBraces
+        p.Aux.Template(earlydefns.cvt_!, pparents, self.cvt, stats.cvt_!) // TODO: infer hasStats
       case g.Block(stats, expr) =>
         p.Term.Block((stats :+ expr).cvt_!)
       case g.CaseDef(pat, guard, body) =>
@@ -394,13 +394,13 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         unreachable
       case g.If(cond, thenp, elsep) =>
         // TODO: figure out hasElse
-        p.Term.If(cond.cvt_!, thenp.cvt_!, elsep.cvt_!)(hasElse = true)
+        p.Term.If(cond.cvt_!, thenp.cvt_!, elsep.cvt_!)
       case g.Match(selector, cases) =>
         // TODO: it's cute that Term.Cases is a Term, but what tpe shall we return for it? :)
         p.Term.Match(selector.cvt_!, p.Term.Cases(cases.cvt))
       case g.Return(expr) =>
         // TODO: figure out hasExpr
-        p.Term.Return(expr.cvt_!)(hasExpr = true)
+        p.Term.Return(expr.cvt_!)
       case g.Try(body, catches, finalizer) =>
         // TODO: undo desugarings of `try foo catch bar`
         val catchp = if (catches.nonEmpty) Some(p.Term.Cases(catches.cvt)) else None
@@ -431,8 +431,8 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         // TODO: figure out whether type arguments were inferred or not
         val q"new $tpt(...$argss)" = in
         val supercall = p.Aux.Parent(tpt.tpe.cvt, argss.cvt_!).appendScratchpad(in)
-        val self = p.Aux.Self(None, None)(hasThis = false).appendScratchpad(tpt)
-        val templ = p.Aux.Template(Nil, List(supercall), self, stats = Nil)(hasBraces = false).appendScratchpad(in)
+        val self = p.Aux.Self(None, None).appendScratchpad(tpt)
+        val templ = p.Aux.Template(Nil, List(supercall), self).appendScratchpad(in)
         p.Term.New(templ)
       case in @ g.Apply(_, _) =>
         // TODO: infer the difference between Apply, ApplyInfix, ApplyUnary and Update
@@ -465,7 +465,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         unreachable
       case in @ g.Select(qual, _) =>
         require(in.symbol.isTerm) // NOTE: typename selections are impossible, because all TypTrees have already been converted to TypeTrees
-        p.Term.Select(qual.cvt_!, in.symbol.asTerm.precvt(qual.tpe, in))(isPostfix = false) // TODO: figure out isPostfix
+        p.Term.Select(qual.cvt_!, in.symbol.asTerm.precvt(qual.tpe, in), isPostfix = false) // TODO: figure out isPostfix
       case in @ g.Ident(_) =>
         require(in.symbol.isTerm) // NOTE: see the g.Select note
         in.symbol.asTerm.rawcvt(in)
@@ -520,7 +520,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
             sym.asTerm.rawcvt(g.Ident(sym))
           case _: g.SingletonType =>
             val p.Type.Singleton(preref) = pre.cvt
-            p.Term.Select(preref, sym.asTerm.precvt(pre, g.Ident(sym)))(isPostfix = false) // TODO: figure out isPostfix
+            p.Term.Select(preref, sym.asTerm.precvt(pre, g.Ident(sym)), isPostfix = false) // TODO: figure out isPostfix
           case _ =>
             unreachable
         }).appendScratchpad(in)
@@ -556,7 +556,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
           case AbstractTypeSymbol(sym) => p.Decl.Type(pmods(sym), sym.rawcvt(g.TypeDef(sym)), ptparams(sym.typeParams), pbounds(sym.info.depoly))
           case AliasTypeSymbol(sym) => p.Defn.Type(pmods(sym), sym.rawcvt(g.TypeDef(sym, g.TypeTree(sym.info))), ptparams(sym.typeParams), sym.info.depoly.cvt)
         })
-        p.Type.Compound(parents.cvt, pstmts)(hasBraces = true) // TODO: infer hasBraces
+        p.Type.Compound(parents.cvt, pstmts) // TODO: infer hasRefinement
       case g.ExistentialType(quantified, underlying) =>
         // TODO: infer type placeholders where they were specified explicitly
         val pstmts: Seq[p.Stmt.Existential] = quantified.map({
