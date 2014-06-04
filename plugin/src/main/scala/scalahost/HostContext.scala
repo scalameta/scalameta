@@ -162,34 +162,34 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
       def pbounds(gtpe: g.Type): p.Aux.TypeBounds = gtpe match {
         case g.TypeBounds(glo, ghi) =>
           // TODO: infer which of the bounds were specified explicitly by the user
-          p.Aux.TypeBounds(Some(glo.cvt), Some(ghi.cvt))
+          p.Aux.TypeBounds(glo.cvt, ghi.cvt)(hasLo = true, hasHi = true)
         case _ =>
           unreachable
       }
-      private def ptparam(gsym: g.Symbol): p.Aux.TypeParam = {
+      private def ptparam(gsym: g.Symbol): p.TypeParam = {
         // TODO: undo desugarings of context and view bounds
         require(gsym.isType)
         val isAnonymous = gsym.name == g.tpnme.WILDCARD
-        if (isAnonymous) p.Aux.TypeParam.Anonymous(pmods(gsym), ptparams(gsym.typeParams), Nil, Nil, pbounds(gsym.info.depoly))
-        else p.Aux.TypeParam.Named(pmods(gsym), gsym.asType.rawcvt(g.Ident(gsym)), ptparams(gsym.typeParams), Nil, Nil, pbounds(gsym.info.depoly))
+        if (isAnonymous) p.TypeParam.Anonymous(pmods(gsym), ptparams(gsym.typeParams), Nil, Nil, pbounds(gsym.info.depoly))
+        else p.TypeParam.Named(pmods(gsym), gsym.asType.rawcvt(g.Ident(gsym)), ptparams(gsym.typeParams), Nil, Nil, pbounds(gsym.info.depoly))
       }
-      def ptparams(gsyms: List[g.Symbol]): Seq[p.Aux.TypeParam] = gsyms.map(ptparam)
-      def pvparamtpe(gtpe: g.Type): p.Aux.ParamType = {
+      def ptparams(gsyms: List[g.Symbol]): Seq[p.TypeParam] = gsyms.map(ptparam)
+      def pvparamtpe(gtpe: g.Type): p.Param.Type = {
         val ptpe = (gtpe.cvt: p.Type)
-        if (g.definitions.isRepeatedParamType(gtpe)) p.Aux.ParamType.Repeated(ptpe)
-        else if (g.definitions.isByNameParamType(gtpe)) p.Aux.ParamType.ByName(ptpe)
+        if (g.definitions.isRepeatedParamType(gtpe)) p.Param.Type.Repeated(ptpe)
+        else if (g.definitions.isByNameParamType(gtpe)) p.Param.Type.ByName(ptpe)
         else ptpe
       }
-      private def pvparam(gsym: g.Symbol): p.Aux.Param.Named = {
+      private def pvparam(gsym: g.Symbol): p.Param.Named = {
         require(gsym.isTerm)
         // TODO: discern inferred and explicitly specified vparamtpe
         // TODO: somehow figure out the default argument from a parameter symbol if it is specified
-        p.Aux.Param.Named(pmods(gsym), gsym.asTerm.rawcvt(g.Ident(gsym)), Some(pvparamtpe(gsym.info.depoly)), None)
+        p.Param.Named(pmods(gsym), gsym.asTerm.rawcvt(g.Ident(gsym)), Some(pvparamtpe(gsym.info.depoly)), None)
       }
-      private def pvparams(gsyms: List[g.Symbol]): Seq[p.Aux.Param.Named] = gsyms.map(pvparam)
-      private def pvparamss(gsymss: List[List[g.Symbol]]): Seq[Seq[p.Aux.Param.Named]] = gsymss.map(pvparams)
-      def pexplicitss(gsym: g.Symbol): Seq[Seq[p.Aux.Param.Named]] = if (pimplicits(gsym).nonEmpty) pvparamss(gsym.info.paramss).dropRight(1) else pvparamss(gsym.info.paramss)
-      def pimplicits(gsym: g.Symbol): Seq[p.Aux.Param.Named] = pvparams(gsym.info.paramss.flatten.filter(_.isImplicit))
+      private def pvparams(gsyms: List[g.Symbol]): Seq[p.Param.Named] = gsyms.map(pvparam)
+      private def pvparamss(gsymss: List[List[g.Symbol]]): Seq[Seq[p.Param.Named]] = gsymss.map(pvparams)
+      def pexplicitss(gsym: g.Symbol): Seq[Seq[p.Param.Named]] = if (pimplicits(gsym).nonEmpty) pvparamss(gsym.info.paramss).dropRight(1) else pvparamss(gsym.info.paramss)
+      def pimplicits(gsym: g.Symbol): Seq[p.Param.Named] = pvparams(gsym.info.paramss.flatten.filter(_.isImplicit))
       private def pclassof(gtype: g.Type): p.Term.ApplyType = {
         val mothershipCore = g.gen.mkAttributedRef(g.currentRun.runDefinitions.Predef_classOf).asInstanceOf[g.Select]
         val scratchpad = g.TypeApply(mothershipCore, List(g.TypeTree(gtype))).setType(g.appliedType(mothershipCore.tpe, gtype))
@@ -242,14 +242,14 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
       case in @ g.ModuleDef(_, _, templ) =>
         require(in.symbol.isModule && !in.symbol.isModuleClass)
         p.Defn.Object(pmods(in.symbol), in.symbol.asModule.rawcvt(in), templ.cvt)
-      case in @ g.ValDef(_, _, tpt @ g.TypeTree(), rhs) if pt <:< typeOf[p.Aux.Param] =>
+      case in @ g.ValDef(_, _, tpt @ g.TypeTree(), rhs) if pt <:< typeOf[p.Param] =>
         require(in.symbol.isTerm)
         val isAnonymous = in.symbol.name.toString.startsWith("x$")
         val ptpe = if (!tpt.wasEmpty) Some(pvparamtpe(tpt.tpe)) else None
         val pdefault = if (rhs.nonEmpty) Some[p.Term](rhs.cvt_!) else None
         require(isAnonymous ==> pdefault.isEmpty)
-        if (isAnonymous) p.Aux.Param.Anonymous(pmods(in.symbol), ptpe)
-        else p.Aux.Param.Named(pmods(in.symbol), in.symbol.asTerm.rawcvt(in), ptpe, pdefault)
+        if (isAnonymous) p.Param.Anonymous(pmods(in.symbol), ptpe)
+        else p.Param.Named(pmods(in.symbol), in.symbol.asTerm.rawcvt(in), ptpe, pdefault)
       case in @ g.ValDef(_, _, tpt @ g.TypeTree(), rhs) if pt <:< typeOf[p.Aux.Self] =>
         require(in.symbol.isTerm)
         val isAnonymous = in == g.noSelfType || in.symbol.name.toString == "x$1"
@@ -257,7 +257,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         val ptpe = if (!tpt.wasEmpty) Some(tpt.cvt) else None
         require(rhs.isEmpty)
         p.Aux.Self(pname, ptpe)(hasThis = false) // TODO: figure out hasThis
-      case in @ g.ValDef(_, _, tpt @ g.TypeTree(), rhs) if pt <:< typeOf[p.Aux.ValOrVar] =>
+      case in @ g.ValDef(_, _, tpt @ g.TypeTree(), rhs) if pt <:< typeOf[p.Member.ValOrVar] =>
         // TODO: collapse desugared representations of pattern-based vals and vars
         // TODO: figure out whether a var def has an explicitly written underscore as its body or not
         require(in.symbol.isTerm)
@@ -280,12 +280,12 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
           p.Ctor.Secondary(pmods(in.symbol), explicitss.cvt_!, implicits.cvt_!, argss.cvt_!, stats.cvt_!)
         } else if (in.symbol.isDeferred) p.Decl.Def(pmods(in.symbol), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt_!, implicits.cvt_!, tpt.cvt) // TODO: infer procedures
         else p.Defn.Def(pmods(in.symbol), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt_!, implicits.cvt_!, if (!tpt.wasEmpty) Some(tpt.cvt) else None, body.cvt_!)
-      case in @ g.TypeDef(_, _, tparams, tpt @ g.TypeTree()) if pt <:< typeOf[p.Aux.TypeParam] =>
+      case in @ g.TypeDef(_, _, tparams, tpt @ g.TypeTree()) if pt <:< typeOf[p.TypeParam] =>
         // TODO: undo desugarings of context and view bounds
         require(in.symbol.isType)
         val isAnonymous = in.symbol.name == g.tpnme.WILDCARD
-        if (isAnonymous) p.Aux.TypeParam.Anonymous(pmods(in.symbol), tparams.cvt, Nil, Nil, pbounds(tpt.tpe))
-        else p.Aux.TypeParam.Named(pmods(in.symbol), in.symbol.asType.rawcvt(in), tparams.cvt, Nil, Nil, pbounds(tpt.tpe))
+        if (isAnonymous) p.TypeParam.Anonymous(pmods(in.symbol), tparams.cvt, Nil, Nil, pbounds(tpt.tpe))
+        else p.TypeParam.Named(pmods(in.symbol), in.symbol.asType.rawcvt(in), tparams.cvt, Nil, Nil, pbounds(tpt.tpe))
       case in @ g.TypeDef(_, _, tparams, tpt @ g.TypeTree()) if pt <:< typeOf[p.Member] =>
         require(in.symbol.isType)
         if (in.symbol.isDeferred) p.Decl.Type(pmods(in.symbol), in.symbol.asType.rawcvt(in), tparams.cvt, pbounds(tpt.tpe))
@@ -393,14 +393,14 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
       case g.AssignOrNamedArg(lhs, rhs) =>
         unreachable
       case g.If(cond, thenp, elsep) =>
-        // TODO: infer the difference between If.Then and If.ThenElse
-        p.Term.If.ThenElse(cond.cvt_!, thenp.cvt_!, elsep.cvt_!)
+        // TODO: figure out hasElse
+        p.Term.If(cond.cvt_!, thenp.cvt_!, elsep.cvt_!)(hasElse = true)
       case g.Match(selector, cases) =>
         // TODO: it's cute that Term.Cases is a Term, but what tpe shall we return for it? :)
         p.Term.Match(selector.cvt_!, p.Term.Cases(cases.cvt))
       case g.Return(expr) =>
-        // TODO: figure out whether the return expression was specified explicitly by the user
-        p.Term.Return.Expr(expr.cvt_!)
+        // TODO: figure out hasExpr
+        p.Term.Return(expr.cvt_!)(hasExpr = true)
       case g.Try(body, catches, finalizer) =>
         // TODO: undo desugarings of `try foo catch bar`
         val catchp = if (catches.nonEmpty) Some(p.Term.Cases(catches.cvt)) else None
