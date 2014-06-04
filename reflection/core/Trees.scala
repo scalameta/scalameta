@@ -34,8 +34,17 @@ import scala.reflect.syntactic.SyntacticInfo._
   def withOrigin(origin: Origin): ThisType
   def mapOrigin(f: Origin => Origin): ThisType
 
+  // NOTE: withParent and mapParent are not available
+  // because parent-child structure of trees is supposed to be maintained by the framework
   def parent: Option[Tree]
-  private[core] def internalWithParent(x: Tree): ThisType
+
+  def showCode: String = syntactic.show.ShowCode.showTree(this).toString
+  def showRaw: String = syntactic.show.ShowRaw.showTree(this).toString
+  final override def toString: String = showRaw
+
+  // NOTE: not supposed to be used outside the framework internals, not even in hosts
+  private[core] def internalParent: Tree
+  private[core] def withInternalParent(x: Tree): ThisType
 
   // TODO: these APIs will most likely change in the future
   // because we would like to make sure that trees are fully immutable
@@ -43,10 +52,6 @@ import scala.reflect.syntactic.SyntacticInfo._
   private[reflect] def appendScratchpad(datum: Any)(implicit h: HostContext): ThisType
   private[reflect] def withScratchpad(scratchpad: Seq[Any])(implicit h: HostContext): ThisType
   private[reflect] def mapScratchpad(f: Seq[Any] => Seq[Any])(implicit h: HostContext): ThisType
-
-  def showCode: String = syntactic.show.ShowCode.showTree(this).toString
-  def showRaw: String = syntactic.show.ShowRaw.showTree(this).toString
-  final override def toString: String = showRaw
 }
 
 @branch trait Ref extends Tree

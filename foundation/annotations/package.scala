@@ -38,19 +38,19 @@ package object annotations {
           }
           f.tpe.finalResultType match {
             case Primitive(tpe) => q""
-            case Tree(tpe) => lazyLoad(pf => q"$pf.internalWithParent(this)")
-            case OptionTree(tpe) => lazyLoad(pf => q"$pf.map(_.internalWithParent(this))")
-            case SeqTree(tpe) => lazyLoad(pf => q"$pf.map(_.internalWithParent(this))")
-            case SeqSeqTree(tpe) => lazyLoad(pf => q"$pf.map(_.map(_.internalWithParent(this)))")
+            case Tree(tpe) => lazyLoad(pf => q"$pf.withInternalParent(this)")
+            case OptionTree(tpe) => lazyLoad(pf => q"$pf.map(_.withInternalParent(this))")
+            case SeqTree(tpe) => lazyLoad(pf => q"$pf.map(_.withInternalParent(this))")
+            case SeqSeqTree(tpe) => lazyLoad(pf => q"$pf.map(_.map(_.withInternalParent(this)))")
           }
         }
         def storeField(f: c.Tree, v: c.Tree) = {
           f.tpe.finalResultType match {
             case Primitive(tpe) => q""
-            case Tree(tpe) => q"$f = $v.internalWithParent(node)"
-            case OptionTree(tpe) => q"$f = $v.map(_.internalWithParent(node))"
-            case SeqTree(tpe) => q"$f = $v.map(_.internalWithParent(node))"
-            case SeqSeqTree(tpe) => q"$f = $v.map(_.map(_.internalWithParent(node)))"
+            case Tree(tpe) => q"$f = $v.withInternalParent(node)"
+            case OptionTree(tpe) => q"$f = $v.map(_.withInternalParent(node))"
+            case SeqTree(tpe) => q"$f = $v.map(_.withInternalParent(node))"
+            case SeqSeqTree(tpe) => q"$f = $v.map(_.map(_.withInternalParent(node)))"
             case tpe => c.abort(c.enclosingPosition, s"unsupported field type $tpe")
           }
         }
