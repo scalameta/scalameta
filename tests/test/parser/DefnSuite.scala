@@ -35,7 +35,7 @@ class DefnSuite extends ParseSuite {
 
   test("type F[T] = List[T]") {
     val Defn.Type(Nil, Type.Name("F"),
-                  TypeParam.Named(Nil, Type.Name("T"), Nil, Nil, Nil, TypeBounds(None, None)) :: Nil,
+                  TypeParam.Named(Nil, Type.Name("T"), Nil, Nil, Nil, EmptyBounds()) :: Nil,
                   Type.Apply(Type.Name("List"), Type.Name("T") :: Nil)) = templStat("type F[T] = List[T]")
   }
 
@@ -46,7 +46,7 @@ class DefnSuite extends ParseSuite {
   test("def x[A <: B] = 2") {
     val Defn.Def(Nil, Term.Name("x"),
                  TypeParam.Named(Nil, Type.Name("A"), Nil, Nil, Nil,
-                                 TypeBounds(None, Some(Type.Name("B")))) :: Nil,
+                                 TypeBounds(Type.Name("Nothing"), Type.Name("B"))) :: Nil,
                  Nil, Nil, None, Lit.Int(2)) = templStat("def x[A <: B] = 2")
   }
 
@@ -54,7 +54,7 @@ class DefnSuite extends ParseSuite {
     val Defn.Def(Nil, Term.Name("x"),
                  TypeParam.Named(Nil, Type.Name("A"), Nil, Nil,
                                  Type.Name("B") :: Nil,
-                                 TypeBounds(None, None)) :: Nil,
+                                 EmptyBounds()) :: Nil,
                  Nil, Nil, None, Lit.Int(2)) = templStat("def x[A <% B] = 2")
   }
 
@@ -63,7 +63,7 @@ class DefnSuite extends ParseSuite {
     val Defn.Def(Nil, Term.Name("x"),
                  TypeParam.Named(Nil, Type.Name("A"), Nil,
                                  Type.Name("B") :: Nil,
-                                 Nil, TypeBounds(None, None)) :: Nil,
+                                 Nil, EmptyBounds()) :: Nil,
                  Nil, Nil, None, Lit.Int(2)) = templStat("def x[A: B] = 2")
   }
 
@@ -77,7 +77,7 @@ class DefnSuite extends ParseSuite {
 
   test("def proc { return 42 }") {
     val Defn.Procedure(Nil, Term.Name("proc"), Nil, Nil, Nil,
-                       Term.Return(Some(Lit.Int(42))) :: Nil) = templStat("def proc { return 42 }")
-
+                       (ret @ Term.Return(Lit.Int(42))) :: Nil) = templStat("def proc { return 42 }")
+    assert(ret.hasExpr === true)
   }
 }

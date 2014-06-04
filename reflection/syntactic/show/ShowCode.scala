@@ -32,9 +32,9 @@ object ShowCode {
   implicit def showTree[T <: Tree]: Show[T] = Show { x => (x: Tree) match {
     case t: Name => if (t.isBackquoted) s("`", t.value, "`") else s(t.value)
 
-    // ParamType
-    case t: ParamType.Repeated => s(t.tpe, "*")
-    case t: ParamType.ByName   => s("=> ", t.tpe)
+    // Param.Type
+    case t: Param.Type.Repeated => s(t.tpe, "*")
+    case t: Param.Type.ByName   => s("=> ", t.tpe)
 
     // Type
     case t: Type.Project     => s(t.qual, "#", t.selector)
@@ -43,7 +43,7 @@ object ShowCode {
     case t: Type.Annotate    => s(t.tpe, " ", t.mods)
     case t: Type.Apply       => s(t.tpe, "[", r(t.args, ", "), "]")
     case t: Type.ApplyInfix  => s(t.lhs, " ", t.op, " ", t.rhs)
-    case t: Type.Compound if t.hasExplicitRefinement => s(r(t.tpes, " with "), " { ", r(t.refinement, "; "), " }")
+    case t: Type.Compound if t.hasBraces => s(r(t.tpes, " with "), " { ", r(t.refinement, "; "), " }")
     case t: Type.Compound    => r(t.tpes, "with")
     case t: Type.Existential => s(t.tpe, " forSome { ", r(t.quants, "; "), " }")
     case t: Type.Placeholder => s("_", t.bounds)
@@ -65,16 +65,16 @@ object ShowCode {
     case _: Lit.Unit     => s("()")
 
     // Term
-    case t: Term.This        => s(t.qual.map { qual => s(qual, ".") }.getOrElse(s()), "this")
-    case t: Term.Select      => s(parens(t.qual), ".", t.selector)
-    case t: Term.Assign      => s(parens(t.lhs), " = ", t.rhs)
-    case t: Term.Update      => s(parens(t.lhs), " = ", t.rhs)
-    case t: Term.Return      => s("return ", t.expr.map(s(_)).getOrElse(s()))
-    case t: Term.Throw       => s("throw ", t.expr)
-    case t: Term.Ascribe     => s(t.expr, ": ", t.tpe)
-    case t: Term.Annotate    => s(t.expr, ": ", t.mods)
-    case t: Term.Tuple       => s("(", r(t.elements, ", "), ")")
-    case t: Term.Block       =>
+    case t: Term.This     => s(t.qual.map { qual => s(qual, ".") }.getOrElse(s()), "this")
+    case t: Term.Select   => s(parens(t.qual), if (t.isPostfix) " " else ".", t.selector)
+    case t: Term.Assign   => s(parens(t.lhs), " = ", t.rhs)
+    case t: Term.Update   => s(parens(t.lhs), " = ", t.rhs)
+    case t: Term.Return   => s("return", if (t.hasExpr) s(" ", t.expr) else s())
+    case t: Term.Throw    => s("throw ", t.expr)
+    case t: Term.Ascribe  => s(t.expr, ": ", t.tpe)
+    case t: Term.Annotate => s(t.expr, ": ", t.mods)
+    case t: Term.Tuple    => s("(", r(t.elements, ", "), ")")
+    case t: Term.Block    =>
       import Term.{Block, Function}
       def pstats(s: Seq[Stmt.Block]) = r(s.map(i(_)), ";")
       t match {
@@ -106,12 +106,11 @@ object ShowCode {
         case (arg: Term) :: Nil => s(parens(arg))
         case args               => s(args)
       })
-    case t: Term.Try         =>
+    case t: Term.Try      =>
       s("try ", t.expr,
         t.catchp.map { catchp => s(" catch ", catchp) }.getOrElse(s()),
         t.finallyp.map { finallyp => s(" finally ", finallyp) }.getOrElse(s()))
-    case t: Term.If.Then     => s("if (", t.cond, ") ", t.thenp)
-    case t: Term.If.ThenElse => s("if (", t.cond, ") ", t.thenp, " else ", t.elsep)
+    case t: Term.If       => s("if (", t.cond, ") ", t.thenp, if (t.hasElse) s(" else ", t.elsep) else s())
     case t: Term.Function =>
       t match {
         case Term.Function(Param.Named(mods, name, tptopt, _) :: Nil, body) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
@@ -227,15 +226,14 @@ object ShowCode {
       if (t.early.isEmpty && t.parents.isEmpty && t.self.name.isEmpty && t.self.decltpe.isEmpty && t.stats.isEmpty) s()
       else {
         val pearly = if (t.early.isEmpty) s() else s("{ ", r(t.early, "; "), " } with ")
-        // TODO: use Template.hasExplicitBody
+        // TODO: use Template.hasBraces
         val pbody = if (t.self.name.isEmpty && t.self.decltpe.isEmpty && t.stats.isEmpty) s()
                     else s("{", t.self, r(t.stats.map(i(_)), ";"), n("}"))
         val pparents = if (t.parents.nonEmpty) s(r(t.parents, " with "), " ") else s()
         s(pearly, pparents, pbody)
       }
     case t: TypeBounds =>
-      s(t.lo.map { lo => s(" >: ", lo) }.getOrElse(s()),
-        t.hi.map { hi => s(" <: ", hi) }.getOrElse(s()))
+      s(if (t.hasLo) s(" >: ", t.lo) else s(), if (t.hasHi) s(" <: ", t.hi) else s())
     case t: Case  =>
       s("case ", t.pat, t.cond.map { cond => s(" if ", cond) }.getOrElse(s()), " =>", r(t.stats.map(i(_)), ";"))
     case t: Param.Anonymous => s(t.mods, "_", t.decltpe)
@@ -281,7 +279,7 @@ object ShowCode {
       if (impl.isEmpty) s()
       else s("(implicit ", r(impl, ", "), ")"))
   }
-  implicit val showParamTypeOpt: Show[Option[ParamType]] = Show { _.map { t => s(": ", t) }.getOrElse(s()) }
+  implicit val showParamTypeOpt: Show[Option[Param.Type]] = Show { _.map { t => s(": ", t) }.getOrElse(s()) }
   implicit val showTypeOpt: Show[Option[Type]] = Show { _.map { t => s(": ", t) }.getOrElse(s()) }
   implicit val showTermNameOpt: Show[Option[Term.Name]] = Show { _.map(s(_)).getOrElse(s(")")) }
   implicit val showImportSels: Show[Seq[Import.Selector]] = Show {

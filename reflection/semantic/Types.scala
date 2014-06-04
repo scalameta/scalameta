@@ -2,11 +2,9 @@ package scala.reflect
 package semantic
 
 import org.scalareflect.annotations._
-import org.scalareflect.errors._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.reflect.core._
-import scala.reflect.semantic.errors.wrapHosted
 
 trait TypeOps {
   implicit class SemanticTypeOps(tree: Type) {
@@ -18,9 +16,9 @@ trait TypeOps {
     @hosted def companion: Type.Ref = tree match {
       case ref: Type.Ref => ref.defns.flatMap {
         case Seq(t: Member.Template) => t.companion
-        case _ => fail(ReflectionException(s"companion not found"))
+        case _ => fail("companion not found")
       }.map(_.ref.toTypeRef)
-      case _ => fail(ReflectionException(s"companion not found"))
+      case _ => fail("companion not found")
     }
   }
 
@@ -30,14 +28,14 @@ trait TypeOps {
         defns <- ref.defns
         result <- defns match {
           case Seq(t: Member.Template) => succeed(t)
-          case d => fail(ReflectionException(s"unexpected ref $ref to $d returned from supertypes"))
+          case d => fail(s"unexpected ref $ref to $d returned from supertypes")
         }
       } yield result
     }
     succeed(tpes) mmap {
       case ref: Type.Ref => extractTemplate(ref)
       case Type.Apply(ref: Type.Ref, _) => extractTemplate(ref)
-      case tpe => fail(ReflectionException(s"unexpected type $tpe returned from supertypes"))
+      case tpe => fail(s"unexpected type $tpe returned from supertypes")
     }
   }
   implicit class SemanticTemplatesOps(val parents: Seq[Member.Template]) {

@@ -2,18 +2,16 @@ package scala.reflect
 package semantic
 
 import org.scalareflect.annotations._
-import org.scalareflect.errors._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.reflect.core._
-import scala.reflect.semantic.errors.wrapHosted
 
 trait ScopeOps {
   private[semantic] implicit class SemanticIterableOps[T](val members: Seq[T]) {
     @hosted def findUnique: T = members match {
       case Seq(unique) => succeed(unique)
-      case Seq() => fail(ReflectionException("no members found"))
-      case _ => fail(ReflectionException("multiple members found"))
+      case Seq() => fail("no members found")
+      case _ => fail("multiple members found")
     }
   }
 
@@ -106,14 +104,14 @@ trait ScopeOps {
   }
 
   implicit class SemanticParamsScopeOps(tree: Scope.Params) {
-    @hosted def params: Seq[Aux.Param.Named] = tree.allMembers[Aux.Param.Named]
-    @hosted def params(name: Name): Aux.Param.Named = tree.uniqueMember[Aux.Param.Named](name.toString)
-    @hosted def params(name: String): Aux.Param.Named = tree.uniqueMember[Aux.Param.Named](name.toString)
-    @hosted def params(name: scala.Symbol): Aux.Param.Named = tree.uniqueMember[Aux.Param.Named](name.toString)
-    @hosted def tparams: Seq[Aux.TypeParam.Named] = tree.allMembers[Aux.TypeParam.Named]
-    @hosted def tparams(name: Name): Aux.TypeParam.Named = tree.uniqueMember[Aux.TypeParam.Named](name.toString)
-    @hosted def tparams(name: String): Aux.TypeParam.Named = tree.uniqueMember[Aux.TypeParam.Named](name.toString)
-    @hosted def tparams(name: scala.Symbol): Aux.TypeParam.Named = tree.uniqueMember[Aux.TypeParam.Named](name.toString)
+    @hosted def params: Seq[Param.Named] = tree.allMembers[Param.Named]
+    @hosted def params(name: Name): Param.Named = tree.uniqueMember[Param.Named](name.toString)
+    @hosted def params(name: String): Param.Named = tree.uniqueMember[Param.Named](name.toString)
+    @hosted def params(name: scala.Symbol): Param.Named = tree.uniqueMember[Param.Named](name.toString)
+    @hosted def tparams: Seq[TypeParam.Named] = tree.allMembers[TypeParam.Named]
+    @hosted def tparams(name: Name): TypeParam.Named = tree.uniqueMember[TypeParam.Named](name.toString)
+    @hosted def tparams(name: String): TypeParam.Named = tree.uniqueMember[TypeParam.Named](name.toString)
+    @hosted def tparams(name: scala.Symbol): TypeParam.Named = tree.uniqueMember[TypeParam.Named](name.toString)
   }
 
   implicit class SemanticTemplateOps(tree: Aux.Template) {

@@ -53,17 +53,17 @@ class TypeSuite extends ParseSuite {
 
   test("A with B") {
     val comp @ Compound(TypeName("A") :: TypeName("B") :: Nil, Nil) = tpe("A with B")
-    assert(comp.hasExplicitRefinement == false)
+    assert(comp.hasBraces == false)
   }
 
   test("A with B {}") {
     val comp @ Compound(TypeName("A") :: TypeName("B") :: Nil, Nil) = tpe("A with B {}")
-    assert(comp.hasExplicitRefinement == true)
+    assert(comp.hasBraces == true)
   }
 
   test("{}") {
     val comp @ Compound(Nil, Nil) = tpe("{}")
-    assert(comp.hasExplicitRefinement == true)
+    assert(comp.hasBraces == true)
   }
 
   test("A { def x: A; val y: B; type C }") {
@@ -71,37 +71,37 @@ class TypeSuite extends ParseSuite {
                  Decl.Def(Nil, TermName("x"),
                           Nil, Nil, Nil, TypeName("Int")) ::
                  Decl.Val(Nil, List(TermName("y")), TypeName("B")) ::
-                 Decl.Type(Nil, TypeName("C"), Nil, TypeBounds(None, None)) :: Nil) =
+                 Decl.Type(Nil, TypeName("C"), Nil, EmptyBounds()) :: Nil) =
       tpe("A { def x: Int; val y: B; type C }")
   }
 
   test("F[_ >: lo <: hi]") {
     val Apply(TypeName("F"),
-              Placeholder(TypeBounds(Some(TypeName("lo")),
-                                     Some(TypeName("hi")))) :: Nil) =
+              Placeholder(TypeBounds(TypeName("lo"),
+                                     TypeName("hi"))) :: Nil) =
       tpe("F[_ >: lo <: hi]")
   }
 
   test("F[_ >: lo") {
     val Apply(TypeName("F"),
-              Placeholder(TypeBounds(Some(TypeName("lo")), None)) :: Nil) =
+              Placeholder(TypeBounds(TypeName("lo"), TypeName("Any"))) :: Nil) =
       tpe("F[_ >: lo]")
   }
 
   test("F[_ <: hi]") {
     val Apply(TypeName("F"),
-              Placeholder(TypeBounds(None, Some(TypeName("hi")))) :: Nil) =
+              Placeholder(TypeBounds(TypeName("Nothing"), TypeName("hi"))) :: Nil) =
       tpe("F[_ <: hi]")
   }
 
   test("F[_]") {
-    val Apply(TypeName("F"), Placeholder(TypeBounds(None, None)) :: Nil) =
+    val Apply(TypeName("F"), Placeholder(EmptyBounds()) :: Nil) =
       tpe("F[_]")
   }
 
   test("F[T] forSome { type T }") {
     val Existential(Apply(TypeName("F"), TypeName("T") :: Nil),
-                    Decl.Type(Nil, TypeName("T"), Nil, TypeBounds(None, None)) :: Nil) =
+                    Decl.Type(Nil, TypeName("T"), Nil, EmptyBounds()) :: Nil) =
       tpe("F[T] forSome { type T }")
   }
 

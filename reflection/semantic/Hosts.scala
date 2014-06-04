@@ -15,7 +15,7 @@ trait HostContext {
   def members(scope: Scope, name: Name): Seq[Member]
   def ctors(scope: Scope): Seq[Ctor]
 
-  def defns(ref: Ref): Seq[Member] = ???
+  def defns(ref: Ref): Seq[Member]
   def overrides(member: Member.Term): Seq[Member.Term]
   def overrides(member: Member.Type): Seq[Member.Type]
 

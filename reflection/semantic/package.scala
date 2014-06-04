@@ -2,7 +2,6 @@ package scala.reflect
 
 import org.scalareflect.adt._
 import org.scalareflect.annotations._
-import org.scalareflect.errors._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.reflect.core._
@@ -21,18 +20,18 @@ package object semantic extends MemberOps with ScopeOps with TermOps with TypeOp
     @hosted def attrs: Seq[Attribute] = delegate
     @hosted private[semantic] def internalTpe: Type = attrs.flatMap(_.collect{ case tpe: Attribute.Type => tpe } match {
       case Attribute.Type(tpe: Type) :: Nil => succeed(tpe)
-      case _ => fail(ReflectionException("typecheck has failed"))
+      case _ => fail("typecheck has failed")
     })
-    @hosted private[semantic] def internalParamTpe: Aux.ParamType = attrs.flatMap(_.collect{ case tpe: Attribute.Type => tpe } match {
+    @hosted private[semantic] def internalParamTpe: Param.Type = attrs.flatMap(_.collect{ case tpe: Attribute.Type => tpe } match {
       case Attribute.Type(paramTpe) :: Nil => succeed(paramTpe)
-      case _ => fail(ReflectionException("typecheck has failed"))
+      case _ => fail("typecheck has failed")
     })
   }
 
   @root trait Attribute
   object Attribute {
     @leaf class Defn(defn: core.Tree) extends Attribute
-    @leaf class Type(tpe: core.Aux.ParamType) extends Attribute
+    @leaf class Type(tpe: core.Param.Type) extends Attribute
     @leaf class InferredTargs(targs: Seq[core.Type]) extends Attribute
     @leaf class InferredVargs(vargs: Seq[core.Term]) extends Attribute
     @leaf class MacroExpansion(tree: core.Tree) extends Attribute

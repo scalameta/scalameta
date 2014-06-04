@@ -354,21 +354,21 @@ abstract class Parser { parser =>
 /* ---------- TREE CONSTRUCTION ------------------------------------------- */
 
   /** Convert tree to formal parameter list. */
-  def convertToParams(tree: Term): List[Aux.Param] = tree match {
+  def convertToParams(tree: Term): List[Param] = tree match {
     case Term.Tuple(ts) => ts.toList flatMap convertToParam
     case _              => List(convertToParam(tree)).flatten
   }
 
   /** Convert tree to formal parameter. */
-  def convertToParam(tree: Term): Option[Aux.Param] = tree match {
+  def convertToParam(tree: Term): Option[Param] = tree match {
     case name: Name =>
-      Some(Aux.Param.Named(Nil, name.toTermName, None, None))
+      Some(Param.Named(Nil, name.toTermName, None, None))
     case Term.Placeholder() =>
-      Some(Aux.Param.Anonymous(Nil, None))
+      Some(Param.Anonymous(Nil, None))
     case Term.Ascribe(name: Name, tpt) =>
-      Some(Aux.Param.Named(Nil, name.toTermName, Some(tpt), None))
+      Some(Param.Named(Nil, name.toTermName, Some(tpt), None))
     case Term.Ascribe(Term.Placeholder(), tpt) =>
-      Some(Aux.Param.Anonymous(Nil, Some(tpt)))
+      Some(Param.Anonymous(Nil, Some(tpt)))
     case Lit.Unit() =>
       None
     case other =>
@@ -492,7 +492,7 @@ abstract class Parser { parser =>
     Term.Select(reduceStack(base, opinfo.lhs) match {
       case (t: Term) :: Nil => t
       case _                => unreachable
-    }, opinfo.operator) :: Nil
+    }, opinfo.operator)(isPostfix = true) :: Nil
 
   def finishBinaryOp[T: OpCtx](opinfo: OpInfo[T], rhs: T): T = opctx.binop(opinfo, rhs)
 
@@ -534,7 +534,7 @@ abstract class Parser { parser =>
      *  }}}
      */
     def argType(): Type
-    def functionArgType(): ParamType
+    def functionArgType(): Param.Type
 
     private def tupleInfixType(): Type = {
       in.nextToken()
@@ -551,9 +551,9 @@ abstract class Parser { parser =>
           Type.Function(ts, typ())
         } else {
           val tuple = makeTupleType(ts map {
-            case t: Type               => t
-            case p: ParamType.ByName   => syntaxError(p, "by name type not allowed here")
-            case p: ParamType.Repeated => syntaxError(p, "repeated type not alloed here")
+            case t: Type                => t
+            case p: Param.Type.ByName   => syntaxError(p, "by name type not allowed here")
+            case p: Param.Type.Repeated => syntaxError(p, "repeated type not alloed here")
           })
           infixTypeRest(
             compoundTypeRest(Some(
@@ -656,12 +656,12 @@ abstract class Parser { parser =>
         ts += annotType()
       }
       newLineOptWhenFollowedBy(LBRACE)
-      val types                 = ts.toList
-      val hasExplicitRefinement = in.token == LBRACE
-      val refinements           = if (in.token == LBRACE) refinement() else Nil
+      val types       = ts.toList
+      val hasBraces   = in.token == LBRACE
+      val refinements = if (in.token == LBRACE) refinement() else Nil
       (types, refinements) match {
         case (typ :: Nil, Nil) => typ
-        case _                 => Type.Compound(types, refinements)(hasExplicitRefinement)
+        case _                 => Type.Compound(types, refinements)(hasBraces)
       }
     }
 
@@ -692,7 +692,7 @@ abstract class Parser { parser =>
      *  }}}
      */
     def types(): List[Type] = commaSeparated(argType())
-    def functionTypes(): List[ParamType] = commaSeparated(functionArgType())
+    def functionTypes(): List[Param.Type] = commaSeparated(functionArgType())
   }
 
   // TODO: can we get away without this?
@@ -748,7 +748,7 @@ abstract class Parser { parser =>
       in.nextToken()
       val superp = Aux.Super(None, mixinQualifierOpt())
       accept(DOT)
-      val supersel = Term.Select(superp, termName())
+      val supersel = Term.Select(superp, termName())(isPostfix = false)
       if (stop) supersel
       else {
         in.skipToken()
@@ -771,7 +771,7 @@ abstract class Parser { parser =>
           in.nextToken()
           val superp = Aux.Super(Some(name.toEitherName), mixinQualifierOpt())
           accept(DOT)
-          val supersel = Term.Select(superp, termName())
+          val supersel = Term.Select(superp, termName())(isPostfix = false)
           if (stop) supersel
           else {
             in.skipToken()
@@ -784,7 +784,7 @@ abstract class Parser { parser =>
     }
   }
 
-  def selector(t: Term): Term.Select = Term.Select(t, termName())
+  def selector(t: Term): Term.Select = Term.Select(t, termName())(isPostfix = false)
   def selectors(t: Term.Ref): Term.Ref ={
     val t1 = selector(t)
     if (in.token == DOT && lookingAhead { isName }) {
@@ -971,8 +971,8 @@ abstract class Parser { parser =>
       val cond = condExpr()
       newLinesOpt()
       val thenp = expr()
-      if (in.token == ELSE) { in.nextToken(); Term.If.ThenElse(cond, thenp, expr()) }
-      else { Term.If.Then(cond, thenp) }
+      if (in.token == ELSE) { in.nextToken(); Term.If(cond, thenp, expr())(hasElse = true) }
+      else { Term.If(cond, thenp, Lit.Unit()(Origin.None))(hasElse = false) }
     case TRY =>
       in.skipToken()
       val body: Term = in.token match {
@@ -1022,7 +1022,8 @@ abstract class Parser { parser =>
       }
     case RETURN =>
       in.skipToken()
-      Term.Return(if (isExprIntro) Some(expr()) else None)
+      if (isExprIntro) Term.Return(expr())(hasExpr = true)
+      else Term.Return(Lit.Unit()(Origin.None))(hasExpr = false)
     case THROW =>
       in.skipToken()
       Term.Throw(expr())
@@ -1168,8 +1169,8 @@ abstract class Parser { parser =>
         case NEW =>
           canApply = false
           in.nextToken()
-          val (edefs, parents, self, stats, hasExplicitBody) = template()
-          Term.New(Aux.Template(edefs, parents, self, stats)(hasExplicitBody = hasExplicitBody))
+          val (edefs, parents, self, stats, hasBraces) = template()
+          Term.New(Aux.Template(edefs, parents, self, stats)(hasBraces))
         case _ =>
           syntaxError("illegal start of simple expression")
       }
@@ -1241,7 +1242,7 @@ abstract class Parser { parser =>
   def argumentExprs(): List[Arg] = {
     def args(): List[Arg] = commaSeparated {
       expr() match {
-        case Term.Ascribe(t, Type.Placeholder(Aux.TypeBounds(None, None))) if isName && in.name == "*" =>
+        case Term.Ascribe(t, Type.Placeholder(bounds: Aux.TypeBounds)) if !bounds.hasLo && !bounds.hasHi && isName && in.name == "*" =>
           in.nextToken()
           Arg.Repeated(t)
         case Term.Assign(t: Term.Name, rhs) =>
@@ -1376,7 +1377,7 @@ abstract class Parser { parser =>
     // are we in an XML pattern?
     def isXML: Boolean = false
 
-    def functionArgType(): ParamType = paramType()
+    def functionArgType(): Param.Type = paramType()
     def argType(): Type = typ()
 
     /** {{{
@@ -1553,7 +1554,7 @@ abstract class Parser { parser =>
   /** The implementation of the context sensitive methods for parsing outside of patterns. */
   object outPattern extends PatternContextSensitive {
     def argType(): Type = typ()
-    def functionArgType(): ParamType = paramType()
+    def functionArgType(): Param.Type = paramType()
   }
   /** The implementation for parsing inside of patterns at points where sequences are allowed. */
   object seqOK extends SeqContextSensitive {
@@ -1689,9 +1690,9 @@ abstract class Parser { parser =>
    *  ClassParam        ::= {Annotation}  [{Modifier} (`val' | `var')] Id [`:' ParamType] [`=' Expr]
    *  }}}
    */
-  def paramClauses(ownerIsType: Boolean, ownerIsCase: Boolean = false): (List[List[Aux.Param.Named]], List[Aux.Param.Named]) = {
+  def paramClauses(ownerIsType: Boolean, ownerIsCase: Boolean = false): (List[List[Param.Named]], List[Param.Named]) = {
     var parsedImplicits = false
-    def paramClause(): List[Aux.Param.Named] = {
+    def paramClause(): List[Param.Named] = {
       if (in.token == RPAREN)
         return Nil
 
@@ -1701,8 +1702,8 @@ abstract class Parser { parser =>
       }
       commaSeparated(param(ownerIsCase, ownerIsType, isImplicit = parsedImplicits))
     }
-    val paramss = new ListBuffer[List[Aux.Param.Named]]
-    var implicits = List.empty[Aux.Param.Named]
+    val paramss = new ListBuffer[List[Param.Named]]
+    var implicits = List.empty[Param.Named]
     newLineOptWhenFollowedBy(LPAREN)
     while (!parsedImplicits && in.token == LPAREN) {
       in.nextToken()
@@ -1721,20 +1722,20 @@ abstract class Parser { parser =>
    *  ParamType ::= Type | `=>' Type | Type `*'
    *  }}}
    */
-  def paramType(): ParamType = in.token match {
+  def paramType(): Param.Type = in.token match {
     case ARROW =>
       in.nextToken()
-      ParamType.ByName(typ())
+      Param.Type.ByName(typ())
     case _ =>
       val t = typ()
       if (!isRawStar) t
       else {
         in.nextToken()
-        ParamType.Repeated(t)
+        Param.Type.Repeated(t)
       }
   }
 
-  def param(ownerIsCase: Boolean, ownerIsType: Boolean, isImplicit: Boolean): Aux.Param.Named = {
+  def param(ownerIsCase: Boolean, ownerIsType: Boolean, isImplicit: Boolean): Param.Named = {
     var mods: List[Mod] = annots(skipNewLines = false)
     if (ownerIsType) {
       mods ++= modifiers()
@@ -1751,7 +1752,7 @@ abstract class Parser { parser =>
     val tpt = {
       accept(COLON)
       val tpt = paramType()
-      if (tpt.isInstanceOf[ParamType.ByName]) {
+      if (tpt.isInstanceOf[Param.Type.ByName]) {
         def mayNotBeByName(subj: String) =
           syntaxError(s"$subj parameters may not be call-by-name")
         val isLocalToThis: Boolean =
@@ -1779,7 +1780,7 @@ abstract class Parser { parser =>
         in.nextToken()
         Some(expr())
       }
-    Aux.Param.Named(mods, name, Some(tpt), default)
+    Param.Named(mods, name, Some(tpt), default)
   }
 
   /** {{{
@@ -1791,7 +1792,7 @@ abstract class Parser { parser =>
    *  TypeParam             ::= Id TypeParamClauseOpt TypeBounds {<% Type} {":" Type}
    *  }}}
    */
-  def typeParamClauseOpt(ownerIsType: Boolean, ctxBoundsAllowed: Boolean): List[Aux.TypeParam] = {
+  def typeParamClauseOpt(ownerIsType: Boolean, ctxBoundsAllowed: Boolean): List[TypeParam] = {
     newLineOptWhenFollowedBy(LBRACKET)
     if (in.token != LBRACKET) Nil
     else inBrackets(commaSeparated {
@@ -1800,7 +1801,7 @@ abstract class Parser { parser =>
     })
   }
 
-  def typeParam(annots: List[Mod.Annot], ownerIsType: Boolean, ctxBoundsAllowed: Boolean): Aux.TypeParam = {
+  def typeParam(annots: List[Mod.Annot], ownerIsType: Boolean, ctxBoundsAllowed: Boolean): TypeParam = {
     val mods =
       if (ownerIsType && isName) {
         if (in.name == "+") {
@@ -1836,8 +1837,8 @@ abstract class Parser { parser =>
       }
     }
     nameopt match {
-      case Some(name) => Aux.TypeParam.Named(mods, name, tparams, contextBounds.toList, viewBounds.toList, bounds)
-      case None => Aux.TypeParam.Anonymous(mods, tparams, contextBounds.toList, viewBounds.toList, bounds)
+      case Some(name) => TypeParam.Named(mods, name, tparams, contextBounds.toList, viewBounds.toList, bounds)
+      case None => TypeParam.Anonymous(mods, tparams, contextBounds.toList, viewBounds.toList, bounds)
     }
   }
 
@@ -1848,7 +1849,10 @@ abstract class Parser { parser =>
   def typeBounds(): Aux.TypeBounds = {
     val lo = bound(SUPERTYPE)
     val hi = bound(SUBTYPE)
-    Aux.TypeBounds(lo, hi)
+    Aux.TypeBounds(
+      lo.getOrElse(Type.Name("Nothing")(isBackquoted = false)(Origin.None)),
+      hi.getOrElse(Type.Name("Any")(isBackquoted = false)(Origin.None))
+    )(hasLo = lo.isDefined, hasHi = hi.isDefined)
   }
 
   def bound(tok: Token): Option[Type] =
@@ -2258,18 +2262,18 @@ abstract class Parser { parser =>
    *  }}}
    */
   def templateOpt(owner: TemplateOwner): Aux.Template = {
-    val (early, parents, self, body, hasExplicitBody) = (
+    val (early, parents, self, body, hasBraces) = (
       if (in.token == EXTENDS /* || in.token == SUBTYPE && mods.isTrait */) {
         in.nextToken()
         template()
       }
       else {
         newLineOptWhenFollowedBy(LBRACE)
-        val (self, body, hasExplicitBody) = templateBodyOpt(parenMeansSyntaxError = owner.isTrait || owner.isTerm)
-        (Nil, Nil, self, body, hasExplicitBody)
+        val (self, body, hasBraces) = templateBodyOpt(parenMeansSyntaxError = owner.isTrait || owner.isTerm)
+        (Nil, Nil, self, body, hasBraces)
       }
     )
-    Aux.Template(early, parents, self, body)(hasExplicitBody = hasExplicitBody)
+    Aux.Template(early, parents, self, body)(hasBraces)
   }
 
 /* -------- TEMPLATES ------------------------------------------- */
@@ -2292,7 +2296,7 @@ abstract class Parser { parser =>
         if (parenMeansSyntaxError) syntaxError("traits or objects may not have parameters")
         else abort("unexpected opening parenthesis")
       }
-      (Aux.Self(None, None), Nil, false)
+      (Aux.Self(None, None)(hasThis = false), Nil, false)
     }
   }
 
@@ -2346,22 +2350,24 @@ abstract class Parser { parser =>
    * @param isPre specifies whether in early initializer (true) or not (false)
    */
   def templateStatSeq(isPre : Boolean): (Aux.Self, List[Stmt.Template]) = {
-    var self: Aux.Self = Aux.Self(None, None)
+    var self: Aux.Self = Aux.Self(None, None)(hasThis = false)
     var firstOpt: Option[Term] = None
     if (isExprIntro) {
       val first = expr(InTemplate) // @S: first statement is potentially converted so cannot be stubbed.
       if (in.token == ARROW) {
         first match {
-          case Term.Placeholder() =>
-            self = Aux.Self(None, None)
           case name: Name =>
-            self = Aux.Self(Some(name.toTermName), None)
+            self = Aux.Self(Some(name.toTermName), None)(hasThis = false)
+          case Term.Placeholder() =>
+            self = Aux.Self(None, None)(hasThis = false)
+          case Term.This(None) =>
+            self = Aux.Self(None, None)(hasThis = true)
           case Term.Ascribe(name: Name, tpt) =>
-            self = Aux.Self(Some(name.toTermName), Some(tpt))
+            self = Aux.Self(Some(name.toTermName), Some(tpt))(hasThis = false)
           case Term.Ascribe(Term.Placeholder(), tpt) =>
-            self = Aux.Self(None, Some(tpt))
+            self = Aux.Self(None, Some(tpt))(hasThis = false)
           case Term.Ascribe(tree @ Term.This(None), tpt) =>
-            self = Aux.Self(None, Some(tpt))
+            self = Aux.Self(None, Some(tpt))(hasThis = true)
           case _ =>
         }
         in.nextToken()

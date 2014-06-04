@@ -3,17 +3,17 @@ import scala.reflect.core._, Aux._, Defn.{Trait, Object, Class}
 class TemplateSuite extends ParseSuite {
   test("trait T") {
     val Trait(Nil, Type.Name("T"), Nil, templ @ Aux.Template(Nil, Nil, Self(None, None), Nil)) = templStat("trait T")
-    assert(templ.hasExplicitBody === false)
+    assert(templ.hasBraces === false)
   }
 
   test("trait T {}") {
     val Trait(Nil, Type.Name("T"), Nil, templ @ Aux.Template(Nil, Nil, Self(None, None), Nil)) = templStat("trait T {}")
-    assert(templ.hasExplicitBody === true)
+    assert(templ.hasBraces === true)
   }
 
   test("trait F[T]") {
     val Trait(Nil, Type.Name("F"),
-              TypeParam.Named(Nil, Type.Name("T"), Nil, Nil, Nil, TypeBounds(None, None)) :: Nil,
+              TypeParam.Named(Nil, Type.Name("T"), Nil, Nil, Nil, EmptyBounds()) :: Nil,
               Aux.Template(Nil, Nil, Self(None, None), Nil)) = templStat("trait F[T]")
   }
 
@@ -51,7 +51,7 @@ class TemplateSuite extends ParseSuite {
 
   test("class C[T]") {
     val Class(Nil, Type.Name("C"),
-              TypeParam.Named(Nil, Type.Name("T"), Nil, Nil, Nil, TypeBounds(None, None)) :: Nil,
+              TypeParam.Named(Nil, Type.Name("T"), Nil, Nil, Nil, EmptyBounds()) :: Nil,
               Ctor.Primary(Nil, Nil, Nil),
               Aux.Template(Nil, Nil, Self(None, None), Nil)) = templStat("class C[T]")
   }
@@ -73,6 +73,13 @@ class TemplateSuite extends ParseSuite {
     val Class(Nil, Type.Name("A"), Nil, Ctor.Primary(Nil, Nil, Nil),
               Template(Nil, Nil, Self(Some(Term.Name("self")), Some(Type.Name("B"))), Nil)) =
       templStat("class A { self: B => }")
+  }
+
+  test("class A { this => }") {
+    val Class(Nil, Type.Name("A"), Nil, Ctor.Primary(Nil, Nil, Nil),
+              Template(Nil, Nil, self @ Self(None, None), Nil)) =
+      templStat("class A { this => }")
+    assert(self.hasThis == true)
   }
 
   test("class C { def x: Int }") {

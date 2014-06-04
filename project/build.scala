@@ -118,7 +118,7 @@ object build extends Build {
   ) aggregate (reflection, foundation, tests)
 
   lazy val foundation = Project(
-    id   = "foundation",
+    id   = "core-foundation",
     base = file("foundation")
   ) settings (
     publishableSettings: _*

@@ -2,16 +2,15 @@ package scala.reflect
 package semantic
 
 import org.scalareflect.annotations._
-import org.scalareflect.errors._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.reflect.core._
-import scala.reflect.semantic.errors.wrapHosted
 
 trait MemberOps {
   implicit class SemanticMemberOps(tree: Member) {
     // TODO: expose type parameter instantiation facilities, e.g. `def foo[T]: T = ...` => `def foo: Int = ...`
     def ref: Ref = tree match {
+      // TODO: this logic is not enough. if a member is a synthetic typeSignatureIn'd thing, we also need to remember its prefix
       case self: Aux.Self => self.name.getOrElse(Term.This(None))
       case named: Has.Name => named.name
     }
@@ -88,7 +87,7 @@ trait MemberOps {
       val candidates = tree.owner.flatMap(_.members(companionName))
       candidates.flatMap{candidates =>
         val relevant = candidates.collect(f).headOption
-        relevant.map(result => succeed(result)).getOrElse(fail(ReflectionException(s"companion not found")))
+        relevant.map(result => succeed(result)).getOrElse(fail("companion not found"))
       }
     }
   }
@@ -129,10 +128,10 @@ trait MemberOps {
     @hosted def tpe: core.Type = tree.internalTpe
   }
 
-  implicit class SemanticParentOps(tree: Aux.Param) {
+  implicit class SemanticParentOps(tree: Param) {
     @hosted def ctor: Ctor = tree.attrs.flatMap(_.collect{ case defn: Attribute.Defn => defn } match {
       case Attribute.Defn(defn: Ctor) :: Nil => succeed(defn)
-      case _ => fail(ReflectionException("typecheck has failed"))
+      case _ => fail("typecheck has failed")
     })
   }
 
@@ -141,7 +140,7 @@ trait MemberOps {
     @hosted def tpe: Type = tree.internalTpe
   }
 
-  implicit class SemanticParamOps(tree: Aux.Param) {
-    @hosted def tpe: Aux.ParamType = tree.internalParamTpe
+  implicit class SemanticParamOps(tree: Param) {
+    @hosted def tpe: Param.Type = tree.internalParamTpe
   }
 }
