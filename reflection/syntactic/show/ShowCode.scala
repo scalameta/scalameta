@@ -65,17 +65,16 @@ object ShowCode {
     case _: Lit.Unit     => s("()")
 
     // Term
-    case t: Term.This        => s(t.qual.map { qual => s(qual, ".") }.getOrElse(s()), "this")
-    case t: Term.Select      => s(parens(t.qual), if (t.isPostfix) " " else ".", t.selector)
-    case t: Term.Assign      => s(parens(t.lhs), " = ", t.rhs)
-    case t: Term.Update      => s(parens(t.lhs), " = ", t.rhs)
-    case t: Term.Return.Expr => s("return ", s(t.expr))
-    case t: Term.Return.Unit => s("return")
-    case t: Term.Throw       => s("throw ", t.expr)
-    case t: Term.Ascribe     => s(t.expr, ": ", t.tpe)
-    case t: Term.Annotate    => s(t.expr, ": ", t.mods)
-    case t: Term.Tuple       => s("(", r(t.elements, ", "), ")")
-    case t: Term.Block       =>
+    case t: Term.This     => s(t.qual.map { qual => s(qual, ".") }.getOrElse(s()), "this")
+    case t: Term.Select   => s(parens(t.qual), if (t.isPostfix) " " else ".", t.selector)
+    case t: Term.Assign   => s(parens(t.lhs), " = ", t.rhs)
+    case t: Term.Update   => s(parens(t.lhs), " = ", t.rhs)
+    case t: Term.Return   => s("return", if (t.hasExpr) s(" ", t.expr) else s())
+    case t: Term.Throw    => s("throw ", t.expr)
+    case t: Term.Ascribe  => s(t.expr, ": ", t.tpe)
+    case t: Term.Annotate => s(t.expr, ": ", t.mods)
+    case t: Term.Tuple    => s("(", r(t.elements, ", "), ")")
+    case t: Term.Block    =>
       import Term.{Block, Function}
       def pstats(s: Seq[Stmt.Block]) = r(s.map(i(_)), ";")
       t match {
@@ -107,12 +106,11 @@ object ShowCode {
         case (arg: Term) :: Nil => s(parens(arg))
         case args               => s(args)
       })
-    case t: Term.Try         =>
+    case t: Term.Try      =>
       s("try ", t.expr,
         t.catchp.map { catchp => s(" catch ", catchp) }.getOrElse(s()),
         t.finallyp.map { finallyp => s(" finally ", finallyp) }.getOrElse(s()))
-    case t: Term.If.Then     => s("if (", t.cond, ") ", t.thenp)
-    case t: Term.If.ThenElse => s("if (", t.cond, ") ", t.thenp, " else ", t.elsep)
+    case t: Term.If       => s("if (", t.cond, ") ", t.thenp, if (t.hasElse) s(" else ", t.elsep) else s())
     case t: Term.Function =>
       t match {
         case Term.Function(Param.Named(mods, name, tptopt, _) :: Nil, body) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
@@ -235,8 +233,7 @@ object ShowCode {
         s(pearly, pparents, pbody)
       }
     case t: TypeBounds =>
-      s(t.decllo.map { lo => s(" >: ", lo) }.getOrElse(s()),
-        t.declhi.map { hi => s(" <: ", hi) }.getOrElse(s()))
+      s(if (t.hasLo) s(" >: ", t.lo) else s(), if (t.hasHi) s(" <: ", t.hi) else s())
     case t: Case  =>
       s("case ", t.pat, t.cond.map { cond => s(" if ", cond) }.getOrElse(s()), " =>", r(t.stats.map(i(_)), ";"))
     case t: Param.Anonymous => s(t.mods, "_", t.decltpe)

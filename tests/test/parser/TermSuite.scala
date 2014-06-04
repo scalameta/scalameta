@@ -97,11 +97,13 @@ class TermSuite extends ParseSuite {
   }
 
   test("return") {
-    val Return.Unit() = term("return")
+    val ret @ Return(Lit.Unit()) = term("return")
+    assert(ret.hasExpr === false)
   }
 
   test("return 1") {
-    val Return.Expr(Lit.Int(1)) = term("return 1")
+    val ret @ Return(Lit.Int(1)) = term("return 1")
+    assert(ret.hasExpr === true)
   }
 
   test("throw 1") {
@@ -129,11 +131,13 @@ class TermSuite extends ParseSuite {
   }
 
   test("if (true) true else false") {
-    val If.ThenElse(Lit.Bool(true), Lit.Bool(true), Lit.Bool(false)) = term("if (true) true else false")
+    val iff @ If(Lit.Bool(true), Lit.Bool(true), Lit.Bool(false)) = term("if (true) true else false")
+    assert(iff.hasElse === true)
   }
 
   test("if (true) true") {
-    val If.Then(Lit.Bool(true), Lit.Bool(true)) = term("if (true) true")
+    val iff @ If(Lit.Bool(true), Lit.Bool(true), Lit.Unit()) = term("if (true) true")
+    assert(iff.hasElse === false)
   }
 
   test("(x => x)") {

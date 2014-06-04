@@ -26,14 +26,6 @@ import scala.reflect.syntactic.SyntacticInfo._
 // TODO: implement scaladoc with palladium
 // TODO: add moar requires
 // TODO: add tree for comments
-// TODO: If, Try, Return, TypeBounds => can we provide a completely transparent option-last interface for them
-//       i.e. `If(cond, then)` should work, `If(_, _, _: Term)` should work either, but `if.else` and `if.hasElse` should be Option-based
-//       would that make sense? would that be okay to implement?
-// NOTE: other fields that don't have syntactically reasonable defaults:
-//          * This.qual, Super.thisp, Super.superp
-//          * Private.within, Protected.within
-//          * Case.cond, Named.default, Self.name
-//          * XXX.decltpe
 
 @root trait Tree extends Product {
   type ThisType <: Tree
@@ -93,11 +85,8 @@ object Term {
   }
   @ast class Assign(lhs: Term.Ref, rhs: Term) extends Term
   @ast class Update(lhs: Apply, rhs: Term) extends Term
-  @branch trait Return extends Term { def expr: Term; def hasExpr: Boolean }
-  object Return {
-    @ast class Unit() extends Return { def expr: Term = Lit.Unit(); def hasExpr: Boolean = false }
-    @ast class Expr(expr: Term) extends Return { def hasExpr: Boolean = true }
-  }
+  // TODO: require that expr and hasExpr are consistent
+  @ast class Return(expr: Term)(hasExpr: Boolean) extends Term
   @ast class Throw(expr: Term) extends Term
   @ast class Ascribe(expr: Term, tpe: Type) extends Term
   @ast class Annotate(expr: Term, annots: Seq[Mod.Annot] @nonEmpty) extends Term with Has.Mods {
@@ -111,14 +100,8 @@ object Term {
     require(stats.collect { case v: Defn.Var => v }.forall(_.rhs.isDefined))
     require(stats.collect { case m: Member if m.isPkgObject => m }.isEmpty)
   }
-
-  @branch trait If extends Term { def cond: Term; def thenp: Term; def elsep: Term; def hasElse: Boolean }
-  object If {
-    // TODO: maybe merge Then and ThenElse using flags?
-    @ast class Then(cond: Term, thenp: Term) extends If { def elsep: Term = Lit.Unit(); def hasElse: Boolean = false }
-    @ast class ThenElse(cond: Term, thenp: Term, elsep: Term) extends If { def hasElse: Boolean = true }
-  }
-
+  // TODO: require that elsep and hasElse are consistent
+  @ast class If(cond: Term, thenp: Term, elsep: Term)(hasElse: Boolean) extends Term
   @ast class Match(scrut: Term, cases: Cases) extends Term
   @ast class Try(expr: Term, catchp: Option[Term], finallyp: Option[Term]) extends Term
   // TODO: we could add a flag that distinguishes { x => ... } and (x => { ... })
@@ -473,12 +456,8 @@ object Aux {
                      viewBounds: Seq[core.Type],
                      bounds: Aux.TypeBounds) extends TypeParam with Member.Type with Has.TypeName
   }
-  @ast class TypeBounds(decllo: Option[Type], declhi: Option[Type]) extends Tree {
-    def lo: Type = decllo.getOrElse(???) // TODO: t"Nothing"
-    def hasLo: Boolean = decllo.isDefined
-    def hi: Type = declhi.getOrElse(???) // TODO: t"Any"
-    def hasHi: Boolean = declhi.isDefined
-  }
+  // TODO: require that lo/hi and hasLo/hasHi are consistent
+  @ast class TypeBounds(lo: Type, hi: Type)(hasLo: Boolean, hasHi: Boolean) extends Tree
   @ast class Super(thisp: Option[core.Name.Either], superp: Option[Type.Name]) extends Term.Qualifier with Type.Qualifier
   @branch trait ValOrVar extends Stmt.Template with Has.Mods // NOTE: vals and vars are not members!
 }

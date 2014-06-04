@@ -1,7 +1,7 @@
 import org.scalatest._
 import scala.reflect.syntactic._
 
-class ParseSuite extends FunSuite {
+class ParseSuite extends FunSuite with CommonTrees {
   def parse[T](rule: SourceParser => T): String => T =
     code => new SourceParser(code).parseRule(rule)
   def term = parse(_.expr())

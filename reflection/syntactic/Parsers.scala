@@ -971,8 +971,8 @@ abstract class Parser { parser =>
       val cond = condExpr()
       newLinesOpt()
       val thenp = expr()
-      if (in.token == ELSE) { in.nextToken(); Term.If.ThenElse(cond, thenp, expr()) }
-      else { Term.If.Then(cond, thenp) }
+      if (in.token == ELSE) { in.nextToken(); Term.If(cond, thenp, expr())(hasElse = true) }
+      else { Term.If(cond, thenp, Lit.Unit()(Origin.None))(hasElse = false) }
     case TRY =>
       in.skipToken()
       val body: Term = in.token match {
@@ -1022,8 +1022,8 @@ abstract class Parser { parser =>
       }
     case RETURN =>
       in.skipToken()
-      if (isExprIntro) Term.Return.Expr(expr())
-      else Term.Return.Unit()
+      if (isExprIntro) Term.Return(expr())(hasExpr = true)
+      else Term.Return(Lit.Unit()(Origin.None))(hasExpr = false)
     case THROW =>
       in.skipToken()
       Term.Throw(expr())
@@ -1242,7 +1242,7 @@ abstract class Parser { parser =>
   def argumentExprs(): List[Arg] = {
     def args(): List[Arg] = commaSeparated {
       expr() match {
-        case Term.Ascribe(t, Type.Placeholder(Aux.TypeBounds(None, None))) if isName && in.name == "*" =>
+        case Term.Ascribe(t, Type.Placeholder(bounds: Aux.TypeBounds)) if !bounds.hasLo && !bounds.hasHi && isName && in.name == "*" =>
           in.nextToken()
           Arg.Repeated(t)
         case Term.Assign(t: Term.Name, rhs) =>
@@ -1849,7 +1849,10 @@ abstract class Parser { parser =>
   def typeBounds(): Aux.TypeBounds = {
     val lo = bound(SUPERTYPE)
     val hi = bound(SUBTYPE)
-    Aux.TypeBounds(lo, hi)
+    Aux.TypeBounds(
+      lo.getOrElse(Type.Name("Nothing")(isBackquoted = false)(Origin.None)),
+      hi.getOrElse(Type.Name("Any")(isBackquoted = false)(Origin.None))
+    )(hasLo = lo.isDefined, hasHi = hi.isDefined)
   }
 
   def bound(tok: Token): Option[Type] =
