@@ -48,20 +48,15 @@ class AstMacros(val c: Context) {
       illegal.foreach(stmt => c.abort(stmt.pos, "only invariants and definitions are allowed in @ast classes"))
 
       // step 3: generate boilerplate parameters
-      bparams1 += q"private val prototype: $name"
-      bparams1 += q"private[core] val internalParent: Tree"
-      stats1 += q"def parent: Option[Tree] = if (internalParent != null) _root_.scala.Some(internalParent) else _root_.scala.None"
-      def internalize(p: ValDef) = TermName("_" + p.name.toString)
-      val fieldInitss = paramss.map(_.map(p => q"$AstInternal.initField(this.${internalize(p)})"))
-      stats1 += q"private[core] def withInternalParent(internalParent: Tree): ThisType = new ThisType(this, internalParent, scratchpads, origin)(...$fieldInitss)"
-      bparams1 += q"private val scratchpads: _root_.scala.collection.immutable.Map[_root_.scala.reflect.semantic.HostContext, _root_.scala.collection.immutable.Seq[Any]]"
-      stats1 += q"private[reflect] def scratchpad(implicit h: _root_.scala.reflect.semantic.HostContext): _root_.scala.collection.immutable.Seq[Any] = scratchpads.getOrElse(h, Nil)"
-      stats1 += q"private[reflect] def appendScratchpad(datum: Any)(implicit h: HostContext): ThisType = new ThisType(this, internalParent, scratchpads + (h -> (scratchpads.getOrElse(h, Nil) :+ datum)), origin)(...$fieldInitss)"
-      stats1 += q"private[reflect] def withScratchpad(scratchpad: _root_.scala.collection.immutable.Seq[Any])(implicit h: _root_.scala.reflect.semantic.HostContext): ThisType = new ThisType(this, internalParent, scratchpads + (h -> scratchpad), origin)(...$fieldInitss)"
-      stats1 += q"private[reflect] def mapScratchpad(f: _root_.scala.collection.immutable.Seq[Any] => _root_.scala.collection.immutable.Seq[Any])(implicit h: _root_.scala.reflect.semantic.HostContext): ThisType = new ThisType(this, internalParent, scratchpads + (h -> f(scratchpads.getOrElse(h, Nil))), origin)(...$fieldInitss)"
+      val scratchpadsType = tq"_root_.scala.collection.immutable.Map[_root_.scala.reflect.semantic.HostContext, _root_.scala.collection.immutable.Seq[Any]]"
+      bparams1 += q"protected val internalPrototype: $name"
+      bparams1 += q"protected val internalParent: _root_.scala.reflect.core.Tree"
+      bparams1 += q"protected val internalScratchpads: $scratchpadsType"
       bparams1 += q"val origin: _root_.scala.reflect.core.Origin"
-      stats1 += q"def withOrigin(origin: Origin): ThisType = new ThisType(this, internalParent, scratchpads, origin)(...$fieldInitss)"
-      stats1 += q"def mapOrigin(f: Origin => Origin): ThisType = new ThisType(this, internalParent, scratchpads, f(origin))(...$fieldInitss)"
+      def internalize(p: ValDef) = TermName("_" + p.name.toString)
+      val internalCopyInitss = paramss.map(_.map(p => q"$AstInternal.initField(this.${internalize(p)})"))
+      val internalCopyBody = q"new ThisType(prototype.asInstanceOf[ThisType], parent, internalScratchpads, origin)(...$internalCopyInitss)"
+      stats1 += q"private[core] def internalCopy(prototype: Tree = internalPrototype, parent: Tree = internalParent, scratchpads: $scratchpadsType = internalScratchpads, origin: _root_.scala.reflect.core.Origin = origin): ThisType = $internalCopyBody"
 
       // step 4: turn all parameters into private internal vars, create getters and setters
       paramss1 ++= paramss.map(_.map{ case p @ q"$mods val $name: $tpt = $default" => q"${undefault(unoverride(privatize(varify(mods))))} val ${internalize(p)}: $tpt" })
@@ -124,7 +119,7 @@ class AstMacros(val c: Context) {
       applyBody ++= paramss.flatten.map(p => q"$AdtInternal.emptyCheck(${p.name})")
       applyBody ++= requires
       val paramInitss = paramss.map(_.map(p => q"$AstInternal.initParam(${p.name})"))
-      applyBody += q"val node = new $name(prototype = null, internalParent = null, scratchpads = _root_.scala.collection.immutable.Map(), origin = origin)(...$paramInitss)"
+      applyBody += q"val node = new $name(null, null, _root_.scala.collection.immutable.Map(), origin)(...$paramInitss)"
       applyBody ++= paramss.flatten.map(p => q"$AstInternal.storeField(node.${internalize(p)}, ${p.name})")
       applyBody += q"node"
       mstats1 += q"def apply(...$applyParamss)(implicit origin: _root_.scala.reflect.core.Origin): $name = { ..$applyBody }"

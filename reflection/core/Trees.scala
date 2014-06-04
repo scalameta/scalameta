@@ -31,27 +31,32 @@ import scala.reflect.syntactic.SyntacticInfo._
   type ThisType <: Tree
 
   def origin: Origin
-  def withOrigin(origin: Origin): ThisType
-  def mapOrigin(f: Origin => Origin): ThisType
+  def withOrigin(origin: Origin): ThisType = internalCopy(origin = origin)
+  def mapOrigin(f: Origin => Origin): ThisType = internalCopy(origin = f(origin))
 
   // NOTE: withParent and mapParent are not available
   // because parent-child structure of trees is supposed to be maintained by the framework
-  def parent: Option[Tree]
+  def parent: Option[Tree] = if (internalParent != null) Some(internalParent) else None
 
   def showCode: String = syntactic.show.ShowCode.showTree(this).toString
   def showRaw: String = syntactic.show.ShowRaw.showTree(this).toString
   final override def toString: String = showRaw
 
-  // NOTE: not supposed to be used outside the framework internals, not even in hosts
-  private[core] def internalParent: Tree
-  private[core] def withInternalParent(x: Tree): ThisType
-
   // TODO: these APIs will most likely change in the future
   // because we would like to make sure that trees are fully immutable
-  private[reflect] def scratchpad(implicit h: HostContext): Seq[Any]
-  private[reflect] def appendScratchpad(datum: Any)(implicit h: HostContext): ThisType
-  private[reflect] def withScratchpad(scratchpad: Seq[Any])(implicit h: HostContext): ThisType
-  private[reflect] def mapScratchpad(f: Seq[Any] => Seq[Any])(implicit h: HostContext): ThisType
+  private[reflect] def scratchpad(implicit h: HostContext): Seq[Any] = internalScratchpads.getOrElse(h, Nil);
+  private[reflect] def appendScratchpad(datum: Any)(implicit h: HostContext): ThisType = internalCopy(scratchpads = internalScratchpads + (h -> (internalScratchpads.getOrElse(h, Nil) :+ datum)))
+  private[reflect] def withScratchpad(scratchpad: Seq[Any])(implicit h: HostContext): ThisType = internalCopy(scratchpads = internalScratchpads + (h -> scratchpad))
+  private[reflect] def mapScratchpad(f: Seq[Any] => Seq[Any])(implicit h: HostContext): ThisType = internalCopy(scratchpads = internalScratchpads + (h -> f(internalScratchpads.getOrElse(h, Nil))))
+
+  // NOTE: these are internal APIs that are meant to be used only in the implementation of the framework
+  // host implementors should not utilize these APIs
+  // TODO: turn the prototype argument of internalCopy into ThisType
+  // if done naively, this isn't going to compile for prototypes of @branch traits as ThisType there is abstract
+  protected def internalPrototype: ThisType
+  protected def internalParent: Tree
+  protected def internalScratchpads: Map[HostContext, Seq[Any]]
+  private[core] def internalCopy(prototype: Tree = internalPrototype, parent: Tree = internalParent, scratchpads: Map[HostContext, Seq[Any]] = internalScratchpads, origin: Origin = origin): ThisType
 }
 
 @branch trait Ref extends Tree
