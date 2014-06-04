@@ -151,6 +151,7 @@ object Type {
   @ast class Tuple(elements: Seq[Type] @nonEmpty) extends Type {
     require(elements.length > 1)
   }
+  // TODO: validate consistency of refinement and hasBraces
   @ast class Compound(tpes: Seq[Type], refinement: Seq[Stmt.Refine])(hasBraces: Boolean) extends Type with Scope.Refine {
     require(tpes.length == 1 ==> hasBraces)
   }
@@ -410,6 +411,7 @@ object Aux {
     require(stats.collect { case m: Member if m.isPkgObject => m }.isEmpty)
   }
   @ast class Parent(tpe: Type, argss: Seq[Seq[Arg]]) extends Tree
+  // TODO: validate consistency of stats and hasBraces
   @ast class Template(early: Seq[Stmt.Early],
                       parents: Seq[Parent],
                       self: Self,
