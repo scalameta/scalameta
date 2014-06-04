@@ -66,7 +66,9 @@ import scala.reflect.syntactic.SyntacticInfo._
   def isBackquoted: Boolean
 }
 object Name {
+  // NOTE: this stands for a name that encapsulates both a term name and a type name (like an import does)
   @ast class Both(value: String, @trivia isBackquoted: Boolean = false) extends Name
+  // NOTE: this stands for a name that represents either a term name or a type name (like X in private[X] does)
   @ast class Either(value: String, @trivia isBackquoted: Boolean = false) extends Name with Mod.AccessQualifier
 }
 
@@ -75,7 +77,6 @@ object Term {
   @branch trait Qualifier extends Tree
   @branch trait Ref extends Term with core.Ref with Type.Qualifier
   @ast class This(qual: Option[core.Name.Either]) extends Ref with Mod.AccessQualifier
-  // TODO: isBackquoted might use a default value or some sorts (or an overloaded apply)
   @ast class Name(value: scala.Predef.String @nonEmpty, @trivia isBackquoted: Boolean = false) extends core.Name with Ref with Pat with Member with Has.TermName {
     require(keywords.contains(value) ==> isBackquoted)
     def name: Name = this
@@ -112,7 +113,7 @@ object Term {
   @ast class If(cond: Term, thenp: Term, elsep: Term = Lit.Unit()) extends Term
   @ast class Match(scrut: Term, cases: Cases) extends Term
   @ast class Try(expr: Term, catchp: Option[Term], finallyp: Option[Term]) extends Term
-  // TODO: we could add a flag that distinguishes { x => ... } and (x => { ... })
+  // TODO: we could add a @trivia flag that distinguishes { x => ... } and (x => { ... })
   @ast class Function(params: Seq[Param], body: Term) extends Term with Scope.Params {
     require(params.collect{ case named: Param.Named => named }.forall(_.default.isEmpty))
     require(params.exists(_.mods.exists(_.isInstanceOf[Mod.Implicit])) ==> (params.length == 1))
@@ -185,6 +186,21 @@ object Pat {
   @ast class Typed(lhs: Pat, rhs: Type) extends Pat {
     require(lhs.isInstanceOf[Pat.Wildcard] || lhs.isInstanceOf[Term.Name])
   }
+}
+
+@branch trait Lit extends Term with Pat with Type
+object Lit {
+  @ast class Bool(value: scala.Boolean) extends Lit
+  @ast class Int(value: scala.Int) extends Lit
+  @ast class Long(value: scala.Long) extends Lit
+  @ast class Float(value: scala.Float) extends Lit
+  @ast class Double(value: scala.Double) extends Lit
+  @ast class Char(value: scala.Char) extends Lit
+  @ast class String(value: Predef.String) extends Lit
+  // TODO: validate that not all symbols are representable as literals, e.g. scala.Symbol("")
+  @ast class Symbol(value: scala.Symbol) extends Lit
+  @ast class Null() extends Lit
+  @ast class Unit() extends Lit
 }
 
 @branch trait Member extends Tree with Has.Mods
@@ -311,41 +327,6 @@ object Ctor {
                        stats: Seq[Stmt.Block]) extends Ctor with Stmt.Template with Scope.Params {
     require(stats.collect { case m: Member if m.isPkgObject => m }.isEmpty)
   }
-}
-
-@branch trait Stmt extends Tree
-object Stmt {
-  @branch trait TopLevel extends Stmt
-  @branch trait Template extends Stmt
-  @branch trait Block extends Template
-  @branch trait Refine extends Template
-  @branch trait Existential extends Refine
-  @branch trait Early extends Block
-}
-
-@branch trait Scope extends Tree
-object Scope {
-  @branch trait TopLevel extends Scope with Block
-  @branch trait Template extends Block with Params
-  @branch trait Block extends Refine
-  @branch trait Refine extends Existential
-  @branch trait Existential extends Scope
-  @branch trait Params extends Scope
-}
-
-@branch trait Lit extends Term with Pat with Type
-object Lit {
-  @ast class Bool(value: scala.Boolean) extends Lit
-  @ast class Int(value: scala.Int) extends Lit
-  @ast class Long(value: scala.Long) extends Lit
-  @ast class Float(value: scala.Float) extends Lit
-  @ast class Double(value: scala.Double) extends Lit
-  @ast class Char(value: scala.Char) extends Lit
-  @ast class String(value: Predef.String) extends Lit
-  // TODO: validate that not all symbols are representable as literals, e.g. scala.Symbol("")
-  @ast class Symbol(value: scala.Symbol) extends Lit
-  @ast class Null() extends Lit
-  @ast class Unit() extends Lit
 }
 
 @ast class Import(clauses: Seq[Import.Clause] @nonEmpty) extends Stmt.TopLevel with Stmt.Template with Stmt.Block
@@ -490,4 +471,24 @@ object Has {
   @branch trait Name extends Member { def name: core.Name }
   @branch trait TermName extends Member.Term with Has.Name { def name: Term.Name }
   @branch trait TypeName extends Member.Type with Has.Name { def name: Type.Name }
+}
+
+@branch trait Stmt extends Tree
+object Stmt {
+  @branch trait TopLevel extends Stmt
+  @branch trait Template extends Stmt
+  @branch trait Block extends Template
+  @branch trait Refine extends Template
+  @branch trait Existential extends Refine
+  @branch trait Early extends Block
+}
+
+@branch trait Scope extends Tree
+object Scope {
+  @branch trait TopLevel extends Scope with Block
+  @branch trait Template extends Block with Params
+  @branch trait Block extends Refine
+  @branch trait Refine extends Existential
+  @branch trait Existential extends Scope
+  @branch trait Params extends Scope
 }
