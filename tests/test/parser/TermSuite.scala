@@ -132,12 +132,12 @@ class TermSuite extends ParseSuite {
 
   test("if (true) true else false") {
     val iff @ If(Lit.Bool(true), Lit.Bool(true), Lit.Bool(false)) = term("if (true) true else false")
-    assert(iff.hasElse === true)
+    assert(iff.hasElsep === true)
   }
 
   test("if (true) true") {
     val iff @ If(Lit.Bool(true), Lit.Bool(true), Lit.Unit()) = term("if (true) true")
-    assert(iff.hasElse === false)
+    assert(iff.hasElsep === false)
   }
 
   test("(x => x)") {
@@ -245,12 +245,12 @@ class TermSuite extends ParseSuite {
 
   test("new A") {
     val New(templ @ Template(Nil, Parent(TypeName("A"), Nil) :: Nil, Self(None, None), Nil)) = term("new A")
-    assert(templ.hasBraces === false)
+    assert(templ.hasStats === false)
   }
 
   test("new A {}") {
     val New(templ @ Template(Nil, Parent(TypeName("A"), Nil) :: Nil, Self(None, None), Nil)) = term("new A {}")
-    assert(templ.hasBraces === true)
+    assert(templ.hasStats === true)
   }
 
   test("new A with B") {

@@ -43,8 +43,7 @@ object ShowCode {
     case t: Type.Annotate    => s(t.tpe, " ", t.mods)
     case t: Type.Apply       => s(t.tpe, "[", r(t.args, ", "), "]")
     case t: Type.ApplyInfix  => s(t.lhs, " ", t.op, " ", t.rhs)
-    case t: Type.Compound if t.hasBraces => s(r(t.tpes, " with "), " { ", r(t.refinement, "; "), " }")
-    case t: Type.Compound    => r(t.tpes, "with")
+    case t: Type.Compound    => s(r(t.tpes, "with"), if (t.hasRefinement) s(" { ", r(t.refinement, "; "), " }") else s())
     case t: Type.Existential => s(t.tpe, " forSome { ", r(t.quants, "; "), " }")
     case t: Type.Placeholder => s("_", t.bounds)
     case t: Type.Tuple       => s("(", r(t.elements, ", "), ")")
@@ -110,7 +109,7 @@ object ShowCode {
       s("try ", t.expr,
         t.catchp.map { catchp => s(" catch ", catchp) }.getOrElse(s()),
         t.finallyp.map { finallyp => s(" finally ", finallyp) }.getOrElse(s()))
-    case t: Term.If       => s("if (", t.cond, ") ", t.thenp, if (t.hasElse) s(" else ", t.elsep) else s())
+    case t: Term.If       => s("if (", t.cond, ") ", t.thenp, if (t.hasElsep) s(" else ", t.elsep) else s())
     case t: Term.Function =>
       t match {
         case Term.Function(Param.Named(mods, name, tptopt, _) :: Nil, body) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>

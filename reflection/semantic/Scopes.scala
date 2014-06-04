@@ -27,7 +27,7 @@ trait ScopeOps {
     }
     @hosted private[semantic] def uniqueMember[T: ClassTag](s_name: String): T = {
       val isTerm = classOf[Member.Term].isAssignableFrom(classTag[T].runtimeClass)
-      val name = if (isTerm) Term.Name(s_name)(isBackquoted = false) else Type.Name(s_name)(isBackquoted = false)
+      val name = if (isTerm) Term.Name(s_name, isBackquoted = false) else Type.Name(s_name, isBackquoted = false)
       members(name).map(_.collect { case x: T => x }).flatMap(_.findUnique)
     }
   }

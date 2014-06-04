@@ -66,8 +66,8 @@ import scala.reflect.syntactic.SyntacticInfo._
   def isBackquoted: Boolean
 }
 object Name {
-  @ast class Both(value: String)(isBackquoted: Boolean) extends Name
-  @ast class Either(value: String)(isBackquoted: Boolean) extends Name with Mod.AccessQualifier
+  @ast class Both(value: String, @trivia isBackquoted: Boolean = false) extends Name
+  @ast class Either(value: String, @trivia isBackquoted: Boolean = false) extends Name with Mod.AccessQualifier
 }
 
 @branch trait Term extends Arg with Stmt.Template with Stmt.Block with Term.Qualifier
@@ -76,12 +76,12 @@ object Term {
   @branch trait Ref extends Term with core.Ref with Type.Qualifier
   @ast class This(qual: Option[core.Name.Either]) extends Ref with Mod.AccessQualifier
   // TODO: isBackquoted might use a default value or some sorts (or an overloaded apply)
-  @ast class Name(value: scala.Predef.String @nonEmpty)(isBackquoted: Boolean) extends core.Name with Ref with Pat with Member with Has.TermName {
+  @ast class Name(value: scala.Predef.String @nonEmpty, @trivia isBackquoted: Boolean = false) extends core.Name with Ref with Pat with Member with Has.TermName {
     require(keywords.contains(value) ==> isBackquoted)
     def name: Name = this
     def mods: Seq[Mod] = Nil
   }
-  @ast class Select(qual: Qualifier, selector: Term.Name)(isPostfix: Boolean) extends Ref with Pat
+  @ast class Select(qual: Qualifier, selector: Term.Name, @trivia isPostfix: Boolean = false) extends Ref with Pat
 
   @ast class Interpolate(prefix: Name, parts: Seq[Lit.String] @nonEmpty, args: Seq[Term]) extends Term {
     // TODO: require(prefix.isInterpolationId)
@@ -95,8 +95,7 @@ object Term {
   }
   @ast class Assign(lhs: Term.Ref, rhs: Term) extends Term
   @ast class Update(lhs: Apply, rhs: Term) extends Term
-  // TODO: require that expr and hasExpr are consistent
-  @ast class Return(expr: Term)(hasExpr: Boolean) extends Term
+  @ast class Return(expr: Term = Lit.Unit()) extends Term
   @ast class Throw(expr: Term) extends Term
   @ast class Ascribe(expr: Term, tpe: Type) extends Term
   @ast class Annotate(expr: Term, annots: Seq[Mod.Annot] @nonEmpty) extends Term with Has.Mods {
@@ -110,8 +109,7 @@ object Term {
     require(stats.collect { case v: Defn.Var => v }.forall(_.rhs.isDefined))
     require(stats.collect { case m: Member if m.isPkgObject => m }.isEmpty)
   }
-  // TODO: require that elsep and hasElse are consistent
-  @ast class If(cond: Term, thenp: Term, elsep: Term)(hasElse: Boolean) extends Term
+  @ast class If(cond: Term, thenp: Term, elsep: Term = Lit.Unit()) extends Term
   @ast class Match(scrut: Term, cases: Cases) extends Term
   @ast class Try(expr: Term, catchp: Option[Term], finallyp: Option[Term]) extends Term
   // TODO: we could add a flag that distinguishes { x => ... } and (x => { ... })
@@ -140,7 +138,7 @@ object Term {
 object Type {
   @branch trait Qualifier extends Tree with Term.Qualifier
   @branch trait Ref extends Type with core.Ref
-  @ast class Name(value: String @nonEmpty)(isBackquoted: Boolean) extends core.Name with Ref {
+  @ast class Name(value: String @nonEmpty, @trivia isBackquoted: Boolean = false) extends core.Name with Ref {
     require(keywords.contains(value) ==> isBackquoted)
   }
   @ast class Select(qual: Qualifier, selector: Type.Name) extends Ref {
@@ -156,9 +154,8 @@ object Type {
   @ast class Tuple(elements: Seq[Type] @nonEmpty) extends Type {
     require(elements.length > 1)
   }
-  // TODO: validate consistency of refinement and hasBraces
-  @ast class Compound(tpes: Seq[Type], refinement: Seq[Stmt.Refine])(hasBraces: Boolean) extends Type with Scope.Refine {
-    require(tpes.length == 1 ==> hasBraces)
+  @ast class Compound(tpes: Seq[Type], refinement: Seq[Stmt.Refine] = Nil) extends Type with Scope.Refine {
+    require(tpes.length == 1 ==> hasRefinement)
   }
   @ast class Existential(tpe: Type, quants: Seq[Stmt.Existential] @nonEmpty) extends Type with Scope.Existential
   @ast class Annotate(tpe: Type, annots: Seq[Mod.Annot] @nonEmpty) extends Type with Has.Mods {
@@ -290,7 +287,7 @@ object Defn {
   }
 }
 
-@ast class Pkg(ref: Term.Ref, stats: Seq[Stmt.TopLevel])(hasBraces: Boolean)
+@ast class Pkg(ref: Term.Ref, stats: Seq[Stmt.TopLevel], @trivia hasBraces: Boolean = true)
      extends Stmt.TopLevel with Scope.TopLevel with Member.Term with Has.TermName {
   // TODO: validate nestedness of packages with and without braces
   require(ref.isQualId)
@@ -458,21 +455,19 @@ object Aux {
     require(stats.collect { case m: Member if m.isPkgObject => m }.isEmpty)
   }
   @ast class Parent(tpe: Type, argss: Seq[Seq[Arg]]) extends Tree
-  // TODO: validate consistency of stats and hasBraces
   @ast class Template(early: Seq[Stmt.Early],
                       parents: Seq[Parent],
                       self: Self,
-                      stats: Seq[Stmt.Template])(hasBraces: Boolean) extends Tree with Scope.Template {
+                      stats: Seq[Stmt.Template] = Nil) extends Tree with Scope.Template {
     require(parents.isEmpty || !parents.tail.exists(_.argss.nonEmpty))
     require(early.nonEmpty ==> parents.nonEmpty)
     require(stats.collect { case m: Member if m.isPkgObject => m }.isEmpty)
   }
-  // TODO: validate that name and hasThis are consistent
-  @ast class Self(name: Option[Term.Name], decltpe: Option[Type])(hasThis: Boolean) extends Member.Term {
+  @ast class Self(name: Option[Term.Name], decltpe: Option[Type], @trivia hasThis: Boolean = false) extends Member.Term {
     def mods: Seq[Mod] = Nil
+    require(hasThis ==> name.isEmpty)
   }
-  // TODO: require that lo/hi and hasLo/hasHi are consistent
-  @ast class TypeBounds(lo: Type, hi: Type)(hasLo: Boolean, hasHi: Boolean) extends Tree
+  @ast class TypeBounds(lo: Type = Type.Name("Nothing"), hi: Type = Type.Name("Any")) extends Tree
   @ast class Super(thisp: Option[core.Name.Either], superp: Option[Type.Name]) extends Term.Qualifier with Type.Qualifier
 }
 
