@@ -114,7 +114,7 @@ object Term {
     require(params.collect{ case named: Aux.Param.Named => named }.forall(_.default.isEmpty))
     require(params.exists(_.mods.exists(_.isInstanceOf[Mod.Implicit])) ==> (params.length == 1))
   }
-  @ast class Cases(cases: Seq[Aux.Case]) extends Term {
+  @ast class Cases(cases: Seq[Aux.Case] @nonEmpty) extends Term {
     // TODO: we might want to revisit this
     def isPartialFunction = !parent.map(_ match { case _: Match => false; case _: Try => false; case _ => true }).getOrElse(false)
   }
@@ -418,6 +418,7 @@ object Aux {
     require(early.nonEmpty ==> parents.nonEmpty)
     require(stats.collect { case m: Member if m.isPkgObject => m }.isEmpty)
   }
+  // TODO: validate that name and hasThis are consistent
   @ast class Self(name: Option[Term.Name], decltpe: Option[Type])(hasThis: Boolean) extends Member.Term {
     def mods: Seq[Mod] = Nil
   }
