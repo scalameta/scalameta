@@ -54,11 +54,11 @@ class AstMacros(val c: Context) {
       def internalize(p: ValDef) = TermName("_" + p.name.toString)
       val fieldInitss = paramss.map(_.map(p => q"$AstInternal.initField(this.${internalize(p)})"))
       stats1 += q"private[core] def internalWithParent(internalParent: Tree): ThisType = new ThisType(this, internalParent, scratchpads, origin)(...$fieldInitss)"
-      bparams1 += q"private val scratchpads: _root_.scala.collection.immutable.Map[_root_.scala.reflect.semantic.HostContext, _root_.scala.List[Any]]"
-      stats1 += q"private[reflect] def scratchpad(implicit h: _root_.scala.reflect.semantic.HostContext): _root_.scala.List[Any] = scratchpads.getOrElse(h, Nil)"
+      bparams1 += q"private val scratchpads: _root_.scala.collection.immutable.Map[_root_.scala.reflect.semantic.HostContext, _root_.scala.collection.immutable.Seq[Any]]"
+      stats1 += q"private[reflect] def scratchpad(implicit h: _root_.scala.reflect.semantic.HostContext): _root_.scala.collection.immutable.Seq[Any] = scratchpads.getOrElse(h, Nil)"
       stats1 += q"private[reflect] def appendScratchpad(datum: Any)(implicit h: HostContext): ThisType = new ThisType(this, internalParent, scratchpads + (h -> (scratchpads.getOrElse(h, Nil) :+ datum)), origin)(...$fieldInitss)"
-      stats1 += q"private[reflect] def withScratchpad(scratchpad: _root_.scala.List[Any])(implicit h: _root_.scala.reflect.semantic.HostContext): ThisType = new ThisType(this, internalParent, scratchpads + (h -> scratchpad), origin)(...$fieldInitss)"
-      stats1 += q"private[reflect] def mapScratchpad(f: _root_.scala.List[Any] => _root_.scala.List[Any])(implicit h: _root_.scala.reflect.semantic.HostContext): ThisType = new ThisType(this, internalParent, scratchpads + (h -> f(scratchpads.getOrElse(h, Nil))), origin)(...$fieldInitss)"
+      stats1 += q"private[reflect] def withScratchpad(scratchpad: _root_.scala.collection.immutable.Seq[Any])(implicit h: _root_.scala.reflect.semantic.HostContext): ThisType = new ThisType(this, internalParent, scratchpads + (h -> scratchpad), origin)(...$fieldInitss)"
+      stats1 += q"private[reflect] def mapScratchpad(f: _root_.scala.collection.immutable.Seq[Any] => _root_.scala.collection.immutable.Seq[Any])(implicit h: _root_.scala.reflect.semantic.HostContext): ThisType = new ThisType(this, internalParent, scratchpads + (h -> f(scratchpads.getOrElse(h, Nil))), origin)(...$fieldInitss)"
       bparams1 += q"val origin: _root_.scala.reflect.core.Origin"
       stats1 += q"def withOrigin(origin: Origin): ThisType = new ThisType(this, internalParent, scratchpads, origin)(...$fieldInitss)"
       stats1 += q"def mapOrigin(f: Origin => Origin): ThisType = new ThisType(this, internalParent, scratchpads, f(origin))(...$fieldInitss)"
