@@ -189,6 +189,7 @@ object Pat {
 object Member {
   @branch trait Term extends Member
   @branch trait Type extends Member
+  @branch trait ValOrVar extends Stmt.Template with Has.Mods // NOTE: vals and vars are not members!
   @branch trait Def extends Term with Has.TermName with Stmt.Refine with Has.Paramss with Scope.Params {
     def tparams: Seq[TypeParam]
   }
@@ -209,10 +210,10 @@ object Member {
 object Decl {
   @ast class Val(mods: Seq[Mod],
                  pats: Seq[Term.Name] @nonEmpty,
-                 decltpe: core.Type) extends Decl with Aux.ValOrVar with Stmt.Existential
+                 decltpe: core.Type) extends Decl with Member.ValOrVar with Stmt.Existential
   @ast class Var(mods: Seq[Mod],
                  pats: Seq[Term.Name] @nonEmpty,
-                 decltpe: core.Type) extends Decl with Aux.ValOrVar
+                 decltpe: core.Type) extends Decl with Member.ValOrVar
   // TODO: maybe merge Def and Procedure using flags?
   @ast class Def(mods: Seq[Mod],
                  name: Term.Name,
@@ -236,11 +237,11 @@ object Defn {
   @ast class Val(mods: Seq[Mod],
                  pats: Seq[Pat] @nonEmpty,
                  decltpe: Option[core.Type],
-                 rhs: Term) extends Defn with Aux.ValOrVar with Stmt.Early
+                 rhs: Term) extends Defn with Member.ValOrVar with Stmt.Early
   @ast class Var(mods: Seq[Mod],
                  pats: Seq[Pat] @nonEmpty,
                  decltpe: Option[core.Type],
-                 rhs: Option[Term]) extends Defn with Aux.ValOrVar with Stmt.Early {
+                 rhs: Option[Term]) extends Defn with Member.ValOrVar with Stmt.Early {
     require(rhs.isEmpty ==> pats.forall(_.isInstanceOf[Term.Name]))
     require(decltpe.nonEmpty || rhs.nonEmpty)
   }
@@ -467,7 +468,6 @@ object Aux {
   // TODO: require that lo/hi and hasLo/hasHi are consistent
   @ast class TypeBounds(lo: Type, hi: Type)(hasLo: Boolean, hasHi: Boolean) extends Tree
   @ast class Super(thisp: Option[core.Name.Either], superp: Option[Type.Name]) extends Term.Qualifier with Type.Qualifier
-  @branch trait ValOrVar extends Stmt.Template with Has.Mods // NOTE: vals and vars are not members!
 }
 
 object Has {
