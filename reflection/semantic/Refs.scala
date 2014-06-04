@@ -9,23 +9,23 @@ import scala.reflect.core._
 trait RefOps {
   implicit class SemanticRefOps(tree: Ref) {
     private[semantic] def toTypeRef: Type.Ref = ??? // TODO: t"$tree"
-    @hosted def alts: Seq[Member] = wrapHosted(_.defns(tree))
+    @hosted def defns: Seq[Member] = wrapHosted(_.defns(tree))
   }
 
   implicit class SemanticTypeRefOps(tree: Type.Ref) {
-    @hosted def alts: Seq[Member.Type] = alts.flatMap(alts => {
-      if (alts.exists(!_.isInstanceOf[Member.Type])) fail(s"unexpected $alts for ref $tree")
-      else succeed(alts.asInstanceOf[Seq[Member.Type]])
+    @hosted def defns: Seq[Member.Type] = (tree: Ref).defns.flatMap(defns => {
+      if (defns.exists(!_.isInstanceOf[Member.Type])) fail(s"unexpected $defns for ref $tree")
+      else succeed(defns.asInstanceOf[Seq[Member.Type]])
     })
-    @hosted def defn: Member.Type = alts.flatMap(_.findUnique)
+    @hosted def defn: Member.Type = defns.flatMap(_.findUnique)
   }
 
   implicit class SemanticTermRefOps(tree: Term.Ref) {
-    @hosted def alts: Seq[Member.Term] = alts.flatMap(alts => {
-      if (alts.exists(!_.isInstanceOf[Member.Term])) fail(s"unexpected $alts for ref $tree")
-      else succeed(alts.asInstanceOf[Seq[Member.Term]])
+    @hosted def defns: Seq[Member.Term] = (tree: Ref).defns.flatMap(defns => {
+      if (defns.exists(!_.isInstanceOf[Member.Term])) fail(s"unexpected $defns for ref $tree")
+      else succeed(defns.asInstanceOf[Seq[Member.Term]])
     })
-    @hosted def defn: Member.Term = alts.flatMap(_.findUnique)
+    @hosted def defn: Member.Term = defns.flatMap(_.findUnique)
   }
 
   implicit class SemanticMembers[A <: Member.Term](tree: Seq[A]) {
