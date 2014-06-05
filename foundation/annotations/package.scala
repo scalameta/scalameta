@@ -31,26 +31,26 @@ package object annotations {
           def lazyLoad(fn: c.Tree => c.Tree) = {
             q"""
               if ($f == null) {
-                scala.Predef.require(this.prototype != null)
-                $f = ${fn(q"this.prototype.$fname")}
+                scala.Predef.require(this.internalPrototype != null)
+                $f = ${fn(q"this.internalPrototype.$fname")}
               }
             """
           }
           f.tpe.finalResultType match {
             case Primitive(tpe) => q""
-            case Tree(tpe) => lazyLoad(pf => q"$pf.withInternalParent(this)")
-            case OptionTree(tpe) => lazyLoad(pf => q"$pf.map(_.withInternalParent(this))")
-            case SeqTree(tpe) => lazyLoad(pf => q"$pf.map(_.withInternalParent(this))")
-            case SeqSeqTree(tpe) => lazyLoad(pf => q"$pf.map(_.map(_.withInternalParent(this)))")
+            case Tree(tpe) => lazyLoad(pf => q"$pf.internalCopy(prototype = $pf, parent = this)")
+            case OptionTree(tpe) => lazyLoad(pf => q"$pf.map(el => el.internalCopy(prototype = el, parent = this))")
+            case SeqTree(tpe) => lazyLoad(pf => q"$pf.map(el => el.internalCopy(prototype = el, parent = this))")
+            case SeqSeqTree(tpe) => lazyLoad(pf => q"$pf.map(_.map(el => el.internalCopy(prototype = el, parent = this)))")
           }
         }
         def storeField(f: c.Tree, v: c.Tree) = {
           f.tpe.finalResultType match {
             case Primitive(tpe) => q""
-            case Tree(tpe) => q"$f = $v.withInternalParent(node)"
-            case OptionTree(tpe) => q"$f = $v.map(_.withInternalParent(node))"
-            case SeqTree(tpe) => q"$f = $v.map(_.withInternalParent(node))"
-            case SeqSeqTree(tpe) => q"$f = $v.map(_.map(_.withInternalParent(node)))"
+            case Tree(tpe) => q"$f = $v.internalCopy(prototype = $v, parent = node)"
+            case OptionTree(tpe) => q"$f = $v.map(el => el.internalCopy(prototype = el, parent = node))"
+            case SeqTree(tpe) => q"$f = $v.map(el => el.internalCopy(prototype = el, parent = node))"
+            case SeqSeqTree(tpe) => q"$f = $v.map(_.map(el => el.internalCopy(prototype = el, parent = node)))"
             case tpe => c.abort(c.enclosingPosition, s"unsupported field type $tpe")
           }
         }

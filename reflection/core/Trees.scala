@@ -31,27 +31,32 @@ import scala.reflect.syntactic.SyntacticInfo._
   type ThisType <: Tree
 
   def origin: Origin
-  def withOrigin(origin: Origin): ThisType
-  def mapOrigin(f: Origin => Origin): ThisType
+  def withOrigin(origin: Origin): ThisType = internalCopy(origin = origin)
+  def mapOrigin(f: Origin => Origin): ThisType = internalCopy(origin = f(origin))
 
   // NOTE: withParent and mapParent are not available
   // because parent-child structure of trees is supposed to be maintained by the framework
-  def parent: Option[Tree]
+  def parent: Option[Tree] = if (internalParent != null) Some(internalParent) else None
 
   def showCode: String = syntactic.show.ShowCode.showTree(this).toString
   def showRaw: String = syntactic.show.ShowRaw.showTree(this).toString
   final override def toString: String = showRaw
 
-  // NOTE: not supposed to be used outside the framework internals, not even in hosts
-  private[core] def internalParent: Tree
-  private[core] def withInternalParent(x: Tree): ThisType
-
   // TODO: these APIs will most likely change in the future
   // because we would like to make sure that trees are fully immutable
-  private[reflect] def scratchpad(implicit h: HostContext): Seq[Any]
-  private[reflect] def appendScratchpad(datum: Any)(implicit h: HostContext): ThisType
-  private[reflect] def withScratchpad(scratchpad: Seq[Any])(implicit h: HostContext): ThisType
-  private[reflect] def mapScratchpad(f: Seq[Any] => Seq[Any])(implicit h: HostContext): ThisType
+  private[reflect] def scratchpad(implicit h: HostContext): Seq[Any] = internalScratchpads.getOrElse(h, Nil);
+  private[reflect] def appendScratchpad(datum: Any)(implicit h: HostContext): ThisType = internalCopy(scratchpads = internalScratchpads + (h -> (internalScratchpads.getOrElse(h, Nil) :+ datum)))
+  private[reflect] def withScratchpad(scratchpad: Seq[Any])(implicit h: HostContext): ThisType = internalCopy(scratchpads = internalScratchpads + (h -> scratchpad))
+  private[reflect] def mapScratchpad(f: Seq[Any] => Seq[Any])(implicit h: HostContext): ThisType = internalCopy(scratchpads = internalScratchpads + (h -> f(internalScratchpads.getOrElse(h, Nil))))
+
+  // NOTE: these are internal APIs that are meant to be used only in the implementation of the framework
+  // host implementors should not utilize these APIs
+  // TODO: turn the prototype argument of internalCopy into ThisType
+  // if done naively, this isn't going to compile for prototypes of @branch traits as ThisType there is abstract
+  protected def internalPrototype: ThisType
+  protected def internalParent: Tree
+  protected def internalScratchpads: Map[HostContext, Seq[Any]]
+  private[core] def internalCopy(prototype: Tree = internalPrototype, parent: Tree = internalParent, scratchpads: Map[HostContext, Seq[Any]] = internalScratchpads, origin: Origin = origin): ThisType
 }
 
 @branch trait Ref extends Tree
@@ -61,8 +66,10 @@ import scala.reflect.syntactic.SyntacticInfo._
   def isBackquoted: Boolean
 }
 object Name {
-  @ast class Both(value: String)(isBackquoted: Boolean) extends Name
-  @ast class Either(value: String)(isBackquoted: Boolean) extends Name with Mod.AccessQualifier
+  // NOTE: this stands for a name that encapsulates both a term name and a type name (like an import does)
+  @ast class Both(value: String, @trivia isBackquoted: Boolean = false) extends Name
+  // NOTE: this stands for a name that represents either a term name or a type name (like X in private[X] does)
+  @ast class Either(value: String, @trivia isBackquoted: Boolean = false) extends Name with Mod.AccessQualifier
 }
 
 @branch trait Term extends Arg with Stmt.Template with Stmt.Block with Term.Qualifier
@@ -70,13 +77,12 @@ object Term {
   @branch trait Qualifier extends Tree
   @branch trait Ref extends Term with core.Ref with Type.Qualifier
   @ast class This(qual: Option[core.Name.Either]) extends Ref with Mod.AccessQualifier
-  // TODO: isBackquoted might use a default value or some sorts (or an overloaded apply)
-  @ast class Name(value: scala.Predef.String @nonEmpty)(isBackquoted: Boolean) extends core.Name with Ref with Pat with Member with Has.TermName {
+  @ast class Name(value: scala.Predef.String @nonEmpty, @trivia isBackquoted: Boolean = false) extends core.Name with Ref with Pat with Member with Has.TermName {
     require(keywords.contains(value) ==> isBackquoted)
     def name: Name = this
     def mods: Seq[Mod] = Nil
   }
-  @ast class Select(qual: Qualifier, selector: Term.Name)(isPostfix: Boolean) extends Ref with Pat
+  @ast class Select(qual: Qualifier, selector: Term.Name, @trivia isPostfix: Boolean = false) extends Ref with Pat
 
   @ast class Interpolate(prefix: Name, parts: Seq[Lit.String] @nonEmpty, args: Seq[Term]) extends Term {
     // TODO: require(prefix.isInterpolationId)
@@ -90,8 +96,7 @@ object Term {
   }
   @ast class Assign(lhs: Term.Ref, rhs: Term) extends Term
   @ast class Update(lhs: Apply, rhs: Term) extends Term
-  // TODO: require that expr and hasExpr are consistent
-  @ast class Return(expr: Term)(hasExpr: Boolean) extends Term
+  @ast class Return(expr: Term = Lit.Unit()) extends Term
   @ast class Throw(expr: Term) extends Term
   @ast class Ascribe(expr: Term, tpe: Type) extends Term
   @ast class Annotate(expr: Term, annots: Seq[Mod.Annot] @nonEmpty) extends Term with Has.Mods {
@@ -105,11 +110,10 @@ object Term {
     require(stats.collect { case v: Defn.Var => v }.forall(_.rhs.isDefined))
     require(stats.collect { case m: Member if m.isPkgObject => m }.isEmpty)
   }
-  // TODO: require that elsep and hasElse are consistent
-  @ast class If(cond: Term, thenp: Term, elsep: Term)(hasElse: Boolean) extends Term
+  @ast class If(cond: Term, thenp: Term, elsep: Term = Lit.Unit()) extends Term
   @ast class Match(scrut: Term, cases: Cases) extends Term
   @ast class Try(expr: Term, catchp: Option[Term], finallyp: Option[Term]) extends Term
-  // TODO: we could add a flag that distinguishes { x => ... } and (x => { ... })
+  // TODO: we could add a @trivia flag that distinguishes { x => ... } and (x => { ... })
   @ast class Function(params: Seq[Param], body: Term) extends Term with Scope.Params {
     require(params.collect{ case named: Param.Named => named }.forall(_.default.isEmpty))
     require(params.exists(_.mods.exists(_.isInstanceOf[Mod.Implicit])) ==> (params.length == 1))
@@ -135,7 +139,7 @@ object Term {
 object Type {
   @branch trait Qualifier extends Tree with Term.Qualifier
   @branch trait Ref extends Type with core.Ref
-  @ast class Name(value: String @nonEmpty)(isBackquoted: Boolean) extends core.Name with Ref {
+  @ast class Name(value: String @nonEmpty, @trivia isBackquoted: Boolean = false) extends core.Name with Ref {
     require(keywords.contains(value) ==> isBackquoted)
   }
   @ast class Select(qual: Qualifier, selector: Type.Name) extends Ref {
@@ -151,9 +155,8 @@ object Type {
   @ast class Tuple(elements: Seq[Type] @nonEmpty) extends Type {
     require(elements.length > 1)
   }
-  // TODO: validate consistency of refinement and hasBraces
-  @ast class Compound(tpes: Seq[Type], refinement: Seq[Stmt.Refine])(hasBraces: Boolean) extends Type with Scope.Refine {
-    require(tpes.length == 1 ==> hasBraces)
+  @ast class Compound(tpes: Seq[Type], refinement: Seq[Stmt.Refine] = Nil) extends Type with Scope.Refine {
+    require(tpes.length == 1 ==> hasRefinement)
   }
   @ast class Existential(tpe: Type, quants: Seq[Stmt.Existential] @nonEmpty) extends Type with Scope.Existential
   @ast class Annotate(tpe: Type, annots: Seq[Mod.Annot] @nonEmpty) extends Type with Has.Mods {
@@ -183,6 +186,21 @@ object Pat {
   @ast class Typed(lhs: Pat, rhs: Type) extends Pat {
     require(lhs.isInstanceOf[Pat.Wildcard] || lhs.isInstanceOf[Term.Name])
   }
+}
+
+@branch trait Lit extends Term with Pat with Type
+object Lit {
+  @ast class Bool(value: scala.Boolean) extends Lit
+  @ast class Int(value: scala.Int) extends Lit
+  @ast class Long(value: scala.Long) extends Lit
+  @ast class Float(value: scala.Float) extends Lit
+  @ast class Double(value: scala.Double) extends Lit
+  @ast class Char(value: scala.Char) extends Lit
+  @ast class String(value: Predef.String) extends Lit
+  // TODO: validate that not all symbols are representable as literals, e.g. scala.Symbol("")
+  @ast class Symbol(value: scala.Symbol) extends Lit
+  @ast class Null() extends Lit
+  @ast class Unit() extends Lit
 }
 
 @branch trait Member extends Tree with Has.Mods
@@ -285,7 +303,7 @@ object Defn {
   }
 }
 
-@ast class Pkg(ref: Term.Ref, stats: Seq[Stmt.TopLevel])(hasBraces: Boolean)
+@ast class Pkg(ref: Term.Ref, stats: Seq[Stmt.TopLevel], @trivia hasBraces: Boolean = true)
      extends Stmt.TopLevel with Scope.TopLevel with Member.Term with Has.TermName {
   // TODO: validate nestedness of packages with and without braces
   require(ref.isQualId)
@@ -309,41 +327,6 @@ object Ctor {
                        stats: Seq[Stmt.Block]) extends Ctor with Stmt.Template with Scope.Params {
     require(stats.collect { case m: Member if m.isPkgObject => m }.isEmpty)
   }
-}
-
-@branch trait Stmt extends Tree
-object Stmt {
-  @branch trait TopLevel extends Stmt
-  @branch trait Template extends Stmt
-  @branch trait Block extends Template
-  @branch trait Refine extends Template
-  @branch trait Existential extends Refine
-  @branch trait Early extends Block
-}
-
-@branch trait Scope extends Tree
-object Scope {
-  @branch trait TopLevel extends Scope with Block
-  @branch trait Template extends Block with Params
-  @branch trait Block extends Refine
-  @branch trait Refine extends Existential
-  @branch trait Existential extends Scope
-  @branch trait Params extends Scope
-}
-
-@branch trait Lit extends Term with Pat with Type
-object Lit {
-  @ast class Bool(value: scala.Boolean) extends Lit
-  @ast class Int(value: scala.Int) extends Lit
-  @ast class Long(value: scala.Long) extends Lit
-  @ast class Float(value: scala.Float) extends Lit
-  @ast class Double(value: scala.Double) extends Lit
-  @ast class Char(value: scala.Char) extends Lit
-  @ast class String(value: Predef.String) extends Lit
-  // TODO: validate that not all symbols are representable as literals, e.g. scala.Symbol("")
-  @ast class Symbol(value: scala.Symbol) extends Lit
-  @ast class Null() extends Lit
-  @ast class Unit() extends Lit
 }
 
 @ast class Import(clauses: Seq[Import.Clause] @nonEmpty) extends Stmt.TopLevel with Stmt.Template with Stmt.Block
@@ -453,21 +436,19 @@ object Aux {
     require(stats.collect { case m: Member if m.isPkgObject => m }.isEmpty)
   }
   @ast class Parent(tpe: Type, argss: Seq[Seq[Arg]]) extends Tree
-  // TODO: validate consistency of stats and hasBraces
   @ast class Template(early: Seq[Stmt.Early],
                       parents: Seq[Parent],
                       self: Self,
-                      stats: Seq[Stmt.Template])(hasBraces: Boolean) extends Tree with Scope.Template {
+                      stats: Seq[Stmt.Template] = Nil) extends Tree with Scope.Template {
     require(parents.isEmpty || !parents.tail.exists(_.argss.nonEmpty))
     require(early.nonEmpty ==> parents.nonEmpty)
     require(stats.collect { case m: Member if m.isPkgObject => m }.isEmpty)
   }
-  // TODO: validate that name and hasThis are consistent
-  @ast class Self(name: Option[Term.Name], decltpe: Option[Type])(hasThis: Boolean) extends Member.Term {
+  @ast class Self(name: Option[Term.Name], decltpe: Option[Type], @trivia hasThis: Boolean = false) extends Member.Term {
     def mods: Seq[Mod] = Nil
+    require(hasThis ==> name.isEmpty)
   }
-  // TODO: require that lo/hi and hasLo/hasHi are consistent
-  @ast class TypeBounds(lo: Type, hi: Type)(hasLo: Boolean, hasHi: Boolean) extends Tree
+  @ast class TypeBounds(lo: Type = Type.Name("Nothing"), hi: Type = Type.Name("Any")) extends Tree
   @ast class Super(thisp: Option[core.Name.Either], superp: Option[Type.Name]) extends Term.Qualifier with Type.Qualifier
 }
 
@@ -490,4 +471,24 @@ object Has {
   @branch trait Name extends Member { def name: core.Name }
   @branch trait TermName extends Member.Term with Has.Name { def name: Term.Name }
   @branch trait TypeName extends Member.Type with Has.Name { def name: Type.Name }
+}
+
+@branch trait Stmt extends Tree
+object Stmt {
+  @branch trait TopLevel extends Stmt
+  @branch trait Template extends Stmt
+  @branch trait Block extends Template
+  @branch trait Refine extends Template
+  @branch trait Existential extends Refine
+  @branch trait Early extends Block
+}
+
+@branch trait Scope extends Tree
+object Scope {
+  @branch trait TopLevel extends Scope with Block
+  @branch trait Template extends Block with Params
+  @branch trait Block extends Refine
+  @branch trait Refine extends Existential
+  @branch trait Existential extends Scope
+  @branch trait Params extends Scope
 }

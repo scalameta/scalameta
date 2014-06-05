@@ -81,8 +81,8 @@ trait MemberOps {
     }
     @hosted private[semantic] def findCompanion[T <: Member.Template](f: PartialFunction[Member, T]): T = {
       val companionName = {
-        if (tree.name.isInstanceOf[core.Term.Name]) core.Type.Name(tree.name.value)(isBackquoted = false) else
-        core.Term.Name(tree.name.value)(isBackquoted = false)
+        if (tree.name.isInstanceOf[core.Term.Name]) core.Type.Name(tree.name.value, isBackquoted = false) else
+        core.Term.Name(tree.name.value, isBackquoted = false)
       }
       val candidates = tree.owner.flatMap(_.members(companionName))
       candidates.flatMap{candidates =>
