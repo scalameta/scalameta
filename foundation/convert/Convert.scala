@@ -17,5 +17,8 @@ package convert {
 package object convert {
   implicit class ConvertA2B[A](val a: A) extends AnyVal {
     def convert[B](implicit convert: Convert[A, B]): B = convert(a)
+    def convertOrElse[B](orElse: => B)(implicit convert: Convert[A, B]): B =
+      try convert(a)
+      catch { case _: Exception => orElse }
   }
 }
