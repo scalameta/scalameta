@@ -144,6 +144,7 @@ class AstMacros(val c: Context) {
       stats1 += q"override def hashCode: _root_.scala.Int = _root_.java.lang.System.identityHashCode(this)"
 
       // step 10: generate Companion.apply
+      // TODO: using nulls as marker default values is dubious. we need to look into other ways of implementing this!!
       val applyParamss = rawparamss.map(_.map(p => q"@..${p.mods.annotations} val ${p.name}: ${p.tpt} = ${if (isNontriviaDefault(p)) q"null" else p.rhs}"))
       val internalParamss = paramss.map(_.map(p => q"@..${p.mods.annotations} val ${p.name}: ${p.tpt}"))
       val internalBody = ListBuffer[Tree]()
