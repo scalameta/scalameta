@@ -135,11 +135,11 @@ object Type {
     require(keywords.contains(value) ==> isBackquoted)
   }
   @ast class Select(qual: Qual.Type, selector: Type.Name) extends Ref {
-    require(qual match { case qual: Term.Ref => qual.isPath; case qual: Aux.Super => true; case _ => unreachable })
+    require(qual match { case qual: Term.Ref => qual.isPath; case qual: Qual.Super => true; case _ => unreachable })
   }
   @ast class Project(qual: Type, selector: Type.Name) extends Ref
   @ast class Singleton(ref: Qual.Type) extends Ref {
-    require(ref match { case ref: Term.Ref => ref.isPath; case ref: Aux.Super => true; case _ => unreachable })
+    require(ref match { case ref: Term.Ref => ref.isPath; case ref: Qual.Super => true; case _ => unreachable })
   }
   @ast class Apply(tpe: Type, args: Seq[Type] @nonEmpty) extends Type
   @ast class ApplyInfix(lhs: Type, op: Type, rhs: Type) extends Type
@@ -326,6 +326,8 @@ object Qual {
   @branch trait Type extends Term
   // NOTE: this stands for a name that represents either a term name or a type name (like X in private[X] does)
   @ast class Name(value: String, @trivia isBackquoted: Boolean = false) extends core.Name with Mod.AccessQualifier
+  // TODO: _root_ and _empty_ are very similar entities that might deserve their own qual trees
+  @ast class Super(thisp: Option[Qual.Name], superp: Option[Type.Name]) extends Qual.Term with Qual.Type
 }
 
 @ast class Import(clauses: Seq[Import.Clause] @nonEmpty) extends Stmt.TopLevel with Stmt.Template with Stmt.Block
@@ -446,7 +448,6 @@ object Aux {
     require(hasThis ==> name.isEmpty)
   }
   @ast class TypeBounds(lo: Type = Type.Name("Nothing"), hi: Type = Type.Name("Any")) extends Tree
-  @ast class Super(thisp: Option[Qual.Name], superp: Option[Type.Name]) extends Qual.Term with Qual.Type
 }
 
 object Has {

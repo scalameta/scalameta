@@ -23,7 +23,7 @@ object ShowCode {
     else s(" ", templ)
 
   def parens(t: Qual.Term) = t match {
-    case _: Lit | _: Term.Ref | _: Term.Placeholder | _: Term.Tuple | _: Aux.Super => s(t)
+    case _: Lit | _: Term.Ref | _: Term.Placeholder | _: Term.Tuple | _: Qual.Super => s(t)
     case _ => s("(", t, ")")
   }
 
@@ -244,7 +244,7 @@ object ShowCode {
       val cbounds = r(t.contextBounds.map { s(": ", _) })
       val vbounds = r(t.contextBounds.map { s("<% ", _) })
       s(t.mods, t.name, t.tparams, cbounds, vbounds, t.bounds)
-    case t: Super =>
+    case t: Qual.Super =>
       s(t.thisp.map { thisp => s(thisp, ".") }.getOrElse(s()),
         "super", t.superp.map { st => s("[", st, "]") }.getOrElse(s()))
   } }

@@ -52,7 +52,7 @@ object SyntacticInfo {
       case _                              => false
     }
     def isStableId: Boolean = tree match {
-      case _: Term.Name | Term.Select(_: Aux.Super, _) => true
+      case _: Term.Name | Term.Select(_: Qual.Super, _) => true
       case Term.Select(qual: Term.Ref, _)              => qual.isPath
       case _                                           => false
     }
@@ -750,7 +750,7 @@ abstract class Parser { parser =>
       }
     } else if (in.token == SUPER) {
       in.nextToken()
-      val superp = Aux.Super(None, mixinQualifierOpt())
+      val superp = Qual.Super(None, mixinQualifierOpt())
       accept(DOT)
       val supersel = Term.Select(superp, termName(), isPostfix = false)
       if (stop) supersel
@@ -773,7 +773,7 @@ abstract class Parser { parser =>
           }
         } else if (in.token == SUPER) {
           in.nextToken()
-          val superp = Aux.Super(Some(name.toQualName), mixinQualifierOpt())
+          val superp = Qual.Super(Some(name.toQualName), mixinQualifierOpt())
           accept(DOT)
           val supersel = Term.Select(superp, termName(), isPostfix = false)
           if (stop) supersel

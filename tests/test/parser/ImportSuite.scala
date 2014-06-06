@@ -1,4 +1,4 @@
-import scala.reflect.core._, Import._, Term.{This, Name => TermName, Select}, Aux.Super
+import scala.reflect.core._, Import._, Term.{This, Name => TermName, Select}, Qual.Super
 
 class ImportSuite extends ParseSuite {
   test("import foo.bar") {
