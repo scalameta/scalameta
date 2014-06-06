@@ -15,12 +15,12 @@ trait HostContext {
   def owner(tree: Tree): Scope
   def members(scope: Scope): Seq[Tree]
   def members(scope: Scope, name: Name): Seq[Tree]
+  def overrides(member: Member): Seq[Member]
+  def overriddenBy(member: Member): Seq[Member]
 
   def <:<(tpe1: Type, tpe2: Type): Boolean
   def supertypes(tpe: Type): Seq[Type]
-  def supermembers(member: Member): Seq[Member]
   def subclasses(tpe: Type): Seq[Member.Template]
-  def submembers(member: Member): Seq[Member]
   def linearization(tpes: Seq[Type]): Seq[Type]
   def self(tpe: Type): Aux.Self
   def lub(tpes: Seq[Type]): Type
