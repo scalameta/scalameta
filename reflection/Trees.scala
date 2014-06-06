@@ -23,7 +23,7 @@ import scala.reflect.syntactic.parsers._, SyntacticInfo._
 
   // NOTE: these are internal APIs designed to be used only by hosts
   // TODO: these APIs will most likely change in the future
-  // because we would like to make sure that trees are fully immutable
+  // because we would like to make sure that trees are guaranteed to be immutable
   private[reflect] def scratchpad(implicit h: HostContext): Seq[Any] = internalScratchpads.getOrElse(h, Nil);
   private[reflect] def appendScratchpad(datum: Any)(implicit h: HostContext): ThisType = internalCopy(scratchpads = internalScratchpads + (h -> (internalScratchpads.getOrElse(h, Nil) :+ datum)))
   private[reflect] def withScratchpad(scratchpad: Seq[Any])(implicit h: HostContext): ThisType = internalCopy(scratchpads = internalScratchpads + (h -> scratchpad))
