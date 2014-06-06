@@ -16,7 +16,7 @@ package object semantic {
                                    existentials: Boolean,
                                    macros: Boolean)
 
-  implicit class RichTree(tree: Tree) {
+  implicit class RichTree(val tree: Tree) extends AnyVal {
     @hosted def attrs: Seq[Attr] = delegate
     @hosted private[semantic] def internalTpe: Type = attrs.flatMap(_.collect{ case tpe: Attr.Type => tpe } match {
       case Attr.Type(tpe: Type) :: Nil => succeed(tpe)
@@ -28,11 +28,11 @@ package object semantic {
     })
   }
 
-  implicit class SemanticTermOps(tree: Term) {
+  implicit class SemanticTermOps(val tree: Term) extends AnyVal {
     @hosted def tpe: Type = tree.internalTpe
   }
 
-  implicit class SemanticTypeOps(tree: Type) {
+  implicit class SemanticTypeOps(val tree: Type) extends AnyVal {
     @hosted def <:<(other: Type): Boolean = delegate
     @hosted def weak_<:<(other: Type): Boolean = ???
     @hosted def widen: Type = delegate
@@ -63,26 +63,27 @@ package object semantic {
       case tpe => fail(s"unexpected type $tpe returned from supertypes")
     }
   }
-  implicit class SemanticTemplatesOps(val parents: Seq[Member.Template]) {
+
+  implicit class SemanticTemplatesOps(val parents: Seq[Member.Template]) extends AnyVal {
     @hosted def linearization: Seq[Member.Template] = {
       val linearization = parents.map(_.ref.toTypeRef).linearization
       linearization.flatMap(tpes => supertypesToMembers(tpes))
     }
   }
 
-  implicit class SemanticTypesOps(val parents: Seq[Type]) {
+  implicit class SemanticTypesOps(val parents: Seq[Type]) extends AnyVal {
     @hosted def linearization: Seq[Type] = wrapHosted(_.linearization(parents))
   }
 
   @hosted def lub(tpes: Seq[Type]): Type = delegate
   @hosted def glb(tpes: Seq[Type]): Type = delegate
 
-  implicit class SemanticRefOps(tree: Ref) {
+  implicit class SemanticRefOps(val tree: Ref) extends AnyVal {
     private[semantic] def toTypeRef: Type.Ref = ??? // TODO: t"$tree"
     @hosted def defns: Seq[Member] = wrapHosted(_.defns(tree).collect{ case m: Member => m })
   }
 
-  implicit class SemanticTypeRefOps(tree: Type.Ref) {
+  implicit class SemanticTypeRefOps(val tree: Type.Ref) extends AnyVal {
     @hosted def defns: Seq[Member.Type] = (tree: Ref).defns.flatMap(defns => {
       if (defns.exists(!_.isInstanceOf[Member.Type])) fail(s"unexpected $defns for ref $tree")
       else succeed(defns.asInstanceOf[Seq[Member.Type]])
@@ -90,7 +91,7 @@ package object semantic {
     @hosted def defn: Member.Type = defns.flatMap(_.findUnique)
   }
 
-  implicit class SemanticTermRefOps(tree: Term.Ref) {
+  implicit class SemanticTermRefOps(val tree: Term.Ref) extends AnyVal {
     @hosted def defns: Seq[Member.Term] = (tree: Ref).defns.flatMap(defns => {
       if (defns.exists(!_.isInstanceOf[Member.Term])) fail(s"unexpected $defns for ref $tree")
       else succeed(defns.asInstanceOf[Seq[Member.Term]])
@@ -98,11 +99,11 @@ package object semantic {
     @hosted def defn: Member.Term = defns.flatMap(_.findUnique)
   }
 
-  implicit class SemanticMembers[A <: Member.Term](tree: Seq[A]) {
+  implicit class SemanticMembers[A <: Member.Term](val tree: Seq[A]) extends AnyVal {
     def resolve(tpes: Seq[core.Type]): A = ??? // TODO: implement this in terms of Tree.attrs and Attr.Ref
   }
 
-  implicit class SemanticMemberOps(tree: Member) {
+  implicit class SemanticMemberOps(val tree: Member) extends AnyVal {
     // TODO: expose type parameter instantiation facilities, e.g. `def foo[T]: T = ...` => `def foo: Int = ...`
     def ref: Ref = tree match {
       // TODO: this logic is not enough. if a member is a synthetic typeSignatureIn'd thing, we also need to remember its prefix
@@ -145,17 +146,17 @@ package object semantic {
     def isVarParam: Boolean = tree.mods.exists(_.isInstanceOf[Mod.VarParam])
   }
 
-  implicit class SemanticTermMemberOps(tree: Member.Term) {
+  implicit class SemanticTermMemberOps(val tree: Member.Term) extends AnyVal {
     def ref: Term.Ref = new SemanticMemberOps(tree).ref.asInstanceOf[Term.Ref]
     @hosted def overrides: Seq[Member.Term] = new SemanticMemberOps(tree).overrides.map(_.asInstanceOf[Seq[Member.Term]])
   }
 
-  implicit class SemanticTypeMemberOps(tree: Member.Type) {
+  implicit class SemanticTypeMemberOps(val tree: Member.Type) extends AnyVal {
     def ref: Type.Ref = new SemanticMemberOps(tree).ref.asInstanceOf[Type.Ref]
     @hosted def overrides: Seq[Member.Type] = new SemanticMemberOps(tree).overrides.map(_.asInstanceOf[Seq[Member.Type]])
   }
 
-  implicit class SemanticDefMemberOps(tree: Member.Def) {
+  implicit class SemanticDefMemberOps(val tree: Member.Def) extends AnyVal {
     @hosted def tpe: core.Type = tree match {
       case x: Decl.Def => succeed(x.decltpe)
       case x: Decl.Procedure => ??? // TODO: t"Unit"
@@ -164,7 +165,7 @@ package object semantic {
     }
   }
 
-  implicit class SemanticTemplateMemberOps(tree: Member.Template) {
+  implicit class SemanticTemplateMemberOps(val tree: Member.Template) extends AnyVal {
     @hosted def superclasses: Seq[Member.Template] = tree.ref.toTypeRef.superclasses
     @hosted def supertypes: Seq[core.Type] = tree.ref.toTypeRef.supertypes
     @hosted def subclasses: Seq[Member.Template] = tree.ref.toTypeRef.subclasses
@@ -187,63 +188,63 @@ package object semantic {
     }
   }
 
-  implicit class SemanticDeclValOps(tree: Decl.Val) {
+  implicit class SemanticDeclValOps(val tree: Decl.Val) extends AnyVal {
     @hosted def tpe: core.Type = succeed(tree.decltpe)
   }
 
-  implicit class SemanticDeclVarOps(tree: Decl.Var) {
+  implicit class SemanticDeclVarOps(val tree: Decl.Var) extends AnyVal {
     @hosted def tpe: core.Type = succeed(tree.decltpe)
   }
 
-  implicit class SemanticDefnValOps(tree: Defn.Val) {
+  implicit class SemanticDefnValOps(val tree: Defn.Val) extends AnyVal {
     @hosted def tpe: core.Type = tree.rhs.tpe
   }
 
-  implicit class SemanticDefnVarOps(tree: Defn.Var) {
+  implicit class SemanticDefnVarOps(val tree: Defn.Var) extends AnyVal {
     @hosted def tpe: core.Type = tree.rhs.map(_.tpe).getOrElse(succeed(tree.decltpe.get))
   }
 
-  implicit class SemanticDefnClassOps(tree: Defn.Class) {
+  implicit class SemanticDefnClassOps(val tree: Defn.Class) extends AnyVal {
     @hosted def companion: Object = new SemanticTemplateMemberOps(tree).companion.map(_.asInstanceOf[Object])
   }
 
-  implicit class SemanticDefnTraitOps(tree: Defn.Trait) {
+  implicit class SemanticDefnTraitOps(val tree: Defn.Trait) extends AnyVal {
     @hosted def companion: Object = new SemanticTemplateMemberOps(tree).companion.map(_.asInstanceOf[Object])
   }
 
-  implicit class SemanticDefnObjectOps(tree: Defn.Object) {
+  implicit class SemanticDefnObjectOps(val tree: Defn.Object) extends AnyVal {
     @hosted def companion: Member.Template with Member.Type = new SemanticTemplateMemberOps(tree).companion.map(_.asInstanceOf[Member.Template with Member.Type])
   }
 
-  implicit class SemanticPkgObjectOps(tree: Defn.Object) {
+  implicit class SemanticPkgObjectOps(val tree: Defn.Object) extends AnyVal {
     @hosted def companion: Member.Template with Member.Type = new SemanticTemplateMemberOps(tree).companion.map(_.asInstanceOf[Member.Template with Member.Type])
   }
 
-  implicit class SemanticCtorOps(tree: Ctor) {
+  implicit class SemanticCtorOps(val tree: Ctor) extends AnyVal {
     @hosted def tpe: core.Type = tree.internalTpe
   }
 
-  implicit class SemanticParentOps(tree: Param) {
+  implicit class SemanticParentOps(val tree: Param) extends AnyVal {
     @hosted def ctor: Ctor = tree.attrs.flatMap(_.collect{ case defn: Attr.Defn => defn } match {
       case Attr.Defn(defn: Ctor) :: Nil => succeed(defn)
       case _ => fail("typecheck has failed")
     })
   }
 
-  implicit class SemanticSelfOps(tree: Aux.Self) {
+  implicit class SemanticSelfOps(val tree: Aux.Self) extends AnyVal {
     def ref: Term.This = new SemanticMemberOps(tree).ref.asInstanceOf[Term.This]
     @hosted def tpe: Type = tree.internalTpe
   }
 
-  implicit class SemanticParamOps(tree: Param) {
+  implicit class SemanticParamOps(val tree: Param) extends AnyVal {
     @hosted def tpe: Param.Type = tree.internalParamTpe
   }
 
-  implicit class SemanticTemplateOps(tree: Aux.Template) {
+  implicit class SemanticTemplateOps(val tree: Aux.Template) extends AnyVal {
     @hosted def tpe: Type = tree.internalTpe
   }
 
-  private[semantic] implicit class SemanticIterableOps[T](val members: Seq[T]) {
+  private[semantic] implicit class SemanticIterableOps[T](val members: Seq[T]) extends AnyVal {
     @hosted def findUnique: T = members match {
       case Seq(unique) => succeed(unique)
       case Seq() => fail("no members found")
@@ -251,11 +252,11 @@ package object semantic {
     }
   }
 
-  implicit class SemanticTreeOps(tree: Tree) {
+  implicit class SemanticTreeOps(val tree: Tree) extends AnyVal {
     @hosted def owner: Scope = wrapHosted(_.owner(tree))
   }
 
-  implicit class SemanticScopeOps(tree: Scope) {
+  implicit class SemanticScopeOps(val tree: Scope) extends AnyVal {
     @hosted def members: Seq[Member] = wrapHosted(_.members(tree).collect{ case m: Member => m })
     @hosted def members(name: Name): Seq[Member] = wrapHosted(_.members(tree).collect{ case m: Member => m })
     @hosted private[semantic] def allMembers[T: ClassTag]: Seq[T] = {
@@ -268,7 +269,7 @@ package object semantic {
     }
   }
 
-  implicit class SemanticTopLevelScopeOps(tree: Scope.TopLevel) {
+  implicit class SemanticTopLevelScopeOps(val tree: Scope.TopLevel) extends AnyVal {
     @hosted def packages: Seq[Pkg] = tree.allMembers[Pkg]
     @hosted def packages(name: Name): Pkg = tree.uniqueMember[Pkg](name.toString)
     @hosted def packages(name: String): Pkg = tree.uniqueMember[Pkg](name.toString)
@@ -276,7 +277,7 @@ package object semantic {
     @hosted def pkgobject: Defn.Object = tree.allMembers[Defn.Object].map(_.filter(_.isPkgObject)).flatMap(_.findUnique)
   }
 
-  implicit class SemanticTemplateScopeOps(tree: Scope.Template) {
+  implicit class SemanticTemplateScopeOps(val tree: Scope.Template) extends AnyVal {
     // TODO: directSuperclasses and others
     @hosted def superclasses: Seq[Member.Template] = tree match {
       case x: Aux.Template => x.tpe.flatMap(_.superclasses)
@@ -302,7 +303,7 @@ package object semantic {
     @hosted def ctors: Seq[Ctor] = wrapHosted(_.members(tree).collect{ case c: Ctor => c })
   }
 
-  implicit class SemanticBlockScopeOps(tree: Scope.Block) {
+  implicit class SemanticBlockScopeOps(val tree: Scope.Block) extends AnyVal {
     @hosted def classes: Seq[Defn.Class] = tree.allMembers[Defn.Class]
     @hosted def classes(name: Name): Defn.Class = tree.uniqueMember[Defn.Class](name.toString)
     @hosted def classes(name: String): Defn.Class = tree.uniqueMember[Defn.Class](name.toString)
@@ -321,14 +322,14 @@ package object semantic {
     @hosted def vars(name: scala.Symbol): Term.Name = tree.uniqueMember[Term.Name](name.toString)
   }
 
-  implicit class SemanticRefineScopeOps(tree: Scope.Refine) {
+  implicit class SemanticRefineScopeOps(val tree: Scope.Refine) extends AnyVal {
     @hosted def defs: Seq[Member.Def] = tree.allMembers[Member.Def]
     @hosted def defs(name: Name): Member.Def = tree.uniqueMember[Member.Def](name.toString)
     @hosted def defs(name: String): Member.Def = tree.uniqueMember[Member.Def](name.toString)
     @hosted def defs(name: scala.Symbol): Member.Def = tree.uniqueMember[Member.Def](name.toString)
   }
 
-  implicit class SemanticExistentialScopeOps(tree: Scope.Existential) {
+  implicit class SemanticExistentialScopeOps(val tree: Scope.Existential) extends AnyVal {
     @hosted def vals: Seq[Term.Name] = tree.allMembers[Term.Name]
     @hosted def vals(name: Name): Term.Name = tree.uniqueMember[Term.Name](name.toString)
     @hosted def vals(name: String): Term.Name = tree.uniqueMember[Term.Name](name.toString)
@@ -339,7 +340,7 @@ package object semantic {
     @hosted def types(name: scala.Symbol): Member.AbstractOrAliasType = tree.uniqueMember[Member.AbstractOrAliasType](name.toString)
   }
 
-  implicit class SemanticParamsScopeOps(tree: Scope.Params) {
+  implicit class SemanticParamsScopeOps(val tree: Scope.Params) extends AnyVal {
     @hosted def params: Seq[Param.Named] = tree.allMembers[Param.Named]
     @hosted def params(name: Name): Param.Named = tree.uniqueMember[Param.Named](name.toString)
     @hosted def params(name: String): Param.Named = tree.uniqueMember[Param.Named](name.toString)
