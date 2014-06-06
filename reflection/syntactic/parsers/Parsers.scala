@@ -11,8 +11,6 @@ import Chars.{isOperatorPart, isScalaLetter}
 import Tokens._
 import TokenInfo._
 
-// TODO: would be great to turn this into a public API
-// also look into package.scala
 object SyntacticInfo {
   private[reflect] val unaryOps = Set("-", "+", "~", "!")
   private[reflect] def isUnaryOp(s: String): Boolean = unaryOps contains s

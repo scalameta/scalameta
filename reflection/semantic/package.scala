@@ -100,13 +100,11 @@ package object semantic {
   }
 
   implicit class SemanticMembers[A <: Member.Term](val tree: Seq[A]) extends AnyVal {
-    def resolve(tpes: Seq[core.Type]): A = ??? // TODO: implement this in terms of Tree.attrs and Attr.Ref
+    def resolve(tpes: Seq[core.Type]): A = ???
   }
 
   implicit class SemanticMemberOps(val tree: Member) extends AnyVal {
-    // TODO: expose type parameter instantiation facilities, e.g. `def foo[T]: T = ...` => `def foo: Int = ...`
     def ref: Ref = tree match {
-      // TODO: this logic is not enough. if a member is a synthetic typeSignatureIn'd thing, we also need to remember its prefix
       case self: Aux.Self => self.name.getOrElse(Term.This(None))
       case named: Has.Name => named.name
     }
@@ -129,7 +127,7 @@ package object semantic {
     def isObject: Boolean = tree.isInstanceOf[Defn.Object]
     def isPkg: Boolean = tree.isInstanceOf[Pkg]
     def isPkgObject: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Package])
-    def isJava: Boolean = ??? // TODO: need special trees for Java artifacts
+    def isJava: Boolean = ???
     def isPrivate: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Private])
     def isProtected: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Protected])
     def isPublic: Boolean = !tree.isPrivate && !tree.isProtected
@@ -284,7 +282,6 @@ package object semantic {
   }
 
   implicit class SemanticTemplateScopeOps(val tree: Scope.Template) extends AnyVal {
-    // TODO: directSuperclasses and others
     @hosted def superclasses: Seq[Member.Template] = tree match {
       case x: Aux.Template => x.tpe.flatMap(_.superclasses)
       case x: Member.Template => x.templ.superclasses
