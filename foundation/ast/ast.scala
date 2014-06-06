@@ -83,47 +83,23 @@ class AstMacros(val c: Context) {
 
       // step 5: turn all parameters into private internal vars, create getters and setters
       paramss1 ++= paramss.map(_.map{ case p @ q"$mods val $name: $tpt = $default" => q"${undefault(unoverride(privatize(varify(mods))))} val ${internalize(p.name)}: $tpt" })
-      stats1 ++= paramss.zipWithIndex.flatMap { case (params, i) =>
-        params.flatMap { p =>
-          val pstats = ListBuffer[Tree]()
-          val pinternal = internalize(p.name)
-          val pmods = if (p.mods.hasFlag(OVERRIDE)) Modifiers(OVERRIDE) else NoMods
-          pstats += q"""
-            $pmods def ${p.name}: ${p.tpt} = {
-              $AstInternal.loadField(this.$pinternal)
-              this.$pinternal
-            }
-          """
-          def generateCow(cowName: TermName, cowParams: List[ValDef], action: Tree => Tree): Tree = {
-            val preArgss = paramss.take(i).map(_.map(p => q"this.${p.name}"))
-            val cowArgs = List(AssignOrNamedArg(q"${p.name}", action(q"this.${p.name}")))
-            val postArgss = paramss.drop(i + 1).map(_.map(p => q"this.${p.name}"))
-            val cowArgss = preArgss ++ List(cowArgs) ++ postArgss
-            q"def $cowName(..$cowParams)(implicit origin: _root_.scala.reflect.core.Origin): ThisType = this.copy(...$cowArgss)"
+      stats1 ++= paramss.flatten.map { p =>
+        val pinternal = internalize(p.name)
+        val pmods = if (p.mods.hasFlag(OVERRIDE)) Modifiers(OVERRIDE) else NoMods
+        q"""
+          $pmods def ${p.name}: ${p.tpt} = {
+            $AstInternal.loadField(this.$pinternal)
+            this.$pinternal
           }
-          if (isVanilla(p)) {
-            pstats += generateCow(TermName("with" + p.name.toString.capitalize), List(q"val ${p.name}: ${p.tpt}"), pref => pref)
-            pstats += generateCow(TermName("map" + p.name.toString.capitalize), List(q"val f: ${p.tpt} => ${p.tpt}"), pref => q"f($pref)")
-          } else if (isNontriviaDefault(p)) {
-            pstats += generateCow(TermName("with" + p.name.toString.capitalize), List(q"val ${p.name}: ${p.tpt}"), pref => pref)
-            pstats += generateCow(TermName("without" + p.name.toString.capitalize), Nil, pref => q"null")
-            pstats += generateCow(TermName("map" + p.name.toString.capitalize), List(q"val f: ${p.tpt} => ${p.tpt}"), pref => q"f($pref)")
-          } else if (isNontriviaCompanion(p)) {
-            // NOTE: generate no setters for non-trivia companion parameters
-          } else {
-            unreachable
-          }
-          pstats.toList
-        }
+        """
       }
       val copyParamss = rawparamss.map(_.map(p => q"val ${p.name}: ${p.tpt} = this.${p.name}"))
       val copyArgss = rawparamss.map(_.map(p => q"${p.name}"))
-      // TODO: would be useful to turn copy, mapXXX and withXXX into macros, so that their calls are guaranteed to be inlined
+      // TODO: would be useful to turn copy into a macro, so that its calls are guaranteed to be inlined
       stats1 += q"def copy(...$copyParamss)(implicit origin: _root_.scala.reflect.core.Origin): ThisType = $mname.apply(...$copyArgss)(_root_.scala.reflect.core.Origin.Transform(this, this.origin))"
 
       // step 7: generate boilerplate required by the @ast infrastructure
       stats1 += q"override type ThisType = $name"
-      stats1 += q"def $$tag: _root_.scala.Int = $AdtInternal.calculateTag[ThisType]"
       // TODO: remove leafClass and leafCompanion from here
       anns1 += q"new $AstInternal.astClass"
       anns1 += q"new $AdtInternal.leafClass"

@@ -10,7 +10,6 @@ class root extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro AdtMacros.root
 }
 
-// TODO: withXXX and mapXXX for intermediate methods in branch traits (e.g. paramss/explicitss/implicits in Has.Paramss)
 class branch extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro AdtMacros.branch
 }
@@ -31,10 +30,9 @@ class AdtMacros(val c: Context) {
       if (mods.hasFlag(SEALED)) c.abort(cdef.pos, "sealed is redundant for @root traits")
       if (mods.hasFlag(FINAL)) c.abort(cdef.pos, "@root traits cannot be final")
       val flags1 = flags | SEALED
-      val tag = q"def $$tag: _root_.scala.Int"
       val thisType = if (stats.collect{ case TypeDef(_, TypeName("ThisType"), _, _) => () }.isEmpty) q"type ThisType <: ${cdef.name}" else q""
       val hierarchyCheck = q"$Internal.hierarchyCheck[${cdef.name}]"
-      val stats1 = tag +: thisType +: hierarchyCheck +: stats
+      val stats1 = thisType +: hierarchyCheck +: stats
       val anns1 = q"new $Internal.root" +: anns
       ClassDef(Modifiers(flags1, privateWithin, anns1), name, tparams, Template(parents, self, stats1))
     }
@@ -86,28 +84,13 @@ class AdtMacros(val c: Context) {
       if (ctorMods.flags != NoFlags) c.abort(cdef.pos, "@leaf classes must define a public primary constructor")
       if (paramss.length == 0) c.abort(cdef.pos, "@leaf classes must define a non-empty parameter list")
 
-      // step 2: unprivate parameters, create copy-on-write helpers, generate validation checks
+      // step 2: unprivate parameters, generate validation checks
       val paramss1 = paramss.map(_.map{ case q"$mods val $name: $tpt = $default" => q"${unprivate(mods)} val $name: $tpt = $default" })
-      stats1 ++= paramss.zipWithIndex.flatten { case (params, i) =>
-        params.flatMap { p =>
-          def generateCow(cowName: TermName, cowParam: ValDef, action: Tree => Tree): Tree = {
-            val preArgss = paramss.take(i).map(_.map(p => q"this.${p.name}"))
-            val cowArgs = List(AssignOrNamedArg(q"${p.name}", action(q"this.${p.name}")))
-            val postArgss = paramss.drop(i + 1).map(_.map(p => q"this.${p.name}"))
-            val cowArgss = preArgss ++ List(cowArgs) ++ postArgss
-            q"def $cowName($cowParam): ThisType = this.copy(...$cowArgss)"
-          }
-          val withParam = generateCow(TermName("with" + p.name.toString.capitalize), q"val ${p.name}: ${p.tpt}", pref => pref)
-          val mapParam = generateCow(TermName("map" + p.name.toString.capitalize), q"val f: ${p.tpt} => ${p.tpt}", pref => q"f($pref)")
-          List(withParam, mapParam)
-        }
-      }
       stats1 ++= paramss.flatten.map(p => q"$Internal.nullCheck(this.${p.name})")
       stats1 ++= paramss.flatten.map(p => q"$Internal.emptyCheck(this.${p.name})")
 
       // step 3: generate boilerplate required by the @adt infrastructure
       stats1 += q"override type ThisType = $name"
-      stats1 += q"override def $$tag: _root_.scala.Int = $Internal.calculateTag[ThisType]"
       stats1 += q"$Internal.hierarchyCheck[ThisType]"
       stats1 += q"$Internal.immutabilityCheck[ThisType]"
       anns1 += q"new $Internal.leafClass"
@@ -133,7 +116,6 @@ class AdtMacros(val c: Context) {
 
       // step 2: generate boilerplate required by the @adt infrastructure
       mstats1 += q"override type ThisType = $mname.type"
-      mstats1 += q"override def $$tag: _root_.scala.Int = $Internal.calculateTag[ThisType]"
       mstats1 += q"$Internal.hierarchyCheck[ThisType]"
       mstats1 += q"$Internal.immutabilityCheck[ThisType]"
       manns1 += q"new $Internal.leafClass"

@@ -15,15 +15,8 @@ import scala.reflect.syntactic.parsers._, SyntacticInfo._
 
 @root trait Tree extends Product {
   type ThisType <: Tree
-
   def origin: Origin
-  def withOrigin(origin: Origin): ThisType = internalCopy(origin = origin)
-  def mapOrigin(f: Origin => Origin): ThisType = internalCopy(origin = f(origin))
-
-  // NOTE: withParent and mapParent are not available
-  // because parent-child structure of trees is supposed to be maintained by the framework
   def parent: Option[Tree] = if (internalParent != null) Some(internalParent) else None
-
   def showCode: String = ShowCode.showTree(this).toString
   def showRaw: String = ShowRaw.showTree(this).toString
   final override def toString: String = showRaw
@@ -302,8 +295,6 @@ object Import {
 
 @branch trait Param extends Tree with Has.Mods {
   def decltpe: Option[Param.Type]
-  def withMods(mods: Seq[Mod])(implicit origin: Origin): ThisType
-  def mapMods(mods: Seq[Mod] => Seq[Mod])(implicit origin: Origin): ThisType
 }
 object Param {
   @branch trait Type extends Tree
@@ -324,8 +315,6 @@ object Param {
   def contextBounds: Seq[core.Type]
   def viewBounds: Seq[core.Type]
   def bounds: Aux.TypeBounds
-  def withMods(mods: Seq[Mod])(implicit origin: Origin): ThisType
-  def mapMods(mods: Seq[Mod] => Seq[Mod])(implicit origin: Origin): ThisType
 }
 object TypeParam {
   @ast class Anonymous(mods: Seq[Mod],

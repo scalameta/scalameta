@@ -1093,7 +1093,8 @@ abstract class Parser { parser =>
         Term.Ascribe(expr, typeOrInfixType(location))
       }
     }.get
-    val param = param0.mapMods(Mod.Implicit() +: _)
+    val mods = Mod.Implicit() +: param0.mods
+    val param = param0 match { case p: Param.Anonymous => p.copy(mods = mods); case p: Param.Named => p.copy(mods = mods) }
     accept(ARROW)
     Term.Function(List(param), if (location != InBlock) expr() else block())
   }
