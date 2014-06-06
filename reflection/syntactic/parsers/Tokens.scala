@@ -4,7 +4,7 @@
  */
 
 package scala.reflect
-package syntactic
+package syntactic.parsers
 
 object Tokens {
   def isIdentifier(code: Int) = code == IDENTIFIER || code == BACKQUOTED_IDENT // used by ide

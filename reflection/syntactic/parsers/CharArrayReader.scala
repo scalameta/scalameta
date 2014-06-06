@@ -3,7 +3,8 @@
  * @author  Martin Odersky
  */
 
-package scala.reflect.syntactic.util
+package scala.reflect
+package syntactic.parsers
 
 import Chars._
 

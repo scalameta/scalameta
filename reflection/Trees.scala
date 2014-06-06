@@ -10,9 +10,8 @@ import org.scalareflect.invariants._
 import org.scalareflect.annotations._
 import org.scalareflect.unreachable
 import scala.reflect.semantic._
-import scala.reflect.syntactic._
 import scala.reflect.syntactic.show._
-import scala.reflect.syntactic.SyntacticInfo._
+import scala.reflect.syntactic.parsers._, SyntacticInfo._
 
 // TODO: collection-like methods (see http://clang.llvm.org/docs/LibASTMatchersReference.html)
 // TODO: rewriting/transformation methods

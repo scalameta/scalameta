@@ -4,7 +4,7 @@ package syntactic.show
 import scala.reflect.core._, Aux._
 import org.scalareflect.show.Show
 import Show.{ sequence => s, repeat => r, indent => i, newline => n }
-import scala.reflect.syntactic.SyntacticInfo._
+import scala.reflect.syntactic.parsers.SyntacticInfo._
 import scala.reflect.semantic._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
