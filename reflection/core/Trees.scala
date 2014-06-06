@@ -42,6 +42,7 @@ import scala.reflect.syntactic.SyntacticInfo._
   def showRaw: String = syntactic.show.ShowRaw.showTree(this).toString
   final override def toString: String = showRaw
 
+  // NOTE: these are internal APIs designed to be used only by hosts
   // TODO: these APIs will most likely change in the future
   // because we would like to make sure that trees are fully immutable
   private[reflect] def scratchpad(implicit h: HostContext): Seq[Any] = internalScratchpads.getOrElse(h, Nil);
