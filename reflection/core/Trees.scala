@@ -66,8 +66,6 @@ import scala.reflect.syntactic.SyntacticInfo._
   def isBackquoted: Boolean
 }
 
-
-
 @branch trait Term extends Arg with Stmt.Template with Stmt.Block with Qual.Term
 object Term {
   @branch trait Ref extends Term with core.Ref with Qual.Type
