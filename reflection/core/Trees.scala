@@ -16,16 +16,11 @@ import scala.reflect.syntactic.SyntacticInfo._
 
 // TODO: collection-like methods (see http://clang.llvm.org/docs/LibASTMatchersReference.html)
 // TODO: rewriting/transformation methods
-// TODO: parser
 // TODO: unhygienic quasiquotes
 // TODO: hygiene + hygienic tree equality
 // TODO: what to do with references to particular overloads?
-// TODO: consider adding default values for case class fields whenever applicable
-// TODO: prettyprinter
-// TODO: implement srewrite with palladium
-// TODO: implement scaladoc with palladium
 // TODO: add moar requires
-// TODO: add tree for comments
+// TODO: add ast nodes for regular as well as scaladoc comments
 
 @root trait Tree extends Product {
   type ThisType <: Tree
@@ -345,7 +340,6 @@ object Import {
   @ast class Unimport(name: Name) extends Selector
 }
 
-// TODO: only non-implicit non-val/var parameters may be by name
 @branch trait Param extends Tree with Has.Mods {
   def decltpe: Option[Param.Type]
   def withMods(mods: Seq[Mod])(implicit origin: Origin): ThisType
@@ -357,6 +351,7 @@ object Param {
     @ast class ByName(tpe: Type) extends Type
     @ast class Repeated(tpe: Type) extends Type
   }
+  // TODO: validate that only non-implicit non-val/var parameters may be by name
   @ast class Anonymous(mods: Seq[Mod],
                        decltpe: Option[Type]) extends Param
   @ast class Named(mods: Seq[Mod],
@@ -408,7 +403,7 @@ object Mod {
   @branch trait AccessQualifier extends Tree
   @ast class Private(within: Option[AccessQualifier]) extends Access {
     // TODO: there is obvious duplication wrt Protected, but it's not as easy as it looks
-    // the thing is that @ast moves all requires to Companion.apply, which means that we can't just use inheritance to abstract this way
+    // the thing is that @ast moves all `require` calls to Companion.apply, which means that we can't just use inheritance to abstract this way
     // let's revisit this later and think about how we can improve here
     require(within.nonEmpty ==> (within match { case Some(acc: Term.This) => acc.qual.isEmpty; case _ => true }))
   }
