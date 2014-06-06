@@ -1,17 +1,16 @@
 package scala.reflect
 package core
 
-import org.scalareflect.invariants._
-import org.scalareflect.adt._
-import org.scalareflect.annotations._
-import org.scalareflect.annotations.internal.ast.AstHelperMacros
+import scala.language.experimental.macros
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
-import scala.language.experimental.macros
-import scala.reflect.semantic.HostContext
+import org.scalareflect.adt._
+import org.scalareflect.invariants._
+import org.scalareflect.annotations._
 import org.scalareflect.unreachable
 import scala.reflect.semantic._
 import scala.reflect.syntactic._
+import scala.reflect.syntactic.show._
 import scala.reflect.syntactic.SyntacticInfo._
 
 // TODO: collection-like methods (see http://clang.llvm.org/docs/LibASTMatchersReference.html)
@@ -33,8 +32,8 @@ import scala.reflect.syntactic.SyntacticInfo._
   // because parent-child structure of trees is supposed to be maintained by the framework
   def parent: Option[Tree] = if (internalParent != null) Some(internalParent) else None
 
-  def showCode: String = syntactic.show.ShowCode.showTree(this).toString
-  def showRaw: String = syntactic.show.ShowRaw.showTree(this).toString
+  def showCode: String = ShowCode.showTree(this).toString
+  def showRaw: String = ShowRaw.showTree(this).toString
   final override def toString: String = showRaw
 
   // NOTE: these are internal APIs designed to be used only by hosts

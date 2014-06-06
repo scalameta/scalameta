@@ -12,6 +12,7 @@ import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import org.scalareflect.unreachable
 
+// TODO: would be great to turn this into a public API
 object SyntacticInfo {
   private[reflect] val unaryOps = Set("-", "+", "~", "!")
   private[reflect] def isUnaryOp(s: String): Boolean = unaryOps contains s
