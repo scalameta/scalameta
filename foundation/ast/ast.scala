@@ -62,7 +62,7 @@ class AstMacros(val c: Context) {
       val companionsForDefaultss = nontriviaDefaultss.map(_.map{
         case p @ q"$mods val $name: $tpt = $default" =>
           val Modifiers(flags, privateWithin, anns) = undefault(unoverride(mods))
-          val anns1 = anns :+ q"new _root_.org.scalareflect.annotations.trivia"
+          val anns1 = anns :+ q"new _root_.org.scalareflect.ast.trivia"
           q"${Modifiers(flags, privateWithin, anns1)} val ${hasify(p.name)}: _root_.scala.Boolean"
       })
       def isVanilla(p: ValDef) = !isNontriviaDefault(p) && !isNontriviaCompanion(p)
