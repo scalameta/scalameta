@@ -5,6 +5,7 @@ import scala.language.experimental.macros
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import org.scalareflect.adt._
+import org.scalareflect.ast._
 import org.scalareflect.invariants._
 import org.scalareflect.annotations._
 import org.scalareflect.unreachable

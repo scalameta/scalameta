@@ -1,4 +1,4 @@
-package org.scalareflect.annotations
+package org.scalareflect.ast
 
 import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
@@ -14,7 +14,7 @@ class AstMacros(val c: Context) {
   import c.universe._
   import Flag._
   val AdtInternal = q"_root_.org.scalareflect.adt.Internal"
-  val AstInternal = q"_root_.org.scalareflect.annotations.internal.ast"
+  val AstInternal = q"_root_.org.scalareflect.ast.internal"
   def impl(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       val q"$mods class $name[..$tparams] $ctorMods(...$rawparamss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
