@@ -164,14 +164,14 @@ object Member {
   @branch trait Term extends Member
   @branch trait Type extends Member
   @branch trait ValOrVar extends Stmt.Template with Has.Mods // NOTE: vals and vars are not members!
-  @branch trait Def extends Term with Has.TermName with Stmt.Refine with Has.Paramss with Scope.Params {
+  @branch trait Def extends Term with Has.TermName with Stmt.Refine with Has.TypeParams with Has.Paramss with Scope.Params {
     def tparams: Seq[TypeParam]
   }
-  @branch trait AbstractOrAliasType extends Type with Has.TypeName with Stmt.Refine {
+  @branch trait AbstractOrAliasType extends Type with Has.TypeName with Stmt.Refine with Has.TypeParams {
     def name: core.Type.Name
     def tparams: Seq[TypeParam]
   }
-  @branch trait Template extends Defn with Has.Name with Stmt.TopLevel with Stmt.Block with Has.Paramss with Scope.Template {
+  @branch trait Template extends Defn with Has.Name with Stmt.TopLevel with Stmt.Block with Has.TypeParams with Has.Paramss with Scope.Template {
     def name: core.Name
     def explicits: Seq[Seq[Param.Named]] = Nil
     def implicits: Seq[Param.Named] = Nil
@@ -310,7 +310,7 @@ object Param {
                    default: Option[Term]) extends Param with Member.Term with Has.TermName
 }
 
-@branch trait TypeParam extends Tree with Has.Mods {
+@branch trait TypeParam extends Tree with Has.Mods with Has.TypeParams {
   def tparams: Seq[TypeParam]
   def contextBounds: Seq[core.Type]
   def viewBounds: Seq[core.Type]
@@ -409,6 +409,9 @@ object Has {
     def explicits: Seq[Seq[Param.Named]]
     def implicits: Seq[Param.Named]
     def paramss: Seq[Seq[Param.Named]] = explicits :+ implicits
+  }
+  @branch trait TypeParams extends Tree {
+    def tparams: Seq[TypeParam]
   }
   @branch trait Name extends Member { def name: core.Name }
   @branch trait TermName extends Member.Term with Has.Name { def name: Term.Name }
