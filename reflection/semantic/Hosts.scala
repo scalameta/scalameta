@@ -31,7 +31,7 @@ trait HostContext {
   def dealias(tpe: Type): Type
   def erasure(tpe: Type): Type
 
-  def attrs(tree: Tree): Seq[Attribute]
+  def attrs(tree: Tree): Seq[Attr]
 }
 
 trait MacroContext extends HostContext {
