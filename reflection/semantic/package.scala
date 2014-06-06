@@ -34,7 +34,7 @@ package object semantic {
 
   implicit class SemanticTypeOps(tree: Type) {
     @hosted def <:<(other: Type): Boolean = delegate
-    @hosted def weak_<:<(other: Type): Boolean = delegate
+    @hosted def weak_<:<(other: Type): Boolean = ???
     @hosted def widen: Type = delegate
     @hosted def dealias: Type = delegate
     @hosted def erasure: Type = delegate
@@ -79,7 +79,7 @@ package object semantic {
 
   implicit class SemanticRefOps(tree: Ref) {
     private[semantic] def toTypeRef: Type.Ref = ??? // TODO: t"$tree"
-    @hosted def defns: Seq[Member] = wrapHosted(_.defns(tree))
+    @hosted def defns: Seq[Member] = wrapHosted(_.defns(tree).collect{ case m: Member => m })
   }
 
   implicit class SemanticTypeRefOps(tree: Type.Ref) {
@@ -110,8 +110,8 @@ package object semantic {
       case named: Has.Name => named.name
     }
     @hosted def overrides: Seq[Member] = tree match {
-      case mte: Member.Term => wrapHosted(_.overrides(mte))
-      case mty: Member.Type => wrapHosted(_.overrides(mty))
+      case mte: Member.Term => wrapHosted(_.supermembers(mte))
+      case mty: Member.Type => wrapHosted(_.supermembers(mty))
     }
     def annots: Seq[Mod.Annot] = tree.mods.collect{ case annot: Mod.Annot => annot }
     def doc: Option[Mod.Doc] = tree.mods.collect{ case doc: Mod.Doc => doc }.headOption
@@ -256,8 +256,8 @@ package object semantic {
   }
 
   implicit class SemanticScopeOps(tree: Scope) {
-    @hosted def members: Seq[Member] = delegate
-    @hosted def members(name: Name): Seq[Member] = wrapHosted(_.members(tree))
+    @hosted def members: Seq[Member] = wrapHosted(_.members(tree).collect{ case m: Member => m })
+    @hosted def members(name: Name): Seq[Member] = wrapHosted(_.members(tree).collect{ case m: Member => m })
     @hosted private[semantic] def allMembers[T: ClassTag]: Seq[T] = {
       members.map(_.collect { case x: T => x })
     }
@@ -299,7 +299,7 @@ package object semantic {
       case x: Type => wrapHosted(_.subclasses(x))
     }
     @hosted def ctor: Ctor.Primary = ctors.flatMap(_.collect { case prim: Ctor.Primary => prim }.findUnique)
-    @hosted def ctors: Seq[Ctor] = delegate
+    @hosted def ctors: Seq[Ctor] = wrapHosted(_.members(tree).collect{ case c: Ctor => c })
   }
 
   implicit class SemanticBlockScopeOps(tree: Scope.Block) {

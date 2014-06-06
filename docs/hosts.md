@@ -40,30 +40,28 @@ The same level of robustness is expected from hosts. Concretely: 1) semantic ope
 
 <!-- TODO: explain ordering guarantees for all Seq[T] results both in HostContext and in all our APIs -->
 
-| Method                                                 | Notes
-|--------------------------------------------------------|-----------------------------------------------------------------
-| `def syntaxProfile: SyntaxProfile`                     | Universally accepted syntactically significant compiler / IDE flags. Currently empty (one can only return `SyntaxProfile()`, but later on when we add support for different versions of Scala, we will expand this data structure.
-| `def semanticProfile: SemanticProfile`                 | Universally accepted semantically significant compiler / IDE flags. Again this will grow over time. At the moment only contains `-language:XXX` compiler flags.
-| `def owner(tree: Tree): Scope`                         | A scope that owns the provided tree, be it a definition or a statement in some definition.
-| `def stats(scope: Scope): Seq[Tree]`                   | This isn't actually a method in `HostContext`, and it's here only to emphasize a peculiarity of our API. This particular method in unnecessary, because all lists in trees (e.g. the list of statements in a block or a list of declarations in a package or a class) are actually `Seq`'s, which means that the host can choose between eager and lazy population of scope contents when returning trees to the user of the Palladium API (e.g. in `root`).
-| `def members(scope: Scope): Seq[Member]`               | Returns all members (aka symbols, aka named definitions) belonging to the specified scope. This API could query something as simple as parameters of a method or as complex as all members of a given class (accounting for inherited members and overriding). When called on a `Type` (types can be viewed as scopes as well), this method should return members that are adjusted to the type's type arguments and self type. E.g. `t"List".members` should return `Seq(q"def head: A = ...", ...)`, whereas `t"List[Int]".members` should return `Seq(q"def head: Int = ...", ...)`.
-| `def members(scope: Scope, name: Name): Seq[Member]`   | Same as the previous method, but indexed by name, which can be either `Term.Name` or `Type.Name`.
-| `def ctors(scope: Scope): Seq[Ctor]`                   | Same as previous methods, but for constructors. In Palladium API, constructors are not members, because they can't be referenced by name, so we need this method as a dedicated entity.
-| `def defns(ref: Ref): Seq[Member]`                     | Goes from a reference to the associated definiton or definitions. Might have to return multiple results to account for overloading or situations like imports, super/this qualifiers and accessibility boundaries. If necessary, overloads can be resolved later via `Overload.resolve` or `term.attrs`, but this function shouldn't attempt to do that.
-| `def overrides(member: Member.Term): Seq[Member.Term]` | Computes all term definitions that are overridden by a given definition. If the provided member has been obtained by instantiating certain type parameters, then the results of this method should also have corresponding type parameters instantiated.
-| `def overrides(member: Member.Type): Seq[Member.Type]` | Same as the previous method, but for types.
-| `def <:<(tpe1: Type, tpe2: Type): Boolean`             | Subtyping check.
-| `def weak_<:<(tpe1: Type, tpe2: Type): Boolean`        | Same as the previous method, but returns true when numeric widening is applicable (e.g. `Int <:< Long` is `false`, but `Int weak_<:< Long` is `true`.
-| `def supertypes(tpe: Type): Seq[Type]`                 | All supertypes of a given type in linearization order, with type arguments instantiated accordingly.
-| `def linearization(tpes: Seq[Type]): Seq[Type]`        | Linearization of a given sequence of types.
-| `def subclasses(tpe: Type): Seq[Member.Template]`      | All subclasses of a given type in the closed world reflected by the host.
-| `def self(tpe: Type): Aux.Self`                        | Self type of a given type, again with type arguments instantiated accordingly.
-| `def lub(tpes: Seq[Type]): Type`                       | Least upper bound.
-| `def glb(tpes: Seq[Type]): Type`                       | Greatest lower bound.
-| `def widen(tpe: Type): Type`                           | Goes from a singleton type to a type underlying that singleton. E.g. `t"x.type".widen` in a context that features `val x = 2` should return `t"Int"`. Widenings should be performed shallowly (i.e. `List[x.type]` shouldn't be changed), but to the maximum possible extent (e.g. for `val x = 2; val y: x.type = x`, `t"y.type".widen` should return `t"Int"`, not `t"x.type"`).
-| `def dealias(tpe: Type): Type`                         | Goes from a type alias or an application of a type alias to the underlying type. Again, this should work shallowly, but to the maximum possible extent.
-| `def erasure(tpe: Type): Type`                         | Erasure.
-| `def attrs(tree: Tree): Seq[Attribute]`                | Computes and returns semantic information for a given tree: resolved, i.e. non-overloaded reference to a definition, type, inferred type and value arguments, macro expansion, etc.
+| Method                                                    | Notes
+|-----------------------------------------------------------|-----------------------------------------------------------------
+| `def syntaxProfile: SyntaxProfile`                        | Universally accepted syntactically significant compiler / IDE flags. Currently empty (one can only return `SyntaxProfile()`, but later on when we add support for different versions of Scala, we will expand this data structure.
+| `def semanticProfile: SemanticProfile`                    | Universally accepted semantically significant compiler / IDE flags. Again this will grow over time. At the moment only contains `-language:XXX` compiler flags.
+| `def defns(ref: Ref): Seq[Tree]`                          | Goes from a reference to the associated definiton or definitions. Might have to return multiple results to account for overloading or situations like imports, super/this qualifiers and accessibility boundaries. If necessary, overloads can be resolved later via `Overload.resolve` or `term.attrs`, but this function shouldn't attempt to do that.
+| `def attrs(tree: Tree): Seq[Attr]`                        | Computes and returns semantic information for a given tree: resolved, i.e. non-overloaded reference to a definition, type, inferred type and value arguments, macro expansion, etc.
+| `def owner(tree: Tree): Scope`                            | A scope that owns the provided tree, be it a definition or a statement in some definition.
+| `def stats(scope: Scope): Seq[Tree]`                      | This isn't actually a method in `HostContext`, and it's here only to emphasize a peculiarity of our API. This particular method in unnecessary, because all lists in trees (e.g. the list of statements in a block or a list of declarations in a package or a class) are actually `Seq`'s, which means that the host can choose between eager and lazy population of scope contents when returning trees to the user of the Palladium API (e.g. in `root`).
+| `def members(scope: Scope): Seq[Member]`                  | Returns all members belonging to the specified scope. This API could query something as simple as parameters of a method or as complex as all members of a given class (accounting for inherited members and overriding). When called on a `Type` (types can be viewed as scopes as well), this method should return members that are adjusted to the type's type arguments and self type. E.g. `t"List".members` should return `Seq(q"def head: A = ...", ...)`, whereas `t"List[Int]".members` should return `Seq(q"def head: Int = ...", ...)`.
+| `def members(scope: Scope, name: Name): Seq[Tree]`        | Same as the previous method, but indexed by name. This method would be trivially implementable on top of the previous method if performance didn't matter, but it does, so we expose two methods instead of one. In the future we could have change the signature of the previous method to `def members(scope: Scope): Query[Tree]` and remove this method altogether.
+| `def <:<(tpe1: Type, tpe2: Type): Boolean`                | Subtyping check
+| `def supertypes(tpe: Type): Seq[Type]`                    | All supertypes of a given type in linearization order, with type arguments instantiated accordingly.
+| `def supermembers(member: Member): Seq[Member]`           | All definitions overridden by a given definition in linearization order. If the provided member has been obtained by instantiating certain type parameters, then the results of this method should also have corresponding type parameters instantiated.
+| `def subclasses(tpe: Type): Seq[Member.Template]`         | All subclasses of a given type in the closed world reflected by the host.
+| `def submembers(member: Member): Seq[Member]`             | All definitions overriding a given definition in the closed world reflected by the host. If the provided member has been obtained by instantiating certain type parameters, then the results of this method should also have corresponding type parameters instantiated.
+| `def linearization(tpes: Seq[Type]): Seq[Type]`           | Linearization.
+| `def self(tpe: Type): Aux.Self`                           | Self type of a given type, again with type arguments instantiated accordingly.
+| `def lub(tpes: Seq[Type]): Type`                          | Least upper bound.
+| `def glb(tpes: Seq[Type]): Type`                          | Greatest lower bound.
+| `def widen(tpe: Type): Type`                              | Goes from a singleton type to a type underlying that singleton. E.g. `t"x.type".widen` in a context that features `val x = 2` should return `t"Int"`. Widenings should be performed shallowly (i.e. `List[x.type]` shouldn't be changed), but to the maximum possible extent (e.g. for `val x = 2; val y: x.type = x`, `t"y.type".widen` should return `t"Int"`, not `t"x.type"`).
+| `def dealias(tpe: Type): Type`                            | Goes from a type alias or an application of a type alias to the underlying type. Again, this should work shallowly, but to the maximum possible extent.
+| `def erasure(tpe: Type): Type`                            | Erasure.
 
 ### MacroContext
 

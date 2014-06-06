@@ -9,29 +9,25 @@ trait HostContext {
   def syntaxProfile: SyntaxProfile
   def semanticProfile: SemanticProfile
 
-  def owner(tree: Tree): Scope
-  // NOTE: def stats(scope: Scope): Seq[Tree] is implicit in signatures of Template and Pkg
-  def members(scope: Scope): Seq[Member]
-  def members(scope: Scope, name: Name): Seq[Member]
-  def ctors(scope: Scope): Seq[Ctor]
+  def defns(ref: Ref): Seq[Tree]
+  def attrs(tree: Tree): Seq[Attr]
 
-  def defns(ref: Ref): Seq[Member]
-  def overrides(member: Member.Term): Seq[Member.Term]
-  def overrides(member: Member.Type): Seq[Member.Type]
+  def owner(tree: Tree): Scope
+  def members(scope: Scope): Seq[Tree]
+  def members(scope: Scope, name: Name): Seq[Tree]
 
   def <:<(tpe1: Type, tpe2: Type): Boolean
-  def weak_<:<(tpe1: Type, tpe2: Type): Boolean
   def supertypes(tpe: Type): Seq[Type]
-  def linearization(tpes: Seq[Type]): Seq[Type]
+  def supermembers(member: Member): Seq[Member]
   def subclasses(tpe: Type): Seq[Member.Template]
+  def submembers(member: Member): Seq[Member]
+  def linearization(tpes: Seq[Type]): Seq[Type]
   def self(tpe: Type): Aux.Self
   def lub(tpes: Seq[Type]): Type
   def glb(tpes: Seq[Type]): Type
   def widen(tpe: Type): Type
   def dealias(tpe: Type): Type
   def erasure(tpe: Type): Type
-
-  def attrs(tree: Tree): Seq[Attr]
 }
 
 trait MacroContext extends HostContext {
