@@ -397,7 +397,9 @@ object Enum {
 @branch trait Mod extends Tree
 object Mod {
   @ast class Annot(tpe: Type, argss: Seq[Seq[Arg]]) extends Mod
-  @ast class Doc(doc: String) extends Mod // TODO: design representation for scaladoc
+  // TODO: design representation for scaladoc
+  // TODO: possible gaps between docs and related defns are really scary
+  @ast class Doc(doc: String) extends Mod
   @branch trait Access extends Mod { def within: Option[AccessQualifier] }
   @branch trait AccessQualifier extends Tree
   @ast class Private(within: Option[AccessQualifier]) extends Access {
@@ -418,6 +420,7 @@ object Mod {
   @ast class Covariant() extends Mod
   @ast class Contravariant() extends Mod
   @ast class Lazy() extends Mod
+  // TODO: the modifers below would benefit from relocation
   @ast class Macro() extends Mod
   @ast class ValParam() extends Mod
   @ast class VarParam() extends Mod
