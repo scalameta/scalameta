@@ -1,6 +1,6 @@
 ### Host implementor notes
 
-Palladium provides foundational data structures for metaprogramming defined in [Trees.scala](/reflection/core/Trees.scala) along with several levels of APIs (syntactic and semantic).
+Palladium provides foundational data structures for metaprogramming defined in [Trees.scala](/reflection/Trees.scala) along with several levels of APIs (syntactic and semantic).
 
 While syntactic services are implemented in Palladium itself, semantic services require external implementations called hosts, because it would be unreasonable for us to, say, implement Scala's type inference or implicit resolution algorithms from scratch. In [Hosts.scala](reflection/semantic/Hosts.scala) we have encapsulated a minimalistic API surface that's required from hosts.
 
@@ -8,7 +8,7 @@ Here is some preliminary documentation on the functionality expected from hosts 
 
 ### Trees
 
-Palladium trees provide comprehensive coverage of syntactic structures that comprise Scala. They are predefined in [Trees.scala](/reflection/core/Trees.scala) in the form of a sealed hierarchy, which means that hosts neither need nor can create custom subclasses of `Tree`.
+Palladium trees provide comprehensive coverage of syntactic structures that comprise Scala. They are predefined in [Trees.scala](/reflection/Trees.scala) in the form of a sealed hierarchy, which means that hosts neither need nor can create custom subclasses of `Tree`.
 
 Hosts are, however, required to create instances of Palladium trees to be returned from various host APIs (e.g. the `HostContext.root` entry point to the program introspection returns a `Pkg.Root` tree node or the `MacroContext.application` entry point to macro expansion that returns `Tree`), so here we will outline the guidelines that were used to design Palladium trees in order to allude to expected usage scenarios:
 
