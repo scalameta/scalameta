@@ -415,15 +415,12 @@ object Qual {
 object Has {
   @branch trait Mods extends Tree {
     def mods: Seq[Mod]
-    private[reflect] def validateMods(): Unit = ???
   }
-
   @branch trait Paramss extends Tree {
     def explicits: Seq[Seq[Param.Named]]
     def implicits: Seq[Param.Named]
     def paramss: Seq[Seq[Param.Named]] = explicits :+ implicits
   }
-
   @branch trait Name extends Member { def name: core.Name }
   @branch trait TermName extends Member.Term with Has.Name { def name: Term.Name }
   @branch trait TypeName extends Member.Type with Has.Name { def name: Type.Name }
