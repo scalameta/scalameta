@@ -46,13 +46,6 @@ import scala.reflect.syntactic.parsers._, SyntacticInfo._
   private[core] def internalCopy(prototype: Tree = internalPrototype, parent: Tree = internalParent, scratchpads: Map[HostContext, Seq[Any]] = internalScratchpads, origin: Origin = origin): ThisType
 }
 
-@branch trait Ref extends Tree
-
-@branch trait Name extends Ref {
-  def value: String
-  def isBackquoted: Boolean
-}
-
 @branch trait Term extends Arg with Stmt.Template with Stmt.Block with Qual.Term
 object Term {
   @branch trait Ref extends Term with core.Ref with Qual.Type
@@ -294,13 +287,6 @@ object Ctor {
   }
 }
 
-object Qual {
-  @branch trait Term extends Tree
-  @branch trait Type extends Term
-  @ast class Name(value: String, @trivia isBackquoted: Boolean = false) extends core.Name with Mod.AccessQualifier
-  @ast class Super(thisp: Option[Qual.Name], superp: Option[Type.Name]) extends Qual.Term with Qual.Type
-}
-
 @ast class Import(clauses: Seq[Import.Clause] @nonEmpty) extends Stmt.TopLevel with Stmt.Template with Stmt.Block
 object Import {
   @ast class Clause(ref: Term.Ref, sels: Seq[Selector] @nonEmpty) extends Tree {
@@ -410,6 +396,20 @@ object Aux {
     require(hasThis ==> name.isEmpty)
   }
   @ast class TypeBounds(lo: Type = Type.Name("Nothing"), hi: Type = Type.Name("Any")) extends Tree
+}
+
+@branch trait Ref extends Tree
+
+@branch trait Name extends Ref {
+  def value: String
+  def isBackquoted: Boolean
+}
+
+object Qual {
+  @branch trait Term extends Tree
+  @branch trait Type extends Term
+  @ast class Name(value: String, @trivia isBackquoted: Boolean = false) extends core.Name with Mod.AccessQualifier
+  @ast class Super(thisp: Option[Qual.Name], superp: Option[Type.Name]) extends Qual.Term with Qual.Type
 }
 
 object Has {
