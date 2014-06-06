@@ -1,22 +1,22 @@
-import scala.reflect.core._, Import._, Selector.{Name => SelectorName, _}, Term.{This, Name => TermName, Select}, Aux.Super
+import scala.reflect.core._, Import._, Term.{This, Name => TermName, Select}, Aux.Super
 
 class ImportSuite extends ParseSuite {
   test("import foo.bar") {
-    val Import(Clause(TermName("foo"), SelectorName(Name.Both("bar")) :: Nil) :: Nil) = templStat("import foo.bar")
+    val Import(Clause(TermName("foo"), Name("bar") :: Nil) :: Nil) = templStat("import foo.bar")
   }
 
   test("import foo.bar.baz") {
-    val Import(Clause(Select(TermName("foo"), TermName("bar")), SelectorName(Name.Both("baz")) :: Nil) :: Nil) =
+    val Import(Clause(Select(TermName("foo"), TermName("bar")), Name("baz") :: Nil) :: Nil) =
       templStat("import foo.bar.baz")
   }
 
   test("import super.foo.bar") {
-    val Import(Clause(Select(Super(None, None), TermName("foo")), SelectorName(Name.Both("bar")) :: Nil) :: Nil) =
+    val Import(Clause(Select(Super(None, None), TermName("foo")), Name("bar") :: Nil) :: Nil) =
       templStat("import super.foo.bar")
   }
 
   test("import this.foo.bar") {
-    val Import(Clause(Select(This(None), TermName("foo")), SelectorName(Name.Both("bar")) :: Nil) :: Nil) =
+    val Import(Clause(Select(This(None), TermName("foo")), Name("bar") :: Nil) :: Nil) =
       templStat("import this.foo.bar")
   }
 
@@ -36,31 +36,31 @@ class ImportSuite extends ParseSuite {
   }
 
   test("import foo.{bar}") {
-    val Import(Clause(TermName("foo"), SelectorName(Name.Both("bar")) :: Nil) :: Nil) = templStat("import foo.{bar}")
+    val Import(Clause(TermName("foo"), Name("bar") :: Nil) :: Nil) = templStat("import foo.{bar}")
   }
 
   test("import foo.{bar, baz}") {
-    val Import(Clause(TermName("foo"), SelectorName(Name.Both("bar")) :: SelectorName(Name.Both("baz")) :: Nil) :: Nil) =
+    val Import(Clause(TermName("foo"), Name("bar") :: (Name("baz")) :: Nil) :: Nil) =
       templStat("import foo.{bar, baz}")
   }
 
   test("import foo.{bar => baz}") {
-    val Import(Clause(TermName("foo"), Rename(Name.Both("bar"), Name.Both("baz")) :: Nil) :: Nil) =
+    val Import(Clause(TermName("foo"), Rename(Name("bar"), Name("baz")) :: Nil) :: Nil) =
       templStat("import foo.{bar => baz}")
   }
 
   test("import foo.{bar => _}") {
-    val Import(Clause(TermName("foo"), Unimport(Name.Both("bar")) :: Nil) :: Nil) =
+    val Import(Clause(TermName("foo"), Unimport(Name("bar")) :: Nil) :: Nil) =
       templStat("import foo.{bar => _}")
   }
 
   test("import foo.{bar => _, _}") {
-    val Import(Clause(TermName("foo"), Unimport(Name.Both("bar")) :: Wildcard() :: Nil) :: Nil) =
+    val Import(Clause(TermName("foo"), Unimport(Name("bar")) :: Wildcard() :: Nil) :: Nil) =
       templStat("import foo.{bar => _, _}")
   }
 
   test("import foo.{bar, baz => _, _}") {
-    val Import(Clause(TermName("foo"), SelectorName(Name.Both("bar")) :: Unimport(Name.Both("baz")) :: Wildcard() :: Nil) :: Nil) =
+    val Import(Clause(TermName("foo"), (Name("bar")) :: Unimport(Name("baz")) :: Wildcard() :: Nil) :: Nil) =
       templStat("import foo.{bar, baz => _, _}")
   }
 }

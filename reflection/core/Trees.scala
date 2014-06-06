@@ -65,24 +65,19 @@ import scala.reflect.syntactic.SyntacticInfo._
   def value: String
   def isBackquoted: Boolean
 }
-object Name {
-  // NOTE: this stands for a name that encapsulates both a term name and a type name (like an import does)
-  @ast class Both(value: String, @trivia isBackquoted: Boolean = false) extends Name
-  // NOTE: this stands for a name that represents either a term name or a type name (like X in private[X] does)
-  @ast class Either(value: String, @trivia isBackquoted: Boolean = false) extends Name with Mod.AccessQualifier
-}
 
-@branch trait Term extends Arg with Stmt.Template with Stmt.Block with Term.Qualifier
+
+
+@branch trait Term extends Arg with Stmt.Template with Stmt.Block with Qual.Term
 object Term {
-  @branch trait Qualifier extends Tree
-  @branch trait Ref extends Term with core.Ref with Type.Qualifier
-  @ast class This(qual: Option[core.Name.Either]) extends Ref with Mod.AccessQualifier
+  @branch trait Ref extends Term with core.Ref with Qual.Type
+  @ast class This(qual: Option[Qual.Name]) extends Ref with Mod.AccessQualifier
   @ast class Name(value: scala.Predef.String @nonEmpty, @trivia isBackquoted: Boolean = false) extends core.Name with Ref with Pat with Member with Has.TermName {
     require(keywords.contains(value) ==> isBackquoted)
     def name: Name = this
     def mods: Seq[Mod] = Nil
   }
-  @ast class Select(qual: Qualifier, selector: Term.Name, @trivia isPostfix: Boolean = false) extends Ref with Pat
+  @ast class Select(qual: Qual.Term, selector: Term.Name, @trivia isPostfix: Boolean = false) extends Ref with Pat
 
   @ast class Interpolate(prefix: Name, parts: Seq[Lit.String] @nonEmpty, args: Seq[Term]) extends Term {
     // TODO: require(prefix.isInterpolationId)
@@ -137,16 +132,15 @@ object Term {
 // TODO: simple type validation
 @branch trait Type extends Tree with Param.Type with Scope.Template
 object Type {
-  @branch trait Qualifier extends Tree with Term.Qualifier
   @branch trait Ref extends Type with core.Ref
   @ast class Name(value: String @nonEmpty, @trivia isBackquoted: Boolean = false) extends core.Name with Ref {
     require(keywords.contains(value) ==> isBackquoted)
   }
-  @ast class Select(qual: Qualifier, selector: Type.Name) extends Ref {
+  @ast class Select(qual: Qual.Type, selector: Type.Name) extends Ref {
     require(qual match { case qual: Term.Ref => qual.isPath; case qual: Aux.Super => true; case _ => unreachable })
   }
   @ast class Project(qual: Type, selector: Type.Name) extends Ref
-  @ast class Singleton(ref: Qualifier) extends Ref {
+  @ast class Singleton(ref: Qual.Type) extends Ref {
     require(ref match { case ref: Term.Ref => ref.isPath; case ref: Aux.Super => true; case _ => unreachable })
   }
   @ast class Apply(tpe: Type, args: Seq[Type] @nonEmpty) extends Type
@@ -329,6 +323,13 @@ object Ctor {
   }
 }
 
+object Qual {
+  @branch trait Term extends Tree
+  @branch trait Type extends Term
+  // NOTE: this stands for a name that represents either a term name or a type name (like X in private[X] does)
+  @ast class Name(value: String, @trivia isBackquoted: Boolean = false) extends core.Name with Mod.AccessQualifier
+}
+
 @ast class Import(clauses: Seq[Import.Clause] @nonEmpty) extends Stmt.TopLevel with Stmt.Template with Stmt.Block
 object Import {
   // TODO: validate that wildcard import can only be the last one in the list of sels
@@ -337,12 +338,10 @@ object Import {
   }
 
   @branch trait Selector extends Tree
-  object Selector {
-    @ast class Wildcard() extends Selector
-    @ast class Name(name: core.Name.Both) extends Selector
-    @ast class Rename(from: core.Name.Both, to: core.Name.Both) extends Selector
-    @ast class Unimport(name: core.Name.Both) extends Selector
-  }
+  @ast class Wildcard() extends Selector
+  @ast class Name(value: String, @trivia isBackquoted: Boolean = false) extends core.Name with Selector
+  @ast class Rename(from: Name, to: Name) extends Selector
+  @ast class Unimport(name: Name) extends Selector
 }
 
 // TODO: only non-implicit non-val/var parameters may be by name
@@ -449,7 +448,7 @@ object Aux {
     require(hasThis ==> name.isEmpty)
   }
   @ast class TypeBounds(lo: Type = Type.Name("Nothing"), hi: Type = Type.Name("Any")) extends Tree
-  @ast class Super(thisp: Option[core.Name.Either], superp: Option[Type.Name]) extends Term.Qualifier with Type.Qualifier
+  @ast class Super(thisp: Option[Qual.Name], superp: Option[Type.Name]) extends Qual.Term with Qual.Type
 }
 
 object Has {
