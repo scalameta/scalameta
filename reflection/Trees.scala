@@ -13,14 +13,6 @@ import scala.reflect.semantic._
 import scala.reflect.syntactic.show._
 import scala.reflect.syntactic.parsers._, SyntacticInfo._
 
-// TODO: collection-like methods (see http://clang.llvm.org/docs/LibASTMatchersReference.html)
-// TODO: rewriting/transformation methods
-// TODO: unhygienic quasiquotes
-// TODO: hygiene + hygienic tree equality
-// TODO: what to do with references to particular overloads?
-// TODO: add moar requires
-// TODO: add ast nodes for regular as well as scaladoc comments
-
 @root trait Tree extends Product {
   type ThisType <: Tree
 
@@ -73,7 +65,6 @@ object Term {
   @ast class Select(qual: Qual.Term, selector: Term.Name, @trivia isPostfix: Boolean = false) extends Ref with Pat
 
   @ast class Interpolate(prefix: Name, parts: Seq[Lit.String] @nonEmpty, args: Seq[Term]) extends Term {
-    // TODO: require(prefix.isInterpolationId)
     require(parts.length == args.length + 1)
   }
   @ast class Apply(fun: Term, args: Seq[Arg]) extends Term
@@ -93,7 +84,6 @@ object Term {
   @ast class Tuple(elements: Seq[Term] @nonEmpty) extends Term {
     require(elements.length > 1)
   }
-  // TODO: automatically flatten blocks with just a single term?
   @ast class Block(stats: Seq[Stmt.Block]) extends Term with Scope {
     require(stats.collect { case v: Defn.Var => v }.forall(_.rhs.isDefined))
     require(stats.collect { case m: Member if m.isPkgObject => m }.isEmpty)
@@ -101,13 +91,11 @@ object Term {
   @ast class If(cond: Term, thenp: Term, elsep: Term = Lit.Unit()) extends Term
   @ast class Match(scrut: Term, cases: Cases) extends Term
   @ast class Try(expr: Term, catchp: Option[Term], finallyp: Option[Term]) extends Term
-  // TODO: we could add a @trivia flag that distinguishes { x => ... } and (x => { ... })
   @ast class Function(params: Seq[Param], body: Term) extends Term with Scope.Params {
     require(params.collect{ case named: Param.Named => named }.forall(_.default.isEmpty))
     require(params.exists(_.mods.exists(_.isInstanceOf[Mod.Implicit])) ==> (params.length == 1))
   }
   @ast class Cases(cases: Seq[Aux.Case] @nonEmpty) extends Term {
-    // TODO: we might want to revisit this
     def isPartialFunction = !parent.map(_ match { case _: Match => false; case _: Try => false; case _ => true }).getOrElse(false)
   }
   @ast class While(expr: Term, body: Term) extends Term
@@ -117,12 +105,10 @@ object Term {
   }
   @ast class ForYield(enums: Seq[Enum] @nonEmpty, body: Term) extends Term with Scope
   @ast class New(templ: Aux.Template) extends Term
-  // TODO: validate that placeholder is put into correct context
   @ast class Placeholder() extends Term
   @ast class Eta(term: Term) extends Term
 }
 
-// TODO: simple type validation
 @branch trait Type extends Tree with Param.Type with Scope.Template
 object Type {
   @branch trait Ref extends Type with core.Ref
@@ -149,7 +135,6 @@ object Type {
   @ast class Annotate(tpe: Type, annots: Seq[Mod.Annot] @nonEmpty) extends Type with Has.Mods {
     def mods: Seq[Mod] = annots
   }
-  // TODO: need to validate that placeholder appears within one of allowed contexts (e.g. `type T = _` is illegal)
   @ast class Placeholder(bounds: Aux.TypeBounds) extends Type
 }
 
@@ -167,7 +152,6 @@ object Pat {
     require(ref.isStableId)
   }
   @ast class Interpolate(prefix: Term.Name, parts: Seq[Lit.String] @nonEmpty, args: Seq[Pat]) extends Pat {
-    // TODO: require(prefix.isInterpolationId)
     require(parts.length == args.length + 1)
   }
   @ast class Typed(lhs: Pat, rhs: Type) extends Pat {
@@ -184,7 +168,6 @@ object Lit {
   @ast class Double(value: scala.Double) extends Lit
   @ast class Char(value: scala.Char) extends Lit
   @ast class String(value: Predef.String) extends Lit
-  // TODO: validate that not all symbols are representable as literals, e.g. scala.Symbol("")
   @ast class Symbol(value: scala.Symbol) extends Lit
   @ast class Null() extends Lit
   @ast class Unit() extends Lit
@@ -219,7 +202,6 @@ object Decl {
   @ast class Var(mods: Seq[Mod],
                  pats: Seq[Term.Name] @nonEmpty,
                  decltpe: core.Type) extends Decl with Member.ValOrVar
-  // TODO: maybe merge Def and Procedure using flags?
   @ast class Def(mods: Seq[Mod],
                  name: Term.Name,
                  tparams: Seq[TypeParam],
@@ -256,10 +238,7 @@ object Defn {
                  explicits: Seq[Seq[Param.Named]],
                  implicits: Seq[Param.Named],
                  decltpe: Option[core.Type],
-                 body: Term) extends Defn with Member.Def {
-    // TODO: syntax profile
-    // require(mods.exists(_.isInstanceOf[Mod.Macro]) ==> decltpe.nonEmpty)
-  }
+                 body: Term) extends Defn with Member.Def
   @ast class Procedure(mods: Seq[Mod],
                        name: Term.Name,
                        tparams: Seq[TypeParam],
@@ -292,7 +271,6 @@ object Defn {
 
 @ast class Pkg(ref: Term.Ref, stats: Seq[Stmt.TopLevel], @trivia hasBraces: Boolean = true)
      extends Stmt.TopLevel with Scope.TopLevel with Member.Term with Has.TermName {
-  // TODO: validate nestedness of packages with and without braces
   require(ref.isQualId)
   def mods: Seq[Mod] = Nil
   def name: Term.Name = ref match {
@@ -319,15 +297,12 @@ object Ctor {
 object Qual {
   @branch trait Term extends Tree
   @branch trait Type extends Term
-  // NOTE: this stands for a name that represents either a term name or a type name (like X in private[X] does)
   @ast class Name(value: String, @trivia isBackquoted: Boolean = false) extends core.Name with Mod.AccessQualifier
-  // TODO: _root_ and _empty_ are very similar entities that might deserve their own qual trees
   @ast class Super(thisp: Option[Qual.Name], superp: Option[Type.Name]) extends Qual.Term with Qual.Type
 }
 
 @ast class Import(clauses: Seq[Import.Clause] @nonEmpty) extends Stmt.TopLevel with Stmt.Template with Stmt.Block
 object Import {
-  // TODO: validate that wildcard import can only be the last one in the list of sels
   @ast class Clause(ref: Term.Ref, sels: Seq[Selector] @nonEmpty) extends Tree {
     require(ref.isStableId)
   }
@@ -350,7 +325,6 @@ object Param {
     @ast class ByName(tpe: Type) extends Type
     @ast class Repeated(tpe: Type) extends Type
   }
-  // TODO: validate that only non-implicit non-val/var parameters may be by name
   @ast class Anonymous(mods: Seq[Mod],
                        decltpe: Option[Type]) extends Param
   @ast class Named(mods: Seq[Mod],
@@ -397,20 +371,11 @@ object Enum {
 @branch trait Mod extends Tree
 object Mod {
   @ast class Annot(tpe: Type, argss: Seq[Seq[Arg]]) extends Mod
-  // TODO: design representation for scaladoc
-  // TODO: possible gaps between docs and related defns are really scary
   @ast class Doc(doc: String) extends Mod
   @branch trait Access extends Mod { def within: Option[AccessQualifier] }
   @branch trait AccessQualifier extends Tree
-  @ast class Private(within: Option[AccessQualifier]) extends Access {
-    // TODO: there is obvious duplication wrt Protected, but it's not as easy as it looks
-    // the thing is that @ast moves all `require` calls to Companion.apply, which means that we can't just use inheritance to abstract this way
-    // let's revisit this later and think about how we can improve here
-    require(within.nonEmpty ==> (within match { case Some(acc: Term.This) => acc.qual.isEmpty; case _ => true }))
-  }
-  @ast class Protected(within: Option[AccessQualifier]) extends Access {
-    require(within.nonEmpty ==> (within match { case Some(acc: Term.This) => acc.qual.isEmpty; case _ => true }))
-  }
+  @ast class Private(within: Option[AccessQualifier]) extends Access
+  @ast class Protected(within: Option[AccessQualifier]) extends Access
   @ast class Implicit() extends Mod
   @ast class Final() extends Mod
   @ast class Sealed() extends Mod
@@ -420,7 +385,6 @@ object Mod {
   @ast class Covariant() extends Mod
   @ast class Contravariant() extends Mod
   @ast class Lazy() extends Mod
-  // TODO: the modifers below would benefit from relocation
   @ast class Macro() extends Mod
   @ast class ValParam() extends Mod
   @ast class VarParam() extends Mod
@@ -451,10 +415,6 @@ object Aux {
 object Has {
   @branch trait Mods extends Tree {
     def mods: Seq[Mod]
-    // TODO: https://docs.google.com/spreadsheet/ccc?key=0Ahw_zqMtW4nNdC1lRVJvc3VjTUdOX0ppMVpSYzVRSHc&usp=sharing#gid=0
-    // * write a script that fetches this google doc and converts it into a, say, CSV spec
-    // * write a test that validates the spec by generating source files and parsing them
-    // * write a macro that generates implementation of validateAnnots from the spec + extension methods like isImplicit
     private[reflect] def validateMods(): Unit = ???
   }
 
