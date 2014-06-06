@@ -13,4 +13,5 @@ object Attr {
   @leaf class InferredTargs(targs: Seq[Type]) extends Attr
   @leaf class InferredVargs(vargs: Seq[Term]) extends Attr
   @leaf class MacroExpansion(tree: Tree) extends Attr
+  // TODO: design additional attrs for other aspects of typechecking
 }
