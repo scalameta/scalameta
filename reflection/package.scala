@@ -24,10 +24,6 @@ package object core {
   @quasiquote[Aux.Template]('templ) implicit class TemplateQuote(ctx: StringContext)
   @quasiquote[Aux.Self]('self)      implicit class SelfQuote(ctx: StringContext)
 
-  // TODO: trivia: whitespace, comments, etc (see http://msdn.microsoft.com/en-us/vstudio/hh500769)
-  // TODO: history vs positions (can trivia be inferred from positions only?)
-  // TODO: what should be there in transform? what should be the signature of mapXXX and withXXX?
-  // TODO: also there's the question of what origin should SemanticMemberOps.ref produce for empty This
   @root trait Source { def content: Array[Char] }
   object Source {
     @leaf object None extends Source { def content = new Array[Char](0) }
@@ -42,7 +38,7 @@ package object core {
   @root trait Origin { def src: Source }
   object Origin {
     @leaf object None extends Origin { def src = core.Source.None }
-    @leaf class Source(src: core.Source) extends Origin
+    @leaf class Source(src: core.Source) extends Origin // TODO: positions
     @leaf class Transform(proto: Tree, origin: Origin) extends Origin { def src = origin.src }
     implicit def defaultOriginIsNone: Origin = None
   }

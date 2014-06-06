@@ -3,18 +3,16 @@
  * @author  Martin Odersky
  */
 package scala.reflect
-package syntactic
+package syntactic.parsers
 
 import scala.annotation.{ switch, tailrec }
 import scala.collection.{ mutable, immutable }
 import scala.language.postfixOps
 import mutable.{ ListBuffer, ArrayBuffer }
-import scala.reflect.syntactic.util.{ CharArrayReader, CharArrayReaderData }
-import scala.reflect.syntactic.util._
-import scala.reflect.syntactic.util.Chars._
-import scala.reflect.syntactic.Tokens._
-import scala.reflect.syntactic.TokenInfo._
 import scala.reflect.core.Source
+import Chars._
+import Tokens._
+import TokenInfo._
 
 trait TokenData {
   /** the next token */
@@ -780,9 +778,10 @@ abstract class Scanner extends CharArrayReader with TokenData with ScannerData {
         }
         val alt = if (oct == LF) "\\n" else "\\u%04x" format oct
         def msg(what: String) = s"Octal escape literals are $what, use $alt instead."
-        if (settings.future)
-          syntaxError(start, msg("unsupported"))
-        else
+        // TODO: syntax profile?
+        // if (settings.future)
+        //   syntaxError(start, msg("unsupported"))
+        // else
           deprecationWarning(start, msg("deprecated"))
         putChar(oct.toChar)
       } else {
@@ -1097,7 +1096,7 @@ class MalformedInput(val offset: Offset, val msg: String) extends Exception
  */
 class SourceFileScanner(val source: Source) extends Scanner {
   val buf = source.content
-  override val decodeUni: Boolean = !settings.nouescape
+  override val decodeUni: Boolean = true
 
   // suppress warnings, throw exception on errors
   def deprecationWarning(off: Offset, msg: String): Unit = ()

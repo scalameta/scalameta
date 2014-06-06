@@ -1,17 +1,18 @@
 package scala.reflect
-package syntactic
+package syntactic.parsers
 
 import scala.collection.{ mutable, immutable }
 import mutable.{ ListBuffer, StringBuilder }
-import scala.reflect.syntactic.util.settings
-import scala.reflect.syntactic.util.Chars.{isOperatorPart, isScalaLetter}
-import scala.reflect.syntactic.Tokens._
-import scala.reflect.syntactic.TokenInfo._
 import scala.reflect.core._, Aux._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import org.scalareflect.unreachable
+import Chars.{isOperatorPart, isScalaLetter}
+import Tokens._
+import TokenInfo._
 
+// TODO: would be great to turn this into a public API
+// also look into package.scala
 object SyntacticInfo {
   private[reflect] val unaryOps = Set("-", "+", "~", "!")
   private[reflect] def isUnaryOp(s: String): Boolean = unaryOps contains s
@@ -1827,12 +1828,13 @@ abstract class Parser { parser =>
     val viewBounds = new ListBuffer[Type]
     if (ctxBoundsAllowed) {
       while (in.token == VIEWBOUND) {
-        if (settings.future) {
-          val msg = ("Use an implicit parameter instead.\n" +
-                     "Example: Instead of `def f[A <% Int](a: A)` " +
-                     "use `def f[A](a: A)(implicit ev: A => Int)`.")
-          deprecationWarning(s"View bounds are deprecated. $msg")
-        }
+        // TODO: syntax profile?
+        // if (settings.future) {
+        //   val msg = ("Use an implicit parameter instead.\n" +
+        //              "Example: Instead of `def f[A <% Int](a: A)` " +
+        //              "use `def f[A](a: A)(implicit ev: A => Int)`.")
+        //   deprecationWarning(s"View bounds are deprecated. $msg")
+        // }
         in.nextToken()
         viewBounds += typ()
       }
