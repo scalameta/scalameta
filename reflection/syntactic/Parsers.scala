@@ -52,7 +52,7 @@ object SyntacticInfo {
       case _                              => false
     }
     def isStableId: Boolean = tree match {
-      case _: Term.Name | Term.Select(_: Aux.Super, _) => true
+      case _: Term.Name | Term.Select(_: Qual.Super, _) => true
       case Term.Select(qual: Term.Ref, _)              => qual.isPath
       case _                                           => false
     }
@@ -376,7 +376,7 @@ abstract class Parser { parser =>
   }
 
   def convertToTypeId(ref: Term.Ref): Option[Type] = ref match {
-    case Term.Select(qual: Type.Qualifier, name) =>
+    case Term.Select(qual: Qual.Type, name) =>
       Some(Type.Select(qual, name.toTypeName))
     case name: Term.Name =>
       Some(name.toTypeName)
@@ -709,13 +709,13 @@ abstract class Parser { parser =>
       case name: Term.Name => name
       case _              => Term.Name(name.value, name.isBackquoted)
     }
-    def toEitherName: Name.Either = name match {
-      case name: Name.Either => name
-      case _                 => Name.Either(name.value, name.isBackquoted)
+    def toQualName: Qual.Name = name match {
+      case name: Qual.Name => name
+      case _               => Qual.Name(name.value, name.isBackquoted)
     }
-    def toBothName: Name.Both = name match {
-      case name: Name.Both => name
-      case _               => Name.Both(name.value, name.isBackquoted)
+    def toImportName: Import.Name = name match {
+      case name: Import.Name => name
+      case _                 => Import.Name(name.value, name.isBackquoted)
     }
   }
 
@@ -750,7 +750,7 @@ abstract class Parser { parser =>
       }
     } else if (in.token == SUPER) {
       in.nextToken()
-      val superp = Aux.Super(None, mixinQualifierOpt())
+      val superp = Qual.Super(None, mixinQualifierOpt())
       accept(DOT)
       val supersel = Term.Select(superp, termName(), isPostfix = false)
       if (stop) supersel
@@ -765,7 +765,7 @@ abstract class Parser { parser =>
         in.nextToken()
         if (in.token == THIS) {
           in.nextToken()
-          val thisid = Term.This(Some(name.toEitherName))
+          val thisid = Term.This(Some(name.toQualName))
           if (stop && thisOK) thisid
           else {
             accept(DOT)
@@ -773,7 +773,7 @@ abstract class Parser { parser =>
           }
         } else if (in.token == SUPER) {
           in.nextToken()
-          val superp = Aux.Super(Some(name.toEitherName), mixinQualifierOpt())
+          val superp = Qual.Super(Some(name.toQualName), mixinQualifierOpt())
           accept(DOT)
           val supersel = Term.Select(superp, termName(), isPostfix = false)
           if (stop) supersel
@@ -1603,7 +1603,7 @@ abstract class Parser { parser =>
     if (in.token != LBRACKET) None
     else {
       in.nextToken()
-      val res = if (in.token != THIS) termName().toEitherName
+      val res = if (in.token != THIS) termName().toQualName
                 else { in.nextToken(); Term.This(None) }
       accept(RBRACKET)
       Some(res)
@@ -1885,7 +1885,7 @@ abstract class Parser { parser =>
     sid match {
       case Term.Select(sid: Term.Ref, name: Term.Name) if sid.isStableId =>
         if (in.token == DOT) dotselectors
-        else Import.Clause(sid, Import.Selector.Name(name.toBothName) :: Nil)
+        else Import.Clause(sid, name.toImportName :: Nil)
       case _ => dotselectors
     }
   }
@@ -1899,22 +1899,21 @@ abstract class Parser { parser =>
     else inBraces(commaSeparated(importSelector()))
 
   def importWildcardOrName(): Import.Selector =
-    if (in.token == USCORE) { in.nextToken(); Import.Selector.Wildcard() }
-    else { val name = termName(); Import.Selector.Name(name.toBothName) }
+    if (in.token == USCORE) { in.nextToken(); Import.Wildcard() }
+    else { val name = termName(); name.toImportName }
 
   /** {{{
    *  ImportSelector ::= Id [`=>' Id | `=>' `_']
    *  }}}
    */
   def importSelector(): Import.Selector = {
-    import Import.{Selector => Sel}
     importWildcardOrName() match {
-      case from: Sel.Name if in.token == ARROW =>
+      case from: Import.Name if in.token == ARROW =>
         in.nextToken()
         importWildcardOrName() match {
-          case to: Sel.Name     => Sel.Rename(from.name, to.name)
-          case to: Sel.Wildcard => Sel.Unimport(from.name)
-          case _                => unreachable
+          case to: Import.Name     => Import.Rename(from, to)
+          case to: Import.Wildcard => Import.Unimport(from)
+          case _                   => unreachable
         }
       case other => other
     }

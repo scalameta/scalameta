@@ -1,4 +1,4 @@
-import scala.reflect.core._, Term.{Name => TermName, _}, Type.{Name => TypeName}, Aux._
+import scala.reflect.core._, Term.{Name => TermName, _}, Type.{Name => TypeName}, Aux._, Qual.Super
 
 class TermSuite extends ParseSuite {
   test("x") {
@@ -23,7 +23,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("foo.this") {
-    val This(Some(Name.Either("foo"))) = term("foo.this")
+    val This(Some(Qual.Name("foo"))) = term("foo.this")
   }
 
   test("this") {
@@ -31,7 +31,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("a.super[b].c") {
-    val Select(Super(Some(Name.Either("a")), Some(TypeName("b"))),
+    val Select(Super(Some(Qual.Name("a")), Some(TypeName("b"))),
                TermName("c")) = term("a.super[b].c")
   }
 
@@ -41,7 +41,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("a.super.c") {
-    val Select(Super(Some(Name.Either("a")), None),
+    val Select(Super(Some(Qual.Name("a")), None),
                TermName("c")) = term("a.super.c")
   }
 

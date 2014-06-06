@@ -22,8 +22,8 @@ object ShowCode {
     else if (templ.parents.nonEmpty || templ.early.nonEmpty) s(" extends ", templ)
     else s(" ", templ)
 
-  def parens(t: Term.Qualifier) = t match {
-    case _: Lit | _: Term.Ref | _: Term.Placeholder | _: Term.Tuple | _: Aux.Super => s(t)
+  def parens(t: Qual.Term) = t match {
+    case _: Lit | _: Term.Ref | _: Term.Placeholder | _: Term.Tuple | _: Qual.Super => s(t)
     case _ => s("(", t, ")")
   }
 
@@ -209,10 +209,9 @@ object ShowCode {
     case t: Enum.Guard     => s("if ", t.cond)
 
     // Import
-    case t: Import.Selector.Rename   => s(t.from, " => ", t.to)
-    case t: Import.Selector.Name     => s(t.name)
-    case t: Import.Selector.Unimport => s(t.name, " => _")
-    case _: Import.Selector.Wildcard => s("_")
+    case t: Import.Rename   => s(t.from, " => ", t.to)
+    case t: Import.Unimport => s(t.name, " => _")
+    case _: Import.Wildcard => s("_")
     case t: Import.Clause   => s(t.ref, ".", t.sels)
     case t: Import          => s("import ", r(t.clauses, ", "))
 
@@ -245,7 +244,7 @@ object ShowCode {
       val cbounds = r(t.contextBounds.map { s(": ", _) })
       val vbounds = r(t.contextBounds.map { s("<% ", _) })
       s(t.mods, t.name, t.tparams, cbounds, vbounds, t.bounds)
-    case t: Super =>
+    case t: Qual.Super =>
       s(t.thisp.map { thisp => s(thisp, ".") }.getOrElse(s()),
         "super", t.superp.map { st => s("[", st, "]") }.getOrElse(s()))
   } }
@@ -282,8 +281,8 @@ object ShowCode {
   implicit val showTypeOpt: Show[Option[Type]] = Show { _.map { t => s(": ", t) }.getOrElse(s()) }
   implicit val showTermNameOpt: Show[Option[Term.Name]] = Show { _.map(s(_)).getOrElse(s(")")) }
   implicit val showImportSels: Show[Seq[Import.Selector]] = Show {
-    case (t: Import.Selector.Name) :: Nil     => s(t)
-    case (t: Import.Selector.Wildcard) :: Nil => s(t)
-    case sels                                 => s("{ ", r(sels, ", "), " }")
+    case (t: Import.Name) :: Nil     => s(t)
+    case (t: Import.Wildcard) :: Nil => s(t)
+    case sels                        => s("{ ", r(sels, ", "), " }")
   }
 }

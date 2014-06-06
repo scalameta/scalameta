@@ -79,7 +79,7 @@ class PackageSuite extends ParseSuite {
   }
 
   test("import foo.bar; package object baz") {
-    val CompUnit(Import(Import.Clause(Term.Name("foo"), Import.Selector.Name(Name.Both("bar")) :: Nil) :: Nil) ::
+    val CompUnit(Import(Import.Clause(Term.Name("foo"), Import.Name("bar") :: Nil) :: Nil) ::
                  Defn.Object(Mod.Package() :: Nil, Term.Name("baz"), Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil) =
       compUnit("import foo.bar; package object baz")
   }

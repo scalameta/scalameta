@@ -30,7 +30,7 @@ class TypeSuite extends ParseSuite {
   }
 
   test("super.T") {
-    val Select(Super(None, None), TypeName("T")) = tpe("super.T")
+    val Select(Qual.Super(None, None), TypeName("T")) = tpe("super.T")
   }
 
   test("this.T") {
