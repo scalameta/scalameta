@@ -15,7 +15,7 @@ import scala.reflect.syntactic.parsers._, SyntacticInfo._
 @root trait Tree extends Product {
   type ThisType <: Tree
   def origin: Origin
-  def parent: Option[Tree] = if (internalParent != null) Some(internalParent) else None
+  def parent: Option[Tree]
   def showCode: String = ShowCode.showTree(this).toString
   def showRaw: String = ShowRaw.showTree(this).toString
   final override def toString: String = showRaw
