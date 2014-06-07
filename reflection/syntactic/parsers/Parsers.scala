@@ -73,7 +73,7 @@ case class ParseAbort(msg: String) extends Exception(s"abort: $msg")
 case class ParseSyntaxError(offset: Offset, msg: String) extends Exception(s"syntax error at $offset: $msg")
 case class ParseIncompleteInputError(msg: String) extends Exception("incomplete input: $msg")
 
-class SourceParser(val source: Source) extends Parser {
+class Parser(val source: Source) extends AbstractParser {
   def this(code: String) = this(Source.String(code))
   /** The parse starting point depends on whether the source file is self-contained:
    *  if not, the AST will be supplemented.
@@ -108,7 +108,7 @@ object Location {
 }
 import Location.{ Local, InBlock, InTemplate }
 
-abstract class Parser { parser =>
+abstract class AbstractParser { parser =>
   val in: Scanner
   val source: Source
   implicit val origin: Origin = Origin.Source(source)
