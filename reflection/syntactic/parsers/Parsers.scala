@@ -10,6 +10,7 @@ import org.scalareflect.unreachable
 import Chars.{isOperatorPart, isScalaLetter}
 import Tokens._
 import TokenInfo._
+import Scanners._
 
 object SyntacticInfo {
   private[reflect] val unaryOps = Set("-", "+", "~", "!")
@@ -80,7 +81,7 @@ class Parser(val source: Source) extends AbstractParser {
    */
   def parseStartRule = () => compilationUnit()
 
-  lazy val in = { val s = new SourceFileScanner(source); s.init(); s }
+  lazy val in = { val s = new Scanner(source); s.init(); s }
 
   // warning don't stop parsing
   // TODO:

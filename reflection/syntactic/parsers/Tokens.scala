@@ -7,6 +7,8 @@ package scala.reflect
 package syntactic.parsers
 
 object Tokens {
+  type Token = Int
+
   def isIdentifier(code: Int) = code == IDENTIFIER || code == BACKQUOTED_IDENT // used by ide
   def isLiteral(code: Int) = code >= CHARLIT && code <= INTERPOLATIONID
 

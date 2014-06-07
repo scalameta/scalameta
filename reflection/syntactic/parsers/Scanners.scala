@@ -13,6 +13,7 @@ import scala.reflect.core.Source
 import Chars._
 import Tokens._
 import TokenInfo._
+import Scanners._
 
 trait TokenData {
   /** the next token */
@@ -63,7 +64,7 @@ trait ScannerData extends TokenData with CharArrayReaderData {
   }
 }
 
-abstract class Scanner extends CharArrayReader with TokenData with ScannerData {
+abstract class AbstractScanner extends CharArrayReader with TokenData with ScannerData {
   private def isDigit(c: Char) = java.lang.Character isDigit c
 
   private var openComments = 0
@@ -1094,7 +1095,7 @@ class MalformedInput(val offset: Offset, val msg: String) extends Exception
 /** A scanner for a given source file not necessarily attached to a compilation unit.
  *  Useful for looking inside source files that aren not currently compiled to see what's there
  */
-class SourceFileScanner(val source: Source) extends Scanner {
+class Scanner(val source: Source) extends AbstractScanner {
   val buf = source.content
   override val decodeUni: Boolean = true
 
@@ -1102,4 +1103,9 @@ class SourceFileScanner(val source: Source) extends Scanner {
   def deprecationWarning(off: Offset, msg: String): Unit = ()
   def error  (off: Offset, msg: String): Unit = throw new MalformedInput(off, msg)
   def incompleteInputError(off: Offset, msg: String): Unit = throw new MalformedInput(off, msg)
+}
+
+object Scanners {
+  /** abstract type for offsets - currently an int, but later may be refactored */
+  type Offset = Int
 }
