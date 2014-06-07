@@ -10,4 +10,10 @@ package object parsers {
     "def", "final", "implicit", "null", "protected", "throw", "val", "_",
     ":", "=", "=>", "<-", "<:", "<%", ">:", "#", "@", "\u21D2", "\u2190"
   )
+
+  def parseTopLevel(source: Source): CompUnit = new Parser(source).parseTopLevel()
+  def parseTerm(source: Source): Term = new Parser(source).parseTerm()
+  def parseType(source: Source): Type = new Parser(source).parseType()
+  def parsePat(source: Source): Pat = new Parser(source).parsePat()
+  def parseStats(source: Source): List[Stmt.Template] = new Parser(source).parseStats()
 }
