@@ -16,6 +16,16 @@ package object semantic {
                                    existentials: Boolean,
                                    macros: Boolean)
 
+  @root trait Attr
+  object Attr {
+    @leaf class Defn(defn: Tree) extends Attr
+    @leaf class Type(tpe: Param.Type) extends Attr
+    @leaf class InferredTargs(targs: Seq[Type]) extends Attr
+    @leaf class InferredVargs(vargs: Seq[Term]) extends Attr
+    @leaf class MacroExpansion(tree: Tree) extends Attr
+    // TODO: design additional attrs for other aspects of typechecking
+  }
+
   implicit class RichTree(val tree: Tree) extends AnyVal {
     @hosted def attrs: Seq[Attr] = delegate
     @hosted private[semantic] def internalTpe: Type = attrs.flatMap(_.collect{ case tpe: Attr.Type => tpe } match {
