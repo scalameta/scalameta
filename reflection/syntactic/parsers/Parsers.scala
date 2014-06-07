@@ -139,7 +139,7 @@ abstract class Parser { parser =>
     try tree catch { case e: Exception => pushback() ; throw e }
   }
 
-  def parseStartRule: () => Tree
+  def parseStartRule: () => CompUnit
 
   def parseRule[T](rule: this.type => T): T = {
     val t = rule(this)
@@ -149,11 +149,17 @@ abstract class Parser { parser =>
 
   /** This is the general parse entry point.
    */
-  def parse(): Tree = parseRule(_.parseStartRule())
+  def parseTopLevel(): CompUnit = parseRule(_.parseStartRule())
+
+  /** These are alternative entry points for the three main tree types.
+   */
+  def parseTerm(): Term = parseRule(_.expr())
+  def parseType(): Type = parseRule(_.typ())
+  def parsePat(): Pat = parseRule(_.pattern())
 
   /** These are alternative entry points for repl, script runner, toolbox and parsing in macros.
    */
-  def parseStats(): List[Tree] = parseRule(_.templateStats())
+  def parseStats(): List[Stmt.Template] = parseRule(_.templateStats())
 
 /* ------------- PARSER COMMON -------------------------------------------- */
 
