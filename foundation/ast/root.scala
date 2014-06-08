@@ -15,19 +15,19 @@ class RootMacros(val c: Context) {
     def transform(cdef: ClassDef): ClassDef = {
       val q"${Modifiers(flags, privateWithin, anns)} trait $name[..$tparams] extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
       // TODO: think of better ways to abstract this away from the public API
-      val HostContext = tq"_root_.scala.reflect.semantic.HostContext"
+      val Host = tq"_root_.scala.reflect.semantic.Host"
       val Tree = tq"_root_.scala.reflect.core.Tree"
       val Origin = tq"_root_.scala.reflect.core.Origin"
       val SeqAny = tq"_root_.scala.collection.immutable.Seq[_root_.scala.Any]"
-      val Scratchpads = tq"_root_.scala.Predef.Map[$HostContext, $SeqAny]"
+      val Scratchpads = tq"_root_.scala.Predef.Map[$Host, $SeqAny]"
       val q"..$boilerplate" = q"""
         // NOTE: these are internal APIs designed to be used only by hosts
         // TODO: these APIs will most likely change in the future
         // because we would like to make sure that trees are guaranteed to be immutable
-        private[reflect] def scratchpad(implicit h: $HostContext): $SeqAny = internalScratchpads.getOrElse(h, _root_.scala.Nil);
-        private[reflect] def appendScratchpad(datum: _root_.scala.Any)(implicit h: $HostContext): ThisType = internalCopy(scratchpads = internalScratchpads + (h -> (internalScratchpads.getOrElse(h, Nil) :+ datum)))
-        private[reflect] def withScratchpad(scratchpad: $SeqAny)(implicit h: $HostContext): ThisType = internalCopy(scratchpads = internalScratchpads + (h -> scratchpad))
-        private[reflect] def mapScratchpad(f: $SeqAny => $SeqAny)(implicit h: $HostContext): ThisType = internalCopy(scratchpads = internalScratchpads + (h -> f(internalScratchpads.getOrElse(h, Nil))))
+        private[reflect] def scratchpad(implicit h: $Host): $SeqAny = internalScratchpads.getOrElse(h, _root_.scala.Nil);
+        private[reflect] def appendScratchpad(datum: _root_.scala.Any)(implicit h: $Host): ThisType = internalCopy(scratchpads = internalScratchpads + (h -> (internalScratchpads.getOrElse(h, Nil) :+ datum)))
+        private[reflect] def withScratchpad(scratchpad: $SeqAny)(implicit h: $Host): ThisType = internalCopy(scratchpads = internalScratchpads + (h -> scratchpad))
+        private[reflect] def mapScratchpad(f: $SeqAny => $SeqAny)(implicit h: $Host): ThisType = internalCopy(scratchpads = internalScratchpads + (h -> f(internalScratchpads.getOrElse(h, Nil))))
 
         // NOTE: these are internal APIs that are meant to be used only in the implementation of the framework
         // host implementors should not utilize these APIs

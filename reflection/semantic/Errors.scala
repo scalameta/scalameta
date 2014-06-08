@@ -12,11 +12,11 @@ package object errors {
   def fail(message: String)(implicit eh: ErrorHandler): eh.Failure[ReflectionException] = eh.fail(ReflectionException(message))
   def fail(ex: ReflectionException)(implicit eh: ErrorHandler): eh.Failure[ReflectionException] = eh.fail(ex)
 
-  def wrapHosted = new Wrap[HostContext]
-  def wrapMacrohosted = new Wrap[MacroContext]
-  class Wrap[C <: HostContext] {
-    def apply[T](f: C => T)(implicit c: C, eh: ErrorHandler) = {
-      try eh.succeed(f(c))
+  def wrapHosted = new Wrap[Host]
+  def wrapMacrohosted = new Wrap[MacroHost]
+  class Wrap[H <: Host] {
+    def apply[T](f: H => T)(implicit h: H, eh: ErrorHandler) = {
+      try eh.succeed(f(h))
       catch {
         case ex: ReflectionException => eh.fail(ex)
         case ex: Exception => eh.fail(ReflectionException(ex.toString))

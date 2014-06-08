@@ -71,7 +71,7 @@ class AstMacros(val c: Context) {
       val paramss = rawparamss.zip(companionsForDefaultss).map{ case (raws, companions) => raws ++ companions }
 
       // step 4: create boilerplate bookkeeping parameters
-      val scratchpadsType = tq"_root_.scala.collection.immutable.Map[_root_.scala.reflect.semantic.HostContext, _root_.scala.collection.immutable.Seq[Any]]"
+      val scratchpadsType = tq"_root_.scala.collection.immutable.Map[_root_.scala.reflect.semantic.Host, _root_.scala.collection.immutable.Seq[Any]]"
       bparams1 += q"protected val internalPrototype: $name"
       bparams1 += q"protected val internalParent: _root_.scala.reflect.core.Tree"
       bparams1 += q"protected val internalScratchpads: $scratchpadsType"

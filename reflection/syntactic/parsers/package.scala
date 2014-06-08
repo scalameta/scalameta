@@ -1,6 +1,8 @@
 package scala.reflect
 package syntactic
 
+import scala.reflect.core._
+
 package object parsers {
   val keywords = Set(
     "abstract", "case", "do", "else", "finally", "for", "import", "lazy",
@@ -11,7 +13,7 @@ package object parsers {
     ":", "=", "=>", "<-", "<:", "<%", ">:", "#", "@", "\u21D2", "\u2190"
   )
 
-  def parseTopLevel(source: Source): CompUnit = new Parser(source).parseTopLevel()
+  def parseTopLevel(source: Source): Aux.CompUnit = new Parser(source).parseTopLevel()
   def parseTerm(source: Source): Term = new Parser(source).parseTerm()
   def parseType(source: Source): Type = new Parser(source).parseType()
   def parsePat(source: Source): Pat = new Parser(source).parsePat()

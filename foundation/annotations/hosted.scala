@@ -18,7 +18,7 @@ class HostedMacros(val c: Context) {
     val macroApi = args.collect{ case q"macroApi = true" => true }.nonEmpty
     val mayFail = args.collect{ case q"mayFail = false" => true }.isEmpty
     val exnTpe = tq"_root_.scala.reflect.core.ReflectionException"
-    val contextTpe = if (macroApi) tq"_root_.scala.reflect.semantic.MacroContext" else tq"_root_.scala.reflect.semantic.HostContext"
+    val contextTpe = if (macroApi) tq"_root_.scala.reflect.semantic.MacroHost" else tq"_root_.scala.reflect.semantic.Host"
     val failWrapper = if (macroApi) q"_root_.scala.reflect.semantic.errors.wrapMacrohosted" else q"_root_.scala.reflect.semantic.errors.wrapHosted"
     def transform(ddef: DefDef): DefDef = {
       val DefDef(mods, name, tparams, vparamss, tpt, body) = ddef

@@ -10,7 +10,7 @@ Here is some preliminary documentation on the functionality expected from hosts 
 
 Palladium trees provide comprehensive coverage of syntactic structures that comprise Scala. They are predefined in [Trees.scala](/reflection/Trees.scala) in the form of a sealed hierarchy, which means that hosts neither need nor can create custom subclasses of `Tree`.
 
-Hosts are, however, required to create instances of Palladium trees to be returned from various host APIs (e.g. the `HostContext.root` entry point to the program introspection returns a `Pkg.Root` tree node or the `MacroContext.application` entry point to macro expansion that returns `Tree`), so here we will outline the guidelines that were used to design Palladium trees in order to allude to expected usage scenarios:
+Hosts are, however, required to create instances of Palladium trees to be returned from various host APIs, so here we will outline the guidelines that were used to design Palladium trees in order to allude to expected usage scenarios:
 
   1. Trees are fully immutable in the sense that they: a) don't contain any observationally mutable fields, b) aren't supposed contain any references to anything that might be mutable. This means that after creation trees can never change and as such can be easily reasoned about. In order to "modify" an existing tree, one is supposed to use either `copy` or one of the tree transformers (at the moment, tree transformer functionality isn't designed yet). Both of these approaches create a copy of an original tree with fields changed appropriately.
 
@@ -36,9 +36,9 @@ Native Palladium services (parsing, quasiquotes - essentially, everything syntac
 
 The same level of robustness is expected from hosts. Concretely: 1) semantic operations provided by hosts must be thread-safe, 2) data associated with trees using the scratchpad API must not be mutable. At the moment `scratchpad` and `withScratchpad` use `Any`, but later on we might refine the type signature or reshape the API altogether.
 
-### HostContext
+### Host API
 
-<!-- TODO: explain ordering guarantees for all Seq[T] results both in HostContext and in all our APIs -->
+<!-- TODO: explain ordering guarantees for all Seq[T] results both in Host and in all our APIs -->
 
 | Method                                                    | Notes
 |-----------------------------------------------------------|-----------------------------------------------------------------
@@ -47,7 +47,7 @@ The same level of robustness is expected from hosts. Concretely: 1) semantic ope
 | `def defns(ref: Ref): Seq[Tree]`                          | Goes from a reference to the associated definiton or definitions. Might have to return multiple results to account for overloading or situations like imports, super/this qualifiers and accessibility boundaries. If necessary, overloads can be resolved later via `Overload.resolve` or `term.attrs`, but this function shouldn't attempt to do that.
 | `def attrs(tree: Tree): Seq[Attr]`                        | Computes and returns semantic information for a given tree: resolved, i.e. non-overloaded reference to a definition, type, inferred type and value arguments, macro expansion, etc.
 | `def owner(tree: Tree): Scope`                            | A scope that owns the provided tree, be it a definition or a statement in some definition.
-| `def stats(scope: Scope): Seq[Tree]`                      | This isn't actually a method in `HostContext`, and it's here only to emphasize a peculiarity of our API. This particular method in unnecessary, because all lists in trees (e.g. the list of statements in a block or a list of declarations in a package or a class) are actually `Seq`'s, which means that the host can choose between eager and lazy population of scope contents when returning trees to the user of the Palladium API (e.g. in `root`).
+| `def stats(scope: Scope): Seq[Tree]`                      | This isn't actually a method in `Host`, and it's here only to emphasize a peculiarity of our API. This particular method in unnecessary, because all lists in trees (e.g. the list of statements in a block or a list of declarations in a package or a class) are actually `Seq`'s, which means that the host can choose between eager and lazy population of scope contents when returning trees to the user of the Palladium API (e.g. in `root`).
 | `def members(scope: Scope): Seq[Member]`                  | Returns all members belonging to the specified scope. This API could query something as simple as parameters of a method or as complex as all members of a given class (accounting for inherited members and overriding). When called on a `Type` (types can be viewed as scopes as well), this method should return members that are adjusted to the type's type arguments and self type. E.g. `t"List".members` should return `Seq(q"def head: A = ...", ...)`, whereas `t"List[Int]".members` should return `Seq(q"def head: Int = ...", ...)`.
 | `def members(scope: Scope, name: Name): Seq[Tree]`        | Same as the previous method, but indexed by name. This method would be trivially implementable on top of the previous method if performance didn't matter, but it does, so we expose two methods instead of one. In the future we could have change the signature of the previous method to `def members(scope: Scope): Query[Tree]` and remove this method altogether.
 | `def overrides(member: Member): Seq[Member]`              | All definitions overridden by a given definition in linearization order. If the provided member has been obtained by instantiating certain type parameters, then the results of this method should also have corresponding type parameters instantiated.
@@ -63,7 +63,7 @@ The same level of robustness is expected from hosts. Concretely: 1) semantic ope
 | `def dealias(tpe: Type): Type`                            | Goes from a type alias or an application of a type alias to the underlying type. Again, this should work shallowly, but to the maximum possible extent.
 | `def erasure(tpe: Type): Type`                            | Erasure.
 
-### MacroContext
+### MacroHost API
 
 | Method                                                 | Notes                                                           |
 |--------------------------------------------------------|-----------------------------------------------------------------|

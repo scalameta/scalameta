@@ -5,7 +5,7 @@ import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.reflect.core._
 
-trait HostContext {
+trait Host {
   def syntaxProfile: SyntaxProfile
   def semanticProfile: SemanticProfile
 
@@ -30,7 +30,7 @@ trait HostContext {
   def erasure(tpe: Type): Type
 }
 
-trait MacroContext extends HostContext {
+trait MacroHost extends Host {
   def application: Tree
   def warning(msg: String): Unit
   def error(msg: String): Unit
