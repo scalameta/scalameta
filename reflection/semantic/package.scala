@@ -36,7 +36,10 @@ package object semantic {
   implicit class SemanticTypeOps(val tree: Type) extends AnyVal {
     @hosted def <:<(other: Type): Boolean = delegate
     @hosted def weak_<:<(other: Type): Boolean = ???
-    @hosted def widen: Type = delegate
+    @hosted def widen: Type = tree match {
+      case Type.Singleton(ref: Term) => ref.tpe.flatMap(_.widen)
+      case _ => succeed(tree)
+    }
     @hosted def dealias: Type = delegate
     @hosted def erasure: Type = delegate
     @hosted def companion: Type.Ref = tree match {

@@ -21,7 +21,6 @@ trait Host {
   def linearization(tpes: Seq[Type]): Seq[Type]
   def lub(tpes: Seq[Type]): Type
   def glb(tpes: Seq[Type]): Type
-  def widen(tpe: Type): Type
   def dealias(tpe: Type): Type
   def erasure(tpe: Type): Type
 
