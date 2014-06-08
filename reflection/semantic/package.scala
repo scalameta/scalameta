@@ -365,6 +365,5 @@ package object semantic {
   }
 
   @hosted def resources: Seq[String] = delegate
-  @hosted def resourceAsBytes(url: String): Array[Byte] = delegate
-  @hosted def resourceAsUtf8(url: String): String = resourceAsBytes(url).map(bytes => new String(bytes))
+  @hosted def resource(url: String): Array[Byte] = delegate
 }

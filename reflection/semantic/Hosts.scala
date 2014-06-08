@@ -30,7 +30,7 @@ trait Host {
   def erasure(tpe: Type): Type
 
   def resources: Seq[String]
-  def resourceAsBytes(url: String): Array[Byte]
+  def resource(url: String): Array[Byte]
 }
 
 trait MacroHost extends Host {
