@@ -6,9 +6,6 @@ import scala.collection.immutable.Seq
 import scala.reflect.core._
 
 trait Host {
-  def syntaxProfile: SyntaxProfile
-  def semanticProfile: SemanticProfile
-
   def defns(ref: Ref): Seq[Tree]
   def attrs(tree: Tree): Seq[Attr]
 

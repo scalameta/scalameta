@@ -7,15 +7,6 @@ import scala.collection.immutable.Seq
 import scala.reflect.core._
 
 package object semantic {
-  @hosted def semanticProfile: SemanticProfile = delegate
-  final case class SemanticProfile(dynamics: Boolean,
-                                   postfixOps: Boolean,
-                                   reflectiveCalls: Boolean,
-                                   implicitConversions: Boolean,
-                                   higherKinds: Boolean,
-                                   existentials: Boolean,
-                                   macros: Boolean)
-
   @root trait Attr
   object Attr {
     @leaf class Defn(defn: Tree) extends Attr

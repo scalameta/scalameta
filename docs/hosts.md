@@ -42,8 +42,6 @@ The same level of robustness is expected from hosts. Concretely: 1) semantic ope
 
 | Method                                                    | Notes
 |-----------------------------------------------------------|-----------------------------------------------------------------
-| `def syntaxProfile: SyntaxProfile`                        | Universally accepted syntactically significant compiler / IDE flags. Currently empty (one can only return `SyntaxProfile()`, but later on when we add support for different versions of Scala, we will expand this data structure.
-| `def semanticProfile: SemanticProfile`                    | Universally accepted semantically significant compiler / IDE flags. Again this will grow over time. At the moment only contains `-language:XXX` compiler flags.
 | `def defns(ref: Ref): Seq[Tree]`                          | Goes from a reference to the associated definiton or definitions. Might have to return multiple results to account for overloading or situations like imports, super/this qualifiers and accessibility boundaries. If necessary, overloads can be resolved later via `Overload.resolve` or `term.attrs`, but this function shouldn't attempt to do that.
 | `def attrs(tree: Tree): Seq[Attr]`                        | Computes and returns semantic information for a given tree: resolved, i.e. non-overloaded reference to a definition, type, inferred type and value arguments, macro expansion, etc.
 | `def owner(tree: Tree): Scope`                            | A scope that owns the provided tree, be it a definition or a statement in some definition.

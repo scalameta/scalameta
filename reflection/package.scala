@@ -8,9 +8,6 @@ import scala.{Seq => _}
 import scala.collection.immutable.Seq
 
 package object core {
-  @hosted def syntaxProfile: SyntaxProfile = delegate
-  final case class SyntaxProfile()
-
   @quasiquote[Stmt]('q)             implicit class TermQuote(ctx: StringContext)
   @quasiquote[Param.Type]('t)       implicit class TypeQuote(ctx: StringContext)
   @quasiquote[Pat]('p)              implicit class PatternQuote(ctx: StringContext)
