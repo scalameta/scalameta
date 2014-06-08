@@ -40,7 +40,7 @@ package object semantic {
       case Type.Singleton(ref: Term) => ref.tpe.flatMap(_.widen)
       case _ => succeed(tree)
     }
-    @hosted def dealias: Type = delegate
+    @hosted def dealias: Type = ??? // TODO: this can be expressed as an isAliasType check + a hygienic-equality-based substitution
     @hosted def erasure: Type = delegate
     @hosted def companion: Type.Ref = tree match {
       case ref: Type.Ref => ref.defns.flatMap {
@@ -109,6 +109,8 @@ package object semantic {
     def isVar: Boolean = tree.isInstanceOf[Term.Name] && (tree.parent.map(parent => parent.isInstanceOf[Decl.Var] || parent.isInstanceOf[Defn.Var]).getOrElse(false))
     def isDef: Boolean = tree.isInstanceOf[Member.Def]
     def isType: Boolean = tree.isInstanceOf[Member.AbstractOrAliasType]
+    def isAbstractType: Boolean = tree.isInstanceOf[Decl.Type]
+    def isAliasType: Boolean = tree.isInstanceOf[Defn.Type]
     def isClass: Boolean = tree.isInstanceOf[Defn.Class]
     def isTrait: Boolean = tree.isInstanceOf[Defn.Trait]
     def isObject: Boolean = tree.isInstanceOf[Defn.Object]

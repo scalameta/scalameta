@@ -19,7 +19,6 @@ trait Host {
   def inherited(member: Member): Seq[Member]
   def inheritors(member: Member): Seq[Member]
 
-  def dealias(tpe: Type): Type
   def erasure(tpe: Type): Type
 
   def warning(msg: String): Unit
