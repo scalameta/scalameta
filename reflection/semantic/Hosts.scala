@@ -31,7 +31,6 @@ trait Host {
 }
 
 trait MacroHost extends Host {
-  def application: Tree
   def warning(msg: String): Unit
   def error(msg: String): Unit
   def abort(msg: String): Nothing
