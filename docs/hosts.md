@@ -62,17 +62,11 @@ The same level of robustness is expected from hosts. Concretely: 1) semantic ope
 | `def widen(tpe: Type): Type`                              | Goes from a singleton type to a type underlying that singleton. E.g. `t"x.type".widen` in a context that features `val x = 2` should return `t"Int"`. Widenings should be performed shallowly (i.e. `List[x.type]` shouldn't be changed), but to the maximum possible extent (e.g. for `val x = 2; val y: x.type = x`, `t"y.type".widen` should return `t"Int"`, not `t"x.type"`).
 | `def dealias(tpe: Type): Type`                            | Goes from a type alias or an application of a type alias to the underlying type. Again, this should work shallowly, but to the maximum possible extent.
 | `def erasure(tpe: Type): Type`                            | Erasure.
-
-### MacroHost API
-
-| Method                                                 | Notes                                                           |
-|--------------------------------------------------------|-----------------------------------------------------------------|
-| `def application: Tree`                                | The entire macro application being expanded.
-| `def warning(msg: String): Unit`                       | Produces a warning with a given message at the position of the macro application. Host is free to choose the presentation for warnings.
-| `def error(msg: String): Unit`                         | Produces an error with a given message at the position of the macro application. Host is free to choose the presentation for errors as long as they eventually fail the build.
-| `def abort(msg: String): Nothing`                      | Does the same as `error`, additionally terminating expansion of the macro provided in `MacroContext.application`.
-| `def resources: Seq[String]`                           | Returns a list of urls of build resources. Hosts are advised to strive for compatibility between each other. If the same project is compiled, say, by SBT and then by Intellij IDEA plugin, then it is very desireable for urls emitted by `resources` to be the same.
-| `def resourceAsBytes(url: String): Array[Byte]`        | Reads the specified resource into an array of byte. Users of the Palladium API will then decide whether/how to convert these bytes into strings or something else.
+| `def warning(msg: String): Unit`                          | Produces a warning with a given message. For now, hosts are free to choose the presentation for warnings. Later we will provide a notion of positions.
+| `def error(msg: String): Unit`                            | Produces an error with a given message at the position of the macro application. For now, host are free to choose the presentation for errors. Later we will provide a notion of positions.
+| `def abort(msg: String): Nothing`                         | Does the same as `error`, additionally terminating the host.
+| `def resources: Seq[String]`                              | Returns a list of urls of build resources. Hosts are advised to strive for compatibility between each other. If the same project is compiled, say, by SBT and then by Intellij IDEA plugin, then it is mandatory for urls emitted by `resources` to be the same.
+| `def resourceAsBytes(url: String): Array[Byte]`           | Reads the specified resource into an array of byte. Users of the Palladium API will then decide whether/how to convert these bytes into strings or something else.
 
 ### Error handling
 
