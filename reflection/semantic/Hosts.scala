@@ -28,12 +28,13 @@ trait Host {
   def widen(tpe: Type): Type
   def dealias(tpe: Type): Type
   def erasure(tpe: Type): Type
+
+  def resources: Seq[String]
+  def resourceAsBytes(url: String): Array[Byte]
 }
 
 trait MacroHost extends Host {
   def warning(msg: String): Unit
   def error(msg: String): Unit
   def abort(msg: String): Nothing
-  def resources: Seq[String]
-  def resourceAsBytes(url: String): Array[Byte]
 }

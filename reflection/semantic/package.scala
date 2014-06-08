@@ -363,4 +363,8 @@ package object semantic {
     @hosted def tparams(name: String): TypeParam.Named = tree.uniqueMember[TypeParam.Named](name.toString)
     @hosted def tparams(name: scala.Symbol): TypeParam.Named = tree.uniqueMember[TypeParam.Named](name.toString)
   }
+
+  @hosted def resources: Seq[String] = delegate
+  @hosted def resourceAsBytes(url: String): Array[Byte] = delegate
+  @hosted def resourceAsUtf8(url: String): String = resourceAsBytes(url).map(bytes => new String(bytes))
 }
