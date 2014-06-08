@@ -113,9 +113,9 @@ package object semantic {
       case mte: Member.Term => wrapHosted(_.overrides(mte))
       case mty: Member.Type => wrapHosted(_.overrides(mty))
     }
-    @hosted def overriddenBy: Seq[Member] = tree match {
-      case mte: Member.Term => wrapHosted(_.overriddenBy(mte))
-      case mty: Member.Type => wrapHosted(_.overriddenBy(mty))
+    @hosted def overriddenby: Seq[Member] = tree match {
+      case mte: Member.Term => wrapHosted(_.overriddenby(mte))
+      case mty: Member.Type => wrapHosted(_.overriddenby(mty))
     }
     def annots: Seq[Mod.Annot] = tree.mods.collect{ case annot: Mod.Annot => annot }
     def doc: Option[Mod.Doc] = tree.mods.collect{ case doc: Mod.Doc => doc }.headOption
@@ -152,13 +152,13 @@ package object semantic {
   implicit class SemanticTermMemberOps(val tree: Member.Term) extends AnyVal {
     def ref: Term.Ref = new SemanticMemberOps(tree).ref.asInstanceOf[Term.Ref]
     @hosted def overrides: Seq[Member.Term] = new SemanticMemberOps(tree).overrides.map(_.asInstanceOf[Seq[Member.Term]])
-    @hosted def overriddenBy: Seq[Member.Term] = new SemanticMemberOps(tree).overriddenBy.map(_.asInstanceOf[Seq[Member.Term]])
+    @hosted def overriddenby: Seq[Member.Term] = new SemanticMemberOps(tree).overriddenby.map(_.asInstanceOf[Seq[Member.Term]])
   }
 
   implicit class SemanticTypeMemberOps(val tree: Member.Type) extends AnyVal {
     def ref: Type.Ref = new SemanticMemberOps(tree).ref.asInstanceOf[Type.Ref]
     @hosted def overrides: Seq[Member.Type] = new SemanticMemberOps(tree).overrides.map(_.asInstanceOf[Seq[Member.Type]])
-    @hosted def overriddenBy: Seq[Member.Type] = new SemanticMemberOps(tree).overriddenBy.map(_.asInstanceOf[Seq[Member.Type]])
+    @hosted def overriddenby: Seq[Member.Type] = new SemanticMemberOps(tree).overriddenby.map(_.asInstanceOf[Seq[Member.Type]])
   }
 
   implicit class SemanticDefMemberOps(val tree: Member.Def) extends AnyVal {

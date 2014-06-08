@@ -13,7 +13,7 @@ trait Host {
   def members(scope: Scope): Seq[Tree]
   def members(scope: Scope, name: Name): Seq[Tree]
   def overrides(member: Member): Seq[Member]
-  def overriddenBy(member: Member): Seq[Member]
+  def overriddenby(member: Member): Seq[Member]
 
   def <:<(tpe1: Type, tpe2: Type): Boolean
   def supertypes(tpe: Type): Seq[Type]
