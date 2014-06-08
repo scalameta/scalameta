@@ -19,7 +19,6 @@ trait Host {
   def supertypes(tpe: Type): Seq[Type]
   def subclasses(tpe: Type): Seq[Member.Template]
   def linearization(tpes: Seq[Type]): Seq[Type]
-  def self(tpe: Type): Aux.Self
   def lub(tpes: Seq[Type]): Type
   def glb(tpes: Seq[Type]): Type
   def widen(tpe: Type): Type

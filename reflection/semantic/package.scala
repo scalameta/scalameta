@@ -296,7 +296,7 @@ package object semantic {
     @hosted def self: Aux.Self = tree match {
       case x: Aux.Template => succeed(x.self)
       case x: Member.Template => succeed(x.templ.self)
-      case x: Type => wrapHosted(_.self(x))
+      case x: Type => ??? // TODO: compute this by intersecting x and x.defn.self
     }
     @hosted def subclasses: Seq[Member.Template] = tree match {
       case x: Aux.Template => x.tpe.flatMap(_.superclasses)
