@@ -13,9 +13,12 @@ package object parsers {
     ":", "=", "=>", "<-", "<:", "<%", ">:", "#", "@", "\u21D2", "\u2190"
   )
 
-  def parse(source: Source): Aux.CompUnit = new Parser(source).parseTopLevel()
-  def parseTerm(source: Source): Term = new Parser(source).parseTerm()
-  def parseType(source: Source): Type = new Parser(source).parseType()
-  def parsePat(source: Source): Pat = new Parser(source).parsePat()
-  def parseStats(source: Source): List[Stmt.Template] = new Parser(source).parseStats()
+  implicit class RichSource[T <% Source](val sourceLike: T) {
+    private val source: Source = sourceLike
+    def parse: Aux.CompUnit = new Parser(source).parseTopLevel()
+    def parseTerm: Term = new Parser(source).parseTerm()
+    def parseType: Type = new Parser(source).parseType()
+    def parsePat: Pat = new Parser(source).parsePat()
+    def parseStats: List[Stmt.Template] = new Parser(source).parseStats()
+  }
 }
