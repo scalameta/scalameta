@@ -12,13 +12,13 @@ trait Host {
   def owner(tree: Tree): Scope
   def members(scope: Scope): Seq[Tree]
   def members(scope: Scope, name: Name): Seq[Tree]
-  def overrides(member: Member): Seq[Member]
-  def overriddenby(member: Member): Seq[Member]
 
+  def <:<(tpe1: Type, tpe2: Type): Boolean
   def lub(tpes: Seq[Type]): Type
   def glb(tpes: Seq[Type]): Type
-  def supertypes(tpe: Type): Seq[Type]
-  def subclasses(tpe: Type): Seq[Member.Template]
+  def inherited(member: Member): Seq[Member]
+  def inheritors(member: Member): Seq[Member]
+
   def dealias(tpe: Type): Type
   def erasure(tpe: Type): Type
 

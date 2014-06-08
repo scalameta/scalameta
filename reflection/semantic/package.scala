@@ -34,7 +34,7 @@ package object semantic {
   }
 
   implicit class SemanticTypeOps(val tree: Type) extends AnyVal {
-    @hosted def <:<(other: Type): Boolean = ??? // TODO: express this as something like `lub(tree, other) == other`
+    @hosted def <:<(other: Type): Boolean = delegate
     @hosted def weak_<:<(other: Type): Boolean = ??? // TODO: express this as something like (tree <:< other) || (numeric "subtyping")
     @hosted def widen: Type = tree match {
       case Type.Singleton(ref: Term) => ref.tpe.flatMap(_.widen)
@@ -101,14 +101,8 @@ package object semantic {
       case self: Aux.Self => self.name.getOrElse(Term.This(None))
       case named: Has.Name => named.name
     }
-    @hosted def overrides: Seq[Member] = tree match {
-      case mte: Member.Term => wrapHosted(_.overrides(mte))
-      case mty: Member.Type => wrapHosted(_.overrides(mty))
-    }
-    @hosted def overriddenby: Seq[Member] = tree match {
-      case mte: Member.Term => wrapHosted(_.overriddenby(mte))
-      case mty: Member.Type => wrapHosted(_.overriddenby(mty))
-    }
+    @hosted def inherited: Seq[Member] = delegate
+    @hosted def inheritors: Seq[Member] = delegate
     def annots: Seq[Mod.Annot] = tree.mods.collect{ case annot: Mod.Annot => annot }
     def doc: Option[Mod.Doc] = tree.mods.collect{ case doc: Mod.Doc => doc }.headOption
     def isVal: Boolean = tree.isInstanceOf[Term.Name] && (tree.parent.map(parent => parent.isInstanceOf[Decl.Val] || parent.isInstanceOf[Defn.Val]).getOrElse(false))
@@ -127,7 +121,7 @@ package object semantic {
     def isImplicit: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Implicit])
     def isFinal: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Final])
     def isSealed: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Sealed])
-    @hosted def isOverride: Boolean = tree.overrides.map(_.nonEmpty)
+    @hosted def isOverride: Boolean = tree.inherited.map(_.nonEmpty)
     def isCase: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Case])
     def isAbstract: Boolean = (tree.mods.exists(_.isInstanceOf[Mod.Abstract]) || tree.isInstanceOf[Decl]) && !isAbstractOverride
     def isCovariant: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Covariant])
@@ -143,14 +137,14 @@ package object semantic {
 
   implicit class SemanticTermMemberOps(val tree: Member.Term) extends AnyVal {
     def ref: Term.Ref = new SemanticMemberOps(tree).ref.asInstanceOf[Term.Ref]
-    @hosted def overrides: Seq[Member.Term] = new SemanticMemberOps(tree).overrides.map(_.asInstanceOf[Seq[Member.Term]])
-    @hosted def overriddenby: Seq[Member.Term] = new SemanticMemberOps(tree).overriddenby.map(_.asInstanceOf[Seq[Member.Term]])
+    @hosted def inherited: Seq[Member.Term] = new SemanticMemberOps(tree).inherited.map(_.asInstanceOf[Seq[Member.Term]])
+    @hosted def inheritors: Seq[Member.Term] = new SemanticMemberOps(tree).inheritors.map(_.asInstanceOf[Seq[Member.Term]])
   }
 
   implicit class SemanticTypeMemberOps(val tree: Member.Type) extends AnyVal {
     def ref: Type.Ref = new SemanticMemberOps(tree).ref.asInstanceOf[Type.Ref]
-    @hosted def overrides: Seq[Member.Type] = new SemanticMemberOps(tree).overrides.map(_.asInstanceOf[Seq[Member.Type]])
-    @hosted def overriddenby: Seq[Member.Type] = new SemanticMemberOps(tree).overriddenby.map(_.asInstanceOf[Seq[Member.Type]])
+    @hosted def inherited: Seq[Member.Type] = new SemanticMemberOps(tree).inherited.map(_.asInstanceOf[Seq[Member.Type]])
+    @hosted def inheritors: Seq[Member.Type] = new SemanticMemberOps(tree).inheritors.map(_.asInstanceOf[Seq[Member.Type]])
   }
 
   implicit class SemanticDefMemberOps(val tree: Member.Def) extends AnyVal {
@@ -283,7 +277,7 @@ package object semantic {
     @hosted def supertypes: Seq[Type] = tree match {
       case x: Aux.Template => x.tpe.flatMap(_.supertypes)
       case x: Member.Template => x.templ.supertypes
-      case x: Type => wrapHosted(_.supertypes(x))
+      case x: Type => ??? // TODO: compute this from Host.inherited(x.defn) and x's type arguments
     }
     @hosted def self: Aux.Self = tree match {
       case x: Aux.Template => succeed(x.self)
@@ -293,7 +287,7 @@ package object semantic {
     @hosted def subclasses: Seq[Member.Template] = tree match {
       case x: Aux.Template => x.tpe.flatMap(_.superclasses)
       case x: Member.Template => x.templ.subclasses
-      case x: Type => wrapHosted(_.subclasses(x))
+      case x: Type => ??? // TODO: compute this from Host.inheritors(x.defn) and x's type arguments
     }
     @hosted def ctor: Ctor.Primary = ctors.flatMap(_.collect { case prim: Ctor.Primary => prim }.findUnique)
     @hosted def ctors: Seq[Ctor] = wrapHosted(_.members(tree).collect{ case c: Ctor => c })
