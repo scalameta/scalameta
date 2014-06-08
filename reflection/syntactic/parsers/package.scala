@@ -13,7 +13,7 @@ package object parsers {
     ":", "=", "=>", "<-", "<:", "<%", ">:", "#", "@", "\u21D2", "\u2190"
   )
 
-  def parseTopLevel(source: Source): Aux.CompUnit = new Parser(source).parseTopLevel()
+  def parse(source: Source): Aux.CompUnit = new Parser(source).parseTopLevel()
   def parseTerm(source: Source): Term = new Parser(source).parseTerm()
   def parseType(source: Source): Type = new Parser(source).parseType()
   def parsePat(source: Source): Pat = new Parser(source).parsePat()
