@@ -34,8 +34,8 @@ package object semantic {
   }
 
   implicit class SemanticTypeOps(val tree: Type) extends AnyVal {
-    @hosted def <:<(other: Type): Boolean = delegate
-    @hosted def weak_<:<(other: Type): Boolean = ???
+    @hosted def <:<(other: Type): Boolean = ??? // TODO: express this as something like `lub(tree, other) == other`
+    @hosted def weak_<:<(other: Type): Boolean = ??? // TODO: express this as something like (tree <:< other) || (numeric "subtyping")
     @hosted def widen: Type = tree match {
       case Type.Singleton(ref: Term) => ref.tpe.flatMap(_.widen)
       case _ => succeed(tree)

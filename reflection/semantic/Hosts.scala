@@ -15,12 +15,11 @@ trait Host {
   def overrides(member: Member): Seq[Member]
   def overriddenby(member: Member): Seq[Member]
 
-  def <:<(tpe1: Type, tpe2: Type): Boolean
+  def lub(tpes: Seq[Type]): Type
+  def glb(tpes: Seq[Type]): Type
   def supertypes(tpe: Type): Seq[Type]
   def subclasses(tpe: Type): Seq[Member.Template]
   def linearization(tpes: Seq[Type]): Seq[Type]
-  def lub(tpes: Seq[Type]): Type
-  def glb(tpes: Seq[Type]): Type
   def dealias(tpe: Type): Type
   def erasure(tpe: Type): Type
 
