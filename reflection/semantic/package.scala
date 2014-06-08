@@ -68,17 +68,6 @@ package object semantic {
     }
   }
 
-  implicit class SemanticTemplatesOps(val parents: Seq[Member.Template]) extends AnyVal {
-    @hosted def linearization: Seq[Member.Template] = {
-      val linearization = parents.map(_.ref.toTypeRef).linearization
-      linearization.flatMap(tpes => supertypesToMembers(tpes))
-    }
-  }
-
-  implicit class SemanticTypesOps(val parents: Seq[Type]) extends AnyVal {
-    @hosted def linearization: Seq[Type] = wrapHosted(_.linearization(parents))
-  }
-
   @hosted def lub(tpes: Seq[Type]): Type = delegate
   @hosted def glb(tpes: Seq[Type]): Type = delegate
 

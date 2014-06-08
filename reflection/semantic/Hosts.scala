@@ -19,7 +19,6 @@ trait Host {
   def glb(tpes: Seq[Type]): Type
   def supertypes(tpe: Type): Seq[Type]
   def subclasses(tpe: Type): Seq[Member.Template]
-  def linearization(tpes: Seq[Type]): Seq[Type]
   def dealias(tpe: Type): Type
   def erasure(tpe: Type): Type
 
