@@ -28,16 +28,10 @@ package object core {
     @leaf class String(s: scala.Predef.String) extends Source {
       lazy val content = s.toArray
     }
-    object String {
-      implicit def stringToSource(s: scala.Predef.String): String = String(s)
-    }
     @leaf class File(f: java.io.File) extends Source {
       lazy val content = scala.io.Source.fromFile(f).mkString.toArray
     }
-    object File {
-      def apply(path: Predef.String): Source.File = Source.File(new java.io.File(path))
-      implicit def fileToSource(f: java.io.File): File = File(f)
-    }
+    object File { def apply(path: Predef.String): Source.File = Source.File(new java.io.File(path)) }
   }
   @root trait Origin { def src: Source }
   object Origin {
