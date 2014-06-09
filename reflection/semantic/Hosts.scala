@@ -20,7 +20,9 @@ trait Host {
   def inheritors(member: Member): Seq[Member]
 
   def erasure(tpe: Type): Type
+}
 
+trait MacroHost extends Host {
   def warning(msg: String): Unit
   def error(msg: String): Unit
   def abort(msg: String): Nothing

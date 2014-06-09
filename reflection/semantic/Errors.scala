@@ -13,6 +13,7 @@ package object errors {
   def fail(ex: ReflectionException)(implicit eh: ErrorHandler): eh.Failure[ReflectionException] = eh.fail(ex)
 
   def wrapHosted = new Wrap[Host]
+  def wrapMacrohosted = new Wrap[MacroHost]
   class Wrap[H <: Host] {
     def apply[T](f: H => T)(implicit h: H, eh: ErrorHandler) = {
       try eh.succeed(f(h))
