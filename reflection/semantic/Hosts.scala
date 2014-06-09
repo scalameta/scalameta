@@ -16,8 +16,10 @@ trait Host {
   def <:<(tpe1: Type, tpe2: Type): Boolean
   def lub(tpes: Seq[Type]): Type
   def glb(tpes: Seq[Type]): Type
-  def inherited(member: Member): Seq[Member]
-  def inheritors(member: Member): Seq[Member]
+  def superclasses(member: Member.Template): Seq[Member.Template]
+  def subclasses(member: Member.Template): Seq[Member.Template]
+  def overridden(member: Member): Seq[Member]
+  def overriding(member: Member): Seq[Member]
 
   def erasure(tpe: Type): Type
 }
