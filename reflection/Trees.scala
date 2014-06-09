@@ -4,7 +4,6 @@ package core
 import scala.language.experimental.macros
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
-import org.scalareflect.adt._
 import org.scalareflect.ast._
 import org.scalareflect.invariants._
 import org.scalareflect.annotations._
@@ -15,35 +14,11 @@ import scala.reflect.syntactic.parsers._, SyntacticInfo._
 
 @root trait Tree extends Product {
   type ThisType <: Tree
-
   def origin: Origin
-  def withOrigin(origin: Origin): ThisType = internalCopy(origin = origin)
-  def mapOrigin(f: Origin => Origin): ThisType = internalCopy(origin = f(origin))
-
-  // NOTE: withParent and mapParent are not available
-  // because parent-child structure of trees is supposed to be maintained by the framework
-  def parent: Option[Tree] = if (internalParent != null) Some(internalParent) else None
-
+  def parent: Option[Tree]
   def showCode: String = ShowCode.showTree(this).toString
   def showRaw: String = ShowRaw.showTree(this).toString
   final override def toString: String = showRaw
-
-  // NOTE: these are internal APIs designed to be used only by hosts
-  // TODO: these APIs will most likely change in the future
-  // because we would like to make sure that trees are fully immutable
-  private[reflect] def scratchpad(implicit h: HostContext): Seq[Any] = internalScratchpads.getOrElse(h, Nil);
-  private[reflect] def appendScratchpad(datum: Any)(implicit h: HostContext): ThisType = internalCopy(scratchpads = internalScratchpads + (h -> (internalScratchpads.getOrElse(h, Nil) :+ datum)))
-  private[reflect] def withScratchpad(scratchpad: Seq[Any])(implicit h: HostContext): ThisType = internalCopy(scratchpads = internalScratchpads + (h -> scratchpad))
-  private[reflect] def mapScratchpad(f: Seq[Any] => Seq[Any])(implicit h: HostContext): ThisType = internalCopy(scratchpads = internalScratchpads + (h -> f(internalScratchpads.getOrElse(h, Nil))))
-
-  // NOTE: these are internal APIs that are meant to be used only in the implementation of the framework
-  // host implementors should not utilize these APIs
-  // TODO: turn the prototype argument of internalCopy into ThisType
-  // if done naively, this isn't going to compile for prototypes of @branch traits as ThisType there is abstract
-  protected def internalPrototype: ThisType
-  protected def internalParent: Tree
-  protected def internalScratchpads: Map[HostContext, Seq[Any]]
-  private[core] def internalCopy(prototype: Tree = internalPrototype, parent: Tree = internalParent, scratchpads: Map[HostContext, Seq[Any]] = internalScratchpads, origin: Origin = origin): ThisType
 }
 
 @branch trait Term extends Arg with Stmt.Template with Stmt.Block with Qual.Term
@@ -171,14 +146,14 @@ object Member {
   @branch trait Term extends Member
   @branch trait Type extends Member
   @branch trait ValOrVar extends Stmt.Template with Has.Mods // NOTE: vals and vars are not members!
-  @branch trait Def extends Term with Has.TermName with Stmt.Refine with Has.Paramss with Scope.Params {
+  @branch trait Def extends Term with Has.TermName with Stmt.Refine with Has.TypeParams with Has.Paramss with Scope.Params {
     def tparams: Seq[TypeParam]
   }
-  @branch trait AbstractOrAliasType extends Type with Has.TypeName with Stmt.Refine {
+  @branch trait AbstractOrAliasType extends Type with Has.TypeName with Stmt.Refine with Has.TypeParams {
     def name: core.Type.Name
     def tparams: Seq[TypeParam]
   }
-  @branch trait Template extends Defn with Has.Name with Stmt.TopLevel with Stmt.Block with Has.Paramss with Scope.Template {
+  @branch trait Template extends Defn with Has.Name with Stmt.TopLevel with Stmt.Block with Has.TypeParams with Has.Paramss with Scope.Template {
     def name: core.Name
     def explicits: Seq[Seq[Param.Named]] = Nil
     def implicits: Seq[Param.Named] = Nil
@@ -302,8 +277,6 @@ object Import {
 
 @branch trait Param extends Tree with Has.Mods {
   def decltpe: Option[Param.Type]
-  def withMods(mods: Seq[Mod])(implicit origin: Origin): ThisType
-  def mapMods(mods: Seq[Mod] => Seq[Mod])(implicit origin: Origin): ThisType
 }
 object Param {
   @branch trait Type extends Tree
@@ -319,13 +292,11 @@ object Param {
                    default: Option[Term]) extends Param with Member.Term with Has.TermName
 }
 
-@branch trait TypeParam extends Tree with Has.Mods {
+@branch trait TypeParam extends Tree with Has.Mods with Has.TypeParams {
   def tparams: Seq[TypeParam]
   def contextBounds: Seq[core.Type]
   def viewBounds: Seq[core.Type]
   def bounds: Aux.TypeBounds
-  def withMods(mods: Seq[Mod])(implicit origin: Origin): ThisType
-  def mapMods(mods: Seq[Mod] => Seq[Mod])(implicit origin: Origin): ThisType
 }
 object TypeParam {
   @ast class Anonymous(mods: Seq[Mod],
@@ -420,6 +391,9 @@ object Has {
     def explicits: Seq[Seq[Param.Named]]
     def implicits: Seq[Param.Named]
     def paramss: Seq[Seq[Param.Named]] = explicits :+ implicits
+  }
+  @branch trait TypeParams extends Tree {
+    def tparams: Seq[TypeParam]
   }
   @branch trait Name extends Member { def name: core.Name }
   @branch trait TermName extends Member.Term with Has.Name { def name: Term.Name }

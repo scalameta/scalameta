@@ -137,7 +137,6 @@ object build extends Build {
   ) settings (
     name := "core",
     scalaSource in Compile <<= (baseDirectory in Compile)(base => base),
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided"),
     // scalacOptions ++= Seq("-Xprint:typer"),
     scalacOptions ++= Seq()
   ) dependsOn (foundation)
@@ -158,6 +157,7 @@ object build extends Build {
   ) settings (
     sharedSettings: _*
   ) settings (
+    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _),
     libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.3" % "test",
     libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
     packagedArtifacts := Map.empty,

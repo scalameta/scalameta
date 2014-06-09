@@ -71,7 +71,7 @@ class AstMacros(val c: Context) {
       val paramss = rawparamss.zip(companionsForDefaultss).map{ case (raws, companions) => raws ++ companions }
 
       // step 4: create boilerplate bookkeeping parameters
-      val scratchpadsType = tq"_root_.scala.collection.immutable.Map[_root_.scala.reflect.semantic.HostContext, _root_.scala.collection.immutable.Seq[Any]]"
+      val scratchpadsType = tq"_root_.scala.collection.immutable.Map[_root_.scala.reflect.semantic.Host, _root_.scala.collection.immutable.Seq[Any]]"
       bparams1 += q"protected val internalPrototype: $name"
       bparams1 += q"protected val internalParent: _root_.scala.reflect.core.Tree"
       bparams1 += q"protected val internalScratchpads: $scratchpadsType"
@@ -79,51 +79,28 @@ class AstMacros(val c: Context) {
       def internalize(name: TermName) = TermName("_" + name.toString)
       val internalCopyInitss = paramss.map(_.map(p => q"$AstInternal.initField(this.${internalize(p.name)})"))
       val internalCopyBody = q"new ThisType(prototype.asInstanceOf[ThisType], parent, internalScratchpads, origin)(...$internalCopyInitss)"
-      stats1 += q"private[core] def internalCopy(prototype: Tree = internalPrototype, parent: Tree = internalParent, scratchpads: $scratchpadsType = internalScratchpads, origin: _root_.scala.reflect.core.Origin = origin): ThisType = $internalCopyBody"
+      stats1 += q"private[core] def internalCopy(prototype: _root_.scala.reflect.core.Tree = internalPrototype, parent: _root_.scala.reflect.core.Tree = internalParent, scratchpads: $scratchpadsType = internalScratchpads, origin: _root_.scala.reflect.core.Origin = origin): ThisType = $internalCopyBody"
+      stats1 += q"def parent: _root_.scala.Option[_root_.scala.reflect.core.Tree] = if (internalParent != null) _root_.scala.Some(internalParent) else _root_.scala.None"
 
       // step 5: turn all parameters into private internal vars, create getters and setters
       paramss1 ++= paramss.map(_.map{ case p @ q"$mods val $name: $tpt = $default" => q"${undefault(unoverride(privatize(varify(mods))))} val ${internalize(p.name)}: $tpt" })
-      stats1 ++= paramss.zipWithIndex.flatMap { case (params, i) =>
-        params.flatMap { p =>
-          val pstats = ListBuffer[Tree]()
-          val pinternal = internalize(p.name)
-          val pmods = if (p.mods.hasFlag(OVERRIDE)) Modifiers(OVERRIDE) else NoMods
-          pstats += q"""
-            $pmods def ${p.name}: ${p.tpt} = {
-              $AstInternal.loadField(this.$pinternal)
-              this.$pinternal
-            }
-          """
-          def generateCow(cowName: TermName, cowParams: List[ValDef], action: Tree => Tree): Tree = {
-            val preArgss = paramss.take(i).map(_.map(p => q"this.${p.name}"))
-            val cowArgs = List(AssignOrNamedArg(q"${p.name}", action(q"this.${p.name}")))
-            val postArgss = paramss.drop(i + 1).map(_.map(p => q"this.${p.name}"))
-            val cowArgss = preArgss ++ List(cowArgs) ++ postArgss
-            q"def $cowName(..$cowParams)(implicit origin: _root_.scala.reflect.core.Origin): ThisType = this.copy(...$cowArgss)"
+      stats1 ++= paramss.flatten.map { p =>
+        val pinternal = internalize(p.name)
+        val pmods = if (p.mods.hasFlag(OVERRIDE)) Modifiers(OVERRIDE) else NoMods
+        q"""
+          $pmods def ${p.name}: ${p.tpt} = {
+            $AstInternal.loadField(this.$pinternal)
+            this.$pinternal
           }
-          if (isVanilla(p)) {
-            pstats += generateCow(TermName("with" + p.name.toString.capitalize), List(q"val ${p.name}: ${p.tpt}"), pref => pref)
-            pstats += generateCow(TermName("map" + p.name.toString.capitalize), List(q"val f: ${p.tpt} => ${p.tpt}"), pref => q"f($pref)")
-          } else if (isNontriviaDefault(p)) {
-            pstats += generateCow(TermName("with" + p.name.toString.capitalize), List(q"val ${p.name}: ${p.tpt}"), pref => pref)
-            pstats += generateCow(TermName("without" + p.name.toString.capitalize), Nil, pref => q"null")
-            pstats += generateCow(TermName("map" + p.name.toString.capitalize), List(q"val f: ${p.tpt} => ${p.tpt}"), pref => q"f($pref)")
-          } else if (isNontriviaCompanion(p)) {
-            // NOTE: generate no setters for non-trivia companion parameters
-          } else {
-            unreachable
-          }
-          pstats.toList
-        }
+        """
       }
       val copyParamss = rawparamss.map(_.map(p => q"val ${p.name}: ${p.tpt} = this.${p.name}"))
       val copyArgss = rawparamss.map(_.map(p => q"${p.name}"))
-      // TODO: would be useful to turn copy, mapXXX and withXXX into macros, so that their calls are guaranteed to be inlined
+      // TODO: would be useful to turn copy into a macro, so that its calls are guaranteed to be inlined
       stats1 += q"def copy(...$copyParamss)(implicit origin: _root_.scala.reflect.core.Origin): ThisType = $mname.apply(...$copyArgss)(_root_.scala.reflect.core.Origin.Transform(this, this.origin))"
 
       // step 7: generate boilerplate required by the @ast infrastructure
       stats1 += q"override type ThisType = $name"
-      stats1 += q"def $$tag: _root_.scala.Int = $AdtInternal.calculateTag[ThisType]"
       // TODO: remove leafClass and leafCompanion from here
       anns1 += q"new $AstInternal.astClass"
       anns1 += q"new $AdtInternal.leafClass"

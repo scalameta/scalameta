@@ -10,9 +10,8 @@ import org.scalareflect.unreachable
 import Chars.{isOperatorPart, isScalaLetter}
 import Tokens._
 import TokenInfo._
+import Scanners._
 
-// TODO: would be great to turn this into a public API
-// also look into package.scala
 object SyntacticInfo {
   private[reflect] val unaryOps = Set("-", "+", "~", "!")
   private[reflect] def isUnaryOp(s: String): Boolean = unaryOps contains s
@@ -75,14 +74,14 @@ case class ParseAbort(msg: String) extends Exception(s"abort: $msg")
 case class ParseSyntaxError(offset: Offset, msg: String) extends Exception(s"syntax error at $offset: $msg")
 case class ParseIncompleteInputError(msg: String) extends Exception("incomplete input: $msg")
 
-class SourceParser(val source: Source) extends Parser {
+class Parser(val source: Source) extends AbstractParser {
   def this(code: String) = this(Source.String(code))
   /** The parse starting point depends on whether the source file is self-contained:
    *  if not, the AST will be supplemented.
    */
   def parseStartRule = () => compilationUnit()
 
-  lazy val in = { val s = new SourceFileScanner(source); s.init(); s }
+  lazy val in = { val s = new Scanner(source); s.init(); s }
 
   // warning don't stop parsing
   // TODO:
@@ -110,7 +109,7 @@ object Location {
 }
 import Location.{ Local, InBlock, InTemplate }
 
-abstract class Parser { parser =>
+abstract class AbstractParser { parser =>
   val in: Scanner
   val source: Source
   implicit val origin: Origin = Origin.Source(source)
@@ -141,7 +140,7 @@ abstract class Parser { parser =>
     try tree catch { case e: Exception => pushback() ; throw e }
   }
 
-  def parseStartRule: () => Tree
+  def parseStartRule: () => CompUnit
 
   def parseRule[T](rule: this.type => T): T = {
     val t = rule(this)
@@ -151,11 +150,17 @@ abstract class Parser { parser =>
 
   /** This is the general parse entry point.
    */
-  def parse(): Tree = parseRule(_.parseStartRule())
+  def parseTopLevel(): CompUnit = parseRule(_.parseStartRule())
+
+  /** These are alternative entry points for the three main tree types.
+   */
+  def parseTerm(): Term = parseRule(_.expr())
+  def parseType(): Type = parseRule(_.typ())
+  def parsePat(): Pat = parseRule(_.pattern())
 
   /** These are alternative entry points for repl, script runner, toolbox and parsing in macros.
    */
-  def parseStats(): List[Tree] = parseRule(_.templateStats())
+  def parseStats(): List[Stmt.Template] = parseRule(_.templateStats())
 
 /* ------------- PARSER COMMON -------------------------------------------- */
 
@@ -1093,7 +1098,8 @@ abstract class Parser { parser =>
         Term.Ascribe(expr, typeOrInfixType(location))
       }
     }.get
-    val param = param0.mapMods(Mod.Implicit() +: _)
+    val mods = Mod.Implicit() +: param0.mods
+    val param = param0 match { case p: Param.Anonymous => p.copy(mods = mods); case p: Param.Named => p.copy(mods = mods) }
     accept(ARROW)
     Term.Function(List(param), if (location != InBlock) expr() else block())
   }

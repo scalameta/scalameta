@@ -33,9 +33,29 @@
   1. History vs positions (can trivia be inferred from positions only?)
   1. What should be there in Origin.Transform? What should be the signature of mapXXX and withXXX (should they take Origin or not)?
   1. Liftable[Tree]
+  1. Need special trees for Java artifacts
+  1. Expose scala.reflect.syntactic.parsers.SyntacticInfo and scala.reflect.syntactic.parsers.package in a public API
+  1. Syntax profiles to encapsulate syntax peculiarities of different versions of Scala
 
 ### Quasiquotes
 
   1. Port current unhygienic quasiquotes
   1. Consider native placeholder trees
   1. Better ellipses (e.g. q"..{ $a = $b }" to match/construct list of assigns)
+
+### Semantic
+
+  1. Positions for c.warning/error/abort
+  1. Need more attrs for:
+    1. Auto-inserted apply/unapply/unapplySeq/xxxDynamic
+    1. Expanded for loops
+    1. Constant folding
+    1. Etc
+  1. Design and implement directSuperclasses and likes
+  1. Expose type parameter instantiation facilities, e.g. `def foo[T]: T = ...` => `def foo: Int = ...`
+  1. Semantic profiles to encapsulate standardized semantic differences between Scala versions
+
+
+
+
+

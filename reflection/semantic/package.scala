@@ -7,14 +7,15 @@ import scala.collection.immutable.Seq
 import scala.reflect.core._
 
 package object semantic {
-  @hosted def semanticProfile: SemanticProfile = delegate
-  final case class SemanticProfile(dynamics: Boolean,
-                                   postfixOps: Boolean,
-                                   reflectiveCalls: Boolean,
-                                   implicitConversions: Boolean,
-                                   higherKinds: Boolean,
-                                   existentials: Boolean,
-                                   macros: Boolean)
+  @root trait Attr
+  object Attr {
+    @leaf class Defn(defn: Tree) extends Attr
+    @leaf class Type(tpe: Param.Type) extends Attr
+    @leaf class InferredTargs(targs: Seq[Type]) extends Attr
+    @leaf class InferredVargs(vargs: Seq[Term]) extends Attr
+    @leaf class MacroExpansion(tree: Tree) extends Attr
+    // TODO: design additional attrs for other aspects of typechecking
+  }
 
   implicit class RichTree(val tree: Tree) extends AnyVal {
     @hosted def attrs: Seq[Attr] = delegate
@@ -34,9 +35,12 @@ package object semantic {
 
   implicit class SemanticTypeOps(val tree: Type) extends AnyVal {
     @hosted def <:<(other: Type): Boolean = delegate
-    @hosted def weak_<:<(other: Type): Boolean = ???
-    @hosted def widen: Type = delegate
-    @hosted def dealias: Type = delegate
+    @hosted def weak_<:<(other: Type): Boolean = ??? // TODO: express this as something like (tree <:< other) || (numeric "subtyping")
+    @hosted def widen: Type = tree match {
+      case Type.Singleton(ref: Term) => ref.tpe.flatMap(_.widen)
+      case _ => succeed(tree)
+    }
+    @hosted def dealias: Type = ??? // TODO: this can be expressed as an isAliasType check + a hygienic-equality-based substitution
     @hosted def erasure: Type = delegate
     @hosted def companion: Type.Ref = tree match {
       case ref: Type.Ref => ref.defns.flatMap {
@@ -64,17 +68,6 @@ package object semantic {
     }
   }
 
-  implicit class SemanticTemplatesOps(val parents: Seq[Member.Template]) extends AnyVal {
-    @hosted def linearization: Seq[Member.Template] = {
-      val linearization = parents.map(_.ref.toTypeRef).linearization
-      linearization.flatMap(tpes => supertypesToMembers(tpes))
-    }
-  }
-
-  implicit class SemanticTypesOps(val parents: Seq[Type]) extends AnyVal {
-    @hosted def linearization: Seq[Type] = wrapHosted(_.linearization(parents))
-  }
-
   @hosted def lub(tpes: Seq[Type]): Type = delegate
   @hosted def glb(tpes: Seq[Type]): Type = delegate
 
@@ -100,43 +93,37 @@ package object semantic {
   }
 
   implicit class SemanticMembers[A <: Member.Term](val tree: Seq[A]) extends AnyVal {
-    def resolve(tpes: Seq[core.Type]): A = ??? // TODO: implement this in terms of Tree.attrs and Attr.Ref
+    def resolve(tpes: Seq[core.Type]): A = ???
   }
 
   implicit class SemanticMemberOps(val tree: Member) extends AnyVal {
-    // TODO: expose type parameter instantiation facilities, e.g. `def foo[T]: T = ...` => `def foo: Int = ...`
     def ref: Ref = tree match {
-      // TODO: this logic is not enough. if a member is a synthetic typeSignatureIn'd thing, we also need to remember its prefix
       case self: Aux.Self => self.name.getOrElse(Term.This(None))
       case named: Has.Name => named.name
     }
-    @hosted def overrides: Seq[Member] = tree match {
-      case mte: Member.Term => wrapHosted(_.overrides(mte))
-      case mty: Member.Type => wrapHosted(_.overrides(mty))
-    }
-    @hosted def overriddenBy: Seq[Member] = tree match {
-      case mte: Member.Term => wrapHosted(_.overriddenBy(mte))
-      case mty: Member.Type => wrapHosted(_.overriddenBy(mty))
-    }
+    @hosted def overridden: Seq[Member] = delegate
+    @hosted def overriding: Seq[Member] = delegate
     def annots: Seq[Mod.Annot] = tree.mods.collect{ case annot: Mod.Annot => annot }
     def doc: Option[Mod.Doc] = tree.mods.collect{ case doc: Mod.Doc => doc }.headOption
     def isVal: Boolean = tree.isInstanceOf[Term.Name] && (tree.parent.map(parent => parent.isInstanceOf[Decl.Val] || parent.isInstanceOf[Defn.Val]).getOrElse(false))
     def isVar: Boolean = tree.isInstanceOf[Term.Name] && (tree.parent.map(parent => parent.isInstanceOf[Decl.Var] || parent.isInstanceOf[Defn.Var]).getOrElse(false))
     def isDef: Boolean = tree.isInstanceOf[Member.Def]
     def isType: Boolean = tree.isInstanceOf[Member.AbstractOrAliasType]
+    def isAbstractType: Boolean = tree.isInstanceOf[Decl.Type]
+    def isAliasType: Boolean = tree.isInstanceOf[Defn.Type]
     def isClass: Boolean = tree.isInstanceOf[Defn.Class]
     def isTrait: Boolean = tree.isInstanceOf[Defn.Trait]
     def isObject: Boolean = tree.isInstanceOf[Defn.Object]
     def isPkg: Boolean = tree.isInstanceOf[Pkg]
     def isPkgObject: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Package])
-    def isJava: Boolean = ??? // TODO: need special trees for Java artifacts
+    def isJava: Boolean = ???
     def isPrivate: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Private])
     def isProtected: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Protected])
     def isPublic: Boolean = !tree.isPrivate && !tree.isProtected
     def isImplicit: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Implicit])
     def isFinal: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Final])
     def isSealed: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Sealed])
-    @hosted def isOverride: Boolean = tree.overrides.map(_.nonEmpty)
+    @hosted def isOverride: Boolean = tree.overridden.map(_.nonEmpty)
     def isCase: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Case])
     def isAbstract: Boolean = (tree.mods.exists(_.isInstanceOf[Mod.Abstract]) || tree.isInstanceOf[Decl]) && !isAbstractOverride
     def isCovariant: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Covariant])
@@ -152,14 +139,14 @@ package object semantic {
 
   implicit class SemanticTermMemberOps(val tree: Member.Term) extends AnyVal {
     def ref: Term.Ref = new SemanticMemberOps(tree).ref.asInstanceOf[Term.Ref]
-    @hosted def overrides: Seq[Member.Term] = new SemanticMemberOps(tree).overrides.map(_.asInstanceOf[Seq[Member.Term]])
-    @hosted def overriddenBy: Seq[Member.Term] = new SemanticMemberOps(tree).overriddenBy.map(_.asInstanceOf[Seq[Member.Term]])
+    @hosted def overridden: Seq[Member.Term] = new SemanticMemberOps(tree).overridden.map(_.asInstanceOf[Seq[Member.Term]])
+    @hosted def overriding: Seq[Member.Term] = new SemanticMemberOps(tree).overriding.map(_.asInstanceOf[Seq[Member.Term]])
   }
 
   implicit class SemanticTypeMemberOps(val tree: Member.Type) extends AnyVal {
     def ref: Type.Ref = new SemanticMemberOps(tree).ref.asInstanceOf[Type.Ref]
-    @hosted def overrides: Seq[Member.Type] = new SemanticMemberOps(tree).overrides.map(_.asInstanceOf[Seq[Member.Type]])
-    @hosted def overriddenBy: Seq[Member.Type] = new SemanticMemberOps(tree).overriddenBy.map(_.asInstanceOf[Seq[Member.Type]])
+    @hosted def overridden: Seq[Member.Type] = new SemanticMemberOps(tree).overridden.map(_.asInstanceOf[Seq[Member.Type]])
+    @hosted def overriding: Seq[Member.Type] = new SemanticMemberOps(tree).overriding.map(_.asInstanceOf[Seq[Member.Type]])
   }
 
   implicit class SemanticDefMemberOps(val tree: Member.Def) extends AnyVal {
@@ -284,26 +271,25 @@ package object semantic {
   }
 
   implicit class SemanticTemplateScopeOps(val tree: Scope.Template) extends AnyVal {
-    // TODO: directSuperclasses and others
     @hosted def superclasses: Seq[Member.Template] = tree match {
       case x: Aux.Template => x.tpe.flatMap(_.superclasses)
       case x: Member.Template => x.templ.superclasses
-      case x: Type => x.supertypes.flatMap(tpes => supertypesToMembers(tpes))
+      case x: Type => ??? // TODO: compute this from Host.superclasses
     }
     @hosted def supertypes: Seq[Type] = tree match {
       case x: Aux.Template => x.tpe.flatMap(_.supertypes)
       case x: Member.Template => x.templ.supertypes
-      case x: Type => wrapHosted(_.supertypes(x))
+      case x: Type => ??? // TODO: compute this from Host.superclasses(x.defn) and x's type arguments
     }
     @hosted def self: Aux.Self = tree match {
       case x: Aux.Template => succeed(x.self)
       case x: Member.Template => succeed(x.templ.self)
-      case x: Type => wrapHosted(_.self(x))
+      case x: Type => ??? // TODO: compute this by intersecting x and x.defn.self
     }
     @hosted def subclasses: Seq[Member.Template] = tree match {
       case x: Aux.Template => x.tpe.flatMap(_.superclasses)
       case x: Member.Template => x.templ.subclasses
-      case x: Type => wrapHosted(_.subclasses(x))
+      case x: Type => ??? // TODO: compute this from Host.subclasses
     }
     @hosted def ctor: Ctor.Primary = ctors.flatMap(_.collect { case prim: Ctor.Primary => prim }.findUnique)
     @hosted def ctors: Seq[Ctor] = wrapHosted(_.members(tree).collect{ case c: Ctor => c })
@@ -355,5 +341,13 @@ package object semantic {
     @hosted def tparams(name: Name): TypeParam.Named = tree.uniqueMember[TypeParam.Named](name.toString)
     @hosted def tparams(name: String): TypeParam.Named = tree.uniqueMember[TypeParam.Named](name.toString)
     @hosted def tparams(name: scala.Symbol): TypeParam.Named = tree.uniqueMember[TypeParam.Named](name.toString)
+  }
+
+  object c {
+    @hosted(macroApi = true) def warning(msg: String): Unit = delegate
+    @hosted(macroApi = true) def error(msg: String): Unit = delegate
+    @hosted(macroApi = true) def abort(msg: String): Nothing = delegate
+    @hosted(macroApi = true) def resources: Seq[String] = delegate
+    @hosted(macroApi = true) def resource(url: String): Array[Byte] = delegate
   }
 }
