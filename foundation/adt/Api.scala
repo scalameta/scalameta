@@ -19,7 +19,13 @@ trait AdtReflection {
     def isPayload: Boolean = sym.isTerm && sym.isParameter && !sym.isManualTrivia && !sym.isAutoTrivia
     def isManualTrivia: Boolean = hasAnnotation[AstInternal.trivia] && !hasAnnotation[AstInternal.auto]
     def isAutoTrivia: Boolean = hasAnnotation[AstInternal.trivia] && hasAnnotation[AstInternal.auto]
+    def asRoot: Root = new Root(sym)
+    def asBranch: Branch = new Branch(sym)
+    def asLeaf: Leaf = new Leaf(sym)
+    def asField: Field = new Field(sym)
+  }
 
+  private implicit class PrivateAdtSymbolOps(val sym: Symbol) {
     private def ensureModule(sym: Symbol): Symbol = if (sym.isModuleClass) sym.owner.info.member(sym.name.toTermName) else sym
     def branches: List[Symbol] = { sym.initialize; sym.asClass.knownDirectSubclasses.toList.filter(_.isBranch) }
     def allBranches: List[Symbol] = sym.branches ++ sym.branches.flatMap(_.allBranches).distinct
@@ -30,11 +36,6 @@ trait AdtReflection {
     def fields: List[Symbol] = secondParamList.filter(p => p.isPayload || p.isManualTrivia)
     def nontriviaFields: List[Symbol] = secondParamList.filter(p => p.isPayload)
     def allFields: List[Symbol] = secondParamList
-
-    def asRoot: Root = new Root(sym)
-    def asBranch: Branch = new Branch(sym)
-    def asLeaf: Leaf = new Leaf(sym)
-    def asField: Field = new Field(sym)
   }
 
   trait NonLeafApi {
