@@ -62,7 +62,7 @@ class AstMacros(val c: Context) {
       val companionsForDefaultss = nontriviaDefaultss.map(_.map{
         case p @ q"$mods val $name: $tpt = $default" =>
           val Modifiers(flags, privateWithin, anns) = undefault(unoverride(mods))
-          val anns1 = anns :+ q"new _root_.org.scalareflect.ast.trivia"
+          val anns1 = anns :+ q"new _root_.org.scalareflect.ast.trivia" :+ q"new _root_.org.scalareflect.ast.auto"
           q"${Modifiers(flags, privateWithin, anns1)} val ${hasify(p.name)}: _root_.scala.Boolean"
       })
       def isVanilla(p: ValDef) = !isNontriviaDefault(p) && !isNontriviaCompanion(p)
@@ -121,11 +121,14 @@ class AstMacros(val c: Context) {
       // TODO: would be useful to turn copy, mapXXX and withXXX into macros, so that their calls are guaranteed to be inlined
       stats1 += q"def copy(...$copyParamss)(implicit origin: _root_.scala.reflect.core.Origin): ThisType = $mname.apply(...$copyArgss)(_root_.scala.reflect.core.Origin.Transform(this, this.origin))"
 
-      // step 7: generate boilerplate required by the @adt infrastructure
+      // step 7: generate boilerplate required by the @ast infrastructure
       stats1 += q"override type ThisType = $name"
       stats1 += q"def $$tag: _root_.scala.Int = $AdtInternal.calculateTag[ThisType]"
-      anns1 += q"new $AdtInternal.leaf"
-      manns1 += q"new $AdtInternal.leaf"
+      // TODO: remove leafClass and leafCompanion from here
+      anns1 += q"new $AstInternal.astClass"
+      anns1 += q"new $AdtInternal.leafClass"
+      manns1 += q"new $AstInternal.astCompanion"
+      manns1 += q"new $AdtInternal.leafCompanion"
 
       // step 8: implement Product
       val productParamss = nontriviaParamss

@@ -5,7 +5,8 @@ import scala.annotation.StaticAnnotation
 import scala.reflect.macros.blackbox.Context
 
 object internal {
-  class ast extends StaticAnnotation
+  class astClass extends StaticAnnotation
+  class astCompanion extends StaticAnnotation
 
   def productPrefix[T]: String = macro Macros.productPrefix[T]
   def loadField[T](f: T): Unit = macro Macros.loadField

@@ -110,8 +110,8 @@ class AdtMacros(val c: Context) {
       stats1 += q"override def $$tag: _root_.scala.Int = $Internal.calculateTag[ThisType]"
       stats1 += q"$Internal.hierarchyCheck[ThisType]"
       stats1 += q"$Internal.immutabilityCheck[ThisType]"
-      anns1 += q"new $Internal.leaf"
-      manns1 += q"new $Internal.leaf"
+      anns1 += q"new $Internal.leafClass"
+      manns1 += q"new $Internal.leafCompanion"
       parents1 += tq"_root_.scala.Product"
 
       val cdef1 = q"${casify(finalize(mods1))} class $name[..$tparams] $ctorMods(...$paramss1) extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
@@ -136,7 +136,7 @@ class AdtMacros(val c: Context) {
       mstats1 += q"override def $$tag: _root_.scala.Int = $Internal.calculateTag[ThisType]"
       mstats1 += q"$Internal.hierarchyCheck[ThisType]"
       mstats1 += q"$Internal.immutabilityCheck[ThisType]"
-      manns1 += q"new $Internal.leaf"
+      manns1 += q"new $Internal.leafClass"
       mparents1 += tq"_root_.scala.Product"
 
       q"${casify(mmods1)} object $mname extends { ..$mearlydefns } with ..$mparents1 { $mself => ..$mstats1 }"
@@ -155,7 +155,8 @@ class AdtMacros(val c: Context) {
 object Internal {
   class root extends StaticAnnotation
   class branch extends StaticAnnotation
-  class leaf extends StaticAnnotation
+  class leafClass extends StaticAnnotation
+  class leafCompanion extends StaticAnnotation
   case class TagAttachment(counter: Int)
   def calculateTag[T]: Int = macro AdtHelperMacros.calculateTag[T]
   def nullCheck[T](x: T): Unit = macro AdtHelperMacros.nullCheck
@@ -182,7 +183,8 @@ class AdtHelperMacros(val c: Context) {
     }
     def isRoot = sym.annotations.exists(_.tree.tpe =:= typeOf[Internal.root])
     def isBranch = sym.annotations.exists(_.tree.tpe =:= typeOf[Internal.branch])
-    def isLeaf = sym.annotations.exists(_.tree.tpe =:= typeOf[Internal.leaf])
+    def isLeafClass = sym.annotations.exists(_.tree.tpe =:= typeOf[Internal.leafClass])
+    def isLeafCompanion = sym.annotations.exists(_.tree.tpe =:= typeOf[Internal.leafCompanion])
     def root = sym.asClass.baseClasses.reverse.find(_.isRoot).getOrElse(NoSymbol)
   }
 
@@ -212,9 +214,9 @@ class AdtHelperMacros(val c: Context) {
 
   def hierarchyCheck[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
     val sym = T.tpe.typeSymbol.asClass
-    val designation = if (sym.isRoot) "root" else if (sym.isBranch) "branch" else if (sym.isLeaf) "leaf" else ???
+    val designation = if (sym.isRoot) "root" else if (sym.isBranch) "branch" else if (sym.isLeafClass) "leaf" else ???
     val roots = sym.baseClasses.filter(_.isRoot)
-    if (roots.length == 0 && sym.isLeaf) c.abort(c.enclosingPosition, s"rootless leaf is disallowed")
+    if (roots.length == 0 && sym.isLeafClass) c.abort(c.enclosingPosition, s"rootless leaf is disallowed")
     else if (roots.length > 1) c.abort(c.enclosingPosition, s"multiple roots for a $designation: " + (roots.map(_.fullName).init.mkString(", ")) + " and " + roots.last.fullName)
     val root = roots.headOption.getOrElse(NoSymbol)
     sym.baseClasses.map(_.asClass).foreach{bsym =>
@@ -227,7 +229,7 @@ class AdtHelperMacros(val c: Context) {
         bsym == symbolOf[scala.Product] ||
         bsym == symbolOf[scala.Equals] ||
         root.info.baseClasses.contains(bsym)
-      if (!exempt && !bsym.isRoot && !bsym.isBranch && !bsym.isLeaf) c.abort(c.enclosingPosition, s"outsider parent of a $designation: ${bsym.fullName}")
+      if (!exempt && !bsym.isRoot && !bsym.isBranch && !bsym.isLeafClass) c.abort(c.enclosingPosition, s"outsider parent of a $designation: ${bsym.fullName}")
       if (!exempt && !bsym.isSealed && !bsym.isFinal) c.abort(c.enclosingPosition, s"unsealed parent of a $designation: ${bsym.fullName}")
     }
     q""
