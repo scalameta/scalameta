@@ -39,6 +39,7 @@ class RootMacros(val c: Context) {
         private[core] def internalCopy(prototype: $Tree = internalPrototype, parent: $Tree = internalParent, scratchpads: $Scratchpads = internalScratchpads, origin: $Origin = origin): ThisType
       """
       val stats1 = stats ++ boilerplate
+      // TODO: this should emit @ast.root, not @adt.root
       val anns1 = q"new _root_.org.scalareflect.adt.root" +: anns
       q"${Modifiers(flags, privateWithin, anns1)} trait $name[..$tparams] extends { ..$earlydefns } with ..$parents { $self => ..$stats1 }"
     }
