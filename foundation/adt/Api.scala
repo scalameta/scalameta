@@ -28,7 +28,7 @@ trait AdtReflection {
 
     private def secondParamList: List[Symbol] = sym.info.decls.collect{ case ctor: MethodSymbol if ctor.isPrimaryConstructor => ctor }.head.paramLists(1)
     def fields: List[Symbol] = secondParamList.filter(p => p.isPayload || p.isManualTrivia)
-    def payload: List[Symbol] = secondParamList.filter(p => p.isPayload)
+    def nontriviaFields: List[Symbol] = secondParamList.filter(p => p.isPayload)
     def allFields: List[Symbol] = secondParamList
 
     def asRoot: Root = new Root(sym)
@@ -55,7 +55,7 @@ trait AdtReflection {
   class Leaf(val sym: Symbol) {
     require(sym.isLeaf)
     def fields: List[Field] = sym.fields.map(_.asField)
-    def payload: List[Field] = sym.payload.map(_.asField)
+    def nontriviaFields: List[Field] = sym.nontriviaFields.map(_.asField)
     def allFields: List[Field] = sym.allFields.map(_.asField)
     override def toString = s"leaf ${sym.fullName}"
   }

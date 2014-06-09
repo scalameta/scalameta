@@ -18,7 +18,7 @@ class AdtSuite extends FunSuite {
     assert(f1.toString === "field cond: scala.reflect.core.Term")
     assert(f2.toString === "field thenp: scala.reflect.core.Term")
     assert(f3.toString === "field elsep: scala.reflect.core.Term")
-    val List(p1, p2, p3) = iff.payload
+    val List(p1, p2, p3) = iff.nontriviaFields
     assert(p1.toString === "field cond: scala.reflect.core.Term")
     assert(p2.toString === "field thenp: scala.reflect.core.Term")
     assert(p3.toString === "field elsep: scala.reflect.core.Term")
@@ -34,7 +34,7 @@ class AdtSuite extends FunSuite {
     val List(f1, f2) = iff.fields
     assert(f1.toString === "field value: String @org.scalareflect.invariants.nonEmpty")
     assert(f2.toString === "field isBackquoted: scala.Boolean (manual trivia)")
-    val List(p1) = iff.payload
+    val List(p1) = iff.nontriviaFields
     assert(p1.toString === "field value: String @org.scalareflect.invariants.nonEmpty")
     val List(a1, a2) = iff.allFields
     assert(a1.toString === "field value: String @org.scalareflect.invariants.nonEmpty")
