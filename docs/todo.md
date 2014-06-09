@@ -35,6 +35,7 @@
   1. Liftable[Tree]
   1. Need special trees for Java artifacts
   1. Expose scala.reflect.syntactic.parsers.SyntacticInfo and scala.reflect.syntactic.parsers.package in a public API
+  1. Syntax profiles to encapsulate syntax peculiarities of different versions of Scala
 
 ### Quasiquotes
 
@@ -52,6 +53,7 @@
     1. Etc
   1. Design and implement directSuperclasses and likes
   1. Expose type parameter instantiation facilities, e.g. `def foo[T]: T = ...` => `def foo: Int = ...`
+  1. Semantic profiles to encapsulate standardized semantic differences between Scala versions
 
 
 
