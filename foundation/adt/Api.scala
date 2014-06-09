@@ -69,7 +69,3 @@ trait AdtReflection {
     override def toString = s"field $name: $tpe" + (if (isManualTrivia) " (manual trivia)" else if (isAutoTrivia) " (auto trivia)" else "")
   }
 }
-
-class RuntimeAdtReflection extends {
-  val u: scala.reflect.runtime.universe.type = scala.reflect.runtime.universe
-} with AdtReflection
