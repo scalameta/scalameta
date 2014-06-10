@@ -16,9 +16,7 @@ import scala.reflect.syntactic.parsers._, SyntacticInfo._
   type ThisType <: Tree
   def origin: Origin
   def parent: Option[Tree]
-  def showCode: String = ShowCode.showTree(this).toString
-  def showRaw: String = ShowRaw.showTree(this).toString
-  final override def toString: String = showRaw
+  final override def toString: String = this.show[Raw]
 }
 
 @branch trait Term extends Arg with Stmt.Template with Stmt.Block with Qual.Term

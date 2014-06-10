@@ -17,7 +17,7 @@ package object parsers {
   implicit val stringToSource: Convert[String, Source] = Convert.apply(Source.String(_))
   implicit val fileToSource: Convert[java.io.File, Source] = Convert.apply(Source.File(_))
 
-  trait Parse[T] extends Convert[Source, T] { def apply(source: Source): T }
+  trait Parse[T] extends Convert[Source, T]
   object Parse {
     def apply[T](f: Source => T): Parse[T] = new Parse[T] { def apply(source: Source): T = f(source) }
     implicit val parseCompUnit: Parse[Aux.CompUnit] = apply(source => new Parser(source).parseTopLevel())
