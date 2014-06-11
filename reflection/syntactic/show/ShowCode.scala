@@ -15,7 +15,10 @@ import scala.collection.immutable.Seq
 // TODO: one mega instance for tree isn't nice, maybe separate instances for leafs and inferred instances for branches
 // TODO: strings and string interpolation needs to be smarter wrt " vs """
 
-object ShowCode {
+trait Code[T] extends Show[T]
+object Code {
+  def apply[T](f: T => Show.Result): Code[T] = new Code[T] { def apply(input: T) = f(input) }
+
   def templ(templ: Template) =
     // TODO: consider XXX.isEmpty
     if (templ.early.isEmpty && templ.parents.isEmpty && templ.self.name.isEmpty && templ.self.decltpe.isEmpty && templ.stats.isEmpty) s()
@@ -29,7 +32,7 @@ object ShowCode {
 
   // Branches
   // TODO: this match is not exhaustive: if I remove Mod.Package, then I get no warning
-  implicit def showTree[T <: Tree]: Show[T] = Show { x => (x: Tree) match {
+  implicit def codeTree[T <: Tree]: Code[T] = Code { x => (x: Tree) match {
     case t: Name => if (t.isBackquoted) s("`", t.value, "`") else s(t.value)
 
     // Param.Type
@@ -250,37 +253,37 @@ object ShowCode {
   } }
 
   // Multiples and optionals
-  implicit val showAccessQualifierOpt: Show[Option[Mod.AccessQualifier]] = Show { t =>
+  implicit val codeAccessQualifierOpt: Code[Option[Mod.AccessQualifier]] = Code { t =>
     t.map { qual => s("[", qual, "]") }.getOrElse(s())
   }
-  implicit val showArgs: Show[Seq[Arg]] = Show {
+  implicit val codeArgs: Code[Seq[Arg]] = Code {
     case (b: Term.Block) :: Nil => s(" ", b)
     case args                   => s("(", r(args, ", "), ")")
   }
-  implicit val showArgss: Show[Seq[Seq[Arg]]] = Show { r(_) }
-  implicit val showTargs: Show[Seq[Type]] = Show { targs =>
+  implicit val codeArgss: Code[Seq[Seq[Arg]]] = Code { r(_) }
+  implicit val codeTargs: Code[Seq[Type]] = Code { targs =>
     if (targs.isEmpty) s()
     else s("[", r(targs, ", "), "]")
   }
-  implicit val showPats: Show[Seq[Pat]] = Show { pats =>
+  implicit val codePats: Code[Seq[Pat]] = Code { pats =>
     s("(", r(pats, ", "), ")")
   }
-  implicit val showMods: Show[Seq[Mod]] = Show { mods =>
+  implicit val codeMods: Code[Seq[Mod]] = Code { mods =>
     if (mods.nonEmpty) r(mods) else s()
   }
-  implicit def showParams[P <: Param]: Show[Seq[P]] = Show { params => s("(", r(params, ", "), ")") }
-  implicit val showTparams: Show[Seq[TypeParam]] = Show { tparams =>
+  implicit def codeParams[P <: Param]: Code[Seq[P]] = Code { params => s("(", r(params, ", "), ")") }
+  implicit val codeTparams: Code[Seq[TypeParam]] = Code { tparams =>
     if (tparams.nonEmpty) s("[", r(tparams, ", "), "]") else s()
   }
-  implicit def showParamLists[P <: Param]: Show[(Seq[Seq[P]], Seq[P])] = Show { case (expl, impl) =>
+  implicit def codeParamLists[P <: Param]: Code[(Seq[Seq[P]], Seq[P])] = Code { case (expl, impl) =>
     s(r(expl),
       if (impl.isEmpty) s()
       else s("(implicit ", r(impl, ", "), ")"))
   }
-  implicit val showParamTypeOpt: Show[Option[Param.Type]] = Show { _.map { t => s(": ", t) }.getOrElse(s()) }
-  implicit val showTypeOpt: Show[Option[Type]] = Show { _.map { t => s(": ", t) }.getOrElse(s()) }
-  implicit val showTermNameOpt: Show[Option[Term.Name]] = Show { _.map(s(_)).getOrElse(s(")")) }
-  implicit val showImportSels: Show[Seq[Import.Selector]] = Show {
+  implicit val codeParamTypeOpt: Code[Option[Param.Type]] = Code { _.map { t => s(": ", t) }.getOrElse(s()) }
+  implicit val codeTypeOpt: Code[Option[Type]] = Code { _.map { t => s(": ", t) }.getOrElse(s()) }
+  implicit val codeTermNameOpt: Code[Option[Term.Name]] = Code { _.map(s(_)).getOrElse(s(")")) }
+  implicit val codeImportSels: Code[Seq[Import.Selector]] = Code {
     case (t: Import.Name) :: Nil     => s(t)
     case (t: Import.Wildcard) :: Nil => s(t)
     case sels                        => s("{ ", r(sels, ", "), " }")
