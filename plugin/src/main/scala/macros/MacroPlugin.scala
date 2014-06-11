@@ -243,7 +243,9 @@ trait MacroPlugin extends Common {
     extends analyzer.DefMacroExpander(typer, expandee, mode, outerPt) {
       override def onSuccess(expanded0: Tree) = {
         linkExpandeeAndExpanded(expandee, expanded0)
-        super.onSuccess(expanded0)
+        val result = super.onSuccess(expanded0)
+        expanded0.removeAttachment[MacroExpansionAttachment] // NOTE: removes MEA from the initial expansion wrapped in a blackbox ascription
+        result
       }
     }
     private def linkExpandeeAndExpanded(expandee: Tree, expanded: Tree): Unit = {
