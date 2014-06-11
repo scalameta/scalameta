@@ -9,6 +9,11 @@ import scala.collection.mutable
 import org.scalareflect.unreachable
 import org.scalareflect.invariants._
 
+// NOTE: a macro annotation that converts naive patmat-based converters
+// like `@converter def toPalladium(in: Any, pt: Pt): Any = in match { ... }`
+// into a typeclass, a number of instances (created from patmat clauses) and some glue
+// see the resulting quasiquote of ConverterMacros.converter to get a better idea what's going on
+// has a number of quirks to accommodate ambiguous conversions and other fun stuff, which I should document later (TODO)
 class converter extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro ConverterMacros.converter
 }
