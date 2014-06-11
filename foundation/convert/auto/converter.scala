@@ -1,5 +1,5 @@
-package org.scalareflect
-package convert
+package org.scalareflect.convert
+package auto
 
 import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
@@ -16,7 +16,7 @@ class converter extends StaticAnnotation {
 class ConverterMacros(val c: whitebox.Context) {
   import c.universe._
   import internal._
-
+  val DeriveInternal = q"_root_.org.scalareflect.convert.auto.internal"
   def converter(annottees: Tree*): Tree = {
     def transform(ddef: DefDef): ModuleDef = {
       val q"$mods def $name[..$tparams](...$paramss): $tpt = $body" = ddef
@@ -43,7 +43,7 @@ class ConverterMacros(val c: whitebox.Context) {
       object connector extends Transformer {
         override def transform(tree: Tree): Tree = tree match {
           case DefDef(mods, name, tparams, vparamss, tpt, body) if name != termNames.CONSTRUCTOR =>
-            val body1 = atPos(body.pos)(q"_root_.org.scalareflect.convert.internal.connectConverters($body)")
+            val body1 = atPos(body.pos)(q"$DeriveInternal.connectConverters($body)")
             DefDef(mods, name, tparams, vparamss, tpt, body1)
           case _ =>
             super.transform(tree)
@@ -98,8 +98,8 @@ class ConverterMacros(val c: whitebox.Context) {
       // because template statements get typechecked after val synthesis take place
       // and we can't afford this, because we need to get these converters computed before anything else takes place
       val computeConverters = atPos(ddef.pos)(q"""
-        val $dummy = _root_.org.scalareflect.convert.internal.computeConverters($wrapper){
-          @_root_.org.scalareflect.convert.internal.names(..${instances.filter(!_.notImplemented).map(_.impl.toString)})
+        val $dummy = $DeriveInternal.computeConverters($wrapper){
+          @$DeriveInternal.names(..${instances.filter(!_.notImplemented).map(_.impl.toString)})
           def dummy(in: Any): Any = {
             ..$rawprelude
             in match { case ..$computeParts }
@@ -109,7 +109,7 @@ class ConverterMacros(val c: whitebox.Context) {
       """)
       val instanceSigs = instances.filter(!_.notImplemented).map(instance => atPos(instance.pos)(
         q"""
-          lazy val ${instance.sig} = _root_.org.scalareflect.convert.internal.lookupConverters[${instance.in}, ${instance.out}]
+          lazy val ${instance.sig} = $DeriveInternal.lookupConverters[${instance.in}, ${instance.out}]
         """
       ))
       val instanceDecls = instances.filter(!_.notImplemented).map(instance => atPos(instance.pos)(
@@ -122,7 +122,7 @@ class ConverterMacros(val c: whitebox.Context) {
       val instanceImpls = instances.filter(!_.notImplemented).map(instance => atPos(instance.pos)(
         q"""
           private def ${instance.impl}(in: ${instance.in}): $companion.${instance.sig}.Out = {
-            val out = _root_.org.scalareflect.convert.internal.connectConverters {
+            val out = $DeriveInternal.connectConverters {
               val $helperInstance = new $helperClass(in)
               import $helperInstance._
               ..${prelude.collect { case imp: Import => imp }}
@@ -137,11 +137,11 @@ class ConverterMacros(val c: whitebox.Context) {
         $mods object $wrapper {
           $computeConverters
           private class $helperClass(in: Any) { ..$prelude }
-          trait $typeclass[In, Out] extends _root_.org.scalareflect.convert.Cvt[In, Out]
+          trait $typeclass[In, Out] extends _root_.org.scalareflect.convert.Convert[In, Out]
           object $companion {
             def apply[In, Out](f: In => Out): $typeclass[In, Out] = new $typeclass[In, Out] { def apply(in: In): Out = f(in) }
             import _root_.scala.language.experimental.macros
-            implicit def materialize[In, Out]: $typeclass[In, Out] = macro _root_.org.scalareflect.convert.internal.BlackboxMacros.materialize[In, Out]
+            implicit def materialize[In, Out]: $typeclass[In, Out] = macro $DeriveInternal.BlackboxMacros.materialize[In, Out]
             ..$instanceSigs
             ..$instanceDecls
           }
@@ -187,18 +187,19 @@ package object internal {
     val List_apply = typeOf[List.type].member(TermName("apply")).asMethod
     val Some_apply = typeOf[Some.type].member(TermName("apply")).asMethod
     val Scalareflect_unreachable = typeOf[org.scalareflect.`package`.type].member(TermName("unreachable")).asMethod
-    val Convert_derive = typeOf[org.scalareflect.convert.`package`.type].member(TermName("derive")).asMethod
+    val Auto_derive = typeOf[org.scalareflect.convert.auto.`package`.type].member(TermName("derive")).asMethod
     val SeqClass = symbolOf[scala.collection.immutable.Seq[_]]
-    val RichCvt_cvt = typeOf[org.scalareflect.convert.`package`.RichCvt].member(TermName("cvt")).asMethod
-    val RichCvt_cvtbang = typeOf[org.scalareflect.convert.`package`.RichCvt].member(TermName("cvt_$bang")).asMethod
+    val Ops_cvt = typeOf[org.scalareflect.convert.auto.`package`.Ops].member(TermName("cvt")).asMethod
+    val Ops_cvtbang = typeOf[org.scalareflect.convert.auto.`package`.Ops].member(TermName("cvt_$bang")).asMethod
     val Any_asInstanceOf = AnyTpe.member(TermName("asInstanceOf")).asMethod
-    val LeafAnnotation = symbolOf[org.scalareflect.adt.Internal.leaf]
+    val AstClassAnnotation = symbolOf[org.scalareflect.ast.internal.astClass]
+    val DeriveInternal = q"_root_.org.scalareflect.convert.auto.internal"
     object Cvt {
       def unapply(x: Tree): Option[(Tree, Type, Boolean)] = {
         object RawCvt {
           def unapply(x: Tree): Option[(Tree, Boolean)] = x match {
-            case q"$_($convertee).$_" if x.symbol == RichCvt_cvt => Some((convertee, false))
-            case q"$_($convertee).$_" if x.symbol == RichCvt_cvtbang => Some((convertee, true))
+            case q"$_($convertee).$_" if x.symbol == Ops_cvt => Some((convertee, false))
+            case q"$_($convertee).$_" if x.symbol == Ops_cvtbang => Some((convertee, true))
             case _ => None
           }
         }
@@ -232,8 +233,8 @@ package object internal {
       ???
     }
     case class Converter(in: Type, pt: Type, out: Type, method: Tree, derived: Boolean)
-    type SharedConverter = org.scalareflect.convert.internal.Converter
-    val SharedConverter = org.scalareflect.convert.internal.Converter
+    type SharedConverter = org.scalareflect.convert.auto.internal.Converter
+    val SharedConverter = org.scalareflect.convert.auto.internal.Converter
     def computeConverters(wrapper: Tree)(x: Tree): Tree = {
       import c.internal._, decorators._
       val q"{ ${dummy @ q"def $_(in: $_): $_ = { ..$prelude; in match { case ..$clauses } }"}; () }" = x
@@ -261,13 +262,13 @@ package object internal {
           var isValid = true
           clauses.foreach(clause => {
             val body = clause.body
-            if (body.symbol != Scalareflect_unreachable && body.symbol != Predef_??? && body.symbol != Convert_derive) {
+            if (body.symbol != Scalareflect_unreachable && body.symbol != Predef_??? && body.symbol != Auto_derive) {
               val tpe = precisetpe(body)
               if (tpe =:= NothingTpe) { isValid = false; c.error(clause.pos, "must not convert to Nothing") }
               if (!(tpe <:< typeOf[scala.reflect.core.Tree])) { isValid = false; c.error(clause.pos, s"must only convert to Palladium trees, found ${precisetpe(body)}") }
               val components = extractIntersections(tpe)
               components.foreach(component => {
-                val isLeaf = component.typeSymbol.annotations.exists(_.tree.tpe.typeSymbol == LeafAnnotation)
+                val isLeaf = component.typeSymbol.annotations.exists(_.tree.tpe.typeSymbol == AstClassAnnotation)
                 if (!isLeaf) { isValid = false; c.error(clause.pos, s"must only convert to @ast classes or intersections thereof, found $tpe") }
               })
             }
@@ -358,9 +359,9 @@ package object internal {
             // e.g. every time we cvt_! a Tree to a Term, the conversion will match against Bind and TypeTree, which is embarrassing :)
             WildcardType
           })
-          val underivedOuts = nontrivialClauses.map(_.body).map(body => if (body.symbol != Convert_derive) precisetpe(body) else NoType)
+          val underivedOuts = nontrivialClauses.map(_.body).map(body => if (body.symbol != Auto_derive) precisetpe(body) else NoType)
           val outs = nontrivialClauses.map({ case CaseDef(pat, _, body) =>
-            if (body.symbol != Convert_derive) precisetpe(body)
+            if (body.symbol != Auto_derive) precisetpe(body)
             else lub(ins.zip(underivedOuts).collect{ case (in, out) if (in <:< pat.tpe) && (out != NoType) => out })
           })
           val methods = dummy.symbol.annotations.head.scalaArgs.map({
@@ -369,7 +370,7 @@ package object internal {
               val methodSym = wrapper.symbol.info.member(TermName(s)).orElse(c.abort(c.enclosingPosition, s"something went wrong: can't resolve $s in $wrapper"))
               q"$qual.$methodSym"
           })
-          val deriveds = nontrivialClauses.map(_.body.symbol == Convert_derive)
+          val deriveds = nontrivialClauses.map(_.body.symbol == Auto_derive)
           if (ins.length != pts.length || pts.length != outs.length || outs.length != methods.length || methods.length != deriveds.length) c.abort(c.enclosingPosition, s"something went wrong: can't create converters from ${ins.length}, ${pts.length}, ${outs.length}, ${methods.length} and ${deriveds.length}")
           ins.zip(pts).zip(outs).zip(methods).zip(deriveds).map{ case ((((in, pt), out), method), derived) => SharedConverter(in, pt, out, method, derived) }
         } else {
@@ -381,7 +382,7 @@ package object internal {
         case "toPalladium" => toPalladiumConverters
         case _ => c.abort(c.enclosingPosition, "unknown target: " + target.name)
       }
-      // val tups = converters.map{ case SharedConverter(in: Type, out: Type, method: Tree, derived) => ((if (derived) "*" else "") + in.toString.replace("HostContext.this.", ""), cleanLub(List(out)).toString.replace("scala.reflect.core.", "p."), out.toString.replace("scala.reflect.core.", "p."), method) }
+      // val tups = converters.map{ case SharedConverter(in: Type, out: Type, method: Tree, derived) => ((if (derived) "*" else "") + in.toString.replace("Host.this.", ""), cleanLub(List(out)).toString.replace("scala.reflect.core.", "p."), out.toString.replace("scala.reflect.core.", "p."), method) }
       // val max1 = tups.map(_._1.length).max
       // val max2 = tups.map(_._2.length).max
       // val max3 = tups.map(_._3.length).max
@@ -453,7 +454,7 @@ package object internal {
             case out => sys.error("error converting from " + ${in.toString} + " to " + ${out.toString} + ": unexpected output " + out.getClass.toString + ": " + out)
           }
         """
-        atPos(x.pos)(q"_root_.org.scalareflect.convert.internal.connectConverters($result)")
+        atPos(x.pos)(q"$DeriveInternal.connectConverters($result)")
       }
     }
     def lookupConverters[T: WeakTypeTag, U: WeakTypeTag]: Tree = {
@@ -476,7 +477,7 @@ package object internal {
       val converters = loadConverters()
       if (converters.isEmpty) {
         x
-      } else if (x.exists(_.symbol == Convert_derive)) {
+      } else if (x.exists(_.symbol == Auto_derive)) {
         val q"{ ..$_; in match { case ..$clauses } }" = x
         if (clauses.length != 1) c.abort(c.enclosingPosition, "can't derive a converter encompassing multiple clauses")
         val in = atPos(x.pos)(c.typecheck(Ident(TermName("in"))))

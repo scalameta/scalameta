@@ -10,43 +10,29 @@ import scala.reflect.{core => p}
 import scala.reflect.core.{TermQuote => _, _}
 import scala.reflect.semantic._
 import scala.tools.nsc.{Global => ScalaGlobal}
-import scala.reflect.semantic.{HostContext => PalladiumHostContext}
+import scala.reflect.semantic.{Host => PalladiumHost}
 import org.scalareflect.convert._
+import org.scalareflect.convert.auto._
 import org.scalareflect.invariants._
 import org.scalareflect.unreachable
 
-class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
+class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
   import g.Quasiquote
-  implicit val palladiumContext: PalladiumHostContext = this
+  implicit val palladiumHost: PalladiumHost = this
 
-  def syntaxProfile: SyntaxProfile = ???
-  def semanticProfile: SemanticProfile = ???
-
+  def defns(ref: Ref): Seq[Tree] = ???
+  def attrs(tree: Tree): Seq[Attr] = ???
   def owner(tree: Tree): Scope = ???
-  // NOTE: def stats(scope: Scope): Seq[Tree] is implicit in signatures of Template and Pkg
-  def defns(ref: Ref): Seq[Member] = ???
-  def members(scope: Scope): Seq[Member] = ???
-  def members(scope: Scope, name: Name): Seq[Member] = ???
-  def ctors(scope: Scope): Seq[Ctor] = ???
-
-  def defn(term: Term.Ref): Seq[Member.Term] = ???
-  def defn(tpe: Type.Ref): Member = ???
-  def overrides(member: Member.Term): Seq[Member.Term] = ???
-  def overrides(member: Member.Type): Seq[Member.Type] = ???
-
+  def members(scope: Scope): Seq[Tree] = ???
+  def members(scope: Scope, name: Name): Seq[Tree] = ???
   def <:<(tpe1: Type, tpe2: Type): Boolean = ???
-  def weak_<:<(tpe1: Type, tpe2: Type): Boolean = ???
-  def supertypes(tpe: Type): Seq[Type] = ???
-  def linearization(tpes: Seq[Type]): Seq[Type] = ???
-  def subclasses(tpe: Type): Seq[Member.Template] = ???
-  def self(tpe: Type): Aux.Self = ???
   def lub(tpes: Seq[Type]): Type = ???
   def glb(tpes: Seq[Type]): Type = ???
-  def widen(tpe: Type): Type = ???
-  def dealias(tpe: Type): Type = ???
+  def superclasses(member: Member.Template): Seq[Member.Template] = ???
+  def subclasses(member: Member.Template): Seq[Member.Template] = ???
+  def overridden(member: Member): Seq[Member] = ???
+  def overriding(member: Member): Seq[Member] = ???
   def erasure(tpe: Type): Type = ???
-
-  def attrs(tree: Tree): Seq[Attribute] = ???
 
   // NOTE: we only handle trees and types
   // NOTE: can't use MemberDef.mods, because they get their annotations erased and moved to Symbol.annotations during typechecking
@@ -92,22 +78,22 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
           else if (gsym.isType) p.Type.Name(alias(in), isBackquoted(in)).appendScratchpad(gsym)
           else unreachable).asInstanceOf[pTermOrTypeName]
         }
-        def eithercvt(in: g.Tree): p.Name.Either = {
+        def qualcvt(in: g.Tree): p.Qual.Name = {
           require(gsym != g.NoSymbol)
           val gsyms = {
             if (gsym.isModuleClass) List(gsym.sourceModule.asModule, g.NoSymbol)
             else List(g.NoSymbol, gsym.asClass)
           }
-          p.Name.Either(alias(in), isBackquoted(in)).appendScratchpad(gsyms)
+          p.Qual.Name(alias(in), isBackquoted(in)).appendScratchpad(gsyms)
         }
       }
       implicit class RichSymbols(gsyms: List[g.Symbol]) {
-        def bothcvt(in: g.Tree): p.Name.Both = {
+        def importcvt(in: g.Tree): p.Import.Name = {
           val List(gterm, gtype) = gsyms
           require(gterm != g.NoSymbol || gtype != g.NoSymbol)
           require(gterm != g.NoSymbol ==> gterm.isTerm)
           require(gtype != g.NoSymbol ==> gtype.isType)
-          p.Name.Both(alias(in), isBackquoted(in)).appendScratchpad(gsyms)
+          p.Import.Name(alias(in), isBackquoted(in)).appendScratchpad(gsyms)
         }
       }
       implicit class RichTermSymbol(gsym: g.TermSymbol) {
@@ -126,7 +112,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
       private def paccessqual(gsym: g.Symbol): Option[p.Mod.AccessQualifier] = {
         if (gsym.isPrivateThis || gsym.isProtectedThis) Some(g.This(g.tpnme.EMPTY).setSymbol(gsym.privateWithin).cvt)
         else if (gsym.privateWithin == g.NoSymbol || gsym.privateWithin == null) None
-        else Some(gsym.privateWithin.eithercvt(g.Ident(gsym.privateWithin))) // TODO: this loses information is gsym.privateWithin was brought into scope with a renaming import
+        else Some(gsym.privateWithin.qualcvt(g.Ident(gsym.privateWithin))) // TODO: this loses information is gsym.privateWithin was brought into scope with a renaming import
       }
       def pmods(gsym: g.Symbol): Seq[p.Mod] = {
         val pmods = scala.collection.mutable.ListBuffer[p.Mod]()
@@ -297,19 +283,19 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         // TODO: collapse desugared chains of imports
         // TODO: distinguish `import foo.x` from `import foo.{x => x}`
         p.Import(List(p.Import.Clause(expr.cvt_!, selectors.map(selector => {
-          def resolveImport(source: String, alias: String): p.Name.Both = {
+          def resolveImport(source: String, alias: String): p.Import.Name = {
             val imported = g.TermName(source).bothNames.map(source => expr.tpe.nonLocalMember(source))
-            imported.bothcvt(g.Ident(g.TermName(alias)))
+            imported.importcvt(g.Ident(g.TermName(alias)))
           }
           selector match {
             case g.ImportSelector(g.nme.WILDCARD, _, null, _) =>
-              p.Import.Selector.Wildcard()
+              p.Import.Wildcard()
             case g.ImportSelector(name1, _, name2, _) if name1 == name2 =>
-              p.Import.Selector.Name(resolveImport(name1.toString, name1.toString))
+              resolveImport(name1.toString, name1.toString)
             case g.ImportSelector(name1, _, name2, _) if name1 != name2 =>
-              p.Import.Selector.Rename(resolveImport(name1.toString, name1.toString), resolveImport(name1.toString, name2.toString))
+              p.Import.Rename(resolveImport(name1.toString, name1.toString), resolveImport(name1.toString, name2.toString))
             case g.ImportSelector(name, _, g.nme.WILDCARD, _) =>
-              p.Import.Selector.Unimport(resolveImport(name.toString, name.toString))
+              p.Import.Unimport(resolveImport(name.toString, name.toString))
           }
         }))))
       case in @ g.Template(_, _, rawstats) =>
@@ -458,9 +444,9 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         require(in.symbol.isClass)
         val pthis = if (qual != g.tpnme.EMPTY) Some(qual.cvt) else None
         val psuper = if (mix != g.tpnme.EMPTY) Some(in.symbol.asClass.rawcvt(in)) else None
-        p.Aux.Super(pthis, psuper)
+        p.Qual.Super(pthis, psuper)
       case in @ g.This(qual) =>
-        p.Term.This(if (qual != g.tpnme.EMPTY) Some(in.symbol.eithercvt(in)) else None)
+        p.Term.This(if (qual != g.tpnme.EMPTY) Some(in.symbol.qualcvt(in)) else None)
       case in: g.PostfixSelect =>
         unreachable
       case in @ g.Select(qual, _) =>
@@ -511,7 +497,7 @@ class HostContext[G <: ScalaGlobal](val g: G) extends PalladiumHostContext {
         val p.Type.Singleton(p.Term.This(pthis)) = thistpe.cvt
         require(supertpe.typeSymbol.isType)
         val supersym = supertpe.typeSymbol.asType
-        p.Type.Singleton(p.Aux.Super(pthis, Some(supersym.rawcvt(g.Ident(supersym)).appendScratchpad(in))))
+        p.Type.Singleton(p.Qual.Super(pthis, Some(supersym.rawcvt(g.Ident(supersym)).appendScratchpad(in))))
       case g.SingleType(pre, sym) =>
         // TODO: this loses information if sym was brought into scope with a renaming import
         require(sym.isTerm)
