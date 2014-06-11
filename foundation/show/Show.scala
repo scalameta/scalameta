@@ -2,8 +2,11 @@ package org.scalareflect.show
 
 import scala.reflect.macros.blackbox.Context
 import scala.language.experimental.macros
+import scala.language.implicitConversions
+import scala.language.higherKinds
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
+import org.scalareflect.convert._
 
 trait Show[T] { def apply(t: T): Show.Result }
 object Show {
@@ -59,6 +62,8 @@ object Show {
 
   implicit def printResult[R <: Result]: Show[R] = apply(identity)
   implicit def printString[T <: String]: Show[T] = apply(Show.Str(_))
+
+  implicit def show2convert[T](show: Show[T]): Convert[T, String] = Convert(show(_).toString)
 }
 
 private[show] class ShowMacros(val c: Context) {

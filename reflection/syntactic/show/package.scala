@@ -1,23 +1,24 @@
 package scala.reflect
 package syntactic
 
-import org.scalareflect.convert._
+import org.scalareflect.show._
 import scala.reflect.core._
+import scala.language.higherKinds
 
 package object show {
-  trait Style[T] extends Convert[Tree, String]
-
-  trait Code
+  trait Code[T] extends Show[T]
   object Code {
-    implicit val showCode: Style[Code] = new Style[Code] { def apply(tree: Tree): String = ShowCode.showTree(tree).toString }
+    implicit def tree[T <: Tree]: Code[T] = new Code[T] { def apply(tree: T): Show.Result = ShowCode.showTree(tree) }
+    // TODO: populate this with other implicits from ShowCode
   }
 
-  trait Raw
+  trait Raw[T] extends Show[T]
   object Raw {
-    implicit val showRaw: Style[Raw] = new Style[Raw] { def apply(tree: Tree): String = ShowRaw.showTree(tree).toString }
+    implicit def tree[T <: Tree]: Raw[T] = new Raw[T] { def apply(tree: T): Show.Result = ShowRaw.showTree(tree) }
+    // TODO: populate this with other implicits from ShowRaw
   }
 
-  implicit class ShowOps(val tree: Tree) extends AnyVal {
-    def show[T](implicit ev: Style[T]): String = ev(tree)
+  implicit class ShowOps[T](val x: T) extends AnyVal {
+    def show[Style[T] <: Show[T]](implicit style: Style[T]): String = style(x).toString
   }
 }
