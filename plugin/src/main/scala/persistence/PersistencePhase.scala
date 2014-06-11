@@ -23,7 +23,7 @@ trait PersistencePhase {
     // let's hope that the research into runtime macros, which entails moving the typechecker to scala-reflect.jar will allow us to restructure things
     // so that delayed typechecks come right after typer, not intermingled with other logic
     override val runsAfter = List("typer")
-    override val runsRightAfter = Some("typer")
+    override val runsRightAfter = Some("renumber")
     val phaseName = "persist"
     override def description = "persist palladium abstract syntax trees"
     implicit val h = Scalahost[global.type](global)
