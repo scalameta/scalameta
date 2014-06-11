@@ -184,8 +184,8 @@ object ShowCode {
       s(t.mods, "def ", t.name, t.tparams, (t.explicits, t.implicits), " { ", r(t.stats.map(i(_)), ";"), n("}"))
 
     // Decl
-    case t: Decl.Val       => s(t.mods, "val ", r(t.pats, ", "), t.decltpe)
-    case t: Decl.Var       => s(t.mods, "var ", r(t.pats, ", "), t.decltpe)
+    case t: Decl.Val       => s(t.mods, "val ", r(t.pats, ", "), ": ", t.decltpe)
+    case t: Decl.Var       => s(t.mods, "var ", r(t.pats, ", "), ": ", t.decltpe)
     case t: Decl.Type      => s(t.mods, "type ", t.name, t.tparams, t.bounds)
     case t: Decl.Def       => s(t.mods, "def ", t.name, t.tparams, (t.explicits, t.implicits), ": ", t.decltpe)
     case t: Decl.Procedure => s(t.mods, "def ", t.name, t.tparams, (t.explicits, t.implicits))

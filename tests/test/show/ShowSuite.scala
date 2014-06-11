@@ -9,6 +9,6 @@ class ShowSuite extends ParseSuite {
 
   test("val x: Int (code)") {
     val valx = templStat("val x: Int")
-    assert(valx.show[Code] === "val xInt")
+    assert(valx.show[Code] === "val x: Int")
   }
 }
