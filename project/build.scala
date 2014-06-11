@@ -197,9 +197,16 @@ object build extends Build {
   ) settings (
     sharedSettings ++ usePluginSettings: _*
   ) settings (
+    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _),
+    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _),
     libraryDependencies += "org.scalareflect" % "core_2.11" % "0.1.0-SNAPSHOT",
     libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.3" % "test",
     libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
+    scalacOptions in Test <++= (Keys.`package` in Compile) map { (jar: File) =>
+      val addPlugin = "-Xplugin:" + jar.getAbsolutePath
+      val dummy = "-Jdummy=" + jar.lastModified
+      Seq(addPlugin, dummy)
+    },
     packagedArtifacts := Map.empty,
     scalacOptions ++= Seq()
   ) dependsOn (plugin)

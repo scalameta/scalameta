@@ -89,21 +89,34 @@ trait MacroPlugin extends Common {
               import scala.reflect.core.{Tree => PalladiumTree, Term => PalladiumTerm}
               import scala.reflect.internal.eval.{eval => palladiumEval}
               import org.scalareflect.unreachable
+              import scala.reflect.syntactic.show._
               val palladiumContext = Scalahost[global.type](c)
-              // val applied @ Applied(core, targs, argss) = dissectApplied(expandee)
-              // val implCore = q"${implDdef.symbol}" setType core.tpe
-              // val implTapplied = q"$implCore[..$targs]" setType applied.callee.tpe
-              // val margss = argss.map(_.map(arg => env.bind(arg))) :+ List(env.bind(palladiumContext))
-              // val implApplied = q"$implTapplied(...$margss)" setType expandee.tpe
-              // val scalaInvocation = q"{ $implDdef; $implApplied }" setType expandee.tpe
-              val scalaInvocation: ScalaTerm = implDdef.rhs.asInstanceOf[ScalaTerm] // TODO: this is just a toy
-              val palladiumInvocation: PalladiumTree = ??? // palladiumContext.toPalladium(scalaInvocation)
+              val scalaInvocation: ScalaTerm = {
+                // TODO: implement this
+                // val applied @ Applied(core, targs, argss) = dissectApplied(expandee)
+                // val implCore = q"${implDdef.symbol}" setType core.tpe
+                // val implTapplied = q"$implCore[..$targs]" setType applied.callee.tpe
+                // val margss = argss.map(_.map(arg => env.bind(arg))) :+ List(env.bind(palladiumContext))
+                // val implApplied = q"$implTapplied(...$margss)" setType expandee.tpe
+                // val scalaInvocation = q"{ $implDdef; $implApplied }" setType expandee.tpe
+                implDdef.rhs.asInstanceOf[ScalaTerm]
+              }
+              val palladiumInvocation: PalladiumTree = {
+                // TODO: implement this
+                // palladiumContext.toPalladium(scalaInvocation)
+                ???
+              }
               val palladiumResult: Any = palladiumInvocation match {
                 case term: PalladiumTerm => palladiumEval(term)
                 case _ => unreachable
               }
               val scalaResult: Any = palladiumResult match {
-                case tree: PalladiumTree => ??? // palladiumContext.fromPalladium(tree)
+                case palladiumTree: PalladiumTree =>
+                  // TODO: implement this
+                  // val scalaTree: ScalaTree = palladiumContext.fromPalladium(tree)
+                  // attachExpansionString(expandee, scalaTree, palladiumTree.show[Code])
+                  // scalaTree
+                  ???
                 case other => other
               }
               scalaResult
@@ -221,8 +234,52 @@ trait MacroPlugin extends Common {
           }
           Some(palladiumMacroExpander(expandee))
         case _ =>
-          None
+          val expanded = new DefMacroExpander(typer, expandee, mode, pt).apply(expandee)
+          if (hasMacroExpansionAttachment(expanded)) attachExpansionString(expandee, expanded, showCode(expanded))
+          Some(expanded)
       }
+    }
+    class DefMacroExpander(typer: Typer, expandee: Tree, mode: Mode, outerPt: Type)
+    extends analyzer.DefMacroExpander(typer, expandee, mode, outerPt) {
+      override def onSuccess(expanded0: Tree) = {
+        linkExpandeeAndExpanded(expandee, expanded0)
+        super.onSuccess(expanded0)
+      }
+    }
+    private def linkExpandeeAndExpanded(expandee: Tree, expanded: Tree): Unit = {
+      analyzer.linkExpandeeAndExpanded(expandee, expanded)
+      syncPropertyBags(List(expandee, expanded), Map("expansionTree" -> expanded))
+    }
+    private def attachExpansionString(expandee: Tree, expanded: Tree, expansionString: String): Unit = {
+      syncPropertyBags(List(expandee, expanded), Map("expansionString" -> expansionString))
+    }
+    private def syncPropertyBags(trees: List[Tree], extra: Map[String, Any]): Unit = {
+      // NOTE: this code was necessary when I tried to attach Map[String, Any] to trees
+      // somehow attachments.get, updateAttachment, etc don't work with subtyping and require exact types to match
+      // hence, if you attach a map with a single element, you won't be able to get it back via attachments.get[Map],
+      // because instances of Map are specialized for small number of elements (you'll get back Map.Map1)
+      // import scala.reflect.{classTag, ClassTag}
+      // import scala.reflect.macros.Attachments
+      // implicit class RichAttachments(att: Attachments { type Pos = Position }) {
+      //   def getsub[T: ClassTag]: Option[T] = {
+      //     att.all.filter(x => classTag[T].runtimeClass.isAssignableFrom(x.getClass)).toList match {
+      //       case Nil => None
+      //       case unique :: Nil => Some(unique.asInstanceOf[T])
+      //       case multiple => sys.error(s"too many matches for ${classTag[T].runtimeClass}: $multiple")
+      //     }
+      //   }
+      //   def updatesub[T: ClassTag](x: T): Attachments { type Pos = Position } = {
+      //     val att1 = getsub[T].map(x => att.remove(ClassTag(x.getClass))).getOrElse(att)
+      //     att1.update(x)
+      //   }
+      // }
+      // def getPropertyBag(tree: Tree) = tree.attachments.getsub[Map[String, Any]].getOrElse(Map[String, Any]())
+      // val merged: Map[String, Any] = trees.map(getPropertyBag).reduce((b1, b2) => b1 ++ b2) ++ extra
+      // trees.foreach(tree => tree.setAttachments(tree.attachments.updatesub(merged)))
+      import scala.collection.JavaConversions._
+      def getPropertyBag(tree: Tree) = tree.attachments.get[java.util.HashMap[String, Any]].map(_.toMap).getOrElse(Map[String, Any]())
+      val merged = trees.map(getPropertyBag).reduce((b1, b2) => b1 ++ b2) ++ extra
+      trees.foreach(_.updateAttachment(new java.util.HashMap[String, Any](mapAsJavaMap(merged))))
     }
   }
 }
