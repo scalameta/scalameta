@@ -7,13 +7,13 @@ class JoinSuite extends FunSuite {
     val Term.Name("ytemp") = q"ytemp"
   }
 
-  // test("vals") {
-  //   val fields = List(Term.Name("x") -> Term.Name("xtemp"), Term.Name("y") -> Term.Name("ytemp"))
-  //   val vals = fields.map{ case (f, ref) => q"val ${f.name} = $ref.${f.name}" }
-  //   assert(vals.length === 2)
-  //   val Defn.Val(Nil, List(Term.Name("x")), None, Term.Select(Term.Name("xtemp"), Term.Name("x"))) = vals(0)
-  //   val Defn.Val(Nil, List(Term.Name("y")), None, Term.Select(Term.Name("ytemp"), Term.Name("y"))) = vals(1)
-  // }
+  test("vals") {
+    val fields = List(Term.Name("x") -> Term.Name("xtemp"), Term.Name("y") -> Term.Name("ytemp"))
+    val vals = fields.map{ case (f, ref) => q"val $f = $ref.$f" }
+    assert(vals.length === 2)
+    val Defn.Val(Nil, List(Term.Name("x")), None, Term.Select(Term.Name("xtemp"), Term.Name("x"))) = vals(0)
+    val Defn.Val(Nil, List(Term.Name("y")), None, Term.Select(Term.Name("ytemp"), Term.Name("y"))) = vals(1)
+  }
 
   // test("result") {
   //   val x = Term.Name("x")

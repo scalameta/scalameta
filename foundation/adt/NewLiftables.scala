@@ -9,7 +9,7 @@ import scala.collection.immutable.Seq
 trait NewLiftables {
   val u: scala.reflect.macros.Universe
   implicit def materializeAdt[T <: Adt]: u.Liftable[T] = macro NewLiftableMacros.impl[T]
-  implicit def liftSeq[T: u.Liftable]: u.Liftable[Seq[T]] = u.Liftable { seq => u.Liftable.liftList[T].apply(seq.toList) }
+  implicit def liftSeq[T](implicit ev: u.Liftable[T]): u.Liftable[Seq[T]] = u.Liftable { seq => u.Liftable.liftList[T](ev).apply(seq.toList) }
 }
 
 class NewLiftableMacros(val c: Context) extends AdtReflection {
@@ -34,10 +34,18 @@ class NewLiftableMacros(val c: Context) extends AdtReflection {
         val value = q"_root_.scala.Predef.implicitly[$u.Liftable[${f.tpe}]].apply($localParam.${f.name})"
         q"$u.AssignOrNamedArg($name, $value)"
       })
-      q"def $name($localParam: ${leaf.sym.asType.toType}): $u.Tree = $u.Apply($namePath, $args)"
+      val body = {
+        def reify = q"$u.Apply($namePath, $args)"
+        if (!(leaf.sym.asType.toType <:< c.mirror.staticClass("scala.meta.Name").asType.toType)) reify
+        else q"""
+          val maybeUnquotee = args.collectFirst{ case (id, unquotee) if (id: String) == ($localParam.value: String) => unquotee }
+          maybeUnquotee.getOrElse($reify)
+        """
+      }
+      q"def $name($localParam: ${leaf.sym.asType.toType}): $u.Tree = $body"
     })
     val clauses = leafs.zip(leafLiftNames).map({ case (leaf, name) =>
-      q"if ($mainParam.isInstanceOf[${leaf.sym.asType.toType}]) result = $name($mainParam.asInstanceOf[${leaf.sym.asType.toType}])"
+      q"if ($localParam.isInstanceOf[${leaf.sym.asType.toType}]) result = $name($localParam.asInstanceOf[${leaf.sym.asType.toType}])"
     })
     q"""
       $u.Liftable(($mainParam: ${weakTypeOf[T]}) => {
@@ -46,9 +54,9 @@ class NewLiftableMacros(val c: Context) extends AdtReflection {
           ..$lifts
           implicit def $mainMethod[T <: ${root.sym}]: $u.Liftable[T] = $u.Liftable(($localParam: T) => {
             var result: $u.Tree = null
-            if ($mainParam == null) result = q"null"
+            if ($localParam == null) result = q"null"
             ..$clauses
-            if (result == null) sys.error("none of leafs matched " + $mainParam.getClass)
+            if (result == null) sys.error("none of leafs matched " + $localParam.getClass)
             result
           })
         }
