@@ -259,7 +259,7 @@ trait MacroPlugin extends Common {
     }
     private def linkExpandeeAndExpanded(expandee: Tree, expanded: Tree): Unit = {
       analyzer.linkExpandeeAndExpanded(expandee, expanded)
-      syncPropertyBags(List(expandee, expanded), Map("expansionTree" -> expanded))
+      syncPropertyBags(List(expandee, expanded), Map("expandeeTree" -> expandee, "expandedTree" -> expanded))
     }
     private def attachExpansionString(expandee: Tree, expanded: Tree, expansionString: String): Unit = {
       syncPropertyBags(List(expandee, expanded), Map("expansionString" -> expansionString))
