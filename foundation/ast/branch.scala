@@ -14,8 +14,9 @@ class BranchMacros(val c: Context) {
   def impl(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef): ClassDef = {
       val ClassDef(mods @ Modifiers(flags, privateWithin, anns), name, tparams, templ) = cdef
-      // TODO: this should emit @ast.branch, not @adt.branch
-      val anns1 = q"new _root_.org.scalameta.adt.branch" +: anns
+      val Adt = q"_root_.org.scalameta.adt"
+      val AstInternal = q"_root_.org.scalameta.ast.internal"
+      val anns1 = q"new $AstInternal.branch" +: q"new $Adt.branch" +: anns
       ClassDef(Modifiers(flags, privateWithin, anns1), name, tparams, templ)
     }
     val expanded = annottees match {

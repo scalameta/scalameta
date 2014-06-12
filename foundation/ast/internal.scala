@@ -5,6 +5,9 @@ import scala.annotation.StaticAnnotation
 import scala.reflect.macros.blackbox.Context
 
 object internal {
+  trait Ast extends org.scalameta.adt.Internal.Adt
+  class root extends StaticAnnotation
+  class branch extends StaticAnnotation
   class astClass extends StaticAnnotation
   class astCompanion extends StaticAnnotation
 
@@ -14,15 +17,12 @@ object internal {
   def initField[T](f: T): T = macro Macros.initField
   def initParam[T](f: T): T = macro Macros.initField
 
-  class Macros(val c: Context) {
+  class Macros(val c: Context) extends org.scalameta.adt.AdtReflection {
+    val u: c.universe.type = c.universe
     import c.universe._
     import definitions._
     def productPrefix[T](implicit T: c.WeakTypeTag[T]) = {
-      def loop(sym: Symbol): String = {
-        if (sym.owner.isPackageClass) sym.name.toString
-        else loop(sym.owner) + "." + sym.name.toString
-      }
-      q"${loop(T.tpe.typeSymbol)}"
+      q"${T.tpe.typeSymbol.asLeaf.prefix}"
     }
     def loadField(f: c.Tree) = {
       val q"this.$finternalName" = f
