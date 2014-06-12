@@ -3,6 +3,7 @@ package scala.meta
 import org.scalameta.adt._
 import org.scalameta.annotations._
 import scala.{Seq => _}
+import scala.annotation.compileTimeOnly
 import scala.collection.immutable.Seq
 import scala.reflect.{ClassTag, classTag}
 
@@ -349,5 +350,6 @@ package object semantic {
     @hosted(macroApi = true) def abort(msg: String): Nothing = delegate
     @hosted(macroApi = true) def resources: Seq[String] = delegate
     @hosted(macroApi = true) def resource(url: String): Array[Byte] = delegate
+    @compileTimeOnly("c.whitebox isn't supposed to be used outside macro { ... } blocks") def whitebox[T](expansion: T): T = expansion
   }
 }
