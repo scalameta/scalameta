@@ -42,10 +42,19 @@ trait MacroPlugin extends Common {
             if (ddef.symbol != null) ddef.symbol setFlag IS_ERROR
             ddef setType ErrorType
           } else {
+            var isExplicitlyWhitebox = false
+            object dewhiteboxer extends Transformer {
+              private val c_whitebox = typeOf[scala.reflect.semantic.`package`.c.type].decl(TermName("whitebox")).asMethod
+              override def transform(tree: Tree): Tree = tree match {
+                case Apply(fn, List(arg)) if fn.symbol == c_whitebox => isExplicitlyWhitebox = true; transform(arg)
+                case tree => super.transform(tree)
+              }
+            }
+            val typedImplDdef1 = dewhiteboxer.transform(typedImplDdef).asInstanceOf[DefDef]
             // NOTE: order is actually very important here, because at the end of the day
             // we need the legacy annotation to come first so that it can be picked up by the 2.11.0 macro engine
-            // (otherwise half of standard macro infrastructure will cease to function)
-            ddef.symbol.addAnnotation(MacroImplAnnotation, PalladiumSignature(isBlackbox, typedImplDdef))
+            // (otherwise half of the standard macro infrastructure will cease to function)
+            ddef.symbol.addAnnotation(MacroImplAnnotation, PalladiumSignature(isBlackbox && !isExplicitlyWhitebox, typedImplDdef1))
             ddef.symbol.addAnnotation(MacroImplAnnotation, LegacySignature())
           }
           Some(EmptyTree)
@@ -85,13 +94,13 @@ trait MacroPlugin extends Common {
             }
             // NOTE: magic name. essential for detailed and sane stack traces for exceptions in macro expansion logic
             private def macroExpandWithRuntime(c: ScalaContext): Any = {
-              import global.{Tree => ScalaTree, TermTree => ScalaTerm}
+              import global.{Tree => ScalaTree}
               import scala.reflect.core.{Tree => PalladiumTree, Term => PalladiumTerm}
               import scala.reflect.internal.eval.{eval => palladiumEval}
               import org.scalareflect.unreachable
               import scala.reflect.syntactic.show._
               val palladiumContext = Scalahost[global.type](c)
-              val scalaInvocation: ScalaTerm = {
+              val scalaInvocation: ScalaTree = {
                 // TODO: implement this
                 // val applied @ Applied(core, targs, argss) = dissectApplied(expandee)
                 // val implCore = q"${implDdef.symbol}" setType core.tpe
@@ -99,7 +108,7 @@ trait MacroPlugin extends Common {
                 // val margss = argss.map(_.map(arg => env.bind(arg))) :+ List(env.bind(palladiumContext))
                 // val implApplied = q"$implTapplied(...$margss)" setType expandee.tpe
                 // val scalaInvocation = q"{ $implDdef; $implApplied }" setType expandee.tpe
-                implDdef.rhs.asInstanceOf[ScalaTerm]
+                implDdef.rhs
               }
               val palladiumInvocation: PalladiumTree = {
                 // TODO: implement this

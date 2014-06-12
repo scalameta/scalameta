@@ -75,6 +75,63 @@ abstract class SyntaxAnalyzer extends NscSyntaxAnalyzer with Common {
       signalParseProgress(result.pos)
       result
     }
+
+    override def funDefRest(start: Offset, nameOffset: Offset, mods: Modifiers, name: Name): Tree = {
+      val result = atPos(start, if (name.toTermName == nme.ERROR) start else nameOffset) {
+        var newmods = mods
+        // contextBoundBuf is for context bounded type parameters of the form
+        // [T : B] or [T : => B]; it contains the equivalent implicit parameter type,
+        // i.e. (B[T] or T => B)
+        val contextBoundBuf = new ListBuffer[Tree]
+        val tparams = typeParamClauseOpt(name, contextBoundBuf)
+        val vparamss = paramClauses(name, contextBoundBuf.toList, ofCaseClass = false)
+        newLineOptWhenFollowedBy(LBRACE)
+        var restype = {
+          // NOTE: fromWithinReturnType is unfortunately private, so we have to jump through hoops
+          val m_fromWithinReturnType = classOf[NscSyntaxAnalyzer#Parser].getDeclaredMethods().filter(_.getName == "fromWithinReturnType").head
+          m_fromWithinReturnType.setAccessible(true)
+          m_fromWithinReturnType.invoke(this, () => typedOpt()).asInstanceOf[Tree]
+        }
+        var isPalladiumMacro = false
+        val rhs =
+          if (isStatSep || in.token == RBRACE) {
+            if (restype.isEmpty) {
+              if (settings.future)
+                deprecationWarning(in.lastOffset, s"Procedure syntax is deprecated. Convert procedure `$name` to method by adding `: Unit`.")
+              restype = treeBuilder.scalaUnitConstr
+            }
+            newmods |= Flags.DEFERRED
+            EmptyTree
+          } else if (restype.isEmpty && in.token == LBRACE) {
+            if (settings.future)
+              deprecationWarning(in.offset, s"Procedure syntax is deprecated. Convert procedure `$name` to method by adding `: Unit =`.")
+            restype = treeBuilder.scalaUnitConstr
+            blockExpr()
+          } else {
+            if (in.token == EQUALS) {
+              in.nextTokenAllow(nme.MACROkw)
+              if (isMacro) {
+                in.nextToken()
+                newmods |= Flags.MACRO
+              }
+            } else {
+              accept(EQUALS)
+            }
+            isPalladiumMacro = newmods.isMacro && in.token == LBRACE
+            expr()
+          }
+        if (isPalladiumMacro) {
+          // NOTE: we speculatively color this macro as a blackbox macro (isBlackbox = true)
+          // until we get a chance to typecheck its body and see whether it uses c.whitebox or not
+          if (restype.isEmpty) syntaxError(nameOffset, "palladium macros must explicitly specify their return types", skipIt = false)
+          PalladiumMacro(newmods, name.toTermName, tparams, vparamss, true, restype, rhs)
+        } else {
+          DefDef(newmods, name.toTermName, tparams, vparamss, restype, rhs)
+        }
+      }
+      signalParseProgress(result.pos)
+      result
+    }
   }
 
   override def newPhase(prev: Phase): StdPhase = new StdPhase(prev) {
