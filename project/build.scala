@@ -134,6 +134,7 @@ object build extends Build {
   ) settings (
     publishableSettings: _*
   ) settings (
+    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided"),
     scalaSource in Compile <<= (baseDirectory in Compile)(base => base)
   ) dependsOn (foundation)
 

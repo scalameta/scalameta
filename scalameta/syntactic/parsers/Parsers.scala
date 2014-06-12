@@ -153,15 +153,36 @@ abstract class AbstractParser { parser =>
    */
   def parseTopLevel(): CompUnit = parseRule(_.parseStartRule())
 
-  /** These are alternative entry points for the three main tree types.
+  /** This is the alternative entry point for repl, script runner, toolbox and parsing in macros.
+   */
+  def parseStats(): List[Stmt.Template] = parseRule(_.templateStats())
+
+  /** These are alternative entry points for the three main tree flavors.
    */
   def parseTerm(): Term = parseRule(_.expr())
   def parseType(): Type = parseRule(_.typ())
   def parsePat(): Pat = parseRule(_.pattern())
 
-  /** These are alternative entry points for repl, script runner, toolbox and parsing in macros.
+  /** These are alternative entry points for quasiquotes.
    */
-  def parseStats(): List[Stmt.Template] = parseRule(_.templateStats())
+  def parseQ(): Stmt = parseRule(parser => parser.statSeq(parser.templateStat.orElse(parser.topStat))) match {
+    case stat :: Nil => stat
+    case stats if stats.forall(_.isInstanceOf[Stmt.Block]) => Term.Block(stats.asInstanceOf[List[Stmt.Block]])
+    // TODO: haha, CompUnit itself is not a statП
+    // case stats if stats.forall(_.isInstanceOf[Stmt.TopLevel]) => Aux.CompUnit(stats.asInstanceOf[List[Stmt.TopLevel]])
+    case _ => syntaxError("these statements can't be mixed together")
+  }
+  def parseT(): Param.Type = parseRule(_.paramType())
+  def parseP(): Pat = parsePat()
+  def parseParam(): Param = ???
+  def parseTypeParam(): TypeParam = ???
+  def parseArg(): Arg = ???
+  def parseEnum(): Enum = ???
+  def parseMod(): Mod = ???
+  def parseCase(): Aux.Case = parseRule(_.caseClause())
+  def parseParent(): Aux.Parent = ???
+  def parseTemplate(): Aux.Template = ???
+  def parseSelf(): Aux.Self = ???
 
 /* ------------- PARSER COMMON -------------------------------------------- */
 
