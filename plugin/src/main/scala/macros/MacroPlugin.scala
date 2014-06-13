@@ -244,7 +244,8 @@ trait MacroPlugin extends Common {
           Some(palladiumMacroExpander(expandee))
         case _ =>
           val expanded = new DefMacroExpander(typer, expandee, mode, pt).apply(expandee)
-          if (hasMacroExpansionAttachment(expanded)) attachExpansionString(expandee, expanded, showCode(expanded))
+          // NOTE: can't attach expansion string here, because expanded isn't what you actually think here when run in the IDE
+          // if (hasMacroExpansionAttachment(expanded)) attachExpansionString(expandee, expanded, showCode(expanded))
           Some(expanded)
       }
     }
@@ -253,6 +254,7 @@ trait MacroPlugin extends Common {
       override def onSuccess(expanded0: Tree) = {
         linkExpandeeAndExpanded(expandee, expanded0)
         val result = super.onSuccess(expanded0)
+        attachExpansionString(expandee, expanded0, showCode(expanded0))
         expanded0.removeAttachment[MacroExpansionAttachment] // NOTE: removes MEA from the initial expansion wrapped in a blackbox ascription
         result
       }

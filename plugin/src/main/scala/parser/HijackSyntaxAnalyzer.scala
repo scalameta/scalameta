@@ -12,7 +12,7 @@ import scala.reflect.internal.util.BatchSourceFile
 trait HijackSyntaxAnalyzer {
   self: NscPlugin =>
 
-  def hijackSyntaxAnalyzer(): Unit = {
+  def hijackSyntaxAnalyzer(): global.syntaxAnalyzer.type = {
     val syntaxAnalyzer = new { val global: self.global.type = self.global } with PalladiumSyntaxAnalyzer
     val syntaxAnalyzerField = classOf[NscGlobal].getDeclaredField("syntaxAnalyzer")
     syntaxAnalyzerField.setAccessible(true)
@@ -49,5 +49,7 @@ trait HijackSyntaxAnalyzer {
       new hijackedCompiler.Run().compileSources(initSources)
       f_compiler.set(intp, hijackedCompiler)
     }
+
+    syntaxAnalyzer.asInstanceOf[global.syntaxAnalyzer.type]
   }
 }

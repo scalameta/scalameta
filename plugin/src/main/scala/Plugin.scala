@@ -20,7 +20,9 @@ class Plugin(val global: Global) extends NscPlugin
   val description = """Hosts Project Palladium in scalac.
   For more information visit https://github.com/scalareflect/scalahost"""
   val components = List[NscPluginComponent](RenumberComponent, PersistenceComponent)
-  hijackSyntaxAnalyzer()
-  hijackAnalyzer()
+  val hijackedSyntaxAnalyzer = hijackSyntaxAnalyzer()
+  if (global.syntaxAnalyzer ne hijackedSyntaxAnalyzer) sys.error("failed to hijack syntaxAnalyzer")
+  val hijackedAnalyzer = hijackAnalyzer()
+  if (global.analyzer ne hijackedAnalyzer) sys.error("failed to hijack syntaxAnalyzer")
   global.analyzer.addMacroPlugin(palladiumMacroPlugin)
 }

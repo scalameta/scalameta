@@ -8,26 +8,35 @@ import scala.collection.mutable
 import macros.{Analyzer => PalladiumAnalyzer}
 import scalacompiler.{Plugin => PalladiumPlugin}
 import scala.tools.nsc.interpreter.{ReplGlobal => NscReplGlobal}
+import scala.tools.nsc.interactive.{Global => NscInteractiveGlobal, InteractiveAnalyzer => NscInteractiveAnalyzer}
 
 trait HijackAnalyzer {
   self: PalladiumPlugin =>
 
-  def hijackAnalyzer(): Unit = {
+  def hijackAnalyzer(): global.analyzer.type = {
     // NOTE: need to hijack the right `analyzer` field - it's different for batch compilers and repl compilers
     val isRepl = global.isInstanceOf[NscReplGlobal]
-    val analyzer = new { val global: self.global.type = self.global } with PalladiumAnalyzer {
-      override protected def findMacroClassLoader(): ClassLoader = {
-        val loader = super.findMacroClassLoader
-        if (isRepl) {
-          macroLogVerbose("macro classloader: initializing from a REPL classloader: %s".format(global.classPath.asURLs))
-          val virtualDirectory = global.settings.outputDirs.getSingleOutput.get
-          new scala.reflect.internal.util.AbstractFileClassLoader(virtualDirectory, loader) {}
-        } else {
-          loader
+    val isInteractive = global.isInstanceOf[NscInteractiveGlobal]
+    val analyzer = {
+      if (isInteractive) {
+        new { val global: self.global.type with NscInteractiveGlobal = self.global.asInstanceOf[self.global.type with NscInteractiveGlobal] } with PalladiumAnalyzer with NscInteractiveAnalyzer
+      } else {
+        new { val global: self.global.type = self.global } with PalladiumAnalyzer {
+          override protected def findMacroClassLoader(): ClassLoader = {
+            val loader = super.findMacroClassLoader
+            if (isRepl) {
+              macroLogVerbose("macro classloader: initializing from a REPL classloader: %s".format(global.classPath.asURLs))
+              val virtualDirectory = global.settings.outputDirs.getSingleOutput.get
+              new scala.reflect.internal.util.AbstractFileClassLoader(virtualDirectory, loader) {}
+            } else {
+              loader
+            }
+          }
         }
       }
     }
-    val analyzerField = (if (isRepl) global.getClass else classOf[NscGlobal]).getDeclaredField("analyzer")
+    val globalClass: Class[_] = if (isRepl) classOf[NscReplGlobal] else if (isInteractive) classOf[NscInteractiveGlobal] else classOf[NscGlobal]
+    val analyzerField = globalClass.getDeclaredField("analyzer")
     analyzerField.setAccessible(true)
     analyzerField.set(global, analyzer)
 
@@ -46,5 +55,7 @@ trait HijackAnalyzer {
       phasesSet --= oldScs
       phasesSet ++= newScs
     }
+
+    analyzer.asInstanceOf[global.analyzer.type]
   }
 }
