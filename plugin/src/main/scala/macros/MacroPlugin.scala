@@ -99,8 +99,8 @@ trait MacroPlugin extends Common {
               import scala.reflect.internal.eval.{eval => palladiumEval}
               import org.scalareflect.unreachable
               import scala.reflect.syntactic.show._
-              val palladiumContext = Scalahost[global.type](c)
-              val scalaInvocation: ScalaTree = {
+              lazy val palladiumContext = Scalahost[global.type](c)
+              lazy val scalaInvocation: ScalaTree = {
                 // TODO: implement this
                 // val applied @ Applied(core, targs, argss) = dissectApplied(expandee)
                 // val implCore = q"${implDdef.symbol}" setType core.tpe
@@ -110,16 +110,16 @@ trait MacroPlugin extends Common {
                 // val scalaInvocation = q"{ $implDdef; $implApplied }" setType expandee.tpe
                 implDdef.rhs
               }
-              val palladiumInvocation: PalladiumTree = {
+              lazy val palladiumInvocation: PalladiumTree = {
                 // TODO: implement this
                 // palladiumContext.toPalladium(scalaInvocation)
                 ???
               }
-              val palladiumResult: Any = palladiumInvocation match {
+              lazy val palladiumResult: Any = palladiumInvocation match {
                 case term: PalladiumTerm => palladiumEval(term)
                 case _ => unreachable
               }
-              val scalaResult: Any = palladiumResult match {
+              lazy val scalaResult: Any = palladiumResult match {
                 case palladiumTree: PalladiumTree =>
                   // TODO: implement this
                   // val scalaTree: ScalaTree = palladiumContext.fromPalladium(tree)
@@ -128,7 +128,21 @@ trait MacroPlugin extends Common {
                   ???
                 case other => other
               }
-              scalaResult
+              // TODO: unhardcode this
+              // scalaResult
+              lazy val hardcodedResult = {
+                val Applied(core, targs, List(List(x, y))) = dissectApplied(expandee)
+                def fields(tree: Tree) = tree.tpe.members.collect{ case m: TermSymbol if m.isGetter => m }
+                val xfields = fields(x).map(f => f -> q"xtemp")
+                val yfields = fields(y).map(f => f -> q"ytemp")
+                val getters = (xfields ++ yfields).map{ case (f, ref) => q"val ${f.name} = $ref.${f.name}" }
+                q"""
+                  val xtemp = $x
+                  val ytemp = $y
+                  new { ..$getters }
+                """
+              }
+              hardcodedResult
             }
             override protected def expand(desugared: Tree): Tree = {
               def showDetailed(tree: Tree) = showRaw(tree, printIds = true, printTypes = true)
