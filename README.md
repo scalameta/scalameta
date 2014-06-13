@@ -7,4 +7,4 @@ by scalac typechecker and wrapping scalac internal compiler data stuctures to co
 
 ### How to use
 
-The project is in a very early stage, so it's not supposed to be useful just yet. However, if you're brave enough, we have a nightly build that publishes artifacts to Sonatype at `"org.scalareflect" % "scalahost_2.11.0" % "0.1.0-SNAPSHOT"`.
+The project is in a very early stage, so it's not supposed to be useful just yet. However, if you're brave enough, we have a nightly build that publishes artifacts to Sonatype at `"org.scalareflect" % "scalahost_2.11.1" % "0.1.0-SNAPSHOT"`.
