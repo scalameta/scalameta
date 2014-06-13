@@ -243,6 +243,10 @@ class TermSuite extends ParseSuite {
     val New(Template(Nil, Nil, Self(None, None), Nil)) = term("new {}")
   }
 
+  test("new { x }") {
+    val New(Template(Nil, Nil, Self(None, None), Term.Name("x") :: Nil)) = term("new { x }")
+  }
+
   test("new A") {
     val New(templ @ Template(Nil, Parent(TypeName("A"), Nil) :: Nil, Self(None, None), Nil)) = term("new A")
     assert(templ.hasStats === false)

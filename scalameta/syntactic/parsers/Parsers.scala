@@ -2270,7 +2270,7 @@ abstract class AbstractParser { parser =>
         val (self1, body1, hasStats) = templateBodyOpt(parenMeansSyntaxError = false)
         (edefs, parents, self1, body1, hasStats)
       } else {
-        (Nil, Nil, self, body, false)
+        (Nil, Nil, self, body, true)
       }
     } else {
       val parents = templateParents()
