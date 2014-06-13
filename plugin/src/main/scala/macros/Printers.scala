@@ -319,8 +319,18 @@ trait Printers {
       print("this")
     }
 
-    protected def printBlock(stats: List[Tree], expr: Tree) =
-      printColumn(stats ::: List(expr), "{", ";", "}")
+    protected def printBlock(stats: List[Tree], expr: Tree) = {
+      Block(stats, expr) match {
+        case build.SyntacticNew(earlyDefs, parents, selfType, body) if body.nonEmpty =>
+          require(earlyDefs.isEmpty)
+          require(selfType eq emptyValDef)
+          print("new ")
+          if (body.length == 1) print("{ ", body(0), " }")
+          else printColumn(body, "{", ";", "}")
+        case _ =>
+          printColumn(stats ::: List(expr), "{", ";", "}")
+      }
+    }
 
     def printTree(tree: Tree) = {
       tree match {
