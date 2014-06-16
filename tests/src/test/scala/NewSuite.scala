@@ -18,7 +18,8 @@ class NewSuite extends FunSuite {
         new { ..$getters }
       """)
     }
-    val result = join(new { val x = 2 }, new { val y = 2 })
-    println((result.x, result.y))
+    val result = join(new { val x = 2 }, new { val y = 3 })
+    assert(result.x === 2)
+    assert(result.y === 3)
   }
 }

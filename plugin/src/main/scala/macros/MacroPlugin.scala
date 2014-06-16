@@ -64,7 +64,7 @@ trait MacroPlugin extends Common {
     }
     override def pluginsMacroExpand(typer: Typer, expandee: Tree, mode: Mode, pt: Type): Option[Tree] = {
       val macroSignatures = expandee.symbol.annotations.filter(_.atp.typeSymbol == MacroImplAnnotation)
-      macroSignatures match {
+      val expanded = macroSignatures match {
         case _ :: AnnotationInfo(_, List(PalladiumSignature(_, implDdef)), _) :: Nil =>
           object palladiumMacroExpander extends DefMacroExpander(typer, expandee, mode, pt) {
             private def isDelayed(tree: Tree): Boolean = {
@@ -255,13 +255,13 @@ trait MacroPlugin extends Common {
               }
             }
           }
-          Some(palladiumMacroExpander(expandee))
+          palladiumMacroExpander(expandee)
         case _ =>
-          val expanded = new DefMacroExpander(typer, expandee, mode, pt).apply(expandee)
-          val hasMeaningfulExpansion = hasMacroExpansionAttachment(expanded) && settings.Ymacroexpand.value != settings.MacroExpand.Discard
-          if (hasMeaningfulExpansion) attachExpansionString(expandee, expanded, showCode(expanded))
-          Some(expanded)
+          new DefMacroExpander(typer, expandee, mode, pt).apply(expandee)
       }
+      val hasMeaningfulExpansion = hasMacroExpansionAttachment(expanded) && settings.Ymacroexpand.value != settings.MacroExpand.Discard
+      if (hasMeaningfulExpansion) attachExpansionString(expandee, expanded, showCode(expanded))
+      Some(expanded)
     }
     class DefMacroExpander(typer: Typer, expandee: Tree, mode: Mode, outerPt: Type)
     extends analyzer.DefMacroExpander(typer, expandee, mode, outerPt) {
