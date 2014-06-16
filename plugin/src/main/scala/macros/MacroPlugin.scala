@@ -258,8 +258,8 @@ trait MacroPlugin extends Common {
           Some(palladiumMacroExpander(expandee))
         case _ =>
           val expanded = new DefMacroExpander(typer, expandee, mode, pt).apply(expandee)
-          // NOTE: can't attach expansion string here, because expanded isn't what you actually think here when run in the IDE
-          // if (hasMacroExpansionAttachment(expanded)) attachExpansionString(expandee, expanded, showCode(expanded))
+          val hasMeaningfulExpansion = hasMacroExpansionAttachment(expanded) && settings.Ymacroexpand.value != settings.MacroExpand.Discard
+          if (hasMeaningfulExpansion) attachExpansionString(expandee, expanded, showCode(expanded))
           Some(expanded)
       }
     }
