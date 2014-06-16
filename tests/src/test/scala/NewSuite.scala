@@ -1,5 +1,6 @@
 import org.scalatest._
 
+import scala.language.reflectiveCalls
 import scala.language.experimental.macros
 import scala.reflect.core._
 import scala.reflect.semantic._
@@ -11,11 +12,11 @@ class NewSuite extends FunSuite {
       val xfields = x.tpe.vals.map(f => f -> q"xtemp")
       val yfields = y.tpe.vals.map(f => f -> q"ytemp")
       val getters = (xfields ++ yfields).map{ case (f, ref) => q"val ${f.name} = $ref.${f.name}" }
-      q"""
+      c.whitebox(q"""
         val xtemp = $x
         val ytemp = $y
         new { ..$getters }
-      """
+      """)
     }
     val result = join(new { val x = 2 }, new { val y = 2 })
     println((result.x, result.y))
