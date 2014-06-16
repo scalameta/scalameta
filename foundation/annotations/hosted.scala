@@ -1,4 +1,4 @@
-package org.scalareflect.annotations
+package org.scalameta.annotations
 
 import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
@@ -17,14 +17,14 @@ class HostedMacros(val c: Context) {
     }
     val macroApi = args.collect{ case q"macroApi = true" => true }.nonEmpty
     val mayFail = args.collect{ case q"mayFail = false" => true }.isEmpty
-    val exnTpe = tq"_root_.scala.reflect.core.ReflectionException"
-    val contextTpe = if (macroApi) tq"_root_.scala.reflect.semantic.MacroHost" else tq"_root_.scala.reflect.semantic.Host"
-    val failWrapper = if (macroApi) q"_root_.scala.reflect.semantic.errors.wrapMacrohosted" else q"_root_.scala.reflect.semantic.errors.wrapHosted"
+    val exnTpe = tq"_root_.scala.meta.MetaException"
+    val contextTpe = if (macroApi) tq"_root_.scala.meta.semantic.MacroHost" else tq"_root_.scala.meta.semantic.Host"
+    val failWrapper = if (macroApi) q"_root_.scala.meta.semantic.errors.wrapMacrohosted" else q"_root_.scala.meta.semantic.errors.wrapHosted"
     def transform(ddef: DefDef): DefDef = {
       val DefDef(mods, name, tparams, vparamss, tpt, body) = ddef
-      val mayFails = if (mayFail) List(q"new _root_.org.scalareflect.errors.mayFail[$exnTpe]") else Nil
-      val contextful = q"new _root_.org.scalareflect.annotations.contextful[$contextTpe]"
-      val footprint = q"new _root_.org.scalareflect.annotations.internal.hosted(macroApi = $macroApi, mayFail = $mayFail)"
+      val mayFails = if (mayFail) List(q"new _root_.org.scalameta.errors.mayFail[$exnTpe]") else Nil
+      val contextful = q"new _root_.org.scalameta.annotations.contextful[$contextTpe]"
+      val footprint = q"new _root_.org.scalameta.annotations.internal.hosted(macroApi = $macroApi, mayFail = $mayFail)"
       val mods1 = Modifiers(mods.flags, mods.privateWithin, mods.annotations ++ mayFails ++ List(contextful, footprint))
       val autoBody = body match { case q"delegate" => true; case _ => false }
       val body1 = if (autoBody) {
@@ -51,7 +51,7 @@ class HostedMacros(val c: Context) {
         else q"implicitly[$contextTpe].$name(...$args)"
       } else body
       val body2 = if (autoBody) body1 else q"""
-        import _root_.scala.reflect.semantic.errors.{fail, succeed, wrapHosted, wrapMacrohosted}
+        import _root_.scala.meta.semantic.errors.{fail, succeed, wrapHosted, wrapMacrohosted}
         $body
       """
       DefDef(mods1, name, tparams, vparamss, tpt, body2)

@@ -2,14 +2,13 @@
  * Copyright 2005-2013 LAMP/EPFL
  * @author  Martin Odersky
  */
-package scala.reflect
+package scala.meta
 package syntactic.parsers
 
 import scala.annotation.{ switch, tailrec }
 import scala.collection.{ mutable, immutable }
 import scala.language.postfixOps
 import mutable.{ ListBuffer, ArrayBuffer }
-import scala.reflect.core.Source
 import Chars._
 import Tokens._
 import TokenInfo._

@@ -1,4 +1,4 @@
-package org.scalareflect.show
+package org.scalameta.show
 
 import scala.reflect.macros.blackbox.Context
 import scala.language.experimental.macros
@@ -6,7 +6,7 @@ import scala.language.implicitConversions
 import scala.language.higherKinds
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
-import org.scalareflect.convert._
+import org.scalameta.convert._
 
 trait Show[T] { def apply(t: T): Show.Result }
 object Show {
@@ -69,7 +69,7 @@ object Show {
 private[show] class ShowMacros(val c: Context) {
   import c.universe._
   val ShowTpe = typeOf[Show[_]]
-  val ShowObj = q"_root_.org.scalareflect.show.Show"
+  val ShowObj = q"_root_.org.scalameta.show.Show"
 
   def seq[T](xs: c.Tree*) = {
     val results = xs.map { x =>

@@ -1,4 +1,4 @@
-import scala.reflect.core._, Aux._
+import scala.meta._, Aux._
 
 class ModSuite extends ParseSuite {
   // TODO: implicit

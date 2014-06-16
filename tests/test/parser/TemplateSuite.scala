@@ -1,4 +1,4 @@
-import scala.reflect.core._, Aux._, Defn.{Trait, Object, Class}
+import scala.meta._, Aux._, Defn.{Trait, Object, Class}
 
 class TemplateSuite extends ParseSuite {
   test("trait T") {

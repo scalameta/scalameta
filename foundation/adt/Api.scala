@@ -1,8 +1,8 @@
-package org.scalareflect.adt
+package org.scalameta.adt
 
 import scala.reflect.api.Universe
-import org.scalareflect.adt.{Internal => AdtInternal}
-import org.scalareflect.{ast => AstInternal}
+import org.scalameta.adt.{Internal => AdtInternal}
+import org.scalameta.{ast => AstInternal}
 import scala.reflect.{classTag, ClassTag}
 
 trait AdtReflection {

@@ -1,5 +1,5 @@
 import org.scalatest._
-import scala.reflect.syntactic.parsers._
+import scala.meta.syntactic.parsers._
 
 class ParseSuite extends FunSuite with CommonTrees {
   def parse[T](rule: Parser => T): String => T =

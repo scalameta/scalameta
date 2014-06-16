@@ -1,4 +1,4 @@
-import scala.reflect.core._, Term.{Name => TermName}, Type.{Name => TypeName, _}, Aux._
+import scala.meta._, Term.{Name => TermName}, Type.{Name => TypeName, _}, Aux._
 
 class TypeSuite extends ParseSuite {
   test("T") {

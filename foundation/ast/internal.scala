@@ -1,4 +1,4 @@
-package org.scalareflect.ast
+package org.scalameta.ast
 
 import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
@@ -74,7 +74,7 @@ object internal {
     }
     private object Tree {
       def unapply(tpe: Type): Option[Type] = {
-        if (tpe <:< c.mirror.staticClass("scala.reflect.core.Tree").asType.toType) Some(tpe)
+        if (tpe <:< c.mirror.staticClass("scala.meta.Tree").asType.toType) Some(tpe)
         else None
       }
     }

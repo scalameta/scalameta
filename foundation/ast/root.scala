@@ -1,4 +1,4 @@
-package org.scalareflect.ast
+package org.scalameta.ast
 
 import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
@@ -15,19 +15,19 @@ class RootMacros(val c: Context) {
     def transform(cdef: ClassDef): ClassDef = {
       val q"${Modifiers(flags, privateWithin, anns)} trait $name[..$tparams] extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
       // TODO: think of better ways to abstract this away from the public API
-      val Host = tq"_root_.scala.reflect.semantic.Host"
-      val Tree = tq"_root_.scala.reflect.core.Tree"
-      val Origin = tq"_root_.scala.reflect.core.Origin"
+      val Host = tq"_root_.scala.meta.semantic.Host"
+      val Tree = tq"_root_.scala.meta.Tree"
+      val Origin = tq"_root_.scala.meta.Origin"
       val SeqAny = tq"_root_.scala.collection.immutable.Seq[_root_.scala.Any]"
       val Scratchpads = tq"_root_.scala.Predef.Map[$Host, $SeqAny]"
       val q"..$boilerplate" = q"""
         // NOTE: these are internal APIs designed to be used only by hosts
         // TODO: these APIs will most likely change in the future
         // because we would like to make sure that trees are guaranteed to be immutable
-        private[reflect] def scratchpad(implicit h: $Host): $SeqAny = internalScratchpads.getOrElse(h, _root_.scala.Nil);
-        private[reflect] def appendScratchpad(datum: _root_.scala.Any)(implicit h: $Host): ThisType = internalCopy(scratchpads = internalScratchpads + (h -> (internalScratchpads.getOrElse(h, Nil) :+ datum)))
-        private[reflect] def withScratchpad(scratchpad: $SeqAny)(implicit h: $Host): ThisType = internalCopy(scratchpads = internalScratchpads + (h -> scratchpad))
-        private[reflect] def mapScratchpad(f: $SeqAny => $SeqAny)(implicit h: $Host): ThisType = internalCopy(scratchpads = internalScratchpads + (h -> f(internalScratchpads.getOrElse(h, Nil))))
+        private[meta] def scratchpad(implicit h: $Host): $SeqAny = internalScratchpads.getOrElse(h, _root_.scala.Nil);
+        private[meta] def appendScratchpad(datum: _root_.scala.Any)(implicit h: $Host): ThisType = internalCopy(scratchpads = internalScratchpads + (h -> (internalScratchpads.getOrElse(h, Nil) :+ datum)))
+        private[meta] def withScratchpad(scratchpad: $SeqAny)(implicit h: $Host): ThisType = internalCopy(scratchpads = internalScratchpads + (h -> scratchpad))
+        private[meta] def mapScratchpad(f: $SeqAny => $SeqAny)(implicit h: $Host): ThisType = internalCopy(scratchpads = internalScratchpads + (h -> f(internalScratchpads.getOrElse(h, Nil))))
 
         // NOTE: these are internal APIs that are meant to be used only in the implementation of the framework
         // host implementors should not utilize these APIs
@@ -36,11 +36,11 @@ class RootMacros(val c: Context) {
         protected def internalPrototype: ThisType
         protected def internalParent: $Tree
         protected def internalScratchpads: $Scratchpads
-        private[core] def internalCopy(prototype: $Tree = internalPrototype, parent: $Tree = internalParent, scratchpads: $Scratchpads = internalScratchpads, origin: $Origin = origin): ThisType
+        private[meta] def internalCopy(prototype: $Tree = internalPrototype, parent: $Tree = internalParent, scratchpads: $Scratchpads = internalScratchpads, origin: $Origin = origin): ThisType
       """
       val stats1 = stats ++ boilerplate
       // TODO: this should emit @ast.root, not @adt.root
-      val anns1 = q"new _root_.org.scalareflect.adt.root" +: anns
+      val anns1 = q"new _root_.org.scalameta.adt.root" +: anns
       q"${Modifiers(flags, privateWithin, anns1)} trait $name[..$tparams] extends { ..$earlydefns } with ..$parents { $self => ..$stats1 }"
     }
     val expanded = annottees match {

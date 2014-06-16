@@ -1,8 +1,7 @@
-package scala.reflect
+package scala.meta
 package syntactic
 
-import org.scalareflect.show._
-import scala.reflect.core._
+import org.scalameta.show._
 import scala.language.higherKinds
 
 package object show {

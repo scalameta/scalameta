@@ -6,8 +6,8 @@ object build extends Build {
     scalaVersion := "2.11.0",
     crossVersion := CrossVersion.binary,
     version := "0.1.0-SNAPSHOT",
-    organization := "org.scalareflect",
-    description := "Reflection core of Project Palladium",
+    organization := "org.scalameta",
+    description := "Metaprogramming API and host interfaces of scala.meta",
     resolvers += Resolver.sonatypeRepo("snapshots"),
     resolvers += Resolver.sonatypeRepo("releases"),
     scalaSource in Compile <<= (baseDirectory in Compile)(base => base / "src"),
@@ -36,7 +36,7 @@ object build extends Build {
     },
     pomIncludeRepository := { x => false },
     pomExtra := (
-      <url>https://github.com/scalareflect/core</url>
+      <url>https://github.com/scalameta/scalameta</url>
       <inceptionYear>2014</inceptionYear>
       <licenses>
         <license>
@@ -46,12 +46,12 @@ object build extends Build {
         </license>
       </licenses>
       <scm>
-        <url>git://github.com/scalareflect/core.git</url>
-        <connection>scm:git:git://github.com/scalareflect/core.git</connection>
+        <url>git://github.com/scalameta/scalameta.git</url>
+        <connection>scm:git:git://github.com/scalameta/scalameta.git</connection>
       </scm>
       <issueManagement>
         <system>GitHub</system>
-        <url>https://github.com/scalareflect/core/issues</url>
+        <url>https://github.com/scalameta/scalameta/issues</url>
       </issueManagement>
     ),
     addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0-M1" cross CrossVersion.full),
@@ -96,10 +96,10 @@ object build extends Build {
         }
       } else {
         for {
-          realm <- sys.env.get("SCALAREFLECT_MAVEN_REALM")
-          domain <- sys.env.get("SCALAREFLECT_MAVEN_DOMAIN")
-          user <- sys.env.get("SCALAREFLECT_MAVEN_USER")
-          password <- sys.env.get("SCALAREFLECT_MAVEN_PASSWORD")
+          realm <- sys.env.get("SCALAMETA_MAVEN_REALM")
+          domain <- sys.env.get("SCALAMETA_MAVEN_DOMAIN")
+          user <- sys.env.get("SCALAMETA_MAVEN_USER")
+          password <- sys.env.get("SCALAMETA_MAVEN_PASSWORD")
         } yield {
           println("Loading Sonatype credentials from environment variables")
           Credentials(realm, domain, user, password)
@@ -116,29 +116,25 @@ object build extends Build {
   ) settings (
     test in Test := (test in tests in Test).value,
     packagedArtifacts := Map.empty
-  ) aggregate (reflection, foundation, tests)
+  ) aggregate (scalameta, foundation, tests)
 
   lazy val foundation = Project(
-    id   = "core-foundation",
+    id   = "scalameta-foundation",
     base = file("foundation")
   ) settings (
     publishableSettings: _*
   ) settings (
     scalaSource in Compile <<= (baseDirectory in Compile)(base => base),
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided"),
-    scalacOptions ++= Seq()
+    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided")
   )
 
-  lazy val reflection = Project(
-    id   = "reflection",
-    base = file("reflection")
+  lazy val scalameta = Project(
+    id   = "scalameta",
+    base = file("scalameta")
   ) settings (
     publishableSettings: _*
   ) settings (
-    name := "core",
-    scalaSource in Compile <<= (baseDirectory in Compile)(base => base),
-    // scalacOptions ++= Seq("-Xprint:typer"),
-    scalacOptions ++= Seq()
+    scalaSource in Compile <<= (baseDirectory in Compile)(base => base)
   ) dependsOn (foundation)
 
   lazy val sandbox = Project(
@@ -147,9 +143,8 @@ object build extends Build {
   ) settings (
     sharedSettings: _*
   ) settings (
-    scalaSource in Compile <<= (baseDirectory in Compile)(base => base),
-    scalacOptions ++= Seq()
-  ) dependsOn (reflection)
+    scalaSource in Compile <<= (baseDirectory in Compile)(base => base)
+  ) dependsOn (scalameta)
 
   lazy val tests = Project(
     id   = "tests",
@@ -160,7 +155,6 @@ object build extends Build {
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _),
     libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.3" % "test",
     libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
-    packagedArtifacts := Map.empty,
-    scalacOptions ++= Seq()
-  ) dependsOn (reflection)
+    packagedArtifacts := Map.empty
+  ) dependsOn (scalameta)
 }

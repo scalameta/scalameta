@@ -1,10 +1,10 @@
-package scala.reflect
+package scala.meta
 
-import org.scalareflect.adt._
-import org.scalareflect.annotations._
+import org.scalameta.adt._
+import org.scalameta.annotations._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
-import scala.reflect.core._
+import scala.reflect.{ClassTag, classTag}
 
 package object semantic {
   @root trait Attr
@@ -93,7 +93,7 @@ package object semantic {
   }
 
   implicit class SemanticMembers[A <: Member.Term](val tree: Seq[A]) extends AnyVal {
-    def resolve(tpes: Seq[core.Type]): A = ???
+    def resolve(tpes: Seq[meta.Type]): A = ???
   }
 
   implicit class SemanticMemberOps(val tree: Member) extends AnyVal {
@@ -150,7 +150,7 @@ package object semantic {
   }
 
   implicit class SemanticDefMemberOps(val tree: Member.Def) extends AnyVal {
-    @hosted def tpe: core.Type = tree match {
+    @hosted def tpe: meta.Type = tree match {
       case x: Decl.Def => succeed(x.decltpe)
       case x: Decl.Procedure => ??? // TODO: t"Unit"
       case x: Defn.Def => x.body.tpe
@@ -160,7 +160,7 @@ package object semantic {
 
   implicit class SemanticTemplateMemberOps(val tree: Member.Template) extends AnyVal {
     @hosted def superclasses: Seq[Member.Template] = tree.ref.toTypeRef.superclasses
-    @hosted def supertypes: Seq[core.Type] = tree.ref.toTypeRef.supertypes
+    @hosted def supertypes: Seq[meta.Type] = tree.ref.toTypeRef.supertypes
     @hosted def subclasses: Seq[Member.Template] = tree.ref.toTypeRef.subclasses
     @hosted def self: Aux.Self = succeed(tree.templ.self)
     @hosted def companion: Member.Template = tree match {
@@ -170,8 +170,8 @@ package object semantic {
     }
     @hosted private[semantic] def findCompanion[T <: Member.Template](f: PartialFunction[Member, T]): T = {
       val companionName = {
-        if (tree.name.isInstanceOf[core.Term.Name]) core.Type.Name(tree.name.value, isBackquoted = false) else
-        core.Term.Name(tree.name.value, isBackquoted = false)
+        if (tree.name.isInstanceOf[meta.Term.Name]) meta.Type.Name(tree.name.value, isBackquoted = false) else
+        meta.Term.Name(tree.name.value, isBackquoted = false)
       }
       val candidates = tree.owner.flatMap(_.members(companionName))
       candidates.flatMap{candidates =>
@@ -182,19 +182,19 @@ package object semantic {
   }
 
   implicit class SemanticDeclValOps(val tree: Decl.Val) extends AnyVal {
-    @hosted def tpe: core.Type = succeed(tree.decltpe)
+    @hosted def tpe: meta.Type = succeed(tree.decltpe)
   }
 
   implicit class SemanticDeclVarOps(val tree: Decl.Var) extends AnyVal {
-    @hosted def tpe: core.Type = succeed(tree.decltpe)
+    @hosted def tpe: meta.Type = succeed(tree.decltpe)
   }
 
   implicit class SemanticDefnValOps(val tree: Defn.Val) extends AnyVal {
-    @hosted def tpe: core.Type = tree.rhs.tpe
+    @hosted def tpe: meta.Type = tree.rhs.tpe
   }
 
   implicit class SemanticDefnVarOps(val tree: Defn.Var) extends AnyVal {
-    @hosted def tpe: core.Type = tree.rhs.map(_.tpe).getOrElse(succeed(tree.decltpe.get))
+    @hosted def tpe: meta.Type = tree.rhs.map(_.tpe).getOrElse(succeed(tree.decltpe.get))
   }
 
   implicit class SemanticDefnClassOps(val tree: Defn.Class) extends AnyVal {
@@ -214,7 +214,7 @@ package object semantic {
   }
 
   implicit class SemanticCtorOps(val tree: Ctor) extends AnyVal {
-    @hosted def tpe: core.Type = tree.internalTpe
+    @hosted def tpe: meta.Type = tree.internalTpe
   }
 
   implicit class SemanticParentOps(val tree: Param) extends AnyVal {

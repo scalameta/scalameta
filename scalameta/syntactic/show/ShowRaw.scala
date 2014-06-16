@@ -1,8 +1,7 @@
-package scala.reflect
+package scala.meta
 package syntactic.show
 
-import core._
-import org.scalareflect.show.Show
+import org.scalameta.show.Show
 import Show.{ sequence => s, repeat => r, indent => i, newline => n }
 import scala.{Seq => _}
 import scala.collection.immutable.Seq

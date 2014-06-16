@@ -1,8 +1,8 @@
-package org.scalareflect.adt
+package org.scalameta.adt
 
 import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
-import org.scalareflect.invariants.nonEmpty
+import org.scalameta.invariants.nonEmpty
 import scala.reflect.macros.whitebox.Context
 import scala.collection.mutable.ListBuffer
 
@@ -22,7 +22,7 @@ class AdtMacros(val c: Context) {
   import c.universe._
   import definitions._
   import Flag._
-  val Internal = q"_root_.org.scalareflect.adt.Internal"
+  val Internal = q"_root_.org.scalameta.adt.Internal"
 
   def root(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef): ClassDef = {
@@ -182,7 +182,7 @@ class AdtHelperMacros(val c: Context) {
   }
 
   def nullCheck(x: c.Tree): c.Tree = {
-    if (x.tpe.baseClasses.contains(ObjectClass)) q"_root_.org.scalareflect.invariants.require($x != null)"
+    if (x.tpe.baseClasses.contains(ObjectClass)) q"_root_.org.scalameta.invariants.require($x != null)"
     else q""
   }
 
@@ -190,7 +190,7 @@ class AdtHelperMacros(val c: Context) {
     val emptyCheckRequested =
       try x.symbol.asTerm.accessed.nonEmpty
       catch { case _: AssertionError => x.symbol.nonEmpty }
-    if (emptyCheckRequested) q"_root_.org.scalareflect.invariants.require($x.nonEmpty)"
+    if (emptyCheckRequested) q"_root_.org.scalameta.invariants.require($x.nonEmpty)"
     else q""
   }
 

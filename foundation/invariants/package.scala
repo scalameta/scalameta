@@ -1,4 +1,4 @@
-package org.scalareflect
+package org.scalameta
 
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox.Context
@@ -158,7 +158,7 @@ package invariants {
       q"""
         ${c.untypecheck(prop.emit)} match {
           case (true, _) => ()
-          case (false, $failures) => org.scalareflect.invariants.InvariantFailedException.raise(${showCode(x)}, $failures, scala.Some($enclosingClass.this))
+          case (false, $failures) => org.scalameta.invariants.InvariantFailedException.raise(${showCode(x)}, $failures, scala.Some($enclosingClass.this))
         }
       """
     }

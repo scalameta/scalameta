@@ -1,10 +1,10 @@
-package org.scalareflect.ast
+package org.scalameta.ast
 
 import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
 import scala.reflect.macros.whitebox.Context
 import scala.collection.mutable.ListBuffer
-import org.scalareflect.unreachable
+import org.scalameta.unreachable
 
 class ast extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro AstMacros.impl
@@ -13,8 +13,8 @@ class ast extends StaticAnnotation {
 class AstMacros(val c: Context) {
   import c.universe._
   import Flag._
-  val AdtInternal = q"_root_.org.scalareflect.adt.Internal"
-  val AstInternal = q"_root_.org.scalareflect.ast.internal"
+  val AdtInternal = q"_root_.org.scalameta.adt.Internal"
+  val AstInternal = q"_root_.org.scalameta.ast.internal"
   def impl(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       val q"$mods class $name[..$tparams] $ctorMods(...$rawparamss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
@@ -62,7 +62,7 @@ class AstMacros(val c: Context) {
       val companionsForDefaultss = nontriviaDefaultss.map(_.map{
         case p @ q"$mods val $name: $tpt = $default" =>
           val Modifiers(flags, privateWithin, anns) = undefault(unoverride(mods))
-          val anns1 = anns :+ q"new _root_.org.scalareflect.ast.trivia" :+ q"new _root_.org.scalareflect.ast.auto"
+          val anns1 = anns :+ q"new _root_.org.scalameta.ast.trivia" :+ q"new _root_.org.scalameta.ast.auto"
           q"${Modifiers(flags, privateWithin, anns1)} val ${hasify(p.name)}: _root_.scala.Boolean"
       })
       def isVanilla(p: ValDef) = !isNontriviaDefault(p) && !isNontriviaCompanion(p)
@@ -71,16 +71,16 @@ class AstMacros(val c: Context) {
       val paramss = rawparamss.zip(companionsForDefaultss).map{ case (raws, companions) => raws ++ companions }
 
       // step 4: create boilerplate bookkeeping parameters
-      val scratchpadsType = tq"_root_.scala.collection.immutable.Map[_root_.scala.reflect.semantic.Host, _root_.scala.collection.immutable.Seq[Any]]"
+      val scratchpadsType = tq"_root_.scala.collection.immutable.Map[_root_.scala.meta.semantic.Host, _root_.scala.collection.immutable.Seq[Any]]"
       bparams1 += q"protected val internalPrototype: $name"
-      bparams1 += q"protected val internalParent: _root_.scala.reflect.core.Tree"
+      bparams1 += q"protected val internalParent: _root_.scala.meta.Tree"
       bparams1 += q"protected val internalScratchpads: $scratchpadsType"
-      bparams1 += q"val origin: _root_.scala.reflect.core.Origin"
+      bparams1 += q"val origin: _root_.scala.meta.Origin"
       def internalize(name: TermName) = TermName("_" + name.toString)
       val internalCopyInitss = paramss.map(_.map(p => q"$AstInternal.initField(this.${internalize(p.name)})"))
       val internalCopyBody = q"new ThisType(prototype.asInstanceOf[ThisType], parent, internalScratchpads, origin)(...$internalCopyInitss)"
-      stats1 += q"private[core] def internalCopy(prototype: _root_.scala.reflect.core.Tree = internalPrototype, parent: _root_.scala.reflect.core.Tree = internalParent, scratchpads: $scratchpadsType = internalScratchpads, origin: _root_.scala.reflect.core.Origin = origin): ThisType = $internalCopyBody"
-      stats1 += q"def parent: _root_.scala.Option[_root_.scala.reflect.core.Tree] = if (internalParent != null) _root_.scala.Some(internalParent) else _root_.scala.None"
+      stats1 += q"private[meta] def internalCopy(prototype: _root_.scala.meta.Tree = internalPrototype, parent: _root_.scala.meta.Tree = internalParent, scratchpads: $scratchpadsType = internalScratchpads, origin: _root_.scala.meta.Origin = origin): ThisType = $internalCopyBody"
+      stats1 += q"def parent: _root_.scala.Option[_root_.scala.meta.Tree] = if (internalParent != null) _root_.scala.Some(internalParent) else _root_.scala.None"
 
       // step 5: turn all parameters into private internal vars, create getters and setters
       paramss1 ++= paramss.map(_.map{ case p @ q"$mods val $name: $tpt = $default" => q"${undefault(unoverride(privatize(varify(mods))))} val ${internalize(p.name)}: $tpt" })
@@ -97,7 +97,7 @@ class AstMacros(val c: Context) {
       val copyParamss = rawparamss.map(_.map(p => q"val ${p.name}: ${p.tpt} = this.${p.name}"))
       val copyArgss = rawparamss.map(_.map(p => q"${p.name}"))
       // TODO: would be useful to turn copy into a macro, so that its calls are guaranteed to be inlined
-      stats1 += q"def copy(...$copyParamss)(implicit origin: _root_.scala.reflect.core.Origin): ThisType = $mname.apply(...$copyArgss)(_root_.scala.reflect.core.Origin.Transform(this, this.origin))"
+      stats1 += q"def copy(...$copyParamss)(implicit origin: _root_.scala.meta.Origin): ThisType = $mname.apply(...$copyArgss)(_root_.scala.meta.Origin.Transform(this, this.origin))"
 
       // step 7: generate boilerplate required by the @ast infrastructure
       stats1 += q"override type ThisType = $name"
@@ -145,7 +145,7 @@ class AstMacros(val c: Context) {
         else unreachable
       }))
       mstats1 += q"""
-        def apply(...$applyParamss)(implicit origin: _root_.scala.reflect.core.Origin): $name = {
+        def apply(...$applyParamss)(implicit origin: _root_.scala.meta.Origin): $name = {
           def internal(...$internalParamss): $name = {
             ..$internalBody
           }

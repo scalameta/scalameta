@@ -1,4 +1,4 @@
-import scala.reflect.core._, Pat._, Term.Name
+import scala.meta._, Pat._, Term.Name
 
 class PatSuite extends ParseSuite {
   test("_") {

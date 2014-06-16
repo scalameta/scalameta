@@ -1,13 +1,11 @@
-package scala.reflect
+package scala
 
 import scala.language.experimental.{macros => prettyPlease}
 import scala.language.implicitConversions
-import org.scalareflect.adt._
-import org.scalareflect.annotations._
-import scala.{Seq => _}
-import scala.collection.immutable.Seq
+import org.scalameta.adt._
+import org.scalameta.annotations._
 
-package object core {
+package object meta {
   @quasiquote[Stmt]('q)             implicit class TermQuote(ctx: StringContext)
   @quasiquote[Param.Type]('t)       implicit class TypeQuote(ctx: StringContext)
   @quasiquote[Pat]('p)              implicit class PatternQuote(ctx: StringContext)
@@ -35,11 +33,11 @@ package object core {
   }
   @root trait Origin { def src: Source }
   object Origin {
-    @leaf object None extends Origin { def src = core.Source.None }
-    @leaf class Source(src: core.Source) extends Origin // TODO: positions
+    @leaf object None extends Origin { def src = meta.Source.None }
+    @leaf class Source(src: meta.Source) extends Origin // TODO: positions
     @leaf class Transform(proto: Tree, origin: Origin) extends Origin { def src = origin.src }
     implicit def defaultOriginIsNone: Origin = None
   }
 
-  final case class ReflectionException(msg: String) extends Exception(msg)
+  final case class MetaException(msg: String) extends Exception(msg)
 }

@@ -1,4 +1,4 @@
-import scala.reflect.core._
+import scala.meta._
 
 trait CommonTrees {
   object Nothing {

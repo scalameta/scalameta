@@ -1,4 +1,4 @@
-package org.scalareflect.annotations
+package org.scalameta.annotations
 
 import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
@@ -19,7 +19,7 @@ class ContextfulMacros(val c: Context) {
       q"$SYNTHETIC implicit val $name: $t"
     }
     def transformMods(mods: Modifiers): Modifiers = {
-      val footprint = q"new _root_.org.scalareflect.annotations.internal.contextful[$t]"
+      val footprint = q"new _root_.org.scalameta.annotations.internal.contextful[$t]"
       Modifiers(mods.flags, mods.privateWithin, mods.annotations ++ List(footprint))
     }
     def transformCdef(cdef: ClassDef): ClassDef = {

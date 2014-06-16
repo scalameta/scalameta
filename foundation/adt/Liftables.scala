@@ -1,9 +1,9 @@
-package org.scalareflect.adt
+package org.scalameta.adt
 
 import scala.reflect.api.Universe
 import scala.reflect.macros.whitebox.Context
 import scala.language.experimental.macros
-import org.scalareflect.unreachable
+import org.scalameta.unreachable
 
 trait Liftables {
   val u: Universe

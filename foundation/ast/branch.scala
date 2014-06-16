@@ -1,4 +1,4 @@
-package org.scalareflect.ast
+package org.scalameta.ast
 
 import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
@@ -15,7 +15,7 @@ class BranchMacros(val c: Context) {
     def transform(cdef: ClassDef): ClassDef = {
       val ClassDef(mods @ Modifiers(flags, privateWithin, anns), name, tparams, templ) = cdef
       // TODO: this should emit @ast.branch, not @adt.branch
-      val anns1 = q"new _root_.org.scalareflect.adt.branch" +: anns
+      val anns1 = q"new _root_.org.scalameta.adt.branch" +: anns
       ClassDef(Modifiers(flags, privateWithin, anns1), name, tparams, templ)
     }
     val expanded = annottees match {

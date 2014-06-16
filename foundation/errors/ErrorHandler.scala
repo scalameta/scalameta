@@ -1,4 +1,4 @@
-package org.scalareflect
+package org.scalameta
 
 import scala.language.higherKinds
 import scala.util.{Try, Success => TrySuccess, Failure => TryFailure}

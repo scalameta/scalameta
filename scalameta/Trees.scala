@@ -1,16 +1,15 @@
-package scala.reflect
-package core
+package scala.meta
 
 import scala.language.experimental.macros
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
-import org.scalareflect.ast._
-import org.scalareflect.invariants._
-import org.scalareflect.annotations._
-import org.scalareflect.unreachable
-import scala.reflect.semantic._
-import scala.reflect.syntactic.show._
-import scala.reflect.syntactic.parsers._, SyntacticInfo._
+import org.scalameta.ast._
+import org.scalameta.invariants._
+import org.scalameta.annotations._
+import org.scalameta.unreachable
+import semantic._
+import syntactic.show._
+import syntactic.parsers._, SyntacticInfo._
 
 @root trait Tree extends Product {
   type ThisType <: Tree
@@ -21,9 +20,9 @@ import scala.reflect.syntactic.parsers._, SyntacticInfo._
 
 @branch trait Term extends Arg with Stmt.Template with Stmt.Block with Qual.Term
 object Term {
-  @branch trait Ref extends Term with core.Ref with Qual.Type
+  @branch trait Ref extends Term with meta.Ref with Qual.Type
   @ast class This(qual: Option[Qual.Name]) extends Ref with Mod.AccessQualifier
-  @ast class Name(value: scala.Predef.String @nonEmpty, @trivia isBackquoted: Boolean = false) extends core.Name with Ref with Pat with Member with Has.TermName {
+  @ast class Name(value: scala.Predef.String @nonEmpty, @trivia isBackquoted: Boolean = false) extends meta.Name with Ref with Pat with Member with Has.TermName {
     require(keywords.contains(value) ==> isBackquoted)
     def name: Name = this
     def mods: Seq[Mod] = Nil
@@ -77,8 +76,8 @@ object Term {
 
 @branch trait Type extends Tree with Param.Type with Scope.Template
 object Type {
-  @branch trait Ref extends Type with core.Ref
-  @ast class Name(value: String @nonEmpty, @trivia isBackquoted: Boolean = false) extends core.Name with Ref {
+  @branch trait Ref extends Type with meta.Ref
+  @ast class Name(value: String @nonEmpty, @trivia isBackquoted: Boolean = false) extends meta.Name with Ref {
     require(keywords.contains(value) ==> isBackquoted)
   }
   @ast class Select(qual: Qual.Type, selector: Type.Name) extends Ref {
@@ -148,11 +147,11 @@ object Member {
     def tparams: Seq[TypeParam]
   }
   @branch trait AbstractOrAliasType extends Type with Has.TypeName with Stmt.Refine with Has.TypeParams {
-    def name: core.Type.Name
+    def name: meta.Type.Name
     def tparams: Seq[TypeParam]
   }
   @branch trait Template extends Defn with Has.Name with Stmt.TopLevel with Stmt.Block with Has.TypeParams with Has.Paramss with Scope.Template {
-    def name: core.Name
+    def name: meta.Name
     def explicits: Seq[Seq[Param.Named]] = Nil
     def implicits: Seq[Param.Named] = Nil
     def tparams: Seq[TypeParam] = Nil
@@ -164,23 +163,23 @@ object Member {
 object Decl {
   @ast class Val(mods: Seq[Mod],
                  pats: Seq[Term.Name] @nonEmpty,
-                 decltpe: core.Type) extends Decl with Member.ValOrVar with Stmt.Existential
+                 decltpe: meta.Type) extends Decl with Member.ValOrVar with Stmt.Existential
   @ast class Var(mods: Seq[Mod],
                  pats: Seq[Term.Name] @nonEmpty,
-                 decltpe: core.Type) extends Decl with Member.ValOrVar
+                 decltpe: meta.Type) extends Decl with Member.ValOrVar
   @ast class Def(mods: Seq[Mod],
                  name: Term.Name,
                  tparams: Seq[TypeParam],
                  explicits: Seq[Seq[Param.Named]],
                  implicits: Seq[Param.Named],
-                 decltpe: core.Type) extends Decl with Member.Def
+                 decltpe: meta.Type) extends Decl with Member.Def
   @ast class Procedure(mods: Seq[Mod],
                        name: Term.Name,
                        tparams: Seq[TypeParam],
                        explicits: Seq[Seq[Param.Named]],
                        implicits: Seq[Param.Named]) extends Decl with Member.Def
   @ast class Type(mods: Seq[Mod],
-                  name: core.Type.Name,
+                  name: meta.Type.Name,
                   tparams: Seq[TypeParam],
                   bounds: Aux.TypeBounds) extends Decl with Stmt.Existential with Member.AbstractOrAliasType
 }
@@ -189,11 +188,11 @@ object Decl {
 object Defn {
   @ast class Val(mods: Seq[Mod],
                  pats: Seq[Pat] @nonEmpty,
-                 decltpe: Option[core.Type],
+                 decltpe: Option[meta.Type],
                  rhs: Term) extends Defn with Member.ValOrVar with Stmt.Early
   @ast class Var(mods: Seq[Mod],
                  pats: Seq[Pat] @nonEmpty,
-                 decltpe: Option[core.Type],
+                 decltpe: Option[meta.Type],
                  rhs: Option[Term]) extends Defn with Member.ValOrVar with Stmt.Early {
     require(rhs.isEmpty ==> pats.forall(_.isInstanceOf[Term.Name]))
     require(decltpe.nonEmpty || rhs.nonEmpty)
@@ -203,7 +202,7 @@ object Defn {
                  tparams: Seq[TypeParam],
                  explicits: Seq[Seq[Param.Named]],
                  implicits: Seq[Param.Named],
-                 decltpe: Option[core.Type],
+                 decltpe: Option[meta.Type],
                  body: Term) extends Defn with Member.Def
   @ast class Procedure(mods: Seq[Mod],
                        name: Term.Name,
@@ -214,16 +213,16 @@ object Defn {
     require(stats.collect { case m: Member if m.isPkgObject => m }.isEmpty)
   }
   @ast class Type(mods: Seq[Mod],
-                  name: core.Type.Name,
+                  name: meta.Type.Name,
                   tparams: Seq[TypeParam],
-                  body: core.Type) extends Defn with Stmt.Refine with Member.AbstractOrAliasType
+                  body: meta.Type) extends Defn with Stmt.Refine with Member.AbstractOrAliasType
   @ast class Class(mods: Seq[Mod],
-                   name: core.Type.Name,
+                   name: meta.Type.Name,
                    override val tparams: Seq[TypeParam],
                    ctor: Ctor.Primary,
                    templ: Aux.Template) extends Defn with Member.Template with Has.TypeName
   @ast class Trait(mods: Seq[Mod],
-                   name: core.Type.Name,
+                   name: meta.Type.Name,
                    override val tparams: Seq[TypeParam],
                    templ: Aux.Template) extends Defn with Member.Template with Has.TypeName {
     require(templ.stats.forall(!_.isInstanceOf[Ctor]))
@@ -268,7 +267,7 @@ object Import {
 
   @branch trait Selector extends Tree
   @ast class Wildcard() extends Selector
-  @ast class Name(value: String, @trivia isBackquoted: Boolean = false) extends core.Name with Selector
+  @ast class Name(value: String, @trivia isBackquoted: Boolean = false) extends meta.Name with Selector
   @ast class Rename(from: Name, to: Name) extends Selector
   @ast class Unimport(name: Name) extends Selector
 }
@@ -292,21 +291,21 @@ object Param {
 
 @branch trait TypeParam extends Tree with Has.Mods with Has.TypeParams {
   def tparams: Seq[TypeParam]
-  def contextBounds: Seq[core.Type]
-  def viewBounds: Seq[core.Type]
+  def contextBounds: Seq[meta.Type]
+  def viewBounds: Seq[meta.Type]
   def bounds: Aux.TypeBounds
 }
 object TypeParam {
   @ast class Anonymous(mods: Seq[Mod],
                        tparams: Seq[TypeParam],
-                       contextBounds: Seq[core.Type],
-                       viewBounds: Seq[core.Type],
+                       contextBounds: Seq[meta.Type],
+                       viewBounds: Seq[meta.Type],
                        bounds: Aux.TypeBounds) extends TypeParam
   @ast class Named(mods: Seq[Mod],
-                   name: core.Type.Name,
+                   name: meta.Type.Name,
                    tparams: Seq[TypeParam],
-                   contextBounds: Seq[core.Type],
-                   viewBounds: Seq[core.Type],
+                   contextBounds: Seq[meta.Type],
+                   viewBounds: Seq[meta.Type],
                    bounds: Aux.TypeBounds) extends TypeParam with Member.Type with Has.TypeName
 }
 
@@ -377,7 +376,7 @@ object Aux {
 object Qual {
   @branch trait Term extends Tree
   @branch trait Type extends Term
-  @ast class Name(value: String, @trivia isBackquoted: Boolean = false) extends core.Name with Mod.AccessQualifier
+  @ast class Name(value: String, @trivia isBackquoted: Boolean = false) extends meta.Name with Mod.AccessQualifier
   @ast class Super(thisp: Option[Qual.Name], superp: Option[Type.Name]) extends Qual.Term with Qual.Type
 }
 
@@ -393,7 +392,7 @@ object Has {
   @branch trait TypeParams extends Tree {
     def tparams: Seq[TypeParam]
   }
-  @branch trait Name extends Member { def name: core.Name }
+  @branch trait Name extends Member { def name: meta.Name }
   @branch trait TermName extends Member.Term with Has.Name { def name: Term.Name }
   @branch trait TypeName extends Member.Type with Has.Name { def name: Type.Name }
 }

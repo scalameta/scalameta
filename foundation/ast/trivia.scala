@@ -1,4 +1,4 @@
-package org.scalareflect.ast
+package org.scalameta.ast
 
 import scala.annotation.StaticAnnotation
 

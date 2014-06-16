@@ -1,4 +1,4 @@
-import scala.reflect.core._, Aux._
+import scala.meta._, Aux._
 
 class DefnSuite extends ParseSuite {
   test("val x = 2") {

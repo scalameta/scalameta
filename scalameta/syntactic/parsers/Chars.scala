@@ -2,7 +2,7 @@
  * Copyright 2006-2013 LAMP/EPFL
  * @author  Martin Odersky
  */
-package scala.reflect
+package scala.meta
 package syntactic.parsers
 
 import scala.annotation.{ tailrec, switch }

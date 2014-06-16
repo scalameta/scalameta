@@ -1,4 +1,4 @@
-package org.scalareflect.annotations
+package org.scalameta.annotations
 
 import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation

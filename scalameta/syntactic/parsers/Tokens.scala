@@ -3,7 +3,7 @@
  * @author  Martin Odersky
  */
 
-package scala.reflect
+package scala.meta
 package syntactic.parsers
 
 object Tokens {

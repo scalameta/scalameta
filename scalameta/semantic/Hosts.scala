@@ -1,9 +1,8 @@
-package scala.reflect
+package scala.meta
 package semantic
 
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
-import scala.reflect.core._
 
 trait Host {
   def defns(ref: Ref): Seq[Tree]

@@ -1,4 +1,4 @@
-package org.scalareflect.invariants
+package org.scalameta.invariants
 
 class InvariantFailedException(message: String) extends Exception(message)
 object InvariantFailedException {

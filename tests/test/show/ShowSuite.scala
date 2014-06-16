@@ -1,5 +1,5 @@
 import org.scalatest._
-import scala.reflect.syntactic.show._
+import scala.meta.syntactic.show._
 
 class ShowSuite extends ParseSuite {
   test("val x: Int (raw)") {

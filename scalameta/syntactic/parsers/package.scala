@@ -1,8 +1,7 @@
-package scala.reflect
+package scala.meta
 package syntactic
 
-import scala.reflect.core._
-import org.scalareflect.convert._
+import org.scalameta.convert._
 
 package object parsers {
   val keywords = Set(

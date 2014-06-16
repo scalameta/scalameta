@@ -1,4 +1,4 @@
-package org.scalareflect
+package org.scalameta
 
 import scala.language.higherKinds
 

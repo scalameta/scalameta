@@ -1,20 +1,21 @@
-package scala.reflect
+package scala.meta
 package syntactic.parsers
 
 import scala.collection.{ mutable, immutable }
+import scala.reflect.ClassTag
 import mutable.{ ListBuffer, StringBuilder }
-import scala.reflect.core._, Aux._
+import Aux._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
-import org.scalareflect.unreachable
+import org.scalameta.unreachable
 import Chars.{isOperatorPart, isScalaLetter}
 import Tokens._
 import TokenInfo._
 import Scanners._
 
 object SyntacticInfo {
-  private[reflect] val unaryOps = Set("-", "+", "~", "!")
-  private[reflect] def isUnaryOp(s: String): Boolean = unaryOps contains s
+  private[meta] val unaryOps = Set("-", "+", "~", "!")
+  private[meta] def isUnaryOp(s: String): Boolean = unaryOps contains s
   implicit class SyntacticNameOps(val name: Name) extends AnyVal {
     import name._
     def isLeftAssoc: Boolean = value.last != ':'

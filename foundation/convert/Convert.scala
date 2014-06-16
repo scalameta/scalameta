@@ -1,4 +1,4 @@
-package org.scalareflect
+package org.scalameta
 
 package convert {
   trait Convert[A, B] {

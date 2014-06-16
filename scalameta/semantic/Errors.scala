@@ -1,16 +1,15 @@
-package scala.reflect
+package scala.meta
 package semantic
 
-import org.scalareflect.errors._
-import scala.reflect.core.ReflectionException
+import org.scalameta.errors._
 
 package object errors {
   implicit val throwExceptions = handlers.throwExceptions
   implicit val returnTries = handlers.returnTries
 
   def succeed[S](x: S)(implicit eh: ErrorHandler): eh.Success[S] = eh.succeed(x)
-  def fail(message: String)(implicit eh: ErrorHandler): eh.Failure[ReflectionException] = eh.fail(ReflectionException(message))
-  def fail(ex: ReflectionException)(implicit eh: ErrorHandler): eh.Failure[ReflectionException] = eh.fail(ex)
+  def fail(message: String)(implicit eh: ErrorHandler): eh.Failure[MetaException] = eh.fail(MetaException(message))
+  def fail(ex: MetaException)(implicit eh: ErrorHandler): eh.Failure[MetaException] = eh.fail(ex)
 
   def wrapHosted = new Wrap[Host]
   def wrapMacrohosted = new Wrap[MacroHost]
@@ -18,8 +17,8 @@ package object errors {
     def apply[T](f: H => T)(implicit h: H, eh: ErrorHandler) = {
       try eh.succeed(f(h))
       catch {
-        case ex: ReflectionException => eh.fail(ex)
-        case ex: Exception => eh.fail(ReflectionException(ex.toString))
+        case ex: MetaException => eh.fail(ex)
+        case ex: Exception => eh.fail(MetaException(ex.toString))
       }
     }
   }
