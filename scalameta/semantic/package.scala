@@ -16,6 +16,7 @@ package object semantic {
     @leaf class InferredVargs(vargs: Seq[Term]) extends Attr
     @leaf class MacroExpansion(tree: Tree) extends Attr
     // TODO: design additional attrs for other aspects of typechecking
+    // TODO: see https://github.com/JetBrains/intellij-scala/blob/master/src/org/jetbrains/plugins/scala/lang/resolve/ScalaResolveResult.scala#L24
   }
 
   implicit class RichTree(val tree: Tree) extends AnyVal {
