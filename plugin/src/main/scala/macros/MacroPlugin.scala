@@ -1,5 +1,5 @@
-package scala.reflect.internal.hosts
-package scalacompiler
+package scala.meta
+package internal.hosts.scalacompiler
 package macros
 
 import scala.tools.nsc.plugins.{Plugin => NscPlugin}
@@ -13,8 +13,8 @@ import scala.reflect.macros.runtime.AbortMacroException
 import scala.util.control.ControlThrowable
 import scala.collection.mutable
 import scala.reflect.macros.contexts.{Context => ScalaContext}
-import scala.reflect.semantic.{MacroContext => PalladiumMacroContext}
-import scalahost.{Scalahost, MacroContext => OurMacroContext}
+import scala.meta.semantic.{MacroHost => PalladiumMacroHost}
+import scalahost.{Scalahost, MacroHost => OurMacroHost}
 import scalacompiler.{Plugin => PalladiumPlugin}
 
 trait MacroPlugin extends Common {
@@ -27,6 +27,7 @@ trait MacroPlugin extends Common {
 
   object palladiumMacroPlugin extends NscMacroPlugin {
     override def pluginsTypedMacroBody(typer: Typer, ddef: DefDef): Option[Tree] = {
+      val TermQuote = "denied" // TODO: find a better solution
       ddef match {
         case PalladiumMacro(_, name, tparams, paramss, isBlackbox, _, body) =>
           def cleanupMods(mods: Modifiers) = mods &~ IMPLICIT
@@ -35,8 +36,8 @@ trait MacroPlugin extends Common {
               val p1 = atPos(p.pos)(q"${cleanupMods(mods)} val $pname: _root_.scala.reflect.core.Term")
               if (isRepeated(p.symbol)) copyValDef(p1)(tpt = tq"_root_.scala.<repeated>[${p1.tpt}]") else p1
           }
-          val c = q"implicit val ${TermName("c$" + globalFreshNameCreator.newName(""))}: _root_.scala.reflect.semantic.MacroContext"
-          val implDdef = atPos(ddef.pos)(q"def $name[..$tparams](...$paramss1)(implicit $c): _root_.scala.reflect.core.Term = $body")
+          val c = q"implicit val ${TermName("c$" + globalFreshNameCreator.newName(""))}: _root_.scala.meta.semantic.MacroHost"
+          val implDdef = atPos(ddef.pos)(q"def $name[..$tparams](...$paramss1)(implicit $c): _root_.scala.meta.Term = $body")
           val q"{ ${typedImplDdef: DefDef}; () }" = typer.typed(q"{ $implDdef; () }")
           if (typedImplDdef.exists(_.isErroneous)) {
             if (ddef.symbol != null) ddef.symbol setFlag IS_ERROR
@@ -86,9 +87,9 @@ trait MacroPlugin extends Common {
             // NOTE: magic name. essential for detailed and sane stack traces for exceptions in macro expansion logic
             private def macroExpandWithRuntime(c: ScalaContext): Any = {
               import global.{Tree => ScalaTree, TermTree => ScalaTerm}
-              import scala.reflect.core.{Tree => PalladiumTree, Term => PalladiumTerm}
-              import scala.reflect.internal.eval.{eval => palladiumEval}
-              import org.scalareflect.unreachable
+              import scala.meta.{Tree => PalladiumTree, Term => PalladiumTerm}
+              import scala.meta.internal.eval.{eval => palladiumEval}
+              import org.scalameta.unreachable
               val palladiumContext = Scalahost[global.type](c)
               // val applied @ Applied(core, targs, argss) = dissectApplied(expandee)
               // val implCore = q"${implDdef.symbol}" setType core.tpe

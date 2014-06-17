@@ -2,7 +2,7 @@ language: scala
 script:
   - sbt ++$TRAVIS_SCALA_VERSION clean update compile test package publishOnlyWhenOnMaster
 scala:
-  - 2.11.0
+  - 2.11.1
 jdk:
   - openjdk6
   - openjdk7
@@ -13,7 +13,7 @@ notifications:
     - denys.shabalin@typesafe.com
 env:
   global:
-   - SCALAREFLECT_MAVEN_REALM="Sonatype Nexus Repository Manager"
-   - SCALAREFLECT_MAVEN_DOMAIN="oss.sonatype.org"
-   - secure: "ERPD/pin5ctQ+qRWarqv4qx8qCmrxJgPuRMzX4k+HlmIZKoJ4DwlPNNVaWElb0h+BzTXf4uvLjvkPO8kxMYKZSK2qgmJzr4/zHmoQlCLw7KtDHwxFDggZuzk3R8TeXyhAy+gxlGUuyjh7opomj9xCSUhNTnsvwlEcog8qBMIcjc="
-   - secure: "c50SQUyd2Q47cj6pcxWKyIaIbBTmDJqj+owhBYggnoID8hTP0n0RBYinr4hfm7SzicclOhT9cxZThhlLcBlc6s92NmiB1U3s7SllBegb4qsQeQt8Pe19R7x+Bs7U4VZU9f8n4SnbpHi/tc3uQyj3Z3f+8Ra0OR6NgyKJ9XHTy6s="
+   - SCALAMETA_MAVEN_REALM="Sonatype Nexus Repository Manager"
+   - SCALAMETA_MAVEN_DOMAIN="oss.sonatype.org"
+   - secure: "zQAIM0c3xtM+CYtbFp+G6ONopS8qahaWzvv5hy9OUSp9ZGWd3OzVu33pi0ovOx2D4XKQ3z+Q5sXGFBe6Z3pUshrDv3HsyQ8gzb5z2L06k0YgPCnnAX335Hjgj/4faWr5Pv7mviduDLNnA60ltnAz/J/LonZZK+qXi+VEHaDEtxg="
+   - secure: "dkolBbb18yfBAsXn5/AUtrwn6yit55p3ml74kxQMKAV7Yc3R3vqWFDB/jNTskziRFDL5hHPVGxwC7LHXALdfTZUMSYel0SXX3GVl2OaJ9tOFVz+1bX7KM95iGmzEHw59XvT/H+7624E4sy2+vKk+hsM7vhgswQpRliawFR6Mpcc="

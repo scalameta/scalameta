@@ -9,8 +9,8 @@ object build extends Build {
     scalaVersion := "2.11.0",
     crossVersion := CrossVersion.full,
     version := "0.1.0-SNAPSHOT",
-    organization := "org.scalareflect",
-    description := "Scala host for Project Palladium",
+    organization := "org.scalameta",
+    description := "Scala host for scala.meta",
     resolvers += Resolver.sonatypeRepo("snapshots"),
     resolvers += Resolver.sonatypeRepo("releases"),
     publishMavenStyle := true,
@@ -37,7 +37,7 @@ object build extends Build {
     },
     pomIncludeRepository := { x => false },
     pomExtra := (
-      <url>https://github.com/scalareflect/scalahost</url>
+      <url>https://github.com/scalameta/scalahost</url>
       <inceptionYear>2014</inceptionYear>
       <licenses>
         <license>
@@ -47,12 +47,12 @@ object build extends Build {
         </license>
       </licenses>
       <scm>
-        <url>git://github.com/scalareflect/scalahost.git</url>
-        <connection>scm:git:git://github.com/scalareflect/scalahost.git</connection>
+        <url>git://github.com/scalameta/scalahost.git</url>
+        <connection>scm:git:git://github.com/scalameta/scalahost.git</connection>
       </scm>
       <issueManagement>
         <system>GitHub</system>
-        <url>https://github.com/scalareflect/scalahost/issues</url>
+        <url>https://github.com/scalameta/scalahost/issues</url>
       </issueManagement>
     )
   )
@@ -95,10 +95,10 @@ object build extends Build {
         }
       } else {
         for {
-          realm <- sys.env.get("SCALAREFLECT_MAVEN_REALM")
-          domain <- sys.env.get("SCALAREFLECT_MAVEN_DOMAIN")
-          user <- sys.env.get("SCALAREFLECT_MAVEN_USER")
-          password <- sys.env.get("SCALAREFLECT_MAVEN_PASSWORD")
+          realm <- sys.env.get("SCALAMETA_MAVEN_REALM")
+          domain <- sys.env.get("SCALAMETA_MAVEN_DOMAIN")
+          user <- sys.env.get("SCALAMETA_MAVEN_USER")
+          password <- sys.env.get("SCALAMETA_MAVEN_PASSWORD")
         } yield {
           println("Loading Sonatype credentials from environment variables")
           Credentials(realm, domain, user, password)
@@ -138,8 +138,8 @@ object build extends Build {
     scalaSource in Compile <<= (baseDirectory in Compile)(base => base / "src"),
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided"),
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _ % "provided"),
-    libraryDependencies += "org.scalareflect" % "core_2.11" % "0.1.0-SNAPSHOT",
-    libraryDependencies += "org.scalareflect" % "interpreter_2.11" % "0.1.0-SNAPSHOT",
+    libraryDependencies += "org.scalameta" % "core_2.11" % "0.1.0-SNAPSHOT",
+    libraryDependencies += "org.scalameta" % "interpreter_2.11" % "0.1.0-SNAPSHOT",
     test in assembly := {},
     jarName in assembly := name.value + "_" + scalaVersion.value + "-" + version.value + "-assembly.jar",
     assemblyOption in assembly ~= { _.copy(includeScala = false) },
@@ -159,8 +159,7 @@ object build extends Build {
       IO.copy(List(fatJar -> slimJar), overwrite = true)
       println("packagedArtifact: merged scalahost and its dependencies and produced a fat JAR")
       (art, slimJar)
-    },
-    scalacOptions ++= Seq()
+    }
   )
 
   lazy val sandbox = Project(
@@ -169,8 +168,7 @@ object build extends Build {
   ) settings (
     sharedSettings ++ usePluginSettings: _*
   ) settings (
-    libraryDependencies += "org.scalareflect" % "core_2.11" % "0.1.0-SNAPSHOT",
-    scalacOptions ++= Seq()
+    libraryDependencies += "org.scalameta" % "core_2.11" % "0.1.0-SNAPSHOT"
   )
 
   lazy val tests = Project(
@@ -179,10 +177,9 @@ object build extends Build {
   ) settings (
     sharedSettings ++ usePluginSettings: _*
   ) settings (
-    libraryDependencies += "org.scalareflect" % "core_2.11" % "0.1.0-SNAPSHOT",
+    libraryDependencies += "org.scalameta" % "core_2.11" % "0.1.0-SNAPSHOT",
     libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.3" % "test",
     libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
-    packagedArtifacts := Map.empty,
-    scalacOptions ++= Seq()
+    packagedArtifacts := Map.empty
   ) dependsOn (plugin)
 }

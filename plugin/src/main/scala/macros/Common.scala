@@ -1,5 +1,5 @@
-package scala.reflect.internal.hosts
-package scalacompiler
+package scala.meta
+package internal.hosts.scalacompiler
 package macros
 
 import scala.tools.nsc.Global

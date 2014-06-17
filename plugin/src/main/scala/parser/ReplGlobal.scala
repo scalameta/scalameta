@@ -1,9 +1,9 @@
-package scala.reflect.internal.hosts
-package scalacompiler
+package scala.meta
+package internal.hosts.scalacompiler
 package parser
 
 import scala.tools.nsc.interpreter.{ReplGlobal => NscReplGlobal, _}
-import scala.reflect.internal.hosts.scalacompiler.parser.{SyntaxAnalyzer => PalladiumSyntaxAnalyzer}
+import scala.meta.internal.hosts.scalacompiler.parser.{SyntaxAnalyzer => PalladiumSyntaxAnalyzer}
 
 trait ReplGlobal extends NscReplGlobal { self =>
   // TODO: classloader happy meal!!

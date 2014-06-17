@@ -1,11 +1,11 @@
-package scala.reflect.internal.hosts
-package scalacompiler
+package scala.meta
+package internal.hosts.scalacompiler
 package parser
 
 import scala.tools.nsc.{Global => NscGlobal, Phase, SubComponent, Settings => NscSettings}
 import scala.tools.nsc.plugins.{Plugin => NscPlugin, PluginComponent => NscPluginComponent}
 import scala.collection.mutable
-import scala.reflect.internal.hosts.scalacompiler.parser.{SyntaxAnalyzer => PalladiumSyntaxAnalyzer, ReplGlobal => PalladiumReplGlobal}
+import scala.meta.internal.hosts.scalacompiler.parser.{SyntaxAnalyzer => PalladiumSyntaxAnalyzer, ReplGlobal => PalladiumReplGlobal}
 import scala.tools.nsc.interpreter.{ReplGlobal => NscReplGlobal, _}
 import scala.reflect.internal.util.BatchSourceFile
 
