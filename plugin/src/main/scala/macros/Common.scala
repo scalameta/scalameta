@@ -4,7 +4,7 @@ package macros
 
 import scala.tools.nsc.Global
 
-trait Common {
+trait Common extends scala.reflect.internal.show.Printers {
   val global: Global
   import global._
 
