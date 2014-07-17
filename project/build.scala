@@ -55,6 +55,11 @@ object build extends Build {
         <url>https://github.com/scalameta/scalahost/issues</url>
       </issueManagement>
     ),
+    libraryDependencies <++= (scalaVersion)( sv => Seq(
+      "org.scala-lang" % "scala-reflect" % sv % "provided",
+      "org.scala-lang" % "scala-compiler" % sv % "provided"
+    )),
+    libraryDependencies += "org.scalameta" %% "scalameta" % "0.1.0-SNAPSHOT",
     addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0-M1" cross CrossVersion.full)
   )
 
@@ -137,10 +142,9 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     scalaSource in Compile <<= (baseDirectory in Compile)(base => base),
-    libraryDependencies += "org.scalameta" % "scalameta_2.11" % "0.1.0-SNAPSHOT",
-    libraryDependencies += "org.scalameta" % "scalameta-foundation_2.11" % "0.1.0-SNAPSHOT",
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided"),
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _ % "provided"),
+    libraryDependencies ++= Seq(
+      "org.scalameta" %% "scalameta-foundation" % "0.1.0-SNAPSHOT"
+    ),
     packagedArtifacts := Map.empty
   )
 
@@ -151,11 +155,7 @@ object build extends Build {
     publishableSettings ++ assemblySettings: _*
   ) settings (
     scalaSource in Compile <<= (baseDirectory in Compile)(base => base / "src"),
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided"),
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _ % "provided"),
-    libraryDependencies += "org.scalameta" % "scalameta_2.11" % "0.1.0-SNAPSHOT",
-    libraryDependencies += "org.scalameta" % "scalameta-foundation_2.11" % "0.1.0-SNAPSHOT",
-    libraryDependencies += "org.scalameta" % "interpreter_2.11" % "0.1.0-SNAPSHOT",
+    libraryDependencies += "org.scalameta" %% "interpreter" % "0.1.0-SNAPSHOT",
     test in assembly := {},
     jarName in assembly := name.value + "_" + scalaVersion.value + "-" + version.value + "-assembly.jar",
     assemblyOption in assembly ~= { _.copy(includeScala = false) },
@@ -176,17 +176,13 @@ object build extends Build {
       println("packagedArtifact: merged scalahost and its dependencies and produced a fat JAR")
       (art, slimJar)
     }
-  ) dependsOn (foundation)
+  ) dependsOn (foundation % "optional") // not really optionnal, used for fatjar
 
   lazy val sandbox = Project(
     id   = "sandbox",
     base = file("sandbox")
   ) settings (
     sharedSettings ++ usePluginSettings: _*
-  ) settings (
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _),
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _),
-    libraryDependencies += "org.scalameta" % "scalameta_2.11" % "0.1.0-SNAPSHOT"
   )
 
   lazy val tests = Project(
@@ -195,11 +191,10 @@ object build extends Build {
   ) settings (
     sharedSettings ++ usePluginSettings: _*
   ) settings (
-    libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.3" % "test",
-    libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _),
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _),
-    libraryDependencies += "org.scalameta" % "scalameta_2.11" % "0.1.0-SNAPSHOT",
+    libraryDependencies ++= Seq(
+      "org.scalatest" %% "scalatest" % "2.1.3" % "test",
+      "org.scalacheck" %% "scalacheck" % "1.11.3" % "test"
+    ),
     scalacOptions in Test <++= (Keys.`package` in Compile) map { (jar: File) =>
       val addPlugin = "-Xplugin:" + jar.getAbsolutePath
       val dummy = "-Jdummy=" + jar.lastModified
