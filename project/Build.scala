@@ -28,7 +28,7 @@ object ScalaHostBuild extends Build {
     base = file("foundation"),
     settings = publishableSettings ++ commonDependencies ++ Seq(
       flatSource,
-      libraryDependencies += scalaMetaFoundation,
+      libraryDependencies += metafoundation,
       dontPackage
     )
   )
