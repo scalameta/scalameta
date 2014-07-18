@@ -140,15 +140,8 @@ object Settings {
   // Thanks Jason for this cool idea (taken from https://github.com/retronym/boxer)
   // add plugin timestamp to compiler options to trigger recompile of
   // main after editing the plugin. (Otherwise a 'clean' is needed.)
-  lazy val pluginInTest =
-    scalacOptions in Test <++= (Keys.`package` in Compile) map { (jar: File) =>
-      val addPlugin = "-Xplugin:" + jar.getAbsolutePath
-      val dummy = "-Jdummy=" + jar.lastModified
-      Seq(addPlugin, dummy)
-    }
-
   def usePlugin(plugin: ProjectReference) =
-    scalacOptions in Compile <++= (Keys.`package` in (plugin, Compile)) map { (jar: File) =>
+    scalacOptions <++= (Keys.`package` in (plugin, Compile)) map { (jar: File) =>
       System.setProperty("scalahost.plugin.jar", jar.getAbsolutePath)
       val addPlugin = "-Xplugin:" + jar.getAbsolutePath
       val dummy = "-Jdummy=" + jar.lastModified

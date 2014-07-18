@@ -45,7 +45,7 @@ object ScalaHostBuild extends Build {
     id   = "sandbox",
     base = file("sandbox"),
     settings = sharedSettings ++ commonDependencies ++ Seq(
-      pluginInTest
+      usePlugin(plugin)
     )
   )
 
@@ -54,7 +54,6 @@ object ScalaHostBuild extends Build {
     base = file("tests"),
     settings = sharedSettings ++ commonDependencies ++ Seq(
       usePlugin(plugin),
-      pluginInTest,
       libraryDependencies ++= Seq(scalatest, scalacheck),
       dontPackage
     )
