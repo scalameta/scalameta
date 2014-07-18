@@ -5,9 +5,11 @@ import AssemblyKeys._
 import com.typesafe.sbt.pgp.PgpKeys._
 
 object Settings {
+  lazy val languageVersion = "2.11.1"
+  lazy val metaVersion = "0.1.0-SNAPSHOT"
 
   lazy val sharedSettings: Seq[sbt.Def.Setting[_]] = Defaults.defaultSettings ++ Seq(
-    scalaVersion := "2.11.1",
+    scalaVersion := languageVersion,
     crossVersion := CrossVersion.full,
     version := metaVersion,
     organization := "org.scalameta",
@@ -59,8 +61,6 @@ object Settings {
   )
 
   lazy val flatSource = scalaSource in Compile <<= (baseDirectory in Compile)(base => base)
-
-  lazy val metaVersion = "0.1.0-SNAPSHOT"
 
   lazy val packaging: Seq[sbt.Def.Setting[_]] = assemblySettings ++ Seq(
     test in assembly := {},
