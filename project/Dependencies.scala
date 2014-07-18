@@ -5,7 +5,7 @@ object Dependencies {
 
   def reflect(sv: String) = "org.scala-lang" % "scala-reflect" % sv
   def compiler(sv: String) = "org.scala-lang" % "scala-compiler" % sv
-  lazy val paradise ="org.scalamacros" % "paradise" % "2.1.0-M1" cross CrossVersion.full
+  lazy val paradise ="org.scalamacros" % "paradise" % "2.1.0-SNAPSHOT" cross CrossVersion.full
 
   lazy val meta = "org.scalameta" %% "scalameta" % metaVersion
   lazy val metafoundation = "org.scalameta" %% "scalameta-foundation" % metaVersion
