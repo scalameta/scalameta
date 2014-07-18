@@ -19,7 +19,7 @@ abstract class SyntaxAnalyzer extends NscSyntaxAnalyzer with Common {
 
   private def initialUnitBody(unit: CompilationUnit): Tree = {
     if (unit.isJava) new JavaUnitParser(unit).parse()
-    else if (global.reporter.incompleteHandled) new PalladiumUnitParser(unit).parse()
+    else if (currentRun.reporting.incompleteHandled) new PalladiumUnitParser(unit).parse()
     else new PalladiumUnitParser(unit).smartParse()
   }
 

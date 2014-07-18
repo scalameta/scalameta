@@ -63,6 +63,13 @@ trait MacroPlugin extends Common {
           None
       }
     }
+    override def pluginsIsBlackbox(macroDef: Symbol): Option[Boolean] = {
+      val macroSignatures = macroDef.annotations.filter(_.atp.typeSymbol == MacroImplAnnotation)
+      macroSignatures match {
+        case _ :: AnnotationInfo(_, List(PalladiumSignature(isBlackbox, _)), _) :: Nil => Some(isBlackbox)
+        case _ => None
+      }
+    }
     override def pluginsMacroExpand(typer: Typer, expandee: Tree, mode: Mode, pt: Type): Option[Tree] = {
       val TermQuote = "denied" // TODO: this about a better approach
       val macroSignatures = expandee.symbol.annotations.filter(_.atp.typeSymbol == MacroImplAnnotation)
