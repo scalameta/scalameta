@@ -4,11 +4,14 @@ import sbtassembly.Plugin._
 import AssemblyKeys._
 import com.typesafe.sbt.pgp.PgpKeys._
 
-object build extends Build {
-  lazy val sharedSettings = Defaults.defaultSettings ++ Seq(
-    scalaVersion := "2.11.0",
+object Settings {
+  lazy val languageVersion = "2.11.1"
+  lazy val metaVersion = "0.1.0-SNAPSHOT"
+
+  lazy val sharedSettings: Seq[sbt.Def.Setting[_]] = Defaults.defaultSettings ++ Seq(
+    scalaVersion := languageVersion,
     crossVersion := CrossVersion.full,
-    version := "0.1.0-SNAPSHOT",
+    version := metaVersion,
     organization := "org.scalameta",
     description := "Scala host for scala.meta",
     resolvers += Resolver.sonatypeRepo("snapshots"),
@@ -57,6 +60,31 @@ object build extends Build {
     )
   )
 
+  lazy val flatSource = scalaSource in Compile <<= (baseDirectory in Compile)(base => base)
+
+  lazy val packaging: Seq[sbt.Def.Setting[_]] = assemblySettings ++ Seq(
+    test in assembly := {},
+    jarName in assembly := name.value + "_" + scalaVersion.value + "-" + version.value + "-assembly.jar",
+    assemblyOption in assembly ~= { _.copy(includeScala = false) },
+    Keys.`package` in Compile := {
+      val slimJar = (Keys.`package` in Compile).value
+      val fatJar = new File(crossTarget.value + "/" + (jarName in assembly).value)
+      val _ = assembly.value
+      IO.copy(List(fatJar -> slimJar), overwrite = true)
+      println("package: merged scalahost and its dependencies and produced a fat JAR")
+      slimJar
+    },
+    packagedArtifact in Compile in packageBin := {
+      val temp = (packagedArtifact in Compile in packageBin).value
+      val (art, slimJar) = temp
+      val fatJar = new File(crossTarget.value + "/" + (jarName in assembly).value)
+      val _ = assembly.value
+      IO.copy(List(fatJar -> slimJar), overwrite = true)
+      println("packagedArtifact: merged scalahost and its dependencies and produced a fat JAR")
+      (art, slimJar)
+    }
+  )
+
   // http://stackoverflow.com/questions/20665007/how-to-publish-only-when-on-master-branch-under-travis-and-sbt-0-13
   val publishOnlyWhenOnMaster = taskKey[Unit]("publish task for Travis (don't publish when building pull requests, only publish when the build is triggered by merge into master)")
   def publishOnlyWhenOnMasterImpl = Def.taskDyn {
@@ -71,7 +99,7 @@ object build extends Build {
     }
   }
 
-  lazy val publishableSettings = sharedSettings ++ Seq(
+  lazy val publishableSettings: Seq[sbt.Def.Setting[_]] = sharedSettings ++ Seq(
     publishArtifact in Compile := true,
     publishArtifact in Test := false,
     credentials ++= {
@@ -107,79 +135,16 @@ object build extends Build {
     }.toList
   )
 
-  lazy val usePluginSettings = Seq(
-    scalacOptions in Compile <++= (Keys.`package` in (plugin, Compile)) map { (jar: File) =>
+  lazy val dontPackage = packagedArtifacts := Map.empty
+
+  // Thanks Jason for this cool idea (taken from https://github.com/retronym/boxer)
+  // add plugin timestamp to compiler options to trigger recompile of
+  // main after editing the plugin. (Otherwise a 'clean' is needed.)
+  def usePlugin(plugin: ProjectReference) =
+    scalacOptions <++= (Keys.`package` in (plugin, Compile)) map { (jar: File) =>
       System.setProperty("scalahost.plugin.jar", jar.getAbsolutePath)
       val addPlugin = "-Xplugin:" + jar.getAbsolutePath
-      // Thanks Jason for this cool idea (taken from https://github.com/retronym/boxer)
-      // add plugin timestamp to compiler options to trigger recompile of
-      // main after editing the plugin. (Otherwise a 'clean' is needed.)
       val dummy = "-Jdummy=" + jar.lastModified
       Seq(addPlugin, dummy)
     }
-  )
-
-  lazy val root = Project(
-    id = "root",
-    base = file("root")
-  ) settings (
-    sharedSettings : _*
-  ) settings (
-    test in Test := (test in tests in Test).value,
-    packagedArtifacts := Map.empty
-  ) aggregate (plugin, tests)
-
-  lazy val plugin = Project(
-    id   = "scalahost",
-    base = file("plugin")
-  ) settings (
-    publishableSettings ++ assemblySettings: _*
-  ) settings (
-    scalaSource in Compile <<= (baseDirectory in Compile)(base => base / "src"),
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided"),
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _ % "provided"),
-    libraryDependencies += "org.scalameta" % "core_2.11" % "0.1.0-SNAPSHOT",
-    libraryDependencies += "org.scalameta" % "interpreter_2.11" % "0.1.0-SNAPSHOT",
-    test in assembly := {},
-    jarName in assembly := name.value + "_" + scalaVersion.value + "-" + version.value + "-assembly.jar",
-    assemblyOption in assembly ~= { _.copy(includeScala = false) },
-    Keys.`package` in Compile := {
-      val slimJar = (Keys.`package` in Compile).value
-      val fatJar = new File(crossTarget.value + "/" + (jarName in assembly).value)
-      val _ = assembly.value
-      IO.copy(List(fatJar -> slimJar), overwrite = true)
-      println("package: merged scalahost and its dependencies and produced a fat JAR")
-      slimJar
-    },
-    packagedArtifact in Compile in packageBin := {
-      val temp = (packagedArtifact in Compile in packageBin).value
-      val (art, slimJar) = temp
-      val fatJar = new File(crossTarget.value + "/" + (jarName in assembly).value)
-      val _ = assembly.value
-      IO.copy(List(fatJar -> slimJar), overwrite = true)
-      println("packagedArtifact: merged scalahost and its dependencies and produced a fat JAR")
-      (art, slimJar)
-    }
-  )
-
-  lazy val sandbox = Project(
-    id   = "sandbox",
-    base = file("sandbox")
-  ) settings (
-    sharedSettings ++ usePluginSettings: _*
-  ) settings (
-    libraryDependencies += "org.scalameta" % "core_2.11" % "0.1.0-SNAPSHOT"
-  )
-
-  lazy val tests = Project(
-    id   = "tests",
-    base = file("tests")
-  ) settings (
-    sharedSettings ++ usePluginSettings: _*
-  ) settings (
-    libraryDependencies += "org.scalameta" % "core_2.11" % "0.1.0-SNAPSHOT",
-    libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.3" % "test",
-    libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
-    packagedArtifacts := Map.empty
-  ) dependsOn (plugin)
 }

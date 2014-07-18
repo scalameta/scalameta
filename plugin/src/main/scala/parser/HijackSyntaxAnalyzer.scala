@@ -12,7 +12,7 @@ import scala.reflect.internal.util.BatchSourceFile
 trait HijackSyntaxAnalyzer {
   self: NscPlugin =>
 
-  def hijackSyntaxAnalyzer(): Unit = {
+  def hijackSyntaxAnalyzer(): global.syntaxAnalyzer.type = {
     val syntaxAnalyzer = new { val global: self.global.type = self.global } with PalladiumSyntaxAnalyzer
     val syntaxAnalyzerField = classOf[NscGlobal].getDeclaredField("syntaxAnalyzer")
     syntaxAnalyzerField.setAccessible(true)
@@ -23,8 +23,13 @@ trait HijackSyntaxAnalyzer {
     val phasesSetMapGetter = classOf[NscGlobal].getDeclaredMethod("phasesSet")
     val phasesSet = phasesSetMapGetter.invoke(global).asInstanceOf[mutable.Set[SubComponent]]
     if (phasesSet.exists(_.phaseName == "parser")) { // `scalac -help` doesn't instantiate standard phases
-      phasesSet -= phasesSet.find(_.phaseName == "parser").head
-      phasesSet += syntaxAnalyzer
+      val oldParser = phasesSet.find(_.phaseName == "parser").head
+      val newParser = syntaxAnalyzer
+      phasesSet -= oldParser
+      phasesSet += newParser
+      val phasesDescMapGetter = classOf[NscGlobal].getDeclaredMethod("phasesDescMap")
+      val phasesDescMap = phasesDescMapGetter.invoke(global).asInstanceOf[mutable.Map[SubComponent, String]]
+      phasesDescMap(newParser) = "parse palladium source into ASTs, perform simple desugaring"
     }
 
     if (global.reporter.isInstanceOf[ReplReporter] && global.toString != "<hijacked global>") {
@@ -44,5 +49,7 @@ trait HijackSyntaxAnalyzer {
       new hijackedCompiler.Run().compileSources(initSources)
       f_compiler.set(intp, hijackedCompiler)
     }
+
+    syntaxAnalyzer.asInstanceOf[global.syntaxAnalyzer.type]
   }
 }
