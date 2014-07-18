@@ -6,7 +6,7 @@ object ScalaHostBuild extends Build {
   import Settings._
 
   lazy val commonDependencies = Seq(
-    libraryDependencies <++= (scalaVersion)( sv => Seq(
+    libraryDependencies <++= (scalaVersion)(sv => Seq(
       reflect(sv) % "provided",
       compiler(sv) % "provided",
       meta
@@ -39,7 +39,7 @@ object ScalaHostBuild extends Build {
     settings = publishableSettings ++ commonDependencies ++ packaging ++ Seq(
       libraryDependencies += interpreter
     )
-  ) dependsOn (foundation % "optional") // not really optionnal, used for fatjar
+  ) dependsOn (foundation % "optional") // not really optional, used for fatjar
 
   lazy val sandbox = Project(
     id   = "sandbox",
