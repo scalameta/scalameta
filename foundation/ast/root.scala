@@ -20,6 +20,8 @@ class RootMacros(val c: Context) {
       val Origin = tq"_root_.scala.meta.Origin"
       val SeqAny = tq"_root_.scala.collection.immutable.Seq[_root_.scala.Any]"
       val Scratchpads = tq"_root_.scala.Predef.Map[$Host, $SeqAny]"
+      val Adt = q"_root_.org.scalameta.adt"
+      val AstInternal = q"_root_.org.scalameta.ast.internal"
       val q"..$boilerplate" = q"""
         // NOTE: these are internal APIs designed to be used only by hosts
         // TODO: these APIs will most likely change in the future
@@ -39,9 +41,9 @@ class RootMacros(val c: Context) {
         private[meta] def internalCopy(prototype: $Tree = internalPrototype, parent: $Tree = internalParent, scratchpads: $Scratchpads = internalScratchpads, origin: $Origin = origin): ThisType
       """
       val stats1 = stats ++ boilerplate
-      // TODO: this should emit @ast.root, not @adt.root
-      val anns1 = q"new _root_.org.scalameta.adt.root" +: anns
-      q"${Modifiers(flags, privateWithin, anns1)} trait $name[..$tparams] extends { ..$earlydefns } with ..$parents { $self => ..$stats1 }"
+      val anns1 = q"new $AstInternal.root" +: q"new $Adt.root" +: anns
+      val parents1 = parents :+ tq"$AstInternal.Ast"
+      q"${Modifiers(flags, privateWithin, anns1)} trait $name[..$tparams] extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
     }
     val expanded = annottees match {
       case (cdef @ ClassDef(mods, _, _, _)) :: rest if mods.hasFlag(TRAIT) => transform(cdef) :: rest

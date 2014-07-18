@@ -1,6 +1,6 @@
 import scala.meta._
 
-class BasicSuite extends AdtSuite {
+class ReflectionSuite extends AdtSuite {
   import AdtReflection._
 
   test("root") {

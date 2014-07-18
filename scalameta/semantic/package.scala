@@ -3,6 +3,7 @@ package scala.meta
 import org.scalameta.adt._
 import org.scalameta.annotations._
 import scala.{Seq => _}
+import scala.annotation.compileTimeOnly
 import scala.collection.immutable.Seq
 import scala.reflect.{ClassTag, classTag}
 
@@ -15,6 +16,7 @@ package object semantic {
     @leaf class InferredVargs(vargs: Seq[Term]) extends Attr
     @leaf class MacroExpansion(tree: Tree) extends Attr
     // TODO: design additional attrs for other aspects of typechecking
+    // TODO: see https://github.com/JetBrains/intellij-scala/blob/master/src/org/jetbrains/plugins/scala/lang/resolve/ScalaResolveResult.scala#L24
   }
 
   implicit class RichTree(val tree: Tree) extends AnyVal {
@@ -349,5 +351,6 @@ package object semantic {
     @hosted(macroApi = true) def abort(msg: String): Nothing = delegate
     @hosted(macroApi = true) def resources: Seq[String] = delegate
     @hosted(macroApi = true) def resource(url: String): Array[Byte] = delegate
+    @compileTimeOnly("c.whitebox isn't supposed to be used outside macro { ... } blocks") def whitebox[T](expansion: T): T = expansion
   }
 }

@@ -5,12 +5,12 @@ import scala.reflect.macros.whitebox.Context
 import scala.language.experimental.macros
 import org.scalameta.unreachable
 
-trait Liftables {
+trait OldLiftables {
   val u: Universe
-  def materialize[T]: Any = macro LiftableImpl.expand[T]
+  def materialize[T]: Any = macro OldLiftableImpl.expand[T]
 }
 
-class LiftableImpl(val c: Context) { import c.universe._
+class OldLiftableImpl(val c: Context) { import c.universe._
   val q"$prefix.materialize[..$_]" = c.macroApplication
   val u = q"$prefix.u"
 

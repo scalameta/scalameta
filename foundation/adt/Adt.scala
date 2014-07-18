@@ -34,7 +34,8 @@ class AdtMacros(val c: Context) {
       val hierarchyCheck = q"$Internal.hierarchyCheck[${cdef.name}]"
       val stats1 = thisType +: hierarchyCheck +: stats
       val anns1 = q"new $Internal.root" +: anns
-      ClassDef(Modifiers(flags1, privateWithin, anns1), name, tparams, Template(parents, self, stats1))
+      val parents1 = parents :+ tq"$Internal.Adt"
+      ClassDef(Modifiers(flags1, privateWithin, anns1), name, tparams, Template(parents1, self, stats1))
     }
     val expanded = annottees match {
       case (cdef @ ClassDef(mods, _, _, _)) :: rest if mods.hasFlag(TRAIT) => transform(cdef) :: rest
@@ -135,6 +136,7 @@ class AdtMacros(val c: Context) {
 }
 
 object Internal {
+  trait Adt
   class root extends StaticAnnotation
   class branch extends StaticAnnotation
   class leafClass extends StaticAnnotation

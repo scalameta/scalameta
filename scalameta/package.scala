@@ -1,9 +1,9 @@
 package scala
 
-import scala.language.experimental.{macros => prettyPlease}
 import scala.language.implicitConversions
 import org.scalameta.adt._
 import org.scalameta.annotations._
+import org.scalameta.convert._
 
 package object meta {
   @quasiquote[Stmt]('q)             implicit class TermQuote(ctx: StringContext)
@@ -29,7 +29,11 @@ package object meta {
     @leaf class File(f: java.io.File) extends Source {
       lazy val content = scala.io.Source.fromFile(f).mkString.toArray
     }
-    object File { def apply(path: Predef.String): Source.File = Source.File(new java.io.File(path)) }
+    object File {
+      def apply(path: Predef.String): Source.File = Source.File(new java.io.File(path))
+    }
+    implicit val stringToSource: Convert[scala.Predef.String, Source] = Convert.apply(Source.String(_))
+    implicit val fileToSource: Convert[java.io.File, Source] = Convert.apply(Source.File(_))
   }
   @root trait Origin { def src: Source }
   object Origin {
