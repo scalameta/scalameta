@@ -60,9 +60,12 @@ object Settings {
     )
   )
 
-  lazy val flatSource = scalaSource in Compile <<= (baseDirectory in Compile)(base => base)
+  lazy val flatLayout: Seq[sbt.Def.Setting[_]] = assemblySettings ++ Seq(
+    scalaSource in Compile <<= (baseDirectory in Compile)(base => base),
+    resourceDirectory in Compile <<= (baseDirectory in Compile)(base => base / "resources")
+  )
 
-  lazy val packaging: Seq[sbt.Def.Setting[_]] = assemblySettings ++ Seq(
+  lazy val mergeDependencies: Seq[sbt.Def.Setting[_]] = assemblySettings ++ Seq(
     test in assembly := {},
     jarName in assembly := name.value + "_" + scalaVersion.value + "-" + version.value + "-assembly.jar",
     assemblyOption in assembly ~= { _.copy(includeScala = false) },
