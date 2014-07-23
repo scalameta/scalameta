@@ -5,7 +5,7 @@ import AssemblyKeys._
 import com.typesafe.sbt.pgp.PgpKeys._
 
 object Settings {
-  lazy val languageVersion = "2.11.2-SNAPSHOT"
+  lazy val languageVersion = "2.11.2"
   lazy val metaVersion = "0.1.0-SNAPSHOT"
 
   lazy val sharedSettings: Seq[sbt.Def.Setting[_]] = Defaults.defaultSettings ++ Seq(
@@ -16,6 +16,8 @@ object Settings {
     description := "Scala host for scala.meta",
     resolvers += Resolver.sonatypeRepo("snapshots"),
     resolvers += Resolver.sonatypeRepo("releases"),
+    resolvers += "Pre-release of 2.11.2 core" at "https://oss.sonatype.org/content/repositories/orgscala-lang-1123",
+    resolvers += "Pre-release of 2.11.2 modules" at "https://oss.sonatype.org/content/repositories/orgscala-lang-1124",
     publishMavenStyle := true,
     publishArtifact in Compile := false,
     publishArtifact in Test := false,
