@@ -165,8 +165,9 @@ class ConverterMacros(val c: whitebox.Context) {
 }
 
 package object internal {
-  case class Converter(in: Any, pt: Any, out: Any, method: Any, derived: Boolean)
-  case class ComputedConvertersAttachment(converters: List[Converter])
+  case class Converter(in: Any, pt: Any, out: Any, module: Any, method: String, methodRef: Any, derived: Boolean)
+  class computedConvertersAnnotation(converters: List[Converter]) extends scala.annotation.StaticAnnotation
+  class WildcardDummy
 
   class names(xs: String*) extends scala.annotation.StaticAnnotation
   def computeConverters[T](wrapper: Any)(x: T): Unit = macro WhiteboxMacros.computeConverters
@@ -198,6 +199,9 @@ package object internal {
     val Ops_cvtbang = typeOf[org.scalameta.convert.auto.`package`.Ops].member(TermName("cvt_$bang")).asMethod
     val Any_asInstanceOf = AnyTpe.member(TermName("asInstanceOf")).asMethod
     val AstClassAnnotation = symbolOf[org.scalameta.ast.internal.astClass]
+    val ComputedConvertersAnnotation = symbolOf[org.scalameta.convert.auto.internal.computedConvertersAnnotation]
+    val ComputedConvertersDatabearer = symbolOf[org.scalameta.convert.auto.internal.Converter]
+    val PersistedWildcardType = typeOf[WildcardDummy]
     val DeriveInternal = q"_root_.org.scalameta.convert.auto.internal"
     object Cvt {
       def unapply(x: Tree): Option[(Tree, Type, Boolean)] = {
@@ -235,9 +239,12 @@ package object internal {
       }
     }
     def materialize[In: WeakTypeTag, Out: WeakTypeTag]: Tree = {
-      ???
+      val in = q"${c.freshName(TermName("in"))}"
+      val conversion = convert(in, c.weakTypeOf[In], WildcardType, allowDerived = false, allowDowncasts = false)
+      val typeclassCompanion = c.macroApplication.symbol.owner.asClass.module.asModule
+      q"$typeclassCompanion((($in: ${tq""}) => $conversion))"
     }
-    case class Converter(in: Type, pt: Type, out: Type, method: Tree, derived: Boolean)
+    case class Converter(in: Type, pt: Type, out: Type, module: Tree, method: String, methodRef: Tree, derived: Boolean)
     type SharedConverter = org.scalameta.convert.auto.internal.Converter
     val SharedConverter = org.scalameta.convert.auto.internal.Converter
     def computeConverters(wrapper: Tree)(x: Tree): Tree = {
@@ -377,7 +384,7 @@ package object internal {
           })
           val deriveds = nontrivialClauses.map(_.body.symbol == Auto_derive)
           if (ins.length != pts.length || pts.length != outs.length || outs.length != methods.length || methods.length != deriveds.length) c.abort(c.enclosingPosition, s"something went wrong: can't create converters from ${ins.length}, ${pts.length}, ${outs.length}, ${methods.length} and ${deriveds.length}")
-          ins.zip(pts).zip(outs).zip(methods).zip(deriveds).map{ case ((((in, pt), out), method), derived) => SharedConverter(in, pt, out, method, derived) }
+          ins.zip(pts).zip(outs).zip(methods).zip(deriveds).map{ case ((((in, pt), out), method), derived) => SharedConverter(in, pt, out, wrapper.duplicate, method.symbol.name.toString, method, derived) }
         } else {
           Nil
         }
@@ -393,7 +400,29 @@ package object internal {
       // val max3 = tups.map(_._3.length).max
       // tups.foreach{ case (f1, f2, f3, f4) => println(f1 + (" " * (max1 - f1.length + 5)) + f2 + (" " * (max2 - f2.length + 5)) + f3 + (" " * (max3 - f3.length + 5)) + f4) }
       // ???
-      target.updateAttachment(ComputedConvertersAttachment(converters))
+      target.setAnnotations(target.annotations ++ List(Annotation(
+        ComputedConvertersAnnotation.toType,
+        List({
+          def smuggleType(tpe: Type) = {
+            val persistedTpe = if (tpe eq WildcardType) PersistedWildcardType else tpe
+            Literal(Constant(persistedTpe)).setType(constantType(Constant(persistedTpe)))
+          }
+          def pickleConverter(converter: SharedConverter): Tree = q"""
+            new $ComputedConvertersDatabearer(
+              ${smuggleType(converter.in.asInstanceOf[Type])},
+              ${smuggleType(converter.pt.asInstanceOf[Type])},
+              ${smuggleType(converter.out.asInstanceOf[Type])},
+              ${converter.module.asInstanceOf[Tree]},
+              ${converter.method},
+              ${Literal(Constant(null))},
+              ${converter.derived}
+            )
+          """
+          val untyped = q"$ListModule(${converters.map(pickleConverter)})"
+          c.typecheck(untyped)
+        }),
+        scala.collection.immutable.ListMap()
+      )): _*)
       // TODO: also persist the converters in an annotation on target in order to support separate compilation
       q"()"
     }
@@ -401,8 +430,31 @@ package object internal {
       def loop(sym: Symbol): List[Converter] = {
         if (sym == NoSymbol) Nil
         else {
-          val att = sym.attachments.get[ComputedConvertersAttachment]
-          val result = att.map(_.converters.map(cvtr => Converter(cvtr.in.asInstanceOf[Type], cvtr.pt.asInstanceOf[Type], cvtr.out.asInstanceOf[Type], cvtr.method.asInstanceOf[Tree], cvtr.derived)))
+          object UnsmuggleType {
+            def unapply(tree: Tree): Option[Type] = tree match {
+              case Literal(Constant(persistedTpe: Type)) =>
+                val tpe = if (persistedTpe =:= PersistedWildcardType) WildcardType else persistedTpe
+                Some(tpe)
+              case _ =>
+                None
+            }
+          }
+          val ann = sym.annotations.find(_.tree.tpe.typeSymbol == ComputedConvertersAnnotation)
+          val args = ann.map(_.tree.children.last match { case q"$_.$_[..$_]($_.$_[..$_](..$args))" => args })
+          val result = args.map(_.map(_ match { case q"""new $_(
+            ${UnsmuggleType(in)},
+            ${UnsmuggleType(pt)},
+            ${UnsmuggleType(out)},
+            $module,
+            ${method: String},
+            $_,
+            ${derived: Boolean}
+          )""" =>
+            val qual = module.duplicate
+            val methodSym = module.symbol.info.member(TermName(method)).orElse(c.abort(c.enclosingPosition, s"something went wrong: can't resolve $method in $module"))
+            val methodRef = q"$qual.$methodSym"
+            Converter(in, pt, out, module, method, methodRef, derived)
+          }))
           val next = List(sym.owner) ++ (if (sym.isModule) List(sym.asModule.moduleClass) else Nil)
           result.getOrElse(next.flatMap(loop))
         }
@@ -436,13 +488,13 @@ package object internal {
         matching = matching.filter(c1 => !matching.exists(c2 => c1 != c2 && !(c1.in =:= c2.in) && (c1.in <:< c2.in)))
         var result = matching match {
           case Nil => fail(s"no suitable patterns were found");
-          case List(Converter(cin, _, _, method, _)) if in <:< cin => q"$method($x)"
+          case List(Converter(cin, _, _, _, _, methodRef, _)) if in <:< cin => q"$methodRef($x)"
           case matching =>
             if (matching.map(_.in).length > matching.map(_.in).distinct.length) {
               val (ambin, ambout) = matching.groupBy(_.in).toList.sortBy(_._1.toString).filter(_._2.length > 1).head
               fail(s"$ambin <:< $in is ambiguous between ${ambout.map(_.out)}")
             } else {
-              val cases = matching.map(c => cq"in: ${c.in} => ${c.method}(in)")
+              val cases = matching.map(c => cq"in: ${c.in} => ${c.methodRef}(in)")
               q"""
                 $x match {
                   case ..$cases
