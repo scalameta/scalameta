@@ -240,7 +240,7 @@ package object internal {
     }
     def materialize[In: WeakTypeTag, Out: WeakTypeTag]: Tree = {
       val in = q"${c.freshName(TermName("in"))}"
-      val conversion = convert(in, c.weakTypeOf[In], WildcardType, allowDerived = false, allowDowncasts = false)
+      val conversion = convert(in, c.weakTypeOf[In], WildcardType, allowDerived = false, allowDowncasts = false, sym = c.macroApplication.symbol)
       val typeclassCompanion = c.macroApplication.symbol.owner.asClass.module.asModule
       q"$typeclassCompanion((($in: ${tq""}) => $conversion))"
     }
@@ -426,7 +426,7 @@ package object internal {
       // TODO: also persist the converters in an annotation on target in order to support separate compilation
       q"()"
     }
-    def loadConverters(): List[Converter] = {
+    def loadConverters(sym: Symbol): List[Converter] = {
       def loop(sym: Symbol): List[Converter] = {
         if (sym == NoSymbol) Nil
         else {
@@ -459,14 +459,14 @@ package object internal {
           result.getOrElse(next.flatMap(loop))
         }
       }
-      val converters = loop(enclosingOwner)
+      val converters = loop(sym)
       if (converters.isEmpty && !c.hasErrors) {
         c.abort(c.enclosingPosition, "something went wrong: can't load converters")
       } else {
         converters
       }
     }
-    def convert(x: Tree, in: Type, out: Type, allowDerived: Boolean, allowDowncasts: Boolean): Tree = {
+    def convert(x: Tree, in: Type, out: Type, allowDerived: Boolean, allowDowncasts: Boolean, sym: Symbol): Tree = {
       def fail(reason: String) = { c.error(x.pos, s"can't derive a converter from $in to $out because $reason"); gen.mkAttributedRef(Predef_???).setType(NothingTpe) }
       if (in.baseClasses.contains(SeqClass)) {
         if (!out.baseClasses.contains(SeqClass)) fail(s"of a collection rank mismatch")
@@ -474,11 +474,11 @@ package object internal {
           val in1 = in.baseType(SeqClass).typeArgs.head
           val out1 = out.baseType(SeqClass).typeArgs.head
           val param = c.freshName(TermName("x"))
-          val result1 = convert(atPos(x.pos)(q"$param"), in1, out1, allowDerived, allowDowncasts)
+          val result1 = convert(atPos(x.pos)(q"$param"), in1, out1, allowDerived, allowDowncasts, sym)
           q"$x.map(($param: ${tq""}) => $result1)"
         }
       } else {
-        val converters = loadConverters()
+        val converters = loadConverters(sym)
         def matchesIn(c: Converter) = (in <:< c.in) || (allowDowncasts && (c.in <:< in))
         def matchesOut(c: Converter) = {
           def matchesOutTpe(cout: Type) = (cout <:< out) || (allowDowncasts && (out <:< cout))
@@ -515,7 +515,7 @@ package object internal {
       }
     }
     def lookupConverters[T: WeakTypeTag, U: WeakTypeTag]: Tree = {
-      val converters = loadConverters()
+      val converters = loadConverters(enclosingOwner)
       val in = weakTypeOf[T]
       val pt = weakTypeOf[U]
       val out = {
@@ -531,14 +531,14 @@ package object internal {
       q"new { type In = $in; type Out = $out }"
     }
     def connectConverters(x: Tree): Tree = {
-      val converters = loadConverters()
+      val converters = loadConverters(enclosingOwner)
       if (converters.isEmpty) {
         x
       } else if (x.exists(_.symbol == Auto_derive)) {
         val q"{ ..$_; in match { case ..$clauses } }" = x
         if (clauses.length != 1) c.abort(c.enclosingPosition, "can't derive a converter encompassing multiple clauses")
         val in = atPos(x.pos)(c.typecheck(Ident(TermName("in"))))
-        convert(in, in.tpe, WildcardType, allowDerived = false, allowDowncasts = true)
+        convert(in, in.tpe, WildcardType, allowDerived = false, allowDowncasts = true, sym = enclosingOwner)
       } else {
         object transformer {
           var pt: Type = WildcardType
@@ -550,9 +550,9 @@ package object internal {
           def transform(tree: Tree): Tree = typingTransform(tree)((tree, api) => {
             def connect(convertee: Tree, force: Boolean): Tree = {
               // println(convertee.tpe.widen + " -> " + pt + (if (force) " !!!" else ""))
-              // println(convert(convertee, convertee.tpe.widen, pt, allowDerived = true, allowDowncasts = force))
+              // println(convert(convertee, convertee.tpe.widen, pt, allowDerived = true, allowDowncasts = force, sym = enclosingOwner))
               // gen.mkAttributedRef(Predef_???).setType(NothingTpe)
-              api.typecheck(convert(convertee, convertee.tpe.widen, pt, allowDerived = true, allowDowncasts = force))
+              api.typecheck(convert(convertee, convertee.tpe.widen, pt, allowDerived = true, allowDowncasts = force, sym = enclosingOwner))
             }
             def transformApplyRememberingPts(app: Apply): Apply = {
               treeCopy.Apply(app, api.recur(app.fun), app.args.zipWithIndex.map({ case (arg, i) =>
