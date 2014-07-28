@@ -239,10 +239,10 @@ package object internal {
       }
     }
     def materialize[In: WeakTypeTag, Out: WeakTypeTag]: Tree = {
-      val in = q"${c.freshName(TermName("in"))}"
+      val in = atPos(c.macroApplication.pos)(q"${c.freshName(TermName("in"))}")
       val conversion = convert(in, c.weakTypeOf[In], WildcardType, allowDerived = false, allowDowncasts = false, sym = c.macroApplication.symbol)
       val typeclassCompanion = c.macroApplication.symbol.owner.asClass.module.asModule
-      q"$typeclassCompanion((($in: ${tq""}) => $conversion))"
+      q"$typeclassCompanion((($in: ${c.weakTypeOf[In]}) => $conversion))"
     }
     case class Converter(in: Type, pt: Type, out: Type, module: Tree, method: String, methodRef: Tree, derived: Boolean)
     type SharedConverter = org.scalameta.convert.auto.internal.Converter
