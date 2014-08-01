@@ -229,12 +229,6 @@ package object internal {
         }
       }
     }
-    def lookupConverterWithoutPt[In: c.WeakTypeTag](x: c.Tree): c.Tree = {
-      lookupConverterWithPt(x, EmptyTree)(c.weakTypeTag[In], c.WeakTypeTag(WildcardType))
-    }
-    def lookupConverterWithPt[In: c.WeakTypeTag, Pt: c.WeakTypeTag](x: c.Tree, pt: c.Tree): c.Tree = {
-      convert(x, c.weakTypeOf[In], c.weakTypeOf[Pt], allowDerived = false, allowDowncasts = true, pre = c.prefix.tree.tpe, sym = c.macroApplication.symbol)
-    }
     case class Converter(in: Type, pt: Type, out: Type, module: Tree, method: String, methodRef: Tree, derived: Boolean)
     type SharedConverter = org.scalameta.convert.auto.internal.Converter
     val SharedConverter = org.scalameta.convert.auto.internal.Converter
@@ -469,6 +463,12 @@ package object internal {
       } else {
         converters
       }
+    }
+    def lookupConverterWithoutPt[In: c.WeakTypeTag](x: c.Tree): c.Tree = {
+      lookupConverterWithPt(x, EmptyTree)(c.weakTypeTag[In], c.WeakTypeTag(WildcardType))
+    }
+    def lookupConverterWithPt[In: c.WeakTypeTag, Pt: c.WeakTypeTag](x: c.Tree, pt: c.Tree): c.Tree = {
+      convert(x, c.weakTypeOf[In], c.weakTypeOf[Pt], allowDerived = true, allowDowncasts = true, pre = c.prefix.tree.tpe, sym = c.macroApplication.symbol)
     }
     def convert(x: Tree, in: Type, out: Type, allowDerived: Boolean, allowDowncasts: Boolean, pre: Type, sym: Symbol): Tree = {
       def fail(reason: String) = { c.error(x.pos, s"can't derive a converter from $in to $out because $reason"); gen.mkAttributedRef(Predef_???).setType(NothingTpe) }
