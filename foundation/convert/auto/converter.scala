@@ -455,7 +455,7 @@ package object internal {
         converters
       }
     }
-    def convert(x: Tree, in: Type, out: Type, allowDerived: Boolean, allowDowncasts: Boolean, pre: Type, sym: Symbol): Tree = {
+    def convert(x: Tree, in: Type, out: Type, allowDerived: Boolean, allowInputDowncasts: Boolean, allowOutputDowncasts: Boolean, pre: Type, sym: Symbol): Tree = {
       def fail(reason: String) = { c.error(x.pos, s"can't derive a converter from $in to $out because $reason"); gen.mkAttributedRef(Predef_???).setType(NothingTpe) }
       if (in.baseClasses.contains(SeqClass)) {
         if (!out.baseClasses.contains(SeqClass)) fail(s"of a collection rank mismatch")
@@ -463,14 +463,14 @@ package object internal {
           val in1 = in.baseType(SeqClass).typeArgs.head
           val out1 = out.baseType(SeqClass).typeArgs.head
           val param = c.freshName(TermName("x"))
-          val result1 = convert(atPos(x.pos)(q"$param"), in1, out1, allowDerived, allowDowncasts, pre, sym)
+          val result1 = convert(atPos(x.pos)(q"$param"), in1, out1, allowDerived, allowInputDowncasts, allowOutputDowncasts, pre, sym)
           q"$x.map(($param: ${tq""}) => $result1)"
         }
       } else {
         val converters = loadConverters(pre, sym)
-        def matchesIn(c: Converter) = (in <:< c.in) || (allowDowncasts && (c.in <:< in))
+        def matchesIn(c: Converter) = (in <:< c.in) || (allowInputDowncasts && (c.in <:< in))
         def matchesOut(c: Converter) = {
-          def matchesOutTpe(cout: Type) = (cout <:< out) || (allowDowncasts && (out <:< cout))
+          def matchesOutTpe(cout: Type) = (cout <:< out) || (allowOutputDowncasts && (out <:< cout))
           (out <:< c.pt) && extractIntersections(c.out).exists(matchesOutTpe)
         }
         var matching = converters.filter(c => !c.derived || allowDerived).filter(c => matchesIn(c) && matchesOut(c))
@@ -492,22 +492,29 @@ package object internal {
               """
             }
         }
-        val needsResultDowncast = matching.exists(c => !(c.out <:< out))
-        require(needsResultDowncast ==> allowDowncasts)
-        if (needsResultDowncast) result = q"""
-          $result match {
-            case out: $out => out
-            case out => sys.error("error converting from " + ${in.toString} + " to " + ${out.toString} + ": unexpected output " + out.getClass.toString + ": " + out)
-          }
-        """
-        atPos(x.pos)(result)
+        val downcastees = matching.filter(c => !(c.out <:< out))
+        if (downcastees.nonEmpty && !allowOutputDowncasts) {
+          val problems = downcastees.flatMap(c => extractIntersections(c.out).filter(cout => !(cout <:< out)).map(cout => (c.in, cout)))
+          def printProblem(p: (Type, Type)) = s"${p._1} => ${p._2}"
+          val s_problems = problems.init.map(printProblem).mkString(", ") + (if (problems.length > 1) " and " else "") + printProblem(problems.last)
+          val s_verb = if (problems.length == 1) "doesn't" else "don't"
+          fail(s"$s_problems $s_verb fit the output type")
+        } else {
+          if (downcastees.nonEmpty) result = q"""
+            $result match {
+              case out: $out => out
+              case out => sys.error("error converting from " + ${in.toString} + " to " + ${out.toString} + ": unexpected output " + out.getClass.toString + ": " + out)
+            }
+          """
+          atPos(x.pos)(result)
+        }
       }
     }
     def lookupConvertersWithoutPt[In: c.WeakTypeTag](x: c.Tree): c.Tree = {
       lookupConvertersWithPt(x, EmptyTree)(c.weakTypeTag[In], c.WeakTypeTag(WildcardType))
     }
     def lookupConvertersWithPt[In: c.WeakTypeTag, Pt: c.WeakTypeTag](x: c.Tree, pt: c.Tree): c.Tree = {
-      convert(x, c.weakTypeOf[In], c.weakTypeOf[Pt], allowDerived = true, allowDowncasts = true, pre = c.prefix.tree.tpe, sym = c.macroApplication.symbol)
+      convert(x, c.weakTypeOf[In], c.weakTypeOf[Pt], allowDerived = true, allowInputDowncasts = true, allowOutputDowncasts = true, pre = c.prefix.tree.tpe, sym = c.macroApplication.symbol)
     }
     def lubConverters[T: WeakTypeTag, U: WeakTypeTag]: Tree = {
       val converters = loadConverters(NoType, enclosingOwner)
@@ -533,7 +540,7 @@ package object internal {
         val q"{ ..$_; in match { case ..$clauses } }" = x
         if (clauses.length != 1) c.abort(c.enclosingPosition, "can't derive a converter encompassing multiple clauses")
         val in = atPos(x.pos)(c.typecheck(Ident(TermName("in"))))
-        convert(in, in.tpe, WildcardType, allowDerived = false, allowDowncasts = true, pre = NoType, sym = enclosingOwner)
+        convert(in, in.tpe, WildcardType, allowDerived = false, allowInputDowncasts = true, allowOutputDowncasts = true, pre = NoType, sym = enclosingOwner)
       } else {
         object transformer {
           var pt: Type = WildcardType
@@ -545,9 +552,9 @@ package object internal {
           def transform(tree: Tree): Tree = typingTransform(tree)((tree, api) => {
             def connect(convertee: Tree, force: Boolean): Tree = {
               // println(convertee.tpe.widen + " -> " + pt + (if (force) " !!!" else ""))
-              // println(convert(convertee, convertee.tpe.widen, pt, allowDerived = true, allowDowncasts = force, pre = NoType, sym = enclosingOwner))
+              // println(convert(convertee, convertee.tpe.widen, pt, allowDerived = true, allowInputDowncasts = force, allowOutputDowncasts = force, pre = NoType, sym = enclosingOwner))
               // gen.mkAttributedRef(Predef_???).setType(NothingTpe)
-              api.typecheck(convert(convertee, convertee.tpe.widen, pt, allowDerived = true, allowDowncasts = force, pre = NoType, sym = enclosingOwner))
+              api.typecheck(convert(convertee, convertee.tpe.widen, pt, allowDerived = true, allowInputDowncasts = force, allowOutputDowncasts = force, pre = NoType, sym = enclosingOwner))
             }
             def transformApplyRememberingPts(app: Apply): Apply = {
               treeCopy.Apply(app, api.recur(app.fun), app.args.zipWithIndex.map({ case (arg, i) =>
