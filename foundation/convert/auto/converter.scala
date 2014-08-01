@@ -77,9 +77,9 @@ class ConverterMacros(val c: whitebox.Context) {
       }
       case class Instance(in: Tree, out: Tree, clauses: List[Tree], notImplemented: Boolean, notBounded: Boolean) {
         private val prefix = in.toString.replace(".", "") + "2" + (if (notBounded) "Wildcard" else out.toString.replace(".", ""))
-        lazy val decl = c.freshName(TermName(prefix))
-        lazy val impl = c.freshName(TermName(prefix))
-        lazy val sig = c.freshName(TermName("Sig"))
+        lazy val decl = c.freshName(TermName("Decl$" + prefix))
+        lazy val impl = c.freshName(TermName("Impl$" + prefix))
+        lazy val sig = c.freshName(TermName("Sig$" + prefix))
         def pos = clauses.head.pos
       }
       val instances = mutable.ListBuffer[Instance]()
@@ -114,7 +114,7 @@ class ConverterMacros(val c: whitebox.Context) {
       """)
       val instanceSigs = instances.filter(!_.notImplemented).map(instance => atPos(instance.pos)(
         q"""
-          lazy val ${instance.sig} = $DeriveInternal.lookupConverters[${instance.in}, ${instance.out}]
+          lazy val ${instance.sig} = $DeriveInternal.lubConverters[${instance.in}, ${instance.out}]
         """
       ))
       val instanceDecls = instances.filter(!_.notImplemented).map(instance => atPos(instance.pos)(
@@ -151,8 +151,8 @@ class ConverterMacros(val c: whitebox.Context) {
           }
           ..$instanceImpls
           import _root_.scala.language.experimental.macros
-          def apply[In](x: In): Any = macro $DeriveInternal.WhiteboxMacros.lookupConverterWithoutPt[In]
-          def apply[In, Pt](x: In, pt: _root_.java.lang.Class[Pt]): Any = macro $DeriveInternal.WhiteboxMacros.lookupConverterWithPt[In, Pt]
+          def apply[In](x: In): Any = macro $DeriveInternal.WhiteboxMacros.lookupConvertersWithoutPt[In]
+          def apply[In, Pt](x: In, pt: _root_.java.lang.Class[Pt]): Any = macro $DeriveInternal.WhiteboxMacros.lookupConvertersWithPt[In, Pt]
         }
       """
     }
@@ -171,7 +171,7 @@ package object internal {
 
   class names(xs: String*) extends scala.annotation.StaticAnnotation
   def computeConverters[T](wrapper: Any)(x: T): Unit = macro WhiteboxMacros.computeConverters
-  def lookupConverters[T, U]: Any = macro WhiteboxMacros.lookupConverters[T, U]
+  def lubConverters[T, U]: Any = macro WhiteboxMacros.lubConverters[T, U]
   def connectConverters[T](x: T): Any = macro WhiteboxMacros.connectConverters
 
   class WhiteboxMacros(val c: whitebox.Context) {
@@ -464,12 +464,6 @@ package object internal {
         converters
       }
     }
-    def lookupConverterWithoutPt[In: c.WeakTypeTag](x: c.Tree): c.Tree = {
-      lookupConverterWithPt(x, EmptyTree)(c.weakTypeTag[In], c.WeakTypeTag(WildcardType))
-    }
-    def lookupConverterWithPt[In: c.WeakTypeTag, Pt: c.WeakTypeTag](x: c.Tree, pt: c.Tree): c.Tree = {
-      convert(x, c.weakTypeOf[In], c.weakTypeOf[Pt], allowDerived = true, allowDowncasts = true, pre = c.prefix.tree.tpe, sym = c.macroApplication.symbol)
-    }
     def convert(x: Tree, in: Type, out: Type, allowDerived: Boolean, allowDowncasts: Boolean, pre: Type, sym: Symbol): Tree = {
       def fail(reason: String) = { c.error(x.pos, s"can't derive a converter from $in to $out because $reason"); gen.mkAttributedRef(Predef_???).setType(NothingTpe) }
       if (in.baseClasses.contains(SeqClass)) {
@@ -518,7 +512,13 @@ package object internal {
         atPos(x.pos)(result)
       }
     }
-    def lookupConverters[T: WeakTypeTag, U: WeakTypeTag]: Tree = {
+    def lookupConvertersWithoutPt[In: c.WeakTypeTag](x: c.Tree): c.Tree = {
+      lookupConvertersWithPt(x, EmptyTree)(c.weakTypeTag[In], c.WeakTypeTag(WildcardType))
+    }
+    def lookupConvertersWithPt[In: c.WeakTypeTag, Pt: c.WeakTypeTag](x: c.Tree, pt: c.Tree): c.Tree = {
+      convert(x, c.weakTypeOf[In], c.weakTypeOf[Pt], allowDerived = true, allowDowncasts = true, pre = c.prefix.tree.tpe, sym = c.macroApplication.symbol)
+    }
+    def lubConverters[T: WeakTypeTag, U: WeakTypeTag]: Tree = {
       val converters = loadConverters(NoType, enclosingOwner)
       val in = weakTypeOf[T]
       val pt = weakTypeOf[U]
