@@ -240,7 +240,7 @@ package object internal {
     }
     def materialize[In: WeakTypeTag, Out: WeakTypeTag]: Tree = {
       val in = atPos(c.macroApplication.pos)(q"${c.freshName(TermName("in"))}")
-      val conversion = convert(in, c.weakTypeOf[In], WildcardType, allowDerived = false, allowDowncasts = false, pre = c.prefix.tree.tpe, sym = c.macroApplication.symbol)
+      val conversion = convert(in, c.weakTypeOf[In], WildcardType, allowDerived = false, allowDowncasts = true, pre = c.prefix.tree.tpe, sym = c.macroApplication.symbol)
       val typeclassCompanion = c.macroApplication.symbol.owner.asClass.module.asModule
       q"$typeclassCompanion((($in: ${c.weakTypeOf[In]}) => $conversion))"
     }
@@ -505,7 +505,7 @@ package object internal {
           case matching =>
             if (matching.map(_.in).length > matching.map(_.in).distinct.length) {
               val (ambin, ambout) = matching.groupBy(_.in).toList.sortBy(_._1.toString).filter(_._2.length > 1).head
-              fail(s"$ambin <:< $in is ambiguous between ${ambout.map(_.out)}")
+              fail(s"$ambin <:< $in is ambiguous between ${ambout.map(_.out).map(tpe => cleanLub(List(tpe)))}")
             } else {
               val cases = matching.map(c => cq"in: ${c.in} => ${c.methodRef}(in)")
               q"""
