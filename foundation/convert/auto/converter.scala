@@ -103,8 +103,8 @@ class ConverterMacros(val c: whitebox.Context) {
       // because template statements get typechecked after val synthesis take place
       // and we can't afford this, because we need to get these converters computed before anything else takes place
       val computeConverters = atPos(ddef.pos)(q"""
-        val $dummy = $DeriveInternal.computeConverters($wrapper){
-          @$DeriveInternal.names(..${instances.filter(!_.notImplemented).map(_.impl.toString)})
+        val $dummy = $DeriveInternal.computeConverters($wrapper.$companion){
+          @$DeriveInternal.declNames(..${instances.filter(!_.notImplemented).map(_.decl.toString)})
           def dummy(in: Any): Any = {
             ..$rawprelude
             in match { case ..$computeParts }
@@ -169,8 +169,8 @@ package object internal {
   class computedConvertersAnnotation(converters: List[Converter]) extends scala.annotation.StaticAnnotation
   class WildcardDummy
 
-  class names(xs: String*) extends scala.annotation.StaticAnnotation
-  def computeConverters[T](wrapper: Any)(x: T): Unit = macro WhiteboxMacros.computeConverters
+  class declNames(xs: String*) extends scala.annotation.StaticAnnotation
+  def computeConverters[T](typeclassCompanion: Any)(x: T): Unit = macro WhiteboxMacros.computeConverters
   def lubConverters[T, U]: Any = macro WhiteboxMacros.lubConverters[T, U]
   def connectConverters[T](x: T): Any = macro WhiteboxMacros.connectConverters
 
@@ -232,7 +232,7 @@ package object internal {
     case class Converter(in: Type, pt: Type, out: Type, module: Tree, method: String, methodRef: Tree, derived: Boolean)
     type SharedConverter = org.scalameta.convert.auto.internal.Converter
     val SharedConverter = org.scalameta.convert.auto.internal.Converter
-    def computeConverters(wrapper: Tree)(x: Tree): Tree = {
+    def computeConverters(typeclassCompanion: Tree)(x: Tree): Tree = {
       import c.internal._, decorators._
       val q"{ ${dummy @ q"def $_(in: $_): $_ = { ..$prelude; in match { case ..$clauses } }"}; () }" = x
       def toPalladiumConverters: List[SharedConverter] = {
@@ -363,18 +363,19 @@ package object internal {
           })
           val methods = dummy.symbol.annotations.head.scalaArgs.map({
             case Literal(Constant(s: String)) =>
-              val qual = wrapper.duplicate
-              val methodSym = wrapper.symbol.info.member(TermName(s)).orElse(c.abort(c.enclosingPosition, s"something went wrong: can't resolve $s in $wrapper"))
+              val qual = typeclassCompanion.duplicate
+              val methodSym = typeclassCompanion.symbol.info.member(TermName(s)).orElse(c.abort(c.enclosingPosition, s"something went wrong: can't resolve $s in $typeclassCompanion"))
               q"$qual.$methodSym"
           })
           val deriveds = nontrivialClauses.map(_.body.symbol == Auto_derive)
           if (ins.length != pts.length || pts.length != outs.length || outs.length != methods.length || methods.length != deriveds.length) c.abort(c.enclosingPosition, s"something went wrong: can't create converters from ${ins.length}, ${pts.length}, ${outs.length}, ${methods.length} and ${deriveds.length}")
-          ins.zip(pts).zip(outs).zip(methods).zip(deriveds).map{ case ((((in, pt), out), method), derived) => SharedConverter(in, pt, out, wrapper.duplicate, method.symbol.name.toString, method, derived) }
+          ins.zip(pts).zip(outs).zip(methods).zip(deriveds).map{ case ((((in, pt), out), method), derived) => SharedConverter(in, pt, out, typeclassCompanion.duplicate, method.symbol.name.toString, method, derived) }
         } else {
           Nil
         }
       }
-      val target = wrapper.symbol.asModule.moduleClass.orElse(c.abort(c.enclosingPosition, s"something went wrong: unexpected wrapper $wrapper"))
+      val target = typeclassCompanion.symbol.owner
+      if (!target.isModuleClass) c.abort(c.enclosingPosition, s"something went wrong: unexpected typeclass companion $typeclassCompanion")
       val converters = target.name.toString match {
         case "toPalladium" => toPalladiumConverters
         case _ => c.abort(c.enclosingPosition, "unknown target: " + target.name)
