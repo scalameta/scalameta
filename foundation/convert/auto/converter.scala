@@ -233,7 +233,8 @@ package object internal {
       lookupConverterWithPt(x, EmptyTree)(c.weakTypeTag[In], c.WeakTypeTag(WildcardType))
     }
     def lookupConverterWithPt[In: c.WeakTypeTag, Pt: c.WeakTypeTag](x: c.Tree, pt: c.Tree): c.Tree = {
-      val result = convert(x, c.weakTypeOf[In], c.weakTypeOf[Pt], allowDerived = false, allowDowncasts = true, pre = c.prefix.tree.tpe, sym = c.macroApplication.symbol)
+      val conversion = convert(x, c.weakTypeOf[In], c.weakTypeOf[Pt], allowDerived = false, allowDowncasts = true, pre = c.prefix.tree.tpe, sym = c.macroApplication.symbol)
+      val q"$_.connectConverters($result)" = conversion
       println(result)
       result
     }
