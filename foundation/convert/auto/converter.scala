@@ -146,13 +146,13 @@ class ConverterMacros(val c: whitebox.Context) {
           object $companion {
             def apply[In, Out](f: In => Out): $typeclass[In, Out] = new $typeclass[In, Out] { def apply(in: In): Out = f(in) }
             import _root_.scala.language.experimental.macros
-            implicit def materialize[In, Out]: $typeclass[In, Out] = macro $DeriveInternal.BlackboxMacros.materialize[In, Out]
             ..$instanceSigs
             ..$instanceDecls
           }
           ..$instanceImpls
-          def apply[In, Out](x: In)(implicit ev: $typeclass[In, Out]): Out = ev(x)
-          def apply[In, Pt >: Out, Out](x: In, pt: _root_.java.lang.Class[Pt])(implicit ev: $typeclass[In, Out]): Out = ev(x)
+          import _root_.scala.language.experimental.macros
+          def apply[In](x: In): Any = macro $DeriveInternal.WhiteboxMacros.lookupConverterWithoutPt[In]
+          def apply[In, Pt](x: In, pt: _root_.java.lang.Class[Pt]): Any = macro $DeriveInternal.WhiteboxMacros.lookupConverterWithPt[In, Pt]
         }
       """
     }
@@ -173,15 +173,6 @@ package object internal {
   def computeConverters[T](wrapper: Any)(x: T): Unit = macro WhiteboxMacros.computeConverters
   def lookupConverters[T, U]: Any = macro WhiteboxMacros.lookupConverters[T, U]
   def connectConverters[T](x: T): Any = macro WhiteboxMacros.connectConverters
-
-  class BlackboxMacros(val c: blackbox.Context) {
-    import c.universe._
-    def materialize[In: WeakTypeTag, Out: WeakTypeTag]: Tree = {
-      val helper = new WhiteboxMacros(c.asInstanceOf[whitebox.Context])
-      val result = helper.materialize[In, Out](c.weakTypeTag[In].asInstanceOf[helper.c.WeakTypeTag[In]], c.weakTypeTag[Out].asInstanceOf[helper.c.WeakTypeTag[Out]])
-      result.asInstanceOf[Tree]
-    }
-  }
 
   class WhiteboxMacros(val c: whitebox.Context) {
     import c.universe._
@@ -238,11 +229,18 @@ package object internal {
         }
       }
     }
-    def materialize[In: WeakTypeTag, Out: WeakTypeTag]: Tree = {
+    def lookupConverterWithoutPt[In: c.WeakTypeTag](x: c.Tree): c.Tree = {
+      lookupConverterWithPt(x, EmptyTree)(c.weakTypeTag[In], c.WeakTypeTag(WildcardType))
+    }
+    def lookupConverterWithPt[In: c.WeakTypeTag, Pt: c.WeakTypeTag](x: c.Tree, pt: c.Tree): c.Tree = {
       val in = atPos(c.macroApplication.pos)(q"${c.freshName(TermName("in"))}")
-      val conversion = convert(in, c.weakTypeOf[In], WildcardType, allowDerived = false, allowDowncasts = true, pre = c.prefix.tree.tpe, sym = c.macroApplication.symbol)
+      val conversion = convert(in, c.weakTypeOf[In], c.weakTypeOf[Pt], allowDerived = false, allowDowncasts = true, pre = c.prefix.tree.tpe, sym = c.macroApplication.symbol)
       val typeclassCompanion = c.macroApplication.symbol.owner.asClass.module.asModule
-      q"$typeclassCompanion((($in: ${c.weakTypeOf[In]}) => $conversion))"
+      // NOTE: can't write this as a quasiquote because of a number of bugs:
+      // 1) q"val ..." gets expanded into a Block, not a ValDef
+      // 2) q"val $in: $tpe" gets expanded into a ValDef with an empty TypeTree()
+      val conversionParam = ValDef(Modifiers(PARAM), in.name.toTermName, TypeTree(c.weakTypeOf[In]), EmptyTree)
+      q"$typeclassCompanion(($conversionParam => $conversion))($x)"
     }
     case class Converter(in: Type, pt: Type, out: Type, module: Tree, method: String, methodRef: Tree, derived: Boolean)
     type SharedConverter = org.scalameta.convert.auto.internal.Converter
@@ -452,10 +450,10 @@ package object internal {
           )""" =>
             def prefixize(tpe: Type): Type = {
               val pre1 = pre.orElse(sym.asClass.thisPrefix)
-              val sym1 = sym.info.member(TermName(sym.name.toString.capitalize + "Cvt")).asModule.moduleClass
+              val sym1 = sym
               val tpe1 = tpe.asSeenFrom(pre1, sym1)
-              // pre1 = scala.meta.internal.hosts.scalacompiler.persistence.PersistencePhase.PersistenceComponent.h.toPalladium.ToPalladiumCvt.type
-              // sym1 = object ToPalladiumCvt
+              // pre1 = scala.meta.internal.hosts.scalacompiler.persistence.PersistencePhase.PersistenceComponent.h.toPalladium.type
+              // sym1 = object toPalladium
               // tpe = Host.this.g.ExistentialType
               // tpe1 = scala.meta.internal.hosts.scalacompiler.persistence.PersistencePhase.PersistenceComponent.h.g.ExistentialType
               // println(s"pre1 = $pre1, sym1 = $sym1, $tpe -> $tpe1")
