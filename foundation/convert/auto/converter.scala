@@ -233,10 +233,7 @@ package object internal {
       lookupConverterWithPt(x, EmptyTree)(c.weakTypeTag[In], c.WeakTypeTag(WildcardType))
     }
     def lookupConverterWithPt[In: c.WeakTypeTag, Pt: c.WeakTypeTag](x: c.Tree, pt: c.Tree): c.Tree = {
-      val conversion = convert(x, c.weakTypeOf[In], c.weakTypeOf[Pt], allowDerived = false, allowDowncasts = true, pre = c.prefix.tree.tpe, sym = c.macroApplication.symbol)
-      val q"$_.connectConverters($result)" = conversion
-      println(result)
-      result
+      convert(x, c.weakTypeOf[In], c.weakTypeOf[Pt], allowDerived = false, allowDowncasts = true, pre = c.prefix.tree.tpe, sym = c.macroApplication.symbol)
     }
     case class Converter(in: Type, pt: Type, out: Type, module: Tree, method: String, methodRef: Tree, derived: Boolean)
     type SharedConverter = org.scalameta.convert.auto.internal.Converter
@@ -518,7 +515,7 @@ package object internal {
             case out => sys.error("error converting from " + ${in.toString} + " to " + ${out.toString} + ": unexpected output " + out.getClass.toString + ": " + out)
           }
         """
-        atPos(x.pos)(q"$DeriveInternal.connectConverters($result)")
+        atPos(x.pos)(result)
       }
     }
     def lookupConverters[T: WeakTypeTag, U: WeakTypeTag]: Tree = {
