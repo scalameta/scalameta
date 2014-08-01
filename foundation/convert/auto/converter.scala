@@ -233,14 +233,9 @@ package object internal {
       lookupConverterWithPt(x, EmptyTree)(c.weakTypeTag[In], c.WeakTypeTag(WildcardType))
     }
     def lookupConverterWithPt[In: c.WeakTypeTag, Pt: c.WeakTypeTag](x: c.Tree, pt: c.Tree): c.Tree = {
-      val in = atPos(c.macroApplication.pos)(q"${c.freshName(TermName("in"))}")
-      val conversion = convert(in, c.weakTypeOf[In], c.weakTypeOf[Pt], allowDerived = false, allowDowncasts = true, pre = c.prefix.tree.tpe, sym = c.macroApplication.symbol)
-      val typeclassCompanion = c.macroApplication.symbol.owner.asClass.module.asModule
-      // NOTE: can't write this as a quasiquote because of a number of bugs:
-      // 1) q"val ..." gets expanded into a Block, not a ValDef
-      // 2) q"val $in: $tpe" gets expanded into a ValDef with an empty TypeTree()
-      val conversionParam = ValDef(Modifiers(PARAM), in.name.toTermName, TypeTree(c.weakTypeOf[In]), EmptyTree)
-      q"$typeclassCompanion(($conversionParam => $conversion))($x)"
+      val result = convert(x, c.weakTypeOf[In], c.weakTypeOf[Pt], allowDerived = false, allowDowncasts = true, pre = c.prefix.tree.tpe, sym = c.macroApplication.symbol)
+      println(result)
+      result
     }
     case class Converter(in: Type, pt: Type, out: Type, module: Tree, method: String, methodRef: Tree, derived: Boolean)
     type SharedConverter = org.scalameta.convert.auto.internal.Converter
