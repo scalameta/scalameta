@@ -38,9 +38,7 @@ trait PersistencePhase {
       }
 
       override def apply(unit: CompilationUnit) {
-        // TODO: validate it's a packagedef
-        val pbody = h.toPalladium(unit.body, classOf[Pkg])
-        // TODO: wrap in a compunit
+        val punit = h.toPalladium(unit.body, classOf[Aux.CompUnit])
         // ???
       }
     }
