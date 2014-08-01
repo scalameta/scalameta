@@ -412,7 +412,7 @@ package object internal {
       // TODO: also persist the converters in an annotation on target in order to support separate compilation
       q"()"
     }
-    def loadConverters(pre: Type, sym: Symbol): List[Converter] = {
+    def loadConverters(pre0: Type, sym: Symbol): List[Converter] = {
       def loop(sym: Symbol): List[Converter] = {
         if (sym == NoSymbol) Nil
         else {
@@ -436,23 +436,13 @@ package object internal {
             $_,
             ${derived: Boolean}
           )""" =>
-            def prefixize(tpe: Type): Type = {
-              val pre1 = pre.orElse(sym.asClass.thisPrefix)
-              val sym1 = sym
-              val tpe1 = tpe.asSeenFrom(pre1, sym1)
-              // pre1 = scala.meta.internal.hosts.scalacompiler.persistence.PersistencePhase.PersistenceComponent.h.toPalladium.type
-              // sym1 = object toPalladium
-              // tpe = Host.this.g.ExistentialType
-              // tpe1 = scala.meta.internal.hosts.scalacompiler.persistence.PersistencePhase.PersistenceComponent.h.g.ExistentialType
-              // println(s"pre1 = $pre1, sym1 = $sym1, $tpe -> $tpe1")
-              tpe1
-            }
+            val pre = pre0.orElse(sym.asClass.thisPrefix)
             def computeMethodRef: Tree = {
-              val qual = module.duplicate
               val methodSym = module.symbol.info.member(TermName(method)).orElse(c.abort(c.enclosingPosition, s"something went wrong: can't resolve $method in $module"))
-              q"$qual.$methodSym"
+              if (pre0 == NoType) q"$module.$methodSym"
+              else gen.mkAttributedRef(singleType(pre, module.symbol), methodSym)
             }
-            Converter(prefixize(in), prefixize(pt), prefixize(out), module, method, computeMethodRef, derived)
+            Converter(in.asSeenFrom(pre, sym), pt.asSeenFrom(pre, sym), out.asSeenFrom(pre, sym), module, method, computeMethodRef, derived)
           }))
           val next = List(sym.owner) ++ (if (sym.isModule) List(sym.asModule.moduleClass) else Nil)
           result.getOrElse(next.flatMap(loop))
