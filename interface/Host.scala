@@ -198,10 +198,11 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         case v: g.Type => pclassof(v)
         case v: g.Symbol => ??? // TODO: this is a super-crazy corner case that only appears in arguments of java annotations that refer to java enums
       }).asInstanceOf[pScalaConst]
-      def unattributedNodes(in: Any): List[g.Tree] = in match {
+      def unattributedNodes(in: Any): List[(g.Tree, List[g.Tree])] = in match {
         case gtree: g.Tree =>
-          val offenders = mutable.ListBuffer[g.Tree]()
+          val offenders = mutable.ListBuffer[(g.Tree, List[g.Tree])]()
           object traverser extends g.Traverser {
+            private var path = List[g.Tree]()
             private def check(tree: g.Tree): Unit = {
               val ok = {
                 !tree.isErroneous &&
@@ -209,12 +210,19 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
                 ((tree.canHaveAttrs && tree.hasSymbolField) ==> (tree.symbol != null && tree.symbol != g.NoSymbol))
               }
               if (ok) super.traverse(tree)
-              else { offenders += tree }
+              else { offenders += ((tree, path)) }
             }
-            override def traverse(tree: g.Tree): Unit = tree match {
-              // imports and selectors of imports aren't attributed by the typechecker
-              case g.Import(qual, selectors) => check(qual)
-              case _ => check(tree)
+            override def traverse(tree: g.Tree): Unit = {
+              try {
+                path ::= tree
+                tree match {
+                  // imports and selectors of imports aren't attributed by the typechecker
+                  case g.Import(qual, selectors) => check(qual)
+                  case _ => check(tree)
+                }
+              } finally {
+                path = path.tail
+              }
             }
           }
           traverser.traverse(gtree)
@@ -225,10 +233,25 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
     import Helpers._
     val offenders = unattributedNodes(in)
     if (offenders.nonEmpty) {
-      val grouped = offenders.groupBy(_.productPrefix).toList.sortBy(_._1)
+      val grouped = offenders.groupBy(_._1.productPrefix).toList.sortBy(_._1)
       def commaCommaAnd[T](list: List[T]): String = list.init.mkString(", ") + (if (list.length == 1) "" else " and ") + list.last
+      // The problem is caused by 6 Idents that are either unattributed or erroneous:
       val offenderSummary = commaCommaAnd(grouped.map{ case (k, v) => s"${v.length} $k${if (v.length == 1) "" else "s"}" })
-      val offenderPrintout = grouped.flatMap(_._2).map(_.toString.replace("\n", " ").take(60)).zipWithIndex.map{ case (s, i) => s"${i + 1}: $s" }.mkString("\n")
+      // 1: _ (... CaseDef > Bind > UnApply > Typed > Ident)
+      // 2: _ (...  DefDef > Match > CaseDef > Bind > Ident)
+      // ...
+      val offenderPrintout = grouped.flatMap(_._2).map({ case (tree, path) =>
+        var prefix = tree.toString.replace("\n", " ")
+        if (prefix.length > 60) prefix = prefix.take(60) + "..."
+        val suffix = path.scanLeft("")((suffix, tree) => {
+          if (suffix.length == 0) tree.productPrefix
+          else tree.productPrefix + " > " + suffix
+        }) match {
+          case _ :+ last if last.length <= 40 => last
+          case list => "... " + list.dropWhile(_.length <= 40).head.takeRight(40)
+        }
+        s"$prefix ($suffix)"
+      }).zipWithIndex.map{ case (s, i) => s"${i + 1}: $s" }.mkString("\n")
       sys.error(s"""
         |Input Scala tree is not fully attributed and can't be converted to a Palladium tree.
         |The problem is caused by $offenderSummary that are either unattributed or erroneous:
