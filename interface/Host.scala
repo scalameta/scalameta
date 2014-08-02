@@ -4,6 +4,7 @@ package scalahost
 
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
+import scala.collection.mutable
 import scala.reflect.{classTag, ClassTag}
 import scala.reflect.runtime.universe.{Type => Pt, typeOf}
 import scala.{meta => p}
@@ -198,11 +199,26 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         case v: g.Symbol => ??? // TODO: this is a super-crazy corner case that only appears in arguments of java annotations that refer to java enums
       }).asInstanceOf[pScalaConst]
       def unattributedNodes(in: Any): List[g.Tree] = in match {
-        case gtree: g.Tree => gtree.filter(sub => !({
-          !sub.isErroneous &&
-          (sub.canHaveAttrs ==> (sub.tpe != null)) &&
-          ((sub.canHaveAttrs && sub.hasSymbolField) ==> (sub.symbol != null && sub.symbol != g.NoSymbol))
-        }))
+        case gtree: g.Tree =>
+          val offenders = mutable.ListBuffer[g.Tree]()
+          object traverser extends g.Traverser {
+            private def check(tree: g.Tree): Unit = {
+              val ok = {
+                !tree.isErroneous &&
+                (tree.canHaveAttrs ==> (tree.tpe != null)) &&
+                ((tree.canHaveAttrs && tree.hasSymbolField) ==> (tree.symbol != null && tree.symbol != g.NoSymbol))
+              }
+              if (ok) super.traverse(tree)
+              else { offenders += tree }
+            }
+            override def traverse(tree: g.Tree): Unit = tree match {
+              // imports and selectors of imports aren't attributed by the typechecker
+              case g.Import(qual, selectors) => check(qual)
+              case _ => check(tree)
+            }
+          }
+          traverser.traverse(gtree)
+          offenders.toList
         case _ => Nil
       }
     }
