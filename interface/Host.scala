@@ -204,21 +204,21 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
           object traverser extends g.Traverser {
             private var path = List[g.Tree]()
             private def drilldown[T](tree: g.Tree)(op: g.Tree => T): T = try { path ::= tree; op(tree) } finally { path = path.tail }
-            private def check(tree: g.Tree): Unit = {
+            private def check(tree: g.Tree, skipSymbol: Boolean = false, skipType: Boolean = false): Unit = {
               val ok = {
                 !tree.isErroneous &&
-                (tree.canHaveAttrs ==> (tree.tpe != null)) &&
-                ((tree.canHaveAttrs && tree.hasSymbolField) ==> (tree.symbol != null && tree.symbol != g.NoSymbol))
+                (tree.canHaveAttrs ==> (skipType || (tree.tpe != null))) &&
+                ((tree.canHaveAttrs && tree.hasSymbolField) ==> (skipSymbol || (tree.symbol != null && tree.symbol != g.NoSymbol)))
               }
               if (ok) super.traverse(tree)
               else { offenders += ((tree, path)) }
             }
             override def traverse(tree: g.Tree): Unit = drilldown(tree) {
-              case g.Import(qual, selectors) =>
-                // imports and selectors of imports aren't attributed by the typechecker
-                check(qual)
-              case _ =>
-                check(tree)
+              // imports and selectors of imports aren't attributed by the typechecker
+              case g.Import(qual, selectors) => check(qual)
+              // patmat wildcards used in binds and typeds don't have symbols
+              case g.Ident(g.nme.WILDCARD) => check(tree, skipSymbol = true)
+              case _ => check(tree)
             }
           }
           traverser.traverse(gtree)
