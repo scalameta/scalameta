@@ -197,17 +197,30 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         case v: g.Type => pclassof(v)
         case v: g.Symbol => ??? // TODO: this is a super-crazy corner case that only appears in arguments of java annotations that refer to java enums
       }).asInstanceOf[pScalaConst]
-      def isFullyAttributed(in: Any): Boolean = in match {
-        case gtree: g.Tree => gtree.forAll(sub => {
+      def unattributedNodes(in: Any): List[g.Tree] = in match {
+        case gtree: g.Tree => gtree.filter(sub => !({
           !sub.isErroneous &&
           (sub.canHaveAttrs ==> (sub.tpe != null)) &&
           ((sub.canHaveAttrs && sub.hasSymbolField) ==> (sub.symbol != null && sub.symbol != g.NoSymbol))
-        })
-        case _ => true
+        }))
+        case _ => Nil
       }
     }
     import Helpers._
-    if (!isFullyAttributed(in)) sys.error(s"can't convert not fully attributed Scala tree to Palladium: $in")
+    val offenders = unattributedNodes(in)
+    if (offenders.nonEmpty) {
+      val grouped = offenders.groupBy(_.productPrefix).toList.sortBy(_._1)
+      def commaCommaAnd[T](list: List[T]): String = list.init.mkString(", ") + (if (list.length == 1) "" else " and ") + list.last
+      val offenderSummary = commaCommaAnd(grouped.map{ case (k, v) => s"${v.length} $k${if (v.length == 1) "" else "s"}" })
+      val offenderPrintout = grouped.flatMap(_._2).map(_.toString.replace("\n", " ").take(60)).zipWithIndex.map{ case (s, i) => s"${i + 1}: $s" }.mkString("\n")
+      sys.error(s"""
+        |Input Scala tree is not fully attributed and can't be converted to a Palladium tree.
+        |The problem is caused by $offenderSummary that are either unattributed or erroneous:
+        |$offenderPrintout
+        |The input tree that has caused problems to the converter is printed out below:
+        |$in
+      """.stripMargin)
+    }
     val TermQuote = "denied" // TODO: find a better approach
     in match {
       case g.EmptyTree =>
