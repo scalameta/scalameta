@@ -203,6 +203,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
           val offenders = mutable.ListBuffer[(g.Tree, List[g.Tree])]()
           object traverser extends g.Traverser {
             private var path = List[g.Tree]()
+            private def drilldown[T](tree: g.Tree)(op: g.Tree => T): T = try { path ::= tree; op(tree) } finally { path = path.tail }
             private def check(tree: g.Tree): Unit = {
               val ok = {
                 !tree.isErroneous &&
@@ -212,17 +213,12 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
               if (ok) super.traverse(tree)
               else { offenders += ((tree, path)) }
             }
-            override def traverse(tree: g.Tree): Unit = {
-              try {
-                path ::= tree
-                tree match {
-                  // imports and selectors of imports aren't attributed by the typechecker
-                  case g.Import(qual, selectors) => check(qual)
-                  case _ => check(tree)
-                }
-              } finally {
-                path = path.tail
-              }
+            override def traverse(tree: g.Tree): Unit = drilldown(tree) {
+              case g.Import(qual, selectors) =>
+                // imports and selectors of imports aren't attributed by the typechecker
+                check(qual)
+              case _ =>
+                check(tree)
             }
           }
           traverser.traverse(gtree)
