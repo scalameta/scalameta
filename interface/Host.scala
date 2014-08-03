@@ -357,23 +357,27 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         val SyntacticTemplate(earlydefns, _, self, stats) = in
         val pparents = {
           // TODO: discern `... extends C()` and `... extends C`
+          // TODO: detect and discard synthetic parents
           // TODO: figure out whether type arguments were inferred or not
-          val incompleteParents = in.parents.map(tpe => {
-            require(tpe.isInstanceOf[g.TypeTree])
-            g.Apply(tpe, Nil)
-          })
+          val incompleteParents = in.parents.map(tpe => g.Apply(tpe, Nil))
           val parents = g.treeInfo.firstConstructor(rawstats) match {
             case g.DefDef(_, _, _, _, _, rawinit) =>
               val gsupercall = rawinit.collect { case app @ g.treeInfo.Applied(g.Select(g.Super(_, _), _), _, _) => app }.head
+              var gsupersymbol: g.Symbol = g.NoSymbol
               object prettifier extends g.Transformer {
                 override def transform(tree: g.Tree): g.Tree = tree match {
                   case g.TypeApply(g.Select(g.Super(_, _), _), _) | g.Select(g.Super(_, _), _) =>
-                    g.TypeTree(tree.tpe.finalResultType).setSymbol(tree.symbol)
+                    gsupersymbol = tree.symbol
+                    g.TypeTree(tree.tpe.finalResultType)
                   case _ =>
                     super.transform(tree)
                 }
               }
-              prettifier.transform(gsupercall) +: incompleteParents.drop(1)
+              val gfirstparent = prettifier.transform(gsupercall)
+              require(gsupersymbol != g.NoSymbol)
+              // TODO: figure out how to propagate the symbol
+              // gfirstparent.setSymbol(gsupersymbol) +: incompleteParents.drop(1)
+              gfirstparent +: incompleteParents.drop(1)
             case g.EmptyTree =>
               incompleteParents
           }
