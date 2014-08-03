@@ -29,9 +29,13 @@ object internal {
       def uncapitalize(s: String) = if (s.length == 0) "" else { val chars = s.toCharArray; chars(0) = chars(0).toLower; new String(chars) }
       val fname = TermName(finternalName.toString.stripPrefix("_"))
       def lazyLoad(fn: c.Tree => c.Tree) = {
+        val assertionMessage = s"internal error when initializing ${c.internal.enclosingOwner.owner.name}.$fname"
         q"""
           if ($f == null) {
-            scala.Predef.require(this.internalPrototype != null)
+            // there's not much sense in using org.scalameta.invariants.require here
+            // because when the assertion trips, the tree is most likely in inconsistent state
+            // which will either lead to useless printouts or maybe even worse errors
+            _root_.scala.Predef.require(this.internalPrototype != null, $assertionMessage)
             $f = ${fn(q"this.internalPrototype.$fname")}
           }
         """
