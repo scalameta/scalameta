@@ -42,6 +42,7 @@ class ConverterMacros(val c: whitebox.Context) {
       val wrapper = name
       val dummy = c.freshName(TermName("dummy"))
       val typeclass = TypeName(name.toString.capitalize + "Cvt")
+      val exception = TypeName(name.toString.capitalize + "Exception")
       val companion = typeclass.toTermName
       val helperClass = c.freshName(TypeName(name.toString.capitalize + "Helper"))
       val helperInstance = c.freshName(TermName(name.toString.capitalize + "Helper"))
@@ -127,13 +128,22 @@ class ConverterMacros(val c: whitebox.Context) {
       val instanceImpls = instances.filter(!_.notImplemented).map(instance => atPos(instance.pos)(
         q"""
           private def ${instance.impl}(in: ${instance.in}): $companion.${instance.sig}.Out = {
-            val out = $DeriveInternal.connectConverters {
-              val $helperInstance = new $helperClass(in)
-              import $helperInstance._
-              ..${prelude.collect { case imp: Import => imp }}
-              in match { case ..${instance.clauses} }
+            try {
+              val out = $DeriveInternal.connectConverters {
+                val $helperInstance = new $helperClass(in)
+                import $helperInstance._
+                ..${prelude.collect { case imp: Import => imp }}
+                in match { case ..${instance.clauses} }
+              }
+              out.appendScratchpad(in)
+            } catch {
+              case ex: $exception =>
+                throw ex
+              case ex: _root_.scala.Exception =>
+                def summary(x: Any) = x match { case x: Product => x.productPrefix; case null => "null"; case _ => x.getClass }
+                println("error converting " + summary(in) + ": " + in.toString.replace("\n", "").take(60))
+                throw new $exception(ex)
             }
-            out.appendScratchpad(in)
           }
         """
       ))
@@ -143,6 +153,7 @@ class ConverterMacros(val c: whitebox.Context) {
           $computeConverters
           private class $helperClass(in: Any) { ..$prelude }
           trait $typeclass[In, Out] extends _root_.org.scalameta.convert.Convert[In, Out]
+          class $exception(cause: _root_.scala.Exception) extends _root_.scala.Exception(cause)
           object $companion {
             def apply[In, Out](f: In => Out): $typeclass[In, Out] = new $typeclass[In, Out] { def apply(in: In): Out = f(in) }
             import _root_.scala.language.experimental.macros
