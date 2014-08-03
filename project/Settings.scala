@@ -16,14 +16,10 @@ object Settings {
     description := "Scala host for scala.meta",
     resolvers += Resolver.sonatypeRepo("snapshots"),
     resolvers += Resolver.sonatypeRepo("releases"),
-    resolvers += "Pre-release of 2.11.2 core" at "https://oss.sonatype.org/content/repositories/orgscala-lang-1123",
-    resolvers += "Pre-release of 2.11.2 modules" at "https://oss.sonatype.org/content/repositories/orgscala-lang-1124",
-    publishMavenStyle := true,
-    publishArtifact in Compile := false,
-    publishArtifact in Test := false,
-    scalacOptions ++= Seq("-feature", "-optimise"),
+    scalacOptions ++= Seq("-feature"),
     parallelExecution in Test := false, // hello, reflection sync!!
     logBuffered := false,
+    commands += cls,
     scalaHome := {
       val scalaHome = System.getProperty("scalahost.scala.home")
       if (scalaHome != null) {
@@ -32,6 +28,8 @@ object Settings {
       } else None
     },
     publishMavenStyle := true,
+    publishArtifact in Compile := false,
+    publishArtifact in Test := false,
     publishOnlyWhenOnMaster := publishOnlyWhenOnMasterImpl.value,
     publishTo <<= version { v: String =>
       val nexus = "https://oss.sonatype.org/"
@@ -61,6 +59,14 @@ object Settings {
       </issueManagement>
     )
   )
+
+  def cls = Command.command("cls") { state =>
+    // TODO: figure out how to do an analogue of cmd+k in iterm
+    val cr = new jline.console.ConsoleReader()
+    println("===============")
+    cr.clearScreen
+    state
+  }
 
   lazy val flatLayout: Seq[sbt.Def.Setting[_]] = assemblySettings ++ Seq(
     scalaSource in Compile <<= (baseDirectory in Compile)(base => base),

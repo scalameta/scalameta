@@ -53,7 +53,7 @@ object ScalaHostBuild extends Build {
     settings = sharedSettings ++ commonDependencies ++ Seq(
       usePlugin(plugin)
     )
-  )
+  ) dependsOn(plugin)
 
   lazy val tests = Project(
     id   = "tests",

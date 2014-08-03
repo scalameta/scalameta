@@ -253,7 +253,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         |The problem is caused by $offenderSummary that are either unattributed or erroneous:
         |$offenderPrintout
         |The input tree that has caused problems to the converter is printed out below:
-        |$in\n
+        |$in
         |${g.showRaw(in, printIds = true, printTypes = true)}
       """.stripMargin)
     }
