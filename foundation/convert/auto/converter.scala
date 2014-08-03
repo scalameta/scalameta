@@ -130,13 +130,12 @@ class ConverterMacros(val c: whitebox.Context) {
           try {
             op
           } catch {
-            case ex: $exception =>
-              throw ex
             case ex: _root_.scala.Exception =>
               def summary(x: Any) = x match { case x: Product => x.productPrefix; case null => "null"; case _ => x.getClass }
-              println(${name.toString} + " has encountered an error when converting an " + summary(in))
-              println("the culprit is: " + in.toString.replace("\n", "").take(60))
-              throw new $exception(ex)
+              var details = in.toString.replace("\n", "")
+              if (details.length > 60) details = details.take(60) + "..."
+              println("(" + summary(in) + ") " + details)
+              throw ex
           }
         }
       """
