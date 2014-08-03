@@ -253,6 +253,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         |The problem is caused by $offenderSummary that are either unattributed or erroneous:
         |$offenderPrintout
         |The input tree that has caused problems to the converter is printed out below:
+        |(Note that showRaw output at the end of the printout is supposed to contain ids and types)
         |$in
         |${g.showRaw(in, printIds = true, printTypes = true)}
       """.stripMargin)
@@ -546,9 +547,10 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         unreachable
       case g.NoType =>
         unreachable
-      case g.ThisType(sym) =>
+      case in @ g.ThisType(sym) =>
         // TODO: infer whether thistpe originally corresponded to Some or None
-        p.Type.Singleton(g.This(sym).asInstanceOf[g.This].cvt)
+        val gthis = g.This(sym).asInstanceOf[g.This].setType(in)
+        p.Type.Singleton(gthis.cvt)
       case g.SuperType(thistpe, supertpe) =>
         // TODO: infer whether supertpe originally corresponded to Some or None
         val p.Type.Singleton(p.Term.This(pthis)) = thistpe.cvt
