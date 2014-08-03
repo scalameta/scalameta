@@ -125,10 +125,25 @@ class ConverterMacros(val c: whitebox.Context) {
           })
         """
       ))
+      val catchAndReportExceptions = q"""
+        private def catchAndReportExceptions[T, U](in: T)(op: => U): U = {
+          try {
+            op
+          } catch {
+            case ex: $exception =>
+              throw ex
+            case ex: _root_.scala.Exception =>
+              def summary(x: Any) = x match { case x: Product => x.productPrefix; case null => "null"; case _ => x.getClass }
+              println(${name.toString} + " has encountered an error when converting an " + summary(in))
+              println("the culprit is: " + in.toString.replace("\n", "").take(60))
+              throw new $exception(ex)
+          }
+        }
+      """
       val instanceImpls = instances.filter(!_.notImplemented).map(instance => atPos(instance.pos)(
         q"""
           private def ${instance.impl}(in: ${instance.in}): $companion.${instance.sig}.Out = {
-            try {
+            catchAndReportExceptions(in) {
               val out = $DeriveInternal.connectConverters {
                 val $helperInstance = new $helperClass(in)
                 import $helperInstance._
@@ -136,13 +151,6 @@ class ConverterMacros(val c: whitebox.Context) {
                 in match { case ..${instance.clauses} }
               }
               out.appendScratchpad(in)
-            } catch {
-              case ex: $exception =>
-                throw ex
-              case ex: _root_.scala.Exception =>
-                def summary(x: Any) = x match { case x: Product => x.productPrefix; case null => "null"; case _ => x.getClass }
-                println("error converting " + summary(in) + ": " + in.toString.replace("\n", "").take(60))
-                throw new $exception(ex)
             }
           }
         """
@@ -154,6 +162,7 @@ class ConverterMacros(val c: whitebox.Context) {
           private class $helperClass(in: Any) { ..$prelude }
           trait $typeclass[In, Out] extends _root_.org.scalameta.convert.Convert[In, Out]
           class $exception(cause: _root_.scala.Exception) extends _root_.scala.Exception(cause)
+          $catchAndReportExceptions
           object $companion {
             def apply[In, Out](f: In => Out): $typeclass[In, Out] = new $typeclass[In, Out] { def apply(in: In): Out = f(in) }
             import _root_.scala.language.experimental.macros
