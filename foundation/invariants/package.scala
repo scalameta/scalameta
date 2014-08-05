@@ -36,7 +36,7 @@ package invariants {
         override def diagnostic = showCode(tree) + " is false"
       }
       case class Not(prop: Prop) extends Prop with Simple {
-        override def tree = prop.asInstanceOf[Atom].tree
+        override def tree = q"!${prop.asInstanceOf[Atom].tree}"
         override def diagnostic = showCode(tree) + " is true"
       }
       case class And(props: Prop*) extends Prop {
