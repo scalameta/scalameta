@@ -141,7 +141,10 @@ class ConverterMacros(val c: whitebox.Context) {
                 def summary(x: Any) = x match { case x: Product => x.productPrefix; case null => "null"; case _ => x.getClass }
                 var details = in.toString.replace("\n", "")
                 if (details.length > 60) details = details.take(60) + "..."
-                println("(" + summary(in) + ") " + details)
+                val actualType = summary(in)
+                val expectedType = ${instance.in.toString}.substring(2)
+                val prefix = if (actualType == expectedType) expectedType else (actualType + " <: " + expectedType)
+                println("(" + prefix + ") " + details)
                 throw ex
             }
           }
