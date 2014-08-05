@@ -291,7 +291,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         if (isAnonymous) p.Param.Anonymous(pmods(in.symbol), ptpe)
         else p.Param.Named(pmods(in.symbol), in.symbol.asTerm.rawcvt(in), ptpe, pdefault)
       case in @ g.ValDef(_, _, tpt @ g.TypeTree(), rhs) if pt <:< typeOf[p.Aux.Self] =>
-        require(in.symbol.isTerm)
+        require((in != g.noSelfType) ==> in.symbol.isTerm)
         val isAnonymous = in == g.noSelfType || in.symbol.name.toString == "x$1"
         val pname = if (!isAnonymous) Some(in.symbol.asTerm.rawcvt(in)) else None
         val ptpe = if (!tpt.wasEmpty) Some(tpt.cvt) else None
