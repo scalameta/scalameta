@@ -16,7 +16,7 @@ object Settings {
     description := "Scala host for scala.meta",
     resolvers += Resolver.sonatypeRepo("snapshots"),
     resolvers += Resolver.sonatypeRepo("releases"),
-    scalacOptions ++= Seq("-feature"),
+    scalacOptions ++= Seq("-feature", "-deprecation"),
     parallelExecution in Test := false, // hello, reflection sync!!
     logBuffered := false,
     commands += cls,

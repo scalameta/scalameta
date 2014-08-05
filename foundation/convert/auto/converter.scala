@@ -307,9 +307,9 @@ package object internal {
             if (csym.isSealed) csym.knownDirectSubclasses.toList.map(_.asClass).flatMap(allLeafCompanions)
             else if (csym.isFinal) {
               // somehow calling companionSymbol on results of knownDirectSubclasses is flaky
-              val companionSymbol = csym.owner.info.member(csym.name.toTermName)
-              if (companionSymbol == NoSymbol) c.abort(c.enclosingPosition, "companionless leaf in @root hierarchy")
-              List(csym.companionSymbol)
+              val companion = csym.owner.info.member(csym.name.toTermName)
+              if (companion == NoSymbol) c.abort(c.enclosingPosition, "companionless leaf in @root hierarchy")
+              List(csym.companion)
             } else if (csym.isModuleClass) {
               // haven't encountered bugs here, but just in case
               if (csym.module == NoSymbol) c.abort(c.enclosingPosition, "moduleless leaf in @root hierarchy")
@@ -375,7 +375,7 @@ package object internal {
             if (body.symbol != Auto_derive) precisetpe(body)
             else lub(ins.zip(underivedOuts).collect{ case (in, out) if (in <:< pat.tpe) && (out != NoType) => out })
           })
-          val methods = dummy.symbol.annotations.head.scalaArgs.map({
+          val methods = dummy.symbol.annotations.head.tree.children.tail.map({
             case Literal(Constant(s: String)) =>
               val qual = typeclassCompanion.duplicate
               val methodSym = typeclassCompanion.symbol.info.member(TermName(s)).orElse(c.abort(c.enclosingPosition, s"something went wrong: can't resolve $s in $typeclassCompanion"))
@@ -400,30 +400,26 @@ package object internal {
       // val max3 = tups.map(_._3.length).max
       // tups.foreach{ case (f1, f2, f3, f4) => println(f1 + (" " * (max1 - f1.length + 5)) + f2 + (" " * (max2 - f2.length + 5)) + f3 + (" " * (max3 - f3.length + 5)) + f4) }
       // ???
-      target.setAnnotations(target.annotations ++ List(Annotation(
-        ComputedConvertersAnnotation.toType,
-        List({
-          def smuggleType(tpe: Type) = {
-            val persistedTpe = if (tpe eq WildcardType) PersistedWildcardType else tpe
-            Literal(Constant(persistedTpe)).setType(constantType(Constant(persistedTpe)))
-          }
-          def pickleConverter(converter: SharedConverter): Tree = q"""
-            new $ComputedConvertersDatabearer(
-              ${smuggleType(converter.in.asInstanceOf[Type])},
-              ${smuggleType(converter.pt.asInstanceOf[Type])},
-              ${smuggleType(converter.out.asInstanceOf[Type])},
-              ${converter.module.asInstanceOf[Tree]},
-              ${converter.method},
-              ${Literal(Constant(null))},
-              ${converter.derived}
-            )
-          """
-          val untyped = q"$ListModule(${converters.map(pickleConverter)})"
-          c.typecheck(untyped)
-        }),
-        scala.collection.immutable.ListMap()
-      )): _*)
-      // TODO: also persist the converters in an annotation on target in order to support separate compilation
+      target.setAnnotations(target.annotations ++ List(Annotation({
+        def smuggleType(tpe: Type) = {
+          val persistedTpe = if (tpe eq WildcardType) PersistedWildcardType else tpe
+          Literal(Constant(persistedTpe)).setType(constantType(Constant(persistedTpe)))
+        }
+        def pickleConverter(converter: SharedConverter): Tree = q"""
+          new $ComputedConvertersDatabearer(
+            ${smuggleType(converter.in.asInstanceOf[Type])},
+            ${smuggleType(converter.pt.asInstanceOf[Type])},
+            ${smuggleType(converter.out.asInstanceOf[Type])},
+            ${converter.module.asInstanceOf[Tree]},
+            ${converter.method},
+            ${Literal(Constant(null))},
+            ${converter.derived}
+          )
+        """
+        val untypedArg = q"$ListModule(${converters.map(pickleConverter)})"
+        val typedArg = c.typecheck(untypedArg)
+        q"new ${ComputedConvertersAnnotation.toType}($typedArg)"
+      })): _*)
       q"()"
     }
     def loadConverters(pre0: Type, sym: Symbol): List[Converter] = {
@@ -572,7 +568,7 @@ package object internal {
             }
             def transformApplyRememberingPts(app: Apply): Apply = {
               treeCopy.Apply(app, api.recur(app.fun), app.args.zipWithIndex.map({ case (arg, i) =>
-                val params = app.fun.tpe.paramss.head
+                val params = app.fun.tpe.paramLists.head
                 def isVararg = i >= params.length - 1 && params.last.info.typeSymbol == RepeatedParamClass
                 def unVararg(tpe: Type) = tpe.typeArgs.head
                 pt = if (isVararg) unVararg(params.last.info) else params(i).info

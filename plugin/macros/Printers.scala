@@ -200,7 +200,14 @@ trait Printers {
 
     def printFlags(flags: Long, privateWithin: String) = {
       val mask: Long = if (settings.debug) -1L else PrintableFlags
-      val s = flagsToString(flags & mask, privateWithin)
+      val maskedFlag: Long = mask & flags
+      // TODO: no idea why this method got deprecated
+      // val s = flagsToString(flags & mask, privateWithin)
+      val s = {
+        val flagModule = scala.reflect.internal.Flags
+        val m_flagsToString :: Nil = flagModule.getClass.getMethods.filter(m => m.getName == "flagsToString" && m.getParameterTypes().length == 2).toList
+        m_flagsToString.invoke(flagModule, maskedFlag.asInstanceOf[AnyRef], privateWithin).asInstanceOf[String]
+      }
       if (s != "") print(s + " ")
     }
 
@@ -326,7 +333,7 @@ trait Printers {
       Block(stats, expr) match {
         case build.SyntacticNew(earlyDefs, parents, selfType, body) if body.nonEmpty =>
           require(earlyDefs.isEmpty)
-          require(selfType eq emptyValDef)
+          require(selfType eq noSelfType)
           print("new ")
           if (body.length == 1) print("{ ", body(0), " }")
           else printColumn(body, "{", ";", "}")
@@ -1014,7 +1021,7 @@ trait Printers {
           printSuper(st, printedName(qual), checkSymbol = false)
 
         case th @ This(qual) =>
-          if (tree.hasExistingSymbol && tree.symbol.isPackage) print(tree.symbol.fullName)
+          if (tree.hasExistingSymbol && tree.symbol.hasPackageFlag) print(tree.symbol.fullName)
           else printThis(th, printedName(qual))
 
         // remove this prefix from constructor invocation in typechecked trees: this.this -> this
@@ -1031,7 +1038,7 @@ trait Printers {
             }) && (tr match { // check that Select contains package
               case Select(q, _) => checkRootPackage(q)
               case _: Ident | _: This => val sym = tr.symbol
-                tr.hasExistingSymbol && sym.isPackage && sym.name != nme.ROOTPKG
+                tr.hasExistingSymbol && sym.hasPackageFlag && sym.name != nme.ROOTPKG
               case _ => false
             })
 
