@@ -74,6 +74,7 @@ object Settings {
 
   lazy val mergeDependencies: Seq[sbt.Def.Setting[_]] = assemblySettings ++ Seq(
     test in assembly := {},
+    logLevel in assembly := Level.Error,
     jarName in assembly := name.value + "_" + scalaVersion.value + "-" + version.value + "-assembly.jar",
     assemblyOption in assembly ~= { _.copy(includeScala = false) },
     Keys.`package` in Compile := {
@@ -81,7 +82,6 @@ object Settings {
       val fatJar = new File(crossTarget.value + "/" + (jarName in assembly).value)
       val _ = assembly.value
       IO.copy(List(fatJar -> slimJar), overwrite = true)
-      println("package: merged scalahost and its dependencies and produced a fat JAR")
       slimJar
     },
     packagedArtifact in Compile in packageBin := {
@@ -90,7 +90,6 @@ object Settings {
       val fatJar = new File(crossTarget.value + "/" + (jarName in assembly).value)
       val _ = assembly.value
       IO.copy(List(fatJar -> slimJar), overwrite = true)
-      println("packagedArtifact: merged scalahost and its dependencies and produced a fat JAR")
       (art, slimJar)
     }
   )
