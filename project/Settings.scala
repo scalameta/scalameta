@@ -61,10 +61,9 @@ object Settings {
   )
 
   def cls = Command.command("cls") { state =>
-    // TODO: figure out how to do an analogue of cmd+k in iterm
-    val cr = new jline.console.ConsoleReader()
-    println("===============")
-    cr.clearScreen
+    // NOTE: probably only works in iTerm2
+    // kudos to http://superuser.com/questions/576410/how-can-i-partially-clear-my-terminal-scrollback
+    print("\u001b]50;ClearScrollback\u0007")
     state
   }
 
