@@ -291,12 +291,14 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         if (isAnonymous) p.Param.Anonymous(pmods(in.symbol), ptpe)
         else p.Param.Named(pmods(in.symbol), in.symbol.asTerm.rawcvt(in), ptpe, pdefault)
       case in @ g.ValDef(_, _, tpt @ g.TypeTree(), rhs) if pt <:< typeOf[p.Aux.Self] =>
-        require((in != g.noSelfType) ==> in.symbol.isTerm)
-        val isAnonymous = in == g.noSelfType || in.symbol.name.toString == "x$1"
-        val pname = if (!isAnonymous) Some(in.symbol.asTerm.rawcvt(in)) else None
-        val ptpe = if (in != g.noSelfType && !tpt.wasEmpty) Some(tpt.cvt) else None
         require(rhs.isEmpty)
-        p.Aux.Self(pname, ptpe, hasThis = false) // TODO: figure out hasThis
+        if (in == g.noSelfType) p.Aux.Self(None, None, hasThis = false)
+        else {
+          require(in.symbol.isTerm)
+          val pname = if (in.symbol.name.toString != "x$1") Some(in.symbol.asTerm.rawcvt(in)) else None
+          val ptpe = if (!tpt.wasEmpty) Some(tpt.cvt) else None
+          p.Aux.Self(pname, ptpe, hasThis = false) // TODO: figure out hasThis
+        }
       case in @ g.ValDef(_, _, tpt @ g.TypeTree(), rhs) if pt <:< typeOf[p.Member.ValOrVar] =>
         // TODO: collapse desugared representations of pattern-based vals and vars
         // TODO: figure out whether a var def has an explicitly written underscore as its body or not
