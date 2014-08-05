@@ -218,6 +218,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
               case g.Import(qual, selectors) => check(qual)
               // patmat wildcards used in binds and typeds don't have symbols
               case g.Ident(g.nme.WILDCARD) => check(tree, skipSymbol = true)
+              // literals don't have symbols
+              case g.Literal(const) => check(tree, skipSymbol = true)
               case _ => check(tree)
             }
           }
