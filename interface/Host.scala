@@ -129,7 +129,6 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         if (gsym.isCovariant) pmods += p.Mod.Covariant()
         if (gsym.isContravariant) pmods += p.Mod.Contravariant()
         if (gsym.isLazy) pmods += p.Mod.Lazy()
-        if (gsym.isMacro) pmods += p.Mod.Macro()
         // TODO: implement this
         // if (gsym.???) pmods += p.Mod.ValParam()
         // if (gsym.???) pmods += p.Mod.VarParam()
@@ -144,7 +143,14 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         val g.AnnotationInfo(gatp, gargs, gassocs) = gann
         p.Mod.Annot(gatp.cvt, List(gargs.cvt_!))
       }
-      def panns(ganns: List[g.AnnotationInfo]): Seq[p.Mod.Annot] = ganns.map(pann)
+      def panns(ganns: List[g.AnnotationInfo]): Seq[p.Mod.Annot] = {
+        ganns.filter(gann => {
+          val sym = gann.tree.tpe.typeSymbol
+          def isOldMacroSignature = sym.fullName == "scala.reflect.macros.internal.macroImpl"
+          def isNewMacroSignature = isOldMacroSignature
+          !isOldMacroSignature && !isNewMacroSignature
+        }).map(pann)
+      }
       def pbounds(gtpe: g.Type): p.Aux.TypeBounds = gtpe match {
         case g.TypeBounds(glo, ghi) =>
           // TODO: infer which of the bounds were specified explicitly by the user
@@ -325,6 +331,31 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
           val q"{ $_(...$argss); ..$stats; () }" = body
           // TODO: recover named/default arguments
           p.Ctor.Secondary(pmods(in.symbol), explicitss.cvt_!, implicits.cvt_!, argss.cvt_!, stats.cvt_!)
+        } else if (in.symbol.isMacro) {
+          require(!tpt.wasEmpty) // TODO: support pre-2.12 macros with inferred return types
+          val macroSigs = in.symbol.annotations.filter(_.tree.tpe.typeSymbol.fullName == "scala.reflect.macros.internal.macroImpl")
+          def mkMacroDefn(body: g.Tree) =
+            p.Defn.Macro(pmods(in.symbol), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt_!, implicits.cvt_!, tpt.cvt, body.cvt_!)
+          macroSigs match {
+            case legacySig :: palladiumSig :: Nil =>
+              // TODO: support Palladium macros
+              ???
+            case legacySig :: Nil =>
+              // TODO: obtain the impl ref exactly how it was written by the programmer
+              val q"new $_[..$_]($_(..$args)[..$targs])" = legacySig.tree
+              def peek(key: String) = args.collect{ case g.Assign(g.Literal(g.Constant(s: String)), g.Literal(g.Constant(v))) if key == s => v }.head
+              val className = peek("className").asInstanceOf[String]
+              val methodName = peek("methodName").asInstanceOf[String]
+              val isBundle = peek("isBundle").asInstanceOf[Boolean]
+              require(className.endsWith("$") ==> !isBundle)
+              val containerSym = if (isBundle) g.rootMirror.staticClass(className) else g.rootMirror.staticModule(className.stripSuffix("$"))
+              val container = g.Ident(containerSym).setType(if (isBundle) containerSym.asType.toType else containerSym.info)
+              val methodSym = containerSym.info.member(g.TermName(methodName))
+              var implRef: g.Tree = g.Select(container, methodSym).setType(methodSym.info)
+              if (targs.nonEmpty) implRef = g.TypeApply(implRef, targs).setType(g.appliedType(methodSym.info, targs.map(_.tpe)))
+              mkMacroDefn(implRef)
+            case _ => unreachable
+          }
         } else if (in.symbol.isDeferred) p.Decl.Def(pmods(in.symbol), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt_!, implicits.cvt_!, tpt.cvt) // TODO: infer procedures
         else p.Defn.Def(pmods(in.symbol), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt_!, implicits.cvt_!, if (!tpt.wasEmpty) Some(tpt.cvt) else None, body.cvt_!)
       case in @ g.TypeDef(_, _, tparams, tpt @ g.TypeTree()) if pt <:< typeOf[p.TypeParam] =>
