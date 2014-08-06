@@ -84,6 +84,6 @@ class DefnSuite extends ParseSuite {
   test("def f(x: Int): Int = macro impl") {
     val Defn.Macro(Nil, Term.Name("f"), Nil,
                    (Param.Named(List(), Term.Name(x), Some(Type.Name("Int")), None) :: Nil) :: Nil,
-                   Nil, Type.Name("Int"), None, Term.Name("impl")) = templStat("def f(x: Int): Int = macro impl")
+                   Nil, Type.Name("Int"), Term.Name("impl")) = templStat("def f(x: Int): Int = macro impl")
   }
 }
