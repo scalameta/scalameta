@@ -2044,7 +2044,7 @@ abstract class AbstractParser { parser =>
     }
   }
 
-  def funDefRest(mods: List[Mod], name: Term.Name): Member.Def = {
+  def funDefRest(mods: List[Mod], name: Term.Name): Stmt.Template = {
     def warnProcedureDeprecation =
       deprecationWarning(in.lastOffset, s"Procedure syntax is deprecated. Convert procedure `$name` to method by adding `: Unit`.")
     val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
@@ -2078,7 +2078,7 @@ abstract class AbstractParser { parser =>
         expr()
       }
       if (isMacro) restype match {
-        case Some(restype) => Defn.Macro(mods, name, tparams, paramss, implicits, restype, None, rhs)
+        case Some(restype) => Defn.Macro(mods, name, tparams, paramss, implicits, restype, rhs)
         case None => syntaxError(in.lastOffset, "macros must have explicitly specified return types")
       } else Defn.Def(mods, name, tparams, paramss, implicits, restype, rhs)
     }

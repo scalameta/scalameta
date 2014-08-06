@@ -217,9 +217,8 @@ object Defn {
                    tparams: Seq[TypeParam],
                    explicits: Seq[Seq[Param.Named]],
                    implicits: Seq[Param.Named],
-                   decltpe: meta.Type,
-                   metaprogram: Option[Def],
-                   link: Term) extends Defn with Member.Def
+                   tpe: meta.Type,
+                   body: Term) extends Defn with Member.Term
   @ast class Type(mods: Seq[Mod],
                   name: meta.Type.Name,
                   tparams: Seq[TypeParam],

@@ -110,6 +110,7 @@ package object semantic {
     def isVal: Boolean = tree.isInstanceOf[Term.Name] && (tree.parent.map(parent => parent.isInstanceOf[Decl.Val] || parent.isInstanceOf[Defn.Val]).getOrElse(false))
     def isVar: Boolean = tree.isInstanceOf[Term.Name] && (tree.parent.map(parent => parent.isInstanceOf[Decl.Var] || parent.isInstanceOf[Defn.Var]).getOrElse(false))
     def isDef: Boolean = tree.isInstanceOf[Member.Def]
+    def isMacro: Boolean = tree.isInstanceOf[Defn.Macro]
     def isType: Boolean = tree.isInstanceOf[Member.AbstractOrAliasType]
     def isAbstractType: Boolean = tree.isInstanceOf[Decl.Type]
     def isAliasType: Boolean = tree.isInstanceOf[Defn.Type]
@@ -156,7 +157,6 @@ package object semantic {
       case x: Decl.Procedure => ??? // TODO: t"Unit"
       case x: Defn.Def => x.body.tpe
       case x: Defn.Procedure => ??? // TODO: t"Unit"
-      case x: Defn.Macro => succeed(x.decltpe)
     }
   }
 
@@ -197,6 +197,11 @@ package object semantic {
 
   implicit class SemanticDefnVarOps(val tree: Defn.Var) extends AnyVal {
     @hosted def tpe: meta.Type = tree.rhs.map(_.tpe).getOrElse(succeed(tree.decltpe.get))
+  }
+
+  implicit class SemanticDefnMacroOps(val tree: Defn.Macro) extends AnyVal {
+    @hosted def isBlackbox: Boolean = ???
+    @hosted def isWhitebox: Boolean = ???
   }
 
   implicit class SemanticDefnClassOps(val tree: Defn.Class) extends AnyVal {
@@ -321,6 +326,10 @@ package object semantic {
     @hosted def defs(name: Name): Member.Def = tree.uniqueMember[Member.Def](name.toString)
     @hosted def defs(name: String): Member.Def = tree.uniqueMember[Member.Def](name.toString)
     @hosted def defs(name: scala.Symbol): Member.Def = tree.uniqueMember[Member.Def](name.toString)
+    @hosted def macros: Seq[Defn.Macro] = tree.allMembers[Defn.Macro]
+    @hosted def macros(name: Name): Defn.Macro = tree.uniqueMember[Defn.Macro](name.toString)
+    @hosted def macros(name: String): Defn.Macro = tree.uniqueMember[Defn.Macro](name.toString)
+    @hosted def macros(name: scala.Symbol): Defn.Macro = tree.uniqueMember[Defn.Macro](name.toString)
   }
 
   implicit class SemanticExistentialScopeOps(val tree: Scope.Existential) extends AnyVal {
