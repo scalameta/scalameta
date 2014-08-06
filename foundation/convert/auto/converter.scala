@@ -128,6 +128,15 @@ class ConverterMacros(val c: whitebox.Context) {
       val instanceImpls = instances.filter(!_.notImplemented).map(instance => atPos(instance.pos)(
         q"""
           private def ${instance.impl}(in: ${instance.in}): $companion.${instance.sig}.Out = {
+            def logFailure() = {
+              def summary(x: Any) = x match { case x: Product => x.productPrefix; case null => "null"; case _ => x.getClass }
+              var details = in.toString.replace("\n", "")
+              if (details.length > 60) details = details.take(60) + "..."
+              val actualType = summary(in)
+              val expectedType = ${instance.in.toString}.substring(2)
+              val prefix = if (actualType == expectedType) expectedType else (actualType + " <: " + expectedType)
+              println("(" + prefix + ") " + details)
+            }
             try {
               val out = $DeriveInternal.connectConverters {
                 val $helperInstance = new $helperClass(in)
@@ -137,15 +146,8 @@ class ConverterMacros(val c: whitebox.Context) {
               }
               out.appendScratchpad(in)
             } catch {
-              case ex: _root_.scala.Exception =>
-                def summary(x: Any) = x match { case x: Product => x.productPrefix; case null => "null"; case _ => x.getClass }
-                var details = in.toString.replace("\n", "")
-                if (details.length > 60) details = details.take(60) + "..."
-                val actualType = summary(in)
-                val expectedType = ${instance.in.toString}.substring(2)
-                val prefix = if (actualType == expectedType) expectedType else (actualType + " <: " + expectedType)
-                println("(" + prefix + ") " + details)
-                throw ex
+              case err: _root_.java.lang.AssertionError => logFailure(); throw err
+              case ex: _root_.scala.Exception => logFailure(); throw ex
             }
           }
         """
