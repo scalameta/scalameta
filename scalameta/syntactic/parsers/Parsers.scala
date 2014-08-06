@@ -344,7 +344,6 @@ abstract class AbstractParser { parser =>
   def isRawBar  = isName && in.name == "|"
 
   def isName = in.token == IDENTIFIER || in.token == BACKQUOTED_IDENT
-  def isMacro = in.token == IDENTIFIER && in.name == "macro"
 
   def isLiteralToken(token: Token) = token match {
     case CHARLIT | INTLIT | LONGLIT | FLOATLIT | DOUBLELIT |
@@ -2067,20 +2066,21 @@ abstract class AbstractParser { parser =>
         r
       })
     } else {
-      var newmods = mods
+      var isMacro = false
       val rhs = {
         if (in.token == EQUALS) {
           in.nextTokenAllow("macro")
-          if (isMacro) {
-            in.nextToken()
-            newmods = newmods :+ Mod.Macro()
-          }
+          isMacro = in.token == IDENTIFIER && in.name == "macro"
+          if (isMacro) in.nextToken()
         } else {
           accept(EQUALS)
         }
         expr()
       }
-      Defn.Def(newmods, name, tparams, paramss, implicits, restype, rhs)
+      if (isMacro) restype match {
+        case Some(restype) => Defn.Macro(mods, name, tparams, paramss, implicits, restype, None, rhs)
+        case None => syntaxError(in.lastOffset, "macros must have explicitly specified return types")
+      } else Defn.Def(mods, name, tparams, paramss, implicits, restype, rhs)
     }
   }
 

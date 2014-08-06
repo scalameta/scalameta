@@ -132,7 +132,6 @@ package object semantic {
     def isContravariant: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Contravariant])
     def isLazy: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Lazy])
     def isAbstractOverride: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Abstract]) && tree.mods.exists(_.isInstanceOf[Mod.Override])
-    def isMacro: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Macro])
     def isByNameParam: Boolean = ???
     def isVarargParam: Boolean = ???
     def isValParam: Boolean = tree.mods.exists(_.isInstanceOf[Mod.ValParam])
@@ -157,6 +156,7 @@ package object semantic {
       case x: Decl.Procedure => ??? // TODO: t"Unit"
       case x: Defn.Def => x.body.tpe
       case x: Defn.Procedure => ??? // TODO: t"Unit"
+      case x: Defn.Macro => succeed(x.decltpe)
     }
   }
 
