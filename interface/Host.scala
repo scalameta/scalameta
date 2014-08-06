@@ -425,10 +425,16 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         require(name == in.symbol.name)
         p.Pat.Bind(in.symbol.asTerm.rawcvt(in), tree.cvt_!)
       case in @ g.Apply(tpt @ g.TypeTree(), args) =>
-        val companion = tpt.tpe.typeSymbol.companionSymbol
+        // TypeTree[1]().setOriginal(Select[2](Ident[3](scala#26), scala.Tuple2#1688))
+        // [1] MethodType(List(TermName("_1")#30490, TermName("_2")#30491), TypeRef(ThisType(scala#27), scala.Tuple2#1687, List(TypeRef(SingleType(SingleType(NoPrefix, TermName("c")#15795), TermName("universe")#15857), TypeName("TermSymbol")#9456, List()), TypeRef(SingleType(SingleType(NoPrefix, TermName("c")#15795), TermName("universe")#15857), TypeName("Ident")#10233, List()))))
+        // [2] SingleType(SingleType(ThisType(<root>#2), scala#26), scala.Tuple2#1688)
+        // [3] SingleType(ThisType(<root>#2), scala#26)
+        require(tpt.tpe.isInstanceOf[g.MethodType])
+        val tpe = tpt.tpe.finalResultType
+        val companion = tpe.typeSymbol.companion
         require(companion.isTerm)
         // TODO: figure out whether targs were explicitly specified or not
-        p.Pat.Extract(companion.asTerm.rawcvt(g.Ident(companion)), tpt.tpe.typeArgs.cvt, args.cvt_!)
+        p.Pat.Extract(companion.asTerm.rawcvt(g.Ident(companion)), tpe.typeArgs.cvt, args.cvt_!)
       case in @ g.UnApply(q"$ref.$unapply[..$targs](..$_)", args) =>
         // TODO: infer Extract vs ExtractInfix
         // TODO: infer whether it was an application or a Tuple
