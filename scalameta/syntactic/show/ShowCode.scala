@@ -165,7 +165,6 @@ object Code {
     case _: Mod.Final         => s("final ")
     case _: Mod.Implicit      => s("implicit ")
     case _: Mod.Lazy          => s("lazy ")
-    case _: Mod.Macro         => s("macro ")
     case _: Mod.Override      => s("override ")
     case _: Mod.Sealed        => s("sealed ")
     case t: Mod.Private       => s("private", t.within, " ")
@@ -185,6 +184,9 @@ object Code {
       s(t.mods, "def ", t.name, t.tparams, (t.explicits, t.implicits), t.decltpe, " = ", t.body)
     case t: Defn.Procedure =>
       s(t.mods, "def ", t.name, t.tparams, (t.explicits, t.implicits), " { ", r(t.stats.map(i(_)), ";"), n("}"))
+    case t: Defn.Macro     =>
+      val rhs = t.metaprogram.map(_.body).getOrElse(t.link)
+      s(t.mods, "def ", t.name, t.tparams, (t.explicits, t.implicits), t.decltpe, " = macro ", rhs)
 
     // Decl
     case t: Decl.Val       => s(t.mods, "val ", r(t.pats, ", "), ": ", t.decltpe)

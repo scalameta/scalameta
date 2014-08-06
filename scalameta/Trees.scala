@@ -212,6 +212,14 @@ object Defn {
                        stats: Seq[Stmt.Block]) extends Defn with Member.Def {
     require(stats.collect { case m: Member if m.isPkgObject => m }.isEmpty)
   }
+  @ast class Macro(mods: Seq[Mod],
+                   name: Term.Name,
+                   tparams: Seq[TypeParam],
+                   explicits: Seq[Seq[Param.Named]],
+                   implicits: Seq[Param.Named],
+                   decltpe: meta.Type,
+                   metaprogram: Option[Def],
+                   link: Term) extends Defn with Member.Def
   @ast class Type(mods: Seq[Mod],
                   name: meta.Type.Name,
                   tparams: Seq[TypeParam],
@@ -339,7 +347,6 @@ object Mod {
   @ast class Covariant() extends Mod
   @ast class Contravariant() extends Mod
   @ast class Lazy() extends Mod
-  @ast class Macro() extends Mod
   @ast class ValParam() extends Mod
   @ast class VarParam() extends Mod
   @ast class Package() extends Mod
