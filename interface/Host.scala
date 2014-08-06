@@ -428,7 +428,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         assert(companion.isTerm)
         // TODO: figure out whether targs were explicitly specified or not
         p.Pat.Extract(companion.asTerm.rawcvt(g.Ident(companion)), tpt.tpe.typeArgs.cvt, args.cvt_!)
-      case in @ g.UnApply(q"$ref.$unapply[..$targs](`<unapply-selector>`)", args) =>
+      case in @ g.UnApply(q"$ref.$unapply[..$targs](..$_)", args) =>
         // TODO: infer Extract vs ExtractInfix
         // TODO: infer whether it was an application or a Tuple
         // TODO: also figure out Interpolate
