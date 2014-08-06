@@ -391,6 +391,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
           }
           parents map {
             // TODO: recover names and defaults
+            case q"${tpt: g.TypeTree}()" => p.Aux.Parent(tpt.cvt, Nil)
             case q"${tpt: g.TypeTree}(...$argss)" => p.Aux.Parent(tpt.cvt, argss.cvt_!)
             case _ => unreachable
           }
