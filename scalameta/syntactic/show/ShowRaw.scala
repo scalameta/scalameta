@@ -11,6 +11,10 @@ object Raw {
   def apply[T](f: T => Show.Result): Raw[T] = new Raw[T] { def apply(input: T) = f(input) }
 
   implicit def rawTree[T <: Tree]: Raw[T] = Raw(x => {
-    s(x.productPrefix, "(", r(x.productIterator.map(v => if (v != null) v.toString else "null").toList, ", "), ")")
+    s(x.productPrefix, "(", r(x.productIterator.map({
+      case null => "null"
+      case s: String => "\"" + s + "\"" // TODO: escape all the special characters as necessary
+      case x => x.toString
+    }).toList, ", "), ")")
   })
 }
