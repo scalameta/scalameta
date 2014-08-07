@@ -93,6 +93,10 @@ package invariants {
       case class Exists(list: Atom, fn: Atom) extends Prop {
         override def emit = Atom(q"${list.tree}.exists(${fn.tree})").emit
       }
+      case class Imply(atom1: Atom, atom2: Atom) extends Prop with Simple {
+        override def tree = q"!${atom1.tree} || ${atom2.tree}"
+        override def diagnostic = showCode(atom1.tree) + " is true, but " + showCode(atom2.tree) + " is false"
+      }
 
       def propify(tree: Tree): Prop = tree match {
         case q"!$x" => Not(propify(x))
@@ -102,6 +106,7 @@ package invariants {
         case q"$x != $y" => Ne(Atom(x), Atom(y))
         case q"$x.forall($y)" => Forall(Atom(x), Atom(y))
         case q"$x.exists($y)" => Exists(Atom(x), Atom(y))
+        case q"$_.Implication($x).==>($y)" => Imply(Atom(x), Atom(y))
         case x => Atom(x)
       }
 
