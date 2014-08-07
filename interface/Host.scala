@@ -340,19 +340,29 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         } else if (in.symbol.isMacro) {
           require(!tpt.wasEmpty) // TODO: support pre-2.12 macros with inferred return types
           val macroSigs = in.symbol.annotations.filter(_.tree.tpe.typeSymbol.fullName == "scala.reflect.macros.internal.macroImpl")
-          def mkMacroDefn(body: g.Tree) =
-            p.Defn.Macro(pmods(in.symbol), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt_!, implicits.cvt_!, tpt.cvt, body.cvt_!)
+          def mkMacroDefn(gbody: g.Tree) =
+            p.Defn.Macro(pmods(in.symbol), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt_!, implicits.cvt_!, tpt.cvt, gbody.cvt_!)
+          def parseSig(gsig: g.Annotation) = {
+            val q"new $_[..$_]($_(..$args)[..$targs])" = gsig.tree
+            val metadata = args.collect{
+              case g.Assign(g.Literal(g.Constant(s: String)), g.Literal(g.Constant(v))) => s -> v
+              case g.Assign(g.Literal(g.Constant(s: String)), tree) => s -> tree
+            }.toMap
+            metadata + ("targs" -> targs)
+          }
           macroSigs match {
             case legacySig :: palladiumSig :: Nil =>
-              // TODO: support Palladium macros
-              ???
+              // TODO: figure out the protocol of communicating whether the macro is blackbox or whitebox
+              // this information can be datamined from palladiumSig, but so far it's unclear where to put it
+              val metaprogram = parseSig(palladiumSig)("implDdef").asInstanceOf[g.DefDef].rhs
+              mkMacroDefn(metaprogram)
             case legacySig :: Nil =>
               // TODO: obtain the impl ref exactly how it was written by the programmer
-              val q"new $_[..$_]($_(..$args)[..$targs])" = legacySig.tree
-              def peek(key: String) = args.collect{ case g.Assign(g.Literal(g.Constant(s: String)), g.Literal(g.Constant(v))) if key == s => v }.head
-              val className = peek("className").asInstanceOf[String]
-              val methodName = peek("methodName").asInstanceOf[String]
-              val isBundle = peek("isBundle").asInstanceOf[Boolean]
+              val legacy = parseSig(legacySig)
+              val className = legacy("className").asInstanceOf[String]
+              val methodName = legacy("methodName").asInstanceOf[String]
+              val isBundle = legacy("isBundle").asInstanceOf[Boolean]
+              val targs = legacy("targs").asInstanceOf[List[g.Tree]]
               require(className.endsWith("$") ==> !isBundle)
               val containerSym = if (isBundle) g.rootMirror.staticClass(className) else g.rootMirror.staticModule(className.stripSuffix("$"))
               val container = g.Ident(containerSym).setType(if (isBundle) containerSym.asType.toType else containerSym.info)
