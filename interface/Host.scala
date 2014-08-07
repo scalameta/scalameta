@@ -110,8 +110,12 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
       object AbstractTypeSymbol { def unapply(gsym: g.Symbol): Option[g.TypeSymbol] = if (gsym.isType && gsym.isAbstractType) Some(gsym.asType) else None }
       object AliasTypeSymbol { def unapply(gsym: g.Symbol): Option[g.TypeSymbol] = if (gsym.isType && gsym.isAliasType) Some(gsym.asType) else None }
       private def paccessqual(gsym: g.Symbol): Option[p.Mod.AccessQualifier] = {
-        if (gsym.isPrivateThis || gsym.isProtectedThis) Some(g.This(g.tpnme.EMPTY).setSymbol(gsym.privateWithin).cvt)
-        else if (gsym.privateWithin == g.NoSymbol || gsym.privateWithin == null) None
+        if (gsym.isPrivateThis || gsym.isProtectedThis) {
+          // TODO: does NoSymbol here actually mean gsym.owner?
+          val gpriv = gsym.privateWithin.orElse(gsym.owner)
+          require(gpriv.isClass)
+          Some(g.This(g.tpnme.EMPTY).setSymbol(gpriv).setType(gpriv.asType.toType).cvt)
+        } else if (gsym.privateWithin == g.NoSymbol || gsym.privateWithin == null) None
         else Some(gsym.privateWithin.qualcvt(g.Ident(gsym.privateWithin))) // TODO: this loses information is gsym.privateWithin was brought into scope with a renaming import
       }
       def pmods(gsym: g.Symbol): Seq[p.Mod] = {
