@@ -284,8 +284,10 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
       case in @ g.ClassDef(_, _, tparams, templ) =>
         require(in.symbol.isClass)
         in match {
-          case q"$_ class $_[..$_] $_(...$explicits)(implicit ..$implicits) extends { ..$_ } with ..$_ { $_ => ..$_ }" =>
-            val ctor = p.Ctor.Primary(pmods(in.symbol.primaryConstructor), explicits.cvt_!, implicits.cvt_!).appendScratchpad(in.symbol.primaryConstructor)
+          case q"$_ class $_[..$_] $_(...$_)(implicit ..$_) extends { ..$_ } with ..$_ { $_ => ..$_ }" =>
+            val gctor = templ.body.find(_.symbol == in.symbol.primaryConstructor).get
+            val q"$_ def $_[..$_](...$explicitss)(implicit ..$implicits): $_ = $_" = gctor
+            val ctor = p.Ctor.Primary(pmods(in.symbol.primaryConstructor), explicitss.cvt_!, implicits.cvt_!).appendScratchpad(in.symbol.primaryConstructor)
             p.Defn.Class(pmods(in.symbol), in.symbol.asClass.rawcvt(in), tparams.cvt, ctor, templ.cvt)
           case q"$_ trait $_[..$_] extends { ..$_ } with ..$_ { $_ => ..$_ }" =>
             p.Defn.Trait(pmods(in.symbol), in.symbol.asClass.rawcvt(in), tparams.cvt, templ.cvt)
