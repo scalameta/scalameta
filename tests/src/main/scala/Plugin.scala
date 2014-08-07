@@ -21,11 +21,11 @@ class Plugin(val global: Global) extends NscPlugin { self =>
           if (hasMacroExpansionAttachment(tree)) {
             tree.attachments.get[java.util.HashMap[String, Any]] match {
               case None =>
-                unit.error(tree.pos, "macro expansion without a property bag")
+                reporter.error(tree.pos, "macro expansion without a property bag")
               case Some(bag) =>
-                if (!bag.containsKey("expandeeTree")) unit.error(tree.pos, "macro expansion without expandeeTree in the property bag")
-                if (!bag.containsKey("expandedTree")) unit.error(tree.pos, "macro expansion without expandedTree in the property bag")
-                if (!bag.containsKey("expansionString")) unit.error(tree.pos, "macro expansion without expansionString in the property bag")
+                if (!bag.containsKey("expandeeTree")) reporter.error(tree.pos, "macro expansion without expandeeTree in the property bag")
+                if (!bag.containsKey("expandedTree")) reporter.error(tree.pos, "macro expansion without expandedTree in the property bag")
+                if (!bag.containsKey("expansionString")) reporter.error(tree.pos, "macro expansion without expansionString in the property bag")
             }
           }
         })
