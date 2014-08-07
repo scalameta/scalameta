@@ -65,7 +65,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
       private def isBackquoted(in: g.Tree): Boolean = in match {
         // TODO: infer isBackquoted
         // TODO: iirc according to Denys, even BackquotedIdentifierAttachment sometimes lies
-        case in: g.Ident => in.isBackquoted
+        case in: g.Ident => in.isBackquoted || scala.meta.syntactic.parsers.keywords.contains(in.name.toString)
         case _ => false
       }
       implicit class RichSymbol(gsym: g.Symbol) {
@@ -560,6 +560,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         unreachable
       case in @ g.Select(qual, _) =>
         require(in.symbol.isTerm) // NOTE: typename selections are impossible, because all TypTrees have already been converted to TypeTrees
+        // TODO: what do we do if sym is a package object? do we skip it altogether or do we still emit an explicit reference to it?
         p.Term.Select(qual.cvt_!, in.symbol.asTerm.precvt(qual.tpe, in), isPostfix = false) // TODO: figure out isPostfix
       case in @ g.Ident(_) =>
         require(in.symbol.isTerm) // NOTE: see the g.Select note
@@ -615,6 +616,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
           case g.NoPrefix =>
             sym.asTerm.rawcvt(g.Ident(sym))
           case _: g.SingletonType =>
+            // TODO: what do we do if sym is a package object? do we skip it altogether or do we still emit an explicit reference to it?
             val p.Type.Singleton(preref) = pre.cvt
             p.Term.Select(preref, sym.asTerm.precvt(pre, g.Ident(sym)), isPostfix = false) // TODO: figure out isPostfix
           case _ =>
