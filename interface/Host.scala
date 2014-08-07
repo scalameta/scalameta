@@ -66,6 +66,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         // TODO: infer isBackquoted
         // TODO: iirc according to Denys, even BackquotedIdentifierAttachment sometimes lies
         case in: g.Ident => in.isBackquoted || scala.meta.syntactic.parsers.keywords.contains(in.name.toString)
+        case in: g.Select => scala.meta.syntactic.parsers.keywords.contains(in.name.toString)
         case _ => false
       }
       implicit class RichSymbol(gsym: g.Symbol) {
