@@ -458,14 +458,14 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         p.Pat.Wildcard()
       case g.Star(g.Ident(g.nme.WILDCARD)) =>
         p.Pat.SeqWildcard()
-      case in @ g.Bind(_, g.nme.WILDCARD) =>
+      case in @ g.Bind(_, g.Ident(g.nme.WILDCARD)) =>
         // TODO: discern `case x => ...` and `case x @ _ => ...`
         require(in.symbol.isTerm)
         in.symbol.asTerm.rawcvt(in)
       case in @ g.Bind(_, g.EmptyTree) =>
         require(in.symbol.isType)
         in.symbol.asType.rawcvt(in)
-      case in @ g.Bind(_, g.Typed(g.nme.WILDCARD, tpt @ g.TypeTree())) =>
+      case in @ g.Bind(_, g.Typed(g.Ident(g.nme.WILDCARD), tpt @ g.TypeTree())) =>
         require(in.symbol.isTerm)
         p.Pat.Typed(in.symbol.asTerm.rawcvt(in), tpt.cvt)
       case in @ g.Bind(name, tree) =>
