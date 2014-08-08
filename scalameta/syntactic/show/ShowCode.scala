@@ -96,7 +96,7 @@ object Code {
     case t: Term.Do          => s("do ", t.body, " while (", t.expr, ")")
     case t: Term.For         => s("for (", r(t.enums, "; "), ") ", t.body)
     case t: Term.ForYield    => s("for (", r(t.enums, "; "), ") yield ", t.body)
-    case t: Term.New         => s("new", t.templ)
+    case t: Term.New         => s("new ", t.templ)
     case _: Term.Placeholder => s("_")
     case t: Term.Eta         => s(t.term, " _")
     case t: Term.Match       => s(t.scrut, " match ", t.cases)
