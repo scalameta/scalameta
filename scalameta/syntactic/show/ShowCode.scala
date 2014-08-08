@@ -195,7 +195,7 @@ object Code {
     case t: Decl.Procedure => s(t.mods, "def ", t.name, t.tparams, (t.explicits, t.implicits))
 
     // Pkg
-    case t: CompUnit           => r(t.stats)
+    case t: CompUnit           => r(t.stats, "\n")
     case t: Pkg if t.hasBraces => s("package ", t.name, " { ", r(t.stats.map(i(_)), "\n"), n("}"))
     case t: Pkg                => s("package ", t.name, r(t.stats.map(n(_))))
 
