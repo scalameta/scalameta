@@ -478,14 +478,17 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         // [2] SingleType(SingleType(ThisType(<root>#2), scala#26), scala.Tuple2#1688)
         // [3] SingleType(ThisType(<root>#2), scala#26)
         require(tpt.tpe.isInstanceOf[g.MethodType])
-        val tpe = tpt.tpe.finalResultType
-        val companion = tpe.typeSymbol.companion
-        require(companion.isTerm)
-        // TODO: figure out whether targs were explicitly specified or not
-        p.Pat.Extract(companion.asTerm.rawcvt(g.Ident(companion)), tpe.typeArgs.cvt, args.cvt_!)
+        require(tpt.original != null)
+        val (companion, targs) = tpt.original match {
+          case g.AppliedTypeTree(companion, targs) => (companion, targs)
+          case companion => (companion, Nil)
+        }
+        require(companion.symbol.isModule)
+        // TODO: infer whether it was an application or a Tuple
+        if (g.definitions.isTupleSymbol(companion.symbol.companion)) p.Pat.Tuple(args.cvt_!)
+        else p.Pat.Extract(companion.cvt_!, targs.cvt_!, args.cvt_!)
       case in @ g.UnApply(q"$ref.$unapply[..$targs](..$_)", args) =>
         // TODO: infer Extract vs ExtractInfix
-        // TODO: infer whether it was an application or a Tuple
         // TODO: also figure out Interpolate
         // TODO: figure out whether targs were explicitly specified or not
         require(unapply == g.TermName("unapply") || unapply == g.TermName("unapplySeq"))

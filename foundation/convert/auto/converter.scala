@@ -335,7 +335,6 @@ package object internal {
             sym.fullName != "scala.meta.Mod.VarParam" &&
             sym.fullName != "scala.meta.Pat.ExtractInfix" &&
             sym.fullName != "scala.meta.Pat.Interpolate" &&
-            sym.fullName != "scala.meta.Pat.Tuple" &&
             sym.fullName != "scala.meta.Term.Annotate" &&
             sym.fullName != "scala.meta.Term.ApplyInfix" &&
             sym.fullName != "scala.meta.Term.ApplyUnary" &&
