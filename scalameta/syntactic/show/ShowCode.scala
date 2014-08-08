@@ -181,11 +181,11 @@ object Code {
     case t: Defn.Trait     => s(t.mods, "trait ", t.name, t.tparams, templ(t.templ))
     case t: Defn.Object    => s(t.mods, "object ", t.name, templ(t.templ))
     case t: Defn.Def       =>
-      s(t.mods, "def ", t.name, t.tparams, (t.explicits, t.implicits), t.decltpe, " = ", t.body)
+      s(t.mods, "def ", t.name, t.tparams, (t.explicits, t.implicits), ": ", t.decltpe, " = ", t.body)
     case t: Defn.Procedure =>
       s(t.mods, "def ", t.name, t.tparams, (t.explicits, t.implicits), " { ", r(t.stats.map(i(_)), ";"), n("}"))
     case t: Defn.Macro     =>
-      s(t.mods, "def ", t.name, t.tparams, (t.explicits, t.implicits), t.tpe, " = macro ", t.body)
+      s(t.mods, "def ", t.name, t.tparams, (t.explicits, t.implicits), ": ", t.tpe, " = macro ", t.body)
 
     // Decl
     case t: Decl.Val       => s(t.mods, "val ", r(t.pats, ", "), ": ", t.decltpe)
