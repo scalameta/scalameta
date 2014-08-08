@@ -527,7 +527,9 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
           case fn @ g.Select(_, _) => (fn.cvt: p.Term.Select)
           case _ => unreachable
         }
-        if (targs.exists{ case tt: g.TypeTree => tt.wasEmpty }) pfn
+        // TODO: wasEmpty is not really working well here and checking nullness of originals is too optimistic
+        // however, the former produces much uglier printouts, so I'm going for the latter
+        if (targs.exists{ case tt: g.TypeTree => tt.original == null }) pfn
         else p.Term.ApplyType(pfn, targs.map(_.asInstanceOf[g.TypeTree]).cvt)
       case in @ g.Apply(g.Select(g.New(_), g.nme.CONSTRUCTOR), _) =>
         // TODO: infer the difference between `new X` vs `new X()`
