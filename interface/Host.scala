@@ -501,8 +501,10 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         p.Term.Assign(lhs.cvt_!, rhs.cvt_!)
       case g.AssignOrNamedArg(lhs, rhs) =>
         unreachable
+      case g.If(cond, thenp, g.Literal(g.Constant(()))) =>
+        // TODO: figure out hasElse with definitive precision
+        p.Term.If(cond.cvt_!, thenp.cvt_!)
       case g.If(cond, thenp, elsep) =>
-        // TODO: figure out hasElse
         p.Term.If(cond.cvt_!, thenp.cvt_!, elsep.cvt_!)
       case g.Match(selector, cases) =>
         // TODO: it's cute that Term.Cases is a Term, but what tpe shall we return for it? :)
