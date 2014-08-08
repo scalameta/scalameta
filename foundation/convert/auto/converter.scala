@@ -337,7 +337,6 @@ package object internal {
             sym.fullName != "scala.meta.Pat.Interpolate" &&
             sym.fullName != "scala.meta.Term.Annotate" &&
             sym.fullName != "scala.meta.Term.ApplyInfix" &&
-            sym.fullName != "scala.meta.Term.ApplyUnary" &&
             sym.fullName != "scala.meta.Term.Do" &&
             sym.fullName != "scala.meta.Term.Eta" &&
             sym.fullName != "scala.meta.Term.For" &&

@@ -529,7 +529,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
       case in @ g.TypeApply(fn, targs) =>
         val pfn = fn match {
           case fn @ g.Ident(_) => fn.symbol.asTerm.rawcvt(fn)
-          case fn @ g.Select(_, _) => (fn.cvt: p.Term.Select)
+          case fn @ g.Select(_, _) => (fn.cvt_! : p.Term.Select)
           case _ => unreachable
         }
         // TODO: wasEmpty is not really working well here and checking nullness of originals is too optimistic
@@ -548,7 +548,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         val templ = p.Aux.Template(Nil, List(supercall), self).appendScratchpad(in)
         p.Term.New(templ)
       case in @ g.Apply(_, _) =>
-        // TODO: infer the difference between Apply, ApplyInfix, ApplyUnary and Update
+        // TODO: infer the difference between Apply, ApplyInfix and Update
         // TODO: infer whether it was an application or a Tuple
         // TODO: recover names and defaults (https://github.com/scala/scala/pull/3753/files#diff-269d2d5528eed96b476aded2ea039444R617)
         // TODO: strip off inferred type arguments in loopParent
@@ -579,7 +579,11 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
       case in @ g.Select(qual, _) =>
         require(in.symbol.isTerm) // NOTE: typename selections are impossible, because all TypTrees have already been converted to TypeTrees
         // TODO: what do we do if sym is a package object? do we skip it altogether or do we still emit an explicit reference to it?
-        p.Term.Select(qual.cvt_!, in.symbol.asTerm.precvt(qual.tpe, in), isPostfix = false) // TODO: figure out isPostfix
+        val pname = in.symbol.asTerm.precvt(qual.tpe, in)
+        // TODO: discern unary applications via !x and via explicit x.unary_!
+        // TODO: also think how to detect unary applications that have implicit arguments
+        if (pname.value.startsWith("unary_")) p.Term.ApplyUnary(pname.copy(value = pname.value.stripPrefix("unary_")).appendScratchpad(pname.scratchpad), qual.cvt_!)
+        else p.Term.Select(qual.cvt_!, pname, isPostfix = false) // TODO: figure out isPostfix
       case in @ g.Ident(_) =>
         require(in.symbol.isTerm) // NOTE: see the g.Select note
         in.symbol.asTerm.rawcvt(in)
