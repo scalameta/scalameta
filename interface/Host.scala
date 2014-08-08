@@ -129,7 +129,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         if (gsym.isSealed) pmods += p.Mod.Sealed()
         if (gsym.isOverride) pmods += p.Mod.Override()
         if (gsym.isCase) pmods += p.Mod.Case()
-        if (gsym.isAbstract) pmods += p.Mod.Abstract()
+        if (gsym.isAbstract && !gsym.isParameter) pmods += p.Mod.Abstract()
         if (gsym.isAbstractOverride) { pmods += p.Mod.Abstract(); pmods += p.Mod.Override() }
         if (gsym.isCovariant) pmods += p.Mod.Covariant()
         if (gsym.isContravariant) pmods += p.Mod.Contravariant()
