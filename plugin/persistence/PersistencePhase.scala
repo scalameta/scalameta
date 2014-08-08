@@ -38,7 +38,7 @@ trait PersistencePhase {
       }
 
       override def apply(unit: CompilationUnit) {
-        // val pbody = h.toPalladium(unit.body)
+        val punit = h.toPalladium(unit.body, classOf[Aux.CompUnit])
         // ???
       }
     }

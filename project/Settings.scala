@@ -5,7 +5,7 @@ import AssemblyKeys._
 import com.typesafe.sbt.pgp.PgpKeys._
 
 object Settings {
-  lazy val languageVersion = "2.11.2-SNAPSHOT"
+  lazy val languageVersion = "2.11.2"
   lazy val metaVersion = "0.1.0-SNAPSHOT"
 
   lazy val sharedSettings: Seq[sbt.Def.Setting[_]] = Defaults.defaultSettings ++ Seq(
@@ -16,12 +16,10 @@ object Settings {
     description := "Scala host for scala.meta",
     resolvers += Resolver.sonatypeRepo("snapshots"),
     resolvers += Resolver.sonatypeRepo("releases"),
-    publishMavenStyle := true,
-    publishArtifact in Compile := false,
-    publishArtifact in Test := false,
-    scalacOptions ++= Seq("-feature", "-optimise"),
+    scalacOptions ++= Seq("-feature", "-deprecation"),
     parallelExecution in Test := false, // hello, reflection sync!!
     logBuffered := false,
+    commands += cls,
     scalaHome := {
       val scalaHome = System.getProperty("scalahost.scala.home")
       if (scalaHome != null) {
@@ -30,6 +28,8 @@ object Settings {
       } else None
     },
     publishMavenStyle := true,
+    publishArtifact in Compile := false,
+    publishArtifact in Test := false,
     publishOnlyWhenOnMaster := publishOnlyWhenOnMasterImpl.value,
     publishTo <<= version { v: String =>
       val nexus = "https://oss.sonatype.org/"
@@ -60,10 +60,21 @@ object Settings {
     )
   )
 
-  lazy val flatSource = scalaSource in Compile <<= (baseDirectory in Compile)(base => base)
+  def cls = Command.command("cls") { state =>
+    // NOTE: probably only works in iTerm2
+    // kudos to http://superuser.com/questions/576410/how-can-i-partially-clear-my-terminal-scrollback
+    print("\u001b]50;ClearScrollback\u0007")
+    state
+  }
 
-  lazy val packaging: Seq[sbt.Def.Setting[_]] = assemblySettings ++ Seq(
+  lazy val flatLayout: Seq[sbt.Def.Setting[_]] = assemblySettings ++ Seq(
+    scalaSource in Compile <<= (baseDirectory in Compile)(base => base),
+    resourceDirectory in Compile <<= (baseDirectory in Compile)(base => base / "resources")
+  )
+
+  lazy val mergeDependencies: Seq[sbt.Def.Setting[_]] = assemblySettings ++ Seq(
     test in assembly := {},
+    logLevel in assembly := Level.Error,
     jarName in assembly := name.value + "_" + scalaVersion.value + "-" + version.value + "-assembly.jar",
     assemblyOption in assembly ~= { _.copy(includeScala = false) },
     Keys.`package` in Compile := {
@@ -71,7 +82,6 @@ object Settings {
       val fatJar = new File(crossTarget.value + "/" + (jarName in assembly).value)
       val _ = assembly.value
       IO.copy(List(fatJar -> slimJar), overwrite = true)
-      println("package: merged scalahost and its dependencies and produced a fat JAR")
       slimJar
     },
     packagedArtifact in Compile in packageBin := {
@@ -80,7 +90,6 @@ object Settings {
       val fatJar = new File(crossTarget.value + "/" + (jarName in assembly).value)
       val _ = assembly.value
       IO.copy(List(fatJar -> slimJar), overwrite = true)
-      println("packagedArtifact: merged scalahost and its dependencies and produced a fat JAR")
       (art, slimJar)
     }
   )
