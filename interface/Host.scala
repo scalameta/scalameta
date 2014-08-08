@@ -574,7 +574,25 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         val psuper = if (mix != g.tpnme.EMPTY) Some(in.symbol.asClass.rawcvt(in)) else None
         p.Qual.Super(pthis, psuper)
       case in @ g.This(qual) =>
-        p.Term.This(if (qual != g.tpnme.EMPTY) Some(in.symbol.qualcvt(in)) else None)
+        def moduleRef(gsym: g.Symbol): g.Tree = {
+          def loop(gsym: g.Symbol): g.Tree = {
+            if (gsym.isPackageClass) loop(gsym.asClass.module)
+            else if (gsym.isClass) g.This(gsym).setType(gsym.tpe)
+            else {
+              // TODO: figure out what to do about _root_ and _empty_
+              val isIdent = gsym.owner == g.NoSymbol || gsym.owner == g.rootMirror.RootClass || gsym.owner == g.rootMirror.EmptyPackageClass
+              if (isIdent) g.Ident(gsym).setType(gsym.tpe)
+              else g.Select(loop(gsym.owner), gsym).setType(gsym.tpe)
+            }
+          }
+          loop(gsym)
+        }
+        val isSingleton = in.symbol.isPackageClass
+        if (isSingleton) {
+          val isIdent = in.symbol.owner == g.NoSymbol || in.symbol.owner == g.rootMirror.RootClass || in.symbol.owner == g.rootMirror.EmptyPackageClass
+          if (isIdent) moduleRef(in.symbol).asInstanceOf[g.Ident].cvt_! : p.Term.Name
+          else moduleRef(in.symbol).asInstanceOf[g.Select].cvt_! : p.Term.Select
+        } else p.Term.This(if (qual != g.tpnme.EMPTY) Some(in.symbol.qualcvt(in)) else None)
       case in: g.PostfixSelect =>
         unreachable
       case in @ g.Select(qual, _) =>

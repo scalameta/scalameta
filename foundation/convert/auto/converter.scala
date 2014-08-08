@@ -508,10 +508,13 @@ package object internal {
         val downcastees = matching.filter(c => !(c.out <:< out))
         if (downcastees.nonEmpty && !allowOutputDowncasts) {
           val problems = downcastees.flatMap(c => extractIntersections(c.out).filter(cout => !(cout <:< out)).map(cout => (c.in, cout)))
-          def printProblem(p: (Type, Type)) = s"${p._1} => ${p._2}"
-          val s_problems = problems.init.map(printProblem).mkString(", ") + (if (problems.length > 1) " and " else "") + printProblem(problems.last)
-          val s_verb = if (problems.length == 1) "doesn't" else "don't"
-          fail(s"$s_problems $s_verb fit the output type")
+          if (problems.isEmpty) fail("an unknown problem")
+          else {
+            def printProblem(p: (Type, Type)) = s"${p._1} => ${p._2}"
+            val s_problems = problems.init.map(printProblem).mkString(", ") + (if (problems.length > 1) " and " else "") + printProblem(problems.last)
+            val s_verb = if (problems.length == 1) "doesn't" else "don't"
+            fail(s"$s_problems $s_verb fit the output type")
+          }
         } else {
           if (downcastees.nonEmpty) result = q"""
             $result match {
