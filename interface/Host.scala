@@ -59,8 +59,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         }
       }
       private def alias(in: g.Tree): String = in match {
-        case in: g.NameTree => in.name.toString
-        case g.This(name) => name.toString
+        case in: g.NameTree => in.name.decodedName.toString
+        case g.This(name) => name.decodedName.toString
       }
       private def isBackquoted(in: g.Tree): Boolean = in match {
         // TODO: infer isBackquoted
