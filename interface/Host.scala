@@ -115,7 +115,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
           // TODO: does NoSymbol here actually mean gsym.owner?
           val gpriv = gsym.privateWithin.orElse(gsym.owner)
           require(gpriv.isClass)
-          Some(g.This(g.tpnme.EMPTY).setSymbol(gpriv).setType(gpriv.asType.toType).cvt)
+          Some(p.Term.This(None).appendScratchpad(gpriv))
         } else if (gsym.privateWithin == g.NoSymbol || gsym.privateWithin == null) None
         else Some(gsym.privateWithin.qualcvt(g.Ident(gsym.privateWithin))) // TODO: this loses information is gsym.privateWithin was brought into scope with a renaming import
       }
@@ -639,8 +639,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
           }
           loop(gsym)
         }
-        val isSingleton = in.symbol.isPackageClass
-        if (isSingleton) {
+        if (in.symbol.isPackageClass) {
           val isIdent = in.symbol.owner == g.NoSymbol || in.symbol.owner == g.rootMirror.RootClass || in.symbol.owner == g.rootMirror.EmptyPackageClass
           if (isIdent) moduleRef(in.symbol).asInstanceOf[g.Ident].cvt_! : p.Term.Name
           else moduleRef(in.symbol).asInstanceOf[g.Select].cvt_! : p.Term.Select
