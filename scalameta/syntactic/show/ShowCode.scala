@@ -277,7 +277,8 @@ object Code {
     if (tparams.nonEmpty) s("[", r(tparams, ", "), "]") else s()
   }
   implicit def codeParamLists[P <: Param]: Code[(Seq[Seq[P]], Seq[P])] = Code { case (expl, impl) =>
-    s(r(expl),
+    if (expl.isEmpty && impl.isEmpty) s()
+    else s(r(expl),
       if (impl.isEmpty) s()
       else s("(implicit ", r(impl, ", "), ")"))
   }
