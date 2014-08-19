@@ -579,13 +579,19 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         // TODO: undo the for desugaring
         // TODO: undo the Lit.Symbol desugaring
         // TODO: undo the interpolate desugaring
+        // TODO: figure out whether the programmer actually wrote `foo(...)` or it was `foo.apply(...)`
         type pScalaApply = p.Term{ type ThisType >: p.Term.Name with p.Term.Select with p.Term.Apply with p.Term.ApplyType <: p.Term }
-        def loop(in: g.Tree): pScalaApply = in match {
-          case g.Apply(fn, args) if g.isImplicitMethodType(fn.tpe) => loop(fn).appendScratchpad(in).asInstanceOf[pScalaApply]
-          case g.Apply(fn, args) => p.Term.Apply(loop(fn), args.cvt_!).appendScratchpad(in)
-          case in: g.TypeApply => in.cvt
-          case in: g.Ident => in.symbol.asTerm.rawcvt(in)
-          case in: g.Select => in.cvt
+        def loop(in: g.Tree): pScalaApply = {
+          val result = in match {
+            case g.Apply(fn, args) if g.isImplicitMethodType(fn.tpe) => loop(fn)
+            case g.Apply(fn, args) => p.Term.Apply(loop(fn), args.cvt_!)
+            case in @ g.TypeApply(g.Select(qual, _), targs) if in.symbol.name == g.TermName("apply") => g.treeCopy.TypeApply(in, qual, targs).cvt
+            case in @ g.Select(qual, _) if in.symbol.name == g.TermName("apply") => (qual.cvt_! : p.Term)
+            case in: g.TypeApply => in.cvt
+            case in: g.Select => in.cvt
+            case in: g.Ident => in.symbol.asTerm.rawcvt(in)
+          }
+          result.appendScratchpad(in).asInstanceOf[pScalaApply]
         }
         loop(in)
       case in @ g.ApplyDynamic(_, _) =>
