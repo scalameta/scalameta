@@ -119,7 +119,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         } else if (gsym.privateWithin == g.NoSymbol || gsym.privateWithin == null) None
         else Some(gsym.privateWithin.qualcvt(g.Ident(gsym.privateWithin))) // TODO: this loses information is gsym.privateWithin was brought into scope with a renaming import
       }
-      def pmods(gsym: g.Symbol): Seq[p.Mod] = {
+      def pmods(gsym0: g.Symbol): Seq[p.Mod] = {
+        val gsym = gsym0.getterIn(gsym0.owner).orElse(gsym0)
         val pmods = scala.collection.mutable.ListBuffer[p.Mod]()
         pmods ++= panns(gsym.annotations)
         if (gsym.isPrivate) pmods += p.Mod.Private(paccessqual(gsym))
@@ -414,7 +415,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         // NOTE: SyntacticTemplate (based on UnMkTemplate, the basis of SyntacticClassDef and friends)
         // returns incorrect parents if input is typechecked, so we have to work around
         val SyntacticTemplate(gearlydefns, _, gself, gstats) = in
-        val pparents = {
+        val gparents = {
           // TODO: discern `... extends C()` and `... extends C`
           // TODO: detect and discard synthetic parents
           // TODO: figure out whether type arguments were inferred or not
@@ -440,17 +441,17 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
             case g.EmptyTree =>
               incompleteGparents
           }
-          val gparents = impreciseGparents match {
+          impreciseGparents match {
             // TODO: figure out whether `extends AnyRef` was actually provided explicitly or not
             case q"${anyref: g.TypeTree}()" :: Nil if anyref.tpe.dealias =:= g.definitions.AnyRefTpe.dealias => Nil
             case _ => impreciseGparents
           }
-          gparents map {
-            // TODO: recover names and defaults
-            case q"${tpt: g.TypeTree}()" => p.Aux.Parent(tpt.cvt, Nil)
-            case q"${tpt: g.TypeTree}(...$argss)" => p.Aux.Parent(tpt.cvt, argss.cvt_!)
-            case _ => unreachable
-          }
+        }
+        val pparents = gparents map {
+          // TODO: recover names and defaults
+          case q"${tpt: g.TypeTree}()" => p.Aux.Parent(tpt.cvt, Nil)
+          case q"${tpt: g.TypeTree}(...$argss)" => p.Aux.Parent(tpt.cvt, argss.cvt_!)
+          case _ => unreachable
         }
         // TODO: really infer hasStats
         // TODO: we should be able to write this without an `if` by having something like `hasStats` as an optional synthetic parameter
