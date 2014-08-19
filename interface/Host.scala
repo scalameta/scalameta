@@ -445,6 +445,9 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
           }
         }
         p.Aux.Template(earlydefns.cvt_!, pparents, self.cvt, stats.cvt_!) // TODO: infer hasStats
+      case g.Block((gcdef @ g.ClassDef(_, g.TypeName("$anon"), _, _)) :: Nil, q"new $$anon()") =>
+        val pcdef: p.Defn.Class = gcdef.cvt_!
+        p.Term.New(pcdef.templ)
       case g.Block(stats, expr) =>
         p.Term.Block((stats :+ expr).cvt_!)
       case g.CaseDef(pat, guard, body) =>
