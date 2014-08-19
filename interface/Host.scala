@@ -291,7 +291,10 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         in match {
           case q"$_ class $_[..$_] $_(...$_)(implicit ..$_) extends { ..$_ } with ..$_ { $_ => ..$_ }" =>
             val gctor = templ.body.find(_.symbol == in.symbol.primaryConstructor).get
-            val q"$_ def $_[..$_](...$explicitss)(implicit ..$implicits): $_ = $_" = gctor
+            val q"$_ def $_[..$_](...$impreciseExplicitss)(implicit ..$implicits): $_ = $_" = gctor
+            // TODO: discern `class C` and `class C()`
+            // TODO: recover named/default parameters
+            val explicitss = if (impreciseExplicitss.flatten.isEmpty) List() else impreciseExplicitss
             val ctor = p.Ctor.Primary(pmods(in.symbol.primaryConstructor), explicitss.cvt_!, implicits.cvt_!).appendScratchpad(in.symbol.primaryConstructor)
             p.Defn.Class(pmods(in.symbol), in.symbol.asClass.rawcvt(in), tparams.cvt, ctor, templ.cvt)
           case q"$_ trait $_[..$_] extends { ..$_ } with ..$_ { $_ => ..$_ }" =>
@@ -336,7 +339,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         if (in.symbol.isConstructor) {
           require(!in.symbol.isPrimaryConstructor)
           val q"{ $_(...$argss); ..$stats; () }" = body
-          // TODO: recover named/default arguments
+          // TODO: recover named/default parameters
           p.Ctor.Secondary(pmods(in.symbol), explicitss.cvt_!, implicits.cvt_!, argss.cvt_!, stats.cvt_!)
         } else if (in.symbol.isMacro) {
           require(tpt.original != null) // TODO: support pre-2.12 macros with inferred return types
