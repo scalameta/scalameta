@@ -536,8 +536,16 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
       case g.New(_) =>
         unreachable
       case g.Typed(expr, tpt @ g.TypeTree()) if pt <:< typeOf[p.Term] =>
-        // TODO: infer the difference between Ascribe and Annotate
-        p.Term.Ascribe(expr.cvt_!, tpt.cvt)
+        expr match {
+          case g.Block((gcdef @ g.ClassDef(_, g.TypeName("$anonfun"), _, _)) :: Nil, q"new $$anonfun()") if tpt.tpe.typeSymbol == g.definitions.PartialFunctionClass =>
+            val clauses :: Nil = gcdef.impl.body.collect {
+              case g.DefDef(_, g.TermName("applyOrElse"), _, _, _, g.Match(_, clauses :+ _)) => clauses
+            }
+            p.Term.Cases(clauses.cvt)
+          case _ =>
+            // TODO: infer the difference between Ascribe and Annotate
+            p.Term.Ascribe(expr.cvt_!, tpt.cvt)
+        }
       case g.Typed(expr, tpt @ g.TypeTree()) if pt <:< typeOf[p.Pat] =>
         p.Pat.Typed(expr.cvt_!, tpt.cvt)
       case in @ g.TypeApply(fn, targs) =>
