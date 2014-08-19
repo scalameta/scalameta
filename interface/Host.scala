@@ -578,15 +578,27 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         // TODO: infer whether implicit arguments were provided explicitly and don't remove them if so
         // TODO: undo the for desugaring
         // TODO: undo the Lit.Symbol desugaring
-        // TODO: undo the interpolate desugaring
+        // TODO: undo the interpolation desugaring
         // TODO: figure out whether the programmer actually wrote `foo(...)` or it was `foo.apply(...)`
+        // TODO: figure out whether the programmer actually an implicit conversion or not
         type pScalaApply = p.Term{ type ThisType >: p.Term.Name with p.Term.Select with p.Term.Apply with p.Term.ApplyType <: p.Term }
         def loop(in: g.Tree): pScalaApply = {
+          object ImplicitlyConverted {
+            // NOTE: we could match against g.ApplyToImplicitView here
+            // but as the comment next to it says, sometimes the distinction between g.Apply and g.ApplyToImplicitView might get lost
+            // therefore I'm going for a less robust, but more practically useful approach
+            def unapply(gtree: g.Tree): Option[(g.Tree, g.Tree, List[g.Tree], List[g.Tree])] = gtree match {
+              case g.treeInfo.Applied(core @ g.Select(g.treeInfo.Applied(_, _, (convertee :: Nil) :: Nil), _), targs, args :: Nil) =>
+                Some((convertee, core, targs, args))
+              case _ => None
+            }
+          }
           val result = in match {
+            case ImplicitlyConverted(convertee, core, targs, args) => loop(g.treeCopy.Apply(in, g.treeCopy.Select(core, convertee, core.symbol.name), args))
             case g.Apply(fn, args) if g.isImplicitMethodType(fn.tpe) => loop(fn)
             case g.Apply(fn, args) => p.Term.Apply(loop(fn), args.cvt_!)
-            case in @ g.TypeApply(g.Select(qual, _), targs) if in.symbol.name == g.TermName("apply") => g.treeCopy.TypeApply(in, qual, targs).cvt
-            case in @ g.Select(qual, _) if in.symbol.name == g.TermName("apply") => (qual.cvt_! : p.Term)
+            case g.TypeApply(g.Select(qual, _), targs) if in.symbol.name == g.TermName("apply") => g.treeCopy.TypeApply(in, qual, targs).cvt
+            case g.Select(qual, _) if in.symbol.name == g.TermName("apply") => (qual.cvt_! : p.Term)
             case in: g.TypeApply => in.cvt
             case in: g.Select => in.cvt
             case in: g.Ident => in.symbol.asTerm.rawcvt(in)
