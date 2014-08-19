@@ -482,6 +482,10 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
       case in @ g.Bind(_, g.Typed(g.Ident(g.nme.WILDCARD), tpt @ g.TypeTree())) =>
         require(in.symbol.isTerm)
         p.Pat.Typed(in.symbol.asTerm.rawcvt(in), tpt.cvt)
+      case in @ g.Bind(_, tree @ g.UnApply(q"$ref.$unapply[..$targs](..$_)", g.Typed(g.Ident(g.nme.WILDCARD), tpt @ g.TypeTree()) :: Nil)) =>
+        require(unapply == g.TermName("unapply") || unapply == g.TermName("unapplySeq"))
+        if (tree.fun.symbol.owner == g.definitions.ClassTagClass) p.Pat.Typed(in.symbol.asTerm.rawcvt(in), tpt.cvt)
+        else p.Pat.Bind(in.symbol.asTerm.rawcvt(in), tree.cvt)
       case in @ g.Bind(name, tree) =>
         require(in.symbol.isTerm)
         require(name == in.symbol.name)
@@ -506,7 +510,10 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         // TODO: also figure out Interpolate
         // TODO: figure out whether targs were explicitly specified or not
         require(unapply == g.TermName("unapply") || unapply == g.TermName("unapplySeq"))
-        p.Pat.Extract(ref.cvt_!, targs.map(_.asInstanceOf[g.TypeTree]).cvt, args.cvt_!)
+        type pScalaExtract = p.Pat{ type ThisType >: p.Pat.Extract with p.Pat.Typed <: p.Pat }
+        // TODO: change this to be an ascription of pScalaExtract instead of essentially a no-op asInstanceOf
+        if (in.fun.symbol.owner == g.definitions.ClassTagClass) (args.head.cvt_! : p.Pat).asInstanceOf[pScalaExtract]
+        else p.Pat.Extract(ref.cvt_!, targs.map(_.asInstanceOf[g.TypeTree]).cvt, args.cvt_!)
       case g.Function(params, body) =>
         // TODO: recover eta-expansions that typer desugars to lambdas
         // TODO: recover shorthand function syntax
