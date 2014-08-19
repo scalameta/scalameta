@@ -413,13 +413,13 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
       case in @ g.Template(_, _, rawstats) =>
         // NOTE: SyntacticTemplate (based on UnMkTemplate, the basis of SyntacticClassDef and friends)
         // returns incorrect parents if input is typechecked, so we have to work around
-        val SyntacticTemplate(earlydefns, _, self, stats) = in
+        val SyntacticTemplate(gearlydefns, _, gself, gstats) = in
         val pparents = {
           // TODO: discern `... extends C()` and `... extends C`
           // TODO: detect and discard synthetic parents
           // TODO: figure out whether type arguments were inferred or not
-          val incompleteParents = in.parents.map(tpe => g.Apply(tpe, Nil))
-          val parents = g.treeInfo.firstConstructor(rawstats) match {
+          val incompleteGparents = in.parents.map(tpe => g.Apply(tpe, Nil))
+          val impreciseGparents = g.treeInfo.firstConstructor(rawstats) match {
             case g.DefDef(_, _, _, _, _, rawinit) =>
               val gsupercall = rawinit.collect { case app @ g.treeInfo.Applied(g.Select(g.Super(_, _), _), _, _) => app }.head
               var gsupersymbol: g.Symbol = g.NoSymbol
@@ -435,19 +435,27 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
               val gfirstparent = prettifier.transform(gsupercall)
               require(gsupersymbol != g.NoSymbol)
               // TODO: figure out how to propagate the symbol
-              // gfirstparent.setSymbol(gsupersymbol) +: incompleteParents.drop(1)
-              gfirstparent +: incompleteParents.drop(1)
+              // gfirstparent.setSymbol(gsupersymbol) +: incompleteGparents.drop(1)
+              gfirstparent +: incompleteGparents.drop(1)
             case g.EmptyTree =>
-              incompleteParents
+              incompleteGparents
           }
-          parents map {
+          val gparents = impreciseGparents match {
+            // TODO: figure out whether `extends AnyRef` was actually provided explicitly or not
+            case q"${anyref: g.TypeTree}()" :: Nil if anyref.tpe.dealias =:= g.definitions.AnyRefTpe.dealias => Nil
+            case _ => impreciseGparents
+          }
+          gparents map {
             // TODO: recover names and defaults
             case q"${tpt: g.TypeTree}()" => p.Aux.Parent(tpt.cvt, Nil)
             case q"${tpt: g.TypeTree}(...$argss)" => p.Aux.Parent(tpt.cvt, argss.cvt_!)
             case _ => unreachable
           }
         }
-        p.Aux.Template(earlydefns.cvt_!, pparents, self.cvt, stats.cvt_!) // TODO: infer hasStats
+        // TODO: really infer hasStats
+        // TODO: we should be able to write this without an `if` by having something like `hasStats` as an optional synthetic parameter
+        if (gstats.isEmpty) p.Aux.Template(gearlydefns.cvt_!, pparents, gself.cvt)
+        else p.Aux.Template(gearlydefns.cvt_!, pparents, gself.cvt, gstats.cvt_!)
       case g.Block((gcdef @ g.ClassDef(_, g.TypeName("$anon"), _, _)) :: Nil, q"new $$anon()") =>
         val pcdef: p.Defn.Class = gcdef.cvt_!
         p.Term.New(pcdef.templ)
