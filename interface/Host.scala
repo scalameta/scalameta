@@ -484,6 +484,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         p.Pat.Typed(in.symbol.asTerm.rawcvt(in), tpt.cvt)
       case in @ g.Bind(_, tree @ g.UnApply(q"$ref.$unapply[..$targs](..$_)", g.Typed(g.Ident(g.nme.WILDCARD), tpt @ g.TypeTree()) :: Nil)) =>
         require(unapply == g.TermName("unapply") || unapply == g.TermName("unapplySeq"))
+        // TODO: figure out whether a classtag-style extractor was written explicitly by the programmer
         if (tree.fun.symbol.owner == g.definitions.ClassTagClass) p.Pat.Typed(in.symbol.asTerm.rawcvt(in), tpt.cvt)
         else p.Pat.Bind(in.symbol.asTerm.rawcvt(in), tree.cvt)
       case in @ g.Bind(name, tree) =>
@@ -512,6 +513,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         require(unapply == g.TermName("unapply") || unapply == g.TermName("unapplySeq"))
         type pScalaExtract = p.Pat{ type ThisType >: p.Pat.Extract with p.Pat.Typed <: p.Pat }
         // TODO: change this to be an ascription of pScalaExtract instead of essentially a no-op asInstanceOf
+        // TODO: figure out whether a classtag-style extractor was written explicitly by the programmer
         if (in.fun.symbol.owner == g.definitions.ClassTagClass) (args.head.cvt_! : p.Pat).asInstanceOf[pScalaExtract]
         else p.Pat.Extract(ref.cvt_!, targs.map(_.asInstanceOf[g.TypeTree]).cvt, args.cvt_!)
       case g.Function(params, body) =>
