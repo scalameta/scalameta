@@ -138,7 +138,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         // TODO: how do we distinguish `case class C(val x: Int)` and `case class C(x: Int)`?
         val gparamaccessor = gsym.owner.filter(_.isPrimaryConstructor).map(_.owner.info.member(gsym.name))
         val gaccessed = gparamaccessor.map(_.owner.info.member(gparamaccessor.localName))
-        if (gaccessed != g.NoSymbol) pmods += (if (gaccessed.isMutable) p.Mod.VarParam() else p.Mod.ValParam())
+        if (gaccessed != g.NoSymbol && gaccessed.isMutable) pmods += p.Mod.VarParam()
+        if (gaccessed != g.NoSymbol && !gaccessed.owner.isCase) pmods += p.Mod.ValParam()
         if (gsym.isPackageObject) pmods += p.Mod.Package()
         pmods.toList
       }
@@ -442,11 +443,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
             case g.EmptyTree =>
               incompleteGparents
           }
-          impreciseGparents match {
-            // TODO: figure out whether `extends AnyRef` was actually provided explicitly or not
-            case q"${anyref: g.TypeTree}()" :: Nil if anyref.tpe.dealias =:= g.definitions.AnyRefTpe.dealias => Nil
-            case _ => impreciseGparents
-          }
+          val typicallySyntheticParents = Set[g.Symbol](g.definitions.ObjectClass, g.definitions.ProductRootClass, g.definitions.SerializableClass)
+          impreciseGparents.filter(gp => !typicallySyntheticParents.contains(gp.symbol))
         }
         val pparents = gparents map {
           // TODO: recover names and defaults
