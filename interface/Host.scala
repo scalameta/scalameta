@@ -135,9 +135,10 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         if (gsym.isCovariant) pmods += p.Mod.Covariant()
         if (gsym.isContravariant) pmods += p.Mod.Contravariant()
         if (gsym.isLazy) pmods += p.Mod.Lazy()
-        // TODO: implement this
-        // if (gsym.???) pmods += p.Mod.ValParam()
-        // if (gsym.???) pmods += p.Mod.VarParam()
+        // TODO: how do we distinguish `case class C(val x: Int)` and `case class C(x: Int)`?
+        val gparamaccessor = gsym.owner.filter(_.isPrimaryConstructor).map(_.owner.info.member(gsym.name))
+        val gaccessed = gparamaccessor.map(_.owner.info.member(gparamaccessor.localName))
+        if (gaccessed != g.NoSymbol) pmods += (if (gaccessed.isMutable) p.Mod.VarParam() else p.Mod.ValParam())
         if (gsym.isPackageObject) pmods += p.Mod.Package()
         pmods.toList
       }

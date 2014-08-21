@@ -331,8 +331,6 @@ package object internal {
             sym.fullName != "scala.meta.Enum.Val" &&
             sym.fullName != "scala.meta.Lit.Symbol" &&
             sym.fullName != "scala.meta.Mod.Doc" &&
-            sym.fullName != "scala.meta.Mod.ValParam" &&
-            sym.fullName != "scala.meta.Mod.VarParam" &&
             sym.fullName != "scala.meta.Pat.ExtractInfix" &&
             sym.fullName != "scala.meta.Pat.Interpolate" &&
             sym.fullName != "scala.meta.Term.Annotate" &&
