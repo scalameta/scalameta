@@ -244,6 +244,11 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
           offenders.toList
         case _ => Nil
       }
+      // TODO: wasEmpty is not really working well here and checking nullness of originals is too optimistic
+      // however, the former produces much uglier printouts, so I'm going for the latter
+      // TODO: also see the other places in the code that use originals
+      def hasInferredTargs(targs: List[g.Tree]) = targs.exists{ case tt: g.TypeTree => tt.original == null }
+      def dropInferredTargs(targs: List[g.Tree]) = if (hasInferredTargs(targs)) Nil else targs
     }
     import Helpers._
     val offenders = unattributedNodes(in)
@@ -566,10 +571,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
           case fn @ g.Select(_, _) => (fn.cvt_! : p.Term.Select)
           case _ => unreachable
         }
-        // TODO: wasEmpty is not really working well here and checking nullness of originals is too optimistic
-        // however, the former produces much uglier printouts, so I'm going for the latter
-        // TODO: also see the other places in the code that use originals
-        if (targs.exists{ case tt: g.TypeTree => tt.original == null }) pfn
+        if (hasInferredTargs(targs)) pfn
         else p.Term.ApplyType(pfn, targs.map(_.asInstanceOf[g.TypeTree]).cvt)
       case in @ g.Apply(g.Select(g.New(_), g.nme.CONSTRUCTOR), _) =>
         // TODO: infer the difference between `new X` vs `new X()`
@@ -592,32 +594,22 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         // TODO: undo the Lit.Symbol desugaring
         // TODO: undo the interpolation desugaring
         // TODO: figure out whether the programmer actually wrote `foo(...)` or it was `foo.apply(...)`
-        // TODO: figure out whether the programmer actually an implicit conversion or not
         type pScalaApply = p.Term{ type ThisType >: p.Term.Name with p.Term.Select with p.Term.Apply with p.Term.ApplyInfix with p.Term.ApplyType <: p.Term }
         def loop(in: g.Tree): pScalaApply = {
-          // TODO: remove this duplication wrt conversion of g.TypeApply
-          def dropInferredTargs(targs: List[g.Tree]) = if (targs.exists{ case tt: g.TypeTree => tt.original == null }) Nil else targs
-          object ImplicitlyConverted {
-            // NOTE: we could match against g.ApplyToImplicitView here
-            // but as the comment next to it says, sometimes the distinction between g.Apply and g.ApplyToImplicitView might get lost
-            // therefore I'm going for a less robust, but more practically useful approach
-            def unapply(gtree: g.Tree): Option[(g.Tree, g.Tree, List[g.Tree], List[g.Tree])] = gtree match {
-              case g.treeInfo.Applied(core @ g.Select(g.treeInfo.Applied(_, _, (convertee :: Nil) :: Nil), _), targs, args :: Nil) =>
-                Some((convertee, core, dropInferredTargs(targs), args))
-              case _ => None
-            }
-          }
           object InfixlyApplied {
             // TODO: replace this heuristic with precise detection of infix applications
             def unapply(gtree: g.Tree): Option[(g.Tree, List[g.Tree], g.Tree)] = gtree match {
               case g.treeInfo.Applied(target @ g.Select(lhs, name), targs, (arg :: Nil) :: Nil) if !name.toString.forall(c => Character.isAlphabetic(c)) =>
-                Some((target, dropInferredTargs(targs), arg))
+                val target1 = lhs match {
+                  case g.treeInfo.Applied(_, _, (convertee :: Nil) :: Nil) if lhs.symbol.isImplicit => g.treeCopy.Select(target, convertee, name)
+                  case _ => target
+                }
+                Some((target1, dropInferredTargs(targs), arg))
               case _ => None
             }
           }
           val result = in match {
             case g.Apply(fn, args) if g.isImplicitMethodType(fn.tpe) => loop(fn)
-            case ImplicitlyConverted(convertee, core, targs, args) => loop(g.treeCopy.Apply(in, g.treeCopy.Select(core, convertee, core.symbol.name), args))
             case InfixlyApplied(target @ g.Select(lhs, _), targs, arg) => p.Term.ApplyInfix(lhs.cvt_!, target.symbol.asTerm.rawcvt(target), targs.cvt_!, List(arg.cvt_!))
             case g.Apply(fn, args) => p.Term.Apply(loop(fn), args.cvt_!)
             case g.TypeApply(g.Select(qual, _), targs) if in.symbol.name == g.TermName("apply") => g.treeCopy.TypeApply(in, qual, targs).cvt
@@ -657,14 +649,23 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         } else p.Term.This(if (qual != g.tpnme.EMPTY) Some(in.symbol.qualcvt(in)) else None)
       case in: g.PostfixSelect =>
         unreachable
-      case in @ g.Select(qual, _) =>
+      case in @ g.Select(qual, name) =>
         require(in.symbol.isTerm) // NOTE: typename selections are impossible, because all TypTrees have already been converted to TypeTrees
         // TODO: what do we do if sym is a package object? do we skip it altogether or do we still emit an explicit reference to it?
-        val pname = in.symbol.asTerm.precvt(qual.tpe, in)
         // TODO: discern unary applications via !x and via explicit x.unary_!
         // TODO: also think how to detect unary applications that have implicit arguments
-        if (pname.value.startsWith("unary_")) p.Term.ApplyUnary(pname.copy(value = pname.value.stripPrefix("unary_")).appendScratchpad(pname.scratchpad), qual.cvt_!)
-        else p.Term.Select(qual.cvt_!, pname, isPostfix = false) // TODO: figure out isPostfix
+        // TODO: figure out whether the programmer actually wrote an implicit conversion or not
+        if (qual.symbol.isImplicit) {
+          // NOTE: we could match against g.ApplyToImplicitView here
+          // but as the comment next to it says, sometimes the distinction between g.Apply and g.ApplyToImplicitView might get lost
+          // therefore I'm going for a less robust, but more practically useful approach
+          val g.treeInfo.Applied(_, _, (convertee :: Nil) :: Nil) = qual
+          g.treeCopy.Select(in, convertee, name).cvt
+        } else {
+          val pname = in.symbol.asTerm.precvt(qual.tpe, in)
+          if (pname.value.startsWith("unary_")) p.Term.ApplyUnary(pname.copy(value = pname.value.stripPrefix("unary_")).appendScratchpad(pname.scratchpad), qual.cvt_!)
+          else p.Term.Select(qual.cvt_!, pname, isPostfix = false) // TODO: figure out isPostfix
+        }
       case in @ g.Ident(_) =>
         require(in.symbol.isTerm) // NOTE: see the g.Select note
         in.symbol.asTerm.rawcvt(in)
