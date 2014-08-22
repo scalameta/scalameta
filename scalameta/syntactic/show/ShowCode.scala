@@ -3,13 +3,13 @@ package syntactic.show
 
 import scala.meta.Aux._
 import org.scalameta.show.Show
-import Show.{ sequence => s, repeat => r, indent => i, newline => n }
+import Show.{ sequence => s, repeat => r, indent => i, newline => n, meta => m }
 import scala.meta.syntactic.parsers.SyntacticInfo._
 import scala.meta.semantic._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 
-// TODO: occasional " ;" is annoying
+// TODO: fix occasional incorrectness when semicolons are omitted
 // TODO: needs way more parens, esp in types and patterns
 // TODO: soft wrapping
 // TODO: one mega instance for tree isn't nice, maybe separate instances for leafs and inferred instances for branches
@@ -25,9 +25,34 @@ object Code {
     else if (templ.parents.nonEmpty || templ.early.nonEmpty) s(" extends ", templ)
     else s(" ", templ)
 
-  def parens(t: Qual.Term) = t match {
-    case _: Lit | _: Term.Ref | _: Term.Placeholder | _: Term.Tuple | _: Qual.Super => s(t)
-    case _ => s("(", t, ")")
+  def p(oo: String, t: Qual.Term, left: Boolean = false, right: Boolean = false) = {
+    def needsParens(oo: String, io: String): Boolean = {
+      implicit class MySyntacticInfo(name: Name) {
+        def myprecedence: Int = name.value match {
+          case "." => 100
+          case "()" => 100
+          case "=" => 0
+          case _ if name.myunary => 99
+          case _ => name.precedence
+        }
+        def myunary: Boolean = name.value.startsWith("unary_")
+      }
+      val (op, ip) = (Term.Name(oo).myprecedence, Term.Name(io).myprecedence)
+      val (oa, ia) = (Term.Name(oo).isLeftAssoc, Term.Name(io).isLeftAssoc)
+      val (ou, iu) = (Term.Name(oo).myunary, Term.Name(io).myunary)
+      val result = {
+        if (ou && iu) true
+        else if (oa ^ ia) true
+        else if (oo == io && left != oa) true
+        else op > ip
+      }
+      // println((oo, io, left, right) + " => " + (op, ip, oa, ia, ou, iu) + " => " + result)
+      result
+    }
+    s(t) match {
+      case Show.Meta(io: String, res) if needsParens(oo, io) => s("(", res, ")")
+      case res => res
+    }
   }
 
   // Branches
@@ -68,9 +93,9 @@ object Code {
 
     // Term
     case t: Term.This     => s(t.qual.map { qual => s(qual, ".") }.getOrElse(s()), "this")
-    case t: Term.Select   => s(parens(t.qual), if (t.isPostfix) " " else ".", t.selector)
-    case t: Term.Assign   => s(parens(t.lhs), " = ", t.rhs)
-    case t: Term.Update   => s(parens(t.lhs), " = ", t.rhs)
+    case t: Term.Select   => s(p(".", t.qual), if (t.isPostfix) " " else ".", t.selector)
+    case t: Term.Assign   => m("=", s(p("=", t.lhs), " = ", t.rhs))
+    case t: Term.Update   => m("=", s(p("=", t.lhs), " = ", t.rhs))
     case t: Term.Return   => s("return", if (t.hasExpr) s(" ", t.expr) else s())
     case t: Term.Throw    => s("throw ", t.expr)
     case t: Term.Ascribe  => s(t.expr, ": ", t.tpe)
@@ -78,7 +103,7 @@ object Code {
     case t: Term.Tuple    => s("(", r(t.elements, ", "), ")")
     case t: Term.Block    =>
       import Term.{Block, Function}
-      def pstats(s: Seq[Stmt.Block]) = r(s.map(i(_)), ";")
+      def pstats(s: Seq[Stmt.Block]) = r(s.map(i(_)), "")
       t match {
         case Block(Function(Param.Named(mods, name, tptopt, _) :: Nil, Block(stats)) :: Nil) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
           s("{ implicit ", name, tptopt.map { tpt => s(": ", tpt) }.getOrElse(s()), " => ", pstats(stats), n("}"))
@@ -91,7 +116,7 @@ object Code {
         case _ =>
           if (t.stats.isEmpty) s("{}") else s("{", pstats(t.stats), n("}"))
       }
-    case t: Term.Cases       => s("{", r(t.cases.map(i(_)), ";"), n("}"))
+    case t: Term.Cases       => s("{", r(t.cases.map(i(_)), ""), n("}"))
     case t: Term.While       => s("while (", t.expr, ") ", t.body)
     case t: Term.Do          => s("do ", t.body, " while (", t.expr, ")")
     case t: Term.For         => s("for (", r(t.enums, "; "), ") ", t.body)
@@ -100,14 +125,14 @@ object Code {
     case _: Term.Placeholder => s("_")
     case t: Term.Eta         => s(t.term, " _")
     case t: Term.Match       => s(t.scrut, " match ", t.cases)
-    case t: Term.Apply       => s(parens(t.fun), t.args)
-    case t: Term.ApplyType   => s(parens(t.fun), t.targs)
-    case t: Term.ApplyUnary  => s(t.op, parens(t.arg))
+    case t: Term.Apply       => m("()", s(p("()", t.fun), t.args))
+    case t: Term.ApplyType   => s(t.fun, t.targs)
+    case t: Term.ApplyUnary  => m("unary_" + t.op.value, s(t.op, p("unary_" + t.op.value, t.arg)))
     case t: Term.ApplyInfix  =>
-      s(parens(t.lhs), " ", t.op, t.targs, " ", t.args match {
-        case (arg: Term) :: Nil => s(parens(arg))
+      m(t.op.value, s(p(t.op.value, t.lhs, left = true), " ", t.op, t.targs, " ", t.args match {
+        case (arg: Term) :: Nil => s(p(t.op.value, arg, right = true))
         case args               => s(args)
-      })
+      }))
     case t: Term.Try      =>
       s("try ", t.expr,
         t.catchp.map { catchp => s(" catch ", catchp) }.getOrElse(s()),
@@ -183,7 +208,7 @@ object Code {
     case t: Defn.Def       =>
       s(t.mods, "def ", t.name, t.tparams, (t.explicits, t.implicits), t.decltpe, " = ", t.body)
     case t: Defn.Procedure =>
-      s(t.mods, "def ", t.name, t.tparams, (t.explicits, t.implicits), " { ", r(t.stats.map(i(_)), ";"), n("}"))
+      s(t.mods, "def ", t.name, t.tparams, (t.explicits, t.implicits), " { ", r(t.stats.map(i(_)), ""), n("}"))
     case t: Defn.Macro     =>
       s(t.mods, "def ", t.name, t.tparams, (t.explicits, t.implicits), ": ", t.tpe, " = macro ", t.body)
 
@@ -230,7 +255,7 @@ object Code {
         val pearly = if (t.early.isEmpty) s() else s("{ ", r(t.early, "; "), " } with ")
         // TODO: use Template.hasBraces
         val pbody = if (t.self.name.isEmpty && t.self.decltpe.isEmpty && t.stats.isEmpty) s()
-                    else s("{", t.self, r(t.stats.map(i(_)), ";"), n("}"))
+                    else s("{", t.self, r(t.stats.map(i(_)), ""), n("}"))
         val pparents = if (t.parents.nonEmpty) s(r(t.parents, " with "), " ") else s()
         s(pearly, pparents, pbody)
       }

@@ -6,6 +6,7 @@ import scala.language.implicitConversions
 import scala.language.higherKinds
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
+import scala.{Seq => MutSeq}
 import org.scalameta.convert._
 
 trait Show[T] { def apply(t: T): Show.Result }
@@ -36,6 +37,8 @@ object Show {
           indentation -= 1
         case Newline(res) =>
           nl(res)
+        case Meta(_, res) =>
+          loop(res)
       }
       loop(this)
       sb.toString
@@ -47,13 +50,16 @@ object Show {
   final case class Repeat(xs: Seq[Result], sep: String) extends Result
   final case class Indent(res: Result) extends Result
   final case class Newline(res: Result) extends Result
+  final case class Meta(data: Any, res: Result) extends Result
 
   def apply[T](f: T => Result): Show[T] =
     new Show[T] { def apply(input: T): Result = f(input) }
 
-  def sequence[T](xs: T*): Result = macro ShowMacros.seq[T]
+  def sequence[T](xs: T*): Result = macro ShowMacros.seq
 
   def indent[T](x: T)(implicit show: Show[T]): Indent = Indent(show(x))
+
+  def meta[T](data: Any, xs: T*): Meta = macro ShowMacros.meta
 
   def repeat[T](xs: Seq[T], sep: String = "")(implicit show: Show[T]): Repeat =
     Repeat(xs.map(show(_)), sep)
@@ -71,8 +77,8 @@ private[show] class ShowMacros(val c: Context) {
   val ShowTpe = typeOf[Show[_]]
   val ShowObj = q"_root_.org.scalameta.show.Show"
 
-  def seq[T](xs: c.Tree*) = {
-    val results = xs.map { x =>
+  private def mkResults(xs: MutSeq[c.Tree]): MutSeq[c.Tree] = {
+    xs.map { x =>
       if (x.tpe <:< typeOf[Show.Result])
         x
       else {
@@ -83,9 +89,20 @@ private[show] class ShowMacros(val c: Context) {
           c.abort(x.pos, s"don't know how to print value of type ${x.tpe}")
       }
     }
+  }
+
+  def seq(xs: c.Tree*) = {
+    val results = mkResults(xs)
     if (xs.isEmpty) q"$ShowObj.None"
     else if (xs.length == 1) results.head
     else q"$ShowObj.Sequence(..$results)"
+  }
+
+  def meta(data: c.Tree, xs: c.Tree*) = {
+    val results = mkResults(xs)
+    if (xs.isEmpty) q"$ShowObj.None"
+    else if (xs.length == 1) q"$ShowObj.Meta($data, ${results.head})"
+    else q"$ShowObj.Meta($data, $ShowObj.Sequence(..$results))"
   }
 }
 
