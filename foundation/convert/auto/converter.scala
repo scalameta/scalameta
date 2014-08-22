@@ -527,7 +527,16 @@ package object internal {
       lookupConvertersWithPt(x, EmptyTree)(c.weakTypeTag[In], c.WeakTypeTag(WildcardType))
     }
     def lookupConvertersWithPt[In: c.WeakTypeTag, Pt: c.WeakTypeTag](x: c.Tree, pt: c.Tree): c.Tree = {
-      convert(x, c.weakTypeOf[In], c.weakTypeOf[Pt], allowDerived = true, allowInputDowncasts = true, allowOutputDowncasts = true, pre = c.prefix.tree.tpe, sym = c.macroApplication.symbol)
+      val target = c.macroApplication.symbol.owner
+      target.name.toString match {
+        case "toPalladium" =>
+          val pre = c.prefix.tree.tpe
+          val sym = c.macroApplication.symbol
+          val x1 = q"$DeriveInternal.undoMacroExpansions($x)"
+          convert(x1, c.weakTypeOf[In], c.weakTypeOf[Pt], allowDerived = true, allowInputDowncasts = true, allowOutputDowncasts = true, pre = pre, sym = sym)
+        case _ =>
+          c.abort(c.enclosingPosition, "unknown target: " + target.name)
+      }
     }
     def lubConverters[T: WeakTypeTag, U: WeakTypeTag]: Tree = {
       val converters = loadConverters(NoType, enclosingOwner)
@@ -644,6 +653,23 @@ package object internal {
       val polysel = gen.mkAttributedSelect(pre, m)
       val sel = TypeApply(polysel, List(TypeTree(arg.tpe))).setType(appliedType(polysel.tpe, arg.tpe))
       Apply(sel, List(arg)).setType(sel.tpe.finalResultType)
+    }
+  }
+
+  object undoMacroExpansions {
+    def apply(tree: Any): Any = macro compileTimeImpl
+    def compileTimeImpl(c: whitebox.Context)(tree: c.Tree): c.Tree = {
+      import c.universe._
+      val pre = tree.tpe.asInstanceOf[scala.reflect.internal.SymbolTable#Type].prefix.asInstanceOf[Type]
+      val treeTpe = typeOf[scala.reflect.api.Universe].member(TypeName("Tree")).asType.toTypeIn(pre)
+      val termTreeTpe = typeOf[scala.reflect.api.Universe].member(TypeName("TermTree")).asType.toTypeIn(pre)
+      val actualTpe = tree.tpe
+      val needsUndo = termTreeTpe.baseClasses.contains(actualTpe.typeSymbol) || actualTpe.baseClasses.contains(termTreeTpe.typeSymbol)
+      if (needsUndo) q"_root_.org.scalameta.convert.auto.internal.undoMacroExpansions.runtimeImpl($tree).asInstanceOf[$treeTpe]"
+      else tree
+    }
+    def runtimeImpl(tree: Any): Any = {
+      ???
     }
   }
 }
