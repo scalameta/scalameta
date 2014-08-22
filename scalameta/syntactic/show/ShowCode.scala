@@ -9,7 +9,7 @@ import scala.meta.semantic._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 
-// TODO: occasional " ;" is annoying
+// TODO: fix occasional incorrectness when semicolons are omitted
 // TODO: needs way more parens, esp in types and patterns
 // TODO: soft wrapping
 // TODO: one mega instance for tree isn't nice, maybe separate instances for leafs and inferred instances for branches
@@ -103,7 +103,7 @@ object Code {
     case t: Term.Tuple    => s("(", r(t.elements, ", "), ")")
     case t: Term.Block    =>
       import Term.{Block, Function}
-      def pstats(s: Seq[Stmt.Block]) = r(s.map(i(_)), ";")
+      def pstats(s: Seq[Stmt.Block]) = r(s.map(i(_)), "")
       t match {
         case Block(Function(Param.Named(mods, name, tptopt, _) :: Nil, Block(stats)) :: Nil) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
           s("{ implicit ", name, tptopt.map { tpt => s(": ", tpt) }.getOrElse(s()), " => ", pstats(stats), n("}"))
@@ -116,7 +116,7 @@ object Code {
         case _ =>
           if (t.stats.isEmpty) s("{}") else s("{", pstats(t.stats), n("}"))
       }
-    case t: Term.Cases       => s("{", r(t.cases.map(i(_)), ";"), n("}"))
+    case t: Term.Cases       => s("{", r(t.cases.map(i(_)), ""), n("}"))
     case t: Term.While       => s("while (", t.expr, ") ", t.body)
     case t: Term.Do          => s("do ", t.body, " while (", t.expr, ")")
     case t: Term.For         => s("for (", r(t.enums, "; "), ") ", t.body)
@@ -208,7 +208,7 @@ object Code {
     case t: Defn.Def       =>
       s(t.mods, "def ", t.name, t.tparams, (t.explicits, t.implicits), t.decltpe, " = ", t.body)
     case t: Defn.Procedure =>
-      s(t.mods, "def ", t.name, t.tparams, (t.explicits, t.implicits), " { ", r(t.stats.map(i(_)), ";"), n("}"))
+      s(t.mods, "def ", t.name, t.tparams, (t.explicits, t.implicits), " { ", r(t.stats.map(i(_)), ""), n("}"))
     case t: Defn.Macro     =>
       s(t.mods, "def ", t.name, t.tparams, (t.explicits, t.implicits), ": ", t.tpe, " = macro ", t.body)
 
@@ -255,7 +255,7 @@ object Code {
         val pearly = if (t.early.isEmpty) s() else s("{ ", r(t.early, "; "), " } with ")
         // TODO: use Template.hasBraces
         val pbody = if (t.self.name.isEmpty && t.self.decltpe.isEmpty && t.stats.isEmpty) s()
-                    else s("{", t.self, r(t.stats.map(i(_)), ";"), n("}"))
+                    else s("{", t.self, r(t.stats.map(i(_)), ""), n("}"))
         val pparents = if (t.parents.nonEmpty) s(r(t.parents, " with "), " ") else s()
         s(pearly, pparents, pbody)
       }
