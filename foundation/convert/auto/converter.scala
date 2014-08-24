@@ -331,20 +331,14 @@ package object internal {
             sym.fullName != "scala.meta.Enum.Val" &&
             sym.fullName != "scala.meta.Lit.Symbol" &&
             sym.fullName != "scala.meta.Mod.Doc" &&
-            sym.fullName != "scala.meta.Mod.ValParam" &&
-            sym.fullName != "scala.meta.Mod.VarParam" &&
             sym.fullName != "scala.meta.Pat.ExtractInfix" &&
             sym.fullName != "scala.meta.Pat.Interpolate" &&
-            sym.fullName != "scala.meta.Pat.Tuple" &&
             sym.fullName != "scala.meta.Term.Annotate" &&
-            sym.fullName != "scala.meta.Term.ApplyInfix" &&
-            sym.fullName != "scala.meta.Term.ApplyUnary" &&
             sym.fullName != "scala.meta.Term.Do" &&
             sym.fullName != "scala.meta.Term.Eta" &&
             sym.fullName != "scala.meta.Term.For" &&
             sym.fullName != "scala.meta.Term.ForYield" &&
             sym.fullName != "scala.meta.Term.If.Then" &&
-            sym.fullName != "scala.meta.Term.Interpolate" &&
             sym.fullName != "scala.meta.Term.Placeholder" &&
             sym.fullName != "scala.meta.Term.Return.Unit" &&
             sym.fullName != "scala.meta.Term.Tuple" &&
@@ -510,10 +504,13 @@ package object internal {
         val downcastees = matching.filter(c => !(c.out <:< out))
         if (downcastees.nonEmpty && !allowOutputDowncasts) {
           val problems = downcastees.flatMap(c => extractIntersections(c.out).filter(cout => !(cout <:< out)).map(cout => (c.in, cout)))
-          def printProblem(p: (Type, Type)) = s"${p._1} => ${p._2}"
-          val s_problems = problems.init.map(printProblem).mkString(", ") + (if (problems.length > 1) " and " else "") + printProblem(problems.last)
-          val s_verb = if (problems.length == 1) "doesn't" else "don't"
-          fail(s"$s_problems $s_verb fit the output type")
+          if (problems.isEmpty) fail("an unknown problem")
+          else {
+            def printProblem(p: (Type, Type)) = s"${p._1} => ${p._2}"
+            val s_problems = problems.init.map(printProblem).mkString(", ") + (if (problems.length > 1) " and " else "") + printProblem(problems.last)
+            val s_verb = if (problems.length == 1) "doesn't" else "don't"
+            fail(s"$s_problems $s_verb fit the output type")
+          }
         } else {
           if (downcastees.nonEmpty) result = q"""
             $result match {
@@ -529,7 +526,16 @@ package object internal {
       lookupConvertersWithPt(x, EmptyTree)(c.weakTypeTag[In], c.WeakTypeTag(WildcardType))
     }
     def lookupConvertersWithPt[In: c.WeakTypeTag, Pt: c.WeakTypeTag](x: c.Tree, pt: c.Tree): c.Tree = {
-      convert(x, c.weakTypeOf[In], c.weakTypeOf[Pt], allowDerived = true, allowInputDowncasts = true, allowOutputDowncasts = true, pre = c.prefix.tree.tpe, sym = c.macroApplication.symbol)
+      val target = c.macroApplication.symbol.owner
+      target.name.toString match {
+        case "toPalladium" =>
+          val pre @ q"$h.toPalladium" = c.prefix.tree
+          val sym = c.macroApplication.symbol
+          val x1 = q"$DeriveInternal.undoMacroExpansions($h.g, $x)"
+          convert(x1, c.weakTypeOf[In], c.weakTypeOf[Pt], allowDerived = true, allowInputDowncasts = true, allowOutputDowncasts = true, pre = pre.tpe, sym = sym)
+        case _ =>
+          c.abort(c.enclosingPosition, "unknown target: " + target.name)
+      }
     }
     def lubConverters[T: WeakTypeTag, U: WeakTypeTag]: Tree = {
       val converters = loadConverters(NoType, enclosingOwner)
@@ -646,6 +652,58 @@ package object internal {
       val polysel = gen.mkAttributedSelect(pre, m)
       val sel = TypeApply(polysel, List(TypeTree(arg.tpe))).setType(appliedType(polysel.tpe, arg.tpe))
       Apply(sel, List(arg)).setType(sel.tpe.finalResultType)
+    }
+  }
+
+  object undoMacroExpansions {
+    def apply(global: Any, tree: Any): Any = macro compileTimeImpl
+    def compileTimeImpl(c: whitebox.Context)(global: c.Tree, tree: c.Tree): c.Tree = {
+      import c.universe._
+      val pre = tree.tpe.asInstanceOf[scala.reflect.internal.SymbolTable#Type].prefix.asInstanceOf[Type]
+      val treeTpe = typeOf[scala.reflect.api.Universe].member(TypeName("Tree")).asType.toTypeIn(pre)
+      val termTreeTpe = typeOf[scala.reflect.api.Universe].member(TypeName("TermTree")).asType.toTypeIn(pre)
+      val actualTpe = tree.tpe
+      val needsUndo = termTreeTpe.baseClasses.contains(actualTpe.typeSymbol) || actualTpe.baseClasses.contains(termTreeTpe.typeSymbol)
+      if (needsUndo) q"_root_.org.scalameta.convert.auto.internal.undoMacroExpansions.runtimeImpl($global, $tree).asInstanceOf[$treeTpe]"
+      else tree
+    }
+    def runtimeImpl(global: Any, tree: Any): Any = {
+      // NOTE: partially copy/pasted from Reshape.scala in scalac
+      // NOTE: we can't undo macro expansions in annotation arguments, because after typechecking those are stored on symbols and we can't change those
+      def undoMacroExpansions[G <: scala.tools.nsc.Global](g: G)(tree: g.Tree): g.Tree = {
+        import g._
+        import definitions._
+        val currentRun = g.currentRun
+        import currentRun.runDefinitions._
+        object transformer extends Transformer {
+          override def transform(tree: Tree): Tree = {
+            def postprocess(original: Tree): Tree = {
+              def mkImplicitly(tp: Type) = gen.mkNullaryCall(Predef_implicitly, List(tp)).setType(tp)
+              val sym = original.symbol
+              original match {
+                // this hack is necessary until I fix implicit macros
+                // so far tag materialization is implemented by sneaky macros hidden in scala-compiler.jar
+                // hence we cannot reify references to them, because noone will be able to see them later
+                // when implicit macros are fixed, these sneaky macros will move to corresponding companion objects
+                // of, say, ClassTag or TypeTag
+                case Apply(TypeApply(_, List(tt)), _) if sym == materializeClassTag            => mkImplicitly(appliedType(ClassTagClass, tt.tpe))
+                case Apply(TypeApply(_, List(tt)), List(pre)) if sym == materializeWeakTypeTag => mkImplicitly(typeRef(pre.tpe, WeakTypeTagClass, List(tt.tpe)))
+                case Apply(TypeApply(_, List(tt)), List(pre)) if sym == materializeTypeTag     => mkImplicitly(typeRef(pre.tpe, TypeTagClass, List(tt.tpe)))
+                case _                                                                         => original
+              }
+            }
+            (tree.attachments.get[java.util.HashMap[String, Any]], tree.attachments.get[analyzer.MacroExpansionAttachment]) match {
+              case (Some(bag), _) => super.transform(postprocess(bag.get("expandeeTree").asInstanceOf[Tree]))
+              case (None, Some(analyzer.MacroExpansionAttachment(original, _))) => super.transform(postprocess(original))
+              case _ => super.transform(tree)
+            }
+          }
+        }
+        transformer.transform(tree)
+      }
+      val global1 = global.asInstanceOf[scala.tools.nsc.Global]
+      val tree1 = tree.asInstanceOf[global1.Tree]
+      undoMacroExpansions[global1.type](global1)(tree1)
     }
   }
 }
