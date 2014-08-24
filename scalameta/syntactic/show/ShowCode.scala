@@ -43,7 +43,7 @@ object Code {
       val result = {
         if (ou && iu) true
         else if (oa ^ ia) true
-        else if (oo == io && left != oa) true
+        else if (oo == io && left != oa && left != right) true
         else op > ip
       }
       // println((oo, io, left, right) + " => " + (op, ip, oa, ia, ou, iu) + " => " + result)

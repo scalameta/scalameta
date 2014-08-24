@@ -66,4 +66,13 @@ class ShowSuite extends ParseSuite {
     |}
     """.trim.stripMargin.replace("QQQ", "\"\"\""))
   }
+
+  test("foo.bar(bar) { baz }") {
+    val tree = templStat("foo.bar(bar) { baz }")
+    assert(tree.show[Code] === """
+      |foo.bar(bar) {
+      |  baz
+      |}
+    """.trim.stripMargin)
+  }
 }
