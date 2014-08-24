@@ -585,7 +585,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         val templ = p.Aux.Template(Nil, List(supercall), self).appendScratchpad(in)
         p.Term.New(templ)
       case in @ g.Apply(_, _) =>
-        // TODO: infer the difference between Apply, ApplyInfix and Update
+        // TODO: infer the difference between Apply and Update
         // TODO: infer whether it was an application or a Tuple
         // TODO: recover names and defaults (https://github.com/scala/scala/pull/3753/files#diff-269d2d5528eed96b476aded2ea039444R617)
         // TODO: strip off inferred type arguments in loopParent
@@ -594,7 +594,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         // TODO: undo the Lit.Symbol desugaring
         // TODO: undo the interpolation desugaring
         // TODO: figure out whether the programmer actually wrote `foo(...)` or it was `foo.apply(...)`
-        type pScalaApply = p.Term{ type ThisType >: p.Term.Name with p.Term.Select with p.Term.Apply with p.Term.ApplyInfix with p.Term.ApplyType <: p.Term }
+        // TODO: figure out whether the programmer actually wrote the interpolator or they were explicitly using a desugaring
+        type pScalaApply = p.Term{ type ThisType >: p.Term.Name with p.Term.Select with p.Term.Apply with p.Term.ApplyInfix with p.Term.ApplyType with p.Term.Interpolate <: p.Term }
         def loop(in: g.Tree): pScalaApply = {
           object InfixlyApplied {
             // TODO: replace this heuristic with precise detection of infix applications
@@ -608,7 +609,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
               case _ => None
             }
           }
-          val result = in match {
+          val prelimResult = in match {
             case g.Apply(fn, args) if g.isImplicitMethodType(fn.tpe) => loop(fn)
             case InfixlyApplied(target @ g.Select(lhs, _), targs, arg) => p.Term.ApplyInfix(lhs.cvt_!, target.symbol.asTerm.rawcvt(target), targs.cvt_!, List(arg.cvt_!))
             case g.Apply(fn, args) => p.Term.Apply(loop(fn), args.cvt_!)
@@ -617,6 +618,17 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
             case in: g.TypeApply => in.cvt
             case in: g.Select => in.cvt
             case in: g.Ident => in.symbol.asTerm.rawcvt(in)
+          }
+          val result = prelimResult match {
+            case Term.Apply(Term.Select(Term.Apply(stringContext, parts), prefix), args) =>
+              val isInterpolation = stringContext.scratchpad.collect{ case tree: g.Tree if tree.symbol == g.symbolOf[StringContext.type].companion.companion => tree }.nonEmpty
+              if (isInterpolation) {
+                require(parts.forall(_.isInstanceOf[p.Lit.String]))
+                require(args.forall(_.isInstanceOf[p.Term]))
+                p.Term.Interpolate(prefix, parts.asInstanceOf[Seq[p.Lit.String]], args.asInstanceOf[Seq[p.Term]])
+              } else prelimResult
+            case _ =>
+              prelimResult
           }
           result.appendScratchpad(in).asInstanceOf[pScalaApply]
         }

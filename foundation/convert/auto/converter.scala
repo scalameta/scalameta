@@ -339,7 +339,6 @@ package object internal {
             sym.fullName != "scala.meta.Term.For" &&
             sym.fullName != "scala.meta.Term.ForYield" &&
             sym.fullName != "scala.meta.Term.If.Then" &&
-            sym.fullName != "scala.meta.Term.Interpolate" &&
             sym.fullName != "scala.meta.Term.Placeholder" &&
             sym.fullName != "scala.meta.Term.Return.Unit" &&
             sym.fullName != "scala.meta.Term.Tuple" &&
