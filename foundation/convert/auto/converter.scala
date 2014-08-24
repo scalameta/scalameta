@@ -675,11 +675,11 @@ package object internal {
         val currentRun = g.currentRun
         import currentRun.runDefinitions._
         object transformer extends Transformer {
-          override def transform(tree: Tree): Tree = tree.attachments.get[analyzer.MacroExpansionAttachment] match {
-            case Some(analyzer.MacroExpansionAttachment(original, _)) =>
+          override def transform(tree: Tree): Tree = {
+            def postprocess(original: Tree): Tree = {
               def mkImplicitly(tp: Type) = gen.mkNullaryCall(Predef_implicitly, List(tp)).setType(tp)
               val sym = original.symbol
-              val result = original match {
+              original match {
                 // this hack is necessary until I fix implicit macros
                 // so far tag materialization is implemented by sneaky macros hidden in scala-compiler.jar
                 // hence we cannot reify references to them, because noone will be able to see them later
@@ -690,9 +690,12 @@ package object internal {
                 case Apply(TypeApply(_, List(tt)), List(pre)) if sym == materializeTypeTag     => mkImplicitly(typeRef(pre.tpe, TypeTagClass, List(tt.tpe)))
                 case _                                                                         => original
               }
-              super.transform(result)
-            case _ =>
-              super.transform(tree)
+            }
+            (tree.attachments.get[java.util.HashMap[String, Any]], tree.attachments.get[analyzer.MacroExpansionAttachment]) match {
+              case (Some(bag), _) => super.transform(postprocess(bag.get("expandeeTree").asInstanceOf[Tree]))
+              case (None, Some(analyzer.MacroExpansionAttachment(original, _))) => super.transform(postprocess(original))
+              case _ => super.transform(tree)
+            }
           }
         }
         transformer.transform(tree)
