@@ -162,7 +162,12 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
       def pbounds(gtpe: g.Type): p.Aux.TypeBounds = gtpe match {
         case g.TypeBounds(glo, ghi) =>
           // TODO: infer which of the bounds were specified explicitly by the user
-          p.Aux.TypeBounds(glo.cvt, ghi.cvt)
+          (glo =:= g.typeOf[Nothing], ghi =:= g.typeOf[Any]) match {
+            case (false, false) => p.Aux.TypeBounds(lo = glo.cvt, hi = ghi.cvt)
+            case (true, false) => p.Aux.TypeBounds(hi = ghi.cvt)
+            case (false, true) => p.Aux.TypeBounds(lo = glo.cvt)
+            case (true, true) => p.Aux.TypeBounds()
+          }
         case _ =>
           unreachable
       }
