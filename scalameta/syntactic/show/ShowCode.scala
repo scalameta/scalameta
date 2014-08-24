@@ -151,10 +151,11 @@ object Code {
       }
     case t: Term.Interpolate =>
       val zipped = t.parts.zip(t.args).map {
-        case (part, id: Name) if !id.isBackquoted => s(part, "$", id.value)
-        case (part, arg)                          => s(part, "${", arg, "}")
+        case (part, id: Name) if !id.isBackquoted => s(part.value, "$", id.value)
+        case (part, arg)                          => s(part.value, "${", arg, "}")
       }
-      s(t.prefix, "\"", r(zipped), t.parts.last, "\"")
+      val quote = if (t.parts.map(_.value).exists(s => s.contains("\n") || s.contains("\""))) "\"\"\"" else "\""
+      s(t.prefix, quote, r(zipped), t.parts.last.value, quote)
 
     // Pat
     case t: Pat.Alternative  => s(t.lhs, " | ", t.rhs)
