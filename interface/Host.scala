@@ -605,7 +605,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
           object InfixlyApplied {
             // TODO: replace this heuristic with precise detection of infix applications
             def unapply(gtree: g.Tree): Option[(g.Tree, List[g.Tree], g.Tree)] = gtree match {
-              case g.treeInfo.Applied(target @ g.Select(lhs, name), targs, (arg :: Nil) :: Nil) if !name.toString.forall(c => Character.isAlphabetic(c)) =>
+              case g.treeInfo.Applied(target @ g.Select(lhs, name), targs, (arg :: Nil) :: Nil) if !name.toString.forall(c => Character.isLetter(c)) =>
                 val target1 = lhs match {
                   case g.treeInfo.Applied(_, _, (convertee :: Nil) :: Nil) if lhs.symbol.isImplicit => g.treeCopy.Select(target, convertee, name)
                   case _ => target
