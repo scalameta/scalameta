@@ -28,5 +28,7 @@ class InfrastructureSuite extends FunSuite {
     }
     val tree1 = tree.appendScratchpad(tree)
     tree1.toString // check well-formedness again
+    assert(tree1.scratchpad.length === 1)
+    assert(tree1.scratchpad.head === tree)
   }
 }

@@ -78,7 +78,7 @@ class AstMacros(val c: Context) {
       bparams1 += q"val origin: _root_.scala.meta.Origin"
       def internalize(name: TermName) = TermName("_" + name.toString)
       val internalCopyInitss = paramss.map(_.map(p => q"$AstInternal.initField(this.${internalize(p.name)})"))
-      val internalCopyBody = q"new ThisType(prototype.asInstanceOf[ThisType], parent, internalScratchpads, origin)(...$internalCopyInitss)"
+      val internalCopyBody = q"new ThisType(prototype.asInstanceOf[ThisType], parent, scratchpads, origin)(...$internalCopyInitss)"
       stats1 += q"private[meta] def internalCopy(prototype: _root_.scala.meta.Tree = this, parent: _root_.scala.meta.Tree = internalParent, scratchpads: $scratchpadsType = internalScratchpads, origin: _root_.scala.meta.Origin = origin): ThisType = $internalCopyBody"
       stats1 += q"def parent: _root_.scala.Option[_root_.scala.meta.Tree] = if (internalParent != null) _root_.scala.Some(internalParent) else _root_.scala.None"
 
