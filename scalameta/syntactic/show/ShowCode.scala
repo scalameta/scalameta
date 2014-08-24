@@ -86,7 +86,10 @@ object Code {
     case t: Lit.Float    => s(t.value.toString)
     case t: Lit.Double   => s(t.value.toString)
     case t: Lit.Char     => s(t.value.toString)
-    case t: Lit.String   => s("\"", t.value, "\"")
+    case t: Lit.String   =>
+      val quote = if (t.value.contains("\n")) "\"\"\"" else "\""
+      val printee = if (t.value.contains("\n")) t.value else t.value.replace("\"", "\\\"")
+      s(quote, printee, quote)
     case t: Lit.Symbol   => s("'", t.value.name)
     case _: Lit.Null     => s("null")
     case _: Lit.Unit     => s("()")

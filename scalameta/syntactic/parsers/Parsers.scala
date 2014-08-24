@@ -899,16 +899,21 @@ abstract class AbstractParser { parser =>
     result(interpolator, partsBuf.toList, argsBuf.toList)
   }
 
-  def interpolateTerm(): Term.Interpolate =
+  def interpolateTerm(): Term.Interpolate = {
+    def dropTrivialBlock(term: Term): Term = term match {
+      case Term.Block((stat: Term) :: Nil) => stat
+      case _ => term
+    }
     interpolate[Term, Term.Interpolate](arg = { () =>
       in.token match {
         case IDENTIFIER => termName()
-        //case USCORE   => freshPlaceholder()  // ifonly etapolation
-        case LBRACE     => expr()              // dropAnyBraces(expr0(Local))
+        //case USCORE   => freshPlaceholder()       // ifonly etapolation
+        case LBRACE     => dropTrivialBlock(expr()) // dropAnyBraces(expr0(Local))
         case THIS       => in.nextToken(); Term.This(None)
         case _          => syntaxError("error in interpolated string: identifier or block expected")
       }
     }, result = Term.Interpolate(_, _, _))
+  }
 
   def interpolatePat(): Pat.Interpolate =
     interpolate[Pat, Pat.Interpolate](arg = () => dropAnyBraces(pattern()), result = Pat.Interpolate(_, _, _))
