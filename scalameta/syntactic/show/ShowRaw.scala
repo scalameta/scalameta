@@ -13,7 +13,7 @@ object Raw {
   implicit def rawTree[T <: Tree]: Raw[T] = Raw(x => {
     s(x.productPrefix, "(", r(x.productIterator.map({
       case null => "null"
-      case s: String => "\"" + s + "\"" // TODO: escape all the special characters as necessary
+      case s: String => "\"" + s.replace("\n", "\\n").replace("\"", "\\\"") + "\"" // TODO: escape all the special characters as necessary
       case x => x.toString
     }).toList, ", "), ")")
   })
