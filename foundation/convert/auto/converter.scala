@@ -669,6 +669,7 @@ package object internal {
     }
     def runtimeImpl(global: Any, tree: Any): Any = {
       // NOTE: partially copy/pasted from Reshape.scala in scalac
+      // NOTE: we can't undo macro expansions in annotation arguments, because after typechecking those are stored on symbols and we can't change those
       def undoMacroExpansions[G <: scala.tools.nsc.Global](g: G)(tree: g.Tree): g.Tree = {
         import g._
         import definitions._

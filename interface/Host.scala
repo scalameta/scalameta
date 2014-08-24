@@ -149,7 +149,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         // TODO: infer the difference between @foo and @foo()
         // TODO: support classfile annotation args
         val g.AnnotationInfo(gatp, gargs, gassocs) = gann
-        p.Mod.Annot(gatp.cvt, List(gargs.cvt_!))
+        p.Mod.Annot(gatp.cvt, List(gargs.map(garg => org.scalameta.convert.auto.internal.undoMacroExpansions(g, garg)).cvt_!))
       }
       def panns(ganns: List[g.AnnotationInfo]): Seq[p.Mod.Annot] = {
         ganns.filter(gann => {
@@ -360,7 +360,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
           def mkMacroDefn(gbody: g.Tree) =
             p.Defn.Macro(pmods(in.symbol), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt_!, implicits.cvt_!, tpt.cvt, gbody.cvt_!)
           def parseSig(gsig: g.Annotation) = {
-            val q"new $_[..$_]($_(..$args)[..$targs])" = gsig.tree
+            val q"new $_[..$_]($_(..$args)[..$targs])" = org.scalameta.convert.auto.internal.undoMacroExpansions(g, gsig.tree)
             val metadata = args.collect{
               case g.Assign(g.Literal(g.Constant(s: String)), g.Literal(g.Constant(v))) => s -> v
               case g.Assign(g.Literal(g.Constant(s: String)), tree) => s -> tree
