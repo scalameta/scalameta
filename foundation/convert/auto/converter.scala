@@ -530,10 +530,10 @@ package object internal {
       val target = c.macroApplication.symbol.owner
       target.name.toString match {
         case "toPalladium" =>
-          val pre = c.prefix.tree.tpe
+          val pre @ q"$h.toPalladium" = c.prefix.tree
           val sym = c.macroApplication.symbol
-          val x1 = q"$DeriveInternal.undoMacroExpansions($x)"
-          convert(x1, c.weakTypeOf[In], c.weakTypeOf[Pt], allowDerived = true, allowInputDowncasts = true, allowOutputDowncasts = true, pre = pre, sym = sym)
+          val x1 = q"$DeriveInternal.undoMacroExpansions($h.g, $x)"
+          convert(x1, c.weakTypeOf[In], c.weakTypeOf[Pt], allowDerived = true, allowInputDowncasts = true, allowOutputDowncasts = true, pre = pre.tpe, sym = sym)
         case _ =>
           c.abort(c.enclosingPosition, "unknown target: " + target.name)
       }
@@ -657,19 +657,50 @@ package object internal {
   }
 
   object undoMacroExpansions {
-    def apply(tree: Any): Any = macro compileTimeImpl
-    def compileTimeImpl(c: whitebox.Context)(tree: c.Tree): c.Tree = {
+    def apply(global: Any, tree: Any): Any = macro compileTimeImpl
+    def compileTimeImpl(c: whitebox.Context)(global: c.Tree, tree: c.Tree): c.Tree = {
       import c.universe._
       val pre = tree.tpe.asInstanceOf[scala.reflect.internal.SymbolTable#Type].prefix.asInstanceOf[Type]
       val treeTpe = typeOf[scala.reflect.api.Universe].member(TypeName("Tree")).asType.toTypeIn(pre)
       val termTreeTpe = typeOf[scala.reflect.api.Universe].member(TypeName("TermTree")).asType.toTypeIn(pre)
       val actualTpe = tree.tpe
       val needsUndo = termTreeTpe.baseClasses.contains(actualTpe.typeSymbol) || actualTpe.baseClasses.contains(termTreeTpe.typeSymbol)
-      if (needsUndo) q"_root_.org.scalameta.convert.auto.internal.undoMacroExpansions.runtimeImpl($tree).asInstanceOf[$treeTpe]"
+      if (needsUndo) q"_root_.org.scalameta.convert.auto.internal.undoMacroExpansions.runtimeImpl($global, $tree).asInstanceOf[$treeTpe]"
       else tree
     }
-    def runtimeImpl(tree: Any): Any = {
-      ???
+    def runtimeImpl(global: Any, tree: Any): Any = {
+      // NOTE: partially copy/pasted from Reshape.scala in scalac
+      def undoMacroExpansions[G <: scala.tools.nsc.Global](g: G)(tree: g.Tree): g.Tree = {
+        import g._
+        import definitions._
+        val currentRun = g.currentRun
+        import currentRun.runDefinitions._
+        object transformer extends Transformer {
+          override def transform(tree: Tree): Tree = tree.attachments.get[analyzer.MacroExpansionAttachment] match {
+            case Some(analyzer.MacroExpansionAttachment(original, _)) =>
+              def mkImplicitly(tp: Type) = gen.mkNullaryCall(Predef_implicitly, List(tp)).setType(tp)
+              val sym = original.symbol
+              val result = original match {
+                // this hack is necessary until I fix implicit macros
+                // so far tag materialization is implemented by sneaky macros hidden in scala-compiler.jar
+                // hence we cannot reify references to them, because noone will be able to see them later
+                // when implicit macros are fixed, these sneaky macros will move to corresponding companion objects
+                // of, say, ClassTag or TypeTag
+                case Apply(TypeApply(_, List(tt)), _) if sym == materializeClassTag            => mkImplicitly(appliedType(ClassTagClass, tt.tpe))
+                case Apply(TypeApply(_, List(tt)), List(pre)) if sym == materializeWeakTypeTag => mkImplicitly(typeRef(pre.tpe, WeakTypeTagClass, List(tt.tpe)))
+                case Apply(TypeApply(_, List(tt)), List(pre)) if sym == materializeTypeTag     => mkImplicitly(typeRef(pre.tpe, TypeTagClass, List(tt.tpe)))
+                case _                                                                         => original
+              }
+              super.transform(result)
+            case _ =>
+              super.transform(tree)
+          }
+        }
+        transformer.transform(tree)
+      }
+      val global1 = global.asInstanceOf[scala.tools.nsc.Global]
+      val tree1 = tree.asInstanceOf[global1.Tree]
+      undoMacroExpansions[global1.type](global1)(tree1)
     }
   }
 }
