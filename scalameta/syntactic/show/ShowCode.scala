@@ -86,7 +86,10 @@ object Code {
     case t: Lit.Float    => s(t.value.toString)
     case t: Lit.Double   => s(t.value.toString)
     case t: Lit.Char     => s(t.value.toString)
-    case t: Lit.String   => s("\"", t.value, "\"")
+    case t: Lit.String   =>
+      val quote = if (t.value.contains("\n")) "\"\"\"" else "\""
+      val printee = if (t.value.contains("\n")) t.value else t.value.replace("\"", "\\\"")
+      s(quote, printee, quote)
     case t: Lit.Symbol   => s("'", t.value.name)
     case _: Lit.Null     => s("null")
     case _: Lit.Unit     => s("()")
@@ -151,10 +154,11 @@ object Code {
       }
     case t: Term.Interpolate =>
       val zipped = t.parts.zip(t.args).map {
-        case (part, id: Name) if !id.isBackquoted => s(part, "$", id.value)
-        case (part, arg)                          => s(part, "${", arg, "}")
+        case (part, id: Name) if !id.isBackquoted => s(part.value, "$", id.value)
+        case (part, arg)                          => s(part.value, "${", arg, "}")
       }
-      s(t.prefix, "\"", r(zipped), t.parts.last, "\"")
+      val quote = if (t.parts.map(_.value).exists(s => s.contains("\n") || s.contains("\""))) "\"\"\"" else "\""
+      s(t.prefix, quote, r(zipped), t.parts.last.value, quote)
 
     // Pat
     case t: Pat.Alternative  => s(t.lhs, " | ", t.rhs)
