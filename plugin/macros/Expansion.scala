@@ -248,7 +248,7 @@ trait Expansion extends scala.reflect.internal.show.Printers {
   }
 
   private def syncPropertyBags(trees: List[Tree], extra: Map[String, Any]): Unit = {
-    val merged = trees.map(_.metadata.underlying).reduce((b1, b2) => b1 ++ b2) ++ extra
+    val merged = trees.map(_.metadata.toMap).reduce((b1, b2) => b1 ++ b2) ++ extra
     trees.foreach(_.metadata ++= merged)
   }
 }

@@ -8,6 +8,7 @@ import scala.reflect.macros.whitebox
 import scala.collection.mutable
 import org.scalameta.unreachable
 import org.scalameta.invariants._
+import org.scalameta.reflection._
 
 // NOTE: a macro annotation that converts naive patmat-based converters
 // like `@converter def toPalladium(in: Any, pt: Pt): Any = in match { ... }`
@@ -675,7 +676,8 @@ package object internal {
         import definitions._
         val currentRun = g.currentRun
         import currentRun.runDefinitions._
-        object transformer extends Transformer {
+        object transformer extends Transformer with Metadata {
+          val global: g.type = g
           override def transform(tree: Tree): Tree = {
             def postprocess(original: Tree): Tree = {
               def mkImplicitly(tp: Type) = gen.mkNullaryCall(Predef_implicitly, List(tp)).setType(tp)
@@ -692,8 +694,8 @@ package object internal {
                 case _                                                                         => original
               }
             }
-            (tree.attachments.get[java.util.HashMap[String, Any]], tree.attachments.get[analyzer.MacroExpansionAttachment]) match {
-              case (Some(bag), _) if bag.containsKey("expandeeTree") => super.transform(postprocess(bag.get("expandeeTree").asInstanceOf[Tree]))
+            (tree.metadata.get("expandeeTree").map(_.asInstanceOf[Tree]), tree.attachments.get[analyzer.MacroExpansionAttachment]) match {
+              case (Some(original), _) => super.transform(postprocess(original))
               case (None, Some(analyzer.MacroExpansionAttachment(original, _))) => super.transform(postprocess(original))
               case _ => super.transform(tree)
             }

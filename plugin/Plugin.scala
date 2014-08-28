@@ -7,6 +7,7 @@ import typechecker.HijackAnalyzer
 import macros.{MacroPlugin => PalladiumMacroPlugin}
 import macros.RenumberPhase
 import persistence.PersistencePhase
+import org.scalameta.reflection.Metadata
 
 class Plugin(val global: Global) extends NscPlugin
                                     with HijackAnalyzer

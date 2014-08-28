@@ -3,7 +3,7 @@ package internal.hosts.scalacompiler
 package typechecker
 
 import scala.tools.nsc.typechecker.{Analyzer => NscAnalyzer}
-import scala.meta.internal.hosts.scalacompiler.Metadata
+import org.scalameta.reflection.Metadata
 import scala.reflect.internal.Mode
 
 trait Analyzer extends NscAnalyzer with Metadata {
@@ -14,7 +14,7 @@ trait Analyzer extends NscAnalyzer with Metadata {
     override def typed1(tree: Tree, mode: Mode, pt: Type): Tree = {
       val result = super.typed1(tree, mode, pt)
       tree match {
-        case tree: Ident => result.withMetadata("originalIdent" -> tree)
+        case tree: Ident => result.appendMetadata("originalIdent" -> tree)
         case _ => result
       }
     }
