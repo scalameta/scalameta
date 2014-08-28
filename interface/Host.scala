@@ -674,18 +674,24 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
         // TODO: what do we do if sym is a package object? do we skip it altogether or do we still emit an explicit reference to it?
         // TODO: discern unary applications via !x and via explicit x.unary_!
         // TODO: also think how to detect unary applications that have implicit arguments
-        // TODO: figure out whether the programmer actually wrote an implicit conversion or not
-        val orig = in.metadata.get("originalIdent").map(_.asInstanceOf[g.Ident])
-        orig match {
-          case Some(orig) =>
-            in.symbol.asTerm.rawcvt(orig)
+        val origIdent = in.metadata.get("originalIdent").map(_.asInstanceOf[g.Ident])
+        val origQual = in.metadata.get("originalQual").map(_.asInstanceOf[g.Tree])
+        val origName = in.metadata.get("originalName").map(_.asInstanceOf[g.Name])
+        (origIdent, origQual, origName) match {
           case _ if qual.symbol != null && qual.symbol.isImplicit =>
             // NOTE: we could match against g.ApplyToImplicitView here
             // but as the comment next to it says, sometimes the distinction between g.Apply and g.ApplyToImplicitView might get lost
             // therefore I'm going for a less robust, but more practically useful approach
             val g.treeInfo.Applied(_, _, (convertee :: Nil) :: Nil) = qual
-            g.treeCopy.Select(in, convertee, name).cvt
+            g.treeCopy.Select(in, convertee, name).removeMetadata("originalQual", "originalName").cvt
+          case (Some(origIdent), _, _) =>
+            require(origQual.isEmpty && origName.isEmpty)
+            in.symbol.asTerm.rawcvt(origIdent)
+          case (_, Some(origQual), Some(origName)) =>
+            require(origIdent.isEmpty)
+            g.treeCopy.Select(in, origQual, origName).removeMetadata("originalQual", "originalName").cvt
           case _ =>
+            require(origIdent.isEmpty && origQual.isEmpty && origName.isEmpty)
             val pname = in.symbol.asTerm.precvt(qual.tpe, in)
             if (pname.value.startsWith("unary_")) p.Term.ApplyUnary(pname.copy(value = pname.value.stripPrefix("unary_")).appendScratchpad(pname.scratchpad), qual.cvt_!)
             else p.Term.Select(qual.cvt_!, pname, isPostfix = false) // TODO: figure out isPostfix

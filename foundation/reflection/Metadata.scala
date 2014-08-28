@@ -12,11 +12,10 @@ trait Metadata {
   // since we are a compiler plugin, that's a big restriction, so we go for a stringly-typed approach
   // all tree-specific metadata produced by the plugin is stored as key-value pairs in a java.util.HashMap[String, Any]
   // why Java's HashMap and not a native Scala Map? because prior to 2.11.2 attachments don't work  with subtyping and Map has a bunch of specific subclasses
-  implicit class RichMetadataTree(tree: Tree) {
+  implicit class RichMetadataTree[T <: Tree](tree: T) {
     def metadata: Metadata = new Metadata(tree)
-    def appendMetadata(key: String, value: Any): Tree = { tree.metadata += (key -> value); tree }
-    def appendMetadata(kvps: (String, Any)*): Tree = { kvps.foreach(kvp => tree.metadata += kvp); tree }
-    def removeMetadata(key: String): Tree = { tree.metadata -= key; tree }
+    def appendMetadata(kvps: (String, Any)*): T = { kvps.foreach(kvp => tree.metadata += kvp); tree }
+    def removeMetadata(keys: String*): T = { keys.foreach(key => tree.metadata -= key); tree }
   }
 
   class Metadata(tree: Tree) {
@@ -28,10 +27,12 @@ trait Metadata {
     def get(key: String): Option[Any] = toMap.get(key)
     def getOrElse[T](key: String, value: T): T = toMap.get(key).map(_.asInstanceOf[T]).getOrElse(value)
     def update(key: String, value: Any): Unit = transform(_ + (key -> value))
-    def +=(key: String, value: Any): Unit = update(key, value)
     def +=(kvp: (String, Any)): Unit = update(kvp._1, kvp._2)
-    def -=(key: String): Unit = transform(_ - key)
     def ++=(other: Map[String, Any]): Unit = transform(_ ++ other)
     def ++=(other: Metadata): Unit = transform(_ ++ other.toMap)
+    def -=(key: String): Unit = transform(_ - key)
+    def --=(other: List[String]): Unit = transform(_ -- other)
+    def --=(other: Metadata): Unit = transform(_ -- other.toMap.keys)
+    override def toString = toMap.toString
   }
 }
