@@ -574,11 +574,12 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
       case g.Typed(expr, tpt @ g.TypeTree()) if pt <:< typeOf[p.Pat] =>
         p.Pat.Typed(expr.cvt_!, tpt.cvt)
       case in @ g.TypeApply(fn, targs) =>
-        val pfn = fn match {
+        type pScalaFn = p.Term{ type ThisType >: p.Term.Name with p.Term.Select with p.Term.ApplyUnary <: p.Term }
+        val pfn = (fn match {
           case fn @ g.Ident(_) => fn.symbol.asTerm.rawcvt(fn)
-          case fn @ g.Select(_, _) => (fn.cvt_! : p.Term.Select)
+          case fn @ g.Select(_, _) => (fn.cvt_! : p.Term)
           case _ => unreachable
-        }
+        }).asInstanceOf[pScalaFn]
         if (hasInferredTargs(targs)) pfn
         else p.Term.ApplyType(pfn, targs.map(_.asInstanceOf[g.TypeTree]).cvt)
       case in @ g.Apply(g.Select(g.New(_), g.nme.CONSTRUCTOR), _) =>
