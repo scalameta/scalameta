@@ -604,23 +604,11 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
         // TODO: undo the interpolation desugaring
         // TODO: figure out whether the programmer actually wrote `foo(...)` or it was `foo.apply(...)`
         // TODO: figure out whether the programmer actually wrote the interpolator or they were explicitly using a desugaring
+        // TODO: figure out whether the programmer actually wrote the infix application or they were calling a symbolic method using a dot
         type pScalaApply = p.Term{ type ThisType >: p.Term.Name with p.Term.Select with p.Term.Apply with p.Term.ApplyInfix with p.Term.ApplyType with p.Term.Interpolate <: p.Term }
         def loop(in: g.Tree): pScalaApply = {
-          object InfixlyApplied {
-            // TODO: replace this heuristic with precise detection of infix applications
-            def unapply(gtree: g.Tree): Option[(g.Tree, List[g.Tree], g.Tree)] = gtree match {
-              case g.treeInfo.Applied(target @ g.Select(lhs, name), targs, (arg :: Nil) :: Nil) if !name.toString.forall(c => Character.isLetter(c)) =>
-                val target1 = lhs match {
-                  case g.treeInfo.Applied(_, _, (convertee :: Nil) :: Nil) if lhs.symbol.isImplicit => g.treeCopy.Select(target, convertee, name)
-                  case _ => target
-                }
-                Some((target1, dropInferredTargs(targs), arg))
-              case _ => None
-            }
-          }
           val prelimResult = in match {
             case g.Apply(fn, args) if g.isImplicitMethodType(fn.tpe) => loop(fn)
-            case InfixlyApplied(target @ g.Select(lhs, _), targs, arg) => p.Term.ApplyInfix(lhs.cvt_!, target.symbol.asTerm.rawcvt(target), targs.cvt_!, List(arg.cvt_!))
             case g.Apply(fn, args) => p.Term.Apply(loop(fn), args.cvt_!)
             case g.TypeApply(g.Select(qual, _), targs) if in.symbol.name == g.TermName("apply") => g.treeCopy.TypeApply(in, qual, targs).cvt
             case g.Select(qual, _) if in.symbol.name == g.TermName("apply") => (qual.cvt_! : p.Term)
@@ -636,6 +624,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
                 require(args.forall(_.isInstanceOf[p.Term]))
                 p.Term.Interpolate(prefix, parts.asInstanceOf[Seq[p.Lit.String]], args.asInstanceOf[Seq[p.Term]])
               } else prelimResult
+            case Term.Apply(Term.Select(lhs: p.Term, op), args @ List(arg)) if !op.value.forall(c => Character.isLetter(c)) =>
+              Term.ApplyInfix(lhs, op, Nil, args)
             case _ =>
               prelimResult
           }
@@ -689,7 +679,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
         orig match {
           case Some(orig) =>
             in.symbol.asTerm.rawcvt(orig)
-          case _ if qual.symbol.isImplicit =>
+          case _ if qual.symbol != null && qual.symbol.isImplicit =>
             // NOTE: we could match against g.ApplyToImplicitView here
             // but as the comment next to it says, sometimes the distinction between g.Apply and g.ApplyToImplicitView might get lost
             // therefore I'm going for a less robust, but more practically useful approach
