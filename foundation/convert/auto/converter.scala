@@ -497,7 +497,9 @@ package object internal {
               q"""
                 $x match {
                   case ..$cases
-                  case in => sys.error("error converting from " + ${in.toString} + " to " + ${out.toString} + ": unexpected input " + in.getClass.toString + ": " + in)
+                  case in => sys.error(
+                    "error converting from " + ${in.toString} + " to " + ${out.toString} + ": " +
+                    "expected input of type " + ${matching.map(_.in).toString} + ", got input of " + in.getClass.toString + ": " + in)
                 }
               """
             }
@@ -516,7 +518,9 @@ package object internal {
           if (downcastees.nonEmpty) result = q"""
             $result match {
               case out: $out => out
-              case out => sys.error("error converting from " + ${in.toString} + " to " + ${out.toString} + ": unexpected output " + out.getClass.toString + ": " + out)
+              case out => sys.error(
+                "error converting from " + ${in.toString} + " to " + ${out.toString} + ": " +
+                "expected output of type " + ${out.toString} + ", got output of " + out.getClass.toString + ": " + out)
             }
           """
           atPos(x.pos)(result)
