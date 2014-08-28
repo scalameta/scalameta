@@ -257,9 +257,6 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
       // TODO: also see the other places in the code that use originals
       def hasInferredTargs(targs: List[g.Tree]) = targs.exists{ case tt: g.TypeTree => tt.original == null }
       def dropInferredTargs(targs: List[g.Tree]) = if (hasInferredTargs(targs)) Nil else targs
-      implicit class RichHelperTree(gtree: g.Tree) {
-        def origcvt: Option[p.Term.Name] = gtree.metadata.get("originalIdent").map(orig => gtree.symbol.asTerm.rawcvt(orig.asInstanceOf[g.Ident]))
-      }
     }
     import Helpers._
     val offenders = unattributedNodes(in)
@@ -665,14 +662,17 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
           }
           loop(gsym)
         }
-        type pScalaThis = p.Term.Ref{ type ThisType >: p.Term.Name with p.Term.Select with p.Term.This <: p.Term }
-        in.origcvt.getOrElse({
-          if (in.symbol.isPackageClass) {
+        val orig = in.metadata.get("originalIdent").map(_.asInstanceOf[g.Ident])
+        orig match {
+          case Some(orig) =>
+            in.symbol.asTerm.rawcvt(orig)
+          case _ if in.symbol.isPackageClass =>
             val isIdent = in.symbol.owner == g.NoSymbol || in.symbol.owner == g.rootMirror.RootClass || in.symbol.owner == g.rootMirror.EmptyPackageClass
             if (isIdent) moduleRef(in.symbol).asInstanceOf[g.Ident].cvt_! : p.Term.Name
             else moduleRef(in.symbol).asInstanceOf[g.Select].cvt_! : p.Term.Select
-          } else p.Term.This(if (qual != g.tpnme.EMPTY) Some(in.symbol.qualcvt(in)) else None)
-        }).asInstanceOf[pScalaThis]
+          case _ =>
+            p.Term.This(if (qual != g.tpnme.EMPTY) Some(in.symbol.qualcvt(in)) else None)
+        }
       case in: g.PostfixSelect =>
         unreachable
       case in @ g.Select(qual, name) =>
@@ -681,20 +681,21 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
         // TODO: discern unary applications via !x and via explicit x.unary_!
         // TODO: also think how to detect unary applications that have implicit arguments
         // TODO: figure out whether the programmer actually wrote an implicit conversion or not
-        type pScalaSelect = p.Term{ type ThisType >: p.Term.Name with p.Term.Select with p.Term.ApplyUnary <: p.Term }
-        in.origcvt.getOrElse({
-          if (qual.symbol.isImplicit) {
+        val orig = in.metadata.get("originalIdent").map(_.asInstanceOf[g.Ident])
+        orig match {
+          case Some(orig) =>
+            in.symbol.asTerm.rawcvt(orig)
+          case _ if qual.symbol.isImplicit =>
             // NOTE: we could match against g.ApplyToImplicitView here
             // but as the comment next to it says, sometimes the distinction between g.Apply and g.ApplyToImplicitView might get lost
             // therefore I'm going for a less robust, but more practically useful approach
             val g.treeInfo.Applied(_, _, (convertee :: Nil) :: Nil) = qual
             g.treeCopy.Select(in, convertee, name).cvt
-          } else {
+          case _ =>
             val pname = in.symbol.asTerm.precvt(qual.tpe, in)
             if (pname.value.startsWith("unary_")) p.Term.ApplyUnary(pname.copy(value = pname.value.stripPrefix("unary_")).appendScratchpad(pname.scratchpad), qual.cvt_!)
             else p.Term.Select(qual.cvt_!, pname, isPostfix = false) // TODO: figure out isPostfix
-          }
-        }).asInstanceOf[pScalaSelect]
+        }
       case in @ g.Ident(_) =>
         require(in.symbol.isTerm) // NOTE: see the g.Select note
         in.symbol.asTerm.rawcvt(in)
