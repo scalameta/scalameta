@@ -15,7 +15,7 @@ trait Metadata {
   implicit class RichMetadataTree(tree: Tree) {
     def metadata: Metadata = new Metadata(tree)
     def appendMetadata(key: String, value: Any): Tree = { tree.metadata += (key -> value); tree }
-    def appendMetadata(kvp: (String, Any)): Tree = { tree.metadata += kvp; tree }
+    def appendMetadata(kvps: (String, Any)*): Tree = { kvps.foreach(kvp => tree.metadata += kvp); tree }
     def removeMetadata(key: String): Tree = { tree.metadata -= key; tree }
   }
 

@@ -19,7 +19,9 @@ trait HijackAnalyzer {
     val isInteractive = global.isInstanceOf[NscInteractiveGlobal]
     val analyzer = {
       if (isInteractive) {
-        new { val global: self.global.type with NscInteractiveGlobal = self.global.asInstanceOf[self.global.type with NscInteractiveGlobal] } with PalladiumAnalyzer with NscInteractiveAnalyzer
+        new { val global: self.global.type with NscInteractiveGlobal = self.global.asInstanceOf[self.global.type with NscInteractiveGlobal] } with PalladiumAnalyzer with NscInteractiveAnalyzer {
+          override def newTyper(context: Context) = new ParadiseTyper(context) with InteractiveTyper
+        }
       } else {
         new { val global: self.global.type = self.global } with PalladiumAnalyzer {
           override protected def findMacroClassLoader(): ClassLoader = {
