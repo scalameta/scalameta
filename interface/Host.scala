@@ -713,7 +713,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         ???
       case _: g.TypTree =>
         unreachable
-      // NOTE: this derivation is ambiguous because of g.ValDef, g.TypeDef and g.Typed
+      // NOTE: this derivation is ambiguous because of at least g.ValDef, g.TypeDef and g.Typed
       // case _: g.Tree =>
       //   derive
       case g.NoPrefix =>
