@@ -60,11 +60,11 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
           case _ => tpe
         }
       }
-      private def alias(in: g.Tree): String = in match {
+      def alias(in: g.Tree): String = in match {
         case in: g.NameTree => in.name.decodedName.toString
         case g.This(name) => name.decodedName.toString
       }
-      private def isBackquoted(in: g.Tree): Boolean = (in, in.metadata.get("originalIdent").map(_.asInstanceOf[g.Ident])) match {
+      def isBackquoted(in: g.Tree): Boolean = (in, in.metadata.get("originalIdent").map(_.asInstanceOf[g.Ident])) match {
         // TODO: infer isBackquoted
         // TODO: iirc according to Denys, info in BackquotedIdentifierAttachment might be incomplete
         case (in: g.Ident, _) => in.isBackquoted || scala.meta.syntactic.parsers.keywords.contains(in.name.toString)
@@ -666,7 +666,10 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
         val orig = in.metadata.get("originalIdent").map(_.asInstanceOf[g.Ident])
         orig match {
           case Some(orig) =>
-            in.symbol.asTerm.rawcvt(orig)
+            // NOTE: g.Ident -> g.This can only happen when we're typechecking self reference
+            // this needs special treatment, as we neither in, nor in.symbol are going to help us with the conversion
+            // therefore neither rawcvt, nor precvt are useful to us, and we have to create p.Term.Name ourselves
+            p.Term.Name(alias(orig), isBackquoted(orig))
           case _ if in.symbol.isPackageClass =>
             val isIdent = in.symbol.owner == g.NoSymbol || in.symbol.owner == g.rootMirror.RootClass || in.symbol.owner == g.rootMirror.EmptyPackageClass
             if (isIdent) moduleRef(in.symbol).asInstanceOf[g.Ident].cvt_! : p.Term.Name
