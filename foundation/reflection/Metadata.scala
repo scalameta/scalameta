@@ -12,7 +12,7 @@ trait Metadata {
   // since we are a compiler plugin, that's a big restriction, so we go for a stringly-typed approach
   // all tree-specific metadata produced by the plugin is stored as key-value pairs in a java.util.HashMap[String, Any]
   // why Java's HashMap and not a native Scala Map? because prior to 2.11.2 attachments don't work  with subtyping and Map has a bunch of specific subclasses
-  implicit class RichTree(tree: Tree) {
+  implicit class RichMetadataTree(tree: Tree) {
     def metadata: Metadata = new Metadata(tree)
     def appendMetadata(key: String, value: Any): Tree = { tree.metadata += (key -> value); tree }
     def appendMetadata(kvp: (String, Any)): Tree = { tree.metadata += kvp; tree }

@@ -15,8 +15,10 @@ import org.scalameta.convert._
 import org.scalameta.convert.auto._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
+import org.scalameta.reflection._
 
-class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
+class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
+  val global: g.type = g
   import g.Quasiquote
   implicit val palladiumHost: PalladiumHost = this
 
@@ -52,7 +54,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
           self.UnMkTemplate.unapply(templ).map { case (parents, self, ctorMods, pvparamss, earlydefns, stats) => (earlydefns, parents, self, stats) }
         }
       }
-      implicit class RichType(tpe: g.Type) {
+      implicit class RichHelperType(tpe: g.Type) {
         def depoly: g.Type = tpe match {
           case g.PolyType(_, tpe) => tpe.depoly
           case _ => tpe
@@ -62,14 +64,15 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         case in: g.NameTree => in.name.decodedName.toString
         case g.This(name) => name.decodedName.toString
       }
-      private def isBackquoted(in: g.Tree): Boolean = in match {
+      private def isBackquoted(in: g.Tree): Boolean = (in, in.metadata.get("originalIdent").map(_.asInstanceOf[g.Ident])) match {
         // TODO: infer isBackquoted
-        // TODO: iirc according to Denys, info in BackquotedIdentifierAttachment is incomplete
-        case in: g.Ident => in.isBackquoted || scala.meta.syntactic.parsers.keywords.contains(in.name.toString)
-        case in: g.Select => scala.meta.syntactic.parsers.keywords.contains(in.name.toString)
+        // TODO: iirc according to Denys, info in BackquotedIdentifierAttachment might be incomplete
+        case (in: g.Ident, _) => in.isBackquoted || scala.meta.syntactic.parsers.keywords.contains(in.name.toString)
+        case (_: g.Select, Some(in)) => scala.meta.syntactic.parsers.keywords.contains(in.name.toString)
+        case (in: g.Select, None) => scala.meta.syntactic.parsers.keywords.contains(in.name.toString)
         case _ => false
       }
-      implicit class RichSymbol(gsym: g.Symbol) {
+      implicit class RichHelperSymbol(gsym: g.Symbol) {
         type pTermOrTypeName = p.Name{type ThisType >: p.Term.Name with p.Type.Name <: p.Name}
         def precvt(pre: g.Type, in: g.Tree): pTermOrTypeName = {
           gsym.rawcvt(in).appendScratchpad(pre).asInstanceOf[pTermOrTypeName]
@@ -88,7 +91,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
           p.Qual.Name(alias(in), isBackquoted(in)).appendScratchpad(gsyms)
         }
       }
-      implicit class RichSymbols(gsyms: List[g.Symbol]) {
+      implicit class RichHelperSymbols(gsyms: List[g.Symbol]) {
         def importcvt(in: g.Tree): p.Import.Name = {
           val List(gterm, gtype) = gsyms
           require(gterm != g.NoSymbol || gtype != g.NoSymbol)
@@ -97,11 +100,11 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
           p.Import.Name(alias(in), isBackquoted(in)).appendScratchpad(gsyms)
         }
       }
-      implicit class RichTermSymbol(gsym: g.TermSymbol) {
+      implicit class RichHelperTermSymbol(gsym: g.TermSymbol) {
         def precvt(pre: g.Type, in: g.Tree): p.Term.Name = (gsym: g.Symbol).precvt(pre, in).asInstanceOf[p.Term.Name]
         def rawcvt(in: g.Tree, allowNoSymbol: Boolean = false): p.Term.Name = (gsym: g.Symbol).rawcvt(in).asInstanceOf[p.Term.Name]
       }
-      implicit class RichTypeSymbol(gsym: g.TypeSymbol) {
+      implicit class RichHelperTypeSymbol(gsym: g.TypeSymbol) {
         def precvt(pre: g.Type, in: g.Tree): p.Type.Name = (gsym: g.Symbol).precvt(pre, in).asInstanceOf[p.Type.Name]
         def rawcvt(in: g.Tree): p.Type.Name = (gsym: g.Symbol).rawcvt(in).asInstanceOf[p.Type.Name]
       }
@@ -254,6 +257,9 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
       // TODO: also see the other places in the code that use originals
       def hasInferredTargs(targs: List[g.Tree]) = targs.exists{ case tt: g.TypeTree => tt.original == null }
       def dropInferredTargs(targs: List[g.Tree]) = if (hasInferredTargs(targs)) Nil else targs
+      implicit class RichHelperTree(gtree: g.Tree) {
+        def origcvt: Option[p.Term.Name] = gtree.metadata.get("originalIdent").map(orig => gtree.symbol.asTerm.rawcvt(orig.asInstanceOf[g.Ident]))
+      }
     }
     import Helpers._
     val offenders = unattributedNodes(in)
@@ -659,11 +665,14 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
           }
           loop(gsym)
         }
-        if (in.symbol.isPackageClass) {
-          val isIdent = in.symbol.owner == g.NoSymbol || in.symbol.owner == g.rootMirror.RootClass || in.symbol.owner == g.rootMirror.EmptyPackageClass
-          if (isIdent) moduleRef(in.symbol).asInstanceOf[g.Ident].cvt_! : p.Term.Name
-          else moduleRef(in.symbol).asInstanceOf[g.Select].cvt_! : p.Term.Select
-        } else p.Term.This(if (qual != g.tpnme.EMPTY) Some(in.symbol.qualcvt(in)) else None)
+        type pScalaThis = p.Term{ type ThisType >: p.Term.Name with p.Term.Select with p.Term.This <: p.Term }
+        in.origcvt.getOrElse({
+          if (in.symbol.isPackageClass) {
+            val isIdent = in.symbol.owner == g.NoSymbol || in.symbol.owner == g.rootMirror.RootClass || in.symbol.owner == g.rootMirror.EmptyPackageClass
+            if (isIdent) moduleRef(in.symbol).asInstanceOf[g.Ident].cvt_! : p.Term.Name
+            else moduleRef(in.symbol).asInstanceOf[g.Select].cvt_! : p.Term.Select
+          } else p.Term.This(if (qual != g.tpnme.EMPTY) Some(in.symbol.qualcvt(in)) else None)
+        }).asInstanceOf[pScalaThis]
       case in: g.PostfixSelect =>
         unreachable
       case in @ g.Select(qual, name) =>
@@ -672,17 +681,20 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
         // TODO: discern unary applications via !x and via explicit x.unary_!
         // TODO: also think how to detect unary applications that have implicit arguments
         // TODO: figure out whether the programmer actually wrote an implicit conversion or not
-        if (qual.symbol.isImplicit) {
-          // NOTE: we could match against g.ApplyToImplicitView here
-          // but as the comment next to it says, sometimes the distinction between g.Apply and g.ApplyToImplicitView might get lost
-          // therefore I'm going for a less robust, but more practically useful approach
-          val g.treeInfo.Applied(_, _, (convertee :: Nil) :: Nil) = qual
-          g.treeCopy.Select(in, convertee, name).cvt
-        } else {
-          val pname = in.symbol.asTerm.precvt(qual.tpe, in)
-          if (pname.value.startsWith("unary_")) p.Term.ApplyUnary(pname.copy(value = pname.value.stripPrefix("unary_")).appendScratchpad(pname.scratchpad), qual.cvt_!)
-          else p.Term.Select(qual.cvt_!, pname, isPostfix = false) // TODO: figure out isPostfix
-        }
+        type pScalaSelect = p.Term{ type ThisType >: p.Term.Name with p.Term.Select with p.Term.ApplyUnary <: p.Term }
+        in.origcvt.getOrElse({
+          if (qual.symbol.isImplicit) {
+            // NOTE: we could match against g.ApplyToImplicitView here
+            // but as the comment next to it says, sometimes the distinction between g.Apply and g.ApplyToImplicitView might get lost
+            // therefore I'm going for a less robust, but more practically useful approach
+            val g.treeInfo.Applied(_, _, (convertee :: Nil) :: Nil) = qual
+            g.treeCopy.Select(in, convertee, name).cvt
+          } else {
+            val pname = in.symbol.asTerm.precvt(qual.tpe, in)
+            if (pname.value.startsWith("unary_")) p.Term.ApplyUnary(pname.copy(value = pname.value.stripPrefix("unary_")).appendScratchpad(pname.scratchpad), qual.cvt_!)
+            else p.Term.Select(qual.cvt_!, pname, isPostfix = false) // TODO: figure out isPostfix
+          }
+        }).asInstanceOf[pScalaSelect]
       case in @ g.Ident(_) =>
         require(in.symbol.isTerm) // NOTE: see the g.Select note
         in.symbol.asTerm.rawcvt(in)
