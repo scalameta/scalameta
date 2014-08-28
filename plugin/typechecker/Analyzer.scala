@@ -230,15 +230,18 @@ trait Analyzer extends NscAnalyzer with Metadata {
       // I would gladly do away with the copy/paste, which is not plain ugly, but also imposes high maintainability tax,
       // but I can't do that, because `typedSelect` needs to remember the original qualifier, and I can't override it, because it's a local method.
       // ========================
-      val result = tree match {
-        case tree @ Select(qual, name) => typedSelectOrSuperCall(tree)
-        case _ => super.typed1(tree, mode, pt)
-      }
-      // TODO: wat do these methods even mean, and how do they differ?
-      if (result.isErroneous || result.isErrorTyped) result
-      else tree match {
-        case Ident(_) => result.appendMetadata("originalIdent" -> tree)
-        case _ => result
+      if (isPastTyper) super.typed1(tree, mode, pt)
+      else {
+        val result = tree match {
+          case tree @ Select(qual, name) => typedSelectOrSuperCall(tree)
+          case _ => super.typed1(tree, mode, pt)
+        }
+        // TODO: wat do these methods even mean, and how do they differ?
+        if (result.isErroneous || result.isErrorTyped) result
+        else tree match {
+          case Ident(_) => result.appendMetadata("originalIdent" -> tree)
+          case _ => result
+        }
       }
     }
   }
