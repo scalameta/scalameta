@@ -64,7 +64,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost {
       }
       private def isBackquoted(in: g.Tree): Boolean = in match {
         // TODO: infer isBackquoted
-        // TODO: iirc according to Denys, even BackquotedIdentifierAttachment sometimes lies
+        // TODO: iirc according to Denys, info in BackquotedIdentifierAttachment is incomplete
         case in: g.Ident => in.isBackquoted || scala.meta.syntactic.parsers.keywords.contains(in.name.toString)
         case in: g.Select => scala.meta.syntactic.parsers.keywords.contains(in.name.toString)
         case _ => false
