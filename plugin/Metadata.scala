@@ -1,9 +1,10 @@
 package scala.meta
 package internal.hosts.scalacompiler
 
-import scala.meta.internal.hosts.scalacompiler.{Plugin => PalladiumPlugin}
+import scala.tools.nsc.Global
 
-trait Metadata { self: PalladiumPlugin =>
+trait Metadata {
+  val global: Global
   import global._
   import definitions._
 
@@ -14,6 +15,8 @@ trait Metadata { self: PalladiumPlugin =>
   // why Java's HashMap and not a native Scala Map? because prior to 2.11.2 attachments don't work  with subtyping and Map has a bunch of specific subclasses
   implicit class RichTree(tree: Tree) {
     def metadata: Metadata = new Metadata(tree)
+    def withMetadata(key: String, value: Any): Tree = { tree.metadata += (key -> value); tree }
+    def withMetadata(kvp: (String, Any)): Tree = { tree.metadata += kvp; tree }
   }
 
   class Metadata(tree: Tree) {
@@ -22,6 +25,7 @@ trait Metadata { self: PalladiumPlugin =>
     def transform(f: Map[String, Any] => Map[String, Any]): Unit = tree.updateAttachment(new java.util.HashMap[String, Any](mapAsJavaMap(f(underlying))))
     def apply(key: String): Any = underlying(key)
     def get(key: String): Any = underlying.get(key)
+    def getOrElse[T](key: String, value: T): T = underlying.get(key).map(_.asInstanceOf[T]).getOrElse(value)
     def update(key: String, value: Any): Unit = transform(_ + (key -> value))
     def +=(key: String, value: Any): Unit = update(key, value)
     def +=(kvp: (String, Any)): Unit = update(kvp._1, kvp._2)

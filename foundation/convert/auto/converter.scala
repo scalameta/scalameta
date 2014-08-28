@@ -693,7 +693,7 @@ package object internal {
               }
             }
             (tree.attachments.get[java.util.HashMap[String, Any]], tree.attachments.get[analyzer.MacroExpansionAttachment]) match {
-              case (Some(bag), _) => super.transform(postprocess(bag.get("expandeeTree").asInstanceOf[Tree]))
+              case (Some(bag), _) if bag.containsKey("expandeeTree") => super.transform(postprocess(bag.get("expandeeTree").asInstanceOf[Tree]))
               case (None, Some(analyzer.MacroExpansionAttachment(original, _))) => super.transform(postprocess(original))
               case _ => super.transform(tree)
             }
