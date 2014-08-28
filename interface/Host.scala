@@ -665,7 +665,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
           }
           loop(gsym)
         }
-        type pScalaThis = p.Term{ type ThisType >: p.Term.Name with p.Term.Select with p.Term.This <: p.Term }
+        type pScalaThis = p.Term.Ref{ type ThisType >: p.Term.Name with p.Term.Select with p.Term.This <: p.Term }
         in.origcvt.getOrElse({
           if (in.symbol.isPackageClass) {
             val isIdent = in.symbol.owner == g.NoSymbol || in.symbol.owner == g.rootMirror.RootClass || in.symbol.owner == g.rootMirror.EmptyPackageClass
