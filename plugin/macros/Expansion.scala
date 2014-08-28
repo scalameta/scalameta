@@ -248,31 +248,7 @@ trait Expansion extends scala.reflect.internal.show.Printers {
   }
 
   private def syncPropertyBags(trees: List[Tree], extra: Map[String, Any]): Unit = {
-    // NOTE: this code was necessary when I tried to attach Map[String, Any] to trees
-    // somehow attachments.get, updateAttachment, etc don't work with subtyping and require exact types to match
-    // hence, if you attach a map with a single element, you won't be able to get it back via attachments.get[Map],
-    // because instances of Map are specialized for small number of elements (you'll get back Map.Map1)
-    // import scala.reflect.{classTag, ClassTag}
-    // import scala.reflect.macros.Attachments
-    // implicit class RichAttachments(att: Attachments { type Pos = Position }) {
-    //   def getsub[T: ClassTag]: Option[T] = {
-    //     att.all.filter(x => classTag[T].runtimeClass.isAssignableFrom(x.getClass)).toList match {
-    //       case Nil => None
-    //       case unique :: Nil => Some(unique.asInstanceOf[T])
-    //       case multiple => sys.error(s"too many matches for ${classTag[T].runtimeClass}: $multiple")
-    //     }
-    //   }
-    //   def updatesub[T: ClassTag](x: T): Attachments { type Pos = Position } = {
-    //     val att1 = getsub[T].map(x => att.remove(ClassTag(x.getClass))).getOrElse(att)
-    //     att1.update(x)
-    //   }
-    // }
-    // def getPropertyBag(tree: Tree) = tree.attachments.getsub[Map[String, Any]].getOrElse(Map[String, Any]())
-    // val merged: Map[String, Any] = trees.map(getPropertyBag).reduce((b1, b2) => b1 ++ b2) ++ extra
-    // trees.foreach(tree => tree.setAttachments(tree.attachments.updatesub(merged)))
-    import scala.collection.JavaConversions._
-    def getPropertyBag(tree: Tree) = tree.attachments.get[java.util.HashMap[String, Any]].map(_.toMap).getOrElse(Map[String, Any]())
-    val merged = trees.map(getPropertyBag).reduce((b1, b2) => b1 ++ b2) ++ extra
-    trees.foreach(_.updateAttachment(new java.util.HashMap[String, Any](mapAsJavaMap(merged))))
+    val merged = trees.map(_.metadata.underlying).reduce((b1, b2) => b1 ++ b2) ++ extra
+    trees.foreach(_.metadata ++= merged)
   }
 }
