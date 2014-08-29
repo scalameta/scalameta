@@ -683,26 +683,34 @@ package object internal {
         object transformer extends Transformer with Metadata {
           val global: g.type = g
           override def transform(tree: Tree): Tree = {
-            def postprocess(original: Tree): Tree = {
-              // TODO: remember macro expansions here, because the host will need to convert and attach them to expandee's attrs
-              def mkImplicitly(tp: Type) = gen.mkNullaryCall(Predef_implicitly, List(tp)).setType(tp)
-              val sym = original.symbol
-              original match {
-                // this hack is necessary until I fix implicit macros
-                // so far tag materialization is implemented by sneaky macros hidden in scala-compiler.jar
-                // hence we cannot reify references to them, because noone will be able to see them later
-                // when implicit macros are fixed, these sneaky macros will move to corresponding companion objects
-                // of, say, ClassTag or TypeTag
-                case Apply(TypeApply(_, List(tt)), _) if sym == materializeClassTag            => mkImplicitly(appliedType(ClassTagClass, tt.tpe))
-                case Apply(TypeApply(_, List(tt)), List(pre)) if sym == materializeWeakTypeTag => mkImplicitly(typeRef(pre.tpe, WeakTypeTagClass, List(tt.tpe)))
-                case Apply(TypeApply(_, List(tt)), List(pre)) if sym == materializeTypeTag     => mkImplicitly(typeRef(pre.tpe, TypeTagClass, List(tt.tpe)))
-                case _                                                                         => original
-              }
-            }
-            (tree.metadata.get("expandeeTree").map(_.asInstanceOf[Tree]), tree.attachments.get[analyzer.MacroExpansionAttachment]) match {
-              case (Some(original), _) => super.transform(postprocess(original))
-              case (None, Some(analyzer.MacroExpansionAttachment(original, _))) => super.transform(postprocess(original))
-              case _ => super.transform(tree)
+            // TODO: we need to be more systematic about undoing desugarings
+            // in fact, I think we should replace undoMacroExpansions with something like undoDesugarings
+            // however, that's not the task for today, and today I want to submit a pull request that handles all the tests completely
+            // therefore I'm just dropping this here for the (short) time being
+            tree.metadata.get("originalWhitebox").map(_.asInstanceOf[Tree]) match {
+              case Some(original) => transform(original)
+              case _ =>
+                def postprocess(original: Tree): Tree = {
+                  // TODO: remember macro expansions here, because the host will need to convert and attach them to expandee's attrs
+                  def mkImplicitly(tp: Type) = gen.mkNullaryCall(Predef_implicitly, List(tp)).setType(tp)
+                  val sym = original.symbol
+                  original match {
+                    // this hack is necessary until I fix implicit macros
+                    // so far tag materialization is implemented by sneaky macros hidden in scala-compiler.jar
+                    // hence we cannot reify references to them, because noone will be able to see them later
+                    // when implicit macros are fixed, these sneaky macros will move to corresponding companion objects
+                    // of, say, ClassTag or TypeTag
+                    case Apply(TypeApply(_, List(tt)), _) if sym == materializeClassTag            => mkImplicitly(appliedType(ClassTagClass, tt.tpe))
+                    case Apply(TypeApply(_, List(tt)), List(pre)) if sym == materializeWeakTypeTag => mkImplicitly(typeRef(pre.tpe, WeakTypeTagClass, List(tt.tpe)))
+                    case Apply(TypeApply(_, List(tt)), List(pre)) if sym == materializeTypeTag     => mkImplicitly(typeRef(pre.tpe, TypeTagClass, List(tt.tpe)))
+                    case _                                                                         => original
+                  }
+                }
+                (tree.metadata.get("expandeeTree").map(_.asInstanceOf[Tree]), tree.attachments.get[analyzer.MacroExpansionAttachment]) match {
+                  case (Some(original), _) => super.transform(postprocess(original))
+                  case (None, Some(analyzer.MacroExpansionAttachment(original, _))) => super.transform(postprocess(original))
+                  case _ => super.transform(tree)
+                }
             }
           }
         }
