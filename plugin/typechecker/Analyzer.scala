@@ -6,7 +6,7 @@ import scala.tools.nsc.typechecker.{Analyzer => NscAnalyzer}
 import org.scalameta.reflection.Metadata
 import scala.reflect.internal.Mode
 import scala.reflect.internal.Mode._
-import scala.reflect.internal.util.Statistics
+import scala.reflect.internal.util.{Statistics, ListOfNil}
 import scala.tools.nsc.typechecker.TypersStats._
 
 trait Analyzer extends NscAnalyzer with Metadata {
@@ -19,6 +19,166 @@ trait Analyzer extends NscAnalyzer with Metadata {
   class ParadiseTyper(context: Context) extends Typer(context) {
     import infer._
     import TyperErrorGen._
+    private def typedParentType(encodedtpt: Tree, templ: Template, inMixinPosition: Boolean): Tree = {
+      val app = treeInfo.dissectApplied(encodedtpt)
+      val (treeInfo.Applied(core, _, argss), decodedtpt) = ((app, app.callee))
+      val argssAreTrivial = argss == Nil || argss == ListOfNil
+
+      // we cannot avoid cyclic references with `initialize` here, because when type macros arrive,
+      // we'll have to check the probe for isTypeMacro anyways.
+      // therefore I think it's reasonable to trade a more specific "inherits itself" error
+      // for a generic, yet understandable "cyclic reference" error
+      var probe = typedTypeConstructor(core.duplicate).tpe.typeSymbol
+      if (probe == null) probe = NoSymbol
+      probe.initialize
+
+      if (probe.isTrait || inMixinPosition) {
+        if (!argssAreTrivial) {
+          if (probe.isTrait) ConstrArgsInParentWhichIsTraitError(encodedtpt, probe)
+          else () // a class in a mixin position - this warrants an error in `validateParentClasses`
+                  // therefore here we do nothing, e.g. don't check that the # of ctor arguments
+                  // matches the # of ctor parameters or stuff like that
+        }
+        typedType(decodedtpt)
+      } else {
+        val supertpt = typedTypeConstructor(decodedtpt)
+        val supertparams = if (supertpt.hasSymbolField) supertpt.symbol.typeParams else Nil
+        def inferParentTypeArgs: Tree = {
+          typedPrimaryConstrBody(templ) {
+            val supertpe = PolyType(supertparams, appliedType(supertpt.tpe, supertparams map (_.tpeHK)))
+            val supercall = New(supertpe, mmap(argss)(_.duplicate))
+            val treeInfo.Applied(Select(ctor, nme.CONSTRUCTOR), _, _) = supercall
+            ctor setType supertpe // this is an essential hack, otherwise it will occasionally fail to typecheck
+            atPos(supertpt.pos.focus)(supercall)
+          } match {
+            case EmptyTree => MissingTypeArgumentsParentTpeError(supertpt); supertpt
+            // NOTE: this is a meaningful difference from the code in Typers.scala
+            //-case tpt       => TypeTree(tpt.tpe) setPos supertpt.pos  // SI-7224: don't .focus positions of the TypeTree of a parent that exists in source
+            case tpt       => TypeTree(tpt.tpe) setOriginal supertpt setPos supertpt.pos  // SI-7224: don't .focus positions of the TypeTree of a parent that exists in source
+          }
+        }
+
+        val supertptWithTargs = if (supertparams.isEmpty || context.unit.isJava) supertpt else inferParentTypeArgs
+
+        // this is the place where we tell the typer what argss should be used for the super call
+        // if argss are nullary or empty, then (see the docs for `typedPrimaryConstrBody`)
+        // the super call dummy is already good enough, so we don't need to do anything
+        if (argssAreTrivial) supertptWithTargs else supertptWithTargs updateAttachment SuperArgsAttachment(argss)
+      }
+    }
+    private def normalizeFirstParent(parents: List[Tree]): List[Tree] = {
+      @annotation.tailrec
+      def explode0(parents: List[Tree]): List[Tree] = {
+        val supertpt :: rest = parents // parents is always non-empty here - it only grows
+        if (supertpt.tpe.typeSymbol == AnyClass) {
+          supertpt setType AnyRefTpe
+          parents
+        } else if (treeInfo isTraitRef supertpt) {
+          val supertpt1  = typedType(supertpt)
+          def supersuper = TypeTree(supertpt1.tpe.firstParent) setPos supertpt.pos.focus
+          if (supertpt1.isErrorTyped) rest
+          else explode0(supersuper :: supertpt1 :: rest)
+        } else parents
+      }
+
+      def explode(parents: List[Tree]) =
+        if (treeInfo isTraitRef parents.head) explode0(parents)
+        else parents
+
+      if (parents.isEmpty) Nil else explode(parents)
+    }
+    private def fixDuplicateSyntheticParents(parents: List[Tree]): List[Tree] = parents match {
+      case Nil      => Nil
+      case x :: xs  =>
+        val sym = x.symbol
+        x :: fixDuplicateSyntheticParents(
+          if (isPossibleSyntheticParent(sym)) xs filterNot (_.symbol == sym)
+          else xs
+        )
+    }
+    override def typedParentTypes(templ: Template): List[Tree] = templ.parents match {
+      case Nil =>
+        // NOTE: this is a meaningful difference from the code in Typers.scala
+        //-List(atPos(templ.pos)(TypeTree(AnyRefTpe)))
+        templ.appendMetadata("originalParents" -> Nil)
+        List(atPos(templ.pos)(TypeTree(AnyRefTpe)))
+      case first :: rest =>
+        try {
+          // NOTE: this is a meaningful difference from the code in Typers.scala
+          //-val supertpts = fixDuplicateSyntheticParents(normalizeFirstParent(
+          //-  typedParentType(first, templ, inMixinPosition = false) +:
+          //-  (rest map (typedParentType(_, templ, inMixinPosition = true)))))
+          val supertpts = fixDuplicateSyntheticParents(normalizeFirstParent({
+            val result =
+              typedParentType(first, templ, inMixinPosition = false) +:
+              (rest map (typedParentType(_, templ, inMixinPosition = true)))
+            // TODO: using isPossibleSyntheticParent is not 100% precise, because the user could've specified the parent themselves
+            // however this situation is extremely rare, so I'm letting it slip for the time being
+            val originals = if (context.owner.isCase) result.filter(p => !isPossibleSyntheticParent(p.symbol)) else result
+            templ.appendMetadata("originalParents" -> result)
+            result
+          }))
+
+          // if that is required to infer the targs of a super call
+          // typedParentType calls typedPrimaryConstrBody to do the inferring typecheck
+          // as a side effect, that typecheck also assigns types to the fields underlying early vals
+          // however if inference is not required, the typecheck doesn't happen
+          // and therefore early fields have their type trees not assigned
+          // here we detect this situation and take preventive measures
+          if (treeInfo.hasUntypedPreSuperFields(templ.body))
+            typedPrimaryConstrBody(templ)(EmptyTree)
+
+          supertpts mapConserve (tpt => checkNoEscaping.privates(context.owner, tpt))
+        }
+        catch {
+          case ex: TypeError =>
+            // fallback in case of cyclic errors
+            // @H none of the tests enter here but I couldn't rule it out
+            // upd. @E when a definition inherits itself, we end up here
+            // because `typedParentType` triggers `initialize` for parent types symbols
+            log("Type error calculating parents in template " + templ)
+            log("Error: " + ex)
+            ParentTypesError(templ, ex)
+            List(TypeTree(AnyRefTpe))
+        }
+    }
+    private def typedPrimaryConstrBody(templ: Template)(actualSuperCall: => Tree): Tree =
+        treeInfo.firstConstructor(templ.body) match {
+        case ctor @ DefDef(_, _, _, vparamss, _, cbody @ Block(cstats, cunit)) =>
+            val (preSuperStats, superCall) = {
+              val (stats, rest) = cstats span (x => !treeInfo.isSuperConstrCall(x))
+              (stats map (_.duplicate), if (rest.isEmpty) EmptyTree else rest.head.duplicate)
+            }
+          val superCall1 = (superCall match {
+            case global.pendingSuperCall => actualSuperCall
+            case EmptyTree => EmptyTree
+          }) orElse cunit
+          val cbody1 = treeCopy.Block(cbody, preSuperStats, superCall1)
+          val clazz = context.owner
+            assert(clazz != NoSymbol, templ)
+          val cscope = context.outer.makeNewScope(ctor, context.outer.owner)
+          val cbody2 = { // called both during completion AND typing.
+            val typer1 = newTyper(cscope)
+            // XXX: see about using the class's symbol....
+            clazz.unsafeTypeParams foreach (sym => typer1.context.scope.enter(sym))
+            typer1.namer.enterValueParams(vparamss map (_.map(_.duplicate)))
+            typer1.typed(cbody1)
+            }
+
+            val preSuperVals = treeInfo.preSuperFields(templ.body)
+            if (preSuperVals.isEmpty && preSuperStats.nonEmpty)
+            devWarning("Wanted to zip empty presuper val list with " + preSuperStats)
+            else
+            map2(preSuperStats, preSuperVals)((ldef, gdef) => gdef.tpt setType ldef.symbol.tpe)
+
+          if (superCall1 == cunit) EmptyTree
+          else cbody2 match {
+            case Block(_, expr) => expr
+            case tree => tree
+          }
+          case _ =>
+          EmptyTree
+        }
     private def makeAccessible(tree: Tree, sym: Symbol, pre: Type, site: Tree): (Tree, Type) = {
       if (context.isInPackageObject(sym, pre.typeSymbol)) {
         if (pre.typeSymbol == ScalaPackageClass && sym.isTerm) {
