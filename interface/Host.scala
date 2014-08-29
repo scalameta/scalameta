@@ -167,7 +167,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
         val mothershipCore = g.gen.mkAttributedRef(g.currentRun.runDefinitions.Predef_classOf).asInstanceOf[g.Select]
         val scratchpad = g.TypeApply(mothershipCore, List(g.TypeTree(gtype))).setType(g.appliedType(mothershipCore.tpe, gtype))
         // TODO: track the original TypTree here, so that we don't have to approximate with ptpe
-        p.Term.ApplyType(mothershipCore.cvt, List(ptpe(gtype))).appendScratchpad(scratchpad)
+        p.Term.ApplyType(mothershipCore.cvt_!, List(ptpe(gtype))).appendScratchpad(scratchpad)
       }
       type pScalaConst = p.Term{type ThisType >: p.Lit.Null with p.Lit.Unit with p.Lit.Bool with p.Lit.Int with p.Lit.Long with p.Lit.Float with p.Lit.Double with p.Lit.String with p.Lit.Char with p.Term.ApplyType <: p.Term}
       def pconst(gconst: g.Constant): pScalaConst = (gconst.value match {
@@ -797,7 +797,6 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
       case in: g.PostfixSelect =>
         unreachable
       case in @ g.Select(qual, name) =>
-        require(in.symbol.isTerm) // NOTE: typename selections are impossible, because all TypTrees have already been converted to TypeTrees
         // TODO: what do we do if sym is a package object? do we skip it altogether or do we still emit an explicit reference to it?
         // TODO: discern unary applications via !x and via explicit x.unary_!
         // TODO: also think how to detect unary applications that have implicit arguments
@@ -806,20 +805,18 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
         val origName = in.metadata.get("originalName").map(_.asInstanceOf[g.Name])
         (origIdent, origQual, origName) match {
           case (Some(origIdent), _, _) =>
-            require(origQual.isEmpty && origName.isEmpty)
-            in.symbol.asTerm.rawcvt(origIdent)
+            in.symbol.rawcvt(origIdent)
           case (_, Some(origQual), Some(origName)) =>
-            require(origIdent.isEmpty)
             g.treeCopy.Select(in, origQual, origName).removeMetadata("originalQual", "originalName").cvt
-          case _ =>
-            require(origIdent.isEmpty && origQual.isEmpty && origName.isEmpty)
+          case _ if name.isTermName =>
             val pname = in.symbol.asTerm.precvt(qual.tpe, in)
             if (pname.value.startsWith("unary_")) p.Term.ApplyUnary(pname.copy(value = pname.value.stripPrefix("unary_")).appendScratchpad(pname.scratchpad), qual.cvt_!)
             else p.Term.Select(qual.cvt_!, pname, isPostfix = false) // TODO: figure out isPostfix
+          case _ if name.isTypeName =>
+            p.Type.Select(qual.cvt_!, in.symbol.asType.precvt(qual.tpe, in))
         }
       case in @ g.Ident(_) =>
-        require(in.symbol.isTerm) // NOTE: see the g.Select note
-        in.symbol.asTerm.rawcvt(in)
+        in.symbol.rawcvt(in)
       case g.ReferenceToBoxed(_) =>
         ???
       case g.Literal(const) =>
@@ -837,7 +834,10 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
       case g.SelectFromArray(_, _, _) =>
         unreachable
       case in @ g.TypeTree() =>
-        ??? : pScalaType
+        require(in.original != null)
+        // TODO: a pattern match on a refinement type is unchecked
+        // in.original.cvt_! : pScalaType
+        (in.original.cvt_! : p.Type).asInstanceOf[pScalaType]
       case in @ g.TypeTreeWithDeferredRefCheck() =>
         // NOTE: I guess, we can do deferred checks here as the converter isn't supposed to run in the middle of typer
         // we will have to revisit this in case we decide to support whitebox macros in Palladium
