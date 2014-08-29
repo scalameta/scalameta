@@ -148,6 +148,7 @@ class ConverterMacros(val c: whitebox.Context) {
               out.appendScratchpad(in)
             } catch {
               case err: _root_.java.lang.AssertionError => logFailure(); throw err
+              case err: _root_.org.scalameta.UnreachableError.type => logFailure(); throw err
               case ex: _root_.scala.Exception => logFailure(); throw ex
             }
           }
