@@ -675,6 +675,7 @@ package object internal {
     def runtimeImpl(global: Any, tree: Any): Any = {
       // NOTE: partially copy/pasted from Reshape.scala in scalac
       // NOTE: we can't undo macro expansions in annotation arguments, because after typechecking those are stored on symbols and we can't change those
+      // therefore undoMacroExpansions for annotation arguments is called from within a host, when it takes the contents of symbols and converts them to Palladium trees
       def undoMacroExpansions[G <: scala.tools.nsc.Global](g: G)(tree: g.Tree): g.Tree = {
         import g._
         import definitions._
@@ -684,6 +685,7 @@ package object internal {
           val global: g.type = g
           override def transform(tree: Tree): Tree = {
             def postprocess(original: Tree): Tree = {
+              // TODO: remember macro expansions here, because the host will need to convert and attach them to expandee's attrs
               def mkImplicitly(tp: Type) = gen.mkNullaryCall(Predef_implicitly, List(tp)).setType(tp)
               val sym = original.symbol
               original match {
