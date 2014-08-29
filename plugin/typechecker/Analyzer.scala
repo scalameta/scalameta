@@ -115,8 +115,9 @@ trait Analyzer extends NscAnalyzer with Metadata {
             // TODO: using isPossibleSyntheticParent is not 100% precise, because the user could've specified the parent themselves
             // this can happen in just one case to the best of my knowledge: with explicit inheritance from synthetic parents of `case`
             // however these situations are extremely rare, so I'm letting it slip for the time being
-            val originals = if (context.owner.isCase) result.filter(p => !isPossibleSyntheticParent(p.symbol)) else result
-            templ.appendMetadata("originalParents" -> result)
+            var originals = if (context.owner.isCase) result.filter(p => !isPossibleSyntheticParent(p.symbol)) else result
+            originals = originals.filter(_.tpe.typeSymbol != ObjectClass)
+            templ.appendMetadata("originalParents" -> originals)
             result
           }))
 
