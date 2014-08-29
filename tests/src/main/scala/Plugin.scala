@@ -17,7 +17,7 @@ class Plugin(val global: Global) extends NscPlugin with Metadata { self =>
 
     override def newPhase(prev: Phase): StdPhase = new StdPhase(prev) {
       import analyzer._
-      override def apply(unit: CompilationUnit) {
+      override def apply(unit: CompilationUnit): Unit = {
         unit.body.foreach(tree => {
           if (hasMacroExpansionAttachment(tree)) {
             tree.metadata.toOption match {
