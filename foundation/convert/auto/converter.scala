@@ -264,10 +264,8 @@ package object internal {
           var isValid = true
           clauses.foreach(clause => {
             val in = clause.pat.tpe.typeSymbol.asClass
-            val inIsTreeOrType = in.baseClasses.exists(sym => sym.fullName == "scala.reflect.internal.Trees.Tree" ||
-                                                              sym.fullName == "scala.reflect.internal.Types.Type")
-            if (!inIsTreeOrType) {
-              c.error(clause.pos, s"must only convert from Scala trees and types, found $in")
+            if (!in.baseClasses.exists(sym => sym.fullName == "scala.reflect.internal.Trees.Tree")) {
+              c.error(clause.pos, s"must only convert from Scala trees, found $in")
               isValid = false
             }
           })
@@ -298,7 +296,7 @@ package object internal {
             case _ => NoType
           }
           def sortOfAllSubclassesOf(tpe: Type): List[Symbol] = root.members.toList.flatMap(sym => if ((ref(sym) <:< tpe) && !sym.isAbstract) Some(sym) else None)
-          val expected = sortOfAllSubclassesOf(typeOf[scala.reflect.internal.Trees#Tree]) ++ sortOfAllSubclassesOf(typeOf[scala.reflect.internal.Types#Type])
+          val expected = sortOfAllSubclassesOf(typeOf[scala.reflect.internal.Trees#Tree])
           val inputs = clauses.map(_.pat.tpe).map(tpe => tpe.termSymbol.orElse(tpe.typeSymbol)).map(sym => root.member(sym.name))
           val unmatched = expected.filter(exp => !inputs.exists(pat => ref(exp) <:< ref(pat)))
           if (unmatched.nonEmpty) c.error(c.enclosingPosition, "@converter is not exhaustive in its inputs; missing: " + unmatched)

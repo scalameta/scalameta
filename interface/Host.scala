@@ -36,11 +36,11 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
   def overriding(member: Member): Seq[Member] = ???
   def erasure(tpe: Type): Type = ???
 
-  // NOTE: we only handle trees and types
+  // NOTE: we only handle trees, not types or symbols
   // NOTE: can't use MemberDef.mods, because they get their annotations erased and moved to Symbol.annotations during typechecking
   // NOTE: can't convert symbols, because that's quite unsafe: a lot of symbols don't make sense without prefixes
   // NOTE: careful use of NameTree.name, because it can lie (renaming imports) and it doesn't have enough semantic information (unlike the underlying symbol)
-  // TODO: remember positions. actually, in scalac they are quite accurate, so it would be a shame to discard them
+  // TODO: remember positions. actually, in scalac they are almost accurate, so it would be a shame to discard them
   @converter def toPalladium(in: Any, pt: Pt): Any = {
     object Helpers extends g.ReificationSupportImpl { self =>
       // implicit class RichPalladiumTree[T <: p.Tree](val ptree: T) {
@@ -152,7 +152,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
         // TODO: infer the difference between @foo and @foo()
         // TODO: support classfile annotation args
         val g.AnnotationInfo(gatp, gargs, gassocs) = gann
-        p.Mod.Annot(gatp.cvt, List(gargs.map(garg => org.scalameta.convert.auto.internal.undoMacroExpansions(g, garg)).cvt_!))
+        // TODO: need an original for AnnotationInfo.atp
+        p.Mod.Annot(ptpe(gatp), List(gargs.map(garg => org.scalameta.convert.auto.internal.undoMacroExpansions(g, garg)).cvt_!))
       }
       def panns(ganns: List[g.AnnotationInfo]): Seq[p.Mod.Annot] = {
         ganns.filter(gann => {
@@ -162,48 +163,12 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
           !isOldMacroSignature && !isNewMacroSignature
         }).map(pann)
       }
-      def pbounds(gtpe: g.Type): p.Aux.TypeBounds = gtpe match {
-        case g.TypeBounds(glo, ghi) =>
-          // TODO: infer which of the bounds were specified explicitly by the user
-          (glo =:= g.typeOf[Nothing], ghi =:= g.typeOf[Any]) match {
-            case (false, false) => p.Aux.TypeBounds(lo = glo.cvt, hi = ghi.cvt)
-            case (true, false) => p.Aux.TypeBounds(hi = ghi.cvt)
-            case (false, true) => p.Aux.TypeBounds(lo = glo.cvt)
-            case (true, true) => p.Aux.TypeBounds()
-          }
-        case _ =>
-          unreachable
-      }
-      private def ptparam(gsym: g.Symbol): p.TypeParam = {
-        // TODO: undo desugarings of context and view bounds
-        require(gsym.isType)
-        val isAnonymous = gsym.name == g.tpnme.WILDCARD
-        if (isAnonymous) p.TypeParam.Anonymous(pmods(gsym), ptparams(gsym.typeParams), Nil, Nil, pbounds(gsym.info.depoly))
-        else p.TypeParam.Named(pmods(gsym), gsym.asType.rawcvt(g.Ident(gsym)), ptparams(gsym.typeParams), Nil, Nil, pbounds(gsym.info.depoly))
-      }
-      def ptparams(gsyms: List[g.Symbol]): Seq[p.TypeParam] = gsyms.map(ptparam)
-      def pvparamtpe(gtpe: g.Type): p.Param.Type = {
-        val ptpe = (gtpe.cvt: p.Type)
-        if (g.definitions.isRepeatedParamType(gtpe)) p.Param.Type.Repeated(ptpe)
-        else if (g.definitions.isByNameParamType(gtpe)) p.Param.Type.ByName(ptpe)
-        else ptpe
-      }
-      private def pvparam(gsym: g.Symbol): p.Param.Named = {
-        require(gsym.isTerm)
-        // TODO: discern inferred and explicitly specified vparamtpe
-        // TODO: somehow figure out the default argument from a parameter symbol if it is specified
-        p.Param.Named(pmods(gsym), gsym.asTerm.rawcvt(g.Ident(gsym)), Some(pvparamtpe(gsym.info.depoly)), None)
-      }
-      private def pvparams(gsyms: List[g.Symbol]): Seq[p.Param.Named] = gsyms.map(pvparam)
-      private def pvparamss(gsymss: List[List[g.Symbol]]): Seq[Seq[p.Param.Named]] = gsymss.map(pvparams)
-      def pexplicitss(gsym: g.Symbol): Seq[Seq[p.Param.Named]] = if (pimplicits(gsym).nonEmpty) pvparamss(gsym.info.paramss).dropRight(1) else pvparamss(gsym.info.paramss)
-      def pimplicits(gsym: g.Symbol): Seq[p.Param.Named] = pvparams(gsym.info.paramss.flatten.filter(_.isImplicit))
       private def pclassof(gtype: g.Type): p.Term.ApplyType = {
         val mothershipCore = g.gen.mkAttributedRef(g.currentRun.runDefinitions.Predef_classOf).asInstanceOf[g.Select]
         val scratchpad = g.TypeApply(mothershipCore, List(g.TypeTree(gtype))).setType(g.appliedType(mothershipCore.tpe, gtype))
-        p.Term.ApplyType(mothershipCore.cvt, List(gtype.cvt)).appendScratchpad(scratchpad)
+        // TODO: track the original TypTree here, so that we don't have to approximate with ptpe
+        p.Term.ApplyType(mothershipCore.cvt, List(ptpe(gtype))).appendScratchpad(scratchpad)
       }
-      type pScalaLitType = p.Lit{type ThisType >: p.Lit.Bool with p.Lit.Int with p.Lit.Long with p.Lit.Float with p.Lit.Double with p.Lit.String with p.Lit.Char <: p.Lit}
       type pScalaConst = p.Term{type ThisType >: p.Lit.Null with p.Lit.Unit with p.Lit.Bool with p.Lit.Int with p.Lit.Long with p.Lit.Float with p.Lit.Double with p.Lit.String with p.Lit.Char with p.Term.ApplyType <: p.Term}
       def pconst(gconst: g.Constant): pScalaConst = (gconst.value match {
         case null => p.Lit.Null()
@@ -257,6 +222,198 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
       // TODO: also see the other places in the code that use originals
       def hasInferredTargs(targs: List[g.Tree]) = targs.exists{ case tt: g.TypeTree => tt.original == null }
       def dropInferredTargs(targs: List[g.Tree]) = if (hasInferredTargs(targs)) Nil else targs
+      def pvparamtpe(gtpt: g.TypeTree): p.Param.Type = {
+        def unwrap(ptpe: p.Type): p.Type = ptpe.asInstanceOf[p.Type.Apply].args.head
+        if (g.definitions.isRepeatedParamType(gtpt.tpe)) p.Param.Type.Repeated(unwrap(gtpt.cvt))
+        else if (g.definitions.isByNameParamType(gtpt.tpe)) p.Param.Type.ByName(unwrap(gtpt.cvt))
+        else gtpt.cvt
+      }
+      def ptparambounds(gtpt: g.TypeTree): p.Aux.TypeBounds = gtpt.original match {
+        case g.TypeBoundsTree(glo, ghi) =>
+          // TODO: infer which of the bounds were specified explicitly by the user
+          val g.TypeBounds(glotpe, ghitpe) = gtpt.tpe
+          (glotpe =:= g.typeOf[Nothing], ghitpe =:= g.typeOf[Any]) match {
+            case (false, false) => p.Aux.TypeBounds(lo = glo.cvt_! : p.Type, hi = ghi.cvt_! : p.Type)
+            case (true, false) => p.Aux.TypeBounds(hi = ghi.cvt_! : p.Type)
+            case (false, true) => p.Aux.TypeBounds(lo = glo.cvt_! : p.Type)
+            case (true, true) => p.Aux.TypeBounds()
+          }
+        case _ =>
+          unreachable
+      }
+      // TODO: now that we plan to restore TypeTrees to their originals, the facility of converting Types is no longer necessary
+      // therefore I'm demoting the corresponding plan of the uber-patternmatch to a dedicated method
+      // let's see how far we can get with that
+      type pScalaType = p.Type{ type ThisType >: p.Type.Name with p.Type.Select with p.Type.Project with p.Type.Singleton with p.Type.Apply with p.Type.Compound with p.Type.Existential with p.Type.Annotate with p.Lit.Bool with p.Lit.Int with p.Lit.Long with p.Lit.Float with p.Lit.Double with p.Lit.String with p.Lit.Char <: p.Type }
+      type pScalaLitType = p.Lit{type ThisType >: p.Lit.Bool with p.Lit.Int with p.Lit.Long with p.Lit.Float with p.Lit.Double with p.Lit.String with p.Lit.Char <: p.Lit}
+      def ptpe(gtpe: g.Type): pScalaType = {
+        def loop(gtpe: g.Type): p.Type = {
+          def pbounds(gtpe: g.Type): p.Aux.TypeBounds = gtpe match {
+            case g.TypeBounds(glo, ghi) =>
+              (glo =:= g.typeOf[Nothing], ghi =:= g.typeOf[Any]) match {
+                case (false, false) => p.Aux.TypeBounds(lo = loop(glo), hi = loop(ghi))
+                case (true, false) => p.Aux.TypeBounds(hi = loop(ghi))
+                case (false, true) => p.Aux.TypeBounds(lo = loop(glo))
+                case (true, true) => p.Aux.TypeBounds()
+              }
+            case _ =>
+              unreachable
+          }
+          def ptparam(gsym: g.Symbol): p.TypeParam = {
+            // TODO: undo desugarings of context and view bounds
+            require(gsym.isType)
+            val isAnonymous = gsym.name == g.tpnme.WILDCARD
+            if (isAnonymous) p.TypeParam.Anonymous(pmods(gsym), ptparams(gsym.typeParams), Nil, Nil, pbounds(gsym.info.depoly))
+            else p.TypeParam.Named(pmods(gsym), gsym.asType.rawcvt(g.Ident(gsym)), ptparams(gsym.typeParams), Nil, Nil, pbounds(gsym.info.depoly))
+          }
+          def ptparams(gsyms: List[g.Symbol]): Seq[p.TypeParam] = gsyms.map(ptparam)
+          def pvparamtpe(gtpe: g.Type): p.Param.Type = {
+            def unwrap(ptpe: p.Type): p.Type = ptpe.asInstanceOf[p.Type.Apply].args.head
+            if (g.definitions.isRepeatedParamType(gtpe)) p.Param.Type.Repeated(unwrap(loop(gtpe)))
+            else if (g.definitions.isByNameParamType(gtpe)) p.Param.Type.ByName(unwrap(loop(gtpe)))
+            else loop(gtpe)
+          }
+          def pvparam(gsym: g.Symbol): p.Param.Named = {
+            require(gsym.isTerm)
+            // TODO: discern inferred and explicitly specified vparamtpe
+            // TODO: somehow figure out the default argument from a parameter symbol if it is specified
+            p.Param.Named(pmods(gsym), gsym.asTerm.rawcvt(g.Ident(gsym)), Some(pvparamtpe(gsym.info.depoly)), None)
+          }
+          def pvparams(gsyms: List[g.Symbol]): Seq[p.Param.Named] = gsyms.map(pvparam)
+          def pvparamss(gsymss: List[List[g.Symbol]]): Seq[Seq[p.Param.Named]] = gsymss.map(pvparams)
+          def pexplicitss(gsym: g.Symbol): Seq[Seq[p.Param.Named]] = if (pimplicits(gsym).nonEmpty) pvparamss(gsym.info.paramss).dropRight(1) else pvparamss(gsym.info.paramss)
+          def pimplicits(gsym: g.Symbol): Seq[p.Param.Named] = pvparams(gsym.info.paramss.flatten.filter(_.isImplicit))
+          gtpe match {
+            case g.NoPrefix =>
+              unreachable
+            case g.NoType =>
+              unreachable
+            case in @ g.ThisType(sym) =>
+              p.Type.Singleton({
+                if (sym.isPackageClass) {
+                  def moduleRef(gsym: g.Symbol): g.Tree = {
+                    def loop(gsym: g.Symbol): g.Tree = {
+                      if (gsym.isPackageClass) loop(gsym.asClass.module)
+                      else if (gsym.isClass) g.This(gsym).setType(gsym.tpe)
+                      else {
+                        // TODO: figure out what to do about _root_ and _empty_
+                        val isIdent = gsym.owner == g.NoSymbol || gsym.owner == g.rootMirror.RootClass || gsym.owner == g.rootMirror.EmptyPackageClass
+                        if (isIdent) g.Ident(gsym).setType(gsym.tpe)
+                        else g.Select(loop(gsym.owner), gsym).setType(gsym.tpe)
+                      }
+                    }
+                    loop(gsym)
+                  }
+                  val isIdent = sym.owner == g.NoSymbol || sym.owner == g.rootMirror.RootClass || sym.owner == g.rootMirror.EmptyPackageClass
+                  if (isIdent) moduleRef(sym).asInstanceOf[g.Ident].cvt_! : p.Term.Name
+                  else moduleRef(sym).asInstanceOf[g.Select].cvt_! : p.Term.Select
+                } else {
+                  // TODO: infer whether thistpe originally corresponded to Some or None
+                  p.Term.This(None)
+                }
+              }.appendScratchpad(sym))
+            case g.SuperType(thistpe, supertpe) =>
+              // TODO: infer whether supertpe originally corresponded to Some or None
+              val p.Type.Singleton(p.Term.This(pthis)) = loop(thistpe)
+              require(supertpe.typeSymbol.isType)
+              val supersym = supertpe.typeSymbol.asType
+              p.Type.Singleton(p.Qual.Super(pthis, Some(supersym.rawcvt(g.Ident(supersym)).appendScratchpad(in))))
+            case g.SingleType(pre, sym) =>
+              // TODO: this loses information if sym was brought into scope with a renaming import
+              require(sym.isTerm)
+              val ref = (pre match {
+                case g.NoPrefix =>
+                  sym.asTerm.rawcvt(g.Ident(sym))
+                case _: g.SingletonType =>
+                  // TODO: what do we do if sym is a package object? do we skip it altogether or do we still emit an explicit reference to it?
+                  val p.Type.Singleton(preref) = loop(pre)
+                  p.Term.Select(preref, sym.asTerm.precvt(pre, g.Ident(sym)), isPostfix = false) // TODO: figure out isPostfix
+                case _ =>
+                  unreachable
+              }).appendScratchpad(in)
+              p.Type.Singleton(ref)
+            case g.ConstantType(const) =>
+              pconst(const) match {
+                case lit: p.Lit => lit.asInstanceOf[pScalaLitType]
+                // TODO: can Literal(Constant(_: Type)) or Literal(Constant(_: Symbol)) ever end up in patterns?
+                case _ => unreachable
+              }
+            case g.TypeRef(pre, sym, args) =>
+              // TODO: this loses information if sym was brought into scope with a renaming import
+              require(sym.isType)
+              val ref = pre match {
+                case g.NoPrefix =>
+                  sym.asType.rawcvt(g.Ident(sym))
+                case _: g.SingletonType =>
+                  val p.Type.Singleton(preref) = loop(pre)
+                  p.Type.Select(preref, sym.asType.precvt(pre, g.Ident(sym))).appendScratchpad(in)
+                case _ =>
+                  p.Type.Project(loop(pre), sym.asType.precvt(pre, g.Ident(sym))).appendScratchpad(in)
+              }
+              // TODO: infer whether that was Apply, Function or Tuple
+              // TODO: discern Apply and ApplyInfix
+              if (args.isEmpty) ref
+              else p.Type.Apply(ref, args.map(loop))
+            case g.RefinedType(parents, decls) =>
+              val pstmts: Seq[p.Stmt.Refine] = decls.sorted.toList.map({
+                case ValSymbol(sym) => p.Decl.Val(pmods(sym), List(sym.rawcvt(g.ValDef(sym))), loop(sym.info.depoly))
+                case VarSymbol(sym) if !sym.isMethod && !sym.isModule && sym.isMutable => p.Decl.Var(pmods(sym), List(sym.rawcvt(g.ValDef(sym))), loop(sym.info.depoly))
+                // TODO: infer the difference between Defs and Procedures
+                case DefSymbol(sym) => p.Decl.Def(pmods(sym), sym.rawcvt(g.DefDef(sym, g.EmptyTree)), ptparams(sym.typeParams), pexplicitss(sym), pimplicits(sym), loop(sym.info.finalResultType))
+                case AbstractTypeSymbol(sym) => p.Decl.Type(pmods(sym), sym.rawcvt(g.TypeDef(sym)), ptparams(sym.typeParams), pbounds(sym.info.depoly))
+                case AliasTypeSymbol(sym) => p.Defn.Type(pmods(sym), sym.rawcvt(g.TypeDef(sym, g.TypeTree(sym.info))), ptparams(sym.typeParams), loop(sym.info.depoly))
+              })
+              p.Type.Compound(parents.map(loop), pstmts) // TODO: infer hasRefinement
+            case g.ExistentialType(quantified, underlying) =>
+              // TODO: infer type placeholders where they were specified explicitly
+              val pstmts: Seq[p.Stmt.Existential] = quantified.map({
+                case ValSymbol(sym) => p.Decl.Val(pmods(sym), List(sym.rawcvt(g.ValDef(sym))), loop(sym.info.depoly))
+                case AbstractTypeSymbol(sym) => p.Decl.Type(pmods(sym), sym.rawcvt(g.TypeDef(sym)), ptparams(sym.typeParams), pbounds(sym.info.depoly))
+              })
+              p.Type.Existential(loop(underlying), pstmts)
+            case g.AnnotatedType(anns, underlying) =>
+              p.Type.Annotate(loop(underlying), panns(anns))
+            case g.TypeBounds(lo, hi) =>
+              unreachable
+            // NOTE: these types have no equivalent in Palladium
+            // e.g. q"List.apply".tpe is not some mysterious MethodType, but is an error, because List.apply is actually not a well-formed term
+            // if one wants to analyze q"List.apply" in e.g. q"List.apply(2)", then it's possible to do Term.defn
+            case g.ClassInfoType(_, _, _) =>
+              unreachable
+            case g.MethodType(_, _) =>
+              unreachable
+            case g.NullaryMethodType(_) =>
+              unreachable
+            case g.PolyType(_, _) =>
+              unreachable
+            // NOTE: the types below are only used internally by the typechecker
+            // as far as I understand, it's impossible for them to linger past typer
+            case g.WildcardType =>
+              unreachable
+            case g.BoundedWildcardType(_) =>
+              unreachable
+            case in: g.UniqueErasedValueType =>
+              unreachable
+            case in: g.RepeatedType =>
+              unreachable
+            case in: g.NamedType =>
+              unreachable
+            case in: g.AppliedTypeVar =>
+              unreachable
+            case in: g.HKTypeVar =>
+              unreachable
+            case in: g.AntiPolyType =>
+              unreachable
+            case in: g.ImportType =>
+              unreachable
+            case in: g.OverloadedType =>
+              unreachable
+            case g.ErrorType =>
+              unreachable
+          }
+        }
+        loop(gtpe).asInstanceOf[pScalaType]
+      }
     }
     import Helpers._
     val offenders = unattributedNodes(in)
@@ -322,7 +479,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
       case in @ g.ValDef(_, _, tpt @ g.TypeTree(), rhs) if pt <:< typeOf[p.Param] =>
         require(in.symbol.isTerm)
         val isAnonymous = in.symbol.name.toString.startsWith("x$")
-        val ptpe = if (tpt.original != null) Some(pvparamtpe(tpt.tpe)) else None
+        val ptpe = if (tpt.original != null) Some(pvparamtpe(tpt)) else None
         val pdefault = if (rhs.nonEmpty) Some[p.Term](rhs.cvt_!) else None
         require(isAnonymous ==> pdefault.isEmpty)
         if (isAnonymous) p.Param.Anonymous(pmods(in.symbol), ptpe)
@@ -398,11 +555,11 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
         // TODO: undo desugarings of context and view bounds
         require(in.symbol.isType)
         val isAnonymous = in.symbol.name == g.tpnme.WILDCARD
-        if (isAnonymous) p.TypeParam.Anonymous(pmods(in.symbol), tparams.cvt, Nil, Nil, pbounds(tpt.tpe))
-        else p.TypeParam.Named(pmods(in.symbol), in.symbol.asType.rawcvt(in), tparams.cvt, Nil, Nil, pbounds(tpt.tpe))
+        if (isAnonymous) p.TypeParam.Anonymous(pmods(in.symbol), tparams.cvt, Nil, Nil, ptparambounds(tpt))
+        else p.TypeParam.Named(pmods(in.symbol), in.symbol.asType.rawcvt(in), tparams.cvt, Nil, Nil, ptparambounds(tpt))
       case in @ g.TypeDef(_, _, tparams, tpt @ g.TypeTree()) if pt <:< typeOf[p.Member] =>
         require(in.symbol.isType)
-        if (in.symbol.isDeferred) p.Decl.Type(pmods(in.symbol), in.symbol.asType.rawcvt(in), tparams.cvt, pbounds(tpt.tpe))
+        if (in.symbol.isDeferred) p.Decl.Type(pmods(in.symbol), in.symbol.asType.rawcvt(in), tparams.cvt, ptparambounds(tpt))
         else p.Defn.Type(pmods(in.symbol), in.symbol.asType.rawcvt(in), tparams.cvt, tpt.cvt)
       case g.LabelDef(_, _, _) =>
         // TODO: preprocess the input so that we don't have LabelDefs
@@ -584,12 +741,11 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
         else p.Term.ApplyType(pfn, targs.map(_.asInstanceOf[g.TypeTree]).cvt)
       case in @ g.Apply(g.Select(g.New(_), g.nme.CONSTRUCTOR), _) =>
         // TODO: infer the difference between `new X` vs `new X()`
-        // TODO: undo desugarings of stuff like `new X {}`
         // TODO: strip off inferred type and value arguments (but be careful to not remove explicitly provided arguments!)
         // TODO: recover names and defaults (https://github.com/scala/scala/pull/3753/files#diff-269d2d5528eed96b476aded2ea039444R617)
         // TODO: figure out whether type arguments were inferred or not
         val q"new $tpt(...$argss)" = in
-        val supercall = p.Aux.Parent(tpt.tpe.cvt, argss.cvt_!).appendScratchpad(in)
+        val supercall = p.Aux.Parent(tpt.cvt_!, argss.cvt_!).appendScratchpad(in)
         val self = p.Aux.Self(None, None).appendScratchpad(tpt)
         val templ = p.Aux.Template(Nil, List(supercall), self).appendScratchpad(in)
         p.Term.New(templ)
@@ -697,147 +853,17 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
       case g.SelectFromArray(_, _, _) =>
         unreachable
       case in @ g.TypeTree() =>
-        // TODO: iirc there were two problems with originals that we faced when developing reify:
-        // 1) some originals are attributed only partially
-        // 2) some originals are incomplete (e.g. for compound types iirc)
-        // therefore I think we shouldn't use originals at the moment, so I'm marking g.TypTree as unreachable
-        type pScalaType = p.Type{ type ThisType >: p.Type.Name with p.Type.Select with p.Type.Project with p.Type.Singleton with p.Type.Apply with p.Type.Compound with p.Type.Existential with p.Type.Annotate with p.Lit.Bool with p.Lit.Int with p.Lit.Long with p.Lit.Float with p.Lit.Double with p.Lit.String with p.Lit.Char <: p.Type }
-        (in.tpe.cvt: pScalaType)
-      case g.TypeTreeWithDeferredRefCheck() =>
-        ???
+        ??? : pScalaType
+      case in @ g.TypeTreeWithDeferredRefCheck() =>
+        // NOTE: I guess, we can do deferred checks here as the converter isn't supposed to run in the middle of typer
+        // we will have to revisit this in case we decide to support whitebox macros in Palladium
+        in.check().cvt: pScalaType
       case _: g.TypTree =>
-        unreachable
+        // TODO: also account for Idents, which can very well refer to types while not being TypTrees themselves
+        ???
       // NOTE: this derivation is ambiguous because of at least g.ValDef, g.TypeDef and g.Typed
       // case _: g.Tree =>
       //   derive
-      case g.NoPrefix =>
-        unreachable
-      case g.NoType =>
-        unreachable
-      case in @ g.ThisType(sym) =>
-        p.Type.Singleton({
-          if (sym.isPackageClass) {
-            def moduleRef(gsym: g.Symbol): g.Tree = {
-              def loop(gsym: g.Symbol): g.Tree = {
-                if (gsym.isPackageClass) loop(gsym.asClass.module)
-                else if (gsym.isClass) g.This(gsym).setType(gsym.tpe)
-                else {
-                  // TODO: figure out what to do about _root_ and _empty_
-                  val isIdent = gsym.owner == g.NoSymbol || gsym.owner == g.rootMirror.RootClass || gsym.owner == g.rootMirror.EmptyPackageClass
-                  if (isIdent) g.Ident(gsym).setType(gsym.tpe)
-                  else g.Select(loop(gsym.owner), gsym).setType(gsym.tpe)
-                }
-              }
-              loop(gsym)
-            }
-            val isIdent = sym.owner == g.NoSymbol || sym.owner == g.rootMirror.RootClass || sym.owner == g.rootMirror.EmptyPackageClass
-            if (isIdent) moduleRef(sym).asInstanceOf[g.Ident].cvt_! : p.Term.Name
-            else moduleRef(sym).asInstanceOf[g.Select].cvt_! : p.Term.Select
-          } else {
-            // TODO: infer whether thistpe originally corresponded to Some or None
-            p.Term.This(None)
-          }
-        }.appendScratchpad(sym))
-      case g.SuperType(thistpe, supertpe) =>
-        // TODO: infer whether supertpe originally corresponded to Some or None
-        val p.Type.Singleton(p.Term.This(pthis)) = thistpe.cvt
-        require(supertpe.typeSymbol.isType)
-        val supersym = supertpe.typeSymbol.asType
-        p.Type.Singleton(p.Qual.Super(pthis, Some(supersym.rawcvt(g.Ident(supersym)).appendScratchpad(in))))
-      case g.SingleType(pre, sym) =>
-        // TODO: this loses information if sym was brought into scope with a renaming import
-        require(sym.isTerm)
-        val ref = (pre match {
-          case g.NoPrefix =>
-            sym.asTerm.rawcvt(g.Ident(sym))
-          case _: g.SingletonType =>
-            // TODO: what do we do if sym is a package object? do we skip it altogether or do we still emit an explicit reference to it?
-            val p.Type.Singleton(preref) = pre.cvt
-            p.Term.Select(preref, sym.asTerm.precvt(pre, g.Ident(sym)), isPostfix = false) // TODO: figure out isPostfix
-          case _ =>
-            unreachable
-        }).appendScratchpad(in)
-        p.Type.Singleton(ref)
-      case g.ConstantType(const) =>
-        pconst(const) match {
-          case lit: p.Lit => lit.asInstanceOf[pScalaLitType]
-          // TODO: can Literal(Constant(_: Type)) or Literal(Constant(_: Symbol)) ever end up in patterns?
-          case _ => unreachable
-        }
-      case g.TypeRef(pre, sym, args) =>
-        // TODO: this loses information if sym was brought into scope with a renaming import
-        require(sym.isType)
-        val ref = pre match {
-          case g.NoPrefix =>
-            sym.asType.rawcvt(g.Ident(sym))
-          case _: g.SingletonType =>
-            val p.Type.Singleton(preref) = pre.cvt
-            p.Type.Select(preref, sym.asType.precvt(pre, g.Ident(sym))).appendScratchpad(in)
-          case _ =>
-            p.Type.Project(pre.cvt, sym.asType.precvt(pre, g.Ident(sym))).appendScratchpad(in)
-        }
-        // TODO: infer whether that was Apply, Function or Tuple
-        // TODO: discern Apply and ApplyInfix
-        if (args.isEmpty) ref
-        else p.Type.Apply(ref, args.cvt)
-      case g.RefinedType(parents, decls) =>
-        val pstmts: Seq[p.Stmt.Refine] = decls.sorted.toList.map({
-          case ValSymbol(sym) => p.Decl.Val(pmods(sym), List(sym.rawcvt(g.ValDef(sym))), sym.info.depoly.cvt)
-          case VarSymbol(sym) if !sym.isMethod && !sym.isModule && sym.isMutable => p.Decl.Var(pmods(sym), List(sym.rawcvt(g.ValDef(sym))), sym.info.depoly.cvt)
-          // TODO: infer the difference between Defs and Procedures
-          case DefSymbol(sym) => p.Decl.Def(pmods(sym), sym.rawcvt(g.DefDef(sym, g.EmptyTree)), ptparams(sym.typeParams), pexplicitss(sym), pimplicits(sym), sym.info.finalResultType.cvt)
-          case AbstractTypeSymbol(sym) => p.Decl.Type(pmods(sym), sym.rawcvt(g.TypeDef(sym)), ptparams(sym.typeParams), pbounds(sym.info.depoly))
-          case AliasTypeSymbol(sym) => p.Defn.Type(pmods(sym), sym.rawcvt(g.TypeDef(sym, g.TypeTree(sym.info))), ptparams(sym.typeParams), sym.info.depoly.cvt)
-        })
-        p.Type.Compound(parents.cvt, pstmts) // TODO: infer hasRefinement
-      case g.ExistentialType(quantified, underlying) =>
-        // TODO: infer type placeholders where they were specified explicitly
-        val pstmts: Seq[p.Stmt.Existential] = quantified.map({
-          case ValSymbol(sym) => p.Decl.Val(pmods(sym), List(sym.rawcvt(g.ValDef(sym))), sym.info.depoly.cvt)
-          case AbstractTypeSymbol(sym) => p.Decl.Type(pmods(sym), sym.rawcvt(g.TypeDef(sym)), ptparams(sym.typeParams), pbounds(sym.info.depoly))
-        })
-        p.Type.Existential(underlying.cvt, pstmts)
-      case g.AnnotatedType(anns, underlying) =>
-        p.Type.Annotate(underlying.cvt, panns(anns))
-      case g.TypeBounds(lo, hi) =>
-        unreachable
-      // NOTE: these types have no equivalent in Palladium
-      // e.g. q"List.apply".tpe is not some mysterious MethodType, but is an error, because List.apply is actually not a well-formed term
-      // if one wants to analyze q"List.apply" in e.g. q"List.apply(2)", then it's possible to do Term.defn
-      case g.ClassInfoType(_, _, _) =>
-        unreachable
-      case g.MethodType(_, _) =>
-        unreachable
-      case g.NullaryMethodType(_) =>
-        unreachable
-      case g.PolyType(_, _) =>
-        unreachable
-      // NOTE: the types below are only used internally by the typechecker
-      // as far as I understand, it's impossible for them to linger past typer
-      case g.WildcardType =>
-        unreachable
-      case g.BoundedWildcardType(_) =>
-        unreachable
-      case in: g.UniqueErasedValueType =>
-        unreachable
-      case in: g.RepeatedType =>
-        unreachable
-      case in: g.NamedType =>
-        unreachable
-      case in: g.AppliedTypeVar =>
-        unreachable
-      case in: g.HKTypeVar =>
-        unreachable
-      case in: g.AntiPolyType =>
-        unreachable
-      case in: g.ImportType =>
-        unreachable
-      case in: g.OverloadedType =>
-        unreachable
-      case g.ErrorType =>
-        unreachable
-      case _: g.Type =>
-        derive
     }
   }
 }
