@@ -113,7 +113,8 @@ trait Analyzer extends NscAnalyzer with Metadata {
               typedParentType(first, templ, inMixinPosition = false) +:
               (rest map (typedParentType(_, templ, inMixinPosition = true)))
             // TODO: using isPossibleSyntheticParent is not 100% precise, because the user could've specified the parent themselves
-            // however this situation is extremely rare, so I'm letting it slip for the time being
+            // this can happen in just one case to the best of my knowledge: with explicit inheritance from synthetic parents of `case`
+            // however these situations are extremely rare, so I'm letting it slip for the time being
             val originals = if (context.owner.isCase) result.filter(p => !isPossibleSyntheticParent(p.symbol)) else result
             templ.appendMetadata("originalParents" -> result)
             result
