@@ -8,6 +8,7 @@ import scala.reflect.macros.whitebox
 import scala.collection.mutable
 import org.scalameta.unreachable
 import org.scalameta.invariants._
+import org.scalameta.reflection._
 
 // NOTE: a macro annotation that converts naive patmat-based converters
 // like `@converter def toPalladium(in: Any, pt: Pt): Any = in match { ... }`
@@ -147,6 +148,7 @@ class ConverterMacros(val c: whitebox.Context) {
               out.appendScratchpad(in)
             } catch {
               case err: _root_.java.lang.AssertionError => logFailure(); throw err
+              case err: _root_.org.scalameta.UnreachableError.type => logFailure(); throw err
               case ex: _root_.scala.Exception => logFailure(); throw ex
             }
           }
@@ -262,10 +264,8 @@ package object internal {
           var isValid = true
           clauses.foreach(clause => {
             val in = clause.pat.tpe.typeSymbol.asClass
-            val inIsTreeOrType = in.baseClasses.exists(sym => sym.fullName == "scala.reflect.internal.Trees.Tree" ||
-                                                              sym.fullName == "scala.reflect.internal.Types.Type")
-            if (!inIsTreeOrType) {
-              c.error(clause.pos, s"must only convert from Scala trees and types, found $in")
+            if (!in.baseClasses.exists(sym => sym.fullName == "scala.reflect.internal.Trees.Tree")) {
+              c.error(clause.pos, s"must only convert from Scala trees, found $in")
               isValid = false
             }
           })
@@ -296,7 +296,7 @@ package object internal {
             case _ => NoType
           }
           def sortOfAllSubclassesOf(tpe: Type): List[Symbol] = root.members.toList.flatMap(sym => if ((ref(sym) <:< tpe) && !sym.isAbstract) Some(sym) else None)
-          val expected = sortOfAllSubclassesOf(typeOf[scala.reflect.internal.Trees#Tree]) ++ sortOfAllSubclassesOf(typeOf[scala.reflect.internal.Types#Type])
+          val expected = sortOfAllSubclassesOf(typeOf[scala.reflect.internal.Trees#Tree])
           val inputs = clauses.map(_.pat.tpe).map(tpe => tpe.termSymbol.orElse(tpe.typeSymbol)).map(sym => root.member(sym.name))
           val unmatched = expected.filter(exp => !inputs.exists(pat => ref(exp) <:< ref(pat)))
           if (unmatched.nonEmpty) c.error(c.enclosingPosition, "@converter is not exhaustive in its inputs; missing: " + unmatched)
@@ -496,7 +496,9 @@ package object internal {
               q"""
                 $x match {
                   case ..$cases
-                  case in => sys.error("error converting from " + ${in.toString} + " to " + ${out.toString} + ": unexpected input " + in.getClass.toString + ": " + in)
+                  case in => sys.error(
+                    "error converting from " + ${in.toString} + " to " + ${out.toString} + ": " +
+                    "expected input of type " + ${matching.map(_.in).toString} + ", got input of " + in.getClass.toString + ": " + in)
                 }
               """
             }
@@ -515,7 +517,9 @@ package object internal {
           if (downcastees.nonEmpty) result = q"""
             $result match {
               case out: $out => out
-              case out => sys.error("error converting from " + ${in.toString} + " to " + ${out.toString} + ": unexpected output " + out.getClass.toString + ": " + out)
+              case out => sys.error(
+                "error converting from " + ${in.toString} + " to " + ${out.toString} + ": " +
+                "expected output of type " + ${out.toString} + ", got output of " + out.getClass.toString + ": " + out)
             }
           """
           atPos(x.pos)(result)
@@ -670,32 +674,43 @@ package object internal {
     def runtimeImpl(global: Any, tree: Any): Any = {
       // NOTE: partially copy/pasted from Reshape.scala in scalac
       // NOTE: we can't undo macro expansions in annotation arguments, because after typechecking those are stored on symbols and we can't change those
+      // therefore undoMacroExpansions for annotation arguments is called from within a host, when it takes the contents of symbols and converts them to Palladium trees
       def undoMacroExpansions[G <: scala.tools.nsc.Global](g: G)(tree: g.Tree): g.Tree = {
         import g._
         import definitions._
         val currentRun = g.currentRun
         import currentRun.runDefinitions._
-        object transformer extends Transformer {
+        object transformer extends Transformer with Metadata {
+          val global: g.type = g
           override def transform(tree: Tree): Tree = {
-            def postprocess(original: Tree): Tree = {
-              def mkImplicitly(tp: Type) = gen.mkNullaryCall(Predef_implicitly, List(tp)).setType(tp)
-              val sym = original.symbol
-              original match {
-                // this hack is necessary until I fix implicit macros
-                // so far tag materialization is implemented by sneaky macros hidden in scala-compiler.jar
-                // hence we cannot reify references to them, because noone will be able to see them later
-                // when implicit macros are fixed, these sneaky macros will move to corresponding companion objects
-                // of, say, ClassTag or TypeTag
-                case Apply(TypeApply(_, List(tt)), _) if sym == materializeClassTag            => mkImplicitly(appliedType(ClassTagClass, tt.tpe))
-                case Apply(TypeApply(_, List(tt)), List(pre)) if sym == materializeWeakTypeTag => mkImplicitly(typeRef(pre.tpe, WeakTypeTagClass, List(tt.tpe)))
-                case Apply(TypeApply(_, List(tt)), List(pre)) if sym == materializeTypeTag     => mkImplicitly(typeRef(pre.tpe, TypeTagClass, List(tt.tpe)))
-                case _                                                                         => original
-              }
-            }
-            (tree.attachments.get[java.util.HashMap[String, Any]], tree.attachments.get[analyzer.MacroExpansionAttachment]) match {
-              case (Some(bag), _) => super.transform(postprocess(bag.get("expandeeTree").asInstanceOf[Tree]))
-              case (None, Some(analyzer.MacroExpansionAttachment(original, _))) => super.transform(postprocess(original))
-              case _ => super.transform(tree)
+            // TODO: we need to be more systematic about undoing desugarings
+            // in fact, I think we should replace undoMacroExpansions with something like undoDesugarings
+            // however, that's not the task for today, and today I want to submit a pull request that handles all the tests completely
+            // therefore I'm just dropping this here for the (short) time being
+            tree.metadata.get("originalWhitebox").map(_.asInstanceOf[Tree]) match {
+              case Some(original) => transform(original)
+              case _ =>
+                def postprocess(original: Tree): Tree = {
+                  // TODO: remember macro expansions here, because the host will need to convert and attach them to expandee's attrs
+                  def mkImplicitly(tp: Type) = gen.mkNullaryCall(Predef_implicitly, List(tp)).setType(tp)
+                  val sym = original.symbol
+                  original match {
+                    // this hack is necessary until I fix implicit macros
+                    // so far tag materialization is implemented by sneaky macros hidden in scala-compiler.jar
+                    // hence we cannot reify references to them, because noone will be able to see them later
+                    // when implicit macros are fixed, these sneaky macros will move to corresponding companion objects
+                    // of, say, ClassTag or TypeTag
+                    case Apply(TypeApply(_, List(tt)), _) if sym == materializeClassTag            => mkImplicitly(appliedType(ClassTagClass, tt.tpe))
+                    case Apply(TypeApply(_, List(tt)), List(pre)) if sym == materializeWeakTypeTag => mkImplicitly(typeRef(pre.tpe, WeakTypeTagClass, List(tt.tpe)))
+                    case Apply(TypeApply(_, List(tt)), List(pre)) if sym == materializeTypeTag     => mkImplicitly(typeRef(pre.tpe, TypeTagClass, List(tt.tpe)))
+                    case _                                                                         => original
+                  }
+                }
+                (tree.metadata.get("expandeeTree").map(_.asInstanceOf[Tree]), tree.attachments.get[analyzer.MacroExpansionAttachment]) match {
+                  case (Some(original), _) => super.transform(postprocess(original))
+                  case (None, Some(analyzer.MacroExpansionAttachment(original, _))) => super.transform(postprocess(original))
+                  case _ => super.transform(tree)
+                }
             }
           }
         }

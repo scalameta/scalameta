@@ -63,5 +63,5 @@ object ScalaHostBuild extends Build {
       libraryDependencies ++= Seq(scalatest, scalacheck),
       dontPackage
     )
-  ) dependsOn (plugin)
+  ) dependsOn (plugin, foundation)
 }

@@ -39,8 +39,7 @@ trait RenumberPhase {
         //     val f = unit.source
         //     def totalLines(f: SourceFile) = f.offsetToLine(f.length - 1) + 1
         //     val factor = Math.pow(10, totalLines(f).toString.length).toInt
-        //     // val bag = tree.attachments.get[java.util.HashMap[String, Any]].get
-        //     // println(bag.get("expansionString").asInstanceOf[String])
+        //     // println(tree.metadata("expansionString"))
         //     // println((factor, digits))
         //     var currentLine = (tree.pos.line + 1) * factor - 1
         //     def currentPos = new OffsetPosition(f, f.lineToOffset(currentLine))

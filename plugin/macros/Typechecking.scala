@@ -49,7 +49,7 @@ trait Typechecking {
           object dewhiteboxer extends Transformer {
             private val c_whitebox = typeOf[scala.meta.semantic.`package`.c.type].decl(TermName("whitebox")).asMethod
             override def transform(tree: Tree): Tree = tree match {
-              case Apply(fn, List(arg)) if fn.symbol == c_whitebox => isExplicitlyWhitebox = true; transform(arg)
+              case Apply(fn, List(arg)) if fn.symbol == c_whitebox => isExplicitlyWhitebox = true; transform(arg.appendMetadata("originalWhitebox" -> treeCopy.Apply(tree, fn, List(duplicateAndKeepPositions(arg)))))
               case tree => super.transform(tree)
             }
           }
