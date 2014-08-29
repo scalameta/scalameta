@@ -678,12 +678,6 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
         val origQual = in.metadata.get("originalQual").map(_.asInstanceOf[g.Tree])
         val origName = in.metadata.get("originalName").map(_.asInstanceOf[g.Name])
         (origIdent, origQual, origName) match {
-          case _ if qual.symbol != null && qual.symbol.isImplicit =>
-            // NOTE: we could match against g.ApplyToImplicitView here
-            // but as the comment next to it says, sometimes the distinction between g.Apply and g.ApplyToImplicitView might get lost
-            // therefore I'm going for a less robust, but more practically useful approach
-            val g.treeInfo.Applied(_, _, (convertee :: Nil) :: Nil) = qual
-            g.treeCopy.Select(in, convertee, name).removeMetadata("originalQual", "originalName").cvt
           case (Some(origIdent), _, _) =>
             require(origQual.isEmpty && origName.isEmpty)
             in.symbol.asTerm.rawcvt(origIdent)

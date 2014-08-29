@@ -23,6 +23,7 @@ trait Metadata {
     def toMap: Map[String, Any] = tree.attachments.get[java.util.HashMap[String, Any]].map(_.toMap).getOrElse(Map[String, Any]())
     def toOption: Option[Map[String, Any]] = tree.attachments.get[java.util.HashMap[String, Any]].map(_.toMap)
     def transform(f: Map[String, Any] => Map[String, Any]): Unit = tree.updateAttachment(new java.util.HashMap[String, Any](mapAsJavaMap(f(toMap))))
+    def contains(key: String): Boolean = toMap.contains(key)
     def apply(key: String): Any = toMap(key)
     def get(key: String): Option[Any] = toMap.get(key)
     def getOrElse[T](key: String, value: T): T = toMap.get(key).map(_.asInstanceOf[T]).getOrElse(value)

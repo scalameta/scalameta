@@ -87,8 +87,8 @@ trait Analyzer extends NscAnalyzer with Metadata {
         }
         // NOTE: this is a meaningful difference from the code in Typers.scala
         //-t
-        //+t.appendMetadata("originalQual" -> qual, "originalName" -> name)
-        t.appendMetadata("originalQual" -> qual, "originalName" -> name)
+        if (t.metadata.contains("originalQual") || t.metadata.contains("originalName")) t
+        else t.appendMetadata("originalQual" -> qual, "originalName" -> name)
       }
       def typedSelectInternal(tree: Tree, qual: Tree, name: Name): Tree = {
         def asDynamicCall = dyna.mkInvoke(context, tree, qual, name) map { t =>
@@ -102,7 +102,9 @@ trait Analyzer extends NscAnalyzer with Metadata {
           if (name != nme.CONSTRUCTOR && mode.inAny(EXPRmode | PATTERNmode)) {
             val qual1 = adaptToMemberWithArgs(tree, qual, name, mode, reportAmbiguous = true, saveErrors = true)
             if ((qual1 ne qual) && !qual1.isErrorTyped)
-              return typed(treeCopy.Select(tree, qual1, name), mode, pt)
+              // NOTE: this is a meaningful difference from the code in Typers.scala
+              //-return typed(treeCopy.Select(tree, qual1, name), mode, pt)
+              return typed(treeCopy.Select(tree, qual1, name).appendMetadata("originalQual" -> qual, "originalName" -> name), mode, pt)
           }
           NoSymbol
         }
