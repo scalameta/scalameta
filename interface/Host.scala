@@ -640,19 +640,6 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
         val psuper = if (mix != g.tpnme.EMPTY) Some(in.symbol.asClass.rawcvt(in)) else None
         p.Qual.Super(pthis, psuper)
       case in @ g.This(qual) =>
-        def moduleRef(gsym: g.Symbol): g.Tree = {
-          def loop(gsym: g.Symbol): g.Tree = {
-            if (gsym.isPackageClass) loop(gsym.asClass.module)
-            else if (gsym.isClass) g.This(gsym).setType(gsym.tpe)
-            else {
-              // TODO: figure out what to do about _root_ and _empty_
-              val isIdent = gsym.owner == g.NoSymbol || gsym.owner == g.rootMirror.RootClass || gsym.owner == g.rootMirror.EmptyPackageClass
-              if (isIdent) g.Ident(gsym).setType(gsym.tpe)
-              else g.Select(loop(gsym.owner), gsym).setType(gsym.tpe)
-            }
-          }
-          loop(gsym)
-        }
         val orig = in.metadata.get("originalIdent").map(_.asInstanceOf[g.Ident])
         orig match {
           case Some(orig) =>
@@ -661,9 +648,9 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
             // therefore neither rawcvt, nor precvt are useful to us, and we have to create p.Term.Name ourselves
             p.Term.Name(alias(orig), isBackquoted(orig))
           case _ if in.symbol.isPackageClass =>
-            val isIdent = in.symbol.owner == g.NoSymbol || in.symbol.owner == g.rootMirror.RootClass || in.symbol.owner == g.rootMirror.EmptyPackageClass
-            if (isIdent) moduleRef(in.symbol).asInstanceOf[g.Ident].cvt_! : p.Term.Name
-            else moduleRef(in.symbol).asInstanceOf[g.Select].cvt_! : p.Term.Select
+            // NOTE: now that we undo idents and quals of selects to their original state
+            // this kind of synthetic, unwriteable tree shouldn't arise during conversions
+            unreachable
           case _ =>
             p.Term.This(if (qual != g.tpnme.EMPTY) Some(in.symbol.qualcvt(in)) else None)
         }
@@ -728,9 +715,29 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
       case g.NoType =>
         unreachable
       case in @ g.ThisType(sym) =>
-        // TODO: infer whether thistpe originally corresponded to Some or None
-        val gthis = g.This(sym).asInstanceOf[g.This].setType(in)
-        p.Type.Singleton(gthis.cvt)
+        p.Type.Singleton({
+          if (sym.isPackageClass) {
+            def moduleRef(gsym: g.Symbol): g.Tree = {
+              def loop(gsym: g.Symbol): g.Tree = {
+                if (gsym.isPackageClass) loop(gsym.asClass.module)
+                else if (gsym.isClass) g.This(gsym).setType(gsym.tpe)
+                else {
+                  // TODO: figure out what to do about _root_ and _empty_
+                  val isIdent = gsym.owner == g.NoSymbol || gsym.owner == g.rootMirror.RootClass || gsym.owner == g.rootMirror.EmptyPackageClass
+                  if (isIdent) g.Ident(gsym).setType(gsym.tpe)
+                  else g.Select(loop(gsym.owner), gsym).setType(gsym.tpe)
+                }
+              }
+              loop(gsym)
+            }
+            val isIdent = sym.owner == g.NoSymbol || sym.owner == g.rootMirror.RootClass || sym.owner == g.rootMirror.EmptyPackageClass
+            if (isIdent) moduleRef(sym).asInstanceOf[g.Ident].cvt_! : p.Term.Name
+            else moduleRef(sym).asInstanceOf[g.Select].cvt_! : p.Term.Select
+          } else {
+            // TODO: infer whether thistpe originally corresponded to Some or None
+            p.Term.This(None)
+          }
+        }.appendScratchpad(sym))
       case g.SuperType(thistpe, supertpe) =>
         // TODO: infer whether supertpe originally corresponded to Some or None
         val p.Type.Singleton(p.Term.This(pthis)) = thistpe.cvt
