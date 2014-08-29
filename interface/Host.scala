@@ -834,10 +834,16 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
       case g.SelectFromArray(_, _, _) =>
         unreachable
       case in @ g.TypeTree() =>
-        require(in.original != null)
+        val original = in.original match {
+          case null => unreachable
+          case in: g.SingletonTypeTree => g.treeCopy.SingletonTypeTree(in, in.metadata("originalRef").asInstanceOf[g.Tree])
+          case tree => tree
+        }
         // TODO: a pattern match on a refinement type is unchecked
         // in.original.cvt_! : pScalaType
-        (in.original.cvt_! : p.Type).asInstanceOf[pScalaType]
+        (original.cvt_! : p.Type).asInstanceOf[pScalaType]
+      case in @ g.SingletonTypeTree(ref) =>
+        p.Type.Singleton(ref.cvt_!)
       case in @ g.TypeTreeWithDeferredRefCheck() =>
         // NOTE: I guess, we can do deferred checks here as the converter isn't supposed to run in the middle of typer
         // we will have to revisit this in case we decide to support whitebox macros in Palladium

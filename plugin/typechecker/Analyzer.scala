@@ -385,6 +385,21 @@ trait Analyzer extends NscAnalyzer with Metadata {
             case _                            => tree1
           }
       }
+      def typedSingletonTypeTree(tree: SingletonTypeTree) = {
+        val refTyped =
+          context.withImplicitsDisabled {
+            typed(tree.ref, MonoQualifierModes | mode.onlyTypePat, AnyRefTpe)
+          }
+
+        if (!refTyped.isErrorTyped) {
+          // NOTE: this is a meaningful difference from the code in Typers.scala
+          //-tree setType refTyped.tpe.resultType
+          tree setType refTyped.tpe.resultType appendMetadata ("originalRef" -> refTyped)
+        }
+
+        if (treeInfo.admitsTypeSelection(refTyped)) tree
+        else UnstableTreeError(refTyped)
+      }
       // ========================
       // NOTE: The code above is almost completely copy/pasted from Typers.scala.
       // The changes there are mostly mechanical (indentation), but those, which are non-trivial (e.g. appending metadata to trees)
@@ -396,6 +411,7 @@ trait Analyzer extends NscAnalyzer with Metadata {
       else {
         val result = tree match {
           case tree @ Select(qual, name) => typedSelectOrSuperCall(tree)
+          case tree @ SingletonTypeTree(ref) => typedSingletonTypeTree(tree)
           case _ => super.typed1(tree, mode, pt)
         }
         // TODO: wat do these methods even mean, and how do they differ?
