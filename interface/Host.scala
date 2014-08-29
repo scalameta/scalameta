@@ -587,40 +587,24 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
         // NOTE: SyntacticTemplate (based on UnMkTemplate, the basis of SyntacticClassDef and friends)
         // returns incorrect parents if input is typechecked, so we have to work around
         val SyntacticTemplate(gearlydefns, _, gself, gstats) = in
-        val gparents = {
+        val pparents = {
           // TODO: discern `... extends C()` and `... extends C`
-          // TODO: detect and discard synthetic parents
-          // TODO: figure out whether type arguments were inferred or not
-          val incompleteGparents = in.parents.map(tpe => g.Apply(tpe, Nil))
-          val impreciseGparents = g.treeInfo.firstConstructor(rawstats) match {
-            case g.DefDef(_, _, _, _, _, rawinit) =>
-              val gsupercall = rawinit.collect { case app @ g.treeInfo.Applied(g.Select(g.Super(_, _), _), _, _) => app }.head
-              var gsupersymbol: g.Symbol = g.NoSymbol
-              object prettifier extends g.Transformer {
-                override def transform(tree: g.Tree): g.Tree = tree match {
-                  case g.TypeApply(g.Select(g.Super(_, _), _), _) | g.Select(g.Super(_, _), _) =>
-                    gsupersymbol = tree.symbol
-                    g.TypeTree(tree.tpe.finalResultType)
-                  case _ =>
-                    super.transform(tree)
-                }
-              }
-              val gfirstparent = prettifier.transform(gsupercall)
-              require(gsupersymbol != g.NoSymbol)
-              // TODO: figure out how to propagate the symbol
-              // gfirstparent.setSymbol(gsupersymbol) +: incompleteGparents.drop(1)
-              gfirstparent +: incompleteGparents.drop(1)
-            case g.EmptyTree =>
-              incompleteGparents
-          }
-          val typicallySyntheticParents = Set[g.Symbol](g.definitions.ObjectClass, g.definitions.ProductRootClass, g.definitions.SerializableClass)
-          impreciseGparents.filter(gp => !typicallySyntheticParents.contains(gp.symbol))
-        }
-        val pparents = gparents map {
           // TODO: recover names and defaults
-          case q"${tpt: g.TypeTree}()" => p.Aux.Parent(tpt.cvt, Nil)
-          case q"${tpt: g.TypeTree}(...$argss)" => p.Aux.Parent(tpt.cvt, argss.cvt_!)
-          case _ => unreachable
+          val gparents = in.metadata("originalParents").asInstanceOf[List[g.Tree]]
+          gparents match {
+            case Nil => Nil
+            case gfirstparent +: gotherparents =>
+              var (gsupersymbol, gargss) = g.treeInfo.firstConstructor(rawstats) match {
+                case g.DefDef(_, _, _, _, _, rawinit) if !rawinit.exists(_ == g.pendingSuperCall) =>
+                  rawinit.collect { case g.treeInfo.Applied(core @ g.Select(g.Super(_, _), _), _, argss) => (core.symbol, argss) }.head
+                case g.EmptyTree =>
+                  (g.NoSymbol, g.analyzer.superArgs(gfirstparent).getOrElse(Nil))
+              }
+              if (gargss == List(Nil)) gargss = Nil
+              val pfirstparent = p.Aux.Parent(gfirstparent.cvt_!, gargss.cvt_!).appendScratchpad(gsupersymbol).appendScratchpad(gfirstparent)
+              val potherparents = gotherparents.map(gp => p.Aux.Parent(gp.cvt_!, Nil))
+              pfirstparent +: potherparents
+          }
         }
         // TODO: really infer hasStats
         // TODO: we should be able to write this without an `if` by having something like `hasStats` as an optional synthetic parameter
