@@ -482,7 +482,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
       case in @ g.ValDef(_, _, tpt @ g.TypeTree(), rhs) if pt <:< typeOf[p.Param] =>
         require(in.symbol.isTerm)
         val isAnonymous = in.symbol.name.toString.startsWith("x$")
-        val ptpe = if (tpt.original != null) Some(pvparamtpe(tpt)) else None
+        val ptpe = if (tpt.original != null) Some[p.Param.Type](pvparamtpe(tpt)) else None
         val pdefault = if (rhs.nonEmpty) Some[p.Term](rhs.cvt_!) else None
         require(isAnonymous ==> pdefault.isEmpty)
         if (isAnonymous) p.Param.Anonymous(pmods(in.symbol), ptpe)
@@ -493,7 +493,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
         else {
           require(in.symbol.isTerm)
           val pname = if (in.symbol.name.toString != "x$1") Some(in.symbol.asTerm.rawcvt(in)) else None
-          val ptpe = if (tpt.original != null) Some(tpt.cvt) else None
+          val ptpe = if (tpt.original != null) Some[p.Type](tpt.cvt) else None
           p.Aux.Self(pname, ptpe, hasThis = false) // TODO: figure out hasThis
         }
       case in @ g.ValDef(_, _, tpt @ g.TypeTree(), rhs) if pt <:< typeOf[p.Member.ValOrVar] =>
@@ -504,8 +504,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
         (in.symbol.isDeferred, in.symbol.isMutable) match {
           case (true, false) => p.Decl.Val(pmods(in.symbol), List(in.symbol.asTerm.rawcvt(in)), tpt.cvt)
           case (true, true) => p.Decl.Var(pmods(in.symbol), List(in.symbol.asTerm.rawcvt(in)), tpt.cvt)
-          case (false, false) => p.Defn.Val(pmods(in.symbol), List(in.symbol.asTerm.rawcvt(in)), if (tpt.original != null) Some(tpt.cvt) else None, rhs.cvt_!)
-          case (false, true) => p.Defn.Var(pmods(in.symbol), List(in.symbol.asTerm.rawcvt(in)), if (tpt.original != null) Some(tpt.cvt) else None, if (!rhs.isEmpty) Some[p.Term](rhs.cvt_!) else None)
+          case (false, false) => p.Defn.Val(pmods(in.symbol), List(in.symbol.asTerm.rawcvt(in)), if (tpt.original != null) Some[p.Type](tpt.cvt) else None, rhs.cvt_!)
+          case (false, true) => p.Defn.Var(pmods(in.symbol), List(in.symbol.asTerm.rawcvt(in)), if (tpt.original != null) Some[p.Type](tpt.cvt) else None, if (!rhs.isEmpty) Some[p.Term](rhs.cvt_!) else None)
         }
       case in @ g.DefDef(_, _, _, _, _, _) =>
         // TODO: figure out procedures
@@ -553,7 +553,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
             case _ => unreachable
           }
         } else if (in.symbol.isDeferred) p.Decl.Def(pmods(in.symbol), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt_!, implicits.cvt_!, tpt.cvt) // TODO: infer procedures
-        else p.Defn.Def(pmods(in.symbol), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt_!, implicits.cvt_!, if (tpt.original != null) Some(tpt.cvt) else None, body.cvt_!)
+        else p.Defn.Def(pmods(in.symbol), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt_!, implicits.cvt_!, if (tpt.original != null) Some[p.Type](tpt.cvt) else None, body.cvt_!)
       case in @ g.TypeDef(_, _, tparams, tpt @ g.TypeTree()) if pt <:< typeOf[p.TypeParam] =>
         // TODO: undo desugarings of context and view bounds
         require(in.symbol.isType)
@@ -779,7 +779,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
         unreachable
       case in @ g.Super(qual @ g.This(_), mix) =>
         require(in.symbol.isClass)
-        val pthis = if (qual != g.tpnme.EMPTY) Some(qual.cvt) else None
+        val pthis = if (qual != g.tpnme.EMPTY) Some[p.Qual.Name](???) else None
         val psuper = if (mix != g.tpnme.EMPTY) Some(in.symbol.asClass.rawcvt(in)) else None
         p.Qual.Super(pthis, psuper)
       case in @ g.This(qual) =>
