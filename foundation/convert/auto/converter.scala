@@ -240,6 +240,18 @@ package object internal {
           }
         }
         x match {
+          // TODO: this is a soundness hole
+          // if we allow WildcardType as pt, this means that we are fine with Nothings from `convertee.cvt`
+          // being propagated into inferred types
+          // that can lead to disasters like
+          //
+          //   val pthis = if (qual != g.tpnme.EMPTY) Some(qual.cvt) else None
+          //   p.Qual.Super(pthis, psuper)
+          //
+          // here, regardless of the actual type of `qual.cvt`, the typecheck will succeed
+          // because `Some(qual.cvt)` has type `Some[Nothing]`, pthis has type `Option[Nothing]`,
+          // and, consequently, pthis will fit the `Option[p.Qual.Name]` required by `p.Qual.Super.qual`
+          // if the actual type is incorrect, that'll be a ClassCastException
           case RawCvt(convertee, force) => Some((convertee, WildcardType, force))
           case Ascribe(RawCvt(convertee, force), pt) => Some((convertee, pt, force))
           case Cast(RawCvt(convertee, _), pt) => Some((convertee, pt, true))
@@ -496,7 +508,7 @@ package object internal {
               q"""
                 $x match {
                   case ..$cases
-                  case in => sys.error(
+                  case in => _root_.scala.sys.`package`.error(
                     "error converting from " + ${in.toString} + " to " + ${out.toString} + ": " +
                     "expected input of type " + ${matching.map(_.in).toString} + ", got input of " + in.getClass.toString + ": " + in)
                 }

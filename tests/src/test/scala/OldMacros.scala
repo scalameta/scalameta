@@ -1,6 +1,6 @@
 import org.scalatest._
 
-class OldSuite extends FunSuite {
+class OldMacros extends FunSuite {
   test("old join") {
     import scala.language.reflectiveCalls
     val x = new { val x = 2 }

@@ -133,7 +133,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
         if (gsym.isSealed) pmods += p.Mod.Sealed()
         if (gsym.isOverride) pmods += p.Mod.Override()
         if (gsym.isCase) pmods += p.Mod.Case()
-        if (gsym.isAbstract && !gsym.isParameter) pmods += p.Mod.Abstract()
+        if (gsym.isAbstract && !gsym.isParameter && !gsym.isTrait) pmods += p.Mod.Abstract()
         if (gsym.isAbstractOverride) { pmods += p.Mod.Abstract(); pmods += p.Mod.Override() }
         if (gsym.isCovariant) pmods += p.Mod.Covariant()
         if (gsym.isContravariant) pmods += p.Mod.Contravariant()
@@ -210,6 +210,9 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
               case g.Literal(g.Constant(0)) =>
               // literals don't have symbols
               case g.Literal(const) => check(tree, skipSymbol = true)
+              // template symbols aren't set when typechecking compound type trees, and they are dummies anyway, so it doesn't really matter
+              // https://groups.google.com/forum/#!topic/scala-internals/6ebL7waMav8
+              case g.Template(parents, self, stats) => check(tree, skipSymbol = true)
               case _ => check(tree)
             }
           }
@@ -439,7 +442,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
       }).zipWithIndex.map{ case (s, i) => s"${i + 1}: $s" }.mkString("\n")
       sys.error(s"""
         |Input Scala tree is not fully attributed and can't be converted to a Palladium tree.
-        |The problem is caused by $offenderSummary that are either unattributed or erroneous:
+        |The problem is caused by $offenderSummary that ${if (offenders.length == 1) "is" else "are"} either unattributed or erroneous:
         |$offenderPrintout
         |The input tree that has caused problems to the converter is printed out below:
         |(Note that showRaw output at the end of the printout is supposed to contain ids and types)
@@ -479,7 +482,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
       case in @ g.ValDef(_, _, tpt @ g.TypeTree(), rhs) if pt <:< typeOf[p.Param] =>
         require(in.symbol.isTerm)
         val isAnonymous = in.symbol.name.toString.startsWith("x$")
-        val ptpe = if (tpt.original != null) Some(pvparamtpe(tpt)) else None
+        val ptpe = if (tpt.original != null) Some[p.Param.Type](pvparamtpe(tpt)) else None
         val pdefault = if (rhs.nonEmpty) Some[p.Term](rhs.cvt_!) else None
         require(isAnonymous ==> pdefault.isEmpty)
         if (isAnonymous) p.Param.Anonymous(pmods(in.symbol), ptpe)
@@ -490,7 +493,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
         else {
           require(in.symbol.isTerm)
           val pname = if (in.symbol.name.toString != "x$1") Some(in.symbol.asTerm.rawcvt(in)) else None
-          val ptpe = if (tpt.original != null) Some(tpt.cvt) else None
+          val ptpe = if (tpt.original != null) Some[p.Type](tpt.cvt) else None
           p.Aux.Self(pname, ptpe, hasThis = false) // TODO: figure out hasThis
         }
       case in @ g.ValDef(_, _, tpt @ g.TypeTree(), rhs) if pt <:< typeOf[p.Member.ValOrVar] =>
@@ -501,8 +504,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
         (in.symbol.isDeferred, in.symbol.isMutable) match {
           case (true, false) => p.Decl.Val(pmods(in.symbol), List(in.symbol.asTerm.rawcvt(in)), tpt.cvt)
           case (true, true) => p.Decl.Var(pmods(in.symbol), List(in.symbol.asTerm.rawcvt(in)), tpt.cvt)
-          case (false, false) => p.Defn.Val(pmods(in.symbol), List(in.symbol.asTerm.rawcvt(in)), if (tpt.original != null) Some(tpt.cvt) else None, rhs.cvt_!)
-          case (false, true) => p.Defn.Var(pmods(in.symbol), List(in.symbol.asTerm.rawcvt(in)), if (tpt.original != null) Some(tpt.cvt) else None, if (!rhs.isEmpty) Some[p.Term](rhs.cvt_!) else None)
+          case (false, false) => p.Defn.Val(pmods(in.symbol), List(in.symbol.asTerm.rawcvt(in)), if (tpt.original != null) Some[p.Type](tpt.cvt) else None, rhs.cvt_!)
+          case (false, true) => p.Defn.Var(pmods(in.symbol), List(in.symbol.asTerm.rawcvt(in)), if (tpt.original != null) Some[p.Type](tpt.cvt) else None, if (!rhs.isEmpty) Some[p.Term](rhs.cvt_!) else None)
         }
       case in @ g.DefDef(_, _, _, _, _, _) =>
         // TODO: figure out procedures
@@ -550,7 +553,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
             case _ => unreachable
           }
         } else if (in.symbol.isDeferred) p.Decl.Def(pmods(in.symbol), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt_!, implicits.cvt_!, tpt.cvt) // TODO: infer procedures
-        else p.Defn.Def(pmods(in.symbol), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt_!, implicits.cvt_!, if (tpt.original != null) Some(tpt.cvt) else None, body.cvt_!)
+        else p.Defn.Def(pmods(in.symbol), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt_!, implicits.cvt_!, if (tpt.original != null) Some[p.Type](tpt.cvt) else None, body.cvt_!)
       case in @ g.TypeDef(_, _, tparams, tpt @ g.TypeTree()) if pt <:< typeOf[p.TypeParam] =>
         // TODO: undo desugarings of context and view bounds
         require(in.symbol.isType)
@@ -595,9 +598,9 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
             case Nil => Nil
             case gfirstparent +: gotherparents =>
               var (gsupersymbol, gargss) = g.treeInfo.firstConstructor(rawstats) match {
-                case g.DefDef(_, _, _, _, _, rawinit) if !rawinit.exists(_ == g.pendingSuperCall) =>
+                case g.DefDef(_, name, _, _, _, rawinit) if name == g.nme.CONSTRUCTOR && !rawinit.exists(_ == g.pendingSuperCall) =>
                   rawinit.collect { case g.treeInfo.Applied(core @ g.Select(g.Super(_, _), _), _, argss) => (core.symbol, argss) }.head
-                case g.EmptyTree =>
+                case _ =>
                   (g.NoSymbol, g.analyzer.superArgs(gfirstparent).getOrElse(Nil))
               }
               if (gargss == List(Nil)) gargss = Nil
@@ -776,7 +779,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
         unreachable
       case in @ g.Super(qual @ g.This(_), mix) =>
         require(in.symbol.isClass)
-        val pthis = if (qual != g.tpnme.EMPTY) Some(qual.cvt) else None
+        val orig = in.metadata.get("originalThis").map(_.asInstanceOf[g.This])
+        val pthis = orig.map(orig => qual.symbol.qualcvt(orig))
         val psuper = if (mix != g.tpnme.EMPTY) Some(in.symbol.asClass.rawcvt(in)) else None
         p.Qual.Super(pthis, psuper)
       case in @ g.This(qual) =>
@@ -835,18 +839,38 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
         unreachable
       case in @ g.TypeTree() =>
         val original = in.original match {
-          case null => unreachable
-          case in: g.SingletonTypeTree => g.treeCopy.SingletonTypeTree(in, in.metadata("originalRef").asInstanceOf[g.Tree])
-          case tree => tree
+          case null =>
+            unreachable
+          case in: g.SingletonTypeTree =>
+            g.treeCopy.SingletonTypeTree(in, in.metadata("originalRef").asInstanceOf[g.Tree])
+          case in @ g.CompoundTypeTree(templ) =>
+            // NOTE: this attachment is only going to work past typer
+            // but since we're not yet going to implement whitebox macros, that's not yet a problem
+            require(templ.self == g.noSelfType)
+            val Some(g.CompoundTypeTreeOriginalAttachment(parents1, stats1)) = templ.attachments.get[g.CompoundTypeTreeOriginalAttachment]
+            val templ1 = g.treeCopy.Template(templ, parents1, g.noSelfType, stats1).setType(g.NoType).setSymbol(g.NoSymbol)
+            g.treeCopy.CompoundTypeTree(in, templ1)
+          case tree =>
+            tree
         }
+        original.setType(in.tpe)
         // TODO: a pattern match on a refinement type is unchecked
         // in.original.cvt_! : pScalaType
         (original.cvt_! : p.Type).asInstanceOf[pScalaType]
       case in @ g.SingletonTypeTree(ref) =>
         p.Type.Singleton(ref.cvt_!)
+      case in @ g.CompoundTypeTree(templ) =>
+        val p.Aux.Template(early, parents, self, stats) = templ.cvt
+        require(early.isEmpty && parents.forall(_.argss.isEmpty) && self.name.isEmpty && self.decltpe.isEmpty && stats.forall(_.isInstanceOf[p.Stmt.Refine]))
+        p.Type.Compound(parents.map(_.tpe), stats.asInstanceOf[Seq[p.Stmt.Refine]])
+      case in @ g.AppliedTypeTree(tpt, args) =>
+        // TODO: infer whether that was Apply, Function or Tuple
+        p.Type.Apply(tpt.cvt_!, args.cvt_!)
       case in @ g.TypeTreeWithDeferredRefCheck() =>
         // NOTE: I guess, we can do deferred checks here as the converter isn't supposed to run in the middle of typer
         // we will have to revisit this in case we decide to support whitebox macros in Palladium
+        // TODO: in the future, when we'll have moved the validating part of refchecks before the macro expansion phase,
+        // there won't be any necessity to support TypeTreeWithDeferredRefCheck trees
         in.check().cvt: pScalaType
       case _: g.TypTree =>
         // TODO: also account for Idents, which can very well refer to types while not being TypTrees themselves
