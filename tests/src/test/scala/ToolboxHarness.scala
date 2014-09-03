@@ -13,40 +13,45 @@ trait ToolboxHarness {
   def typecheckConvertAndPrettyprint(code: String): String = {
     val pluginJar = System.getProperty("sbt.classpaths.package.plugin")
     val compilationClasspath = System.getProperty("sbt.classpaths.test.tests").split(File.pathSeparatorChar.toString).map(path => new URL("file://" + path))
-    val classloader = new URLClassLoader(compilationClasspath)
+    val classloader = new URLClassLoader(compilationClasspath, getClass.getClassLoader)
     val mirror = ru.runtimeMirror(classloader)
     val tb = mirror.mkToolBox(options = "-Xplugin:" + pluginJar + " -Xplugin-require:scalahost")
-    val tree = tb.parse(code)
-    val result: String = null
+    var result: String = null
     def cont(compilerApi: AnyRef): Unit = {
       val m_compiler = compilerApi.getClass.getDeclaredMethod("compiler")
       val compiler = m_compiler.invoke(compilerApi).asInstanceOf[scala.tools.nsc.Global]
-
-      val m_importer = compilerApi.getClass.getDeclaredMethod("importer")
-      val importer = m_importer.invoke(compilerApi).asInstanceOf[compiler.Importer { val from: ru.type }]
-      val ctree: compiler.Tree = importer.importTree(tree)
       import compiler._
       import analyzer._
+
       val run = new Run
+      phase = run.parserPhase
+      globalPhase = run.parserPhase
+      val unit = compiler.newCompilationUnit(code, "<memory>")
+      unit.body = compiler.newUnitParser(unit).parse()
       phase = run.namerPhase
       globalPhase = run.namerPhase
-      val namer = newNamer(rootContext(NoCompilationUnit))
-      namer.enterSym(ctree)
+      newNamer(rootContext(unit)).enterSym(unit.body)
+      phase = run.phaseNamed("packageobjects")
+      globalPhase = run.phaseNamed("packageobjects")
+      val openPackageObjectsTraverser = new Traverser {
+        override def traverse(tree: Tree): Unit = tree match {
+          case ModuleDef(_, _, _) =>
+            if (tree.symbol.name == nme.PACKAGEkw) {
+              openPackageModule(tree.symbol, tree.symbol.owner)
+            }
+          case ClassDef(_, _, _, _) => () // make it fast
+          case _ => super.traverse(tree)
+        }
+      }
+      openPackageObjectsTraverser(unit.body)
       phase = run.typerPhase
       globalPhase = run.typerPhase
-      val typer = newTyper(rootContext(NoCompilationUnit))
-      val ttree = typer.typed(ctree).asInstanceOf[compiler.Tree]
-      println(ttree)
+      unit.body = newTyper(rootContext(unit)).typed(unit.body).asInstanceOf[compiler.Tree]
+      for (workItem <- unit.toCheck) workItem()
 
       val h = Scalahost(compiler).asInstanceOf[PalladiumHost with OurHost[compiler.type]]
-      val result = ttree match {
-        case term: TermTree => h.toPalladium(term, classOf[Term])
-        case member: MemberDef => h.toPalladium(member, classOf[Stmt.Template])
-        case other => h.toPalladium(other, classOf[Stmt.TopLevel])
-      }
-      println(result.show[Code])
-      println(result.show[Raw])
-      ???
+      val ptree = h.toPalladium(unit.body, classOf[Aux.CompUnit])
+      result = ptree.show[Code]
     }
     val m_withCompilerApi = tb.getClass.getDeclaredMethod("withCompilerApi")
     val o_withCompilerApi = m_withCompilerApi.invoke(tb)
