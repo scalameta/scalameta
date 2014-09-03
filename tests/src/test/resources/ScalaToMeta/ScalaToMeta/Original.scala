@@ -11,13 +11,13 @@ import scala.meta.internal.hosts.scalacompiler.scalahost.Scalahost
 import scala.meta.semantic.{Host => PalladiumHost}
 import scala.meta.internal.hosts.scalacompiler.scalahost.{Host => OurHost}
 
-trait ToolboxHarness extends FunSuite {
-  private def typecheckConvertAndPrettyprint(code: String, debug: Boolean): String = {
-    val pluginJar = System.getProperty("sbt.classpaths.package.plugin")
-    val compilationClasspath = System.getProperty("sbt.classpaths.test.tests").split(File.pathSeparatorChar.toString).map(path => new URL("file://" + path))
+class ScalaToMeta extends FunSuite {
+  def typecheckConvertAndPrettyprint(code: String, debug: Boolean): String = {
+    val pluginJar = System.getProperty("sbt.paths.plugin.jar")
+    val compilationClasspath = System.getProperty("sbt.paths.tests.classpath").split(File.pathSeparatorChar.toString).map(path => new URL("file://" + path))
     val classloader = new URLClassLoader(compilationClasspath, getClass.getClassLoader)
     val mirror = ru.runtimeMirror(classloader)
-    val tb = mirror.mkToolBox(options = "-cp " + System.getProperty("sbt.classpaths.test.tests") + " -Xplugin:" + pluginJar + " -Xplugin-require:scalahost")
+    val tb = mirror.mkToolBox(options = "-cp " + System.getProperty("sbt.paths.tests.classpath") + " -Xplugin:" + pluginJar + " -Xplugin-require:scalahost")
     var result: String = null
     def cont(compilerApi: AnyRef): Unit = {
       val m_compiler = compilerApi.getClass.getDeclaredMethod("compiler")
@@ -85,12 +85,16 @@ trait ToolboxHarness extends FunSuite {
     result
   }
 
-  def checkScalaToMeta(scalaCodeTemplate: String, metaCodeTemplate: String): Unit = {
-    val actualResult = typecheckConvertAndPrettyprint(scalaCodeTemplate.trim.stripMargin.replace("QQQ", "\"\"\""), debug = false)
-    val expectedResult = metaCodeTemplate.trim.stripMargin.replace("QQQ", "\"\"\"")
+  def runScalaToMetaTest(dirPath: String): Unit = {
+    def slurp(filePath: String) = scala.io.Source.fromFile(new File(filePath)).mkString.trim
+    val actualResult = typecheckConvertAndPrettyprint(slurp(dirPath + File.separatorChar + "Original.scala"), debug = false)
+    val expectedResult = slurp(dirPath + File.separatorChar + "Expected.scala")
     if (actualResult != expectedResult) {
-      typecheckConvertAndPrettyprint(scalaCodeTemplate.trim.stripMargin.replace("QQQ", "\"\"\""), debug = true)
+      typecheckConvertAndPrettyprint(slurp(dirPath + File.separatorChar + "Original.scala"), debug = true)
       assert(actualResult === expectedResult)
     }
   }
+
+  val resourceDir = new File(System.getProperty("sbt.paths.tests.resources") + File.separatorChar + "ScalaToMeta")
+  resourceDir.listFiles().foreach(dir => test(dir.getName)(runScalaToMetaTest(dir.getAbsolutePath)))
 }

@@ -151,15 +151,21 @@ object Settings {
   // main after editing the plugin. (Otherwise a 'clean' is needed.)
   def usePlugin(plugin: ProjectReference) =
     scalacOptions <++= (Keys.`package` in (plugin, Compile)) map { (jar: File) =>
-      System.setProperty("sbt.classpaths.package.plugin", jar.getAbsolutePath)
+      System.setProperty("sbt.paths.plugin.jar", jar.getAbsolutePath)
       Seq("-Xplugin:" + jar.getAbsolutePath, "-Jdummy=" + jar.lastModified)
     }
 
-  def exposeClasspaths(projectName: String) =
+  def exposeClasspaths(projectName: String) = Seq(
     fullClasspath in Test := {
       val defaultValue = (fullClasspath in Test).value
       val classpath = defaultValue.files.map(_.getAbsolutePath)
-      System.setProperty("sbt.classpaths.test.tests", classpath.mkString(java.io.File.pathSeparatorChar.toString))
+      System.setProperty("sbt.paths.tests.classpath", classpath.mkString(java.io.File.pathSeparatorChar.toString))
+      defaultValue
+    },
+    resourceDirectory in Test := {
+      val defaultValue = (resourceDirectory in Test).value
+      System.setProperty("sbt.paths.tests.resources", defaultValue.getAbsolutePath)
       defaultValue
     }
+  )
 }
