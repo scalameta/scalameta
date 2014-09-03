@@ -2,7 +2,8 @@ import org.scalatest._
 import java.net._
 import java.io.File
 import scala.reflect.runtime.{universe => ru}
-import scala.tools.reflect.ToolBox
+import scala.tools.reflect.{ToolBox, ToolBoxError}
+import scala.compat.Platform.EOL
 import scala.meta._
 import scala.meta.syntactic.parsers._
 import scala.meta.syntactic.show._
@@ -11,7 +12,7 @@ import scala.meta.semantic.{Host => PalladiumHost}
 import scala.meta.internal.hosts.scalacompiler.scalahost.{Host => OurHost}
 
 trait ToolboxHarness extends FunSuite {
-  private def typecheckConvertAndPrettyprint(code: String): String = {
+  private def typecheckConvertAndPrettyprint(code: String, debug: Boolean): String = {
     val pluginJar = System.getProperty("sbt.classpaths.package.plugin")
     val compilationClasspath = System.getProperty("sbt.classpaths.test.tests").split(File.pathSeparatorChar.toString).map(path => new URL("file://" + path))
     val classloader = new URLClassLoader(compilationClasspath, getClass.getClassLoader)
@@ -24,14 +25,28 @@ trait ToolboxHarness extends FunSuite {
       import compiler._
       import analyzer._
 
-      val run = new Run
+      reporter.reset()
+      val m_frontEnd = tb.getClass.getDeclaredMethod("frontEnd")
+      val frontEnd = m_frontEnd.invoke(tb).asInstanceOf[scala.tools.reflect.FrontEnd]
+      frontEnd.reset()
+      def throwIfErrors(): Unit = {
+        if (frontEnd.hasErrors) throw ToolBoxError(
+          "reflective compilation has failed:" + EOL + EOL + (frontEnd.infos map (_.msg) mkString EOL)
+        )
+      }
+
+      val run = new compiler.Run
       phase = run.parserPhase
       globalPhase = run.parserPhase
       val unit = compiler.newCompilationUnit(code, "<memory>")
       unit.body = compiler.newUnitParser(unit).parse()
+      throwIfErrors()
+
       phase = run.namerPhase
       globalPhase = run.namerPhase
       newNamer(rootContext(unit)).enterSym(unit.body)
+      throwIfErrors()
+
       phase = run.phaseNamed("packageobjects")
       globalPhase = run.phaseNamed("packageobjects")
       val openPackageObjectsTraverser = new Traverser {
@@ -45,19 +60,28 @@ trait ToolboxHarness extends FunSuite {
         }
       }
       openPackageObjectsTraverser(unit.body)
+      throwIfErrors()
+
       phase = run.typerPhase
       globalPhase = run.typerPhase
-      unit.body = newTyper(rootContext(unit)).typed(unit.body).asInstanceOf[compiler.Tree]
+      val typer = newTyper(rootContext(unit))
+      typer.context.setReportErrors() // need to manually set context mode, otherwise typer.silent will throw exceptions
+      unit.body = typer.typed(unit.body).asInstanceOf[compiler.Tree]
+      if (debug) println(unit.body)
       for (workItem <- unit.toCheck) workItem()
+      throwIfErrors()
 
       val h = Scalahost(compiler).asInstanceOf[PalladiumHost with OurHost[compiler.type]]
       val ptree = h.toPalladium(unit.body, classOf[Aux.CompUnit])
+      if (debug) println(ptree.show[Code])
+      if (debug) println(ptree.show[Raw])
       result = ptree.show[Code]
     }
     val m_withCompilerApi = tb.getClass.getDeclaredMethod("withCompilerApi")
     val o_withCompilerApi = m_withCompilerApi.invoke(tb)
     val m_apply = o_withCompilerApi.getClass.getDeclaredMethods.find(_.getName == "apply").get
-    m_apply.invoke(o_withCompilerApi, cont _)
+    try m_apply.invoke(o_withCompilerApi, cont _)
+    catch scala.reflect.runtime.ReflectionUtils.unwrapHandler({ case ex => throw ex })
     result
   }
 
