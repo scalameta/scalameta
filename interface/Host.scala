@@ -439,7 +439,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
       }).zipWithIndex.map{ case (s, i) => s"${i + 1}: $s" }.mkString("\n")
       sys.error(s"""
         |Input Scala tree is not fully attributed and can't be converted to a Palladium tree.
-        |The problem is caused by $offenderSummary that are either unattributed or erroneous:
+        |The problem is caused by $offenderSummary that ${if (offenders.length == 1) "is" else "are"} either unattributed or erroneous:
         |$offenderPrintout
         |The input tree that has caused problems to the converter is printed out below:
         |(Note that showRaw output at the end of the printout is supposed to contain ids and types)
