@@ -406,7 +406,7 @@ trait Analyzer extends NscAnalyzer with Metadata {
       // NOTE: The code above is almost completely copy/pasted from Typers.scala.
       // The changes there are mostly mechanical (indentation), but those, which are non-trivial (e.g. appending metadata to trees)
       // are denoted with //- and //+ comments that designate diffs from the original code.
-      // I would gladly do away with the copy/paste, which is not plain ugly, but also imposes high maintainability tax,
+      // I would gladly do away with the copy/paste, which is not only plain ugly, but also imposes high maintainability tax,
       // but I can't do that, because `typedSelect` needs to remember the original qualifier, and I can't override it, because it's a local method.
       // ========================
       if (isPastTyper) super.typed1(tree, mode, pt)
