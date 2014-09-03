@@ -114,4 +114,8 @@ class ShowSuite extends ParseSuite {
       |}
     """.trim.stripMargin)
   }
+
+  test("new X") {
+    assert(templStat("new X").show[Code] === "new X")
+  }
 }

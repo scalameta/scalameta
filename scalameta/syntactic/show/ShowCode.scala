@@ -258,11 +258,12 @@ object Code {
       else {
         val pearly = if (t.early.isEmpty) s() else s("{ ", r(t.early, "; "), " } with ")
         val pself = if (s(t.self).toString.nonEmpty) s(" ", t.self) else s("")
+        val pparents = if (t.parents.nonEmpty) s(r(t.parents, " with ")) else s()
+        val psep = if (t.parents.nonEmpty && (t.self.name.nonEmpty || t.self.decltpe.nonEmpty || t.hasStats)) " " else ""
         val pbody = if (t.self.name.isEmpty && t.self.decltpe.isEmpty && !t.hasStats) s()
                     else if (t.stats.length == 1 && !s(t.stats.head).toString.contains("\n")) s("{", pself, " ", t.stats.head, " }")
                     else s("{", pself, r(t.stats.map(i(_)), ""), n("}"))
-        val pparents = if (t.parents.nonEmpty) s(r(t.parents, " with "), " ") else s()
-        s(pearly, pparents, pbody)
+        s(pearly, pparents, psep, pbody)
       }
     case t: TypeBounds =>
       s(if (t.hasLo) s(" >: ", t.lo) else s(), if (t.hasHi) s(" <: ", t.hi) else s())
