@@ -1,8 +1,8 @@
 import org.scalatest._
 
-class ScalaToMeta extends FunSuite with ToolboxHarness {
+class ScalaToMeta extends ToolboxHarness {
   test("definition of old Join") {
-    val result = typecheckConvertAndPrettyprint("""
+    checkScalaToMeta("""
       |import scala.reflect.macros.whitebox._
       |import scala.language.experimental.macros
       |object Join {
@@ -20,8 +20,8 @@ class ScalaToMeta extends FunSuite with ToolboxHarness {
       |  }
       |  def apply[T, U](x: T, y: U): Any = macro impl
       |}
-    """.trim.stripMargin.replace("QQQ", "\"\"\""))
-    assert(result === """
+    """,
+    """
       |import scala.reflect.macros.whitebox._
       |import scala.language.experimental.macros
       |object Join {
@@ -45,6 +45,6 @@ class ScalaToMeta extends FunSuite with ToolboxHarness {
       |  }
       |  def apply[T, U](x: T, y: U): Any = macro Join.impl
       |}
-    """.trim.stripMargin.replace("QQQ", "\"\"\""))
+    """)
   }
 }

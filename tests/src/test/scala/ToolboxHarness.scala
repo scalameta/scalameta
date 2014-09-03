@@ -1,3 +1,4 @@
+import org.scalatest._
 import java.net._
 import java.io.File
 import scala.reflect.runtime.{universe => ru}
@@ -9,8 +10,8 @@ import scala.meta.internal.hosts.scalacompiler.scalahost.Scalahost
 import scala.meta.semantic.{Host => PalladiumHost}
 import scala.meta.internal.hosts.scalacompiler.scalahost.{Host => OurHost}
 
-trait ToolboxHarness {
-  def typecheckConvertAndPrettyprint(code: String): String = {
+trait ToolboxHarness extends FunSuite {
+  private def typecheckConvertAndPrettyprint(code: String): String = {
     val pluginJar = System.getProperty("sbt.classpaths.package.plugin")
     val compilationClasspath = System.getProperty("sbt.classpaths.test.tests").split(File.pathSeparatorChar.toString).map(path => new URL("file://" + path))
     val classloader = new URLClassLoader(compilationClasspath, getClass.getClassLoader)
@@ -58,5 +59,10 @@ trait ToolboxHarness {
     val m_apply = o_withCompilerApi.getClass.getDeclaredMethods.find(_.getName == "apply").get
     m_apply.invoke(o_withCompilerApi, cont _)
     result
+  }
+
+  def checkScalaToMeta(scalaCodeTemplate: String, metaCodeTemplate: String): Unit = {
+    val result = typecheckConvertAndPrettyprint(scalaCodeTemplate.trim.stripMargin.replace("QQQ", "\"\"\""))
+    assert(result === metaCodeTemplate.trim.stripMargin.replace("QQQ", "\"\"\""))
   }
 }
