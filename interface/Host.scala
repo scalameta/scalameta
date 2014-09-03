@@ -779,7 +779,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
         unreachable
       case in @ g.Super(qual @ g.This(_), mix) =>
         require(in.symbol.isClass)
-        val pthis = if (qual != g.tpnme.EMPTY) Some[p.Qual.Name](???) else None
+        val orig = in.metadata.get("originalThis").map(_.asInstanceOf[g.This])
+        val pthis = orig.map(orig => qual.symbol.qualcvt(orig))
         val psuper = if (mix != g.tpnme.EMPTY) Some(in.symbol.asClass.rawcvt(in)) else None
         p.Qual.Super(pthis, psuper)
       case in @ g.This(qual) =>

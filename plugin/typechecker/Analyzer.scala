@@ -445,6 +445,7 @@ trait Analyzer extends NscAnalyzer with Metadata {
         if (result.isErroneous || result.isErrorTyped) result
         else tree match {
           case Ident(_) => result.appendMetadata("originalIdent" -> tree)
+          case Super(qual @ This(_), _) => result.appendMetadata("originalThis" -> qual)
           case _ => result
         }
       }
