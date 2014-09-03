@@ -402,6 +402,30 @@ trait Analyzer extends NscAnalyzer with Metadata {
         if (treeInfo.admitsTypeSelection(refTyped)) tree
         else UnstableTreeError(refTyped)
       }
+      def typedCompoundTypeTree(tree: CompoundTypeTree) = {
+        val templ = tree.templ
+        val parents1 = templ.parents mapConserve (typedType(_, mode))
+
+        // NOTE: this is a meaningful difference from the code in Typers.scala
+        // TODO: figure out how to discern automatically inserted and explicitly written AnyRefs
+        var originals = parents1.filter(_.tpe.typeSymbol != ObjectClass)
+        templ.appendMetadata("originalParents" -> originals)
+
+        // This is also checked later in typedStats, but that is too late for SI-5361, so
+        // we eagerly check this here.
+        for (stat <- templ.body if !treeInfo.isDeclarationOrTypeDef(stat))
+          OnlyDeclarationsError(stat)
+
+        if ((parents1 ++ templ.body) exists (_.isErrorTyped)) tree setType ErrorType
+        else {
+          val decls = newScope
+          //Console.println("Owner: " + context.enclClass.owner + " " + context.enclClass.owner.id)
+          val self = refinedType(parents1 map (_.tpe), context.enclClass.owner, decls, templ.pos)
+          newTyper(context.make(templ, self.typeSymbol, decls)).typedRefinement(templ)
+          templ updateAttachment CompoundTypeTreeOriginalAttachment(parents1, Nil) // stats are set elsewhere
+          tree setType (if (templ.exists(_.isErroneous)) ErrorType else self) // Being conservative to avoid SI-5361
+        }
+      }
       // ========================
       // NOTE: The code above is almost completely copy/pasted from Typers.scala.
       // The changes there are mostly mechanical (indentation), but those, which are non-trivial (e.g. appending metadata to trees)
@@ -414,6 +438,7 @@ trait Analyzer extends NscAnalyzer with Metadata {
         val result = tree match {
           case tree @ Select(qual, name) => typedSelectOrSuperCall(tree)
           case tree @ SingletonTypeTree(ref) => typedSingletonTypeTree(tree)
+          case tree @ CompoundTypeTree(templ) => typedCompoundTypeTree(tree)
           case _ => super.typed1(tree, mode, pt)
         }
         // TODO: wat do these methods even mean, and how do they differ?

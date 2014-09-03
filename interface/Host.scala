@@ -210,6 +210,9 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
               case g.Literal(g.Constant(0)) =>
               // literals don't have symbols
               case g.Literal(const) => check(tree, skipSymbol = true)
+              // template symbols aren't set when typechecking compound type trees, and they are dummies anyway, so it doesn't really matter
+              // https://groups.google.com/forum/#!topic/scala-internals/6ebL7waMav8
+              case g.Template(parents, self, stats) => check(tree, skipSymbol = true)
               case _ => check(tree)
             }
           }
@@ -835,15 +838,29 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
         unreachable
       case in @ g.TypeTree() =>
         val original = in.original match {
-          case null => unreachable
-          case in: g.SingletonTypeTree => g.treeCopy.SingletonTypeTree(in, in.metadata("originalRef").asInstanceOf[g.Tree])
-          case tree => tree
+          case null =>
+            unreachable
+          case in: g.SingletonTypeTree =>
+            g.treeCopy.SingletonTypeTree(in, in.metadata("originalRef").asInstanceOf[g.Tree])
+          case in @ g.CompoundTypeTree(templ) =>
+            // NOTE: this attachment is only going to work past typer
+            // but since we're not yet going to implement whitebox macros, that's not yet a problem
+            require(templ.self == g.noSelfType)
+            val Some(g.CompoundTypeTreeOriginalAttachment(parents1, stats1)) = templ.attachments.get[g.CompoundTypeTreeOriginalAttachment]
+            val templ1 = g.treeCopy.Template(templ, parents1, g.noSelfType, stats1).setType(g.NoType).setSymbol(g.NoSymbol)
+            g.treeCopy.CompoundTypeTree(in, templ1)
+          case tree =>
+            tree
         }
         // TODO: a pattern match on a refinement type is unchecked
         // in.original.cvt_! : pScalaType
         (original.cvt_! : p.Type).asInstanceOf[pScalaType]
       case in @ g.SingletonTypeTree(ref) =>
         p.Type.Singleton(ref.cvt_!)
+      case in @ g.CompoundTypeTree(templ) =>
+        val p.Aux.Template(early, parents, self, stats) = templ.cvt
+        require(early.isEmpty && parents.forall(_.argss.isEmpty) && self.name.isEmpty && self.decltpe.isEmpty && stats.forall(_.isInstanceOf[p.Stmt.Refine]))
+        p.Type.Compound(parents.map(_.tpe), stats.asInstanceOf[Seq[p.Stmt.Refine]])
       case in @ g.TypeTreeWithDeferredRefCheck() =>
         // NOTE: I guess, we can do deferred checks here as the converter isn't supposed to run in the middle of typer
         // we will have to revisit this in case we decide to support whitebox macros in Palladium
