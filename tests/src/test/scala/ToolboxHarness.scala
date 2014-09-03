@@ -17,7 +17,7 @@ trait ToolboxHarness extends FunSuite {
     val compilationClasspath = System.getProperty("sbt.classpaths.test.tests").split(File.pathSeparatorChar.toString).map(path => new URL("file://" + path))
     val classloader = new URLClassLoader(compilationClasspath, getClass.getClassLoader)
     val mirror = ru.runtimeMirror(classloader)
-    val tb = mirror.mkToolBox(options = "-Xplugin:" + pluginJar + " -Xplugin-require:scalahost")
+    val tb = mirror.mkToolBox(options = "-cp " + System.getProperty("sbt.classpaths.test.tests") + " -Xplugin:" + pluginJar + " -Xplugin-require:scalahost")
     var result: String = null
     def cont(compilerApi: AnyRef): Unit = {
       val m_compiler = compilerApi.getClass.getDeclaredMethod("compiler")
