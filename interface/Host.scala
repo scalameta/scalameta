@@ -864,6 +864,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
       case in @ g.TypeTreeWithDeferredRefCheck() =>
         // NOTE: I guess, we can do deferred checks here as the converter isn't supposed to run in the middle of typer
         // we will have to revisit this in case we decide to support whitebox macros in Palladium
+        // TODO: in the future, when we'll have moved the validating part of refchecks before the macro expansion phase,
+        // there won't be any necessity to support TypeTreeWithDeferredRefCheck trees
         in.check().cvt: pScalaType
       case _: g.TypTree =>
         // TODO: also account for Idents, which can very well refer to types while not being TypTrees themselves
