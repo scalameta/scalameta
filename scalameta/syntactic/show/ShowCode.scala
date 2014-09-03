@@ -259,7 +259,7 @@ object Code {
         val pearly = if (t.early.isEmpty) s() else s("{ ", r(t.early, "; "), " } with ")
         val pbody = if (t.self.name.isEmpty && t.self.decltpe.isEmpty && !t.hasStats) s()
                     else if (t.stats.length == 1 && !s(t.stats.head).toString.contains("\n")) s("{ ", t.self, " ", t.stats.head, " }")
-                    else s("{", t.self, " ", r(t.stats.map(i(_)), ""), n("}"))
+                    else s("{", t.self, r(t.stats.map(i(_)), ""), n("}"))
         val pparents = if (t.parents.nonEmpty) s(r(t.parents, " with "), " ") else s()
         s(pearly, pparents, pbody)
       }
