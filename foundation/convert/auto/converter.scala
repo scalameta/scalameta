@@ -508,7 +508,7 @@ package object internal {
               q"""
                 $x match {
                   case ..$cases
-                  case in => sys.error(
+                  case in => _root_.scala.sys.`package`.error(
                     "error converting from " + ${in.toString} + " to " + ${out.toString} + ": " +
                     "expected input of type " + ${matching.map(_.in).toString} + ", got input of " + in.getClass.toString + ": " + in)
                 }
