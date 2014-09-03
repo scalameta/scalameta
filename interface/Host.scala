@@ -852,6 +852,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
           case tree =>
             tree
         }
+        original.setType(in.tpe)
         // TODO: a pattern match on a refinement type is unchecked
         // in.original.cvt_! : pScalaType
         (original.cvt_! : p.Type).asInstanceOf[pScalaType]
@@ -861,6 +862,9 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
         val p.Aux.Template(early, parents, self, stats) = templ.cvt
         require(early.isEmpty && parents.forall(_.argss.isEmpty) && self.name.isEmpty && self.decltpe.isEmpty && stats.forall(_.isInstanceOf[p.Stmt.Refine]))
         p.Type.Compound(parents.map(_.tpe), stats.asInstanceOf[Seq[p.Stmt.Refine]])
+      case in @ g.AppliedTypeTree(tpt, args) =>
+        // TODO: infer whether that was Apply, Function or Tuple
+        p.Type.Apply(tpt.cvt_!, args.cvt_!)
       case in @ g.TypeTreeWithDeferredRefCheck() =>
         // NOTE: I guess, we can do deferred checks here as the converter isn't supposed to run in the middle of typer
         // we will have to revisit this in case we decide to support whitebox macros in Palladium
