@@ -62,7 +62,11 @@ trait ToolboxHarness extends FunSuite {
   }
 
   def checkScalaToMeta(scalaCodeTemplate: String, metaCodeTemplate: String): Unit = {
-    val result = typecheckConvertAndPrettyprint(scalaCodeTemplate.trim.stripMargin.replace("QQQ", "\"\"\""))
-    assert(result === metaCodeTemplate.trim.stripMargin.replace("QQQ", "\"\"\""))
+    val actualResult = typecheckConvertAndPrettyprint(scalaCodeTemplate.trim.stripMargin.replace("QQQ", "\"\"\""), debug = false)
+    val expectedResult = metaCodeTemplate.trim.stripMargin.replace("QQQ", "\"\"\"")
+    if (actualResult != expectedResult) {
+      typecheckConvertAndPrettyprint(scalaCodeTemplate.trim.stripMargin.replace("QQQ", "\"\"\""), debug = true)
+      assert(actualResult === expectedResult)
+    }
   }
 }
