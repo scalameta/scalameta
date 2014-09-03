@@ -598,9 +598,9 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
             case Nil => Nil
             case gfirstparent +: gotherparents =>
               var (gsupersymbol, gargss) = g.treeInfo.firstConstructor(rawstats) match {
-                case g.DefDef(_, _, _, _, _, rawinit) if !rawinit.exists(_ == g.pendingSuperCall) =>
+                case g.DefDef(_, name, _, _, _, rawinit) if name == g.nme.CONSTRUCTOR && !rawinit.exists(_ == g.pendingSuperCall) =>
                   rawinit.collect { case g.treeInfo.Applied(core @ g.Select(g.Super(_, _), _), _, argss) => (core.symbol, argss) }.head
-                case g.EmptyTree =>
+                case _ =>
                   (g.NoSymbol, g.analyzer.superArgs(gfirstparent).getOrElse(Nil))
               }
               if (gargss == List(Nil)) gargss = Nil
