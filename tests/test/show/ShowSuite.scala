@@ -75,4 +75,43 @@ class ShowSuite extends ParseSuite {
       |}
     """.trim.stripMargin)
   }
+
+  test("Template.self stringifications") {
+    assert(templStat("new { val x = 2 }").show[Code] === "new { val x = 2 }")
+    assert(templStat("new { self => val x = 2 }").show[Code] === "new { self => val x = 2 }")
+    assert(templStat("new { self: Int => val x = 2 }").show[Code] === "new { self: Int => val x = 2 }")
+    assert(templStat("""
+      new {
+        val x = 2
+        val y = 3
+      }
+    """).show[Code] === """
+      |new {
+      |  val x = 2
+      |  val y = 3
+      |}
+    """.trim.stripMargin)
+    assert(templStat("""
+      new { self =>
+        val x = 2
+        val y = 3
+      }
+    """).show[Code] === """
+      |new { self =>
+      |  val x = 2
+      |  val y = 3
+      |}
+    """.trim.stripMargin)
+    assert(templStat("""
+      new { self: Int =>
+        val x = 2
+        val y = 3
+      }
+    """).show[Code] === """
+      |new { self: Int =>
+      |  val x = 2
+      |  val y = 3
+      |}
+    """.trim.stripMargin)
+  }
 }
