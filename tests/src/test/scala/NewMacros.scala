@@ -6,7 +6,7 @@ import scala.meta._
 import scala.meta.semantic._
 import errors.throwExceptions
 
-class NewSuite extends FunSuite {
+class NewMacros extends FunSuite {
   test("new join") {
     def join[T, U](x: T, y: U): Any = macro {
       val xfields = x.tpe.vals.map(f => f -> q"xtemp")
