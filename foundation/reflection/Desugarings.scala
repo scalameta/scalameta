@@ -102,20 +102,32 @@ trait Desugarings extends Metadata { self =>
       }
 
       override def transform(tree: Tree): Tree = {
-        object Desugared {
-          def unapply(tree: Tree): Option[Tree] = tree match {
-            case DesugaringProtocol(original) => Some(original)
-            case MacroExpansion(expandee) => Some(expandee)
-            case TypeTree(original) => Some(original)
-            case _ => None
-          }
+        def logFailure() = {
+          def summary(x: Any) = x match { case x: Product => x.productPrefix; case null => "null"; case _ => x.getClass }
+          var details = tree.toString.replace("\n", "")
+          if (details.length > 60) details = details.take(60) + "..."
+          println("(" + summary(tree) + ") " + details)
         }
-        tree match {
-          case Desugared(original) =>
-            val scratchpad = original.metadata.get("scratchpad").map(_.asInstanceOf[List[Any]]).getOrElse(Nil)
-            transform(original.appendMetadata("scratchpad" -> scratchpad))
-          case _ =>
-            super.transform(tree)
+        try {
+          object Desugared {
+            def unapply(tree: Tree): Option[Tree] = tree match {
+              case DesugaringProtocol(original) => Some(original)
+              case MacroExpansion(expandee) => Some(expandee)
+              case TypeTree(original) => Some(original)
+              case _ => None
+            }
+          }
+          tree match {
+            case Desugared(original) =>
+              val scratchpad = original.metadata.get("scratchpad").map(_.asInstanceOf[List[Any]]).getOrElse(Nil)
+              transform(original.appendMetadata("scratchpad" -> scratchpad))
+            case _ =>
+              super.transform(tree)
+          }
+        } catch {
+          case err: _root_.java.lang.AssertionError => logFailure(); throw err
+          case err: _root_.org.scalameta.UnreachableError.type => logFailure(); throw err
+          case ex: _root_.scala.Exception => logFailure(); throw ex
         }
       }
     }
