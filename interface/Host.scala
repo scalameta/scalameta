@@ -17,8 +17,8 @@ import org.scalameta.invariants._
 import org.scalameta.unreachable
 import org.scalameta.reflection._
 
-class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
-  val global: g.type = g
+class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with Desugarings {
+  lazy val global: g.type = g
   import g.Quasiquote
   implicit val palladiumHost: PalladiumHost = this
 
@@ -153,7 +153,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
         // TODO: support classfile annotation args
         val g.AnnotationInfo(gatp, gargs, gassocs) = gann
         // TODO: need an original for AnnotationInfo.atp
-        p.Mod.Annot(ptpe(gatp), List(gargs.map(garg => org.scalameta.convert.auto.internal.undoMacroExpansions(g, garg)).cvt_!))
+        p.Mod.Annot(ptpe(gatp), List(gargs.map(garg => undoDesugarings(garg)).cvt_!))
       }
       def panns(ganns: List[g.AnnotationInfo]): Seq[p.Mod.Annot] = {
         ganns.filter(gann => {
@@ -523,7 +523,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata {
           def mkMacroDefn(gbody: g.Tree) =
             p.Defn.Macro(pmods(in.symbol), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt_!, implicits.cvt_!, tpt.cvt, gbody.cvt_!)
           def parseSig(gsig: g.Annotation) = {
-            val q"new $_[..$_]($_(..$args)[..$targs])" = org.scalameta.convert.auto.internal.undoMacroExpansions(g, gsig.tree)
+            val q"new $_[..$_]($_(..$args)[..$targs])" = undoDesugarings(gsig.tree)
             val metadata = args.collect{
               case g.Assign(g.Literal(g.Constant(s: String)), g.Literal(g.Constant(v))) => s -> v
               case g.Assign(g.Literal(g.Constant(s: String)), tree) => s -> tree
