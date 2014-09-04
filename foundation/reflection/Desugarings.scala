@@ -107,9 +107,9 @@ trait Desugarings extends Metadata { self =>
         case _ => false
       }
 
+      // TODO: wasEmpty is not really working well here and checking nullness of originals is too optimistic
+      // however, the former produces much uglier results, so I'm going for the latter
       object MemberDefWithInferredReturnType {
-        // TODO: wasEmpty is not really working well here and checking nullness of originals is too optimistic
-        // however, the former produces much uglier results, so I'm going for the latter
         def unapply(tree: Tree): Option[Tree] = tree match {
           case tree @ ValDef(_, _, tt @ TypeTree(), _) if isInferred(tt) => Some(copyValDef(tree)(tpt = EmptyTree))
           case tree @ DefDef(_, _, _, _, tt @ TypeTree(), _) if isInferred(tt) => Some(copyDefDef(tree)(tpt = EmptyTree))
@@ -135,6 +135,14 @@ trait Desugarings extends Metadata { self =>
         }
       }
 
+      // TODO: infer whether implicit arguments were provided explicitly and don't remove them if so
+      object ApplicationWithInferredImplicitArguments {
+        def unapply(tree: Tree): Option[Tree] = tree match {
+          case Apply(fn, args) if isImplicitMethodType(fn.tpe) => Some(fn)
+          case _ => None
+        }
+      }
+
       override def transform(tree: Tree): Tree = {
         def logFailure() = {
           def summary(x: Any) = x match { case x: Product => x.productPrefix; case null => "null"; case _ => x.getClass }
@@ -151,6 +159,7 @@ trait Desugarings extends Metadata { self =>
               case MemberDefWithInferredReturnType(original) => Some(original)
               case TypeApplicationWithInferredTypeArguments(original) => Some(original)
               case PartialFunction(original) => Some(original)
+              case ApplicationWithInferredImplicitArguments(original) => Some(original)
               case _ => None
             }
           }

@@ -726,7 +726,6 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
         // TODO: infer whether it was an application or a Tuple
         // TODO: recover names and defaults (https://github.com/scala/scala/pull/3753/files#diff-269d2d5528eed96b476aded2ea039444R617)
         // TODO: strip off inferred type arguments in loopParent
-        // TODO: infer whether implicit arguments were provided explicitly and don't remove them if so
         // TODO: undo the for desugaring
         // TODO: undo the Lit.Symbol desugaring
         // TODO: undo the interpolation desugaring
@@ -736,7 +735,6 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
         type pScalaApply = p.Term{ type ThisType >: p.Term.Name with p.Term.Select with p.Term.Apply with p.Term.ApplyInfix with p.Term.ApplyType with p.Term.Interpolate <: p.Term }
         def loop(in: g.Tree): pScalaApply = {
           val prelimResult = in match {
-            case g.Apply(fn, args) if g.isImplicitMethodType(fn.tpe) => loop(fn)
             case g.Apply(fn, args) => p.Term.Apply(loop(fn), args.cvt_!)
             case g.TypeApply(g.Select(qual, _), targs) if in.symbol.name == g.TermName("apply") => g.treeCopy.TypeApply(in, qual, targs).cvt
             case g.Select(qual, _) if in.symbol.name == g.TermName("apply") => (qual.cvt_! : p.Term)
