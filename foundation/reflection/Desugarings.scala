@@ -17,9 +17,10 @@ trait Desugarings extends Metadata { self =>
 
   def undoDesugarings[Input <: Tree, Output <: Tree](tree: Input)(implicit ev: UndoDesugaringsSignature[Input, Output]): Output = {
     object transformer extends Transformer {
-      // DESUGARING #1: c.whitebox contraction
-      object WhiteboxContraction {
-        def unapply(tree: Tree): Option[Tree] = tree.metadata.get("originalWhitebox").map(_.asInstanceOf[Tree])
+      // DESUGARING #1: the newly established desugaring protocol
+      // if a transformer wants to be friendly to us, they can use this protocol to simplify our lives
+      object HasOriginal {
+        def unapply(tree: Tree): Option[Tree] = tree.metadata.get("original").map(_.asInstanceOf[Tree])
       }
 
       // DESUGARING #2: macro expansion
@@ -61,7 +62,7 @@ trait Desugarings extends Metadata { self =>
       }
 
       override def transform(tree: Tree): Tree = tree match {
-        case WhiteboxContraction(original) => transform(original)
+        case HasOriginal(original) => transform(original)
         case MacroExpansion(expandee) => transform(expandee)
         case tree => super.transform(tree)
       }
