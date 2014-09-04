@@ -4,7 +4,11 @@ import scala.tools.nsc.Global
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 
-trait Desugarings { self =>
+// NOTE: this file undoes the desugarings applied by Scala's parser and typechecker to the extent possible with scala.reflect trees
+// for instance, insertions of implicit argument lists are undone, because it's a simple Apply => Tree transformation
+// however, we can't undo ClassDef desugarings or while-loop desugarings, because scala.reflect lacks the trees to represent those in their original form
+// some of the undesugarings can be done automatically, some of them require https://github.com/scalameta/scalahost/blob/master/plugin/typechecker/Analyzer.scala
+trait Desugarings extends Metadata { self =>
   val global: Global
   import global._
   import definitions._
@@ -12,37 +16,54 @@ trait Desugarings { self =>
   import currentRun.runDefinitions._
 
   def undoDesugarings[Input <: Tree, Output <: Tree](tree: Input)(implicit ev: UndoDesugaringsSignature[Input, Output]): Output = {
-    // NOTE: partially copy/pasted from Reshape.scala in scalac
-    // NOTE: we can't undo macro expansions in annotation arguments, because after typechecking those are stored on symbols and we can't change those
-    // therefore undoDesugarings for annotation arguments is called from within a host, when it takes the contents of symbols and converts them to Palladium trees
-    object transformer extends Transformer with Metadata {
-      lazy val global: self.global.type = self.global
-      override def transform(tree: Tree): Tree = {
-        tree.metadata.get("originalWhitebox").map(_.asInstanceOf[Tree]) match {
-          case Some(original) => transform(original)
-          case _ =>
-            def postprocess(original: Tree): Tree = {
-              // TODO: remember macro expansions here, because the host will need to convert and attach them to expandee's attrs
-              def mkImplicitly(tp: Type) = gen.mkNullaryCall(Predef_implicitly, List(tp)).setType(tp)
-              val sym = original.symbol
-              original match {
-                // this hack is necessary until I fix implicit macros
-                // so far tag materialization is implemented by sneaky macros hidden in scala-compiler.jar
-                // hence we cannot reify references to them, because noone will be able to see them later
-                // when implicit macros are fixed, these sneaky macros will move to corresponding companion objects
-                // of, say, ClassTag or TypeTag
-                case Apply(TypeApply(_, List(tt)), _) if sym == materializeClassTag            => mkImplicitly(appliedType(ClassTagClass, tt.tpe))
-                case Apply(TypeApply(_, List(tt)), List(pre)) if sym == materializeWeakTypeTag => mkImplicitly(typeRef(pre.tpe, WeakTypeTagClass, List(tt.tpe)))
-                case Apply(TypeApply(_, List(tt)), List(pre)) if sym == materializeTypeTag     => mkImplicitly(typeRef(pre.tpe, TypeTagClass, List(tt.tpe)))
-                case _                                                                         => original
-              }
+    object transformer extends Transformer {
+      // DESUGARING #1: c.whitebox contraction
+      object WhiteboxContraction {
+        def unapply(tree: Tree): Option[Tree] = tree.metadata.get("originalWhitebox").map(_.asInstanceOf[Tree])
+      }
+
+      // DESUGARING #2: macro expansion
+      object MacroExpansion {
+        // NOTE: partially copy/pasted from Reshape.scala in scalac
+        // NOTE: we can't undo macro expansions in annotation arguments, because after typechecking those are stored on symbols and we can't change those
+        // therefore undoDesugarings for annotation arguments is called from within a host, when it takes the contents of symbols and converts them to Palladium trees
+        def unapply(tree: Tree): Option[Tree] = {
+          def postprocess(original: Tree): Tree = {
+            // TODO: remember macro expansions here, because the host will need to convert and attach them to expandee's attrs
+            def mkImplicitly(tp: Type) = gen.mkNullaryCall(Predef_implicitly, List(tp)).setType(tp)
+            val sym = original.symbol
+            original match {
+              // this hack is necessary until I fix implicit macros
+              // so far tag materialization is implemented by sneaky macros hidden in scala-compiler.jar
+              // hence we cannot reify references to them, because noone will be able to see them later
+              // when implicit macros are fixed, these sneaky macros will move to corresponding companion objects
+              // of, say, ClassTag or TypeTag
+              case Apply(TypeApply(_, List(tt)), _) if sym == materializeClassTag            => mkImplicitly(appliedType(ClassTagClass, tt.tpe))
+              case Apply(TypeApply(_, List(tt)), List(pre)) if sym == materializeWeakTypeTag => mkImplicitly(typeRef(pre.tpe, WeakTypeTagClass, List(tt.tpe)))
+              case Apply(TypeApply(_, List(tt)), List(pre)) if sym == materializeTypeTag     => mkImplicitly(typeRef(pre.tpe, TypeTagClass, List(tt.tpe)))
+              case _                                                                         => original
             }
-            (tree.metadata.get("expandeeTree").map(_.asInstanceOf[Tree]), tree.attachments.get[analyzer.MacroExpansionAttachment]) match {
-              case (Some(original), _) => super.transform(postprocess(original))
-              case (None, Some(analyzer.MacroExpansionAttachment(original, _))) => super.transform(postprocess(original))
-              case _ => super.transform(tree)
-            }
+          }
+          def strip(tree: Tree): Tree = {
+            // TODO: current approaches to macro expansion metadata is a bit weird
+            // because both expandees and expansions are attached with the same piece of metadata
+            // we need to debug recursive macro expansions to see how they behave in the current system
+            duplicateAndKeepPositions(tree).removeMetadata("expandeeTree").removeAttachment[analyzer.MacroExpansionAttachment]
+          }
+          // NOTE: the expandeeTree metadata is attached by scala.meta macro expansion
+          // the MacroExpansionAttachment attachment is attached by scala.reflect macro expansion
+          (tree.metadata.get("expandeeTree").map(_.asInstanceOf[Tree]), tree.attachments.get[analyzer.MacroExpansionAttachment]) match {
+            case (Some(original), _) => Some(strip(postprocess(original)))
+            case (None, Some(analyzer.MacroExpansionAttachment(original, _))) => Some(strip(postprocess(original)))
+            case _ => None
+          }
         }
+      }
+
+      override def transform(tree: Tree): Tree = tree match {
+        case WhiteboxContraction(original) => transform(original)
+        case MacroExpansion(expandee) => transform(expandee)
+        case tree => super.transform(tree)
       }
     }
     transformer.transform(tree).asInstanceOf[Output]
