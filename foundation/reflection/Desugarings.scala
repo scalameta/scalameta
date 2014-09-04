@@ -19,7 +19,7 @@ trait Desugarings extends Metadata { self =>
     object transformer extends Transformer {
       // DESUGARING #1: the newly established desugaring protocol
       // if a transformer wants to be friendly to us, they can use this protocol to simplify our lives
-      object HasOriginal {
+      object DesugaringProtocol {
         def unapply(tree: Tree): Option[Tree] = tree.metadata.get("original").map(_.asInstanceOf[Tree])
       }
 
@@ -64,7 +64,7 @@ trait Desugarings extends Metadata { self =>
       override def transform(tree: Tree): Tree = {
         object Desugared {
           def unapply(tree: Tree): Option[Tree] = tree match {
-            case HasOriginal(original) => Some(original)
+            case DesugaringProtocol(original) => Some(original)
             case MacroExpansion(expandee) => Some(expandee)
             case _ => None
           }
