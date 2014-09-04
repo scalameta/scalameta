@@ -10,6 +10,7 @@ import scala.meta.syntactic.show._
 import scala.meta.internal.hosts.scalacompiler.scalahost.Scalahost
 import scala.meta.semantic.{Host => PalladiumHost}
 import scala.meta.internal.hosts.scalacompiler.scalahost.{Host => OurHost}
+import org.scalameta.reflection.Desugarings
 
 class ScalaToMeta extends FunSuite {
   def typecheckConvertAndPrettyprint(code: String, debug: Boolean): String = {
@@ -68,6 +69,7 @@ class ScalaToMeta extends FunSuite {
       typer.context.setReportErrors() // need to manually set context mode, otherwise typer.silent will throw exceptions
       unit.body = typer.typed(unit.body).asInstanceOf[compiler.Tree]
       if (debug) println(unit.body)
+      if (debug) println((new { val global: compiler.type = compiler } with Desugarings).undoDesugarings(unit.body))
       for (workItem <- unit.toCheck) workItem()
       throwIfErrors()
 
