@@ -15,6 +15,9 @@ trait Desugarings extends Metadata { self =>
   val currentRun = global.currentRun
   import currentRun.runDefinitions._
 
+  import org.scalameta.invariants.Implication
+  def require[T](x: T): Unit = macro org.scalameta.invariants.Macros.require
+
   def undoDesugarings[Input <: Tree, Output <: Tree](tree: Input)(implicit ev: UndoDesugaringsSignature[Input, Output]): Output = {
     object transformer extends Transformer {
       // DESUGARING #1: the newly established desugaring protocol
