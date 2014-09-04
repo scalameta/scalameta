@@ -117,7 +117,7 @@ trait Desugarings extends Metadata { self =>
         }
       }
 
-      object ApplicationWithInferredTypeArguments {
+      object TypeApplicationWithInferredTypeArguments {
         def unapply(tree: Tree): Option[Tree] = tree match {
           case TypeApply(fn, targs) if targs.exists(isInferred) => Some(fn)
           case _ => None
@@ -149,7 +149,7 @@ trait Desugarings extends Metadata { self =>
               case MacroExpansion(expandee) => Some(expandee)
               case TypeTreeWithOriginal(original) => Some(original)
               case MemberDefWithInferredReturnType(original) => Some(original)
-              case ApplicationWithInferredTypeArguments(original) => Some(original)
+              case TypeApplicationWithInferredTypeArguments(original) => Some(original)
               case PartialFunction(original) => Some(original)
               case _ => None
             }
