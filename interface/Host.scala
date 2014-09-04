@@ -686,7 +686,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
         p.Term.If(cond.cvt_!, thenp.cvt_!, elsep.cvt_!)
       case g.Match(selector, cases) =>
         // TODO: it's cute that Term.Cases is a Term, but what tpe shall we return for it? :)
-        p.Term.Match(selector.cvt_!, p.Term.Cases(cases.cvt))
+        if (selector == g.EmptyTree) p.Term.Cases(cases.cvt)
+        else p.Term.Match(selector.cvt_!, p.Term.Cases(cases.cvt))
       case g.Return(expr) =>
         // TODO: figure out hasExpr
         p.Term.Return(expr.cvt_!)
@@ -700,16 +701,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
       case g.New(_) =>
         unreachable
       case g.Typed(expr, tpt) if pt <:< typeOf[p.Term] =>
-        expr match {
-          case g.Block((gcdef @ g.ClassDef(_, g.TypeName("$anonfun"), _, _)) :: Nil, q"new $$anonfun()") if tpt.tpe.typeSymbol == g.definitions.PartialFunctionClass =>
-            val clauses :: Nil = gcdef.impl.body.collect {
-              case g.DefDef(_, g.TermName("applyOrElse"), _, _, _, g.Match(_, clauses :+ _)) => clauses
-            }
-            p.Term.Cases(clauses.cvt)
-          case _ =>
-            // TODO: infer the difference between Ascribe and Annotate
-            p.Term.Ascribe(expr.cvt_!, tpt.cvt_!)
-        }
+        // TODO: infer the difference between Ascribe and Annotate
+        p.Term.Ascribe(expr.cvt_!, tpt.cvt_!)
       case g.Typed(expr, tpt) if pt <:< typeOf[p.Pat] =>
         p.Pat.Typed(expr.cvt_!, tpt.cvt_!)
       case in @ g.TypeApply(fn, targs) =>

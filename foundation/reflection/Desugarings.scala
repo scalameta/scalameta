@@ -119,6 +119,17 @@ trait Desugarings extends Metadata { self =>
         }
       }
 
+      object PartialFunction {
+        def unapply(tree: Tree): Option[Tree] = tree match {
+          case Typed(Block((gcdef @ ClassDef(_, tpnme.ANON_FUN_NAME, _, _)) :: Nil, q"new ${Ident(tpnme.ANON_FUN_NAME)}()"), tpt)
+          if tpt.tpe.typeSymbol == definitions.PartialFunctionClass =>
+            val (m, cases) :: Nil = gcdef.impl.body.collect { case DefDef(_, nme.applyOrElse, _, _, _, m @ Match(_, cases :+ _)) => (m, cases) }
+            Some(treeCopy.Match(m, EmptyTree, cases))
+          case _ =>
+            None
+        }
+      }
+
       override def transform(tree: Tree): Tree = {
         def logFailure() = {
           def summary(x: Any) = x match { case x: Product => x.productPrefix; case null => "null"; case _ => x.getClass }
@@ -134,6 +145,7 @@ trait Desugarings extends Metadata { self =>
               case TypeTreeWithOriginal(original) => Some(original)
               case MemberDefWithInferredReturnType(original) => Some(original)
               case ApplicationWithInferredTypeArguments(original) => Some(original)
+              case PartialFunction(original) => Some(original)
               case _ => None
             }
           }
