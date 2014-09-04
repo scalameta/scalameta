@@ -82,6 +82,11 @@ trait Desugarings extends Metadata { self =>
                 val Some(CompoundTypeTreeOriginalAttachment(parents1, stats1)) = templ.attachments.get[CompoundTypeTreeOriginalAttachment]
                 val templ1 = treeCopy.Template(templ, parents1, noSelfType, stats1).setType(NoType).setSymbol(NoSymbol)
                 treeCopy.CompoundTypeTree(tree, templ1)
+              case tree @ TypeBoundsTree(lo, hi) =>
+                // TODO: infer which of the bounds were specified explicitly by the user
+                val lo1 = if (lo.tpe =:= NothingTpe) EmptyTree else lo
+                val hi1 = if (hi.tpe =:= AnyTpe) EmptyTree else hi
+                treeCopy.TypeBoundsTree(tree, lo1, hi1)
               case tree =>
                 tree
             }

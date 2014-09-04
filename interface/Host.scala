@@ -228,9 +228,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
       }
       def ptparambounds(gtpt: g.Tree): p.Aux.TypeBounds = gtpt match {
         case g.TypeBoundsTree(glo, ghi) =>
-          // TODO: infer which of the bounds were specified explicitly by the user
-          val g.TypeBounds(glotpe, ghitpe) = gtpt.tpe
-          (glotpe =:= g.typeOf[Nothing], ghitpe =:= g.typeOf[Any]) match {
+          (glo.isEmpty, ghi.isEmpty) match {
             case (false, false) => p.Aux.TypeBounds(lo = glo.cvt_! : p.Type, hi = ghi.cvt_! : p.Type)
             case (true, false) => p.Aux.TypeBounds(hi = ghi.cvt_! : p.Type)
             case (false, true) => p.Aux.TypeBounds(lo = glo.cvt_! : p.Type)
