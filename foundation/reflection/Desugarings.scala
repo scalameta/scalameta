@@ -64,11 +64,49 @@ trait Desugarings extends Metadata { self =>
         }
       }
 
+      // DESUGARING #3: TypeTree => its original
+      object TypeTree {
+        def unapply(tree: Tree): Option[Tree] = tree match {
+          case tree @ global.TypeTree() =>
+            val original = tree.original match {
+              case null =>
+                // NOTE: would be nice to disallow TypeTree(tpe) without originals, but allow TypeTree()
+                // because that's what one can write syntactically
+                // however we have scala.reflect macros, which can generate TypeTree(tpe) trees
+                // so for the sake of compatibility we have to remain conservative
+                // TODO: however, you know, let's ban synthetic TypeTrees for now and see where it leads
+                require(tree.tpe == null)
+                tree
+              case tree: SingletonTypeTree =>
+                treeCopy.SingletonTypeTree(tree, tree.metadata("originalRef").asInstanceOf[Tree])
+              case tree @ CompoundTypeTree(templ) =>
+                // NOTE: this attachment is only going to work past typer
+                // but since we're not yet going to implement whitebox macros, that's not yet a problem
+                require(templ.self == noSelfType)
+                val Some(CompoundTypeTreeOriginalAttachment(parents1, stats1)) = templ.attachments.get[CompoundTypeTreeOriginalAttachment]
+                val templ1 = treeCopy.Template(templ, parents1, noSelfType, stats1).setType(NoType).setSymbol(NoSymbol)
+                treeCopy.CompoundTypeTree(tree, templ1)
+              case tree =>
+                tree
+            }
+            Some(original.setType(tree.tpe))
+          case in @ TypeTreeWithDeferredRefCheck() =>
+            // NOTE: I guess, we can do deferred checks here as the converter isn't supposed to run in the middle of typer
+            // we will have to revisit this in case we decide to support whitebox macros in Palladium
+            // TODO: in the future, when we'll have moved the validating part of refchecks before the macro expansion phase,
+            // there won't be any necessity to support TypeTreeWithDeferredRefCheck trees
+            unapply(in.check())
+          case _ =>
+            None
+        }
+      }
+
       override def transform(tree: Tree): Tree = {
         object Desugared {
           def unapply(tree: Tree): Option[Tree] = tree match {
             case DesugaringProtocol(original) => Some(original)
             case MacroExpansion(expandee) => Some(expandee)
+            case TypeTree(original) => Some(original)
             case _ => None
           }
         }
