@@ -767,43 +767,26 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
         val psuper = if (mix != g.tpnme.EMPTY) Some(in.symbol.asClass.rawcvt(in)) else None
         p.Qual.Super(pthis, psuper)
       case in @ g.This(qual) =>
-        val orig = in.metadata.get("originalIdent").map(_.asInstanceOf[g.Ident])
-        orig match {
-          case Some(orig) =>
-            // NOTE: g.Ident -> g.This can only happen when we're typechecking self reference
-            // this needs special treatment, as we neither in, nor in.symbol are going to help us with the conversion
-            // therefore neither rawcvt, nor precvt are useful to us, and we have to create p.Term.Name ourselves
-            p.Term.Name(alias(orig), isBackquoted(orig))
-          case _ if in.symbol.isPackageClass =>
-            // NOTE: now that we undo idents and quals of selects to their original state
-            // this kind of synthetic, unwriteable tree shouldn't arise during conversions
-            unreachable
-          case _ =>
-            p.Term.This(if (qual != g.tpnme.EMPTY) Some(in.symbol.qualcvt(in)) else None)
-        }
+        require(!in.symbol.isPackageClass)
+        p.Term.This(if (qual != g.tpnme.EMPTY) Some(in.symbol.qualcvt(in)) else None)
       case in: g.PostfixSelect =>
         unreachable
       case in @ g.Select(qual, name) =>
-        // TODO: what do we do if sym is a package object? do we skip it altogether or do we still emit an explicit reference to it?
         // TODO: discern unary applications via !x and via explicit x.unary_!
         // TODO: also think how to detect unary applications that have implicit arguments
-        val origIdent = in.metadata.get("originalIdent").map(_.asInstanceOf[g.Ident])
-        val origQual = in.metadata.get("originalQual").map(_.asInstanceOf[g.Tree])
-        val origName = in.metadata.get("originalName").map(_.asInstanceOf[g.Name])
-        (origIdent, origQual, origName) match {
-          case (Some(origIdent), _, _) =>
-            in.symbol.rawcvt(origIdent)
-          case (_, Some(origQual), Some(origName)) =>
-            g.treeCopy.Select(in, origQual, origName).removeMetadata("originalQual", "originalName").cvt
-          case _ if name.isTermName =>
-            val pname = in.symbol.asTerm.precvt(qual.tpe, in)
-            if (pname.value.startsWith("unary_")) p.Term.ApplyUnary(pname.copy(value = pname.value.stripPrefix("unary_")).appendScratchpad(pname.scratchpad), qual.cvt_!)
-            else p.Term.Select(qual.cvt_!, pname, isPostfix = false) // TODO: figure out isPostfix
-          case _ if name.isTypeName =>
-            p.Type.Select(qual.cvt_!, in.symbol.asType.precvt(qual.tpe, in))
+        if (name.isTermName) {
+          val pname = in.symbol.asTerm.precvt(qual.tpe, in)
+          if (pname.value.startsWith("unary_")) p.Term.ApplyUnary(pname.copy(value = pname.value.stripPrefix("unary_")).appendScratchpad(pname.scratchpad), qual.cvt_!)
+          else p.Term.Select(qual.cvt_!, pname, isPostfix = false) // TODO: figure out isPostfix
+        } else {
+          p.Type.Select(qual.cvt_!, in.symbol.asType.precvt(qual.tpe, in))
         }
       case in @ g.Ident(_) =>
-        in.symbol.rawcvt(in)
+        // TODO: Ident(<term name>) with a type symbol attached to it
+        // is the encoding that the ensugarer uses to denote a self reference
+        // also see the ensugarer for more information
+        if (in.isTerm && in.symbol.isType) p.Term.Name(alias(in), isBackquoted(in))
+        else in.symbol.rawcvt(in)
       case g.ReferenceToBoxed(_) =>
         ???
       case g.Literal(const) =>

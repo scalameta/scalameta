@@ -3,12 +3,13 @@ package org.scalameta.reflection
 import scala.tools.nsc.Global
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
+import scala.org.scalameta.reflection.Helpers
 
 // NOTE: this file undoes the desugarings applied by Scala's parser and typechecker to the extent possible with scala.reflect trees
 // for instance, insertions of implicit argument lists are undone, because it's a simple Apply => Tree transformation
 // however, we can't undo ClassDef desugarings or while-loop desugarings, because scala.reflect lacks the trees to represent those in their original form
 // some of the undesugarings can be done automatically, some of them require https://github.com/scalameta/scalahost/blob/master/plugin/typechecker/Analyzer.scala
-trait Desugarings extends Metadata { self =>
+trait Desugarings extends Metadata with Helpers { self =>
   val global: Global
   import global._
   import definitions._
@@ -143,6 +144,25 @@ trait Desugarings extends Metadata { self =>
         }
       }
 
+      // TODO: test the situation when tree.symbol is a package object
+      object RefTreeWithOriginal {
+        def unapply(tree: Tree): Option[Tree] = {
+          object OriginalIdent { def unapply(tree: Tree): Option[Ident] = tree.metadata.get("originalIdent").map(_.asInstanceOf[Ident]) }
+          object OriginalQual { def unapply(tree: Tree): Option[Tree] = tree.metadata.get("originalQual").map(_.asInstanceOf[Tree]) }
+          object OriginalName { def unapply(tree: Tree): Option[Name] = tree.metadata.get("originalName").map(_.asInstanceOf[Name]) }
+          object OriginalSelect { def unapply(tree: Tree): Option[(Tree, Name)] = OriginalQual.unapply(tree).flatMap(qual => OriginalName.unapply(tree).flatMap(name => Some((qual, name)))) }
+          (tree, tree) match {
+            // Ident => This is a very uncommon situation, which happens when we typecheck a self reference
+            // unfortunately, this self reference can't have a symbol, because self doesn't have a symbol, so we have to do some encoding
+            case (This(_), OriginalIdent(orig)) => Some(orig.copyAttrs(tree).removeMetadata("originalIdent"))
+            case (Select(_, _), OriginalIdent(orig)) => Some(orig.copyAttrs(tree).removeMetadata("originalIdent"))
+            case (Select(_, _), OriginalSelect(origQual, origName)) => Some(treeCopy.Select(tree, origQual, origName).removeMetadata("originalQual", "originalName"))
+            case (SelectFromTypeTree(_, _), OriginalSelect(origQual, origName)) => Some(treeCopy.SelectFromTypeTree(tree, origQual, origName).removeMetadata("originalQual", "originalName"))
+            case _ => None
+          }
+        }
+      }
+
       override def transform(tree: Tree): Tree = {
         def logFailure() = {
           def summary(x: Any) = x match { case x: Product => x.productPrefix; case null => "null"; case _ => x.getClass }
@@ -160,6 +180,7 @@ trait Desugarings extends Metadata { self =>
               case TypeApplicationWithInferredTypeArguments(original) => Some(original)
               case PartialFunction(original) => Some(original)
               case ApplicationWithInferredImplicitArguments(original) => Some(original)
+              case RefTreeWithOriginal(original) => Some(original)
               case _ => None
             }
           }
