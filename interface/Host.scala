@@ -220,11 +220,6 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
           offenders.toList
         case _ => Nil
       }
-      // TODO: wasEmpty is not really working well here and checking nullness of originals is too optimistic
-      // however, the former produces much uglier printouts, so I'm going for the latter
-      // TODO: also see the other places in the code that use originals
-      def hasInferredTargs(targs: List[g.Tree]) = targs.exists{ case tt: g.TypeTree => tt.original == null }
-      def dropInferredTargs(targs: List[g.Tree]) = if (hasInferredTargs(targs)) Nil else targs
       def pvparamtpe(gtpt: g.Tree): p.Param.Type = {
         def unwrap(ptpe: p.Type): p.Type = ptpe.asInstanceOf[p.Type.Apply].args.head
         if (g.definitions.isRepeatedParamType(gtpt.tpe)) p.Param.Type.Repeated(unwrap(gtpt.cvt_! : p.Type))
@@ -724,8 +719,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
           case fn @ g.Select(_, _) => (fn.cvt_! : p.Term)
           case _ => unreachable
         }).asInstanceOf[pScalaFn]
-        if (hasInferredTargs(targs)) pfn
-        else p.Term.ApplyType(pfn, targs.cvt_!)
+        p.Term.ApplyType(pfn, targs.cvt_!)
       case in @ g.Apply(g.Select(g.New(_), g.nme.CONSTRUCTOR), _) =>
         // TODO: infer the difference between `new X` vs `new X()`
         // TODO: strip off inferred type and value arguments (but be careful to not remove explicitly provided arguments!)

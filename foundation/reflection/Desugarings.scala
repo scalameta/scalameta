@@ -97,12 +97,24 @@ trait Desugarings extends Metadata { self =>
         }
       }
 
+      private def isInferred(tree: Tree): Boolean = tree match {
+        case tt @ TypeTree() => tt.nonEmpty && tt.original == null
+        case _ => false
+      }
+
       object MemberDefWithInferredReturnType {
         // TODO: wasEmpty is not really working well here and checking nullness of originals is too optimistic
         // however, the former produces much uglier results, so I'm going for the latter
         def unapply(tree: Tree): Option[Tree] = tree match {
-          case tree @ ValDef(_, _, tt @ TypeTree(), _) if tt.nonEmpty && tt.original == null => Some(copyValDef(tree)(tpt = TypeTree().appendScratchpad(tt.tpe)))
-          case tree @ DefDef(_, _, _, _, tt @ TypeTree(), _) if tt.nonEmpty && tt.original == null => Some(copyDefDef(tree)(tpt = TypeTree().appendScratchpad(tt.tpe)))
+          case tree @ ValDef(_, _, tt @ TypeTree(), _) if isInferred(tt) => Some(copyValDef(tree)(tpt = TypeTree().appendScratchpad(tt.tpe)))
+          case tree @ DefDef(_, _, _, _, tt @ TypeTree(), _) if isInferred(tt) => Some(copyDefDef(tree)(tpt = TypeTree().appendScratchpad(tt.tpe)))
+          case _ => None
+        }
+      }
+
+      object ApplicationWithInferredTypeArguments {
+        def unapply(tree: Tree): Option[Tree] = tree match {
+          case TypeApply(fn, targs) if targs.exists(isInferred) => Some(fn)
           case _ => None
         }
       }
@@ -121,6 +133,7 @@ trait Desugarings extends Metadata { self =>
               case MacroExpansion(expandee) => Some(expandee)
               case TypeTreeWithOriginal(original) => Some(original)
               case MemberDefWithInferredReturnType(original) => Some(original)
+              case ApplicationWithInferredTypeArguments(original) => Some(original)
               case _ => None
             }
           }
