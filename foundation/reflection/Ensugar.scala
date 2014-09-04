@@ -9,7 +9,7 @@ import scala.org.scalameta.reflection.Helpers
 // for instance, insertions of implicit argument lists are undone, because it's a simple Apply => Tree transformation
 // however, we can't undo ClassDef desugarings or while-loop desugarings, because scala.reflect lacks the trees to represent those in their original form
 // some of the undesugarings can be done automatically, some of them require https://github.com/scalameta/scalahost/blob/master/plugin/typechecker/Analyzer.scala
-trait Desugarings extends Metadata with Helpers { self =>
+trait Ensugar extends Metadata with Helpers { self =>
   val global: Global
   import global._
   import definitions._
@@ -17,9 +17,9 @@ trait Desugarings extends Metadata with Helpers { self =>
   import currentRun.runDefinitions._
 
   import org.scalameta.invariants.Implication
-  def require[T](x: T): Unit = macro org.scalameta.invariants.Macros.require
+  private def require[T](x: T): Unit = macro org.scalameta.invariants.Macros.require
 
-  def undoDesugarings[Input <: Tree, Output <: Tree](tree: Input)(implicit ev: UndoDesugaringsSignature[Input, Output]): Output = {
+  def ensugar[Input <: Tree, Output <: Tree](tree: Input)(implicit ev: EnsugarSignature[Input, Output]): Output = {
     object transformer extends Transformer {
       // NOTE: this is the newly established desugaring protocol
       // if a transformer wants to be friendly to us, they can use this protocol to simplify our lives
@@ -199,10 +199,10 @@ trait Desugarings extends Metadata with Helpers { self =>
   }
 }
 
-trait UndoDesugaringsSignature[Input, Output]
-object UndoDesugaringsSignature {
+trait EnsugarSignature[Input, Output]
+object EnsugarSignature {
   // NOTE: can't be bothered with contravariant implicits, so writing a macro instead
-  implicit def materialize[Input, Output]: UndoDesugaringsSignature[Input, Output] = macro impl[Input]
+  implicit def materialize[Input, Output]: EnsugarSignature[Input, Output] = macro impl[Input]
   def impl[Input: c.WeakTypeTag](c: Context) = {
     import c.universe._
     import c.internal._
@@ -234,6 +234,6 @@ object UndoDesugaringsSignature {
       }, args)
       case tpe => tpe
     }
-    q"new _root_.org.scalameta.reflection.UndoDesugaringsSignature[$input, $output] {}"
+    q"new _root_.org.scalameta.reflection.EnsugarSignature[$input, $output] {}"
   }
 }

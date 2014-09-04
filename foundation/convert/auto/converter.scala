@@ -129,7 +129,7 @@ class ConverterMacros(val c: whitebox.Context) {
       val instanceImpls = instances.filter(!_.notImplemented).map(instance => atPos(instance.pos)(
         q"""
           private def ${instance.impl}(in: ${instance.in}): $companion.${instance.sig}.Out = {
-            // TODO: fix the duplication wrt Desugarings
+            // TODO: fix the duplication wrt Ensugar
             def logFailure() = {
               def summary(x: Any) = x match { case x: Product => x.productPrefix; case null => "null"; case _ => x.getClass }
               var details = in.toString.replace("\n", "")
@@ -213,7 +213,7 @@ package object internal {
     val ComputedConvertersDatabearer = symbolOf[org.scalameta.convert.auto.internal.Converter]
     val PersistedWildcardType = typeOf[WildcardDummy]
     val DeriveInternal = q"_root_.org.scalameta.convert.auto.internal"
-    val DesugaringsTrait = tq"_root_.org.scalameta.reflection.Desugarings"
+    val EnsugarTrait = tq"_root_.org.scalameta.reflection.Ensugar"
     object Cvt {
       def unapply(x: Tree): Option[(Tree, Type, Boolean)] = {
         object RawCvt {
@@ -549,7 +549,7 @@ package object internal {
         case "toPalladium" =>
           val pre @ q"$h.toPalladium" = c.prefix.tree
           val sym = c.macroApplication.symbol
-          val x1 = q"(new { val global: $h.g.type = $h.g } with $DesugaringsTrait).undoDesugarings($x)"
+          val x1 = q"(new { val global: $h.g.type = $h.g } with $EnsugarTrait).ensugar($x)"
           convert(x1, c.weakTypeOf[In], c.weakTypeOf[Pt], allowDerived = true, allowInputDowncasts = true, allowOutputDowncasts = true, pre = pre.tpe, sym = sym)
         case _ =>
           c.abort(c.enclosingPosition, "unknown target: " + target.name)
