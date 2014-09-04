@@ -61,10 +61,21 @@ trait Desugarings extends Metadata { self =>
         }
       }
 
-      override def transform(tree: Tree): Tree = tree match {
-        case HasOriginal(original) => transform(original)
-        case MacroExpansion(expandee) => transform(expandee)
-        case tree => super.transform(tree)
+      override def transform(tree: Tree): Tree = {
+        object Desugared {
+          def unapply(tree: Tree): Option[Tree] = tree match {
+            case HasOriginal(original) => Some(original)
+            case MacroExpansion(expandee) => Some(expandee)
+            case _ => None
+          }
+        }
+        tree match {
+          case Desugared(original) =>
+            val scratchpad = original.metadata.get("scratchpad").map(_.asInstanceOf[List[Any]]).getOrElse(Nil)
+            transform(original.appendMetadata("scratchpad" -> scratchpad))
+          case _ =>
+            super.transform(tree)
+        }
       }
     }
     transformer.transform(tree).asInstanceOf[Output]
