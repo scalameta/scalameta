@@ -20,17 +20,14 @@ trait Desugarings extends Metadata { self =>
 
   def undoDesugarings[Input <: Tree, Output <: Tree](tree: Input)(implicit ev: UndoDesugaringsSignature[Input, Output]): Output = {
     object transformer extends Transformer {
-      // DESUGARING #1: the newly established desugaring protocol
+      // NOTE: this is the newly established desugaring protocol
       // if a transformer wants to be friendly to us, they can use this protocol to simplify our lives
       object DesugaringProtocol {
         def unapply(tree: Tree): Option[Tree] = tree.metadata.get("original").map(_.asInstanceOf[Tree])
       }
 
-      // DESUGARING #2: macro expansion
+      // NOTE: partially copy/pasted from Reshape.scala in scalac
       object MacroExpansion {
-        // NOTE: partially copy/pasted from Reshape.scala in scalac
-        // NOTE: we can't undo macro expansions in annotation arguments, because after typechecking those are stored on symbols and we can't change those
-        // therefore undoDesugarings for annotation arguments is called from within a host, when it takes the contents of symbols and converts them to Palladium trees
         def unapply(tree: Tree): Option[Tree] = {
           def postprocess(original: Tree): Tree = {
             // TODO: remember macro expansions here, because the host will need to convert and attach them to expandee's attrs
@@ -64,19 +61,18 @@ trait Desugarings extends Metadata { self =>
         }
       }
 
-      // DESUGARING #3: TypeTree => its original
-      object TypeTree {
+      object TypeTreeWithOriginal {
         def unapply(tree: Tree): Option[Tree] = tree match {
-          case tree @ global.TypeTree() =>
+          case tree @ TypeTree() if tree.original == null =>
+            // NOTE: would be nice to disallow TypeTree(tpe) without originals, but allow TypeTree()
+            // because that's what one can write syntactically
+            // however we have scala.reflect macros, which can generate TypeTree(tpe) trees
+            // so for the sake of compatibility we have to remain conservative
+            // TODO: however, you know, let's ban synthetic TypeTrees for now and see where it leads
+            require(tree.tpe == null)
+            None
+          case tree @ TypeTree() if tree.original != null =>
             val original = tree.original match {
-              case null =>
-                // NOTE: would be nice to disallow TypeTree(tpe) without originals, but allow TypeTree()
-                // because that's what one can write syntactically
-                // however we have scala.reflect macros, which can generate TypeTree(tpe) trees
-                // so for the sake of compatibility we have to remain conservative
-                // TODO: however, you know, let's ban synthetic TypeTrees for now and see where it leads
-                require(tree.tpe == null)
-                tree
               case tree: SingletonTypeTree =>
                 treeCopy.SingletonTypeTree(tree, tree.metadata("originalRef").asInstanceOf[Tree])
               case tree @ CompoundTypeTree(templ) =>
@@ -101,6 +97,16 @@ trait Desugarings extends Metadata { self =>
         }
       }
 
+      object MemberDefWithInferredReturnType {
+        // TODO: wasEmpty is not really working well here and checking nullness of originals is too optimistic
+        // however, the former produces much uglier results, so I'm going for the latter
+        def unapply(tree: Tree): Option[Tree] = tree match {
+          case tree @ ValDef(_, _, tt @ TypeTree(), _) if tt.nonEmpty && tt.original == null => Some(copyValDef(tree)(tpt = TypeTree().appendScratchpad(tt.tpe)))
+          case tree @ DefDef(_, _, _, _, tt @ TypeTree(), _) if tt.nonEmpty && tt.original == null => Some(copyDefDef(tree)(tpt = TypeTree().appendScratchpad(tt.tpe)))
+          case _ => None
+        }
+      }
+
       override def transform(tree: Tree): Tree = {
         def logFailure() = {
           def summary(x: Any) = x match { case x: Product => x.productPrefix; case null => "null"; case _ => x.getClass }
@@ -113,16 +119,14 @@ trait Desugarings extends Metadata { self =>
             def unapply(tree: Tree): Option[Tree] = tree match {
               case DesugaringProtocol(original) => Some(original)
               case MacroExpansion(expandee) => Some(expandee)
-              case TypeTree(original) => Some(original)
+              case TypeTreeWithOriginal(original) => Some(original)
+              case MemberDefWithInferredReturnType(original) => Some(original)
               case _ => None
             }
           }
           tree match {
-            case Desugared(original) =>
-              val scratchpad = original.metadata.get("scratchpad").map(_.asInstanceOf[List[Any]]).getOrElse(Nil)
-              transform(original.appendMetadata("scratchpad" -> scratchpad))
-            case _ =>
-              super.transform(tree)
+            case Desugared(original) => transform(original.appendScratchpad(tree))
+            case _ => super.transform(tree)
           }
         } catch {
           case err: _root_.java.lang.AssertionError => logFailure(); throw err
