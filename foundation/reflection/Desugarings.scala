@@ -111,8 +111,8 @@ trait Desugarings extends Metadata { self =>
         // TODO: wasEmpty is not really working well here and checking nullness of originals is too optimistic
         // however, the former produces much uglier results, so I'm going for the latter
         def unapply(tree: Tree): Option[Tree] = tree match {
-          case tree @ ValDef(_, _, tt @ TypeTree(), _) if isInferred(tt) => Some(copyValDef(tree)(tpt = TypeTree().appendScratchpad(tt.tpe)))
-          case tree @ DefDef(_, _, _, _, tt @ TypeTree(), _) if isInferred(tt) => Some(copyDefDef(tree)(tpt = TypeTree().appendScratchpad(tt.tpe)))
+          case tree @ ValDef(_, _, tt @ TypeTree(), _) if isInferred(tt) => Some(copyValDef(tree)(tpt = EmptyTree))
+          case tree @ DefDef(_, _, _, _, tt @ TypeTree(), _) if isInferred(tt) => Some(copyDefDef(tree)(tpt = EmptyTree))
           case _ => None
         }
       }
