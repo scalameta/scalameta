@@ -116,10 +116,10 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
         } else if (gsym.privateWithin == g.NoSymbol || gsym.privateWithin == null) None
         else Some(gsym.privateWithin.qualcvt(g.Ident(gsym.privateWithin))) // TODO: this loses information is gsym.privateWithin was brought into scope with a renaming import
       }
-      def pmods(gsym0: g.Symbol): Seq[p.Mod] = {
-        val gsym = gsym0.getterIn(gsym0.owner).orElse(gsym0)
+      def pmods(gmdef: g.MemberDef): Seq[p.Mod] = {
+        val gsym = gmdef.symbol.getterIn(gmdef.symbol.owner).orElse(gmdef.symbol)
         val pmods = scala.collection.mutable.ListBuffer[p.Mod]()
-        pmods ++= panns(gsym.annotations)
+        pmods ++= gmdef.mods.annotations.map{ case q"new $gtpt(...$gargss)" => p.Mod.Annot(gtpt.cvt_!, gargss.cvt_!) }
         if (gsym.isPrivate) pmods += p.Mod.Private(paccessqual(gsym))
         if (gsym.isProtected) pmods += p.Mod.Protected(paccessqual(gsym))
         if (gsym.isImplicit) pmods += p.Mod.Implicit()
@@ -139,23 +139,6 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
         if (gaccessed != g.NoSymbol && !gaccessed.owner.isCase) pmods += p.Mod.ValParam()
         if (gsym.isPackageObject) pmods += p.Mod.Package()
         pmods.toList
-      }
-      private def pann(gann: g.AnnotationInfo): p.Mod.Annot = {
-        // TODO: recover names and defaults (https://github.com/scala/scala/pull/3753/files#diff-269d2d5528eed96b476aded2ea039444R617)
-        // TODO: recover multiple argument lists (?!)
-        // TODO: infer the difference between @foo and @foo()
-        // TODO: support classfile annotation args
-        val g.AnnotationInfo(gatp, gargs, gassocs) = gann
-        // TODO: need an original for AnnotationInfo.atp
-        p.Mod.Annot(ptpe(gatp), List(gargs.map(garg => ensugar(garg)).cvt_!))
-      }
-      def panns(ganns: List[g.AnnotationInfo]): Seq[p.Mod.Annot] = {
-        ganns.filter(gann => {
-          val sym = gann.tree.tpe.typeSymbol
-          def isOldMacroSignature = sym.fullName == "scala.reflect.macros.internal.macroImpl"
-          def isNewMacroSignature = isOldMacroSignature
-          !isOldMacroSignature && !isNewMacroSignature
-        }).map(pann)
       }
       private def pclassof(gtype: g.Type): p.Term.ApplyType = {
         val mothershipCore = g.gen.mkAttributedRef(g.currentRun.runDefinitions.Predef_classOf).asInstanceOf[g.Select]
@@ -237,12 +220,49 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
       type pScalaType = p.Type{ type ThisType >: p.Type.Name with p.Type.Select with p.Type.Project with p.Type.Singleton with p.Type.Apply with p.Type.Compound with p.Type.Existential with p.Type.Annotate with p.Lit.Bool with p.Lit.Int with p.Lit.Long with p.Lit.Float with p.Lit.Double with p.Lit.String with p.Lit.Char <: p.Type }
       type pScalaLitType = p.Lit{type ThisType >: p.Lit.Bool with p.Lit.Int with p.Lit.Long with p.Lit.Float with p.Lit.Double with p.Lit.String with p.Lit.Char <: p.Lit}
       def ptpe(gtpe: g.Type): pScalaType = {
-        object ValSymbol { def unapply(gsym: g.Symbol): Option[g.TermSymbol] = if (gsym.isTerm && !gsym.isMethod && !gsym.isModule && !gsym.isMutable) Some(gsym.asTerm) else None }
-        object VarSymbol { def unapply(gsym: g.Symbol): Option[g.TermSymbol] = if (gsym.isTerm && !gsym.isMethod && !gsym.isModule && gsym.isMutable) Some(gsym.asTerm) else None }
-        object DefSymbol { def unapply(gsym: g.Symbol): Option[g.TermSymbol] = if (gsym.isMethod) Some(gsym.asTerm) else None }
-        object AbstractTypeSymbol { def unapply(gsym: g.Symbol): Option[g.TypeSymbol] = if (gsym.isType && gsym.isAbstractType) Some(gsym.asType) else None }
-        object AliasTypeSymbol { def unapply(gsym: g.Symbol): Option[g.TypeSymbol] = if (gsym.isType && gsym.isAliasType) Some(gsym.asType) else None }
         def loop(gtpe: g.Type): p.Type = {
+          object ValSymbol { def unapply(gsym: g.Symbol): Option[g.TermSymbol] = if (gsym.isTerm && !gsym.isMethod && !gsym.isModule && !gsym.isMutable) Some(gsym.asTerm) else None }
+          object VarSymbol { def unapply(gsym: g.Symbol): Option[g.TermSymbol] = if (gsym.isTerm && !gsym.isMethod && !gsym.isModule && gsym.isMutable) Some(gsym.asTerm) else None }
+          object DefSymbol { def unapply(gsym: g.Symbol): Option[g.TermSymbol] = if (gsym.isMethod) Some(gsym.asTerm) else None }
+          object AbstractTypeSymbol { def unapply(gsym: g.Symbol): Option[g.TypeSymbol] = if (gsym.isType && gsym.isAbstractType) Some(gsym.asType) else None }
+          object AliasTypeSymbol { def unapply(gsym: g.Symbol): Option[g.TypeSymbol] = if (gsym.isType && gsym.isAliasType) Some(gsym.asType) else None }
+          def pann(gann: g.AnnotationInfo): p.Mod.Annot = {
+            val g.AnnotationInfo(gatp, gargs, gassocs) = gann
+            // TODO: need an original for AnnotationInfo.atp
+            p.Mod.Annot(ptpe(gatp), List(gargs.map(garg => ensugar(garg)).cvt_!))
+          }
+          def panns(ganns: List[g.AnnotationInfo]): Seq[p.Mod.Annot] = {
+            ganns.filter(gann => {
+              val sym = gann.tree.tpe.typeSymbol
+              def isOldMacroSignature = sym.fullName == "scala.reflect.macros.internal.macroImpl"
+              def isNewMacroSignature = isOldMacroSignature
+              !isOldMacroSignature && !isNewMacroSignature
+            }).map(pann)
+          }
+          def pmods(gsym0: g.Symbol): Seq[p.Mod] = {
+            val gsym = gsym0.getterIn(gsym0.owner).orElse(gsym0)
+            val pmods = scala.collection.mutable.ListBuffer[p.Mod]()
+            pmods ++= panns(gsym0.annotations)
+            if (gsym.isPrivate) pmods += p.Mod.Private(paccessqual(gsym))
+            if (gsym.isProtected) pmods += p.Mod.Protected(paccessqual(gsym))
+            if (gsym.isImplicit) pmods += p.Mod.Implicit()
+            if (gsym.isFinal) pmods += p.Mod.Final()
+            if (gsym.isSealed) pmods += p.Mod.Sealed()
+            if (gsym.isOverride) pmods += p.Mod.Override()
+            if (gsym.isCase) pmods += p.Mod.Case()
+            if (gsym.isAbstract && !gsym.isParameter && !gsym.isTrait) pmods += p.Mod.Abstract()
+            if (gsym.isAbstractOverride) { pmods += p.Mod.Abstract(); pmods += p.Mod.Override() }
+            if (gsym.isCovariant) pmods += p.Mod.Covariant()
+            if (gsym.isContravariant) pmods += p.Mod.Contravariant()
+            if (gsym.isLazy) pmods += p.Mod.Lazy()
+            // TODO: how do we distinguish `case class C(val x: Int)` and `case class C(x: Int)`?
+            val gparamaccessor = gsym.owner.filter(_.isPrimaryConstructor).map(_.owner.info.member(gsym.name))
+            val gaccessed = gparamaccessor.map(_.owner.info.member(gparamaccessor.localName))
+            if (gaccessed != g.NoSymbol && gaccessed.isMutable) pmods += p.Mod.VarParam()
+            if (gaccessed != g.NoSymbol && !gaccessed.owner.isCase) pmods += p.Mod.ValParam()
+            if (gsym.isPackageObject) pmods += p.Mod.Package()
+            pmods.toList
+          }
           def pbounds(gtpe: g.Type): p.Aux.TypeBounds = gtpe match {
             case g.TypeBounds(glo, ghi) =>
               (glo =:= g.typeOf[Nothing], ghi =:= g.typeOf[Any]) match {
@@ -458,27 +478,27 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
         require(in.symbol.isClass)
         in match {
           case q"$_ class $_[..$_] $_(...$_)(implicit ..$_) extends { ..$_ } with ..$_ { $_ => ..$_ }" =>
-            val gctor = templ.body.find(_.symbol == in.symbol.primaryConstructor).get
+            val gctor = templ.body.find(_.symbol == in.symbol.primaryConstructor).get.asInstanceOf[g.DefDef]
             val q"$_ def $_[..$_](...$impreciseExplicitss)(implicit ..$implicits): $_ = $_" = gctor
             // TODO: discern `class C` and `class C()`
             // TODO: recover named/default parameters
             val explicitss = if (impreciseExplicitss.flatten.isEmpty) List() else impreciseExplicitss
-            val ctor = p.Ctor.Primary(pmods(in.symbol.primaryConstructor), explicitss.cvt_!, implicits.cvt_!).appendScratchpad(in.symbol.primaryConstructor)
-            p.Defn.Class(pmods(in.symbol), in.symbol.asClass.rawcvt(in), tparams.cvt, ctor, templ.cvt)
+            val ctor = p.Ctor.Primary(pmods(gctor), explicitss.cvt_!, implicits.cvt_!).appendScratchpad(in.symbol.primaryConstructor)
+            p.Defn.Class(pmods(in), in.symbol.asClass.rawcvt(in), tparams.cvt, ctor, templ.cvt)
           case q"$_ trait $_[..$_] extends { ..$_ } with ..$_ { $_ => ..$_ }" =>
-            p.Defn.Trait(pmods(in.symbol), in.symbol.asClass.rawcvt(in), tparams.cvt, templ.cvt)
+            p.Defn.Trait(pmods(in), in.symbol.asClass.rawcvt(in), tparams.cvt, templ.cvt)
         }
       case in @ g.ModuleDef(_, _, templ) =>
         require(in.symbol.isModule && !in.symbol.isModuleClass)
-        p.Defn.Object(pmods(in.symbol), in.symbol.asModule.rawcvt(in), templ.cvt)
+        p.Defn.Object(pmods(in), in.symbol.asModule.rawcvt(in), templ.cvt)
       case in @ g.ValDef(_, _, tpt, rhs) if pt <:< typeOf[p.Param] =>
         require(in.symbol.isTerm)
         val isAnonymous = in.symbol.name.toString.startsWith("x$")
         val ptpe = if (tpt.nonEmpty) Some[p.Param.Type](pvparamtpe(tpt)) else None
         val pdefault = if (rhs.nonEmpty) Some[p.Term](rhs.cvt_!) else None
         require(isAnonymous ==> pdefault.isEmpty)
-        if (isAnonymous) p.Param.Anonymous(pmods(in.symbol), ptpe)
-        else p.Param.Named(pmods(in.symbol), in.symbol.asTerm.rawcvt(in), ptpe, pdefault)
+        if (isAnonymous) p.Param.Anonymous(pmods(in), ptpe)
+        else p.Param.Named(pmods(in), in.symbol.asTerm.rawcvt(in), ptpe, pdefault)
       case in @ g.ValDef(_, _, tpt, rhs) if pt <:< typeOf[p.Aux.Self] =>
         require(rhs.isEmpty)
         if (in == g.noSelfType) p.Aux.Self(None, None, hasThis = false)
@@ -494,10 +514,10 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
         require(in.symbol.isTerm)
         require(in.symbol.isDeferred ==> rhs.isEmpty)
         (in.symbol.isDeferred, in.symbol.isMutable) match {
-          case (true, false) => p.Decl.Val(pmods(in.symbol), List(in.symbol.asTerm.rawcvt(in)), tpt.cvt_!)
-          case (true, true) => p.Decl.Var(pmods(in.symbol), List(in.symbol.asTerm.rawcvt(in)), tpt.cvt_!)
-          case (false, false) => p.Defn.Val(pmods(in.symbol), List(in.symbol.asTerm.rawcvt(in)), if (tpt.nonEmpty) Some[p.Type](tpt.cvt_!) else None, rhs.cvt_!)
-          case (false, true) => p.Defn.Var(pmods(in.symbol), List(in.symbol.asTerm.rawcvt(in)), if (tpt.nonEmpty) Some[p.Type](tpt.cvt_!) else None, if (rhs.nonEmpty) Some[p.Term](rhs.cvt_!) else None)
+          case (true, false) => p.Decl.Val(pmods(in), List(in.symbol.asTerm.rawcvt(in)), tpt.cvt_!)
+          case (true, true) => p.Decl.Var(pmods(in), List(in.symbol.asTerm.rawcvt(in)), tpt.cvt_!)
+          case (false, false) => p.Defn.Val(pmods(in), List(in.symbol.asTerm.rawcvt(in)), if (tpt.nonEmpty) Some[p.Type](tpt.cvt_!) else None, rhs.cvt_!)
+          case (false, true) => p.Defn.Var(pmods(in), List(in.symbol.asTerm.rawcvt(in)), if (tpt.nonEmpty) Some[p.Type](tpt.cvt_!) else None, if (rhs.nonEmpty) Some[p.Term](rhs.cvt_!) else None)
         }
       case in @ g.DefDef(_, _, _, _, _, _) =>
         // TODO: figure out procedures
@@ -508,12 +528,12 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
           require(!in.symbol.isPrimaryConstructor)
           val q"{ $_(...$argss); ..$stats; () }" = body
           // TODO: recover named/default parameters
-          p.Ctor.Secondary(pmods(in.symbol), explicitss.cvt_!, implicits.cvt_!, argss.cvt_!, stats.cvt_!)
+          p.Ctor.Secondary(pmods(in), explicitss.cvt_!, implicits.cvt_!, argss.cvt_!, stats.cvt_!)
         } else if (in.symbol.isMacro) {
           require(tpt.nonEmpty) // TODO: support pre-2.12 macros with inferred return types
           val macroSigs = in.symbol.annotations.filter(_.tree.tpe.typeSymbol.fullName == "scala.reflect.macros.internal.macroImpl")
           def mkMacroDefn(gbody: g.Tree) =
-            p.Defn.Macro(pmods(in.symbol), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt_!, implicits.cvt_!, tpt.cvt_!, gbody.cvt_!)
+            p.Defn.Macro(pmods(in), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt_!, implicits.cvt_!, tpt.cvt_!, gbody.cvt_!)
           def parseSig(gsig: g.Annotation) = {
             val q"new $_[..$_]($_(..$args)[..$targs])" = ensugar(gsig.tree)
             val metadata = args.collect{
@@ -544,18 +564,18 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
               mkMacroDefn(implRef)
             case _ => unreachable
           }
-        } else if (in.symbol.isDeferred) p.Decl.Def(pmods(in.symbol), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt_!, implicits.cvt_!, tpt.cvt_!) // TODO: infer procedures
-        else p.Defn.Def(pmods(in.symbol), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt_!, implicits.cvt_!, if (tpt.nonEmpty) Some[p.Type](tpt.cvt_!) else None, body.cvt_!)
+        } else if (in.symbol.isDeferred) p.Decl.Def(pmods(in), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt_!, implicits.cvt_!, tpt.cvt_!) // TODO: infer procedures
+        else p.Defn.Def(pmods(in), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt_!, implicits.cvt_!, if (tpt.nonEmpty) Some[p.Type](tpt.cvt_!) else None, body.cvt_!)
       case in @ g.TypeDef(_, _, tparams, tpt) if pt <:< typeOf[p.TypeParam] =>
         // TODO: undo desugarings of context and view bounds
         require(in.symbol.isType)
         val isAnonymous = in.symbol.name == g.tpnme.WILDCARD
-        if (isAnonymous) p.TypeParam.Anonymous(pmods(in.symbol), tparams.cvt, Nil, Nil, ptparambounds(tpt))
-        else p.TypeParam.Named(pmods(in.symbol), in.symbol.asType.rawcvt(in), tparams.cvt, Nil, Nil, ptparambounds(tpt))
+        if (isAnonymous) p.TypeParam.Anonymous(pmods(in), tparams.cvt, Nil, Nil, ptparambounds(tpt))
+        else p.TypeParam.Named(pmods(in), in.symbol.asType.rawcvt(in), tparams.cvt, Nil, Nil, ptparambounds(tpt))
       case in @ g.TypeDef(_, _, tparams, tpt) if pt <:< typeOf[p.Member] =>
         require(in.symbol.isType)
-        if (in.symbol.isDeferred) p.Decl.Type(pmods(in.symbol), in.symbol.asType.rawcvt(in), tparams.cvt, ptparambounds(tpt))
-        else p.Defn.Type(pmods(in.symbol), in.symbol.asType.rawcvt(in), tparams.cvt, tpt.cvt_!)
+        if (in.symbol.isDeferred) p.Decl.Type(pmods(in), in.symbol.asType.rawcvt(in), tparams.cvt, ptparambounds(tpt))
+        else p.Defn.Type(pmods(in), in.symbol.asType.rawcvt(in), tparams.cvt, tpt.cvt_!)
       case g.LabelDef(_, _, _) =>
         // TODO: preprocess the input so that we don't have LabelDefs
         ???

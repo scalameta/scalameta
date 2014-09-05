@@ -4,6 +4,7 @@ import scala.tools.nsc.Global
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 import scala.org.scalameta.reflection.Helpers
+import org.scalameta.unreachable
 
 // NOTE: this file undoes the desugarings applied by Scala's parser and typechecker to the extent possible with scala.reflect trees
 // for instance, insertions of implicit argument lists are undone, because it's a simple Apply => Tree transformation
@@ -27,11 +28,14 @@ trait Ensugar extends Metadata with Helpers { self =>
         def unapply(tree: Tree): Option[Tree] = tree.metadata.get("original").map(_.asInstanceOf[Tree])
       }
 
-      // NOTE: partially copy/pasted from Reshape.scala in scalac
+      // TODO: remember macro expansions here, because the host will need to convert and attach them to expandee's attrs
+      // TODO: current approaches to macro expansion metadata is a bit weird
+      // because both expandees and expansions are attached with the same piece of metadata
+      // we need to debug recursive macro expansions to see how they behave in the current system
       object MacroExpansion {
         def unapply(tree: Tree): Option[Tree] = {
           def postprocess(original: Tree): Tree = {
-            // TODO: remember macro expansions here, because the host will need to convert and attach them to expandee's attrs
+            // NOTE: this method is partially copy/pasted from Reshape.scala in scalac
             def mkImplicitly(tp: Type) = gen.mkNullaryCall(Predef_implicitly, List(tp)).setType(tp)
             val sym = original.symbol
             original match {
@@ -47,9 +51,6 @@ trait Ensugar extends Metadata with Helpers { self =>
             }
           }
           def strip(tree: Tree): Tree = {
-            // TODO: current approaches to macro expansion metadata is a bit weird
-            // because both expandees and expansions are attached with the same piece of metadata
-            // we need to debug recursive macro expansions to see how they behave in the current system
             duplicateAndKeepPositions(tree).removeMetadata("expandeeTree").removeAttachment[analyzer.MacroExpansionAttachment]
           }
           // NOTE: the expandeeTree metadata is attached by scala.meta macro expansion
@@ -62,6 +63,9 @@ trait Ensugar extends Metadata with Helpers { self =>
         }
       }
 
+      // TODO: infer which of the TypeBoundsTree bounds were specified explicitly by the user
+      // TODO: in the future, when we'll have moved the validating part of refchecks before the macro expansion phase,
+      // there won't be any necessity to support TypeTreeWithDeferredRefCheck trees
       object TypeTreeWithOriginal {
         def unapply(tree: Tree): Option[Tree] = tree match {
           case tree @ TypeTree() if tree.original == null =>
@@ -84,7 +88,6 @@ trait Ensugar extends Metadata with Helpers { self =>
                 val templ1 = treeCopy.Template(templ, parents1, noSelfType, stats1).setType(NoType).setSymbol(NoSymbol)
                 treeCopy.CompoundTypeTree(tree, templ1)
               case tree @ TypeBoundsTree(lo, hi) =>
-                // TODO: infer which of the bounds were specified explicitly by the user
                 val lo1 = if (lo.tpe =:= NothingTpe) EmptyTree else lo
                 val hi1 = if (hi.tpe =:= AnyTpe) EmptyTree else hi
                 treeCopy.TypeBoundsTree(tree, lo1, hi1)
@@ -95,8 +98,6 @@ trait Ensugar extends Metadata with Helpers { self =>
           case in @ TypeTreeWithDeferredRefCheck() =>
             // NOTE: I guess, we can do deferred checks here as the converter isn't supposed to run in the middle of typer
             // we will have to revisit this in case we decide to support whitebox macros in Palladium
-            // TODO: in the future, when we'll have moved the validating part of refchecks before the macro expansion phase,
-            // there won't be any necessity to support TypeTreeWithDeferredRefCheck trees
             unapply(in.check())
           case _ =>
             None
@@ -134,6 +135,29 @@ trait Ensugar extends Metadata with Helpers { self =>
           case tree @ ValDef(_, _, tt @ TypeTree(), _) if isInferred(tt) => Some(copyValDef(tree)(tpt = EmptyTree))
           case tree @ DefDef(_, _, _, _, tt @ TypeTree(), _) if isInferred(tt) => Some(copyDefDef(tree)(tpt = EmptyTree))
           case _ => None
+        }
+      }
+
+      // TODO: support classfile annotation args (ann.original.argss are untyped at the moment)
+      object MemberDefWithAnnotations {
+        def unapply(tree: Tree): Option[Tree] = {
+          def isSyntheticAnnotation(ann: AnnotationInfo): Boolean = ann.atp.typeSymbol.fullName == "scala.reflect.macros.internal.macroImpl"
+          def isDesugaredMods(mdef: MemberDef): Boolean = mdef.mods.annotations.isEmpty && tree.symbol.annotations.filterNot(isSyntheticAnnotation).nonEmpty
+          def ensugarMods(mdef: MemberDef): Modifiers = mdef.mods.withAnnotations(mdef.symbol.annotations.flatMap(ensugarAnnotation))
+          def ensugarAnnotation(ann: AnnotationInfo): Option[Tree] = ann.original match {
+            case original if original.nonEmpty => Some(original)
+            case EmptyTree if isSyntheticAnnotation(ann) => None
+            case EmptyTree => unreachable
+          }
+          tree match {
+            // case tree @ PackageDef(_, _) => // package defs don't have annotations
+            case tree: TypeDef if isDesugaredMods(tree) => Some(copyTypeDef(tree)(mods = ensugarMods(tree)))
+            case tree: ClassDef if isDesugaredMods(tree) => Some(copyClassDef(tree)(mods = ensugarMods(tree)))
+            case tree: ModuleDef if isDesugaredMods(tree) => Some(copyModuleDef(tree)(mods = ensugarMods(tree)))
+            case tree: ValDef if isDesugaredMods(tree) => Some(copyValDef(tree)(mods = ensugarMods(tree)))
+            case tree: DefDef if isDesugaredMods(tree) => Some(copyDefDef(tree)(mods = ensugarMods(tree)))
+            case _ => None
+          }
         }
       }
 
@@ -178,6 +202,7 @@ trait Ensugar extends Metadata with Helpers { self =>
               case TypeTreeWithOriginal(original) => Some(original)
               case RefTreeWithOriginal(original) => Some(original)
               case MemberDefWithInferredReturnType(original) => Some(original)
+              case MemberDefWithAnnotations(original) => Some(original)
               case TypeApplicationWithInferredTypeArguments(original) => Some(original)
               case ApplicationWithInferredImplicitArguments(original) => Some(original)
               case PartialFunction(original) => Some(original)
