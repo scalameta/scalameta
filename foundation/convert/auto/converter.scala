@@ -492,7 +492,7 @@ package object internal {
         def matchesIn(c: Converter) = (in <:< c.in) || (allowInputDowncasts && (c.in <:< in))
         def matchesOut(c: Converter) = {
           def matchesOutTpe(cout: Type) = (cout <:< out) || (allowOutputDowncasts && (out <:< cout))
-          (out <:< c.pt) && extractIntersections(c.out).exists(matchesOutTpe)
+          extractIntersections(c.out).exists(matchesOutTpe)
         }
         var matching = converters.filter(c => !c.derived || allowDerived).filter(c => matchesIn(c) && matchesOut(c))
         matching = matching.filter(c1 => !matching.exists(c2 => c1 != c2 && !(c1.in =:= c2.in) && (c1.in <:< c2.in)))
