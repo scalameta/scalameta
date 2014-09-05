@@ -525,39 +525,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
           p.Ctor.Secondary(pmods(in), explicitss.cvt_!, implicits.cvt_!, argss.cvt_!, stats.cvt_!)
         } else if (in.symbol.isMacro) {
           require(tpt.nonEmpty) // TODO: support pre-2.12 macros with inferred return types
-          val macroSigs = in.symbol.annotations.filter(_.tree.tpe.typeSymbol.fullName == "scala.reflect.macros.internal.macroImpl")
-          def mkMacroDefn(gbody: g.Tree) =
-            p.Defn.Macro(pmods(in), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt_!, implicits.cvt_!, tpt.cvt_!, gbody.cvt_!)
-          def parseSig(gsig: g.Annotation) = {
-            val q"new $_[..$_]($_(..$args)[..$targs])" = ensugar(gsig.tree)
-            val metadata = args.collect{
-              case g.Assign(g.Literal(g.Constant(s: String)), g.Literal(g.Constant(v))) => s -> v
-              case g.Assign(g.Literal(g.Constant(s: String)), tree) => s -> tree
-            }.toMap
-            metadata + ("targs" -> targs)
-          }
-          macroSigs match {
-            case legacySig :: palladiumSig :: Nil =>
-              // TODO: figure out the protocol of communicating whether the macro is blackbox or whitebox
-              // this information can be datamined from palladiumSig, but so far it's unclear where to put it
-              val metaprogram = parseSig(palladiumSig)("implDdef").asInstanceOf[g.DefDef].rhs
-              mkMacroDefn(metaprogram)
-            case legacySig :: Nil =>
-              // TODO: obtain the impl ref exactly how it was written by the programmer
-              val legacy = parseSig(legacySig)
-              val className = legacy("className").asInstanceOf[String]
-              val methodName = legacy("methodName").asInstanceOf[String]
-              val isBundle = legacy("isBundle").asInstanceOf[Boolean]
-              val targs = legacy("targs").asInstanceOf[List[g.Tree]]
-              require(className.endsWith("$") ==> !isBundle)
-              val containerSym = if (isBundle) g.rootMirror.staticClass(className) else g.rootMirror.staticModule(className.stripSuffix("$"))
-              val container = g.Ident(containerSym).setType(if (isBundle) containerSym.asType.toType else containerSym.info)
-              val methodSym = containerSym.info.member(g.TermName(methodName))
-              var implRef: g.Tree = g.Select(container, methodSym).setType(methodSym.info)
-              if (targs.nonEmpty) implRef = g.TypeApply(implRef, targs).setType(g.appliedType(methodSym.info, targs.map(_.tpe)))
-              mkMacroDefn(implRef)
-            case _ => unreachable
-          }
+          p.Defn.Macro(pmods(in), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt_!, implicits.cvt_!, tpt.cvt_!, body.cvt_!)
         } else if (in.symbol.isDeferred) p.Decl.Def(pmods(in), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt_!, implicits.cvt_!, tpt.cvt_!) // TODO: infer procedures
         else p.Defn.Def(pmods(in), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt_!, implicits.cvt_!, if (tpt.nonEmpty) Some[p.Type](tpt.cvt_!) else None, body.cvt_!)
       case in @ g.TypeDef(_, _, tparams, tpt) if pt <:< typeOf[p.TypeParam] =>
