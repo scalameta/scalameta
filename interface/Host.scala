@@ -43,21 +43,9 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
   // TODO: remember positions. actually, in scalac they are almost accurate, so it would be a shame to discard them
   @converter def toPalladium(in: Any, pt: Pt): Any = {
     object Helpers extends g.ReificationSupportImpl { self =>
-      // implicit class RichPalladiumTree[T <: p.Tree](val ptree: T) {
-      //   def appendScratchpad(x: Any): ptree.ThisType = ptree.mapScratchpad(_.map({
-      //     case xs: List[_] => xs :+ x
-      //     case y => sys.error(s"unexpected scratchpad $y for $ptree")
-      //   }).getOrElse(Nil))
-      // }
       object SyntacticTemplate {
         def unapply(templ: g.Template): Option[(List[g.Tree], List[g.Tree], g.ValDef, List[g.Tree])] = {
           self.UnMkTemplate.unapply(templ).map { case (parents, self, ctorMods, pvparamss, earlydefns, stats) => (earlydefns, parents, self, stats) }
-        }
-      }
-      implicit class RichHelperType(tpe: g.Type) {
-        def depoly: g.Type = tpe match {
-          case g.PolyType(_, tpe) => tpe.depoly
-          case _ => tpe
         }
       }
       def alias(in: g.Tree): String = in match {
@@ -218,9 +206,14 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
       // therefore I'm demoting the corresponding plan of the uber-patternmatch to a dedicated method
       // let's see how far we can get with that
       type pScalaType = p.Type{ type ThisType >: p.Type.Name with p.Type.Select with p.Type.Project with p.Type.Singleton with p.Type.Apply with p.Type.Compound with p.Type.Existential with p.Type.Annotate with p.Lit.Bool with p.Lit.Int with p.Lit.Long with p.Lit.Float with p.Lit.Double with p.Lit.String with p.Lit.Char <: p.Type }
-      type pScalaLitType = p.Lit{type ThisType >: p.Lit.Bool with p.Lit.Int with p.Lit.Long with p.Lit.Float with p.Lit.Double with p.Lit.String with p.Lit.Char <: p.Lit}
       def ptpe(gtpe: g.Type): pScalaType = {
         def loop(gtpe: g.Type): p.Type = {
+          implicit class RichHelperType(tpe: g.Type) {
+            def depoly: g.Type = tpe match {
+              case g.PolyType(_, tpe) => tpe.depoly
+              case _ => tpe
+            }
+          }
           object ValSymbol { def unapply(gsym: g.Symbol): Option[g.TermSymbol] = if (gsym.isTerm && !gsym.isMethod && !gsym.isModule && !gsym.isMutable) Some(gsym.asTerm) else None }
           object VarSymbol { def unapply(gsym: g.Symbol): Option[g.TermSymbol] = if (gsym.isTerm && !gsym.isMethod && !gsym.isModule && gsym.isMutable) Some(gsym.asTerm) else None }
           object DefSymbol { def unapply(gsym: g.Symbol): Option[g.TermSymbol] = if (gsym.isMethod) Some(gsym.asTerm) else None }
@@ -348,6 +341,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
               }).appendScratchpad(in)
               p.Type.Singleton(ref)
             case g.ConstantType(const) =>
+              type pScalaLitType = p.Lit{type ThisType >: p.Lit.Bool with p.Lit.Int with p.Lit.Long with p.Lit.Float with p.Lit.Double with p.Lit.String with p.Lit.Char <: p.Lit}
               pconst(const) match {
                 case lit: p.Lit => lit.asInstanceOf[pScalaLitType]
                 // TODO: can Literal(Constant(_: Type)) or Literal(Constant(_: Symbol)) ever end up in patterns?
