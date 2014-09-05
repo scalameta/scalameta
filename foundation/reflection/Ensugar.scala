@@ -234,6 +234,7 @@ trait Ensugar extends Metadata with Helpers { self =>
           }
         }
 
+        // TODO: test how this works with new
         object TypeApplicationWithInferredTypeArguments {
           def unapply(tree: Tree): Option[Tree] = tree match {
             case TypeApply(fn, targs) if targs.exists(isInferred) => Some(fn)
@@ -242,9 +243,18 @@ trait Ensugar extends Metadata with Helpers { self =>
         }
 
         // TODO: infer whether implicit arguments were provided explicitly and don't remove them if so
+        // TODO: test how this works with new
         object ApplicationWithInferredImplicitArguments {
           def unapply(tree: Tree): Option[Tree] = tree match {
             case Apply(fn, args) if isImplicitMethodType(fn.tpe) => Some(fn)
+            case _ => None
+          }
+        }
+
+        // TODO: figure out whether the programmer actually wrote `foo(...)` or it was `foo.apply(...)`
+        object ApplicationWithInsertedApply {
+          def unapply(tree: Tree): Option[Tree] = tree match {
+            case Select(qual, _) if tree.symbol.name == nme.apply => Some(qual)
             case _ => None
           }
         }
@@ -328,6 +338,7 @@ trait Ensugar extends Metadata with Helpers { self =>
                 case MacroDef(original) => Some(original)
                 case TypeApplicationWithInferredTypeArguments(original) => Some(original)
                 case ApplicationWithInferredImplicitArguments(original) => Some(original)
+                case ApplicationWithInsertedApply(original) => Some(original)
                 case StandalonePartialFunction(original) => Some(original)
                 case LambdaPartialFunction(original) => Some(original)
                 case CaseClassExtractor(original) => Some(original)

@@ -632,51 +632,28 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
         p.Term.ApplyType(fn.cvt_!, targs.cvt_!)
       case in @ g.Apply(g.Select(g.New(_), g.nme.CONSTRUCTOR), _) if pt <:< typeOf[p.Term] =>
         // TODO: infer the difference between `new X` vs `new X()`
-        // TODO: strip off inferred type and value arguments (but be careful to not remove explicitly provided arguments!)
         // TODO: recover names and defaults (https://github.com/scala/scala/pull/3753/files#diff-269d2d5528eed96b476aded2ea039444R617)
-        // TODO: figure out whether type arguments were inferred or not
         val q"new $tpt(...$argss)" = in
         val supercall = p.Aux.Parent(tpt.cvt_!, argss.cvt_!).appendScratchpad(in)
         val self = p.Aux.Self(None, None).appendScratchpad(tpt)
         val templ = p.Aux.Template(Nil, List(supercall), self).appendScratchpad(in)
         p.Term.New(templ)
-      case in @ g.Apply(_, _) if pt <:< typeOf[p.Term] =>
+      case in @ g.Apply(fn, args) if pt <:< typeOf[p.Term] =>
         // TODO: infer the difference between Apply and Update
         // TODO: infer whether it was an application or a Tuple
         // TODO: recover names and defaults (https://github.com/scala/scala/pull/3753/files#diff-269d2d5528eed96b476aded2ea039444R617)
-        // TODO: strip off inferred type arguments in loopParent
         // TODO: undo the for desugaring
         // TODO: undo the Lit.Symbol desugaring
-        // TODO: undo the interpolation desugaring
-        // TODO: figure out whether the programmer actually wrote `foo(...)` or it was `foo.apply(...)`
         // TODO: figure out whether the programmer actually wrote the interpolator or they were explicitly using a desugaring
         // TODO: figure out whether the programmer actually wrote the infix application or they were calling a symbolic method using a dot
-        type pScalaApply = p.Term{ type ThisType >: p.Term.Name with p.Term.Select with p.Term.Apply with p.Term.ApplyInfix with p.Term.ApplyType with p.Term.Interpolate <: p.Term }
-        def loop(in: g.Tree): pScalaApply = {
-          val prelimResult = in match {
-            case g.Apply(fn, args) => p.Term.Apply(loop(fn), args.cvt_!)
-            case g.TypeApply(g.Select(qual, _), targs) if in.symbol.name == g.TermName("apply") => g.treeCopy.TypeApply(in, qual, targs).cvt
-            case g.Select(qual, _) if in.symbol.name == g.TermName("apply") => (qual.cvt_! : p.Term)
-            case in: g.TypeApply => in.cvt
-            case in: g.Select => in.cvt
-            case in: g.Ident => in.symbol.asTerm.rawcvt(in)
-          }
-          val result = prelimResult match {
-            case Term.Apply(Term.Select(Term.Apply(stringContext, parts), prefix), args) =>
-              val isInterpolation = stringContext.scratchpad.collect{ case tree: g.Tree if tree.symbol == g.symbolOf[StringContext.type].companion.companion => tree }.nonEmpty
-              if (isInterpolation) {
-                require(parts.forall(_.isInstanceOf[p.Lit.String]))
-                require(args.forall(_.isInstanceOf[p.Term]))
-                p.Term.Interpolate(prefix, parts.asInstanceOf[Seq[p.Lit.String]], args.asInstanceOf[Seq[p.Term]])
-              } else prelimResult
-            case Term.Apply(Term.Select(lhs: p.Term, op), args @ List(arg)) if !op.value.forall(c => Character.isLetter(c)) =>
-              Term.ApplyInfix(lhs, op, Nil, args)
-            case _ =>
-              prelimResult
-          }
-          result.appendScratchpad(in).asInstanceOf[pScalaApply]
+        fn match {
+          case q"$stringContext(..$parts).$prefix" if stringContext.symbol == g.definitions.StringContextClass.companion =>
+            p.Term.Interpolate((fn.cvt_! : p.Term.Select).selector, parts.cvt_!, args.cvt_!)
+          case q"$lhs.$op" if !op.decoded.forall(c => Character.isLetter(c)) =>
+            p.Term.ApplyInfix(lhs.cvt_!, (fn.cvt_! : p.Term.Select).selector, Nil, args.cvt_!)
+          case _ =>
+            p.Term.Apply(fn.cvt_!, args.cvt_!)
         }
-        loop(in)
       case in @ g.Apply(fn, args) if pt <:< typeOf[p.Pat] =>
         // TODO: infer Extract vs ExtractInfix
         // TODO: also figure out Interpolate
