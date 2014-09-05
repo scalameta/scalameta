@@ -1,6 +1,6 @@
 import org.scalatest._
 import java.net._
-import java.io.File
+import java.io._
 import scala.reflect.runtime.{universe => ru}
 import scala.tools.reflect.{ToolBox, ToolBoxError}
 import scala.compat.Platform.EOL
@@ -88,12 +88,23 @@ class ScalaToMeta extends FunSuite {
   }
 
   def runScalaToMetaTest(dirPath: String): Unit = {
-    def slurp(filePath: String) = scala.io.Source.fromFile(new File(filePath)).mkString.trim
-    val actualResult = typecheckConvertAndPrettyprint(slurp(dirPath + File.separatorChar + "Original.scala"), debug = false)
-    val expectedResult = slurp(dirPath + File.separatorChar + "Expected.scala")
+    def resource(label: String) = dirPath + File.separatorChar + label + ".scala"
+    def slurp(label: String) = scala.io.Source.fromFile(new File(resource(label))).mkString.trim
+    def dump(label: String, content: String) = {
+      val w = new BufferedWriter(new FileWriter(resource(label)))
+      w.write(content)
+      w.close()
+    }
+    def delete(label: String) = {
+      val f = new File(resource(label))
+      if (f.exists) f.delete
+    }
+    delete("Actual")
+    val actualResult = typecheckConvertAndPrettyprint(slurp("Original"), debug = false)
+    val expectedResult = slurp("Expected")
     if (actualResult != expectedResult) {
-      typecheckConvertAndPrettyprint(slurp(dirPath + File.separatorChar + "Original.scala"), debug = true)
-      assert(actualResult === expectedResult)
+      dump("Actual", actualResult)
+      fail(s"see ${resource("Actual")} for details")
     }
   }
 
