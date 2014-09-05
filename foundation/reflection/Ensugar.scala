@@ -145,9 +145,8 @@ trait Ensugar extends Metadata with Helpers { self =>
               if (superArgss == List(Nil)) superArgss = Nil
               val parents1 = parents match {
                 case firstParent +: otherParents =>
-                  val firstParent1 = superArgss.foldLeft(firstParent)((curr, args) => Apply(firstParent, args).setSymbol(superSymbol).setType(firstParent.tpe))
-                  val otherParents1 = otherParents.map(otherParent => Apply(otherParent, Nil).setSymbol(otherParent.tpe.typeSymbol).setType(otherParent.tpe))
-                  firstParent1 +: otherParents1
+                  val firstParent1 = superArgss.foldLeft(firstParent)((curr, args) => Apply(firstParent, args).setType(firstParent.tpe).appendScratchpad(superSymbol))
+                  firstParent1 +: otherParents
                 case Nil =>
                   Nil
               }
