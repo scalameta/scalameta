@@ -103,6 +103,25 @@ trait Ensugar extends Metadata with Helpers { self =>
         }
       }
 
+      // TODO: test the situation when tree.symbol is a package object
+      object RefTreeWithOriginal {
+        def unapply(tree: Tree): Option[Tree] = {
+          object OriginalIdent { def unapply(tree: Tree): Option[Ident] = tree.metadata.get("originalIdent").map(_.asInstanceOf[Ident]) }
+          object OriginalQual { def unapply(tree: Tree): Option[Tree] = tree.metadata.get("originalQual").map(_.asInstanceOf[Tree]) }
+          object OriginalName { def unapply(tree: Tree): Option[Name] = tree.metadata.get("originalName").map(_.asInstanceOf[Name]) }
+          object OriginalSelect { def unapply(tree: Tree): Option[(Tree, Name)] = OriginalQual.unapply(tree).flatMap(qual => OriginalName.unapply(tree).flatMap(name => Some((qual, name)))) }
+          (tree, tree) match {
+            // Ident => This is a very uncommon situation, which happens when we typecheck a self reference
+            // unfortunately, this self reference can't have a symbol, because self doesn't have a symbol, so we have to do some encoding
+            case (This(_), OriginalIdent(orig)) => Some(orig.copyAttrs(tree).removeMetadata("originalIdent"))
+            case (Select(_, _), OriginalIdent(orig)) => Some(orig.copyAttrs(tree).removeMetadata("originalIdent"))
+            case (Select(_, _), OriginalSelect(origQual, origName)) => Some(treeCopy.Select(tree, origQual, origName).removeMetadata("originalQual", "originalName"))
+            case (SelectFromTypeTree(_, _), OriginalSelect(origQual, origName)) => Some(treeCopy.SelectFromTypeTree(tree, origQual, origName).removeMetadata("originalQual", "originalName"))
+            case _ => None
+          }
+        }
+      }
+
       private def isInferred(tree: Tree): Boolean = tree match {
         case tt @ TypeTree() => tt.nonEmpty && tt.original == null
         case _ => false
@@ -125,17 +144,6 @@ trait Ensugar extends Metadata with Helpers { self =>
         }
       }
 
-      object PartialFunction {
-        def unapply(tree: Tree): Option[Tree] = tree match {
-          case Typed(Block((gcdef @ ClassDef(_, tpnme.ANON_FUN_NAME, _, _)) :: Nil, q"new ${Ident(tpnme.ANON_FUN_NAME)}()"), tpt)
-          if tpt.tpe.typeSymbol == definitions.PartialFunctionClass =>
-            val (m, cases) :: Nil = gcdef.impl.body.collect { case DefDef(_, nme.applyOrElse, _, _, _, m @ Match(_, cases :+ _)) => (m, cases) }
-            Some(treeCopy.Match(m, EmptyTree, cases))
-          case _ =>
-            None
-        }
-      }
-
       // TODO: infer whether implicit arguments were provided explicitly and don't remove them if so
       object ApplicationWithInferredImplicitArguments {
         def unapply(tree: Tree): Option[Tree] = tree match {
@@ -144,22 +152,14 @@ trait Ensugar extends Metadata with Helpers { self =>
         }
       }
 
-      // TODO: test the situation when tree.symbol is a package object
-      object RefTreeWithOriginal {
-        def unapply(tree: Tree): Option[Tree] = {
-          object OriginalIdent { def unapply(tree: Tree): Option[Ident] = tree.metadata.get("originalIdent").map(_.asInstanceOf[Ident]) }
-          object OriginalQual { def unapply(tree: Tree): Option[Tree] = tree.metadata.get("originalQual").map(_.asInstanceOf[Tree]) }
-          object OriginalName { def unapply(tree: Tree): Option[Name] = tree.metadata.get("originalName").map(_.asInstanceOf[Name]) }
-          object OriginalSelect { def unapply(tree: Tree): Option[(Tree, Name)] = OriginalQual.unapply(tree).flatMap(qual => OriginalName.unapply(tree).flatMap(name => Some((qual, name)))) }
-          (tree, tree) match {
-            // Ident => This is a very uncommon situation, which happens when we typecheck a self reference
-            // unfortunately, this self reference can't have a symbol, because self doesn't have a symbol, so we have to do some encoding
-            case (This(_), OriginalIdent(orig)) => Some(orig.copyAttrs(tree).removeMetadata("originalIdent"))
-            case (Select(_, _), OriginalIdent(orig)) => Some(orig.copyAttrs(tree).removeMetadata("originalIdent"))
-            case (Select(_, _), OriginalSelect(origQual, origName)) => Some(treeCopy.Select(tree, origQual, origName).removeMetadata("originalQual", "originalName"))
-            case (SelectFromTypeTree(_, _), OriginalSelect(origQual, origName)) => Some(treeCopy.SelectFromTypeTree(tree, origQual, origName).removeMetadata("originalQual", "originalName"))
-            case _ => None
-          }
+      object PartialFunction {
+        def unapply(tree: Tree): Option[Tree] = tree match {
+          case Typed(Block((gcdef @ ClassDef(_, tpnme.ANON_FUN_NAME, _, _)) :: Nil, q"new ${Ident(tpnme.ANON_FUN_NAME)}()"), tpt)
+          if tpt.tpe.typeSymbol == definitions.PartialFunctionClass =>
+            val (m, cases) :: Nil = gcdef.impl.body.collect { case DefDef(_, nme.applyOrElse, _, _, _, m @ Match(_, cases :+ _)) => (m, cases) }
+            Some(treeCopy.Match(m, EmptyTree, cases))
+          case _ =>
+            None
         }
       }
 
@@ -176,11 +176,11 @@ trait Ensugar extends Metadata with Helpers { self =>
               case DesugaringProtocol(original) => Some(original)
               case MacroExpansion(expandee) => Some(expandee)
               case TypeTreeWithOriginal(original) => Some(original)
+              case RefTreeWithOriginal(original) => Some(original)
               case MemberDefWithInferredReturnType(original) => Some(original)
               case TypeApplicationWithInferredTypeArguments(original) => Some(original)
-              case PartialFunction(original) => Some(original)
               case ApplicationWithInferredImplicitArguments(original) => Some(original)
-              case RefTreeWithOriginal(original) => Some(original)
+              case PartialFunction(original) => Some(original)
               case _ => None
             }
           }
