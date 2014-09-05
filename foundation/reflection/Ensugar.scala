@@ -169,12 +169,12 @@ trait Ensugar extends Metadata with Helpers { self =>
               case _ => Nil
             }
             def parseMacroSig(sig: AnnotationInfo) = {
-              val q"new $_[..$_]($_(..$args)[..$targs])" = loop(sig.tree)
+              val q"new $_[..$_]($_(..$args)[..$targs])" = sig.tree
               val metadata = args.collect{
                 case Assign(Literal(Constant(s: String)), Literal(Constant(v))) => s -> v
-                case Assign(Literal(Constant(s: String)), tree) => s -> tree
+                case Assign(Literal(Constant(s: String)), tree) => s -> loop(tree)
               }.toMap
-              metadata + ("targs" -> targs)
+              metadata + ("targs" -> targs.map(loop))
             }
             macroSigs(tree) match {
               case legacySig :: palladiumSig :: Nil =>
