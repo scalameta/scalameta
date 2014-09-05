@@ -19,9 +19,10 @@ class converter extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro ConverterMacros.converter
 }
 
-class ConverterMacros(val c: whitebox.Context) {
+class ConverterMacros(val c: whitebox.Context) extends Metadata {
   import c.universe._
   import internal._
+  lazy val global: c.universe.type = c.universe
   val DeriveInternal = q"_root_.org.scalameta.convert.auto.internal"
   def converter(annottees: Tree*): Tree = {
     def transform(ddef: DefDef): ModuleDef = {
@@ -98,8 +99,8 @@ class ConverterMacros(val c: whitebox.Context) {
       })
       val computeParts = instances.map({
         case Instance(_, _, Nil, _, _) => unreachable
-        case Instance(_, _, List(clause), _, _) => clause
-        case Instance(in, _, clauses, _, _) => atPos(clauses.head.pos)(cq"in: $in => in match { case ..$clauses }")
+        case Instance(_, out, List(clause), _, _) => clause.appendMetadata("pt" -> out)
+        case Instance(in, out, clauses, _, _) => atPos(clauses.head.pos)(cq"in: $in => in match { case ..$clauses }".appendMetadata("pt" -> out))
       })
       // NOTE: having this as an rhs of a dummy val rather than as a statement in the template is important
       // because template statements get typechecked after val synthesis take place
@@ -129,6 +130,7 @@ class ConverterMacros(val c: whitebox.Context) {
       val instanceImpls = instances.filter(!_.notImplemented).map(instance => atPos(instance.pos)(
         q"""
           private def ${instance.impl}(in: ${instance.in}): $companion.${instance.sig}.Out = {
+            // TODO: fix the duplication wrt Ensugar
             def logFailure() = {
               def summary(x: Any) = x match { case x: Product => x.productPrefix; case null => "null"; case _ => x.getClass }
               var details = in.toString.replace("\n", "")
@@ -192,12 +194,13 @@ package object internal {
   def lubConverters[T, U]: Any = macro WhiteboxMacros.lubConverters[T, U]
   def connectConverters[T](x: T): Any = macro WhiteboxMacros.connectConverters
 
-  class WhiteboxMacros(val c: whitebox.Context) {
+  class WhiteboxMacros(val c: whitebox.Context) extends Metadata {
     import c.universe._
     import definitions._
     import c.internal._
     import decorators._
     import Flag._
+    lazy val global: c.universe.type = c.universe
     val Predef_??? = typeOf[Predef.type].member(TermName("$qmark$qmark$qmark")).asMethod
     val List_apply = typeOf[List.type].member(TermName("apply")).asMethod
     val Some_apply = typeOf[Some.type].member(TermName("apply")).asMethod
@@ -212,6 +215,7 @@ package object internal {
     val ComputedConvertersDatabearer = symbolOf[org.scalameta.convert.auto.internal.Converter]
     val PersistedWildcardType = typeOf[WildcardDummy]
     val DeriveInternal = q"_root_.org.scalameta.convert.auto.internal"
+    val EnsugarTrait = tq"_root_.org.scalameta.reflection.Ensugar"
     object Cvt {
       def unapply(x: Tree): Option[(Tree, Type, Boolean)] = {
         object RawCvt {
@@ -373,11 +377,7 @@ package object internal {
         if (isValid) {
           val nontrivialClauses = clauses.filter(clause => clause.body.symbol != scalameta_unreachable && clause.body.symbol != Predef_???)
           val ins = nontrivialClauses.map(_.pat.tpe)
-          val pts = nontrivialClauses.map(clause => {
-            // TODO: implement this to make our cvt_! conversions safer
-            // e.g. every time we cvt_! a Tree to a Term, the conversion will match against Bind and TypeTree, which is embarrassing :)
-            WildcardType
-          })
+          val pts = nontrivialClauses.map(clause => c.typecheck(clause.metadata("pt").asInstanceOf[Tree], mode = c.TYPEmode).tpe)
           val underivedOuts = nontrivialClauses.map(_.body).map(body => if (body.symbol != Auto_derive) precisetpe(body) else NoType)
           val outs = nontrivialClauses.map({ case CaseDef(pat, _, body) =>
             if (body.symbol != Auto_derive) precisetpe(body)
@@ -492,7 +492,7 @@ package object internal {
         def matchesIn(c: Converter) = (in <:< c.in) || (allowInputDowncasts && (c.in <:< in))
         def matchesOut(c: Converter) = {
           def matchesOutTpe(cout: Type) = (cout <:< out) || (allowOutputDowncasts && (out <:< cout))
-          (out <:< c.pt) && extractIntersections(c.out).exists(matchesOutTpe)
+          extractIntersections(c.out).exists(matchesOutTpe)
         }
         var matching = converters.filter(c => !c.derived || allowDerived).filter(c => matchesIn(c) && matchesOut(c))
         matching = matching.filter(c1 => !matching.exists(c2 => c1 != c2 && !(c1.in =:= c2.in) && (c1.in <:< c2.in)))
@@ -547,7 +547,7 @@ package object internal {
         case "toPalladium" =>
           val pre @ q"$h.toPalladium" = c.prefix.tree
           val sym = c.macroApplication.symbol
-          val x1 = q"$DeriveInternal.undoMacroExpansions($h.g, $x)"
+          val x1 = q"(new { val global: $h.g.type = $h.g } with $EnsugarTrait).ensugar($x)"
           convert(x1, c.weakTypeOf[In], c.weakTypeOf[Pt], allowDerived = true, allowInputDowncasts = true, allowOutputDowncasts = true, pre = pre.tpe, sym = sym)
         case _ =>
           c.abort(c.enclosingPosition, "unknown target: " + target.name)
@@ -668,69 +668,6 @@ package object internal {
       val polysel = gen.mkAttributedSelect(pre, m)
       val sel = TypeApply(polysel, List(TypeTree(arg.tpe))).setType(appliedType(polysel.tpe, arg.tpe))
       Apply(sel, List(arg)).setType(sel.tpe.finalResultType)
-    }
-  }
-
-  object undoMacroExpansions {
-    def apply(global: Any, tree: Any): Any = macro compileTimeImpl
-    def compileTimeImpl(c: whitebox.Context)(global: c.Tree, tree: c.Tree): c.Tree = {
-      import c.universe._
-      val pre = tree.tpe.asInstanceOf[scala.reflect.internal.SymbolTable#Type].prefix.asInstanceOf[Type]
-      val treeTpe = typeOf[scala.reflect.api.Universe].member(TypeName("Tree")).asType.toTypeIn(pre)
-      val termTreeTpe = typeOf[scala.reflect.api.Universe].member(TypeName("TermTree")).asType.toTypeIn(pre)
-      val actualTpe = tree.tpe
-      val needsUndo = termTreeTpe.baseClasses.contains(actualTpe.typeSymbol) || actualTpe.baseClasses.contains(termTreeTpe.typeSymbol)
-      if (needsUndo) q"_root_.org.scalameta.convert.auto.internal.undoMacroExpansions.runtimeImpl($global, $tree).asInstanceOf[$treeTpe]"
-      else tree
-    }
-    def runtimeImpl(global: Any, tree: Any): Any = {
-      // NOTE: partially copy/pasted from Reshape.scala in scalac
-      // NOTE: we can't undo macro expansions in annotation arguments, because after typechecking those are stored on symbols and we can't change those
-      // therefore undoMacroExpansions for annotation arguments is called from within a host, when it takes the contents of symbols and converts them to Palladium trees
-      def undoMacroExpansions[G <: scala.tools.nsc.Global](g: G)(tree: g.Tree): g.Tree = {
-        import g._
-        import definitions._
-        val currentRun = g.currentRun
-        import currentRun.runDefinitions._
-        object transformer extends Transformer with Metadata {
-          val global: g.type = g
-          override def transform(tree: Tree): Tree = {
-            // TODO: we need to be more systematic about undoing desugarings
-            // in fact, I think we should replace undoMacroExpansions with something like undoDesugarings
-            // however, that's not the task for today, and today I want to submit a pull request that handles all the tests completely
-            // therefore I'm just dropping this here for the (short) time being
-            tree.metadata.get("originalWhitebox").map(_.asInstanceOf[Tree]) match {
-              case Some(original) => transform(original)
-              case _ =>
-                def postprocess(original: Tree): Tree = {
-                  // TODO: remember macro expansions here, because the host will need to convert and attach them to expandee's attrs
-                  def mkImplicitly(tp: Type) = gen.mkNullaryCall(Predef_implicitly, List(tp)).setType(tp)
-                  val sym = original.symbol
-                  original match {
-                    // this hack is necessary until I fix implicit macros
-                    // so far tag materialization is implemented by sneaky macros hidden in scala-compiler.jar
-                    // hence we cannot reify references to them, because noone will be able to see them later
-                    // when implicit macros are fixed, these sneaky macros will move to corresponding companion objects
-                    // of, say, ClassTag or TypeTag
-                    case Apply(TypeApply(_, List(tt)), _) if sym == materializeClassTag            => mkImplicitly(appliedType(ClassTagClass, tt.tpe))
-                    case Apply(TypeApply(_, List(tt)), List(pre)) if sym == materializeWeakTypeTag => mkImplicitly(typeRef(pre.tpe, WeakTypeTagClass, List(tt.tpe)))
-                    case Apply(TypeApply(_, List(tt)), List(pre)) if sym == materializeTypeTag     => mkImplicitly(typeRef(pre.tpe, TypeTagClass, List(tt.tpe)))
-                    case _                                                                         => original
-                  }
-                }
-                (tree.metadata.get("expandeeTree").map(_.asInstanceOf[Tree]), tree.attachments.get[analyzer.MacroExpansionAttachment]) match {
-                  case (Some(original), _) => super.transform(postprocess(original))
-                  case (None, Some(analyzer.MacroExpansionAttachment(original, _))) => super.transform(postprocess(original))
-                  case _ => super.transform(tree)
-                }
-            }
-          }
-        }
-        transformer.transform(tree)
-      }
-      val global1 = global.asInstanceOf[scala.tools.nsc.Global]
-      val tree1 = tree.asInstanceOf[global1.Tree]
-      undoMacroExpansions[global1.type](global1)(tree1)
     }
   }
 }

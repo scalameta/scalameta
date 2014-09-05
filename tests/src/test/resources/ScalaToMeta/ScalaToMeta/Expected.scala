@@ -52,7 +52,7 @@ class ScalaToMeta extends FunSuite {
           case ClassDef(_, _, _, _) =>
             ()
           case _ =>
-            .super.traverse(tree)
+            super.traverse(tree)
         }
       }
       openPackageObjectsTraverser(unit.body)
@@ -73,7 +73,7 @@ class ScalaToMeta extends FunSuite {
     }
     val m_withCompilerApi = tb.getClass().getDeclaredMethod("withCompilerApi")
     val o_withCompilerApi = m_withCompilerApi.invoke(tb)
-    val m_apply = o_withCompilerApi.getClass().getDeclaredMethods().find(_ => x$2.getName().==("apply")).get
+    val m_apply = o_withCompilerApi.getClass().getDeclaredMethods().find(_ => x$2.getName() == "apply").get
     try m_apply.invoke(o_withCompilerApi, {
       compilerApi => cont(compilerApi)
     }) catch {
@@ -95,6 +95,6 @@ class ScalaToMeta extends FunSuite {
       assert(actualResult === expectedResult)
     }
   }
-  val resourceDir = new File(System.getProperty("sbt.paths.tests.resources").+(File.separatorChar).+("ScalaToMeta"))
+  val resourceDir = new File(System.getProperty("sbt.paths.tests.resources") + File.separatorChar + "ScalaToMeta")
   resourceDir.listFiles().foreach(dir => test(dir.getName())(runScalaToMetaTest(dir.getAbsolutePath())))
 }
