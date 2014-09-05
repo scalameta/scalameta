@@ -68,8 +68,8 @@ trait Helpers {
       val (gvdefs, etdefs) = rawEdefs.partition(treeInfo.isEarlyValDef)
       val (fieldDefs, UnCtor(ctorMods, ctorVparamss, lvdefs) :: body2) = rest.splitAt(indexOfCtor(rest))
       val evdefs = gvdefs.zip(lvdefs).map {
-        case (gvdef @ ValDef(_, _, tpt: TypeTree, _), ValDef(_, _, _, rhs)) =>
-          copyValDef(gvdef)(tpt = tpt.original, rhs = rhs)
+        case (gvdef @ ValDef(_, _, tpt, _), ValDef(_, _, _, rhs)) =>
+          copyValDef(gvdef)(tpt = tpt, rhs = rhs)
       }
       val edefs = evdefs ::: etdefs
       Some(in.parents, in.self, edefs, body2)
