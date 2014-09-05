@@ -43,11 +43,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
   // TODO: remember positions. actually, in scalac they are almost accurate, so it would be a shame to discard them
   @converter def toPalladium(in: Any, pt: Pt): Any = {
     object Helpers extends g.ReificationSupportImpl { self =>
-      object SyntacticTemplate {
-        def unapply(templ: g.Template): Option[(List[g.Tree], List[g.Tree], g.ValDef, List[g.Tree])] = {
-          self.UnMkTemplate.unapply(templ).map { case (parents, self, ctorMods, pvparamss, earlydefns, stats) => (earlydefns, parents, self, stats) }
-        }
-      }
+      val SyntacticTemplate = UnMkTemplate
       def alias(in: g.Tree): String = in match {
         case in: g.NameTree => in.name.decodedName.toString
         case g.This(name) => name.decodedName.toString
@@ -564,30 +560,10 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
           }
         }))))
       case in @ g.Template(_, _, rawstats) =>
-        // NOTE: SyntacticTemplate (based on UnMkTemplate, the basis of SyntacticClassDef and friends)
-        // returns incorrect parents if input is typechecked, so we have to work around
-        val SyntacticTemplate(gearlydefns, _, gself, gstats) = in
-        val pparents = {
-          // TODO: discern `... extends C()` and `... extends C`
-          // TODO: recover names and defaults
-          val gparents = in.metadata("originalParents").asInstanceOf[List[g.Tree]]
-          gparents match {
-            case Nil => Nil
-            case gfirstparent +: gotherparents =>
-              var (gsupersymbol, gargss) = g.treeInfo.firstConstructor(rawstats) match {
-                case g.DefDef(_, name, _, _, _, rawinit) if name == g.nme.CONSTRUCTOR && !rawinit.exists(_ == g.pendingSuperCall) =>
-                  rawinit.collect { case g.treeInfo.Applied(core @ g.Select(g.Super(_, _), _), _, argss) => (core.symbol, argss) }.head
-                case _ =>
-                  (g.NoSymbol, g.analyzer.superArgs(gfirstparent).getOrElse(Nil))
-              }
-              if (gargss == List(Nil)) gargss = Nil
-              val pfirstparent = p.Aux.Parent(gfirstparent.cvt_!, gargss.cvt_!).appendScratchpad(gsupersymbol).appendScratchpad(gfirstparent)
-              val potherparents = gotherparents.map(gp => p.Aux.Parent(gp.cvt_!, Nil))
-              pfirstparent +: potherparents
-          }
-        }
         // TODO: really infer hasStats
-        // TODO: we should be able to write this without an `if` by having something like `hasStats` as an optional synthetic parameter
+        // TODO: we should be able to write Template instantiations without an `if` by having something like `hasStats` as an optional synthetic parameter
+        val SyntacticTemplate(gparents, gself, _, _, gearlydefns, gstats) = in
+        val pparents = gparents.map(gparent => { val applied = g.treeInfo.dissectApplied(gparent); p.Aux.Parent(applied.callee.cvt_!, applied.argss.cvt_!) })
         if (gstats.isEmpty) p.Aux.Template(gearlydefns.cvt_!, pparents, gself.cvt)
         else p.Aux.Template(gearlydefns.cvt_!, pparents, gself.cvt, gstats.cvt_!)
       case g.Block((gcdef @ g.ClassDef(_, g.TypeName("$anon"), _, _)) :: Nil, q"new $$anon()") =>

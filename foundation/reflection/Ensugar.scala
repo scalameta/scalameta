@@ -124,6 +124,39 @@ trait Ensugar extends Metadata with Helpers { self =>
           }
         }
 
+        // TODO: discern `... extends C()` and `... extends C`
+        // TODO: recover names and defaults in super constructor invocations
+        object TemplateWithOriginal {
+          def unapply(tree: Tree): Option[Tree] = (tree, tree.metadata.get("originalParents").map(_.asInstanceOf[List[Tree]])) match {
+            case (tree @ Template(_, self, body), Some(parents)) =>
+              var superSymbol: Symbol = NoSymbol
+              var superArgss: List[List[Tree]] = parents.headOption.flatMap(firstParent => analyzer.superArgs(firstParent)).getOrElse(Nil)
+              object revertToPendingSuperCall extends Transformer {
+                override def transform(tree: Tree): Tree = tree match {
+                  case treeInfo.Applied(core @ Select(Super(_, _), _), _, argss) =>
+                    superSymbol = core.symbol
+                    superArgss = argss
+                    pendingSuperCall
+                  case _ =>
+                    super.transform(tree)
+                }
+              }
+              val body1 = revertToPendingSuperCall.transformTrees(body)
+              if (superArgss == List(Nil)) superArgss = Nil
+              val parents1 = parents match {
+                case firstParent +: otherParents =>
+                  val firstParent1 = superArgss.foldLeft(firstParent)((curr, args) => Apply(firstParent, args).setSymbol(superSymbol).setType(firstParent.tpe))
+                  val otherParents1 = otherParents.map(otherParent => Apply(otherParent, Nil).setSymbol(otherParent.tpe.typeSymbol).setType(otherParent.tpe))
+                  firstParent1 +: otherParents1
+                case Nil =>
+                  Nil
+              }
+              Some(treeCopy.Template(tree, parents1, self, body1).removeMetadata("originalParents"))
+            case _ =>
+              None
+          }
+        }
+
         private def isInferred(tree: Tree): Boolean = tree match {
           case tt @ TypeTree() => tt.nonEmpty && tt.original == null
           case _ => false
@@ -241,6 +274,7 @@ trait Ensugar extends Metadata with Helpers { self =>
                 case MacroExpansion(expandee) => Some(expandee)
                 case TypeTreeWithOriginal(original) => Some(original)
                 case RefTreeWithOriginal(original) => Some(original)
+                case TemplateWithOriginal(original) => Some(original)
                 case MemberDefWithInferredReturnType(original) => Some(original)
                 case MemberDefWithAnnotations(original) => Some(original)
                 case MacroDef(original) => Some(original)
