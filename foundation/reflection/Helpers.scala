@@ -66,7 +66,10 @@ trait Helpers {
       val body1 = recoverBody(filterBody(in.body))
       val (rawEdefs, rest) = body1.span(treeInfo.isEarlyDef)
       val (gvdefs, etdefs) = rawEdefs.partition(treeInfo.isEarlyValDef)
-      val (fieldDefs, UnCtor(ctorMods, ctorVparamss, lvdefs) :: body2) = rest.splitAt(indexOfCtor(rest))
+      val (fieldDefs, lvdefs, body2) = rest.splitAt(indexOfCtor(rest)) match {
+        case (fieldDefs, UnCtor(_, _, lvdefs) :: body2) => (fieldDefs, lvdefs, body2)
+        case (Nil, body2) => (Nil, Nil, body2)
+      }
       val evdefs = gvdefs.zip(lvdefs).map {
         case (gvdef @ ValDef(_, _, tpt, _), ValDef(_, _, _, rhs)) =>
           copyValDef(gvdef)(tpt = tpt, rhs = rhs)
