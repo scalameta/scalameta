@@ -629,13 +629,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
       case g.Typed(expr, tpt) if pt <:< typeOf[p.Pat] =>
         p.Pat.Typed(expr.cvt_!, tpt.cvt_!)
       case in @ g.TypeApply(fn, targs) =>
-        type pScalaFn = p.Term{ type ThisType >: p.Term.Name with p.Term.Select with p.Term.ApplyUnary <: p.Term }
-        val pfn = (fn match {
-          case fn @ g.Ident(_) => fn.symbol.asTerm.rawcvt(fn)
-          case fn @ g.Select(_, _) => (fn.cvt_! : p.Term)
-          case _ => unreachable
-        }).asInstanceOf[pScalaFn]
-        p.Term.ApplyType(pfn, targs.cvt_!)
+        p.Term.ApplyType(fn.cvt_!, targs.cvt_!)
       case in @ g.Apply(g.Select(g.New(_), g.nme.CONSTRUCTOR), _) if pt <:< typeOf[p.Term] =>
         // TODO: infer the difference between `new X` vs `new X()`
         // TODO: strip off inferred type and value arguments (but be careful to not remove explicitly provided arguments!)
