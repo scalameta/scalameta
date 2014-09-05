@@ -52,7 +52,7 @@ class ScalaToMeta extends FunSuite {
           case ClassDef(_, _, _, _) =>
             ()
           case _ =>
-            .super.traverse(tree)
+            super.traverse(tree)
         }
       }
       openPackageObjectsTraverser(unit.body)
