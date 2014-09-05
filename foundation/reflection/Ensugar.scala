@@ -249,12 +249,22 @@ trait Ensugar extends Metadata with Helpers { self =>
           }
         }
 
-        object PartialFunction {
+        object StandalonePartialFunction {
           def unapply(tree: Tree): Option[Tree] = tree match {
             case Typed(Block((gcdef @ ClassDef(_, tpnme.ANON_FUN_NAME, _, _)) :: Nil, q"new ${Ident(tpnme.ANON_FUN_NAME)}()"), tpt)
             if tpt.tpe.typeSymbol == definitions.PartialFunctionClass =>
               val (m, cases) :: Nil = gcdef.impl.body.collect { case DefDef(_, nme.applyOrElse, _, _, _, m @ Match(_, cases :+ _)) => (m, cases) }
               Some(treeCopy.Match(m, EmptyTree, cases))
+            case _ =>
+              None
+          }
+        }
+
+        object LambdaPartialFunction {
+          def unapply(tree: Tree): Option[Tree] = tree match {
+            case Function(x0def :: Nil, Match(x0ref @ Ident(_), cases))
+            if x0def.symbol == x0ref.symbol && x0def.name.toString.startsWith("x0$") =>
+              Some(Match(EmptyTree, cases).setType(tree.tpe))
             case _ =>
               None
           }
@@ -318,7 +328,8 @@ trait Ensugar extends Metadata with Helpers { self =>
                 case MacroDef(original) => Some(original)
                 case TypeApplicationWithInferredTypeArguments(original) => Some(original)
                 case ApplicationWithInferredImplicitArguments(original) => Some(original)
-                case PartialFunction(original) => Some(original)
+                case StandalonePartialFunction(original) => Some(original)
+                case LambdaPartialFunction(original) => Some(original)
                 case CaseClassExtractor(original) => Some(original)
                 case ClassTagExtractor(original) => Some(original)
                 case VanillaExtractor(original) => Some(original)

@@ -596,12 +596,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
         require(name == in.symbol.name)
         p.Pat.Bind(in.symbol.asTerm.rawcvt(in), tree.cvt_!)
       case g.Function(params, body) =>
-        // TODO: recover eta-expansions that typer desugars to lambdas
         // TODO: recover shorthand function syntax
-        (params, body) match {
-          case (x0def :: Nil, g.Match(x0ref @ g.Ident(_), cases)) if x0def.symbol == x0ref.symbol && x0def.name.toString.startsWith("x0$") => p.Term.Cases(cases.cvt)
-          case _ => p.Term.Function(params.cvt, body.cvt_!)
-        }
+        p.Term.Function(params.cvt, body.cvt_!)
       case g.Assign(lhs, rhs) =>
         p.Term.Assign(lhs.cvt_!, rhs.cvt_!)
       case g.AssignOrNamedArg(lhs, rhs) =>
