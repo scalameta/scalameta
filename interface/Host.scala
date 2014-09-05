@@ -571,8 +571,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
         p.Term.New(pcdef.templ)
       case g.Block(stats, expr) =>
         p.Term.Block((stats :+ expr).cvt_!)
-      case g.CaseDef(pat, guard, body) =>
-        val q"..$stats" = body
+      case g.CaseDef(pat, guard, q"..$stats") =>
         p.Aux.Case(pat.cvt_!, if (guard.nonEmpty) Some[p.Term](guard.cvt_!) else None, stats.cvt_!)
       case g.Alternative(fst :: snd :: Nil) =>
         p.Pat.Alternative(fst.cvt_!, snd.cvt_!)
