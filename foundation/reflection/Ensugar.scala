@@ -157,6 +157,13 @@ trait Ensugar extends Metadata with Helpers { self =>
           }
         }
 
+        object SuperWithOriginal {
+          def unapply(tree: Tree): Option[Tree] = (tree, tree.metadata.get("originalThis").map(_.asInstanceOf[This])) match {
+            case (tree @ Super(qual, mix), Some(originalQual)) => Some(treeCopy.Super(tree, originalQual, mix).removeMetadata("originalThis"))
+            case _ => None
+          }
+        }
+
         private def isInferred(tree: Tree): Boolean = tree match {
           case tt @ TypeTree() => tt.nonEmpty && tt.original == null
           case _ => false
@@ -333,6 +340,7 @@ trait Ensugar extends Metadata with Helpers { self =>
                 case TypeTreeWithOriginal(original) => Some(original)
                 case RefTreeWithOriginal(original) => Some(original)
                 case TemplateWithOriginal(original) => Some(original)
+                case SuperWithOriginal(original) => Some(original)
                 case MemberDefWithInferredReturnType(original) => Some(original)
                 case MemberDefWithAnnotations(original) => Some(original)
                 case MacroDef(original) => Some(original)
