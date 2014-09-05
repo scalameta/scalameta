@@ -129,19 +129,10 @@ trait Ensugar extends Metadata with Helpers { self =>
         object TemplateWithOriginal {
           def unapply(tree: Tree): Option[Tree] = (tree, tree.metadata.get("originalParents").map(_.asInstanceOf[List[Tree]])) match {
             case (tree @ Template(_, self, body), Some(parents)) =>
-              var superSymbol: Symbol = NoSymbol
-              var superArgss: List[List[Tree]] = parents.headOption.flatMap(firstParent => analyzer.superArgs(firstParent)).getOrElse(Nil)
-              object revertToPendingSuperCall extends Transformer {
-                override def transform(tree: Tree): Tree = tree match {
-                  case treeInfo.Applied(core @ Select(Super(_, _), nme.CONSTRUCTOR), _, argss) =>
-                    superSymbol = core.symbol
-                    superArgss = argss
-                    pendingSuperCall
-                  case _ =>
-                    super.transform(tree)
-                }
+              var (superSymbol, superArgss) = treeInfo.firstConstructor(body) match {
+                case EmptyTree => (NoSymbol, parents.headOption.flatMap(firstParent => analyzer.superArgs(firstParent)).getOrElse(Nil))
+                case DefDef(_, _, _, _, _, Block(_ :+ treeInfo.Applied(core, _, argss), _)) => (core.symbol, argss)
               }
-              val body1 = revertToPendingSuperCall.transformTrees(body)
               if (superArgss == List(Nil)) superArgss = Nil
               val parents1 = parents match {
                 case firstParent +: otherParents =>
@@ -150,7 +141,7 @@ trait Ensugar extends Metadata with Helpers { self =>
                 case Nil =>
                   Nil
               }
-              Some(treeCopy.Template(tree, parents1, self, body1).removeMetadata("originalParents"))
+              Some(treeCopy.Template(tree, parents1, self, body).removeMetadata("originalParents"))
             case _ =>
               None
           }
