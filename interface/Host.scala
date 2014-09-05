@@ -43,7 +43,6 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
   // TODO: remember positions. actually, in scalac they are almost accurate, so it would be a shame to discard them
   @converter def toPalladium(in: Any, pt: Pt): Any = {
     object Helpers extends g.ReificationSupportImpl { self =>
-      val SyntacticTemplate = UnMkTemplate
       def alias(in: g.Tree): String = in match {
         case in: g.NameTree => in.name.decodedName.toString
         case g.This(name) => name.decodedName.toString
@@ -558,10 +557,10 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
               p.Import.Unimport(resolveImport(name.toString, name.toString))
           }
         }))))
-      case in @ g.Template(_, _, rawstats) =>
+      case in @ g.Template(gparents, gself, _) =>
         // TODO: really infer hasStats
         // TODO: we should be able to write Template instantiations without an `if` by having something like `hasStats` as an optional synthetic parameter
-        val SyntacticTemplate(gparents, gself, _, _, gearlydefns, gstats) = in
+        val SyntacticTemplate(_, _, gearlydefns, gstats) = in
         val pparents = gparents.map(gparent => { val applied = g.treeInfo.dissectApplied(gparent); p.Aux.Parent(applied.callee.cvt_!, applied.argss.cvt_!) })
         if (gstats.isEmpty) p.Aux.Template(gearlydefns.cvt_!, pparents, gself.cvt)
         else p.Aux.Template(gearlydefns.cvt_!, pparents, gself.cvt, gstats.cvt_!)
