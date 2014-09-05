@@ -133,7 +133,7 @@ trait Ensugar extends Metadata with Helpers { self =>
               var superArgss: List[List[Tree]] = parents.headOption.flatMap(firstParent => analyzer.superArgs(firstParent)).getOrElse(Nil)
               object revertToPendingSuperCall extends Transformer {
                 override def transform(tree: Tree): Tree = tree match {
-                  case treeInfo.Applied(core @ Select(Super(_, _), _), _, argss) =>
+                  case treeInfo.Applied(core @ Select(Super(_, _), nme.CONSTRUCTOR), _, argss) =>
                     superSymbol = core.symbol
                     superArgss = argss
                     pendingSuperCall
