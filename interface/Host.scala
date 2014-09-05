@@ -504,9 +504,9 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
         }
       case in @ g.ValDef(_, _, tpt, rhs) if pt <:< typeOf[p.Member.ValOrVar] =>
         // TODO: collapse desugared representations of pattern-based vals and vars
-        // TODO: figure out whether a var def has an explicitly written underscore as its body or not
         require(in.symbol.isTerm)
         require(in.symbol.isDeferred ==> rhs.isEmpty)
+        require(in.symbol.hasFlag(g.Flag.DEFAULTINIT) ==> rhs.isEmpty)
         (in.symbol.isDeferred, in.symbol.isMutable) match {
           case (true, false) => p.Decl.Val(pmods(in), List(in.symbol.asTerm.rawcvt(in)), tpt.cvt_!)
           case (true, true) => p.Decl.Var(pmods(in), List(in.symbol.asTerm.rawcvt(in)), tpt.cvt_!)
