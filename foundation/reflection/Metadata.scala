@@ -1,11 +1,12 @@
 package org.scalameta.reflection
 
-import scala.tools.nsc.Global
+import scala.reflect.macros.Universe
 
 trait Metadata {
-  val global: Global
+  val global: Universe
   import global._
-  import definitions._
+  import internal._
+  import decorators._
 
   // NOTE: the mechanism of attachments is too low-level for our purposes
   // because it typically works with dedicated data structures that are declared and then shared between all potential users

@@ -498,7 +498,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
           val ptpe = if (tpt.nonEmpty) Some[p.Type](tpt.cvt_!) else None
           p.Aux.Self(pname, ptpe, hasThis = false) // TODO: figure out hasThis
         }
-      case in @ g.ValDef(_, _, tpt, rhs) if pt <:< typeOf[p.Member.ValOrVar] =>
+      case in @ g.ValDef(_, _, tpt, rhs) if pt <:< typeOf[p.Stmt] =>
         // TODO: collapse desugared representations of pattern-based vals and vars
         require(in.symbol.isTerm)
         require(in.symbol.isDeferred ==> rhs.isEmpty)

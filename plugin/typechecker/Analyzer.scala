@@ -2,6 +2,7 @@ package scala.meta
 package internal.hosts.scalacompiler
 package typechecker
 
+import scala.tools.nsc.Global
 import scala.tools.nsc.typechecker.{Analyzer => NscAnalyzer}
 import org.scalameta.reflection.Metadata
 import scala.reflect.internal.Mode
@@ -10,6 +11,7 @@ import scala.reflect.internal.util.{Statistics, ListOfNil}
 import scala.tools.nsc.typechecker.TypersStats._
 
 trait Analyzer extends NscAnalyzer with Metadata {
+  val global: Global
   import global._
   import definitions._
   val stableCurrentRun = global.currentRun

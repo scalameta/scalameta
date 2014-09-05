@@ -19,9 +19,10 @@ class converter extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro ConverterMacros.converter
 }
 
-class ConverterMacros(val c: whitebox.Context) {
+class ConverterMacros(val c: whitebox.Context) extends Metadata {
   import c.universe._
   import internal._
+  lazy val global: c.universe.type = c.universe
   val DeriveInternal = q"_root_.org.scalameta.convert.auto.internal"
   def converter(annottees: Tree*): Tree = {
     def transform(ddef: DefDef): ModuleDef = {
@@ -98,8 +99,8 @@ class ConverterMacros(val c: whitebox.Context) {
       })
       val computeParts = instances.map({
         case Instance(_, _, Nil, _, _) => unreachable
-        case Instance(_, _, List(clause), _, _) => clause
-        case Instance(in, _, clauses, _, _) => atPos(clauses.head.pos)(cq"in: $in => in match { case ..$clauses }")
+        case Instance(_, out, List(clause), _, _) => clause.appendMetadata("pt" -> out)
+        case Instance(in, out, clauses, _, _) => atPos(clauses.head.pos)(cq"in: $in => in match { case ..$clauses }".appendMetadata("pt" -> out))
       })
       // NOTE: having this as an rhs of a dummy val rather than as a statement in the template is important
       // because template statements get typechecked after val synthesis take place
@@ -193,12 +194,13 @@ package object internal {
   def lubConverters[T, U]: Any = macro WhiteboxMacros.lubConverters[T, U]
   def connectConverters[T](x: T): Any = macro WhiteboxMacros.connectConverters
 
-  class WhiteboxMacros(val c: whitebox.Context) {
+  class WhiteboxMacros(val c: whitebox.Context) extends Metadata {
     import c.universe._
     import definitions._
     import c.internal._
     import decorators._
     import Flag._
+    lazy val global: c.universe.type = c.universe
     val Predef_??? = typeOf[Predef.type].member(TermName("$qmark$qmark$qmark")).asMethod
     val List_apply = typeOf[List.type].member(TermName("apply")).asMethod
     val Some_apply = typeOf[Some.type].member(TermName("apply")).asMethod
@@ -375,11 +377,7 @@ package object internal {
         if (isValid) {
           val nontrivialClauses = clauses.filter(clause => clause.body.symbol != scalameta_unreachable && clause.body.symbol != Predef_???)
           val ins = nontrivialClauses.map(_.pat.tpe)
-          val pts = nontrivialClauses.map(clause => {
-            // TODO: implement this to make our cvt_! conversions safer
-            // e.g. every time we cvt_! a Tree to a Term, the conversion will match against Bind and TypeTree, which is embarrassing :)
-            WildcardType
-          })
+          val pts = nontrivialClauses.map(clause => c.typecheck(clause.metadata("pt").asInstanceOf[Tree], mode = c.TYPEmode).tpe)
           val underivedOuts = nontrivialClauses.map(_.body).map(body => if (body.symbol != Auto_derive) precisetpe(body) else NoType)
           val outs = nontrivialClauses.map({ case CaseDef(pat, _, body) =>
             if (body.symbol != Auto_derive) precisetpe(body)
