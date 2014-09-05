@@ -542,7 +542,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
         if (in.symbol.isDeferred) p.Decl.Type(pmods(in), in.symbol.asType.rawcvt(in), tparams.cvt, ptparambounds(tpt))
         else p.Defn.Type(pmods(in), in.symbol.asType.rawcvt(in), tparams.cvt, tpt.cvt_!)
       case g.LabelDef(_, _, _) =>
-        // TODO: preprocess the input so that we don't have LabelDefs
+        // TODO: support LabelDefs
         ???
       case g.Import(expr, selectors) =>
         // TODO: collapse desugared chains of imports
