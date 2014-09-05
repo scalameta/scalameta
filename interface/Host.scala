@@ -64,12 +64,11 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
         case in: g.NameTree => in.name.decodedName.toString
         case g.This(name) => name.decodedName.toString
       }
-      def isBackquoted(in: g.Tree): Boolean = (in, in.metadata.get("originalIdent").map(_.asInstanceOf[g.Ident])) match {
+      def isBackquoted(in: g.Tree): Boolean = in match {
         // TODO: infer isBackquoted
         // TODO: iirc according to Denys, info in BackquotedIdentifierAttachment might be incomplete
-        case (in: g.Ident, _) => in.isBackquoted || scala.meta.syntactic.parsers.keywords.contains(in.name.toString)
-        case (_: g.Select, Some(in)) => scala.meta.syntactic.parsers.keywords.contains(in.name.toString)
-        case (in: g.Select, None) => scala.meta.syntactic.parsers.keywords.contains(in.name.toString)
+        case in: g.Ident => in.isBackquoted || scala.meta.syntactic.parsers.keywords.contains(in.name.toString)
+        case in: g.Select => scala.meta.syntactic.parsers.keywords.contains(in.name.toString)
         case _ => false
       }
       implicit class RichHelperSymbol(gsym: g.Symbol) {
