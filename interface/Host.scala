@@ -591,40 +591,10 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
       case in @ g.Bind(_, g.Typed(g.Ident(g.nme.WILDCARD), tpt)) =>
         require(in.symbol.isTerm)
         p.Pat.Typed(in.symbol.asTerm.rawcvt(in), tpt.cvt_!)
-      case in @ g.Bind(_, tree @ g.UnApply(q"$ref.$unapply[..$targs](..$_)", g.Typed(g.Ident(g.nme.WILDCARD), tpt) :: Nil)) =>
-        require(unapply == g.TermName("unapply") || unapply == g.TermName("unapplySeq"))
-        // TODO: figure out whether a classtag-style extractor was written explicitly by the programmer
-        if (tree.fun.symbol.owner == g.definitions.ClassTagClass) p.Pat.Typed(in.symbol.asTerm.rawcvt(in), tpt.cvt_!)
-        else p.Pat.Bind(in.symbol.asTerm.rawcvt(in), tree.cvt)
       case in @ g.Bind(name, tree) =>
         require(in.symbol.isTerm)
         require(name == in.symbol.name)
         p.Pat.Bind(in.symbol.asTerm.rawcvt(in), tree.cvt_!)
-      case in @ g.Apply(tpt @ g.TypeTree(), args) =>
-        // TypeTree[1]().setOriginal(Select[2](Ident[3](scala#26), scala.Tuple2#1688))
-        // [1] MethodType(List(TermName("_1")#30490, TermName("_2")#30491), TypeRef(ThisType(scala#27), scala.Tuple2#1687, List(TypeRef(SingleType(SingleType(NoPrefix, TermName("c")#15795), TermName("universe")#15857), TypeName("TermSymbol")#9456, List()), TypeRef(SingleType(SingleType(NoPrefix, TermName("c")#15795), TermName("universe")#15857), TypeName("Ident")#10233, List()))))
-        // [2] SingleType(SingleType(ThisType(<root>#2), scala#26), scala.Tuple2#1688)
-        // [3] SingleType(ThisType(<root>#2), scala#26)
-        require(tpt.tpe.isInstanceOf[g.MethodType])
-        require(tpt.original != null)
-        val (companion, targs) = tpt.original match {
-          case g.AppliedTypeTree(companion, targs) => (companion, targs)
-          case companion => (companion, Nil)
-        }
-        require(companion.symbol.isModule)
-        // TODO: infer whether it was an application or a Tuple
-        if (g.definitions.isTupleSymbol(companion.symbol.companion)) p.Pat.Tuple(args.cvt_!)
-        else p.Pat.Extract(companion.cvt_!, targs.cvt_!, args.cvt_!)
-      case in @ g.UnApply(q"$ref.$unapply[..$targs](..$_)", args) =>
-        // TODO: infer Extract vs ExtractInfix
-        // TODO: also figure out Interpolate
-        // TODO: figure out whether targs were explicitly specified or not
-        require(unapply == g.TermName("unapply") || unapply == g.TermName("unapplySeq"))
-        type pScalaExtract = p.Pat{ type ThisType >: p.Pat.Extract with p.Pat.Typed <: p.Pat }
-        // TODO: change this to be an ascription of pScalaExtract instead of essentially a no-op asInstanceOf
-        // TODO: figure out whether a classtag-style extractor was written explicitly by the programmer
-        if (in.fun.symbol.owner == g.definitions.ClassTagClass) (args.head.cvt_! : p.Pat).asInstanceOf[pScalaExtract]
-        else p.Pat.Extract(ref.cvt_!, targs.cvt_!, args.cvt_!)
       case g.Function(params, body) =>
         // TODO: recover eta-expansions that typer desugars to lambdas
         // TODO: recover shorthand function syntax
@@ -670,7 +640,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
           case _ => unreachable
         }).asInstanceOf[pScalaFn]
         p.Term.ApplyType(pfn, targs.cvt_!)
-      case in @ g.Apply(g.Select(g.New(_), g.nme.CONSTRUCTOR), _) =>
+      case in @ g.Apply(g.Select(g.New(_), g.nme.CONSTRUCTOR), _) if pt <:< typeOf[p.Term] =>
         // TODO: infer the difference between `new X` vs `new X()`
         // TODO: strip off inferred type and value arguments (but be careful to not remove explicitly provided arguments!)
         // TODO: recover names and defaults (https://github.com/scala/scala/pull/3753/files#diff-269d2d5528eed96b476aded2ea039444R617)
@@ -680,7 +650,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
         val self = p.Aux.Self(None, None).appendScratchpad(tpt)
         val templ = p.Aux.Template(Nil, List(supercall), self).appendScratchpad(in)
         p.Term.New(templ)
-      case in @ g.Apply(_, _) =>
+      case in @ g.Apply(_, _) if pt <:< typeOf[p.Term] =>
         // TODO: infer the difference between Apply and Update
         // TODO: infer whether it was an application or a Tuple
         // TODO: recover names and defaults (https://github.com/scala/scala/pull/3753/files#diff-269d2d5528eed96b476aded2ea039444R617)
@@ -717,6 +687,15 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
           result.appendScratchpad(in).asInstanceOf[pScalaApply]
         }
         loop(in)
+      case in @ g.Apply(fn, args) if pt <:< typeOf[p.Pat] =>
+        // TODO: infer Extract vs ExtractInfix
+        // TODO: also figure out Interpolate
+        // TODO: also figure out whether the user wrote p.Pat.Tuple themselves, or it was inserted by the compiler
+        if (g.definitions.isTupleSymbol(in.symbol.companion)) p.Pat.Tuple(args.cvt_!)
+        else {
+          val (ref, targs) = in match { case q"$ref.$unapply[..$targs](..$_)" => (ref, targs); case q"$ref[..$targs](..$_)" => (ref, targs) }
+          p.Pat.Extract(ref.cvt_!, targs.cvt_!, args.cvt_!)
+        }
       case in @ g.ApplyDynamic(_, _) =>
         unreachable
       case in @ g.Super(qual @ g.This(_), mix) =>
@@ -761,6 +740,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
       case g.InjectDerivedValue(_) =>
         unreachable
       case g.SelectFromArray(_, _, _) =>
+        unreachable
+      case g.UnApply(_, _) =>
         unreachable
       case in @ g.TypeTree() =>
         unreachable

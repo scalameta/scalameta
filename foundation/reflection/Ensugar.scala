@@ -260,6 +260,44 @@ trait Ensugar extends Metadata with Helpers { self =>
           }
         }
 
+        object CaseClassExtractor {
+          def unapply(tree: Tree): Option[Tree] = tree match {
+            case tree @ Apply(tpt @ TypeTree(), args) if tpt.tpe.isInstanceOf[MethodType] =>
+              // TypeTree[1]().setOriginal(Select[2](Ident[3](scala#26), scala.Tuple2#1688))
+              // [1] MethodType(List(TermName("_1")#30490, TermName("_2")#30491), TypeRef(ThisType(scala#27), scala.Tuple2#1687, List(TypeRef(SingleType(SingleType(NoPrefix, TermName("c")#15795), TermName("universe")#15857), TypeName("TermSymbol")#9456, List()), TypeRef(SingleType(SingleType(NoPrefix, TermName("c")#15795), TermName("universe")#15857), TypeName("Ident")#10233, List()))))
+              // [2] SingleType(SingleType(ThisType(<root>#2), scala#26), scala.Tuple2#1688)
+              // [3] SingleType(ThisType(<root>#2), scala#26)
+              require(tpt.original != null && tpt.symbol.isModule)
+              Some(treeCopy.Apply(tree, tpt.original, args).appendScratchpad(tpt.tpe))
+            case _ =>
+              None
+          }
+        }
+
+        // TODO: figure out whether the classtag-style extractor was written explicitly by the programmer
+        object ClassTagExtractor {
+          def unapply(tree: Tree): Option[Tree] = tree match {
+            case outerPat @ UnApply(q"$ref.$unapply[..$targs](..$_)", (innerPat @ Typed(Ident(nme.WILDCARD), _)) :: Nil)
+            if outerPat.fun.symbol.owner == definitions.ClassTagClass && unapply == nme.unapply =>
+              Some(innerPat)
+            case _ =>
+              None
+          }
+        }
+
+        // TODO: test case class unapplication with targs
+        // TODO: also test case objects
+        // TODO: figure out whether targs were explicitly specified or not
+        object VanillaExtractor {
+          def unapply(tree: Tree): Option[Tree] = tree match {
+            case UnApply(fn @ q"$_.$unapply[..$_](..$_)", args) =>
+              require(unapply == nme.unapply || unapply == nme.unapplySeq)
+              Some(Apply(treeInfo.dissectApplied(fn).callee, args).setType(tree.tpe))
+            case _ =>
+              None
+          }
+        }
+
         override def transform(tree: Tree): Tree = {
           def logFailure() = {
             def summary(x: Any) = x match { case x: Product => x.productPrefix; case null => "null"; case _ => x.getClass }
@@ -281,6 +319,9 @@ trait Ensugar extends Metadata with Helpers { self =>
                 case TypeApplicationWithInferredTypeArguments(original) => Some(original)
                 case ApplicationWithInferredImplicitArguments(original) => Some(original)
                 case PartialFunction(original) => Some(original)
+                case CaseClassExtractor(original) => Some(original)
+                case ClassTagExtractor(original) => Some(original)
+                case VanillaExtractor(original) => Some(original)
                 case _ => None
               }
             }
