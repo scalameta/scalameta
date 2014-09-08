@@ -18,7 +18,7 @@ trait Analyzer extends NscAnalyzer with Metadata {
   import stableCurrentRun.runDefinitions._
 
   override def newTyper(context: Context) = new ParadiseTyper(context)
-  class ParadiseTyper(context: Context) extends Typer(context) {
+  class ParadiseTyper(context0: Context) extends Typer(context0) {
     import infer._
     import TyperErrorGen._
     private def typedParentType(encodedtpt: Tree, templ: Template, inMixinPosition: Boolean): Tree = {
