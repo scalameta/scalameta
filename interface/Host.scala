@@ -123,41 +123,6 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         if (gsym.isPackageObject) pmods += p.Mod.Package()
         pmods.toList
       }
-      def unattributedNodes(in: Any): List[(g.Tree, List[g.Tree])] = in match {
-        case gtree: g.Tree =>
-          val offenders = mutable.ListBuffer[(g.Tree, List[g.Tree])]()
-          object traverser extends g.Traverser {
-            private var path = List[g.Tree]()
-            private def drilldown[T](tree: g.Tree)(op: g.Tree => T): T = try { path ::= tree; op(tree) } finally { path = path.tail }
-            private def check(tree: g.Tree, skipSymbol: Boolean = false, skipType: Boolean = false): Unit = {
-              val ok = {
-                !tree.isErroneous &&
-                (tree.canHaveAttrs ==> (skipType || (tree.tpe != null))) &&
-                ((tree.canHaveAttrs && tree.hasSymbolField) ==> (skipSymbol || (tree.symbol != null && tree.symbol != g.NoSymbol)))
-              }
-              if (ok) super.traverse(tree)
-              else { offenders += ((tree, path)) }
-            }
-            override def traverse(tree: g.Tree): Unit = drilldown(tree) {
-              // imports and selectors of imports aren't attributed by the typechecker
-              case g.Import(qual, selectors) => check(qual)
-              // patmat wildcards used in binds and typeds don't have symbols
-              case g.Ident(g.nme.WILDCARD) => check(tree, skipSymbol = true)
-              // skip verification of Literal(Constant(0))
-              // https://groups.google.com/forum/#!topic/scala-internals/gppfuY7-tdA
-              case g.Literal(g.Constant(0)) =>
-              // literals don't have symbols
-              case g.Literal(const) => check(tree, skipSymbol = true)
-              // template symbols aren't set when typechecking compound type trees, and they are dummies anyway, so it doesn't really matter
-              // https://groups.google.com/forum/#!topic/scala-internals/6ebL7waMav8
-              case g.Template(parents, self, stats) => check(tree, skipSymbol = true)
-              case _ => check(tree)
-            }
-          }
-          traverser.traverse(gtree)
-          offenders.toList
-        case _ => Nil
-      }
       def pvparamtpe(gtpt: g.Tree): p.Param.Type = {
         def unwrap(ptpe: p.Type): p.Type = ptpe.asInstanceOf[p.Type.Apply].args.head
         if (g.definitions.isRepeatedParamType(gtpt.tpe)) p.Param.Type.Repeated(unwrap(gtpt.cvt_! : p.Type))
@@ -177,38 +142,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
       }
     }
     import Helpers._
-    val offenders = unattributedNodes(in)
-    if (offenders.nonEmpty) {
-      val grouped = offenders.groupBy(_._1.productPrefix).toList.sortBy(_._1)
-      def commaCommaAnd[T](list: List[T]): String = list.init.mkString(", ") + (if (list.length == 1) "" else " and ") + list.last
-      // The problem is caused by 6 Idents that are either unattributed or erroneous:
-      val offenderSummary = commaCommaAnd(grouped.map{ case (k, v) => s"${v.length} $k${if (v.length == 1) "" else "s"}" })
-      // 1: _ (... CaseDef > Bind > UnApply > Typed > Ident)
-      // 2: _ (...  DefDef > Match > CaseDef > Bind > Ident)
-      // ...
-      val offenderPrintout = grouped.flatMap(_._2).map({ case (tree, path) =>
-        var prefix = tree.toString.replace("\n", " ")
-        if (prefix.length > 60) prefix = prefix.take(60) + "..."
-        val suffix = path.scanLeft("")((suffix, tree) => {
-          if (suffix.length == 0) tree.productPrefix
-          else tree.productPrefix + " > " + suffix
-        }) match {
-          case _ :+ last if last.length <= 40 => last
-          case list => "... " + list.dropWhile(_.length <= 40).head.takeRight(40)
-        }
-        s"$prefix ($suffix)"
-      }).zipWithIndex.map{ case (s, i) => s"${i + 1}: $s" }.mkString("\n")
-      sys.error(s"""
-        |Input Scala tree is not fully attributed and can't be converted to a Palladium tree.
-        |The problem is caused by $offenderSummary that ${if (offenders.length == 1) "is" else "are"} either unattributed or erroneous:
-        |$offenderPrintout
-        |The input tree that has caused problems to the converter is printed out below:
-        |(Note that showRaw output at the end of the printout is supposed to contain ids and types)
-        |$in
-        |${g.showRaw(in, printIds = true, printTypes = true)}
-      """.stripMargin)
-    }
     val TermQuote = "denied" // TODO: find a better approach
+    in.asInstanceOf[g.Tree].ensureAttributed()
     in match {
       case g.EmptyTree =>
         unreachable

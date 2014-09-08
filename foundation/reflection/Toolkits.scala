@@ -13,6 +13,7 @@ trait MacroToolkit extends Metadata {
 trait GlobalToolkit extends MacroToolkit
                        with Helpers
                        with Ensugar
-                       with Syntaxize {
+                       with Syntaxize
+                       with Attributed {
   val global: Global
 }

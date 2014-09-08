@@ -1,13 +1,7 @@
 package org.scalameta.reflection
 
-import scala.tools.nsc.Global
-import scala.language.experimental.macros
-import scala.reflect.macros.whitebox.Context
-import scala.org.scalameta.reflection.Helpers
-import org.scalameta.unreachable
-
 trait Syntaxize {
-  self: MacroToolkit =>
+  self: GlobalToolkit =>
 
   import global._
   import definitions._
