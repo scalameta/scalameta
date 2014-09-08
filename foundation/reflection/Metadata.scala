@@ -1,9 +1,8 @@
 package org.scalameta.reflection
 
-import scala.reflect.macros.Universe
-
 trait Metadata {
-  val global: Universe
+  self: MacroToolkit =>
+
   import global._
   import internal._
   import decorators._

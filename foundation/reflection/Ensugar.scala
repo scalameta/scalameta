@@ -10,8 +10,9 @@ import org.scalameta.unreachable
 // for instance, insertions of implicit argument lists are undone, because it's a simple Apply => Tree transformation
 // however, we can't undo ClassDef, anonymous new or while-loop desugarings, because scala.reflect lacks the trees to represent those in their original form
 // some of the undesugarings can be done automatically, some of them require https://github.com/scalameta/scalahost/blob/master/plugin/typechecker/Analyzer.scala
-trait Ensugar extends Metadata with Helpers { self =>
-  val global: Global
+trait Ensugar {
+  self: GlobalToolkit =>
+
   import global._
   import definitions._
   val currentRun = global.currentRun

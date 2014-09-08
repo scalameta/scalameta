@@ -4,13 +4,13 @@ package typechecker
 
 import scala.tools.nsc.Global
 import scala.tools.nsc.typechecker.{Analyzer => NscAnalyzer}
-import org.scalameta.reflection.Metadata
+import org.scalameta.reflection._
 import scala.reflect.internal.Mode
 import scala.reflect.internal.Mode._
 import scala.reflect.internal.util.{Statistics, ListOfNil}
 import scala.tools.nsc.typechecker.TypersStats._
 
-trait Analyzer extends NscAnalyzer with Metadata {
+trait Analyzer extends NscAnalyzer with GlobalToolkit {
   val global: Global
   import global._
   import definitions._

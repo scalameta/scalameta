@@ -17,7 +17,7 @@ import org.scalameta.invariants._
 import org.scalameta.unreachable
 import org.scalameta.reflection._
 
-class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with Ensugar {
+class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit {
   lazy val global: g.type = g
   import g.Quasiquote
   implicit val palladiumHost: PalladiumHost = this
