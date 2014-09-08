@@ -12,6 +12,7 @@ trait MacroToolkit extends Metadata {
 // however that's not an immediate blocker, so I leave that for future work
 trait GlobalToolkit extends MacroToolkit
                        with Helpers
-                       with Ensugar {
+                       with Ensugar
+                       with Syntaxize {
   val global: Global
 }

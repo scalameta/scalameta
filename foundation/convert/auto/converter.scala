@@ -360,9 +360,12 @@ package object internal {
             sym.fullName != "scala.meta.Term.Tuple" &&
             sym.fullName != "scala.meta.Term.Update" &&
             sym.fullName != "scala.meta.Term.While" &&
+            sym.fullName != "scala.meta.Type.Annotate" &&
             sym.fullName != "scala.meta.Type.ApplyInfix" &&
+            sym.fullName != "scala.meta.Type.Existential" &&
             sym.fullName != "scala.meta.Type.Function" &&
             sym.fullName != "scala.meta.Type.Placeholder" &&
+            sym.fullName != "scala.meta.Type.Project" &&
             sym.fullName != "scala.meta.Type.Tuple"
           })
           if (unmatched.nonEmpty) c.error(c.enclosingPosition, "@converter is not exhaustive in its outputs; missing: " + unmatched)
