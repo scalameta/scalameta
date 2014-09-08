@@ -17,6 +17,7 @@ trait Metadata {
     def metadata: Metadata = new Metadata(tree)
     def appendMetadata(kvps: (String, Any)*): T = { kvps.foreach(kvp => tree.metadata += kvp); tree }
     def removeMetadata(keys: String*): T = { keys.foreach(key => tree.metadata -= key); tree }
+    def hasMetadata(key: String): Boolean = metadata.get(key).isDefined
     def scratchpad: List[Any] = tree.metadata.get("scratchpad").map(_.asInstanceOf[List[Any]]).getOrElse(Nil)
     def appendScratchpad(datum: Any): Tree = tree.appendMetadata("scratchpad" -> (tree.scratchpad :+ datum))
   }

@@ -154,6 +154,13 @@ trait Ensugar extends Metadata with Helpers { self =>
           }
         }
 
+        object ClassOfWithOriginal {
+          def unapply(tree: Tree): Option[Tree] = (tree, tree.metadata.get("originalClassOf").map(_.asInstanceOf[Tree])) match {
+            case (tree @ Literal(Constant(tpe: Type)), Some(original)) => Some(original.setType(tree.tpe))
+            case _ => None
+          }
+        }
+
         private def isInferred(tree: Tree): Boolean = tree match {
           case tt @ TypeTree() => tt.nonEmpty && tt.original == null
           case _ => false
@@ -195,7 +202,7 @@ trait Ensugar extends Metadata with Helpers { self =>
         object MacroDef {
           def unapply(tree: Tree): Option[Tree] = {
             tree match {
-              case tree: DefDef if tree.metadata.get("originalMacro").isEmpty =>
+              case tree: DefDef if !tree.hasMetadata("originalMacro") =>
                 def macroSigs(tree: Tree) = tree match {
                   case tree: DefDef => tree.symbol.annotations.filter(_.tree.tpe.typeSymbol.fullName == "scala.reflect.macros.internal.macroImpl")
                   case _ => Nil
@@ -336,6 +343,7 @@ trait Ensugar extends Metadata with Helpers { self =>
                 case RefTreeWithOriginal(original) => Some(original)
                 case TemplateWithOriginal(original) => Some(original)
                 case SuperWithOriginal(original) => Some(original)
+                case ClassOfWithOriginal(original) => Some(original)
                 case MemberDefWithInferredReturnType(original) => Some(original)
                 case MemberDefWithAnnotations(original) => Some(original)
                 case MacroDef(original) => Some(original)

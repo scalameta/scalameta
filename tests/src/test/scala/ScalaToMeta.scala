@@ -95,12 +95,14 @@ class ScalaToMeta extends FunSuite {
       w.write(content)
       w.close()
     }
+    def exists(label: String) = new File(resource(label)).exists
     def delete(label: String) = {
       val f = new File(resource(label))
       if (f.exists) f.delete
     }
     delete("Actual")
     val actualResult = typecheckConvertAndPrettyprint(slurp("Original"), debug = false)
+    if (!exists("Expected")) dump("Expected", "")
     val expectedResult = slurp("Expected")
     if (actualResult != expectedResult) {
       dump("Actual", actualResult)

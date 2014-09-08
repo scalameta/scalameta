@@ -66,7 +66,7 @@ class ScalaToMeta extends FunSuite {
       unit.toCheck.foreach(workItem => workItem())
       throwIfErrors()
       val h = Scalahost(compiler).asInstanceOf[PalladiumHostwithOurHost[compiler.type] {  }]
-      val ptree = h.toPalladium(unit.body, Predef.this.classOf[scala.meta.Aux.CompUnit])
+      val ptree = h.toPalladium(unit.body, classOf[Aux.CompUnit])
       if (debug) println(ptree.show[Code])
       if (debug) println(ptree.show[Raw])
       result = ptree.show[Code]

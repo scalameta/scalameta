@@ -123,28 +123,6 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
         if (gsym.isPackageObject) pmods += p.Mod.Package()
         pmods.toList
       }
-      private def pclassof(gtype: g.Type): p.Term.ApplyType = {
-        val mothershipCore = g.gen.mkAttributedRef(g.currentRun.runDefinitions.Predef_classOf).asInstanceOf[g.Select]
-        val scratchpad = g.TypeApply(mothershipCore, List(g.TypeTree(gtype))).setType(g.appliedType(mothershipCore.tpe, gtype))
-        // TODO: track the original TypTree here, so that we don't have to approximate with ptpe
-        p.Term.ApplyType(mothershipCore.cvt_!, List(ptpe(gtype))).appendScratchpad(scratchpad)
-      }
-      type pScalaConst = p.Term{type ThisType >: p.Lit.Null with p.Lit.Unit with p.Lit.Bool with p.Lit.Int with p.Lit.Long with p.Lit.Float with p.Lit.Double with p.Lit.String with p.Lit.Char with p.Term.ApplyType <: p.Term}
-      def pconst(gconst: g.Constant): pScalaConst = (gconst.value match {
-        case null => p.Lit.Null()
-        case () => p.Lit.Unit()
-        case v: Boolean => p.Lit.Bool(v)
-        case v: Byte => ???
-        case v: Short => ???
-        case v: Int => p.Lit.Int(v)
-        case v: Long => p.Lit.Long(v)
-        case v: Float => p.Lit.Float(v)
-        case v: Double => p.Lit.Double(v)
-        case v: String => p.Lit.String(v)
-        case v: Char => p.Lit.Char(v)
-        case v: g.Type => pclassof(v)
-        case v: g.Symbol => ??? // TODO: this is a super-crazy corner case that only appears in arguments of java annotations that refer to java enums
-      }).asInstanceOf[pScalaConst]
       def unattributedNodes(in: Any): List[(g.Tree, List[g.Tree])] = in match {
         case gtree: g.Tree =>
           val offenders = mutable.ListBuffer[(g.Tree, List[g.Tree])]()
@@ -251,6 +229,28 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
             if (gsym.isPackageObject) pmods += p.Mod.Package()
             pmods.toList
           }
+          def pclassof(gtype: g.Type): p.Term.ApplyType = {
+            val mothershipCore = g.gen.mkAttributedRef(g.currentRun.runDefinitions.Predef_classOf).asInstanceOf[g.Select]
+            val scratchpad = g.TypeApply(mothershipCore, List(g.TypeTree(gtype))).setType(g.appliedType(mothershipCore.tpe, gtype))
+            // TODO: track the original TypTree here, so that we don't have to approximate with ptpe
+            p.Term.ApplyType(mothershipCore.cvt_!, List(ptpe(gtype))).appendScratchpad(scratchpad)
+          }
+          type pScalaConst = p.Term{type ThisType >: p.Lit.Null with p.Lit.Unit with p.Lit.Bool with p.Lit.Int with p.Lit.Long with p.Lit.Float with p.Lit.Double with p.Lit.String with p.Lit.Char with p.Term.ApplyType <: p.Term}
+          def pconst(gconst: g.Constant): pScalaConst = (gconst.value match {
+            case null => p.Lit.Null()
+            case () => p.Lit.Unit()
+            case v: Boolean => p.Lit.Bool(v)
+            case v: Byte => ???
+            case v: Short => ???
+            case v: Int => p.Lit.Int(v)
+            case v: Long => p.Lit.Long(v)
+            case v: Float => p.Lit.Float(v)
+            case v: Double => p.Lit.Double(v)
+            case v: String => p.Lit.String(v)
+            case v: Char => p.Lit.Char(v)
+            case v: g.Type => pclassof(v)
+            case v: g.Symbol => ??? // TODO: this is a super-crazy corner case that only appears in arguments of java annotations that refer to java enums
+          }).asInstanceOf[pScalaConst]
           def pbounds(gtpe: g.Type): p.Aux.TypeBounds = gtpe match {
             case g.TypeBounds(glo, ghi) =>
               (glo =:= g.typeOf[Nothing], ghi =:= g.typeOf[Any]) match {
@@ -689,8 +689,21 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with Metadata with 
         else in.symbol.rawcvt(in)
       case g.ReferenceToBoxed(_) =>
         ???
-      case g.Literal(const) =>
-        pconst(const)
+      case in @ g.Literal(g.Constant(value)) =>
+        value match {
+          case null => p.Lit.Null()
+          case () => p.Lit.Unit()
+          case v: Boolean => p.Lit.Bool(v)
+          case v: Byte => ???
+          case v: Short => ???
+          case v: Int => p.Lit.Int(v)
+          case v: Long => p.Lit.Long(v)
+          case v: Float => p.Lit.Float(v)
+          case v: Double => p.Lit.Double(v)
+          case v: String => p.Lit.String(v)
+          case v: Char => p.Lit.Char(v)
+          case _ => unreachable
+        }
       case g.Parens(_) =>
         unreachable
       case g.DocDef(_, _) =>
