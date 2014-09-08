@@ -4,13 +4,13 @@ package typechecker
 
 import scala.tools.nsc.Global
 import scala.tools.nsc.typechecker.{Analyzer => NscAnalyzer}
-import org.scalameta.reflection.Metadata
+import org.scalameta.reflection._
 import scala.reflect.internal.Mode
 import scala.reflect.internal.Mode._
 import scala.reflect.internal.util.{Statistics, ListOfNil}
 import scala.tools.nsc.typechecker.TypersStats._
 
-trait Analyzer extends NscAnalyzer with Metadata {
+trait Analyzer extends NscAnalyzer with GlobalToolkit {
   val global: Global
   import global._
   import definitions._
@@ -18,7 +18,7 @@ trait Analyzer extends NscAnalyzer with Metadata {
   import stableCurrentRun.runDefinitions._
 
   override def newTyper(context: Context) = new ParadiseTyper(context)
-  class ParadiseTyper(context: Context) extends Typer(context) {
+  class ParadiseTyper(context0: Context) extends Typer(context0) {
     import infer._
     import TyperErrorGen._
     private def typedParentType(encodedtpt: Tree, templ: Template, inMixinPosition: Boolean): Tree = {
@@ -146,8 +146,8 @@ trait Analyzer extends NscAnalyzer with Metadata {
             List(TypeTree(AnyRefTpe))
         }
     }
-    private def typedPrimaryConstrBody(templ: Template)(actualSuperCall: => Tree): Tree =
-        treeInfo.firstConstructor(templ.body) match {
+    private def typedPrimaryConstrBody(templ: Template)(actualSuperCall: => Tree): Tree = {
+      treeInfo.firstConstructor(templ.body) match {
         case ctor @ DefDef(_, _, _, vparamss, _, cbody @ Block(cstats, cunit)) =>
             val (preSuperStats, superCall) = {
               val (stats, rest) = cstats span (x => !treeInfo.isSuperConstrCall(x))
@@ -183,6 +183,7 @@ trait Analyzer extends NscAnalyzer with Metadata {
           case _ =>
           EmptyTree
         }
+    }
     private def makeAccessible(tree: Tree, sym: Symbol, pre: Type, site: Tree): (Tree, Type) = {
       if (context.isInPackageObject(sym, pre.typeSymbol)) {
         if (pre.typeSymbol == ScalaPackageClass && sym.isTerm) {
@@ -221,6 +222,13 @@ trait Analyzer extends NscAnalyzer with Metadata {
     }
     private def typedSelectOrSuperQualifier(qual: Tree) =
       context withinSuperInit typed(qual, PolyQualifierModes)
+    override protected def typedTypeApply(tree: Tree, mode: Mode, fun: Tree, args: List[Tree]): Tree = fun.tpe match {
+      // NOTE: this is a meaningful difference from the code in Typers.scala
+      case PolyType(tparams, restpe) if tparams.nonEmpty && sameLength(tparams, args) && isPredefClassOf(fun.symbol) =>
+        typedClassOf(tree, args.head, noGen = true).appendMetadata("originalClassOf" -> treeCopy.TypeApply(tree, fun, args))
+      case _ =>
+        super.typedTypeApply(tree, mode, fun, args)
+    }
     override def typed1(tree: Tree, mode: Mode, pt: Type): Tree = {
       def lookupInOwner(owner: Symbol, name: Name): Symbol = if (mode.inQualMode) rootMirror.missingHook(owner, name) else NoSymbol
       def lookupInRoot(name: Name): Symbol  = lookupInOwner(rootMirror.RootClass, name)
@@ -428,6 +436,68 @@ trait Analyzer extends NscAnalyzer with Metadata {
           tree setType (if (templ.exists(_.isErroneous)) ErrorType else self) // Being conservative to avoid SI-5361
         }
       }
+      def qualifies(sym: Symbol) = (
+           sym.hasRawInfo
+        && reallyExists(sym)
+        && !(mode.typingConstructorPattern && sym.isMethod && !sym.isStable)
+      )
+      def typedIdent(tree: Tree, name: Name): Tree = {
+        // setting to enable unqualified idents in empty package (used by the repl)
+        def inEmptyPackage = if (settings.exposeEmptyPackage) lookupInEmpty(name) else NoSymbol
+
+        def issue(err: AbsTypeError) = {
+          // Avoiding some spurious error messages: see SI-2388.
+          val suppress = reporter.hasErrors && (name startsWith tpnme.ANON_CLASS_NAME)
+          if (!suppress)
+            ErrorUtils.issueTypeError(err)
+
+          setError(tree)
+        }
+          // ignore current variable scope in patterns to enforce linearity
+        val startContext = if (mode.typingPatternOrTypePat) context.outer else context
+        val nameLookup   = tree.symbol match {
+          case NoSymbol   => startContext.lookupSymbol(name, qualifies)
+          case sym        => LookupSucceeded(EmptyTree, sym)
+        }
+        import InferErrorGen._
+        nameLookup match {
+          case LookupAmbiguous(msg)         => issue(AmbiguousIdentError(tree, name, msg))
+          case LookupInaccessible(sym, msg) => issue(AccessError(tree, sym, context, msg))
+          case LookupNotFound               =>
+            inEmptyPackage orElse lookupInRoot(name) match {
+              case NoSymbol => issue(SymbolNotFoundError(tree, name, context.owner, startContext))
+              case sym      => typed1(tree setSymbol sym, mode, pt)
+                }
+          case LookupSucceeded(qual, sym)   =>
+            (// this -> Foo.this
+            if (sym.isThisSym)
+              typed1(This(sym.owner) setPos tree.pos, mode, pt)
+          // Inferring classOf type parameter from expected type.  Otherwise an
+          // actual call to the stubbed classOf method is generated, returning null.
+            else if (isPredefClassOf(sym) && pt.typeSymbol == ClassClass && pt.typeArgs.nonEmpty) {
+            // NOTE: this is a meaningful difference from the code in Typers.scala
+            tree.appendMetadata("originalClassOf" -> Ident(name).setSymbol(sym))
+            typedClassOf(tree, TypeTree(pt.typeArgs.head))
+          }
+          else {
+              val pre1  = if (sym.isTopLevel) sym.owner.thisType else if (qual == EmptyTree) NoPrefix else qual.tpe
+              val tree1 = if (qual == EmptyTree) tree else atPos(tree.pos)(Select(atPos(tree.pos.focusStart)(qual), name))
+              val (tree2, pre2) = makeAccessible(tree1, sym, pre1, qual)
+            // SI-5967 Important to replace param type A* with Seq[A] when seen from from a reference, to avoid
+            //         inference errors in pattern matching.
+              stabilize(tree2, pre2, mode, pt) modifyType dropIllegalStarTypes
+            }) setAttachments tree.attachments
+          }
+        }
+      def typedIdentOrWildcard(tree: Ident) = {
+        val name = tree.name
+        if (Statistics.canEnable) Statistics.incCounter(typedIdentCount)
+        if ((name == nme.WILDCARD && mode.typingPatternNotConstructor) ||
+            (name == tpnme.WILDCARD && mode.inTypeMode))
+          tree setType makeFullyDefined(pt)
+        else
+          typedIdent(tree, name)
+      }
       // ========================
       // NOTE: The code above is almost completely copy/pasted from Typers.scala.
       // The changes there are mostly mechanical (indentation), but those, which are non-trivial (e.g. appending metadata to trees)
@@ -438,6 +508,7 @@ trait Analyzer extends NscAnalyzer with Metadata {
       if (isPastTyper) super.typed1(tree, mode, pt)
       else {
         val result = tree match {
+          case tree @ Ident(name) => typedIdentOrWildcard(tree)
           case tree @ Select(qual, name) => typedSelectOrSuperCall(tree)
           case tree @ SingletonTypeTree(ref) => typedSingletonTypeTree(tree)
           case tree @ CompoundTypeTree(templ) => typedCompoundTypeTree(tree)

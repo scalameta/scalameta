@@ -1,7 +1,7 @@
 import scala.tools.nsc.{ Global, Phase, SubComponent }
 import scala.tools.nsc.plugins.{ Plugin => NscPlugin, PluginComponent => NscPluginComponent }
-import org.scalameta.reflection.Metadata
-class Plugin(val global: Global) extends NscPlugin with Metadata { self =>
+import org.scalameta.reflection.GlobalToolkit
+class Plugin(val global: Global) extends NscPlugin with GlobalToolkit { self =>
   val name = "attatest"
   val description = "Tests attachments produced by scalahost"
   val components = List[NscPluginComponent](PluginComponent)

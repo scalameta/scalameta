@@ -19,7 +19,7 @@ class converter extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro ConverterMacros.converter
 }
 
-class ConverterMacros(val c: whitebox.Context) extends Metadata {
+class ConverterMacros(val c: whitebox.Context) extends MacroToolkit {
   import c.universe._
   import internal._
   lazy val global: c.universe.type = c.universe
@@ -194,7 +194,7 @@ package object internal {
   def lubConverters[T, U]: Any = macro WhiteboxMacros.lubConverters[T, U]
   def connectConverters[T](x: T): Any = macro WhiteboxMacros.connectConverters
 
-  class WhiteboxMacros(val c: whitebox.Context) extends Metadata {
+  class WhiteboxMacros(val c: whitebox.Context) extends MacroToolkit {
     import c.universe._
     import definitions._
     import c.internal._
@@ -215,7 +215,7 @@ package object internal {
     val ComputedConvertersDatabearer = symbolOf[org.scalameta.convert.auto.internal.Converter]
     val PersistedWildcardType = typeOf[WildcardDummy]
     val DeriveInternal = q"_root_.org.scalameta.convert.auto.internal"
-    val EnsugarTrait = tq"_root_.org.scalameta.reflection.Ensugar"
+    val ToolkitTrait = tq"_root_.org.scalameta.reflection.GlobalToolkit"
     object Cvt {
       def unapply(x: Tree): Option[(Tree, Type, Boolean)] = {
         object RawCvt {
@@ -360,9 +360,12 @@ package object internal {
             sym.fullName != "scala.meta.Term.Tuple" &&
             sym.fullName != "scala.meta.Term.Update" &&
             sym.fullName != "scala.meta.Term.While" &&
+            sym.fullName != "scala.meta.Type.Annotate" &&
             sym.fullName != "scala.meta.Type.ApplyInfix" &&
+            sym.fullName != "scala.meta.Type.Existential" &&
             sym.fullName != "scala.meta.Type.Function" &&
             sym.fullName != "scala.meta.Type.Placeholder" &&
+            sym.fullName != "scala.meta.Type.Project" &&
             sym.fullName != "scala.meta.Type.Tuple"
           })
           if (unmatched.nonEmpty) c.error(c.enclosingPosition, "@converter is not exhaustive in its outputs; missing: " + unmatched)
@@ -547,7 +550,7 @@ package object internal {
         case "toPalladium" =>
           val pre @ q"$h.toPalladium" = c.prefix.tree
           val sym = c.macroApplication.symbol
-          val x1 = q"(new { val global: $h.g.type = $h.g } with $EnsugarTrait).ensugar($x)"
+          val x1 = q"(new { val global: $h.g.type = $h.g } with $ToolkitTrait).ensugar($x)"
           convert(x1, c.weakTypeOf[In], c.weakTypeOf[Pt], allowDerived = true, allowInputDowncasts = true, allowOutputDowncasts = true, pre = pre.tpe, sym = sym)
         case _ =>
           c.abort(c.enclosingPosition, "unknown target: " + target.name)

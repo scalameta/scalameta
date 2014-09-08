@@ -7,7 +7,7 @@ import typechecker.HijackAnalyzer
 import macros.{MacroPlugin => PalladiumMacroPlugin}
 import macros.RenumberPhase
 import persistence.PersistencePhase
-import org.scalameta.reflection.Metadata
+import org.scalameta.reflection._
 
 class Plugin(val global: Global) extends NscPlugin
                                     with HijackAnalyzer
@@ -15,7 +15,7 @@ class Plugin(val global: Global) extends NscPlugin
                                     with RenumberPhase
                                     with PersistencePhase
                                     with PluginSettings
-                                    with Metadata {
+                                    with GlobalToolkit {
   val name = "scalahost"
   val description = """Hosts Project Palladium in scalac.
   For more information visit https://github.com/scalareflect/scalahost"""

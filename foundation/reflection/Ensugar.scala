@@ -10,8 +10,9 @@ import org.scalameta.unreachable
 // for instance, insertions of implicit argument lists are undone, because it's a simple Apply => Tree transformation
 // however, we can't undo ClassDef, anonymous new or while-loop desugarings, because scala.reflect lacks the trees to represent those in their original form
 // some of the undesugarings can be done automatically, some of them require https://github.com/scalameta/scalahost/blob/master/plugin/typechecker/Analyzer.scala
-trait Ensugar extends Metadata with Helpers { self =>
-  val global: Global
+trait Ensugar {
+  self: GlobalToolkit =>
+
   import global._
   import definitions._
   val currentRun = global.currentRun
@@ -154,6 +155,13 @@ trait Ensugar extends Metadata with Helpers { self =>
           }
         }
 
+        object ClassOfWithOriginal {
+          def unapply(tree: Tree): Option[Tree] = (tree, tree.metadata.get("originalClassOf").map(_.asInstanceOf[Tree])) match {
+            case (tree @ Literal(Constant(tpe: Type)), Some(original)) => Some(original.setType(tree.tpe))
+            case _ => None
+          }
+        }
+
         private def isInferred(tree: Tree): Boolean = tree match {
           case tt @ TypeTree() => tt.nonEmpty && tt.original == null
           case _ => false
@@ -195,7 +203,7 @@ trait Ensugar extends Metadata with Helpers { self =>
         object MacroDef {
           def unapply(tree: Tree): Option[Tree] = {
             tree match {
-              case tree: DefDef if tree.metadata.get("originalMacro").isEmpty =>
+              case tree: DefDef if !tree.hasMetadata("originalMacro") =>
                 def macroSigs(tree: Tree) = tree match {
                   case tree: DefDef => tree.symbol.annotations.filter(_.tree.tpe.typeSymbol.fullName == "scala.reflect.macros.internal.macroImpl")
                   case _ => Nil
@@ -336,6 +344,7 @@ trait Ensugar extends Metadata with Helpers { self =>
                 case RefTreeWithOriginal(original) => Some(original)
                 case TemplateWithOriginal(original) => Some(original)
                 case SuperWithOriginal(original) => Some(original)
+                case ClassOfWithOriginal(original) => Some(original)
                 case MemberDefWithInferredReturnType(original) => Some(original)
                 case MemberDefWithAnnotations(original) => Some(original)
                 case MacroDef(original) => Some(original)
@@ -379,9 +388,11 @@ object EnsugarSignature {
       case TypeRef(pre, sym, args) => typeRef(pre, {
         val explicitMapping = Map(
           "TermTree" -> "Tree", // macro expansion
-          "SymTree" -> "Tree", // macro expansion
-          "NameTree" -> "Tree", // macro expansion
-          "RefTree" -> "Tree", // macro expansion
+          "SymTree!" -> "Tree", // macro expansion
+          "NameTree!" -> "Tree", // macro expansion
+          "RefTree!" -> "Tree", // macro expansion
+          "Select" -> "Tree", // macro expansion
+          "Ident" -> "Tree", // macro expansion
           "UnApply" -> "GenericApply", // extractor-based unapplication
           "AssignOrNamedArg" -> "AssignOrNamedArg", // macros can't expand into these
           "Super" -> "Super", // macros can't expand into these
@@ -389,10 +400,10 @@ object EnsugarSignature {
                                // the rest of the tree types are mapped to themselves (see below)
         )
         implicit class StringlyTyped(x1: String) {
-          def toType: Type = typeRef(pre, pre.member(TypeName(x1)), Nil)
-          def toSymbol: Symbol = pre.member(TypeName(x1))
+          def toType: Type = typeRef(pre, pre.member(TypeName(x1.stripSuffix("!"))), Nil)
+          def toSymbol: Symbol = pre.member(TypeName(x1.stripSuffix("!")))
         }
-        val matches = explicitMapping.keys.filter(k => input <:< k.toType).toList
+        val matches = explicitMapping.keys.filter(k => if (k.endsWith("!")) input =:= k.toType else input <:< k.toType).toList
         val disambiguated = matches.filter(m1 => matches.forall(m2 => !(m1 != m2 && (m2.toType <:< m1.toType))))
         disambiguated match {
           case m :: Nil => explicitMapping(m).toSymbol

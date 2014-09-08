@@ -7,6 +7,7 @@ import scala.reflect.internal.Flags
 trait Helpers {
   val global: Global
   import global._
+  import definitions._
 
   implicit class RichHelperTree[T <: Tree](tree: T) {
     def copyAttrs(other: Tree): T = tree.copyAttrs(other)

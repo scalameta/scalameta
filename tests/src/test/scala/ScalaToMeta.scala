@@ -10,7 +10,7 @@ import scala.meta.syntactic.show._
 import scala.meta.internal.hosts.scalacompiler.scalahost.Scalahost
 import scala.meta.semantic.{Host => PalladiumHost}
 import scala.meta.internal.hosts.scalacompiler.scalahost.{Host => OurHost}
-import org.scalameta.reflection.Ensugar
+import org.scalameta.reflection._
 
 class ScalaToMeta extends FunSuite {
   def typecheckConvertAndPrettyprint(code: String, debug: Boolean): String = {
@@ -69,7 +69,7 @@ class ScalaToMeta extends FunSuite {
       typer.context.setReportErrors() // need to manually set context mode, otherwise typer.silent will throw exceptions
       unit.body = typer.typed(unit.body).asInstanceOf[compiler.Tree]
       if (debug) println(unit.body)
-      if (debug) println((new { val global: compiler.type = compiler } with Ensugar).ensugar(unit.body))
+      if (debug) println((new { val global: compiler.type = compiler } with GlobalToolkit).ensugar(unit.body))
       for (workItem <- unit.toCheck) workItem()
       throwIfErrors()
 
@@ -95,12 +95,14 @@ class ScalaToMeta extends FunSuite {
       w.write(content)
       w.close()
     }
+    def exists(label: String) = new File(resource(label)).exists
     def delete(label: String) = {
       val f = new File(resource(label))
       if (f.exists) f.delete
     }
     delete("Actual")
     val actualResult = typecheckConvertAndPrettyprint(slurp("Original"), debug = false)
+    if (!exists("Expected")) dump("Expected", "")
     val expectedResult = slurp("Expected")
     if (actualResult != expectedResult) {
       dump("Actual", actualResult)
