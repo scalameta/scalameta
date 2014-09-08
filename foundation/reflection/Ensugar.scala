@@ -379,9 +379,11 @@ object EnsugarSignature {
       case TypeRef(pre, sym, args) => typeRef(pre, {
         val explicitMapping = Map(
           "TermTree" -> "Tree", // macro expansion
-          "SymTree" -> "Tree", // macro expansion
-          "NameTree" -> "Tree", // macro expansion
-          "RefTree" -> "Tree", // macro expansion
+          "SymTree!" -> "Tree", // macro expansion
+          "NameTree!" -> "Tree", // macro expansion
+          "RefTree!" -> "Tree", // macro expansion
+          "Select" -> "Tree", // macro expansion
+          "Ident" -> "Tree", // macro expansion
           "UnApply" -> "GenericApply", // extractor-based unapplication
           "AssignOrNamedArg" -> "AssignOrNamedArg", // macros can't expand into these
           "Super" -> "Super", // macros can't expand into these
@@ -389,10 +391,10 @@ object EnsugarSignature {
                                // the rest of the tree types are mapped to themselves (see below)
         )
         implicit class StringlyTyped(x1: String) {
-          def toType: Type = typeRef(pre, pre.member(TypeName(x1)), Nil)
-          def toSymbol: Symbol = pre.member(TypeName(x1))
+          def toType: Type = typeRef(pre, pre.member(TypeName(x1.stripSuffix("!"))), Nil)
+          def toSymbol: Symbol = pre.member(TypeName(x1.stripSuffix("!")))
         }
-        val matches = explicitMapping.keys.filter(k => input <:< k.toType).toList
+        val matches = explicitMapping.keys.filter(k => if (k.endsWith("!")) input =:= k.toType else input <:< k.toType).toList
         val disambiguated = matches.filter(m1 => matches.forall(m2 => !(m1 != m2 && (m2.toType <:< m1.toType))))
         disambiguated match {
           case m :: Nil => explicitMapping(m).toSymbol
