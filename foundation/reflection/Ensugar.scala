@@ -132,7 +132,7 @@ trait Ensugar {
                 case EmptyTree => (NoSymbol, parents.headOption.flatMap(firstParent => analyzer.superArgs(firstParent)).getOrElse(Nil))
                 case DefDef(_, _, _, _, _, Block(_ :+ treeInfo.Applied(core, _, argss), _)) => (core.symbol, argss)
               }
-              if (superArgss == List(Nil)) superArgss = Nil
+              if (superArgss == List(Nil) && superSymbol.info.paramss.flatten.isEmpty) superArgss = Nil
               val parents1 = parents match {
                 case firstParent +: otherParents =>
                   val firstParent1 = superArgss.foldLeft(firstParent)((curr, args) => Apply(firstParent, args).setType(firstParent.tpe).appendScratchpad(superSymbol))

@@ -322,14 +322,6 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         p.Pat.Typed(expr.cvt_!, tpt.cvt_!)
       case in @ g.TypeApply(fn, targs) =>
         p.Term.ApplyType(fn.cvt_!, targs.cvt_!)
-      case in @ g.Apply(g.Select(g.New(_), g.nme.CONSTRUCTOR), _) if pt <:< typeOf[p.Term] =>
-        // TODO: infer the difference between `new X` vs `new X()`
-        // TODO: recover names and defaults (https://github.com/scala/scala/pull/3753/files#diff-269d2d5528eed96b476aded2ea039444R617)
-        val q"new $tpt(...$argss)" = in
-        val supercall = p.Aux.Parent(tpt.cvt_!, argss.cvt_!).appendScratchpad(in)
-        val self = p.Aux.Self(None, None).appendScratchpad(tpt)
-        val templ = p.Aux.Template(Nil, List(supercall), self).appendScratchpad(in)
-        p.Term.New(templ)
       case in @ g.Apply(fn, args) if pt <:< typeOf[p.Term] =>
         // TODO: infer the difference between Apply and Update
         // TODO: infer whether it was an application or a Tuple
@@ -338,10 +330,17 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         // TODO: undo the Lit.Symbol desugaring
         // TODO: figure out whether the programmer actually wrote the interpolator or they were explicitly using a desugaring
         // TODO: figure out whether the programmer actually wrote the infix application or they were calling a symbolic method using a dot
-        fn match {
-          case q"$stringContext(..$parts).$prefix" if stringContext.symbol == g.definitions.StringContextClass.companion =>
+        // TODO: infer the difference between `new X` vs `new X()`
+        in match {
+          case q"new $tpt(...$argss0)" =>
+            val argss = if (argss0.isEmpty && in.symbol.info.paramss.flatten.nonEmpty) List(List()) else argss0
+            val supercall = p.Aux.Parent(tpt.cvt_!, argss.cvt_!).appendScratchpad(in)
+            val self = p.Aux.Self(None, None).appendScratchpad(tpt)
+            val templ = p.Aux.Template(Nil, List(supercall), self).appendScratchpad(in)
+            p.Term.New(templ)
+          case q"$stringContext(..$parts).$prefix(..$args)" if stringContext.symbol == g.definitions.StringContextClass.companion =>
             p.Term.Interpolate((fn.cvt_! : p.Term.Select).selector, parts.cvt_!, args.cvt_!)
-          case q"$lhs.$op" if !op.decoded.forall(c => Character.isLetter(c)) =>
+          case q"$lhs.$op(..$args)" if !op.decoded.forall(c => Character.isLetter(c)) =>
             p.Term.ApplyInfix(lhs.cvt_!, (fn.cvt_! : p.Term.Select).selector, Nil, args.cvt_!)
           case _ =>
             p.Term.Apply(fn.cvt_!, args.cvt_!)
