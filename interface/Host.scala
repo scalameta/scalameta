@@ -251,10 +251,10 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
               p.Import.Unimport(resolveImport(name.toString, name.toString))
           }
         }))))
-      case in @ g.Template(gparents, gself, _) =>
+      case in @ g.Template(_, _, _) =>
         // TODO: really infer hasStats
         // TODO: we should be able to write Template instantiations without an `if` by having something like `hasStats` as an optional synthetic parameter
-        val SyntacticTemplate(_, _, gearlydefns, gstats) = in
+        val SyntacticTemplate(gparents, gself, gearlydefns, gstats) = in
         val pparents = gparents.map(gparent => { val applied = g.treeInfo.dissectApplied(gparent); p.Aux.Parent(applied.callee.cvt_!, applied.argss.cvt_!) })
         if (gstats.isEmpty) p.Aux.Template(gearlydefns.cvt_!, pparents, gself.cvt)
         else p.Aux.Template(gearlydefns.cvt_!, pparents, gself.cvt, gstats.cvt_!)

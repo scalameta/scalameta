@@ -123,26 +123,11 @@ trait Ensugar {
           }
         }
 
-        // TODO: discern `... extends C()` and `... extends C`
         // TODO: recover names and defaults in super constructor invocations
         object TemplateWithOriginal {
           def unapply(tree: Tree): Option[Tree] = (tree, tree.metadata.get("originalParents").map(_.asInstanceOf[List[Tree]])) match {
-            case (tree @ Template(_, self, body), Some(parents)) =>
-              var (superSymbol, superArgss) = treeInfo.firstConstructor(body) match {
-                case EmptyTree => (NoSymbol, parents.headOption.flatMap(firstParent => analyzer.superArgs(firstParent)).getOrElse(Nil))
-                case DefDef(_, _, _, _, _, Block(_ :+ treeInfo.Applied(core, _, argss), _)) => (core.symbol, argss)
-              }
-              if (superArgss == List(Nil) && superSymbol.info.paramss.flatten.isEmpty) superArgss = Nil
-              val parents1 = parents match {
-                case firstParent +: otherParents =>
-                  val firstParent1 = superArgss.foldLeft(firstParent)((curr, args) => Apply(firstParent, args).setType(firstParent.tpe).appendScratchpad(superSymbol))
-                  firstParent1 +: otherParents
-                case Nil =>
-                  Nil
-              }
-              Some(treeCopy.Template(tree, parents1, self, body).removeMetadata("originalParents"))
-            case _ =>
-              None
+            case (tree @ Template(_, self, body), Some(original)) => Some(treeCopy.Template(tree, original, self, body).removeMetadata("originalParents"))
+            case _ => None
           }
         }
 
