@@ -44,6 +44,7 @@ trait Ensugar {
                 case MemberDefWithInferredReturnType(original) => Some(original)
                 case MemberDefWithAnnotations(original) => Some(original)
                 case MacroDef(original) => Some(original)
+                case DefaultGetterDef(original) => Some(original)
                 case TypeApplicationWithInferredTypeArguments(original) => Some(original)
                 case ApplicationWithInferredImplicitArguments(original) => Some(original)
                 case ApplicationWithInsertedApply(original) => Some(original)
@@ -269,6 +270,13 @@ trait Ensugar {
           }
         }
 
+        object DefaultGetterDef {
+          def unapply(tree: Tree): Option[Tree] = tree match {
+            case tree: DefDef if tree.symbol.isDefaultGetter => Some(EmptyTree)
+            case _ => None
+          }
+        }
+
         // TODO: test how this works with new
         object TypeApplicationWithInferredTypeArguments {
           def unapply(tree: Tree): Option[Tree] = tree match {
@@ -353,7 +361,8 @@ trait Ensugar {
           }
         }
       }
-      transformer.transform(tree)
+      val result = transformer.transform(tree)
+      collapseEmptyTrees.transform(result)
     }
     loop(tree).asInstanceOf[Output]
   }
