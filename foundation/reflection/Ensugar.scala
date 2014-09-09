@@ -110,16 +110,14 @@ trait Ensugar {
         object RefTreeWithOriginal {
           def unapply(tree: Tree): Option[Tree] = {
             object OriginalIdent { def unapply(tree: Tree): Option[Ident] = tree.metadata.get("originalIdent").map(_.asInstanceOf[Ident]) }
-            object OriginalQual { def unapply(tree: Tree): Option[Tree] = tree.metadata.get("originalQual").map(_.asInstanceOf[Tree]) }
-            object OriginalName { def unapply(tree: Tree): Option[Name] = tree.metadata.get("originalName").map(_.asInstanceOf[Name]) }
-            object OriginalSelect { def unapply(tree: Tree): Option[(Tree, Name)] = OriginalQual.unapply(tree).flatMap(qual => OriginalName.unapply(tree).flatMap(name => Some((qual, name)))) }
+            object OriginalSelect { def unapply(tree: Tree): Option[Name] = tree.metadata.get("originalName").map(_.asInstanceOf[Name]) }
             (tree, tree) match {
               // Ident => This is a very uncommon situation, which happens when we typecheck a self reference
               // unfortunately, this self reference can't have a symbol, because self doesn't have a symbol, so we have to do some encoding
               case (This(_), OriginalIdent(orig)) => Some(orig.copyAttrs(tree).removeMetadata("originalIdent"))
               case (Select(_, _), OriginalIdent(orig)) => Some(orig.copyAttrs(tree).removeMetadata("originalIdent"))
-              case (Select(_, _), OriginalSelect(origQual, origName)) => Some(treeCopy.Select(tree, origQual, origName).removeMetadata("originalQual", "originalName"))
-              case (SelectFromTypeTree(_, _), OriginalSelect(origQual, origName)) => Some(treeCopy.SelectFromTypeTree(tree, origQual, origName).removeMetadata("originalQual", "originalName"))
+              case (Select(qual, _), OriginalSelect(orig)) => Some(treeCopy.Select(tree, qual, orig).removeMetadata("originalName"))
+              case (SelectFromTypeTree(qual, _), OriginalSelect(orig)) => Some(treeCopy.SelectFromTypeTree(tree, qual, orig).removeMetadata("originalName"))
               case _ => None
             }
           }
@@ -150,7 +148,7 @@ trait Ensugar {
 
         object SuperWithOriginal {
           def unapply(tree: Tree): Option[Tree] = (tree, tree.metadata.get("originalThis").map(_.asInstanceOf[This])) match {
-            case (tree @ Super(qual, mix), Some(originalQual)) => Some(treeCopy.Super(tree, originalQual, mix).removeMetadata("originalThis"))
+            case (tree @ Super(qual, mix), Some(originalThis)) => Some(treeCopy.Super(tree, originalThis, mix).removeMetadata("originalThis"))
             case _ => None
           }
         }

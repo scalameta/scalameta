@@ -17,7 +17,7 @@ class ScalaToMeta extends FunSuite {
     val classloader = new URLClassLoader(compilationClasspath, getClass().getClassLoader())
     val mirror = ru.runtimeMirror(classloader)
     val tb = {
-      val qual$1 = ToolBox(mirror)
+      val qual$1 = mirror
       val x$4 = "-cp " + System.getProperty("sbt.paths.tests.classpath") + " -Xplugin:" + pluginJar + " -Xplugin-require:scalahost"
       val x$5 = qual$1.mkToolBox$default$1
       qual$1.mkToolBox(x$5, x$4)
