@@ -16,12 +16,7 @@ class ScalaToMeta extends FunSuite {
     val compilationClasspath = System.getProperty("sbt.paths.tests.classpath").split(File.pathSeparatorChar.toString()).map(path => new URL("file://" + path))
     val classloader = new URLClassLoader(compilationClasspath, getClass().getClassLoader())
     val mirror = ru.runtimeMirror(classloader)
-    val tb = {
-      val qual$1 = mirror
-      val x$4 = "-cp " + System.getProperty("sbt.paths.tests.classpath") + " -Xplugin:" + pluginJar + " -Xplugin-require:scalahost"
-      val x$5 = qual$1.mkToolBox$default$1
-      qual$1.mkToolBox(x$5, x$4)
-    }
+    val tb = mirror.mkToolBox(options = "-cp " + System.getProperty("sbt.paths.tests.classpath") + " -Xplugin:" + pluginJar + " -Xplugin-require:scalahost")
     var result: String = null
     def cont(compilerApi: AnyRef): Unit = {
       val m_compiler = compilerApi.getClass().getDeclaredMethod("compiler")
@@ -32,7 +27,7 @@ class ScalaToMeta extends FunSuite {
       val m_frontEnd = tb.getClass().getDeclaredMethod("frontEnd")
       val frontEnd = m_frontEnd.invoke(tb).asInstanceOf[scala.tools.reflect.FrontEnd]
       frontEnd.reset()
-      def throwIfErrors(): Unit = if (frontEnd.hasErrors) throw ToolBoxError("reflective compilation has failed:" + EOL + EOL + frontEnd.infos.map(_ => x$1.msg).mkString(EOL), ToolBoxError.apply$default$2)
+      def throwIfErrors(): Unit = if (frontEnd.hasErrors) throw ToolBoxError("reflective compilation has failed:" + EOL + EOL + frontEnd.infos.map(_ => x$1.msg).mkString(EOL))
       val run = new compiler.Run
       compiler phase_= run.parserPhase
       compiler globalPhase_= run.parserPhase
@@ -41,7 +36,7 @@ class ScalaToMeta extends FunSuite {
       throwIfErrors()
       compiler phase_= run.namerPhase
       compiler globalPhase_= run.namerPhase
-      newNamer(rootContext(unit, analyzer.rootContext$default$2, analyzer.rootContext$default$3)).enterSym(unit.body)
+      newNamer(rootContext(unit)).enterSym(unit.body)
       throwIfErrors()
       compiler phase_= run.phaseNamed("packageobjects")
       compiler globalPhase_= run.phaseNamed("packageobjects")
@@ -59,7 +54,7 @@ class ScalaToMeta extends FunSuite {
       throwIfErrors()
       compiler phase_= run.typerPhase
       compiler globalPhase_= run.typerPhase
-      val typer = newTyper(rootContext(unit, analyzer.rootContext$default$2, analyzer.rootContext$default$3))
+      val typer = newTyper(rootContext(unit))
       typer.context.setReportErrors()
       unit body_= typer.typed(unit.body).asInstanceOf[compiler.Tree]
       if (debug) println(unit.body)
@@ -88,10 +83,10 @@ class ScalaToMeta extends FunSuite {
   }
   def runScalaToMetaTest(dirPath: String): Unit = {
     def slurp(filePath: String) = scala.io.Source.fromFile(new File(filePath)).mkString.trim()
-    val actualResult = typecheckConvertAndPrettyprint(slurp(dirPath + File.separatorChar + "Original.scala"), false)
+    val actualResult = typecheckConvertAndPrettyprint(slurp(dirPath + File.separatorChar + "Original.scala"), debug = false)
     val expectedResult = slurp(dirPath + File.separatorChar + "Expected.scala")
     if (actualResult != expectedResult) {
-      typecheckConvertAndPrettyprint(slurp(dirPath + File.separatorChar + "Original.scala"), true)
+      typecheckConvertAndPrettyprint(slurp(dirPath + File.separatorChar + "Original.scala"), debug = true)
       assert(actualResult === expectedResult)
     }
   }

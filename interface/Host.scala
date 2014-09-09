@@ -165,7 +165,6 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
           val gctor = templ.body.find(_.symbol == in.symbol.primaryConstructor).get.asInstanceOf[g.DefDef]
           val q"$_ def $_[..$_](...$impreciseExplicitss)(implicit ..$implicits): $_ = $_" = gctor
           // TODO: discern `class C` and `class C()`
-          // TODO: recover named/default parameters
           val explicitss = if (impreciseExplicitss.flatten.isEmpty) List() else impreciseExplicitss
           val ctor = p.Ctor.Primary(pmods(gctor), explicitss.cvt_!, implicits.cvt_!).appendScratchpad(in.symbol.primaryConstructor)
           p.Defn.Class(pmods(in), in.symbol.asClass.rawcvt(in), tparams.cvt, ctor, templ.cvt)
@@ -209,7 +208,6 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         if (in.symbol.isConstructor) {
           require(!in.symbol.isPrimaryConstructor)
           val q"{ $_(...$argss); ..$stats; () }" = body
-          // TODO: recover named/default parameters
           p.Ctor.Secondary(pmods(in), explicitss.cvt_!, implicits.cvt_!, argss.cvt_!, stats.cvt_!)
         } else if (in.symbol.isMacro) {
           require(tpt.nonEmpty) // TODO: support pre-2.12 macros with inferred return types
@@ -293,7 +291,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
       case g.Assign(lhs, rhs) =>
         p.Term.Assign(lhs.cvt_!, rhs.cvt_!)
       case g.AssignOrNamedArg(lhs, rhs) =>
-        unreachable
+        p.Arg.Named(lhs.cvt_!, rhs.cvt_!)
       case g.If(cond, thenp, g.Literal(g.Constant(()))) =>
         // TODO: figure out hasElse with definitive precision
         p.Term.If(cond.cvt_!, thenp.cvt_!)
@@ -325,7 +323,6 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
       case in @ g.Apply(fn, args) if pt <:< typeOf[p.Term] =>
         // TODO: infer the difference between Apply and Update
         // TODO: infer whether it was an application or a Tuple
-        // TODO: recover names and defaults (https://github.com/scala/scala/pull/3753/files#diff-269d2d5528eed96b476aded2ea039444R617)
         // TODO: undo the for desugaring
         // TODO: undo the Lit.Symbol desugaring
         // TODO: figure out whether the programmer actually wrote the interpolator or they were explicitly using a desugaring

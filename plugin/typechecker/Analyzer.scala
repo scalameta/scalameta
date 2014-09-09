@@ -519,6 +519,7 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
         else tree match {
           case Ident(_) => result.appendMetadata("originalIdent" -> tree)
           case Super(qual @ This(_), _) => result.appendMetadata("originalThis" -> qual)
+          case Apply(_, _) => result.appendMetadata("originalApply" -> tree)
           case _ => result
         }
       }

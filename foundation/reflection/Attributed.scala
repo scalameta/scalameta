@@ -44,6 +44,9 @@ trait Attributed {
           // template symbols aren't set when typechecking compound type trees, and they are dummies anyway, so it doesn't really matter
           // https://groups.google.com/forum/#!topic/scala-internals/6ebL7waMav8
           case Template(parents, self, stats) => check(tree, skipSymbol = true)
+          // these trees are used as ensugared representations of named arguments
+          // as such, they can't and don't have any types or symbols attributed to them
+          case AssignOrNamedArg(lhs, rhs) => check(tree, skipSymbol = true, skipType = true)
           case _ => check(tree)
         }
       }
