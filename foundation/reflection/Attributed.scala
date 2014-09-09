@@ -2,6 +2,7 @@ package org.scalameta.reflection
 
 import scala.collection.mutable
 import org.scalameta.invariants._
+import org.scalameta.unreachable
 
 trait Attributed {
   self: GlobalToolkit =>
@@ -11,6 +12,8 @@ trait Attributed {
 
   implicit class RichAttributedTree(tree: Tree) {
     def ensureAttributed(): Unit = {
+      var erroneous = 0
+      var unattributed = 0
       val offenders = mutable.ListBuffer[(Tree, List[Tree])]()
       object traverser extends Traverser {
         private var path = List[Tree]()
@@ -22,7 +25,11 @@ trait Attributed {
             ((tree.canHaveAttrs && tree.hasSymbolField) ==> (skipSymbol || (tree.symbol != null && tree.symbol != NoSymbol)))
           }
           if (ok) super.traverse(tree)
-          else { offenders += ((tree, path)) }
+          else {
+            if (tree.isErroneous) erroneous += 1
+            else unattributed += 1
+            offenders += ((tree, path))
+          }
         }
         override def traverse(tree: Tree): Unit = drilldown(tree) {
           // imports and selectors of imports aren't attributed by the typechecker
@@ -37,6 +44,9 @@ trait Attributed {
           // template symbols aren't set when typechecking compound type trees, and they are dummies anyway, so it doesn't really matter
           // https://groups.google.com/forum/#!topic/scala-internals/6ebL7waMav8
           case Template(parents, self, stats) => check(tree, skipSymbol = true)
+          // these trees are used as ensugared representations of named arguments
+          // as such, they can't and don't have any types or symbols attributed to them
+          case AssignOrNamedArg(lhs, rhs) => check(tree, skipSymbol = true, skipType = true)
           case _ => check(tree)
         }
       }
@@ -61,9 +71,15 @@ trait Attributed {
           }
           s"$prefix ($suffix)"
         }).zipWithIndex.map{ case (s, i) => s"${i + 1}: $s" }.mkString("\n")
+        val offenderDiagnostics = (erroneous, unattributed) match {
+          case (0, 0) => unreachable
+          case (0, _) => "unattributed"
+          case (_, 0) => "erroneous"
+          case (_, _) => "either unattributed or erroneous"
+        }
         sys.error(s"""
           |Input Scala tree is not fully attributed and can't be converted to a Palladium tree.
-          |The problem is caused by $offenderSummary that ${if (offenders.length == 1) "is" else "are"} either unattributed or erroneous:
+          |The problem is caused by $offenderSummary that ${if (offenders.length == 1) "is" else "are"} $offenderDiagnostics:
           |$offenderPrintout
           |The input tree that has caused problems to the converter is printed out below:
           |(Note that showRaw output at the end of the printout is supposed to contain ids and types)

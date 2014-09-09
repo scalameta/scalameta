@@ -259,8 +259,7 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
         }
         // NOTE: this is a meaningful difference from the code in Typers.scala
         //-t
-        if (t.metadata.contains("originalQual") || t.metadata.contains("originalName")) t
-        else t.appendMetadata("originalQual" -> qual, "originalName" -> name)
+        t.appendMetadata("originalName" -> name)
       }
       def typedSelectInternal(tree: Tree, qual: Tree, name: Name): Tree = {
         def asDynamicCall = dyna.mkInvoke(context, tree, qual, name) map { t =>
@@ -273,10 +272,11 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
           // xml member to StringContext, which in turn has an unapply[Seq] method)
           if (name != nme.CONSTRUCTOR && mode.inAny(EXPRmode | PATTERNmode)) {
             val qual1 = adaptToMemberWithArgs(tree, qual, name, mode, reportAmbiguous = true, saveErrors = true)
-            if ((qual1 ne qual) && !qual1.isErrorTyped)
+            if ((qual1 ne qual) && !qual1.isErrorTyped) {
               // NOTE: this is a meaningful difference from the code in Typers.scala
               //-return typed(treeCopy.Select(tree, qual1, name), mode, pt)
-              return typed(treeCopy.Select(tree, qual1, name).appendMetadata("originalQual" -> qual, "originalName" -> name), mode, pt)
+              return typed(treeCopy.Select(tree, qual1.appendMetadata("original" -> qual), name), mode, pt)
+            }
           }
           NoSymbol
         }
@@ -519,6 +519,7 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
         else tree match {
           case Ident(_) => result.appendMetadata("originalIdent" -> tree)
           case Super(qual @ This(_), _) => result.appendMetadata("originalThis" -> qual)
+          case Apply(_, _) => result.appendMetadata("originalApply" -> tree)
           case _ => result
         }
       }

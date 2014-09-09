@@ -5,6 +5,7 @@ import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 import scala.org.scalameta.reflection.Helpers
 import org.scalameta.unreachable
+import org.scalameta.invariants._
 
 // NOTE: this file undoes the desugarings applied by Scala's parser and typechecker to the extent possible with scala.reflect trees
 // for instance, insertions of implicit argument lists are undone, because it's a simple Apply => Tree transformation
@@ -17,6 +18,7 @@ trait Ensugar {
   import definitions._
   val currentRun = global.currentRun
   import currentRun.runDefinitions._
+  import treeInfo._
 
   import org.scalameta.invariants.Implication
   private def require[T](x: T): Unit = macro org.scalameta.invariants.Macros.require
@@ -24,6 +26,50 @@ trait Ensugar {
   def ensugar[Input <: Tree, Output <: Tree](tree: Input)(implicit ev: EnsugarSignature[Input, Output]): Output = {
     def loop(tree: Tree): Tree = {
       object transformer extends Transformer {
+        override def transform(tree: Tree): Tree = {
+          def logFailure() = {
+            def summary(x: Any) = x match { case x: Product => x.productPrefix; case null => "null"; case _ => x.getClass }
+            var details = tree.toString.replace("\n", "")
+            if (details.length > 60) details = details.take(60) + "..."
+            println("(" + summary(tree) + ") " + details)
+          }
+          try {
+            object Desugared {
+              def unapply(tree: Tree): Option[Tree] = tree match {
+                case DesugaringProtocol(original) => Some(original)
+                case MacroExpansion(expandee) => Some(expandee)
+                case TypeTreeWithOriginal(original) => Some(original)
+                case RefTreeWithOriginal(original) => Some(original)
+                case TemplateWithOriginal(original) => Some(original)
+                case SuperWithOriginal(original) => Some(original)
+                case ClassOfWithOriginal(original) => Some(original)
+                case MemberDefWithInferredReturnType(original) => Some(original)
+                case MemberDefWithAnnotations(original) => Some(original)
+                case MacroDef(original) => Some(original)
+                case DefaultGetterDef(original) => Some(original)
+                case TypeApplicationWithInferredTypeArguments(original) => Some(original)
+                case ApplicationWithInferredImplicitArguments(original) => Some(original)
+                case ApplicationWithInsertedApply(original) => Some(original)
+                case ApplicationWithNamesOrDefaults(original) => Some(original)
+                case StandalonePartialFunction(original) => Some(original)
+                case LambdaPartialFunction(original) => Some(original)
+                case CaseClassExtractor(original) => Some(original)
+                case ClassTagExtractor(original) => Some(original)
+                case VanillaExtractor(original) => Some(original)
+                case _ => None
+              }
+            }
+            tree match {
+              case Desugared(original) => transform(original.appendScratchpad(tree))
+              case _ => super.transform(tree)
+            }
+          } catch {
+            case err: _root_.java.lang.AssertionError => logFailure(); throw err
+            case err: _root_.org.scalameta.UnreachableError.type => logFailure(); throw err
+            case ex: _root_.scala.Exception => logFailure(); throw ex
+          }
+        }
+
         // NOTE: this is the newly established desugaring protocol
         // if a transformer wants to be friendly to us, they can use this protocol to simplify our lives
         object DesugaringProtocol {
@@ -110,47 +156,29 @@ trait Ensugar {
         object RefTreeWithOriginal {
           def unapply(tree: Tree): Option[Tree] = {
             object OriginalIdent { def unapply(tree: Tree): Option[Ident] = tree.metadata.get("originalIdent").map(_.asInstanceOf[Ident]) }
-            object OriginalQual { def unapply(tree: Tree): Option[Tree] = tree.metadata.get("originalQual").map(_.asInstanceOf[Tree]) }
-            object OriginalName { def unapply(tree: Tree): Option[Name] = tree.metadata.get("originalName").map(_.asInstanceOf[Name]) }
-            object OriginalSelect { def unapply(tree: Tree): Option[(Tree, Name)] = OriginalQual.unapply(tree).flatMap(qual => OriginalName.unapply(tree).flatMap(name => Some((qual, name)))) }
+            object OriginalSelect { def unapply(tree: Tree): Option[Name] = tree.metadata.get("originalName").map(_.asInstanceOf[Name]) }
             (tree, tree) match {
               // Ident => This is a very uncommon situation, which happens when we typecheck a self reference
               // unfortunately, this self reference can't have a symbol, because self doesn't have a symbol, so we have to do some encoding
               case (This(_), OriginalIdent(orig)) => Some(orig.copyAttrs(tree).removeMetadata("originalIdent"))
               case (Select(_, _), OriginalIdent(orig)) => Some(orig.copyAttrs(tree).removeMetadata("originalIdent"))
-              case (Select(_, _), OriginalSelect(origQual, origName)) => Some(treeCopy.Select(tree, origQual, origName).removeMetadata("originalQual", "originalName"))
-              case (SelectFromTypeTree(_, _), OriginalSelect(origQual, origName)) => Some(treeCopy.SelectFromTypeTree(tree, origQual, origName).removeMetadata("originalQual", "originalName"))
+              case (Select(qual, _), OriginalSelect(orig)) => Some(treeCopy.Select(tree, qual, orig).removeMetadata("originalName"))
+              case (SelectFromTypeTree(qual, _), OriginalSelect(orig)) => Some(treeCopy.SelectFromTypeTree(tree, qual, orig).removeMetadata("originalName"))
               case _ => None
             }
           }
         }
 
-        // TODO: discern `... extends C()` and `... extends C`
-        // TODO: recover names and defaults in super constructor invocations
         object TemplateWithOriginal {
           def unapply(tree: Tree): Option[Tree] = (tree, tree.metadata.get("originalParents").map(_.asInstanceOf[List[Tree]])) match {
-            case (tree @ Template(_, self, body), Some(parents)) =>
-              var (superSymbol, superArgss) = treeInfo.firstConstructor(body) match {
-                case EmptyTree => (NoSymbol, parents.headOption.flatMap(firstParent => analyzer.superArgs(firstParent)).getOrElse(Nil))
-                case DefDef(_, _, _, _, _, Block(_ :+ treeInfo.Applied(core, _, argss), _)) => (core.symbol, argss)
-              }
-              if (superArgss == List(Nil)) superArgss = Nil
-              val parents1 = parents match {
-                case firstParent +: otherParents =>
-                  val firstParent1 = superArgss.foldLeft(firstParent)((curr, args) => Apply(firstParent, args).setType(firstParent.tpe).appendScratchpad(superSymbol))
-                  firstParent1 +: otherParents
-                case Nil =>
-                  Nil
-              }
-              Some(treeCopy.Template(tree, parents1, self, body).removeMetadata("originalParents"))
-            case _ =>
-              None
+            case (tree @ Template(_, self, body), Some(original)) => Some(treeCopy.Template(tree, original, self, body).removeMetadata("originalParents"))
+            case _ => None
           }
         }
 
         object SuperWithOriginal {
           def unapply(tree: Tree): Option[Tree] = (tree, tree.metadata.get("originalThis").map(_.asInstanceOf[This])) match {
-            case (tree @ Super(qual, mix), Some(originalQual)) => Some(treeCopy.Super(tree, originalQual, mix).removeMetadata("originalThis"))
+            case (tree @ Super(qual, mix), Some(originalThis)) => Some(treeCopy.Super(tree, originalThis, mix).removeMetadata("originalThis"))
             case _ => None
           }
         }
@@ -244,6 +272,13 @@ trait Ensugar {
           }
         }
 
+        object DefaultGetterDef {
+          def unapply(tree: Tree): Option[Tree] = tree match {
+            case tree: DefDef if tree.symbol.isDefaultGetter => Some(EmptyTree)
+            case _ => None
+          }
+        }
+
         // TODO: test how this works with new
         object TypeApplicationWithInferredTypeArguments {
           def unapply(tree: Tree): Option[Tree] = tree match {
@@ -266,6 +301,84 @@ trait Ensugar {
           def unapply(tree: Tree): Option[Tree] = tree match {
             case Select(qual, _) if tree.symbol.name == nme.apply => Some(qual)
             case _ => None
+          }
+        }
+
+        object ApplicationWithNamesOrDefaults {
+          def unapply(tree: Tree): Option[Tree] = {
+            object OriginalApply {
+              def unapply(tree: Tree) = tree.metadata.get("originalApply").map(_.asInstanceOf[Apply])
+            }
+            def isNameDefaultQual(tree: Tree) = tree match {
+              case ValDef(_, name, _, _) => name.startsWith(nme.QUAL_PREFIX)
+              case _ => false
+            }
+            def isNameDefaultTemp(tree: Tree) = tree match {
+              case vdef: ValDef => vdef.symbol.isArtifact
+              case _ => false
+            }
+            val (qualsym, qual, vdefs0, app @ Applied(_, _, argss)) = tree match {
+              case Block((qualdef @ ValDef(_, _, _, qual)) +: vdefs, app) if isNameDefaultQual(qualdef) => (qualdef.symbol, qual, vdefs, app)
+              case Block(vdefs, app) if vdefs.forall(isNameDefaultTemp) => (NoSymbol, EmptyTree, vdefs, app)
+              case tree => (NoSymbol, EmptyTree, Nil, tree)
+            }
+            val vdefs = vdefs0.map{ case vdef: ValDef => vdef }
+            def hasNamesDefaults(args: List[Tree]) = {
+              args.exists(arg => isDefaultGetter(arg) || vdefs.exists(_.symbol == arg.symbol))
+            }
+            def undoNamesDefaults(args: List[Tree], depth: Int) = {
+              def extractRhs(vdef: ValDef) = vdef.rhs.changeOwner(vdef.symbol -> typer.context.owner)
+              def matchesVdef(arg: Tree, vdef: ValDef) = WildcardStarArg.unapply(arg).getOrElse(arg).symbol == vdef.symbol
+              def substituteVref(arg: Tree, vdef: ValDef) = new TreeSubstituter(List(vdef.symbol), List(extractRhs(vdef))).transform(arg)
+              case class Arg(tree: Tree, ipos: Int, inamed: Int) { val param = app.symbol.paramss(depth)(ipos) }
+              val indexed = args.map(arg => arg -> vdefs.indexWhere(matchesVdef(arg, _))).zipWithIndex.flatMap({
+                /*    default    */ case ((arg, _), _) if isDefaultGetter(arg) => None
+                /*   positional  */ case ((arg, -1), ipos) => Some(Arg(arg, ipos, -1))
+                /* default+named */ case ((_, inamed), _) if isDefaultGetter(extractRhs(vdefs(inamed))) => None
+                /*     named     */ case ((arg, inamed), ipos) => Some(Arg(substituteVref(arg, vdefs(inamed)), ipos, inamed))
+              })
+              if (indexed.forall(_.inamed == -1)) indexed.map(_.tree)
+              else indexed.sortBy(_.inamed).map(arg => AssignOrNamedArg(Ident(arg.param).setType(arg.tree.tpe), arg.tree))
+            }
+            def loop(tree: Tree, depth: Int): Tree = tree match {
+              case Apply(fun, args) if hasNamesDefaults(args) => treeCopy.Apply(tree, loop(fun, depth - 1), undoNamesDefaults(args, depth))
+              case Apply(fun, args) => treeCopy.Apply(tree, loop(fun, depth - 1), args)
+              case TypeApply(core, targs) => treeCopy.TypeApply(tree, core, targs)
+              case Select(core, name) if qualsym != NoSymbol && core.symbol == qualsym => treeCopy.Select(tree, qual, name).removeMetadata("originalQual")
+              case core => core
+            }
+            val sugaredDoesntLookLikeNamesDefaults = qualsym == NoSymbol && !hasNamesDefaults(argss.flatten)
+            val originalDoesntLookLikeNamesDefaults = tree match { case OriginalApply(Applied(_, _, argss)) => argss.flatten.forall(!_.isInstanceOf[AssignOrNamedArg]); case _ => true }
+            val doesntLookLikeNamesDefaults = sugaredDoesntLookLikeNamesDefaults && originalDoesntLookLikeNamesDefaults
+            if (app.symbol == null || app.symbol == NoSymbol || app.exists(_.isErroneous) || doesntLookLikeNamesDefaults) None
+            else {
+              // NOTE: necessary to smooth out the rough edges of the translation
+              // 1) if all arguments are positional, the typer will drop names completely,
+              // which is something that undoNamesDefaults can't do anything about
+              // e.g. `def foo(x: Int = 2) = ???; foo(x = something)`
+              // 2) conversely, if there were no named arguments, but there were defaults
+              // undoNamesDefaults can sometimes be confused into thinking that there were named arguments
+              // e.g. `def foo(x: Int = 2, y: Int = 3) = ???; var unstable = this; unstable.foo(2)`
+              def correlate(tree1: Tree, tree0: Tree): Tree = {
+                def lookupParam(name: Name): Symbol = app.symbol.info.paramss.flatten.find(_.name.toString == name.toString).get
+                def correlateArgs(args1: List[Tree], args0: List[Tree]): List[Tree] = {
+                  require(args1.length == args0.length)
+                  args1.zip(args0).map({
+                    case (arg1 @ AssignOrNamedArg(_, _), arg0 @ AssignOrNamedArg(_, _)) => arg1
+                    case (arg1 @ AssignOrNamedArg(_, rhs), arg0) => rhs
+                    case (arg1, arg0 @ AssignOrNamedArg(Ident(name), _)) => AssignOrNamedArg(Ident(lookupParam(name)).setType(arg1.tpe), arg1)
+                    case (arg1, arg0) => arg1
+                  })
+                }
+                (tree1, tree0) match {
+                  case (tree1 @ Apply(fn1, args1), Apply(fn0, args0)) => treeCopy.Apply(tree1, correlate(fn1, fn0), correlateArgs(args1, args0))
+                  case _ => tree1
+                }
+              }
+              val result = loop(app, depth = argss.length - 1)
+              val original = tree.metadata("originalApply").asInstanceOf[Apply]
+              Some(correlate(result, original).removeMetadata("originalApply"))
+            }
           }
         }
 
@@ -322,55 +435,14 @@ trait Ensugar {
           def unapply(tree: Tree): Option[Tree] = tree match {
             case UnApply(fn @ q"$_.$unapply[..$_](..$_)", args) =>
               require(unapply == nme.unapply || unapply == nme.unapplySeq)
-              Some(Apply(treeInfo.dissectApplied(fn).callee, args).setType(tree.tpe))
+              Some(Apply(dissectApplied(fn).callee, args).setType(tree.tpe))
             case _ =>
               None
           }
         }
-
-        override def transform(tree: Tree): Tree = {
-          def logFailure() = {
-            def summary(x: Any) = x match { case x: Product => x.productPrefix; case null => "null"; case _ => x.getClass }
-            var details = tree.toString.replace("\n", "")
-            if (details.length > 60) details = details.take(60) + "..."
-            println("(" + summary(tree) + ") " + details)
-          }
-          try {
-            object Desugared {
-              def unapply(tree: Tree): Option[Tree] = tree match {
-                case DesugaringProtocol(original) => Some(original)
-                case MacroExpansion(expandee) => Some(expandee)
-                case TypeTreeWithOriginal(original) => Some(original)
-                case RefTreeWithOriginal(original) => Some(original)
-                case TemplateWithOriginal(original) => Some(original)
-                case SuperWithOriginal(original) => Some(original)
-                case ClassOfWithOriginal(original) => Some(original)
-                case MemberDefWithInferredReturnType(original) => Some(original)
-                case MemberDefWithAnnotations(original) => Some(original)
-                case MacroDef(original) => Some(original)
-                case TypeApplicationWithInferredTypeArguments(original) => Some(original)
-                case ApplicationWithInferredImplicitArguments(original) => Some(original)
-                case ApplicationWithInsertedApply(original) => Some(original)
-                case StandalonePartialFunction(original) => Some(original)
-                case LambdaPartialFunction(original) => Some(original)
-                case CaseClassExtractor(original) => Some(original)
-                case ClassTagExtractor(original) => Some(original)
-                case VanillaExtractor(original) => Some(original)
-                case _ => None
-              }
-            }
-            tree match {
-              case Desugared(original) => transform(original.appendScratchpad(tree))
-              case _ => super.transform(tree)
-            }
-          } catch {
-            case err: _root_.java.lang.AssertionError => logFailure(); throw err
-            case err: _root_.org.scalameta.UnreachableError.type => logFailure(); throw err
-            case ex: _root_.scala.Exception => logFailure(); throw ex
-          }
-        }
       }
-      transformer.transform(tree)
+      val result = transformer.transform(tree)
+      collapseEmptyTrees.transform(result)
     }
     loop(tree).asInstanceOf[Output]
   }

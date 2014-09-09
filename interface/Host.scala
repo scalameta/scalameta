@@ -37,8 +37,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
   def erasure(tpe: Type): Type = ???
 
   // NOTE: we only handle trees, not types or symbols
-  // NOTE: can't use MemberDef.mods, because they get their annotations erased and moved to Symbol.annotations during typechecking
   // NOTE: can't convert symbols, because that's quite unsafe: a lot of symbols don't make sense without prefixes
+  // NOTE: can't convert types, because they don't have originals, so any such conversion will be an approximation
   // NOTE: careful use of NameTree.name, because it can lie (renaming imports) and it doesn't have enough semantic information (unlike the underlying symbol)
   // TODO: remember positions. actually, in scalac they are almost accurate, so it would be a shame to discard them
   @converter def toPalladium(in: Any, pt: Pt): Any = {
@@ -90,16 +90,18 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         def precvt(pre: g.Type, in: g.Tree): p.Type.Name = (gsym: g.Symbol).precvt(pre, in).asInstanceOf[p.Type.Name]
         def rawcvt(in: g.Tree): p.Type.Name = (gsym: g.Symbol).rawcvt(in).asInstanceOf[p.Type.Name]
       }
-      private def paccessqual(gsym: g.Symbol): Option[p.Mod.AccessQualifier] = {
-        if (gsym.isPrivateThis || gsym.isProtectedThis) {
-          // TODO: does NoSymbol here actually mean gsym.owner?
-          val gpriv = gsym.privateWithin.orElse(gsym.owner)
-          require(gpriv.isClass)
-          Some(p.Term.This(None).appendScratchpad(gpriv))
-        } else if (gsym.privateWithin == g.NoSymbol || gsym.privateWithin == null) None
-        else Some(gsym.privateWithin.qualcvt(g.Ident(gsym.privateWithin))) // TODO: this loses information is gsym.privateWithin was brought into scope with a renaming import
-      }
       def pmods(gmdef: g.MemberDef): Seq[p.Mod] = {
+        // TODO: since we have mods correctly ensugared here, I think, we could try to avoid using gsym here
+        // however, everything works fine at the moment, so I'll denote this refactoring as future work
+        def paccessqual(gsym: g.Symbol): Option[p.Mod.AccessQualifier] = {
+          if (gsym.isPrivateThis || gsym.isProtectedThis) {
+            // TODO: does NoSymbol here actually mean gsym.owner?
+            val gpriv = gsym.privateWithin.orElse(gsym.owner)
+            require(gpriv.isClass)
+            Some(p.Term.This(None).appendScratchpad(gpriv))
+          } else if (gsym.privateWithin == g.NoSymbol || gsym.privateWithin == null) None
+          else Some(gsym.privateWithin.qualcvt(g.Ident(gsym.privateWithin))) // TODO: this loses information is gsym.privateWithin was brought into scope with a renaming import
+        }
         val gsym = gmdef.symbol.getterIn(gmdef.symbol.owner).orElse(gmdef.symbol)
         val pmods = scala.collection.mutable.ListBuffer[p.Mod]()
         pmods ++= gmdef.mods.annotations.map{ case q"new $gtpt(...$gargss)" => p.Mod.Annot(gtpt.cvt_!, gargss.cvt_!) }
@@ -163,7 +165,6 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
           val gctor = templ.body.find(_.symbol == in.symbol.primaryConstructor).get.asInstanceOf[g.DefDef]
           val q"$_ def $_[..$_](...$impreciseExplicitss)(implicit ..$implicits): $_ = $_" = gctor
           // TODO: discern `class C` and `class C()`
-          // TODO: recover named/default parameters
           val explicitss = if (impreciseExplicitss.flatten.isEmpty) List() else impreciseExplicitss
           val ctor = p.Ctor.Primary(pmods(gctor), explicitss.cvt_!, implicits.cvt_!).appendScratchpad(in.symbol.primaryConstructor)
           p.Defn.Class(pmods(in), in.symbol.asClass.rawcvt(in), tparams.cvt, ctor, templ.cvt)
@@ -207,7 +208,6 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         if (in.symbol.isConstructor) {
           require(!in.symbol.isPrimaryConstructor)
           val q"{ $_(...$argss); ..$stats; () }" = body
-          // TODO: recover named/default parameters
           p.Ctor.Secondary(pmods(in), explicitss.cvt_!, implicits.cvt_!, argss.cvt_!, stats.cvt_!)
         } else if (in.symbol.isMacro) {
           require(tpt.nonEmpty) // TODO: support pre-2.12 macros with inferred return types
@@ -249,10 +249,10 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
               p.Import.Unimport(resolveImport(name.toString, name.toString))
           }
         }))))
-      case in @ g.Template(gparents, gself, _) =>
+      case in @ g.Template(_, _, _) =>
         // TODO: really infer hasStats
         // TODO: we should be able to write Template instantiations without an `if` by having something like `hasStats` as an optional synthetic parameter
-        val SyntacticTemplate(_, _, gearlydefns, gstats) = in
+        val SyntacticTemplate(gparents, gself, gearlydefns, gstats) = in
         val pparents = gparents.map(gparent => { val applied = g.treeInfo.dissectApplied(gparent); p.Aux.Parent(applied.callee.cvt_!, applied.argss.cvt_!) })
         if (gstats.isEmpty) p.Aux.Template(gearlydefns.cvt_!, pparents, gself.cvt)
         else p.Aux.Template(gearlydefns.cvt_!, pparents, gself.cvt, gstats.cvt_!)
@@ -291,7 +291,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
       case g.Assign(lhs, rhs) =>
         p.Term.Assign(lhs.cvt_!, rhs.cvt_!)
       case g.AssignOrNamedArg(lhs, rhs) =>
-        unreachable
+        p.Arg.Named(lhs.cvt_!, rhs.cvt_!)
       case g.If(cond, thenp, g.Literal(g.Constant(()))) =>
         // TODO: figure out hasElse with definitive precision
         p.Term.If(cond.cvt_!, thenp.cvt_!)
@@ -320,26 +320,24 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         p.Pat.Typed(expr.cvt_!, tpt.cvt_!)
       case in @ g.TypeApply(fn, targs) =>
         p.Term.ApplyType(fn.cvt_!, targs.cvt_!)
-      case in @ g.Apply(g.Select(g.New(_), g.nme.CONSTRUCTOR), _) if pt <:< typeOf[p.Term] =>
-        // TODO: infer the difference between `new X` vs `new X()`
-        // TODO: recover names and defaults (https://github.com/scala/scala/pull/3753/files#diff-269d2d5528eed96b476aded2ea039444R617)
-        val q"new $tpt(...$argss)" = in
-        val supercall = p.Aux.Parent(tpt.cvt_!, argss.cvt_!).appendScratchpad(in)
-        val self = p.Aux.Self(None, None).appendScratchpad(tpt)
-        val templ = p.Aux.Template(Nil, List(supercall), self).appendScratchpad(in)
-        p.Term.New(templ)
       case in @ g.Apply(fn, args) if pt <:< typeOf[p.Term] =>
         // TODO: infer the difference between Apply and Update
         // TODO: infer whether it was an application or a Tuple
-        // TODO: recover names and defaults (https://github.com/scala/scala/pull/3753/files#diff-269d2d5528eed96b476aded2ea039444R617)
         // TODO: undo the for desugaring
         // TODO: undo the Lit.Symbol desugaring
         // TODO: figure out whether the programmer actually wrote the interpolator or they were explicitly using a desugaring
         // TODO: figure out whether the programmer actually wrote the infix application or they were calling a symbolic method using a dot
-        fn match {
-          case q"$stringContext(..$parts).$prefix" if stringContext.symbol == g.definitions.StringContextClass.companion =>
+        // TODO: infer the difference between `new X` vs `new X()`
+        in match {
+          case q"new $tpt(...$argss0)" =>
+            val argss = if (argss0.isEmpty && in.symbol.info.paramss.flatten.nonEmpty) List(List()) else argss0
+            val supercall = p.Aux.Parent(tpt.cvt_!, argss.cvt_!).appendScratchpad(in)
+            val self = p.Aux.Self(None, None).appendScratchpad(tpt)
+            val templ = p.Aux.Template(Nil, List(supercall), self).appendScratchpad(in)
+            p.Term.New(templ)
+          case q"$stringContext(..$parts).$prefix(..$args)" if stringContext.symbol == g.definitions.StringContextClass.companion =>
             p.Term.Interpolate((fn.cvt_! : p.Term.Select).selector, parts.cvt_!, args.cvt_!)
-          case q"$lhs.$op" if !op.decoded.forall(c => Character.isLetter(c)) =>
+          case q"$lhs.$op(..$args)" if !op.decoded.forall(c => Character.isLetter(c)) =>
             p.Term.ApplyInfix(lhs.cvt_!, (fn.cvt_! : p.Term.Select).selector, Nil, args.cvt_!)
           case _ =>
             p.Term.Apply(fn.cvt_!, args.cvt_!)
