@@ -37,8 +37,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
   def erasure(tpe: Type): Type = ???
 
   // NOTE: we only handle trees, not types or symbols
-  // NOTE: can't use MemberDef.mods, because they get their annotations erased and moved to Symbol.annotations during typechecking
   // NOTE: can't convert symbols, because that's quite unsafe: a lot of symbols don't make sense without prefixes
+  // NOTE: can't convert types, because they don't have originals, so any such conversion will be an approximation
   // NOTE: careful use of NameTree.name, because it can lie (renaming imports) and it doesn't have enough semantic information (unlike the underlying symbol)
   // TODO: remember positions. actually, in scalac they are almost accurate, so it would be a shame to discard them
   @converter def toPalladium(in: Any, pt: Pt): Any = {
@@ -90,16 +90,18 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         def precvt(pre: g.Type, in: g.Tree): p.Type.Name = (gsym: g.Symbol).precvt(pre, in).asInstanceOf[p.Type.Name]
         def rawcvt(in: g.Tree): p.Type.Name = (gsym: g.Symbol).rawcvt(in).asInstanceOf[p.Type.Name]
       }
-      private def paccessqual(gsym: g.Symbol): Option[p.Mod.AccessQualifier] = {
-        if (gsym.isPrivateThis || gsym.isProtectedThis) {
-          // TODO: does NoSymbol here actually mean gsym.owner?
-          val gpriv = gsym.privateWithin.orElse(gsym.owner)
-          require(gpriv.isClass)
-          Some(p.Term.This(None).appendScratchpad(gpriv))
-        } else if (gsym.privateWithin == g.NoSymbol || gsym.privateWithin == null) None
-        else Some(gsym.privateWithin.qualcvt(g.Ident(gsym.privateWithin))) // TODO: this loses information is gsym.privateWithin was brought into scope with a renaming import
-      }
       def pmods(gmdef: g.MemberDef): Seq[p.Mod] = {
+        // TODO: since we have mods correctly ensugared here, I think, we could try to avoid using gsym here
+        // however, everything works fine at the moment, so I'll denote this refactoring as future work
+        def paccessqual(gsym: g.Symbol): Option[p.Mod.AccessQualifier] = {
+          if (gsym.isPrivateThis || gsym.isProtectedThis) {
+            // TODO: does NoSymbol here actually mean gsym.owner?
+            val gpriv = gsym.privateWithin.orElse(gsym.owner)
+            require(gpriv.isClass)
+            Some(p.Term.This(None).appendScratchpad(gpriv))
+          } else if (gsym.privateWithin == g.NoSymbol || gsym.privateWithin == null) None
+          else Some(gsym.privateWithin.qualcvt(g.Ident(gsym.privateWithin))) // TODO: this loses information is gsym.privateWithin was brought into scope with a renaming import
+        }
         val gsym = gmdef.symbol.getterIn(gmdef.symbol.owner).orElse(gmdef.symbol)
         val pmods = scala.collection.mutable.ListBuffer[p.Mod]()
         pmods ++= gmdef.mods.annotations.map{ case q"new $gtpt(...$gargss)" => p.Mod.Annot(gtpt.cvt_!, gargss.cvt_!) }
