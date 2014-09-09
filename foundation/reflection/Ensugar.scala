@@ -24,6 +24,48 @@ trait Ensugar {
   def ensugar[Input <: Tree, Output <: Tree](tree: Input)(implicit ev: EnsugarSignature[Input, Output]): Output = {
     def loop(tree: Tree): Tree = {
       object transformer extends Transformer {
+        override def transform(tree: Tree): Tree = {
+          def logFailure() = {
+            def summary(x: Any) = x match { case x: Product => x.productPrefix; case null => "null"; case _ => x.getClass }
+            var details = tree.toString.replace("\n", "")
+            if (details.length > 60) details = details.take(60) + "..."
+            println("(" + summary(tree) + ") " + details)
+          }
+          try {
+            object Desugared {
+              def unapply(tree: Tree): Option[Tree] = tree match {
+                case DesugaringProtocol(original) => Some(original)
+                case MacroExpansion(expandee) => Some(expandee)
+                case TypeTreeWithOriginal(original) => Some(original)
+                case RefTreeWithOriginal(original) => Some(original)
+                case TemplateWithOriginal(original) => Some(original)
+                case SuperWithOriginal(original) => Some(original)
+                case ClassOfWithOriginal(original) => Some(original)
+                case MemberDefWithInferredReturnType(original) => Some(original)
+                case MemberDefWithAnnotations(original) => Some(original)
+                case MacroDef(original) => Some(original)
+                case TypeApplicationWithInferredTypeArguments(original) => Some(original)
+                case ApplicationWithInferredImplicitArguments(original) => Some(original)
+                case ApplicationWithInsertedApply(original) => Some(original)
+                case StandalonePartialFunction(original) => Some(original)
+                case LambdaPartialFunction(original) => Some(original)
+                case CaseClassExtractor(original) => Some(original)
+                case ClassTagExtractor(original) => Some(original)
+                case VanillaExtractor(original) => Some(original)
+                case _ => None
+              }
+            }
+            tree match {
+              case Desugared(original) => transform(original.appendScratchpad(tree))
+              case _ => super.transform(tree)
+            }
+          } catch {
+            case err: _root_.java.lang.AssertionError => logFailure(); throw err
+            case err: _root_.org.scalameta.UnreachableError.type => logFailure(); throw err
+            case ex: _root_.scala.Exception => logFailure(); throw ex
+          }
+        }
+
         // NOTE: this is the newly established desugaring protocol
         // if a transformer wants to be friendly to us, they can use this protocol to simplify our lives
         object DesugaringProtocol {
@@ -308,48 +350,6 @@ trait Ensugar {
               Some(Apply(treeInfo.dissectApplied(fn).callee, args).setType(tree.tpe))
             case _ =>
               None
-          }
-        }
-
-        override def transform(tree: Tree): Tree = {
-          def logFailure() = {
-            def summary(x: Any) = x match { case x: Product => x.productPrefix; case null => "null"; case _ => x.getClass }
-            var details = tree.toString.replace("\n", "")
-            if (details.length > 60) details = details.take(60) + "..."
-            println("(" + summary(tree) + ") " + details)
-          }
-          try {
-            object Desugared {
-              def unapply(tree: Tree): Option[Tree] = tree match {
-                case DesugaringProtocol(original) => Some(original)
-                case MacroExpansion(expandee) => Some(expandee)
-                case TypeTreeWithOriginal(original) => Some(original)
-                case RefTreeWithOriginal(original) => Some(original)
-                case TemplateWithOriginal(original) => Some(original)
-                case SuperWithOriginal(original) => Some(original)
-                case ClassOfWithOriginal(original) => Some(original)
-                case MemberDefWithInferredReturnType(original) => Some(original)
-                case MemberDefWithAnnotations(original) => Some(original)
-                case MacroDef(original) => Some(original)
-                case TypeApplicationWithInferredTypeArguments(original) => Some(original)
-                case ApplicationWithInferredImplicitArguments(original) => Some(original)
-                case ApplicationWithInsertedApply(original) => Some(original)
-                case StandalonePartialFunction(original) => Some(original)
-                case LambdaPartialFunction(original) => Some(original)
-                case CaseClassExtractor(original) => Some(original)
-                case ClassTagExtractor(original) => Some(original)
-                case VanillaExtractor(original) => Some(original)
-                case _ => None
-              }
-            }
-            tree match {
-              case Desugared(original) => transform(original.appendScratchpad(tree))
-              case _ => super.transform(tree)
-            }
-          } catch {
-            case err: _root_.java.lang.AssertionError => logFailure(); throw err
-            case err: _root_.org.scalameta.UnreachableError.type => logFailure(); throw err
-            case ex: _root_.scala.Exception => logFailure(); throw ex
           }
         }
       }
