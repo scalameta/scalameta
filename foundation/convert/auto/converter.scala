@@ -294,12 +294,7 @@ package object internal {
             if (body.symbol != scalameta_unreachable && body.symbol != Predef_??? && body.symbol != Auto_derive) {
               val tpe = precisetpe(body)
               if (tpe =:= NothingTpe) { isValid = false; c.error(clause.pos, "must not convert to Nothing") }
-              if (!(tpe <:< typeOf[scala.meta.Tree])) { isValid = false; c.error(clause.pos, s"must only convert to Palladium trees, found ${precisetpe(body)}") }
-              val components = extractIntersections(tpe)
-              components.foreach(component => {
-                val isLeaf = component.typeSymbol.annotations.exists(_.tree.tpe.typeSymbol == AstClassAnnotation)
-                if (!isLeaf) { isValid = false; c.error(clause.pos, s"must only convert to @ast classes or intersections thereof, found $tpe") }
-              })
+              if (!(tpe <:< typeOf[scala.meta.Tree])) { isValid = false; c.error(clause.pos, s"must only convert to trees or intersections thereof, found ${precisetpe(body)}") }
             }
           })
           isValid
@@ -358,7 +353,6 @@ package object internal {
             sym.fullName != "scala.meta.Term.Placeholder" &&
             sym.fullName != "scala.meta.Term.Return.Unit" &&
             sym.fullName != "scala.meta.Term.Tuple" &&
-            sym.fullName != "scala.meta.Term.Update" &&
             sym.fullName != "scala.meta.Term.While" &&
             sym.fullName != "scala.meta.Type.Annotate" &&
             sym.fullName != "scala.meta.Type.ApplyInfix" &&

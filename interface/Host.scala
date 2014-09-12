@@ -55,14 +55,22 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         case _ => false
       }
       implicit class RichHelperSymbol(gsym: g.Symbol) {
-        type pTermOrTypeName = p.Name{type ThisType >: p.Term.Name with p.Type.Name <: p.Name}
-        def precvt(pre: g.Type, in: g.Tree): pTermOrTypeName = {
-          gsym.rawcvt(in).appendScratchpad(pre).asInstanceOf[pTermOrTypeName]
+        def isAnonymous: Boolean = {
+          // NOTE: not all symbols whose names start with x$ are placeholders
+          // there are also at least artifact vals created for named arguments
+          val isTermPlaceholder = gsym.isTerm && gsym.isParameter && gsym.name.startsWith(g.nme.FRESH_TERM_NAME_PREFIX)
+          val isAnonymousSelfName = gsym.name.startsWith(g.nme.FRESH_TERM_NAME_PREFIX) || gsym.name == g.nme.this_
+          val isAnonymousSelf = gsym.isTerm && isAnonymousSelfName && gsym.owner.isClass // TODO: more precise detection, probably via attachments
+          val isAnonymousTypeParameter = gsym.name == g.tpnme.WILDCARD
+          isTermPlaceholder || isAnonymousSelf || isAnonymousTypeParameter
         }
-        def rawcvt(in: g.Tree): pTermOrTypeName = {
-          (if (gsym.isTerm) p.Term.Name(alias(in), isBackquoted(in)).appendScratchpad(gsym)
+        def precvt(pre: g.Type, in: g.Tree): p.Name = {
+          gsym.rawcvt(in).appendScratchpad(pre)
+        }
+        def rawcvt(in: g.Tree): p.Name = {
+          if (gsym.isTerm) p.Term.Name(alias(in), isBackquoted(in)).appendScratchpad(gsym)
           else if (gsym.isType) p.Type.Name(alias(in), isBackquoted(in)).appendScratchpad(gsym)
-          else unreachable).asInstanceOf[pTermOrTypeName]
+          else unreachable
         }
         def qualcvt(in: g.Tree): p.Qual.Name = {
           require(gsym != g.NoSymbol)
@@ -174,18 +182,17 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         p.Defn.Object(pmods(in), in.symbol.asModule.rawcvt(in), templ.cvt)
       case in @ g.ValDef(_, _, tpt, rhs) if pt <:< typeOf[p.Param] =>
         require(in.symbol.isTerm)
-        val isAnonymous = in.symbol.name.toString.startsWith("x$")
         val ptpe = if (tpt.nonEmpty) Some[p.Param.Type](pvparamtpe(tpt)) else None
         val pdefault = if (rhs.nonEmpty) Some[p.Term](rhs.cvt_!) else None
-        require(isAnonymous ==> pdefault.isEmpty)
-        if (isAnonymous) p.Param.Anonymous(pmods(in), ptpe)
+        require(in.symbol.isAnonymous ==> pdefault.isEmpty)
+        if (in.symbol.isAnonymous) p.Param.Anonymous(pmods(in), ptpe)
         else p.Param.Named(pmods(in), in.symbol.asTerm.rawcvt(in), ptpe, pdefault)
       case in @ g.ValDef(_, _, tpt, rhs) if pt <:< typeOf[p.Aux.Self] =>
         require(rhs.isEmpty)
         if (in == g.noSelfType) p.Aux.Self(None, None, hasThis = false)
         else {
           require(in.symbol.isTerm)
-          val pname = if (in.symbol.name.toString != "x$1") Some(in.symbol.asTerm.rawcvt(in)) else None
+          val pname = if (!in.symbol.isAnonymous) Some(in.symbol.asTerm.rawcvt(in)) else None
           val ptpe = if (tpt.nonEmpty) Some[p.Type](tpt.cvt_!) else None
           p.Aux.Self(pname, ptpe, hasThis = false) // TODO: figure out hasThis
         }
@@ -220,8 +227,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
       case in @ g.TypeDef(_, _, tparams, tpt) if pt <:< typeOf[p.TypeParam] =>
         // TODO: undo desugarings of context and view bounds
         require(in.symbol.isType)
-        val isAnonymous = in.symbol.name == g.tpnme.WILDCARD
-        if (isAnonymous) p.TypeParam.Anonymous(pmods(in), tparams.cvt, Nil, Nil, ptparambounds(tpt))
+        if (in.symbol.isAnonymous) p.TypeParam.Anonymous(pmods(in), tparams.cvt, Nil, Nil, ptparambounds(tpt))
         else p.TypeParam.Named(pmods(in), in.symbol.asType.rawcvt(in), tparams.cvt, Nil, Nil, ptparambounds(tpt))
       case in @ g.TypeDef(_, _, tparams, tpt) if pt <:< typeOf[p.Member] =>
         require(in.symbol.isType)
@@ -286,9 +292,13 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         require(name == in.symbol.name)
         p.Pat.Bind(in.symbol.asTerm.rawcvt(in), tree.cvt_!)
       case g.Function(params, body) =>
-        // TODO: recover shorthand function syntax
-        p.Term.Function(params.cvt, body.cvt_!)
-      case g.Assign(lhs, rhs) =>
+        // TODO: need to be careful to discern `_ + 2` and `_ => 2`
+        // because in both cases parameter names are `x$...`
+        val isShorthand = params.exists(_.symbol.isAnonymous) && body.exists(tree => params.exists(_.symbol == tree.symbol))
+        if (isShorthand) (body.cvt_! : p.Term) else p.Term.Function(params.cvt, body.cvt_!)
+      case g.Assign(lhs: g.Apply, rhs) =>
+        p.Term.Update(lhs.cvt_!, rhs.cvt_!)
+      case g.Assign(lhs: g.RefTree, rhs) =>
         p.Term.Assign(lhs.cvt_!, rhs.cvt_!)
       case g.AssignOrNamedArg(lhs, rhs) =>
         p.Arg.Named(lhs.cvt_!, rhs.cvt_!)
@@ -305,8 +315,14 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         // TODO: figure out hasExpr
         p.Term.Return(expr.cvt_!)
       case g.Try(body, catches, finalizer) =>
-        // TODO: undo desugarings of `try foo catch bar`
-        val catchp = if (catches.nonEmpty) Some(p.Term.Cases(catches.cvt)) else None
+        object CatchExpr {
+          def unapply(tree: g.Tree): Option[g.Tree] = tree match {
+            case g.CaseDef(pq"$scrutdef: Throwable", g.EmptyTree, g.Block(List(g.ValDef(_, tempdef, _, handler)), _))
+            if scrutdef.startsWith(g.nme.FRESH_TERM_NAME_PREFIX) && tempdef.startsWith("catchExpr") => Some(handler)
+            case _ => None
+          }
+        }
+        val catchp = catches match { case CatchExpr(handler) :: Nil => Some[p.Term](handler.cvt_!); case Nil => None; case _ => Some(p.Term.Cases(catches.cvt)) }
         val finallyp = if (finalizer.nonEmpty) Some[p.Term](finalizer.cvt_!) else None
         p.Term.Try(body.cvt_!, catchp, finallyp)
       case g.Throw(expr) =>
@@ -321,7 +337,6 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
       case in @ g.TypeApply(fn, targs) =>
         p.Term.ApplyType(fn.cvt_!, targs.cvt_!)
       case in @ g.Apply(fn, args) if pt <:< typeOf[p.Term] =>
-        // TODO: infer the difference between Apply and Update
         // TODO: infer whether it was an application or a Tuple
         // TODO: undo the for desugaring
         // TODO: undo the Lit.Symbol desugaring
@@ -337,8 +352,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
             p.Term.New(templ)
           case q"$stringContext(..$parts).$prefix(..$args)" if stringContext.symbol == g.definitions.StringContextClass.companion =>
             p.Term.Interpolate((fn.cvt_! : p.Term.Select).selector, parts.cvt_!, args.cvt_!)
-          case q"$lhs.$op(..$args)" if !op.decoded.forall(c => Character.isLetter(c)) =>
-            p.Term.ApplyInfix(lhs.cvt_!, (fn.cvt_! : p.Term.Select).selector, Nil, args.cvt_!)
+          case q"$lhs.$op($arg)" if !op.decoded.forall(c => Character.isLetter(c)) =>
+            p.Term.ApplyInfix(lhs.cvt_!, (fn.cvt_! : p.Term.Select).selector, Nil, List(arg.cvt_!))
           case _ =>
             p.Term.Apply(fn.cvt_!, args.cvt_!)
         }
@@ -372,10 +387,11 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
           p.Type.Select(qual.cvt_!, in.symbol.asType.precvt(qual.tpe, in))
         }
       case in @ g.Ident(_) =>
-        // TODO: Ident(<term name>) with a type symbol attached to it
+        // NOTE: Ident(<term name>) with a type symbol attached to it
         // is the encoding that the ensugarer uses to denote a self reference
         // also see the ensugarer for more information
         if (in.isTerm && in.symbol.isType) p.Term.Name(alias(in), isBackquoted(in))
+        else if (in.isTerm && in.symbol.isAnonymous) p.Term.Placeholder()
         else in.symbol.rawcvt(in)
       case g.ReferenceToBoxed(_) =>
         ???

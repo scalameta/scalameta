@@ -27,19 +27,19 @@ class ScalaToMeta extends FunSuite {
       val m_frontEnd = tb.getClass().getDeclaredMethod("frontEnd")
       val frontEnd = m_frontEnd.invoke(tb).asInstanceOf[scala.tools.reflect.FrontEnd]
       frontEnd.reset()
-      def throwIfErrors(): Unit = if (frontEnd.hasErrors) throw ToolBoxError("reflective compilation has failed:" + EOL + EOL + frontEnd.infos.map(_ => x$1.msg).mkString(EOL))
+      def throwIfErrors(): Unit = if (frontEnd.hasErrors) throw ToolBoxError("reflective compilation has failed:" + EOL + EOL + frontEnd.infos.map(_.msg).mkString(EOL))
       val run = new compiler.Run
-      compiler phase_= run.parserPhase
-      compiler globalPhase_= run.parserPhase
+      compiler.phase = run.parserPhase
+      compiler.globalPhase = run.parserPhase
       val unit = compiler.newCompilationUnit(code, "<memory>")
-      unit body_= compiler.newUnitParser(unit).parse()
+      unit.body = compiler.newUnitParser(unit).parse()
       throwIfErrors()
-      compiler phase_= run.namerPhase
-      compiler globalPhase_= run.namerPhase
+      compiler.phase = run.namerPhase
+      compiler.globalPhase = run.namerPhase
       newNamer(rootContext(unit)).enterSym(unit.body)
       throwIfErrors()
-      compiler phase_= run.phaseNamed("packageobjects")
-      compiler globalPhase_= run.phaseNamed("packageobjects")
+      compiler.phase = run.phaseNamed("packageobjects")
+      compiler.globalPhase = run.phaseNamed("packageobjects")
       val openPackageObjectsTraverser = new Traverser {
         override def traverse(tree: Tree): Unit = tree match {
           case ModuleDef(_, _, _) =>
@@ -52,15 +52,15 @@ class ScalaToMeta extends FunSuite {
       }
       openPackageObjectsTraverser(unit.body)
       throwIfErrors()
-      compiler phase_= run.typerPhase
-      compiler globalPhase_= run.typerPhase
+      compiler.phase = run.typerPhase
+      compiler.globalPhase = run.typerPhase
       val typer = newTyper(rootContext(unit))
       typer.context.setReportErrors()
-      unit body_= typer.typed(unit.body).asInstanceOf[compiler.Tree]
+      unit.body = typer.typed(unit.body).asInstanceOf[compiler.Tree]
       if (debug) println(unit.body)
       unit.toCheck.foreach(workItem => workItem())
       throwIfErrors()
-      val h = Scalahost(compiler).asInstanceOf[PalladiumHostwithOurHost[compiler.type] {  }]
+      val h = Scalahost(compiler).asInstanceOf[PalladiumHost with OurHost[compiler.type] {}]
       val ptree = h.toPalladium(unit.body, classOf[Aux.CompUnit])
       if (debug) println(ptree.show[Code])
       if (debug) println(ptree.show[Raw])
@@ -68,17 +68,13 @@ class ScalaToMeta extends FunSuite {
     }
     val m_withCompilerApi = tb.getClass().getDeclaredMethod("withCompilerApi")
     val o_withCompilerApi = m_withCompilerApi.invoke(tb)
-    val m_apply = o_withCompilerApi.getClass().getDeclaredMethods().find(_ => x$2.getName() == "apply").get
+    val m_apply = o_withCompilerApi.getClass().getDeclaredMethods().find(_.getName() == "apply").get
     try m_apply.invoke(o_withCompilerApi, {
       compilerApi => cont(compilerApi)
-    }) catch {
-      case x$3: Throwable =>
-        val catchExpr1 = scala.reflect.runtime.ReflectionUtils.unwrapHandler({
-          case ex =>
-            throw ex
-        });
-        if (catchExpr1.isDefinedAt(x$3)) catchExpr1(x$3) else throw x$3
-    }
+    }) catch scala.reflect.runtime.ReflectionUtils.unwrapHandler({
+      case ex =>
+        throw ex
+    })
     result
   }
   def runScalaToMetaTest(dirPath: String): Unit = {
