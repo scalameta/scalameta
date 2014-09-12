@@ -125,4 +125,15 @@ class ShowSuite extends ParseSuite {
     assert(templStat("x: @foo").show[Code] === "x: @foo")
     assert(templStat("(x: @foo) + 2").show[Code] === "(x: @foo) + 2")
   }
+
+  test("compound types") {
+    assert(tpe("Foo").show[Code] === "Foo")
+    assert(tpe("Foo {}").show[Code] === "Foo")
+    assert(tpe("Foo { type T = Int }").show[Code] === "Foo { type T = Int }")
+    assert(tpe("Foo { type T = Int; type U <: String }").show[Code] === "Foo { type T = Int; type U <: String }")
+    assert(tpe("Foo with Bar").show[Code] === "Foo with Bar")
+    assert(tpe("Foo with Bar {}").show[Code] === "Foo with Bar {}")
+    assert(tpe("Foo with Bar { type T = Int }").show[Code] === "Foo with Bar { type T = Int }")
+    assert(tpe("Foo with Bar { type T = Int; type U <: String }").show[Code] === "Foo with Bar { type T = Int; type U <: String }")
+  }
 }

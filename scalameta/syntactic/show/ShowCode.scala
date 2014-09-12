@@ -73,7 +73,7 @@ object Code {
     case t: Type.Annotate    => s(t.tpe, " ", t.mods)
     case t: Type.Apply       => s(t.tpe, "[", r(t.args, ", "), "]")
     case t: Type.ApplyInfix  => s(t.lhs, " ", t.op, " ", t.rhs)
-    case t: Type.Compound    => s(r(t.tpes, "with"), if (t.hasRefinement) s(" { ", r(t.refinement, "; "), " }") else s())
+    case t: Type.Compound    => s(r(t.tpes, " with "), a(" {", a(" ", r(t.refinement, "; "), " "), "}", t.hasRefinement))
     case t: Type.Existential => s(t.tpe, " forSome { ", r(t.quants, "; "), " }")
     case t: Type.Placeholder => s("_", t.bounds)
     case t: Type.Tuple       => s("(", r(t.elements, ", "), ")")
