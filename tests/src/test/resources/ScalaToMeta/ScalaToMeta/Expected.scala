@@ -71,14 +71,10 @@ class ScalaToMeta extends FunSuite {
     val m_apply = o_withCompilerApi.getClass().getDeclaredMethods().find(_.getName() == "apply").get
     try m_apply.invoke(o_withCompilerApi, {
       compilerApi => cont(compilerApi)
-    }) catch {
-      case x$3: Throwable =>
-        val catchExpr1 = scala.reflect.runtime.ReflectionUtils.unwrapHandler({
-          case ex =>
-            throw ex
-        });
-        if (catchExpr1.isDefinedAt(x$3)) catchExpr1(x$3) else throw x$3
-    }
+    }) catch scala.reflect.runtime.ReflectionUtils.unwrapHandler({
+      case ex =>
+        throw ex
+    })
     result
   }
   def runScalaToMetaTest(dirPath: String): Unit = {

@@ -315,8 +315,14 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         // TODO: figure out hasExpr
         p.Term.Return(expr.cvt_!)
       case g.Try(body, catches, finalizer) =>
-        // TODO: undo desugarings of `try foo catch bar`
-        val catchp = if (catches.nonEmpty) Some(p.Term.Cases(catches.cvt)) else None
+        object CatchExpr {
+          def unapply(tree: g.Tree): Option[g.Tree] = tree match {
+            case g.CaseDef(pq"$scrutdef: Throwable", g.EmptyTree, g.Block(List(g.ValDef(_, tempdef, _, handler)), _))
+            if scrutdef.startsWith(g.nme.FRESH_TERM_NAME_PREFIX) && tempdef.startsWith("catchExpr") => Some(handler)
+            case _ => None
+          }
+        }
+        val catchp = catches match { case CatchExpr(handler) :: Nil => Some[p.Term](handler.cvt_!); case Nil => None; case _ => Some(p.Term.Cases(catches.cvt)) }
         val finallyp = if (finalizer.nonEmpty) Some[p.Term](finalizer.cvt_!) else None
         p.Term.Try(body.cvt_!, catchp, finallyp)
       case g.Throw(expr) =>
