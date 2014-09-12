@@ -55,14 +55,13 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         case _ => false
       }
       implicit class RichHelperSymbol(gsym: g.Symbol) {
-        type pTermOrTypeName = p.Name{type ThisType >: p.Term.Name with p.Type.Name <: p.Name}
-        def precvt(pre: g.Type, in: g.Tree): pTermOrTypeName = {
-          gsym.rawcvt(in).appendScratchpad(pre).asInstanceOf[pTermOrTypeName]
+        def precvt(pre: g.Type, in: g.Tree): p.Name = {
+          gsym.rawcvt(in).appendScratchpad(pre)
         }
-        def rawcvt(in: g.Tree): pTermOrTypeName = {
-          (if (gsym.isTerm) p.Term.Name(alias(in), isBackquoted(in)).appendScratchpad(gsym)
+        def rawcvt(in: g.Tree): p.Name = {
+          if (gsym.isTerm) p.Term.Name(alias(in), isBackquoted(in)).appendScratchpad(gsym)
           else if (gsym.isType) p.Type.Name(alias(in), isBackquoted(in)).appendScratchpad(gsym)
-          else unreachable).asInstanceOf[pTermOrTypeName]
+          else unreachable
         }
         def qualcvt(in: g.Tree): p.Qual.Name = {
           require(gsym != g.NoSymbol)

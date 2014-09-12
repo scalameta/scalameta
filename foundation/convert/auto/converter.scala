@@ -294,12 +294,7 @@ package object internal {
             if (body.symbol != scalameta_unreachable && body.symbol != Predef_??? && body.symbol != Auto_derive) {
               val tpe = precisetpe(body)
               if (tpe =:= NothingTpe) { isValid = false; c.error(clause.pos, "must not convert to Nothing") }
-              if (!(tpe <:< typeOf[scala.meta.Tree])) { isValid = false; c.error(clause.pos, s"must only convert to Palladium trees, found ${precisetpe(body)}") }
-              val components = extractIntersections(tpe)
-              components.foreach(component => {
-                val isLeaf = component.typeSymbol.annotations.exists(_.tree.tpe.typeSymbol == AstClassAnnotation)
-                if (!isLeaf) { isValid = false; c.error(clause.pos, s"must only convert to @ast classes or intersections thereof, found $tpe") }
-              })
+              if (!(tpe <:< typeOf[scala.meta.Tree])) { isValid = false; c.error(clause.pos, s"must only convert to trees or intersections thereof, found ${precisetpe(body)}") }
             }
           })
           isValid
