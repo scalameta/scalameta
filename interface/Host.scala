@@ -296,7 +296,9 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         // because in both cases parameter names are `x$...`
         val isShorthand = params.exists(_.symbol.isAnonymous) && body.exists(tree => params.exists(_.symbol == tree.symbol))
         if (isShorthand) (body.cvt_! : p.Term) else p.Term.Function(params.cvt, body.cvt_!)
-      case g.Assign(lhs, rhs) =>
+      case g.Assign(lhs: g.Apply, rhs) =>
+        p.Term.Update(lhs.cvt_!, rhs.cvt_!)
+      case g.Assign(lhs: g.RefTree, rhs) =>
         p.Term.Assign(lhs.cvt_!, rhs.cvt_!)
       case g.AssignOrNamedArg(lhs, rhs) =>
         p.Arg.Named(lhs.cvt_!, rhs.cvt_!)
@@ -329,7 +331,6 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
       case in @ g.TypeApply(fn, targs) =>
         p.Term.ApplyType(fn.cvt_!, targs.cvt_!)
       case in @ g.Apply(fn, args) if pt <:< typeOf[p.Term] =>
-        // TODO: infer the difference between Apply and Update
         // TODO: infer whether it was an application or a Tuple
         // TODO: undo the for desugaring
         // TODO: undo the Lit.Symbol desugaring
@@ -345,8 +346,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
             p.Term.New(templ)
           case q"$stringContext(..$parts).$prefix(..$args)" if stringContext.symbol == g.definitions.StringContextClass.companion =>
             p.Term.Interpolate((fn.cvt_! : p.Term.Select).selector, parts.cvt_!, args.cvt_!)
-          case q"$lhs.$op(..$args)" if !op.decoded.forall(c => Character.isLetter(c)) =>
-            p.Term.ApplyInfix(lhs.cvt_!, (fn.cvt_! : p.Term.Select).selector, Nil, args.cvt_!)
+          case q"$lhs.$op($arg)" if !op.decoded.forall(c => Character.isLetter(c)) =>
+            p.Term.ApplyInfix(lhs.cvt_!, (fn.cvt_! : p.Term.Select).selector, Nil, List(arg.cvt_!))
           case _ =>
             p.Term.Apply(fn.cvt_!, args.cvt_!)
         }

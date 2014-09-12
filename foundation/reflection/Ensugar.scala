@@ -51,6 +51,8 @@ trait Ensugar {
                 case ApplicationWithInferredImplicitArguments(original) => Some(original)
                 case ApplicationWithInsertedApply(original) => Some(original)
                 case ApplicationWithNamesOrDefaults(original) => Some(original)
+                case AssignmentWithInsertedUpdate(original) => Some(original)
+                case AssignmentWithInsertedUnderscoreEquals(original) => Some(original)
                 case StandalonePartialFunction(original) => Some(original)
                 case LambdaPartialFunction(original) => Some(original)
                 case CaseClassExtractor(original) => Some(original)
@@ -379,6 +381,27 @@ trait Ensugar {
               val original = tree.metadata("originalApply").asInstanceOf[Apply]
               Some(correlate(result, original).removeMetadata("originalApply"))
             }
+          }
+        }
+
+        // TODO: figure out whether the programmer actually wrote `foo(...) = ...` or it was `foo.update(..., ...)`
+        object AssignmentWithInsertedUpdate {
+          def unapply(tree: Tree): Option[Tree] = tree match {
+            case tree @ Apply(core @ Select(lhs, _), args :+ value) if core.symbol.name == nme.update =>
+              Some(Assign(Apply(lhs, args).setType(NoType), value).setType(tree.tpe))
+            case _ =>
+              None
+          }
+        }
+
+        // TODO: figure out whether the programmer actually wrote `foo.bar = ...` or it was `foo.bar_=(...)`
+        object AssignmentWithInsertedUnderscoreEquals {
+          def unapply(tree: Tree): Option[Tree] = tree match {
+            case tree @ Apply(core @ Select(lhs, op), List(arg)) if op.decoded.endsWith("_=") =>
+              val getter = tree.symbol.owner.info.decl(tree.symbol.name.getterName)
+              Some(Assign(Select(lhs, getter).setType(lhs.tpe.memberInfo(getter)), arg).setType(tree.tpe))
+            case _ =>
+              None
           }
         }
 

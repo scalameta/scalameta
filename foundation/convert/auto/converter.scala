@@ -353,7 +353,6 @@ package object internal {
             sym.fullName != "scala.meta.Term.Placeholder" &&
             sym.fullName != "scala.meta.Term.Return.Unit" &&
             sym.fullName != "scala.meta.Term.Tuple" &&
-            sym.fullName != "scala.meta.Term.Update" &&
             sym.fullName != "scala.meta.Term.While" &&
             sym.fullName != "scala.meta.Type.Annotate" &&
             sym.fullName != "scala.meta.Type.ApplyInfix" &&

@@ -29,17 +29,17 @@ class ScalaToMeta extends FunSuite {
       frontEnd.reset()
       def throwIfErrors(): Unit = if (frontEnd.hasErrors) throw ToolBoxError("reflective compilation has failed:" + EOL + EOL + frontEnd.infos.map(_.msg).mkString(EOL))
       val run = new compiler.Run
-      compiler phase_= run.parserPhase
-      compiler globalPhase_= run.parserPhase
+      compiler.phase = run.parserPhase
+      compiler.globalPhase = run.parserPhase
       val unit = compiler.newCompilationUnit(code, "<memory>")
-      unit body_= compiler.newUnitParser(unit).parse()
+      unit.body = compiler.newUnitParser(unit).parse()
       throwIfErrors()
-      compiler phase_= run.namerPhase
-      compiler globalPhase_= run.namerPhase
+      compiler.phase = run.namerPhase
+      compiler.globalPhase = run.namerPhase
       newNamer(rootContext(unit)).enterSym(unit.body)
       throwIfErrors()
-      compiler phase_= run.phaseNamed("packageobjects")
-      compiler globalPhase_= run.phaseNamed("packageobjects")
+      compiler.phase = run.phaseNamed("packageobjects")
+      compiler.globalPhase = run.phaseNamed("packageobjects")
       val openPackageObjectsTraverser = new Traverser {
         override def traverse(tree: Tree): Unit = tree match {
           case ModuleDef(_, _, _) =>
@@ -52,11 +52,11 @@ class ScalaToMeta extends FunSuite {
       }
       openPackageObjectsTraverser(unit.body)
       throwIfErrors()
-      compiler phase_= run.typerPhase
-      compiler globalPhase_= run.typerPhase
+      compiler.phase = run.typerPhase
+      compiler.globalPhase = run.typerPhase
       val typer = newTyper(rootContext(unit))
       typer.context.setReportErrors()
-      unit body_= typer.typed(unit.body).asInstanceOf[compiler.Tree]
+      unit.body = typer.typed(unit.body).asInstanceOf[compiler.Tree]
       if (debug) println(unit.body)
       unit.toCheck.foreach(workItem => workItem())
       throwIfErrors()
