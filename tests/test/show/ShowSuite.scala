@@ -118,4 +118,11 @@ class ShowSuite extends ParseSuite {
   test("new X") {
     assert(templStat("new X").show[Code] === "new X")
   }
+
+  test("ascribe and annotate") {
+    assert(templStat("_: Int").show[Code] === "_: Int")
+    assert(templStat("(_: Int) + 2").show[Code] === "(_: Int) + 2")
+    assert(templStat("x: @foo").show[Code] === "x: @foo")
+    assert(templStat("(x: @foo) + 2").show[Code] === "(x: @foo) + 2")
+  }
 }
