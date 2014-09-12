@@ -27,7 +27,7 @@ class ScalaToMeta extends FunSuite {
       val m_frontEnd = tb.getClass().getDeclaredMethod("frontEnd")
       val frontEnd = m_frontEnd.invoke(tb).asInstanceOf[scala.tools.reflect.FrontEnd]
       frontEnd.reset()
-      def throwIfErrors(): Unit = if (frontEnd.hasErrors) throw ToolBoxError("reflective compilation has failed:" + EOL + EOL + frontEnd.infos.map(_ => x$1.msg).mkString(EOL))
+      def throwIfErrors(): Unit = if (frontEnd.hasErrors) throw ToolBoxError("reflective compilation has failed:" + EOL + EOL + frontEnd.infos.map(_.msg).mkString(EOL))
       val run = new compiler.Run
       compiler phase_= run.parserPhase
       compiler globalPhase_= run.parserPhase
@@ -68,7 +68,7 @@ class ScalaToMeta extends FunSuite {
     }
     val m_withCompilerApi = tb.getClass().getDeclaredMethod("withCompilerApi")
     val o_withCompilerApi = m_withCompilerApi.invoke(tb)
-    val m_apply = o_withCompilerApi.getClass().getDeclaredMethods().find(_ => x$2.getName() == "apply").get
+    val m_apply = o_withCompilerApi.getClass().getDeclaredMethods().find(_.getName() == "apply").get
     try m_apply.invoke(o_withCompilerApi, {
       compilerApi => cont(compilerApi)
     }) catch {
