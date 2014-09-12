@@ -27,19 +27,21 @@ object Code {
 
   def p(oo: String, t: Qual.Term, left: Boolean = false, right: Boolean = false) = {
     def needsParens(oo: String, io: String): Boolean = {
-      implicit class MySyntacticInfo(name: Name) {
-        def myprecedence: Int = name.value match {
+      implicit class MySyntacticInfo(name: String) {
+        def myprecedence: Int = name match {
           case "." => 100
           case "()" => 100
           case "=" => 0
+          case ":" => -1
           case _ if name.myunary => 99
-          case _ => name.precedence
+          case _ => Term.Name(name).precedence
         }
-        def myunary: Boolean = name.value.startsWith("unary_")
+        def myleftassoc: Boolean = name.last != ':'
+        def myunary: Boolean = name.startsWith("unary_")
       }
-      val (op, ip) = (Term.Name(oo).myprecedence, Term.Name(io).myprecedence)
-      val (oa, ia) = (Term.Name(oo).isLeftAssoc, Term.Name(io).isLeftAssoc)
-      val (ou, iu) = (Term.Name(oo).myunary, Term.Name(io).myunary)
+      val (op, ip) = (oo.myprecedence, io.myprecedence)
+      val (oa, ia) = (oo.myleftassoc, io.myleftassoc)
+      val (ou, iu) = (oo.myunary, io.myunary)
       val result = {
         if (ou && iu) true
         else if (oa ^ ia) true
@@ -101,8 +103,8 @@ object Code {
     case t: Term.Update   => m("=", s(p("=", t.lhs), " = ", t.rhs))
     case t: Term.Return   => s("return", if (t.hasExpr) s(" ", t.expr) else s())
     case t: Term.Throw    => s("throw ", t.expr)
-    case t: Term.Ascribe  => s(t.expr, ": ", t.tpe)
-    case t: Term.Annotate => s(t.expr, ": ", t.mods)
+    case t: Term.Ascribe  => m(":", s(t.expr, ": ", t.tpe))
+    case t: Term.Annotate => m(":", s(t.expr, ": ", t.mods))
     case t: Term.Tuple    => s("(", r(t.elements, ", "), ")")
     case t: Term.Block    =>
       import Term.{Block, Function}
