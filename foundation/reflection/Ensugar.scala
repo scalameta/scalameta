@@ -448,7 +448,7 @@ trait Ensugar {
               // [1] MethodType(List(TermName("_1")#30490, TermName("_2")#30491), TypeRef(ThisType(scala#27), scala.Tuple2#1687, List(TypeRef(SingleType(SingleType(NoPrefix, TermName("c")#15795), TermName("universe")#15857), TypeName("TermSymbol")#9456, List()), TypeRef(SingleType(SingleType(NoPrefix, TermName("c")#15795), TermName("universe")#15857), TypeName("Ident")#10233, List()))))
               // [2] SingleType(SingleType(ThisType(<root>#2), scala#26), scala.Tuple2#1688)
               // [3] SingleType(ThisType(<root>#2), scala#26)
-              require(tpt.original != null && tpt.original.symbol.isModule)
+              require(tpt.original != null)
               Some(treeCopy.Apply(tree, tpt.original, args).appendScratchpad(tpt.tpe))
             case _ =>
               None
