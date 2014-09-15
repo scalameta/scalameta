@@ -43,6 +43,7 @@ trait Ensugar {
                 case TemplateWithOriginal(original) => Some(original)
                 case SuperWithOriginal(original) => Some(original)
                 case ClassOfWithOriginal(original) => Some(original)
+                case MemberDefWithSynthetic(original) => Some(original)
                 case MemberDefWithInferredReturnType(original) => Some(original)
                 case MemberDefWithAnnotations(original) => Some(original)
                 case MacroDef(original) => Some(original)
@@ -195,6 +196,20 @@ trait Ensugar {
         private def isInferred(tree: Tree): Boolean = tree match {
           case tt @ TypeTree() => tt.nonEmpty && tt.original == null
           case _ => false
+        }
+
+        object MemberDefWithSynthetic {
+          def unapply(tree: Tree): Option[Tree] = {
+            implicit class RichSyntheticTree(tree: Tree) {
+              def isSynthetic = tree match { case mdef: MemberDef => mdef.mods.isSynthetic; case _ => false }
+            }
+            tree match {
+              case tree @ PackageDef(pid, stats) if stats.exists(_.isSynthetic) => Some(treeCopy.PackageDef(tree, pid, stats.filter(!_.isSynthetic)))
+              case tree @ Block(stats, expr) if stats.exists(_.isSynthetic) => Some(treeCopy.Block(tree, stats.filter(!_.isSynthetic), expr))
+              case tree @ Template(parents, self, stats) if stats.exists(_.isSynthetic) => Some(treeCopy.Template(tree, parents, self, stats.filter(!_.isSynthetic)))
+              case _ => None
+            }
+          }
         }
 
         // TODO: wasEmpty is not really working well here and checking nullness of originals is too optimistic
