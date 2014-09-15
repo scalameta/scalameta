@@ -111,5 +111,6 @@ class ScalaToMeta extends FunSuite {
   }
 
   val resourceDir = new File(System.getProperty("sbt.paths.tests.resources") + File.separatorChar + "ScalaToMeta")
-  resourceDir.listFiles().filter(_.listFiles().nonEmpty).foreach(dir => test(dir.getName)(runScalaToMetaTest(dir.getAbsolutePath)))
+  val testDirs = resourceDir.listFiles().filter(_.listFiles().nonEmpty).filter(!_.getName().endsWith("_disabled"))
+  testDirs.foreach(testDir => test(testDir.getName)(runScalaToMetaTest(testDir.getAbsolutePath)))
 }
