@@ -352,7 +352,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         // TODO: figure out whether the programmer actually wrote the infix application or they were calling a symbolic method using a dot
         // TODO: infer the difference between `new X` vs `new X()`
         in match {
-          case q"new $tpt(...$argss0)" =>
+          case q"new $_(...$argss0)" =>
+            val g.treeInfo.Applied(g.Select(g.New(tpt), _), _, _) = in
             val argss = if (argss0.isEmpty && in.symbol.info.paramss.flatten.nonEmpty) List(List()) else argss0
             val supercall = p.Aux.Parent(tpt.cvt_!, pargss(argss)).appendScratchpad(in)
             val self = p.Aux.Self(None, None).appendScratchpad(tpt)
