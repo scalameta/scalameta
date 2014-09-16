@@ -503,6 +503,48 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
         else
           typedIdent(tree, name)
       }
+      def typedAssign(lhs: Tree, rhs: Tree): Tree = {
+        // see SI-7617 for an explanation of why macro expansion is suppressed
+        def typedLhs(lhs: Tree) = typed(lhs, EXPRmode | LHSmode)
+        val lhs1    = unsuppressMacroExpansion(typedLhs(suppressMacroExpansion(lhs)))
+        val varsym  = lhs1.symbol
+
+        // see #2494 for double error message example
+        def fail() =
+          if (lhs1.isErrorTyped) lhs1
+          else AssignmentError(tree, varsym)
+
+        if (varsym == null)
+          return fail()
+
+        if (treeInfo.mayBeVarGetter(varsym)) {
+          lhs1 match {
+            case treeInfo.Applied(Select(qual, name), _, _) =>
+              val sel = Select(qual, name.setterName) setPos lhs.pos
+              val app = Apply(sel, List(rhs)) setPos tree.pos
+              // NOTE: this is a meaningful difference from the code in Typers.scala
+              //-return typed(app, mode, pt)
+              return typed(app, mode, pt).appendMetadata("originalLhs" -> lhs1)
+
+            case _ =>
+          }
+        }
+//      if (varsym.isVariable ||
+//        // setter-rewrite has been done above, so rule out methods here, but, wait a minute, why are we assigning to non-variables after erasure?!
+//        (phase.erasedTypes && varsym.isValue && !varsym.isMethod)) {
+        if (varsym.isVariable || varsym.isValue && phase.erasedTypes) {
+          val rhs1 = typedByValueExpr(rhs, lhs1.tpe)
+          treeCopy.Assign(tree, lhs1, checkDead(rhs1)) setType UnitTpe
+        }
+        else if(dyna.isDynamicallyUpdatable(lhs1)) {
+          val rhs1 = typedByValueExpr(rhs)
+          val t = atPos(lhs1.pos.withEnd(rhs1.pos.end)) {
+            Apply(lhs1, List(rhs1))
+          }
+          dyna.wrapErrors(t, _.typed1(t, mode, pt))
+        }
+        else fail()
+      }
       // ========================
       // NOTE: The code above is almost completely copy/pasted from Typers.scala.
       // The changes there are mostly mechanical (indentation), but those, which are non-trivial (e.g. appending metadata to trees)
@@ -517,6 +559,7 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
           case tree @ Select(qual, name) => typedSelectOrSuperCall(tree)
           case tree @ SingletonTypeTree(ref) => typedSingletonTypeTree(tree)
           case tree @ CompoundTypeTree(templ) => typedCompoundTypeTree(tree)
+          case tree @ Assign(lhs, rhs) => typedAssign(lhs, rhs)
           case _ => super.typed1(tree, mode, pt)
         }
         // TODO: wat do these methods even mean, and how do they differ?

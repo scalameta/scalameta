@@ -413,10 +413,17 @@ trait Ensugar {
 
         // TODO: figure out whether the programmer actually wrote `foo.bar = ...` or it was `foo.bar_=(...)`
         object AssignmentWithInsertedUnderscoreEquals {
+          object OriginalAssign {
+            def unapply(tree: Tree): Option[(Tree, Tree)] = {
+              (tree.metadata.get("originalLhs").map(_.asInstanceOf[Tree]), tree) match {
+                case (Some(lhs), Apply(_, List(rhs))) => Some((lhs, rhs))
+                case _ => None
+              }
+            }
+          }
           def unapply(tree: Tree): Option[Tree] = tree match {
-            case tree @ Apply(core @ Select(lhs, op), List(arg)) if op.decoded.endsWith("_=") =>
-              val getter = tree.symbol.owner.info.decl(tree.symbol.name.getterName)
-              Some(Assign(Select(lhs, getter).setType(lhs.tpe.memberInfo(getter)), arg).setType(tree.tpe))
+            case OriginalAssign(lhs, rhs) =>
+              Some(Assign(lhs, rhs).setType(tree.tpe))
             case _ =>
               None
           }
