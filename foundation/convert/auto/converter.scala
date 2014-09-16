@@ -332,8 +332,6 @@ package object internal {
           val expected = mutable.Set(allLeafCompanions(root).distinct: _*)
           (prelude ++ clauses).foreach(_.foreach(sub => if (sub.symbol != null) expected -= sub.symbol))
           val unmatched = expected.filter(sym => {
-            sym.fullName != "scala.meta.Arg.Named" &&
-            sym.fullName != "scala.meta.Arg.Repeated" &&
             sym.fullName != "scala.meta.Aux.CompUnit" &&
             sym.fullName != "scala.meta.Decl.Procedure" &&
             sym.fullName != "scala.meta.Defn.Procedure" &&

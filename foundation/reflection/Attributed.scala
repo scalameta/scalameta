@@ -47,6 +47,9 @@ trait Attributed {
           // these trees are used as ensugared representations of named arguments
           // as such, they can't and don't have any types or symbols attributed to them
           case AssignOrNamedArg(lhs, rhs) => check(tree, skipSymbol = true, skipType = true)
+          // this tree is used as part of an encoding for varargifying sequences
+          // in this encoding _* doesn't have a symbol, only a type
+          case Ident(tpnme.WILDCARD_STAR) => check(tree, skipSymbol = true)
           case _ => check(tree)
         }
       }

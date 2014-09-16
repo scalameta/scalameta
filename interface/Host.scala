@@ -112,7 +112,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         }
         val gsym = gmdef.symbol.getterIn(gmdef.symbol.owner).orElse(gmdef.symbol)
         val pmods = scala.collection.mutable.ListBuffer[p.Mod]()
-        pmods ++= gmdef.mods.annotations.map{ case q"new $gtpt(...$gargss)" => p.Mod.Annot(gtpt.cvt_!, gargss.cvt_!) }
+        pmods ++= gmdef.mods.annotations.map{ case q"new $gtpt(...$gargss)" => p.Mod.Annot(gtpt.cvt_!, pargss(gargss)) }
         if (gsym.isPrivate) pmods += p.Mod.Private(paccessqual(gsym))
         if (gsym.isProtected) pmods += p.Mod.Protected(paccessqual(gsym))
         if (gsym.isImplicit) pmods += p.Mod.Implicit()
@@ -150,6 +150,13 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         case _ =>
           unreachable
       }
+      def parg(garg: g.Tree): p.Arg = garg match {
+        case g.Typed(expr, g.Ident(g.tpnme.WILDCARD_STAR)) => p.Arg.Repeated(expr.cvt_!)
+        case g.AssignOrNamedArg(lhs, rhs) => p.Arg.Named(lhs.cvt_!, rhs.cvt_!)
+        case _ => garg.cvt_! : p.Term
+      }
+      def pargs(gargs: List[g.Tree]): Seq[p.Arg] = gargs.map(parg)
+      def pargss(gargss: List[List[g.Tree]]): Seq[Seq[p.Arg]] = gargss.map(pargs)
     }
     import Helpers._
     val TermQuote = "denied" // TODO: find a better approach
@@ -215,7 +222,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         if (in.symbol.isConstructor) {
           require(!in.symbol.isPrimaryConstructor)
           val q"{ $_(...$argss); ..$stats; () }" = body
-          p.Ctor.Secondary(pmods(in), explicitss.cvt_!, implicits.cvt_!, argss.cvt_!, stats.cvt_!)
+          p.Ctor.Secondary(pmods(in), explicitss.cvt_!, implicits.cvt_!, pargss(argss), stats.cvt_!)
         } else if (in.symbol.isMacro) {
           require(tpt.nonEmpty) // TODO: support pre-2.12 macros with inferred return types
           p.Defn.Macro(pmods(in), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt_!, implicits.cvt_!, tpt.cvt_!, body.cvt_!)
@@ -259,7 +266,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         // TODO: really infer hasStats
         // TODO: we should be able to write Template instantiations without an `if` by having something like `hasStats` as an optional synthetic parameter
         val SyntacticTemplate(gparents, gself, gearlydefns, gstats) = in
-        val pparents = gparents.map(gparent => { val applied = g.treeInfo.dissectApplied(gparent); p.Aux.Parent(applied.callee.cvt_!, applied.argss.cvt_!) })
+        val pparents = gparents.map(gparent => { val applied = g.treeInfo.dissectApplied(gparent); p.Aux.Parent(applied.callee.cvt_!, pargss(applied.argss)) })
         if (gstats.isEmpty) p.Aux.Template(gearlydefns.cvt_!, pparents, gself.cvt)
         else p.Aux.Template(gearlydefns.cvt_!, pparents, gself.cvt, gstats.cvt_!)
       case g.Block((gcdef @ g.ClassDef(_, g.TypeName("$anon"), _, _)) :: Nil, q"new $$anon()") =>
@@ -301,7 +308,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
       case g.Assign(lhs: g.RefTree, rhs) =>
         p.Term.Assign(lhs.cvt_!, rhs.cvt_!)
       case g.AssignOrNamedArg(lhs, rhs) =>
-        p.Arg.Named(lhs.cvt_!, rhs.cvt_!)
+        // NOTE: handled in parg/pargs/pargss
+        unreachable
       case g.If(cond, thenp, g.Literal(g.Constant(()))) =>
         // TODO: figure out hasElse with definitive precision
         p.Term.If(cond.cvt_!, thenp.cvt_!)
@@ -346,16 +354,16 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         in match {
           case q"new $tpt(...$argss0)" =>
             val argss = if (argss0.isEmpty && in.symbol.info.paramss.flatten.nonEmpty) List(List()) else argss0
-            val supercall = p.Aux.Parent(tpt.cvt_!, argss.cvt_!).appendScratchpad(in)
+            val supercall = p.Aux.Parent(tpt.cvt_!, pargss(argss)).appendScratchpad(in)
             val self = p.Aux.Self(None, None).appendScratchpad(tpt)
             val templ = p.Aux.Template(Nil, List(supercall), self).appendScratchpad(in)
             p.Term.New(templ)
           case q"$stringContext(..$parts).$prefix(..$args)" if stringContext.symbol == g.definitions.StringContextClass.companion =>
             p.Term.Interpolate((fn.cvt_! : p.Term.Select).selector, parts.cvt_!, args.cvt_!)
           case q"$lhs.$op($arg)" if !op.decoded.forall(c => Character.isLetter(c)) =>
-            p.Term.ApplyInfix(lhs.cvt_!, (fn.cvt_! : p.Term.Select).selector, Nil, List(arg.cvt_!))
+            p.Term.ApplyInfix(lhs.cvt_!, (fn.cvt_! : p.Term.Select).selector, Nil, List(parg(arg)))
           case _ =>
-            p.Term.Apply(fn.cvt_!, args.cvt_!)
+            p.Term.Apply(fn.cvt_!, pargs(args))
         }
       case in @ g.Apply(fn, args) if pt <:< typeOf[p.Pat] =>
         // TODO: infer Extract vs ExtractInfix
