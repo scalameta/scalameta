@@ -129,21 +129,23 @@ trait Ensugar {
               None
             case tree @ TypeTree() if tree.original != null =>
               val original = tree.original match {
-                case tree: SingletonTypeTree =>
-                  treeCopy.SingletonTypeTree(tree, tree.metadata("originalRef").asInstanceOf[Tree])
-                case tree @ CompoundTypeTree(templ) =>
+                case original @ SingletonTypeTree(_) =>
+                  treeCopy.SingletonTypeTree(original, original.metadata("originalRef").asInstanceOf[Tree])
+                case original @ CompoundTypeTree(templ) =>
                   // NOTE: this attachment is only going to work past typer
                   // but since we're not yet going to implement whitebox macros, that's not yet a problem
                   require(templ.self == noSelfType)
                   val Some(CompoundTypeTreeOriginalAttachment(parents1, stats1)) = templ.attachments.get[CompoundTypeTreeOriginalAttachment]
                   val templ1 = treeCopy.Template(templ, parents1, noSelfType, stats1).setType(NoType).setSymbol(NoSymbol)
-                  treeCopy.CompoundTypeTree(tree, templ1)
-                case tree @ TypeBoundsTree(lo, hi) =>
+                  treeCopy.CompoundTypeTree(original, templ1)
+                case original @ TypeBoundsTree(lo, hi) =>
                   val lo1 = if (lo.tpe =:= NothingTpe) EmptyTree else lo
                   val hi1 = if (hi.tpe =:= AnyTpe) EmptyTree else hi
-                  treeCopy.TypeBoundsTree(tree, lo1, hi1)
-                case tree =>
-                  tree
+                  treeCopy.TypeBoundsTree(original, lo1, hi1)
+                case original @ AppliedTypeTree(fn, args) =>
+                  treeCopy.AppliedTypeTree(original, fn, args)
+                case original =>
+                  original
               }
               Some(original.setType(tree.tpe))
             case in @ TypeTreeWithDeferredRefCheck() =>
