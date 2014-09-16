@@ -229,6 +229,11 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
       case _ =>
         super.typedTypeApply(tree, mode, fun, args)
     }
+    override def doTypedApply(tree: Tree, fun0: Tree, args: List[Tree], mode: Mode, pt: Type): Tree = {
+      val result = super.doTypedApply(tree, fun0, args, mode, pt)
+      if (args.isEmpty && result.symbol == NilModule) result.appendMetadata("original" -> Apply(fun0, args).setType(result.tpe))
+      result
+    }
     override def typed1(tree: Tree, mode: Mode, pt: Type): Tree = {
       def lookupInOwner(owner: Symbol, name: Name): Symbol = if (mode.inQualMode) rootMirror.missingHook(owner, name) else NoSymbol
       def lookupInRoot(name: Name): Symbol  = lookupInOwner(rootMirror.RootClass, name)
