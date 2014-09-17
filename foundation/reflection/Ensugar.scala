@@ -299,10 +299,9 @@ trait Ensugar {
           }
         }
 
-        // TODO: infer whether the implicit view was called explicitly and don't remove it if so
         object ImplicitConversion {
           def unapply(tree: Tree): Option[Tree] = tree match {
-            case Apply(fn, List(arg)) if fn.symbol.isImplicit => Some(arg)
+            case ApplyImplicitView(_, arg) => Some(arg)
             case _ => None
           }
         }
@@ -315,11 +314,10 @@ trait Ensugar {
           }
         }
 
-        // TODO: infer whether implicit arguments were provided explicitly and don't remove them if so
         // TODO: test how this works with new
         object ApplicationWithInferredImplicitArguments {
           def unapply(tree: Tree): Option[Tree] = tree match {
-            case Apply(fn, args) if isImplicitMethodType(fn.tpe) => Some(fn)
+            case ApplyToImplicitArgs(fn, _) => Some(fn)
             case _ => None
           }
         }
