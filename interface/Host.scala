@@ -115,7 +115,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         pmods ++= gmdef.mods.annotations.map{ case q"new $gtpt(...$gargss)" => p.Mod.Annot(gtpt.cvt_!, pargss(gargss)) }
         if (gsym.isPrivate) pmods += p.Mod.Private(paccessqual(gsym))
         if (gsym.isProtected) pmods += p.Mod.Protected(paccessqual(gsym))
-        if (gsym.isImplicit) pmods += p.Mod.Implicit()
+        if (gsym.isImplicit && !(gsym.isParameter && gsym.owner.isMethod)) pmods += p.Mod.Implicit()
         if (gsym.isFinal) pmods += p.Mod.Final()
         if (gsym.isSealed) pmods += p.Mod.Sealed()
         if (gsym.isOverride) pmods += p.Mod.Override()
