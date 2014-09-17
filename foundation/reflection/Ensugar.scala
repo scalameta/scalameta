@@ -48,6 +48,7 @@ trait Ensugar {
                 case MemberDefWithAnnotations(original) => Some(original)
                 case MacroDef(original) => Some(original)
                 case DefaultGetterDef(original) => Some(original)
+                case ImplicitConversion(original) => Some(original)
                 case TypeApplicationWithInferredTypeArguments(original) => Some(original)
                 case ApplicationWithInferredImplicitArguments(original) => Some(original)
                 case ApplicationWithInsertedApply(original) => Some(original)
@@ -294,6 +295,14 @@ trait Ensugar {
         object DefaultGetterDef {
           def unapply(tree: Tree): Option[Tree] = tree match {
             case tree: DefDef if tree.symbol.isDefaultGetter => Some(EmptyTree)
+            case _ => None
+          }
+        }
+
+        // TODO: infer whether the implicit view was called explicitly and don't remove it if so
+        object ImplicitConversion {
+          def unapply(tree: Tree): Option[Tree] = tree match {
+            case Apply(fn, List(arg)) if fn.symbol.isImplicit => Some(arg)
             case _ => None
           }
         }
