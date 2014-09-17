@@ -98,6 +98,10 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         def precvt(pre: g.Type, in: g.Tree): p.Type.Name = (gsym: g.Symbol).precvt(pre, in).asInstanceOf[p.Type.Name]
         def rawcvt(in: g.Tree): p.Type.Name = (gsym: g.Symbol).rawcvt(in).asInstanceOf[p.Type.Name]
       }
+      def pannot(gannot: g.Tree): p.Mod.Annot = {
+        val q"new $gtpt(...$gargss)" = gannot
+        p.Mod.Annot(gtpt.cvt_!, pargss(gargss))
+      }
       def pmods(gmdef: g.MemberDef): Seq[p.Mod] = {
         // TODO: since we have mods correctly ensugared here, I think, we could try to avoid using gsym here
         // however, everything works fine at the moment, so I'll denote this refactoring as future work
@@ -112,7 +116,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         }
         val gsym = gmdef.symbol.getterIn(gmdef.symbol.owner).orElse(gmdef.symbol)
         val pmods = scala.collection.mutable.ListBuffer[p.Mod]()
-        pmods ++= gmdef.mods.annotations.map{ case q"new $gtpt(...$gargss)" => p.Mod.Annot(gtpt.cvt_!, pargss(gargss)) }
+        pmods ++= gmdef.mods.annotations.map(pannot)
         if (gsym.isPrivate) pmods += p.Mod.Private(paccessqual(gsym))
         if (gsym.isProtected) pmods += p.Mod.Protected(paccessqual(gsym))
         if (gsym.isImplicit && !(gsym.isParameter && gsym.owner.isMethod)) pmods += p.Mod.Implicit()
@@ -427,8 +431,12 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         unreachable
       case g.DocDef(_, _) =>
         unreachable
-      case g.Annotated(_, _) =>
-        unreachable
+      case g.Annotated(annot, arg) if pt <:< typeOf[p.Term] =>
+        val (parg, pannots) = (arg.cvt_! : p.Term) match { case p.Term.Annotate(arg, annots) => (arg, annots); case arg => (arg, Nil) }
+        p.Term.Annotate(parg, pannots :+ pannot(annot))
+      case g.Annotated(annot, arg) if pt <:< typeOf[p.Type] =>
+        val (parg, pannots) = (arg.cvt_! : p.Type) match { case p.Type.Annotate(arg, annots) => (arg, annots); case arg => (arg, Nil) }
+        p.Type.Annotate(parg, pannots :+ pannot(annot))
       case g.ArrayValue(_, _) =>
         unreachable
       case g.InjectDerivedValue(_) =>

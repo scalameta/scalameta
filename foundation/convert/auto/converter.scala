@@ -342,7 +342,6 @@ package object internal {
             sym.fullName != "scala.meta.Mod.Doc" &&
             sym.fullName != "scala.meta.Pat.ExtractInfix" &&
             sym.fullName != "scala.meta.Pat.Interpolate" &&
-            sym.fullName != "scala.meta.Term.Annotate" &&
             sym.fullName != "scala.meta.Term.Do" &&
             sym.fullName != "scala.meta.Term.Eta" &&
             sym.fullName != "scala.meta.Term.For" &&
@@ -352,7 +351,6 @@ package object internal {
             sym.fullName != "scala.meta.Term.Return.Unit" &&
             sym.fullName != "scala.meta.Term.Tuple" &&
             sym.fullName != "scala.meta.Term.While" &&
-            sym.fullName != "scala.meta.Type.Annotate" &&
             sym.fullName != "scala.meta.Type.ApplyInfix" &&
             sym.fullName != "scala.meta.Type.Existential" &&
             sym.fullName != "scala.meta.Type.Function" &&

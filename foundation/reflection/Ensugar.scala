@@ -60,6 +60,7 @@ trait Ensugar {
                 case CaseClassExtractor(original) => Some(original)
                 case ClassTagExtractor(original) => Some(original)
                 case VanillaExtractor(original) => Some(original)
+                case AnnotatedTerm(original) => Some(original)
                 case _ => None
               }
             }
@@ -145,6 +146,17 @@ trait Ensugar {
                   treeCopy.TypeBoundsTree(original, lo1, hi1)
                 case original @ AppliedTypeTree(fn, args) =>
                   treeCopy.AppliedTypeTree(original, fn, args)
+                case original @ Annotated(_, arg) =>
+                  // NOTE: annot from the original is unattributed, so we can't use it
+                  // NOTE: if we have nested Annotated nodes, only the outermost one has annotations with attributed originals
+                  def loop(tree: Tree, annots: List[Tree]): Tree = (tree, annots) match {
+                    case (tree @ Annotated(_, arg), annot :: rest) => treeCopy.Annotated(tree, annot, loop(arg, rest))
+                    case (tree, Nil) => tree
+                    case _ => unreachable
+                  }
+                  val annots = tree.tpe.asInstanceOf[AnnotatedType].annotations.map(_.original)
+                  require(annots.forall(_.nonEmpty))
+                  loop(original, annots)
                 case original =>
                   original
               }
@@ -490,6 +502,32 @@ trait Ensugar {
             case UnApply(fn @ q"$_.$unapply[..$_](..$_)", args) =>
               require(unapply == nme.unapply || unapply == nme.unapplySeq)
               Some(Apply(dissectApplied(fn).callee, args).setType(tree.tpe))
+            case _ =>
+              None
+          }
+        }
+
+        // NOTE: partially copy/pasted from Reshape.scala from scalac
+        object AnnotatedTerm {
+          object TypeTreeWithRawOriginal {
+            def unapply(tree: TypeTree): Option[Tree] = tree match {
+              case tt @ TypeTree() if tt.original != null => Some(tt.original)
+              case _ => None
+            }
+          }
+          object AnnotatedWithAnns {
+            def unapply(tree: Annotated): Option[(List[Tree], Tree)] = tree match {
+              case Annotated(ann, annotated: Annotated) => unapply(annotated).map({ case (anns, arg) => (anns :+ ann, arg) })
+              case Annotated(ann, arg) => Some((List(ann), arg))
+              case _ => None
+            }
+          }
+          def unapply(tree: Tree): Option[Tree] = tree match {
+            case ty @ Typed(_, tt @ TypeTreeWithRawOriginal(AnnotatedWithAnns(_, arg))) if arg.isTerm =>
+              // NOTE: annot from original is unattributed, so we can't use it
+              val original @ Annotated(_, arg) = tt.original
+              val List(annot, _*) = tree.tpe.asInstanceOf[AnnotatedType].annotations.map(_.original)
+              Some(treeCopy.Annotated(original, annot, arg))
             case _ =>
               None
           }
