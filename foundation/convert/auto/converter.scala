@@ -547,7 +547,7 @@ package object internal {
             if (System.getProperty("ensugar.debug") != null) { println(result); println($h.g.showRaw(result, printIds = true, printTypes = true)) }
             result
           """
-          convert(x1, c.weakTypeOf[In], c.weakTypeOf[Pt], allowDerived = true, allowInputDowncasts = true, allowOutputDowncasts = true, pre = pre.tpe, sym = sym)
+          convert(x1, c.typecheck(x1).tpe, c.weakTypeOf[Pt], allowDerived = true, allowInputDowncasts = true, allowOutputDowncasts = true, pre = pre.tpe, sym = sym)
         case _ =>
           c.abort(c.enclosingPosition, "unknown target: " + target.name)
       }
