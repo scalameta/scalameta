@@ -542,7 +542,11 @@ package object internal {
         case "toPalladium" =>
           val pre @ q"$h.toPalladium" = c.prefix.tree
           val sym = c.macroApplication.symbol
-          val x1 = q"(new { val global: $h.g.type = $h.g } with $ToolkitTrait).ensugar($x)"
+          val x1 = q"""
+            val result = (new { val global: $h.g.type = $h.g } with $ToolkitTrait).ensugar($x)
+            if (System.getProperty("ensugar.debug") != null) { println(result); println($h.g.showRaw(result, printIds = true, printTypes = true)) }
+            result
+          """
           convert(x1, c.weakTypeOf[In], c.weakTypeOf[Pt], allowDerived = true, allowInputDowncasts = true, allowOutputDowncasts = true, pre = pre.tpe, sym = sym)
         case _ =>
           c.abort(c.enclosingPosition, "unknown target: " + target.name)
