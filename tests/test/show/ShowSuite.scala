@@ -136,4 +136,9 @@ class ShowSuite extends ParseSuite {
     assert(tpe("Foo with Bar { type T = Int }").show[Code] === "Foo with Bar { type T = Int }")
     assert(tpe("Foo with Bar { type T = Int; type U <: String }").show[Code] === "Foo with Bar { type T = Int; type U <: String }")
   }
+
+  test("packages") {
+    assert(compUnit("package foo.bar; class C").show[Code] === "package foo.bar\nclass C")
+    assert(compUnit("package foo.bar { class C }").show[Code] === "package foo.bar {\n  class C\n}")
+  }
 }
