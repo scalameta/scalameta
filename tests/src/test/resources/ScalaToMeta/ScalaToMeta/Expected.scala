@@ -29,17 +29,17 @@ class ScalaToMeta extends FunSuite {
       frontEnd.reset()
       def throwIfErrors(): Unit = if (frontEnd.hasErrors) throw ToolBoxError("reflective compilation has failed:" + EOL + EOL + frontEnd.infos.map(_.msg).mkString(EOL))
       val run = new compiler.Run
-      compiler.phase = run.parserPhase
-      compiler.globalPhase = run.parserPhase
+      phase = run.parserPhase
+      globalPhase = run.parserPhase
       val unit = compiler.newCompilationUnit(code, "<memory>")
       unit.body = compiler.newUnitParser(unit).parse()
       throwIfErrors()
-      compiler.phase = run.namerPhase
-      compiler.globalPhase = run.namerPhase
+      phase = run.namerPhase
+      globalPhase = run.namerPhase
       newNamer(rootContext(unit)).enterSym(unit.body)
       throwIfErrors()
-      compiler.phase = run.phaseNamed("packageobjects")
-      compiler.globalPhase = run.phaseNamed("packageobjects")
+      phase = run.phaseNamed("packageobjects")
+      globalPhase = run.phaseNamed("packageobjects")
       val openPackageObjectsTraverser = new Traverser {
         override def traverse(tree: Tree): Unit = tree match {
           case ModuleDef(_, _, _) =>
@@ -52,8 +52,8 @@ class ScalaToMeta extends FunSuite {
       }
       openPackageObjectsTraverser(unit.body)
       throwIfErrors()
-      compiler.phase = run.typerPhase
-      compiler.globalPhase = run.typerPhase
+      phase = run.typerPhase
+      globalPhase = run.typerPhase
       val typer = newTyper(rootContext(unit))
       typer.context.setReportErrors()
       unit.body = typer.typed(unit.body).asInstanceOf[compiler.Tree]

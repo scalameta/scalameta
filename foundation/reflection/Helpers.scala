@@ -93,9 +93,24 @@ trait Helpers {
 
   object collapseEmptyTrees extends Transformer {
     override def transform(tree: Tree): Tree = tree match {
+      case tree @ PackageDef(pid, stats) if stats.exists(_.isEmpty) => transform(treeCopy.PackageDef(tree, pid, stats.filter(!_.isEmpty)))
       case tree @ Block(stats, expr) if stats.exists(_.isEmpty) => transform(treeCopy.Block(tree, stats.filter(!_.isEmpty), expr))
       case tree @ Template(parents, self, stats) if stats.exists(_.isEmpty) => transform(treeCopy.Template(tree, parents, self, stats.filter(!_.isEmpty)))
       case _ => super.transform(tree)
+    }
+  }
+
+  object ApplyImplicitView {
+    def unapply(tree: Tree): Option[(Tree, Tree)] = tree match {
+      case tree: ApplyImplicitView => Some((tree.fun, tree.args.head))
+      case _ => None
+    }
+  }
+
+  object ApplyToImplicitArgs {
+    def unapply(tree: Tree): Option[(Tree, List[Tree])] = tree match {
+      case tree: ApplyToImplicitArgs => Some((tree.fun, tree.args))
+      case _ => None
     }
   }
 }

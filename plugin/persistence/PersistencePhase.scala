@@ -38,7 +38,8 @@ trait PersistencePhase {
       }
 
       override def apply(unit: CompilationUnit) {
-        val punit = h.toPalladium(unit.body, classOf[Aux.CompUnit])
+        val ensugared = (new { val global: h.g.type = h.g } with _root_.org.scalameta.reflection.GlobalToolkit).ensugar(unit.body)
+        // val punit = h.toPalladium(unit.body, classOf[Aux.CompUnit])
         // ???
       }
     }

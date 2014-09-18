@@ -332,8 +332,6 @@ package object internal {
           val expected = mutable.Set(allLeafCompanions(root).distinct: _*)
           (prelude ++ clauses).foreach(_.foreach(sub => if (sub.symbol != null) expected -= sub.symbol))
           val unmatched = expected.filter(sym => {
-            sym.fullName != "scala.meta.Arg.Named" &&
-            sym.fullName != "scala.meta.Arg.Repeated" &&
             sym.fullName != "scala.meta.Aux.CompUnit" &&
             sym.fullName != "scala.meta.Decl.Procedure" &&
             sym.fullName != "scala.meta.Defn.Procedure" &&
@@ -344,7 +342,6 @@ package object internal {
             sym.fullName != "scala.meta.Mod.Doc" &&
             sym.fullName != "scala.meta.Pat.ExtractInfix" &&
             sym.fullName != "scala.meta.Pat.Interpolate" &&
-            sym.fullName != "scala.meta.Term.Annotate" &&
             sym.fullName != "scala.meta.Term.Do" &&
             sym.fullName != "scala.meta.Term.Eta" &&
             sym.fullName != "scala.meta.Term.For" &&
@@ -354,7 +351,6 @@ package object internal {
             sym.fullName != "scala.meta.Term.Return.Unit" &&
             sym.fullName != "scala.meta.Term.Tuple" &&
             sym.fullName != "scala.meta.Term.While" &&
-            sym.fullName != "scala.meta.Type.Annotate" &&
             sym.fullName != "scala.meta.Type.ApplyInfix" &&
             sym.fullName != "scala.meta.Type.Existential" &&
             sym.fullName != "scala.meta.Type.Function" &&
@@ -544,8 +540,12 @@ package object internal {
         case "toPalladium" =>
           val pre @ q"$h.toPalladium" = c.prefix.tree
           val sym = c.macroApplication.symbol
-          val x1 = q"(new { val global: $h.g.type = $h.g } with $ToolkitTrait).ensugar($x)"
-          convert(x1, c.weakTypeOf[In], c.weakTypeOf[Pt], allowDerived = true, allowInputDowncasts = true, allowOutputDowncasts = true, pre = pre.tpe, sym = sym)
+          val x1 = q"""
+            val result = (new { val global: $h.g.type = $h.g } with $ToolkitTrait).ensugar($x)
+            if (System.getProperty("ensugar.debug") != null) { println(result); println($h.g.showRaw(result, printIds = true, printTypes = true)) }
+            result
+          """
+          convert(x1, c.typecheck(x1).tpe, c.weakTypeOf[Pt], allowDerived = true, allowInputDowncasts = true, allowOutputDowncasts = true, pre = pre.tpe, sym = sym)
         case _ =>
           c.abort(c.enclosingPosition, "unknown target: " + target.name)
       }
