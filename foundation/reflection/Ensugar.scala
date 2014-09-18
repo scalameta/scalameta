@@ -533,8 +533,15 @@ trait Ensugar {
           }
         }
       }
-      val result = transformer.transform(tree)
-      collapseEmptyTrees.transform(result)
+      object advancedDuplicator extends Transformer {
+        override def transform(tree: Tree): Tree = tree match {
+          case tt: TypeTree if tt.original != null => tt.duplicate.setOriginal(advancedDuplicator.transform(tt.original.duplicate))
+          case _ => super.transform(tree.duplicate)
+        }
+      }
+      val duplicatedInput = advancedDuplicator.transform(tree)
+      val preliminaryResult = transformer.transform(duplicatedInput)
+      collapseEmptyTrees.transform(preliminaryResult)
     }
     loop(tree).asInstanceOf[Output]
   }
