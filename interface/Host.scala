@@ -172,12 +172,12 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
       case g.UnmappableTree =>
         unreachable
       case g.PackageDef(pid, stats) if pt <:< typeOf[p.Pkg] =>
-        require(pid.name != g.nme.EMPTY)
+        require(pid.name != g.nme.EMPTY_PACKAGE_NAME)
         val hasBraces = stats.collect{ case pdef: g.PackageDef => pdef }.length > 1
         p.Pkg(pid.cvt_!, stats.cvt_!, hasBraces = hasBraces) // TODO: infer hasBraces
       case g.PackageDef(pid, stats) if pt <:< typeOf[p.Aux.CompUnit] =>
         val hasBraces = stats.collect{ case pdef: g.PackageDef => pdef }.length > 1
-        if (pid.name == g.nme.EMPTY) p.Aux.CompUnit(stats.cvt_!)
+        if (pid.name == g.nme.EMPTY_PACKAGE_NAME) p.Aux.CompUnit(stats.cvt_!)
         else p.Aux.CompUnit(List(p.Pkg(pid.cvt_!, stats.cvt_!, hasBraces = hasBraces))) // TODO: infer hasBraces
       case in @ g.ClassDef(_, _, tparams, templ) =>
         require(in.symbol.isClass)
