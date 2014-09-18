@@ -365,14 +365,13 @@ trait Ensugar {
               args.exists(arg => isDefaultGetter(arg) || vdefs.exists(_.symbol == arg.symbol))
             }
             def undoNamesDefaults(args: List[Tree], depth: Int) = {
-              def extractRhs(vdef: ValDef) = vdef.rhs.changeOwner(vdef.symbol -> typer.context.owner)
               def matchesVdef(arg: Tree, vdef: ValDef) = WildcardStarArg.unapply(arg).getOrElse(arg).symbol == vdef.symbol
-              def substituteVref(arg: Tree, vdef: ValDef) = new TreeSubstituter(List(vdef.symbol), List(extractRhs(vdef))).transform(arg)
+              def substituteVref(arg: Tree, vdef: ValDef) = new TreeSubstituter(List(vdef.symbol), List(vdef.rhs)).transform(arg)
               case class Arg(tree: Tree, ipos: Int, inamed: Int) { val param = app.symbol.paramss(depth)(ipos) }
               val indexed = args.map(arg => arg -> vdefs.indexWhere(matchesVdef(arg, _))).zipWithIndex.flatMap({
                 /*    default    */ case ((arg, _), _) if isDefaultGetter(arg) => None
                 /*   positional  */ case ((arg, -1), ipos) => Some(Arg(arg, ipos, -1))
-                /* default+named */ case ((_, inamed), _) if isDefaultGetter(extractRhs(vdefs(inamed))) => None
+                /* default+named */ case ((_, inamed), _) if isDefaultGetter(vdefs(inamed).rhs) => None
                 /*     named     */ case ((arg, inamed), ipos) => Some(Arg(substituteVref(arg, vdefs(inamed)), ipos, inamed))
               })
               if (indexed.forall(_.inamed == -1)) indexed.map(_.tree)
