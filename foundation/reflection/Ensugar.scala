@@ -78,7 +78,7 @@ trait Ensugar {
         // NOTE: this is the newly established desugaring protocol
         // if a transformer wants to be friendly to us, they can use this protocol to simplify our lives
         object DesugaringProtocol {
-          def unapply(tree: Tree): Option[Tree] = tree.metadata.get("original").map(_.asInstanceOf[Tree])
+          def unapply(tree: Tree): Option[Tree] = tree.metadata.get("original").map(_.asInstanceOf[Tree].duplicate)
         }
 
         // TODO: remember macro expansions here, because the host will need to convert and attach them to expandee's attrs
@@ -109,8 +109,8 @@ trait Ensugar {
             // NOTE: the expandeeTree metadata is attached by scala.meta macro expansion
             // the MacroExpansionAttachment attachment is attached by scala.reflect macro expansion
             (tree.metadata.get("expandeeTree").map(_.asInstanceOf[Tree]), tree.attachments.get[analyzer.MacroExpansionAttachment]) match {
-              case (Some(original), _) => Some(strip(postprocess(original)))
-              case (None, Some(analyzer.MacroExpansionAttachment(original, _))) => Some(strip(postprocess(original)))
+              case (Some(original), _) => Some(strip(postprocess(original.duplicate)))
+              case (None, Some(analyzer.MacroExpansionAttachment(original, _))) => Some(strip(postprocess(original.duplicate)))
               case _ => None
             }
           }
@@ -132,13 +132,13 @@ trait Ensugar {
             case tree @ TypeTree() if tree.original != null =>
               val original = tree.original match {
                 case original @ SingletonTypeTree(_) =>
-                  treeCopy.SingletonTypeTree(original, original.metadata("originalRef").asInstanceOf[Tree])
+                  treeCopy.SingletonTypeTree(original, original.metadata("originalRef").asInstanceOf[Tree].duplicate)
                 case original @ CompoundTypeTree(templ) =>
                   // NOTE: this attachment is only going to work past typer
                   // but since we're not yet going to implement whitebox macros, that's not yet a problem
                   require(templ.self == noSelfType)
                   val Some(CompoundTypeTreeOriginalAttachment(parents1, stats1)) = templ.attachments.get[CompoundTypeTreeOriginalAttachment]
-                  val templ1 = treeCopy.Template(templ, parents1, noSelfType, stats1).setType(NoType).setSymbol(NoSymbol)
+                  val templ1 = treeCopy.Template(templ, parents1.map(_.duplicate), noSelfType, stats1.map(_.duplicate)).setType(NoType).setSymbol(NoSymbol)
                   treeCopy.CompoundTypeTree(original, templ1)
                 case original @ TypeBoundsTree(lo, hi) =>
                   val lo1 = if (lo.tpe =:= NothingTpe) EmptyTree else lo
@@ -173,7 +173,7 @@ trait Ensugar {
         // TODO: test the situation when tree.symbol is a package object
         object RefTreeWithOriginal {
           def unapply(tree: Tree): Option[Tree] = {
-            object OriginalIdent { def unapply(tree: Tree): Option[Ident] = tree.metadata.get("originalIdent").map(_.asInstanceOf[Ident]) }
+            object OriginalIdent { def unapply(tree: Tree): Option[Ident] = tree.metadata.get("originalIdent").map(_.asInstanceOf[Ident].duplicate) }
             object OriginalSelect { def unapply(tree: Tree): Option[Name] = tree.metadata.get("originalName").map(_.asInstanceOf[Name]) }
             (tree, tree) match {
               // Ident => This is a very uncommon situation, which happens when we typecheck a self reference
@@ -188,21 +188,21 @@ trait Ensugar {
         }
 
         object TemplateWithOriginal {
-          def unapply(tree: Tree): Option[Tree] = (tree, tree.metadata.get("originalParents").map(_.asInstanceOf[List[Tree]])) match {
+          def unapply(tree: Tree): Option[Tree] = (tree, tree.metadata.get("originalParents").map(_.asInstanceOf[List[Tree]].map(_.duplicate))) match {
             case (tree @ Template(_, self, body), Some(original)) => Some(treeCopy.Template(tree, original, self, body).removeMetadata("originalParents"))
             case _ => None
           }
         }
 
         object SuperWithOriginal {
-          def unapply(tree: Tree): Option[Tree] = (tree, tree.metadata.get("originalThis").map(_.asInstanceOf[This])) match {
+          def unapply(tree: Tree): Option[Tree] = (tree, tree.metadata.get("originalThis").map(_.asInstanceOf[This].duplicate)) match {
             case (tree @ Super(qual, mix), Some(originalThis)) => Some(treeCopy.Super(tree, originalThis, mix).removeMetadata("originalThis"))
             case _ => None
           }
         }
 
         object ClassOfWithOriginal {
-          def unapply(tree: Tree): Option[Tree] = (tree, tree.metadata.get("originalClassOf").map(_.asInstanceOf[Tree])) match {
+          def unapply(tree: Tree): Option[Tree] = (tree, tree.metadata.get("originalClassOf").map(_.asInstanceOf[Tree].duplicate)) match {
             case (tree @ Literal(Constant(tpe: Type)), Some(original)) => Some(original.setType(tree.tpe))
             case _ => None
           }
@@ -345,7 +345,7 @@ trait Ensugar {
         object ApplicationWithNamesOrDefaults {
           def unapply(tree: Tree): Option[Tree] = {
             object OriginalApply {
-              def unapply(tree: Tree) = tree.metadata.get("originalApply").map(_.asInstanceOf[Apply])
+              def unapply(tree: Tree) = tree.metadata.get("originalApply").map(_.asInstanceOf[Apply].duplicate)
             }
             def isNameDefaultQual(tree: Tree) = tree match {
               case ValDef(_, name, _, _) => name.startsWith(nme.QUAL_PREFIX)
@@ -414,7 +414,7 @@ trait Ensugar {
                 }
               }
               val result = loop(app, depth = argss.length - 1)
-              val original = tree.metadata("originalApply").asInstanceOf[Apply]
+              val original = tree.metadata("originalApply").asInstanceOf[Apply].duplicate
               Some(correlate(result, original).removeMetadata("originalApply"))
             }
           }
@@ -434,7 +434,7 @@ trait Ensugar {
         object AssignmentWithInsertedUnderscoreEquals {
           object OriginalAssign {
             def unapply(tree: Tree): Option[(Tree, Tree)] = {
-              (tree.metadata.get("originalLhs").map(_.asInstanceOf[Tree]), tree) match {
+              (tree.metadata.get("originalLhs").map(_.asInstanceOf[Tree].duplicate), tree) match {
                 case (Some(lhs), Apply(_, List(rhs))) => Some((lhs, rhs))
                 case _ => None
               }
