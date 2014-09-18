@@ -139,6 +139,8 @@ class ShowSuite extends ParseSuite {
 
   test("packages") {
     assert(compUnit("package foo.bar; class C").show[Code] === "package foo.bar\nclass C")
+    assert(compUnit("package foo.bar; class C; class D").show[Code] === "package foo.bar\nclass C\nclass D")
     assert(compUnit("package foo.bar { class C }").show[Code] === "package foo.bar {\n  class C\n}")
+    assert(compUnit("package foo.bar { class C; class D }").show[Code] === "package foo.bar {\n  class C\n  class D\n}")
   }
 }
