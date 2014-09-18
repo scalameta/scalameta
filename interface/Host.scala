@@ -175,7 +175,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         require(pid.name != g.nme.EMPTY)
         p.Pkg(pid.cvt_!, stats.cvt_!, hasBraces = true) // TODO: infer hasBraces
       case g.PackageDef(pid, stats) if pt <:< typeOf[p.Aux.CompUnit] =>
-        if (pid.name != g.nme.EMPTY) p.Aux.CompUnit(stats.cvt_!)
+        if (pid.name == g.nme.EMPTY) p.Aux.CompUnit(stats.cvt_!)
         else p.Aux.CompUnit(List(p.Pkg(pid.cvt_!, stats.cvt_!, hasBraces = true))) // TODO: infer hasBraces
       case in @ g.ClassDef(_, _, tparams, templ) =>
         require(in.symbol.isClass)
