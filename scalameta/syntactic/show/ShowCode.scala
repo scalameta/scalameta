@@ -227,7 +227,7 @@ object Code {
 
     // Pkg
     case t: CompUnit           => r(t.stats, "\n")
-    case t: Pkg if t.hasBraces => s("package ", t.ref, " {", r(t.stats.map(i(_)), "\n"), n("}"))
+    case t: Pkg if t.hasBraces => s("package ", t.ref, " {", r(t.stats.map(i(_)), ""), n("}"))
     case t: Pkg                => s("package ", t.ref, r(t.stats.map(n(_))))
 
     // Ctor
