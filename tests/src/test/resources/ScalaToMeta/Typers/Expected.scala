@@ -1,27 +1,157 @@
-package nsc { 
-  package typechecker { 
-    import scala.reflect.internal.util.{ BatchSourceFile, Statistics, shortClassOfInstance }
-
-    import scala.reflect.internal.Flags._
-
-    import scala.reflect.internal.Mode
-
-    import scala.reflect.internal.Mode._
-
-    import scala.tools.nsc.`package`.ListOfNil
-
-    trait Typers extends Adaptations with Tags with TypersTracking with PatternTypers { self: Analyzer =>
-      import global._
-      import definitions._
-      import TypersStats._
-      final def forArgMode(fun: Tree, mode: Mode) = if (treeInfo.isSelfOrSuperConstrCall(fun)) mode | SCCmode else mode
-      val transformed = new scala.collection.mutable.AnyRefMap[Tree, Tree]
-      final val shortenImports = false
-      def resetDocComments() = clearDocComments()
-      def resetTyper(): scala.Unit = {
-        resetContexts()
-        resetImplicits()
-        resetDocComments()
+package scala
+package tools.nsc
+package typechecker
+import scala.reflect.internal.util.{ BatchSourceFile, Statistics, shortClassOfInstance }
+import scala.reflect.internal.Flags._
+import scala.reflect.internal.Mode
+import scala.reflect.internal.Mode._
+import scala.tools.nsc.`package`.ListOfNil
+trait Typers extends Adaptations with Tags with TypersTracking with PatternTypers { self: Analyzer =>
+  import global._
+  import definitions._
+  import TypersStats._
+  final def forArgMode(fun: Tree, mode: Mode) = if (treeInfo.isSelfOrSuperConstrCall(fun)) mode | SCCmode else mode
+  val transformed = new scala.collection.mutable.AnyRefMap[Tree, Tree]
+  final val shortenImports = false
+  def resetDocComments() = clearDocComments()
+  def resetTyper(): scala.Unit = {
+    resetContexts()
+    resetImplicits()
+    resetDocComments()
+  }
+  sealed abstract class SilentResult[+ T] {
+    abstract def isEmpty: Boolean
+    def nonEmpty = !isEmpty
+    @inline final def fold[U](none: => U)(f: _root_.scala.Function1[T, U]): U = this match {
+      case SilentResultValue(value) =>
+        f(value)
+      case _ =>
+        none
+    }
+    @inline final def map[U](f: _root_.scala.Function1[T, U]): SilentResult[U] = this match {
+      case SilentResultValue(value) =>
+        SilentResultValue(f(value))
+      case x: SilentTypeError =>
+        x
+    }
+    @inline final def filter(p: _root_.scala.Function1[T, Boolean]): SilentResult[T] = this match {
+      case SilentResultValue(value) if !p(value) =>
+        SilentTypeError(TypeErrorWrapper(new TypeError(NoPosition, "!p")))
+      case _ =>
+        this
+    }
+    @inline final def orElse[T1 >: T](f: _root_.scala.Function1[Seq[AbsTypeError], T1]): T1 = this match {
+      case SilentResultValue(value) =>
+        value
+      case s: SilentTypeError =>
+        f(s.reportableErrors)
+    }
+  }
+  class SilentTypeErrorprivate (val errors: List[AbsTypeError]) extends SilentResult[Nothing] {
+    override def isEmpty = true
+    def err: AbsTypeError = errors.head
+    def reportableErrors = errors match {
+      case +:(e1: AmbiguousImplicitTypeError, _) =>
+        List(e1)
+      case all =>
+        all
+    }
+  }
+  object SilentTypeError {
+    def apply(errors: AbsTypeError*): SilentTypeError = new SilentTypeError(errors.toList)
+    def unapply(error: SilentTypeError): Option[AbsTypeError] = error.errors.headOption
+  }
+  case class SilentResultValue[+ T](value: T) extends SilentResult[T] { override def isEmpty = false }
+  def newTyper(context: Context): Typer = new NormalTyper(context)
+  private class NormalTyper(context: Context) extends Typer(context)
+  private final val SYNTHETIC_PRIVATE = 274877906944
+  private final val InterpolatorCodeRegex = "\$\{.*?\}".r
+  private final val InterpolatorIdentRegex = "\$[$\w]+".r
+  abstract class Typer(context0: Context) extends TyperDiagnostics with Adaptation with Tag with PatternTyper with TyperContextErrors {
+    import context0.unit
+    import typeDebug.{ ptTree, ptBlock, ptLine, inGreen, inRed }
+    import TyperErrorGen._
+    val runDefinitions = currentRun.runDefinitions
+    import runDefinitions._
+    private val transformed: scala.collection.mutable.Map[Tree, Tree] = unit.transformed
+    val infer = new Inferencer {
+      def context = Typer.this.context
+      override def isCoercible(tp: Type, pt: Type) = undoLog.undo(viewExists(tp, pt))
+    }
+    def canAdaptConstantTypeToLiteral = true
+    def canTranslateEmptyListToNil = true
+    def missingSelectErrorTree(tree: Tree, qual: Tree, name: Name): Tree = tree
+    def typedDocDef(docDef: DocDef, mode: Mode, pt: Type): Tree = typed(docDef.definition, mode, pt)
+    def applyImplicitArgs(fun: Tree): Tree = fun.tpe match {
+      case MethodType(params, _) =>
+        val argResultsBuff = new scala.collection.mutable.ListBuffer[SearchResult];
+        val argBuff = new scala.collection.mutable.ListBuffer[Tree];
+        var paramFailed = false;
+        var mkArg: _root_.scala.Function2[Name, Tree, Tree] = tree;
+        params.foreach(param => {
+          var paramTp = param.tpe
+          argResultsBuff.foreach(ar => paramTp = paramTp.subst(ar.subst.from, ar.subst.to))
+          val res = if (paramFailed || paramTp.isError && {
+            paramFailed = true
+            true
+          }) SearchFailure else inferImplicit(fun, paramTp, context.reportErrors, isView = false, context)
+          argResultsBuff += res
+          if (res.isSuccess) argBuff += mkArg(param.name, res.tree) else {
+            mkArg = {
+              (name, tree) => gen.mkNamedArg(name, tree)
+            }
+            if (!param.hasDefault && !paramFailed) {
+              context.reportBuffer.errors.collectFirst({
+                case dte: DivergentImplicitTypeError =>
+                  dte
+              }) match {
+                case Some(divergent) =>
+                  if (context.reportErrors) {
+                    context.issue(divergent.withPt(paramTp))
+                    context.reportBuffer.clearErrors({
+                      case dte: DivergentImplicitTypeError =>
+                        true
+                    })
+                  }
+                case _ =>
+                  NoImplicitFoundError(fun, param)
+              }
+              paramFailed = true
+            }
+          }
+        });
+        val args = argBuff.toList;
+        argResultsBuff.foreach(ar => {
+          ar.subst.traverse(fun)
+          args.foreach(arg => ar.subst.traverse(arg))
+        });
+        new ApplyToImplicitArgs(fun, args).setPos(fun.pos)
+      case ErrorType =>
+        fun
+    }
+    def viewExists(from: Type, to: Type): Boolean = !from.isError && !to.isError && context.implicitsEnabled && inferView(context.tree, from, to, reportAmbiguous = false, saveErrors = true) != EmptyTree
+    def inferView(tree: Tree, from: Type, to: Type, reportAmbiguous: Boolean): Tree = inferView(tree, from, to, reportAmbiguous, saveErrors = true)
+    def inferView(tree: Tree, from: Type, to: Type, reportAmbiguous: Boolean, saveErrors: Boolean): Tree = {
+      debuglog("infer view from " + from + " to " + to)
+      if (isPastTyper) EmptyTree else from match {
+        case MethodType(_, _) =>
+          EmptyTree
+        case OverloadedType(_, _) =>
+          EmptyTree
+        case PolyType(_, _) =>
+          EmptyTree
+        case _ =>
+          def wrapImplicit(from: Type): Tree = {
+            val result = inferImplicit(tree, functionType({
+              Nil :: x$2
+            }, to), reportAmbiguous, isView = true, context, saveAmbiguousDivergent = saveErrors)
+            if (result.subst != EmptyTreeTypeSubstituter) {
+              result.subst.traverse(tree)
+              notifyUndetparamsInferred(result.subst.from, result.subst.to)
+            }
+            result.tree
+          };
+          wrapImplicit(from).orElse(wrapImplicit(byNameType(from)))
       }
       sealed abstract class SilentResult[+ T] {
         abstract def isEmpty: Boolean
