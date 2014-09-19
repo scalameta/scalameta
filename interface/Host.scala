@@ -280,11 +280,19 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         val pparents = gparents.map(gparent => { val applied = g.treeInfo.dissectApplied(gparent); p.Aux.Parent(applied.callee.cvt_!, pargss(applied.argss)) })
         if (gstats.isEmpty) p.Aux.Template(gearlydefns.cvt_!, pparents, gself.cvt)
         else p.Aux.Template(gearlydefns.cvt_!, pparents, gself.cvt, gstats.cvt_!)
-      case g.Block((gcdef @ g.ClassDef(_, g.TypeName("$anon"), _, _)) :: Nil, q"new $$anon()") =>
-        val pcdef: p.Defn.Class = gcdef.cvt_!
-        p.Term.New(pcdef.templ)
       case g.Block(stats, expr) =>
-        p.Term.Block((stats :+ expr).cvt_!)
+        in match {
+          case g.Block((gcdef @ g.ClassDef(_, g.TypeName("$anon"), _, _)) :: Nil, q"new $$anon()") =>
+            val pcdef: p.Defn.Class = gcdef.cvt_!
+            p.Term.New(pcdef.templ)
+          case g.Block(
+            List(g.ValDef(g.Modifiers(xflags, _, _), x1, g.EmptyTree, left)),
+            g.treeInfo.Applied(op @ g.Select(right, _), targs, List(List(g.Ident(x2)))))
+          if xflags == (g.Flag.SYNTHETIC | g.Flag.ARTIFACT) && x1.startsWith(g.nme.FRESH_TERM_NAME_PREFIX) && x1 == x2 =>
+            p.Term.ApplyInfix(left.cvt_!, op.symbol.asTerm.precvt(right.tpe, op), targs.cvt_!, List(right.cvt_!))
+          case g.Block(stats, expr) =>
+            p.Term.Block((stats :+ expr).cvt_!)
+        }
       case g.CaseDef(pat, guard, q"..$stats") =>
         p.Aux.Case(pat.cvt_!, if (guard.nonEmpty) Some[p.Term](guard.cvt_!) else None, stats.cvt_!)
       case g.Alternative(fst :: snd :: Nil) =>
