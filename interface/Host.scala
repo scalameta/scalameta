@@ -110,7 +110,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
           if (gsym.isPrivateThis || gsym.isProtectedThis) {
             // TODO: does NoSymbol here actually mean gsym.owner?
             val gpriv = gsym.privateWithin.orElse(gsym.owner)
-            require(gpriv.isClass) // NOTE: some sick artifact vals, produced by mkPatDef, can be private to method :O
+            require(gpriv.isClass)
             Some(p.Term.This(None).appendScratchpad(gpriv))
           } else if (gsym.privateWithin == g.NoSymbol || gsym.privateWithin == null) None
           else Some(gsym.privateWithin.qualcvt(g.Ident(gsym.privateWithin))) // TODO: this loses information is gsym.privateWithin was brought into scope with a renaming import
@@ -118,7 +118,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         val gsym = gmdef.symbol.getterIn(gmdef.symbol.owner).orElse(gmdef.symbol)
         val pmods = scala.collection.mutable.ListBuffer[p.Mod]()
         pmods ++= gmdef.mods.annotations.map(pannot)
-        if (gsym.isPrivate) pmods += p.Mod.Private(paccessqual(gsym))
+         // NOTE: some sick artifact vals produced by mkPatDef can be private to method, so we can't invoke paccessqual on them
+        if (gsym.isPrivate && !gsym.isSynthetic && !gsym.isArtifact) pmods += p.Mod.Private(paccessqual(gsym))
         if (gsym.isProtected) pmods += p.Mod.Protected(paccessqual(gsym))
         if (gsym.isImplicit && !(gsym.isParameter && gsym.owner.isMethod)) pmods += p.Mod.Implicit()
         if (gsym.isFinal) pmods += p.Mod.Final()
@@ -162,6 +163,40 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
       }
       def pargs(gargs: List[g.Tree]): Seq[p.Arg] = gargs.map(parg)
       def pargss(gargss: List[List[g.Tree]]): Seq[Seq[p.Arg]] = gargss.map(pargs)
+      def pstats(gstats: List[g.Tree]): List[p.Stmt] = {
+        val result = mutable.ListBuffer[p.Stmt]()
+        var i = 0
+        while (i < gstats.length) {
+          val gstat = gstats(i)
+          i += 1
+          val pstat = gstat match {
+            // NOTE: we can't trust annot.tpe.typeSymbol, because annot.tpe is bugged
+            // for example, @unchecked in `List[Int] @unchecked` has type `List[Int] @unchecked` instead of the correct `unchecked`
+            // see https://github.com/scala/scala/blob/73fb460c1cd20ee97556ec0867d17efaa795d129/src/compiler/scala/tools/nsc/typechecker/Typers.scala#L4048
+            case in @ g.ValDef(_, _, tpt, g.Match(g.Annotated(annot @ g.treeInfo.Applied(core, _, _), rhs), List(g.CaseDef(pat, g.EmptyTree, _))))
+            if core.tpe.finalResultType.typeSymbol == g.symbolOf[unchecked] =>
+              if (in.symbol.isSynthetic && in.symbol.isArtifact) i += g.definitions.TupleClass.seq.indexOf(in.symbol.info.typeSymbol) + 1
+              val modbearer = gstats(i - 1).asInstanceOf[g.ValDef] // TODO: mods for nullary patterns get irrevocably lost (`implicit val List() = List()`)
+              require(tpt == g.EmptyTree && rhs.nonEmpty)
+              if (!modbearer.symbol.isMutable) p.Defn.Val(pmods(modbearer), List(pat.cvt_! : p.Pat), None, rhs.cvt_!)
+              else p.Defn.Var(pmods(modbearer), List(pat.cvt_! : p.Pat), None, Some[p.Term](rhs.cvt_!))
+            case in =>
+              in.cvt_! : p.Stmt
+          }
+          result += pstat
+        }
+        result.toList
+      }
+      def ptemplstats(gstats: List[g.Tree]): List[p.Stmt.Template] = {
+        val result = pstats(gstats)
+        require(result.forall(_.isInstanceOf[p.Stmt.Template]))
+        result.asInstanceOf[List[p.Stmt.Template]]
+      }
+      def pblockstats(gstats: List[g.Tree]): List[p.Stmt.Block] = {
+        val result = pstats(gstats)
+        require(result.forall(_.isInstanceOf[p.Stmt.Block]))
+        result.asInstanceOf[List[p.Stmt.Block]]
+      }
     }
     import Helpers._
     val TermQuote = "denied" // TODO: find a better approach
@@ -279,7 +314,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         val SyntacticTemplate(gparents, gself, gearlydefns, gstats) = in
         val pparents = gparents.map(gparent => { val applied = g.treeInfo.dissectApplied(gparent); p.Aux.Parent(applied.callee.cvt_!, pargss(applied.argss)) })
         if (gstats.isEmpty) p.Aux.Template(gearlydefns.cvt_!, pparents, gself.cvt)
-        else p.Aux.Template(gearlydefns.cvt_!, pparents, gself.cvt, gstats.cvt_!)
+        else p.Aux.Template(gearlydefns.cvt_!, pparents, gself.cvt, ptemplstats(gstats))
       case g.Block(stats, expr) =>
         in match {
           case g.Block((gcdef @ g.ClassDef(_, g.TypeName("$anon"), _, _)) :: Nil, q"new $$anon()") =>
@@ -291,7 +326,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
           if xflags == (g.Flag.SYNTHETIC | g.Flag.ARTIFACT) && x1.startsWith(g.nme.FRESH_TERM_NAME_PREFIX) && x1 == x2 =>
             p.Term.ApplyInfix(left.cvt_!, op.symbol.asTerm.precvt(right.tpe, op), targs.cvt_!, List(right.cvt_!))
           case g.Block(stats, expr) =>
-            p.Term.Block((stats :+ expr).cvt_!)
+            p.Term.Block(pblockstats(stats :+ expr))
         }
       case g.CaseDef(pat, guard, q"..$stats") =>
         p.Aux.Case(pat.cvt_!, if (guard.nonEmpty) Some[p.Term](guard.cvt_!) else None, stats.cvt_!)
