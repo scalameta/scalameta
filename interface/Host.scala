@@ -110,7 +110,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
           if (gsym.isPrivateThis || gsym.isProtectedThis) {
             // TODO: does NoSymbol here actually mean gsym.owner?
             val gpriv = gsym.privateWithin.orElse(gsym.owner)
-            require(gpriv.isClass)
+            require(gpriv.isClass) // NOTE: some sick artifact vals, produced by mkPatDef, can be private to method :O
             Some(p.Term.This(None).appendScratchpad(gpriv))
           } else if (gsym.privateWithin == g.NoSymbol || gsym.privateWithin == null) None
           else Some(gsym.privateWithin.qualcvt(g.Ident(gsym.privateWithin))) // TODO: this loses information is gsym.privateWithin was brought into scope with a renaming import
