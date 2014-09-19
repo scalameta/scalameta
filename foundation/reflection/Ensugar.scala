@@ -386,7 +386,7 @@ trait Ensugar {
             }
             val sugaredDoesntLookLikeNamesDefaults = qualsym == NoSymbol && !hasNamesDefaults(argss.flatten)
             val originalDoesntLookLikeNamesDefaults = tree match { case OriginalApply(Applied(_, _, argss)) => argss.flatten.forall(!_.isInstanceOf[AssignOrNamedArg]); case _ => true }
-            val doesntLookLikeNamesDefaults = sugaredDoesntLookLikeNamesDefaults && originalDoesntLookLikeNamesDefaults
+            val doesntLookLikeNamesDefaults = sugaredDoesntLookLikeNamesDefaults || originalDoesntLookLikeNamesDefaults
             if (app.symbol == null || app.symbol == NoSymbol || app.exists(_.isErroneous) || doesntLookLikeNamesDefaults) None
             else {
               // NOTE: necessary to smooth out the rough edges of the translation
