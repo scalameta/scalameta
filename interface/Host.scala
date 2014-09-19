@@ -164,20 +164,34 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
       def pargs(gargs: List[g.Tree]): Seq[p.Arg] = gargs.map(parg)
       def pargss(gargss: List[List[g.Tree]]): Seq[Seq[p.Arg]] = gargss.map(pargs)
       def pstats(gstats: List[g.Tree]): List[p.Stmt] = {
+        object PatDefCore {
+          def unapply(tree: g.MemberDef): Option[(g.Tree, g.Tree)] = tree match {
+            // NOTE: we can't trust annot.tpe.typeSymbol, because annot.tpe is bugged
+            // for example, @unchecked in `List[Int] @unchecked` has type `List[Int] @unchecked` instead of the correct `unchecked`
+            // see https://github.com/scala/scala/blob/73fb460c1cd20ee97556ec0867d17efaa795d129/src/compiler/scala/tools/nsc/typechecker/Typers.scala#L4048
+            case in @ g.ValDef(_, _, tpt, g.Match(g.Annotated(annot @ g.treeInfo.Applied(core, _, _), rhs), List(g.CaseDef(pat, g.EmptyTree, _))))
+            if core.tpe.finalResultType.typeSymbol == g.symbolOf[unchecked] =>
+              require(tpt == g.EmptyTree && rhs.nonEmpty)
+              Some((pat, rhs))
+            // NOTE: funnily enough, in a very degenerate case, we can also ends up with a def with the same structure
+            // try `locally { implicit lazy val List() = List() }` if you care to know more
+            case in @ g.DefDef(_, _, Nil, Nil, tpt, g.Match(g.Annotated(annot @ g.treeInfo.Applied(core, _, _), rhs), List(g.CaseDef(pat, g.EmptyTree, _))))
+            if core.tpe.finalResultType.typeSymbol == g.symbolOf[unchecked] =>
+              require(tpt == g.EmptyTree && rhs.nonEmpty)
+              Some((pat, rhs))
+            case _ =>
+              None
+          }
+        }
         val result = mutable.ListBuffer[p.Stmt]()
         var i = 0
         while (i < gstats.length) {
           val gstat = gstats(i)
           i += 1
           val pstat = gstat match {
-            // NOTE: we can't trust annot.tpe.typeSymbol, because annot.tpe is bugged
-            // for example, @unchecked in `List[Int] @unchecked` has type `List[Int] @unchecked` instead of the correct `unchecked`
-            // see https://github.com/scala/scala/blob/73fb460c1cd20ee97556ec0867d17efaa795d129/src/compiler/scala/tools/nsc/typechecker/Typers.scala#L4048
-            case in @ g.ValDef(_, _, tpt, g.Match(g.Annotated(annot @ g.treeInfo.Applied(core, _, _), rhs), List(g.CaseDef(pat, g.EmptyTree, _))))
-            if core.tpe.finalResultType.typeSymbol == g.symbolOf[unchecked] =>
+            case in @ PatDefCore(pat, rhs) =>
               if (in.symbol.isSynthetic && in.symbol.isArtifact) i += g.definitions.TupleClass.seq.indexOf(in.symbol.info.typeSymbol) + 1
-              val modbearer = gstats(i - 1).asInstanceOf[g.ValDef] // TODO: mods for nullary patterns get irrevocably lost (`implicit val List() = List()`)
-              require(tpt == g.EmptyTree && rhs.nonEmpty)
+              val modbearer = gstats(i - 1).asInstanceOf[g.MemberDef] // TODO: mods for nullary patterns get irrevocably lost (`implicit val List() = List()`)
               if (!modbearer.symbol.isMutable) p.Defn.Val(pmods(modbearer), List(pat.cvt_! : p.Pat), None, rhs.cvt_!)
               else p.Defn.Var(pmods(modbearer), List(pat.cvt_! : p.Pat), None, Some[p.Term](rhs.cvt_!))
             case in =>

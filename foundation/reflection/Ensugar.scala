@@ -49,6 +49,8 @@ trait Ensugar {
                 case MemberDefWithAnnotations(original) => Some(original)
                 case MacroDef(original) => Some(original)
                 case DefaultGetterDef(original) => Some(original)
+                case LazyLocal(original) => Some(original)
+                case LazyDef(original) => Some(original)
                 case ImplicitConversion(original) => Some(original)
                 case TypeApplicationWithInferredTypeArguments(original) => Some(original)
                 case ApplicationWithInferredImplicitArguments(original) => Some(original)
@@ -311,6 +313,25 @@ trait Ensugar {
           def unapply(tree: Tree): Option[Tree] = tree match {
             case tree: DefDef if tree.symbol.isDefaultGetter => Some(EmptyTree)
             case _ => None
+          }
+        }
+
+        object LazyLocal {
+          def unapply(tree: Tree): Option[Tree] = tree match {
+            // NOTE: can't use tree.name here, because tree.symbol.name != tree.name for lazy synthetics
+            // NOTE: can't use tree.symbol.name here, because sometimes underlying fields aren't mangled
+            case tree: ValDef if tree.symbol.isLazy && tree.symbol.isMutable => Some(EmptyTree)
+            case _ => None
+          }
+        }
+
+        object LazyDef {
+          def unapply(tree: Tree): Option[Tree] = tree match {
+            case tree @ DefDef(mods, name, Nil, Nil, tpt, Block(List(Assign(lzy1: RefTree, rhs)), lzy2: RefTree))
+            if tree.symbol.isLazy && lzy1.name == lzy2.name && lzy1.symbol.isLazy && lzy1.symbol.isMutable =>
+              Some(ValDef(mods, name, tpt, rhs).copyAttrs(tree))
+            case _ =>
+              None
           }
         }
 
