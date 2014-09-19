@@ -386,8 +386,8 @@ trait Ensugar {
             }
             val sugaredDoesntLookLikeNamesDefaults = qualsym == NoSymbol && !hasNamesDefaults(argss.flatten)
             val originalDoesntLookLikeNamesDefaults = tree match { case OriginalApply(Applied(_, _, argss)) => argss.flatten.forall(!_.isInstanceOf[AssignOrNamedArg]); case _ => true }
-            val doesntLookLikeNamesDefaults = sugaredDoesntLookLikeNamesDefaults || originalDoesntLookLikeNamesDefaults
-            if (app.symbol == null || app.symbol == NoSymbol || app.exists(_.isErroneous) || doesntLookLikeNamesDefaults) None
+            val doesntLookLikeNamesDefaults = sugaredDoesntLookLikeNamesDefaults && originalDoesntLookLikeNamesDefaults
+            if (app.symbol == null || app.symbol == NoSymbol || app.exists(_.isErroneous) || doesntLookLikeNamesDefaults || OriginalApply.unapply(tree).isEmpty) None
             else {
               // NOTE: necessary to smooth out the rough edges of the translation
               // 1) if all arguments are positional, the typer will drop names completely,
