@@ -811,15 +811,10 @@ This restriction is planned to be removed in subsequent releases.""")
     }
     private def typedPrimaryConstrBody(templ: Template)(actualSuperCall: => Tree): Tree = treeInfo.firstConstructor(templ.body) match {
       case ctor @ DefDef(_, _, _, vparamss, _, cbody @ Block(cstats, cunit)) =>
-        val x$29 = {
+        val (preSuperStats, superCall) = {
           val (stats, rest) = cstats.span(x => !treeInfo.isSuperConstrCall(x))
           scala.Tuple2(stats.map(_.duplicate), if (rest.isEmpty) EmptyTree else rest.head.duplicate)
-        }: @scala.unchecked match {
-          case (preSuperStats, superCall) =>
-            scala.Tuple2(preSuperStats, superCall)
         };
-        val preSuperStats = x$29._1;
-        val superCall = x$29._2;
         val superCall1 = superCall match {
           case global.pendingSuperCall =>
             actualSuperCall
@@ -1075,12 +1070,7 @@ This restriction is planned to be removed in subsequent releases.""")
                 ()
             }
           });
-          val x$51 = decompose(fn): @scala.unchecked match {
-            case (superConstr, preArgs) =>
-              scala.Tuple2(superConstr, preArgs)
-          };
-          val superConstr = x$51._1;
-          val preArgs = x$51._2;
+          val (superConstr, preArgs) = decompose(fn);
           val params = fn.tpe.params;
           val applyArgs = if (args.length < params.length) args :+ EmptyTree else args.take(params.length);
           assert(sameLength(applyArgs, params) || call.isErrorTyped, s"arity mismatch but call is not error typed: $clazz (params=$params, args=$applyArgs)");

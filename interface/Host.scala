@@ -163,7 +163,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
       }
       def pargs(gargs: List[g.Tree]): Seq[p.Arg] = gargs.map(parg)
       def pargss(gargss: List[List[g.Tree]]): Seq[Seq[p.Arg]] = gargss.map(pargs)
-      def pstats(gstats: List[g.Tree]): List[p.Stmt] = {
+      def pstats[T <: p.Stmt : ClassTag](gstats: List[g.Tree]): List[T] = {
         object PatDefCore {
           def unapply(tree: g.MemberDef): Option[(g.Tree, g.Tree)] = tree match {
             // NOTE: we can't trust annot.tpe.typeSymbol, because annot.tpe is bugged
@@ -199,17 +199,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
           }
           result += pstat
         }
-        result.toList
-      }
-      def ptemplstats(gstats: List[g.Tree]): List[p.Stmt.Template] = {
-        val result = pstats(gstats)
-        require(result.forall(_.isInstanceOf[p.Stmt.Template]))
-        result.asInstanceOf[List[p.Stmt.Template]]
-      }
-      def pblockstats(gstats: List[g.Tree]): List[p.Stmt.Block] = {
-        val result = pstats(gstats)
-        require(result.forall(_.isInstanceOf[p.Stmt.Block]))
-        result.asInstanceOf[List[p.Stmt.Block]]
+        require(result.forall(pstat => classTag[T].runtimeClass.isAssignableFrom(pstat.getClass)))
+        result.toList.asInstanceOf[List[T]]
       }
     }
     import Helpers._
@@ -223,11 +214,11 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
       case g.PackageDef(pid, stats) if pt <:< typeOf[p.Pkg] =>
         require(pid.name != g.nme.EMPTY_PACKAGE_NAME)
         val hasBraces = stats.collect{ case pdef: g.PackageDef => pdef }.length > 1
-        p.Pkg(pid.cvt_!, stats.cvt_!, hasBraces = hasBraces) // TODO: infer hasBraces
+        p.Pkg(pid.cvt_!, pstats[p.Stmt.TopLevel](stats), hasBraces = hasBraces) // TODO: infer hasBraces
       case g.PackageDef(pid, stats) if pt <:< typeOf[p.Aux.CompUnit] =>
         val hasBraces = stats.collect{ case pdef: g.PackageDef => pdef }.length > 1
-        if (pid.name == g.nme.EMPTY_PACKAGE_NAME) p.Aux.CompUnit(stats.cvt_!)
-        else p.Aux.CompUnit(List(p.Pkg(pid.cvt_!, stats.cvt_!, hasBraces = hasBraces))) // TODO: infer hasBraces
+        if (pid.name == g.nme.EMPTY_PACKAGE_NAME) p.Aux.CompUnit(pstats[p.Stmt.TopLevel](stats))
+        else p.Aux.CompUnit(List(p.Pkg(pid.cvt_!, pstats[p.Stmt.TopLevel](stats), hasBraces = hasBraces))) // TODO: infer hasBraces
       case in @ g.ClassDef(_, _, tparams, templ) =>
         require(in.symbol.isClass)
         if (in.symbol.isTrait) {
@@ -278,7 +269,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         if (in.symbol.isConstructor) {
           require(!in.symbol.isPrimaryConstructor)
           val q"{ $_(...$argss); ..$stats; () }" = body
-          p.Ctor.Secondary(pmods(in), explicitss.cvt_!, implicits.cvt_!, pargss(argss), stats.cvt_!)
+          p.Ctor.Secondary(pmods(in), explicitss.cvt_!, implicits.cvt_!, pargss(argss), pstats[p.Stmt.Block](stats))
         } else if (in.symbol.isMacro) {
           require(tpt.nonEmpty) // TODO: support pre-2.12 macros with inferred return types
           p.Defn.Macro(pmods(in), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt_!, implicits.cvt_!, tpt.cvt_!, body.cvt_!)
@@ -328,7 +319,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         val SyntacticTemplate(gparents, gself, gearlydefns, gstats) = in
         val pparents = gparents.map(gparent => { val applied = g.treeInfo.dissectApplied(gparent); p.Aux.Parent(applied.callee.cvt_!, pargss(applied.argss)) })
         if (gstats.isEmpty) p.Aux.Template(gearlydefns.cvt_!, pparents, gself.cvt)
-        else p.Aux.Template(gearlydefns.cvt_!, pparents, gself.cvt, ptemplstats(gstats))
+        else p.Aux.Template(gearlydefns.cvt_!, pparents, gself.cvt, pstats[p.Stmt.Template](gstats))
       case g.Block(stats, expr) =>
         in match {
           case g.Block((gcdef @ g.ClassDef(_, g.TypeName("$anon"), _, _)) :: Nil, q"new $$anon()") =>
@@ -340,10 +331,10 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
           if xflags == (g.Flag.SYNTHETIC | g.Flag.ARTIFACT) && x1.startsWith(g.nme.FRESH_TERM_NAME_PREFIX) && x1 == x2 =>
             p.Term.ApplyInfix(left.cvt_!, op.symbol.asTerm.precvt(right.tpe, op), targs.cvt_!, List(right.cvt_!))
           case g.Block(stats, expr) =>
-            p.Term.Block(pblockstats(stats :+ expr))
+            p.Term.Block(pstats[p.Stmt.Block](stats :+ expr))
         }
       case g.CaseDef(pat, guard, q"..$stats") =>
-        p.Aux.Case(pat.cvt_!, if (guard.nonEmpty) Some[p.Term](guard.cvt_!) else None, stats.cvt_!)
+        p.Aux.Case(pat.cvt_!, if (guard.nonEmpty) Some[p.Term](guard.cvt_!) else None, pstats[p.Stmt.Block](stats))
       case g.Alternative(fst :: snd :: Nil) =>
         p.Pat.Alternative(fst.cvt_!, snd.cvt_!)
       case in @ g.Alternative(hd :: rest) =>
