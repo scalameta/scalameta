@@ -197,12 +197,13 @@ class AdtHelperMacros(val c: Context) {
   }
 
   def hierarchyCheck[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
-    val sym = T.tpe.typeSymbol.asClass
+    val sym         = T.tpe.typeSymbol.asClass
     val designation = if (sym.isRoot) "root" else if (sym.isBranch) "branch" else if (sym.isLeafClass) "leaf" else ???
-    val roots = sym.baseClasses.filter(_.isRoot)
-    if (roots.length == 0 && sym.isLeafClass) c.abort(c.enclosingPosition, s"rootless leaf is disallowed")
-    else if (roots.length > 1) c.abort(c.enclosingPosition, s"multiple roots for a $designation: " + (roots.map(_.fullName).init.mkString(", ")) + " and " + roots.last.fullName)
-    val root = roots.headOption.getOrElse(NoSymbol)
+    val root = sym.baseClasses filter (_.isRoot) match {
+      case Nil          => if (sym.isLeafClass) c.abort(c.enclosingPosition, s"rootless leaf is disallowed") else NoSymbol
+      case root :: Nil  => root
+      case init :+ last => c.abort(c.enclosingPosition, s"multiple roots for a $designation: " + init.map(_.fullName).mkString(" and "))
+    }
     sym.baseClasses.map(_.asClass).foreach{bsym =>
       val exempt =
         bsym.isModuleClass ||

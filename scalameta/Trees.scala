@@ -20,9 +20,15 @@ import syntactic.parsers._, SyntacticInfo._
   def origin: Origin
   def parent: Tree
 
-  def isEmpty                             = false
-  def map(f: Tree => Tree): Tree          = if (isEmpty) this else f(this)
-  def exists(p: Tree => Boolean): Boolean = !isEmpty && p(this)
+  def fold[A](none: => A)(f: ThisType => A): A = if (isEmpty) none else f(thisTree)
+  def thisTree: ThisType                       = this.asInstanceOf[ThisType]
+  def | [A >: ThisType](alt: => A): A          = if (isEmpty) alt else thisTree
+  def get: ThisType                            = if (isEmpty) sys.error("Empty.get") else thisTree
+  def isDefined                                = !isEmpty
+  def isEmpty                                  = false
+  def exists(p: Tree => Boolean): Boolean      = !isEmpty && p(this)
+
+  def map[A >: EmptyTree](f: ThisType => A): A = if (isEmpty) this.asInstanceOf[A] else f(thisTree)
 
   final override def toString: String = this.show[Raw]
 }
@@ -209,7 +215,7 @@ object Defn {
                  decltpe: Option[meta.Type],
                  rhs: Option[Term]) extends Defn with Member.ValOrVar with Stmt.Early {
     require(rhs.isEmpty ==> pats.forall(_.isInstanceOf[Term.Name]))
-    require(decltpe.nonEmpty || rhs.nonEmpty)
+    require(decltpe.isDefined || rhs.isDefined)
   }
   @ast class Def(mods: Seq[Mod],
                  name: Term.Name,
@@ -366,6 +372,14 @@ object Mod {
 }
 
 object Aux {
+  // wip.
+  //
+  // @branch trait TreeSeq extends Tree { def trees: Seq[Tree] }
+  // @ast class Args(trees: Seq[Arg]) extends TreeSeq
+  // @ast class Argss(trees: Seq[Args]) extends TreeSeq
+  // @ast class Params(trees: Seq[Param]) extends TreeSeq
+  // @ast class Paramss(trees: Seq[Params]) extends TreeSeq
+
   @ast class CompUnit(stats: Seq[Stmt.TopLevel]) extends Tree
   @ast class Case(pat: Pat, cond: Option[Term], stats: Seq[Stmt.Block]) extends Tree with Scope {
     require(stats.collect { case m: Member if m.isPkgObject => m }.isEmpty)
@@ -384,6 +398,13 @@ object Aux {
     require(hasThis ==> name.isEmpty)
   }
   @ast class TypeBounds(lo: Type = Type.Name("Nothing"), hi: Type = Type.Name("Any")) extends Tree
+
+  object NoSelf {
+    def unapply(x: scala.meta.Tree) = x match {
+      case Self(None, None) => true
+      case _                => false
+    }
+  }
 }
 
 @branch trait Ref extends Tree
