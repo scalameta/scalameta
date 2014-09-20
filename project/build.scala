@@ -3,22 +3,22 @@ import Keys._
 
 object build extends Build {
   lazy val sharedSettings = Defaults.defaultSettings ++ Seq(
-    scalaVersion := "2.11.2",
-    crossVersion := CrossVersion.binary,
-    version := "0.1.0-SNAPSHOT",
-    organization := "org.scalameta",
-    description := "Metaprogramming API and host interfaces of scala.meta",
-    resolvers += Resolver.sonatypeRepo("snapshots"),
-    resolvers += Resolver.sonatypeRepo("releases"),
-    scalaSource in Compile <<= (baseDirectory in Compile)(base => base / "src"),
-    scalaSource in Test <<= (baseDirectory in Test)(base => base / "test"),
-    publishMavenStyle := true,
-    publishArtifact in Compile := false,
-    publishArtifact in Test := false,
-    scalacOptions ++= Seq("-deprecation", "-feature", "-optimise", "-unchecked"),
-    parallelExecution in Test := false, // hello, reflection sync!!
-    logBuffered := false,
-    scalaHome := {
+                  scalaVersion :=  "2.11.2",
+                  crossVersion :=  CrossVersion.binary,
+                       version :=  "0.1.0-SNAPSHOT",
+                  organization :=  "org.scalameta",
+                   description :=  "Metaprogramming API and host interfaces of scala.meta",
+                     resolvers +=  Resolver.sonatypeRepo("snapshots"),
+                     resolvers +=  Resolver.sonatypeRepo("releases"),
+        scalaSource in Compile <<= (baseDirectory in Compile)(base => base / "src"),
+           scalaSource in Test <<= (baseDirectory in Test)(base => base / "test"),
+             publishMavenStyle :=  true,
+    publishArtifact in Compile :=  false,
+       publishArtifact in Test :=  false,
+                 scalacOptions ++= Seq("-deprecation", "-feature", "-optimise", "-unchecked"),
+     parallelExecution in Test :=  false, // hello, reflection sync!!
+                   logBuffered :=  false,
+                     scalaHome :=  {
       val scalaHome = System.getProperty("core.scala.home")
       if (scalaHome != null) {
         println(s"Going for custom scala home at $scalaHome")
@@ -155,7 +155,7 @@ object build extends Build {
   ) settings (
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _),
     libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.3" % "test",
-    libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
+    libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.11.5" % "test",
     packagedArtifacts := Map.empty
   ) dependsOn (scalameta)
 }
