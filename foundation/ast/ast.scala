@@ -80,7 +80,7 @@ class AstMacros(val c: Context) {
       val internalCopyInitss = paramss.map(_.map(p => q"$AstInternal.initField(this.${internalize(p.name)})"))
       val internalCopyBody = q"new ThisType(prototype.asInstanceOf[ThisType], parent, scratchpads, origin)(...$internalCopyInitss)"
       stats1 += q"private[meta] def internalCopy(prototype: _root_.scala.meta.Tree = this, parent: _root_.scala.meta.Tree = internalParent, scratchpads: $scratchpadsType = internalScratchpads, origin: _root_.scala.meta.Origin = origin): ThisType = $internalCopyBody"
-      stats1 += q"def parent: _root_.scala.Option[_root_.scala.meta.Tree] = if (internalParent != null) _root_.scala.Some(internalParent) else _root_.scala.None"
+      stats1 += q"def parent: _root_.scala.meta.Tree = if (internalParent == null) _root_.scala.meta.EmptyTree() else internalParent"
 
       // step 5: turn all parameters into private internal vars, create getters and setters
       paramss1 ++= paramss.map(_.map{ case p @ q"$mods val $name: $tpt = $default" => q"${undefault(unoverride(privatize(varify(mods))))} val ${internalize(p.name)}: $tpt" })

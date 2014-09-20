@@ -11,10 +11,19 @@ import semantic._
 import syntactic.show._
 import syntactic.parsers._, SyntacticInfo._
 
+@ast class EmptyTree() extends Term with Type with Pat {
+  override def isEmpty = true
+}
+
 @root trait Tree extends Product {
   type ThisType <: Tree
   def origin: Origin
-  def parent: Option[Tree]
+  def parent: Tree
+
+  def isEmpty                             = false
+  def map(f: Tree => Tree): Tree          = if (isEmpty) this else f(this)
+  def exists(p: Tree => Boolean): Boolean = !isEmpty && p(this)
+
   final override def toString: String = this.show[Raw]
 }
 
@@ -61,7 +70,12 @@ object Term {
     require(params.exists(_.mods.exists(_.isInstanceOf[Mod.Implicit])) ==> (params.length == 1))
   }
   @ast class Cases(cases: Seq[Aux.Case] @nonEmpty) extends Term {
-    def isPartialFunction = !parent.map(_ match { case _: Match => false; case _: Try => false; case _ => true }).getOrElse(false)
+    def isPartialFunction = parent.isEmpty || {
+      parent exists {
+        case _: Match | _: Try => true
+        case _                 => false
+      }
+    }
   }
   @ast class While(expr: Term, body: Term) extends Term
   @ast class Do(body: Term, expr: Term) extends Term
