@@ -19,6 +19,7 @@ trait Ensugar {
   val currentRun = global.currentRun
   import currentRun.runDefinitions._
   import treeInfo._
+  import scala.reflect.internal.Flags._
 
   import org.scalameta.invariants.Implication
   private def require[T](x: T): Unit = macro org.scalameta.invariants.Macros.require
@@ -43,11 +44,13 @@ trait Ensugar {
                 case TemplateWithOriginal(original) => Some(original)
                 case SuperWithOriginal(original) => Some(original)
                 case ClassOfWithOriginal(original) => Some(original)
-                case MemberDefWithSynthetic(original) => Some(original)
+                case MemberDefWithSyntheticButNotArtifact(original) => Some(original)
                 case MemberDefWithInferredReturnType(original) => Some(original)
                 case MemberDefWithAnnotations(original) => Some(original)
                 case MacroDef(original) => Some(original)
                 case DefaultGetterDef(original) => Some(original)
+                case LazyLocal(original) => Some(original)
+                case LazyDef(original) => Some(original)
                 case ImplicitConversion(original) => Some(original)
                 case TypeApplicationWithInferredTypeArguments(original) => Some(original)
                 case ApplicationWithInferredImplicitArguments(original) => Some(original)
@@ -213,15 +216,17 @@ trait Ensugar {
           case _ => false
         }
 
-        object MemberDefWithSynthetic {
+        object MemberDefWithSyntheticButNotArtifact {
           def unapply(tree: Tree): Option[Tree] = {
-            implicit class RichSyntheticTree(tree: Tree) {
-              def isSynthetic = tree match { case mdef: MemberDef => mdef.mods.isSynthetic; case _ => false }
+            implicit class RichTrees(trees: List[Tree]) {
+              private def needsTrimming(tree: Tree) = tree match { case mdef: MemberDef => mdef.mods.isSynthetic && !mdef.mods.isArtifact; case _ => false }
+              def needTrimming = trees.exists(needsTrimming)
+              def trim = trees.filter(tree => !needsTrimming(tree))
             }
             tree match {
-              case tree @ PackageDef(pid, stats) if stats.exists(_.isSynthetic) => Some(treeCopy.PackageDef(tree, pid, stats.filter(!_.isSynthetic)))
-              case tree @ Block(stats, expr) if stats.exists(_.isSynthetic) => Some(treeCopy.Block(tree, stats.filter(!_.isSynthetic), expr))
-              case tree @ Template(parents, self, stats) if stats.exists(_.isSynthetic) => Some(treeCopy.Template(tree, parents, self, stats.filter(!_.isSynthetic)))
+              case tree @ PackageDef(pid, stats) if stats.needTrimming => Some(treeCopy.PackageDef(tree, pid, stats.trim))
+              case tree @ Block(stats, expr) if stats.needTrimming => Some(treeCopy.Block(tree, stats.trim, expr))
+              case tree @ Template(parents, self, stats) if stats.needTrimming => Some(treeCopy.Template(tree, parents, self, stats.trim))
               case _ => None
             }
           }
@@ -311,6 +316,25 @@ trait Ensugar {
           }
         }
 
+        object LazyLocal {
+          def unapply(tree: Tree): Option[Tree] = tree match {
+            // NOTE: can't use tree.name here, because tree.symbol.name != tree.name for lazy synthetics
+            // NOTE: can't use tree.symbol.name here, because sometimes underlying fields aren't mangled
+            case tree: ValDef if tree.symbol.isLazy && tree.symbol.isMutable => Some(EmptyTree)
+            case _ => None
+          }
+        }
+
+        object LazyDef {
+          def unapply(tree: Tree): Option[Tree] = tree match {
+            case tree @ DefDef(mods, name, Nil, Nil, tpt, Block(List(Assign(lzy1: RefTree, rhs)), lzy2: RefTree))
+            if tree.symbol.isLazy && lzy1.name == lzy2.name && lzy1.symbol.isLazy && lzy1.symbol.isMutable =>
+              Some(ValDef(mods, name, tpt, rhs).copyAttrs(tree))
+            case _ =>
+              None
+          }
+        }
+
         object ImplicitConversion {
           def unapply(tree: Tree): Option[Tree] = tree match {
             case ApplyImplicitView(_, arg) => Some(arg)
@@ -387,7 +411,7 @@ trait Ensugar {
             val sugaredDoesntLookLikeNamesDefaults = qualsym == NoSymbol && !hasNamesDefaults(argss.flatten)
             val originalDoesntLookLikeNamesDefaults = tree match { case OriginalApply(Applied(_, _, argss)) => argss.flatten.forall(!_.isInstanceOf[AssignOrNamedArg]); case _ => true }
             val doesntLookLikeNamesDefaults = sugaredDoesntLookLikeNamesDefaults && originalDoesntLookLikeNamesDefaults
-            if (app.symbol == null || app.symbol == NoSymbol || app.exists(_.isErroneous) || doesntLookLikeNamesDefaults) None
+            if (app.symbol == null || app.symbol == NoSymbol || app.exists(_.isErroneous) || doesntLookLikeNamesDefaults || OriginalApply.unapply(tree).isEmpty) None
             else {
               // NOTE: necessary to smooth out the rough edges of the translation
               // 1) if all arguments are positional, the typer will drop names completely,
