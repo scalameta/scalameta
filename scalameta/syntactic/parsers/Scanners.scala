@@ -5,6 +5,7 @@
 package scala.meta
 package syntactic.parsers
 
+import java.util.NoSuchElementException
 import scala.annotation.{ switch, tailrec }
 import scala.collection.{ mutable, immutable }
 import scala.language.postfixOps
@@ -12,7 +13,6 @@ import mutable.{ ListBuffer, ArrayBuffer }
 import Chars._
 import Tokens._
 import TokenInfo._
-import Scanners._
 
 trait TokenData {
   /** the next token */
@@ -163,10 +163,8 @@ abstract class AbstractScanner extends CharArrayReader with TokenData with Scann
     if (idtoken == IDENTIFIER) {
       if (kw2token contains name) {
         token = kw2token(name)
-        if (token == IDENTIFIER && allowIdent != name) {
-          if (name == "macro")
-            syntaxError(s"$name is now a reserved word; usage as an identifier is disallowed")
-          else if (emitIdentifierDeprecationWarnings)
+        if (token == IDENTIFIER) {
+          if (emitIdentifierDeprecationWarnings)
             deprecationWarning(s"$name is now a reserved word; usage as an identifier is deprecated")
         }
       }
@@ -211,20 +209,6 @@ abstract class AbstractScanner extends CharArrayReader with TokenData with Scann
     val off = offset
     nextToken()
     off
-  }
-
-  /** Allow an otherwise deprecated ident here */
-  private var allowIdent: String = ""
-
-  /** Get next token, and allow the otherwise deprecated ident `name`  */
-  def nextTokenAllow(name: String) = {
-    val prev = allowIdent
-    allowIdent = name
-    try {
-      nextToken()
-    } finally {
-      allowIdent = prev
-    }
   }
 
   /** Produce next token, filling TokenData fields of Scanner.
@@ -324,7 +308,7 @@ abstract class AbstractScanner extends CharArrayReader with TokenData with Scann
       }
     }
 
-    // print("["+this+"]")
+    //print("["+this+"]")
   }
 
   /** Is current token first one after a newline? */
@@ -1089,7 +1073,7 @@ abstract class AbstractScanner extends CharArrayReader with TokenData with Scann
   }
 }
 
-class MalformedInput(val offset: Offset, val msg: String) extends Exception
+case class MalformedInput(val offset: Offset, val msg: String) extends Exception
 
 /** A scanner for a given source file not necessarily attached to a compilation unit.
  *  Useful for looking inside source files that aren not currently compiled to see what's there
@@ -1099,12 +1083,7 @@ class Scanner(val source: Source) extends AbstractScanner {
   override val decodeUni: Boolean = true
 
   // suppress warnings, throw exception on errors
-  def deprecationWarning(off: Offset, msg: String): Unit = ()
-  def error  (off: Offset, msg: String): Unit = throw new MalformedInput(off, msg)
-  def incompleteInputError(off: Offset, msg: String): Unit = throw new MalformedInput(off, msg)
-}
-
-object Scanners {
-  /** abstract type for offsets - currently an int, but later may be refactored */
-  type Offset = Int
+  def deprecationWarning(off: Offset, msg: String): Unit   = ()
+  def error  (off: Offset, msg: String): Unit              = throw MalformedInput(off, msg)
+  def incompleteInputError(off: Offset, msg: String): Unit = throw MalformedInput(off, msg)
 }
