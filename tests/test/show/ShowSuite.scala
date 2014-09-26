@@ -149,4 +149,15 @@ class ShowSuite extends ParseSuite {
     assert(compUnit("class C[+T]").show[Code] === "class C[+T]")
     assert(compUnit("class C[@foo +T]").show[Code] === "class C[@foo +T]")
   }
+
+  test("primary constructor mods") {
+    assert(compUnit("class C").show[Code] === "class C")
+    assert(compUnit("class C private").show[Code] === "class C private")
+    assert(compUnit("class C @foo(x)").show[Code] === "class C @foo(x)")
+    assert(compUnit("class C @foo(x) private").show[Code] === "class C @foo(x) private")
+    assert(compUnit("class C(x: Int)").show[Code] === "class C(x: Int)")
+    assert(compUnit("class C private (x: Int)").show[Code] === "class C private (x: Int)")
+    assert(compUnit("class C @foo(x) (x: Int)").show[Code] === "class C @foo(x) (x: Int)")
+    assert(compUnit("class C @foo(x) private (x: Int)").show[Code] === "class C @foo(x) private (x: Int)")
+  }
 }
