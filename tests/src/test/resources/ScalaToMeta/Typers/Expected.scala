@@ -19,7 +19,7 @@ trait Typers extends Adaptations with Tags with TypersTracking with PatternTyper
     resetImplicits()
     resetDocComments()
   }
-  sealed abstract class SilentResult[+ T] {
+  sealed abstract class SilentResult[+T] {
     abstract def isEmpty: Boolean
     def nonEmpty = !isEmpty
     @inline final def fold[U](none: => U)(f: _root_.scala.Function1[T, U]): U = this match {
@@ -61,7 +61,7 @@ trait Typers extends Adaptations with Tags with TypersTracking with PatternTyper
     def apply(errors: AbsTypeError*): SilentTypeError = new SilentTypeError(errors.toList)
     def unapply(error: SilentTypeError): Option[AbsTypeError] = error.errors.headOption
   }
-  case class SilentResultValue[+ T](value: T) extends SilentResult[T] { override def isEmpty = false }
+  case class SilentResultValue[+T](value: T) extends SilentResult[T] { override def isEmpty = false }
   def newTyper(context: Context): Typer = new NormalTyper(context)
   private class NormalTyper(context: Context) extends Typer(context)
   private final val SYNTHETIC_PRIVATE = 274877906944
