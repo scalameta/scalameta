@@ -160,4 +160,13 @@ class ShowSuite extends ParseSuite {
     assert(compUnit("class C @foo(x) (x: Int)").show[Code] === "class C @foo(x) (x: Int)")
     assert(compUnit("class C @foo(x) private (x: Int)").show[Code] === "class C @foo(x) private (x: Int)")
   }
+
+  test("parentheses in patterns") {
+    assert(templStat("x match { case (xs: List[Int]) :+ x => ??? }").show[Code] === """
+      |x match {
+      |  case (xs: List[Int]) :+ x =>
+      |    ???
+      |}
+    """.trim.stripMargin)
+  }
 }

@@ -113,7 +113,7 @@ object Pat {
   @ast class Extract(ref: Term.Ref, targs: Seq[Type], elements: Seq[Pat]) extends Pat {
     require(ref.isStableId)
   }
-  @ast class ExtractInfix(lhs: Pat, ref: Term.Ref, rhs: Seq[Pat] @nonEmpty) extends Pat {
+  @ast class ExtractInfix(lhs: Pat, ref: Term.Name, rhs: Seq[Pat] @nonEmpty) extends Pat {
     require(ref.isStableId)
   }
   @ast class Interpolate(prefix: Term.Name, parts: Seq[Lit.String] @nonEmpty, args: Seq[Pat]) extends Pat {
