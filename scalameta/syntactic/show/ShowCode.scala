@@ -25,7 +25,7 @@ object Code {
     else if (templ.parents.nonEmpty || templ.early.nonEmpty) s(" extends ", templ)
     else s(" ", templ)
 
-  def p(oo: String, t: Qual.Term, left: Boolean = false, right: Boolean = false) = {
+  def p(oo: String, t: Tree, left: Boolean = false, right: Boolean = false) = {
     def needsParens(oo: String, io: String): Boolean = {
       implicit class MySyntacticInfo(name: String) {
         def myprecedence: Int = name match {
@@ -167,14 +167,14 @@ object Code {
     case t: Pat.Bind         => s(t.lhs, " @ ", t.rhs)
     case t: Pat.Tuple        => s(t.elements)
     case _: Pat.SeqWildcard  => s("_*")
-    case t: Pat.Typed        => s(t.lhs, ": ", t.rhs)
+    case t: Pat.Typed        => m(":", s(t.lhs, ": ", t.rhs))
     case _: Pat.Wildcard     => s("_")
-    case t: Pat.Extract      => s(t.ref, t.targs, t.elements)
+    case t: Pat.Extract      => m("()", s(t.ref, t.targs, t.elements))
     case t: Pat.ExtractInfix =>
-      s(t.lhs, " ", t.ref, " ", t.rhs match {
-        case pat :: Nil => s(pat)
+      m(t.ref.value, s(p(t.ref.value, t.lhs), " ", t.ref, " ", t.rhs match {
+        case pat :: Nil => s(p(t.ref.value, pat))
         case pats       => s(pats)
-      })
+      }))
     case t: Pat.Interpolate  =>
       val zipped = t.parts.zip(t.args).map {
         case (part, id: Name) if !id.isBackquoted => s(part, "$", id.value)
