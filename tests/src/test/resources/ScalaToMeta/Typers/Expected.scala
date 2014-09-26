@@ -862,14 +862,14 @@ This restriction is planned to be removed in subsequent releases.""")
         Nil
       case x :: xs =>
         val sym = x.symbol;
-        x :: (fixDuplicateSyntheticParents(if (isPossibleSyntheticParent(sym)) xs.filterNot(_.symbol == sym) else xs))
+        x :: fixDuplicateSyntheticParents(if (isPossibleSyntheticParent(sym)) xs.filterNot(_.symbol == sym) else xs)
     }
     def typedParentTypes(templ: Template): List[Tree] = templ.parents match {
       case Nil =>
         List(atPos(templ.pos)(TypeTree(AnyRefTpe)))
       case first :: rest =>
         try {
-          val supertpts = fixDuplicateSyntheticParents(normalizeFirstParent((typedParentType(first, templ, inMixinPosition = false)) +: (rest.map(typedParentType(_, templ, inMixinPosition = true)))))
+          val supertpts = fixDuplicateSyntheticParents(normalizeFirstParent(typedParentType(first, templ, inMixinPosition = false) +: rest.map(typedParentType(_, templ, inMixinPosition = true))))
           if (treeInfo.hasUntypedPreSuperFields(templ.body)) typedPrimaryConstrBody(templ)(EmptyTree)
           supertpts.mapConserve(tpt => checkNoEscaping.privates(context.owner, tpt))
         } catch {
@@ -1150,7 +1150,7 @@ This restriction is planned to be removed in subsequent releases.""")
       def paramssTypes(tp: Type): List[List[Type]] = tp match {
         case mt @ MethodType(_, restpe) =>
           val x$59 = mt.paramTypes;
-          (paramssTypes(restpe)) :: x$59
+          paramssTypes(restpe) :: x$59
         case PolyType(_, restpe) =>
           paramssTypes(restpe)
         case _ =>
@@ -1484,7 +1484,7 @@ This restriction is planned to be removed in subsequent releases.""")
       }
       val samDef = DefDef(Modifiers(2097186), sam.name.toTermName, Nil, List(fun.vparams), TypeTree(samBodyDef.tpt.tpe).setPos(sampos.focus), Apply(Ident(bodyName), fun.vparams.map(p => Ident(p.name))))
       val serializableParentAddendum = if (typeIsSubTypeOfSerializable(samClassTp)) Nil else List(TypeTree(SerializableTpe))
-      val classDef = ClassDef(Modifiers(32), tpnme.ANON_FUN_NAME, tparams = Nil, gen.mkTemplate(parents = (TypeTree(samClassTpFullyDefined)) :: serializableParentAddendum, self = emptyValDef, constrMods = NoMods, vparamss = ListOfNil, body = List(samDef), superPos = sampos.focus))
+      val classDef = ClassDef(Modifiers(32), tpnme.ANON_FUN_NAME, tparams = Nil, gen.mkTemplate(parents = TypeTree(samClassTpFullyDefined) :: serializableParentAddendum, self = emptyValDef, constrMods = NoMods, vparamss = ListOfNil, body = List(samDef), superPos = sampos.focus))
       val block = nestedTyper.typedPos(sampos, mode, samClassTpFullyDefined)(Block(samBodyDef, classDef, Apply(Select(New(Ident(tpnme.ANON_FUN_NAME)), nme.CONSTRUCTOR), Nil)))
       classDef.symbol.addAnnotation(SerialVersionUIDAnnotation)
       block
@@ -1643,7 +1643,7 @@ This restriction is planned to be removed in subsequent releases.""")
             newStats = neg
             pos.toList
           }
-          (stats.foldRight(List[Tree]())((stat, res) => stat :: (matching(stat)) ::: res)) ::: newStats.toList
+          stats.foldRight(List[Tree]())((stat, res) => stat :: matching(stat) ::: res) ::: newStats.toList
         }
       }
       val stats1 = stats.mapConserve {
