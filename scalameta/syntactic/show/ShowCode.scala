@@ -274,11 +274,17 @@ object Code {
     case t: TypeParam.Anonymous =>
       val cbounds = r(t.contextBounds.map { s(": ", _) })
       val vbounds = r(t.contextBounds.map { s("<% ", _) })
-      s(a(t.mods, " "), "_", t.tparams, cbounds, vbounds, t.bounds)
+      val variance = t.mods.foldLeft("")((curr, m) => if (m.isInstanceOf[Mod.Covariant]) "+" else if (m.isInstanceOf[Mod.Contravariant]) "-" else curr)
+      val mods = t.mods.filter(m => !m.isInstanceOf[Mod.Covariant] && !m.isInstanceOf[Mod.Contravariant])
+      require(t.mods.length - mods.length <= 1)
+      s(a(mods, " "), variance, "_", t.tparams, cbounds, vbounds, t.bounds)
     case t: TypeParam.Named =>
       val cbounds = r(t.contextBounds.map { s(": ", _) })
       val vbounds = r(t.contextBounds.map { s("<% ", _) })
-      s(a(t.mods, " "), t.name, t.tparams, cbounds, vbounds, t.bounds)
+      val variance = t.mods.foldLeft("")((curr, m) => if (m.isInstanceOf[Mod.Covariant]) "+" else if (m.isInstanceOf[Mod.Contravariant]) "-" else curr)
+      val mods = t.mods.filter(m => !m.isInstanceOf[Mod.Covariant] && !m.isInstanceOf[Mod.Contravariant])
+      require(t.mods.length - mods.length <= 1)
+      s(a(mods, " "), variance, t.name, t.tparams, cbounds, vbounds, t.bounds)
     case t: Qual.Super =>
       s(t.thisp.map { thisp => s(thisp, ".") }.getOrElse(s()),
         "super", t.superp.map { st => s("[", st, "]") }.getOrElse(s()))
