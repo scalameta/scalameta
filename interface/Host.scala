@@ -440,7 +440,10 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         if (g.definitions.isTupleSymbol(in.symbol.companion)) p.Pat.Tuple(args.cvt_!)
         else {
           val (ref, targs) = in match { case q"$ref.$unapply[..$targs](..$_)" => (ref, targs); case q"$ref[..$targs](..$_)" => (ref, targs) }
-          p.Pat.Extract(ref.cvt_!, targs.cvt_!, args.cvt_!)
+          (ref, args) match {
+            case (ref @ g.Ident(name), List(lhs, rhs)) if name.looksLikeInfix && targs.isEmpty => p.Pat.ExtractInfix(lhs.cvt_!, ref.cvt_!, List(rhs.cvt_!))
+            case _ => p.Pat.Extract(ref.cvt_!, targs.cvt_!, args.cvt_!)
+          }
         }
       case in @ g.ApplyDynamic(_, _) =>
         unreachable

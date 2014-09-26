@@ -51,7 +51,7 @@ trait Typers extends Adaptations with Tags with TypersTracking with PatternTyper
     override def isEmpty = true
     def err: AbsTypeError = errors.head
     def reportableErrors = errors match {
-      case +:(e1: AmbiguousImplicitTypeError, _) =>
+      case e1: AmbiguousImplicitTypeError +: _ =>
         List(e1)
       case all =>
         all
@@ -650,7 +650,7 @@ trait Typers extends Adaptations with Tags with TypersTracking with PatternTyper
           adapt(tree, mode, pt, original)
         case NullaryMethodType(restpe) =>
           adapt(tree.setType(restpe), mode, pt, original)
-        case TypeRef(_, ByNameParamClass, ::(arg, Nil)) if mode.inExprMode =>
+        case TypeRef(_, ByNameParamClass, arg :: Nil) if mode.inExprMode =>
           adapt(tree.setType(arg), mode, pt, original)
         case tp if mode.typingExprNotLhs && isExistentialType(tp) =>
           adapt(tree.setType(tp.dealias.skolemizeExistential(context.owner, tree)), mode, pt, original)
@@ -844,7 +844,7 @@ This restriction is planned to be removed in subsequent releases.""")
     }
     private def normalizeFirstParent(parents: List[Tree]): List[Tree] = {
       @annotation.tailrec def explode0(parents: List[Tree]): List[Tree] = {
-        val ::(supertpt, rest) = parents
+        val supertpt :: rest = parents
         if (supertpt.tpe.typeSymbol == AnyClass) {
           supertpt.setType(AnyRefTpe)
           parents
@@ -860,14 +860,14 @@ This restriction is planned to be removed in subsequent releases.""")
     private def fixDuplicateSyntheticParents(parents: List[Tree]): List[Tree] = parents match {
       case Nil =>
         Nil
-      case ::(x, xs) =>
+      case x :: xs =>
         val sym = x.symbol;
         x :: (fixDuplicateSyntheticParents(if (isPossibleSyntheticParent(sym)) xs.filterNot(_.symbol == sym) else xs))
     }
     def typedParentTypes(templ: Template): List[Tree] = templ.parents match {
       case Nil =>
         List(atPos(templ.pos)(TypeTree(AnyRefTpe)))
-      case ::(first, rest) =>
+      case first :: rest =>
         try {
           val supertpts = fixDuplicateSyntheticParents(normalizeFirstParent((typedParentType(first, templ, inMixinPosition = false)) +: (rest.map(typedParentType(_, templ, inMixinPosition = true)))))
           if (treeInfo.hasUntypedPreSuperFields(templ.body)) typedPrimaryConstrBody(templ)(EmptyTree)
@@ -1004,7 +1004,7 @@ This restriction is planned to be removed in subsequent releases.""")
         val body2 = if (isPastTyper || reporter.hasErrors) body1 else body1.flatMap(rewrappingWrapperTrees(namer.addDerivedTrees(Typer.this, _)))
         val primaryCtor = treeInfo.firstConstructor(body2)
         val primaryCtor1 = primaryCtor match {
-          case DefDef(_, _, _, _, _, Block(:+(earlyVals, global.pendingSuperCall), unit)) =>
+          case DefDef(_, _, _, _, _, Block(earlyVals :+ global.pendingSuperCall, unit)) =>
             val argss = superArgs(parents1.head).getOrElse(Nil);
             val pos = wrappingPos(parents1.head.pos, primaryCtor :: argss.flatten).makeTransparent;
             val superCall = atPos(pos)(PrimarySuperCall(argss));
@@ -1075,7 +1075,7 @@ This restriction is planned to be removed in subsequent releases.""")
           val applyArgs = if (args.length < params.length) args :+ EmptyTree else args.take(params.length);
           assert(sameLength(applyArgs, params) || call.isErrorTyped, s"arity mismatch but call is not error typed: $clazz (params=$params, args=$applyArgs)");
           (superConstr, preArgs ::: applyArgs)
-        case Block(:+(_, superCall), _) =>
+        case Block(_ :+ superCall, _) =>
           decompose(superCall)
         case _ =>
           (call, Nil)
@@ -1213,7 +1213,7 @@ This restriction is planned to be removed in subsequent releases.""")
         allParams.foreach(p => p.deprecatedParamName.foreach(n => if (allParams.exists(p1 => p1.name == n || p != p1 && p1.deprecatedParamName.exists(_ == n))) DeprecatedParamNameError(p, n)))
         if (meth.isStructuralRefinementMember) checkMethodStructuralCompatible(ddef)
         if (meth.isImplicit && !meth.isSynthetic) meth.info.paramss match {
-          case ::(List(param), _) if !param.isImplicit =>
+          case List(param) :: _ if !param.isImplicit =>
             checkFeature(ddef.pos, ImplicitConversionsFeature, meth.toString())
           case _ =>
         }
@@ -1364,12 +1364,12 @@ This restriction is planned to be removed in subsequent releases.""")
       assert(pt.typeSymbol == PartialFunctionClass, s"PartialFunction synthesis for match in $tree requires PartialFunction expected type, but got $pt.")
       val targs = pt.dealiasWiden.typeArgs
       targs match {
-        case ::(argTp, _) if isFullyDefined(argTp) =>
+        case argTp :: _ if isFullyDefined(argTp) =>
         case _ =>
           MissingParameterTypeAnonMatchError(tree, pt);
           return setError(tree)
       }
-      val ::(argTp, ::(resTp, Nil)) = targs
+      val argTp :: resTp :: Nil = targs
       val targsValidParams = targs.forall(_ <:< AnyTpe)
       val anonClass = context.owner.newAnonymousFunctionClass(tree.pos).addAnnotation(SerialVersionUIDAnnotation)
       import CODE._
@@ -1498,7 +1498,7 @@ This restriction is planned to be removed in subsequent releases.""")
         val samInfo = pt.memberInfo(sam)
         (samInfo.paramTypes, samInfo.resultType)
       } else pt.baseType(FunctionSymbol) match {
-        case TypeRef(_, FunctionSymbol, :+(args, res)) =>
+        case TypeRef(_, FunctionSymbol, args :+ res) =>
           (args, res)
         case _ =>
           (fun.vparams.map(_ => if (pt == ErrorType) ErrorType else NoType), WildcardType)
@@ -1901,7 +1901,7 @@ This restriction is planned to be removed in subsequent releases.""")
         case Apply(fun, args) =>
           val typedFun = typed(fun, mode.forFunMode);
           if (typedFun.symbol.owner == ArrayModule.moduleClass && typedFun.symbol.name == nme) pt match {
-            case TypeRef(_, ArrayClass, ::(targ, _)) =>
+            case TypeRef(_, ArrayClass, targ :: _) =>
               trees2ConstArg(args, targ)
             case _ =>
               reportAnnotationError(ArrayConstantsTypeMismatchError(tree, pt));
@@ -1930,10 +1930,10 @@ This restriction is planned to be removed in subsequent releases.""")
           names ++= if (isJava) annScope.iterator else typedFun.tpe.params.iterator
           def hasValue = names.exists(_.name == nme.value)
           val args = argss match {
-            case ::(::(arg, Nil), Nil) if !isNamedArg(arg) && hasValue =>
+            case arg :: Nil :: Nil if !isNamedArg(arg) && hasValue =>
               val x$118 = gen.mkNamedArg(nme.value, arg);
               Nil :: x$118
-            case ::(args, Nil) =>
+            case args :: Nil =>
               args
           }
           val nvPairs = args.map({
@@ -2293,7 +2293,7 @@ currently not supported; ignoring arguments """ + args);
         def samePackedTypes = !isPastTyper && thenp1.tpe.annotations.isEmpty && elsep1.tpe.annotations.isEmpty && packedType(thenp1, context.owner) =:= packedType(elsep1, context.owner)
         def finish(ownType: Type) = treeCopy.If(tree, cond1, thenp1, elsep1).setType(ownType)
         if (isFullyDefined(pt)) finish(pt) else thenp1.tpe.deconst :: elsep1.tpe.deconst :: Nil match {
-          case ::(tp, _) if samePackedTypes =>
+          case tp :: _ if samePackedTypes =>
             finish(tp)
           case tpes if sameWeakLubAsLub(tpes) =>
             finish(lub(tpes))
@@ -2506,7 +2506,7 @@ currently not supported; ignoring arguments """ + args);
       }
       object ArrayInstantiation {
         def unapply(tree: Apply) = tree match {
-          case Apply(Select(New(tpt), name), ::(arg, Nil)) if tpt.tpe != null && tpt.tpe.typeSymbol == ArrayClass =>
+          case Apply(Select(New(tpt), name), arg :: Nil) if tpt.tpe != null && tpt.tpe.typeSymbol == ArrayClass =>
             Some(tpt.tpe).collect({
               case erasure.GenericArray(level, componentType) =>
                 val tagType = 1.until(level).foldLeft(componentType)(arrayType(res));
@@ -2538,7 +2538,7 @@ currently not supported; ignoring arguments """ + args);
         val prefix = name.toTermName.stripSuffix(nme.EQL)
         def mkAssign(vble: Tree): Tree = Assign(vble, Apply(Select(vble.duplicate, prefix).setPos(fun.pos.focus), args).setPos(tree.pos.makeTransparent)).setPos(tree.pos)
         def mkUpdate(table: Tree, indices: List[Tree]) = gen.evalOnceAll(table :: indices, context.owner, context.unit)({
-          case ::(tab, is) =>
+          case tab :: is =>
             def mkCall(name: Name, extraArgs: Tree*) = Apply(Select(tab(), name).setPos(table.pos), is.map(i => i()) ++ extraArgs).setPos(tree.pos);
             mkCall(nme.update, Apply(Select(mkCall(nme), prefix).setPos(fun.pos), args).setPos(tree.pos))
           case _ =>
@@ -2942,7 +2942,7 @@ currently not supported; ignoring arguments """ + args);
             requiresNoArgs(restpe)
           case MethodType(Nil, restpe) =>
             requiresNoArgs(restpe)
-          case MethodType(::(p, _), _) =>
+          case MethodType(p :: _, _) =>
             p.isImplicit
           case _ =>
             true
