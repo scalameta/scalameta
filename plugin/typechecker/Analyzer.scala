@@ -234,6 +234,17 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
       if (args.isEmpty && result.symbol == NilModule) result.appendMetadata("original" -> Apply(fun0, args).setType(result.tpe))
       result
     }
+    override protected def adapt(tree: Tree, mode: Mode, pt: Type, original: Tree = EmptyTree): Tree = {
+      val result = super.adapt(tree, mode, pt, original)
+      tree.tpe match {
+        case ct @ ConstantType(value) if mode.inNone(TYPEmode | FUNmode) && (ct <:< pt) && canAdaptConstantTypeToLiteral => // (0)
+          // NOTE: need to guard against subsequent adaptations that might mess up the original
+          if (result.hasMetadata("originalConstant")) result
+          else result.appendMetadata("originalConstant" -> tree)
+        case _ =>
+          result
+      }
+    }
     override def typed1(tree: Tree, mode: Mode, pt: Type): Tree = {
       def lookupInOwner(owner: Symbol, name: Name): Symbol = if (mode.inQualMode) rootMirror.missingHook(owner, name) else NoSymbol
       def lookupInRoot(name: Name): Symbol  = lookupInOwner(rootMirror.RootClass, name)

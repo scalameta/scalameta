@@ -65,6 +65,7 @@ trait Ensugar {
                 case VanillaExtractor(original) => Some(original)
                 case AnnotatedTerm(original) => Some(original)
                 case EtaExpansion(original) => Some(original)
+                case InlinedConstant(original) => Some(original)
                 case _ => None
               }
             }
@@ -563,6 +564,10 @@ trait Ensugar {
             case Some(original) => Some(Typed(original, Function(Nil, EmptyTree)).setType(tree.tpe))
             case None => None
           }
+        }
+
+        object InlinedConstant {
+          def unapply(tree: Tree): Option[Tree] = tree.metadata.get("originalConstant").map(_.asInstanceOf[Tree].removeMetadata("originalConstant"))
         }
       }
       object advancedDuplicator extends Transformer {
