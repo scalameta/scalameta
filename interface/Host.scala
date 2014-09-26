@@ -410,6 +410,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         // TODO: figure out whether the programmer actually wrote the interpolator or they were explicitly using a desugaring
         // TODO: figure out whether the programmer actually wrote the infix application or they were calling a symbolic method using a dot
         // TODO: infer the difference between `new X` vs `new X()`
+        // TODO: figure out whether the programmer actually used the tuple syntax or they were calling the tuple companion explicitly
         in match {
           case q"new $_(...$argss0)" =>
             val g.treeInfo.Applied(g.Select(g.New(tpt), _), _, _) = in
@@ -422,6 +423,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
             p.Term.Interpolate((fn.cvt_! : p.Term.Select).selector, parts.cvt_!, args.cvt_!)
           case q"$lhs.$op($arg)" if !op.decoded.forall(c => Character.isLetter(c)) =>
             p.Term.ApplyInfix(lhs.cvt_!, (fn.cvt_! : p.Term.Select).selector, Nil, List(parg(arg)))
+          case _ if g.definitions.TupleClass.seq.contains(in.symbol.companion) =>
+            p.Term.Tuple(args.cvt_!)
           case _ =>
             p.Term.Apply(fn.cvt_!, pargs(args))
         }
@@ -507,8 +510,10 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         require(early.isEmpty && parents.forall(_.argss.isEmpty) && self.name.isEmpty && self.decltpe.isEmpty && stats.forall(_.isInstanceOf[p.Stmt.Refine]))
         p.Type.Compound(parents.map(_.tpe), stats.asInstanceOf[Seq[p.Stmt.Refine]])
       case in @ g.AppliedTypeTree(tpt, args) =>
-        // TODO: infer whether that was Apply, Function or Tuple
-        p.Type.Apply(tpt.cvt_!, args.cvt_!)
+        // TODO: infer whether that was really Apply, Function or Tuple
+        if (g.definitions.FunctionClass.seq.contains(tpt.tpe.typeSymbol)) p.Type.Function(args.init.cvt_!, args.last.cvt_!)
+        else if (g.definitions.TupleClass.seq.contains(tpt.tpe.typeSymbol)) p.Type.Tuple(args.cvt_!)
+        else p.Type.Apply(tpt.cvt_!, args.cvt_!)
       case _: g.TypTree =>
         // TODO: also account for Idents, which can very well refer to types while not being TypTrees themselves
         ???
