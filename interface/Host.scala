@@ -397,14 +397,12 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
       case g.New(_) =>
         unreachable
       case g.Typed(expr, tpt) if pt <:< typeOf[p.Term] =>
-        // TODO: infer the difference between Ascribe and Annotate
         p.Term.Ascribe(expr.cvt_!, tpt.cvt_!)
       case g.Typed(expr, tpt) if pt <:< typeOf[p.Pat] =>
         p.Pat.Typed(expr.cvt_!, tpt.cvt_!)
       case in @ g.TypeApply(fn, targs) =>
         p.Term.ApplyType(fn.cvt_!, targs.cvt_!)
       case in @ g.Apply(fn, args) if pt <:< typeOf[p.Term] =>
-        // TODO: infer whether it was an application or a Tuple
         // TODO: undo the for desugaring
         // TODO: undo the Lit.Symbol desugaring
         // TODO: figure out whether the programmer actually wrote the interpolator or they were explicitly using a desugaring
