@@ -47,7 +47,7 @@ trait Typers extends Adaptations with Tags with TypersTracking with PatternTyper
         f(s.reportableErrors)
     }
   }
-  class SilentTypeErrorprivate (val errors: List[AbsTypeError]) extends SilentResult[Nothing] {
+  class SilentTypeError private (val errors: List[AbsTypeError]) extends SilentResult[Nothing] {
     override def isEmpty = true
     def err: AbsTypeError = errors.head
     def reportableErrors = errors match {
