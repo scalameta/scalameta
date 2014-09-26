@@ -64,6 +64,7 @@ trait Ensugar {
                 case ClassTagExtractor(original) => Some(original)
                 case VanillaExtractor(original) => Some(original)
                 case AnnotatedTerm(original) => Some(original)
+                case EtaExpansion(original) => Some(original)
                 case _ => None
               }
             }
@@ -554,6 +555,13 @@ trait Ensugar {
               Some(treeCopy.Annotated(original, annot, arg))
             case _ =>
               None
+          }
+        }
+
+        object EtaExpansion {
+          def unapply(tree: Tree): Option[Tree] = tree.metadata.get("originalEta").map(_.asInstanceOf[Tree]) match {
+            case Some(original) => Some(Typed(original, Function(Nil, EmptyTree)).setType(tree.tpe))
+            case None => None
           }
         }
       }

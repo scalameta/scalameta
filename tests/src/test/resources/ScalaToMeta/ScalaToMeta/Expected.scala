@@ -69,9 +69,7 @@ class ScalaToMeta extends FunSuite {
     val m_withCompilerApi = tb.getClass().getDeclaredMethod("withCompilerApi")
     val o_withCompilerApi = m_withCompilerApi.invoke(tb)
     val m_apply = o_withCompilerApi.getClass().getDeclaredMethods().find(_.getName() == "apply").get
-    try m_apply.invoke(o_withCompilerApi, {
-      compilerApi => cont(compilerApi)
-    }) catch scala.reflect.runtime.ReflectionUtils.unwrapHandler({
+    try m_apply.invoke(o_withCompilerApi, cont _) catch scala.reflect.runtime.ReflectionUtils.unwrapHandler({
       case ex =>
         throw ex
     })

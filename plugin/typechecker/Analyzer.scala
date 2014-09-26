@@ -545,6 +545,60 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
         }
         else fail()
       }
+      def functionTypeWildcard(tree: Tree, arity: Int): Type = {
+        val tp = functionType(List.fill(arity)(WildcardType), WildcardType)
+        if (tp == NoType) MaxFunctionArityError(tree)
+        tp
+      }
+      def typedEta(expr1: Tree): Tree = expr1.tpe match {
+        case TypeRef(_, ByNameParamClass, _) =>
+          val expr2 = Function(List(), expr1) setPos expr1.pos
+          new ChangeOwnerTraverser(context.owner, expr2.symbol).traverse(expr2)
+          typed1(expr2, mode, pt)
+        case NullaryMethodType(restpe) =>
+          val expr2 = Function(List(), expr1) setPos expr1.pos
+          new ChangeOwnerTraverser(context.owner, expr2.symbol).traverse(expr2)
+          typed1(expr2, mode, pt)
+        case PolyType(_, MethodType(formals, _)) =>
+          if (isFunctionType(pt)) expr1
+          else adapt(expr1, mode, functionTypeWildcard(expr1, formals.length))
+        case MethodType(formals, _) =>
+          if (isFunctionType(pt)) expr1
+          else adapt(expr1, mode, functionTypeWildcard(expr1, formals.length))
+        case ErrorType =>
+          expr1
+        case _ =>
+          UnderscoreEtaError(expr1)
+      }
+      def typedTyped(tree: Typed) = {
+        if (treeInfo isWildcardStarType tree.tpt)
+          typedStarInPattern(tree, mode.onlySticky, pt)
+        else if (mode.inPatternMode)
+          typedInPattern(tree, mode.onlySticky, pt)
+        else tree match {
+          // find out whether the programmer is trying to eta-expand a macro def
+          // to do that we need to typecheck the tree first (we need a symbol of the eta-expandee)
+          // that typecheck must not trigger macro expansions, so we explicitly prohibit them
+          // however we cannot do `context.withMacrosDisabled`
+          // because `expr` might contain nested macro calls (see SI-6673)
+          //
+          // Note: apparently `Function(Nil, EmptyTree)` is the secret parser marker
+          // which means trailing underscore.
+          case Typed(expr, Function(Nil, EmptyTree)) =>
+            typed1(suppressMacroExpansion(expr), mode, pt) match {
+              case macroDef if treeInfo.isMacroApplication(macroDef) =>
+                MacroEtaError(macroDef)
+              case exprTyped =>
+                // NOTE: this is a meaningful difference from the code in Typers.scala
+                //-typedEta(checkDead(exprTyped))
+                typedEta(checkDead(exprTyped)).appendMetadata("originalEta" -> exprTyped)
+            }
+          case Typed(expr, tpt) =>
+            val tpt1  = typedType(tpt, mode)                           // type the ascribed type first
+            val expr1 = typed(expr, mode.onlySticky, tpt1.tpe.deconst) // then type the expression with tpt1 as the expected type
+            treeCopy.Typed(tree, expr1, tpt1) setType tpt1.tpe
+        }
+      }
       // ========================
       // NOTE: The code above is almost completely copy/pasted from Typers.scala.
       // The changes there are mostly mechanical (indentation), but those, which are non-trivial (e.g. appending metadata to trees)
@@ -560,6 +614,7 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
           case tree @ SingletonTypeTree(ref) => typedSingletonTypeTree(tree)
           case tree @ CompoundTypeTree(templ) => typedCompoundTypeTree(tree)
           case tree @ Assign(lhs, rhs) => typedAssign(lhs, rhs)
+          case tree @ Typed(expr, tpt) => typedTyped(tree)
           case _ => super.typed1(tree, mode, pt)
         }
         // TODO: wat do these methods even mean, and how do they differ?

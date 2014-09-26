@@ -50,6 +50,9 @@ trait Attributed {
           // this tree is used as part of an encoding for varargifying sequences
           // in this encoding _* doesn't have a symbol, only a type
           case Ident(tpnme.WILDCARD_STAR) => check(tree, skipSymbol = true)
+          // `Function(Nil, EmptyTree)` is the secret parser marker which means trailing underscore
+          // that's not even a valid type, so it can have neither type, nor symbol => we just skip it here
+          case Typed(expr, Function(Nil, EmptyTree)) => check(expr)
           case _ => check(tree)
         }
       }

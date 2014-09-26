@@ -396,6 +396,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         p.Term.Throw(expr.cvt_!)
       case g.New(_) =>
         unreachable
+      case g.Typed(expr, g.Function(Nil, g.EmptyTree)) if pt <:< typeOf[p.Term] =>
+        p.Term.Eta(expr.cvt_!)
       case g.Typed(expr, tpt) if pt <:< typeOf[p.Term] =>
         p.Term.Ascribe(expr.cvt_!, tpt.cvt_!)
       case g.Typed(expr, tpt) if pt <:< typeOf[p.Pat] =>
