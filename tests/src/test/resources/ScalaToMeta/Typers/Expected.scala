@@ -51,7 +51,7 @@ trait Typers extends Adaptations with Tags with TypersTracking with PatternTyper
     override def isEmpty = true
     def err: AbsTypeError = errors.head
     def reportableErrors = errors match {
-      case e1: AmbiguousImplicitTypeError +: _ =>
+      case (e1: AmbiguousImplicitTypeError) +: _ =>
         List(e1)
       case all =>
         all
