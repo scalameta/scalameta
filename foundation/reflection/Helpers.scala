@@ -11,7 +11,7 @@ trait Helpers {
   import definitions._
   import treeInfo._
 
-  implicit class RichHelperTree[T <: Tree](tree: T) {
+  implicit class RichFoundationHelperTree[T <: Tree](tree: T) {
     def copyAttrs(other: Tree): T = tree.copyAttrs(other)
   }
 

@@ -43,17 +43,22 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
   // TODO: remember positions. actually, in scalac they are almost accurate, so it would be a shame to discard them
   @converter def toPalladium(in: Any, pt: Pt): Any = {
     object Helpers extends g.ReificationSupportImpl { self =>
-      def alias(in: g.Tree): String = in match {
-        case in: g.NameTree => in.name.decodedName.toString
-        case g.This(name) => name.decodedName.toString
-        case g.Super(_, name) => name.decodedName.toString
+      implicit class RichHelperTree(gtree: g.Tree) {
+        def alias: String = gtree match {
+          case gtree: g.NameTree => gtree.name.decodedName.toString
+          case g.This(name) => name.decodedName.toString
+          case g.Super(_, name) => name.decodedName.toString
+        }
+        def isBackquoted: Boolean = gtree match {
+          // TODO: infer isBackquoted
+          // TODO: iirc according to Denys, info in BackquotedIdentifierAttachment might be incomplete
+          case gtree: g.Ident => gtree.isBackquoted || scala.meta.syntactic.parsers.keywords.contains(gtree.name.toString)
+          case gtree: g.Select => scala.meta.syntactic.parsers.keywords.contains(gtree.name.toString)
+          case _ => false
+        }
       }
-      def isBackquoted(in: g.Tree): Boolean = in match {
-        // TODO: infer isBackquoted
-        // TODO: iirc according to Denys, info in BackquotedIdentifierAttachment might be incomplete
-        case in: g.Ident => in.isBackquoted || scala.meta.syntactic.parsers.keywords.contains(in.name.toString)
-        case in: g.Select => scala.meta.syntactic.parsers.keywords.contains(in.name.toString)
-        case _ => false
+      implicit class RichHelperName(gname: g.Name) {
+        def looksLikeInfix = !gname.decoded.forall(c => Character.isLetter(c))
       }
       implicit class RichHelperSymbol(gsym: g.Symbol) {
         def isAnonymous: Boolean = {
@@ -69,8 +74,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
           gsym.rawcvt(in).appendScratchpad(pre)
         }
         def rawcvt(in: g.Tree): p.Name = {
-          if (gsym.isTerm) p.Term.Name(alias(in), isBackquoted(in)).appendScratchpad(gsym)
-          else if (gsym.isType) p.Type.Name(alias(in), isBackquoted(in)).appendScratchpad(gsym)
+          if (gsym.isTerm) p.Term.Name(in.alias, in.isBackquoted).appendScratchpad(gsym)
+          else if (gsym.isType) p.Type.Name(in.alias, in.isBackquoted).appendScratchpad(gsym)
           else unreachable
         }
         def qualcvt(in: g.Tree): p.Qual.Name = {
@@ -79,7 +84,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
             if (gsym.isModuleClass) List(gsym.sourceModule.asModule, g.NoSymbol)
             else List(g.NoSymbol, gsym.asClass)
           }
-          p.Qual.Name(alias(in), isBackquoted(in)).appendScratchpad(gsyms)
+          p.Qual.Name(in.alias, in.isBackquoted).appendScratchpad(gsyms)
         }
       }
       implicit class RichHelperSymbols(gsyms: List[g.Symbol]) {
@@ -88,7 +93,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
           require(gterm != g.NoSymbol || gtype != g.NoSymbol)
           require(gterm != g.NoSymbol ==> gterm.isTerm)
           require(gtype != g.NoSymbol ==> gtype.isType)
-          p.Import.Name(alias(in), isBackquoted(in)).appendScratchpad(gsyms)
+          p.Import.Name(in.alias, in.isBackquoted).appendScratchpad(gsyms)
         }
       }
       implicit class RichHelperTermSymbol(gsym: g.TermSymbol) {
@@ -421,7 +426,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
             p.Term.New(templ)
           case q"$stringContext(..$parts).$prefix(..$args)" if stringContext.symbol == g.definitions.StringContextClass.companion =>
             p.Term.Interpolate((fn.cvt_! : p.Term.Select).selector, parts.cvt_!, args.cvt_!)
-          case q"$lhs.$op($arg)" if !op.decoded.forall(c => Character.isLetter(c)) =>
+          case q"$lhs.$op($arg)" if op.looksLikeInfix =>
             p.Term.ApplyInfix(lhs.cvt_!, (fn.cvt_! : p.Term.Select).selector, Nil, List(parg(arg)))
           case _ if g.definitions.TupleClass.seq.contains(in.symbol.companion) =>
             p.Term.Tuple(args.cvt_!)
@@ -461,7 +466,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         // NOTE: Ident(<term name>) with a type symbol attached to it
         // is the encoding that the ensugarer uses to denote a self reference
         // also see the ensugarer for more information
-        if (in.isTerm && in.symbol.isType) p.Term.Name(alias(in), isBackquoted(in))
+        if (in.isTerm && in.symbol.isType) p.Term.Name(in.alias, in.isBackquoted)
         else if (in.isTerm && in.symbol.isAnonymous) p.Term.Placeholder()
         else in.symbol.rawcvt(in)
       case g.ReferenceToBoxed(_) =>
