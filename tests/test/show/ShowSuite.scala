@@ -143,4 +143,10 @@ class ShowSuite extends ParseSuite {
     assert(compUnit("package foo.bar { class C }").show[Code] === "package foo.bar {\n  class C\n}")
     assert(compUnit("package foo.bar { class C; class D }").show[Code] === "package foo.bar {\n  class C\n  class D\n}")
   }
+
+  test("type parameter mods") {
+    assert(compUnit("class C[@foo T]").show[Code] === "class C[@foo T]")
+    assert(compUnit("class C[+T]").show[Code] === "class C[+T]")
+    assert(compUnit("class C[@foo +T]").show[Code] === "class C[@foo +T]")
+  }
 }
