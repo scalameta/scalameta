@@ -208,7 +208,7 @@ object Code {
     case t: Defn.Val       => s(a(t.mods, " "), "val ", r(t.pats, ", "), t.decltpe, " = ", t.rhs)
     case t: Defn.Var       => s(a(t.mods, " "), "var ", r(t.pats, ", "), t.decltpe, " = ", t.rhs.map(s(_)).getOrElse(s("_")))
     case t: Defn.Type      => s(a(t.mods, " "), "type ", t.name, t.tparams, " = ", t.body)
-    case t: Defn.Class     => s(a(t.mods, " "), "class ", t.name, t.tparams, t.ctor, templ(t.templ))
+    case t: Defn.Class     => s(a(t.mods, " "), "class ", t.name, t.tparams, a(" ", t.ctor, t.ctor.mods.nonEmpty), templ(t.templ))
     case t: Defn.Trait     => s(a(t.mods, " "), "trait ", t.name, t.tparams, templ(t.templ))
     case t: Defn.Object    => s(a(t.mods, " "), "object ", t.name, templ(t.templ))
     case t: Defn.Def       =>
@@ -231,7 +231,7 @@ object Code {
     case t: Pkg                => s("package ", t.ref, r(t.stats.map(n(_))))
 
     // Ctor
-    case t: Ctor.Primary   => s(a(t.mods, " "), (t.explicits, t.implicits))
+    case t: Ctor.Primary   => s(a(t.mods, " ", t.mods.nonEmpty && (t.explicits.nonEmpty || t.implicits.nonEmpty)), (t.explicits, t.implicits))
     case t: Ctor.Secondary =>
       s(a(t.mods, " "), "def this", (t.explicits, t.implicits), t.stats match {
         case Nil   => s(" = this", t.primaryCtorArgss)
