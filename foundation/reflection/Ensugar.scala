@@ -454,6 +454,7 @@ trait Ensugar {
         }
 
         // TODO: figure out whether the programmer actually wrote `foo.bar = ...` or it was `foo.bar_=(...)`
+        // TODO: collapse `M.foo = M.foo + bar` into `M.foo += bar` when appropriate
         object AssignmentWithInsertedUnderscoreEquals {
           object OriginalAssign {
             def unapply(tree: Tree): Option[(Tree, Tree)] = {
