@@ -169,4 +169,14 @@ class ShowSuite extends ParseSuite {
       |}
     """.trim.stripMargin)
   }
+
+  test("List(x, y) :: z") {
+    assert(templStat("List(x, y) :: z").show[Code] == "List(x, y) :: z")
+    assert(templStat("x match { case List(x, y) :: z => ??? }").show[Code] === """
+      |x match {
+      |  case List(x, y) :: z =>
+      |    ???
+      |}
+    """.trim.stripMargin)
+  }
 }

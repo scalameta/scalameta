@@ -28,6 +28,7 @@ object Code {
   def p(oo: String, t: Tree, left: Boolean = false, right: Boolean = false) = {
     def needsParens(oo: String, io: String): Boolean = {
       implicit class MySyntacticInfo(name: String) {
+        private def special = Set(".", "()", "=", ":")
         def myprecedence: Int = name match {
           case "." => 100
           case "()" => 100
@@ -36,19 +37,21 @@ object Code {
           case _ if name.myunary => 99
           case _ => Term.Name(name).precedence
         }
+        def myinfix: Boolean = !special.contains(name) && !name.myunary
         def myleftassoc: Boolean = name.last != ':'
         def myunary: Boolean = name.startsWith("unary_")
       }
       val (op, ip) = (oo.myprecedence, io.myprecedence)
+      val (oi, ii) = (oo.myinfix, io.myinfix)
       val (oa, ia) = (oo.myleftassoc, io.myleftassoc)
       val (ou, iu) = (oo.myunary, io.myunary)
       val result = {
         if (ou && iu) true
-        else if (oa ^ ia) true
-        else if (oo == io && left != oa && left != right) true
+        else if (oi && ii && (oa ^ ia)) true
+        else if (oi && ii && (oo == io && left != oa && left != right)) true
         else op > ip
       }
-      // println((oo, io, left, right) + " => " + (op, ip, oa, ia, ou, iu) + " => " + result)
+      // println((oo, io, left, right) + " => " + (op, ip, oi, ii, oa, ia, ou, iu) + " => " + result)
       result
     }
     s(t) match {
