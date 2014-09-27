@@ -140,7 +140,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         val gparamaccessor = gsym.owner.filter(_.isPrimaryConstructor).map(_.owner.info.member(gsym.name))
         val gaccessed = gparamaccessor.map(_.owner.info.member(gparamaccessor.localName))
         if (gaccessed != g.NoSymbol && gaccessed.isMutable) pmods += p.Mod.VarParam()
-        if (gaccessed != g.NoSymbol && !gaccessed.owner.isCase) pmods += p.Mod.ValParam()
+        if (gaccessed != g.NoSymbol && !gaccessed.owner.isCase && !gaccessed.isMutable) pmods += p.Mod.ValParam()
         if (gsym.isPackageObject) pmods += p.Mod.Package()
         pmods.toList
       }
