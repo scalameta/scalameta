@@ -179,4 +179,18 @@ class ShowSuite extends ParseSuite {
       |}
     """.trim.stripMargin)
   }
+
+  test("secondary ctor") {
+    assert(compUnit("class C(x: Int) { def this() { this(2); println(\"OBLIVION!!!\") } }").show[Code] === "class C(x: Int) { def this() { this(2); println(\"OBLIVION!!!\") } }")
+  }
+
+  test("case semicolons") {
+    assert(templStat("x match { case y => foo1; foo2 }").show[Code] === """
+      |x match {
+      |  case y =>
+      |    foo1
+      |    foo2
+      |}
+    """.trim.stripMargin)
+  }
 }

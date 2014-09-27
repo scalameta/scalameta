@@ -238,7 +238,7 @@ object Code {
     case t: Ctor.Secondary =>
       s(a(t.mods, " "), "def this", (t.explicits, t.implicits), t.stats match {
         case Nil   => s(" = this", t.primaryCtorArgss)
-        case stats => s("{ this", t.primaryCtorArgss, ";", r(stats, "; "), " }")
+        case stats => s(" { this", t.primaryCtorArgss, ";", a(" ", r(stats, "; ")), " }")
       })
 
     // Enum
@@ -271,7 +271,7 @@ object Code {
     case t: TypeBounds =>
       s(if (t.hasLo) s(" >: ", t.lo) else s(), if (t.hasHi) s(" <: ", t.hi) else s())
     case t: Case  =>
-      s("case ", t.pat, t.cond.map { cond => s(" if ", cond) }.getOrElse(s()), " =>", r(t.stats.map(i(_)), ";"))
+      s("case ", t.pat, t.cond.map { cond => s(" if ", cond) }.getOrElse(s()), " =>", r(t.stats.map(i(_)), ""))
     case t: Param.Anonymous => s(a(t.mods, " "), "_", t.decltpe)
     case t: Param.Named => s(a(t.mods, " "), t.name, t.decltpe, t.default.map(s(" = ", _)).getOrElse(s()))
     case t: TypeParam.Anonymous =>
