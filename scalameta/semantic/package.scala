@@ -29,6 +29,11 @@ package object semantic {
       case Attr.Type(paramTpe) :: Nil => succeed(paramTpe)
       case _ => fail("typecheck has failed")
     })
+
+    def isValDeclOrDefn = tree match {
+      case _: Decl.Val | _: Defn.Val => true
+      case _                         => false
+    }
   }
 
   implicit class SemanticTermOps(val tree: Term) extends AnyVal {
@@ -106,9 +111,9 @@ package object semantic {
     @hosted def overridden: Seq[Member] = delegate
     @hosted def overriding: Seq[Member] = delegate
     def annots: Seq[Mod.Annot] = tree.mods.collect{ case annot: Mod.Annot => annot }
-    def doc: Option[Mod.Doc] = tree.mods.collect{ case doc: Mod.Doc => doc }.headOption
-    def isVal: Boolean = tree.isInstanceOf[Term.Name] && (tree.parent.map(parent => parent.isInstanceOf[Decl.Val] || parent.isInstanceOf[Defn.Val]).getOrElse(false))
-    def isVar: Boolean = tree.isInstanceOf[Term.Name] && (tree.parent.map(parent => parent.isInstanceOf[Decl.Var] || parent.isInstanceOf[Defn.Var]).getOrElse(false))
+    def doc: Option[Mod.Doc] = tree.mods collectFirst { case doc: Mod.Doc => doc }
+    def isVal: Boolean = tree.isInstanceOf[Term.Name] && tree.parent.isValDeclOrDefn
+    def isVar: Boolean = tree.isInstanceOf[Term.Name] && tree.parent.isValDeclOrDefn
     def isDef: Boolean = tree.isInstanceOf[Member.Def]
     def isMacro: Boolean = tree.isInstanceOf[Defn.Macro]
     def isType: Boolean = tree.isInstanceOf[Member.AbstractOrAliasType]
@@ -177,7 +182,7 @@ package object semantic {
       }
       val candidates = tree.owner.flatMap(_.members(companionName))
       candidates.flatMap{candidates =>
-        val relevant = candidates.collect(f).headOption
+        val relevant = candidates collectFirst f
         relevant.map(result => succeed(result)).getOrElse(fail("companion not found"))
       }
     }

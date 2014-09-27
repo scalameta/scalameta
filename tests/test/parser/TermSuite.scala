@@ -240,33 +240,33 @@ class TermSuite extends ParseSuite {
   }
 
   test("new {}") {
-    val New(Template(Nil, Nil, Self(None, None), Nil)) = term("new {}")
+    val New(Template(Nil, Nil, NoSelf(), Nil)) = term("new {}")
   }
 
   test("new { x }") {
-    val New(Template(Nil, Nil, Self(None, None), Term.Name("x") :: Nil)) = term("new { x }")
+    val New(Template(Nil, Nil, NoSelf(), Term.Name("x") :: Nil)) = term("new { x }")
   }
 
   test("new A") {
-    val New(templ @ Template(Nil, Parent(TypeName("A"), Nil) :: Nil, Self(None, None), Nil)) = term("new A")
+    val New(templ @ Template(Nil, Parent(TypeName("A"), Nil) :: Nil, NoSelf(), Nil)) = term("new A")
     assert(templ.hasStats === false)
   }
 
   test("new A {}") {
-    val New(templ @ Template(Nil, Parent(TypeName("A"), Nil) :: Nil, Self(None, None), Nil)) = term("new A {}")
+    val New(templ @ Template(Nil, Parent(TypeName("A"), Nil) :: Nil, NoSelf(), Nil)) = term("new A {}")
     assert(templ.hasStats === true)
   }
 
   test("new A with B") {
     val New(Template(Nil, Parent(TypeName("A"), Nil) ::
                           Parent(TypeName("B"), Nil) :: Nil,
-                     Self(None, None), Nil)) =
+                     NoSelf(), Nil)) =
       term("new A with B")
   }
 
   test("new { val x: Int = 1 } with A") {
     val New(Template(Defn.Val(Nil, List(TermName("x")), Some(TypeName("Int")), Lit.Int(1)) :: Nil,
-                     Parent(TypeName("A"), Nil) :: Nil, Self(None, None), Nil)) =
+                     Parent(TypeName("A"), Nil) :: Nil, NoSelf(), Nil)) =
       term("new { val x: Int = 1 } with A")
   }
 

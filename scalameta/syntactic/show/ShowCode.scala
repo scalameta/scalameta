@@ -114,7 +114,7 @@ object Code {
       def pstats(s: Seq[Stmt.Block]) = r(s.map(i(_)), "")
       t match {
         case Block(Function(Param.Named(mods, name, tptopt, _) :: Nil, Block(stats)) :: Nil) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
-          s("{ implicit ", name, tptopt.map { tpt => s(": ", tpt) }.getOrElse(s()), " => ", pstats(stats), n("}"))
+          s("{ implicit ", name, tptopt.fold(s())(tpt => s(": ", tpt)), " => ", pstats(stats), n("}"))
         case Block(Function(Param.Named(mods, name, None, _) :: Nil, Block(stats)) :: Nil) =>
           s("{ ", name, " => ", pstats(stats), n("}"))
         case Block(Function(Param.Anonymous(_, _) :: Nil, Block(stats)) :: Nil) =>
@@ -143,13 +143,14 @@ object Code {
       }))
     case t: Term.Try      =>
       s("try ", t.expr,
-        t.catchp.map { catchp => s(" catch ", catchp) }.getOrElse(s()),
-        t.finallyp.map { finallyp => s(" finally ", finallyp) }.getOrElse(s()))
+        t.catchp.fold(s())(catchp => s(" catch ", catchp)),
+        t.finallyp.fold(s())(finallyp => s(" finally ", finallyp))
+      )
     case t: Term.If       => s("if (", t.cond, ") ", t.thenp, if (t.hasElsep) s(" else ", t.elsep) else s())
     case t: Term.Function =>
       t match {
         case Term.Function(Param.Named(mods, name, tptopt, _) :: Nil, body) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
-          s("implicit ", name, tptopt.map { tpt => s(": ", tpt) }.getOrElse(s()), " => ", body)
+          s("implicit ", name, tptopt.fold(s())(tpt => s(": ", tpt)), " => ", body)
         case Term.Function(Param.Named(mods, name, None, _) :: Nil, body) =>
           s(name, " => ", body)
         case Term.Function(Param.Anonymous(_, _) :: Nil, body) =>
@@ -209,7 +210,7 @@ object Code {
 
     // Defn
     case t: Defn.Val       => s(a(t.mods, " "), "val ", r(t.pats, ", "), t.decltpe, " = ", t.rhs)
-    case t: Defn.Var       => s(a(t.mods, " "), "var ", r(t.pats, ", "), t.decltpe, " = ", t.rhs.map(s(_)).getOrElse(s("_")))
+    case t: Defn.Var       => s(a(t.mods, " "), "var ", r(t.pats, ", "), t.decltpe, " = ", t.rhs.fold(s("_"))(x => s(x)))
     case t: Defn.Type      => s(a(t.mods, " "), "type ", t.name, t.tparams, " = ", t.body)
     case t: Defn.Class     => s(a(t.mods, " "), "class ", t.name, t.tparams, a(" ", t.ctor, t.ctor.mods.nonEmpty), templ(t.templ))
     case t: Defn.Trait     => s(a(t.mods, " "), "trait ", t.name, t.tparams, templ(t.templ))
@@ -262,7 +263,7 @@ object Code {
       if (t.early.isEmpty && t.parents.isEmpty && t.self.name.isEmpty && t.self.decltpe.isEmpty && t.stats.isEmpty) s()
       else {
         val pearly = if (t.early.isEmpty) s() else s("{ ", r(t.early, "; "), " } with ")
-        val pparents = a(r(t.parents, " with "), " ", t.parents.nonEmpty && (t.self.name.nonEmpty || t.self.decltpe.nonEmpty || t.hasStats))
+        val pparents = a(r(t.parents, " with "), " ", t.parents.nonEmpty && (t.self.name.nonEmpty || t.self.decltpe.isDefined || t.hasStats))
         val pbody = if (t.self.name.isEmpty && t.self.decltpe.isEmpty && !t.hasStats) s()
                     else if (t.stats.length == 1 && !s(t.stats.head).toString.contains("\n")) s("{", a(" ", t.self), " ", t.stats.head, " }")
                     else s("{", a(" ", t.self), r(t.stats.map(i(_)), ""), n("}"))
@@ -273,7 +274,7 @@ object Code {
     case t: Case  =>
       s("case ", t.pat, t.cond.map { cond => s(" if ", cond) }.getOrElse(s()), " =>", r(t.stats.map(i(_)), ""))
     case t: Param.Anonymous => s(a(t.mods, " "), "_", t.decltpe)
-    case t: Param.Named => s(a(t.mods, " "), t.name, t.decltpe, t.default.map(s(" = ", _)).getOrElse(s()))
+    case t: Param.Named => s(a(t.mods, " "), t.name, t.decltpe, t.default.fold(s())(s(" = ", _)))
     case t: TypeParam.Anonymous =>
       val cbounds = r(t.contextBounds.map { s(": ", _) })
       val vbounds = r(t.contextBounds.map { s("<% ", _) })
