@@ -113,4 +113,47 @@ trait Helpers {
       case _ => None
     }
   }
+
+  object DesugaredSetter {
+    def unapply(tree: Tree): Option[(Tree, Tree)] = tree.metadata.get("originalAssign").map(_.asInstanceOf[(Tree, Name, List[Tree])]) match {
+      case Some((Desugared(lhs), name: TermName, Desugared(List(rhs)))) if nme.isSetterName(tree.symbol.name) && name == nme.EQL =>
+        require(lhs.symbol.owner == tree.symbol.owner && lhs.symbol.name.setterName == tree.symbol.name)
+        Some((lhs, rhs))
+      case _ =>
+        None
+    }
+  }
+
+  object DesugaredUpdate {
+    def unapply(tree: Tree): Option[(Tree, Tree)] = tree match {
+      case Apply(core @ Select(lhs, _), args :+ rhs) if core.symbol.name == nme.update && !tree.hasMetadata("originalAssign") =>
+        Some((Apply(lhs, args).setType(NoType), rhs))
+      case _ =>
+        None
+    }
+  }
+
+  object DesugaredOpAssign {
+    def unapply(tree: Tree): Option[(Tree, List[Tree])] = tree.metadata.get("originalAssign").map(_.asInstanceOf[(Tree, Name, List[Tree])]) match {
+      case Some((Desugared(qual), name: TermName, Desugared(args))) if name != nme.EQL =>
+        Some((Select(qual, name).setType(NoType), args))
+      case _ => None
+    }
+  }
+
+  object EvalOnce {
+    def unapply(trees: List[Tree]): Option[Transformer] = {
+      if (trees.isEmpty) None
+      else {
+        val inlinees = trees.collect{ case tree @ ValDef(_, name, _, rhs) if tree.symbol.isSynthetic && name.startsWith("ev$") => name -> rhs }.toMap
+        if (inlinees.size != trees.size) None
+        else Some(new Transformer {
+          override def transform(tree: Tree): Tree = tree match {
+            case Ident(name: TermName) if inlinees.contains(name) => transform(inlinees(name))
+            case _ => super.transform(tree)
+          }
+        })
+      }
+    }
+  }
 }

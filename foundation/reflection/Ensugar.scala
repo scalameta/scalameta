@@ -24,6 +24,12 @@ trait Ensugar {
   import org.scalameta.invariants.Implication
   private def require[T](x: T): Unit = macro org.scalameta.invariants.Macros.require
 
+  object Desugared {
+    private val trivialSignature = new EnsugarSignature[Tree, Tree]{}
+    def unapply(tree: Tree): Some[Tree] = Some(ensugar(tree)(trivialSignature))
+    def unapply(trees: List[Tree]): Some[List[Tree]] = Some(trees.map(tree => ensugar(tree)(trivialSignature)))
+  }
+
   def ensugar[Input <: Tree, Output <: Tree](tree: Input)(implicit ev: EnsugarSignature[Input, Output]): Output = {
     def loop(tree: Tree): Tree = {
       object transformer extends Transformer {
@@ -44,7 +50,7 @@ trait Ensugar {
                 case TemplateWithOriginal(original) => Some(original)
                 case SuperWithOriginal(original) => Some(original)
                 case ClassOfWithOriginal(original) => Some(original)
-                case MemberDefWithSyntheticButNotArtifact(original) => Some(original)
+                case MemberDefWithTrimmableSynthetic(original) => Some(original)
                 case MemberDefWithInferredReturnType(original) => Some(original)
                 case MemberDefWithAnnotations(original) => Some(original)
                 case MacroDef(original) => Some(original)
@@ -56,8 +62,6 @@ trait Ensugar {
                 case ApplicationWithInferredImplicitArguments(original) => Some(original)
                 case ApplicationWithInsertedApply(original) => Some(original)
                 case ApplicationWithNamesOrDefaults(original) => Some(original)
-                case AssignmentWithInsertedUpdate(original) => Some(original)
-                case AssignmentWithInsertedUnderscoreEquals(original) => Some(original)
                 case StandalonePartialFunction(original) => Some(original)
                 case LambdaPartialFunction(original) => Some(original)
                 case CaseClassExtractor(original) => Some(original)
@@ -218,10 +222,11 @@ trait Ensugar {
           case _ => false
         }
 
-        object MemberDefWithSyntheticButNotArtifact {
+        object MemberDefWithTrimmableSynthetic {
           def unapply(tree: Tree): Option[Tree] = {
             implicit class RichTrees(trees: List[Tree]) {
-              private def needsTrimming(tree: Tree) = tree match { case mdef: MemberDef => mdef.mods.isSynthetic && !mdef.mods.isArtifact; case _ => false }
+              private def needsTrimming(mdef: MemberDef): Boolean = mdef.mods.isSynthetic && !mdef.mods.isArtifact && !mdef.name.startsWith("ev$")
+              private def needsTrimming(tree: Tree): Boolean = tree match { case mdef: MemberDef => needsTrimming(mdef); case _ => false }
               def needTrimming = trees.exists(needsTrimming)
               def trim = trees.filter(tree => !needsTrimming(tree))
             }
@@ -442,35 +447,6 @@ trait Ensugar {
               val original = tree.metadata("originalApply").asInstanceOf[Apply].duplicate
               Some(correlate(result, original).removeMetadata("originalApply"))
             }
-          }
-        }
-
-        // TODO: figure out whether the programmer actually wrote `foo(...) = ...` or it was `foo.update(..., ...)`
-        object AssignmentWithInsertedUpdate {
-          def unapply(tree: Tree): Option[Tree] = tree match {
-            case tree @ Apply(core @ Select(lhs, _), args :+ value) if core.symbol.name == nme.update =>
-              Some(Assign(Apply(lhs, args).setType(NoType), value).setType(tree.tpe))
-            case _ =>
-              None
-          }
-        }
-
-        // TODO: figure out whether the programmer actually wrote `foo.bar = ...` or it was `foo.bar_=(...)`
-        // TODO: collapse `M.foo = M.foo + bar` into `M.foo += bar` when appropriate
-        object AssignmentWithInsertedUnderscoreEquals {
-          object OriginalAssign {
-            def unapply(tree: Tree): Option[(Tree, Tree)] = {
-              (tree.metadata.get("originalLhs").map(_.asInstanceOf[Tree].duplicate), tree) match {
-                case (Some(lhs), Apply(_, List(rhs))) => Some((lhs, rhs))
-                case _ => None
-              }
-            }
-          }
-          def unapply(tree: Tree): Option[Tree] = tree match {
-            case OriginalAssign(lhs, rhs) =>
-              Some(Assign(lhs, rhs).setType(tree.tpe))
-            case _ =>
-              None
           }
         }
 

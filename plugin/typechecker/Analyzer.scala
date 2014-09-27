@@ -21,6 +21,7 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
   class ParadiseTyper(context0: Context) extends Typer(context0) {
     import infer._
     import TyperErrorGen._
+    import typeDebug._
     private def typedParentType(encodedtpt: Tree, templ: Template, inMixinPosition: Boolean): Tree = {
       val app = treeInfo.dissectApplied(encodedtpt)
       val (treeInfo.Applied(core, _, argss), decodedtpt) = ((app, app.callee))
@@ -530,12 +531,13 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
 
         if (treeInfo.mayBeVarGetter(varsym)) {
           lhs1 match {
-            case treeInfo.Applied(Select(qual, name), _, _) =>
+            case treeInfo.Applied(core @ Select(qual, name), _, _) =>
               val sel = Select(qual, name.setterName) setPos lhs.pos
               val app = Apply(sel, List(rhs)) setPos tree.pos
               // NOTE: this is a meaningful difference from the code in Typers.scala
               //-return typed(app, mode, pt)
-              return typed(app, mode, pt).appendMetadata("originalLhs" -> lhs1)
+              val result @ treeInfo.Applied(_, _, List(typedRhs) :: _) = typed(app, mode, pt)
+              return result.appendMetadata("originalAssign" -> (core, nme.EQL, List(typedRhs)))
 
             case _ =>
           }
@@ -610,6 +612,204 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
             treeCopy.Typed(tree, expr1, tpt1) setType tpt1.tpe
         }
       }
+      def tryTypedArgs(args: List[Tree], mode: Mode): Option[List[Tree]] = {
+        val c = context.makeSilent(reportAmbiguousErrors = false)
+        c.retyping = true
+        try {
+          val res = newTyper(c).typedArgs(args, mode)
+          if (c.hasErrors) None else Some(res)
+        } catch {
+          case ex: CyclicReference =>
+            throw ex
+          case te: TypeError =>
+            // @H some of typer errors can still leak,
+            // for instance in continuations
+            None
+        }
+      }
+      // convert new Array[T](len) to evidence[ClassTag[T]].newArray(len)
+      // convert new Array^N[T](len) for N > 1 to evidence[ClassTag[Array[...Array[T]...]]].newArray(len)
+      // where Array HK gets applied (N-1) times
+      object ArrayInstantiation {
+        def unapply(tree: Apply) = tree match {
+          case Apply(Select(New(tpt), name), arg :: Nil) if tpt.tpe != null && tpt.tpe.typeSymbol == ArrayClass =>
+            Some(tpt.tpe) collect {
+              case erasure.GenericArray(level, componentType) =>
+                val tagType = (1 until level).foldLeft(componentType)((res, _) => arrayType(res))
+
+                resolveClassTag(tree.pos, tagType) match {
+                  case EmptyTree => MissingClassTagError(tree, tagType)
+                  case tag       => atPos(tree.pos)(new ApplyToImplicitArgs(Select(tag, nme.newArray), arg :: Nil))
+                }
+            }
+          case _ => None
+        }
+      }
+      def convertToAssignment(fun: Tree, qual: Tree, name: Name, args: List[Tree]): Tree = {
+        val prefix = name.toTermName stripSuffix nme.EQL
+        def mkAssign(vble: Tree): Tree =
+          Assign(
+            vble,
+            Apply(
+              Select(vble.duplicate, prefix) setPos fun.pos.focus, args) setPos tree.pos.makeTransparent
+          ) setPos tree.pos
+
+        def mkUpdate(table: Tree, indices: List[Tree]) = {
+          gen.evalOnceAll(table :: indices, context.owner, context.unit) {
+            case tab :: is =>
+              def mkCall(name: Name, extraArgs: Tree*) = (
+                Apply(
+                  Select(tab(), name) setPos table.pos,
+                  is.map(i => i()) ++ extraArgs
+                ) setPos tree.pos
+              )
+              mkCall(
+                nme.update,
+                Apply(Select(mkCall(nme.apply), prefix) setPos fun.pos, args) setPos tree.pos
+              )
+            case _ => EmptyTree
+          }
+        }
+
+        val tree1 = qual match {
+          case Ident(_) =>
+            mkAssign(qual)
+
+          case Select(qualqual, vname) =>
+            gen.evalOnce(qualqual, context.owner, context.unit) { qq =>
+              val qq1 = qq()
+              mkAssign(Select(qq1, vname) setPos qual.pos)
+            }
+
+          case Apply(fn, indices) =>
+            fn match {
+              case treeInfo.Applied(Select(table, nme.apply), _, _) => mkUpdate(table, indices)
+              case _  => UnexpectedTreeAssignmentConversionError(qual)
+            }
+        }
+        // NOTE: this is a meaningful difference from the code in Typers.scala
+        //-typed1(tree1, mode, pt)
+        typed1(tree1, mode, pt).appendMetadata("originalAssign" -> (qual, name, args))
+      }
+      def tryTypedApply(fun: Tree, args: List[Tree]): Tree = {
+        val start = if (Statistics.canEnable) Statistics.startTimer(failedApplyNanos) else null
+
+        def onError(typeErrors: Seq[AbsTypeError]): Tree = {
+          if (Statistics.canEnable) Statistics.stopTimer(failedApplyNanos, start)
+
+          // If the problem is with raw types, copnvert to existentials and try again.
+          // See #4712 for a case where this situation arises,
+          if ((fun.symbol ne null) && fun.symbol.isJavaDefined) {
+            val newtpe = rawToExistential(fun.tpe)
+            if (fun.tpe ne newtpe) {
+              // println("late cooking: "+fun+":"+fun.tpe) // DEBUG
+              return tryTypedApply(fun setType newtpe, args)
+            }
+          }
+          def treesInResult(tree: Tree): List[Tree] = tree :: (tree match {
+            case Block(_, r)                        => treesInResult(r)
+            case Match(_, cases)                    => cases
+            case CaseDef(_, _, r)                   => treesInResult(r)
+            case Annotated(_, r)                    => treesInResult(r)
+            case If(_, t, e)                        => treesInResult(t) ++ treesInResult(e)
+            case Try(b, catches, _)                 => treesInResult(b) ++ catches
+            case Typed(r, Function(Nil, EmptyTree)) => treesInResult(r)
+            case Select(qual, name)                 => treesInResult(qual)
+            case Apply(fun, args)                   => treesInResult(fun) ++ args.flatMap(treesInResult)
+            case TypeApply(fun, args)               => treesInResult(fun) ++ args.flatMap(treesInResult)
+            case _                                  => Nil
+          })
+          def errorInResult(tree: Tree) = treesInResult(tree) exists (err => typeErrors.exists(_.errPos == err.pos))
+
+          val retry = (typeErrors.forall(_.errPos != null)) && (fun :: tree :: args exists errorInResult)
+          typingStack.printTyping({
+            val funStr = ptTree(fun) + " and " + (args map ptTree mkString ", ")
+            if (retry) "second try: " + funStr
+            else "no second try: " + funStr + " because error not in result: " + typeErrors.head.errPos+"!="+tree.pos
+          })
+          if (retry) {
+            val Select(qual, name) = fun
+            tryTypedArgs(args, forArgMode(fun, mode)) match {
+              case Some(args1) if !args1.exists(arg => arg.exists(_.isErroneous)) =>
+                val qual1 =
+                  if (!pt.isError) adaptToArguments(qual, name, args1, pt, reportAmbiguous = true, saveErrors = true)
+                  else qual
+                if (qual1 ne qual) {
+                  val tree1 = Apply(Select(qual1, name) setPos fun.pos, args1) setPos tree.pos
+                  return context withinSecondTry typed1(tree1, mode, pt)
+                }
+              case _ => ()
+            }
+          }
+          typeErrors foreach issue
+          setError(treeCopy.Apply(tree, fun, args))
+        }
+
+        silent(_.doTypedApply(tree, fun, args, mode, pt)) orElse onError
+      }
+      def normalTypedApply(tree: Tree, fun: Tree, args: List[Tree]) = {
+        // TODO: replace `fun.symbol.isStable` by `treeInfo.isStableIdentifierPattern(fun)`
+        val stableApplication = (fun.symbol ne null) && fun.symbol.isMethod && fun.symbol.isStable
+        val funpt = if (mode.inPatternMode) pt else WildcardType
+        val appStart = if (Statistics.canEnable) Statistics.startTimer(failedApplyNanos) else null
+        val opeqStart = if (Statistics.canEnable) Statistics.startTimer(failedOpEqNanos) else null
+
+        def onError(reportError: => Tree): Tree = fun match {
+          case Select(qual, name) if !mode.inPatternMode && nme.isOpAssignmentName(newTermName(name.decode)) =>
+            val qual1 = typedQualifier(qual)
+            if (treeInfo.isVariableOrGetter(qual1)) {
+              if (Statistics.canEnable) Statistics.stopTimer(failedOpEqNanos, opeqStart)
+              convertToAssignment(fun, qual1, name, args)
+            }
+            else {
+              if (Statistics.canEnable) Statistics.stopTimer(failedApplyNanos, appStart)
+                reportError
+            }
+          case _ =>
+            if (Statistics.canEnable) Statistics.stopTimer(failedApplyNanos, appStart)
+            reportError
+        }
+        val silentResult = silent(
+          op                    = _.typed(fun, mode.forFunMode, funpt),
+          reportAmbiguousErrors = !mode.inExprMode && context.ambiguousErrors,
+          newtree               = if (mode.inExprMode) tree else context.tree
+        )
+        silentResult match {
+          case SilentResultValue(fun1) =>
+            val fun2 = if (stableApplication) stabilizeFun(fun1, mode, pt) else fun1
+            if (Statistics.canEnable) Statistics.incCounter(typedApplyCount)
+            val noSecondTry = (
+                 isPastTyper
+              || context.inSecondTry
+              || (fun2.symbol ne null) && fun2.symbol.isConstructor
+              || isImplicitMethodType(fun2.tpe)
+            )
+            val isFirstTry = fun2 match {
+              case Select(_, _) => !noSecondTry && mode.inExprMode
+              case _            => false
+            }
+            if (isFirstTry)
+              tryTypedApply(fun2, args)
+            else
+              doTypedApply(tree, fun2, args, mode, pt)
+          case err: SilentTypeError =>
+            onError({
+              err.reportableErrors foreach issue
+              args foreach (arg => typed(arg, mode, ErrorType))
+              setError(tree)
+            })
+        }
+      }
+      def typedApply(tree: Apply) = tree match {
+        case Apply(Block(stats, expr), args) =>
+          typed1(atPos(tree.pos)(Block(stats, Apply(expr, args) setPos tree.pos.makeTransparent)), mode, pt)
+        case Apply(fun, args) =>
+          normalTypedApply(tree, fun, args) match {
+            case ArrayInstantiation(tree1)                                           => typed(tree1, mode, pt)
+            case Apply(Select(fun, nme.apply), _) if treeInfo.isSuperConstrCall(fun) => TooManyArgumentListsForConstructor(tree) //SI-5696
+            case tree1                                                               => tree1
+          }
+      }
       // ========================
       // NOTE: The code above is almost completely copy/pasted from Typers.scala.
       // The changes there are mostly mechanical (indentation), but those, which are non-trivial (e.g. appending metadata to trees)
@@ -626,6 +826,7 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
           case tree @ CompoundTypeTree(templ) => typedCompoundTypeTree(tree)
           case tree @ Assign(lhs, rhs) => typedAssign(lhs, rhs)
           case tree @ Typed(expr, tpt) => typedTyped(tree)
+          case tree @ Apply(fun, args) => typedApply(tree)
           case _ => super.typed1(tree, mode, pt)
         }
         // TODO: wat do these methods even mean, and how do they differ?

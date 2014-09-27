@@ -657,9 +657,7 @@ trait Typers extends Adaptations with Tags with TypersTracking with PatternTyper
         case PolyType(tparams, restpe) if mode.inNone(TAPPmode | PATTERNmode) && !context.inTypeConstructorAllowed =>
           val tparams1 = cloneSymbols(tparams)
           val tree1 = if (tree.isType) tree else TypeApply(tree, tparams1.map(tparam => TypeTree(tparam.tpeHK).setPos(tree.pos.focus))).setPos(tree.pos)
-          {
-            ev$1.undetparams = ev$1.undetparams ++ tparams1
-          }
+          context.undetparams ++= tparams1
           notifyUndetparamsAdded(tparams1)
           adapt(tree1.setType(restpe.substSym(tparams, tparams1)), mode, pt, original)
         case mt: MethodType if mode.typingExprNotFunNotLhs && mt.isImplicit =>
@@ -2030,7 +2028,7 @@ This restriction is planned to be removed in subsequent releases.""")
       def addLocals(tp: Type): scala.Unit = {
         val remainingSyms = new scala.collection.mutable.ListBuffer[Symbol]
         def addIfLocal(sym: Symbol, tp: Type): scala.Unit = if (isLocal(sym) && !localSyms(sym) && !boundSyms(sym)) if (sym.typeParams.isEmpty) {
-          localSyms = localSyms + sym
+          localSyms += sym
           {
             remainingSyms += sym
             ()
@@ -2039,7 +2037,7 @@ This restriction is planned to be removed in subsequent releases.""")
         tp.foreach(t => {
           t match {
             case ExistentialType(tparams, _) =>
-              boundSyms = boundSyms ++ tparams
+              boundSyms ++= tparams
             case AnnotatedType(annots, _) =>
               annots.foreach(annot => annot.args.foreach(arg => arg match {
                 case Ident(_) =>

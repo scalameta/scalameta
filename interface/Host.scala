@@ -335,6 +335,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
             g.treeInfo.Applied(op @ g.Select(right, _), targs, List(List(g.Ident(x2)))))
           if xflags == (g.Flag.SYNTHETIC | g.Flag.ARTIFACT) && x1.startsWith(g.nme.FRESH_TERM_NAME_PREFIX) && x1 == x2 =>
             p.Term.ApplyInfix(left.cvt_!, op.symbol.asTerm.precvt(right.tpe, op), targs.cvt_!, List(right.cvt_!))
+          case in @ g.Block(EvalOnce(inliner), expr) =>
+            inliner.transform(expr).copyAttrs(in).cvt_! : p.Term
           case g.Block(stats, expr) =>
             p.Term.Block(pstats[p.Stmt.Block](stats :+ expr))
         }
@@ -367,10 +369,21 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         // because in both cases parameter names are `x$...`
         val isShorthand = params.exists(_.symbol.isAnonymous) && body.exists(tree => params.exists(_.symbol == tree.symbol))
         if (isShorthand) (body.cvt_! : p.Term) else p.Term.Function(params.cvt, body.cvt_!)
-      case g.Assign(lhs: g.Apply, rhs) =>
-        p.Term.Update(lhs.cvt_!, rhs.cvt_!)
-      case g.Assign(lhs: g.RefTree, rhs) =>
-        p.Term.Assign(lhs.cvt_!, rhs.cvt_!)
+      case in @ g.Assign(lhs, rhs) =>
+        in match {
+          // TODO: this is a very-very weird representation for op-assignments
+          // representing `foo.x_=(value)` as an Assign to a getter selection totally okay
+          // because `foo.x = value` doesn't compiler without a getter
+          // representing `foo.update(args, value)` as an Assign to an Apply is moderately weird
+          // because one can write `foo(args) = value` even without having foo to be applicable
+          // but this encoding is so awkward that I wonder whether it's ever going to be useful
+          case DesugaredOpAssign(g.Select(lhs, op), args) =>
+            // NOTE: funny thing is that desugared op-assigns can't have explicitly provided type arguments
+            // something like `class C { def +[T](x: T): C = ??? }; var c = new C; c +=[Int] 2` isn't going to compile
+            p.Term.ApplyInfix(lhs.cvt_!, p.Term.Name(op.decodedName.toString, isBackquoted = false), Nil, args.cvt_!)
+          case _ =>
+            p.Term.Assign(lhs.cvt_!, rhs.cvt_!)
+        }
       case g.AssignOrNamedArg(lhs, rhs) =>
         // NOTE: handled in parg/pargs/pargss
         unreachable
@@ -416,6 +429,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         // TODO: figure out whether the programmer actually wrote the infix application or they were calling a symbolic method using a dot
         // TODO: infer the difference between `new X` vs `new X()`
         // TODO: figure out whether the programmer actually used the tuple syntax or they were calling the tuple companion explicitly
+        // TODO: figure out whether the programmer actually wrote `foo(...) = ...` or it was `foo.update(..., ...)`
         in match {
           case q"new $_(...$argss0)" =>
             val g.treeInfo.Applied(g.Select(g.New(tpt), _), _, _) = in
@@ -426,6 +440,12 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
             p.Term.New(templ)
           case q"$stringContext(..$parts).$prefix(..$args)" if stringContext.symbol == g.definitions.StringContextClass.companion =>
             p.Term.Interpolate((fn.cvt_! : p.Term.Select).selector, parts.cvt_!, args.cvt_!)
+          case DesugaredSetter(lhs, rhs) =>
+            p.Term.Assign(lhs.cvt_!, rhs.cvt_!)
+          case DesugaredUpdate(core @ g.Apply(lhs, args), rhs) =>
+            p.Term.Update(p.Term.Apply(lhs.cvt_!, args.cvt_!).appendScratchpad(core), rhs.cvt_!)
+          case DesugaredOpAssign(g.Select(lhs, op), args) =>
+            p.Term.ApplyInfix(lhs.cvt_!, p.Term.Name(op.decodedName.toString, isBackquoted = false), Nil, args.cvt_!)
           case q"$lhs.$op($arg)" if op.looksLikeInfix =>
             p.Term.ApplyInfix(lhs.cvt_!, (fn.cvt_! : p.Term.Select).selector, Nil, List(parg(arg)))
           case _ if g.definitions.TupleClass.seq.contains(in.symbol.companion) =>
