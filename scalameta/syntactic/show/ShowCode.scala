@@ -238,7 +238,7 @@ object Code {
     case t: Ctor.Secondary =>
       s(a(t.mods, " "), "def this", (t.explicits, t.implicits), t.stats match {
         case Nil   => s(" = this", t.primaryCtorArgss)
-        case stats => s("{ this", t.primaryCtorArgss, ";", r(stats, "; "), " }")
+        case stats => s(" { this", t.primaryCtorArgss, ";", a(" ", r(stats, "; ")), " }")
       })
 
     // Enum

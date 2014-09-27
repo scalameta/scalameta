@@ -179,4 +179,8 @@ class ShowSuite extends ParseSuite {
       |}
     """.trim.stripMargin)
   }
+
+  test("secondary ctor") {
+    assert(compUnit("class C(x: Int) { def this() { this(2); println(\"OBLIVION!!!\") } }").show[Code] === "class C(x: Int) { def this() { this(2); println(\"OBLIVION!!!\") } }")
+  }
 }
