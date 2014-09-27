@@ -155,7 +155,7 @@ trait Typers extends Adaptations with Tags with TypersTracking with PatternTyper
     import infer._
     private var namerCache: Namer = null
     def namer = {
-      if (namerCache.eq(null) || namerCache.context != context) namerCache = newNamer(context)
+      if ((namerCache eq null) || namerCache.context != context) namerCache = newNamer(context)
       namerCache
     }
     var context = context0
@@ -165,12 +165,12 @@ trait Typers extends Adaptations with Tags with TypersTracking with PatternTyper
         new SubstWildcardMap(tparams)(tp)
       case TypeRef(_, sym, _) if sym.isAliasType =>
         val tp0 = tp.dealias
-        if (tp.eq(tp0)) {
+        if (tp eq tp0) {
           debugwarn(s"dropExistential did not progress dealiasing $tp, see SI-7126")
           tp
         } else {
           val tp1 = dropExistential(tp0)
-          if (tp1.eq(tp0)) tp else tp1
+          if (tp1 eq tp0) tp else tp1
         }
       case _ =>
         tp
@@ -269,7 +269,7 @@ trait Typers extends Adaptations with Tags with TypersTracking with PatternTyper
         } else if (sym.owner.isTerm && !sym.isTypeParameterOrSkolem) {
           var e = scope.lookupEntry(sym.name)
           var found = false
-          while (!found && e.ne(null) && e.owner == scope) if (e.sym == sym) {
+          while (!found && (e ne null) && e.owner == scope) if (e.sym == sym) {
             found = true
             addHidden(sym)
           } else e = scope.lookupNextEntry(e)
@@ -333,7 +333,7 @@ trait Typers extends Adaptations with Tags with TypersTracking with PatternTyper
     }
     def isStale(sym: Symbol): Boolean = sym.rawInfo.isInstanceOf[loaders.ClassfileLoader] && {
       sym.rawInfo.load(sym)
-      sym.sourceFile.ne(null) && currentRun.compiledFiles.contains(sym.sourceFile.path)
+      (sym.sourceFile ne null) && currentRun.compiledFiles.contains(sym.sourceFile.path)
     }
     private def isStableContext(tree: Tree, mode: Mode, pt: Type) = {
       def ptSym = pt.typeSymbol
@@ -581,7 +581,7 @@ trait Typers extends Adaptations with Tags with TypersTracking with PatternTyper
       }
       def fallbackAfterVanillaAdapt(): Tree = {
         def isPopulatedPattern = {
-          if (tree.symbol.ne(null) && tree.symbol.isModule) inferModulePattern(tree, pt)
+          if ((tree.symbol ne null) && tree.symbol.isModule) inferModulePattern(tree, pt)
           isPopulated(tree.tpe, approximateAbstracts(pt))
         }
         if (mode.inPatternMode && isPopulatedPattern) return tree
@@ -685,7 +685,7 @@ trait Typers extends Adaptations with Tags with TypersTracking with PatternTyper
     def instantiatePossiblyExpectingUnit(tree: Tree, mode: Mode, pt: Type): Tree = if (mode.typingExprNotFun && pt.typeSymbol == UnitClass) instantiateExpectingUnit(tree, mode) else instantiate(tree, mode, pt)
     private def isAdaptableWithView(qual: Tree) = {
       val qtpe = qual.tpe.widen
-      !isPastTyper && qual.isTerm && !qual.isInstanceOf[Super] && (qual.symbol.eq(null) || !qual.symbol.isTerm || qual.symbol.isValue) && !qtpe.isError && !qtpe.typeSymbol.isBottomClass && qtpe != WildcardType && !qual.isInstanceOf[ApplyImplicitView] && (context.implicitsEnabled || context.enrichmentEnabled)
+      !isPastTyper && qual.isTerm && !qual.isInstanceOf[Super] && ((qual.symbol eq null) || !qual.symbol.isTerm || qual.symbol.isValue) && !qtpe.isError && !qtpe.typeSymbol.isBottomClass && qtpe != WildcardType && !qual.isInstanceOf[ApplyImplicitView] && (context.implicitsEnabled || context.enrichmentEnabled)
     }
     def adaptToMember(qual: Tree, searchTemplate: Type, reportAmbiguous: Boolean = true, saveErrors: Boolean = true): Tree = if (isAdaptableWithView(qual)) {
       qual.tpe.dealiasWiden match {
@@ -707,7 +707,7 @@ trait Typers extends Adaptations with Tags with TypersTracking with PatternTyper
     }
     def adaptToMemberWithArgs(tree: Tree, qual: Tree, name: Name, mode: Mode, reportAmbiguous: Boolean, saveErrors: Boolean): Tree = {
       def onError(reportError: => Tree): Tree = context.tree match {
-        case Apply(tree1, args) if tree1.eq(tree) && args.nonEmpty =>
+        case Apply(tree1, args) if (tree1 eq tree) && args.nonEmpty =>
           silent(_.typedArgs(args.map(_.duplicate), mode)).filter(xs => !xs.exists(_.isErrorTyped)).map(xs => adaptToArguments(qual, name, xs, WildcardType, reportAmbiguous, saveErrors)).orElse(_ => reportError)
         case _ =>
           reportError
@@ -953,7 +953,7 @@ This restriction is planned to be removed in subsequent releases.""")
       val clazz = mdef.symbol.moduleClass
       val typedMods = typedModifiers(mdef.mods)
       assert(clazz != NoSymbol, mdef)
-      val noSerializable = linkedClass.eq(NoSymbol) || linkedClass.isErroneous || !linkedClass.isSerializable || clazz.isSerializable
+      val noSerializable = (linkedClass eq NoSymbol) || linkedClass.isErroneous || !linkedClass.isSerializable || clazz.isSerializable
       val impl1 = newTyper(context.make(mdef.impl, clazz, newScope)).typedTemplate(mdef.impl, typedParentTypes(mdef.impl) ++ if (noSerializable) Nil else {
         clazz.makeSerializable()
         List(TypeTree(SerializableTpe).setPos(clazz.pos.focus))
@@ -979,7 +979,7 @@ This restriction is planned to be removed in subsequent releases.""")
       var txt0 = txt
       trees.foreach(tree => txt0 = enterSym(txt0, tree))
     }
-    protected def enterSym(txt: Context, tree: Tree): Context = if (txt.eq(context)) namer.enterSym(tree) else newNamer(txt).enterSym(tree)
+    protected def enterSym(txt: Context, tree: Tree): Context = if (txt eq context) namer.enterSym(tree) else newNamer(txt).enterSym(tree)
     def typedTemplate(templ0: Template, parents1: List[Tree]): Template = {
       val templ = templ0
       val clazz = context.owner
@@ -1081,7 +1081,7 @@ This restriction is planned to be removed in subsequent releases.""")
           (call, Nil)
       }
       val (superConstr, superArgs) = decompose(rhs)
-      assert(superConstr.symbol.ne(null), superConstr)
+      assert(superConstr.symbol ne null, superConstr)
       def superClazz = superConstr.symbol.owner
       def superParamAccessors = superClazz.constrParamAccessors
       if (superConstr.symbol.isPrimaryConstructor && !superClazz.isJavaDefined && sameLength(superParamAccessors, superArgs)) superParamAccessors.zip(superArgs).withFilter(check$ifrefutable$1 => check$ifrefutable$1: @scala.unchecked match {
@@ -1358,7 +1358,7 @@ This restriction is planned to be removed in subsequent releases.""")
     def virtualizedMatch(match_: Match, mode: Mode, pt: Type) = {
       import patmat.{ vpmName, PureMatchTranslator }
       val matchStrategy: Tree = if (!(settings.Xexperimental && context.isNameInScope(vpmName._match))) null else qual$4.silent(_.typed(Ident(vpmName._match)), reportAmbiguousErrors = false).orElse(_ => null)
-      if (matchStrategy.ne(null)) typed(new PureMatchTranslator(this.asInstanceOf[patmat.global.analyzer.Typer], matchStrategy).translateMatch(match_), mode, pt) else match_
+      if (matchStrategy ne null) typed(new PureMatchTranslator(this.asInstanceOf[patmat.global.analyzer.Typer], matchStrategy).translateMatch(match_), mode, pt) else match_
     }
     def synthesizePartialFunction(paramName: TermName, paramPos: Position, paramSynthetic: Boolean, tree: Tree, mode: Mode, pt: Type): Tree = {
       assert(pt.typeSymbol == PartialFunctionClass, s"PartialFunction synthesis for match in $tree requires PartialFunction expected type, but got $pt.")
@@ -1525,7 +1525,7 @@ This restriction is planned to be removed in subsequent releases.""")
           }
         })
         fun.body match {
-          case Match(sel, cases) if sel.ne(EmptyTree) && pt.typeSymbol == PartialFunctionClass =>
+          case Match(sel, cases) if (sel ne EmptyTree) && pt.typeSymbol == PartialFunctionClass =>
             val outerTyper = newTyper(context.outer)
             val p = fun.vparams.head
             if (p.tpt.tpe == null) p.tpt.setType(outerTyper.typedType(p.tpt).tpe)
@@ -1599,9 +1599,9 @@ This restriction is planned to be removed in subsequent releases.""")
       def checkNoDoubleDefs: Unit = {
         val scope = if (inBlock) context.scope else context.owner.info.decls
         var e = scope.elems
-        while (e.ne(null) && e.owner == scope) {
+        while ((e ne null) && e.owner == scope) {
           var e1 = scope.lookupNextEntry(e)
-          while (e1.ne(null) && e1.owner == scope) {
+          while ((e1 ne null) && e1.owner == scope) {
             if (!accesses(e.sym, e1.sym) && !accesses(e1.sym, e.sym) && (e.sym.isType || inBlock || e.sym.tpe.matches(e1.sym.tpe))) if (!e.sym.isErroneous && !e1.sym.isErroneous && !e.sym.hasDefault && !e.sym.hasAnnotation(BridgeClass) && !e1.sym.hasAnnotation(BridgeClass)) {
               log("""Double definition detected:
   """ + (e.sym.getClass(), e.sym.info, e.sym.ownerChain) + """
@@ -1625,7 +1625,7 @@ This restriction is planned to be removed in subsequent releases.""")
             newStats += typedStat(tree)
             context.unit.synthetics -= sym
           }))
-          moreToAdd = scope.elems.ne(initElems)
+          moreToAdd = scope.elems ne initElems
         }
         if (newStats.isEmpty) stats else {
           def matches(stat: Tree, synt: Tree) = (stat, synt) match {
@@ -1989,7 +1989,7 @@ This restriction is planned to be removed in subsequent releases.""")
     def packSymbols(hidden: List[Symbol], tp: Type): Type = global.packSymbols(hidden, tp, context0.owner)
     def isReferencedFrom(ctx: Context, sym: Symbol): Boolean = ctx.owner.isTerm && ctx.scope.exists(dcl => dcl.isInitialized && dcl.info.contains(sym)) || {
       var ctx1 = ctx.outer
-      while (ctx1 != NoContext && ctx1.scope.eq(ctx.scope)) ctx1 = ctx1.outer
+      while (ctx1 != NoContext && (ctx1.scope eq ctx.scope)) ctx1 = ctx1.outer
       ctx1 != NoContext && isReferencedFrom(ctx1, sym)
     }
     def isCapturedExistential(sym: Symbol) = sym.hasAllFlags(EXISTENTIAL | CAPTURED) && {
@@ -2019,7 +2019,7 @@ This restriction is planned to be removed in subsequent releases.""")
       val dealiasLocals = new TypeMap {
         def apply(tp: Type): Type = tp match {
           case TypeRef(pre, sym, args) =>
-            if (sym.isAliasType && containsLocal(tp) && tp.dealias.ne(tp)) apply(tp.dealias) else {
+            if (sym.isAliasType && containsLocal(tp) && (tp.dealias ne tp)) apply(tp.dealias) else {
               if (pre.isVolatile) InferTypeWithVolatileTypeSelectionError(tree, pre)
               mapOver(tp)
             }
@@ -2321,7 +2321,7 @@ This restriction is planned to be removed in subsequent releases.""")
         val enclMethod = context.enclMethod
         if (enclMethod == NoContext || enclMethod.owner.isConstructor || context.enclClass.enclMethod == enclMethod) ReturnOutsideOfDefError(tree) else {
           val DefDef(_, name, _, _, restpt, _) = enclMethod.tree
-          if (restpt.tpe.eq(null)) ReturnWithoutTypeError(tree, enclMethod.owner) else {
+          if (restpt.tpe eq null) ReturnWithoutTypeError(tree, enclMethod.owner) else {
             val expr1 = context.withinReturnExpr(typedByValueExpr(expr, restpt.tpe))
             if (restpt.tpe.typeSymbol == UnitClass) if (typed(expr).tpe.typeSymbol != UnitClass) context.warning(tree.pos, "enclosing method " + name + " has result type Unit: return value discarded")
             val res = treeCopy.Return(tree, checkDead(expr1)).setSymbol(enclMethod.owner)
@@ -2398,9 +2398,9 @@ This restriction is planned to be removed in subsequent releases.""")
         val start = if (Statistics.canEnable) Statistics.startTimer(failedApplyNanos) else null
         def onError(typeErrors: Seq[AbsTypeError]): Tree = {
           if (Statistics.canEnable) Statistics.stopTimer(failedApplyNanos, start)
-          if (fun.symbol.ne(null) && fun.symbol.isJavaDefined) {
+          if ((fun.symbol ne null) && fun.symbol.isJavaDefined) {
             val newtpe = rawToExistential(fun.tpe)
-            if (fun.tpe.ne(newtpe)) return tryTypedApply(fun.setType(newtpe), args)
+            if (fun.tpe ne newtpe) return tryTypedApply(fun.setType(newtpe), args)
           }
           def treesInResult(tree: Tree): List[Tree] = tree :: tree match {
             case Block(_, r) =>
@@ -2445,7 +2445,7 @@ This restriction is planned to be removed in subsequent releases.""")
             tryTypedArgs(args, forArgMode(fun, mode)) match {
               case Some(args1) if !args1.exists(arg => arg.exists(_.isErroneous)) =>
                 val qual1 = if (!pt.isError) adaptToArguments(qual, name, args1, pt, reportAmbiguous = true, saveErrors = true) else qual
-                if (qual1.ne(qual)) {
+                if (qual1 ne qual) {
                   val tree1 = Apply(Select(qual1, name).setPos(fun.pos), args1).setPos(tree.pos)
                   return context.withinSecondTry(typed1(tree1, mode, pt))
                 }
@@ -2463,7 +2463,7 @@ This restriction is planned to be removed in subsequent releases.""")
         }
       }
       def normalTypedApply(tree: Tree, fun: Tree, args: List[Tree]) = {
-        val stableApplication = fun.symbol.ne(null) && fun.symbol.isMethod && fun.symbol.isStable
+        val stableApplication = (fun.symbol ne null) && fun.symbol.isMethod && fun.symbol.isStable
         val funpt = if (mode.inPatternMode) pt else WildcardType
         val appStart = if (Statistics.canEnable) Statistics.startTimer(failedApplyNanos) else null
         val opeqStart = if (Statistics.canEnable) Statistics.startTimer(failedOpEqNanos) else null
@@ -2486,7 +2486,7 @@ This restriction is planned to be removed in subsequent releases.""")
           case SilentResultValue(fun1) =>
             val fun2 = if (stableApplication) stabilizeFun(fun1, mode, pt) else fun1
             if (Statistics.canEnable) Statistics.incCounter(typedApplyCount)
-            val noSecondTry = isPastTyper || context.inSecondTry || fun2.symbol.ne(null) && fun2.symbol.isConstructor || isImplicitMethodType(fun2.tpe)
+            val noSecondTry = isPastTyper || context.inSecondTry || (fun2.symbol ne null) && fun2.symbol.isConstructor || isImplicitMethodType(fun2.tpe)
             val isFirstTry = fun2 match {
               case Select(_, _) =>
                 !noSecondTry && mode.inExprMode
@@ -2617,7 +2617,7 @@ This restriction is planned to be removed in subsequent releases.""")
         val sym = tree.symbol.orElse(member(qual, name)).orElse {
           if (name != nme.CONSTRUCTOR && mode.inAny(EXPRmode | PATTERNmode)) {
             val qual1 = adaptToMemberWithArgs(tree, qual, name, mode, reportAmbiguous = true, saveErrors = true)
-            if (qual1.ne(qual) && !qual1.isErrorTyped) return typed(treeCopy.Select(tree, qual1, name), mode, pt)
+            if ((qual1 ne qual) && !qual1.isErrorTyped) return typed(treeCopy.Select(tree, qual1, name), mode, pt)
           }
           NoSymbol
         }
@@ -2674,7 +2674,7 @@ This restriction is planned to be removed in subsequent releases.""")
               }).setType(qual.tpe).setPos(qual.pos), name)
             case _ if accessibleError.isDefined =>
               val qual1 = if (name == nme.CONSTRUCTOR) qual else adaptToMemberWithArgs(tree, qual, name, mode, reportAmbiguous = false, saveErrors = false)
-              if (!qual1.isErrorTyped && qual1.ne(qual)) typed(Select(qual1, name).setPos(tree.pos), mode, pt) else asDynamicCall.getOrElse {
+              if (!qual1.isErrorTyped && (qual1 ne qual)) typed(Select(qual1, name).setPos(tree.pos), mode, pt) else asDynamicCall.getOrElse {
                 issue(accessibleError.get)
                 setError(tree)
               }
@@ -2823,11 +2823,11 @@ This restriction is planned to be removed in subsequent releases.""")
         }
       }
       val sym: Symbol = tree.symbol
-      if (sym.ne(null) && sym.ne(NoSymbol)) sym.initialize
+      if ((sym ne null) && (sym ne NoSymbol)) sym.initialize
       def typedPackageDef(pdef0: PackageDef) = {
         val pdef = treeCopy.PackageDef(pdef0, pdef0.pid, pluginsEnterStats(this, pdef0.stats))
         val pid1 = typedQualifier(pdef.pid).asInstanceOf[RefTree]
-        assert(sym.moduleClass.ne(NoSymbol), sym)
+        assert(sym.moduleClass ne NoSymbol, sym)
         val stats1 = newTyper(context.make(tree, sym.moduleClass, sym.info.decls)).typedStats(pdef.stats, NoSymbol)
         treeCopy.PackageDef(tree, pid1, stats1).setType(NoType)
       }
@@ -2857,7 +2857,7 @@ This restriction is planned to be removed in subsequent releases.""")
         }
         if (!isPastTyper) tree match {
           case Try(_, Nil, fin) =>
-            if (fin.eq(EmptyTree)) context.warning(tree.pos, "A try without a catch or finally is equivalent to putting its body in a block; no exceptions are handled.")
+            if (fin eq EmptyTree) context.warning(tree.pos, "A try without a catch or finally is equivalent to putting its body in a block; no exceptions are handled.")
           case Try(_, catches, _) =>
             catches.foreach {
               cdef => checkForCatchAll(cdef)
@@ -3125,18 +3125,18 @@ This restriction is planned to be removed in subsequent releases.""")
     }
     private def typedInternal(tree: Tree, mode: Mode, pt: Type): Tree = {
       val ptPlugins = pluginsPt(pt, this, tree, mode)
-      def retypingOk = context.retyping && tree.tpe.ne(null) && (tree.tpe.isErroneous || !(tree.tpe <:< ptPlugins))
+      def retypingOk = context.retyping && (tree.tpe ne null) && (tree.tpe.isErroneous || !(tree.tpe <:< ptPlugins))
       def runTyper(): Tree = {
         if (retypingOk) {
           tree.tpe = null
           if (tree.hasSymbol) tree.symbol = NoSymbol
         }
-        val alreadyTyped = tree.tpe.ne(null)
+        val alreadyTyped = tree.tpe ne null
         val shouldPrint = !alreadyTyped && !phase.erasedTypes
         val ptWild = if (mode.inPatternMode) ptPlugins else dropExistential(ptPlugins)
         val tree1: Tree = if (alreadyTyped) tree else typed1(tree, mode, ptWild)
         if (shouldPrint) typingStack.showTyped(tree1)
-        if (tree1.tpe.eq(null)) return setError(tree)
+        if (tree1.tpe eq null) return setError(tree)
         tree1.modifyType(pluginsTyped(_, this, tree1, mode, ptPlugins))
         val result = if (tree1.isEmpty) tree1 else {
           val result = adapt(tree1, mode, ptPlugins, tree)
