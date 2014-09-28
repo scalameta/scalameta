@@ -1147,8 +1147,7 @@ This restriction is planned to be removed in subsequent releases.""")
       }
       def paramssTypes(tp: Type): List[List[Type]] = tp match {
         case mt @ MethodType(_, restpe) =>
-          val x$59 = mt.paramTypes
-          paramssTypes(restpe) :: x$59
+          mt.paramTypes :: paramssTypes(restpe)
         case PolyType(_, restpe) =>
           paramssTypes(restpe)
         case _ =>
@@ -1294,8 +1293,7 @@ This restriction is planned to be removed in subsequent releases.""")
           case vd @ ValDef(_, _, _, _) if vd.symbol.isLazy =>
             namer.addDerivedTrees(Typer.this, vd)
           case _ =>
-            val x$68 = stat
-            Nil :: x$68
+            stat :: Nil
         })
         val stats2 = typedStats(stats1, context.owner)
         val expr1 = typed(block.expr, mode &~ (FUNmode | QUALmode), pt)
@@ -1929,8 +1927,7 @@ This restriction is planned to be removed in subsequent releases.""")
           def hasValue = names.exists(_.name == nme.value)
           val args = argss match {
             case arg :: Nil :: Nil if !isNamedArg(arg) && hasValue =>
-              val x$118 = gen.mkNamedArg(nme.value, arg)
-              Nil :: x$118
+              gen.mkNamedArg(nme.value, arg) :: Nil
             case args :: Nil =>
               args
           }

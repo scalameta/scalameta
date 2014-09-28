@@ -140,20 +140,4 @@ trait Helpers {
       case _ => None
     }
   }
-
-  object EvalOnce {
-    def unapply(trees: List[Tree]): Option[Transformer] = {
-      if (trees.isEmpty) None
-      else {
-        val inlinees = trees.collect{ case tree @ ValDef(_, name, _, rhs) if tree.symbol.isSynthetic && name.startsWith("ev$") => name -> rhs }.toMap
-        if (inlinees.size != trees.size) None
-        else Some(new Transformer {
-          override def transform(tree: Tree): Tree = tree match {
-            case Ident(name: TermName) if inlinees.contains(name) => transform(inlinees(name))
-            case _ => super.transform(tree)
-          }
-        })
-      }
-    }
-  }
 }

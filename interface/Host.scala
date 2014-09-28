@@ -168,7 +168,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
       }
       def pargs(gargs: List[g.Tree]): Seq[p.Arg] = gargs.map(parg)
       def pargss(gargss: List[List[g.Tree]]): Seq[Seq[p.Arg]] = gargss.map(pargs)
-      def pstats[T <: p.Stmt : ClassTag](gstats: List[g.Tree]): List[T] = {
+      def pstats[T <: p.Stmt : ClassTag](gparent: g.Tree, gstats: List[g.Tree]): List[T] = {
         object PatDefCore {
           def unapply(tree: g.MemberDef): Option[(g.Tree, g.Tree)] = tree match {
             // NOTE: we can't trust annot.tpe.typeSymbol, because annot.tpe is bugged
@@ -188,6 +188,21 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
               None
           }
         }
+        object AnonymousClassDef {
+          def unapply(tree: g.ClassDef): Option[g.Template] = if (tree.name == g.tpnme.ANON_CLASS_NAME) Some(tree.impl) else None
+        }
+        object RightAssociativeApplicationLhsTemporaryVal {
+          def unapply(tree: g.ValDef): Option[g.Tree] = {
+            if (tree.mods.isSynthetic && tree.mods.isArtifact && tree.name.startsWith(g.nme.FRESH_TERM_NAME_PREFIX)) Some(tree.rhs)
+            else None
+          }
+        }
+        object EvalOnceTemporaryVal {
+          def unapply(tree: g.ValDef): Option[(g.Name, g.Tree)] = {
+            if (tree.symbol.isSynthetic && tree.name.startsWith("ev$")) Some((tree.name, tree.rhs))
+            else None
+          }
+        }
         val result = mutable.ListBuffer[p.Stmt]()
         var i = 0
         while (i < gstats.length) {
@@ -199,6 +214,25 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
               val modbearer = gstats(i - 1).asInstanceOf[g.MemberDef] // TODO: mods for nullary patterns get irrevocably lost (`implicit val List() = List()`)
               if (!modbearer.symbol.isMutable) p.Defn.Val(pmods(modbearer), List(pat.cvt_! : p.Pat), None, rhs.cvt_!)
               else p.Defn.Var(pmods(modbearer), List(pat.cvt_! : p.Pat), None, Some[p.Term](rhs.cvt_!))
+            case in @ AnonymousClassDef(templ) =>
+              i += 1
+              val q"new $$anon()" = gstats(i - 1)
+              p.Term.New(templ.cvt_!)
+            case in @ RightAssociativeApplicationLhsTemporaryVal(left) =>
+              i += 1
+              val g.treeInfo.Applied(op @ g.Select(right, _), targs, List(List(g.Ident(_)))) = gstats(i - 1)
+              p.Term.ApplyInfix(left.cvt_!, op.symbol.asTerm.precvt(right.tpe, op), targs.cvt_!, List(right.cvt_!))
+            case in @ EvalOnceTemporaryVal(_, _) =>
+              val inlinees = gstats.collect({ case EvalOnceTemporaryVal(name, rhs) => (name -> rhs) }).toMap
+              require(i == 1 && inlinees.size == gstats.size - 1)
+              i = gstats.length
+              object inliner extends g.Transformer {
+                override def transform(tree: g.Tree): g.Tree = tree match {
+                  case g.Ident(name: g.TermName) if inlinees.contains(name) => transform(inlinees(name))
+                  case _ => super.transform(tree)
+                }
+              }
+              inliner.transform(gstats(i - 1)).copyAttrs(gparent).cvt_! : p.Term
             case in =>
               in.cvt_! : p.Stmt
           }
@@ -208,6 +242,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         result.toList.asInstanceOf[List[T]]
       }
     }
+
     import Helpers._
     val TermQuote = "denied" // TODO: find a better approach
     in.asInstanceOf[g.Tree].ensureAttributed()
@@ -216,14 +251,14 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         unreachable
       case g.UnmappableTree =>
         unreachable
-      case g.PackageDef(pid, stats) if pt <:< typeOf[p.Pkg] =>
+      case in @ g.PackageDef(pid, stats) if pt <:< typeOf[p.Pkg] =>
         require(pid.name != g.nme.EMPTY_PACKAGE_NAME)
         val hasBraces = stats.collect{ case pdef: g.PackageDef => pdef }.length > 1
-        p.Pkg(pid.cvt_!, pstats[p.Stmt.TopLevel](stats), hasBraces = hasBraces) // TODO: infer hasBraces
-      case g.PackageDef(pid, stats) if pt <:< typeOf[p.Aux.CompUnit] =>
+        p.Pkg(pid.cvt_!, pstats[p.Stmt.TopLevel](in, stats), hasBraces = hasBraces) // TODO: infer hasBraces
+      case in @ g.PackageDef(pid, stats) if pt <:< typeOf[p.Aux.CompUnit] =>
         val hasBraces = stats.collect{ case pdef: g.PackageDef => pdef }.length > 1
-        if (pid.name == g.nme.EMPTY_PACKAGE_NAME) p.Aux.CompUnit(pstats[p.Stmt.TopLevel](stats))
-        else p.Aux.CompUnit(List(p.Pkg(pid.cvt_!, pstats[p.Stmt.TopLevel](stats), hasBraces = hasBraces))) // TODO: infer hasBraces
+        if (pid.name == g.nme.EMPTY_PACKAGE_NAME) p.Aux.CompUnit(pstats[p.Stmt.TopLevel](in, stats))
+        else p.Aux.CompUnit(List(p.Pkg(pid.cvt_!, pstats[p.Stmt.TopLevel](in, stats), hasBraces = hasBraces))) // TODO: infer hasBraces
       case in @ g.ClassDef(_, _, tparams, templ) =>
         require(in.symbol.isClass)
         if (in.symbol.isTrait) {
@@ -274,7 +309,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         if (in.symbol.isConstructor) {
           require(!in.symbol.isPrimaryConstructor)
           val q"{ $_(...$argss); ..$stats; () }" = body
-          p.Ctor.Secondary(pmods(in), explicitss.cvt_!, implicits.cvt_!, pargss(argss), pstats[p.Stmt.Block](stats))
+          p.Ctor.Secondary(pmods(in), explicitss.cvt_!, implicits.cvt_!, pargss(argss), pstats[p.Stmt.Block](in, stats))
         } else if (in.symbol.isMacro) {
           require(tpt.nonEmpty) // TODO: support pre-2.12 macros with inferred return types
           p.Defn.Macro(pmods(in), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt_!, implicits.cvt_!, tpt.cvt_!, body.cvt_!)
@@ -324,24 +359,18 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         val SyntacticTemplate(gparents, gself, gearlydefns, gstats) = in
         val pparents = gparents.map(gparent => { val applied = g.treeInfo.dissectApplied(gparent); p.Aux.Parent(applied.callee.cvt_!, pargss(applied.argss)) })
         if (gstats.isEmpty) p.Aux.Template(gearlydefns.cvt_!, pparents, gself.cvt)
-        else p.Aux.Template(gearlydefns.cvt_!, pparents, gself.cvt, pstats[p.Stmt.Template](gstats))
-      case g.Block(stats, expr) =>
-        in match {
-          case g.Block((gcdef @ g.ClassDef(_, g.TypeName("$anon"), _, _)) :: Nil, q"new $$anon()") =>
-            val pcdef: p.Defn.Class = gcdef.cvt_!
-            p.Term.New(pcdef.templ)
-          case g.Block(
-            List(g.ValDef(g.Modifiers(xflags, _, _), x1, g.EmptyTree, left)),
-            g.treeInfo.Applied(op @ g.Select(right, _), targs, List(List(g.Ident(x2)))))
-          if xflags == (g.Flag.SYNTHETIC | g.Flag.ARTIFACT) && x1.startsWith(g.nme.FRESH_TERM_NAME_PREFIX) && x1 == x2 =>
-            p.Term.ApplyInfix(left.cvt_!, op.symbol.asTerm.precvt(right.tpe, op), targs.cvt_!, List(right.cvt_!))
-          case in @ g.Block(EvalOnce(inliner), expr) =>
-            inliner.transform(expr).copyAttrs(in).cvt_! : p.Term
-          case g.Block(stats, expr) =>
-            p.Term.Block(pstats[p.Stmt.Block](stats :+ expr))
+        else p.Aux.Template(gearlydefns.cvt_!, pparents, gself.cvt, pstats[p.Stmt.Template](in, gstats))
+      case in: g.Block =>
+        // NOTE: if a block with non-trivial stats has been collapsed to a single stat
+        // then this means that it's a desugaring of a language construct (e.g. `new C{}` or `1 :: Nil`)
+        // and it shouldn't be a p.Term.Block, but rather a resulting stat instead
+        val gstats = in.stats :+ in.expr
+        (gstats, Helpers.pstats[p.Stmt.Block](in, gstats)) match {
+          case ((nel @ _ :+ _) :+ gexpr, Nil :+ pstat) => pstat.asInstanceOf[p.Term]
+          case (_, pstats) => p.Term.Block(pstats)
         }
-      case g.CaseDef(pat, guard, q"..$stats") =>
-        p.Aux.Case(pat.cvt_!, if (guard.nonEmpty) Some[p.Term](guard.cvt_!) else None, pstats[p.Stmt.Block](stats))
+      case in @ g.CaseDef(pat, guard, q"..$stats") =>
+        p.Aux.Case(pat.cvt_!, if (guard.nonEmpty) Some[p.Term](guard.cvt_!) else None, pstats[p.Stmt.Block](in, stats))
       case g.Alternative(fst :: snd :: Nil) =>
         p.Pat.Alternative(fst.cvt_!, snd.cvt_!)
       case in @ g.Alternative(hd :: rest) =>
