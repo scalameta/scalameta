@@ -567,7 +567,7 @@ trait Ensugar {
         }
 
         object InlinedConstant {
-          def unapply(tree: Tree): Option[Tree] = tree.metadata.get("originalConstant").map(_.asInstanceOf[Tree].removeMetadata("originalConstant"))
+          def unapply(tree: Tree): Option[Tree] = tree.metadata.get("originalConstant").map(_.asInstanceOf[Tree].duplicate.removeMetadata("originalConstant"))
         }
       }
       object advancedDuplicator extends Transformer {
