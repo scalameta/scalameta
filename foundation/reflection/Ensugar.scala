@@ -225,7 +225,8 @@ trait Ensugar {
         object MemberDefWithTrimmableSynthetic {
           def unapply(tree: Tree): Option[Tree] = {
             implicit class RichTrees(trees: List[Tree]) {
-              private def needsTrimming(mdef: MemberDef): Boolean = mdef.mods.isSynthetic && !mdef.mods.isArtifact && !mdef.name.startsWith("ev$")
+              private def importantName(mdef: MemberDef): Boolean = mdef.name.startsWith("ev$") || mdef.name.startsWith("eta$")
+              private def needsTrimming(mdef: MemberDef): Boolean = mdef.mods.isSynthetic && !mdef.mods.isArtifact && !importantName(mdef)
               private def needsTrimming(tree: Tree): Boolean = tree match { case mdef: MemberDef => needsTrimming(mdef); case _ => false }
               def needTrimming = trees.exists(needsTrimming)
               def trim = trees.filter(tree => !needsTrimming(tree))

@@ -197,9 +197,9 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
             else None
           }
         }
-        object EvalOnceTemporaryVal {
+        object InlinableHoistedTemporaryVal {
           def unapply(tree: g.ValDef): Option[(g.Name, g.Tree)] = {
-            if (tree.symbol.isSynthetic && tree.name.startsWith("ev$")) Some((tree.name, tree.rhs))
+            if (tree.symbol.isSynthetic && (tree.name.startsWith("ev$") || tree.name.startsWith("eta$"))) Some((tree.name, tree.rhs))
             else None
           }
         }
@@ -222,8 +222,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
               i += 1
               val g.treeInfo.Applied(op @ g.Select(right, _), targs, List(List(g.Ident(_)))) = gstats(i - 1)
               p.Term.ApplyInfix(left.cvt_!, op.symbol.asTerm.precvt(right.tpe, op), targs.cvt_!, List(right.cvt_!))
-            case in @ EvalOnceTemporaryVal(_, _) =>
-              val inlinees = gstats.collect({ case EvalOnceTemporaryVal(name, rhs) => (name -> rhs) }).toMap
+            case in @ InlinableHoistedTemporaryVal(_, _) =>
+              val inlinees = gstats.collect({ case InlinableHoistedTemporaryVal(name, rhs) => (name -> rhs) }).toMap
               require(i == 1 && inlinees.size == gstats.size - 1)
               i = gstats.length
               object inliner extends g.Transformer {
