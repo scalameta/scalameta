@@ -19,8 +19,8 @@ object Eta {
     val c1 = new C
     def c2 = new C
     autoEta(c1.foo1)
-    autoEta(c1 foo2 1)
+    autoEta(c1.foo2(1))
     autoEta(c2.foo1)
-    autoEta(c2 foo2 2)
+    autoEta(c2.foo2(2))
   }
 }

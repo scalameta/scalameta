@@ -58,7 +58,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         }
       }
       implicit class RichHelperName(gname: g.Name) {
-        def looksLikeInfix = !gname.decoded.forall(c => Character.isLetter(c)) || gname == g.nme.eq || gname == g.nme.ne
+        def looksLikeInfix = !gname.decoded.forall(c => Character.isLetter(c) || Character.isDigit(c) || c == '_') || gname == g.nme.eq || gname == g.nme.ne
       }
       implicit class RichHelperSymbol(gsym: g.Symbol) {
         def isAnonymous: Boolean = {
