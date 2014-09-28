@@ -1318,7 +1318,7 @@ This restriction is planned to be removed in subsequent releases.""")
     }
     def virtualizedMatch(match_: Match, mode: Mode, pt: Type) = {
       import patmat.{ vpmName, PureMatchTranslator }
-      val matchStrategy: Tree = if (!(settings.Xexperimental && context.isNameInScope(vpmName._match))) null else qual$4.silent(_.typed(Ident(vpmName._match)), reportAmbiguousErrors = false).orElse(_ => null)
+      val matchStrategy: Tree = if (!(settings.Xexperimental && context.isNameInScope(vpmName._match))) null else newTyper(context.makeImplicit(reportAmbiguousErrors = false)).silent(_.typed(Ident(vpmName._match)), reportAmbiguousErrors = false).orElse(_ => null)
       if (matchStrategy ne null) typed(new PureMatchTranslator(this.asInstanceOf[patmat.global.analyzer.Typer], matchStrategy).translateMatch(match_), mode, pt) else match_
     }
     def synthesizePartialFunction(paramName: TermName, paramPos: Position, paramSynthetic: Boolean, tree: Tree, mode: Mode, pt: Type): Tree = {
@@ -1654,7 +1654,7 @@ This restriction is planned to be removed in subsequent releases.""")
         case OverloadedType(pre, alts) =>
           def handleOverloaded = {
             val undetparams = context.undetparams
-            val (args1, argTpes) = qual$10.savingUndeterminedTypeParams()(x$217())
+            val (args1, argTpes) = context.savingUndeterminedTypeParams()(x$217())
             if (context.hasErrors) setError(tree) else {
               inferMethodAlternative(fun, undetparams, argTpes, pt)
               doTypedApply(tree, adapt(fun, mode.forFunMode, WildcardType), args1, mode, pt)

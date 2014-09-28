@@ -413,7 +413,7 @@ trait Ensugar {
             def loop(tree: Tree, depth: Int): Tree = tree match {
               case Apply(fun, args) if hasNamesDefaults(args) => treeCopy.Apply(tree, loop(fun, depth - 1), undoNamesDefaults(args, depth))
               case Apply(fun, args) => treeCopy.Apply(tree, loop(fun, depth - 1), args)
-              case TypeApply(core, targs) => treeCopy.TypeApply(tree, core, targs)
+              case TypeApply(core, targs) => treeCopy.TypeApply(tree, loop(core, depth - 1), targs)
               case Select(core, name) if qualsym != NoSymbol && core.symbol == qualsym => treeCopy.Select(tree, qual, name).removeMetadata("originalQual")
               case core => core
             }
