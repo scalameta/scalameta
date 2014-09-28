@@ -488,7 +488,7 @@ trait Ensugar {
         // TODO: figure out whether the classtag-style extractor was written explicitly by the programmer
         object ClassTagExtractor {
           def unapply(tree: Tree): Option[Tree] = tree match {
-            case outerPat @ UnApply(q"$ref.$unapply[..$targs](..$_)", (innerPat @ Typed(Ident(nme.WILDCARD), _)) :: Nil)
+            case outerPat @ UnApply(q"$ref.$unapply[..$targs](..$_)", List(innerPat))
             if outerPat.fun.symbol.owner == definitions.ClassTagClass && unapply == nme.unapply =>
               Some(innerPat)
             case _ =>
