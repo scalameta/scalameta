@@ -236,12 +236,65 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
       result
     }
     override protected def adapt(tree: Tree, mode: Mode, pt: Type, original: Tree = EmptyTree): Tree = {
+      def hasUndets = context.undetparams.nonEmpty
+      def hasUndetsInMonoMode = hasUndets && !mode.inPolyMode
+      def instantiateToMethodType(mt: MethodType): Tree = {
+        val meth = tree match {
+          // a partial named application is a block (see comment in EtaExpansion)
+          case Block(_, tree1) => tree1.symbol
+          case _               => tree.symbol
+        }
+        if (!meth.isConstructor && isFunctionType(pt)) { // (4.2)
+          debuglog(s"eta-expanding $tree: ${tree.tpe} to $pt")
+          checkParamsConvertible(tree, tree.tpe)
+          // NOTE: this is a meaningful difference from the code in Typers.scala
+          //-val tree0 = etaExpand(context.unit, tree, this)
+          val tree0 = etaExpand(context.unit, tree, this).appendMetadata("originalAutoEta" -> tree)
+
+          // #2624: need to infer type arguments for eta expansion of a polymorphic method
+          // context.undetparams contains clones of meth.typeParams (fresh ones were generated in etaExpand)
+          // need to run typer on tree0, since etaExpansion sets the tpe's of its subtrees to null
+          // can't type with the expected type, as we can't recreate the setup in (3) without calling typed
+          // (note that (3) does not call typed to do the polymorphic type instantiation --
+          //  it is called after the tree has been typed with a polymorphic expected result type)
+          if (hasUndets)
+            instantiate(typed(tree0, mode), mode, pt)
+          else
+            typed(tree0, mode, pt)
+        }
+        else if (!meth.isConstructor && mt.params.isEmpty) // (4.3)
+          adapt(typed(Apply(tree, Nil) setPos tree.pos), mode, pt, original)
+        else if (context.implicitsEnabled)
+          MissingArgsForMethodTpeError(tree, meth)
+        else
+          setError(tree)
+      }
       val result = super.adapt(tree, mode, pt, original)
-      tree.tpe match {
+      if (isMacroImplRef(tree)) {
+        result
+      } else tree.tpe match {
+        case atp @ AnnotatedType(_, _) if canAdaptAnnotations(tree, this, mode, pt) => // (-1)
+          result
         case ct @ ConstantType(value) if mode.inNone(TYPEmode | FUNmode) && (ct <:< pt) && canAdaptConstantTypeToLiteral => // (0)
+          // NOTE: this is a meaningful difference from the code in Typers.scala
+          //-result
           // NOTE: need to guard against subsequent adaptations that might mess up the original
           if (result.hasMetadata("originalConstant")) result
           else result.appendMetadata("originalConstant" -> tree)
+        case OverloadedType(pre, alts) if !mode.inFunMode => // (1)
+          result
+        case NullaryMethodType(restpe) => // (2)
+          result
+        case TypeRef(_, ByNameParamClass, arg :: Nil) if mode.inExprMode => // (2)
+          result
+        case tp if mode.typingExprNotLhs && isExistentialType(tp) =>
+          result
+        case PolyType(tparams, restpe) if mode.inNone(TAPPmode | PATTERNmode) && !context.inTypeConstructorAllowed => // (3)
+          result
+        case mt: MethodType if mode.typingExprNotFunNotLhs && mt.isImplicit => // (4.1)
+          result
+        case mt: MethodType if mode.typingExprNotFunNotLhs && !hasUndetsInMonoMode && !treeInfo.isMacroApplicationOrBlock(tree) =>
+          instantiateToMethodType(mt)
         case _ =>
           result
       }
@@ -604,7 +657,7 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
               case exprTyped =>
                 // NOTE: this is a meaningful difference from the code in Typers.scala
                 //-typedEta(checkDead(exprTyped))
-                typedEta(checkDead(exprTyped)).appendMetadata("originalEta" -> exprTyped)
+                typedEta(checkDead(exprTyped)).appendMetadata("originalManualEta" -> exprTyped)
             }
           case Typed(expr, tpt) =>
             val tpt1  = typedType(tpt, mode)                           // type the ascribed type first

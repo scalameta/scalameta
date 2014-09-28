@@ -199,7 +199,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         }
         object InlinableHoistedTemporaryVal {
           def unapply(tree: g.ValDef): Option[(g.Symbol, g.Tree)] = {
-            if (tree.symbol.isSynthetic && (tree.name.startsWith("ev$") || tree.name.startsWith("eta$"))) Some((tree.symbol, tree.rhs))
+            if (tree.symbol.isSynthetic && tree.name.startsWith("ev$")) Some((tree.symbol, tree.rhs))
             else None
           }
         }

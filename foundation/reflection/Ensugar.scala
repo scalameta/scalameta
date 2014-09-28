@@ -225,7 +225,7 @@ trait Ensugar {
         object MemberDefWithTrimmableSynthetic {
           def unapply(tree: Tree): Option[Tree] = {
             implicit class RichTrees(trees: List[Tree]) {
-              private def importantName(mdef: MemberDef): Boolean = mdef.name.startsWith("ev$") || mdef.name.startsWith("eta$")
+              private def importantName(mdef: MemberDef): Boolean = mdef.name.startsWith("ev$")
               private def needsTrimming(mdef: MemberDef): Boolean = mdef.mods.isSynthetic && !mdef.mods.isArtifact && !importantName(mdef)
               private def needsTrimming(tree: Tree): Boolean = tree match { case mdef: MemberDef => needsTrimming(mdef); case _ => false }
               def needTrimming = trees.exists(needsTrimming)
@@ -537,9 +537,14 @@ trait Ensugar {
         }
 
         object EtaExpansion {
-          def unapply(tree: Tree): Option[Tree] = tree.metadata.get("originalEta").map(_.asInstanceOf[Tree]) match {
-            case Some(original) => Some(Typed(original, Function(Nil, EmptyTree)).setType(tree.tpe))
-            case None => None
+          def unapply(tree: Tree): Option[Tree] = {
+            val manualEta = tree.metadata.get("originalManualEta").map(_.asInstanceOf[Tree])
+            val autoEta = tree.metadata.get("originalAutoEta").map(_.asInstanceOf[Tree])
+            (manualEta, autoEta) match {
+              case (Some(original), _) => Some(Typed(original, Function(Nil, EmptyTree)).setType(tree.tpe))
+              case (_, Some(original)) => Some(original)
+              case _ => None
+            }
           }
         }
 
