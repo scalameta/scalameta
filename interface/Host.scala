@@ -198,8 +198,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
           }
         }
         object InlinableHoistedTemporaryVal {
-          def unapply(tree: g.ValDef): Option[(g.Name, g.Tree)] = {
-            if (tree.symbol.isSynthetic && (tree.name.startsWith("ev$") || tree.name.startsWith("eta$"))) Some((tree.name, tree.rhs))
+          def unapply(tree: g.ValDef): Option[(g.Symbol, g.Tree)] = {
+            if (tree.symbol.isSynthetic && (tree.name.startsWith("ev$") || tree.name.startsWith("eta$"))) Some((tree.symbol, tree.rhs))
             else None
           }
         }
@@ -223,12 +223,12 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
               val g.treeInfo.Applied(op @ g.Select(right, _), targs, List(List(g.Ident(_)))) = gstats(i - 1)
               p.Term.ApplyInfix(left.cvt_!, op.symbol.asTerm.precvt(right.tpe, op), targs.cvt_!, List(right.cvt_!))
             case in @ InlinableHoistedTemporaryVal(_, _) =>
-              val inlinees = gstats.collect({ case InlinableHoistedTemporaryVal(name, rhs) => (name -> rhs) }).toMap
+              val inlinees = gstats.collect({ case InlinableHoistedTemporaryVal(sym, rhs) => (sym -> rhs) }).toMap
               require(i == 1 && inlinees.size == gstats.size - 1)
               i = gstats.length
               object inliner extends g.Transformer {
                 override def transform(tree: g.Tree): g.Tree = tree match {
-                  case g.Ident(name: g.TermName) if inlinees.contains(name) => transform(inlinees(name))
+                  case tree @ g.Ident(_) if inlinees.contains(tree.symbol) => transform(inlinees(tree.symbol))
                   case _ => super.transform(tree)
                 }
               }
