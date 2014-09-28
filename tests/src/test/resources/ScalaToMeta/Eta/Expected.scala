@@ -6,10 +6,7 @@ object Eta {
     def x3(x: Int) = x
     x3 _
     def x4[T](x: T) = x
-    {
-      x4 _
-      ()
-    }
+    x4 _
   }
   def autoEta(fn: Int => Int): Unit = {
     class C {

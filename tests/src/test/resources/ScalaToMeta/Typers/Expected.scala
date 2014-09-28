@@ -223,16 +223,10 @@ trait Typers extends Adaptations with Tags with TypersTracking with PatternTyper
       }
     }
     def checkNonCyclic(pos: Position, tp: Type, lockedSym: Symbol): Boolean = try if (!lockedSym.lock(CyclicReferenceError(pos, tp, lockedSym))) false else checkNonCyclic(pos, tp) finally lockedSym.unlock()
-    def checkNonCyclic(sym: Symbol): scala.Unit = if (!checkNonCyclic(sym.pos, sym.tpe_*)) {
-      sym.setInfo(ErrorType)
-      ()
-    }
+    def checkNonCyclic(sym: Symbol): scala.Unit = if (!checkNonCyclic(sym.pos, sym.tpe_*)) sym.setInfo(ErrorType)
     def checkNonCyclic(defn: Tree, tpt: Tree): scala.Unit = if (!checkNonCyclic(defn.pos, tpt.tpe, defn.symbol)) {
       tpt.setType(ErrorType)
-      {
-        defn.symbol.setInfo(ErrorType)
-        ()
-      }
+      defn.symbol.setInfo(ErrorType)
     }
     def checkParamsConvertible(tree: Tree, tpe0: Type): scala.Unit = {
       def checkParamsConvertible0(tpe: Type) = tpe match {
@@ -1054,7 +1048,6 @@ This restriction is planned to be removed in subsequent releases.""")
             tree match {
               case This(qual) =>
                 pending += SuperConstrArgsThisReferenceError(tree)
-                ()
               case _ =>
                 ()
             }
@@ -1108,7 +1101,6 @@ This restriction is planned to be removed in subsequent releases.""")
           foreachSubTreeBoundTo(List(selfConstructorCall), clazz)({
             case tree @ This(qual) =>
               pending += SelfConstrArgsThisReferenceError(tree)
-              ()
             case _ =>
               ()
           })
@@ -1158,15 +1150,9 @@ This restriction is planned to be removed in subsequent releases.""")
         }
         checkAbstract(paramType, "Parameter type")
         if (sym.isDerivedValueClass) failStruct(paramPos, "a user-defined value class")
-        if (paramType.isInstanceOf[ThisType] && sym == meth.owner) {
-          failStruct(paramPos, "the type of that refinement (self type)")
-          ()
-        }
+        if (paramType.isInstanceOf[ThisType] && sym == meth.owner) failStruct(paramPos, "the type of that refinement (self type)")
       }))
-      if (resultType.typeSymbol.isDerivedValueClass) {
-        failStruct(ddef.tpt.pos, "a user-defined value class", where = "Result type")
-        ()
-      }
+      if (resultType.typeSymbol.isDerivedValueClass) failStruct(ddef.tpt.pos, "a user-defined value class", where = "Result type")
     }
     def typedDefDef(ddef: DefDef): DefDef = {
       val meth = ddef.symbol.initialize
@@ -1488,10 +1474,7 @@ This restriction is planned to be removed in subsequent releases.""")
             issuedMissingParameterTypeError = true
             ErrorType
           }
-          if (!vparam.tpt.pos.isDefined) {
-            vparam.tpt.setPos(vparam.pos.focus)
-            ()
-          }
+          if (!vparam.tpt.pos.isDefined) vparam.tpt.setPos(vparam.pos.focus)
         })
         fun.body match {
           case Match(sel, cases) if (sel ne EmptyTree) && pt.typeSymbol == PartialFunctionClass =>
@@ -1519,15 +1502,12 @@ This restriction is planned to be removed in subsequent releases.""")
     def typedRefinement(templ: Template): scala.Unit = {
       val stats = templ.body
       namer.enterSyms(stats)
-      {
-        unit.toCheck += () => {
-          val stats1 = typedStats(stats, NoSymbol)
-          val att = templ.attachments.get[CompoundTypeTreeOriginalAttachment].getOrElse(CompoundTypeTreeOriginalAttachment(Nil, Nil))
-          templ.removeAttachment[CompoundTypeTreeOriginalAttachment]
-          templ.updateAttachment(att.copy(stats = stats1))
-          stats1.withFilter(stat => stat.isDef && stat.symbol.isOverridingSymbol).foreach(stat => stat.symbol.setFlag(OVERRIDE))
-        }
-        ()
+      unit.toCheck += () => {
+        val stats1 = typedStats(stats, NoSymbol)
+        val att = templ.attachments.get[CompoundTypeTreeOriginalAttachment].getOrElse(CompoundTypeTreeOriginalAttachment(Nil, Nil))
+        templ.removeAttachment[CompoundTypeTreeOriginalAttachment]
+        templ.updateAttachment(att.copy(stats = stats1))
+        stats1.withFilter(stat => stat.isDef && stat.symbol.isOverridingSymbol).foreach(stat => stat.symbol.setFlag(OVERRIDE))
       }
     }
     def typedImport(imp: Import): Import = transformed.remove(imp) match {
@@ -1948,10 +1928,7 @@ This restriction is planned to be removed in subsequent releases.""")
     }
     def packCaptured(tpe: Type): Type = {
       val captured = scala.collection.mutable.Set[Symbol]()
-      tpe.foreach(tp => if (isCapturedExistential(tp.typeSymbol)) {
-        captured += tp.typeSymbol
-        ()
-      })
+      tpe.foreach(tp => if (isCapturedExistential(tp.typeSymbol)) captured += tp.typeSymbol)
       existentialAbstraction(captured.toList, tpe)
     }
     def packedType(tree: Tree, owner: Symbol): Type = {
@@ -1981,10 +1958,7 @@ This restriction is planned to be removed in subsequent releases.""")
         val remainingSyms = new scala.collection.mutable.ListBuffer[Symbol]
         def addIfLocal(sym: Symbol, tp: Type): scala.Unit = if (isLocal(sym) && !localSyms(sym) && !boundSyms(sym)) if (sym.typeParams.isEmpty) {
           localSyms += sym
-          {
-            remainingSyms += sym
-            ()
-          }
+          remainingSyms += sym
         } else AbstractExistentiallyOverParamerizedTpeError(tree, tp)
         tp.foreach(t => {
           t match {
@@ -2727,10 +2701,7 @@ This restriction is planned to be removed in subsequent releases.""")
                 val TypeBounds(lo1, hi1) = tbounds.subst(tparams, argtypes)
                 val lo = lub(List(lo0, lo1))
                 val hi = glb(List(hi0, hi1))
-                if (!(lo =:= lo0 && hi =:= hi0)) {
-                  asym.setInfo(logResult(s"Updating bounds of ${asym.fullLocationString} in $tree from '$abounds' to")(TypeBounds(lo, hi)))
-                  ()
-                }
+                if (!(lo =:= lo0 && hi =:= hi0)) asym.setInfo(logResult(s"Updating bounds of ${asym.fullLocationString} in $tree from '$abounds' to")(TypeBounds(lo, hi)))
               }
               if (asym != null && asym.isAbstractType) arg match {
                 case Bind(_, _) =>

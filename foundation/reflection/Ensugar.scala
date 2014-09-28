@@ -70,6 +70,7 @@ trait Ensugar {
                 case AnnotatedTerm(original) => Some(original)
                 case EtaExpansion(original) => Some(original)
                 case InlinedConstant(original) => Some(original)
+                case InsertedUnit(original) => Some(original)
                 case _ => None
               }
             }
@@ -550,6 +551,13 @@ trait Ensugar {
 
         object InlinedConstant {
           def unapply(tree: Tree): Option[Tree] = tree.metadata.get("originalConstant").map(_.asInstanceOf[Tree].duplicate.removeMetadata("originalConstant"))
+        }
+
+        object InsertedUnit {
+          def unapply(tree: Tree): Option[Tree] = tree match {
+            case Block(List(expr), unit @ Literal(Constant(()))) if unit.hasMetadata("insertedUnit") => Some(expr)
+            case _ => None
+          }
         }
       }
       object advancedDuplicator extends Transformer {
