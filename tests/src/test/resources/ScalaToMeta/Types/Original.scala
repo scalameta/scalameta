@@ -13,25 +13,25 @@ object Types {
   class D4 extends {} with B with Y
 
   val x5 = new X
-  val x6 = new Y{}
+  val x6 = new X{}
   val x7 = new B with Y{}
 
-  @(Y @Y) class D8
+  @(X @X) class D8
 
-  type T9 = Y => Y
-  type T10 = (Y, Y)
-  type T11 = Y { def x: Int }
+  type T9 = X => X
+  type T10 = (X, X)
+  type T11 = X { def x: Int }
   type T12 = B with Y { def x: Int }
 
-  new C{} match { case x13: Y => }
+  new X{} match { case x13: X => }
 
-  class D14[T: Z](val x15: Y) {
-    self16: Y =>
-    val x17: Y = new Y{}
-    def x18(x19: Y)(x20: Y): Y = (x20: Y): @Y
-    type T21 >: Y <: T
-    type T22 = Z[Y]
+  class D14[T: Z](val x15: X) {
+    self16: X =>
+    val x17: X = new X{}
+    def x18(x19: X)(x20: X): X = (x20: X): @X
+    type T21 >: X <: X
+    type T22 = Z[X]
     type T23 = Z[T] forSome { type T }
-    type T24 = Z[Y]#U
+    type T24 = Z[X]#U
   }
 }

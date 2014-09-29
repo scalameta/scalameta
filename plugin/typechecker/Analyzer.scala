@@ -9,6 +9,8 @@ import scala.reflect.internal.Mode
 import scala.reflect.internal.Mode._
 import scala.reflect.internal.util.{Statistics, ListOfNil}
 import scala.tools.nsc.typechecker.TypersStats._
+import scala.reflect.internal.Flags
+import scala.reflect.internal.Flags._
 
 trait Analyzer extends NscAnalyzer with GlobalToolkit {
   val global: Global
@@ -598,6 +600,29 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
         case _ =>
           vanillaAdapt(tree)
       }
+    }
+    override protected def typedExistentialTypeTree(tree: ExistentialTypeTree, mode: Mode): Tree = {
+      for (wc <- tree.whereClauses)
+        if (wc.symbol == NoSymbol) { namer enterSym wc; wc.symbol setFlag EXISTENTIAL }
+        else context.scope enter wc.symbol
+      val whereClauses1 = typedStats(tree.whereClauses, context.owner)
+      for (vd @ ValDef(_, _, _, _) <- whereClauses1)
+        if (vd.symbol.tpe.isVolatile)
+          AbstractionFromVolatileTypeError(vd)
+      val tpt1 = typedType(tree.tpt, mode)
+      existentialTransform(whereClauses1 map (_.symbol), tpt1.tpe)((tparams, tp) => {
+        val original = (tpt1 match {
+          case tpt : TypeTree => atPos(tree.pos)(ExistentialTypeTree(tpt.original, tree.whereClauses))
+          case _ => {
+            debuglog(s"cannot reconstruct the original for $tree, because $tpt1 is not a TypeTree")
+            tree
+          }
+        // NOTE: this is a meaningful difference from the code in Typers.scala
+        //-}
+        }).appendMetadata("typedExistentialTypeTree" -> treeCopy.ExistentialTypeTree(tree, tpt1, whereClauses1.asInstanceOf[List[MemberDef]]))
+        TypeTree(newExistentialType(tparams, tp)) setOriginal original
+      }
+      )
     }
     override def typed1(tree: Tree, mode: Mode, pt: Type): Tree = {
       def lookupInOwner(owner: Symbol, name: Name): Symbol = if (mode.inQualMode) rootMirror.missingHook(owner, name) else NoSymbol

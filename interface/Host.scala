@@ -573,9 +573,12 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         if (g.definitions.FunctionClass.seq.contains(tpt.tpe.typeSymbol)) p.Type.Function(args.init.cvt_!, args.last.cvt_!)
         else if (g.definitions.TupleClass.seq.contains(tpt.tpe.typeSymbol)) p.Type.Tuple(args.cvt_!)
         else p.Type.Apply(tpt.cvt_!, args.cvt_!)
-      case _: g.TypTree =>
-        // TODO: also account for Idents, which can very well refer to types while not being TypTrees themselves
-        ???
+      case in @ g.ExistentialTypeTree(tpt, whereClauses) =>
+        p.Type.Existential(tpt.cvt_!, whereClauses.cvt_!)
+      case in @ g.SelectFromTypeTree(qual, name) =>
+        p.Type.Project(qual.cvt_!, in.symbol.asType.precvt(qual.tpe, in))
+      case in @ g.TypeBoundsTree(_, _) =>
+        unreachable
       // NOTE: this derivation is ambiguous because of at least g.ValDef, g.TypeDef and g.Typed
       // case _: g.Tree =>
       //   derive

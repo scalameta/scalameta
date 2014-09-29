@@ -167,6 +167,11 @@ trait Ensugar {
                   val annots = tree.tpe.asInstanceOf[AnnotatedType].annotations.map(_.original)
                   require(annots.forall(_.nonEmpty))
                   loop(original, annots)
+                case original @ ExistentialTypeTree(_, _) =>
+                  // NOTE: original.tpt is partially screwed up and original.whereClauses is untyped
+                  // therefore we look into the attachment, which has both tpt and whereClauses in their post-typecheck state
+                  val ExistentialTypeTree(TypeTreeWithOriginal(tpt), whereClauses) = original.metadata("typedExistentialTypeTree").asInstanceOf[Tree].duplicate
+                  treeCopy.ExistentialTypeTree(original, tpt, whereClauses)
                 case original =>
                   original
               }

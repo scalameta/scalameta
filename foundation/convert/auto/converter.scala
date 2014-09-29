@@ -346,9 +346,7 @@ package object internal {
             sym.fullName != "scala.meta.Term.ForYield" &&
             sym.fullName != "scala.meta.Term.Placeholder" &&
             sym.fullName != "scala.meta.Type.ApplyInfix" &&
-            sym.fullName != "scala.meta.Type.Existential" &&
-            sym.fullName != "scala.meta.Type.Placeholder" &&
-            sym.fullName != "scala.meta.Type.Project"
+            sym.fullName != "scala.meta.Type.Placeholder"
           })
           if (unmatched.nonEmpty) c.error(c.enclosingPosition, "@converter is not exhaustive in its outputs; missing: " + unmatched)
           unmatched.isEmpty
