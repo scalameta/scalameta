@@ -8,6 +8,7 @@ import scala.meta.syntactic.parsers.SyntacticInfo._
 import scala.meta.semantic._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
+import internal._
 
 // TODO: fix occasional incorrectness when semicolons are omitted
 // TODO: needs way more parens, esp in types and patterns
@@ -87,14 +88,11 @@ object Code {
     // Lit
     case t: Lit.Bool     => s(t.value.toString)
     case t: Lit.Int      => s(t.value.toString)
-    case t: Lit.Long     => s(t.value.toString)
-    case t: Lit.Float    => s(t.value.toString)
-    case t: Lit.Double   => s(t.value.toString)
-    case t: Lit.Char     => s(t.value.toString)
-    case t: Lit.String   =>
-      val quote = if (t.value.contains("\n")) "\"\"\"" else "\""
-      val printee = if (t.value.contains("\n")) t.value else t.value.replace("\"", "\\\"")
-      s(quote, printee, quote)
+    case t: Lit.Long     => s(t.value.toString + "l")
+    case t: Lit.Float    => s(t.value.toString + "f")
+    case t: Lit.Double   => s(t.value.toString + "d")
+    case t: Lit.Char     => s(enquote(t.value.toString, SingleQuotes))
+    case t: Lit.String   => s(enquote(t.value.toString, if (t.value.contains("\n")) TripleQuotes else DoubleQuotes))
     case t: Lit.Symbol   => s("'", t.value.name)
     case _: Lit.Null     => s("null")
     case _: Lit.Unit     => s("()")
