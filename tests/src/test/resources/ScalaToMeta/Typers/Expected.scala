@@ -20,7 +20,7 @@ trait Typers extends Adaptations with Tags with TypersTracking with PatternTyper
     resetDocComments()
   }
   sealed abstract class SilentResult[+T] {
-    abstract def isEmpty: Boolean
+    def isEmpty: Boolean
     def nonEmpty = !isEmpty
     @inline final def fold[U](none: => U)(f: T => U): U = this match {
       case SilentResultValue(value) =>
