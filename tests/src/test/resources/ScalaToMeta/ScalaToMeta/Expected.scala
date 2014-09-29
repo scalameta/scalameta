@@ -58,7 +58,7 @@ class ScalaToMeta extends FunSuite {
       typer.context.setReportErrors()
       unit.body = typer.typed(unit.body).asInstanceOf[compiler.Tree]
       if (debug) println(unit.body)
-      unit.toCheck.foreach(workItem => workItem())
+      for (workItem <- unit.toCheck) workItem()
       throwIfErrors()
       val h = Scalahost(compiler).asInstanceOf[PalladiumHost with OurHost[compiler.type] {}]
       val ptree = h.toPalladium(unit.body, classOf[Aux.CompUnit])
@@ -69,9 +69,7 @@ class ScalaToMeta extends FunSuite {
     val m_withCompilerApi = tb.getClass().getDeclaredMethod("withCompilerApi")
     val o_withCompilerApi = m_withCompilerApi.invoke(tb)
     val m_apply = o_withCompilerApi.getClass().getDeclaredMethods().find(_.getName() == "apply").get
-    try m_apply.invoke(o_withCompilerApi, {
-      compilerApi => cont(compilerApi)
-    }) catch scala.reflect.runtime.ReflectionUtils.unwrapHandler({
+    try m_apply.invoke(o_withCompilerApi, cont _) catch scala.reflect.runtime.ReflectionUtils.unwrapHandler({
       case ex =>
         throw ex
     })

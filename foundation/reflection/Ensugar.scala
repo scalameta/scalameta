@@ -24,6 +24,12 @@ trait Ensugar {
   import org.scalameta.invariants.Implication
   private def require[T](x: T): Unit = macro org.scalameta.invariants.Macros.require
 
+  object Desugared {
+    private val trivialSignature = new EnsugarSignature[Tree, Tree]{}
+    def unapply(tree: Tree): Some[Tree] = Some(ensugar(tree)(trivialSignature))
+    def unapply(trees: List[Tree]): Some[List[Tree]] = Some(trees.map(tree => ensugar(tree)(trivialSignature)))
+  }
+
   def ensugar[Input <: Tree, Output <: Tree](tree: Input)(implicit ev: EnsugarSignature[Input, Output]): Output = {
     def loop(tree: Tree): Tree = {
       object transformer extends Transformer {
@@ -44,7 +50,8 @@ trait Ensugar {
                 case TemplateWithOriginal(original) => Some(original)
                 case SuperWithOriginal(original) => Some(original)
                 case ClassOfWithOriginal(original) => Some(original)
-                case MemberDefWithSyntheticButNotArtifact(original) => Some(original)
+                case SelfWithOriginal(original) => Some(original)
+                case MemberDefWithTrimmableSynthetic(original) => Some(original)
                 case MemberDefWithInferredReturnType(original) => Some(original)
                 case MemberDefWithAnnotations(original) => Some(original)
                 case MacroDef(original) => Some(original)
@@ -56,14 +63,15 @@ trait Ensugar {
                 case ApplicationWithInferredImplicitArguments(original) => Some(original)
                 case ApplicationWithInsertedApply(original) => Some(original)
                 case ApplicationWithNamesOrDefaults(original) => Some(original)
-                case AssignmentWithInsertedUpdate(original) => Some(original)
-                case AssignmentWithInsertedUnderscoreEquals(original) => Some(original)
                 case StandalonePartialFunction(original) => Some(original)
                 case LambdaPartialFunction(original) => Some(original)
                 case CaseClassExtractor(original) => Some(original)
                 case ClassTagExtractor(original) => Some(original)
                 case VanillaExtractor(original) => Some(original)
                 case AnnotatedTerm(original) => Some(original)
+                case EtaExpansion(original) => Some(original)
+                case InlinedConstant(original) => Some(original)
+                case InsertedUnit(original) => Some(original)
                 case _ => None
               }
             }
@@ -160,6 +168,11 @@ trait Ensugar {
                   val annots = tree.tpe.asInstanceOf[AnnotatedType].annotations.map(_.original)
                   require(annots.forall(_.nonEmpty))
                   loop(original, annots)
+                case original @ ExistentialTypeTree(_, _) =>
+                  // NOTE: original.tpt is partially screwed up and original.whereClauses is untyped
+                  // therefore we look into the attachment, which has both tpt and whereClauses in their post-typecheck state
+                  val ExistentialTypeTree(TypeTreeWithOriginal(tpt), whereClauses) = original.metadata("typedExistentialTypeTree").asInstanceOf[Tree].duplicate
+                  treeCopy.ExistentialTypeTree(original, tpt, whereClauses)
                 case original =>
                   original
               }
@@ -211,15 +224,21 @@ trait Ensugar {
           }
         }
 
+        object SelfWithOriginal {
+          def unapply(tree: Tree): Option[Tree] = tree.metadata.get("originalSelf").map(_.asInstanceOf[Tree].duplicate.removeMetadata("originalSelf"))
+        }
+
         private def isInferred(tree: Tree): Boolean = tree match {
           case tt @ TypeTree() => tt.nonEmpty && tt.original == null
           case _ => false
         }
 
-        object MemberDefWithSyntheticButNotArtifact {
+        object MemberDefWithTrimmableSynthetic {
           def unapply(tree: Tree): Option[Tree] = {
             implicit class RichTrees(trees: List[Tree]) {
-              private def needsTrimming(tree: Tree) = tree match { case mdef: MemberDef => mdef.mods.isSynthetic && !mdef.mods.isArtifact; case _ => false }
+              private def importantName(mdef: MemberDef): Boolean = mdef.name.startsWith("ev$")
+              private def needsTrimming(mdef: MemberDef): Boolean = mdef.mods.isSynthetic && !mdef.mods.isArtifact && !importantName(mdef)
+              private def needsTrimming(tree: Tree): Boolean = tree match { case mdef: MemberDef => needsTrimming(mdef); case _ => false }
               def needTrimming = trees.exists(needsTrimming)
               def trim = trees.filter(tree => !needsTrimming(tree))
             }
@@ -358,10 +377,11 @@ trait Ensugar {
           }
         }
 
-        // TODO: figure out whether the programmer actually wrote `foo(...)` or it was `foo.apply(...)`
         object ApplicationWithInsertedApply {
+          // TODO: make this work, putting a workaround in place for now
+          // def unapply(tree: Tree): Option[Tree] = tree.metadata.get("originalApplee").map(_.asInstanceOf[Tree])
           def unapply(tree: Tree): Option[Tree] = tree match {
-            case Select(qual, _) if tree.symbol.name == nme.apply => Some(qual)
+            case Select(qual, _) if tree.symbol.name == nme.apply && tree.symbol.paramss.nonEmpty => Some(qual)
             case _ => None
           }
         }
@@ -379,6 +399,16 @@ trait Ensugar {
               case vdef: ValDef => vdef.symbol.isArtifact
               case _ => false
             }
+            def refsNameDefaultTemp(arg: Tree, vdef: ValDef) = {
+              val isTrivialRef = arg.symbol == vdef.symbol
+              val isWildcardStarRef = WildcardStarArg.unapply(arg).map(_.symbol == vdef.symbol).getOrElse(false)
+              val isByNameRef = arg match { case Apply(Select(arg, nme.apply), List()) => arg.symbol == vdef.symbol; case _ => false }
+              isTrivialRef || isWildcardStarRef || isByNameRef
+            }
+            def subNameDefaultTemp(arg: Tree, vdef: ValDef) = {
+              val result = new TreeSubstituter(List(vdef.symbol), List(vdef.rhs)).transform(arg)
+              result match { case Apply(Select(Function(List(), body), nme.apply), List()) => body; case _ => result }
+            }
             val (qualsym, qual, vdefs0, app @ Applied(_, _, argss)) = tree match {
               case Block((qualdef @ ValDef(_, _, _, qual)) +: vdefs, app) if isNameDefaultQual(qualdef) => (qualdef.symbol, qual, vdefs, app)
               case Block(vdefs, app) if vdefs.forall(isNameDefaultTemp) => (NoSymbol, EmptyTree, vdefs, app)
@@ -386,17 +416,15 @@ trait Ensugar {
             }
             val vdefs = vdefs0.map{ case vdef: ValDef => vdef }
             def hasNamesDefaults(args: List[Tree]) = {
-              args.exists(arg => isDefaultGetter(arg) || vdefs.exists(_.symbol == arg.symbol))
+              args.exists(arg => isDefaultGetter(arg) || vdefs.exists(vdef => refsNameDefaultTemp(arg, vdef)))
             }
             def undoNamesDefaults(args: List[Tree], depth: Int) = {
-              def matchesVdef(arg: Tree, vdef: ValDef) = WildcardStarArg.unapply(arg).getOrElse(arg).symbol == vdef.symbol
-              def substituteVref(arg: Tree, vdef: ValDef) = new TreeSubstituter(List(vdef.symbol), List(vdef.rhs)).transform(arg)
               case class Arg(tree: Tree, ipos: Int, inamed: Int) { val param = app.symbol.paramss(depth)(ipos) }
-              val indexed = args.map(arg => arg -> vdefs.indexWhere(matchesVdef(arg, _))).zipWithIndex.flatMap({
+              val indexed = args.map(arg => arg -> vdefs.indexWhere(refsNameDefaultTemp(arg, _))).zipWithIndex.flatMap({
                 /*    default    */ case ((arg, _), _) if isDefaultGetter(arg) => None
                 /*   positional  */ case ((arg, -1), ipos) => Some(Arg(arg, ipos, -1))
                 /* default+named */ case ((_, inamed), _) if isDefaultGetter(vdefs(inamed).rhs) => None
-                /*     named     */ case ((arg, inamed), ipos) => Some(Arg(substituteVref(arg, vdefs(inamed)), ipos, inamed))
+                /*     named     */ case ((arg, inamed), ipos) => Some(Arg(subNameDefaultTemp(arg, vdefs(inamed)), ipos, inamed))
               })
               if (indexed.forall(_.inamed == -1)) indexed.map(_.tree)
               else indexed.sortBy(_.inamed).map(arg => AssignOrNamedArg(Ident(arg.param).setType(arg.tree.tpe), arg.tree))
@@ -404,7 +432,7 @@ trait Ensugar {
             def loop(tree: Tree, depth: Int): Tree = tree match {
               case Apply(fun, args) if hasNamesDefaults(args) => treeCopy.Apply(tree, loop(fun, depth - 1), undoNamesDefaults(args, depth))
               case Apply(fun, args) => treeCopy.Apply(tree, loop(fun, depth - 1), args)
-              case TypeApply(core, targs) => treeCopy.TypeApply(tree, core, targs)
+              case TypeApply(core, targs) => treeCopy.TypeApply(tree, loop(core, depth - 1), targs)
               case Select(core, name) if qualsym != NoSymbol && core.symbol == qualsym => treeCopy.Select(tree, qual, name).removeMetadata("originalQual")
               case core => core
             }
@@ -443,34 +471,6 @@ trait Ensugar {
           }
         }
 
-        // TODO: figure out whether the programmer actually wrote `foo(...) = ...` or it was `foo.update(..., ...)`
-        object AssignmentWithInsertedUpdate {
-          def unapply(tree: Tree): Option[Tree] = tree match {
-            case tree @ Apply(core @ Select(lhs, _), args :+ value) if core.symbol.name == nme.update =>
-              Some(Assign(Apply(lhs, args).setType(NoType), value).setType(tree.tpe))
-            case _ =>
-              None
-          }
-        }
-
-        // TODO: figure out whether the programmer actually wrote `foo.bar = ...` or it was `foo.bar_=(...)`
-        object AssignmentWithInsertedUnderscoreEquals {
-          object OriginalAssign {
-            def unapply(tree: Tree): Option[(Tree, Tree)] = {
-              (tree.metadata.get("originalLhs").map(_.asInstanceOf[Tree].duplicate), tree) match {
-                case (Some(lhs), Apply(_, List(rhs))) => Some((lhs, rhs))
-                case _ => None
-              }
-            }
-          }
-          def unapply(tree: Tree): Option[Tree] = tree match {
-            case OriginalAssign(lhs, rhs) =>
-              Some(Assign(lhs, rhs).setType(tree.tpe))
-            case _ =>
-              None
-          }
-        }
-
         object StandalonePartialFunction {
           def unapply(tree: Tree): Option[Tree] = tree match {
             case Typed(Block((gcdef @ ClassDef(_, tpnme.ANON_FUN_NAME, _, _)) :: Nil, q"new ${Ident(tpnme.ANON_FUN_NAME)}()"), tpt)
@@ -483,9 +483,27 @@ trait Ensugar {
         }
 
         object LambdaPartialFunction {
+          object SyntheticParamDefs {
+            def unapply(trees: List[ValDef]): Option[Int] = {
+              val yes = trees.zipWithIndex.forall{ case (ValDef(mods, name, _, _), i) => mods.isSynthetic && name.startsWith("x" + i + "$") }
+              if (yes) Some(trees.length) else None
+            }
+          }
+          object SyntheticParamRef {
+            def unapply(tree: Tree): Option[Int] = tree match {
+              case Literal(Constant(())) =>
+                Some(0)
+              case Ident(name) if name.toString.startsWith("x0$") =>
+                Some(1)
+              case Apply(_, args) if TupleClass.seq.contains(tree.symbol.owner.companion) =>
+                val yes = args.zipWithIndex.forall{ case (Ident(name), i) => name.startsWith("x" + i + "$") }
+                if (yes) Some(args.length) else None
+              case _ =>
+                None
+            }
+          }
           def unapply(tree: Tree): Option[Tree] = tree match {
-            case Function(x0def :: Nil, Match(x0ref @ Ident(_), cases))
-            if x0def.symbol == x0ref.symbol && x0def.name.toString.startsWith("x0$") =>
+            case Function(SyntheticParamDefs(arity1), Match(SyntheticParamRef(arity2), cases)) if arity1 == arity2 =>
               Some(Match(EmptyTree, cases).setType(tree.tpe))
             case _ =>
               None
@@ -509,7 +527,7 @@ trait Ensugar {
         // TODO: figure out whether the classtag-style extractor was written explicitly by the programmer
         object ClassTagExtractor {
           def unapply(tree: Tree): Option[Tree] = tree match {
-            case outerPat @ UnApply(q"$ref.$unapply[..$targs](..$_)", (innerPat @ Typed(Ident(nme.WILDCARD), _)) :: Nil)
+            case outerPat @ UnApply(q"$ref.$unapply[..$targs](..$_)", List(innerPat))
             if outerPat.fun.symbol.owner == definitions.ClassTagClass && unapply == nme.unapply =>
               Some(innerPat)
             case _ =>
@@ -553,6 +571,29 @@ trait Ensugar {
               Some(treeCopy.Annotated(original, annot, arg))
             case _ =>
               None
+          }
+        }
+
+        object EtaExpansion {
+          def unapply(tree: Tree): Option[Tree] = {
+            val manualEta = tree.metadata.get("originalManualEta").map(_.asInstanceOf[Tree])
+            val autoEta = tree.metadata.get("originalAutoEta").map(_.asInstanceOf[Tree])
+            (manualEta, autoEta) match {
+              case (Some(original), _) => Some(Typed(original, Function(Nil, EmptyTree)).setType(tree.tpe))
+              case (_, Some(original)) => Some(original)
+              case _ => None
+            }
+          }
+        }
+
+        object InlinedConstant {
+          def unapply(tree: Tree): Option[Tree] = tree.metadata.get("originalConstant").map(_.asInstanceOf[Tree].duplicate.removeMetadata("originalConstant"))
+        }
+
+        object InsertedUnit {
+          def unapply(tree: Tree): Option[Tree] = tree match {
+            case Block(List(expr), unit @ Literal(Constant(()))) if unit.hasMetadata("insertedUnit") => Some(expr)
+            case _ => None
           }
         }
       }

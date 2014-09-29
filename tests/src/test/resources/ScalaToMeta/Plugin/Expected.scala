@@ -18,8 +18,8 @@ class Plugin(val global: Global) extends NscPlugin with GlobalToolkit { self =>
         case None =>
           reporter.error(tree.pos, "macro expansion without a property bag")
         case Some(bag) =>
-          if (!bag.contains("expandeeTree")) reporter.error(tree.pos, "macro expansion without expandeeTree in the property bag");
-          if (!bag.contains("expandedTree")) reporter.error(tree.pos, "macro expansion without expandedTree in the property bag");
+          if (!bag.contains("expandeeTree")) reporter.error(tree.pos, "macro expansion without expandeeTree in the property bag")
+          if (!bag.contains("expandedTree")) reporter.error(tree.pos, "macro expansion without expandedTree in the property bag")
           if (!bag.contains("expansionString")) reporter.error(tree.pos, "macro expansion without expansionString in the property bag")
       })
     }

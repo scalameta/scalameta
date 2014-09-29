@@ -332,31 +332,10 @@ package object internal {
           val expected = mutable.Set(allLeafCompanions(root).distinct: _*)
           (prelude ++ clauses).foreach(_.foreach(sub => if (sub.symbol != null) expected -= sub.symbol))
           val unmatched = expected.filter(sym => {
-            sym.fullName != "scala.meta.Aux.CompUnit" &&
             sym.fullName != "scala.meta.Decl.Procedure" &&
             sym.fullName != "scala.meta.Defn.Procedure" &&
-            sym.fullName != "scala.meta.Enum.Generator" &&
-            sym.fullName != "scala.meta.Enum.Guard" &&
-            sym.fullName != "scala.meta.Enum.Val" &&
-            sym.fullName != "scala.meta.Lit.Symbol" &&
             sym.fullName != "scala.meta.Mod.Doc" &&
-            sym.fullName != "scala.meta.Pat.ExtractInfix" &&
-            sym.fullName != "scala.meta.Pat.Interpolate" &&
-            sym.fullName != "scala.meta.Term.Do" &&
-            sym.fullName != "scala.meta.Term.Eta" &&
-            sym.fullName != "scala.meta.Term.For" &&
-            sym.fullName != "scala.meta.Term.ForYield" &&
-            sym.fullName != "scala.meta.Term.If.Then" &&
-            sym.fullName != "scala.meta.Term.Placeholder" &&
-            sym.fullName != "scala.meta.Term.Return.Unit" &&
-            sym.fullName != "scala.meta.Term.Tuple" &&
-            sym.fullName != "scala.meta.Term.While" &&
-            sym.fullName != "scala.meta.Type.ApplyInfix" &&
-            sym.fullName != "scala.meta.Type.Existential" &&
-            sym.fullName != "scala.meta.Type.Function" &&
-            sym.fullName != "scala.meta.Type.Placeholder" &&
-            sym.fullName != "scala.meta.Type.Project" &&
-            sym.fullName != "scala.meta.Type.Tuple"
+            sym.fullName != "scala.meta.Pat.Interpolate"
           })
           if (unmatched.nonEmpty) c.error(c.enclosingPosition, "@converter is not exhaustive in its outputs; missing: " + unmatched)
           unmatched.isEmpty
