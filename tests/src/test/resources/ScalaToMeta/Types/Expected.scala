@@ -10,18 +10,18 @@ object Types {
   class D3 extends Y
   class D4 extends B with Y
   val x5 = new X
-  val x6 = new X
-  val x7 = new B with Y
+  val x6 = new X {}
+  val x7 = new B with Y {}
   @X @X class D8
   type T9 = X => X
   type T10 = (X, X)
   type T11 = X { def x: Int }
   type T12 = B with Y { def x: Int }
-  new X match {
+  new X {} match {
     case x13: X =>
   }
   class D14[T](val x15: X)(implicit evidence$1: Z[T]) { self16: X =>
-    val x17: X = new X
+    val x17: X = new X {}
     def x18(x19: X)(x20: X): X = x20: X: @X
     type T21 >: X <: X
     type T22 = Z[X]
