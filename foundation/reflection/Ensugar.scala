@@ -472,9 +472,27 @@ trait Ensugar {
         }
 
         object LambdaPartialFunction {
+          object SyntheticParamDefs {
+            def unapply(trees: List[ValDef]): Option[Int] = {
+              val yes = trees.zipWithIndex.forall{ case (ValDef(mods, name, _, _), i) => mods.isSynthetic && name.startsWith("x" + i + "$") }
+              if (yes) Some(trees.length) else None
+            }
+          }
+          object SyntheticParamRef {
+            def unapply(tree: Tree): Option[Int] = tree match {
+              case Literal(Constant(())) =>
+                Some(0)
+              case Ident(name) if name.toString.startsWith("x0$") =>
+                Some(1)
+              case Apply(_, args) if TupleClass.seq.contains(tree.symbol.owner.companion) =>
+                val yes = args.zipWithIndex.forall{ case (Ident(name), i) => name.startsWith("x" + i + "$") }
+                if (yes) Some(args.length) else None
+              case _ =>
+                None
+            }
+          }
           def unapply(tree: Tree): Option[Tree] = tree match {
-            case Function(x0def :: Nil, Match(x0ref @ Ident(_), cases))
-            if x0def.symbol == x0ref.symbol && x0def.name.toString.startsWith("x0$") =>
+            case Function(SyntheticParamDefs(arity1), Match(SyntheticParamRef(arity2), cases)) if arity1 == arity2 =>
               Some(Match(EmptyTree, cases).setType(tree.tpe))
             case _ =>
               None

@@ -1420,7 +1420,7 @@ This restriction is planned to be removed in subsequent releases.""")
         val samTyCon = samClassTp.typeSymbol.typeConstructor
         val tparams = samClassTp.typeSymbol.typeParams
         val tvars = tparams.map(freshVar)
-        val samClassTpMoreDefined = appliedType(samTyCon, (samClassTp.typeArgs, tparams, tvars).zipped.map((x0$4, x1$1, x2$1) => (x0$4, x1$1, x2$1) match {
+        val samClassTpMoreDefined = appliedType(samTyCon, (samClassTp.typeArgs, tparams, tvars).zipped.map({
           case (a, _, tv) if isFullyDefined(a) =>
             tv =:= a
             a
@@ -1605,7 +1605,7 @@ This restriction is planned to be removed in subsequent releases.""")
     def typedArgs(args: List[Tree], mode: Mode) = args.mapConserve(arg => typedArg(arg, mode, NOmode, WildcardType))
     def needsInstantiation(tparams: List[Symbol], formals: List[Type], args: List[Tree]) = {
       def isLowerBounded(tparam: Symbol) = !tparam.info.bounds.lo.typeSymbol.isBottomClass
-      exists2(formals, args)((x0$5, x1$2) => (x0$5, x1$2) match {
+      exists2(formals, args)({
         case (formal, Function(vparams, _)) =>
           vparams.exists(_.tpt.isEmpty) && vparams.length <= MaxFunctionArity && formal.baseType(FunctionClass(vparams.length)) match {
             case TypeRef(_, _, formalargs) =>
