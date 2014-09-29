@@ -394,7 +394,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         require(name == in.symbol.name)
         p.Pat.Bind(in.symbol.asTerm.rawcvt(in), tree.cvt_!)
       case g.Function(params, body) =>
-        // TODO: need to be careful to discern `_ + 2` and `_ => 2`
+        // NOTE: need to be careful to discern `_ + 2` and `_ => 2`
         // because in both cases parameter names are `x$...`
         val isShorthand = params.exists(_.symbol.isAnonymous) && body.exists(tree => params.exists(_.symbol == tree.symbol))
         if (isShorthand) (body.cvt_! : p.Term) else p.Term.Function(params.cvt, body.cvt_!)
