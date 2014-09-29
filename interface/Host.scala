@@ -468,7 +468,6 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
       case in @ g.TypeApply(fn, targs) =>
         p.Term.ApplyType(fn.cvt_!, targs.cvt_!)
       case in @ g.Apply(fn, args) if pt <:< typeOf[p.Term] =>
-        // TODO: undo the for desugaring
         // TODO: figure out whether the programmer actually wrote the interpolator or they were explicitly using a desugaring
         // TODO: figure out whether the programmer actually wrote the infix application or they were calling a symbolic method using a dot
         // TODO: infer the difference between `new X` vs `new X()`
@@ -493,6 +492,14 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
             p.Term.ApplyInfix(lhs.cvt_!, p.Term.Name(op.decodedName.toString, isBackquoted = false), Nil, args.cvt_!)
           case DesugaredSymbolLiteral(value) =>
             p.Lit.Symbol(value) : p.Term
+          case DesugaredFor(enums, body, isYield) =>
+            val penums = enums.map({
+              case Generator(pat, rhs) => p.Enum.Generator(pat.cvt_!, rhs.cvt_!)
+              case Val(pat, rhs) => p.Enum.Val(pat.cvt_!, rhs.cvt_!)
+              case Guard(cond) => p.Enum.Guard(cond.cvt_!)
+            })
+            if (isYield) p.Term.ForYield(penums, body.cvt_!)
+            else p.Term.For(penums, body.cvt_!)
           case q"$lhs.$op($arg)" if op.looksLikeInfix =>
             p.Term.ApplyInfix(lhs.cvt_!, (fn.cvt_! : p.Term.Select).selector, Nil, List(parg(arg)))
           case _ if g.definitions.TupleClass.seq.contains(in.symbol.companion) =>

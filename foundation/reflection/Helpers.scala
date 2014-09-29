@@ -3,6 +3,7 @@ package org.scalameta.reflection
 
 import scala.tools.nsc.Global
 import scala.reflect.internal.Flags
+import scala.collection.mutable
 
 trait Helpers {
   self: _root_.org.scalameta.reflection.GlobalToolkit =>
@@ -10,6 +11,7 @@ trait Helpers {
   import global._
   import definitions._
   import treeInfo._
+  import build._
 
   implicit class RichFoundationHelperTree[T <: Tree](tree: T) {
     def copyAttrs(other: Tree): T = tree.copyAttrs(other)
@@ -145,6 +147,88 @@ trait Helpers {
     def unapply(tree: Tree): Option[scala.Symbol] = tree match {
       case Apply(fn, List(Literal(Constant(s_value: String)))) if fn.symbol == SymbolModule => Some(scala.Symbol(s_value))
       case _ => None
+    }
+  }
+
+  sealed trait Enum
+  case class Generator(pat: Tree, rhs: Tree) extends Enum
+  case class Val(pat: Tree, rhs: Tree) extends Enum
+  case class Guard(cond: Tree) extends Enum
+
+  object DesugaredFor {
+    def unapply(tree: Tree): Option[(List[Enum], Tree, Boolean)] = {
+      // TODO: looks like a bug / tree shape incompatibility in UnFor
+      // seemingly innocent `(l1, l2) = i` produces four SyntacticValEq's
+      // (x$2 @ (_: <empty>)) = i: @scala.unchecked match {
+      //   case (x$1 @ scala.Tuple2((l1 @ _), (l2 @ _))) => scala.Tuple3(x$1, l1, l2)
+      // }
+      // (x$1 @ (_: <empty>)) = x$2._1
+      // (l1 @ (_: <empty>)) = x$2._2
+      // (l2 @ (_: <empty>)) = x$2._3
+      def postprocessSyntacticEnums(enums: List[Tree]): List[Tree] = {
+        val buf = mutable.ListBuffer[Tree]()
+        var i = 0
+        while (i < enums.length) {
+          val enum = enums(i)
+          i += 1
+          enum match {
+            case SyntacticValEq(
+                Bind(name, Typed(Ident(nme.WILDCARD), EmptyTree)),
+                Match(Annotated(_, rhs), List(CaseDef(pat, _, marker)))) =>
+              val skip = definitions.TupleClass.seq.indexOf(marker.tpe.typeSymbol) + 1
+              require(skip > 0)
+              i += skip
+              buf += SyntacticValEq(pat, rhs)
+            case _ =>
+              buf += enum
+          }
+        }
+        buf.toList
+      }
+      // TODO: looks like there's another problem in UnFor that sometimes appends (or fails to remove) extraneous refutability checks
+      // I don't have time to catch it right now, so I'm just getting rid of those checks as a workaround
+      object DropRefutabilityChecks {
+        def unapply(tree: Tree): Some[Tree] = tree match {
+          case Apply(
+            Select(tree, nme.withFilter),
+            List(Function(List(ValDef(_, name, _, _)), _)))
+          if name.startsWith(nme.CHECK_IF_REFUTABLE_STRING) =>
+            unapply(tree)
+          case _ =>
+            Some(tree)
+        }
+      }
+      // TODO: not sure whether it's a bug or a feature, but SyntacticValFrom and SyntacticValEq sometimes produce weird trees, e.g.:
+      // (x$1 @ scala.Tuple2((i1 @ _), (i2 @ _))) <- List(scala.Tuple2(1, 2), scala.Tuple2(2, 3))
+      // (j @ (_: <empty>)) = i1
+      // Again, there's too much to do and too little time, so I'm going to work around
+      // upd. Actually, the EmptyTree thingie is the result of Ensugar, which translates all originless TypeTrees to EmptyTree
+      // It looks like we'll have to copy/paste the entire UnFor here and adapt it accordingly
+      object DropUselessPatterns {
+        def unapply(tree: Tree): Some[Tree] = tree match {
+          case tree @ Bind(name, pat) if name.startsWith("x$") => unapply(pat)
+          case tree @ Bind(name, Typed(wild @ Ident(nme.WILDCARD), EmptyTree)) => Some(treeCopy.Bind(tree, name, wild))
+          case tree => Some(tree)
+        }
+      }
+      // NOTE: UnClosure creates binds that are totally unattributed
+      // here we somewhat approximate the attributes to at least give the host an idea of what's going on
+      def approximateAttributes(pat: Tree, rhs: Tree): Tree = pat match {
+        case pat @ Bind(name: TermName, Ident(nme.WILDCARD)) if pat.tpe == null && pat.symbol == NoSymbol =>
+          Bind(NoSymbol.newTermSymbol(name).setInfo(rhs.tpe), Ident(nme.WILDCARD).setType(rhs.tpe)).setType(rhs.tpe)
+        case pat =>
+          pat
+      }
+      def extractOurEnums(enums: List[Tree]): List[Enum] = enums map {
+        case SyntacticValFrom(DropUselessPatterns(pat), DropRefutabilityChecks(rhs)) => Generator(approximateAttributes(pat, rhs), rhs)
+        case SyntacticValEq(DropUselessPatterns(pat), DropRefutabilityChecks(rhs)) => Val(approximateAttributes(pat, rhs), rhs)
+        case SyntacticFilter(tree) => Guard(tree)
+      }
+      tree match {
+        case SyntacticFor(enums, body) => Some((extractOurEnums(postprocessSyntacticEnums(enums)), body, false))
+        case SyntacticForYield(enums, body) => Some((extractOurEnums(postprocessSyntacticEnums(enums)), body, true))
+        case _ => None
+      }
     }
   }
 }
