@@ -2064,7 +2064,7 @@ This restriction is planned to be removed in subsequent releases.""")
         def isDesugaredApply = {
           val protoQual = macroExpandee(qual).orElse(qual)
           treeSelection match {
-            case Select(`protoQual`, nme) =>
+            case Select(`protoQual`, nme.apply) =>
               true
             case _ =>
               false
@@ -2417,7 +2417,7 @@ This restriction is planned to be removed in subsequent releases.""")
           normalTypedApply(tree, fun, args) match {
             case ArrayInstantiation(tree1) =>
               typed(tree1, mode, pt)
-            case Apply(Select(fun, nme), _) if treeInfo.isSuperConstrCall(fun) =>
+            case Apply(Select(fun, nme.apply), _) if treeInfo.isSuperConstrCall(fun) =>
               TooManyArgumentListsForConstructor(tree)
             case tree1 =>
               tree1
@@ -2443,7 +2443,7 @@ This restriction is planned to be removed in subsequent releases.""")
             })
           case Apply(fn, indices) =>
             fn match {
-              case treeInfo.Applied(Select(table, nme), _, _) =>
+              case treeInfo.Applied(Select(table, nme.apply), _, _) =>
                 mkUpdate(table, indices)
               case _ =>
                 UnexpectedTreeAssignmentConversionError(qual)

@@ -375,7 +375,9 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
             other
         }
         typedPos(tree.pos, mode, pt) {
-          Select(qual setPos tree.pos.makeTransparent, nme.apply)
+          // NOTE: this is a meaningful difference from the code in Typers.scala
+          //-Select(qual setPos tree.pos.makeTransparent, nme.apply)
+          Select(qual setPos tree.pos.makeTransparent, nme.apply).appendMetadata("originalApplee" -> qual)
         }
       }
       def adaptConstant(value: Constant): Tree = {
