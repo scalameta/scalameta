@@ -113,6 +113,7 @@ class ShowSuite extends ParseSuite {
       |  val y = 3
       |}
     """.trim.stripMargin)
+    assert(templStat("class B { x: B => }").show[Code] === "class B { x: B => }")
   }
 
   test("new X") {
