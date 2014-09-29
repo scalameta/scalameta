@@ -65,8 +65,8 @@ trait Typers extends Adaptations with Tags with TypersTracking with PatternTyper
   def newTyper(context: Context): Typer = new NormalTyper(context)
   private class NormalTyper(context: Context) extends Typer(context)
   private final val SYNTHETIC_PRIVATE = TRANS_FLAG
-  private final val InterpolatorCodeRegex = "\$\{.*?\}".r
-  private final val InterpolatorIdentRegex = "\$[$\w]+".r
+  private final val InterpolatorCodeRegex = "\\$\\{.*?\\}".r
+  private final val InterpolatorIdentRegex = "\\$[$\\w]+".r
   abstract class Typer(context0: Context) extends TyperDiagnostics with Adaptation with Tag with PatternTyper with TyperContextErrors {
     import context0.unit
     import typeDebug.{ ptTree, ptBlock, ptLine, inGreen, inRed }
@@ -2865,7 +2865,7 @@ This restriction is planned to be removed in subsequent releases.""")
           def suspiciousSym(name: TermName) = context.lookupSymbol(name, _ => true).symbol
           def suspiciousExpr = InterpolatorCodeRegex.findFirstIn(s)
           def suspiciousIdents = InterpolatorIdentRegex.findAllIn(s).map(s => suspiciousSym(s.drop(1)))
-          if (s.contains( )) if (suspiciousExpr.nonEmpty) warn("detected an interpolated expression") else suspiciousIdents.find(isPlausible).foreach(sym => warn(s"detected interpolated identifier `$${sym.name}`"))
+          if (s.contains(' ')) if (suspiciousExpr.nonEmpty) warn("detected an interpolated expression") else suspiciousIdents.find(isPlausible).foreach(sym => warn(s"detected interpolated identifier `$${sym.name}`"))
         }
         lit match {
           case Literal(Constant(s: String)) if !isRecognizablyNotForInterpolation =>
