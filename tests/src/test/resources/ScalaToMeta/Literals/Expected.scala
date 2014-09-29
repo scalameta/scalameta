@@ -7,7 +7,7 @@ object Literals {
   val lit6 = 0.0d
   val lit7 = '0'
   val lit8 = "0"
-  val lit9 = scala.Symbol("zero")
+  val lit9 = 'zero
   val lit10 = null
   val lit11 = ()
 }

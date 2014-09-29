@@ -453,12 +453,12 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         p.Term.ApplyType(fn.cvt_!, targs.cvt_!)
       case in @ g.Apply(fn, args) if pt <:< typeOf[p.Term] =>
         // TODO: undo the for desugaring
-        // TODO: undo the Lit.Symbol desugaring
         // TODO: figure out whether the programmer actually wrote the interpolator or they were explicitly using a desugaring
         // TODO: figure out whether the programmer actually wrote the infix application or they were calling a symbolic method using a dot
         // TODO: infer the difference between `new X` vs `new X()`
         // TODO: figure out whether the programmer actually used the tuple syntax or they were calling the tuple companion explicitly
         // TODO: figure out whether the programmer actually wrote `foo(...) = ...` or it was `foo.update(..., ...)`
+        // TODO: figure out whether the programmer actually wrote `'foo` or it was 'Symbol("foo")'
         in match {
           case q"new $_(...$argss0)" =>
             val g.treeInfo.Applied(g.Select(g.New(tpt), _), _, _) = in
@@ -475,6 +475,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
             p.Term.Update(p.Term.Apply(lhs.cvt_!, args.cvt_!).appendScratchpad(core), rhs.cvt_!)
           case DesugaredOpAssign(g.Select(lhs, op), args) =>
             p.Term.ApplyInfix(lhs.cvt_!, p.Term.Name(op.decodedName.toString, isBackquoted = false), Nil, args.cvt_!)
+          case DesugaredSymbolLiteral(value) =>
+            p.Lit.Symbol(value) : p.Term
           case q"$lhs.$op($arg)" if op.looksLikeInfix =>
             p.Term.ApplyInfix(lhs.cvt_!, (fn.cvt_! : p.Term.Select).selector, Nil, List(parg(arg)))
           case _ if g.definitions.TupleClass.seq.contains(in.symbol.companion) =>

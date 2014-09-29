@@ -140,4 +140,11 @@ trait Helpers {
       case _ => None
     }
   }
+
+  object DesugaredSymbolLiteral {
+    def unapply(tree: Tree): Option[scala.Symbol] = tree match {
+      case Apply(fn, List(Literal(Constant(s_value: String)))) if fn.symbol == SymbolModule => Some(scala.Symbol(s_value))
+      case _ => None
+    }
+  }
 }
