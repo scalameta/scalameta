@@ -209,4 +209,9 @@ class ShowSuite extends ParseSuite {
     assert(templStat("null").show[Code] === "null")
     assert(templStat("()").show[Code] === "()")
   }
+
+  test("context and view bounds") {
+    assert(templStat("class C[T: List, U <: Int]").show[Code] === "class C[T: List, U <: Int]")
+    assert(templStat("def m[T: List, U <: Int] = ???").show[Code] === "def m[T: List, U <: Int] = ???")
+  }
 }
