@@ -624,6 +624,13 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
       }
       )
     }
+    override def typedTemplate(templ0: Template, parents1: List[Tree]): Template = {
+      val Template(_, self0 @ ValDef(_, _, selftpt0, _), _) = templ0
+      val result = super.typedTemplate(templ0, parents1)
+      // NOTE: I wouldn't be surprised if `typedType` that we have to do here corrupts the typer, and everything blows up
+      if (self0 != noSelfType && selftpt0.nonEmpty) result.self.appendMetadata("originalSelf" -> copyValDef(result.self)(tpt = typedType(selftpt0)))
+      result
+    }
     override def typed1(tree: Tree, mode: Mode, pt: Type): Tree = {
       def lookupInOwner(owner: Symbol, name: Name): Symbol = if (mode.inQualMode) rootMirror.missingHook(owner, name) else NoSymbol
       def lookupInRoot(name: Name): Symbol  = lookupInOwner(rootMirror.RootClass, name)

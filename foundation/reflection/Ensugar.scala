@@ -50,6 +50,7 @@ trait Ensugar {
                 case TemplateWithOriginal(original) => Some(original)
                 case SuperWithOriginal(original) => Some(original)
                 case ClassOfWithOriginal(original) => Some(original)
+                case SelfWithOriginal(original) => Some(original)
                 case MemberDefWithTrimmableSynthetic(original) => Some(original)
                 case MemberDefWithInferredReturnType(original) => Some(original)
                 case MemberDefWithAnnotations(original) => Some(original)
@@ -221,6 +222,10 @@ trait Ensugar {
             case (tree @ Literal(Constant(tpe: Type)), Some(original)) => Some(original.setType(tree.tpe))
             case _ => None
           }
+        }
+
+        object SelfWithOriginal {
+          def unapply(tree: Tree): Option[Tree] = tree.metadata.get("originalSelf").map(_.asInstanceOf[Tree].duplicate.removeMetadata("originalSelf"))
         }
 
         private def isInferred(tree: Tree): Boolean = tree match {
