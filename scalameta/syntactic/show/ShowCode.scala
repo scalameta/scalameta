@@ -281,7 +281,7 @@ object Code {
     case t: Case  =>
       s("case ", t.pat, t.cond.map { cond => s(" if ", cond) }.getOrElse(s()), " =>", r(t.stats.map(i(_)), ""))
     case t: Param.Anonymous => s(a(t.mods, " "), "_", t.decltpe)
-    case t: Param.Named => s(a(t.mods, " "), t.name, t.decltpe, t.default.map(s(" = ", _)).getOrElse(s()))
+    case t: Param.Named => s(a(t.mods, " "), a(t.name, " ", t.decltpe.nonEmpty && t.name.value.endsWith("_")), t.decltpe, t.default.map(s(" = ", _)).getOrElse(s()))
     case t: TypeParam.Anonymous =>
       val cbounds = r(t.contextBounds.map { s(": ", _) })
       val vbounds = r(t.viewBounds.map { s(" <% ", _) })
