@@ -257,14 +257,23 @@ object Code {
       if (t.name.isEmpty && t.decltpe.isEmpty) s()
       else s(t.name, t.decltpe, " =>")
     case t: Template =>
-      if (t.early.isEmpty && t.parents.isEmpty && t.self.name.isEmpty && t.self.decltpe.isEmpty && t.stats.isEmpty) s()
+      val isBodyEmpty = t.self.name.isEmpty && t.self.decltpe.isEmpty && !t.hasStats
+      val isTemplateEmpty = t.early.isEmpty && t.parents.isEmpty && isBodyEmpty
+      if (isTemplateEmpty) s()
       else {
-        val pearly = if (t.early.isEmpty) s() else s("{ ", r(t.early, "; "), " } with ")
-        val pparents = a(r(t.parents, " with "), " ", t.parents.nonEmpty && (t.self.name.nonEmpty || t.self.decltpe.nonEmpty || t.hasStats))
-        val pbody = if (t.self.name.isEmpty && t.self.decltpe.isEmpty && !t.hasStats) s()
-                    else if (t.stats.isEmpty) s("{", a(" ", t.self), " }")
-                    else if (t.stats.length == 1 && !s(t.stats.head).toString.contains("\n")) s("{", a(" ", t.self), " ", t.stats.head, " }")
-                    else s("{", a(" ", t.self), r(t.stats.map(i(_)), ""), n("}"))
+        val isOneLiner = t.stats.length == 0 || (t.stats.length == 1 && !s(t.stats.head).toString.contains("\n"))
+        val pearly = if (!t.early.isEmpty) s("{ ", r(t.early, "; "), " } with ") else s()
+        val pparents = a(r(t.parents, " with "), " ", !t.parents.isEmpty && !isBodyEmpty)
+        val pbody = (t.self.name.nonEmpty || t.self.decltpe.nonEmpty, t.hasStats, t.stats) match {
+          case (false, false, _) => s()
+          case (true, false, _) => s("{ ", t.self, " }")
+          case (false, true, List()) if isOneLiner => s("{}")
+          case (false, true, List(stat)) if isOneLiner => s("{ ", stat, " }")
+          case (false, true, stats) => s("{", r(stats.map(i(_)), ""), n("}"))
+          case (true, true, List()) if isOneLiner => s("{ ", t.self, " }")
+          case (true, true, List(stat)) if isOneLiner => s("{ ", t.self, " ", stat, " }")
+          case (true, true, stats) => s("{ ", t.self, r(stats.map(i(_)), ""), n("}"))
+        }
         s(pearly, pparents, pbody)
       }
     case t: TypeBounds =>
