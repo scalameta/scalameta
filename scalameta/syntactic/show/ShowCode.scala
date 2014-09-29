@@ -29,12 +29,15 @@ object Code {
   def p(oo: String, t: Tree, left: Boolean = false, right: Boolean = false) = {
     def needsParens(oo: String, io: String): Boolean = {
       implicit class MySyntacticInfo(name: String) {
-        private def special = Set(".", "()", "=", ":")
+        private def special = Set(".", "()", "=", ":", "match", "if", "lambda")
         def myprecedence: Int = name match {
           case "." => 100
           case "()" => 100
           case "=" => 0
           case ":" => -1
+          case "match" => -2
+          case "if" => -3
+          case "lambda" => -4
           case _ if name.myunary => 99
           case _ => Term.Name(name).precedence
         }
@@ -112,13 +115,13 @@ object Code {
       def pstats(s: Seq[Stmt.Block]) = r(s.map(i(_)), "")
       t match {
         case Block(Function(Param.Named(mods, name, tptopt, _) :: Nil, Block(stats)) :: Nil) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
-          s("{ implicit ", name, tptopt.map { tpt => s(": ", tpt) }.getOrElse(s()), " => ", pstats(stats), n("}"))
+          m("lambda", s("{ implicit ", name, tptopt.map { tpt => s(": ", tpt) }.getOrElse(s()), " => ", pstats(stats), n("}")))
         case Block(Function(Param.Named(mods, name, None, _) :: Nil, Block(stats)) :: Nil) =>
-          s("{ ", name, " => ", pstats(stats), n("}"))
+          m("lambda", s("{ ", name, " => ", pstats(stats), n("}")))
         case Block(Function(Param.Anonymous(_, _) :: Nil, Block(stats)) :: Nil) =>
-          s("{ _ => ", pstats(stats), n("}"))
+          m("lambda", s("{ _ => ", pstats(stats), n("}")))
         case Block(Function(params, Block(stats)) :: Nil) =>
-          s("{ (", r(params, ", "), ") => ", pstats(stats), n("}"))
+          m("lambda", s("{ (", r(params, ", "), ") => ", pstats(stats), n("}")))
         case _ =>
           if (t.stats.isEmpty) s("{}") else s("{", pstats(t.stats), n("}"))
       }
@@ -130,7 +133,7 @@ object Code {
     case t: Term.New         => s("new ", t.templ)
     case _: Term.Placeholder => s("_")
     case t: Term.Eta         => s(t.term, " _")
-    case t: Term.Match       => s(t.scrut, " match ", t.cases)
+    case t: Term.Match       => m("match", s(t.scrut, " match ", t.cases))
     case t: Term.Apply       => m("()", s(p("()", t.fun), t.args))
     case t: Term.ApplyType   => s(t.fun, t.targs)
     case t: Term.ApplyUnary  => m("unary_" + t.op.value, s(t.op, p("unary_" + t.op.value, t.arg)))
@@ -143,17 +146,17 @@ object Code {
       s("try ", t.expr,
         t.catchp.map { catchp => s(" catch ", catchp) }.getOrElse(s()),
         t.finallyp.map { finallyp => s(" finally ", finallyp) }.getOrElse(s()))
-    case t: Term.If       => s("if (", t.cond, ") ", t.thenp, if (t.hasElsep) s(" else ", t.elsep) else s())
+    case t: Term.If       => m("if", s("if (", t.cond, ") ", t.thenp, if (t.hasElsep) s(" else ", t.elsep) else s()))
     case t: Term.Function =>
       t match {
         case Term.Function(Param.Named(mods, name, tptopt, _) :: Nil, body) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
-          s("implicit ", name, tptopt.map { tpt => s(": ", tpt) }.getOrElse(s()), " => ", body)
+          m("lambda", s("implicit ", name, tptopt.map { tpt => s(": ", tpt) }.getOrElse(s()), " => ", body))
         case Term.Function(Param.Named(mods, name, None, _) :: Nil, body) =>
-          s(name, " => ", body)
+          m("lambda", s(name, " => ", body))
         case Term.Function(Param.Anonymous(_, _) :: Nil, body) =>
-          s("_ => ", body)
+          m("lambda", s("_ => ", body))
         case Term.Function(params, body) =>
-          s("(", r(params, ", "), ") => ", body)
+          m("lambda", s("(", r(params, ", "), ") => ", body))
       }
     case t: Term.Interpolate =>
       val zipped = t.parts.zip(t.args).map {
@@ -165,7 +168,7 @@ object Code {
 
     // Pat
     case t: Pat.Alternative  => s(t.lhs, " | ", t.rhs)
-    case t: Pat.Bind         => s(t.lhs, " @ ", t.rhs)
+    case t: Pat.Bind         => s(t.lhs, " @ ", a("(", t.rhs, ")", t.rhs.isInstanceOf[Pat.Alternative] || t.rhs.isInstanceOf[Pat.Typed]))
     case t: Pat.Tuple        => s(t.elements)
     case _: Pat.SeqWildcard  => s("_*")
     case t: Pat.Typed        => m(":", s(t.lhs, ": ", t.rhs))
