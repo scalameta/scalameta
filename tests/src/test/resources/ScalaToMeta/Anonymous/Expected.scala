@@ -6,4 +6,5 @@ object Anonymous {
   val f5: List[Int] => List[Int] = _.map(f1)
   val f6: List[Int] => List[Int] = _.map(_ + 2)
   val f7: Int => Int = _ => 2
+  val f8: (Int, Int) => Int = (_, y) => y
 }

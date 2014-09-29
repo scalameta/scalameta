@@ -87,7 +87,7 @@ trait Typers extends Adaptations with Tags with TypersTracking with PatternTyper
         val argResultsBuff = new scala.collection.mutable.ListBuffer[SearchResult]
         val argBuff = new scala.collection.mutable.ListBuffer[Tree]
         var paramFailed = false
-        var mkArg: (Name, Tree) => Tree = tree
+        var mkArg: (Name, Tree) => Tree = (_, tree) => tree
         for (param <- params) {
           var paramTp = param.tpe
           for (ar <- argResultsBuff) paramTp = paramTp.subst(ar.subst.from, ar.subst.to)
@@ -2398,7 +2398,7 @@ This restriction is planned to be removed in subsequent releases.""")
           case Apply(Select(New(tpt), name), arg :: Nil) if tpt.tpe != null && tpt.tpe.typeSymbol == ArrayClass =>
             Some(tpt.tpe).collect({
               case erasure.GenericArray(level, componentType) =>
-                val tagType = 1.until(level).foldLeft(componentType)(arrayType(res))
+                val tagType = 1.until(level).foldLeft(componentType)((res, _) => arrayType(res))
                 resolveClassTag(tree.pos, tagType) match {
                   case EmptyTree =>
                     MissingClassTagError(tree, tagType)

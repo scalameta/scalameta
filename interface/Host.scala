@@ -412,7 +412,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
       case g.Function(params, body) =>
         // NOTE: need to be careful to discern `_ + 2` and `_ => 2`
         // because in both cases parameter names are `x$...`
-        val isShorthand = params.exists(_.symbol.isAnonymous) && body.exists(tree => params.exists(_.symbol == tree.symbol))
+        // also need to be careful not to mistakenly recognize `(_, y) => y` as shorthand syntax
+        val isShorthand = params.nonEmpty && params.forall(param => param.symbol.isAnonymous && body.exists(_.symbol == param.symbol))
         if (isShorthand) (body.cvt_! : p.Term) else p.Term.Function(params.cvt, body.cvt_!)
       case in @ g.Assign(lhs, rhs) =>
         in match {
