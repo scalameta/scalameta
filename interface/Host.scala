@@ -570,9 +570,13 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         p.Type.Compound(parents.map(_.tpe), stats.asInstanceOf[Seq[p.Stmt.Refine]])
       case in @ g.AppliedTypeTree(tpt, args) =>
         // TODO: infer whether that was really Apply, Function or Tuple
+        // TODO: precisely infer whether that was infix application or normal application
         if (g.definitions.FunctionClass.seq.contains(tpt.tpe.typeSymbol)) p.Type.Function(args.init.cvt_!, args.last.cvt_!)
         else if (g.definitions.TupleClass.seq.contains(tpt.tpe.typeSymbol)) p.Type.Tuple(args.cvt_!)
-        else p.Type.Apply(tpt.cvt_!, args.cvt_!)
+        else in match {
+          case g.AppliedTypeTree(tpt @ g.RefTree(_, name), List(lhs, rhs)) if name.looksLikeInfix => p.Type.ApplyInfix(lhs.cvt_!, tpt.cvt_!, rhs.cvt_!)
+          case _ => p.Type.Apply(tpt.cvt_!, args.cvt_!)
+        }
       case in @ g.ExistentialTypeTree(tpt, whereClauses) =>
         p.Type.Existential(tpt.cvt_!, whereClauses.cvt_!)
       case in @ g.SelectFromTypeTree(qual, name) =>

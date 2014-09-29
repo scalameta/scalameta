@@ -5,6 +5,8 @@ object Types {
   class X
   trait Y
   class Z[T] { type U = T }
+  class ::[T, U]
+  class Cons[T, U]
 
   class D1 extends X
   class D2 extends B with Y
@@ -33,5 +35,9 @@ object Types {
     type T22 = Z[X]
     type T23 = Z[T] forSome { type T }
     type T24 = Z[X]#U
+    type T25 = Int :: List[Int]
+    type T26 = ::[Int, List[Int]]
+    type T27 = Int Cons List[Int]
+    type T28 = Cons[Int, List[Int]]
   }
 }
