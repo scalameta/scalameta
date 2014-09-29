@@ -172,8 +172,8 @@ object Code {
     case _: Pat.Wildcard     => s("_")
     case t: Pat.Extract      => m("()", s(t.ref, t.targs, t.elements))
     case t: Pat.ExtractInfix =>
-      m(t.ref.value, s(p(t.ref.value, t.lhs), " ", t.ref, " ", t.rhs match {
-        case pat :: Nil => s(p(t.ref.value, pat))
+      m(t.ref.value, s(p(t.ref.value, t.lhs, left = true), " ", t.ref, " ", t.rhs match {
+        case pat :: Nil => s(p(t.ref.value, pat, right = true))
         case pats       => s(pats)
       }))
     case t: Pat.Interpolate  =>
