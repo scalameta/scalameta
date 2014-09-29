@@ -2634,12 +2634,12 @@ This restriction is planned to be removed in subsequent releases.""")
                 typed1(tree.setSymbol(sym), mode, pt)
             }
           case LookupSucceeded(qual, sym) =>
-            if (sym.isThisSym) typed1(This(sym.owner).setPos(tree.pos), mode, pt) else if (isPredefClassOf(sym) && pt.typeSymbol == ClassClass && pt.typeArgs.nonEmpty) typedClassOf(tree, TypeTree(pt.typeArgs.head)) else {
+            (if (sym.isThisSym) typed1(This(sym.owner).setPos(tree.pos), mode, pt) else if (isPredefClassOf(sym) && pt.typeSymbol == ClassClass && pt.typeArgs.nonEmpty) typedClassOf(tree, TypeTree(pt.typeArgs.head)) else {
               val pre1 = if (sym.isTopLevel) sym.owner.thisType else if (qual == EmptyTree) NoPrefix else qual.tpe
               val tree1 = if (qual == EmptyTree) tree else atPos(tree.pos)(Select(atPos(tree.pos.focusStart)(qual), name))
               val (tree2, pre2) = makeAccessible(tree1, sym, pre1, qual)
               stabilize(tree2, pre2, mode, pt).modifyType(dropIllegalStarTypes)
-            }.setAttachments(tree.attachments)
+            }).setAttachments(tree.attachments)
         }
       }
       def typedIdentOrWildcard(tree: Ident) = {
