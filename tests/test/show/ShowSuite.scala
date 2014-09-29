@@ -193,4 +193,18 @@ class ShowSuite extends ParseSuite {
       |}
     """.trim.stripMargin)
   }
+
+  test("assorted literals") {
+    assert(templStat("true").show[Code] === "true")
+    assert(templStat("false").show[Code] === "false")
+    assert(templStat("0").show[Code] === "0")
+    assert(templStat("0l").show[Code] === "0l")
+    assert(templStat("0f").show[Code] === "0.0f")
+    assert(templStat("0d").show[Code] === "0.0d")
+    assert(templStat("'0'").show[Code] === "'0'")
+    assert(templStat("\"0\"").show[Code] === "\"0\"")
+    assert(templStat("'zero").show[Code] === "'zero")
+    assert(templStat("null").show[Code] === "null")
+    assert(templStat("()").show[Code] === "()")
+  }
 }
