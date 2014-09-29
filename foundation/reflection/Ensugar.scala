@@ -388,6 +388,16 @@ trait Ensugar {
               case vdef: ValDef => vdef.symbol.isArtifact
               case _ => false
             }
+            def refsNameDefaultTemp(arg: Tree, vdef: ValDef) = {
+              val isTrivialRef = arg.symbol == vdef.symbol
+              val isWildcardStarRef = WildcardStarArg.unapply(arg).map(_.symbol == vdef.symbol).getOrElse(false)
+              val isByNameRef = arg match { case Apply(Select(arg, nme.apply), List()) => arg.symbol == vdef.symbol; case _ => false }
+              isTrivialRef || isWildcardStarRef || isByNameRef
+            }
+            def subNameDefaultTemp(arg: Tree, vdef: ValDef) = {
+              val result = new TreeSubstituter(List(vdef.symbol), List(vdef.rhs)).transform(arg)
+              result match { case Apply(Select(Function(List(), body), nme.apply), List()) => body; case _ => result }
+            }
             val (qualsym, qual, vdefs0, app @ Applied(_, _, argss)) = tree match {
               case Block((qualdef @ ValDef(_, _, _, qual)) +: vdefs, app) if isNameDefaultQual(qualdef) => (qualdef.symbol, qual, vdefs, app)
               case Block(vdefs, app) if vdefs.forall(isNameDefaultTemp) => (NoSymbol, EmptyTree, vdefs, app)
@@ -395,17 +405,15 @@ trait Ensugar {
             }
             val vdefs = vdefs0.map{ case vdef: ValDef => vdef }
             def hasNamesDefaults(args: List[Tree]) = {
-              args.exists(arg => isDefaultGetter(arg) || vdefs.exists(_.symbol == arg.symbol))
+              args.exists(arg => isDefaultGetter(arg) || vdefs.exists(vdef => refsNameDefaultTemp(arg, vdef)))
             }
             def undoNamesDefaults(args: List[Tree], depth: Int) = {
-              def matchesVdef(arg: Tree, vdef: ValDef) = WildcardStarArg.unapply(arg).getOrElse(arg).symbol == vdef.symbol
-              def substituteVref(arg: Tree, vdef: ValDef) = new TreeSubstituter(List(vdef.symbol), List(vdef.rhs)).transform(arg)
               case class Arg(tree: Tree, ipos: Int, inamed: Int) { val param = app.symbol.paramss(depth)(ipos) }
-              val indexed = args.map(arg => arg -> vdefs.indexWhere(matchesVdef(arg, _))).zipWithIndex.flatMap({
+              val indexed = args.map(arg => arg -> vdefs.indexWhere(refsNameDefaultTemp(arg, _))).zipWithIndex.flatMap({
                 /*    default    */ case ((arg, _), _) if isDefaultGetter(arg) => None
                 /*   positional  */ case ((arg, -1), ipos) => Some(Arg(arg, ipos, -1))
                 /* default+named */ case ((_, inamed), _) if isDefaultGetter(vdefs(inamed).rhs) => None
-                /*     named     */ case ((arg, inamed), ipos) => Some(Arg(substituteVref(arg, vdefs(inamed)), ipos, inamed))
+                /*     named     */ case ((arg, inamed), ipos) => Some(Arg(subNameDefaultTemp(arg, vdefs(inamed)), ipos, inamed))
               })
               if (indexed.forall(_.inamed == -1)) indexed.map(_.tree)
               else indexed.sortBy(_.inamed).map(arg => AssignOrNamedArg(Ident(arg.param).setType(arg.tree.tpe), arg.tree))

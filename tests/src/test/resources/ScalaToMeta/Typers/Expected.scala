@@ -1654,7 +1654,22 @@ This restriction is planned to be removed in subsequent releases.""")
         case OverloadedType(pre, alts) =>
           def handleOverloaded = {
             val undetparams = context.undetparams
-            val (args1, argTpes) = context.savingUndeterminedTypeParams()(x$217())
+            val (args1, argTpes) = context.savingUndeterminedTypeParams() {
+              val amode = forArgMode(fun, mode)
+              def typedArg0(tree: Tree) = typedArg(tree, amode, BYVALmode, WildcardType)
+              args.map({
+                case arg @ AssignOrNamedArg(Ident(name), rhs) =>
+                  val typedRhs = typedArg0(rhs)
+                  val argWithTypedRhs = treeCopy.AssignOrNamedArg(arg, arg.lhs, typedRhs)
+                  (argWithTypedRhs, NamedType(name, typedRhs.tpe.deconst))
+                case arg @ treeInfo.WildcardStarArg(repeated) =>
+                  val arg1 = typedArg0(arg)
+                  (arg1, RepeatedType(arg1.tpe.deconst))
+                case arg =>
+                  val arg1 = typedArg0(arg)
+                  (arg1, arg1.tpe.deconst)
+              }).unzip
+            }
             if (context.hasErrors) setError(tree) else {
               inferMethodAlternative(fun, undetparams, argTpes, pt)
               doTypedApply(tree, adapt(fun, mode.forFunMode, WildcardType), args1, mode, pt)
