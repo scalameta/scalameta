@@ -151,7 +151,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         else if (g.definitions.isByNameParamType(gtpt.tpe)) p.Param.Type.ByName(unwrap(gtpt.cvt_! : p.Type))
         else (gtpt.cvt_! : p.Type)
       }
-      def pbounds(gtpt: g.Tree): p.Aux.TypeBounds = gtpt match {
+      def ptypebounds(gtpt: g.Tree): p.Aux.TypeBounds = gtpt match {
         case g.TypeBoundsTree(glo, ghi) =>
           (glo.isEmpty, ghi.isEmpty) match {
             case (false, false) => p.Aux.TypeBounds(lo = glo.cvt_! : p.Type, hi = ghi.cvt_! : p.Type)
@@ -242,6 +242,17 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         require(result.forall(pstat => classTag[T].runtimeClass.isAssignableFrom(pstat.getClass)))
         result.toList.asInstanceOf[List[T]]
       }
+      def gextractContextBounds(gtparams0: List[g.TypeDef], gimplicits0: List[g.ValDef]): (List[g.TypeDef], List[g.ValDef]) = {
+        val (gbounds, gimplicits) = gimplicits0.partition(_.name.startsWith(g.nme.EVIDENCE_PARAM_PREFIX))
+        val gtparams = gtparams0.map(gp => {
+          val grawRelevantBounds = gbounds.filter(_.exists(_.symbol == gp.symbol))
+          val (grawContextBounds, grawViewBounds) = grawRelevantBounds.partition(_.tpt.tpe.typeSymbol != g.definitions.FunctionClass(1))
+          val gcontextBounds = grawContextBounds.map{ case g.ValDef(_, _, g.AppliedTypeTree(gtpt, List(garg @ g.Ident(_))), _) if garg.symbol == gp.symbol => gtpt }
+          val gviewBounds = grawViewBounds.map{ case g.ValDef(_, _, g.AppliedTypeTree(_, List(garg @ g.Ident(_), gtarget)), _) if garg.symbol == gp.symbol => gtarget }
+          gp.appendMetadata("originalContextBounds" -> gcontextBounds, "originalViewBounds" -> gviewBounds)
+        })
+        (gtparams, gimplicits)
+      }
     }
 
     import Helpers._
@@ -260,15 +271,17 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         val hasBraces = stats.collect{ case pdef: g.PackageDef => pdef }.length > 1
         if (pid.name == g.nme.EMPTY_PACKAGE_NAME) p.Aux.CompUnit(pstats[p.Stmt.TopLevel](in, stats))
         else p.Aux.CompUnit(List(p.Pkg(pid.cvt_!, pstats[p.Stmt.TopLevel](in, stats), hasBraces = hasBraces))) // TODO: infer hasBraces
-      case in @ g.ClassDef(_, _, tparams, templ) =>
+      case in @ g.ClassDef(_, _, tparams0, templ) =>
         require(in.symbol.isClass)
         if (in.symbol.isTrait) {
+          val tparams = tparams0 // NOTE: no context bounds for traits
           p.Defn.Trait(pmods(in), in.symbol.asClass.rawcvt(in), tparams.cvt, templ.cvt)
         } else {
           val gctor = templ.body.find(_.symbol == in.symbol.primaryConstructor).get.asInstanceOf[g.DefDef]
-          val q"$_ def $_[..$_](...$impreciseExplicitss)(implicit ..$implicits): $_ = $_" = gctor
+          val q"$_ def $_[..$_](...$impreciseExplicitss)(implicit ..$implicits0): $_ = $_" = gctor
           // TODO: discern `class C` and `class C()`
           val explicitss = if (impreciseExplicitss.flatten.isEmpty) List() else impreciseExplicitss
+          val (tparams, implicits) = gextractContextBounds(tparams0, implicits0)
           val ctor = p.Ctor.Primary(pmods(gctor), explicitss.cvt_!, implicits.cvt_!).appendScratchpad(in.symbol.primaryConstructor)
           p.Defn.Class(pmods(in), in.symbol.asClass.rawcvt(in), tparams.cvt, ctor, templ.cvt)
         }
@@ -305,7 +318,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
       case in @ g.DefDef(_, _, _, _, _, _) =>
         // TODO: figure out procedures
         require(in.symbol.isMethod)
-        val q"$_ def $_[..$tparams](...$explicitss)(implicit ..$implicits): $tpt = $body" = in
+        val q"$_ def $_[..$tparams0](...$explicitss)(implicit ..$implicits0): $tpt = $body" = in
+        val (tparams, implicits) = gextractContextBounds(tparams0, implicits0)
         require(in.symbol.isDeferred ==> body.isEmpty)
         if (in.symbol.isConstructor) {
           require(!in.symbol.isPrimaryConstructor)
@@ -320,13 +334,14 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
           p.Defn.Def(pmods(in), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt_!, implicits.cvt_!, if (tpt.nonEmpty) Some[p.Type](tpt.cvt_!) else None, body.cvt_!)
         }
       case in @ g.TypeDef(_, _, tparams, tpt) if pt <:< typeOf[p.TypeParam] =>
-        // TODO: undo desugarings of context and view bounds
         require(in.symbol.isType)
-        if (in.symbol.isAnonymous) p.TypeParam.Anonymous(pmods(in), tparams.cvt, Nil, Nil, pbounds(tpt))
-        else p.TypeParam.Named(pmods(in), in.symbol.asType.rawcvt(in), tparams.cvt, Nil, Nil, pbounds(tpt))
+        val pcontextbounds = in.metadata("originalContextBounds").asInstanceOf[List[g.Tree]].map(_.cvt_! : p.Type)
+        val pviewbounds = in.metadata("originalViewBounds").asInstanceOf[List[g.Tree]].map(_.cvt_! : p.Type)
+        if (in.symbol.isAnonymous) p.TypeParam.Anonymous(pmods(in), tparams.cvt, pcontextbounds, pviewbounds, ptypebounds(tpt))
+        else p.TypeParam.Named(pmods(in), in.symbol.asType.rawcvt(in), tparams.cvt, pcontextbounds, pviewbounds, ptypebounds(tpt))
       case in @ g.TypeDef(_, _, tparams, tpt) if pt <:< typeOf[p.Member] =>
         require(in.symbol.isType)
-        if (in.symbol.isDeferred) p.Decl.Type(pmods(in), in.symbol.asType.rawcvt(in), tparams.cvt, pbounds(tpt))
+        if (in.symbol.isDeferred) p.Decl.Type(pmods(in), in.symbol.asType.rawcvt(in), tparams.cvt, ptypebounds(tpt))
         else p.Defn.Type(pmods(in), in.symbol.asType.rawcvt(in), tparams.cvt, tpt.cvt_!)
       case in @ g.LabelDef(name, params, rhs) =>
         require(params.isEmpty)
@@ -523,7 +538,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         // also see the ensugarer for more information
         if (in.isTerm && in.symbol.isType) p.Term.Name(in.alias, in.isBackquoted)
         else if (in.isTerm && in.symbol.isAnonymous) p.Term.Placeholder()
-        else if (in.isType && in.symbol.isAnonymous) p.Type.Placeholder(pbounds(in.metadata("originalBounds").asInstanceOf[g.Tree]))
+        else if (in.isType && in.symbol.isAnonymous) p.Type.Placeholder(ptypebounds(in.metadata("originalBounds").asInstanceOf[g.Tree]))
         else in.symbol.rawcvt(in)
       case g.ReferenceToBoxed(_) =>
         ???

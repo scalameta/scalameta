@@ -22,7 +22,7 @@ object Types {
   new X {} match {
     case x13: X =>
   }
-  class D14[T](val x15: X)(implicit evidence$1: Z[T]) { self16: X =>
+  class D14[T: Z<% Z](val x15: X) { self16: X =>
     val x17: X = new X {}
     def x18(x19: X)(x20: X): X = x20: X: @X
     type T21 >: X <: X
