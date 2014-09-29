@@ -340,8 +340,7 @@ package object internal {
             sym.fullName != "scala.meta.Mod.Doc" &&
             sym.fullName != "scala.meta.Pat.Interpolate" &&
             sym.fullName != "scala.meta.Term.For" &&
-            sym.fullName != "scala.meta.Term.ForYield" &&
-            sym.fullName != "scala.meta.Type.Placeholder"
+            sym.fullName != "scala.meta.Term.ForYield"
           })
           if (unmatched.nonEmpty) c.error(c.enclosingPosition, "@converter is not exhaustive in its outputs; missing: " + unmatched)
           unmatched.isEmpty

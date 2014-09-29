@@ -39,5 +39,8 @@ object Types {
     type T26 = ::[Int, List[Int]]
     type T27 = Int Cons List[Int]
     type T28 = Cons[Int, List[Int]]
+    type T29 = Z[_]
+    type T30 = Cons[_, _ <: Int]
+    type T31 = Cons[Z[_ >: String], _ <: Int]
   }
 }

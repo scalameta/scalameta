@@ -65,10 +65,11 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
           // NOTE: not all symbols whose names start with x$ are placeholders
           // there are also at least artifact vals created for named arguments
           val isTermPlaceholder = gsym.isTerm && gsym.isParameter && gsym.name.startsWith(g.nme.FRESH_TERM_NAME_PREFIX)
+          val isTypePlaceholder = gsym.isType && gsym.isAbstract && gsym.name.startsWith("_$")
           val isAnonymousSelfName = gsym.name.startsWith(g.nme.FRESH_TERM_NAME_PREFIX) || gsym.name == g.nme.this_
           val isAnonymousSelf = gsym.isTerm && isAnonymousSelfName && gsym.owner.isClass // TODO: more precise detection, probably via attachments
           val isAnonymousTypeParameter = gsym.name == g.tpnme.WILDCARD
-          isTermPlaceholder || isAnonymousSelf || isAnonymousTypeParameter
+          isTermPlaceholder || isTypePlaceholder || isAnonymousSelf || isAnonymousTypeParameter
         }
         def precvt(pre: g.Type, in: g.Tree): p.Name = {
           gsym.rawcvt(in).appendScratchpad(pre)
@@ -150,7 +151,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         else if (g.definitions.isByNameParamType(gtpt.tpe)) p.Param.Type.ByName(unwrap(gtpt.cvt_! : p.Type))
         else (gtpt.cvt_! : p.Type)
       }
-      def ptparambounds(gtpt: g.Tree): p.Aux.TypeBounds = gtpt match {
+      def pbounds(gtpt: g.Tree): p.Aux.TypeBounds = gtpt match {
         case g.TypeBoundsTree(glo, ghi) =>
           (glo.isEmpty, ghi.isEmpty) match {
             case (false, false) => p.Aux.TypeBounds(lo = glo.cvt_! : p.Type, hi = ghi.cvt_! : p.Type)
@@ -321,11 +322,11 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
       case in @ g.TypeDef(_, _, tparams, tpt) if pt <:< typeOf[p.TypeParam] =>
         // TODO: undo desugarings of context and view bounds
         require(in.symbol.isType)
-        if (in.symbol.isAnonymous) p.TypeParam.Anonymous(pmods(in), tparams.cvt, Nil, Nil, ptparambounds(tpt))
-        else p.TypeParam.Named(pmods(in), in.symbol.asType.rawcvt(in), tparams.cvt, Nil, Nil, ptparambounds(tpt))
+        if (in.symbol.isAnonymous) p.TypeParam.Anonymous(pmods(in), tparams.cvt, Nil, Nil, pbounds(tpt))
+        else p.TypeParam.Named(pmods(in), in.symbol.asType.rawcvt(in), tparams.cvt, Nil, Nil, pbounds(tpt))
       case in @ g.TypeDef(_, _, tparams, tpt) if pt <:< typeOf[p.Member] =>
         require(in.symbol.isType)
-        if (in.symbol.isDeferred) p.Decl.Type(pmods(in), in.symbol.asType.rawcvt(in), tparams.cvt, ptparambounds(tpt))
+        if (in.symbol.isDeferred) p.Decl.Type(pmods(in), in.symbol.asType.rawcvt(in), tparams.cvt, pbounds(tpt))
         else p.Defn.Type(pmods(in), in.symbol.asType.rawcvt(in), tparams.cvt, tpt.cvt_!)
       case in @ g.LabelDef(name, params, rhs) =>
         require(params.isEmpty)
@@ -522,6 +523,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         // also see the ensugarer for more information
         if (in.isTerm && in.symbol.isType) p.Term.Name(in.alias, in.isBackquoted)
         else if (in.isTerm && in.symbol.isAnonymous) p.Term.Placeholder()
+        else if (in.isType && in.symbol.isAnonymous) p.Type.Placeholder(pbounds(in.metadata("originalBounds").asInstanceOf[g.Tree]))
         else in.symbol.rawcvt(in)
       case g.ReferenceToBoxed(_) =>
         ???
@@ -578,7 +580,19 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
           case _ => p.Type.Apply(tpt.cvt_!, args.cvt_!)
         }
       case in @ g.ExistentialTypeTree(tpt, whereClauses) =>
-        p.Type.Existential(tpt.cvt_!, whereClauses.cvt_!)
+        val isShorthand = whereClauses.exists(_.symbol.isAnonymous)
+        object rememberBounds extends g.Transformer {
+          override def transform(tree: g.Tree): g.Tree = tree match {
+            case tree @ g.Ident(_) =>
+              whereClauses.find(_.symbol == tree.symbol) match {
+                case Some(g.TypeDef(_, _, _, tpt)) => tree.appendMetadata("originalBounds" -> tpt)
+                case _ => super.transform(tree)
+              }
+            case _ =>
+              super.transform(tree)
+          }
+        }
+        if (isShorthand) (rememberBounds.transform(tpt).cvt_! : p.Type) else p.Type.Existential(tpt.cvt_!, whereClauses.cvt_!)
       case in @ g.SelectFromTypeTree(qual, name) =>
         p.Type.Project(qual.cvt_!, in.symbol.asType.precvt(qual.tpe, in))
       case in @ g.TypeBoundsTree(_, _) =>
