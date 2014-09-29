@@ -284,14 +284,14 @@ object Code {
     case t: Param.Named => s(a(t.mods, " "), t.name, t.decltpe, t.default.map(s(" = ", _)).getOrElse(s()))
     case t: TypeParam.Anonymous =>
       val cbounds = r(t.contextBounds.map { s(": ", _) })
-      val vbounds = r(t.viewBounds.map { s("<% ", _) })
+      val vbounds = r(t.viewBounds.map { s(" <% ", _) })
       val variance = t.mods.foldLeft("")((curr, m) => if (m.isInstanceOf[Mod.Covariant]) "+" else if (m.isInstanceOf[Mod.Contravariant]) "-" else curr)
       val mods = t.mods.filter(m => !m.isInstanceOf[Mod.Covariant] && !m.isInstanceOf[Mod.Contravariant])
       require(t.mods.length - mods.length <= 1)
       s(a(mods, " "), variance, "_", t.tparams, cbounds, vbounds, t.bounds)
     case t: TypeParam.Named =>
       val cbounds = r(t.contextBounds.map { s(": ", _) })
-      val vbounds = r(t.viewBounds.map { s("<% ", _) })
+      val vbounds = r(t.viewBounds.map { s(" <% ", _) })
       val variance = t.mods.foldLeft("")((curr, m) => if (m.isInstanceOf[Mod.Covariant]) "+" else if (m.isInstanceOf[Mod.Contravariant]) "-" else curr)
       val mods = t.mods.filter(m => !m.isInstanceOf[Mod.Covariant] && !m.isInstanceOf[Mod.Contravariant])
       require(t.mods.length - mods.length <= 1)
