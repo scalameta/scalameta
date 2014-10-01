@@ -226,7 +226,7 @@ object Code {
       m(SimpleExpr1, s(t.prefix, quote, r(zipped), t.parts.last.value, quote))
 
     // Pat
-    case t: Pat.Alternative  => m(Pattern, s(p(Pattern1, t.lhs), " ", kw("|"), " ", p(Pattern1, t.rhs)))
+    case t: Pat.Alternative  => m(Pattern, s(p(Pattern, t.lhs), " ", kw("|"), " ", p(Pattern, t.rhs)))
     case t: Pat.Bind         => m(Pattern2, s(p(SimplePattern, t.lhs), " ", kw("@"), " ", p(AnyPattern3, t.rhs)))
     case t: Pat.Tuple        => m(SimplePattern, s("(", r(t.elements, ", "), ")"))
     case _: Pat.SeqWildcard  => m(SimplePattern, kw("_*"))

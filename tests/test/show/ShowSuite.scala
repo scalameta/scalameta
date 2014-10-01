@@ -239,6 +239,8 @@ class ShowSuite extends ParseSuite {
     assert(templStat("type T = A + (B / C)").show[Code] === "type T = A + (B / C)")
     assert(templStat("type T = A :: B :: C").show[Code] === "type T = A :: B :: C")
     assert(templStat("type T = (A :: B) :: C").show[Code] === "type T = (A :: B) :: C")
+    assert(templStat("foo match { case _: A | _: B => }").show[Code] === "foo match {\n  case _: A | _: B =>\n}")
+    assert(templStat("foo match { case _: A | _: B | _: C => }").show[Code] === "foo match {\n  case _: A | _: B | _: C =>\n}")
   }
 
   test("more trickiness") {
