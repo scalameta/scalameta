@@ -88,7 +88,7 @@ object Type {
     require(ref match { case ref: Term.Ref => ref.isPath; case ref: Qual.Super => true; case _ => unreachable })
   }
   @ast class Apply(tpe: Type, args: Seq[Type] @nonEmpty) extends Type
-  @ast class ApplyInfix(lhs: Type, op: Type, rhs: Type) extends Type
+  @ast class ApplyInfix(lhs: Type, op: Name, rhs: Type) extends Type
   @ast class Function(params: Seq[Param.Type], res: Type) extends Type
   @ast class Tuple(elements: Seq[Type] @nonEmpty) extends Type {
     require(elements.length > 1)
