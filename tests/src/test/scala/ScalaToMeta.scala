@@ -104,6 +104,8 @@ class ScalaToMeta extends FunSuite {
     val actualResult = typecheckConvertAndPrettyprint(slurp("Original"), debug = false)
     if (!exists("Expected")) dump("Expected", "")
     val expectedResult = slurp("Expected")
+    // TODO: would also be nice to test structural equivalence of reflect -> meta converted trees and meta parsed trees
+    // unfortunately much of the trivia is lost during reflect parsing, so we can only dream of structural equivalence...
     if (actualResult != expectedResult) {
       dump("Actual", actualResult)
       fail(s"see ${resource("Actual")} for details")
