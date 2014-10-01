@@ -22,7 +22,6 @@
     1. Lit.String.hasTripleQuotes
     1. Interpolate.hasTripleQuotes
     1. Interpolate.hasBraces (Seq[Boolean] for capturing the flavor of splices)
-  1. Trees for macros (esp old vs new macro)
   1. Design representation for scaladoc and comments in general
   1. Possible gaps between docs and related defns are really scary, consider making docs a semantic operation on definition
   1. Revisit class val/var parameter representation (Mod.ValParam vs separate tree)
