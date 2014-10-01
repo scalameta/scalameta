@@ -14,7 +14,7 @@ object Types {
   val x5 = new X
   val x6 = new X {}
   val x7 = new B with Y {}
-  @X @X class D8
+  @(X @X) class D8
   type T9 = X => X
   type T10 = (X, X)
   type T11 = X { def x: Int }
@@ -24,7 +24,7 @@ object Types {
   }
   class D14[T: Z](val x15: X) { self16: X =>
     val x17: X = new X {}
-    def x18(x19: X)(x20: X): X = x20: X: @X
+    def x18(x19: X)(x20: X): X = (x20: X): @X
     type T21 >: X <: X
     type T22 = Z[X]
     type T23 = Z[T] forSome { type T }
