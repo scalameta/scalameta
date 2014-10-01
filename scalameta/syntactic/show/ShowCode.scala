@@ -13,10 +13,8 @@ import org.scalameta.adt._
 import org.scalameta.invariants._
 
 // TODO: fix occasional incorrectness when semicolons are omitted
-// TODO: needs way more parens, esp in types and patterns
 // TODO: soft wrapping
 // TODO: one mega instance for tree isn't nice, maybe separate instances for leafs and inferred instances for branches
-// TODO: strings and string interpolation needs to be smarter wrt " vs """
 
 trait Code[T] extends Show[T]
 object Code {
