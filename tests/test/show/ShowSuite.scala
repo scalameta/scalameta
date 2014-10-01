@@ -240,4 +240,10 @@ class ShowSuite extends ParseSuite {
     assert(templStat("type T = A :: B :: C").show[Code] === "type T = A :: B :: C")
     assert(templStat("type T = (A :: B) :: C").show[Code] === "type T = (A :: B) :: C")
   }
+
+  test("more trickiness") {
+    assert(templStat("def foo(bar_ : Int) = ???").show[Code] === "def foo(bar_ : Int) = ???")
+    assert(templStat("class C[T_ : Foo]").show[Code] === "class C[T_ : Foo]")
+    assert(templStat("val scala_ : NameType = ???").show[Code] === "val scala_ : NameType = ???")
+  }
 }
