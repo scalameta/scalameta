@@ -2579,7 +2579,7 @@ abstract class AbstractParser { parser =>
     val (refs, stats) = packageStats()
     refs match {
       case Nil          => Aux.CompUnit(stats)
-      case init :+ last => Aux.CompUnit(init.foldLeft(Pkg(last, stats, hasBraces = false)) { (acc, ref) => Pkg(ref, acc :: Nil, hasBraces = false) } :: Nil)
+      case init :+ last => Aux.CompUnit(init.foldRight(Pkg(last, stats, hasBraces = false)) { (ref, acc) => Pkg(ref, acc :: Nil, hasBraces = false) } :: Nil)
     }
   }
 }
