@@ -214,4 +214,30 @@ class ShowSuite extends ParseSuite {
     assert(templStat("class C[T: List, U <% Int]").show[Code] === "class C[T: List, U <% Int]")
     assert(templStat("def m[T: List, U <% Int] = ???").show[Code] === "def m[T: List, U <% Int] = ???")
   }
+
+  test("some tricky parenthesization") {
+    assert(templStat("if (1) 2 else 3 + 4").show[Code] === "if (1) 2 else 3 + 4")
+    assert(templStat("(if (1) 2 else 3) + 4").show[Code] === "(if (1) 2 else 3) + 4")
+    assert(templStat("if (1) 2 else 3 match { case _ => }").show[Code] === "if (1) 2 else 3 match {\n  case _ =>\n}")
+    assert(templStat("(if (1) 2 else 3) match { case _ => }").show[Code] === "(if (1) 2 else 3) match {\n  case _ =>\n}")
+    assert(templStat("unit.toCheck += (() => body)").show[Code] === "unit.toCheck += (() => body)")
+    assert(templStat("({ foo1; foo2 }).orElse(bar)").show[Code] === "{\n  foo1\n  foo2\n}.orElse(bar)")
+    assert(templStat("(foo match { case _ => }).orElse(bar)").show[Code] === "(foo match {\n  case _ =>\n}).orElse(bar)")
+    assert(templStat("foo || (if (cond) bar else baz)").show[Code] === "foo || (if (cond) bar else baz)")
+    assert(templStat("foo && (bar match { case _ => })").show[Code] === "foo && (bar match {\n  case _ =>\n})")
+    assert(templStat("\"foo \" + (if (cond) bar else baz)").show[Code] === "\"foo \" + (if (cond) bar else baz)")
+    assert(templStat("foo match { case bar @ (_: T1 | _: T2) => }").show[Code] === "foo match {\n  case bar @ (_: T1 | _: T2) =>\n}")
+    assert(templStat("foo match { case A + B / C => }").show[Code] === "foo match {\n  case A + B / C =>\n}")
+    assert(templStat("foo match { case (A + B) / C => }").show[Code] === "foo match {\n  case (A + B) / C =>\n}")
+    assert(templStat("foo match { case A + (B / C) => }").show[Code] === "foo match {\n  case A + B / C =>\n}")
+    assert(templStat("foo match { case bar :: Nil :: Nil => }").show[Code] === "foo match {\n  case bar :: Nil :: Nil =>\n}")
+    assert(templStat("foo match { case (bar :: Nil) :: Nil => }").show[Code] === "foo match {\n  case (bar :: Nil) :: Nil =>\n}")
+    assert(templStat("@(foo @foo) class Bar").show[Code] === "@(foo @foo) class Bar")
+    assert(templStat("(foo: Foo): @foo").show[Code] === "(foo: Foo): @foo")
+    assert(templStat("type T = A + B / C").show[Code] === "type T = A + B / C")
+    assert(templStat("type T = (A + B) / C").show[Code] === "type T = A + B / C")
+    assert(templStat("type T = A + (B / C)").show[Code] === "type T = A + (B / C)")
+    assert(templStat("type T = A :: B :: C").show[Code] === "type T = A :: B :: C")
+    assert(templStat("type T = (A :: B) :: C").show[Code] === "type T = (A :: B) :: C")
+  }
 }
