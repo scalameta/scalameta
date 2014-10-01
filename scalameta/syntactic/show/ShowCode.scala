@@ -20,12 +20,6 @@ trait Code[T] extends Show[T]
 object Code {
   def apply[T](f: T => Show.Result): Code[T] = new Code[T] { def apply(input: T) = f(input) }
 
-  def templ(templ: Template) =
-    // TODO: consider XXX.isEmpty
-    if (templ.early.isEmpty && templ.parents.isEmpty && templ.self.name.isEmpty && templ.self.decltpe.isEmpty && templ.stats.isEmpty) s()
-    else if (templ.parents.nonEmpty || templ.early.nonEmpty) s(" extends ", templ)
-    else s(" ", templ)
-
   def p(oo: String, t: Tree, left: Boolean = false, right: Boolean = false) = {
     def needsParens(oo: String, io: String): Boolean = {
       implicit class MySyntacticInfo(name: String) {
@@ -63,6 +57,12 @@ object Code {
       case res => res
     }
   }
+
+  def templ(templ: Template) =
+    // TODO: consider XXX.isEmpty
+    if (templ.early.isEmpty && templ.parents.isEmpty && templ.self.name.isEmpty && templ.self.decltpe.isEmpty && templ.stats.isEmpty) s()
+    else if (templ.parents.nonEmpty || templ.early.nonEmpty) s(" extends ", templ)
+    else s(" ", templ)
 
   // Branches
   // TODO: this match is not exhaustive: if I remove Mod.Package, then I get no warning
