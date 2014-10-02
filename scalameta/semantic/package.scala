@@ -199,11 +199,6 @@ package object semantic {
     @hosted def tpe: meta.Type = tree.rhs.map(_.tpe).getOrElse(succeed(tree.decltpe.get))
   }
 
-  implicit class SemanticDefnMacroOps(val tree: Defn.Macro) extends AnyVal {
-    @hosted def isBlackbox: Boolean = ???
-    @hosted def isWhitebox: Boolean = ???
-  }
-
   implicit class SemanticDefnClassOps(val tree: Defn.Class) extends AnyVal {
     @hosted def companion: Object = new SemanticTemplateMemberOps(tree).companion.map(_.asInstanceOf[Object])
   }
@@ -360,6 +355,5 @@ package object semantic {
     @hosted(macroApi = true) def abort(msg: String): Nothing = delegate
     @hosted(macroApi = true) def resources: Seq[String] = delegate
     @hosted(macroApi = true) def resource(url: String): Array[Byte] = delegate
-    @compileTimeOnly("c.whitebox isn't supposed to be used outside macro { ... } blocks") def whitebox[T](expansion: T): T = expansion
   }
 }
