@@ -45,19 +45,10 @@ trait Typechecking {
           if (ddef.symbol != null) ddef.symbol setFlag IS_ERROR
           ddef setType ErrorType
         } else {
-          var isExplicitlyWhitebox = false
-          object dewhiteboxer extends Transformer {
-            private val c_whitebox = typeOf[scala.meta.semantic.`package`.c.type].decl(TermName("whitebox")).asMethod
-            override def transform(tree: Tree): Tree = tree match {
-              case Apply(fn, List(arg)) if fn.symbol == c_whitebox => isExplicitlyWhitebox = true; transform(arg.appendMetadata("original" -> treeCopy.Apply(tree, fn, List(duplicateAndKeepPositions(arg)))))
-              case tree => super.transform(tree)
-            }
-          }
-          val typedImplDdef1 = dewhiteboxer.transform(typedImplDdef).asInstanceOf[DefDef]
           // NOTE: order is actually very important here, because at the end of the day
           // we need the legacy annotation to come first so that it can be picked up by the 2.11.x macro engine
           // (otherwise half of the standard macro infrastructure will cease to function)
-          ddef.symbol.addAnnotation(MacroImplAnnotation, PalladiumSignature(!isExplicitlyWhitebox, typedImplDdef1))
+          ddef.symbol.addAnnotation(MacroImplAnnotation, PalladiumSignature(typedImplDdef))
           ddef.symbol.addAnnotation(MacroImplAnnotation, LegacySignature())
         }
         Some(EmptyTree)
@@ -71,16 +62,14 @@ trait Typechecking {
   }
 
   object PalladiumSignature extends FixupSignature {
-    def apply(isBlackbox: Boolean, implDdef: DefDef): Tree = {
+    def apply(implDdef: DefDef): Tree = {
       fixup(Apply(Ident(TermName("palladiumMacro")), List(
-        Assign(Literal(Constant("isBlackbox")), Literal(Constant(isBlackbox))),
         Assign(Literal(Constant("implDdef")), implDdef))))
     }
-    def unapply(tree: Tree): Option[(Boolean, DefDef)] = {
+    def unapply(tree: Tree): Option[DefDef] = {
       tree match {
         case Apply(Ident(TermName("palladiumMacro")), List(
-          Assign(Literal(Constant("isBlackbox")), Literal(Constant(isBlackbox: Boolean))),
-          Assign(Literal(Constant("implDdef")), (implDdef: DefDef)))) => Some((isBlackbox, implDdef))
+          Assign(Literal(Constant("implDdef")), (implDdef: DefDef)))) => Some(implDdef)
         case _ => None
       }
     }
@@ -107,7 +96,7 @@ trait Typechecking {
   def palladiumIsBlackbox(macroDef: Symbol): Option[Boolean] = {
     val macroSignatures = macroDef.annotations.filter(_.atp.typeSymbol == MacroImplAnnotation)
     macroSignatures match {
-      case _ :: AnnotationInfo(_, List(PalladiumSignature(isBlackbox, _)), _) :: Nil => Some(isBlackbox)
+      case _ :: AnnotationInfo(_, List(PalladiumSignature(_)), _) :: Nil => Some(true)
       case _ => None
     }
   }
