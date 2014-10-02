@@ -28,7 +28,7 @@ trait Expansion extends scala.reflect.internal.show.Printers {
     val TermQuote = "denied" // TODO: this about a better approach
     val macroSignatures = expandee.symbol.annotations.filter(_.atp.typeSymbol == MacroImplAnnotation)
     val expanded = macroSignatures match {
-      case _ :: AnnotationInfo(_, List(PalladiumSignature(_, implDdef)), _) :: Nil =>
+      case _ :: AnnotationInfo(_, List(PalladiumSignature(implDdef)), _) :: Nil =>
         object palladiumMacroExpander extends DefMacroExpander(typer, expandee, mode, pt) {
           private def isDelayed(tree: Tree): Boolean = {
             val macros = Class.forName("scala.tools.nsc.typechecker.Macros$class", false, getClass.getClassLoader)
