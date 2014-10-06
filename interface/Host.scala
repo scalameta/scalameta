@@ -509,7 +509,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
             })
             if (isYield) p.Term.ForYield(penums, body.cvt_!)
             else p.Term.For(penums, body.cvt_!)
-          case q"$lhs.$op($arg)" if op.looksLikeInfix =>
+          case q"$lhs.$op($arg)" if op.looksLikeInfix && !lhs.isInstanceOf[g.Super] =>
             p.Term.ApplyInfix(lhs.cvt_!, (fn.cvt_! : p.Term.Select).selector, Nil, List(parg(arg)))
           case _ if g.definitions.TupleClass.seq.contains(in.symbol.companion) =>
             p.Term.Tuple(args.cvt_!)
