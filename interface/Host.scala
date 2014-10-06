@@ -396,6 +396,11 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         p.Pat.Alternative(hd.cvt_!, g.Alternative(rest).setType(in.tpe).asInstanceOf[g.Alternative].cvt)
       case g.Ident(g.nme.WILDCARD) =>
         p.Pat.Wildcard()
+      case g.Bind(g.tpnme.WILDCARD, g.EmptyTree) =>
+        // TODO: we can't do p.Pat.Wildcard(), because we expect a meta.Type here
+        // NOTE: it looks like bounds in type wildcards aren't allowed by Scala's typechecker
+        // so we just insert empty type bounds here
+        p.Type.Placeholder(p.Aux.TypeBounds())
       case g.Star(g.Ident(g.nme.WILDCARD)) =>
         p.Pat.SeqWildcard()
       case in @ g.Bind(_, g.Ident(g.nme.WILDCARD)) =>
