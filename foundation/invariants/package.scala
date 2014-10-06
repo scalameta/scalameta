@@ -14,6 +14,8 @@ package object invariants {
 package invariants {
   class Macros(val c: Context) {
     import c.universe._
+    import c.internal._
+    import decorators._
     def require(x: Tree): Tree = {
       sealed abstract class Prop {
         lazy val result = c.freshName(TermName("result"))
@@ -153,17 +155,43 @@ package invariants {
       // println("=======")
 
       val failures = c.freshName(TermName("failures"))
-      def enclosingClass = {
-        def loop(sym: Symbol): Symbol = {
-          if (sym.isClass) sym
-          else loop(sym.owner)
+      object freeLocalFinder extends Traverser {
+        private val localRefs = scala.collection.mutable.ListBuffer[Tree]()
+        private val localLocals = scala.collection.mutable.Set[Symbol]()
+        def registerLocalLocal(sym: Symbol) {
+          if (sym != null && sym != NoSymbol) localLocals += sym
         }
-        loop(c.internal.enclosingOwner)
+        def markLocalLocal(tree: Tree) {
+          if (tree.symbol != null && tree.symbol != NoSymbol) {
+            val sym = tree.symbol
+            registerLocalLocal(sym)
+            registerLocalLocal(sym.deSkolemize)
+            registerLocalLocal(sym.companion)
+            sym match {
+              case sym: ClassSymbol => registerLocalLocal(sym.module)
+              case sym: ModuleSymbol => registerLocalLocal(sym.moduleClass)
+              case _ => ;
+            }
+          }
+        }
+        override def traverse(tree: Tree): Unit = {
+          val sym = tree.symbol
+          tree match {
+            case tree: Ident if !sym.owner.isClass && tree.name != termNames.WILDCARD => localRefs += tree
+            case tree: This if !sym.isPackageClass => localRefs += tree
+            case _: DefTree | Function(_, _) | Template(_, _, _) => markLocalLocal(tree); super.traverse(tree)
+            case _ => super.traverse(tree)
+          }
+        }
+        def freeLocals = localRefs.filter(ref => !localLocals.contains(ref.symbol))
       }
+      freeLocalFinder.traverse(x)
+      val freeLocals = freeLocalFinder.freeLocals.map(tree => tree.symbol.name.toString -> tree.duplicate).toMap
+      // println(x -> freeLocals)
       q"""
         ${c.untypecheck(prop.emit)} match {
           case (true, _) => ()
-          case (false, $failures) => org.scalameta.invariants.InvariantFailedException.raise(${showCode(x)}, $failures, scala.Some($enclosingClass.this))
+          case (false, $failures) => org.scalameta.invariants.InvariantFailedException.raise(${showCode(x)}, $failures, $freeLocals)
         }
       """
     }
