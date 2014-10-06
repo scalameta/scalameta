@@ -21,7 +21,7 @@ trait Typechecking {
       def isVanillaBody(tree: Tree): Boolean = tree match {
         case Ident(_) => true
         case Select(_, _) => true
-        case TypeApply(fn, _) => isVanillaBody(tree)
+        case TypeApply(fn, _) => isVanillaBody(fn)
         case _ => false
       }
       if (isVanillaBody(tree)) None else Some(tree)
