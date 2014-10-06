@@ -153,17 +153,10 @@ package invariants {
       // println("=======")
 
       val failures = c.freshName(TermName("failures"))
-      def enclosingClass = {
-        def loop(sym: Symbol): Symbol = {
-          if (sym.isClass) sym
-          else loop(sym.owner)
-        }
-        loop(c.internal.enclosingOwner)
-      }
       q"""
         ${c.untypecheck(prop.emit)} match {
           case (true, _) => ()
-          case (false, $failures) => org.scalameta.invariants.InvariantFailedException.raise(${showCode(x)}, $failures, scala.Some($enclosingClass.this))
+          case (false, $failures) => org.scalameta.invariants.InvariantFailedException.raise(${showCode(x)}, $failures)
         }
       """
     }
