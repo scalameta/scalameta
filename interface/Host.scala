@@ -326,7 +326,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         require(in.symbol.isDeferred ==> body.isEmpty)
         if (in.symbol.isConstructor) {
           require(!in.symbol.isPrimaryConstructor)
-          val q"{ $_(...$argss); ..$stats; () }" = body
+          val q"{ $_(...$argss); ..$stats }" = body
           p.Ctor.Secondary(pmods(in), explicitss.cvt_!, implicits.cvt_!, pargss(argss), pstats[p.Stmt.Block](in, stats))
         } else if (in.symbol.isMacro) {
           require(tpt.nonEmpty) // TODO: support pre-2.12 macros with inferred return types
@@ -396,6 +396,11 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         p.Pat.Alternative(hd.cvt_!, g.Alternative(rest).setType(in.tpe).asInstanceOf[g.Alternative].cvt)
       case g.Ident(g.nme.WILDCARD) =>
         p.Pat.Wildcard()
+      case g.Bind(g.tpnme.WILDCARD, g.EmptyTree) =>
+        // TODO: we can't do p.Pat.Wildcard(), because we expect a meta.Type here
+        // NOTE: it looks like bounds in type wildcards aren't allowed by Scala's typechecker
+        // so we just insert empty type bounds here
+        p.Type.Placeholder(p.Aux.TypeBounds())
       case g.Star(g.Ident(g.nme.WILDCARD)) =>
         p.Pat.SeqWildcard()
       case in @ g.Bind(_, g.Ident(g.nme.WILDCARD)) =>
@@ -504,7 +509,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
             })
             if (isYield) p.Term.ForYield(penums, body.cvt_!)
             else p.Term.For(penums, body.cvt_!)
-          case q"$lhs.$op($arg)" if op.looksLikeInfix =>
+          case q"$lhs.$op($arg)" if op.looksLikeInfix && !lhs.isInstanceOf[g.Super] =>
             p.Term.ApplyInfix(lhs.cvt_!, (fn.cvt_! : p.Term.Select).selector, Nil, List(parg(arg)))
           case _ if g.definitions.TupleClass.seq.contains(in.symbol.companion) =>
             p.Term.Tuple(args.cvt_!)
