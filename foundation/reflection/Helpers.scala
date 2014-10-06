@@ -137,7 +137,15 @@ trait Helpers {
 
   object DesugaredOpAssign {
     def unapply(tree: Tree): Option[(Tree, List[Tree])] = tree.metadata.get("originalAssign").map(_.asInstanceOf[(Tree, Name, List[Tree])]) match {
-      case Some((Desugared(qual), name: TermName, Desugared(args))) if name != nme.EQL =>
+      // TODO: can't use `args` here, because they might be untyped, so we have to workaround
+      // case Some((Desugared(qual), name: TermName, Desugared(args))) if name != nme.EQL =>
+      case Some((Desugared(qual), name: TermName, _)) if name != nme.EQL =>
+        def extractArgs(tree: Tree): List[Tree] = tree match {
+          case Assign(_, Apply(_, args)) => args // case #1 of convertToAssignment
+          case Block(_, expr) => extractArgs(expr) // case #2 of convertToAssignment
+          case Apply(_, _ :+ Apply(_, args)) => args // case #3 of convertToAssignment
+        }
+        val args = extractArgs(tree)
         Some((Select(qual, name).setType(NoType), args))
       case _ => None
     }

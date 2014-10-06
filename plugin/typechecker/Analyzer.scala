@@ -1076,7 +1076,7 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
         }
         // NOTE: this is a meaningful difference from the code in Typers.scala
         //-typed1(tree1, mode, pt)
-        typed1(tree1, mode, pt).appendMetadata("originalAssign" -> (qual, name, args))
+        typed1(tree1, mode, pt).appendMetadata("originalAssign" -> (qual, name, args)) // TODO: args here might be untyped!!
       }
       def tryTypedApply(fun: Tree, args: List[Tree]): Tree = {
         val start = if (Statistics.canEnable) Statistics.startTimer(failedApplyNanos) else null
