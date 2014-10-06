@@ -60,6 +60,7 @@ trait Ensugar {
                 case LazyDef(original) => Some(original)
                 case ImplicitConversion(original) => Some(original)
                 case TypeApplicationWithInferredTypeArguments(original) => Some(original)
+                case ApplicationWithArrayInstantiation(original) => Some(original)
                 case ApplicationWithInferredImplicitArguments(original) => Some(original)
                 case ApplicationWithInsertedApply(original) => Some(original)
                 case ApplicationWithNamesOrDefaults(original) => Some(original)
@@ -367,6 +368,10 @@ trait Ensugar {
             case TypeApply(fn, targs) if targs.exists(isInferred) => Some(fn)
             case _ => None
           }
+        }
+
+        object ApplicationWithArrayInstantiation {
+          def unapply(tree: Tree): Option[Tree] = tree.metadata.get("originalArray").map(_.asInstanceOf[Tree].duplicate)
         }
 
         // TODO: test how this works with new

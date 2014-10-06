@@ -1192,7 +1192,9 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
           typed1(atPos(tree.pos)(Block(stats, Apply(expr, args) setPos tree.pos.makeTransparent)), mode, pt)
         case Apply(fun, args) =>
           normalTypedApply(tree, fun, args) match {
-            case ArrayInstantiation(tree1)                                           => typed(tree1, mode, pt)
+            // NOTE: this is a meaningful difference from the code in Typers.scala
+            //-case ArrayInstantiation(tree1)                                           => typed(tree1, mode, pt)
+            case tree1 @ ArrayInstantiation(tree2)                                   => typed(tree2, mode, pt).appendMetadata("originalArray" -> tree1)
             case Apply(Select(fun, nme.apply), _) if treeInfo.isSuperConstrCall(fun) => TooManyArgumentListsForConstructor(tree) //SI-5696
             case tree1                                                               => tree1
           }
