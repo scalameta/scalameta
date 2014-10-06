@@ -274,7 +274,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
       case in @ g.ClassDef(_, _, tparams0, templ) =>
         require(in.symbol.isClass)
         if (in.symbol.isTrait) {
-          val tparams = tparams0 // NOTE: no context bounds for traits
+          val (tparams, implicits) = gextractContextBounds(tparams0, Nil)
+          require(implicits.isEmpty) // NOTE: no context bounds for traits
           p.Defn.Trait(pmods(in), in.symbol.asClass.rawcvt(in), tparams.cvt, templ.cvt)
         } else {
           val gctor = templ.body.find(_.symbol == in.symbol.primaryConstructor).get.asInstanceOf[g.DefDef]
