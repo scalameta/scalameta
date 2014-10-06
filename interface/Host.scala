@@ -240,7 +240,11 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
           result += pstat
         }
         require(result.forall(pstat => classTag[T].runtimeClass.isAssignableFrom(pstat.getClass)))
-        result.toList.asInstanceOf[List[T]]
+        // TODO: precisely calculate Pkg.hasBraces instead of going for this hacky heuristics
+        result.toList.map({
+          case pkg @ Pkg(ref, stats) => Pkg(ref, stats, hasBraces = result.length != 1)
+          case stat => stat
+        }).asInstanceOf[List[T]]
       }
       def gextractContextBounds(gtparams0: List[g.TypeDef], gimplicits0: List[g.ValDef]): (List[g.TypeDef], List[g.ValDef]) = {
         val (gbounds, gimplicits) = gimplicits0.partition(_.name.startsWith(g.nme.EVIDENCE_PARAM_PREFIX))
@@ -265,12 +269,10 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         unreachable
       case in @ g.PackageDef(pid, stats) if pt <:< typeOf[p.Pkg] =>
         require(pid.name != g.nme.EMPTY_PACKAGE_NAME)
-        val hasBraces = stats.collect{ case pdef: g.PackageDef => pdef }.length > 1
-        p.Pkg(pid.cvt_!, pstats[p.Stmt.TopLevel](in, stats), hasBraces = hasBraces) // TODO: infer hasBraces
+        p.Pkg(pid.cvt_!, pstats[p.Stmt.TopLevel](in, stats), hasBraces = false)
       case in @ g.PackageDef(pid, stats) if pt <:< typeOf[p.Aux.CompUnit] =>
-        val hasBraces = stats.collect{ case pdef: g.PackageDef => pdef }.length > 1
         if (pid.name == g.nme.EMPTY_PACKAGE_NAME) p.Aux.CompUnit(pstats[p.Stmt.TopLevel](in, stats))
-        else p.Aux.CompUnit(List(p.Pkg(pid.cvt_!, pstats[p.Stmt.TopLevel](in, stats), hasBraces = hasBraces))) // TODO: infer hasBraces
+        else p.Aux.CompUnit(List(p.Pkg(pid.cvt_!, pstats[p.Stmt.TopLevel](in, stats), hasBraces = false)))
       case in @ g.ClassDef(_, _, tparams0, templ) =>
         require(in.symbol.isClass)
         if (in.symbol.isTrait) {
