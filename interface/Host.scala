@@ -330,7 +330,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
           p.Ctor.Secondary(pmods(in), explicitss.cvt_!, implicits.cvt_!, pargss(argss), pstats[p.Stmt.Block](in, stats))
         } else if (in.symbol.isMacro) {
           require(tpt.nonEmpty) // TODO: support pre-2.12 macros with inferred return types
-          p.Defn.Macro(pmods(in), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt_!, implicits.cvt_!, tpt.cvt_!, body.cvt_!)
+          val pbody = if (body != g.EmptyTree) (body.cvt_! : p.Term) else p.Term.Name("???").appendScratchpad(q"???".setSymbol(g.definitions.Predef_???).setType(g.definitions.NothingTpe))
+          p.Defn.Macro(pmods(in), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt_!, implicits.cvt_!, tpt.cvt_!, pbody)
         } else if (in.symbol.isDeferred) {
           p.Decl.Def(pmods(in), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt_!, implicits.cvt_!, tpt.cvt_!) // TODO: infer procedures
         } else {
