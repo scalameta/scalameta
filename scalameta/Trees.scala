@@ -84,8 +84,8 @@ object Type {
     require(qual match { case qual: Term.Ref => qual.isPath; case qual: Qual.Super => true; case _ => unreachable })
   }
   @ast class Project(qual: Type, selector: Type.Name) extends Ref
-  @ast class Singleton(ref: Qual.Type) extends Ref {
-    require(ref match { case ref: Term.Ref => ref.isPath; case ref: Qual.Super => true; case _ => unreachable })
+  @ast class Singleton(ref: Term.Ref) extends Ref {
+    require(ref.isPath)
   }
   @ast class Apply(tpe: Type, args: Seq[Type] @nonEmpty) extends Type
   @ast class ApplyInfix(lhs: Type, op: Name, rhs: Type) extends Type
