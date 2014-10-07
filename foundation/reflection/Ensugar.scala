@@ -399,7 +399,7 @@ trait Ensugar {
           // TODO: make this work, putting a workaround in place for now
           // def unapply(tree: Tree): Option[Tree] = tree.metadata.get("originalApplee").map(_.asInstanceOf[Tree])
           def unapply(tree: Tree): Option[Tree] = tree match {
-            case Select(qual, _) if tree.symbol.name == nme.apply && tree.symbol.paramss.nonEmpty => Some(qual)
+            case Select(qual, _) if tree.symbol.name == nme.apply && tree.symbol.paramss.nonEmpty && !qual.isInstanceOf[Super] => Some(qual)
             case _ => None
           }
         }
