@@ -342,8 +342,9 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         val pviewbounds = in.metadata("originalViewBounds").asInstanceOf[List[g.Tree]].map(_.cvt_! : p.Type)
         if (in.symbol.isAnonymous) p.TypeParam.Anonymous(pmods(in), tparams.cvt, pcontextbounds, pviewbounds, ptypebounds(tpt))
         else p.TypeParam.Named(pmods(in), in.symbol.asType.rawcvt(in), tparams.cvt, pcontextbounds, pviewbounds, ptypebounds(tpt))
-      case in @ g.TypeDef(_, _, tparams, tpt) if pt <:< typeOf[p.Member] =>
+      case in @ g.TypeDef(_, _, tparams0, tpt) if pt <:< typeOf[p.Member] =>
         require(in.symbol.isType)
+        val tparams = tparams0.map(_.appendMetadata("originalContextBounds" -> Nil).appendMetadata("originalViewBounds" -> Nil))
         if (in.symbol.isDeferred) p.Decl.Type(pmods(in), in.symbol.asType.rawcvt(in), tparams.cvt, ptypebounds(tpt))
         else p.Defn.Type(pmods(in), in.symbol.asType.rawcvt(in), tparams.cvt, tpt.cvt_!)
       case in @ g.LabelDef(name, params, rhs) =>
