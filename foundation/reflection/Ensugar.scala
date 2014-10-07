@@ -262,16 +262,28 @@ trait Ensugar {
           }
         }
 
-        // TODO: support classfile annotation args (ann.original.argss are untyped at the moment)
         object MemberDefWithAnnotations {
           def unapply(tree: Tree): Option[Tree] = {
             def isSyntheticAnnotation(ann: AnnotationInfo): Boolean = ann.atp.typeSymbol.fullName == "scala.reflect.macros.internal.macroImpl"
             def isDesugaredMods(mdef: MemberDef): Boolean = mdef.mods.annotations.isEmpty && tree.symbol.annotations.filterNot(isSyntheticAnnotation).nonEmpty
             def ensugarMods(mdef: MemberDef): Modifiers = mdef.mods.withAnnotations(mdef.symbol.annotations.flatMap(ensugarAnnotation))
             def ensugarAnnotation(ann: AnnotationInfo): Option[Tree] = ann.original match {
-              case original if original.nonEmpty => Some(original)
+              case original if original.nonEmpty && original.tpe != null => Some(original)
+              case original if original.nonEmpty && original.tpe == null => Some(fixupAttributesOfClassfileAnnotOriginal(original))
               case EmptyTree if isSyntheticAnnotation(ann) => None
               case EmptyTree => unreachable
+            }
+            def fixupAttributesOfClassfileAnnotOriginal(original: Tree): Tree = {
+              // TODO: support classfile annotation args (non-literal ann.original.argss are untyped at the moment)
+              // TODO: originals of classfile annotations don't have tpe set at the top level (Apply.tpe)
+              // until this is fixed, we have to work around. luckily, this isn't hard at all
+              val Apply(fn, args) = original
+              val typedArgs = args.map({ case AssignOrNamedArg(lhs @ Ident(name), rhs) =>
+                val param = fn.symbol.paramss.flatten.find(_.name == name).get
+                val typedLhs = Ident(param).setType(rhs.tpe)
+                AssignOrNamedArg(typedLhs, rhs)
+              })
+              treeCopy.Apply(original, fn, typedArgs).setType(fn.tpe.finalResultType)
             }
             tree match {
               // case tree @ PackageDef(_, _) => // package defs don't have annotations
