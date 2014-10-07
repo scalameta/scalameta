@@ -376,8 +376,9 @@ trait Ensugar {
 
         // TODO: test how this works with new
         object ApplicationWithInferredImplicitArguments {
-          def unapply(tree: Tree): Option[Tree] = tree match {
-            case ApplyToImplicitArgs(fn, _) => Some(fn)
+          def unapply(tree: Tree): Option[Tree] = (tree, dissectApplied(tree)) match {
+            case (ApplyToImplicitArgs(fn, _), _) => Some(fn)
+            case (Apply(fn, args), Applied(Select(This(_), nme.CONSTRUCTOR), _, _)) if isImplicitMethodType(fn.tpe) => Some(fn)
             case _ => None
           }
         }
