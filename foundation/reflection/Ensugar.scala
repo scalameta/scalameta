@@ -615,6 +615,7 @@ trait Ensugar {
         object InsertedUnit {
           def unapply(tree: Tree): Option[Tree] = tree match {
             case Block(List(expr), unit @ Literal(Constant(()))) if unit.hasMetadata("insertedUnit") => Some(expr)
+            case tree @ Block(init :+ last, unit @ Literal(Constant(()))) if last.isInstanceOf[MemberDef] => Some(treeCopy.Block(tree, init, last))
             case _ => None
           }
         }
