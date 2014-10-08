@@ -357,10 +357,14 @@ trait Ensugar {
           }
         }
 
+        // NOTE: lazy vals in trait are desugared in a special way, different from lazy vals in classes
         object LazyDef {
           def unapply(tree: Tree): Option[Tree] = tree match {
             case tree @ DefDef(mods, name, Nil, Nil, tpt, Block(List(Assign(lzy1: RefTree, rhs)), lzy2: RefTree))
             if tree.symbol.isLazy && lzy1.name == lzy2.name && lzy1.symbol.isLazy && lzy1.symbol.isMutable =>
+              Some(ValDef(mods, name, tpt, rhs).copyAttrs(tree))
+            case tree @ DefDef(mods, name, Nil, Nil, tpt, rhs)
+            if tree.symbol.isLazy && tree.symbol.owner.isTrait =>
               Some(ValDef(mods, name, tpt, rhs).copyAttrs(tree))
             case _ =>
               None
