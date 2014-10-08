@@ -612,6 +612,7 @@ trait Ensugar {
           def unapply(tree: Tree): Option[Tree] = tree.metadata.get("originalConstant").map(_.asInstanceOf[Tree].duplicate.removeMetadata("originalConstant"))
         }
 
+        // TODO: support things like `locally{}`
         object InsertedUnit {
           def unapply(tree: Tree): Option[Tree] = tree match {
             case Block(List(expr), unit @ Literal(Constant(()))) if unit.hasMetadata("insertedUnit") => Some(expr)
