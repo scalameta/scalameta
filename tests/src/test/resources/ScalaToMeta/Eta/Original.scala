@@ -20,4 +20,8 @@ object Eta {
     autoEta(c2.foo1)
     autoEta(c2.foo2(2))
   }
+  object Exception {
+    def mkCatcher(isDef: Int => Boolean) = ???
+    def throwableSubtypeToCatcher(pf: PartialFunction[Int, Int]) = mkCatcher(pf.isDefinedAt _)
+  }
 }

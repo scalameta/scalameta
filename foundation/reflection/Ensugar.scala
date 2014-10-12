@@ -640,8 +640,9 @@ trait Ensugar {
           def ensugar(tree: Tree): Option[Tree] = {
             val manualEta = tree.metadata.get("originalManualEta").map(_.asInstanceOf[Tree])
             val autoEta = tree.metadata.get("originalAutoEta").map(_.asInstanceOf[Tree])
+            def stripMetadata(tree: Tree) = tree.removeMetadata("originalManualEta").removeMetadata("originalAutoEta")
             (manualEta, autoEta) match {
-              case (Some(original), _) => Some(Typed(original, Function(Nil, EmptyTree)).setType(tree.tpe))
+              case (Some(original), _) => Some(Typed(stripMetadata(original), Function(Nil, EmptyTree)).setType(tree.tpe))
               case (_, Some(original)) => Some(original)
               case _ => None
             }
