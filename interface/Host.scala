@@ -312,7 +312,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         require(in.symbol.isTerm)
         require(in.symbol.isDeferred ==> rhs.isEmpty)
         require(in.symbol.hasFlag(g.Flag.DEFAULTINIT) ==> rhs.isEmpty)
-        (in.symbol.isDeferred, in.symbol.isMutable) match {
+        (in.symbol.isDeferred, in.symbol.isMutable || in.mods.isMutable) match {
           case (true, false) => p.Decl.Val(pmods(in), List(in.symbol.asTerm.rawcvt(in)), tpt.cvt_!)
           case (true, true) => p.Decl.Var(pmods(in), List(in.symbol.asTerm.rawcvt(in)), tpt.cvt_!)
           case (false, false) => p.Defn.Val(pmods(in), List(in.symbol.asTerm.rawcvt(in)), if (tpt.nonEmpty) Some[p.Type](tpt.cvt_!) else None, rhs.cvt_!)

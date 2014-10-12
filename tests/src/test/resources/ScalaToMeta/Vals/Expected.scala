@@ -1,8 +1,8 @@
-object Pats {
+object Vals {
   val List() = List()
   val List() = List()
   val List() = List()
-  val List() = List()
+  lazy val List() = List()
   val x1 = List(1)
   var x2 = List(2)
   implicit val x3 = List(3)
@@ -33,7 +33,7 @@ object Pats {
     implicit val List(x11, y11) = List(13, 14)
     implicit lazy val List(x12, y12) = List(15, 16)
   }
-  trait Trait {
+  trait Trait1 {
     val List() = List()
     val List() = List()
     val List() = List()
@@ -50,5 +50,9 @@ object Pats {
     var List(x10, y10) = List(11, 12)
     implicit val List(x11, y11) = List(13, 14)
     implicit lazy val List(x12, y12) = List(15, 16)
+  }
+  trait Trait2 {
+    val x1: Int
+    var x2: Int
   }
 }
