@@ -277,11 +277,37 @@ trait Ensugar {
               // TODO: support classfile annotation args (non-literal ann.original.argss are untyped at the moment)
               // TODO: originals of classfile annotations don't have tpe set at the top level (Apply.tpe)
               // until this is fixed, we have to work around. luckily, this isn't hard at all
+              // TODO: tree2ConstArg does some seriously crazy transformations, which are hardly generalizable
+              // since I don't have much time, I'll just support a couple of those for now
               val Apply(fn, args) = original
-              val typedArgs = args.map({ case AssignOrNamedArg(lhs @ Ident(name), rhs) =>
-                val param = fn.symbol.paramss.flatten.find(_.name == name).get
-                val typedLhs = Ident(param).setType(rhs.tpe)
-                AssignOrNamedArg(typedLhs, rhs)
+              def typify(arg: Tree): Tree = {
+                arg match {
+                  case arg @ Literal(const @ Constant(value)) =>
+                    arg.setType(ConstantType(const))
+                  case arg @ Select(x: Literal, op) =>
+                    val sym = x.value.tpe.member(op.encodedName)
+                    require(sym != NoSymbol && !sym.isOverloaded)
+                    treeCopy.Select(arg, typify(x), op).setSymbol(sym).setType(sym.info.finalResultType)
+                  case arg @ Apply(core @ Select(x: Literal, op), List(y: Literal)) =>
+                    val sym = x.value.tpe.member(op.encodedName).suchThat(sym => sym.paramss.flatten.map(_.info) == List(y.value.tpe))
+                    require(sym != NoSymbol && !sym.isOverloaded)
+                    val typedCore = treeCopy.Select(core, typify(x), op).setSymbol(sym).setType(sym.info)
+                    treeCopy.Apply(arg, typedCore, List(typify(y))).setType(sym.info.finalResultType)
+                  case arg @ Apply(Select(New(tpt), nme.CONSTRUCTOR), args) =>
+                    ???
+                  case arg @ Apply(fn, args) =>
+                    ???
+                  case arg @ Typed(expr, tpt) =>
+                    treeCopy.Typed(arg, typify(expr), EmptyTree)
+                }
+              }
+              val typedArgs = args.map({
+                case arg @ AssignOrNamedArg(_, rhs) if arg.hasMetadata("insertedValue") =>
+                  typify(rhs)
+                case arg @ AssignOrNamedArg(lhs @ Ident(name), rhs) =>
+                  val param = fn.symbol.paramss.flatten.find(_.name == name).get
+                  val typedLhs = Ident(param).setType(rhs.tpe)
+                  AssignOrNamedArg(typedLhs, typify(rhs))
               })
               treeCopy.Apply(original, fn, typedArgs).setType(fn.tpe.finalResultType)
             }
@@ -608,6 +634,8 @@ trait Ensugar {
           }
         }
 
+        // TODO: support constant folding of singleton-typed method calls
+        // grep for `constfold(treeCopy.Apply(tree, fun, args1) setType ifPatternSkipFormals(restpe))` for the place to start
         object InlinedConstant {
           def unapply(tree: Tree): Option[Tree] = tree.metadata.get("originalConstant").map(_.asInstanceOf[Tree].duplicate.removeMetadata("originalConstant"))
         }

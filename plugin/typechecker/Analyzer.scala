@@ -11,6 +11,7 @@ import scala.reflect.internal.util.{Statistics, ListOfNil}
 import scala.tools.nsc.typechecker.TypersStats._
 import scala.reflect.internal.Flags
 import scala.reflect.internal.Flags._
+import scala.collection.mutable
 
 trait Analyzer extends NscAnalyzer with GlobalToolkit {
   val global: Global
@@ -632,6 +633,202 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
       // NOTE: I wouldn't be surprised if `typedType` that we have to do here corrupts the typer, and everything blows up
       if (self0 != noSelfType && selftpt0.nonEmpty) result.self.appendMetadata("originalSelf" -> copyValDef(result.self)(tpt = typedType(selftpt0)))
       result
+    }
+    override def typedAnnotation(ann: Tree, mode: Mode = EXPRmode): AnnotationInfo = {
+      var hasError: Boolean = false
+      val pending = mutable.ListBuffer[AbsTypeError]()
+
+      def finish(res: AnnotationInfo): AnnotationInfo = {
+        if (hasError) {
+          pending.foreach(ErrorUtils.issueTypeError)
+          ErroneousAnnotation
+        }
+        else res
+      }
+
+      def reportAnnotationError(err: AbsTypeError) = {
+        pending += err
+        hasError = true
+        ErroneousAnnotation
+      }
+
+      /* Calling constfold right here is necessary because some trees (negated
+       * floats and literals in particular) are not yet folded.
+       */
+      def tryConst(tr: Tree, pt: Type): Option[LiteralAnnotArg] = {
+        // The typed tree may be relevantly different than the tree `tr`,
+        // e.g. it may have encountered an implicit conversion.
+        val ttree = typed(constfold(tr), pt)
+        val const: Constant = ttree match {
+          case l @ Literal(c) if !l.isErroneous => c
+          case tree => tree.tpe match {
+            case ConstantType(c)  => c
+            case tpe              => null
+          }
+        }
+
+        if (const == null) {
+          reportAnnotationError(AnnotationNotAConstantError(ttree)); None
+        } else if (const.value == null) {
+          reportAnnotationError(AnnotationArgNullError(tr)); None
+        } else
+          Some(LiteralAnnotArg(const))
+      }
+
+      /* Converts an untyped tree to a ClassfileAnnotArg. If the conversion fails,
+       * an error message is reported and None is returned.
+       */
+      def tree2ConstArg(tree: Tree, pt: Type): Option[ClassfileAnnotArg] = tree match {
+        case Apply(Select(New(tpt), nme.CONSTRUCTOR), args) if (pt.typeSymbol == ArrayClass) =>
+          reportAnnotationError(ArrayConstantsError(tree)); None
+
+        case ann @ Apply(Select(New(tpt), nme.CONSTRUCTOR), args) =>
+          val annInfo = typedAnnotation(ann, mode)
+          val annType = annInfo.tpe
+
+          if (!annType.typeSymbol.isSubClass(pt.typeSymbol))
+            reportAnnotationError(AnnotationTypeMismatchError(tpt, annType, annType))
+          else if (!annType.typeSymbol.isSubClass(ClassfileAnnotationClass))
+            reportAnnotationError(NestedAnnotationError(ann, annType))
+
+          if (annInfo.atp.isErroneous) { hasError = true; None }
+          else Some(NestedAnnotArg(annInfo))
+
+        // use of Array.apply[T: ClassTag](xs: T*): Array[T]
+        // and    Array.apply(x: Int, xs: Int*): Array[Int]       (and similar)
+        case Apply(fun, args) =>
+          val typedFun = typed(fun, mode.forFunMode)
+          if (typedFun.symbol.owner == ArrayModule.moduleClass && typedFun.symbol.name == nme.apply)
+            pt match {
+              case TypeRef(_, ArrayClass, targ :: _) =>
+                trees2ConstArg(args, targ)
+              case _ =>
+                // For classfile annotations, pt can only be T:
+                //   BT = Int, .., String, Class[_], JavaAnnotClass
+                //   T = BT | Array[BT]
+                // So an array literal as argument can only be valid if pt is Array[_]
+                reportAnnotationError(ArrayConstantsTypeMismatchError(tree, pt))
+                None
+            }
+          else tryConst(tree, pt)
+
+        case Typed(t, _) =>
+          tree2ConstArg(t, pt)
+
+        case tree =>
+          tryConst(tree, pt)
+      }
+      def trees2ConstArg(trees: List[Tree], pt: Type): Option[ArrayAnnotArg] = {
+        val args = trees.map(tree2ConstArg(_, pt))
+        if (args.exists(_.isEmpty)) None
+        else Some(ArrayAnnotArg(args.flatten.toArray))
+      }
+
+      // begin typedAnnotation
+      val treeInfo.Applied(fun0, targs, argss) = ann
+      if (fun0.isErroneous)
+        return finish(ErroneousAnnotation)
+      val typedFun0 = typed(fun0, mode.forFunMode)
+      val typedFunPart = (
+        // If there are dummy type arguments in typeFun part, it suggests we
+        // must type the actual constructor call, not only the select. The value
+        // arguments are how the type arguments will be inferred.
+        if (targs.isEmpty && typedFun0.exists(t => t.tpe != null && isDummyAppliedType(t.tpe)))
+          logResult(s"Retyped $typedFun0 to find type args")(typed(argss.foldLeft(fun0)(Apply(_, _))))
+        else
+          typedFun0
+      )
+      val treeInfo.Applied(typedFun @ Select(New(annTpt), _), _, _) = typedFunPart
+      val annType = annTpt.tpe
+
+      finish(
+        if (typedFun.isErroneous)
+          ErroneousAnnotation
+        else if (annType.typeSymbol isNonBottomSubClass ClassfileAnnotationClass) {
+          // annotation to be saved as java classfile annotation
+          val isJava = typedFun.symbol.owner.isJavaDefined
+          if (argss.length > 1) {
+            reportAnnotationError(MultipleArgumentListForAnnotationError(ann))
+          }
+          else {
+            val annScope = annType.decls
+                .filter(sym => sym.isMethod && !sym.isConstructor && sym.isJavaDefined)
+            val names = mutable.Set[Symbol]()
+            names ++= (if (isJava) annScope.iterator
+                       else typedFun.tpe.params.iterator)
+
+            def hasValue = names exists (_.name == nme.value)
+            val args = argss match {
+              // NOTE: this is a meaningful difference from the code in Typers.scala
+              //-case (arg :: Nil) :: Nil if !isNamedArg(arg) && hasValue => gen.mkNamedArg(nme.value, arg) :: Nil
+              case (arg :: Nil) :: Nil if !isNamedArg(arg) && hasValue => gen.mkNamedArg(nme.value, arg).appendMetadata("insertedValue" -> arg) :: Nil
+              case args :: Nil                                         => args
+            }
+
+            val nvPairs = args map {
+              case arg @ AssignOrNamedArg(Ident(name), rhs) =>
+                val sym = if (isJava) annScope.lookup(name)
+                          else findSymbol(typedFun.tpe.params)(_.name == name)
+                if (sym == NoSymbol) {
+                  reportAnnotationError(UnknownAnnotationNameError(arg, name))
+                  (nme.ERROR, None)
+                } else if (!names.contains(sym)) {
+                  reportAnnotationError(DuplicateValueAnnotationError(arg, name))
+                  (nme.ERROR, None)
+                } else {
+                  names -= sym
+                  if (isJava) sym.cookJavaRawInfo() // #3429
+                  val annArg = tree2ConstArg(rhs, sym.tpe.resultType)
+                  (sym.name, annArg)
+                }
+              case arg =>
+                reportAnnotationError(ClassfileAnnotationsAsNamedArgsError(arg))
+                (nme.ERROR, None)
+            }
+            for (sym <- names) {
+              // make sure the flags are up to date before erroring (jvm/t3415 fails otherwise)
+              sym.initialize
+              if (!sym.hasAnnotation(AnnotationDefaultAttr) && !sym.hasDefault)
+                reportAnnotationError(AnnotationMissingArgError(ann, annType, sym))
+            }
+
+            if (hasError) ErroneousAnnotation
+            else AnnotationInfo(annType, List(), nvPairs map {p => (p._1, p._2.get)}).setOriginal(Apply(typedFun, args).setPos(ann.pos))
+          }
+        }
+        else {
+          val typedAnn: Tree = {
+            // local dummy fixes SI-5544
+            val localTyper = newTyper(context.make(ann, context.owner.newLocalDummy(ann.pos)))
+            localTyper.typed(ann, mode, annType)
+          }
+          def annInfo(t: Tree): AnnotationInfo = t match {
+            case Apply(Select(New(tpt), nme.CONSTRUCTOR), args) =>
+              AnnotationInfo(annType, args, List()).setOriginal(typedAnn).setPos(t.pos)
+
+            case Block(stats, expr) =>
+              context.warning(t.pos, "Usage of named or default arguments transformed this annotation\n"+
+                                "constructor call into a block. The corresponding AnnotationInfo\n"+
+                                "will contain references to local values and default getters instead\n"+
+                                "of the actual argument trees")
+              annInfo(expr)
+
+            case Apply(fun, args) =>
+              context.warning(t.pos, "Implementation limitation: multiple argument lists on annotations are\n"+
+                                     "currently not supported; ignoring arguments "+ args)
+              annInfo(fun)
+
+            case _ =>
+              reportAnnotationError(UnexpectedTreeAnnotationError(t, typedAnn))
+          }
+
+          if (annType.typeSymbol == DeprecatedAttr && argss.flatten.size < 2)
+            context.deprecationWarning(ann.pos, DeprecatedAttr, "@deprecated now takes two arguments; see the scaladoc.")
+
+          if ((typedAnn.tpe == null) || typedAnn.tpe.isErroneous) ErroneousAnnotation
+          else annInfo(typedAnn)
+        }
+      )
     }
     override def typed1(tree: Tree, mode: Mode, pt: Type): Tree = {
       def lookupInOwner(owner: Symbol, name: Name): Symbol = if (mode.inQualMode) rootMirror.missingHook(owner, name) else NoSymbol

@@ -53,6 +53,10 @@ trait Attributed {
           // `Function(Nil, EmptyTree)` is the secret parser marker which means trailing underscore
           // that's not even a valid type, so it can have neither type, nor symbol => we just skip it here
           case Typed(expr, Function(Nil, EmptyTree)) => check(expr)
+          // https://groups.google.com/forum/#!topic/scala-internals/g81XE65jHc8
+          // type ascriptions in arguments of classfile annotations aren't typechecked at all
+          // our ensugarer represents this weird corner case with Typed(_, EmptyTree)
+          case Typed(expr, EmptyTree) => check(expr)
           case _ => check(tree)
         }
       }
