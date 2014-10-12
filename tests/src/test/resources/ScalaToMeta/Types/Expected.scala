@@ -37,4 +37,5 @@ object Types {
     type T30 = Cons[_, _ <: Int]
     type T31 = Cons[Z[_ >: String], _ <: Int]
   }
+  type T32 = List[Int] @scala.annotation.unchecked.uncheckedVariance
 }

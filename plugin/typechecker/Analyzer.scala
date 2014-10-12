@@ -1396,6 +1396,55 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
             case tree1                                                               => tree1
           }
       }
+      def typedAnnotated(atd: Annotated): Tree = {
+        val ann = atd.annot
+        val arg1 = typed(atd.arg, mode, pt)
+        /* mode for typing the annotation itself */
+        val annotMode = (mode &~ TYPEmode) | EXPRmode
+
+        def resultingTypeTree(tpe: Type) = {
+          // we need symbol-ful originals for reification
+          // hence we go the extra mile to hand-craft tis guy
+          val original = arg1 match {
+            // NOTE: this is a meaningful difference from the code in Typers.scala
+            //-case tt @ TypeTree() if tt.original != null => Annotated(ann, tt.original)
+            case tt @ TypeTree() if tt.original != null => Annotated(ann, tt.original.appendMetadata("originalAnnottee" -> arg1))
+            // this clause is needed to correctly compile stuff like "new C @D" or "@(inline @getter)"
+            // NOTE: this is a meaningful difference from the code in Typers.scala
+            //-case _ => Annotated(ann, arg1.appendMetadata("originalAnnottee" -> arg1))
+            case _ => Annotated(ann, arg1.appendMetadata("originalAnnottee" -> arg1))
+          }
+          original setType ann.tpe
+          TypeTree(tpe) setOriginal original setPos tree.pos.focus
+        }
+
+        if (arg1.isType) {
+          // make sure the annotation is only typechecked once
+          if (ann.tpe == null) {
+            val ainfo = typedAnnotation(ann, annotMode)
+            val atype = arg1.tpe.withAnnotation(ainfo)
+
+            if (ainfo.isErroneous)
+              // Erroneous annotations were already reported in typedAnnotation
+              arg1  // simply drop erroneous annotations
+            else {
+              ann setType atype
+              resultingTypeTree(atype)
+            }
+          } else {
+            // the annotation was typechecked before
+            resultingTypeTree(ann.tpe)
+          }
+        }
+        else {
+          if (ann.tpe == null) {
+            val annotInfo = typedAnnotation(ann, annotMode)
+            ann setType arg1.tpe.withAnnotation(annotInfo)
+          }
+          val atype = ann.tpe
+          Typed(arg1, resultingTypeTree(atype)) setPos tree.pos setType atype
+        }
+      }
       // ========================
       // NOTE: The code above is almost completely copy/pasted from Typers.scala.
       // The changes there are mostly mechanical (indentation), but those, which are non-trivial (e.g. appending metadata to trees)
@@ -1413,6 +1462,7 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
           case tree @ Assign(lhs, rhs) => typedAssign(lhs, rhs)
           case tree @ Typed(expr, tpt) => typedTyped(tree)
           case tree @ Apply(fun, args) => typedApply(tree)
+          case tree @ Annotated(annot, arg) => typedAnnotated(tree)
           case _ => super.typed1(tree, mode, pt)
         }
         // TODO: wat do these methods even mean, and how do they differ?

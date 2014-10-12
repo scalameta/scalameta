@@ -186,12 +186,17 @@ trait Ensugar {
                   treeCopy.TypeBoundsTree(original, lo1, hi1)
                 case original @ AppliedTypeTree(fn, args) =>
                   treeCopy.AppliedTypeTree(original, fn, args)
-                case original @ Annotated(_, arg) =>
+                case original @ Annotated(_, _) =>
                   // NOTE: annot from the original is unattributed, so we can't use it
                   // NOTE: if we have nested Annotated nodes, only the outermost one has annotations with attributed originals
+                  // NOTE: apparently arg from the original is broken as well, so we need to fix it up before use
+                  // NOTE: another fun thing is that the original of the annottee can be either a TypeTree or an attributed TypTree
+                  // that's caused by the fact that the TypTree => TypeTree adaptation doesn't happen in FUNmode
+                  object OriginalAnnottee { def unapply(tree: Tree) = tree.metadata.get("originalAnnottee").map(_.asInstanceOf[Tree]) }
                   def loop(tree: Tree, annots: List[Tree]): Tree = (tree, annots) match {
                     case (tree @ Annotated(_, arg), annot :: rest) => treeCopy.Annotated(tree, annot, loop(arg, rest))
-                    case (tree, Nil) => tree
+                    case (OriginalAnnottee(TypeTreeWithOriginal(tree)), Nil) => tree
+                    case (OriginalAnnottee(tree), Nil) => tree
                     case _ => unreachable
                   }
                   val annots = tree.tpe.asInstanceOf[AnnotatedType].annotations.map(_.original)
