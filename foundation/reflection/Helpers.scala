@@ -9,7 +9,7 @@ import _root_.org.scalameta.invariants._
 trait Helpers {
   self: _root_.org.scalameta.reflection.GlobalToolkit =>
 
-  import global._
+  import global.{require => _, _}
   import definitions._
   import treeInfo._
   import build._
