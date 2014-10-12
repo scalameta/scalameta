@@ -521,7 +521,7 @@ package object internal {
           val sym = c.macroApplication.symbol
           val x1 = q"""
             val result = (new { val global: $h.g.type = $h.g } with $ToolkitTrait).ensugar($x)
-            if (System.getProperty("ensugar.debug") != null) { Console.err.println(result); Console.err.println($h.g.showRaw(result, printIds = true, printTypes = true)) }
+            if (System.getProperty("ensugar.debug") != null) { _root_.scala.Console.err.println(result); _root_.scala.Console.err.println($h.g.showRaw(result, printIds = true, printTypes = true)) }
             result
           """
           convert(x1, c.typecheck(x1).tpe, c.weakTypeOf[Pt], allowDerived = true, allowInputDowncasts = true, allowOutputDowncasts = true, pre = pre.tpe, sym = sym)
