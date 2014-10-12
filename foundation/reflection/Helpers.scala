@@ -172,13 +172,16 @@ trait Helpers {
       object DropUselessPatterns {
         def unapply(tree: Tree): Some[Tree] = tree match {
           case tree @ Bind(name, pat) if name.startsWith("x$") => unapply(pat)
-          case tree @ Bind(name, Typed(wild @ Ident(nme.WILDCARD), EmptyTree)) => Some(treeCopy.Bind(tree, name, wild))
+          case tree @ Bind(name, Typed(wild @ Ident(nme.WILDCARD), EmptyTree)) => unapply(treeCopy.Bind(tree, name, wild))
+          case tree @ Bind(nme.WILDCARD, pat @ Ident(nme.WILDCARD)) => Some(pat)
           case tree => Some(tree)
         }
       }
       // NOTE: UnClosure creates binds that are totally unattributed
       // here we somewhat approximate the attributes to at least give the host an idea of what's going on
       def approximateAttributes(pat: Tree, rhs: Tree): Tree = pat match {
+        case pat @ Ident(nme.WILDCARD) if pat.tpe == null && pat.symbol == NoSymbol =>
+          Ident(nme.WILDCARD).setType(rhs.tpe)
         case pat @ Bind(name: TermName, Ident(nme.WILDCARD)) if pat.tpe == null && pat.symbol == NoSymbol =>
           Bind(NoSymbol.newTermSymbol(name).setInfo(rhs.tpe), Ident(nme.WILDCARD).setType(rhs.tpe)).setType(rhs.tpe)
         case pat =>
