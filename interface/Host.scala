@@ -312,7 +312,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         require(in.symbol.isTerm)
         require(in.symbol.isDeferred ==> rhs.isEmpty)
         require(in.symbol.hasFlag(g.Flag.DEFAULTINIT) ==> rhs.isEmpty)
-        (in.symbol.isDeferred, in.symbol.isMutable) match {
+        (in.symbol.isDeferred, in.symbol.isMutable || in.mods.isMutable) match {
           case (true, false) => p.Decl.Val(pmods(in), List(in.symbol.asTerm.rawcvt(in)), tpt.cvt_!)
           case (true, true) => p.Decl.Var(pmods(in), List(in.symbol.asTerm.rawcvt(in)), tpt.cvt_!)
           case (false, false) => p.Defn.Val(pmods(in), List(in.symbol.asTerm.rawcvt(in)), if (tpt.nonEmpty) Some[p.Type](tpt.cvt_!) else None, rhs.cvt_!)
@@ -330,14 +330,16 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
           p.Ctor.Secondary(pmods(in), explicitss.cvt_!, implicits.cvt_!, pargss(argss), pstats[p.Stmt.Block](in, stats))
         } else if (in.symbol.isMacro) {
           require(tpt.nonEmpty) // TODO: support pre-2.12 macros with inferred return types
-          p.Defn.Macro(pmods(in), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt_!, implicits.cvt_!, tpt.cvt_!, body.cvt_!)
+          val pbody = if (body != g.EmptyTree) (body.cvt_! : p.Term) else p.Term.Name("???").appendScratchpad(q"???".setSymbol(g.definitions.Predef_???).setType(g.definitions.NothingTpe))
+          p.Defn.Macro(pmods(in), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt_!, implicits.cvt_!, tpt.cvt_!, pbody)
         } else if (in.symbol.isDeferred) {
           p.Decl.Def(pmods(in), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt_!, implicits.cvt_!, tpt.cvt_!) // TODO: infer procedures
         } else {
           p.Defn.Def(pmods(in), in.symbol.asMethod.rawcvt(in), tparams.cvt, explicitss.cvt_!, implicits.cvt_!, if (tpt.nonEmpty) Some[p.Type](tpt.cvt_!) else None, body.cvt_!)
         }
-      case in @ g.TypeDef(_, _, tparams, tpt) if pt <:< typeOf[p.TypeParam] =>
+      case in @ g.TypeDef(_, _, tparams0, tpt) if pt <:< typeOf[p.TypeParam] =>
         require(in.symbol.isType)
+        val tparams = tparams0.map(_.appendMetadata("originalContextBounds" -> Nil).appendMetadata("originalViewBounds" -> Nil))
         val pcontextbounds = in.metadata("originalContextBounds").asInstanceOf[List[g.Tree]].map(_.cvt_! : p.Type)
         val pviewbounds = in.metadata("originalViewBounds").asInstanceOf[List[g.Tree]].map(_.cvt_! : p.Type)
         if (in.symbol.isAnonymous) p.TypeParam.Anonymous(pmods(in), tparams.cvt, pcontextbounds, pviewbounds, ptypebounds(tpt))
@@ -471,6 +473,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         unreachable
       case g.Typed(expr, g.Function(Nil, g.EmptyTree)) if pt <:< typeOf[p.Term] =>
         p.Term.Eta(expr.cvt_!)
+      case g.Typed(expr, g.EmptyTree) =>
+        ???
       case g.Typed(expr, tpt) if pt <:< typeOf[p.Term] =>
         p.Term.Ascribe(expr.cvt_!, tpt.cvt_!)
       case g.Typed(expr, tpt) if pt <:< typeOf[p.Pat] =>
@@ -493,7 +497,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
             val templ = p.Aux.Template(Nil, List(supercall), self).appendScratchpad(in)
             p.Term.New(templ)
           case q"$stringContext(..$parts).$prefix(..$args)" if stringContext.symbol == g.definitions.StringContextClass.companion =>
-            p.Term.Interpolate((fn.cvt_! : p.Term.Select).selector, parts.cvt_!, args.cvt_!)
+            p.Term.Interpolate(fn.symbol.asTerm.precvt(fn.asInstanceOf[g.Select].qualifier.tpe, fn), parts.cvt_!, args.cvt_!)
           case DesugaredSetter(lhs, rhs) =>
             p.Term.Assign(lhs.cvt_!, rhs.cvt_!)
           case DesugaredUpdate(core @ g.Apply(lhs, args), rhs) =>
@@ -511,7 +515,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
             if (isYield) p.Term.ForYield(penums, body.cvt_!)
             else p.Term.For(penums, body.cvt_!)
           case q"$lhs.$op($arg)" if op.looksLikeInfix && !lhs.isInstanceOf[g.Super] =>
-            p.Term.ApplyInfix(lhs.cvt_!, (fn.cvt_! : p.Term.Select).selector, Nil, List(parg(arg)))
+            p.Term.ApplyInfix(lhs.cvt_!, fn.symbol.asTerm.precvt(lhs.tpe, fn), Nil, List(parg(arg)))
           case _ if g.definitions.TupleClass.seq.contains(in.symbol.companion) =>
             p.Term.Tuple(args.cvt_!)
           case _ =>

@@ -4,11 +4,12 @@ package org.scalameta.reflection
 import scala.tools.nsc.Global
 import scala.reflect.internal.Flags
 import scala.collection.mutable
+import _root_.org.scalameta.invariants._
 
 trait Helpers {
   self: _root_.org.scalameta.reflection.GlobalToolkit =>
 
-  import global._
+  import global.{require => _, _}
   import definitions._
   import treeInfo._
   import build._
@@ -20,42 +21,6 @@ trait Helpers {
   // NOTE: partially copy/pasted from TreeInfo.scala and ReificationSupport.scala in scalac
   object SyntacticTemplate {
     def unapply(in: Template): Some[(List[Tree], ValDef, List[Tree], List[Tree])] = {
-      def filterBody(body: List[Tree]) = body filter {
-        case _: ValDef | _: TypeDef => true
-        // keep valdef or getter for val/var
-        case dd: DefDef if dd.mods.hasAccessorFlag => !nme.isSetterName(dd.name) && !in.body.exists {
-          case vd: ValDef => dd.name == vd.name.dropLocal
-          case _ => false
-        }
-        case md: MemberDef => !md.mods.isSynthetic
-        case tree => true
-      }
-      def lazyValDefRhs(body: Tree) = {
-        body match {
-          case Block(List(Assign(_, rhs)), _) => rhs
-          case _ => body
-        }
-      }
-      def recoverBody(body: List[Tree]) = body map {
-        case vd @ ValDef(vmods, vname, _, vrhs) if nme.isLocalName(vname) =>
-          in.body find {
-            case dd: DefDef => dd.name == vname.dropLocal
-            case _ => false
-          } map { dd =>
-            val DefDef(dmods, dname, _, _, _, drhs) = dd
-            // get access flags from DefDef
-            val vdMods = (vmods &~ Flags.AccessFlags) | (dmods & Flags.AccessFlags).flags
-            // for most cases lazy body should be taken from accessor DefDef
-            val vdRhs = if (vmods.isLazy) lazyValDefRhs(drhs) else vrhs
-            copyValDef(vd)(mods = vdMods, name = dname, rhs = vdRhs)
-          } getOrElse (vd)
-        // for abstract and some lazy val/vars
-        case dd @ DefDef(mods, name, _, _, tpt, rhs) if mods.hasAccessorFlag =>
-          // transform getter mods to field
-          val vdMods = (if (!mods.hasStableFlag) mods | Flags.MUTABLE else mods &~ Flags.STABLE) &~ Flags.ACCESSOR
-          ValDef(vdMods, name, tpt, rhs)
-        case tr => tr
-      }
       object UnCtor {
         def unapply(tree: Tree): Option[(Modifiers, List[List[ValDef]], List[Tree], Symbol, List[List[Tree]])] = tree match {
           case DefDef(mods, nme.MIXIN_CONSTRUCTOR, _, _, _, build.SyntacticBlock(lvdefs :+ _)) =>
@@ -68,7 +33,7 @@ trait Helpers {
       def indexOfCtor(trees: List[Tree]) = {
         trees.indexWhere { case UnCtor(_, _, _, _, _) => true ; case _ => false }
       }
-      val body1 = recoverBody(filterBody(in.body))
+      val body1 = in.body // NOTE: filterBody and recoverBody moved to Ensugar
       val (rawEdefs, rest) = body1.span(treeInfo.isEarlyDef)
       val (gvdefs, etdefs) = rawEdefs.partition(treeInfo.isEarlyValDef)
       var (fieldDefs, lvdefs, superSym, superArgss, body2) = rest.splitAt(indexOfCtor(rest)) match {
@@ -78,7 +43,7 @@ trait Helpers {
       // TODO: really discern `... extends C()` and `... extends C`
       if (superArgss == List(Nil) && superSym.info.paramss.flatten.isEmpty) superArgss = Nil
       val evdefs = gvdefs.zip(lvdefs).map {
-        case (gvdef @ ValDef(_, _, tpt, _), ValDef(_, _, _, rhs)) =>
+        case (gvdef @ ValDef(_, _, _, _), ValDef(_, _, tpt, rhs)) =>
           copyValDef(gvdef)(tpt = tpt, rhs = rhs)
       }
       val edefs = evdefs ::: etdefs
@@ -90,15 +55,6 @@ trait Helpers {
           Nil
       }
       Some(parents, in.self, edefs, body2)
-    }
-  }
-
-  object collapseEmptyTrees extends Transformer {
-    override def transform(tree: Tree): Tree = tree match {
-      case tree @ PackageDef(pid, stats) if stats.exists(_.isEmpty) => transform(treeCopy.PackageDef(tree, pid, stats.filter(!_.isEmpty)))
-      case tree @ Block(stats, expr) if stats.exists(_.isEmpty) => transform(treeCopy.Block(tree, stats.filter(!_.isEmpty), expr))
-      case tree @ Template(parents, self, stats) if stats.exists(_.isEmpty) => transform(treeCopy.Template(tree, parents, self, stats.filter(!_.isEmpty)))
-      case _ => super.transform(tree)
     }
   }
 
@@ -119,7 +75,7 @@ trait Helpers {
   object DesugaredSetter {
     def unapply(tree: Tree): Option[(Tree, Tree)] = tree.metadata.get("originalAssign").map(_.asInstanceOf[(Tree, Name, List[Tree])]) match {
       case Some((Desugared(lhs), name: TermName, Desugared(List(rhs)))) if nme.isSetterName(tree.symbol.name) && name == nme.EQL =>
-        require(lhs.symbol.owner == tree.symbol.owner && lhs.symbol.name.setterName == tree.symbol.name)
+        require(lhs.symbol.name.setterName == tree.symbol.name)
         Some((lhs, rhs))
       case _ =>
         None
@@ -128,7 +84,8 @@ trait Helpers {
 
   object DesugaredUpdate {
     def unapply(tree: Tree): Option[(Tree, Tree)] = tree match {
-      case Apply(core @ Select(lhs, _), args :+ rhs) if core.symbol.name == nme.update && !tree.hasMetadata("originalAssign") =>
+      case Apply(core @ Select(lhs, _), args :+ rhs)
+      if core.symbol.name == nme.update && !tree.hasMetadata("originalAssign") && !lhs.isInstanceOf[Super] && (args :+ rhs).forall(!_.isInstanceOf[AssignOrNamedArg]) =>
         Some((Apply(lhs, args).setType(NoType), rhs))
       case _ =>
         None
@@ -215,13 +172,16 @@ trait Helpers {
       object DropUselessPatterns {
         def unapply(tree: Tree): Some[Tree] = tree match {
           case tree @ Bind(name, pat) if name.startsWith("x$") => unapply(pat)
-          case tree @ Bind(name, Typed(wild @ Ident(nme.WILDCARD), EmptyTree)) => Some(treeCopy.Bind(tree, name, wild))
+          case tree @ Bind(name, Typed(wild @ Ident(nme.WILDCARD), EmptyTree)) => unapply(treeCopy.Bind(tree, name, wild))
+          case tree @ Bind(nme.WILDCARD, pat @ Ident(nme.WILDCARD)) => Some(pat)
           case tree => Some(tree)
         }
       }
       // NOTE: UnClosure creates binds that are totally unattributed
       // here we somewhat approximate the attributes to at least give the host an idea of what's going on
       def approximateAttributes(pat: Tree, rhs: Tree): Tree = pat match {
+        case pat @ Ident(nme.WILDCARD) if pat.tpe == null && pat.symbol == NoSymbol =>
+          Ident(nme.WILDCARD).setType(rhs.tpe)
         case pat @ Bind(name: TermName, Ident(nme.WILDCARD)) if pat.tpe == null && pat.symbol == NoSymbol =>
           Bind(NoSymbol.newTermSymbol(name).setInfo(rhs.tpe), Ident(nme.WILDCARD).setType(rhs.tpe)).setType(rhs.tpe)
         case pat =>
