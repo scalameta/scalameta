@@ -45,6 +45,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
     object Helpers extends g.ReificationSupportImpl { self =>
       implicit class RichHelperTree(gtree: g.Tree) {
         def alias: String = gtree match {
+          case gtree: g.ModuleDef if gtree.symbol.isPackageObject => gtree.symbol.owner.name.decodedName.toString
           case gtree: g.NameTree => gtree.name.decodedName.toString
           case g.This(name) => name.decodedName.toString
           case g.Super(_, name) => name.decodedName.toString
@@ -128,7 +129,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         if (gsym.isPrivate && !gsym.isSynthetic && !gsym.isArtifact) pmods += p.Mod.Private(paccessqual(gsym))
         if (gsym.isProtected) pmods += p.Mod.Protected(paccessqual(gsym))
         if (gsym.isImplicit && !(gsym.isParameter && gsym.owner.isMethod)) pmods += p.Mod.Implicit()
-        if (gsym.isFinal) pmods += p.Mod.Final()
+        if (gsym.isFinal && gmdef.mods.hasFlag(g.Flag.FINAL)) pmods += p.Mod.Final()
         if (gsym.isSealed) pmods += p.Mod.Sealed()
         if (gsym.isOverride) pmods += p.Mod.Override()
         if (gsym.isCase) pmods += p.Mod.Case()
@@ -267,12 +268,15 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         unreachable
       case g.UnmappableTree =>
         unreachable
-      case in @ g.PackageDef(pid, stats) if pt <:< typeOf[p.Pkg] =>
+      case in @ g.PackageDef(pid, stats) if pt <:< typeOf[p.Stmt] =>
         require(pid.name != g.nme.EMPTY_PACKAGE_NAME)
-        p.Pkg(pid.cvt_!, pstats[p.Stmt.TopLevel](in, stats), hasBraces = false)
+        stats match {
+          case List(pkgobject: g.ModuleDef) if pkgobject.symbol.isPackageObject => pkgobject.cvt_! : p.Defn.Object
+          case _ => p.Pkg(pid.cvt_!, pstats[p.Stmt.TopLevel](in, stats), hasBraces = false)
+        }
       case in @ g.PackageDef(pid, stats) if pt <:< typeOf[p.Aux.CompUnit] =>
         if (pid.name == g.nme.EMPTY_PACKAGE_NAME) p.Aux.CompUnit(pstats[p.Stmt.TopLevel](in, stats))
-        else p.Aux.CompUnit(List(p.Pkg(pid.cvt_!, pstats[p.Stmt.TopLevel](in, stats), hasBraces = false)))
+        else p.Aux.CompUnit(List(in.cvt_! : p.Stmt.TopLevel))
       case in @ g.ClassDef(_, _, tparams0, templ) =>
         require(in.symbol.isClass)
         if (in.symbol.isTrait) {

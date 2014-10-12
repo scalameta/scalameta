@@ -38,7 +38,7 @@ trait Ensugar {
             def summary(x: Any) = x match { case x: Product => x.productPrefix; case null => "null"; case _ => x.getClass }
             var details = tree.toString.replace("\n", "")
             if (details.length > 60) details = details.take(60) + "..."
-            println("(" + summary(tree) + ") " + details)
+            Console.err.println("(" + summary(tree) + ") " + details)
           }
 
           try {
@@ -95,7 +95,7 @@ trait Ensugar {
             if (result.nonEmpty && System.getProperty("ensugar.debug") != null) {
               val name = this.getClass.getName.stripSuffix("$").stripPrefix("org.scalameta.reflection.Ensugar$transformer$2$")
               def summary(tree: Tree) = tree.toString.replace("\n", "").take(40)
-              println(s"$name: ${summary(tree)} => ${summary(result.get)}")
+              Console.err.println(s"$name: ${summary(tree)} => ${summary(result.get)}")
             }
             result
           }

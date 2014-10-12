@@ -27,7 +27,10 @@ trait Helpers {
             Some((mods | Flag.TRAIT, Nil, lvdefs, NoSymbol, Nil))
           case DefDef(mods, nme.CONSTRUCTOR, Nil, vparamss, _, build.SyntacticBlock(lvdefs :+ Applied(core, _, argss) :+ _)) =>
             Some((mods, vparamss, lvdefs, core.symbol, argss))
-          case _ => None
+          case DefDef(mods, nme.CONSTRUCTOR, Nil, List(Nil), _, Block(Nil, Literal(Constant(())))) if in.symbol.owner.isPrimitiveValueClass =>
+            Some((mods, Nil, Nil, NoSymbol, Nil))
+          case _ =>
+            None
         }
       }
       def indexOfCtor(trees: List[Tree]) = {
