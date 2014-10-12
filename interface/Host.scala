@@ -129,7 +129,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         if (gsym.isPrivate && !gsym.isSynthetic && !gsym.isArtifact) pmods += p.Mod.Private(paccessqual(gsym))
         if (gsym.isProtected) pmods += p.Mod.Protected(paccessqual(gsym))
         if (gsym.isImplicit && !(gsym.isParameter && gsym.owner.isMethod)) pmods += p.Mod.Implicit()
-        if (gsym.isFinal) pmods += p.Mod.Final()
+        if (gsym.isFinal && gmdef.mods.hasFlag(g.Flag.FINAL)) pmods += p.Mod.Final()
         if (gsym.isSealed) pmods += p.Mod.Sealed()
         if (gsym.isOverride) pmods += p.Mod.Override()
         if (gsym.isCase) pmods += p.Mod.Case()
