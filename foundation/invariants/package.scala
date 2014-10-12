@@ -191,7 +191,7 @@ package invariants {
       q"""
         ${c.untypecheck(prop.emit)} match {
           case (true, _) => ()
-          case (false, $failures) => org.scalameta.invariants.InvariantFailedException.raise(${showCode(x)}, $failures, $freeLocals)
+          case (false, $failures) => _root_.org.scalameta.invariants.InvariantFailedException.raise(${showCode(x)}, $failures, $freeLocals)
         }
       """
     }
