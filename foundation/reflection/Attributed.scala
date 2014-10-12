@@ -9,6 +9,7 @@ trait Attributed {
 
   import global._
   import definitions._
+  import scala.reflect.internal.Flags._
 
   implicit class RichAttributedTree(tree: Tree) {
     def ensureAttributed(): Unit = {
@@ -57,6 +58,10 @@ trait Attributed {
           // type ascriptions in arguments of classfile annotations aren't typechecked at all
           // our ensugarer represents this weird corner case with Typed(_, EmptyTree)
           case Typed(expr, EmptyTree) => check(expr)
+          // underlying fields for early vals have broken originals of their tpts
+          // therefore here we opt out of checking those
+          // they don't matter anyway, because we're going to use tpts of fields' local counterparts
+          case ValDef(_, _, _, rhs) if tree.symbol.hasFlag(PRESUPER) && tree.symbol.owner.isClass => check(rhs)
           case _ => check(tree)
         }
       }

@@ -43,7 +43,7 @@ trait Helpers {
       // TODO: really discern `... extends C()` and `... extends C`
       if (superArgss == List(Nil) && superSym.info.paramss.flatten.isEmpty) superArgss = Nil
       val evdefs = gvdefs.zip(lvdefs).map {
-        case (gvdef @ ValDef(_, _, tpt, _), ValDef(_, _, _, rhs)) =>
+        case (gvdef @ ValDef(_, _, _, _), ValDef(_, _, tpt, rhs)) =>
           copyValDef(gvdef)(tpt = tpt, rhs = rhs)
       }
       val edefs = evdefs ::: etdefs
