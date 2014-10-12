@@ -447,7 +447,7 @@ trait Ensugar {
             def ensugar = {
               val withoutSetters = trees.filter({ case AbstractAccessor(ddef) if nme.isSetterName(ddef.name) => false; case _ => true })
               withoutSetters.map({
-                case ddef @ DefDef(dmods, dname, _, _, dtpt, drhs) if dmods.hasAccessorFlag =>
+                case AbstractAccessor(ddef @ DefDef(dmods, dname, _, _, dtpt, drhs)) =>
                   val resultmods = (if (!dmods.hasStableFlag) dmods | MUTABLE else dmods &~ STABLE) &~ ACCESSOR
                   ValDef(resultmods, dname, dtpt, drhs).copyAttrs(ddef)
                 case tree =>

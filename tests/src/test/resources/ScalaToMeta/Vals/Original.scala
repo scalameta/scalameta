@@ -55,4 +55,8 @@ object Vals {
     val x1: Int
     var x2: Int
   }
+  trait Trait3 {
+    protected[this] val x: Int
+    private lazy val y = x
+  }
 }
