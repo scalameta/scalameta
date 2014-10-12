@@ -4,6 +4,7 @@ package org.scalameta.reflection
 import scala.tools.nsc.Global
 import scala.reflect.internal.Flags
 import scala.collection.mutable
+import _root_.org.scalameta.invariants._
 
 trait Helpers {
   self: _root_.org.scalameta.reflection.GlobalToolkit =>
