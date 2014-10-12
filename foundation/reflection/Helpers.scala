@@ -75,7 +75,7 @@ trait Helpers {
   object DesugaredSetter {
     def unapply(tree: Tree): Option[(Tree, Tree)] = tree.metadata.get("originalAssign").map(_.asInstanceOf[(Tree, Name, List[Tree])]) match {
       case Some((Desugared(lhs), name: TermName, Desugared(List(rhs)))) if nme.isSetterName(tree.symbol.name) && name == nme.EQL =>
-        require(lhs.symbol.owner == tree.symbol.owner && lhs.symbol.name.setterName == tree.symbol.name)
+        require(lhs.symbol.name.setterName == tree.symbol.name)
         Some((lhs, rhs))
       case _ =>
         None
