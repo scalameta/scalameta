@@ -497,7 +497,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
             val templ = p.Aux.Template(Nil, List(supercall), self).appendScratchpad(in)
             p.Term.New(templ)
           case q"$stringContext(..$parts).$prefix(..$args)" if stringContext.symbol == g.definitions.StringContextClass.companion =>
-            p.Term.Interpolate((fn.cvt_! : p.Term.Select).selector, parts.cvt_!, args.cvt_!)
+            p.Term.Interpolate(fn.symbol.asTerm.precvt(fn.asInstanceOf[g.Select].qualifier.tpe, fn), parts.cvt_!, args.cvt_!)
           case DesugaredSetter(lhs, rhs) =>
             p.Term.Assign(lhs.cvt_!, rhs.cvt_!)
           case DesugaredUpdate(core @ g.Apply(lhs, args), rhs) =>
@@ -515,7 +515,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
             if (isYield) p.Term.ForYield(penums, body.cvt_!)
             else p.Term.For(penums, body.cvt_!)
           case q"$lhs.$op($arg)" if op.looksLikeInfix && !lhs.isInstanceOf[g.Super] =>
-            p.Term.ApplyInfix(lhs.cvt_!, (fn.cvt_! : p.Term.Select).selector, Nil, List(parg(arg)))
+            p.Term.ApplyInfix(lhs.cvt_!, fn.symbol.asTerm.precvt(lhs.tpe, fn), Nil, List(parg(arg)))
           case _ if g.definitions.TupleClass.seq.contains(in.symbol.companion) =>
             p.Term.Tuple(args.cvt_!)
           case _ =>
