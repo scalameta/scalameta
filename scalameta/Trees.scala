@@ -141,13 +141,9 @@ object Lit {
 @branch trait Member extends Tree with Has.Mods
 object Member {
   @branch trait Term extends Member
-  @branch trait Type extends Member with Has.TypeParams {
-    def name: Type.Name
-  }
+  @branch trait Type extends Member with Has.TypeName with Has.TypeParams
   @branch trait ValOrVar extends Stmt.Template with Has.Mods // NOTE: vals and vars are not members!
-  @branch trait Def extends Term with Has.TermName with Stmt.Refine with Has.TypeParams with Has.Paramss with Scope.Params {
-    def tparams: Seq[TypeParam]
-  }
+  @branch trait Def extends Term with Has.TermName with Stmt.Refine with Has.TypeParams with Has.Paramss with Scope.Params
 }
 
 @branch trait Decl extends Stmt.Template with Stmt.Refine
@@ -397,8 +393,8 @@ object Has {
     def templ: Aux.Template
   }
   @branch trait Name extends Member { def name: meta.Name }
-  @branch trait TermName extends Member.Term with Has.Name { def name: Term.Name }
-  @branch trait TypeName extends Member.Type with Has.Name { def name: Type.Name }
+  @branch trait TermName extends Has.Name { def name: Term.Name }
+  @branch trait TypeName extends Has.Name { def name: Type.Name }
 }
 
 @branch trait Stmt extends Tree
