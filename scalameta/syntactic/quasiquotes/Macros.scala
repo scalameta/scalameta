@@ -15,8 +15,8 @@ class Macros[C <: Context](val c: C) extends AdtReflection with NewLiftables {
     val q"$_($_.apply(..$partlits)).$_.apply[..$_](..$argtrees)" = macroApplication
     val parts = partlits.map{ case q"${part: String}" => part }
     def ndots(s: String): Int = if (s.endsWith(".")) ndots(s.stripSuffix(".")) + 1 else 0
-    val args = argtrees.zipWithIndex.map{ case (tree, i) => (c.freshName(tree.toString), ndots(parts(i)), tree) }
-    val snippet = (parts.init.zip(args).flatMap{ case (part, (id, ndots, _)) => List(part.stripSuffix("." * ndots), s"`$id`") } :+ parts.last).mkString("")
+    val args = argtrees.zipWithIndex.map{ case (tree, i) => (c.freshName("dummy"), ndots(parts(i)), tree) }
+    val snippet = (parts.init.zip(args).flatMap{ case (part, (id, ndots, _)) => List(if (ndots != 1) part.stripSuffix("." * ndots) else part, s"$id") } :+ parts.last).mkString("")
     val liveTree: PalladiumTree = parse(snippet)
     val reifiedTree: ScalaTree = implicitly[Liftable[PalladiumTree]].apply(liveTree)
     reifiedTree
