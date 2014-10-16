@@ -160,8 +160,10 @@ package object semantic {
 
   implicit class SemanticTemplateMemberOps(val tree: Member.Template) extends AnyVal {
     @hosted def superclasses: Seq[Member.Template] = tree.ref.toTypeRef.superclasses
+    @hosted def directSuperclasses: Seq[Member.Template] = tree.ref.toTypeRef.directSuperclasses
     @hosted def supertypes: Seq[meta.Type] = tree.ref.toTypeRef.supertypes
     @hosted def subclasses: Seq[Member.Template] = tree.ref.toTypeRef.subclasses
+    @hosted def directSubclasses: Seq[Member.Template] = tree.ref.toTypeRef.directSubclasses
     @hosted def self: Aux.Self = succeed(tree.templ.self)
     @hosted def companion: Member.Template = tree match {
       case _: Defn.Class => findCompanion{ case x: Defn.Object => x }
@@ -276,6 +278,7 @@ package object semantic {
       case x: Member.Template => x.templ.superclasses
       case x: Type => ??? // TODO: compute this from Host.superclasses
     }
+    @hosted def directSuperclasses: Seq[Member.Template] = ??? // TODO: compute this from superclasses
     @hosted def supertypes: Seq[Type] = tree match {
       case x: Aux.Template => x.tpe.flatMap(_.supertypes)
       case x: Member.Template => x.templ.supertypes
@@ -291,6 +294,7 @@ package object semantic {
       case x: Member.Template => x.templ.subclasses
       case x: Type => ??? // TODO: compute this from Host.subclasses
     }
+    @hosted def directSubclasses: Seq[Member.Template] = ??? // TODO: compute this from subclasses
     @hosted def ctor: Ctor.Primary = ctors.flatMap(_.collect { case prim: Ctor.Primary => prim }.findUnique)
     @hosted def ctors: Seq[Ctor] = wrapHosted(_.members(tree).collect{ case c: Ctor => c })
   }
