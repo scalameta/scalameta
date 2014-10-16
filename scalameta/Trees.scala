@@ -142,18 +142,17 @@ object Lit {
 object Member {
   @branch trait Term extends Member
   @branch trait Type extends Member with Has.TypeName with Has.TypeParams
-  @branch trait ValOrVar extends Stmt.Template with Has.Mods // NOTE: vals and vars are not members!
   @branch trait Def extends Term with Has.TermName with Stmt.Refine with Has.TypeParams with Has.Paramss with Scope.Params
 }
 
-@branch trait Decl extends Stmt.Template with Stmt.Refine
+@branch trait Decl extends Stmt.Template with Stmt.Refine with Has.Mods
 object Decl {
   @ast class Val(mods: Seq[Mod],
                  pats: Seq[Term.Name] @nonEmpty,
-                 decltpe: meta.Type) extends Decl with Member.ValOrVar with Stmt.Existential
+                 decltpe: meta.Type) extends Decl with Stmt.Existential
   @ast class Var(mods: Seq[Mod],
                  pats: Seq[Term.Name] @nonEmpty,
-                 decltpe: meta.Type) extends Decl with Member.ValOrVar
+                 decltpe: meta.Type) extends Decl
   @ast class Def(mods: Seq[Mod],
                  name: Term.Name,
                  tparams: Seq[TypeParam],
@@ -171,16 +170,16 @@ object Decl {
                   bounds: Aux.TypeBounds) extends Decl with Member.Type with Stmt.Existential
 }
 
-@branch trait Defn extends Stmt.Block with Stmt.Template
+@branch trait Defn extends Stmt.Block with Stmt.Template with Has.Mods
 object Defn {
   @ast class Val(mods: Seq[Mod],
                  pats: Seq[Pat] @nonEmpty,
                  decltpe: Option[meta.Type],
-                 rhs: Term) extends Defn with Member.ValOrVar with Stmt.Early
+                 rhs: Term) extends Defn with Stmt.Early
   @ast class Var(mods: Seq[Mod],
                  pats: Seq[Pat] @nonEmpty,
                  decltpe: Option[meta.Type],
-                 rhs: Option[Term]) extends Defn with Member.ValOrVar with Stmt.Early {
+                 rhs: Option[Term]) extends Defn with Stmt.Early {
     require(rhs.isEmpty ==> pats.forall(_.isInstanceOf[Term.Name]))
     require(decltpe.nonEmpty || rhs.nonEmpty)
   }
