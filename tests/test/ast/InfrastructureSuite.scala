@@ -25,7 +25,6 @@ class InfrastructureSuite extends FunSuite {
       def overridden(member: Member): Seq[Member] = ???
       def overriding(member: Member): Seq[Member] = ???
       def erasure(tpe: Type): Type = ???
-      def freshName(prefix: String): String = ???
     }
     val tree1 = tree.appendScratchpad(tree)
     tree1.toString // check well-formedness again
