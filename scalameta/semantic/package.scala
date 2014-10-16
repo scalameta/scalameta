@@ -76,6 +76,7 @@ package object semantic {
   implicit class SemanticRefOps(val tree: Ref) extends AnyVal {
     private[semantic] def toTypeRef: Type.Ref = ??? // TODO: t"$tree"
     @hosted def defns: Seq[Member] = wrapHosted(_.defns(tree).collect{ case m: Member => m })
+    @hosted def defn: Member = defns.flatMap(_.findUnique)
   }
 
   implicit class SemanticTypeRefOps(val tree: Type.Ref) extends AnyVal {
