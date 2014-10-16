@@ -51,7 +51,7 @@ package object semantic {
       case ref: Type.Ref => ref.defns.flatMap {
         case Seq(t: Has.Template) => t.companion
         case _ => fail("companion not found")
-      }.map(_.typeRef)
+      }.map(_.ref.toTypeRef)
       case _ => fail("companion not found")
     }
   }
@@ -77,6 +77,7 @@ package object semantic {
   @hosted def glb(tpes: Seq[Type]): Type = delegate
 
   implicit class SemanticRefOps(val tree: Ref) extends AnyVal {
+    private[semantic] def toTypeRef: Type.Ref = ??? // TODO: t"$tree"
     @hosted def defns: Seq[Member] = wrapHosted(_.defns(tree).collect{ case m: Member => m })
     @hosted def defn: Member = defns.flatMap(_.findUnique)
   }
@@ -99,7 +100,10 @@ package object semantic {
   }
 
   implicit class SemanticMemberOps(val tree: Member) extends AnyVal {
-    def typeRef: Type.Ref = ???
+    def ref: Ref = tree match {
+      case self: Aux.Self => self.name.getOrElse(Term.This(None))
+      case named: Has.Name => named.name
+    }
     @hosted def overridden: Seq[Member] = delegate
     @hosted def overriding: Seq[Member] = delegate
     def annots: Seq[Mod.Annot] = tree.mods.collect{ case annot: Mod.Annot => annot }
@@ -137,12 +141,13 @@ package object semantic {
   }
 
   implicit class SemanticTermMemberOps(val tree: Member.Term) extends AnyVal {
-    def termRef: Term.Ref = ???
+    def ref: Term.Ref = new SemanticMemberOps(tree).ref.asInstanceOf[Term.Ref]
     @hosted def overridden: Seq[Member.Term] = new SemanticMemberOps(tree).overridden.map(_.asInstanceOf[Seq[Member.Term]])
     @hosted def overriding: Seq[Member.Term] = new SemanticMemberOps(tree).overriding.map(_.asInstanceOf[Seq[Member.Term]])
   }
 
   implicit class SemanticTypeMemberOps(val tree: Member.Type) extends AnyVal {
+    def ref: Type.Ref = new SemanticMemberOps(tree).ref.asInstanceOf[Type.Ref]
     @hosted def overridden: Seq[Member.Type] = new SemanticMemberOps(tree).overridden.map(_.asInstanceOf[Seq[Member.Type]])
     @hosted def overriding: Seq[Member.Type] = new SemanticMemberOps(tree).overriding.map(_.asInstanceOf[Seq[Member.Type]])
   }
@@ -157,11 +162,11 @@ package object semantic {
   }
 
   implicit class SemanticTemplateMemberOps(val tree: Has.Template) extends AnyVal {
-    @hosted def superclasses: Seq[Has.Template] = tree.typeRef.superclasses
-    @hosted def directSuperclasses: Seq[Has.Template] = tree.typeRef.directSuperclasses
-    @hosted def supertypes: Seq[meta.Type] = tree.typeRef.supertypes
-    @hosted def subclasses: Seq[Has.Template] = tree.typeRef.subclasses
-    @hosted def directSubclasses: Seq[Has.Template] = tree.typeRef.directSubclasses
+    @hosted def superclasses: Seq[Has.Template] = tree.ref.toTypeRef.superclasses
+    @hosted def directSuperclasses: Seq[Has.Template] = tree.ref.toTypeRef.directSuperclasses
+    @hosted def supertypes: Seq[meta.Type] = tree.ref.toTypeRef.supertypes
+    @hosted def subclasses: Seq[Has.Template] = tree.ref.toTypeRef.subclasses
+    @hosted def directSubclasses: Seq[Has.Template] = tree.ref.toTypeRef.directSubclasses
     @hosted def self: Aux.Self = succeed(tree.templ.self)
     @hosted def companion: Has.Template = tree match {
       case _: Defn.Class => findCompanion{ case x: Defn.Object => x }
@@ -225,8 +230,7 @@ package object semantic {
   }
 
   implicit class SemanticSelfOps(val tree: Aux.Self) extends AnyVal {
-    def typeRef: Type.Singleton = Type.Singleton(tree.termRef)
-    def termRef: Term.This = new SemanticTermMemberOps(tree).termRef.asInstanceOf[Term.This]
+    def ref: Term.This = new SemanticMemberOps(tree).ref.asInstanceOf[Term.This]
     @hosted def tpe: Type = tree.internalTpe
   }
 
