@@ -141,7 +141,7 @@ object Lit {
 @branch trait Member extends Tree with Has.Mods
 object Member {
   @branch trait Term extends Member
-  @branch trait Type extends Member
+  @branch trait Type extends Member { def name: Type.Name }
   @branch trait ValOrVar extends Stmt.Template with Has.Mods // NOTE: vals and vars are not members!
   @branch trait Def extends Term with Has.TermName with Stmt.Refine with Has.TypeParams with Has.Paramss with Scope.Params {
     def tparams: Seq[TypeParam]
