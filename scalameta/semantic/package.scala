@@ -79,11 +79,8 @@ package object semantic {
   }
 
   implicit class SemanticTypeRefOps(val tree: Type.Ref) extends AnyVal {
-    @hosted def defns: Seq[Member.Type] = (tree: Ref).defns.flatMap(defns => {
-      if (defns.exists(!_.isInstanceOf[Member.Type])) fail(s"unexpected $defns for ref $tree")
-      else succeed(defns.asInstanceOf[Seq[Member.Type]])
-    })
-    @hosted def defn: Member.Type = defns.flatMap(_.findUnique)
+    // NOTE: we can't refine the return type of Ref.defns and Ref.defn
+    // because a Type.Ref can refer to both types (regular types) and terms (singleton types)
   }
 
   implicit class SemanticTermRefOps(val tree: Term.Ref) extends AnyVal {
