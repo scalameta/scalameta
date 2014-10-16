@@ -49,19 +49,19 @@ package object semantic {
     @hosted def erasure: Type = delegate
     @hosted def companion: Type.Ref = tree match {
       case ref: Type.Ref => ref.defns.flatMap {
-        case Seq(t: Member.Template) => t.companion
+        case Seq(t: Has.Template) => t.companion
         case _ => fail("companion not found")
       }.map(_.typeRef)
       case _ => fail("companion not found")
     }
   }
 
-  @hosted private[semantic] def supertypesToMembers(tpes: Seq[Type]): Seq[Member.Template] = {
+  @hosted private[semantic] def supertypesToMembers(tpes: Seq[Type]): Seq[Has.Template] = {
     def extractTemplate(ref: Type.Ref) = {
       for {
         defns <- ref.defns
         result <- defns match {
-          case Seq(t: Member.Template) => succeed(t)
+          case Seq(t: Has.Template) => succeed(t)
           case d => fail(s"unexpected ref $ref to $d returned from supertypes")
         }
       } yield result
@@ -156,19 +156,19 @@ package object semantic {
     }
   }
 
-  implicit class SemanticTemplateMemberOps(val tree: Member.Template) extends AnyVal {
-    @hosted def superclasses: Seq[Member.Template] = tree.typeRef.superclasses
-    @hosted def directSuperclasses: Seq[Member.Template] = tree.typeRef.directSuperclasses
+  implicit class SemanticTemplateMemberOps(val tree: Has.Template) extends AnyVal {
+    @hosted def superclasses: Seq[Has.Template] = tree.typeRef.superclasses
+    @hosted def directSuperclasses: Seq[Has.Template] = tree.typeRef.directSuperclasses
     @hosted def supertypes: Seq[meta.Type] = tree.typeRef.supertypes
-    @hosted def subclasses: Seq[Member.Template] = tree.typeRef.subclasses
-    @hosted def directSubclasses: Seq[Member.Template] = tree.typeRef.directSubclasses
+    @hosted def subclasses: Seq[Has.Template] = tree.typeRef.subclasses
+    @hosted def directSubclasses: Seq[Has.Template] = tree.typeRef.directSubclasses
     @hosted def self: Aux.Self = succeed(tree.templ.self)
-    @hosted def companion: Member.Template = tree match {
+    @hosted def companion: Has.Template = tree match {
       case _: Defn.Class => findCompanion{ case x: Defn.Object => x }
       case _: Defn.Trait => findCompanion{ case x: Defn.Object => x }
       case _: Defn.Object => findCompanion{ case x: Defn.Class => x; case x: Defn.Trait => x }
     }
-    @hosted private[semantic] def findCompanion[T <: Member.Template](f: PartialFunction[Member, T]): T = {
+    @hosted private[semantic] def findCompanion[T <: Has.Template](f: PartialFunction[Member, T]): T = {
       val companionName = {
         if (tree.name.isInstanceOf[meta.Term.Name]) meta.Type.Name(tree.name.value, isBackquoted = false) else
         meta.Term.Name(tree.name.value, isBackquoted = false)
@@ -206,11 +206,11 @@ package object semantic {
   }
 
   implicit class SemanticDefnObjectOps(val tree: Defn.Object) extends AnyVal {
-    @hosted def companion: Member.Template with Member.Type = new SemanticTemplateMemberOps(tree).companion.map(_.asInstanceOf[Member.Template with Member.Type])
+    @hosted def companion: Has.Template with Member.Type = new SemanticTemplateMemberOps(tree).companion.map(_.asInstanceOf[Has.Template with Member.Type])
   }
 
   implicit class SemanticPkgObjectOps(val tree: Defn.Object) extends AnyVal {
-    @hosted def companion: Member.Template with Member.Type = new SemanticTemplateMemberOps(tree).companion.map(_.asInstanceOf[Member.Template with Member.Type])
+    @hosted def companion: Has.Template with Member.Type = new SemanticTemplateMemberOps(tree).companion.map(_.asInstanceOf[Has.Template with Member.Type])
   }
 
   implicit class SemanticCtorOps(val tree: Ctor) extends AnyVal {
@@ -272,28 +272,28 @@ package object semantic {
   }
 
   implicit class SemanticTemplateScopeOps(val tree: Scope.Template) extends AnyVal {
-    @hosted def superclasses: Seq[Member.Template] = tree match {
+    @hosted def superclasses: Seq[Has.Template] = tree match {
       case x: Aux.Template => x.tpe.flatMap(_.superclasses)
-      case x: Member.Template => x.templ.superclasses
+      case x: Has.Template => x.templ.superclasses
       case x: Type => ??? // TODO: compute this from Host.superclasses
     }
-    @hosted def directSuperclasses: Seq[Member.Template] = ??? // TODO: compute this from superclasses
+    @hosted def directSuperclasses: Seq[Has.Template] = ??? // TODO: compute this from superclasses
     @hosted def supertypes: Seq[Type] = tree match {
       case x: Aux.Template => x.tpe.flatMap(_.supertypes)
-      case x: Member.Template => x.templ.supertypes
+      case x: Has.Template => x.templ.supertypes
       case x: Type => ??? // TODO: compute this from Host.superclasses(x.defn) and x's type arguments
     }
     @hosted def self: Aux.Self = tree match {
       case x: Aux.Template => succeed(x.self)
-      case x: Member.Template => succeed(x.templ.self)
+      case x: Has.Template => succeed(x.templ.self)
       case x: Type => ??? // TODO: compute this by intersecting x and x.defn.self
     }
-    @hosted def subclasses: Seq[Member.Template] = tree match {
+    @hosted def subclasses: Seq[Has.Template] = tree match {
       case x: Aux.Template => x.tpe.flatMap(_.superclasses)
-      case x: Member.Template => x.templ.subclasses
+      case x: Has.Template => x.templ.subclasses
       case x: Type => ??? // TODO: compute this from Host.subclasses
     }
-    @hosted def directSubclasses: Seq[Member.Template] = ??? // TODO: compute this from subclasses
+    @hosted def directSubclasses: Seq[Has.Template] = ??? // TODO: compute this from subclasses
     @hosted def ctor: Ctor.Primary = ctors.flatMap(_.collect { case prim: Ctor.Primary => prim }.findUnique)
     @hosted def ctors: Seq[Ctor] = wrapHosted(_.members(tree).collect{ case c: Ctor => c })
   }

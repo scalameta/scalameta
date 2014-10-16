@@ -150,13 +150,6 @@ object Member {
     def name: meta.Type.Name
     def tparams: Seq[TypeParam]
   }
-  @branch trait Template extends Defn with Has.Name with Stmt.TopLevel with Stmt.Block with Has.TypeParams with Has.Paramss with Scope.Template {
-    def name: meta.Name
-    def explicits: Seq[Seq[Param.Named]] = Nil
-    def implicits: Seq[Param.Named] = Nil
-    def tparams: Seq[TypeParam] = Nil
-    def templ: Aux.Template
-  }
 }
 
 @branch trait Decl extends Stmt.Template with Stmt.Refine
@@ -227,17 +220,17 @@ object Defn {
                    name: meta.Type.Name,
                    override val tparams: Seq[TypeParam],
                    ctor: Ctor.Primary,
-                   templ: Aux.Template) extends Defn with Member.Template with Has.TypeName
+                   templ: Aux.Template) extends Defn with Has.Template with Has.TypeName
   @ast class Trait(mods: Seq[Mod],
                    name: meta.Type.Name,
                    override val tparams: Seq[TypeParam],
-                   templ: Aux.Template) extends Defn with Member.Template with Has.TypeName {
+                   templ: Aux.Template) extends Defn with Has.Template with Has.TypeName {
     require(templ.stats.forall(!_.isInstanceOf[Ctor]))
     require(templ.parents.forall(_.argss.isEmpty))
   }
   @ast class Object(mods: Seq[Mod],
                     name: Term.Name,
-                    templ: Aux.Template) extends Defn with Member.Template with Has.TermName {
+                    templ: Aux.Template) extends Defn with Has.Template with Has.TermName {
   }
 }
 
@@ -397,6 +390,13 @@ object Has {
   }
   @branch trait TypeParams extends Tree {
     def tparams: Seq[TypeParam]
+  }
+  @branch trait Template extends Defn with Has.Name with Stmt.TopLevel with Stmt.Block with Has.TypeParams with Has.Paramss with Scope.Template {
+    def name: meta.Name
+    def explicits: Seq[Seq[Param.Named]] = Nil
+    def implicits: Seq[Param.Named] = Nil
+    def tparams: Seq[TypeParam] = Nil
+    def templ: Aux.Template
   }
   @branch trait Name extends Member { def name: meta.Name }
   @branch trait TermName extends Member.Term with Has.Name { def name: Term.Name }

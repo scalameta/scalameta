@@ -20,8 +20,8 @@ class InfrastructureSuite extends FunSuite {
       def <:<(tpe1: Type, tpe2: Type): Boolean = ???
       def lub(tpes: Seq[Type]): Type = ???
       def glb(tpes: Seq[Type]): Type = ???
-      def superclasses(member: Member.Template): Seq[Member.Template] = ???
-      def subclasses(member: Member.Template): Seq[Member.Template] = ???
+      def superclasses(member: Has.Template): Seq[Has.Template] = ???
+      def subclasses(member: Has.Template): Seq[Has.Template] = ???
       def overridden(member: Member): Seq[Member] = ???
       def overriding(member: Member): Seq[Member] = ???
       def erasure(tpe: Type): Type = ???
