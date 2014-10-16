@@ -141,13 +141,11 @@ object Lit {
 @branch trait Member extends Tree with Has.Mods
 object Member {
   @branch trait Term extends Member
-  @branch trait Type extends Member { def name: Type.Name }
+  @branch trait Type extends Member with Has.TypeParams {
+    def name: Type.Name
+  }
   @branch trait ValOrVar extends Stmt.Template with Has.Mods // NOTE: vals and vars are not members!
   @branch trait Def extends Term with Has.TermName with Stmt.Refine with Has.TypeParams with Has.Paramss with Scope.Params {
-    def tparams: Seq[TypeParam]
-  }
-  @branch trait AbstractOrAliasType extends Type with Has.TypeName with Stmt.Refine with Has.TypeParams {
-    def name: meta.Type.Name
     def tparams: Seq[TypeParam]
   }
 }
@@ -174,7 +172,7 @@ object Decl {
   @ast class Type(mods: Seq[Mod],
                   name: meta.Type.Name,
                   tparams: Seq[TypeParam],
-                  bounds: Aux.TypeBounds) extends Decl with Stmt.Existential with Member.AbstractOrAliasType
+                  bounds: Aux.TypeBounds) extends Decl with Member.Type with Stmt.Existential
 }
 
 @branch trait Defn extends Stmt.Block with Stmt.Template
@@ -215,7 +213,7 @@ object Defn {
   @ast class Type(mods: Seq[Mod],
                   name: meta.Type.Name,
                   tparams: Seq[TypeParam],
-                  body: meta.Type) extends Defn with Stmt.Refine with Member.AbstractOrAliasType
+                  body: meta.Type) extends Defn with Member.Type with Stmt.Refine
   @ast class Class(mods: Seq[Mod],
                    name: meta.Type.Name,
                    override val tparams: Seq[TypeParam],

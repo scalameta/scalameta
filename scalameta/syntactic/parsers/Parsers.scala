@@ -2134,7 +2134,7 @@ abstract class AbstractParser { parser =>
    *  TypeDcl ::= type Id [TypeParamClause] TypeBounds
    *  }}}
    */
-  def typeDefOrDcl(mods: List[Mod]): Member.AbstractOrAliasType = {
+  def typeDefOrDcl(mods: List[Mod]): Member.Type with Stmt.Template = {
     in.nextToken()
     newLinesOpt()
     val name = typeName()

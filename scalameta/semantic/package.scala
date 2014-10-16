@@ -108,7 +108,7 @@ package object semantic {
     def isVar: Boolean = tree.isInstanceOf[Term.Name] && (tree.parent.map(parent => parent.isInstanceOf[Decl.Var] || parent.isInstanceOf[Defn.Var]).getOrElse(false))
     def isDef: Boolean = tree.isInstanceOf[Member.Def]
     def isMacro: Boolean = tree.isInstanceOf[Defn.Macro]
-    def isType: Boolean = tree.isInstanceOf[Member.AbstractOrAliasType]
+    def isType: Boolean = tree.isInstanceOf[Member.Type]
     def isAbstractType: Boolean = tree.isInstanceOf[Decl.Type]
     def isAliasType: Boolean = tree.isInstanceOf[Defn.Type]
     def isClass: Boolean = tree.isInstanceOf[Defn.Class]
@@ -333,10 +333,10 @@ package object semantic {
     @hosted def vals(name: Name): Term.Name = tree.uniqueMember[Term.Name](name.toString)
     @hosted def vals(name: String): Term.Name = tree.uniqueMember[Term.Name](name.toString)
     @hosted def vals(name: scala.Symbol): Term.Name = tree.uniqueMember[Term.Name](name.toString)
-    @hosted def types: Seq[Member.AbstractOrAliasType] = tree.allMembers[Member.AbstractOrAliasType]
-    @hosted def types(name: Name): Member.AbstractOrAliasType = tree.uniqueMember[Member.AbstractOrAliasType](name.toString)
-    @hosted def types(name: String): Member.AbstractOrAliasType = tree.uniqueMember[Member.AbstractOrAliasType](name.toString)
-    @hosted def types(name: scala.Symbol): Member.AbstractOrAliasType = tree.uniqueMember[Member.AbstractOrAliasType](name.toString)
+    @hosted def types: Seq[Member.Type] = tree.allMembers[Member.Type]
+    @hosted def types(name: Name): Member.Type = tree.uniqueMember[Member.Type](name.toString)
+    @hosted def types(name: String): Member.Type = tree.uniqueMember[Member.Type](name.toString)
+    @hosted def types(name: scala.Symbol): Member.Type = tree.uniqueMember[Member.Type](name.toString)
   }
 
   implicit class SemanticParamsScopeOps(val tree: Scope.Params) extends AnyVal {
