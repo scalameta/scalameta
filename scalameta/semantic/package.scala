@@ -351,6 +351,14 @@ package object semantic {
     @hosted def tparams(name: scala.Symbol): TypeParam.Named = tree.uniqueMember[TypeParam.Named](name.toString)
   }
 
+  implicit class SemanticTermNameModuleOps(val module: Term.Name.type) extends AnyVal {
+    @hosted def fresh(prefix: String): Term.Name = wrapHosted(host => Term.Name(host.freshName(prefix)))
+  }
+
+  implicit class SemanticTypeNameModuleOps(val module: Type.Name.type) extends AnyVal {
+    @hosted def fresh(prefix: String): Type.Name = wrapHosted(host => Type.Name(host.freshName(prefix)))
+  }
+
   object c {
     @hosted(macroApi = true) def warning(msg: String): Unit = delegate
     @hosted(macroApi = true) def error(msg: String): Unit = delegate

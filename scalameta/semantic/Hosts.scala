@@ -21,6 +21,8 @@ trait Host {
   def overriding(member: Member): Seq[Member]
 
   def erasure(tpe: Type): Type
+
+  def freshName(prefix: String): String
 }
 
 trait MacroHost extends Host {
