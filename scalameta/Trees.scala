@@ -1,6 +1,5 @@
 package scala.meta
 
-import scala.language.experimental.macros
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import org.scalameta.ast._

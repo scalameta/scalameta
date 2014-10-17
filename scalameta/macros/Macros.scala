@@ -1,5 +1,5 @@
 package scala.meta
-package semantic
+package macros
 
 import org.scalameta.adt._
 import org.scalameta.annotations._
