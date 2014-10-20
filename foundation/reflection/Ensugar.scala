@@ -494,8 +494,11 @@ trait Ensugar {
           def ensugar(trees: List[Tree]) = {
             val withoutLocals = trees.filter({ case LazyLocal(_, _, _, _) => false; case _ => true })
             withoutLocals.map({
-              case tree @ LazyAccessor(mods, name, tpt, rhs) => ValDef(mods, name, tpt, rhs).copyAttrs(tree)
-              case tree => tree
+              case tree @ LazyAccessor(mods, name, tpt, rhs) =>
+                val ltpt = trees.collect({ case vdef @ LazyLocal(_, lname, ltpt, _) if name.localName == lname => ltpt }).headOption
+                ValDef(mods, name, ltpt.getOrElse(tpt), rhs).copyAttrs(tree)
+              case tree =>
+                tree
             })
           }
         }
