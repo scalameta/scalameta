@@ -121,6 +121,9 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
             // TODO: using isPossibleSyntheticParent is not 100% precise, because the user could've specified the parent themselves
             // this can happen in just one case to the best of my knowledge: with explicit inheritance from synthetic parents of `case`
             // however these situations are extremely rare, so I'm letting it slip for the time being
+            // NOTE: this differs from Definitions.isPossibleSyntheticParent, because it doesn't include ProductX traits
+            // which are no longer synthetically put into parents of case classes (I guess, that happened somewhere on the road to 2.11.0)
+            val isPossibleSyntheticParent = Set[Symbol](ProductRootClass, SerializableClass)
             var originals = if (context.owner.isCase) result.filter(p => !isPossibleSyntheticParent(p.symbol)) else result
             originals = originals.filter(_.tpe.typeSymbol != ObjectClass)
             templ.appendMetadata("originalParents" -> originals)
