@@ -13,18 +13,18 @@ import scala.meta.internal.hosts.scalacompiler.scalahost.{ Host => OurHost }
 class ScalaToMeta extends FunSuite {
   def typecheckConvertAndPrettyprint(code: String, debug: Boolean): String = {
     val pluginJar = System.getProperty("sbt.paths.plugin.jar")
-    val compilationClasspath = System.getProperty("sbt.paths.tests.classpath").split(File.pathSeparatorChar.toString()).map(path => new URL("file://" + path))
-    val classloader = new URLClassLoader(compilationClasspath, getClass().getClassLoader())
+    val compilationClasspath = System.getProperty("sbt.paths.tests.classpath").split(File.pathSeparatorChar.toString).map(path => new URL("file://" + path))
+    val classloader = new URLClassLoader(compilationClasspath, getClass.getClassLoader)
     val mirror = ru.runtimeMirror(classloader)
     val tb = mirror.mkToolBox(options = "-cp " + System.getProperty("sbt.paths.tests.classpath") + " -Xplugin:" + pluginJar + " -Xplugin-require:scalahost")
     var result: String = null
     def cont(compilerApi: AnyRef): Unit = {
-      val m_compiler = compilerApi.getClass().getDeclaredMethod("compiler")
+      val m_compiler = compilerApi.getClass.getDeclaredMethod("compiler")
       val compiler = m_compiler.invoke(compilerApi).asInstanceOf[scala.tools.nsc.Global]
       import compiler._
       import analyzer._
       reporter.reset()
-      val m_frontEnd = tb.getClass().getDeclaredMethod("frontEnd")
+      val m_frontEnd = tb.getClass.getDeclaredMethod("frontEnd")
       val frontEnd = m_frontEnd.invoke(tb).asInstanceOf[scala.tools.reflect.FrontEnd]
       frontEnd.reset()
       def throwIfErrors(): Unit = if (frontEnd.hasErrors) throw ToolBoxError("reflective compilation has failed:" + EOL + EOL + frontEnd.infos.map(_.msg).mkString(EOL))
@@ -66,9 +66,9 @@ class ScalaToMeta extends FunSuite {
       if (debug) println(ptree.show[Raw])
       result = ptree.show[Code]
     }
-    val m_withCompilerApi = tb.getClass().getDeclaredMethod("withCompilerApi")
+    val m_withCompilerApi = tb.getClass.getDeclaredMethod("withCompilerApi")
     val o_withCompilerApi = m_withCompilerApi.invoke(tb)
-    val m_apply = o_withCompilerApi.getClass().getDeclaredMethods().find(_.getName() == "apply").get
+    val m_apply = o_withCompilerApi.getClass.getDeclaredMethods.find(_.getName == "apply").get
     try m_apply.invoke(o_withCompilerApi, cont _) catch scala.reflect.runtime.ReflectionUtils.unwrapHandler({
       case ex =>
         throw ex
@@ -76,7 +76,7 @@ class ScalaToMeta extends FunSuite {
     result
   }
   def runScalaToMetaTest(dirPath: String): Unit = {
-    def slurp(filePath: String) = scala.io.Source.fromFile(new File(filePath)).mkString.trim()
+    def slurp(filePath: String) = scala.io.Source.fromFile(new File(filePath)).mkString.trim
     val actualResult = typecheckConvertAndPrettyprint(slurp(dirPath + File.separatorChar + "Original.scala"), debug = false)
     val expectedResult = slurp(dirPath + File.separatorChar + "Expected.scala")
     if (actualResult != expectedResult) {
@@ -85,5 +85,5 @@ class ScalaToMeta extends FunSuite {
     }
   }
   val resourceDir = new File(System.getProperty("sbt.paths.tests.resources") + File.separatorChar + "ScalaToMeta")
-  resourceDir.listFiles().foreach(dir => test(dir.getName())(runScalaToMetaTest(dir.getAbsolutePath())))
+  resourceDir.listFiles().foreach(dir => test(dir.getName)(runScalaToMetaTest(dir.getAbsolutePath)))
 }

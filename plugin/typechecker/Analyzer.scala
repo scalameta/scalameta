@@ -303,9 +303,11 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
           else
             typed(tree0, mode, pt)
         }
-        else if (!meth.isConstructor && mt.params.isEmpty) // (4.3)
-          adapt(typed(Apply(tree, Nil) setPos tree.pos), mode, pt, original)
-        else if (context.implicitsEnabled)
+        else if (!meth.isConstructor && mt.params.isEmpty) { // (4.3)
+          // NOTE: this is a meaningful difference from the code in Typers.scala
+          //-adapt(typed(Apply(tree, Nil) setPos tree.pos), mode, pt, original)
+          adapt(typed(Apply(tree, Nil).appendMetadata("originalParenless" -> true) setPos tree.pos), mode, pt, original)
+        } else if (context.implicitsEnabled)
           MissingArgsForMethodTpeError(tree, meth)
         else
           setError(tree)

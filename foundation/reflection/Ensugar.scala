@@ -66,6 +66,7 @@ trait Ensugar {
                 case ApplicationWithInferredImplicitArguments(original) => Some(original)
                 case ApplicationWithInsertedApply(original) => Some(original)
                 case ApplicationWithNamesOrDefaults(original) => Some(original)
+                case ApplicationWithInsertedParentheses(original) => Some(original)
                 case StandalonePartialFunction(original) => Some(original)
                 case LambdaPartialFunction(original) => Some(original)
                 case CaseClassExtractor(original) => Some(original)
@@ -618,6 +619,13 @@ trait Ensugar {
               val original = tree.metadata("originalApply").asInstanceOf[Apply].duplicate
               Some(correlate(result, original).removeMetadata("originalApply"))
             }
+          }
+        }
+
+        object ApplicationWithInsertedParentheses extends SingleEnsugarer {
+          def ensugar(tree: Tree): Option[Tree] = (tree, tree.metadata.get("originalParenless")) match {
+            case (Apply(fn, Nil), Some(true)) => Some(fn)
+            case _ => None
           }
         }
 
