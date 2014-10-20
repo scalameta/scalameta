@@ -125,7 +125,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         val gsym = gmdef.symbol.getterIn(gmdef.symbol.owner).orElse(gmdef.symbol)
         val pmods = scala.collection.mutable.ListBuffer[p.Mod]()
         pmods ++= gmdef.mods.annotations.map(pannot)
-         // NOTE: some sick artifact vals produced by mkPatDef can be private to method, so we can't invoke paccessqual on them
+        // NOTE: some sick artifact vals produced by mkPatDef can be private to method, so we can't invoke paccessqual on them
         if (gsym.isPrivate && !gsym.isSynthetic && !gsym.isArtifact) pmods += p.Mod.Private(paccessqual(gsym))
         if (gsym.isProtected) pmods += p.Mod.Protected(paccessqual(gsym))
         if (gsym.isImplicit && !(gsym.isParameter && gsym.owner.isMethod)) pmods += p.Mod.Implicit()
