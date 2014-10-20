@@ -27,7 +27,8 @@ trait Helpers {
             Some((mods | Flag.TRAIT, Nil, lvdefs, NoSymbol, Nil))
           case DefDef(mods, nme.CONSTRUCTOR, Nil, vparamss, _, build.SyntacticBlock(lvdefs :+ Applied(core, _, argss) :+ _)) =>
             Some((mods, vparamss, lvdefs, core.symbol, argss))
-          case DefDef(mods, nme.CONSTRUCTOR, Nil, List(Nil), _, Block(Nil, Literal(Constant(())))) if in.symbol.owner.isPrimitiveValueClass =>
+          case DefDef(mods, nme.CONSTRUCTOR, Nil, List(Nil), _, Block(Nil, Literal(Constant(()))))
+          if in.symbol.owner.isPrimitiveValueClass || in.symbol.owner == AnyValClass =>
             Some((mods, Nil, Nil, NoSymbol, Nil))
           case _ =>
             None

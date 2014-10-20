@@ -558,7 +558,7 @@ trait Typers extends Adaptations with Tags with TypersTracking with PatternTyper
           |       pt: $pt
           |  context: ${context.tree}
           |  adapted
-          """.trim()
+          """.trim
         val boundOrSkolems = if (canIgnoreMismatch) bound ++ pt.skolemsExceptMethodTypeParams else Nil
         boundOrSkolems match {
           case Nil =>
@@ -1172,7 +1172,7 @@ This restriction is planned to be removed in subsequent releases.""")
         if (meth.isStructuralRefinementMember) checkMethodStructuralCompatible(ddef)
         if (meth.isImplicit && !meth.isSynthetic) meth.info.paramss match {
           case List(param) :: _ if !param.isImplicit =>
-            checkFeature(ddef.pos, ImplicitConversionsFeature, meth.toString())
+            checkFeature(ddef.pos, ImplicitConversionsFeature, meth.toString)
           case _ =>
         }
       }
@@ -1527,8 +1527,8 @@ This restriction is planned to be removed in subsequent releases.""")
           while ((e1 ne null) && e1.owner == scope) {
             if (!accesses(e.sym, e1.sym) && !accesses(e1.sym, e.sym) && (e.sym.isType || inBlock || e.sym.tpe.matches(e1.sym.tpe))) if (!e.sym.isErroneous && !e1.sym.isErroneous && !e.sym.hasDefault && !e.sym.hasAnnotation(BridgeClass) && !e1.sym.hasAnnotation(BridgeClass)) {
               log("""Double definition detected:
-  """ + (e.sym.getClass(), e.sym.info, e.sym.ownerChain) + """
-  """ + (e1.sym.getClass(), e1.sym.info, e1.sym.ownerChain))
+  """ + (e.sym.getClass, e.sym.info, e.sym.ownerChain) + """
+  """ + (e1.sym.getClass, e1.sym.info, e1.sym.ownerChain))
               DefDefinedTwiceError(e.sym, e1.sym)
               scope.unlink(e1)
             }
@@ -1553,7 +1553,7 @@ This restriction is planned to be removed in subsequent releases.""")
         if (newStats.isEmpty) stats else {
           def matches(stat: Tree, synt: Tree) = (stat, synt) match {
             case (DefDef(_, statName, _, _, _, _), DefDef(mods, syntName, _, _, _, _)) =>
-              mods.hasDefault && syntName.toString().startsWith(statName.toString())
+              mods.hasDefault && syntName.toString.startsWith(statName.toString)
             case (ClassDef(_, className, _, _), ModuleDef(_, moduleName, _)) =>
               className.toTermName == moduleName
             case (ClassDef(cmods, cname, _, _), DefDef(dmods, dname, _, _, _, _)) =>
@@ -2050,7 +2050,7 @@ This restriction is planned to be removed in subsequent releases.""")
       def typedNamedApply(orig: Tree, fun: Tree, args: List[Tree], mode: Mode, pt: Type): Tree = {
         def argToBinding(arg: Tree): Tree = arg match {
           case AssignOrNamedArg(i @ Ident(name), rhs) =>
-            atPos(i.pos.withEnd(rhs.pos.end))(gen.mkTuple(List(atPos(i.pos)(CODE.LIT(name.toString())), rhs)))
+            atPos(i.pos.withEnd(rhs.pos.end))(gen.mkTuple(List(atPos(i.pos)(CODE.LIT(name.toString)), rhs)))
           case _ =>
             gen.mkTuple(List(CODE.LIT(""), arg))
         }
@@ -2144,7 +2144,7 @@ This restriction is planned to be removed in subsequent releases.""")
         val body = tree.body
         name match {
           case name: TypeName =>
-            assert(body == EmptyTree, context.unit + " typedBind: " + name.debugString + " " + body + " " + body.getClass())
+            assert(body == EmptyTree, context.unit + " typedBind: " + name.debugString + " " + body + " " + body.getClass)
             val sym = if (tree.symbol != NoSymbol) tree.symbol else if (isFullyDefined(pt)) context.owner.newAliasType(name, tree.pos).setInfo(pt) else context.owner.newAbstractType(name, tree.pos).setInfo(TypeBounds.empty)
             if (name != tpnme.WILDCARD) namer.enterInScope(sym) else context.scope.enter(sym)
             tree.setSymbol(sym).setType(sym.tpeHK)
@@ -2523,7 +2523,7 @@ This restriction is planned to be removed in subsequent releases.""")
             debuglog(s"""
               |qual=$qual:${qual.tpe}
               |symbol=${qual.tpe.termSymbol.defString}
-              |scope-id=${qual.tpe.termSymbol.info.decls.hashCode()}
+              |scope-id=${qual.tpe.termSymbol.info.decls.hashCode}
               |members=${qual.tpe.members.mkString(", ")}
               |name=$name
               |found=$sym
@@ -2597,7 +2597,7 @@ This restriction is planned to be removed in subsequent releases.""")
           }
           def sym = tree1.symbol
           if (tree.isInstanceOf[PostfixSelect]) checkFeature(tree.pos, PostfixOpsFeature, name.decode)
-          if (sym != null && sym.isOnlyRefinementMember && !sym.isMacro) checkFeature(tree1.pos, ReflectiveCallsFeature, sym.toString())
+          if (sym != null && sym.isOnlyRefinementMember && !sym.isMacro) checkFeature(tree1.pos, ReflectiveCallsFeature, sym.toString)
           qualStableOrError.symbol match {
             case s: Symbol if s.isRootPackage =>
               treeCopy.Ident(tree1, name)
@@ -2889,7 +2889,7 @@ This restriction is planned to be removed in subsequent releases.""")
         case tree: Star =>
           typedStar(tree)
         case _ =>
-          abort(s"unexpected tree in pattern mode: ${tree.getClass()}\n$tree")
+          abort(s"unexpected tree in pattern mode: ${tree.getClass}\n$tree")
       }
       def typedTypTree(tree: TypTree): Tree = tree match {
         case tree: TypeTree =>
@@ -2909,7 +2909,7 @@ This restriction is planned to be removed in subsequent releases.""")
         case tree: TypeTreeWithDeferredRefCheck =>
           tree
         case _ =>
-          abort(s"unexpected type-representing tree: ${tree.getClass()}\n$tree")
+          abort(s"unexpected type-representing tree: ${tree.getClass}\n$tree")
       }
       def typedMemberDef(tree: MemberDef): Tree = tree match {
         case tree: ValDef =>
@@ -2925,7 +2925,7 @@ This restriction is planned to be removed in subsequent releases.""")
         case tree: PackageDef =>
           typedPackageDef(tree)
         case _ =>
-          abort(s"unexpected member def: ${tree.getClass()}\n$tree")
+          abort(s"unexpected member def: ${tree.getClass}\n$tree")
       }
       def typedOutsidePatternMode(tree: Tree): Tree = tree match {
         case tree: Block =>
@@ -2965,7 +2965,7 @@ This restriction is planned to be removed in subsequent releases.""")
         case tree: DocDef =>
           typedDocDef(tree, mode, pt)
         case _ =>
-          abort(s"unexpected tree: ${tree.getClass()}\n$tree")
+          abort(s"unexpected tree: ${tree.getClass}\n$tree")
       }
       def typedInAnyMode(tree: Tree): Tree = tree match {
         case tree: Ident =>
@@ -2999,8 +2999,8 @@ This restriction is planned to be removed in subsequent releases.""")
     def typed(tree: Tree, mode: Mode, pt: Type): Tree = {
       lastTreeToTyper = tree
       def body = if (printTypings && !phase.erasedTypes && !noPrintTyping(tree)) typingStack.nextTyped(tree, mode, pt, context)(typedInternal(tree, mode, pt)) else typedInternal(tree, mode, pt)
-      val startByType = if (Statistics.canEnable) Statistics.pushTimer(byTypeStack, byTypeNanos(tree.getClass())) else null
-      if (Statistics.canEnable) Statistics.incCounter(visitsByType, tree.getClass())
+      val startByType = if (Statistics.canEnable) Statistics.pushTimer(byTypeStack, byTypeNanos(tree.getClass)) else null
+      if (Statistics.canEnable) Statistics.incCounter(visitsByType, tree.getClass)
       try body finally if (Statistics.canEnable) Statistics.popTimer(byTypeStack, startByType)
     }
     private def typedInternal(tree: Tree, mode: Mode, pt: Type): Tree = {

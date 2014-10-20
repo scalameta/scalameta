@@ -66,6 +66,7 @@ trait Ensugar {
                 case ApplicationWithInferredImplicitArguments(original) => Some(original)
                 case ApplicationWithInsertedApply(original) => Some(original)
                 case ApplicationWithNamesOrDefaults(original) => Some(original)
+                case ApplicationWithInsertedParentheses(original) => Some(original)
                 case StandalonePartialFunction(original) => Some(original)
                 case LambdaPartialFunction(original) => Some(original)
                 case CaseClassExtractor(original) => Some(original)
@@ -298,8 +299,8 @@ trait Ensugar {
         object MemberDefWithAnnotations extends SingleEnsugarer {
           def ensugar(tree: Tree): Option[Tree] = {
             def isSyntheticAnnotation(ann: AnnotationInfo): Boolean = ann.atp.typeSymbol.fullName == "scala.reflect.macros.internal.macroImpl"
-            def isDesugaredMods(mdef: MemberDef): Boolean = mdef.mods.annotations.isEmpty && tree.symbol.annotations.filterNot(isSyntheticAnnotation).nonEmpty
-            def ensugarMods(mdef: MemberDef): Modifiers = mdef.mods.withAnnotations(mdef.symbol.annotations.flatMap(ensugarAnnotation))
+            def hasDesugaredAnnots(mdef: MemberDef): Boolean = mdef.mods.annotations.isEmpty && tree.symbol.annotations.filterNot(isSyntheticAnnotation).nonEmpty
+            def ensugarAnnots(mdef: MemberDef): Modifiers = mdef.mods.withAnnotations(mdef.symbol.annotations.flatMap(ensugarAnnotation))
             def ensugarAnnotation(ann: AnnotationInfo): Option[Tree] = ann.original match {
               case original if original.nonEmpty && original.tpe != null => Some(original)
               case original if original.nonEmpty && original.tpe == null => Some(fixupAttributesOfClassfileAnnotOriginal(original))
@@ -346,11 +347,11 @@ trait Ensugar {
             }
             tree match {
               // case tree @ PackageDef(_, _) => // package defs don't have annotations
-              case tree: TypeDef if isDesugaredMods(tree) => Some(copyTypeDef(tree)(mods = ensugarMods(tree)))
-              case tree: ClassDef if isDesugaredMods(tree) => Some(copyClassDef(tree)(mods = ensugarMods(tree)))
-              case tree: ModuleDef if isDesugaredMods(tree) => Some(copyModuleDef(tree)(mods = ensugarMods(tree)))
-              case tree: ValDef if isDesugaredMods(tree) => Some(copyValDef(tree)(mods = ensugarMods(tree)))
-              case tree: DefDef if isDesugaredMods(tree) => Some(copyDefDef(tree)(mods = ensugarMods(tree)))
+              case tree: TypeDef if hasDesugaredAnnots(tree) => Some(copyTypeDef(tree)(mods = ensugarAnnots(tree)))
+              case tree: ClassDef if hasDesugaredAnnots(tree) => Some(copyClassDef(tree)(mods = ensugarAnnots(tree)))
+              case tree: ModuleDef if hasDesugaredAnnots(tree) => Some(copyModuleDef(tree)(mods = ensugarAnnots(tree)))
+              case tree: ValDef if hasDesugaredAnnots(tree) => Some(copyValDef(tree)(mods = ensugarAnnots(tree)))
+              case tree: DefDef if hasDesugaredAnnots(tree) => Some(copyDefDef(tree)(mods = ensugarAnnots(tree)))
               case _ => None
             }
           }
@@ -493,8 +494,11 @@ trait Ensugar {
           def ensugar(trees: List[Tree]) = {
             val withoutLocals = trees.filter({ case LazyLocal(_, _, _, _) => false; case _ => true })
             withoutLocals.map({
-              case tree @ LazyAccessor(mods, name, tpt, rhs) => ValDef(mods, name, tpt, rhs).copyAttrs(tree)
-              case tree => tree
+              case tree @ LazyAccessor(mods, name, tpt, rhs) =>
+                val ltpt = trees.collect({ case vdef @ LazyLocal(_, lname, ltpt, _) if name.localName == lname => ltpt }).headOption
+                ValDef(mods, name, ltpt.getOrElse(tpt), rhs).copyAttrs(tree)
+              case tree =>
+                tree
             })
           }
         }
@@ -618,6 +622,13 @@ trait Ensugar {
               val original = tree.metadata("originalApply").asInstanceOf[Apply].duplicate
               Some(correlate(result, original).removeMetadata("originalApply"))
             }
+          }
+        }
+
+        object ApplicationWithInsertedParentheses extends SingleEnsugarer {
+          def ensugar(tree: Tree): Option[Tree] = (tree, tree.metadata.get("originalParenless")) match {
+            case (Apply(fn, Nil), Some(true)) => Some(fn)
+            case _ => None
           }
         }
 

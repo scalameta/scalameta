@@ -20,6 +20,7 @@ import org.scalameta.reflection._
 class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit {
   lazy val global: g.type = g
   import g.Quasiquote
+  import g.Flag._
   implicit val palladiumHost: PalladiumHost = this
 
   def defns(ref: Ref): Seq[Tree] = ???
@@ -30,8 +31,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
   def <:<(tpe1: Type, tpe2: Type): Boolean = ???
   def lub(tpes: Seq[Type]): Type = ???
   def glb(tpes: Seq[Type]): Type = ???
-  def superclasses(member: Member.Template): Seq[Member.Template] = ???
-  def subclasses(member: Member.Template): Seq[Member.Template] = ???
+  def parents(member: Has.Template): Seq[Has.Template] = ???
+  def children(member: Has.Template): Seq[Has.Template] = ???
   def overridden(member: Member): Seq[Member] = ???
   def overriding(member: Member): Seq[Member] = ???
   def erasure(tpe: Type): Type = ???
@@ -111,40 +112,60 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         p.Mod.Annot(gtpt.cvt_!, pargss(gargss))
       }
       def pmods(gmdef: g.MemberDef): Seq[p.Mod] = {
-        // TODO: since we have mods correctly ensugared here, I think, we could try to avoid using gsym here
-        // however, everything works fine at the moment, so I'll denote this refactoring as future work
-        def paccessqual(gsym: g.Symbol): Option[p.Mod.AccessQualifier] = {
-          if (gsym.isPrivateThis || gsym.isProtectedThis) {
-            // TODO: does NoSymbol here actually mean gsym.owner?
-            val gpriv = gsym.privateWithin.orElse(gsym.owner)
-            require(gpriv.isClass)
-            Some(p.Term.This(None).appendScratchpad(gpriv))
-          } else if (gsym.privateWithin == g.NoSymbol || gsym.privateWithin == null) None
-          else Some(gsym.privateWithin.qualcvt(g.Ident(gsym.privateWithin))) // TODO: this loses information is gsym.privateWithin was brought into scope with a renaming import
+        def annotationMods(gmdef: g.MemberDef): Seq[p.Mod] = {
+          gmdef.mods.annotations.map(pannot)
         }
-        val gsym = gmdef.symbol.getterIn(gmdef.symbol.owner).orElse(gmdef.symbol)
-        val pmods = scala.collection.mutable.ListBuffer[p.Mod]()
-        pmods ++= gmdef.mods.annotations.map(pannot)
-         // NOTE: some sick artifact vals produced by mkPatDef can be private to method, so we can't invoke paccessqual on them
-        if (gsym.isPrivate && !gsym.isSynthetic && !gsym.isArtifact) pmods += p.Mod.Private(paccessqual(gsym))
-        if (gsym.isProtected) pmods += p.Mod.Protected(paccessqual(gsym))
-        if (gsym.isImplicit && !(gsym.isParameter && gsym.owner.isMethod)) pmods += p.Mod.Implicit()
-        if (gsym.isFinal && gmdef.mods.hasFlag(g.Flag.FINAL)) pmods += p.Mod.Final()
-        if (gsym.isSealed) pmods += p.Mod.Sealed()
-        if (gsym.isOverride) pmods += p.Mod.Override()
-        if (gsym.isCase) pmods += p.Mod.Case()
-        if (gsym.isAbstract && gsym.isClass && !gsym.isTrait) pmods += p.Mod.Abstract()
-        if (gsym.isAbstractOverride) { pmods += p.Mod.Abstract(); pmods += p.Mod.Override() }
-        if (gsym.isCovariant) pmods += p.Mod.Covariant()
-        if (gsym.isContravariant) pmods += p.Mod.Contravariant()
-        if (gsym.isLazy) pmods += p.Mod.Lazy()
-        // TODO: how do we distinguish `case class C(val x: Int)` and `case class C(x: Int)`?
-        val gparamaccessor = gsym.owner.filter(_.isPrimaryConstructor).map(_.owner.info.member(gsym.name))
-        val gaccessed = gparamaccessor.map(_.owner.info.member(gparamaccessor.localName))
-        if (gaccessed != g.NoSymbol && gaccessed.isMutable) pmods += p.Mod.VarParam()
-        if (gaccessed != g.NoSymbol && !gaccessed.owner.isCase && !gaccessed.isMutable) pmods += p.Mod.ValParam()
-        if (gsym.isPackageObject) pmods += p.Mod.Package()
-        pmods.toList
+        def accessQualifierMods(gmdef: g.MemberDef): Seq[p.Mod] = {
+          def paccessqual(gsym: g.Symbol): Option[p.Mod.AccessQualifier] = {
+            if (gsym.isPrivateThis || gsym.isProtectedThis) {
+              // TODO: does NoSymbol here actually mean gsym.owner?
+              val gpriv = gsym.privateWithin.orElse(gsym.owner)
+              require(gpriv.isClass)
+              Some(p.Term.This(None).appendScratchpad(gpriv))
+            } else if (gsym.privateWithin == g.NoSymbol || gsym.privateWithin == null) None
+            else Some(gsym.privateWithin.qualcvt(g.Ident(gsym.privateWithin))) // NOTE: https://groups.google.com/forum/#!topic/scala-internals/NcCUxVYtmx8
+          }
+          val gsym = gmdef.symbol.getterIn(gmdef.symbol.owner).orElse(gmdef.symbol)
+          if (gsym.isSynthetic && gsym.isArtifact) {
+            // NOTE: some sick artifact vals produced by mkPatDef can be private to method, so we can't invoke paccessqual on them
+            Nil
+          } else if (gmdef.mods.hasFlag(LOCAL) || gmdef.mods.hasAccessBoundary) {
+            if (gsym.isProtected) List(p.Mod.Protected(paccessqual(gsym)))
+            else List(p.Mod.Private(paccessqual(gsym)))
+          } else {
+            if (gsym.isProtected) List(p.Mod.Protected(None))
+            else if (gsym.isPrivate) List(p.Mod.Private(None))
+            else Nil
+          }
+        }
+        def valparamMods(gmdef: g.MemberDef): Seq[p.Mod] = {
+          val pmods = scala.collection.mutable.ListBuffer[p.Mod]()
+          val ggetter = gmdef.symbol.owner.filter(_.isPrimaryConstructor).map(_.owner.info.member(gmdef.name))
+          val gfield = ggetter.map(_.owner.info.member(ggetter.localName))
+          gfield match {
+            case g.NoSymbol => Nil
+            case sym if sym.isMutable => List(p.Mod.VarParam())
+            case sym if !sym.isMutable && sym.owner.isCase => Nil // TODO: how do we really distinguish `case class C(val x: Int)` and `case class C(x: Int)`?
+            case sym if !sym.isMutable && !sym.owner.isCase => List(p.Mod.ValParam())
+          }
+        }
+        def otherMods(gmdef: g.MemberDef): Seq[p.Mod] = {
+          val pmods = scala.collection.mutable.ListBuffer[p.Mod]()
+          val gmods = gmdef.mods
+          if (gmods.hasFlag(IMPLICIT) && !gmods.hasFlag(PARAM)) pmods += p.Mod.Implicit()
+          if (gmods.hasFlag(FINAL)) pmods += p.Mod.Final()
+          if (gmods.hasFlag(SEALED)) pmods += p.Mod.Sealed()
+          if (gmods.hasFlag(OVERRIDE)) pmods += p.Mod.Override()
+          if (gmods.hasFlag(CASE)) pmods += p.Mod.Case()
+          if (gmods.hasFlag(ABSTRACT) && gmdef.isInstanceOf[g.ClassDef] && !gmods.hasFlag(TRAIT)) pmods += p.Mod.Abstract()
+          if (gmods.hasFlag(ABSOVERRIDE)) { pmods += p.Mod.Abstract(); pmods += p.Mod.Override() }
+          if (gmods.hasFlag(COVARIANT) && gmdef.isInstanceOf[g.TypeDef]) pmods += p.Mod.Covariant()
+          if (gmods.hasFlag(CONTRAVARIANT) && gmdef.isInstanceOf[g.TypeDef]) pmods += p.Mod.Contravariant()
+          if (gmods.hasFlag(LAZY)) pmods += p.Mod.Lazy()
+          if (gmdef.name == g.nme.PACKAGE && gmdef.isInstanceOf[g.ModuleDef]) pmods += p.Mod.Package()
+          pmods.toList
+        }
+        annotationMods(gmdef) ++ accessQualifierMods(gmdef) ++ valparamMods(gmdef) ++ otherMods(gmdef)
       }
       def pvparamtpe(gtpt: g.Tree): p.Param.Type = {
         def unwrap(ptpe: p.Type): p.Type = ptpe.asInstanceOf[p.Type.Apply].args.head
@@ -315,7 +336,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         // TODO: collapse desugared representations of pattern-based vals and vars
         require(in.symbol.isTerm)
         require(in.symbol.isDeferred ==> rhs.isEmpty)
-        require(in.symbol.hasFlag(g.Flag.DEFAULTINIT) ==> rhs.isEmpty)
+        require(in.symbol.hasFlag(DEFAULTINIT) ==> rhs.isEmpty)
         (in.symbol.isDeferred, in.symbol.isMutable || in.mods.isMutable) match {
           case (true, false) => p.Decl.Val(pmods(in), List(in.symbol.asTerm.rawcvt(in)), tpt.cvt_!)
           case (true, true) => p.Decl.Var(pmods(in), List(in.symbol.asTerm.rawcvt(in)), tpt.cvt_!)

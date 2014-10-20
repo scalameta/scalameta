@@ -25,7 +25,7 @@ package serialization {
   trait Serializer[T] { def serialize(x: T): String }
   object Serializer {
     implicit def materialize[T: adt.Adt]: Serializer[T] = macro Serializer.impl[T]
-    implicit def intSerializer: Serializer[Int] = new Serializer[Int] { def serialize(x: Int) = x.toString() }
+    implicit def intSerializer: Serializer[Int] = new Serializer[Int] { def serialize(x: Int) = x.toString }
     implicit def stringSerializer: Serializer[String] = new Serializer[String] { def serialize(x: String) = x }
     def impl[T: c.WeakTypeTag](c: Context)(adtEvidence: c.Tree) = {
       import c.universe._
@@ -36,10 +36,10 @@ package serialization {
       def serializerFor(sym: ClassSymbol, tagged: Boolean) = {
         def tagFor(sym: ClassSymbol) = {
           val family = weakTypeOf[T].typeSymbol.asClass.knownDirectSubclasses
-          family.toList.sortBy(_.name.toString()).indexOf(sym).toString()
+          family.toList.sortBy(_.name.toString).indexOf(sym).toString
         }
         val fieldNames = sym.primaryConstructor.asMethod.paramLists.head.map(_.name.toTermName)
-        var fieldJson = fieldNames.map(fieldName => q"${"\"" + fieldName.toString() + "\": "} + _root_.serialization.serialize($paramName.$fieldName)")
+        var fieldJson = fieldNames.map(fieldName => q"${"\"" + fieldName.toString + "\": "} + _root_.serialization.serialize($paramName.$fieldName)")
         if (tagged) fieldJson :+= q"${"$tag: " + tagFor(sym)}"
         val unwrappedResult = fieldJson.foldLeft(None: Option[Tree])((acc, curr) => acc.map(acc => q"$acc + ${", "} + $curr").orElse(Some(curr)))
         q""" "{" + ${unwrappedResult.getOrElse(q"")} + "}" """
