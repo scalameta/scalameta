@@ -248,4 +248,8 @@ class ShowSuite extends ParseSuite {
     assert(templStat("class C[T_ : Foo]").show[Code] === "class C[T_ : Foo]")
     assert(templStat("val scala_ : NameType = ???").show[Code] === "val scala_ : NameType = ???")
   }
+
+  test("class C extends (() => Int)") {
+    assert(templStat("class C extends (() => Int)").show[Code] === "class C extends (() => Int)")
+  }
 }

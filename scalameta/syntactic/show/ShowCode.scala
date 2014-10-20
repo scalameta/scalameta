@@ -314,7 +314,7 @@ object Code {
     case t: Import          => s(kw("import"), " ", r(t.clauses, ", "))
 
     // Aux
-    case t: Parent => s(t.tpe, t.argss)
+    case t: Parent => s(p(AnnotTyp, t.tpe), t.argss)
     case t: Self =>
       if (t.name.isEmpty && t.decltpe.isEmpty) s()
       else s(t.name, t.decltpe, " ", kw("=>"))
