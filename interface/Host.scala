@@ -120,7 +120,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
             require(gpriv.isClass)
             Some(p.Term.This(None).appendScratchpad(gpriv))
           } else if (gsym.privateWithin == g.NoSymbol || gsym.privateWithin == null) None
-          else Some(gsym.privateWithin.qualcvt(g.Ident(gsym.privateWithin))) // TODO: this loses information is gsym.privateWithin was brought into scope with a renaming import
+          else Some(gsym.privateWithin.qualcvt(g.Ident(gsym.privateWithin))) // NOTE: https://groups.google.com/forum/#!topic/scala-internals/NcCUxVYtmx8
         }
         val gsym = gmdef.symbol.getterIn(gmdef.symbol.owner).orElse(gmdef.symbol)
         val pmods = scala.collection.mutable.ListBuffer[p.Mod]()
