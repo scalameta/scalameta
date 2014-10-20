@@ -124,7 +124,7 @@ package object semantic {
     def isPrivate: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Private])
     def isProtected: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Protected])
     def isPublic: Boolean = !tree.isPrivate && !tree.isProtected
-    def isImplicit: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Implicit])
+    def isImplicit: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Implicit]) // TODO: also account for implicit parameters!
     def isFinal: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Final]) || tree.isObject
     def isSealed: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Sealed])
     @hosted def isOverride: Boolean = tree.overridden.map(_.nonEmpty)
