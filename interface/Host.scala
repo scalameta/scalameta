@@ -116,37 +116,25 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
           gmdef.mods.annotations.map(pannot)
         }
         def accessQualifierMods(gmdef: g.MemberDef): Seq[p.Mod] = {
-          def paccessqual(gsym: g.Symbol): Option[p.Mod.AccessQualifier] = {
-            if (gsym.isPrivateThis || gsym.isProtectedThis) {
-              // TODO: does NoSymbol here actually mean gsym.owner?
-              val gpriv = gsym.privateWithin.orElse(gsym.owner)
-              require(gpriv.isClass)
-              Some(p.Term.This(None).appendScratchpad(gpriv))
-            } else if (gsym.privateWithin == g.NoSymbol || gsym.privateWithin == null) None
-            else Some(gsym.privateWithin.qualcvt(g.Ident(gsym.privateWithin))) // NOTE: https://groups.google.com/forum/#!topic/scala-internals/NcCUxVYtmx8
-          }
-          val gsym = gmdef.symbol.getterIn(gmdef.symbol.owner).orElse(gmdef.symbol)
-          if (gsym.isSynthetic && gsym.isArtifact) {
-            // NOTE: some sick artifact vals produced by mkPatDef can be private to method, so we can't invoke paccessqual on them
+          val gmods = gmdef.mods
+          if (gmods.hasFlag(SYNTHETIC) && gmods.hasFlag(ARTIFACT)) {
+            // NOTE: some sick artifact vals produced by mkPatDef can be private to method (whatever that means)
+            // so we can't invoke paccessqual on them, because that will produce crazy results
             Nil
-          } else if (gmdef.mods.hasFlag(LOCAL) || gmdef.mods.hasAccessBoundary) {
-            if (gsym.isProtected) List(p.Mod.Protected(paccessqual(gsym)))
-            else List(p.Mod.Private(paccessqual(gsym)))
+          } else if (gmods.hasFlag(LOCAL) || gmods.hasAccessBoundary) {
+            val pqual = {
+              val gsym = gmdef.symbol.getterIn(gmdef.symbol.owner).orElse(gmdef.symbol)
+              val gpriv = gsym.privateWithin.orElse(gmdef.symbol.owner)
+              if (gpriv == g.NoSymbol) None
+              else if (gmods.hasFlag(LOCAL)) Some(p.Term.This(None).appendScratchpad(gpriv))
+              else Some(gpriv.qualcvt(g.Ident(gpriv))) // NOTE: https://groups.google.com/forum/#!topic/scala-internals/NcCUxVYtmx8
+            }
+            if (gmods.hasFlag(PROTECTED)) List(p.Mod.Protected(pqual))
+            else List(p.Mod.Private(pqual))
           } else {
-            if (gsym.isProtected) List(p.Mod.Protected(None))
-            else if (gsym.isPrivate) List(p.Mod.Private(None))
+            if (gmods.hasFlag(PROTECTED)) List(p.Mod.Protected(None))
+            else if (gmods.hasFlag(PRIVATE)) List(p.Mod.Private(None))
             else Nil
-          }
-        }
-        def valparamMods(gmdef: g.MemberDef): Seq[p.Mod] = {
-          val pmods = scala.collection.mutable.ListBuffer[p.Mod]()
-          val ggetter = gmdef.symbol.owner.filter(_.isPrimaryConstructor).map(_.owner.info.member(gmdef.name))
-          val gfield = ggetter.map(_.owner.info.member(ggetter.localName))
-          gfield match {
-            case g.NoSymbol => Nil
-            case sym if sym.isMutable => List(p.Mod.VarParam())
-            case sym if !sym.isMutable && sym.owner.isCase => Nil // TODO: how do we really distinguish `case class C(val x: Int)` and `case class C(x: Int)`?
-            case sym if !sym.isMutable && !sym.owner.isCase => List(p.Mod.ValParam())
           }
         }
         def otherMods(gmdef: g.MemberDef): Seq[p.Mod] = {
@@ -165,7 +153,24 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
           if (gmdef.name == g.nme.PACKAGE && gmdef.isInstanceOf[g.ModuleDef]) pmods += p.Mod.Package()
           pmods.toList
         }
-        annotationMods(gmdef) ++ accessQualifierMods(gmdef) ++ valparamMods(gmdef) ++ otherMods(gmdef)
+        def valparamMods(gmdef: g.MemberDef): Seq[p.Mod] = {
+          val pmods = scala.collection.mutable.ListBuffer[p.Mod]()
+          val ggetter = gmdef.symbol.owner.filter(_.isPrimaryConstructor).map(_.owner.info.member(gmdef.name))
+          val gfield = ggetter.map(_.owner.info.member(ggetter.localName))
+          gfield match {
+            case g.NoSymbol => Nil
+            case sym if sym.isMutable => List(p.Mod.VarParam())
+            case sym if !sym.isMutable && sym.owner.isCase => Nil // TODO: how do we really distinguish `case class C(val x: Int)` and `case class C(x: Int)`?
+            case sym if !sym.isMutable && !sym.owner.isCase => List(p.Mod.ValParam())
+          }
+        }
+        val result = annotationMods(gmdef) ++ accessQualifierMods(gmdef) ++ otherMods(gmdef) ++ valparamMods(gmdef)
+        result match {
+          // TODO: we can't discern `class C(x: Int)` and `class C(private[this] val x: Int)`
+          // so let's err on the side of the more popular option
+          case List(Mod.Private(Some(Term.This(None)))) if gmdef.symbol.owner.isPrimaryConstructor => Nil
+          case other => other
+        }
       }
       def pvparamtpe(gtpt: g.Tree): p.Param.Type = {
         def unwrap(ptpe: p.Type): p.Type = ptpe.asInstanceOf[p.Type.Apply].args.head

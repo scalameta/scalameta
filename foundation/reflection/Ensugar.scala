@@ -55,6 +55,7 @@ trait Ensugar {
                 case MemberDefWithTrimmableSynthetic(original) => Some(original)
                 case MemberDefWithInferredReturnType(original) => Some(original)
                 case MemberDefWithAnnotations(original) => Some(original)
+                case ClassParam(original) => Some(original)
                 case MacroDef(original) => Some(original)
                 case DefaultGetter(original) => Some(original)
                 case VanillaAccessor(original) => Some(original)
@@ -353,6 +354,33 @@ trait Ensugar {
               case tree: ValDef if hasDesugaredAnnots(tree) => Some(copyValDef(tree)(mods = ensugarAnnots(tree)))
               case tree: DefDef if hasDesugaredAnnots(tree) => Some(copyDefDef(tree)(mods = ensugarAnnots(tree)))
               case _ => None
+            }
+          }
+        }
+
+        object ClassParam extends SingleEnsugarer {
+          def ensugar(tree: Tree): Option[Tree] = {
+            tree match {
+              case tree @ ValDef(mods @ Modifiers(flags, privateWithin, anns), _, _, _)
+              if tree.symbol.owner.isPrimaryConstructor && !tree.hasMetadata("originalFlags") =>
+                var flags1 = flags
+                val classSym = tree.symbol.owner.owner
+                val getter = classSym.info.member(tree.name).filter(_.isMethod)
+                val field = classSym.info.member(tree.name.localName).orElse(classSym.info.member(tree.name))
+                val carrier = getter.orElse(field)
+                if (carrier.hasFlag(FINAL)) flags1 |= FINAL
+                if (carrier.hasFlag(OVERRIDE)) flags1 |= OVERRIDE
+                if (carrier.hasFlag(ABSOVERRIDE)) flags1 |= ABSOVERRIDE
+                if (carrier.hasFlag(LAZY)) flags1 |= LAZY
+                if (getter.hasFlag(PROTECTED)) flags1 |= PROTECTED
+                if (getter.hasFlag(PRIVATE)) flags1 |= PRIVATE
+                if (getter.hasFlag(LOCAL)) flags1 |= LOCAL
+                if (getter == NoSymbol) flags1 |= (PRIVATE | LOCAL)
+                // TODO: also collect annotations from fields, accessors, bean accessors and whatever else
+                val mods1 = Modifiers(flags1, privateWithin, anns).setPositions(mods.positions)
+                Some(copyValDef(tree)(mods = mods1).appendMetadata("originalFlags" -> true))
+              case _ =>
+                None
             }
           }
         }
