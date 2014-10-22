@@ -125,7 +125,7 @@
  Procedure | `q"..$mods def $name[..$tparams](...$paramss)"`
  Type      | `q"..$mods type $tname[..$tparams] >: $tpeopt <: tpeopt"`
 
-## Definitions
+### Definitions
 
                 | Quasiquote
 ----------------|------------------------------
@@ -143,26 +143,26 @@
  Package Object | `q"package object $name extends $template"`
  Package        | `q"package $ref { ..$stats }"`
 
-## Template, Parents and Self
-           
-           | Quasiquote
------------|--------------------
- Template  | `templ"{ ..$stat } with ..$parents { $param => ..$stats }"`
- Parent    | `templ"$tpe(...$argss)"`
-
-## Params (meta.Param)
+### Params (meta.Param)
 
            | Quasiquote
 -----------|-----------------
  Anonymous | `param"..$mods _: $atpe"`
  Named     | `param"..$mods $name: $atpe = $default"`
 
-## Type Params (meta.TypeParam)
+### Type Params (meta.TypeParam)
 
            | Quasiquote
 -----------|-----------------
  Anonymous | `tparam"..$mods _[..$tparams] <% ..$tpes : ..$tpes >: $tpeopt <: $tpeopt"`
  Named     | `tparam"..$mods $name[..$tparams] <% ..$tpes : ..$tpes >: $tpeopt <: $tpeopt"`
+
+## Template, Parents and Self
+           
+           | Quasiquote
+-----------|--------------------
+ Template  | `templ"{ ..$stat } with ..$parents { $param => ..$stats }"`
+ Parent    | `templ"$tpe(...$argss)"`
 
 ## Modifiers (meta.Mod)
 
