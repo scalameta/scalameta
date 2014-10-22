@@ -157,7 +157,7 @@
  Anonymous | `tparam"..$mods _[..$tparams] <% ..$tpes : ..$tpes >: $tpeopt <: $tpeopt"`
  Named     | `tparam"..$mods $name[..$tparams] <% ..$tpes : ..$tpes >: $tpeopt <: $tpeopt"`
 
-## Template, Parents and Self
+## Template (meta.Template) and Parents (meta.Parent)
            
            | Quasiquote
 -----------|--------------------
