@@ -20,14 +20,13 @@ import syntactic.parsers._, SyntacticInfo._
 @branch trait Term extends Arg with Stmt.Template with Stmt.Block with Qual.Term
 object Term {
   @branch trait Ref extends Term with meta.Ref with Qual.Type
-  @ast class This(qual: Option[Qual.Name]) extends Ref with Mod.AccessQualifier
-  @ast class Name(value: scala.Predef.String @nonEmpty, @trivia isBackquoted: Boolean = false) extends meta.Name with Ref with Pat with Member with Has.TermName {
+  @ast class This(qual: Option[Qual.Name]) extends Term.Ref with Qual.Access
+  @ast class Name(value: scala.Predef.String @nonEmpty, @trivia isBackquoted: Boolean = false) extends meta.Name with Term.Ref with Pat with Member with Has.TermName {
     require(keywords.contains(value) ==> isBackquoted)
     def name: Name = this
     def mods: Seq[Mod] = Nil
   }
-  @ast class Select(qual: Qual.Term, selector: Term.Name, @trivia isPostfix: Boolean = false) extends Ref with Pat
-
+  @ast class Select(qual: Qual.Term, selector: Term.Name, @trivia isPostfix: Boolean = false) extends Term.Ref with Pat
   @ast class Interpolate(prefix: Name, parts: Seq[Lit.String] @nonEmpty, args: Seq[Term]) extends Term {
     require(parts.length == args.length + 1)
   }
@@ -71,15 +70,16 @@ object Term {
   @ast class New(templ: Aux.Template) extends Term
   @ast class Placeholder() extends Term
   @ast class Eta(term: Term) extends Term
+  @ast class Quote(prefix: Name, body: Term) extends Term
 }
 
 @branch trait Type extends Tree with Param.Type with Scope.Template
 object Type {
   @branch trait Ref extends Type with meta.Ref
-  @ast class Name(value: String @nonEmpty, @trivia isBackquoted: Boolean = false) extends meta.Name with Ref {
+  @ast class Name(value: String @nonEmpty, @trivia isBackquoted: Boolean = false) extends meta.Name with Type.Ref {
     require(keywords.contains(value) ==> isBackquoted)
   }
-  @ast class Select(qual: Qual.Type, selector: Type.Name) extends Ref {
+  @ast class Select(qual: Qual.Type, selector: Type.Name) extends Type.Ref {
     require(qual match { case qual: Term.Ref => qual.isPath; case qual: Qual.Super => true; case _ => unreachable })
   }
   @ast class Project(qual: Type, selector: Type.Name) extends Ref
@@ -311,10 +311,9 @@ object Enum {
 object Mod {
   @ast class Annot(tpe: Type, argss: Seq[Seq[Arg]]) extends Mod
   @ast class Doc(doc: String) extends Mod
-  @branch trait Access extends Mod { def within: Option[AccessQualifier] }
-  @branch trait AccessQualifier extends Tree
-  @ast class Private(within: Option[AccessQualifier]) extends Access
-  @ast class Protected(within: Option[AccessQualifier]) extends Access
+  @branch trait Access extends Mod { def within: Option[Qual.Access] }
+  @ast class Private(within: Option[Qual.Access]) extends Access
+  @ast class Protected(within: Option[Qual.Access]) extends Access
   @ast class Implicit() extends Mod
   @ast class Final() extends Mod
   @ast class Sealed() extends Mod
@@ -357,10 +356,19 @@ object Aux {
   def isBackquoted: Boolean
 }
 
+@branch trait Unquote extends Tree {
+  def term: Term
+}
+object Unquote {
+  @ast class Term(term: Term) extends Unquote with meta.Term
+  @ast class Type(term: Term) extends Unquote with meta.Type
+}
+
 object Qual {
   @branch trait Term extends Tree
   @branch trait Type extends Term
-  @ast class Name(value: String, @trivia isBackquoted: Boolean = false) extends meta.Name with Mod.AccessQualifier
+  @branch trait Access extends Tree
+  @ast class Name(value: String, @trivia isBackquoted: Boolean = false) extends meta.Name with Qual.Access
   @ast class Super(thisp: Option[Qual.Name], superp: Option[Type.Name]) extends Qual.Term with Qual.Type
 }
 

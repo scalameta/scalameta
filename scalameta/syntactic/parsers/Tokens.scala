@@ -173,7 +173,7 @@ object TokenInfo {
     ">:"        -> SUPERTYPE,
     "#"         -> HASH,
     "@"         -> AT,
-    "macro"     -> IDENTIFIER,
+    "macro"     -> MACRO,
     "then"      -> IDENTIFIER
   )
 

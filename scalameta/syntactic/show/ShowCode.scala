@@ -364,7 +364,7 @@ object Code {
   } }
 
   // Multiples and optionals
-  implicit val codeAccessQualifierOpt: Code[Option[Mod.AccessQualifier]] = Code { t =>
+  implicit val codeAccessQualifierOpt: Code[Option[Qual.Access]] = Code { t =>
     t.map { qual => s("[", qual, "]") }.getOrElse(s())
   }
   implicit val codeArgs: Code[Seq[Arg]] = Code {
