@@ -1,40 +1,4 @@
-## Types, interpolators and naming conventions
-
- Type                 | Interpolator | Shorthand
-----------------------|--------------|-----------
- meta.Enum            | `enum`       | `$enum`
- meta.Member          | `q`          | `$memb`
- meta.Member.Class    | `q`          |
- meta.Member.Ctor     | `q`          |
- meta.Member.Field    | `q`          |
- meta.Member.Method   | `q`          |
- meta.Member.Object   | `q`          |
- meta.Member.Pkg      | `q`          |
- meta.Member.Trait    | `q`          |
- meta.Member.Type     | `q`          |
- meta.Mod             | `mod`        | `$mod`
- meta.Param           | `param`      | `$param`
- meta.Param.Named     | `param`      | `$param`
- meta.Parent          | `templ`      | `$parent`
- meta.Pat             | `p`          | `$pat`
- meta.Pat.Arg         | `p`          | `$apat`
- meta.Ref             |              |
- meta.Selector        | `sel`        | `$sel`
- meta.Stat            | `q`          | `$stat`
- meta.Templ           | `templ`      | `$templ`
- meta.Term            | `q`          | `$expr`
- meta.Term.Arg        | `arg`        | `$arg`
- meta.Term.Name       | `q`          | `$name`
- meta.Term.Ref        | `q`          | `$ref` 
- meta.Tree            |              | 
- meta.Type            | `t`          | `$tpe`
- meta.Type.Arg        | `t`          | `$atpe`
- meta.Type.Name       | `t`          | `$tname`
- meta.Type.Ref        | `t`          |
- meta.TypeParam       | `tparam`     | `$tparam`
- meta.TypeParam.Named | `tparam`     | `$tparam`
-
-## Literals (`$lit`)
+## Literals
 
          | Quasiquote
 ---------|------------------------------
@@ -48,14 +12,6 @@
  Symbol  | `q" 's "`, `q"$symbol"`
  Null    | `q"null"`
  Unit    | `q"()"`
-
-### Suffix name modifiers
-
- Suffix | Wrapped Type  | Example
---------|---------------|-----------------------------
- -s     | `Seq[_]`      | `exprs: Seq[meta.Term]`
- -ss    | `Seq[Seq[_]]` | `exprss: Seq[Seq[meta.Term]]`
- -opt   | `Option[_]`   | `expropt: Option[meta.Term]`
 
 ## Expressions (meta.Term)
 
@@ -169,7 +125,7 @@
  Procedure | `q"..$mods def $name[..$tparams](...$paramss)"`
  Type      | `q"..$mods type $tname[..$tparams] >: $tpeopt <: tpeopt"`
 
-## Definitions
+### Definitions
 
                 | Quasiquote
 ----------------|------------------------------
@@ -187,26 +143,26 @@
  Package Object | `q"package object $name extends $template"`
  Package        | `q"package $ref { ..$stats }"`
 
-## Template, Parents and Self
-           
-           | Quasiquote
------------|--------------------
- Template  | `templ"{ ..$stat } with ..$parents { $param => ..$stats }"`
- Parent    | `templ"$tpe(...$argss)"`
-
-## Params (meta.Param)
+### Params (meta.Param)
 
            | Quasiquote
 -----------|-----------------
  Anonymous | `param"..$mods _: $atpe"`
  Named     | `param"..$mods $name: $atpe = $default"`
 
-## Type Params (meta.TypeParam)
+### Type Params (meta.TypeParam)
 
            | Quasiquote
 -----------|-----------------
  Anonymous | `tparam"..$mods _[..$tparams] <% ..$tpes : ..$tpes >: $tpeopt <: $tpeopt"`
  Named     | `tparam"..$mods $name[..$tparams] <% ..$tpes : ..$tpes >: $tpeopt <: $tpeopt"`
+
+## Template (meta.Template) and Parents (meta.Parent)
+           
+           | Quasiquote
+-----------|--------------------
+ Template  | `templ"{ ..$stat } with ..$parents { $param => ..$stats }"`
+ Parent    | `templ"$tpe(...$argss)"`
 
 ## Modifiers (meta.Mod)
 
@@ -245,3 +201,37 @@
  Rename Selector   | `sel"$str => $str"`
  Unimport Selector | `sel"$str => _"`
  Wildcard Selector | `sel"_"`
+
+## Naming conventions
+
+### Shorthands and interpolators
+
+ Type           | Shorthand | Interpolator 
+----------------|-----------|--------------
+ meta.Enum      | `$enum`   | `enum`       
+ meta.Member    | `$memb`   | `q`          
+ meta.Mod       | `$mod`    | `mod`        
+ meta.Param     | `$param`  | `param`      
+ meta.Parent    | `$parent` | `templ`      
+ meta.Pat       | `$pat`    | `p`          
+ meta.Pat.Arg   | `$apat`   | `p`          
+ meta.Selector  | `$sel`    | `sel`        
+ meta.Stat      | `$stat`   | `q`          
+ meta.Templ     | `$templ`  | `templ`      
+ meta.Term      | `$expr`   | `q`          
+ meta.Term.Arg  | `$arg`    | `arg`        
+ meta.Term.Name | `$name`   | `q`          
+ meta.Term.Ref  | `$ref`    | `q`          
+ meta.Type      | `$tpe`    | `t`          
+ meta.Type.Arg  | `$atpe`   | `t`          
+ meta.Type.Name | `$tname`  | `t`          
+ meta.TypeParam | `$tparam` | `tparam`     
+                | `$lit`    | `q` 
+
+### Suffix name modifiers
+
+ Suffix | Wrapped Type  | Example
+--------|---------------|-----------------------------
+ -s     | `Seq[_]`      | `exprs: Seq[meta.Term]`
+ -ss    | `Seq[Seq[_]]` | `exprss: Seq[Seq[meta.Term]]`
+ -opt   | `Option[_]`   | `expropt: Option[meta.Term]`
