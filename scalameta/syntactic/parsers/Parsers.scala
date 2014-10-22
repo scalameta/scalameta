@@ -2134,7 +2134,7 @@ abstract class AbstractParser { parser =>
    *  TypeDcl ::= type Id [TypeParamClause] TypeBounds
    *  }}}
    */
-  def typeDefOrDcl(mods: List[Mod]): Member.AbstractOrAliasType = {
+  def typeDefOrDcl(mods: List[Mod]): Member.Type with Stmt.Template = {
     in.nextToken()
     newLinesOpt()
     val name = typeName()
@@ -2151,7 +2151,7 @@ abstract class AbstractParser { parser =>
   }
 
   /** Hook for IDE, for top-level classes/objects. */
-  def topLevelTmplDef: Member.Template with Stmt.TopLevel =
+  def topLevelTmplDef: Has.Template with Stmt.TopLevel =
     tmplDef(annots(skipNewLines = true) ++ modifiers())
 
   /** {{{
@@ -2160,7 +2160,7 @@ abstract class AbstractParser { parser =>
    *            |  [override] trait TraitDef
    *  }}}
    */
-  def tmplDef(mods: List[Mod]): Member.Template with Stmt.Template = {
+  def tmplDef(mods: List[Mod]): Has.Template with Stmt.Template = {
     mods.getAll[Mod.Lazy].foreach { syntaxError(_, "classes cannot be lazy") }
     in.token match {
       case TRAIT =>

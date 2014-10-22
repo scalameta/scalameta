@@ -1,6 +1,5 @@
 package scala.meta
 
-import scala.language.experimental.macros
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import org.scalameta.ast._
@@ -138,35 +137,14 @@ object Lit {
   @ast class Unit() extends Lit
 }
 
-@branch trait Member extends Tree with Has.Mods
-object Member {
-  @branch trait Term extends Member
-  @branch trait Type extends Member
-  @branch trait ValOrVar extends Stmt.Template with Has.Mods // NOTE: vals and vars are not members!
-  @branch trait Def extends Term with Has.TermName with Stmt.Refine with Has.TypeParams with Has.Paramss with Scope.Params {
-    def tparams: Seq[TypeParam]
-  }
-  @branch trait AbstractOrAliasType extends Type with Has.TypeName with Stmt.Refine with Has.TypeParams {
-    def name: meta.Type.Name
-    def tparams: Seq[TypeParam]
-  }
-  @branch trait Template extends Defn with Has.Name with Stmt.TopLevel with Stmt.Block with Has.TypeParams with Has.Paramss with Scope.Template {
-    def name: meta.Name
-    def explicits: Seq[Seq[Param.Named]] = Nil
-    def implicits: Seq[Param.Named] = Nil
-    def tparams: Seq[TypeParam] = Nil
-    def templ: Aux.Template
-  }
-}
-
-@branch trait Decl extends Stmt.Template with Stmt.Refine
+@branch trait Decl extends Stmt.Template with Stmt.Refine with Has.Mods
 object Decl {
   @ast class Val(mods: Seq[Mod],
                  pats: Seq[Term.Name] @nonEmpty,
-                 decltpe: meta.Type) extends Decl with Member.ValOrVar with Stmt.Existential
+                 decltpe: meta.Type) extends Decl with Stmt.Existential
   @ast class Var(mods: Seq[Mod],
                  pats: Seq[Term.Name] @nonEmpty,
-                 decltpe: meta.Type) extends Decl with Member.ValOrVar
+                 decltpe: meta.Type) extends Decl
   @ast class Def(mods: Seq[Mod],
                  name: Term.Name,
                  tparams: Seq[TypeParam],
@@ -181,19 +159,19 @@ object Decl {
   @ast class Type(mods: Seq[Mod],
                   name: meta.Type.Name,
                   tparams: Seq[TypeParam],
-                  bounds: Aux.TypeBounds) extends Decl with Stmt.Existential with Member.AbstractOrAliasType
+                  bounds: Aux.TypeBounds) extends Decl with Member.Type with Stmt.Existential
 }
 
-@branch trait Defn extends Stmt.Block with Stmt.Template
+@branch trait Defn extends Stmt.Block with Stmt.Template with Has.Mods
 object Defn {
   @ast class Val(mods: Seq[Mod],
                  pats: Seq[Pat] @nonEmpty,
                  decltpe: Option[meta.Type],
-                 rhs: Term) extends Defn with Member.ValOrVar with Stmt.Early
+                 rhs: Term) extends Defn with Stmt.Early
   @ast class Var(mods: Seq[Mod],
                  pats: Seq[Pat] @nonEmpty,
                  decltpe: Option[meta.Type],
-                 rhs: Option[Term]) extends Defn with Member.ValOrVar with Stmt.Early {
+                 rhs: Option[Term]) extends Defn with Stmt.Early {
     require(rhs.isEmpty ==> pats.forall(_.isInstanceOf[Term.Name]))
     require(decltpe.nonEmpty || rhs.nonEmpty)
   }
@@ -222,22 +200,22 @@ object Defn {
   @ast class Type(mods: Seq[Mod],
                   name: meta.Type.Name,
                   tparams: Seq[TypeParam],
-                  body: meta.Type) extends Defn with Stmt.Refine with Member.AbstractOrAliasType
+                  body: meta.Type) extends Defn with Member.Type with Stmt.Refine
   @ast class Class(mods: Seq[Mod],
                    name: meta.Type.Name,
                    override val tparams: Seq[TypeParam],
                    ctor: Ctor.Primary,
-                   templ: Aux.Template) extends Defn with Member.Template with Has.TypeName
+                   templ: Aux.Template) extends Defn with Has.Template with Has.TypeName
   @ast class Trait(mods: Seq[Mod],
                    name: meta.Type.Name,
                    override val tparams: Seq[TypeParam],
-                   templ: Aux.Template) extends Defn with Member.Template with Has.TypeName {
+                   templ: Aux.Template) extends Defn with Has.Template with Has.TypeName {
     require(templ.stats.forall(!_.isInstanceOf[Ctor]))
     require(templ.parents.forall(_.argss.isEmpty))
   }
   @ast class Object(mods: Seq[Mod],
                     name: Term.Name,
-                    templ: Aux.Template) extends Defn with Member.Template with Has.TermName {
+                    templ: Aux.Template) extends Defn with Has.Template with Has.TermName {
   }
 }
 
@@ -390,17 +368,31 @@ object Has {
   @branch trait Mods extends Tree {
     def mods: Seq[Mod]
   }
-  @branch trait Paramss extends Tree {
+  @branch trait Paramss extends Tree with Scope.Params {
     def explicits: Seq[Seq[Param.Named]]
     def implicits: Seq[Param.Named]
     def paramss: Seq[Seq[Param.Named]] = explicits :+ implicits
   }
-  @branch trait TypeParams extends Tree {
+  @branch trait TypeParams extends Tree with Scope.Params {
     def tparams: Seq[TypeParam]
   }
+  @branch trait Template extends Defn with Has.Name with Stmt.TopLevel with Stmt.Block with Has.TypeParams with Has.Paramss with Scope.Template {
+    def name: meta.Name
+    def explicits: Seq[Seq[Param.Named]] = Nil
+    def implicits: Seq[Param.Named] = Nil
+    def tparams: Seq[TypeParam] = Nil
+    def templ: Aux.Template
+  }
   @branch trait Name extends Member { def name: meta.Name }
-  @branch trait TermName extends Member.Term with Has.Name { def name: Term.Name }
-  @branch trait TypeName extends Member.Type with Has.Name { def name: Type.Name }
+  @branch trait TermName extends Has.Name { def name: Term.Name }
+  @branch trait TypeName extends Has.Name { def name: Type.Name }
+}
+
+@branch trait Member extends Tree with Has.Mods
+object Member {
+  @branch trait Term extends Member
+  @branch trait Type extends Member with Has.TypeName with Has.TypeParams
+  @branch trait Def extends Term with Has.TermName with Has.TypeParams with Has.Paramss
 }
 
 @branch trait Stmt extends Tree

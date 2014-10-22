@@ -8,6 +8,9 @@ import scala.collection.immutable.Seq
 import scala.reflect.{ClassTag, classTag}
 
 package object semantic {
+  @root trait Mark
+  def mark(): Mark = ???
+
   @root trait Attr
   object Attr {
     @leaf class Defn(defn: Tree) extends Attr
@@ -46,19 +49,19 @@ package object semantic {
     @hosted def erasure: Type = delegate
     @hosted def companion: Type.Ref = tree match {
       case ref: Type.Ref => ref.defns.flatMap {
-        case Seq(t: Member.Template) => t.companion
+        case Seq(t: Has.Template) => t.companion
         case _ => fail("companion not found")
       }.map(_.ref.toTypeRef)
       case _ => fail("companion not found")
     }
   }
 
-  @hosted private[semantic] def supertypesToMembers(tpes: Seq[Type]): Seq[Member.Template] = {
+  @hosted private[semantic] def supertypesToMembers(tpes: Seq[Type]): Seq[Has.Template] = {
     def extractTemplate(ref: Type.Ref) = {
       for {
         defns <- ref.defns
         result <- defns match {
-          case Seq(t: Member.Template) => succeed(t)
+          case Seq(t: Has.Template) => succeed(t)
           case d => fail(s"unexpected ref $ref to $d returned from supertypes")
         }
       } yield result
@@ -76,14 +79,12 @@ package object semantic {
   implicit class SemanticRefOps(val tree: Ref) extends AnyVal {
     private[semantic] def toTypeRef: Type.Ref = ??? // TODO: t"$tree"
     @hosted def defns: Seq[Member] = wrapHosted(_.defns(tree).collect{ case m: Member => m })
+    @hosted def defn: Member = defns.flatMap(_.findUnique)
   }
 
   implicit class SemanticTypeRefOps(val tree: Type.Ref) extends AnyVal {
-    @hosted def defns: Seq[Member.Type] = (tree: Ref).defns.flatMap(defns => {
-      if (defns.exists(!_.isInstanceOf[Member.Type])) fail(s"unexpected $defns for ref $tree")
-      else succeed(defns.asInstanceOf[Seq[Member.Type]])
-    })
-    @hosted def defn: Member.Type = defns.flatMap(_.findUnique)
+    // NOTE: we can't refine the return type of Ref.defns and Ref.defn
+    // because a Type.Ref can refer to both types (regular types) and terms (singleton types)
   }
 
   implicit class SemanticTermRefOps(val tree: Term.Ref) extends AnyVal {
@@ -111,7 +112,7 @@ package object semantic {
     def isVar: Boolean = tree.isInstanceOf[Term.Name] && (tree.parent.map(parent => parent.isInstanceOf[Decl.Var] || parent.isInstanceOf[Defn.Var]).getOrElse(false))
     def isDef: Boolean = tree.isInstanceOf[Member.Def]
     def isMacro: Boolean = tree.isInstanceOf[Defn.Macro]
-    def isType: Boolean = tree.isInstanceOf[Member.AbstractOrAliasType]
+    def isType: Boolean = tree.isInstanceOf[Member.Type]
     def isAbstractType: Boolean = tree.isInstanceOf[Decl.Type]
     def isAliasType: Boolean = tree.isInstanceOf[Defn.Type]
     def isClass: Boolean = tree.isInstanceOf[Defn.Class]
@@ -123,8 +124,8 @@ package object semantic {
     def isPrivate: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Private])
     def isProtected: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Protected])
     def isPublic: Boolean = !tree.isPrivate && !tree.isProtected
-    def isImplicit: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Implicit])
-    def isFinal: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Final])
+    def isImplicit: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Implicit]) // TODO: also account for implicit parameters!
+    def isFinal: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Final]) || tree.isObject
     def isSealed: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Sealed])
     @hosted def isOverride: Boolean = tree.overridden.map(_.nonEmpty)
     def isCase: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Case])
@@ -160,17 +161,16 @@ package object semantic {
     }
   }
 
-  implicit class SemanticTemplateMemberOps(val tree: Member.Template) extends AnyVal {
-    @hosted def superclasses: Seq[Member.Template] = tree.ref.toTypeRef.superclasses
-    @hosted def supertypes: Seq[meta.Type] = tree.ref.toTypeRef.supertypes
-    @hosted def subclasses: Seq[Member.Template] = tree.ref.toTypeRef.subclasses
+  implicit class SemanticTemplateMemberOps(val tree: Has.Template) extends AnyVal {
+    @hosted def parents: Seq[Member.Type with Has.Template] = tree.ref.toTypeRef.parents
+    @hosted def children: Seq[Has.Template] = tree.ref.toTypeRef.children
     @hosted def self: Aux.Self = succeed(tree.templ.self)
-    @hosted def companion: Member.Template = tree match {
+    @hosted def companion: Has.Template = tree match {
       case _: Defn.Class => findCompanion{ case x: Defn.Object => x }
       case _: Defn.Trait => findCompanion{ case x: Defn.Object => x }
       case _: Defn.Object => findCompanion{ case x: Defn.Class => x; case x: Defn.Trait => x }
     }
-    @hosted private[semantic] def findCompanion[T <: Member.Template](f: PartialFunction[Member, T]): T = {
+    @hosted private[semantic] def findCompanion[T <: Has.Template](f: PartialFunction[Member, T]): T = {
       val companionName = {
         if (tree.name.isInstanceOf[meta.Term.Name]) meta.Type.Name(tree.name.value, isBackquoted = false) else
         meta.Term.Name(tree.name.value, isBackquoted = false)
@@ -208,11 +208,11 @@ package object semantic {
   }
 
   implicit class SemanticDefnObjectOps(val tree: Defn.Object) extends AnyVal {
-    @hosted def companion: Member.Template with Member.Type = new SemanticTemplateMemberOps(tree).companion.map(_.asInstanceOf[Member.Template with Member.Type])
+    @hosted def companion: Has.Template with Member.Type = new SemanticTemplateMemberOps(tree).companion.map(_.asInstanceOf[Has.Template with Member.Type])
   }
 
   implicit class SemanticPkgObjectOps(val tree: Defn.Object) extends AnyVal {
-    @hosted def companion: Member.Template with Member.Type = new SemanticTemplateMemberOps(tree).companion.map(_.asInstanceOf[Member.Template with Member.Type])
+    @hosted def companion: Has.Template with Member.Type = new SemanticTemplateMemberOps(tree).companion.map(_.asInstanceOf[Has.Template with Member.Type])
   }
 
   implicit class SemanticCtorOps(val tree: Ctor) extends AnyVal {
@@ -273,25 +273,12 @@ package object semantic {
   }
 
   implicit class SemanticTemplateScopeOps(val tree: Scope.Template) extends AnyVal {
-    @hosted def superclasses: Seq[Member.Template] = tree match {
-      case x: Aux.Template => x.tpe.flatMap(_.superclasses)
-      case x: Member.Template => x.templ.superclasses
-      case x: Type => ??? // TODO: compute this from Host.superclasses
-    }
-    @hosted def supertypes: Seq[Type] = tree match {
-      case x: Aux.Template => x.tpe.flatMap(_.supertypes)
-      case x: Member.Template => x.templ.supertypes
-      case x: Type => ??? // TODO: compute this from Host.superclasses(x.defn) and x's type arguments
-    }
+    @hosted def parents: Seq[Member.Type with Has.Template] = ???
+    @hosted def children: Seq[Has.Template] = ???
     @hosted def self: Aux.Self = tree match {
       case x: Aux.Template => succeed(x.self)
-      case x: Member.Template => succeed(x.templ.self)
+      case x: Has.Template => succeed(x.templ.self)
       case x: Type => ??? // TODO: compute this by intersecting x and x.defn.self
-    }
-    @hosted def subclasses: Seq[Member.Template] = tree match {
-      case x: Aux.Template => x.tpe.flatMap(_.superclasses)
-      case x: Member.Template => x.templ.subclasses
-      case x: Type => ??? // TODO: compute this from Host.subclasses
     }
     @hosted def ctor: Ctor.Primary = ctors.flatMap(_.collect { case prim: Ctor.Primary => prim }.findUnique)
     @hosted def ctors: Seq[Ctor] = wrapHosted(_.members(tree).collect{ case c: Ctor => c })
@@ -332,10 +319,10 @@ package object semantic {
     @hosted def vals(name: Name): Term.Name = tree.uniqueMember[Term.Name](name.toString)
     @hosted def vals(name: String): Term.Name = tree.uniqueMember[Term.Name](name.toString)
     @hosted def vals(name: scala.Symbol): Term.Name = tree.uniqueMember[Term.Name](name.toString)
-    @hosted def types: Seq[Member.AbstractOrAliasType] = tree.allMembers[Member.AbstractOrAliasType]
-    @hosted def types(name: Name): Member.AbstractOrAliasType = tree.uniqueMember[Member.AbstractOrAliasType](name.toString)
-    @hosted def types(name: String): Member.AbstractOrAliasType = tree.uniqueMember[Member.AbstractOrAliasType](name.toString)
-    @hosted def types(name: scala.Symbol): Member.AbstractOrAliasType = tree.uniqueMember[Member.AbstractOrAliasType](name.toString)
+    @hosted def types: Seq[Member.Type] = tree.allMembers[Member.Type]
+    @hosted def types(name: Name): Member.Type = tree.uniqueMember[Member.Type](name.toString)
+    @hosted def types(name: String): Member.Type = tree.uniqueMember[Member.Type](name.toString)
+    @hosted def types(name: scala.Symbol): Member.Type = tree.uniqueMember[Member.Type](name.toString)
   }
 
   implicit class SemanticParamsScopeOps(val tree: Scope.Params) extends AnyVal {
@@ -347,13 +334,5 @@ package object semantic {
     @hosted def tparams(name: Name): TypeParam.Named = tree.uniqueMember[TypeParam.Named](name.toString)
     @hosted def tparams(name: String): TypeParam.Named = tree.uniqueMember[TypeParam.Named](name.toString)
     @hosted def tparams(name: scala.Symbol): TypeParam.Named = tree.uniqueMember[TypeParam.Named](name.toString)
-  }
-
-  object c {
-    @hosted(macroApi = true) def warning(msg: String): Unit = delegate
-    @hosted(macroApi = true) def error(msg: String): Unit = delegate
-    @hosted(macroApi = true) def abort(msg: String): Nothing = delegate
-    @hosted(macroApi = true) def resources: Seq[String] = delegate
-    @hosted(macroApi = true) def resource(url: String): Array[Byte] = delegate
   }
 }
