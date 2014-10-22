@@ -1,4 +1,4 @@
-## Literals (`$lit`)
+## Literals
 
          | Quasiquote
 ---------|------------------------------
@@ -226,6 +226,7 @@
  meta.Type.Arg  | `$atpe`   | `t`          
  meta.Type.Name | `$tname`  | `t`          
  meta.TypeParam | `$tparam` | `tparam`     
+                | `$lit`    | `q` 
 
 ### Suffix name modifiers
 
@@ -234,4 +235,3 @@
  -s     | `Seq[_]`      | `exprs: Seq[meta.Term]`
  -ss    | `Seq[Seq[_]]` | `exprss: Seq[Seq[meta.Term]]`
  -opt   | `Option[_]`   | `expropt: Option[meta.Term]`
- 
