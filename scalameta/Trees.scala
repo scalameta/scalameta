@@ -355,14 +355,6 @@ object Aux {
   def isBackquoted: Boolean
 }
 
-@branch trait Unquote extends Tree {
-  def term: Term
-}
-object Unquote {
-  @ast class Term(term: Term) extends Unquote with meta.Term
-  @ast class Type(term: Term) extends Unquote with meta.Type
-}
-
 object Qual {
   @branch trait Term extends Tree
   @branch trait Type extends Term
