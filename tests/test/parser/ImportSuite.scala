@@ -1,4 +1,4 @@
-import scala.meta._, Import._, Term.{This, Name => TermName, Select}, Qual.Super
+import scala.meta._, Import._, Term.{This, Name => TermName, Select, Super}
 
 class ImportSuite extends ParseSuite {
   test("import foo.bar") {
@@ -45,22 +45,22 @@ class ImportSuite extends ParseSuite {
   }
 
   test("import foo.{bar => baz}") {
-    val Import(Clause(TermName("foo"), Rename(Name("bar"), Name("baz")) :: Nil) :: Nil) =
+    val Import(Clause(TermName("foo"), Rename("bar", "baz") :: Nil) :: Nil) =
       templStat("import foo.{bar => baz}")
   }
 
   test("import foo.{bar => _}") {
-    val Import(Clause(TermName("foo"), Unimport(Name("bar")) :: Nil) :: Nil) =
+    val Import(Clause(TermName("foo"), Unimport("bar") :: Nil) :: Nil) =
       templStat("import foo.{bar => _}")
   }
 
   test("import foo.{bar => _, _}") {
-    val Import(Clause(TermName("foo"), Unimport(Name("bar")) :: Wildcard() :: Nil) :: Nil) =
+    val Import(Clause(TermName("foo"), Unimport("bar") :: Wildcard() :: Nil) :: Nil) =
       templStat("import foo.{bar => _, _}")
   }
 
   test("import foo.{bar, baz => _, _}") {
-    val Import(Clause(TermName("foo"), (Name("bar")) :: Unimport(Name("baz")) :: Wildcard() :: Nil) :: Nil) =
+    val Import(Clause(TermName("foo"), (Name("bar")) :: Unimport("baz") :: Wildcard() :: Nil) :: Nil) =
       templStat("import foo.{bar, baz => _, _}")
   }
 }

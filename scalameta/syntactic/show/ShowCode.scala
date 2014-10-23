@@ -171,11 +171,11 @@ object Code {
     case t: Term.Tuple    => m(SimpleExpr1, s("(", r(t.elements, ", "), ")"))
     case t: Term.Block    =>
       import Term.{Block, Function}
-      def pstats(s: Seq[Stmt.Block]) = r(s.map(i(_)), "")
+      def pstats(s: Seq[Stat]) = r(s.map(i(_)), "")
       t match {
-        case Block(Function(Param.Named(mods, name, tptopt, _) :: Nil, Block(stats)) :: Nil) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
+        case Block(Function(Param.Named.Simple(mods, name, tptopt, _) :: Nil, Block(stats)) :: Nil) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
           m(SimpleExpr, s("{ ", kw("implicit"), " ", name, tptopt.map(s(kw(":"), " ", _)).getOrElse(s()), " ", kw("=>"), " ", pstats(stats), n("}")))
-        case Block(Function(Param.Named(mods, name, None, _) :: Nil, Block(stats)) :: Nil) =>
+        case Block(Function(Param.Named.Simple(mods, name, None, _) :: Nil, Block(stats)) :: Nil) =>
           m(SimpleExpr, s("{ ", name, " ", kw("=>"), " ", pstats(stats), n("}")))
         case Block(Function(Param.Anonymous(_, _) :: Nil, Block(stats)) :: Nil) =>
           m(SimpleExpr, s("{ ", kw("_"), " ", kw("=>"), " ", pstats(stats), n("}")))
@@ -208,9 +208,9 @@ object Code {
     case t: Term.If       => m(Expr1, s(kw("if"), " (", t.cond, ") ", p(Expr, t.thenp), if (t.hasElsep) s(" ", kw("else"), " ", p(Expr, t.elsep)) else s()))
     case t: Term.Function =>
       t match {
-        case Term.Function(Param.Named(mods, name, tptopt, _) :: Nil, body) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
+        case Term.Function(Param.Named.Simple(mods, name, tptopt, _) :: Nil, body) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
           m(Expr, s(kw("implicit"), " ", name, tptopt.map(s(kw(":"), " ", _)).getOrElse(s()), " ", kw("=>"), " ", p(Expr, body)))
-        case Term.Function(Param.Named(mods, name, None, _) :: Nil, body) =>
+        case Term.Function(Param.Named.Simple(mods, name, None, _) :: Nil, body) =>
           m(Expr, s(name, " ", kw("=>"), " ", p(Expr, body)))
         case Term.Function(Param.Anonymous(_, _) :: Nil, body) =>
           m(Expr, s(kw("_"), " ", kw("=>"), " ", p(Expr, body)))
@@ -250,22 +250,23 @@ object Code {
     case t: Arg.Repeated => s(p(PostfixExpr, t.arg), kw(":"), " ", kw("_*"))
 
     // Mod
-    case t: Mod.Annot         => s(kw("@"), p(SimpleTyp, t.tpe), t.argss)
-    case _: Mod.Abstract      => kw("abstract")
-    case _: Mod.Case          => kw("case")
-    case _: Mod.Covariant     => kw("+")
-    case _: Mod.Contravariant => kw("-")
-    case _: Mod.Doc           => ???
-    case _: Mod.Final         => kw("final")
-    case _: Mod.Implicit      => kw("implicit")
-    case _: Mod.Lazy          => kw("lazy")
-    case _: Mod.Override      => kw("override")
-    case _: Mod.Sealed        => kw("sealed")
-    case t: Mod.Private       => s(kw("private"), t.within)
-    case t: Mod.Protected     => s(kw("protected"), t.within)
-    case _: Mod.ValParam      => kw("val")
-    case _: Mod.VarParam      => kw("var")
-    case _: Mod.Package       => kw("package")
+    case t: Mod.Annot           => s(kw("@"), p(SimpleTyp, t.tpe), t.argss)
+    case _: Mod.Abstract        => kw("abstract")
+    case _: Mod.Case            => kw("case")
+    case _: Mod.Covariant       => kw("+")
+    case _: Mod.Contravariant   => kw("-")
+    case _: Mod.Doc             => ???
+    case _: Mod.Final           => kw("final")
+    case _: Mod.Implicit        => kw("implicit")
+    case _: Mod.Lazy            => kw("lazy")
+    case _: Mod.Override        => kw("override")
+    case _: Mod.Sealed          => kw("sealed")
+    case t: Mod.Private         => s(kw("private"))
+    case t: Mod.PrivateThis     => s(kw("private"), kw("this"))
+    case t: Mod.PrivateWithin   => s(kw("private"), t.name.toString)
+    case t: Mod.Protected       => s(kw("protected"))
+    case t: Mod.ProtectedThis   => s(kw("protected"), kw("this"))
+    case t: Mod.ProtectedWithin => s(kw("protected"), t.name.toString)
 
     // Defn
     case t: Defn.Val       => s(a(t.mods, " "), kw("val"), " ", r(t.pats, ", "), t.decltpe, " ", kw("="), " ", t.rhs)
@@ -292,6 +293,7 @@ object Code {
     case t: CompUnit           => r(t.stats, "\n")
     case t: Pkg if t.hasBraces => s(kw("package"), " ", t.ref, " {", r(t.stats.map(i(_)), ""), n("}"))
     case t: Pkg                => s(kw("package"), " ", t.ref, r(t.stats.map(n(_))))
+    case t: Pkg.Object         => s(kw("package"), " ", a(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
 
     // Ctor
     case t: Ctor.Primary   => s(a(t.mods, " ", t.mods.nonEmpty && (t.explicits.nonEmpty || t.implicits.nonEmpty)), (t.explicits, t.implicits))
@@ -342,8 +344,11 @@ object Code {
       s(if (t.hasLo) s(" ", kw(">:"), " ", p(Typ, t.lo)) else s(), if (t.hasHi) s(" ", kw("<:"), " ", p(Typ, t.hi)) else s())
     case t: Case  =>
       s("case ", p(Pattern, t.pat), t.cond.map { cond => s(" ", kw("if"), " ", p(PostfixExpr, cond)) }.getOrElse(s()), " ", kw("=>"), r(t.stats.map(i(_)), ""))
-    case t: Param.Anonymous => s(a(t.mods, " "), kw("_"), t.decltpe)
-    case t: Param.Named => s(a(t.mods, " "), t.name, t.decltpe, t.default.map(s(" ", kw("="), " ", _)).getOrElse(s()))
+    case t: Param.Anonymous =>
+      s(a(t.mods, " "), kw("_"), t.decltpe)
+    case t: Param.Named =>
+      val keyword = t match { case t: Param.Named.Simple => ""; case t: Param.Named.Val => "val"; case t: Param.Named.Var => "var"; }
+      s(a(t.mods, " "), kw(keyword), t.name, t.decltpe, t.default.map(s(" ", kw("="), " ", _)).getOrElse(s()))
     case t: TypeParam.Anonymous =>
       val cbounds = r(t.contextBounds.map { s(kw(":"), " ", _) })
       val vbounds = r(t.viewBounds.map { s(" ", kw("<%"), " ", _) })
@@ -358,15 +363,12 @@ object Code {
       val mods = t.mods.filter(m => !m.isInstanceOf[Mod.Covariant] && !m.isInstanceOf[Mod.Contravariant])
       require(t.mods.length - mods.length <= 1)
       s(a(mods, " "), variance, t.name, t.tparams, cbounds, vbounds, t.bounds)
-    case t: Qual.Super =>
+    case t: Term.Super =>
       s(t.thisp.map { thisp => s(thisp, ".") }.getOrElse(s()),
         kw("super"), t.superp.map { st => s("[", st, "]") }.getOrElse(s()))
   } }
 
   // Multiples and optionals
-  implicit val codeAccessQualifierOpt: Code[Option[Qual.Access]] = Code { t =>
-    t.map { qual => s("[", qual, "]") }.getOrElse(s())
-  }
   implicit val codeArgs: Code[Seq[Arg]] = Code {
     case (b: Term.Block) :: Nil => s(" ", b)
     case args                   => s("(", r(args, ", "), ")")

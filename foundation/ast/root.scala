@@ -17,7 +17,6 @@ class RootMacros(val c: Context) {
       // TODO: think of better ways to abstract this away from the public API
       val Host = tq"_root_.scala.meta.semantic.Host"
       val Tree = tq"_root_.scala.meta.Tree"
-      val Origin = tq"_root_.scala.meta.Origin"
       val SeqAny = tq"_root_.scala.collection.immutable.Seq[_root_.scala.Any]"
       val Scratchpads = tq"_root_.scala.Predef.Map[$Host, $SeqAny]"
       val Adt = q"_root_.org.scalameta.adt"
@@ -38,7 +37,7 @@ class RootMacros(val c: Context) {
         protected def internalPrototype: ThisType
         protected def internalParent: $Tree
         protected def internalScratchpads: $Scratchpads
-        private[meta] def internalCopy(prototype: $Tree = internalPrototype, parent: $Tree = internalParent, scratchpads: $Scratchpads = internalScratchpads, origin: $Origin = origin): ThisType
+        private[meta] def internalCopy(prototype: $Tree = internalPrototype, parent: $Tree = internalParent, scratchpads: $Scratchpads = internalScratchpads): ThisType
       """
       val stats1 = stats ++ boilerplate
       val anns1 = q"new $AstInternal.root" +: q"new $Adt.root" +: anns

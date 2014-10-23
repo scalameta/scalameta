@@ -24,8 +24,8 @@ package object parsers {
     implicit val parseCompUnit: Parse[Aux.CompUnit] = apply(source => new Parser(source).parseTopLevel())
     implicit val parseTerm: Parse[Term] = apply(source => new Parser(source).parseTerm())
     implicit val parseType: Parse[Type] = apply(source => new Parser(source).parseType())
-    implicit val parseStats: Parse[List[Stmt.Template]] = apply(source => new Parser(source).parseStats())
-    implicit val parseQ: Parse[Stmt] = apply(source => new Parser(source).parseQ())
+    implicit val parseStats: Parse[List[Stat]] = apply(source => new Parser(source).parseStats())
+    implicit val parseQ: Parse[Stat] = apply(source => new Parser(source).parseQ())
     implicit val parseT: Parse[Param.Type] = apply(source => new Parser(source).parseT())
     implicit val parseP: Parse[Pat] = apply(source => new Parser(source).parseP())
     implicit val parseParam: Parse[Param] = apply(source => new Parser(source).parseParam())
@@ -147,6 +147,6 @@ package object parsers {
         scanner.nextToken()
       } while (tok.isNot[Tok.EOF])
       buf.toVector
-    }    
+    }
   }
 }

@@ -87,34 +87,34 @@ class DeclSuite extends ParseSuite {
 
   test("def f(x: Int)") {
     val Decl.Procedure(Nil, Term.Name("f"), Nil,
-                       (Param.Named(Nil, Term.Name("x"),
-                                    Some(Type.Name("Int")),
-                                    None) :: Nil) :: Nil, Nil) =
+                       (Param.Named.Simple(Nil, Term.Name("x"),
+                                           Some(Type.Name("Int")),
+                                           None) :: Nil) :: Nil, Nil) =
       templStat("def f(x: Int)")
   }
 
   test("def f(x: Int*)") {
     val Decl.Procedure(Nil, Term.Name("f"), Nil,
-                       (Param.Named(Nil, Term.Name("x"),
-                                    Some(Param.Type.Repeated(Type.Name("Int"))),
-                                    None) :: Nil) :: Nil, Nil) =
+                       (Param.Named.Simple(Nil, Term.Name("x"),
+                                           Some(Param.Type.Repeated(Type.Name("Int"))),
+                                           None) :: Nil) :: Nil, Nil) =
       templStat("def f(x: Int*)")
   }
 
   test("def f(x: => Int)") {
     val Decl.Procedure(Nil, Term.Name("f"), Nil,
-                       (Param.Named(Nil, Term.Name("x"),
-                                    Some(Param.Type.ByName(Type.Name("Int"))),
-                                    None) :: Nil) :: Nil, Nil) =
+                       (Param.Named.Simple(Nil, Term.Name("x"),
+                                           Some(Param.Type.ByName(Type.Name("Int"))),
+                                           None) :: Nil) :: Nil, Nil) =
       templStat("def f(x: => Int)")
   }
 
 
   test("def f(implicit x: Int)") {
     val Decl.Procedure(Nil, Term.Name("f"), Nil, Nil,
-                       Param.Named(Nil, Term.Name("x"),
-                                   Some(Type.Name("Int")),
-                                   None) :: Nil) =
+                       Param.Named.Simple(Nil, Term.Name("x"),
+                                          Some(Type.Name("Int")),
+                                          None) :: Nil) =
       templStat("def f(implicit x: Int)")
   }
 

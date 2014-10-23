@@ -1,4 +1,4 @@
-import scala.meta._, Term.{Name => TermName, _}, Type.{Name => TypeName}, Aux._, Qual.Super
+import scala.meta._, Term.{Name => TermName, _}, Type.{Name => TypeName}, Aux._
 
 class TermSuite extends ParseSuite {
   test("x") {
@@ -23,7 +23,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("foo.this") {
-    val This(Some(Qual.Name("foo"))) = term("foo.this")
+    val This(Some("foo")) = term("foo.this")
   }
 
   test("this") {
@@ -31,17 +31,17 @@ class TermSuite extends ParseSuite {
   }
 
   test("a.super[b].c") {
-    val Select(Super(Some(Qual.Name("a")), Some(TypeName("b"))),
+    val Select(Super(Some("a"), Some("b")),
                TermName("c")) = term("a.super[b].c")
   }
 
   test("super[b].c") {
-    val Select(Super(None, Some(TypeName("b"))),
+    val Select(Super(None, Some("b")),
                TermName("c")) = term("super[b].c")
   }
 
   test("a.super.c") {
-    val Select(Super(Some(Qual.Name("a")), None),
+    val Select(Super(Some("a"), None),
                TermName("c")) = term("a.super.c")
   }
 
@@ -141,12 +141,12 @@ class TermSuite extends ParseSuite {
   }
 
   test("(x => x)") {
-    val Function(Param.Named(Nil, TermName("x"), None, None) :: Nil,
+    val Function(Param.Named.Simple(Nil, TermName("x"), None, None) :: Nil,
                  TermName("x")) = term("(x => x)")
   }
 
   test("(x: Int) => x") {
-    val Function(Param.Named(Nil, TermName("x"), Some(TypeName("Int")), None) :: Nil,
+    val Function(Param.Named.Simple(Nil, TermName("x"), Some(TypeName("Int")), None) :: Nil,
                  TermName("x")) = term("(x: Int) => x")
   }
 
@@ -160,7 +160,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("{ implicit x => () }") {
-    val Block(Function(Param.Named(Mod.Implicit() :: Nil, TermName("x"), None, None) :: Nil,
+    val Block(Function(Param.Named.Simple(Mod.Implicit() :: Nil, TermName("x"), None, None) :: Nil,
                        Block(Lit.Unit() :: Nil)) :: Nil) = term("{ implicit x => () }")
   }
 
