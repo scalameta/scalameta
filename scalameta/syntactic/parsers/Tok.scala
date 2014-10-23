@@ -1,121 +1,113 @@
 package scala.meta
 package syntactic.parsers
 
-sealed trait Tok {
-  def isIdent: Boolean         = this.isInstanceOf[Tok.Ident]
-  def isLit: Boolean           = this.isInstanceOf[Tok.Lit]
-  def isNumericLit: Boolean    = this.isInstanceOf[Tok.NumericLit]
-  def isKeyword: Boolean       = this.isInstanceOf[Tok.Keyword]
-  def isMod: Boolean           = this.isInstanceOf[Tok.Mod]
-  def isLocalMod: Boolean      = this.isInstanceOf[Tok.LocalMod]
-  def isExprIntro: Boolean     = this.isInstanceOf[Tok.ExprIntro]
-  def isTemplateIntro: Boolean = this.isInstanceOf[Tok.TemplateIntro]
-  def isTypeIntro: Boolean     = this.isInstanceOf[Tok.TypeIntro]
-  def isDclIntro: Boolean      = this.isInstanceOf[Tok.DclIntro]
-  def isStatSep: Boolean       = this.isInstanceOf[Tok.StatSep]
-  def isStatSeqEnd: Boolean    = this.isInstanceOf[Tok.StatSeqEnd]
-  def isCaseDefEnd: Boolean    = this.isInstanceOf[Tok.CaseDefEnd]
+import org.scalameta.adt._
+import scala.reflect.ClassTag
+
+@root trait Tok {
+  def is[T <: Tok: ClassTag]: Boolean  = this match { case _: T => true; case _ => false }
+  def isNot[T <: Tok: ClassTag]: Boolean = !is[T]
+  def offset: Int
 }
 object Tok {
-  sealed trait TypeIntro extends Tok
-  sealed trait ExprIntro extends Tok
-  sealed trait TemplateIntro extends Tok
-  sealed trait DclIntro extends Tok
-  sealed trait StatSeqEnd extends Tok
-  sealed trait CaseDefEnd extends Tok
+  @branch trait TypeIntro extends Tok
+  @branch trait ExprIntro extends Tok
+  @branch trait DefIntro extends Tok
+  @branch trait TemplateIntro extends DefIntro
+  @branch trait DclIntro extends DefIntro
+  @branch trait StatSeqEnd extends Tok
+  @branch trait CaseDefEnd extends Tok
 
-  final case class Ident(value: Predef.String, isBackquoted: Boolean) extends ExprIntro with TypeIntro
-  final case class InterpolationId(value: Predef.String) extends ExprIntro
-  final case class StringPart(value: Predef.String) extends Tok  
+  @leaf class Ident(value: Predef.String, isBackquoted: Boolean, offset: Int) extends ExprIntro with TypeIntro
 
-  sealed trait Lit extends ExprIntro
-  sealed trait NumericLit extends Lit
-  final case class Int(value: scala.Int) extends NumericLit
-  final case class Long(value: scala.Long) extends NumericLit
-  final case class Float(value: scala.Float) extends NumericLit
-  final case class Double(value: scala.Double) extends NumericLit
-  final case class Char(value: scala.Char) extends Lit
-  final case class Symbol(value: scala.Symbol) extends Lit
-  final case class String(value: Predef.String) extends Lit
-  case object Null extends Keyword with Lit
-  case object True extends Keyword with Lit
-  case object False extends Keyword with Lit
+  object Interpolation {
+    @leaf class Id(value: Predef.String, offset: Int) extends ExprIntro
+    @leaf class Part(value: Predef.String, offset: Int) extends Tok    
+  }  
 
-  sealed trait Keyword extends Tok
-  case object Case extends Keyword with CaseDefEnd
-  case object CaseClass extends Keyword with TemplateIntro
-  case object CaseObject extends Keyword with TemplateIntro
-  case object Catch extends Keyword
-  case object Class extends Keyword with TemplateIntro
-  case object Def extends Keyword with DclIntro
-  case object Do extends Keyword with ExprIntro
-  case object Else extends Keyword
-  case object Extends extends Keyword
-  case object Finally extends Keyword
-  case object For extends Keyword with ExprIntro
-  case object ForSome extends Keyword
-  case object If extends Keyword with ExprIntro
-  case object Import extends Keyword
-  case object Match extends Keyword
-  case object Macro extends Keyword
-  case object New extends Keyword with ExprIntro
-  case object Object extends Keyword with TemplateIntro
-  case object Package extends Keyword
-  case object Return extends Keyword with ExprIntro
-  case object Super extends Keyword with ExprIntro with TypeIntro
-  case object This extends Keyword with ExprIntro with TypeIntro
-  case object Throw extends Keyword with ExprIntro
-  case object Trait extends Keyword with TemplateIntro
-  case object Try extends Keyword with ExprIntro
-  case object Type extends Keyword with DclIntro
-  case object Val extends Keyword with DclIntro
-  case object Var extends Keyword with DclIntro
-  case object While extends Keyword with ExprIntro
-  case object With extends Keyword
-  case object Yield extends Keyword
+  @branch trait Literal extends ExprIntro
+  @branch trait NumericLiteral extends Literal
+  object Literal {    
+    @leaf class Int(value: scala.Int, offset: scala.Int) extends NumericLiteral
+    @leaf class Long(value: scala.Long, offset: scala.Int) extends NumericLiteral
+    @leaf class Float(value: scala.Float, offset: scala.Int) extends NumericLiteral
+    @leaf class Double(value: scala.Double, offset: scala.Int) extends NumericLiteral
+    @leaf class Char(value: scala.Char, offset: scala.Int) extends Literal
+    @leaf class Symbol(value: scala.Symbol, offset: scala.Int) extends Literal
+    @leaf class String(value: Predef.String, offset: scala.Int) extends Literal
+  }  
+  @leaf class `null`(offset: Int) extends Keyword with Literal
+  @leaf class `true`(offset: Int) extends Keyword with Literal
+  @leaf class `false`(offset: Int) extends Keyword with Literal
 
-  sealed trait Mod extends Keyword
-  sealed trait LocalMod extends Mod
-  case object Abstract extends LocalMod
-  case object Final extends LocalMod
-  case object Sealed extends LocalMod
-  case object Implicit extends LocalMod
-  case object Lazy extends LocalMod
-  case object Private extends Mod
-  case object Protected extends Mod
-  case object Override extends Mod
+  @branch trait Keyword extends Tok
+  @leaf class `case`(offset: Int) extends Keyword with CaseDefEnd
+  @leaf class `case class`(offset: Int) extends Keyword with TemplateIntro
+  @leaf class `case object`(offset: Int) extends Keyword with TemplateIntro
+  @leaf class `catch`(offset: Int) extends Keyword
+  @leaf class `class `(offset: Int) extends Keyword with TemplateIntro
+  @leaf class `def`(offset: Int) extends Keyword with DclIntro
+  @leaf class `do`(offset: Int) extends Keyword with ExprIntro
+  @leaf class `else`(offset: Int) extends Keyword
+  @leaf class `extends`(offset: Int) extends Keyword
+  @leaf class `finally`(offset: Int) extends Keyword
+  @leaf class `for`(offset: Int) extends Keyword with ExprIntro
+  @leaf class `forSome`(offset: Int) extends Keyword
+  @leaf class `if`(offset: Int) extends Keyword with ExprIntro
+  @leaf class `import`(offset: Int) extends Keyword
+  @leaf class `match`(offset: Int) extends Keyword
+  @leaf class `macro`(offset: Int) extends Keyword
+  @leaf class `new`(offset: Int) extends Keyword with ExprIntro
+  @leaf class `object`(offset: Int) extends Keyword with TemplateIntro
+  @leaf class `package `(offset: Int) extends Keyword
+  @leaf class `return`(offset: Int) extends Keyword with ExprIntro
+  @leaf class `super`(offset: Int) extends Keyword with ExprIntro with TypeIntro
+  @leaf class `this`(offset: Int) extends Keyword with ExprIntro with TypeIntro
+  @leaf class `throw`(offset: Int) extends Keyword with ExprIntro
+  @leaf class `trait`(offset: Int) extends Keyword with TemplateIntro
+  @leaf class `try`(offset: Int) extends Keyword with ExprIntro
+  @leaf class `type`(offset: Int) extends Keyword with DclIntro
+  @leaf class `val`(offset: Int) extends Keyword with DclIntro
+  @leaf class `var`(offset: Int) extends Keyword with DclIntro
+  @leaf class `while`(offset: Int) extends Keyword with ExprIntro
+  @leaf class `with`(offset: Int) extends Keyword
+  @leaf class `yield`(offset: Int) extends Keyword
 
-  sealed trait Delim extends Tok
-  sealed trait StatSep extends Delim
-  case object `(` extends Delim with ExprIntro with TypeIntro
-  case object `)` extends Delim
-  case object `[` extends Delim
-  case object `]` extends Delim
-  case object `{` extends Delim with ExprIntro
-  case object `}` extends Delim with StatSeqEnd with CaseDefEnd
-  case object `,` extends Delim
-  case object `;` extends StatSep
-  case object `:` extends Delim
-  case object `.` extends Delim
-  case object `=` extends Delim
-  case object `@` extends Delim with TypeIntro
-  case object `#` extends Delim
-  case object `_` extends Delim with ExprIntro with TypeIntro
-  case object `=>` extends Delim
-  case object `<-` extends Delim
-  case object `<:` extends Delim
-  case object `>:` extends Delim
-  case object `<%` extends Delim
-  case object `\n` extends StatSep
-  case object `\n\n` extends StatSep
-  case object EOF extends StatSep with StatSeqEnd with CaseDefEnd
+  @branch trait Modifier extends Keyword
+  @branch trait LocalModifier extends Modifier
+  @leaf class `abstract`(offset: Int) extends LocalModifier
+  @leaf class `final`(offset: Int) extends LocalModifier
+  @leaf class `sealed`(offset: Int) extends LocalModifier
+  @leaf class `implicit`(offset: Int) extends LocalModifier
+  @leaf class `lazy`(offset: Int) extends LocalModifier
+  @leaf class `private`(offset: Int) extends Modifier
+  @leaf class `protected`(offset: Int) extends Modifier
+  @leaf class `override`(offset: Int) extends Modifier
 
-  case object Empty extends Tok
-  case object Undef extends Tok
-  case object Error extends Tok
-  case object Ignore extends Tok
-  case object Escape extends Tok
-  case object XMLStart extends Tok with ExprIntro
-  case object `\\` extends Tok
-  case object ` ` extends Tok
+  @branch trait Delim extends Tok
+  @branch trait StatSep extends Delim
+  @leaf class `(`(offset: Int) extends Delim with ExprIntro with TypeIntro
+  @leaf class `)`(offset: Int) extends Delim
+  @leaf class `[`(offset: Int) extends Delim
+  @leaf class `]`(offset: Int) extends Delim
+  @leaf class `{`(offset: Int) extends Delim with ExprIntro
+  @leaf class `}`(offset: Int) extends Delim with StatSeqEnd with CaseDefEnd
+  @leaf class `,`(offset: Int) extends Delim
+  @leaf class `;`(offset: Int) extends StatSep
+  @leaf class `:`(offset: Int) extends Delim
+  @leaf class `.`(offset: Int) extends Delim
+  @leaf class `=`(offset: Int) extends Delim
+  @leaf class `@`(offset: Int) extends Delim with TypeIntro
+  @leaf class `#`(offset: Int) extends Delim
+  @leaf class `_ `(offset: Int) extends Delim with ExprIntro with TypeIntro
+  @leaf class `=>`(offset: Int) extends Delim
+  @leaf class `<-`(offset: Int) extends Delim
+  @leaf class `<:`(offset: Int) extends Delim
+  @leaf class `>:`(offset: Int) extends Delim
+  @leaf class `<%`(offset: Int) extends Delim
+  @leaf class `\n`(offset: Int) extends StatSep
+  @leaf class `\n\n`(offset: Int) extends StatSep
+  
+  @leaf class EOF(offset: Int) extends StatSep with StatSeqEnd with CaseDefEnd
+  @leaf class XMLStart(offset: Int) extends Tok with ExprIntro
 }
