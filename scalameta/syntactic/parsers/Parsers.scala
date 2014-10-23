@@ -276,7 +276,7 @@ abstract class AbstractParser { parser =>
   def syntaxError(tree: Tree, msg: String): Nothing = syntaxError(msg)
   
   // TODO: print nice textual representaion of T here instead of runtime class
-  def syntaxErrorExpected[T <: Tok: ClassTag]: Nothing = syntaxError(s"${implicitly[ClassTag[T]].runtimeClass} expected but ${tok} found.")
+  def syntaxErrorExpected[T <: Tok: ClassTag]: Nothing = syntaxError(s"${implicitly[ClassTag[T]].runtimeClass} expected but $tok found.")
 
   /** Consume one token of the specified type, or signal an error if it is not there. */
   def accept[T <: Tok: ClassTag]: Unit =
@@ -1146,7 +1146,7 @@ abstract class AbstractParser { parser =>
           if (hasStats) Term.New(Aux.Template(edefs, parents, self, stats))
           else Term.New(Aux.Template(edefs, parents, self))
         case _ =>
-          syntaxError(s"illegal start of simple expression: ${tok}")
+          syntaxError(s"illegal start of simple expression: $tok")
       }
     simpleExprRest(t, canApply = canApply)
   }
