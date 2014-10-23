@@ -13,7 +13,7 @@ class TokIterator(tokens: immutable.IndexedSeq[(Tok, Offset)],
   }  
   def tok: Tok = _tok
   def offset: Offset = _offset
-  def hasNext: Boolean = pos < tokens.size
+  def hasNext: Boolean = pos + 1 < tokens.size
   def next: (Tok, Offset) = {
     if (!hasNext) throw new NoSuchElementException()
     pos += 1

@@ -48,104 +48,104 @@ package object parsers {
       var buf = new mutable.UnrolledBuffer[(Tok, Offset)]
       while (scanner.token != EOF) {
         val tok = (scanner.token: @switch) match {
-          case EMPTY => Tok.Empty
-          case UNDEF => Tok.Undef
-          case ERROR => Tok.Error
-          case EOF   => Tok.EOF
+          case EMPTY => ???
+          case UNDEF => ???
+          case ERROR => ???
+          case EOF   => Tok.EOF()
 
-          case CHARLIT         => Tok.Char(scanner.charVal)
-          case INTLIT          => Tok.Int(scanner.intVal(false).toInt)
-          case LONGLIT         => Tok.Long(scanner.intVal(false))
-          case FLOATLIT        => Tok.Float(scanner.floatVal(false).toFloat)
-          case DOUBLELIT       => Tok.Double(scanner.floatVal(false))
-          case STRINGLIT       => Tok.String(scanner.strVal)
-          case STRINGPART      => Tok.StringPart(scanner.strVal)
-          case SYMBOLLIT       => Tok.Symbol(scala.Symbol(scanner.strVal))
-          case INTERPOLATIONID => Tok.InterpolationId(scanner.name)
+          case CHARLIT         => Tok.Literal.Char(scanner.charVal)
+          case INTLIT          => Tok.Literal.Int(scanner.intVal(false).toInt)
+          case LONGLIT         => Tok.Literal.Long(scanner.intVal(false))
+          case FLOATLIT        => Tok.Literal.Float(scanner.floatVal(false).toFloat)
+          case DOUBLELIT       => Tok.Literal.Double(scanner.floatVal(false))
+          case STRINGLIT       => Tok.Literal.String(scanner.strVal)
+          case SYMBOLLIT       => Tok.Literal.Symbol(scala.Symbol(scanner.strVal))
+          case INTERPOLATIONID => Tok.Interpolation.Id(scanner.name)
+          case STRINGPART      => Tok.Interpolation.Part(scanner.strVal)                    
 
           case IDENTIFIER       => Tok.Ident(scanner.name, isBackquoted = false)
           case BACKQUOTED_IDENT => Tok.Ident(scanner.name, isBackquoted = true)
 
-          case NEW   => Tok.New
-          case THIS  => Tok.This
-          case SUPER => Tok.Super
-          case NULL  => Tok.Null
-          case TRUE  => Tok.True
-          case FALSE => Tok.False
+          case NEW   => Tok.`new`()
+          case THIS  => Tok.`this`()
+          case SUPER => Tok.`super`()
+          case NULL  => Tok.`null`()
+          case TRUE  => Tok.`true`()
+          case FALSE => Tok.`false`()
 
-          case IMPLICIT  => Tok.Implicit
-          case OVERRIDE  => Tok.Override
-          case PROTECTED => Tok.Protected
-          case PRIVATE   => Tok.Private
-          case ABSTRACT  => Tok.Abstract
-          case FINAL     => Tok.Final
-          case SEALED    => Tok.Sealed
-          case LAZY      => Tok.Lazy
-          case MACRO     => Tok.Macro
+          case IMPLICIT  => Tok.`implicit`()
+          case OVERRIDE  => Tok.`override`()
+          case PROTECTED => Tok.`protected`()
+          case PRIVATE   => Tok.`private`()
+          case ABSTRACT  => Tok.`abstract`()
+          case FINAL     => Tok.`final`()
+          case SEALED    => Tok.`sealed`()
+          case LAZY      => Tok.`lazy`()
+          case MACRO     => Tok.`macro`()
 
-          case PACKAGE    => Tok.Package
-          case IMPORT     => Tok.Import
-          case CLASS      => Tok.Class
-          case CASECLASS  => Tok.CaseClass
-          case OBJECT     => Tok.Object
-          case CASEOBJECT => Tok.CaseObject
-          case TRAIT      => Tok.Trait
-          case EXTENDS    => Tok.Extends
-          case WITH       => Tok.With
-          case TYPE       => Tok.Type
-          case FORSOME    => Tok.ForSome
-          case DEF        => Tok.Def
-          case VAL        => Tok.Val
-          case VAR        => Tok.Var
+          case PACKAGE    => Tok.`package `()
+          case IMPORT     => Tok.`import`()
+          case CLASS      => Tok.`class `()
+          case CASECLASS  => Tok.`case class`()
+          case OBJECT     => Tok.`object`()
+          case CASEOBJECT => Tok.`case object`()
+          case TRAIT      => Tok.`trait`()
+          case EXTENDS    => Tok.`extends`()
+          case WITH       => Tok.`with`()
+          case TYPE       => Tok.`type`()
+          case FORSOME    => Tok.`forSome`()
+          case DEF        => Tok.`def`()
+          case VAL        => Tok.`val`()
+          case VAR        => Tok.`var`()
 
-          case IF      => Tok.If
+          case IF      => Tok.`if`()
           case THEN    => ???
-          case ELSE    => Tok.Else
-          case WHILE   => Tok.While
-          case DO      => Tok.Do
-          case FOR     => Tok.For
-          case YIELD   => Tok.Yield
-          case THROW   => Tok.Throw
-          case TRY     => Tok.Try
-          case CATCH   => Tok.Catch
-          case FINALLY => Tok.Finally
-          case CASE    => Tok.Case
-          case RETURN  => Tok.Return
-          case MATCH   => Tok.Match
+          case ELSE    => Tok.`else`()
+          case WHILE   => Tok.`while`()
+          case DO      => Tok.`do`()
+          case FOR     => Tok.`for`()
+          case YIELD   => Tok.`yield`()
+          case THROW   => Tok.`throw`()
+          case TRY     => Tok.`try`()
+          case CATCH   => Tok.`catch`()
+          case FINALLY => Tok.`finally`()
+          case CASE    => Tok.`case`()
+          case RETURN  => Tok.`return`()
+          case MATCH   => Tok.`match`()
 
-          case LPAREN   => Tok.`(`
-          case RPAREN   => Tok.`)`
-          case LBRACKET => Tok.`[`
-          case RBRACKET => Tok.`]`
-          case LBRACE   => Tok.`{`
-          case RBRACE   => Tok.`}`
+          case LPAREN   => Tok.`(`()
+          case RPAREN   => Tok.`)`()
+          case LBRACKET => Tok.`[`()
+          case RBRACKET => Tok.`]`()
+          case LBRACE   => Tok.`{`()
+          case RBRACE   => Tok.`}`()
 
-          case COMMA     => Tok.`,`
-          case SEMI      => Tok.`;`
-          case DOT       => Tok.`.`
-          case COLON     => Tok.`:`
-          case EQUALS    => Tok.`=`
-          case AT        => Tok.`@`
-          case HASH      => Tok.`#`
-          case USCORE    => Tok.`_`
-          case ARROW     => Tok.`=>`
-          case LARROW    => Tok.`<-`
-          case SUBTYPE   => Tok.`<:`
-          case SUPERTYPE => Tok.`>:`
-          case VIEWBOUND => Tok.`<%`
-          case NEWLINE   => Tok.`\n`
-          case NEWLINES  => Tok.`\n\n`
-          case XMLSTART  => Tok.XMLStart
+          case COMMA     => Tok.`,`()
+          case SEMI      => Tok.`;`()
+          case DOT       => Tok.`.`()
+          case COLON     => Tok.`:`()
+          case EQUALS    => Tok.`=`()
+          case AT        => Tok.`@`()
+          case HASH      => Tok.`#`()
+          case USCORE    => Tok.`_ `()
+          case ARROW     => Tok.`=>`()
+          case LARROW    => Tok.`<-`()
+          case SUBTYPE   => Tok.`<:`()
+          case SUPERTYPE => Tok.`>:`()
+          case VIEWBOUND => Tok.`<%`()
+          case NEWLINE   => Tok.`\n`()
+          case NEWLINES  => Tok.`\n\n`()
+          case XMLSTART  => Tok.XMLStart()
 
           case COMMENT    => ???
-          case WHITESPACE => Tok.` `
-          case IGNORE     => Tok.Ignore
-          case ESCAPE     => Tok.Escape
+          case WHITESPACE => ???
+          case IGNORE     => ???
+          case ESCAPE     => ???
         }
         buf += ((tok, scanner.offset))
         scanner.nextToken()
       }
-      buf += ((Tok.EOF, scanner.offset))
+      buf += ((Tok.EOF(), scanner.offset))
       buf.toVector
     }    
   }
