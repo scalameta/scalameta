@@ -320,11 +320,11 @@ abstract class AbstractParser { parser =>
   /** Convert tree to formal parameter. */
   def convertToParam(tree: Term): Option[Param] = tree match {
     case name: Name =>
-      Some(Param.Named(Nil, name.toTermName, None, None))
+      Some(Param.Named.Simple(Nil, name.toTermName, None, None))
     case Term.Placeholder() =>
       Some(Param.Anonymous(Nil, None))
     case Term.Ascribe(name: Name, tpt) =>
-      Some(Param.Named(Nil, name.toTermName, Some(tpt), None))
+      Some(Param.Named.Simple(Nil, name.toTermName, Some(tpt), None))
     case Term.Ascribe(Term.Placeholder(), tpt) =>
       Some(Param.Anonymous(Nil, Some(tpt)))
     case Lit.Unit() =>
@@ -1060,7 +1060,7 @@ abstract class AbstractParser { parser =>
       }
     }.get
     val mods = Mod.Implicit() +: param0.mods
-    val param = param0 match { case p: Param.Anonymous => p.copy(mods = mods); case p: Param.Named => p.copy(mods = mods) }
+    val param = param0 match { case p: Param.Anonymous => p.copy(mods = mods); case p: Param.Named.Simple => p.copy(mods = mods); case _ => unreachable }
     accept[`=>`]
     Term.Function(List(param), if (location != InBlock) expr() else block())
   }
@@ -1707,15 +1707,12 @@ abstract class AbstractParser { parser =>
 
   def param(ownerIsCase: Boolean, ownerIsType: Boolean, isImplicit: Boolean): Param.Named = {
     var mods: List[Mod] = annots(skipNewLines = false)
+    val (isValParam, isVarParam) = (ownerIsType && tok.is[`val`], ownerIsType && tok.is[`var`])
+    if (isValParam || isVarParam) in.next()
     if (ownerIsType) {
       mods ++= modifiers()
       mods.getAll[Mod.Lazy].foreach { m =>
         syntaxError(m, "lazy modifier not allowed here. Use call-by-name parameters instead")
-      }
-      tok match {
-        case _: `val` => mods = mods :+ Mod.ValParam(); next()
-        case _: `var` => mods = mods :+ Mod.VarParam(); next()
-        case _        =>
       }
     }
     val name = termName()
@@ -1731,11 +1728,11 @@ abstract class AbstractParser { parser =>
             case _ => false
           }) else (mods.access match {
             case Some(Mod.Private(Some(Term.This(_)))) => true
-            case None if !mods.has[Mod.ValParam] && !mods.has[Mod.VarParam] => true
+            case None if !isValParam && !isVarParam => true
             case _ => false
           })
         if (ownerIsType && !isLocalToThis) {
-          if(mods.has[Mod.VarParam])
+          if (isVarParam)
             mayNotBeByName("`var'")
           else
             mayNotBeByName("`val'")
@@ -1750,7 +1747,9 @@ abstract class AbstractParser { parser =>
         next()
         Some(expr())
       }
-    Param.Named(mods, name, Some(tpt), default)
+    if (isValParam) Param.Named.Val(mods, name, Some(tpt), default)
+    else if (isVarParam) Param.Named.Var(mods, name, Some(tpt), default)
+    else Param.Named.Simple(mods, name, Some(tpt), default)
   }
 
   /** {{{

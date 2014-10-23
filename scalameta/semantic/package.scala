@@ -136,8 +136,8 @@ package object semantic {
     def isAbstractOverride: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Abstract]) && tree.mods.exists(_.isInstanceOf[Mod.Override])
     def isByNameParam: Boolean = ???
     def isVarargParam: Boolean = ???
-    def isValParam: Boolean = tree.mods.exists(_.isInstanceOf[Mod.ValParam])
-    def isVarParam: Boolean = tree.mods.exists(_.isInstanceOf[Mod.VarParam])
+    def isValParam: Boolean = tree.isInstanceOf[Param.Named.Val]
+    def isVarParam: Boolean = tree.isInstanceOf[Param.Named.Var]
   }
 
   implicit class SemanticTermMemberOps(val tree: Member.Term) extends AnyVal {

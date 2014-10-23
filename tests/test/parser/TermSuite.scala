@@ -141,12 +141,12 @@ class TermSuite extends ParseSuite {
   }
 
   test("(x => x)") {
-    val Function(Param.Named(Nil, TermName("x"), None, None) :: Nil,
+    val Function(Param.Named.Simple(Nil, TermName("x"), None, None) :: Nil,
                  TermName("x")) = term("(x => x)")
   }
 
   test("(x: Int) => x") {
-    val Function(Param.Named(Nil, TermName("x"), Some(TypeName("Int")), None) :: Nil,
+    val Function(Param.Named.Simple(Nil, TermName("x"), Some(TypeName("Int")), None) :: Nil,
                  TermName("x")) = term("(x: Int) => x")
   }
 
@@ -160,7 +160,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("{ implicit x => () }") {
-    val Block(Function(Param.Named(Mod.Implicit() :: Nil, TermName("x"), None, None) :: Nil,
+    val Block(Function(Param.Named.Simple(Mod.Implicit() :: Nil, TermName("x"), None, None) :: Nil,
                        Block(Lit.Unit() :: Nil)) :: Nil) = term("{ implicit x => () }")
   }
 

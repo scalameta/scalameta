@@ -173,9 +173,9 @@ object Code {
       import Term.{Block, Function}
       def pstats(s: Seq[Stmt.Block]) = r(s.map(i(_)), "")
       t match {
-        case Block(Function(Param.Named(mods, name, tptopt, _) :: Nil, Block(stats)) :: Nil) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
+        case Block(Function(Param.Named.Simple(mods, name, tptopt, _) :: Nil, Block(stats)) :: Nil) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
           m(SimpleExpr, s("{ ", kw("implicit"), " ", name, tptopt.map(s(kw(":"), " ", _)).getOrElse(s()), " ", kw("=>"), " ", pstats(stats), n("}")))
-        case Block(Function(Param.Named(mods, name, None, _) :: Nil, Block(stats)) :: Nil) =>
+        case Block(Function(Param.Named.Simple(mods, name, None, _) :: Nil, Block(stats)) :: Nil) =>
           m(SimpleExpr, s("{ ", name, " ", kw("=>"), " ", pstats(stats), n("}")))
         case Block(Function(Param.Anonymous(_, _) :: Nil, Block(stats)) :: Nil) =>
           m(SimpleExpr, s("{ ", kw("_"), " ", kw("=>"), " ", pstats(stats), n("}")))
@@ -208,9 +208,9 @@ object Code {
     case t: Term.If       => m(Expr1, s(kw("if"), " (", t.cond, ") ", p(Expr, t.thenp), if (t.hasElsep) s(" ", kw("else"), " ", p(Expr, t.elsep)) else s()))
     case t: Term.Function =>
       t match {
-        case Term.Function(Param.Named(mods, name, tptopt, _) :: Nil, body) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
+        case Term.Function(Param.Named.Simple(mods, name, tptopt, _) :: Nil, body) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
           m(Expr, s(kw("implicit"), " ", name, tptopt.map(s(kw(":"), " ", _)).getOrElse(s()), " ", kw("=>"), " ", p(Expr, body)))
-        case Term.Function(Param.Named(mods, name, None, _) :: Nil, body) =>
+        case Term.Function(Param.Named.Simple(mods, name, None, _) :: Nil, body) =>
           m(Expr, s(name, " ", kw("=>"), " ", p(Expr, body)))
         case Term.Function(Param.Anonymous(_, _) :: Nil, body) =>
           m(Expr, s(kw("_"), " ", kw("=>"), " ", p(Expr, body)))
@@ -263,8 +263,6 @@ object Code {
     case _: Mod.Sealed        => kw("sealed")
     case t: Mod.Private       => s(kw("private"), t.within)
     case t: Mod.Protected     => s(kw("protected"), t.within)
-    case _: Mod.ValParam      => kw("val")
-    case _: Mod.VarParam      => kw("var")
     case _: Mod.Package       => kw("package")
 
     // Defn
@@ -342,8 +340,11 @@ object Code {
       s(if (t.hasLo) s(" ", kw(">:"), " ", p(Typ, t.lo)) else s(), if (t.hasHi) s(" ", kw("<:"), " ", p(Typ, t.hi)) else s())
     case t: Case  =>
       s("case ", p(Pattern, t.pat), t.cond.map { cond => s(" ", kw("if"), " ", p(PostfixExpr, cond)) }.getOrElse(s()), " ", kw("=>"), r(t.stats.map(i(_)), ""))
-    case t: Param.Anonymous => s(a(t.mods, " "), kw("_"), t.decltpe)
-    case t: Param.Named => s(a(t.mods, " "), t.name, t.decltpe, t.default.map(s(" ", kw("="), " ", _)).getOrElse(s()))
+    case t: Param.Anonymous =>
+      s(a(t.mods, " "), kw("_"), t.decltpe)
+    case t: Param.Named =>
+      val keyword = t match { case t: Param.Named.Simple => ""; case t: Param.Named.Val => "val"; case t: Param.Named.Var => "var"; }
+      s(a(t.mods, " "), kw(keyword), t.name, t.decltpe, t.default.map(s(" ", kw("="), " ", _)).getOrElse(s()))
     case t: TypeParam.Anonymous =>
       val cbounds = r(t.contextBounds.map { s(kw(":"), " ", _) })
       val vbounds = r(t.viewBounds.map { s(" ", kw("<%"), " ", _) })

@@ -266,10 +266,17 @@ object Param {
   }
   @ast class Anonymous(mods: Seq[Mod],
                        decltpe: Option[Type]) extends Param
-  @ast class Named(mods: Seq[Mod],
-                   name: Term.Name,
-                   decltpe: Option[Type],
-                   default: Option[Term]) extends Param with Member.Term with Has.TermName
+  @branch trait Named extends Param with Member.Term with Has.TermName{
+    def mods: Seq[Mod]
+    def name: Term.Name
+    def decltpe: Option[Type]
+    def default: Option[Term]
+  }
+  object Named {
+    @ast class Simple(mods: Seq[Mod], name: Term.Name, decltpe: Option[Type], default: Option[Term]) extends Named
+    @ast class Val(mods: Seq[Mod], name: Term.Name, decltpe: Option[Type], default: Option[Term]) extends Named
+    @ast class Var(mods: Seq[Mod], name: Term.Name, decltpe: Option[Type], default: Option[Term]) extends Named
+  }
 }
 
 @branch trait TypeParam extends Tree with Has.Mods with Has.TypeParams {
@@ -321,8 +328,6 @@ object Mod {
   @ast class Covariant() extends Mod
   @ast class Contravariant() extends Mod
   @ast class Lazy() extends Mod
-  @ast class ValParam() extends Mod
-  @ast class VarParam() extends Mod
   @ast class Package() extends Mod
 }
 
