@@ -2463,8 +2463,8 @@ abstract class AbstractParser { parser =>
       Pkg(qualId(), inBracesOrNil(topStatSeq()), hasBraces = true)
     }
 
-  def packageObject(): Defn.Object =
-    Defn.Object(Mod.Package() :: Nil, termName(), templateOpt(OwnedByObject))
+  def packageObject(): Pkg.Object =
+    Pkg.Object(Nil, termName(), templateOpt(OwnedByObject))
 
   /** {{{
    *  CompilationUnit ::= {package QualId semi} TopStatSeq

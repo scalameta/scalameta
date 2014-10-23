@@ -263,7 +263,6 @@ object Code {
     case _: Mod.Sealed        => kw("sealed")
     case t: Mod.Private       => s(kw("private"), t.within)
     case t: Mod.Protected     => s(kw("protected"), t.within)
-    case _: Mod.Package       => kw("package")
 
     // Defn
     case t: Defn.Val       => s(a(t.mods, " "), kw("val"), " ", r(t.pats, ", "), t.decltpe, " ", kw("="), " ", t.rhs)
@@ -290,6 +289,7 @@ object Code {
     case t: CompUnit           => r(t.stats, "\n")
     case t: Pkg if t.hasBraces => s(kw("package"), " ", t.ref, " {", r(t.stats.map(i(_)), ""), n("}"))
     case t: Pkg                => s(kw("package"), " ", t.ref, r(t.stats.map(n(_))))
+    case t: Pkg.Object         => s(kw("package"), " ", a(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
 
     // Ctor
     case t: Ctor.Primary   => s(a(t.mods, " ", t.mods.nonEmpty && (t.explicits.nonEmpty || t.implicits.nonEmpty)), (t.explicits, t.implicits))

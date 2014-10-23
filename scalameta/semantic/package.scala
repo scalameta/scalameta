@@ -119,7 +119,7 @@ package object semantic {
     def isTrait: Boolean = tree.isInstanceOf[Defn.Trait]
     def isObject: Boolean = tree.isInstanceOf[Defn.Object]
     def isPkg: Boolean = tree.isInstanceOf[Pkg]
-    def isPkgObject: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Package])
+    def isPkgObject: Boolean = tree.isInstanceOf[Pkg.Object]
     def isJava: Boolean = ???
     def isPrivate: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Private])
     def isProtected: Boolean = tree.mods.exists(_.isInstanceOf[Mod.Protected])
@@ -169,6 +169,7 @@ package object semantic {
       case _: Defn.Class => findCompanion{ case x: Defn.Object => x }
       case _: Defn.Trait => findCompanion{ case x: Defn.Object => x }
       case _: Defn.Object => findCompanion{ case x: Defn.Class => x; case x: Defn.Trait => x }
+      case _: Pkg.Object => fail("companion not found")
     }
     @hosted private[semantic] def findCompanion[T <: Has.Template](f: PartialFunction[Member, T]): T = {
       val companionName = {

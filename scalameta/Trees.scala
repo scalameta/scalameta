@@ -48,7 +48,6 @@ object Term {
   }
   @ast class Block(stats: Seq[Stmt.Block]) extends Term with Scope {
     require(stats.collect { case v: Defn.Var => v }.forall(_.rhs.isDefined))
-    require(stats.collect { case m: Member if m.isPkgObject => m }.isEmpty)
   }
   @ast class If(cond: Term, thenp: Term, elsep: Term = Lit.Unit()) extends Term
   @ast class Match(scrut: Term, cases: Cases) extends Term
@@ -185,9 +184,7 @@ object Defn {
                        tparams: Seq[TypeParam],
                        explicits: Seq[Seq[Param.Named]],
                        implicits: Seq[Param.Named],
-                       stats: Seq[Stmt.Block]) extends Defn with Member.Def {
-    require(stats.collect { case m: Member if m.isPkgObject => m }.isEmpty)
-  }
+                       stats: Seq[Stmt.Block]) extends Defn with Member.Def
   @ast class Macro(mods: Seq[Mod],
                    name: Term.Name,
                    tparams: Seq[TypeParam],
@@ -203,17 +200,17 @@ object Defn {
                    name: meta.Type.Name,
                    override val tparams: Seq[TypeParam],
                    ctor: Ctor.Primary,
-                   templ: Aux.Template) extends Defn with Has.Template with Has.TypeName
+                   templ: Aux.Template) extends Defn with Member.Type with Has.Template with Has.TypeName
   @ast class Trait(mods: Seq[Mod],
                    name: meta.Type.Name,
                    override val tparams: Seq[TypeParam],
-                   templ: Aux.Template) extends Defn with Has.Template with Has.TypeName {
+                   templ: Aux.Template) extends Defn with Member.Type with Has.Template with Has.TypeName {
     require(templ.stats.forall(!_.isInstanceOf[Ctor]))
     require(templ.parents.forall(_.argss.isEmpty))
   }
   @ast class Object(mods: Seq[Mod],
                     name: Term.Name,
-                    templ: Aux.Template) extends Defn with Has.Template with Has.TermName {
+                    templ: Aux.Template) extends Defn with Member.Term with Has.Template with Has.TermName {
   }
 }
 
@@ -227,6 +224,10 @@ object Defn {
     case _                    => unreachable
   }
 }
+object Pkg {
+  @ast class Object(mods: Seq[Mod], name: Term.Name, templ: Aux.Template)
+       extends Stmt.TopLevel with Member.Term with Has.Template with Has.TermName
+}
 
 @branch trait Ctor extends Tree with Has.Mods with Has.Paramss
 object Ctor {
@@ -237,9 +238,7 @@ object Ctor {
                        explicits: Seq[Seq[Param.Named]] @nonEmpty,
                        implicits: Seq[Param.Named],
                        primaryCtorArgss: Seq[Seq[Arg]],
-                       stats: Seq[Stmt.Block]) extends Ctor with Stmt.Template with Scope.Params {
-    require(stats.collect { case m: Member if m.isPkgObject => m }.isEmpty)
-  }
+                       stats: Seq[Stmt.Block]) extends Ctor with Stmt.Template with Scope.Params
 }
 
 @ast class Import(clauses: Seq[Import.Clause] @nonEmpty) extends Stmt.TopLevel with Stmt.Template with Stmt.Block
@@ -328,14 +327,11 @@ object Mod {
   @ast class Covariant() extends Mod
   @ast class Contravariant() extends Mod
   @ast class Lazy() extends Mod
-  @ast class Package() extends Mod
 }
 
 object Aux {
   @ast class CompUnit(stats: Seq[Stmt.TopLevel]) extends Tree
-  @ast class Case(pat: Pat, cond: Option[Term], stats: Seq[Stmt.Block]) extends Tree with Scope {
-    require(stats.collect { case m: Member if m.isPkgObject => m }.isEmpty)
-  }
+  @ast class Case(pat: Pat, cond: Option[Term], stats: Seq[Stmt.Block]) extends Tree with Scope
   @ast class Parent(tpe: Type, argss: Seq[Seq[Arg]]) extends Tree
   @ast class Template(early: Seq[Stmt.Early],
                       parents: Seq[Parent],
@@ -343,7 +339,6 @@ object Aux {
                       stats: Seq[Stmt.Template] = Nil) extends Tree with Scope.Template {
     require(parents.isEmpty || !parents.tail.exists(_.argss.nonEmpty))
     require(early.nonEmpty ==> parents.nonEmpty)
-    require(stats.collect { case m: Member if m.isPkgObject => m }.isEmpty)
   }
   @ast class Self(name: Option[Term.Name], decltpe: Option[Type], @trivia hasThis: Boolean = false) extends Member.Term {
     def mods: Seq[Mod] = Nil
