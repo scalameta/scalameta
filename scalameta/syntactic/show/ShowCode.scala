@@ -171,7 +171,7 @@ object Code {
     case t: Term.Tuple    => m(SimpleExpr1, s("(", r(t.elements, ", "), ")"))
     case t: Term.Block    =>
       import Term.{Block, Function}
-      def pstats(s: Seq[Stmt.Block]) = r(s.map(i(_)), "")
+      def pstats(s: Seq[Stat]) = r(s.map(i(_)), "")
       t match {
         case Block(Function(Param.Named.Simple(mods, name, tptopt, _) :: Nil, Block(stats)) :: Nil) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
           m(SimpleExpr, s("{ ", kw("implicit"), " ", name, tptopt.map(s(kw(":"), " ", _)).getOrElse(s()), " ", kw("=>"), " ", pstats(stats), n("}")))

@@ -67,6 +67,47 @@ object SyntacticInfo {
       case acc: Mod.Protected => acc
     }
   }
+  implicit class RichStat(val stat: Stat) extends AnyVal {
+    def isTopLevelStat: Boolean = stat match {
+      case _: Import => true
+      case _: Pkg => true
+      case _: Defn.Class => true
+      case _: Defn.Trait => true
+      case _: Defn.Object => true
+      case _: Pkg.Object => true
+      case _ => false
+    }
+    def isTemplateStat: Boolean = stat match {
+      case _: Import => true
+      case _: Term => true
+      case _: Decl => true
+      case _: Defn => true
+      case _: Ctor.Secondary => true
+      case _ => false
+    }
+    def isBlockStat: Boolean = stat match {
+      case _: Import => true
+      case _: Term => true
+      case stat: Defn.Var => stat.rhs.isDefined
+      case _: Defn => true
+      case _ => false
+    }
+    def isRefineStat: Boolean = stat match {
+      case _: Decl => true
+      case _: Defn.Type => true
+      case _ => false
+    }
+    def isExistentialStat: Boolean = stat match {
+      case _: Decl.Val => true
+      case _: Decl.Type => true
+      case _ => false
+    }
+    def isEarlyStat: Boolean = stat match {
+      case _: Defn.Val => true
+      case _: Defn.Var => true
+      case _ => false
+    }
+  }
 }
 import SyntacticInfo._
 
@@ -148,7 +189,7 @@ abstract class AbstractParser { parser =>
 
   /** This is the alternative entry point for repl, script runner, toolbox and parsing in macros.
    */
-  def parseStats(): List[Stmt.Template] = parseRule(_.templateStats())
+  def parseStats(): List[Stat] = parseRule(_.templateStats())
 
   /** These are alternative entry points for the three main tree flavors.
    */
@@ -158,11 +199,11 @@ abstract class AbstractParser { parser =>
 
   /** These are alternative entry points for quasiquotes.
    */
-  def parseQ(): Stmt = parseRule(parser => parser.statSeq(parser.templateStat.orElse(parser.topStat))) match {
+  def parseQ(): Stat = parseRule(parser => parser.statSeq(parser.templateStat.orElse(parser.topStat))) match {
     case stat :: Nil => stat
-    case stats if stats.forall(_.isInstanceOf[Stmt.Block]) => Term.Block(stats.asInstanceOf[List[Stmt.Block]])
+    case stats if stats.forall(_.isBlockStat) => Term.Block(stats)
     // TODO: haha, CompUnit itself is not a statП
-    // case stats if stats.forall(_.isInstanceOf[Stmt.TopLevel]) => Aux.CompUnit(stats.asInstanceOf[List[Stmt.TopLevel]])
+    // case stats if stats.forall(_.isTopLevelStat) => Aux.CompUnit(stats)
     case _ => syntaxError("these statements can't be mixed together")
   }
   def parseT(): Param.Type = parseRule(_.paramType())
@@ -1249,7 +1290,7 @@ abstract class AbstractParser { parser =>
     }
   }
 
-  def mkBlock(stats: List[Stmt.Block]): Term = Term.Block(stats)
+  def mkBlock(stats: List[Stat]): Term = Term.Block(stats)
 
   /** {{{
    *  Block ::= BlockStatSeq
@@ -1897,7 +1938,7 @@ abstract class AbstractParser { parser =>
    *           | type [nl] TypeDcl
    *  }}}
    */
-  def defOrDclOrCtor(mods: List[Mod]): Stmt.Template = {
+  def defOrDclOrCtor(mods: List[Mod]): Stat = {
     mods.getAll[Mod.Lazy].foreach { m =>
       if (tok.isNot[`val`]) syntaxError(m, "lazy not allowed here. Only vals can be lazy")
     }
@@ -1913,12 +1954,12 @@ abstract class AbstractParser { parser =>
     }
   }
 
-  def nonLocalDefOrDcl: Stmt.Template = {
+  def nonLocalDefOrDcl: Stat = {
     val anns = annots(skipNewLines = true)
     val mods = anns ++ modifiers()
     defOrDclOrCtor(mods) match {
-      case s: Stmt.Template => s
-      case other            => syntaxError(other, "is not a valid template statement")
+      case s if s.isTemplateStat => s
+      case other                 => syntaxError(other, "is not a valid template statement")
     }
   }
 
@@ -1928,7 +1969,7 @@ abstract class AbstractParser { parser =>
    *  VarDef ::= PatDef | Id {`,' Id} `:' Type `=' `_'
    *  }}}
    */
-  def patDefOrDcl(mods: List[Mod]): Stmt.Template = {
+  def patDefOrDcl(mods: List[Mod]): Stat = {
     val isMutable = tok.is[`var`]
     next()
     val lhs: List[Pat] = commaSeparated(noSeq.pattern2())
@@ -1965,7 +2006,7 @@ abstract class AbstractParser { parser =>
    *  FunSig ::= id [FunTypeParamClause] ParamClauses
    *  }}}
    */
-  def funDefOrDclOrCtor(mods: List[Mod]): Stmt.Template = {
+  def funDefOrDclOrCtor(mods: List[Mod]): Stat = {
     next()
     if (tok.isNot[`this`]) funDefRest(mods, termName())
     else {
@@ -1980,7 +2021,7 @@ abstract class AbstractParser { parser =>
     }
   }
 
-  def funDefRest(mods: List[Mod], name: Term.Name): Stmt.Template = {
+  def funDefRest(mods: List[Mod], name: Term.Name): Stat = {
     def warnProcedureDeprecation =
       deprecationWarning(tok.offset, s"Procedure syntax is deprecated. Convert procedure `$name` to method by adding `: Unit`.")
     val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
@@ -2025,7 +2066,7 @@ abstract class AbstractParser { parser =>
    *                    |  ConstrBlock
    *  }}}
    */
-  def constrExpr(): (List[List[Arg]], List[Stmt.Block]) =
+  def constrExpr(): (List[List[Arg]], List[Stat]) =
     if (tok.is[`{`]) constrBlock()
     else (selfInvocation(), Nil)
 
@@ -2049,7 +2090,7 @@ abstract class AbstractParser { parser =>
    *  ConstrBlock    ::=  `{' SelfInvocation {semi BlockStat} `}'
    *  }}}
    */
-  def constrBlock(): (List[List[Arg]], List[Stmt.Block]) = {
+  def constrBlock(): (List[List[Arg]], List[Stat]) = {
     next()
     val argss = selfInvocation()
     val stats =
@@ -2065,7 +2106,7 @@ abstract class AbstractParser { parser =>
    *  TypeDcl ::= type Id [TypeParamClause] TypeBounds
    *  }}}
    */
-  def typeDefOrDcl(mods: List[Mod]): Member.Type with Stmt.Template = {
+  def typeDefOrDcl(mods: List[Mod]): Member.Type = {
     next()
     newLinesOpt()
     val name = typeName()
@@ -2082,7 +2123,7 @@ abstract class AbstractParser { parser =>
   }
 
   /** Hook for IDE, for top-level classes/objects. */
-  def topLevelTmplDef: Has.Template with Stmt.TopLevel =
+  def topLevelTmplDef: Has.Template =
     tmplDef(annots(skipNewLines = true) ++ modifiers())
 
   /** {{{
@@ -2091,7 +2132,7 @@ abstract class AbstractParser { parser =>
    *            |  [override] trait TraitDef
    *  }}}
    */
-  def tmplDef(mods: List[Mod]): Has.Template with Stmt.Template = {
+  def tmplDef(mods: List[Mod]): Has.Template = {
     mods.getAll[Mod.Lazy].foreach { syntaxError(_, "classes cannot be lazy") }
     tok match {
       case _: `trait` =>
@@ -2194,7 +2235,7 @@ abstract class AbstractParser { parser =>
    *  EarlyDef      ::= Annotations Modifiers PatDef
    *  }}}
    */
-  def template(): (List[Stmt.Early], List[Aux.Parent], Aux.Self, List[Stmt.Template], Boolean) = {
+  def template(): (List[Stat], List[Aux.Parent], Aux.Self, List[Stat], Boolean) = {
     newLineOptWhenFollowedBy[`{`]
     if (tok.is[`{`]) {
       // @S: pre template body cannot stub like post body can!
@@ -2215,7 +2256,7 @@ abstract class AbstractParser { parser =>
     }
   }
 
-  def ensureEarlyDef(tree: Stmt.Template): Stmt.Early = tree match {
+  def ensureEarlyDef(tree: Stat): Stat = tree match {
     case v: Defn.Val => v
     case v: Defn.Var => v
     case t: Defn.Type =>
@@ -2254,10 +2295,10 @@ abstract class AbstractParser { parser =>
    *  }}}
    * @param isPre specifies whether in early initializer (true) or not (false)
    */
-  def templateBody(isPre: Boolean): (Aux.Self, List[Stmt.Template]) =
+  def templateBody(isPre: Boolean): (Aux.Self, List[Stat]) =
     inBraces(templateStatSeq(isPre = isPre))
 
-  def templateBodyOpt(parenMeansSyntaxError: Boolean): (Aux.Self, List[Stmt.Template], Boolean) = {
+  def templateBodyOpt(parenMeansSyntaxError: Boolean): (Aux.Self, List[Stat], Boolean) = {
     newLineOptWhenFollowedBy[`{`]
     if (tok.is[`{`]) {
       val (self, stats) = templateBody(isPre = false)
@@ -2275,11 +2316,11 @@ abstract class AbstractParser { parser =>
    *  Refinement ::= [nl] `{' RefineStat {semi RefineStat} `}'
    *  }}}
    */
-  def refinement(): List[Stmt.Refine] = inBraces(refineStatSeq())
+  def refinement(): List[Stat] = inBraces(refineStatSeq())
 
-  def existentialStats(): List[Stmt.Existential] = refinement() map {
-    case stmt: Stmt.Existential => stmt
-    case other                  => syntaxError(other, "not a legal existential clause")
+  def existentialStats(): List[Stat] = refinement() map {
+    case stat if stat.isExistentialStat => stat
+    case other                          => syntaxError(other, "not a legal existential clause")
   }
 
 /* -------- STATSEQS ------------------------------------------- */
@@ -2304,8 +2345,8 @@ abstract class AbstractParser { parser =>
    *            |
    *  }}}
    */
-  def topStatSeq(): List[Stmt.TopLevel] = statSeq(topStat, errorMsg = "expected class or object definition")
-  def topStat: PartialFunction[Tok, Stmt.TopLevel] = {
+  def topStatSeq(): List[Stat] = statSeq(topStat, errorMsg = "expected class or object definition")
+  def topStat: PartialFunction[Tok, Stat] = {
     case _: `package `  =>
       next()
       packageOrPackageObject()
@@ -2320,7 +2361,7 @@ abstract class AbstractParser { parser =>
    *  }}}
    * @param isPre specifies whether in early initializer (true) or not (false)
    */
-  def templateStatSeq(isPre : Boolean): (Aux.Self, List[Stmt.Template]) = {
+  def templateStatSeq(isPre : Boolean): (Aux.Self, List[Stat]) = {
     var self: Aux.Self = Aux.Self(None, None, hasThis = false)
     var firstOpt: Option[Term] = None
     if (tok.is[ExprIntro]) {
@@ -2360,8 +2401,8 @@ abstract class AbstractParser { parser =>
    *                     |
    *  }}}
    */
-  def templateStats(): List[Stmt.Template] = statSeq(templateStat)
-  def templateStat: PartialFunction[Tok, Stmt.Template] = {
+  def templateStats(): List[Stat] = statSeq(templateStat)
+  def templateStat: PartialFunction[Tok, Stat] = {
     case _: `import` =>
       importStmt()
     case _: DefIntro | _: Modifier | _: `@` =>
@@ -2377,8 +2418,8 @@ abstract class AbstractParser { parser =>
    *                     |
    *  }}}
    */
-  def refineStatSeq(): List[Stmt.Refine] = {
-    val stats = new ListBuffer[Stmt.Refine]
+  def refineStatSeq(): List[Stat] = {
+    val stats = new ListBuffer[Stat]
     while (!tok.is[StatSeqEnd]) {
       stats ++= refineStat()
       if (tok.isNot[`}`]) acceptStatSep()
@@ -2386,11 +2427,11 @@ abstract class AbstractParser { parser =>
     stats.toList
   }
 
-  def refineStat(): Option[Stmt.Refine] =
+  def refineStat(): Option[Stat] =
     if (tok.is[DclIntro]) {
       defOrDclOrCtor(Nil) match {
-        case sr: Stmt.Refine => Some(sr)
-        case other           => syntaxError(other, "is not a valid refinement declaration")
+        case stat if stat.isRefineStat => Some(stat)
+        case other                     => syntaxError(other, "is not a valid refinement declaration")
       }
     } else if (!tok.is[StatSep]) {
       syntaxError(
@@ -2399,17 +2440,17 @@ abstract class AbstractParser { parser =>
          else ""))
     } else None
 
-  def localDef(implicitMod: Option[Mod.Implicit]): Stmt.Block = {
+  def localDef(implicitMod: Option[Mod.Implicit]): Stat = {
     val mods = (implicitMod ++: annots(skipNewLines = true)) ++ localModifiers()
     if (mods forall { case _: Mod.Implicit | _: Mod.Lazy | _: Mod.Annot => true; case _ => false })
       (defOrDclOrCtor(mods) match {
-        case sb: Stmt.Block => sb
-        case other          => syntaxError(other, "is not a valid block statement")
+        case stat if stat.isBlockStat => stat
+        case other                    => syntaxError(other, "is not a valid block statement")
       })
     else
       (tmplDef(mods) match {
-        case sb: Stmt.Block => sb
-        case other          => syntaxError(other, "is not a valid block statement")
+        case stat if stat.isBlockStat => stat
+        case other                    => syntaxError(other, "is not a valid block statement")
       })
   }
 
@@ -2422,8 +2463,8 @@ abstract class AbstractParser { parser =>
    *                 |
    *  }}}
    */
-  def blockStatSeq(): List[Stmt.Block] = {
-    val stats = new ListBuffer[Stmt.Block]
+  def blockStatSeq(): List[Stat] = {
+    val stats = new ListBuffer[Stat]
     while (!tok.is[StatSeqEnd] && !tok.is[CaseDefEnd]) {
       if (tok.is[`import`]) {
         stats += importStmt()
@@ -2455,7 +2496,7 @@ abstract class AbstractParser { parser =>
   }
 
 
-  def packageOrPackageObject(): Stmt.TopLevel =
+  def packageOrPackageObject(): Stat =
     if (tok.is[`object`]) {
       next()
       packageObject()
@@ -2471,9 +2512,9 @@ abstract class AbstractParser { parser =>
    *  }}}
    */
   def compilationUnit(): CompUnit = {
-    def packageStats(): (List[Term.Ref], List[Stmt.TopLevel])  = {
+    def packageStats(): (List[Term.Ref], List[Stat])  = {
       val refs = new ListBuffer[Term.Ref]
-      val ts = new ListBuffer[Stmt.TopLevel]
+      val ts = new ListBuffer[Stat]
       while (tok.is[`;`]) next()
       if (tok.is[`package `]) {
         next()

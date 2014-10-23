@@ -6,7 +6,7 @@ import org.scalameta.annotations._
 import org.scalameta.convert._
 
 package object meta {
-  @quasiquote[Stmt]('q)             implicit class TermQuote(ctx: StringContext)
+  @quasiquote[Stat]('q)             implicit class TermQuote(ctx: StringContext)
   @quasiquote[Param.Type]('t)       implicit class TypeQuote(ctx: StringContext)
   @quasiquote[Pat]('p)              implicit class PatternQuote(ctx: StringContext)
 
