@@ -359,7 +359,7 @@ object Code {
       val mods = t.mods.filter(m => !m.isInstanceOf[Mod.Covariant] && !m.isInstanceOf[Mod.Contravariant])
       require(t.mods.length - mods.length <= 1)
       s(a(mods, " "), variance, t.name, t.tparams, cbounds, vbounds, t.bounds)
-    case t: Qual.Super =>
+    case t: Term.Super =>
       s(t.thisp.map { thisp => s(thisp, ".") }.getOrElse(s()),
         kw("super"), t.superp.map { st => s("[", st, "]") }.getOrElse(s()))
   } }

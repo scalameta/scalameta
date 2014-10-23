@@ -1,4 +1,4 @@
-import scala.meta._, Import._, Term.{This, Name => TermName, Select}, Qual.Super
+import scala.meta._, Import._, Term.{This, Name => TermName, Select, Super}
 
 class ImportSuite extends ParseSuite {
   test("import foo.bar") {

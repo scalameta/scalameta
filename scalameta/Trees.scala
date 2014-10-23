@@ -16,16 +16,17 @@ import syntactic.parsers._, SyntacticInfo._
   final override def toString: String = this.show[Raw]
 }
 
-@branch trait Term extends Arg with Stmt.Template with Stmt.Block with Qual.Term
+@branch trait Term extends Arg with Stmt.Template with Stmt.Block
 object Term {
-  @branch trait Ref extends Term with meta.Ref with Qual.Type
+  @branch trait Ref extends Term with meta.Ref
   @ast class This(qual: Option[Qual.Name]) extends Term.Ref with Qual.Access
+  @ast class Super(thisp: Option[Qual.Name], superp: Option[Type.Name]) extends Term.Ref
   @ast class Name(value: scala.Predef.String @nonEmpty, @trivia isBackquoted: Boolean = false) extends meta.Name with Term.Ref with Pat with Member with Has.TermName {
     require(keywords.contains(value) ==> isBackquoted)
     def name: Name = this
     def mods: Seq[Mod] = Nil
   }
-  @ast class Select(qual: Qual.Term, selector: Term.Name, @trivia isPostfix: Boolean = false) extends Term.Ref with Pat
+  @ast class Select(qual: Term, selector: Term.Name, @trivia isPostfix: Boolean = false) extends Term.Ref with Pat
   @ast class Interpolate(prefix: Name, parts: Seq[Lit.String] @nonEmpty, args: Seq[Term]) extends Term {
     require(parts.length == args.length + 1)
   }
@@ -76,11 +77,11 @@ object Type {
   @ast class Name(value: String @nonEmpty, @trivia isBackquoted: Boolean = false) extends meta.Name with Type.Ref {
     require(keywords.contains(value) ==> isBackquoted)
   }
-  @ast class Select(qual: Qual.Type, selector: Type.Name) extends Type.Ref {
-    require(qual match { case qual: Term.Ref => qual.isPath; case qual: Qual.Super => true; case _ => unreachable })
+  @ast class Select(qual: Term.Ref, selector: Type.Name) extends Type.Ref {
+    require(qual.isPath || qual.isInstanceOf[Term.Super])
   }
-  @ast class Project(qual: Type, selector: Type.Name) extends Ref
-  @ast class Singleton(ref: Term.Ref) extends Ref {
+  @ast class Project(qual: Type, selector: Type.Name) extends Type.Ref
+  @ast class Singleton(ref: Term.Ref) extends Type.Ref {
     require(ref.isPath)
   }
   @ast class Apply(tpe: Type, args: Seq[Type] @nonEmpty) extends Type
@@ -355,11 +356,8 @@ object Aux {
 }
 
 object Qual {
-  @branch trait Term extends Tree
-  @branch trait Type extends Term
   @branch trait Access extends Tree
   @ast class Name(value: String, @trivia isBackquoted: Boolean = false) extends meta.Name with Qual.Access
-  @ast class Super(thisp: Option[Qual.Name], superp: Option[Type.Name]) extends Qual.Term with Qual.Type
 }
 
 object Has {

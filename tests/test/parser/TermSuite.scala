@@ -1,4 +1,4 @@
-import scala.meta._, Term.{Name => TermName, _}, Type.{Name => TypeName}, Aux._, Qual.Super
+import scala.meta._, Term.{Name => TermName, _}, Type.{Name => TypeName}, Aux._
 
 class TermSuite extends ParseSuite {
   test("x") {

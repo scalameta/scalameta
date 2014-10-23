@@ -1,4 +1,4 @@
-import scala.meta._, Term.{Name => TermName}, Type.{Name => TypeName, _}, Aux._
+import scala.meta._, Term.{Name => TermName, Super}, Type.{Name => TypeName, _}, Aux._
 
 class TypeSuite extends ParseSuite {
   test("T") {
@@ -30,7 +30,7 @@ class TypeSuite extends ParseSuite {
   }
 
   test("super.T") {
-    val Select(Qual.Super(None, None), TypeName("T")) = tpe("super.T")
+    val Select(Super(None, None), TypeName("T")) = tpe("super.T")
   }
 
   test("this.T") {

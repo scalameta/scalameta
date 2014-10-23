@@ -52,9 +52,9 @@ object SyntacticInfo {
       case _                              => false
     }
     def isStableId: Boolean = tree match {
-      case _: Term.Name | Term.Select(_: Qual.Super, _) => true
-      case Term.Select(qual: Term.Ref, _)              => qual.isPath
-      case _                                           => false
+      case _: Term.Name | Term.Select(_: Term.Super, _) => true
+      case Term.Select(qual: Term.Ref, _)               => qual.isPath
+      case _                                            => false
     }
   }
   implicit class RichMods(val mods: List[Mod]) extends AnyVal {
@@ -334,7 +334,7 @@ abstract class AbstractParser { parser =>
   }
 
   def convertToTypeId(ref: Term.Ref): Option[Type] = ref match {
-    case Term.Select(qual: Qual.Type, name) =>
+    case Term.Select(qual: Term.Ref, name) =>
       Some(Type.Select(qual, name.toTypeName))
     case name: Term.Name =>
       Some(name.toTypeName)
@@ -707,7 +707,7 @@ abstract class AbstractParser { parser =>
       }
     } else if (tok.is[`super`]) {
       next()
-      val superp = Qual.Super(None, mixinQualifierOpt())
+      val superp = Term.Super(None, mixinQualifierOpt())
       accept[`.`]
       val supersel = Term.Select(superp, termName(), isPostfix = false)
       if (stop) supersel
@@ -730,7 +730,7 @@ abstract class AbstractParser { parser =>
           }
         } else if (tok.is[`super`]) {
           next()
-          val superp = Qual.Super(Some(name.toQualName), mixinQualifierOpt())
+          val superp = Term.Super(Some(name.toQualName), mixinQualifierOpt())
           accept[`.`]
           val supersel = Term.Select(superp, termName(), isPostfix = false)
           if (stop) supersel
