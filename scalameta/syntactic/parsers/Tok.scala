@@ -5,7 +5,7 @@ import scala.reflect.ClassTag
 
 sealed trait Tok {
   def is[T <: Tok: ClassTag]: Boolean  = this match { case _: T => true; case _ => false }
-  def not[T <: Tok: ClassTag]: Boolean = !is[T]
+  def isNot[T <: Tok: ClassTag]: Boolean = !is[T]
   def offset: Int
 }
 object Tok {

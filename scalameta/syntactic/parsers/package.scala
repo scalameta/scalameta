@@ -145,7 +145,7 @@ package object parsers {
         } 
         buf += tok
         scanner.nextToken()
-      } while (tok.not[Tok.EOF])
+      } while (tok.isNot[Tok.EOF])
       buf.toVector
     }    
   }

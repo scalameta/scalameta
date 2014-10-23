@@ -281,7 +281,7 @@ abstract class AbstractParser { parser =>
   /** Consume one token of the specified type, or signal an error if it is not there. */
   def accept[T <: Tok: ClassTag]: Unit =
     if (tok.is[T]) {
-      if (tok.not[EOF]) in.next()
+      if (tok.isNot[EOF]) in.next()
     } else syntaxErrorExpected[T]
 
   /** {{{
@@ -576,7 +576,7 @@ abstract class AbstractParser { parser =>
         case _: `_ ` => in.next(); wildcardType()
         case _        =>
           val ref: Term.Ref = path()
-          if (tok.not[`.`])
+          if (tok.isNot[`.`])
             convertToTypeId(ref) getOrElse { syntaxError("identifier expected") }
           else {
             in.next()
@@ -696,7 +696,7 @@ abstract class AbstractParser { parser =>
    */
   // TODO: this has to be rewritten
   def path(thisOK: Boolean = true): Term.Ref = {
-    def stop = tok.not[`.`] || ahead { tok.not[`this`] && tok.not[`super`] && !tok.is[Ident] }
+    def stop = tok.isNot[`.`] || ahead { tok.isNot[`this`] && tok.isNot[`super`] && !tok.is[Ident] }
     if (tok.is[`this`]) {
       in.next()
       val thisnone = Term.This(None)
@@ -778,7 +778,7 @@ abstract class AbstractParser { parser =>
   */
   def qualId(): Term.Ref = {
     val name = termName()
-    if (tok.not[`.`]) name
+    if (tok.isNot[`.`]) name
     else {
       in.next()
       selectors(name)
@@ -952,10 +952,10 @@ abstract class AbstractParser { parser =>
         case _      => expr()
       }
       val catchopt =
-        if (tok.not[`catch`]) None
+        if (tok.isNot[`catch`]) None
         else {
           in.next()
-          if (tok.not[`{`]) Some(expr())
+          if (tok.isNot[`{`]) Some(expr())
           else inBraces {
             if (tok.is[`case`]) Some(Term.Cases(caseClauses()))
             else Some(expr())
@@ -1053,7 +1053,7 @@ abstract class AbstractParser { parser =>
   def implicitClosure(location: Location): Term.Function = {
     val param0 = convertToParam {
       val name = termName()
-      if (tok.not[`:`]) name
+      if (tok.isNot[`:`]) name
       else {
         in.next()
         Term.Ascribe(expr, typeOrInfixType(location))
@@ -1197,7 +1197,7 @@ abstract class AbstractParser { parser =>
   }
 
   def argumentExprsOrPrefixExpr(): List[Arg] =
-    if (tok.not[`{`] && tok.not[`(`]) prefixExpr() :: Nil
+    if (tok.isNot[`{`] && tok.isNot[`(`]) prefixExpr() :: Nil
     else {
       val args = argumentExprs()
       tok match {
@@ -1234,7 +1234,7 @@ abstract class AbstractParser { parser =>
 
   /** A succession of argument lists. */
   def multipleArgumentExprs(): List[List[Arg]] = {
-    if (tok.not[`(`]) Nil
+    if (tok.isNot[`(`]) Nil
     else argumentExprs() :: multipleArgumentExprs()
   }
 
@@ -1325,7 +1325,7 @@ abstract class AbstractParser { parser =>
     val rhs = expr()
 
     def loop(): List[Enum] =
-      if (tok.not[`if`]) Nil
+      if (tok.isNot[`if`]) Nil
       else Enum.Guard(guard().get) :: loop()
 
     val tail =
@@ -1402,7 +1402,7 @@ abstract class AbstractParser { parser =>
     def pattern2(): Pat = {
       val p = pattern3()
 
-      if (tok.not[`@`]) p
+      if (tok.isNot[`@`]) p
       else p match {
         case Pat.Wildcard() =>
           in.next()
@@ -1564,10 +1564,10 @@ abstract class AbstractParser { parser =>
    *  }}}
    */
   def accessQualifierOpt(): Option[Qual.Access] = {
-    if (tok.not[`[`]) None
+    if (tok.isNot[`[`]) None
     else {
       in.next()
-      val res = if (tok.not[`this`]) termName().toQualName
+      val res = if (tok.isNot[`this`]) termName().toQualName
                 else { in.next(); Term.This(None) }
       accept[`]`]
       Some(res)
@@ -1745,7 +1745,7 @@ abstract class AbstractParser { parser =>
       tpt
     }
     val default =
-      if (tok.not[`=`]) None
+      if (tok.isNot[`=`]) None
       else {
         in.next()
         Some(expr())
@@ -1764,7 +1764,7 @@ abstract class AbstractParser { parser =>
    */
   def typeParamClauseOpt(ownerIsType: Boolean, ctxBoundsAllowed: Boolean): List[TypeParam] = {
     newLineOptWhenFollowedBy[`[`]
-    if (tok.not[`[`]) Nil
+    if (tok.isNot[`[`]) Nil
     else inBrackets(commaSeparated {
       val mods = annots(skipNewLines = true)
       typeParam(mods, ownerIsType, ctxBoundsAllowed)
@@ -1861,7 +1861,7 @@ abstract class AbstractParser { parser =>
    *  }}}
    */
   def importSelectors(): List[Import.Selector] =
-    if (tok.not[`{`]) List(importWildcardOrName())
+    if (tok.isNot[`{`]) List(importWildcardOrName())
     else inBraces(commaSeparated(importSelector()))
 
   def importWildcardOrName(): Import.Selector =
@@ -1900,7 +1900,7 @@ abstract class AbstractParser { parser =>
    */
   def defOrDclOrCtor(mods: List[Mod]): Stmt.Template = {
     mods.getAll[Mod.Lazy].foreach { m =>
-      if (tok.not[`val`]) syntaxError(m, "lazy not allowed here. Only vals can be lazy")
+      if (tok.isNot[`val`]) syntaxError(m, "lazy not allowed here. Only vals can be lazy")
     }
     tok match {
       case _: `val` | _: `var` =>
@@ -1968,7 +1968,7 @@ abstract class AbstractParser { parser =>
    */
   def funDefOrDclOrCtor(mods: List[Mod]): Stmt.Template = {
     in.next()
-    if (tok.not[`this`]) funDefRest(mods, termName())
+    if (tok.isNot[`this`]) funDefRest(mods, termName())
     else {
       in.next()
       val (paramss, implicits) = paramClauses(ownerIsType = true)
@@ -2118,7 +2118,7 @@ abstract class AbstractParser { parser =>
   def classDef(mods: List[Mod]): Defn.Class = {
     in.next()
     // TODO:
-    // if (ofCaseClass && tok.not[`(`])
+    // if (ofCaseClass && tok.isNot[`(`])
     //  syntaxError(tok.offset, "case classes without a parameter list are not allowed;\n"+
     //                             "use either case objects or case classes with an explicit `()' as a parameter list.")
     // TODO:
@@ -2382,7 +2382,7 @@ abstract class AbstractParser { parser =>
     val stats = new ListBuffer[Stmt.Refine]
     while (!tok.is[StatSeqEnd]) {
       stats ++= refineStat()
-      if (tok.not[`}`]) acceptStatSep()
+      if (tok.isNot[`}`]) acceptStatSep()
     }
     stats.toList
   }
@@ -2481,7 +2481,7 @@ abstract class AbstractParser { parser =>
         if (tok.is[`object`]) {
           in.next()
           ts += packageObject()
-          if (tok.not[EOF]) {
+          if (tok.isNot[EOF]) {
             acceptStatSep()
             ts ++= topStatSeq()
           }
