@@ -39,7 +39,7 @@
  Match             | `q"$expr match { ..case $pat if $cond => ..$stat }"`
  Try Catch Cases   | `q"try $expr catch $expr finally $expr"`
  Try Catch Expr    | `q"try $expr catch { ..case $pat if $cond => ..$stat } finally $expr" `
- Function          | `q"(..$params) => $expr"`
+ Function          | `q"(..$iparams) => $expr"`
  Partial Function  | `q"{ ..case $pat if $cond => ..$stat }"`
  While             | `q"while ($expr) $expr"`
  Do While          | `q"do $expr while($expr)"`
@@ -134,34 +134,28 @@
  Def            | `q"..$mods def $name[..$tparams](...$paramss): $tpe = $expr"`
  Macro          | `q"..$mods def $name[..$tparams](...$paramss): $tpe = macro $expr"`
  Procedure      | `q"..$mods def $name[..$tparams](...$paramss) { ..$stats }"`
- Primary Ctor   | `q"..$mods def this(..$paramss)"`
+ Primary Ctor   | `q"..$mods def this(..$cparamss)"`
  Secondary Ctor | `q"..$mods def this(..$paramss) = { this(...$args); ..$stats }"`
  Type           | `q"..$mods type $tname[..$tparams] = $tpe"`
- Class          | `q"..$mods class $tname[..$tparams] ..$mods(...$paramss) extends $template"`
+ Class          | `q"..$mods class $tname[..$tparams] ..$mods(...$cparamss) extends $template"`
  Trait          | `q"..$mods trait $tname[..$tparams] extends $template"`
  Object         | `q"..$mods object $name extends $template"`
  Package Object | `q"package object $name extends $template"`
  Package        | `q"package $ref { ..$stats }"`
 
-### Params (meta.Param)
+### Params
 
-           | Quasiquote
------------|-----------------
- Anonymous | `param"..$mods _: $atpe"`
- Named     | `param"..$mods $name: $atpe = $default"`
-
-### Type Params (meta.TypeParam)
-
-           | Quasiquote
------------|-----------------
- Anonymous | `tparam"..$mods _[..$tparams] <% ..$tpes : ..$tpes >: $tpeopt <: $tpeopt"`
- Named     | `tparam"..$mods $name[..$tparams] <% ..$tpes : ..$tpes >: $tpeopt <: $tpeopt"`
+                | Quasiquote
+----------------|-------------------------------------------------
+ Term Param     | `param"..$mods $nameopt: $atpeopt = $defaultopt"`
+ Template Param | `param"..$mods $name: $atpe = $defaultopt"`, `param"..$mods val $name: $atpe = $defaultopt"`, `param"..$mods var $name: $atpe = $defaultopt"`
+ Type Param     | `param"..$mods type $nameopt[..$tparams] <% ..$tpes : ..$tpes >: $tpeopt <: $tpeopt"`
 
 ## Template (meta.Template) and Parents (meta.Parent)
 
            | Quasiquote
 -----------|--------------------
- Template  | `templ"{ ..$stat } with ..$parents { $param => ..$stats }"`
+ Template  | `templ"{ ..$stat } with ..$parents { $iparam => ..$stats }"`
  Parent    | `templ"$tpe(...$argss)"`
 
 ## Modifiers (meta.Mod)
@@ -206,27 +200,28 @@
 
 ### Shorthands and interpolators
 
- Type           | Shorthand | Interpolator
-----------------|-----------|--------------
- meta.Enum      | `$enum`   | `enum`
- meta.Member    | `$memb`   | `q`
- meta.Mod       | `$mod`    | `mod`
- meta.Param     | `$param`  | `param`
- meta.Parent    | `$parent` | `templ`
- meta.Pat       | `$pat`    | `p`
- meta.Pat.Arg   | `$apat`   | `p`
- meta.Selector  | `$sel`    | `sel`
- meta.Stat      | `$stat`   | `q`
- meta.Templ     | `$templ`  | `templ`
- meta.Term      | `$expr`   | `q`
- meta.Term.Arg  | `$arg`    | `arg`
- meta.Term.Name | `$name`   | `q`
- meta.Term.Ref  | `$ref`    | `q`
- meta.Type      | `$tpe`    | `t`
- meta.Type.Arg  | `$atpe`   | `t`
- meta.Type.Name | `$tname`  | `t`
- meta.TypeParam | `$tparam` | `tparam`
-                | `$lit`    | `q`
+ Type             | Shorthand | Interpolator
+------------------|-----------|--------------
+ meta.Enum        | `$enum`   | `enum`
+ meta.Member      | `$memb`   | `q`
+ meta.Mod         | `$mod`    | `mod`
+ meta.Parent      | `$parent` | `templ`
+ meta.Pat         | `$pat`    | `p`
+ meta.Pat.Arg     | `$apat`   | `p`
+ meta.Selector    | `$sel`    | `sel`
+ meta.Stat        | `$stat`   | `q`
+ meta.Templ       | `$templ`  | `templ`
+ meta.Templ.Param | `$cparam` | `param`
+ meta.Term        | `$expr`   | `q`
+ meta.Term.Arg    | `$arg`    | `arg`
+ meta.Term.Name   | `$name`   | `q`
+ meta.Term.Ref    | `$ref`    | `q`
+ meta.Term.Param  | `$param`  | `param`
+ meta.Type        | `$tpe`    | `t`
+ meta.Type.Arg    | `$atpe`   | `t`
+ meta.Type.Name   | `$tname`  | `t`
+ meta.Type.Param  | `$tparam` | `param`
+                  | `$lit`    | `q`
 
 ### Suffix name modifiers
 
