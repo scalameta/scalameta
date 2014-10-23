@@ -12,7 +12,6 @@ import syntactic.parsers._, SyntacticInfo._
 
 @root trait Tree extends Product {
   type ThisType <: Tree
-  def origin: Origin
   def parent: Option[Tree]
   final override def toString: String = this.show[Raw]
 }

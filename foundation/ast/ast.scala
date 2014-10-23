@@ -75,11 +75,10 @@ class AstMacros(val c: Context) {
       bparams1 += q"protected val internalPrototype: $name"
       bparams1 += q"protected val internalParent: _root_.scala.meta.Tree"
       bparams1 += q"protected val internalScratchpads: $scratchpadsType"
-      bparams1 += q"val origin: _root_.scala.meta.Origin"
       def internalize(name: TermName) = TermName("_" + name.toString)
       val internalCopyInitss = paramss.map(_.map(p => q"$AstInternal.initField(this.${internalize(p.name)})"))
-      val internalCopyBody = q"new ThisType(prototype.asInstanceOf[ThisType], parent, scratchpads, origin)(...$internalCopyInitss)"
-      stats1 += q"private[meta] def internalCopy(prototype: _root_.scala.meta.Tree = this, parent: _root_.scala.meta.Tree = internalParent, scratchpads: $scratchpadsType = internalScratchpads, origin: _root_.scala.meta.Origin = origin): ThisType = $internalCopyBody"
+      val internalCopyBody = q"new ThisType(prototype.asInstanceOf[ThisType], parent, scratchpads)(...$internalCopyInitss)"
+      stats1 += q"private[meta] def internalCopy(prototype: _root_.scala.meta.Tree = this, parent: _root_.scala.meta.Tree = internalParent, scratchpads: $scratchpadsType = internalScratchpads): ThisType = $internalCopyBody"
       stats1 += q"def parent: _root_.scala.Option[_root_.scala.meta.Tree] = if (internalParent != null) _root_.scala.Some(internalParent) else _root_.scala.None"
 
       // step 5: turn all parameters into private internal vars, create getters and setters
@@ -97,7 +96,7 @@ class AstMacros(val c: Context) {
       val copyParamss = rawparamss.map(_.map(p => q"val ${p.name}: ${p.tpt} = this.${p.name}"))
       val copyArgss = rawparamss.map(_.map(p => q"${p.name}"))
       // TODO: would be useful to turn copy into a macro, so that its calls are guaranteed to be inlined
-      stats1 += q"def copy(...$copyParamss)(implicit origin: _root_.scala.meta.Origin): ThisType = $mname.apply(...$copyArgss)(_root_.scala.meta.Origin.Transform(this, this.origin))"
+      stats1 += q"def copy(...$copyParamss): ThisType = $mname.apply(...$copyArgss)"
 
       // step 7: generate boilerplate required by the @ast infrastructure
       stats1 += q"override type ThisType = $name"
@@ -135,7 +134,7 @@ class AstMacros(val c: Context) {
       internalBody ++= internalLocalss.flatten.map{ case (local, internal) => q"$AdtInternal.emptyCheck($local)" }
       internalBody ++= requires
       val paramInitss = internalLocalss.map(_.map{ case (local, internal) => q"$AstInternal.initParam($local)" })
-      internalBody += q"val node = new $name(null, null, _root_.scala.collection.immutable.Map(), origin)(...$paramInitss)"
+      internalBody += q"val node = new $name(null, null, _root_.scala.collection.immutable.Map())(...$paramInitss)"
       internalBody ++= internalLocalss.flatten.map{ case (local, internal) => q"$AstInternal.storeField(node.$internal, $local)" }
       internalBody += q"node"
       val internalArgss = paramss.map(_.map(p => {
@@ -145,7 +144,7 @@ class AstMacros(val c: Context) {
         else unreachable
       }))
       mstats1 += q"""
-        def apply(...$applyParamss)(implicit origin: _root_.scala.meta.Origin): $name = {
+        def apply(...$applyParamss): $name = {
           def internal(...$internalParamss): $name = {
             ..$internalBody
           }

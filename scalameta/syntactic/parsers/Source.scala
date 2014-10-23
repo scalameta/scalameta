@@ -1,10 +1,13 @@
 package scala.meta
+package syntactic.parsers
+
 import org.scalameta.adt._
 import org.scalameta.convert._
 
-@root trait Source { 
-  def content: Array[Char] 
+@root trait Source {
+  def content: Array[Char]
 }
+
 object Source {
   @leaf object None extends Source { def content = new Array[Char](0) }
   @leaf class String(s: scala.Predef.String) extends Source {

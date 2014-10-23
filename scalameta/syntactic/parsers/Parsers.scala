@@ -114,7 +114,6 @@ abstract class AbstractParser { parser =>
   def tok = in.tok
   def next() = in.next()
   val source: Source
-  implicit val origin: Origin = Origin.Source(source)
 
   /** Scoping operator used to temporarily look into the future.
    *  Backs up token iterator before evaluating a block and restores it after.
@@ -130,7 +129,7 @@ abstract class AbstractParser { parser =>
    */
   @inline def peekingAhead[T](tree: => T): T = {
     val forked = in.fork
-    next()    
+    next()
     // try it, in case it is recoverable
     try tree catch { case e: Exception => in = forked ; throw e }
   }
@@ -275,7 +274,7 @@ abstract class AbstractParser { parser =>
   // TODO: get offset out of tree once we have positions
   def warning(tree: Tree, msg: String): Unit = deprecationWarning(msg)
   def syntaxError(tree: Tree, msg: String): Nothing = syntaxError(msg)
-  
+
   // TODO: print nice textual representaion of T here instead of runtime class
   def syntaxErrorExpected[T <: Tok: ClassTag]: Nothing = syntaxError(s"${implicitly[ClassTag[T]].runtimeClass} expected but $tok found.")
 
@@ -299,13 +298,13 @@ abstract class AbstractParser { parser =>
       acceptStatSep()
 
 /* -------------- TOKEN CLASSES ------------------------------------------- */
-  
-  def isIdentAnd(pred: String => Boolean) = tok match { 
+
+  def isIdentAnd(pred: String => Boolean) = tok match {
     case id: Ident if pred(id.value) => true
     case _                           => false
   }
   def isUnaryOp: Boolean            = isIdentAnd(SyntacticInfo.isUnaryOp)
-  def isIdentExcept(except: String) = isIdentAnd(_ != except)  
+  def isIdentExcept(except: String) = isIdentAnd(_ != except)
   def isIdentOf(name: String)       = isIdentAnd(_ == name)
   def isRawStar: Boolean            = isIdentOf("*")
   def isRawBar: Boolean             = isIdentOf("|")
@@ -679,7 +678,7 @@ abstract class AbstractParser { parser =>
   }
 
   def name[T](ctor: (String, Boolean) => T, advance: Boolean): T = tok match {
-    case Ident(name, isBackquoted, _) => 
+    case Ident(name, isBackquoted, _) =>
       val res = ctor(name, isBackquoted)
       if (advance) next()
       res
@@ -799,12 +798,12 @@ abstract class AbstractParser { parser =>
       case Literal.Long(v, _)       => Lit.Long(if (isNegated) -v else v)
       case Literal.Float(v, _)      => Lit.Float(if (isNegated) -v else v)
       case Literal.Double(v, _)     => Lit.Double(if (isNegated) -v else v)
-      case Literal.String(v, _)     => Lit.String(v) 
+      case Literal.String(v, _)     => Lit.String(v)
       case Literal.Symbol(v, _)     => Lit.Symbol(v)
-      case Interpolation.Part(v, _) => Lit.String(v) 
+      case Interpolation.Part(v, _) => Lit.String(v)
       case _: `true`                => Lit.Bool(true)
       case _: `false`               => Lit.Bool(false)
-      case _: `null`                => Lit.Null()      
+      case _: `null`                => Lit.Null()
       case _                        => syntaxError("illegal literal")
     }
     next()
@@ -1608,7 +1607,7 @@ abstract class AbstractParser { parser =>
         case _: `implicit`  => loop(addMod(mods, Mod.Implicit()))
         case _: `lazy`      => loop(addMod(mods, Mod.Lazy()))
         case _: `override`  => loop(addMod(mods, Mod.Override()))
-        case _: `private` 
+        case _: `private`
            | _: `protected` =>
           mods.foreach { m =>
             if(m.isInstanceOf[Mod.Access]) syntaxError("duplicate private/protected qualifier")
