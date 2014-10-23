@@ -99,7 +99,7 @@ class TemplateSuite extends ParseSuite {
 
   test("class C private(x: Int)") {
     val Class(Nil, Type.Name("C"), Nil,
-              Ctor.Primary(Mod.Private(None) :: Nil,
+              Ctor.Primary(Mod.Private() :: Nil,
                            (Param.Named.Simple(Nil, Term.Name("x"),
                                                Some(Type.Name("Int")), None) :: Nil) :: Nil, Nil),
               Aux.Template(Nil, Nil, Self(None, None), Nil)) =

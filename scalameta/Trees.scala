@@ -19,9 +19,9 @@ import syntactic.parsers._, SyntacticInfo._
 @branch trait Term extends Arg with Stat
 object Term {
   @branch trait Ref extends Term with meta.Ref
-  @ast class This(qual: Option[Qual.Name]) extends Term.Ref with Qual.Access
-  @ast class Super(thisp: Option[Qual.Name], superp: Option[Type.Name]) extends Term.Ref
-  @ast class Name(value: scala.Predef.String @nonEmpty, @trivia isBackquoted: Boolean = false) extends meta.Name with Term.Ref with Pat with Member with Has.TermName {
+  @ast class This(qual: Option[Predef.String]) extends Term.Ref
+  @ast class Super(thisp: Option[Predef.String], superp: Option[Predef.String]) extends Term.Ref
+  @ast class Name(value: Predef.String @nonEmpty, @trivia isBackquoted: Boolean = false) extends meta.Name with Term.Ref with Pat with Member with Has.TermName {
     require(keywords.contains(value) ==> isBackquoted)
     def name: Name = this
     def mods: Seq[Mod] = Nil
@@ -255,8 +255,8 @@ object Import {
   @branch trait Selector extends Tree
   @ast class Wildcard() extends Selector
   @ast class Name(value: String, @trivia isBackquoted: Boolean = false) extends meta.Name with Selector
-  @ast class Rename(from: Name, to: Name) extends Selector
-  @ast class Unimport(name: Name) extends Selector
+  @ast class Rename(from: String, to: String) extends Selector
+  @ast class Unimport(name: String) extends Selector
 }
 
 @branch trait Param extends Tree with Has.Mods {
@@ -320,9 +320,12 @@ object Enum {
 object Mod {
   @ast class Annot(tpe: Type, argss: Seq[Seq[Arg]]) extends Mod
   @ast class Doc(doc: String) extends Mod
-  @branch trait Access extends Mod { def within: Option[Qual.Access] }
-  @ast class Private(within: Option[Qual.Access]) extends Access
-  @ast class Protected(within: Option[Qual.Access]) extends Access
+  @ast class Private extends Mod
+  @ast class PrivateThis extends Mod
+  @ast class PrivateWithin(name: Predef.String) extends Mod
+  @ast class Protected extends Mod
+  @ast class ProtectedThis extends Mod
+  @ast class ProtectedWithin(name: Predef.String) extends Mod
   @ast class Implicit() extends Mod
   @ast class Final() extends Mod
   @ast class Sealed() extends Mod
@@ -361,11 +364,6 @@ object Aux {
 @branch trait Name extends Ref {
   def value: String
   def isBackquoted: Boolean
-}
-
-object Qual {
-  @branch trait Access extends Tree
-  @ast class Name(value: String, @trivia isBackquoted: Boolean = false) extends meta.Name with Qual.Access
 }
 
 object Has {

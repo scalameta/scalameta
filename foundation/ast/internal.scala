@@ -73,6 +73,7 @@ object internal {
         if (tpe =:= typeOf[String] ||
             tpe =:= typeOf[scala.Symbol] ||
             ScalaPrimitiveValueClasses.contains(tpe.typeSymbol)) Some(tpe)
+        else if (tpe.typeSymbol == OptionClass && Primitive.unapply(tpe.typeArgs.head).nonEmpty) Some(tpe)
         else None
       }
     }

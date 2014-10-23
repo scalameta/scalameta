@@ -250,19 +250,23 @@ object Code {
     case t: Arg.Repeated => s(p(PostfixExpr, t.arg), kw(":"), " ", kw("_*"))
 
     // Mod
-    case t: Mod.Annot         => s(kw("@"), p(SimpleTyp, t.tpe), t.argss)
-    case _: Mod.Abstract      => kw("abstract")
-    case _: Mod.Case          => kw("case")
-    case _: Mod.Covariant     => kw("+")
-    case _: Mod.Contravariant => kw("-")
-    case _: Mod.Doc           => ???
-    case _: Mod.Final         => kw("final")
-    case _: Mod.Implicit      => kw("implicit")
-    case _: Mod.Lazy          => kw("lazy")
-    case _: Mod.Override      => kw("override")
-    case _: Mod.Sealed        => kw("sealed")
-    case t: Mod.Private       => s(kw("private"), t.within)
-    case t: Mod.Protected     => s(kw("protected"), t.within)
+    case t: Mod.Annot           => s(kw("@"), p(SimpleTyp, t.tpe), t.argss)
+    case _: Mod.Abstract        => kw("abstract")
+    case _: Mod.Case            => kw("case")
+    case _: Mod.Covariant       => kw("+")
+    case _: Mod.Contravariant   => kw("-")
+    case _: Mod.Doc             => ???
+    case _: Mod.Final           => kw("final")
+    case _: Mod.Implicit        => kw("implicit")
+    case _: Mod.Lazy            => kw("lazy")
+    case _: Mod.Override        => kw("override")
+    case _: Mod.Sealed          => kw("sealed")
+    case t: Mod.Private         => s(kw("private"))
+    case t: Mod.PrivateThis     => s(kw("private"), kw("this"))
+    case t: Mod.PrivateWithin   => s(kw("private"), t.name.toString)
+    case t: Mod.Protected       => s(kw("protected"))
+    case t: Mod.ProtectedThis   => s(kw("protected"), kw("this"))
+    case t: Mod.ProtectedWithin => s(kw("protected"), t.name.toString)
 
     // Defn
     case t: Defn.Val       => s(a(t.mods, " "), kw("val"), " ", r(t.pats, ", "), t.decltpe, " ", kw("="), " ", t.rhs)
@@ -365,9 +369,6 @@ object Code {
   } }
 
   // Multiples and optionals
-  implicit val codeAccessQualifierOpt: Code[Option[Qual.Access]] = Code { t =>
-    t.map { qual => s("[", qual, "]") }.getOrElse(s())
-  }
   implicit val codeArgs: Code[Seq[Arg]] = Code {
     case (b: Term.Block) :: Nil => s(" ", b)
     case args                   => s("(", r(args, ", "), ")")

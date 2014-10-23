@@ -23,7 +23,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("foo.this") {
-    val This(Some(Qual.Name("foo"))) = term("foo.this")
+    val This(Some("foo")) = term("foo.this")
   }
 
   test("this") {
@@ -31,17 +31,17 @@ class TermSuite extends ParseSuite {
   }
 
   test("a.super[b].c") {
-    val Select(Super(Some(Qual.Name("a")), Some(TypeName("b"))),
+    val Select(Super(Some("a"), Some("b")),
                TermName("c")) = term("a.super[b].c")
   }
 
   test("super[b].c") {
-    val Select(Super(None, Some(TypeName("b"))),
+    val Select(Super(None, Some("b")),
                TermName("c")) = term("super[b].c")
   }
 
   test("a.super.c") {
-    val Select(Super(Some(Qual.Name("a")), None),
+    val Select(Super(Some("a"), None),
                TermName("c")) = term("a.super.c")
   }
 

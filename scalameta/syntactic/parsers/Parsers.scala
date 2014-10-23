@@ -57,15 +57,23 @@ object SyntacticInfo {
       case _                                            => false
     }
   }
+  implicit class RichMod(val mod: Mod) extends AnyVal {
+    def isAccess: Boolean = mod match {
+      case _: Mod.Private         => true
+      case _: Mod.PrivateThis     => true
+      case _: Mod.PrivateWithin   => true
+      case _: Mod.Protected       => true
+      case _: Mod.ProtectedThis   => true
+      case _: Mod.ProtectedWithin => true
+      case _                      => false
+    }
+  }
   implicit class RichMods(val mods: List[Mod]) extends AnyVal {
     def has[T <: Mod](implicit tag: ClassTag[T]): Boolean =
       mods.exists { _.getClass == tag.runtimeClass }
     def getAll[T <: Mod](implicit tag: ClassTag[T]): List[T] =
       mods.collect { case m if m.getClass == tag.runtimeClass => m.asInstanceOf[T] }
-    def access: Option[Mod.Access] = mods.collectFirst {
-      case acc: Mod.Private   => acc
-      case acc: Mod.Protected => acc
-    }
+    def access: Option[Mod] = mods.collectFirst{ case m if m.isAccess => m }
   }
   implicit class RichStat(val stat: Stat) extends AnyVal {
     def isTopLevelStat: Boolean = stat match {
@@ -708,14 +716,6 @@ abstract class AbstractParser { parser =>
       case name: Term.Name => name
       case _              => Term.Name(name.value, name.isBackquoted)
     }
-    def toQualName: Qual.Name = name match {
-      case name: Qual.Name => name
-      case _               => Qual.Name(name.value, name.isBackquoted)
-    }
-    def toImportName: Import.Name = name match {
-      case name: Import.Name => name
-      case _                 => Import.Name(name.value, name.isBackquoted)
-    }
   }
 
   def name[T](ctor: (String, Boolean) => T, advance: Boolean): T = tok match {
@@ -763,7 +763,7 @@ abstract class AbstractParser { parser =>
         next()
         if (tok.is[`this`]) {
           next()
-          val thisid = Term.This(Some(name.toQualName))
+          val thisid = Term.This(Some(name.value))
           if (stop && thisOK) thisid
           else {
             accept[`.`]
@@ -771,7 +771,7 @@ abstract class AbstractParser { parser =>
           }
         } else if (tok.is[`super`]) {
           next()
-          val superp = Term.Super(Some(name.toQualName), mixinQualifierOpt())
+          val superp = Term.Super(Some(name.value), mixinQualifierOpt())
           accept[`.`]
           val supersel = Term.Select(superp, termName(), isPostfix = false)
           if (stop) supersel
@@ -800,8 +800,8 @@ abstract class AbstractParser { parser =>
   *   MixinQualifier ::= `[' Id `]'
   *   }}}
   */
-  def mixinQualifierOpt(): Option[Type.Name] =
-    if (tok.is[`[`]) Some(inBrackets(typeName()))
+  def mixinQualifierOpt(): Option[String] =
+    if (tok.is[`[`]) Some(inBrackets(typeName().value))
     else None
 
   /** {{{
@@ -1601,28 +1601,36 @@ abstract class AbstractParser { parser =>
 /* -------- MODIFIERS and ANNOTATIONS ------------------------------------------- */
 
   /** {{{
+   *  AccessModifier ::= (private | protected) [AccessQualifier]
    *  AccessQualifier ::= `[' (Id | this) `]'
    *  }}}
    */
-  def accessQualifierOpt(): Option[Qual.Access] = {
-    if (tok.isNot[`[`]) None
-    else {
-      next()
-      val res = if (tok.isNot[`this`]) termName().toQualName
-                else { next(); Term.This(None) }
-      accept[`]`]
-      Some(res)
+  def accessModifierOpt(): Option[Mod] = {
+    val tok = in.tok
+    val (isNaked, isLocal, name) = {
+      if (tok.is[`private`] || tok.is[`protected`]) {
+        next()
+        if (tok.isNot[`[`]) (true, false, None)
+        else {
+          next()
+          val result = if (tok.is[`this`]) (false, false, Some(termName().value))
+                    else { next(); (false, true, None) }
+          accept[`]`]
+          result
+        }
+      } else {
+        (false, false, None)
+      }
     }
-  }
-
-  /** {{{
-   *  AccessModifier ::= (private | protected) [AccessQualifier]
-   *  }}}
-   */
-  def accessModifierOpt(): Option[Mod] = tok match {
-    case _: `private`   => next(); Some(Mod.Private(accessQualifierOpt()) )
-    case _: `protected` => next(); Some(Mod.Protected(accessQualifierOpt()) )
-    case _              => None
+    (tok, isNaked, isLocal, name) match {
+      case (_: `private`,   true,  false, None)       => Some(Mod.Private())
+      case (_: `private`,   false, true,  None)       => Some(Mod.PrivateThis())
+      case (_: `private`,   false, false, Some(name)) => Some(Mod.PrivateWithin(name))
+      case (_: `protected`, true,  false, None)       => Some(Mod.Protected())
+      case (_: `protected`, false, true,  None)       => Some(Mod.ProtectedThis())
+      case (_: `protected`, false, false, Some(name)) => Some(Mod.ProtectedWithin(name))
+      case _                                          => None
+    }
   }
 
   /** {{{
@@ -1650,9 +1658,7 @@ abstract class AbstractParser { parser =>
         case _: `override`  => loop(addMod(mods, Mod.Override()))
         case _: `private`
            | _: `protected` =>
-          mods.foreach { m =>
-            if(m.isInstanceOf[Mod.Access]) syntaxError("duplicate private/protected qualifier")
-          }
+          mods.filter(_.isAccess).foreach(_ => syntaxError("duplicate private/protected qualifier"))
           val optmod = accessModifierOpt()
           optmod.map { mod => loop(addMod(mods, mod, advance = false)) }.getOrElse(mods)
         case _:`\n` if !isLocal => next(); loop(mods)
@@ -1749,7 +1755,7 @@ abstract class AbstractParser { parser =>
   def param(ownerIsCase: Boolean, ownerIsType: Boolean, isImplicit: Boolean): Param.Named = {
     var mods: List[Mod] = annots(skipNewLines = false)
     val (isValParam, isVarParam) = (ownerIsType && tok.is[`val`], ownerIsType && tok.is[`var`])
-    if (isValParam || isVarParam) in.next()
+    if (isValParam || isVarParam) next()
     if (ownerIsType) {
       mods ++= modifiers()
       mods.getAll[Mod.Lazy].foreach { m =>
@@ -1765,10 +1771,10 @@ abstract class AbstractParser { parser =>
           syntaxError(s"$subj parameters may not be call-by-name")
         val isLocalToThis: Boolean =
           if (ownerIsCase) (mods.access match {
-            case Some(Mod.Private(Some(Term.This(_)))) => true
+            case Some(Mod.PrivateThis()) => true
             case _ => false
           }) else (mods.access match {
-            case Some(Mod.Private(Some(Term.This(_)))) => true
+            case Some(Mod.PrivateThis()) => true
             case None if !isValParam && !isVarParam => true
             case _ => false
           })
@@ -1891,7 +1897,7 @@ abstract class AbstractParser { parser =>
     sid match {
       case Term.Select(sid: Term.Ref, name: Term.Name) if sid.isStableId =>
         if (tok.is[`.`]) dotselectors
-        else Import.Clause(sid, name.toImportName :: Nil)
+        else Import.Clause(sid, Import.Name(name.value, name.isBackquoted) :: Nil)
       case _ => dotselectors
     }
   }
@@ -1906,7 +1912,7 @@ abstract class AbstractParser { parser =>
 
   def importWildcardOrName(): Import.Selector =
     if (tok.is[`_ `]) { next(); Import.Wildcard() }
-    else { val name = termName(); name.toImportName }
+    else { val name = termName(); Import.Name(name.value, name.isBackquoted) }
 
   /** {{{
    *  ImportSelector ::= Id [`=>' Id | `=>' `_']
@@ -1917,8 +1923,8 @@ abstract class AbstractParser { parser =>
       case from: Import.Name if tok.is[`=>`] =>
         next()
         importWildcardOrName() match {
-          case to: Import.Name     => Import.Rename(from, to)
-          case to: Import.Wildcard => Import.Unimport(from)
+          case to: Import.Name     => Import.Rename(from.value, to.value)
+          case to: Import.Wildcard => Import.Unimport(from.value)
           case _                   => unreachable
         }
       case other => other
