@@ -69,7 +69,6 @@ object Term {
   @ast class New(templ: Aux.Template) extends Term
   @ast class Placeholder() extends Term
   @ast class Eta(term: Term) extends Term
-  @ast class Quote(prefix: Name, body: Term) extends Term
 }
 
 @branch trait Type extends Tree with Param.Type with Scope.Template
