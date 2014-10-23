@@ -111,6 +111,7 @@ import Location.{ Local, InBlock, InTemplate }
 
 abstract class AbstractParser { parser =>
   var in: TokIterator
+  def tok = in.tok
   val source: Source
   implicit val origin: Origin = Origin.Source(source)
 
@@ -182,7 +183,7 @@ abstract class AbstractParser { parser =>
    *  the next token not be the expected opener (e.g. Tok.`(`) will be returned
    *  instead of the contents of the groupers.  However in all cases accept[`(`]
    *  will be called, so a parse error will still result.  If the grouping is
-   *  optional, in.tok should be tested before calling these methods.
+   *  optional, tok should be tested before calling these methods.
    */
   @inline final def inParens[T](body: => T): T = {
     accept[`(`]
@@ -191,7 +192,7 @@ abstract class AbstractParser { parser =>
     ret
   }
   @inline final def inParensOrError[T](body: => T, alt: T): T =
-    if (in.tok.is[`(`]) inParens(body)
+    if (tok.is[`(`]) inParens(body)
     else { accept[`(`]; alt }
 
   @inline final def inParensOrUnit[T, Ret >: Lit](body: => Ret): Ret = inParensOrError(body, Lit.Unit())
@@ -204,13 +205,13 @@ abstract class AbstractParser { parser =>
     ret
   }
   @inline final def inBracesOrError[T](body: => T, alt: T): T =
-    if (in.tok.is[`{`]) inBraces(body)
+    if (tok.is[`{`]) inBraces(body)
     else { accept[`{`]; alt }
 
   @inline final def inBracesOrNil[T](body: => List[T]): List[T] = inBracesOrError(body, Nil)
   @inline final def inBracesOrUnit[T](body: => Term): Term = inBracesOrError(body, Lit.Unit())
   @inline final def dropAnyBraces[T](body: => T): T =
-    if (in.tok.is[`{`]) inBraces(body)
+    if (tok.is[`{`]) inBraces(body)
     else body
 
   @inline final def inBrackets[T](body: => T): T = {
@@ -234,7 +235,7 @@ abstract class AbstractParser { parser =>
     var nparens = 0
     var nbraces = 0
     while (true) {
-      in.tok match {
+      tok match {
         case _: EOF =>
           return
         case _: `;` =>
@@ -254,7 +255,7 @@ abstract class AbstractParser { parser =>
           nbraces += 1
         case _ =>
       }
-      if (targetToken == in.tok && nparens == 0 && nbraces == 0) return
+      if (targetToken == tok && nparens == 0 && nbraces == 0) return
       in.next()
     }
   }
@@ -266,21 +267,21 @@ abstract class AbstractParser { parser =>
   def incompleteInputError(msg: String): Nothing
   def syntaxError(offset: Offset, msg: String): Nothing
 
-  def syntaxError(msg: String): Nothing = syntaxError(in.offset, msg)
-  def warning(msg: String): Unit = warning(in.offset, msg)
-  def deprecationWarning(msg: String): Unit = deprecationWarning(in.offset, msg)
+  def syntaxError(msg: String): Nothing = syntaxError(tok.offset, msg)
+  def warning(msg: String): Unit = warning(tok.offset, msg)
+  def deprecationWarning(msg: String): Unit = deprecationWarning(tok.offset, msg)
 
   // TODO: get offset out of tree once we have positions
   def warning(tree: Tree, msg: String): Unit = deprecationWarning(msg)
   def syntaxError(tree: Tree, msg: String): Nothing = syntaxError(msg)
   
   // TODO: print nice textual representaion of T here instead of runtime class
-  def syntaxErrorExpected[T <: Tok: ClassTag]: Nothing = syntaxError(s"${implicitly[ClassTag[T]].runtimeClass} expected but ${in.tok} found.")
+  def syntaxErrorExpected[T <: Tok: ClassTag]: Nothing = syntaxError(s"${implicitly[ClassTag[T]].runtimeClass} expected but ${tok} found.")
 
   /** Consume one token of the specified type, or signal an error if it is not there. */
   def accept[T <: Tok: ClassTag]: Unit =
-    if (in.tok.is[T]) {
-      if (in.tok.not[EOF]) in.next()
+    if (tok.is[T]) {
+      if (tok.not[EOF]) in.next()
     } else syntaxErrorExpected[T]
 
   /** {{{
@@ -288,19 +289,19 @@ abstract class AbstractParser { parser =>
    *  nl  = `\n' // where allowed
    *  }}}
    */
-  def acceptStatSep(): Unit = in.tok match {
+  def acceptStatSep(): Unit = tok match {
     case _: `\n` | _: `\n\n` => in.next()
     case _                   => accept[`;`]
   }
   def acceptStatSepOpt() =
-    if (!in.tok.is[StatSeqEnd])
+    if (!tok.is[StatSeqEnd])
       acceptStatSep()
 
 /* -------------- TOKEN CLASSES ------------------------------------------- */
   
-  def isIdentAnd(pred: String => Boolean) = in.tok match { 
-    case Ident(n, _) if pred(n) => true
-    case _                      => false
+  def isIdentAnd(pred: String => Boolean) = tok match { 
+    case id: Ident if pred(id.value) => true
+    case _                           => false
   }
   def isUnaryOp: Boolean            = isIdentAnd(SyntacticInfo.isUnaryOp)
   def isIdentExcept(except: String) = isIdentAnd(_ != except)  
@@ -347,7 +348,7 @@ abstract class AbstractParser { parser =>
     if (!sepFirst)
       ts += part
 
-    while (in.tok.is[Sep]) {
+    while (tok.is[Sep]) {
       in.next()
       ts += part
     }
@@ -374,14 +375,14 @@ abstract class AbstractParser { parser =>
   }
 
   def makeTupleTermParens(bodyf: => List[Term]) =
-    makeTupleTerm(inParens(if (in.tok.is[`)`]) Nil else bodyf))
+    makeTupleTerm(inParens(if (tok.is[`)`]) Nil else bodyf))
 
   // TODO: make zero tuple for types Lit.Unit() too?
   def makeTupleType(body: List[Type]): Type =
     makeTuple[Type](body, () => unreachable, Type.Tuple(_))
 
   def makeTuplePatParens(bodyf: => List[Pat]): Pat = {
-    val body = inParens(if (in.tok.is[`)`]) Nil else bodyf)
+    val body = inParens(if (tok.is[`)`]) Nil else bodyf)
     makeTuple[Pat](body, () => Lit.Unit(), Pat.Tuple(_))
   }
 
@@ -409,7 +410,7 @@ abstract class AbstractParser { parser =>
     implicit object `List Arg Context` extends OpCtx[List[Arg]] {
       def opinfo(tree: List[Arg]): OpInfo[List[Arg]] = {
         val name = termName()
-        val targs = if (in.tok.is[`[`]) exprTypeArgs() else Nil
+        val targs = if (tok.is[`[`]) exprTypeArgs() else Nil
         OpInfo(tree, name, targs)
       }
       def binop(opinfo: OpInfo[List[Arg]], rhs: List[Arg]): List[Arg] = {
@@ -423,7 +424,7 @@ abstract class AbstractParser { parser =>
     implicit object `Pat Context` extends OpCtx[Pat] {
       def opinfo(tree: Pat): OpInfo[Pat] = {
         val name = termName()
-        if (in.tok.is[`[`]) syntaxError("infix patterns cannot have type arguments")
+        if (tok.is[`[`]) syntaxError("infix patterns cannot have type arguments")
         OpInfo(tree, name, Nil)
       }
       def binop(opinfo: OpInfo[Pat], rhs: Pat): Pat = {
@@ -454,8 +455,8 @@ abstract class AbstractParser { parser =>
   def finishBinaryOp[T: OpCtx](opinfo: OpInfo[T], rhs: T): T = opctx.binop(opinfo, rhs)
 
   def reduceStack[T: OpCtx](base: List[OpInfo[T]], top: T): T = {
-    val opPrecedence = if (in.tok.is[Ident]) termName(advance = false).precedence else 0
-    val leftAssoc    = !in.tok.is[Ident] || termName(advance = false).isLeftAssoc
+    val opPrecedence = if (tok.is[Ident]) termName(advance = false).precedence else 0
+    val leftAssoc    = !tok.is[Ident] || termName(advance = false).isLeftAssoc
 
     reduceStack(base, top, opPrecedence, leftAssoc)
   }
@@ -495,7 +496,7 @@ abstract class AbstractParser { parser =>
 
     private def tupleInfixType(): Type = {
       in.next()
-      if (in.tok.is[`)`]) {
+      if (tok.is[`)`]) {
         in.next()
         accept[`=>`]
         Type.Function(Nil, typ())
@@ -503,7 +504,7 @@ abstract class AbstractParser { parser =>
       else {
         val ts = functionTypes()
         accept[`)`]
-        if (in.tok.is[`=>`]) {
+        if (tok.is[`=>`]) {
           in.next()
           Type.Function(ts, typ())
         } else {
@@ -538,10 +539,10 @@ abstract class AbstractParser { parser =>
      */
     def typ(): Type = {
       val t: Type =
-        if (in.tok.is[`(`]) tupleInfixType()
+        if (tok.is[`(`]) tupleInfixType()
         else infixType(InfixMode.FirstOp)
 
-      in.tok match {
+      tok match {
         case _: `=>`      => in.next(); Type.Function(List(t), typ())
         case _: `forSome` => in.next(); makeExistentialTypeTree(t)
         case _            => t
@@ -570,12 +571,12 @@ abstract class AbstractParser { parser =>
      *  }}}
      */
     def simpleType(): Type = {
-      simpleTypeRest(in.tok match {
+      simpleTypeRest(tok match {
         case _: `(`   => makeTupleType(inParens(types()))
         case _: `_ ` => in.next(); wildcardType()
         case _        =>
           val ref: Term.Ref = path()
-          if (in.tok.not[`.`])
+          if (tok.not[`.`])
             convertToTypeId(ref) getOrElse { syntaxError("identifier expected") }
           else {
             in.next()
@@ -589,7 +590,7 @@ abstract class AbstractParser { parser =>
       in.next()
       Type.Project(qual, typeName())
     }
-    def simpleTypeRest(t: Type): Type = in.tok match {
+    def simpleTypeRest(t: Type): Type = tok match {
       case _: `#` => simpleTypeRest(typeProjection(t))
       case _: `[` => simpleTypeRest(Type.Apply(t, typeArgs()))
       case _      => t
@@ -601,20 +602,20 @@ abstract class AbstractParser { parser =>
      *  }}}
      */
     def compoundType(): Type = compoundTypeRest(
-      if (in.tok.is[`{`]) None
+      if (tok.is[`{`]) None
       else Some(annotType())
     )
 
     // TODO: warn about def f: Unit { } case?
     def compoundTypeRest(t: Option[Type]): Type = {
       val ts = new ListBuffer[Type] ++ t
-      while (in.tok.is[`with`]) {
+      while (tok.is[`with`]) {
         in.next()
         ts += annotType()
       }
       newLineOptWhenFollowedBy[`{`]
       val types = ts.toList
-      if (in.tok.is[`{`]) {
+      if (tok.is[`{`]) {
         val refinements = refinement()
         (types, refinements) match {
           case (typ :: Nil, Nil) => typ
@@ -676,8 +677,8 @@ abstract class AbstractParser { parser =>
     }
   }
 
-  def name[T](ctor: (String, Boolean) => T, advance: Boolean): T = in.tok match {
-    case Ident(name, isBackquoted) => 
+  def name[T](ctor: (String, Boolean) => T, advance: Boolean): T = tok match {
+    case Ident(name, isBackquoted, _) => 
       val res = ctor(name, isBackquoted)
       if (advance) in.next()
       res
@@ -695,8 +696,8 @@ abstract class AbstractParser { parser =>
    */
   // TODO: this has to be rewritten
   def path(thisOK: Boolean = true): Term.Ref = {
-    def stop = in.tok.not[`.`] || ahead { in.tok.not[`this`] && in.tok.not[`super`] && !in.tok.is[Ident] }
-    if (in.tok.is[`this`]) {
+    def stop = tok.not[`.`] || ahead { tok.not[`this`] && tok.not[`super`] && !tok.is[Ident] }
+    if (tok.is[`this`]) {
       in.next()
       val thisnone = Term.This(None)
       if (stop && thisOK) thisnone
@@ -704,7 +705,7 @@ abstract class AbstractParser { parser =>
         accept[`.`]
         selectors(thisnone)
       }
-    } else if (in.tok.is[`super`]) {
+    } else if (tok.is[`super`]) {
       in.next()
       val superp = Qual.Super(None, mixinQualifierOpt())
       accept[`.`]
@@ -719,7 +720,7 @@ abstract class AbstractParser { parser =>
       if (stop) name
       else {
         in.next()
-        if (in.tok.is[`this`]) {
+        if (tok.is[`this`]) {
           in.next()
           val thisid = Term.This(Some(name.toQualName))
           if (stop && thisOK) thisid
@@ -727,7 +728,7 @@ abstract class AbstractParser { parser =>
             accept[`.`]
             selectors(thisid)
           }
-        } else if (in.tok.is[`super`]) {
+        } else if (tok.is[`super`]) {
           in.next()
           val superp = Qual.Super(Some(name.toQualName), mixinQualifierOpt())
           accept[`.`]
@@ -747,7 +748,7 @@ abstract class AbstractParser { parser =>
   def selector(t: Term): Term.Select = Term.Select(t, termName(), isPostfix = false)
   def selectors(t: Term.Ref): Term.Ref ={
     val t1 = selector(t)
-    if (in.tok.is[`.`] && ahead { in.tok.is[Ident] }) {
+    if (tok.is[`.`] && ahead { tok.is[Ident] }) {
       in.next()
       selectors(t1)
     }
@@ -759,7 +760,7 @@ abstract class AbstractParser { parser =>
   *   }}}
   */
   def mixinQualifierOpt(): Option[Type.Name] =
-    if (in.tok.is[`[`]) Some(inBrackets(typeName()))
+    if (tok.is[`[`]) Some(inBrackets(typeName()))
     else None
 
   /** {{{
@@ -777,7 +778,7 @@ abstract class AbstractParser { parser =>
   */
   def qualId(): Term.Ref = {
     val name = termName()
-    if (in.tok.not[`.`]) name
+    if (tok.not[`.`]) name
     else {
       in.next()
       selectors(name)
@@ -791,19 +792,19 @@ abstract class AbstractParser { parser =>
    *  }}}
    */
   def literal(isNegated: Boolean = false): Lit = {
-    val res = in.tok match {
-      case Literal.Char(v)       => Lit.Char(v)
-      case Literal.Int(v)        => Lit.Int(if (isNegated) -v else v)
-      case Literal.Long(v)       => Lit.Long(if (isNegated) -v else v)
-      case Literal.Float(v)      => Lit.Float(if (isNegated) -v else v)
-      case Literal.Double(v)     => Lit.Double(if (isNegated) -v else v)
-      case Literal.String(v)     => Lit.String(v) 
-      case Literal.Symbol(v)     => Lit.Symbol(v)
-      case Interpolation.Part(v) => Lit.String(v) 
-      case _: `true`             => Lit.Bool(true)
-      case _: `false`            => Lit.Bool(false)
-      case _: `null`             => Lit.Null()      
-      case _                     => syntaxError("illegal literal")
+    val res = tok match {
+      case Literal.Char(v, _)       => Lit.Char(v)
+      case Literal.Int(v, _)        => Lit.Int(if (isNegated) -v else v)
+      case Literal.Long(v, _)       => Lit.Long(if (isNegated) -v else v)
+      case Literal.Float(v, _)      => Lit.Float(if (isNegated) -v else v)
+      case Literal.Double(v, _)     => Lit.Double(if (isNegated) -v else v)
+      case Literal.String(v, _)     => Lit.String(v) 
+      case Literal.Symbol(v, _)     => Lit.Symbol(v)
+      case Interpolation.Part(v, _) => Lit.String(v) 
+      case _: `true`                => Lit.Bool(true)
+      case _: `false`               => Lit.Bool(false)
+      case _: `null`                => Lit.Null()      
+      case _                        => syntaxError("illegal literal")
     }
     in.next()
     res
@@ -811,25 +812,25 @@ abstract class AbstractParser { parser =>
 
   def interpolate[Ctx, Ret](arg: () => Ctx, result: (Term.Name, List[Lit.String], List[Ctx]) => Ret): Ret = {
     def part() = {
-      val value = in.tok match {
-        case Literal.String(v)     => v
-        case Interpolation.Part(v) => v
-        case _                     => syntaxErrorExpected[Interpolation.Part]
+      val value = tok match {
+        case Literal.String(v, _)     => v
+        case Interpolation.Part(v, _) => v
+        case _                        => syntaxErrorExpected[Interpolation.Part]
       }
       val lit = Lit.String(value)
       in.next()
       lit
     }
-    val Interpolation.Id(nameStr) = in.tok
+    val Interpolation.Id(nameStr, _) = tok
     val interpolator = Term.Name(nameStr, isBackquoted = false) // termName() for INTERPOLATIONID
     in.next()
     val partsBuf = new ListBuffer[Lit.String]
     val argsBuf = new ListBuffer[Ctx]
-    while (in.tok.is[Interpolation.Part]) {
+    while (tok.is[Interpolation.Part]) {
       partsBuf += part()
       argsBuf += arg()
     }
-    if (in.tok.is[Literal.String]) partsBuf += part()
+    if (tok.is[Literal.String]) partsBuf += part()
     result(interpolator, partsBuf.toList, argsBuf.toList)
   }
 
@@ -839,12 +840,12 @@ abstract class AbstractParser { parser =>
       case _ => term
     }
     interpolate[Term, Term.Interpolate](arg = { () =>
-      in.tok match {
-        case Ident(_, _) => termName()
-        // case _: `_ `       => freshPlaceholder()       // ifonly etapolation
-        case _: `{`          => dropTrivialBlock(expr()) // dropAnyBraces(expr0(Local))
-        case _: `this`       => in.next(); Term.This(None)
-        case _               => syntaxError("error in interpolated string: identifier or block expected")
+      tok match {
+        case _: Ident   => termName()
+        // case _: `_ ` => freshPlaceholder()       // ifonly etapolation
+        case _: `{`     => dropTrivialBlock(expr()) // dropAnyBraces(expr0(Local))
+        case _: `this`  => in.next(); Term.This(None)
+        case _          => syntaxError("error in interpolated string: identifier or block expected")
       }
     }, result = Term.Interpolate(_, _, _))
   }
@@ -855,22 +856,22 @@ abstract class AbstractParser { parser =>
 /* ------------- NEW LINES ------------------------------------------------- */
 
   def newLineOpt(): Unit = {
-    if (in.tok.is[`\n`]) in.next()
+    if (tok.is[`\n`]) in.next()
   }
 
   def newLinesOpt(): Unit = {
-    if (in.tok.is[`\n`] || in.tok.is[`\n\n`])
+    if (tok.is[`\n`] || tok.is[`\n\n`])
       in.next()
   }
 
   def newLineOptWhenFollowedBy[T <: Tok: ClassTag]: Unit = {
     // note: next is defined here because current is Tok.`\n`
-    if (in.tok.is[`\n`] && ahead { in.tok.is[T] }) newLineOpt()
+    if (tok.is[`\n`] && ahead { tok.is[T] }) newLineOpt()
   }
 
   def newLineOptWhenFollowing(p: Tok => Boolean): Unit = {
     // note: next is defined here because current is Tok.`\n`
-    if (in.tok.is[`\n`] && ahead { p(in.tok) }) newLineOpt()
+    if (tok.is[`\n`] && ahead { p(tok) }) newLineOpt()
   }
 
 /* ------------- TYPES ---------------------------------------------------- */
@@ -880,7 +881,7 @@ abstract class AbstractParser { parser =>
    *  }}}
    */
   def typedOpt(): Option[Type] =
-    if (in.tok.is[`:`]) { in.next(); Some(typ()) }
+    if (tok.is[`:`]) { in.next(); Some(typ()) }
     else None
 
   def typeOrInfixType(location: Location): Type =
@@ -899,7 +900,7 @@ abstract class AbstractParser { parser =>
 /* ----------- EXPRESSIONS ------------------------------------------------ */
 
   def condExpr(): Term = {
-    if (in.tok.is[`(`]) {
+    if (tok.is[`(`]) {
       in.next()
       val r = expr()
       accept[`)`]
@@ -935,32 +936,32 @@ abstract class AbstractParser { parser =>
    */
   def expr(): Term = expr(Local)
 
-  def expr(location: Location): Term = in.tok match {
+  def expr(location: Location): Term = tok match {
     case _: `if` =>
       in.next()
       val cond = condExpr()
       newLinesOpt()
       val thenp = expr()
-      if (in.tok.is[`else`]) { in.next(); Term.If(cond, thenp, expr()) }
+      if (tok.is[`else`]) { in.next(); Term.If(cond, thenp, expr()) }
       else { Term.If(cond, thenp) }
     case _: `try` =>
       in.next()
-      val body: Term = in.tok match {
+      val body: Term = tok match {
         case _: `{` => inBracesOrUnit(block())
         case _: `(` => inParensOrUnit(expr())
         case _      => expr()
       }
       val catchopt =
-        if (in.tok.not[`catch`]) None
+        if (tok.not[`catch`]) None
         else {
           in.next()
-          if (in.tok.not[`{`]) Some(expr())
+          if (tok.not[`{`]) Some(expr())
           else inBraces {
-            if (in.tok.is[`case`]) Some(Term.Cases(caseClauses()))
+            if (tok.is[`case`]) Some(Term.Cases(caseClauses()))
             else Some(expr())
           }
         }
-      val finallyopt = in.tok match {
+      val finallyopt = tok match {
         case _: `finally` => in.next(); Some(expr())
         case _            => None
       }
@@ -974,17 +975,17 @@ abstract class AbstractParser { parser =>
     case _: `do` =>
       in.next()
       val body = expr()
-      if (in.tok.is[StatSep]) in.next()
+      if (tok.is[StatSep]) in.next()
       accept[`while`]
       val cond = condExpr()
       Term.Do(body, cond)
     case _: `for` =>
       in.next()
       val enums =
-        if (in.tok.is[`{`]) inBracesOrNil(enumerators())
+        if (tok.is[`{`]) inBracesOrNil(enumerators())
         else inParensOrNil(enumerators())
       newLinesOpt()
-      if (in.tok.is[`yield`]) {
+      if (tok.is[`yield`]) {
         in.next()
         Term.ForYield(enums, expr())
       } else {
@@ -992,7 +993,7 @@ abstract class AbstractParser { parser =>
       }
     case _: `return` =>
       in.next()
-      if (in.tok.is[ExprIntro]) Term.Return(expr())
+      if (tok.is[ExprIntro]) Term.Return(expr())
       else Term.Return()
     case _: `throw` =>
       in.next()
@@ -1001,7 +1002,7 @@ abstract class AbstractParser { parser =>
       implicitClosure(location)
     case _ =>
       var t: Term = postfixExpr()
-      if (in.tok.is[`=`]) {
+      if (tok.is[`=`]) {
         t match {
           case ref: Term.Ref =>
             in.next()
@@ -1011,9 +1012,9 @@ abstract class AbstractParser { parser =>
             t = Term.Update(app, expr())
           case _ =>
         }
-      } else if (in.tok.is[`:`]) {
+      } else if (tok.is[`:`]) {
         val colonPos = in.next()
-        if (in.tok.is[`@`]) {
+        if (tok.is[`@`]) {
           t = Term.Annotate(t, annots(skipNewLines = false))
         } else {
           t = {
@@ -1023,7 +1024,7 @@ abstract class AbstractParser { parser =>
             Term.Ascribe(t, tpt)
           }
         }
-      } else if (in.tok.is[`match`]) {
+      } else if (tok.is[`match`]) {
         in.next()
         t = Term.Match(t, Term.Cases(inBracesOrNil(caseClauses())))
       }
@@ -1035,7 +1036,7 @@ abstract class AbstractParser { parser =>
         case Term.Tuple(xs) if xs.forall(_.isInstanceOf[Term.Ascribe]) => true
         case _ => false
       }
-      if (in.tok.is[`=>`] && (location != InTemplate || lhsIsTypedParamList)) {
+      if (tok.is[`=>`] && (location != InTemplate || lhsIsTypedParamList)) {
         in.next()
         t = {
           Term.Function(convertToParams(t), if (location != InBlock) expr() else block())
@@ -1052,7 +1053,7 @@ abstract class AbstractParser { parser =>
   def implicitClosure(location: Location): Term.Function = {
     val param0 = convertToParam {
       val name = termName()
-      if (in.tok.not[`:`]) name
+      if (tok.not[`:`]) name
       else {
         in.next()
         Term.Ascribe(expr, typeOrInfixType(location))
@@ -1075,11 +1076,11 @@ abstract class AbstractParser { parser =>
     val base = ctx.stack
 
     def loop(top: List[Arg]): List[Arg] =
-      if (!in.tok.is[Ident]) top
+      if (!tok.is[Ident]) top
       else {
         ctx.push(reduceStack(base, top))
         newLineOptWhenFollowing(_.is[ExprIntro])
-        if (in.tok.is[ExprIntro]) loop(argumentExprsOrPrefixExpr())
+        if (tok.is[ExprIntro]) loop(argumentExprsOrPrefixExpr())
         else finishPostfixOp(base, ctx.pop())
       }
 
@@ -1097,7 +1098,7 @@ abstract class AbstractParser { parser =>
     if (!isUnaryOp) simpleExpr()
     else {
       val op = termName()
-      if (op.value == "-" && in.tok.is[NumericLiteral])
+      if (op.value == "-" && tok.is[NumericLiteral])
         simpleExprRest(literal(isNegated = true), canApply = true)
       else
         Term.ApplyUnary(op, simpleExpr())
@@ -1121,14 +1122,14 @@ abstract class AbstractParser { parser =>
   def simpleExpr(): Term = {
     var canApply = true
     val t: Term =
-      in.tok match {
+      tok match {
         case _: Literal =>
           literal()
-        case Interpolation.Id(_) =>
+        case _: Interpolation.Id =>
           interpolateTerm()
         case _: XMLStart =>
           xmlLiteral()
-        case Ident(_, _) | _: `this` | _: `super` =>
+        case _: Ident | _: `this` | _: `super` =>
           path()
         case _: `_ ` =>
           in.next()
@@ -1145,14 +1146,14 @@ abstract class AbstractParser { parser =>
           if (hasStats) Term.New(Aux.Template(edefs, parents, self, stats))
           else Term.New(Aux.Template(edefs, parents, self))
         case _ =>
-          syntaxError(s"illegal start of simple expression: ${in.tok}")
+          syntaxError(s"illegal start of simple expression: ${tok}")
       }
     simpleExprRest(t, canApply = canApply)
   }
 
   def simpleExprRest(t: Term, canApply: Boolean): Term = {
     if (canApply) newLineOptWhenFollowedBy[`{`]
-    in.tok match {
+    tok match {
       case _: `.` =>
         in.next()
         simpleExprRest(selector(t), canApply = true)
@@ -1160,7 +1161,7 @@ abstract class AbstractParser { parser =>
         t match {
           case _: Term.Name | _: Term.Select | _: Term.Apply =>
             var app: Term = t
-            while (in.tok.is[`[`])
+            while (tok.is[`[`])
               app = Term.ApplyType(app, exprTypeArgs())
 
             simpleExprRest(app, canApply = true)
@@ -1196,10 +1197,10 @@ abstract class AbstractParser { parser =>
   }
 
   def argumentExprsOrPrefixExpr(): List[Arg] =
-    if (in.tok.not[`{`] && in.tok.not[`(`]) prefixExpr() :: Nil
+    if (tok.not[`{`] && tok.not[`(`]) prefixExpr() :: Nil
     else {
       val args = argumentExprs()
-      in.tok match {
+      tok match {
         case _: `.` | _: `[` | _: `(` | _: `{` | _: `_ ` =>
           simpleExprRest(argsToTerm(args), canApply = true) :: Nil
         case _ =>
@@ -1224,16 +1225,16 @@ abstract class AbstractParser { parser =>
           other
       }
     }
-    in.tok match {
+    tok match {
       case _: `{` => List(blockExpr())
-      case _: `(` => inParens(if (in.tok.is[`)`]) Nil else args())
+      case _: `(` => inParens(if (tok.is[`)`]) Nil else args())
       case _      => Nil
     }
   }
 
   /** A succession of argument lists. */
   def multipleArgumentExprs(): List[List[Arg]] = {
-    if (in.tok.not[`(`]) Nil
+    if (tok.not[`(`]) Nil
     else argumentExprs() :: multipleArgumentExprs()
   }
 
@@ -1243,7 +1244,7 @@ abstract class AbstractParser { parser =>
    */
   def blockExpr(): Term = {
     inBraces {
-      if (in.tok.is[`case`]) Term.Cases(caseClauses())
+      if (tok.is[`case`]) Term.Cases(caseClauses())
       else block()
     }
   }
@@ -1277,7 +1278,7 @@ abstract class AbstractParser { parser =>
    *  }}}
    */
   def guard(): Option[Term] =
-    if (in.tok.is[`if`]) { in.next(); Some(postfixExpr()) }
+    if (tok.is[`if`]) { in.next(); Some(postfixExpr()) }
     else None
 
   /** {{{
@@ -1290,7 +1291,7 @@ abstract class AbstractParser { parser =>
   def enumerators(): List[Enum] = {
     val enums = new ListBuffer[Enum]
     enums ++= enumerator(isFirst = true)
-    while (in.tok.is[StatSep]) {
+    while (tok.is[StatSep]) {
       in.next()
       enums ++= enumerator(isFirst = false)
     }
@@ -1298,7 +1299,7 @@ abstract class AbstractParser { parser =>
   }
 
   def enumerator(isFirst: Boolean, allowNestedIf: Boolean = true): List[Enum] =
-    if (in.tok.is[`if`] && !isFirst) Enum.Guard(guard().get) :: Nil
+    if (tok.is[`if`] && !isFirst) Enum.Guard(guard().get) :: Nil
     else generator(!isFirst, allowNestedIf)
 
   /** {{{
@@ -1306,13 +1307,13 @@ abstract class AbstractParser { parser =>
    *  }}}
    */
   def generator(eqOK: Boolean, allowNestedIf: Boolean = true): List[Enum] = {
-    val hasVal = in.tok.is[`val`]
+    val hasVal = tok.is[`val`]
     if (hasVal)
       in.next()
 
     val pat   = noSeq.pattern1()
-    val point = in.offset
-    val hasEq = in.tok.is[`=`]
+    val point = tok.offset
+    val hasEq = tok.is[`=`]
 
     if (hasVal) {
       if (hasEq) deprecationWarning("val keyword in for comprehension is deprecated")
@@ -1324,7 +1325,7 @@ abstract class AbstractParser { parser =>
     val rhs = expr()
 
     def loop(): List[Enum] =
-      if (in.tok.not[`if`]) Nil
+      if (tok.not[`if`]) Nil
       else Enum.Guard(guard().get) :: loop()
 
     val tail =
@@ -1380,7 +1381,7 @@ abstract class AbstractParser { parser =>
      *  }}}
      */
     def pattern1(): Pat = pattern2() match {
-      case p @ (_: Term.Name | _: Pat.Wildcard) if in.tok.is[`:`] =>
+      case p @ (_: Term.Name | _: Pat.Wildcard) if tok.is[`:`] =>
         p match {
           case name: Term.Name if !name.isVarPattern =>
             syntaxError("Pattern variables must start with a lower-case letter. (SLS 8.1.1.)")
@@ -1401,7 +1402,7 @@ abstract class AbstractParser { parser =>
     def pattern2(): Pat = {
       val p = pattern3()
 
-      if (in.tok.not[`@`]) p
+      if (tok.not[`@`]) p
       else p match {
         case Pat.Wildcard() =>
           in.next()
@@ -1423,7 +1424,7 @@ abstract class AbstractParser { parser =>
       val ctx = opctx[Pat]
       val base = ctx.stack
       // See SI-3189, SI-4832 for motivation. Cf SI-3480 for counter-motivation.
-      def isCloseDelim = in.tok match {
+      def isCloseDelim = tok match {
         case _: `}` => isXML
         case _: `)` => !isXML
         case _      => false
@@ -1444,8 +1445,8 @@ abstract class AbstractParser { parser =>
     }
 
     def badPattern3(): Nothing = {
-      def isComma                = in.tok.is[`,`]
-      def isDelimiter            = in.tok.is[`)`] || in.tok.is[`}`]
+      def isComma                = tok.is[`,`]
+      def isDelimiter            = tok.is[`)`] || tok.is[`}`]
       def isCommaOrDelimiter     = isComma || isDelimiter
       val (isUnderscore, isStar) = opctx[Pat].stack match {
         case OpInfo(Pat.Wildcard(), Term.Name("*"), _) :: _ => (true,   true)
@@ -1484,21 +1485,21 @@ abstract class AbstractParser { parser =>
     def simplePattern(): Pat =
       // simple diagnostics for this entry point
       simplePattern(() => syntaxError("illegal start of simple pattern"))
-    def simplePattern(onError: () => Nothing): Pat = in.tok match {
-      case Ident(_, _) | _: `this` =>
+    def simplePattern(onError: () => Nothing): Pat = tok match {
+      case _: Ident | _: `this` =>
         val sid = stableId()
-        if (in.tok.is[NumericLiteral]) {
+        if (tok.is[NumericLiteral]) {
           sid match {
             case Term.Name("-") =>
               return literal(isNegated = true)
             case _ =>
           }
         }
-        val targs = in.tok match {
+        val targs = tok match {
           case _: `[` => typeArgs()
           case _        => Nil
         }
-        (in.tok, sid) match {
+        (tok, sid) match {
           case (_: `(`, _)                 => Pat.Extract(sid, targs, argumentPatterns())
           case (_, _) if targs.nonEmpty    => syntaxError("pattern must be a value")
           case (_, sid: Term.Ref with Pat) => sid
@@ -1507,9 +1508,9 @@ abstract class AbstractParser { parser =>
       case _: `_ ` =>
         in.next()
         Pat.Wildcard()
-      case tok if tok.is[Literal] =>
+      case _: Literal =>
         literal()
-      case Interpolation.Id(_) =>
+      case _: Interpolation.Id =>
         interpolatePat()
       case _: `(` =>
         makeTuplePatParens(noSeq.patterns())
@@ -1551,7 +1552,7 @@ abstract class AbstractParser { parser =>
   def seqPatterns(): List[Pat] = seqOK.patterns()
   def xmlSeqPatterns(): List[Pat] = xmlSeqOK.patterns() // Called from xml parser
   def argumentPatterns(): List[Pat] = inParens {
-    if (in.tok.is[`)`]) Nil
+    if (tok.is[`)`]) Nil
     else seqPatterns()
   }
   def xmlLiteralPattern(): Pat
@@ -1563,10 +1564,10 @@ abstract class AbstractParser { parser =>
    *  }}}
    */
   def accessQualifierOpt(): Option[Qual.Access] = {
-    if (in.tok.not[`[`]) None
+    if (tok.not[`[`]) None
     else {
       in.next()
-      val res = if (in.tok.not[`this`]) termName().toQualName
+      val res = if (tok.not[`this`]) termName().toQualName
                 else { in.next(); Term.This(None) }
       accept[`]`]
       Some(res)
@@ -1577,7 +1578,7 @@ abstract class AbstractParser { parser =>
    *  AccessModifier ::= (private | protected) [AccessQualifier]
    *  }}}
    */
-  def accessModifierOpt(): Option[Mod] = in.tok match {
+  def accessModifierOpt(): Option[Mod] = tok match {
     case _: `private`   => in.next(); Some(Mod.Private(accessQualifierOpt()) )
     case _: `protected` => in.next(); Some(Mod.Protected(accessQualifierOpt()) )
     case _              => None
@@ -1596,10 +1597,10 @@ abstract class AbstractParser { parser =>
       if (advance) in.next()
       mods :+ mod
     }
-    def acceptable = if (isLocal) in.tok.is[LocalModifier] else true
+    def acceptable = if (isLocal) tok.is[LocalModifier] else true
     def loop(mods: List[Mod]): List[Mod] =
       if (!acceptable) mods
-      else (in.tok match {
+      else (tok match {
         case _: `abstract`  => loop(addMod(mods, Mod.Abstract()))
         case _: `final`     => loop(addMod(mods, Mod.Final()))
         case _: `sealed`    => loop(addMod(mods, Mod.Sealed()))
@@ -1642,7 +1643,7 @@ abstract class AbstractParser { parser =>
 
   def annot(): Mod.Annot = {
     val t = exprSimpleType()
-    if (in.tok.is[`(`]) Mod.Annot(t, multipleArgumentExprs())
+    if (tok.is[`(`]) Mod.Annot(t, multipleArgumentExprs())
     else Mod.Annot(t, Nil)
   }
 
@@ -1662,10 +1663,10 @@ abstract class AbstractParser { parser =>
   def paramClauses(ownerIsType: Boolean, ownerIsCase: Boolean = false): (List[List[Param.Named]], List[Param.Named]) = {
     var parsedImplicits = false
     def paramClause(): List[Param.Named] = {
-      if (in.tok.is[`)`])
+      if (tok.is[`)`])
         return Nil
 
-      if (in.tok.is[`implicit`]) {
+      if (tok.is[`implicit`]) {
         in.next()
         parsedImplicits = true
       }
@@ -1674,7 +1675,7 @@ abstract class AbstractParser { parser =>
     val paramss = new ListBuffer[List[Param.Named]]
     var implicits = List.empty[Param.Named]
     newLineOptWhenFollowedBy[`(`]
-    while (!parsedImplicits && in.tok.is[`(`]) {
+    while (!parsedImplicits && tok.is[`(`]) {
       in.next()
       val clause = paramClause()
       if (!parsedImplicits)
@@ -1691,7 +1692,7 @@ abstract class AbstractParser { parser =>
    *  ParamType ::= Type | `=>' Type | Type `*'
    *  }}}
    */
-  def paramType(): Param.Type = in.tok match {
+  def paramType(): Param.Type = tok match {
     case _: `=>` =>
       in.next()
       Param.Type.ByName(typ())
@@ -1711,7 +1712,7 @@ abstract class AbstractParser { parser =>
       mods.getAll[Mod.Lazy].foreach { m =>
         syntaxError(m, "lazy modifier not allowed here. Use call-by-name parameters instead")
       }
-      in.tok match {
+      tok match {
         case _: `val` => mods = mods :+ Mod.ValParam(); in.next()
         case _: `var` => mods = mods :+ Mod.VarParam(); in.next()
         case _        =>
@@ -1744,7 +1745,7 @@ abstract class AbstractParser { parser =>
       tpt
     }
     val default =
-      if (in.tok.not[`=`]) None
+      if (tok.not[`=`]) None
       else {
         in.next()
         Some(expr())
@@ -1763,7 +1764,7 @@ abstract class AbstractParser { parser =>
    */
   def typeParamClauseOpt(ownerIsType: Boolean, ctxBoundsAllowed: Boolean): List[TypeParam] = {
     newLineOptWhenFollowedBy[`[`]
-    if (in.tok.not[`[`]) Nil
+    if (tok.not[`[`]) Nil
     else inBrackets(commaSeparated {
       val mods = annots(skipNewLines = true)
       typeParam(mods, ownerIsType, ctxBoundsAllowed)
@@ -1772,7 +1773,7 @@ abstract class AbstractParser { parser =>
 
   def typeParam(annots: List[Mod.Annot], ownerIsType: Boolean, ctxBoundsAllowed: Boolean): TypeParam = {
     val mods =
-      if (ownerIsType && in.tok.is[Ident]) {
+      if (ownerIsType && tok.is[Ident]) {
         if (isIdentOf("+")) {
           in.next()
           annots :+ Mod.Covariant()
@@ -1782,15 +1783,15 @@ abstract class AbstractParser { parser =>
         } else annots
       } else annots
     val nameopt =
-      if (in.tok.is[Ident]) Some(typeName())
-      else if (in.tok.is[`_ `]) { in.next(); None }
+      if (tok.is[Ident]) Some(typeName())
+      else if (tok.is[`_ `]) { in.next(); None }
       else syntaxError("identifier or `_' expected")
     val tparams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
     val bounds = typeBounds()
     val contextBounds = new ListBuffer[Type]
     val viewBounds = new ListBuffer[Type]
     if (ctxBoundsAllowed) {
-      while (in.tok.is[`<%`]) {
+      while (tok.is[`<%`]) {
         // TODO: syntax profile?
         // if (settings.future) {
         //   val msg = ("Use an implicit parameter instead.\n" +
@@ -1801,7 +1802,7 @@ abstract class AbstractParser { parser =>
         in.next()
         viewBounds += typ()
       }
-      while (in.tok.is[`:`]) {
+      while (tok.is[`:`]) {
         in.next()
         contextBounds += typ()
       }
@@ -1826,7 +1827,7 @@ abstract class AbstractParser { parser =>
   }
 
   def bound[T <: Tok: ClassTag]: Option[Type] =
-    if (in.tok.is[T]) { in.next(); Some(typ()) } else None
+    if (tok.is[T]) { in.next(); Some(typ()) } else None
 
 /* -------- DEFS ------------------------------------------- */
 
@@ -1849,7 +1850,7 @@ abstract class AbstractParser { parser =>
     def dotselectors = { accept[`.`]; Import.Clause(sid, importSelectors()) }
     sid match {
       case Term.Select(sid: Term.Ref, name: Term.Name) if sid.isStableId =>
-        if (in.tok.is[`.`]) dotselectors
+        if (tok.is[`.`]) dotselectors
         else Import.Clause(sid, name.toImportName :: Nil)
       case _ => dotselectors
     }
@@ -1860,11 +1861,11 @@ abstract class AbstractParser { parser =>
    *  }}}
    */
   def importSelectors(): List[Import.Selector] =
-    if (in.tok.not[`{`]) List(importWildcardOrName())
+    if (tok.not[`{`]) List(importWildcardOrName())
     else inBraces(commaSeparated(importSelector()))
 
   def importWildcardOrName(): Import.Selector =
-    if (in.tok.is[`_ `]) { in.next(); Import.Wildcard() }
+    if (tok.is[`_ `]) { in.next(); Import.Wildcard() }
     else { val name = termName(); name.toImportName }
 
   /** {{{
@@ -1873,7 +1874,7 @@ abstract class AbstractParser { parser =>
    */
   def importSelector(): Import.Selector = {
     importWildcardOrName() match {
-      case from: Import.Name if in.tok.is[`=>`] =>
+      case from: Import.Name if tok.is[`=>`] =>
         in.next()
         importWildcardOrName() match {
           case to: Import.Name     => Import.Rename(from, to)
@@ -1899,9 +1900,9 @@ abstract class AbstractParser { parser =>
    */
   def defOrDclOrCtor(mods: List[Mod]): Stmt.Template = {
     mods.getAll[Mod.Lazy].foreach { m =>
-      if (in.tok.not[`val`]) syntaxError(m, "lazy not allowed here. Only vals can be lazy")
+      if (tok.not[`val`]) syntaxError(m, "lazy not allowed here. Only vals can be lazy")
     }
-    in.tok match {
+    tok match {
       case _: `val` | _: `var` =>
         patDefOrDcl(mods)
       case _: `def` =>
@@ -1929,15 +1930,15 @@ abstract class AbstractParser { parser =>
    *  }}}
    */
   def patDefOrDcl(mods: List[Mod]): Stmt.Template = {
-    val isMutable = in.tok.is[`var`]
+    val isMutable = tok.is[`var`]
     in.next()
     val lhs: List[Pat] = commaSeparated(noSeq.pattern2())
     val tp: Option[Type] = typedOpt()
 
-    if (tp.isEmpty || in.tok.is[`=`]) {
+    if (tp.isEmpty || tok.is[`=`]) {
       accept[`=`]
       val rhs =
-        if (in.tok.is[`_ `] && tp.nonEmpty && isMutable && lhs.forall(_.isInstanceOf[Term.Name])) {
+        if (tok.is[`_ `] && tp.nonEmpty && isMutable && lhs.forall(_.isInstanceOf[Term.Name])) {
           in.next()
           None
         } else Some(expr())
@@ -1967,12 +1968,12 @@ abstract class AbstractParser { parser =>
    */
   def funDefOrDclOrCtor(mods: List[Mod]): Stmt.Template = {
     in.next()
-    if (in.tok.not[`this`]) funDefRest(mods, termName())
+    if (tok.not[`this`]) funDefRest(mods, termName())
     else {
       in.next()
       val (paramss, implicits) = paramClauses(ownerIsType = true)
       newLineOptWhenFollowedBy[`{`]
-      val (argss, stats) = in.tok match {
+      val (argss, stats) = tok match {
         case _: `{` => constrBlock()
         case _      => accept[`=`]; constrExpr()
       }
@@ -1982,18 +1983,18 @@ abstract class AbstractParser { parser =>
 
   def funDefRest(mods: List[Mod], name: Term.Name): Stmt.Template = {
     def warnProcedureDeprecation =
-      deprecationWarning(in.offset, s"Procedure syntax is deprecated. Convert procedure `$name` to method by adding `: Unit`.")
+      deprecationWarning(tok.offset, s"Procedure syntax is deprecated. Convert procedure `$name` to method by adding `: Unit`.")
     val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
     val (paramss, implicits) = paramClauses(ownerIsType = false)
     newLineOptWhenFollowedBy[`{`]
     var restype = fromWithinReturnType(typedOpt())
-    if (in.tok.is[StatSep] || in.tok.is[`}`]) {
+    if (tok.is[StatSep] || tok.is[`}`]) {
       if (restype.isEmpty) {
         warnProcedureDeprecation
         Decl.Procedure(mods, name, tparams, paramss, implicits)
       } else
         Decl.Def(mods, name, tparams, paramss, implicits, restype.get)
-    } else if (restype.isEmpty && in.tok.is[`{`]) {
+    } else if (restype.isEmpty && tok.is[`{`]) {
       warnProcedureDeprecation
       Defn.Procedure(mods, name, tparams, paramss, implicits, {
         accept[`{`]
@@ -2004,9 +2005,9 @@ abstract class AbstractParser { parser =>
     } else {
       var isMacro = false
       val rhs = {
-        if (in.tok.is[`=`]) {
+        if (tok.is[`=`]) {
           in.next()
-          isMacro = in.tok.is[`macro`]
+          isMacro = tok.is[`macro`]
           if (isMacro) in.next()
         } else {
           accept[`=`]
@@ -2015,7 +2016,7 @@ abstract class AbstractParser { parser =>
       }
       if (isMacro) restype match {
         case Some(restype) => Defn.Macro(mods, name, tparams, paramss, implicits, restype, rhs)
-        case None => syntaxError(in.offset, "macros must have explicitly specified return types")
+        case None => syntaxError(tok.offset, "macros must have explicitly specified return types")
       } else Defn.Def(mods, name, tparams, paramss, implicits, restype, rhs)
     }
   }
@@ -2026,7 +2027,7 @@ abstract class AbstractParser { parser =>
    *  }}}
    */
   def constrExpr(): (List[List[Arg]], List[Stmt.Block]) =
-    if (in.tok.is[`{`]) constrBlock()
+    if (tok.is[`{`]) constrBlock()
     else (selfInvocation(), Nil)
 
   /** {{{
@@ -2038,7 +2039,7 @@ abstract class AbstractParser { parser =>
     newLineOptWhenFollowedBy[`{`]
     var t: List[List[Arg]] = List(argumentExprs())
     newLineOptWhenFollowedBy[`{`]
-    while (in.tok.is[`(`] || in.tok.is[`{`]) {
+    while (tok.is[`(`] || tok.is[`{`]) {
       t = t :+ argumentExprs()
       newLineOptWhenFollowedBy[`{`]
     }
@@ -2053,7 +2054,7 @@ abstract class AbstractParser { parser =>
     in.next()
     val argss = selfInvocation()
     val stats =
-      if (!in.tok.is[StatSep]) Nil
+      if (!tok.is[StatSep]) Nil
       else { in.next(); blockStatSeq() }
     accept[`}`]
     (argss, stats)
@@ -2070,7 +2071,7 @@ abstract class AbstractParser { parser =>
     newLinesOpt()
     val name = typeName()
     val tparams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
-    in.tok match {
+    tok match {
       case _: `=` =>
         in.next()
         Defn.Type(mods, name, tparams, typ())
@@ -2093,7 +2094,7 @@ abstract class AbstractParser { parser =>
    */
   def tmplDef(mods: List[Mod]): Has.Template with Stmt.Template = {
     mods.getAll[Mod.Lazy].foreach { syntaxError(_, "classes cannot be lazy") }
-    in.tok match {
+    tok match {
       case _: `trait` =>
         traitDef(mods)
       case _: `class ` =>
@@ -2117,12 +2118,12 @@ abstract class AbstractParser { parser =>
   def classDef(mods: List[Mod]): Defn.Class = {
     in.next()
     // TODO:
-    // if (ofCaseClass && in.tok.not[`(`])
-    //  syntaxError(in.offset, "case classes without a parameter list are not allowed;\n"+
+    // if (ofCaseClass && tok.not[`(`])
+    //  syntaxError(tok.offset, "case classes without a parameter list are not allowed;\n"+
     //                             "use either case objects or case classes with an explicit `()' as a parameter list.")
     // TODO:
     // if (owner == nme.CONSTRUCTOR && (result.isEmpty || (result.head take 1 exists (_.mods.isImplicit)))) {
-    //  in.tok match {
+    //  tok match {
     //    case _: `[` => syntaxError("no type parameters allowed here")
     //    case _: EOF => incompleteInputError("auxiliary constructor needs non-implicit parameter list")
     //    case _      => syntaxError(start, "auxiliary constructor needs non-implicit parameter list")
@@ -2177,13 +2178,13 @@ abstract class AbstractParser { parser =>
     val parents = new ListBuffer[Aux.Parent]
     def readAppliedParent() = {
       val parentTpe = startModType()
-      parents += (in.tok match {
+      parents += (tok match {
         case _: `(` => Aux.Parent(parentTpe, multipleArgumentExprs())
         case _      => Aux.Parent(parentTpe, Nil)
       })
     }
     readAppliedParent()
-    while (in.tok.is[`with`]) { in.next(); readAppliedParent() }
+    while (tok.is[`with`]) { in.next(); readAppliedParent() }
     parents.toList
   }
 
@@ -2196,10 +2197,10 @@ abstract class AbstractParser { parser =>
    */
   def template(): (List[Stmt.Early], List[Aux.Parent], Aux.Self, List[Stmt.Template], Boolean) = {
     newLineOptWhenFollowedBy[`{`]
-    if (in.tok.is[`{`]) {
+    if (tok.is[`{`]) {
       // @S: pre template body cannot stub like post body can!
       val (self, body) = templateBody(isPre = true)
-      if (in.tok.is[`with`] && self.name.isEmpty && self.decltpe.isEmpty) {
+      if (tok.is[`with`] && self.name.isEmpty && self.decltpe.isEmpty) {
         val edefs = body.map(ensureEarlyDef)
         in.next()
         val parents = templateParents()
@@ -2233,7 +2234,7 @@ abstract class AbstractParser { parser =>
    */
   def templateOpt(owner: TemplateOwner): Aux.Template = {
     val (early, parents, self, body, hasStats) = (
-      if (in.tok.is[`extends`] /* || in.tok.is[`<:`] && mods.isTrait */) {
+      if (tok.is[`extends`] /* || tok.is[`<:`] && mods.isTrait */) {
         in.next()
         template()
       }
@@ -2259,11 +2260,11 @@ abstract class AbstractParser { parser =>
 
   def templateBodyOpt(parenMeansSyntaxError: Boolean): (Aux.Self, List[Stmt.Template], Boolean) = {
     newLineOptWhenFollowedBy[`{`]
-    if (in.tok.is[`{`]) {
+    if (tok.is[`{`]) {
       val (self, stats) = templateBody(isPre = false)
       (self, stats, true)
     } else {
-      if (in.tok.is[`(`]) {
+      if (tok.is[`(`]) {
         if (parenMeansSyntaxError) syntaxError("traits or objects may not have parameters")
         else abort("unexpected opening parenthesis")
       }
@@ -2287,9 +2288,9 @@ abstract class AbstractParser { parser =>
   def statSeq[T <: Tree](statpf: PartialFunction[Tok, T],
                          errorMsg: String = "illegal start of definition"): List[T] = {
     val stats = new ListBuffer[T]
-    while (!in.tok.is[StatSeqEnd]) {
-      if (statpf.isDefinedAt(in.tok)) stats += statpf(in.tok)
-      else if (!in.tok.is[StatSep]) syntaxError(errorMsg)
+    while (!tok.is[StatSeqEnd]) {
+      if (statpf.isDefinedAt(tok)) stats += statpf(tok)
+      else if (!tok.is[StatSep]) syntaxError(errorMsg)
       acceptStatSepOpt()
     }
     stats.toList
@@ -2323,9 +2324,9 @@ abstract class AbstractParser { parser =>
   def templateStatSeq(isPre : Boolean): (Aux.Self, List[Stmt.Template]) = {
     var self: Aux.Self = Aux.Self(None, None, hasThis = false)
     var firstOpt: Option[Term] = None
-    if (in.tok.is[ExprIntro]) {
+    if (tok.is[ExprIntro]) {
       val first = expr(InTemplate) // @S: first statement is potentially converted so cannot be stubbed.
-      if (in.tok.is[`=>`]) {
+      if (tok.is[`=>`]) {
         first match {
           case name: Name =>
             self = Aux.Self(Some(name.toTermName), None, hasThis = false)
@@ -2379,20 +2380,20 @@ abstract class AbstractParser { parser =>
    */
   def refineStatSeq(): List[Stmt.Refine] = {
     val stats = new ListBuffer[Stmt.Refine]
-    while (!in.tok.is[StatSeqEnd]) {
+    while (!tok.is[StatSeqEnd]) {
       stats ++= refineStat()
-      if (in.tok.not[`}`]) acceptStatSep()
+      if (tok.not[`}`]) acceptStatSep()
     }
     stats.toList
   }
 
   def refineStat(): Option[Stmt.Refine] =
-    if (in.tok.is[DclIntro]) {
+    if (tok.is[DclIntro]) {
       defOrDclOrCtor(Nil) match {
         case sr: Stmt.Refine => Some(sr)
         case other           => syntaxError(other, "is not a valid refinement declaration")
       }
-    } else if (!in.tok.is[StatSep]) {
+    } else if (!tok.is[StatSep]) {
       syntaxError(
         "illegal start of declaration"+
         (if (inFunReturnType) " (possible cause: missing `=' in front of current method body)"
@@ -2424,30 +2425,30 @@ abstract class AbstractParser { parser =>
    */
   def blockStatSeq(): List[Stmt.Block] = {
     val stats = new ListBuffer[Stmt.Block]
-    while (!in.tok.is[StatSeqEnd] && !in.tok.is[CaseDefEnd]) {
-      if (in.tok.is[`import`]) {
+    while (!tok.is[StatSeqEnd] && !tok.is[CaseDefEnd]) {
+      if (tok.is[`import`]) {
         stats += importStmt()
         acceptStatSepOpt()
       }
-      else if (in.tok.is[DefIntro] || in.tok.is[LocalModifier] || in.tok.is[`@`]) {
-        if (in.tok.is[`implicit`]) {
+      else if (tok.is[DefIntro] || tok.is[LocalModifier] || tok.is[`@`]) {
+        if (tok.is[`implicit`]) {
           in.next()
-          if (in.tok.is[Ident]) stats += implicitClosure(InBlock)
+          if (tok.is[Ident]) stats += implicitClosure(InBlock)
           else stats += localDef(Some(Mod.Implicit()))
         } else {
           stats += localDef(None)
         }
         acceptStatSepOpt()
       }
-      else if (in.tok.is[ExprIntro]) {
+      else if (tok.is[ExprIntro]) {
         stats += expr(InBlock)
-        if (!in.tok.is[CaseDefEnd]) acceptStatSep()
+        if (!tok.is[CaseDefEnd]) acceptStatSep()
       }
-      else if (in.tok.is[StatSep]) {
+      else if (tok.is[StatSep]) {
         in.next()
       }
       else {
-        val addendum = if (in.tok.is[Modifier]) " (no modifiers allowed here)" else ""
+        val addendum = if (tok.is[Modifier]) " (no modifiers allowed here)" else ""
         syntaxError("illegal start of statement" + addendum)
       }
     }
@@ -2456,7 +2457,7 @@ abstract class AbstractParser { parser =>
 
 
   def packageOrPackageObject(): Stmt.TopLevel =
-    if (in.tok.is[`object`]) {
+    if (tok.is[`object`]) {
       in.next()
       packageObject()
     } else {
@@ -2474,22 +2475,22 @@ abstract class AbstractParser { parser =>
     def packageStats(): (List[Term.Ref], List[Stmt.TopLevel])  = {
       val refs = new ListBuffer[Term.Ref]
       val ts = new ListBuffer[Stmt.TopLevel]
-      while (in.tok.is[`;`]) in.next()
-      if (in.tok.is[`package `]) {
+      while (tok.is[`;`]) in.next()
+      if (tok.is[`package `]) {
         in.next()
-        if (in.tok.is[`object`]) {
+        if (tok.is[`object`]) {
           in.next()
           ts += packageObject()
-          if (in.tok.not[EOF]) {
+          if (tok.not[EOF]) {
             acceptStatSep()
             ts ++= topStatSeq()
           }
         } else {
           val qid = qualId()
 
-          if (in.tok.is[EOF]) {
+          if (tok.is[EOF]) {
             refs += qid
-          } else if (in.tok.is[StatSep]) {
+          } else if (tok.is[StatSep]) {
             in.next()
             refs += qid
             val (nrefs, nstats) = packageStats()
