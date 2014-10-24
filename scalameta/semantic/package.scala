@@ -13,12 +13,8 @@ package object semantic {
 
   @root trait Attr
   object Attr {
-    @leaf class Defn(defn: Tree) extends Attr
-    @leaf class Type(tpe: Param.Type) extends Attr
-    @leaf class InferredTargs(targs: Seq[Type]) extends Attr
-    @leaf class InferredVargs(vargs: Seq[Term]) extends Attr
-    @leaf class MacroExpansion(tree: Tree) extends Attr
-    // TODO: design additional attrs for other aspects of typechecking
+    // TODO: design the attr hierarchy of semantic facts that can be figured out about trees
+    // TODO: examples: a type a tree, a definition/definitions the tree refers to, the scope that a tree belongs to, maybe a desugaring, etc
     // TODO: see https://github.com/JetBrains/intellij-scala/blob/master/src/org/jetbrains/plugins/scala/lang/resolve/ScalaResolveResult.scala#L24
   }
 
