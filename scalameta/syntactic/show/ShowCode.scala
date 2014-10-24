@@ -255,7 +255,6 @@ object Code {
     case _: Mod.Case            => kw("case")
     case _: Mod.Covariant       => kw("+")
     case _: Mod.Contravariant   => kw("-")
-    case _: Mod.Doc             => ???
     case _: Mod.Final           => kw("final")
     case _: Mod.Implicit        => kw("implicit")
     case _: Mod.Lazy            => kw("lazy")
