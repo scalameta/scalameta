@@ -14,7 +14,7 @@ package object semantic {
   @root trait Attr
   object Attr {
     // TODO: design the attr hierarchy of semantic facts that can be figured out about trees
-    // TODO: examples: a type a tree, a definition/definitions the tree refers to, the scope that a tree belongs to, maybe a desugaring, etc
+    // TODO: examples: a type a tree, a definition/definitions the tree refers to, maybe a desugaring, etc
     // TODO: see https://github.com/JetBrains/intellij-scala/blob/master/src/org/jetbrains/plugins/scala/lang/resolve/ScalaResolveResult.scala#L24
   }
 

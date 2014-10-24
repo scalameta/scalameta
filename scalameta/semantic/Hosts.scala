@@ -7,6 +7,7 @@ import scala.collection.immutable.Seq
 trait Host {
   def attrs(tree: Tree): Seq[Attr]
 
+  def owner(tree: Tree): Scope
   def members(scope: Scope): Seq[Tree]
 
   def <:<(tpe1: Type, tpe2: Type): Boolean
