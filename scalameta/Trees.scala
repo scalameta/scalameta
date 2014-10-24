@@ -16,7 +16,7 @@ import syntactic.parsers._, SyntacticInfo._
   final override def toString: String = this.show[Raw]
 }
 
-@branch trait Term extends Arg with Stat
+@branch trait Term extends Stat with Term.Arg
 object Term {
   @branch trait Ref extends Term with meta.Ref
   @ast class This(qual: Option[Predef.String]) extends Term.Ref
@@ -69,9 +69,14 @@ object Term {
   @ast class New(templ: Aux.Template) extends Term
   @ast class Placeholder() extends Term
   @ast class Eta(term: Term) extends Term
+  @branch trait Arg extends Tree
+  object Arg {
+    @ast class Named(name: Name, rhs: Term) extends Arg
+    @ast class Repeated(arg: Term) extends Arg
+  }
 }
 
-@branch trait Type extends Tree with Param.Type with Scope.Template
+@branch trait Type extends Tree with Type.Arg with Scope.Template
 object Type {
   @branch trait Ref extends Type with meta.Ref
   @ast class Name(value: String @nonEmpty, @trivia isBackquoted: Boolean = false) extends meta.Name with Type.Ref {
@@ -86,7 +91,7 @@ object Type {
   }
   @ast class Apply(tpe: Type, args: Seq[Type] @nonEmpty) extends Type
   @ast class ApplyInfix(lhs: Type, op: Name, rhs: Type) extends Type
-  @ast class Function(params: Seq[Param.Type], res: Type) extends Type
+  @ast class Function(params: Seq[Type.Arg], res: Type) extends Type
   @ast class Tuple(elements: Seq[Type] @nonEmpty) extends Type {
     require(elements.length > 1)
   }
@@ -101,19 +106,23 @@ object Type {
     def mods: Seq[Mod] = annots
   }
   @ast class Placeholder(bounds: Aux.TypeBounds) extends Type
+  @branch trait Arg extends Tree
+  object Arg {
+    @ast class ByName(tpe: Type) extends Arg
+    @ast class Repeated(tpe: Type) extends Arg
+  }
 }
 
-@branch trait Pat extends Tree
+@branch trait Pat extends Tree with Pat.Arg
 object Pat {
   @ast class Wildcard() extends Pat
-  @ast class SeqWildcard() extends Pat
-  @ast class Bind(lhs: Term.Name, rhs: Pat) extends Pat
+  @ast class Bind(lhs: Term.Name, rhs: Pat.Arg) extends Pat
   @ast class Alternative(lhs: Pat, rhs: Pat) extends Pat
   @ast class Tuple(elements: Seq[Pat] @nonEmpty) extends Pat
-  @ast class Extract(ref: Term.Ref, targs: Seq[Type], elements: Seq[Pat]) extends Pat {
+  @ast class Extract(ref: Term.Ref, targs: Seq[Type], elements: Seq[Pat.Arg]) extends Pat {
     require(ref.isStableId)
   }
-  @ast class ExtractInfix(lhs: Pat, ref: Term.Name, rhs: Seq[Pat] @nonEmpty) extends Pat {
+  @ast class ExtractInfix(lhs: Pat, ref: Term.Name, rhs: Seq[Pat.Arg] @nonEmpty) extends Pat {
     require(ref.isStableId)
   }
   @ast class Interpolate(prefix: Term.Name, parts: Seq[Lit.String] @nonEmpty, args: Seq[Pat]) extends Pat {
@@ -121,6 +130,10 @@ object Pat {
   }
   @ast class Typed(lhs: Pat, rhs: Type) extends Pat {
     require(lhs.isInstanceOf[Pat.Wildcard] || lhs.isInstanceOf[Term.Name])
+  }
+  @branch trait Arg extends Tree
+  object Arg {
+    @ast class SeqWildcard() extends Arg
   }
 }
 
@@ -242,7 +255,7 @@ object Ctor {
   @ast class Secondary(mods: Seq[Mod],
                        explicits: Seq[Seq[Param.Named]] @nonEmpty,
                        implicits: Seq[Param.Named],
-                       primaryCtorArgss: Seq[Seq[Arg]],
+                       primaryCtorArgss: Seq[Seq[Term.Arg]],
                        stats: Seq[Stat]) extends Ctor with Stat with Scope.Params
 }
 
@@ -260,26 +273,21 @@ object Import {
 }
 
 @branch trait Param extends Tree with Has.Mods {
-  def decltpe: Option[Param.Type]
+  def decltpe: Option[Type.Arg]
 }
 object Param {
-  @branch trait Type extends Tree
-  object Type {
-    @ast class ByName(tpe: Type) extends Type
-    @ast class Repeated(tpe: Type) extends Type
-  }
   @ast class Anonymous(mods: Seq[Mod],
                        decltpe: Option[Type]) extends Param
   @branch trait Named extends Param with Member.Term with Has.TermName{
     def mods: Seq[Mod]
     def name: Term.Name
-    def decltpe: Option[Type]
+    def decltpe: Option[Type.Arg]
     def default: Option[Term]
   }
   object Named {
-    @ast class Simple(mods: Seq[Mod], name: Term.Name, decltpe: Option[Type], default: Option[Term]) extends Named
-    @ast class Val(mods: Seq[Mod], name: Term.Name, decltpe: Option[Type], default: Option[Term]) extends Named
-    @ast class Var(mods: Seq[Mod], name: Term.Name, decltpe: Option[Type], default: Option[Term]) extends Named
+    @ast class Simple(mods: Seq[Mod], name: Term.Name, decltpe: Option[Type.Arg], default: Option[Term]) extends Named
+    @ast class Val(mods: Seq[Mod], name: Term.Name, decltpe: Option[Type.Arg], default: Option[Term]) extends Named
+    @ast class Var(mods: Seq[Mod], name: Term.Name, decltpe: Option[Type.Arg], default: Option[Term]) extends Named
   }
 }
 
@@ -303,12 +311,6 @@ object TypeParam {
                    bounds: Aux.TypeBounds) extends TypeParam with Member.Type with Has.TypeName
 }
 
-@branch trait Arg extends Tree
-object Arg {
-  @ast class Named(name: Term.Name, rhs: Term) extends Arg
-  @ast class Repeated(arg: Term) extends Arg
-}
-
 @branch trait Enum extends Tree
 object Enum {
   @ast class Generator(pat: Pat, rhs: Term) extends Enum
@@ -318,7 +320,7 @@ object Enum {
 
 @branch trait Mod extends Tree
 object Mod {
-  @ast class Annot(tpe: Type, argss: Seq[Seq[Arg]]) extends Mod
+  @ast class Annot(tpe: Type, argss: Seq[Seq[Term.Arg]]) extends Mod
   @ast class Private extends Mod
   @ast class PrivateThis extends Mod
   @ast class PrivateWithin(name: Predef.String) extends Mod
@@ -341,7 +343,7 @@ object Aux {
     require(stats.forall(_.isTopLevelStat))
   }
   @ast class Case(pat: Pat, cond: Option[Term], stats: Seq[Stat]) extends Tree with Scope
-  @ast class Parent(tpe: Type, argss: Seq[Seq[Arg]]) extends Tree
+  @ast class Parent(tpe: Type, argss: Seq[Seq[Term.Arg]]) extends Tree
   @ast class Template(early: Seq[Stat],
                       parents: Seq[Parent],
                       self: Self,

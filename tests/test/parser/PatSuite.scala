@@ -30,12 +30,12 @@ class PatSuite extends ParseSuite {
   }
 
   test("foo(_*)") {
-    val Extract(Name("foo"), Nil, SeqWildcard() :: Nil) = pat("foo(_*)")
+    val Extract(Name("foo"), Nil, Arg.SeqWildcard() :: Nil) = pat("foo(_*)")
   }
 
   test("foo(x @ _*)") {
     val Extract(Name("foo"), Nil,
-                Bind(Name("x"), SeqWildcard()) :: Nil) = pat("foo(x @ _*)")
+                Bind(Name("x"), Arg.SeqWildcard()) :: Nil) = pat("foo(x @ _*)")
   }
 
   test("a :: b") {

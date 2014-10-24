@@ -96,7 +96,7 @@ class DeclSuite extends ParseSuite {
   test("def f(x: Int*)") {
     val Decl.Procedure(Nil, Term.Name("f"), Nil,
                        (Param.Named.Simple(Nil, Term.Name("x"),
-                                           Some(Param.Type.Repeated(Type.Name("Int"))),
+                                           Some(Type.Arg.Repeated(Type.Name("Int"))),
                                            None) :: Nil) :: Nil, Nil) =
       templStat("def f(x: Int*)")
   }
@@ -104,7 +104,7 @@ class DeclSuite extends ParseSuite {
   test("def f(x: => Int)") {
     val Decl.Procedure(Nil, Term.Name("f"), Nil,
                        (Param.Named.Simple(Nil, Term.Name("x"),
-                                           Some(Param.Type.ByName(Type.Name("Int"))),
+                                           Some(Type.Arg.ByName(Type.Name("Int"))),
                                            None) :: Nil) :: Nil, Nil) =
       templStat("def f(x: => Int)")
   }

@@ -26,11 +26,11 @@ package object parsers {
     implicit val parseType: Parse[Type] = apply(source => new Parser(source).parseType())
     implicit val parseStats: Parse[List[Stat]] = apply(source => new Parser(source).parseStats())
     implicit val parseQ: Parse[Stat] = apply(source => new Parser(source).parseQ())
-    implicit val parseT: Parse[Param.Type] = apply(source => new Parser(source).parseT())
-    implicit val parseP: Parse[Pat] = apply(source => new Parser(source).parseP())
+    implicit val parseT: Parse[Type.Arg] = apply(source => new Parser(source).parseT())
+    implicit val parseP: Parse[Pat.Arg] = apply(source => new Parser(source).parseP())
     implicit val parseParam: Parse[Param] = apply(source => new Parser(source).parseParam())
     implicit val parseTypeParam: Parse[TypeParam] = apply(source => new Parser(source).parseTypeParam())
-    implicit val parseArg: Parse[Arg] = apply(source => new Parser(source).parseArg())
+    implicit val parseTermArg: Parse[Term.Arg] = apply(source => new Parser(source).parseTermArg())
     implicit val parseEnum: Parse[Enum] = apply(source => new Parser(source).parseEnum())
     implicit val parseMod: Parse[Mod] = apply(source => new Parser(source).parseMod())
     implicit val parseCase: Parse[Aux.Case] = apply(source => new Parser(source).parseCase())
@@ -62,7 +62,7 @@ package object parsers {
           case STRINGLIT       => Tok.Literal.String(scanner.strVal, scanner.offset)
           case SYMBOLLIT       => Tok.Literal.Symbol(scala.Symbol(scanner.strVal), scanner.offset)
           case INTERPOLATIONID => Tok.Interpolation.Id(scanner.name, scanner.offset)
-          case STRINGPART      => Tok.Interpolation.Part(scanner.strVal, scanner.offset)        
+          case STRINGPART      => Tok.Interpolation.Part(scanner.strVal, scanner.offset)
 
           case IDENTIFIER       => Tok.Ident(scanner.name, isBackquoted = false, scanner.offset)
           case BACKQUOTED_IDENT => Tok.Ident(scanner.name, isBackquoted = true, scanner.offset)
@@ -142,7 +142,7 @@ package object parsers {
           case WHITESPACE => ???
           case IGNORE     => ???
           case ESCAPE     => ???
-        } 
+        }
         buf += tok
         scanner.nextToken()
       } while (tok.isNot[Tok.EOF])

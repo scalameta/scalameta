@@ -7,12 +7,12 @@ import org.scalameta.convert._
 
 package object meta {
   @quasiquote[Stat]('q)             implicit class TermQuote(ctx: StringContext)
-  @quasiquote[Param.Type]('t)       implicit class TypeQuote(ctx: StringContext)
-  @quasiquote[Pat]('p)              implicit class PatternQuote(ctx: StringContext)
+  @quasiquote[Type.Arg]('t)         implicit class TypeQuote(ctx: StringContext)
+  @quasiquote[Pat.Arg]('p)          implicit class PatternQuote(ctx: StringContext)
 
   @quasiquote[Param]('param)        implicit class ParamQuote(ctx: StringContext)
   @quasiquote[TypeParam]('tparam)   implicit class TypeParamQuote(ctx: StringContext)
-  @quasiquote[Arg]('arg)            implicit class ArgQuote(ctx: StringContext)
+  @quasiquote[Term.Arg]('arg)       implicit class ArgQuote(ctx: StringContext)
   @quasiquote[Enum]('enum)          implicit class EnumQuote(ctx: StringContext)
   @quasiquote[Mod]('mod)            implicit class ModQuote(ctx: StringContext)
   @quasiquote[Aux.Case]('cas)       implicit class CaseQuote(ctx: StringContext)

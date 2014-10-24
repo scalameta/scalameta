@@ -128,9 +128,9 @@ object Code {
   implicit def codeTree[T <: Tree]: Code[T] = Code { x => (x: Tree) match {
     case t: Name => m(Path, if (t.isBackquoted) s("`", t.value, "`") else s(t.value))
 
-    // Param.Type
-    case t: Param.Type.Repeated => m(ParamTyp, s(p(Typ, t.tpe), kw("*")))
-    case t: Param.Type.ByName   => m(ParamTyp, s(kw("=>"), " ", p(Typ, t.tpe)))
+    // Type.Arg
+    case t: Type.Arg.Repeated => m(ParamTyp, s(p(Typ, t.tpe), kw("*")))
+    case t: Type.Arg.ByName   => m(ParamTyp, s(kw("=>"), " ", p(Typ, t.tpe)))
 
     // Type
     case t: Type.Project     => m(SimpleTyp, s(t.qual, kw("#"), t.selector))
@@ -158,6 +158,10 @@ object Code {
     case t: Lit.Symbol   => m(Literal, s("'", t.value.name))
     case _: Lit.Null     => m(Literal, s(kw("null")))
     case _: Lit.Unit     => m(Literal, s("()"))
+
+    // Term.Arg
+    case t: Term.Arg.Named    => s(t.name, " ", kw("="), " ", p(Expr, t.rhs))
+    case t: Term.Arg.Repeated => s(p(PostfixExpr, t.arg), kw(":"), " ", kw("_*"))
 
     // Term
     case t: Term.This     => m(SimpleExpr1, s(t.qual.map(s(_, ".")).getOrElse(s()), kw("this")))
@@ -226,28 +230,24 @@ object Code {
       m(SimpleExpr1, s(t.prefix, quote, r(zipped), t.parts.last.value, quote))
 
     // Pat
-    case t: Pat.Alternative  => m(Pattern, s(p(Pattern, t.lhs), " ", kw("|"), " ", p(Pattern, t.rhs)))
-    case t: Pat.Bind         => m(Pattern2, s(p(SimplePattern, t.lhs), " ", kw("@"), " ", p(AnyPattern3, t.rhs)))
-    case t: Pat.Tuple        => m(SimplePattern, s("(", r(t.elements, ", "), ")"))
-    case _: Pat.SeqWildcard  => m(SimplePattern, kw("_*"))
-    case t: Pat.Typed        => m(Pattern1, s(p(SimplePattern, t.lhs), kw(":"), " ", p(Typ, t.rhs)))
-    case _: Pat.Wildcard     => m(SimplePattern, kw("_"))
-    case t: Pat.Extract      => m(SimplePattern, s(t.ref, t.targs, t.elements))
-    case t: Pat.ExtractInfix =>
+    case t: Pat.Alternative      => m(Pattern, s(p(Pattern, t.lhs), " ", kw("|"), " ", p(Pattern, t.rhs)))
+    case t: Pat.Bind             => m(Pattern2, s(p(SimplePattern, t.lhs), " ", kw("@"), " ", p(AnyPattern3, t.rhs)))
+    case t: Pat.Tuple            => m(SimplePattern, s("(", r(t.elements, ", "), ")"))
+    case _: Pat.Arg.SeqWildcard  => m(SimplePattern, kw("_*"))
+    case t: Pat.Typed            => m(Pattern1, s(p(SimplePattern, t.lhs), kw(":"), " ", p(Typ, t.rhs)))
+    case _: Pat.Wildcard         => m(SimplePattern, kw("_"))
+    case t: Pat.Extract          => m(SimplePattern, s(t.ref, t.targs, t.elements))
+    case t: Pat.ExtractInfix     =>
       m(Pattern3(t.ref.value), s(p(Pattern3(t.ref.value), t.lhs, left = true), " ", t.ref, " ", t.rhs match {
         case pat :: Nil => s(p(Pattern3(t.ref.value), pat, right = true))
         case pats       => s(pats)
       }))
-    case t: Pat.Interpolate  =>
+    case t: Pat.Interpolate =>
       val zipped = t.parts.zip(t.args).map {
         case (part, id: Name) if !id.isBackquoted => s(part, "$", id.value)
         case (part, arg)                          => s(part, "${", arg, "}")
       }
       m(SimplePattern, s(t.prefix, "\"", r(zipped), t.parts.last, "\""))
-
-    // Arg
-    case t: Arg.Named    => s(t.name, " ", kw("="), " ", p(Expr, t.rhs))
-    case t: Arg.Repeated => s(p(PostfixExpr, t.arg), kw(":"), " ", kw("_*"))
 
     // Mod
     case t: Mod.Annot           => s(kw("@"), p(SimpleTyp, t.tpe), t.argss)
@@ -368,21 +368,18 @@ object Code {
   } }
 
   // Multiples and optionals
-  implicit val codeArgs: Code[Seq[Arg]] = Code {
+  implicit val codeArgs: Code[Seq[Term.Arg]] = Code {
     case (b: Term.Block) :: Nil => s(" ", b)
     case args                   => s("(", r(args, ", "), ")")
   }
-  implicit val codeArgss: Code[Seq[Seq[Arg]]] = Code { r(_) }
+  implicit val codeArgss: Code[Seq[Seq[Term.Arg]]] = Code { r(_) }
   implicit val codeTargs: Code[Seq[Type]] = Code { targs =>
     if (targs.isEmpty) s()
     else s("[", r(targs, ", "), "]")
   }
-  implicit val codePats: Code[Seq[Pat]] = Code { pats =>
-    s("(", r(pats, ", "), ")")
-  }
-  implicit val codeMods: Code[Seq[Mod]] = Code { mods =>
-    if (mods.nonEmpty) r(mods, " ") else s()
-  }
+  implicit val codePats: Code[Seq[Pat]] = Code { pats => s("(", r(pats, ", "), ")") }
+  implicit val codePatArgs: Code[Seq[Pat.Arg]] = Code { pats => s("(", r(pats, ", "), ")") }
+  implicit val codeMods: Code[Seq[Mod]] = Code { mods => if (mods.nonEmpty) r(mods, " ") else s() }
   implicit def codeParams[P <: Param]: Code[Seq[P]] = Code { params => s("(", r(params, ", "), ")") }
   implicit val codeTparams: Code[Seq[TypeParam]] = Code { tparams =>
     if (tparams.nonEmpty) s("[", r(tparams, ", "), "]") else s()
@@ -393,7 +390,7 @@ object Code {
       if (impl.isEmpty) s()
       else s("(", kw("implicit"), " ", r(impl, ", "), ")"))
   }
-  implicit val codeParamTypeOpt: Code[Option[Param.Type]] = Code { _.map { t => s(kw(":"), " ", t) }.getOrElse(s()) }
+  implicit val codeTypeArgOpt: Code[Option[Type.Arg]] = Code { _.map { t => s(kw(":"), " ", t) }.getOrElse(s()) }
   implicit val codeTypeOpt: Code[Option[Type]] = Code { _.map { t => s(kw(":"), " ", t) }.getOrElse(s()) }
   implicit val codeTermNameOpt: Code[Option[Term.Name]] = Code { _.map(s(_)).getOrElse(s(")")) }
   implicit val codeImportSels: Code[Seq[Import.Selector]] = Code {

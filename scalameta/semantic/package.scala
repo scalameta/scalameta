@@ -162,7 +162,7 @@ package object semantic {
   }
 
   implicit class SemanticParamOps(val tree: Param) extends AnyVal {
-    @hosted def tpe: Param.Type = ???
+    @hosted def tpe: Type.Arg = ???
   }
 
   implicit class SemanticTemplateOps(val tree: Aux.Template) extends AnyVal {
