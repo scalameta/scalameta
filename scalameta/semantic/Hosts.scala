@@ -10,7 +10,6 @@ trait Host {
 
   def owner(tree: Tree): Scope
   def members(scope: Scope): Seq[Tree]
-  def members(scope: Scope, name: Name): Seq[Tree]
 
   def <:<(tpe1: Type, tpe2: Type): Boolean
   def lub(tpes: Seq[Type]): Type
