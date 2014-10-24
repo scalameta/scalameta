@@ -59,8 +59,8 @@ package object semantic {
 
   implicit class SemanticMemberOps(val tree: Member) extends AnyVal {
     def ref: Ref = ???
-    @hosted def overridden: Seq[Member] = delegate
-    @hosted def overriding: Seq[Member] = delegate
+    @hosted def parents: Seq[Member] = ???
+    @hosted def children: Seq[Member] = ???
     def annots: Seq[Mod.Annot] = tree.mods.collect{ case annot: Mod.Annot => annot }
     def isVal: Boolean = ???
     def isVar: Boolean = ???
