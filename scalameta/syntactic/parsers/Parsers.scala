@@ -221,8 +221,7 @@ abstract class AbstractParser { parser =>
   def parseEnum(): Enum = ???
   def parseMod(): Mod = ???
   def parseCase(): Aux.Case = parseRule(_.caseClause())
-  def parseParent(): Aux.Parent = ???
-  def parseTemplate(): Aux.Template = ???
+  def parseTemplate(): Tree = ???
 
 /* ------------- PARSER COMMON -------------------------------------------- */
 
@@ -1694,13 +1693,13 @@ abstract class AbstractParser { parser =>
     t
   }
   def constructorAnnots(): List[Mod.Annot] = readAnnots {
-    Mod.Annot(Aux.Parent(exprSimpleType(), argumentExprs() :: Nil))
+    Mod.Annot(Aux.CtorRef(exprSimpleType(), argumentExprs() :: Nil))
   }
 
   def annot(): Mod.Annot = {
     val t = exprSimpleType()
-    if (tok.is[`(`]) Mod.Annot(Aux.Parent(t, multipleArgumentExprs()))
-    else Mod.Annot(Aux.Parent(t, Nil))
+    if (tok.is[`(`]) Mod.Annot(Aux.CtorRef(t, multipleArgumentExprs()))
+    else Mod.Annot(Aux.CtorRef(t, Nil))
   }
 
 /* -------- PARAMETERS ------------------------------------------- */
@@ -2228,13 +2227,13 @@ abstract class AbstractParser { parser =>
    *  TraitParents       ::= ModType {with ModType}
    *  }}}
    */
-  def templateParents(): List[Aux.Parent] = {
-    val parents = new ListBuffer[Aux.Parent]
+  def templateParents(): List[Aux.CtorRef] = {
+    val parents = new ListBuffer[Aux.CtorRef]
     def readAppliedParent() = {
       val parentTpe = startModType()
       parents += (tok match {
-        case _: `(` => Aux.Parent(parentTpe, multipleArgumentExprs())
-        case _      => Aux.Parent(parentTpe, Nil)
+        case _: `(` => Aux.CtorRef(parentTpe, multipleArgumentExprs())
+        case _      => Aux.CtorRef(parentTpe, Nil)
       })
     }
     readAppliedParent()
@@ -2249,7 +2248,7 @@ abstract class AbstractParser { parser =>
    *  EarlyDef      ::= Annotations Modifiers PatDef
    *  }}}
    */
-  def template(): (List[Stat], List[Aux.Parent], Param.Term, List[Stat], Boolean) = {
+  def template(): (List[Stat], List[Aux.CtorRef], Param.Term, List[Stat], Boolean) = {
     newLineOptWhenFollowedBy[`{`]
     if (tok.is[`{`]) {
       // @S: pre template body cannot stub like post body can!

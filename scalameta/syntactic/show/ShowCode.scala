@@ -255,7 +255,7 @@ object Code {
       m(SimplePattern, s(t.prefix, "\"", r(zipped), t.parts.last, "\""))
 
     // Mod
-    case t: Mod.Annot           => s(kw("@"), p(SimpleTyp, t.ctor.tpe), t.ctor.argss)
+    case t: Mod.Annot           => s(kw("@"), p(SimpleTyp, t.ref.tpe), t.ref.argss)
     case _: Mod.Abstract        => kw("abstract")
     case _: Mod.Case            => kw("case")
     case _: Mod.Covariant       => kw("+")
@@ -322,7 +322,7 @@ object Code {
     case t: Import          => s(kw("import"), " ", r(t.clauses, ", "))
 
     // Aux
-    case t: Parent => s(p(AnnotTyp, t.tpe), t.argss)
+    case t: CtorRef  => s(p(AnnotTyp, t.tpe), t.argss)
     case t: Template =>
       val isBodyEmpty = t.self.name.isEmpty && t.self.decltpe.isEmpty && !t.hasStats
       val isTemplateEmpty = t.early.isEmpty && t.parents.isEmpty && isBodyEmpty

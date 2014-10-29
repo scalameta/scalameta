@@ -54,7 +54,7 @@ package object semantic {
     @hosted def defn: U = ???
   }
 
-  implicit class SemanticParentOps(val tree: Aux.Parent) extends AnyVal {
+  implicit class SemanticCtorRefOps(val tree: Aux.CtorRef) extends AnyVal {
     @hosted def ctor: Ctor = ???
   }
 

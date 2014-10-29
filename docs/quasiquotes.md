@@ -32,7 +32,7 @@
  Return            | `q"return $expropt"`
  Throw             | `q"throw $expr"`
  Ascribe           | `q"$expr: $tpe"`
- Annotate          | `q"$expr: ..@$parents"`
+ Annotate          | `q"$expr: ..@$crefs"`
  Tuple             | `q"(..$exprs)"`
  Block             | `q"{ ..$stats }"`
  If                | `q"if ($expr) $expr else $expr"`
@@ -72,7 +72,7 @@
  Tuple             | `t"(..$tpes)"`
  Compound          | `t"..$tpes { ..$stats }"`
  Existential       | `t"$tpe forSome { ..$stats }"`
- Annotate          | `t"$tpe ..@$parents"`
+ Annotate          | `t"$tpe ..@$crefs"`
  Placeholder       | `t"_"`
 
 ## Argument Types (meta.Type.Arg)
@@ -155,14 +155,14 @@
 
            | Quasiquote
 -----------|--------------------
- Template  | `templ"{ ..$stat } with ..$parents { $param => ..$stats }"`
+ Template  | `templ"{ ..$stat } with ..$crefs { $param => ..$stats }"`
  Parent    | `templ"$tpe(...$argss)"`
 
 ## Modifiers (meta.Mod)
 
                   | Quasiquote
 ------------------|-----------------
- Annotation       | `mod"@$parent"`
+ Annotation       | `mod"@$cref"`
  Private          | `mod"private"`
  Private Within   | `mod"private[$str]"`
  Private This     | `mod"private[this]"`
@@ -205,7 +205,7 @@
  meta.Enum        | `$enum`   | `enum`
  meta.Member      | `$memb`   | `q`
  meta.Mod         | `$mod`    | `mod`
- meta.Parent      | `$parent` | `templ`
+ meta.Ctor.Ref    | `$cref`   | `templ`
  meta.Pat         | `$pat`    | `p`
  meta.Pat.Arg     | `$apat`   | `p`
  meta.Selector    | `$sel`    | `sel`

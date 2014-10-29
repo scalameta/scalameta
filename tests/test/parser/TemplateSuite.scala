@@ -19,14 +19,14 @@ class TemplateSuite extends ParseSuite {
 
   test("trait A extends B") {
     val Trait(Nil, Type.Name("A"), Nil,
-              Template(Nil, Parent(Type.Name("B"), Nil) :: Nil, EmptySelf(), Nil)) =
+              Template(Nil, CtorRef(Type.Name("B"), Nil) :: Nil, EmptySelf(), Nil)) =
       templStat("trait A extends B")
   }
 
   test("trait A extends { val x: Int } with B") {
     val Trait(Nil, Type.Name("A"), Nil,
               Template(Defn.Val(Nil, List(Term.Name("x")), Some(Type.Name("Int")), Lit.Int(2)) :: Nil,
-                       Parent(Type.Name("B"), Nil) :: Nil, EmptySelf(), Nil)) =
+                       CtorRef(Type.Name("B"), Nil) :: Nil, EmptySelf(), Nil)) =
       templStat("trait A extends { val x: Int = 2 } with B")
   }
 
@@ -58,14 +58,14 @@ class TemplateSuite extends ParseSuite {
 
   test("class A extends B") {
     val Class(Nil, Type.Name("A"), Nil, Ctor.Primary(Nil, Nil),
-              Template(Nil, Parent(Type.Name("B"), Nil) :: Nil, EmptySelf(), Nil)) =
+              Template(Nil, CtorRef(Type.Name("B"), Nil) :: Nil, EmptySelf(), Nil)) =
       templStat("class A extends B")
   }
 
   test("class A extends { val x: Int } with B") {
     val Class(Nil, Type.Name("A"), Nil, Ctor.Primary(Nil, Nil),
               Template(Defn.Val(Nil, List(Term.Name("x")), Some(Type.Name("Int")), Lit.Int(2)) :: Nil,
-                       Parent(Type.Name("B"), Nil) :: Nil, EmptySelf(), Nil)) =
+                       CtorRef(Type.Name("B"), Nil) :: Nil, EmptySelf(), Nil)) =
       templStat("class A extends { val x: Int = 2 } with B")
   }
 
@@ -141,14 +141,14 @@ class TemplateSuite extends ParseSuite {
 
   test("object A extends B") {
     val Object(Nil, Term.Name("A"),
-              Template(Nil, Parent(Type.Name("B"), Nil) :: Nil, EmptySelf(), Nil)) =
+              Template(Nil, CtorRef(Type.Name("B"), Nil) :: Nil, EmptySelf(), Nil)) =
       templStat("object A extends B")
   }
 
   test("object A extends { val x: Int } with B") {
     val Object(Nil, Term.Name("A"),
               Template(Defn.Val(Nil, List(Term.Name("x")), Some(Type.Name("Int")), Lit.Int(2)) :: Nil,
-                       Parent(Type.Name("B"), Nil) :: Nil, EmptySelf(), Nil)) =
+                       CtorRef(Type.Name("B"), Nil) :: Nil, EmptySelf(), Nil)) =
       templStat("object A extends { val x: Int = 2 } with B")
   }
 

@@ -115,7 +115,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("1: @foo") {
-    val Annotate(Lit.Int(1), Mod.Annot(Aux.Parent(TypeName("foo"), Nil)) :: Nil) = term("1: @foo")
+    val Annotate(Lit.Int(1), Mod.Annot(Aux.CtorRef(TypeName("foo"), Nil)) :: Nil) = term("1: @foo")
   }
 
   test("(true, false)") {
@@ -248,25 +248,25 @@ class TermSuite extends ParseSuite {
   }
 
   test("new A") {
-    val New(templ @ Template(Nil, Parent(TypeName("A"), Nil) :: Nil, EmptySelf(), Nil)) = term("new A")
+    val New(templ @ Template(Nil, CtorRef(TypeName("A"), Nil) :: Nil, EmptySelf(), Nil)) = term("new A")
     assert(templ.hasStats === false)
   }
 
   test("new A {}") {
-    val New(templ @ Template(Nil, Parent(TypeName("A"), Nil) :: Nil, EmptySelf(), Nil)) = term("new A {}")
+    val New(templ @ Template(Nil, CtorRef(TypeName("A"), Nil) :: Nil, EmptySelf(), Nil)) = term("new A {}")
     assert(templ.hasStats === true)
   }
 
   test("new A with B") {
-    val New(Template(Nil, Parent(TypeName("A"), Nil) ::
-                          Parent(TypeName("B"), Nil) :: Nil,
+    val New(Template(Nil, CtorRef(TypeName("A"), Nil) ::
+                          CtorRef(TypeName("B"), Nil) :: Nil,
                      EmptySelf(), Nil)) =
       term("new A with B")
   }
 
   test("new { val x: Int = 1 } with A") {
     val New(Template(Defn.Val(Nil, List(TermName("x")), Some(TypeName("Int")), Lit.Int(1)) :: Nil,
-                     Parent(TypeName("A"), Nil) :: Nil, EmptySelf(), Nil)) =
+                     CtorRef(TypeName("A"), Nil) :: Nil, EmptySelf(), Nil)) =
       term("new { val x: Int = 1 } with A")
   }
 

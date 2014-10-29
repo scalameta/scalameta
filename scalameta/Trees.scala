@@ -296,7 +296,7 @@ object Enum {
 
 @branch trait Mod extends Tree
 object Mod {
-  @ast class Annot(ctor: Aux.Parent) extends Mod
+  @ast class Annot(ref: Aux.CtorRef) extends Mod
   @ast class Private extends Mod
   @ast class PrivateThis extends Mod
   @ast class PrivateWithin(name: Predef.String) extends Mod
@@ -319,9 +319,9 @@ object Aux {
     require(stats.forall(_.isTopLevelStat))
   }
   @ast class Case(pat: Pat, cond: Option[Term], stats: Seq[Stat]) extends Tree with Scope
-  @ast class Parent(tpe: Type, argss: Seq[Seq[Term.Arg]]) extends Tree
+  @ast class CtorRef(tpe: Type, argss: Seq[Seq[Term.Arg]]) extends Tree
   @ast class Template(early: Seq[Stat],
-                      parents: Seq[Parent],
+                      parents: Seq[CtorRef],
                       self: Param.Term,
                       stats: Seq[Stat] = Nil) extends Tree with Scope {
     require(parents.isEmpty || !parents.tail.exists(_.argss.nonEmpty))
