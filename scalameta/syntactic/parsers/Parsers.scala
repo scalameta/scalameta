@@ -1003,7 +1003,7 @@ abstract class AbstractParser { parser =>
           next()
           if (tok.isNot[`{`]) Some(expr())
           else inBraces {
-            if (tok.is[`case`]) Some(Term.Cases(caseClauses()))
+            if (tok.is[`case`]) Some(caseClauses())
             else Some(expr())
           }
         }
@@ -1011,7 +1011,12 @@ abstract class AbstractParser { parser =>
         case _: `finally` => next(); Some(expr())
         case _            => None
       }
-      Term.Try(body, catchopt, finallyopt)
+      catchopt match {
+        case None => Term.TryWithCases(body, Nil, finallyopt)
+        case Some(cases: List[_]) => Term.TryWithCases(body, cases.asInstanceOf[List[Aux.Case]], finallyopt)
+        case Some(term: Term) => Term.TryWithTerm(body, term, finallyopt)
+        case _ => unreachable
+      }
     case _: `while` =>
       next()
       val cond = condExpr()
@@ -1072,7 +1077,7 @@ abstract class AbstractParser { parser =>
         }
       } else if (tok.is[`match`]) {
         next()
-        t = Term.Match(t, Term.Cases(inBracesOrNil(caseClauses())))
+        t = Term.Match(t, inBracesOrNil(caseClauses()))
       }
       // in order to allow anonymous functions as statements (as opposed to expressions) inside
       // templates, we have to disambiguate them from self type declarations - bug #1565
@@ -1289,7 +1294,7 @@ abstract class AbstractParser { parser =>
    */
   def blockExpr(): Term = {
     inBraces {
-      if (tok.is[`case`]) Term.Cases(caseClauses())
+      if (tok.is[`case`]) Term.PartialFunction(caseClauses())
       else block()
     }
   }

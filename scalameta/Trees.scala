@@ -49,15 +49,14 @@ object Term {
     require(stats.forall(_.isBlockStat))
   }
   @ast class If(cond: Term, thenp: Term, elsep: Term = Lit.Unit()) extends Term
-  @ast class Match(scrut: Term, cases: Cases) extends Term
-  @ast class Try(expr: Term, catchp: Option[Term], finallyp: Option[Term]) extends Term
+  @ast class Match(scrut: Term, cases: Seq[Aux.Case] @nonEmpty) extends Term
+  @ast class TryWithCases(expr: Term, catchp: Seq[Aux.Case], finallyp: Option[Term]) extends Term
+  @ast class TryWithTerm(expr: Term, catchp: Term, finallyp: Option[Term]) extends Term
   @ast class Function(params: Seq[Param.Term], body: Term) extends Term with Scope {
     require(params.forall(param => (param.name.nonEmpty ==> param.default.isEmpty)))
     require(params.exists(_.mods.exists(_.isInstanceOf[Mod.Implicit])) ==> (params.length == 1))
   }
-  @ast class Cases(cases: Seq[Aux.Case] @nonEmpty) extends Term {
-    def isPartialFunction = !parent.map(_ match { case _: Match => false; case _: Try => false; case _ => true }).getOrElse(false)
-  }
+  @ast class PartialFunction(cases: Seq[Aux.Case] @nonEmpty) extends Term
   @ast class While(expr: Term, body: Term) extends Term
   @ast class Do(body: Term, expr: Term) extends Term
   @ast class For(enums: Seq[Enum] @nonEmpty, body: Term) extends Term with Scope {

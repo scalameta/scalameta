@@ -190,26 +190,29 @@ object Code {
         case _ =>
           m(SimpleExpr, if (t.stats.isEmpty) s("{}") else s("{", pstats(t.stats), n("}")))
       }
-    case t: Term.Cases       => m(SimpleExpr, s("{", r(t.cases.map(i(_)), ""), n("}")))
-    case t: Term.While       => m(Expr1, s(kw("while"), " (", t.expr, ") ", p(Expr, t.body)))
-    case t: Term.Do          => m(Expr1, s(kw("do"), " ", p(Expr, t.body), " ", kw("while"), " (", t.expr, ")"))
-    case t: Term.For         => m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ") ", t.body))
-    case t: Term.ForYield    => m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ") ", kw("yield"), " ", t.body))
-    case t: Term.New         => m(SimpleExpr, s(kw("new"), " ", t.templ))
-    case _: Term.Placeholder => m(SimpleExpr1, kw("_"))
-    case t: Term.Eta         => m(SimpleExpr, s(p(SimpleExpr1, t.term), " ", kw("_")))
-    case t: Term.Match       => m(Expr1, s(p(PostfixExpr, t.scrut), " ", kw("match"), " ", t.cases))
-    case t: Term.Apply       => m(SimpleExpr1, s(p(SimpleExpr1, t.fun), t.args))
-    case t: Term.ApplyType   => m(SimpleExpr1, s(p(SimpleExpr, t.fun), t.targs))
-    case t: Term.ApplyUnary  => m(PrefixExpr, s(t.op, p(SimpleExpr, t.arg)))
-    case t: Term.ApplyInfix  =>
-      m(InfixExpr(t.op.value), s(p(InfixExpr(t.op.value), t.lhs, left = true), " ", t.op, t.targs, " ", t.args match {
+    case t: Term.PartialFunction => m(SimpleExpr, s("{", r(t.cases.map(i(_)), ""), n("}")))
+    case t: Term.While           => m(Expr1, s(kw("while"), " (", t.expr, ") ", p(Expr, t.body)))
+    case t: Term.Do              => m(Expr1, s(kw("do"), " ", p(Expr, t.body), " ", kw("while"), " (", t.expr, ")"))
+    case t: Term.For             => m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ") ", t.body))
+    case t: Term.ForYield        => m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ") ", kw("yield"), " ", t.body))
+    case t: Term.New             => m(SimpleExpr, s(kw("new"), " ", t.templ))
+    case _: Term.Placeholder     => m(SimpleExpr1, kw("_"))
+    case t: Term.Eta             => m(SimpleExpr, s(p(SimpleExpr1, t.term), " ", kw("_")))
+    case t: Term.Match           => m(Expr1, s(p(PostfixExpr, t.scrut), " ", kw("match"), " {", r(t.cases.map(i(_)), ""), n("}")))
+    case t: Term.Apply           => m(SimpleExpr1, s(p(SimpleExpr1, t.fun), t.args))
+    case t: Term.ApplyType       => m(SimpleExpr1, s(p(SimpleExpr, t.fun), t.targs))
+    case t: Term.ApplyUnary      => m(PrefixExpr, s(t.op, p(SimpleExpr, t.arg)))
+    case t: Term.ApplyInfix      =>
+      m(InfixExpr(t.op.value)    , s(p(InfixExpr(t.op.value), t.lhs, left = true), " ", t.op, t.targs, " ", t.args match {
         case (arg: Term) :: Nil => s(p(InfixExpr(t.op.value), arg, right = true))
         case args               => s(args)
       }))
-    case t: Term.Try      =>
+    case t: Term.TryWithCases    =>
       m(Expr1, s(kw("try"), " ", p(Expr, t.expr),
-        t.catchp.map { catchp => s(" ", kw("catch"), " ", catchp) }.getOrElse(s()),
+        if (t.catchp.nonEmpty) s(" ", kw("catch"), " {", r(t.catchp.map(i(_)), ""), n("}")) else s(""),
+        t.finallyp.map { finallyp => s(" ", kw("finally"), " ", finallyp) }.getOrElse(s())))
+    case t: Term.TryWithTerm     =>
+      m(Expr1, s(kw("try"), " ", p(Expr, t.expr), " ", kw("catch"), " ", t.catchp,
         t.finallyp.map { finallyp => s(" ", kw("finally"), " ", finallyp) }.getOrElse(s())))
     case t: Term.If       => m(Expr1, s(kw("if"), " (", t.cond, ") ", p(Expr, t.thenp), if (t.hasElsep) s(" ", kw("else"), " ", p(Expr, t.elsep)) else s()))
     case t: Term.Function =>
