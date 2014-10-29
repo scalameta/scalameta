@@ -8,8 +8,9 @@ import scala.collection.immutable.Seq
 import scala.reflect.{ClassTag, classTag}
 
 package object semantic {
-  @root trait Mark
-  def mark(): Mark = ???
+  // ===========================
+  // PART 1: ATTRIBUTES
+  // ===========================
 
   @root trait Attr
   object Attr {
@@ -57,8 +58,9 @@ package object semantic {
     @hosted def ctor: Ctor = ???
   }
 
-  implicit class SemanticTermOps(val tree: Term) extends AnyVal {
-  }
+  // ===========================
+  // PART 2: TYPES
+  // ===========================
 
   implicit class SemanticTypeOps(val tree: Type) extends AnyVal {
     @hosted def <:<(other: Type): Boolean = delegate
@@ -71,6 +73,10 @@ package object semantic {
 
   @hosted def lub(tpes: Seq[Type]): Type = delegate
   @hosted def glb(tpes: Seq[Type]): Type = delegate
+
+  // ===========================
+  // PART 3: MEMBERS
+  // ===========================
 
   implicit class SemanticMemberOps(val tree: Member) extends AnyVal {
     def ref: Ref = ???
@@ -138,6 +144,10 @@ package object semantic {
   implicit class SemanticDefnObjectOps(val tree: Defn.Object) extends AnyVal {
     @hosted def companion: Member.Template = ???
   }
+
+  // ===========================
+  // PART 4: SCOPES
+  // ===========================
 
   implicit class SemanticScopeOps(val tree: Scope) extends AnyVal {
     @hosted def members: Seq[Member] = ???
@@ -211,4 +221,11 @@ package object semantic {
     @hosted def tparams(name: String): TypeParam.Named = ???
     @hosted def tparams(name: scala.Symbol): TypeParam.Named = ???
   }
+
+  // ===========================
+  // PART 5: HYGIENE
+  // ===========================
+
+  @root trait Mark
+  def mark(): Mark = ???
 }
