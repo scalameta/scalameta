@@ -10,8 +10,7 @@ package object meta {
   @quasiquote[Type.Arg]('t)         implicit class TypeQuote(ctx: StringContext)
   @quasiquote[Pat.Arg]('p)          implicit class PatternQuote(ctx: StringContext)
 
-  @quasiquote[Param]('param)        implicit class ParamQuote(ctx: StringContext)
-  @quasiquote[TypeParam]('tparam)   implicit class TypeParamQuote(ctx: StringContext)
+  @quasiquote[Tree]('param)         implicit class ParamQuote(ctx: StringContext)
   @quasiquote[Term.Arg]('arg)       implicit class ArgQuote(ctx: StringContext)
   @quasiquote[Enum]('enum)          implicit class EnumQuote(ctx: StringContext)
   @quasiquote[Mod]('mod)            implicit class ModQuote(ctx: StringContext)

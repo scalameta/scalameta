@@ -177,11 +177,11 @@ object Code {
       import Term.{Block, Function}
       def pstats(s: Seq[Stat]) = r(s.map(i(_)), "")
       t match {
-        case Block(Function(Param.Named.Simple(mods, name, tptopt, _) :: Nil, Block(stats)) :: Nil) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
+        case Block(Function(Param.Term.Simple(mods, Some(name), tptopt, _) :: Nil, Block(stats)) :: Nil) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
           m(SimpleExpr, s("{ ", kw("implicit"), " ", name, tptopt.map(s(kw(":"), " ", _)).getOrElse(s()), " ", kw("=>"), " ", pstats(stats), n("}")))
-        case Block(Function(Param.Named.Simple(mods, name, None, _) :: Nil, Block(stats)) :: Nil) =>
+        case Block(Function(Param.Term.Simple(mods, Some(name), None, _) :: Nil, Block(stats)) :: Nil) =>
           m(SimpleExpr, s("{ ", name, " ", kw("=>"), " ", pstats(stats), n("}")))
-        case Block(Function(Param.Anonymous(_, _) :: Nil, Block(stats)) :: Nil) =>
+        case Block(Function(Param.Term.Simple(_, None, _, _) :: Nil, Block(stats)) :: Nil) =>
           m(SimpleExpr, s("{ ", kw("_"), " ", kw("=>"), " ", pstats(stats), n("}")))
         case Block(Function(params, Block(stats)) :: Nil) =>
           m(SimpleExpr, s("{ (", r(params, ", "), ") => ", pstats(stats), n("}")))
@@ -212,11 +212,11 @@ object Code {
     case t: Term.If       => m(Expr1, s(kw("if"), " (", t.cond, ") ", p(Expr, t.thenp), if (t.hasElsep) s(" ", kw("else"), " ", p(Expr, t.elsep)) else s()))
     case t: Term.Function =>
       t match {
-        case Term.Function(Param.Named.Simple(mods, name, tptopt, _) :: Nil, body) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
+        case Term.Function(Param.Term.Simple(mods, Some(name), tptopt, _) :: Nil, body) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
           m(Expr, s(kw("implicit"), " ", name, tptopt.map(s(kw(":"), " ", _)).getOrElse(s()), " ", kw("=>"), " ", p(Expr, body)))
-        case Term.Function(Param.Named.Simple(mods, name, None, _) :: Nil, body) =>
+        case Term.Function(Param.Term.Simple(mods, Some(name), None, _) :: Nil, body) =>
           m(Expr, s(name, " ", kw("=>"), " ", p(Expr, body)))
-        case Term.Function(Param.Anonymous(_, _) :: Nil, body) =>
+        case Term.Function(Param.Term.Simple(_, None, _, _) :: Nil, body) =>
           m(Expr, s(kw("_"), " ", kw("=>"), " ", p(Expr, body)))
         case Term.Function(params, body) =>
           m(Expr, s("(", r(params, ", "), ") ", kw("=>"), " ", p(Expr, body)))
@@ -343,26 +343,17 @@ object Code {
       s(if (t.hasLo) s(" ", kw(">:"), " ", p(Typ, t.lo)) else s(), if (t.hasHi) s(" ", kw("<:"), " ", p(Typ, t.hi)) else s())
     case t: Case  =>
       s("case ", p(Pattern, t.pat), t.cond.map { cond => s(" ", kw("if"), " ", p(PostfixExpr, cond)) }.getOrElse(s()), " ", kw("=>"), r(t.stats.map(i(_)), ""))
-    case t: Param.Anonymous =>
-      s(a(t.mods, " "), kw("_"), t.decltpe)
-    case t: Param.Named =>
-      val keyword = t match { case t: Param.Named.Simple => ""; case t: Param.Named.Val => "val"; case t: Param.Named.Var => "var"; }
+    case t: Param.Template =>
+      val keyword = t match { case t: Param.Term.Simple => ""; case t: Param.Term.Val => "val"; case t: Param.Term.Var => "var"; }
       val mods = t.mods.filter(!_.isInstanceOf[Mod.Implicit]) // NOTE: `implicit` in parameters is skipped in favor of `implicit` in the enclosing parameter list
-      s(a(mods, " "), kw(keyword), t.name, t.decltpe, t.default.map(s(" ", kw("="), " ", _)).getOrElse(s()))
-    case t: TypeParam.Anonymous =>
+      s(a(mods, " "), kw(keyword), t.name.map(_.value).getOrElse("_"), t.tpe, t.default.map(s(" ", kw("="), " ", _)).getOrElse(s()))
+    case t: Param.Type =>
       val cbounds = r(t.contextBounds.map { s(kw(":"), " ", _) })
       val vbounds = r(t.viewBounds.map { s(" ", kw("<%"), " ", _) })
       val variance = t.mods.foldLeft("")((curr, m) => if (m.isInstanceOf[Mod.Covariant]) "+" else if (m.isInstanceOf[Mod.Contravariant]) "-" else curr)
       val mods = t.mods.filter(m => !m.isInstanceOf[Mod.Covariant] && !m.isInstanceOf[Mod.Contravariant])
       require(t.mods.length - mods.length <= 1)
-      s(a(mods, " "), variance, kw("_"), t.tparams, cbounds, vbounds, t.bounds)
-    case t: TypeParam.Named =>
-      val cbounds = r(t.contextBounds.map { s(kw(":"), " ", _) })
-      val vbounds = r(t.viewBounds.map { s(" ", kw("<%"), " ", _) })
-      val variance = t.mods.foldLeft("")((curr, m) => if (m.isInstanceOf[Mod.Covariant]) "+" else if (m.isInstanceOf[Mod.Contravariant]) "-" else curr)
-      val mods = t.mods.filter(m => !m.isInstanceOf[Mod.Covariant] && !m.isInstanceOf[Mod.Contravariant])
-      require(t.mods.length - mods.length <= 1)
-      s(a(mods, " "), variance, t.name, t.tparams, cbounds, vbounds, t.bounds)
+      s(a(mods, " "), variance, t.name.map(_.value).getOrElse("_"), t.tparams, cbounds, vbounds, t.bounds)
     case t: Term.Super =>
       s(t.thisp.map { thisp => s(thisp, ".") }.getOrElse(s()),
         kw("super"), t.superp.map { st => s("[", st, "]") }.getOrElse(s()))
@@ -382,11 +373,11 @@ object Code {
   implicit val codePatArgs: Code[Seq[Pat.Arg]] = Code { pats => s("(", r(pats, ", "), ")") }
   implicit val codeMods: Code[Seq[Mod]] = Code { mods => if (mods.nonEmpty) r(mods, " ") else s() }
   implicit val codeAnnots: Code[Seq[Mod.Annot]] = Code { annots => if (annots.nonEmpty) r(annots, " ") else s() }
-  implicit def codeParams[P <: Param]: Code[Seq[P]] = Code { params => s("(", r(params, ", "), ")") }
-  implicit def codeParamss[P <: Param]: Code[Seq[Seq[P]]] = Code { paramss => r(paramss.map(params =>
+  implicit def codeParams[P <: Param.Template]: Code[Seq[P]] = Code { params => s("(", r(params, ", "), ")") }
+  implicit def codeParamss[P <: Param.Template]: Code[Seq[Seq[P]]] = Code { paramss => r(paramss.map(params =>
     s("(", a("implicit ", r(params, ", "), params.exists(_.mods.exists(_.isInstanceOf[Mod.Implicit]))), ")")
   ), "")}
-  implicit val codeTparams: Code[Seq[TypeParam]] = Code { tparams =>
+  implicit val codeTparams: Code[Seq[Param.Type]] = Code { tparams =>
     if (tparams.nonEmpty) s("[", r(tparams, ", "), "]") else s()
   }
   implicit val codeTypeArgOpt: Code[Option[Type.Arg]] = Code { _.map { t => s(kw(":"), " ", t) }.getOrElse(s()) }

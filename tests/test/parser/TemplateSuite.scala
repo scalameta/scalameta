@@ -13,7 +13,7 @@ class TemplateSuite extends ParseSuite {
 
   test("trait F[T]") {
     val Trait(Nil, Type.Name("F"),
-              TypeParam.Named(Nil, Type.Name("T"), Nil, Nil, Nil, EmptyBounds()) :: Nil,
+              Param.Type(Nil, Some(Type.Name("T")), Nil, Nil, Nil, EmptyBounds()) :: Nil,
               Aux.Template(Nil, Nil, Self(None, None), Nil)) = templStat("trait F[T]")
   }
 
@@ -51,7 +51,7 @@ class TemplateSuite extends ParseSuite {
 
   test("class C[T]") {
     val Class(Nil, Type.Name("C"),
-              TypeParam.Named(Nil, Type.Name("T"), Nil, Nil, Nil, EmptyBounds()) :: Nil,
+              Param.Type(Nil, Some(Type.Name("T")), Nil, Nil, Nil, EmptyBounds()) :: Nil,
               Ctor.Primary(Nil, Nil),
               Aux.Template(Nil, Nil, Self(None, None), Nil)) = templStat("class C[T]")
   }
@@ -91,8 +91,8 @@ class TemplateSuite extends ParseSuite {
 
   test("class C(x: Int)") {
     val Class(Nil, Type.Name("C"), Nil,
-              Ctor.Primary(Nil, (Param.Named.Simple(Nil, Term.Name("x"),
-                                                    Some(Type.Name("Int")), None) :: Nil) :: Nil),
+              Ctor.Primary(Nil, (Param.Term.Simple(Nil, Some(Term.Name("x")),
+                                                   Some(Type.Name("Int")), None) :: Nil) :: Nil),
               Aux.Template(Nil, Nil, Self(None, None), Nil)) =
       templStat("class C(x: Int)")
   }
@@ -100,29 +100,29 @@ class TemplateSuite extends ParseSuite {
   test("class C private(x: Int)") {
     val Class(Nil, Type.Name("C"), Nil,
               Ctor.Primary(Mod.Private() :: Nil,
-                           (Param.Named.Simple(Nil, Term.Name("x"),
-                                               Some(Type.Name("Int")), None) :: Nil) :: Nil),
+                           (Param.Term.Simple(Nil, Some(Term.Name("x")),
+                                              Some(Type.Name("Int")), None) :: Nil) :: Nil),
               Aux.Template(Nil, Nil, Self(None, None), Nil)) =
       templStat("class C private(x: Int)")
   }
 
   test("class C(val x: Int)") {
     val Class(Nil, Type.Name("C"), Nil,
-              Ctor.Primary(Nil, (Param.Named.Val(Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil) :: Nil),
+              Ctor.Primary(Nil, (Param.Term.Val(Nil, Some(Term.Name("x")), Some(Type.Name("Int")), None) :: Nil) :: Nil),
               Aux.Template(Nil, Nil, Self(None, None), Nil)) =
       templStat("class C(val x: Int)")
   }
 
   test("class C(var x: Int)") {
     val Class(Nil, Type.Name("C"), Nil,
-              Ctor.Primary(Nil, (Param.Named.Var(Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil) :: Nil),
+              Ctor.Primary(Nil, (Param.Term.Var(Nil, Some(Term.Name("x")), Some(Type.Name("Int")), None) :: Nil) :: Nil),
               Aux.Template(Nil, Nil, Self(None, None), Nil)) =
       templStat("class C(var x: Int)")
   }
 
   test("class C(implicit x: Int)") {
     val Class(Nil, Type.Name("C"), Nil,
-              Ctor.Primary(Nil, (Param.Named.Simple(Mod.Implicit() :: Nil, Term.Name("x"),
+              Ctor.Primary(Nil, (Param.Term.Simple(Mod.Implicit() :: Nil, Some(Term.Name("x")),
                                                    Some(Type.Name("Int")), None) :: Nil) :: Nil),
               Aux.Template(Nil, Nil, Self(None, None), Nil)) =
       templStat("class C(implicit x: Int)")

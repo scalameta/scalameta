@@ -34,7 +34,7 @@ package object semantic {
     implicit object DefnVar extends Typeable[Defn.Var, Type]
     implicit object Ctor extends Typeable[Ctor, Type]
     implicit object Self extends Typeable[Aux.Self, Type]
-    implicit object Param extends Typeable[Param, Type.Arg]
+    implicit object TermParam extends Typeable[Param.Term, Type.Arg]
     implicit object Template extends Typeable[Aux.Template, Type]
   }
 
@@ -194,14 +194,14 @@ package object semantic {
     @hosted def types(name: Name): Member.Type = ???
     @hosted def types(name: String): Member.Type = ???
     @hosted def types(name: scala.Symbol): Member.Type = ???
-    @hosted def params: Seq[Param.Named] = ???
-    @hosted def params(name: Name): Param.Named = ???
-    @hosted def params(name: String): Param.Named = ???
-    @hosted def params(name: scala.Symbol): Param.Named = ???
-    @hosted def tparams: Seq[TypeParam.Named] = ???
-    @hosted def tparams(name: Name): TypeParam.Named = ???
-    @hosted def tparams(name: String): TypeParam.Named = ???
-    @hosted def tparams(name: scala.Symbol): TypeParam.Named = ???
+    @hosted def params: Seq[Param.Template] = ???
+    @hosted def params(name: Name): Param.Template = ???
+    @hosted def params(name: String): Param.Template = ???
+    @hosted def params(name: scala.Symbol): Param.Template = ???
+    @hosted def tparams: Seq[Param.Type] = ???
+    @hosted def tparams(name: Name): Param.Type = ???
+    @hosted def tparams(name: String): Param.Type = ???
+    @hosted def tparams(name: scala.Symbol): Param.Type = ???
   }
 
   // ===========================

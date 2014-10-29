@@ -216,8 +216,7 @@ abstract class AbstractParser { parser =>
   }
   def parseT(): Type.Arg = parseRule(_.paramType())
   def parseP(): Pat.Arg = parseRule(_.pattern())
-  def parseParam(): Param = ???
-  def parseTypeParam(): TypeParam = ???
+  def parseParam(): Tree = ???
   def parseTermArg(): Term.Arg = ???
   def parseEnum(): Enum = ???
   def parseMod(): Mod = ???
@@ -361,21 +360,21 @@ abstract class AbstractParser { parser =>
 /* ---------- TREE CONSTRUCTION ------------------------------------------- */
 
   /** Convert tree to formal parameter list. */
-  def convertToParams(tree: Term): List[Param] = tree match {
+  def convertToParams(tree: Term): List[Param.Term.Simple] = tree match {
     case Term.Tuple(ts) => ts.toList flatMap convertToParam
     case _              => List(convertToParam(tree)).flatten
   }
 
   /** Convert tree to formal parameter. */
-  def convertToParam(tree: Term): Option[Param] = tree match {
+  def convertToParam(tree: Term): Option[Param.Term.Simple] = tree match {
     case name: Name =>
-      Some(Param.Named.Simple(Nil, name.toTermName, None, None))
+      Some(Param.Term.Simple(Nil, Some(name.toTermName), None, None))
     case Term.Placeholder() =>
-      Some(Param.Anonymous(Nil, None))
+      Some(Param.Term.Simple(Nil, None, None, None))
     case Term.Ascribe(name: Name, tpt) =>
-      Some(Param.Named.Simple(Nil, name.toTermName, Some(tpt), None))
+      Some(Param.Term.Simple(Nil, Some(name.toTermName), Some(tpt), None))
     case Term.Ascribe(Term.Placeholder(), tpt) =>
-      Some(Param.Anonymous(Nil, Some(tpt)))
+      Some(Param.Term.Simple(Nil, None, Some(tpt), None))
     case Lit.Unit() =>
       None
     case other =>
@@ -1100,8 +1099,7 @@ abstract class AbstractParser { parser =>
         Term.Ascribe(expr, typeOrInfixType(location))
       }
     }.get
-    val mods = Mod.Implicit() +: param0.mods
-    val param = param0 match { case p: Param.Anonymous => p.copy(mods = mods); case p: Param.Named.Simple => p.copy(mods = mods); case _ => unreachable }
+    val param = param0.copy(mods = Mod.Implicit() +: param0.mods)
     accept[`=>`]
     Term.Function(List(param), if (location != InBlock) expr() else block())
   }
@@ -1707,9 +1705,9 @@ abstract class AbstractParser { parser =>
    *  ClassParam        ::= {Annotation}  [{Modifier} (`val' | `var')] Id [`:' ParamType] [`=' Expr]
    *  }}}
    */
-  def paramClauses(ownerIsType: Boolean, ownerIsCase: Boolean = false): List[List[Param.Named]] = {
+  def paramClauses(ownerIsType: Boolean, ownerIsCase: Boolean = false): List[List[Param.Template]] = {
     var parsedImplicits = false
-    def paramClause(): List[Param.Named] = {
+    def paramClause(): List[Param.Template] = {
       if (tok.is[`)`])
         return Nil
 
@@ -1719,7 +1717,7 @@ abstract class AbstractParser { parser =>
       }
       commaSeparated(param(ownerIsCase, ownerIsType, isImplicit = parsedImplicits))
     }
-    val paramss = new ListBuffer[List[Param.Named]]
+    val paramss = new ListBuffer[List[Param.Template]]
     newLineOptWhenFollowedBy[`(`]
     while (!parsedImplicits && tok.is[`(`]) {
       next()
@@ -1747,7 +1745,7 @@ abstract class AbstractParser { parser =>
       }
   }
 
-  def param(ownerIsCase: Boolean, ownerIsType: Boolean, isImplicit: Boolean): Param.Named = {
+  def param(ownerIsCase: Boolean, ownerIsType: Boolean, isImplicit: Boolean): Param.Template = {
     var mods: List[Mod] = annots(skipNewLines = false)
     if (isImplicit) mods ++= List(Mod.Implicit())
     val (isValParam, isVarParam) = (ownerIsType && tok.is[`val`], ownerIsType && tok.is[`var`])
@@ -1790,9 +1788,9 @@ abstract class AbstractParser { parser =>
         next()
         Some(expr())
       }
-    if (isValParam) Param.Named.Val(mods, name, Some(tpt), default)
-    else if (isVarParam) Param.Named.Var(mods, name, Some(tpt), default)
-    else Param.Named.Simple(mods, name, Some(tpt), default)
+    if (isValParam) Param.Term.Val(mods, Some(name), Some(tpt), default)
+    else if (isVarParam) Param.Term.Var(mods, Some(name), Some(tpt), default)
+    else Param.Term.Simple(mods, Some(name), Some(tpt), default)
   }
 
   /** {{{
@@ -1804,7 +1802,7 @@ abstract class AbstractParser { parser =>
    *  TypeParam             ::= Id TypeParamClauseOpt TypeBounds {<% Type} {":" Type}
    *  }}}
    */
-  def typeParamClauseOpt(ownerIsType: Boolean, ctxBoundsAllowed: Boolean): List[TypeParam] = {
+  def typeParamClauseOpt(ownerIsType: Boolean, ctxBoundsAllowed: Boolean): List[Param.Type] = {
     newLineOptWhenFollowedBy[`[`]
     if (tok.isNot[`[`]) Nil
     else inBrackets(commaSeparated {
@@ -1813,7 +1811,7 @@ abstract class AbstractParser { parser =>
     })
   }
 
-  def typeParam(annots: List[Mod.Annot], ownerIsType: Boolean, ctxBoundsAllowed: Boolean): TypeParam = {
+  def typeParam(annots: List[Mod.Annot], ownerIsType: Boolean, ctxBoundsAllowed: Boolean): Param.Type = {
     val mods =
       if (ownerIsType && tok.is[Ident]) {
         if (isIdentOf("+")) {
@@ -1850,8 +1848,8 @@ abstract class AbstractParser { parser =>
       }
     }
     nameopt match {
-      case Some(name) => TypeParam.Named(mods, name, tparams, contextBounds.toList, viewBounds.toList, bounds)
-      case None => TypeParam.Anonymous(mods, tparams, contextBounds.toList, viewBounds.toList, bounds)
+      case Some(name) => Param.Type(mods, Some(name), tparams, contextBounds.toList, viewBounds.toList, bounds)
+      case None => Param.Type(mods, None, tparams, contextBounds.toList, viewBounds.toList, bounds)
     }
   }
 
@@ -2013,7 +2011,9 @@ abstract class AbstractParser { parser =>
     if (tok.isNot[`this`]) funDefRest(mods, termName())
     else {
       next()
-      val paramss = paramClauses(ownerIsType = true)
+      // TODO: ownerIsType = true is most likely a bug here
+      // secondary constructors can't have val/var parameters
+      val paramss = paramClauses(ownerIsType = true).asInstanceOf[Seq[Seq[Param.Term]]]
       newLineOptWhenFollowedBy[`{`]
       val (argss, stats) = tok match {
         case _: `{` => constrBlock()
@@ -2027,7 +2027,7 @@ abstract class AbstractParser { parser =>
     def warnProcedureDeprecation =
       deprecationWarning(tok.offset, s"Procedure syntax is deprecated. Convert procedure `$name` to method by adding `: Unit`.")
     val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
-    val paramss = paramClauses(ownerIsType = false)
+    val paramss = paramClauses(ownerIsType = false).asInstanceOf[Seq[Seq[Param.Term]]]
     newLineOptWhenFollowedBy[`{`]
     var restype = fromWithinReturnType(typedOpt())
     if (tok.is[StatSep] || tok.is[`}`]) {

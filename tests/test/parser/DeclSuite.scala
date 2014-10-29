@@ -50,33 +50,33 @@ class DeclSuite extends ParseSuite {
 
   test("type F[T]") {
    val Decl.Type(Nil, Type.Name("F"),
-                 TypeParam.Named(Nil, Type.Name("T"),
-                                 Nil, Nil, Nil, EmptyBounds()) :: Nil,
+                 Param.Type(Nil, Some(Type.Name("T")),
+                            Nil, Nil, Nil, EmptyBounds()) :: Nil,
                  EmptyBounds()) = templStat("type F[T]")
   }
 
   test("type F[_]") {
     val Decl.Type(Nil, Type.Name("F"),
-                  TypeParam.Anonymous(Nil, Nil, Nil, Nil, EmptyBounds()) :: Nil,
+                  Param.Type(Nil, None, Nil, Nil, Nil, EmptyBounds()) :: Nil,
                   EmptyBounds()) = templStat("type F[_]")
   }
 
   test("type F[A <: B]") {
     val Decl.Type(Nil, Type.Name("F"),
-                  TypeParam.Named(Nil, Type.Name("T"),
-                                  Nil, Nil, Nil,
-                                  TypeBounds(Type.Name("Nothing"), Type.Name("B"))) :: Nil,
+                  Param.Type(Nil, Some(Type.Name("T")),
+                             Nil, Nil, Nil,
+                             TypeBounds(Type.Name("Nothing"), Type.Name("B"))) :: Nil,
                   EmptyBounds()) = templStat("type F[T <: B]")
   }
 
   test("type F[+T]") {
     val Decl.Type(Nil, Type.Name("F"),
-                  TypeParam.Named(Mod.Covariant() :: Nil, Type.Name("T"),
-                                  Nil, Nil, Nil, EmptyBounds()) :: Nil,
+                  Param.Type(Mod.Covariant() :: Nil, Some(Type.Name("T")),
+                             Nil, Nil, Nil, EmptyBounds()) :: Nil,
                   EmptyBounds()) = templStat("type F[+T]")
     val Decl.Type(Nil, Type.Name("F"),
-                  TypeParam.Named(Mod.Contravariant() :: Nil, Type.Name("T"),
-                                  Nil, Nil, Nil, EmptyBounds()) :: Nil,
+                  Param.Type(Mod.Contravariant() :: Nil, Some(Type.Name("T")),
+                             Nil, Nil, Nil, EmptyBounds()) :: Nil,
                   EmptyBounds()) = templStat("type F[-T]")
   }
 
@@ -87,32 +87,32 @@ class DeclSuite extends ParseSuite {
 
   test("def f(x: Int)") {
     val Decl.Procedure(Nil, Term.Name("f"), Nil,
-                       (Param.Named.Simple(Nil, Term.Name("x"),
-                                           Some(Type.Name("Int")),
-                                           None) :: Nil) :: Nil) =
+                       (Param.Term.Simple(Nil, Some(Term.Name("x")),
+                                          Some(Type.Name("Int")),
+                                          None) :: Nil) :: Nil) =
       templStat("def f(x: Int)")
   }
 
   test("def f(x: Int*)") {
     val Decl.Procedure(Nil, Term.Name("f"), Nil,
-                       (Param.Named.Simple(Nil, Term.Name("x"),
-                                           Some(Type.Arg.Repeated(Type.Name("Int"))),
-                                           None) :: Nil) :: Nil) =
+                       (Param.Term.Simple(Nil, Some(Term.Name("x")),
+                                          Some(Type.Arg.Repeated(Type.Name("Int"))),
+                                          None) :: Nil) :: Nil) =
       templStat("def f(x: Int*)")
   }
 
   test("def f(x: => Int)") {
     val Decl.Procedure(Nil, Term.Name("f"), Nil,
-                       (Param.Named.Simple(Nil, Term.Name("x"),
-                                           Some(Type.Arg.ByName(Type.Name("Int"))),
-                                           None) :: Nil) :: Nil) =
+                       (Param.Term.Simple(Nil, Some(Term.Name("x")),
+                                          Some(Type.Arg.ByName(Type.Name("Int"))),
+                                          None) :: Nil) :: Nil) =
       templStat("def f(x: => Int)")
   }
 
 
   test("def f(implicit x: Int)") {
     val Decl.Procedure(Nil, Term.Name("f"), Nil,
-                       (Param.Named.Simple(Mod.Implicit() :: Nil, Term.Name("x"),
+                       (Param.Term.Simple(Mod.Implicit() :: Nil, Some(Term.Name("x")),
                                           Some(Type.Name("Int")),
                                           None) :: Nil) :: Nil) =
       templStat("def f(implicit x: Int)")
@@ -125,7 +125,7 @@ class DeclSuite extends ParseSuite {
 
   test("def f[T]: T") {
     val Decl.Def(Nil, Term.Name("f"),
-                 TypeParam.Named(Nil, Type.Name("T"), Nil, Nil, Nil, EmptyBounds()) :: Nil,
+                 Param.Type(Nil, Some(Type.Name("T")), Nil, Nil, Nil, EmptyBounds()) :: Nil,
                  Nil, Type.Name("T")) =
       templStat("def f[T]: T")
   }
