@@ -26,16 +26,16 @@ package object semantic {
 
   sealed trait Typeable[+T, U]
   object Typeable {
-    object Term extends Typeable[Term, Type]
-    object MemberDef extends Typeable[Member.Def, Type]
-    object DeclVal extends Typeable[Decl.Val, Type]
-    object DeclVar extends Typeable[Decl.Var, Type]
-    object DefnVal extends Typeable[Defn.Val, Type]
-    object DefnVar extends Typeable[Defn.Var, Type]
-    object Ctor extends Typeable[Ctor, Type]
-    object Self extends Typeable[Aux.Self, Type]
-    object Param extends Typeable[Param, Type.Arg]
-    object Template extends Typeable[Aux.Template, Type]
+    implicit object Term extends Typeable[Term, Type]
+    implicit object MemberDef extends Typeable[Member.Def, Type]
+    implicit object DeclVal extends Typeable[Decl.Val, Type]
+    implicit object DeclVar extends Typeable[Decl.Var, Type]
+    implicit object DefnVal extends Typeable[Defn.Val, Type]
+    implicit object DefnVar extends Typeable[Defn.Var, Type]
+    implicit object Ctor extends Typeable[Ctor, Type]
+    implicit object Self extends Typeable[Aux.Self, Type]
+    implicit object Param extends Typeable[Param, Type.Arg]
+    implicit object Template extends Typeable[Aux.Template, Type]
   }
 
   implicit class SemanticTypeableOps[T <: Tree, U <: Tree](val tree: T)(implicit ev: Typeable[T, U]) {
@@ -44,9 +44,9 @@ package object semantic {
 
   sealed trait Resolvable[+T, U]
   object Resolvable {
-    object Ref extends Resolvable[Ref, Member]
-    object TermRef extends Resolvable[Term.Ref, Member.Term]
-    object TypeRef extends Resolvable[Type.Ref, Member] // Type.Ref can refer to both types (regular types) and terms (singleton types)
+    implicit object Ref extends Resolvable[Ref, Member]
+    implicit object TermRef extends Resolvable[Term.Ref, Member.Term]
+    implicit object TypeRef extends Resolvable[Type.Ref, Member] // Type.Ref can refer to both types (regular types) and terms (singleton types)
   }
 
   implicit class SemanticResolvableOps[T <: Tree, U <: Tree](val tree: T)(implicit ev: Resolvable[T, U]) {
@@ -149,20 +149,43 @@ package object semantic {
   // PART 4: SCOPES
   // ===========================
 
-  implicit class SemanticScopeOps(val tree: Scope) extends AnyVal {
+  object Scope {
+    sealed trait TopLevel[+T] extends Block[T]
+    object TopLevel extends Instances
+    sealed trait Template[+T] extends Block[T] with Params[T]
+    object Template extends Instances
+    sealed trait Block[+T]
+    object Block extends Instances
+    sealed trait Params[+T]
+    object Params extends Instances
+    trait Instances {
+      implicit object PkgIsTopLevel extends TopLevel[Pkg]
+      implicit object TemplateIsTemplate extends Template[Aux.Template]
+      implicit object MemberTemplateIsTemplate extends Template[Member.Template]
+      implicit object TypeIsTemplate extends Template[Type]
+      implicit object BlockIsBlock extends Block[Term.Block]
+      implicit object CtorIsParams extends Params[Ctor]
+      implicit object FunctionIsParams extends Params[Term.Function]
+      implicit object MemberDefIsParams extends Params[Member.Def]
+      implicit object MemberTypeIsParams extends Params[Member.Type]
+      implicit object TypeParamIsParams extends Params[TypeParam]
+    }
+  }
+
+  implicit class SemanticScopeOps[T <: Scope](val tree: T) {
     @hosted def members: Seq[Member] = ???
     @hosted def members(name: Name): Seq[Member] = ???
   }
 
-  implicit class SemanticTopLevelScopeOps(val tree: Scope.TopLevel) extends AnyVal {
+  implicit class SemanticTopLevelScopeOps[T <: Scope : Scope.TopLevel](val tree: T) {
     @hosted def packages: Seq[Pkg] = ???
     @hosted def packages(name: Name): Pkg = ???
     @hosted def packages(name: String): Pkg = ???
     @hosted def packages(name: scala.Symbol): Pkg = ???
-    @hosted def pkgobject: Defn.Object = ???
+    @hosted def pkgobject: Pkg.Object = ???
   }
 
-  implicit class SemanticTemplateScopeOps(val tree: Scope.Template) extends AnyVal {
+  implicit class SemanticTemplateScopeOps[T <: Scope : Scope.Template](val tree: T) {
     @hosted def parents: Seq[Member.Template] = ???
     @hosted def children: Seq[Member.Template] = ???
     @hosted def self: Aux.Self = ???
@@ -170,7 +193,7 @@ package object semantic {
     @hosted def ctors: Seq[Ctor] = ???
   }
 
-  implicit class SemanticBlockScopeOps(val tree: Scope.Block) extends AnyVal {
+  implicit class SemanticBlockScopeOps[T <: Scope : Scope.Block](val tree: T) {
     @hosted def classes: Seq[Defn.Class] = ???
     @hosted def classes(name: Name): Defn.Class = ???
     @hosted def classes(name: String): Defn.Class = ???
@@ -187,9 +210,10 @@ package object semantic {
     @hosted def vars(name: Name): Term.Name = ???
     @hosted def vars(name: String): Term.Name = ???
     @hosted def vars(name: scala.Symbol): Term.Name = ???
-  }
-
-  implicit class SemanticRefineScopeOps(val tree: Scope.Refine) extends AnyVal {
+    @hosted def vals: Seq[Term.Name] = ???
+    @hosted def vals(name: Name): Term.Name = ???
+    @hosted def vals(name: String): Term.Name = ???
+    @hosted def vals(name: scala.Symbol): Term.Name = ???
     @hosted def defs: Seq[Member.Def] = ???
     @hosted def defs(name: Name): Member.Def = ???
     @hosted def defs(name: String): Member.Def = ???
@@ -198,20 +222,13 @@ package object semantic {
     @hosted def macros(name: Name): Defn.Macro = ???
     @hosted def macros(name: String): Defn.Macro = ???
     @hosted def macros(name: scala.Symbol): Defn.Macro = ???
-  }
-
-  implicit class SemanticExistentialScopeOps(val tree: Scope.Existential) extends AnyVal {
-    @hosted def vals: Seq[Term.Name] = ???
-    @hosted def vals(name: Name): Term.Name = ???
-    @hosted def vals(name: String): Term.Name = ???
-    @hosted def vals(name: scala.Symbol): Term.Name = ???
     @hosted def types: Seq[Member.Type] = ???
     @hosted def types(name: Name): Member.Type = ???
     @hosted def types(name: String): Member.Type = ???
     @hosted def types(name: scala.Symbol): Member.Type = ???
   }
 
-  implicit class SemanticParamsScopeOps(val tree: Scope.Params) extends AnyVal {
+  implicit class SemanticParamsScopeOps[T <: Scope : Scope.Params](val tree: T) {
     @hosted def params: Seq[Param.Named] = ???
     @hosted def params(name: Name): Param.Named = ???
     @hosted def params(name: String): Param.Named = ???

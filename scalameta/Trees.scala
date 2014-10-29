@@ -51,7 +51,7 @@ object Term {
   @ast class If(cond: Term, thenp: Term, elsep: Term = Lit.Unit()) extends Term
   @ast class Match(scrut: Term, cases: Cases) extends Term
   @ast class Try(expr: Term, catchp: Option[Term], finallyp: Option[Term]) extends Term
-  @ast class Function(params: Seq[Param], body: Term) extends Term with Scope.Params {
+  @ast class Function(params: Seq[Param], body: Term) extends Term with Scope {
     require(params.collect{ case named: Param.Named => named }.forall(_.default.isEmpty))
     require(params.exists(_.mods.exists(_.isInstanceOf[Mod.Implicit])) ==> (params.length == 1))
   }
@@ -74,7 +74,7 @@ object Term {
   }
 }
 
-@branch trait Type extends Tree with Type.Arg with Scope.Template
+@branch trait Type extends Tree with Type.Arg with Scope
 object Type {
   @branch trait Ref extends Type with meta.Ref
   @ast class Name(value: String @nonEmpty, @trivia isBackquoted: Boolean = false) extends meta.Name with Type.Ref {
@@ -93,11 +93,11 @@ object Type {
   @ast class Tuple(elements: Seq[Type] @nonEmpty) extends Type {
     require(elements.length > 1)
   }
-  @ast class Compound(tpes: Seq[Type], refinement: Seq[Stat] = Nil) extends Type with Scope.Refine {
+  @ast class Compound(tpes: Seq[Type], refinement: Seq[Stat] = Nil) extends Type {
     require(tpes.length == 1 ==> hasRefinement)
     require(refinement.forall(_.isRefineStat))
   }
-  @ast class Existential(tpe: Type, quants: Seq[Stat] @nonEmpty) extends Type with Scope.Existential {
+  @ast class Existential(tpe: Type, quants: Seq[Stat] @nonEmpty) extends Type {
     require(quants.forall(_.isExistentialStat))
   }
   @ast class Annotate(tpe: Type, annots: Seq[Mod.Annot] @nonEmpty) extends Type
@@ -223,7 +223,7 @@ object Defn {
 }
 
 @ast class Pkg(ref: Term.Ref, stats: Seq[Stat], @trivia hasBraces: Boolean = true)
-     extends Stat with Scope.TopLevel with Member.Term {
+     extends Stat with Member.Term with Scope {
   require(ref.isQualId)
   require(stats.forall(_.isTopLevelStat))
   def mods: Seq[Mod] = Nil
@@ -235,17 +235,17 @@ object Defn {
 }
 object Pkg {
   @ast class Object(mods: Seq[Mod], name: Term.Name, templ: Aux.Template)
-       extends Stat with Member.Term
+       extends Stat with Member.Term with Member.Template
 }
 
-@branch trait Ctor extends Tree
+@branch trait Ctor extends Tree with Scope
 object Ctor {
   @ast class Primary(mods: Seq[Mod],
                      paramss: Seq[Seq[Param.Named]]) extends Ctor
   @ast class Secondary(mods: Seq[Mod],
                        paramss: Seq[Seq[Param.Named]] @nonEmpty,
                        primaryCtorArgss: Seq[Seq[Term.Arg]],
-                       stats: Seq[Stat]) extends Ctor with Stat with Scope.Params
+                       stats: Seq[Stat]) extends Ctor with Stat
 }
 
 @ast class Import(clauses: Seq[Import.Clause] @nonEmpty) extends Stat
@@ -337,7 +337,7 @@ object Aux {
   @ast class Template(early: Seq[Stat],
                       parents: Seq[Parent],
                       self: Self,
-                      stats: Seq[Stat] = Nil) extends Tree with Scope.Template {
+                      stats: Seq[Stat] = Nil) extends Tree with Scope {
     require(parents.isEmpty || !parents.tail.exists(_.argss.nonEmpty))
     require(early.nonEmpty ==> parents.nonEmpty)
     require(early.forall(_.isEarlyStat))
@@ -362,14 +362,14 @@ object Aux {
 }
 object Member {
   @branch trait Term extends Member
-  @branch trait Type extends Member {
+  @branch trait Type extends Member with Scope {
     def tparams: Seq[TypeParam]
   }
-  @branch trait Def extends Term {
+  @branch trait Def extends Term with Scope {
     def tparams: Seq[TypeParam]
     def paramss: Seq[Seq[Param.Named]]
   }
-  @branch trait Template extends Member {
+  @branch trait Template extends Member with Scope {
     def tparams: Seq[TypeParam] = Nil
     def paramss: Seq[Seq[Param.Named]] = Nil
     def templ: Aux.Template
@@ -379,11 +379,3 @@ object Member {
 @branch trait Stat extends Tree
 
 @branch trait Scope extends Tree
-object Scope {
-  @branch trait TopLevel extends Scope with Block
-  @branch trait Template extends Block with Params
-  @branch trait Block extends Refine
-  @branch trait Refine extends Existential
-  @branch trait Existential extends Scope
-  @branch trait Params extends Scope
-}
