@@ -127,22 +127,22 @@ package object semantic {
   }
 
   implicit class SemanticTemplateMemberOps(val tree: Member.Template) extends AnyVal {
-    @hosted def parents: Seq[Member.Template] = ???
+    @hosted def parents: Seq[Member.Template with Member.Type] = ???
     @hosted def children: Seq[Member.Template] = ???
     @hosted def self: Aux.Self = ???
     @hosted def companion: Member.Template = ???
   }
 
   implicit class SemanticDefnClassOps(val tree: Defn.Class) extends AnyVal {
-    @hosted def companion: Object = ???
+    @hosted def companion: Defn.Object = ???
   }
 
   implicit class SemanticDefnTraitOps(val tree: Defn.Trait) extends AnyVal {
-    @hosted def companion: Object = ???
+    @hosted def companion: Defn.Object = ???
   }
 
   implicit class SemanticDefnObjectOps(val tree: Defn.Object) extends AnyVal {
-    @hosted def companion: Member.Template = ???
+    @hosted def companion: Member.Template with Member.Type = ???
   }
 
   // ===========================
@@ -157,7 +157,7 @@ package object semantic {
     @hosted def packages(name: String): Pkg = ???
     @hosted def packages(name: scala.Symbol): Pkg = ???
     @hosted def pkgobject: Pkg.Object = ???
-    @hosted def parents: Seq[Member.Template] = ???
+    @hosted def parents: Seq[Member.Template with Member.Type] = ???
     @hosted def children: Seq[Member.Template] = ???
     @hosted def self: Aux.Self = ???
     @hosted def ctor: Ctor.Primary = ???
