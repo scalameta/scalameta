@@ -297,7 +297,7 @@ object Enum {
 
 @branch trait Mod extends Tree
 object Mod {
-  @ast class Annot(tpe: Type, argss: Seq[Seq[Term.Arg]]) extends Mod
+  @ast class Annot(ctor: Aux.Parent) extends Mod
   @ast class Private extends Mod
   @ast class PrivateThis extends Mod
   @ast class PrivateWithin(name: Predef.String) extends Mod

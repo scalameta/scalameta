@@ -1690,13 +1690,13 @@ abstract class AbstractParser { parser =>
     t
   }
   def constructorAnnots(): List[Mod.Annot] = readAnnots {
-    Mod.Annot(exprSimpleType(), argumentExprs() :: Nil)
+    Mod.Annot(Aux.Parent(exprSimpleType(), argumentExprs() :: Nil))
   }
 
   def annot(): Mod.Annot = {
     val t = exprSimpleType()
-    if (tok.is[`(`]) Mod.Annot(t, multipleArgumentExprs())
-    else Mod.Annot(t, Nil)
+    if (tok.is[`(`]) Mod.Annot(Aux.Parent(t, multipleArgumentExprs()))
+    else Mod.Annot(Aux.Parent(t, Nil))
   }
 
 /* -------- PARAMETERS ------------------------------------------- */

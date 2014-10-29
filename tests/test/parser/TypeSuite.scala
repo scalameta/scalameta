@@ -47,7 +47,7 @@ class TypeSuite extends ParseSuite {
   }
 
   test("T @foo") {
-    val Annotate(TypeName("T"), Mod.Annot(TypeName("foo"), Nil) :: Nil) =
+    val Annotate(TypeName("T"), Mod.Annot(Aux.Parent(TypeName("foo"), Nil)) :: Nil) =
       tpe("T @foo")
   }
 

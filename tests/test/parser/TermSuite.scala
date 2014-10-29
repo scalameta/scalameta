@@ -115,7 +115,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("1: @foo") {
-    val Annotate(Lit.Int(1), Mod.Annot(TypeName("foo"), Nil) :: Nil) = term("1: @foo")
+    val Annotate(Lit.Int(1), Mod.Annot(Aux.Parent(TypeName("foo"), Nil)) :: Nil) = term("1: @foo")
   }
 
   test("(true, false)") {

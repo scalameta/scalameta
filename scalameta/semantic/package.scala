@@ -36,6 +36,7 @@ package object semantic {
     implicit object Self extends Typeable[Aux.Self, Type]
     implicit object TermParam extends Typeable[Param.Term, Type.Arg]
     implicit object Template extends Typeable[Aux.Template, Type]
+    implicit object Annot extends Typeable[Mod.Annot, Type]
   }
 
   implicit class SemanticTypeableOps[T <: Tree, U <: Tree](val tree: T)(implicit ev: Typeable[T, U]) {

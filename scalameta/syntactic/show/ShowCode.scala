@@ -252,7 +252,7 @@ object Code {
       m(SimplePattern, s(t.prefix, "\"", r(zipped), t.parts.last, "\""))
 
     // Mod
-    case t: Mod.Annot           => s(kw("@"), p(SimpleTyp, t.tpe), t.argss)
+    case t: Mod.Annot           => s(kw("@"), p(SimpleTyp, t.ctor.tpe), t.ctor.argss)
     case _: Mod.Abstract        => kw("abstract")
     case _: Mod.Case            => kw("case")
     case _: Mod.Covariant       => kw("+")
