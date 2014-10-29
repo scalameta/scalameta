@@ -53,10 +53,6 @@ package object semantic {
     @hosted def defn: Member.Term = ???
   }
 
-  implicit class SemanticTermMembersOps[A <: Member.Term](val tree: Seq[A]) extends AnyVal {
-    def resolve(tpes: Seq[meta.Type]): A = ???
-  }
-
   implicit class SemanticMemberOps(val tree: Member) extends AnyVal {
     def ref: Ref = ???
     @hosted def parents: Seq[Member] = ???
