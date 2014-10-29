@@ -109,11 +109,11 @@ package object semantic {
     @hosted def tpe: meta.Type = ???
   }
 
-  implicit class SemanticTemplateMemberOps(val tree: Has.Template) extends AnyVal {
-    @hosted def parents: Seq[Member.Type with Has.Template] = ???
-    @hosted def children: Seq[Has.Template] = ???
+  implicit class SemanticTemplateMemberOps(val tree: Member.Template) extends AnyVal {
+    @hosted def parents: Seq[Member.Template] = ???
+    @hosted def children: Seq[Member.Template] = ???
     @hosted def self: Aux.Self = ???
-    @hosted def companion: Has.Template = ???
+    @hosted def companion: Member.Template = ???
   }
 
   implicit class SemanticDeclValOps(val tree: Decl.Val) extends AnyVal {
@@ -141,11 +141,11 @@ package object semantic {
   }
 
   implicit class SemanticDefnObjectOps(val tree: Defn.Object) extends AnyVal {
-    @hosted def companion: Has.Template with Member.Type = ???
+    @hosted def companion: Member.Template = ???
   }
 
   implicit class SemanticPkgObjectOps(val tree: Defn.Object) extends AnyVal {
-    @hosted def companion: Has.Template with Member.Type = ???
+    @hosted def companion: Member.Template = ???
   }
 
   implicit class SemanticCtorOps(val tree: Ctor) extends AnyVal {
@@ -187,8 +187,8 @@ package object semantic {
   }
 
   implicit class SemanticTemplateScopeOps(val tree: Scope.Template) extends AnyVal {
-    @hosted def parents: Seq[Member.Type with Has.Template] = ???
-    @hosted def children: Seq[Has.Template] = ???
+    @hosted def parents: Seq[Member.Template] = ???
+    @hosted def children: Seq[Member.Template] = ???
     @hosted def self: Aux.Self = ???
     @hosted def ctor: Ctor.Primary = ???
     @hosted def ctors: Seq[Ctor] = ???

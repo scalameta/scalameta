@@ -2125,7 +2125,7 @@ abstract class AbstractParser { parser =>
   }
 
   /** Hook for IDE, for top-level classes/objects. */
-  def topLevelTmplDef: Has.Template =
+  def topLevelTmplDef: Member =
     tmplDef(annots(skipNewLines = true) ++ modifiers())
 
   /** {{{
@@ -2134,7 +2134,7 @@ abstract class AbstractParser { parser =>
    *            |  [override] trait TraitDef
    *  }}}
    */
-  def tmplDef(mods: List[Mod]): Has.Template = {
+  def tmplDef(mods: List[Mod]): Member = {
     mods.getAll[Mod.Lazy].foreach { syntaxError(_, "classes cannot be lazy") }
     tok match {
       case _: `trait` =>

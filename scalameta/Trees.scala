@@ -21,7 +21,7 @@ object Term {
   @branch trait Ref extends Term with meta.Ref
   @ast class This(qual: Option[Predef.String]) extends Term.Ref
   @ast class Super(thisp: Option[Predef.String], superp: Option[Predef.String]) extends Term.Ref
-  @ast class Name(value: Predef.String @nonEmpty, @trivia isBackquoted: Boolean = false) extends meta.Name with Term.Ref with Pat with Member with Has.TermName {
+  @ast class Name(value: Predef.String @nonEmpty, @trivia isBackquoted: Boolean = false) extends meta.Name with Term.Ref with Pat with Member {
     require(keywords.contains(value) ==> isBackquoted)
     def name: Name = this
     def mods: Seq[Mod] = Nil
@@ -41,9 +41,7 @@ object Term {
   @ast class Return(expr: Term = Lit.Unit()) extends Term
   @ast class Throw(expr: Term) extends Term
   @ast class Ascribe(expr: Term, tpe: Type) extends Term
-  @ast class Annotate(expr: Term, annots: Seq[Mod.Annot] @nonEmpty) extends Term with Has.Mods {
-    def mods: Seq[Mod] = annots
-  }
+  @ast class Annotate(expr: Term, annots: Seq[Mod.Annot] @nonEmpty) extends Term
   @ast class Tuple(elements: Seq[Term] @nonEmpty) extends Term {
     require(elements.length > 1)
   }
@@ -102,9 +100,7 @@ object Type {
   @ast class Existential(tpe: Type, quants: Seq[Stat] @nonEmpty) extends Type with Scope.Existential {
     require(quants.forall(_.isExistentialStat))
   }
-  @ast class Annotate(tpe: Type, annots: Seq[Mod.Annot] @nonEmpty) extends Type with Has.Mods {
-    def mods: Seq[Mod] = annots
-  }
+  @ast class Annotate(tpe: Type, annots: Seq[Mod.Annot] @nonEmpty) extends Type
   @ast class Placeholder(bounds: Aux.TypeBounds) extends Type
   @branch trait Arg extends Tree
   object Arg {
@@ -151,7 +147,7 @@ object Lit {
   @ast class Unit() extends Lit
 }
 
-@branch trait Decl extends Stat with Has.Mods
+@branch trait Decl extends Stat
 object Decl {
   @ast class Val(mods: Seq[Mod],
                  pats: Seq[Term.Name] @nonEmpty,
@@ -174,7 +170,7 @@ object Decl {
                   bounds: Aux.TypeBounds) extends Decl with Member.Type
 }
 
-@branch trait Defn extends Stat with Has.Mods
+@branch trait Defn extends Stat
 object Defn {
   @ast class Val(mods: Seq[Mod],
                  pats: Seq[Pat] @nonEmpty,
@@ -203,7 +199,7 @@ object Defn {
                    tparams: Seq[TypeParam],
                    paramss: Seq[Seq[Param.Named]],
                    tpe: meta.Type,
-                   body: Term) extends Defn with Member.Term with Has.TermName
+                   body: Term) extends Defn with Member.Term
   @ast class Type(mods: Seq[Mod],
                   name: meta.Type.Name,
                   tparams: Seq[TypeParam],
@@ -212,24 +208,22 @@ object Defn {
                    name: meta.Type.Name,
                    override val tparams: Seq[TypeParam],
                    ctor: Ctor.Primary,
-                   templ: Aux.Template) extends Defn with Member.Type with Has.Template with Has.TypeName {
-    override def paramss: Seq[Seq[Param.Named]] = ctor.paramss
-  }
+                   templ: Aux.Template) extends Defn with Member.Type with Member.Template
   @ast class Trait(mods: Seq[Mod],
                    name: meta.Type.Name,
                    override val tparams: Seq[TypeParam],
-                   templ: Aux.Template) extends Defn with Member.Type with Has.Template with Has.TypeName {
+                   templ: Aux.Template) extends Defn with Member.Type with Member.Template {
     require(templ.stats.forall(!_.isInstanceOf[Ctor]))
     require(templ.parents.forall(_.argss.isEmpty))
   }
   @ast class Object(mods: Seq[Mod],
                     name: Term.Name,
-                    templ: Aux.Template) extends Defn with Member.Term with Has.Template with Has.TermName {
+                    templ: Aux.Template) extends Defn with Member.Term with Member.Template {
   }
 }
 
 @ast class Pkg(ref: Term.Ref, stats: Seq[Stat], @trivia hasBraces: Boolean = true)
-     extends Stat with Scope.TopLevel with Member.Term with Has.TermName {
+     extends Stat with Scope.TopLevel with Member.Term {
   require(ref.isQualId)
   require(stats.forall(_.isTopLevelStat))
   def mods: Seq[Mod] = Nil
@@ -241,10 +235,10 @@ object Defn {
 }
 object Pkg {
   @ast class Object(mods: Seq[Mod], name: Term.Name, templ: Aux.Template)
-       extends Stat with Member.Term with Has.Template with Has.TermName
+       extends Stat with Member.Term
 }
 
-@branch trait Ctor extends Tree with Has.Mods with Has.Paramss
+@branch trait Ctor extends Tree
 object Ctor {
   @ast class Primary(mods: Seq[Mod],
                      paramss: Seq[Seq[Param.Named]]) extends Ctor
@@ -267,13 +261,14 @@ object Import {
   @ast class Unimport(name: String) extends Selector
 }
 
-@branch trait Param extends Tree with Has.Mods {
+@branch trait Param extends Tree {
+  def mods: Seq[Mod]
   def decltpe: Option[Type.Arg]
 }
 object Param {
   @ast class Anonymous(mods: Seq[Mod],
                        decltpe: Option[Type]) extends Param
-  @branch trait Named extends Param with Member.Term with Has.TermName{
+  @branch trait Named extends Param with Member.Term {
     def mods: Seq[Mod]
     def name: Term.Name
     def decltpe: Option[Type.Arg]
@@ -286,7 +281,7 @@ object Param {
   }
 }
 
-@branch trait TypeParam extends Tree with Has.Mods with Has.TypeParams {
+@branch trait TypeParam extends Tree {
   def tparams: Seq[TypeParam]
   def contextBounds: Seq[meta.Type]
   def viewBounds: Seq[meta.Type]
@@ -303,7 +298,7 @@ object TypeParam {
                    tparams: Seq[TypeParam],
                    contextBounds: Seq[meta.Type],
                    viewBounds: Seq[meta.Type],
-                   bounds: Aux.TypeBounds) extends TypeParam with Member.Type with Has.TypeName
+                   bounds: Aux.TypeBounds) extends TypeParam with Member.Type
 }
 
 @branch trait Enum extends Tree
@@ -362,32 +357,23 @@ object Aux {
   def isBackquoted: Boolean
 }
 
-object Has {
-  @branch trait Mods extends Tree {
-    def mods: Seq[Mod]
-  }
-  @branch trait Paramss extends Tree with Scope.Params {
-    def paramss: Seq[Seq[Param.Named]]
-  }
-  @branch trait TypeParams extends Tree with Scope.Params {
+@branch trait Member extends Tree with Stat {
+  def mods: Seq[Mod]
+}
+object Member {
+  @branch trait Term extends Member
+  @branch trait Type extends Member {
     def tparams: Seq[TypeParam]
   }
-  @branch trait Template extends Defn with Has.Name with Has.TypeParams with Has.Paramss with Scope.Template {
-    def name: meta.Name
+  @branch trait Def extends Term {
+    def tparams: Seq[TypeParam]
+    def paramss: Seq[Seq[Param.Named]]
+  }
+  @branch trait Template extends Member {
     def tparams: Seq[TypeParam] = Nil
     def paramss: Seq[Seq[Param.Named]] = Nil
     def templ: Aux.Template
   }
-  @branch trait Name extends Member { def name: meta.Name }
-  @branch trait TermName extends Has.Name { def name: Term.Name }
-  @branch trait TypeName extends Has.Name { def name: Type.Name }
-}
-
-@branch trait Member extends Tree with Stat with Has.Mods
-object Member {
-  @branch trait Term extends Member
-  @branch trait Type extends Member with Has.TypeName with Has.TypeParams
-  @branch trait Def extends Term with Has.TermName with Has.TypeParams with Has.Paramss
 }
 
 @branch trait Stat extends Tree
