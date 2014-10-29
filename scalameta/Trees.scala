@@ -270,14 +270,14 @@ object Param {
   @branch trait Template extends Member.Term {
     def mods: Seq[Mod]
     def name: Option[meta.Term.Name]
-    def tpe: Option[meta.Type.Arg]
+    def decltpe: Option[meta.Type.Arg]
     def default: Option[meta.Term]
   }
   @branch trait Term extends Template
   object Term {
-    @ast class Simple(mods: Seq[Mod], name: Option[meta.Term.Name], tpe: Option[meta.Type.Arg], default: Option[meta.Term]) extends Term with Template
-    @ast class Val(mods: Seq[Mod], name: Option[meta.Term.Name], tpe: Option[meta.Type.Arg], default: Option[meta.Term]) extends Template
-    @ast class Var(mods: Seq[Mod], name: Option[meta.Term.Name], tpe: Option[meta.Type.Arg], default: Option[meta.Term]) extends Template
+    @ast class Simple(mods: Seq[Mod], name: Option[meta.Term.Name], decltpe: Option[meta.Type.Arg], default: Option[meta.Term]) extends Term with Template
+    @ast class Val(mods: Seq[Mod], name: Option[meta.Term.Name], decltpe: Option[meta.Type.Arg], default: Option[meta.Term]) extends Template
+    @ast class Var(mods: Seq[Mod], name: Option[meta.Term.Name], decltpe: Option[meta.Type.Arg], default: Option[meta.Term]) extends Template
   }
   @ast class Type(mods: Seq[Mod],
                   name: Option[meta.Type.Name],
@@ -323,16 +323,12 @@ object Aux {
   @ast class Parent(tpe: Type, argss: Seq[Seq[Term.Arg]]) extends Tree
   @ast class Template(early: Seq[Stat],
                       parents: Seq[Parent],
-                      self: Self,
+                      self: Param.Term,
                       stats: Seq[Stat] = Nil) extends Tree with Scope {
     require(parents.isEmpty || !parents.tail.exists(_.argss.nonEmpty))
     require(early.nonEmpty ==> parents.nonEmpty)
     require(early.forall(_.isEarlyStat))
     require(stats.forall(_.isTemplateStat))
-  }
-  @ast class Self(name: Option[Term.Name], decltpe: Option[Type], @trivia hasThis: Boolean = false) extends Member.Term {
-    def mods: Seq[Mod] = Nil
-    require(hasThis ==> name.isEmpty)
   }
 }
 

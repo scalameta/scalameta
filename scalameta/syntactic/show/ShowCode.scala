@@ -320,9 +320,6 @@ object Code {
 
     // Aux
     case t: Parent => s(p(AnnotTyp, t.tpe), t.argss)
-    case t: Self =>
-      if (t.name.isEmpty && t.decltpe.isEmpty) s()
-      else s(t.name, t.decltpe, " ", kw("=>"))
     case t: Template =>
       val isBodyEmpty = t.self.name.isEmpty && t.self.decltpe.isEmpty && !t.hasStats
       val isTemplateEmpty = t.early.isEmpty && t.parents.isEmpty && isBodyEmpty
@@ -333,13 +330,13 @@ object Code {
         val pparents = a(r(t.parents, " with "), " ", !t.parents.isEmpty && !isBodyEmpty)
         val pbody = (t.self.name.nonEmpty || t.self.decltpe.nonEmpty, t.hasStats, t.stats) match {
           case (false, false, _) => s()
-          case (true, false, _) => s("{ ", t.self, " }")
+          case (true, false, _) => s("{ ", t.self, " => }")
           case (false, true, List()) if isOneLiner => s("{}")
           case (false, true, List(stat)) if isOneLiner => s("{ ", stat, " }")
           case (false, true, stats) => s("{", r(stats.map(i(_)), ""), n("}"))
-          case (true, true, List()) if isOneLiner => s("{ ", t.self, " }")
-          case (true, true, List(stat)) if isOneLiner => s("{ ", t.self, " ", stat, " }")
-          case (true, true, stats) => s("{ ", t.self, r(stats.map(i(_)), ""), n("}"))
+          case (true, true, List()) if isOneLiner => s("{ ", t.self, " => }")
+          case (true, true, List(stat)) if isOneLiner => s("{ ", t.self, " => ", stat, " }")
+          case (true, true, stats) => s("{ ", t.self, " =>", r(stats.map(i(_)), ""), n("}"))
         }
         s(pearly, pparents, pbody)
       }
@@ -348,7 +345,7 @@ object Code {
     case t: Param.Template =>
       val keyword = t match { case t: Param.Term.Simple => ""; case t: Param.Term.Val => "val"; case t: Param.Term.Var => "var"; }
       val mods = t.mods.filter(!_.isInstanceOf[Mod.Implicit]) // NOTE: `implicit` in parameters is skipped in favor of `implicit` in the enclosing parameter list
-      s(a(mods, " "), kw(keyword), t.name.map(_.value).getOrElse("_"), t.tpe, t.default.map(s(" ", kw("="), " ", _)).getOrElse(s()))
+      s(a(mods, " "), kw(keyword), t.name.map(_.value).getOrElse("_"), t.decltpe, t.default.map(s(" ", kw("="), " ", _)).getOrElse(s()))
     case t: Param.Type =>
       val cbounds = r(t.contextBounds.map { s(kw(":"), " ", _) })
       val vbounds = r(t.viewBounds.map { s(" ", kw("<%"), " ", _) })

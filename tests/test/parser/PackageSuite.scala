@@ -4,14 +4,14 @@ class PackageSuite extends ParseSuite {
   test("class C") {
     val CompUnit(Class(Nil, Type.Name("C"), Nil,
                        Ctor.Primary(Nil, Nil),
-                       Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil) = compUnit("class C")
+                       EmptyTemplate()) :: Nil) = compUnit("class C")
   }
 
   test("package foo; class C") {
     val CompUnit((pkgfoo @ Pkg(Term.Name("foo"),
                                Class(Nil, Type.Name("C"), Nil,
                                      Ctor.Primary(Nil, Nil),
-                                     Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil)) :: Nil) =
+                                     EmptyTemplate()) :: Nil)) :: Nil) =
       compUnit("package foo; class C")
     assert(pkgfoo.hasBraces === false)
   }
@@ -20,7 +20,7 @@ class PackageSuite extends ParseSuite {
     val CompUnit((pkgfoo @Pkg(Term.Name("foo"),
                               Class(Nil, Type.Name("C"), Nil,
                                     Ctor.Primary(Nil, Nil),
-                                    Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil)) :: Nil) =
+                                    EmptyTemplate()) :: Nil)) :: Nil) =
       compUnit("package foo { class C }")
     assert(pkgfoo.hasBraces === true)
   }
@@ -29,7 +29,7 @@ class PackageSuite extends ParseSuite {
     val CompUnit((pkgfoobar @ Pkg(Term.Select(Term.Name("foo"), Term.Name("bar")),
                                   Class(Nil, Type.Name("C"), Nil,
                                         Ctor.Primary(Nil, Nil),
-                                        Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil)) :: Nil) =
+                                        EmptyTemplate()) :: Nil)) :: Nil) =
       compUnit("package foo.bar; class C")
     assert(pkgfoobar.hasBraces === false)
   }
@@ -38,7 +38,7 @@ class PackageSuite extends ParseSuite {
     val CompUnit((pkgfoobar @ Pkg(Term.Select(Term.Name("foo"), Term.Name("bar")),
                                   Class(Nil, Type.Name("C"), Nil,
                                         Ctor.Primary(Nil, Nil),
-                                        Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil)) :: Nil) =
+                                        EmptyTemplate()) :: Nil)) :: Nil) =
       compUnit("package foo.bar { class C }")
     assert(pkgfoobar.hasBraces === true)
   }
@@ -48,7 +48,7 @@ class PackageSuite extends ParseSuite {
                                (pkgbar @ Pkg(Term.Name("bar"),
                                              Class(Nil, Type.Name("C"), Nil,
                                                    Ctor.Primary(Nil, Nil),
-                                                   Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil)) :: Nil)) :: Nil) =
+                                                   EmptyTemplate()) :: Nil)) :: Nil)) :: Nil) =
       compUnit("package foo; package bar; class C")
     assert(pkgfoo.hasBraces === false)
     assert(pkgbar.hasBraces === false)
@@ -59,7 +59,7 @@ class PackageSuite extends ParseSuite {
                                (pkgbar @ Pkg(Term.Name("bar"),
                                              Class(Nil, Type.Name("C"), Nil,
                                                    Ctor.Primary(Nil, Nil),
-                                                   Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil)) :: Nil)) :: Nil) =
+                                                   EmptyTemplate()) :: Nil)) :: Nil)) :: Nil) =
       compUnit("package foo { package bar { class C } }")
     assert(pkgfoo.hasBraces === true)
     assert(pkgbar.hasBraces === true)
@@ -75,12 +75,12 @@ class PackageSuite extends ParseSuite {
 
   test("package object foo") {
     val CompUnit(Pkg.Object(Nil, Term.Name("foo"),
-                            Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil) = compUnit("package object foo")
+                            EmptyTemplate()) :: Nil) = compUnit("package object foo")
   }
 
   test("import foo.bar; package object baz") {
     val CompUnit(Import(Import.Clause(Term.Name("foo"), Import.Name("bar") :: Nil) :: Nil) ::
-                 Pkg.Object(Nil, Term.Name("baz"), Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil) =
+                 Pkg.Object(Nil, Term.Name("baz"), EmptyTemplate()) :: Nil) =
       compUnit("import foo.bar; package object baz")
   }
 

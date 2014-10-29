@@ -155,7 +155,7 @@
 
            | Quasiquote
 -----------|--------------------
- Template  | `templ"{ ..$stat } with ..$parents { $iparam => ..$stats }"`
+ Template  | `templ"{ ..$stat } with ..$parents { $param => ..$stats }"`
  Parent    | `templ"$tpe(...$argss)"`
 
 ## Modifiers (meta.Mod)

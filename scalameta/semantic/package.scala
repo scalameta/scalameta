@@ -33,8 +33,7 @@ package object semantic {
     implicit object DefnVal extends Typeable[Defn.Val, Type]
     implicit object DefnVar extends Typeable[Defn.Var, Type]
     implicit object Ctor extends Typeable[Ctor, Type]
-    implicit object Self extends Typeable[Aux.Self, Type]
-    implicit object TermParam extends Typeable[Param.Term, Type.Arg]
+    implicit object TemplateParam extends Typeable[Param.Template, Type.Arg]
     implicit object Template extends Typeable[Aux.Template, Type]
     implicit object Annot extends Typeable[Mod.Annot, Type]
   }
@@ -130,7 +129,7 @@ package object semantic {
   implicit class SemanticTemplateMemberOps(val tree: Member.Template) extends AnyVal {
     @hosted def parents: Seq[Member.Template with Member.Type] = ???
     @hosted def children: Seq[Member.Template] = ???
-    @hosted def self: Aux.Self = ???
+    @hosted def self: Param.Term = ???
     @hosted def companion: Member.Template = ???
   }
 
@@ -160,7 +159,7 @@ package object semantic {
     @hosted def pkgobject: Pkg.Object = ???
     @hosted def parents: Seq[Member.Template with Member.Type] = ???
     @hosted def children: Seq[Member.Template] = ???
-    @hosted def self: Aux.Self = ???
+    @hosted def self: Param.Term = ???
     @hosted def ctor: Ctor.Primary = ???
     @hosted def ctors: Seq[Ctor] = ???
     @hosted def classes: Seq[Defn.Class] = ???

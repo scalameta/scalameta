@@ -17,7 +17,6 @@ package object meta {
   @quasiquote[Aux.Case]('cas)       implicit class CaseQuote(ctx: StringContext)
   @quasiquote[Aux.Parent]('parent)  implicit class ParentQuote(ctx: StringContext)
   @quasiquote[Aux.Template]('templ) implicit class TemplateQuote(ctx: StringContext)
-  @quasiquote[Aux.Self]('self)      implicit class SelfQuote(ctx: StringContext)
 
   final case class MetaException(msg: String) extends Exception(msg)
 }

@@ -223,7 +223,6 @@ abstract class AbstractParser { parser =>
   def parseCase(): Aux.Case = parseRule(_.caseClause())
   def parseParent(): Aux.Parent = ???
   def parseTemplate(): Aux.Template = ???
-  def parseSelf(): Aux.Self = ???
 
 /* ------------- PARSER COMMON -------------------------------------------- */
 
@@ -2245,7 +2244,7 @@ abstract class AbstractParser { parser =>
    *  EarlyDef      ::= Annotations Modifiers PatDef
    *  }}}
    */
-  def template(): (List[Stat], List[Aux.Parent], Aux.Self, List[Stat], Boolean) = {
+  def template(): (List[Stat], List[Aux.Parent], Param.Term, List[Stat], Boolean) = {
     newLineOptWhenFollowedBy[`{`]
     if (tok.is[`{`]) {
       // @S: pre template body cannot stub like post body can!
@@ -2305,10 +2304,10 @@ abstract class AbstractParser { parser =>
    *  }}}
    * @param isPre specifies whether in early initializer (true) or not (false)
    */
-  def templateBody(isPre: Boolean): (Aux.Self, List[Stat]) =
+  def templateBody(isPre: Boolean): (Param.Term, List[Stat]) =
     inBraces(templateStatSeq(isPre = isPre))
 
-  def templateBodyOpt(parenMeansSyntaxError: Boolean): (Aux.Self, List[Stat], Boolean) = {
+  def templateBodyOpt(parenMeansSyntaxError: Boolean): (Param.Term, List[Stat], Boolean) = {
     newLineOptWhenFollowedBy[`{`]
     if (tok.is[`{`]) {
       val (self, stats) = templateBody(isPre = false)
@@ -2318,7 +2317,7 @@ abstract class AbstractParser { parser =>
         if (parenMeansSyntaxError) syntaxError("traits or objects may not have parameters")
         else abort("unexpected opening parenthesis")
       }
-      (Aux.Self(None, None, hasThis = false), Nil, false)
+      (Param.Term.Simple(Nil, None, None, None), Nil, false)
     }
   }
 
@@ -2371,25 +2370,25 @@ abstract class AbstractParser { parser =>
    *  }}}
    * @param isPre specifies whether in early initializer (true) or not (false)
    */
-  def templateStatSeq(isPre : Boolean): (Aux.Self, List[Stat]) = {
-    var self: Aux.Self = Aux.Self(None, None, hasThis = false)
+  def templateStatSeq(isPre : Boolean): (Param.Term, List[Stat]) = {
+    var self: Param.Term = Param.Term.Simple(Nil, None, None, None)
     var firstOpt: Option[Term] = None
     if (tok.is[ExprIntro]) {
       val first = expr(InTemplate) // @S: first statement is potentially converted so cannot be stubbed.
       if (tok.is[`=>`]) {
         first match {
           case name: Name =>
-            self = Aux.Self(Some(name.toTermName), None, hasThis = false)
+            self = Param.Term.Simple(Nil, Some(name.toTermName), None, None)
           case Term.Placeholder() =>
-            self = Aux.Self(None, None, hasThis = false)
+            self = Param.Term.Simple(Nil, None, None, None)
           case Term.This(None) =>
-            self = Aux.Self(None, None, hasThis = true)
+            self = Param.Term.Simple(Nil, None, None, None)
           case Term.Ascribe(name: Name, tpt) =>
-            self = Aux.Self(Some(name.toTermName), Some(tpt), hasThis = false)
+            self = Param.Term.Simple(Nil, Some(name.toTermName), Some(tpt), None)
           case Term.Ascribe(Term.Placeholder(), tpt) =>
-            self = Aux.Self(None, Some(tpt), hasThis = false)
+            self = Param.Term.Simple(Nil, None, Some(tpt), None)
           case Term.Ascribe(tree @ Term.This(None), tpt) =>
-            self = Aux.Self(None, Some(tpt), hasThis = true)
+            self = Param.Term.Simple(Nil, None, Some(tpt), None)
           case _ =>
         }
         next()
