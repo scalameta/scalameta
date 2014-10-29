@@ -216,12 +216,15 @@ abstract class AbstractParser { parser =>
   }
   def parseT(): Type.Arg = parseRule(_.paramType())
   def parseP(): Pat.Arg = parseRule(_.pattern())
-  def parseParam(): Tree = ???
+  def parseTemplateParam(): Param.Template = ???
+  def parseTermParam(): Param.Term = ???
+  def parseTypeParam(): Param.Type = ???
   def parseTermArg(): Term.Arg = ???
   def parseEnum(): Enum = ???
   def parseMod(): Mod = ???
-  def parseCase(): Aux.Case = parseRule(_.caseClause())
-  def parseTemplate(): Tree = ???
+  def parseTemplate(): Aux.Template = ???
+  def parseCtorRef(): Aux.CtorRef = ???
+  def parseImportSelector(): Import.Selector = ???
 
 /* ------------- PARSER COMMON -------------------------------------------- */
 

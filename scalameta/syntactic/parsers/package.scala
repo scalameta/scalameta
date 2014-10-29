@@ -28,15 +28,15 @@ package object parsers {
     implicit val parseQ: Parse[Stat] = apply(source => new Parser(source).parseQ())
     implicit val parseT: Parse[Type.Arg] = apply(source => new Parser(source).parseT())
     implicit val parseP: Parse[Pat.Arg] = apply(source => new Parser(source).parseP())
-    implicit val parseTemplateParam: Parse[Param.Template] = apply(source => new Parser(source).parseParam().asInstanceOf[Param.Template])
-    implicit val parseTermParam: Parse[Param.Term] = apply(source => new Parser(source).parseParam().asInstanceOf[Param.Term])
-    implicit val parseTypeParam: Parse[Param.Type] = apply(source => new Parser(source).parseParam().asInstanceOf[Param.Type])
+    implicit val parseTemplateParam: Parse[Param.Template] = apply(source => new Parser(source).parseTemplateParam())
+    implicit val parseTermParam: Parse[Param.Term] = apply(source => new Parser(source).parseTermParam())
+    implicit val parseTypeParam: Parse[Param.Type] = apply(source => new Parser(source).parseTypeParam())
     implicit val parseTermArg: Parse[Term.Arg] = apply(source => new Parser(source).parseTermArg())
     implicit val parseEnum: Parse[Enum] = apply(source => new Parser(source).parseEnum())
     implicit val parseMod: Parse[Mod] = apply(source => new Parser(source).parseMod())
-    implicit val parseCase: Parse[Aux.Case] = apply(source => new Parser(source).parseCase())
-    implicit val parseTemplate: Parse[Aux.Template] = apply(source => new Parser(source).parseTemplate().asInstanceOf[Aux.Template])
-    implicit val parseCtorRef: Parse[Aux.CtorRef] = apply(source => new Parser(source).parseTemplate().asInstanceOf[Aux.CtorRef])
+    implicit val parseTemplate: Parse[Aux.Template] = apply(source => new Parser(source).parseTemplate())
+    implicit val parseCtorRef: Parse[Aux.CtorRef] = apply(source => new Parser(source).parseCtorRef())
+    implicit val parseImportSelector: Parse[Import.Selector] = apply(source => new Parser(source).parseImportSelector())
   }
 
   implicit class RichSource[T](val sourceLike: T)(implicit ev: Convert[T, Source]) {
