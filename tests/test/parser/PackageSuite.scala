@@ -3,14 +3,14 @@ import scala.meta._, Aux._, Defn.Class
 class PackageSuite extends ParseSuite {
   test("class C") {
     val CompUnit(Class(Nil, Type.Name("C"), Nil,
-                       Ctor.Primary(Nil, Nil, Nil),
+                       Ctor.Primary(Nil, Nil),
                        Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil) = compUnit("class C")
   }
 
   test("package foo; class C") {
     val CompUnit((pkgfoo @ Pkg(Term.Name("foo"),
                                Class(Nil, Type.Name("C"), Nil,
-                                     Ctor.Primary(Nil, Nil, Nil),
+                                     Ctor.Primary(Nil, Nil),
                                      Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil)) :: Nil) =
       compUnit("package foo; class C")
     assert(pkgfoo.hasBraces === false)
@@ -19,7 +19,7 @@ class PackageSuite extends ParseSuite {
   test("package foo { class C }") {
     val CompUnit((pkgfoo @Pkg(Term.Name("foo"),
                               Class(Nil, Type.Name("C"), Nil,
-                                    Ctor.Primary(Nil, Nil, Nil),
+                                    Ctor.Primary(Nil, Nil),
                                     Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil)) :: Nil) =
       compUnit("package foo { class C }")
     assert(pkgfoo.hasBraces === true)
@@ -28,7 +28,7 @@ class PackageSuite extends ParseSuite {
   test("package foo.bar; class C") {
     val CompUnit((pkgfoobar @ Pkg(Term.Select(Term.Name("foo"), Term.Name("bar")),
                                   Class(Nil, Type.Name("C"), Nil,
-                                        Ctor.Primary(Nil, Nil, Nil),
+                                        Ctor.Primary(Nil, Nil),
                                         Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil)) :: Nil) =
       compUnit("package foo.bar; class C")
     assert(pkgfoobar.hasBraces === false)
@@ -37,7 +37,7 @@ class PackageSuite extends ParseSuite {
   test("package foo.bar { class C }") {
     val CompUnit((pkgfoobar @ Pkg(Term.Select(Term.Name("foo"), Term.Name("bar")),
                                   Class(Nil, Type.Name("C"), Nil,
-                                        Ctor.Primary(Nil, Nil, Nil),
+                                        Ctor.Primary(Nil, Nil),
                                         Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil)) :: Nil) =
       compUnit("package foo.bar { class C }")
     assert(pkgfoobar.hasBraces === true)
@@ -47,7 +47,7 @@ class PackageSuite extends ParseSuite {
     val CompUnit((pkgfoo @ Pkg(Term.Name("foo"),
                                (pkgbar @ Pkg(Term.Name("bar"),
                                              Class(Nil, Type.Name("C"), Nil,
-                                                   Ctor.Primary(Nil, Nil, Nil),
+                                                   Ctor.Primary(Nil, Nil),
                                                    Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil)) :: Nil)) :: Nil) =
       compUnit("package foo; package bar; class C")
     assert(pkgfoo.hasBraces === false)
@@ -58,7 +58,7 @@ class PackageSuite extends ParseSuite {
     val CompUnit((pkgfoo @ Pkg(Term.Name("foo"),
                                (pkgbar @ Pkg(Term.Name("bar"),
                                              Class(Nil, Type.Name("C"), Nil,
-                                                   Ctor.Primary(Nil, Nil, Nil),
+                                                   Ctor.Primary(Nil, Nil),
                                                    Aux.Template(Nil, Nil, Self(None, None), Nil)) :: Nil)) :: Nil)) :: Nil) =
       compUnit("package foo { package bar { class C } }")
     assert(pkgfoo.hasBraces === true)

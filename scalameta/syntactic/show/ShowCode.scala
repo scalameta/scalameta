@@ -275,18 +275,18 @@ object Code {
     case t: Defn.Trait     => s(a(t.mods, " "), kw("trait"), " ", t.name, t.tparams, templ(t.templ))
     case t: Defn.Object    => s(a(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
     case t: Defn.Def       =>
-      s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, (t.explicits, t.implicits), t.decltpe, " = ", t.body)
+      s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, t.decltpe, " = ", t.body)
     case t: Defn.Procedure =>
-      s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, (t.explicits, t.implicits), " { ", r(t.stats.map(i(_)), ""), n("}"))
+      s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, " { ", r(t.stats.map(i(_)), ""), n("}"))
     case t: Defn.Macro     =>
-      s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, (t.explicits, t.implicits), kw(":"), " ", t.tpe, " ", kw("="), " ", kw("macro"), " ", t.body)
+      s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, kw(":"), " ", t.tpe, " ", kw("="), " ", kw("macro"), " ", t.body)
 
     // Decl
     case t: Decl.Val       => s(a(t.mods, " "), kw("val"), " ", r(t.pats, ", "), kw(":"), " ", t.decltpe)
     case t: Decl.Var       => s(a(t.mods, " "), kw("var"), " ", r(t.pats, ", "), kw(":"), " ", t.decltpe)
     case t: Decl.Type      => s(a(t.mods, " "), kw("type"), " ", t.name, t.tparams, t.bounds)
-    case t: Decl.Def       => s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, (t.explicits, t.implicits), kw(":"), " ", t.decltpe)
-    case t: Decl.Procedure => s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, (t.explicits, t.implicits))
+    case t: Decl.Def       => s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, kw(":"), " ", t.decltpe)
+    case t: Decl.Procedure => s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss)
 
     // Pkg
     case t: CompUnit           => r(t.stats, "\n")
@@ -295,9 +295,9 @@ object Code {
     case t: Pkg.Object         => s(kw("package"), " ", a(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
 
     // Ctor
-    case t: Ctor.Primary   => s(a(t.mods, " ", t.mods.nonEmpty && (t.explicits.nonEmpty || t.implicits.nonEmpty)), (t.explicits, t.implicits))
+    case t: Ctor.Primary   => s(a(t.mods, " ", t.mods.nonEmpty && t.paramss.nonEmpty), t.paramss)
     case t: Ctor.Secondary =>
-      s(a(t.mods, " "), kw("def"), " ", kw("this"), (t.explicits, t.implicits), t.stats match {
+      s(a(t.mods, " "), kw("def"), " ", kw("this"), t.paramss, t.stats match {
         case Nil   => s(" ", kw("="), " ", kw("this"), t.primaryCtorArgss)
         case stats => s(" { ", kw("this"), t.primaryCtorArgss, ";", a(" ", r(stats, "; ")), " }")
       })
@@ -347,7 +347,8 @@ object Code {
       s(a(t.mods, " "), kw("_"), t.decltpe)
     case t: Param.Named =>
       val keyword = t match { case t: Param.Named.Simple => ""; case t: Param.Named.Val => "val"; case t: Param.Named.Var => "var"; }
-      s(a(t.mods, " "), kw(keyword), t.name, t.decltpe, t.default.map(s(" ", kw("="), " ", _)).getOrElse(s()))
+      val mods = t.mods.filter(!_.isInstanceOf[Mod.Implicit]) // NOTE: `implicit` in parameters is skipped in favor of `implicit` in the enclosing parameter list
+      s(a(mods, " "), kw(keyword), t.name, t.decltpe, t.default.map(s(" ", kw("="), " ", _)).getOrElse(s()))
     case t: TypeParam.Anonymous =>
       val cbounds = r(t.contextBounds.map { s(kw(":"), " ", _) })
       val vbounds = r(t.viewBounds.map { s(" ", kw("<%"), " ", _) })
@@ -381,14 +382,11 @@ object Code {
   implicit val codePatArgs: Code[Seq[Pat.Arg]] = Code { pats => s("(", r(pats, ", "), ")") }
   implicit val codeMods: Code[Seq[Mod]] = Code { mods => if (mods.nonEmpty) r(mods, " ") else s() }
   implicit def codeParams[P <: Param]: Code[Seq[P]] = Code { params => s("(", r(params, ", "), ")") }
+  implicit def codeParamss[P <: Param]: Code[Seq[Seq[P]]] = Code { paramss => r(paramss.map(params =>
+    s("(", a("implicit ", r(params, ", "), params.exists(_.mods.exists(_.isInstanceOf[Mod.Implicit]))), ")")
+  ), "")}
   implicit val codeTparams: Code[Seq[TypeParam]] = Code { tparams =>
     if (tparams.nonEmpty) s("[", r(tparams, ", "), "]") else s()
-  }
-  implicit def codeParamLists[P <: Param]: Code[(Seq[Seq[P]], Seq[P])] = Code { case (expl, impl) =>
-    if (expl.isEmpty && impl.isEmpty) s()
-    else s(r(expl),
-      if (impl.isEmpty) s()
-      else s("(", kw("implicit"), " ", r(impl, ", "), ")"))
   }
   implicit val codeTypeArgOpt: Code[Option[Type.Arg]] = Code { _.map { t => s(kw(":"), " ", t) }.getOrElse(s()) }
   implicit val codeTypeOpt: Code[Option[Type]] = Code { _.map { t => s(kw(":"), " ", t) }.getOrElse(s()) }

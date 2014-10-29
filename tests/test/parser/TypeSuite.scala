@@ -69,7 +69,7 @@ class TypeSuite extends ParseSuite {
   test("A { def x: A; val y: B; type C }") {
     val Compound(TypeName("A") :: Nil,
                  Decl.Def(Nil, TermName("x"),
-                          Nil, Nil, Nil, TypeName("Int")) ::
+                          Nil, Nil, TypeName("Int")) ::
                  Decl.Val(Nil, List(TermName("y")), TypeName("B")) ::
                  Decl.Type(Nil, TypeName("C"), Nil, EmptyBounds()) :: Nil) =
       tpe("A { def x: Int; val y: B; type C }")

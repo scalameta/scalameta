@@ -162,14 +162,12 @@ object Decl {
   @ast class Def(mods: Seq[Mod],
                  name: Term.Name,
                  tparams: Seq[TypeParam],
-                 explicits: Seq[Seq[Param.Named]],
-                 implicits: Seq[Param.Named],
+                 paramss: Seq[Seq[Param.Named]],
                  decltpe: meta.Type) extends Decl with Member.Def
   @ast class Procedure(mods: Seq[Mod],
                        name: Term.Name,
                        tparams: Seq[TypeParam],
-                       explicits: Seq[Seq[Param.Named]],
-                       implicits: Seq[Param.Named]) extends Decl with Member.Def
+                       paramss: Seq[Seq[Param.Named]]) extends Decl with Member.Def
   @ast class Type(mods: Seq[Mod],
                   name: meta.Type.Name,
                   tparams: Seq[TypeParam],
@@ -192,21 +190,18 @@ object Defn {
   @ast class Def(mods: Seq[Mod],
                  name: Term.Name,
                  tparams: Seq[TypeParam],
-                 explicits: Seq[Seq[Param.Named]],
-                 implicits: Seq[Param.Named],
+                 paramss: Seq[Seq[Param.Named]],
                  decltpe: Option[meta.Type],
                  body: Term) extends Defn with Member.Def
   @ast class Procedure(mods: Seq[Mod],
                        name: Term.Name,
                        tparams: Seq[TypeParam],
-                       explicits: Seq[Seq[Param.Named]],
-                       implicits: Seq[Param.Named],
+                       paramss: Seq[Seq[Param.Named]],
                        stats: Seq[Stat]) extends Defn with Member.Def
   @ast class Macro(mods: Seq[Mod],
                    name: Term.Name,
                    tparams: Seq[TypeParam],
-                   explicits: Seq[Seq[Param.Named]],
-                   implicits: Seq[Param.Named],
+                   paramss: Seq[Seq[Param.Named]],
                    tpe: meta.Type,
                    body: Term) extends Defn with Member.Term with Has.TermName
   @ast class Type(mods: Seq[Mod],
@@ -217,7 +212,9 @@ object Defn {
                    name: meta.Type.Name,
                    override val tparams: Seq[TypeParam],
                    ctor: Ctor.Primary,
-                   templ: Aux.Template) extends Defn with Member.Type with Has.Template with Has.TypeName
+                   templ: Aux.Template) extends Defn with Member.Type with Has.Template with Has.TypeName {
+    override def paramss: Seq[Seq[Param.Named]] = ctor.paramss
+  }
   @ast class Trait(mods: Seq[Mod],
                    name: meta.Type.Name,
                    override val tparams: Seq[TypeParam],
@@ -250,11 +247,9 @@ object Pkg {
 @branch trait Ctor extends Tree with Has.Mods with Has.Paramss
 object Ctor {
   @ast class Primary(mods: Seq[Mod],
-                     explicits: Seq[Seq[Param.Named]],
-                     implicits: Seq[Param.Named]) extends Ctor
+                     paramss: Seq[Seq[Param.Named]]) extends Ctor
   @ast class Secondary(mods: Seq[Mod],
-                       explicits: Seq[Seq[Param.Named]] @nonEmpty,
-                       implicits: Seq[Param.Named],
+                       paramss: Seq[Seq[Param.Named]] @nonEmpty,
                        primaryCtorArgss: Seq[Seq[Term.Arg]],
                        stats: Seq[Stat]) extends Ctor with Stat with Scope.Params
 }
@@ -372,18 +367,15 @@ object Has {
     def mods: Seq[Mod]
   }
   @branch trait Paramss extends Tree with Scope.Params {
-    def explicits: Seq[Seq[Param.Named]]
-    def implicits: Seq[Param.Named]
-    def paramss: Seq[Seq[Param.Named]] = explicits :+ implicits
+    def paramss: Seq[Seq[Param.Named]]
   }
   @branch trait TypeParams extends Tree with Scope.Params {
     def tparams: Seq[TypeParam]
   }
   @branch trait Template extends Defn with Has.Name with Has.TypeParams with Has.Paramss with Scope.Template {
     def name: meta.Name
-    def explicits: Seq[Seq[Param.Named]] = Nil
-    def implicits: Seq[Param.Named] = Nil
     def tparams: Seq[TypeParam] = Nil
+    def paramss: Seq[Seq[Param.Named]] = Nil
     def templ: Aux.Template
   }
   @branch trait Name extends Member { def name: meta.Name }

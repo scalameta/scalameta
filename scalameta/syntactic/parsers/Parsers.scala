@@ -1707,7 +1707,7 @@ abstract class AbstractParser { parser =>
    *  ClassParam        ::= {Annotation}  [{Modifier} (`val' | `var')] Id [`:' ParamType] [`=' Expr]
    *  }}}
    */
-  def paramClauses(ownerIsType: Boolean, ownerIsCase: Boolean = false): (List[List[Param.Named]], List[Param.Named]) = {
+  def paramClauses(ownerIsType: Boolean, ownerIsCase: Boolean = false): List[List[Param.Named]] = {
     var parsedImplicits = false
     def paramClause(): List[Param.Named] = {
       if (tok.is[`)`])
@@ -1720,19 +1720,14 @@ abstract class AbstractParser { parser =>
       commaSeparated(param(ownerIsCase, ownerIsType, isImplicit = parsedImplicits))
     }
     val paramss = new ListBuffer[List[Param.Named]]
-    var implicits = List.empty[Param.Named]
     newLineOptWhenFollowedBy[`(`]
     while (!parsedImplicits && tok.is[`(`]) {
       next()
-      val clause = paramClause()
-      if (!parsedImplicits)
-        paramss += clause
-      else
-        implicits = clause
+      paramss += paramClause()
       accept[`)`]
       newLineOptWhenFollowedBy[`(`]
     }
-    (paramss.toList, implicits)
+    paramss.toList
   }
 
   /** {{{
@@ -1754,6 +1749,7 @@ abstract class AbstractParser { parser =>
 
   def param(ownerIsCase: Boolean, ownerIsType: Boolean, isImplicit: Boolean): Param.Named = {
     var mods: List[Mod] = annots(skipNewLines = false)
+    if (isImplicit) mods ++= List(Mod.Implicit())
     val (isValParam, isVarParam) = (ownerIsType && tok.is[`val`], ownerIsType && tok.is[`var`])
     if (isValParam || isVarParam) next()
     if (ownerIsType) {
@@ -2017,13 +2013,13 @@ abstract class AbstractParser { parser =>
     if (tok.isNot[`this`]) funDefRest(mods, termName())
     else {
       next()
-      val (paramss, implicits) = paramClauses(ownerIsType = true)
+      val paramss = paramClauses(ownerIsType = true)
       newLineOptWhenFollowedBy[`{`]
       val (argss, stats) = tok match {
         case _: `{` => constrBlock()
         case _      => accept[`=`]; constrExpr()
       }
-      Ctor.Secondary(mods, paramss, implicits, argss, stats)
+      Ctor.Secondary(mods, paramss, argss, stats)
     }
   }
 
@@ -2031,18 +2027,18 @@ abstract class AbstractParser { parser =>
     def warnProcedureDeprecation =
       deprecationWarning(tok.offset, s"Procedure syntax is deprecated. Convert procedure `$name` to method by adding `: Unit`.")
     val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
-    val (paramss, implicits) = paramClauses(ownerIsType = false)
+    val paramss = paramClauses(ownerIsType = false)
     newLineOptWhenFollowedBy[`{`]
     var restype = fromWithinReturnType(typedOpt())
     if (tok.is[StatSep] || tok.is[`}`]) {
       if (restype.isEmpty) {
         warnProcedureDeprecation
-        Decl.Procedure(mods, name, tparams, paramss, implicits)
+        Decl.Procedure(mods, name, tparams, paramss)
       } else
-        Decl.Def(mods, name, tparams, paramss, implicits, restype.get)
+        Decl.Def(mods, name, tparams, paramss, restype.get)
     } else if (restype.isEmpty && tok.is[`{`]) {
       warnProcedureDeprecation
-      Defn.Procedure(mods, name, tparams, paramss, implicits, {
+      Defn.Procedure(mods, name, tparams, paramss, {
         accept[`{`]
         var r = blockStatSeq()
         accept[`}`]
@@ -2061,9 +2057,9 @@ abstract class AbstractParser { parser =>
         expr()
       }
       if (isMacro) restype match {
-        case Some(restype) => Defn.Macro(mods, name, tparams, paramss, implicits, restype, rhs)
+        case Some(restype) => Defn.Macro(mods, name, tparams, paramss, restype, rhs)
         case None => syntaxError(tok.offset, "macros must have explicitly specified return types")
-      } else Defn.Def(mods, name, tparams, paramss, implicits, restype, rhs)
+      } else Defn.Def(mods, name, tparams, paramss, restype, rhs)
     }
   }
 
@@ -2183,8 +2179,8 @@ abstract class AbstractParser { parser =>
 
   def primaryCtor(ownerIsCase: Boolean): Ctor.Primary = {
     val mods = constructorAnnots() ++ accessModifierOpt()
-    val (paramss, implicits) = paramClauses(ownerIsType = true, ownerIsCase)
-    Ctor.Primary(mods, paramss, implicits)
+    val paramss = paramClauses(ownerIsType = true, ownerIsCase)
+    Ctor.Primary(mods, paramss)
   }
 
   /** {{{
