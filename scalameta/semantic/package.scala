@@ -18,12 +18,46 @@ package object semantic {
     // TODO: see https://github.com/JetBrains/intellij-scala/blob/master/src/org/jetbrains/plugins/scala/lang/resolve/ScalaResolveResult.scala#L24
   }
 
-  implicit class RichTree(val tree: Tree) extends AnyVal {
+  implicit class SemanticTreeOps(val tree: Tree) extends AnyVal {
     @hosted def attrs: Seq[Attr] = delegate
+    @hosted def owner: Scope = ???
+  }
+
+  sealed trait Typeable[+T, U]
+  object Typeable {
+    object Term extends Typeable[Term, Type]
+    object MemberDef extends Typeable[Member.Def, Type]
+    object DeclVal extends Typeable[Decl.Val, Type]
+    object DeclVar extends Typeable[Decl.Var, Type]
+    object DefnVal extends Typeable[Defn.Val, Type]
+    object DefnVar extends Typeable[Defn.Var, Type]
+    object Ctor extends Typeable[Ctor, Type]
+    object Self extends Typeable[Aux.Self, Type]
+    object Param extends Typeable[Param, Type.Arg]
+    object Template extends Typeable[Aux.Template, Type]
+  }
+
+  implicit class SemanticTypeableOps[T <: Tree, U <: Tree](val tree: T)(implicit ev: Typeable[T, U]) {
+    @hosted def tpe: U = ???
+  }
+
+  sealed trait Resolvable[+T, U]
+  object Resolvable {
+    object Ref extends Resolvable[Ref, Member]
+    object TermRef extends Resolvable[Term.Ref, Member.Term]
+    object TypeRef extends Resolvable[Type.Ref, Member] // Type.Ref can refer to both types (regular types) and terms (singleton types)
+  }
+
+  implicit class SemanticResolvableOps[T <: Tree, U <: Tree](val tree: T)(implicit ev: Resolvable[T, U]) {
+    @hosted def defns: Seq[U] = ???
+    @hosted def defn: U = ???
+  }
+
+  implicit class SemanticParentOps(val tree: Aux.Parent) extends AnyVal {
+    @hosted def ctor: Ctor = ???
   }
 
   implicit class SemanticTermOps(val tree: Term) extends AnyVal {
-    @hosted def tpe: Type = ???
   }
 
   implicit class SemanticTypeOps(val tree: Type) extends AnyVal {
@@ -37,21 +71,6 @@ package object semantic {
 
   @hosted def lub(tpes: Seq[Type]): Type = delegate
   @hosted def glb(tpes: Seq[Type]): Type = delegate
-
-  implicit class SemanticRefOps(val tree: Ref) extends AnyVal {
-    @hosted def defns: Seq[Member] = ???
-    @hosted def defn: Member = ???
-  }
-
-  implicit class SemanticTypeRefOps(val tree: Type.Ref) extends AnyVal {
-    // NOTE: we can't refine the return type of Ref.defns and Ref.defn
-    // because a Type.Ref can refer to both types (regular types) and terms (singleton types)
-  }
-
-  implicit class SemanticTermRefOps(val tree: Term.Ref) extends AnyVal {
-    @hosted def defns: Seq[Member.Term] = ???
-    @hosted def defn: Member.Term = ???
-  }
 
   implicit class SemanticMemberOps(val tree: Member) extends AnyVal {
     def ref: Ref = ???
@@ -91,18 +110,14 @@ package object semantic {
 
   implicit class SemanticTermMemberOps(val tree: Member.Term) extends AnyVal {
     def ref: Term.Ref = ???
-    @hosted def overridden: Seq[Member.Term] = ???
-    @hosted def overriding: Seq[Member.Term] = ???
+    @hosted def parents: Seq[Member.Term] = ???
+    @hosted def children: Seq[Member.Term] = ???
   }
 
   implicit class SemanticTypeMemberOps(val tree: Member.Type) extends AnyVal {
-    def ref: Type.Ref = new SemanticMemberOps(tree).ref.asInstanceOf[Type.Ref]
-    @hosted def overridden: Seq[Member.Type] = ???
-    @hosted def overriding: Seq[Member.Type] = ???
-  }
-
-  implicit class SemanticDefMemberOps(val tree: Member.Def) extends AnyVal {
-    @hosted def tpe: meta.Type = ???
+    def ref: Type.Ref = ???
+    @hosted def parents: Seq[Member.Type] = ???
+    @hosted def children: Seq[Member.Type] = ???
   }
 
   implicit class SemanticTemplateMemberOps(val tree: Member.Template) extends AnyVal {
@@ -110,22 +125,6 @@ package object semantic {
     @hosted def children: Seq[Member.Template] = ???
     @hosted def self: Aux.Self = ???
     @hosted def companion: Member.Template = ???
-  }
-
-  implicit class SemanticDeclValOps(val tree: Decl.Val) extends AnyVal {
-    @hosted def tpe: meta.Type = ???
-  }
-
-  implicit class SemanticDeclVarOps(val tree: Decl.Var) extends AnyVal {
-    @hosted def tpe: meta.Type = ???
-  }
-
-  implicit class SemanticDefnValOps(val tree: Defn.Val) extends AnyVal {
-    @hosted def tpe: meta.Type = ???
-  }
-
-  implicit class SemanticDefnVarOps(val tree: Defn.Var) extends AnyVal {
-    @hosted def tpe: meta.Type = ???
   }
 
   implicit class SemanticDefnClassOps(val tree: Defn.Class) extends AnyVal {
@@ -138,35 +137,6 @@ package object semantic {
 
   implicit class SemanticDefnObjectOps(val tree: Defn.Object) extends AnyVal {
     @hosted def companion: Member.Template = ???
-  }
-
-  implicit class SemanticPkgObjectOps(val tree: Defn.Object) extends AnyVal {
-    @hosted def companion: Member.Template = ???
-  }
-
-  implicit class SemanticCtorOps(val tree: Ctor) extends AnyVal {
-    @hosted def tpe: meta.Type = ???
-  }
-
-  implicit class SemanticParentOps(val tree: Param) extends AnyVal {
-    @hosted def ctor: Ctor = ???
-  }
-
-  implicit class SemanticSelfOps(val tree: Aux.Self) extends AnyVal {
-    def ref: Term.This = ???
-    @hosted def tpe: Type = ???
-  }
-
-  implicit class SemanticParamOps(val tree: Param) extends AnyVal {
-    @hosted def tpe: Type.Arg = ???
-  }
-
-  implicit class SemanticTemplateOps(val tree: Aux.Template) extends AnyVal {
-    @hosted def tpe: Type = ???
-  }
-
-  implicit class SemanticTreeOps(val tree: Tree) extends AnyVal {
-    @hosted def owner: Scope = ???
   }
 
   implicit class SemanticScopeOps(val tree: Scope) extends AnyVal {
