@@ -101,7 +101,7 @@ object Type {
     require(quants.forall(_.isExistentialStat))
   }
   @ast class Annotate(tpe: Type, annots: Seq[Mod.Annot] @nonEmpty) extends Type
-  @ast class Placeholder(bounds: Aux.TypeBounds) extends Type
+  @ast class Placeholder(lo: Type = Type.Name("Nothing"), hi: Type = Type.Name("Any")) extends Type
   @branch trait Arg extends Tree
   object Arg {
     @ast class ByName(tpe: Type) extends Arg
@@ -167,7 +167,8 @@ object Decl {
   @ast class Type(mods: Seq[Mod],
                   name: meta.Type.Name,
                   tparams: Seq[Param.Type],
-                  bounds: Aux.TypeBounds) extends Decl with Member.Type
+                  lo: meta.Type = meta.Type.Name("Nothing"),
+                  hi: meta.Type = meta.Type.Name("Any")) extends Decl with Member.Type
 }
 
 @branch trait Defn extends Stat
@@ -283,7 +284,8 @@ object Param {
                   tparams: Seq[meta.Param.Type],
                   contextBounds: Seq[meta.Type],
                   viewBounds: Seq[meta.Type],
-                  bounds: Aux.TypeBounds) extends Member.Type
+                  lo: meta.Type = meta.Type.Name("Nothing"),
+                  hi: meta.Type = meta.Type.Name("Any")) extends Member.Type
 }
 
 @branch trait Enum extends Tree
@@ -332,7 +334,6 @@ object Aux {
     def mods: Seq[Mod] = Nil
     require(hasThis ==> name.isEmpty)
   }
-  @ast class TypeBounds(lo: Type = Type.Name("Nothing"), hi: Type = Type.Name("Any")) extends Tree
 }
 
 @branch trait Ref extends Tree

@@ -935,7 +935,14 @@ abstract class AbstractParser { parser =>
    *  WildcardType ::= `_' TypeBounds
    *  }}}
    */
-  def wildcardType(): Type = Type.Placeholder(typeBounds())
+  def wildcardType(): Type = {
+    typeBounds() match {
+      case (Some(lo), Some(hi)) => Type.Placeholder(lo, hi)
+      case (Some(lo), None)     => Type.Placeholder(lo = lo)
+      case (None, Some(hi))     => Type.Placeholder(hi = hi)
+      case (None, None)         => Type.Placeholder()
+    }
+  }
 
 /* ----------- EXPRESSIONS ------------------------------------------------ */
 
@@ -1255,7 +1262,7 @@ abstract class AbstractParser { parser =>
   def argumentExprs(): List[Term.Arg] = {
     def args(): List[Term.Arg] = commaSeparated {
       expr() match {
-        case Term.Ascribe(t, Type.Placeholder(bounds: Aux.TypeBounds)) if !bounds.hasLo && !bounds.hasHi && isIdentOf("*") =>
+        case Term.Ascribe(t, ph: Type.Placeholder) if !ph.hasLo && !ph.hasHi && isIdentOf("*") =>
           next()
           Term.Arg.Repeated(t)
         case Term.Assign(t: Term.Name, rhs) =>
@@ -1847,9 +1854,11 @@ abstract class AbstractParser { parser =>
         contextBounds += typ()
       }
     }
-    nameopt match {
-      case Some(name) => Param.Type(mods, Some(name), tparams, contextBounds.toList, viewBounds.toList, bounds)
-      case None => Param.Type(mods, None, tparams, contextBounds.toList, viewBounds.toList, bounds)
+    bounds match {
+      case (Some(lo), Some(hi)) => Param.Type(mods, nameopt, tparams, contextBounds.toList, viewBounds.toList, lo, hi)
+      case (Some(lo), None)     => Param.Type(mods, nameopt, tparams, contextBounds.toList, viewBounds.toList, lo = lo)
+      case (None, Some(hi))     => Param.Type(mods, nameopt, tparams, contextBounds.toList, viewBounds.toList, hi = hi)
+      case (None, None)         => Param.Type(mods, nameopt, tparams, contextBounds.toList, viewBounds.toList)
     }
   }
 
@@ -1857,14 +1866,8 @@ abstract class AbstractParser { parser =>
    *  TypeBounds ::= [`>:' Type] [`<:' Type]
    *  }}}
    */
-  def typeBounds(): Aux.TypeBounds = {
-    (bound[`>:`], bound[`<:`]) match {
-      case (Some(lo), Some(hi)) => Aux.TypeBounds(lo, hi)
-      case (Some(lo), None)     => Aux.TypeBounds(lo = lo)
-      case (None, Some(hi))     => Aux.TypeBounds(hi = hi)
-      case (None, None)         => Aux.TypeBounds()
-    }
-  }
+  def typeBounds() =
+    (bound[`>:`], bound[`<:`])
 
   def bound[T <: Tok: ClassTag]: Option[Type] =
     if (tok.is[T]) { next(); Some(typ()) } else None
@@ -2118,7 +2121,12 @@ abstract class AbstractParser { parser =>
         next()
         Defn.Type(mods, name, tparams, typ())
       case _: `>:` | _: `<:` | _: `,` | _: `}` | _: StatSep =>
-        Decl.Type(mods, name, tparams, typeBounds())
+        typeBounds() match {
+          case (Some(lo), Some(hi)) => Decl.Type(mods, name, tparams, lo, hi)
+          case (Some(lo), None)     => Decl.Type(mods, name, tparams, lo = lo)
+          case (None, Some(hi))     => Decl.Type(mods, name, tparams, hi = hi)
+          case (None, None)         => Decl.Type(mods, name, tparams)
+        }
       case _ =>
         syntaxError("`=', `>:', or `<:' expected")
     }

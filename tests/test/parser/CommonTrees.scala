@@ -14,11 +14,4 @@ trait CommonTrees {
       case _ => false
     }
   }
-
-  object EmptyBounds {
-    def unapply(tree: Tree): Boolean = tree match {
-      case Aux.TypeBounds(Nothing(), Any()) => true
-      case _ => false
-    }
-  }
 }

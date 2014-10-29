@@ -141,7 +141,9 @@ object Code {
     case t: Type.ApplyInfix  => m(InfixTyp(t.op.value), s(p(InfixTyp(t.op.value), t.lhs, left = true), " ", t.op, " ", p(InfixTyp(t.op.value), t.rhs, right = true)))
     case t: Type.Compound    => m(CompoundTyp, s(r(t.tpes.map(tpe => p(AnnotTyp, tpe)), " with "), a(" {", a(" ", r(t.refinement, "; "), " "), "}", t.hasRefinement)))
     case t: Type.Existential => m(Typ, s(p(AnyInfixTyp, t.tpe), " ", kw("forSome"), " { ", r(t.quants, "; "), " }"))
-    case t: Type.Placeholder => m(SimpleTyp, s(kw("_"), t.bounds))
+    case t: Type.Placeholder =>
+      val bounds = s(if (t.hasLo) s(" ", kw(">:"), " ", p(Typ, t.lo)) else s(), if (t.hasHi) s(" ", kw("<:"), " ", p(Typ, t.hi)) else s())
+      m(SimpleTyp, s(kw("_"), bounds))
     case t: Type.Tuple       => m(SimpleTyp, s("(", r(t.elements, ", "), ")"))
     case t: Type.Function    =>
       val params = if (t.params.size == 1) s(p(AnyInfixTyp, t.params.head)) else s("(", r(t.params.map(param => p(ParamTyp, param)), ", "), ")")
@@ -284,7 +286,9 @@ object Code {
     // Decl
     case t: Decl.Val       => s(a(t.mods, " "), kw("val"), " ", r(t.pats, ", "), kw(":"), " ", t.decltpe)
     case t: Decl.Var       => s(a(t.mods, " "), kw("var"), " ", r(t.pats, ", "), kw(":"), " ", t.decltpe)
-    case t: Decl.Type      => s(a(t.mods, " "), kw("type"), " ", t.name, t.tparams, t.bounds)
+    case t: Decl.Type      =>
+      val bounds = s(if (t.hasLo) s(" ", kw(">:"), " ", p(Typ, t.lo)) else s(), if (t.hasHi) s(" ", kw("<:"), " ", p(Typ, t.hi)) else s())
+      s(a(t.mods, " "), kw("type"), " ", t.name, t.tparams, bounds)
     case t: Decl.Def       => s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, kw(":"), " ", t.decltpe)
     case t: Decl.Procedure => s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss)
 
@@ -339,8 +343,6 @@ object Code {
         }
         s(pearly, pparents, pbody)
       }
-    case t: TypeBounds =>
-      s(if (t.hasLo) s(" ", kw(">:"), " ", p(Typ, t.lo)) else s(), if (t.hasHi) s(" ", kw("<:"), " ", p(Typ, t.hi)) else s())
     case t: Case  =>
       s("case ", p(Pattern, t.pat), t.cond.map { cond => s(" ", kw("if"), " ", p(PostfixExpr, cond)) }.getOrElse(s()), " ", kw("=>"), r(t.stats.map(i(_)), ""))
     case t: Param.Template =>
@@ -353,7 +355,8 @@ object Code {
       val variance = t.mods.foldLeft("")((curr, m) => if (m.isInstanceOf[Mod.Covariant]) "+" else if (m.isInstanceOf[Mod.Contravariant]) "-" else curr)
       val mods = t.mods.filter(m => !m.isInstanceOf[Mod.Covariant] && !m.isInstanceOf[Mod.Contravariant])
       require(t.mods.length - mods.length <= 1)
-      s(a(mods, " "), variance, t.name.map(_.value).getOrElse("_"), t.tparams, cbounds, vbounds, t.bounds)
+      val bounds = s(if (t.hasLo) s(" ", kw(">:"), " ", p(Typ, t.lo)) else s(), if (t.hasHi) s(" ", kw("<:"), " ", p(Typ, t.hi)) else s())
+      s(a(mods, " "), variance, t.name.map(_.value).getOrElse("_"), t.tparams, cbounds, vbounds, bounds)
     case t: Term.Super =>
       s(t.thisp.map { thisp => s(thisp, ".") }.getOrElse(s()),
         kw("super"), t.superp.map { st => s("[", st, "]") }.getOrElse(s()))
