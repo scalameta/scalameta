@@ -37,6 +37,7 @@ package object parsers {
     implicit val parseTemplate: Parse[Aux.Template] = apply(source => new Parser(source).parseTemplate())
     implicit val parseCtorRef: Parse[Aux.CtorRef] = apply(source => new Parser(source).parseCtorRef())
     implicit val parseImportSelector: Parse[Import.Selector] = apply(source => new Parser(source).parseImportSelector())
+    implicit val parseCase: Parse[Aux.Case] = apply(source => new Parser(source).parseCase())
   }
 
   implicit class RichSource[T](val sourceLike: T)(implicit ev: Convert[T, Source]) {

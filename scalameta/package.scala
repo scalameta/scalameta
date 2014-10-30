@@ -15,6 +15,7 @@ package object meta {
   @quasiquote[Mod]('mod)                                            implicit class ModQuote(ctx: StringContext)
   @quasiquote[Tree]('templ, Aux.Template, Aux.CtorRef)              implicit class TemplateQuote(ctx: StringContext)
   @quasiquote[Import.Selector]('sel)                                implicit class SelectorQuote(ctx: StringContext)
+  @quasiquote[Aux.Case]('cas)                                       implicit class CaseQuote(ctx: StringContext)
 
   final case class MetaException(msg: String) extends Exception(msg)
 }

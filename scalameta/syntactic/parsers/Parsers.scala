@@ -225,6 +225,7 @@ abstract class AbstractParser { parser =>
   def parseTemplate(): Aux.Template = ???
   def parseCtorRef(): Aux.CtorRef = ???
   def parseImportSelector(): Import.Selector = ???
+  def parseCase(): Aux.Case = ???
 
 /* ------------- PARSER COMMON -------------------------------------------- */
 

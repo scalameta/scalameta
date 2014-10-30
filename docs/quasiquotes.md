@@ -36,11 +36,11 @@
  Tuple             | `q"(..$exprs)"`
  Block             | `q"{ ..$stats }"`
  If                | `q"if ($expr) $expr else $expr"`
- Match             | `q"$expr match { ..case $pat if $cond => ..$stat }"`
+ Match             | `q"$expr match { case ..$cass }"`
  Try Catch Cases   | `q"try $expr catch $expr finally $expr"`
- Try Catch Expr    | `q"try $expr catch { ..case $pat if $cond => ..$stat } finally $expr" `
+ Try Catch Expr    | `q"try $expr catch { case ..$cass } finally $expr" `
  Function          | `q"(..$iparams) => $expr"`
- Partial Function  | `q"{ ..case $pat if $cond => ..$stat }"`
+ Partial Function  | `q"{ case ..$cass }"`
  While             | `q"while ($expr) $expr"`
  Do While          | `q"do $expr while($expr)"`
  For               | `q"for (..$enums) $expr"`
@@ -151,7 +151,7 @@
  Template Param | `param"..$mods $name: $atpe = $defaultopt"`, `param"..$mods val $name: $atpe = $defaultopt"`, `param"..$mods var $name: $atpe = $defaultopt"`
  Type Param     | `param"..$mods type $nameopt[..$tparams] <% ..$tpes : ..$tpes >: $tpeopt <: $tpeopt"`
 
-## Template (meta.Template) and Parents (meta.Parent)
+## Template (meta.Template) and Parents (meta.Ctor.Ref)
 
            | Quasiquote
 -----------|--------------------
@@ -196,6 +196,12 @@
  Unimport Selector | `sel"$str => _"`
  Wildcard Selector | `sel"_"`
 
+## Cases (meta.Case)
+
+      | Quasiquote
+------|---------------------------
+ Case | `cas"$pat if $condopt => ..$stat"`
+
 ## Naming conventions
 
 ### Shorthands and interpolators
@@ -203,6 +209,7 @@
  Type             | Shorthand | Interpolator
 ------------------|-----------|--------------
  meta.Enum        | `$enum`   | `enum`
+ meta.Case        | `$cas`    | `cas`
  meta.Member      | `$memb`   | `q`
  meta.Mod         | `$mod`    | `mod`
  meta.Ctor.Ref    | `$cref`   | `templ`
