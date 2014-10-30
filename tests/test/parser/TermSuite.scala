@@ -93,7 +93,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("a(0) = true") {
-    val Update(Apply(TermName("a"), Lit.Int(0) :: Nil), Lit.Bool(true)) = term("a(0) = true")
+    val Update(TermName("a"), (Lit.Int(0) :: Nil) :: Nil, Lit.Bool(true)) = term("a(0) = true")
   }
 
   test("return") {

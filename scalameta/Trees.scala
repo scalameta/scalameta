@@ -37,7 +37,7 @@ object Term {
     require(op.isUnaryOp)
   }
   @ast class Assign(lhs: Term.Ref, rhs: Term) extends Term
-  @ast class Update(lhs: Apply, rhs: Term) extends Term
+  @ast class Update(fun: Term, argss: Seq[Seq[Arg]], rhs: Term) extends Term
   @ast class Return(expr: Term = Lit.Unit()) extends Term
   @ast class Throw(expr: Term) extends Term
   @ast class Ascribe(expr: Term, tpe: Type) extends Term

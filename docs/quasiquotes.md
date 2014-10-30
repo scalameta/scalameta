@@ -36,9 +36,9 @@
  Block             | `q"{ ..$stats }"`
  If                | `q"if ($expr) $expr else $expr"`
  Match             | `q"$expr match { case ..$cass }"`
- Try Catch Cases   | `q"try $expr catch $expr finally $expr"`
- Try Catch Expr    | `q"try $expr catch { case ..$cass } finally $expr" `
- Function          | `q"(..$iparams) => $expr"`
+ Try Catch Cases   | `q"try $expr catch { case ..$cass } finally $expropt"`
+ Try Catch Expr    | `q"try $expr catch $expr finally $expropt" `
+ Function          | `q"(..$params) => $expr"`
  Partial Function  | `q"{ case ..$cass }"`
  While             | `q"while ($expr) $expr"`
  Do While          | `q"do $expr while($expr)"`
@@ -66,13 +66,13 @@
  Projection        | `t"$tpe#$tname"`
  Singleton         | `t"$ref.type"`
  Application       | `t"$tpe[..$tpes]`
- Infix Application | `t"$tpe $tpe $tpe"`
+ Infix Application | `t"$tpe $tname $tpe"`
  Function          | `t"(..$atpes) => $tpe"`
  Tuple             | `t"(..$tpes)"`
  Compound          | `t"..$tpes { ..$stats }"`
  Existential       | `t"$tpe forSome { ..$stats }"`
  Annotate          | `t"$tpe ..@$crefs"`
- Placeholder       | `t"_"`
+ Placeholder       | `t"_ >: $tpeopt <: tpeopt"`
  Literal           | `t"$lit"`
 
 ## Argument Types (meta.Type.Arg)
@@ -88,11 +88,11 @@
                | Quasiquote
 ---------------|----------------------------
  Wildcard      | `p"_"`
- Binding       | `p"$name @ $pat"`
+ Bind          | `p"$name @ $pat"`
  Alternative   | `p"$pat | $pat"`
  Tuple         | `p"(..$pats)"`
  Extract       | `p"$ref[..$tpes](..$apats)"`
- Infix Extract | `p"$pat $ref (..$apats)"`
+ Infix Extract | `p"$pat $name (..$apats)"`
  Interpolation | `p""" $name"$${..$pats}" """`
  Typed         | `p"$pat: $tpe"`
  Name          | `p"name"`
@@ -120,8 +120,8 @@
 
            | Quasiquote
 -----------|------------------------------
- Val       | `q"..$mods val $name: $tpe"`
- Var       | `q"..$mods var $name: $tpe"`
+ Val       | `q"..$mods val ..$names: $tpe"`
+ Var       | `q"..$mods var ..$names: $tpe"`
  Def       | `q"..$mods def $name[..$tparams](...$paramss): $tpe"`
  Procedure | `q"..$mods def $name[..$tparams](...$paramss)"`
  Type      | `q"..$mods type $tname[..$tparams] >: $tpeopt <: tpeopt"`
@@ -130,15 +130,15 @@
 
                 | Quasiquote
 ----------------|------------------------------
- Val            | `q"..$mods val $name: $tpe = $expr"`
- Var            | `q"..$mods var $name: $tpe = $expr", q"..$mods var $name: $tpe = _"`
- Def            | `q"..$mods def $name[..$tparams](...$paramss): $tpe = $expr"`
+ Val            | `q"..$mods val ..$pats: $tpeopt = $expr"`
+ Var            | `q"..$mods var ..$pats: $tpeopt = $expropt"`
+ Def            | `q"..$mods def $name[..$tparams](...$paramss): $tpeopt = $expr"`
  Macro          | `q"..$mods def $name[..$tparams](...$paramss): $tpe = macro $expr"`
  Procedure      | `q"..$mods def $name[..$tparams](...$paramss) { ..$stats }"`
  Primary Ctor   | `q"..$mods def this(..$cparamss)"`
- Secondary Ctor | `q"..$mods def this(..$paramss) = { this(...$args); ..$stats }"`
+ Secondary Ctor | `q"..$mods def this(..$paramss) = { this(...$argss); ..$stats }"`
  Type           | `q"..$mods type $tname[..$tparams] = $tpe"`
- Class          | `q"..$mods class $tname[..$tparams] ..$mods(...$cparamss) extends $template"`
+ Class          | `q"..$mods class $tname[..$tparams] $ctor extends $template"`
  Trait          | `q"..$mods trait $tname[..$tparams] extends $template"`
  Object         | `q"..$mods object $name extends $template"`
  Package Object | `q"package object $name extends $template"`

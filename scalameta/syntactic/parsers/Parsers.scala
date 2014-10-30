@@ -1062,8 +1062,16 @@ abstract class AbstractParser { parser =>
             next()
             t = Term.Assign(ref, expr())
           case app: Term.Apply =>
+            def decompose(term: Term): (Term, List[List[Term.Arg]]) = term match {
+              case Term.Apply(fun, args) =>
+                val (core, otherArgss) = decompose(fun)
+                (core, args.toList +: otherArgss)
+              case term =>
+                (term, Nil)
+            }
+            val (core, argss) = decompose(app)
             next()
-            t = Term.Update(app, expr())
+            t = Term.Update(core, argss, expr())
           case _ =>
         }
       } else if (tok.is[`:`]) {

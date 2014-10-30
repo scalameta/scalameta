@@ -169,7 +169,7 @@ object Code {
     case t: Term.This     => m(SimpleExpr1, s(t.qual.map(s(_, ".")).getOrElse(s()), kw("this")))
     case t: Term.Select   => m(Path, s(p(SimpleExpr, t.qual), if (t.isPostfix) " " else ".", t.selector))
     case t: Term.Assign   => m(Expr1, s(p(SimpleExpr1, t.lhs), " ", kw("="), " ", p(Expr, t.rhs)))
-    case t: Term.Update   => m(Expr1, s(p(SimpleExpr1, t.lhs), " ", kw("="), " ", p(Expr, t.rhs)))
+    case t: Term.Update   => m(Expr1, s(p(SimpleExpr1, t.fun), t.argss, " ", kw("="), " ", p(Expr, t.rhs)))
     case t: Term.Return   => m(Expr1, s(kw("return"), if (t.hasExpr) s(" ", p(Expr, t.expr)) else s()))
     case t: Term.Throw    => m(Expr1, s(kw("throw"), " ", p(Expr, t.expr)))
     case t: Term.Ascribe  => m(Expr1, s(p(PostfixExpr, t.expr), kw(":"), " ", t.tpe))
