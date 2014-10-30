@@ -17,12 +17,11 @@
 
                    | Quasiquote
 -------------------|------------------
- Name              | `q"name"`
- Literal           | `q"$lit"`
- Interpolation     | `q""" $name"$${..$exprs}" """`
  This              | `q"$stropt.this"`
  Super             | `q"$stropt.super[$stropt]"`
+ Name              | `q"name"`
  Selection         | `q"$expr.$name"`
+ Interpolation     | `q""" $name"$${..$exprs}" """`
  Application       | `q"$expr(..$args)"`
  Type Application  | `q"$expr[..$tpes]"`
  Infix Application | `q"$expr $name[..$tpes] (..$args)"`
@@ -48,21 +47,21 @@
  New               | `q"new $templ"`
  Placeholder       | `q"_"`
  Eta Expansion     | `q"$expr _"`
+ Literal           | `q"$lit"`
 
 ## Arguments (meta.Term.Arg)
 
-          | Quasiquote
-----------|------------------------------
- Named    | `arg"$name = $expr"`
- Repeated | `arg"$expr: _*"`
- Term     | `arg"$expr"`
+            | Quasiquote
+------------|------------------------------
+ Named      | `arg"$name = $expr"`
+ Repeated   | `arg"$expr: _*"`
+ Expression | `arg"$expr"`
 
 ## Types (meta.Type)
 
                    | Quasiquote
 -------------------|------------------------------
  Name              | `t"name"`
- Literal           | `t"$lit"`
  Selection         | `t"$ref.$tname"`
  Projection        | `t"$tpe#$tname"`
  Singleton         | `t"$ref.type"`
@@ -74,6 +73,7 @@
  Existential       | `t"$tpe forSome { ..$stats }"`
  Annotate          | `t"$tpe ..@$crefs"`
  Placeholder       | `t"_"`
+ Literal           | `t"$lit"`
 
 ## Argument Types (meta.Type.Arg)
 
@@ -87,23 +87,24 @@
 
                | Quasiquote
 ---------------|----------------------------
- Name          | `p"name"`
- Literal       | `p"$lit"`
- Interpolation | `p""" $name"$${..$pats}" """`
  Wildcard      | `p"_"`
  Binding       | `p"$name @ $pat"`
  Alternative   | `p"$pat | $pat"`
  Tuple         | `p"(..$pats)"`
  Extract       | `p"$ref[..$tpes](..$apats)"`
  Infix Extract | `p"$pat $ref (..$apats)"`
- Type          | `p"$pat: $tpe"`
+ Interpolation | `p""" $name"$${..$pats}" """`
+ Typed         | `p"$pat: $tpe"`
+ Name          | `p"name"`
+ Selection     | `p"$expr.$name"`
+ Literal       | `p"$lit"`
 
 ## Argument Patterns (meta.Pat.Arg)
 
                    | Quasiquote
 -------------------|----------------------------
- Pattern           | `p"$pat"`
  Sequence Wildcard | `p"_*"`
+ Pattern           | `p"$pat"`
 
 ## Statements (meta.Stat)
 
