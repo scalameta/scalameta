@@ -6,7 +6,6 @@ import org.scalameta.ast._
 import org.scalameta.invariants._
 import org.scalameta.annotations._
 import org.scalameta.unreachable
-import semantic._
 import syntactic.show._
 import syntactic.parsers._, SyntacticInfo._
 
