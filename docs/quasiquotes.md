@@ -207,29 +207,29 @@
 
 ### Shorthands and interpolators
 
- Type             | Shorthand | Interpolator
-------------------|-----------|--------------
- meta.Enum        | `$enum`   | `enum`
- meta.Case        | `$cas`    | `cas`
- meta.Member      | `$memb`   | `q`
- meta.Mod         | `$mod`    | `mod`
- meta.Ctor.Ref    | `$cref`   | `templ`
- meta.Pat         | `$pat`    | `p`
- meta.Pat.Arg     | `$apat`   | `p`
- meta.Selector    | `$sel`    | `sel`
- meta.Stat        | `$stat`   | `q`
- meta.Templ       | `$templ`  | `templ`
- meta.Templ.Param | `$cparam` | `param`
- meta.Term        | `$expr`   | `q`
- meta.Term.Arg    | `$arg`    | `arg`
- meta.Term.Name   | `$name`   | `q`
- meta.Term.Ref    | `$ref`    | `q`
- meta.Term.Param  | `$param`  | `param`
- meta.Type        | `$tpe`    | `t`
- meta.Type.Arg    | `$atpe`   | `t`
- meta.Type.Name   | `$tname`  | `t`
- meta.Type.Param  | `$tparam` | `param`
-                  | `$lit`    | `q`
+ Type                | Shorthand | Interpolator
+---------------------|-----------|--------------
+ meta.Enum           | `$enum`   | `enum`
+ meta.Case           | `$cas`    | `cas`
+ meta.Member         | `$memb`   | `q`
+ meta.Mod            | `$mod`    | `mod`
+ meta.Ctor.Ref       | `$cref`   | `templ`
+ meta.Pat            | `$pat`    | `p`
+ meta.Pat.Arg        | `$apat`   | `p`
+ meta.Selector       | `$sel`    | `sel`
+ meta.Stat           | `$stat`   | `q`
+ meta.Template       | `$templ`  | `templ`
+ meta.Template.Param | `$cparam` | `param`
+ meta.Term           | `$expr`   | `q`
+ meta.Term.Arg       | `$arg`    | `arg`
+ meta.Term.Name      | `$name`   | `q`
+ meta.Term.Ref       | `$ref`    | `q`
+ meta.Term.Param     | `$param`  | `param`
+ meta.Type           | `$tpe`    | `t`
+ meta.Type.Arg       | `$atpe`   | `t`
+ meta.Type.Name      | `$tname`  | `t`
+ meta.Type.Param     | `$tparam` | `param`
+                     | `$lit`    | `q`
 
 ### Suffix name modifiers
 

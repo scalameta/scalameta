@@ -1,15 +1,15 @@
-package scala.meta
-package syntactic.show
+package scala.meta.syntactic
+package show
 
-import scala.meta.Aux._
 import org.scalameta.show.Show
 import Show.{ sequence => s, repeat => r, indent => i, newline => n, meta => m, adorn => a, function => fn }
 import scala.meta.syntactic.parsers.SyntacticInfo._
 import scala.meta.syntactic.parsers.Chars._
-import scala.meta.semantic._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
-import internal._
+import scala.meta.syntactic.show.internal._
+import scala.meta.syntactic.ast._
+import scala.{meta => api}
 import org.scalameta.adt._
 import org.scalameta.invariants._
 
@@ -125,7 +125,7 @@ object Code {
 
   // Branches
   // TODO: this match is not exhaustive: if I remove Mod.Package, then I get no warning
-  implicit def codeTree[T <: Tree]: Code[T] = Code { x => (x: Tree) match {
+  implicit def codeTree[T <: api.Tree]: Code[T] = Code { x => (x: api.Tree) match {
     case t: Name => m(Path, if (t.isBackquoted) s("`", t.value, "`") else s(t.value))
 
     // Type.Arg
@@ -179,11 +179,11 @@ object Code {
       import Term.{Block, Function}
       def pstats(s: Seq[Stat]) = r(s.map(i(_)), "")
       t match {
-        case Block(Function(Param.Term.Simple(mods, Some(name), tptopt, _) :: Nil, Block(stats)) :: Nil) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
+        case Block(Function(Term.Param.Simple(mods, Some(name), tptopt, _) :: Nil, Block(stats)) :: Nil) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
           m(SimpleExpr, s("{ ", kw("implicit"), " ", name, tptopt.map(s(kw(":"), " ", _)).getOrElse(s()), " ", kw("=>"), " ", pstats(stats), n("}")))
-        case Block(Function(Param.Term.Simple(mods, Some(name), None, _) :: Nil, Block(stats)) :: Nil) =>
+        case Block(Function(Term.Param.Simple(mods, Some(name), None, _) :: Nil, Block(stats)) :: Nil) =>
           m(SimpleExpr, s("{ ", name, " ", kw("=>"), " ", pstats(stats), n("}")))
-        case Block(Function(Param.Term.Simple(_, None, _, _) :: Nil, Block(stats)) :: Nil) =>
+        case Block(Function(Term.Param.Simple(_, None, _, _) :: Nil, Block(stats)) :: Nil) =>
           m(SimpleExpr, s("{ ", kw("_"), " ", kw("=>"), " ", pstats(stats), n("}")))
         case Block(Function(params, Block(stats)) :: Nil) =>
           m(SimpleExpr, s("{ (", r(params, ", "), ") => ", pstats(stats), n("}")))
@@ -217,11 +217,11 @@ object Code {
     case t: Term.If       => m(Expr1, s(kw("if"), " (", t.cond, ") ", p(Expr, t.thenp), if (t.hasElsep) s(" ", kw("else"), " ", p(Expr, t.elsep)) else s()))
     case t: Term.Function =>
       t match {
-        case Term.Function(Param.Term.Simple(mods, Some(name), tptopt, _) :: Nil, body) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
+        case Term.Function(Term.Param.Simple(mods, Some(name), tptopt, _) :: Nil, body) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
           m(Expr, s(kw("implicit"), " ", name, tptopt.map(s(kw(":"), " ", _)).getOrElse(s()), " ", kw("=>"), " ", p(Expr, body)))
-        case Term.Function(Param.Term.Simple(mods, Some(name), None, _) :: Nil, body) =>
+        case Term.Function(Term.Param.Simple(mods, Some(name), None, _) :: Nil, body) =>
           m(Expr, s(name, " ", kw("=>"), " ", p(Expr, body)))
-        case Term.Function(Param.Term.Simple(_, None, _, _) :: Nil, body) =>
+        case Term.Function(Term.Param.Simple(_, None, _, _) :: Nil, body) =>
           m(Expr, s(kw("_"), " ", kw("=>"), " ", p(Expr, body)))
         case Term.Function(params, body) =>
           m(Expr, s("(", r(params, ", "), ") ", kw("=>"), " ", p(Expr, body)))
@@ -322,7 +322,7 @@ object Code {
     case t: Import          => s(kw("import"), " ", r(t.clauses, ", "))
 
     // Aux
-    case t: CtorRef  => s(p(AnnotTyp, t.tpe), t.argss)
+    case t: Ctor.Ref => s(p(AnnotTyp, t.tpe), t.argss)
     case t: Template =>
       val isBodyEmpty = t.self.name.isEmpty && t.self.decltpe.isEmpty && !t.hasStats
       val isTemplateEmpty = t.early.isEmpty && t.parents.isEmpty && isBodyEmpty
@@ -345,11 +345,11 @@ object Code {
       }
     case t: Case  =>
       s("case ", p(Pattern, t.pat), t.cond.map { cond => s(" ", kw("if"), " ", p(PostfixExpr, cond)) }.getOrElse(s()), " ", kw("=>"), r(t.stats.map(i(_)), ""))
-    case t: Param.Template =>
-      val keyword = t match { case t: Param.Term.Simple => ""; case t: Param.Term.Val => "val"; case t: Param.Term.Var => "var"; }
+    case t: Template.Param =>
+      val keyword = t match { case t: Term.Param.Simple => ""; case t: Term.Param.Val => "val"; case t: Term.Param.Var => "var"; }
       val mods = t.mods.filter(!_.isInstanceOf[Mod.Implicit]) // NOTE: `implicit` in parameters is skipped in favor of `implicit` in the enclosing parameter list
       s(a(mods, " "), kw(keyword), t.name.map(_.value).getOrElse("_"), t.decltpe, t.default.map(s(" ", kw("="), " ", _)).getOrElse(s()))
-    case t: Param.Type =>
+    case t: Type.Param =>
       val cbounds = r(t.contextBounds.map { s(kw(":"), " ", _) })
       val vbounds = r(t.viewBounds.map { s(" ", kw("<%"), " ", _) })
       val variance = t.mods.foldLeft("")((curr, m) => if (m.isInstanceOf[Mod.Covariant]) "+" else if (m.isInstanceOf[Mod.Contravariant]) "-" else curr)
@@ -363,30 +363,30 @@ object Code {
   } }
 
   // Multiples and optionals
-  implicit val codeArgs: Code[Seq[Term.Arg]] = Code {
+  private implicit val codeArgs: Code[Seq[Term.Arg]] = Code {
     case (b: Term.Block) :: Nil => s(" ", b)
     case args                   => s("(", r(args, ", "), ")")
   }
-  implicit val codeArgss: Code[Seq[Seq[Term.Arg]]] = Code { r(_) }
-  implicit val codeTargs: Code[Seq[Type]] = Code { targs =>
+  private implicit val codeArgss: Code[Seq[Seq[Term.Arg]]] = Code { r(_) }
+  private implicit val codeTargs: Code[Seq[Type]] = Code { targs =>
     if (targs.isEmpty) s()
     else s("[", r(targs, ", "), "]")
   }
-  implicit val codePats: Code[Seq[Pat]] = Code { pats => s("(", r(pats, ", "), ")") }
-  implicit val codePatArgs: Code[Seq[Pat.Arg]] = Code { pats => s("(", r(pats, ", "), ")") }
-  implicit val codeMods: Code[Seq[Mod]] = Code { mods => if (mods.nonEmpty) r(mods, " ") else s() }
-  implicit val codeAnnots: Code[Seq[Mod.Annot]] = Code { annots => if (annots.nonEmpty) r(annots, " ") else s() }
-  implicit def codeParams[P <: Param.Template]: Code[Seq[P]] = Code { params => s("(", r(params, ", "), ")") }
-  implicit def codeParamss[P <: Param.Template]: Code[Seq[Seq[P]]] = Code { paramss => r(paramss.map(params =>
+  private implicit val codePats: Code[Seq[Pat]] = Code { pats => s("(", r(pats, ", "), ")") }
+  private implicit val codePatArgs: Code[Seq[Pat.Arg]] = Code { pats => s("(", r(pats, ", "), ")") }
+  private implicit val codeMods: Code[Seq[Mod]] = Code { mods => if (mods.nonEmpty) r(mods, " ") else s() }
+  private implicit val codeAnnots: Code[Seq[Mod.Annot]] = Code { annots => if (annots.nonEmpty) r(annots, " ") else s() }
+  private implicit def codeParams[P <: Template.Param]: Code[Seq[P]] = Code { params => s("(", r(params, ", "), ")") }
+  private implicit def codeParamss[P <: Template.Param]: Code[Seq[Seq[P]]] = Code { paramss => r(paramss.map(params =>
     s("(", a("implicit ", r(params, ", "), params.exists(_.mods.exists(_.isInstanceOf[Mod.Implicit]))), ")")
   ), "")}
-  implicit val codeTparams: Code[Seq[Param.Type]] = Code { tparams =>
+  private implicit val codeTparams: Code[Seq[Type.Param]] = Code { tparams =>
     if (tparams.nonEmpty) s("[", r(tparams, ", "), "]") else s()
   }
-  implicit val codeTypeArgOpt: Code[Option[Type.Arg]] = Code { _.map { t => s(kw(":"), " ", t) }.getOrElse(s()) }
-  implicit val codeTypeOpt: Code[Option[Type]] = Code { _.map { t => s(kw(":"), " ", t) }.getOrElse(s()) }
-  implicit val codeTermNameOpt: Code[Option[Term.Name]] = Code { _.map(s(_)).getOrElse(s(")")) }
-  implicit val codeImportSels: Code[Seq[Import.Selector]] = Code {
+  private implicit val codeTypeArgOpt: Code[Option[Type.Arg]] = Code { _.map { t => s(kw(":"), " ", t) }.getOrElse(s()) }
+  private implicit val codeTypeOpt: Code[Option[Type]] = Code { _.map { t => s(kw(":"), " ", t) }.getOrElse(s()) }
+  private implicit val codeTermNameOpt: Code[Option[Term.Name]] = Code { _.map(s(_)).getOrElse(s(")")) }
+  private implicit val codeImportSels: Code[Seq[Selector]] = Code {
     case (t: Import.Name) :: Nil     => s(t)
     case (t: Import.Wildcard) :: Nil => s(t)
     case sels                        => s("{ ", r(sels, ", "), " }")

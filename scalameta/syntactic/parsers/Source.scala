@@ -1,5 +1,5 @@
-package scala.meta
-package syntactic.parsers
+package scala.meta.syntactic
+package parsers
 
 import org.scalameta.adt._
 import org.scalameta.convert._

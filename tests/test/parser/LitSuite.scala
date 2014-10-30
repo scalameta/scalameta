@@ -1,4 +1,4 @@
-import scala.meta._
+import scala.meta.syntactic.ast._
 
 class LitSuite extends ParseSuite {
   test("true") {

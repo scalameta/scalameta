@@ -1,9 +1,5 @@
-/* NSC -- new Scala compiler
- * Copyright 2005-2013 LAMP/EPFL
- * @author  Martin Odersky
- */
-package scala.meta
-package syntactic.parsers
+package scala.meta.syntactic
+package parsers
 
 import java.util.NoSuchElementException
 import scala.annotation.{ switch, tailrec }

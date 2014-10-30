@@ -1,4 +1,4 @@
-import scala.meta._, Aux._, Defn.Class
+import scala.meta.syntactic.ast._, Defn.Class
 
 class PackageSuite extends ParseSuite {
   test("class C") {

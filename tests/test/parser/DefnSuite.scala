@@ -1,4 +1,4 @@
-import scala.meta._, Aux._
+import scala.meta.syntactic.ast._
 
 class DefnSuite extends ParseSuite {
   test("val x = 2") {
@@ -35,7 +35,7 @@ class DefnSuite extends ParseSuite {
 
   test("type F[T] = List[T]") {
     val Defn.Type(Nil, Type.Name("F"),
-                  Param.Type(Nil, Some(Type.Name("T")), Nil, Nil, Nil, Nothing(), Any()) :: Nil,
+                  Type.Param(Nil, Some(Type.Name("T")), Nil, Nil, Nil, Nothing(), Any()) :: Nil,
                   Type.Apply(Type.Name("List"), Type.Name("T") :: Nil)) = templStat("type F[T] = List[T]")
   }
 
@@ -45,14 +45,14 @@ class DefnSuite extends ParseSuite {
 
   test("def x[A <: B] = 2") {
     val Defn.Def(Nil, Term.Name("x"),
-                 Param.Type(Nil, Some(Type.Name("A")), Nil, Nil, Nil,
+                 Type.Param(Nil, Some(Type.Name("A")), Nil, Nil, Nil,
                             Type.Name("Nothing"), Type.Name("B")) :: Nil,
                  Nil, None, Lit.Int(2)) = templStat("def x[A <: B] = 2")
   }
 
   test("def x[A <% B] = 2") {
     val Defn.Def(Nil, Term.Name("x"),
-                 Param.Type(Nil, Some(Type.Name("A")), Nil, Nil,
+                 Type.Param(Nil, Some(Type.Name("A")), Nil, Nil,
                             Type.Name("B") :: Nil,
                             Nothing(), Any()) :: Nil,
                  Nil, None, Lit.Int(2)) = templStat("def x[A <% B] = 2")
@@ -61,7 +61,7 @@ class DefnSuite extends ParseSuite {
 
   test("def x[A: B] = 2") {
     val Defn.Def(Nil, Term.Name("x"),
-                 Param.Type(Nil, Some(Type.Name("A")), Nil,
+                 Type.Param(Nil, Some(Type.Name("A")), Nil,
                             Type.Name("B") :: Nil,
                             Nil, Nothing(), Any()) :: Nil,
                  Nil, None, Lit.Int(2)) = templStat("def x[A: B] = 2")
@@ -69,8 +69,8 @@ class DefnSuite extends ParseSuite {
 
   test("def f(a: Int)(implicit b: Int) = a + b") {
     val Defn.Def(Nil, Term.Name("f"), Nil,
-                 (Param.Term.Simple(Nil, Some(Term.Name("a")), Some(Type.Name("Int")), None) :: Nil) ::
-                 (Param.Term.Simple(Mod.Implicit() :: Nil, Some(Term.Name("b")), Some(Type.Name("Int")), None) :: Nil) :: Nil, None,
+                 (Term.Param.Simple(Nil, Some(Term.Name("a")), Some(Type.Name("Int")), None) :: Nil) ::
+                 (Term.Param.Simple(Mod.Implicit() :: Nil, Some(Term.Name("b")), Some(Type.Name("Int")), None) :: Nil) :: Nil, None,
                  Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, Term.Name("b") :: Nil)) =
       templStat("def f(a: Int)(implicit b: Int) = a + b")
   }
@@ -83,7 +83,7 @@ class DefnSuite extends ParseSuite {
 
   test("def f(x: Int): Int = macro impl") {
     val Defn.Macro(Nil, Term.Name("f"), Nil,
-                   (Param.Term.Simple(List(), Some(Term.Name(x)), Some(Type.Name("Int")), None) :: Nil) :: Nil,
+                   (Term.Param.Simple(List(), Some(Term.Name(x)), Some(Type.Name("Int")), None) :: Nil) :: Nil,
                    Type.Name("Int"), Term.Name("impl")) = templStat("def f(x: Int): Int = macro impl")
   }
 }

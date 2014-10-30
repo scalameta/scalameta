@@ -1,4 +1,4 @@
-import scala.meta._, Term.{Name => TermName, Super}, Type.{Name => TypeName, _}, Aux._
+import scala.meta.syntactic.ast._, Term.{Name => TermName, Super}, Type.{Name => TypeName, _}
 
 class TypeSuite extends ParseSuite {
   test("T") {
@@ -47,7 +47,7 @@ class TypeSuite extends ParseSuite {
   }
 
   test("T @foo") {
-    val Annotate(TypeName("T"), Mod.Annot(Aux.CtorRef(TypeName("foo"), Nil)) :: Nil) =
+    val Annotate(TypeName("T"), Mod.Annot(Ctor.Ref(TypeName("foo"), Nil)) :: Nil) =
       tpe("T @foo")
   }
 

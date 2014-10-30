@@ -1,5 +1,4 @@
-package scala.meta
-package syntactic
+package scala.meta.syntactic
 
 import org.scalameta.show._
 import scala.language.higherKinds

@@ -1,9 +1,5 @@
-/* NSC -- new Scala compiler
- * Copyright 2006-2013 LAMP/EPFL
- * @author  Martin Odersky
- */
-package scala.meta
-package syntactic.parsers
+package scala.meta.syntactic
+package parsers
 
 import scala.annotation.{ tailrec, switch }
 import java.lang.{ Character => JCharacter }

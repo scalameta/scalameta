@@ -35,7 +35,7 @@ class NewLiftableMacros(val c: Context) extends AdtReflection {
           def reify = q"_root_.scala.Predef.implicitly[$u.Liftable[${f.tpe}]].apply($localParam.${f.name})"
           if (!f.tpe.baseClasses.contains(symbolOf[scala.collection.immutable.Seq[_]])) reify
           else q"""
-            def extractDummy(any: Any): Option[String] = if (any.isInstanceOf[_root_.scala.meta.Name]) Some(any.asInstanceOf[_root_.scala.meta.Name].value) else None
+            def extractDummy(any: Any): Option[String] = if (any.isInstanceOf[_root_.scala.meta.Name]) Some(any.asInstanceOf[_root_.scala.meta.Name].productIterator.toList.head.toString) else None
             def uniqueName = $localParam.${f.name}.map(extractDummy) match { case List(dummy @ Some(name)) => dummy; case _ => None }
             val maybeUnquotee = args.collectFirst{ case (id, 2, unquotee) if Some(id: String) == (uniqueName: Option[String]) => unquotee }
             maybeUnquotee.getOrElse($reify)
