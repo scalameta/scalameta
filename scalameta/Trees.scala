@@ -142,12 +142,7 @@ package scala.meta.syntactic.ast {
       @ast class Named(name: Name, rhs: Term) extends Arg
       @ast class Repeated(arg: Term) extends Arg
     }
-    @branch trait Param extends api.Term.Param with Member with Templ.Param
-    object Param {
-      @ast class Simple(mods: Seq[Mod], name: Option[impl.Term.Name], decltpe: Option[Type.Arg], default: Option[Term]) extends Term.Param with Templ.Param
-      @ast class Val(mods: Seq[Mod], name: Option[impl.Term.Name], decltpe: Option[Type.Arg], default: Option[Term]) extends Templ.Param
-      @ast class Var(mods: Seq[Mod], name: Option[impl.Term.Name], decltpe: Option[Type.Arg], default: Option[Term]) extends Templ.Param
-    }
+    @ast class Param(mods: Seq[Mod], name: Option[impl.Term.Name], decltpe: Option[Type.Arg], default: Option[Term]) extends api.Term.Param with Member with Templ.Param
   }
 
   @branch trait Type extends api.Type with Tree with Type.Arg with Scope
@@ -359,6 +354,10 @@ package scala.meta.syntactic.ast {
       def name: Option[impl.Term.Name]
       def decltpe: Option[Type.Arg]
       def default: Option[Term]
+    }
+    object Param {
+      @ast class Val(mods: Seq[Mod], name: Option[impl.Term.Name], decltpe: Option[Type.Arg], default: Option[Term]) extends Templ.Param
+      @ast class Var(mods: Seq[Mod], name: Option[impl.Term.Name], decltpe: Option[Type.Arg], default: Option[Term]) extends Templ.Param
     }
   }
 

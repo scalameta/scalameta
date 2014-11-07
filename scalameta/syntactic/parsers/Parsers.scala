@@ -359,21 +359,21 @@ abstract class AbstractParser { parser =>
 /* ---------- TREE CONSTRUCTION ------------------------------------------- */
 
   /** Convert tree to formal parameter list. */
-  def convertToParams(tree: Term): List[Term.Param.Simple] = tree match {
+  def convertToParams(tree: Term): List[Term.Param] = tree match {
     case Term.Tuple(ts) => ts.toList flatMap convertToParam
     case _              => List(convertToParam(tree)).flatten
   }
 
   /** Convert tree to formal parameter. */
-  def convertToParam(tree: Term): Option[Term.Param.Simple] = tree match {
+  def convertToParam(tree: Term): Option[Term.Param] = tree match {
     case name: Name =>
-      Some(Term.Param.Simple(Nil, Some(name.toTermName), None, None))
+      Some(Term.Param(Nil, Some(name.toTermName), None, None))
     case Term.Placeholder() =>
-      Some(Term.Param.Simple(Nil, None, None, None))
+      Some(Term.Param(Nil, None, None, None))
     case Term.Ascribe(name: Name, tpt) =>
-      Some(Term.Param.Simple(Nil, Some(name.toTermName), Some(tpt), None))
+      Some(Term.Param(Nil, Some(name.toTermName), Some(tpt), None))
     case Term.Ascribe(Term.Placeholder(), tpt) =>
-      Some(Term.Param.Simple(Nil, None, Some(tpt), None))
+      Some(Term.Param(Nil, None, Some(tpt), None))
     case Lit.Unit() =>
       None
     case other =>
@@ -1800,9 +1800,9 @@ abstract class AbstractParser { parser =>
         next()
         Some(expr())
       }
-    if (isValParam) Term.Param.Val(mods, Some(name), Some(tpt), default)
-    else if (isVarParam) Term.Param.Var(mods, Some(name), Some(tpt), default)
-    else Term.Param.Simple(mods, Some(name), Some(tpt), default)
+    if (isValParam) Templ.Param.Val(mods, Some(name), Some(tpt), default)
+    else if (isVarParam) Templ.Param.Var(mods, Some(name), Some(tpt), default)
+    else Term.Param(mods, Some(name), Some(tpt), default)
   }
 
   /** {{{
@@ -2313,7 +2313,7 @@ abstract class AbstractParser { parser =>
         if (parenMeansSyntaxError) syntaxError("traits or objects may not have parameters")
         else abort("unexpected opening parenthesis")
       }
-      (Term.Param.Simple(Nil, None, None, None), Nil, false)
+      (Term.Param(Nil, None, None, None), Nil, false)
     }
   }
 
@@ -2367,24 +2367,24 @@ abstract class AbstractParser { parser =>
    * @param isPre specifies whether in early initializer (true) or not (false)
    */
   def templateStatSeq(isPre : Boolean): (Term.Param, List[Stat]) = {
-    var self: Term.Param = Term.Param.Simple(Nil, None, None, None)
+    var self: Term.Param = Term.Param(Nil, None, None, None)
     var firstOpt: Option[Term] = None
     if (tok.is[ExprIntro]) {
       val first = expr(InTemplate) // @S: first statement is potentially converted so cannot be stubbed.
       if (tok.is[`=>`]) {
         first match {
           case name: Name =>
-            self = Term.Param.Simple(Nil, Some(name.toTermName), None, None)
+            self = Term.Param(Nil, Some(name.toTermName), None, None)
           case Term.Placeholder() =>
-            self = Term.Param.Simple(Nil, None, None, None)
+            self = Term.Param(Nil, None, None, None)
           case Term.This(None) =>
-            self = Term.Param.Simple(Nil, None, None, None)
+            self = Term.Param(Nil, None, None, None)
           case Term.Ascribe(name: Name, tpt) =>
-            self = Term.Param.Simple(Nil, Some(name.toTermName), Some(tpt), None)
+            self = Term.Param(Nil, Some(name.toTermName), Some(tpt), None)
           case Term.Ascribe(Term.Placeholder(), tpt) =>
-            self = Term.Param.Simple(Nil, None, Some(tpt), None)
+            self = Term.Param(Nil, None, Some(tpt), None)
           case Term.Ascribe(tree @ Term.This(None), tpt) =>
-            self = Term.Param.Simple(Nil, None, Some(tpt), None)
+            self = Term.Param(Nil, None, Some(tpt), None)
           case _ =>
         }
         next()

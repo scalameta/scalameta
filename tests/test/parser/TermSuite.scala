@@ -141,26 +141,26 @@ class TermSuite extends ParseSuite {
   }
 
   test("(x => x)") {
-    val Function(Term.Param.Simple(Nil, Some(TermName("x")), None, None) :: Nil,
+    val Function(Term.Param(Nil, Some(TermName("x")), None, None) :: Nil,
                  TermName("x")) = term("(x => x)")
   }
 
   test("(x: Int) => x") {
-    val Function(Term.Param.Simple(Nil, Some(TermName("x")), Some(TypeName("Int")), None) :: Nil,
+    val Function(Term.Param(Nil, Some(TermName("x")), Some(TypeName("Int")), None) :: Nil,
                  TermName("x")) = term("(x: Int) => x")
   }
 
   test("(_: Int) => x") {
-    val Function(Term.Param.Simple(Nil, None, Some(TypeName("Int")), None) :: Nil,
+    val Function(Term.Param(Nil, None, Some(TypeName("Int")), None) :: Nil,
                  TermName("x")) = term("(_: Int) => x")
   }
 
   test("_ => ()") {
-    val Function(Term.Param.Simple(Nil, None, None, None) :: Nil, Lit.Unit()) = term("_ => ()")
+    val Function(Term.Param(Nil, None, None, None) :: Nil, Lit.Unit()) = term("_ => ()")
   }
 
   test("{ implicit x => () }") {
-    val Block(Function(Term.Param.Simple(Mod.Implicit() :: Nil, Some(TermName("x")), None, None) :: Nil,
+    val Block(Function(Term.Param(Mod.Implicit() :: Nil, Some(TermName("x")), None, None) :: Nil,
                        Block(Lit.Unit() :: Nil)) :: Nil) = term("{ implicit x => () }")
   }
 
@@ -271,7 +271,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("new { self: T => }") {
-    val New(Templ(Nil, Nil, Term.Param.Simple(Nil, Some(TermName("self")), Some(TypeName("T")), None), Nil)) =
+    val New(Templ(Nil, Nil, Term.Param(Nil, Some(TermName("self")), Some(TypeName("T")), None), Nil)) =
       term("new { self: T => }")
   }
 

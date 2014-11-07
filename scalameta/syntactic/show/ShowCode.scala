@@ -179,11 +179,11 @@ object Code {
       import Term.{Block, Function}
       def pstats(s: Seq[Stat]) = r(s.map(i(_)), "")
       t match {
-        case Block(Function(Term.Param.Simple(mods, Some(name), tptopt, _) :: Nil, Block(stats)) :: Nil) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
+        case Block(Function(Term.Param(mods, Some(name), tptopt, _) :: Nil, Block(stats)) :: Nil) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
           m(SimpleExpr, s("{ ", kw("implicit"), " ", name, tptopt.map(s(kw(":"), " ", _)).getOrElse(s()), " ", kw("=>"), " ", pstats(stats), n("}")))
-        case Block(Function(Term.Param.Simple(mods, Some(name), None, _) :: Nil, Block(stats)) :: Nil) =>
+        case Block(Function(Term.Param(mods, Some(name), None, _) :: Nil, Block(stats)) :: Nil) =>
           m(SimpleExpr, s("{ ", name, " ", kw("=>"), " ", pstats(stats), n("}")))
-        case Block(Function(Term.Param.Simple(_, None, _, _) :: Nil, Block(stats)) :: Nil) =>
+        case Block(Function(Term.Param(_, None, _, _) :: Nil, Block(stats)) :: Nil) =>
           m(SimpleExpr, s("{ ", kw("_"), " ", kw("=>"), " ", pstats(stats), n("}")))
         case Block(Function(params, Block(stats)) :: Nil) =>
           m(SimpleExpr, s("{ (", r(params, ", "), ") => ", pstats(stats), n("}")))
@@ -217,11 +217,11 @@ object Code {
     case t: Term.If       => m(Expr1, s(kw("if"), " (", t.cond, ") ", p(Expr, t.thenp), if (t.hasElsep) s(" ", kw("else"), " ", p(Expr, t.elsep)) else s()))
     case t: Term.Function =>
       t match {
-        case Term.Function(Term.Param.Simple(mods, Some(name), tptopt, _) :: Nil, body) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
+        case Term.Function(Term.Param(mods, Some(name), tptopt, _) :: Nil, body) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
           m(Expr, s(kw("implicit"), " ", name, tptopt.map(s(kw(":"), " ", _)).getOrElse(s()), " ", kw("=>"), " ", p(Expr, body)))
-        case Term.Function(Term.Param.Simple(mods, Some(name), None, _) :: Nil, body) =>
+        case Term.Function(Term.Param(mods, Some(name), None, _) :: Nil, body) =>
           m(Expr, s(name, " ", kw("=>"), " ", p(Expr, body)))
-        case Term.Function(Term.Param.Simple(_, None, _, _) :: Nil, body) =>
+        case Term.Function(Term.Param(_, None, _, _) :: Nil, body) =>
           m(Expr, s(kw("_"), " ", kw("=>"), " ", p(Expr, body)))
         case Term.Function(params, body) =>
           m(Expr, s("(", r(params, ", "), ") ", kw("=>"), " ", p(Expr, body)))
@@ -344,7 +344,7 @@ object Code {
     case t: Case  =>
       s("case ", p(Pattern, t.pat), t.cond.map { cond => s(" ", kw("if"), " ", p(PostfixExpr, cond)) }.getOrElse(s()), " ", kw("=>"), r(t.stats.map(i(_)), ""))
     case t: Templ.Param =>
-      val keyword = t match { case t: Term.Param.Simple => ""; case t: Term.Param.Val => "val"; case t: Term.Param.Var => "var"; }
+      val keyword = t match { case t: Term.Param => ""; case t: Templ.Param.Val => "val"; case t: Templ.Param.Var => "var"; }
       val mods = t.mods.filter(!_.isInstanceOf[Mod.Implicit]) // NOTE: `implicit` in parameters is skipped in favor of `implicit` in the enclosing parameter list
       s(a(mods, " "), kw(keyword), t.name.map(_.value).getOrElse("_"), t.decltpe, t.default.map(s(" ", kw("="), " ", _)).getOrElse(s()))
     case t: Type.Param =>
