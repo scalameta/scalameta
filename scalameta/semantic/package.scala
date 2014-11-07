@@ -20,7 +20,7 @@ package object semantic {
   }
 
   implicit class SemanticTreeOps(val tree: Tree) extends AnyVal {
-    @hosted def attrs: Seq[Attr] = delegate
+    @hosted def attrs: Seq[Attr] = ???
     @hosted def owner: Scope = ???
   }
 
@@ -59,16 +59,16 @@ package object semantic {
   // ===========================
 
   implicit class SemanticTypeOps(val tree: Type) extends AnyVal {
-    @hosted def <:<(other: Type): Boolean = delegate
+    @hosted def <:<(other: Type): Boolean = ???
     @hosted def weak_<:<(other: Type): Boolean = ???
     @hosted def widen: Type = ???
     @hosted def dealias: Type = ???
-    @hosted def erasure: Type = delegate
+    @hosted def erasure: Type = ???
     @hosted def companion: Type.Ref = ???
   }
 
-  @hosted def lub(tpes: Seq[Type]): Type = delegate
-  @hosted def glb(tpes: Seq[Type]): Type = delegate
+  @hosted def lub(tpes: Seq[Type]): Type = ???
+  @hosted def glb(tpes: Seq[Type]): Type = ???
 
   // ===========================
   // PART 3: MEMBERS
