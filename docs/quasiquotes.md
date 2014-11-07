@@ -214,7 +214,7 @@
  meta.Member         | `$memb`   | `q`
  meta.Mod            | `$mod`    | `mod`
  meta.Ctor           | `$ctor`   |
- meta.Ctor.Ref       | `$cref`   | `templ`
+ meta.Ctor.Ref       | `$cref`   | `ctorref`
  meta.Pat            | `$pat`    | `p`
  meta.Pat.Arg        | `$apat`   | `p`
  meta.Selector       | `$sel`    | `sel`
@@ -225,7 +225,7 @@
  meta.Term.Arg       | `$arg`    | `arg`
  meta.Term.Name      | `$name`   | `q`
  meta.Term.Ref       | `$ref`    | `q`
- meta.Term.Param     | `$param`  | `param`
+ meta.Term.Param     | `$param`  | `tparam`
  meta.Type           | `$tpe`    | `t`
  meta.Type.Arg       | `$atpe`   | `t`
  meta.Type.Name      | `$tname`  | `t`

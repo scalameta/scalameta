@@ -24,7 +24,17 @@ package object parsers {
     implicit val parseTerm: Parse[Term] = apply(source => new Parser(source).parseTerm())
     implicit val parseType: Parse[Type.Arg] = apply(source => new Parser(source).parseType())
     implicit val parsePat: Parse[Pat.Arg] = apply(source => new Parser(source).parsePat())
+    implicit val parseStat: Parse[Stat] = apply(source => new Parser(source).parseStat())
     implicit val parseStats: Parse[List[Stat]] = apply(source => new Parser(source).parseStats())
+    implicit val parseParam: Parse[Templ.Param] = apply(source => new Parser(source).parseParam())
+    implicit val parseTparam: Parse[Type.Param] = apply(source => new Parser(source).parseTparam())
+    implicit val parseTermArg: Parse[Term.Arg] = apply(source => new Parser(source).parseTermArg())
+    implicit val parseEnum: Parse[Enum] = apply(source => new Parser(source).parseEnum())
+    implicit val parseMod: Parse[Mod] = apply(source => new Parser(source).parseMod())
+    implicit val parseTempl: Parse[Templ] = apply(source => new Parser(source).parseTempl())
+    implicit val parseCtorRef: Parse[Ctor.Ref] = apply(source => new Parser(source).parseCtorRef())
+    implicit val parseSelector: Parse[Selector] = apply(source => new Parser(source).parseSelector())
+    implicit val parseCase: Parse[Case] = apply(source => new Parser(source).parseCase())
   }
 
   implicit class RichSource[T](val sourceLike: T)(implicit ev: Convert[T, Source]) {

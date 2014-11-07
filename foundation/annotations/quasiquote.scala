@@ -12,7 +12,7 @@ class QuasiquoteMacros(val c: Context) {
   import c.universe._
   import Flag._
   def impl(annottees: c.Tree*): c.Tree = {
-    val q"new $_(scala.Symbol(${qname: String})).macroTransform(..$_)" = c.macroApplication
+    val q"new $_[$qtype](scala.Symbol(${qname: String})).macroTransform(..$_)" = c.macroApplication
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       val q"$mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
       val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" = mdef
@@ -21,19 +21,16 @@ class QuasiquoteMacros(val c: Context) {
         object ${TermName(qname)} {
           import scala.language.experimental.macros
           def apply[T](args: T*): _root_.scala.meta.Tree = macro $mname.applyImpl
-          def unapply(scrutinee: Any): Any = macro ???
+          def unapply(scrutinee: Any): $qtype = macro ???
         }
       """
       val qparser = TermName("parse" + qname.capitalize)
       val q"..$applyimpls" = q"""
         import scala.reflect.macros.whitebox.Context
         def applyImpl(c: Context)(args: c.Tree*): c.Tree = {
+          import _root_.scala.meta.syntactic.parsers.RichSource
           val helper = new _root_.scala.meta.syntactic.quasiquotes.Macros[c.type](c)
-          helper.apply(c.macroApplication, ((s: String) => {
-            val source = _root_.scala.meta.syntactic.parsers.Source.String(s)
-            val parser = new _root_.scala.meta.syntactic.parsers.Parser(source)
-            parser.$qparser()
-          }))
+          helper.apply(c.macroApplication, (s: String) => s.parse[$qtype])
         }
       """
       val cdef1 = q"$mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..${qmodule +: stats} }"

@@ -197,32 +197,32 @@ abstract class AbstractParser { parser =>
 
   /** This is the alternative entry point for repl, script runner, toolbox and parsing in macros.
    */
+  def parseStat(): Stat = parseRule(parser => parser.statSeq(parser.templateStat.orElse(parser.topStat))) match {
+    case stat :: Nil => stat
+    case stats if stats.forall(_.isBlockStat) => Term.Block(stats)
+    // TODO: haha, CompUnit itself is not a stat
+    // case stats if stats.forall(_.isTopLevelStat) => CompUnit(stats)
+    case _ => syntaxError("these statements can't be mixed together")
+  }
   def parseStats(): List[Stat] = parseRule(_.templateStats())
 
-  /** These are alternative entry points for the three main tree flavors.
+  /** These are alternative entry points for quasiquotes.
    */
   def parseTerm(): Term = parseRule(_.expr())
-  def parseType(): Type.Arg = parseRule(_.typ())
+  def parseType(): Type.Arg = parseRule(_.paramType())
   def parsePat(): Pat.Arg = parseRule(_.pattern())
 
   /** These are alternative entry points for quasiquotes.
    */
-  def parseQ(): Stat = parseRule(parser => parser.statSeq(parser.templateStat.orElse(parser.topStat))) match {
-    case stat :: Nil => stat
-    case stats if stats.forall(_.isBlockStat) => Term.Block(stats)
-    // TODO: haha, CompUnit itself is not a statП
-    // case stats if stats.forall(_.isTopLevelStat) => CompUnit(stats)
-    case _ => syntaxError("these statements can't be mixed together")
-  }
-  def parseT(): Type.Arg = parseRule(_.paramType())
-  def parseP(): Pat.Arg = parseRule(_.pattern())
-  def parseParam(): Tree = ???
-  def parseArg(): Term.Arg = ???
+  def parseParam(): Templ.Param = ???
+  def parseTparam(): Type.Param = ???
+  def parseTermArg(): Term.Arg = ???
   def parseEnum(): Enum = ???
   def parseMod(): Mod = ???
-  def parseTempl(): Tree = ???
-  def parseSel(): Selector = ???
-  def parseCas(): Case = ???
+  def parseTempl(): Templ = ???
+  def parseCtorRef(): Ctor.Ref = ???
+  def parseSelector(): Selector = ???
+  def parseCase(): Case = ???
 
 /* ------------- PARSER COMMON -------------------------------------------- */
 
