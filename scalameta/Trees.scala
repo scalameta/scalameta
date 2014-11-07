@@ -75,6 +75,7 @@ package scala.meta {
   @branch trait Case extends Tree
 }
 
+// TODO: to be renamed to org.scalameta.trees or similar
 package scala.meta.syntactic.ast {
   @branch trait Tree extends api.Tree
 
