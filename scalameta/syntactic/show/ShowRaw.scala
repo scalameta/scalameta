@@ -16,9 +16,13 @@ object Raw {
   implicit def rawTree[T <: api.Tree]: Raw[T] = Raw(x => s(x.productPrefix, "(", x match {
     case x: Lit.String => s(enquote(x.value, DoubleQuotes))
     case x: Lit => s(x.show[Code])
-    case x => r(x.productIterator.map({
-      case el: String => enquote(el, DoubleQuotes)
-      case el => el.toString
-    }).toList, ", ")
+    case x =>
+      def showRaw(x: Any): String = x match {
+        case el: String => enquote(el, DoubleQuotes)
+        case el: api.Tree => el.show[Raw]
+        case el: List[_] => "List(" + el.map(showRaw).mkString(", ") + ")"
+        case el => el.toString
+      }
+      r(x.productIterator.map(showRaw).toList, ", ")
   }, ")"))
 }

@@ -13,7 +13,7 @@ package scala.meta {
   @root trait Tree extends Product {
     type ThisType <: Tree
     def parent: Option[Tree]
-    final override def toString: String = this.show[Raw]
+    final override def toString: String = this.show[Code]
   }
 
   @branch trait Ref extends Tree
