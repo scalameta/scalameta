@@ -24,28 +24,28 @@ package object semantic {
     @hosted def owner: Scope = ???
   }
 
-  sealed trait Typeable[+T, U]
-  object Typeable {
-    implicit object Term extends Typeable[meta.Term, meta.Type]
-    implicit object Method extends Typeable[meta.Member.Method, meta.Type]
-    implicit object Field extends Typeable[meta.Member.Field, meta.Type]
-    implicit object Ctor extends Typeable[meta.Ctor, meta.Type]
-    implicit object TemplateParam extends Typeable[meta.Template.Param, meta.Type.Arg]
-    implicit object Template extends Typeable[meta.Template, meta.Type]
+  sealed trait HasTpe[+T, U]
+  object HasTpe {
+    implicit object Term extends HasTpe[meta.Term, meta.Type]
+    implicit object Method extends HasTpe[meta.Member.Method, meta.Type]
+    implicit object Field extends HasTpe[meta.Member.Field, meta.Type]
+    implicit object Ctor extends HasTpe[meta.Ctor, meta.Type]
+    implicit object TemplateParam extends HasTpe[meta.Template.Param, meta.Type.Arg]
+    implicit object Template extends HasTpe[meta.Template, meta.Type]
   }
 
-  implicit class SemanticTypeableOps[T <: Tree, U <: Tree](val tree: T)(implicit ev: Typeable[T, U]) {
+  implicit class SemanticTypeableOps[T <: Tree, U <: Tree](val tree: T)(implicit ev: HasTpe[T, U]) {
     @hosted def tpe: U = ???
   }
 
-  sealed trait Resolvable[+T, U]
-  object Resolvable {
-    implicit object Ref extends Resolvable[meta.Ref, meta.Member]
-    implicit object TermRef extends Resolvable[meta.Term.Ref, meta.Member.Term]
-    implicit object TypeRef extends Resolvable[meta.Type.Ref, meta.Member] // Type.Ref can refer to both types (regular types) and terms (singleton types)
+  sealed trait HasDefn[+T, U]
+  object HasDefn {
+    implicit object Ref extends HasDefn[meta.Ref, meta.Member]
+    implicit object TermRef extends HasDefn[meta.Term.Ref, meta.Member.Term]
+    implicit object TypeRef extends HasDefn[meta.Type.Ref, meta.Member] // Type.Ref can refer to both types (regular types) and terms (singleton types)
   }
 
-  implicit class SemanticResolvableOps[T <: Tree, U <: Tree](val tree: T)(implicit ev: Resolvable[T, U]) {
+  implicit class SemanticResolvableOps[T <: Tree, U <: Tree](val tree: T)(implicit ev: HasDefn[T, U]) {
     @hosted def defns: Seq[U] = ???
     @hosted def defn: U = ???
   }
