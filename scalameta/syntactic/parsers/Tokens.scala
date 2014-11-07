@@ -1,10 +1,5 @@
-/* NSC -- new Scala compiler
- * Copyright 2005-2013 LAMP/EPFL
- * @author  Martin Odersky
- */
-
-package scala.meta
-package syntactic.parsers
+package scala.meta.syntactic
+package parsers
 
 object Tokens {
   type Token = Int

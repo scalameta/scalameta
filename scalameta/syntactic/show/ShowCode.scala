@@ -1,15 +1,15 @@
-package scala.meta
-package syntactic.show
+package scala.meta.syntactic
+package show
 
-import scala.meta.Aux._
 import org.scalameta.show.Show
 import Show.{ sequence => s, repeat => r, indent => i, newline => n, meta => m, adorn => a, function => fn }
 import scala.meta.syntactic.parsers.SyntacticInfo._
 import scala.meta.syntactic.parsers.Chars._
-import scala.meta.semantic._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
-import internal._
+import scala.meta.syntactic.show.internal._
+import scala.meta.syntactic.ast._
+import scala.{meta => api}
 import org.scalameta.adt._
 import org.scalameta.invariants._
 
@@ -117,7 +117,7 @@ object Code {
     if (danger) s(" " +keyword) else s(keyword)
   })
 
-  def templ(templ: Template) =
+  def templ(templ: Templ) =
     // TODO: consider XXX.isEmpty
     if (templ.early.isEmpty && templ.parents.isEmpty && templ.self.name.isEmpty && templ.self.decltpe.isEmpty && templ.stats.isEmpty) s()
     else if (templ.parents.nonEmpty || templ.early.nonEmpty) s(" extends ", templ)
@@ -125,18 +125,18 @@ object Code {
 
   // Branches
   // TODO: this match is not exhaustive: if I remove Mod.Package, then I get no warning
-  implicit def codeTree[T <: Tree]: Code[T] = Code { x => (x: Tree) match {
+  implicit def codeTree[T <: api.Tree]: Code[T] = Code { x => (x: api.Tree) match {
     case t: Name => m(Path, if (t.isBackquoted) s("`", t.value, "`") else s(t.value))
 
-    // Param.Type
-    case t: Param.Type.Repeated => m(ParamTyp, s(p(Typ, t.tpe), kw("*")))
-    case t: Param.Type.ByName   => m(ParamTyp, s(kw("=>"), " ", p(Typ, t.tpe)))
+    // Type.Arg
+    case t: Type.Arg.Repeated => m(ParamTyp, s(p(Typ, t.tpe), kw("*")))
+    case t: Type.Arg.ByName   => m(ParamTyp, s(kw("=>"), " ", p(Typ, t.tpe)))
 
     // Type
     case t: Type.Project     => m(SimpleTyp, s(t.qual, kw("#"), t.selector))
     case t: Type.Select      => m(SimpleTyp, s(t.qual, kw("."), t.selector))
     case t: Type.Singleton   => m(SimpleTyp, s(p(SimpleExpr1, t.ref), ".", kw("type")))
-    case t: Type.Annotate    => m(AnnotTyp, s(p(SimpleTyp, t.tpe), " ", t.mods))
+    case t: Type.Annotate    => m(AnnotTyp, s(p(SimpleTyp, t.tpe), " ", t.annots))
     case t: Type.Apply       => m(SimpleTyp, s(p(SimpleTyp, t.tpe), kw("["), r(t.args.map(arg => p(Typ, arg)), ", "), kw("]")))
     case t: Type.ApplyInfix  => m(InfixTyp(t.op.value), s(p(InfixTyp(t.op.value), t.lhs, left = true), " ", t.op, " ", p(InfixTyp(t.op.value), t.rhs, right = true)))
     case t: Type.Compound    => m(CompoundTyp, s(r(t.tpes.map(tpe => p(AnnotTyp, tpe)), " with "), a(" {", a(" ", r(t.refinement, "; "), " "), "}", t.hasRefinement)))
@@ -146,6 +146,8 @@ object Code {
     case t: Type.Function    =>
       val params = if (t.params.size == 1) s(p(AnyInfixTyp, t.params.head)) else s("(", r(t.params.map(param => p(ParamTyp, param)), ", "), ")")
       m(Typ, s(params, " ", kw("=>"), " ", p(Typ, t.res)))
+    case t: Type.Bounds =>
+      s(t.lo.map(lo => s(" ", kw(">:"), " ", p(Typ, lo))).getOrElse(s()), t.hi.map(hi => s(" ", kw("<:"), " ", p(Typ, hi))).getOrElse(s()))
 
     // Lit
     case t: Lit.Bool     => m(Literal, s(t.value.toString))
@@ -159,60 +161,67 @@ object Code {
     case _: Lit.Null     => m(Literal, s(kw("null")))
     case _: Lit.Unit     => m(Literal, s("()"))
 
+    // Term.Arg
+    case t: Term.Arg.Named    => s(t.name, " ", kw("="), " ", p(Expr, t.rhs))
+    case t: Term.Arg.Repeated => s(p(PostfixExpr, t.arg), kw(":"), " ", kw("_*"))
+
     // Term
     case t: Term.This     => m(SimpleExpr1, s(t.qual.map(s(_, ".")).getOrElse(s()), kw("this")))
     case t: Term.Select   => m(Path, s(p(SimpleExpr, t.qual), if (t.isPostfix) " " else ".", t.selector))
     case t: Term.Assign   => m(Expr1, s(p(SimpleExpr1, t.lhs), " ", kw("="), " ", p(Expr, t.rhs)))
-    case t: Term.Update   => m(Expr1, s(p(SimpleExpr1, t.lhs), " ", kw("="), " ", p(Expr, t.rhs)))
+    case t: Term.Update   => m(Expr1, s(p(SimpleExpr1, t.fun), t.argss, " ", kw("="), " ", p(Expr, t.rhs)))
     case t: Term.Return   => m(Expr1, s(kw("return"), if (t.hasExpr) s(" ", p(Expr, t.expr)) else s()))
     case t: Term.Throw    => m(Expr1, s(kw("throw"), " ", p(Expr, t.expr)))
     case t: Term.Ascribe  => m(Expr1, s(p(PostfixExpr, t.expr), kw(":"), " ", t.tpe))
-    case t: Term.Annotate => m(Expr1, s(p(PostfixExpr, t.expr), kw(":"), " ", t.mods))
+    case t: Term.Annotate => m(Expr1, s(p(PostfixExpr, t.expr), kw(":"), " ", t.annots))
     case t: Term.Tuple    => m(SimpleExpr1, s("(", r(t.elements, ", "), ")"))
     case t: Term.Block    =>
       import Term.{Block, Function}
       def pstats(s: Seq[Stat]) = r(s.map(i(_)), "")
       t match {
-        case Block(Function(Param.Named.Simple(mods, name, tptopt, _) :: Nil, Block(stats)) :: Nil) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
+        case Block(Function(Term.Param.Simple(mods, Some(name), tptopt, _) :: Nil, Block(stats)) :: Nil) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
           m(SimpleExpr, s("{ ", kw("implicit"), " ", name, tptopt.map(s(kw(":"), " ", _)).getOrElse(s()), " ", kw("=>"), " ", pstats(stats), n("}")))
-        case Block(Function(Param.Named.Simple(mods, name, None, _) :: Nil, Block(stats)) :: Nil) =>
+        case Block(Function(Term.Param.Simple(mods, Some(name), None, _) :: Nil, Block(stats)) :: Nil) =>
           m(SimpleExpr, s("{ ", name, " ", kw("=>"), " ", pstats(stats), n("}")))
-        case Block(Function(Param.Anonymous(_, _) :: Nil, Block(stats)) :: Nil) =>
+        case Block(Function(Term.Param.Simple(_, None, _, _) :: Nil, Block(stats)) :: Nil) =>
           m(SimpleExpr, s("{ ", kw("_"), " ", kw("=>"), " ", pstats(stats), n("}")))
         case Block(Function(params, Block(stats)) :: Nil) =>
           m(SimpleExpr, s("{ (", r(params, ", "), ") => ", pstats(stats), n("}")))
         case _ =>
           m(SimpleExpr, if (t.stats.isEmpty) s("{}") else s("{", pstats(t.stats), n("}")))
       }
-    case t: Term.Cases       => m(SimpleExpr, s("{", r(t.cases.map(i(_)), ""), n("}")))
-    case t: Term.While       => m(Expr1, s(kw("while"), " (", t.expr, ") ", p(Expr, t.body)))
-    case t: Term.Do          => m(Expr1, s(kw("do"), " ", p(Expr, t.body), " ", kw("while"), " (", t.expr, ")"))
-    case t: Term.For         => m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ") ", t.body))
-    case t: Term.ForYield    => m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ") ", kw("yield"), " ", t.body))
-    case t: Term.New         => m(SimpleExpr, s(kw("new"), " ", t.templ))
-    case _: Term.Placeholder => m(SimpleExpr1, kw("_"))
-    case t: Term.Eta         => m(SimpleExpr, s(p(SimpleExpr1, t.term), " ", kw("_")))
-    case t: Term.Match       => m(Expr1, s(p(PostfixExpr, t.scrut), " ", kw("match"), " ", t.cases))
-    case t: Term.Apply       => m(SimpleExpr1, s(p(SimpleExpr1, t.fun), t.args))
-    case t: Term.ApplyType   => m(SimpleExpr1, s(p(SimpleExpr, t.fun), t.targs))
-    case t: Term.ApplyUnary  => m(PrefixExpr, s(t.op, p(SimpleExpr, t.arg)))
-    case t: Term.ApplyInfix  =>
-      m(InfixExpr(t.op.value), s(p(InfixExpr(t.op.value), t.lhs, left = true), " ", t.op, t.targs, " ", t.args match {
+    case t: Term.PartialFunction => m(SimpleExpr, s("{", r(t.cases.map(i(_)), ""), n("}")))
+    case t: Term.While           => m(Expr1, s(kw("while"), " (", t.expr, ") ", p(Expr, t.body)))
+    case t: Term.Do              => m(Expr1, s(kw("do"), " ", p(Expr, t.body), " ", kw("while"), " (", t.expr, ")"))
+    case t: Term.For             => m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ") ", t.body))
+    case t: Term.ForYield        => m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ") ", kw("yield"), " ", t.body))
+    case t: Term.New             => m(SimpleExpr, s(kw("new"), " ", t.templ))
+    case _: Term.Placeholder     => m(SimpleExpr1, kw("_"))
+    case t: Term.Eta             => m(SimpleExpr, s(p(SimpleExpr1, t.term), " ", kw("_")))
+    case t: Term.Match           => m(Expr1, s(p(PostfixExpr, t.scrut), " ", kw("match"), " {", r(t.cases.map(i(_)), ""), n("}")))
+    case t: Term.Apply           => m(SimpleExpr1, s(p(SimpleExpr1, t.fun), t.args))
+    case t: Term.ApplyType       => m(SimpleExpr1, s(p(SimpleExpr, t.fun), t.targs))
+    case t: Term.ApplyUnary      => m(PrefixExpr, s(t.op, p(SimpleExpr, t.arg)))
+    case t: Term.ApplyInfix      =>
+      m(InfixExpr(t.op.value)    , s(p(InfixExpr(t.op.value), t.lhs, left = true), " ", t.op, t.targs, " ", t.args match {
         case (arg: Term) :: Nil => s(p(InfixExpr(t.op.value), arg, right = true))
         case args               => s(args)
       }))
-    case t: Term.Try      =>
+    case t: Term.TryWithCases    =>
       m(Expr1, s(kw("try"), " ", p(Expr, t.expr),
-        t.catchp.map { catchp => s(" ", kw("catch"), " ", catchp) }.getOrElse(s()),
+        if (t.catchp.nonEmpty) s(" ", kw("catch"), " {", r(t.catchp.map(i(_)), ""), n("}")) else s(""),
+        t.finallyp.map { finallyp => s(" ", kw("finally"), " ", finallyp) }.getOrElse(s())))
+    case t: Term.TryWithTerm     =>
+      m(Expr1, s(kw("try"), " ", p(Expr, t.expr), " ", kw("catch"), " ", t.catchp,
         t.finallyp.map { finallyp => s(" ", kw("finally"), " ", finallyp) }.getOrElse(s())))
     case t: Term.If       => m(Expr1, s(kw("if"), " (", t.cond, ") ", p(Expr, t.thenp), if (t.hasElsep) s(" ", kw("else"), " ", p(Expr, t.elsep)) else s()))
     case t: Term.Function =>
       t match {
-        case Term.Function(Param.Named.Simple(mods, name, tptopt, _) :: Nil, body) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
+        case Term.Function(Term.Param.Simple(mods, Some(name), tptopt, _) :: Nil, body) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
           m(Expr, s(kw("implicit"), " ", name, tptopt.map(s(kw(":"), " ", _)).getOrElse(s()), " ", kw("=>"), " ", p(Expr, body)))
-        case Term.Function(Param.Named.Simple(mods, name, None, _) :: Nil, body) =>
+        case Term.Function(Term.Param.Simple(mods, Some(name), None, _) :: Nil, body) =>
           m(Expr, s(name, " ", kw("=>"), " ", p(Expr, body)))
-        case Term.Function(Param.Anonymous(_, _) :: Nil, body) =>
+        case Term.Function(Term.Param.Simple(_, None, _, _) :: Nil, body) =>
           m(Expr, s(kw("_"), " ", kw("=>"), " ", p(Expr, body)))
         case Term.Function(params, body) =>
           m(Expr, s("(", r(params, ", "), ") ", kw("=>"), " ", p(Expr, body)))
@@ -226,36 +235,31 @@ object Code {
       m(SimpleExpr1, s(t.prefix, quote, r(zipped), t.parts.last.value, quote))
 
     // Pat
-    case t: Pat.Alternative  => m(Pattern, s(p(Pattern, t.lhs), " ", kw("|"), " ", p(Pattern, t.rhs)))
-    case t: Pat.Bind         => m(Pattern2, s(p(SimplePattern, t.lhs), " ", kw("@"), " ", p(AnyPattern3, t.rhs)))
-    case t: Pat.Tuple        => m(SimplePattern, s("(", r(t.elements, ", "), ")"))
-    case _: Pat.SeqWildcard  => m(SimplePattern, kw("_*"))
-    case t: Pat.Typed        => m(Pattern1, s(p(SimplePattern, t.lhs), kw(":"), " ", p(Typ, t.rhs)))
-    case _: Pat.Wildcard     => m(SimplePattern, kw("_"))
-    case t: Pat.Extract      => m(SimplePattern, s(t.ref, t.targs, t.elements))
-    case t: Pat.ExtractInfix =>
+    case t: Pat.Alternative      => m(Pattern, s(p(Pattern, t.lhs), " ", kw("|"), " ", p(Pattern, t.rhs)))
+    case t: Pat.Bind             => m(Pattern2, s(p(SimplePattern, t.lhs), " ", kw("@"), " ", p(AnyPattern3, t.rhs)))
+    case t: Pat.Tuple            => m(SimplePattern, s("(", r(t.elements, ", "), ")"))
+    case _: Pat.Arg.SeqWildcard  => m(SimplePattern, kw("_*"))
+    case t: Pat.Typed            => m(Pattern1, s(p(SimplePattern, t.lhs), kw(":"), " ", p(Typ, t.rhs)))
+    case _: Pat.Wildcard         => m(SimplePattern, kw("_"))
+    case t: Pat.Extract          => m(SimplePattern, s(t.ref, t.targs, t.elements))
+    case t: Pat.ExtractInfix     =>
       m(Pattern3(t.ref.value), s(p(Pattern3(t.ref.value), t.lhs, left = true), " ", t.ref, " ", t.rhs match {
         case pat :: Nil => s(p(Pattern3(t.ref.value), pat, right = true))
         case pats       => s(pats)
       }))
-    case t: Pat.Interpolate  =>
+    case t: Pat.Interpolate =>
       val zipped = t.parts.zip(t.args).map {
         case (part, id: Name) if !id.isBackquoted => s(part, "$", id.value)
         case (part, arg)                          => s(part, "${", arg, "}")
       }
       m(SimplePattern, s(t.prefix, "\"", r(zipped), t.parts.last, "\""))
 
-    // Arg
-    case t: Arg.Named    => s(t.name, " ", kw("="), " ", p(Expr, t.rhs))
-    case t: Arg.Repeated => s(p(PostfixExpr, t.arg), kw(":"), " ", kw("_*"))
-
     // Mod
-    case t: Mod.Annot           => s(kw("@"), p(SimpleTyp, t.tpe), t.argss)
+    case t: Mod.Annot           => s(kw("@"), p(SimpleTyp, t.ref.tpe), t.ref.argss)
     case _: Mod.Abstract        => kw("abstract")
     case _: Mod.Case            => kw("case")
     case _: Mod.Covariant       => kw("+")
     case _: Mod.Contravariant   => kw("-")
-    case _: Mod.Doc             => ???
     case _: Mod.Final           => kw("final")
     case _: Mod.Implicit        => kw("implicit")
     case _: Mod.Lazy            => kw("lazy")
@@ -276,18 +280,18 @@ object Code {
     case t: Defn.Trait     => s(a(t.mods, " "), kw("trait"), " ", t.name, t.tparams, templ(t.templ))
     case t: Defn.Object    => s(a(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
     case t: Defn.Def       =>
-      s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, (t.explicits, t.implicits), t.decltpe, " = ", t.body)
+      s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, t.decltpe, " = ", t.body)
     case t: Defn.Procedure =>
-      s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, (t.explicits, t.implicits), " { ", r(t.stats.map(i(_)), ""), n("}"))
+      s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, " { ", r(t.stats.map(i(_)), ""), n("}"))
     case t: Defn.Macro     =>
-      s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, (t.explicits, t.implicits), kw(":"), " ", t.tpe, " ", kw("="), " ", kw("macro"), " ", t.body)
+      s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, kw(":"), " ", t.tpe, " ", kw("="), " ", kw("macro"), " ", t.body)
 
     // Decl
     case t: Decl.Val       => s(a(t.mods, " "), kw("val"), " ", r(t.pats, ", "), kw(":"), " ", t.decltpe)
     case t: Decl.Var       => s(a(t.mods, " "), kw("var"), " ", r(t.pats, ", "), kw(":"), " ", t.decltpe)
     case t: Decl.Type      => s(a(t.mods, " "), kw("type"), " ", t.name, t.tparams, t.bounds)
-    case t: Decl.Def       => s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, (t.explicits, t.implicits), kw(":"), " ", t.decltpe)
-    case t: Decl.Procedure => s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, (t.explicits, t.implicits))
+    case t: Decl.Def       => s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, kw(":"), " ", t.decltpe)
+    case t: Decl.Procedure => s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss)
 
     // Pkg
     case t: CompUnit           => r(t.stats, "\n")
@@ -296,9 +300,9 @@ object Code {
     case t: Pkg.Object         => s(kw("package"), " ", a(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
 
     // Ctor
-    case t: Ctor.Primary   => s(a(t.mods, " ", t.mods.nonEmpty && (t.explicits.nonEmpty || t.implicits.nonEmpty)), (t.explicits, t.implicits))
+    case t: Ctor.Primary   => s(a(t.mods, " ", t.mods.nonEmpty && t.paramss.nonEmpty), t.paramss)
     case t: Ctor.Secondary =>
-      s(a(t.mods, " "), kw("def"), " ", kw("this"), (t.explicits, t.implicits), t.stats match {
+      s(a(t.mods, " "), kw("def"), " ", kw("this"), t.paramss, t.stats match {
         case Nil   => s(" ", kw("="), " ", kw("this"), t.primaryCtorArgss)
         case stats => s(" { ", kw("this"), t.primaryCtorArgss, ";", a(" ", r(stats, "; ")), " }")
       })
@@ -316,11 +320,8 @@ object Code {
     case t: Import          => s(kw("import"), " ", r(t.clauses, ", "))
 
     // Aux
-    case t: Parent => s(p(AnnotTyp, t.tpe), t.argss)
-    case t: Self =>
-      if (t.name.isEmpty && t.decltpe.isEmpty) s()
-      else s(t.name, t.decltpe, " ", kw("=>"))
-    case t: Template =>
+    case t: Ctor.Ref => s(p(AnnotTyp, t.tpe), t.argss)
+    case t: Templ =>
       val isBodyEmpty = t.self.name.isEmpty && t.self.decltpe.isEmpty && !t.hasStats
       val isTemplateEmpty = t.early.isEmpty && t.parents.isEmpty && isBodyEmpty
       if (isTemplateEmpty) s()
@@ -330,74 +331,60 @@ object Code {
         val pparents = a(r(t.parents, " with "), " ", !t.parents.isEmpty && !isBodyEmpty)
         val pbody = (t.self.name.nonEmpty || t.self.decltpe.nonEmpty, t.hasStats, t.stats) match {
           case (false, false, _) => s()
-          case (true, false, _) => s("{ ", t.self, " }")
+          case (true, false, _) => s("{ ", t.self, " => }")
           case (false, true, List()) if isOneLiner => s("{}")
           case (false, true, List(stat)) if isOneLiner => s("{ ", stat, " }")
           case (false, true, stats) => s("{", r(stats.map(i(_)), ""), n("}"))
-          case (true, true, List()) if isOneLiner => s("{ ", t.self, " }")
-          case (true, true, List(stat)) if isOneLiner => s("{ ", t.self, " ", stat, " }")
-          case (true, true, stats) => s("{ ", t.self, r(stats.map(i(_)), ""), n("}"))
+          case (true, true, List()) if isOneLiner => s("{ ", t.self, " => }")
+          case (true, true, List(stat)) if isOneLiner => s("{ ", t.self, " => ", stat, " }")
+          case (true, true, stats) => s("{ ", t.self, " =>", r(stats.map(i(_)), ""), n("}"))
         }
         s(pearly, pparents, pbody)
       }
-    case t: TypeBounds =>
-      s(if (t.hasLo) s(" ", kw(">:"), " ", p(Typ, t.lo)) else s(), if (t.hasHi) s(" ", kw("<:"), " ", p(Typ, t.hi)) else s())
     case t: Case  =>
       s("case ", p(Pattern, t.pat), t.cond.map { cond => s(" ", kw("if"), " ", p(PostfixExpr, cond)) }.getOrElse(s()), " ", kw("=>"), r(t.stats.map(i(_)), ""))
-    case t: Param.Anonymous =>
-      s(a(t.mods, " "), kw("_"), t.decltpe)
-    case t: Param.Named =>
-      val keyword = t match { case t: Param.Named.Simple => ""; case t: Param.Named.Val => "val"; case t: Param.Named.Var => "var"; }
-      s(a(t.mods, " "), kw(keyword), t.name, t.decltpe, t.default.map(s(" ", kw("="), " ", _)).getOrElse(s()))
-    case t: TypeParam.Anonymous =>
+    case t: Templ.Param =>
+      val keyword = t match { case t: Term.Param.Simple => ""; case t: Term.Param.Val => "val"; case t: Term.Param.Var => "var"; }
+      val mods = t.mods.filter(!_.isInstanceOf[Mod.Implicit]) // NOTE: `implicit` in parameters is skipped in favor of `implicit` in the enclosing parameter list
+      s(a(mods, " "), kw(keyword), t.name.map(_.value).getOrElse("_"), t.decltpe, t.default.map(s(" ", kw("="), " ", _)).getOrElse(s()))
+    case t: Type.Param =>
       val cbounds = r(t.contextBounds.map { s(kw(":"), " ", _) })
       val vbounds = r(t.viewBounds.map { s(" ", kw("<%"), " ", _) })
+      val tbounds = s(t.typeBounds)
       val variance = t.mods.foldLeft("")((curr, m) => if (m.isInstanceOf[Mod.Covariant]) "+" else if (m.isInstanceOf[Mod.Contravariant]) "-" else curr)
       val mods = t.mods.filter(m => !m.isInstanceOf[Mod.Covariant] && !m.isInstanceOf[Mod.Contravariant])
       require(t.mods.length - mods.length <= 1)
-      s(a(mods, " "), variance, kw("_"), t.tparams, cbounds, vbounds, t.bounds)
-    case t: TypeParam.Named =>
-      val cbounds = r(t.contextBounds.map { s(kw(":"), " ", _) })
-      val vbounds = r(t.viewBounds.map { s(" ", kw("<%"), " ", _) })
-      val variance = t.mods.foldLeft("")((curr, m) => if (m.isInstanceOf[Mod.Covariant]) "+" else if (m.isInstanceOf[Mod.Contravariant]) "-" else curr)
-      val mods = t.mods.filter(m => !m.isInstanceOf[Mod.Covariant] && !m.isInstanceOf[Mod.Contravariant])
-      require(t.mods.length - mods.length <= 1)
-      s(a(mods, " "), variance, t.name, t.tparams, cbounds, vbounds, t.bounds)
+      s(a(mods, " "), variance, t.name.map(_.value).getOrElse("_"), t.tparams, cbounds, vbounds, tbounds)
     case t: Term.Super =>
       s(t.thisp.map { thisp => s(thisp, ".") }.getOrElse(s()),
         kw("super"), t.superp.map { st => s("[", st, "]") }.getOrElse(s()))
   } }
 
   // Multiples and optionals
-  implicit val codeArgs: Code[Seq[Arg]] = Code {
+  private implicit val codeArgs: Code[Seq[Term.Arg]] = Code {
     case (b: Term.Block) :: Nil => s(" ", b)
     case args                   => s("(", r(args, ", "), ")")
   }
-  implicit val codeArgss: Code[Seq[Seq[Arg]]] = Code { r(_) }
-  implicit val codeTargs: Code[Seq[Type]] = Code { targs =>
+  private implicit val codeArgss: Code[Seq[Seq[Term.Arg]]] = Code { r(_) }
+  private implicit val codeTargs: Code[Seq[Type]] = Code { targs =>
     if (targs.isEmpty) s()
     else s("[", r(targs, ", "), "]")
   }
-  implicit val codePats: Code[Seq[Pat]] = Code { pats =>
-    s("(", r(pats, ", "), ")")
-  }
-  implicit val codeMods: Code[Seq[Mod]] = Code { mods =>
-    if (mods.nonEmpty) r(mods, " ") else s()
-  }
-  implicit def codeParams[P <: Param]: Code[Seq[P]] = Code { params => s("(", r(params, ", "), ")") }
-  implicit val codeTparams: Code[Seq[TypeParam]] = Code { tparams =>
+  private implicit val codePats: Code[Seq[Pat]] = Code { pats => s("(", r(pats, ", "), ")") }
+  private implicit val codePatArgs: Code[Seq[Pat.Arg]] = Code { pats => s("(", r(pats, ", "), ")") }
+  private implicit val codeMods: Code[Seq[Mod]] = Code { mods => if (mods.nonEmpty) r(mods, " ") else s() }
+  private implicit val codeAnnots: Code[Seq[Mod.Annot]] = Code { annots => if (annots.nonEmpty) r(annots, " ") else s() }
+  private implicit def codeParams[P <: Templ.Param]: Code[Seq[P]] = Code { params => s("(", r(params, ", "), ")") }
+  private implicit def codeParamss[P <: Templ.Param]: Code[Seq[Seq[P]]] = Code { paramss => r(paramss.map(params =>
+    s("(", a("implicit ", r(params, ", "), params.exists(_.mods.exists(_.isInstanceOf[Mod.Implicit]))), ")")
+  ), "")}
+  private implicit val codeTparams: Code[Seq[Type.Param]] = Code { tparams =>
     if (tparams.nonEmpty) s("[", r(tparams, ", "), "]") else s()
   }
-  implicit def codeParamLists[P <: Param]: Code[(Seq[Seq[P]], Seq[P])] = Code { case (expl, impl) =>
-    if (expl.isEmpty && impl.isEmpty) s()
-    else s(r(expl),
-      if (impl.isEmpty) s()
-      else s("(", kw("implicit"), " ", r(impl, ", "), ")"))
-  }
-  implicit val codeParamTypeOpt: Code[Option[Param.Type]] = Code { _.map { t => s(kw(":"), " ", t) }.getOrElse(s()) }
-  implicit val codeTypeOpt: Code[Option[Type]] = Code { _.map { t => s(kw(":"), " ", t) }.getOrElse(s()) }
-  implicit val codeTermNameOpt: Code[Option[Term.Name]] = Code { _.map(s(_)).getOrElse(s(")")) }
-  implicit val codeImportSels: Code[Seq[Import.Selector]] = Code {
+  private implicit val codeTypeArgOpt: Code[Option[Type.Arg]] = Code { _.map { t => s(kw(":"), " ", t) }.getOrElse(s()) }
+  private implicit val codeTypeOpt: Code[Option[Type]] = Code { _.map { t => s(kw(":"), " ", t) }.getOrElse(s()) }
+  private implicit val codeTermNameOpt: Code[Option[Term.Name]] = Code { _.map(s(_)).getOrElse(s(")")) }
+  private implicit val codeImportSels: Code[Seq[Selector]] = Code {
     case (t: Import.Name) :: Nil     => s(t)
     case (t: Import.Wildcard) :: Nil => s(t)
     case sels                        => s("{ ", r(sels, ", "), " }")

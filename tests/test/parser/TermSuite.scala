@@ -1,4 +1,4 @@
-import scala.meta._, Term.{Name => TermName, _}, Type.{Name => TypeName}, Aux._
+import scala.meta.syntactic.ast._, Term.{Name => TermName, _}, Type.{Name => TypeName}
 
 class TermSuite extends ParseSuite {
   test("x") {
@@ -93,7 +93,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("a(0) = true") {
-    val Update(Apply(TermName("a"), Lit.Int(0) :: Nil), Lit.Bool(true)) = term("a(0) = true")
+    val Update(TermName("a"), (Lit.Int(0) :: Nil) :: Nil, Lit.Bool(true)) = term("a(0) = true")
   }
 
   test("return") {
@@ -115,7 +115,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("1: @foo") {
-    val Annotate(Lit.Int(1), Mod.Annot(TypeName("foo"), Nil) :: Nil) = term("1: @foo")
+    val Annotate(Lit.Int(1), Mod.Annot(Ctor.Ref(TypeName("foo"), Nil)) :: Nil) = term("1: @foo")
   }
 
   test("(true, false)") {
@@ -141,63 +141,63 @@ class TermSuite extends ParseSuite {
   }
 
   test("(x => x)") {
-    val Function(Param.Named.Simple(Nil, TermName("x"), None, None) :: Nil,
+    val Function(Term.Param.Simple(Nil, Some(TermName("x")), None, None) :: Nil,
                  TermName("x")) = term("(x => x)")
   }
 
   test("(x: Int) => x") {
-    val Function(Param.Named.Simple(Nil, TermName("x"), Some(TypeName("Int")), None) :: Nil,
+    val Function(Term.Param.Simple(Nil, Some(TermName("x")), Some(TypeName("Int")), None) :: Nil,
                  TermName("x")) = term("(x: Int) => x")
   }
 
   test("(_: Int) => x") {
-    val Function(Param.Anonymous(Nil, Some(TypeName("Int"))) :: Nil,
+    val Function(Term.Param.Simple(Nil, None, Some(TypeName("Int")), None) :: Nil,
                  TermName("x")) = term("(_: Int) => x")
   }
 
   test("_ => ()") {
-    val Function(Param.Anonymous(Nil, None) :: Nil, Lit.Unit()) = term("_ => ()")
+    val Function(Term.Param.Simple(Nil, None, None, None) :: Nil, Lit.Unit()) = term("_ => ()")
   }
 
   test("{ implicit x => () }") {
-    val Block(Function(Param.Named.Simple(Mod.Implicit() :: Nil, TermName("x"), None, None) :: Nil,
+    val Block(Function(Term.Param.Simple(Mod.Implicit() :: Nil, Some(TermName("x")), None, None) :: Nil,
                        Block(Lit.Unit() :: Nil)) :: Nil) = term("{ implicit x => () }")
   }
 
   test("1 match { case 1 => true }") {
-    val Match(Lit.Int(1), Cases(Case(Lit.Int(1), None, Lit.Bool(true) :: Nil) :: Nil)) =
+    val Match(Lit.Int(1), Case(Lit.Int(1), None, Lit.Bool(true) :: Nil) :: Nil) =
       term("1 match { case 1 => true }")
   }
 
   test("1 match { case 1 => }") {
-    val Match(Lit.Int(1), Cases(Case(Lit.Int(1), None, Nil) :: Nil)) =
+    val Match(Lit.Int(1), Case(Lit.Int(1), None, Nil) :: Nil) =
       term("1 match { case 1 => }")
   }
 
   test("1 match { case 1 if true => }") {
-    val Match(Lit.Int(1), Cases(Case(Lit.Int(1), Some(Lit.Bool(true)), Nil) :: Nil)) =
+    val Match(Lit.Int(1), Case(Lit.Int(1), Some(Lit.Bool(true)), Nil) :: Nil) =
       term("1 match { case 1 if true => }")
   }
 
   test("try 1") {
-    val Try(Lit.Int(1), None, None) = term("try 1")
+    val TryWithCases(Lit.Int(1), Nil, None) = term("try 1")
   }
 
   test("try 1 catch 1") {
-    val Try(Lit.Int(1), Some(Lit.Int(1)), None) = term("try 1 catch 1")
+    val TryWithTerm(Lit.Int(1), Lit.Int(1), None) = term("try 1 catch 1")
   }
 
   test("try 1 catch { case _ => }") {
-    val Try(Lit.Int(1), Some(Cases(Case(Pat.Wildcard(), None, Nil) :: Nil)), None) =
+    val TryWithCases(Lit.Int(1), Case(Pat.Wildcard(), None, Nil) :: Nil, None) =
       term("try 1 catch { case _ => }")
   }
 
   test("try 1 finally 1") {
-    val Try(Lit.Int(1), None, Some(Lit.Int(1))) = term("try 1 finally 1")
+    val TryWithCases(Lit.Int(1), Nil, Some(Lit.Int(1))) = term("try 1 finally 1")
   }
 
   test("{ case 1 => () }") {
-    val Cases(Case(Lit.Int(1), None, Lit.Unit() :: Nil) :: Nil) =
+    val PartialFunction(Case(Lit.Int(1), None, Lit.Unit() :: Nil) :: Nil) =
       term("{ case 1 => () }")
   }
 
@@ -240,38 +240,38 @@ class TermSuite extends ParseSuite {
   }
 
   test("new {}") {
-    val New(Template(Nil, Nil, Self(None, None), Nil)) = term("new {}")
+    val New(EmptyTemplate()) = term("new {}")
   }
 
   test("new { x }") {
-    val New(Template(Nil, Nil, Self(None, None), Term.Name("x") :: Nil)) = term("new { x }")
+    val New(Templ(Nil, Nil, EmptySelf(), Term.Name("x") :: Nil)) = term("new { x }")
   }
 
   test("new A") {
-    val New(templ @ Template(Nil, Parent(TypeName("A"), Nil) :: Nil, Self(None, None), Nil)) = term("new A")
+    val New(templ @ Templ(Nil, Ctor.Ref(TypeName("A"), Nil) :: Nil, EmptySelf(), Nil)) = term("new A")
     assert(templ.hasStats === false)
   }
 
   test("new A {}") {
-    val New(templ @ Template(Nil, Parent(TypeName("A"), Nil) :: Nil, Self(None, None), Nil)) = term("new A {}")
+    val New(templ @ Templ(Nil, Ctor.Ref(TypeName("A"), Nil) :: Nil, EmptySelf(), Nil)) = term("new A {}")
     assert(templ.hasStats === true)
   }
 
   test("new A with B") {
-    val New(Template(Nil, Parent(TypeName("A"), Nil) ::
-                          Parent(TypeName("B"), Nil) :: Nil,
-                     Self(None, None), Nil)) =
+    val New(Templ(Nil, Ctor.Ref(TypeName("A"), Nil) ::
+                          Ctor.Ref(TypeName("B"), Nil) :: Nil,
+                     EmptySelf(), Nil)) =
       term("new A with B")
   }
 
   test("new { val x: Int = 1 } with A") {
-    val New(Template(Defn.Val(Nil, List(TermName("x")), Some(TypeName("Int")), Lit.Int(1)) :: Nil,
-                     Parent(TypeName("A"), Nil) :: Nil, Self(None, None), Nil)) =
+    val New(Templ(Defn.Val(Nil, List(TermName("x")), Some(TypeName("Int")), Lit.Int(1)) :: Nil,
+                     Ctor.Ref(TypeName("A"), Nil) :: Nil, EmptySelf(), Nil)) =
       term("new { val x: Int = 1 } with A")
   }
 
   test("new { self: T => }") {
-    val New(Template(Nil, Nil, Self(Some(TermName("self")), Some(TypeName("T"))), Nil)) =
+    val New(Templ(Nil, Nil, Term.Param.Simple(Nil, Some(TermName("self")), Some(TypeName("T")), None), Nil)) =
       term("new { self: T => }")
   }
 

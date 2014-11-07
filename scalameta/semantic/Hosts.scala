@@ -5,22 +5,18 @@ import scala.{Seq => _}
 import scala.collection.immutable.Seq
 
 trait Host {
-  def defns(ref: Ref): Seq[Tree]
   def attrs(tree: Tree): Seq[Attr]
 
   def owner(tree: Tree): Scope
   def members(scope: Scope): Seq[Tree]
-  def members(scope: Scope, name: Name): Seq[Tree]
 
   def <:<(tpe1: Type, tpe2: Type): Boolean
   def lub(tpes: Seq[Type]): Type
   def glb(tpes: Seq[Type]): Type
-  def parents(member: Has.Template): Seq[Has.Template]
-  def children(member: Has.Template): Seq[Has.Template]
-  def overridden(member: Member): Seq[Member]
-  def overriding(member: Member): Seq[Member]
-
   def erasure(tpe: Type): Type
+
+  def parents(member: Member): Seq[Member]
+  def children(member: Member): Seq[Member]
 }
 
 trait MacroHost extends Host {

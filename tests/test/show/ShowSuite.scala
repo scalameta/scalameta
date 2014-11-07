@@ -252,4 +252,8 @@ class ShowSuite extends ParseSuite {
   test("class C extends (() => Int)") {
     assert(templStat("class C extends (() => Int)").show[Code] === "class C extends (() => Int)")
   }
+
+  test("class C(x: Int)(implicit y: String, z: Boolean)") {
+    assert(templStat("class C(x: Int)(implicit y: String, z: Boolean)").show[Code] === "class C(x: Int)(implicit y: String, z: Boolean)")
+  }
 }

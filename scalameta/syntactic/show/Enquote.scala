@@ -1,5 +1,5 @@
-package scala.meta
-package syntactic.show
+package scala.meta.syntactic
+package show
 package internal
 
 sealed trait QuoteStyle

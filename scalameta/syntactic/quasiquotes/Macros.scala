@@ -1,5 +1,5 @@
-package scala.meta
-package syntactic.quasiquotes
+package scala.meta.syntactic
+package quasiquotes
 
 import scala.reflect.macros.whitebox.Context
 import org.scalameta.adt._

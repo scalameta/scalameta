@@ -1,15 +1,15 @@
-package scala.meta
-package syntactic.parsers
+package scala.meta.syntactic
+package parsers
 
 import scala.collection.immutable
 
-class TokIterator(tokens: immutable.IndexedSeq[Tok], 
+class TokIterator(tokens: immutable.IndexedSeq[Tok],
                   private var pos: Int = -1,
                   private var _tok: Tok = null) extends Iterator[Tok] {
   require(tokens.nonEmpty)
   if (pos == -1) {
     next()
-  }  
+  }
   def tok: Tok = _tok
   def hasNext: Boolean = pos + 1 < tokens.size
   def next: Tok = {
@@ -17,6 +17,6 @@ class TokIterator(tokens: immutable.IndexedSeq[Tok],
     pos += 1
     _tok = tokens(pos)
     _tok
-  } 
+  }
   def fork: TokIterator = new TokIterator(tokens, pos, _tok)
 }

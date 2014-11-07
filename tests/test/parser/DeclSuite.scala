@@ -1,4 +1,4 @@
-import scala.meta._, Aux._
+import scala.meta.syntactic.ast._
 
 class DeclSuite extends ParseSuite {
   test("val x: Int") {
@@ -22,111 +22,100 @@ class DeclSuite extends ParseSuite {
   }
 
   test("type T") {
-    val Decl.Type(Nil, Type.Name("T"), Nil, bounds: TypeBounds) = templStat("type T")
-    assert(bounds.hasLo === false)
-    assert(bounds.hasHi === false)
+    val t @ Decl.Type(Nil, Type.Name("T"), Nil, Type.Bounds(None, None)) = templStat("type T")
   }
 
   test("type T <: hi") {
-    val Decl.Type(Nil, Type.Name("T"), Nil,
-                  bounds @ TypeBounds(Type.Name("Nothing"), Type.Name("hi"))) = templStat("type T <: hi")
-    assert(bounds.hasLo === false)
-    assert(bounds.hasHi === true)
+    val t @ Decl.Type(Nil, Type.Name("T"), Nil, Type.Bounds(None, Some(Type.Name("hi")))) = templStat("type T <: hi")
   }
 
   test("type T >: lo") {
-    val Decl.Type(Nil, Type.Name("T"), Nil,
-                  bounds @ TypeBounds(Type.Name("lo"), Type.Name("Any"))) = templStat("type T >: lo")
-    assert(bounds.hasLo === true)
-    assert(bounds.hasHi === false)
+    val t @ Decl.Type(Nil, Type.Name("T"), Nil, Type.Bounds(Some(Type.Name("lo")), None)) = templStat("type T >: lo")
   }
 
   test("type T >: lo <: hi") {
-    val Decl.Type(Nil, Type.Name("T"), Nil,
-                  bounds @ TypeBounds(Type.Name("lo"), Type.Name("hi"))) = templStat("type T >: lo <: hi")
-    assert(bounds.hasLo === true)
-    assert(bounds.hasHi === true)
+    val t @ Decl.Type(Nil, Type.Name("T"), Nil, Type.Bounds(Some(Type.Name("lo")), Some(Type.Name("hi")))) = templStat("type T >: lo <: hi")
   }
 
   test("type F[T]") {
    val Decl.Type(Nil, Type.Name("F"),
-                 TypeParam.Named(Nil, Type.Name("T"),
-                                 Nil, Nil, Nil, EmptyBounds()) :: Nil,
-                 EmptyBounds()) = templStat("type F[T]")
+                 Type.Param(Nil, Some(Type.Name("T")),
+                            Nil, Nil, Nil, Type.Bounds(None, None)) :: Nil,
+                 Type.Bounds(None, None)) = templStat("type F[T]")
   }
 
   test("type F[_]") {
     val Decl.Type(Nil, Type.Name("F"),
-                  TypeParam.Anonymous(Nil, Nil, Nil, Nil, EmptyBounds()) :: Nil,
-                  EmptyBounds()) = templStat("type F[_]")
+                  Type.Param(Nil, None, Nil, Nil, Nil, Type.Bounds(None, None)) :: Nil,
+                  Type.Bounds(None, None)) = templStat("type F[_]")
   }
 
   test("type F[A <: B]") {
     val Decl.Type(Nil, Type.Name("F"),
-                  TypeParam.Named(Nil, Type.Name("T"),
-                                  Nil, Nil, Nil,
-                                  TypeBounds(Type.Name("Nothing"), Type.Name("B"))) :: Nil,
-                  EmptyBounds()) = templStat("type F[T <: B]")
+                  Type.Param(Nil, Some(Type.Name("T")),
+                             Nil, Nil, Nil,
+                             Type.Bounds(None, Some(Type.Name("B")))) :: Nil,
+                  Type.Bounds(None, None)) = templStat("type F[T <: B]")
   }
 
   test("type F[+T]") {
     val Decl.Type(Nil, Type.Name("F"),
-                  TypeParam.Named(Mod.Covariant() :: Nil, Type.Name("T"),
-                                  Nil, Nil, Nil, EmptyBounds()) :: Nil,
-                  EmptyBounds()) = templStat("type F[+T]")
+                  Type.Param(Mod.Covariant() :: Nil, Some(Type.Name("T")),
+                             Nil, Nil, Nil, Type.Bounds(None, None)) :: Nil,
+                  Type.Bounds(None, None)) = templStat("type F[+T]")
     val Decl.Type(Nil, Type.Name("F"),
-                  TypeParam.Named(Mod.Contravariant() :: Nil, Type.Name("T"),
-                                  Nil, Nil, Nil, EmptyBounds()) :: Nil,
-                  EmptyBounds()) = templStat("type F[-T]")
+                  Type.Param(Mod.Contravariant() :: Nil, Some(Type.Name("T")),
+                             Nil, Nil, Nil, Type.Bounds(None, None)) :: Nil,
+                  Type.Bounds(None, None)) = templStat("type F[-T]")
   }
 
   test("def f") {
-    val Decl.Procedure(Nil, Term.Name("f"), Nil, Nil, Nil) =
+    val Decl.Procedure(Nil, Term.Name("f"), Nil, Nil) =
       templStat("def f")
   }
 
   test("def f(x: Int)") {
     val Decl.Procedure(Nil, Term.Name("f"), Nil,
-                       (Param.Named.Simple(Nil, Term.Name("x"),
-                                           Some(Type.Name("Int")),
-                                           None) :: Nil) :: Nil, Nil) =
+                       (Term.Param.Simple(Nil, Some(Term.Name("x")),
+                                          Some(Type.Name("Int")),
+                                          None) :: Nil) :: Nil) =
       templStat("def f(x: Int)")
   }
 
   test("def f(x: Int*)") {
     val Decl.Procedure(Nil, Term.Name("f"), Nil,
-                       (Param.Named.Simple(Nil, Term.Name("x"),
-                                           Some(Param.Type.Repeated(Type.Name("Int"))),
-                                           None) :: Nil) :: Nil, Nil) =
+                       (Term.Param.Simple(Nil, Some(Term.Name("x")),
+                                          Some(Type.Arg.Repeated(Type.Name("Int"))),
+                                          None) :: Nil) :: Nil) =
       templStat("def f(x: Int*)")
   }
 
   test("def f(x: => Int)") {
     val Decl.Procedure(Nil, Term.Name("f"), Nil,
-                       (Param.Named.Simple(Nil, Term.Name("x"),
-                                           Some(Param.Type.ByName(Type.Name("Int"))),
-                                           None) :: Nil) :: Nil, Nil) =
+                       (Term.Param.Simple(Nil, Some(Term.Name("x")),
+                                          Some(Type.Arg.ByName(Type.Name("Int"))),
+                                          None) :: Nil) :: Nil) =
       templStat("def f(x: => Int)")
   }
 
 
   test("def f(implicit x: Int)") {
-    val Decl.Procedure(Nil, Term.Name("f"), Nil, Nil,
-                       Param.Named.Simple(Nil, Term.Name("x"),
+    val Decl.Procedure(Nil, Term.Name("f"), Nil,
+                       (Term.Param.Simple(Mod.Implicit() :: Nil, Some(Term.Name("x")),
                                           Some(Type.Name("Int")),
-                                          None) :: Nil) =
+                                          None) :: Nil) :: Nil) =
       templStat("def f(implicit x: Int)")
   }
 
   test("def f: X") {
-    val Decl.Def(Nil, Term.Name("f"), Nil, Nil, Nil, Type.Name("X")) =
+    val Decl.Def(Nil, Term.Name("f"), Nil, Nil, Type.Name("X")) =
       templStat("def f: X")
   }
 
   test("def f[T]: T") {
     val Decl.Def(Nil, Term.Name("f"),
-                 TypeParam.Named(Nil, Type.Name("T"), Nil, Nil, Nil, EmptyBounds()) :: Nil,
-                 Nil, Nil, Type.Name("T")) =
+                 Type.Param(Nil, Some(Type.Name("T")), Nil, Nil, Nil, Type.Bounds(None, None)) :: Nil,
+                 Nil, Type.Name("T")) =
       templStat("def f[T]: T")
   }
 }

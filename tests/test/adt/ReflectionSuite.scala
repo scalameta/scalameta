@@ -1,4 +1,5 @@
-import scala.meta._
+import scala.meta.Tree
+import scala.meta.syntactic.ast.Term.{If, Name}
 
 class ReflectionSuite extends AdtSuite {
   import AdtReflection._
@@ -8,24 +9,24 @@ class ReflectionSuite extends AdtSuite {
   }
 
   test("If") {
-    val iff = symbolOf[Term.If].asLeaf
+    val iff = symbolOf[If].asLeaf
     val List(f1, f2, f3) = iff.fields
-    assert(f1.toString === "field cond: scala.meta.Term")
-    assert(f2.toString === "field thenp: scala.meta.Term")
-    assert(f3.toString === "field elsep: scala.meta.Term")
+    assert(f1.toString === "field cond: scala.meta.syntactic.ast.Term")
+    assert(f2.toString === "field thenp: scala.meta.syntactic.ast.Term")
+    assert(f3.toString === "field elsep: scala.meta.syntactic.ast.Term")
     val List(p1, p2, p3) = iff.nontriviaFields
-    assert(p1.toString === "field cond: scala.meta.Term")
-    assert(p2.toString === "field thenp: scala.meta.Term")
-    assert(p3.toString === "field elsep: scala.meta.Term")
+    assert(p1.toString === "field cond: scala.meta.syntactic.ast.Term")
+    assert(p2.toString === "field thenp: scala.meta.syntactic.ast.Term")
+    assert(p3.toString === "field elsep: scala.meta.syntactic.ast.Term")
     val List(a1, a2, a3, a4) = iff.allFields
-    assert(a1.toString === "field cond: scala.meta.Term")
-    assert(a2.toString === "field thenp: scala.meta.Term")
-    assert(a3.toString === "field elsep: scala.meta.Term")
+    assert(a1.toString === "field cond: scala.meta.syntactic.ast.Term")
+    assert(a2.toString === "field thenp: scala.meta.syntactic.ast.Term")
+    assert(a3.toString === "field elsep: scala.meta.syntactic.ast.Term")
     assert(a4.toString === "field hasElsep: scala.Boolean (auto trivia)")
   }
 
   test("Term.Name") {
-    val iff = symbolOf[Term.Name].asLeaf
+    val iff = symbolOf[Name].asLeaf
     val List(f1, f2) = iff.fields
     assert(f1.toString === "field value: String @org.scalameta.invariants.nonEmpty")
     assert(f2.toString === "field isBackquoted: scala.Boolean (manual trivia)")

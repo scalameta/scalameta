@@ -1,5 +1,5 @@
-package scala.meta
-package syntactic.parsers
+package scala.meta.syntactic
+package parsers
 
 import org.scalameta.adt._
 import scala.reflect.ClassTag
@@ -22,12 +22,12 @@ object Tok {
 
   object Interpolation {
     @leaf class Id(value: Predef.String, offset: Int) extends ExprIntro
-    @leaf class Part(value: Predef.String, offset: Int) extends Tok    
-  }  
+    @leaf class Part(value: Predef.String, offset: Int) extends Tok
+  }
 
   @branch trait Literal extends ExprIntro
   @branch trait NumericLiteral extends Literal
-  object Literal {    
+  object Literal {
     @leaf class Int(value: scala.Int, offset: scala.Int) extends NumericLiteral
     @leaf class Long(value: scala.Long, offset: scala.Int) extends NumericLiteral
     @leaf class Float(value: scala.Float, offset: scala.Int) extends NumericLiteral
@@ -35,7 +35,7 @@ object Tok {
     @leaf class Char(value: scala.Char, offset: scala.Int) extends Literal
     @leaf class Symbol(value: scala.Symbol, offset: scala.Int) extends Literal
     @leaf class String(value: Predef.String, offset: scala.Int) extends Literal
-  }  
+  }
   @leaf class `null`(offset: Int) extends Keyword with Literal
   @leaf class `true`(offset: Int) extends Keyword with Literal
   @leaf class `false`(offset: Int) extends Keyword with Literal
@@ -107,7 +107,7 @@ object Tok {
   @leaf class `<%`(offset: Int) extends Delim
   @leaf class `\n`(offset: Int) extends StatSep
   @leaf class `\n\n`(offset: Int) extends StatSep
-  
+
   @leaf class EOF(offset: Int) extends StatSep with StatSeqEnd with CaseDefEnd
   @leaf class XMLStart(offset: Int) extends Tok with ExprIntro
 }

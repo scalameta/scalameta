@@ -20,16 +20,17 @@ class QuasiquoteMacros(val c: Context) {
       val qmodule = q"""
         object ${TermName(qname)} {
           import scala.language.experimental.macros
-          def apply[T](args: T*): $qtype = macro $mname.applyImpl
-          def unapply(scrutinee: Any): Any = macro ???
+          def apply[T](args: T*): _root_.scala.meta.Tree = macro $mname.applyImpl
+          def unapply(scrutinee: Any): $qtype = macro ???
         }
       """
+      val qparser = TermName("parse" + qname.capitalize)
       val q"..$applyimpls" = q"""
         import scala.reflect.macros.whitebox.Context
         def applyImpl(c: Context)(args: c.Tree*): c.Tree = {
           import _root_.scala.meta.syntactic.parsers.RichSource
           val helper = new _root_.scala.meta.syntactic.quasiquotes.Macros[c.type](c)
-          helper.apply(c.macroApplication, ((s: String) => s.parse[$qtype]))
+          helper.apply(c.macroApplication, (s: String) => s.parse[$qtype])
         }
       """
       val cdef1 = q"$mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..${qmodule +: stats} }"

@@ -1,10 +1,10 @@
-package scala.meta
-package syntactic
+package scala.meta.syntactic
 
 import scala.collection.{immutable, mutable}
 import scala.annotation.switch
 import org.scalameta.convert._
 import parsers.Tokens._
+import scala.meta._
 
 package object parsers {
   type Offset = Int
@@ -21,22 +21,20 @@ package object parsers {
   trait Parse[T] extends Convert[Source, T]
   object Parse {
     def apply[T](f: Source => T): Parse[T] = new Parse[T] { def apply(source: Source): T = f(source) }
-    implicit val parseCompUnit: Parse[Aux.CompUnit] = apply(source => new Parser(source).parseTopLevel())
     implicit val parseTerm: Parse[Term] = apply(source => new Parser(source).parseTerm())
-    implicit val parseType: Parse[Type] = apply(source => new Parser(source).parseType())
+    implicit val parseType: Parse[Type.Arg] = apply(source => new Parser(source).parseType())
+    implicit val parsePat: Parse[Pat.Arg] = apply(source => new Parser(source).parsePat())
+    implicit val parseStat: Parse[Stat] = apply(source => new Parser(source).parseStat())
     implicit val parseStats: Parse[List[Stat]] = apply(source => new Parser(source).parseStats())
-    implicit val parseQ: Parse[Stat] = apply(source => new Parser(source).parseQ())
-    implicit val parseT: Parse[Param.Type] = apply(source => new Parser(source).parseT())
-    implicit val parseP: Parse[Pat] = apply(source => new Parser(source).parseP())
-    implicit val parseParam: Parse[Param] = apply(source => new Parser(source).parseParam())
-    implicit val parseTypeParam: Parse[TypeParam] = apply(source => new Parser(source).parseTypeParam())
-    implicit val parseArg: Parse[Arg] = apply(source => new Parser(source).parseArg())
+    implicit val parseParam: Parse[Templ.Param] = apply(source => new Parser(source).parseParam())
+    implicit val parseTparam: Parse[Type.Param] = apply(source => new Parser(source).parseTparam())
+    implicit val parseTermArg: Parse[Term.Arg] = apply(source => new Parser(source).parseTermArg())
     implicit val parseEnum: Parse[Enum] = apply(source => new Parser(source).parseEnum())
     implicit val parseMod: Parse[Mod] = apply(source => new Parser(source).parseMod())
-    implicit val parseCase: Parse[Aux.Case] = apply(source => new Parser(source).parseCase())
-    implicit val parseParent: Parse[Aux.Parent] = apply(source => new Parser(source).parseParent())
-    implicit val parseTemplate: Parse[Aux.Template] = apply(source => new Parser(source).parseTemplate())
-    implicit val parseSelf: Parse[Aux.Self] = apply(source => new Parser(source).parseSelf())
+    implicit val parseTempl: Parse[Templ] = apply(source => new Parser(source).parseTempl())
+    implicit val parseCtorRef: Parse[Ctor.Ref] = apply(source => new Parser(source).parseCtorRef())
+    implicit val parseSelector: Parse[Selector] = apply(source => new Parser(source).parseSelector())
+    implicit val parseCase: Parse[Case] = apply(source => new Parser(source).parseCase())
   }
 
   implicit class RichSource[T](val sourceLike: T)(implicit ev: Convert[T, Source]) {
@@ -62,7 +60,7 @@ package object parsers {
           case STRINGLIT       => Tok.Literal.String(scanner.strVal, scanner.offset)
           case SYMBOLLIT       => Tok.Literal.Symbol(scala.Symbol(scanner.strVal), scanner.offset)
           case INTERPOLATIONID => Tok.Interpolation.Id(scanner.name, scanner.offset)
-          case STRINGPART      => Tok.Interpolation.Part(scanner.strVal, scanner.offset)        
+          case STRINGPART      => Tok.Interpolation.Part(scanner.strVal, scanner.offset)
 
           case IDENTIFIER       => Tok.Ident(scanner.name, isBackquoted = false, scanner.offset)
           case BACKQUOTED_IDENT => Tok.Ident(scanner.name, isBackquoted = true, scanner.offset)
@@ -142,7 +140,7 @@ package object parsers {
           case WHITESPACE => ???
           case IGNORE     => ???
           case ESCAPE     => ???
-        } 
+        }
         buf += tok
         scanner.nextToken()
       } while (tok.isNot[Tok.EOF])
