@@ -35,11 +35,11 @@
  Tuple             | `q"(..$exprs)"`
  Block             | `q"{ ..$stats }"`
  If                | `q"if ($expr) $expr else $expr"`
- Match             | `q"$expr match { case ..$cass }"`
- Try Catch Cases   | `q"try $expr catch { case ..$cass } finally $expropt"`
+ Match             | `q"$expr match { ..case $cass }"`
+ Try Catch Cases   | `q"try $expr catch { ..case $cass } finally $expropt"`
  Try Catch Expr    | `q"try $expr catch $expr finally $expropt" `
  Function          | `q"(..$params) => $expr"`
- Partial Function  | `q"{ case ..$cass }"`
+ Partial Function  | `q"{ ..case $cass }"`
  While             | `q"while ($expr) $expr"`
  Do While          | `q"do $expr while($expr)"`
  For               | `q"for (..$enums) $expr"`
@@ -213,13 +213,14 @@
  meta.Case           | `$cas`    | `cas`
  meta.Member         | `$memb`   | `q`
  meta.Mod            | `$mod`    | `mod`
+ meta.Ctor           | `$ctor`   |
  meta.Ctor.Ref       | `$cref`   | `templ`
  meta.Pat            | `$pat`    | `p`
  meta.Pat.Arg        | `$apat`   | `p`
  meta.Selector       | `$sel`    | `sel`
  meta.Stat           | `$stat`   | `q`
- meta.Template       | `$templ`  | `templ`
- meta.Template.Param | `$cparam` | `param`
+ meta.Templ          | `$templ`  | `templ`
+ meta.Templ.Param    | `$cparam` | `param`
  meta.Term           | `$expr`   | `q`
  meta.Term.Arg       | `$arg`    | `arg`
  meta.Term.Name      | `$name`   | `q`

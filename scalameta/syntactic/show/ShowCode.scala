@@ -117,7 +117,7 @@ object Code {
     if (danger) s(" " +keyword) else s(keyword)
   })
 
-  def templ(templ: Template) =
+  def templ(templ: Templ) =
     // TODO: consider XXX.isEmpty
     if (templ.early.isEmpty && templ.parents.isEmpty && templ.self.name.isEmpty && templ.self.decltpe.isEmpty && templ.stats.isEmpty) s()
     else if (templ.parents.nonEmpty || templ.early.nonEmpty) s(" extends ", templ)
@@ -321,7 +321,7 @@ object Code {
 
     // Aux
     case t: Ctor.Ref => s(p(AnnotTyp, t.tpe), t.argss)
-    case t: Template =>
+    case t: Templ =>
       val isBodyEmpty = t.self.name.isEmpty && t.self.decltpe.isEmpty && !t.hasStats
       val isTemplateEmpty = t.early.isEmpty && t.parents.isEmpty && isBodyEmpty
       if (isTemplateEmpty) s()
@@ -343,7 +343,7 @@ object Code {
       }
     case t: Case  =>
       s("case ", p(Pattern, t.pat), t.cond.map { cond => s(" ", kw("if"), " ", p(PostfixExpr, cond)) }.getOrElse(s()), " ", kw("=>"), r(t.stats.map(i(_)), ""))
-    case t: Template.Param =>
+    case t: Templ.Param =>
       val keyword = t match { case t: Term.Param.Simple => ""; case t: Term.Param.Val => "val"; case t: Term.Param.Var => "var"; }
       val mods = t.mods.filter(!_.isInstanceOf[Mod.Implicit]) // NOTE: `implicit` in parameters is skipped in favor of `implicit` in the enclosing parameter list
       s(a(mods, " "), kw(keyword), t.name.map(_.value).getOrElse("_"), t.decltpe, t.default.map(s(" ", kw("="), " ", _)).getOrElse(s()))
@@ -374,8 +374,8 @@ object Code {
   private implicit val codePatArgs: Code[Seq[Pat.Arg]] = Code { pats => s("(", r(pats, ", "), ")") }
   private implicit val codeMods: Code[Seq[Mod]] = Code { mods => if (mods.nonEmpty) r(mods, " ") else s() }
   private implicit val codeAnnots: Code[Seq[Mod.Annot]] = Code { annots => if (annots.nonEmpty) r(annots, " ") else s() }
-  private implicit def codeParams[P <: Template.Param]: Code[Seq[P]] = Code { params => s("(", r(params, ", "), ")") }
-  private implicit def codeParamss[P <: Template.Param]: Code[Seq[Seq[P]]] = Code { paramss => r(paramss.map(params =>
+  private implicit def codeParams[P <: Templ.Param]: Code[Seq[P]] = Code { params => s("(", r(params, ", "), ")") }
+  private implicit def codeParamss[P <: Templ.Param]: Code[Seq[Seq[P]]] = Code { paramss => r(paramss.map(params =>
     s("(", a("implicit ", r(params, ", "), params.exists(_.mods.exists(_.isInstanceOf[Mod.Implicit]))), ")")
   ), "")}
   private implicit val codeTparams: Code[Seq[Type.Param]] = Code { tparams =>

@@ -1194,8 +1194,8 @@ abstract class AbstractParser { parser =>
           canApply = false
           next()
           val (edefs, parents, self, stats, hasStats) = template()
-          if (hasStats) Term.New(Template(edefs, parents, self, stats))
-          else Term.New(Template(edefs, parents, self))
+          if (hasStats) Term.New(Templ(edefs, parents, self, stats))
+          else Term.New(Templ(edefs, parents, self))
         case _ =>
           syntaxError(s"illegal start of simple expression: $tok")
       }
@@ -1717,9 +1717,9 @@ abstract class AbstractParser { parser =>
    *  ClassParam        ::= {Annotation}  [{Modifier} (`val' | `var')] Id [`:' ParamType] [`=' Expr]
    *  }}}
    */
-  def paramClauses(ownerIsType: Boolean, ownerIsCase: Boolean = false): List[List[Template.Param]] = {
+  def paramClauses(ownerIsType: Boolean, ownerIsCase: Boolean = false): List[List[Templ.Param]] = {
     var parsedImplicits = false
-    def paramClause(): List[Template.Param] = {
+    def paramClause(): List[Templ.Param] = {
       if (tok.is[`)`])
         return Nil
 
@@ -1729,7 +1729,7 @@ abstract class AbstractParser { parser =>
       }
       commaSeparated(param(ownerIsCase, ownerIsType, isImplicit = parsedImplicits))
     }
-    val paramss = new ListBuffer[List[Template.Param]]
+    val paramss = new ListBuffer[List[Templ.Param]]
     newLineOptWhenFollowedBy[`(`]
     while (!parsedImplicits && tok.is[`(`]) {
       next()
@@ -1757,7 +1757,7 @@ abstract class AbstractParser { parser =>
       }
   }
 
-  def param(ownerIsCase: Boolean, ownerIsType: Boolean, isImplicit: Boolean): Template.Param = {
+  def param(ownerIsCase: Boolean, ownerIsType: Boolean, isImplicit: Boolean): Templ.Param = {
     var mods: List[Mod] = annots(skipNewLines = false)
     if (isImplicit) mods ++= List(Mod.Implicit())
     val (isValParam, isVarParam) = (ownerIsType && tok.is[`val`], ownerIsType && tok.is[`var`])
@@ -2277,7 +2277,7 @@ abstract class AbstractParser { parser =>
    *  TraitExtends     ::= `extends' | `<:'
    *  }}}
    */
-  def templateOpt(owner: TemplateOwner): Template = {
+  def templateOpt(owner: TemplateOwner): Templ = {
     val (early, parents, self, body, hasStats) = (
       if (tok.is[`extends`] /* || tok.is[`<:`] && mods.isTrait */) {
         next()
@@ -2289,8 +2289,8 @@ abstract class AbstractParser { parser =>
         (Nil, Nil, self, body, hasStats)
       }
     )
-    if (hasStats) Template(early, parents, self, body)
-    else Template(early, parents, self)
+    if (hasStats) Templ(early, parents, self, body)
+    else Templ(early, parents, self)
   }
 
 /* -------- TEMPLATES ------------------------------------------- */

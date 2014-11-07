@@ -244,34 +244,34 @@ class TermSuite extends ParseSuite {
   }
 
   test("new { x }") {
-    val New(Template(Nil, Nil, EmptySelf(), Term.Name("x") :: Nil)) = term("new { x }")
+    val New(Templ(Nil, Nil, EmptySelf(), Term.Name("x") :: Nil)) = term("new { x }")
   }
 
   test("new A") {
-    val New(templ @ Template(Nil, Ctor.Ref(TypeName("A"), Nil) :: Nil, EmptySelf(), Nil)) = term("new A")
+    val New(templ @ Templ(Nil, Ctor.Ref(TypeName("A"), Nil) :: Nil, EmptySelf(), Nil)) = term("new A")
     assert(templ.hasStats === false)
   }
 
   test("new A {}") {
-    val New(templ @ Template(Nil, Ctor.Ref(TypeName("A"), Nil) :: Nil, EmptySelf(), Nil)) = term("new A {}")
+    val New(templ @ Templ(Nil, Ctor.Ref(TypeName("A"), Nil) :: Nil, EmptySelf(), Nil)) = term("new A {}")
     assert(templ.hasStats === true)
   }
 
   test("new A with B") {
-    val New(Template(Nil, Ctor.Ref(TypeName("A"), Nil) ::
+    val New(Templ(Nil, Ctor.Ref(TypeName("A"), Nil) ::
                           Ctor.Ref(TypeName("B"), Nil) :: Nil,
                      EmptySelf(), Nil)) =
       term("new A with B")
   }
 
   test("new { val x: Int = 1 } with A") {
-    val New(Template(Defn.Val(Nil, List(TermName("x")), Some(TypeName("Int")), Lit.Int(1)) :: Nil,
+    val New(Templ(Defn.Val(Nil, List(TermName("x")), Some(TypeName("Int")), Lit.Int(1)) :: Nil,
                      Ctor.Ref(TypeName("A"), Nil) :: Nil, EmptySelf(), Nil)) =
       term("new { val x: Int = 1 } with A")
   }
 
   test("new { self: T => }") {
-    val New(Template(Nil, Nil, Term.Param.Simple(Nil, Some(TermName("self")), Some(TypeName("T")), None), Nil)) =
+    val New(Templ(Nil, Nil, Term.Param.Simple(Nil, Some(TermName("self")), Some(TypeName("T")), None), Nil)) =
       term("new { self: T => }")
   }
 

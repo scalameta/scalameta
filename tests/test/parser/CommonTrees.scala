@@ -24,7 +24,7 @@ trait CommonTrees {
 
   object EmptyTemplate {
     def unapply(tree: Tree): Boolean = tree match {
-      case Template(Nil, Nil, Term.Param.Simple(Nil, None, None, None), Nil) => true
+      case Templ(Nil, Nil, Term.Param.Simple(Nil, None, None, None), Nil) => true
       case _ => false
     }
   }

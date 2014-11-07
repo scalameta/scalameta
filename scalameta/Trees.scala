@@ -26,7 +26,7 @@ package scala.meta {
     @branch trait Ref extends Term with api.Ref
     @branch trait Name extends api.Name with Term.Ref with Pat with Member
     @branch trait Arg extends Tree
-    @branch trait Param extends Member with Template.Param
+    @branch trait Param extends Member with Templ.Param
   }
 
   @branch trait Type extends Tree with Type.Arg with Scope
@@ -46,13 +46,13 @@ package scala.meta {
   object Member {
     @branch trait Term extends Member
     @branch trait Type extends Member with Scope
-    @branch trait Class extends Type with Template
-    @branch trait Trait extends Type with Template
+    @branch trait Class extends Type with Templ
+    @branch trait Trait extends Type with Templ
     @branch trait Field extends Term
     @branch trait Method extends Term with Scope
-    @branch trait Object extends Term with Template
-    @branch trait Pkg extends Term with Template
-    @branch trait Template extends Member with Scope
+    @branch trait Object extends Term with Templ
+    @branch trait Pkg extends Term with Templ
+    @branch trait Templ extends Member with Scope
   }
 
   @branch trait Ctor extends Tree with Scope
@@ -60,11 +60,11 @@ package scala.meta {
     @branch trait Ref extends Tree
   }
 
-  @branch trait Template extends Tree with Scope
-  object Template {
+  @branch trait Templ extends Tree with Scope
+  object Templ {
     // TODO: this design doesn't work unfortunately, because we can't have anonymous params be members
     // Member.ref is expected to never crash, and making anonymous params Member.Term and Member.Type violates it
-    // also, having Param.Term extend Param.Template is very-very awkward
+    // also, having Param.Term extend Param.Templ is very-very awkward
     // UPD: man, I'm totally confused. you know what, why don't we turn `val` and `var` into trivia?
     @branch trait Param extends Member
   }
@@ -133,7 +133,7 @@ package scala.meta.syntactic.ast {
       require(enums.head.isInstanceOf[Enum.Generator])
     }
     @ast class ForYield(enums: Seq[Enum] @nonEmpty, body: Term) extends Term with Scope
-    @ast class New(templ: Template) extends Term
+    @ast class New(templ: Templ) extends Term
     @ast class Placeholder() extends Term
     @ast class Eta(term: Term) extends Term
     @branch trait Arg extends api.Term.Arg with Tree
@@ -141,11 +141,11 @@ package scala.meta.syntactic.ast {
       @ast class Named(name: Name, rhs: Term) extends Arg
       @ast class Repeated(arg: Term) extends Arg
     }
-    @branch trait Param extends api.Term.Param with Member with Template.Param
+    @branch trait Param extends api.Term.Param with Member with Templ.Param
     object Param {
-      @ast class Simple(mods: Seq[Mod], name: Option[impl.Term.Name], decltpe: Option[Type.Arg], default: Option[Term]) extends Term.Param with Template.Param
-      @ast class Val(mods: Seq[Mod], name: Option[impl.Term.Name], decltpe: Option[Type.Arg], default: Option[Term]) extends Template.Param
-      @ast class Var(mods: Seq[Mod], name: Option[impl.Term.Name], decltpe: Option[Type.Arg], default: Option[Term]) extends Template.Param
+      @ast class Simple(mods: Seq[Mod], name: Option[impl.Term.Name], decltpe: Option[Type.Arg], default: Option[Term]) extends Term.Param with Templ.Param
+      @ast class Val(mods: Seq[Mod], name: Option[impl.Term.Name], decltpe: Option[Type.Arg], default: Option[Term]) extends Templ.Param
+      @ast class Var(mods: Seq[Mod], name: Option[impl.Term.Name], decltpe: Option[Type.Arg], default: Option[Term]) extends Templ.Param
     }
   }
 
@@ -233,13 +233,13 @@ package scala.meta.syntactic.ast {
   object Member {
     @branch trait Term extends api.Member.Term with Member
     @branch trait Type extends api.Member.Type with Member with Scope
-    @branch trait Class extends api.Member.Class with Type with Template
-    @branch trait Trait extends api.Member.Trait with Type with Template
+    @branch trait Class extends api.Member.Class with Type with Templ
+    @branch trait Trait extends api.Member.Trait with Type with Templ
     @branch trait Field extends api.Member.Field with Term
     @branch trait Method extends api.Member.Method with Term with Scope
-    @branch trait Object extends api.Member.Object with Term with Template
-    @branch trait Pkg extends api.Member.Pkg with Term with Template
-    @branch trait Template extends api.Member.Template with Member with Scope
+    @branch trait Object extends api.Member.Object with Term with Templ
+    @branch trait Pkg extends api.Member.Pkg with Term with Templ
+    @branch trait Templ extends api.Member.Templ with Member with Scope
   }
 
   @branch trait Decl extends Stat
@@ -303,17 +303,17 @@ package scala.meta.syntactic.ast {
                      name: impl.Type.Name,
                      tparams: Seq[impl.Type.Param],
                      ctor: Ctor.Primary,
-                     templ: Template) extends Defn with Member.Class
+                     templ: Templ) extends Defn with Member.Class
     @ast class Trait(mods: Seq[Mod],
                      name: impl.Type.Name,
                      tparams: Seq[impl.Type.Param],
-                     templ: Template) extends Defn with Member.Trait {
+                     templ: Templ) extends Defn with Member.Trait {
       require(templ.stats.forall(!_.isInstanceOf[Ctor]))
       require(templ.parents.forall(_.argss.isEmpty))
     }
     @ast class Object(mods: Seq[Mod],
                       name: Term.Name,
-                      templ: Template) extends Defn with Member.Object
+                      templ: Templ) extends Defn with Member.Object
   }
 
   @ast class Pkg(ref: Term.Ref, stats: Seq[Stat], @trivia hasBraces: Boolean = true)
@@ -328,14 +328,14 @@ package scala.meta.syntactic.ast {
     }
   }
   object Pkg {
-    @ast class Object(mods: Seq[Mod], name: Term.Name, templ: Template)
+    @ast class Object(mods: Seq[Mod], name: Term.Name, templ: Templ)
          extends Member.Object
   }
 
   @branch trait Ctor extends api.Ctor with Tree with Scope
   object Ctor {
     @ast class Primary(mods: Seq[Mod],
-                       paramss: Seq[Seq[Template.Param]]) extends Ctor
+                       paramss: Seq[Seq[Templ.Param]]) extends Ctor
     @ast class Secondary(mods: Seq[Mod],
                          paramss: Seq[Seq[Term.Param]] @nonEmpty,
                          primaryCtorArgss: Seq[Seq[Term.Arg]],
@@ -343,17 +343,17 @@ package scala.meta.syntactic.ast {
     @ast class Ref(tpe: Type, argss: Seq[Seq[Term.Arg]]) extends api.Ctor.Ref
   }
 
-  @ast class Template(early: Seq[Stat],
+  @ast class Templ(early: Seq[Stat],
                       parents: Seq[Ctor.Ref],
                       self: Term.Param,
-                      stats: Seq[Stat] = Nil) extends api.Template with Tree with Scope {
+                      stats: Seq[Stat] = Nil) extends api.Templ with Tree with Scope {
     require(parents.isEmpty || !parents.tail.exists(_.argss.nonEmpty))
     require(early.nonEmpty ==> parents.nonEmpty)
     require(early.forall(_.isEarlyStat))
     require(stats.forall(_.isTemplateStat))
   }
-  object Template {
-    @branch trait Param extends api.Template.Param with Member {
+  object Templ {
+    @branch trait Param extends api.Templ.Param with Member {
       def mods: Seq[Mod]
       def name: Option[impl.Term.Name]
       def decltpe: Option[Type.Arg]
