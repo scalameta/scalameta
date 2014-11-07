@@ -241,6 +241,6 @@ package object semantic {
 
   implicit class SemanticNameOps(val tree: Name) extends AnyVal {
     @hosted def isBinder: Boolean = ???
-    @hosted def isBindee: Boolean = ???
+    @hosted def isReference: Boolean = ???
   }
 }
