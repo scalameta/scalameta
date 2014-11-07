@@ -213,7 +213,7 @@
  meta.Case           | `$cas`    | `cas`
  meta.Member         | `$memb`   | `q`
  meta.Mod            | `$mod`    | `mod`
- meta.Ctor           | `$ctor`   |
+ meta.Ctor           | `$ctor`   | `q`
  meta.Ctor.Ref       | `$cref`   | `ctorref`
  meta.Pat            | `$pat`    | `p`
  meta.Pat.Arg        | `$apat`   | `p`

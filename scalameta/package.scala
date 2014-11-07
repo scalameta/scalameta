@@ -6,6 +6,12 @@ import org.scalameta.annotations._
 import org.scalameta.convert._
 
 package object meta {
+  // TODO: it would be ideal to have these as annotations on corresponding AST nodes
+  // e.g. instead of `@branch trait Stat extends Tree`
+  // we will have `@quasiquote('q) @branch trait Stat extends Tree`
+  // that would probably allow us for every AST node to have an associated quasiquote interpolator in the doc
+  // upd. this might also require non-local macro expansion because of hierarchical structure of the `scala.meta` package
+  // (if we annotate scala.meta.package.Type.Arg, we need to somehow put the TypeQuote implicit class into scala.meta.package)
   @quasiquote[Stat]('q)            implicit class TermQuote(ctx: StringContext)
   @quasiquote[Type.Arg]('t)        implicit class TypeQuote(ctx: StringContext)
   @quasiquote[Pat.Arg]('p)         implicit class PatternQuote(ctx: StringContext)
