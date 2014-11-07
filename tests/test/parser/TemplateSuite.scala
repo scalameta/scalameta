@@ -13,7 +13,7 @@ class TemplateSuite extends ParseSuite {
 
   test("trait F[T]") {
     val Trait(Nil, Type.Name("F"),
-              Type.Param(Nil, Some(Type.Name("T")), Nil, Nil, Nil, Nothing(), Any()) :: Nil,
+              Type.Param(Nil, Some(Type.Name("T")), Nil, Nil, Nil, Type.Bounds(None, None)) :: Nil,
               EmptyTemplate()) = templStat("trait F[T]")
   }
 
@@ -51,7 +51,7 @@ class TemplateSuite extends ParseSuite {
 
   test("class C[T]") {
     val Class(Nil, Type.Name("C"),
-              Type.Param(Nil, Some(Type.Name("T")), Nil, Nil, Nil, Nothing(), Any()) :: Nil,
+              Type.Param(Nil, Some(Type.Name("T")), Nil, Nil, Nil, Type.Bounds(None, None)) :: Nil,
               Ctor.Primary(Nil, Nil),
               EmptyTemplate()) = templStat("class C[T]")
   }

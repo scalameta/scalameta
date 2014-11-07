@@ -176,7 +176,8 @@ package scala.meta.syntactic.ast {
       require(quants.forall(_.isExistentialStat))
     }
     @ast class Annotate(tpe: Type, annots: Seq[Mod.Annot] @nonEmpty) extends Type
-    @ast class Placeholder(lo: Type = Type.Name("Nothing"), hi: Type = Type.Name("Any")) extends Type
+    @ast class Placeholder(bounds: Bounds) extends Type
+    @ast class Bounds(lo: Option[Type], hi: Option[Type]) extends Tree
     @branch trait Arg extends api.Type.Arg with Tree
     object Arg {
       @ast class ByName(tpe: Type) extends Arg
@@ -187,8 +188,7 @@ package scala.meta.syntactic.ast {
                      tparams: Seq[impl.Type.Param],
                      contextBounds: Seq[impl.Type],
                      viewBounds: Seq[impl.Type],
-                     lo: impl.Type = impl.Type.Name("Nothing"),
-                     hi: impl.Type = impl.Type.Name("Any")) extends api.Type.Param with Member.Type
+                     typeBounds: impl.Type.Bounds) extends api.Type.Param with Member.Type
   }
 
   @branch trait Pat extends api.Pat with Tree with Pat.Arg
@@ -262,8 +262,7 @@ package scala.meta.syntactic.ast {
     @ast class Type(mods: Seq[Mod],
                     name: impl.Type.Name,
                     tparams: Seq[impl.Type.Param],
-                    lo: impl.Type = impl.Type.Name("Nothing"),
-                    hi: impl.Type = impl.Type.Name("Any")) extends Decl with Member.Type
+                    bounds: impl.Type.Bounds) extends Decl with Member.Type
   }
 
   @branch trait Defn extends Stat

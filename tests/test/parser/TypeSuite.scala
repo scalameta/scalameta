@@ -71,36 +71,36 @@ class TypeSuite extends ParseSuite {
                  Decl.Def(Nil, TermName("x"),
                           Nil, Nil, TypeName("Int")) ::
                  Decl.Val(Nil, List(TermName("y")), TypeName("B")) ::
-                 Decl.Type(Nil, TypeName("C"), Nil, Nothing(), Any()) :: Nil) =
+                 Decl.Type(Nil, TypeName("C"), Nil, Type.Bounds(None, None)) :: Nil) =
       tpe("A { def x: Int; val y: B; type C }")
   }
 
   test("F[_ >: lo <: hi]") {
     val Apply(TypeName("F"),
-              Placeholder(TypeName("lo"), TypeName("hi")) :: Nil) =
+              Placeholder(Type.Bounds(Some(TypeName("lo")), Some(TypeName("hi")))) :: Nil) =
       tpe("F[_ >: lo <: hi]")
   }
 
   test("F[_ >: lo") {
     val Apply(TypeName("F"),
-              Placeholder(TypeName("lo"), TypeName("Any")) :: Nil) =
+              Placeholder(Type.Bounds(Some(TypeName("lo")), None)) :: Nil) =
       tpe("F[_ >: lo]")
   }
 
   test("F[_ <: hi]") {
     val Apply(TypeName("F"),
-              Placeholder(TypeName("Nothing"), TypeName("hi")) :: Nil) =
+              Placeholder(Type.Bounds(None, Some(TypeName("hi")))) :: Nil) =
       tpe("F[_ <: hi]")
   }
 
   test("F[_]") {
-    val Apply(TypeName("F"), Placeholder(Nothing(), Any()) :: Nil) =
+    val Apply(TypeName("F"), Placeholder(Type.Bounds(None, None)) :: Nil) =
       tpe("F[_]")
   }
 
   test("F[T] forSome { type T }") {
     val Existential(Apply(TypeName("F"), TypeName("T") :: Nil),
-                    Decl.Type(Nil, TypeName("T"), Nil, Nothing(), Any()) :: Nil) =
+                    Decl.Type(Nil, TypeName("T"), Nil, Type.Bounds(None, None)) :: Nil) =
       tpe("F[T] forSome { type T }")
   }
 
