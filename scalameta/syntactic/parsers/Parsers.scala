@@ -1894,7 +1894,7 @@ abstract class AbstractParser { parser =>
     sid match {
       case Term.Select(sid: Term.Ref, name: Term.Name) if sid.isStableId =>
         if (tok.is[`.`]) dotselectors
-        else Import.Clause(sid, Import.Name(name.value, name.isBackquoted) :: Nil)
+        else Import.Clause(sid, Import.Name(name.value) :: Nil)
       case _ => dotselectors
     }
   }
@@ -1909,7 +1909,7 @@ abstract class AbstractParser { parser =>
 
   def importWildcardOrName(): Selector =
     if (tok.is[`_ `]) { next(); Import.Wildcard() }
-    else { val name = termName(); Import.Name(name.value, name.isBackquoted) }
+    else { val name = termName(); Import.Name(name.value) }
 
   /** {{{
    *  ImportSelector ::= Id [`=>' Id | `=>' `_']

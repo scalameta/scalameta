@@ -396,7 +396,7 @@ package scala.meta.syntactic.ast {
       require(ref.isStableId)
     }
     @ast class Wildcard() extends Selector
-    @ast class Name(value: String, @trivia isBackquoted: Boolean = false) extends meta.Name with Selector
+    @ast class Name(value: String) extends Selector
     @ast class Rename(from: String, to: String) extends Selector
     @ast class Unimport(name: String) extends Selector
   }
