@@ -76,8 +76,8 @@ package object semantic {
 
   implicit class SemanticMemberOps(val tree: Member) extends AnyVal {
     @hosted def ref: Ref = ???
-    @hosted def parents: Seq[Member] = ???
-    @hosted def children: Seq[Member] = ???
+    @hosted def overridden: Seq[Member] = ???
+    @hosted def overriding: Seq[Member] = ???
     @hosted def mods: Seq[Mod] = ???
     @hosted def annots: Seq[Ctor.Ref] = ???
     @hosted def isVal: Boolean = ???
