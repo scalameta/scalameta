@@ -9,5 +9,5 @@ class ParseSuite extends FunSuite with CommonTrees {
   def tpe = parse(_.typ())
   def topStat = parse(p => p.topStat(p.in.tok))
   def templStat = parse(p => p.templateStat(p.in.tok))
-  def compUnit = parse(_.compilationUnit())
+  def topLevel = parse(_.compilationUnit())
 }

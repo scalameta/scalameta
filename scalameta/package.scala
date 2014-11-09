@@ -24,6 +24,7 @@ package object meta {
   @quasiquote[Ctor.Ref]('ctorref)  implicit class CtorRefQuote(ctx: StringContext)
   @quasiquote[Selector]('sel)      implicit class SelectorQuote(ctx: StringContext)
   @quasiquote[Case]('cas)          implicit class CaseQuote(ctx: StringContext)
+  @quasiquote[TopLevel]('toplevel) implicit class TopLevelQuote(ctx: StringContext)
 
   final case class MetaException(msg: String) extends Exception(msg)
 }
