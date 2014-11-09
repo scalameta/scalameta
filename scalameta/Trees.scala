@@ -42,17 +42,17 @@ package scala.meta {
     @branch trait Arg extends Tree
   }
 
-  @branch trait Member extends Tree with Stat
+  @branch trait Member extends Tree
   object Member {
     @branch trait Term extends Member
     @branch trait Type extends Member with Scope
-    @branch trait Class extends Type with Templ
-    @branch trait Trait extends Type with Templ
-    @branch trait Field extends Term
-    @branch trait Method extends Term with Scope
-    @branch trait Object extends Term with Templ
-    @branch trait Pkg extends Term with Templ
-    @branch trait Templ extends Member with Scope
+    @branch trait Class extends Type with Templ with Stat
+    @branch trait Trait extends Type with Templ with Stat
+    @branch trait Field extends Term with Stat
+    @branch trait Method extends Term with Scope with Stat
+    @branch trait Object extends Term with Templ with Stat
+    @branch trait Pkg extends Term with Templ with Stat
+    @branch trait Templ extends Member with Scope with Stat
   }
 
   @branch trait Ctor extends Tree with Scope
@@ -226,17 +226,17 @@ package scala.meta.syntactic.ast {
     @ast class Unit() extends Lit
   }
 
-  @branch trait Member extends api.Member with Tree with Stat
+  @branch trait Member extends api.Member with Tree
   object Member {
     @branch trait Term extends api.Member.Term with Member
     @branch trait Type extends api.Member.Type with Member with Scope
-    @branch trait Class extends api.Member.Class with Type with Templ
-    @branch trait Trait extends api.Member.Trait with Type with Templ
-    @branch trait Field extends api.Member.Field with Term
-    @branch trait Method extends api.Member.Method with Term with Scope
-    @branch trait Object extends api.Member.Object with Term with Templ
-    @branch trait Pkg extends api.Member.Pkg with Term with Templ
-    @branch trait Templ extends api.Member.Templ with Member with Scope
+    @branch trait Class extends api.Member.Class with Type with Templ with Stat
+    @branch trait Trait extends api.Member.Trait with Type with Templ with Stat
+    @branch trait Field extends api.Member.Field with Term with Stat
+    @branch trait Method extends api.Member.Method with Term with Scope with Stat
+    @branch trait Object extends api.Member.Object with Term with Templ with Stat
+    @branch trait Pkg extends api.Member.Pkg with Term with Templ with Stat
+    @branch trait Templ extends api.Member.Templ with Member with Scope with Stat
   }
 
   @branch trait Decl extends Stat
