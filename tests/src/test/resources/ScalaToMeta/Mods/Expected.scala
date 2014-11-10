@@ -13,7 +13,7 @@ object Test {
     class E2(protected var x: Int)
     class E3(protected[this] val x: Int)
     class F1(final val x: Int)
-    class F2(private[this] final x: Int)
+    class F2(final x: Int)
     class F3(private final val x: Int)
   }
   trait EagerVals {

@@ -87,10 +87,10 @@ trait Helpers {
   }
 
   object DesugaredUpdate {
-    def unapply(tree: Tree): Option[(Tree, Tree)] = tree match {
+    def unapply(tree: Tree): Option[(Tree, List[List[Tree]], Tree)] = tree match {
       case Apply(core @ Select(lhs, _), args :+ rhs)
       if core.symbol.name == nme.update && !tree.hasMetadata("originalAssign") && !lhs.isInstanceOf[Super] && (args :+ rhs).forall(!_.isInstanceOf[AssignOrNamedArg]) =>
-        Some((Apply(lhs, args).setType(NoType), rhs))
+        Some((lhs, List(args), rhs))
       case _ =>
         None
     }
