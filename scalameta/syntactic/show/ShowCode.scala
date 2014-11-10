@@ -313,6 +313,7 @@ object Code {
     case t: Enum.Guard     => s(kw("if"), " ", p(PostfixExpr, t.cond))
 
     // Import
+    case t: Import.Name     => s(t.value)
     case t: Import.Rename   => s(t.from, " ", kw("=>"), " ", t.to)
     case t: Import.Unimport => s(t.name, " ", kw("=>"), " ", kw("_"))
     case _: Import.Wildcard => kw("_")
