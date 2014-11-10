@@ -260,4 +260,22 @@ class ShowSuite extends ParseSuite {
   test("class C(var x: Int)") {
     assert(templStat("class C(var x: Int)").show[Code] === "class C(var x: Int)")
   }
+
+  test("private/protected within something") {
+    assert(templStat("""
+      class C {
+        private[this] val x = 1
+        private[D] val y = 2
+        protected[this] val z = 3
+        protected[D] val w = 4
+      }
+    """).show[Code] === """
+      |class C {
+      |  private[this] val x = 1
+      |  private[D] val y = 2
+      |  protected[this] val z = 3
+      |  protected[D] val w = 4
+      |}
+    """.stripMargin.trim)
+  }
 }

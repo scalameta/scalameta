@@ -1616,15 +1616,15 @@ abstract class AbstractParser { parser =>
    *  }}}
    */
   def accessModifierOpt(): Option[Mod] = {
-    val tok = in.tok
+    val originalTok = in.tok
     val (isNaked, isLocal, name) = {
-      if (tok.is[`private`] || tok.is[`protected`]) {
+      if (in.tok.is[`private`] || in.tok.is[`protected`]) {
         next()
-        if (tok.isNot[`[`]) (true, false, None)
+        if (in.tok.isNot[`[`]) (true, false, None)
         else {
           next()
-          val result = if (tok.is[`this`]) (false, false, Some(termName().value))
-                    else { next(); (false, true, None) }
+          val result = if (in.tok.is[`this`]) { next(); (false, true, None) }
+                    else (false, false, Some(termName().value))
           accept[`]`]
           result
         }
@@ -1632,7 +1632,7 @@ abstract class AbstractParser { parser =>
         (false, false, None)
       }
     }
-    (tok, isNaked, isLocal, name) match {
+    (originalTok, isNaked, isLocal, name) match {
       case (_: `private`,   true,  false, None)       => Some(Mod.Private())
       case (_: `private`,   false, true,  None)       => Some(Mod.PrivateThis())
       case (_: `private`,   false, false, Some(name)) => Some(Mod.PrivateWithin(name))
