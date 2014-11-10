@@ -290,7 +290,7 @@ package scala.meta.syntactic.ast {
                      name: Term.Name,
                      tparams: Seq[impl.Type.Param],
                      paramss: Seq[Seq[Term.Param]],
-                     tpe: meta.Type,
+                     tpe: impl.Type,
                      body: Term) extends Defn with Member.Method
     @ast class Type(mods: Seq[Mod],
                     name: impl.Type.Name,
