@@ -346,7 +346,7 @@ object Code {
     case t: Templ.Param =>
       val keyword = t match { case t: Term.Param => ""; case t: Templ.Param.Val => "val"; case t: Templ.Param.Var => "var"; }
       val mods = t.mods.filter(!_.isInstanceOf[Mod.Implicit]) // NOTE: `implicit` in parameters is skipped in favor of `implicit` in the enclosing parameter list
-      s(a(mods, " "), kw(keyword), t.name.map(_.value).getOrElse("_"), t.decltpe, t.default.map(s(" ", kw("="), " ", _)).getOrElse(s()))
+      s(a(mods, " "), a(kw(keyword), " ", keyword.nonEmpty), t.name.map(_.value).getOrElse("_"), t.decltpe, t.default.map(s(" ", kw("="), " ", _)).getOrElse(s()))
     case t: Type.Param =>
       val cbounds = r(t.contextBounds.map { s(kw(":"), " ", _) })
       val vbounds = r(t.viewBounds.map { s(" ", kw("<%"), " ", _) })
