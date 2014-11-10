@@ -21,6 +21,7 @@ object Raw {
       def showRaw(x: Any): String = x match {
         case el: String => enquote(el, DoubleQuotes)
         case el: api.Tree => el.show[Raw]
+        case el: Nil.type => "Nil"
         case el: List[_] => "List(" + el.map(showRaw).mkString(", ") + ")"
         case el => el.toString
       }
