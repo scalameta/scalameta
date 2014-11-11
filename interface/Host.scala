@@ -257,9 +257,9 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
           case List(pkgobject: g.ModuleDef) if pkgobject.symbol.isPackageObject => pkgobject.cvt_! : p.Pkg.Object
           case _ => p.Pkg(pid.cvt_!, pstats(in, stats), hasBraces = false)
         }
-      case in @ g.PackageDef(pid, stats) if pt <:< typeOf[p.TopLevel] =>
-        if (pid.name == g.nme.EMPTY_PACKAGE_NAME) p.TopLevel(pstats(in, stats))
-        else p.TopLevel(List(in.cvt_! : p.Stat))
+      case in @ g.PackageDef(pid, stats) if pt <:< typeOf[p.Source] =>
+        if (pid.name == g.nme.EMPTY_PACKAGE_NAME) p.Source(pstats(in, stats))
+        else p.Source(List(in.cvt_! : p.Stat))
       case in @ g.ClassDef(_, _, tparams0, templ) =>
         require(in.symbol.isClass)
         if (in.symbol.isTrait) {
