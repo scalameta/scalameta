@@ -140,27 +140,27 @@ class ShowSuite extends ParseSuite {
   }
 
   test("packages") {
-    assert(topLevel("package foo.bar; class C").show[Code] === "package foo.bar\nclass C")
-    assert(topLevel("package foo.bar; class C; class D").show[Code] === "package foo.bar\nclass C\nclass D")
-    assert(topLevel("package foo.bar { class C }").show[Code] === "package foo.bar {\n  class C\n}")
-    assert(topLevel("package foo.bar { class C; class D }").show[Code] === "package foo.bar {\n  class C\n  class D\n}")
+    assert(source("package foo.bar; class C").show[Code] === "package foo.bar\nclass C")
+    assert(source("package foo.bar; class C; class D").show[Code] === "package foo.bar\nclass C\nclass D")
+    assert(source("package foo.bar { class C }").show[Code] === "package foo.bar {\n  class C\n}")
+    assert(source("package foo.bar { class C; class D }").show[Code] === "package foo.bar {\n  class C\n  class D\n}")
   }
 
   test("type parameter mods") {
-    assert(topLevel("class C[@foo T]").show[Code] === "class C[@foo T]")
-    assert(topLevel("class C[+T]").show[Code] === "class C[+T]")
-    assert(topLevel("class C[@foo +T]").show[Code] === "class C[@foo +T]")
+    assert(source("class C[@foo T]").show[Code] === "class C[@foo T]")
+    assert(source("class C[+T]").show[Code] === "class C[+T]")
+    assert(source("class C[@foo +T]").show[Code] === "class C[@foo +T]")
   }
 
   test("primary constructor mods") {
-    assert(topLevel("class C").show[Code] === "class C")
-    assert(topLevel("class C private").show[Code] === "class C private")
-    assert(topLevel("class C @foo(x)").show[Code] === "class C @foo(x)")
-    assert(topLevel("class C @foo(x) private").show[Code] === "class C @foo(x) private")
-    assert(topLevel("class C(x: Int)").show[Code] === "class C(x: Int)")
-    assert(topLevel("class C private (x: Int)").show[Code] === "class C private (x: Int)")
-    assert(topLevel("class C @foo(x) (x: Int)").show[Code] === "class C @foo(x) (x: Int)")
-    assert(topLevel("class C @foo(x) private (x: Int)").show[Code] === "class C @foo(x) private (x: Int)")
+    assert(source("class C").show[Code] === "class C")
+    assert(source("class C private").show[Code] === "class C private")
+    assert(source("class C @foo(x)").show[Code] === "class C @foo(x)")
+    assert(source("class C @foo(x) private").show[Code] === "class C @foo(x) private")
+    assert(source("class C(x: Int)").show[Code] === "class C(x: Int)")
+    assert(source("class C private (x: Int)").show[Code] === "class C private (x: Int)")
+    assert(source("class C @foo(x) (x: Int)").show[Code] === "class C @foo(x) (x: Int)")
+    assert(source("class C @foo(x) private (x: Int)").show[Code] === "class C @foo(x) private (x: Int)")
   }
 
   test("parentheses in patterns") {
@@ -183,7 +183,7 @@ class ShowSuite extends ParseSuite {
   }
 
   test("secondary ctor") {
-    assert(topLevel("class C(x: Int) { def this() { this(2); println(\"OBLIVION!!!\") } }").show[Code] === "class C(x: Int) { def this() { this(2); println(\"OBLIVION!!!\") } }")
+    assert(source("class C(x: Int) { def this() { this(2); println(\"OBLIVION!!!\") } }").show[Code] === "class C(x: Int) { def this() { this(2); println(\"OBLIVION!!!\") } }")
   }
 
   test("case semicolons") {

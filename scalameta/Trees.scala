@@ -73,7 +73,7 @@ package scala.meta {
   @branch trait Enum extends Tree
   @branch trait Selector extends Tree
   @branch trait Case extends Tree
-  @branch trait TopLevel extends Tree
+  @branch trait Source extends Tree
 }
 
 // TODO: to be renamed to org.scalameta.trees or similar
@@ -403,7 +403,7 @@ package scala.meta.syntactic.ast {
 
   @ast class Case(pat: Pat, cond: Option[Term], stats: Seq[Stat]) extends api.Case with Tree
 
-  @ast class TopLevel(stats: Seq[Stat]) extends api.TopLevel with Tree {
+  @ast class Source(stats: Seq[Stat]) extends api.Source with Tree {
     require(stats.forall(_.isTopLevelStat))
   }
 }

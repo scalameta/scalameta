@@ -184,7 +184,7 @@ abstract class AbstractParser { parser =>
     try tree catch { case e: Exception => in = forked ; throw e }
   }
 
-  def parseStartRule: () => TopLevel
+  def parseStartRule: () => Source
 
   def parseRule[T](rule: this.type => T): T = {
     val t = rule(this)
@@ -194,15 +194,15 @@ abstract class AbstractParser { parser =>
 
   /** This is the general parse entry point.
    */
-  def parseTopLevel(): TopLevel = parseRule(_.parseStartRule())
+  def parseSource(): Source = parseRule(_.parseStartRule())
 
   /** This is the alternative entry point for repl, script runner, toolbox and parsing in macros.
    */
   def parseStat(): Stat = parseRule(parser => parser.statSeq(parser.templateStat.orElse(parser.topStat))) match {
     case stat :: Nil => stat
     case stats if stats.forall(_.isBlockStat) => Term.Block(stats)
-    // TODO: haha, TopLevel itself is not a stat
-    // case stats if stats.forall(_.isTopLevelStat) => TopLevel(stats)
+    // TODO: haha, Source itself is not a stat
+    // case stats if stats.forall(_.isTopLevelStat) => Source(stats)
     case _ => syntaxError("these statements can't be mixed together")
   }
   def parseStats(): List[Stat] = parseRule(_.templateStats())
@@ -2517,7 +2517,7 @@ abstract class AbstractParser { parser =>
    *  CompilationUnit ::= {package QualId semi} TopStatSeq
    *  }}}
    */
-  def compilationUnit(): TopLevel = {
+  def compilationUnit(): Source = {
     def packageStats(): (List[Term.Ref], List[Stat])  = {
       val refs = new ListBuffer[Term.Ref]
       val ts = new ListBuffer[Stat]
@@ -2556,8 +2556,8 @@ abstract class AbstractParser { parser =>
 
     val (refs, stats) = packageStats()
     refs match {
-      case Nil          => TopLevel(stats)
-      case init :+ last => TopLevel(init.foldRight(Pkg(last, stats, hasBraces = false)) { (ref, acc) => Pkg(ref, acc :: Nil, hasBraces = false) } :: Nil)
+      case Nil          => Source(stats)
+      case init :+ last => Source(init.foldRight(Pkg(last, stats, hasBraces = false)) { (ref, acc) => Pkg(ref, acc :: Nil, hasBraces = false) } :: Nil)
     }
   }
 }

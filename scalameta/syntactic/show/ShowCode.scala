@@ -294,7 +294,7 @@ object Code {
     case t: Decl.Procedure => s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss)
 
     // Pkg
-    case t: TopLevel           => r(t.stats, "\n")
+    case t: Source             => r(t.stats, "\n")
     case t: Pkg if t.hasBraces => s(kw("package"), " ", t.ref, " {", r(t.stats.map(i(_)), ""), n("}"))
     case t: Pkg                => s(kw("package"), " ", t.ref, r(t.stats.map(n(_))))
     case t: Pkg.Object         => s(kw("package"), " ", a(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))

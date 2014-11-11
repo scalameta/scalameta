@@ -21,7 +21,7 @@ package object parsers {
   trait Parse[T] extends Convert[Origin, T]
   object Parse {
     def apply[T](f: Origin => T): Parse[T] = new Parse[T] { def apply(origin: Origin): T = f(origin) }
-    implicit val parseTopLevel: Parse[TopLevel] = apply(origin => new Parser(origin).parseTopLevel())
+    implicit val parseSource: Parse[Source] = apply(origin => new Parser(origin).parseSource())
     implicit val parseTerm: Parse[Term] = apply(origin => new Parser(origin).parseTerm())
     implicit val parseType: Parse[Type.Arg] = apply(origin => new Parser(origin).parseType())
     implicit val parsePat: Parse[Pat.Arg] = apply(origin => new Parser(origin).parsePat())
