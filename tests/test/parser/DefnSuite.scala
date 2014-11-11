@@ -69,8 +69,8 @@ class DefnSuite extends ParseSuite {
 
   test("def f(a: Int)(implicit b: Int) = a + b") {
     val Defn.Def(Nil, Term.Name("f"), Nil,
-                 (Term.Param.Simple(Nil, Some(Term.Name("a")), Some(Type.Name("Int")), None) :: Nil) ::
-                 (Term.Param.Simple(Mod.Implicit() :: Nil, Some(Term.Name("b")), Some(Type.Name("Int")), None) :: Nil) :: Nil, None,
+                 (Term.Param(Nil, Some(Term.Name("a")), Some(Type.Name("Int")), None) :: Nil) ::
+                 (Term.Param(Mod.Implicit() :: Nil, Some(Term.Name("b")), Some(Type.Name("Int")), None) :: Nil) :: Nil, None,
                  Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, Term.Name("b") :: Nil)) =
       templStat("def f(a: Int)(implicit b: Int) = a + b")
   }
@@ -83,7 +83,7 @@ class DefnSuite extends ParseSuite {
 
   test("def f(x: Int): Int = macro impl") {
     val Defn.Macro(Nil, Term.Name("f"), Nil,
-                   (Term.Param.Simple(List(), Some(Term.Name(x)), Some(Type.Name("Int")), None) :: Nil) :: Nil,
+                   (Term.Param(List(), Some(Term.Name(x)), Some(Type.Name("Int")), None) :: Nil) :: Nil,
                    Type.Name("Int"), Term.Name("impl")) = templStat("def f(x: Int): Int = macro impl")
   }
 }

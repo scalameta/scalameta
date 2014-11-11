@@ -11,6 +11,7 @@ import Chars.{isOperatorPart, isScalaLetter}
 import Tok._
 import scala.reflect.ClassTag
 import scala.meta.syntactic.ast._
+import scala.meta.Origin
 
 object SyntacticInfo {
   private[meta] val unaryOps = Set("-", "+", "~", "!")
@@ -123,14 +124,14 @@ case class ParseAbort(msg: String) extends Exception(s"abort: $msg")
 case class ParseSyntaxError(offset: Offset, msg: String) extends Exception(s"syntax error at $offset: $msg")
 case class ParseIncompleteInputError(msg: String) extends Exception("incomplete input: $msg")
 
-class Parser(val source: Source) extends AbstractParser {
-  def this(code: String) = this(Source.String(code))
-  /** The parse starting point depends on whether the source file is self-contained:
+class Parser(val origin: Origin) extends AbstractParser {
+  def this(code: String) = this(Origin.String(code))
+  /** The parse starting point depends on whether the origin file is self-contained:
    *  if not, the AST will be supplemented.
    */
   def parseStartRule = () => compilationUnit()
 
-  var in: TokIterator = new TokIterator(source.tokens)
+  var in: TokIterator = new TokIterator(origin.tokens)
 
   // warning don't stop parsing
   // TODO:
@@ -162,7 +163,7 @@ abstract class AbstractParser { parser =>
   var in: TokIterator
   def tok = in.tok
   def next() = in.next()
-  val source: Source
+  val origin: Origin
 
   /** Scoping operator used to temporarily look into the future.
    *  Backs up token iterator before evaluating a block and restores it after.
@@ -183,7 +184,7 @@ abstract class AbstractParser { parser =>
     try tree catch { case e: Exception => in = forked ; throw e }
   }
 
-  def parseStartRule: () => CompUnit
+  def parseStartRule: () => Source
 
   def parseRule[T](rule: this.type => T): T = {
     val t = rule(this)
@@ -193,15 +194,15 @@ abstract class AbstractParser { parser =>
 
   /** This is the general parse entry point.
    */
-  def parseTopLevel(): CompUnit = parseRule(_.parseStartRule())
+  def parseSource(): Source = parseRule(_.parseStartRule())
 
   /** This is the alternative entry point for repl, script runner, toolbox and parsing in macros.
    */
   def parseStat(): Stat = parseRule(parser => parser.statSeq(parser.templateStat.orElse(parser.topStat))) match {
     case stat :: Nil => stat
     case stats if stats.forall(_.isBlockStat) => Term.Block(stats)
-    // TODO: haha, CompUnit itself is not a stat
-    // case stats if stats.forall(_.isTopLevelStat) => CompUnit(stats)
+    // TODO: haha, Source itself is not a stat
+    // case stats if stats.forall(_.isTopLevelStat) => Source(stats)
     case _ => syntaxError("these statements can't be mixed together")
   }
   def parseStats(): List[Stat] = parseRule(_.templateStats())
@@ -359,21 +360,21 @@ abstract class AbstractParser { parser =>
 /* ---------- TREE CONSTRUCTION ------------------------------------------- */
 
   /** Convert tree to formal parameter list. */
-  def convertToParams(tree: Term): List[Term.Param.Simple] = tree match {
+  def convertToParams(tree: Term): List[Term.Param] = tree match {
     case Term.Tuple(ts) => ts.toList flatMap convertToParam
     case _              => List(convertToParam(tree)).flatten
   }
 
   /** Convert tree to formal parameter. */
-  def convertToParam(tree: Term): Option[Term.Param.Simple] = tree match {
+  def convertToParam(tree: Term): Option[Term.Param] = tree match {
     case name: Name =>
-      Some(Term.Param.Simple(Nil, Some(name.toTermName), None, None))
+      Some(Term.Param(Nil, Some(name.toTermName), None, None))
     case Term.Placeholder() =>
-      Some(Term.Param.Simple(Nil, None, None, None))
+      Some(Term.Param(Nil, None, None, None))
     case Term.Ascribe(name: Name, tpt) =>
-      Some(Term.Param.Simple(Nil, Some(name.toTermName), Some(tpt), None))
+      Some(Term.Param(Nil, Some(name.toTermName), Some(tpt), None))
     case Term.Ascribe(Term.Placeholder(), tpt) =>
-      Some(Term.Param.Simple(Nil, None, Some(tpt), None))
+      Some(Term.Param(Nil, None, Some(tpt), None))
     case Lit.Unit() =>
       None
     case other =>
@@ -1616,15 +1617,15 @@ abstract class AbstractParser { parser =>
    *  }}}
    */
   def accessModifierOpt(): Option[Mod] = {
-    val tok = in.tok
+    val originalTok = in.tok
     val (isNaked, isLocal, name) = {
-      if (tok.is[`private`] || tok.is[`protected`]) {
+      if (in.tok.is[`private`] || in.tok.is[`protected`]) {
         next()
-        if (tok.isNot[`[`]) (true, false, None)
+        if (in.tok.isNot[`[`]) (true, false, None)
         else {
           next()
-          val result = if (tok.is[`this`]) (false, false, Some(termName().value))
-                    else { next(); (false, true, None) }
+          val result = if (in.tok.is[`this`]) { next(); (false, true, None) }
+                    else (false, false, Some(termName().value))
           accept[`]`]
           result
         }
@@ -1632,7 +1633,7 @@ abstract class AbstractParser { parser =>
         (false, false, None)
       }
     }
-    (tok, isNaked, isLocal, name) match {
+    (originalTok, isNaked, isLocal, name) match {
       case (_: `private`,   true,  false, None)       => Some(Mod.Private())
       case (_: `private`,   false, true,  None)       => Some(Mod.PrivateThis())
       case (_: `private`,   false, false, Some(name)) => Some(Mod.PrivateWithin(name))
@@ -1800,9 +1801,9 @@ abstract class AbstractParser { parser =>
         next()
         Some(expr())
       }
-    if (isValParam) Term.Param.Val(mods, Some(name), Some(tpt), default)
-    else if (isVarParam) Term.Param.Var(mods, Some(name), Some(tpt), default)
-    else Term.Param.Simple(mods, Some(name), Some(tpt), default)
+    if (isValParam) Templ.Param.Val(mods, Some(name), Some(tpt), default)
+    else if (isVarParam) Templ.Param.Var(mods, Some(name), Some(tpt), default)
+    else Term.Param(mods, Some(name), Some(tpt), default)
   }
 
   /** {{{
@@ -1894,7 +1895,7 @@ abstract class AbstractParser { parser =>
     sid match {
       case Term.Select(sid: Term.Ref, name: Term.Name) if sid.isStableId =>
         if (tok.is[`.`]) dotselectors
-        else Import.Clause(sid, Import.Name(name.value, name.isBackquoted) :: Nil)
+        else Import.Clause(sid, Import.Name(name.value) :: Nil)
       case _ => dotselectors
     }
   }
@@ -1909,7 +1910,7 @@ abstract class AbstractParser { parser =>
 
   def importWildcardOrName(): Selector =
     if (tok.is[`_ `]) { next(); Import.Wildcard() }
-    else { val name = termName(); Import.Name(name.value, name.isBackquoted) }
+    else { val name = termName(); Import.Name(name.value) }
 
   /** {{{
    *  ImportSelector ::= Id [`=>' Id | `=>' `_']
@@ -2111,7 +2112,7 @@ abstract class AbstractParser { parser =>
    *  TypeDcl ::= type Id [TypeParamClause] TypeBounds
    *  }}}
    */
-  def typeDefOrDcl(mods: List[Mod]): Member.Type = {
+  def typeDefOrDcl(mods: List[Mod]): Member.Type with Stat = {
     next()
     newLinesOpt()
     val name = typeName()
@@ -2128,7 +2129,7 @@ abstract class AbstractParser { parser =>
   }
 
   /** Hook for IDE, for top-level classes/objects. */
-  def topLevelTmplDef: Member =
+  def topLevelTmplDef: Member.Templ =
     tmplDef(annots(skipNewLines = true) ++ modifiers())
 
   /** {{{
@@ -2137,7 +2138,7 @@ abstract class AbstractParser { parser =>
    *            |  [override] trait TraitDef
    *  }}}
    */
-  def tmplDef(mods: List[Mod]): Member = {
+  def tmplDef(mods: List[Mod]): Member.Templ = {
     mods.getAll[Mod.Lazy].foreach { syntaxError(_, "classes cannot be lazy") }
     tok match {
       case _: `trait` =>
@@ -2313,7 +2314,7 @@ abstract class AbstractParser { parser =>
         if (parenMeansSyntaxError) syntaxError("traits or objects may not have parameters")
         else abort("unexpected opening parenthesis")
       }
-      (Term.Param.Simple(Nil, None, None, None), Nil, false)
+      (Term.Param(Nil, None, None, None), Nil, false)
     }
   }
 
@@ -2367,24 +2368,24 @@ abstract class AbstractParser { parser =>
    * @param isPre specifies whether in early initializer (true) or not (false)
    */
   def templateStatSeq(isPre : Boolean): (Term.Param, List[Stat]) = {
-    var self: Term.Param = Term.Param.Simple(Nil, None, None, None)
+    var self: Term.Param = Term.Param(Nil, None, None, None)
     var firstOpt: Option[Term] = None
     if (tok.is[ExprIntro]) {
       val first = expr(InTemplate) // @S: first statement is potentially converted so cannot be stubbed.
       if (tok.is[`=>`]) {
         first match {
           case name: Name =>
-            self = Term.Param.Simple(Nil, Some(name.toTermName), None, None)
+            self = Term.Param(Nil, Some(name.toTermName), None, None)
           case Term.Placeholder() =>
-            self = Term.Param.Simple(Nil, None, None, None)
+            self = Term.Param(Nil, None, None, None)
           case Term.This(None) =>
-            self = Term.Param.Simple(Nil, None, None, None)
+            self = Term.Param(Nil, None, None, None)
           case Term.Ascribe(name: Name, tpt) =>
-            self = Term.Param.Simple(Nil, Some(name.toTermName), Some(tpt), None)
+            self = Term.Param(Nil, Some(name.toTermName), Some(tpt), None)
           case Term.Ascribe(Term.Placeholder(), tpt) =>
-            self = Term.Param.Simple(Nil, None, Some(tpt), None)
+            self = Term.Param(Nil, None, Some(tpt), None)
           case Term.Ascribe(tree @ Term.This(None), tpt) =>
-            self = Term.Param.Simple(Nil, None, Some(tpt), None)
+            self = Term.Param(Nil, None, Some(tpt), None)
           case _ =>
         }
         next()
@@ -2516,7 +2517,7 @@ abstract class AbstractParser { parser =>
    *  CompilationUnit ::= {package QualId semi} TopStatSeq
    *  }}}
    */
-  def compilationUnit(): CompUnit = {
+  def compilationUnit(): Source = {
     def packageStats(): (List[Term.Ref], List[Stat])  = {
       val refs = new ListBuffer[Term.Ref]
       val ts = new ListBuffer[Stat]
@@ -2555,8 +2556,8 @@ abstract class AbstractParser { parser =>
 
     val (refs, stats) = packageStats()
     refs match {
-      case Nil          => CompUnit(stats)
-      case init :+ last => CompUnit(init.foldRight(Pkg(last, stats, hasBraces = false)) { (ref, acc) => Pkg(ref, acc :: Nil, hasBraces = false) } :: Nil)
+      case Nil          => Source(stats)
+      case init :+ last => Source(init.foldRight(Pkg(last, stats, hasBraces = false)) { (ref, acc) => Pkg(ref, acc :: Nil, hasBraces = false) } :: Nil)
     }
   }
 }

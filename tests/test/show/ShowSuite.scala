@@ -4,7 +4,7 @@ import scala.meta.syntactic.show._
 class ShowSuite extends ParseSuite {
   test("val x: Int (raw)") {
     val tree = templStat("val x: Int")
-    assert(tree.show[Raw] === "Decl.Val(List(), List(Term.Name(\"x\")), Type.Name(\"Int\"))")
+    assert(tree.show[Raw] === "Decl.Val(Nil, List(Term.Name(\"x\")), Type.Name(\"Int\"))")
   }
 
   test("val x: Int (code)") {
@@ -34,7 +34,7 @@ class ShowSuite extends ParseSuite {
       QQQ
       val y = "\""
     }""".replace("QQQ", "\"\"\""))
-    assert(tree.show[Raw] === """Term.Block(List(Defn.Val(List(), List(Term.Name("x")), None, Lit.String("\n        x\n      ")), Defn.Val(List(), List(Term.Name("y")), None, Lit.String("\""))))""")
+    assert(tree.show[Raw] === """Term.Block(List(Defn.Val(Nil, List(Term.Name("x")), None, Lit.String("\n        x\n      ")), Defn.Val(Nil, List(Term.Name("y")), None, Lit.String("\""))))""")
     assert(tree.show[Code] === """
     |{
     |  val x = QQQ
@@ -54,7 +54,7 @@ class ShowSuite extends ParseSuite {
         ..$z
       QQQ
     }""".replace("QQQ", "\"\"\""))
-    assert(tree.show[Raw] === """Term.Block(List(Defn.Val(List(), List(Term.Name("x")), None, Term.Interpolate(Term.Name("q"), List(Lit.String("123 + "), Lit.String(" + "), Lit.String(" + 456")), List(Term.Name("x"), Term.Apply(Term.Name("foo"), List(Lit.Int(123)))))), Defn.Val(List(), List(Term.Name("y")), None, Lit.String("\n        $x\n        $y\n        ..$z\n      "))))""")
+    assert(tree.show[Raw] === """Term.Block(List(Defn.Val(Nil, List(Term.Name("x")), None, Term.Interpolate(Term.Name("q"), List(Lit.String("123 + "), Lit.String(" + "), Lit.String(" + 456")), List(Term.Name("x"), Term.Apply(Term.Name("foo"), List(Lit.Int(123)))))), Defn.Val(Nil, List(Term.Name("y")), None, Lit.String("\n        $x\n        $y\n        ..$z\n      "))))""")
     assert(tree.show[Code] === """
     |{
     |  val x = q"123 + $x + ${foo(123)} + 456"
@@ -140,27 +140,27 @@ class ShowSuite extends ParseSuite {
   }
 
   test("packages") {
-    assert(compUnit("package foo.bar; class C").show[Code] === "package foo.bar\nclass C")
-    assert(compUnit("package foo.bar; class C; class D").show[Code] === "package foo.bar\nclass C\nclass D")
-    assert(compUnit("package foo.bar { class C }").show[Code] === "package foo.bar {\n  class C\n}")
-    assert(compUnit("package foo.bar { class C; class D }").show[Code] === "package foo.bar {\n  class C\n  class D\n}")
+    assert(source("package foo.bar; class C").show[Code] === "package foo.bar\nclass C")
+    assert(source("package foo.bar; class C; class D").show[Code] === "package foo.bar\nclass C\nclass D")
+    assert(source("package foo.bar { class C }").show[Code] === "package foo.bar {\n  class C\n}")
+    assert(source("package foo.bar { class C; class D }").show[Code] === "package foo.bar {\n  class C\n  class D\n}")
   }
 
   test("type parameter mods") {
-    assert(compUnit("class C[@foo T]").show[Code] === "class C[@foo T]")
-    assert(compUnit("class C[+T]").show[Code] === "class C[+T]")
-    assert(compUnit("class C[@foo +T]").show[Code] === "class C[@foo +T]")
+    assert(source("class C[@foo T]").show[Code] === "class C[@foo T]")
+    assert(source("class C[+T]").show[Code] === "class C[+T]")
+    assert(source("class C[@foo +T]").show[Code] === "class C[@foo +T]")
   }
 
   test("primary constructor mods") {
-    assert(compUnit("class C").show[Code] === "class C")
-    assert(compUnit("class C private").show[Code] === "class C private")
-    assert(compUnit("class C @foo(x)").show[Code] === "class C @foo(x)")
-    assert(compUnit("class C @foo(x) private").show[Code] === "class C @foo(x) private")
-    assert(compUnit("class C(x: Int)").show[Code] === "class C(x: Int)")
-    assert(compUnit("class C private (x: Int)").show[Code] === "class C private (x: Int)")
-    assert(compUnit("class C @foo(x) (x: Int)").show[Code] === "class C @foo(x) (x: Int)")
-    assert(compUnit("class C @foo(x) private (x: Int)").show[Code] === "class C @foo(x) private (x: Int)")
+    assert(source("class C").show[Code] === "class C")
+    assert(source("class C private").show[Code] === "class C private")
+    assert(source("class C @foo(x)").show[Code] === "class C @foo(x)")
+    assert(source("class C @foo(x) private").show[Code] === "class C @foo(x) private")
+    assert(source("class C(x: Int)").show[Code] === "class C(x: Int)")
+    assert(source("class C private (x: Int)").show[Code] === "class C private (x: Int)")
+    assert(source("class C @foo(x) (x: Int)").show[Code] === "class C @foo(x) (x: Int)")
+    assert(source("class C @foo(x) private (x: Int)").show[Code] === "class C @foo(x) private (x: Int)")
   }
 
   test("parentheses in patterns") {
@@ -183,7 +183,7 @@ class ShowSuite extends ParseSuite {
   }
 
   test("secondary ctor") {
-    assert(compUnit("class C(x: Int) { def this() { this(2); println(\"OBLIVION!!!\") } }").show[Code] === "class C(x: Int) { def this() { this(2); println(\"OBLIVION!!!\") } }")
+    assert(source("class C(x: Int) { def this() { this(2); println(\"OBLIVION!!!\") } }").show[Code] === "class C(x: Int) { def this() { this(2); println(\"OBLIVION!!!\") } }")
   }
 
   test("case semicolons") {
@@ -255,5 +255,27 @@ class ShowSuite extends ParseSuite {
 
   test("class C(x: Int)(implicit y: String, z: Boolean)") {
     assert(templStat("class C(x: Int)(implicit y: String, z: Boolean)").show[Code] === "class C(x: Int)(implicit y: String, z: Boolean)")
+  }
+
+  test("class C(var x: Int)") {
+    assert(templStat("class C(var x: Int)").show[Code] === "class C(var x: Int)")
+  }
+
+  test("private/protected within something") {
+    assert(templStat("""
+      class C {
+        private[this] val x = 1
+        private[D] val y = 2
+        protected[this] val z = 3
+        protected[D] val w = 4
+      }
+    """).show[Code] === """
+      |class C {
+      |  private[this] val x = 1
+      |  private[D] val y = 2
+      |  protected[this] val z = 3
+      |  protected[D] val w = 4
+      |}
+    """.stripMargin.trim)
   }
 }

@@ -17,14 +17,14 @@ trait CommonTrees {
 
   object EmptySelf {
     def unapply(tree: Tree): Boolean = tree match {
-      case Term.Param.Simple(Nil, None, None, None) => true
+      case Term.Param(Nil, None, None, None) => true
       case _ => false
     }
   }
 
   object EmptyTemplate {
     def unapply(tree: Tree): Boolean = tree match {
-      case Templ(Nil, Nil, Term.Param.Simple(Nil, None, None, None), Nil) => true
+      case Templ(Nil, Nil, Term.Param(Nil, None, None, None), Nil) => true
       case _ => false
     }
   }

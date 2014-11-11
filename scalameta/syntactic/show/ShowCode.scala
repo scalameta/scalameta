@@ -179,11 +179,11 @@ object Code {
       import Term.{Block, Function}
       def pstats(s: Seq[Stat]) = r(s.map(i(_)), "")
       t match {
-        case Block(Function(Term.Param.Simple(mods, Some(name), tptopt, _) :: Nil, Block(stats)) :: Nil) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
+        case Block(Function(Term.Param(mods, Some(name), tptopt, _) :: Nil, Block(stats)) :: Nil) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
           m(SimpleExpr, s("{ ", kw("implicit"), " ", name, tptopt.map(s(kw(":"), " ", _)).getOrElse(s()), " ", kw("=>"), " ", pstats(stats), n("}")))
-        case Block(Function(Term.Param.Simple(mods, Some(name), None, _) :: Nil, Block(stats)) :: Nil) =>
+        case Block(Function(Term.Param(mods, Some(name), None, _) :: Nil, Block(stats)) :: Nil) =>
           m(SimpleExpr, s("{ ", name, " ", kw("=>"), " ", pstats(stats), n("}")))
-        case Block(Function(Term.Param.Simple(_, None, _, _) :: Nil, Block(stats)) :: Nil) =>
+        case Block(Function(Term.Param(_, None, _, _) :: Nil, Block(stats)) :: Nil) =>
           m(SimpleExpr, s("{ ", kw("_"), " ", kw("=>"), " ", pstats(stats), n("}")))
         case Block(Function(params, Block(stats)) :: Nil) =>
           m(SimpleExpr, s("{ (", r(params, ", "), ") => ", pstats(stats), n("}")))
@@ -217,11 +217,11 @@ object Code {
     case t: Term.If       => m(Expr1, s(kw("if"), " (", t.cond, ") ", p(Expr, t.thenp), if (t.hasElsep) s(" ", kw("else"), " ", p(Expr, t.elsep)) else s()))
     case t: Term.Function =>
       t match {
-        case Term.Function(Term.Param.Simple(mods, Some(name), tptopt, _) :: Nil, body) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
+        case Term.Function(Term.Param(mods, Some(name), tptopt, _) :: Nil, body) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
           m(Expr, s(kw("implicit"), " ", name, tptopt.map(s(kw(":"), " ", _)).getOrElse(s()), " ", kw("=>"), " ", p(Expr, body)))
-        case Term.Function(Term.Param.Simple(mods, Some(name), None, _) :: Nil, body) =>
+        case Term.Function(Term.Param(mods, Some(name), None, _) :: Nil, body) =>
           m(Expr, s(name, " ", kw("=>"), " ", p(Expr, body)))
-        case Term.Function(Term.Param.Simple(_, None, _, _) :: Nil, body) =>
+        case Term.Function(Term.Param(_, None, _, _) :: Nil, body) =>
           m(Expr, s(kw("_"), " ", kw("=>"), " ", p(Expr, body)))
         case Term.Function(params, body) =>
           m(Expr, s("(", r(params, ", "), ") ", kw("=>"), " ", p(Expr, body)))
@@ -266,11 +266,11 @@ object Code {
     case _: Mod.Override        => kw("override")
     case _: Mod.Sealed          => kw("sealed")
     case t: Mod.Private         => s(kw("private"))
-    case t: Mod.PrivateThis     => s(kw("private"), kw("this"))
-    case t: Mod.PrivateWithin   => s(kw("private"), t.name.toString)
+    case t: Mod.PrivateThis     => s(kw("private"), kw("["), kw("this"), kw("]"))
+    case t: Mod.PrivateWithin   => s(kw("private"), kw("["), t.name.toString, kw("]"))
     case t: Mod.Protected       => s(kw("protected"))
-    case t: Mod.ProtectedThis   => s(kw("protected"), kw("this"))
-    case t: Mod.ProtectedWithin => s(kw("protected"), t.name.toString)
+    case t: Mod.ProtectedThis   => s(kw("protected"), kw("["), kw("this"), kw("]"))
+    case t: Mod.ProtectedWithin => s(kw("protected"), kw("["), t.name.toString, kw("]"))
 
     // Defn
     case t: Defn.Val       => s(a(t.mods, " "), kw("val"), " ", r(t.pats, ", "), t.decltpe, " ", kw("="), " ", t.rhs)
@@ -294,7 +294,7 @@ object Code {
     case t: Decl.Procedure => s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss)
 
     // Pkg
-    case t: CompUnit           => r(t.stats, "\n")
+    case t: Source             => r(t.stats, "\n")
     case t: Pkg if t.hasBraces => s(kw("package"), " ", t.ref, " {", r(t.stats.map(i(_)), ""), n("}"))
     case t: Pkg                => s(kw("package"), " ", t.ref, r(t.stats.map(n(_))))
     case t: Pkg.Object         => s(kw("package"), " ", a(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
@@ -313,6 +313,7 @@ object Code {
     case t: Enum.Guard     => s(kw("if"), " ", p(PostfixExpr, t.cond))
 
     // Import
+    case t: Import.Name     => s(t.value)
     case t: Import.Rename   => s(t.from, " ", kw("=>"), " ", t.to)
     case t: Import.Unimport => s(t.name, " ", kw("=>"), " ", kw("_"))
     case _: Import.Wildcard => kw("_")
@@ -344,9 +345,9 @@ object Code {
     case t: Case  =>
       s("case ", p(Pattern, t.pat), t.cond.map { cond => s(" ", kw("if"), " ", p(PostfixExpr, cond)) }.getOrElse(s()), " ", kw("=>"), r(t.stats.map(i(_)), ""))
     case t: Templ.Param =>
-      val keyword = t match { case t: Term.Param.Simple => ""; case t: Term.Param.Val => "val"; case t: Term.Param.Var => "var"; }
+      val keyword = t match { case t: Term.Param => ""; case t: Templ.Param.Val => "val"; case t: Templ.Param.Var => "var"; }
       val mods = t.mods.filter(!_.isInstanceOf[Mod.Implicit]) // NOTE: `implicit` in parameters is skipped in favor of `implicit` in the enclosing parameter list
-      s(a(mods, " "), kw(keyword), t.name.map(_.value).getOrElse("_"), t.decltpe, t.default.map(s(" ", kw("="), " ", _)).getOrElse(s()))
+      s(a(mods, " "), a(kw(keyword), " ", keyword.nonEmpty), t.name.map(_.value).getOrElse("_"), t.decltpe, t.default.map(s(" ", kw("="), " ", _)).getOrElse(s()))
     case t: Type.Param =>
       val cbounds = r(t.contextBounds.map { s(kw(":"), " ", _) })
       val vbounds = r(t.viewBounds.map { s(" ", kw("<%"), " ", _) })

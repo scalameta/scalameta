@@ -43,6 +43,7 @@ package object semantic {
     implicit object Ref extends HasDefn[meta.Ref, meta.Member]
     implicit object TermRef extends HasDefn[meta.Term.Ref, meta.Member.Term]
     implicit object TypeRef extends HasDefn[meta.Type.Ref, meta.Member] // Type.Ref can refer to both types (regular types) and terms (singleton types)
+    implicit object Selector extends HasDefn[meta.Selector, meta.Member]
   }
 
   implicit class SemanticResolvableOps[T <: Tree, U <: Tree](val tree: T)(implicit ev: HasDefn[T, U]) {
