@@ -28,7 +28,7 @@ class QuasiquoteMacros(val c: Context) {
       val q"..$applyimpls" = q"""
         import scala.reflect.macros.whitebox.Context
         def applyImpl(c: Context)(args: c.Tree*): c.Tree = {
-          import _root_.scala.meta.syntactic.parsers.RichSource
+          import _root_.scala.meta.syntactic.parsers.RichOrigin
           val helper = new _root_.scala.meta.syntactic.quasiquotes.Macros[c.type](c)
           helper.apply(c.macroApplication, (s: String) => s.parse[$qtype])
         }

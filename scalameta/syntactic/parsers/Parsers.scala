@@ -11,6 +11,7 @@ import Chars.{isOperatorPart, isScalaLetter}
 import Tok._
 import scala.reflect.ClassTag
 import scala.meta.syntactic.ast._
+import scala.meta.Origin
 
 object SyntacticInfo {
   private[meta] val unaryOps = Set("-", "+", "~", "!")
@@ -123,14 +124,14 @@ case class ParseAbort(msg: String) extends Exception(s"abort: $msg")
 case class ParseSyntaxError(offset: Offset, msg: String) extends Exception(s"syntax error at $offset: $msg")
 case class ParseIncompleteInputError(msg: String) extends Exception("incomplete input: $msg")
 
-class Parser(val source: Source) extends AbstractParser {
-  def this(code: String) = this(Source.String(code))
-  /** The parse starting point depends on whether the source file is self-contained:
+class Parser(val origin: Origin) extends AbstractParser {
+  def this(code: String) = this(Origin.String(code))
+  /** The parse starting point depends on whether the origin file is self-contained:
    *  if not, the AST will be supplemented.
    */
   def parseStartRule = () => compilationUnit()
 
-  var in: TokIterator = new TokIterator(source.tokens)
+  var in: TokIterator = new TokIterator(origin.tokens)
 
   // warning don't stop parsing
   // TODO:
@@ -162,7 +163,7 @@ abstract class AbstractParser { parser =>
   var in: TokIterator
   def tok = in.tok
   def next() = in.next()
-  val source: Source
+  val origin: Origin
 
   /** Scoping operator used to temporarily look into the future.
    *  Backs up token iterator before evaluating a block and restores it after.

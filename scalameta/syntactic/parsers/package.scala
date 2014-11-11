@@ -18,31 +18,31 @@ package object parsers {
     ":", "=", "=>", "<-", "<:", "<%", ">:", "#", "@", "\u21D2", "\u2190"
   )
 
-  trait Parse[T] extends Convert[Source, T]
+  trait Parse[T] extends Convert[Origin, T]
   object Parse {
-    def apply[T](f: Source => T): Parse[T] = new Parse[T] { def apply(source: Source): T = f(source) }
-    implicit val parseTopLevel: Parse[TopLevel] = apply(source => new Parser(source).parseTopLevel())
-    implicit val parseTerm: Parse[Term] = apply(source => new Parser(source).parseTerm())
-    implicit val parseType: Parse[Type.Arg] = apply(source => new Parser(source).parseType())
-    implicit val parsePat: Parse[Pat.Arg] = apply(source => new Parser(source).parsePat())
-    implicit val parseStat: Parse[Stat] = apply(source => new Parser(source).parseStat())
-    implicit val parseStats: Parse[List[Stat]] = apply(source => new Parser(source).parseStats())
-    implicit val parseParam: Parse[Templ.Param] = apply(source => new Parser(source).parseParam())
-    implicit val parseTparam: Parse[Type.Param] = apply(source => new Parser(source).parseTparam())
-    implicit val parseTermArg: Parse[Term.Arg] = apply(source => new Parser(source).parseTermArg())
-    implicit val parseEnum: Parse[Enum] = apply(source => new Parser(source).parseEnum())
-    implicit val parseMod: Parse[Mod] = apply(source => new Parser(source).parseMod())
-    implicit val parseTempl: Parse[Templ] = apply(source => new Parser(source).parseTempl())
-    implicit val parseCtorRef: Parse[Ctor.Ref] = apply(source => new Parser(source).parseCtorRef())
-    implicit val parseSelector: Parse[Selector] = apply(source => new Parser(source).parseSelector())
-    implicit val parseCase: Parse[Case] = apply(source => new Parser(source).parseCase())
+    def apply[T](f: Origin => T): Parse[T] = new Parse[T] { def apply(origin: Origin): T = f(origin) }
+    implicit val parseTopLevel: Parse[TopLevel] = apply(origin => new Parser(origin).parseTopLevel())
+    implicit val parseTerm: Parse[Term] = apply(origin => new Parser(origin).parseTerm())
+    implicit val parseType: Parse[Type.Arg] = apply(origin => new Parser(origin).parseType())
+    implicit val parsePat: Parse[Pat.Arg] = apply(origin => new Parser(origin).parsePat())
+    implicit val parseStat: Parse[Stat] = apply(origin => new Parser(origin).parseStat())
+    implicit val parseStats: Parse[List[Stat]] = apply(origin => new Parser(origin).parseStats())
+    implicit val parseParam: Parse[Templ.Param] = apply(origin => new Parser(origin).parseParam())
+    implicit val parseTparam: Parse[Type.Param] = apply(origin => new Parser(origin).parseTparam())
+    implicit val parseTermArg: Parse[Term.Arg] = apply(origin => new Parser(origin).parseTermArg())
+    implicit val parseEnum: Parse[Enum] = apply(origin => new Parser(origin).parseEnum())
+    implicit val parseMod: Parse[Mod] = apply(origin => new Parser(origin).parseMod())
+    implicit val parseTempl: Parse[Templ] = apply(origin => new Parser(origin).parseTempl())
+    implicit val parseCtorRef: Parse[Ctor.Ref] = apply(origin => new Parser(origin).parseCtorRef())
+    implicit val parseSelector: Parse[Selector] = apply(origin => new Parser(origin).parseSelector())
+    implicit val parseCase: Parse[Case] = apply(origin => new Parser(origin).parseCase())
   }
 
-  implicit class RichSource[T](val sourceLike: T)(implicit ev: Convert[T, Source]) {
-    private val source: Source = ev(sourceLike)
-    def parse[T](implicit ev: Parse[T]): T = ev(source)
+  implicit class RichOrigin[T](val originLike: T)(implicit ev: Convert[T, Origin]) {
+    private val origin: Origin = ev(originLike)
+    def parse[T](implicit ev: Parse[T]): T = ev(origin)
     def tokens: immutable.IndexedSeq[Tok] = {
-      val scanner = new Scanner(source)
+      val scanner = new Scanner(origin)
       scanner.init()
       var buf = new mutable.UnrolledBuffer[Tok]
       var tok: Tok = null

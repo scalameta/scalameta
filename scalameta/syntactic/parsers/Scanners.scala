@@ -9,6 +9,7 @@ import mutable.{ ListBuffer, ArrayBuffer }
 import Chars._
 import Tokens._
 import TokenInfo._
+import scala.meta.Origin
 
 trait TokenData {
   /** the next token */
@@ -1071,11 +1072,11 @@ abstract class AbstractScanner extends CharArrayReader with TokenData with Scann
 
 case class MalformedInput(val offset: Offset, val msg: String) extends Exception
 
-/** A scanner for a given source file not necessarily attached to a compilation unit.
- *  Useful for looking inside source files that aren not currently compiled to see what's there
+/** A scanner for a given origin file not necessarily attached to a compilation unit.
+ *  Useful for looking inside origin files that aren not currently compiled to see what's there
  */
-class Scanner(val source: Source) extends AbstractScanner {
-  val buf = source.content
+class Scanner(val origin: Origin) extends AbstractScanner {
+  val buf = origin.content
   override val decodeUni: Boolean = true
 
   // suppress warnings, throw exception on errors
