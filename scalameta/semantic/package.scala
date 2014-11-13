@@ -64,7 +64,6 @@ package object semantic {
     @hosted def weak_<:<(other: Type): Boolean = ???
     @hosted def widen: Type = ???
     @hosted def dealias: Type = ???
-    @hosted def erasure: Type = ???
     @hosted def companion: Type.Ref = ???
   }
 
