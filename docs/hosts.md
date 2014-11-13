@@ -51,9 +51,7 @@ The same level of robustness is expected from hosts. Concretely: 1) semantic ope
 | `def glb(tpes: Seq[Type]): Type`                          | Greatest lower bound.
 | `def parents(member: Member): Seq[Member]`                | Direct parents (i.e. superclasses or overriddens) of a given member. If the provided member has been obtained via some prefix or by instantiating some type parameters, then the results of this method should also have corresponding type parameters instantiated.
 | `def children(member: Member): Seq[Member]`               | Direct children (i.e. subclasses or overriders) of a given member in the closed world reflected by the host. If the provided member has been obtained via some prefix by instantiating some type parameters, then the results of this method should also have corresponding type parameters instantiated.
-| `def warning(msg: String): Unit`                          | Produces a warning with a given message. For now, hosts are free to choose the presentation for warnings. Later we will provide a notion of positions.
-| `def error(msg: String): Unit`                            | Produces an error with a given message at the position of the macro application. For now, host are free to choose the presentation for errors. Later we will provide a notion of positions.
-| `def abort(msg: String): Nothing`                         | Does the same as `error`, additionally terminating the host.
+| `def notify(event: Event): Unit`                          | Emits an event to be processed by a host. Events can be warnings, errors and fatal errors. For now, events only contain messages, but later on we will provide a notion of positions. Hosts are free to choose presentation for events (i.e. ways of distinguishing warnings from errors).
 | `def resources: Map[String, Array[Byte]]`                 | Returns a map from resource urls to resource contents. Hosts are advised to strive for compatibility between each other. If the same project is compiled, say, by SBT and then by Intellij IDEA plugin, then it is mandatory for urls emitted by `resources` to be the same.
 
 ### Error handling

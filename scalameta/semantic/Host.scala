@@ -17,10 +17,3 @@ trait Host {
   def parents(member: Member): Seq[Member]
   def children(member: Member): Seq[Member]
 }
-
-trait MacroHost extends Host {
-  def warning(msg: String): Unit
-  def error(msg: String): Unit
-  def abort(msg: String): Nothing
-  def resources: Map[String, Array[Byte]]
-}
