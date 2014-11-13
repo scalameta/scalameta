@@ -54,8 +54,7 @@ The same level of robustness is expected from hosts. Concretely: 1) semantic ope
 | `def warning(msg: String): Unit`                          | Produces a warning with a given message. For now, hosts are free to choose the presentation for warnings. Later we will provide a notion of positions.
 | `def error(msg: String): Unit`                            | Produces an error with a given message at the position of the macro application. For now, host are free to choose the presentation for errors. Later we will provide a notion of positions.
 | `def abort(msg: String): Nothing`                         | Does the same as `error`, additionally terminating the host.
-| `def resources: Seq[String]`                              | Returns a list of urls of build resources. Hosts are advised to strive for compatibility between each other. If the same project is compiled, say, by SBT and then by Intellij IDEA plugin, then it is mandatory for urls emitted by `resources` to be the same.
-| `def resourceAsBytes(url: String): Array[Byte]`           | Reads the specified resource into an array of byte. Users of the Palladium API will then decide whether/how to convert these bytes into strings or something else.
+| `def resources: Map[String, Array[Byte]]`                 | Returns a map from resource urls to resource contents. Hosts are advised to strive for compatibility between each other. If the same project is compiled, say, by SBT and then by Intellij IDEA plugin, then it is mandatory for urls emitted by `resources` to be the same.
 
 ### Error handling
 
