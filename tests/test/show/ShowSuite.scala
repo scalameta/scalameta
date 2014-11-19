@@ -1,5 +1,6 @@
 import org.scalatest._
 import scala.meta.syntactic.show._
+import scala.compat.Platform.EOL
 
 class ShowSuite extends ParseSuite {
   test("val x: Int (raw)") {
@@ -140,10 +141,10 @@ class ShowSuite extends ParseSuite {
   }
 
   test("packages") {
-    assert(source("package foo.bar; class C").show[Code] === "package foo.bar\nclass C")
-    assert(source("package foo.bar; class C; class D").show[Code] === "package foo.bar\nclass C\nclass D")
-    assert(source("package foo.bar { class C }").show[Code] === "package foo.bar {\n  class C\n}")
-    assert(source("package foo.bar { class C; class D }").show[Code] === "package foo.bar {\n  class C\n  class D\n}")
+    assert(source("package foo.bar; class C").show[Code] === s"package foo.bar${EOL}class C")
+    assert(source("package foo.bar; class C; class D").show[Code] === s"package foo.bar${EOL}class C${EOL}class D")
+    assert(source("package foo.bar { class C }").show[Code] === s"package foo.bar {${EOL}  class C${EOL}}")
+    assert(source("package foo.bar { class C; class D }").show[Code] === s"package foo.bar {${EOL}  class C${EOL}  class D${EOL}}")
   }
 
   test("type parameter mods") {
@@ -218,20 +219,20 @@ class ShowSuite extends ParseSuite {
   test("some tricky parenthesization") {
     assert(templStat("if (1) 2 else 3 + 4").show[Code] === "if (1) 2 else 3 + 4")
     assert(templStat("(if (1) 2 else 3) + 4").show[Code] === "(if (1) 2 else 3) + 4")
-    assert(templStat("if (1) 2 else 3 match { case _ => }").show[Code] === "if (1) 2 else 3 match {\n  case _ =>\n}")
-    assert(templStat("(if (1) 2 else 3) match { case _ => }").show[Code] === "(if (1) 2 else 3) match {\n  case _ =>\n}")
+    assert(templStat("if (1) 2 else 3 match { case _ => }").show[Code] === s"if (1) 2 else 3 match {${EOL}  case _ =>${EOL}}")
+    assert(templStat("(if (1) 2 else 3) match { case _ => }").show[Code] === s"(if (1) 2 else 3) match {${EOL}  case _ =>${EOL}}")
     assert(templStat("unit.toCheck += (() => body)").show[Code] === "unit.toCheck += (() => body)")
-    assert(templStat("({ foo1; foo2 }).orElse(bar)").show[Code] === "{\n  foo1\n  foo2\n}.orElse(bar)")
-    assert(templStat("(foo match { case _ => }).orElse(bar)").show[Code] === "(foo match {\n  case _ =>\n}).orElse(bar)")
+    assert(templStat("({ foo1; foo2 }).orElse(bar)").show[Code] === s"{${EOL}  foo1${EOL}  foo2${EOL}}.orElse(bar)")
+    assert(templStat("(foo match { case _ => }).orElse(bar)").show[Code] === s"(foo match {${EOL}  case _ =>${EOL}}).orElse(bar)")
     assert(templStat("foo || (if (cond) bar else baz)").show[Code] === "foo || (if (cond) bar else baz)")
-    assert(templStat("foo && (bar match { case _ => })").show[Code] === "foo && (bar match {\n  case _ =>\n})")
+    assert(templStat("foo && (bar match { case _ => })").show[Code] === s"foo && (bar match {${EOL}  case _ =>${EOL}})")
     assert(templStat("\"foo \" + (if (cond) bar else baz)").show[Code] === "\"foo \" + (if (cond) bar else baz)")
-    assert(templStat("foo match { case bar @ (_: T1 | _: T2) => }").show[Code] === "foo match {\n  case bar @ (_: T1 | _: T2) =>\n}")
-    assert(templStat("foo match { case A + B / C => }").show[Code] === "foo match {\n  case A + B / C =>\n}")
-    assert(templStat("foo match { case (A + B) / C => }").show[Code] === "foo match {\n  case (A + B) / C =>\n}")
-    assert(templStat("foo match { case A + (B / C) => }").show[Code] === "foo match {\n  case A + B / C =>\n}")
-    assert(templStat("foo match { case bar :: Nil :: Nil => }").show[Code] === "foo match {\n  case bar :: Nil :: Nil =>\n}")
-    assert(templStat("foo match { case (bar :: Nil) :: Nil => }").show[Code] === "foo match {\n  case (bar :: Nil) :: Nil =>\n}")
+    assert(templStat("foo match { case bar @ (_: T1 | _: T2) => }").show[Code] === s"foo match {${EOL}  case bar @ (_: T1 | _: T2) =>${EOL}}")
+    assert(templStat("foo match { case A + B / C => }").show[Code] === s"foo match {${EOL}  case A + B / C =>${EOL}}")
+    assert(templStat("foo match { case (A + B) / C => }").show[Code] === s"foo match {${EOL}  case (A + B) / C =>${EOL}}")
+    assert(templStat("foo match { case A + (B / C) => }").show[Code] === s"foo match {${EOL}  case A + B / C =>${EOL}}")
+    assert(templStat("foo match { case bar :: Nil :: Nil => }").show[Code] === s"foo match {${EOL}  case bar :: Nil :: Nil =>${EOL}}")
+    assert(templStat("foo match { case (bar :: Nil) :: Nil => }").show[Code] === s"foo match {${EOL}  case (bar :: Nil) :: Nil =>${EOL}}")
     assert(templStat("@(foo @foo) class Bar").show[Code] === "@(foo @foo) class Bar")
     assert(templStat("(foo: Foo): @foo").show[Code] === "(foo: Foo): @foo")
     assert(templStat("type T = A + B / C").show[Code] === "type T = A + B / C")
@@ -239,8 +240,8 @@ class ShowSuite extends ParseSuite {
     assert(templStat("type T = A + (B / C)").show[Code] === "type T = A + (B / C)")
     assert(templStat("type T = A :: B :: C").show[Code] === "type T = A :: B :: C")
     assert(templStat("type T = (A :: B) :: C").show[Code] === "type T = (A :: B) :: C")
-    assert(templStat("foo match { case _: A | _: B => }").show[Code] === "foo match {\n  case _: A | _: B =>\n}")
-    assert(templStat("foo match { case _: A | _: B | _: C => }").show[Code] === "foo match {\n  case _: A | _: B | _: C =>\n}")
+    assert(templStat("foo match { case _: A | _: B => }").show[Code] === s"foo match {${EOL}  case _: A | _: B =>${EOL}}")
+    assert(templStat("foo match { case _: A | _: B | _: C => }").show[Code] === s"foo match {${EOL}  case _: A | _: B | _: C =>${EOL}}")
   }
 
   test("more trickiness") {
