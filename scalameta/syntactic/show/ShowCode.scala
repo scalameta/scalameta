@@ -12,6 +12,7 @@ import scala.meta.syntactic.ast._
 import scala.{meta => api}
 import org.scalameta.adt._
 import org.scalameta.invariants._
+import scala.compat.Platform.EOL
 
 // TODO: fix occasional incorrectness when semicolons are omitted
 // TODO: soft wrapping
@@ -156,7 +157,7 @@ object Code {
     case t: Lit.Float    => m(Literal, s(t.value.toString + "f"))
     case t: Lit.Double   => m(Literal, s(t.value.toString + "d"))
     case t: Lit.Char     => m(Literal, s(enquote(t.value.toString, SingleQuotes)))
-    case t: Lit.String   => m(Literal, s(enquote(t.value.toString, if (t.value.contains("\n")) TripleQuotes else DoubleQuotes)))
+    case t: Lit.String   => m(Literal, s(enquote(t.value.toString, if (t.value.contains(EOL)) TripleQuotes else DoubleQuotes)))
     case t: Lit.Symbol   => m(Literal, s("'", t.value.name))
     case _: Lit.Null     => m(Literal, s(kw("null")))
     case _: Lit.Unit     => m(Literal, s("()"))
@@ -231,7 +232,7 @@ object Code {
         case (part, id: Name) if !id.isBackquoted => s(part.value, "$", id.value)
         case (part, arg)                          => s(part.value, "${", p(Expr, arg), "}")
       }
-      val quote = if (t.parts.map(_.value).exists(s => s.contains("\n") || s.contains("\""))) "\"\"\"" else "\""
+      val quote = if (t.parts.map(_.value).exists(s => s.contains(EOL) || s.contains("\""))) "\"\"\"" else "\""
       m(SimpleExpr1, s(t.prefix, quote, r(zipped), t.parts.last.value, quote))
 
     // Pat
@@ -294,7 +295,7 @@ object Code {
     case t: Decl.Procedure => s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss)
 
     // Pkg
-    case t: Source             => r(t.stats, "\n")
+    case t: Source             => r(t.stats, EOL)
     case t: Pkg if t.hasBraces => s(kw("package"), " ", t.ref, " {", r(t.stats.map(i(_)), ""), n("}"))
     case t: Pkg                => s(kw("package"), " ", t.ref, r(t.stats.map(n(_))))
     case t: Pkg.Object         => s(kw("package"), " ", a(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
@@ -327,7 +328,7 @@ object Code {
       val isTemplateEmpty = t.early.isEmpty && t.parents.isEmpty && isBodyEmpty
       if (isTemplateEmpty) s()
       else {
-        val isOneLiner = t.stats.length == 0 || (t.stats.length == 1 && !s(t.stats.head).toString.contains("\n"))
+        val isOneLiner = t.stats.length == 0 || (t.stats.length == 1 && !s(t.stats.head).toString.contains(EOL))
         val pearly = if (!t.early.isEmpty) s("{ ", r(t.early, "; "), " } with ") else s()
         val pparents = a(r(t.parents, " with "), " ", !t.parents.isEmpty && !isBodyEmpty)
         val pbody = (t.self.name.nonEmpty || t.self.decltpe.nonEmpty, t.hasStats, t.stats) match {

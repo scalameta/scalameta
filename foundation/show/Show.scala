@@ -8,6 +8,7 @@ import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.{Seq => MutSeq}
 import org.scalameta.convert._
+import scala.compat.Platform.EOL
 
 trait Show[T] { def apply(t: T): Show.Result }
 object Show {
@@ -16,7 +17,7 @@ object Show {
       val sb = new StringBuilder
       var indentation = 0
       def nl(res: Result) = {
-        sb.append("\n")
+        sb.append(EOL)
         sb.append("  " * indentation)
         loop(res)
       }
