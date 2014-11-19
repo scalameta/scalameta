@@ -1,6 +1,5 @@
 import org.scalatest._
 import scala.meta.syntactic.show._
-import scala.compat.Platform.EOL
 
 class ShowSuite extends ParseSuite {
   test("val x: Int (raw)") {
@@ -35,7 +34,7 @@ class ShowSuite extends ParseSuite {
       QQQ
       val y = "\""
     }""".replace("QQQ", "\"\"\""))
-    assert(tree.show[Raw] === """Term.Block(List(Defn.Val(Nil, List(Term.Name("x")), None, Lit.String("\n        x\n      ")), Defn.Val(Nil, List(Term.Name("y")), None, Lit.String("\""))))""")
+    assert(tree.show[Raw] === """Term.Block(List(Defn.Val(Nil, List(Term.Name("x")), None, Lit.String("%n        x%n      ")), Defn.Val(Nil, List(Term.Name("y")), None, Lit.String("\""))))""".replace("%n", escapedEOL))
     assert(tree.show[Code] === """
     |{
     |  val x = QQQ
@@ -55,7 +54,7 @@ class ShowSuite extends ParseSuite {
         ..$z
       QQQ
     }""".replace("QQQ", "\"\"\""))
-    assert(tree.show[Raw] === """Term.Block(List(Defn.Val(Nil, List(Term.Name("x")), None, Term.Interpolate(Term.Name("q"), List(Lit.String("123 + "), Lit.String(" + "), Lit.String(" + 456")), List(Term.Name("x"), Term.Apply(Term.Name("foo"), List(Lit.Int(123)))))), Defn.Val(Nil, List(Term.Name("y")), None, Lit.String("\n        $x\n        $y\n        ..$z\n      "))))""")
+    assert(tree.show[Raw] === """Term.Block(List(Defn.Val(Nil, List(Term.Name("x")), None, Term.Interpolate(Term.Name("q"), List(Lit.String("123 + "), Lit.String(" + "), Lit.String(" + 456")), List(Term.Name("x"), Term.Apply(Term.Name("foo"), List(Lit.Int(123)))))), Defn.Val(Nil, List(Term.Name("y")), None, Lit.String("%n        $x%n        $y%n        ..$z%n      "))))""".replace("%n", escapedEOL))
     assert(tree.show[Code] === """
     |{
     |  val x = q"123 + $x + ${foo(123)} + 456"
