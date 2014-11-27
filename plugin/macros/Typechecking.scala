@@ -3,7 +3,7 @@ package internal.hosts.scalacompiler
 package macros
 
 import scala.reflect.internal.Flags._
-import scala.meta.internal.hosts.scalacompiler.{Plugin => PalladiumPlugin}
+import scala.meta.internal.hosts.scalacompiler.{PluginBase => PalladiumPlugin}
 
 trait Typechecking {
   self: PalladiumPlugin =>

@@ -1,7 +1,7 @@
 package scala.meta
 package internal.hosts.scalacompiler
 
-import scala.meta.internal.hosts.scalacompiler.{Plugin => PalladiumPlugin}
+import scala.meta.internal.hosts.scalacompiler.{PluginBase => PalladiumPlugin}
 
 object Settings {
   class Setting[T](get: () => T, set: T => Unit) {
