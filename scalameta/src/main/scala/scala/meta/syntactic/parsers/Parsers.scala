@@ -120,10 +120,6 @@ object SyntacticInfo {
 }
 import SyntacticInfo._
 
-case class ParseAbort(msg: String) extends Exception(s"abort: $msg")
-case class ParseSyntaxError(offset: Offset, msg: String) extends Exception(s"syntax error at $offset: $msg")
-case class ParseIncompleteInputError(msg: String) extends Exception("incomplete input: $msg")
-
 class Parser(val origin: Origin) extends AbstractParser {
   def this(code: String) = this(Origin.String(code))
   /** The parse starting point depends on whether the origin file is self-contained:
@@ -131,17 +127,9 @@ class Parser(val origin: Origin) extends AbstractParser {
    */
   def parseStartRule = () => compilationUnit()
 
-  var in: TokIterator = new TokIterator(origin.tokens)
-
-  // warning don't stop parsing
-  // TODO:
-  def warning(offset: Offset, msg: String): Unit = ()
-  def deprecationWarning(offset: Offset, msg: String): Unit = ()
-
-  // errors do
-  def abort(msg: String): Nothing = throw ParseAbort(msg)
-  def syntaxError(offset: Offset, msg: String): Nothing = throw ParseSyntaxError(offset, msg)
-  def incompleteInputError(msg: String): Nothing = throw ParseIncompleteInputError(msg)
+  val tokens = origin.tokens
+  val nwtokens = tokens.filter(_.isNot[Whitespace])
+  var in: TokIterator = new TokIterator(nwtokens)
 
   /** the markup parser */
   // private[this] lazy val xmlp = new MarkupParser(this, preserveWS = true)
@@ -164,6 +152,9 @@ abstract class AbstractParser { parser =>
   def tok = in.tok
   def next() = in.next()
   val origin: Origin
+
+  val report = Report(() => in.tok.offset)
+  import report._
 
   /** Scoping operator used to temporarily look into the future.
    *  Backs up token iterator before evaluating a block and restores it after.
@@ -279,58 +270,21 @@ abstract class AbstractParser { parser =>
     finally inFunReturnType = saved
   }
 
-  protected def skip(targetToken: Tok) {
-    var nparens = 0
-    var nbraces = 0
-    while (true) {
-      tok match {
-        case _: EOF =>
-          return
-        case _: `;` =>
-          if (nparens == 0 && nbraces == 0) return
-        case _: `\n` =>
-          if (nparens == 0 && nbraces == 0) return
-        case _: `\n\n` =>
-          if (nparens == 0 && nbraces == 0) return
-        case _: `)` =>
-          nparens -= 1
-        case _: `}` =>
-          if (nbraces == 0) return
-          nbraces -= 1
-        case _: `(` =>
-          nparens += 1
-        case _: `{` =>
-          nbraces += 1
-        case _ =>
-      }
-      if (targetToken == tok && nparens == 0 && nbraces == 0) return
-      next()
-    }
-  }
-
-  def warning(offset: Offset, msg: String): Unit
-  def deprecationWarning(offset: Offset, msg: String) : Unit
-
-  def abort(msg: String): Nothing
-  def incompleteInputError(msg: String): Nothing
-  def syntaxError(offset: Offset, msg: String): Nothing
-
-  def syntaxError(msg: String): Nothing = syntaxError(tok.offset, msg)
-  def warning(msg: String): Unit = warning(tok.offset, msg)
-  def deprecationWarning(msg: String): Unit = deprecationWarning(tok.offset, msg)
-
-  // TODO: get offset out of tree once we have positions
-  def warning(tree: Tree, msg: String): Unit = deprecationWarning(msg)
-  def syntaxError(tree: Tree, msg: String): Nothing = syntaxError(msg)
+  // TODO: fixme once trees have positions
+  def offset(t: Tree): Offset = in.tok.offset
 
   // TODO: print nice textual representaion of T here instead of runtime class
-  def syntaxErrorExpected[T <: Tok: ClassTag]: Nothing = syntaxError(s"${implicitly[ClassTag[T]].runtimeClass} expected but $tok found.")
+  def syntaxErrorExpected[T <: Tok: TypeString]: Nothing = syntaxError(s"${implicitly[TypeString[T]].value} expected but $tok found.")
 
   /** Consume one token of the specified type, or signal an error if it is not there. */
-  def accept[T <: Tok: ClassTag]: Unit =
+  def accept[T <: Tok: ClassTag: TypeString]: Unit =
     if (tok.is[T]) {
       if (tok.isNot[EOF]) next()
     } else syntaxErrorExpected[T]
+
+  /** If current token is T consume it. */
+  def acceptOpt[T <: Tok: ClassTag]: Unit =
+    if (tok.is[T]) next()
 
   /** {{{
    *  semi = nl {nl} | `;`
@@ -338,8 +292,8 @@ abstract class AbstractParser { parser =>
    *  }}}
    */
   def acceptStatSep(): Unit = tok match {
-    case _: `\n` | _: `\n\n` => next()
-    case _                   => accept[`;`]
+    case _: `\n` => next()
+    case _       => accept[`;`]
   }
   def acceptStatSepOpt() =
     if (!tok.is[StatSeqEnd])
@@ -378,7 +332,7 @@ abstract class AbstractParser { parser =>
     case Lit.Unit() =>
       None
     case other =>
-      syntaxError(other, s"$other, not a legal formal parameter")
+      syntaxError(s"$other, not a legal formal parameter", at = offset(other))
   }
 
   def convertToTypeId(ref: Term.Ref): Option[Type] = ref match {
@@ -558,8 +512,8 @@ abstract class AbstractParser { parser =>
         } else {
           val tuple = makeTupleType(ts map {
             case t: Type              => t
-            case p: Type.Arg.ByName   => syntaxError(p, "by name type not allowed here")
-            case p: Type.Arg.Repeated => syntaxError(p, "repeated type not allowed here")
+            case p: Type.Arg.ByName   => syntaxError("by name type not allowed here", at = offset(p))
+            case p: Type.Arg.Repeated => syntaxError("repeated type not allowed here", at = offset(p))
           })
           infixTypeRest(
             compoundTypeRest(Some(
@@ -900,7 +854,7 @@ abstract class AbstractParser { parser =>
   }
 
   def newLinesOpt(): Unit = {
-    if (tok.is[`\n`] || tok.is[`\n\n`])
+    if (tok.is[`\n`])
       next()
   }
 
@@ -983,6 +937,7 @@ abstract class AbstractParser { parser =>
       newLinesOpt()
       val thenp = expr()
       if (tok.is[`else`]) { next(); Term.If(cond, thenp, expr()) }
+      else if (tok.is[`;`] && ahead { tok.is[`else`] }) { next(); next(); Term.If(cond, thenp, expr()) }
       else { Term.If(cond, thenp) }
     case _: `try` =>
       next()
@@ -1243,7 +1198,7 @@ abstract class AbstractParser { parser =>
       case Nil                              => Nil
       case (t: Term) :: rest                => t :: loop(rest)
       case (nmd: Term.Arg.Named) :: rest    => Term.Assign(nmd.name, nmd.rhs) :: loop(rest)
-      case (rep: Term.Arg.Repeated) :: rest => syntaxError(rep, "repeated argument not allowed here")
+      case (rep: Term.Arg.Repeated) :: rest => syntaxError("repeated argument not allowed here", at = offset(rep))
     }
     makeTupleTerm(loop(args))
   }
@@ -1653,7 +1608,7 @@ abstract class AbstractParser { parser =>
    */
   def modifiers(isLocal: Boolean = false): List[Mod] = {
     def addMod(mods: List[Mod], mod: Mod, advance: Boolean = true): List[Mod] = {
-      mods.foreach { m => if (m == mod) syntaxError(m, "repeated modifier") }
+      mods.foreach { m => if (m == mod) syntaxError("repeated modifier", at = offset(mod)) }
       if (advance) next()
       mods :+ mod
     }
@@ -1766,7 +1721,7 @@ abstract class AbstractParser { parser =>
     if (ownerIsType) {
       mods ++= modifiers()
       mods.getAll[Mod.Lazy].foreach { m =>
-        syntaxError(m, "lazy modifier not allowed here. Use call-by-name parameters instead")
+        syntaxError("lazy modifier not allowed here. Use call-by-name parameters instead", at = offset(m))
       }
     }
     val name = termName()
@@ -1944,7 +1899,7 @@ abstract class AbstractParser { parser =>
    */
   def defOrDclOrCtor(mods: List[Mod]): Stat = {
     mods.getAll[Mod.Lazy].foreach { m =>
-      if (tok.isNot[`val`]) syntaxError(m, "lazy not allowed here. Only vals can be lazy")
+      if (tok.isNot[`val`]) syntaxError("lazy not allowed here. Only vals can be lazy", at = offset(m))
     }
     tok match {
       case _: `val` | _: `var` =>
@@ -1963,7 +1918,7 @@ abstract class AbstractParser { parser =>
     val mods = anns ++ modifiers()
     defOrDclOrCtor(mods) match {
       case s if s.isTemplateStat => s
-      case other                 => syntaxError(other, "is not a valid template statement")
+      case other                 => syntaxError("is not a valid template statement", at = offset(other))
     }
   }
 
@@ -1990,10 +1945,10 @@ abstract class AbstractParser { parser =>
       if (isMutable) Defn.Var(mods, lhs, tp, rhs)
       else Defn.Val(mods, lhs, tp, rhs.get)
     } else {
-      mods.getAll[Mod.Lazy].foreach { syntaxError(_, "lazy values may not be abstract") }
+      mods.getAll[Mod.Lazy].foreach { m => syntaxError("lazy values may not be abstract", at = offset(m)) }
       val ids = lhs.map {
         case name: Term.Name => name
-        case other          => syntaxError(other, "pattern definition may not be abstract")
+        case other           => syntaxError("pattern definition may not be abstract", at = offset(other))
       }
 
       if (isMutable) Decl.Var(mods, ids, tp.get)
@@ -2029,7 +1984,7 @@ abstract class AbstractParser { parser =>
 
   def funDefRest(mods: List[Mod], name: Term.Name): Stat = {
     def warnProcedureDeprecation =
-      deprecationWarning(tok.offset, s"Procedure syntax is deprecated. Convert procedure `$name` to method by adding `: Unit`.")
+      deprecationWarning(s"Procedure syntax is deprecated. Convert procedure `$name` to method by adding `: Unit`.")
     val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
     val paramss = paramClauses(ownerIsType = false).asInstanceOf[Seq[Seq[Term.Param]]]
     newLineOptWhenFollowedBy[`{`]
@@ -2062,7 +2017,7 @@ abstract class AbstractParser { parser =>
       }
       if (isMacro) restype match {
         case Some(restype) => Defn.Macro(mods, name, tparams, paramss, restype, rhs)
-        case None => syntaxError(tok.offset, "macros must have explicitly specified return types")
+        case None          => syntaxError("macros must have explicitly specified return types")
       } else Defn.Def(mods, name, tparams, paramss, restype, rhs)
     }
   }
@@ -2139,17 +2094,19 @@ abstract class AbstractParser { parser =>
    *  }}}
    */
   def tmplDef(mods: List[Mod]): Member.Templ = {
-    mods.getAll[Mod.Lazy].foreach { syntaxError(_, "classes cannot be lazy") }
+    mods.getAll[Mod.Lazy].foreach { m => syntaxError("classes cannot be lazy", at = offset(m)) }
     tok match {
       case _: `trait` =>
         traitDef(mods)
       case _: `class ` =>
         classDef(mods)
-      case _: `case class` =>
+      case _: `case` if ahead(tok.is[`class `]) =>
+        next()
         classDef(mods :+ Mod.Case())
       case _: `object` =>
         objectDef(mods)
-      case _: `case object` =>
+      case _: `case` if ahead(tok.is[`object`])=>
+        next()
         objectDef(mods :+ Mod.Case())
       case _ =>
         syntaxError(s"expected start of definition")
@@ -2266,10 +2223,11 @@ abstract class AbstractParser { parser =>
     case v: Defn.Val => v
     case v: Defn.Var => v
     case t: Defn.Type =>
-      syntaxError(t, "early type members are not allowed any longer. " +
-                     "Move them to the regular body: the semantics are the same.")
+      syntaxError("early type members are not allowed any longer. " +
+                  "Move them to the regular body: the semantics are the same.",
+                  at = offset(t))
     case other =>
-      syntaxError(other, "not a valid early definition")
+      syntaxError("not a valid early definition", at = offset(other))
   }
 
   /** {{{
@@ -2312,7 +2270,7 @@ abstract class AbstractParser { parser =>
     } else {
       if (tok.is[`(`]) {
         if (parenMeansSyntaxError) syntaxError("traits or objects may not have parameters")
-        else abort("unexpected opening parenthesis")
+        else error("unexpected opening parenthesis")
       }
       (Term.Param(Nil, None, None, None), Nil, false)
     }
@@ -2326,7 +2284,7 @@ abstract class AbstractParser { parser =>
 
   def existentialStats(): List[Stat] = refinement() map {
     case stat if stat.isExistentialStat => stat
-    case other                          => syntaxError(other, "not a legal existential clause")
+    case other                          => syntaxError("not a legal existential clause", at = offset(other))
   }
 
 /* -------- STATSEQS ------------------------------------------- */
@@ -2437,7 +2395,7 @@ abstract class AbstractParser { parser =>
     if (tok.is[DclIntro]) {
       defOrDclOrCtor(Nil) match {
         case stat if stat.isRefineStat => Some(stat)
-        case other                     => syntaxError(other, "is not a valid refinement declaration")
+        case other                     => syntaxError("is not a valid refinement declaration", at = offset(other))
       }
     } else if (!tok.is[StatSep]) {
       syntaxError(
@@ -2451,12 +2409,12 @@ abstract class AbstractParser { parser =>
     if (mods forall { case _: Mod.Implicit | _: Mod.Lazy | _: Mod.Annot => true; case _ => false })
       (defOrDclOrCtor(mods) match {
         case stat if stat.isBlockStat => stat
-        case other                    => syntaxError(other, "is not a valid block statement")
+        case other                    => syntaxError("is not a valid block statement", at = offset(other))
       })
     else
       (tmplDef(mods) match {
         case stat if stat.isBlockStat => stat
-        case other                    => syntaxError(other, "is not a valid block statement")
+        case other                    => syntaxError("is not a valid block statement", at = offset(other))
       })
   }
 
@@ -2521,7 +2479,7 @@ abstract class AbstractParser { parser =>
     def packageStats(): (List[Term.Ref], List[Stat])  = {
       val refs = new ListBuffer[Term.Ref]
       val ts = new ListBuffer[Stat]
-      while (tok.is[`;`]) next()
+      while (tok.is[`;`] || tok.is[`\n`]) next()
       if (tok.is[`package `]) {
         next()
         if (tok.is[`object`]) {

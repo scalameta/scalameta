@@ -3,7 +3,6 @@ package quasiquotes
 
 import scala.reflect.macros.whitebox.Context
 import org.scalameta.adt._
-import scala.meta.syntactic.parsers.ParseSyntaxError
 
 class Macros[C <: Context](val c: C) extends AdtReflection with NewLiftables {
   val u: c.universe.type = c.universe

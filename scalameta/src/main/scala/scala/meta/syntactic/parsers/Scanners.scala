@@ -5,6 +5,7 @@ import java.util.NoSuchElementException
 import scala.annotation.{ switch, tailrec }
 import scala.collection.{ mutable, immutable }
 import scala.language.postfixOps
+import scala.util.Try
 import mutable.{ ListBuffer, ArrayBuffer }
 import Chars._
 import Tokens._
@@ -39,30 +40,87 @@ trait TokenData {
     this.base = td.base
     this
   }
-}
 
-/** An interface to most of mutable data in Scanner defined in TokenData
- *  and CharArrayReader (+ next, prev fields) with copyFrom functionality
- *  to backup/restore data (used by quasiquotes' lookingAhead).
- */
-trait ScannerData extends TokenData with CharArrayReaderData {
-  /** we need one token lookahead and one token history
+  /** Convert current strVal to char value
    */
-  val next: TokenData = new TokenData{}
-  val prev: TokenData = new TokenData{}
+  def charVal: Char = if (strVal.length > 0) strVal.charAt(0) else 0
 
-  def copyFrom(sd: ScannerData): this.type = {
-    this.next copyFrom sd.next
-    this.prev copyFrom sd.prev
-    super[CharArrayReaderData].copyFrom(sd)
-    super[TokenData].copyFrom(sd)
-    this
+  /** Convert current strVal, base to long value
+   *  This is tricky because of max negative value.
+   */
+  def intVal(negated: Boolean): Try[Long] = {
+    def inner(): Long =
+      if (token == CHARLIT && !negated) {
+        charVal.toLong
+      } else {
+        var value: Long = 0
+        val divider = if (base == 10) 1 else 2
+        val limit: Long =
+          if (token == LONGLIT) Long.MaxValue else Int.MaxValue
+        var i = 0
+        val len = strVal.length
+        while (i < len) {
+          val d = digit2int(strVal charAt i, base)
+          if (d < 0) {
+            throw new Exception("malformed integer number")
+            return 0
+          }
+          if (value < 0 ||
+              limit / (base / divider) < value ||
+              limit - (d / divider) < value * (base / divider) &&
+              !(negated && limit == value * base - 1 + d)) {
+                throw new Exception("integer number too large")
+                return 0
+              }
+          value = value * base + d
+          i += 1
+        }
+        if (negated) -value else value
+      }
+    Try(inner())
   }
+
+  def intVal: Try[Long] = intVal(negated = false)
+
+  /** Convert current strVal, base to double value
+  */
+  def floatVal(negated: Boolean): Try[Double] = {
+    def inner(): Double = {
+      val limit: Double =
+        if (token == DOUBLELIT) Double.MaxValue else Float.MaxValue
+
+      val value: Double = java.lang.Double.valueOf(strVal).doubleValue()
+      def isDeprecatedForm = {
+        val idx = strVal indexOf '.'
+        (idx == strVal.length - 1) || (
+             (idx >= 0)
+          && (idx + 1 < strVal.length)
+          && (!Character.isDigit(strVal charAt (idx + 1)))
+        )
+      }
+      if (value > limit)
+        throw new Exception("floating point number too large")
+      if (isDeprecatedForm)
+        throw new Exception("floating point number is missing digit after dot")
+
+      if (negated) -value else value
+    }
+    Try(inner())
+  }
+
+  def floatVal: Try[Double] = floatVal(negated = false)
 }
 
-abstract class AbstractScanner extends CharArrayReader with TokenData with ScannerData {
-  private def isDigit(c: Char) = java.lang.Character isDigit c
+class Scanner(val origin: Origin, decodeUni: Boolean = true) {
+  val curr: TokenData         = new TokenData {}
+  val next: TokenData         = new TokenData {}
+  val prev: TokenData         = new TokenData {}
+  val reader: CharArrayReader = new CharArrayReader(origin.content, report.error, decodeUni)
+  val report: Report          = Report(() => curr.offset)
 
+  import curr._, reader._, report._
+
+  private def isDigit(c: Char) = java.lang.Character isDigit c
   private var openComments = 0
   protected def putCommentChar(): Unit = nextChar()
 
@@ -208,7 +266,7 @@ abstract class AbstractScanner extends CharArrayReader with TokenData with Scann
     off
   }
 
-  /** Produce next token, filling TokenData fields of Scanner.
+  /** Produce next token, filling curr TokenData fields of Scanner.
    */
   def nextToken() {
     val lastToken = token
@@ -259,51 +317,23 @@ abstract class AbstractScanner extends CharArrayReader with TokenData with Scann
           sepRegions = sepRegions.tail
       }
     } else {
-      this copyFrom next
+      curr copyFrom next
       next.token = EMPTY
     }
 
+    // TODO: make sure these are properly handled in the parser
     /* Insert NEWLINE or NEWLINES if
      * - we are after a newline
      * - we are within a { ... } or on toplevel (wrt sepRegions)
      * - the current token can start a statement and the one before can end it
      * insert NEWLINES if we are past a blank line, NEWLINE otherwise
      */
-    if (afterLineEnd() && inLastOfStat(lastToken) && inFirstOfStat(token) &&
+    /*if (afterLineEnd() && inLastOfStat(lastToken) && inFirstOfStat(token) &&
         (sepRegions.isEmpty || sepRegions.head == RBRACE)) {
-      next copyFrom this
+      next copyFrom curr
       offset = if (lineStartOffset <= offset) lineStartOffset else lastLineStartOffset
       token = if (pastBlankLine()) NEWLINES else NEWLINE
-    }
-
-    // Join CASE + CLASS => CASECLASS, CASE + OBJECT => CASEOBJECT, SEMI + ELSE => ELSE
-    if (token == CASE) {
-      prev copyFrom this
-      val nextLastOffset = charOffset - 1
-      fetchToken()
-      def resetOffset() {
-        offset = prev.offset
-        lastOffset = prev.lastOffset
-      }
-      if (token == CLASS) {
-        token = CASECLASS
-        resetOffset()
-      } else if (token == OBJECT) {
-        token = CASEOBJECT
-        resetOffset()
-      } else {
-        lastOffset = nextLastOffset
-        next copyFrom this
-        this copyFrom prev
-      }
-    } else if (token == SEMI) {
-      prev copyFrom this
-      fetchToken()
-      if (token != ELSE) {
-        next copyFrom this
-        this copyFrom prev
-      }
-    }
+    }*/
 
     //print("["+this+"]")
   }
@@ -342,10 +372,11 @@ abstract class AbstractScanner extends CharArrayReader with TokenData with Scann
   protected final def fetchToken() {
     offset = charOffset - 1
     (ch: @switch) match {
-
       case ' ' | '\t' | CR | LF | FF =>
+        token = WHITESPACE
+        strVal = ch.toString
         nextChar()
-        fetchToken()
+        //nextToken()
       case 'A' | 'B' | 'C' | 'D' | 'E' |
            'F' | 'G' | 'H' | 'I' | 'J' |
            'K' | 'L' | 'M' | 'N' | 'O' |
@@ -763,7 +794,7 @@ abstract class AbstractScanner extends CharArrayReader with TokenData with Scann
         // if (settings.future)
         //   syntaxError(start, msg("unsupported"))
         // else
-          deprecationWarning(start, msg("deprecated"))
+          deprecationWarning(msg("deprecated"), at = start)
         putChar(oct.toChar)
       } else {
         ch match {
@@ -785,7 +816,7 @@ abstract class AbstractScanner extends CharArrayReader with TokenData with Scann
     }
 
   protected def invalidEscape(): Unit = {
-    syntaxError(charOffset - 1, "invalid escape character")
+    syntaxError("invalid escape character", at = charOffset - 1)
     putChar(ch)
   }
 
@@ -835,76 +866,6 @@ abstract class AbstractScanner extends CharArrayReader with TokenData with Scann
     checkNoLetter()
     setStrVal()
   }
-
-  /** Convert current strVal to char value
-   */
-  def charVal: Char = if (strVal.length > 0) strVal.charAt(0) else 0
-
-  /** Convert current strVal, base to long value
-   *  This is tricky because of max negative value.
-   */
-  def intVal(negated: Boolean): Long = {
-    if (token == CHARLIT && !negated) {
-      charVal.toLong
-    } else {
-      var value: Long = 0
-      val divider = if (base == 10) 1 else 2
-      val limit: Long =
-        if (token == LONGLIT) Long.MaxValue else Int.MaxValue
-      var i = 0
-      val len = strVal.length
-      while (i < len) {
-        val d = digit2int(strVal charAt i, base)
-        if (d < 0) {
-          syntaxError("malformed integer number")
-          return 0
-        }
-        if (value < 0 ||
-            limit / (base / divider) < value ||
-            limit - (d / divider) < value * (base / divider) &&
-            !(negated && limit == value * base - 1 + d)) {
-              syntaxError("integer number too large")
-              return 0
-            }
-        value = value * base + d
-        i += 1
-      }
-      if (negated) -value else value
-    }
-  }
-
-  def intVal: Long = intVal(negated = false)
-
-  /** Convert current strVal, base to double value
-  */
-  def floatVal(negated: Boolean): Double = {
-
-    val limit: Double =
-      if (token == DOUBLELIT) Double.MaxValue else Float.MaxValue
-    try {
-      val value: Double = java.lang.Double.valueOf(strVal).doubleValue()
-      def isDeprecatedForm = {
-        val idx = strVal indexOf '.'
-        (idx == strVal.length - 1) || (
-             (idx >= 0)
-          && (idx + 1 < strVal.length)
-          && (!Character.isDigit(strVal charAt (idx + 1)))
-        )
-      }
-      if (value > limit)
-        syntaxError("floating point number too large")
-      if (isDeprecatedForm)
-        syntaxError("floating point number is missing digit after dot")
-
-      if (negated) -value else value
-    } catch {
-      case _: NumberFormatException =>
-        syntaxError("malformed floating point number")
-        0.0
-    }
-  }
-
-  def floatVal: Double = floatVal(negated = false)
 
   def checkNoLetter() {
     if (isIdentifierPart(ch) && ch >= ' ')
@@ -1008,29 +969,6 @@ abstract class AbstractScanner extends CharArrayReader with TokenData with Scann
 
 // Errors -----------------------------------------------------------------
 
-  def error(off: Offset, msg: String): Unit
-  def incompleteInputError(off: Offset, msg: String): Unit
-  def deprecationWarning(off: Offset, msg: String): Unit
-
-  /** generate an error at the given offset
-  */
-  def syntaxError(off: Offset, msg: String) {
-    error(off, msg)
-    token = ERROR
-  }
-
-  /** generate an error at the current token offset
-  */
-  def syntaxError(msg: String): Unit = syntaxError(offset, msg)
-
-  def deprecationWarning(msg: String): Unit = deprecationWarning(offset, msg)
-
-  /** signal an error where the input ended in the middle of a token */
-  def incompleteInputError(msg: String) {
-    incompleteInputError(offset, msg)
-    token = EOF
-  }
-
   override def toString() = token match {
     case IDENTIFIER | BACKQUOTED_IDENT =>
       "id(" + name + ")"
@@ -1062,25 +1000,15 @@ abstract class AbstractScanner extends CharArrayReader with TokenData with Scann
       token2string(token)
   }
 
-  /** Initialization method: read first char, then first token
+  /** Initialize scanner; call f on each scanned token data
    */
-  def init() {
+  def foreach(f: TokenData => Unit) {
     nextChar()
     nextToken()
+    f(curr)
+    while(curr.token != EOF) {
+      nextToken()
+      f(curr)
+    }
   }
-}
-
-case class MalformedInput(val offset: Offset, val msg: String) extends Exception
-
-/** A scanner for a given origin file not necessarily attached to a compilation unit.
- *  Useful for looking inside origin files that aren not currently compiled to see what's there
- */
-class Scanner(val origin: Origin) extends AbstractScanner {
-  val buf = origin.content
-  override val decodeUni: Boolean = true
-
-  // suppress warnings, throw exception on errors
-  def deprecationWarning(off: Offset, msg: String): Unit   = ()
-  def error  (off: Offset, msg: String): Unit              = throw MalformedInput(off, msg)
-  def incompleteInputError(off: Offset, msg: String): Unit = throw MalformedInput(off, msg)
 }

@@ -3,13 +3,19 @@ package parsers
 
 import org.scalameta.adt._
 import scala.reflect.ClassTag
+import scala.language.experimental.macros
 
 @root trait Tok {
-  def is[T <: Tok: ClassTag]: Boolean  = this match { case _: T => true; case _ => false }
+  def is[T <: Tok: ClassTag]: Boolean    = this match { case _: T => true; case _ => false }
   def isNot[T <: Tok: ClassTag]: Boolean = !is[T]
   def offset: Int
 }
 object Tok {
+  trait TypeString[T <: Tok] { val value: String }
+  object TypeString {
+    implicit def materialize[T <: Tok]: TypeString[T] = macro org.scalameta.syntactic.TypeString.materialize[T]
+  }
+
   @branch trait TypeIntro extends Tok
   @branch trait ExprIntro extends Tok
   @branch trait DefIntro extends Tok
@@ -41,9 +47,7 @@ object Tok {
   @leaf class `false`(offset: Int) extends Keyword with Literal
 
   @branch trait Keyword extends Tok
-  @leaf class `case`(offset: Int) extends Keyword with CaseDefEnd
-  @leaf class `case class`(offset: Int) extends Keyword with TemplateIntro
-  @leaf class `case object`(offset: Int) extends Keyword with TemplateIntro
+  @leaf class `case`(offset: Int) extends Keyword with CaseDefEnd with TemplateIntro
   @leaf class `catch`(offset: Int) extends Keyword
   @leaf class `class `(offset: Int) extends Keyword with TemplateIntro
   @leaf class `def`(offset: Int) extends Keyword with DclIntro
@@ -106,7 +110,13 @@ object Tok {
   @leaf class `>:`(offset: Int) extends Delim
   @leaf class `<%`(offset: Int) extends Delim
   @leaf class `\n`(offset: Int) extends StatSep
-  @leaf class `\n\n`(offset: Int) extends StatSep
+
+  @branch trait Whitespace extends Tok
+  @leaf class ` `(offset: Int) extends Whitespace
+  @leaf class `\t`(offset: Int) extends Whitespace
+  @leaf class FormFeed(offset: Int) extends Whitespace
+  @leaf class LineFeed(offset: Int) extends Whitespace
+  @leaf class CarriageReturn(offset: Int) extends Whitespace
 
   @leaf class EOF(offset: Int) extends StatSep with StatSeqEnd with CaseDefEnd
   @leaf class XMLStart(offset: Int) extends Tok with ExprIntro

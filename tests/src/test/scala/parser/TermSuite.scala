@@ -135,6 +135,11 @@ class TermSuite extends ParseSuite {
     assert(iff.hasElsep === true)
   }
 
+  test("if (true) true; else false") {
+    val iff @ If(Lit.Bool(true), Lit.Bool(true), Lit.Bool(false)) = term("if (true) true; else false")
+    assert(iff.hasElsep === true)
+  }
+
   test("if (true) true") {
     val iff @ If(Lit.Bool(true), Lit.Bool(true), Lit.Unit()) = term("if (true) true")
     assert(iff.hasElsep === false)

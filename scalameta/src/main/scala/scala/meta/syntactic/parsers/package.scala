@@ -3,8 +3,29 @@ package scala.meta.syntactic
 import scala.collection.{immutable, mutable}
 import scala.annotation.switch
 import org.scalameta.convert._
+import org.scalameta.unreachable
 import parsers.Tokens._
 import scala.meta._
+import scala.meta.syntactic.parsers.Chars.{CR, LF, FF}
+
+package parsers {
+  // TODO: when I grow up I want to become a monad, just like my daddy
+  trait Report {
+    def currentOffset: Offset
+    def warning(msg: String, at: Offset = currentOffset): Unit                 = ()
+    def deprecationWarning(msg: String, at: Offset = currentOffset): Unit      = ()
+    def error(msg: String, at: Offset = currentOffset): Nothing                = throw Report.Error(msg, at)
+    def syntaxError(msg: String, at: Offset = currentOffset): Nothing          = throw Report.SyntaxError(msg, at)
+    def incompleteInputError(msg: String, at: Offset = currentOffset): Nothing = throw Report.IncompleteInputError(msg, at)
+  }
+  object Report {
+    def apply(current: () => Offset) = new Report { def currentOffset = current() }
+    sealed abstract class Exception(msg: String) extends scala.Exception(msg)
+    final case class Error(msg: String, at: Offset) extends Exception(s"error $msg at $at: $msg")
+    final case class SyntaxError(msg: String, at: Offset) extends Exception(s"syntax error at $at: $msg")
+    final case class IncompleteInputError(msg: String, at: Offset) extends Exception("incomplete input at $at: $msg")
+  }
+}
 
 package object parsers {
   type Offset = Int
@@ -42,109 +63,122 @@ package object parsers {
     private val origin: Origin = ev(originLike)
     def parse[T](implicit ev: Parse[T]): T = ev(origin)
     def tokens: immutable.IndexedSeq[Tok] = {
-      val scanner = new Scanner(origin)
-      scanner.init()
-      var buf = new mutable.UnrolledBuffer[Tok]
-      var tok: Tok = null
-      do {
-        tok = (scanner.token: @switch) match {
-          case EMPTY => ???
-          case UNDEF => ???
-          case ERROR => ???
-          case EOF   => Tok.EOF(scanner.offset)
+      def td2tok(curr: TokenData): Tok = {
+        import curr.offset
+        (curr.token: @switch) match {
+          case CHARLIT         => Tok.Literal.Char(curr.charVal, offset)
+          case INTLIT          => Tok.Literal.Int(curr.intVal(false).map(_.toInt).get, offset)
+          case LONGLIT         => Tok.Literal.Long(curr.intVal(false).get, offset)
+          case FLOATLIT        => Tok.Literal.Float(curr.floatVal(false).map(_.toFloat).get, offset)
+          case DOUBLELIT       => Tok.Literal.Double(curr.floatVal(false).get, offset)
+          case STRINGLIT       => Tok.Literal.String(curr.strVal, offset)
+          case SYMBOLLIT       => Tok.Literal.Symbol(scala.Symbol(curr.strVal), offset)
+          case INTERPOLATIONID => Tok.Interpolation.Id(curr.name, offset)
+          case STRINGPART      => Tok.Interpolation.Part(curr.strVal, offset)
 
-          case CHARLIT         => Tok.Literal.Char(scanner.charVal, scanner.offset)
-          case INTLIT          => Tok.Literal.Int(scanner.intVal(false).toInt, scanner.offset)
-          case LONGLIT         => Tok.Literal.Long(scanner.intVal(false), scanner.offset)
-          case FLOATLIT        => Tok.Literal.Float(scanner.floatVal(false).toFloat, scanner.offset)
-          case DOUBLELIT       => Tok.Literal.Double(scanner.floatVal(false), scanner.offset)
-          case STRINGLIT       => Tok.Literal.String(scanner.strVal, scanner.offset)
-          case SYMBOLLIT       => Tok.Literal.Symbol(scala.Symbol(scanner.strVal), scanner.offset)
-          case INTERPOLATIONID => Tok.Interpolation.Id(scanner.name, scanner.offset)
-          case STRINGPART      => Tok.Interpolation.Part(scanner.strVal, scanner.offset)
+          case IDENTIFIER       => Tok.Ident(curr.name, isBackquoted = false, offset)
+          case BACKQUOTED_IDENT => Tok.Ident(curr.name, isBackquoted = true, offset)
 
-          case IDENTIFIER       => Tok.Ident(scanner.name, isBackquoted = false, scanner.offset)
-          case BACKQUOTED_IDENT => Tok.Ident(scanner.name, isBackquoted = true, scanner.offset)
+          case NEW   => Tok.`new`(offset)
+          case THIS  => Tok.`this`(offset)
+          case SUPER => Tok.`super`(offset)
+          case NULL  => Tok.`null`(offset)
+          case TRUE  => Tok.`true`(offset)
+          case FALSE => Tok.`false`(offset)
 
-          case NEW   => Tok.`new`(scanner.offset)
-          case THIS  => Tok.`this`(scanner.offset)
-          case SUPER => Tok.`super`(scanner.offset)
-          case NULL  => Tok.`null`(scanner.offset)
-          case TRUE  => Tok.`true`(scanner.offset)
-          case FALSE => Tok.`false`(scanner.offset)
+          case IMPLICIT  => Tok.`implicit`(offset)
+          case OVERRIDE  => Tok.`override`(offset)
+          case PROTECTED => Tok.`protected`(offset)
+          case PRIVATE   => Tok.`private`(offset)
+          case ABSTRACT  => Tok.`abstract`(offset)
+          case FINAL     => Tok.`final`(offset)
+          case SEALED    => Tok.`sealed`(offset)
+          case LAZY      => Tok.`lazy`(offset)
+          case MACRO     => Tok.`macro`(offset)
 
-          case IMPLICIT  => Tok.`implicit`(scanner.offset)
-          case OVERRIDE  => Tok.`override`(scanner.offset)
-          case PROTECTED => Tok.`protected`(scanner.offset)
-          case PRIVATE   => Tok.`private`(scanner.offset)
-          case ABSTRACT  => Tok.`abstract`(scanner.offset)
-          case FINAL     => Tok.`final`(scanner.offset)
-          case SEALED    => Tok.`sealed`(scanner.offset)
-          case LAZY      => Tok.`lazy`(scanner.offset)
-          case MACRO     => Tok.`macro`(scanner.offset)
+          case PACKAGE    => Tok.`package `(offset)
+          case IMPORT     => Tok.`import`(offset)
+          case CLASS      => Tok.`class `(offset)
+          case CASECLASS  => unreachable
+          case OBJECT     => Tok.`object`(offset)
+          case CASEOBJECT => unreachable
+          case TRAIT      => Tok.`trait`(offset)
+          case EXTENDS    => Tok.`extends`(offset)
+          case WITH       => Tok.`with`(offset)
+          case TYPE       => Tok.`type`(offset)
+          case FORSOME    => Tok.`forSome`(offset)
+          case DEF        => Tok.`def`(offset)
+          case VAL        => Tok.`val`(offset)
+          case VAR        => Tok.`var`(offset)
 
-          case PACKAGE    => Tok.`package `(scanner.offset)
-          case IMPORT     => Tok.`import`(scanner.offset)
-          case CLASS      => Tok.`class `(scanner.offset)
-          case CASECLASS  => Tok.`case class`(scanner.offset)
-          case OBJECT     => Tok.`object`(scanner.offset)
-          case CASEOBJECT => Tok.`case object`(scanner.offset)
-          case TRAIT      => Tok.`trait`(scanner.offset)
-          case EXTENDS    => Tok.`extends`(scanner.offset)
-          case WITH       => Tok.`with`(scanner.offset)
-          case TYPE       => Tok.`type`(scanner.offset)
-          case FORSOME    => Tok.`forSome`(scanner.offset)
-          case DEF        => Tok.`def`(scanner.offset)
-          case VAL        => Tok.`val`(scanner.offset)
-          case VAR        => Tok.`var`(scanner.offset)
+          case IF      => Tok.`if`(offset)
+          case THEN    => unreachable
+          case ELSE    => Tok.`else`(offset)
+          case WHILE   => Tok.`while`(offset)
+          case DO      => Tok.`do`(offset)
+          case FOR     => Tok.`for`(offset)
+          case YIELD   => Tok.`yield`(offset)
+          case THROW   => Tok.`throw`(offset)
+          case TRY     => Tok.`try`(offset)
+          case CATCH   => Tok.`catch`(offset)
+          case FINALLY => Tok.`finally`(offset)
+          case CASE    => Tok.`case`(offset)
+          case RETURN  => Tok.`return`(offset)
+          case MATCH   => Tok.`match`(offset)
 
-          case IF      => Tok.`if`(scanner.offset)
-          case THEN    => ???
-          case ELSE    => Tok.`else`(scanner.offset)
-          case WHILE   => Tok.`while`(scanner.offset)
-          case DO      => Tok.`do`(scanner.offset)
-          case FOR     => Tok.`for`(scanner.offset)
-          case YIELD   => Tok.`yield`(scanner.offset)
-          case THROW   => Tok.`throw`(scanner.offset)
-          case TRY     => Tok.`try`(scanner.offset)
-          case CATCH   => Tok.`catch`(scanner.offset)
-          case FINALLY => Tok.`finally`(scanner.offset)
-          case CASE    => Tok.`case`(scanner.offset)
-          case RETURN  => Tok.`return`(scanner.offset)
-          case MATCH   => Tok.`match`(scanner.offset)
+          case LPAREN   => Tok.`(`(offset)
+          case RPAREN   => Tok.`)`(offset)
+          case LBRACKET => Tok.`[`(offset)
+          case RBRACKET => Tok.`]`(offset)
+          case LBRACE   => Tok.`{`(offset)
+          case RBRACE   => Tok.`}`(offset)
 
-          case LPAREN   => Tok.`(`(scanner.offset)
-          case RPAREN   => Tok.`)`(scanner.offset)
-          case LBRACKET => Tok.`[`(scanner.offset)
-          case RBRACKET => Tok.`]`(scanner.offset)
-          case LBRACE   => Tok.`{`(scanner.offset)
-          case RBRACE   => Tok.`}`(scanner.offset)
+          case COMMA     => Tok.`,`(offset)
+          case SEMI      => Tok.`;`(offset)
+          case DOT       => Tok.`.`(offset)
+          case COLON     => Tok.`:`(offset)
+          case EQUALS    => Tok.`=`(offset)
+          case AT        => Tok.`@`(offset)
+          case HASH      => Tok.`#`(offset)
+          case USCORE    => Tok.`_ `(offset)
+          case ARROW     => Tok.`=>`(offset)
+          case LARROW    => Tok.`<-`(offset)
+          case SUBTYPE   => Tok.`<:`(offset)
+          case SUPERTYPE => Tok.`>:`(offset)
+          case VIEWBOUND => Tok.`<%`(offset)
 
-          case COMMA     => Tok.`,`(scanner.offset)
-          case SEMI      => Tok.`;`(scanner.offset)
-          case DOT       => Tok.`.`(scanner.offset)
-          case COLON     => Tok.`:`(scanner.offset)
-          case EQUALS    => Tok.`=`(scanner.offset)
-          case AT        => Tok.`@`(scanner.offset)
-          case HASH      => Tok.`#`(scanner.offset)
-          case USCORE    => Tok.`_ `(scanner.offset)
-          case ARROW     => Tok.`=>`(scanner.offset)
-          case LARROW    => Tok.`<-`(scanner.offset)
-          case SUBTYPE   => Tok.`<:`(scanner.offset)
-          case SUPERTYPE => Tok.`>:`(scanner.offset)
-          case VIEWBOUND => Tok.`<%`(scanner.offset)
-          case NEWLINE   => Tok.`\n`(scanner.offset)
-          case NEWLINES  => Tok.`\n\n`(scanner.offset)
-          case XMLSTART  => Tok.XMLStart(scanner.offset)
+          case NEWLINE                           => Tok.`\n`(offset)
+          case WHITESPACE if curr.strVal == "\n" => Tok.`\n`(offset)
+          case WHITESPACE if curr.strVal == "\t" => Tok.`\t`(offset)
+          case WHITESPACE if curr.strVal == " "  => Tok.` `(offset)
+          case WHITESPACE if curr.strVal == CR   => Tok.CarriageReturn(offset)
+          case WHITESPACE if curr.strVal == LF   => Tok.LineFeed(offset)
+          case WHITESPACE if curr.strVal == FF   => Tok.FormFeed(offset)
+          case WHITESPACE                        => unreachable
 
-          case COMMENT    => ???
-          case WHITESPACE => ???
-          case IGNORE     => ???
-          case ESCAPE     => ???
+          case EOF       => Tok.EOF(offset)
+          case XMLSTART  => Tok.XMLStart(offset)
+
+          case COMMENT  => unreachable
+          case IGNORE   => unreachable
+          case ESCAPE   => unreachable
+          case EMPTY    => unreachable
+          case UNDEF    => unreachable
+          case ERROR    => unreachable
+          case NEWLINES => unreachable
         }
-        buf += tok
-        scanner.nextToken()
-      } while (tok.isNot[Tok.EOF])
+      }
+
+      var buf = new mutable.UnrolledBuffer[Tok]
+      val scanner = new Scanner(origin)
+      scanner.foreach { curr =>
+        try {
+          buf += td2tok(curr)
+        } catch {
+          case e: Exception =>
+            scanner.report.error(e.getMessage)
+        }
+      }
       buf.toVector
     }
   }
