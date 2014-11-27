@@ -4,7 +4,7 @@ package persistence
 
 import scala.tools.nsc.{Global, Phase, SubComponent}
 import scala.tools.nsc.plugins.{Plugin => NscPlugin, PluginComponent => NscPluginComponent}
-import scala.meta.internal.hosts.scalacompiler.{Plugin => PalladiumPlugin}
+import scala.meta.internal.hosts.scalacompiler.{PluginBase => PalladiumPlugin}
 import scalahost.Scalahost
 import scala.reflect.io.AbstractFile
 import org.scalameta.reflection._

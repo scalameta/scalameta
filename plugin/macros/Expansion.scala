@@ -14,7 +14,7 @@ import scala.collection.mutable
 import scala.reflect.macros.contexts.{Context => ScalaContext}
 import scala.meta.semantic.{MacroHost => PalladiumMacroHost}
 import scalahost.{Scalahost, MacroHost => OurMacroHost}
-import scala.meta.internal.hosts.scalacompiler.{Plugin => PalladiumPlugin}
+import scala.meta.internal.hosts.scalacompiler.{PluginBase => PalladiumPlugin}
 
 trait Expansion extends scala.reflect.internal.show.Printers {
   self: PalladiumPlugin =>
