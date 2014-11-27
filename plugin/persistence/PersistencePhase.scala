@@ -7,6 +7,7 @@ import scala.tools.nsc.plugins.{Plugin => NscPlugin, PluginComponent => NscPlugi
 import scala.meta.internal.hosts.scalacompiler.{Plugin => PalladiumPlugin}
 import scalahost.Scalahost
 import scala.reflect.io.AbstractFile
+import org.scalameta.reflection._
 
 trait PersistencePhase {
   self: PalladiumPlugin =>
@@ -39,6 +40,7 @@ trait PersistencePhase {
 
       override def apply(unit: CompilationUnit) {
         val punit = h.toPalladium(unit.body, classOf[Source])
+        unit.body.appendMetadata("scalameta" -> punit)
         // ???
       }
     }
