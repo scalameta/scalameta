@@ -46,17 +46,15 @@ The same level of robustness is expected from hosts. Concretely: 1) semantic ope
 | `def owner(tree: Tree): Scope`                            | A scope that owns the provided tree, be it a definition or a statement in some definition.
 | `def stats(scope: Scope): Seq[Tree]`                      | This isn't actually a method in `Host`, and it's here only to emphasize a peculiarity of our API. This particular method in unnecessary, because all lists in trees (e.g. the list of statements in a block or a list of declarations in a package or a class) are actually `Seq`'s, which means that the host can choose between eager and lazy population of scope contents when returning trees to the user of the Palladium API (e.g. in `root`).
 | `def members(scope: Scope): Seq[Member]`                  | Returns all members belonging to the specified scope. This API could query something as simple as parameters of a method or as complex as all members of a given class (accounting for inherited members and overriding). When called on a `Type` (types can be viewed as scopes as well), this method should return members that are adjusted to the type's type arguments and self type. E.g. `t"List".members` should return `Seq(q"def head: A = ...", ...)`, whereas `t"List[Int]".members` should return `Seq(q"def head: Int = ...", ...)`.
-| `def <:<(tpe1: Type, tpe2: Type): Boolean`                | Subtyping check
+| `def isSubType(tpe1: Type, tpe2: Type): Boolean`          | Subtyping check.
 | `def lub(tpes: Seq[Type]): Type`                          | Least upper bound.
 | `def glb(tpes: Seq[Type]): Type`                          | Greatest lower bound.
-| `def erasure(tpe: Type): Type`                            | Erasure.
 | `def parents(member: Member): Seq[Member]`                | Direct parents (i.e. superclasses or overriddens) of a given member. If the provided member has been obtained via some prefix or by instantiating some type parameters, then the results of this method should also have corresponding type parameters instantiated.
 | `def children(member: Member): Seq[Member]`               | Direct children (i.e. subclasses or overriders) of a given member in the closed world reflected by the host. If the provided member has been obtained via some prefix by instantiating some type parameters, then the results of this method should also have corresponding type parameters instantiated.
 | `def warning(msg: String): Unit`                          | Produces a warning with a given message. For now, hosts are free to choose the presentation for warnings. Later we will provide a notion of positions.
 | `def error(msg: String): Unit`                            | Produces an error with a given message at the position of the macro application. For now, host are free to choose the presentation for errors. Later we will provide a notion of positions.
 | `def abort(msg: String): Nothing`                         | Does the same as `error`, additionally terminating the host.
-| `def resources: Seq[String]`                              | Returns a list of urls of build resources. Hosts are advised to strive for compatibility between each other. If the same project is compiled, say, by SBT and then by Intellij IDEA plugin, then it is mandatory for urls emitted by `resources` to be the same.
-| `def resourceAsBytes(url: String): Array[Byte]`           | Reads the specified resource into an array of byte. Users of the Palladium API will then decide whether/how to convert these bytes into strings or something else.
+| `def resources: Map[String, Array[Byte]]`                 | Returns a map from resource urls to resource contents. Hosts are advised to strive for compatibility between each other. If the same project is compiled, say, by SBT and then by Intellij IDEA plugin, then it is mandatory for urls emitted by `resources` to be the same.
 
 ### Error handling
 
