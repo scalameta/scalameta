@@ -74,6 +74,7 @@ class AdtMacros(val c: Context) {
       def mods1 = mods.mapAnnotations(_ => anns1.toList)
       val manns1 = ListBuffer[Tree]() ++ mmods.annotations
       def mmods1 = mmods.mapAnnotations(_ => manns1.toList)
+      val mstats1 = ListBuffer[Tree]() ++ mstats
       def unprivate(mods: Modifiers) = Modifiers((mods.flags.asInstanceOf[Long] & (~scala.reflect.internal.Flags.LOCAL) & (~scala.reflect.internal.Flags.PRIVATE)).asInstanceOf[FlagSet], mods.privateWithin, mods.annotations)
       def casify(mods: Modifiers) = Modifiers(mods.flags | CASE, mods.privateWithin, mods.annotations)
       def finalize(mods: Modifiers) = Modifiers(mods.flags | FINAL, mods.privateWithin, mods.annotations)
@@ -93,7 +94,8 @@ class AdtMacros(val c: Context) {
 
       // step 3: generate boilerplate required by the @adt infrastructure
       stats1 += q"override type ThisType = $name"
-      stats1 += q"override def $$tag: _root_.scala.Int = $Internal.calculateTag[ThisType]"
+      stats1 += q"override def $$tag: _root_.scala.Int = $mname.$$tag"
+      mstats1 += q"def $$tag: _root_.scala.Int = $Internal.calculateTag[$name]"
       stats1 += q"$Internal.hierarchyCheck[ThisType]"
       stats1 += q"$Internal.immutabilityCheck[ThisType]"
       anns1 += q"new $Internal.leafClass"
@@ -101,7 +103,7 @@ class AdtMacros(val c: Context) {
       parents1 += tq"_root_.scala.Product"
 
       val cdef1 = q"${casify(finalize(mods1))} class $name[..$tparams] $ctorMods(...$paramss1) extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
-      val mdef1 = q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }"
+      val mdef1 = q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
       List(cdef1, mdef1)
     }
 
