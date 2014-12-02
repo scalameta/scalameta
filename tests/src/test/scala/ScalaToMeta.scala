@@ -7,9 +7,8 @@ import scala.compat.Platform.EOL
 import scala.meta._
 import scala.meta.syntactic.parsers._
 import scala.meta.syntactic.show._
-import scala.meta.internal.hosts.scalacompiler.scalahost.Scalahost
 import scala.meta.semantic.{Host => PalladiumHost}
-import scala.meta.internal.hosts.scalacompiler.scalahost.{Host => OurHost}
+import scala.meta.internal.hosts.scalac.{Host => OurHost, Scalahost}
 import org.scalameta.reflection._
 
 class ScalaToMeta extends FunSuite {

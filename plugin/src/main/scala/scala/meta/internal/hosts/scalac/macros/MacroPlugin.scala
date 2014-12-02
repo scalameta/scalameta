@@ -1,9 +1,9 @@
 package scala.meta
-package internal.hosts.scalacompiler
+package internal.hosts.scalac
 package macros
 
 import scala.reflect.internal.Mode
-import scala.meta.internal.hosts.scalacompiler.{PluginBase => PalladiumPlugin}
+import scala.meta.internal.hosts.scalac.{PluginBase => PalladiumPlugin}
 
 trait MacroPlugin extends Typechecking with Expansion {
   self: PalladiumPlugin =>

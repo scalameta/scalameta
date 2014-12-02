@@ -25,7 +25,7 @@ object ScalaHostBuild extends Build {
   lazy val foundation = Project(
     id   = "scalahost-foundation",
     base = file("foundation"),
-    settings = publishableSettings ++ commonDependencies ++ flatLayout ++ Seq(
+    settings = publishableSettings ++ commonDependencies ++ Seq(
       libraryDependencies += metafoundation,
       dontPackage
     )
@@ -34,7 +34,7 @@ object ScalaHostBuild extends Build {
   lazy val interface = Project(
     id   = "scalahost-interface",
     base = file("interface"),
-    settings = publishableSettings ++ commonDependencies ++ flatLayout ++ Seq(
+    settings = publishableSettings ++ commonDependencies ++ Seq(
       dontPackage
     )
   ) dependsOn (foundation)
@@ -42,7 +42,7 @@ object ScalaHostBuild extends Build {
   lazy val plugin = Project(
     id   = "scalahost",
     base = file("plugin"),
-    settings = publishableSettings ++ commonDependencies ++ flatLayout ++ mergeDependencies ++ Seq(
+    settings = publishableSettings ++ commonDependencies ++ mergeDependencies ++ Seq(
       libraryDependencies += interpreter
     )
   ) dependsOn (foundation % "optional", interface % "optional") // not really optional, used for fatjar

@@ -7,9 +7,8 @@ import scala.compat.Platform.EOL
 import scala.meta._
 import scala.meta.syntactic.parsers._
 import scala.meta.syntactic.show._
-import scala.meta.internal.hosts.scalacompiler.scalahost.Scalahost
 import scala.meta.semantic.{ Host => PalladiumHost }
-import scala.meta.internal.hosts.scalacompiler.scalahost.{ Host => OurHost }
+import scala.meta.internal.hosts.scalac.{ Host => OurHost, Scalahost }
 class ScalaToMeta extends FunSuite {
   def typecheckConvertAndPrettyprint(code: String, debug: Boolean): String = {
     val pluginJar = System.getProperty("sbt.paths.plugin.jar")

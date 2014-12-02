@@ -1,12 +1,12 @@
 package scala.meta
-package internal.hosts.scalacompiler
+package internal.hosts.scalac
 package typechecker
 
 import scala.tools.nsc.{Global => NscGlobal, Phase, SubComponent}
 import scala.tools.nsc.plugins.{Plugin => NscPlugin, PluginComponent => NscPluginComponent}
 import scala.collection.mutable
 import typechecker.{Analyzer => PalladiumAnalyzer}
-import scala.meta.internal.hosts.scalacompiler.{PluginBase => PalladiumPlugin}
+import scala.meta.internal.hosts.scalac.{PluginBase => PalladiumPlugin}
 import scala.tools.nsc.interpreter.{ReplGlobal => NscReplGlobal}
 import scala.tools.nsc.interactive.{Global => NscInteractiveGlobal, InteractiveAnalyzer => NscInteractiveAnalyzer}
 

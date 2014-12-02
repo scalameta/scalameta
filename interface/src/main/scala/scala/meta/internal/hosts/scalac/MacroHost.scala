@@ -1,6 +1,5 @@
 package scala.meta
-package internal.hosts.scalacompiler
-package scalahost
+package internal.hosts.scalac
 
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
@@ -13,6 +12,5 @@ class MacroHost[G <: ScalaGlobal](val c: ScalaMacroContext) extends Host[G](c.un
   def warning(msg: String): Unit = ???
   def error(msg: String): Unit = ???
   def abort(msg: String): Nothing = ???
-  def resources: Seq[String] = ???
-  def resource(url: String): Array[Byte] = ???
+  def resources: Map[String, Array[Byte]] = ???
 }

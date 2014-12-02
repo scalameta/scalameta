@@ -1,11 +1,10 @@
 package scala.meta
-package internal.hosts.scalacompiler
+package internal.hosts.scalac
 package macros
 
 import scala.tools.nsc.{Global, Phase, SubComponent}
 import scala.tools.nsc.plugins.{Plugin => NscPlugin, PluginComponent => NscPluginComponent}
-import scala.meta.internal.hosts.scalacompiler.{PluginBase => PalladiumPlugin}
-import scalahost.Scalahost
+import scala.meta.internal.hosts.scalac.{PluginBase => PalladiumPlugin}
 import scala.reflect.internal.util.{SourceFile, BatchSourceFile, OffsetPosition}
 
 trait RenumberPhase {

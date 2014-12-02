@@ -1,5 +1,5 @@
 package scala.meta
-package internal.hosts.scalacompiler
+package internal.hosts.scalac
 package macros
 
 import scala.reflect.internal.Flags._
@@ -13,8 +13,7 @@ import scala.util.control.ControlThrowable
 import scala.collection.mutable
 import scala.reflect.macros.contexts.{Context => ScalaContext}
 import scala.meta.semantic.{MacroHost => PalladiumMacroHost}
-import scalahost.{Scalahost, MacroHost => OurMacroHost}
-import scala.meta.internal.hosts.scalacompiler.{PluginBase => PalladiumPlugin}
+import scala.meta.internal.hosts.scalac.{Scalahost, MacroHost => OurMacroHost, PluginBase => PalladiumPlugin}
 
 trait Expansion extends scala.reflect.internal.show.Printers {
   self: PalladiumPlugin =>
