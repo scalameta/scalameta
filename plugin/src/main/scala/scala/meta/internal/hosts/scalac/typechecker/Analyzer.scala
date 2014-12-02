@@ -1,5 +1,5 @@
 package scala.meta
-package internal.hosts.scalacompiler
+package internal.hosts.scalac
 package typechecker
 
 import scala.tools.nsc.Global

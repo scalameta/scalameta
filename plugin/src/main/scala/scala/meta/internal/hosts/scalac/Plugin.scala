@@ -1,5 +1,5 @@
 package scala.meta
-package internal.hosts.scalacompiler
+package internal.hosts.scalac
 
 import scala.tools.nsc.Global
 import scala.tools.nsc.plugins.{Plugin => NscPlugin, PluginComponent => NscPluginComponent}

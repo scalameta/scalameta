@@ -2,7 +2,7 @@ package scala.reflect.internal.show
 
 // NOTE: can't be in the usual package, because need to use some private[reflect] methods
 // package scala.meta
-// package internal.hosts.scalacompiler
+// package internal.hosts.scalac
 // package macros
 
 import java.io.{ OutputStream, PrintWriter, StringWriter, Writer }

@@ -67,11 +67,6 @@ object Settings {
     state
   }
 
-  lazy val flatLayout: Seq[sbt.Def.Setting[_]] = assemblySettings ++ Seq(
-    scalaSource in Compile <<= (baseDirectory in Compile)(base => base),
-    resourceDirectory in Compile <<= (baseDirectory in Compile)(base => base / "resources")
-  )
-
   lazy val mergeDependencies: Seq[sbt.Def.Setting[_]] = assemblySettings ++ Seq(
     test in assembly := {},
     logLevel in assembly := Level.Error,
