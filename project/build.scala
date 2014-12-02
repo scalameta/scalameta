@@ -7,11 +7,9 @@ object build extends Build {
     crossVersion := CrossVersion.binary,
     version := "0.1.0-SNAPSHOT",
     organization := "org.scalameta",
-    description := "Metaprogramming API and host interfaces of scala.meta",
+    description := "Metaprogramming and hosting APIs of scala.meta",
     resolvers += Resolver.sonatypeRepo("snapshots"),
     resolvers += Resolver.sonatypeRepo("releases"),
-    scalaSource in Compile <<= (baseDirectory in Compile)(base => base / "src"),
-    scalaSource in Test <<= (baseDirectory in Test)(base => base / "test"),
     publishMavenStyle := true,
     publishArtifact in Compile := false,
     publishArtifact in Test := false,
@@ -124,7 +122,6 @@ object build extends Build {
   ) settings (
     publishableSettings: _*
   ) settings (
-    scalaSource in Compile <<= (baseDirectory in Compile)(base => base),
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided")
   )
 
@@ -134,8 +131,7 @@ object build extends Build {
   ) settings (
     publishableSettings: _*
   ) settings (
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided"),
-    scalaSource in Compile <<= (baseDirectory in Compile)(base => base)
+    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided")
   ) dependsOn (foundation)
 
   lazy val sandbox = Project(
