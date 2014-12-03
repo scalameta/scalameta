@@ -24,6 +24,6 @@ trait PluginBase extends NscPlugin
 class Plugin(val global: Global) extends PluginBase {
   val name = "scalahost"
   val description = """Hosts Project Palladium in scalac.
-  For more information visit https://github.com/scalareflect/scalahost"""
+  For more information visit https://github.com/scalameta/scalahost"""
   val components = List[NscPluginComponent](RenumberComponent, PersistenceComponent)
 }
