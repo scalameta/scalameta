@@ -6,7 +6,7 @@ import scala.collection.immutable.Seq
 import scala.collection.mutable
 import scala.reflect.{classTag, ClassTag}
 import scala.reflect.runtime.universe.{Type => Pt, typeOf}
-import scala.meta.syntactic.{ast => p}
+import scala.meta.internal.{ast => p}
 import scala.meta.syntactic.parsers.SyntacticInfo._
 import scala.tools.nsc.{Global => ScalaGlobal}
 import scala.meta.semantic.{Host => PalladiumHost}

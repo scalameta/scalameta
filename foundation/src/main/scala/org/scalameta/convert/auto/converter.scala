@@ -332,9 +332,9 @@ package object internal {
           val expected = mutable.Set(allLeafCompanions(root).distinct: _*)
           (prelude ++ clauses).foreach(_.foreach(sub => if (sub.symbol != null) expected -= sub.symbol))
           val unmatched = expected.filter(sym => {
-            sym.fullName != "scala.meta.syntactic.ast.Decl.Procedure" &&
-            sym.fullName != "scala.meta.syntactic.ast.Defn.Procedure" &&
-            sym.fullName != "scala.meta.syntactic.ast.Pat.Interpolate"
+            sym.fullName != "scala.meta.internal.ast.Decl.Procedure" &&
+            sym.fullName != "scala.meta.internal.ast.Defn.Procedure" &&
+            sym.fullName != "scala.meta.internal.ast.Pat.Interpolate"
           })
           if (unmatched.nonEmpty) c.error(c.enclosingPosition, "@converter is not exhaustive in its outputs; missing: " + unmatched)
           unmatched.isEmpty
