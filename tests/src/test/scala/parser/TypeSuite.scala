@@ -1,4 +1,4 @@
-import scala.meta.syntactic.ast._, Term.{Name => TermName, Super}, Type.{Name => TypeName, _}
+import scala.meta.internal.ast._, Term.{Name => TermName, Super}, Type.{Name => TypeName, _}
 
 class TypeSuite extends ParseSuite {
   test("T") {

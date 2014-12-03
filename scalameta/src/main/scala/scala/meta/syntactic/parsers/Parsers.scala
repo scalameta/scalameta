@@ -10,7 +10,7 @@ import org.scalameta.unreachable
 import Chars.{isOperatorPart, isScalaLetter}
 import Tok._
 import scala.reflect.ClassTag
-import scala.meta.syntactic.ast._
+import scala.meta.internal.ast._
 import scala.meta.Origin
 
 object SyntacticInfo {

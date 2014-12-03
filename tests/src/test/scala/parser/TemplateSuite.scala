@@ -1,4 +1,4 @@
-import scala.meta.syntactic.ast._, Defn.{Trait, Object, Class}
+import scala.meta.internal.ast._, Defn.{Trait, Object, Class}
 
 class TemplateSuite extends ParseSuite {
   test("trait T") {

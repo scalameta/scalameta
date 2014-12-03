@@ -8,7 +8,7 @@ import scala.meta.syntactic.parsers.Chars._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.meta.syntactic.show.internal._
-import scala.meta.syntactic.ast._
+import scala.meta.internal.ast._
 import scala.{meta => api}
 import org.scalameta.adt._
 import org.scalameta.invariants._

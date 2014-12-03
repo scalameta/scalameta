@@ -1,4 +1,4 @@
-import scala.meta.syntactic.ast._
+import scala.meta.internal.ast._
 
 trait CommonTrees {
   object Nothing {
