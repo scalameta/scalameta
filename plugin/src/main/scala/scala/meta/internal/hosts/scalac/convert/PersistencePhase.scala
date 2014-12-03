@@ -1,6 +1,6 @@
 package scala.meta
 package internal.hosts.scalac
-package persistence
+package convert
 
 import scala.tools.nsc.{Global, Phase, SubComponent}
 import scala.tools.nsc.plugins.{Plugin => NscPlugin, PluginComponent => NscPluginComponent}
@@ -8,10 +8,10 @@ import scala.meta.internal.hosts.scalac.{PluginBase => PalladiumPlugin}
 import scala.reflect.io.AbstractFile
 import org.scalameta.reflection._
 
-trait PersistencePhase {
+trait ConvertPhase {
   self: PalladiumPlugin =>
 
-  object PersistenceComponent extends NscPluginComponent {
+  object ConvertComponent extends NscPluginComponent {
     val global: self.global.type = self.global
     import global._
 
@@ -23,24 +23,15 @@ trait PersistencePhase {
     // let's hope that the research into runtime macros, which entails moving the typechecker to scala-reflect.jar will allow us to restructure things
     // so that delayed typechecks come right after typer, not intermingled with other logic
     override val runsAfter = List("typer")
-    override val runsRightAfter = Some("renumber")
-    val phaseName = "persist"
-    override def description = "persist palladium abstract syntax trees"
+    override val runsRightAfter = None
+    val phaseName = "convert"
+    override def description = "convert compiler trees to scala.meta"
     implicit val h = Scalahost[global.type](global)
 
     override def newPhase(prev: Phase): StdPhase = new StdPhase(prev) {
-      private def target(unit: CompilationUnit): AbstractFile = {
-        // TODO: this method does abstract away the real vs virtual input business
-        // but unfortunately it isn't of terrible use for REPL at the moment
-        // because the paths we get there are the trivial (memory)/<init> and (memory)/<console>
-        val targetDir = settings.outputDirs.outputDirFor(unit.source.file)
-        targetDir.fileNamed(unit.source.file.name.replace(".scala", "") + ".ast")
-      }
-
       override def apply(unit: CompilationUnit) {
         val punit = h.toPalladium(unit.body, classOf[Source])
         unit.body.appendMetadata("scalameta" -> punit)
-        // ???
       }
     }
   }
