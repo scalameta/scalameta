@@ -1,5 +1,5 @@
 import org.scalatest._
-import scala.meta.syntactic.ast._
+import scala.meta.internal.ast._
 
 class JoinSuite extends FunSuite {
   test("idents") {

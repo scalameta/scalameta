@@ -1,4 +1,4 @@
-import scala.meta.syntactic.ast._
+import scala.meta.internal.ast._
 
 class DefnSuite extends ParseSuite {
   test("val x = 2") {

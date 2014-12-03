@@ -7,7 +7,7 @@ import org.scalameta.unreachable
 import scala.meta.syntactic.show._
 import scala.meta.syntactic.parsers._, SyntacticInfo._
 import scala.{meta => api}
-import scala.meta.syntactic.{ast => impl}
+import scala.meta.internal.{ast => impl}
 
 package scala.meta {
   @root trait Tree extends Product {
@@ -76,8 +76,7 @@ package scala.meta {
   @branch trait Source extends Tree
 }
 
-// TODO: to be renamed to org.scalameta.trees or similar
-package scala.meta.syntactic.ast {
+package scala.meta.internal.ast {
   @branch trait Tree extends api.Tree
 
   @branch trait Ref extends api.Ref with Tree

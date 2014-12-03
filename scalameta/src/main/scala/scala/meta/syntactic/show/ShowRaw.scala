@@ -6,7 +6,7 @@ import Show.{ sequence => s, repeat => r, indent => i, newline => n }
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.meta.syntactic.show.internal._
-import scala.meta.syntactic.ast._
+import scala.meta.internal.ast._
 import scala.{meta => api}
 
 trait Raw[T] extends Show[T]
