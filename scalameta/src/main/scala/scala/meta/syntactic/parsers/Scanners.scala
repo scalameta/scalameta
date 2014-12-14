@@ -22,6 +22,9 @@ trait TokenData {
   /** the offset of the character following the token preceding this one */
   var lastOffset: Offset = 0
 
+  /** next.offset */
+  var nextOffset: Offset = 0
+
   /** the name of an identifier */
   var name: String = null
 
@@ -35,6 +38,7 @@ trait TokenData {
     this.token = td.token
     this.offset = td.offset
     this.lastOffset = td.lastOffset
+    this.nextOffset = td.nextOffset
     this.name = td.name
     this.strVal = td.strVal
     this.base = td.base
@@ -53,14 +57,17 @@ trait TokenData {
       if (token == CHARLIT && !negated) {
         charVal.toLong
       } else {
+        var input = strVal
+        if (input.startsWith("0x") || input.startsWith("0X")) input = input.substring(2)
+        if (input.endsWith("l") || input.endsWith("L")) input = input.substring(0, input.length - 1)
         var value: Long = 0
         val divider = if (base == 10) 1 else 2
         val limit: Long =
           if (token == LONGLIT) Long.MaxValue else Int.MaxValue
         var i = 0
-        val len = strVal.length
+        val len = input.length
         while (i < len) {
-          val d = digit2int(strVal charAt i, base)
+          val d = digit2int(input charAt i, base)
           if (d < 0) {
             throw new Exception("malformed integer number")
             return 0
@@ -320,6 +327,8 @@ class Scanner(val origin: Origin, decodeUni: Boolean = true) {
       curr copyFrom next
       next.token = EMPTY
     }
+
+    curr.nextOffset = charOffset - 1
   }
 
   /** Is current token first one after a newline? */
@@ -412,6 +421,7 @@ class Scanner(val origin: Origin, decodeUni: Boolean = true) {
           putChar(ch)
           nextChar()
           if (ch == 'x' || ch == 'X') {
+            putChar(ch)
             nextChar()
             base = 16
           } else {
@@ -868,12 +878,15 @@ class Scanner(val origin: Origin, decodeUni: Boolean = true) {
         // Checking for base == 8 is not enough, because base = 8 is set
         // as soon as a 0 is read in `case '0'` of method fetchToken.
         if (base == 8 && notSingleZero) syntaxError("Non-zero integral values may not have a leading zero.")
-        setStrVal()
         if (isL) {
+          putChar(ch)
+          setStrVal()
           nextChar()
           token = LONGLIT
+        } else {
+          setStrVal()
+          checkNoLetter()
         }
-        else checkNoLetter()
       }
     }
 
