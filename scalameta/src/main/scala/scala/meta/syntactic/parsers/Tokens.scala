@@ -103,8 +103,6 @@ object Tokens {
   final val SUBTYPE = 134
   final val SUPERTYPE = 135
   final val VIEWBOUND = 136
-  final val NEWLINE = 137
-  final val NEWLINES = 138
   final val XMLSTART = 139
 
   /** for IDE only */
@@ -193,8 +191,6 @@ object TokenInfo {
     case EOF => "eof"
     case ERROR => "something"
     case SEMI => "';'"
-    case NEWLINE => "';'"
-    case NEWLINES => "';'"
     case COMMA => "','"
     case CASECLASS => "case class"
     case CASEOBJECT => "case object"

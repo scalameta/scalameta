@@ -147,16 +147,14 @@ package object parsers {
           case SUPERTYPE => Tok.`>:`(offset)
           case VIEWBOUND => Tok.`<%`(offset)
 
-          case NEWLINE                           => Tok.`\n`(offset)
-          case WHITESPACE if curr.strVal == "\n" => Tok.`\n`(offset)
-          case WHITESPACE if curr.strVal == "\t" => Tok.`\t`(offset)
-          case WHITESPACE if curr.strVal == " "  => Tok.` `(offset)
+          case WHITESPACE if curr.strVal == " "  => Tok.Space(offset)
+          case WHITESPACE if curr.strVal == "\t" => Tok.Tab(offset)
           case WHITESPACE if curr.strVal == CR   => Tok.CarriageReturn(offset)
           case WHITESPACE if curr.strVal == LF   => Tok.LineFeed(offset)
           case WHITESPACE if curr.strVal == FF   => Tok.FormFeed(offset)
           case WHITESPACE                        => unreachable
 
-          case EOF       => Tok.EOF(offset)
+          case EOF       => Tok.EndOfFile(offset)
           case XMLSTART  => Tok.XMLStart(offset)
 
           case COMMENT  => unreachable
@@ -165,7 +163,6 @@ package object parsers {
           case EMPTY    => unreachable
           case UNDEF    => unreachable
           case ERROR    => unreachable
-          case NEWLINES => unreachable
         }
       }
 

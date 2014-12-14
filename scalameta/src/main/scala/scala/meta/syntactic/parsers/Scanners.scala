@@ -320,22 +320,6 @@ class Scanner(val origin: Origin, decodeUni: Boolean = true) {
       curr copyFrom next
       next.token = EMPTY
     }
-
-    // TODO: make sure these are properly handled in the parser
-    /* Insert NEWLINE or NEWLINES if
-     * - we are after a newline
-     * - we are within a { ... } or on toplevel (wrt sepRegions)
-     * - the current token can start a statement and the one before can end it
-     * insert NEWLINES if we are past a blank line, NEWLINE otherwise
-     */
-    /*if (afterLineEnd() && inLastOfStat(lastToken) && inFirstOfStat(token) &&
-        (sepRegions.isEmpty || sepRegions.head == RBRACE)) {
-      next copyFrom curr
-      offset = if (lineStartOffset <= offset) lineStartOffset else lastLineStartOffset
-      token = if (pastBlankLine()) NEWLINES else NEWLINE
-    }*/
-
-    //print("["+this+"]")
   }
 
   /** Is current token first one after a newline? */
@@ -551,26 +535,6 @@ class Scanner(val origin: Origin, decodeUni: Boolean = true) {
         }
         fetchOther()
     }
-  }
-
-  /** Can token start a statement? */
-  def inFirstOfStat(token: Token) = token match {
-    case EOF | CATCH | ELSE | EXTENDS | FINALLY | FORSOME | MATCH | WITH | YIELD |
-         COMMA | SEMI | NEWLINE | NEWLINES | DOT | COLON | EQUALS | ARROW | LARROW |
-         SUBTYPE | VIEWBOUND | SUPERTYPE | HASH | RPAREN | RBRACKET | RBRACE | LBRACKET =>
-      false
-    case _ =>
-      true
-  }
-
-  /** Can token end a statement? */
-  def inLastOfStat(token: Token) = token match {
-    case CHARLIT | INTLIT | LONGLIT | FLOATLIT | DOUBLELIT | STRINGLIT | SYMBOLLIT |
-         IDENTIFIER | BACKQUOTED_IDENT | THIS | NULL | TRUE | FALSE | RETURN | USCORE |
-         TYPE | XMLSTART | RPAREN | RBRACKET | RBRACE =>
-      true
-    case _ =>
-      false
   }
 
 // Identifiers ---------------------------------------------------------------
@@ -990,10 +954,6 @@ class Scanner(val origin: Origin, decodeUni: Boolean = true) {
       "interpolationid(" + name + ")"
     case SEMI =>
       ";"
-    case NEWLINE =>
-      ";"
-    case NEWLINES =>
-      ";;"
     case COMMA =>
       ","
     case _ =>

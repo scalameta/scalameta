@@ -180,7 +180,7 @@ abstract class AbstractParser { parser =>
 
   def parseRule[T](rule: this.type => T): T = {
     val t = rule(this)
-    accept[EOF]
+    accept[EndOfFile]
     t
   }
 
@@ -279,7 +279,7 @@ abstract class AbstractParser { parser =>
   /** Consume one token of the specified type, or signal an error if it is not there. */
   def accept[T <: Tok: ClassTag: ClassName]: Unit =
     if (tok.is[T]) {
-      if (tok.isNot[EOF]) next()
+      if (tok.isNot[EndOfFile]) next()
     } else syntaxErrorExpected[T]
 
   /** If current token is T consume it. */
@@ -292,8 +292,8 @@ abstract class AbstractParser { parser =>
    *  }}}
    */
   def acceptStatSep(): Unit = tok match {
-    case _: `\n` => next()
-    case _       => accept[`;`]
+    case _: LineFeed => next()
+    case _           => accept[`;`]
   }
   def acceptStatSepOpt() =
     if (!tok.is[StatSeqEnd])
@@ -850,22 +850,22 @@ abstract class AbstractParser { parser =>
 /* ------------- NEW LINES ------------------------------------------------- */
 
   def newLineOpt(): Unit = {
-    if (tok.is[`\n`]) next()
+    if (tok.is[LineFeed]) next()
   }
 
   def newLinesOpt(): Unit = {
-    if (tok.is[`\n`])
+    if (tok.is[LineFeed])
       next()
   }
 
   def newLineOptWhenFollowedBy[T <: Tok: ClassTag]: Unit = {
     // note: next is defined here because current is Tok.`\n`
-    if (tok.is[`\n`] && ahead { tok.is[T] }) newLineOpt()
+    if (tok.is[LineFeed] && ahead { tok.is[T] }) newLineOpt()
   }
 
   def newLineOptWhenFollowing(p: Tok => Boolean): Unit = {
     // note: next is defined here because current is Tok.`\n`
-    if (tok.is[`\n`] && ahead { p(tok) }) newLineOpt()
+    if (tok.is[LineFeed] && ahead { p(tok) }) newLineOpt()
   }
 
 /* ------------- TYPES ---------------------------------------------------- */
@@ -1627,8 +1627,8 @@ abstract class AbstractParser { parser =>
           mods.filter(_.isAccess).foreach(_ => syntaxError("duplicate private/protected qualifier"))
           val optmod = accessModifierOpt()
           optmod.map { mod => loop(addMod(mods, mod, advance = false)) }.getOrElse(mods)
-        case _:`\n` if !isLocal => next(); loop(mods)
-        case _                  => mods
+        case _: LineFeed if !isLocal => next(); loop(mods)
+        case _                       => mods
       })
     loop(Nil)
   }
@@ -2479,20 +2479,20 @@ abstract class AbstractParser { parser =>
     def packageStats(): (List[Term.Ref], List[Stat])  = {
       val refs = new ListBuffer[Term.Ref]
       val ts = new ListBuffer[Stat]
-      while (tok.is[`;`] || tok.is[`\n`]) next()
+      while (tok.is[`;`] || tok.is[LineFeed]) next()
       if (tok.is[`package `]) {
         next()
         if (tok.is[`object`]) {
           next()
           ts += packageObject()
-          if (tok.isNot[EOF]) {
+          if (tok.isNot[EndOfFile]) {
             acceptStatSep()
             ts ++= topStatSeq()
           }
         } else {
           val qid = qualId()
 
-          if (tok.is[EOF]) {
+          if (tok.is[EndOfFile]) {
             refs += qid
           } else if (tok.is[StatSep]) {
             next()

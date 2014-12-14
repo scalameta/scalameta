@@ -104,15 +104,14 @@ object Tok {
   @leaf class `<:`(offset: Int) extends Delim
   @leaf class `>:`(offset: Int) extends Delim
   @leaf class `<%`(offset: Int) extends Delim
-  @leaf class `\n`(offset: Int) extends StatSep
 
   @branch trait Whitespace extends Tok
-  @leaf class ` `(offset: Int) extends Whitespace
-  @leaf class `\t`(offset: Int) extends Whitespace
-  @leaf class FormFeed(offset: Int) extends Whitespace
-  @leaf class LineFeed(offset: Int) extends Whitespace
+  @leaf class Space(offset: Int) extends Whitespace
+  @leaf class Tab(offset: Int) extends Whitespace
   @leaf class CarriageReturn(offset: Int) extends Whitespace
+  @leaf class LineFeed(offset: Int) extends Whitespace with StatSep
+  @leaf class FormFeed(offset: Int) extends Whitespace
 
-  @leaf class EOF(offset: Int) extends StatSep with StatSeqEnd with CaseDefEnd
+  @leaf class EndOfFile(offset: Int) extends StatSep with StatSeqEnd with CaseDefEnd
   @leaf class XMLStart(offset: Int) extends Tok with ExprIntro
 }
