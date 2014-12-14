@@ -12,6 +12,7 @@ import Tok._
 import scala.reflect.ClassTag
 import scala.meta.internal.ast._
 import scala.meta.Origin
+import org.scalameta.reflection.ClassName
 
 object SyntacticInfo {
   private[meta] val unaryOps = Set("-", "+", "~", "!")
@@ -273,11 +274,10 @@ abstract class AbstractParser { parser =>
   // TODO: fixme once trees have positions
   def offset(t: Tree): Offset = in.tok.offset
 
-  // TODO: print nice textual representaion of T here instead of runtime class
-  def syntaxErrorExpected[T <: Tok: TypeString]: Nothing = syntaxError(s"${implicitly[TypeString[T]].value} expected but $tok found.")
+  def syntaxErrorExpected[T <: Tok: ClassName]: Nothing = syntaxError(s"${implicitly[ClassName[T]]} expected but $tok found.")
 
   /** Consume one token of the specified type, or signal an error if it is not there. */
-  def accept[T <: Tok: ClassTag: TypeString]: Unit =
+  def accept[T <: Tok: ClassTag: ClassName]: Unit =
     if (tok.is[T]) {
       if (tok.isNot[EOF]) next()
     } else syntaxErrorExpected[T]

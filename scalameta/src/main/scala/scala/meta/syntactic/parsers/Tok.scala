@@ -11,11 +11,6 @@ import scala.language.experimental.macros
   def offset: Int
 }
 object Tok {
-  trait TypeString[T <: Tok] { val value: String }
-  object TypeString {
-    implicit def materialize[T <: Tok]: TypeString[T] = macro org.scalameta.syntactic.TypeString.materialize[T]
-  }
-
   @branch trait TypeIntro extends Tok
   @branch trait ExprIntro extends Tok
   @branch trait DefIntro extends Tok
