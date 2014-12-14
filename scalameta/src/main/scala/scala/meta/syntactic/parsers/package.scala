@@ -66,18 +66,20 @@ package object parsers {
       def td2tok(curr: TokenData): Tok = {
         import curr.offset
         (curr.token: @switch) match {
-          case CHARLIT         => Tok.Literal.Char(curr.charVal, offset)
-          case INTLIT          => Tok.Literal.Int(curr.intVal(false).map(_.toInt).get, offset)
-          case LONGLIT         => Tok.Literal.Long(curr.intVal(false).get, offset)
-          case FLOATLIT        => Tok.Literal.Float(curr.floatVal(false).map(_.toFloat).get, offset)
-          case DOUBLELIT       => Tok.Literal.Double(curr.floatVal(false).get, offset)
-          case STRINGLIT       => Tok.Literal.String(curr.strVal, offset)
-          case SYMBOLLIT       => Tok.Literal.Symbol(scala.Symbol(curr.strVal), offset)
-          case INTERPOLATIONID => Tok.Interpolation.Id(curr.name, offset)
-          case STRINGPART      => Tok.Interpolation.Part(curr.strVal, offset)
+          case CHARLIT         => Tok.Literal.Char(curr.strVal, curr.charVal, offset)
+          case INTLIT          => Tok.Literal.Int(curr.strVal, curr.intVal(false).map(_.toInt).get, offset)
+          case LONGLIT         => Tok.Literal.Long(curr.strVal, curr.intVal(false).get, offset)
+          case FLOATLIT        => Tok.Literal.Float(curr.strVal, curr.floatVal(false).map(_.toFloat).get, offset)
+          case DOUBLELIT       => Tok.Literal.Double(curr.strVal, curr.floatVal(false).get, offset)
+          // TODO: discern double and triple quotes in string literals
+          case STRINGLIT       => Tok.Literal.String("\"" + curr.strVal + "\"", curr.strVal, offset)
+          case SYMBOLLIT       => Tok.Literal.Symbol("'" + curr.strVal, scala.Symbol(curr.strVal), offset)
+          case INTERPOLATIONID => Tok.Interpolation.Id(curr.name.toString, curr.name, offset)
+          // TODO: discern double and triple quotes in interpolation literals
+          case STRINGPART      => Tok.Interpolation.Part(curr.strVal, curr.strVal, offset)
 
-          case IDENTIFIER       => Tok.Ident(curr.name, isBackquoted = false, offset)
-          case BACKQUOTED_IDENT => Tok.Ident(curr.name, isBackquoted = true, offset)
+          case IDENTIFIER       => Tok.Ident(curr.name.toString, curr.name, isBackquoted = false, offset)
+          case BACKQUOTED_IDENT => Tok.Ident("`" + curr.name.toString + "`", curr.name, isBackquoted = true, offset)
 
           case NEW   => Tok.`new`(offset)
           case THIS  => Tok.`this`(offset)
@@ -147,14 +149,14 @@ package object parsers {
           case SUPERTYPE => Tok.`>:`(offset)
           case VIEWBOUND => Tok.`<%`(offset)
 
-          case WHITESPACE if curr.strVal == " "  => Tok.Space(offset)
-          case WHITESPACE if curr.strVal == "\t" => Tok.Tab(offset)
-          case WHITESPACE if curr.strVal == CR   => Tok.CarriageReturn(offset)
-          case WHITESPACE if curr.strVal == LF   => Tok.LineFeed(offset)
-          case WHITESPACE if curr.strVal == FF   => Tok.FormFeed(offset)
+          case WHITESPACE if curr.strVal == " "  => Tok.` `(offset)
+          case WHITESPACE if curr.strVal == "\t" => Tok.`\t`(offset)
+          case WHITESPACE if curr.strVal == "\r" => Tok.`\r`(offset)
+          case WHITESPACE if curr.strVal == "\n" => Tok.`\n`(offset)
+          case WHITESPACE if curr.strVal == "\f" => Tok.`\f`(offset)
           case WHITESPACE                        => unreachable
 
-          case EOF       => Tok.EndOfFile(offset)
+          case EOF       => Tok.EOF(offset + 1)
           case XMLSTART  => Tok.XMLStart(offset)
 
           case COMMENT  => unreachable

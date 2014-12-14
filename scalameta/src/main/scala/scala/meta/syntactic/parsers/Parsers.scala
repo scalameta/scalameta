@@ -2,7 +2,6 @@ package scala.meta.syntactic
 package parsers
 
 import scala.collection.{ mutable, immutable }
-import scala.reflect.ClassTag
 import mutable.{ ListBuffer, StringBuilder }
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
@@ -12,7 +11,7 @@ import Tok._
 import scala.reflect.ClassTag
 import scala.meta.internal.ast._
 import scala.meta.Origin
-import org.scalameta.reflection.ClassName
+import org.scalameta.tokens._
 
 object SyntacticInfo {
   private[meta] val unaryOps = Set("-", "+", "~", "!")
@@ -129,8 +128,7 @@ class Parser(val origin: Origin) extends AbstractParser {
   def parseStartRule = () => compilationUnit()
 
   val tokens = origin.tokens
-  val nwtokens = tokens.filter(_.isNot[Whitespace])
-  var in: TokIterator = new TokIterator(nwtokens)
+  var in: TokIterator = new TokIterator(tokens.filter(tok => tok.isNot[Whitespace] || tok.is[`\n`]))
 
   /** the markup parser */
   // private[this] lazy val xmlp = new MarkupParser(this, preserveWS = true)
@@ -180,7 +178,7 @@ abstract class AbstractParser { parser =>
 
   def parseRule[T](rule: this.type => T): T = {
     val t = rule(this)
-    accept[EndOfFile]
+    accept[EOF]
     t
   }
 
@@ -274,16 +272,16 @@ abstract class AbstractParser { parser =>
   // TODO: fixme once trees have positions
   def offset(t: Tree): Offset = in.tok.offset
 
-  def syntaxErrorExpected[T <: Tok: ClassName]: Nothing = syntaxError(s"${implicitly[ClassName[T]]} expected but $tok found.")
+  def syntaxErrorExpected[T: TokMetadata]: Nothing = syntaxError(s"${implicitly[TokMetadata[T]].name} expected but ${tok.name} found.")
 
   /** Consume one token of the specified type, or signal an error if it is not there. */
-  def accept[T <: Tok: ClassTag: ClassName]: Unit =
+  def accept[T: TokMetadata]: Unit =
     if (tok.is[T]) {
-      if (tok.isNot[EndOfFile]) next()
+      if (tok.isNot[EOF]) next()
     } else syntaxErrorExpected[T]
 
   /** If current token is T consume it. */
-  def acceptOpt[T <: Tok: ClassTag]: Unit =
+  def acceptOpt[T: TokMetadata]: Unit =
     if (tok.is[T]) next()
 
   /** {{{
@@ -292,8 +290,8 @@ abstract class AbstractParser { parser =>
    *  }}}
    */
   def acceptStatSep(): Unit = tok match {
-    case _: LineFeed => next()
-    case _           => accept[`;`]
+    case _: `\n` => next()
+    case _       => accept[`;`]
   }
   def acceptStatSepOpt() =
     if (!tok.is[StatSeqEnd])
@@ -345,7 +343,7 @@ abstract class AbstractParser { parser =>
   }
 
   /** {{{ part { `sep` part } }}},or if sepFirst is true, {{{ { `sep` part } }}}. */
-  final def tokenSeparated[Sep <: Tok: ClassTag, T](sepFirst: Boolean, part: => T): List[T] = {
+  final def tokenSeparated[Sep: TokMetadata, T](sepFirst: Boolean, part: => T): List[T] = {
     val ts = new ListBuffer[T]
     if (!sepFirst)
       ts += part
@@ -672,7 +670,7 @@ abstract class AbstractParser { parser =>
   }
 
   def name[T](ctor: (String, Boolean) => T, advance: Boolean): T = tok match {
-    case Ident(name, isBackquoted, _) =>
+    case Ident(_, name, isBackquoted, _) =>
       val res = ctor(name, isBackquoted)
       if (advance) next()
       res
@@ -787,18 +785,18 @@ abstract class AbstractParser { parser =>
    */
   def literal(isNegated: Boolean = false): Lit = {
     val res = tok match {
-      case Literal.Char(v, _)       => Lit.Char(v)
-      case Literal.Int(v, _)        => Lit.Int(if (isNegated) -v else v)
-      case Literal.Long(v, _)       => Lit.Long(if (isNegated) -v else v)
-      case Literal.Float(v, _)      => Lit.Float(if (isNegated) -v else v)
-      case Literal.Double(v, _)     => Lit.Double(if (isNegated) -v else v)
-      case Literal.String(v, _)     => Lit.String(v)
-      case Literal.Symbol(v, _)     => Lit.Symbol(v)
-      case Interpolation.Part(v, _) => Lit.String(v)
-      case _: `true`                => Lit.Bool(true)
-      case _: `false`               => Lit.Bool(false)
-      case _: `null`                => Lit.Null()
-      case _                        => syntaxError("illegal literal")
+      case Literal.Char(_, v, _)       => Lit.Char(v)
+      case Literal.Int(_, v, _)        => Lit.Int(if (isNegated) -v else v)
+      case Literal.Long(_, v, _)       => Lit.Long(if (isNegated) -v else v)
+      case Literal.Float(_, v, _)      => Lit.Float(if (isNegated) -v else v)
+      case Literal.Double(_, v, _)     => Lit.Double(if (isNegated) -v else v)
+      case Literal.String(_, v, _)     => Lit.String(v)
+      case Literal.Symbol(_, v, _)     => Lit.Symbol(v)
+      case Interpolation.Part(_, v, _) => Lit.String(v)
+      case _: `true`                   => Lit.Bool(true)
+      case _: `false`                  => Lit.Bool(false)
+      case _: `null`                   => Lit.Null()
+      case _                           => syntaxError("illegal literal")
     }
     next()
     res
@@ -807,15 +805,15 @@ abstract class AbstractParser { parser =>
   def interpolate[Ctx, Ret](arg: () => Ctx, result: (Term.Name, List[Lit.String], List[Ctx]) => Ret): Ret = {
     def part() = {
       val value = tok match {
-        case Literal.String(v, _)     => v
-        case Interpolation.Part(v, _) => v
-        case _                        => syntaxErrorExpected[Interpolation.Part]
+        case Literal.String(_, v, _)     => v
+        case Interpolation.Part(_, v, _) => v
+        case _                           => syntaxErrorExpected[Interpolation.Part]
       }
       val lit = Lit.String(value)
       next()
       lit
     }
-    val Interpolation.Id(nameStr, _) = tok
+    val Interpolation.Id(_, nameStr, _) = tok
     val interpolator = Term.Name(nameStr, isBackquoted = false) // termName() for INTERPOLATIONID
     next()
     val partsBuf = new ListBuffer[Lit.String]
@@ -850,22 +848,22 @@ abstract class AbstractParser { parser =>
 /* ------------- NEW LINES ------------------------------------------------- */
 
   def newLineOpt(): Unit = {
-    if (tok.is[LineFeed]) next()
+    if (tok.is[`\n`]) next()
   }
 
   def newLinesOpt(): Unit = {
-    if (tok.is[LineFeed])
+    if (tok.is[`\n`])
       next()
   }
 
-  def newLineOptWhenFollowedBy[T <: Tok: ClassTag]: Unit = {
+  def newLineOptWhenFollowedBy[T: TokMetadata]: Unit = {
     // note: next is defined here because current is Tok.`\n`
-    if (tok.is[LineFeed] && ahead { tok.is[T] }) newLineOpt()
+    if (tok.is[`\n`] && ahead { tok.is[T] }) newLineOpt()
   }
 
   def newLineOptWhenFollowing(p: Tok => Boolean): Unit = {
     // note: next is defined here because current is Tok.`\n`
-    if (tok.is[LineFeed] && ahead { p(tok) }) newLineOpt()
+    if (tok.is[`\n`] && ahead { p(tok) }) newLineOpt()
   }
 
 /* ------------- TYPES ---------------------------------------------------- */
@@ -1627,8 +1625,8 @@ abstract class AbstractParser { parser =>
           mods.filter(_.isAccess).foreach(_ => syntaxError("duplicate private/protected qualifier"))
           val optmod = accessModifierOpt()
           optmod.map { mod => loop(addMod(mods, mod, advance = false)) }.getOrElse(mods)
-        case _: LineFeed if !isLocal => next(); loop(mods)
-        case _                       => mods
+        case _: `\n` if !isLocal => next(); loop(mods)
+        case _                   => mods
       })
     loop(Nil)
   }
@@ -1825,7 +1823,7 @@ abstract class AbstractParser { parser =>
   def typeBounds() =
     Type.Bounds(bound[`>:`], bound[`<:`])
 
-  def bound[T <: Tok: ClassTag]: Option[Type] =
+  def bound[T: TokMetadata]: Option[Type] =
     if (tok.is[T]) { next(); Some(typ()) } else None
 
 /* -------- DEFS ------------------------------------------- */
@@ -2479,20 +2477,20 @@ abstract class AbstractParser { parser =>
     def packageStats(): (List[Term.Ref], List[Stat])  = {
       val refs = new ListBuffer[Term.Ref]
       val ts = new ListBuffer[Stat]
-      while (tok.is[`;`] || tok.is[LineFeed]) next()
+      while (tok.is[`;`] || tok.is[`\n`]) next()
       if (tok.is[`package `]) {
         next()
         if (tok.is[`object`]) {
           next()
           ts += packageObject()
-          if (tok.isNot[EndOfFile]) {
+          if (tok.isNot[EOF]) {
             acceptStatSep()
             ts ++= topStatSeq()
           }
         } else {
           val qid = qualId()
 
-          if (tok.is[EndOfFile]) {
+          if (tok.is[EOF]) {
             refs += qid
           } else if (tok.is[StatSep]) {
             next()
