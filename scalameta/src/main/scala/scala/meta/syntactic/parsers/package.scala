@@ -171,12 +171,14 @@ package object parsers {
       var buf = new mutable.UnrolledBuffer[Tok]
       val scanner = new Scanner(origin)
       scanner.foreach { curr =>
-        try {
-          buf += td2tok(curr)
-        } catch {
-          case e: Exception =>
-            scanner.report.error(e.getMessage)
-        }
+        // TODO: reinstate error handling
+        // try {
+        //   buf += td2tok(curr)
+        // } catch {
+        //   case e: Exception =>
+        //     scanner.report.error(e.getMessage)
+        // }
+        buf += td2tok(curr)
       }
       buf.toVector
     }
