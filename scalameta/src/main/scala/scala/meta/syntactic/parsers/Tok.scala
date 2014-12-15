@@ -12,7 +12,7 @@ import scala.meta.syntactic.show._
   def offset: Int
   def name: String
   def code: String
-  final override def toString = this.show[Code]
+  final override def toString = this.show[Raw]
 }
 object Tok {
   @branch trait Static extends Tok
