@@ -4,10 +4,13 @@ package parsers
 import scala.collection.{ mutable, immutable }
 import mutable.{ ListBuffer, StringBuilder }
 import scala.{Seq => _}
-import scala.collection.immutable.Seq
+import scala.collection.immutable._
 import org.scalameta.unreachable
 import Chars.{isOperatorPart, isScalaLetter}
 import Tok._
+import Tokens._
+import Tokens.{Token => LegacyToken}
+import scala.meta.syntactic.parsers.{Tok => NewToken}
 import scala.reflect.ClassTag
 import scala.meta.internal.ast._
 import scala.meta.Origin
@@ -127,8 +130,52 @@ class Parser(val origin: Origin) extends AbstractParser {
    */
   def parseStartRule = () => compilationUnit()
 
+  // NOTE: Scala's parser isn't ready to accept whitespace and comment tokens,
+  // so we have to filter them out, because otherwise we'll get errors like `expected blah, got whitespace`
+  // however, in certain tricky cases some whitespace tokens (namely, newlines) do have to be emitted
+  // this leads to extremely dirty and seriously crazy code, which I'd like to replace in the future
+  private class CrazyTokIterator(var pos: Int = -1, var tok: NewToken = null) extends TokIterator {
+    var sepRegions: List[LegacyToken] = Nil
+    require(tokens.nonEmpty)
+    next()
+    def hasNext: Boolean = tokens.drop(pos + 1).exists(_.isNot[Whitespace])
+    def next(): Tok = {
+      if (!hasNext) throw new NoSuchElementException()
+      pos += 1
+      val prev = tok
+      val curr = tokens(pos)
+      val next = tokens.drop(pos + 1).filter(_.isNot[Whitespace]).headOption.getOrElse(null)
+      def updateSepRegions() = {
+        if (prev == null) ()
+        else if (prev.is[`(`]) sepRegions = RPAREN :: sepRegions
+        else if (prev.is[`[`]) sepRegions = RBRACKET :: sepRegions
+        else if (prev.is[`{`]) sepRegions = RBRACE :: sepRegions
+        else if (prev.is[`case`]) sepRegions = ARROW :: sepRegions
+        else if (prev.is[`}`]) {
+          while (!sepRegions.isEmpty && sepRegions.head != RBRACE) sepRegions = sepRegions.tail
+          if (!sepRegions.isEmpty) sepRegions = sepRegions.tail
+        } else if (prev.is[`]`]) if (!sepRegions.isEmpty && sepRegions.head == RBRACKET) sepRegions = sepRegions.tail
+        else if (prev.is[`)`]) if (!sepRegions.isEmpty && sepRegions.head == RPAREN) sepRegions = sepRegions.tail
+        else if (prev.is[`=>`]) if (!sepRegions.isEmpty && sepRegions.head == ARROW) sepRegions = sepRegions.tail
+        else () // TODO: handle string interpolation when we decide on its representation
+      }
+      def shouldEmitNewline() = {
+        if (prev == null || next == null) false
+        else prev.is[CanEndStat] && next.isNot[CantStartStat] && (sepRegions.isEmpty || sepRegions.head == RBRACE)
+      }
+      def emit() = {
+        tok = curr
+        tok
+      }
+      updateSepRegions()
+      if (curr.isNot[Whitespace] || (curr.is[`\n`] && shouldEmitNewline)) emit()
+      else this.next()
+    }
+    def fork: TokIterator = new CrazyTokIterator(pos, tok)
+  }
+
   val tokens = origin.tokens
-  var in: TokIterator = new TokIterator(tokens.filter(tok => tok.isNot[Whitespace] || tok.is[`\n`]))
+  var in: TokIterator = new CrazyTokIterator()
 
   /** the markup parser */
   // private[this] lazy val xmlp = new MarkupParser(this, preserveWS = true)
@@ -147,6 +194,7 @@ object Location {
 import Location.{ Local, InBlock, InTemplate }
 
 abstract class AbstractParser { parser =>
+  trait TokIterator extends Iterator[Tok] { def tok: Tok; def fork: TokIterator }
   var in: TokIterator
   def tok = in.tok
   def next() = in.next()
