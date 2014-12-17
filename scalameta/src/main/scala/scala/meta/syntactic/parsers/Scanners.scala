@@ -22,8 +22,8 @@ trait TokenData {
   /** the offset of the character following the token preceding this one */
   var lastOffset: Offset = 0
 
-  /** next.offset */
-  var nextOffset: Offset = 0
+  /** the offset of the last character of the current token */
+  var endOffset: Offset = 0
 
   /** the name of an identifier */
   var name: String = null
@@ -38,7 +38,7 @@ trait TokenData {
     this.token = td.token
     this.offset = td.offset
     this.lastOffset = td.lastOffset
-    this.nextOffset = td.nextOffset
+    this.endOffset = td.endOffset
     this.name = td.name
     this.strVal = td.strVal
     this.base = td.base
@@ -328,7 +328,23 @@ class Scanner(val origin: Origin, decodeUni: Boolean = true) {
       next.token = EMPTY
     }
 
-    curr.nextOffset = charOffset - 1
+    // NOTE: endOffset is used to determine range positions for certain tokens.
+    // Most tokens (e.g. `(` or `;`) have constant widths, so their range positions can be calculated trivially from their offsets,
+    // however some tokens (see who extends Tok.Dynamic for an exhaustive list) have variable widths,
+    // and for them we need to remember where their parsing ended in order to calculate their positions.
+    // That's what endOffset does (indirectly): each token's position should be [curr.offset, curr.endOffset]
+    //
+    // Now how do we calculate endOffset?
+    // 1) What we have at hand is `charOffset`, which is the position right after the position of the character that's just been read.
+    // 2) This means that `charOffset - 1` is the position of the character that's just been read.
+    // 3) Since reading that character terminated fetchToken, this means that that character is the first character of the next token.
+    // 4) This means that `charOffset - 2` is where the last character of the our current token lies.
+    //
+    // The only corner case here is EOF. In that case the virtual position of the character that's just been read (or, more precisely,
+    // that's been attempted to be read) seems to be `buf.length`, but some other logic in the scanner suggests that sometimes it can even
+    // be `buf.length + 1` or more. Therefore, we don't bother ourselves with doing decrements and just assign endOffset to be `buf.length - 1`.
+    curr.endOffset = charOffset - 2
+    if (charOffset >= buf.length && ch == SU) curr.endOffset = buf.length - 1
   }
 
   /** Is current token first one after a newline? */

@@ -65,7 +65,7 @@ package object parsers {
     def tokens: immutable.IndexedSeq[Tok] = {
       def td2tok(curr: TokenData): Tok = {
         implicit class TokenDataExtensions(tokenData: TokenData) {
-          def code = origin.content.mkString.substring(tokenData.offset, tokenData.nextOffset)
+          def code = origin.content.mkString.substring(tokenData.offset, tokenData.endOffset + 1)
         }
         (curr.token: @switch) match {
           case CHARLIT         => Tok.Literal.Char(curr.code, curr.charVal, curr.offset)
