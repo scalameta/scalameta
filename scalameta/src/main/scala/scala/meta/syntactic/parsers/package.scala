@@ -178,6 +178,8 @@ package object parsers {
         //   case e: Exception =>
         //     scanner.report.error(e.getMessage)
         // }
+        // val tokenGetters = Tokens.getClass.getMethods.filter(_.getParameterTypes().length == 0)
+        // println(tokenGetters.find(m => m.invoke(Tokens) == curr).get.getName)
         buf += td2tok(curr)
       }
       buf.toVector
