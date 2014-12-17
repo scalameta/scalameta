@@ -24,7 +24,7 @@ class TokMetadataMacros(val c: Context) {
     if ((T.tpe <:< TokClass.toType) && T.tpe.typeSymbol.annotations.exists(_.tree.tpe.typeSymbol == TokMarkerClass)) {
       val nameBody = {
         val ctor = T.tpe.typeSymbol.info.decls.collect{case m: MethodSymbol if m.isPrimaryConstructor => m}.head
-        val argss = ctor.paramLists.map(_.map(p => gen.mkZero(p.info)))
+        val argss = ctor.paramLists.map(_.map(p => if (p.info =:= typeOf[String]) Literal(Constant("")) else gen.mkZero(p.info)))
         q"new $T(...$argss).name"
       }
       q"""
