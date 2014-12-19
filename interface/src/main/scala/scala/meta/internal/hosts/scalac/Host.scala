@@ -220,7 +220,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
             case in =>
               in.cvt_! : p.Stat
           }
-          result += pstat
+          result += pstat.appendScratchpad(gstat)
         }
         // TODO: precisely calculate Pkg.hasBraces instead of going for this hacky heuristics
         result.toList.map({
