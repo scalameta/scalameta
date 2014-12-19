@@ -79,6 +79,7 @@ package object parsers {
 
           case IDENTIFIER       => Tok.Ident(curr.code, curr.name, isBackquoted = false, curr.offset)
           case BACKQUOTED_IDENT => Tok.Ident(curr.code, curr.name, isBackquoted = true, curr.offset)
+          case INTERPOLATIONID  => Tok.Interpolation.Id(curr.code, curr.name, curr.offset)
 
           case NEW   => Tok.`new`(curr.offset)
           case THIS  => Tok.`this`(curr.offset)
@@ -182,51 +183,58 @@ package object parsers {
       val oldTokens = oldTokenBuf.toVector
 
       var newTokens = new mutable.UnrolledBuffer[Tok]
-      var i = 0
-      var curr = oldTokens(i)
-      def nextToken() = { i += 1; curr = if (i < oldTokens.length) oldTokens(i) else null }
-      def emitToken() = { newTokens += td2tok(curr) }
-      while (i < oldTokens.length) {
-        if (curr.token == INTERPOLATIONID) {
+      def loop(startingFrom: Int): Unit = {
+        var i = startingFrom
+        def prev = oldTokens(i - 1)
+        def curr = oldTokens(i)
+        def emitToken() = newTokens += td2tok(curr)
+        def nextToken() = i += 1
+        if (i >= oldTokens.length) return
+
+        emitToken()
+        nextToken()
+
+        if (prev.token == INTERPOLATIONID) {
           // NOTE: funnily enough, messing with interpolation tokens is what I've been doing roughly 3 years ago, on New Year's Eve of 2011/2012
           // I vividly remember spending 2 or 3 days making scanner emit detailed tokens for string interpolations, and that was tedious.
           // Now we need to do the same for our new token stream, but I don't really feel like going through the pain again.
           // Therefore, I'm giving up the 1-to-1 old-to-new token correspondence and will be trying to reverse engineer sane tokens here rather than in scanner.
-          // NOTE: at this point, curr.token is INTERPOLATIONID
-          newTokens += Tok.Interpolation.Id(curr.code, curr.name, curr.offset)
-
-          // NOTE: at this point, curr.token is INTERPOLATIONID
-          var startEnd = curr.endOffset + 1
+          var startEnd = prev.endOffset + 1
           while (startEnd < buf.length && buf(startEnd) == '\"') startEnd += 1
-          val numStartQuotes = startEnd - curr.endOffset - 1
+          val numStartQuotes = startEnd - prev.endOffset - 1
           val numQuotes = if (numStartQuotes <= 2) 1 else 3
           def emitStart(offset: Int) = newTokens += Tok.Interpolation.Start("\"" * numQuotes, offset)
           def emitEnd(offset: Int) = newTokens += Tok.Interpolation.End("\"" * numQuotes, offset)
-          nextToken()
-
           def emitContents(): Unit = {
             require(curr.token == STRINGPART || curr.token == STRINGLIT)
             if (curr.token == STRINGPART) {
               newTokens += Tok.Interpolation.Part(curr.code, curr.name, curr.offset)
               require(buf(curr.endOffset + 1) == '$')
               val dollarOffset = curr.endOffset + 1
-              def emitSpliceStart(code: String) = newTokens += Tok.Interpolation.SpliceStart(code, dollarOffset)
+              def emitSpliceStart(code: String, offset: Int) = newTokens += Tok.Interpolation.SpliceStart(code, offset)
+              def emitSpliceEnd(code: String, offset: Int) = newTokens += Tok.Interpolation.SpliceEnd(code, offset)
+              def skipExpectedToken(expected: Token) = { require(curr.token == expected) }
               def emitExpectedToken(expected: Token) = { require(curr.token == expected); emitToken() }
               if (buf(dollarOffset + 1) == '{') {
-                emitSpliceStart("${")
+                emitSpliceStart("${", dollarOffset)
                 nextToken()
+                skipExpectedToken(LBRACE)
                 ???
+                emitSpliceEnd("}", curr.offset - 1)
+                emitContents()
               } else if (buf(dollarOffset + 1) == '_') {
-                emitSpliceStart("$_")
+                emitSpliceStart("$_", dollarOffset)
                 nextToken()
                 emitExpectedToken(USCORE)
                 nextToken()
+                emitSpliceEnd("", curr.offset - 1)
                 emitContents()
               } else {
-                emitSpliceStart("$")
+                emitSpliceStart("$", dollarOffset)
                 nextToken()
                 emitExpectedToken(IDENTIFIER)
                 nextToken()
+                emitSpliceEnd("", curr.offset - 1)
                 emitContents()
               }
             } else {
@@ -235,20 +243,18 @@ package object parsers {
               require(buf(curr.endOffset + 1) == '\"')
             }
           }
-
-          // NOTE: at this point, curr.token is the first token after INTERPOLATIONID
-          // this means STRINGPART if the interpolation is non-empty and STRINGLIT is the interpolation is empty
           numStartQuotes match {
             case 1 => emitStart(curr.offset - 1); emitContents(); emitEnd(curr.endOffset + 1)
             case 2 => emitStart(curr.offset); curr.endOffset -= 1; emitContents(); emitEnd(curr.endOffset + 1)
             case n if 3 <= n && n < 6 => emitStart(curr.offset - 3); emitContents(); emitEnd(curr.endOffset + 1)
             case 6 => emitStart(curr.offset - 3); emitContents(); emitEnd(curr.endOffset + 1)
           }
-        } else {
-          emitToken()
         }
-        nextToken()
+
+        loop(i + 1)
       }
+
+      loop(startingFrom = 0)
       newTokens.toVector
     }
   }
