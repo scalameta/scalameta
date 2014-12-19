@@ -199,10 +199,35 @@ package object parsers {
 
           def emitStart(offset: Int) = newTokens += Tok.Interpolation.Start("\"" * numQuotes, offset)
           def emitEnd(offset: Int) = newTokens += Tok.Interpolation.End("\"" * numQuotes, offset)
-          def emitContents() = {
+          def emitContents(): Unit = {
             require(curr.token == STRINGPART || curr.token == STRINGLIT)
             if (curr.token == STRINGPART) {
-              ???
+              newTokens += Tok.Interpolation.Part(curr.code, curr.name, curr.offset)
+              require(buf(curr.endOffset + 1) == '$')
+              val dollarOffset = curr.endOffset + 1
+              def emitAndConsumeSpliceStart(code: String) = {
+                newTokens += Tok.Interpolation.SpliceStart(code, dollarOffset)
+                i += 1
+                curr = oldTokens(i)
+              }
+              def emitAndConsumePredefinedToken(expected: Token) = {
+                require(curr.token == expected)
+                newTokens += td2tok(curr)
+                i += 1
+                curr = oldTokens(i)
+              }
+              if (buf(dollarOffset + 1) == '{') {
+                emitAndConsumeSpliceStart("${")
+                ???
+              } else if (buf(dollarOffset + 1) == '_') {
+                emitAndConsumeSpliceStart("$_")
+                emitAndConsumePredefinedToken(USCORE)
+                emitContents()
+              } else {
+                emitAndConsumeSpliceStart("$")
+                emitAndConsumePredefinedToken(IDENTIFIER)
+                emitContents()
+              }
             } else {
               curr.endOffset -= numQuotes
               newTokens += Tok.Interpolation.Part(curr.code, curr.name, curr.offset)

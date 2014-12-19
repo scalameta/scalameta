@@ -349,8 +349,10 @@ class Scanner(val origin: Origin, decodeUni: Boolean = true) {
     // upd. Speaking of corner cases, positions of tokens emitted by string interpolation tokenizers are simply insane,
     // and need to be reverse engineered having some context (previous tokens, number of quotes in the interpolation) in mind.
     // Therefore I don't even attempt to handle them here, and instead apply fixups elsewhere when converting old-style TOKENS into new-style Tok instances.
-    curr.endOffset = charOffset - 2
-    if (charOffset >= buf.length && ch == SU) curr.endOffset = buf.length - 1
+    if (curr.token != STRINGPART) { // endOffset of STRINGPART tokens is set elsewhere
+      curr.endOffset = charOffset - 2
+      if (charOffset >= buf.length && ch == SU) curr.endOffset = buf.length - 1
+    }
   }
 
   /** Is current token first one after a newline? */
@@ -703,14 +705,17 @@ class Scanner(val origin: Origin, decodeUni: Boolean = true) {
         getStringPart(multiLine)
       } else if (ch == '{') {
         finishStringPart()
+        endOffset = charOffset - 3
         nextRawChar()
         next.token = LBRACE
       } else if (ch == '_') {
         finishStringPart()
+        endOffset = charOffset - 3
         nextRawChar()
         next.token = USCORE
       } else if (Character.isUnicodeIdentifierStart(ch)) {
         finishStringPart()
+        endOffset = charOffset - 3
         do {
           putChar(ch)
           nextRawChar()
