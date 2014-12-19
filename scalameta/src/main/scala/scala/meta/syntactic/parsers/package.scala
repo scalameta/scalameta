@@ -186,7 +186,7 @@ package object parsers {
           // NOTE: funnily enough, messing with interpolation tokens is what I've been doing roughly 3 years ago, on New Year's Eve of 2011/2012
           // I vividly remember spending 2 or 3 days making scanner emit detailed tokens for string interpolations, and that was tedious.
           // Now we need to do the same for our new token stream, but I don't really feel like going through the pain again.
-          // Therefore, I'm giving up the 1-to-1 old-to-new token correspondence and will be trying to reverse engineer sane tokens here rather than it scanner.
+          // Therefore, I'm giving up the 1-to-1 old-to-new token correspondence and will be trying to reverse engineer sane tokens here rather than in scanner.
           newTokens += Tok.Interpolation.Id(curr.code, curr.name, curr.offset)
 
           var startEnd = curr.endOffset + 1
@@ -198,13 +198,22 @@ package object parsers {
 
           def emitStart(offset: Int) = newTokens += Tok.Interpolation.Start("\"" * numQuotes, offset)
           def emitEnd(offset: Int) = newTokens += Tok.Interpolation.End("\"" * numQuotes, offset)
-          def emitContents() = ???
+          def emitContents() = {
+            require(curr.token == STRINGPART || curr.token == STRINGLIT)
+            if (curr.token == STRINGPART) {
+              ???
+            } else {
+              curr.endOffset -= numQuotes
+              newTokens += Tok.Interpolation.Part(curr.code, curr.name, curr.offset)
+              require(buf(curr.endOffset + 1) == '\"')
+            }
+          }
 
           numStartQuotes match {
-            case 1 => emitStart(curr.offset); emitContents(); emitEnd(curr.endOffset)
-            case 2 => emitStart(curr.offset); emitEnd(curr.offset + 1)
-            case n if 3 <= n && n < 6 => emitStart(curr.offset); emitContents(); emitEnd(curr.endOffset - 2)
-            case 6 => emitStart(curr.offset); emitEnd(curr.offset + 3)
+            case 1 => emitStart(curr.offset - 1); emitContents(); emitEnd(curr.endOffset + 1)
+            case 2 => emitStart(curr.offset); curr.endOffset -= 1; emitContents(); emitEnd(curr.endOffset + 1)
+            case n if 3 <= n && n < 6 => emitStart(curr.offset - 3); emitContents(); emitEnd(curr.endOffset + 1)
+            case 6 => emitStart(curr.offset - 3); emitContents(); emitEnd(curr.endOffset + 1)
           }
         } else {
           newTokens += td2tok(curr)

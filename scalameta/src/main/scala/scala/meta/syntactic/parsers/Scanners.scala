@@ -343,6 +343,10 @@ class Scanner(val origin: Origin, decodeUni: Boolean = true) {
     // The only corner case here is EOF. In that case the virtual position of the character that's just been read (or, more precisely,
     // that's been attempted to be read) seems to be `buf.length`, but some other logic in the scanner suggests that sometimes it can even
     // be `buf.length + 1` or more. Therefore, we don't bother ourselves with doing decrements and just assign endOffset to be `buf.length - 1`.
+    //
+    // upd. Speaking of corner cases, positions of tokens emitted by string interpolation tokenizers are simply insane,
+    // and need to be reverse engineered having some context (previous tokens, number of quotes in the interpolation) in mind.
+    // Therefore I don't even attempt to handle them here, and instead apply fixups elsewhere when converting old-style TOKENS into new-style Tok instances.
     curr.endOffset = charOffset - 2
     if (charOffset >= buf.length && ch == SU) curr.endOffset = buf.length - 1
   }
