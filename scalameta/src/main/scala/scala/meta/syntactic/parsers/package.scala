@@ -7,6 +7,7 @@ import org.scalameta.unreachable
 import parsers.Tokens._
 import scala.meta._
 import scala.meta.syntactic.parsers.Chars.{CR, LF, FF}
+import org.scalameta.invariants._
 
 package parsers {
   // TODO: when I grow up I want to become a monad, just like my daddy

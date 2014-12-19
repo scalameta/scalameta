@@ -45,6 +45,8 @@ trait TokenData {
     this
   }
 
+  override def toString = s"{token = $token, position = $offset..$endOffset, lastOffset = $lastOffset, name = $name, strVal = $strVal, base = $base}"
+
   /** Convert current strVal to char value
    */
   def charVal: Char = if (strVal.length > 0) strVal.charAt(0) else 0
