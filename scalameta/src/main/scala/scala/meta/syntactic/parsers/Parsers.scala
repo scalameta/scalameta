@@ -137,7 +137,7 @@ class Parser(val origin: Origin) extends AbstractParser {
   private class CrazyTokIterator(var pos: Int = -1, var tok: NewToken = null) extends TokIterator {
     var sepRegions: List[LegacyToken] = Nil
     require(tokens.nonEmpty)
-    next()
+    if (pos == -1) next() // TODO: only do next() if we've been just created. forks can't go for next()
     def hasNext: Boolean = tokens.drop(pos + 1).exists(_.isNot[Whitespace])
     def next(): Tok = {
       if (!hasNext) throw new NoSuchElementException()
