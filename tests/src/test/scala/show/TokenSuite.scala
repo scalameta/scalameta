@@ -70,6 +70,36 @@ class ShowTokenSuite extends ParseSuite {
     """.trim.stripMargin.replace("QQQ", "\"\"\""))
   }
 
+  test("showCode without comments - insane") {
+    assert(tokenize("""
+      |class C {
+      |  q""
+      |  q"$b + 2"
+      |  q"${b} + 2"
+      |  q"class $X"
+      |  q"class ${X}"
+      |  qQQQQQQ
+      |  qQQQ$d + 2QQQ
+      |  qQQQ${d} + 2QQQ
+      |  qQQQclass $YQQQ
+      |  qQQQclass ${Y}QQQ
+      |}
+    """.trim.stripMargin.replace("QQQ", "\"\"\"")).map(_.show[Code]).mkString === """
+      |class C {
+      |  q""
+      |  q"$b + 2"
+      |  q"${b} + 2"
+      |  q"class $X"
+      |  q"class ${X}"
+      |  qQQQQQQ
+      |  qQQQ$d + 2QQQ
+      |  qQQQ${d} + 2QQQ
+      |  qQQQclass $YQQQ
+      |  qQQQclass ${Y}QQQ
+      |}
+    """.trim.stripMargin.replace("QQQ", "\"\"\""))
+  }
+
   test("showCode with comments") {
     // TODO: uncomment me
     // assert(tokenize("class C  /*hello world*/{\t val x = 2}\n//bye-bye world\n").map(_.show[Code]).mkString === "class C  /*hello world*/{\t val x = 2}\n//bye-bye world\n")
@@ -409,6 +439,134 @@ class ShowTokenSuite extends ParseSuite {
       |\n (470)
       |} (471)
       |EOF (472)
+    """.trim.stripMargin.replace("QQQ", "\"\"\""))
+  }
+
+  test("showRaw without comments - insane") {
+    assert(tokenize("""
+      |class C {
+      |  q""
+      |  q"$b + 2"
+      |  q"${b} + 2"
+      |  q"class $X"
+      |  q"class ${X}"
+      |  qQQQQQQ
+      |  qQQQ$d + 2QQQ
+      |  qQQQ${d} + 2QQQ
+      |  qQQQclass $YQQQ
+      |  qQQQclass ${Y}QQQ
+      |}
+    """.trim.stripMargin.replace("QQQ", "\"\"\"")).map(_.show[Raw]).mkString("\n") === """
+      |class (0)
+      |  (5)
+      |C (6)
+      |  (7)
+      |{ (8)
+      |\n (9)
+      |  (10)
+      |  (11)
+      |q (12)
+      |" (13)
+      | (13)
+      |" (16)
+      |\n (15)
+      |  (16)
+      |  (17)
+      |q (18)
+      |" (19)
+      | (20)
+      |$ (20)
+      |b (21)
+      | (21)
+      | + 2 (22)
+      |" (28)
+      |\n (27)
+      |  (28)
+      |  (29)
+      |q (30)
+      |" (31)
+      | (32)
+      |${ (32)
+      |b (34)
+      |} (35)
+      | + 2 (36)
+      |" (42)
+      |\n (41)
+      |  (42)
+      |  (43)
+      |q (44)
+      |" (45)
+      |class  (46)
+      |$ (52)
+      |X (53)
+      | (53)
+      | (54)
+      |" (56)
+      |\n (55)
+      |  (56)
+      |  (57)
+      |q (58)
+      |" (59)
+      |class  (60)
+      |${ (66)
+      |X (68)
+      |} (69)
+      | (70)
+      |" (72)
+      |\n (71)
+      |  (72)
+      |  (73)
+      |q (74)
+      |QQQ (75)
+      | (78)
+      |QQQ (82)
+      |\n (81)
+      |  (82)
+      |  (83)
+      |q (84)
+      |QQQ (85)
+      | (88)
+      |$ (88)
+      |d (89)
+      | (89)
+      | + 2 (90)
+      |QQQ (98)
+      |\n (97)
+      |  (98)
+      |  (99)
+      |q (100)
+      |QQQ (101)
+      | (104)
+      |${ (104)
+      |d (106)
+      |} (107)
+      | + 2 (108)
+      |QQQ (116)
+      |\n (115)
+      |  (116)
+      |  (117)
+      |q (118)
+      |QQQ (119)
+      |class  (122)
+      |$ (128)
+      |Y (129)
+      | (129)
+      | (130)
+      |QQQ (134)
+      |\n (133)
+      |  (134)
+      |  (135)
+      |q (136)
+      |QQQ (137)
+      |class  (140)
+      |${ (146)
+      |Y (148)
+      |} (149)
+      | (150)
+      |QQQ (154)
+      |\n (153)
+      |} (154)
+      |EOF (155)
     """.trim.stripMargin.replace("QQQ", "\"\"\""))
   }
 
