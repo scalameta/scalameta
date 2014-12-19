@@ -33,7 +33,11 @@ object Tok {
 
   object Interpolation {
     @token class Id(code: Predef.String, value: Predef.String, offset: Int) extends Dynamic with ExprIntro { def name = "interpolation id" }
+    @token class Start(code: Predef.String, offset: Int) extends Dynamic with Tok { def name = "interpolation start" }
     @token class Part(code: Predef.String, value: Predef.String, offset: Int) extends Dynamic with Tok { def name = "interpolation part" }
+    @token class SpliceStart(code: Predef.String, offset: Int) extends Dynamic with Tok { def name = "splice start" }
+    @token class SpliceEnd(code: Predef.String, offset: Int) extends Dynamic with Tok { def name = "splice end" }
+    @token class End(code: Predef.String, offset: Int) extends Dynamic with Tok { def name = "interpolation end" }
   }
 
   @branch trait Literal extends ExprIntro with CanEndStat

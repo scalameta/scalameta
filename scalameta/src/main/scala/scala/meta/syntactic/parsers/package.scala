@@ -63,10 +63,10 @@ package object parsers {
     private val origin: Origin = ev(originLike)
     def parse[T](implicit ev: Parse[T]): T = ev(origin)
     def tokens: immutable.IndexedSeq[Tok] = {
+      implicit class TokenDataExtensions(tokenData: TokenData) {
+        def code = origin.content.mkString.substring(tokenData.offset, tokenData.endOffset + 1)
+      }
       def td2tok(curr: TokenData): Tok = {
-        implicit class TokenDataExtensions(tokenData: TokenData) {
-          def code = origin.content.mkString.substring(tokenData.offset, tokenData.endOffset + 1)
-        }
         (curr.token: @switch) match {
           case CHARLIT         => Tok.Literal.Char(curr.code, curr.charVal, curr.offset)
           case INTLIT          => Tok.Literal.Int(curr.code, curr.intVal(false).map(_.toInt).get, curr.offset)
@@ -75,8 +75,6 @@ package object parsers {
           case DOUBLELIT       => Tok.Literal.Double(curr.code, curr.floatVal(false).get, curr.offset)
           case STRINGLIT       => Tok.Literal.String(curr.code, curr.strVal, curr.offset)
           case SYMBOLLIT       => Tok.Literal.Symbol(curr.code, scala.Symbol(curr.strVal), curr.offset)
-          case INTERPOLATIONID => Tok.Interpolation.Id(curr.code, curr.name, curr.offset)
-          case STRINGPART      => Tok.Interpolation.Part(curr.code, curr.strVal, curr.offset)
 
           case IDENTIFIER       => Tok.Ident(curr.code, curr.name, isBackquoted = false, curr.offset)
           case BACKQUOTED_IDENT => Tok.Ident(curr.code, curr.name, isBackquoted = true, curr.offset)
@@ -168,21 +166,52 @@ package object parsers {
           case ERROR    => unreachable
         }
       }
-      var buf = new mutable.UnrolledBuffer[Tok]
       val scanner = new Scanner(origin)
-      scanner.foreach { curr =>
+      val buf = scanner.reader.buf
+      var oldTokenBuf = new mutable.UnrolledBuffer[TokenData]
+      scanner.foreach(curr => {
         // TODO: reinstate error handling
-        // try {
-        //   buf += td2tok(curr)
-        // } catch {
-        //   case e: Exception =>
-        //     scanner.report.error(e.getMessage)
-        // }
+        // try oldTokenBuf += curr
+        // catch { case e: Exception => scanner.report.error(e.getMessage) }
         // val tokenGetters = Tokens.getClass.getMethods.filter(_.getParameterTypes().length == 0)
         // println(tokenGetters.find(m => m.invoke(Tokens) == curr).get.getName)
-        buf += td2tok(curr)
+        oldTokenBuf += new TokenData{}.copyFrom(curr)
+      })
+      val oldTokens = oldTokenBuf.toVector
+      var newTokens = new mutable.UnrolledBuffer[Tok]
+      var i = 0
+      while (i < oldTokens.length) {
+        var curr = oldTokens(i)
+        if (curr.token == INTERPOLATIONID) {
+          // NOTE: funnily enough, messing with interpolation tokens is what I've been doing roughly 3 years ago, on New Year's Eve of 2011/2012
+          // I vividly remember spending 2 or 3 days making scanner emit detailed tokens for string interpolations, and that was tedious.
+          // Now we need to do the same for our new token stream, but I don't really feel like going through the pain again.
+          // Therefore, I'm giving up the 1-to-1 old-to-new token correspondence and will be trying to reverse engineer sane tokens here rather than it scanner.
+          newTokens += Tok.Interpolation.Id(curr.code, curr.name, curr.offset)
+
+          var startEnd = curr.endOffset + 1
+          while (startEnd < buf.length && buf(startEnd) == '\"') startEnd += 1
+          val numStartQuotes = startEnd - curr.endOffset - 1
+          val numQuotes = if (numStartQuotes <= 2) 1 else 3
+          i += 1
+          curr = oldTokens(i)
+
+          def emitStart(offset: Int) = newTokens += Tok.Interpolation.Start("\"" * numQuotes, offset)
+          def emitEnd(offset: Int) = newTokens += Tok.Interpolation.End("\"" * numQuotes, offset)
+          def emitContents() = ???
+
+          numStartQuotes match {
+            case 1 => emitStart(curr.offset); emitContents(); emitEnd(curr.endOffset)
+            case 2 => emitStart(curr.offset); emitEnd(curr.offset + 1)
+            case n if 3 <= n && n < 6 => emitStart(curr.offset); emitContents(); emitEnd(curr.endOffset - 2)
+            case 6 => emitStart(curr.offset); emitEnd(curr.offset + 3)
+          }
+        } else {
+          newTokens += td2tok(curr)
+        }
+        i += 1
       }
-      buf.toVector
+      newTokens.toVector
     }
   }
 }
