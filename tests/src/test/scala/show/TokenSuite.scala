@@ -100,37 +100,6 @@ class ShowTokenSuite extends ParseSuite {
   }
 
   test("showRaw without comments - hard") {
-    println(tokenize("""
-      |class C {
-      |  val x1a = 2
-      |  val x1b = 0x002
-      |  val x1c = 0x002a
-      |  val x2a = 2l
-      |  val x2b = 2L
-      |  val x2c = 0x002l
-      |  val x2d = 0x002L
-      |  val x2e = 0x002al
-      |  val x2f = 0x002aL
-      |  val x3a = 2f
-      |  val x3b = 2.0F
-      |  val x4a = 2d
-      |  val x4b = 2.0D
-      |  val x4c = 2.0
-      |  val x5a = 'a'
-      |  val x5b = '\b'
-      |  val x5c = '"'
-      |  val x5d = '\"'
-      |  val x6 = 'a
-      |  val x7a = ""
-      |  val x7b = "\b"
-      |  val x7c = "c"
-      |  val x7d = "\""
-      |  val x7e = QQQQQQ
-      |  val x7f = QQQf\nQQQ
-      |  val hello = 42
-      |  val `world` = 42
-      |}
-    """.trim.stripMargin.replace("QQQ", "\"\"\"")).map(_.show[Raw]).mkString("\n"))
     assert(tokenize("""
       |class C {
       |  val x1a = 2
