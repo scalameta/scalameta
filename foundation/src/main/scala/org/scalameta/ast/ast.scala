@@ -155,15 +155,26 @@ class AstMacros(val c: Context) {
       """
 
       // step 11: generate Companion.unapply
-      // TODO: migrate to name-based pattern matching
       val unapplyParamss = nontriviaParamss
+      val unapplyParams = unapplyParamss.head
       val needsUnapply = !mstats.exists(stat => stat match { case DefDef(_, TermName("unapply"), _, _, _, _) => true; case _ => false })
       if (needsUnapply) {
-        if (paramss.head.isEmpty) mstats1 += q"def unapply(x: $name): Boolean = true"
-        else {
-          val successTargs = tq"(..${unapplyParamss.head.map(p => p.tpt)})"
-          val successArgs = q"(..${unapplyParamss.head.map(p => q"x.${p.name}")})"
-          mstats1 += q"def unapply(x: $name): Option[$successTargs] = if (x == null) _root_.scala.None else _root_.scala.Some($successArgs)"
+        if (unapplyParams.length != 0) {
+          // TODO: remove this workaround once https://issues.scala-lang.org/browse/SI-9029 is fixed
+          if (name.toString == "Bounds" || name.toString == "Templ" || name.toString == "Ref" || name.toString == "Name") {
+            val successTargs = tq"(..${unapplyParamss.head.map(p => p.tpt)})"
+            val successArgs = q"(..${unapplyParamss.head.map(p => q"x.${p.name}")})"
+            mstats1 += q"@_root_.scala.inline final def unapply(x: $name): Option[$successTargs] = if (x == null) _root_.scala.None else _root_.scala.Some($successArgs)"
+          } else {
+            stats1 += q"@_root_.scala.inline final def isDefined = !isEmpty"
+            stats1 += q"@_root_.scala.inline final def isEmpty = false"
+            val getBody = if (unapplyParams.length == 1) q"this.${unapplyParams.head.name}" else q"this"
+            stats1 += q"@_root_.scala.inline final def get = $getBody"
+            unapplyParams.zipWithIndex.foreach({ case (p, i) => stats1 += q"@_root_.scala.inline final def ${TermName("_" + (i + 1))} = this.${p.name}" })
+            mstats1 += q"@_root_.scala.inline final def unapply(x: $name): $name = x"
+          }
+        } else {
+          mstats1 += q"@_root_.scala.inline final def unapply(x: $name): Boolean = true"
         }
       }
 
