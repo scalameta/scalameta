@@ -214,7 +214,7 @@ package object parsers {
           def emitContents(): Unit = {
             require(curr.token == STRINGPART || curr.token == STRINGLIT)
             if (curr.token == STRINGPART) {
-              newTokens += Tok.Interpolation.Part(curr.code, curr.name, curr.offset)
+              newTokens += Tok.Interpolation.Part(curr.code, curr.strVal, curr.offset)
               require(buf(curr.endOffset + 1) == '$')
               val dollarOffset = curr.endOffset + 1
               def emitSpliceStart(code: String, offset: Int) = newTokens += Tok.Interpolation.SpliceStart(code, offset)
@@ -248,7 +248,7 @@ package object parsers {
               }
             } else {
               curr.endOffset -= numQuotes
-              newTokens += Tok.Interpolation.Part(curr.code, curr.name, curr.offset)
+              newTokens += Tok.Interpolation.Part(curr.code, curr.strVal, curr.offset)
               require(buf(curr.endOffset + 1) == '\"')
               nextToken()
             }
