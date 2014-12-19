@@ -183,13 +183,19 @@ package object parsers {
       val oldTokens = oldTokenBuf.toVector
 
       var newTokens = new mutable.UnrolledBuffer[Tok]
-      def loop(startingFrom: Int): Unit = {
+      def loop(startingFrom: Int, braceBalance: Int = 0, returnWhenBraceBalanceHitsZero: Boolean = false): Int = {
         var i = startingFrom
         def prev = oldTokens(i - 1)
         def curr = oldTokens(i)
         def emitToken() = newTokens += td2tok(curr)
         def nextToken() = i += 1
-        if (i >= oldTokens.length) return
+        if (i >= oldTokens.length) return i
+
+        // NOTE: need to track this in order to correctly emit SpliceEnd tokens after splices end
+        var braceBalance1 = braceBalance
+        if (curr.token == LBRACE) braceBalance1 += 1
+        if (curr.token == RBRACE) braceBalance1 -= 1
+        if (braceBalance1 == 0 && returnWhenBraceBalanceHitsZero) return i
 
         emitToken()
         nextToken()
@@ -213,13 +219,16 @@ package object parsers {
               val dollarOffset = curr.endOffset + 1
               def emitSpliceStart(code: String, offset: Int) = newTokens += Tok.Interpolation.SpliceStart(code, offset)
               def emitSpliceEnd(code: String, offset: Int) = newTokens += Tok.Interpolation.SpliceEnd(code, offset)
-              def skipExpectedToken(expected: Token) = { require(curr.token == expected) }
+              def requireExpectedToken(expected: Token) = { require(curr.token == expected) }
               def emitExpectedToken(expected: Token) = { require(curr.token == expected); emitToken() }
               if (buf(dollarOffset + 1) == '{') {
                 emitSpliceStart("${", dollarOffset)
                 nextToken()
-                skipExpectedToken(LBRACE)
-                ???
+                requireExpectedToken(LBRACE)
+                nextToken()
+                i = loop(i, braceBalance = 1, returnWhenBraceBalanceHitsZero = true)
+                requireExpectedToken(RBRACE)
+                nextToken()
                 emitSpliceEnd("}", curr.offset - 1)
                 emitContents()
               } else if (buf(dollarOffset + 1) == '_') {
@@ -241,6 +250,7 @@ package object parsers {
               curr.endOffset -= numQuotes
               newTokens += Tok.Interpolation.Part(curr.code, curr.name, curr.offset)
               require(buf(curr.endOffset + 1) == '\"')
+              nextToken()
             }
           }
           numStartQuotes match {
@@ -251,7 +261,7 @@ package object parsers {
           }
         }
 
-        loop(i + 1)
+        loop(i, braceBalance1, returnWhenBraceBalanceHitsZero)
       }
 
       loop(startingFrom = 0)
