@@ -851,26 +851,20 @@ abstract class AbstractParser { parser =>
   }
 
   def interpolate[Ctx, Ret](arg: () => Ctx, result: (Term.Name, List[Lit.String], List[Ctx]) => Ret): Ret = {
-    def part() = {
-      val value = tok match {
-        case Literal.String(_, v, _)     => v
-        case Interpolation.Part(_, v, _) => v
-        case _                           => syntaxErrorExpected[Interpolation.Part]
-      }
-      val lit = Lit.String(value)
-      next()
-      lit
-    }
     val Interpolation.Id(_, nameStr, _) = tok
     val interpolator = Term.Name(nameStr, isBackquoted = false) // termName() for INTERPOLATIONID
     next()
     val partsBuf = new ListBuffer[Lit.String]
     val argsBuf = new ListBuffer[Ctx]
-    while (tok.is[Interpolation.Part]) {
-      partsBuf += part()
-      argsBuf += arg()
+    def loop(): Unit = tok match {
+      case Interpolation.Start(_, _) => next(); loop()
+      case Interpolation.Part(_, value, _) => partsBuf += Lit.String(value); next(); loop()
+      case Interpolation.SpliceStart(_, _) => next(); argsBuf += arg(); loop()
+      case Interpolation.SpliceEnd(_, _) => next(); loop()
+      case Interpolation.End(_, _) => next(); // just return
+      case _ => unreachable
     }
-    if (tok.is[Literal.String]) partsBuf += part()
+    loop()
     result(interpolator, partsBuf.toList, argsBuf.toList)
   }
 
