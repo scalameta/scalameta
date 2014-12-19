@@ -224,7 +224,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         }
         // TODO: precisely calculate Pkg.hasBraces instead of going for this hacky heuristics
         result.toList.map({
-          case pkg @ p.Pkg(ref, stats) => p.Pkg(ref, stats, hasBraces = result.length != 1)
+          case pkg @ p.Pkg(ref, stats) => p.Pkg(ref, stats, hasBraces = result.length != 1).withScratchpad(pkg.scratchpad)
           case stat => stat
         })
       }
