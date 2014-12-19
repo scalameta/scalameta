@@ -859,8 +859,8 @@ abstract class AbstractParser { parser =>
     def loop(): Unit = tok match {
       case Interpolation.Start(_, _) => next(); loop()
       case Interpolation.Part(_, value, _) => partsBuf += Lit.String(value); next(); loop()
-      case Interpolation.SpliceStart(_, _) => next(); argsBuf += arg(); loop()
-      case Interpolation.SpliceEnd(_, _) => next(); loop()
+      case Interpolation.SpliceStart(_) => next(); argsBuf += arg(); loop()
+      case Interpolation.SpliceEnd(_) => next(); loop()
       case Interpolation.End(_, _) => next(); // just return
       case _ => unreachable
     }

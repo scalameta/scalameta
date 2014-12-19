@@ -191,14 +191,14 @@ package object parsers {
         def nextToken() = i += 1
         if (i >= oldTokens.length) return i
 
-        // NOTE: need to track this in order to correctly emit SpliceEnd tokens after splices end
-        var braceBalance1 = braceBalance
-        if (curr.token == LBRACE) braceBalance1 += 1
-        if (curr.token == RBRACE) braceBalance1 -= 1
-        if (braceBalance1 == 0 && returnWhenBraceBalanceHitsZero) return i
-
         emitToken()
         nextToken()
+
+        // NOTE: need to track this in order to correctly emit SpliceEnd tokens after splices end
+        var braceBalance1 = braceBalance
+        if (prev.token == LBRACE) braceBalance1 += 1
+        if (prev.token == RBRACE) braceBalance1 -= 1
+        if (braceBalance1 == 0 && returnWhenBraceBalanceHitsZero) return i
 
         if (prev.token == INTERPOLATIONID) {
           // NOTE: funnily enough, messing with interpolation tokens is what I've been doing roughly 3 years ago, on New Year's Eve of 2011/2012
@@ -217,33 +217,29 @@ package object parsers {
               newTokens += Tok.Interpolation.Part(curr.code, curr.strVal, curr.offset)
               require(buf(curr.endOffset + 1) == '$')
               val dollarOffset = curr.endOffset + 1
-              def emitSpliceStart(code: String, offset: Int) = newTokens += Tok.Interpolation.SpliceStart(code, offset)
-              def emitSpliceEnd(code: String, offset: Int) = newTokens += Tok.Interpolation.SpliceEnd(code, offset)
+              def emitSpliceStart(offset: Int) = newTokens += Tok.Interpolation.SpliceStart(offset)
+              def emitSpliceEnd(offset: Int) = newTokens += Tok.Interpolation.SpliceEnd(offset)
               def requireExpectedToken(expected: Token) = { require(curr.token == expected) }
               def emitExpectedToken(expected: Token) = { require(curr.token == expected); emitToken() }
               if (buf(dollarOffset + 1) == '{') {
-                emitSpliceStart("${", dollarOffset)
+                emitSpliceStart(dollarOffset)
                 nextToken()
-                requireExpectedToken(LBRACE)
-                nextToken()
-                i = loop(i, braceBalance = 1, returnWhenBraceBalanceHitsZero = true)
-                requireExpectedToken(RBRACE)
-                nextToken()
-                emitSpliceEnd("}", curr.offset - 1)
+                i = loop(i, braceBalance = 0, returnWhenBraceBalanceHitsZero = true)
+                emitSpliceEnd(curr.offset - 1)
                 emitContents()
               } else if (buf(dollarOffset + 1) == '_') {
-                emitSpliceStart("$_", dollarOffset)
+                emitSpliceStart(dollarOffset)
                 nextToken()
                 emitExpectedToken(USCORE)
                 nextToken()
-                emitSpliceEnd("", curr.offset - 1)
+                emitSpliceEnd(curr.offset - 1)
                 emitContents()
               } else {
-                emitSpliceStart("$", dollarOffset)
+                emitSpliceStart(dollarOffset)
                 nextToken()
                 emitExpectedToken(IDENTIFIER)
                 nextToken()
-                emitSpliceEnd("", curr.offset - 1)
+                emitSpliceEnd(curr.offset - 1)
                 emitContents()
               }
             } else {
