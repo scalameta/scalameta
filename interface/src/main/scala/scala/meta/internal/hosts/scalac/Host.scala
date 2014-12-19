@@ -137,8 +137,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
       }
       def pvparamtpe(gtpt: g.Tree): p.Type.Arg = {
         def unwrap(ptpe: p.Type): p.Type = ptpe.asInstanceOf[p.Type.Apply].args.head
-        if (g.definitions.isRepeatedParamType(gtpt.tpe)) p.Type.Arg.Repeated(unwrap(gtpt.cvt_! : p.Type))
-        else if (g.definitions.isByNameParamType(gtpt.tpe)) p.Type.Arg.ByName(unwrap(gtpt.cvt_! : p.Type))
+        if (g.definitions.isRepeatedParamType(gtpt.tpe)) p.Type.Arg.Repeated(unwrap(gtpt.cvt_! : p.Type)).appendScratchpad(gtpt)
+        else if (g.definitions.isByNameParamType(gtpt.tpe)) p.Type.Arg.ByName(unwrap(gtpt.cvt_! : p.Type)).appendScratchpad(gtpt)
         else (gtpt.cvt_! : p.Type)
       }
       def ptypebounds(gtpt: g.Tree): p.Type.Bounds = gtpt match {
@@ -220,11 +220,11 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
             case in =>
               in.cvt_! : p.Stat
           }
-          result += pstat
+          result += pstat.appendScratchpad(gstat)
         }
         // TODO: precisely calculate Pkg.hasBraces instead of going for this hacky heuristics
         result.toList.map({
-          case pkg @ p.Pkg(ref, stats) => p.Pkg(ref, stats, hasBraces = result.length != 1)
+          case pkg @ p.Pkg(ref, stats) => p.Pkg(ref, stats, hasBraces = result.length != 1).withScratchpad(pkg.scratchpad)
           case stat => stat
         })
       }
@@ -346,7 +346,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
           case q"$body; if ($cond) $cont else ()" if name.startsWith(g.nme.DO_WHILE_PREFIX) => p.Term.Do(body.cvt_!, cond.cvt_!)
           case _ => unreachable
         }
-      case g.Import(expr, selectors) =>
+      case in @ g.Import(expr, selectors) =>
         // TODO: collapse desugared chains of imports
         // TODO: distinguish `import foo.x` from `import foo.{x => x}`
         p.Import(List(p.Import.Clause(expr.cvt_!, selectors.map({
@@ -354,12 +354,12 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
           case g.ImportSelector(name1, _, name2, _) if name1 == name2 => p.Import.Name(name1.toString)
           case g.ImportSelector(name1, _, name2, _) if name1 != name2 => p.Import.Rename(name1.toString, name2.toString)
           case g.ImportSelector(name, _, g.nme.WILDCARD, _)           => p.Import.Unimport(name.toString)
-        }))))
+        })).appendScratchpad(in)))
       case in @ g.Template(_, _, _) =>
         // TODO: really infer hasStats
         // TODO: we should be able to write Template instantiations without an `if` by having something like `hasStats` as an optional synthetic parameter
         val SyntacticTemplate(gparents, gself, gearlydefns, gstats) = in
-        val pparents = gparents.map(gparent => { val applied = g.treeInfo.dissectApplied(gparent); p.Ctor.Ref(applied.callee.cvt_!, pargss(applied.argss)) })
+        val pparents = gparents.map(gparent => { val applied = g.treeInfo.dissectApplied(gparent); p.Ctor.Ref(applied.callee.cvt_!, pargss(applied.argss)).appendScratchpad(applied) })
         // TODO: (gself.cvt_! : p.Term.Param).withMods(Nil)
         val pself0 @ p.Term.Param(mods, name, decltpe, default) = gself.cvt_! : p.Term.Param
         val pself = p.Term.Param(Nil, name, decltpe, default).withScratchpad(pself0.scratchpad)
