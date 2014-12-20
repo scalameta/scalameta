@@ -617,4 +617,88 @@ class ShowTokenSuite extends ParseSuite {
       |EOF (8..7)
     """.trim.stripMargin)
   }
+
+  test("interpolation start & end - episode 01") {
+    assert(tokenize("q\"\"").map(_.show[Raw]).mkString("\n") === """
+      |q (0..0)
+      |" (1..1)
+      | (2..1)
+      |" (2..2)
+      |EOF (3..2)
+    """.trim.stripMargin)
+  }
+
+  test("interpolation start & end - episode 02") {
+    assert(tokenize("q\"\";").map(_.show[Raw]).mkString("\n") === """
+      |q (0..0)
+      |" (1..1)
+      | (2..1)
+      |" (2..2)
+      |; (3..3)
+      |EOF (4..3)
+    """.trim.stripMargin)
+  }
+
+  test("interpolation start & end - episode 03") {
+    assert(tokenize("q\"a\"").map(_.show[Raw]).mkString("\n") === """
+      |q (0..0)
+      |" (1..1)
+      |a (2..2)
+      |" (3..3)
+      |EOF (4..3)
+    """.trim.stripMargin)
+  }
+
+  test("interpolation start & end - episode 04") {
+    assert(tokenize("q\"a\";").map(_.show[Raw]).mkString("\n") === """
+      |q (0..0)
+      |" (1..1)
+      |a (2..2)
+      |" (3..3)
+      |; (4..4)
+      |EOF (5..4)
+    """.trim.stripMargin)
+  }
+
+  test("interpolation start & end - episode 05") {
+    assert(tokenize("q\"\"\"\"\"\"").map(_.show[Raw]).mkString("\n") === """
+      |q (0..0)
+      |QQQ (1..3)
+      | (4..3)
+      |QQQ (4..6)
+      |EOF (7..6)
+    """.trim.stripMargin.replace("QQQ", "\"\"\""))
+  }
+
+  test("interpolation start & end - episode 06") {
+    assert(tokenize("q\"\"\"\"\"\";").map(_.show[Raw]).mkString("\n") === """
+      |q (0..0)
+      |QQQ (1..3)
+      | (4..3)
+      |QQQ (4..6)
+      |; (7..7)
+      |EOF (8..7)
+    """.trim.stripMargin.replace("QQQ", "\"\"\""))
+  }
+
+  test("interpolation start & end - episode 07") {
+    assert(tokenize("q\"\"\"a\"\"\"").map(_.show[Raw]).mkString("\n") === """
+      |q (0..0)
+      |QQQ (1..3)
+      |a (4..4)
+      |QQQ (5..7)
+      |EOF (8..7)
+    """.trim.stripMargin.replace("QQQ", "\"\"\""))
+  }
+
+  test("interpolation start & end - episode 08") {
+    assert(tokenize("q\"\"\"a\"\"\";").map(_.show[Raw]).mkString("\n") === """
+      |q (0..0)
+      |QQQ (1..3)
+      |a (4..4)
+      |QQQ (5..7)
+      |; (8..8)
+      |EOF (9..8)
+    """.trim.stripMargin.replace("QQQ", "\"\"\""))
+  }
 }

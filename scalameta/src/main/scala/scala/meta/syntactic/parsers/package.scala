@@ -174,7 +174,9 @@ package object parsers {
         // catch { case e: Exception => scanner.report.error(e.getMessage) }
         // val tokenGetters = Tokens.getClass.getMethods.filter(_.getParameterTypes().length == 0)
         // println(tokenGetters.find(m => m.invoke(Tokens) == curr).get.getName)
-        oldTokenBuf += new TokenData{}.copyFrom(curr)
+        val currCopy = new TokenData{}.copyFrom(curr)
+        if (currCopy.token == EOF) currCopy.offset = buf.length // NOTE: sometimes EOF's offset is `buf.length - 1`, and that might mess things up
+        oldTokenBuf += currCopy
       })
       val oldTokens = oldTokenBuf.toVector
 
@@ -245,11 +247,15 @@ package object parsers {
               nextToken()
             }
           }
+          // NOTE: before emitStart, curr is the first token that follows INTERPOLATIONID
+          // i.e. STRINGLIT (if the interpolation is empty) or STRINGPART (if it's not)
+          // NOTE: before emitEnd, curr is the first token that follows the concluding STRINGLIT of the interpolation
+          // for example, EOF in the case of `q""` or `q"$foobar"`
           numStartQuotes match {
-            case 1 => emitStart(curr.offset - 1); emitContents(); emitEnd(curr.endOffset + 1)
-            case 2 => emitStart(curr.offset); curr.endOffset -= 1; emitContents(); emitEnd(curr.endOffset + 1)
-            case n if 3 <= n && n < 6 => emitStart(curr.offset - 3); emitContents(); emitEnd(curr.endOffset + 1)
-            case 6 => emitStart(curr.offset - 3); emitContents(); emitEnd(curr.endOffset + 1)
+            case 1 => emitStart(curr.offset - 1); emitContents(); emitEnd(curr.offset - 1)
+            case 2 => emitStart(curr.offset); curr.offset += 1; emitContents(); emitEnd(curr.offset - 1)
+            case n if 3 <= n && n < 6 => emitStart(curr.offset - 3); emitContents(); emitEnd(curr.offset - 3)
+            case 6 => emitStart(curr.offset - 3); emitContents(); emitEnd(curr.offset - 3)
           }
         }
 
