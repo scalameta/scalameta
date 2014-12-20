@@ -24,7 +24,7 @@ package parsers {
     sealed abstract class Exception(msg: String) extends scala.Exception(msg)
     final case class Error(msg: String, at: Offset) extends Exception(s"error $msg at $at: $msg")
     final case class SyntaxError(msg: String, at: Offset) extends Exception(s"syntax error at $at: $msg")
-    final case class IncompleteInputError(msg: String, at: Offset) extends Exception("incomplete input at $at: $msg")
+    final case class IncompleteInputError(msg: String, at: Offset) extends Exception(s"incomplete input at $at: $msg")
   }
 }
 
