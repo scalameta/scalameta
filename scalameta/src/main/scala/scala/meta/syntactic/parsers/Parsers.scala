@@ -1757,14 +1757,14 @@ abstract class AbstractParser { parser =>
   def param(ownerIsCase: Boolean, ownerIsType: Boolean, isImplicit: Boolean): Templ.Param = {
     var mods: List[Mod] = annots(skipNewLines = false)
     if (isImplicit) mods ++= List(Mod.Implicit())
-    val (isValParam, isVarParam) = (ownerIsType && tok.is[`val`], ownerIsType && tok.is[`var`])
-    if (isValParam || isVarParam) next()
     if (ownerIsType) {
       mods ++= modifiers()
       mods.getAll[Mod.Lazy].foreach { m =>
         syntaxError("lazy modifier not allowed here. Use call-by-name parameters instead", at = offset(m))
       }
     }
+    val (isValParam, isVarParam) = (ownerIsType && tok.is[`val`], ownerIsType && tok.is[`var`])
+    if (isValParam || isVarParam) next()
     val name = termName()
     val tpt = {
       accept[`:`]
