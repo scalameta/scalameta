@@ -134,8 +134,11 @@ class Parser(val origin: Origin) extends AbstractParser {
   // so we have to filter them out, because otherwise we'll get errors like `expected blah, got whitespace`
   // however, in certain tricky cases some whitespace tokens (namely, newlines) do have to be emitted
   // this leads to extremely dirty and seriously crazy code, which I'd like to replace in the future
-  private class CrazyTokIterator(var pos: Int = -1, var tok: NewToken = null) extends TokIterator {
+  private class CrazyTokIterator(
+    var pos: Int = -1,
+    var tok: NewToken = null,
     var sepRegions: List[LegacyToken] = Nil
+  ) extends TokIterator {
     require(tokens.nonEmpty)
     if (pos == -1) next() // TODO: only do next() if we've been just created. forks can't go for next()
     def nonTrivia(tok: Tok) = tok.isNot[Whitespace] && tok.isNot[Comment]
@@ -146,33 +149,30 @@ class Parser(val origin: Origin) extends AbstractParser {
       val prev = tok
       val curr = tokens(pos)
       val next = tokens.drop(pos + 1).filter(nonTrivia).headOption.getOrElse(null)
-      def updateSepRegions() = {
-        if (prev == null) ()
-        else if (prev.is[`(`]) sepRegions = RPAREN :: sepRegions
-        else if (prev.is[`[`]) sepRegions = RBRACKET :: sepRegions
-        else if (prev.is[`{`]) sepRegions = RBRACE :: sepRegions
-        else if (prev.is[`case`]) sepRegions = ARROW :: sepRegions
-        else if (prev.is[`}`]) {
-          while (!sepRegions.isEmpty && sepRegions.head != RBRACE) sepRegions = sepRegions.tail
-          if (!sepRegions.isEmpty) sepRegions = sepRegions.tail
-        } else if (prev.is[`]`]) if (!sepRegions.isEmpty && sepRegions.head == RBRACKET) sepRegions = sepRegions.tail
-        else if (prev.is[`)`]) if (!sepRegions.isEmpty && sepRegions.head == RPAREN) sepRegions = sepRegions.tail
-        else if (prev.is[`=>`]) if (!sepRegions.isEmpty && sepRegions.head == ARROW) sepRegions = sepRegions.tail
-        else () // TODO: handle string interpolation when we decide on its representation
-      }
       def shouldEmitNewline() = {
         if (prev == null || next == null) false
         else prev.is[CanEndStat] && next.isNot[CantStartStat] && (sepRegions.isEmpty || sepRegions.head == RBRACE)
       }
       def emit() = {
+        if (curr == null) ()
+        else if (curr.is[`(`]) sepRegions = RPAREN :: sepRegions
+        else if (curr.is[`[`]) sepRegions = RBRACKET :: sepRegions
+        else if (curr.is[`{`]) sepRegions = RBRACE :: sepRegions
+        else if (curr.is[`case`]) sepRegions = ARROW :: sepRegions
+        else if (curr.is[`}`]) {
+          while (!sepRegions.isEmpty && sepRegions.head != RBRACE) sepRegions = sepRegions.tail
+          if (!sepRegions.isEmpty) sepRegions = sepRegions.tail
+        } else if (curr.is[`]`]) { if (!sepRegions.isEmpty && sepRegions.head == RBRACKET) sepRegions = sepRegions.tail }
+        else if (curr.is[`)`]) { if (!sepRegions.isEmpty && sepRegions.head == RPAREN) sepRegions = sepRegions.tail }
+        else if (curr.is[`=>`]) { if (!sepRegions.isEmpty && sepRegions.head == ARROW) sepRegions = sepRegions.tail }
+        else () // TODO: handle string interpolation when we decide on its representation
         tok = curr
         tok
       }
-      updateSepRegions()
       if (nonTrivia(curr) || (curr.is[`\n`] && shouldEmitNewline)) emit()
       else this.next()
     }
-    def fork: TokIterator = new CrazyTokIterator(pos, tok)
+    def fork: TokIterator = new CrazyTokIterator(pos, tok, sepRegions)
   }
 
   val tokens = origin.tokens
