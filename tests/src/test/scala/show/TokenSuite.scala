@@ -701,4 +701,18 @@ class ShowTokenSuite extends ParseSuite {
       |EOF (9..8)
     """.trim.stripMargin.replace("QQQ", "\"\"\""))
   }
+
+  test("$this") {
+    assert(tokenize("q\"$this\"").map(_.show[Raw]).mkString("\n") === """
+      |q (0..0)
+      |" (1..1)
+      | (2..1)
+      |splice start (2..2)
+      |this (3..6)
+      |splice end (6..5)
+      | (7..6)
+      |" (7..7)
+      |EOF (8..7)
+    """.trim.stripMargin)
+  }
 }

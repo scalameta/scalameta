@@ -235,7 +235,8 @@ package object parsers {
               } else {
                 emitSpliceStart(dollarOffset)
                 nextToken()
-                emitExpectedToken(IDENTIFIER)
+                require(curr.token == IDENTIFIER || curr.token == THIS)
+                emitToken()
                 nextToken()
                 emitSpliceEnd(curr.offset - 1)
                 emitContents()
