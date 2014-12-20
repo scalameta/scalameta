@@ -30,6 +30,6 @@ object Raw {
 
   implicit def rawTok[T <: Tok]: Raw[T] = Raw { x =>
     val prefix = (x: Tok) match { case x: Tok.EOF => "EOF"; case x: Tok.Dynamic => x.code; case x: Tok.Static => x.name }
-    s(prefix, " (", x.offset.toString, ")")
+    s(prefix, " (", x.start.toString, "..", x.end.toString, ")")
   }
 }

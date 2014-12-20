@@ -32,15 +32,19 @@ class TokenMacros(val c: Context) {
       anns1 += q"new $TokenInternal.tokenClass"
       manns1 += q"new $TokenInternal.tokenCompanion"
 
-      // step 2: generate implementation of `def code: String` and `def name: String` for static tokens
-      val isStaticToken = !paramss.flatten.exists(_.name.toString == "code") && !stats.exists{ case DefDef(_, TermName("code"), _, _, _, _) => true; case _ => false }
-      if (isStaticToken) {
-        var code = name.decodedName.toString
-        if (code == "_ ") code = "_" // NOTE: can't call a class `_`, so have to use `_ `
-        if (code == "class ") code = "class" // TODO: wat?
-        if (code == "package ") code = "package" // TODO: wat?
-        stats1 += q"def code: _root_.scala.Predef.String = $code"
-        stats1 += q"def name: _root_.scala.Predef.String = ${escape(code)}"
+      // step 2: generate implementation of `def name: String` and `def end: String` for static tokens
+      val isStaticToken = !paramss.flatten.exists(_.name.toString == "end")
+      val needsName = isStaticToken && !stats.exists{ case DefDef(_, TermName("name"), _, _, _, _) => true; case _ => false }
+      val needsEnd = isStaticToken && !stats.exists{ case DefDef(_, TermName("end"), _, _, _, _) => true; case _ => false }
+      val hasCustomCode = isStaticToken && stats.exists{ case DefDef(_, TermName("code"), _, _, _, _) => true; case _ => false }
+      var code = name.decodedName.toString
+      if (code == "_ ") code = "_" // NOTE: can't call a class `_`, so have to use `_ `
+      if (code == "class ") code = "class" // TODO: wat?
+      if (code == "package ") code = "package" // TODO: wat?
+      if (needsName) stats1 += q"def name: _root_.scala.Predef.String = ${escape(code)}"
+      if (needsEnd) {
+        val codeRef = if (hasCustomCode) q"this.code.length" else q"${code.length}"
+        stats1 += q"def end: _root_.scala.Int = this.start + $codeRef - 1"
       }
 
       // step 3: ensure that the token is correctly classified as either static or dynamic

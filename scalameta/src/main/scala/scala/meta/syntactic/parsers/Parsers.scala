@@ -201,7 +201,7 @@ abstract class AbstractParser { parser =>
   def next() = in.next()
   val origin: Origin
 
-  val report = Report(() => in.tok.offset)
+  val report = Report(() => in.tok.start)
   import report._
 
   /** Scoping operator used to temporarily look into the future.
@@ -319,7 +319,7 @@ abstract class AbstractParser { parser =>
   }
 
   // TODO: fixme once trees have positions
-  def offset(t: Tree): Offset = in.tok.offset
+  def offset(t: Tree): Offset = in.tok.start
 
   def syntaxErrorExpected[T: TokMetadata]: Nothing = syntaxError(s"${implicitly[TokMetadata[T]].name} expected but ${tok.name} found.")
 
@@ -349,8 +349,8 @@ abstract class AbstractParser { parser =>
 /* -------------- TOKEN CLASSES ------------------------------------------- */
 
   def isIdentAnd(pred: String => Boolean) = tok match {
-    case id: Ident if pred(id.value) => true
-    case _                           => false
+    case id: Ident if pred(id.code.stripPrefix("`").stripSuffix("`")) => true
+    case _                                                            => false
   }
   def isUnaryOp: Boolean            = isIdentAnd(SyntacticInfo.isUnaryOp)
   def isIdentExcept(except: String) = isIdentAnd(_ != except)
@@ -719,7 +719,9 @@ abstract class AbstractParser { parser =>
   }
 
   def name[T](ctor: (String, Boolean) => T, advance: Boolean): T = tok match {
-    case Ident(_, name, isBackquoted, _) =>
+    case tok: Ident =>
+      val name = tok.code.stripPrefix("`").stripSuffix("`")
+      val isBackquoted = tok.code.startsWith("`")
       val res = ctor(name, isBackquoted)
       if (advance) next()
       res
@@ -834,35 +836,33 @@ abstract class AbstractParser { parser =>
    */
   def literal(isNegated: Boolean = false): Lit = {
     val res = tok match {
-      case Literal.Char(_, v, _)       => Lit.Char(v)
-      case Literal.Int(_, v, _)        => Lit.Int(if (isNegated) -v else v)
-      case Literal.Long(_, v, _)       => Lit.Long(if (isNegated) -v else v)
-      case Literal.Float(_, v, _)      => Lit.Float(if (isNegated) -v else v)
-      case Literal.Double(_, v, _)     => Lit.Double(if (isNegated) -v else v)
-      case Literal.String(_, v, _)     => Lit.String(v)
-      case Literal.Symbol(_, v, _)     => Lit.Symbol(v)
-      case Interpolation.Part(_, v, _) => Lit.String(v)
-      case _: `true`                   => Lit.Bool(true)
-      case _: `false`                  => Lit.Bool(false)
-      case _: `null`                   => Lit.Null()
-      case _                           => syntaxError("illegal literal")
+      case tok: Literal.Char    => Lit.Char(tok.value)
+      case tok: Literal.Int     => Lit.Int(if (isNegated) -tok.value else tok.value)
+      case tok: Literal.Long    => Lit.Long(if (isNegated) -tok.value else tok.value)
+      case tok: Literal.Float   => Lit.Float(if (isNegated) -tok.value else tok.value)
+      case tok: Literal.Double  => Lit.Double(if (isNegated) -tok.value else tok.value)
+      case tok: Literal.String  => Lit.String(tok.value)
+      case tok: Literal.Symbol  => Lit.Symbol(tok.value)
+      case tok: `true`          => Lit.Bool(true)
+      case tok: `false`         => Lit.Bool(false)
+      case tok: `null`          => Lit.Null()
+      case _                    => syntaxError("illegal literal")
     }
     next()
     res
   }
 
   def interpolate[Ctx, Ret](arg: () => Ctx, result: (Term.Name, List[Lit.String], List[Ctx]) => Ret): Ret = {
-    val Interpolation.Id(_, nameStr, _) = tok
-    val interpolator = Term.Name(nameStr, isBackquoted = false) // termName() for INTERPOLATIONID
+    val interpolator = Term.Name(tok.asInstanceOf[Interpolation.Id].code, isBackquoted = false) // termName() for INTERPOLATIONID
     next()
     val partsBuf = new ListBuffer[Lit.String]
     val argsBuf = new ListBuffer[Ctx]
     def loop(): Unit = tok match {
-      case Interpolation.Start(_, _) => next(); loop()
-      case Interpolation.Part(_, value, _) => partsBuf += Lit.String(value); next(); loop()
-      case Interpolation.SpliceStart(_) => next(); argsBuf += arg(); loop()
-      case Interpolation.SpliceEnd(_) => next(); loop()
-      case Interpolation.End(_, _) => next(); // just return
+      case tok: Interpolation.Start => next(); loop()
+      case tok: Interpolation.Part => partsBuf += Lit.String(tok.code); next(); loop()
+      case tok: Interpolation.SpliceStart => next(); argsBuf += arg(); loop()
+      case tok: Interpolation.SpliceEnd => next(); loop()
+      case tok: Interpolation.End => next(); // just return
       case _ => unreachable
     }
     loop()
@@ -1360,7 +1360,7 @@ abstract class AbstractParser { parser =>
       next()
 
     val pat   = noSeq.pattern1()
-    val point = tok.offset
+    val point = tok.start
     val hasEq = tok.is[`=`]
 
     if (hasVal) {
