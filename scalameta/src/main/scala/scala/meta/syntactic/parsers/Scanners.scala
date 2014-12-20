@@ -89,8 +89,6 @@ trait TokenData {
     Try(inner())
   }
 
-  def intVal: Try[Long] = intVal(negated = false)
-
   /** Convert current strVal, base to double value
   */
   def floatVal(negated: Boolean): Try[Double] = {
@@ -116,8 +114,6 @@ trait TokenData {
     }
     Try(inner())
   }
-
-  def floatVal: Try[Double] = floatVal(negated = false)
 }
 
 class Scanner(val origin: Origin, decodeUni: Boolean = true) {
@@ -979,32 +975,7 @@ class Scanner(val origin: Origin, decodeUni: Boolean = true) {
 
 // Errors -----------------------------------------------------------------
 
-  override def toString() = token match {
-    case IDENTIFIER | BACKQUOTED_IDENT =>
-      "id(" + name + ")"
-    case CHARLIT =>
-      "char(" + intVal + ")"
-    case INTLIT =>
-      "int(" + intVal + ")"
-    case LONGLIT =>
-      "long(" + intVal + ")"
-    case FLOATLIT =>
-      "float(" + floatVal + ")"
-    case DOUBLELIT =>
-      "double(" + floatVal + ")"
-    case STRINGLIT =>
-      "string(" + strVal + ")"
-    case STRINGPART =>
-      "stringpart(" + strVal + ")"
-    case INTERPOLATIONID =>
-      "interpolationid(" + name + ")"
-    case SEMI =>
-      ";"
-    case COMMA =>
-      ","
-    case _ =>
-      token2string(token)
-  }
+  override def toString() = token.toString
 
   /** Initialize scanner; call f on each scanned token data
    */

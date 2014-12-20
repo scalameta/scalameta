@@ -768,4 +768,12 @@ class ShowTokenSuite extends ParseSuite {
       |EOF (23..22)
     """.trim.stripMargin)
   }
+
+  test("-2147483648") {
+    assert(tokenize("-2147483648").map(_.show[Raw]).mkString("\n") === """
+      |- (0..0)
+      |2147483648 (1..10)
+      |EOF (11..10)
+    """.trim.stripMargin.replace("QQQ", "\"\"\""))
+  }
 }

@@ -837,10 +837,10 @@ abstract class AbstractParser { parser =>
   def literal(isNegated: Boolean = false): Lit = {
     val res = tok match {
       case tok: Literal.Char    => Lit.Char(tok.value)
-      case tok: Literal.Int     => Lit.Int(if (isNegated) -tok.value else tok.value)
-      case tok: Literal.Long    => Lit.Long(if (isNegated) -tok.value else tok.value)
-      case tok: Literal.Float   => Lit.Float(if (isNegated) -tok.value else tok.value)
-      case tok: Literal.Double  => Lit.Double(if (isNegated) -tok.value else tok.value)
+      case tok: Literal.Int     => Lit.Int(tok.value(isNegated))
+      case tok: Literal.Long    => Lit.Long(tok.value(isNegated))
+      case tok: Literal.Float   => Lit.Float(tok.value(isNegated))
+      case tok: Literal.Double  => Lit.Double(tok.value(isNegated))
       case tok: Literal.String  => Lit.String(tok.value)
       case tok: Literal.Symbol  => Lit.Symbol(tok.value)
       case tok: `true`          => Lit.Bool(true)

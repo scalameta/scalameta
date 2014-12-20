@@ -55,10 +55,10 @@ object Tok {
   @branch trait DynamicLiteral extends Dynamic with Literal
   @branch trait NumericLiteral extends DynamicLiteral
   object Literal {
-    @token class Int(origin: Origin, start: scala.Int, end: scala.Int, value: scala.Int) extends NumericLiteral { def name = "integer literal" }
-    @token class Long(origin: Origin, start: scala.Int, end: scala.Int, value: scala.Long) extends NumericLiteral { def name = "long literal" }
-    @token class Float(origin: Origin, start: scala.Int, end: scala.Int, value: scala.Float) extends NumericLiteral { def name = "float literal" }
-    @token class Double(origin: Origin, start: scala.Int, end: scala.Int, value: scala.Double) extends NumericLiteral { def name = "double literal" }
+    @token class Int(origin: Origin, start: scala.Int, end: scala.Int, value: Boolean => scala.Int) extends NumericLiteral { def name = "integer literal" }
+    @token class Long(origin: Origin, start: scala.Int, end: scala.Int, value: Boolean => scala.Long) extends NumericLiteral { def name = "long literal" }
+    @token class Float(origin: Origin, start: scala.Int, end: scala.Int, value: Boolean => scala.Float) extends NumericLiteral { def name = "float literal" }
+    @token class Double(origin: Origin, start: scala.Int, end: scala.Int, value: Boolean => scala.Double) extends NumericLiteral { def name = "double literal" }
     @token class Char(origin: Origin, start: scala.Int, end: scala.Int, value: scala.Char) extends DynamicLiteral { def name = "character literal" }
     @token class Symbol(origin: Origin, start: scala.Int, end: scala.Int, value: scala.Symbol) extends DynamicLiteral { def name = "symbol literal" }
     @token class String(origin: Origin, start: scala.Int, end: scala.Int, value: Predef.String) extends DynamicLiteral { def name = "string literal" }

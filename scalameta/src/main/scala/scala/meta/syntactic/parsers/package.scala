@@ -67,10 +67,10 @@ package object parsers {
       def td2tok(curr: TokenData): Tok = {
         (curr.token: @switch) match {
           case CHARLIT         => Tok.Literal.Char(origin, curr.offset, curr.endOffset, curr.charVal)
-          case INTLIT          => Tok.Literal.Int(origin, curr.offset, curr.endOffset, curr.intVal(false).map(_.toInt).get)
-          case LONGLIT         => Tok.Literal.Long(origin, curr.offset, curr.endOffset, curr.intVal(false).get)
-          case FLOATLIT        => Tok.Literal.Float(origin, curr.offset, curr.endOffset, curr.floatVal(false).map(_.toFloat).get)
-          case DOUBLELIT       => Tok.Literal.Double(origin, curr.offset, curr.endOffset, curr.floatVal(false).get)
+          case INTLIT          => Tok.Literal.Int(origin, curr.offset, curr.endOffset, isNegated => curr.intVal(isNegated).map(_.toInt).get)
+          case LONGLIT         => Tok.Literal.Long(origin, curr.offset, curr.endOffset, isNegated => curr.intVal(isNegated).get)
+          case FLOATLIT        => Tok.Literal.Float(origin, curr.offset, curr.endOffset, isNegated => curr.floatVal(isNegated).map(_.toFloat).get)
+          case DOUBLELIT       => Tok.Literal.Double(origin, curr.offset, curr.endOffset, isNegated => curr.floatVal(isNegated).get)
           case STRINGLIT       => Tok.Literal.String(origin, curr.offset, curr.endOffset, curr.strVal)
           case SYMBOLLIT       => Tok.Literal.Symbol(origin, curr.offset, curr.endOffset, scala.Symbol(curr.strVal))
 
