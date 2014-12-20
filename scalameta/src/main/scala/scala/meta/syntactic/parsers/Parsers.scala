@@ -158,7 +158,7 @@ class Parser(val origin: Origin) extends AbstractParser {
         else if (curr.is[`(`]) sepRegions = RPAREN :: sepRegions
         else if (curr.is[`[`]) sepRegions = RBRACKET :: sepRegions
         else if (curr.is[`{`]) sepRegions = RBRACE :: sepRegions
-        else if (curr.is[`case`]) sepRegions = ARROW :: sepRegions
+        else if (curr.is[`case`] && !next.is[`class `] && !next.is[`object`]) sepRegions = ARROW :: sepRegions
         else if (curr.is[`}`]) {
           while (!sepRegions.isEmpty && sepRegions.head != RBRACE) sepRegions = sepRegions.tail
           if (!sepRegions.isEmpty) sepRegions = sepRegions.tail
