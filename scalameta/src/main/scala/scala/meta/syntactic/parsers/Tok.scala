@@ -109,27 +109,29 @@ object Tok {
   @token class `protected`(origin: Origin, start: Int) extends Modifier
   @token class `override`(origin: Origin, start: Int) extends Modifier
 
-  @branch trait Delim extends Static with Tok
+  @branch trait Delim extends Tok
+  @branch trait StaticDelim extends Delim with Static
+  @branch trait DynamicDelim extends Delim with Static
   @branch trait StatSep extends Delim
-  @token class `(`(origin: Origin, start: Int) extends Delim with ExprIntro with TypeIntro
-  @token class `)`(origin: Origin, start: Int) extends Delim with CantStartStat with CanEndStat
-  @token class `[`(origin: Origin, start: Int) extends Delim with CantStartStat
-  @token class `]`(origin: Origin, start: Int) extends Delim with CantStartStat with CanEndStat
-  @token class `{`(origin: Origin, start: Int) extends Delim with ExprIntro
-  @token class `}`(origin: Origin, start: Int) extends Delim with StatSeqEnd with CaseDefEnd with CantStartStat with CanEndStat
-  @token class `,`(origin: Origin, start: Int) extends Delim with CantStartStat
-  @token class `;`(origin: Origin, start: Int) extends StatSep with CantStartStat
-  @token class `:`(origin: Origin, start: Int) extends Delim with CantStartStat
-  @token class `.`(origin: Origin, start: Int) extends Delim with CantStartStat
-  @token class `=`(origin: Origin, start: Int) extends Delim with CantStartStat
-  @token class `@`(origin: Origin, start: Int) extends Delim with TypeIntro
-  @token class `#`(origin: Origin, start: Int) extends Delim with CantStartStat
-  @token class `_ `(origin: Origin, start: Int) extends Delim with ExprIntro with TypeIntro with CanEndStat
-  @token class `=>`(origin: Origin, start: Int) extends Delim with CantStartStat
-  @token class `<-`(origin: Origin, start: Int) extends Delim with CantStartStat
-  @token class `<:`(origin: Origin, start: Int) extends Delim with CantStartStat
-  @token class `>:`(origin: Origin, start: Int) extends Delim with CantStartStat
-  @token class `<%`(origin: Origin, start: Int) extends Delim with CantStartStat
+  @token class `(`(origin: Origin, start: Int) extends StaticDelim with ExprIntro with TypeIntro
+  @token class `)`(origin: Origin, start: Int) extends StaticDelim with CantStartStat with CanEndStat
+  @token class `[`(origin: Origin, start: Int) extends StaticDelim with CantStartStat
+  @token class `]`(origin: Origin, start: Int) extends StaticDelim with CantStartStat with CanEndStat
+  @token class `{`(origin: Origin, start: Int) extends StaticDelim with ExprIntro
+  @token class `}`(origin: Origin, start: Int) extends StaticDelim with StatSeqEnd with CaseDefEnd with CantStartStat with CanEndStat
+  @token class `,`(origin: Origin, start: Int) extends StaticDelim with CantStartStat
+  @token class `;`(origin: Origin, start: Int) extends StaticDelim with StatSep with CantStartStat
+  @token class `:`(origin: Origin, start: Int) extends StaticDelim with CantStartStat
+  @token class `.`(origin: Origin, start: Int) extends StaticDelim with CantStartStat
+  @token class `=`(origin: Origin, start: Int) extends StaticDelim with CantStartStat
+  @token class `@`(origin: Origin, start: Int) extends StaticDelim with TypeIntro
+  @token class `#`(origin: Origin, start: Int) extends StaticDelim with CantStartStat
+  @token class `_ `(origin: Origin, start: Int) extends StaticDelim with ExprIntro with TypeIntro with CanEndStat
+  @token class `=>`(origin: Origin, start: Int, end: Int) extends DynamicDelim with CantStartStat { def name = "right arrow" }
+  @token class `<-`(origin: Origin, start: Int, end: Int) extends DynamicDelim with CantStartStat { def name = "left arrow" }
+  @token class `<:`(origin: Origin, start: Int) extends StaticDelim with CantStartStat
+  @token class `>:`(origin: Origin, start: Int) extends StaticDelim with CantStartStat
+  @token class `<%`(origin: Origin, start: Int) extends StaticDelim with CantStartStat
 
   @branch trait Whitespace extends Static with Tok
   @token class ` `(origin: Origin, start: Int) extends Whitespace
