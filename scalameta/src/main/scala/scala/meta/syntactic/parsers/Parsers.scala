@@ -150,6 +150,8 @@ class Parser(val origin: Origin) extends AbstractParser {
       val curr = tokens(pos)
       val next = tokens.drop(pos + 1).filter(nonTrivia).headOption.getOrElse(null)
       def shouldEmitNewline() = {
+        // println((prev, next, sepRegions))
+        // println(prev.is[CanEndStat], next.isNot[CantStartStat], (sepRegions.isEmpty || sepRegions.head == RBRACE))
         if (prev == null || next == null) false
         else prev.is[CanEndStat] && next.isNot[CantStartStat] && (sepRegions.isEmpty || sepRegions.head == RBRACE)
       }
