@@ -435,7 +435,7 @@ class Scanner(val origin: Origin, decodeUni: Boolean = true) {
       case '/' =>
         nextChar()
         if (skipComment()) {
-          fetchToken()
+          token = COMMENT
         } else {
           putChar('/')
           getOperatorRest()
@@ -625,9 +625,15 @@ class Scanner(val origin: Origin, decodeUni: Boolean = true) {
          '|' | '\\' =>
       putChar(ch); nextChar(); getOperatorRest()
     case '/' =>
-      nextChar()
-      if (skipComment()) finishNamed()
-      else { putChar('/'); getOperatorRest() }
+      val lookahead = lookaheadReader
+      lookahead.nextChar()
+      if (lookahead.ch == '/' || lookahead.ch == '*') {
+        finishNamed()
+      } else {
+        putChar('/')
+        nextChar()
+        getOperatorRest()
+      }
     case _ =>
       if (isSpecial(ch)) { putChar(ch); nextChar(); getOperatorRest() }
       else finishNamed()

@@ -127,6 +127,8 @@ object Tok {
   @token class `\n`(offset: Int) extends Whitespace with StatSep with CantStartStat
   @token class `\f`(offset: Int) extends Whitespace
 
+  @token class Comment(code: Predef.String, offset: Int) extends Dynamic with Tok { def name = "comment" }
+
   @token class EOF(offset: Int) extends Static with StatSep with StatSeqEnd with CaseDefEnd with CantStartStat { def name = "end of file"; def code = "" }
   @token class XMLStart(offset: Int) extends Dynamic with Tok with ExprIntro with CanEndStat { def name = ???; def code = ??? }
 }

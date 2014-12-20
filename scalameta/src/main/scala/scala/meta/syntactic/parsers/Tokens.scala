@@ -105,11 +105,8 @@ object Tokens {
   final val VIEWBOUND = 136
   final val XMLSTART = 139
 
-  /** for IDE only */
-  final val COMMENT = 200
   final val WHITESPACE = 201
-  final val IGNORE = 202
-  final val ESCAPE = 203
+  final val COMMENT = 300
 }
 
 object TokenInfo {

@@ -100,9 +100,12 @@ class ShowTokenSuite extends ParseSuite {
     """.trim.stripMargin.replace("QQQ", "\"\"\""))
   }
 
-  test("showCode with comments") {
-    // TODO: uncomment me
-    // assert(tokenize("class C  /*hello world*/{\t val x = 2}\n//bye-bye world\n").map(_.show[Code]).mkString === "class C  /*hello world*/{\t val x = 2}\n//bye-bye world\n")
+  test("showCode with comments - easy") {
+    assert(tokenize("class C  /*hello world*/{\t val x = 2}\n//bye-bye world\n").map(_.show[Code]).mkString === "class C  /*hello world*/{\t val x = 2}\n//bye-bye world\n")
+  }
+
+  test("showCode with comments - tricky") {
+    assert(tokenize("x ~/**/y").map(_.show[Code]).mkString === "x ~/**/y")
   }
 
   test("showRaw without comments - easy") {
@@ -578,30 +581,40 @@ class ShowTokenSuite extends ParseSuite {
     """.trim.stripMargin.replace("QQQ", "\"\"\""))
   }
 
-  test("showRaw with comments") {
-    // TODO: uncomment me
-    // assert(tokenize("class C  /*hello world*/{\t val x = 2}\n//bye-bye world\n").map(_.show[Raw]).mkString("\n") === """
-    //   |class (0)
-    //   |  (5)
-    //   |C (6)
-    //   |  (7)
-    //   |  (8)
-    //   |/*hello world*/ (9)
-    //   |{ (24)
-    //   |\t (25)
-    //   |  (26)
-    //   |val (27)
-    //   |  (30)
-    //   |x (31)
-    //   |  (32)
-    //   |= (33)
-    //   |  (34)
-    //   |2 (35)
-    //   |} (36)
-    //   |\n (37)
-    //   |//bye-bye world (38)
-    //   |\n (53)
-    //   |EOF (54)
-    // """.trim.stripMargin)
+  test("showRaw with comments - easy") {
+    assert(tokenize("class C  /*hello world*/{\t val x = 2}\n//bye-bye world\n").map(_.show[Raw]).mkString("\n") === """
+      |class (0)
+      |  (5)
+      |C (6)
+      |  (7)
+      |  (8)
+      |/*hello world*/ (9)
+      |{ (24)
+      |\t (25)
+      |  (26)
+      |val (27)
+      |  (30)
+      |x (31)
+      |  (32)
+      |= (33)
+      |  (34)
+      |2 (35)
+      |} (36)
+      |\n (37)
+      |//bye-bye world (38)
+      |\n (53)
+      |EOF (54)
+    """.trim.stripMargin)
+  }
+
+  test("showRaw with comments - tricky") {
+    assert(tokenize("x ~/**/y").map(_.show[Raw]).mkString("\n") === """
+      |x (0)
+      |  (1)
+      |~ (2)
+      |/**/ (3)
+      |y (7)
+      |EOF (8)
+    """.trim.stripMargin)
   }
 }

@@ -157,12 +157,11 @@ package object parsers {
             else if (curr.strVal == "\f") Tok.`\f`(curr.offset)
             else unreachable
 
+          case COMMENT   => Tok.Comment(curr.code, curr.offset)
+
           case EOF       => Tok.EOF(curr.offset + 1)
           case XMLSTART  => Tok.XMLStart(curr.offset)
 
-          case COMMENT  => unreachable
-          case IGNORE   => unreachable
-          case ESCAPE   => unreachable
           case EMPTY    => unreachable
           case UNDEF    => unreachable
           case ERROR    => unreachable

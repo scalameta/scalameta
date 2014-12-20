@@ -138,13 +138,14 @@ class Parser(val origin: Origin) extends AbstractParser {
     var sepRegions: List[LegacyToken] = Nil
     require(tokens.nonEmpty)
     if (pos == -1) next() // TODO: only do next() if we've been just created. forks can't go for next()
-    def hasNext: Boolean = tokens.drop(pos + 1).exists(_.isNot[Whitespace])
+    def nonTrivia(tok: Tok) = tok.isNot[Whitespace] && tok.isNot[Comment]
+    def hasNext: Boolean = tokens.drop(pos + 1).exists(nonTrivia)
     def next(): Tok = {
       if (!hasNext) throw new NoSuchElementException()
       pos += 1
       val prev = tok
       val curr = tokens(pos)
-      val next = tokens.drop(pos + 1).filter(_.isNot[Whitespace]).headOption.getOrElse(null)
+      val next = tokens.drop(pos + 1).filter(nonTrivia).headOption.getOrElse(null)
       def updateSepRegions() = {
         if (prev == null) ()
         else if (prev.is[`(`]) sepRegions = RPAREN :: sepRegions
@@ -168,7 +169,7 @@ class Parser(val origin: Origin) extends AbstractParser {
         tok
       }
       updateSepRegions()
-      if (curr.isNot[Whitespace] || (curr.is[`\n`] && shouldEmitNewline)) emit()
+      if (nonTrivia(curr) || (curr.is[`\n`] && shouldEmitNewline)) emit()
       else this.next()
     }
     def fork: TokIterator = new CrazyTokIterator(pos, tok)
