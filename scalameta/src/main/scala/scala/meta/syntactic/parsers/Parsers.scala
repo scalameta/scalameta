@@ -136,28 +136,30 @@ class Parser(val origin: Origin) extends AbstractParser {
   // this leads to extremely dirty and seriously crazy code, which I'd like to replace in the future
   private class CrazyTokIterator(
     var pos: Int = -1,
+    var tokPos: Int = -1,
     var tok: NewToken = null,
     var sepRegions: List[LegacyToken] = Nil
   ) extends TokIterator {
     require(tokens.nonEmpty)
     if (pos == -1) next() // TODO: only do next() if we've been just created. forks can't go for next()
+    def isTrivia(tok: Tok) = !nonTrivia(tok)
     def nonTrivia(tok: Tok) = tok.isNot[Whitespace] && tok.isNot[Comment]
     def hasNext: Boolean = tokens.drop(pos + 1).exists(nonTrivia)
     def next(): Tok = {
       if (!hasNext) throw new NoSuchElementException()
       pos += 1
+      val prevPos = tokPos
       val prev = tok
       val curr = tokens(pos)
-      val next = tokens.drop(pos + 1).filter(nonTrivia).headOption.getOrElse(null)
-      def shouldEmitNewline() = {
-        // println((prev, next, sepRegions))
-        // println(prev.is[CanEndStat], next.isNot[CantStartStat], (sepRegions.isEmpty || sepRegions.head == RBRACE))
-        if (prev == null || next == null) false
-        else prev.is[CanEndStat] && next.isNot[CantStartStat] && (sepRegions.isEmpty || sepRegions.head == RBRACE)
+      val nextPos = {
+        var i = pos + 1
+        while (i < tokens.length && isTrivia(tokens(i))) i += 1
+        if (i == tokens.length) i = -1
+        i
       }
-      def emit() = {
-        if (curr == null) ()
-        else if (curr.is[`(`]) sepRegions = RPAREN :: sepRegions
+      val next = if (nextPos != -1) tokens(nextPos) else null
+      if (nonTrivia(curr)) {
+        if (curr.is[`(`]) sepRegions = RPAREN :: sepRegions
         else if (curr.is[`[`]) sepRegions = RBRACKET :: sepRegions
         else if (curr.is[`{`]) sepRegions = RBRACE :: sepRegions
         else if (curr.is[`case`] && !next.is[`class `] && !next.is[`object`]) sepRegions = ARROW :: sepRegions
@@ -167,14 +169,36 @@ class Parser(val origin: Origin) extends AbstractParser {
         } else if (curr.is[`]`]) { if (!sepRegions.isEmpty && sepRegions.head == RBRACKET) sepRegions = sepRegions.tail }
         else if (curr.is[`)`]) { if (!sepRegions.isEmpty && sepRegions.head == RPAREN) sepRegions = sepRegions.tail }
         else if (curr.is[`=>`]) { if (!sepRegions.isEmpty && sepRegions.head == ARROW) sepRegions = sepRegions.tail }
-        else () // TODO: handle string interpolation when we decide on its representation
+        else () // do nothing for other tokens
+        tokPos = pos
         tok = curr
         tok
+      } else {
+        var lines = 0
+        var i = prevPos + 1
+        var lastNewlinePos = -1
+        while (i < nextPos) {
+          if (tokens(i).is[`\n`]) {
+            lastNewlinePos = i
+            lines += 1
+          }
+          i += 1
+        }
+        if (lines > 0 &&
+            prev != null && prev.is[CanEndStat] &&
+            next != null && next.isNot[CantStartStat] &&
+            (sepRegions.isEmpty || sepRegions.head == RBRACE)) {
+          tokPos = lastNewlinePos
+          tok = tokens(tokPos)
+          if (lines > 1) tok = `\n\n`(tok.origin, tok.start)
+          tok
+        } else {
+          pos = nextPos - 1
+          this.next()
+        }
       }
-      if (nonTrivia(curr) || (curr.is[`\n`] && shouldEmitNewline)) emit()
-      else this.next()
     }
-    def fork: TokIterator = new CrazyTokIterator(pos, tok, sepRegions)
+    def fork: TokIterator = new CrazyTokIterator(pos, tokPos, tok, sepRegions)
   }
 
   val tokens = origin.tokens
@@ -341,8 +365,8 @@ abstract class AbstractParser { parser =>
    *  }}}
    */
   def acceptStatSep(): Unit = tok match {
-    case _: `\n` => next()
-    case _       => accept[`;`]
+    case _: `\n` | _: `\n\n` => next()
+    case _                   => accept[`;`]
   }
   def acceptStatSepOpt() =
     if (!tok.is[StatSeqEnd])
@@ -897,7 +921,7 @@ abstract class AbstractParser { parser =>
   }
 
   def newLinesOpt(): Unit = {
-    if (tok.is[`\n`])
+    if (tok.is[`\n`] || tok.is[`\n\n`])
       next()
   }
 

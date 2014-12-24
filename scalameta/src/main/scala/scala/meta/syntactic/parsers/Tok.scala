@@ -138,6 +138,9 @@ object Tok {
   @token class `\t`(origin: Origin, start: Int) extends Whitespace
   @token class `\r`(origin: Origin, start: Int) extends Whitespace
   @token class `\n`(origin: Origin, start: Int) extends Whitespace with StatSep with CantStartStat
+  // TODO: \n\n is a virtual token emitted by TokIterator to appease the semi-ported scalac parser
+  // it will never occur in a token stream produced by RichOrigin.tokens
+  @token class `\n\n`(origin: Origin, start: Int) extends Whitespace with StatSep with CantStartStat
   @token class `\f`(origin: Origin, start: Int) extends Whitespace
 
   @token class Comment(origin: Origin, start: Int, end: Int) extends Dynamic with Tok { def name = "comment" }
