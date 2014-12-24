@@ -87,7 +87,7 @@ object Tok {
   @token class `package `(origin: Origin, start: Int) extends Keyword
   @token class `return`(origin: Origin, start: Int) extends Keyword with ExprIntro with CanEndStat
   @token class `super`(origin: Origin, start: Int) extends Keyword with ExprIntro with TypeIntro
-  @token class `this`(origin: Origin, start: Int) extends Keyword with ExprIntro with TypeIntro
+  @token class `this`(origin: Origin, start: Int) extends Keyword with ExprIntro with TypeIntro with CanEndStat
   @token class `throw`(origin: Origin, start: Int) extends Keyword with ExprIntro
   @token class `trait`(origin: Origin, start: Int) extends Keyword with TemplateIntro
   @token class `try`(origin: Origin, start: Int) extends Keyword with ExprIntro
