@@ -1019,7 +1019,7 @@ abstract class AbstractParser { parser =>
           next()
           if (tok.isNot[`{`]) Some(expr())
           else inBraces {
-            if (tok.is[`case`]) Some(caseClauses())
+            if (tok.is[`case`] && !ahead(tok.is[`class `] || tok.is[`object`])) Some(caseClauses())
             else Some(expr())
           }
         }
@@ -1318,7 +1318,7 @@ abstract class AbstractParser { parser =>
    */
   def blockExpr(): Term = {
     inBraces {
-      if (tok.is[`case`]) Term.PartialFunction(caseClauses())
+      if (tok.is[`case`] && !ahead(tok.is[`class `] || tok.is[`object`])) Term.PartialFunction(caseClauses())
       else block()
     }
   }
@@ -2496,7 +2496,8 @@ abstract class AbstractParser { parser =>
    */
   def blockStatSeq(): List[Stat] = {
     val stats = new ListBuffer[Stat]
-    while (!tok.is[StatSeqEnd] && !tok.is[CaseDefEnd]) {
+    while ((!tok.is[StatSeqEnd] && !tok.is[CaseDefEnd]) ||
+           (tok.is[`case`] && ahead(tok.is[`class `] || tok.is[`object`]))) {
       if (tok.is[`import`]) {
         stats += importStmt()
         acceptStatSepOpt()
