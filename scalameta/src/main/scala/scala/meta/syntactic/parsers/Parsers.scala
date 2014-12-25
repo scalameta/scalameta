@@ -174,23 +174,26 @@ class Parser(val origin: Origin) extends AbstractParser {
         tok = curr
         tok
       } else {
-        var lines = 0
         var i = prevPos + 1
         var lastNewlinePos = -1
+        var newlineStreak = false
+        var newlines = false
         while (i < nextPos) {
-          if (tokens(i).is[`\n`]) {
+          if (tokens(i).is[`\n`] || tokens(i).is[`\f`]) {
             lastNewlinePos = i
-            lines += 1
+            if (newlineStreak) newlines = true
+            newlineStreak = true
           }
+          newlineStreak &= tokens(i).is[Whitespace]
           i += 1
         }
-        if (lines > 0 &&
+        if (lastNewlinePos != -1 &&
             prev != null && prev.is[CanEndStat] &&
             next != null && next.isNot[CantStartStat] &&
             (sepRegions.isEmpty || sepRegions.head == RBRACE)) {
           tokPos = lastNewlinePos
           tok = tokens(tokPos)
-          if (lines > 1) tok = `\n\n`(tok.origin, tok.start)
+          if (newlines) tok = `\n\n`(tok.origin, tok.start)
           tok
         } else {
           pos = nextPos - 1
