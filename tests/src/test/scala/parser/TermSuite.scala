@@ -135,6 +135,11 @@ class TermSuite extends ParseSuite {
     assert(iff.hasElsep === true)
   }
 
+  test("if (true) true; else false") {
+    val iff @ If(Lit.Bool(true), Lit.Bool(true), Lit.Bool(false)) = term("if (true) true; else false")
+    assert(iff.hasElsep === true)
+  }
+
   test("if (true) true") {
     val iff @ If(Lit.Bool(true), Lit.Bool(true), Lit.Unit()) = term("if (true) true")
     assert(iff.hasElsep === false)
@@ -294,5 +299,13 @@ class TermSuite extends ParseSuite {
   test("a + (b: _*)") {
     val ApplyInfix(TermName("a"), TermName("+"), Nil,
                    Arg.Repeated(TermName("b")) :: Nil) = term("a + (b: _*)")
+  }
+
+  test("local class") {
+    val Term.Block(List(
+      Defn.Class(
+        List(Mod.Case()), Type.Name("C"), Nil,
+        Ctor.Primary(Nil, List(List(Term.Param(Nil, Some(x), Some(Type.Name("Int")), None)))),
+        Templ(Nil, Nil, Term.Param(Nil, None, None, None), Nil)))) = term("{ case class C(x: Int); }")
   }
 }

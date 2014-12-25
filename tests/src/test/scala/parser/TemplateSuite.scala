@@ -129,7 +129,12 @@ class TemplateSuite extends ParseSuite {
       templStat("class C(implicit x: Int)")
   }
 
-
+  test("class C(override val x: Int)") {
+    val Class(Nil, Type.Name("C"), Nil,
+              Ctor.Primary(Nil, (Templ.Param.Val(List(Mod.Override()), Some(Term.Name("x")), Some(Type.Name("Int")), None) :: Nil) :: Nil),
+              EmptyTemplate()) =
+      templStat("class C(override val x: Int)")
+  }
 
   test("object O") {
     val Object(Nil, Term.Name("O"), EmptyTemplate()) = templStat("object O")

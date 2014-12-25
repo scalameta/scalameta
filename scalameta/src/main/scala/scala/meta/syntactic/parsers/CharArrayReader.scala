@@ -17,26 +17,11 @@ trait CharArrayReaderData {
   var lastLineStartOffset: Int = 0
 
   protected var lastUnicodeOffset = -1
-
-  def copyFrom(cd: CharArrayReaderData): this.type = {
-    this.ch = cd.ch
-    this.charOffset = cd.charOffset
-    this.lineStartOffset = cd.lineStartOffset
-    this.lastLineStartOffset = cd.lastLineStartOffset
-    this.lastUnicodeOffset = cd.lastUnicodeOffset
-    this
-  }
 }
 
-abstract class CharArrayReader extends CharArrayReaderData { self =>
-
-  val buf: Array[Char]
-
-  def decodeUni: Boolean = true
-
-  /** An error routine to call on bad unicode escapes \\uxxxx. */
-  protected def error(offset: Int, msg: String): Unit
-
+class CharArrayReader(val buf: Array[Char],
+                      error: (String, Offset) => Unit,
+                      decodeUni: Boolean = true) extends CharArrayReaderData { self =>
   /** Is last character a unicode escape \\uxxxx? */
   def isUnicodeEscape = charOffset == lastUnicodeOffset
 
@@ -83,13 +68,13 @@ abstract class CharArrayReader extends CharArrayReaderData { self =>
         // Since the positioning code is very insistent about throwing exceptions,
         // we have to decrement the position so our error message can be seen, since
         // we are one past EOF.  This happens with e.g. val x = \ u 1 <EOF>
-        error(charOffset - 1, "incomplete unicode escape")
+        error("incomplete unicode escape", charOffset - 1)
         SU
       }
       else {
         val d = digit2int(buf(charOffset), 16)
         if (d >= 0) charOffset += 1
-        else error(charOffset, "error in unicode escape")
+        else error("error in unicode escape", charOffset)
         d
       }
     }
@@ -126,12 +111,9 @@ abstract class CharArrayReader extends CharArrayReaderData { self =>
   /** A new reader that takes off at the current character position */
   def lookaheadReader = new CharArrayLookaheadReader
 
-  class CharArrayLookaheadReader extends CharArrayReader {
-    val buf = self.buf
+  class CharArrayLookaheadReader extends CharArrayReader(buf, error, decodeUni) {
     charOffset = self.charOffset
     ch = self.ch
-    override def decodeUni = self.decodeUni
-    def error(offset: Int, msg: String) = self.error(offset, msg)
     /** A mystery why CharArrayReader.nextChar() returns Unit */
     def getc() = { nextChar() ; ch }
     def getu() = { require(buf(charOffset) == '\\') ; ch = '\\' ; charOffset += 1 ; potentialUnicode() ; ch }

@@ -1,13 +1,13 @@
 package scala.meta.syntactic
 package show
 
-import org.scalameta.show.Show
+import org.scalameta.show._
 import Show.{ sequence => s, repeat => r, indent => i, newline => n, meta => m, adorn => a, function => fn }
 import scala.meta.syntactic.parsers.SyntacticInfo._
 import scala.meta.syntactic.parsers.Chars._
+import scala.meta.syntactic.parsers.Tok
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
-import scala.meta.syntactic.show.internal._
 import scala.meta.internal.ast._
 import scala.{meta => api}
 import org.scalameta.adt._
@@ -391,4 +391,6 @@ object Code {
     case (t: Import.Wildcard) :: Nil => s(t)
     case sels                        => s("{ ", r(sels, ", "), " }")
   }
+
+  implicit def codeTok[T <: Tok]: Code[T] = Code { x => s(x.code) }
 }

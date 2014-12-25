@@ -2,16 +2,19 @@ package scala.meta.syntactic
 package parsers
 
 import scala.collection.{ mutable, immutable }
-import scala.reflect.ClassTag
 import mutable.{ ListBuffer, StringBuilder }
 import scala.{Seq => _}
-import scala.collection.immutable.Seq
+import scala.collection.immutable._
 import org.scalameta.unreachable
 import Chars.{isOperatorPart, isScalaLetter}
 import Tok._
+import Tokens._
+import Tokens.{Token => LegacyToken}
+import scala.meta.syntactic.parsers.{Tok => NewToken}
 import scala.reflect.ClassTag
 import scala.meta.internal.ast._
 import scala.meta.Origin
+import org.scalameta.tokens._
 
 object SyntacticInfo {
   private[meta] val unaryOps = Set("-", "+", "~", "!")
@@ -120,10 +123,6 @@ object SyntacticInfo {
 }
 import SyntacticInfo._
 
-case class ParseAbort(msg: String) extends Exception(s"abort: $msg")
-case class ParseSyntaxError(offset: Offset, msg: String) extends Exception(s"syntax error at $offset: $msg")
-case class ParseIncompleteInputError(msg: String) extends Exception("incomplete input: $msg")
-
 class Parser(val origin: Origin) extends AbstractParser {
   def this(code: String) = this(Origin.String(code))
   /** The parse starting point depends on whether the origin file is self-contained:
@@ -131,17 +130,82 @@ class Parser(val origin: Origin) extends AbstractParser {
    */
   def parseStartRule = () => compilationUnit()
 
-  var in: TokIterator = new TokIterator(origin.tokens)
+  // NOTE: Scala's parser isn't ready to accept whitespace and comment tokens,
+  // so we have to filter them out, because otherwise we'll get errors like `expected blah, got whitespace`
+  // however, in certain tricky cases some whitespace tokens (namely, newlines) do have to be emitted
+  // this leads to extremely dirty and seriously crazy code, which I'd like to replace in the future
+  private class CrazyTokIterator(
+    var pos: Int = -1,
+    var tokPos: Int = -1,
+    var tok: NewToken = null,
+    var sepRegions: List[LegacyToken] = Nil
+  ) extends TokIterator {
+    require(tokens.nonEmpty)
+    if (pos == -1) next() // TODO: only do next() if we've been just created. forks can't go for next()
+    def isTrivia(tok: Tok) = !nonTrivia(tok)
+    def nonTrivia(tok: Tok) = tok.isNot[Whitespace] && tok.isNot[Comment]
+    def hasNext: Boolean = tokens.drop(pos + 1).exists(nonTrivia)
+    def next(): Tok = {
+      if (!hasNext) throw new NoSuchElementException()
+      pos += 1
+      val prevPos = tokPos
+      val prev = tok
+      val curr = tokens(pos)
+      val nextPos = {
+        var i = pos + 1
+        while (i < tokens.length && isTrivia(tokens(i))) i += 1
+        if (i == tokens.length) i = -1
+        i
+      }
+      val next = if (nextPos != -1) tokens(nextPos) else null
+      if (nonTrivia(curr)) {
+        if (curr.is[`(`]) sepRegions = RPAREN :: sepRegions
+        else if (curr.is[`[`]) sepRegions = RBRACKET :: sepRegions
+        else if (curr.is[`{`]) sepRegions = RBRACE :: sepRegions
+        else if (curr.is[`case`] && !next.is[`class `] && !next.is[`object`]) sepRegions = ARROW :: sepRegions
+        else if (curr.is[`}`]) {
+          while (!sepRegions.isEmpty && sepRegions.head != RBRACE) sepRegions = sepRegions.tail
+          if (!sepRegions.isEmpty) sepRegions = sepRegions.tail
+        } else if (curr.is[`]`]) { if (!sepRegions.isEmpty && sepRegions.head == RBRACKET) sepRegions = sepRegions.tail }
+        else if (curr.is[`)`]) { if (!sepRegions.isEmpty && sepRegions.head == RPAREN) sepRegions = sepRegions.tail }
+        else if (curr.is[`=>`]) { if (!sepRegions.isEmpty && sepRegions.head == ARROW) sepRegions = sepRegions.tail }
+        else () // do nothing for other tokens
+        tokPos = pos
+        tok = curr
+        tok
+      } else {
+        var i = prevPos + 1
+        var lastNewlinePos = -1
+        var newlineStreak = false
+        var newlines = false
+        while (i < nextPos) {
+          if (tokens(i).is[`\n`] || tokens(i).is[`\f`]) {
+            lastNewlinePos = i
+            if (newlineStreak) newlines = true
+            newlineStreak = true
+          }
+          newlineStreak &= tokens(i).is[Whitespace]
+          i += 1
+        }
+        if (lastNewlinePos != -1 &&
+            prev != null && prev.is[CanEndStat] &&
+            next != null && next.isNot[CantStartStat] &&
+            (sepRegions.isEmpty || sepRegions.head == RBRACE)) {
+          tokPos = lastNewlinePos
+          tok = tokens(tokPos)
+          if (newlines) tok = `\n\n`(tok.origin, tok.start)
+          tok
+        } else {
+          pos = nextPos - 1
+          this.next()
+        }
+      }
+    }
+    def fork: TokIterator = new CrazyTokIterator(pos, tokPos, tok, sepRegions)
+  }
 
-  // warning don't stop parsing
-  // TODO:
-  def warning(offset: Offset, msg: String): Unit = ()
-  def deprecationWarning(offset: Offset, msg: String): Unit = ()
-
-  // errors do
-  def abort(msg: String): Nothing = throw ParseAbort(msg)
-  def syntaxError(offset: Offset, msg: String): Nothing = throw ParseSyntaxError(offset, msg)
-  def incompleteInputError(msg: String): Nothing = throw ParseIncompleteInputError(msg)
+  val tokens = origin.tokens
+  var in: TokIterator = new CrazyTokIterator()
 
   /** the markup parser */
   // private[this] lazy val xmlp = new MarkupParser(this, preserveWS = true)
@@ -160,10 +224,14 @@ object Location {
 import Location.{ Local, InBlock, InTemplate }
 
 abstract class AbstractParser { parser =>
+  trait TokIterator extends Iterator[Tok] { def tok: Tok; def fork: TokIterator }
   var in: TokIterator
   def tok = in.tok
   def next() = in.next()
   val origin: Origin
+
+  val report = Report(() => in.tok.start)
+  import report._
 
   /** Scoping operator used to temporarily look into the future.
    *  Backs up token iterator before evaluating a block and restores it after.
@@ -279,58 +347,20 @@ abstract class AbstractParser { parser =>
     finally inFunReturnType = saved
   }
 
-  protected def skip(targetToken: Tok) {
-    var nparens = 0
-    var nbraces = 0
-    while (true) {
-      tok match {
-        case _: EOF =>
-          return
-        case _: `;` =>
-          if (nparens == 0 && nbraces == 0) return
-        case _: `\n` =>
-          if (nparens == 0 && nbraces == 0) return
-        case _: `\n\n` =>
-          if (nparens == 0 && nbraces == 0) return
-        case _: `)` =>
-          nparens -= 1
-        case _: `}` =>
-          if (nbraces == 0) return
-          nbraces -= 1
-        case _: `(` =>
-          nparens += 1
-        case _: `{` =>
-          nbraces += 1
-        case _ =>
-      }
-      if (targetToken == tok && nparens == 0 && nbraces == 0) return
-      next()
-    }
-  }
+  // TODO: fixme once trees have positions
+  def offset(t: Tree): Offset = in.tok.start
 
-  def warning(offset: Offset, msg: String): Unit
-  def deprecationWarning(offset: Offset, msg: String) : Unit
-
-  def abort(msg: String): Nothing
-  def incompleteInputError(msg: String): Nothing
-  def syntaxError(offset: Offset, msg: String): Nothing
-
-  def syntaxError(msg: String): Nothing = syntaxError(tok.offset, msg)
-  def warning(msg: String): Unit = warning(tok.offset, msg)
-  def deprecationWarning(msg: String): Unit = deprecationWarning(tok.offset, msg)
-
-  // TODO: get offset out of tree once we have positions
-  def warning(tree: Tree, msg: String): Unit = deprecationWarning(msg)
-  def syntaxError(tree: Tree, msg: String): Nothing = syntaxError(msg)
-
-  // TODO: print nice textual representaion of T here instead of runtime class
-  def syntaxErrorExpected[T <: Tok: ClassTag]: Nothing = syntaxError(s"${implicitly[ClassTag[T]].runtimeClass} expected but $tok found.")
+  def syntaxErrorExpected[T: TokMetadata]: Nothing = syntaxError(s"${implicitly[TokMetadata[T]].name} expected but ${tok.name} found.")
 
   /** Consume one token of the specified type, or signal an error if it is not there. */
-  def accept[T <: Tok: ClassTag]: Unit =
+  def accept[T: TokMetadata]: Unit =
     if (tok.is[T]) {
       if (tok.isNot[EOF]) next()
     } else syntaxErrorExpected[T]
+
+  /** If current token is T consume it. */
+  def acceptOpt[T: TokMetadata]: Unit =
+    if (tok.is[T]) next()
 
   /** {{{
    *  semi = nl {nl} | `;`
@@ -348,8 +378,8 @@ abstract class AbstractParser { parser =>
 /* -------------- TOKEN CLASSES ------------------------------------------- */
 
   def isIdentAnd(pred: String => Boolean) = tok match {
-    case id: Ident if pred(id.value) => true
-    case _                           => false
+    case id: Ident if pred(id.code.stripPrefix("`").stripSuffix("`")) => true
+    case _                                                            => false
   }
   def isUnaryOp: Boolean            = isIdentAnd(SyntacticInfo.isUnaryOp)
   def isIdentExcept(except: String) = isIdentAnd(_ != except)
@@ -378,7 +408,7 @@ abstract class AbstractParser { parser =>
     case Lit.Unit() =>
       None
     case other =>
-      syntaxError(other, s"$other, not a legal formal parameter")
+      syntaxError(s"$other, not a legal formal parameter", at = offset(other))
   }
 
   def convertToTypeId(ref: Term.Ref): Option[Type] = ref match {
@@ -391,7 +421,7 @@ abstract class AbstractParser { parser =>
   }
 
   /** {{{ part { `sep` part } }}},or if sepFirst is true, {{{ { `sep` part } }}}. */
-  final def tokenSeparated[Sep <: Tok: ClassTag, T](sepFirst: Boolean, part: => T): List[T] = {
+  final def tokenSeparated[Sep: TokMetadata, T](sepFirst: Boolean, part: => T): List[T] = {
     val ts = new ListBuffer[T]
     if (!sepFirst)
       ts += part
@@ -558,8 +588,8 @@ abstract class AbstractParser { parser =>
         } else {
           val tuple = makeTupleType(ts map {
             case t: Type              => t
-            case p: Type.Arg.ByName   => syntaxError(p, "by name type not allowed here")
-            case p: Type.Arg.Repeated => syntaxError(p, "repeated type not allowed here")
+            case p: Type.Arg.ByName   => syntaxError("by name type not allowed here", at = offset(p))
+            case p: Type.Arg.Repeated => syntaxError("repeated type not allowed here", at = offset(p))
           })
           infixTypeRest(
             compoundTypeRest(Some(
@@ -718,7 +748,9 @@ abstract class AbstractParser { parser =>
   }
 
   def name[T](ctor: (String, Boolean) => T, advance: Boolean): T = tok match {
-    case Ident(name, isBackquoted, _) =>
+    case tok: Ident =>
+      val name = tok.code.stripPrefix("`").stripSuffix("`")
+      val isBackquoted = tok.code.startsWith("`")
       val res = ctor(name, isBackquoted)
       if (advance) next()
       res
@@ -833,44 +865,36 @@ abstract class AbstractParser { parser =>
    */
   def literal(isNegated: Boolean = false): Lit = {
     val res = tok match {
-      case Literal.Char(v, _)       => Lit.Char(v)
-      case Literal.Int(v, _)        => Lit.Int(if (isNegated) -v else v)
-      case Literal.Long(v, _)       => Lit.Long(if (isNegated) -v else v)
-      case Literal.Float(v, _)      => Lit.Float(if (isNegated) -v else v)
-      case Literal.Double(v, _)     => Lit.Double(if (isNegated) -v else v)
-      case Literal.String(v, _)     => Lit.String(v)
-      case Literal.Symbol(v, _)     => Lit.Symbol(v)
-      case Interpolation.Part(v, _) => Lit.String(v)
-      case _: `true`                => Lit.Bool(true)
-      case _: `false`               => Lit.Bool(false)
-      case _: `null`                => Lit.Null()
-      case _                        => syntaxError("illegal literal")
+      case tok: Literal.Char    => Lit.Char(tok.value)
+      case tok: Literal.Int     => Lit.Int(tok.value(isNegated))
+      case tok: Literal.Long    => Lit.Long(tok.value(isNegated))
+      case tok: Literal.Float   => Lit.Float(tok.value(isNegated))
+      case tok: Literal.Double  => Lit.Double(tok.value(isNegated))
+      case tok: Literal.String  => Lit.String(tok.value)
+      case tok: Literal.Symbol  => Lit.Symbol(tok.value)
+      case tok: `true`          => Lit.Bool(true)
+      case tok: `false`         => Lit.Bool(false)
+      case tok: `null`          => Lit.Null()
+      case _                    => syntaxError("illegal literal")
     }
     next()
     res
   }
 
   def interpolate[Ctx, Ret](arg: () => Ctx, result: (Term.Name, List[Lit.String], List[Ctx]) => Ret): Ret = {
-    def part() = {
-      val value = tok match {
-        case Literal.String(v, _)     => v
-        case Interpolation.Part(v, _) => v
-        case _                        => syntaxErrorExpected[Interpolation.Part]
-      }
-      val lit = Lit.String(value)
-      next()
-      lit
-    }
-    val Interpolation.Id(nameStr, _) = tok
-    val interpolator = Term.Name(nameStr, isBackquoted = false) // termName() for INTERPOLATIONID
+    val interpolator = Term.Name(tok.asInstanceOf[Interpolation.Id].code, isBackquoted = false) // termName() for INTERPOLATIONID
     next()
     val partsBuf = new ListBuffer[Lit.String]
     val argsBuf = new ListBuffer[Ctx]
-    while (tok.is[Interpolation.Part]) {
-      partsBuf += part()
-      argsBuf += arg()
+    def loop(): Unit = tok match {
+      case tok: Interpolation.Start => next(); loop()
+      case tok: Interpolation.Part => partsBuf += Lit.String(tok.code); next(); loop()
+      case tok: Interpolation.SpliceStart => next(); argsBuf += arg(); loop()
+      case tok: Interpolation.SpliceEnd => next(); loop()
+      case tok: Interpolation.End => next(); // just return
+      case _ => unreachable
     }
-    if (tok.is[Literal.String]) partsBuf += part()
+    loop()
     result(interpolator, partsBuf.toList, argsBuf.toList)
   }
 
@@ -904,7 +928,7 @@ abstract class AbstractParser { parser =>
       next()
   }
 
-  def newLineOptWhenFollowedBy[T <: Tok: ClassTag]: Unit = {
+  def newLineOptWhenFollowedBy[T: TokMetadata]: Unit = {
     // note: next is defined here because current is Tok.`\n`
     if (tok.is[`\n`] && ahead { tok.is[T] }) newLineOpt()
   }
@@ -983,6 +1007,7 @@ abstract class AbstractParser { parser =>
       newLinesOpt()
       val thenp = expr()
       if (tok.is[`else`]) { next(); Term.If(cond, thenp, expr()) }
+      else if (tok.is[`;`] && ahead { tok.is[`else`] }) { next(); next(); Term.If(cond, thenp, expr()) }
       else { Term.If(cond, thenp) }
     case _: `try` =>
       next()
@@ -997,7 +1022,7 @@ abstract class AbstractParser { parser =>
           next()
           if (tok.isNot[`{`]) Some(expr())
           else inBraces {
-            if (tok.is[`case`]) Some(caseClauses())
+            if (tok.is[`case`] && !ahead(tok.is[`class `] || tok.is[`object`])) Some(caseClauses())
             else Some(expr())
           }
         }
@@ -1243,7 +1268,7 @@ abstract class AbstractParser { parser =>
       case Nil                              => Nil
       case (t: Term) :: rest                => t :: loop(rest)
       case (nmd: Term.Arg.Named) :: rest    => Term.Assign(nmd.name, nmd.rhs) :: loop(rest)
-      case (rep: Term.Arg.Repeated) :: rest => syntaxError(rep, "repeated argument not allowed here")
+      case (rep: Term.Arg.Repeated) :: rest => syntaxError("repeated argument not allowed here", at = offset(rep))
     }
     makeTupleTerm(loop(args))
   }
@@ -1296,7 +1321,7 @@ abstract class AbstractParser { parser =>
    */
   def blockExpr(): Term = {
     inBraces {
-      if (tok.is[`case`]) Term.PartialFunction(caseClauses())
+      if (tok.is[`case`] && !ahead(tok.is[`class `] || tok.is[`object`])) Term.PartialFunction(caseClauses())
       else block()
     }
   }
@@ -1364,7 +1389,7 @@ abstract class AbstractParser { parser =>
       next()
 
     val pat   = noSeq.pattern1()
-    val point = tok.offset
+    val point = tok.start
     val hasEq = tok.is[`=`]
 
     if (hasVal) {
@@ -1653,7 +1678,7 @@ abstract class AbstractParser { parser =>
    */
   def modifiers(isLocal: Boolean = false): List[Mod] = {
     def addMod(mods: List[Mod], mod: Mod, advance: Boolean = true): List[Mod] = {
-      mods.foreach { m => if (m == mod) syntaxError(m, "repeated modifier") }
+      mods.foreach { m => if (m == mod) syntaxError("repeated modifier", at = offset(mod)) }
       if (advance) next()
       mods :+ mod
     }
@@ -1672,8 +1697,8 @@ abstract class AbstractParser { parser =>
           mods.filter(_.isAccess).foreach(_ => syntaxError("duplicate private/protected qualifier"))
           val optmod = accessModifierOpt()
           optmod.map { mod => loop(addMod(mods, mod, advance = false)) }.getOrElse(mods)
-        case _:`\n` if !isLocal => next(); loop(mods)
-        case _                  => mods
+        case _: `\n` if !isLocal => next(); loop(mods)
+        case _                   => mods
       })
     loop(Nil)
   }
@@ -1761,14 +1786,14 @@ abstract class AbstractParser { parser =>
   def param(ownerIsCase: Boolean, ownerIsType: Boolean, isImplicit: Boolean): Templ.Param = {
     var mods: List[Mod] = annots(skipNewLines = false)
     if (isImplicit) mods ++= List(Mod.Implicit())
-    val (isValParam, isVarParam) = (ownerIsType && tok.is[`val`], ownerIsType && tok.is[`var`])
-    if (isValParam || isVarParam) next()
     if (ownerIsType) {
       mods ++= modifiers()
       mods.getAll[Mod.Lazy].foreach { m =>
-        syntaxError(m, "lazy modifier not allowed here. Use call-by-name parameters instead")
+        syntaxError("lazy modifier not allowed here. Use call-by-name parameters instead", at = offset(m))
       }
     }
+    val (isValParam, isVarParam) = (ownerIsType && tok.is[`val`], ownerIsType && tok.is[`var`])
+    if (isValParam || isVarParam) next()
     val name = termName()
     val tpt = {
       accept[`:`]
@@ -1870,7 +1895,7 @@ abstract class AbstractParser { parser =>
   def typeBounds() =
     Type.Bounds(bound[`>:`], bound[`<:`])
 
-  def bound[T <: Tok: ClassTag]: Option[Type] =
+  def bound[T: TokMetadata]: Option[Type] =
     if (tok.is[T]) { next(); Some(typ()) } else None
 
 /* -------- DEFS ------------------------------------------- */
@@ -1944,7 +1969,7 @@ abstract class AbstractParser { parser =>
    */
   def defOrDclOrCtor(mods: List[Mod]): Stat = {
     mods.getAll[Mod.Lazy].foreach { m =>
-      if (tok.isNot[`val`]) syntaxError(m, "lazy not allowed here. Only vals can be lazy")
+      if (tok.isNot[`val`]) syntaxError("lazy not allowed here. Only vals can be lazy", at = offset(m))
     }
     tok match {
       case _: `val` | _: `var` =>
@@ -1963,7 +1988,7 @@ abstract class AbstractParser { parser =>
     val mods = anns ++ modifiers()
     defOrDclOrCtor(mods) match {
       case s if s.isTemplateStat => s
-      case other                 => syntaxError(other, "is not a valid template statement")
+      case other                 => syntaxError("is not a valid template statement", at = offset(other))
     }
   }
 
@@ -1990,10 +2015,10 @@ abstract class AbstractParser { parser =>
       if (isMutable) Defn.Var(mods, lhs, tp, rhs)
       else Defn.Val(mods, lhs, tp, rhs.get)
     } else {
-      mods.getAll[Mod.Lazy].foreach { syntaxError(_, "lazy values may not be abstract") }
+      mods.getAll[Mod.Lazy].foreach { m => syntaxError("lazy values may not be abstract", at = offset(m)) }
       val ids = lhs.map {
         case name: Term.Name => name
-        case other          => syntaxError(other, "pattern definition may not be abstract")
+        case other           => syntaxError("pattern definition may not be abstract", at = offset(other))
       }
 
       if (isMutable) Decl.Var(mods, ids, tp.get)
@@ -2029,7 +2054,7 @@ abstract class AbstractParser { parser =>
 
   def funDefRest(mods: List[Mod], name: Term.Name): Stat = {
     def warnProcedureDeprecation =
-      deprecationWarning(tok.offset, s"Procedure syntax is deprecated. Convert procedure `$name` to method by adding `: Unit`.")
+      deprecationWarning(s"Procedure syntax is deprecated. Convert procedure `$name` to method by adding `: Unit`.")
     val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
     val paramss = paramClauses(ownerIsType = false).asInstanceOf[Seq[Seq[Term.Param]]]
     newLineOptWhenFollowedBy[`{`]
@@ -2062,7 +2087,7 @@ abstract class AbstractParser { parser =>
       }
       if (isMacro) restype match {
         case Some(restype) => Defn.Macro(mods, name, tparams, paramss, restype, rhs)
-        case None => syntaxError(tok.offset, "macros must have explicitly specified return types")
+        case None          => syntaxError("macros must have explicitly specified return types")
       } else Defn.Def(mods, name, tparams, paramss, restype, rhs)
     }
   }
@@ -2139,17 +2164,19 @@ abstract class AbstractParser { parser =>
    *  }}}
    */
   def tmplDef(mods: List[Mod]): Member.Templ = {
-    mods.getAll[Mod.Lazy].foreach { syntaxError(_, "classes cannot be lazy") }
+    mods.getAll[Mod.Lazy].foreach { m => syntaxError("classes cannot be lazy", at = offset(m)) }
     tok match {
       case _: `trait` =>
         traitDef(mods)
       case _: `class ` =>
         classDef(mods)
-      case _: `case class` =>
+      case _: `case` if ahead(tok.is[`class `]) =>
+        next()
         classDef(mods :+ Mod.Case())
       case _: `object` =>
         objectDef(mods)
-      case _: `case object` =>
+      case _: `case` if ahead(tok.is[`object`])=>
+        next()
         objectDef(mods :+ Mod.Case())
       case _ =>
         syntaxError(s"expected start of definition")
@@ -2266,10 +2293,11 @@ abstract class AbstractParser { parser =>
     case v: Defn.Val => v
     case v: Defn.Var => v
     case t: Defn.Type =>
-      syntaxError(t, "early type members are not allowed any longer. " +
-                     "Move them to the regular body: the semantics are the same.")
+      syntaxError("early type members are not allowed any longer. " +
+                  "Move them to the regular body: the semantics are the same.",
+                  at = offset(t))
     case other =>
-      syntaxError(other, "not a valid early definition")
+      syntaxError("not a valid early definition", at = offset(other))
   }
 
   /** {{{
@@ -2312,7 +2340,7 @@ abstract class AbstractParser { parser =>
     } else {
       if (tok.is[`(`]) {
         if (parenMeansSyntaxError) syntaxError("traits or objects may not have parameters")
-        else abort("unexpected opening parenthesis")
+        else error("unexpected opening parenthesis")
       }
       (Term.Param(Nil, None, None, None), Nil, false)
     }
@@ -2326,7 +2354,7 @@ abstract class AbstractParser { parser =>
 
   def existentialStats(): List[Stat] = refinement() map {
     case stat if stat.isExistentialStat => stat
-    case other                          => syntaxError(other, "not a legal existential clause")
+    case other                          => syntaxError("not a legal existential clause", at = offset(other))
   }
 
 /* -------- STATSEQS ------------------------------------------- */
@@ -2437,7 +2465,7 @@ abstract class AbstractParser { parser =>
     if (tok.is[DclIntro]) {
       defOrDclOrCtor(Nil) match {
         case stat if stat.isRefineStat => Some(stat)
-        case other                     => syntaxError(other, "is not a valid refinement declaration")
+        case other                     => syntaxError("is not a valid refinement declaration", at = offset(other))
       }
     } else if (!tok.is[StatSep]) {
       syntaxError(
@@ -2451,12 +2479,12 @@ abstract class AbstractParser { parser =>
     if (mods forall { case _: Mod.Implicit | _: Mod.Lazy | _: Mod.Annot => true; case _ => false })
       (defOrDclOrCtor(mods) match {
         case stat if stat.isBlockStat => stat
-        case other                    => syntaxError(other, "is not a valid block statement")
+        case other                    => syntaxError("is not a valid block statement", at = offset(other))
       })
     else
       (tmplDef(mods) match {
         case stat if stat.isBlockStat => stat
-        case other                    => syntaxError(other, "is not a valid block statement")
+        case other                    => syntaxError("is not a valid block statement", at = offset(other))
       })
   }
 
@@ -2471,7 +2499,8 @@ abstract class AbstractParser { parser =>
    */
   def blockStatSeq(): List[Stat] = {
     val stats = new ListBuffer[Stat]
-    while (!tok.is[StatSeqEnd] && !tok.is[CaseDefEnd]) {
+    while ((!tok.is[StatSeqEnd] && !tok.is[CaseDefEnd]) ||
+           (tok.is[`case`] && ahead(tok.is[`class `] || tok.is[`object`]))) {
       if (tok.is[`import`]) {
         stats += importStmt()
         acceptStatSepOpt()
@@ -2521,7 +2550,7 @@ abstract class AbstractParser { parser =>
     def packageStats(): (List[Term.Ref], List[Stat])  = {
       val refs = new ListBuffer[Term.Ref]
       val ts = new ListBuffer[Stat]
-      while (tok.is[`;`]) next()
+      while (tok.is[`;`] || tok.is[`\n`]) next()
       if (tok.is[`package `]) {
         next()
         if (tok.is[`object`]) {

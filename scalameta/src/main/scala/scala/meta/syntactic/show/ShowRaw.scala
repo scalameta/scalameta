@@ -1,13 +1,13 @@
 package scala.meta.syntactic
 package show
 
-import org.scalameta.show.Show
+import org.scalameta.show._
 import Show.{ sequence => s, repeat => r, indent => i, newline => n }
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
-import scala.meta.syntactic.show.internal._
 import scala.meta.internal.ast._
 import scala.{meta => api}
+import scala.meta.syntactic.parsers.Tok
 
 trait Raw[T] extends Show[T]
 object Raw {
@@ -23,8 +23,15 @@ object Raw {
         case el: api.Tree => el.show[Raw]
         case el: Nil.type => "Nil"
         case el: List[_] => "List(" + el.map(showRaw).mkString(", ") + ")"
+        case el: None.type => "None"
+        case el: Some[_] => "Some(" + showRaw(el.get) + ")"
         case el => el.toString
       }
       r(x.productIterator.map(showRaw).toList, ", ")
   }, ")"))
+
+  implicit def rawTok[T <: Tok]: Raw[T] = Raw { x =>
+    val prefix = (x: Tok) match { case x: Tok.EOF => "EOF"; case x: Tok.Dynamic => x.code; case x: Tok.Static => x.name }
+    s(prefix, " (", x.start.toString, "..", x.end.toString, ")")
+  }
 }

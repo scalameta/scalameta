@@ -1,7 +1,7 @@
 import org.scalatest._
 import scala.meta.syntactic.show._
 
-class ShowSuite extends ParseSuite {
+class ShowTreeSuite extends ParseSuite {
   test("val x: Int (raw)") {
     val tree = templStat("val x: Int")
     assert(tree.show[Raw] === "Decl.Val(Nil, List(Term.Name(\"x\")), Type.Name(\"Int\"))")
