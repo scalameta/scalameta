@@ -170,10 +170,10 @@ class AdtHelperMacros(val c: Context) {
       def hasNonEmpty(anns: List[Annotation]) = anns.exists(_.tree.tpe =:= typeOf[nonEmpty])
       hasNonEmpty(sym.annotations) || hasNonEmpty(tptAnns)
     }
-    def isRoot = sym.annotations.exists(_.tree.tpe =:= typeOf[Internal.root])
-    def isBranch = sym.annotations.exists(_.tree.tpe =:= typeOf[Internal.branch])
-    def isLeafClass = sym.annotations.exists(_.tree.tpe =:= typeOf[Internal.leafClass])
-    def isLeafCompanion = sym.annotations.exists(_.tree.tpe =:= typeOf[Internal.leafCompanion])
+    def isRoot = { sym.initialize; sym.annotations.exists(_.tree.tpe =:= typeOf[Internal.root]) }
+    def isBranch = { sym.initialize; sym.annotations.exists(_.tree.tpe =:= typeOf[Internal.branch]) }
+    def isLeafClass = { sym.initialize; sym.annotations.exists(_.tree.tpe =:= typeOf[Internal.leafClass]) }
+    def isLeafCompanion = { sym.initialize; sym.annotations.exists(_.tree.tpe =:= typeOf[Internal.leafCompanion]) }
     def root = sym.asClass.baseClasses.reverse.find(_.isRoot).getOrElse(NoSymbol)
   }
 
