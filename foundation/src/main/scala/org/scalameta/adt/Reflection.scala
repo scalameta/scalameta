@@ -13,7 +13,7 @@ trait AdtReflection {
 
   implicit class AdtSymbolOps(val sym: Symbol) {
     def isAdt: Boolean = sym.isClass && (sym.asClass.toType <:< typeOf[AdtInternal.Adt])
-    private def hasAnnotation[T: ClassTag] = sym.annotations.exists(_.tree.tpe.typeSymbol.fullName == classTag[T].runtimeClass.getCanonicalName)
+    private def hasAnnotation[T: ClassTag] = { sym.initialize; sym.annotations.exists(_.tree.tpe.typeSymbol.fullName == classTag[T].runtimeClass.getCanonicalName) }
     def isRoot: Boolean = hasAnnotation[AdtInternal.root]
     def isBranch: Boolean = hasAnnotation[AdtInternal.branch]
     def isLeaf: Boolean = hasAnnotation[AdtInternal.leafClass]
