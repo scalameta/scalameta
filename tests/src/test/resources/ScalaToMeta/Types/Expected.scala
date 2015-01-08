@@ -38,4 +38,9 @@ object Types {
     type T31 = Cons[Z[_ >: String], _ <: Int]
   }
   type T32 = List[Int] @scala.annotation.unchecked.uncheckedVariance
+  type @@[T, U] = T with U
+  type T33 = Int @@ Int
+  type T34 = Int @@ Int
+  object M { type ++[T, U] = T with U }
+  type T35 = M.++[Int, Int]
 }

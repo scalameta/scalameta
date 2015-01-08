@@ -623,14 +623,14 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
       case in @ g.CompoundTypeTree(templ) =>
         val p.Templ(early, parents, self, stats) = templ.cvt
         require(early.isEmpty && parents.forall(_.argss.isEmpty) && self.name.isEmpty && self.decltpe.isEmpty && stats.forall(_.isRefineStat))
-        p.Type.Compound(parents.map(_.tpe), stats)
+        if (stats.nonEmpty) p.Type.Compound(parents.map(_.tpe), stats) else p.Type.Compound(parents.map(_.tpe))
       case in @ g.AppliedTypeTree(tpt, args) =>
         // TODO: infer whether that was really Apply, Function or Tuple
         // TODO: precisely infer whether that was infix application or normal application
         if (g.definitions.FunctionClass.seq.contains(tpt.tpe.typeSymbolDirect)) p.Type.Function(args.init.cvt_!, args.last.cvt_!)
         else if (g.definitions.TupleClass.seq.contains(tpt.tpe.typeSymbolDirect) && args.length > 1) p.Type.Tuple(args.cvt_!)
         else in match {
-          case g.AppliedTypeTree(tpt @ g.RefTree(_, name), List(lhs, rhs)) if name.looksLikeInfix => p.Type.ApplyInfix(lhs.cvt_!, tpt.cvt_!, rhs.cvt_!)
+          case g.AppliedTypeTree(tpt @ g.Ident(name), List(lhs, rhs)) if name.looksLikeInfix => p.Type.ApplyInfix(lhs.cvt_!, tpt.cvt_!, rhs.cvt_!)
           case _ => p.Type.Apply(tpt.cvt_!, args.cvt_!)
         }
       case in @ g.ExistentialTypeTree(tpt, whereClauses) =>
