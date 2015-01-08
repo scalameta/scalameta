@@ -501,7 +501,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
             else p.Term.For(penums, body.cvt_!)
           case q"$lhs.$op($arg)" if op.looksLikeInfix && !lhs.isInstanceOf[g.Super] =>
             p.Term.ApplyInfix(lhs.cvt_!, fn.symbol.asTerm.precvt(lhs.tpe, fn), Nil, List(parg(arg)))
-          case _ if g.definitions.TupleClass.seq.contains(in.symbol.companion) =>
+          case _ if g.definitions.TupleClass.seq.contains(in.symbol.companion) && args.length > 1 =>
             p.Term.Tuple(args.cvt_!)
           case _ =>
             p.Term.Apply(fn.cvt_!, pargs(args))
@@ -595,7 +595,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         // TODO: infer whether that was really Apply, Function or Tuple
         // TODO: precisely infer whether that was infix application or normal application
         if (g.definitions.FunctionClass.seq.contains(tpt.tpe.typeSymbolDirect)) p.Type.Function(args.init.cvt_!, args.last.cvt_!)
-        else if (g.definitions.TupleClass.seq.contains(tpt.tpe.typeSymbolDirect)) p.Type.Tuple(args.cvt_!)
+        else if (g.definitions.TupleClass.seq.contains(tpt.tpe.typeSymbolDirect) && args.length > 1) p.Type.Tuple(args.cvt_!)
         else in match {
           case g.AppliedTypeTree(tpt @ g.RefTree(_, name), List(lhs, rhs)) if name.looksLikeInfix => p.Type.ApplyInfix(lhs.cvt_!, tpt.cvt_!, rhs.cvt_!)
           case _ => p.Type.Apply(tpt.cvt_!, args.cvt_!)
