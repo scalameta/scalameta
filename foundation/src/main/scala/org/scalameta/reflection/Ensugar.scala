@@ -65,7 +65,6 @@ trait Ensugar {
                 case TypeApplicationWithInferredTypeArguments(original) => Some(original)
                 case ApplicationWithArrayInstantiation(original) => Some(original)
                 case ApplicationWithInferredImplicitArguments(original) => Some(original)
-                case ApplicationWithInsertedApply(original) => Some(original)
                 case ApplicationWithNamesOrDefaults(original) => Some(original)
                 case ApplicationWithInsertedParentheses(original) => Some(original)
                 case StandalonePartialFunction(original) => Some(original)
@@ -555,15 +554,6 @@ trait Ensugar {
           def ensugar(tree: Tree): Option[Tree] = (tree, dissectApplied(tree)) match {
             case (ApplyToImplicitArgs(fn, _), _) => Some(fn)
             case (Apply(fn, args), Applied(Select(This(_), nme.CONSTRUCTOR), _, _)) if isImplicitMethodType(fn.tpe) => Some(fn)
-            case _ => None
-          }
-        }
-
-        object ApplicationWithInsertedApply extends SingleEnsugarer {
-          // TODO: make this work, putting a workaround in place for now
-          // def ensugar(tree: Tree): Option[Tree] = tree.metadata.get("originalApplee").map(_.asInstanceOf[Tree])
-          def ensugar(tree: Tree): Option[Tree] = tree match {
-            case Select(qual, _) if tree.symbol.name == nme.apply && tree.symbol.paramss.nonEmpty && !qual.isInstanceOf[Super] => Some(qual)
             case _ => None
           }
         }

@@ -112,9 +112,40 @@ trait Helpers {
     }
   }
 
+  object DesugaredApply {
+    private object Target {
+      def unapply(tree: Tree): Option[Tree] = tree match {
+        case Select(target, _) if !target.isInstanceOf[Super] => Some(target)
+        case tree @ TypeApply(Select(target, _), targs) if !target.isInstanceOf[Super] => Some(treeCopy.TypeApply(tree, target, targs))
+        case _ => None
+      }
+    }
+    // TODO: make `metadata.get("originalApplee")` on `fn` work
+    // until this is implemented, I'm putting a workaround in place
+    def unapply(tree: Tree): Option[(Tree, List[Tree])] = tree match {
+      case Apply(Target(target), args) if tree.symbol.name == nme.apply && tree.symbol.paramss.nonEmpty => Some((target, args))
+      case _ => None
+    }
+  }
+
   object DesugaredSymbolLiteral {
     def unapply(tree: Tree): Option[scala.Symbol] = tree match {
-      case Apply(fn, List(Literal(Constant(s_value: String)))) if fn.symbol == SymbolModule => Some(scala.Symbol(s_value))
+      case DesugaredApply(module, List(Literal(Constant(s_value: String)))) if module.symbol == SymbolModule => Some(scala.Symbol(s_value))
+      case _ => None
+    }
+  }
+
+  object DesugaredTuple {
+    def unapply(tree: Tree): Option[List[Tree]] = tree match {
+      case DesugaredApply(module, args) if module.symbol != null && TupleClass.seq.contains(module.symbol.companion) && args.length > 1 => Some(args)
+      case _ => None
+    }
+  }
+
+  object DesugaredInterpolation {
+    def unapply(tree: Tree): Option[(Select, List[Tree], List[Tree])] = tree match {
+      case Apply(fn @ q"$stringContext.apply(..$parts).$prefix", args) if stringContext.symbol == StringContextClass.companion => Some((fn.asInstanceOf[Select], parts, args))
+      case DesugaredApply(fn @ q"$stringContext.apply(..$parts).$prefix", args) if stringContext.symbol == StringContextClass.companion => Some((fn.asInstanceOf[Select], parts, args))
       case _ => None
     }
   }
@@ -144,7 +175,7 @@ trait Helpers {
             case SyntacticValEq(
                 Bind(name, Typed(Ident(nme.WILDCARD), EmptyTree)),
                 Match(Annotated(_, rhs), List(CaseDef(pat, _, marker)))) =>
-              val skip = definitions.TupleClass.seq.indexOf(marker.tpe.typeSymbol) + 1
+              val skip = definitions.TupleClass.seq.indexOf(marker.tpe.typeSymbolDirect) + 1
               require(skip > 0)
               i += skip
               buf += SyntacticValEq(pat, rhs)

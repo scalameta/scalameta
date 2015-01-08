@@ -473,6 +473,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         // TODO: figure out whether the programmer actually used the tuple syntax or they were calling the tuple companion explicitly
         // TODO: figure out whether the programmer actually wrote `foo(...) = ...` or it was `foo.update(..., ...)`
         // TODO: figure out whether the programmer actually wrote `'foo` or it was 'Symbol("foo")'
+        // TODO: support applyDynamic, but don't forget to account for .apply desugarings (see DesugaredInterpolation for an example of what I'm talking about)
         in match {
           case q"new $_(...$argss0)" =>
             val g.treeInfo.Applied(g.Select(g.New(tpt), _), _, _) = in
@@ -481,8 +482,6 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
             val self = p.Term.Param(Nil, None, None, None).appendScratchpad(tpt)
             val templ = p.Templ(Nil, List(supercall), self).appendScratchpad(in)
             p.Term.New(templ)
-          case q"$stringContext(..$parts).$prefix(..$args)" if stringContext.symbol == g.definitions.StringContextClass.companion =>
-            p.Term.Interpolate(fn.symbol.asTerm.precvt(fn.asInstanceOf[g.Select].qualifier.tpe, fn), parts.cvt_!, args.cvt_!)
           case DesugaredSetter(lhs, rhs) =>
             p.Term.Assign(lhs.cvt_!, rhs.cvt_!)
           case DesugaredUpdate(lhs, argss, rhs) =>
@@ -491,6 +490,10 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
             p.Term.ApplyInfix(lhs.cvt_!, p.Term.Name(op.decodedName.toString, isBackquoted = false), Nil, args.cvt_!)
           case DesugaredSymbolLiteral(value) =>
             p.Lit.Symbol(value) : p.Term
+          case DesugaredTuple(arg) =>
+            p.Term.Tuple(args.cvt_!)
+          case DesugaredInterpolation(prefix, parts, args) =>
+            p.Term.Interpolate(prefix.symbol.asTerm.precvt(prefix.qualifier.tpe, prefix), parts.cvt_!, args.cvt_!)
           case DesugaredFor(enums, body, isYield) =>
             val penums = enums.map({
               case Generator(pat, rhs) => p.Enum.Generator(pat.cvt_!, rhs.cvt_!)
@@ -501,8 +504,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
             else p.Term.For(penums, body.cvt_!)
           case q"$lhs.$op($arg)" if op.looksLikeInfix && !lhs.isInstanceOf[g.Super] =>
             p.Term.ApplyInfix(lhs.cvt_!, fn.symbol.asTerm.precvt(lhs.tpe, fn), Nil, List(parg(arg)))
-          case _ if g.definitions.TupleClass.seq.contains(in.symbol.companion) && args.length > 1 =>
-            p.Term.Tuple(args.cvt_!)
+          case DesugaredApply(target, args) =>
+            p.Term.Apply(target.cvt_!, pargs(args))
           case _ =>
             p.Term.Apply(fn.cvt_!, pargs(args))
         }
