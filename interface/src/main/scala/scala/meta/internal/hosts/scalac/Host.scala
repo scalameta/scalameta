@@ -48,8 +48,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         def isBackquoted: Boolean = gtree match {
           // TODO: infer isBackquoted
           // TODO: iirc according to Denys, info in BackquotedIdentifierAttachment might be incomplete
-          case gtree: g.Ident => gtree.isBackquoted || scala.meta.syntactic.parsers.keywords.contains(gtree.name.toString)
-          case gtree: g.Select => scala.meta.syntactic.parsers.keywords.contains(gtree.name.toString)
+          case gtree: g.Ident => gtree.isBackquoted || scala.meta.syntactic.parsers.keywords.contains(gtree.alias)
+          case gtree: g.NameTree => scala.meta.syntactic.parsers.keywords.contains(gtree.alias)
           case _ => false
         }
       }
