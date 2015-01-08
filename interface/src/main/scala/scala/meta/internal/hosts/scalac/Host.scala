@@ -155,18 +155,48 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
       def pstats(gparent: g.Tree, gstats: List[g.Tree]): List[p.Stat] = {
         object PatDefCore {
           def unapply(tree: g.MemberDef): Option[(g.Tree, g.Tree)] = tree match {
-            // NOTE: we can't trust annot.tpe.typeSymbol, because annot.tpe is bugged
+            // CASE #1: 0 and 2+ patterns in a val definition
+            // ~$ typecheck 'locally { val List() = List() }'
+            // [[syntax trees at end of typer]]// Scala source: tmp1T1gLt
+            // scala.this.Predef.locally[Unit]({
+            //   <synthetic> <artifact> private[this] val x$1: Unit = (immutable.this.Nil: List[Nothing] @unchecked) match {
+            //     case immutable.this.List.unapplySeq[Nothing](<unapply-selector>) <unapply> () => ()
+            //   };
+            //   ()
+            // })
+            // [[syntax trees at end of typer]]// Scala source: tmpDlXMAx
+            // scala.this.Predef.locally[Unit]({
+            //   <synthetic> <artifact> private[this] val x$1: (Nothing, Nothing) = (immutable.this.Nil: List[Nothing] @unchecked) match {
+            //     case immutable.this.List.unapplySeq[Nothing](<unapply-selector>) <unapply> ((x @ _), (y @ _)) => scala.Tuple2.apply[Nothing, Nothing](x, y)
+            //   };
+            //   val x: Nothing = x$1._1;
+            //   val y: Nothing = x$1._2;
+            //   ()
+            // })
+            // btw we can't trust annot.tpe.typeSymbol, because annot.tpe is bugged
             // for example, @unchecked in `List[Int] @unchecked` has type `List[Int] @unchecked` instead of the correct `unchecked`
             // see https://github.com/scala/scala/blob/73fb460c1cd20ee97556ec0867d17efaa795d129/src/compiler/scala/tools/nsc/typechecker/Typers.scala#L4048
-            case in @ g.ValDef(_, _, tpt, g.Match(g.Annotated(annot @ g.treeInfo.Applied(core, _, _), rhs), List(g.CaseDef(pat, g.EmptyTree, _))))
-            if core.tpe.finalResultType.typeSymbolDirect == g.symbolOf[unchecked] =>
-              require(tpt == g.EmptyTree && rhs.nonEmpty)
+            case in @ g.ValDef(_, _, g.EmptyTree, g.Match(g.Annotated(annot @ g.treeInfo.Applied(core, _, _), rhs), List(g.CaseDef(pat, g.EmptyTree, _))))
+            if core.tpe.finalResultType.typeSymbolDirect == g.symbolOf[unchecked] && in.symbol.isSynthetic && in.symbol.isArtifact =>
               Some((pat, rhs))
-            // NOTE: funnily enough, in a very degenerate case, we can also ends up with a def with the same structure
-            // try `locally { implicit lazy val List() = List() }` if you care to know more
-            case in @ g.DefDef(_, _, Nil, Nil, tpt, g.Match(g.Annotated(annot @ g.treeInfo.Applied(core, _, _), rhs), List(g.CaseDef(pat, g.EmptyTree, _))))
+            // CASE #2: 1 pattern in a val definition
+            // ~$ typecheck 'locally { val List(x) = List() }'
+            // [[syntax trees at end of typer]]// Scala source: tmpHlTi6k
+            // scala.this.Predef.locally[Unit]({
+            //   val x: Nothing = (immutable.this.Nil: List[Nothing] @unchecked) match {
+            //     case immutable.this.List.unapplySeq[Nothing](<unapply-selector>) <unapply> ((x @ _)) => x
+            //   };
+            //   ()
+            // })
+            case in @ g.ValDef(_, _, g.EmptyTree, g.Match(g.Annotated(annot @ g.treeInfo.Applied(core, _, _), rhs), List(g.CaseDef(pat, g.EmptyTree, body @ g.Ident(_)))))
             if core.tpe.finalResultType.typeSymbolDirect == g.symbolOf[unchecked] =>
-              require(tpt == g.EmptyTree && rhs.nonEmpty)
+              val binds = pat.collect{ case x: g.Bind => x }
+              if (binds.length == 1 && binds.head.symbol == body.symbol) Some((pat, rhs))
+              else None
+            // CASE #3: funnily enough, in a very degenerate case, we can also ends up with a def with the same structure
+            // try `locally { implicit lazy val List() = List() }` if you care to know more
+            case in @ g.DefDef(_, _, Nil, Nil, g.EmptyTree, g.Match(g.Annotated(annot @ g.treeInfo.Applied(core, _, _), rhs), List(g.CaseDef(pat, g.EmptyTree, _))))
+            if core.tpe.finalResultType.typeSymbolDirect == g.symbolOf[unchecked] && in.symbol.isSynthetic && in.symbol.isArtifact =>
               Some((pat, rhs))
             case _ =>
               None
