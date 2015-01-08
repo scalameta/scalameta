@@ -199,8 +199,13 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
           // List extractors are mixed with :: patterns. See Test5 in lists.scala.
           //
           // TODO SI-6609 Eliminate this special case once the old pattern matcher is removed.
-          def dealias(sym: Symbol) =
-            (atPos(tree.pos.makeTransparent) {gen.mkAttributedRef(sym)} setPos tree.pos, sym.owner.thisType)
+          def dealias(sym: Symbol) = {
+            // NOTE: this is a meaningful difference from the code in Typers.scala
+            //-(atPos(tree.pos.makeTransparent) {gen.mkAttributedRef(sym)} setPos tree.pos, sym.owner.thisType)
+            val result @ Select(qual, _) = atPos(tree.pos.makeTransparent) {gen.mkAttributedRef(sym)} setPos tree.pos
+            qual.appendMetadata("original" -> site)
+            (result, sym.owner.thisType)
+          }
           sym.name match {
             case nme.List => return dealias(ListModule)
             case nme.Seq  => return dealias(SeqModule)
@@ -214,7 +219,9 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
             case Select(qual, _) => Select(qual, nme.PACKAGEkw)
             case SelectFromTypeTree(qual, _) => Select(qual, nme.PACKAGEkw)
           }
-        }}
+        // NOTE: this is a meaningful difference from the code in Typers.scala
+        //-}}
+        }}.appendMetadata("original" -> site)
         val tree1 = atPos(tree.pos) {
           tree match {
             case Ident(name) => Select(qual, name)
