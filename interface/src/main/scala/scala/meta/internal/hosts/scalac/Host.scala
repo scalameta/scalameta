@@ -233,9 +233,46 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
               val q"new $$anon()" = gstats(i - 1)
               p.Term.New(templ.cvt_!)
             case in @ RightAssociativeApplicationLhsTemporaryVal(left) =>
+              object Right {
+                def unapply(gtree: g.Tree): Option[(g.Select, g.Tree, List[g.Tree])] = gtree match {
+                  case g.treeInfo.Applied(op @ g.Select(qual, _), targs, List(List(leftRef @ g.Ident(_)))) if in.symbol == leftRef.symbol => Some((op, qual, targs))
+                  case _ => None
+                }
+              }
               i += 1
-              val g.treeInfo.Applied(op @ g.Select(right, _), targs, List(List(g.Ident(_)))) = gstats(i - 1)
-              p.Term.ApplyInfix(left.cvt_!, op.symbol.asTerm.precvt(right.tpe, op), targs.cvt_!, List(right.cvt_!))
+              gstats(i - 1) match {
+                // NOTE: typically, right-associative applications are desugared as follows:
+                // ~$ typecheck '1 :: Nil'
+                // [[syntax trees at end of typer]]// Scala source: tmpdPr5f0
+                // {
+                //   <synthetic> <artifact> val x$1: Int = 1;
+                //   immutable.this.Nil.::[Int](x$1)
+                // }
+                // so we use this particular shape of a block to detect such applications
+                case Right(op, qual, targs) =>
+                  p.Term.ApplyInfix(left.cvt_!, op.symbol.asTerm.precvt(qual.tpe, op), targs.cvt_!, List(qual.cvt_!))
+                // HOWEVER, under some conditions (but not always!)
+                // applications of right-associative applications can move into the block as follows:
+                // ~$ typecheck '(1 :: Nil)(0)'
+                // [[syntax trees at end of typer]]// Scala source: tmp2C43uG
+                // {
+                //   <synthetic> <artifact> val x$1: Int = 1;
+                //   immutable.this.Nil.::[Int](x$1).apply(0)
+                // }
+                // then we canonicalize the block by hoisting the extraneous applications and then convert it via normal means
+                case gstat =>
+                  def canonicalize(gparent: g.Block): g.Apply = {
+                    val g.Block(List(gtempval @ RightAssociativeApplicationLhsTemporaryVal(_)), gstat) = gparent
+                    def loop(gtree: g.Tree): g.Tree = gtree match {
+                      case gtree @ Right(_, _, _) => g.treeCopy.Block(gparent, List(gtempval), gtree)
+                      case gtree @ g.TypeApply(fn, targs) => g.treeCopy.TypeApply(gtree, loop(fn), targs)
+                      case gtree @ g.Apply(fn, args) => g.treeCopy.Apply(gtree, loop(fn), args)
+                      case gtree @ g.Select(qual, name) => g.treeCopy.Select(gtree, loop(qual), name)
+                    }
+                    loop(gstat).asInstanceOf[g.Apply]
+                  }
+                  canonicalize(gparent.asInstanceOf[g.Block]).cvt_! : p.Term
+              }
             case in @ InlinableHoistedTemporaryVal(_, _) =>
               val inlinees = gstats.collect({ case InlinableHoistedTemporaryVal(sym, rhs) => (sym -> rhs) }).toMap
               require(i == 1 && inlinees.size == gstats.size - 1)
