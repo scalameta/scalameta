@@ -132,3 +132,9 @@ object NamesDefaultsSuper {
   class Oneone6 extends Oneone(100)(100)
   class Oneone7 extends Oneone()()
 }
+object NamesDefaultsImplicit {
+  def foo(x: Int = 2, y: Int = 3)(implicit z: Int) = ???
+  implicit val t = 4
+  foo(y = 5)
+  foo(y = 5)(6)
+}

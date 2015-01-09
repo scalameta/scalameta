@@ -160,7 +160,7 @@ trait Typers extends Adaptations with Tags with TypersTracking with PatternTyper
     def context1 = context
     def dropExistential(tp: Type): Type = tp match {
       case ExistentialType(tparams, tpe) =>
-        new SubstWildcardMap(tparams)(tp)
+        (new SubstWildcardMap(tparams))(tp)
       case TypeRef(_, sym, _) if sym.isAliasType =>
         val tp0 = tp.dealias
         if (tp eq tp0) {

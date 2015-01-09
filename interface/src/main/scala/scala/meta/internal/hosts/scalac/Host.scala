@@ -48,8 +48,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         def isBackquoted: Boolean = gtree match {
           // TODO: infer isBackquoted
           // TODO: iirc according to Denys, info in BackquotedIdentifierAttachment might be incomplete
-          case gtree: g.Ident => gtree.isBackquoted || scala.meta.syntactic.parsers.keywords.contains(gtree.name.toString)
-          case gtree: g.Select => scala.meta.syntactic.parsers.keywords.contains(gtree.name.toString)
+          case gtree: g.Ident => gtree.isBackquoted || scala.meta.syntactic.parsers.keywords.contains(gtree.alias)
+          case gtree: g.NameTree => scala.meta.syntactic.parsers.keywords.contains(gtree.alias)
           case _ => false
         }
       }
@@ -155,18 +155,48 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
       def pstats(gparent: g.Tree, gstats: List[g.Tree]): List[p.Stat] = {
         object PatDefCore {
           def unapply(tree: g.MemberDef): Option[(g.Tree, g.Tree)] = tree match {
-            // NOTE: we can't trust annot.tpe.typeSymbol, because annot.tpe is bugged
+            // CASE #1: 0 and 2+ patterns in a val definition
+            // ~$ typecheck 'locally { val List() = List() }'
+            // [[syntax trees at end of typer]]// Scala source: tmp1T1gLt
+            // scala.this.Predef.locally[Unit]({
+            //   <synthetic> <artifact> private[this] val x$1: Unit = (immutable.this.Nil: List[Nothing] @unchecked) match {
+            //     case immutable.this.List.unapplySeq[Nothing](<unapply-selector>) <unapply> () => ()
+            //   };
+            //   ()
+            // })
+            // [[syntax trees at end of typer]]// Scala source: tmpDlXMAx
+            // scala.this.Predef.locally[Unit]({
+            //   <synthetic> <artifact> private[this] val x$1: (Nothing, Nothing) = (immutable.this.Nil: List[Nothing] @unchecked) match {
+            //     case immutable.this.List.unapplySeq[Nothing](<unapply-selector>) <unapply> ((x @ _), (y @ _)) => scala.Tuple2.apply[Nothing, Nothing](x, y)
+            //   };
+            //   val x: Nothing = x$1._1;
+            //   val y: Nothing = x$1._2;
+            //   ()
+            // })
+            // btw we can't trust annot.tpe.typeSymbol, because annot.tpe is bugged
             // for example, @unchecked in `List[Int] @unchecked` has type `List[Int] @unchecked` instead of the correct `unchecked`
             // see https://github.com/scala/scala/blob/73fb460c1cd20ee97556ec0867d17efaa795d129/src/compiler/scala/tools/nsc/typechecker/Typers.scala#L4048
-            case in @ g.ValDef(_, _, tpt, g.Match(g.Annotated(annot @ g.treeInfo.Applied(core, _, _), rhs), List(g.CaseDef(pat, g.EmptyTree, _))))
-            if core.tpe.finalResultType.typeSymbol == g.symbolOf[unchecked] =>
-              require(tpt == g.EmptyTree && rhs.nonEmpty)
+            case in @ g.ValDef(_, _, g.EmptyTree, g.Match(g.Annotated(annot @ g.treeInfo.Applied(core, _, _), rhs), List(g.CaseDef(pat, g.EmptyTree, _))))
+            if core.tpe.finalResultType.typeSymbolDirect == g.symbolOf[unchecked] && in.symbol.isSynthetic && in.symbol.isArtifact =>
               Some((pat, rhs))
-            // NOTE: funnily enough, in a very degenerate case, we can also ends up with a def with the same structure
+            // CASE #2: 1 pattern in a val definition
+            // ~$ typecheck 'locally { val List(x) = List() }'
+            // [[syntax trees at end of typer]]// Scala source: tmpHlTi6k
+            // scala.this.Predef.locally[Unit]({
+            //   val x: Nothing = (immutable.this.Nil: List[Nothing] @unchecked) match {
+            //     case immutable.this.List.unapplySeq[Nothing](<unapply-selector>) <unapply> ((x @ _)) => x
+            //   };
+            //   ()
+            // })
+            case in @ g.ValDef(_, _, g.EmptyTree, g.Match(g.Annotated(annot @ g.treeInfo.Applied(core, _, _), rhs), List(g.CaseDef(pat, g.EmptyTree, body @ g.Ident(_)))))
+            if core.tpe.finalResultType.typeSymbolDirect == g.symbolOf[unchecked] =>
+              val binds = pat.collect{ case x: g.Bind => x }
+              if (binds.length == 1 && binds.head.symbol == body.symbol) Some((pat, rhs))
+              else None
+            // CASE #3: funnily enough, in a very degenerate case, we can also ends up with a def with the same structure
             // try `locally { implicit lazy val List() = List() }` if you care to know more
-            case in @ g.DefDef(_, _, Nil, Nil, tpt, g.Match(g.Annotated(annot @ g.treeInfo.Applied(core, _, _), rhs), List(g.CaseDef(pat, g.EmptyTree, _))))
-            if core.tpe.finalResultType.typeSymbol == g.symbolOf[unchecked] =>
-              require(tpt == g.EmptyTree && rhs.nonEmpty)
+            case in @ g.DefDef(_, _, Nil, Nil, g.EmptyTree, g.Match(g.Annotated(annot @ g.treeInfo.Applied(core, _, _), rhs), List(g.CaseDef(pat, g.EmptyTree, _))))
+            if core.tpe.finalResultType.typeSymbolDirect == g.symbolOf[unchecked] && in.symbol.isSynthetic && in.symbol.isArtifact =>
               Some((pat, rhs))
             case _ =>
               None
@@ -194,7 +224,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
           i += 1
           val pstat = gstat match {
             case in @ PatDefCore(pat, rhs) =>
-              if (in.symbol.isSynthetic && in.symbol.isArtifact) i += g.definitions.TupleClass.seq.indexOf(in.symbol.info.typeSymbol) + 1
+              if (in.symbol.isSynthetic && in.symbol.isArtifact) i += g.definitions.TupleClass.seq.indexOf(in.symbol.info.typeSymbolDirect) + 1
               val modbearer = gstats(i - 1).asInstanceOf[g.MemberDef] // TODO: mods for nullary patterns get irrevocably lost (`implicit val List() = List()`)
               if (!modbearer.symbol.isMutable) p.Defn.Val(pmods(modbearer), List(pat.cvt_! : p.Pat), None, rhs.cvt_!)
               else p.Defn.Var(pmods(modbearer), List(pat.cvt_! : p.Pat), None, Some[p.Term](rhs.cvt_!))
@@ -203,9 +233,46 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
               val q"new $$anon()" = gstats(i - 1)
               p.Term.New(templ.cvt_!)
             case in @ RightAssociativeApplicationLhsTemporaryVal(left) =>
+              object Right {
+                def unapply(gtree: g.Tree): Option[(g.Select, g.Tree, List[g.Tree])] = gtree match {
+                  case g.treeInfo.Applied(op @ g.Select(qual, _), targs, List(List(leftRef @ g.Ident(_)))) if in.symbol == leftRef.symbol => Some((op, qual, targs))
+                  case _ => None
+                }
+              }
               i += 1
-              val g.treeInfo.Applied(op @ g.Select(right, _), targs, List(List(g.Ident(_)))) = gstats(i - 1)
-              p.Term.ApplyInfix(left.cvt_!, op.symbol.asTerm.precvt(right.tpe, op), targs.cvt_!, List(right.cvt_!))
+              gstats(i - 1) match {
+                // NOTE: typically, right-associative applications are desugared as follows:
+                // ~$ typecheck '1 :: Nil'
+                // [[syntax trees at end of typer]]// Scala source: tmpdPr5f0
+                // {
+                //   <synthetic> <artifact> val x$1: Int = 1;
+                //   immutable.this.Nil.::[Int](x$1)
+                // }
+                // so we use this particular shape of a block to detect such applications
+                case Right(op, qual, targs) =>
+                  p.Term.ApplyInfix(left.cvt_!, op.symbol.asTerm.precvt(qual.tpe, op), targs.cvt_!, List(qual.cvt_!))
+                // HOWEVER, under some conditions (but not always!)
+                // applications of right-associative applications can move into the block as follows:
+                // ~$ typecheck '(1 :: Nil)(0)'
+                // [[syntax trees at end of typer]]// Scala source: tmp2C43uG
+                // {
+                //   <synthetic> <artifact> val x$1: Int = 1;
+                //   immutable.this.Nil.::[Int](x$1).apply(0)
+                // }
+                // then we canonicalize the block by hoisting the extraneous applications and then convert it via normal means
+                case gstat =>
+                  def canonicalize(gparent: g.Block): g.Apply = {
+                    val g.Block(List(gtempval @ RightAssociativeApplicationLhsTemporaryVal(_)), gstat) = gparent
+                    def loop(gtree: g.Tree): g.Tree = gtree match {
+                      case gtree @ Right(_, _, _) => g.treeCopy.Block(gparent, List(gtempval), gtree)
+                      case gtree @ g.TypeApply(fn, targs) => g.treeCopy.TypeApply(gtree, loop(fn), targs)
+                      case gtree @ g.Apply(fn, args) => g.treeCopy.Apply(gtree, loop(fn), args)
+                      case gtree @ g.Select(qual, name) => g.treeCopy.Select(gtree, loop(qual), name)
+                    }
+                    loop(gstat).asInstanceOf[g.Apply]
+                  }
+                  canonicalize(gparent.asInstanceOf[g.Block]).cvt_! : p.Term
+              }
             case in @ InlinableHoistedTemporaryVal(_, _) =>
               val inlinees = gstats.collect({ case InlinableHoistedTemporaryVal(sym, rhs) => (sym -> rhs) }).toMap
               require(i == 1 && inlinees.size == gstats.size - 1)
@@ -232,7 +299,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         val (gbounds, gimplicits) = gimplicits0.partition(_.name.startsWith(g.nme.EVIDENCE_PARAM_PREFIX))
         val gtparams = gtparams0.map(gp => {
           val grawRelevantBounds = gbounds.filter(_.exists(_.symbol == gp.symbol))
-          val (grawContextBounds, grawViewBounds) = grawRelevantBounds.partition(_.tpt.tpe.typeSymbol != g.definitions.FunctionClass(1))
+          val (grawContextBounds, grawViewBounds) = grawRelevantBounds.partition(_.tpt.tpe.typeSymbolDirect != g.definitions.FunctionClass(1))
           val gcontextBounds = grawContextBounds.map{ case g.ValDef(_, _, g.AppliedTypeTree(gtpt, List(garg @ g.Ident(_))), _) if garg.symbol == gp.symbol => gtpt }
           val gviewBounds = grawViewBounds.map{ case g.ValDef(_, _, g.AppliedTypeTree(_, List(garg @ g.Ident(_), gtarget)), _) if garg.symbol == gp.symbol => gtarget }
           gp.appendMetadata("originalContextBounds" -> gcontextBounds, "originalViewBounds" -> gviewBounds)
@@ -473,6 +540,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         // TODO: figure out whether the programmer actually used the tuple syntax or they were calling the tuple companion explicitly
         // TODO: figure out whether the programmer actually wrote `foo(...) = ...` or it was `foo.update(..., ...)`
         // TODO: figure out whether the programmer actually wrote `'foo` or it was 'Symbol("foo")'
+        // TODO: support applyDynamic, but don't forget to account for .apply desugarings (see DesugaredInterpolation for an example of what I'm talking about)
         in match {
           case q"new $_(...$argss0)" =>
             val g.treeInfo.Applied(g.Select(g.New(tpt), _), _, _) = in
@@ -481,8 +549,6 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
             val self = p.Term.Param(Nil, None, None, None).appendScratchpad(tpt)
             val templ = p.Templ(Nil, List(supercall), self).appendScratchpad(in)
             p.Term.New(templ)
-          case q"$stringContext(..$parts).$prefix(..$args)" if stringContext.symbol == g.definitions.StringContextClass.companion =>
-            p.Term.Interpolate(fn.symbol.asTerm.precvt(fn.asInstanceOf[g.Select].qualifier.tpe, fn), parts.cvt_!, args.cvt_!)
           case DesugaredSetter(lhs, rhs) =>
             p.Term.Assign(lhs.cvt_!, rhs.cvt_!)
           case DesugaredUpdate(lhs, argss, rhs) =>
@@ -491,6 +557,10 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
             p.Term.ApplyInfix(lhs.cvt_!, p.Term.Name(op.decodedName.toString, isBackquoted = false), Nil, args.cvt_!)
           case DesugaredSymbolLiteral(value) =>
             p.Lit.Symbol(value) : p.Term
+          case DesugaredTuple(arg) =>
+            p.Term.Tuple(args.cvt_!)
+          case DesugaredInterpolation(prefix, parts, args) =>
+            p.Term.Interpolate(prefix.symbol.asTerm.precvt(prefix.qualifier.tpe, prefix), parts.cvt_!, args.cvt_!)
           case DesugaredFor(enums, body, isYield) =>
             val penums = enums.map({
               case Generator(pat, rhs) => p.Enum.Generator(pat.cvt_!, rhs.cvt_!)
@@ -501,8 +571,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
             else p.Term.For(penums, body.cvt_!)
           case q"$lhs.$op($arg)" if op.looksLikeInfix && !lhs.isInstanceOf[g.Super] =>
             p.Term.ApplyInfix(lhs.cvt_!, fn.symbol.asTerm.precvt(lhs.tpe, fn), Nil, List(parg(arg)))
-          case _ if g.definitions.TupleClass.seq.contains(in.symbol.companion) =>
-            p.Term.Tuple(args.cvt_!)
+          case DesugaredApply(target, args) =>
+            p.Term.Apply(target.cvt_!, pargs(args))
           case _ =>
             p.Term.Apply(fn.cvt_!, pargs(args))
         }
@@ -590,14 +660,14 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
       case in @ g.CompoundTypeTree(templ) =>
         val p.Templ(early, parents, self, stats) = templ.cvt
         require(early.isEmpty && parents.forall(_.argss.isEmpty) && self.name.isEmpty && self.decltpe.isEmpty && stats.forall(_.isRefineStat))
-        p.Type.Compound(parents.map(_.tpe), stats)
+        if (stats.nonEmpty) p.Type.Compound(parents.map(_.tpe), stats) else p.Type.Compound(parents.map(_.tpe))
       case in @ g.AppliedTypeTree(tpt, args) =>
         // TODO: infer whether that was really Apply, Function or Tuple
         // TODO: precisely infer whether that was infix application or normal application
-        if (g.definitions.FunctionClass.seq.contains(tpt.tpe.typeSymbol)) p.Type.Function(args.init.cvt_!, args.last.cvt_!)
-        else if (g.definitions.TupleClass.seq.contains(tpt.tpe.typeSymbol)) p.Type.Tuple(args.cvt_!)
+        if (g.definitions.FunctionClass.seq.contains(tpt.tpe.typeSymbolDirect)) p.Type.Function(args.init.cvt_!, args.last.cvt_!)
+        else if (g.definitions.TupleClass.seq.contains(tpt.tpe.typeSymbolDirect) && args.length > 1) p.Type.Tuple(args.cvt_!)
         else in match {
-          case g.AppliedTypeTree(tpt @ g.RefTree(_, name), List(lhs, rhs)) if name.looksLikeInfix => p.Type.ApplyInfix(lhs.cvt_!, tpt.cvt_!, rhs.cvt_!)
+          case g.AppliedTypeTree(tpt @ g.Ident(name), List(lhs, rhs)) if name.looksLikeInfix => p.Type.ApplyInfix(lhs.cvt_!, tpt.cvt_!, rhs.cvt_!)
           case _ => p.Type.Apply(tpt.cvt_!, args.cvt_!)
         }
       case in @ g.ExistentialTypeTree(tpt, whereClauses) =>
