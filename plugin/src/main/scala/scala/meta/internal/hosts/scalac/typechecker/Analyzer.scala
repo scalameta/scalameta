@@ -1398,7 +1398,9 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
       }
       def typedApply(tree: Apply) = tree match {
         case Apply(Block(stats, expr), args) =>
-          typed1(atPos(tree.pos)(Block(stats, Apply(expr, args) setPos tree.pos.makeTransparent)), mode, pt)
+          // NOTE: this is a meaningful difference from the code in Typers.scala
+          //-typed1(atPos(tree.pos)(Block(stats, Apply(expr, args) setPos tree.pos.makeTransparent)), mode, pt)
+          typed1(atPos(tree.pos)(Block(stats, treeCopy.Apply(tree, expr, args) setPos tree.pos.makeTransparent)), mode, pt)
         case Apply(fun, args) =>
           normalTypedApply(tree, fun, args) match {
             // NOTE: this is a meaningful difference from the code in Typers.scala
