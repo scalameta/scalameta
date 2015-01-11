@@ -1,6 +1,5 @@
-package scala.meta
-package internal.hosts.scalac
-package typechecker
+// NOTE: has to be this package or otherwise we won't be able to access Context.issue
+package scala.tools.nsc.typechecker
 
 import scala.tools.nsc.Global
 import scala.tools.nsc.typechecker.{Analyzer => NscAnalyzer}
@@ -13,7 +12,7 @@ import scala.reflect.internal.Flags
 import scala.reflect.internal.Flags._
 import scala.collection.mutable
 
-trait Analyzer extends NscAnalyzer with GlobalToolkit {
+trait PalladiumAnalyzer extends NscAnalyzer with GlobalToolkit {
   val global: Global
   import global._
   import definitions._
@@ -167,7 +166,9 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
           val cbody1 = treeCopy.Block(cbody, preSuperStats, superCall1)
           val clazz = context.owner
             assert(clazz != NoSymbol, templ)
-          val cscope = context.outer.makeNewScope(ctor, context.outer.owner)
+          val dummy = context.outer.owner.newLocalDummy(templ.pos)
+          val cscope = context.outer.makeNewScope(ctor, dummy)
+          if (dummy.isTopLevel) currentRun.symSource(dummy) = currentUnit.source.file
           val cbody2 = { // called both during completion AND typing.
             val typer1 = newTyper(cscope)
             // XXX: see about using the class's symbol....
@@ -264,14 +265,14 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
         }
 
         // avoid throwing spurious DivergentImplicit errors
-        if (context.hasErrors)
+        if (context.reporter.hasErrors)
           setError(tree)
         else
           withCondConstrTyper(treeInfo.isSelfOrSuperConstrCall(tree))(typer1 =>
             if (original != EmptyTree && pt != WildcardType) (
               typer1 silent { tpr =>
                 val withImplicitArgs = tpr.applyImplicitArgs(tree)
-                if (tpr.context.hasErrors) tree // silent will wrap it in SilentTypeError anyway
+                if (tpr.context.reporter.hasErrors) tree // silent will wrap it in SilentTypeError anyway
                 else tpr.typed(withImplicitArgs, mode, pt)
               }
               orElse { _ =>
@@ -295,7 +296,7 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
           case Block(_, tree1) => tree1.symbol
           case _               => tree.symbol
         }
-        if (!meth.isConstructor && isFunctionType(pt)) { // (4.2)
+        if (!meth.isConstructor && (isFunctionType(pt) || samOf(pt).exists)) { // (4.2)
           debuglog(s"eta-expanding $tree: ${tree.tpe} to $pt")
           checkParamsConvertible(tree, tree.tpe)
           // NOTE: this is a meaningful difference from the code in Typers.scala
@@ -325,13 +326,13 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
 
       def adaptType(): Tree = {
         // @M When not typing a type constructor (!context.inTypeConstructorAllowed)
-        // or raw type (tree.symbol.isJavaDefined && context.unit.isJava), types must be of kind *,
+        // or raw type, types must be of kind *,
         // and thus parameterized types must be applied to their type arguments
         // @M TODO: why do kind-* tree's have symbols, while higher-kinded ones don't?
         def properTypeRequired = (
              tree.hasSymbolField
           && !context.inTypeConstructorAllowed
-          && !(tree.symbol.isJavaDefined && context.unit.isJava)
+          && !context.unit.isJava
         )
         // @M: don't check tree.tpe.symbol.typeParams. check tree.tpe.typeParams!!!
         // (e.g., m[Int] --> tree.tpe.symbol.typeParams.length == 1, tree.tpe.typeParams.length == 0!)
@@ -517,7 +518,7 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
                 val silentContext = context.makeImplicit(context.ambiguousErrors)
                 val res = newTyper(silentContext).typed(
                   new ApplyImplicitView(coercion, List(tree)) setPos tree.pos, mode, pt)
-                silentContext.firstError match {
+                silentContext.reporter.firstError match {
                   case Some(err) => context.issue(err)
                   case None      => return res
                 }
@@ -584,7 +585,7 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
           adaptConstant(value)
         case OverloadedType(pre, alts) if !mode.inFunMode => // (1)
           inferExprAlternative(tree, pt)
-          adapt(tree, mode, pt, original)
+          adaptAfterOverloadResolution(tree, mode, pt, original)
         case NullaryMethodType(restpe) => // (2)
           adapt(tree setType restpe, mode, pt, original)
         case TypeRef(_, ByNameParamClass, arg :: Nil) if mode.inExprMode => // (2)
@@ -965,7 +966,7 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
               else
                 // before failing due to access, try a dynamic call.
                 asDynamicCall getOrElse {
-                  issue(accessibleError.get)
+                  context.issue(accessibleError.get)
                   setError(tree)
                 }
             case _ =>
@@ -1016,14 +1017,15 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
             typed(tree.ref, MonoQualifierModes | mode.onlyTypePat, AnyRefTpe)
           }
 
-        if (!refTyped.isErrorTyped) {
+        if (refTyped.isErrorTyped) {
+          setError(tree)
+        } else {
           // NOTE: this is a meaningful difference from the code in Typers.scala
           //-tree setType refTyped.tpe.resultType
           tree setType refTyped.tpe.resultType appendMetadata ("originalRef" -> refTyped)
+          if (refTyped.isErrorTyped || treeInfo.admitsTypeSelection(refTyped)) tree
+          else UnstableTreeError(tree)
         }
-
-        if (treeInfo.admitsTypeSelection(refTyped)) tree
-        else UnstableTreeError(refTyped)
       }
       def typedCompoundTypeTree(tree: CompoundTypeTree) = {
         val templ = tree.templ
@@ -1213,7 +1215,7 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
         c.retyping = true
         try {
           val res = newTyper(c).typedArgs(args, mode)
-          if (c.hasErrors) None else Some(res)
+          if (c.reporter.hasErrors) None else Some(res)
         } catch {
           case ex: CyclicReference =>
             throw ex
@@ -1337,7 +1339,7 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
               case _ => ()
             }
           }
-          typeErrors foreach issue
+          typeErrors foreach context.issue
           setError(treeCopy.Apply(tree, fun, args))
         }
 
@@ -1390,7 +1392,7 @@ trait Analyzer extends NscAnalyzer with GlobalToolkit {
               doTypedApply(tree, fun2, args, mode, pt)
           case err: SilentTypeError =>
             onError({
-              err.reportableErrors foreach issue
+              err.reportableErrors foreach context.issue
               args foreach (arg => typed(arg, mode, ErrorType))
               setError(tree)
             })
