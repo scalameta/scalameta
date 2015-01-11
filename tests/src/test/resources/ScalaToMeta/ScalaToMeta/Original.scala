@@ -64,7 +64,7 @@ class ScalaToMeta extends FunSuite {
       phase = run.typerPhase
       globalPhase = run.typerPhase
       val typer = newTyper(rootContext(unit))
-      typer.context.setReportErrors() // need to manually set context mode, otherwise typer.silent will throw exceptions
+      typer.context.initRootContext() // need to manually set context mode, otherwise typer.silent will throw exceptions
       unit.body = typer.typed(unit.body).asInstanceOf[compiler.Tree]
       if (debug) println(unit.body)
       for (workItem <- unit.toCheck) workItem()

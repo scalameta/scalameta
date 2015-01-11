@@ -1,8 +1,8 @@
 language: scala
 script:
-  - sbt ++$TRAVIS_SCALA_VERSION clean update compile test package publishOnlyWhenOnMaster
+  - sbt ++$TRAVIS_SCALA_VERSION clean update compile test package
 scala:
-  - 2.11.2
+  - 2.11.5
 jdk:
   - openjdk6
   - openjdk7
@@ -10,7 +10,6 @@ jdk:
 notifications:
   email:
     - eugene.burmako@epfl.ch
-    - denys.shabalin@typesafe.com
 env:
   global:
    - SCALAMETA_MAVEN_REALM="Sonatype Nexus Repository Manager"
