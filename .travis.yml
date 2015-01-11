@@ -10,7 +10,6 @@ jdk:
 notifications:
   email:
     - eugene.burmako@epfl.ch
-    - denys.shabalin@typesafe.com
 env:
   global:
    - SCALAMETA_MAVEN_REALM="Sonatype Nexus Repository Manager"
