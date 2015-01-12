@@ -51,9 +51,20 @@ object build extends Build {
         <system>GitHub</system>
         <url>https://github.com/scalameta/scalameta/issues</url>
       </issueManagement>
+      <developers>
+        <developer>
+          <id>xeno-by</id>
+          <name>Eugene Burmako</name>
+          <url>http://xeno.by</url>
+        </developer>
+        <developer>
+          <id>densh</id>
+          <name>Denys Shabalin</name>
+          <url>http://den.sh</url>
+        </developer>
+      </developers>
     ),
-    addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0-M1" cross CrossVersion.full),
-    publishArtifact in (Compile, packageDoc) := false
+    addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0-M3" cross CrossVersion.full)
   )
 
   // http://stackoverflow.com/questions/20665007/how-to-publish-only-when-on-master-branch-under-travis-and-sbt-0-13
