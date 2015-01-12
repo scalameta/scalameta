@@ -71,14 +71,14 @@ class AstMacros(val c: Context) {
       val paramss = rawparamss.zip(companionsForDefaultss).map{ case (raws, companions) => raws ++ companions }
 
       // step 4: create boilerplate bookkeeping parameters
-      val scratchpadsType = tq"_root_.scala.collection.immutable.Map[_root_.scala.meta.semantic.Host, _root_.scala.collection.immutable.Seq[Any]]"
+      val scratchpadType = tq"_root_.scala.collection.immutable.Seq[Any]"
       bparams1 += q"protected val internalPrototype: $name"
       bparams1 += q"protected val internalParent: _root_.scala.meta.Tree"
-      bparams1 += q"protected val internalScratchpads: $scratchpadsType"
+      bparams1 += q"protected val internalScratchpad: $scratchpadType"
       def internalize(name: TermName) = TermName("_" + name.toString)
       val internalCopyInitss = paramss.map(_.map(p => q"$AstInternal.initField(this.${internalize(p.name)})"))
-      val internalCopyBody = q"new ThisType(prototype.asInstanceOf[ThisType], parent, scratchpads)(...$internalCopyInitss)"
-      stats1 += q"private[meta] def internalCopy(prototype: _root_.scala.meta.Tree = this, parent: _root_.scala.meta.Tree = internalParent, scratchpads: $scratchpadsType = internalScratchpads): ThisType = $internalCopyBody"
+      val internalCopyBody = q"new ThisType(prototype.asInstanceOf[ThisType], parent, scratchpad)(...$internalCopyInitss)"
+      stats1 += q"private[meta] def internalCopy(prototype: _root_.scala.meta.Tree = this, parent: _root_.scala.meta.Tree = internalParent, scratchpad: $scratchpadType = internalScratchpad): ThisType = $internalCopyBody"
       stats1 += q"def parent: _root_.scala.Option[_root_.scala.meta.Tree] = if (internalParent != null) _root_.scala.Some(internalParent) else _root_.scala.None"
 
       // step 5: turn all parameters into private internal vars, create getters and setters
@@ -136,7 +136,7 @@ class AstMacros(val c: Context) {
       internalBody ++= internalLocalss.flatten.map{ case (local, internal) => q"$AdtInternal.emptyCheck($local)" }
       internalBody ++= requires
       val paramInitss = internalLocalss.map(_.map{ case (local, internal) => q"$AstInternal.initParam($local)" })
-      internalBody += q"val node = new $name(null, null, _root_.scala.collection.immutable.Map())(...$paramInitss)"
+      internalBody += q"val node = new $name(null, null, _root_.scala.collection.immutable.Nil)(...$paramInitss)"
       internalBody ++= internalLocalss.flatten.map{ case (local, internal) => q"$AstInternal.storeField(node.$internal, $local)" }
       internalBody += q"node"
       val internalArgss = paramss.map(_.map(p => {
