@@ -15,7 +15,6 @@ class RootMacros(val c: Context) {
     def transform(cdef: ClassDef): ClassDef = {
       val q"${Modifiers(flags, privateWithin, anns)} trait $name[..$tparams] extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
       // TODO: think of better ways to abstract this away from the public API
-      val Host = tq"_root_.scala.meta.semantic.Host"
       val Tree = tq"_root_.scala.meta.Tree"
       val Datum = tq"_root_.scala.Any"
       val Data = tq"_root_.scala.collection.immutable.Seq[$Datum]"

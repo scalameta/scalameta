@@ -11,7 +11,7 @@ class InfrastructureSuite extends FunSuite {
   test("appendScratchpad") {
     val tree = q"foo.bar"
     tree.toString // check well-formedness
-    implicit object FooHost extends Host {
+    implicit object FooContext extends Context {
       def attrs(tree: Tree): Seq[Attr] = ???
       def owner(tree: Tree): Scope = ???
       def members(scope: Scope): Seq[Tree] = ???

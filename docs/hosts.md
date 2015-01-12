@@ -2,7 +2,7 @@
 
 scala.meta provides foundational data structures for metaprogramming defined in [Trees.scala](/scalameta/Trees.scala) along with several levels of APIs (syntactic and semantic).
 
-While syntactic services are implemented in scala.meta itself, semantic services require external implementations called hosts, because it would be unreasonable for us to, say, implement Scala's type inference or implicit resolution algorithms from scratch. In [Hosts.scala](/scalameta/semantic/Hosts.scala) we have encapsulated a minimalistic API surface that's required from hosts.
+While syntactic services are implemented in scala.meta itself, semantic services require external implementations called hosts, because it would be unreasonable for us to, say, implement Scala's type inference or implicit resolution algorithms from scratch. In [semantic/Context.scala](/scalameta/semantic/Context.scala) and  [macros/Context.scala](/scalameta/macros/Context.scala) we have encapsulated a minimalistic API surface that's required from hosts.
 
 Here is some preliminary documentation on the functionality expected from hosts along with certain background information about scala.meta's data structures.
 

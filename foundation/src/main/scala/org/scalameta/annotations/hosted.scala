@@ -17,12 +17,11 @@ class HostedMacros(val c: Context) {
     }
     val macroApi = args.collect{ case q"macroApi = true" => true }.nonEmpty
     val exnTpe = tq"_root_.scala.meta.MetaException"
-    val contextTpe = if (macroApi) tq"_root_.scala.meta.semantic.MacroHost" else tq"_root_.scala.meta.semantic.Host"
+    val contextTpe = if (macroApi) tq"_root_.scala.meta.macros.Context" else tq"_root_.scala.meta.semantic.Context"
     def transform(ddef: DefDef): DefDef = {
       val DefDef(mods, name, tparams, vparamss, tpt, body) = ddef
       val contextful = q"new _root_.org.scalameta.annotations.contextful[$contextTpe]"
-      val footprint = q"new _root_.org.scalameta.annotations.internal.hosted(macroApi = $macroApi)"
-      val mods1 = Modifiers(mods.flags, mods.privateWithin, mods.annotations ++ List(contextful, footprint))
+      val mods1 = Modifiers(mods.flags, mods.privateWithin, mods.annotations ++ List(contextful))
       val autoBody = body match { case q"delegate" => true; case _ => false }
       val body1 = if (autoBody) {
         val owner = c.internal.enclosingOwner
