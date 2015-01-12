@@ -6,5 +6,5 @@ import scala.reflect.macros.blackbox.Context
 
 object internal {
   class contextful[T] extends StaticAnnotation
-  class hosted(macroApi: Boolean, mayFail: Boolean) extends StaticAnnotation
+  class hosted(macroApi: Boolean) extends StaticAnnotation
 }
