@@ -55,10 +55,6 @@ package scala.meta {
 
   @branch trait Templ extends Tree with Scope
   object Templ {
-    // TODO: this design doesn't work unfortunately, because we can't have anonymous params be members
-    // Member.ref is expected to never crash, and making anonymous params Member.Term and Member.Type violates it
-    // also, having Param.Term extend Param.Templ is very-very awkward
-    // UPD: man, I'm totally confused. you know what, why don't we turn `val` and `var` into trivia?
     @branch trait Param extends Member.Term
   }
 
