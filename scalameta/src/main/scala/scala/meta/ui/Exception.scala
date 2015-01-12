@@ -1,4 +1,5 @@
 package scala.meta
 package ui
 
-final case class Exception(msg: String, pos: scala.meta.syntactic.Token) extends scala.Exception(msg)
+// TODO: also have an optional Position parameter
+final case class Exception(msg: String) extends scala.Exception(msg)
