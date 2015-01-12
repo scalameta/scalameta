@@ -74,7 +74,7 @@ class AstMacros(val c: Context) {
       val scratchpadsType = tq"_root_.scala.collection.immutable.Map[_root_.scala.meta.semantic.Host, _root_.scala.collection.immutable.Seq[Any]]"
       bparams1 += q"protected val internalPrototype: $name"
       bparams1 += q"protected val internalParent: _root_.scala.meta.Tree"
-      bparams1 += q"protected val internalScratchpads: $scratchpadsType"
+      bparams1 += q"@transient protected val internalScratchpads: $scratchpadsType"
       def internalize(name: TermName) = TermName("_" + name.toString)
       val internalCopyInitss = paramss.map(_.map(p => q"$AstInternal.initField(this.${internalize(p.name)})"))
       val internalCopyBody = q"new ThisType(prototype.asInstanceOf[ThisType], parent, scratchpads)(...$internalCopyInitss)"
