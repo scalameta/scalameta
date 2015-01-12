@@ -26,7 +26,7 @@ package scala.meta {
     @branch trait Ref extends Term with api.Ref
     @branch trait Name extends api.Name with Term.Ref with Pat with Member
     @branch trait Arg extends Tree
-    @branch trait Param extends Member with Templ.Param
+    @branch trait Param extends Member.Term with Templ.Param
   }
 
   @branch trait Type extends Tree with Type.Arg with Scope
@@ -34,7 +34,7 @@ package scala.meta {
     @branch trait Ref extends Type with api.Ref
     @branch trait Name extends api.Name with Type.Ref
     @branch trait Arg extends Tree
-    @branch trait Param extends Member
+    @branch trait Param extends Member.Type
   }
 
   @branch trait Pat extends Tree with Pat.Arg
@@ -42,17 +42,10 @@ package scala.meta {
     @branch trait Arg extends Tree
   }
 
-  @branch trait Member extends Tree
+  @branch trait Member extends Tree with Scope
   object Member {
     @branch trait Term extends Member
-    @branch trait Type extends Member with Scope
-    @branch trait Class extends Type with Templ with Stat
-    @branch trait Trait extends Type with Templ with Stat
-    @branch trait Field extends Term with Stat
-    @branch trait Method extends Term with Scope with Stat
-    @branch trait Object extends Term with Templ with Stat
-    @branch trait Pkg extends Term with Templ with Stat
-    @branch trait Templ extends Member with Scope with Stat
+    @branch trait Type extends Member
   }
 
   @branch trait Ctor extends Tree with Scope
@@ -66,7 +59,7 @@ package scala.meta {
     // Member.ref is expected to never crash, and making anonymous params Member.Term and Member.Type violates it
     // also, having Param.Term extend Param.Templ is very-very awkward
     // UPD: man, I'm totally confused. you know what, why don't we turn `val` and `var` into trivia?
-    @branch trait Param extends Member
+    @branch trait Param extends Member.Term
   }
 
   @branch trait Mod extends Tree
@@ -224,36 +217,29 @@ package scala.meta.internal.ast {
     @ast class Unit() extends Lit
   }
 
-  @branch trait Member extends api.Member with Tree
+  @branch trait Member extends api.Member with Tree with Scope
   object Member {
     @branch trait Term extends api.Member.Term with Member
-    @branch trait Type extends api.Member.Type with Member with Scope
-    @branch trait Class extends api.Member.Class with Type with Templ with Stat
-    @branch trait Trait extends api.Member.Trait with Type with Templ with Stat
-    @branch trait Field extends api.Member.Field with Term with Stat
-    @branch trait Method extends api.Member.Method with Term with Scope with Stat
-    @branch trait Object extends api.Member.Object with Term with Templ with Stat
-    @branch trait Pkg extends api.Member.Pkg with Term with Templ with Stat
-    @branch trait Templ extends api.Member.Templ with Member with Scope with Stat
+    @branch trait Type extends api.Member.Type with Member
   }
 
   @branch trait Decl extends Stat
   object Decl {
     @ast class Val(mods: Seq[Mod],
                    pats: Seq[Term.Name] @nonEmpty,
-                   decltpe: impl.Type) extends Decl with Member.Field
+                   decltpe: impl.Type) extends Decl with Member.Term
     @ast class Var(mods: Seq[Mod],
                    pats: Seq[Term.Name] @nonEmpty,
-                   decltpe: impl.Type) extends Decl with Member.Field
+                   decltpe: impl.Type) extends Decl with Member.Term
     @ast class Def(mods: Seq[Mod],
                    name: Term.Name,
                    tparams: Seq[impl.Type.Param],
                    paramss: Seq[Seq[Term.Param]],
-                   decltpe: impl.Type) extends Decl with Member.Method
+                   decltpe: impl.Type) extends Decl with Member.Term
     @ast class Procedure(mods: Seq[Mod],
                          name: Term.Name,
                          tparams: Seq[impl.Type.Param],
-                         paramss: Seq[Seq[Term.Param]]) extends Decl with Member.Method
+                         paramss: Seq[Seq[Term.Param]]) extends Decl with Member.Term
     @ast class Type(mods: Seq[Mod],
                     name: impl.Type.Name,
                     tparams: Seq[impl.Type.Param],
@@ -265,11 +251,11 @@ package scala.meta.internal.ast {
     @ast class Val(mods: Seq[Mod],
                    pats: Seq[Pat] @nonEmpty,
                    decltpe: Option[impl.Type],
-                   rhs: Term) extends Defn with Member.Field
+                   rhs: Term) extends Defn with Member.Term
     @ast class Var(mods: Seq[Mod],
                    pats: Seq[Pat] @nonEmpty,
                    decltpe: Option[impl.Type],
-                   rhs: Option[Term]) extends Defn with Member.Field {
+                   rhs: Option[Term]) extends Defn with Member.Term {
       require(rhs.isEmpty ==> pats.forall(_.isInstanceOf[Term.Name]))
       require(decltpe.nonEmpty || rhs.nonEmpty)
     }
@@ -278,18 +264,18 @@ package scala.meta.internal.ast {
                    tparams: Seq[impl.Type.Param],
                    paramss: Seq[Seq[Term.Param]],
                    decltpe: Option[impl.Type],
-                   body: Term) extends Defn with Member.Method
+                   body: Term) extends Defn with Member.Term
     @ast class Procedure(mods: Seq[Mod],
                          name: Term.Name,
                          tparams: Seq[impl.Type.Param],
                          paramss: Seq[Seq[Term.Param]],
-                         stats: Seq[Stat]) extends Defn with Member.Method
+                         stats: Seq[Stat]) extends Defn with Member.Term
     @ast class Macro(mods: Seq[Mod],
                      name: Term.Name,
                      tparams: Seq[impl.Type.Param],
                      paramss: Seq[Seq[Term.Param]],
                      tpe: impl.Type,
-                     body: Term) extends Defn with Member.Method
+                     body: Term) extends Defn with Member.Term
     @ast class Type(mods: Seq[Mod],
                     name: impl.Type.Name,
                     tparams: Seq[impl.Type.Param],
@@ -298,21 +284,21 @@ package scala.meta.internal.ast {
                      name: impl.Type.Name,
                      tparams: Seq[impl.Type.Param],
                      ctor: Ctor.Primary,
-                     templ: Templ) extends Defn with Member.Class
+                     templ: Templ) extends Defn with Member.Type
     @ast class Trait(mods: Seq[Mod],
                      name: impl.Type.Name,
                      tparams: Seq[impl.Type.Param],
-                     templ: Templ) extends Defn with Member.Trait {
+                     templ: Templ) extends Defn with Member.Type {
       require(templ.stats.forall(!_.isInstanceOf[Ctor]))
       require(templ.parents.forall(_.argss.isEmpty))
     }
     @ast class Object(mods: Seq[Mod],
                       name: Term.Name,
-                      templ: Templ) extends Defn with Member.Object
+                      templ: Templ) extends Defn with Member.Term
   }
 
   @ast class Pkg(ref: Term.Ref, stats: Seq[Stat], @trivia hasBraces: Boolean = true)
-       extends Member.Pkg {
+       extends Member.Term with Stat {
     require(ref.isQualId)
     require(stats.forall(_.isTopLevelStat))
     def mods: Seq[Mod] = Nil
@@ -324,7 +310,7 @@ package scala.meta.internal.ast {
   }
   object Pkg {
     @ast class Object(mods: Seq[Mod], name: Term.Name, templ: Templ)
-         extends Member.Object
+         extends Member.Term with Stat
   }
 
   @branch trait Ctor extends api.Ctor with Tree with Scope

@@ -2149,7 +2149,7 @@ abstract class AbstractParser { parser =>
   }
 
   /** Hook for IDE, for top-level classes/objects. */
-  def topLevelTmplDef: Member.Templ =
+  def topLevelTmplDef: Member with Stat =
     tmplDef(annots(skipNewLines = true) ++ modifiers())
 
   /** {{{
@@ -2158,7 +2158,7 @@ abstract class AbstractParser { parser =>
    *            |  [override] trait TraitDef
    *  }}}
    */
-  def tmplDef(mods: List[Mod]): Member.Templ = {
+  def tmplDef(mods: List[Mod]): Member with Stat = {
     mods.getAll[Mod.Lazy].foreach { m => syntaxError("classes cannot be lazy", at = m) }
     token match {
       case _: `trait` =>
@@ -2335,7 +2335,7 @@ abstract class AbstractParser { parser =>
     } else {
       if (token.is[`(`]) {
         if (parenMeansSyntaxError) syntaxError("traits or objects may not have parameters")
-        else error("unexpected opening parenthesis")
+        else syntaxError("unexpected opening parenthesis")
       }
       (Term.Param(Nil, None, None, None), Nil, false)
     }
