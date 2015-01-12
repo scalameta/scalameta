@@ -51,6 +51,18 @@ object build extends Build {
         <system>GitHub</system>
         <url>https://github.com/scalameta/interpreter/issues</url>
       </issueManagement>
+      <developers>
+        <developer>
+          <id>xeno-by</id>
+          <name>Eugene Burmako</name>
+          <url>http://xeno.by</url>
+        </developer>
+        <developer>
+          <id>dedoz</id>
+          <name>Mikhail Mutcianko</name>
+          <url>http://github.com/dedoz</url>
+        </developer>
+      </developers>
     )
   )
 
