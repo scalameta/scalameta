@@ -43,9 +43,11 @@ class AstMacros(val c: Context) {
       if (rawparamss.length == 0) c.abort(cdef.pos, "@leaf classes must define a non-empty parameter list")
 
       // step 2: validate the body of the class
-      val (defns, rest) = stats.partition(_.isDef)
+      val (defns, rest1) = stats.partition(_.isDef)
+      val (imports, rest2) = rest1.partition(_ match { case _: Import => true; case _ => false })
       stats1 ++= defns
-      val (requires, illegal) = rest.partition(_ match { case q"require($what)" => true; case _ => false })
+      stats1 ++= imports
+      val (requires, illegal) = rest2.partition(_ match { case q"require($what)" => true; case _ => false })
       illegal.foreach(stmt => c.abort(stmt.pos, "only invariants and definitions are allowed in @ast classes"))
 
       // step 3: figure out relevant parameters, generate companion parameters for those with defaults
@@ -134,6 +136,7 @@ class AstMacros(val c: Context) {
       // internalBody += q"$AdtInternal.immutabilityCheck[$name]"
       internalBody ++= internalLocalss.flatten.map{ case (local, internal) => q"$AdtInternal.nullCheck($local)" }
       internalBody ++= internalLocalss.flatten.map{ case (local, internal) => q"$AdtInternal.emptyCheck($local)" }
+      internalBody ++= imports
       internalBody ++= requires
       val paramInitss = internalLocalss.map(_.map{ case (local, internal) => q"$AstInternal.initParam($local)" })
       internalBody += q"val node = new $name(null, null, _root_.scala.collection.immutable.Nil)(...$paramInitss)"

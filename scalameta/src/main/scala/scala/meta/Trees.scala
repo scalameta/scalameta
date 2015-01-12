@@ -4,16 +4,16 @@ import org.scalameta.ast._
 import org.scalameta.invariants._
 import org.scalameta.annotations._
 import org.scalameta.unreachable
-import scala.meta.syntactic.show._
-import scala.meta.syntactic.parsers._, SyntacticInfo._
 import scala.{meta => api}
 import scala.meta.internal.{ast => impl}
+import scala.meta.syntactic.parsers.SyntacticInfo._ // necessary only for sanity checks in trees
+import scala.meta.syntactic.tokenizers.keywords // necessary only for sanity checks in trees
 
 package scala.meta {
   @root trait Tree extends Product {
     type ThisType <: Tree
     def parent: Option[Tree]
-    final override def toString: String = this.show[Code]
+    final override def toString: String = scala.meta.ui.ShowOps(this).show[scala.meta.ui.Code]
   }
 
   @branch trait Ref extends Tree
@@ -93,7 +93,6 @@ package scala.meta.internal.ast {
     @ast class This(qual: Option[Predef.String]) extends Term.Ref
     @ast class Super(thisp: Option[Predef.String], superp: Option[Predef.String]) extends Term.Ref
     @ast class Name(value: Predef.String @nonEmpty, @trivia isBackquoted: Boolean = false) extends api.Term.Name with impl.Name with Term.Ref with Pat with Member {
-      require(keywords.contains(value) ==> isBackquoted)
       def name: Name = this
       def mods: Seq[Mod] = Nil
     }

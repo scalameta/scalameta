@@ -1,4 +1,5 @@
-package scala.meta.syntactic
+package scala.meta
+package syntactic
 package quasiquotes
 
 import scala.reflect.macros.whitebox.Context

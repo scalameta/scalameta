@@ -1,11 +1,13 @@
-package scala.meta.syntactic
-package parsers
+package scala.meta
+package syntactic
+package tokenizers
 
-object Tokens {
-  type Token = Int
+// NOTE: moved to the package object
+// type LegacyToken = Int
 
-  def isIdentifier(code: Int) = code == IDENTIFIER || code == BACKQUOTED_IDENT // used by ide
-  def isLiteral(code: Int) = code >= CHARLIT && code <= INTERPOLATIONID
+object LegacyToken {
+  def isIdentifier(code: LegacyToken) = code == IDENTIFIER || code == BACKQUOTED_IDENT // used by ide
+  def isLiteral(code: LegacyToken) = code >= CHARLIT && code <= INTERPOLATIONID
 
   /** special tokens */
   final val EMPTY = -3
@@ -107,12 +109,8 @@ object Tokens {
 
   final val WHITESPACE = 201
   final val COMMENT = 300
-}
 
-object TokenInfo {
-  import Tokens._
-
-  val kw2token = Map[String, Token](
+  val kw2legacytoken = Map[String, LegacyToken](
     "abstract"  -> ABSTRACT,
     "case"      -> CASE,
     "catch"     -> CATCH,
@@ -166,36 +164,4 @@ object TokenInfo {
     "macro"     -> MACRO,
     "then"      -> IDENTIFIER
   )
-
-  val token2name = (kw2token map (_.swap)).toMap
-
-  /** Returns the string representation of given token. */
-  def token2string(token: Token): String = (token: @scala.annotation.switch) match {
-    case IDENTIFIER | BACKQUOTED_IDENT => "identifier"
-    case CHARLIT => "character literal"
-    case INTLIT => "integer literal"
-    case LONGLIT => "long literal"
-    case FLOATLIT => "float literal"
-    case DOUBLELIT => "double literal"
-    case STRINGLIT | STRINGPART | INTERPOLATIONID => "string literal"
-    case SYMBOLLIT => "symbol literal"
-    case LPAREN => "'('"
-    case RPAREN => "')'"
-    case LBRACE => "'{'"
-    case RBRACE => "'}'"
-    case LBRACKET => "'['"
-    case RBRACKET => "']'"
-    case EOF => "eof"
-    case ERROR => "something"
-    case SEMI => "';'"
-    case COMMA => "','"
-    case CASECLASS => "case class"
-    case CASEOBJECT => "case object"
-    case XMLSTART => "$XMLSTART$<"
-    case _ =>
-      (token2name get token) match {
-        case Some(name) => "'" + name + "'"
-        case _          => "'<" + token + ">'"
-      }
-  }
 }

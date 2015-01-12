@@ -1,5 +1,6 @@
-package scala.meta.syntactic
-package parsers
+package scala.meta
+package syntactic
+package tokenizers
 
 import Chars._
 

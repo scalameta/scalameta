@@ -1,5 +1,6 @@
-package scala.meta.syntactic
-package parsers
+package scala.meta
+package syntactic
+package tokenizers
 
 import scala.annotation.{ tailrec, switch }
 import java.lang.{ Character => JCharacter }

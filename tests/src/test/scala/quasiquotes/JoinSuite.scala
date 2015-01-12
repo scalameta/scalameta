@@ -4,11 +4,11 @@ import scala.meta.internal.ast._
 class JoinSuite extends FunSuite {
   test("idents") {
     val Term.Name("xtemp") = {
-      import scala.meta._
+      import scala.meta.syntactic._
       q"xtemp"
     }
     val Term.Name("ytemp") = {
-      import scala.meta._
+      import scala.meta.syntactic._
       q"ytemp"
     }
   }
@@ -16,7 +16,7 @@ class JoinSuite extends FunSuite {
   test("vals") {
     val fields = List(Term.Name("x") -> Term.Name("xtemp"), Term.Name("y") -> Term.Name("ytemp"))
     val vals = fields.map{ case (f, ref) =>
-      import scala.meta._
+      import scala.meta.syntactic._
       q"val $f = $ref.$f"
     }
     assert(vals.length === 2)
@@ -31,7 +31,7 @@ class JoinSuite extends FunSuite {
       Defn.Val(Nil, List(Term.Name("x")), None, Term.Select(Term.Name("xtemp"), Term.Name("x"))),
       Defn.Val(Nil, List(Term.Name("y")), None, Term.Select(Term.Name("ytemp"), Term.Name("y"))))
     val result = {
-      import scala.meta._
+      import scala.meta.syntactic._
       q"""
         val xtemp = $x
         val ytemp = $y

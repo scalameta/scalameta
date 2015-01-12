@@ -1,18 +1,18 @@
-package scala.meta.syntactic
-package parsers
+package scala.meta
+package syntactic
+package tokenizers
 
 import org.scalameta.tokens._
 import scala.reflect.ClassTag
 import scala.language.experimental.macros
-import scala.meta.syntactic.show._
 import scala.meta.Origin
 
-@root trait Tok {
+@root trait Token {
   def is[T: ClassTag]: Boolean    = implicitly[ClassTag[T]].runtimeClass.isAssignableFrom(this.getClass)
   def isNot[T: ClassTag]: Boolean = !is[T]
   def origin: Origin
-  def start: Int
-  def end: Int
+  def start: Offset
+  def end: Offset
   def name: String
   def code: String = {
     val buf = new StringBuffer
@@ -23,32 +23,33 @@ import scala.meta.Origin
     }
     buf.toString
   }
-  final override def toString = this.show[Raw]
+  final override def toString = scala.meta.ui.ShowOps(this).show[scala.meta.ui.Raw]
 }
-object Tok {
-  @branch trait Static extends Tok
-  @branch trait Dynamic extends Tok
 
-  @branch trait TypeIntro extends Tok
-  @branch trait ExprIntro extends Tok
-  @branch trait DefIntro extends Tok
+object Token {
+  @branch trait Static extends Token
+  @branch trait Dynamic extends Token
+
+  @branch trait TypeIntro extends Token
+  @branch trait ExprIntro extends Token
+  @branch trait DefIntro extends Token
   @branch trait TemplateIntro extends DefIntro
   @branch trait DclIntro extends DefIntro
-  @branch trait StatSeqEnd extends Tok
-  @branch trait CaseDefEnd extends Tok
+  @branch trait StatSeqEnd extends Token
+  @branch trait CaseDefEnd extends Token
 
-  @branch trait CantStartStat extends Tok
-  @branch trait CanEndStat extends Tok
+  @branch trait CantStartStat extends Token
+  @branch trait CanEndStat extends Token
 
   @token class Ident(origin: Origin, start: Int, end: Int) extends Dynamic with ExprIntro with TypeIntro with CanEndStat { def name = "identifier" }
 
   object Interpolation {
     @token class Id(origin: Origin, start: Int, end: Int) extends Dynamic with ExprIntro { def name = "interpolation id" }
-    @token class Start(origin: Origin, start: Int, end: Int) extends Dynamic with Tok { def name = "interpolation start" }
-    @token class Part(origin: Origin, start: Int, end: Int) extends Dynamic with Tok { def name = "interpolation part" }
-    @token class SpliceStart(origin: Origin, start: Int) extends Static with Tok { def name = "splice start"; override def code = "$" }
-    @token class SpliceEnd(origin: Origin, start: Int) extends Static with Tok { def name = "splice end"; override def code = "" }
-    @token class End(origin: Origin, start: Int, end: Int) extends Dynamic with Tok with CanEndStat { def name = "interpolation end" }
+    @token class Start(origin: Origin, start: Int, end: Int) extends Dynamic with Token { def name = "interpolation start" }
+    @token class Part(origin: Origin, start: Int, end: Int) extends Dynamic with Token { def name = "interpolation part" }
+    @token class SpliceStart(origin: Origin, start: Int) extends Static with Token { def name = "splice start"; override def code = "$" }
+    @token class SpliceEnd(origin: Origin, start: Int) extends Static with Token { def name = "splice end"; override def code = "" }
+    @token class End(origin: Origin, start: Int, end: Int) extends Dynamic with Token with CanEndStat { def name = "interpolation end" }
   }
 
   @branch trait Literal extends ExprIntro with CanEndStat
@@ -67,7 +68,7 @@ object Tok {
   @token class `true`(origin: Origin, start: Int) extends Keyword with Literal
   @token class `false`(origin: Origin, start: Int) extends Keyword with Literal
 
-  @branch trait Keyword extends Static with Tok
+  @branch trait Keyword extends Static with Token
   @token class `case`(origin: Origin, start: Int) extends Keyword with CaseDefEnd with TemplateIntro
   @token class `catch`(origin: Origin, start: Int) extends Keyword with CantStartStat
   @token class `class `(origin: Origin, start: Int) extends Keyword with TemplateIntro
@@ -109,7 +110,7 @@ object Tok {
   @token class `protected`(origin: Origin, start: Int) extends Modifier
   @token class `override`(origin: Origin, start: Int) extends Modifier
 
-  @branch trait Delim extends Tok
+  @branch trait Delim extends Token
   @branch trait StaticDelim extends Delim with Static
   @branch trait DynamicDelim extends Delim with Static
   @branch trait StatSep extends Delim
@@ -133,7 +134,7 @@ object Tok {
   @token class `>:`(origin: Origin, start: Int) extends StaticDelim with CantStartStat
   @token class `<%`(origin: Origin, start: Int) extends StaticDelim with CantStartStat
 
-  @branch trait Whitespace extends Static with Tok
+  @branch trait Whitespace extends Static with Token
   @token class ` `(origin: Origin, start: Int) extends Whitespace
   @token class `\t`(origin: Origin, start: Int) extends Whitespace
   @token class `\r`(origin: Origin, start: Int) extends Whitespace
@@ -143,8 +144,10 @@ object Tok {
   @token class `\n\n`(origin: Origin, start: Int) extends Whitespace with StatSep with CantStartStat
   @token class `\f`(origin: Origin, start: Int) extends Whitespace
 
-  @token class Comment(origin: Origin, start: Int, end: Int) extends Dynamic with Tok { def name = "comment" }
+  @token class Comment(origin: Origin, start: Int, end: Int) extends Dynamic with Token { def name = "comment" }
 
   @token class EOF(origin: Origin) extends Static with StatSep with StatSeqEnd with CaseDefEnd with CantStartStat { def name = "end of file"; override def code = ""; def start = origin.content.length; def end = origin.content.length - 1 }
-  @token class XMLStart(origin: Origin, start: Int, end: Int) extends Dynamic with Tok with ExprIntro with CanEndStat { def name = ??? }
+
+  // TODO: implement XML literals
+  @token class XMLStart(origin: Origin, start: Int, end: Int) extends Dynamic with Token with ExprIntro with CanEndStat { def name = ??? }
 }

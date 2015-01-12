@@ -1,11 +1,11 @@
-package scala.meta.syntactic
-package show
+package scala.meta
+package ui
 
 import org.scalameta.show._
 import Show.{ sequence => s, repeat => r, indent => i, newline => n, meta => m, adorn => a, function => fn }
 import scala.meta.syntactic.parsers.SyntacticInfo._
-import scala.meta.syntactic.parsers.Chars._
-import scala.meta.syntactic.parsers.Tok
+import scala.meta.syntactic.tokenizers.Chars._
+import scala.meta.syntactic.Token
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.meta.internal.ast._
@@ -392,5 +392,5 @@ object Code {
     case sels                        => s("{ ", r(sels, ", "), " }")
   }
 
-  implicit def codeTok[T <: Tok]: Code[T] = Code { x => s(x.code) }
+  implicit def codeToken[T <: Token]: Code[T] = Code { x => s(x.code) }
 }

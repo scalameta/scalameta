@@ -3,7 +3,7 @@ package scala.meta
 import org.scalatest._
 import scala.meta._
 import scala.meta.semantic._
-import scala.meta.syntactic.parsers._
+import scala.meta.syntactic._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 

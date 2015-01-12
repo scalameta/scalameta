@@ -1,129 +1,24 @@
-package scala.meta.syntactic
-package parsers
+package scala.meta
+package syntactic
+package tokenizers
 
 import java.util.NoSuchElementException
 import scala.annotation.{ switch, tailrec }
 import scala.collection.{ mutable, immutable }
 import scala.language.postfixOps
-import scala.util.Try
 import mutable.{ ListBuffer, ArrayBuffer }
 import Chars._
-import Tokens._
-import TokenInfo._
+import LegacyToken._
 import scala.meta.Origin
 
-trait TokenData {
-  /** the next token */
-  var token: Token = EMPTY
+class LegacyScanner(val origin: Origin, decodeUni: Boolean = true) {
+  val curr: LegacyTokenData   = new LegacyTokenData {}
+  val next: LegacyTokenData   = new LegacyTokenData {}
+  val prev: LegacyTokenData   = new LegacyTokenData {}
+  val reader: CharArrayReader = new CharArrayReader(origin.content, reporter.readerError, decodeUni)
+  val reporter: Reporter      = Reporter(() => curr.offset)
 
-  /** the offset of the first character of the current token */
-  var offset: Offset = 0
-
-  /** the offset of the character following the token preceding this one */
-  var lastOffset: Offset = 0
-
-  /** the offset of the last character of the current token */
-  var endOffset: Offset = 0
-
-  /** the name of an identifier */
-  var name: String = null
-
-  /** the string value of a literal */
-  var strVal: String = null
-
-  /** the base of a number */
-  var base: Int = 0
-
-  def copyFrom(td: TokenData): this.type = {
-    this.token = td.token
-    this.offset = td.offset
-    this.lastOffset = td.lastOffset
-    this.endOffset = td.endOffset
-    this.name = td.name
-    this.strVal = td.strVal
-    this.base = td.base
-    this
-  }
-
-  override def toString = s"{token = $token, position = $offset..$endOffset, lastOffset = $lastOffset, name = $name, strVal = $strVal, base = $base}"
-
-  /** Convert current strVal to char value
-   */
-  def charVal: Char = if (strVal.length > 0) strVal.charAt(0) else 0
-
-  /** Convert current strVal, base to long value
-   *  This is tricky because of max negative value.
-   */
-  def intVal(negated: Boolean): Try[Long] = {
-    def inner(): Long =
-      if (token == CHARLIT && !negated) {
-        charVal.toLong
-      } else {
-        var input = strVal
-        if (input.startsWith("0x") || input.startsWith("0X")) input = input.substring(2)
-        if (input.endsWith("l") || input.endsWith("L")) input = input.substring(0, input.length - 1)
-        var value: Long = 0
-        val divider = if (base == 10) 1 else 2
-        val limit: Long =
-          if (token == LONGLIT) Long.MaxValue else Int.MaxValue
-        var i = 0
-        val len = input.length
-        while (i < len) {
-          val d = digit2int(input charAt i, base)
-          if (d < 0) {
-            throw new Exception("malformed integer number")
-            return 0
-          }
-          if (value < 0 ||
-              limit / (base / divider) < value ||
-              limit - (d / divider) < value * (base / divider) &&
-              !(negated && limit == value * base - 1 + d)) {
-                throw new Exception("integer number too large")
-                return 0
-              }
-          value = value * base + d
-          i += 1
-        }
-        if (negated) -value else value
-      }
-    Try(inner())
-  }
-
-  /** Convert current strVal, base to double value
-  */
-  def floatVal(negated: Boolean): Try[Double] = {
-    def inner(): Double = {
-      val limit: Double =
-        if (token == DOUBLELIT) Double.MaxValue else Float.MaxValue
-
-      val value: Double = java.lang.Double.valueOf(strVal).doubleValue()
-      def isDeprecatedForm = {
-        val idx = strVal indexOf '.'
-        (idx == strVal.length - 1) || (
-             (idx >= 0)
-          && (idx + 1 < strVal.length)
-          && (!Character.isDigit(strVal charAt (idx + 1)))
-        )
-      }
-      if (value > limit)
-        throw new Exception("floating point number too large")
-      if (isDeprecatedForm)
-        throw new Exception("floating point number is missing digit after dot")
-
-      if (negated) -value else value
-    }
-    Try(inner())
-  }
-}
-
-class Scanner(val origin: Origin, decodeUni: Boolean = true) {
-  val curr: TokenData         = new TokenData {}
-  val next: TokenData         = new TokenData {}
-  val prev: TokenData         = new TokenData {}
-  val reader: CharArrayReader = new CharArrayReader(origin.content, report.error, decodeUni)
-  val report: Report          = Report(() => curr.offset)
-
-  import curr._, reader._, report._
+  import curr._, reader._, reporter._
 
   private def isDigit(c: Char) = java.lang.Character isDigit c
   private var openComments = 0
@@ -191,7 +86,7 @@ class Scanner(val origin: Origin, decodeUni: Boolean = true) {
 
   def isAtEnd = charOffset >= buf.length
 
-  def resume(lastCode: Token) = {
+  def resume(lastCode: LegacyToken) = {
     token = lastCode
     if (next.token != EMPTY)
       syntaxError("unexpected end of input: possible missing '}' in XML block")
@@ -216,13 +111,13 @@ class Scanner(val origin: Origin, decodeUni: Boolean = true) {
   protected def emitIdentifierDeprecationWarnings = true
 
   /** Clear buffer and set name and token */
-  private def finishNamed(idtoken: Token = IDENTIFIER) {
+  private def finishNamed(idtoken: LegacyToken = IDENTIFIER) {
     name = cbuf.toString
     cbuf.clear()
     token = idtoken
     if (idtoken == IDENTIFIER) {
-      if (kw2token contains name) {
-        token = kw2token(name)
+      if (kw2legacytoken contains name) {
+        token = kw2legacytoken(name)
         if (token == IDENTIFIER) {
           if (emitIdentifierDeprecationWarnings)
             deprecationWarning(s"$name is now a reserved word; usage as an identifier is deprecated")
@@ -248,7 +143,7 @@ class Scanner(val origin: Origin, decodeUni: Boolean = true) {
    *            (the STRINGLIT appears twice in succession on the stack iff the
    *             expression is a multiline string literal).
    */
-  var sepRegions: List[Token] = List()
+  var sepRegions: List[LegacyToken] = List()
 
 // Get next token ------------------------------------------------------------
 
@@ -344,7 +239,7 @@ class Scanner(val origin: Origin, decodeUni: Boolean = true) {
     //
     // upd. Speaking of corner cases, positions of tokens emitted by string interpolation tokenizers are simply insane,
     // and need to be reverse engineered having some context (previous tokens, number of quotes in the interpolation) in mind.
-    // Therefore I don't even attempt to handle them here, and instead apply fixups elsewhere when converting old-style TOKENS into new-style Tok instances.
+    // Therefore I don't even attempt to handle them here, and instead apply fixups elsewhere when converting legacy TOKENS into new LegacyToken instances.
     if (curr.token != STRINGPART) { // endOffset of STRINGPART tokens is set elsewhere
       curr.endOffset = charOffset - 2
       if (charOffset >= buf.length && ch == SU) curr.endOffset = buf.length - 1
@@ -725,8 +620,8 @@ class Scanner(val origin: Origin, decodeUni: Boolean = true) {
         next.token = IDENTIFIER
         next.name = cbuf.toString
         cbuf.clear()
-        if (kw2token contains next.name) {
-          next.token = kw2token(next.name)
+        if (kw2legacytoken contains next.name) {
+          next.token = kw2legacytoken(next.name)
         }
       } else {
         syntaxError("invalid string interpolation: `$$', `$'ident or `$'BlockExpr expected")
@@ -979,7 +874,7 @@ class Scanner(val origin: Origin, decodeUni: Boolean = true) {
 
   /** Initialize scanner; call f on each scanned token data
    */
-  def foreach(f: TokenData => Unit) {
+  def foreach(f: LegacyTokenData => Unit) {
     nextChar()
     nextToken()
     f(curr)
