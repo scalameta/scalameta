@@ -2,7 +2,7 @@ package scala.meta.internal.eval
 package interpreter
 
 import scala.meta._
-import syntactic.show._
+import scala.meta.ui._
 
 object Interpreter {
   def eval(term: Term): Any = {
