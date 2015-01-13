@@ -3,17 +3,17 @@ package internal.hosts.scalac
 package macros
 
 import scala.reflect.internal.Mode
-import scala.meta.internal.hosts.scalac.{PluginBase => PalladiumPlugin}
+import scala.meta.internal.hosts.scalac.{PluginBase => ScalahostPlugin}
 
 trait MacroPlugin extends Typechecking with Expansion {
-  self: PalladiumPlugin =>
+  self: ScalahostPlugin =>
 
   import global._
   import analyzer.{MacroPlugin => NscMacroPlugin, _}
 
-  object palladiumMacroPlugin extends NscMacroPlugin {
-    override def pluginsTypedMacroBody(typer: Typer, ddef: DefDef): Option[Tree] = palladiumTypedMacroBody(typer, ddef)
-    override def pluginsIsBlackbox(macroDef: Symbol): Option[Boolean] = palladiumIsBlackbox(macroDef)
-    override def pluginsMacroExpand(typer: Typer, expandee: Tree, mode: Mode, pt: Type): Option[Tree] = palladiumMacroExpand(typer, expandee, mode, pt)
+  object scalahostMacroPlugin extends NscMacroPlugin {
+    override def pluginsTypedMacroBody(typer: Typer, ddef: DefDef): Option[Tree] = scalahostTypedMacroBody(typer, ddef)
+    override def pluginsIsBlackbox(macroDef: Symbol): Option[Boolean] = scalahostIsBlackbox(macroDef)
+    override def pluginsMacroExpand(typer: Typer, expandee: Tree, mode: Mode, pt: Type): Option[Tree] = scalahostMacroExpand(typer, expandee, mode, pt)
   }
 }

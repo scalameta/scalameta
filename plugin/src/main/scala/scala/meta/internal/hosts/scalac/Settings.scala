@@ -1,7 +1,7 @@
 package scala.meta
 package internal.hosts.scalac
 
-import scala.meta.internal.hosts.scalac.{PluginBase => PalladiumPlugin}
+import scala.meta.internal.hosts.scalac.{PluginBase => ScalahostPlugin}
 
 object Settings {
   class Setting[T](get: () => T, set: T => Unit) {
@@ -25,7 +25,7 @@ object Settings {
 }
 
 trait PluginSettings {
-  self: PalladiumPlugin =>
+  self: ScalahostPlugin =>
 
   override def processOptions(options: List[String], error: String => Unit) {
     options foreach {

@@ -11,24 +11,24 @@ import scala.reflect.runtime.ReflectionUtils
 import scala.reflect.macros.runtime.AbortMacroException
 import scala.util.control.ControlThrowable
 import scala.collection.mutable
-import scala.reflect.macros.contexts.{Context => ScalaContext}
-import scala.meta.semantic.{MacroHost => PalladiumMacroHost}
-import scala.meta.internal.hosts.scalac.{Scalahost, MacroHost => OurMacroHost, PluginBase => PalladiumPlugin}
+import scala.reflect.macros.contexts.{Context => ScalareflectMacroContext}
+import scala.meta.macros.{Context => ScalametaMacroContext}
+import scala.meta.internal.hosts.scalac.{MacroContext => ScalahostMacroContext, PluginBase => ScalahostPlugin, Scalahost}
 
 trait Expansion extends scala.reflect.internal.show.Printers {
-  self: PalladiumPlugin =>
+  self: ScalahostPlugin =>
 
   import global._
   import definitions._
   import treeInfo._
   import analyzer.{MacroPlugin => NscMacroPlugin, _}
 
-  def palladiumMacroExpand(typer: Typer, expandee: Tree, mode: Mode, pt: Type): Option[Tree] = {
+  def scalahostMacroExpand(typer: Typer, expandee: Tree, mode: Mode, pt: Type): Option[Tree] = {
     val TermQuote = "denied" // TODO: this about a better approach
     val macroSignatures = expandee.symbol.annotations.filter(_.atp.typeSymbol == MacroImplAnnotation)
     val expanded = macroSignatures match {
-      case _ :: AnnotationInfo(_, List(PalladiumSignature(implDdef)), _) :: Nil =>
-        object palladiumMacroExpander extends DefMacroExpander(typer, expandee, mode, pt) {
+      case _ :: AnnotationInfo(_, List(ScalahostSignature(implDdef)), _) :: Nil =>
+        object scalahostMacroExpander extends DefMacroExpander(typer, expandee, mode, pt) {
           private def isDelayed(tree: Tree): Boolean = {
             val macros = Class.forName("scala.tools.nsc.typechecker.Macros$class", false, getClass.getClassLoader)
             val isDelayedMethod = macros.getDeclaredMethods().filter(_.getName == "isDelayed").head
@@ -55,43 +55,43 @@ trait Expansion extends scala.reflect.internal.show.Printers {
             MacroArgs(context, Nil)
           }
           // NOTE: magic name. essential for detailed and sane stack traces for exceptions in macro expansion logic
-          private def macroExpandWithRuntime(c: ScalaContext): Any = {
+          private def macroExpandWithRuntime(rc: ScalareflectMacroContext): Any = {
             import global.{Tree => ScalaTree}
-            import scala.meta.{Tree => PalladiumTree, Term => PalladiumTerm}
-            import scala.meta.internal.eval.{eval => palladiumEval}
+            import scala.meta.{Tree => ScalametaTree, Term => ScalametaTerm}
+            import scala.meta.internal.eval.{eval => scalametaEval}
+            import scala.meta.ui._
             import org.scalameta.unreachable
-            import scala.meta.syntactic.show._
-            lazy val palladiumContext = Scalahost[global.type](c)
-            lazy val scalaInvocation: ScalaTree = {
+            lazy val hc = Scalahost.mkMacroContext[global.type](rc)
+            lazy val scalareflectInvocation: ScalaTree = {
               // TODO: implement this
               // val applied @ Applied(core, targs, argss) = dissectApplied(expandee)
               // val implCore = q"${implDdef.symbol}" setType core.tpe
               // val implTapplied = q"$implCore[..$targs]" setType applied.callee.tpe
-              // val margss = argss.map(_.map(arg => env.bind(arg))) :+ List(env.bind(palladiumContext))
+              // val margss = argss.map(_.map(arg => env.bind(arg))) :+ List(env.bind(hc))
               // val implApplied = q"$implTapplied(...$margss)" setType expandee.tpe
               // val scalaInvocation = q"{ $implDdef; $implApplied }" setType expandee.tpe
               implDdef.rhs
             }
-            lazy val palladiumInvocation: PalladiumTree = {
+            lazy val scalametaInvocation: ScalametaTree = {
               // TODO: implement this
-              // palladiumContext.toPalladium(scalaInvocation)
+              // hc.toScalameta(scalareflectInvocation)
               ???
             }
-            lazy val palladiumResult: Any = palladiumInvocation match {
-              case term: PalladiumTerm => palladiumEval(term)
+            lazy val scalametaResult: Any = scalametaInvocation match {
+              case term: ScalametaTerm => scalametaEval(term)
               case _ => unreachable
             }
-            lazy val scalaResult: Any = palladiumResult match {
-              case palladiumTree: PalladiumTree =>
+            lazy val scalareflectResult: Any = scalametaResult match {
+              case scalametaTree: ScalametaTree =>
                 // TODO: implement this
-                // val scalaTree: ScalaTree = palladiumContext.fromPalladium(tree)
-                // attachExpansionString(expandee, scalaTree, palladiumTree.show[Code])
-                // scalaTree
+                // val scalareflectTree: ScalareflectTree = hc.fromScalameta(tree)
+                // attachExpansionString(expandee, scalareflectTree, scalametaTree.show[Code])
+                // scalareflectTree
                 ???
               case other => other
             }
             // TODO: unhardcode this
-            // scalaResult
+            // scalareflectResult
             lazy val hardcodedResult = {
               val Applied(core, targs, List(List(x, y))) = dissectApplied(expandee)
               def fields(tree: Tree) = tree.tpe.members.collect{ case m: TermSymbol if m.isGetter => m }
@@ -217,7 +217,7 @@ trait Expansion extends scala.reflect.internal.show.Printers {
             }
           }
         }
-        palladiumMacroExpander(expandee)
+        scalahostMacroExpander(expandee)
       case _ =>
         new DefMacroExpander(typer, expandee, mode, pt).apply(expandee)
     }
