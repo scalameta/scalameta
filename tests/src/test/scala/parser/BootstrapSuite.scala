@@ -12,15 +12,15 @@ class BootstrapSuite extends ParseSuite {
     def loop(dir: File): Unit = {
       def bootstrapTest(src: File): Unit = {
         test(src.getAbsolutePath) {
-          import scala.meta.syntactic.parsers._
-          import scala.meta.syntactic.show._
+          import scala.meta.syntactic._
+          import scala.meta.ui._
           val toks = src.tokens
           val content = scala.io.Source.fromFile(src).mkString
           // check #1: everything's covered
           var isFail = false
           def fail(msg: String) = { isFail = true; println(msg) }
           val bitmap = new Array[Boolean](content.length)
-          val tokenmap = scala.collection.mutable.Map[Int, List[Tok]]()
+          val tokenmap = scala.collection.mutable.Map[Int, List[Token]]()
           toks.foreach(tok => {
             var i = tok.start
             while (i <= tok.end) {

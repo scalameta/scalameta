@@ -1,5 +1,5 @@
 import org.scalatest._
-import scala.meta.syntactic.show._
+import scala.meta.ui._
 
 class ShowTokenSuite extends ParseSuite {
   test("showCode without comments - simple") {

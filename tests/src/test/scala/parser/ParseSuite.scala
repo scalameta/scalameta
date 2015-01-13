@@ -1,4 +1,5 @@
 import org.scalatest._
+import scala.meta.syntactic._
 import scala.meta.syntactic.parsers._
 
 class ParseSuite extends FunSuite with CommonTrees {
@@ -12,5 +13,5 @@ class ParseSuite extends FunSuite with CommonTrees {
   def topStat = parse(p => p.topStatSeq().head)
   def templStat = parse(p => p.templateStats().head)
   def source = parse(_.compilationUnit())
-  def tokenize(s: String): Seq[Tok] = s.tokens
+  def tokenize(s: String): Seq[Token] = s.tokens
 }

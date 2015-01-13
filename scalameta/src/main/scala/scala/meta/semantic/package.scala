@@ -27,8 +27,7 @@ package object semantic {
   sealed trait HasTpe[+T, U]
   object HasTpe {
     implicit object Term extends HasTpe[meta.Term, meta.Type]
-    implicit object Method extends HasTpe[meta.Member.Method, meta.Type]
-    implicit object Field extends HasTpe[meta.Member.Field, meta.Type]
+    implicit object Member extends HasTpe[meta.Member, meta.Type]
     implicit object Ctor extends HasTpe[meta.Ctor, meta.Type]
     implicit object TemplateParam extends HasTpe[meta.Templ.Param, meta.Type.Arg]
     implicit object Templ extends HasTpe[meta.Templ, meta.Type]
@@ -65,6 +64,7 @@ package object semantic {
     @hosted def widen: Type = ???
     @hosted def dealias: Type = ???
     @hosted def companion: Type.Ref = ???
+    @hosted def parents: Seq[Type] = ???
   }
 
   @hosted def lub(tpes: Seq[Type]): Type = ???
@@ -76,8 +76,9 @@ package object semantic {
 
   implicit class SemanticMemberOps(val tree: Member) extends AnyVal {
     @hosted def ref: Ref = ???
-    @hosted def overridden: Seq[Member] = ???
-    @hosted def overriding: Seq[Member] = ???
+    @hosted def parents: Seq[Member] = ???
+    @hosted def children: Seq[Member] = ???
+    @hosted def companion: Member = ???
     @hosted def mods: Seq[Mod] = ???
     @hosted def annots: Seq[Ctor.Ref] = ???
     @hosted def isVal: Boolean = ???
@@ -115,40 +116,14 @@ package object semantic {
     @hosted def ref: Term.Ref = ???
     @hosted def parents: Seq[Member.Term] = ???
     @hosted def children: Seq[Member.Term] = ???
+    @hosted def companion: Member.Type = ???
   }
 
   implicit class SemanticTypeMemberOps(val tree: Member.Type) extends AnyVal {
     @hosted def ref: Type.Ref = ???
     @hosted def parents: Seq[Member.Type] = ???
     @hosted def children: Seq[Member.Type] = ???
-    @hosted def tparams: Seq[Type.Param] = ???
-  }
-
-  implicit class SemanticTemplateMemberOps(val tree: Member.Templ) extends AnyVal {
-    @hosted def parents: Seq[Member.Templ with Member.Type] = ???
-    @hosted def children: Seq[Member.Templ] = ???
-    @hosted def self: Term.Param = ???
-    @hosted def companion: Member.Templ = ???
-    @hosted def tparams: Seq[Type.Param] = ???
-    @hosted def paramss: Seq[Seq[Term.Param]] = ???
-    @hosted def template: Templ = ???
-  }
-
-  implicit class SemanticClassMemberOps(val tree: Member.Class) extends AnyVal {
-    @hosted def companion: Member.Object = ???
-  }
-
-  implicit class SemanticTraitMemberOps(val tree: Member.Trait) extends AnyVal {
-    @hosted def companion: Member.Object = ???
-  }
-
-  implicit class SemanticMethodMemberOps(val tree: Member.Method) extends AnyVal {
-    @hosted def tparams: Seq[Type.Param] = ???
-    @hosted def paramss: Seq[Seq[Term.Param]] = ???
-  }
-
-  implicit class SemanticObjectMemberOps(val tree: Member.Object) extends AnyVal {
-    @hosted def companion: Member.Templ with Member.Type = ???
+    @hosted def companion: Member.Term = ???
   }
 
   implicit class SemanticTemplateParameterOps(val tree: Templ.Param) extends AnyVal {
@@ -180,28 +155,24 @@ package object semantic {
   implicit class SemanticScopeOps(val tree: Scope) extends AnyVal {
     @hosted def members: Seq[Member] = ???
     @hosted def members(name: Name): Seq[Member] = ???
-    @hosted def packages: Seq[Member.Pkg] = ???
-    @hosted def packages(name: Name): Member.Pkg = ???
-    @hosted def packages(name: String): Member.Pkg = ???
-    @hosted def packages(name: scala.Symbol): Member.Pkg = ???
-    @hosted def pkgobject: Member.Object = ???
-    @hosted def parents: Seq[Member.Templ with Member.Type] = ???
-    @hosted def children: Seq[Member.Templ] = ???
-    @hosted def self: Term.Param = ???
+    @hosted def packages: Seq[Member.Term] = ???
+    @hosted def packages(name: Name): Member.Term = ???
+    @hosted def packages(name: String): Member.Term = ???
+    @hosted def packages(name: scala.Symbol): Member.Term = ???
     @hosted def ctor: Ctor = ???
     @hosted def ctors: Seq[Ctor] = ???
-    @hosted def classes: Seq[Member.Class] = ???
-    @hosted def classes(name: Name): Member.Class = ???
-    @hosted def classes(name: String): Member.Class = ???
-    @hosted def classes(name: scala.Symbol): Member.Class = ???
-    @hosted def traits: Seq[Member.Trait] = ???
-    @hosted def traits(name: Name): Member.Trait = ???
-    @hosted def traits(name: String): Member.Trait = ???
-    @hosted def traits(name: scala.Symbol): Member.Trait = ???
-    @hosted def objects: Seq[Member.Object] = ???
-    @hosted def objects(name: Name): Member.Object = ???
-    @hosted def objects(name: String): Member.Object = ???
-    @hosted def objects(name: scala.Symbol): Member.Object = ???
+    @hosted def classes: Seq[Member.Type] = ???
+    @hosted def classes(name: Name): Member.Type = ???
+    @hosted def classes(name: String): Member.Type = ???
+    @hosted def classes(name: scala.Symbol): Member.Type = ???
+    @hosted def traits: Seq[Member.Type] = ???
+    @hosted def traits(name: Name): Member.Type = ???
+    @hosted def traits(name: String): Member.Type = ???
+    @hosted def traits(name: scala.Symbol): Member.Type = ???
+    @hosted def objects: Seq[Member.Term] = ???
+    @hosted def objects(name: Name): Member.Term = ???
+    @hosted def objects(name: String): Member.Term = ???
+    @hosted def objects(name: scala.Symbol): Member.Term = ???
     @hosted def vars: Seq[Term.Name] = ???
     @hosted def vars(name: Name): Term.Name = ???
     @hosted def vars(name: String): Term.Name = ???
@@ -210,19 +181,16 @@ package object semantic {
     @hosted def vals(name: Name): Term.Name = ???
     @hosted def vals(name: String): Term.Name = ???
     @hosted def vals(name: scala.Symbol): Term.Name = ???
-    @hosted def defs: Seq[Member.Method] = ???
-    @hosted def defs(name: Name): Member.Method = ???
-    @hosted def defs(name: String): Member.Method = ???
-    @hosted def defs(name: scala.Symbol): Member.Method = ???
-    @hosted def macros: Seq[Member.Method] = ???
-    @hosted def macros(name: Name): Member.Method = ???
-    @hosted def macros(name: String): Member.Method = ???
-    @hosted def macros(name: scala.Symbol): Member.Method = ???
+    @hosted def defs: Seq[Member.Term] = ???
+    @hosted def defs(name: Name): Member.Term = ???
+    @hosted def defs(name: String): Member.Term = ???
+    @hosted def defs(name: scala.Symbol): Member.Term = ???
     @hosted def types: Seq[Member.Type] = ???
     @hosted def types(name: Name): Member.Type = ???
     @hosted def types(name: String): Member.Type = ???
     @hosted def types(name: scala.Symbol): Member.Type = ???
     @hosted def params: Seq[Templ.Param] = ???
+    @hosted def paramss: Seq[Seq[Templ.Param]] = ???
     @hosted def params(name: Name): Templ.Param = ???
     @hosted def params(name: String): Templ.Param = ???
     @hosted def params(name: scala.Symbol): Templ.Param = ???

@@ -7,21 +7,21 @@ import scala.reflect.ClassTag
 import java.lang.Class
 
 @implicitNotFound(msg = "${T} is not a token class and can't be used here.")
-trait TokMetadata[T] extends ClassTag[T] {
+trait TokenMetadata[T] extends ClassTag[T] {
   def name: String
   def runtimeClass: Class[T]
 }
-object TokMetadata {
-  implicit def materialize[T]: TokMetadata[T] = macro TokMetadataMacros.materialize[T]
+object TokenMetadata {
+  implicit def materialize[T]: TokenMetadata[T] = macro TokenMetadataMacros.materialize[T]
 }
 
-class TokMetadataMacros(val c: Context) {
+class TokenMetadataMacros(val c: Context) {
   import c.universe._
   import c.internal._
-  lazy val TokClass = rootMirror.staticClass("scala.meta.syntactic.parsers.Tok")
-  lazy val TokMarkerClass = rootMirror.staticModule("org.scalameta.tokens.internal.package").info.decl(TypeName("tokenClass")).asClass
+  lazy val TokenClass = rootMirror.staticClass("scala.meta.syntactic.tokenizers.Token")
+  lazy val TokenMarkerClass = rootMirror.staticModule("org.scalameta.tokens.internal.package").info.decl(TypeName("tokenClass")).asClass
   def materialize[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
-    if ((T.tpe <:< TokClass.toType) && T.tpe.typeSymbol.annotations.exists(_.tree.tpe.typeSymbol == TokMarkerClass)) {
+    if ((T.tpe <:< TokenClass.toType) && T.tpe.typeSymbol.annotations.exists(_.tree.tpe.typeSymbol == TokenMarkerClass)) {
       val nameBody = {
         val ctor = T.tpe.typeSymbol.info.decls.collect{case m: MethodSymbol if m.isPrimaryConstructor => m}.head
         val argss = ctor.paramLists.map(_.map(p => {
@@ -32,7 +32,7 @@ class TokMetadataMacros(val c: Context) {
         q"new $T(...$argss).name"
       }
       q"""
-        new _root_.org.scalameta.tokens.TokMetadata[$T] {
+        new _root_.org.scalameta.tokens.TokenMetadata[$T] {
           def name: _root_.scala.Predef.String = $nameBody
           def runtimeClass: _root_.java.lang.Class[$T] = implicitly[_root_.scala.reflect.ClassTag[$T]].runtimeClass.asInstanceOf[_root_.java.lang.Class[$T]]
         }

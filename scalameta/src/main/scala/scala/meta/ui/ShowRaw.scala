@@ -1,5 +1,5 @@
-package scala.meta.syntactic
-package show
+package scala.meta
+package ui
 
 import org.scalameta.show._
 import Show.{ sequence => s, repeat => r, indent => i, newline => n }
@@ -7,7 +7,7 @@ import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.meta.internal.ast._
 import scala.{meta => api}
-import scala.meta.syntactic.parsers.Tok
+import scala.meta.syntactic.tokenizers.Token
 
 trait Raw[T] extends Show[T]
 object Raw {
@@ -30,8 +30,8 @@ object Raw {
       r(x.productIterator.map(showRaw).toList, ", ")
   }, ")"))
 
-  implicit def rawTok[T <: Tok]: Raw[T] = Raw { x =>
-    val prefix = (x: Tok) match { case x: Tok.EOF => "EOF"; case x: Tok.Dynamic => x.code; case x: Tok.Static => x.name }
+  implicit def rawToken[T <: Token]: Raw[T] = Raw { x =>
+    val prefix = (x: Token) match { case x: Token.EOF => "EOF"; case x: Token.Dynamic => x.code; case x: Token.Static => x.name }
     s(prefix, " (", x.start.toString, "..", x.end.toString, ")")
   }
 }
