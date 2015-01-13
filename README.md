@@ -1,7 +1,7 @@
 ### Scala host
 
 Scala host for [scala.meta](http://scalameta.org) provides a
-macro plugin that can host Project Palladium macros by overriding macro expansion hooks exposed
+macro plugin that can host scala.meta macros by overriding macro expansion hooks exposed
 by scalac typechecker and wrapping scalac internal compiler data stuctures to conform to the API exposed in
 [the core](https://github.com/scalameta/scalameta).
 
