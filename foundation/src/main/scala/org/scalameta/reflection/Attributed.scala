@@ -93,7 +93,7 @@ trait Attributed {
           case (_, _) => "either unattributed or erroneous"
         }
         sys.error(s"""
-          |Input Scala tree is not fully attributed and can't be converted to a Palladium tree.
+          |Input scala.reflect tree is not fully attributed and can't be converted to a scala.meta tree.
           |The problem is caused by $offenderSummary that ${if (offenders.length == 1) "is" else "are"} $offenderDiagnostics:
           |$offenderPrintout
           |The input tree that has caused problems to the converter is printed out below:

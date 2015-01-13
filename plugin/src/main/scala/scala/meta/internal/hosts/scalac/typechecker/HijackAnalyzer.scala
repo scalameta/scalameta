@@ -5,13 +5,13 @@ package typechecker
 import scala.tools.nsc.{Global => NscGlobal, Phase, SubComponent}
 import scala.tools.nsc.plugins.{Plugin => NscPlugin, PluginComponent => NscPluginComponent}
 import scala.collection.mutable
-import scala.tools.nsc.typechecker.PalladiumAnalyzer
-import scala.meta.internal.hosts.scalac.{PluginBase => PalladiumPlugin}
+import scala.tools.nsc.typechecker.ScalahostAnalyzer
+import scala.meta.internal.hosts.scalac.{PluginBase => ScalahostPlugin}
 import scala.tools.nsc.interpreter.{ReplGlobal => NscReplGlobal}
 import scala.tools.nsc.interactive.{Global => NscInteractiveGlobal, InteractiveAnalyzer => NscInteractiveAnalyzer}
 
 trait HijackAnalyzer {
-  self: PalladiumPlugin =>
+  self: ScalahostPlugin =>
 
   def hijackAnalyzer(): global.analyzer.type = {
     // NOTE: need to hijack the right `analyzer` field - it's different for batch compilers and repl compilers
@@ -19,11 +19,11 @@ trait HijackAnalyzer {
     val isInteractive = global.isInstanceOf[NscInteractiveGlobal]
     val analyzer = {
       if (isInteractive) {
-        new { val global: self.global.type with NscInteractiveGlobal = self.global.asInstanceOf[self.global.type with NscInteractiveGlobal] } with PalladiumAnalyzer with NscInteractiveAnalyzer {
-          override def newTyper(context: Context) = new ParadiseTyper(context) with InteractiveTyper
+        new { val global: self.global.type with NscInteractiveGlobal = self.global.asInstanceOf[self.global.type with NscInteractiveGlobal] } with ScalahostAnalyzer with NscInteractiveAnalyzer {
+          override def newTyper(context: Context) = new ScalahostTyper(context) with InteractiveTyper
         }
       } else {
-        new { val global: self.global.type = self.global } with PalladiumAnalyzer {
+        new { val global: self.global.type = self.global } with ScalahostAnalyzer {
           override protected def findMacroClassLoader(): ClassLoader = {
             val loader = super.findMacroClassLoader
             if (isRepl) {

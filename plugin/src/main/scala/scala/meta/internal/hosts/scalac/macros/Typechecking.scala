@@ -3,10 +3,10 @@ package internal.hosts.scalac
 package macros
 
 import scala.reflect.internal.Flags._
-import scala.meta.internal.hosts.scalac.{PluginBase => PalladiumPlugin}
+import scala.meta.internal.hosts.scalac.{PluginBase => ScalahostPlugin}
 
 trait Typechecking {
-  self: PalladiumPlugin =>
+  self: ScalahostPlugin =>
 
   import global._
   import definitions._
@@ -14,9 +14,9 @@ trait Typechecking {
   import analyzer.{MacroPlugin => NscMacroPlugin, _}
 
   // TODO: would be nice if we had a way to know whether `tree` is a collapsed single-element block
-  // then we could reliably discern vanilla macro syntax `def foo = macro bar` and palladium macro syntax `def foo = macro { ... }`
+  // then we could reliably discern vanilla macro syntax `def foo = macro bar` and scala.meta macro syntax `def foo = macro { ... }`
   // for now we have to approximate, and maybe later we could make this approximation more precise
-  object PalladiumBody {
+  object ScalahostMacroBody {
     def unapply(tree: Tree): Option[Tree] = {
       def isVanillaBody(tree: Tree): Boolean = tree match {
         case Ident(_) => true
@@ -28,10 +28,10 @@ trait Typechecking {
     }
   }
 
-  def palladiumTypedMacroBody(typer: Typer, ddef: DefDef): Option[Tree] = {
+  def scalahostTypedMacroBody(typer: Typer, ddef: DefDef): Option[Tree] = {
     val TermQuote = "denied" // TODO: find a better solution
     ddef match {
-      case DefDef(mods, name, tparams, vparamss, _, PalladiumBody(body)) if mods.hasFlag(MACRO) =>
+      case DefDef(mods, name, tparams, vparamss, _, ScalahostMacroBody(body)) if mods.hasFlag(MACRO) =>
         def cleanupMods(mods: Modifiers) = mods &~ IMPLICIT
         val vparamss1 = mmap(vparamss){
           case p @ q"$mods val $pname: $_ = $_" =>
@@ -48,7 +48,7 @@ trait Typechecking {
           // NOTE: order is actually very important here, because at the end of the day
           // we need the legacy annotation to come first so that it can be picked up by the 2.11.x macro engine
           // (otherwise half of the standard macro infrastructure will cease to function)
-          ddef.symbol.addAnnotation(MacroImplAnnotation, PalladiumSignature(typedImplDdef))
+          ddef.symbol.addAnnotation(MacroImplAnnotation, ScalahostSignature(typedImplDdef))
           ddef.symbol.addAnnotation(MacroImplAnnotation, LegacySignature())
         }
         Some(EmptyTree)
@@ -58,17 +58,17 @@ trait Typechecking {
   }
 
   object LegacySignature extends FixupSignature {
-    def apply(): Tree = fixup(Apply(Ident(TermName("macro")), List(Assign(Literal(Constant("macroEngine")), Literal(Constant("Palladium experimental macro engine"))))))
+    def apply(): Tree = fixup(Apply(Ident(TermName("macro")), List(Assign(Literal(Constant("macroEngine")), Literal(Constant("Scalahost experimental macro engine compatible with scala.meta APIs"))))))
   }
 
-  object PalladiumSignature extends FixupSignature {
+  object ScalahostSignature extends FixupSignature {
     def apply(implDdef: DefDef): Tree = {
-      fixup(Apply(Ident(TermName("palladiumMacro")), List(
+      fixup(Apply(Ident(TermName("scalahostMacro")), List(
         Assign(Literal(Constant("implDdef")), implDdef))))
     }
     def unapply(tree: Tree): Option[DefDef] = {
       tree match {
-        case Apply(Ident(TermName("palladiumMacro")), List(
+        case Apply(Ident(TermName("scalahostMacro")), List(
           Assign(Literal(Constant("implDdef")), (implDdef: DefDef)))) => Some(implDdef)
         case _ => None
       }
@@ -93,10 +93,10 @@ trait Typechecking {
     }
   }
 
-  def palladiumIsBlackbox(macroDef: Symbol): Option[Boolean] = {
+  def scalahostIsBlackbox(macroDef: Symbol): Option[Boolean] = {
     val macroSignatures = macroDef.annotations.filter(_.atp.typeSymbol == MacroImplAnnotation)
     macroSignatures match {
-      case _ :: AnnotationInfo(_, List(PalladiumSignature(_)), _) :: Nil => Some(true)
+      case _ :: AnnotationInfo(_, List(ScalahostSignature(_)), _) :: Nil => Some(true)
       case _ => None
     }
   }

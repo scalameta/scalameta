@@ -4,12 +4,12 @@ package convert
 
 import scala.tools.nsc.{Global, Phase, SubComponent}
 import scala.tools.nsc.plugins.{Plugin => NscPlugin, PluginComponent => NscPluginComponent}
-import scala.meta.internal.hosts.scalac.{PluginBase => PalladiumPlugin}
+import scala.meta.internal.hosts.scalac.{PluginBase => ScalahostPlugin}
 import scala.reflect.io.AbstractFile
 import org.scalameta.reflection._
 
 trait ConvertPhase {
-  self: PalladiumPlugin =>
+  self: ScalahostPlugin =>
 
   object ConvertComponent extends NscPluginComponent {
     val global: self.global.type = self.global
@@ -26,11 +26,11 @@ trait ConvertPhase {
     override val runsRightAfter = None
     val phaseName = "convert"
     override def description = "convert compiler trees to scala.meta"
-    implicit val h = Scalahost[global.type](global)
+    implicit val c = Scalahost.mkSemanticContext[global.type](global)
 
     override def newPhase(prev: Phase): StdPhase = new StdPhase(prev) {
       override def apply(unit: CompilationUnit) {
-        val punit = h.toPalladium(unit.body, classOf[Source])
+        val punit = c.toScalameta(unit.body, classOf[Source])
         unit.body.appendMetadata("scalameta" -> punit)
       }
     }

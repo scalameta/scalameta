@@ -12,15 +12,15 @@ import scala.reflect.internal.Flags
 import scala.reflect.internal.Flags._
 import scala.collection.mutable
 
-trait PalladiumAnalyzer extends NscAnalyzer with GlobalToolkit {
+trait ScalahostAnalyzer extends NscAnalyzer with GlobalToolkit {
   val global: Global
   import global._
   import definitions._
   val stableCurrentRun = global.currentRun
   import stableCurrentRun.runDefinitions._
 
-  override def newTyper(context: Context) = new ParadiseTyper(context)
-  class ParadiseTyper(context0: Context) extends Typer(context0) {
+  override def newTyper(context: Context) = new ScalahostTyper(context)
+  class ScalahostTyper(context0: Context) extends Typer(context0) {
     import infer._
     import TyperErrorGen._
     import typeDebug._
@@ -936,7 +936,7 @@ trait PalladiumAnalyzer extends NscAnalyzer with GlobalToolkit {
             case Select(_, _) => treeCopy.Select(tree, qual, name)
             case SelectFromTypeTree(_, _) => treeCopy.SelectFromTypeTree(tree, qual, name)
           }
-          val (result, accessibleError) = silent(_.asInstanceOf[ParadiseTyper].makeAccessible(tree1, sym, qual.tpe, qual)) match {
+          val (result, accessibleError) = silent(_.asInstanceOf[ScalahostTyper].makeAccessible(tree1, sym, qual.tpe, qual)) match {
             case SilentTypeError(err: AccessTypeError) =>
               (tree1, Some(err))
             case SilentTypeError(err) =>

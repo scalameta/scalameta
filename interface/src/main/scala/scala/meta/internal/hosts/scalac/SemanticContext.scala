@@ -9,18 +9,18 @@ import scala.reflect.runtime.universe.{Type => Pt, typeOf}
 import scala.meta.internal.{ast => p}
 import scala.meta.syntactic.parsers.SyntacticInfo._
 import scala.tools.nsc.{Global => ScalaGlobal}
-import scala.meta.semantic.{Host => PalladiumHost}
+import scala.meta.semantic.{Context => ScalametaSemanticContext}
 import org.scalameta.convert._
 import org.scalameta.convert.auto._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
 import org.scalameta.reflection._
 
-class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit {
+class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticContext with GlobalToolkit {
   lazy val global: g.type = g
   import g.Quasiquote
   import g.Flag._
-  implicit val palladiumHost: PalladiumHost = this
+  implicit val c: ScalametaSemanticContext = this
 
   def attrs(tree: Tree): Seq[scala.meta.semantic.Attr] = ???
   def owner(tree: Tree): Scope = ???
@@ -36,7 +36,7 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
   // NOTE: can't convert types, because they don't have originals, so any such conversion will be an approximation
   // NOTE: careful use of NameTree.name, because it can lie (renaming imports) and it doesn't have enough semantic information (unlike the underlying symbol)
   // TODO: remember positions. actually, in scalac they are almost accurate, so it would be a shame to discard them
-  @converter def toPalladium(in: Any, pt: Pt): Any = {
+  @converter def toScalameta(in: Any, pt: Pt): Any = {
     object Helpers extends g.ReificationSupportImpl { self =>
       implicit class RichHelperTree(gtree: g.Tree) {
         def alias: String = gtree match {
@@ -48,8 +48,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
         def isBackquoted: Boolean = gtree match {
           // TODO: infer isBackquoted
           // TODO: iirc according to Denys, info in BackquotedIdentifierAttachment might be incomplete
-          case gtree: g.Ident => gtree.isBackquoted || scala.meta.syntactic.parsers.keywords.contains(gtree.alias)
-          case gtree: g.NameTree => scala.meta.syntactic.parsers.keywords.contains(gtree.alias)
+          case gtree: g.Ident => gtree.isBackquoted || scala.meta.syntactic.tokenizers.keywords.contains(gtree.alias)
+          case gtree: g.NameTree => scala.meta.syntactic.tokenizers.keywords.contains(gtree.alias)
           case _ => false
         }
       }
@@ -71,8 +71,8 @@ class Host[G <: ScalaGlobal](val g: G) extends PalladiumHost with GlobalToolkit 
           gsym.rawcvt(in).appendScratchpad(pre)
         }
         def rawcvt(in: g.Tree): p.Name = {
-          if (gsym.isTerm) p.Term.Name(in.alias, in.isBackquoted).appendScratchpad(gsym)
-          else if (gsym.isType) p.Type.Name(in.alias, in.isBackquoted).appendScratchpad(gsym)
+          if (gsym.isTerm) (p.Term.Name(in.alias, in.isBackquoted).appendScratchpad(gsym): p.Name)
+          else if (gsym.isType) (p.Type.Name(in.alias, in.isBackquoted).appendScratchpad(gsym): p.Name)
           else unreachable
         }
       }

@@ -214,7 +214,7 @@ trait Ensugar {
               Some(original.setType(tree.tpe))
             case in @ TypeTreeWithDeferredRefCheck() =>
               // NOTE: I guess, we can do deferred checks here as the converter isn't supposed to run in the middle of typer
-              // we will have to revisit this in case we decide to support whitebox macros in Palladium
+              // we will have to revisit this in case we decide to support whitebox macros in scala.meta
               unapply(in.check())
             case _ =>
               None
@@ -401,8 +401,8 @@ trait Ensugar {
                   metadata + ("targs" -> targs.map(loop))
                 }
                 val originalBody = macroSigs(tree) match {
-                  case legacySig :: palladiumSig :: Nil =>
-                    Some(parseMacroSig(palladiumSig)("implDdef").asInstanceOf[DefDef].rhs)
+                  case legacySig :: scalametaSig :: Nil =>
+                    Some(parseMacroSig(scalametaSig)("implDdef").asInstanceOf[DefDef].rhs)
                   case legacySig :: Nil =>
                     // TODO: obtain the impl ref exactly how it was written by the programmer
                     val legacy = parseMacroSig(legacySig)

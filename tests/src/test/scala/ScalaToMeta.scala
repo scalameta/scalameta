@@ -5,10 +5,8 @@ import scala.reflect.runtime.{universe => ru}
 import scala.tools.reflect.{ToolBox, ToolBoxError}
 import scala.compat.Platform.EOL
 import scala.meta._
-import scala.meta.syntactic.parsers._
-import scala.meta.syntactic.show._
-import scala.meta.semantic.{Host => PalladiumHost}
-import scala.meta.internal.hosts.scalac.{Host => OurHost, Scalahost}
+import scala.meta.ui._
+import scala.meta.internal.hosts.scalac.Scalahost
 import org.scalameta.reflection._
 
 class ScalaToMeta extends FunSuite {
@@ -72,8 +70,8 @@ class ScalaToMeta extends FunSuite {
       for (workItem <- unit.toCheck) workItem()
       throwIfErrors()
 
-      val h = Scalahost(compiler).asInstanceOf[PalladiumHost with OurHost[compiler.type]]
-      val ptree = h.toPalladium(unit.body, classOf[Source])
+      val c = Scalahost.mkSemanticContext[compiler.type](compiler)
+      val ptree = c.toScalameta(unit.body, classOf[Source])
       if (debug) println(ptree.show[Code])
       if (debug) println(ptree.show[Raw])
       result = ptree.show[Code]
