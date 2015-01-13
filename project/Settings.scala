@@ -57,6 +57,13 @@ object Settings {
         <system>GitHub</system>
         <url>https://github.com/scalameta/scalahost/issues</url>
       </issueManagement>
+      <developers>
+        <developer>
+          <id>xeno-by</id>
+          <name>Eugene Burmako</name>
+          <url>http://xeno.by</url>
+        </developer>
+      </developers>
     )
   )
 
