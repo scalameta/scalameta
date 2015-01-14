@@ -143,21 +143,14 @@ package object semantic {
   }
 
   implicit class SemanticTemplateParameterOps(val tree: Templ.Param) extends AnyVal {
-    @hosted def mods: Seq[Mod] = ???
-    @hosted def name: Option[meta.Term.Name] = ???
     @hosted def default: Option[meta.Term] = ???
   }
 
   implicit class SemanticTermParameterOps(val tree: Term.Param) extends AnyVal {
-    @hosted def mods: Seq[Mod] = ???
-    @hosted def name: Option[meta.Term.Name] = ???
     @hosted def default: Option[meta.Term] = ???
   }
 
   implicit class SemanticTypeParameterOps(val tree: Type.Param) extends AnyVal {
-    @hosted def mods: Seq[Mod] = ???
-    @hosted def name: Option[meta.Type.Name] = ???
-    @hosted def tparams: Seq[meta.Type.Param] = ???
     @hosted def contextBounds: Seq[meta.Type] = ???
     @hosted def viewBounds: Seq[meta.Type] = ???
     @hosted def lo: meta.Type = ???
