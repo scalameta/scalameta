@@ -9,6 +9,7 @@ import scala.annotation.compileTimeOnly
 import scala.collection.immutable.Seq
 import scala.reflect.{ClassTag, classTag}
 import scala.meta.ui.{Exception => SemanticException}
+import scala.meta.semantic.{Context => SemanticContext}
 
 package object semantic {
   // ===========================
@@ -170,51 +171,56 @@ package object semantic {
   // ===========================
 
   implicit class SemanticScopeOps(val tree: Scope) extends AnyVal {
-    @hosted def members: Seq[Member] = ???
-    @hosted def members(name: Name): Seq[Member] = ???
-    @hosted def packages: Seq[Member.Term] = ???
-    @hosted def packages(name: Name): Member.Term = ???
-    @hosted def packages(name: String): Member.Term = ???
-    @hosted def packages(name: scala.Symbol): Member.Term = ???
-    @hosted def ctor: Ctor = ???
-    @hosted def ctors: Seq[Ctor] = ???
-    @hosted def classes: Seq[Member.Type] = ???
-    @hosted def classes(name: Name): Member.Type = ???
-    @hosted def classes(name: String): Member.Type = ???
-    @hosted def classes(name: scala.Symbol): Member.Type = ???
-    @hosted def traits: Seq[Member.Type] = ???
-    @hosted def traits(name: Name): Member.Type = ???
-    @hosted def traits(name: String): Member.Type = ???
-    @hosted def traits(name: scala.Symbol): Member.Type = ???
-    @hosted def objects: Seq[Member.Term] = ???
-    @hosted def objects(name: Name): Member.Term = ???
-    @hosted def objects(name: String): Member.Term = ???
-    @hosted def objects(name: scala.Symbol): Member.Term = ???
-    @hosted def vars: Seq[Term.Name] = ???
-    @hosted def vars(name: Name): Term.Name = ???
-    @hosted def vars(name: String): Term.Name = ???
-    @hosted def vars(name: scala.Symbol): Term.Name = ???
-    @hosted def vals: Seq[Term.Name] = ???
-    @hosted def vals(name: Name): Term.Name = ???
-    @hosted def vals(name: String): Term.Name = ???
-    @hosted def vals(name: scala.Symbol): Term.Name = ???
-    @hosted def defs: Seq[Member.Term] = ???
-    @hosted def defs(name: Name): Member.Term = ???
-    @hosted def defs(name: String): Member.Term = ???
-    @hosted def defs(name: scala.Symbol): Member.Term = ???
-    @hosted def types: Seq[Member.Type] = ???
-    @hosted def types(name: Name): Member.Type = ???
-    @hosted def types(name: String): Member.Type = ???
-    @hosted def types(name: scala.Symbol): Member.Type = ???
-    @hosted def params: Seq[Templ.Param] = ???
+    @hosted private def askAll[T: ClassTag](filter: T => Boolean): Seq[T] = {
+      val partiallyFiltered = implicitly[SemanticContext].members(tree).filter(_ match { case _: T => true; case _ => false }).asInstanceOf[Seq[T]]
+      partiallyFiltered.filter(filter)
+    }
+    @hosted private def askSingle[T <: Member : ClassTag](name: String, filter: T => Boolean, diagnostic: String): T = {
+      // TODO: here we rely on the fact that `x.ref.toString` gives us member's name
+      // oh man, I think we should just bite the bullet and expose a fallible `Member.name` method
+      val partiallyFitered = askAll[T](x => x.ref.toString == name && filter(x))
+      partiallyFitered match {
+        case Seq(single) => single
+        case Seq(_, _*) => throw new SemanticException(s"multiple $diagnostic found in ${tree.summary}")
+        case Seq() => throw new SemanticException(s"no $diagnostic found in ${tree.summary}")
+      }
+    }
+    @hosted def members: Seq[Member] = askAll[Member](_ => true)
+    @hosted def members(name: String): Member = askSingle[Member](name, _ => true, "members")
+    @hosted def members(name: scala.Symbol): Member = askSingle[Member](name.toString, _ => true, "members")
+    @hosted def packages: Seq[Member.Term] = askAll[Member.Term](_.isPackage)
+    @hosted def packages(name: String): Member.Term = askSingle[Member.Term](name, _.isPackage, "packages")
+    @hosted def packages(name: scala.Symbol): Member.Term = askSingle[Member.Term](name.toString, _.isPackage, "packages")
+    @hosted def ctor: Ctor = askAll[Ctor](_ => true) match { case Seq(primary, _*) => primary; case _ => throw new SemanticException(s"no constructors found in ${tree.summary}") }
+    @hosted def ctors: Seq[Ctor] = askAll[Ctor](_ => true)
+    @hosted def classes: Seq[Member.Type] = askAll[Member.Type](_.isClass)
+    @hosted def classes(name: String): Member.Type = askSingle[Member.Type](name, _.isClass, "classes")
+    @hosted def classes(name: scala.Symbol): Member.Type = askSingle[Member.Type](name.toString, _.isClass, "classes")
+    @hosted def traits: Seq[Member.Type] = askAll[Member.Type](_.isTrait)
+    @hosted def traits(name: String): Member.Type = askSingle[Member.Type](name, _.isTrait, "traits")
+    @hosted def traits(name: scala.Symbol): Member.Type = askSingle[Member.Type](name.toString, _.isTrait, "traits")
+    @hosted def objects: Seq[Member.Term] = askAll[Member.Term](_.isObject)
+    @hosted def objects(name: String): Member.Term = askSingle[Member.Term](name, _.isObject, "objects")
+    @hosted def objects(name: scala.Symbol): Member.Term = askSingle[Member.Term](name.toString, _.isObject, "objects")
+    @hosted def vars: Seq[Term.Name] = askAll[Term.Name](_.isVar)
+    @hosted def vars(name: String): Term.Name = askSingle[Term.Name](name, _.isVar, "vars")
+    @hosted def vars(name: scala.Symbol): Term.Name = askSingle[Term.Name](name.toString, _.isVar, "vars")
+    @hosted def vals: Seq[Term.Name] = askAll[Term.Name](_.isVal)
+    @hosted def vals(name: String): Term.Name = askSingle[Term.Name](name, _.isVal, "vals")
+    @hosted def vals(name: scala.Symbol): Term.Name = askSingle[Term.Name](name.toString, _.isVal, "vals")
+    @hosted def defs: Seq[Member.Term] = askAll[Member.Term](_.isDef)
+    @hosted def defs(name: String): Member.Term = askSingle[Member.Term](name, _.isDef, "defs")
+    @hosted def defs(name: scala.Symbol): Member.Term = askSingle[Member.Term](name.toString, _.isDef, "defs")
+    @hosted def types: Seq[Member.Type] = askAll[Member.Type](m => m.isAbstractType || m.isAliasType)
+    @hosted def types(name: String): Member.Type = askSingle[Member.Type](name, m => m.isAbstractType || m.isAliasType, "types")
+    @hosted def types(name: scala.Symbol): Member.Type = askSingle[Member.Type](name.toString, m => m.isAbstractType || m.isAliasType, "types")
+    @hosted def params: Seq[Templ.Param] = askAll[Templ.Param](_ => true)
     @hosted def paramss: Seq[Seq[Templ.Param]] = ???
-    @hosted def params(name: Name): Templ.Param = ???
-    @hosted def params(name: String): Templ.Param = ???
-    @hosted def params(name: scala.Symbol): Templ.Param = ???
-    @hosted def tparams: Seq[Type.Param] = ???
-    @hosted def tparams(name: Name): Type.Param = ???
-    @hosted def tparams(name: String): Type.Param = ???
-    @hosted def tparams(name: scala.Symbol): Type.Param = ???
+    @hosted def params(name: String): Templ.Param = askSingle[Templ.Param](name, _ => true, "parameters")
+    @hosted def params(name: scala.Symbol): Templ.Param = askSingle[Templ.Param](name.toString, _ => true, "parameters")
+    @hosted def tparams: Seq[Type.Param] = askAll[Type.Param](_ => true)
+    @hosted def tparams(name: String): Type.Param = askSingle[Type.Param](name, _ => true, "type parameters")
+    @hosted def tparams(name: scala.Symbol): Type.Param = askSingle[Type.Param](name.toString, _ => true, "type parameters")
   }
 
   // ===========================
