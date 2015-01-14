@@ -2,12 +2,16 @@ package org.scalameta
 
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox.Context
+import scala.reflect.{ClassTag, classTag}
 
 package object invariants {
-  def require[T](x: T): Unit = macro Macros.require
+  def require(x: Boolean): Unit = macro Macros.require
   // TODO: add pretty printed support for implication
   implicit class Implication(left: Boolean) {
     def ==>(right: Boolean) = !left || right
+  }
+  implicit class RequireDowncast[T](x: T) {
+    def require[U <: T : ClassTag]: U = macro Macros.requireDowncast[U]
   }
 }
 
@@ -193,6 +197,14 @@ package invariants {
           case (true, _) => ()
           case (false, $failures) => _root_.org.scalameta.invariants.InvariantFailedException.raise(${showCode(x)}, $failures, $freeLocals)
         }
+      """
+    }
+    def requireDowncast[U](ev: c.Tree)(U: c.WeakTypeTag[U]): c.Tree = {
+      val q"$_($x)" = c.prefix.tree
+      q"""
+        val temp = ${c.untypecheck(x)}
+        org.scalameta.invariants.require(temp != null && _root_.scala.reflect.classTag[$U].runtimeClass.isAssignableFrom(temp.getClass))
+        temp.asInstanceOf[$U]
       """
     }
   }

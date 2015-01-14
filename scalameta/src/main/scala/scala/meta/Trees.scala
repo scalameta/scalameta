@@ -5,7 +5,7 @@ import org.scalameta.invariants._
 import org.scalameta.annotations._
 import org.scalameta.unreachable
 import scala.{meta => api}
-import scala.meta.internal.{ast => impl}
+import scala.meta.internal.{ast => impl} // necessary only to define internal classes, not to define the APIs
 import scala.meta.syntactic.parsers.SyntacticInfo._ // necessary only for sanity checks in trees
 import scala.meta.syntactic.tokenizers.keywords // necessary only for sanity checks in trees
 
@@ -13,11 +13,6 @@ package scala.meta {
   @root trait Tree extends Product {
     type ThisType <: Tree
     def parent: Option[Tree]
-    final override def toString: String = {
-      import scala.meta.ui._
-      import scala.meta.dialects.Scala211
-      this.show[Code] // we can't parameterize toString, so we default to Scala prettyprinting
-    }
   }
 
   @branch trait Ref extends Tree
@@ -227,10 +222,10 @@ package scala.meta.internal.ast {
   object Decl {
     @ast class Val(mods: Seq[Mod],
                    pats: Seq[Term.Name] @nonEmpty,
-                   decltpe: impl.Type) extends Decl with Member.Term
+                   decltpe: impl.Type) extends Decl
     @ast class Var(mods: Seq[Mod],
                    pats: Seq[Term.Name] @nonEmpty,
-                   decltpe: impl.Type) extends Decl with Member.Term
+                   decltpe: impl.Type) extends Decl
     @ast class Def(mods: Seq[Mod],
                    name: Term.Name,
                    tparams: Seq[impl.Type.Param],
@@ -251,11 +246,11 @@ package scala.meta.internal.ast {
     @ast class Val(mods: Seq[Mod],
                    pats: Seq[Pat] @nonEmpty,
                    decltpe: Option[impl.Type],
-                   rhs: Term) extends Defn with Member.Term
+                   rhs: Term) extends Defn
     @ast class Var(mods: Seq[Mod],
                    pats: Seq[Pat] @nonEmpty,
                    decltpe: Option[impl.Type],
-                   rhs: Option[Term]) extends Defn with Member.Term {
+                   rhs: Option[Term]) extends Defn {
       require(rhs.isEmpty ==> pats.forall(_.isInstanceOf[Term.Name]))
       require(decltpe.nonEmpty || rhs.nonEmpty)
     }
