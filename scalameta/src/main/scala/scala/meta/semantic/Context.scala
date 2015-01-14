@@ -9,6 +9,7 @@ trait Context {
 
   def attrs(tree: Tree): Seq[Attr]
 
+  def root: Scope
   def owner(tree: Tree): Scope
   def members(scope: Scope): Seq[Tree]
 
