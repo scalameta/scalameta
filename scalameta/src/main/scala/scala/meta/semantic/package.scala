@@ -103,11 +103,62 @@ package object semantic {
   // ===========================
 
   implicit class SemanticMemberOps(val tree: Member) extends AnyVal {
-    @hosted def ref: Ref = ???
+    @hosted def ref: Ref = {
+      tree.require[impl.Member] match {
+        case tree: impl.Term.Name => tree
+        case tree: impl.Decl.Def => tree.name
+        case tree: impl.Decl.Procedure => tree.name
+        case tree: impl.Decl.Type => tree.name
+        case tree: impl.Defn.Def => tree.name
+        case tree: impl.Defn.Procedure => tree.name
+        case tree: impl.Defn.Macro => tree.name
+        case tree: impl.Defn.Type => tree.name
+        case tree: impl.Defn.Class => tree.name
+        case tree: impl.Defn.Trait => tree.name
+        case tree: impl.Defn.Object => tree.name
+        case tree: impl.Pkg => tree.name
+        case tree: impl.Pkg.Object => tree.name
+        case tree: impl.Templ.Param if tree.parent.map(_.isInstanceOf[impl.Templ]).getOrElse(false) => impl.Term.This(???)
+        case tree: impl.Templ.Param if tree.name.isDefined => tree.name.get
+        case tree: impl.Templ.Param => throw new SemanticException(s"can't reference an anonymous parameter ${tree.summary}")
+        case tree: impl.Type.Param if tree.name.isDefined => tree.name.get
+        case tree: impl.Type.Param => throw new SemanticException(s"can't reference an anonymous parameter ${tree.summary}")
+      }
+    }
     @hosted def parents: Seq[Member] = implicitly[SemanticContext].parents(tree)
     @hosted def children: Seq[Member] = implicitly[SemanticContext].children(tree)
-    @hosted def companion: Member = ???
-    @hosted def mods: Seq[Mod] = ???
+    @hosted def companion: Member = {
+      val candidates = {
+        if (tree.isClass || tree.isTrait) tree.owner.members.filter(m => m.isObject && m.ref.toString == tree.ref.toString)
+        else if (tree.isObject) tree.owner.members.filter(m => (m.isClass || m.isTrait) && m.ref.toString == tree.ref.toString)
+        else throw new SemanticException(s"can't have companions for ${tree.summary}")
+      }
+      require(candidates.length < 2)
+      candidates match {
+        case Seq(companion) => companion
+        case Seq() => throw new SemanticException(s"no companions for ${tree.summary}")
+        case _ => unreachable
+      }
+    }
+    @hosted def mods: Seq[Mod] = {
+      tree.require[impl.Member] match {
+        case tree: impl.Term.Name => firstNonPatParent(tree).collect{case member: Member => member}.map(_.mods).getOrElse(Nil)
+        case tree: impl.Decl.Def => tree.mods
+        case tree: impl.Decl.Procedure => tree.mods
+        case tree: impl.Decl.Type => tree.mods
+        case tree: impl.Defn.Def => tree.mods
+        case tree: impl.Defn.Procedure => tree.mods
+        case tree: impl.Defn.Macro => tree.mods
+        case tree: impl.Defn.Type => tree.mods
+        case tree: impl.Defn.Class => tree.mods
+        case tree: impl.Defn.Trait => tree.mods
+        case tree: impl.Defn.Object => tree.mods
+        case tree: impl.Pkg => Nil
+        case tree: impl.Pkg.Object => tree.mods
+        case tree: impl.Templ.Param => tree.mods
+        case tree: impl.Type.Param => tree.mods
+      }
+    }
     @hosted def annots: Seq[Ctor.Ref] = tree.mods.collect{ case impl.Mod.Annot(ref) => ref }
     @hosted private def firstNonPatParent(pat: Pat): Option[Tree] = pat.parent.collect{case pat: Pat => pat}.flatMap(firstNonPatParent).orElse(pat.parent)
     @hosted def isVal: Boolean = Some(tree).collect{case name: Term.Name => name}.flatMap(firstNonPatParent).map(s => s.isInstanceOf[impl.Decl.Val] || s.isInstanceOf[impl.Defn.Val]).getOrElse(false)
