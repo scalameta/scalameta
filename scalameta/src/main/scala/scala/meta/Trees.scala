@@ -5,7 +5,7 @@ import org.scalameta.invariants._
 import org.scalameta.annotations._
 import org.scalameta.unreachable
 import scala.{meta => api}
-import scala.meta.internal.{ast => impl}
+import scala.meta.internal.{ast => impl} // necessary only to define internal classes, not to define the APIs
 import scala.meta.syntactic.parsers.SyntacticInfo._ // necessary only for sanity checks in trees
 import scala.meta.syntactic.tokenizers.keywords // necessary only for sanity checks in trees
 

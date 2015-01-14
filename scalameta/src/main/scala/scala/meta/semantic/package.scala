@@ -10,6 +10,7 @@ import scala.collection.immutable.Seq
 import scala.reflect.{ClassTag, classTag}
 import scala.meta.ui.{Exception => SemanticException}
 import scala.meta.semantic.{Context => SemanticContext}
+import scala.meta.internal.{ast => impl} // necessary only to implement APIs, not to define them
 
 package object semantic {
   // ===========================
@@ -107,38 +108,47 @@ package object semantic {
     @hosted def children: Seq[Member] = implicitly[SemanticContext].children(tree)
     @hosted def companion: Member = ???
     @hosted def mods: Seq[Mod] = ???
-    @hosted def annots: Seq[Ctor.Ref] = ???
-    @hosted def isVal: Boolean = ???
-    @hosted def isVar: Boolean = ???
-    @hosted def isDef: Boolean = ???
-    @hosted def isMacro: Boolean = ???
-    @hosted def isAbstractType: Boolean = ???
-    @hosted def isAliasType: Boolean = ???
-    @hosted def isClass: Boolean = ???
-    @hosted def isTrait: Boolean = ???
-    @hosted def isObject: Boolean = ???
-    @hosted def isPackage: Boolean = ???
-    @hosted def isPackageObject: Boolean = ???
-    @hosted def isPrivate: Boolean = ???
-    @hosted def isProtected: Boolean = ???
-    @hosted def isPublic: Boolean = ???
+    @hosted def annots: Seq[Ctor.Ref] = tree.mods.collect{ case impl.Mod.Annot(ref) => ref }
+    @hosted private def firstNonPatParent(pat: Pat): Option[Tree] = pat.parent.collect{case pat: Pat => pat}.flatMap(firstNonPatParent).orElse(pat.parent)
+    @hosted def isVal: Boolean = Some(tree).collect{case name: Term.Name => name}.flatMap(firstNonPatParent).map(s => s.isInstanceOf[impl.Decl.Val] || s.isInstanceOf[impl.Defn.Val]).getOrElse(false)
+    @hosted def isVar: Boolean = Some(tree).collect{case name: Term.Name => name}.flatMap(firstNonPatParent).map(s => s.isInstanceOf[impl.Decl.Var] || s.isInstanceOf[impl.Defn.Var]).getOrElse(false)
+    @hosted def isDef: Boolean = tree.isInstanceOf[impl.Decl.Def] || tree.isInstanceOf[impl.Decl.Procedure] || tree.isInstanceOf[impl.Defn.Def] || tree.isInstanceOf[impl.Defn.Procedure]
+    @hosted def isMacro: Boolean = tree.isInstanceOf[impl.Defn.Macro]
+    @hosted def isAbstractType: Boolean = tree.isInstanceOf[impl.Decl.Type]
+    @hosted def isAliasType: Boolean = tree.isInstanceOf[impl.Defn.Type]
+    @hosted def isClass: Boolean = tree.isInstanceOf[impl.Defn.Class]
+    @hosted def isTrait: Boolean = tree.isInstanceOf[impl.Defn.Trait]
+    @hosted def isObject: Boolean = tree.isInstanceOf[impl.Defn.Object]
+    @hosted def isPackage: Boolean = tree.isInstanceOf[impl.Pkg]
+    @hosted def isPackageObject: Boolean = tree.isInstanceOf[impl.Pkg.Object]
+    @hosted def isPrivate: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Private]) || tree.mods.exists(_.isInstanceOf[impl.Mod.PrivateThis]) || tree.mods.exists(_.isInstanceOf[impl.Mod.PrivateWithin])
+    @hosted def isProtected: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Protected]) || tree.mods.exists(_.isInstanceOf[impl.Mod.ProtectedThis]) || tree.mods.exists(_.isInstanceOf[impl.Mod.ProtectedWithin])
+    @hosted def isPublic: Boolean = !tree.isPrivate && !tree.isProtected
     @hosted def accessBoundary: Member = ???
-    @hosted def isImplicit: Boolean = ???
-    @hosted def isFinal: Boolean = ???
-    @hosted def isSealed: Boolean = ???
-    @hosted def isOverride: Boolean = ???
-    @hosted def isCase: Boolean = ???
-    @hosted def isAbstract: Boolean = ???
-    @hosted def isCovariant: Boolean = ???
-    @hosted def isContravariant: Boolean = ???
-    @hosted def isLazy: Boolean = ???
-    @hosted def isAbstractOverride: Boolean = ???
-    @hosted def isParam: Boolean = ???
-    @hosted def isTypeParam: Boolean = ???
+    @hosted def isImplicit: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Implicit])
+    @hosted def isFinal: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Final]) || tree.isObject
+    @hosted def isSealed: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Sealed])
+    @hosted def isOverride: Boolean = {
+      def isSyntacticOverride = !isAbstract && tree.mods.exists(_.isInstanceOf[impl.Mod.Override])
+      def isSemanticOverride = {
+        def isEligible = isVal || isVar || isDef || isMacro || isAbstractType || isAliasType
+        def overridesSomething = parents.nonEmpty
+        isEligible && overridesSomething
+      }
+      isSyntacticOverride || isSemanticOverride
+    }
+    @hosted def isCase: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Case])
+    @hosted def isAbstract: Boolean = (!isAbstractOverride && tree.mods.exists(_.isInstanceOf[impl.Mod.Abstract])) || tree.isInstanceOf[impl.Decl]
+    @hosted def isCovariant: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Covariant])
+    @hosted def isContravariant: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Contravariant])
+    @hosted def isLazy: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Lazy])
+    @hosted def isAbstractOverride: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Abstract]) && tree.mods.exists(_.isInstanceOf[impl.Mod.Override])
+    @hosted def isParam: Boolean = tree.isInstanceOf[impl.Term.Param]
+    @hosted def isTypeParam: Boolean = tree.isInstanceOf[impl.Type.Param]
     @hosted def isByNameParam: Boolean = ???
     @hosted def isVarargParam: Boolean = ???
-    @hosted def isValParam: Boolean = ???
-    @hosted def isVarParam: Boolean = ???
+    @hosted def isValParam: Boolean = tree.isInstanceOf[impl.Templ.Param.Val]
+    @hosted def isVarParam: Boolean = tree.isInstanceOf[impl.Templ.Param.Var]
   }
 
   implicit class SemanticTermMemberOps(val tree: Member.Term) extends AnyVal {
@@ -156,18 +166,18 @@ package object semantic {
   }
 
   implicit class SemanticTemplateParameterOps(val tree: Templ.Param) extends AnyVal {
-    @hosted def default: Option[meta.Term] = ???
+    @hosted def default: Option[meta.Term] = tree.require[impl.Templ.Param].default
   }
 
   implicit class SemanticTermParameterOps(val tree: Term.Param) extends AnyVal {
-    @hosted def default: Option[meta.Term] = ???
+    @hosted def default: Option[meta.Term] = tree.require[impl.Term.Param].default
   }
 
   implicit class SemanticTypeParameterOps(val tree: Type.Param) extends AnyVal {
-    @hosted def contextBounds: Seq[meta.Type] = ???
-    @hosted def viewBounds: Seq[meta.Type] = ???
-    @hosted def lo: meta.Type = ???
-    @hosted def hi: meta.Type = ???
+    @hosted def contextBounds: Seq[meta.Type] = tree.require[impl.Type.Param].contextBounds
+    @hosted def viewBounds: Seq[meta.Type] = tree.require[impl.Type.Param].viewBounds
+    @hosted def lo: meta.Type = tree.require[impl.Type.Param].lo
+    @hosted def hi: meta.Type = tree.require[impl.Type.Param].hi
   }
 
   // ===========================
