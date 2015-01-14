@@ -26,10 +26,10 @@ package object semantic {
 
   implicit class SemanticTreeOps(val tree: Tree) extends AnyVal {
     @hosted private[meta] def internalAttr[T: ClassTag]: T = {
-      val relevant = tree.attrs.filter(_ match { case _: T => true; case _ => false })
+      val relevant = tree.attrs.collect{ case x: T => x }
       require(relevant.length < 2)
       relevant match {
-        case Seq(tpe) => tpe.asInstanceOf[T]
+        case Seq(tpe) => tpe
         case Seq() => throw new SemanticException(s"failed to figure out ${classTag[T].runtimeClass.getName.toLowerCase} of ${tree.summary}")
         case _ => unreachable
       }
@@ -170,7 +170,7 @@ package object semantic {
 
   implicit class SemanticScopeOps(val tree: Scope) extends AnyVal {
     @hosted private[meta] def internalAll[T: ClassTag](filter: T => Boolean): Seq[T] = {
-      val partiallyFiltered = implicitly[SemanticContext].members(tree).filter(_ match { case _: T => true; case _ => false }).asInstanceOf[Seq[T]]
+      val partiallyFiltered = implicitly[SemanticContext].members(tree).collect{ case x: T => x }
       partiallyFiltered.filter(filter)
     }
     @hosted private[meta] def internalSingle[T <: Member : ClassTag](name: String, filter: T => Boolean, diagnostic: String): T = {
