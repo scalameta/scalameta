@@ -108,8 +108,8 @@ package object semantic {
     @hosted def isClass: Boolean = ???
     @hosted def isTrait: Boolean = ???
     @hosted def isObject: Boolean = ???
-    @hosted def isPkg: Boolean = ???
-    @hosted def isPkgObject: Boolean = ???
+    @hosted def isPackage: Boolean = ???
+    @hosted def isPackageObject: Boolean = ???
     @hosted def isPrivate: Boolean = ???
     @hosted def isProtected: Boolean = ???
     @hosted def isPublic: Boolean = ???
