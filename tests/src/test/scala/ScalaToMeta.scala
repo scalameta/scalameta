@@ -70,7 +70,7 @@ class ScalaToMeta extends FunSuite {
       for (workItem <- unit.toCheck) workItem()
       throwIfErrors()
 
-      val c = Scalahost.mkSemanticContext[compiler.type](compiler)
+      implicit val c = Scalahost.mkSemanticContext[compiler.type](compiler)
       val ptree = c.toScalameta(unit.body, classOf[Source])
       if (debug) println(ptree.show[Code])
       if (debug) println(ptree.show[Raw])

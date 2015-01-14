@@ -22,6 +22,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
   import g.Flag._
   implicit val c: ScalametaSemanticContext = this
 
+  def dialect: Dialect = scala.meta.dialects.Scala211
   def attrs(tree: Tree): Seq[scala.meta.semantic.Attr] = ???
   def owner(tree: Tree): Scope = ???
   def members(scope: Scope): Seq[Tree] = ???

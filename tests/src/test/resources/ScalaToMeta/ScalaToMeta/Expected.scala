@@ -59,7 +59,7 @@ class ScalaToMeta extends FunSuite {
       if (debug) println(new { val global: compiler.type = compiler } with GlobalToolkit {}.ensugar(unit.body))
       for (workItem <- unit.toCheck) workItem()
       throwIfErrors()
-      val c = Scalahost.mkSemanticContext[compiler.type](compiler)
+      implicit val c = Scalahost.mkSemanticContext[compiler.type](compiler)
       val ptree = c.toScalameta(unit.body, classOf[Source])
       if (debug) println(ptree.show[Code])
       if (debug) println(ptree.show[Raw])
