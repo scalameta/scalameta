@@ -21,6 +21,17 @@ class RootMacros(val c: Context) {
       val Adt = q"_root_.org.scalameta.adt"
       val AstInternal = q"_root_.org.scalameta.ast.internal"
       val q"..$boilerplate" = q"""
+        final override def toString: String = {
+          import _root_.scala.meta.ui._
+          import _root_.scala.meta.dialects.Scala211
+          this.show[Code] // we can't parameterize toString, so we default to Scala prettyprinting
+        }
+        private[meta] final def summary: String = {
+          var result = this.toString.replace(scala.compat.Platform.EOL, " ")
+          if (result.length > 60) result = result.take(60) + "..."
+          result
+        }
+
         // NOTE: these are internal APIs designed to be used only by hosts
         // TODO: these APIs will most likely change in the future
         // because we would like to make sure that trees are guaranteed to be immutable

@@ -2,10 +2,13 @@ package scala.meta
 
 import org.scalameta.adt._
 import org.scalameta.annotations._
+import org.scalameta.invariants._
+import org.scalameta.unreachable
 import scala.{Seq => _}
 import scala.annotation.compileTimeOnly
 import scala.collection.immutable.Seq
 import scala.reflect.{ClassTag, classTag}
+import scala.meta.ui.{Exception => SemanticException}
 
 package object semantic {
   // ===========================
@@ -15,12 +18,22 @@ package object semantic {
   @root trait Attr
   object Attr {
     // TODO: design the attr hierarchy of semantic facts that can be figured out about trees
-    // TODO: examples: a type a tree, a definition/definitions the tree refers to, maybe a desugaring, etc
+    // TODO: examples: a type of a tree, a definition/definitions the tree refers to, maybe a desugaring, etc
     // TODO: see https://github.com/JetBrains/intellij-scala/blob/master/src/org/jetbrains/plugins/scala/lang/resolve/ScalaResolveResult.scala#L24
+    @leaf class Type(tpe: scala.meta.Type) extends Attr
   }
 
   implicit class SemanticTreeOps(val tree: Tree) extends AnyVal {
-    @hosted def attrs: Seq[Attr] = ???
+    @hosted private[meta] def attr[T: ClassTag]: T = {
+      val relevant = tree.attrs.filter(_ match { case _: T => true; case _ => false })
+      require(relevant.length < 2)
+      relevant match {
+        case Seq(tpe) => tpe.asInstanceOf[T]
+        case Seq() => throw new SemanticException(s"failed to figure out ${classTag[T].runtimeClass.getName.toLowerCase} of ${tree.summary}")
+        case _ => unreachable
+      }
+    }
+    @hosted def attrs: Seq[Attr] = askHost
     @hosted def owner: Scope = ???
   }
 
@@ -33,8 +46,12 @@ package object semantic {
     implicit object Templ extends HasTpe[meta.Templ, meta.Type]
   }
 
-  implicit class SemanticTypeableOps[T <: Tree, U <: Tree](val tree: T)(implicit ev: HasTpe[T, U]) {
-    @hosted def tpe: U = ???
+  implicit class SemanticTypeableOps[T <: Tree, U <: Tree : ClassTag](val tree: T)(implicit ev: HasTpe[T, U]) {
+    @hosted def tpe: U = {
+      val tpe = tree.attr[Attr.Type].tpe
+      require(tpe != null && classTag[U].runtimeClass.isAssignableFrom(tpe.getClass))
+      tpe.asInstanceOf[U]
+    }
   }
 
   sealed trait HasDefn[+T, U]

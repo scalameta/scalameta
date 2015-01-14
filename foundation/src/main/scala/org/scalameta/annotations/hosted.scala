@@ -22,8 +22,8 @@ class HostedMacros(val c: Context) {
       val DefDef(mods, name, tparams, vparamss, tpt, body) = ddef
       val contextful = q"new _root_.org.scalameta.annotations.contextful[$contextTpe]"
       val mods1 = Modifiers(mods.flags, mods.privateWithin, mods.annotations ++ List(contextful))
-      val autoBody = body match { case q"delegate" => true; case _ => false }
-      val body1 = if (autoBody) {
+      val askHost = body match { case q"askHost" => true; case _ => false }
+      val body1 = if (askHost) {
         val owner = c.internal.enclosingOwner
         val isInPackageObject = (owner.isModuleClass && owner.name == typeNames.PACKAGE) || (owner.name.toString.endsWith("Ops"))
         val isInImplicitClass = owner.isClass && owner.isImplicit
@@ -45,7 +45,7 @@ class HostedMacros(val c: Context) {
         if (isInImplicitClass && !macroApi) prependArg(q"tree")
         q"implicitly[$contextTpe].$name(...$args)"
       } else body
-      val body2 = if (autoBody) body1 else body
+      val body2 = if (askHost) body1 else body
       DefDef(mods1, name, tparams, vparamss, tpt, body2)
     }
     val expanded = annottees match {

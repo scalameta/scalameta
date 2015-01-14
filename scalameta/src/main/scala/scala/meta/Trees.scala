@@ -13,11 +13,6 @@ package scala.meta {
   @root trait Tree extends Product {
     type ThisType <: Tree
     def parent: Option[Tree]
-    final override def toString: String = {
-      import scala.meta.ui._
-      import scala.meta.dialects.Scala211
-      this.show[Code] // we can't parameterize toString, so we default to Scala prettyprinting
-    }
   }
 
   @branch trait Ref extends Tree
