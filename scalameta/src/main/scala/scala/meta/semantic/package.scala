@@ -22,6 +22,7 @@ package object semantic {
     // TODO: examples: a type of a tree, a definition/definitions the tree refers to, maybe a desugaring, etc
     // TODO: see https://github.com/JetBrains/intellij-scala/blob/master/src/org/jetbrains/plugins/scala/lang/resolve/ScalaResolveResult.scala#L24
     @leaf class Type(tpe: scala.meta.Type) extends Attr
+    @leaf class Defns(defns: Seq[scala.meta.Tree] @nonEmpty) extends Attr
   }
 
   implicit class SemanticTreeOps(val tree: Tree) extends AnyVal {
@@ -35,7 +36,7 @@ package object semantic {
       }
     }
     @hosted def attrs: Seq[Attr] = askHost
-    @hosted def owner: Scope = ???
+    @hosted def owner: Scope = askHost
   }
 
   sealed trait HasTpe[+T, U]
@@ -60,12 +61,24 @@ package object semantic {
   }
 
   implicit class SemanticResolvableOps[T <: Tree, U <: Tree](val tree: T)(implicit ev: HasDefn[T, U]) {
-    @hosted def defns: Seq[U] = ???
-    @hosted def defn: U = ???
+    @hosted def defns: Seq[U] = tree.internalAttr[Attr.Defns].defns.require[Seq[U]]
+    @hosted def defn: U = {
+      defns match {
+        case Seq(single) => single
+        case Seq(_, _*) => throw new SemanticException(s"multiple definitions found for ${tree.summary}")
+        case Seq() => unreachable
+      }
+    }
   }
 
   implicit class SemanticCtorRefOps(val tree: Ctor.Ref) extends AnyVal {
-    @hosted def ctor: Ctor = ???
+    @hosted def ctor: Ctor = {
+      tree.internalAttr[Attr.Defns].defns.require[Seq[Ctor]] match {
+        case Seq(single) => single
+        case Seq(_, _*) => throw new SemanticException(s"multiple constructors found for ${tree.summary}")
+        case Seq() => unreachable
+      }
+    }
   }
 
   // ===========================
@@ -73,7 +86,7 @@ package object semantic {
   // ===========================
 
   implicit class SemanticTypeOps(val tree: Type) extends AnyVal {
-    @hosted def <:<(other: Type): Boolean = ???
+    @hosted def <:<(other: Type): Boolean = implicitly[SemanticContext].isSubType(tree, other)
     @hosted def weak_<:<(other: Type): Boolean = ???
     @hosted def widen: Type = ???
     @hosted def dealias: Type = ???
@@ -81,8 +94,8 @@ package object semantic {
     @hosted def parents: Seq[Type] = ???
   }
 
-  @hosted def lub(tpes: Seq[Type]): Type = ???
-  @hosted def glb(tpes: Seq[Type]): Type = ???
+  @hosted def lub(tpes: Seq[Type]): Type = askHost
+  @hosted def glb(tpes: Seq[Type]): Type = askHost
 
   // ===========================
   // PART 3: MEMBERS
@@ -90,8 +103,8 @@ package object semantic {
 
   implicit class SemanticMemberOps(val tree: Member) extends AnyVal {
     @hosted def ref: Ref = ???
-    @hosted def parents: Seq[Member] = ???
-    @hosted def children: Seq[Member] = ???
+    @hosted def parents: Seq[Member] = askHost
+    @hosted def children: Seq[Member] = askHost
     @hosted def companion: Member = ???
     @hosted def mods: Seq[Mod] = ???
     @hosted def annots: Seq[Ctor.Ref] = ???
