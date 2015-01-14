@@ -47,12 +47,8 @@ package object semantic {
     implicit object Templ extends HasTpe[meta.Templ, meta.Type]
   }
 
-  implicit class SemanticTypeableOps[T <: Tree, U <: Tree : ClassTag](val tree: T)(implicit ev: HasTpe[T, U]) {
-    @hosted def tpe: U = {
-      val tpe = tree.internalAttr[Attr.Type].tpe
-      require(tpe != null && classTag[U].runtimeClass.isAssignableFrom(tpe.getClass))
-      tpe.asInstanceOf[U]
-    }
+  implicit class SemanticTypeableOps[T <: Tree, U <: Type : ClassTag](val tree: T)(implicit ev: HasTpe[T, U]) {
+    @hosted def tpe: U = tree.internalAttr[Attr.Type].tpe.require[U]
   }
 
   sealed trait HasDefn[+T, U]
