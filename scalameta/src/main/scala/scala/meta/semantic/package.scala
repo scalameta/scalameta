@@ -35,8 +35,8 @@ package object semantic {
         case _ => unreachable
       }
     }
-    @hosted def attrs: Seq[Attr] = askHost
-    @hosted def owner: Scope = askHost
+    @hosted def attrs: Seq[Attr] = implicitly[SemanticContext].attrs(tree)
+    @hosted def owner: Scope = implicitly[SemanticContext].owner(tree)
   }
 
   sealed trait HasTpe[+T, U]
@@ -94,8 +94,8 @@ package object semantic {
     @hosted def parents: Seq[Type] = ???
   }
 
-  @hosted def lub(tpes: Seq[Type]): Type = askHost
-  @hosted def glb(tpes: Seq[Type]): Type = askHost
+  @hosted def lub(tpes: Seq[Type]): Type = implicitly[SemanticContext].lub(tpes)
+  @hosted def glb(tpes: Seq[Type]): Type = implicitly[SemanticContext].glb(tpes)
 
   // ===========================
   // PART 3: MEMBERS
@@ -103,8 +103,8 @@ package object semantic {
 
   implicit class SemanticMemberOps(val tree: Member) extends AnyVal {
     @hosted def ref: Ref = ???
-    @hosted def parents: Seq[Member] = askHost
-    @hosted def children: Seq[Member] = askHost
+    @hosted def parents: Seq[Member] = implicitly[SemanticContext].parents(tree)
+    @hosted def children: Seq[Member] = implicitly[SemanticContext].children(tree)
     @hosted def companion: Member = ???
     @hosted def mods: Seq[Mod] = ???
     @hosted def annots: Seq[Ctor.Ref] = ???

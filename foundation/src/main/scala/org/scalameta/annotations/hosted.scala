@@ -22,31 +22,7 @@ class HostedMacros(val c: Context) {
       val DefDef(mods, name, tparams, vparamss, tpt, body) = ddef
       val contextful = q"new _root_.org.scalameta.annotations.contextful[$contextTpe]"
       val mods1 = Modifiers(mods.flags, mods.privateWithin, mods.annotations ++ List(contextful))
-      val askHost = body match { case q"askHost" => true; case _ => false }
-      val body1 = if (askHost) {
-        val owner = c.internal.enclosingOwner
-        val isInPackageObject = (owner.isModuleClass && owner.name == typeNames.PACKAGE) || (owner.name.toString.endsWith("Ops"))
-        val isInImplicitClass = owner.isClass && owner.isImplicit
-        def paramRef(p: ValDef) = {
-          val isVararg = p.tpt match {
-            case tq"$_.$name[..$_]" if name == definitions.RepeatedParamClass.name => true
-            case _ => false
-          }
-          if (isVararg) q"${p.name}: _*" else q"${p.name}"
-        }
-        var args = vparamss.map(_.map(paramRef))
-        def prependArg(arg: Tree): Unit = {
-          args = args match {
-            case hd :: tl => (arg +: hd) :: tl
-            case Nil => List(List(arg))
-          }
-        }
-        if (!isInPackageObject && !isInImplicitClass && !macroApi) prependArg(q"this")
-        if (isInImplicitClass && !macroApi) prependArg(q"tree")
-        q"implicitly[$contextTpe].$name(...$args)"
-      } else body
-      val body2 = if (askHost) body1 else body
-      DefDef(mods1, name, tparams, vparamss, tpt, body2)
+      DefDef(mods1, name, tparams, vparamss, tpt, body)
     }
     val expanded = annottees match {
       case (ddef: DefDef) :: rest => transform(ddef) :: rest
