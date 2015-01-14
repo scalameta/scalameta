@@ -1,4 +1,5 @@
 import scala.meta.internal.ast._, Import._, Term.{This, Name => TermName, Select, Super}
+import scala.meta.dialects.Scala211
 
 class ImportSuite extends ParseSuite {
   test("import foo.bar") {

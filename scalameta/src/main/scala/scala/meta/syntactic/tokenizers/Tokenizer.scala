@@ -9,7 +9,7 @@ import Chars.{CR, LF, FF}
 import LegacyToken._
 
 object tokenize {
-  def apply(origin: Origin): Vector[Token] = {
+  def apply(origin: Origin)(implicit dialect: Dialect): Vector[Token] = {
     def legacyTokenToToken(curr: LegacyTokenData): Token = {
       (curr.token: @scala.annotation.switch) match {
         case CHARLIT         => Token.Literal.Char(origin, curr.offset, curr.endOffset, curr.charVal)

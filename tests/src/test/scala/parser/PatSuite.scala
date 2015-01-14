@@ -1,4 +1,5 @@
 import scala.meta.internal.ast._, Pat._, Term.Name
+import scala.meta.dialects.Scala211
 
 class PatSuite extends ParseSuite {
   test("_") {

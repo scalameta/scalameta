@@ -1,4 +1,5 @@
 import scala.meta.internal.ast._, Term.{Name => TermName, Super}, Type.{Name => TypeName, _}
+import scala.meta.dialects.Scala211
 
 class TypeSuite extends ParseSuite {
   test("T") {

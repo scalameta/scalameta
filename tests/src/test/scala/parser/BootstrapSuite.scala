@@ -14,6 +14,7 @@ class BootstrapSuite extends ParseSuite {
         test(src.getAbsolutePath) {
           import scala.meta.syntactic._
           import scala.meta.ui._
+          import scala.meta.dialects.Scala211
           val toks = src.tokens
           val content = scala.io.Source.fromFile(src).mkString
           // check #1: everything's covered

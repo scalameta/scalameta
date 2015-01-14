@@ -13,6 +13,7 @@ import scala.meta.syntactic.tokenizers.Chars.{isOperatorPart, isScalaLetter}
 import scala.meta.syntactic.tokenizers.Token._
 import org.scalameta.tokens._
 import org.scalameta.unreachable
+import org.scalameta.invariants._
 
 object SyntacticInfo {
   private[meta] val unaryOps = Set("-", "+", "~", "!")
@@ -121,8 +122,12 @@ object SyntacticInfo {
 }
 import SyntacticInfo._
 
-class Parser(val origin: Origin) extends AbstractParser {
-  def this(code: String) = this(Origin.String(code))
+class Parser(val origin: Origin)(implicit val dialect: Dialect) extends AbstractParser {
+  def this(code: String)(implicit dialect: Dialect) = this(Origin.String(code))
+
+  // implementation restrictions wrt various dialect properties
+  require(Set("@", ":").contains(dialect.bindToSeqWildcardDesignator))
+
   /** The parse starting point depends on whether the origin file is self-contained:
    *  if not, the AST will be supplemented.
    */
@@ -227,6 +232,7 @@ abstract class AbstractParser { parser =>
   def token = in.token
   def next() = in.next()
   val origin: Origin
+  val dialect: Dialect
 
   val reporter = Reporter(() => in.token)
   import reporter._
@@ -1460,7 +1466,17 @@ abstract class AbstractParser { parser =>
           case _ =>
         }
         next()
-        Pat.Typed(p.asInstanceOf[Pat], compoundType())
+        if (dialect.bindToSeqWildcardDesignator == ":" &&
+            token.is[`_ `] && peekingAhead(isRawStar)) {
+          next() // skip *
+          p match {
+            case name: Term.Name => Pat.Bind(p.asInstanceOf[Term.Name], Pat.Arg.SeqWildcard())
+            case _: Pat.Wildcard => Pat.Arg.SeqWildcard()
+            case _ => unreachable // it's really sad that otherwise we're going to get an exhaustivity warning
+          }
+        } else {
+          Pat.Typed(p.asInstanceOf[Pat], compoundType())
+        }
       case p => p
     }
 
@@ -1502,7 +1518,7 @@ abstract class AbstractParser { parser =>
         case _      => false
       }
       def checkWildStar: Option[Pat.Arg.SeqWildcard] = top match {
-        case Pat.Wildcard() if isSequenceOK && isRawStar => peekingAhead (
+        case Pat.Wildcard() if isSequenceOK && isRawStar && dialect.bindToSeqWildcardDesignator == "@" => peekingAhead (
           // TODO: used to be Star(top) | EmptyTree, why start had param?
           if (isCloseDelim) Some(Pat.Arg.SeqWildcard())
           else None
