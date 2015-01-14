@@ -4,6 +4,9 @@ package scala.meta
 // because then implicit scope for Dialect lookups will contain members of the package object
 // i.e. both Scala211 and Dotty, which is definitely not what we want
 trait Dialect {
+  // The sequence of characters that's used to express a bind
+  // to a sequence wildcard pattern.
+  def bindToSeqWildcardDesignator: String
 }
 
 object Dialect {
@@ -15,8 +18,12 @@ object Dialect {
 
 package object dialects {
   implicit object Scala211 extends Dialect {
+    // List(1, 2, 3) match { case List(xs @ _*) => ... }
+    def bindToSeqWildcardDesignator = "@"
   }
 
   implicit object Dotty extends Dialect {
+    // List(1, 2, 3) match { case List(xs: _*) => ... }
+    def bindToSeqWildcardDesignator = ":"
   }
 }

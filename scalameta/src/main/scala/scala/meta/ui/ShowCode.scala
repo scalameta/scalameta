@@ -237,7 +237,10 @@ object Code {
 
     // Pat
     case t: Pat.Alternative      => m(Pattern, s(p(Pattern, t.lhs), " ", kw("|"), " ", p(Pattern, t.rhs)))
-    case t: Pat.Bind             => m(Pattern2, s(p(SimplePattern, t.lhs), " ", kw("@"), " ", p(AnyPattern3, t.rhs)))
+    case t: Pat.Bind             =>
+      val separator = if (t.rhs.isInstanceOf[Pat.Arg.SeqWildcard] && dialect.bindToSeqWildcardDesignator == ":") ""  else " "
+      val designator = if (t.rhs.isInstanceOf[Pat.Arg.SeqWildcard]) dialect.bindToSeqWildcardDesignator else "@"
+      m(Pattern2, s(p(SimplePattern, t.lhs), separator, kw(designator), " ", p(AnyPattern3, t.rhs)))
     case t: Pat.Tuple            => m(SimplePattern, s("(", r(t.elements, ", "), ")"))
     case _: Pat.Arg.SeqWildcard  => m(SimplePattern, kw("_*"))
     case t: Pat.Typed            => m(Pattern1, s(p(SimplePattern, t.lhs), kw(":"), " ", p(Typ, t.rhs)))

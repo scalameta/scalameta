@@ -2,7 +2,7 @@ import org.scalatest._
 import scala.meta.ui._
 import scala.meta.dialects.Scala211
 
-class ShowTreeSuite extends ParseSuite {
+class ScalaSuite extends ParseSuite {
   test("val x: Int (raw)") {
     val tree = templStat("val x: Int")
     assert(tree.show[Raw] === "Decl.Val(Nil, List(Term.Name(\"x\")), Type.Name(\"Int\"))")
@@ -278,5 +278,11 @@ class ShowTreeSuite extends ParseSuite {
       |  protected[D] val w = 4
       |}
     """.stripMargin.trim)
+  }
+
+  test("case List(xs @ _*)") {
+    val tree = pat("List(xs @ _*)")
+    assert(tree.show[Raw] === "Pat.Extract(Term.Name(\"List\"), Nil, List(Pat.Bind(Term.Name(\"xs\"), Pat.Arg.SeqWildcard())))")
+    assert(tree.show[Code] === "List(xs @ _*)")
   }
 }
