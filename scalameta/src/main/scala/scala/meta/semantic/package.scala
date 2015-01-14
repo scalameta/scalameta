@@ -129,17 +129,17 @@ package object semantic {
   }
 
   implicit class SemanticTermMemberOps(val tree: Member.Term) extends AnyVal {
-    @hosted def ref: Term.Ref = ???
-    @hosted def parents: Seq[Member.Term] = ???
-    @hosted def children: Seq[Member.Term] = ???
-    @hosted def companion: Member.Type = ???
+    @hosted def ref: Term.Ref = new SemanticMemberOps(tree).ref.require[Term.Ref]
+    @hosted def parents: Seq[Member.Term] = new SemanticMemberOps(tree).parents.require[Seq[Member.Term]]
+    @hosted def children: Seq[Member.Term] = new SemanticMemberOps(tree).children.require[Seq[Member.Term]]
+    @hosted def companion: Member.Type = new SemanticMemberOps(tree).companion.require[Member.Type]
   }
 
   implicit class SemanticTypeMemberOps(val tree: Member.Type) extends AnyVal {
-    @hosted def ref: Type.Ref = ???
-    @hosted def parents: Seq[Member.Type] = ???
-    @hosted def children: Seq[Member.Type] = ???
-    @hosted def companion: Member.Term = ???
+    @hosted def ref: Type.Ref = new SemanticMemberOps(tree).ref.require[Type.Ref]
+    @hosted def parents: Seq[Member.Type] = new SemanticMemberOps(tree).parents.require[Seq[Member.Type]]
+    @hosted def children: Seq[Member.Type] = new SemanticMemberOps(tree).parents.require[Seq[Member.Type]]
+    @hosted def companion: Member.Term = new SemanticMemberOps(tree).companion.require[Member.Term]
   }
 
   implicit class SemanticTemplateParameterOps(val tree: Templ.Param) extends AnyVal {
