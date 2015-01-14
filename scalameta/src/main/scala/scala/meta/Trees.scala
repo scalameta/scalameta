@@ -222,10 +222,10 @@ package scala.meta.internal.ast {
   object Decl {
     @ast class Val(mods: Seq[Mod],
                    pats: Seq[Term.Name] @nonEmpty,
-                   decltpe: impl.Type) extends Decl with Member.Term
+                   decltpe: impl.Type) extends Decl
     @ast class Var(mods: Seq[Mod],
                    pats: Seq[Term.Name] @nonEmpty,
-                   decltpe: impl.Type) extends Decl with Member.Term
+                   decltpe: impl.Type) extends Decl
     @ast class Def(mods: Seq[Mod],
                    name: Term.Name,
                    tparams: Seq[impl.Type.Param],
@@ -246,11 +246,11 @@ package scala.meta.internal.ast {
     @ast class Val(mods: Seq[Mod],
                    pats: Seq[Pat] @nonEmpty,
                    decltpe: Option[impl.Type],
-                   rhs: Term) extends Defn with Member.Term
+                   rhs: Term) extends Defn
     @ast class Var(mods: Seq[Mod],
                    pats: Seq[Pat] @nonEmpty,
                    decltpe: Option[impl.Type],
-                   rhs: Option[Term]) extends Defn with Member.Term {
+                   rhs: Option[Term]) extends Defn {
       require(rhs.isEmpty ==> pats.forall(_.isInstanceOf[Term.Name]))
       require(decltpe.nonEmpty || rhs.nonEmpty)
     }
