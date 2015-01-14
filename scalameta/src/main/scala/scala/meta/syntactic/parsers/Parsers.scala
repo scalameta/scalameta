@@ -121,8 +121,8 @@ object SyntacticInfo {
 }
 import SyntacticInfo._
 
-class Parser(val origin: Origin) extends AbstractParser {
-  def this(code: String) = this(Origin.String(code))
+class Parser(val origin: Origin)(implicit val dialect: Dialect) extends AbstractParser {
+  def this(code: String)(implicit dialect: Dialect) = this(Origin.String(code))
   /** The parse starting point depends on whether the origin file is self-contained:
    *  if not, the AST will be supplemented.
    */
@@ -227,6 +227,7 @@ abstract class AbstractParser { parser =>
   def token = in.token
   def next() = in.next()
   val origin: Origin
+  val dialect: Dialect
 
   val reporter = Reporter(() => in.token)
   import reporter._

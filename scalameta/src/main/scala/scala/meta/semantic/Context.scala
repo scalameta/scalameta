@@ -5,6 +5,8 @@ import scala.{Seq => _}
 import scala.collection.immutable.Seq
 
 trait Context {
+  def dialect: Dialect
+
   def attrs(tree: Tree): Seq[Attr]
 
   def owner(tree: Tree): Scope

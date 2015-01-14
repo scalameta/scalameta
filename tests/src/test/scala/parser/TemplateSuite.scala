@@ -1,4 +1,5 @@
 import scala.meta.internal.ast._, Defn.{Trait, Object, Class}
+import scala.meta.dialects.Scala211
 
 class TemplateSuite extends ParseSuite {
   test("trait T") {

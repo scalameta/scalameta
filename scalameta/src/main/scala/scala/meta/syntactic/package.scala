@@ -39,24 +39,24 @@ package object syntactic {
   trait Parse[T] extends Convert[Origin, T]
   object Parse {
     def apply[T](f: Origin => T): Parse[T] = new Parse[T] { def apply(origin: Origin): T = f(origin) }
-    implicit val parseSource: Parse[Source] = apply(origin => new Parser(origin).parseSource())
-    implicit val parseTerm: Parse[Term] = apply(origin => new Parser(origin).parseTerm())
-    implicit val parseType: Parse[Type.Arg] = apply(origin => new Parser(origin).parseType())
-    implicit val parsePat: Parse[Pat.Arg] = apply(origin => new Parser(origin).parsePat())
-    implicit val parseStat: Parse[Stat] = apply(origin => new Parser(origin).parseStat())
-    implicit val parseStats: Parse[List[Stat]] = apply(origin => new Parser(origin).parseStats())
-    implicit val parseParam: Parse[Templ.Param] = apply(origin => new Parser(origin).parseParam())
-    implicit val parseTparam: Parse[Type.Param] = apply(origin => new Parser(origin).parseTparam())
-    implicit val parseTermArg: Parse[Term.Arg] = apply(origin => new Parser(origin).parseTermArg())
-    implicit val parseEnum: Parse[Enum] = apply(origin => new Parser(origin).parseEnum())
-    implicit val parseMod: Parse[Mod] = apply(origin => new Parser(origin).parseMod())
-    implicit val parseTempl: Parse[Templ] = apply(origin => new Parser(origin).parseTempl())
-    implicit val parseCtorRef: Parse[Ctor.Ref] = apply(origin => new Parser(origin).parseCtorRef())
-    implicit val parseSelector: Parse[Selector] = apply(origin => new Parser(origin).parseSelector())
-    implicit val parseCase: Parse[Case] = apply(origin => new Parser(origin).parseCase())
+    implicit def parseSource(implicit dialect: Dialect): Parse[Source] = apply(origin => new Parser(origin).parseSource())
+    implicit def parseTerm(implicit dialect: Dialect): Parse[Term] = apply(origin => new Parser(origin).parseTerm())
+    implicit def parseType(implicit dialect: Dialect): Parse[Type.Arg] = apply(origin => new Parser(origin).parseType())
+    implicit def parsePat(implicit dialect: Dialect): Parse[Pat.Arg] = apply(origin => new Parser(origin).parsePat())
+    implicit def parseStat(implicit dialect: Dialect): Parse[Stat] = apply(origin => new Parser(origin).parseStat())
+    implicit def parseStats(implicit dialect: Dialect): Parse[List[Stat]] = apply(origin => new Parser(origin).parseStats())
+    implicit def parseParam(implicit dialect: Dialect): Parse[Templ.Param] = apply(origin => new Parser(origin).parseParam())
+    implicit def parseTparam(implicit dialect: Dialect): Parse[Type.Param] = apply(origin => new Parser(origin).parseTparam())
+    implicit def parseTermArg(implicit dialect: Dialect): Parse[Term.Arg] = apply(origin => new Parser(origin).parseTermArg())
+    implicit def parseEnum(implicit dialect: Dialect): Parse[Enum] = apply(origin => new Parser(origin).parseEnum())
+    implicit def parseMod(implicit dialect: Dialect): Parse[Mod] = apply(origin => new Parser(origin).parseMod())
+    implicit def parseTempl(implicit dialect: Dialect): Parse[Templ] = apply(origin => new Parser(origin).parseTempl())
+    implicit def parseCtorRef(implicit dialect: Dialect): Parse[Ctor.Ref] = apply(origin => new Parser(origin).parseCtorRef())
+    implicit def parseSelector(implicit dialect: Dialect): Parse[Selector] = apply(origin => new Parser(origin).parseSelector())
+    implicit def parseCase(implicit dialect: Dialect): Parse[Case] = apply(origin => new Parser(origin).parseCase())
   }
 
-  implicit class RichOrigin[T](val originLike: T)(implicit ev: Convert[T, Origin]) {
+  implicit class RichOrigin[T](val originLike: T)(implicit ev: Convert[T, Origin], dialect: Dialect) {
     private lazy val origin = ev(originLike)
     def parse[T: Parse](implicit ev: Parse[T]): T = ev(origin)
     def tokens: Vector[Token] = tokenize(origin)

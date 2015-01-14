@@ -1,4 +1,5 @@
 import scala.meta.internal.ast._
+import scala.meta.dialects.Scala211
 
 class DefnSuite extends ParseSuite {
   test("val x = 2") {

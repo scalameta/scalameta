@@ -52,6 +52,7 @@ We understand that this API is at odds with the goals of statelessness and platf
 
 | Method                                                    | Notes
 |-----------------------------------------------------------|-----------------------------------------------------------------
+| `def dialect: Dialect`                                    | See [dialects/Dialect.scala](/scalameta/dialects/Dialect.scala)
 | `def attrs(tree: Tree): Seq[Attr]`                        | Computes and returns semantic information for a given tree: resolved, i.e. non-overloaded reference to a definition, type, inferred type and value arguments, macro expansion, etc. This API isn't fleshed out yet, please contact the developers for more information.
 | `def owner(tree: Tree): Scope`                            | A scope that owns the provided tree, be it a definition or a statement in some definition.
 | `def stats(scope: Scope): Seq[Tree]`                      | This isn't actually a method in `Context`, and it's here only to emphasize a peculiarity of our API. This particular method in unnecessary, because all lists in trees (e.g. the list of statements in a block or a list of declarations in a package or a class) are actually `Seq`'s, which means that the host can choose between eager and lazy population of scope contents when returning trees to the user of the scala.meta API (e.g. in `root`).

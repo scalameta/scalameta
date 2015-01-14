@@ -1,4 +1,5 @@
 import scala.meta.internal.ast._, Defn.Class
+import scala.meta.dialects.Scala211
 
 class PackageSuite extends ParseSuite {
   test("class C") {

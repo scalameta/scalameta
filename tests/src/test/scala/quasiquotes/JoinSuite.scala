@@ -1,5 +1,6 @@
 import org.scalatest._
 import scala.meta.internal.ast._
+import scala.meta.dialects.Scala211
 
 class JoinSuite extends FunSuite {
   test("idents") {

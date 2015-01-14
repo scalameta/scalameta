@@ -15,8 +15,11 @@ object Raw {
 
   // TODO: would be nice to generate this with a macro for all tree nodes that we have
   implicit def rawTree[T <: api.Tree]: Raw[T] = Raw(x => s(x.productPrefix, "(", x match {
-    case x: Lit.String => s(enquote(x.value, DoubleQuotes))
-    case x: Lit => s(x.show[Code])
+    case x: Lit.String =>
+      s(enquote(x.value, DoubleQuotes))
+    case x: Lit =>
+      import scala.meta.dialects.Scala211 // show[Raw] is a debug printout, so it doesn't matter much which dialect we're using for that
+      s(x.show[Code])
     case x =>
       def showRaw(x: Any): String = x match {
         case el: String => enquote(el, DoubleQuotes)

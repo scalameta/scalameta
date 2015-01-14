@@ -1,17 +1,17 @@
 import org.scalatest._
 import scala.meta.syntactic._
 import scala.meta.syntactic.parsers._
+import scala.meta.Dialect
 
 class ParseSuite extends FunSuite with CommonTrees {
   val EOL = scala.compat.Platform.EOL
   val escapedEOL = if (EOL == "\n") """\n""" else """\r\n"""
-  def parse[T](rule: Parser => T): String => T =
-    code => new Parser(code).parseRule(rule)
-  def term = parse(_.expr())
-  def pat = parse(_.pattern())
-  def tpe = parse(_.typ())
-  def topStat = parse(p => p.topStatSeq().head)
-  def templStat = parse(p => p.templateStats().head)
-  def source = parse(_.compilationUnit())
-  def tokenize(s: String): Seq[Token] = s.tokens
+  private def parse[T](code: String, rule: Parser => T)(implicit dialect: Dialect): T = new Parser(code).parseRule(rule)
+  def term(code: String)(implicit dialect: Dialect) = parse(code, _.expr())(dialect)
+  def pat(code: String)(implicit dialect: Dialect) = parse(code, _.pattern())(dialect)
+  def tpe(code: String)(implicit dialect: Dialect) = parse(code, _.typ())(dialect)
+  def topStat(code: String)(implicit dialect: Dialect) = parse(code, p => p.topStatSeq().head)(dialect)
+  def templStat(code: String)(implicit dialect: Dialect) = parse(code, p => p.templateStats().head)(dialect)
+  def source(code: String)(implicit dialect: Dialect) = parse(code, _.compilationUnit())(dialect)
+  def tokenize(code: String)(implicit dialect: Dialect): Seq[Token] = code.tokens
 }
