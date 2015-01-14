@@ -40,7 +40,7 @@ package object semantic {
     @hosted def owner: Scope = implicitly[SemanticContext].owner(tree)
   }
 
-  sealed trait HasTpe[+T, U]
+  sealed trait HasTpe[-T, U]
   object HasTpe {
     implicit object Term extends HasTpe[meta.Term, meta.Type]
     implicit object Member extends HasTpe[meta.Member, meta.Type]
@@ -53,7 +53,7 @@ package object semantic {
     @hosted def tpe: U = tree.internalAttr[Attr.Type].tpe.require[U]
   }
 
-  sealed trait HasDefn[+T, U]
+  sealed trait HasDefn[-T, U]
   object HasDefn {
     implicit object Ref extends HasDefn[meta.Ref, meta.Member]
     implicit object TermRef extends HasDefn[meta.Term.Ref, meta.Member.Term]
