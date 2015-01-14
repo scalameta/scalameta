@@ -124,6 +124,8 @@ package object semantic {
     @hosted def isContravariant: Boolean = ???
     @hosted def isLazy: Boolean = ???
     @hosted def isAbstractOverride: Boolean = ???
+    @hosted def isParam: Boolean = ???
+    @hosted def isTypeParam: Boolean = ???
     @hosted def isByNameParam: Boolean = ???
     @hosted def isVarargParam: Boolean = ???
     @hosted def isValParam: Boolean = ???
