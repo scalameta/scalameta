@@ -11,6 +11,7 @@ import scala.reflect.{ClassTag, classTag}
 import scala.meta.ui.{Exception => SemanticException}
 import scala.meta.semantic.{Context => SemanticContext}
 import scala.meta.internal.{ast => impl} // necessary only to implement APIs, not to define them
+import scala.reflect.runtime.{universe => ru} // necessary only for a very hacky approximation of hygiene
 
 package object semantic {
   // ===========================
@@ -40,25 +41,25 @@ package object semantic {
     @hosted def owner: Scope = implicitly[SemanticContext].owner(tree)
   }
 
-  sealed trait HasTpe[-T, U]
+  sealed trait HasTpe[T, U]
   object HasTpe {
-    implicit object Term extends HasTpe[meta.Term, meta.Type]
-    implicit object Member extends HasTpe[meta.Member, meta.Type]
-    implicit object Ctor extends HasTpe[meta.Ctor, meta.Type]
-    implicit object TemplateParam extends HasTpe[meta.Templ.Param, meta.Type.Arg]
-    implicit object Templ extends HasTpe[meta.Templ, meta.Type]
+    implicit def Term[T <: meta.Term]: HasTpe[T, meta.Type] = new HasTpe[T, meta.Type] {}
+    implicit def Member[T <: meta.Member]: HasTpe[T, meta.Member] = new HasTpe[T, meta.Member] {}
+    implicit def Ctor[T <: meta.Ctor]: HasTpe[T, meta.Ctor] = new HasTpe[T, meta.Ctor] {}
+    implicit def TemplateParam[T <: meta.Templ.Param]: HasTpe[T, meta.Templ.Param] = new HasTpe[T, meta.Templ.Param] {}
+    implicit def Templ[T <: meta.Templ]: HasTpe[T, meta.Templ] = new HasTpe[T, meta.Templ] {}
   }
 
   implicit class SemanticTypeableOps[T <: Tree, U <: Type : ClassTag](val tree: T)(implicit ev: HasTpe[T, U]) {
     @hosted def tpe: U = tree.internalAttr[Attr.Type].tpe.require[U]
   }
 
-  sealed trait HasDefn[-T, U]
+  sealed trait HasDefn[T, U]
   object HasDefn {
-    implicit object Ref extends HasDefn[meta.Ref, meta.Member]
-    implicit object TermRef extends HasDefn[meta.Term.Ref, meta.Member.Term]
-    implicit object TypeRef extends HasDefn[meta.Type.Ref, meta.Member] // Type.Ref can refer to both types (regular types) and terms (singleton types)
-    implicit object Selector extends HasDefn[meta.Selector, meta.Member]
+    implicit def Ref[T <: meta.Ref]: HasDefn[T, meta.Member] = new HasDefn[T, meta.Member] {}
+    implicit def TermRef[T <: meta.Term.Ref]: HasDefn[T, meta.Member.Term] = new HasDefn[T, meta.Member.Term] {}
+    implicit def TypeRef[T <: meta.Type.Ref]: HasDefn[T, meta.Member] = new HasDefn[T, meta.Member] {} // Type.Ref can refer to both types (regular types) and terms (singleton types)
+    implicit def Selector[T <: meta.Selector]: HasDefn[T, meta.Member] = new HasDefn[T, meta.Member] {}
   }
 
   implicit class SemanticResolvableOps[T <: Tree, U <: Tree](val tree: T)(implicit ev: HasDefn[T, U]) {
@@ -307,10 +308,10 @@ package object semantic {
 
   @hosted private def refOf(path: String, isTerm: Boolean): Ref = {
     val c = implicitly[SemanticContext]
-    val prefix :+ name = path.split(".").toList
+    val prefix :+ name = path.split('.').toList
     val owner = prefix.foldLeft(c.root)((curr, name) => curr.internalSingle[Member.Term](name, _ => true, "terms"))
     if (isTerm) owner.internalSingle[Member.Term](name, _ => true, "terms").ref else owner.internalSingle[Member.Type](name, _ => true, "types").ref
   }
-  @hosted def typeOf(path: String): Type.Ref = refOf(path, isTerm = false).asInstanceOf[Type.Ref]
-  @hosted def termOf(path: String): Term.Ref = refOf(path, isTerm = true).asInstanceOf[Term.Ref]
+  @hosted def typeOf[T: ru.TypeTag]: Type.Ref = refOf(ru.typeOf[T].typeSymbol.fullName, isTerm = false).asInstanceOf[Type.Ref]
+  @hosted def termOf[T: ru.TypeTag](x: T): Term.Ref = refOf(ru.typeOf[T].typeSymbol.fullName, isTerm = true).asInstanceOf[Term.Ref]
 }
