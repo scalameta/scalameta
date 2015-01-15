@@ -308,7 +308,7 @@ package object semantic {
 
   @hosted private def refOf(path: String, isTerm: Boolean): Ref = {
     val c = implicitly[SemanticContext]
-    val prefix :+ name = path.split(".").toList
+    val prefix :+ name = path.split('.').toList
     val owner = prefix.foldLeft(c.root)((curr, name) => curr.internalSingle[Member.Term](name, _ => true, "terms"))
     if (isTerm) owner.internalSingle[Member.Term](name, _ => true, "terms").ref else owner.internalSingle[Member.Type](name, _ => true, "types").ref
   }
