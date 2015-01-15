@@ -41,25 +41,25 @@ package object semantic {
     @hosted def owner: Scope = implicitly[SemanticContext].owner(tree)
   }
 
-  sealed trait HasTpe[-T, U]
+  sealed trait HasTpe[T, U]
   object HasTpe {
-    implicit object Term extends HasTpe[meta.Term, meta.Type]
-    implicit object Member extends HasTpe[meta.Member, meta.Type]
-    implicit object Ctor extends HasTpe[meta.Ctor, meta.Type]
-    implicit object TemplateParam extends HasTpe[meta.Templ.Param, meta.Type.Arg]
-    implicit object Templ extends HasTpe[meta.Templ, meta.Type]
+    implicit def Term[T <: meta.Term]: HasTpe[T, meta.Type] = new HasTpe[T, meta.Type] {}
+    implicit def Member[T <: meta.Member]: HasTpe[T, meta.Member] = new HasTpe[T, meta.Member] {}
+    implicit def Ctor[T <: meta.Ctor]: HasTpe[T, meta.Ctor] = new HasTpe[T, meta.Ctor] {}
+    implicit def TemplateParam[T <: meta.Templ.Param]: HasTpe[T, meta.Templ.Param] = new HasTpe[T, meta.Templ.Param] {}
+    implicit def Templ[T <: meta.Templ]: HasTpe[T, meta.Templ] = new HasTpe[T, meta.Templ] {}
   }
 
   implicit class SemanticTypeableOps[T <: Tree, U <: Type : ClassTag](val tree: T)(implicit ev: HasTpe[T, U]) {
     @hosted def tpe: U = tree.internalAttr[Attr.Type].tpe.require[U]
   }
 
-  sealed trait HasDefn[-T, U]
+  sealed trait HasDefn[T, U]
   object HasDefn {
-    implicit object Ref extends HasDefn[meta.Ref, meta.Member]
-    implicit object TermRef extends HasDefn[meta.Term.Ref, meta.Member.Term]
-    implicit object TypeRef extends HasDefn[meta.Type.Ref, meta.Member] // Type.Ref can refer to both types (regular types) and terms (singleton types)
-    implicit object Selector extends HasDefn[meta.Selector, meta.Member]
+    implicit def Ref[T <: meta.Ref]: HasDefn[T, meta.Member] = new HasDefn[T, meta.Member] {}
+    implicit def TermRef[T <: meta.Term.Ref]: HasDefn[T, meta.Member.Term] = new HasDefn[T, meta.Member.Term] {}
+    implicit def TypeRef[T <: meta.Type.Ref]: HasDefn[T, meta.Member] = new HasDefn[T, meta.Member] {} // Type.Ref can refer to both types (regular types) and terms (singleton types)
+    implicit def Selector[T <: meta.Selector]: HasDefn[T, meta.Member] = new HasDefn[T, meta.Member] {}
   }
 
   implicit class SemanticResolvableOps[T <: Tree, U <: Tree](val tree: T)(implicit ev: HasDefn[T, U]) {
