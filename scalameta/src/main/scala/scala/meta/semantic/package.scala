@@ -11,6 +11,7 @@ import scala.reflect.{ClassTag, classTag}
 import scala.meta.ui.{Exception => SemanticException}
 import scala.meta.semantic.{Context => SemanticContext}
 import scala.meta.internal.{ast => impl} // necessary only to implement APIs, not to define them
+import scala.reflect.runtime.{universe => ru} // necessary only for a very hacky approximation of hygiene
 
 package object semantic {
   // ===========================
@@ -311,6 +312,6 @@ package object semantic {
     val owner = prefix.foldLeft(c.root)((curr, name) => curr.internalSingle[Member.Term](name, _ => true, "terms"))
     if (isTerm) owner.internalSingle[Member.Term](name, _ => true, "terms").ref else owner.internalSingle[Member.Type](name, _ => true, "types").ref
   }
-  @hosted def typeOf(path: String): Type.Ref = refOf(path, isTerm = false).asInstanceOf[Type.Ref]
-  @hosted def termOf(path: String): Term.Ref = refOf(path, isTerm = true).asInstanceOf[Term.Ref]
+  @hosted def typeOf[T: ru.TypeTag]: Type.Ref = refOf(ru.typeOf[T].typeSymbol.fullName, isTerm = false).asInstanceOf[Type.Ref]
+  @hosted def termOf[T: ru.TypeTag](x: T): Term.Ref = refOf(ru.typeOf[T].typeSymbol.fullName, isTerm = true).asInstanceOf[Term.Ref]
 }
