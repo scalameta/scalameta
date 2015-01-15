@@ -24,7 +24,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
 
   def dialect: Dialect = scala.meta.dialects.Scala211
   def attrs(tree: Tree): Seq[scala.meta.semantic.Attr] = tree match {
-    case tree: Term => List(scala.meta.semantic.Attr.Type(toApproximateScalameta(tree.scratchpad.collect{ case gtree: g.Tree => gtree }.head.tpe)))
+    case tree: Term => List(scala.meta.semantic.Attr.Type(toApproximateScalameta(tree.scratchpad.collect{ case gtree: g.Tree => gtree }.head.tpe.widen)))
     case _ => Nil
   }
   def root: Scope = p.Pkg(p.Term.Name("_root").appendScratchpad(g.rootMirror.RootPackage), Nil).appendScratchpad(g.rootMirror.RootPackage)
