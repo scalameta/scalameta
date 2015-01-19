@@ -22,7 +22,7 @@ package object syntactic {
   @quasiquote[Type.Arg]('t)             implicit class TypeQuote(ctx: StringContext)
   @quasiquote[Type.Param]('tparam)      implicit class TypeParamQuote(ctx: StringContext)
   @quasiquote[Case, Pat.Arg]('p)        implicit class CaseOrPatternQuote(ctx: StringContext)
-  @quasiquote[Ctor.Ref]('ctorref)       implicit class CtorRefQuote(ctx: StringContext)
+  @quasiquote[Ctor.Ref, Term]('ctorref) implicit class CtorRefQuote(ctx: StringContext)
   @quasiquote[Template]('template)      implicit class TemplateQuote(ctx: StringContext)
   @quasiquote[Mod]('mod)                implicit class ModQuote(ctx: StringContext)
   @quasiquote[Enumerator]('enumerator)  implicit class EnumeratorQuote(ctx: StringContext)

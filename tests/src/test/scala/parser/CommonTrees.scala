@@ -22,6 +22,13 @@ trait CommonTrees {
     }
   }
 
+  object EmptyCtor {
+    def unapply(tree: Tree): Boolean = tree match {
+      case Ctor.Primary(Nil, Ctor.Name("this"), Nil) => true
+      case _ => false
+    }
+  }
+
   object EmptyTemplate {
     def unapply(tree: Tree): Boolean = tree match {
       case Template(Nil, Nil, Term.Param(Nil, None, None, None), Nil) => true

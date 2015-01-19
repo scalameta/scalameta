@@ -121,7 +121,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("1: @foo") {
-    val Annotate(Lit.Int(1), Mod.Annot(Ctor.Ref(TypeName("foo"), Nil)) :: Nil) = term("1: @foo")
+    val Annotate(Lit.Int(1), Mod.Annot(Ctor.Name("foo")) :: Nil) = term("1: @foo")
   }
 
   test("(true, false)") {
@@ -262,27 +262,25 @@ class TermSuite extends ParseSuite {
   }
 
   test("new A") {
-    val New(templ @ Template(Nil, Ctor.Ref(TypeName("A"), Nil) :: Nil, EmptySelf(), Nil)) = term("new A")
+    val New(templ @ Template(Nil, Ctor.Name("A") :: Nil, EmptySelf(), Nil)) = term("new A")
     // TODO: revisit this once we have trivia in place
     // assert(templ.hasStats === false)
   }
 
   test("new A {}") {
-    val New(templ @ Template(Nil, Ctor.Ref(TypeName("A"), Nil) :: Nil, EmptySelf(), Nil)) = term("new A {}")
+    val New(templ @ Template(Nil, Ctor.Name("A") :: Nil, EmptySelf(), Nil)) = term("new A {}")
     // TODO: revisit this once we have trivia in place
     // assert(templ.hasStats === true)
   }
 
   test("new A with B") {
-    val New(Template(Nil, Ctor.Ref(TypeName("A"), Nil) ::
-                          Ctor.Ref(TypeName("B"), Nil) :: Nil,
-                     EmptySelf(), Nil)) =
+    val New(Template(Nil, Ctor.Name("A") :: Ctor.Name("B") :: Nil, EmptySelf(), Nil)) =
       term("new A with B")
   }
 
   test("new { val x: Int = 1 } with A") {
     val New(Template(Defn.Val(Nil, List(TermName("x")), Some(TypeName("Int")), Lit.Int(1)) :: Nil,
-                     Ctor.Ref(TypeName("A"), Nil) :: Nil, EmptySelf(), Nil)) =
+                     Ctor.Name("A") :: Nil, EmptySelf(), Nil)) =
       term("new { val x: Int = 1 } with A")
   }
 
@@ -316,7 +314,7 @@ class TermSuite extends ParseSuite {
     val Term.Block(List(
       Defn.Class(
         List(Mod.Case()), Type.Name("C"), Nil,
-        Ctor.Primary(Nil, List(List(Term.Param(Nil, Some(x), Some(Type.Name("Int")), None)))),
+        Ctor.Primary(Nil, Ctor.Name("this"), List(List(Term.Param(Nil, Some(x), Some(Type.Name("Int")), None)))),
         Template(Nil, Nil, Term.Param(Nil, None, None, None), Nil)))) = term("{ case class C(x: Int); }")
   }
 }

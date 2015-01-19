@@ -43,6 +43,33 @@ object SyntacticInfo {
         case _               => 10
       }
   }
+  implicit class SyntacticTermOps(val tree: Term) extends AnyVal {
+    def isCtorCall: Boolean = tree match {
+      case _: Ctor.Ref => true
+      case Term.ApplyType(callee, _) => callee.isCtorCall
+      case Term.Apply(callee, _) => callee.isCtorCall
+      case Term.Annotate(annottee, _) => annottee.isCtorCall
+      case _ => false
+    }
+    def ctorTpe: Type = tree match {
+      case Ctor.Name(value) => Type.Name(value)
+      case Ctor.Ref.Select(qual, name) => Type.Select(qual, Type.Name(name.value))
+      case Ctor.Ref.Project(qual, name) => Type.Project(qual, Type.Name(name.value))
+      case Ctor.Ref.Function(_) => unreachable
+      case Term.ApplyType(Ctor.Ref.Function(_), targs) => Type.Function(targs.init, targs.last)
+      case Term.ApplyType(callee, targs) => Type.Apply(callee.ctorTpe, targs)
+      case Term.Apply(callee, _) => callee.ctorTpe
+      case Term.Annotate(annottee, annots) => Type.Annotate(annottee.ctorTpe, annots)
+      case _ => unreachable
+    }
+    def ctorArgss: Seq[Seq[Term.Arg]] = tree match {
+      case _: Ctor.Ref => Nil
+      case Term.ApplyType(callee, _) => callee.ctorArgss
+      case Term.Apply(callee, args) => callee.ctorArgss :+ args
+      case Term.Annotate(annottee, _) => annottee.ctorArgss
+      case _ => unreachable
+    }
+  }
   implicit class SyntacticTermRefOps(val tree: Term.Ref) extends AnyVal {
     def isPath: Boolean = tree.isStableId || tree.isInstanceOf[Term.This]
     def isQualId: Boolean = tree match {
@@ -2198,6 +2225,7 @@ abstract class AbstractParser { parser =>
     next()
     Defn.Trait(mods, typeName(),
                typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false),
+               primaryCtor(OwnedByTrait),
                templateOpt(OwnedByTrait))
   }
 
@@ -2217,15 +2245,22 @@ abstract class AbstractParser { parser =>
    */
   def objectDef(mods: List[Mod]): Defn.Object = {
     next()
-    Defn.Object(mods, termName(), templateOpt(OwnedByObject))
+    Defn.Object(mods, termName(), primaryCtor(OwnedByObject), templateOpt(OwnedByObject))
   }
 
 /* -------- CONSTRUCTORS ------------------------------------------- */
 
+  // TODO: we need to store some string in Ctor.Name in order to represent constructor calls (which also use Ctor.Name)
+  // however, when representing constructor defns, we can't easily figure out that name
+  // a natural desire would be to have this name equal to the name of the enclosing class/trait/object
+  // but unfortunately we can't do that, because we can create ctors in isolation from their enclosures
+  // therefore, I'm going to use `Term.Name("this")` here for the time being
+
   def primaryCtor(owner: TemplateOwner): Ctor.Primary = {
+    if (!owner.isClass) return Ctor.Primary(Nil, Ctor.Name("this"), Nil)
     val mods = constructorAnnots() ++ accessModifierOpt()
     val paramss = paramClauses(ownerIsType = true, owner == OwnedByCaseClass)
-    Ctor.Primary(mods, paramss)
+    Ctor.Primary(mods, Ctor.Name("this"), paramss)
   }
 
   def secondaryCtor(mods: List[Mod]): Ctor.Secondary = {
@@ -2238,12 +2273,27 @@ abstract class AbstractParser { parser =>
       case _: `{` => constrBlock()
       case _      => accept[`=`]; constrExpr()
     }
-    Ctor.Secondary(mods, paramss, argss, stats)
+    Ctor.Secondary(mods, Ctor.Name("this"), paramss, argss, stats)
   }
 
-  def constructorCall(tpe: Type, allowArgss: Boolean = true): Ctor.Ref = {
+  def constructorCall(tpe: Type, allowArgss: Boolean = true): Term = {
+    object Types {
+      def unapply(tpes: Seq[Type.Arg]): Option[Seq[Type]] = {
+        if (tpes.forall(_.isInstanceOf[Type])) Some(tpes.map(_.asInstanceOf[Type]))
+        else None
+      }
+    }
+    def convert(tpe: Type): Term = tpe match {
+      case Type.Name(value) => Ctor.Name(value)
+      case Type.Select(qual, name) => Ctor.Ref.Select(qual, Ctor.Name(name.value))
+      case Type.Project(qual, name) => Ctor.Ref.Project(qual, Ctor.Name(name.value))
+      case Type.Function(Types(params), ret) => Term.ApplyType(Ctor.Ref.Function(Ctor.Name("=>")), params :+ ret)
+      case Type.Annotate(tpe, annots) => Term.Annotate(convert(tpe), annots)
+      case Type.Apply(tpe, args) => Term.ApplyType(convert(tpe), args)
+      case _ => syntaxError("this type can't be used in a constructor call")
+    }
     val argss = if (token.isNot[`(`]) Nil else if (allowArgss) multipleArgumentExprs() else List(argumentExprs())
-    Ctor.Ref(tpe, argss)
+    argss.foldLeft(convert(tpe))((curr, args) => Term.Apply(curr, args))
   }
 
 /* -------- TEMPLATES ------------------------------------------- */
@@ -2253,8 +2303,8 @@ abstract class AbstractParser { parser =>
    *  TraitParents       ::= ModType {with ModType}
    *  }}}
    */
-  def templateParents(): List[Ctor.Ref] = {
-    val parents = new ListBuffer[Ctor.Ref]
+  def templateParents(): List[Term] = {
+    val parents = new ListBuffer[Term]
     def readAppliedParent() = parents += constructorCall(startModType())
     readAppliedParent()
     while (token.is[`with`]) { next(); readAppliedParent() }
@@ -2533,7 +2583,7 @@ abstract class AbstractParser { parser =>
     }
 
   def packageObject(): Pkg.Object =
-    Pkg.Object(Nil, termName(), templateOpt(OwnedByObject))
+    Pkg.Object(Nil, termName(), primaryCtor(OwnedByObject), templateOpt(OwnedByObject))
 
   /** {{{
    *  CompilationUnit ::= {package QualId semi} TopStatSeq

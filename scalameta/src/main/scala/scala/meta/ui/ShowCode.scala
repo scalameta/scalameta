@@ -278,7 +278,7 @@ object Code {
       m(SimplePattern, s(t.prefix, "\"", r(zipped), t.parts.last, "\""))
 
     // Mod
-    case t: Mod.Annot           => s(kw("@"), p(SimpleTyp, t.ref.tpe), t.ref.argss)
+    case t: Mod.Annot           => s(kw("@"), p(SimpleTyp, t.tree.ctorTpe), t.tree.ctorArgss)
     case _: Mod.Abstract        => kw("abstract")
     case _: Mod.Case            => kw("case")
     case _: Mod.Covariant       => kw("+")
@@ -341,7 +341,7 @@ object Code {
     case t: Import          => s(kw("import"), " ", r(t.clauses, ", "))
 
     // Aux
-    case t: Ctor.Ref => s(p(AnnotTyp, t.tpe), t.argss)
+    case t: Ctor.Ref => if (t.isInstanceOf[Ctor.Ref.Function]) s("=>") else s(t.ctorTpe)
     case t: Template =>
       val isBodyEmpty = t.self.name.isEmpty && t.self.decltpe.isEmpty && !guessHasStats(t)
       val isTemplateEmpty = t.early.isEmpty && t.parents.isEmpty && isBodyEmpty
@@ -349,7 +349,7 @@ object Code {
       else {
         val isOneLiner = t.stats.length == 0 || (t.stats.length == 1 && !s(t.stats.head).toString.contains(EOL))
         val pearly = if (!t.early.isEmpty) s("{ ", r(t.early, "; "), " } with ") else s()
-        val pparents = a(r(t.parents, " with "), " ", !t.parents.isEmpty && !isBodyEmpty)
+        val pparents = a(r(t.parents.map(parent => s(p(AnnotTyp, parent.ctorTpe), parent.ctorArgss)), " with "), " ", !t.parents.isEmpty && !isBodyEmpty)
         val pbody = (t.self.name.nonEmpty || t.self.decltpe.nonEmpty, guessHasStats(t), t.stats) match {
           case (false, false, _) => s()
           case (true, false, _) => s("{ ", t.self, " => }")

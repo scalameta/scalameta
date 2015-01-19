@@ -43,13 +43,11 @@ class TypeSuite extends ParseSuite {
   }
 
   test("(A, B) => C") {
-    val Function(TypeName("A") :: TypeName("B") :: Nil, TypeName("C")) =
-      tpe("(A, B) => C")
+    val Function(TypeName("A") :: TypeName("B") :: Nil, TypeName("C")) = tpe("(A, B) => C")
   }
 
   test("T @foo") {
-    val Annotate(TypeName("T"), Mod.Annot(Ctor.Ref(TypeName("foo"), Nil)) :: Nil) =
-      tpe("T @foo")
+    val Annotate(TypeName("T"), Mod.Annot(Ctor.Name("foo")) :: Nil) = tpe("T @foo")
   }
 
   test("A with B") {

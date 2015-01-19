@@ -47,9 +47,8 @@ package scala.meta {
     @branch trait Type extends Member
   }
 
-  @branch trait Ctor extends Tree with Scope
   object Ctor {
-    @branch trait Ref extends Tree
+    @branch trait Ref extends Term.Ref
   }
 
   @branch trait Template extends Tree with Scope
@@ -271,13 +270,18 @@ package scala.meta.internal.ast {
     @ast class Trait(mods: Seq[Mod],
                      name: impl.Type.Name,
                      tparams: Seq[impl.Type.Param],
+                     ctor: Ctor.Primary,
                      templ: Template) extends Defn with Member.Type {
       require(templ.stats.forall(!_.isInstanceOf[Ctor]))
-      require(templ.parents.forall(_.argss.isEmpty))
+      require(ctor.mods.isEmpty && ctor.paramss.isEmpty)
     }
     @ast class Object(mods: Seq[Mod],
                       name: Term.Name,
-                      templ: Template) extends Defn with Member.Term
+                      ctor: Ctor.Primary,
+                      templ: Template) extends Defn with Member.Term {
+      require(templ.stats.forall(!_.isInstanceOf[Ctor]))
+      require(ctor.mods.isEmpty && ctor.paramss.isEmpty)
+    }
   }
 
   @ast class Pkg(ref: Term.Ref, stats: Seq[Stat])
@@ -292,26 +296,36 @@ package scala.meta.internal.ast {
     }
   }
   object Pkg {
-    @ast class Object(mods: Seq[Mod], name: Term.Name, templ: Template)
+    @ast class Object(mods: Seq[Mod], name: Term.Name, ctor: Ctor.Primary, templ: Template)
          extends Member.Term with Stat
   }
 
-  @branch trait Ctor extends api.Ctor with Tree with Scope
+  @branch trait Ctor extends Tree with Scope with Member.Term
   object Ctor {
     @ast class Primary(mods: Seq[Mod],
+                       name: Ctor.Name,
                        paramss: Seq[Seq[Term.Param]]) extends Ctor
     @ast class Secondary(mods: Seq[Mod],
+                         name: Ctor.Name,
                          paramss: Seq[Seq[Term.Param]] @nonEmpty,
                          primaryCtorArgss: Seq[Seq[Term.Arg]],
                          stats: Seq[Stat]) extends Ctor with Stat
-    @ast class Ref(tpe: Type, argss: Seq[Seq[Term.Arg]]) extends api.Ctor.Ref
+    @branch trait Ref extends api.Ctor.Ref with impl.Term.Ref
+    val Name = Ref.Name
+    type Name = Ref.Name
+    object Ref {
+      @ast class Name(value: String @nonEmpty) extends impl.Name with Ref
+      @ast class Select(qual: Term.Ref, name: Name) extends Ref
+      @ast class Project(qual: Type, name: Name) extends Ref
+      @ast class Function(name: Name) extends Ref
+    }
   }
 
   @ast class Template(early: Seq[Stat],
-                      parents: Seq[Ctor.Ref],
+                      parents: Seq[Term],
                       self: Term.Param,
                       stats: Seq[Stat]) extends api.Template with Tree with Scope {
-    require(parents.isEmpty || !parents.tail.exists(_.argss.nonEmpty))
+    require(parents.forall(_.isCtorCall))
     require(early.nonEmpty ==> parents.nonEmpty)
     require(early.forall(_.isEarlyStat))
     require(stats.forall(_.isTemplateStat))
@@ -319,7 +333,9 @@ package scala.meta.internal.ast {
 
   @branch trait Mod extends api.Mod with Tree
   object Mod {
-    @ast class Annot(ref: impl.Ctor.Ref) extends Mod
+    @ast class Annot(tree: Term) extends Mod {
+      require(tree.isCtorCall)
+    }
     @ast class Private extends Mod
     @ast class PrivateThis extends Mod
     @ast class PrivateWithin(name: Predef.String) extends Mod

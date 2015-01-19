@@ -31,7 +31,7 @@
  Return            | `q"return $expropt"`
  Throw             | `q"throw $expr"`
  Ascribe           | `q"$expr: $tpe"`
- Annotate          | `q"$expr: ..@$ctorrefs"`
+ Annotate          | `q"$expr: ..@$expr"`
  Tuple             | `q"(..$exprs)"`
  Block             | `q"{ ..$stats }"`
  If                | `q"if ($expr) $expr else $expr"`
@@ -71,7 +71,7 @@
  Tuple             | `t"(..$tpes)"`
  Compound          | `t"..$tpes { ..$stats }"`
  Existential       | `t"$tpe forSome { ..$stats }"`
- Annotate          | `t"$tpe ..@$ctorrefs"`
+ Annotate          | `t"$tpe ..@$expr"`
  Placeholder       | `t"_ >: $tpeopt <: tpeopt"`
  Literal           | `t"$lit"`
 
@@ -136,7 +136,7 @@
  Primary Ctor   | `q"..$mods def this(..$paramss)"`
  Secondary Ctor | `q"..$mods def this(..$paramss) = { this(...$aexprss); ..$stats }"`
  Type           | `q"..$mods type $tname[..$tparams] = $tpe"`
- Class          | `q"..$mods class $tname[..$tparams] $ctor extends $template"`
+ Class          | `q"..$mods class $tname[..$tparams] $member extends $template"`
  Trait          | `q"..$mods trait $tname[..$tparams] extends $template"`
  Object         | `q"..$mods object $name extends $template"`
  Package Object | `q"package object $name extends $template"`
@@ -149,18 +149,17 @@
  Term Param     | `param"..$mods $nameopt: $atpeopt = $defaultopt"`
  Type Param     | `param"..$mods type $nameopt[..$tparams] <% ..$tpes : ..$tpes >: $tpeopt <: $tpeopt"`
 
-## Template (meta.Template) and Parents (meta.Ctor.Ref)
+## Template (meta.Template)
 
            | Quasiquote
 -----------|--------------------
- Template  | `template"{ ..$stat } with ..$ctorrefs { $param => ..$stats }"`
- Parent    | `template"$tpe(...$aexprss)"`
+ Template  | `template"{ ..$stat } with ..$exprs { $param => ..$stats }"`
 
 ## Modifiers (meta.Mod)
 
                   | Quasiquote
 ------------------|-----------------
- Annotation       | `mod"@$ctorref"`
+ Annotation       | `mod"@$expr"`
  Private          | `mod"private"`
  Private Within   | `mod"private[$str]"`
  Private This     | `mod"private[this]"`
@@ -209,7 +208,6 @@
  Type                | Shorthand     | Interpolator
 ---------------------|---------------|--------------
  meta.Case           | `$case`       | `p`
- meta.Ctor           | `$ctor`       | `q`
  meta.Ctor.Ref       | `$ctorref`    | `ctorref`
  meta.Enumerator     | `$enumerator` | `enumerator`
  meta.Member         | `$member`     | `q`

@@ -24,7 +24,7 @@ package object semantic {
     // TODO: examples: a type of a tree, a definition/definitions the tree refers to, maybe a desugaring, etc
     // TODO: see https://github.com/JetBrains/intellij-scala/blob/master/src/org/jetbrains/plugins/scala/lang/resolve/ScalaResolveResult.scala#L24
     @leaf class Type(tpe: scala.meta.Type) extends Attr
-    @leaf class Defns(defns: Seq[scala.meta.Tree] @nonEmpty) extends Attr
+    @leaf class Defns(defns: Seq[scala.meta.Member] @nonEmpty) extends Attr
   }
 
   implicit class SemanticTreeOps(val tree: Tree) extends AnyVal {
@@ -45,7 +45,6 @@ package object semantic {
   object HasTpe {
     implicit def Term[T <: meta.Term]: HasTpe[T, meta.Type] = new HasTpe[T, meta.Type] {}
     implicit def Member[T <: meta.Member]: HasTpe[T, meta.Type] = new HasTpe[T, meta.Type] {}
-    implicit def Ctor[T <: meta.Ctor]: HasTpe[T, meta.Type] = new HasTpe[T, meta.Type] {}
     implicit def TermParam[T <: meta.Term.Param]: HasTpe[T, meta.Type.Arg] = new HasTpe[T, meta.Type.Arg] {}
     implicit def Template[T <: meta.Template]: HasTpe[T, meta.Type] = new HasTpe[T, meta.Type] {}
   }
@@ -68,16 +67,6 @@ package object semantic {
       defns match {
         case Seq(single) => single
         case Seq(_, _*) => throw new SemanticException(s"multiple definitions found for ${tree.summary}")
-        case Seq() => unreachable
-      }
-    }
-  }
-
-  implicit class SemanticCtorRefOps(val tree: Ctor.Ref) extends AnyVal {
-    @hosted def ctor: Ctor = {
-      tree.internalAttr[Attr.Defns].defns.require[Seq[Ctor]] match {
-        case Seq(single) => single
-        case Seq(_, _*) => throw new SemanticException(s"multiple constructors found for ${tree.summary}")
         case Seq() => unreachable
       }
     }
@@ -122,6 +111,8 @@ package object semantic {
         case tree: impl.Term.Param => throw new SemanticException(s"can't reference an anonymous parameter ${tree.summary}")
         case tree: impl.Type.Param if tree.name.isDefined => tree.name.get
         case tree: impl.Type.Param => throw new SemanticException(s"can't reference an anonymous parameter ${tree.summary}")
+        case tree: impl.Ctor.Primary => tree.name
+        case tree: impl.Ctor.Secondary => tree.name
       }
     }
     @hosted def parents: Seq[Member] = implicitly[SemanticContext].parents(tree)
@@ -154,13 +145,17 @@ package object semantic {
         case tree: impl.Pkg.Object => tree.mods
         case tree: impl.Term.Param => tree.mods
         case tree: impl.Type.Param => tree.mods
+        case tree: impl.Ctor.Primary => tree.mods
+        case tree: impl.Ctor.Secondary => tree.mods
       }
     }
-    @hosted def annots: Seq[Ctor.Ref] = tree.mods.collect{ case impl.Mod.Annot(ref) => ref }
+    @hosted def annots: Seq[Term] = tree.mods.collect{ case impl.Mod.Annot(ref) => ref }
     @hosted private def firstNonPatParent(pat: Pat): Option[Tree] = pat.parent.collect{case pat: Pat => pat}.flatMap(firstNonPatParent).orElse(pat.parent)
     @hosted def isVal: Boolean = Some(tree).collect{case name: Term.Name => name}.flatMap(firstNonPatParent).map(s => s.isInstanceOf[impl.Decl.Val] || s.isInstanceOf[impl.Defn.Val]).getOrElse(false)
     @hosted def isVar: Boolean = Some(tree).collect{case name: Term.Name => name}.flatMap(firstNonPatParent).map(s => s.isInstanceOf[impl.Decl.Var] || s.isInstanceOf[impl.Defn.Var]).getOrElse(false)
     @hosted def isDef: Boolean = tree.isInstanceOf[impl.Decl.Def] || tree.isInstanceOf[impl.Defn.Def]
+    @hosted def isCtor: Boolean = tree.isInstanceOf[impl.Ctor.Primary] || tree.isInstanceOf[impl.Ctor.Secondary]
+    @hosted def isPrimaryCtor: Boolean = tree.isInstanceOf[impl.Ctor.Primary]
     @hosted def isMacro: Boolean = tree.isInstanceOf[impl.Defn.Macro]
     @hosted def isAbstractType: Boolean = tree.isInstanceOf[impl.Decl.Type]
     @hosted def isAliasType: Boolean = tree.isInstanceOf[impl.Defn.Type]
@@ -246,8 +241,8 @@ package object semantic {
     @hosted def packages: Seq[Member.Term] = internalAll[Member.Term](_.isPackage)
     @hosted def packages(name: String): Member.Term = internalSingle[Member.Term](name, _.isPackage, "packages")
     @hosted def packages(name: scala.Symbol): Member.Term = internalSingle[Member.Term](name.toString, _.isPackage, "packages")
-    @hosted def ctor: Ctor = internalAll[Ctor](_ => true) match { case Seq(primary, _*) => primary; case _ => throw new SemanticException(s"no constructors found in ${tree.summary}") }
-    @hosted def ctors: Seq[Ctor] = internalAll[Ctor](_ => true)
+    @hosted def ctor: Member.Term = internalAll[Member.Term](_ => true) match { case Seq(primary, _*) => primary; case _ => throw new SemanticException(s"no constructors found in ${tree.summary}") }
+    @hosted def ctors: Seq[Member.Term] = internalAll[Member.Term](_ => true)
     @hosted def classes: Seq[Member.Type] = internalAll[Member.Type](_.isClass)
     @hosted def classes(name: String): Member.Type = internalSingle[Member.Type](name, _.isClass, "classes")
     @hosted def classes(name: scala.Symbol): Member.Type = internalSingle[Member.Type](name.toString, _.isClass, "classes")
