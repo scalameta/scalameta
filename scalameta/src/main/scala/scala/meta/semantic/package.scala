@@ -41,18 +41,13 @@ package object semantic {
     @hosted def owner: Scope = implicitly[SemanticContext].owner(tree)
   }
 
-  sealed trait HasTpe[T, +U]
+  sealed trait HasTpe[T, U]
   object HasTpe {
-    implicit def ApiTerm[T <: meta.Term]: HasTpe[T, meta.Type] = new HasTpe[T, meta.Type] {}
-    implicit def ApiMember[T <: meta.Member]: HasTpe[T, meta.Member] = new HasTpe[T, meta.Member] {}
-    implicit def ApiCtor[T <: meta.Ctor]: HasTpe[T, meta.Ctor] = new HasTpe[T, meta.Ctor] {}
-    implicit def ApiTemplateParam[T <: meta.Term.Param]: HasTpe[T, meta.Term.Param] = new HasTpe[T, meta.Term.Param] {}
-    implicit def ApiTempl[T <: meta.Template]: HasTpe[T, meta.Template] = new HasTpe[T, meta.Template] {}
-    implicit def ImplTerm[T <: impl.Term]: HasTpe[T, impl.Type] = new HasTpe[T, impl.Type] {}
-    implicit def ImplMember[T <: impl.Member]: HasTpe[T, impl.Member] = new HasTpe[T, impl.Member] {}
-    implicit def ImplCtor[T <: impl.Ctor]: HasTpe[T, impl.Ctor] = new HasTpe[T, impl.Ctor] {}
-    implicit def ImplTemplateParam[T <: impl.Term.Param]: HasTpe[T, impl.Term.Param] = new HasTpe[T, impl.Term.Param] {}
-    implicit def ImplTempl[T <: impl.Template]: HasTpe[T, impl.Template] = new HasTpe[T, impl.Template] {}
+    implicit def Term[T <: meta.Term]: HasTpe[T, meta.Type] = new HasTpe[T, meta.Type] {}
+    implicit def Member[T <: meta.Member]: HasTpe[T, meta.Type] = new HasTpe[T, meta.Type] {}
+    implicit def Ctor[T <: meta.Ctor]: HasTpe[T, meta.Type] = new HasTpe[T, meta.Type] {}
+    implicit def TermParam[T <: meta.Term.Param]: HasTpe[T, meta.Type.Arg] = new HasTpe[T, meta.Type.Arg] {}
+    implicit def Template[T <: meta.Template]: HasTpe[T, meta.Type] = new HasTpe[T, meta.Type] {}
   }
 
   implicit class SemanticTypeableOps[T <: Tree, U <: Type : ClassTag](val tree: T)(implicit ev: HasTpe[T, U]) {
@@ -61,10 +56,10 @@ package object semantic {
 
   sealed trait HasDefn[T, U]
   object HasDefn {
-    implicit def ApiRef[T <: meta.Ref]: HasDefn[T, meta.Member] = new HasDefn[T, meta.Member] {}
-    implicit def ApiTermRef[T <: meta.Term.Ref]: HasDefn[T, meta.Member.Term] = new HasDefn[T, meta.Member.Term] {}
-    implicit def ApiTypeRef[T <: meta.Type.Ref]: HasDefn[T, meta.Member] = new HasDefn[T, meta.Member] {} // Type.Ref can refer to both types (regular types) and terms (singleton types)
-    implicit def ApiSelector[T <: meta.Selector]: HasDefn[T, meta.Member] = new HasDefn[T, meta.Member] {}
+    implicit def Ref[T <: meta.Ref]: HasDefn[T, meta.Member] = new HasDefn[T, meta.Member] {}
+    implicit def TermRef[T <: meta.Term.Ref]: HasDefn[T, meta.Member.Term] = new HasDefn[T, meta.Member.Term] {}
+    implicit def TypeRef[T <: meta.Type.Ref]: HasDefn[T, meta.Member] = new HasDefn[T, meta.Member] {} // Type.Ref can refer to both types (regular types) and terms (singleton types)
+    implicit def Selector[T <: meta.Selector]: HasDefn[T, meta.Member] = new HasDefn[T, meta.Member] {}
   }
 
   implicit class SemanticResolvableOps[T <: Tree, U <: Tree](val tree: T)(implicit ev: HasDefn[T, U]) {
