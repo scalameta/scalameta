@@ -250,13 +250,12 @@ package object semantic {
       val filtered = internalAll[T](x => x.ref.toString == name && filter(x))
       filtered match {
         case Seq(single) => single
-        case Seq(_, _*) => throw new SemanticException(s"multiple $diagnostic found in ${tree.summary}")
-        case Seq() => throw new SemanticException(s"no $diagnostic found in ${tree.summary}")
+        case Seq(_, _*) => throw new SemanticException(s"multiple $name $diagnostic found in ${tree.summary}")
+        case Seq() => throw new SemanticException(s"no $name $diagnostic found in ${tree.summary}")
       }
     }
     @hosted def members: Seq[Member] = internalAll[Member](_ => true)
-    @hosted def members(name: String): Member = internalSingle[Member](name, _ => true, "members")
-    @hosted def members(name: scala.Symbol): Member = internalSingle[Member](name.toString, _ => true, "members")
+    @hosted def members(name: Name): Member = internalSingle[Member](name.toString, m => (name.isInstanceOf[Term.Name] && m.isInstanceOf[Member.Term]) || (name.isInstanceOf[Type.Name] && m.isInstanceOf[Member.Type]), if (name.isInstanceOf[Term.Name]) "term members" else "type members")
     @hosted def packages: Seq[Member.Term] = internalAll[Member.Term](_.isPackage)
     @hosted def packages(name: String): Member.Term = internalSingle[Member.Term](name, _.isPackage, "packages")
     @hosted def packages(name: scala.Symbol): Member.Term = internalSingle[Member.Term](name.toString, _.isPackage, "packages")
