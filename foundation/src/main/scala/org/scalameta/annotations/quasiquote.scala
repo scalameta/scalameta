@@ -17,7 +17,10 @@ class QuasiquoteMacros(val c: Context) {
       val q"$mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
       val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" = mdef
       if (stats.nonEmpty) c.abort(cdef.pos, "@quasiquote classes must have empty bodies")
-      val qtypesLub = lub(qtypes.map(_.duplicate).map(qtype => c.typecheck(qtype, c.TYPEmode).tpe))
+      val qtypesLub = lub(qtypes.map(_.duplicate).map(qtype => {
+        try c.typecheck(qtype, c.TYPEmode).tpe
+        catch { case c.TypecheckException(pos, msg) => c.abort(pos.asInstanceOf[c.Position], msg) }
+      }))
       val qmodule = q"""
         object ${TermName(qname)} {
           import scala.language.experimental.macros
