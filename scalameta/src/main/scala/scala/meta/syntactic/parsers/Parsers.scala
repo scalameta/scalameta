@@ -283,12 +283,12 @@ abstract class AbstractParser { parser =>
 
   /** These are alternative entry points for quasiquotes.
    */
-  def parseParam(): Templ.Param = ???
+  def parseParam(): Template.Param = ???
   def parseTparam(): Type.Param = ???
   def parseTermArg(): Term.Arg = ???
-  def parseEnum(): Enum = ???
+  def parseEnumerator(): Enumerator = ???
   def parseMod(): Mod = ???
-  def parseTempl(): Templ = ???
+  def parseTemplate(): Template = ???
   def parseCtorRef(): Ctor.Ref = ???
   def parseSelector(): Selector = ???
   def parseCase(): Case = ???
@@ -1359,8 +1359,8 @@ abstract class AbstractParser { parser =>
    *                |  val Pattern1 `=' Expr
    *  }}}
    */
-  def enumerators(): List[Enum] = {
-    val enums = new ListBuffer[Enum]
+  def enumerators(): List[Enumerator] = {
+    val enums = new ListBuffer[Enumerator]
     enums ++= enumerator(isFirst = true)
     while (token.is[StatSep]) {
       next()
@@ -1369,15 +1369,15 @@ abstract class AbstractParser { parser =>
     enums.toList
   }
 
-  def enumerator(isFirst: Boolean, allowNestedIf: Boolean = true): List[Enum] =
-    if (token.is[`if`] && !isFirst) Enum.Guard(guard().get) :: Nil
+  def enumerator(isFirst: Boolean, allowNestedIf: Boolean = true): List[Enumerator] =
+    if (token.is[`if`] && !isFirst) Enumerator.Guard(guard().get) :: Nil
     else generator(!isFirst, allowNestedIf)
 
   /** {{{
    *  Generator ::= Pattern1 (`<-' | `=') Expr [Guard]
    *  }}}
    */
-  def generator(eqOK: Boolean, allowNestedIf: Boolean = true): List[Enum] = {
+  def generator(eqOK: Boolean, allowNestedIf: Boolean = true): List[Enumerator] = {
     val hasVal = token.is[`val`]
     if (hasVal)
       next()
@@ -1395,16 +1395,16 @@ abstract class AbstractParser { parser =>
     else accept[`<-`]
     val rhs = expr()
 
-    def loop(): List[Enum] =
+    def loop(): List[Enumerator] =
       if (token.isNot[`if`]) Nil
-      else Enum.Guard(guard().get) :: loop()
+      else Enumerator.Guard(guard().get) :: loop()
 
     val tail =
       if (allowNestedIf) loop()
       else Nil
 
-    (if (hasEq) Enum.Val(pat.asInstanceOf[Pat], rhs)
-     else Enum.Generator(pat.asInstanceOf[Pat], rhs)) :: tail
+    (if (hasEq) Enumerator.Val(pat.asInstanceOf[Pat], rhs)
+     else Enumerator.Generator(pat.asInstanceOf[Pat], rhs)) :: tail
   }
 
 /* -------- PATTERNS ------------------------------------------- */
@@ -1753,9 +1753,9 @@ abstract class AbstractParser { parser =>
    *  ClassParam        ::= {Annotation}  [{Modifier} (`val' | `var')] Id [`:' ParamType] [`=' Expr]
    *  }}}
    */
-  def paramClauses(ownerIsType: Boolean, ownerIsCase: Boolean = false): List[List[Templ.Param]] = {
+  def paramClauses(ownerIsType: Boolean, ownerIsCase: Boolean = false): List[List[Template.Param]] = {
     var parsedImplicits = false
-    def paramClause(): List[Templ.Param] = {
+    def paramClause(): List[Template.Param] = {
       if (token.is[`)`])
         return Nil
 
@@ -1765,7 +1765,7 @@ abstract class AbstractParser { parser =>
       }
       commaSeparated(param(ownerIsCase, ownerIsType, isImplicit = parsedImplicits))
     }
-    val paramss = new ListBuffer[List[Templ.Param]]
+    val paramss = new ListBuffer[List[Template.Param]]
     newLineOptWhenFollowedBy[`(`]
     while (!parsedImplicits && token.is[`(`]) {
       next()
@@ -1793,7 +1793,7 @@ abstract class AbstractParser { parser =>
       }
   }
 
-  def param(ownerIsCase: Boolean, ownerIsType: Boolean, isImplicit: Boolean): Templ.Param = {
+  def param(ownerIsCase: Boolean, ownerIsType: Boolean, isImplicit: Boolean): Template.Param = {
     var mods: List[Mod] = annots(skipNewLines = false)
     if (isImplicit) mods ++= List(Mod.Implicit())
     if (ownerIsType) {
@@ -1836,8 +1836,8 @@ abstract class AbstractParser { parser =>
         next()
         Some(expr())
       }
-    if (isValParam) Templ.Param.Val(mods, Some(name), Some(tpt), default)
-    else if (isVarParam) Templ.Param.Var(mods, Some(name), Some(tpt), default)
+    if (isValParam) Template.Param.Val(mods, Some(name), Some(tpt), default)
+    else if (isVarParam) Template.Param.Var(mods, Some(name), Some(tpt), default)
     else Term.Param(mods, Some(name), Some(tpt), default)
   }
 
@@ -2273,7 +2273,7 @@ abstract class AbstractParser { parser =>
    *  EarlyDef      ::= Annotations Modifiers PatDef
    *  }}}
    */
-  def template(): Templ = {
+  def template(): Template = {
     newLineOptWhenFollowedBy[`{`]
     if (token.is[`{`]) {
       // @S: pre template body cannot stub like post body can!
@@ -2283,14 +2283,14 @@ abstract class AbstractParser { parser =>
         next()
         val parents = templateParents()
         val (self1, body1) = templateBodyOpt(parenMeansSyntaxError = false)
-        Templ(edefs, parents, self1, body1)
+        Template(edefs, parents, self1, body1)
       } else {
-        Templ(Nil, Nil, self, body)
+        Template(Nil, Nil, self, body)
       }
     } else {
       val parents = templateParents()
       val (self, body) = templateBodyOpt(parenMeansSyntaxError = false)
-      Templ(Nil, parents, self, body)
+      Template(Nil, parents, self, body)
     }
   }
 
@@ -2311,7 +2311,7 @@ abstract class AbstractParser { parser =>
    *  TraitExtends     ::= `extends' | `<:'
    *  }}}
    */
-  def templateOpt(owner: TemplateOwner): Templ = {
+  def templateOpt(owner: TemplateOwner): Template = {
     if (token.is[`extends`] /* || token.is[`<:`] && mods.isTrait */) {
       next()
       template()
@@ -2319,7 +2319,7 @@ abstract class AbstractParser { parser =>
     else {
       newLineOptWhenFollowedBy[`{`]
       val (self, body) = templateBodyOpt(parenMeansSyntaxError = owner.isTrait || owner.isTerm)
-      Templ(Nil, Nil, self, body)
+      Template(Nil, Nil, self, body)
     }
   }
 

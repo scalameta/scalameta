@@ -25,7 +25,7 @@ package scala.meta {
     @branch trait Ref extends Term with api.Ref
     @branch trait Name extends api.Name with Term.Ref with Pat with Member
     @branch trait Arg extends Tree
-    @branch trait Param extends Member.Term with Templ.Param
+    @branch trait Param extends Member.Term with Template.Param
   }
 
   @branch trait Type extends Tree with Type.Arg with Scope
@@ -52,13 +52,13 @@ package scala.meta {
     @branch trait Ref extends Tree
   }
 
-  @branch trait Templ extends Tree with Scope
-  object Templ {
+  @branch trait Template extends Tree with Scope
+  object Template {
     @branch trait Param extends Member.Term
   }
 
   @branch trait Mod extends Tree
-  @branch trait Enum extends Tree
+  @branch trait Enumerator extends Tree
   @branch trait Selector extends Tree
   @branch trait Case extends Tree
   @branch trait Source extends Tree
@@ -116,11 +116,11 @@ package scala.meta.internal.ast {
     @ast class PartialFunction(cases: Seq[Case] @nonEmpty) extends Term
     @ast class While(expr: Term, body: Term) extends Term
     @ast class Do(body: Term, expr: Term) extends Term
-    @ast class For(enums: Seq[Enum] @nonEmpty, body: Term) extends Term with Scope {
-      require(enums.head.isInstanceOf[Enum.Generator])
+    @ast class For(enums: Seq[Enumerator] @nonEmpty, body: Term) extends Term with Scope {
+      require(enums.head.isInstanceOf[Enumerator.Generator])
     }
-    @ast class ForYield(enums: Seq[Enum] @nonEmpty, body: Term) extends Term with Scope
-    @ast class New(templ: Templ) extends Term
+    @ast class ForYield(enums: Seq[Enumerator] @nonEmpty, body: Term) extends Term with Scope
+    @ast class New(templ: Template) extends Term
     @ast class Placeholder() extends Term
     @ast class Eta(term: Term) extends Term
     @branch trait Arg extends api.Term.Arg with Tree
@@ -128,7 +128,7 @@ package scala.meta.internal.ast {
       @ast class Named(name: Name, rhs: Term) extends Arg
       @ast class Repeated(arg: Term) extends Arg
     }
-    @ast class Param(mods: Seq[Mod], name: Option[impl.Term.Name], decltpe: Option[Type.Arg], default: Option[Term]) extends api.Term.Param with Member with Templ.Param
+    @ast class Param(mods: Seq[Mod], name: Option[impl.Term.Name], decltpe: Option[Type.Arg], default: Option[Term]) extends api.Term.Param with Member with Template.Param
   }
 
   @branch trait Type extends api.Type with Tree with Type.Arg with Scope
@@ -271,17 +271,17 @@ package scala.meta.internal.ast {
                      name: impl.Type.Name,
                      tparams: Seq[impl.Type.Param],
                      ctor: Ctor.Primary,
-                     templ: Templ) extends Defn with Member.Type
+                     templ: Template) extends Defn with Member.Type
     @ast class Trait(mods: Seq[Mod],
                      name: impl.Type.Name,
                      tparams: Seq[impl.Type.Param],
-                     templ: Templ) extends Defn with Member.Type {
+                     templ: Template) extends Defn with Member.Type {
       require(templ.stats.forall(!_.isInstanceOf[Ctor]))
       require(templ.parents.forall(_.argss.isEmpty))
     }
     @ast class Object(mods: Seq[Mod],
                       name: Term.Name,
-                      templ: Templ) extends Defn with Member.Term
+                      templ: Template) extends Defn with Member.Term
   }
 
   @ast class Pkg(ref: Term.Ref, stats: Seq[Stat])
@@ -296,14 +296,14 @@ package scala.meta.internal.ast {
     }
   }
   object Pkg {
-    @ast class Object(mods: Seq[Mod], name: Term.Name, templ: Templ)
+    @ast class Object(mods: Seq[Mod], name: Term.Name, templ: Template)
          extends Member.Term with Stat
   }
 
   @branch trait Ctor extends api.Ctor with Tree with Scope
   object Ctor {
     @ast class Primary(mods: Seq[Mod],
-                       paramss: Seq[Seq[Templ.Param]]) extends Ctor
+                       paramss: Seq[Seq[Template.Param]]) extends Ctor
     @ast class Secondary(mods: Seq[Mod],
                          paramss: Seq[Seq[Term.Param]] @nonEmpty,
                          primaryCtorArgss: Seq[Seq[Term.Arg]],
@@ -311,25 +311,25 @@ package scala.meta.internal.ast {
     @ast class Ref(tpe: Type, argss: Seq[Seq[Term.Arg]]) extends api.Ctor.Ref
   }
 
-  @ast class Templ(early: Seq[Stat],
+  @ast class Template(early: Seq[Stat],
                       parents: Seq[Ctor.Ref],
                       self: Term.Param,
-                      stats: Seq[Stat]) extends api.Templ with Tree with Scope {
+                      stats: Seq[Stat]) extends api.Template with Tree with Scope {
     require(parents.isEmpty || !parents.tail.exists(_.argss.nonEmpty))
     require(early.nonEmpty ==> parents.nonEmpty)
     require(early.forall(_.isEarlyStat))
     require(stats.forall(_.isTemplateStat))
   }
-  object Templ {
-    @branch trait Param extends api.Templ.Param with Member {
+  object Template {
+    @branch trait Param extends api.Template.Param with Member {
       def mods: Seq[Mod]
       def name: Option[impl.Term.Name]
       def decltpe: Option[Type.Arg]
       def default: Option[Term]
     }
     object Param {
-      @ast class Val(mods: Seq[Mod], name: Option[impl.Term.Name], decltpe: Option[Type.Arg], default: Option[Term]) extends Templ.Param
-      @ast class Var(mods: Seq[Mod], name: Option[impl.Term.Name], decltpe: Option[Type.Arg], default: Option[Term]) extends Templ.Param
+      @ast class Val(mods: Seq[Mod], name: Option[impl.Term.Name], decltpe: Option[Type.Arg], default: Option[Term]) extends Template.Param
+      @ast class Var(mods: Seq[Mod], name: Option[impl.Term.Name], decltpe: Option[Type.Arg], default: Option[Term]) extends Template.Param
     }
   }
 
@@ -353,11 +353,11 @@ package scala.meta.internal.ast {
     @ast class Lazy() extends Mod
   }
 
-  @branch trait Enum extends api.Enum with Tree
-  object Enum {
-    @ast class Generator(pat: Pat, rhs: Term) extends Enum
-    @ast class Val(pat: Pat, rhs: Term) extends Enum
-    @ast class Guard(cond: Term) extends Enum
+  @branch trait Enumerator extends api.Enumerator with Tree
+  object Enumerator {
+    @ast class Generator(pat: Pat, rhs: Term) extends Enumerator
+    @ast class Val(pat: Pat, rhs: Term) extends Enumerator
+    @ast class Guard(cond: Term) extends Enumerator
   }
 
   @ast class Import(clauses: Seq[Import.Clause] @nonEmpty) extends Stat

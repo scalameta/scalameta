@@ -42,9 +42,9 @@
  Partial Function  | `q"{ ..case $cass }"`
  While             | `q"while ($expr) $expr"`
  Do While          | `q"do $expr while($expr)"`
- For               | `q"for (..$enums) $expr"`
- For Yield         | `q"for (..$enums) yield $expr"`
- New               | `q"new $templ"`
+ For               | `q"for (..$enumerators) $expr"`
+ For Yield         | `q"for (..$enumerators) yield $expr"`
+ New               | `q"new $template"`
  Placeholder       | `q"_"`
  Eta Expansion     | `q"$expr _"`
  Literal           | `q"$lit"`
@@ -112,7 +112,7 @@
 ------------|----------------------------
  Expression | `q"$expr"`
  Member     | `q"$memb"`
- Import     | `q"import ..($ref.{..$sels})"`
+ Import     | `q"import ..($ref.{..$selectors})"`
 
 ## Members (meta.Member)
 
@@ -154,8 +154,8 @@
 
            | Quasiquote
 -----------|--------------------
- Template  | `templ"{ ..$stat } with ..$crefs { $param => ..$stats }"`
- Parent    | `templ"$tpe(...$argss)"`
+ Template  | `template"{ ..$stat } with ..$crefs { $param => ..$stats }"`
+ Parent    | `template"$tpe(...$argss)"`
 
 ## Modifiers (meta.Mod)
 
@@ -182,18 +182,18 @@
 
            | Quasiquote
 -----------|------------------------------
- Generator | `enum"$pat <- $expr"`
- Value     | `enum"$pat = $expr"`
- Guard     | `enum"if $expr"`
+ Generator | `enumerator"$pat <- $expr"`
+ Value     | `enumerator"$pat = $expr"`
+ Guard     | `enumerator"if $expr"`
 
 ## Selectors (meta.Selector)
 
                    | Quasiquote
 -------------------|---------------------------
- Name Selector     | `sel"$str"`
- Rename Selector   | `sel"$str => $str"`
- Unimport Selector | `sel"$str => _"`
- Wildcard Selector | `sel"_"`
+ Name Selector     | `selector"$str"`
+ Rename Selector   | `selector"$str => $str"`
+ Unimport Selector | `selector"$str => _"`
+ Wildcard Selector | `selector"_"`
 
 ## Cases (meta.Case)
 
@@ -205,30 +205,30 @@
 
 ### Shorthands and interpolators
 
- Type                | Shorthand | Interpolator
----------------------|-----------|--------------
- meta.Enum           | `$enum`   | `enum`
- meta.Case           | `$cas`    | `cas`
- meta.Member         | `$memb`   | `q`
- meta.Mod            | `$mod`    | `mod`
- meta.Ctor           | `$ctor`   | `q`
- meta.Ctor.Ref       | `$cref`   | `ctorref`
- meta.Pat            | `$pat`    | `p`
- meta.Pat.Arg        | `$apat`   | `p`
- meta.Selector       | `$sel`    | `sel`
- meta.Stat           | `$stat`   | `q`
- meta.Templ          | `$templ`  | `templ`
- meta.Templ.Param    | `$cparam` | `param`
- meta.Term           | `$expr`   | `q`
- meta.Term.Arg       | `$arg`    | `arg`
- meta.Term.Name      | `$name`   | `q`
- meta.Term.Ref       | `$ref`    | `q`
- meta.Term.Param     | `$param`  | `tparam`
- meta.Type           | `$tpe`    | `t`
- meta.Type.Arg       | `$atpe`   | `t`
- meta.Type.Name      | `$tname`  | `t`
- meta.Type.Param     | `$tparam` | `param`
-                     | `$lit`    | `q`
+ Type                | Shorthand     | Interpolator
+---------------------|---------------|--------------
+ meta.Enumerator     | `$enumerator` | `enumerator`
+ meta.Case           | `$cas`        | `cas`
+ meta.Member         | `$memb`       | `q`
+ meta.Mod            | `$mod`        | `mod`
+ meta.Ctor           | `$ctor`       | `q`
+ meta.Ctor.Ref       | `$cref`       | `ctorref`
+ meta.Pat            | `$pat`        | `p`
+ meta.Pat.Arg        | `$apat`       | `p`
+ meta.Selector       | `$selector`   | `selector`
+ meta.Stat           | `$stat`       | `q`
+ meta.Template       | `$template`   | `template`
+ meta.Template.Param | `$cparam`     | `param`
+ meta.Term           | `$expr`       | `q`
+ meta.Term.Arg       | `$arg`        | `arg`
+ meta.Term.Name      | `$name`       | `q`
+ meta.Term.Ref       | `$ref`        | `q`
+ meta.Term.Param     | `$param`      | `tparam`
+ meta.Type           | `$tpe`        | `t`
+ meta.Type.Arg       | `$atpe`       | `t`
+ meta.Type.Name      | `$tname`      | `t`
+ meta.Type.Param     | `$tparam`     | `param`
+                     | `$lit`        | `q`
 
 ### Suffix name modifiers
 

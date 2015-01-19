@@ -46,13 +46,13 @@ package object semantic {
     implicit def ApiTerm[T <: meta.Term]: HasTpe[T, meta.Type] = new HasTpe[T, meta.Type] {}
     implicit def ApiMember[T <: meta.Member]: HasTpe[T, meta.Member] = new HasTpe[T, meta.Member] {}
     implicit def ApiCtor[T <: meta.Ctor]: HasTpe[T, meta.Ctor] = new HasTpe[T, meta.Ctor] {}
-    implicit def ApiTemplateParam[T <: meta.Templ.Param]: HasTpe[T, meta.Templ.Param] = new HasTpe[T, meta.Templ.Param] {}
-    implicit def ApiTempl[T <: meta.Templ]: HasTpe[T, meta.Templ] = new HasTpe[T, meta.Templ] {}
+    implicit def ApiTemplateParam[T <: meta.Template.Param]: HasTpe[T, meta.Template.Param] = new HasTpe[T, meta.Template.Param] {}
+    implicit def ApiTempl[T <: meta.Template]: HasTpe[T, meta.Template] = new HasTpe[T, meta.Template] {}
     implicit def ImplTerm[T <: impl.Term]: HasTpe[T, impl.Type] = new HasTpe[T, impl.Type] {}
     implicit def ImplMember[T <: impl.Member]: HasTpe[T, impl.Member] = new HasTpe[T, impl.Member] {}
     implicit def ImplCtor[T <: impl.Ctor]: HasTpe[T, impl.Ctor] = new HasTpe[T, impl.Ctor] {}
-    implicit def ImplTemplateParam[T <: impl.Templ.Param]: HasTpe[T, impl.Templ.Param] = new HasTpe[T, impl.Templ.Param] {}
-    implicit def ImplTempl[T <: impl.Templ]: HasTpe[T, impl.Templ] = new HasTpe[T, impl.Templ] {}
+    implicit def ImplTemplateParam[T <: impl.Template.Param]: HasTpe[T, impl.Template.Param] = new HasTpe[T, impl.Template.Param] {}
+    implicit def ImplTempl[T <: impl.Template]: HasTpe[T, impl.Template] = new HasTpe[T, impl.Template] {}
   }
 
   implicit class SemanticTypeableOps[T <: Tree, U <: Type : ClassTag](val tree: T)(implicit ev: HasTpe[T, U]) {
@@ -122,9 +122,9 @@ package object semantic {
         case tree: impl.Defn.Object => tree.name
         case tree: impl.Pkg => tree.name
         case tree: impl.Pkg.Object => tree.name
-        case tree: impl.Templ.Param if tree.parent.map(_.isInstanceOf[impl.Templ]).getOrElse(false) => impl.Term.This(???)
-        case tree: impl.Templ.Param if tree.name.isDefined => tree.name.get
-        case tree: impl.Templ.Param => throw new SemanticException(s"can't reference an anonymous parameter ${tree.summary}")
+        case tree: impl.Template.Param if tree.parent.map(_.isInstanceOf[impl.Template]).getOrElse(false) => impl.Term.This(???)
+        case tree: impl.Template.Param if tree.name.isDefined => tree.name.get
+        case tree: impl.Template.Param => throw new SemanticException(s"can't reference an anonymous parameter ${tree.summary}")
         case tree: impl.Type.Param if tree.name.isDefined => tree.name.get
         case tree: impl.Type.Param => throw new SemanticException(s"can't reference an anonymous parameter ${tree.summary}")
       }
@@ -157,7 +157,7 @@ package object semantic {
         case tree: impl.Defn.Object => tree.mods
         case tree: impl.Pkg => Nil
         case tree: impl.Pkg.Object => tree.mods
-        case tree: impl.Templ.Param => tree.mods
+        case tree: impl.Template.Param => tree.mods
         case tree: impl.Type.Param => tree.mods
       }
     }
@@ -200,8 +200,8 @@ package object semantic {
     @hosted def isTypeParam: Boolean = tree.isInstanceOf[impl.Type.Param]
     @hosted def isByNameParam: Boolean = ???
     @hosted def isVarargParam: Boolean = ???
-    @hosted def isValParam: Boolean = tree.isInstanceOf[impl.Templ.Param.Val]
-    @hosted def isVarParam: Boolean = tree.isInstanceOf[impl.Templ.Param.Var]
+    @hosted def isValParam: Boolean = tree.isInstanceOf[impl.Template.Param.Val]
+    @hosted def isVarParam: Boolean = tree.isInstanceOf[impl.Template.Param.Var]
   }
 
   implicit class SemanticTermMemberOps(val tree: Member.Term) extends AnyVal {
@@ -218,8 +218,8 @@ package object semantic {
     @hosted def companion: Member.Term = new SemanticMemberOps(tree).companion.require[Member.Term]
   }
 
-  implicit class SemanticTemplateParameterOps(val tree: Templ.Param) extends AnyVal {
-    @hosted def default: Option[meta.Term] = tree.require[impl.Templ.Param].default
+  implicit class SemanticTemplateParameterOps(val tree: Template.Param) extends AnyVal {
+    @hosted def default: Option[meta.Term] = tree.require[impl.Template.Param].default
   }
 
   implicit class SemanticTermParameterOps(val tree: Term.Param) extends AnyVal {
@@ -278,10 +278,10 @@ package object semantic {
     @hosted def types: Seq[Member.Type] = internalAll[Member.Type](m => m.isAbstractType || m.isAliasType)
     @hosted def types(name: String): Member.Type = internalSingle[Member.Type](name, m => m.isAbstractType || m.isAliasType, "types")
     @hosted def types(name: scala.Symbol): Member.Type = internalSingle[Member.Type](name.toString, m => m.isAbstractType || m.isAliasType, "types")
-    @hosted def params: Seq[Templ.Param] = internalAll[Templ.Param](_ => true)
-    @hosted def paramss: Seq[Seq[Templ.Param]] = ???
-    @hosted def params(name: String): Templ.Param = internalSingle[Templ.Param](name, _ => true, "parameters")
-    @hosted def params(name: scala.Symbol): Templ.Param = internalSingle[Templ.Param](name.toString, _ => true, "parameters")
+    @hosted def params: Seq[Template.Param] = internalAll[Template.Param](_ => true)
+    @hosted def paramss: Seq[Seq[Template.Param]] = ???
+    @hosted def params(name: String): Template.Param = internalSingle[Template.Param](name, _ => true, "parameters")
+    @hosted def params(name: scala.Symbol): Template.Param = internalSingle[Template.Param](name.toString, _ => true, "parameters")
     @hosted def tparams: Seq[Type.Param] = internalAll[Type.Param](_ => true)
     @hosted def tparams(name: String): Type.Param = internalSingle[Type.Param](name, _ => true, "type parameters")
     @hosted def tparams(name: scala.Symbol): Type.Param = internalSingle[Type.Param](name.toString, _ => true, "type parameters")

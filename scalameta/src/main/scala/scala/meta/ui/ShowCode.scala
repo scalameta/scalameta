@@ -120,7 +120,7 @@ object Code {
     if (danger) s(" " +keyword) else s(keyword)
   })
 
-  def templ(templ: Templ)(implicit dialect: Dialect) =
+  def templ(templ: Template)(implicit dialect: Dialect) =
     // TODO: consider XXX.isEmpty
     if (templ.early.isEmpty && templ.parents.isEmpty && templ.self.name.isEmpty && templ.self.decltpe.isEmpty && templ.stats.isEmpty) s()
     else if (templ.parents.nonEmpty || templ.early.nonEmpty) s(" extends ", templ)
@@ -132,7 +132,7 @@ object Code {
   private def guessIsPostfix(t: Term.Select): Boolean = false
   private def guessHasExpr(t: Term.Return): Boolean = t.expr match { case Lit.Unit() => false; case _ => true }
   private def guessHasElsep(t: Term.If): Boolean = t.elsep match { case Lit.Unit() => false; case _ => true }
-  private def guessHasStats(t: Templ): Boolean = t.stats.nonEmpty
+  private def guessHasStats(t: Template): Boolean = t.stats.nonEmpty
   private def guessHasBraces(t: Pkg): Boolean = {
     def isOnlyChild(t: Pkg): Boolean = t.parent match {
       case Some(t: Pkg) => isOnlyChild(t)
@@ -325,10 +325,10 @@ object Code {
         case stats => s(" { ", kw("this"), t.primaryCtorArgss, ";", a(" ", r(stats, "; ")), " }")
       })
 
-    // Enum
-    case t: Enum.Val       => s(p(Pattern1, t.pat), " = ", p(Expr, t.rhs))
-    case t: Enum.Generator => s(p(Pattern1, t.pat), " <- ", p(Expr, t.rhs))
-    case t: Enum.Guard     => s(kw("if"), " ", p(PostfixExpr, t.cond))
+    // Enumerator
+    case t: Enumerator.Val       => s(p(Pattern1, t.pat), " = ", p(Expr, t.rhs))
+    case t: Enumerator.Generator => s(p(Pattern1, t.pat), " <- ", p(Expr, t.rhs))
+    case t: Enumerator.Guard     => s(kw("if"), " ", p(PostfixExpr, t.cond))
 
     // Import
     case t: Import.Name     => s(t.value)
@@ -340,7 +340,7 @@ object Code {
 
     // Aux
     case t: Ctor.Ref => s(p(AnnotTyp, t.tpe), t.argss)
-    case t: Templ =>
+    case t: Template =>
       val isBodyEmpty = t.self.name.isEmpty && t.self.decltpe.isEmpty && !guessHasStats(t)
       val isTemplateEmpty = t.early.isEmpty && t.parents.isEmpty && isBodyEmpty
       if (isTemplateEmpty) s()
@@ -362,8 +362,8 @@ object Code {
       }
     case t: Case  =>
       s("case ", p(Pattern, t.pat), t.cond.map { cond => s(" ", kw("if"), " ", p(PostfixExpr, cond)) }.getOrElse(s()), " ", kw("=>"), r(t.stats.map(i(_)), ""))
-    case t: Templ.Param =>
-      val keyword = t match { case t: Term.Param => ""; case t: Templ.Param.Val => "val"; case t: Templ.Param.Var => "var"; }
+    case t: Template.Param =>
+      val keyword = t match { case t: Term.Param => ""; case t: Template.Param.Val => "val"; case t: Template.Param.Var => "var"; }
       val mods = t.mods.filter(!_.isInstanceOf[Mod.Implicit]) // NOTE: `implicit` in parameters is skipped in favor of `implicit` in the enclosing parameter list
       s(a(mods, " "), a(kw(keyword), " ", keyword.nonEmpty), t.name.map(_.value).getOrElse("_"), t.decltpe, t.default.map(s(" ", kw("="), " ", _)).getOrElse(s()))
     case t: Type.Param =>
@@ -393,8 +393,8 @@ object Code {
   private implicit def codePatArgs(implicit dialect: Dialect): Code[Seq[Pat.Arg]] = Code { pats => s("(", r(pats, ", "), ")") }
   private implicit def codeMods(implicit dialect: Dialect): Code[Seq[Mod]] = Code { mods => if (mods.nonEmpty) r(mods, " ") else s() }
   private implicit def codeAnnots(implicit dialect: Dialect): Code[Seq[Mod.Annot]] = Code { annots => if (annots.nonEmpty) r(annots, " ") else s() }
-  private implicit def codeParams[P <: Templ.Param](implicit dialect: Dialect): Code[Seq[P]] = Code { params => s("(", r(params, ", "), ")") }
-  private implicit def codeParamss[P <: Templ.Param](implicit dialect: Dialect): Code[Seq[Seq[P]]] = Code { paramss => r(paramss.map(params =>
+  private implicit def codeParams[P <: Template.Param](implicit dialect: Dialect): Code[Seq[P]] = Code { params => s("(", r(params, ", "), ")") }
+  private implicit def codeParamss[P <: Template.Param](implicit dialect: Dialect): Code[Seq[Seq[P]]] = Code { paramss => r(paramss.map(params =>
     s("(", a("implicit ", r(params, ", "), params.exists(_.mods.exists(_.isInstanceOf[Mod.Implicit]))), ")")
   ), "")}
   private implicit def codeTparams(implicit dialect: Dialect): Code[Seq[Type.Param]] = Code { tparams =>

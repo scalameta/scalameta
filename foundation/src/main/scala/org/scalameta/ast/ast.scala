@@ -137,7 +137,7 @@ class AstMacros(val c: Context) {
       if (needsUnapply) {
         if (unapplyParams.length != 0) {
           // TODO: remove this workaround once https://issues.scala-lang.org/browse/SI-9029 is fixed
-          if (name.toString == "Bounds" || name.toString == "Templ" || name.toString == "Ref" || name.toString == "Name") {
+          if (name.toString == "Bounds" || name.toString == "Template" || name.toString == "Ref" || name.toString == "Name") {
             val successTargs = tq"(..${unapplyParamss.head.map(p => p.tpt)})"
             val successArgs = q"(..${unapplyParamss.head.map(p => q"x.${p.name}")})"
             mstats1 += q"@_root_.scala.inline final def unapply(x: $name): Option[$successTargs] = if (x == null) _root_.scala.None else _root_.scala.Some($successArgs)"
