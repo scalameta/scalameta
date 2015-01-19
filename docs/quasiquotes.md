@@ -35,11 +35,11 @@
  Tuple             | `q"(..$exprs)"`
  Block             | `q"{ ..$stats }"`
  If                | `q"if ($expr) $expr else $expr"`
- Match             | `q"$expr match { ..case $cass }"`
- Try Catch Cases   | `q"try $expr catch { ..case $cass } finally $expropt"`
+ Match             | `q"$expr match { ..case $cases }"`
+ Try Catch Cases   | `q"try $expr catch { ..case $cases } finally $expropt"`
  Try Catch Expr    | `q"try $expr catch $expr finally $expropt" `
  Function          | `q"(..$params) => $expr"`
- Partial Function  | `q"{ ..case $cass }"`
+ Partial Function  | `q"{ ..case $cases }"`
  While             | `q"while ($expr) $expr"`
  Do While          | `q"do $expr while($expr)"`
  For               | `q"for (..$enumerators) $expr"`
@@ -199,7 +199,7 @@
 
       | Quasiquote
 ------|---------------------------
- Case | `cas"$pat if $condopt => ..$stat"`
+ Case | `p"$pat if $condopt => ..$stat"`
 
 ## Naming conventions
 
@@ -208,7 +208,7 @@
  Type                | Shorthand     | Interpolator
 ---------------------|---------------|--------------
  meta.Enumerator     | `$enumerator` | `enumerator`
- meta.Case           | `$cas`        | `cas`
+ meta.Case           | `$case`       | `p`
  meta.Member         | `$memb`       | `q`
  meta.Mod            | `$mod`        | `mod`
  meta.Ctor           | `$ctor`       | `q`

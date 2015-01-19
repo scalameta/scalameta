@@ -18,7 +18,7 @@ package object syntactic {
   // (if we annotate scala.meta.package.Type.Arg, we need to somehow put the TypeQuote implicit class into scala.meta.package)
   @quasiquote[Stat]('q)                implicit class TermQuote(ctx: StringContext)
   @quasiquote[Type.Arg]('t)            implicit class TypeQuote(ctx: StringContext)
-  @quasiquote[Pat.Arg]('p)             implicit class PatternQuote(ctx: StringContext)
+  @quasiquote[Case, Pat.Arg]('p)       implicit class PatternQuote(ctx: StringContext)
   @quasiquote[Template.Param]('param)  implicit class ParamQuote(ctx: StringContext)
   @quasiquote[Type.Param]('tparam)     implicit class TparamQuote(ctx: StringContext)
   @quasiquote[Term.Arg]('arg)          implicit class ArgQuote(ctx: StringContext)

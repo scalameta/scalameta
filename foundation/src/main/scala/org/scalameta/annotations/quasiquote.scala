@@ -12,19 +12,23 @@ class QuasiquoteMacros(val c: Context) {
   import c.universe._
   import Flag._
   def impl(annottees: c.Tree*): c.Tree = {
-    val q"new $_[$qtype](scala.Symbol(${qname: String})).macroTransform(..$_)" = c.macroApplication
+    val q"new $_[..$qtypes](scala.Symbol(${qname: String})).macroTransform(..$_)" = c.macroApplication
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       val q"$mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
       val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" = mdef
       if (stats.nonEmpty) c.abort(cdef.pos, "@quasiquote classes must have empty bodies")
+      val qtypesLub = lub(qtypes.map(_.duplicate).map(qtype => c.typecheck(qtype, c.TYPEmode).tpe))
       val qmodule = q"""
         object ${TermName(qname)} {
           import scala.language.experimental.macros
           def apply[T](args: T*)(implicit dialect: _root_.scala.meta.Dialect): _root_.scala.meta.Tree = macro $mname.applyImpl
-          def unapply(scrutinee: Any): $qtype = macro ???
+          def unapply(scrutinee: Any): $qtypesLub = macro ???
         }
       """
-      val qparser = TermName("parse" + qname.capitalize)
+      val qunsafeResults = qtypes.map(qtype => q"_root_.scala.meta.syntactic.RichOrigin(s).parse[$qtype]")
+      var qsafeResult = qunsafeResults.map(qunsafeParser => q"_root_.scala.util.Try($qunsafeParser)").reduce((acc, curr) => q"$acc.orElse($curr)")
+      val qparseResult = if (qunsafeResults.length == 1) qunsafeResults.head else q"$qsafeResult.get"
+      val qparser = q"(s: _root_.scala.Predef.String) => $qparseResult"
       val q"..$applyimpls" = q"""
         import scala.reflect.macros.whitebox.Context
         def applyImpl(c: Context)(args: c.Tree*)(dialect: c.Tree): c.Tree = {
@@ -45,7 +49,7 @@ class QuasiquoteMacros(val c: Context) {
             else if (dialect.symbol == c.mirror.staticModule("_root_.scala.meta.dialects.Dotty")) _root_.scala.meta.dialects.Dotty
             else c.abort(c.enclosingPosition, "can't use the " + dialect + " dialect in quasiquotes")
           }
-          helper.apply(c.macroApplication, (s: String) => _root_.scala.meta.syntactic.RichOrigin(s).parse[$qtype])
+          helper.apply(c.macroApplication, $qparser)
         }
       """
       val cdef1 = q"$mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..${qmodule +: stats} }"
