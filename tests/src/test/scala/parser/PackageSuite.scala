@@ -14,7 +14,8 @@ class PackageSuite extends ParseSuite {
                                      Ctor.Primary(Nil, Nil),
                                      EmptyTemplate()) :: Nil)) :: Nil) =
       source("package foo; class C")
-    assert(pkgfoo.hasBraces === false)
+    // TODO: revisit this once we have trivia in place
+    // assert(pkgfoo.hasBraces === false)
   }
 
   test("package foo { class C }") {
@@ -23,7 +24,8 @@ class PackageSuite extends ParseSuite {
                                     Ctor.Primary(Nil, Nil),
                                     EmptyTemplate()) :: Nil)) :: Nil) =
       source("package foo { class C }")
-    assert(pkgfoo.hasBraces === true)
+    // TODO: revisit this once we have trivia in place
+    // assert(pkgfoo.hasBraces === true)
   }
 
   test("package foo.bar; class C") {
@@ -32,7 +34,8 @@ class PackageSuite extends ParseSuite {
                                         Ctor.Primary(Nil, Nil),
                                         EmptyTemplate()) :: Nil)) :: Nil) =
       source("package foo.bar; class C")
-    assert(pkgfoobar.hasBraces === false)
+    // TODO: revisit this once we have trivia in place
+    // assert(pkgfoobar.hasBraces === false)
   }
 
   test("package foo.bar { class C }") {
@@ -41,7 +44,8 @@ class PackageSuite extends ParseSuite {
                                         Ctor.Primary(Nil, Nil),
                                         EmptyTemplate()) :: Nil)) :: Nil) =
       source("package foo.bar { class C }")
-    assert(pkgfoobar.hasBraces === true)
+    // TODO: revisit this once we have trivia in place
+    // assert(pkgfoobar.hasBraces === true)
   }
 
   test("package foo; package bar; class C") {
@@ -51,8 +55,9 @@ class PackageSuite extends ParseSuite {
                                                    Ctor.Primary(Nil, Nil),
                                                    EmptyTemplate()) :: Nil)) :: Nil)) :: Nil) =
       source("package foo; package bar; class C")
-    assert(pkgfoo.hasBraces === false)
-    assert(pkgbar.hasBraces === false)
+    // TODO: revisit this once we have trivia in place
+    // assert(pkgfoo.hasBraces === false)
+    // assert(pkgbar.hasBraces === false)
   }
 
   test("package foo { package bar { class C } }") {
@@ -62,16 +67,18 @@ class PackageSuite extends ParseSuite {
                                                    Ctor.Primary(Nil, Nil),
                                                    EmptyTemplate()) :: Nil)) :: Nil)) :: Nil) =
       source("package foo { package bar { class C } }")
-    assert(pkgfoo.hasBraces === true)
-    assert(pkgbar.hasBraces === true)
+    // TODO: revisit this once we have trivia in place
+    // assert(pkgfoo.hasBraces === true)
+    // assert(pkgbar.hasBraces === true)
   }
 
   test("package foo {}; package bar {}") {
     val Source((pkgfoo @ Pkg(Term.Name("foo"), Nil)) ::
                  (pkgbar @ Pkg(Term.Name("bar"), Nil)) :: Nil) =
       source("package foo {}; package bar {}")
-    assert(pkgfoo.hasBraces === true)
-    assert(pkgbar.hasBraces === true)
+    // TODO: revisit this once we have trivia in place
+    // assert(pkgfoo.hasBraces === true)
+    // assert(pkgbar.hasBraces === true)
   }
 
   test("package object foo") {

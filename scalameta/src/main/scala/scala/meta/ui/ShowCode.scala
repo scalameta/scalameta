@@ -5,6 +5,7 @@ import org.scalameta.show._
 import Show.{ sequence => s, repeat => r, indent => i, newline => n, meta => m, adorn => a, function => fn }
 import scala.meta.syntactic.parsers.SyntacticInfo._
 import scala.meta.syntactic.tokenizers.Chars._
+import scala.meta.syntactic.tokenizers.keywords
 import scala.meta.syntactic.Token
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
@@ -12,6 +13,7 @@ import scala.meta.internal.ast._
 import scala.{meta => api}
 import org.scalameta.adt._
 import org.scalameta.invariants._
+import org.scalameta.unreachable
 import scala.compat.Platform.EOL
 
 // TODO: fix occasional incorrectness when semicolons are omitted
@@ -124,10 +126,27 @@ object Code {
     else if (templ.parents.nonEmpty || templ.early.nonEmpty) s(" extends ", templ)
     else s(" ", templ)
 
+  // TODO: revisit this once we have trivia in place
+  private def guessIsBackquoted(t: Name): Boolean = keywords.contains(t.value) || t.value.contains(" ") // TODO: a more thorough implementation
+  private def guessHasRefinement(t: Type.Compound): Boolean = t.refinement.nonEmpty
+  private def guessIsPostfix(t: Term.Select): Boolean = false
+  private def guessHasExpr(t: Term.Return): Boolean = t.expr match { case Lit.Unit() => false; case _ => true }
+  private def guessHasElsep(t: Term.If): Boolean = t.elsep match { case Lit.Unit() => false; case _ => true }
+  private def guessHasStats(t: Templ): Boolean = t.stats.nonEmpty
+  private def guessHasBraces(t: Pkg): Boolean = {
+    def isOnlyChild(t: Pkg): Boolean = t.parent match {
+      case Some(t: Pkg) => isOnlyChild(t)
+      case Some(source: Source) => source.stats.length == 1
+      case None => true
+      case _ => unreachable
+    }
+    !isOnlyChild(t)
+  }
+
   // Branches
   // TODO: this match is not exhaustive: if I remove Mod.Package, then I get no warning
   implicit def codeTree[T <: api.Tree](implicit dialect: Dialect): Code[T] = Code { x => (x: api.Tree) match {
-    case t: Name => m(Path, if (t.isBackquoted) s("`", t.value, "`") else s(t.value))
+    case t: Name => m(Path, if (guessIsBackquoted(t)) s("`", t.value, "`") else s(t.value))
 
     // Type.Arg
     case t: Type.Arg.Repeated => m(ParamTyp, s(p(Typ, t.tpe), kw("*")))
@@ -140,7 +159,7 @@ object Code {
     case t: Type.Annotate    => m(AnnotTyp, s(p(SimpleTyp, t.tpe), " ", t.annots))
     case t: Type.Apply       => m(SimpleTyp, s(p(SimpleTyp, t.tpe), kw("["), r(t.args.map(arg => p(Typ, arg)), ", "), kw("]")))
     case t: Type.ApplyInfix  => m(InfixTyp(t.op.value), s(p(InfixTyp(t.op.value), t.lhs, left = true), " ", t.op, " ", p(InfixTyp(t.op.value), t.rhs, right = true)))
-    case t: Type.Compound    => m(CompoundTyp, s(r(t.tpes.map(tpe => p(AnnotTyp, tpe)), " with "), a(" {", a(" ", r(t.refinement, "; "), " "), "}", t.hasRefinement)))
+    case t: Type.Compound    => m(CompoundTyp, s(r(t.tpes.map(tpe => p(AnnotTyp, tpe)), " with "), a(" {", a(" ", r(t.refinement, "; "), " "), "}", guessHasRefinement(t))))
     case t: Type.Existential => m(Typ, s(p(AnyInfixTyp, t.tpe), " ", kw("forSome"), " { ", r(t.quants, "; "), " }"))
     case t: Type.Placeholder => m(SimpleTyp, s(kw("_"), t.bounds))
     case t: Type.Tuple       => m(SimpleTyp, s("(", r(t.elements, ", "), ")"))
@@ -168,10 +187,10 @@ object Code {
 
     // Term
     case t: Term.This     => m(SimpleExpr1, s(t.qual.map(s(_, ".")).getOrElse(s()), kw("this")))
-    case t: Term.Select   => m(Path, s(p(SimpleExpr, t.qual), if (t.isPostfix) " " else ".", t.selector))
+    case t: Term.Select   => m(Path, s(p(SimpleExpr, t.qual), if (guessIsPostfix(t)) " " else ".", t.selector))
     case t: Term.Assign   => m(Expr1, s(p(SimpleExpr1, t.lhs), " ", kw("="), " ", p(Expr, t.rhs)))
     case t: Term.Update   => m(Expr1, s(p(SimpleExpr1, t.fun), t.argss, " ", kw("="), " ", p(Expr, t.rhs)))
-    case t: Term.Return   => m(Expr1, s(kw("return"), if (t.hasExpr) s(" ", p(Expr, t.expr)) else s()))
+    case t: Term.Return   => m(Expr1, s(kw("return"), if (guessHasExpr(t)) s(" ", p(Expr, t.expr)) else s()))
     case t: Term.Throw    => m(Expr1, s(kw("throw"), " ", p(Expr, t.expr)))
     case t: Term.Ascribe  => m(Expr1, s(p(PostfixExpr, t.expr), kw(":"), " ", t.tpe))
     case t: Term.Annotate => m(Expr1, s(p(PostfixExpr, t.expr), kw(":"), " ", t.annots))
@@ -215,7 +234,7 @@ object Code {
     case t: Term.TryWithTerm     =>
       m(Expr1, s(kw("try"), " ", p(Expr, t.expr), " ", kw("catch"), " ", t.catchp,
         t.finallyp.map { finallyp => s(" ", kw("finally"), " ", finallyp) }.getOrElse(s())))
-    case t: Term.If       => m(Expr1, s(kw("if"), " (", t.cond, ") ", p(Expr, t.thenp), if (t.hasElsep) s(" ", kw("else"), " ", p(Expr, t.elsep)) else s()))
+    case t: Term.If       => m(Expr1, s(kw("if"), " (", t.cond, ") ", p(Expr, t.thenp), if (guessHasElsep(t)) s(" ", kw("else"), " ", p(Expr, t.elsep)) else s()))
     case t: Term.Function =>
       t match {
         case Term.Function(Term.Param(mods, Some(name), tptopt, _) :: Nil, body) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
@@ -229,8 +248,8 @@ object Code {
       }
     case t: Term.Interpolate =>
       val zipped = t.parts.zip(t.args).map {
-        case (part, id: Name) if !id.isBackquoted => s(part.value, "$", id.value)
-        case (part, arg)                          => s(part.value, "${", p(Expr, arg), "}")
+        case (part, id: Name) if !guessIsBackquoted(id) => s(part.value, "$", id.value)
+        case (part, arg)                                => s(part.value, "${", p(Expr, arg), "}")
       }
       val quote = if (t.parts.map(_.value).exists(s => s.contains(EOL) || s.contains("\""))) "\"\"\"" else "\""
       m(SimpleExpr1, s(t.prefix, quote, r(zipped), t.parts.last.value, quote))
@@ -253,8 +272,8 @@ object Code {
       }))
     case t: Pat.Interpolate =>
       val zipped = t.parts.zip(t.args).map {
-        case (part, id: Name) if !id.isBackquoted => s(part, "$", id.value)
-        case (part, arg)                          => s(part, "${", arg, "}")
+        case (part, id: Name) if !guessIsBackquoted(id) => s(part, "$", id.value)
+        case (part, arg)                                => s(part, "${", arg, "}")
       }
       m(SimplePattern, s(t.prefix, "\"", r(zipped), t.parts.last, "\""))
 
@@ -283,10 +302,8 @@ object Code {
     case t: Defn.Class     => s(a(t.mods, " "), kw("class"), " ", t.name, t.tparams, a(" ", t.ctor, t.ctor.mods.nonEmpty), templ(t.templ))
     case t: Defn.Trait     => s(a(t.mods, " "), kw("trait"), " ", t.name, t.tparams, templ(t.templ))
     case t: Defn.Object    => s(a(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
-    case t: Defn.Def       =>
-      s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, t.decltpe, " = ", t.body)
-    case t: Defn.Macro     =>
-      s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, kw(":"), " ", t.tpe, " ", kw("="), " ", kw("macro"), " ", t.body)
+    case t: Defn.Def       => s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, t.decltpe, " = ", t.body)
+    case t: Defn.Macro     => s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, kw(":"), " ", t.tpe, " ", kw("="), " ", kw("macro"), " ", t.body)
 
     // Decl
     case t: Decl.Val       => s(a(t.mods, " "), kw("val"), " ", r(t.pats, ", "), kw(":"), " ", t.decltpe)
@@ -295,10 +312,10 @@ object Code {
     case t: Decl.Def       => s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, kw(":"), " ", t.decltpe)
 
     // Pkg
-    case t: Source             => r(t.stats, EOL)
-    case t: Pkg if t.hasBraces => s(kw("package"), " ", t.ref, " {", r(t.stats.map(i(_)), ""), n("}"))
-    case t: Pkg                => s(kw("package"), " ", t.ref, r(t.stats.map(n(_))))
-    case t: Pkg.Object         => s(kw("package"), " ", a(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
+    case t: Source                   => r(t.stats, EOL)
+    case t: Pkg if guessHasBraces(t) => s(kw("package"), " ", t.ref, " {", r(t.stats.map(i(_)), ""), n("}"))
+    case t: Pkg                      => s(kw("package"), " ", t.ref, r(t.stats.map(n(_))))
+    case t: Pkg.Object               => s(kw("package"), " ", a(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
 
     // Ctor
     case t: Ctor.Primary   => s(a(t.mods, " ", t.mods.nonEmpty && t.paramss.nonEmpty), t.paramss)
@@ -324,14 +341,14 @@ object Code {
     // Aux
     case t: Ctor.Ref => s(p(AnnotTyp, t.tpe), t.argss)
     case t: Templ =>
-      val isBodyEmpty = t.self.name.isEmpty && t.self.decltpe.isEmpty && !t.hasStats
+      val isBodyEmpty = t.self.name.isEmpty && t.self.decltpe.isEmpty && !guessHasStats(t)
       val isTemplateEmpty = t.early.isEmpty && t.parents.isEmpty && isBodyEmpty
       if (isTemplateEmpty) s()
       else {
         val isOneLiner = t.stats.length == 0 || (t.stats.length == 1 && !s(t.stats.head).toString.contains(EOL))
         val pearly = if (!t.early.isEmpty) s("{ ", r(t.early, "; "), " } with ") else s()
         val pparents = a(r(t.parents, " with "), " ", !t.parents.isEmpty && !isBodyEmpty)
-        val pbody = (t.self.name.nonEmpty || t.self.decltpe.nonEmpty, t.hasStats, t.stats) match {
+        val pbody = (t.self.name.nonEmpty || t.self.decltpe.nonEmpty, guessHasStats(t), t.stats) match {
           case (false, false, _) => s()
           case (true, false, _) => s("{ ", t.self, " => }")
           case (false, true, List()) if isOneLiner => s("{}")

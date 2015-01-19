@@ -17,9 +17,7 @@ trait AdtReflection {
     def isRoot: Boolean = hasAnnotation[AdtInternal.root]
     def isBranch: Boolean = hasAnnotation[AdtInternal.branch]
     def isLeaf: Boolean = hasAnnotation[AdtInternal.leafClass]
-    def isPayload: Boolean = sym.isTerm && sym.isParameter && !sym.isManualTrivia && !sym.isAutoTrivia
-    def isManualTrivia: Boolean = hasAnnotation[AstInternal.trivia] && !hasAnnotation[AstInternal.auto]
-    def isAutoTrivia: Boolean = hasAnnotation[AstInternal.trivia] && hasAnnotation[AstInternal.auto]
+    def isPayload: Boolean = sym.isTerm && sym.isParameter
     def asAdt: Adt = if (isRoot) sym.asRoot else if (isBranch) sym.asBranch else if (isLeaf) sym.asLeaf else sys.error("not an adt")
     def asRoot: Root = new Root(sym)
     def asBranch: Branch = new Branch(sym)
@@ -36,8 +34,7 @@ trait AdtReflection {
 
     def root: Symbol = sym.asClass.baseClasses.reverse.find(_.isRoot).getOrElse(NoSymbol)
     private def secondParamList: List[Symbol] = sym.info.decls.collect{ case ctor: MethodSymbol if ctor.isPrimaryConstructor => ctor }.head.paramLists(1)
-    def fields: List[Symbol] = secondParamList.filter(p => p.isPayload || p.isManualTrivia)
-    def nontriviaFields: List[Symbol] = secondParamList.filter(p => p.isPayload)
+    def fields: List[Symbol] = secondParamList.filter(p => p.isPayload)
     def allFields: List[Symbol] = secondParamList
   }
 
@@ -70,7 +67,6 @@ trait AdtReflection {
   class Leaf(sym: Symbol) extends Adt(sym) {
     require(sym.isLeaf)
     def fields: List[Field] = sym.fields.map(_.asField)
-    def nontriviaFields: List[Field] = sym.nontriviaFields.map(_.asField)
     def allFields: List[Field] = sym.allFields.map(_.asField)
     override def toString = s"leaf $prefix"
   }
@@ -78,8 +74,6 @@ trait AdtReflection {
     require(sym.isTerm && sym.isParameter)
     def name: TermName = TermName(sym.name.toString.stripPrefix("_"))
     def tpe: Type = sym.info
-    def isManualTrivia: Boolean = sym.isManualTrivia
-    def isAutoTrivia: Boolean = sym.isAutoTrivia
-    override def toString = s"field $name: $tpe" + (if (isManualTrivia) " (manual trivia)" else if (isAutoTrivia) " (auto trivia)" else "")
+    override def toString = s"field $name: $tpe"
   }
 }

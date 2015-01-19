@@ -68,10 +68,7 @@ package scala.meta.internal.ast {
   @branch trait Tree extends api.Tree
 
   @branch trait Ref extends api.Ref with Tree
-  @branch trait Name extends api.Name with Ref {
-    def value: String
-    def isBackquoted: Boolean
-  }
+  @branch trait Name extends api.Name with Ref { def value: String }
   @branch trait Stat extends api.Stat with Tree
   @branch trait Scope extends api.Scope with Tree
 
@@ -80,11 +77,13 @@ package scala.meta.internal.ast {
     @branch trait Ref extends api.Term.Ref with Term with impl.Ref
     @ast class This(qual: Option[Predef.String]) extends Term.Ref
     @ast class Super(thisp: Option[Predef.String], superp: Option[Predef.String]) extends Term.Ref
-    @ast class Name(value: Predef.String @nonEmpty, @trivia isBackquoted: Boolean = false) extends api.Term.Name with impl.Name with Term.Ref with Pat with Member {
+    @ast class Name(value: Predef.String @nonEmpty) extends api.Term.Name with impl.Name with Term.Ref with Pat with Member {
       def name: Name = this
       def mods: Seq[Mod] = Nil
+      // TODO: revisit this once we have trivia in place
+      // require(keywords.contains(value) ==> isBackquoted)
     }
-    @ast class Select(qual: Term, selector: Term.Name, @trivia isPostfix: Boolean = false) extends Term.Ref with Pat
+    @ast class Select(qual: Term, selector: Term.Name) extends Term.Ref with Pat
     @ast class Interpolate(prefix: Name, parts: Seq[Lit.String] @nonEmpty, args: Seq[Term]) extends Term {
       require(parts.length == args.length + 1)
     }
@@ -96,7 +95,7 @@ package scala.meta.internal.ast {
     }
     @ast class Assign(lhs: Term.Ref, rhs: Term) extends Term
     @ast class Update(fun: Term, argss: Seq[Seq[Arg]], rhs: Term) extends Term
-    @ast class Return(expr: Term = Lit.Unit()) extends Term
+    @ast class Return(expr: Term) extends Term
     @ast class Throw(expr: Term) extends Term
     @ast class Ascribe(expr: Term, tpe: Type) extends Term
     @ast class Annotate(expr: Term, annots: Seq[Mod.Annot] @nonEmpty) extends Term
@@ -106,7 +105,7 @@ package scala.meta.internal.ast {
     @ast class Block(stats: Seq[Stat]) extends Term with Scope {
       require(stats.forall(_.isBlockStat))
     }
-    @ast class If(cond: Term, thenp: Term, elsep: Term = Lit.Unit()) extends Term
+    @ast class If(cond: Term, thenp: Term, elsep: Term) extends Term
     @ast class Match(scrut: Term, cases: Seq[Case] @nonEmpty) extends Term
     @ast class TryWithCases(expr: Term, catchp: Seq[Case], finallyp: Option[Term]) extends Term
     @ast class TryWithTerm(expr: Term, catchp: Term, finallyp: Option[Term]) extends Term
@@ -135,8 +134,9 @@ package scala.meta.internal.ast {
   @branch trait Type extends api.Type with Tree with Type.Arg with Scope
   object Type {
     @branch trait Ref extends api.Type.Ref with Type with impl.Ref
-    @ast class Name(value: String @nonEmpty, @trivia isBackquoted: Boolean = false) extends api.Type.Name with impl.Name with Type.Ref {
-      require(keywords.contains(value) ==> isBackquoted)
+    @ast class Name(value: String @nonEmpty) extends api.Type.Name with impl.Name with Type.Ref {
+      // TODO: revisit this once we have trivia in place
+      // require(keywords.contains(value) ==> isBackquoted)
     }
     @ast class Select(qual: Term.Ref, selector: Type.Name) extends Type.Ref {
       require(qual.isPath || qual.isInstanceOf[Term.Super])
@@ -151,8 +151,9 @@ package scala.meta.internal.ast {
     @ast class Tuple(elements: Seq[Type] @nonEmpty) extends Type {
       require(elements.length > 1)
     }
-    @ast class Compound(tpes: Seq[Type], refinement: Seq[Stat] = Nil) extends Type {
-      require(tpes.length == 1 ==> hasRefinement)
+    @ast class Compound(tpes: Seq[Type], refinement: Seq[Stat]) extends Type {
+      // TODO: revisit this once we have trivia in place
+      // require(tpes.length == 1 ==> hasRefinement)
       require(refinement.forall(_.isRefineStat))
     }
     @ast class Existential(tpe: Type, quants: Seq[Stat] @nonEmpty) extends Type {
@@ -283,7 +284,7 @@ package scala.meta.internal.ast {
                       templ: Templ) extends Defn with Member.Term
   }
 
-  @ast class Pkg(ref: Term.Ref, stats: Seq[Stat], @trivia hasBraces: Boolean = true)
+  @ast class Pkg(ref: Term.Ref, stats: Seq[Stat])
        extends Member.Term with Stat {
     require(ref.isQualId)
     require(stats.forall(_.isTopLevelStat))
@@ -313,7 +314,7 @@ package scala.meta.internal.ast {
   @ast class Templ(early: Seq[Stat],
                       parents: Seq[Ctor.Ref],
                       self: Term.Param,
-                      stats: Seq[Stat] = Nil) extends api.Templ with Tree with Scope {
+                      stats: Seq[Stat]) extends api.Templ with Tree with Scope {
     require(parents.isEmpty || !parents.tail.exists(_.argss.nonEmpty))
     require(early.nonEmpty ==> parents.nonEmpty)
     require(early.forall(_.isEarlyStat))
