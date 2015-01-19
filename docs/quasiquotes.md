@@ -133,7 +133,7 @@
  Var            | `q"..$mods var ..$pats: $tpeopt = $expropt"`
  Def            | `q"..$mods def $name[..$tparams](...$paramss): $tpeopt = $expr"`
  Macro          | `q"..$mods def $name[..$tparams](...$paramss): $tpe = macro $expr"`
- Primary Ctor   | `q"..$mods def this(..$cparamss)"`
+ Primary Ctor   | `q"..$mods def this(..$paramss)"`
  Secondary Ctor | `q"..$mods def this(..$paramss) = { this(...$aexprss); ..$stats }"`
  Type           | `q"..$mods type $tname[..$tparams] = $tpe"`
  Class          | `q"..$mods class $tname[..$tparams] $ctor extends $template"`
@@ -147,7 +147,6 @@
                 | Quasiquote
 ----------------|-------------------------------------------------
  Term Param     | `param"..$mods $nameopt: $atpeopt = $defaultopt"`
- Template Param | `param"..$mods $name: $atpe = $defaultopt"`, `param"..$mods val $name: $atpe = $defaultopt"`, `param"..$mods var $name: $atpe = $defaultopt"`
  Type Param     | `param"..$mods type $nameopt[..$tparams] <% ..$tpes : ..$tpes >: $tpeopt <: $tpeopt"`
 
 ## Template (meta.Template) and Parents (meta.Ctor.Ref)
@@ -177,6 +176,8 @@
  Covariant        | `mod"+"`
  Contravariant    | `mod"-"`
  Lazy             | `mod"lazy"`
+ Val              | `mod"val"`
+ Var              | `mod"var"`
 
 ## Enumerators (meta.Enum)
 
@@ -218,16 +219,15 @@
  meta.Selector       | `$selector`   | `selector`
  meta.Stat           | `$stat`       | `q`
  meta.Template       | `$template`   | `template`
- meta.Template.Param | `$cparam`     | `param`
  meta.Term           | `$expr`       | `q`
  meta.Term.Arg       | `$aexpr`      | `arg`
  meta.Term.Name      | `$name`       | `q`
  meta.Term.Ref       | `$ref`        | `q`
- meta.Term.Param     | `$param`      | `tparam`
+ meta.Term.Param     | `$param`      | `param`
  meta.Type           | `$tpe`        | `t`
  meta.Type.Arg       | `$atpe`       | `t`
  meta.Type.Name      | `$tname`      | `t`
- meta.Type.Param     | `$tparam`     | `param`
+ meta.Type.Param     | `$tparam`     | `tparam`
                      | `$lit`        | `q`
 
 ### Suffix name modifiers

@@ -25,7 +25,7 @@ package scala.meta {
     @branch trait Ref extends Term with api.Ref
     @branch trait Name extends api.Name with Term.Ref with Pat with Member
     @branch trait Arg extends Tree
-    @branch trait Param extends Member.Term with Template.Param
+    @branch trait Param extends Member.Term
   }
 
   @branch trait Type extends Tree with Type.Arg with Scope
@@ -53,10 +53,6 @@ package scala.meta {
   }
 
   @branch trait Template extends Tree with Scope
-  object Template {
-    @branch trait Param extends Member.Term
-  }
-
   @branch trait Mod extends Tree
   @branch trait Enumerator extends Tree
   @branch trait Selector extends Tree
@@ -128,7 +124,7 @@ package scala.meta.internal.ast {
       @ast class Named(name: Name, rhs: Term) extends Arg
       @ast class Repeated(arg: Term) extends Arg
     }
-    @ast class Param(mods: Seq[Mod], name: Option[impl.Term.Name], decltpe: Option[Type.Arg], default: Option[Term]) extends api.Term.Param with Member with Template.Param
+    @ast class Param(mods: Seq[Mod], name: Option[impl.Term.Name], decltpe: Option[Type.Arg], default: Option[Term]) extends api.Term.Param with Member.Term
   }
 
   @branch trait Type extends api.Type with Tree with Type.Arg with Scope
@@ -303,7 +299,7 @@ package scala.meta.internal.ast {
   @branch trait Ctor extends api.Ctor with Tree with Scope
   object Ctor {
     @ast class Primary(mods: Seq[Mod],
-                       paramss: Seq[Seq[Template.Param]]) extends Ctor
+                       paramss: Seq[Seq[Term.Param]]) extends Ctor
     @ast class Secondary(mods: Seq[Mod],
                          paramss: Seq[Seq[Term.Param]] @nonEmpty,
                          primaryCtorArgss: Seq[Seq[Term.Arg]],
@@ -319,18 +315,6 @@ package scala.meta.internal.ast {
     require(early.nonEmpty ==> parents.nonEmpty)
     require(early.forall(_.isEarlyStat))
     require(stats.forall(_.isTemplateStat))
-  }
-  object Template {
-    @branch trait Param extends api.Template.Param with Member {
-      def mods: Seq[Mod]
-      def name: Option[impl.Term.Name]
-      def decltpe: Option[Type.Arg]
-      def default: Option[Term]
-    }
-    object Param {
-      @ast class Val(mods: Seq[Mod], name: Option[impl.Term.Name], decltpe: Option[Type.Arg], default: Option[Term]) extends Template.Param
-      @ast class Var(mods: Seq[Mod], name: Option[impl.Term.Name], decltpe: Option[Type.Arg], default: Option[Term]) extends Template.Param
-    }
   }
 
   @branch trait Mod extends api.Mod with Tree
@@ -351,6 +335,8 @@ package scala.meta.internal.ast {
     @ast class Covariant() extends Mod
     @ast class Contravariant() extends Mod
     @ast class Lazy() extends Mod
+    @ast class ValParam() extends Mod
+    @ast class VarParam() extends Mod
   }
 
   @branch trait Enumerator extends api.Enumerator with Tree

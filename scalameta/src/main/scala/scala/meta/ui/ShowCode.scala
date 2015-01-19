@@ -288,6 +288,8 @@ object Code {
     case _: Mod.Lazy            => kw("lazy")
     case _: Mod.Override        => kw("override")
     case _: Mod.Sealed          => kw("sealed")
+    case _: Mod.ValParam        => kw("val")
+    case _: Mod.VarParam        => kw("var")
     case t: Mod.Private         => s(kw("private"))
     case t: Mod.PrivateThis     => s(kw("private"), kw("["), kw("this"), kw("]"))
     case t: Mod.PrivateWithin   => s(kw("private"), kw("["), t.name.toString, kw("]"))
@@ -362,10 +364,9 @@ object Code {
       }
     case t: Case  =>
       s("case ", p(Pattern, t.pat), t.cond.map { cond => s(" ", kw("if"), " ", p(PostfixExpr, cond)) }.getOrElse(s()), " ", kw("=>"), r(t.stats.map(i(_)), ""))
-    case t: Template.Param =>
-      val keyword = t match { case t: Term.Param => ""; case t: Template.Param.Val => "val"; case t: Template.Param.Var => "var"; }
+    case t: Term.Param =>
       val mods = t.mods.filter(!_.isInstanceOf[Mod.Implicit]) // NOTE: `implicit` in parameters is skipped in favor of `implicit` in the enclosing parameter list
-      s(a(mods, " "), a(kw(keyword), " ", keyword.nonEmpty), t.name.map(_.value).getOrElse("_"), t.decltpe, t.default.map(s(" ", kw("="), " ", _)).getOrElse(s()))
+      s(a(mods, " "), t.name.map(_.value).getOrElse("_"), t.decltpe, t.default.map(s(" ", kw("="), " ", _)).getOrElse(s()))
     case t: Type.Param =>
       val cbounds = r(t.contextBounds.map { s(kw(":"), " ", _) })
       val vbounds = r(t.viewBounds.map { s(" ", kw("<%"), " ", _) })
@@ -393,8 +394,8 @@ object Code {
   private implicit def codePatArgs(implicit dialect: Dialect): Code[Seq[Pat.Arg]] = Code { pats => s("(", r(pats, ", "), ")") }
   private implicit def codeMods(implicit dialect: Dialect): Code[Seq[Mod]] = Code { mods => if (mods.nonEmpty) r(mods, " ") else s() }
   private implicit def codeAnnots(implicit dialect: Dialect): Code[Seq[Mod.Annot]] = Code { annots => if (annots.nonEmpty) r(annots, " ") else s() }
-  private implicit def codeParams[P <: Template.Param](implicit dialect: Dialect): Code[Seq[P]] = Code { params => s("(", r(params, ", "), ")") }
-  private implicit def codeParamss[P <: Template.Param](implicit dialect: Dialect): Code[Seq[Seq[P]]] = Code { paramss => r(paramss.map(params =>
+  private implicit def codeParams[P <: Term.Param](implicit dialect: Dialect): Code[Seq[P]] = Code { params => s("(", r(params, ", "), ")") }
+  private implicit def codeParamss[P <: Term.Param](implicit dialect: Dialect): Code[Seq[Seq[P]]] = Code { paramss => r(paramss.map(params =>
     s("(", a("implicit ", r(params, ", "), params.exists(_.mods.exists(_.isInstanceOf[Mod.Implicit]))), ")")
   ), "")}
   private implicit def codeTparams(implicit dialect: Dialect): Code[Seq[Type.Param]] = Code { tparams =>

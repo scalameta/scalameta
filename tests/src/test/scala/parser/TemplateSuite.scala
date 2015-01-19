@@ -112,14 +112,14 @@ class TemplateSuite extends ParseSuite {
 
   test("class C(val x: Int)") {
     val Class(Nil, Type.Name("C"), Nil,
-              Ctor.Primary(Nil, (Template.Param.Val(Nil, Some(Term.Name("x")), Some(Type.Name("Int")), None) :: Nil) :: Nil),
+              Ctor.Primary(Nil, (Term.Param(Mod.ValParam() :: Nil, Some(Term.Name("x")), Some(Type.Name("Int")), None) :: Nil) :: Nil),
               EmptyTemplate()) =
       templStat("class C(val x: Int)")
   }
 
   test("class C(var x: Int)") {
     val Class(Nil, Type.Name("C"), Nil,
-              Ctor.Primary(Nil, (Template.Param.Var(Nil, Some(Term.Name("x")), Some(Type.Name("Int")), None) :: Nil) :: Nil),
+              Ctor.Primary(Nil, (Term.Param(Mod.VarParam() :: Nil, Some(Term.Name("x")), Some(Type.Name("Int")), None) :: Nil) :: Nil),
               EmptyTemplate()) =
       templStat("class C(var x: Int)")
   }
@@ -134,7 +134,7 @@ class TemplateSuite extends ParseSuite {
 
   test("class C(override val x: Int)") {
     val Class(Nil, Type.Name("C"), Nil,
-              Ctor.Primary(Nil, (Template.Param.Val(List(Mod.Override()), Some(Term.Name("x")), Some(Type.Name("Int")), None) :: Nil) :: Nil),
+              Ctor.Primary(Nil, (Term.Param(List(Mod.Override(), Mod.ValParam()), Some(Term.Name("x")), Some(Type.Name("Int")), None) :: Nil) :: Nil),
               EmptyTemplate()) =
       templStat("class C(override val x: Int)")
   }

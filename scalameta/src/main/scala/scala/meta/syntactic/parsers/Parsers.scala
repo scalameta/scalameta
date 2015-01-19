@@ -283,7 +283,7 @@ abstract class AbstractParser { parser =>
 
   /** These are alternative entry points for quasiquotes.
    */
-  def parseParam(): Template.Param = ???
+  def parseParam(): Term.Param = ???
   def parseTparam(): Type.Param = ???
   def parseTermArg(): Term.Arg = ???
   def parseEnumerator(): Enumerator = ???
@@ -1753,9 +1753,9 @@ abstract class AbstractParser { parser =>
    *  ClassParam        ::= {Annotation}  [{Modifier} (`val' | `var')] Id [`:' ParamType] [`=' Expr]
    *  }}}
    */
-  def paramClauses(ownerIsType: Boolean, ownerIsCase: Boolean = false): List[List[Template.Param]] = {
+  def paramClauses(ownerIsType: Boolean, ownerIsCase: Boolean = false): List[List[Term.Param]] = {
     var parsedImplicits = false
-    def paramClause(): List[Template.Param] = {
+    def paramClause(): List[Term.Param] = {
       if (token.is[`)`])
         return Nil
 
@@ -1765,7 +1765,7 @@ abstract class AbstractParser { parser =>
       }
       commaSeparated(param(ownerIsCase, ownerIsType, isImplicit = parsedImplicits))
     }
-    val paramss = new ListBuffer[List[Template.Param]]
+    val paramss = new ListBuffer[List[Term.Param]]
     newLineOptWhenFollowedBy[`(`]
     while (!parsedImplicits && token.is[`(`]) {
       next()
@@ -1793,7 +1793,7 @@ abstract class AbstractParser { parser =>
       }
   }
 
-  def param(ownerIsCase: Boolean, ownerIsType: Boolean, isImplicit: Boolean): Template.Param = {
+  def param(ownerIsCase: Boolean, ownerIsType: Boolean, isImplicit: Boolean): Term.Param = {
     var mods: List[Mod] = annots(skipNewLines = false)
     if (isImplicit) mods ++= List(Mod.Implicit())
     if (ownerIsType) {
@@ -1803,7 +1803,8 @@ abstract class AbstractParser { parser =>
       }
     }
     val (isValParam, isVarParam) = (ownerIsType && token.is[`val`], ownerIsType && token.is[`var`])
-    if (isValParam || isVarParam) next()
+    if (isValParam) { mods :+= Mod.ValParam(); next() }
+    if (isVarParam) { mods :+= Mod.VarParam(); next() }
     val name = termName()
     val tpt = {
       accept[`:`]
@@ -1830,15 +1831,14 @@ abstract class AbstractParser { parser =>
       }
       tpt
     }
-    val default =
+    val default = {
       if (token.isNot[`=`]) None
       else {
         next()
         Some(expr())
       }
-    if (isValParam) Template.Param.Val(mods, Some(name), Some(tpt), default)
-    else if (isVarParam) Template.Param.Var(mods, Some(name), Some(tpt), default)
-    else Term.Param(mods, Some(name), Some(tpt), default)
+    }
+    Term.Param(mods, Some(name), Some(tpt), default)
   }
 
   /** {{{
