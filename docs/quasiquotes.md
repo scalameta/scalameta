@@ -22,12 +22,12 @@
  Name              | `q"name"`
  Selection         | `q"$expr.$name"`
  Interpolation     | `q""" $name"$${..$exprs}" """`
- Application       | `q"$expr(..$args)"`
+ Application       | `q"$expr(..$aexprs)"`
  Type Application  | `q"$expr[..$tpes]"`
- Infix Application | `q"$expr $name[..$tpes] (..$args)"`
+ Infix Application | `q"$expr $name[..$tpes] (..$aexprs)"`
  Unary Application | `q"!$expr", q"~$expr", q"-$expr", "+$expr"`
  Assign            | `q"$ref = $expr"`
- Update            | `q"$expr(..$args) = $expr"`
+ Update            | `q"$expr(..$aexprs) = $expr"`
  Return            | `q"return $expropt"`
  Throw             | `q"throw $expr"`
  Ascribe           | `q"$expr: $tpe"`
@@ -53,9 +53,9 @@
 
             | Quasiquote
 ------------|------------------------------
- Named      | `arg"$name = $expr"`
- Repeated   | `arg"$expr: _*"`
- Expression | `arg"$expr"`
+ Named      | `aexpr"$name = $expr"`
+ Repeated   | `aexpr"$expr: _*"`
+ Expression | `aexpr"$expr"`
 
 ## Types (meta.Type)
 
@@ -134,7 +134,7 @@
  Def            | `q"..$mods def $name[..$tparams](...$paramss): $tpeopt = $expr"`
  Macro          | `q"..$mods def $name[..$tparams](...$paramss): $tpe = macro $expr"`
  Primary Ctor   | `q"..$mods def this(..$cparamss)"`
- Secondary Ctor | `q"..$mods def this(..$paramss) = { this(...$argss); ..$stats }"`
+ Secondary Ctor | `q"..$mods def this(..$paramss) = { this(...$aexprss); ..$stats }"`
  Type           | `q"..$mods type $tname[..$tparams] = $tpe"`
  Class          | `q"..$mods class $tname[..$tparams] $ctor extends $template"`
  Trait          | `q"..$mods trait $tname[..$tparams] extends $template"`
@@ -155,7 +155,7 @@
            | Quasiquote
 -----------|--------------------
  Template  | `template"{ ..$stat } with ..$crefs { $param => ..$stats }"`
- Parent    | `template"$tpe(...$argss)"`
+ Parent    | `template"$tpe(...$aexprss)"`
 
 ## Modifiers (meta.Mod)
 
@@ -220,7 +220,7 @@
  meta.Template       | `$template`   | `template`
  meta.Template.Param | `$cparam`     | `param`
  meta.Term           | `$expr`       | `q`
- meta.Term.Arg       | `$arg`        | `arg`
+ meta.Term.Arg       | `$aexpr`      | `arg`
  meta.Term.Name      | `$name`       | `q`
  meta.Term.Ref       | `$ref`        | `q`
  meta.Term.Param     | `$param`      | `tparam`
