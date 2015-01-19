@@ -294,20 +294,4 @@ package object semantic {
     @hosted def isBinder: Boolean = ???
     @hosted def isReference: Boolean = ???
   }
-
-  // ===========================
-  // PART 6: QUICK NAVIGATION
-  // ===========================
-
-  // TODO: this is a temporary category of the API create because we don't have hygiene yet
-  // later on, instead of `typeOf("X")`, we'll be able to simply say `t"X"`
-
-  @hosted private def refOf(path: String, isTerm: Boolean): Ref = {
-    val c = implicitly[SemanticContext]
-    val prefix :+ name = path.split('.').toList
-    val owner = prefix.foldLeft(c.root)((curr, name) => curr.internalSingle[Member.Term](name, _ => true, "terms"))
-    if (isTerm) owner.internalSingle[Member.Term](name, _ => true, "terms").ref else owner.internalSingle[Member.Type](name, _ => true, "types").ref
-  }
-  @hosted def typeOf[T: ru.TypeTag]: impl.Type.Ref = refOf(ru.typeOf[T].typeSymbol.fullName, isTerm = false).asInstanceOf[impl.Type.Ref]
-  @hosted def termOf[T: ru.TypeTag](x: T): impl.Term.Ref = refOf(ru.typeOf[T].typeSymbol.fullName, isTerm = true).asInstanceOf[impl.Term.Ref]
 }
