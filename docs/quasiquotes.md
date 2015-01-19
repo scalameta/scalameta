@@ -123,7 +123,6 @@
  Val       | `q"..$mods val ..$names: $tpe"`
  Var       | `q"..$mods var ..$names: $tpe"`
  Def       | `q"..$mods def $name[..$tparams](...$paramss): $tpe"`
- Procedure | `q"..$mods def $name[..$tparams](...$paramss)"`
  Type      | `q"..$mods type $tname[..$tparams] >: $tpeopt <: tpeopt"`
 
 ### Definitions
@@ -134,7 +133,6 @@
  Var            | `q"..$mods var ..$pats: $tpeopt = $expropt"`
  Def            | `q"..$mods def $name[..$tparams](...$paramss): $tpeopt = $expr"`
  Macro          | `q"..$mods def $name[..$tparams](...$paramss): $tpe = macro $expr"`
- Procedure      | `q"..$mods def $name[..$tparams](...$paramss) { ..$stats }"`
  Primary Ctor   | `q"..$mods def this(..$cparamss)"`
  Secondary Ctor | `q"..$mods def this(..$paramss) = { this(...$argss); ..$stats }"`
  Type           | `q"..$mods type $tname[..$tparams] = $tpe"`

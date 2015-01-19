@@ -77,8 +77,8 @@ class DefnSuite extends ParseSuite {
   }
 
   test("def proc { return 42 }") {
-    val Defn.Procedure(Nil, Term.Name("proc"), Nil, Nil,
-                       (ret @ Term.Return(Lit.Int(42))) :: Nil) = templStat("def proc { return 42 }")
+    val Defn.Def(Nil, Term.Name("proc"), Nil, Nil, Some(Type.Name("Unit")), Term.Block((ret @ Term.Return(Lit.Int(42))) :: Nil)) =
+      templStat("def proc { return 42 }")
     assert(ret.hasExpr === true)
   }
 

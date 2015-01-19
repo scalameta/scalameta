@@ -285,8 +285,6 @@ object Code {
     case t: Defn.Object    => s(a(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
     case t: Defn.Def       =>
       s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, t.decltpe, " = ", t.body)
-    case t: Defn.Procedure =>
-      s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, " { ", r(t.stats.map(i(_)), ""), n("}"))
     case t: Defn.Macro     =>
       s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, kw(":"), " ", t.tpe, " ", kw("="), " ", kw("macro"), " ", t.body)
 
@@ -295,7 +293,6 @@ object Code {
     case t: Decl.Var       => s(a(t.mods, " "), kw("var"), " ", r(t.pats, ", "), kw(":"), " ", t.decltpe)
     case t: Decl.Type      => s(a(t.mods, " "), kw("type"), " ", t.name, t.tparams, t.bounds)
     case t: Decl.Def       => s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, kw(":"), " ", t.decltpe)
-    case t: Decl.Procedure => s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss)
 
     // Pkg
     case t: Source             => r(t.stats, EOL)

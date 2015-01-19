@@ -231,10 +231,6 @@ package scala.meta.internal.ast {
                    tparams: Seq[impl.Type.Param],
                    paramss: Seq[Seq[Term.Param]],
                    decltpe: impl.Type) extends Decl with Member.Term
-    @ast class Procedure(mods: Seq[Mod],
-                         name: Term.Name,
-                         tparams: Seq[impl.Type.Param],
-                         paramss: Seq[Seq[Term.Param]]) extends Decl with Member.Term
     @ast class Type(mods: Seq[Mod],
                     name: impl.Type.Name,
                     tparams: Seq[impl.Type.Param],
@@ -260,11 +256,6 @@ package scala.meta.internal.ast {
                    paramss: Seq[Seq[Term.Param]],
                    decltpe: Option[impl.Type],
                    body: Term) extends Defn with Member.Term
-    @ast class Procedure(mods: Seq[Mod],
-                         name: Term.Name,
-                         tparams: Seq[impl.Type.Param],
-                         paramss: Seq[Seq[Term.Param]],
-                         stats: Seq[Stat]) extends Defn with Member.Term
     @ast class Macro(mods: Seq[Mod],
                      name: Term.Name,
                      tparams: Seq[impl.Type.Param],
