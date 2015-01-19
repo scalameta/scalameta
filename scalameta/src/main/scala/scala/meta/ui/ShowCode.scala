@@ -292,10 +292,10 @@ object Code {
     case _: Mod.VarParam        => kw("var")
     case t: Mod.Private         => s(kw("private"))
     case t: Mod.PrivateThis     => s(kw("private"), kw("["), kw("this"), kw("]"))
-    case t: Mod.PrivateWithin   => s(kw("private"), kw("["), t.name.toString, kw("]"))
+    case t: Mod.PrivateWithin   => s(kw("private"), kw("["), t.name, kw("]"))
     case t: Mod.Protected       => s(kw("protected"))
     case t: Mod.ProtectedThis   => s(kw("protected"), kw("["), kw("this"), kw("]"))
-    case t: Mod.ProtectedWithin => s(kw("protected"), kw("["), t.name.toString, kw("]"))
+    case t: Mod.ProtectedWithin => s(kw("protected"), kw("["), t.name, kw("]"))
 
     // Defn
     case t: Defn.Val       => s(a(t.mods, " "), kw("val"), " ", r(t.pats, ", "), t.decltpe, " ", kw("="), " ", t.rhs)
