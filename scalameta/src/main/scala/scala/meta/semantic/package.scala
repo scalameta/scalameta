@@ -41,7 +41,7 @@ package object semantic {
     @hosted def owner: Scope = implicitly[SemanticContext].owner(tree)
   }
 
-  sealed trait HasTpe[T, U]
+  sealed trait HasTpe[T, U <: meta.Type.Arg]
   object HasTpe {
     implicit def Term[T <: meta.Term]: HasTpe[T, meta.Type] = new HasTpe[T, meta.Type] {}
     implicit def Member[T <: meta.Member]: HasTpe[T, meta.Type] = new HasTpe[T, meta.Type] {}
@@ -54,7 +54,7 @@ package object semantic {
     @hosted def tpe: U = tree.internalAttr[Attr.Type].tpe.require[U]
   }
 
-  sealed trait HasDefn[T, U]
+  sealed trait HasDefn[T, U <: meta.Member]
   object HasDefn {
     implicit def Ref[T <: meta.Ref]: HasDefn[T, meta.Member] = new HasDefn[T, meta.Member] {}
     implicit def TermRef[T <: meta.Term.Ref]: HasDefn[T, meta.Member.Term] = new HasDefn[T, meta.Member.Term] {}
@@ -62,7 +62,7 @@ package object semantic {
     implicit def Selector[T <: meta.Selector]: HasDefn[T, meta.Member] = new HasDefn[T, meta.Member] {}
   }
 
-  implicit class SemanticResolvableOps[T <: Tree, U <: Tree](val tree: T)(implicit ev: HasDefn[T, U]) {
+  implicit class SemanticResolvableOps[T <: Tree, U <: meta.Member](val tree: T)(implicit ev: HasDefn[T, U]) {
     @hosted def defns: Seq[U] = tree.internalAttr[Attr.Defns].defns.require[Seq[U]]
     @hosted def defn: U = {
       defns match {
