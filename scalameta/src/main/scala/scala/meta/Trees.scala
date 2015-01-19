@@ -60,7 +60,7 @@ package scala.meta {
   @branch trait Mod extends Tree
   @branch trait Enumerator extends Tree
   @branch trait Selector extends Tree
-  @branch trait Case extends Tree
+  @branch trait Case extends Tree with Scope
   @branch trait Source extends Tree
 }
 
@@ -372,7 +372,7 @@ package scala.meta.internal.ast {
     @ast class Unimport(name: String) extends Selector
   }
 
-  @ast class Case(pat: Pat, cond: Option[Term], stats: Seq[Stat]) extends api.Case with Tree
+  @ast class Case(pat: Pat, cond: Option[Term], stats: Seq[Stat]) extends api.Case with Tree with Scope
 
   @ast class Source(stats: Seq[Stat]) extends api.Source with Tree {
     require(stats.forall(_.isTopLevelStat))
