@@ -165,13 +165,13 @@ class Parser(val origin: Origin)(implicit val dialect: Dialect) extends Abstract
         if (curr.is[`(`]) sepRegions = ')' :: sepRegions
         else if (curr.is[`[`]) sepRegions = ']' :: sepRegions
         else if (curr.is[`{`]) sepRegions = '}' :: sepRegions
-        else if (curr.is[`case`] && !next.is[`class `] && !next.is[`object`]) sepRegions = '⇒' :: sepRegions
+        else if (curr.is[`case`] && !next.is[`class `] && !next.is[`object`]) sepRegions = '\u21d2' :: sepRegions
         else if (curr.is[`}`]) {
           while (!sepRegions.isEmpty && sepRegions.head != '}') sepRegions = sepRegions.tail
           if (!sepRegions.isEmpty) sepRegions = sepRegions.tail
         } else if (curr.is[`]`]) { if (!sepRegions.isEmpty && sepRegions.head == ']') sepRegions = sepRegions.tail }
         else if (curr.is[`)`]) { if (!sepRegions.isEmpty && sepRegions.head == ')') sepRegions = sepRegions.tail }
-        else if (curr.is[`=>`]) { if (!sepRegions.isEmpty && sepRegions.head == '⇒') sepRegions = sepRegions.tail }
+        else if (curr.is[`=>`]) { if (!sepRegions.isEmpty && sepRegions.head == '\u21d2') sepRegions = sepRegions.tail }
         else () // do nothing for other tokens
         tokenPos = pos
         token = curr
