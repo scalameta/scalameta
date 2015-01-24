@@ -54,7 +54,7 @@ package scala.meta {
   @branch trait Template extends Tree with Scope
   @branch trait Mod extends Tree
   @branch trait Enumerator extends Tree
-  @branch trait Selector extends Tree
+  @branch trait Importee extends Tree
   @branch trait Case extends Tree with Scope
   @branch trait Source extends Tree
 }
@@ -363,15 +363,17 @@ package scala.meta.internal.ast {
   }
 
   @ast class Import(clauses: Seq[Import.Clause] @nonEmpty) extends Stat
-  @branch trait Selector extends api.Selector with Tree
   object Import {
     @ast class Clause(ref: Term.Ref, sels: Seq[Selector] @nonEmpty) extends Tree {
       require(ref.isStableId)
     }
-    @ast class Wildcard() extends Selector
-    @ast class Name(value: String) extends Selector
-    @ast class Rename(from: String, to: String) extends Selector
-    @ast class Unimport(name: String) extends Selector
+    @branch trait Selector extends api.Importee with Tree
+    object Selector {
+      @ast class Wildcard() extends Selector
+      @ast class Name(value: String) extends Selector
+      @ast class Rename(from: String, to: String) extends Selector
+      @ast class Unimport(name: String) extends Selector
+    }
   }
 
   @ast class Case(pat: Pat, cond: Option[Term], stats: Seq[Stat]) extends api.Case with Tree with Scope

@@ -310,7 +310,7 @@ abstract class AbstractParser { parser =>
   def parseTemplate(): Template = ???
   def parseMod(): Mod = ???
   def parseEnumerator(): Enumerator = ???
-  def parseSelector(): Selector = ???
+  def parseImportee(): Importee = ???
   def parseSource(): Source = parseRule(_.parseStartRule())
 
 /* ------------- PARSER COMMON -------------------------------------------- */
@@ -1945,7 +1945,7 @@ abstract class AbstractParser { parser =>
     sid match {
       case Term.Select(sid: Term.Ref, name: Term.Name) if sid.isStableId =>
         if (token.is[`.`]) dotselectors
-        else Import.Clause(sid, Import.Name(name.value) :: Nil)
+        else Import.Clause(sid, Import.Selector.Name(name.value) :: Nil)
       case _ => dotselectors
     }
   }
@@ -1954,26 +1954,26 @@ abstract class AbstractParser { parser =>
    *  ImportSelectors ::= `{' {ImportSelector `,'} (ImportSelector | `_') `}'
    *  }}}
    */
-  def importSelectors(): List[Selector] =
+  def importSelectors(): List[Import.Selector] =
     if (token.isNot[`{`]) List(importWildcardOrName())
     else inBraces(commaSeparated(importSelector()))
 
-  def importWildcardOrName(): Selector =
-    if (token.is[`_ `]) { next(); Import.Wildcard() }
-    else { val name = termName(); Import.Name(name.value) }
+  def importWildcardOrName(): Import.Selector =
+    if (token.is[`_ `]) { next(); Import.Selector.Wildcard() }
+    else { val name = termName(); Import.Selector.Name(name.value) }
 
   /** {{{
    *  ImportSelector ::= Id [`=>' Id | `=>' `_']
    *  }}}
    */
-  def importSelector(): Selector = {
+  def importSelector(): Import.Selector = {
     importWildcardOrName() match {
-      case from: Import.Name if token.is[`=>`] =>
+      case from: Import.Selector.Name if token.is[`=>`] =>
         next()
         importWildcardOrName() match {
-          case to: Import.Name     => Import.Rename(from.value, to.value)
-          case to: Import.Wildcard => Import.Unimport(from.value)
-          case _                   => unreachable
+          case to: Import.Selector.Name     => Import.Selector.Rename(from.value, to.value)
+          case to: Import.Selector.Wildcard => Import.Selector.Unimport(from.value)
+          case _                            => unreachable
         }
       case other => other
     }

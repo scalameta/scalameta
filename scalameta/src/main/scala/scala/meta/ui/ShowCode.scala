@@ -333,12 +333,12 @@ object Code {
     case t: Enumerator.Guard     => s(kw("if"), " ", p(PostfixExpr, t.cond))
 
     // Import
-    case t: Import.Name     => s(t.value)
-    case t: Import.Rename   => s(t.from, " ", kw("=>"), " ", t.to)
-    case t: Import.Unimport => s(t.name, " ", kw("=>"), " ", kw("_"))
-    case _: Import.Wildcard => kw("_")
-    case t: Import.Clause   => s(t.ref, ".", t.sels)
-    case t: Import          => s(kw("import"), " ", r(t.clauses, ", "))
+    case t: Import.Selector.Name     => s(t.value)
+    case t: Import.Selector.Rename   => s(t.from, " ", kw("=>"), " ", t.to)
+    case t: Import.Selector.Unimport => s(t.name, " ", kw("=>"), " ", kw("_"))
+    case _: Import.Selector.Wildcard => kw("_")
+    case t: Import.Clause            => s(t.ref, ".", t.sels)
+    case t: Import                   => s(kw("import"), " ", r(t.clauses, ", "))
 
     // Aux
     case t: Ctor.Ref => if (t.isInstanceOf[Ctor.Ref.Function]) s("=>") else s(t.ctorTpe)
@@ -404,10 +404,10 @@ object Code {
   private implicit def codeTypeArgOpt(implicit dialect: Dialect): Code[Option[Type.Arg]] = Code { _.map { t => s(kw(":"), " ", t) }.getOrElse(s()) }
   private implicit def codeTypeOpt(implicit dialect: Dialect): Code[Option[Type]] = Code { _.map { t => s(kw(":"), " ", t) }.getOrElse(s()) }
   private implicit def codeTermNameOpt(implicit dialect: Dialect): Code[Option[Term.Name]] = Code { _.map(s(_)).getOrElse(s(")")) }
-  private implicit def codeImportSels(implicit dialect: Dialect): Code[Seq[Selector]] = Code {
-    case (t: Import.Name) :: Nil     => s(t)
-    case (t: Import.Wildcard) :: Nil => s(t)
-    case sels                        => s("{ ", r(sels, ", "), " }")
+  private implicit def codeImportSels(implicit dialect: Dialect): Code[Seq[Import.Selector]] = Code {
+    case (t: Import.Selector.Name) :: Nil     => s(t)
+    case (t: Import.Selector.Wildcard) :: Nil => s(t)
+    case sels                                 => s("{ ", r(sels, ", "), " }")
   }
 
   implicit def codeToken[T <: Token]: Code[T] = Code { x => s(x.code) }

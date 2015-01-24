@@ -58,7 +58,7 @@ package object semantic {
     implicit def Ref[T <: meta.Ref]: HasDefn[T, meta.Member] = new HasDefn[T, meta.Member] {}
     implicit def TermRef[T <: meta.Term.Ref]: HasDefn[T, meta.Member.Term] = new HasDefn[T, meta.Member.Term] {}
     implicit def TypeRef[T <: meta.Type.Ref]: HasDefn[T, meta.Member] = new HasDefn[T, meta.Member] {} // Type.Ref can refer to both types (regular types) and terms (singleton types)
-    implicit def Selector[T <: meta.Selector]: HasDefn[T, meta.Member] = new HasDefn[T, meta.Member] {}
+    implicit def Importee[T <: meta.Importee]: HasDefn[T, meta.Member] = new HasDefn[T, meta.Member] {}
   }
 
   implicit class SemanticResolvableOps[T <: Tree, U <: meta.Member](val tree: T)(implicit ev: HasDefn[T, U]) {

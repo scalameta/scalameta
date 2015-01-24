@@ -112,7 +112,7 @@
 ------------|----------------------------
  Expression | `q"$expr"`
  Member     | `q"$member"`
- Import     | `q"import ..($ref.{..$selectors})"`
+ Import     | `q"import ..($ref.{..$importees})"`
 
 ## Members (meta.Member)
 
@@ -186,14 +186,14 @@
  Value     | `enumerator"$pat = $expr"`
  Guard     | `enumerator"if $expr"`
 
-## Selectors (meta.Selector)
+## Importees (meta.Importee)
 
-                   | Quasiquote
--------------------|---------------------------
- Name Selector     | `selector"$str"`
- Rename Selector   | `selector"$str => $str"`
- Unimport Selector | `selector"$str => _"`
- Wildcard Selector | `selector"_"`
+           | Quasiquote
+-----------|---------------------------
+ Name      | `importee"$str"`
+ Rename    | `importee"$str => $str"`
+ Unimport  | `importee"$str => _"`
+ Wildcard  | `importee"_"`
 
 ## Cases (meta.Case)
 
@@ -214,7 +214,7 @@
  meta.Mod            | `$mod`        | `mod`
  meta.Pat            | `$pat`        | `p`
  meta.Pat.Arg        | `$apat`       | `p`
- meta.Selector       | `$selector`   | `selector`
+ meta.Importee       | `$importee`   | `importee`
  meta.Stat           | `$stat`       | `q`
  meta.Template       | `$template`   | `template`
  meta.Term           | `$expr`       | `q`

@@ -72,7 +72,7 @@ class PackageSuite extends ParseSuite {
   }
 
   test("import foo.bar; package object baz") {
-    val Source(Import(Import.Clause(Term.Name("foo"), Import.Name("bar") :: Nil) :: Nil) ::
+    val Source(Import(Import.Clause(Term.Name("foo"), Import.Selector.Name("bar") :: Nil) :: Nil) ::
                  Pkg.Object(Nil, Term.Name("baz"), EmptyCtor(), EmptyTemplate()) :: Nil) =
       source("import foo.bar; package object baz")
   }

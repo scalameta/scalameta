@@ -26,7 +26,7 @@ package object syntactic {
   @quasiquote[Template]('template)      implicit class TemplateQuote(ctx: StringContext)
   @quasiquote[Mod]('mod)                implicit class ModQuote(ctx: StringContext)
   @quasiquote[Enumerator]('enumerator)  implicit class EnumeratorQuote(ctx: StringContext)
-  @quasiquote[Selector]('selector)      implicit class SelectorQuote(ctx: StringContext)
+  @quasiquote[Importee]('importee)      implicit class ImporteeQuote(ctx: StringContext)
   @quasiquote[Source]('source)          implicit class SourceQuote(ctx: StringContext)
 
   // ===========================
@@ -53,7 +53,7 @@ package object syntactic {
     implicit def parseTemplate(implicit dialect: Dialect): Parse[Template] = apply(origin => new Parser(origin).parseTemplate())
     implicit def parseMod(implicit dialect: Dialect): Parse[Mod] = apply(origin => new Parser(origin).parseMod())
     implicit def parseEnumerator(implicit dialect: Dialect): Parse[Enumerator] = apply(origin => new Parser(origin).parseEnumerator())
-    implicit def parseSelector(implicit dialect: Dialect): Parse[Selector] = apply(origin => new Parser(origin).parseSelector())
+    implicit def parseImportee(implicit dialect: Dialect): Parse[Importee] = apply(origin => new Parser(origin).parseImportee())
     implicit def parseSource(implicit dialect: Dialect): Parse[Source] = apply(origin => new Parser(origin).parseSource())
   }
 
