@@ -31,7 +31,7 @@
  Return            | `q"return $expropt"`
  Throw             | `q"throw $expr"`
  Ascribe           | `q"$expr: $tpe"`
- Annotate          | `q"$expr: ..@$crefs"`
+ Annotate          | `q"$expr: ..@$ctorrefs"`
  Tuple             | `q"(..$exprs)"`
  Block             | `q"{ ..$stats }"`
  If                | `q"if ($expr) $expr else $expr"`
@@ -71,7 +71,7 @@
  Tuple             | `t"(..$tpes)"`
  Compound          | `t"..$tpes { ..$stats }"`
  Existential       | `t"$tpe forSome { ..$stats }"`
- Annotate          | `t"$tpe ..@$crefs"`
+ Annotate          | `t"$tpe ..@$ctorrefs"`
  Placeholder       | `t"_ >: $tpeopt <: tpeopt"`
  Literal           | `t"$lit"`
 
@@ -111,7 +111,7 @@
             | Quasiquote
 ------------|----------------------------
  Expression | `q"$expr"`
- Member     | `q"$memb"`
+ Member     | `q"$member"`
  Import     | `q"import ..($ref.{..$selectors})"`
 
 ## Members (meta.Member)
@@ -153,14 +153,14 @@
 
            | Quasiquote
 -----------|--------------------
- Template  | `template"{ ..$stat } with ..$crefs { $param => ..$stats }"`
+ Template  | `template"{ ..$stat } with ..$ctorrefs { $param => ..$stats }"`
  Parent    | `template"$tpe(...$aexprss)"`
 
 ## Modifiers (meta.Mod)
 
                   | Quasiquote
 ------------------|-----------------
- Annotation       | `mod"@$cref"`
+ Annotation       | `mod"@$ctorref"`
  Private          | `mod"private"`
  Private Within   | `mod"private[$str]"`
  Private This     | `mod"private[this]"`
@@ -208,12 +208,12 @@
 
  Type                | Shorthand     | Interpolator
 ---------------------|---------------|--------------
- meta.Enumerator     | `$enumerator` | `enumerator`
  meta.Case           | `$case`       | `p`
- meta.Member         | `$memb`       | `q`
- meta.Mod            | `$mod`        | `mod`
  meta.Ctor           | `$ctor`       | `q`
- meta.Ctor.Ref       | `$cref`       | `ctorref`
+ meta.Ctor.Ref       | `$ctorref`    | `ctorref`
+ meta.Enumerator     | `$enumerator` | `enumerator`
+ meta.Member         | `$member`     | `q`
+ meta.Mod            | `$mod`        | `mod`
  meta.Pat            | `$pat`        | `p`
  meta.Pat.Arg        | `$apat`       | `p`
  meta.Selector       | `$selector`   | `selector`
