@@ -1719,18 +1719,13 @@ abstract class AbstractParser { parser =>
    *  }}}
    */
   def annots(skipNewLines: Boolean): List[Mod.Annot] = readAnnots {
-    val t = annot()
+    val t = Mod.Annot(constructorCall(exprSimpleType, allowArgss = true))
     if (skipNewLines) newLineOpt()
     t
   }
-  def constructorAnnots(): List[Mod.Annot] = readAnnots {
-    Mod.Annot(Ctor.Ref(exprSimpleType(), argumentExprs() :: Nil))
-  }
 
-  def annot(): Mod.Annot = {
-    val t = exprSimpleType()
-    if (token.is[`(`]) Mod.Annot(Ctor.Ref(t, multipleArgumentExprs()))
-    else Mod.Annot(Ctor.Ref(t, Nil))
+  def constructorAnnots(): List[Mod.Annot] = readAnnots {
+    Mod.Annot(constructorCall(exprSimpleType(), allowArgss = false))
   }
 
 /* -------- PARAMETERS ------------------------------------------- */
@@ -1970,7 +1965,7 @@ abstract class AbstractParser { parser =>
    *           | type [nl] TypeDcl
    *  }}}
    */
-  def defOrDclOrCtor(mods: List[Mod]): Stat = {
+  def defOrDclOrSecondaryCtor(mods: List[Mod]): Stat = {
     mods.getAll[Mod.Lazy].foreach { m =>
       if (token.isNot[`val`]) syntaxError("lazy not allowed here. Only vals can be lazy", at = m)
     }
@@ -1978,7 +1973,7 @@ abstract class AbstractParser { parser =>
       case _: `val` | _: `var` =>
         patDefOrDcl(mods)
       case _: `def` =>
-        funDefOrDclOrCtor(mods)
+        funDefOrDclOrSecondaryCtor(mods)
       case _: `type` =>
         typeDefOrDcl(mods)
       case _ =>
@@ -1989,7 +1984,7 @@ abstract class AbstractParser { parser =>
   def nonLocalDefOrDcl: Stat = {
     val anns = annots(skipNewLines = true)
     val mods = anns ++ modifiers()
-    defOrDclOrCtor(mods) match {
+    defOrDclOrSecondaryCtor(mods) match {
       case s if s.isTemplateStat => s
       case other                 => syntaxError("is not a valid template statement", at = other)
     }
@@ -2038,21 +2033,10 @@ abstract class AbstractParser { parser =>
    *  FunSig ::= id [FunTypeParamClause] ParamClauses
    *  }}}
    */
-  def funDefOrDclOrCtor(mods: List[Mod]): Stat = {
+  def funDefOrDclOrSecondaryCtor(mods: List[Mod]): Stat = {
     next()
     if (token.isNot[`this`]) funDefRest(mods, termName())
-    else {
-      next()
-      // TODO: ownerIsType = true is most likely a bug here
-      // secondary constructors can't have val/var parameters
-      val paramss = paramClauses(ownerIsType = true).asInstanceOf[Seq[Seq[Term.Param]]]
-      newLineOptWhenFollowedBy[`{`]
-      val (argss, stats) = token match {
-        case _: `{` => constrBlock()
-        case _      => accept[`=`]; constrExpr()
-      }
-      Ctor.Secondary(mods, paramss, argss, stats)
-    }
+    else secondaryCtor(mods)
   }
 
   def funDefRest(mods: List[Mod], name: Term.Name): Stat = {
@@ -2203,13 +2187,7 @@ abstract class AbstractParser { parser =>
 
     Defn.Class(mods, typeName(),
                typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = true),
-               primaryCtor(ownerIsCase = mods.has[Mod.Case]), templateOpt(OwnedByClass))
-  }
-
-  def primaryCtor(ownerIsCase: Boolean): Ctor.Primary = {
-    val mods = constructorAnnots() ++ accessModifierOpt()
-    val paramss = paramClauses(ownerIsType = true, ownerIsCase)
-    Ctor.Primary(mods, paramss)
+               primaryCtor(if (mods.has[Mod.Case]) OwnedByCaseClass else OwnedByClass), templateOpt(OwnedByClass))
   }
 
   /** {{{
@@ -2225,9 +2203,11 @@ abstract class AbstractParser { parser =>
 
   sealed trait TemplateOwner {
     def isTerm = this eq OwnedByObject
+    def isClass = (this eq OwnedByCaseClass) || (this eq OwnedByClass)
     def isTrait = this eq OwnedByTrait
   }
   object OwnedByTrait extends TemplateOwner
+  object OwnedByCaseClass extends TemplateOwner
   object OwnedByClass extends TemplateOwner
   object OwnedByObject extends TemplateOwner
 
@@ -2240,6 +2220,34 @@ abstract class AbstractParser { parser =>
     Defn.Object(mods, termName(), templateOpt(OwnedByObject))
   }
 
+/* -------- CONSTRUCTORS ------------------------------------------- */
+
+  def primaryCtor(owner: TemplateOwner): Ctor.Primary = {
+    val mods = constructorAnnots() ++ accessModifierOpt()
+    val paramss = paramClauses(ownerIsType = true, owner == OwnedByCaseClass)
+    Ctor.Primary(mods, paramss)
+  }
+
+  def secondaryCtor(mods: List[Mod]): Ctor.Secondary = {
+    next()
+    // TODO: ownerIsType = true is most likely a bug here
+    // secondary constructors can't have val/var parameters
+    val paramss = paramClauses(ownerIsType = true).asInstanceOf[Seq[Seq[Term.Param]]]
+    newLineOptWhenFollowedBy[`{`]
+    val (argss, stats) = token match {
+      case _: `{` => constrBlock()
+      case _      => accept[`=`]; constrExpr()
+    }
+    Ctor.Secondary(mods, paramss, argss, stats)
+  }
+
+  def constructorCall(tpe: Type, allowArgss: Boolean = true): Ctor.Ref = {
+    val argss = if (token.isNot[`(`]) Nil else if (allowArgss) multipleArgumentExprs() else List(argumentExprs())
+    Ctor.Ref(tpe, argss)
+  }
+
+/* -------- TEMPLATES ------------------------------------------- */
+
   /** {{{
    *  ClassParents       ::= ModType {`(' [Exprs] `)'} {with ModType}
    *  TraitParents       ::= ModType {with ModType}
@@ -2247,13 +2255,7 @@ abstract class AbstractParser { parser =>
    */
   def templateParents(): List[Ctor.Ref] = {
     val parents = new ListBuffer[Ctor.Ref]
-    def readAppliedParent() = {
-      val parentTpe = startModType()
-      parents += (token match {
-        case _: `(` => Ctor.Ref(parentTpe, multipleArgumentExprs())
-        case _      => Ctor.Ref(parentTpe, Nil)
-      })
-    }
+    def readAppliedParent() = parents += constructorCall(startModType())
     readAppliedParent()
     while (token.is[`with`]) { next(); readAppliedParent() }
     parents.toList
@@ -2315,8 +2317,6 @@ abstract class AbstractParser { parser =>
       Template(Nil, Nil, self, body)
     }
   }
-
-/* -------- TEMPLATES ------------------------------------------- */
 
   /** {{{
    *  TemplateBody ::= [nl] `{' TemplateStatSeq `}'
@@ -2456,7 +2456,7 @@ abstract class AbstractParser { parser =>
 
   def refineStat(): Option[Stat] =
     if (token.is[DclIntro]) {
-      defOrDclOrCtor(Nil) match {
+      defOrDclOrSecondaryCtor(Nil) match {
         case stat if stat.isRefineStat => Some(stat)
         case other                     => syntaxError("is not a valid refinement declaration", at = other)
       }
@@ -2470,7 +2470,7 @@ abstract class AbstractParser { parser =>
   def localDef(implicitMod: Option[Mod.Implicit]): Stat = {
     val mods = (implicitMod ++: annots(skipNewLines = true)) ++ localModifiers()
     if (mods forall { case _: Mod.Implicit | _: Mod.Lazy | _: Mod.Annot => true; case _ => false })
-      (defOrDclOrCtor(mods) match {
+      (defOrDclOrSecondaryCtor(mods) match {
         case stat if stat.isBlockStat => stat
         case other                    => syntaxError("is not a valid block statement", at = other)
       })
