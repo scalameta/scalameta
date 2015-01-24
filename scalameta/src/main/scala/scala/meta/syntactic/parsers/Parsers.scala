@@ -260,12 +260,8 @@ abstract class AbstractParser { parser =>
     t
   }
 
-  /** This is the general parse entry point.
-   */
-  def parseSource(): Source = parseRule(_.parseStartRule())
-
-  /** This is the alternative entry point for repl, script runner, toolbox and parsing in macros.
-   */
+  // Entry points for Parse[T]
+  // Used for quasiquotes as well as for ad-hoc parsing
   def parseStat(): Stat = parseRule(parser => parser.statSeq(parser.templateStat.orElse(parser.topStat))) match {
     case stat :: Nil => stat
     case stats if stats.forall(_.isBlockStat) => Term.Block(stats)
@@ -274,24 +270,21 @@ abstract class AbstractParser { parser =>
     case _ => syntaxError("these statements can't be mixed together")
   }
   def parseStats(): List[Stat] = parseRule(_.templateStats())
-
-  /** These are alternative entry points for quasiquotes.
-   */
   def parseTerm(): Term = parseRule(_.expr())
-  def parseType(): Type.Arg = parseRule(_.paramType())
-  def parsePat(): Pat.Arg = parseRule(_.pattern())
-
-  /** These are alternative entry points for quasiquotes.
-   */
-  def parseParam(): Term.Param = ???
-  def parseTparam(): Type.Param = ???
   def parseTermArg(): Term.Arg = ???
-  def parseEnumerator(): Enumerator = ???
-  def parseMod(): Mod = ???
-  def parseTemplate(): Template = ???
-  def parseCtorRef(): Ctor.Ref = ???
-  def parseSelector(): Selector = ???
+  def parseTermParam(): Term.Param = ???
+  def parseType(): Type = parseRule(_.typ())
+  def parseTypeArg(): Type.Arg = parseRule(_.paramType())
+  def parseTypeParam(): Type.Param = ???
+  def parsePat(): Pat = ???
+  def parsePatArg(): Pat.Arg = parseRule(_.pattern())
   def parseCase(): Case = ???
+  def parseCtorRef(): Ctor.Ref = ???
+  def parseTemplate(): Template = ???
+  def parseMod(): Mod = ???
+  def parseEnumerator(): Enumerator = ???
+  def parseSelector(): Selector = ???
+  def parseSource(): Source = parseRule(_.parseStartRule())
 
 /* ------------- PARSER COMMON -------------------------------------------- */
 
