@@ -156,7 +156,7 @@
  Name Reference      | `ctor"$ctorname"`
  Select Reference    | `ctor"$ref.$ctorname"`
  Project Reference   | `ctor"$tpe#$ctorname"`
- Function Reference  | `ctor"=>"` or `ctor"(..$tpes) => $tpe"`
+ Function Reference  | `ctor"(..$tpes) => $tpe"`
  Annotated Reference | `ctor"$ctorname ..@$expr"`
  Applied Reference   | `ctor"$ctorref(...$aexprss)"`
  Tapplied Reference  | `ctor"$ctorref[..$atpes]"`
