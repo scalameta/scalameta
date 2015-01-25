@@ -127,7 +127,42 @@ object Code {
     else s(" ", templ)
 
   // TODO: revisit this once we have trivia in place
-  private def guessIsBackquoted(t: Name): Boolean = keywords.contains(t.value) || t.value.contains(" ") // TODO: a more thorough implementation
+  private def guessIsBackquoted(t: Name): Boolean = {
+    def cantBeWrittenWithoutBackquotes(t: Name): Boolean = {
+      // TODO: this requires a more thorough implementation
+      keywords.contains(t.value) || t.value.contains(" ")
+    }
+    def isAmbiguousWithPatVar(t: Term.Name, p: Tree): Boolean = {
+      // TODO: the `eq` trick is very unreliable, but I can't come up with anything better at the moment
+      // since the whole guessXXX business is going to be obsoleted by tokens very soon, I'm leaving this as is
+      val looksLikePatVar = t.value.head.isLower && t.value.head.isLetter
+      val thisLocationAlsoAcceptsPatVars = p match {
+        case p: Term.Name => unreachable
+        case p: Term.Select => false
+        case p: Pat.Wildcard => unreachable
+        case p: Pat.Var => false
+        case p: Pat.Bind => unreachable
+        case p: Pat.Alternative => true
+        case p: Pat.Tuple => true
+        case p: Pat.Extract => p.elements.exists(_ eq t)
+        case p: Pat.ExtractInfix => (p.lhs eq t) || p.rhs.exists(_ eq t)
+        case p: Pat.Interpolate => p.args.exists(_ eq t)
+        case p: Pat.Typed => unreachable
+        case p: Pat => unreachable
+        case p: Case => p.pat eq t
+        case p: Defn.Val => p.pats.exists(_ eq t)
+        case p: Defn.Var => p.pats.exists(_ eq t)
+        case p: Enumerator.Generator => p.pat eq t
+        case p: Enumerator.Val => p.pat eq t
+        case _ => false
+      }
+      looksLikePatVar && thisLocationAlsoAcceptsPatVars
+    }
+    (t, t.parent) match {
+      case (t: Term.Name, Some(p: Tree)) => isAmbiguousWithPatVar(t, p) || cantBeWrittenWithoutBackquotes(t)
+      case _ => cantBeWrittenWithoutBackquotes(t)
+    }
+  }
   private def guessHasRefinement(t: Type.Compound): Boolean = t.refinement.nonEmpty
   private def guessIsPostfix(t: Term.Select): Boolean = false
   private def guessHasExpr(t: Term.Return): Boolean = t.expr match { case Lit.Unit() => false; case _ => true }
@@ -252,6 +287,7 @@ object Code {
 
     // Pat
     case _: Pat.Wildcard         => m(SimplePattern, kw("_"))
+    case t: Pat.Var              => m(SimplePattern, s(t.name.value))
     case t: Pat.Bind             =>
       val separator = if (t.rhs.isInstanceOf[Pat.Arg.SeqWildcard] && dialect.bindToSeqWildcardDesignator == ":") ""  else " "
       val designator = if (t.rhs.isInstanceOf[Pat.Arg.SeqWildcard]) dialect.bindToSeqWildcardDesignator else "@"

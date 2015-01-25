@@ -173,7 +173,8 @@ package scala.meta.internal.ast {
   @branch trait Pat extends api.Pat with Tree with Pat.Arg
   object Pat {
     @ast class Wildcard() extends Pat
-    @ast class Bind(lhs: Term.Name, rhs: Pat.Arg) extends Pat
+    @ast class Var(name: Term.Name) extends Pat
+    @ast class Bind(lhs: Pat.Var, rhs: Pat.Arg) extends Pat
     @ast class Alternative(lhs: Pat, rhs: Pat) extends Pat
     @ast class Tuple(elements: Seq[Pat] @nonEmpty) extends Pat
     @ast class Extract(ref: Term.Ref, targs: Seq[Type], elements: Seq[Pat.Arg]) extends Pat {
@@ -186,7 +187,7 @@ package scala.meta.internal.ast {
       require(parts.length == args.length + 1)
     }
     @ast class Typed(lhs: Pat, rhs: Type) extends Pat {
-      require(lhs.isInstanceOf[Pat.Wildcard] || lhs.isInstanceOf[Term.Name])
+      require(lhs.isInstanceOf[Pat.Wildcard] || lhs.isInstanceOf[Pat.Var])
     }
     @branch trait Arg extends api.Pat.Arg with Tree
     object Arg {
@@ -217,10 +218,10 @@ package scala.meta.internal.ast {
   @branch trait Decl extends Stat
   object Decl {
     @ast class Val(mods: Seq[Mod],
-                   pats: Seq[Term.Name] @nonEmpty,
+                   pats: Seq[Pat.Var] @nonEmpty,
                    decltpe: impl.Type) extends Decl
     @ast class Var(mods: Seq[Mod],
-                   pats: Seq[Term.Name] @nonEmpty,
+                   pats: Seq[Pat.Var] @nonEmpty,
                    decltpe: impl.Type) extends Decl
     @ast class Def(mods: Seq[Mod],
                    name: Term.Name,
@@ -243,7 +244,7 @@ package scala.meta.internal.ast {
                    pats: Seq[Pat] @nonEmpty,
                    decltpe: Option[impl.Type],
                    rhs: Option[Term]) extends Defn {
-      require(rhs.isEmpty ==> pats.forall(_.isInstanceOf[Term.Name]))
+      require(rhs.isEmpty ==> pats.forall(_.isInstanceOf[Pat.Var]))
       require(decltpe.nonEmpty || rhs.nonEmpty)
     }
     @ast class Def(mods: Seq[Mod],

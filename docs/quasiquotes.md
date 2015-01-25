@@ -88,6 +88,7 @@
                | Quasiquote
 ---------------|----------------------------
  Wildcard      | `p"_"`
+ Var           | `p"name"`
  Bind          | `p"$name @ $pat"`
  Alternative   | `p"$pat | $pat"`
  Tuple         | `p"(..$pats)"`
@@ -95,7 +96,7 @@
  Infix Extract | `p"$pat $name (..$apats)"`
  Interpolation | `p""" $name"$${..$pats}" """`
  Typed         | `p"$pat: $tpe"`
- Name          | `p"name"`
+ Name          | `p"`name`"`
  Selection     | `p"$expr.$name"`
  Literal       | `p"$lit"`
 

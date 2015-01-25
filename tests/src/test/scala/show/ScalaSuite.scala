@@ -5,7 +5,7 @@ import scala.meta.dialects.Scala211
 class ScalaSuite extends ParseSuite {
   test("val x: Int (raw)") {
     val tree = templStat("val x: Int")
-    assert(tree.show[Raw] === "Decl.Val(Nil, List(Term.Name(\"x\")), Type.Name(\"Int\"))")
+    assert(tree.show[Raw] === "Decl.Val(Nil, List(Pat.Var(Term.Name(\"x\"))), Type.Name(\"Int\"))")
   }
 
   test("val x: Int (code)") {
@@ -35,7 +35,7 @@ class ScalaSuite extends ParseSuite {
       QQQ
       val y = "\""
     }""".replace("QQQ", "\"\"\""))
-    assert(tree.show[Raw] === """Term.Block(List(Defn.Val(Nil, List(Term.Name("x")), None, Lit.String("%n        x%n      ")), Defn.Val(Nil, List(Term.Name("y")), None, Lit.String("\""))))""".replace("%n", escapedEOL))
+    assert(tree.show[Raw] === """Term.Block(List(Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.String("%n        x%n      ")), Defn.Val(Nil, List(Pat.Var(Term.Name("y"))), None, Lit.String("\""))))""".replace("%n", escapedEOL))
     assert(tree.show[Code] === """
     |{
     |  val x = QQQ
@@ -55,7 +55,7 @@ class ScalaSuite extends ParseSuite {
         ..$z
       QQQ
     }""".replace("QQQ", "\"\"\""))
-    assert(tree.show[Raw] === """Term.Block(List(Defn.Val(Nil, List(Term.Name("x")), None, Term.Interpolate(Term.Name("q"), List(Lit.String("123 + "), Lit.String(" + "), Lit.String(" + 456")), List(Term.Name("x"), Term.Apply(Term.Name("foo"), List(Lit.Int(123)))))), Defn.Val(Nil, List(Term.Name("y")), None, Lit.String("%n        $x%n        $y%n        ..$z%n      "))))""".replace("%n", escapedEOL))
+    assert(tree.show[Raw] === """Term.Block(List(Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Term.Interpolate(Term.Name("q"), List(Lit.String("123 + "), Lit.String(" + "), Lit.String(" + 456")), List(Term.Name("x"), Term.Apply(Term.Name("foo"), List(Lit.Int(123)))))), Defn.Val(Nil, List(Pat.Var(Term.Name("y"))), None, Lit.String("%n        $x%n        $y%n        ..$z%n      "))))""".replace("%n", escapedEOL))
     assert(tree.show[Code] === """
     |{
     |  val x = q"123 + $x + ${foo(123)} + 456"
@@ -289,7 +289,7 @@ class ScalaSuite extends ParseSuite {
 
   test("case List(xs @ _*)") {
     val tree = pat("List(xs @ _*)")
-    assert(tree.show[Raw] === "Pat.Extract(Term.Name(\"List\"), Nil, List(Pat.Bind(Term.Name(\"xs\"), Pat.Arg.SeqWildcard())))")
+    assert(tree.show[Raw] === "Pat.Extract(Term.Name(\"List\"), Nil, List(Pat.Bind(Pat.Var(Term.Name(\"xs\")), Pat.Arg.SeqWildcard())))")
     assert(tree.show[Code] === "List(xs @ _*)")
   }
 
@@ -297,5 +297,20 @@ class ScalaSuite extends ParseSuite {
     val tree = source("package foo; class C; package baz { class D }")
     assert(tree.show[Raw] === "Source(List(Pkg(Term.Name(\"foo\"), List(Defn.Class(Nil, Type.Name(\"C\"), Nil, Ctor.Primary(Nil, Ctor.Ref.Name(\"this\"), Nil), Template(Nil, Nil, Term.Param(Nil, None, None, None), Nil)), Pkg(Term.Name(\"baz\"), List(Defn.Class(Nil, Type.Name(\"D\"), Nil, Ctor.Primary(Nil, Ctor.Ref.Name(\"this\"), Nil), Template(Nil, Nil, Term.Param(Nil, None, None, None), Nil))))))))")
     assert(tree.show[Code] === "package foo\nclass C\npackage baz {\n  class D\n}")
+  }
+
+  test("case `x`") {
+    val tree1 = pat("`x`")
+    assert(tree1.show[Raw] === "Term.Name(\"x\")")
+    assert(tree1.show[Code] === "x")
+    val tree2 = pat("f(`x`)")
+    assert(tree2.show[Raw] === "Pat.Extract(Term.Name(\"f\"), Nil, List(Term.Name(\"x\")))")
+    assert(tree2.show[Code] === "f(`x`)")
+    val tree3 = pat("X")
+    assert(tree3.show[Raw] === "Term.Name(\"X\")")
+    assert(tree3.show[Code] === "X")
+    val tree4 = pat("f(X)")
+    assert(tree4.show[Raw] === "Pat.Extract(Term.Name(\"f\"), Nil, List(Term.Name(\"X\")))")
+    assert(tree4.show[Code] === "f(X)")
   }
 }

@@ -254,6 +254,9 @@ abstract class AbstractParser { parser =>
   var in: TokenIterator
   def token = in.token
   def next() = in.next()
+  def nextOnce() = next()
+  def nextTwice() = { next(); next() }
+  def nextThrice() = { next(); next(); next() }
   val origin: Origin
   val dialect: Dialect
 
@@ -403,6 +406,7 @@ abstract class AbstractParser { parser =>
   def isIdentOf(name: String)       = isIdentAnd(_ == name)
   def isRawStar: Boolean            = isIdentOf("*")
   def isRawBar: Boolean             = isIdentOf("|")
+  def isColonWildcardStar: Boolean  = token.is[`:`] && ahead(token.is[`_ `] && ahead(isIdentOf("*")))
 
 /* ---------- TREE CONSTRUCTION ------------------------------------------- */
 
@@ -1471,21 +1475,30 @@ abstract class AbstractParser { parser =>
      *                |  [SeqPattern2]
      *  }}}
      */
-    def pattern1(): Pat.Arg = pattern2() match {
-      case p @ (_: Term.Name | _: Pat.Wildcard) if token.is[`:`] =>
-        next() // skip :
-        if (dialect.bindToSeqWildcardDesignator == ":" &&
-            token.is[`_ `] && peekingAhead(isRawStar)) {
-          next() // skip *
-          p match {
-            case name: Term.Name => Pat.Bind(p.asInstanceOf[Term.Name], Pat.Arg.SeqWildcard())
-            case _: Pat.Wildcard => Pat.Arg.SeqWildcard()
-            case _ => unreachable // it's really sad that otherwise we're going to get an exhaustivity warning
-          }
-        } else {
-          Pat.Typed(p.asInstanceOf[Pat], compoundType())
+    def pattern1(): Pat.Arg = {
+      val ptoken = token
+      val p = pattern2()
+      if (token.isNot[`:`]) p
+      else {
+        p match {
+          case p: Term.Name =>
+            syntaxError("Pattern variables must start with a lower-case letter. (SLS 8.1.1.)")
+          case p: Pat.Var if dialect.bindToSeqWildcardDesignator == ":" && isColonWildcardStar =>
+            nextThrice()
+            Pat.Bind(p, Pat.Arg.SeqWildcard())
+          case p: Pat.Var =>
+            nextOnce()
+            Pat.Typed(p, compoundType())
+          case p: Pat.Wildcard if dialect.bindToSeqWildcardDesignator == ":" && isColonWildcardStar =>
+            nextThrice()
+            Pat.Arg.SeqWildcard()
+          case p: Pat.Wildcard =>
+            nextOnce()
+            Pat.Typed(p, compoundType())
+          case p =>
+            p
         }
-      case p => p
+      }
     }
 
     /** {{{
@@ -1496,28 +1509,19 @@ abstract class AbstractParser { parser =>
      *  }}}
      */
     def pattern2(): Pat.Arg = {
-      val ptoken = token
       val p = pattern3()
-
-      p match {
-        case p @ Term.Name(value) =>
-          // TODO: replace `p.token` with `p.tokens.head` in the future
-          val isBackquoted = ptoken.toString.endsWith("`")
-          val isVarPattern = !isBackquoted && value.head.isLower && value.head.isLetter
-          if (!isVarPattern) syntaxError("Pattern variables must start with a lower-case letter. (SLS 8.1.1.)")
-        case _ => false
-      }
-
-
       if (token.isNot[`@`]) p
       else p match {
-        case Pat.Wildcard() =>
+        case p: Term.Name =>
+          syntaxError("Pattern variables must start with a lower-case letter. (SLS 8.1.1.)")
+        case p: Pat.Var =>
+          next()
+          Pat.Bind(p, pattern3())
+        case p: Pat.Wildcard =>
           next()
           pattern3()
-        case name: Term.Name =>
-          next()
-          Pat.Bind(name, pattern3())
-        case _ => p
+        case p =>
+          p
       }
     }
 
@@ -1594,7 +1598,12 @@ abstract class AbstractParser { parser =>
       simplePattern(() => syntaxError("illegal start of simple pattern"))
     def simplePattern(onError: () => Nothing): Pat = token match {
       case _: Ident | _: `this` =>
+        val isBackquoted = token.code.endsWith("`")
         val sid = stableId()
+        val isVarPattern = sid match {
+          case Term.Name(value) => !isBackquoted && value.head.isLower && value.head.isLetter
+          case _ => false
+        }
         if (token.is[NumericLiteral]) {
           sid match {
             case Term.Name("-") =>
@@ -1607,10 +1616,12 @@ abstract class AbstractParser { parser =>
           case _        => Nil
         }
         (token, sid) match {
-          case (_: `(`, _)                 => Pat.Extract(sid, targs, argumentPatterns())
-          case (_, _) if targs.nonEmpty    => syntaxError("pattern must be a value")
-          case (_, sid: Term.Ref with Pat) => sid
-          case _                           => unreachable
+          case (_: `(`, _)                          => Pat.Extract(sid, targs, argumentPatterns())
+          case (_, _) if targs.nonEmpty             => syntaxError("pattern must be a value")
+          case (_, name: Term.Name) if isVarPattern => Pat.Var(name)
+          case (_, name: Term.Name)                 => name
+          case (_, select: Term.Select)             => select
+          case _                                    => unreachable
         }
       case _: `_ ` =>
         next()
@@ -2026,13 +2037,16 @@ abstract class AbstractParser { parser =>
   def patDefOrDcl(mods: List[Mod]): Stat = {
     val isMutable = token.is[`var`]
     next()
-    val lhs: List[Pat] = commaSeparated(noSeq.pattern2().asInstanceOf[Pat])
+    val lhs: List[Pat] = commaSeparated(noSeq.pattern2().asInstanceOf[Pat]).map {
+      case name: Term.Name => Pat.Var(name) // TODO: val `x`: Int should be parsed as Decl.Val(..., Pat.Var(Term.Name("x")), ...)
+      case pat => pat
+    }
     val tp: Option[Type] = typedOpt()
 
     if (tp.isEmpty || token.is[`=`]) {
       accept[`=`]
       val rhs =
-        if (token.is[`_ `] && tp.nonEmpty && isMutable && lhs.forall(_.isInstanceOf[Term.Name])) {
+        if (token.is[`_ `] && tp.nonEmpty && isMutable && lhs.forall(_.isInstanceOf[Pat.Var])) {
           next()
           None
         } else Some(expr())
@@ -2042,8 +2056,8 @@ abstract class AbstractParser { parser =>
     } else {
       mods.getAll[Mod.Lazy].foreach { m => syntaxError("lazy values may not be abstract", at = m) }
       val ids = lhs.map {
-        case name: Term.Name => name
-        case other           => syntaxError("pattern definition may not be abstract", at = other)
+        case name: Pat.Var => name
+        case other         => syntaxError("pattern definition may not be abstract", at = other)
       }
 
       if (isMutable) Decl.Var(mods, ids, tp.get)
