@@ -146,56 +146,34 @@ object Code {
   // Branches
   // TODO: this match is not exhaustive: if I remove Mod.Package, then I get no warning
   implicit def codeTree[T <: api.Tree](implicit dialect: Dialect): Code[T] = Code { x => (x: api.Tree) match {
-    case t: Name => m(Path, if (guessIsBackquoted(t)) s("`", t.value, "`") else s(t.value))
-
-    // Type.Arg
-    case t: Type.Arg.Repeated => m(ParamTyp, s(p(Typ, t.tpe), kw("*")))
-    case t: Type.Arg.ByName   => m(ParamTyp, s(kw("=>"), " ", p(Typ, t.tpe)))
-
-    // Type
-    case t: Type.Project     => m(SimpleTyp, s(t.qual, kw("#"), t.selector))
-    case t: Type.Select      => m(SimpleTyp, s(t.qual, kw("."), t.selector))
-    case t: Type.Singleton   => m(SimpleTyp, s(p(SimpleExpr1, t.ref), ".", kw("type")))
-    case t: Type.Annotate    => m(AnnotTyp, s(p(SimpleTyp, t.tpe), " ", t.annots))
-    case t: Type.Apply       => m(SimpleTyp, s(p(SimpleTyp, t.tpe), kw("["), r(t.args.map(arg => p(Typ, arg)), ", "), kw("]")))
-    case t: Type.ApplyInfix  => m(InfixTyp(t.op.value), s(p(InfixTyp(t.op.value), t.lhs, left = true), " ", t.op, " ", p(InfixTyp(t.op.value), t.rhs, right = true)))
-    case t: Type.Compound    => m(CompoundTyp, s(r(t.tpes.map(tpe => p(AnnotTyp, tpe)), " with "), a(" {", a(" ", r(t.refinement, "; "), " "), "}", guessHasRefinement(t))))
-    case t: Type.Existential => m(Typ, s(p(AnyInfixTyp, t.tpe), " ", kw("forSome"), " { ", r(t.quants, "; "), " }"))
-    case t: Type.Placeholder => m(SimpleTyp, s(kw("_"), t.bounds))
-    case t: Type.Tuple       => m(SimpleTyp, s("(", r(t.elements, ", "), ")"))
-    case t: Type.Function    =>
-      val params = if (t.params.size == 1) s(p(AnyInfixTyp, t.params.head)) else s("(", r(t.params.map(param => p(ParamTyp, param)), ", "), ")")
-      m(Typ, s(params, " ", kw("=>"), " ", p(Typ, t.res)))
-    case t: Type.Bounds =>
-      s(t.lo.map(lo => s(" ", kw(">:"), " ", p(Typ, lo))).getOrElse(s()), t.hi.map(hi => s(" ", kw("<:"), " ", p(Typ, hi))).getOrElse(s()))
-
-    // Lit
-    case t: Lit.Bool     => m(Literal, s(t.value.toString))
-    case t: Lit.Int      => m(Literal, s(t.value.toString))
-    case t: Lit.Long     => m(Literal, s(t.value.toString + "l"))
-    case t: Lit.Float    => m(Literal, s(t.value.toString + "f"))
-    case t: Lit.Double   => m(Literal, s(t.value.toString + "d"))
-    case t: Lit.Char     => m(Literal, s(enquote(t.value.toString, SingleQuotes)))
-    case t: Lit.String   => m(Literal, s(enquote(t.value.toString, if (t.value.contains(EOL)) TripleQuotes else DoubleQuotes)))
-    case t: Lit.Symbol   => m(Literal, s("'", t.value.name))
-    case _: Lit.Null     => m(Literal, s(kw("null")))
-    case _: Lit.Unit     => m(Literal, s("()"))
-
-    // Term.Arg
-    case t: Term.Arg.Named    => s(t.name, " ", kw("="), " ", p(Expr, t.rhs))
-    case t: Term.Arg.Repeated => s(p(PostfixExpr, t.arg), kw(":"), " ", kw("_*"))
-
     // Term
-    case t: Term.This     => m(SimpleExpr1, s(t.qual.map(s(_, ".")).getOrElse(s()), kw("this")))
-    case t: Term.Select   => m(Path, s(p(SimpleExpr, t.qual), if (guessIsPostfix(t)) " " else ".", t.selector))
-    case t: Term.Assign   => m(Expr1, s(p(SimpleExpr1, t.lhs), " ", kw("="), " ", p(Expr, t.rhs)))
-    case t: Term.Update   => m(Expr1, s(p(SimpleExpr1, t.fun), t.argss, " ", kw("="), " ", p(Expr, t.rhs)))
-    case t: Term.Return   => m(Expr1, s(kw("return"), if (guessHasExpr(t)) s(" ", p(Expr, t.expr)) else s()))
-    case t: Term.Throw    => m(Expr1, s(kw("throw"), " ", p(Expr, t.expr)))
-    case t: Term.Ascribe  => m(Expr1, s(p(PostfixExpr, t.expr), kw(":"), " ", t.tpe))
-    case t: Term.Annotate => m(Expr1, s(p(PostfixExpr, t.expr), kw(":"), " ", t.annots))
-    case t: Term.Tuple    => m(SimpleExpr1, s("(", r(t.elements, ", "), ")"))
-    case t: Term.Block    =>
+    case t: Term.This            => m(SimpleExpr1, s(t.qual.map(s(_, ".")).getOrElse(s()), kw("this")))
+    case t: Term.Super           => s(t.thisp.map(thisp => s(thisp, ".")).getOrElse(s()), kw("super"), t.superp.map(st => s("[", st, "]")).getOrElse(s()))
+    case t: Term.Name            => m(Path, if (guessIsBackquoted(t)) s("`", t.value, "`") else s(t.value))
+    case t: Term.Select          => m(Path, s(p(SimpleExpr, t.qual), if (guessIsPostfix(t)) " " else ".", t.selector))
+    case t: Term.Interpolate     =>
+      val zipped = t.parts.zip(t.args).map {
+        case (part, id: Name) if !guessIsBackquoted(id) => s(part.value, "$", id.value)
+        case (part, arg)                                => s(part.value, "${", p(Expr, arg), "}")
+      }
+      val quote = if (t.parts.map(_.value).exists(s => s.contains(EOL) || s.contains("\""))) "\"\"\"" else "\""
+      m(SimpleExpr1, s(t.prefix, quote, r(zipped), t.parts.last.value, quote))
+    case t: Term.Apply           => m(SimpleExpr1, s(p(SimpleExpr1, t.fun), t.args))
+    case t: Term.ApplyType       => m(SimpleExpr1, s(p(SimpleExpr, t.fun), t.targs))
+    case t: Term.ApplyInfix      =>
+      m(InfixExpr(t.op.value), s(p(InfixExpr(t.op.value), t.lhs, left = true), " ", t.op, t.targs, " ", t.args match {
+        case (arg: Term) :: Nil => s(p(InfixExpr(t.op.value), arg, right = true))
+        case args               => s(args)
+      }))
+    case t: Term.ApplyUnary      => m(PrefixExpr, s(t.op, p(SimpleExpr, t.arg)))
+    case t: Term.Assign          => m(Expr1, s(p(SimpleExpr1, t.lhs), " ", kw("="), " ", p(Expr, t.rhs)))
+    case t: Term.Update          => m(Expr1, s(p(SimpleExpr1, t.fun), t.argss, " ", kw("="), " ", p(Expr, t.rhs)))
+    case t: Term.Return          => m(Expr1, s(kw("return"), if (guessHasExpr(t)) s(" ", p(Expr, t.expr)) else s()))
+    case t: Term.Throw           => m(Expr1, s(kw("throw"), " ", p(Expr, t.expr)))
+    case t: Term.Ascribe         => m(Expr1, s(p(PostfixExpr, t.expr), kw(":"), " ", t.tpe))
+    case t: Term.Annotate        => m(Expr1, s(p(PostfixExpr, t.expr), kw(":"), " ", t.annots))
+    case t: Term.Tuple           => m(SimpleExpr1, s("(", r(t.elements, ", "), ")"))
+    case t: Term.Block           =>
       import Term.{Block, Function}
       def pstats(s: Seq[Stat]) = r(s.map(i(_)), "")
       t match {
@@ -210,23 +188,8 @@ object Code {
         case _ =>
           m(SimpleExpr, if (t.stats.isEmpty) s("{}") else s("{", pstats(t.stats), n("}")))
       }
-    case t: Term.PartialFunction => m(SimpleExpr, s("{", r(t.cases.map(i(_)), ""), n("}")))
-    case t: Term.While           => m(Expr1, s(kw("while"), " (", t.expr, ") ", p(Expr, t.body)))
-    case t: Term.Do              => m(Expr1, s(kw("do"), " ", p(Expr, t.body), " ", kw("while"), " (", t.expr, ")"))
-    case t: Term.For             => m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ") ", t.body))
-    case t: Term.ForYield        => m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ") ", kw("yield"), " ", t.body))
-    case t: Term.New             => m(SimpleExpr, s(kw("new"), " ", t.templ))
-    case _: Term.Placeholder     => m(SimpleExpr1, kw("_"))
-    case t: Term.Eta             => m(SimpleExpr, s(p(SimpleExpr1, t.term), " ", kw("_")))
+    case t: Term.If              => m(Expr1, s(kw("if"), " (", t.cond, ") ", p(Expr, t.thenp), if (guessHasElsep(t)) s(" ", kw("else"), " ", p(Expr, t.elsep)) else s()))
     case t: Term.Match           => m(Expr1, s(p(PostfixExpr, t.scrut), " ", kw("match"), " {", r(t.cases.map(i(_)), ""), n("}")))
-    case t: Term.Apply           => m(SimpleExpr1, s(p(SimpleExpr1, t.fun), t.args))
-    case t: Term.ApplyType       => m(SimpleExpr1, s(p(SimpleExpr, t.fun), t.targs))
-    case t: Term.ApplyUnary      => m(PrefixExpr, s(t.op, p(SimpleExpr, t.arg)))
-    case t: Term.ApplyInfix      =>
-      m(InfixExpr(t.op.value)    , s(p(InfixExpr(t.op.value), t.lhs, left = true), " ", t.op, t.targs, " ", t.args match {
-        case (arg: Term) :: Nil => s(p(InfixExpr(t.op.value), arg, right = true))
-        case args               => s(args)
-      }))
     case t: Term.TryWithCases    =>
       m(Expr1, s(kw("try"), " ", p(Expr, t.expr),
         if (t.catchp.nonEmpty) s(" ", kw("catch"), " {", r(t.catchp.map(i(_)), ""), n("}")) else s(""),
@@ -234,8 +197,7 @@ object Code {
     case t: Term.TryWithTerm     =>
       m(Expr1, s(kw("try"), " ", p(Expr, t.expr), " ", kw("catch"), " ", t.catchp,
         t.finallyp.map { finallyp => s(" ", kw("finally"), " ", finallyp) }.getOrElse(s())))
-    case t: Term.If       => m(Expr1, s(kw("if"), " (", t.cond, ") ", p(Expr, t.thenp), if (guessHasElsep(t)) s(" ", kw("else"), " ", p(Expr, t.elsep)) else s()))
-    case t: Term.Function =>
+    case t: Term.Function        =>
       t match {
         case Term.Function(Term.Param(mods, Some(name), tptopt, _) :: Nil, body) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
           m(Expr, s(kw("implicit"), " ", name, tptopt.map(s(kw(":"), " ", _)).getOrElse(s()), " ", kw("=>"), " ", p(Expr, body)))
@@ -246,24 +208,56 @@ object Code {
         case Term.Function(params, body) =>
           m(Expr, s("(", r(params, ", "), ") ", kw("=>"), " ", p(Expr, body)))
       }
-    case t: Term.Interpolate =>
-      val zipped = t.parts.zip(t.args).map {
-        case (part, id: Name) if !guessIsBackquoted(id) => s(part.value, "$", id.value)
-        case (part, arg)                                => s(part.value, "${", p(Expr, arg), "}")
-      }
-      val quote = if (t.parts.map(_.value).exists(s => s.contains(EOL) || s.contains("\""))) "\"\"\"" else "\""
-      m(SimpleExpr1, s(t.prefix, quote, r(zipped), t.parts.last.value, quote))
+    case t: Term.PartialFunction => m(SimpleExpr, s("{", r(t.cases.map(i(_)), ""), n("}")))
+    case t: Term.While           => m(Expr1, s(kw("while"), " (", t.expr, ") ", p(Expr, t.body)))
+    case t: Term.Do              => m(Expr1, s(kw("do"), " ", p(Expr, t.body), " ", kw("while"), " (", t.expr, ")"))
+    case t: Term.For             => m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ") ", t.body))
+    case t: Term.ForYield        => m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ") ", kw("yield"), " ", t.body))
+    case t: Term.New             => m(SimpleExpr, s(kw("new"), " ", t.templ))
+    case _: Term.Placeholder     => m(SimpleExpr1, kw("_"))
+    case t: Term.Eta             => m(SimpleExpr, s(p(SimpleExpr1, t.term), " ", kw("_")))
+    case t: Term.Arg.Named       => s(t.name, " ", kw("="), " ", p(Expr, t.rhs))
+    case t: Term.Arg.Repeated    => s(p(PostfixExpr, t.arg), kw(":"), " ", kw("_*"))
+    case t: Term.Param           =>
+      val mods = t.mods.filter(!_.isInstanceOf[Mod.Implicit]) // NOTE: `implicit` in parameters is skipped in favor of `implicit` in the enclosing parameter list
+      s(a(mods, " "), t.name.map(_.value).getOrElse("_"), t.decltpe, t.default.map(s(" ", kw("="), " ", _)).getOrElse(s()))
+
+    // Type
+    case t: Type.Name         => m(Path, if (guessIsBackquoted(t)) s("`", t.value, "`") else s(t.value))
+    case t: Type.Select       => m(SimpleTyp, s(t.qual, kw("."), t.selector))
+    case t: Type.Project      => m(SimpleTyp, s(t.qual, kw("#"), t.selector))
+    case t: Type.Singleton    => m(SimpleTyp, s(p(SimpleExpr1, t.ref), ".", kw("type")))
+    case t: Type.Apply        => m(SimpleTyp, s(p(SimpleTyp, t.tpe), kw("["), r(t.args.map(arg => p(Typ, arg)), ", "), kw("]")))
+    case t: Type.ApplyInfix   => m(InfixTyp(t.op.value), s(p(InfixTyp(t.op.value), t.lhs, left = true), " ", t.op, " ", p(InfixTyp(t.op.value), t.rhs, right = true)))
+    case t: Type.Function     =>
+      val params = if (t.params.size == 1) s(p(AnyInfixTyp, t.params.head)) else s("(", r(t.params.map(param => p(ParamTyp, param)), ", "), ")")
+      m(Typ, s(params, " ", kw("=>"), " ", p(Typ, t.res)))
+    case t: Type.Tuple        => m(SimpleTyp, s("(", r(t.elements, ", "), ")"))
+    case t: Type.Compound     => m(CompoundTyp, s(r(t.tpes.map(tpe => p(AnnotTyp, tpe)), " with "), a(" {", a(" ", r(t.refinement, "; "), " "), "}", guessHasRefinement(t))))
+    case t: Type.Existential  => m(Typ, s(p(AnyInfixTyp, t.tpe), " ", kw("forSome"), " { ", r(t.quants, "; "), " }"))
+    case t: Type.Annotate     => m(AnnotTyp, s(p(SimpleTyp, t.tpe), " ", t.annots))
+    case t: Type.Placeholder  => m(SimpleTyp, s(kw("_"), t.bounds))
+    case t: Type.Bounds =>
+      s(t.lo.map(lo => s(" ", kw(">:"), " ", p(Typ, lo))).getOrElse(s()), t.hi.map(hi => s(" ", kw("<:"), " ", p(Typ, hi))).getOrElse(s()))
+    case t: Type.Arg.Repeated => m(ParamTyp, s(p(Typ, t.tpe), kw("*")))
+    case t: Type.Arg.ByName   => m(ParamTyp, s(kw("=>"), " ", p(Typ, t.tpe)))
+    case t: Type.Param        =>
+      val cbounds = r(t.contextBounds.map { s(kw(":"), " ", _) })
+      val vbounds = r(t.viewBounds.map { s(" ", kw("<%"), " ", _) })
+      val tbounds = s(t.typeBounds)
+      val variance = t.mods.foldLeft("")((curr, m) => if (m.isInstanceOf[Mod.Covariant]) "+" else if (m.isInstanceOf[Mod.Contravariant]) "-" else curr)
+      val mods = t.mods.filter(m => !m.isInstanceOf[Mod.Covariant] && !m.isInstanceOf[Mod.Contravariant])
+      require(t.mods.length - mods.length <= 1)
+      s(a(mods, " "), variance, t.name.map(_.value).getOrElse("_"), t.tparams, cbounds, vbounds, tbounds)
 
     // Pat
-    case t: Pat.Alternative      => m(Pattern, s(p(Pattern, t.lhs), " ", kw("|"), " ", p(Pattern, t.rhs)))
+    case _: Pat.Wildcard         => m(SimplePattern, kw("_"))
     case t: Pat.Bind             =>
       val separator = if (t.rhs.isInstanceOf[Pat.Arg.SeqWildcard] && dialect.bindToSeqWildcardDesignator == ":") ""  else " "
       val designator = if (t.rhs.isInstanceOf[Pat.Arg.SeqWildcard]) dialect.bindToSeqWildcardDesignator else "@"
       m(Pattern2, s(p(SimplePattern, t.lhs), separator, kw(designator), " ", p(AnyPattern3, t.rhs)))
+    case t: Pat.Alternative      => m(Pattern, s(p(Pattern, t.lhs), " ", kw("|"), " ", p(Pattern, t.rhs)))
     case t: Pat.Tuple            => m(SimplePattern, s("(", r(t.elements, ", "), ")"))
-    case _: Pat.Arg.SeqWildcard  => m(SimplePattern, kw("_*"))
-    case t: Pat.Typed            => m(Pattern1, s(p(SimplePattern, t.lhs), kw(":"), " ", p(Typ, t.rhs)))
-    case _: Pat.Wildcard         => m(SimplePattern, kw("_"))
     case t: Pat.Extract          => m(SimplePattern, s(t.ref, t.targs, t.elements))
     case t: Pat.ExtractInfix     =>
       m(Pattern3(t.ref.value), s(p(Pattern3(t.ref.value), t.lhs, left = true), " ", t.ref, " ", t.rhs match {
@@ -276,28 +270,26 @@ object Code {
         case (part, arg)                                => s(part, "${", arg, "}")
       }
       m(SimplePattern, s(t.prefix, "\"", r(zipped), t.parts.last, "\""))
+    case t: Pat.Typed            => m(Pattern1, s(p(SimplePattern, t.lhs), kw(":"), " ", p(Typ, t.rhs)))
+    case _: Pat.Arg.SeqWildcard  => m(SimplePattern, kw("_*"))
 
-    // Mod
-    case t: Mod.Annot           => s(kw("@"), p(SimpleTyp, t.tree.ctorTpe), t.tree.ctorArgss)
-    case _: Mod.Abstract        => kw("abstract")
-    case _: Mod.Case            => kw("case")
-    case _: Mod.Covariant       => kw("+")
-    case _: Mod.Contravariant   => kw("-")
-    case _: Mod.Final           => kw("final")
-    case _: Mod.Implicit        => kw("implicit")
-    case _: Mod.Lazy            => kw("lazy")
-    case _: Mod.Override        => kw("override")
-    case _: Mod.Sealed          => kw("sealed")
-    case _: Mod.ValParam        => kw("val")
-    case _: Mod.VarParam        => kw("var")
-    case t: Mod.Private         => s(kw("private"))
-    case t: Mod.PrivateThis     => s(kw("private"), kw("["), kw("this"), kw("]"))
-    case t: Mod.PrivateWithin   => s(kw("private"), kw("["), t.name, kw("]"))
-    case t: Mod.Protected       => s(kw("protected"))
-    case t: Mod.ProtectedThis   => s(kw("protected"), kw("["), kw("this"), kw("]"))
-    case t: Mod.ProtectedWithin => s(kw("protected"), kw("["), t.name, kw("]"))
+    // Lit
+    case t: Lit.Bool    => m(Literal, s(t.value.toString))
+    case t: Lit.Int     => m(Literal, s(t.value.toString))
+    case t: Lit.Long    => m(Literal, s(t.value.toString + "l"))
+    case t: Lit.Float   => m(Literal, s(t.value.toString + "f"))
+    case t: Lit.Double  => m(Literal, s(t.value.toString + "d"))
+    case t: Lit.Char    => m(Literal, s(enquote(t.value.toString, SingleQuotes)))
+    case t: Lit.String  => m(Literal, s(enquote(t.value.toString, if (t.value.contains(EOL)) TripleQuotes else DoubleQuotes)))
+    case t: Lit.Symbol  => m(Literal, s("'", t.value.name))
+    case _: Lit.Null    => m(Literal, s(kw("null")))
+    case _: Lit.Unit    => m(Literal, s("()"))
 
-    // Defn
+    // Member
+    case t: Decl.Val       => s(a(t.mods, " "), kw("val"), " ", r(t.pats, ", "), kw(":"), " ", t.decltpe)
+    case t: Decl.Var       => s(a(t.mods, " "), kw("var"), " ", r(t.pats, ", "), kw(":"), " ", t.decltpe)
+    case t: Decl.Type      => s(a(t.mods, " "), kw("type"), " ", t.name, t.tparams, t.bounds)
+    case t: Decl.Def       => s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, kw(":"), " ", t.decltpe)
     case t: Defn.Val       => s(a(t.mods, " "), kw("val"), " ", r(t.pats, ", "), t.decltpe, " ", kw("="), " ", t.rhs)
     case t: Defn.Var       => s(a(t.mods, " "), kw("var"), " ", r(t.pats, ", "), t.decltpe, " ", kw("="), " ", t.rhs.map(s(_)).getOrElse(s(kw("_"))))
     case t: Defn.Type      => s(a(t.mods, " "), kw("type"), " ", t.name, t.tparams, " ", kw("="), " ", t.body)
@@ -306,42 +298,18 @@ object Code {
     case t: Defn.Object    => s(a(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
     case t: Defn.Def       => s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, t.decltpe, " = ", t.body)
     case t: Defn.Macro     => s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, kw(":"), " ", t.tpe, " ", kw("="), " ", kw("macro"), " ", t.body)
-
-    // Decl
-    case t: Decl.Val       => s(a(t.mods, " "), kw("val"), " ", r(t.pats, ", "), kw(":"), " ", t.decltpe)
-    case t: Decl.Var       => s(a(t.mods, " "), kw("var"), " ", r(t.pats, ", "), kw(":"), " ", t.decltpe)
-    case t: Decl.Type      => s(a(t.mods, " "), kw("type"), " ", t.name, t.tparams, t.bounds)
-    case t: Decl.Def       => s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, kw(":"), " ", t.decltpe)
-
-    // Pkg
-    case t: Source                   => r(t.stats, EOL)
     case t: Pkg if guessHasBraces(t) => s(kw("package"), " ", t.ref, " {", r(t.stats.map(i(_)), ""), n("}"))
-    case t: Pkg                      => s(kw("package"), " ", t.ref, r(t.stats.map(n(_))))
-    case t: Pkg.Object               => s(kw("package"), " ", a(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
-
-    // Ctor
+    case t: Pkg            => s(kw("package"), " ", t.ref, r(t.stats.map(n(_))))
+    case t: Pkg.Object     => s(kw("package"), " ", a(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
     case t: Ctor.Primary   => s(a(t.mods, " ", t.mods.nonEmpty && t.paramss.nonEmpty), t.paramss)
     case t: Ctor.Secondary =>
       s(a(t.mods, " "), kw("def"), " ", kw("this"), t.paramss, t.stats match {
         case Nil   => s(" ", kw("="), " ", kw("this"), t.primaryCtorArgss)
         case stats => s(" { ", kw("this"), t.primaryCtorArgss, ";", a(" ", r(stats, "; ")), " }")
       })
+    case t: Ctor.Ref       => if (t.isInstanceOf[Ctor.Ref.Function]) s("=>") else s(t.ctorTpe)
 
-    // Enumerator
-    case t: Enumerator.Val       => s(p(Pattern1, t.pat), " = ", p(Expr, t.rhs))
-    case t: Enumerator.Generator => s(p(Pattern1, t.pat), " <- ", p(Expr, t.rhs))
-    case t: Enumerator.Guard     => s(kw("if"), " ", p(PostfixExpr, t.cond))
-
-    // Import
-    case t: Import.Selector.Name     => s(t.value)
-    case t: Import.Selector.Rename   => s(t.from, " ", kw("=>"), " ", t.to)
-    case t: Import.Selector.Unimport => s(t.name, " ", kw("=>"), " ", kw("_"))
-    case _: Import.Selector.Wildcard => kw("_")
-    case t: Import.Clause            => s(t.ref, ".", t.sels)
-    case t: Import                   => s(kw("import"), " ", r(t.clauses, ", "))
-
-    // Aux
-    case t: Ctor.Ref => if (t.isInstanceOf[Ctor.Ref.Function]) s("=>") else s(t.ctorTpe)
+    // Template
     case t: Template =>
       val isBodyEmpty = t.self.name.isEmpty && t.self.decltpe.isEmpty && !guessHasStats(t)
       val isTemplateEmpty = t.early.isEmpty && t.parents.isEmpty && isBodyEmpty
@@ -362,22 +330,45 @@ object Code {
         }
         s(pearly, pparents, pbody)
       }
-    case t: Case  =>
-      s("case ", p(Pattern, t.pat), t.cond.map { cond => s(" ", kw("if"), " ", p(PostfixExpr, cond)) }.getOrElse(s()), " ", kw("=>"), r(t.stats.map(i(_)), ""))
-    case t: Term.Param =>
-      val mods = t.mods.filter(!_.isInstanceOf[Mod.Implicit]) // NOTE: `implicit` in parameters is skipped in favor of `implicit` in the enclosing parameter list
-      s(a(mods, " "), t.name.map(_.value).getOrElse("_"), t.decltpe, t.default.map(s(" ", kw("="), " ", _)).getOrElse(s()))
-    case t: Type.Param =>
-      val cbounds = r(t.contextBounds.map { s(kw(":"), " ", _) })
-      val vbounds = r(t.viewBounds.map { s(" ", kw("<%"), " ", _) })
-      val tbounds = s(t.typeBounds)
-      val variance = t.mods.foldLeft("")((curr, m) => if (m.isInstanceOf[Mod.Covariant]) "+" else if (m.isInstanceOf[Mod.Contravariant]) "-" else curr)
-      val mods = t.mods.filter(m => !m.isInstanceOf[Mod.Covariant] && !m.isInstanceOf[Mod.Contravariant])
-      require(t.mods.length - mods.length <= 1)
-      s(a(mods, " "), variance, t.name.map(_.value).getOrElse("_"), t.tparams, cbounds, vbounds, tbounds)
-    case t: Term.Super =>
-      s(t.thisp.map { thisp => s(thisp, ".") }.getOrElse(s()),
-        kw("super"), t.superp.map { st => s("[", st, "]") }.getOrElse(s()))
+
+    // Mod
+    case t: Mod.Annot                => s(kw("@"), p(SimpleTyp, t.tree.ctorTpe), t.tree.ctorArgss)
+    case t: Mod.Private              => s(kw("private"))
+    case t: Mod.PrivateThis          => s(kw("private"), kw("["), kw("this"), kw("]"))
+    case t: Mod.PrivateWithin        => s(kw("private"), kw("["), t.name, kw("]"))
+    case t: Mod.Protected            => s(kw("protected"))
+    case t: Mod.ProtectedThis        => s(kw("protected"), kw("["), kw("this"), kw("]"))
+    case t: Mod.ProtectedWithin      => s(kw("protected"), kw("["), t.name, kw("]"))
+    case _: Mod.Implicit             => kw("implicit")
+    case _: Mod.Final                => kw("final")
+    case _: Mod.Sealed               => kw("sealed")
+    case _: Mod.Override             => kw("override")
+    case _: Mod.Case                 => kw("case")
+    case _: Mod.Abstract             => kw("abstract")
+    case _: Mod.Covariant            => kw("+")
+    case _: Mod.Contravariant        => kw("-")
+    case _: Mod.Lazy                 => kw("lazy")
+    case _: Mod.ValParam             => kw("val")
+    case _: Mod.VarParam             => kw("var")
+
+    // Enumerator
+    case t: Enumerator.Val           => s(p(Pattern1, t.pat), " = ", p(Expr, t.rhs))
+    case t: Enumerator.Generator     => s(p(Pattern1, t.pat), " <- ", p(Expr, t.rhs))
+    case t: Enumerator.Guard         => s(kw("if"), " ", p(PostfixExpr, t.cond))
+
+    // Import
+    case t: Import.Selector.Name     => s(t.value)
+    case t: Import.Selector.Rename   => s(t.from, " ", kw("=>"), " ", t.to)
+    case t: Import.Selector.Unimport => s(t.name, " ", kw("=>"), " ", kw("_"))
+    case _: Import.Selector.Wildcard => kw("_")
+    case t: Import.Clause            => s(t.ref, ".", t.sels)
+    case t: Import                   => s(kw("import"), " ", r(t.clauses, ", "))
+
+    // Case
+    case t: Case  => s("case ", p(Pattern, t.pat), t.cond.map { cond => s(" ", kw("if"), " ", p(PostfixExpr, cond)) }.getOrElse(s()), " ", kw("=>"), r(t.stats.map(i(_)), ""))
+
+    // Source
+    case t: Source                   => r(t.stats, EOL)
   } }
 
   // Multiples and optionals
