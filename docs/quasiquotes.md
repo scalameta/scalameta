@@ -133,8 +133,6 @@
  Var            | `q"..$mods var ..$pats: $tpeopt = $expropt"`
  Def            | `q"..$mods def $name[..$tparams](...$paramss): $tpeopt = $expr"`
  Macro          | `q"..$mods def $name[..$tparams](...$paramss): $tpe = macro $expr"`
- Primary Ctor   | `q"..$mods def this(..$paramss)"`
- Secondary Ctor | `q"..$mods def this(..$paramss) = { this(...$aexprss); ..$stats }"`
  Type           | `q"..$mods type $tname[..$tparams] = $tpe"`
  Class          | `q"..$mods class $tname[..$tparams] $member extends $template"`
  Trait          | `q"..$mods trait $tname[..$tparams] extends $template"`
@@ -148,6 +146,29 @@
 ----------------|-------------------------------------------------
  Term Param     | `param"..$mods $nameopt: $atpeopt = $defaultopt"`
  Type Param     | `param"..$mods type $nameopt[..$tparams] <% ..$tpes : ..$tpes >: $tpeopt <: $tpeopt"`
+
+## Constructors (meta.Member) and Constructor References (meta.Ctor.Ref and meta.Term)
+
+                     | Quasiquote
+---------------------|------------------------------
+ Primary Ctor        | `ctor"..$mods def this(..$paramss)"`
+ Secondary Ctor      | `ctor"..$mods def this(..$paramss) = { this(...$aexprss); ..$stats }"`
+ Name Reference      | `ctor"$ctorname"`
+ Select Reference    | `ctor"$ref.$ctorname"`
+ Project Reference   | `ctor"$tpe#$ctorname"`
+ Function Reference  | `ctor"=>"` or `ctor"(..$tpes) => $tpe"`
+ Annotated Reference | `ctor"$ctorname ..@$expr"`
+ Applied Reference   | `ctor"$ctorref(...$aexprss)"`
+ Tapplied Reference  | `ctor"$ctorref[..$atpes]"`
+
+                | Quasiquote
+----------------|------------------------------
+ Val            | `q"..$mods val ..$pats: $tpeopt = $expr"`
+ Var            | `q"..$mods var ..$pats: $tpeopt = $expropt"`
+ Def            | `q"..$mods def $name[..$tparams](...$paramss): $tpeopt = $expr"`
+ Macro          | `q"..$mods def $name[..$tparams](...$paramss): $tpe = macro $expr"`
+ Primary Ctor   | `q"..$mods def this(..$paramss)"`
+ Secondary Ctor | `q"..$mods def this(..$paramss) = { this(...$aexprss); ..$stats }"`
 
 ## Template (meta.Template)
 
@@ -208,7 +229,8 @@
  Type                | Shorthand     | Interpolator
 ---------------------|---------------|--------------
  meta.Case           | `$case`       | `p`
- meta.Ctor.Ref       | `$ctorref`    | `ctorref`
+ meta.Ctor.Ref       | `$ctorref`    | `ctor`
+                     | `$ctorname`   | `ctor`
  meta.Enumerator     | `$enumerator` | `enumerator`
  meta.Member         | `$member`     | `q`
  meta.Mod            | `$mod`        | `mod`
