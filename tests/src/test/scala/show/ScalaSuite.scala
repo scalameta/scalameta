@@ -292,4 +292,10 @@ class ScalaSuite extends ParseSuite {
     assert(tree.show[Raw] === "Pat.Extract(Term.Name(\"List\"), Nil, List(Pat.Bind(Term.Name(\"xs\"), Pat.Arg.SeqWildcard())))")
     assert(tree.show[Code] === "List(xs @ _*)")
   }
+
+  test("package foo; class C; package baz { class D }") {
+    val tree = source("package foo; class C; package baz { class D }")
+    assert(tree.show[Raw] === "Source(List(Pkg(Term.Name(\"foo\"), List(Defn.Class(Nil, Type.Name(\"C\"), Nil, Ctor.Primary(Nil, Ctor.Ref.Name(\"this\"), Nil), Template(Nil, Nil, Term.Param(Nil, None, None, None), Nil)), Pkg(Term.Name(\"baz\"), List(Defn.Class(Nil, Type.Name(\"D\"), Nil, Ctor.Primary(Nil, Ctor.Ref.Name(\"this\"), Nil), Template(Nil, Nil, Term.Param(Nil, None, None, None), Nil))))))))")
+    assert(tree.show[Code] === "package foo\nclass C\npackage baz {\n  class D\n}")
+  }
 }

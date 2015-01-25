@@ -134,13 +134,13 @@ object Code {
   private def guessHasElsep(t: Term.If): Boolean = t.elsep match { case Lit.Unit() => false; case _ => true }
   private def guessHasStats(t: Template): Boolean = t.stats.nonEmpty
   private def guessHasBraces(t: Pkg): Boolean = {
-    def isOnlyChild(t: Pkg): Boolean = t.parent match {
-      case Some(t: Pkg) => isOnlyChild(t)
+    def isOnlyChildOfOnlyChild(t: Pkg): Boolean = t.parent match {
+      case Some(pkg: Pkg) => isOnlyChildOfOnlyChild(pkg) && pkg.stats.length == 1
       case Some(source: Source) => source.stats.length == 1
       case None => true
       case _ => unreachable
     }
-    !isOnlyChild(t)
+    !isOnlyChildOfOnlyChild(t)
   }
 
   // Branches
