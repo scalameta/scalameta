@@ -24,14 +24,14 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
 
   def dialect: Dialect = scala.meta.dialects.Scala211
   def attrs(tree: Tree): Seq[scala.meta.semantic.Attr] = tree match {
-    case tree: Term => List(scala.meta.semantic.Attr.Type(toApproximateScalameta(tree.scratchpad.collect{ case gtree: g.Tree => gtree }.head.tpe)))
+    case tree: Term => List(scala.meta.semantic.Attr.Type(toApproximateScalameta(tree.scratchpad.collect{ case gtree: g.Tree => gtree }.head.tpe.widen)))
     case _ => Nil
   }
   def root: Scope = p.Pkg(p.Term.Name("_root").appendScratchpad(g.rootMirror.RootPackage), Nil).appendScratchpad(g.rootMirror.RootPackage)
   def owner(tree: Tree): Scope = ???
   def members(scope: Scope): Seq[Tree] = {
     def obtainSymbol(tree: Tree) = tree.scratchpad.collect{ case gsym: g.Symbol => gsym }.head
-    def approximateMembers(gsym: g.Symbol) = gsym.info.members.sorted.toList.map(toApproximateScalameta.apply)
+    def approximateMembers(gsym: g.Symbol) = gsym.info.members.sorted.toList.filter(!_.name.toString.contains("languageFeature")).map(toApproximateScalameta.apply)
     scope match {
       case _: p.Pkg => approximateMembers(obtainSymbol(scope))
       case _: p.Defn.Object => approximateMembers(obtainSymbol(scope))
@@ -391,12 +391,12 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
           case (false, true) => p.Defn.Var(pmods(in), List(in.symbol.asTerm.rawcvt(in)), if (tpt.nonEmpty) Some[p.Type](tpt.cvt_!) else None, if (rhs.nonEmpty) Some[p.Term](rhs.cvt_!) else None)
         }
       case in @ g.DefDef(_, _, _, _, _, _) =>
-        // TODO: figure out procedures
         require(in.symbol.isMethod)
         val q"$_ def $_[..$tparams0](...$explicitss)(implicit ..$implicits0): $tpt = $body" = in
         val (tparams, implicits) = gextractContextBounds(tparams0, implicits0)
         val paramss = if (implicits.nonEmpty) explicitss :+ implicits else explicitss
         require(in.symbol.isDeferred ==> body.isEmpty)
+        val isProcedure = tpt match { case tq"scala.Unit" => true; case _ => false } // TODO: think of something reliable
         if (in.symbol.isConstructor) {
           require(!in.symbol.isPrimaryConstructor)
           val q"{ $_(...$argss); ..$stats }" = body
@@ -406,9 +406,12 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
           val pbody = if (body != g.EmptyTree) (body.cvt_! : p.Term) else p.Term.Name("???").appendScratchpad(q"???".setSymbol(g.definitions.Predef_???).setType(g.definitions.NothingTpe))
           p.Defn.Macro(pmods(in), in.symbol.asMethod.rawcvt(in), tparams.cvt, paramss.cvt_!, tpt.cvt_!, pbody)
         } else if (in.symbol.isDeferred) {
-          p.Decl.Def(pmods(in), in.symbol.asMethod.rawcvt(in), tparams.cvt, paramss.cvt_!, tpt.cvt_!) // TODO: infer procedures
+          if (isProcedure) p.Decl.Procedure(pmods(in), in.symbol.asMethod.rawcvt(in), tparams.cvt, paramss.cvt_!)
+          else p.Decl.Def(pmods(in), in.symbol.asMethod.rawcvt(in), tparams.cvt, paramss.cvt_!, tpt.cvt_!)
         } else {
-          p.Defn.Def(pmods(in), in.symbol.asMethod.rawcvt(in), tparams.cvt, paramss.cvt_!, if (tpt.nonEmpty) Some[p.Type](tpt.cvt_!) else None, body.cvt_!)
+          val pbody = (body.cvt_! : p.Term) match { case p.Term.Block(stats) => stats; case other => List(other) }
+          if (isProcedure) p.Defn.Procedure(pmods(in), in.symbol.asMethod.rawcvt(in), tparams.cvt, paramss.cvt_!, pbody)
+          else p.Defn.Def(pmods(in), in.symbol.asMethod.rawcvt(in), tparams.cvt, paramss.cvt_!, if (tpt.nonEmpty) Some[p.Type](tpt.cvt_!) else None, body.cvt_!)
         }
       case in @ g.TypeDef(_, _, tparams0, tpt) if pt <:< typeOf[p.Type.Param] =>
         require(in.symbol.isType)
