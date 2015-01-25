@@ -14,7 +14,7 @@ trait Typers extends Adaptations with Tags with TypersTracking with PatternTyper
   val transformed = new scala.collection.mutable.AnyRefMap[Tree, Tree]
   final val shortenImports = false
   def resetDocComments() = clearDocComments()
-  def resetTyper() { 
+  def resetTyper(): scala.Unit = {
     resetContexts()
     resetImplicits()
     resetDocComments()
@@ -209,16 +209,12 @@ trait Typers extends Adaptations with Tags with TypersTracking with PatternTyper
       }
     }
     def checkNonCyclic(pos: Position, tp: Type, lockedSym: Symbol): Boolean = try if (!lockedSym.lock(CyclicReferenceError(pos, tp, lockedSym))) false else checkNonCyclic(pos, tp) finally lockedSym.unlock()
-    def checkNonCyclic(sym: Symbol) { 
-      if (!checkNonCyclic(sym.pos, sym.tpe_*)) sym.setInfo(ErrorType)
+    def checkNonCyclic(sym: Symbol): scala.Unit = if (!checkNonCyclic(sym.pos, sym.tpe_*)) sym.setInfo(ErrorType)
+    def checkNonCyclic(defn: Tree, tpt: Tree): scala.Unit = if (!checkNonCyclic(defn.pos, tpt.tpe, defn.symbol)) {
+      tpt.setType(ErrorType)
+      defn.symbol.setInfo(ErrorType)
     }
-    def checkNonCyclic(defn: Tree, tpt: Tree) { 
-      if (!checkNonCyclic(defn.pos, tpt.tpe, defn.symbol)) {
-        tpt.setType(ErrorType)
-        defn.symbol.setInfo(ErrorType)
-      }
-    }
-    def checkParamsConvertible(tree: Tree, tpe0: Type) { 
+    def checkParamsConvertible(tree: Tree, tpe0: Type): scala.Unit = {
       def checkParamsConvertible0(tpe: Type) = tpe match {
         case MethodType(formals, restpe) =>
           if (tpe.isDependentMethodType) DependentMethodTpeConversionToFunctionError(tree, tpe)
@@ -244,19 +240,17 @@ trait Typers extends Adaptations with Tags with TypersTracking with PatternTyper
       }
       def addHidden(sym: Symbol) = if (!hiddenSymbols.contains(sym)) hiddenSymbols = sym :: hiddenSymbols
       override def apply(t: Type): Type = {
-        def checkNoEscape(sym: Symbol) { 
-          if (sym.isPrivate && !sym.hasFlag(SYNTHETIC_PRIVATE)) {
-            var o = owner
-            while (o != NoSymbol && o != sym.owner && o != sym.owner.linkedClassOfClass && !o.isLocalToBlock && !o.isPrivate && !o.privateWithin.hasTransOwner(sym.owner)) o = o.owner
-            if (o == sym.owner || o == sym.owner.linkedClassOfClass) addHidden(sym)
-          } else if (sym.owner.isTerm && !sym.isTypeParameterOrSkolem) {
-            var e = scope.lookupEntry(sym.name)
-            var found = false
-            while (!found && (e ne null) && e.owner == scope) if (e.sym == sym) {
-              found = true
-              addHidden(sym)
-            } else e = scope.lookupNextEntry(e)
-          }
+        def checkNoEscape(sym: Symbol): scala.Unit = if (sym.isPrivate && !sym.hasFlag(SYNTHETIC_PRIVATE)) {
+          var o = owner
+          while (o != NoSymbol && o != sym.owner && o != sym.owner.linkedClassOfClass && !o.isLocalToBlock && !o.isPrivate && !o.privateWithin.hasTransOwner(sym.owner)) o = o.owner
+          if (o == sym.owner || o == sym.owner.linkedClassOfClass) addHidden(sym)
+        } else if (sym.owner.isTerm && !sym.isTypeParameterOrSkolem) {
+          var e = scope.lookupEntry(sym.name)
+          var found = false
+          while (!found && (e ne null) && e.owner == scope) if (e.sym == sym) {
+            found = true
+            addHidden(sym)
+          } else e = scope.lookupNextEntry(e)
         }
         mapOver(t match {
           case TypeRef(_, sym, args) =>
@@ -273,9 +267,7 @@ trait Typers extends Adaptations with Tags with TypersTracking with PatternTyper
         })
       }
     }
-    def reenterValueParams(vparamss: List[List[ValDef]]) { 
-      for (vparams <- vparamss; vparam <- vparams) context.scope.enter(vparam.symbol)
-    }
+    def reenterValueParams(vparamss: List[List[ValDef]]): scala.Unit = for (vparams <- vparamss; vparam <- vparams) context.scope.enter(vparam.symbol)
     def reenterTypeParams(tparams: List[TypeDef]): List[Symbol] = for (tparam <- tparams) yield {
       context.scope.enter(tparam.symbol)
       tparam.symbol.deSkolemize
@@ -857,7 +849,7 @@ This restriction is planned to be removed in subsequent releases.""")
             List(TypeTree(AnyRefTpe))
         }
     }
-    def validateParentClasses(parents: List[Tree], selfType: Type) { 
+    def validateParentClasses(parents: List[Tree], selfType: Type): scala.Unit = {
       val pending = scala.collection.mutable.ListBuffer[AbsTypeError]()
       def validateDynamicParent(parent: Symbol, parentPos: Position) = if (parent == DynamicClass) checkFeature(parentPos, DynamicsFeature)
       def validateParentClass(parent: Tree, superclazz: Symbol) = if (!parent.isErrorTyped) {
@@ -889,7 +881,7 @@ This restriction is planned to be removed in subsequent releases.""")
       }
       pending.foreach(ErrorUtils.issueTypeError)
     }
-    def checkFinitary(classinfo: ClassInfoType) { 
+    def checkFinitary(classinfo: ClassInfoType): scala.Unit = {
       val clazz = classinfo.typeSymbol
       for (tparam <- clazz.typeParams) if (classinfo.expansiveRefs(tparam).contains(tparam)) {
         val newinfo = ClassInfoType(classinfo.parents.map(_.instantiateTypeParams(List(tparam), List(AnyRefTpe))), classinfo.decls, clazz)
@@ -1027,7 +1019,7 @@ This restriction is planned to be removed in subsequent releases.""")
       }
       treeCopy.ValDef(vdef, typedMods, vdef.name, tpt1, checkDead(rhs1)).setType(NoType)
     }
-    def computeParamAliases(clazz: Symbol, vparamss: List[List[ValDef]], rhs: Tree) { 
+    def computeParamAliases(clazz: Symbol, vparamss: List[List[ValDef]], rhs: Tree): scala.Unit = {
       debuglog(s"computing param aliases for $clazz:${clazz.primaryConstructor.tpe}:$rhs")
       val pending = scala.collection.mutable.ListBuffer[AbsTypeError]()
       def decompose(call: Tree): (Tree, List[Tree]) = call match {
@@ -1076,7 +1068,7 @@ This restriction is planned to be removed in subsequent releases.""")
       }
       pending.foreach(ErrorUtils.issueTypeError)
     }
-    private def checkSelfConstructorArgs(ddef: DefDef, clazz: Symbol) { 
+    private def checkSelfConstructorArgs(ddef: DefDef, clazz: Symbol): scala.Unit = {
       val pending = scala.collection.mutable.ListBuffer[AbsTypeError]()
       ddef.rhs match {
         case Block(stats, expr) =>
@@ -1193,12 +1185,10 @@ This restriction is planned to be removed in subsequent releases.""")
       if (tdef.symbol.isDeferred && tdef.symbol.info.isHigherKinded) checkFeature(tdef.pos, HigherKindsFeature)
       treeCopy.TypeDef(tdef, typedMods, tdef.name, tparams1, rhs1).setType(NoType)
     }
-    private def enterLabelDef(stat: Tree) { 
-      stat match {
-        case ldef @ LabelDef(_, _, _) =>
-          if (ldef.symbol == NoSymbol) ldef.symbol = namer.enterInScope(context.owner.newLabel(ldef.name, ldef.pos).setInfo(MethodType(List(), UnitTpe)))
-        case _ =>
-      }
+    private def enterLabelDef(stat: Tree): scala.Unit = stat match {
+      case ldef @ LabelDef(_, _, _) =>
+        if (ldef.symbol == NoSymbol) ldef.symbol = namer.enterInScope(context.owner.newLabel(ldef.name, ldef.pos).setInfo(MethodType(List(), UnitTpe)))
+      case _ =>
     }
     def typedLabelDef(ldef: LabelDef): LabelDef = if (!nme.isLoopHeaderLabel(ldef.symbol.name) || isPastTyper) {
       val restpe = ldef.symbol.tpe.resultType
@@ -1473,7 +1463,7 @@ This restriction is planned to be removed in subsequent releases.""")
         }
       }
     }
-    def typedRefinement(templ: Template) { 
+    def typedRefinement(templ: Template): scala.Unit = {
       val stats = templ.body
       namer.enterSyms(stats)
       unit.toCheck += (() => {
@@ -1693,9 +1683,7 @@ This restriction is planned to be removed in subsequent releases.""")
                 case t @ (_: DefTree | _: Function) if ownerOf(t.symbol) == context.owner =>
                   t.symbol
               })
-              def rollbackNamesDefaultsOwnerChanges() { 
-                symsOwnedByContextOwner.foreach(_.owner = context.owner)
-              }
+              def rollbackNamesDefaultsOwnerChanges(): scala.Unit = symsOwnedByContextOwner.foreach(_.owner = context.owner)
               val fun1 = transformNamedApplication(Typer.this, mode, pt)(fun, x => x)
               if (fun1.isErroneous) duplErrTree else {
                 assert(isNamedApplyBlock(fun1), fun1)
@@ -1958,14 +1946,12 @@ This restriction is planned to be removed in subsequent releases.""")
             mapOver(tp)
         }
       }
-      def addLocals(tp: Type) { 
+      def addLocals(tp: Type): scala.Unit = {
         val remainingSyms = new scala.collection.mutable.ListBuffer[Symbol]
-        def addIfLocal(sym: Symbol, tp: Type) { 
-          if (isLocal(sym) && !localSyms(sym) && !boundSyms(sym)) if (sym.typeParams.isEmpty) {
-            localSyms += sym
-            remainingSyms += sym
-          } else AbstractExistentiallyOverParamerizedTpeError(tree, tp)
-        }
+        def addIfLocal(sym: Symbol, tp: Type): scala.Unit = if (isLocal(sym) && !localSyms(sym) && !boundSyms(sym)) if (sym.typeParams.isEmpty) {
+          localSyms += sym
+          remainingSyms += sym
+        } else AbstractExistentiallyOverParamerizedTpeError(tree, tp)
         for (t <- tp) {
           t match {
             case ExistentialType(tparams, _) =>
@@ -2739,7 +2725,7 @@ This restriction is planned to be removed in subsequent releases.""")
         treeCopy.Star(tree, typed(tree.elem, mode, pt)).setType(makeFullyDefined(pt))
       }
       def issueTryWarnings(tree: Try): Try = {
-        def checkForCatchAll(cdef: CaseDef) { 
+        def checkForCatchAll(cdef: CaseDef): scala.Unit = {
           def unbound(t: Tree) = t.symbol == null || t.symbol == NoSymbol
           def warn(name: Name) = {
             val msg = s"This catches all Throwables. If this is really intended, use `case ${name.decoded} : Throwable` to clear this warning."

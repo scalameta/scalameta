@@ -20,7 +20,7 @@ trait Helpers {
 
   // NOTE: partially copy/pasted from TreeInfo.scala and ReificationSupport.scala in scalac
   object SyntacticTemplate {
-    def unapply(in: Template): Some[(List[Tree], ValDef, List[Tree], List[Tree])] = {
+    def unapply(in: Template): Some[(Symbol, List[Tree], ValDef, List[Tree], List[Tree])] = {
       object UnCtor {
         def unapply(tree: Tree): Option[(Modifiers, List[List[ValDef]], List[Tree], Symbol, List[List[Tree]])] = tree match {
           case DefDef(mods, nme.MIXIN_CONSTRUCTOR, _, _, _, build.SyntacticBlock(lvdefs :+ _)) =>
@@ -58,7 +58,7 @@ trait Helpers {
         case Nil =>
           Nil
       }
-      Some(parents, in.self, edefs, body2)
+      Some(superSym, parents, in.self, edefs, body2)
     }
   }
 
