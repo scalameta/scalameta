@@ -182,6 +182,7 @@ object Code {
   // TODO: this match is not exhaustive: if I remove Mod.Package, then I get no warning
   implicit def codeTree[T <: api.Tree](implicit dialect: Dialect): Code[T] = Code { x => (x: api.Tree) match {
     // Term
+    case t: Term if t.isCtorCall => if (t.isInstanceOf[Ctor.Ref.Function]) s("=>") else s(p(AnnotTyp, t.ctorTpe), t.ctorArgss)
     case t: Term.This            => m(SimpleExpr1, s(t.qual.map(s(_, ".")).getOrElse(s()), kw("this")))
     case t: Term.Super           => s(t.thisp.map(thisp => s(thisp, ".")).getOrElse(s()), kw("super"), t.superp.map(st => s("[", st, "]")).getOrElse(s()))
     case t: Term.Name            => m(Path, if (guessIsBackquoted(t)) s("`", t.value, "`") else s(t.value))
@@ -343,7 +344,6 @@ object Code {
         case Nil   => s(" ", kw("="), " ", kw("this"), t.primaryCtorArgss)
         case stats => s(" { ", kw("this"), t.primaryCtorArgss, ";", a(" ", r(stats, "; ")), " }")
       })
-    case t: Ctor.Ref       => if (t.isInstanceOf[Ctor.Ref.Function]) s("=>") else s(t.ctorTpe)
 
     // Template
     case t: Template =>
