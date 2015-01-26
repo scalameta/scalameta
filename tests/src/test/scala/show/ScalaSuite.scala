@@ -119,9 +119,7 @@ class ScalaSuite extends ParseSuite {
 
   test("new X") {
     assert(templStat("new X").show[Code] === "new X")
-    // TODO: revisit this once we have trivia in place
-    // assert(templStat("new X {}").show[Code] === "new X {}")
-    assert(templStat("new X {}").show[Code] === "new X")
+    assert(templStat("new X {}").show[Code] === "new X {}")
   }
 
   test("ascribe and annotate") {
@@ -295,7 +293,7 @@ class ScalaSuite extends ParseSuite {
 
   test("package foo; class C; package baz { class D }") {
     val tree = source("package foo; class C; package baz { class D }")
-    assert(tree.show[Raw] === "Source(List(Pkg(Term.Name(\"foo\"), List(Defn.Class(Nil, Type.Name(\"C\"), Nil, Ctor.Primary(Nil, Ctor.Ref.Name(\"this\"), Nil), Template(Nil, Nil, Term.Param(Nil, None, None, None), Nil)), Pkg(Term.Name(\"baz\"), List(Defn.Class(Nil, Type.Name(\"D\"), Nil, Ctor.Primary(Nil, Ctor.Ref.Name(\"this\"), Nil), Template(Nil, Nil, Term.Param(Nil, None, None, None), Nil))))))))")
+    assert(tree.show[Raw] === "Source(List(Pkg(Term.Name(\"foo\"), List(Defn.Class(Nil, Type.Name(\"C\"), Nil, Ctor.Primary(Nil, Ctor.Ref.Name(\"this\"), Nil), Template(Nil, Nil, Term.Param(Nil, None, None, None), None)), Pkg(Term.Name(\"baz\"), List(Defn.Class(Nil, Type.Name(\"D\"), Nil, Ctor.Primary(Nil, Ctor.Ref.Name(\"this\"), Nil), Template(Nil, Nil, Term.Param(Nil, None, None, None), None))))))))")
     assert(tree.show[Code] === "package foo\nclass C\npackage baz {\n  class D\n}")
   }
 

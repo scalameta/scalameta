@@ -347,14 +347,14 @@ object Code {
 
     // Template
     case t: Template =>
-      val isBodyEmpty = t.self.name.isEmpty && t.self.decltpe.isEmpty && !guessHasStats(t)
+      val isBodyEmpty = t.self.name.isEmpty && t.self.decltpe.isEmpty && t.stats.isEmpty
       val isTemplateEmpty = t.early.isEmpty && t.parents.isEmpty && isBodyEmpty
       if (isTemplateEmpty) s()
       else {
-        val isOneLiner = t.stats.length == 0 || (t.stats.length == 1 && !s(t.stats.head).toString.contains(EOL))
+        val isOneLiner = t.stats.map(stats => stats.length == 0 || (stats.length == 1 && !s(stats.head).toString.contains(EOL))).getOrElse(true)
         val pearly = if (!t.early.isEmpty) s("{ ", r(t.early, "; "), " } with ") else s()
-        val pparents = a(r(t.parents.map(parent => s(p(AnnotTyp, parent.ctorTpe), parent.ctorArgss)), " with "), " ", !t.parents.isEmpty && !isBodyEmpty)
-        val pbody = (t.self.name.nonEmpty || t.self.decltpe.nonEmpty, guessHasStats(t), t.stats) match {
+        val pparents = a(r(t.parents, " with "), " ", !t.parents.isEmpty && !isBodyEmpty)
+        val pbody = (t.self.name.nonEmpty || t.self.decltpe.nonEmpty, t.stats.nonEmpty, t.stats.getOrElse(Nil)) match {
           case (false, false, _) => s()
           case (true, false, _) => s("{ ", t.self, " => }")
           case (false, true, List()) if isOneLiner => s("{}")

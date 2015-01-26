@@ -2344,7 +2344,7 @@ abstract class AbstractParser { parser =>
         val (self1, body1) = templateBodyOpt(parenMeansSyntaxError = false)
         Template(edefs, parents, self1, body1)
       } else {
-        Template(Nil, Nil, self, body)
+        Template(Nil, Nil, self, Some(body))
       }
     } else {
       val parents = templateParents()
@@ -2390,16 +2390,17 @@ abstract class AbstractParser { parser =>
   def templateBody(isPre: Boolean): (Term.Param, List[Stat]) =
     inBraces(templateStatSeq(isPre = isPre))
 
-  def templateBodyOpt(parenMeansSyntaxError: Boolean): (Term.Param, List[Stat]) = {
+  def templateBodyOpt(parenMeansSyntaxError: Boolean): (Term.Param, Option[List[Stat]]) = {
     newLineOptWhenFollowedBy[`{`]
     if (token.is[`{`]) {
-      templateBody(isPre = false)
+      val (self, body) = templateBody(isPre = false)
+      (self, Some(body))
     } else {
       if (token.is[`(`]) {
         if (parenMeansSyntaxError) syntaxError("traits or objects may not have parameters")
         else syntaxError("unexpected opening parenthesis")
       }
-      (Term.Param(Nil, None, None, None), Nil)
+      (Term.Param(Nil, None, None, None), None)
     }
   }
 

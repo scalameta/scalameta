@@ -325,11 +325,11 @@ package scala.meta.internal.ast {
   @ast class Template(early: Seq[Stat],
                       parents: Seq[Term],
                       self: Term.Param,
-                      stats: Seq[Stat]) extends api.Template with Tree with Scope {
+                      stats: Option[Seq[Stat]]) extends api.Template with Tree with Scope {
     require(parents.forall(_.isCtorCall))
     require(early.nonEmpty ==> parents.nonEmpty)
     require(early.forall(_.isEarlyStat))
-    require(stats.forall(_.isTemplateStat))
+    require(stats.getOrElse(Nil).forall(_.isTemplateStat))
   }
 
   @branch trait Mod extends api.Mod with Tree

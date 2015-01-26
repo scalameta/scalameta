@@ -254,38 +254,38 @@ class TermSuite extends ParseSuite {
   }
 
   test("new {}") {
-    val New(EmptyTemplate()) = term("new {}")
+    val New(Template(Nil, Nil, EmptySelf(), Some(Nil))) = term("new {}")
   }
 
   test("new { x }") {
-    val New(Template(Nil, Nil, EmptySelf(), Term.Name("x") :: Nil)) = term("new { x }")
+    val New(Template(Nil, Nil, EmptySelf(), Some(Term.Name("x") :: Nil))) = term("new { x }")
   }
 
   test("new A") {
-    val New(templ @ Template(Nil, Ctor.Name("A") :: Nil, EmptySelf(), Nil)) = term("new A")
+    val New(templ @ Template(Nil, Ctor.Name("A") :: Nil, EmptySelf(), None)) = term("new A")
     // TODO: revisit this once we have trivia in place
     // assert(templ.hasStats === false)
   }
 
   test("new A {}") {
-    val New(templ @ Template(Nil, Ctor.Name("A") :: Nil, EmptySelf(), Nil)) = term("new A {}")
+    val New(templ @ Template(Nil, Ctor.Name("A") :: Nil, EmptySelf(), Some(Nil))) = term("new A {}")
     // TODO: revisit this once we have trivia in place
     // assert(templ.hasStats === true)
   }
 
   test("new A with B") {
-    val New(Template(Nil, Ctor.Name("A") :: Ctor.Name("B") :: Nil, EmptySelf(), Nil)) =
+    val New(Template(Nil, Ctor.Name("A") :: Ctor.Name("B") :: Nil, EmptySelf(), None)) =
       term("new A with B")
   }
 
   test("new { val x: Int = 1 } with A") {
     val New(Template(Defn.Val(Nil, List(Pat.Var(TermName("x"))), Some(TypeName("Int")), Lit.Int(1)) :: Nil,
-                     Ctor.Name("A") :: Nil, EmptySelf(), Nil)) =
+                     Ctor.Name("A") :: Nil, EmptySelf(), None)) =
       term("new { val x: Int = 1 } with A")
   }
 
   test("new { self: T => }") {
-    val New(Template(Nil, Nil, Term.Param(Nil, Some(TermName("self")), Some(TypeName("T")), None), Nil)) =
+    val New(Template(Nil, Nil, Term.Param(Nil, Some(TermName("self")), Some(TypeName("T")), None), Some(Nil))) =
       term("new { self: T => }")
   }
 
@@ -314,7 +314,7 @@ class TermSuite extends ParseSuite {
     val Term.Block(List(
       Defn.Class(
         List(Mod.Case()), Type.Name("C"), Nil,
-        Ctor.Primary(Nil, Ctor.Name("this"), List(List(Term.Param(Nil, Some(x), Some(Type.Name("Int")), None)))),
-        Template(Nil, Nil, Term.Param(Nil, None, None, None), Nil)))) = term("{ case class C(x: Int); }")
+        Ctor.Primary(Nil, Ctor.Name("this"), List(List(Term.Param(Nil, Some(Term.Name("x")), Some(Type.Name("Int")), None)))),
+        EmptyTemplate()))) = term("{ case class C(x: Int); }")
   }
 }

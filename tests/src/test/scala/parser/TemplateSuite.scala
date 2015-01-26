@@ -3,13 +3,13 @@ import scala.meta.dialects.Scala211
 
 class TemplateSuite extends ParseSuite {
   test("trait T") {
-    val Trait(Nil, Type.Name("T"), Nil, EmptyCtor(), templ @ EmptyTemplate()) = templStat("trait T")
+    val Trait(Nil, Type.Name("T"), Nil, EmptyCtor(), Template(Nil, Nil, Term.Param(Nil, None, None, None), None)) = templStat("trait T")
     // TODO: revisit this once we have trivia in place
     // assert(templ.hasStats === false)
   }
 
   test("trait T {}") {
-    val Trait(Nil, Type.Name("T"), Nil, EmptyCtor(), templ @ EmptyTemplate()) = templStat("trait T {}")
+    val Trait(Nil, Type.Name("T"), Nil, EmptyCtor(), Template(Nil, Nil, Term.Param(Nil, None, None, None), Some(Nil))) = templStat("trait T {}")
     // TODO: revisit this once we have trivia in place
     // assert(templ.hasStats === true)
   }
@@ -23,27 +23,27 @@ class TemplateSuite extends ParseSuite {
 
   test("trait A extends B") {
     val Trait(Nil, Type.Name("A"), Nil, EmptyCtor(),
-              Template(Nil, Ctor.Name("B") :: Nil, EmptySelf(), Nil)) =
+              Template(Nil, Ctor.Name("B") :: Nil, EmptySelf(), None)) =
       templStat("trait A extends B")
   }
 
   test("trait A extends { val x: Int } with B") {
     val Trait(Nil, Type.Name("A"), Nil, EmptyCtor(),
               Template(Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), Some(Type.Name("Int")), Lit.Int(2)) :: Nil,
-                       Ctor.Name("B") :: Nil, EmptySelf(), Nil)) =
+                       Ctor.Name("B") :: Nil, EmptySelf(), None)) =
       templStat("trait A extends { val x: Int = 2 } with B")
   }
 
   test("trait A extends { self: B => }") {
     val Trait(Nil, Type.Name("A"), Nil, EmptyCtor(),
-              Template(Nil, Nil, Term.Param(Nil, Some(Term.Name("self")), Some(Type.Name("B")), None), Nil)) =
+              Template(Nil, Nil, Term.Param(Nil, Some(Term.Name("self")), Some(Type.Name("B")), None), Some(Nil))) =
       templStat("trait A { self: B => }")
   }
 
   test("trait T { def x: Int }") {
     val Trait(Nil, Type.Name("T"), Nil, EmptyCtor(),
               Template(Nil, Nil, EmptySelf(),
-                       Decl.Def(Nil, Term.Name("x"), Nil, Nil, Type.Name("Int")) :: Nil)) =
+                       Some(Decl.Def(Nil, Term.Name("x"), Nil, Nil, Type.Name("Int")) :: Nil))) =
       templStat("trait T { def x: Int }")
   }
 
@@ -60,32 +60,32 @@ class TemplateSuite extends ParseSuite {
 
   test("class A extends B") {
     val Class(Nil, Type.Name("A"), Nil, EmptyCtor(),
-              Template(Nil, Ctor.Name("B") :: Nil, EmptySelf(), Nil)) =
+              Template(Nil, Ctor.Name("B") :: Nil, EmptySelf(), None)) =
       templStat("class A extends B")
   }
 
   test("class A extends { val x: Int } with B") {
     val Class(Nil, Type.Name("A"), Nil, EmptyCtor(),
               Template(Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), Some(Type.Name("Int")), Lit.Int(2)) :: Nil,
-                       Ctor.Name("B") :: Nil, EmptySelf(), Nil)) =
+                       Ctor.Name("B") :: Nil, EmptySelf(), None)) =
       templStat("class A extends { val x: Int = 2 } with B")
   }
 
   test("class A extends { self: B => }") {
     val Class(Nil, Type.Name("A"), Nil, EmptyCtor(),
-              Template(Nil, Nil, Term.Param(Nil, Some(Term.Name("self")), Some(Type.Name("B")), None), Nil)) =
+              Template(Nil, Nil, Term.Param(Nil, Some(Term.Name("self")), Some(Type.Name("B")), None), Some(Nil))) =
       templStat("class A { self: B => }")
   }
 
   test("class A { this => }") {
-    val Class(Nil, Type.Name("A"), Nil, EmptyCtor(), Template(Nil, Nil, self @ EmptySelf(), Nil)) = templStat("class A { this => }")
+    val Class(Nil, Type.Name("A"), Nil, EmptyCtor(), Template(Nil, Nil, self @ EmptySelf(), Some(Nil))) = templStat("class A { this => }")
     // TODO: revisit this once we have trivia in place
     // assert(self.hasThis == true)
   }
 
   test("class C { def x: Int }") {
     val Class(Nil, Type.Name("C"), Nil, EmptyCtor(),
-              Template(Nil, Nil, EmptySelf(), Decl.Def(Nil, Term.Name("x"), Nil, Nil, Type.Name("Int")) :: Nil)) =
+              Template(Nil, Nil, EmptySelf(), Some(Decl.Def(Nil, Term.Name("x"), Nil, Nil, Type.Name("Int")) :: Nil))) =
       templStat("class C { def x: Int }")
   }
 
@@ -147,20 +147,20 @@ class TemplateSuite extends ParseSuite {
 
   test("object A extends B") {
     val Object(Nil, Term.Name("A"), EmptyCtor(),
-              Template(Nil, Ctor.Name("B") :: Nil, EmptySelf(), Nil)) =
+              Template(Nil, Ctor.Name("B") :: Nil, EmptySelf(), None)) =
       templStat("object A extends B")
   }
 
   test("object A extends { val x: Int } with B") {
     val Object(Nil, Term.Name("A"), EmptyCtor(),
               Template(Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), Some(Type.Name("Int")), Lit.Int(2)) :: Nil,
-                       Ctor.Name("B") :: Nil, EmptySelf(), Nil)) =
+                       Ctor.Name("B") :: Nil, EmptySelf(), None)) =
       templStat("object A extends { val x: Int = 2 } with B")
   }
 
   test("object A extends { self: B => }") {
     val Object(Nil, Term.Name("A"), EmptyCtor(),
-               Template(Nil, Nil, Term.Param(Nil, Some(Term.Name("self")), Some(Type.Name("B")), None), Nil)) =
+               Template(Nil, Nil, Term.Param(Nil, Some(Term.Name("self")), Some(Type.Name("B")), None), Some(Nil))) =
       templStat("object A { self: B => }")
   }
 }
