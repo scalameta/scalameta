@@ -332,7 +332,8 @@ package object internal {
           val expected = mutable.Set(allLeafCompanions(root).distinct: _*)
           (prelude ++ clauses).foreach(_.foreach(sub => if (sub.symbol != null) expected -= sub.symbol))
           val unmatched = expected.filter(sym => {
-            sym.fullName != "scala.meta.internal.ast.Pat.Interpolate"
+            sym.fullName != "scala.meta.internal.ast.Pat.Interpolate" &&
+            sym.fullName != "scala.meta.internal.ast.Ctor.Ref.Name" // Ctor.Name is an alias to Ctor.Ref.Name, and it is very well used in the converter
           })
           if (unmatched.nonEmpty) c.error(c.enclosingPosition, "@converter is not exhaustive in its outputs; missing: " + unmatched)
           unmatched.isEmpty
