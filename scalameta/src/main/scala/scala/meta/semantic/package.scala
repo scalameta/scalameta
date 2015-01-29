@@ -62,6 +62,8 @@ package object semantic {
   }
 
   implicit class SemanticResolvableOps[T <: Tree, U <: meta.Member](val tree: T)(implicit ev: HasDefn[T, U]) {
+    @hosted def prefix: Type = ???
+    @hosted def in(prefix: Type): T = ???
     @hosted def defns: Seq[U] = tree.internalAttr[Attr.Defns].defns.require[Seq[U]]
     @hosted def defn: U = {
       defns match {
@@ -93,6 +95,8 @@ package object semantic {
   // ===========================
 
   implicit class SemanticMemberOps(val tree: Member) extends AnyVal {
+    @hosted def prefix: Type = ???
+    @hosted def in(prefix: Type): Member = ???
     @hosted def ref: Ref = {
       tree.require[impl.Member] match {
         case tree: impl.Term.Name => tree
@@ -195,6 +199,7 @@ package object semantic {
   }
 
   implicit class SemanticTermMemberOps(val tree: Member.Term) extends AnyVal {
+    @hosted def in(prefix: Type): Member.Term = ???
     @hosted def ref: Term.Ref = new SemanticMemberOps(tree).ref.require[Term.Ref]
     @hosted def parents: Seq[Member.Term] = new SemanticMemberOps(tree).parents.require[Seq[Member.Term]]
     @hosted def children: Seq[Member.Term] = new SemanticMemberOps(tree).children.require[Seq[Member.Term]]
@@ -202,6 +207,7 @@ package object semantic {
   }
 
   implicit class SemanticTypeMemberOps(val tree: Member.Type) extends AnyVal {
+    @hosted def in(prefix: Type): Member.Type = ???
     @hosted def ref: Type.Ref = new SemanticMemberOps(tree).ref.require[Type.Ref]
     @hosted def parents: Seq[Member.Type] = new SemanticMemberOps(tree).parents.require[Seq[Member.Type]]
     @hosted def children: Seq[Member.Type] = new SemanticMemberOps(tree).parents.require[Seq[Member.Type]]
