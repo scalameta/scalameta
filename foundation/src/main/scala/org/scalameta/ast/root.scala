@@ -48,36 +48,6 @@ class RootMacros(val c: Context) {
         protected def internalParent: $Tree
         protected def internalScratchpad: $Data
         private[meta] def internalCopy(prototype: $Tree = internalPrototype, parent: $Tree = internalParent, scratchpad: $Data = internalScratchpad): ThisType
-
-        // NOTE: this is sparta!!!
-        // obviously contradicts most (if not all) of the ideals of scala.meta
-        // but I still have to put it here to make the tomorrow's demo work
-        // later on, when we have the first approximation of hygiene, this code will die in flames from which it was born
-        private def scalaReflectSymbol: _root_.scala.AnyRef = {
-          import _root_.scala.language.reflectiveCalls
-          val scratchpads = this.asInstanceOf[{ def internalScratchpad: Seq[Any] }].internalScratchpad
-          val associatedTree = scratchpads.collect{case tree: _root_.scala.reflect.internal.SymbolTable#Tree => tree}.headOption
-          val associatedSymbol = scratchpads.collect{case sym: _root_.scala.reflect.internal.SymbolTable#Symbol => sym}.headOption
-          val result = associatedTree.map(_.symbol.asInstanceOf[_root_.scala.AnyRef]).orElse(associatedSymbol)
-          result.getOrElse(null)
-        }
-        final override def canEqual(that: _root_.scala.Any): _root_.scala.Boolean = that.isInstanceOf[_root_.scala.meta.Tree]
-        final override def equals(that: _root_.scala.Any): _root_.scala.Boolean = {
-          that match {
-            case that: _root_.scala.meta.Tree =>
-              if (this.isInstanceOf[_root_.scala.meta.Ref] && that.isInstanceOf[_root_.scala.meta.Ref] &&
-                  this.scalaReflectSymbol != null && that.scalaReflectSymbol != null) {
-                this.scalaReflectSymbol eq that.scalaReflectSymbol
-              } else {
-                this eq that
-              }
-            case _ =>
-              false
-          }
-        }
-        final override def hashCode: _root_.scala.Int = {
-          _root_.java.lang.System.identityHashCode(this)
-        }
       """
       val stats1 = stats ++ boilerplate
       val anns1 = q"new $AstInternal.root" +: q"new $Adt.root" +: anns

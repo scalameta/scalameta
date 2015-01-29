@@ -25,7 +25,7 @@ package scala.meta {
     @branch trait Ref extends Term with api.Ref
     @branch trait Name extends api.Name with Term.Ref with Pat with Member
     @branch trait Arg extends Tree
-    @branch trait Param extends Member.Term with Templ.Param
+    @branch trait Param extends Member.Term
   }
 
   @branch trait Type extends Tree with Type.Arg with Scope
@@ -47,20 +47,15 @@ package scala.meta {
     @branch trait Type extends Member
   }
 
-  @branch trait Ctor extends Tree with Scope
   object Ctor {
-    @branch trait Ref extends Tree
+    @branch trait Ref extends Term.Ref
   }
 
-  @branch trait Templ extends Tree with Scope
-  object Templ {
-    @branch trait Param extends Member.Term
-  }
-
+  @branch trait Template extends Tree with Scope
   @branch trait Mod extends Tree
-  @branch trait Enum extends Tree
-  @branch trait Selector extends Tree
-  @branch trait Case extends Tree
+  @branch trait Enumerator extends Tree
+  @branch trait Importee extends Tree
+  @branch trait Case extends Tree with Scope
   @branch trait Source extends Tree
 }
 
@@ -68,10 +63,7 @@ package scala.meta.internal.ast {
   @branch trait Tree extends api.Tree
 
   @branch trait Ref extends api.Ref with Tree
-  @branch trait Name extends api.Name with Ref {
-    def value: String
-    def isBackquoted: Boolean
-  }
+  @branch trait Name extends api.Name with Ref { def value: String }
   @branch trait Stat extends api.Stat with Tree
   @branch trait Scope extends api.Scope with Tree
 
@@ -80,11 +72,13 @@ package scala.meta.internal.ast {
     @branch trait Ref extends api.Term.Ref with Term with impl.Ref
     @ast class This(qual: Option[Predef.String]) extends Term.Ref
     @ast class Super(thisp: Option[Predef.String], superp: Option[Predef.String]) extends Term.Ref
-    @ast class Name(value: Predef.String @nonEmpty, @trivia isBackquoted: Boolean = false) extends api.Term.Name with impl.Name with Term.Ref with Pat with Member {
+    @ast class Name(value: Predef.String @nonEmpty) extends api.Term.Name with impl.Name with Term.Ref with Pat with Member {
       def name: Name = this
       def mods: Seq[Mod] = Nil
+      // TODO: revisit this once we have trivia in place
+      // require(keywords.contains(value) ==> isBackquoted)
     }
-    @ast class Select(qual: Term, selector: Term.Name, @trivia isPostfix: Boolean = false) extends Term.Ref with Pat
+    @ast class Select(qual: Term, selector: Term.Name) extends Term.Ref with Pat
     @ast class Interpolate(prefix: Name, parts: Seq[Lit.String] @nonEmpty, args: Seq[Term]) extends Term {
       require(parts.length == args.length + 1)
     }
@@ -96,7 +90,7 @@ package scala.meta.internal.ast {
     }
     @ast class Assign(lhs: Term.Ref, rhs: Term) extends Term
     @ast class Update(fun: Term, argss: Seq[Seq[Arg]], rhs: Term) extends Term
-    @ast class Return(expr: Term = Lit.Unit()) extends Term
+    @ast class Return(expr: Term) extends Term
     @ast class Throw(expr: Term) extends Term
     @ast class Ascribe(expr: Term, tpe: Type) extends Term
     @ast class Annotate(expr: Term, annots: Seq[Mod.Annot] @nonEmpty) extends Term
@@ -106,7 +100,7 @@ package scala.meta.internal.ast {
     @ast class Block(stats: Seq[Stat]) extends Term with Scope {
       require(stats.forall(_.isBlockStat))
     }
-    @ast class If(cond: Term, thenp: Term, elsep: Term = Lit.Unit()) extends Term
+    @ast class If(cond: Term, thenp: Term, elsep: Term) extends Term
     @ast class Match(scrut: Term, cases: Seq[Case] @nonEmpty) extends Term
     @ast class TryWithCases(expr: Term, catchp: Seq[Case], finallyp: Option[Term]) extends Term
     @ast class TryWithTerm(expr: Term, catchp: Term, finallyp: Option[Term]) extends Term
@@ -117,11 +111,11 @@ package scala.meta.internal.ast {
     @ast class PartialFunction(cases: Seq[Case] @nonEmpty) extends Term
     @ast class While(expr: Term, body: Term) extends Term
     @ast class Do(body: Term, expr: Term) extends Term
-    @ast class For(enums: Seq[Enum] @nonEmpty, body: Term) extends Term with Scope {
-      require(enums.head.isInstanceOf[Enum.Generator])
+    @ast class For(enums: Seq[Enumerator] @nonEmpty, body: Term) extends Term with Scope {
+      require(enums.head.isInstanceOf[Enumerator.Generator])
     }
-    @ast class ForYield(enums: Seq[Enum] @nonEmpty, body: Term) extends Term with Scope
-    @ast class New(templ: Templ) extends Term
+    @ast class ForYield(enums: Seq[Enumerator] @nonEmpty, body: Term) extends Term with Scope
+    @ast class New(templ: Template) extends Term
     @ast class Placeholder() extends Term
     @ast class Eta(term: Term) extends Term
     @branch trait Arg extends api.Term.Arg with Tree
@@ -129,14 +123,15 @@ package scala.meta.internal.ast {
       @ast class Named(name: Name, rhs: Term) extends Arg
       @ast class Repeated(arg: Term) extends Arg
     }
-    @ast class Param(mods: Seq[Mod], name: Option[impl.Term.Name], decltpe: Option[Type.Arg], default: Option[Term]) extends api.Term.Param with Member with Templ.Param
+    @ast class Param(mods: Seq[Mod], name: Option[impl.Term.Name], decltpe: Option[Type.Arg], default: Option[Term]) extends api.Term.Param with Member.Term
   }
 
   @branch trait Type extends api.Type with Tree with Type.Arg with Scope
   object Type {
     @branch trait Ref extends api.Type.Ref with Type with impl.Ref
-    @ast class Name(value: String @nonEmpty, @trivia isBackquoted: Boolean = false) extends api.Type.Name with impl.Name with Type.Ref {
-      require(keywords.contains(value) ==> isBackquoted)
+    @ast class Name(value: String @nonEmpty) extends api.Type.Name with impl.Name with Type.Ref {
+      // TODO: revisit this once we have trivia in place
+      // require(keywords.contains(value) ==> isBackquoted)
     }
     @ast class Select(qual: Term.Ref, selector: Type.Name) extends Type.Ref {
       require(qual.isPath || qual.isInstanceOf[Term.Super])
@@ -151,8 +146,9 @@ package scala.meta.internal.ast {
     @ast class Tuple(elements: Seq[Type] @nonEmpty) extends Type {
       require(elements.length > 1)
     }
-    @ast class Compound(tpes: Seq[Type], refinement: Seq[Stat] = Nil) extends Type {
-      require(tpes.length == 1 ==> hasRefinement)
+    @ast class Compound(tpes: Seq[Type], refinement: Seq[Stat]) extends Type {
+      // TODO: revisit this once we have trivia in place
+      // require(tpes.length == 1 ==> hasRefinement)
       require(refinement.forall(_.isRefineStat))
     }
     @ast class Existential(tpe: Type, quants: Seq[Stat] @nonEmpty) extends Type {
@@ -177,7 +173,8 @@ package scala.meta.internal.ast {
   @branch trait Pat extends api.Pat with Tree with Pat.Arg
   object Pat {
     @ast class Wildcard() extends Pat
-    @ast class Bind(lhs: Term.Name, rhs: Pat.Arg) extends Pat
+    @ast class Var(name: Term.Name) extends Pat
+    @ast class Bind(lhs: Pat.Var, rhs: Pat.Arg) extends Pat
     @ast class Alternative(lhs: Pat, rhs: Pat) extends Pat
     @ast class Tuple(elements: Seq[Pat] @nonEmpty) extends Pat
     @ast class Extract(ref: Term.Ref, targs: Seq[Type], elements: Seq[Pat.Arg]) extends Pat {
@@ -190,7 +187,7 @@ package scala.meta.internal.ast {
       require(parts.length == args.length + 1)
     }
     @ast class Typed(lhs: Pat, rhs: Type) extends Pat {
-      require(lhs.isInstanceOf[Pat.Wildcard] || lhs.isInstanceOf[Term.Name])
+      require(lhs.isInstanceOf[Pat.Wildcard] || lhs.isInstanceOf[Pat.Var])
     }
     @branch trait Arg extends api.Pat.Arg with Tree
     object Arg {
@@ -221,20 +218,16 @@ package scala.meta.internal.ast {
   @branch trait Decl extends Stat
   object Decl {
     @ast class Val(mods: Seq[Mod],
-                   pats: Seq[Term.Name] @nonEmpty,
+                   pats: Seq[Pat.Var] @nonEmpty,
                    decltpe: impl.Type) extends Decl
     @ast class Var(mods: Seq[Mod],
-                   pats: Seq[Term.Name] @nonEmpty,
+                   pats: Seq[Pat.Var] @nonEmpty,
                    decltpe: impl.Type) extends Decl
     @ast class Def(mods: Seq[Mod],
                    name: Term.Name,
                    tparams: Seq[impl.Type.Param],
                    paramss: Seq[Seq[Term.Param]],
                    decltpe: impl.Type) extends Decl with Member.Term
-    @ast class Procedure(mods: Seq[Mod],
-                         name: Term.Name,
-                         tparams: Seq[impl.Type.Param],
-                         paramss: Seq[Seq[Term.Param]]) extends Decl with Member.Term
     @ast class Type(mods: Seq[Mod],
                     name: impl.Type.Name,
                     tparams: Seq[impl.Type.Param],
@@ -251,7 +244,7 @@ package scala.meta.internal.ast {
                    pats: Seq[Pat] @nonEmpty,
                    decltpe: Option[impl.Type],
                    rhs: Option[Term]) extends Defn {
-      require(rhs.isEmpty ==> pats.forall(_.isInstanceOf[Term.Name]))
+      require(rhs.isEmpty ==> pats.forall(_.isInstanceOf[Pat.Var]))
       require(decltpe.nonEmpty || rhs.nonEmpty)
     }
     @ast class Def(mods: Seq[Mod],
@@ -260,11 +253,6 @@ package scala.meta.internal.ast {
                    paramss: Seq[Seq[Term.Param]],
                    decltpe: Option[impl.Type],
                    body: Term) extends Defn with Member.Term
-    @ast class Procedure(mods: Seq[Mod],
-                         name: Term.Name,
-                         tparams: Seq[impl.Type.Param],
-                         paramss: Seq[Seq[Term.Param]],
-                         stats: Seq[Stat]) extends Defn with Member.Term
     @ast class Macro(mods: Seq[Mod],
                      name: Term.Name,
                      tparams: Seq[impl.Type.Param],
@@ -279,20 +267,25 @@ package scala.meta.internal.ast {
                      name: impl.Type.Name,
                      tparams: Seq[impl.Type.Param],
                      ctor: Ctor.Primary,
-                     templ: Templ) extends Defn with Member.Type
+                     templ: Template) extends Defn with Member.Type
     @ast class Trait(mods: Seq[Mod],
                      name: impl.Type.Name,
                      tparams: Seq[impl.Type.Param],
-                     templ: Templ) extends Defn with Member.Type {
+                     ctor: Ctor.Primary,
+                     templ: Template) extends Defn with Member.Type {
       require(templ.stats.forall(!_.isInstanceOf[Ctor]))
-      require(templ.parents.forall(_.argss.isEmpty))
+      require(ctor.mods.isEmpty && ctor.paramss.isEmpty)
     }
     @ast class Object(mods: Seq[Mod],
                       name: Term.Name,
-                      templ: Templ) extends Defn with Member.Term
+                      ctor: Ctor.Primary,
+                      templ: Template) extends Defn with Member.Term {
+      require(templ.stats.forall(!_.isInstanceOf[Ctor]))
+      require(ctor.mods.isEmpty && ctor.paramss.isEmpty)
+    }
   }
 
-  @ast class Pkg(ref: Term.Ref, stats: Seq[Stat], @trivia hasBraces: Boolean = true)
+  @ast class Pkg(ref: Term.Ref, stats: Seq[Stat])
        extends Member.Term with Stat {
     require(ref.isQualId)
     require(stats.forall(_.isTopLevelStat))
@@ -304,46 +297,46 @@ package scala.meta.internal.ast {
     }
   }
   object Pkg {
-    @ast class Object(mods: Seq[Mod], name: Term.Name, templ: Templ)
+    @ast class Object(mods: Seq[Mod], name: Term.Name, ctor: Ctor.Primary, templ: Template)
          extends Member.Term with Stat
   }
 
-  @branch trait Ctor extends api.Ctor with Tree with Scope
+  @branch trait Ctor extends Tree with Scope with Member.Term
   object Ctor {
     @ast class Primary(mods: Seq[Mod],
-                       paramss: Seq[Seq[Templ.Param]]) extends Ctor
+                       name: Ctor.Name,
+                       paramss: Seq[Seq[Term.Param]]) extends Ctor
     @ast class Secondary(mods: Seq[Mod],
+                         name: Ctor.Name,
                          paramss: Seq[Seq[Term.Param]] @nonEmpty,
                          primaryCtorArgss: Seq[Seq[Term.Arg]],
                          stats: Seq[Stat]) extends Ctor with Stat
-    @ast class Ref(tpe: Type, argss: Seq[Seq[Term.Arg]]) extends api.Ctor.Ref
+    @branch trait Ref extends api.Ctor.Ref with impl.Term.Ref
+    val Name = Ref.Name
+    type Name = Ref.Name
+    object Ref {
+      @ast class Name(value: String @nonEmpty) extends impl.Name with Ref
+      @ast class Select(qual: Term.Ref, name: Name) extends Ref
+      @ast class Project(qual: Type, name: Name) extends Ref
+      @ast class Function(name: Name) extends Ref
+    }
   }
 
-  @ast class Templ(early: Seq[Stat],
-                      parents: Seq[Ctor.Ref],
+  @ast class Template(early: Seq[Stat],
+                      parents: Seq[Term],
                       self: Term.Param,
-                      stats: Seq[Stat] = Nil) extends api.Templ with Tree with Scope {
-    require(parents.isEmpty || !parents.tail.exists(_.argss.nonEmpty))
+                      stats: Option[Seq[Stat]]) extends api.Template with Tree with Scope {
+    require(parents.forall(_.isCtorCall))
     require(early.nonEmpty ==> parents.nonEmpty)
     require(early.forall(_.isEarlyStat))
-    require(stats.forall(_.isTemplateStat))
-  }
-  object Templ {
-    @branch trait Param extends api.Templ.Param with Member {
-      def mods: Seq[Mod]
-      def name: Option[impl.Term.Name]
-      def decltpe: Option[Type.Arg]
-      def default: Option[Term]
-    }
-    object Param {
-      @ast class Val(mods: Seq[Mod], name: Option[impl.Term.Name], decltpe: Option[Type.Arg], default: Option[Term]) extends Templ.Param
-      @ast class Var(mods: Seq[Mod], name: Option[impl.Term.Name], decltpe: Option[Type.Arg], default: Option[Term]) extends Templ.Param
-    }
+    require(stats.getOrElse(Nil).forall(_.isTemplateStat))
   }
 
   @branch trait Mod extends api.Mod with Tree
   object Mod {
-    @ast class Annot(ref: impl.Ctor.Ref) extends Mod
+    @ast class Annot(tree: Term) extends Mod {
+      require(tree.isCtorCall)
+    }
     @ast class Private extends Mod
     @ast class PrivateThis extends Mod
     @ast class PrivateWithin(name: Predef.String) extends Mod
@@ -359,28 +352,32 @@ package scala.meta.internal.ast {
     @ast class Covariant() extends Mod
     @ast class Contravariant() extends Mod
     @ast class Lazy() extends Mod
+    @ast class ValParam() extends Mod
+    @ast class VarParam() extends Mod
   }
 
-  @branch trait Enum extends api.Enum with Tree
-  object Enum {
-    @ast class Generator(pat: Pat, rhs: Term) extends Enum
-    @ast class Val(pat: Pat, rhs: Term) extends Enum
-    @ast class Guard(cond: Term) extends Enum
+  @branch trait Enumerator extends api.Enumerator with Tree
+  object Enumerator {
+    @ast class Generator(pat: Pat, rhs: Term) extends Enumerator
+    @ast class Val(pat: Pat, rhs: Term) extends Enumerator
+    @ast class Guard(cond: Term) extends Enumerator
   }
 
   @ast class Import(clauses: Seq[Import.Clause] @nonEmpty) extends Stat
-  @branch trait Selector extends api.Selector with Tree
   object Import {
     @ast class Clause(ref: Term.Ref, sels: Seq[Selector] @nonEmpty) extends Tree {
       require(ref.isStableId)
     }
-    @ast class Wildcard() extends Selector
-    @ast class Name(value: String) extends Selector
-    @ast class Rename(from: String, to: String) extends Selector
-    @ast class Unimport(name: String) extends Selector
+    @branch trait Selector extends api.Importee with Tree
+    object Selector {
+      @ast class Wildcard() extends Selector
+      @ast class Name(value: String) extends Selector
+      @ast class Rename(from: String, to: String) extends Selector
+      @ast class Unimport(name: String) extends Selector
+    }
   }
 
-  @ast class Case(pat: Pat, cond: Option[Term], stats: Seq[Stat]) extends api.Case with Tree
+  @ast class Case(pat: Pat, cond: Option[Term], stats: Seq[Stat]) extends api.Case with Tree with Scope
 
   @ast class Source(stats: Seq[Stat]) extends api.Source with Tree {
     require(stats.forall(_.isTopLevelStat))

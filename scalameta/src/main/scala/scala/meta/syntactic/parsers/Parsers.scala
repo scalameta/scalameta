@@ -42,9 +42,32 @@ object SyntacticInfo {
         case '*' | '/' | '%' => 9
         case _               => 10
       }
-    def isVarPattern: Boolean = name match {
-      case _: Term.Name => !isBackquoted && value.head.isLower && value.head.isLetter
-      case _            => false
+  }
+  implicit class SyntacticTermOps(val tree: Term) extends AnyVal {
+    def isCtorCall: Boolean = tree match {
+      case _: Ctor.Ref => true
+      case Term.ApplyType(callee, _) => callee.isCtorCall
+      case Term.Apply(callee, _) => callee.isCtorCall
+      case Term.Annotate(annottee, _) => annottee.isCtorCall
+      case _ => false
+    }
+    def ctorTpe: Type = tree match {
+      case Ctor.Name(value) => Type.Name(value)
+      case Ctor.Ref.Select(qual, name) => Type.Select(qual, Type.Name(name.value))
+      case Ctor.Ref.Project(qual, name) => Type.Project(qual, Type.Name(name.value))
+      case Ctor.Ref.Function(_) => unreachable
+      case Term.ApplyType(Ctor.Ref.Function(_), targs) => Type.Function(targs.init, targs.last)
+      case Term.ApplyType(callee, targs) => Type.Apply(callee.ctorTpe, targs)
+      case Term.Apply(callee, _) => callee.ctorTpe
+      case Term.Annotate(annottee, annots) => Type.Annotate(annottee.ctorTpe, annots)
+      case _ => unreachable
+    }
+    def ctorArgss: Seq[Seq[Term.Arg]] = tree match {
+      case _: Ctor.Ref => Nil
+      case Term.ApplyType(callee, _) => callee.ctorArgss
+      case Term.Apply(callee, args) => callee.ctorArgss :+ args
+      case Term.Annotate(annottee, _) => annottee.ctorArgss
+      case _ => unreachable
     }
   }
   implicit class SyntacticTermRefOps(val tree: Term.Ref) extends AnyVal {
@@ -231,6 +254,9 @@ abstract class AbstractParser { parser =>
   var in: TokenIterator
   def token = in.token
   def next() = in.next()
+  def nextOnce() = next()
+  def nextTwice() = { next(); next() }
+  def nextThrice() = { next(); next(); next() }
   val origin: Origin
   val dialect: Dialect
 
@@ -264,12 +290,8 @@ abstract class AbstractParser { parser =>
     t
   }
 
-  /** This is the general parse entry point.
-   */
-  def parseSource(): Source = parseRule(_.parseStartRule())
-
-  /** This is the alternative entry point for repl, script runner, toolbox and parsing in macros.
-   */
+  // Entry points for Parse[T]
+  // Used for quasiquotes as well as for ad-hoc parsing
   def parseStat(): Stat = parseRule(parser => parser.statSeq(parser.templateStat.orElse(parser.topStat))) match {
     case stat :: Nil => stat
     case stats if stats.forall(_.isBlockStat) => Term.Block(stats)
@@ -278,24 +300,21 @@ abstract class AbstractParser { parser =>
     case _ => syntaxError("these statements can't be mixed together")
   }
   def parseStats(): List[Stat] = parseRule(_.templateStats())
-
-  /** These are alternative entry points for quasiquotes.
-   */
   def parseTerm(): Term = parseRule(_.expr())
-  def parseType(): Type.Arg = parseRule(_.paramType())
-  def parsePat(): Pat.Arg = parseRule(_.pattern())
-
-  /** These are alternative entry points for quasiquotes.
-   */
-  def parseParam(): Templ.Param = ???
-  def parseTparam(): Type.Param = ???
   def parseTermArg(): Term.Arg = ???
-  def parseEnum(): Enum = ???
-  def parseMod(): Mod = ???
-  def parseTempl(): Templ = ???
-  def parseCtorRef(): Ctor.Ref = ???
-  def parseSelector(): Selector = ???
+  def parseTermParam(): Term.Param = ???
+  def parseType(): Type = parseRule(_.typ())
+  def parseTypeArg(): Type.Arg = parseRule(_.paramType())
+  def parseTypeParam(): Type.Param = ???
+  def parsePat(): Pat = ???
+  def parsePatArg(): Pat.Arg = parseRule(_.pattern())
   def parseCase(): Case = ???
+  def parseCtorRef(): Ctor.Ref = ???
+  def parseTemplate(): Template = ???
+  def parseMod(): Mod = ???
+  def parseEnumerator(): Enumerator = ???
+  def parseImportee(): Importee = ???
+  def parseSource(): Source = parseRule(_.parseStartRule())
 
 /* ------------- PARSER COMMON -------------------------------------------- */
 
@@ -387,6 +406,7 @@ abstract class AbstractParser { parser =>
   def isIdentOf(name: String)       = isIdentAnd(_ == name)
   def isRawStar: Boolean            = isIdentOf("*")
   def isRawBar: Boolean             = isIdentOf("|")
+  def isColonWildcardStar: Boolean  = token.is[`:`] && ahead(token.is[`_ `] && ahead(isIdentOf("*")))
 
 /* ---------- TREE CONSTRUCTION ------------------------------------------- */
 
@@ -529,7 +549,7 @@ abstract class AbstractParser { parser =>
     Term.Select(reduceStack(base, opinfo.lhs) match {
       case (t: Term) :: Nil => t
       case _                => unreachable
-    }, opinfo.operator, isPostfix = true) :: Nil
+    }, opinfo.operator) :: Nil
 
   def finishBinaryOp[T: OpCtx](opinfo: OpInfo[T], rhs: T): T = opctx.binop(opinfo, rhs)
 
@@ -702,7 +722,7 @@ abstract class AbstractParser { parser =>
         }
       } else {
         if (types.length == 1) types.head
-        else Type.Compound(types)
+        else Type.Compound(types, Nil)
       }
     }
 
@@ -740,26 +760,25 @@ abstract class AbstractParser { parser =>
   implicit class NameToName(name: Name) {
     def toTypeName: Type.Name = name match {
       case name: Type.Name => name
-      case _              => Type.Name(name.value, name.isBackquoted)
+      case _              => Type.Name(name.value)
     }
     def toTermName: Term.Name = name match {
       case name: Term.Name => name
-      case _              => Term.Name(name.value, name.isBackquoted)
+      case _              => Term.Name(name.value)
     }
   }
 
-  def name[T](ctor: (String, Boolean) => T, advance: Boolean): T = token match {
+  def name[T](ctor: String => T, advance: Boolean): T = token match {
     case token: Ident =>
       val name = token.code.stripPrefix("`").stripSuffix("`")
-      val isBackquoted = token.code.startsWith("`")
-      val res = ctor(name, isBackquoted)
+      val res = ctor(name)
       if (advance) next()
       res
     case _ =>
       syntaxErrorExpected[Ident]
   }
-  def termName(advance: Boolean = true): Term.Name = name(Term.Name(_, _), advance)
-  def typeName(advance: Boolean = true): Type.Name = name(Type.Name(_, _), advance)
+  def termName(advance: Boolean = true): Term.Name = name(Term.Name(_), advance)
+  def typeName(advance: Boolean = true): Type.Name = name(Type.Name(_), advance)
 
   /** {{{
    *  Path       ::= StableId
@@ -782,7 +801,7 @@ abstract class AbstractParser { parser =>
       next()
       val superp = Term.Super(None, mixinQualifierOpt())
       accept[`.`]
-      val supersel = Term.Select(superp, termName(), isPostfix = false)
+      val supersel = Term.Select(superp, termName())
       if (stop) supersel
       else {
         next()
@@ -805,7 +824,7 @@ abstract class AbstractParser { parser =>
           next()
           val superp = Term.Super(Some(name.value), mixinQualifierOpt())
           accept[`.`]
-          val supersel = Term.Select(superp, termName(), isPostfix = false)
+          val supersel = Term.Select(superp, termName())
           if (stop) supersel
           else {
             next()
@@ -818,7 +837,7 @@ abstract class AbstractParser { parser =>
     }
   }
 
-  def selector(t: Term): Term.Select = Term.Select(t, termName(), isPostfix = false)
+  def selector(t: Term): Term.Select = Term.Select(t, termName())
   def selectors(t: Term.Ref): Term.Ref ={
     val t1 = selector(t)
     if (token.is[`.`] && ahead { token.is[Ident] }) {
@@ -883,7 +902,7 @@ abstract class AbstractParser { parser =>
   }
 
   def interpolate[Ctx, Ret](arg: () => Ctx, result: (Term.Name, List[Lit.String], List[Ctx]) => Ret): Ret = {
-    val interpolator = Term.Name(token.asInstanceOf[Interpolation.Id].code, isBackquoted = false) // termName() for INTERPOLATIONID
+    val interpolator = Term.Name(token.asInstanceOf[Interpolation.Id].code) // termName() for INTERPOLATIONID
     next()
     val partsBuf = new ListBuffer[Lit.String]
     val argsBuf = new ListBuffer[Ctx]
@@ -1009,7 +1028,7 @@ abstract class AbstractParser { parser =>
       val thenp = expr()
       if (token.is[`else`]) { next(); Term.If(cond, thenp, expr()) }
       else if (token.is[`;`] && ahead { token.is[`else`] }) { next(); next(); Term.If(cond, thenp, expr()) }
-      else { Term.If(cond, thenp) }
+      else { Term.If(cond, thenp, Lit.Unit()) }
     case _: `try` =>
       next()
       val body: Term = token match {
@@ -1065,7 +1084,7 @@ abstract class AbstractParser { parser =>
     case _: `return` =>
       next()
       if (token.is[ExprIntro]) Term.Return(expr())
-      else Term.Return()
+      else Term.Return(Lit.Unit())
     case _: `throw` =>
       next()
       Term.Throw(expr())
@@ -1220,9 +1239,7 @@ abstract class AbstractParser { parser =>
         case _: `new` =>
           canApply = false
           next()
-          val (edefs, parents, self, stats, hasStats) = template()
-          if (hasStats) Term.New(Templ(edefs, parents, self, stats))
-          else Term.New(Templ(edefs, parents, self))
+          Term.New(template())
         case _ =>
           syntaxError(s"illegal start of simple expression: $token")
       }
@@ -1366,8 +1383,8 @@ abstract class AbstractParser { parser =>
    *                |  val Pattern1 `=' Expr
    *  }}}
    */
-  def enumerators(): List[Enum] = {
-    val enums = new ListBuffer[Enum]
+  def enumerators(): List[Enumerator] = {
+    val enums = new ListBuffer[Enumerator]
     enums ++= enumerator(isFirst = true)
     while (token.is[StatSep]) {
       next()
@@ -1376,15 +1393,15 @@ abstract class AbstractParser { parser =>
     enums.toList
   }
 
-  def enumerator(isFirst: Boolean, allowNestedIf: Boolean = true): List[Enum] =
-    if (token.is[`if`] && !isFirst) Enum.Guard(guard().get) :: Nil
+  def enumerator(isFirst: Boolean, allowNestedIf: Boolean = true): List[Enumerator] =
+    if (token.is[`if`] && !isFirst) Enumerator.Guard(guard().get) :: Nil
     else generator(!isFirst, allowNestedIf)
 
   /** {{{
    *  Generator ::= Pattern1 (`<-' | `=') Expr [Guard]
    *  }}}
    */
-  def generator(eqOK: Boolean, allowNestedIf: Boolean = true): List[Enum] = {
+  def generator(eqOK: Boolean, allowNestedIf: Boolean = true): List[Enumerator] = {
     val hasVal = token.is[`val`]
     if (hasVal)
       next()
@@ -1402,16 +1419,16 @@ abstract class AbstractParser { parser =>
     else accept[`<-`]
     val rhs = expr()
 
-    def loop(): List[Enum] =
+    def loop(): List[Enumerator] =
       if (token.isNot[`if`]) Nil
-      else Enum.Guard(guard().get) :: loop()
+      else Enumerator.Guard(guard().get) :: loop()
 
     val tail =
       if (allowNestedIf) loop()
       else Nil
 
-    (if (hasEq) Enum.Val(pat.asInstanceOf[Pat], rhs)
-     else Enum.Generator(pat.asInstanceOf[Pat], rhs)) :: tail
+    (if (hasEq) Enumerator.Val(pat.asInstanceOf[Pat], rhs)
+     else Enumerator.Generator(pat.asInstanceOf[Pat], rhs)) :: tail
   }
 
 /* -------- PATTERNS ------------------------------------------- */
@@ -1458,26 +1475,30 @@ abstract class AbstractParser { parser =>
      *                |  [SeqPattern2]
      *  }}}
      */
-    def pattern1(): Pat.Arg = pattern2() match {
-      case p @ (_: Term.Name | _: Pat.Wildcard) if token.is[`:`] =>
+    def pattern1(): Pat.Arg = {
+      val ptoken = token
+      val p = pattern2()
+      if (token.isNot[`:`]) p
+      else {
         p match {
-          case name: Term.Name if !name.isVarPattern =>
+          case p: Term.Name =>
             syntaxError("Pattern variables must start with a lower-case letter. (SLS 8.1.1.)")
-          case _ =>
+          case p: Pat.Var if dialect.bindToSeqWildcardDesignator == ":" && isColonWildcardStar =>
+            nextThrice()
+            Pat.Bind(p, Pat.Arg.SeqWildcard())
+          case p: Pat.Var =>
+            nextOnce()
+            Pat.Typed(p, compoundType())
+          case p: Pat.Wildcard if dialect.bindToSeqWildcardDesignator == ":" && isColonWildcardStar =>
+            nextThrice()
+            Pat.Arg.SeqWildcard()
+          case p: Pat.Wildcard =>
+            nextOnce()
+            Pat.Typed(p, compoundType())
+          case p =>
+            p
         }
-        next()
-        if (dialect.bindToSeqWildcardDesignator == ":" &&
-            token.is[`_ `] && peekingAhead(isRawStar)) {
-          next() // skip *
-          p match {
-            case name: Term.Name => Pat.Bind(p.asInstanceOf[Term.Name], Pat.Arg.SeqWildcard())
-            case _: Pat.Wildcard => Pat.Arg.SeqWildcard()
-            case _ => unreachable // it's really sad that otherwise we're going to get an exhaustivity warning
-          }
-        } else {
-          Pat.Typed(p.asInstanceOf[Pat], compoundType())
-        }
-      case p => p
+      }
     }
 
     /** {{{
@@ -1489,16 +1510,18 @@ abstract class AbstractParser { parser =>
      */
     def pattern2(): Pat.Arg = {
       val p = pattern3()
-
       if (token.isNot[`@`]) p
       else p match {
-        case Pat.Wildcard() =>
+        case p: Term.Name =>
+          syntaxError("Pattern variables must start with a lower-case letter. (SLS 8.1.1.)")
+        case p: Pat.Var =>
+          next()
+          Pat.Bind(p, pattern3())
+        case p: Pat.Wildcard =>
           next()
           pattern3()
-        case name: Term.Name if name.isVarPattern =>
-          next()
-          Pat.Bind(name, pattern3())
-        case _ => p
+        case p =>
+          p
       }
     }
 
@@ -1575,7 +1598,12 @@ abstract class AbstractParser { parser =>
       simplePattern(() => syntaxError("illegal start of simple pattern"))
     def simplePattern(onError: () => Nothing): Pat = token match {
       case _: Ident | _: `this` =>
+        val isBackquoted = token.code.endsWith("`")
         val sid = stableId()
+        val isVarPattern = sid match {
+          case Term.Name(value) => !isBackquoted && value.head.isLower && value.head.isLetter
+          case _ => false
+        }
         if (token.is[NumericLiteral]) {
           sid match {
             case Term.Name("-") =>
@@ -1588,10 +1616,12 @@ abstract class AbstractParser { parser =>
           case _        => Nil
         }
         (token, sid) match {
-          case (_: `(`, _)                 => Pat.Extract(sid, targs, argumentPatterns())
-          case (_, _) if targs.nonEmpty    => syntaxError("pattern must be a value")
-          case (_, sid: Term.Ref with Pat) => sid
-          case _                           => unreachable
+          case (_: `(`, _)                          => Pat.Extract(sid, targs, argumentPatterns())
+          case (_, _) if targs.nonEmpty             => syntaxError("pattern must be a value")
+          case (_, name: Term.Name) if isVarPattern => Pat.Var(name)
+          case (_, name: Term.Name)                 => name
+          case (_, select: Term.Select)             => select
+          case _                                    => unreachable
         }
       case _: `_ ` =>
         next()
@@ -1727,18 +1757,13 @@ abstract class AbstractParser { parser =>
    *  }}}
    */
   def annots(skipNewLines: Boolean): List[Mod.Annot] = readAnnots {
-    val t = annot()
+    val t = Mod.Annot(constructorCall(exprSimpleType, allowArgss = true))
     if (skipNewLines) newLineOpt()
     t
   }
-  def constructorAnnots(): List[Mod.Annot] = readAnnots {
-    Mod.Annot(Ctor.Ref(exprSimpleType(), argumentExprs() :: Nil))
-  }
 
-  def annot(): Mod.Annot = {
-    val t = exprSimpleType()
-    if (token.is[`(`]) Mod.Annot(Ctor.Ref(t, multipleArgumentExprs()))
-    else Mod.Annot(Ctor.Ref(t, Nil))
+  def constructorAnnots(): List[Mod.Annot] = readAnnots {
+    Mod.Annot(constructorCall(exprSimpleType(), allowArgss = false))
   }
 
 /* -------- PARAMETERS ------------------------------------------- */
@@ -1754,9 +1779,9 @@ abstract class AbstractParser { parser =>
    *  ClassParam        ::= {Annotation}  [{Modifier} (`val' | `var')] Id [`:' ParamType] [`=' Expr]
    *  }}}
    */
-  def paramClauses(ownerIsType: Boolean, ownerIsCase: Boolean = false): List[List[Templ.Param]] = {
+  def paramClauses(ownerIsType: Boolean, ownerIsCase: Boolean = false): List[List[Term.Param]] = {
     var parsedImplicits = false
-    def paramClause(): List[Templ.Param] = {
+    def paramClause(): List[Term.Param] = {
       if (token.is[`)`])
         return Nil
 
@@ -1766,7 +1791,7 @@ abstract class AbstractParser { parser =>
       }
       commaSeparated(param(ownerIsCase, ownerIsType, isImplicit = parsedImplicits))
     }
-    val paramss = new ListBuffer[List[Templ.Param]]
+    val paramss = new ListBuffer[List[Term.Param]]
     newLineOptWhenFollowedBy[`(`]
     while (!parsedImplicits && token.is[`(`]) {
       next()
@@ -1794,7 +1819,7 @@ abstract class AbstractParser { parser =>
       }
   }
 
-  def param(ownerIsCase: Boolean, ownerIsType: Boolean, isImplicit: Boolean): Templ.Param = {
+  def param(ownerIsCase: Boolean, ownerIsType: Boolean, isImplicit: Boolean): Term.Param = {
     var mods: List[Mod] = annots(skipNewLines = false)
     if (isImplicit) mods ++= List(Mod.Implicit())
     if (ownerIsType) {
@@ -1804,7 +1829,8 @@ abstract class AbstractParser { parser =>
       }
     }
     val (isValParam, isVarParam) = (ownerIsType && token.is[`val`], ownerIsType && token.is[`var`])
-    if (isValParam || isVarParam) next()
+    if (isValParam) { mods :+= Mod.ValParam(); next() }
+    if (isVarParam) { mods :+= Mod.VarParam(); next() }
     val name = termName()
     val tpt = {
       accept[`:`]
@@ -1831,15 +1857,14 @@ abstract class AbstractParser { parser =>
       }
       tpt
     }
-    val default =
+    val default = {
       if (token.isNot[`=`]) None
       else {
         next()
         Some(expr())
       }
-    if (isValParam) Templ.Param.Val(mods, Some(name), Some(tpt), default)
-    else if (isVarParam) Templ.Param.Var(mods, Some(name), Some(tpt), default)
-    else Term.Param(mods, Some(name), Some(tpt), default)
+    }
+    Term.Param(mods, Some(name), Some(tpt), default)
   }
 
   /** {{{
@@ -1931,7 +1956,7 @@ abstract class AbstractParser { parser =>
     sid match {
       case Term.Select(sid: Term.Ref, name: Term.Name) if sid.isStableId =>
         if (token.is[`.`]) dotselectors
-        else Import.Clause(sid, Import.Name(name.value) :: Nil)
+        else Import.Clause(sid, Import.Selector.Name(name.value) :: Nil)
       case _ => dotselectors
     }
   }
@@ -1940,26 +1965,26 @@ abstract class AbstractParser { parser =>
    *  ImportSelectors ::= `{' {ImportSelector `,'} (ImportSelector | `_') `}'
    *  }}}
    */
-  def importSelectors(): List[Selector] =
+  def importSelectors(): List[Import.Selector] =
     if (token.isNot[`{`]) List(importWildcardOrName())
     else inBraces(commaSeparated(importSelector()))
 
-  def importWildcardOrName(): Selector =
-    if (token.is[`_ `]) { next(); Import.Wildcard() }
-    else { val name = termName(); Import.Name(name.value) }
+  def importWildcardOrName(): Import.Selector =
+    if (token.is[`_ `]) { next(); Import.Selector.Wildcard() }
+    else { val name = termName(); Import.Selector.Name(name.value) }
 
   /** {{{
    *  ImportSelector ::= Id [`=>' Id | `=>' `_']
    *  }}}
    */
-  def importSelector(): Selector = {
+  def importSelector(): Import.Selector = {
     importWildcardOrName() match {
-      case from: Import.Name if token.is[`=>`] =>
+      case from: Import.Selector.Name if token.is[`=>`] =>
         next()
         importWildcardOrName() match {
-          case to: Import.Name     => Import.Rename(from.value, to.value)
-          case to: Import.Wildcard => Import.Unimport(from.value)
-          case _                   => unreachable
+          case to: Import.Selector.Name     => Import.Selector.Rename(from.value, to.value)
+          case to: Import.Selector.Wildcard => Import.Selector.Unimport(from.value)
+          case _                            => unreachable
         }
       case other => other
     }
@@ -1978,7 +2003,7 @@ abstract class AbstractParser { parser =>
    *           | type [nl] TypeDcl
    *  }}}
    */
-  def defOrDclOrCtor(mods: List[Mod]): Stat = {
+  def defOrDclOrSecondaryCtor(mods: List[Mod]): Stat = {
     mods.getAll[Mod.Lazy].foreach { m =>
       if (token.isNot[`val`]) syntaxError("lazy not allowed here. Only vals can be lazy", at = m)
     }
@@ -1986,7 +2011,7 @@ abstract class AbstractParser { parser =>
       case _: `val` | _: `var` =>
         patDefOrDcl(mods)
       case _: `def` =>
-        funDefOrDclOrCtor(mods)
+        funDefOrDclOrSecondaryCtor(mods)
       case _: `type` =>
         typeDefOrDcl(mods)
       case _ =>
@@ -1997,7 +2022,7 @@ abstract class AbstractParser { parser =>
   def nonLocalDefOrDcl: Stat = {
     val anns = annots(skipNewLines = true)
     val mods = anns ++ modifiers()
-    defOrDclOrCtor(mods) match {
+    defOrDclOrSecondaryCtor(mods) match {
       case s if s.isTemplateStat => s
       case other                 => syntaxError("is not a valid template statement", at = other)
     }
@@ -2012,13 +2037,16 @@ abstract class AbstractParser { parser =>
   def patDefOrDcl(mods: List[Mod]): Stat = {
     val isMutable = token.is[`var`]
     next()
-    val lhs: List[Pat] = commaSeparated(noSeq.pattern2().asInstanceOf[Pat])
+    val lhs: List[Pat] = commaSeparated(noSeq.pattern2().asInstanceOf[Pat]).map {
+      case name: Term.Name => Pat.Var(name) // TODO: val `x`: Int should be parsed as Decl.Val(..., Pat.Var(Term.Name("x")), ...)
+      case pat => pat
+    }
     val tp: Option[Type] = typedOpt()
 
     if (tp.isEmpty || token.is[`=`]) {
       accept[`=`]
       val rhs =
-        if (token.is[`_ `] && tp.nonEmpty && isMutable && lhs.forall(_.isInstanceOf[Term.Name])) {
+        if (token.is[`_ `] && tp.nonEmpty && isMutable && lhs.forall(_.isInstanceOf[Pat.Var])) {
           next()
           None
         } else Some(expr())
@@ -2028,8 +2056,8 @@ abstract class AbstractParser { parser =>
     } else {
       mods.getAll[Mod.Lazy].foreach { m => syntaxError("lazy values may not be abstract", at = m) }
       val ids = lhs.map {
-        case name: Term.Name => name
-        case other           => syntaxError("pattern definition may not be abstract", at = other)
+        case name: Pat.Var => name
+        case other         => syntaxError("pattern definition may not be abstract", at = other)
       }
 
       if (isMutable) Decl.Var(mods, ids, tp.get)
@@ -2046,21 +2074,10 @@ abstract class AbstractParser { parser =>
    *  FunSig ::= id [FunTypeParamClause] ParamClauses
    *  }}}
    */
-  def funDefOrDclOrCtor(mods: List[Mod]): Stat = {
+  def funDefOrDclOrSecondaryCtor(mods: List[Mod]): Stat = {
     next()
     if (token.isNot[`this`]) funDefRest(mods, termName())
-    else {
-      next()
-      // TODO: ownerIsType = true is most likely a bug here
-      // secondary constructors can't have val/var parameters
-      val paramss = paramClauses(ownerIsType = true).asInstanceOf[Seq[Seq[Term.Param]]]
-      newLineOptWhenFollowedBy[`{`]
-      val (argss, stats) = token match {
-        case _: `{` => constrBlock()
-        case _      => accept[`=`]; constrExpr()
-      }
-      Ctor.Secondary(mods, paramss, argss, stats)
-    }
+    else secondaryCtor(mods)
   }
 
   def funDefRest(mods: List[Mod], name: Term.Name): Stat = {
@@ -2073,17 +2090,12 @@ abstract class AbstractParser { parser =>
     if (token.is[StatSep] || token.is[`}`]) {
       if (restype.isEmpty) {
         warnProcedureDeprecation
-        Decl.Procedure(mods, name, tparams, paramss)
+        Decl.Def(mods, name, tparams, paramss, Type.Name("Unit")) // TODO: hygiene!
       } else
         Decl.Def(mods, name, tparams, paramss, restype.get)
     } else if (restype.isEmpty && token.is[`{`]) {
       warnProcedureDeprecation
-      Defn.Procedure(mods, name, tparams, paramss, {
-        accept[`{`]
-        var r = blockStatSeq()
-        accept[`}`]
-        r
-      })
+      Defn.Def(mods, name, tparams, paramss, Some(Type.Name("Unit")), expr()) // TODO: hygiene!
     } else {
       var isMacro = false
       val rhs = {
@@ -2216,13 +2228,7 @@ abstract class AbstractParser { parser =>
 
     Defn.Class(mods, typeName(),
                typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = true),
-               primaryCtor(ownerIsCase = mods.has[Mod.Case]), templateOpt(OwnedByClass))
-  }
-
-  def primaryCtor(ownerIsCase: Boolean): Ctor.Primary = {
-    val mods = constructorAnnots() ++ accessModifierOpt()
-    val paramss = paramClauses(ownerIsType = true, ownerIsCase)
-    Ctor.Primary(mods, paramss)
+               primaryCtor(if (mods.has[Mod.Case]) OwnedByCaseClass else OwnedByClass), templateOpt(OwnedByClass))
   }
 
   /** {{{
@@ -2233,14 +2239,17 @@ abstract class AbstractParser { parser =>
     next()
     Defn.Trait(mods, typeName(),
                typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false),
+               primaryCtor(OwnedByTrait),
                templateOpt(OwnedByTrait))
   }
 
   sealed trait TemplateOwner {
     def isTerm = this eq OwnedByObject
+    def isClass = (this eq OwnedByCaseClass) || (this eq OwnedByClass)
     def isTrait = this eq OwnedByTrait
   }
   object OwnedByTrait extends TemplateOwner
+  object OwnedByCaseClass extends TemplateOwner
   object OwnedByClass extends TemplateOwner
   object OwnedByObject extends TemplateOwner
 
@@ -2250,23 +2259,67 @@ abstract class AbstractParser { parser =>
    */
   def objectDef(mods: List[Mod]): Defn.Object = {
     next()
-    Defn.Object(mods, termName(), templateOpt(OwnedByObject))
+    Defn.Object(mods, termName(), primaryCtor(OwnedByObject), templateOpt(OwnedByObject))
   }
+
+/* -------- CONSTRUCTORS ------------------------------------------- */
+
+  // TODO: we need to store some string in Ctor.Name in order to represent constructor calls (which also use Ctor.Name)
+  // however, when representing constructor defns, we can't easily figure out that name
+  // a natural desire would be to have this name equal to the name of the enclosing class/trait/object
+  // but unfortunately we can't do that, because we can create ctors in isolation from their enclosures
+  // therefore, I'm going to use `Term.Name("this")` here for the time being
+
+  def primaryCtor(owner: TemplateOwner): Ctor.Primary = {
+    if (!owner.isClass) return Ctor.Primary(Nil, Ctor.Name("this"), Nil)
+    val mods = constructorAnnots() ++ accessModifierOpt()
+    val paramss = paramClauses(ownerIsType = true, owner == OwnedByCaseClass)
+    Ctor.Primary(mods, Ctor.Name("this"), paramss)
+  }
+
+  def secondaryCtor(mods: List[Mod]): Ctor.Secondary = {
+    next()
+    // TODO: ownerIsType = true is most likely a bug here
+    // secondary constructors can't have val/var parameters
+    val paramss = paramClauses(ownerIsType = true).asInstanceOf[Seq[Seq[Term.Param]]]
+    newLineOptWhenFollowedBy[`{`]
+    val (argss, stats) = token match {
+      case _: `{` => constrBlock()
+      case _      => accept[`=`]; constrExpr()
+    }
+    Ctor.Secondary(mods, Ctor.Name("this"), paramss, argss, stats)
+  }
+
+  def constructorCall(tpe: Type, allowArgss: Boolean = true): Term = {
+    object Types {
+      def unapply(tpes: Seq[Type.Arg]): Option[Seq[Type]] = {
+        if (tpes.forall(_.isInstanceOf[Type])) Some(tpes.map(_.asInstanceOf[Type]))
+        else None
+      }
+    }
+    def convert(tpe: Type): Term = tpe match {
+      case Type.Name(value) => Ctor.Name(value)
+      case Type.Select(qual, name) => Ctor.Ref.Select(qual, Ctor.Name(name.value))
+      case Type.Project(qual, name) => Ctor.Ref.Project(qual, Ctor.Name(name.value))
+      case Type.Function(Types(params), ret) => Term.ApplyType(Ctor.Ref.Function(Ctor.Name("=>")), params :+ ret)
+      case Type.Annotate(tpe, annots) => Term.Annotate(convert(tpe), annots)
+      case Type.Apply(tpe, args) => Term.ApplyType(convert(tpe), args)
+      case _ => syntaxError("this type can't be used in a constructor call")
+    }
+    val argss = if (token.isNot[`(`]) Nil else if (allowArgss) multipleArgumentExprs() else List(argumentExprs())
+    argss.foldLeft(convert(tpe))((curr, args) => Term.Apply(curr, args))
+  }
+
+/* -------- TEMPLATES ------------------------------------------- */
 
   /** {{{
    *  ClassParents       ::= ModType {`(' [Exprs] `)'} {with ModType}
    *  TraitParents       ::= ModType {with ModType}
    *  }}}
    */
-  def templateParents(): List[Ctor.Ref] = {
-    val parents = new ListBuffer[Ctor.Ref]
-    def readAppliedParent() = {
-      val parentTpe = startModType()
-      parents += (token match {
-        case _: `(` => Ctor.Ref(parentTpe, multipleArgumentExprs())
-        case _      => Ctor.Ref(parentTpe, Nil)
-      })
-    }
+  def templateParents(): List[Term] = {
+    val parents = new ListBuffer[Term]
+    def readAppliedParent() = parents += constructorCall(startModType())
     readAppliedParent()
     while (token.is[`with`]) { next(); readAppliedParent() }
     parents.toList
@@ -2279,7 +2332,7 @@ abstract class AbstractParser { parser =>
    *  EarlyDef      ::= Annotations Modifiers PatDef
    *  }}}
    */
-  def template(): (List[Stat], List[Ctor.Ref], Term.Param, List[Stat], Boolean) = {
+  def template(): Template = {
     newLineOptWhenFollowedBy[`{`]
     if (token.is[`{`]) {
       // @S: pre template body cannot stub like post body can!
@@ -2288,15 +2341,15 @@ abstract class AbstractParser { parser =>
         val edefs = body.map(ensureEarlyDef)
         next()
         val parents = templateParents()
-        val (self1, body1, hasStats) = templateBodyOpt(parenMeansSyntaxError = false)
-        (edefs, parents, self1, body1, hasStats)
+        val (self1, body1) = templateBodyOpt(parenMeansSyntaxError = false)
+        Template(edefs, parents, self1, body1)
       } else {
-        (Nil, Nil, self, body, true)
+        Template(Nil, Nil, self, Some(body))
       }
     } else {
       val parents = templateParents()
-      val (self, body, hasStats) = templateBodyOpt(parenMeansSyntaxError = false)
-      (Nil, parents, self, body, hasStats)
+      val (self, body) = templateBodyOpt(parenMeansSyntaxError = false)
+      Template(Nil, parents, self, body)
     }
   }
 
@@ -2317,23 +2370,17 @@ abstract class AbstractParser { parser =>
    *  TraitExtends     ::= `extends' | `<:'
    *  }}}
    */
-  def templateOpt(owner: TemplateOwner): Templ = {
-    val (early, parents, self, body, hasStats) = (
-      if (token.is[`extends`] /* || token.is[`<:`] && mods.isTrait */) {
-        next()
-        template()
-      }
-      else {
-        newLineOptWhenFollowedBy[`{`]
-        val (self, body, hasStats) = templateBodyOpt(parenMeansSyntaxError = owner.isTrait || owner.isTerm)
-        (Nil, Nil, self, body, hasStats)
-      }
-    )
-    if (hasStats) Templ(early, parents, self, body)
-    else Templ(early, parents, self)
+  def templateOpt(owner: TemplateOwner): Template = {
+    if (token.is[`extends`] /* || token.is[`<:`] && mods.isTrait */) {
+      next()
+      template()
+    }
+    else {
+      newLineOptWhenFollowedBy[`{`]
+      val (self, body) = templateBodyOpt(parenMeansSyntaxError = owner.isTrait || owner.isTerm)
+      Template(Nil, Nil, self, body)
+    }
   }
-
-/* -------- TEMPLATES ------------------------------------------- */
 
   /** {{{
    *  TemplateBody ::= [nl] `{' TemplateStatSeq `}'
@@ -2343,17 +2390,17 @@ abstract class AbstractParser { parser =>
   def templateBody(isPre: Boolean): (Term.Param, List[Stat]) =
     inBraces(templateStatSeq(isPre = isPre))
 
-  def templateBodyOpt(parenMeansSyntaxError: Boolean): (Term.Param, List[Stat], Boolean) = {
+  def templateBodyOpt(parenMeansSyntaxError: Boolean): (Term.Param, Option[List[Stat]]) = {
     newLineOptWhenFollowedBy[`{`]
     if (token.is[`{`]) {
-      val (self, stats) = templateBody(isPre = false)
-      (self, stats, true)
+      val (self, body) = templateBody(isPre = false)
+      (self, Some(body))
     } else {
       if (token.is[`(`]) {
         if (parenMeansSyntaxError) syntaxError("traits or objects may not have parameters")
         else syntaxError("unexpected opening parenthesis")
       }
-      (Term.Param(Nil, None, None, None), Nil, false)
+      (Term.Param(Nil, None, None, None), None)
     }
   }
 
@@ -2474,7 +2521,7 @@ abstract class AbstractParser { parser =>
 
   def refineStat(): Option[Stat] =
     if (token.is[DclIntro]) {
-      defOrDclOrCtor(Nil) match {
+      defOrDclOrSecondaryCtor(Nil) match {
         case stat if stat.isRefineStat => Some(stat)
         case other                     => syntaxError("is not a valid refinement declaration", at = other)
       }
@@ -2488,7 +2535,7 @@ abstract class AbstractParser { parser =>
   def localDef(implicitMod: Option[Mod.Implicit]): Stat = {
     val mods = (implicitMod ++: annots(skipNewLines = true)) ++ localModifiers()
     if (mods forall { case _: Mod.Implicit | _: Mod.Lazy | _: Mod.Annot => true; case _ => false })
-      (defOrDclOrCtor(mods) match {
+      (defOrDclOrSecondaryCtor(mods) match {
         case stat if stat.isBlockStat => stat
         case other                    => syntaxError("is not a valid block statement", at = other)
       })
@@ -2547,11 +2594,11 @@ abstract class AbstractParser { parser =>
       next()
       packageObject()
     } else {
-      Pkg(qualId(), inBracesOrNil(topStatSeq()), hasBraces = true)
+      Pkg(qualId(), inBracesOrNil(topStatSeq()))
     }
 
   def packageObject(): Pkg.Object =
-    Pkg.Object(Nil, termName(), templateOpt(OwnedByObject))
+    Pkg.Object(Nil, termName(), primaryCtor(OwnedByObject), templateOpt(OwnedByObject))
 
   /** {{{
    *  CompilationUnit ::= {package QualId semi} TopStatSeq
@@ -2583,7 +2630,7 @@ abstract class AbstractParser { parser =>
             refs ++= nrefs
             ts ++= nstats
           } else {
-            ts += inBraces(Pkg(qid, topStatSeq(), hasBraces = true))
+            ts += inBraces(Pkg(qid, topStatSeq()))
             acceptStatSepOpt()
             ts ++= topStatSeq()
           }
@@ -2597,7 +2644,7 @@ abstract class AbstractParser { parser =>
     val (refs, stats) = packageStats()
     refs match {
       case Nil          => Source(stats)
-      case init :+ last => Source(init.foldRight(Pkg(last, stats, hasBraces = false)) { (ref, acc) => Pkg(ref, acc :: Nil, hasBraces = false) } :: Nil)
+      case init :+ last => Source(init.foldRight(Pkg(last, stats)) { (ref, acc) => Pkg(ref, acc :: Nil) } :: Nil)
     }
   }
 }

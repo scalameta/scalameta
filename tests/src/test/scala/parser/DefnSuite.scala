@@ -3,30 +3,35 @@ import scala.meta.dialects.Scala211
 
 class DefnSuite extends ParseSuite {
   test("val x = 2") {
-    val Defn.Val(Nil, Term.Name("x") :: Nil, None, Lit.Int(2)) = templStat("val x = 2")
+    val Defn.Val(Nil, Pat.Var(Term.Name("x")) :: Nil, None, Lit.Int(2)) = templStat("val x = 2")
   }
 
   test("var x = 2") {
-    val Defn.Var(Nil, Term.Name("x") :: Nil, None, Some(Lit.Int(2))) = templStat("var x = 2")
+    val Defn.Var(Nil, Pat.Var(Term.Name("x")) :: Nil, None, Some(Lit.Int(2))) = templStat("var x = 2")
   }
 
   test("val x, y = 2") {
-    val Defn.Val(Nil, Term.Name("x") :: Term.Name("y") :: Nil,
+    val Defn.Val(Nil, Pat.Var(Term.Name("x")) :: Pat.Var(Term.Name("y")) :: Nil,
                  None, Lit.Int(2)) = templStat("val x, y = 2")
   }
 
   test("val x: Int = 2") {
-    val Defn.Val(Nil, Term.Name("x") :: Nil,
+    val Defn.Val(Nil, Pat.Var(Term.Name("x")) :: Nil,
                  Some(Type.Name("Int")), Lit.Int(2)) = templStat("val x: Int = 2")
   }
 
+  test("val `x`: Int = 2") {
+    val Defn.Val(Nil, Pat.Var(Term.Name("x")) :: Nil,
+                 Some(Type.Name("Int")), Lit.Int(2)) = templStat("val `x`: Int = 2")
+  }
+
   test("var x: Int = _") {
-    val Defn.Var(Nil, Term.Name("x") :: Nil,
+    val Defn.Var(Nil, Pat.Var(Term.Name("x")) :: Nil,
                  Some(Type.Name("Int")), None) = templStat("var x: Int = _")
   }
 
   test("val (x: Int) = 2") {
-    val Defn.Val(Nil, Pat.Typed(Term.Name("x"), Type.Name("Int")) :: Nil,
+    val Defn.Val(Nil, Pat.Typed(Pat.Var(Term.Name("x")), Type.Name("Int")) :: Nil,
                  None, Lit.Int(2)) = templStat("val (x: Int) = 2")
   }
 
@@ -77,9 +82,10 @@ class DefnSuite extends ParseSuite {
   }
 
   test("def proc { return 42 }") {
-    val Defn.Procedure(Nil, Term.Name("proc"), Nil, Nil,
-                       (ret @ Term.Return(Lit.Int(42))) :: Nil) = templStat("def proc { return 42 }")
-    assert(ret.hasExpr === true)
+    val Defn.Def(Nil, Term.Name("proc"), Nil, Nil, Some(Type.Name("Unit")), Term.Block((ret @ Term.Return(Lit.Int(42))) :: Nil)) =
+      templStat("def proc { return 42 }")
+    // TODO: revisit this once we have trivia in place
+    // assert(ret.hasExpr === true)
   }
 
   test("def f(x: Int): Int = macro impl") {

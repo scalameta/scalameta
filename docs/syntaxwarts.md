@@ -26,3 +26,4 @@
   1. Annotations can have multiple argument lists
   1. Infix expressions can have type arguments
   1. Right hand side of infix expression should be ::= SimpleExpr | ArgumentExprs
+  1. Whitespace separators aren't documented well. Sometimes you can have things separated by newlines, sometimes you can't.

@@ -3,22 +3,22 @@ import scala.meta.dialects.Scala211
 
 class DeclSuite extends ParseSuite {
   test("val x: Int") {
-    val Decl.Val(Nil, List(Term.Name("x")), Type.Name("Int")) = templStat("val x: Int")
+    val Decl.Val(Nil, List(Pat.Var(Term.Name("x"))), Type.Name("Int")) = templStat("val x: Int")
   }
 
   test("var x: Int") {
-    val Decl.Var(Nil, List(Term.Name("x")), Type.Name("Int")) = templStat("var x: Int")
+    val Decl.Var(Nil, List(Pat.Var(Term.Name("x"))), Type.Name("Int")) = templStat("var x: Int")
   }
 
   test("val x, y: Int") {
-    val Decl.Val(Nil, List(Term.Name("x"), Term.Name("y")), Type.Name("Int")) =
+    val Decl.Val(Nil, List(Pat.Var(Term.Name("x")), Pat.Var(Term.Name("y"))), Type.Name("Int")) =
       templStat("val x, y: Int")
-    val Decl.Var(Nil, List(Term.Name("x"), Term.Name("y")), Type.Name("Int")) =
+    val Decl.Var(Nil, List(Pat.Var(Term.Name("x")), Pat.Var(Term.Name("y"))), Type.Name("Int")) =
       templStat("var x, y: Int")
   }
 
   test("var x, y: Int") {
-    val Decl.Var(Nil, List(Term.Name("x"), Term.Name("y")), Type.Name("Int")) =
+    val Decl.Var(Nil, List(Pat.Var(Term.Name("x")), Pat.Var(Term.Name("y"))), Type.Name("Int")) =
       templStat("var x, y: Int")
   }
 
@@ -71,40 +71,44 @@ class DeclSuite extends ParseSuite {
   }
 
   test("def f") {
-    val Decl.Procedure(Nil, Term.Name("f"), Nil, Nil) =
+    val Decl.Def(Nil, Term.Name("f"), Nil, Nil, Type.Name("Unit")) =
       templStat("def f")
   }
 
   test("def f(x: Int)") {
-    val Decl.Procedure(Nil, Term.Name("f"), Nil,
-                       (Term.Param(Nil, Some(Term.Name("x")),
-                                   Some(Type.Name("Int")),
-                                   None) :: Nil) :: Nil) =
+    val Decl.Def(Nil, Term.Name("f"), Nil,
+                 (Term.Param(Nil, Some(Term.Name("x")),
+                             Some(Type.Name("Int")),
+                             None) :: Nil) :: Nil,
+                 Type.Name("Unit")) =
       templStat("def f(x: Int)")
   }
 
   test("def f(x: Int*)") {
-    val Decl.Procedure(Nil, Term.Name("f"), Nil,
-                       (Term.Param(Nil, Some(Term.Name("x")),
-                                   Some(Type.Arg.Repeated(Type.Name("Int"))),
-                                   None) :: Nil) :: Nil) =
+    val Decl.Def(Nil, Term.Name("f"), Nil,
+                 (Term.Param(Nil, Some(Term.Name("x")),
+                             Some(Type.Arg.Repeated(Type.Name("Int"))),
+                             None) :: Nil) :: Nil,
+                 Type.Name("Unit")) =
       templStat("def f(x: Int*)")
   }
 
   test("def f(x: => Int)") {
-    val Decl.Procedure(Nil, Term.Name("f"), Nil,
-                       (Term.Param(Nil, Some(Term.Name("x")),
-                                   Some(Type.Arg.ByName(Type.Name("Int"))),
-                                   None) :: Nil) :: Nil) =
+    val Decl.Def(Nil, Term.Name("f"), Nil,
+                 (Term.Param(Nil, Some(Term.Name("x")),
+                             Some(Type.Arg.ByName(Type.Name("Int"))),
+                             None) :: Nil) :: Nil,
+                 Type.Name("Unit")) =
       templStat("def f(x: => Int)")
   }
 
 
   test("def f(implicit x: Int)") {
-    val Decl.Procedure(Nil, Term.Name("f"), Nil,
-                       (Term.Param(Mod.Implicit() :: Nil, Some(Term.Name("x")),
-                                   Some(Type.Name("Int")),
-                                   None) :: Nil) :: Nil) =
+    val Decl.Def(Nil, Term.Name("f"), Nil,
+                 (Term.Param(Mod.Implicit() :: Nil, Some(Term.Name("x")),
+                             Some(Type.Name("Int")),
+                             None) :: Nil) :: Nil,
+                 Type.Name("Unit")) =
       templStat("def f(implicit x: Int)")
   }
 

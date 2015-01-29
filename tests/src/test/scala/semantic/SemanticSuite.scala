@@ -18,9 +18,5 @@ class SemanticSuite extends FunSuite {
     (term2b.tpe: api.Type)
     val term3b: impl.Term.Ref = ???
     (term3b.tpe: api.Type)
-    (typeOf[Int]: api.Type.Ref)
-    (typeOf[Int]: impl.Type.Ref)
-    (termOf(Int): api.Term.Ref)
-    (termOf(Int): impl.Term.Ref)
   }
 }

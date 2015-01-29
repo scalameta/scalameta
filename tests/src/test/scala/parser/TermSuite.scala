@@ -8,19 +8,22 @@ class TermSuite extends ParseSuite {
 
   test("`x`") {
     val name @ TermName("x") = term("`x`")
-    assert(name.isBackquoted === true)
+    // TODO: revisit this once we have trivia in place
+    // assert(name.isBackquoted === true)
   }
 
   test("a.b.c") {
     val outer @ Select(inner @ Select(TermName("a"), TermName("b")), TermName("c")) = term("a.b.c")
-    assert(outer.isPostfix === false)
-    assert(inner.isPostfix === false)
+    // TODO: revisit this once we have trivia in place
+    // assert(outer.isPostfix === false)
+    // assert(inner.isPostfix === false)
   }
 
   test("a.b c") {
     val outer @ Select(inner @ Select(TermName("a"), TermName("b")), TermName("c")) = term("a.b c")
-    assert(outer.isPostfix === true)
-    assert(inner.isPostfix === false)
+    // TODO: revisit this once we have trivia in place
+    // assert(outer.isPostfix === true)
+    // assert(inner.isPostfix === false)
   }
 
   test("foo.this") {
@@ -99,12 +102,14 @@ class TermSuite extends ParseSuite {
 
   test("return") {
     val ret @ Return(Lit.Unit()) = term("return")
-    assert(ret.hasExpr === false)
+    // TODO: revisit this once we have trivia in place
+    // assert(ret.hasExpr === false)
   }
 
   test("return 1") {
     val ret @ Return(Lit.Int(1)) = term("return 1")
-    assert(ret.hasExpr === true)
+    // TODO: revisit this once we have trivia in place
+    // assert(ret.hasExpr === true)
   }
 
   test("throw 1") {
@@ -116,7 +121,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("1: @foo") {
-    val Annotate(Lit.Int(1), Mod.Annot(Ctor.Ref(TypeName("foo"), Nil)) :: Nil) = term("1: @foo")
+    val Annotate(Lit.Int(1), Mod.Annot(Ctor.Name("foo")) :: Nil) = term("1: @foo")
   }
 
   test("(true, false)") {
@@ -133,17 +138,20 @@ class TermSuite extends ParseSuite {
 
   test("if (true) true else false") {
     val iff @ If(Lit.Bool(true), Lit.Bool(true), Lit.Bool(false)) = term("if (true) true else false")
-    assert(iff.hasElsep === true)
+    // TODO: revisit this once we have trivia in place
+    // assert(iff.hasElsep === true)
   }
 
   test("if (true) true; else false") {
     val iff @ If(Lit.Bool(true), Lit.Bool(true), Lit.Bool(false)) = term("if (true) true; else false")
-    assert(iff.hasElsep === true)
+    // TODO: revisit this once we have trivia in place
+    // assert(iff.hasElsep === true)
   }
 
   test("if (true) true") {
     val iff @ If(Lit.Bool(true), Lit.Bool(true), Lit.Unit()) = term("if (true) true")
-    assert(iff.hasElsep === false)
+    // TODO: revisit this once we have trivia in place
+    // assert(iff.hasElsep === false)
   }
 
   test("(x => x)") {
@@ -216,16 +224,16 @@ class TermSuite extends ParseSuite {
   }
 
   test("for (a <- b; if c; x = a) x") {
-    val For(List(Enum.Generator(TermName("a"), TermName("b")),
-                 Enum.Guard(TermName("c")),
-                 Enum.Val(TermName("x"), TermName("a"))),
+    val For(List(Enumerator.Generator(Pat.Var(TermName("a")), TermName("b")),
+                 Enumerator.Guard(TermName("c")),
+                 Enumerator.Val(Pat.Var(TermName("x")), TermName("a"))),
             TermName("x")) = term("for (a <- b; if c; x = a) x")
 
   }
   test("for (a <- b; if c; x = a) yield x") {
-    val ForYield(List(Enum.Generator(TermName("a"), TermName("b")),
-                      Enum.Guard(TermName("c")),
-                      Enum.Val(TermName("x"), TermName("a"))),
+    val ForYield(List(Enumerator.Generator(Pat.Var(TermName("a")), TermName("b")),
+                      Enumerator.Guard(TermName("c")),
+                      Enumerator.Val(Pat.Var(TermName("x")), TermName("a"))),
                  TermName("x")) = term("for (a <- b; if c; x = a) yield x")
   }
 
@@ -246,38 +254,38 @@ class TermSuite extends ParseSuite {
   }
 
   test("new {}") {
-    val New(EmptyTemplate()) = term("new {}")
+    val New(Template(Nil, Nil, EmptySelf(), Some(Nil))) = term("new {}")
   }
 
   test("new { x }") {
-    val New(Templ(Nil, Nil, EmptySelf(), Term.Name("x") :: Nil)) = term("new { x }")
+    val New(Template(Nil, Nil, EmptySelf(), Some(Term.Name("x") :: Nil))) = term("new { x }")
   }
 
   test("new A") {
-    val New(templ @ Templ(Nil, Ctor.Ref(TypeName("A"), Nil) :: Nil, EmptySelf(), Nil)) = term("new A")
-    assert(templ.hasStats === false)
+    val New(templ @ Template(Nil, Ctor.Name("A") :: Nil, EmptySelf(), None)) = term("new A")
+    // TODO: revisit this once we have trivia in place
+    // assert(templ.hasStats === false)
   }
 
   test("new A {}") {
-    val New(templ @ Templ(Nil, Ctor.Ref(TypeName("A"), Nil) :: Nil, EmptySelf(), Nil)) = term("new A {}")
-    assert(templ.hasStats === true)
+    val New(templ @ Template(Nil, Ctor.Name("A") :: Nil, EmptySelf(), Some(Nil))) = term("new A {}")
+    // TODO: revisit this once we have trivia in place
+    // assert(templ.hasStats === true)
   }
 
   test("new A with B") {
-    val New(Templ(Nil, Ctor.Ref(TypeName("A"), Nil) ::
-                          Ctor.Ref(TypeName("B"), Nil) :: Nil,
-                     EmptySelf(), Nil)) =
+    val New(Template(Nil, Ctor.Name("A") :: Ctor.Name("B") :: Nil, EmptySelf(), None)) =
       term("new A with B")
   }
 
   test("new { val x: Int = 1 } with A") {
-    val New(Templ(Defn.Val(Nil, List(TermName("x")), Some(TypeName("Int")), Lit.Int(1)) :: Nil,
-                     Ctor.Ref(TypeName("A"), Nil) :: Nil, EmptySelf(), Nil)) =
+    val New(Template(Defn.Val(Nil, List(Pat.Var(TermName("x"))), Some(TypeName("Int")), Lit.Int(1)) :: Nil,
+                     Ctor.Name("A") :: Nil, EmptySelf(), None)) =
       term("new { val x: Int = 1 } with A")
   }
 
   test("new { self: T => }") {
-    val New(Templ(Nil, Nil, Term.Param(Nil, Some(TermName("self")), Some(TypeName("T")), None), Nil)) =
+    val New(Template(Nil, Nil, Term.Param(Nil, Some(TermName("self")), Some(TypeName("T")), None), Some(Nil))) =
       term("new { self: T => }")
   }
 
@@ -306,7 +314,7 @@ class TermSuite extends ParseSuite {
     val Term.Block(List(
       Defn.Class(
         List(Mod.Case()), Type.Name("C"), Nil,
-        Ctor.Primary(Nil, List(List(Term.Param(Nil, Some(x), Some(Type.Name("Int")), None)))),
-        Templ(Nil, Nil, Term.Param(Nil, None, None, None), Nil)))) = term("{ case class C(x: Int); }")
+        Ctor.Primary(Nil, Ctor.Name("this"), List(List(Term.Param(Nil, Some(Term.Name("x")), Some(Type.Name("Int")), None)))),
+        EmptyTemplate()))) = term("{ case class C(x: Int); }")
   }
 }

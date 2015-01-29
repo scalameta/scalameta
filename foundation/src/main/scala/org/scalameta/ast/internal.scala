@@ -44,6 +44,7 @@ object internal {
         case Primitive(tpe) => q""
         case Tree(tpe) => lazyLoad(pf => q"$pf.internalCopy(prototype = $pf, parent = this)")
         case OptionTree(tpe) => lazyLoad(pf => q"$pf.map(el => el.internalCopy(prototype = el, parent = this))")
+        case OptionSeqTree(tpe) => lazyLoad(pf => q"$pf.map(_.map(el => el.internalCopy(prototype = el, parent = this)))")
         case SeqTree(tpe) => lazyLoad(pf => q"$pf.map(el => el.internalCopy(prototype = el, parent = this))")
         case SeqSeqTree(tpe) => lazyLoad(pf => q"$pf.map(_.map(el => el.internalCopy(prototype = el, parent = this)))")
       }
@@ -53,6 +54,7 @@ object internal {
         case Primitive(tpe) => q""
         case Tree(tpe) => q"$f = $v.internalCopy(prototype = $v, parent = node)"
         case OptionTree(tpe) => q"$f = $v.map(el => el.internalCopy(prototype = el, parent = node))"
+        case OptionSeqTree(tpe) => q"$f = $v.map(_.map(el => el.internalCopy(prototype = el, parent = node)))"
         case SeqTree(tpe) => q"$f = $v.map(el => el.internalCopy(prototype = el, parent = node))"
         case SeqSeqTree(tpe) => q"$f = $v.map(_.map(el => el.internalCopy(prototype = el, parent = node)))"
         case tpe => c.abort(c.enclosingPosition, s"unsupported field type $tpe")
@@ -63,6 +65,7 @@ object internal {
         case Primitive(tpe) => q"$f"
         case Tree(tpe) => q"null"
         case OptionTree(tpe) => q"null"
+        case OptionSeqTree(tpe) => q"null"
         case SeqTree(tpe) => q"null"
         case SeqSeqTree(tpe) => q"null"
         case tpe => c.abort(c.enclosingPosition, s"unsupported field type $tpe")
@@ -108,6 +111,16 @@ object internal {
         if (tpe.typeSymbol == c.mirror.staticClass("scala.Option")) {
           tpe.typeArgs match {
             case Tree(tpe) :: Nil => Some(tpe)
+            case _ => None
+          }
+        } else None
+      }
+    }
+    private object OptionSeqTree {
+      def unapply(tpe: Type): Option[Type] = {
+        if (tpe.typeSymbol == c.mirror.staticClass("scala.Option")) {
+          tpe.typeArgs match {
+            case SeqTree(tpe) :: Nil => Some(tpe)
             case _ => None
           }
         } else None
