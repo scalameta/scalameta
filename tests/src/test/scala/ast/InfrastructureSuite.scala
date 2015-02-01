@@ -19,8 +19,6 @@ class InfrastructureSuite extends FunSuite {
       def root: Scope = ???
       def owner(tree: Tree): Scope = ???
       def members(scope: Scope): Seq[Tree] = ???
-      def symbol(tree: Tree): Symbol = ???
-      def tree(symbol: Symbol): Tree = ???
       def isSubType(tpe1: Type, tpe2: Type): Boolean = ???
       def lub(tpes: Seq[Type]): Type = ???
       def glb(tpes: Seq[Type]): Type = ???

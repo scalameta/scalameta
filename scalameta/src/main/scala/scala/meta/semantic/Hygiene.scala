@@ -45,6 +45,30 @@ object Symbol {
   @leaf class Local(id: String) extends Symbol
 }
 
+// upd. It should've been obvious from the very beginning, but symbols alone don't cut it.
+// Even though symbols and symbol-based sigmas can preserve enough information to ensure hygiene,
+// that information isn't useful in itself - only a full-fledged typechecker can make sense of it
+// (in the paper, such a typechecker includes a symbol table and a list of prefixes for all symbols).
+// However, when comparing trees, we don't have a typechecker, so we need to figure out what else is necessary.
+// Another essential thing apart from symbols is prefixes. Let's hope that this is it.
+
+@root trait Prefix
+object Prefix {
+  @leaf object Zero extends Prefix
+  @leaf class Type(tpe: scala.meta.Type) extends Prefix
+}
+
+// upd. The bunch of information that should be enough for hygienic comparison?
+// We define it here and call it denotation. Hopefully, prefix and symbol are all that it takes.
+// Also, hopefully, it's only necessary to define denotations for all names in a tree
+// to guarantee hygienic comparisons and name lookups.
+
+@root trait Denotation { def prefix: Prefix; def symbol: Symbol }
+object Denotation {
+  @leaf object Zero extends Denotation { def prefix = Prefix.Zero; def symbol = Symbol.Zero; }
+  @leaf class Precomputed(prefix: Prefix, symbol: Symbol) extends Denotation
+}
+
 // In Denys's thesis, sigmas are lists of renamings (a renaming maps an attributed named to a name).
 // These renamings allow to easily resolve names into symbols, providing basis for hygienic name lookup.
 // While working just fine for a calculus, eager lists of renamings are going to be impractical
@@ -65,14 +89,23 @@ object Symbol {
 // but you need the entire symbol table to resolve `scala.Int`.
 
 // Therefore, for now our sigmas going to be really stupid. Instead of doing anything to resolve names,
-// they will just look into `tree.symbol` and return that value. We are also going to pre-typecheck
-// quasiquotes and pre-populate symbols, so that these naive sigmas can get at least some job done.
+// they will just look into `tree.denotation` and return that value. We are also going to pre-typecheck
+// quasiquotes and pre-populate denotations, so that these naive sigmas can get at least some job done.
 
-@root trait Sigma { def symbol(tree: Tree): Symbol }
+@root trait Sigma { def denotation(name: Name): Denotation }
 object Sigma {
-  @leaf object Zero extends Sigma { override def symbol(tree: Tree): Symbol = Symbol.Zero }
-  // @leaf object Naive extends Sigma { override def symbol(tree: Tree): Symbol = tree.symbol }
+  @leaf object Zero extends Sigma { def denotation(name: Name) = Denotation.Zero }
+  // @leaf object Naive extends Sigma { def denotation(name: Name) = name.denotation }
 }
+
+// TODO: equals and hashcode are to be implemented with hygienic name comparison in mind
+// something like:
+//   * If both are non-Refs, then compare product prefixes and product elements
+//   * If both are Refs and both are paths, then compare denotations
+//   * If both are Refs and both have non-Ref qualifiers, then compare qualifiers and compare denotations
+//   * Otherwise, not equal
+// TODO: we should also use our compiler plugin powers to warn on Ref/Def comparisons
+// because those indicate mistakes like `case q"foo.$bar" if bar == t"Foo".defs("bar") => ...`
 
 object equals {
   def apply(tree1: Tree, tree2: Tree): Boolean = false

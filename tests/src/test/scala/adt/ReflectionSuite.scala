@@ -24,7 +24,9 @@ class ReflectionSuite extends AdtSuite {
     val iff = symbolOf[Name].asLeaf
     val List(f1) = iff.fields
     assert(f1.toString === "field value: String @org.scalameta.invariants.nonEmpty")
-    val List(a1) = iff.allFields
+    val List(a1, a2, a3) = iff.allFields
     assert(a1.toString === "field value: String @org.scalameta.invariants.nonEmpty")
+    assert(a2.toString === "field denot: scala.meta.internal.hygiene.Denotation (auxiliary)")
+    assert(a3.toString === "field sigma: scala.meta.internal.hygiene.Sigma (auxiliary)")
   }
 }

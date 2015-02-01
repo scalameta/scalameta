@@ -2,7 +2,7 @@ package org.scalameta.adt
 
 import scala.reflect.api.Universe
 import org.scalameta.adt.{Internal => AdtInternal}
-import org.scalameta.{ast => AstInternal}
+import org.scalameta.ast.{internal => AstInternal}
 import scala.reflect.{classTag, ClassTag}
 
 trait AdtReflection {
@@ -17,7 +17,8 @@ trait AdtReflection {
     def isRoot: Boolean = hasAnnotation[AdtInternal.root]
     def isBranch: Boolean = hasAnnotation[AdtInternal.branch]
     def isLeaf: Boolean = hasAnnotation[AdtInternal.leafClass]
-    def isPayload: Boolean = sym.isTerm && sym.isParameter
+    def isPayload: Boolean = sym.isTerm && sym.isParameter && !sym.isAuxiliary
+    def isAuxiliary: Boolean = hasAnnotation[AstInternal.auxiliary]
     def asAdt: Adt = if (isRoot) sym.asRoot else if (isBranch) sym.asBranch else if (isLeaf) sym.asLeaf else sys.error("not an adt")
     def asRoot: Root = new Root(sym)
     def asBranch: Branch = new Branch(sym)
@@ -74,6 +75,8 @@ trait AdtReflection {
     require(sym.isTerm && sym.isParameter)
     def name: TermName = TermName(sym.name.toString.stripPrefix("_"))
     def tpe: Type = sym.info
-    override def toString = s"field $name: $tpe"
+    def isPayload: Boolean = sym.isPayload
+    def isAuxiliary: Boolean = sym.isAuxiliary
+    override def toString = s"field $name: $tpe" + (if (isAuxiliary) " (auxiliary)" else "")
   }
 }

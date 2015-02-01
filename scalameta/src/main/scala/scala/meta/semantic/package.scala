@@ -23,6 +23,7 @@ package object semantic {
     // TODO: design the attr hierarchy of semantic facts that can be figured out about trees
     // TODO: examples: a type of a tree, a definition/definitions the tree refers to, maybe a desugaring, etc
     // TODO: see https://github.com/JetBrains/intellij-scala/blob/master/src/org/jetbrains/plugins/scala/lang/resolve/ScalaResolveResult.scala#L24
+    // TODO: but keep in mind that some of the facts (denotations) are now stored in tree fields (see Hygiene.scala for more information)
     @leaf class Type(tpe: scala.meta.Type) extends Attr
     @leaf class Defns(defns: Seq[scala.meta.Member] @nonEmpty) extends Attr
   }
@@ -41,7 +42,7 @@ package object semantic {
     @hosted def owner: Scope = implicitly[SemanticContext].owner(tree)
   }
 
-  sealed trait HasTpe[T, U <: meta.Type.Arg]
+  sealed trait HasTpe[T <: Tree, U <: Type.Arg]
   object HasTpe {
     implicit def Term[T <: meta.Term]: HasTpe[T, meta.Type] = new HasTpe[T, meta.Type] {}
     implicit def Member[T <: meta.Member]: HasTpe[T, meta.Type] = new HasTpe[T, meta.Type] {}
@@ -53,7 +54,7 @@ package object semantic {
     @hosted def tpe: U = tree.internalAttr[Attr.Type].tpe.require[U]
   }
 
-  sealed trait HasDefn[T, U <: meta.Member]
+  sealed trait HasDefn[T <: Tree, U <: Member]
   object HasDefn {
     implicit def Ref[T <: meta.Ref]: HasDefn[T, meta.Member] = new HasDefn[T, meta.Member] {}
     implicit def TermRef[T <: meta.Term.Ref]: HasDefn[T, meta.Member.Term] = new HasDefn[T, meta.Member.Term] {}
@@ -61,9 +62,7 @@ package object semantic {
     implicit def Importee[T <: meta.Importee]: HasDefn[T, meta.Member] = new HasDefn[T, meta.Member] {}
   }
 
-  implicit class SemanticResolvableOps[T <: Tree, U <: meta.Member](val tree: T)(implicit ev: HasDefn[T, U]) {
-    @hosted def prefix: Type = ???
-    @hosted def in(prefix: Type): T = ???
+  implicit class SemanticDefnableOps[T <: Tree, U <: meta.Member](val tree: T)(implicit ev: HasDefn[T, U]) {
     @hosted def defns: Seq[U] = tree.internalAttr[Attr.Defns].defns.require[Seq[U]]
     @hosted def defn: U = {
       defns match {
@@ -72,6 +71,17 @@ package object semantic {
         case Seq() => unreachable
       }
     }
+  }
+
+  sealed trait HasPrefix[T <: Tree, U <: Type]
+  object HasPrefix {
+    implicit def Ref[T <: meta.Ref]: HasPrefix[T, meta.Type] = new HasPrefix[T, meta.Type] {}
+  }
+
+  implicit class SemanticPrefixableOps[T <: Tree, U <: meta.Type](val tree: T)(implicit ev: HasPrefix[T, U]) {
+    @hosted def prefix: Option[U] = ???
+    @hosted def in(prefix: U): T = in(Some(prefix))
+    @hosted def in(prefix: Option[U]): T = ???
   }
 
   // ===========================
