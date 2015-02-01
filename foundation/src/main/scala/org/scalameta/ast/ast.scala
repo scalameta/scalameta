@@ -99,12 +99,7 @@ class AstMacros(val c: Context) {
       stats1 += q"override def productElement(n: _root_.scala.Int): Any = n match { case ..$pelClauses }"
       stats1 += q"override def productIterator: _root_.scala.Iterator[_root_.scala.Any] = _root_.scala.runtime.ScalaRunTime.typedProductIterator(this)"
 
-      // step 7: implement equality
-      stats1 += q"override def canEqual(that: _root_.scala.Any): _root_.scala.Boolean = that.isInstanceOf[ThisType]"
-      stats1 += q"override def equals(that: _root_.scala.Any): _root_.scala.Boolean = this eq that.asInstanceOf[AnyRef]"
-      stats1 += q"override def hashCode: _root_.scala.Int = _root_.java.lang.System.identityHashCode(this)"
-
-      // step 8: generate Companion.apply
+      // step 7: generate Companion.apply
       val applyParamss = paramss.map(_.map(_.duplicate))
       val internalParamss = paramss.map(_.map(p => q"@..${p.mods.annotations} val ${p.name}: ${p.tpt}"))
       val internalBody = ListBuffer[Tree]()
@@ -129,7 +124,7 @@ class AstMacros(val c: Context) {
         }
       """
 
-      // step 9: generate Companion.unapply
+      // step 8: generate Companion.unapply
       val unapplyParamss = paramss.map(_.map(_.duplicate))
       val unapplyParams = unapplyParamss.head
       val needsUnapply = !mstats.exists(stat => stat match { case DefDef(_, TermName("unapply"), _, _, _, _) => true; case _ => false })

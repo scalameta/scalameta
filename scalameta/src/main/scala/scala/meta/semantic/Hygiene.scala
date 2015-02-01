@@ -74,3 +74,10 @@ object Sigma {
   // @leaf object Naive extends Sigma { override def symbol(tree: Tree): Symbol = tree.symbol }
 }
 
+object equals {
+  def apply(tree1: Tree, tree2: Tree): Boolean = false
+}
+
+object hashcode {
+  def apply(tree: Tree): Int = System.identityHashCode(tree)
+}
