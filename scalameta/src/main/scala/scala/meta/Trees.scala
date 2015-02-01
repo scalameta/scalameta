@@ -77,8 +77,6 @@ package scala.meta.internal.ast {
     @ast class This(qual: Option[Predef.String]) extends Term.Ref
     @ast class Super(thisp: Option[Predef.String], superp: Option[Predef.String]) extends Term.Ref
     @ast class Name(value: Predef.String @nonEmpty) extends api.Term.Name with impl.Name with Term.Ref with Pat with Member {
-      def name: Name = this
-      def mods: Seq[Mod] = Nil
       // TODO: revisit this once we have trivia in place
       // require(keywords.contains(value) ==> isBackquoted)
     }
@@ -293,12 +291,6 @@ package scala.meta.internal.ast {
        extends Member.Term with Stat {
     require(ref.isQualId)
     require(stats.forall(_.isTopLevelStat))
-    def mods: Seq[Mod] = Nil
-    def name: Term.Name = ref match {
-      case name: Term.Name      => name
-      case Term.Select(_, name) => name
-      case _                    => unreachable
-    }
   }
   object Pkg {
     @ast class Object(mods: Seq[Mod], name: Term.Name, ctor: Ctor.Primary, templ: Template)

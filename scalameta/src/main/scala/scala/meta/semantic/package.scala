@@ -108,7 +108,8 @@ package object semantic {
         case tree: impl.Defn.Class => tree.name
         case tree: impl.Defn.Trait => tree.name
         case tree: impl.Defn.Object => tree.name
-        case tree: impl.Pkg => tree.name
+        case       impl.Pkg(name: impl.Term.Name, _) => name
+        case       impl.Pkg(impl.Term.Select(_, name: impl.Term.Name), _) => name
         case tree: impl.Pkg.Object => tree.name
         case tree: impl.Term.Param if tree.parent.map(_.isInstanceOf[impl.Template]).getOrElse(false) => impl.Term.This(???)
         case tree: impl.Term.Param if tree.name.isDefined => tree.name.get
