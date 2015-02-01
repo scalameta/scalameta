@@ -4,7 +4,9 @@ package semantic
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.meta.internal.hygiene.Symbol
+import org.scalameta.annotations._
 
+@opaque
 trait Context {
   def dialect: Dialect
 

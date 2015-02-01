@@ -14,16 +14,16 @@ class InfrastructureSuite extends FunSuite {
     val tree = q"foo.bar"
     tree.toString // check well-formedness
     implicit object FooContext extends Context {
-      def dialect: Dialect = Scala211
-      def attrs(tree: Tree): Seq[Attr] = ???
-      def root: Scope = ???
-      def owner(tree: Tree): Scope = ???
-      def members(scope: Scope): Seq[Tree] = ???
-      def isSubType(tpe1: Type, tpe2: Type): Boolean = ???
-      def lub(tpes: Seq[Type]): Type = ???
-      def glb(tpes: Seq[Type]): Type = ???
-      def parents(member: Member): Seq[Member] = ???
-      def children(member: Member): Seq[Member] = ???
+      private[meta] def dialect: Dialect = Scala211
+      private[meta] def attrs(tree: Tree): Seq[Attr] = ???
+      private[meta] def root: Scope = ???
+      private[meta] def owner(tree: Tree): Scope = ???
+      private[meta] def members(scope: Scope): Seq[Tree] = ???
+      private[meta] def isSubType(tpe1: Type, tpe2: Type): Boolean = ???
+      private[meta] def lub(tpes: Seq[Type]): Type = ???
+      private[meta] def glb(tpes: Seq[Type]): Type = ???
+      private[meta] def parents(member: Member): Seq[Member] = ???
+      private[meta] def children(member: Member): Seq[Member] = ???
     }
     val tree1 = tree.appendScratchpad(tree)
     tree1.toString // check well-formedness again
