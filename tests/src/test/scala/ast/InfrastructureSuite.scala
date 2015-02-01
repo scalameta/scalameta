@@ -4,6 +4,7 @@ import org.scalatest._
 import scala.meta._
 import scala.meta.semantic._
 import scala.meta.syntactic._
+import scala.meta.internal.hygiene.Symbol
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.meta.dialects.Scala211
@@ -18,6 +19,8 @@ class InfrastructureSuite extends FunSuite {
       def root: Scope = ???
       def owner(tree: Tree): Scope = ???
       def members(scope: Scope): Seq[Tree] = ???
+      def symbol(tree: Tree): Symbol = ???
+      def tree(symbol: Symbol): Tree = ???
       def isSubType(tpe1: Type, tpe2: Type): Boolean = ???
       def lub(tpes: Seq[Type]): Type = ???
       def glb(tpes: Seq[Type]): Type = ???
