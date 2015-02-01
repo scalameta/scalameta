@@ -8,7 +8,7 @@ import scala.{Seq => _}
 import scala.annotation.compileTimeOnly
 import scala.collection.immutable.Seq
 import scala.reflect.{ClassTag, classTag}
-import scala.meta.ui.{Exception => SemanticException}
+import scala.meta.ui.{Exception => SemanticException, _}
 import scala.meta.semantic.{Context => SemanticContext}
 import scala.meta.internal.{ast => impl} // necessary only to implement APIs, not to define them
 import scala.reflect.runtime.{universe => ru} // necessary only for a very hacky approximation of hygiene
@@ -33,7 +33,7 @@ package object semantic {
       require(relevant.length < 2)
       relevant match {
         case Seq(tpe) => tpe
-        case Seq() => throw new SemanticException(s"failed to figure out ${classTag[T].runtimeClass.getName.toLowerCase} of ${tree.summary}")
+        case Seq() => throw new SemanticException(s"failed to figure out ${classTag[T].runtimeClass.getName.toLowerCase} of ${tree.show[Summary]}")
         case _ => unreachable
       }
     }
@@ -68,7 +68,7 @@ package object semantic {
     @hosted def defn: U = {
       defns match {
         case Seq(single) => single
-        case Seq(_, _*) => throw new SemanticException(s"multiple definitions found for ${tree.summary}")
+        case Seq(_, _*) => throw new SemanticException(s"multiple definitions found for ${tree.show[Summary]}")
         case Seq() => unreachable
       }
     }
@@ -112,9 +112,9 @@ package object semantic {
         case tree: impl.Pkg.Object => tree.name
         case tree: impl.Term.Param if tree.parent.map(_.isInstanceOf[impl.Template]).getOrElse(false) => impl.Term.This(???)
         case tree: impl.Term.Param if tree.name.isDefined => tree.name.get
-        case tree: impl.Term.Param => throw new SemanticException(s"can't reference an anonymous parameter ${tree.summary}")
+        case tree: impl.Term.Param => throw new SemanticException(s"can't reference an anonymous parameter ${tree.show[Summary]}")
         case tree: impl.Type.Param if tree.name.isDefined => tree.name.get
-        case tree: impl.Type.Param => throw new SemanticException(s"can't reference an anonymous parameter ${tree.summary}")
+        case tree: impl.Type.Param => throw new SemanticException(s"can't reference an anonymous parameter ${tree.show[Summary]}")
         case tree: impl.Ctor.Primary => tree.name
         case tree: impl.Ctor.Secondary => tree.name
       }
@@ -125,12 +125,12 @@ package object semantic {
       val candidates = {
         if (tree.isClass || tree.isTrait) tree.owner.members.filter(m => m.isObject && m.ref.toString == tree.ref.toString)
         else if (tree.isObject) tree.owner.members.filter(m => (m.isClass || m.isTrait) && m.ref.toString == tree.ref.toString)
-        else throw new SemanticException(s"can't have companions for ${tree.summary}")
+        else throw new SemanticException(s"can't have companions for ${tree.show[Summary]}")
       }
       require(candidates.length < 2)
       candidates match {
         case Seq(companion) => companion
-        case Seq() => throw new SemanticException(s"no companions for ${tree.summary}")
+        case Seq() => throw new SemanticException(s"no companions for ${tree.show[Summary]}")
         case _ => unreachable
       }
     }
@@ -238,8 +238,8 @@ package object semantic {
       val filtered = internalAll[T](x => x.ref.toString == name && filter(x))
       filtered match {
         case Seq(single) => single
-        case Seq(_, _*) => throw new SemanticException(s"multiple $name $diagnostic found in ${tree.summary}")
-        case Seq() => throw new SemanticException(s"no $name $diagnostic found in ${tree.summary}")
+        case Seq(_, _*) => throw new SemanticException(s"multiple $name $diagnostic found in ${tree.show[Summary]}")
+        case Seq() => throw new SemanticException(s"no $name $diagnostic found in ${tree.show[Summary]}")
       }
     }
     @hosted def members: Seq[Member] = internalAll[Member](_ => true)
@@ -247,7 +247,7 @@ package object semantic {
     @hosted def packages: Seq[Member.Term] = internalAll[Member.Term](_.isPackage)
     @hosted def packages(name: String): Member.Term = internalSingle[Member.Term](name, _.isPackage, "packages")
     @hosted def packages(name: scala.Symbol): Member.Term = internalSingle[Member.Term](name.toString, _.isPackage, "packages")
-    @hosted def ctor: Member.Term = internalAll[Member.Term](_ => true) match { case Seq(primary, _*) => primary; case _ => throw new SemanticException(s"no constructors found in ${tree.summary}") }
+    @hosted def ctor: Member.Term = internalAll[Member.Term](_ => true) match { case Seq(primary, _*) => primary; case _ => throw new SemanticException(s"no constructors found in ${tree.show[Summary]}") }
     @hosted def ctors: Seq[Member.Term] = internalAll[Member.Term](_ => true)
     @hosted def classes: Seq[Member.Type] = internalAll[Member.Type](_.isClass)
     @hosted def classes(name: String): Member.Type = internalSingle[Member.Type](name, _.isClass, "classes")

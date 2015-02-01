@@ -13,6 +13,7 @@ package scala.meta {
   @root trait Tree extends Product {
     type ThisType <: Tree
     def parent: Option[Tree]
+    final override def toString = scala.meta.internal.ui.show(this)
   }
 
   @branch trait Ref extends Tree
