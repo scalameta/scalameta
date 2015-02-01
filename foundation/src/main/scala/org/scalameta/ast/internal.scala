@@ -10,6 +10,7 @@ object internal {
   class branch extends StaticAnnotation
   class astClass extends StaticAnnotation
   class astCompanion extends StaticAnnotation
+  class auxiliary extends StaticAnnotation
 
   def productPrefix[T]: String = macro Macros.productPrefix[T]
   def loadField[T](f: T): Unit = macro Macros.loadField
@@ -77,6 +78,8 @@ object internal {
             tpe =:= typeOf[scala.Symbol] ||
             ScalaPrimitiveValueClasses.contains(tpe.typeSymbol)) Some(tpe)
         else if (tpe.typeSymbol == OptionClass && Primitive.unapply(tpe.typeArgs.head).nonEmpty) Some(tpe)
+        else if (tpe.baseClasses.contains(c.mirror.staticClass("scala.meta.internal.hygiene.Denotation"))) Some(tpe)
+        else if (tpe.baseClasses.contains(c.mirror.staticClass("scala.meta.internal.hygiene.Sigma"))) Some(tpe)
         else None
       }
     }

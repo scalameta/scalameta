@@ -5,11 +5,13 @@ import scala.meta.dialects.Scala211
 class JoinSuite extends FunSuite {
   test("idents") {
     val Term.Name("xtemp") = {
-      import scala.meta.syntactic._
+      import scala.meta._
+      import syntactic.quasiquotes._
       q"xtemp"
     }
     val Term.Name("ytemp") = {
-      import scala.meta.syntactic._
+      import scala.meta._
+      import syntactic.quasiquotes._
       q"ytemp"
     }
   }
@@ -17,7 +19,8 @@ class JoinSuite extends FunSuite {
   test("vals") {
     val fields = List(Term.Name("x") -> Term.Name("xtemp"), Term.Name("y") -> Term.Name("ytemp"))
     val vals = fields.map{ case (f, ref) =>
-      import scala.meta.syntactic._
+      import scala.meta._
+      import syntactic.quasiquotes._
       q"val $f = $ref.$f"
     }
     assert(vals.length === 2)
@@ -32,7 +35,8 @@ class JoinSuite extends FunSuite {
       Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Term.Select(Term.Name("xtemp"), Term.Name("x"))),
       Defn.Val(Nil, List(Pat.Var(Term.Name("y"))), None, Term.Select(Term.Name("ytemp"), Term.Name("y"))))
     val result = {
-      import scala.meta.syntactic._
+      import scala.meta._
+      import syntactic.quasiquotes._
       q"""
         val xtemp = $x
         val ytemp = $y
