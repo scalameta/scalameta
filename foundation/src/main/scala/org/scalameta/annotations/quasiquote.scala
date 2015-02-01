@@ -35,7 +35,7 @@ class QuasiquoteMacros(val c: Context) {
       val q"..$applyimpls" = q"""
         import scala.reflect.macros.whitebox.Context
         def applyImpl(c: Context)(args: c.Tree*)(dialect: c.Tree): c.Tree = {
-          val helper = new _root_.scala.meta.syntactic.quasiquotes.Macros[c.type](c)
+          val helper = new _root_.scala.meta.internal.quasiquotes.Macros[c.type](c)
           implicit val dialectInstance: _root_.scala.meta.Dialect = {
             // We want to have a higher-order way to abstract over differences in dialects
             // and we're using implicits for that (implicits are values => values are higher-order => good).
