@@ -34,13 +34,14 @@ trait AdtReflection {
     def allLeafs: List[Symbol] = sym.leafs ++ sym.branches.flatMap(_.allLeafs).distinct.map(ensureModule)
 
     def root: Symbol = sym.asClass.baseClasses.reverse.find(_.isRoot).getOrElse(NoSymbol)
-    private def secondParamList: List[Symbol] = sym.info.decls.collect{ case ctor: MethodSymbol if ctor.isPrimaryConstructor => ctor }.head.paramLists(1)
-    def fields: List[Symbol] = secondParamList.filter(p => p.isPayload)
-    def allFields: List[Symbol] = secondParamList
+    private def lastParamList: List[Symbol] = sym.info.decls.collect{ case ctor: MethodSymbol if ctor.isPrimaryConstructor => ctor }.head.paramLists.last
+    def fields: List[Symbol] = lastParamList.filter(p => p.isPayload)
+    def allFields: List[Symbol] = lastParamList
   }
 
   trait CommonApi {
     def sym: Symbol
+    def tpe: Type = if (sym.isTerm) sym.info else sym.asType.toType
     def prefix: String = {
       def loop(sym: Symbol): String = {
         if (sym.owner.isPackageClass) sym.name.toString

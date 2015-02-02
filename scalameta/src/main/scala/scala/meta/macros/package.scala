@@ -1,5 +1,4 @@
 package scala.meta
-package macros
 
 import org.scalameta.adt._
 import org.scalameta.annotations._

@@ -6,6 +6,7 @@ import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import org.scalameta.adt._
 import org.scalameta.invariants._
+import scala.meta.internal.{ast => impl}
 
 // Our current understanding of hygiene operates based on two primitives:
 // 1) Symbols (dumb unique tokens that can be associated with definitions and references to them)
@@ -31,17 +32,15 @@ import org.scalameta.invariants._
 @root trait Signature
 object Signature {
   @leaf object Type extends Signature
-  @leaf object Val extends Signature
-  @leaf class Method(params: Seq[String], ret: String) extends Signature
-  @leaf object Object extends Signature
-  @leaf object Package extends Signature
+  @leaf object Term extends Signature
+  @leaf class Method(params: Seq[Symbol], ret: Symbol) extends Signature
 }
 
 @root trait Symbol
 object Symbol {
   @leaf object Zero extends Symbol
   @leaf object Root extends Symbol
-  @leaf class Global(owner: Symbol, signature: Signature) extends Symbol
+  @leaf class Global(owner: Symbol, name: String, signature: Signature) extends Symbol
   @leaf class Local(id: String) extends Symbol
 }
 
@@ -92,25 +91,8 @@ object Denotation {
 // they will just look into `tree.denotation` and return that value. We are also going to pre-typecheck
 // quasiquotes and pre-populate denotations, so that these naive sigmas can get at least some job done.
 
-@root trait Sigma { def denotation(name: Name): Denotation }
+@root trait Sigma { def resolve(name: Name): Denotation }
 object Sigma {
-  @leaf object Zero extends Sigma { def denotation(name: Name) = Denotation.Zero }
-  // @leaf object Naive extends Sigma { def denotation(name: Name) = name.denotation }
-}
-
-// TODO: equals and hashcode are to be implemented with hygienic name comparison in mind
-// something like:
-//   * If both are non-Refs, then compare product prefixes and product elements
-//   * If both are Refs and both are paths, then compare denotations
-//   * If both are Refs and both have non-Ref qualifiers, then compare qualifiers and compare denotations
-//   * Otherwise, not equal
-// TODO: we should also use our compiler plugin powers to warn on Ref/Def comparisons
-// because those indicate mistakes like `case q"foo.$bar" if bar == t"Foo".defs("bar") => ...`
-
-object equals {
-  def apply(tree1: Tree, tree2: Tree): Boolean = false
-}
-
-object hashcode {
-  def apply(tree: Tree): Int = System.identityHashCode(tree)
+  @leaf object Zero extends Sigma { def resolve(name: Name) = Denotation.Zero }
+  @leaf object Naive extends Sigma { def resolve(name: Name) = name.require[impl.Name].denot }
 }
