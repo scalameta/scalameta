@@ -9,12 +9,12 @@ import org.scalameta.ast.{Liftables => AstLiftables}
 
 // TODO: ideally, we would like to bootstrap these macros on top of scala.meta
 // so that quasiquotes can be interpreted by any host, not just scalac
-class Macros[C <: Context](val c: C) extends AdtReflection with AstLiftables {
+class Macros[C <: Context](val c: C) extends AdtReflection with AdtLiftables with AstLiftables {
   val u: c.universe.type = c.universe
   import c.universe.{Tree => _, _}
   import c.universe.{Tree => ScalaReflectTree}
   import scala.meta.{Tree => ScalaMetaTree}
-  val TermQuote = "denied" // TODO: find a cleaner way out of this mess
+  val TermQuote = "shadow scala.meta quasiquotes"
   case class Dummy(id: String, ndots: Int, arg: ScalaReflectTree)
 
   def apply(macroApplication: ScalaReflectTree, scalaMetaParse: String => ScalaMetaTree): ScalaReflectTree = {
@@ -24,12 +24,12 @@ class Macros[C <: Context](val c: C) extends AdtReflection with AstLiftables {
     flavor match {
       case SyntacticFlavor =>
         val (skeleton, dummies) = parseSkeleton(macroApplication, scalaMetaParse)
-        reifySkeleton(skeleton, EmptyTree, dummies)
+        reifySkeleton(skeleton, dummies)
       case SemanticFlavor =>
         // TODO: this is a very naive approach to hygiene, and it will be replaced as soon as possible
         val (skeleton, dummies) = parseSkeleton(macroApplication, scalaMetaParse)
-        val attributedSkeleton = scala.util.Try(attributeSkeleton(skeleton)).getOrElse(EmptyTree)
-        reifySkeleton(skeleton, attributedSkeleton, dummies)
+        val maybeAttributedSkeleton = scala.util.Try(attributeSkeleton(skeleton)).getOrElse(skeleton)
+        reifySkeleton(maybeAttributedSkeleton, dummies)
       case _ =>
         c.abort(c.enclosingPosition, "choose the flavor of quasiquotes by importing either scala.meta.syntactic.quasiquotes._ or scala.meta.semantic.quasiquotes._")
     }
@@ -44,17 +44,19 @@ class Macros[C <: Context](val c: C) extends AdtReflection with AstLiftables {
     (scalaMetaParse(snippet), dummies)
   }
 
-  private def attributeSkeleton(meta: ScalaMetaTree): ScalaReflectTree = {
+  private def attributeSkeleton(meta: ScalaMetaTree): ScalaMetaTree = {
     val (scalaReflectParse, scalaReflectMode) = meta match {
       case _: scala.meta.Term => ((code: String) => c.parse(code), c.TERMmode)
       case _: scala.meta.Type => ((code: String) => c.parse(s"type T = $code").asInstanceOf[TypeDef].rhs, c.TYPEmode)
       case _ => sys.error("attribution of " + meta.productPrefix + " is not supported yet")
     }
-    c.typecheck(scalaReflectParse(meta.toString), mode = scalaReflectMode, silent = false)
+    val reflect = c.typecheck(scalaReflectParse(meta.toString), mode = scalaReflectMode, silent = false)
+    // TODO: correlate `meta` and `reflect` and populate denotations in `reflect`
+    // afterwards `reifySkeleton` will automatically take care of reifying those denotations
+    meta
   }
 
-  private def reifySkeleton(meta: ScalaMetaTree, reflect: ScalaReflectTree, dummies: List[Dummy]): ScalaReflectTree = {
-    // TODO: account for `reflect` when reifying `meta`
+  private def reifySkeleton(meta: ScalaMetaTree, dummies: List[Dummy]): ScalaReflectTree = {
     implicitly[Liftable[ScalaMetaTree]].apply(meta)
   }
 }

@@ -30,7 +30,7 @@ class LiftableMacros(val c: Context) extends AdtReflection {
       val init = q"""$u.Ident($u.TermName("_root_"))""": Tree
       val namePath = leaf.sym.fullName.split('.').foldLeft(init)((acc, part) => q"$u.Select($acc, $u.TermName($part))")
       val localParam = c.freshName(TermName("x"))
-      val args = leaf.fields.map(f => {
+      val args = leaf.allFields.map(f => {
         val name = q"$u.Ident($u.TermName(${f.name.toString}))"
         val value = q"_root_.scala.Predef.implicitly[$u.Liftable[${f.tpe}]].apply($localParam.${f.name})"
         // NOTE: we can't really use AssignOrNamedArg here, sorry
