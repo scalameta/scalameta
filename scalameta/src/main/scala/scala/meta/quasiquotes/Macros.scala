@@ -112,6 +112,7 @@ class Macros[C <: Context](val c: C) extends AdtReflection with AdtLiftables wit
       val reflect = c.typecheck(reflectParse(meta.toString), mode = reflectMode, silent = false)
       if (denotDebug) { println("reflect = " + reflect); println(showRaw(reflect, printIds = true)) }
       val meta1 = correlate(meta, reflect)
+      if (denotDebug) { println("result = " + meta1.show[Semantics]) }
       meta1
     } catch {
       case ex: Throwable => if (denotDebug) ex.printStackTrace(); throw ex

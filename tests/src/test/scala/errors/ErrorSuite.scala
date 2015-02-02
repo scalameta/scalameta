@@ -248,4 +248,19 @@ class ErrorSuite extends FunSuite {
       (??? : Tree).show[Summary]
     """) === "")
   }
+
+  test("show[Semantics] without import") {
+    assert(typecheckError("""
+      import scala.meta._
+      (??? : Tree).show[Semantics]
+    """) === "value show is not a member of scala.meta.Tree")
+  }
+
+  test("show[Semantics] when everything's correct") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.ui._
+      (??? : Tree).show[Semantics]
+    """) === "")
+  }
 }
