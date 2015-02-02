@@ -4,12 +4,12 @@ package quasiquotes
 
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
-import org.scalameta.adt._
-import org.scalameta.ast._
+import org.scalameta.adt.{Liftables => AdtLiftables, AdtReflection}
+import org.scalameta.ast.{Liftables => AstLiftables}
 
 // TODO: ideally, we would like to bootstrap these macros on top of scala.meta
 // so that quasiquotes can be interpreted by any host, not just scalac
-class Macros[C <: Context](val c: C) extends AdtReflection with Liftables {
+class Macros[C <: Context](val c: C) extends AdtReflection with AstLiftables {
   val u: c.universe.type = c.universe
   import c.universe.{Tree => _, _}
   import c.universe.{Tree => ScalaReflectTree}
