@@ -14,12 +14,12 @@ class Macros[C <: Context](val c: C) extends AdtReflection with Liftables {
   import c.universe.{Tree => _, _}
   import c.universe.{Tree => ScalaReflectTree}
   import scala.meta.{Tree => ScalaMetaTree}
-  val TermQuote = "denied" // TODO: find a cleaner way out of this mess
+  val TermQuote = "shadow scala.meta quasiquotes"
   case class Dummy(id: String, ndots: Int, arg: ScalaReflectTree)
 
   def apply(macroApplication: ScalaReflectTree, scalaMetaParse: String => ScalaMetaTree): ScalaReflectTree = {
     val SyntacticFlavor = symbolOf[scala.meta.syntactic.quasiquotes.Enable.type]
-    val SemanticFlavor = symbolOf[scala.meta.semantic.quasiquotes.Enable.type]
+    val SemanticFlavor = symbolOf[scala.meta.semantic.quasiquotes.EnableImpl.type]
     val flavor = c.inferImplicitValue(typeOf[scala.meta.quasiquotes.Flavor]).tpe.typeSymbol
     flavor match {
       case SyntacticFlavor =>
