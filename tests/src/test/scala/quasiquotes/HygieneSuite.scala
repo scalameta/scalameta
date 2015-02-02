@@ -34,4 +34,23 @@ class HygieneSuite extends FunSuite {
       |Type.Compound(List(Type.Apply(Type.Name("List")[0], List(Type.Name("Int")[0]))), List(Decl.Def(Nil, Term.Name("head")[0], Nil, Nil, Type.Name("Int")[0])))
     """.stripMargin.trim)
   }
+  test("equality - 1") {
+    val unqualified = {
+      import scala.collection.mutable.Map
+      t"Map"
+    }
+    val qualified = t"scala.collection.mutable.Map"
+    assert(unqualified == qualified)
+    assert(unqualified.hashCode == qualified.hashCode)
+  }
+  test("equality - 2") {
+    val unqualified = {
+      import scala.collection.mutable.Map
+      q"Map"
+    }
+    val qualified1 = t"scala.collection.mutable.Map"
+    val qualified2 = t"scala.collection.mutable.Map.type"
+    assert(unqualified != qualified1)
+    assert(unqualified != qualified2)
+  }
 }
