@@ -6,6 +6,7 @@ import org.scalameta.annotations._
 import org.scalameta.unreachable
 import scala.{meta => api}
 import scala.meta.internal.{ast => impl} // necessary only to define internal classes, not to define the APIs
+import scala.meta.internal.hygiene._ // necessary only to define internal classes, not to define the APIs
 import scala.meta.syntactic.parsers.SyntacticInfo._ // necessary only for sanity checks in trees
 import scala.meta.syntactic.tokenizers.keywords // necessary only for sanity checks in trees
 
@@ -67,7 +68,7 @@ package scala.meta.internal.ast {
   @branch trait Tree extends api.Tree
 
   @branch trait Ref extends api.Ref with Tree
-  @branch trait Name extends api.Name with Ref { def value: String }
+  @branch trait Name extends api.Name with Ref { def value: String; def denot: Denotation; def sigma: Sigma }
   @branch trait Stat extends api.Stat with Tree
   @branch trait Scope extends api.Scope with Tree
 

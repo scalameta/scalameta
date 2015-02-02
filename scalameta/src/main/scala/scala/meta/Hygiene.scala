@@ -6,6 +6,7 @@ import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import org.scalameta.adt._
 import org.scalameta.invariants._
+import scala.meta.internal.{ast => impl}
 
 // Our current understanding of hygiene operates based on two primitives:
 // 1) Symbols (dumb unique tokens that can be associated with definitions and references to them)
@@ -31,17 +32,15 @@ import org.scalameta.invariants._
 @root trait Signature
 object Signature {
   @leaf object Type extends Signature
-  @leaf object Val extends Signature
-  @leaf class Method(params: Seq[String], ret: String) extends Signature
-  @leaf object Object extends Signature
-  @leaf object Package extends Signature
+  @leaf object Term extends Signature
+  @leaf class Method(params: Seq[Symbol], ret: Symbol) extends Signature
 }
 
 @root trait Symbol
 object Symbol {
   @leaf object Zero extends Symbol
   @leaf object Root extends Symbol
-  @leaf class Global(owner: Symbol, signature: Signature) extends Symbol
+  @leaf class Global(owner: Symbol, name: String, signature: Signature) extends Symbol
   @leaf class Local(id: String) extends Symbol
 }
 
@@ -95,7 +94,7 @@ object Denotation {
 @root trait Sigma { def denotation(name: Name): Denotation }
 object Sigma {
   @leaf object Zero extends Sigma { def denotation(name: Name) = Denotation.Zero }
-  // @leaf object Naive extends Sigma { def denotation(name: Name) = name.denotation }
+  @leaf object Naive extends Sigma { def denotation(name: Name) = name.require[impl.Name].denot }
 }
 
 // TODO: equals and hashcode are to be implemented with hygienic name comparison in mind
