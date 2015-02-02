@@ -1,18 +1,19 @@
-package org.scalameta.adt
+package org.scalameta.ast
 
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox.Context
-import org.scalameta.adt.Internal.Adt
+import org.scalameta.ast.internal.Ast
+import org.scalameta.adt.AdtReflection
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 
-trait NewLiftables {
+trait Liftables {
   val u: scala.reflect.macros.Universe
-  implicit def materializeAdt[T <: Adt]: u.Liftable[T] = macro NewLiftableMacros.impl[T]
+  implicit def materializeAst[T <: Ast]: u.Liftable[T] = macro LiftableMacros.impl[T]
   implicit def liftSeq[T](implicit ev: u.Liftable[T]): u.Liftable[Seq[T]] = u.Liftable { seq => u.Liftable.liftList[T](ev).apply(seq.toList) }
 }
 
-class NewLiftableMacros(val c: Context) extends AdtReflection {
+class LiftableMacros(val c: Context) extends AdtReflection {
   val u: c.universe.type = c.universe
   import c.universe._
   def impl[T: WeakTypeTag]: c.Tree = {
@@ -37,7 +38,7 @@ class NewLiftableMacros(val c: Context) extends AdtReflection {
           else q"""
             def extractDummy(any: Any): Option[String] = if (any.isInstanceOf[_root_.scala.meta.Name]) Some(any.asInstanceOf[_root_.scala.meta.Name].productIterator.toList.head.toString) else None
             def uniqueName = $localParam.${f.name}.map(extractDummy) match { case List(dummy @ Some(name)) => dummy; case _ => None }
-            val maybeUnquotee = args.collectFirst{ case (id, 2, unquotee) if Some(id: String) == (uniqueName: Option[String]) => unquotee }
+            val maybeUnquotee = dummies.collectFirst{ case Dummy(id, 2, unquotee) if Some(id: String) == (uniqueName: Option[String]) => unquotee }
             maybeUnquotee.getOrElse($reify)
           """
         }
@@ -51,7 +52,7 @@ class NewLiftableMacros(val c: Context) extends AdtReflection {
         def reify = q"$u.Apply($namePath, $args)"
         if (!(leaf.sym.asType.toType <:< c.mirror.staticClass("scala.meta.Name").asType.toType)) reify
         else q"""
-          val maybeUnquotee = args.collectFirst{ case (id, 0 | 1, unquotee) if (id: String) == ($localParam.value: String) => unquotee }
+          val maybeUnquotee = dummies.collectFirst{ case Dummy(id, 0 | 1, unquotee) if (id: String) == ($localParam.value: String) => unquotee }
           maybeUnquotee.getOrElse($reify)
         """
       }
@@ -63,7 +64,8 @@ class NewLiftableMacros(val c: Context) extends AdtReflection {
     q"""
       $u.Liftable(($mainParam: ${weakTypeOf[T]}) => {
         object $mainModule {
-          val materializeAdt = "shadow the adt materializer"
+          val materializeAst = "shadow the ast materializer"
+          val TermQuote = "shadow scala.meta quasiquotes"
           ..$liftLeafs
           implicit def $mainMethod[T <: ${root.sym}]: $u.Liftable[T] = $u.Liftable(($localParam: T) => {
             var result: $u.Tree = null
