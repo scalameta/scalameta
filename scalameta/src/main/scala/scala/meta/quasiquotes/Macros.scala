@@ -22,6 +22,13 @@ class Macros[C <: Context](val c: C) extends AdtReflection with AdtLiftables wit
   val TermQuote = "shadow scala.meta quasiquotes"
   case class Dummy(id: String, ndots: Int, arg: ReflectTree)
 
+  import definitions._
+  val SeqModule = c.mirror.staticModule("scala.collection.Seq")
+  val ScalaPackageObjectClass = c.mirror.staticModule("scala.package")
+  val ScalaList = ScalaPackageObjectClass.info.decl(TermName("List"))
+  val ScalaNil = ScalaPackageObjectClass.info.decl(TermName("Nil"))
+  val ScalaSeq = ScalaPackageObjectClass.info.decl(TermName("Seq"))
+
   def apply(macroApplication: ReflectTree, metaParse: String => MetaTree): ReflectTree = {
     val SyntacticFlavor = symbolOf[scala.meta.syntactic.quasiquotes.Enable.type]
     val SemanticFlavor = symbolOf[scala.meta.semantic.quasiquotes.Enable.type]
@@ -52,12 +59,12 @@ class Macros[C <: Context](val c: C) extends AdtReflection with AdtLiftables wit
   private def attributeSkeleton(meta: MetaTree): MetaTree = {
     def denot(reflect: ReflectSymbol): Denotation = {
       def isLocatable(reflect: ReflectSymbol): Boolean = {
-        val isNotBanned = !reflect.name.toString.startsWith("<local ")
-        val hasLocatableParent = reflect.isPackage || reflect.isPackageClass || isLocatable(reflect.owner)
+        def isNotBanned = reflect != NoSymbol && !reflect.name.toString.startsWith("<local ")
+        def hasLocatableParent = reflect.isPackage || reflect.isPackageClass || isLocatable(reflect.owner)
         isNotBanned && hasLocatableParent
       }
       def signature(reflect: ReflectSymbol): MetaSignature = {
-        if (reflect.isMethod) {
+        if (reflect.isMethod && !reflect.asMethod.isGetter) {
           val MethodType(params, ret) = reflect.info.erasure
           MetaSignature.Method(params.map(convert), convert(ret.termSymbol.orElse(ret.typeSymbol)))
         }
@@ -66,7 +73,6 @@ class Macros[C <: Context](val c: C) extends AdtReflection with AdtLiftables wit
         else unreachable
       }
       def convert(reflect: ReflectSymbol): MetaSymbol = {
-        require(reflect != NoSymbol)
         if (reflect.isModuleClass || reflect.isPackageClass) convert(reflect.asClass.module)
         else if (reflect == c.mirror.RootClass || reflect == c.mirror.RootPackage) MetaSymbol.Root
         else MetaSymbol.Global(convert(reflect.owner), reflect.name.decodedName.toString, signature(reflect))
@@ -91,8 +97,8 @@ class Macros[C <: Context](val c: C) extends AdtReflection with AdtLiftables wit
         val qual = correlate(meta.qual, reflect.qualifier).require[impl.Term.Ref]
         val name = correlate(meta.selector, reflect).require[impl.Type.Name]
         impl.Type.Select(qual, name)
-      case (meta: impl.Type.Singleton, reflect: RefTree) =>
-        val qual = correlate(meta.ref, reflect).require[impl.Term.Ref]
+      case (meta: impl.Type.Singleton, reflect: SingletonTypeTree) =>
+        val qual = correlate(meta.ref, reflect.ref).require[impl.Term.Ref]
         impl.Type.Singleton(qual)
       case (meta: impl.Type.Apply, reflect: AppliedTypeTree) =>
         val tpe = correlate(meta.tpe, reflect.tpt).require[impl.Type]
@@ -109,7 +115,21 @@ class Macros[C <: Context](val c: C) extends AdtReflection with AdtLiftables wit
         case _: scala.meta.Type => ((code: String) => c.parse(s"type T = $code").asInstanceOf[TypeDef].rhs, c.TYPEmode)
         case _ => sys.error("attribution of " + meta.productPrefix + " is not supported yet")
       }
-      val reflect = c.typecheck(reflectParse(meta.toString), mode = reflectMode, silent = false)
+      val reflect = {
+        // NOTE: please don't ask me about the hacks that you see below
+        // even on three simple tests, scalac's typecheck has managed to screw me up multiple times
+        // requiring crazy workarounds for really trivial situations
+        def undealias(symbol: ReflectSymbol): ReflectSymbol = {
+          if (symbol == ListModule) ScalaList
+          else if (symbol == NilModule) ScalaNil
+          else if (symbol == SeqModule) ScalaSeq
+          else symbol
+        }
+        var result = c.typecheck(reflectParse(meta.toString), mode = reflectMode, silent = false)
+        if (result match { case _: SingletonTypeTree => true; case _ => false }) result = SingletonTypeTree(Ident(undealias(result.tpe.termSymbol)))
+        if (result.symbol != undealias(result.symbol)) result = Ident(undealias(result.symbol))
+        result
+      }
       if (denotDebug) { println("reflect = " + reflect); println(showRaw(reflect, printIds = true)) }
       val meta1 = correlate(meta, reflect)
       if (denotDebug) { println("result = " + meta1.show[Semantics]) }
