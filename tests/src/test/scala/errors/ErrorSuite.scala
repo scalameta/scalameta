@@ -64,21 +64,11 @@ class ErrorSuite extends FunSuite {
     """) === "")
   }
 
-  test("semantic quasiquotes without context") {
-    assert(typecheckError("""
-      import scala.meta._
-      import scala.meta.dialects.Scala211
-      import scala.meta.semantic.quasiquotes._
-      q"hello"
-    """) === "")
-  }
-
   test("semantic quasiquotes when everything's correct") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
       import scala.meta.semantic.quasiquotes._
-      implicit val c: scala.meta.semantic.Context = ???
       q"hello"
     """) === "")
   }
