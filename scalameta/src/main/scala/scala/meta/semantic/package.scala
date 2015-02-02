@@ -289,16 +289,4 @@ package object semantic {
     @hosted def tparams(name: String): Type.Param = internalSingle[Type.Param](name, _ => true, "type parameters")
     @hosted def tparams(name: scala.Symbol): Type.Param = internalSingle[Type.Param](name.toString, _ => true, "type parameters")
   }
-
-  // ===========================
-  // PART 5: BINDINGS
-  // ===========================
-
-  @root trait Mark
-  def mark(): Mark = ???
-
-  implicit class SemanticNameOps(val tree: Name) extends AnyVal {
-    @hosted def isBinder: Boolean = ???
-    @hosted def isReference: Boolean = ???
-  }
 }
