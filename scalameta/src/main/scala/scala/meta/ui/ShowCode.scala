@@ -15,11 +15,13 @@ import org.scalameta.adt._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
 import scala.compat.Platform.EOL
+import scala.annotation.implicitNotFound
 
 // TODO: fix occasional incorrectness when semicolons are omitted
 // TODO: soft wrapping
 // TODO: one mega instance for tree isn't nice, maybe separate instances for leafs and inferred instances for branches
 
+@implicitNotFound(msg = "don't know how to show[Code] for ${T} (if you're prettyprinting a tree, be sure to import a dialect, e.g. scala.meta.dialects.Scala211)")
 trait Code[T] extends Show[T]
 object Code {
   def apply[T](f: T => Show.Result): Code[T] = new Code[T] { def apply(input: T) = f(input) }

@@ -8,7 +8,9 @@ import scala.collection.immutable.Seq
 import scala.meta.internal.ast._
 import scala.{meta => api}
 import scala.meta.syntactic.tokenizers.Token
+import scala.annotation.implicitNotFound
 
+@implicitNotFound(msg = "don't know how to show[Raw] for ${T}")
 trait Raw[T] extends Show[T]
 object Raw {
   def apply[T](f: T => Show.Result): Raw[T] = new Raw[T] { def apply(input: T) = f(input) }

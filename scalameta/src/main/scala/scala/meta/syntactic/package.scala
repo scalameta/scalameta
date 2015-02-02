@@ -5,6 +5,7 @@ import scala.meta.syntactic.tokenizers._
 import scala.meta.syntactic.quasiquotes._
 import org.scalameta.annotations._
 import org.scalameta.convert._
+import scala.annotation.implicitNotFound
 
 package object syntactic {
   // ===========================
@@ -13,6 +14,7 @@ package object syntactic {
   type Token = scala.meta.syntactic.tokenizers.Token
   val Token = scala.meta.syntactic.tokenizers.Token
 
+  @implicitNotFound(msg = "don't know how to parse ${T} (if you're sure that ${T} is parseable, double-check that you've imported a dialect, e.g. scala.meta.dialects.Scala211)")
   trait Parse[T] extends Convert[Origin, T]
   object Parse {
     def apply[T](f: Origin => T): Parse[T] = new Parse[T] { def apply(origin: Origin): T = f(origin) }
@@ -35,9 +37,8 @@ package object syntactic {
     implicit def parseSource(implicit dialect: Dialect): Parse[Source] = apply(origin => new Parser(origin).parseSource())
   }
 
-  implicit class RichOrigin[T](val originLike: T)(implicit ev: Convert[T, Origin], dialect: Dialect) {
-    private lazy val origin = ev(originLike)
-    def parse[T: Parse](implicit ev: Parse[T]): T = ev(origin)
-    def tokens: Vector[Token] = tokenize(origin)
+  implicit class RichOrigin[T](val originLike: T) {
+    def parse[U](implicit convert: Convert[T, Origin], dialect: Dialect, parse: Parse[U]): U = parse(convert(originLike))
+    def tokens(implicit convert: Convert[T, Origin], dialect: Dialect): Vector[Token] = tokenize(convert(originLike))
   }
 }

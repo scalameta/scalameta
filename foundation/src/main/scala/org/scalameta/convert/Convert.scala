@@ -1,6 +1,9 @@
 package org.scalameta
 
+import scala.annotation.implicitNotFound
+
 package convert {
+  @implicitNotFound("don't know how to convert ${A} to ${B}")
   trait Convert[A, B] {
     def apply(a: A): B
   }

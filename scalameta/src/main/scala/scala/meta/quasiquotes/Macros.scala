@@ -31,7 +31,7 @@ class Macros[C <: Context](val c: C) extends AdtReflection with Liftables {
         val attributedSkeleton = scala.util.Try(attributeSkeleton(skeleton)).getOrElse(EmptyTree)
         reifySkeleton(skeleton, attributedSkeleton, dummies)
       case _ =>
-        c.abort(c.enclosingPosition, "choose the flavor of quasiquotes by importing either `syntactic.quasiquotes._` or `semantic.quasiquotes._`")
+        c.abort(c.enclosingPosition, "choose the flavor of quasiquotes by importing either scala.meta.syntactic.quasiquotes._ or scala.meta.semantic.quasiquotes._")
     }
   }
 
