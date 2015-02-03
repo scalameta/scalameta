@@ -76,14 +76,15 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
           val isAnonymousTypeParameter = gsym.name == g.tpnme.WILDCARD
           isTermPlaceholder || isTypePlaceholder || isAnonymousSelf || isAnonymousTypeParameter
         }
-        def precvt(pre: g.Type, in: g.Tree): p.Name = {
-          gsym.rawcvt(in).appendScratchpad(pre)
+        type pTermOrTypeName = p.Name{type ThisType >: p.Term.Name with p.Type.Name <: p.Name}
+        def precvt(pre: g.Type, in: g.Tree): pTermOrTypeName = {
+          gsym.rawcvt(in).appendScratchpad(pre).asInstanceOf[pTermOrTypeName]
         }
-        def rawcvt(in: g.Tree): p.Name = {
-          if (gsym.isTerm) (p.Term.Name(in.alias).appendScratchpad(gsym): p.Name)
-          else if (gsym.isType) (p.Type.Name(in.alias).appendScratchpad(gsym): p.Name)
+        def rawcvt(in: g.Tree): pTermOrTypeName = ({
+          if (gsym.isTerm) p.Term.Name(in.alias).appendScratchpad(gsym)
+          else if (gsym.isType) p.Type.Name(in.alias).appendScratchpad(gsym)
           else unreachable
-        }
+        }).asInstanceOf[pTermOrTypeName]
       }
       implicit class RichHelperTermSymbol(gsym: g.TermSymbol) {
         def precvt(pre: g.Type, in: g.Tree): p.Term.Name = (gsym: g.Symbol).precvt(pre, in).asInstanceOf[p.Term.Name]
