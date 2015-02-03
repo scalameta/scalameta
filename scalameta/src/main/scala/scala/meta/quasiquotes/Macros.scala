@@ -58,10 +58,10 @@ class Macros[C <: Context](val c: C) extends AdtReflection with AdtLiftables wit
 
   private def attributeSkeleton(meta: MetaTree): MetaTree = {
     def denot(reflect: ReflectSymbol): Denotation = {
-      def isLocatable(reflect: ReflectSymbol): Boolean = {
-        def isNotBanned = reflect != NoSymbol && !reflect.name.toString.startsWith("<local ")
-        def hasLocatableParent = reflect.isPackage || reflect.isPackageClass || isLocatable(reflect.owner)
-        isNotBanned && hasLocatableParent
+      def isGlobal(reflect: ReflectSymbol): Boolean = {
+        def definitelyLocal = reflect == NoSymbol || reflect.name.toString.startsWith("<local ") || (reflect.owner.isMethod && !reflect.isParameter)
+        def isParentGlobal = reflect.isPackage || reflect.isPackageClass || isGlobal(reflect.owner)
+        !definitelyLocal && isParentGlobal
       }
       def signature(reflect: ReflectSymbol): MetaSignature = {
         if (reflect.isMethod && !reflect.asMethod.isGetter) {
@@ -77,7 +77,7 @@ class Macros[C <: Context](val c: C) extends AdtReflection with AdtLiftables wit
         else if (reflect == c.mirror.RootClass || reflect == c.mirror.RootPackage) MetaSymbol.Root
         else MetaSymbol.Global(convert(reflect.owner), reflect.name.decodedName.toString, signature(reflect))
       }
-      require(isLocatable(reflect))
+      require(reflect != NoSymbol && isGlobal(reflect))
       Denotation.Precomputed(Prefix.Zero, convert(reflect))
     }
     def correlate(meta: MetaTree, reflect: ReflectTree): MetaTree = (meta, reflect) match {
