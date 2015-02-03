@@ -141,7 +141,7 @@ package scala.meta.internal.ast {
     }
     @ast class Project(qual: Type, selector: Type.Name) extends Type.Ref
     @ast class Singleton(ref: Term.Ref) extends Type.Ref {
-      require(ref.isPath)
+      require(ref.isPath || ref.isInstanceOf[Term.Super])
     }
     @ast class Apply(tpe: Type, args: Seq[Type] @nonEmpty) extends Type
     @ast class ApplyInfix(lhs: Type, op: Name, rhs: Type) extends Type
