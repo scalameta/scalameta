@@ -13,6 +13,9 @@ package object invariants {
   implicit class RequireDowncast[T](x: T) {
     def require[U <: T : ClassTag]: U = macro Macros.requireDowncast[U]
   }
+  implicit class RequireSome[T](x: Option[T]) {
+    def requireGet: T = macro Macros.requireGet
+  }
 }
 
 package invariants {
@@ -205,6 +208,14 @@ package invariants {
         val temp = ${c.untypecheck(x)}
         org.scalameta.invariants.require(temp != null && _root_.scala.reflect.classTag[$U].runtimeClass.isAssignableFrom(temp.getClass))
         temp.asInstanceOf[$U]
+      """
+    }
+    def requireGet: c.Tree = {
+      val q"$_($x)" = c.prefix.tree
+      q"""
+        val temp = ${c.untypecheck(x)}
+        org.scalameta.invariants.require(temp != null && temp.isDefined)
+        temp.get
       """
     }
   }
