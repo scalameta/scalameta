@@ -374,7 +374,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
     }
 
     import Helpers._
-    val TermQuote = "denied" // TODO: find a better approach
+    val TermQuote = "shadow scala.meta quasiquotes"
     in.asInstanceOf[g.Tree].ensureAttributed()
     in match {
       case g.EmptyTree =>

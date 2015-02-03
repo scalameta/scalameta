@@ -24,7 +24,7 @@ trait Expansion extends scala.reflect.internal.show.Printers {
   import analyzer.{MacroPlugin => NscMacroPlugin, _}
 
   def scalahostMacroExpand(typer: Typer, expandee: Tree, mode: Mode, pt: Type): Option[Tree] = {
-    val TermQuote = "denied" // TODO: this about a better approach
+    val TermQuote = "shadow scala.meta quasiquotes"
     val macroSignatures = expandee.symbol.annotations.filter(_.atp.typeSymbol == MacroImplAnnotation)
     val expanded = macroSignatures match {
       case _ :: AnnotationInfo(_, List(ScalahostSignature(implDdef)), _) :: Nil =>
