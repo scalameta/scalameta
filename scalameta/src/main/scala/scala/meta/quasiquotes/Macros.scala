@@ -65,8 +65,9 @@ class Macros[C <: Context](val c: C) extends AdtReflection with AdtLiftables wit
       }
       def signature(reflect: ReflectSymbol): MetaSignature = {
         if (reflect.isMethod && !reflect.asMethod.isGetter) {
-          val MethodType(params, ret) = reflect.info.erasure
-          MetaSignature.Method(params.map(convert), convert(ret.termSymbol.orElse(ret.typeSymbol)))
+          val g = c.universe.asInstanceOf[scala.tools.nsc.Global]
+          val jvmSignature = g.exitingDelambdafy(new g.genASM.JPlainBuilder(null, false).descriptor(reflect.asInstanceOf[g.Symbol]))
+          MetaSignature.Method(jvmSignature)
         }
         else if (reflect.isTerm) MetaSignature.Term
         else if (reflect.isType) MetaSignature.Type

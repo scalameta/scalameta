@@ -33,7 +33,7 @@ import scala.meta.internal.{ast => impl}
 object Signature {
   @leaf object Type extends Signature
   @leaf object Term extends Signature
-  @leaf class Method(params: Seq[Symbol], ret: Symbol) extends Signature
+  @leaf class Method(jvmSignature: String) extends Signature
 }
 
 @root trait Symbol

@@ -60,8 +60,7 @@ object Semantics {
           case Symbol.Root => "_root_"
           case Symbol.Global(owner, name, Signature.Type) => loop(owner) + "#" + name
           case Symbol.Global(owner, name, Signature.Term) => loop(owner) + "." + name
-          case Symbol.Global(owner, name, Signature.Method(Nil, ret)) => loop(owner) + "." + name + ":" + loop(ret)
-          case Symbol.Global(owner, name, Signature.Method(params, ret)) => loop(owner) + "." + name + "(" + params.map(loop).mkString(", ") + ")" + ":" + loop(ret)
+          case Symbol.Global(owner, name, Signature.Method(jvmSignature)) => loop(owner) + "." + name + jvmSignature
           case Symbol.Local(id) => "local#" + id
         }
         var result = loop(sym)
