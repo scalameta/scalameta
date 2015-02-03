@@ -24,8 +24,8 @@ object Semantics {
   implicit def semanticsTree[T <: api.Tree]: Semantics[T] = Semantics(x => {
     var _nextId = 1
     def nextId() = { val id = _nextId; _nextId = _nextId + 1; id }
-    val symbols = mutable.Map[Symbol, Int]()
-    def id(x: Symbol): Int = symbols.getOrElseUpdate(x, nextId())
+    val denots = mutable.Map[Denotation, Int]()
+    def id(x: Denotation): Int = denots.getOrElseUpdate(x, nextId())
     def body(x: api.Tree): String = {
       def whole(x: Any): String = x match {
         case x: String => enquote(x, DoubleQuotes)
@@ -45,7 +45,7 @@ object Semantics {
       val semantics = x match {
         case x: Name =>
           (x.denot, x.sigma) match {
-            case (Denotation.Precomputed(Prefix.Zero, sym: Symbol), Sigma.Naive) => s"[${id(sym)}]"
+            case (denot: Denotation.Precomputed, Sigma.Naive) => s"[${id(denot)}]"
             case (Denotation.Zero, Sigma.Zero) => "[0]"
             case _ => unreachable
           }
@@ -54,7 +54,13 @@ object Semantics {
       syntax + semantics
     }
     def footer(): String = {
-      def prettyprint(sym: Symbol): String = {
+      def prettyprintPrefix(pre: Prefix): String = {
+        pre match {
+          case Prefix.Zero => "0"
+          case Prefix.Type(tpe) => import scala.meta.dialects.Scala211; tpe.show[Code]
+        }
+      }
+      def prettyprintSymbol(sym: Symbol): String = {
         def loop(sym: Symbol): String = sym match {
           case Symbol.Zero => "0"
           case Symbol.Root => "_root_"
@@ -67,8 +73,11 @@ object Semantics {
         if (result != "_root_") result = result.stripPrefix("_root_.")
         result
       }
-      if (symbols.isEmpty) ""
-      else EOL + symbols.toList.sortBy{ case (k, v) => v}.map{ case (k, v) => s"[$v] ${prettyprint(k)}"}.mkString(EOL)
+      def prettyprintDenotation(denot: Denotation): String = {
+        prettyprintPrefix(denot.prefix) + "::" + prettyprintSymbol(denot.symbol)
+      }
+      if (denots.isEmpty) ""
+      else EOL + denots.toList.sortBy{ case (k, v) => v}.map{ case (k, v) => s"[$v] ${prettyprintDenotation(k)}"}.mkString(EOL)
     }
     s(body(x) + footer())
   })

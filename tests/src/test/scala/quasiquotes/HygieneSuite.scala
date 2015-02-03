@@ -8,20 +8,20 @@ class HygieneSuite extends FunSuite {
   test("q\"List\"") {
     assert(q"List".show[Semantics] === """
       |Term.Name("List")[1]
-      |[1] scala.package.List
+      |[1] 0::scala.package.List
     """.stripMargin.trim)
   }
   test("t\"List.type\"") {
     assert(t"List.type".show[Semantics] === """
       |Type.Singleton(Term.Name("List")[1])
-      |[1] scala.package.List
+      |[1] 0::scala.package.List
     """.stripMargin.trim)
   }
   test("t\"List[Int]\"") {
     assert(t"List[Int]".show[Semantics] === """
       |Type.Apply(Type.Name("List")[1], List(Type.Name("Int")[2]))
-      |[1] scala.package#List
-      |[2] scala#Int
+      |[1] 0::scala.package#List
+      |[2] 0::scala#Int
     """.stripMargin.trim)
   }
   test("not yet supported: t\"List[X]\"") {
