@@ -58,9 +58,9 @@ object build extends Build {
           <url>http://xeno.by</url>
         </developer>
         <developer>
-          <id>dedoz</id>
-          <name>Mikhail Mutcianko</name>
-          <url>http://github.com/dedoz</url>
+          <id>vjovanov</id>
+          <name>Vojin Jovanovic</name>
+          <url>http://github.com/vjovanov</url>
         </developer>
       </developers>
     )
