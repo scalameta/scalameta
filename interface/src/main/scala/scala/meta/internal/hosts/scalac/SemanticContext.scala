@@ -28,14 +28,33 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
   implicit val c: ScalametaSemanticContext = this
 
   def dialect: scala.meta.dialects.Scala211.type = scala.meta.dialects.Scala211
-  private[meta] def attrs(tree: papi.Tree): Seq[scala.meta.semantic.Attr] = tree match {
-    case tree: p.Term =>
-      val gtpeFromOriginal = tree.originalTree.map(_.tpe)
-      val gtpeFromDenotation = tree.originalPre.flatMap(gpre => tree.originalSym.map(gsym => gsym.infoIn(gpre)))
-      val gtpe = gtpeFromOriginal.orElse(gtpeFromOriginal).requireGet
-      val widenedGtpe = gtpe.widen // TODO: Type.widen in core is still ???, so we implicitly widen here
-      List(a.Type(toApproximateScalameta(widenedGtpe)))
-    case _ => Nil
+  private[meta] def attrs(tree: papi.Tree): Seq[scala.meta.semantic.Attr] = {
+    def attrType(tree: papi.Tree): List[scala.meta.semantic.Attr] = {
+      tree match {
+        case tree: p.Term =>
+          val gtpeFromOriginal = tree.originalTree.map(_.tpe)
+          val gtpeFromDenotation = tree.originalPre.flatMap(gpre => tree.originalSym.map(gsym => gsym.infoIn(gpre)))
+          val gtpe = gtpeFromOriginal.orElse(gtpeFromOriginal).requireGet
+          val widenedGtpe = gtpe.widen // TODO: Type.widen in core is still ???, so we implicitly widen here
+          List(a.Type(toApproximateScalameta(widenedGtpe)))
+        case _ =>
+          Nil
+      }
+    }
+    def attrDefns(tree: papi.Tree): List[scala.meta.semantic.Attr] = {
+      tree match {
+        case tree: p.Ref =>
+          import scala.meta.semantic.`package`._
+          val gpre = tree.originalPre.requireGet
+          val ppre = if (gpre != g.NoPrefix) Some(toApproximateScalameta(gpre)) else None
+          val gsyms = tree.originalSym.map(_.alternatives).requireGet
+          val pmembers = gsyms.map(toApproximateScalameta.apply).map(_.in(ppre))
+          List(a.Defns(pmembers))
+        case _ =>
+          Nil
+      }
+    }
+    attrType(tree) ++ attrDefns(tree)
   }
   private[meta] def root: papi.Scope = p.Pkg(p.Term.Name("_root_").withDenot(g.NoType, g.rootMirror.RootPackage), Nil)
   private[meta] def owner(tree: papi.Tree): papi.Scope = ???
