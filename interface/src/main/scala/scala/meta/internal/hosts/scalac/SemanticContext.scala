@@ -27,7 +27,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
   import scala.reflect.internal.Flags._
   implicit val c: ScalametaSemanticContext = this
 
-  def dialect: papi.Dialect = scala.meta.dialects.Scala211
+  def dialect: scala.meta.dialects.Scala211.type = scala.meta.dialects.Scala211
   def attrs(tree: papi.Tree): Seq[scala.meta.semantic.Attr] = tree match {
     case tree: p.Term =>
       val gtpeFromOriginal = tree.originalTree.map(_.tpe)
