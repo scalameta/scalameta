@@ -4,7 +4,7 @@
 import org.scalatest._
 import org.scalameta.tests._
 
-class ErrorSuite extends FunSuite {
+class PublicSuite extends FunSuite {
   test("macro APIs without import") {
     assert(typecheckError("""
       import scala.meta._
@@ -127,6 +127,27 @@ class ErrorSuite extends FunSuite {
       implicit val c: scala.meta.semantic.Context = ???
       (??? : Ref).defn
     """) === "")
+  }
+
+  test("semantic APIs working correctly with different input types") {
+    class dontExecuteJustCompile {
+      import scala.meta.semantic._
+      import scala.{meta => api}
+      import scala.meta.internal.{ast => impl}
+      implicit val c: Context = ???
+      val term1a: api.Term = ???
+      (term1a.tpe: api.Type)
+      val term2a: api.Term with api.Type = ???
+      (term2a.tpe: api.Type)
+      val term3a: api.Term.Ref = ???
+      (term3a.tpe: api.Type)
+      val term1b: impl.Term = ???
+      (term1b.tpe: api.Type)
+      val term2b: impl.Term with impl.Type = ???
+      (term2b.tpe: api.Type)
+      val term3b: impl.Term.Ref = ???
+      (term3b.tpe: api.Type)
+    }
   }
 
   // TODO: this error is somewhat confusing
