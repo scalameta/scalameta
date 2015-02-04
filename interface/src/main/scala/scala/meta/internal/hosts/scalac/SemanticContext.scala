@@ -982,7 +982,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
               case v: g.Type => unreachable
               case v: g.Symbol => unreachable
             }
-          case in @ g.TypeRef(pre, sym, args) if sym.isModuleClass || sym.isPackageClass =>
+          case in @ g.TypeRef(pre: g.SingletonType, sym, args) if sym.isModuleClass || sym.isPackageClass =>
             require(args.isEmpty)
             apply(g.SingleType(pre, sym.module))
           case in @ g.TypeRef(pre, sym, args) =>
