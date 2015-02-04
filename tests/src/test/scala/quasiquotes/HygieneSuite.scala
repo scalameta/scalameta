@@ -8,29 +8,39 @@ class HygieneSuite extends FunSuite {
   test("q\"List\"") {
     assert(q"List".show[Semantics] === """
       |Term.Name("List")[1]
-      |[1] `package`.type::scala.package.List
+      |[1] Type.Singleton(Term.Name("package")[2])::scala.package.List
+      |[2] Type.Singleton(Term.Name("scala")[3])::scala.package
+      |[3] Type.Singleton(Term.Name("<root>")[4])::scala
+      |[4] 0::_root_
     """.stripMargin.trim)
   }
   test("q\"scala.collection.immutable.List\"") {
     assert(q"scala.collection.immutable.List".show[Semantics] === """
       |Term.Select(Term.Select(Term.Select(Term.Name("scala")[1], Term.Name("collection")[2]), Term.Name("immutable")[3]), Term.Name("List")[4])
-      |[1] <root>.type::scala
-      |[2] scala.type::scala.collection
-      |[3] collection.type::scala.collection.immutable
-      |[4] immutable.type::scala.collection.immutable.List
+      |[1] Type.Singleton(Term.Name("<root>")[5])::scala
+      |[2] Type.Singleton(Term.Name("scala")[1])::scala.collection
+      |[3] Type.Singleton(Term.Name("collection")[2])::scala.collection.immutable
+      |[4] Type.Singleton(Term.Name("immutable")[3])::scala.collection.immutable.List
+      |[5] 0::_root_
     """.stripMargin.trim)
   }
   test("t\"List.type\"") {
     assert(t"List.type".show[Semantics] === """
       |Type.Singleton(Term.Name("List")[1])
-      |[1] `package`.type::scala.package.List
+      |[1] Type.Singleton(Term.Name("package")[2])::scala.package.List
+      |[2] Type.Singleton(Term.Name("scala")[3])::scala.package
+      |[3] Type.Singleton(Term.Name("<root>")[4])::scala
+      |[4] 0::_root_
     """.stripMargin.trim)
   }
   test("t\"List[Int]\"") {
     assert(t"List[Int]".show[Semantics] === """
       |Type.Apply(Type.Name("List")[1], List(Type.Name("Int")[2]))
-      |[1] `package`.type::scala.package#List
-      |[2] scala.type::scala#Int
+      |[1] Type.Singleton(Term.Name("package")[3])::scala.package#List
+      |[2] Type.Singleton(Term.Name("scala")[4])::scala#Int
+      |[3] Type.Singleton(Term.Name("scala")[4])::scala.package
+      |[4] Type.Singleton(Term.Name("<root>")[5])::scala
+      |[5] 0::_root_
     """.stripMargin.trim)
   }
   test("not yet supported: t\"List[X]\"") {

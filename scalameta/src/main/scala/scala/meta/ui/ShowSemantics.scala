@@ -57,7 +57,7 @@ object Semantics {
       def prettyprintPrefix(pre: Prefix): String = {
         pre match {
           case Prefix.Zero => "0"
-          case Prefix.Type(tpe) => import scala.meta.dialects.Scala211; tpe.show[Code]
+          case Prefix.Type(tpe) => body(tpe)
         }
       }
       def prettyprintSymbol(sym: Symbol): String = {
@@ -76,8 +76,11 @@ object Semantics {
       def prettyprintDenotation(denot: Denotation): String = {
         prettyprintPrefix(denot.prefix) + "::" + prettyprintSymbol(denot.symbol)
       }
+      var prevSize = 0
+      do { prevSize = denots.size; denots.keys.toList.foreach(prettyprintDenotation) }
+      while (denots.size != prevSize)
       if (denots.isEmpty) ""
-      else EOL + denots.toList.sortBy{ case (k, v) => v}.map{ case (k, v) => s"[$v] ${prettyprintDenotation(k)}"}.mkString(EOL)
+      else EOL + denots.toList.sortBy{ case (k, v) => v }.map{ case (k, v) => s"[$v] ${prettyprintDenotation(k)}" }.mkString(EOL)
     }
     s(body(x) + footer())
   })
