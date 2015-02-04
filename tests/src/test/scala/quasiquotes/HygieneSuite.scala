@@ -11,6 +11,15 @@ class HygieneSuite extends FunSuite {
       |[1] `package`.type::scala.package.List
     """.stripMargin.trim)
   }
+  test("q\"scala.collection.immutable.List\"") {
+    assert(q"scala.collection.immutable.List".show[Semantics] === """
+      |Term.Select(Term.Select(Term.Select(Term.Name("scala")[1], Term.Name("collection")[2]), Term.Name("immutable")[3]), Term.Name("List")[4])
+      |[1] <root>.type::scala
+      |[2] scala.type::scala.collection
+      |[3] collection.type::scala.collection.immutable
+      |[4] immutable.type::scala.collection.immutable.List
+    """.stripMargin.trim)
+  }
   test("t\"List.type\"") {
     assert(t"List.type".show[Semantics] === """
       |Type.Singleton(Term.Name("List")[1])

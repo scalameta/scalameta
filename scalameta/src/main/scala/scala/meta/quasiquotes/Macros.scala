@@ -15,6 +15,8 @@ import scala.meta.ui._
 // so that quasiquotes can be interpreted by any host, not just scalac
 class Macros[C <: Context](val c: C) extends AdtReflection with AdtLiftables with AstLiftables {
   val u: c.universe.type = c.universe
+  import c.internal._
+  import decorators._
   import c.universe.{Tree => _, Symbol => _, Type => _, _}
   import c.universe.{Tree => ReflectTree, Symbol => ReflectSymbol, Type => ReflectType}
   import scala.meta.{Tree => MetaTree, Type => MetaType}
@@ -79,11 +81,15 @@ class Macros[C <: Context](val c: C) extends AdtReflection with AdtLiftables wit
           else if (sym.isConstructor) defaultPrefix(sym.owner)
           else sym.owner.asInstanceOf[scala.reflect.internal.Symbols#Symbol].thisType.asInstanceOf[ReflectType]
         }
+        def singletonType(pre: ReflectType, sym: ReflectSymbol): MetaType = {
+          impl.Type.Singleton(impl.Term.Name(sym.name.toString, denot(pre, sym), Sigma.Naive))
+        }
         val pre1 = pre.orElse(defaultPrefix(sym))
         pre1 match {
           case NoPrefix => MetaPrefix.Zero
-          case ThisType(sym) => MetaPrefix.Type(impl.Type.Singleton(impl.Term.Name(sym.name.toString, denot(NoType, sym), Sigma.Naive)))
-          case SingleType(pre, sym) => MetaPrefix.Type(impl.Type.Singleton(impl.Term.Name(sym.name.toString, denot(pre, sym), Sigma.Naive)))
+          case ThisType(sym) => MetaPrefix.Type(singletonType(NoType, sym))
+          case SingleType(pre, sym) => MetaPrefix.Type(singletonType(pre, sym))
+          case TypeRef(pre, sym, Nil) if sym.isModule || sym.isModuleClass || sym.isPackage || sym.isPackageClass => MetaPrefix.Type(singletonType(pre, sym))
           case _ => sys.error(s"unsupported type ${pre1}, designation = ${pre1.getClass}, structure = ${showRaw(pre1, printIds = true, printTypes = true)}")
         }
       }
@@ -103,7 +109,8 @@ class Macros[C <: Context](val c: C) extends AdtReflection with AdtLiftables wit
       case (meta: impl.Type.Name, reflect: RefTree) =>
         impl.Type.Name(meta.value, denot(reflect.qualifier.tpe, reflect.symbol), Sigma.Naive)
       case (meta: impl.Ref, reflect: Ident) =>
-        correlate(meta, Select(Ident(reflect.symbol.owner), reflect.symbol.name))
+        val fakePrefix = Ident(reflect.symbol.owner).setType(reflect.symbol.owner.asInstanceOf[scala.reflect.internal.Symbols#Symbol].tpe.asInstanceOf[ReflectType])
+        correlate(meta, Select(fakePrefix, reflect.symbol.name).setSymbol(reflect.symbol).setType(reflect.tpe))
       case (meta: impl.Term.Select, reflect: RefTree) =>
         val qual = correlate(meta.qual, reflect.qualifier).require[impl.Term]
         val name = correlate(meta.selector, reflect).require[impl.Term.Name]
@@ -135,9 +142,9 @@ class Macros[C <: Context](val c: C) extends AdtReflection with AdtLiftables wit
         // even on three simple tests, scalac's typecheck has managed to screw me up multiple times
         // requiring crazy workarounds for really trivial situations
         def undealias(symbol: ReflectSymbol): ReflectSymbol = {
-          if (symbol == ListModule) ScalaList
-          else if (symbol == NilModule) ScalaNil
-          else if (symbol == SeqModule) ScalaSeq
+          if (symbol == ListModule && !meta.toString.contains(".List")) ScalaList
+          else if (symbol == NilModule && !meta.toString.contains(".Nil")) ScalaNil
+          else if (symbol == SeqModule && !meta.toString.contains(".Seq")) ScalaSeq
           else symbol
         }
         var result = c.typecheck(reflectParse(meta.toString), mode = reflectMode, silent = false)
