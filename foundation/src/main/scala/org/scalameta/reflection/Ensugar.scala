@@ -3,7 +3,7 @@ package org.scalameta.reflection
 import scala.tools.nsc.Global
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
-import scala.org.scalameta.reflection.Helpers
+import scala.org.scalameta.reflection.TreeHelpers
 import org.scalameta.unreachable
 import org.scalameta.invariants._
 
@@ -93,12 +93,18 @@ trait Ensugar {
         trait SingleEnsugarer {
           def unapply(tree: Tree): Option[Tree] = {
             val result = ensugar(tree)
-            if (result.nonEmpty && System.getProperty("ensugar.debug") != null) {
-              val name = this.getClass.getName.stripSuffix("$").stripPrefix("org.scalameta.reflection.Ensugar$transformer$2$")
-              def summary(tree: Tree) = tree.toString.replace("\n", "").take(40)
-              Console.err.println(s"$name: ${summary(tree)} => ${summary(result.get)}")
+            result match {
+              case Some(result) =>
+                if (System.getProperty("ensugar.debug") != null) {
+                  val name = this.getClass.getName.stripSuffix("$").stripPrefix("org.scalameta.reflection.Ensugar$transformer$2$")
+                  def summary(tree: Tree) = tree.toString.replace("\n", "").take(40)
+                  Console.err.println(s"$name: ${summary(tree)} => ${summary(result)}")
+                }
+                if (result.tpe != tree.tpe) Some(duplicateAndKeepPositions(result).setType(tree.tpe))
+                else Some(result)
+              case _ =>
+                None
             }
-            result
           }
           def ensugar(tree: Tree): Option[Tree]
         }

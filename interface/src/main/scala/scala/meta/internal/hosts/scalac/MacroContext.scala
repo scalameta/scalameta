@@ -8,8 +8,8 @@ import scala.meta.internal.hosts.scalac.{SemanticContext => ScalahostSemanticCon
 
 class MacroContext[G <: ScalaGlobal](val scalareflectMacroContext: ScalareflectMacroContext)
 extends ScalahostSemanticContext[G](scalareflectMacroContext.universe.asInstanceOf[G]) with ScalametaMacroContext {
-  def warning(msg: String): Unit = ???
-  def error(msg: String): Unit = ???
-  def abort(msg: String): Nothing = ???
-  def resources: Map[String, Array[Byte]] = ???
+  private[meta] def warning(msg: String): Unit = ???
+  private[meta] def error(msg: String): Unit = ???
+  private[meta] def abort(msg: String): Nothing = ???
+  private[meta] def resources: Map[String, Array[Byte]] = ???
 }

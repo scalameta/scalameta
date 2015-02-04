@@ -6,7 +6,7 @@ import scala.reflect.internal.Flags
 import scala.collection.mutable
 import _root_.org.scalameta.invariants._
 
-trait Helpers {
+trait TreeHelpers {
   self: _root_.org.scalameta.reflection.GlobalToolkit =>
 
   import global.{require => _, _}

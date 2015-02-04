@@ -147,7 +147,7 @@ class ConverterMacros(val c: whitebox.Context) extends MacroToolkit {
                 ..${prelude.collect { case imp: Import => imp }}
                 in match { case ..${instance.clauses} }
               }
-              out.appendScratchpad(in)
+              out.withOriginal(in)
             } catch {
               case err: _root_.java.lang.AssertionError => logFailure(); throw err
               case err: _root_.org.scalameta.UnreachableError.type => logFailure(); throw err

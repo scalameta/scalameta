@@ -29,7 +29,7 @@ trait Typechecking {
   }
 
   def scalahostTypedMacroBody(typer: Typer, ddef: DefDef): Option[Tree] = {
-    val TermQuote = "denied" // TODO: find a better solution
+    val TermQuote = "shadow scala.meta quasiquotes"
     ddef match {
       case DefDef(mods, name, tparams, vparamss, _, ScalahostMacroBody(body)) if mods.hasFlag(MACRO) =>
         def cleanupMods(mods: Modifiers) = mods &~ IMPLICIT
