@@ -28,7 +28,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
   implicit val c: ScalametaSemanticContext = this
 
   def dialect: scala.meta.dialects.Scala211.type = scala.meta.dialects.Scala211
-  def attrs(tree: papi.Tree): Seq[scala.meta.semantic.Attr] = tree match {
+  private[meta] def attrs(tree: papi.Tree): Seq[scala.meta.semantic.Attr] = tree match {
     case tree: p.Term =>
       val gtpeFromOriginal = tree.originalTree.map(_.tpe)
       val gtpeFromDenotation = tree.originalPre.flatMap(gpre => tree.originalSym.map(gsym => gsym.infoIn(gpre)))
@@ -37,24 +37,24 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
       List(a.Type(toApproximateScalameta(widenedGtpe)))
     case _ => Nil
   }
-  def root: papi.Scope = p.Pkg(p.Term.Name("_root_").withDenot(g.NoType, g.rootMirror.RootPackage), Nil)
-  def owner(tree: papi.Tree): papi.Scope = ???
-  def members(scope: papi.Scope): Seq[papi.Tree] = ???
-  def isSubType(tpe1: papi.Type, tpe2: papi.Type): Boolean = ???
-  def lub(tpes: Seq[papi.Type]): papi.Type = ???
-  def glb(tpes: Seq[papi.Type]): papi.Type = ???
-  def parents(member: papi.Member): Seq[papi.Member] = ???
-  def children(member: papi.Member): Seq[papi.Member] = ???
+  private[meta] def root: papi.Scope = p.Pkg(p.Term.Name("_root_").withDenot(g.NoType, g.rootMirror.RootPackage), Nil)
+  private[meta] def owner(tree: papi.Tree): papi.Scope = ???
+  private[meta] def members(scope: papi.Scope): Seq[papi.Tree] = ???
+  private[meta] def isSubType(tpe1: papi.Type, tpe2: papi.Type): Boolean = ???
+  private[meta] def lub(tpes: Seq[papi.Type]): papi.Type = ???
+  private[meta] def glb(tpes: Seq[papi.Type]): papi.Type = ???
+  private[meta] def parents(member: papi.Member): Seq[papi.Member] = ???
+  private[meta] def children(member: papi.Member): Seq[papi.Member] = ???
 
   // NOTE: this is an exhaustive list of payloads that can be attached to scratchpads of converted trees
-  sealed trait ScratchpadDatum
-  object ScratchpadDatum {
+  private sealed trait ScratchpadDatum
+  private object ScratchpadDatum {
     case class Denotation(gpre: g.Type, gsym: g.Symbol) extends ScratchpadDatum
     case class Original(goriginal: Any) extends ScratchpadDatum
   }
 
   private val gsymToHsymCache = mutable.Map[g.Symbol, h.Symbol]()
-  implicit class RichScratchpadTree[T <: p.Tree](ptree: T) {
+  private implicit class RichScratchpadTree[T <: p.Tree](ptree: T) {
     // TODO: `convert` is somewhat copy/pasted from core/quasiquotes/Macros.scala
     // however, there's no way for us to share those implementations until we bootstrap
     private def convert(gsym: g.Symbol): h.Symbol = gsymToHsymCache.getOrElseUpdate(gsym, {
@@ -838,11 +838,11 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
   private val gtpeToPtpeCache = mutable.Map[g.Type, p.Type]()
   private val gsymToPmemberCache = mutable.Map[g.Symbol, p.Member]()
   object toApproximateScalameta {
-    def pannot(gannot: g.AnnotationInfo): p.Mod.Annot = {
+    private def pannot(gannot: g.AnnotationInfo): p.Mod.Annot = {
       val g.AnnotationInfo(gatp, gargs, gassocs) = gannot
       p.Mod.Annot(???)
     }
-    def pannots(gannots: List[g.AnnotationInfo]): Seq[p.Mod.Annot] = {
+    private def pannots(gannots: List[g.AnnotationInfo]): Seq[p.Mod.Annot] = {
       gannots.filter(gannot => {
         val gsym = gannot.tree.tpe.typeSymbol
         def isOldMacroSignature = gsym.fullName == "scala.reflect.macros.internal.macroImpl"
@@ -850,7 +850,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
         !isOldMacroSignature && !isNewMacroSignature
       }).map(pannot)
     }
-    def pmods(gsym0: g.Symbol): Seq[p.Mod] = {
+    private def pmods(gsym0: g.Symbol): Seq[p.Mod] = {
       // TODO: bring this up to sync with toScalameta.pmods
       val gsym = gsym0.getterIn(gsym0.owner).orElse(gsym0)
       val pmods = scala.collection.mutable.ListBuffer[p.Mod]()
@@ -867,31 +867,31 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
       if (gsym.isLazy) pmods += p.Mod.Lazy()
       pmods.toList
     }
-    def pvparamtpe(gtpe: g.Type): p.Type.Arg = {
+    private def pvparamtpe(gtpe: g.Type): p.Type.Arg = {
       def unwrap(ptpe: p.Type): p.Type = ptpe.asInstanceOf[p.Type.Apply].args.head
       if (g.definitions.isRepeatedParamType(gtpe)) p.Type.Arg.Repeated(unwrap(apply(gtpe)))
       else if (g.definitions.isByNameParamType(gtpe)) p.Type.Arg.ByName(unwrap(apply(gtpe)))
       else apply(gtpe)
     }
-    def ptypebounds(gtpe: g.Type): p.Type.Bounds = gtpe match {
+    private def ptypebounds(gtpe: g.Type): p.Type.Bounds = gtpe match {
       case g.TypeBounds(glo, ghi) => p.Type.Bounds(if (glo =:= g.typeOf[Nothing]) None else Some(apply(glo)), if (ghi =:= g.typeOf[Any]) None else Some(apply(ghi)))
       case _ => unreachable
     }
-    def pvparam(gsym: g.Symbol): p.Term.Param = {
+    private def pvparam(gsym: g.Symbol): p.Term.Param = {
       require(gsym.isTerm)
       // TODO: discern inferred and explicitly specified vparamtpe
       // TODO: somehow figure out the default argument from a parameter symbol if it is specified
       p.Term.Param(pmods(gsym), Some(gsym.asTerm.rawcvt(g.Ident(gsym))), Some(pvparamtpe(gsym.info.depoly)), None).withOriginal(gsym)
     }
-    def pvparams(gsyms: List[g.Symbol]): Seq[p.Term.Param] = gsyms.map(pvparam)
-    def pvparamss(gsymss: List[List[g.Symbol]]): Seq[Seq[p.Term.Param]] = gsymss.map(pvparams)
-    def ptparam(gsym: g.Symbol): p.Type.Param = {
+    private def pvparams(gsyms: List[g.Symbol]): Seq[p.Term.Param] = gsyms.map(pvparam)
+    private def pvparamss(gsymss: List[List[g.Symbol]]): Seq[Seq[p.Term.Param]] = gsymss.map(pvparams)
+    private def ptparam(gsym: g.Symbol): p.Type.Param = {
       // TODO: undo desugarings of context and view bounds
       require(gsym.isType)
       val pname = if (gsym.name != g.tpnme.WILDCARD) Some(gsym.asType.rawcvt(g.Ident(gsym))) else None
       p.Type.Param(pmods(gsym), pname, ptparams(gsym.typeParams), Nil, Nil, ptypebounds(gsym.info.depoly)).withOriginal(gsym)
     }
-    def ptparams(gsyms: List[g.Symbol]): Seq[p.Type.Param] = gsyms.map(ptparam)
+    private def ptparams(gsyms: List[g.Symbol]): Seq[p.Type.Param] = gsyms.map(ptparam)
     def apply(gtpe: g.Type): p.Type = gtpeToPtpeCache.getOrElseUpdate(gtpe, {
       def loop(gtpe: g.Type): p.Type = {
         val in = gtpe
