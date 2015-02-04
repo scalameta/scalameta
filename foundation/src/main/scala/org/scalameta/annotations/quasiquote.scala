@@ -48,8 +48,8 @@ class QuasiquoteMacros(val c: Context) {
             // A natural extension to this would be to allow any static value, not just predefined dialects.
             // Later on, we could further relax this restriction by doing parsing for a superset of all dialects and then
             // delaying validation of resulting ASTs until runtime.
-            if (dialect.symbol == c.mirror.staticModule("_root_.scala.meta.dialects.Scala211")) _root_.scala.meta.dialects.Scala211
-            else if (dialect.symbol == c.mirror.staticModule("_root_.scala.meta.dialects.Dotty")) _root_.scala.meta.dialects.Dotty
+            if (dialect.tpe.termSymbol == c.mirror.staticModule("_root_.scala.meta.dialects.Scala211")) _root_.scala.meta.dialects.Scala211
+            else if (dialect.tpe.termSymbol == c.mirror.staticModule("_root_.scala.meta.dialects.Dotty")) _root_.scala.meta.dialects.Dotty
             else c.abort(c.enclosingPosition, "can't use the " + dialect + " dialect in quasiquotes")
           }
           helper.apply(c.macroApplication, $qparser)

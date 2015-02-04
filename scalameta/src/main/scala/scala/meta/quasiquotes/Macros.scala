@@ -8,16 +8,18 @@ import org.scalameta.adt.{Liftables => AdtLiftables, AdtReflection}
 import org.scalameta.ast.{Liftables => AstLiftables}
 import org.scalameta.invariants._
 import org.scalameta.unreachable
-import scala.meta.internal.hygiene.{Symbol => MetaSymbol, Signature => MetaSignature, _}
+import scala.meta.internal.hygiene.{Symbol => MetaSymbol, Prefix => MetaPrefix, Signature => MetaSignature, _}
 import scala.meta.ui._
 
 // TODO: ideally, we would like to bootstrap these macros on top of scala.meta
 // so that quasiquotes can be interpreted by any host, not just scalac
 class Macros[C <: Context](val c: C) extends AdtReflection with AdtLiftables with AstLiftables {
   val u: c.universe.type = c.universe
-  import c.universe.{Tree => _, Symbol => _, _}
-  import c.universe.{Tree => ReflectTree, Symbol => ReflectSymbol}
-  import scala.meta.{Tree => MetaTree}
+  import c.internal._
+  import decorators._
+  import c.universe.{Tree => _, Symbol => _, Type => _, _}
+  import c.universe.{Tree => ReflectTree, Symbol => ReflectSymbol, Type => ReflectType}
+  import scala.meta.{Tree => MetaTree, Type => MetaType}
   import scala.meta.internal.{ast => impl}
   val TermQuote = "shadow scala.meta quasiquotes"
   case class Dummy(id: String, ndots: Int, arg: ReflectTree)
@@ -57,38 +59,58 @@ class Macros[C <: Context](val c: C) extends AdtReflection with AdtLiftables wit
   }
 
   private def attributeSkeleton(meta: MetaTree): MetaTree = {
-    def denot(reflect: ReflectSymbol): Denotation = {
-      def isLocatable(reflect: ReflectSymbol): Boolean = {
-        def isNotBanned = reflect != NoSymbol && !reflect.name.toString.startsWith("<local ")
-        def hasLocatableParent = reflect.isPackage || reflect.isPackageClass || isLocatable(reflect.owner)
-        isNotBanned && hasLocatableParent
+    def denot(pre: ReflectType, sym: ReflectSymbol): Denotation = {
+      def isGlobal(sym: ReflectSymbol): Boolean = {
+        def definitelyLocal = sym == NoSymbol || sym.name.toString.startsWith("<local ") || (sym.owner.isMethod && !sym.isParameter)
+        def isParentGlobal = sym.isPackage || sym.isPackageClass || isGlobal(sym.owner)
+        !definitelyLocal && isParentGlobal
       }
-      def signature(reflect: ReflectSymbol): MetaSignature = {
-        if (reflect.isMethod && !reflect.asMethod.isGetter) {
-          val MethodType(params, ret) = reflect.info.erasure
-          MetaSignature.Method(params.map(convert), convert(ret.termSymbol.orElse(ret.typeSymbol)))
+      def signature(sym: ReflectSymbol): MetaSignature = {
+        if (sym.isMethod && !sym.asMethod.isGetter) {
+          val g = c.universe.asInstanceOf[scala.tools.nsc.Global]
+          val jvmSignature = g.exitingDelambdafy(new g.genASM.JPlainBuilder(null, false).descriptor(sym.asInstanceOf[g.Symbol]))
+          MetaSignature.Method(jvmSignature)
         }
-        else if (reflect.isTerm) MetaSignature.Term
-        else if (reflect.isType) MetaSignature.Type
+        else if (sym.isTerm) MetaSignature.Term
+        else if (sym.isType) MetaSignature.Type
         else unreachable
       }
-      def convert(reflect: ReflectSymbol): MetaSymbol = {
-        if (reflect.isModuleClass || reflect.isPackageClass) convert(reflect.asClass.module)
-        else if (reflect == c.mirror.RootClass || reflect == c.mirror.RootPackage) MetaSymbol.Root
-        else MetaSymbol.Global(convert(reflect.owner), reflect.name.decodedName.toString, signature(reflect))
+      def convertPrefix(pre: ReflectType): MetaPrefix = {
+        def defaultPrefix(sym: ReflectSymbol): ReflectType = {
+          if (sym.isType && sym.asType.isExistential && sym.asType.isParameter) NoPrefix
+          else if (sym.isConstructor) defaultPrefix(sym.owner)
+          else sym.owner.asInstanceOf[scala.reflect.internal.Symbols#Symbol].thisType.asInstanceOf[ReflectType]
+        }
+        def singletonType(pre: ReflectType, sym: ReflectSymbol): MetaType = {
+          impl.Type.Singleton(impl.Term.Name(sym.name.toString, denot(pre, sym), Sigma.Naive))
+        }
+        val pre1 = pre.orElse(defaultPrefix(sym))
+        pre1 match {
+          case NoPrefix => MetaPrefix.Zero
+          case ThisType(sym) => MetaPrefix.Type(singletonType(NoType, sym))
+          case SingleType(pre, sym) => MetaPrefix.Type(singletonType(pre, sym))
+          case TypeRef(pre, sym, Nil) if sym.isModule || sym.isModuleClass || sym.isPackage || sym.isPackageClass => MetaPrefix.Type(singletonType(pre, sym))
+          case _ => sys.error(s"unsupported type ${pre1}, designation = ${pre1.getClass}, structure = ${showRaw(pre1, printIds = true, printTypes = true)}")
+        }
       }
-      require(isLocatable(reflect))
-      Denotation.Precomputed(Prefix.Zero, convert(reflect))
+      def convertSymbol(sym: ReflectSymbol): MetaSymbol = {
+        if (sym.isModuleClass || sym.isPackageClass) convertSymbol(sym.asClass.module)
+        else if (sym == c.mirror.RootClass || sym == c.mirror.RootPackage) MetaSymbol.Root
+        else MetaSymbol.Global(convertSymbol(sym.owner), sym.name.decodedName.toString, signature(sym))
+      }
+      require(pre != null && sym != NoSymbol && isGlobal(sym))
+      Denotation.Precomputed(convertPrefix(pre), convertSymbol(sym))
     }
     def correlate(meta: MetaTree, reflect: ReflectTree): MetaTree = (meta, reflect) match {
       case (meta, reflect: TypeTree) =>
         correlate(meta, reflect.original)
       case (meta: impl.Term.Name, reflect: RefTree) =>
-        impl.Term.Name(meta.value, denot(reflect.symbol), Sigma.Naive)
+        impl.Term.Name(meta.value, denot(reflect.qualifier.tpe, reflect.symbol), Sigma.Naive)
       case (meta: impl.Type.Name, reflect: RefTree) =>
-        impl.Type.Name(meta.value, denot(reflect.symbol), Sigma.Naive)
+        impl.Type.Name(meta.value, denot(reflect.qualifier.tpe, reflect.symbol), Sigma.Naive)
       case (meta: impl.Ref, reflect: Ident) =>
-        correlate(meta, Select(Ident(reflect.symbol.owner), reflect.symbol.name))
+        val fakePrefix = Ident(reflect.symbol.owner).setType(reflect.symbol.owner.asInstanceOf[scala.reflect.internal.Symbols#Symbol].tpe.asInstanceOf[ReflectType])
+        correlate(meta, Select(fakePrefix, reflect.symbol.name).setSymbol(reflect.symbol).setType(reflect.tpe))
       case (meta: impl.Term.Select, reflect: RefTree) =>
         val qual = correlate(meta.qual, reflect.qualifier).require[impl.Term]
         val name = correlate(meta.selector, reflect).require[impl.Term.Name]
@@ -108,6 +130,7 @@ class Macros[C <: Context](val c: C) extends AdtReflection with AdtLiftables wit
         sys.error("correlation of " + meta.productPrefix + " and " + reflect.productPrefix + " is not supported yet")
     }
     val denotDebug = sys.props("denot.debug") != null
+    val denotWarn = sys.props("denot.warn") != null
     if (denotDebug) { println("meta = " + meta); println(meta.show[Raw]) }
     try {
       val (reflectParse, reflectMode) = meta match {
@@ -120,9 +143,9 @@ class Macros[C <: Context](val c: C) extends AdtReflection with AdtLiftables wit
         // even on three simple tests, scalac's typecheck has managed to screw me up multiple times
         // requiring crazy workarounds for really trivial situations
         def undealias(symbol: ReflectSymbol): ReflectSymbol = {
-          if (symbol == ListModule) ScalaList
-          else if (symbol == NilModule) ScalaNil
-          else if (symbol == SeqModule) ScalaSeq
+          if (symbol == ListModule && !meta.toString.contains(".List")) ScalaList
+          else if (symbol == NilModule && !meta.toString.contains(".Nil")) ScalaNil
+          else if (symbol == SeqModule && !meta.toString.contains(".Seq")) ScalaSeq
           else symbol
         }
         var result = c.typecheck(reflectParse(meta.toString), mode = reflectMode, silent = false)
@@ -135,7 +158,10 @@ class Macros[C <: Context](val c: C) extends AdtReflection with AdtLiftables wit
       if (denotDebug) { println("result = " + meta1.show[Semantics]) }
       meta1
     } catch {
-      case ex: Throwable => if (denotDebug) ex.printStackTrace(); throw ex
+      case ex: Throwable =>
+        if (denotDebug) ex.printStackTrace()
+        if (denotWarn) c.warning(c.enclosingPosition, "implementation restriction: failed to attribute the quasiquote, proceeding in unhygienic mode")
+        throw ex
     }
   }
 

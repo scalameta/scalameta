@@ -76,6 +76,8 @@ package object semantic {
   sealed trait HasPrefix[T <: Tree, U <: Type]
   object HasPrefix {
     implicit def Ref[T <: meta.Ref]: HasPrefix[T, meta.Type] = new HasPrefix[T, meta.Type] {}
+    implicit def Member[T <: meta.Member]: HasPrefix[T, meta.Type] = new HasPrefix[T, meta.Type] {}
+    implicit def TermName[T <: meta.Term.Name]: HasPrefix[T, meta.Type] = new HasPrefix[T, meta.Type] {}
   }
 
   implicit class SemanticPrefixableOps[T <: Tree, U <: meta.Type](val tree: T)(implicit ev: HasPrefix[T, U]) {
@@ -105,8 +107,6 @@ package object semantic {
   // ===========================
 
   implicit class SemanticMemberOps(val tree: Member) extends AnyVal {
-    @hosted def prefix: Type = ???
-    @hosted def in(prefix: Type): Member = ???
     @hosted def ref: Ref = {
       tree.require[impl.Member] match {
         case tree: impl.Term.Name => tree
@@ -210,7 +210,6 @@ package object semantic {
   }
 
   implicit class SemanticTermMemberOps(val tree: Member.Term) extends AnyVal {
-    @hosted def in(prefix: Type): Member.Term = ???
     @hosted def ref: Term.Ref = new SemanticMemberOps(tree).ref.require[Term.Ref]
     @hosted def parents: Seq[Member.Term] = new SemanticMemberOps(tree).parents.require[Seq[Member.Term]]
     @hosted def children: Seq[Member.Term] = new SemanticMemberOps(tree).children.require[Seq[Member.Term]]
@@ -218,7 +217,6 @@ package object semantic {
   }
 
   implicit class SemanticTypeMemberOps(val tree: Member.Type) extends AnyVal {
-    @hosted def in(prefix: Type): Member.Type = ???
     @hosted def ref: Type.Ref = new SemanticMemberOps(tree).ref.require[Type.Ref]
     @hosted def parents: Seq[Member.Type] = new SemanticMemberOps(tree).parents.require[Seq[Member.Type]]
     @hosted def children: Seq[Member.Type] = new SemanticMemberOps(tree).parents.require[Seq[Member.Type]]

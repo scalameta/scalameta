@@ -7,7 +7,7 @@ import scala.meta.internal.hygiene.Symbol
 import org.scalameta.annotations._
 import scala.annotation._
 
-@opaque
+@opaque(exclude = "dialect")
 @implicitNotFound("this method requires an implicit scala.meta.semantic.Context")
 trait Context {
   def dialect: Dialect
