@@ -130,6 +130,7 @@ class Macros[C <: Context](val c: C) extends AdtReflection with AdtLiftables wit
         sys.error("correlation of " + meta.productPrefix + " and " + reflect.productPrefix + " is not supported yet")
     }
     val denotDebug = sys.props("denot.debug") != null
+    val denotWarn = sys.props("denot.warn") != null
     if (denotDebug) { println("meta = " + meta); println(meta.show[Raw]) }
     try {
       val (reflectParse, reflectMode) = meta match {
@@ -157,7 +158,10 @@ class Macros[C <: Context](val c: C) extends AdtReflection with AdtLiftables wit
       if (denotDebug) { println("result = " + meta1.show[Semantics]) }
       meta1
     } catch {
-      case ex: Throwable => if (denotDebug) ex.printStackTrace(); throw ex
+      case ex: Throwable =>
+        if (denotDebug) ex.printStackTrace()
+        if (denotWarn) c.warning(c.enclosingPosition, "implementation restriction: failed to attribute the quasiquote, proceeding in unhygienic mode")
+        throw ex
     }
   }
 
