@@ -15,7 +15,7 @@ class InfrastructureSuite extends FunSuite {
     val tree = q"foo.bar"
     tree.toString // check well-formedness
     implicit object FooContext extends Context {
-      private[meta] def dialect: Dialect = Scala211
+      def dialect: Dialect = Scala211
       private[meta] def attrs(tree: Tree): Seq[Attr] = ???
       private[meta] def root: Scope = ???
       private[meta] def owner(tree: Tree): Scope = ???
