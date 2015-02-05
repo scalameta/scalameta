@@ -1002,7 +1002,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
             if (args.isEmpty) ref
             else p.Type.Apply(ref, args.map(loop))
           case g.RefinedType(parents, decls) =>
-            val pstmts = decls.sorted.toList.map(gsym => apply(g.RefinedType(parents, g.EmptyScope), gsym).asInstanceOf[p.Stat])
+            val pstmts = decls.sorted.toList.map(gsym => apply(in, gsym).asInstanceOf[p.Stat])
             p.Type.Compound(parents.map(loop), pstmts)
           case g.ExistentialType(quantified, underlying) =>
             // TODO: infer type placeholders where they were specified explicitly
