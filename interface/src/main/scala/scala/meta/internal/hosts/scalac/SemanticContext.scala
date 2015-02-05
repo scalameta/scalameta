@@ -21,7 +21,7 @@ import scala.meta.internal.{hygiene => h}
 import scala.meta.semantic.{Attr => a}
 import java.util.UUID.randomUUID
 
-class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticContext with GlobalToolkit {
+class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticContext with GlobalToolkit with MetaToolkit {
   lazy val global: g.type = g
   import g.Quasiquote
   import scala.reflect.internal.Flags._
@@ -99,7 +99,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
       val hsym = convert(gsym)
       h.Denotation.Precomputed(hpre, hsym)
     }
-    def withDenot(gsym: g.Symbol): T = {
+    def withDenot(gsym: g.Symbol)(implicit ev: CanHaveDenot[T]): T = {
       def defaultpre(gsym: g.Symbol): g.Type = {
         if (gsym.hasFlag(EXISTENTIAL | PARAM)) g.NoPrefix
         else if (gsym.isConstructor) defaultpre(gsym.owner)
@@ -107,7 +107,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
       }
       ptree.withDenot(defaultpre(gsym), gsym)
     }
-    def withDenot(gpre: g.Type, gsym: g.Symbol): T = {
+    def withDenot(gpre: g.Type, gsym: g.Symbol)(implicit ev: CanHaveDenot[T]): T = {
       val ptree0 = ptree // NOTE: this is here only to provide an unqualified Ident for the `require` macro
       require(ptree0.isInstanceOf[p.Name] && gpre != null && gsym != g.NoSymbol)
       val scratchpad = ptree.scratchpad :+ ScratchpadDatum.Denotation(gpre, gsym)
