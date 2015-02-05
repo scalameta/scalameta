@@ -46,9 +46,8 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
         case tree: p.Ref =>
           import scala.meta.semantic.`package`._
           val gpre = tree.originalPre.requireGet
-          val ppre = if (gpre != g.NoPrefix) Some(toApproximateScalameta(gpre)) else None
           val gsyms = tree.originalSym.map(_.alternatives).requireGet
-          val pmembers = gsyms.map(toApproximateScalameta.apply).map(_.in(ppre))
+          val pmembers = gsyms.map(gsym => toApproximateScalameta(gpre, gsym))
           List(a.Defns(pmembers))
         case _ =>
           Nil
@@ -855,7 +854,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
 
   // TODO: strangely enough, these caches don't improve performance in a measurable fashion
   private val gtpeToPtpeCache = mutable.Map[g.Type, p.Type]()
-  private val gsymToPmemberCache = mutable.Map[g.Symbol, p.Member]()
+  private val gsymToPmemberCache = mutable.Map[(g.Type, g.Symbol), p.Member]()
   object toApproximateScalameta {
     private def pannot(gannot: g.AnnotationInfo): p.Mod.Annot = {
       val g.AnnotationInfo(gatp, gargs, gassocs) = gannot
@@ -1003,20 +1002,11 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
             if (args.isEmpty) ref
             else p.Type.Apply(ref, args.map(loop))
           case g.RefinedType(parents, decls) =>
-            val pstmts: Seq[p.Stat] = decls.sorted.toList.map({
-              case AbstractValSymbol(sym) => p.Decl.Val(pmods(sym), List(p.Pat.Var(sym.rawcvt(g.ValDef(sym)))), loop(sym.info.depoly)).withOriginal(sym)
-              case AbstractVarSymbol(sym) => p.Decl.Var(pmods(sym), List(p.Pat.Var(sym.rawcvt(g.ValDef(sym)))), loop(sym.info.depoly)).withOriginal(sym)
-              case AbstractDefSymbol(sym) => p.Decl.Def(pmods(sym), sym.rawcvt(g.DefDef(sym, g.EmptyTree)), ptparams(sym.typeParams), pvparamss(sym.paramss), loop(sym.info.finalResultType)).withOriginal(sym)
-              case AbstractTypeSymbol(sym) => p.Decl.Type(pmods(sym), sym.rawcvt(g.TypeDef(sym)), ptparams(sym.typeParams), ptypebounds(sym.info.depoly)).withOriginal(sym)
-              case AliasTypeSymbol(sym) => p.Defn.Type(pmods(sym), sym.rawcvt(g.TypeDef(sym, g.TypeTree(sym.info))), ptparams(sym.typeParams), loop(sym.info.depoly)).withOriginal(sym)
-            })
+            val pstmts = decls.sorted.toList.map(gsym => apply(g.RefinedType(parents, g.EmptyScope), gsym).asInstanceOf[p.Stat])
             p.Type.Compound(parents.map(loop), pstmts)
           case g.ExistentialType(quantified, underlying) =>
             // TODO: infer type placeholders where they were specified explicitly
-            val pstmts: Seq[p.Stat] = quantified.map({
-              case ValSymbol(sym) => p.Decl.Val(pmods(sym), List(p.Pat.Var(sym.rawcvt(g.ValDef(sym)))), loop(sym.info.depoly)).withOriginal(sym)
-              case AbstractTypeSymbol(sym) => p.Decl.Type(pmods(sym), sym.rawcvt(g.TypeDef(sym)), ptparams(sym.typeParams), ptypebounds(sym.info.depoly)).withOriginal(sym)
-            })
+            val pstmts: Seq[p.Stat] = quantified.map(gsym => apply(g.NoPrefix, gsym).asInstanceOf[p.Stat])
             p.Type.Existential(loop(underlying), pstmts)
           case g.AnnotatedType(annots, underlying) =>
             p.Type.Annotate(loop(underlying), pannots(annots))
@@ -1027,7 +1017,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
       }
       loop(gtpe)
     })
-    def apply(sym: g.Symbol): p.Member = gsymToPmemberCache.getOrElseUpdate(sym, {
+    def apply(pre: g.Type, sym: g.Symbol): p.Member = gsymToPmemberCache.getOrElseUpdate((pre, sym), {
       def dummyTemplate = p.Template(Nil, Nil, p.Term.Param(Nil, None, None, None), None)
       def dummyCtor = p.Ctor.Primary(Nil, p.Ctor.Name("this"), Nil)
       def dummyBody = p.Term.Name("???")
