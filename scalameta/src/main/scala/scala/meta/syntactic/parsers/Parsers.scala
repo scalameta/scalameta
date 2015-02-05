@@ -1365,7 +1365,7 @@ abstract class AbstractParser { parser =>
   def block(): Term = mkBlock(blockStatSeq())
 
   def caseClause(): Case =
-    Case(pattern().asInstanceOf[Pat], guard(), { accept[`=>`]; blockStatSeq() })
+    Case(pattern().asInstanceOf[Pat], guard(), { accept[`=>`]; Term.Block(blockStatSeq()) })
 
   /** {{{
    *  CaseClauses ::= CaseClause {CaseClause}

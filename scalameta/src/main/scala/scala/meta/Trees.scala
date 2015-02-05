@@ -375,7 +375,7 @@ package scala.meta.internal.ast {
     }
   }
 
-  @ast class Case(pat: Pat, cond: Option[Term], stats: Seq[Stat]) extends api.Case with Tree with Scope
+  @ast class Case(pat: Pat, cond: Option[Term], body: Term.Block) extends api.Case with Tree with Scope
 
   @ast class Source(stats: Seq[Stat]) extends api.Source with Tree {
     require(stats.forall(_.isTopLevelStat))

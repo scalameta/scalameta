@@ -401,7 +401,7 @@ object Code {
     case t: Import                   => s(kw("import"), " ", r(t.clauses, ", "))
 
     // Case
-    case t: Case  => s("case ", p(Pattern, t.pat), t.cond.map { cond => s(" ", kw("if"), " ", p(PostfixExpr, cond)) }.getOrElse(s()), " ", kw("=>"), r(t.stats.map(i(_)), ""))
+    case t: Case  => s("case ", p(Pattern, t.pat), t.cond.map { cond => s(" ", kw("if"), " ", p(PostfixExpr, cond)) }.getOrElse(s()), " ", kw("=>"), r(t.body.stats.map(i(_)), ""))
 
     // Source
     case t: Source                   => r(t.stats, EOL)
