@@ -57,9 +57,9 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
     attrType(tree) ++ attrDefns(tree)
   }
 
-  private[meta] lazy val root: papi.Scope = p.Pkg(p.Term.Name("_root_").withDenot(g.NoPrefix, g.rootMirror.RootPackage), LazySeq(members(root).map(_.require[p.Stat])))
-  private[meta] def owner(tree: papi.Tree): papi.Scope = ???
-  private[meta] def members(scope: papi.Scope): Seq[papi.Tree] = ???
+  private[meta] lazy val root: papi.Scope = p.Pkg(p.Term.Name("_root_").withDenot(g.NoPrefix, g.rootMirror.RootPackage), LazySeq(members(root).map(_.asInstanceOf[p.Stat])))
+  private[meta] def owner(member: papi.Member): papi.Scope = ???
+  private[meta] def members(scope: papi.Scope): Seq[papi.Member] = ???
 
   private[meta] def isSubType(tpe1: papi.Type, tpe2: papi.Type): Boolean = ???
   private[meta] def lub(tpes: Seq[papi.Type]): papi.Type = ???
@@ -538,9 +538,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
         val paramss = if (implicits.nonEmpty) explicitss :+ implicits else explicitss
         require(in.symbol.isDeferred ==> body.isEmpty)
         if (in.symbol.isConstructor) {
-          require(!in.symbol.isPrimaryConstructor)
-          val q"{ $_(...$argss); ..$stats }" = body
-          p.Ctor.Secondary(pmods(in), p.Ctor.Name(in.name.toString).withDenot(in.symbol), paramss.cvt_!, pargss(argss), pstats(in, stats))
+          p.Ctor.Secondary(pmods(in), p.Ctor.Name(in.name.toString).withDenot(in.symbol), paramss.cvt_!, body.cvt_!)
         } else if (in.symbol.isMacro) {
           require(tpt.nonEmpty) // TODO: support pre-2.12 macros with inferred return types
           val pbody = if (body != g.EmptyTree) (body.cvt_! : p.Term) else p.Term.Name("???").withDenot(g.definitions.Predef_???)
@@ -600,8 +598,8 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
           case ((nel @ _ :+ _) :+ gexpr, Nil :+ pstat) => pstat.asInstanceOf[p.Term]
           case (_, pstats) => p.Term.Block(pstats)
         }
-      case in @ g.CaseDef(pat, guard, q"..$stats") =>
-        p.Case(pat.cvt_!, if (guard.nonEmpty) Some[p.Term](guard.cvt_!) else None, pstats(in, stats))
+      case in @ g.CaseDef(pat, guard, body @ q"..$stats") =>
+        p.Case(pat.cvt_!, if (guard.nonEmpty) Some[p.Term](guard.cvt_!) else None, p.Term.Block(pstats(in, stats)).withOriginal(body))
       case g.Alternative(fst :: snd :: Nil) =>
         p.Pat.Alternative(fst.cvt_!, snd.cvt_!)
       case in @ g.Alternative(hd :: rest) =>
@@ -756,6 +754,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
       case in @ g.Select(qual, name) =>
         // TODO: discern unary applications via !x and via explicit x.unary_!
         // TODO: also think how to detect unary applications that have implicit arguments
+        require(name != g.nme.CONSTRUCTOR)
         if (name.isTermName) {
           if (name.toString.startsWith("unary_")) {
             val in1 = g.treeCopy.Select(in, qual, g.TermName(name.toString.stripPrefix("unary_")))
@@ -770,7 +769,11 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
         // NOTE: Ident(<term name>) with a type symbol attached to it
         // is the encoding that the ensugarer uses to denote a self reference
         // also see the ensugarer for more information
-        if (in.isTerm && in.symbol.isType) p.Term.Name(in.alias)
+        // NOTE: primary ctor calls in secondary ctors are represented as follows:
+        // Apply(Select(This(TypeName("C")), nme.CONSTRUCTOR), List(...))
+        // therefore we need to detect this special select and transform it accordingly
+        if (in.name == g.nme.CONSTRUCTOR) p.Ctor.Name("this").withDenot(in.symbol)
+        else if (in.isTerm && in.symbol.isType) p.Term.Name(in.alias)
         else if (in.isTerm && in.symbol.isAnonymous) p.Term.Placeholder()
         else if (in.isType && in.symbol.isAnonymous) p.Type.Placeholder(ptypebounds(in.metadata("originalBounds").asInstanceOf[g.Tree]))
         else in.symbol.rawcvt(in)
