@@ -654,23 +654,18 @@ package object internal {
       val isTree = T.tpe <:< c.mirror.staticClass("scala.meta.internal.ast.Tree").asType.toType
       val isMember = T.tpe <:< c.mirror.staticClass("scala.meta.internal.ast.Member").asType.toType && T.tpe.decl(TermName("name")) != NoSymbol
       if (isMember) {
-        val nameField = T.tpe.decl(TermName("name"))
-        val maybeName = if (nameField.info.resultType.typeSymbol == symbolOf[Option[_]]) q"$x.name" else q"Some($x.name)"
         q"""
-          def updateCache(member: ${x.tpe}, maybeName: _root_.scala.Option[_root_.scala.meta.internal.ast.Name]): _root_.scala.Unit = {
-            maybeName match {
-              case _root_.scala.Some(name) if _root_.scala.meta.semantic.`package`.SemanticNameOps(name).isBinder =>
-                val denot = name.denot
-                _root_.org.scalameta.invariants.require(member != null && denot != _root_.scala.meta.internal.hygiene.Denotation.Zero)
-                _root_.org.scalameta.invariants.require(member != null && denot.symbol != _root_.scala.meta.internal.hygiene.Symbol.Zero)
-                _root_.org.scalameta.invariants.require(member != null && !hsymToPmemberCache.contains(denot.symbol))
-                hsymToPmemberCache(denot.symbol) = $x
-              case _ =>
-                // do nothing
+          def updateCache(member: ${x.tpe}, name: _root_.scala.meta.internal.ast.Name): _root_.scala.Unit = {
+            if (_root_.scala.meta.semantic.`package`.SemanticNameOps(name).isBinder) {
+              val denot = name.denot
+              _root_.org.scalameta.invariants.require(member != null && denot != _root_.scala.meta.internal.hygiene.Denotation.Zero)
+              _root_.org.scalameta.invariants.require(member != null && denot.symbol != _root_.scala.meta.internal.hygiene.Symbol.Zero)
+              _root_.org.scalameta.invariants.require(member != null && !hsymToPmemberCache.contains(denot.symbol))
+              hsymToPmemberCache(denot.symbol) = $x
             }
           }
           val result = $x.withOriginal(in)
-          updateCache(result, $maybeName)
+          updateCache(result, $x.name.asInstanceOf[_root_.scala.meta.internal.ast.Name])
           result
         """
       } else if (isTree) {

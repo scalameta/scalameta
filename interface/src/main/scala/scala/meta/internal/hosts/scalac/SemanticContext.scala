@@ -116,12 +116,15 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
       require(ptree0.isInstanceOf[p.Name] && gpre != null && gsym != g.NoSymbol)
       val scratchpad = ptree.scratchpad :+ ScratchpadDatum.Denotation(gpre, gsym)
       val ptree1 = ptree match {
+        case ptree: p.Name.Anonymous => ptree.copy(denot = denot(gpre, gsym), sigma = h.Sigma.Naive)
         case ptree: p.Term.Name => ptree.copy(denot = denot(gpre, gsym), sigma = h.Sigma.Naive)
         case ptree: p.Type.Name => ptree.copy(denot = denot(gpre, gsym), sigma = h.Sigma.Naive)
         // TODO: some ctor refs don't have corresponding constructor symbols in Scala (namely, ones for traits and objects)
         // in these cases, our gsym is going to be a symbol of the trait or object in question
         // we need to account for that in `convert` and create a constructor symbol of our own
         case ptree: p.Ctor.Name => ptree.copy(denot = denot(gpre, gsym), sigma = h.Sigma.Naive)
+        case ptree: p.Term.This => ptree.copy(denot = denot(gpre, gsym), sigma = h.Sigma.Naive)
+        case ptree: p.Term.Super => ptree.copy(denot = denot(gpre, gsym), sigma = h.Sigma.Naive)
         case _ => unreachable
       }
       ptree1.withScratchpad(scratchpad).asInstanceOf[T]
@@ -162,6 +165,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
       isTermPlaceholder || isTypePlaceholder || isAnonymousSelf || isAnonymousTypeParameter
     }
     type pTermOrTypeName = p.Name{type ThisType >: p.Term.Name with p.Type.Name <: p.Name}
+    type pTermOrTypeOrAnonymousName = p.Name{type ThisType >: p.Term.Name with p.Type.Name with p.Name.Anonymous <: p.Name}
     private def dumbcvt(in: g.Tree): p.Name = {
       if (gsym.isTerm) p.Term.Name(in.alias)
       else if (gsym.isType) p.Type.Name(in.alias)
@@ -169,14 +173,19 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
     }
     def precvt(pre: g.Type, in: g.Tree): pTermOrTypeName = dumbcvt(in).withDenot(pre, gsym).asInstanceOf[pTermOrTypeName]
     def rawcvt(in: g.Tree): pTermOrTypeName = dumbcvt(in).withDenot(gsym).asInstanceOf[pTermOrTypeName]
+    def anoncvt(in: g.Tree): pTermOrTypeOrAnonymousName = (if (gsym.isAnonymous) p.Name.Anonymous() else dumbcvt(in)).withDenot(gsym).asInstanceOf[pTermOrTypeOrAnonymousName]
   }
   implicit class RichToScalametaTermSymbol(gsym: g.TermSymbol) {
+    type pTermOrAnonymousName = papi.Term.Name with p.Name{type ThisType >: p.Term.Name with p.Name.Anonymous <: p.Name}
     def precvt(pre: g.Type, in: g.Tree): p.Term.Name = (gsym: g.Symbol).precvt(pre, in).asInstanceOf[p.Term.Name]
     def rawcvt(in: g.Tree, allowNoSymbol: Boolean = false): p.Term.Name = (gsym: g.Symbol).rawcvt(in).asInstanceOf[p.Term.Name]
+    def anoncvt(in: g.ValDef): pTermOrAnonymousName = (gsym: g.Symbol).anoncvt(in).asInstanceOf[pTermOrAnonymousName]
   }
   implicit class RichToScalametaTypeSymbol(gsym: g.TypeSymbol) {
+    type pTypeOrAnonymousName = papi.Type.Name with p.Name{type ThisType >: p.Type.Name with p.Name.Anonymous <: p.Name}
     def precvt(pre: g.Type, in: g.Tree): p.Type.Name = (gsym: g.Symbol).precvt(pre, in).asInstanceOf[p.Type.Name]
     def rawcvt(in: g.Tree): p.Type.Name = (gsym: g.Symbol).rawcvt(in).asInstanceOf[p.Type.Name]
+    def anoncvt(in: g.TypeDef): pTypeOrAnonymousName = (gsym: g.Symbol).anoncvt(in).asInstanceOf[pTypeOrAnonymousName]
   }
 
   // TODO: remember positions. actually, in scalac they are almost accurate, so it would be a shame to discard them
@@ -511,15 +520,12 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
         else p.Defn.Object(pmods(in), in.symbol.asModule.rawcvt(in), pfakector(in), templ.cvt)
       case in @ g.ValDef(_, _, tpt, rhs) if pt <:< typeOf[p.Term.Param] =>
         // TODO: how do we really distinguish `case class C(val x: Int)` and `case class C(x: Int)`?
-        if (in == g.noSelfType) p.Term.Param(Nil, None, None, None)
-        else {
-          require(in.symbol.isTerm)
-          val pname = if (!in.symbol.isAnonymous) Some(in.symbol.asTerm.rawcvt(in)) else None
-          val ptpe = if (tpt.nonEmpty) Some[p.Type.Arg](pvparamtpe(tpt)) else None
-          val pdefault = if (rhs.nonEmpty) Some[p.Term](rhs.cvt_!) else None
-          require(in.symbol.isAnonymous ==> pdefault.isEmpty)
-          p.Term.Param(pmods(in), pname, ptpe, pdefault)
-        }
+        require(in != g.noSelfType && in.symbol.isTerm)
+        val pname = in.symbol.asTerm.anoncvt(in)
+        val ptpe = if (tpt.nonEmpty) Some[p.Type.Arg](pvparamtpe(tpt)) else None
+        val pdefault = if (rhs.nonEmpty) Some[p.Term](rhs.cvt_!) else None
+        require(in.symbol.isAnonymous ==> pdefault.isEmpty)
+        p.Term.Param(pmods(in), pname, ptpe, pdefault)
       case in @ g.ValDef(_, _, tpt, rhs) if pt <:< typeOf[p.Stat] =>
         // TODO: collapse desugared representations of pattern-based vals and vars
         require(in.symbol.isTerm)
@@ -550,7 +556,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
         }
       case in @ g.TypeDef(_, _, tparams0, tpt) if pt <:< typeOf[p.Type.Param] =>
         require(in.symbol.isType)
-        val pname = if (!in.symbol.isAnonymous) Some(in.symbol.asType.rawcvt(in)) else None
+        val pname = in.symbol.asType.anoncvt(in)
         val tparams = tparams0.map(_.appendMetadata("originalContextBounds" -> Nil).appendMetadata("originalViewBounds" -> Nil))
         val pcontextbounds = in.metadata("originalContextBounds").asInstanceOf[List[g.Tree]].map(_.cvt_! : p.Type)
         val pviewbounds = in.metadata("originalViewBounds").asInstanceOf[List[g.Tree]].map(_.cvt_! : p.Type)
@@ -584,9 +590,14 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
           val gctorsym = gsupersym.orElse(gparent.tpe.typeSymbolDirect)
           pctorcall(gparent, gapplied.callee, gctorsym, gapplied.argss)
         })
-        // TODO: `copy` doesn't preserve scratchpads and semantic information, so we have to do this ugliness
-        val pself0 @ p.Term.Param(mods, name, decltpe, default) = gself.cvt_! : p.Term.Param
-        val pself = p.Term.Param(Nil, name, decltpe, default).withScratchpad(pself0.scratchpad)
+        val pself = {
+          // NOTE: if we're converting a template of a CompoundTypeTree
+          // then it won't have any symbol set, so our p.Name.Anonymous is going to remain denotation-less
+          val pdumbselfname = if (gself.name == g.nme.WILDCARD) p.Name.Anonymous() else p.Term.Name(gself.alias)
+          val pselfname = if (in.symbol.owner != g.NoSymbol) pdumbselfname.withDenot(in.symbol.owner) else pdumbselfname
+          val pselftpe = if (gself.tpt.nonEmpty) Some[p.Type.Arg](pvparamtpe(gself.tpt)) else None
+          p.Term.Param(Nil, pselfname, pselftpe, None).withOriginal(gself)
+        }
         val hasStats = gstats.nonEmpty || in.symbol.owner.name == g.tpnme.ANON_CLASS_NAME
         p.Template(gearlydefns.cvt_!, pparents, pself, if (hasStats) Some(pstats(in, gstats)) else None)
       case in: g.Block =>
@@ -699,7 +710,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
             val g.treeInfo.Applied(ctorref @ g.Select(g.New(tpt), _), _, _) = in
             val argss = if (argss0.isEmpty && in.symbol.info.paramss.flatten.nonEmpty) List(List()) else argss0
             val supercall = pctorcall(in, tpt, ctorref.symbol, argss)
-            val self = p.Term.Param(Nil, None, None, None).withOriginal(g.noSelfType)
+            val self = p.Term.Param(Nil, p.Name.Anonymous().withDenot(tpt.tpe.typeSymbol), None, None).withOriginal(g.noSelfType)
             val templ = p.Template(Nil, List(supercall), self, None)
             p.Term.New(templ)
           case DesugaredSetter(lhs, rhs) =>
@@ -745,10 +756,11 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
         unreachable
       case in @ g.Super(qual @ g.This(_), mix) =>
         require(in.symbol.isClass)
-        p.Term.Super((qual.cvt : p.Term.This).qual, if (mix != g.tpnme.EMPTY) Some(in.mix.toString) else None)
+        val superdumb = p.Term.Super((qual.cvt : p.Term.This).qual, if (mix != g.tpnme.EMPTY) Some(in.mix.toString) else None)
+        superdumb.withDenot(qual.tpe, in.tpe.typeSymbol)
       case in @ g.This(qual) =>
         require(!in.symbol.isPackageClass)
-        p.Term.This(if (qual != g.tpnme.EMPTY) Some(in.symbol.name.toString) else None)
+        p.Term.This(if (qual != g.tpnme.EMPTY) Some(in.symbol.name.toString) else None).withDenot(in.tpe.prefix, in.symbol)
       case in: g.PostfixSelect =>
         unreachable
       case in @ g.Select(qual, name) =>
@@ -819,8 +831,8 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
       case in @ g.SingletonTypeTree(ref) =>
         p.Type.Singleton(ref.cvt_!)
       case in @ g.CompoundTypeTree(templ) =>
-        val p.Template(early, parents, self, stats) = templ.cvt
-        require(early.isEmpty && parents.forall(!_.isInstanceOf[p.Term.Apply]) && self.name.isEmpty && self.decltpe.isEmpty && stats.map(_.forall(_.isRefineStat)).getOrElse(true))
+        val template @ p.Template(early, parents, _, stats) = templ.cvt : p.Template
+        require(template.isCompoundTypeCompatible)
         p.Type.Compound(parents.map(pctorcalltpe), stats.getOrElse(Nil))
       case in @ g.AppliedTypeTree(tpt, args) =>
         // TODO: infer whether that was really Apply, Function or Tuple
@@ -902,15 +914,14 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
       require(gsym.isTerm)
       // TODO: discern inferred and explicitly specified vparamtpe
       // TODO: somehow figure out the default argument from a parameter symbol if it is specified
-      p.Term.Param(pmods(gsym), Some(gsym.asTerm.rawcvt(g.Ident(gsym))), Some(pvparamtpe(gsym.info.depoly)), None).withOriginal(gsym)
+      p.Term.Param(pmods(gsym), gsym.asTerm.anoncvt(g.internal.valDef(gsym)), Some(pvparamtpe(gsym.info.depoly)), None).withOriginal(gsym)
     }
     private def pvparams(gsyms: List[g.Symbol]): Seq[p.Term.Param] = gsyms.map(pvparam)
     private def pvparamss(gsymss: List[List[g.Symbol]]): Seq[Seq[p.Term.Param]] = gsymss.map(pvparams)
     private def ptparam(gsym: g.Symbol): p.Type.Param = {
       // TODO: undo desugarings of context and view bounds
       require(gsym.isType)
-      val pname = if (gsym.name != g.tpnme.WILDCARD) Some(gsym.asType.rawcvt(g.Ident(gsym))) else None
-      p.Type.Param(pmods(gsym), pname, ptparams(gsym.typeParams), Nil, Nil, ptypebounds(gsym.info.depoly)).withOriginal(gsym)
+      p.Type.Param(pmods(gsym), gsym.asType.anoncvt(g.internal.typeDef(gsym)), ptparams(gsym.typeParams), Nil, Nil, ptypebounds(gsym.info.depoly)).withOriginal(gsym)
     }
     private def ptparams(gsyms: List[g.Symbol]): Seq[p.Type.Param] = gsyms.map(ptparam)
     def apply(gtpe: g.Type): p.Type = gtpeToPtpeCache.getOrElseUpdate(gtpe, {
@@ -940,15 +951,16 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
                 if (isIdent) toScalameta(moduleRef(sym), classOf[p.Term.Name])
                 else toScalameta(moduleRef(sym), classOf[p.Term.Select])
               } else {
-                p.Term.This(None).withOriginal(g.This(g.tpnme.EMPTY).setType(in))
+                p.Term.This(None).withOriginal(g.This(g.tpnme.EMPTY).setType(in)).withDenot(in.prefix.orElse(g.NoPrefix), in.typeSymbol)
               }
             })
           case in @ g.SuperType(thistpe, supertpe) =>
-            val p.Type.Singleton(p.Term.This(pthis)) = loop(thistpe)
+            val p.Type.Singleton(p.Term.This(pthisname)) = loop(thistpe)
             require(supertpe.typeSymbol.isType)
             val supersym = supertpe.typeSymbol.asType
             val superoriginal = g.Super(g.This(g.tpnme.EMPTY), g.tpnme.EMPTY).setType(in)
-            p.Type.Singleton(p.Term.Super(pthis, Some(supersym.name.toString)).withOriginal(superoriginal))
+            val superdumb = p.Term.Super(pthisname, Some(supersym.name.toString)).withOriginal(superoriginal)
+            p.Type.Singleton(superdumb.withDenot(thistpe, supertpe.typeSymbol))
           case in @ g.SingleType(pre, sym) =>
             require(sym.isTerm)
             val ref = pre match {
@@ -1021,7 +1033,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
       loop(gtpe)
     })
     def apply(pre: g.Type, sym: g.Symbol): p.Member = gsymToPmemberCache.getOrElseUpdate((pre, sym), {
-      def dummyTemplate = p.Template(Nil, Nil, p.Term.Param(Nil, None, None, None), None)
+      def dummyTemplate = p.Template(Nil, Nil, p.Term.Param(Nil, p.Name.Anonymous(), None, None), None)
       def dummyCtor = p.Ctor.Primary(Nil, p.Ctor.Name("this"), Nil)
       def dummyBody = p.Term.Name("???")
       val in = sym
