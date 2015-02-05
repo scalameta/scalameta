@@ -99,6 +99,7 @@ package object semantic {
       val name = source.ref match {
         case _: impl.Term.This => ???
         case name: impl.Name => name
+        case _ => unreachable
       }
       def stripPrefix(denot: h.Denotation) = denot match {
         case h.Denotation.Zero => h.Denotation.Zero
@@ -274,6 +275,7 @@ package object semantic {
       val thisName = member.ref match {
         case _: impl.Term.This => ???
         case name: impl.Name => name
+        case _ => unreachable
       }
       all.filter(that => {
         def thisDenot = thisName.denot.require[h.Denotation.Precomputed]
