@@ -44,10 +44,10 @@ package object semantic {
 
   sealed trait HasTpe[T <: Tree, U <: Type.Arg]
   object HasTpe {
-    implicit def Term[T <: meta.Term]: HasTpe[T, meta.Type] = new HasTpe[T, meta.Type] {}
-    implicit def Member[T <: meta.Member]: HasTpe[T, meta.Type] = new HasTpe[T, meta.Type] {}
-    implicit def TermParam[T <: meta.Term.Param]: HasTpe[T, meta.Type.Arg] = new HasTpe[T, meta.Type.Arg] {}
-    implicit def Template[T <: meta.Template]: HasTpe[T, meta.Type] = new HasTpe[T, meta.Type] {}
+    implicit def Term[T <: meta.Term]: HasTpe[T, meta.Type] = null
+    implicit def Member[T <: meta.Member]: HasTpe[T, meta.Type] = null
+    implicit def TermParam[T <: meta.Term.Param]: HasTpe[T, meta.Type.Arg] = null
+    implicit def Template[T <: meta.Template]: HasTpe[T, meta.Type] = null
   }
 
   implicit class SemanticTypeableOps[T <: Tree, U <: Type : ClassTag](val tree: T)(implicit ev: HasTpe[T, U]) {
@@ -56,10 +56,10 @@ package object semantic {
 
   sealed trait HasDefn[T <: Tree, U <: Member]
   object HasDefn {
-    implicit def Ref[T <: meta.Ref]: HasDefn[T, meta.Member] = new HasDefn[T, meta.Member] {}
-    implicit def TermRef[T <: meta.Term.Ref]: HasDefn[T, meta.Member.Term] = new HasDefn[T, meta.Member.Term] {}
-    implicit def TypeRef[T <: meta.Type.Ref]: HasDefn[T, meta.Member] = new HasDefn[T, meta.Member] {} // Type.Ref can refer to both types (regular types) and terms (singleton types)
-    implicit def Importee[T <: meta.Importee]: HasDefn[T, meta.Member] = new HasDefn[T, meta.Member] {}
+    implicit def Ref[T <: meta.Ref]: HasDefn[T, meta.Member] = null
+    implicit def TermRef[T <: meta.Term.Ref]: HasDefn[T, meta.Member.Term] = null
+    implicit def TypeRef[T <: meta.Type.Ref]: HasDefn[T, meta.Member] = null // Type.Ref can refer to both types (regular types) and terms (singleton types)
+    implicit def Importee[T <: meta.Importee]: HasDefn[T, meta.Member] = null
   }
 
   implicit class SemanticDefnableOps[T <: Tree, U <: meta.Member](val tree: T)(implicit ev: HasDefn[T, U]) {
@@ -71,19 +71,6 @@ package object semantic {
         case Seq() => unreachable
       }
     }
-  }
-
-  sealed trait HasPrefix[T <: Tree, U <: Type]
-  object HasPrefix {
-    implicit def Ref[T <: meta.Ref]: HasPrefix[T, meta.Type] = new HasPrefix[T, meta.Type] {}
-    implicit def Member[T <: meta.Member]: HasPrefix[T, meta.Type] = new HasPrefix[T, meta.Type] {}
-    implicit def TermName[T <: meta.Term.Name]: HasPrefix[T, meta.Type] = new HasPrefix[T, meta.Type] {}
-  }
-
-  implicit class SemanticPrefixableOps[T <: Tree, U <: meta.Type](val tree: T)(implicit ev: HasPrefix[T, U]) {
-    @hosted def prefix: Option[U] = ???
-    @hosted def in(prefix: U): T = in(Some(prefix))
-    @hosted def in(prefix: Option[U]): T = ???
   }
 
   // ===========================
