@@ -175,10 +175,6 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
     def rawcvt(in: g.Tree): p.Type.Name = (gsym: g.Symbol).rawcvt(in).asInstanceOf[p.Type.Name]
   }
 
-  // NOTE: we only handle trees, not types or symbols
-  // NOTE: can't convert symbols, because that's quite unsafe: a lot of symbols don't make sense without prefixes
-  // NOTE: can't convert types, because they don't have originals, so any such conversion will be an approximation
-  // NOTE: careful use of NameTree.name, because it can lie (renaming imports) and it doesn't have enough semantic information (unlike the underlying symbol)
   // TODO: remember positions. actually, in scalac they are almost accurate, so it would be a shame to discard them
   @converter def toScalameta(in: Any, pt: Pt): Any = {
     object Helpers extends g.ReificationSupportImpl { self =>
