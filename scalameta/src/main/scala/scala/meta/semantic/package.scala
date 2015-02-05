@@ -40,7 +40,6 @@ package object semantic {
       }
     }
     @hosted def attrs: Seq[Attr] = implicitly[SemanticContext].attrs(tree)
-    @hosted def owner: Scope = implicitly[SemanticContext].owner(tree)
   }
 
   sealed trait HasTpe[T <: Tree, U <: Type.Arg]
@@ -111,6 +110,10 @@ package object semantic {
         case name: impl.Ctor.Name => name.copy(denot = stripPrefix(name.denot))
       }
       prefixlessName.defn
+    }
+    @hosted def owner: Scope = {
+      tree match { case name: Term.Name => require(name.isBinder); case _ => }
+      implicitly[SemanticContext].owner(tree)
     }
     @hosted def ref: Ref = {
       tree.require[impl.Member] match {

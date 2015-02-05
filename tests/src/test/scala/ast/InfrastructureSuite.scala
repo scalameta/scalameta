@@ -18,8 +18,8 @@ class InfrastructureSuite extends FunSuite {
       def dialect: Dialect = Scala211
       private[meta] def attrs(tree: Tree): Seq[Attr] = ???
       private[meta] def root: Scope = ???
-      private[meta] def owner(tree: Tree): Scope = ???
-      private[meta] def members(scope: Scope): Seq[Tree] = ???
+      private[meta] def owner(member: Member): Scope = ???
+      private[meta] def members(scope: Scope): Seq[Member] = ???
       private[meta] def isSubType(tpe1: Type, tpe2: Type): Boolean = ???
       private[meta] def lub(tpes: Seq[Type]): Type = ???
       private[meta] def glb(tpes: Seq[Type]): Type = ???
