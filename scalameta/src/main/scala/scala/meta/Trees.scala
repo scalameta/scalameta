@@ -298,7 +298,7 @@ package scala.meta.internal.ast {
          extends Member.Term with Stat
   }
 
-  @branch trait Ctor extends Tree with Scope with Member.Term
+  @branch trait Ctor extends Tree with Member.Term
   object Ctor {
     @ast class Primary(mods: Seq[Mod],
                        name: Ctor.Name,
