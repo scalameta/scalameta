@@ -81,7 +81,7 @@ package scala.meta.internal.ast {
       // TODO: revisit this once we have trivia in place
       // require(keywords.contains(value) ==> isBackquoted)
     }
-    @ast class Select(qual: Term, selector: Term.Name) extends Term.Ref with Pat
+    @ast class Select(qual: Term, name: Term.Name) extends Term.Ref with Pat
     @ast class Interpolate(prefix: Name, parts: Seq[Lit.String] @nonEmpty, args: Seq[Term]) extends Term {
       require(parts.length == args.length + 1)
     }
@@ -136,10 +136,10 @@ package scala.meta.internal.ast {
       // TODO: revisit this once we have trivia in place
       // require(keywords.contains(value) ==> isBackquoted)
     }
-    @ast class Select(qual: Term.Ref, selector: Type.Name) extends Type.Ref {
+    @ast class Select(qual: Term.Ref, name: Type.Name) extends Type.Ref {
       require(qual.isPath || qual.isInstanceOf[Term.Super])
     }
-    @ast class Project(qual: Type, selector: Type.Name) extends Type.Ref
+    @ast class Project(qual: Type, name: Type.Name) extends Type.Ref
     @ast class Singleton(ref: Term.Ref) extends Type.Ref {
       require(ref.isPath || ref.isInstanceOf[Term.Super])
     }

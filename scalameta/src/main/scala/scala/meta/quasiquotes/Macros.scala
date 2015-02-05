@@ -113,11 +113,11 @@ class Macros[C <: Context](val c: C) extends AdtReflection with AdtLiftables wit
         correlate(meta, Select(fakePrefix, reflect.symbol.name).setSymbol(reflect.symbol).setType(reflect.tpe))
       case (meta: impl.Term.Select, reflect: RefTree) =>
         val qual = correlate(meta.qual, reflect.qualifier).require[impl.Term]
-        val name = correlate(meta.selector, reflect).require[impl.Term.Name]
+        val name = correlate(meta.name, reflect).require[impl.Term.Name]
         impl.Term.Select(qual, name)
       case (meta: impl.Type.Select, reflect: RefTree) =>
         val qual = correlate(meta.qual, reflect.qualifier).require[impl.Term.Ref]
-        val name = correlate(meta.selector, reflect).require[impl.Type.Name]
+        val name = correlate(meta.name, reflect).require[impl.Type.Name]
         impl.Type.Select(qual, name)
       case (meta: impl.Type.Singleton, reflect: SingletonTypeTree) =>
         val qual = correlate(meta.ref, reflect.ref).require[impl.Term.Ref]

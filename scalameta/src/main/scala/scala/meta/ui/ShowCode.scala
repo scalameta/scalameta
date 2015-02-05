@@ -188,7 +188,7 @@ object Code {
     case t: Term.This            => m(SimpleExpr1, s(t.qual.map(s(_, ".")).getOrElse(s()), kw("this")))
     case t: Term.Super           => s(t.thisp.map(thisp => s(thisp, ".")).getOrElse(s()), kw("super"), t.superp.map(st => s("[", st, "]")).getOrElse(s()))
     case t: Term.Name            => m(Path, if (guessIsBackquoted(t)) s("`", t.value, "`") else s(t.value))
-    case t: Term.Select          => m(Path, s(p(SimpleExpr, t.qual), if (guessIsPostfix(t)) " " else ".", t.selector))
+    case t: Term.Select          => m(Path, s(p(SimpleExpr, t.qual), if (guessIsPostfix(t)) " " else ".", t.name))
     case t: Term.Interpolate     =>
       val zipped = t.parts.zip(t.args).map {
         case (part, id: Name) if !guessIsBackquoted(id) => s(part.value, "$", id.value)
@@ -262,8 +262,8 @@ object Code {
 
     // Type
     case t: Type.Name         => m(Path, if (guessIsBackquoted(t)) s("`", t.value, "`") else s(t.value))
-    case t: Type.Select       => m(SimpleTyp, s(t.qual, kw("."), t.selector))
-    case t: Type.Project      => m(SimpleTyp, s(t.qual, kw("#"), t.selector))
+    case t: Type.Select       => m(SimpleTyp, s(t.qual, kw("."), t.name))
+    case t: Type.Project      => m(SimpleTyp, s(t.qual, kw("#"), t.name))
     case t: Type.Singleton    => m(SimpleTyp, s(p(SimpleExpr1, t.ref), ".", kw("type")))
     case t: Type.Apply        => m(SimpleTyp, s(p(SimpleTyp, t.tpe), kw("["), r(t.args.map(arg => p(Typ, arg)), ", "), kw("]")))
     case t: Type.ApplyInfix   => m(InfixTyp(t.op.value), s(p(InfixTyp(t.op.value), t.lhs, left = true), " ", t.op, " ", p(InfixTyp(t.op.value), t.rhs, right = true)))
