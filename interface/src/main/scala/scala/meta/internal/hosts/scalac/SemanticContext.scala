@@ -55,7 +55,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
     }
     attrType(tree) ++ attrDefns(tree)
   }
-  private[meta] def root: papi.Scope = p.Pkg(p.Term.Name("_root_").withDenot(g.NoType, g.rootMirror.RootPackage), Nil)
+  private[meta] def root: papi.Scope = p.Pkg(p.Term.Name("_root_").withDenot(g.NoPrefix, g.rootMirror.RootPackage), Nil)
   private[meta] def owner(tree: papi.Tree): papi.Scope = ???
   private[meta] def members(scope: papi.Scope): Seq[papi.Tree] = ???
   private[meta] def isSubType(tpe1: papi.Type, tpe2: papi.Type): Boolean = ???
