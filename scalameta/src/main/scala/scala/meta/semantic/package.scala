@@ -95,6 +95,22 @@ package object semantic {
   // ===========================
 
   implicit class SemanticMemberOps(val tree: Member) extends AnyVal {
+    @hosted def source: Member = {
+      val name = source.ref match {
+        case _: impl.Term.This => ???
+        case name: impl.Name => name
+      }
+      def stripPrefix(denot: h.Denotation) = denot match {
+        case h.Denotation.Zero => h.Denotation.Zero
+        case denot: h.Denotation.Precomputed => denot.copy(prefix = h.Prefix.Zero)
+      }
+      val prefixlessName = name match {
+        case name: impl.Term.Name => name.copy(denot = stripPrefix(name.denot))
+        case name: impl.Type.Name => name.copy(denot = stripPrefix(name.denot))
+        case name: impl.Ctor.Name => name.copy(denot = stripPrefix(name.denot))
+      }
+      prefixlessName.defn
+    }
     @hosted def ref: Ref = {
       tree.require[impl.Member] match {
         case tree: impl.Term.Name => tree
