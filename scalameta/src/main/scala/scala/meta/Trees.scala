@@ -56,7 +56,7 @@ package scala.meta {
     @branch trait Ref extends Term.Ref
   }
 
-  @branch trait Template extends Tree with Scope
+  @branch trait Template extends Tree
   @branch trait Mod extends Tree
   @branch trait Enumerator extends Tree
   @branch trait Importee extends Tree
@@ -322,7 +322,7 @@ package scala.meta.internal.ast {
   @ast class Template(early: Seq[Stat],
                       parents: Seq[Term],
                       self: Term.Param,
-                      stats: Option[Seq[Stat]]) extends api.Template with Tree with Scope {
+                      stats: Option[Seq[Stat]]) extends api.Template with Tree {
     require(parents.forall(_.isCtorCall))
     require(early.nonEmpty ==> parents.nonEmpty)
     require(early.forall(_.isEarlyStat))
