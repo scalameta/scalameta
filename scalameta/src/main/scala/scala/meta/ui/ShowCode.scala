@@ -132,7 +132,9 @@ object Code {
   private def guessIsBackquoted(t: Name): Boolean = {
     def cantBeWrittenWithoutBackquotes(t: Name): Boolean = {
       // TODO: this requires a more thorough implementation
-      keywords.contains(t.value) || t.value.contains(" ")
+      // TODO: the `this` check is actually here to correctly prettyprint primary ctor calls in secondary ctors
+      // this is purely an implementation artifact and will be fixed once we have tokens
+      t.value != "this" && (keywords.contains(t.value) || t.value.contains(" "))
     }
     def isAmbiguousWithPatVar(t: Term.Name, p: Tree): Boolean = {
       // TODO: the `eq` trick is very unreliable, but I can't come up with anything better at the moment
@@ -341,11 +343,7 @@ object Code {
     case t: Pkg            => s(kw("package"), " ", t.ref, r(t.stats.map(n(_))))
     case t: Pkg.Object     => s(kw("package"), " ", a(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
     case t: Ctor.Primary   => s(a(t.mods, " ", t.mods.nonEmpty && t.paramss.nonEmpty), t.paramss)
-    case t: Ctor.Secondary =>
-      s(a(t.mods, " "), kw("def"), " ", kw("this"), t.paramss, t.stats match {
-        case Nil   => s(" ", kw("="), " ", kw("this"), t.primaryCtorArgss)
-        case stats => s(" { ", kw("this"), t.primaryCtorArgss, ";", a(" ", r(stats, "; ")), " }")
-      })
+    case t: Ctor.Secondary => s(a(t.mods, " "), kw("def"), " ", kw("this"), t.paramss, " ", t.body)
 
     // Template
     case t: Template =>

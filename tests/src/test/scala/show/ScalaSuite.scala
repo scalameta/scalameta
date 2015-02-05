@@ -189,7 +189,14 @@ class ScalaSuite extends ParseSuite {
   }
 
   test("secondary ctor") {
-    assert(source("class C(x: Int) { def this() { this(2); println(\"OBLIVION!!!\") } }").show[Code] === "class C(x: Int) { def this() { this(2); println(\"OBLIVION!!!\") } }")
+    assert(source("class C(x: Int) { def this() { this(2); println(\"OBLIVION!!!\") } }").show[Code] === """
+      |class C(x: Int) {
+      |  def this() {
+      |    this(2)
+      |    println("OBLIVION!!!")
+      |  }
+      |}
+    """.trim.stripMargin)
   }
 
   test("case semicolons") {

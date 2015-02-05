@@ -69,6 +69,17 @@ object SyntacticInfo {
       case Term.Annotate(annottee, _) => annottee.ctorArgss
       case _ => unreachable
     }
+    def isCtorBody: Boolean = {
+      def isSuperCall(tree: Tree): Boolean = tree match {
+        case _: Ctor.Name => true
+        case Term.Apply(fn, _) => isSuperCall(fn)
+        case _ => false // you can't write `this[...](...)`
+      }
+      tree match {
+        case Term.Block(superCall +: _) => isSuperCall(superCall)
+        case superCall => isSuperCall(superCall)
+      }
+    }
   }
   implicit class SyntacticTermRefOps(val tree: Term.Ref) extends AnyVal {
     def isPath: Boolean = tree.isStableId || tree.isInstanceOf[Term.This]
@@ -2120,38 +2131,38 @@ abstract class AbstractParser { parser =>
    *                    |  ConstrBlock
    *  }}}
    */
-  def constrExpr(): (List[List[Term.Arg]], List[Stat]) =
+  def constrExpr(): Term =
     if (token.is[`{`]) constrBlock()
-    else (selfInvocation(), Nil)
+    else selfInvocation()
 
   /** {{{
    *  SelfInvocation  ::= this ArgumentExprs {ArgumentExprs}
    *  }}}
    */
-  def selfInvocation(): List[List[Term.Arg]] = {
+  def selfInvocation(): Term = {
     accept[`this`]
     newLineOptWhenFollowedBy[`{`]
-    var t: List[List[Term.Arg]] = List(argumentExprs())
+    var argss: List[List[Term.Arg]] = List(argumentExprs())
     newLineOptWhenFollowedBy[`{`]
     while (token.is[`(`] || token.is[`{`]) {
-      t = t :+ argumentExprs()
+      argss = argss :+ argumentExprs()
       newLineOptWhenFollowedBy[`{`]
     }
-    t
+    argss.foldLeft(Ctor.Name("this"): Term)((curr, args) => Term.Apply(curr, args))
   }
 
   /** {{{
    *  ConstrBlock    ::=  `{' SelfInvocation {semi BlockStat} `}'
    *  }}}
    */
-  def constrBlock(): (List[List[Term.Arg]], List[Stat]) = {
+  def constrBlock(): Term.Block = {
     next()
-    val argss = selfInvocation()
+    val supercall = selfInvocation()
     val stats =
       if (!token.is[StatSep]) Nil
       else { next(); blockStatSeq() }
     accept[`}`]
-    (argss, stats)
+    Term.Block(supercall +: stats)
   }
 
   /** {{{
@@ -2283,11 +2294,11 @@ abstract class AbstractParser { parser =>
     // secondary constructors can't have val/var parameters
     val paramss = paramClauses(ownerIsType = true).asInstanceOf[Seq[Seq[Term.Param]]]
     newLineOptWhenFollowedBy[`{`]
-    val (argss, stats) = token match {
+    val body = token match {
       case _: `{` => constrBlock()
       case _      => accept[`=`]; constrExpr()
     }
-    Ctor.Secondary(mods, Ctor.Name("this"), paramss, argss, stats)
+    Ctor.Secondary(mods, Ctor.Name("this"), paramss, body)
   }
 
   def constructorCall(tpe: Type, allowArgss: Boolean = true): Term = {

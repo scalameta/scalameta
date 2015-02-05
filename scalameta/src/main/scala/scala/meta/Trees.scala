@@ -306,8 +306,9 @@ package scala.meta.internal.ast {
     @ast class Secondary(mods: Seq[Mod],
                          name: Ctor.Name,
                          paramss: Seq[Seq[Term.Param]] @nonEmpty,
-                         primaryCtorArgss: Seq[Seq[Term.Arg]],
-                         stats: Seq[Stat]) extends Ctor with Stat
+                         body: Term) extends Ctor with Stat {
+      require(body.isCtorBody)
+    }
     @branch trait Ref extends api.Ctor.Ref with impl.Term.Ref
     val Name = Ref.Name
     type Name = Ref.Name
