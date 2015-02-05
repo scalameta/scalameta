@@ -15,8 +15,8 @@ trait Context {
   def attrs(tree: Tree): Seq[Attr]
 
   def root: Scope
-  def owner(tree: Tree): Scope
-  def members(scope: Scope): Seq[Tree]
+  def owner(member: Member): Scope
+  def members(scope: Scope): Seq[Member]
 
   def isSubType(tpe1: Type, tpe2: Type): Boolean
   def lub(tpes: Seq[Type]): Type
