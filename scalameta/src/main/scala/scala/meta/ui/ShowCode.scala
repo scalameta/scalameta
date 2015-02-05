@@ -132,7 +132,9 @@ object Code {
   private def guessIsBackquoted(t: Name): Boolean = {
     def cantBeWrittenWithoutBackquotes(t: Name): Boolean = {
       // TODO: this requires a more thorough implementation
-      keywords.contains(t.value) || t.value.contains(" ")
+      // TODO: the `this` check is actually here to correctly prettyprint primary ctor calls in secondary ctors
+      // this is purely an implementation artifact and will be fixed once we have tokens
+      t.value != "this" && (keywords.contains(t.value) || t.value.contains(" "))
     }
     def isAmbiguousWithPatVar(t: Term.Name, p: Tree): Boolean = {
       // TODO: the `eq` trick is very unreliable, but I can't come up with anything better at the moment
@@ -188,7 +190,7 @@ object Code {
     case t: Term.This            => m(SimpleExpr1, s(t.qual.map(s(_, ".")).getOrElse(s()), kw("this")))
     case t: Term.Super           => s(t.thisp.map(thisp => s(thisp, ".")).getOrElse(s()), kw("super"), t.superp.map(st => s("[", st, "]")).getOrElse(s()))
     case t: Term.Name            => m(Path, if (guessIsBackquoted(t)) s("`", t.value, "`") else s(t.value))
-    case t: Term.Select          => m(Path, s(p(SimpleExpr, t.qual), if (guessIsPostfix(t)) " " else ".", t.selector))
+    case t: Term.Select          => m(Path, s(p(SimpleExpr, t.qual), if (guessIsPostfix(t)) " " else ".", t.name))
     case t: Term.Interpolate     =>
       val zipped = t.parts.zip(t.args).map {
         case (part, id: Name) if !guessIsBackquoted(id) => s(part.value, "$", id.value)
@@ -262,8 +264,8 @@ object Code {
 
     // Type
     case t: Type.Name         => m(Path, if (guessIsBackquoted(t)) s("`", t.value, "`") else s(t.value))
-    case t: Type.Select       => m(SimpleTyp, s(t.qual, kw("."), t.selector))
-    case t: Type.Project      => m(SimpleTyp, s(t.qual, kw("#"), t.selector))
+    case t: Type.Select       => m(SimpleTyp, s(t.qual, kw("."), t.name))
+    case t: Type.Project      => m(SimpleTyp, s(t.qual, kw("#"), t.name))
     case t: Type.Singleton    => m(SimpleTyp, s(p(SimpleExpr1, t.ref), ".", kw("type")))
     case t: Type.Apply        => m(SimpleTyp, s(p(SimpleTyp, t.tpe), kw("["), r(t.args.map(arg => p(Typ, arg)), ", "), kw("]")))
     case t: Type.ApplyInfix   => m(InfixTyp(t.op.value), s(p(InfixTyp(t.op.value), t.lhs, left = true), " ", t.op, " ", p(InfixTyp(t.op.value), t.rhs, right = true)))
@@ -341,11 +343,7 @@ object Code {
     case t: Pkg            => s(kw("package"), " ", t.ref, r(t.stats.map(n(_))))
     case t: Pkg.Object     => s(kw("package"), " ", a(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
     case t: Ctor.Primary   => s(a(t.mods, " ", t.mods.nonEmpty && t.paramss.nonEmpty), t.paramss)
-    case t: Ctor.Secondary =>
-      s(a(t.mods, " "), kw("def"), " ", kw("this"), t.paramss, t.stats match {
-        case Nil   => s(" ", kw("="), " ", kw("this"), t.primaryCtorArgss)
-        case stats => s(" { ", kw("this"), t.primaryCtorArgss, ";", a(" ", r(stats, "; ")), " }")
-      })
+    case t: Ctor.Secondary => s(a(t.mods, " "), kw("def"), " ", kw("this"), t.paramss, if (t.body.isInstanceOf[Term.Block]) " " else " = ", t.body)
 
     // Template
     case t: Template =>
@@ -403,7 +401,7 @@ object Code {
     case t: Import                   => s(kw("import"), " ", r(t.clauses, ", "))
 
     // Case
-    case t: Case  => s("case ", p(Pattern, t.pat), t.cond.map { cond => s(" ", kw("if"), " ", p(PostfixExpr, cond)) }.getOrElse(s()), " ", kw("=>"), r(t.stats.map(i(_)), ""))
+    case t: Case  => s("case ", p(Pattern, t.pat), t.cond.map { cond => s(" ", kw("if"), " ", p(PostfixExpr, cond)) }.getOrElse(s()), " ", kw("=>"), r(t.body.stats.map(i(_)), ""))
 
     // Source
     case t: Source                   => r(t.stats, EOL)

@@ -179,17 +179,17 @@ class TermSuite extends ParseSuite {
   }
 
   test("1 match { case 1 => true }") {
-    val Match(Lit.Int(1), Case(Lit.Int(1), None, Lit.Bool(true) :: Nil) :: Nil) =
+    val Match(Lit.Int(1), Case(Lit.Int(1), None, Term.Block(Lit.Bool(true) :: Nil)) :: Nil) =
       term("1 match { case 1 => true }")
   }
 
   test("1 match { case 1 => }") {
-    val Match(Lit.Int(1), Case(Lit.Int(1), None, Nil) :: Nil) =
+    val Match(Lit.Int(1), Case(Lit.Int(1), None, Term.Block(Nil)) :: Nil) =
       term("1 match { case 1 => }")
   }
 
   test("1 match { case 1 if true => }") {
-    val Match(Lit.Int(1), Case(Lit.Int(1), Some(Lit.Bool(true)), Nil) :: Nil) =
+    val Match(Lit.Int(1), Case(Lit.Int(1), Some(Lit.Bool(true)), Term.Block(Nil)) :: Nil) =
       term("1 match { case 1 if true => }")
   }
 
@@ -202,7 +202,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("try 1 catch { case _ => }") {
-    val TryWithCases(Lit.Int(1), Case(Pat.Wildcard(), None, Nil) :: Nil, None) =
+    val TryWithCases(Lit.Int(1), Case(Pat.Wildcard(), None, Term.Block(Nil)) :: Nil, None) =
       term("try 1 catch { case _ => }")
   }
 
@@ -211,7 +211,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("{ case 1 => () }") {
-    val PartialFunction(Case(Lit.Int(1), None, Lit.Unit() :: Nil) :: Nil) =
+    val PartialFunction(Case(Lit.Int(1), None, Term.Block(Lit.Unit() :: Nil)) :: Nil) =
       term("{ case 1 => () }")
   }
 

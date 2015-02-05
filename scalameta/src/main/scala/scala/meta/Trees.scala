@@ -56,7 +56,7 @@ package scala.meta {
     @branch trait Ref extends Term.Ref
   }
 
-  @branch trait Template extends Tree with Scope
+  @branch trait Template extends Tree
   @branch trait Mod extends Tree
   @branch trait Enumerator extends Tree
   @branch trait Importee extends Tree
@@ -81,7 +81,7 @@ package scala.meta.internal.ast {
       // TODO: revisit this once we have trivia in place
       // require(keywords.contains(value) ==> isBackquoted)
     }
-    @ast class Select(qual: Term, selector: Term.Name) extends Term.Ref with Pat
+    @ast class Select(qual: Term, name: Term.Name) extends Term.Ref with Pat
     @ast class Interpolate(prefix: Name, parts: Seq[Lit.String] @nonEmpty, args: Seq[Term]) extends Term {
       require(parts.length == args.length + 1)
     }
@@ -136,10 +136,10 @@ package scala.meta.internal.ast {
       // TODO: revisit this once we have trivia in place
       // require(keywords.contains(value) ==> isBackquoted)
     }
-    @ast class Select(qual: Term.Ref, selector: Type.Name) extends Type.Ref {
+    @ast class Select(qual: Term.Ref, name: Type.Name) extends Type.Ref {
       require(qual.isPath || qual.isInstanceOf[Term.Super])
     }
-    @ast class Project(qual: Type, selector: Type.Name) extends Type.Ref
+    @ast class Project(qual: Type, name: Type.Name) extends Type.Ref
     @ast class Singleton(ref: Term.Ref) extends Type.Ref {
       require(ref.isPath || ref.isInstanceOf[Term.Super])
     }
@@ -298,7 +298,7 @@ package scala.meta.internal.ast {
          extends Member.Term with Stat
   }
 
-  @branch trait Ctor extends Tree with Scope with Member.Term
+  @branch trait Ctor extends Tree with Member.Term
   object Ctor {
     @ast class Primary(mods: Seq[Mod],
                        name: Ctor.Name,
@@ -306,8 +306,9 @@ package scala.meta.internal.ast {
     @ast class Secondary(mods: Seq[Mod],
                          name: Ctor.Name,
                          paramss: Seq[Seq[Term.Param]] @nonEmpty,
-                         primaryCtorArgss: Seq[Seq[Term.Arg]],
-                         stats: Seq[Stat]) extends Ctor with Stat
+                         body: Term) extends Ctor with Stat {
+      require(body.isCtorBody)
+    }
     @branch trait Ref extends api.Ctor.Ref with impl.Term.Ref
     val Name = Ref.Name
     type Name = Ref.Name
@@ -322,7 +323,7 @@ package scala.meta.internal.ast {
   @ast class Template(early: Seq[Stat],
                       parents: Seq[Term],
                       self: Term.Param,
-                      stats: Option[Seq[Stat]]) extends api.Template with Tree with Scope {
+                      stats: Option[Seq[Stat]]) extends api.Template with Tree {
     require(parents.forall(_.isCtorCall))
     require(early.nonEmpty ==> parents.nonEmpty)
     require(early.forall(_.isEarlyStat))
@@ -374,7 +375,7 @@ package scala.meta.internal.ast {
     }
   }
 
-  @ast class Case(pat: Pat, cond: Option[Term], stats: Seq[Stat]) extends api.Case with Tree with Scope
+  @ast class Case(pat: Pat, cond: Option[Term], body: Term.Block) extends api.Case with Tree with Scope
 
   @ast class Source(stats: Seq[Stat]) extends api.Source with Tree {
     require(stats.forall(_.isTopLevelStat))
