@@ -12,6 +12,7 @@ import scala.meta.syntactic.parsers.SyntacticInfo._
 import scala.tools.nsc.{Global => ScalaGlobal}
 import scala.meta.semantic.{Context => ScalametaSemanticContext}
 import org.scalameta.adt._
+import org.scalameta.collections._
 import org.scalameta.convert._
 import org.scalameta.convert.auto._
 import org.scalameta.invariants._
@@ -55,7 +56,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
     }
     attrType(tree) ++ attrDefns(tree)
   }
-  private[meta] def root: papi.Scope = p.Pkg(p.Term.Name("_root_").withDenot(g.NoPrefix, g.rootMirror.RootPackage), Nil)
+  private[meta] lazy val root: papi.Scope = p.Pkg(p.Term.Name("_root_").withDenot(g.NoPrefix, g.rootMirror.RootPackage), LazySeq(members(root).map(_.require[p.Stat])))
   private[meta] def owner(tree: papi.Tree): papi.Scope = ???
   private[meta] def members(scope: papi.Scope): Seq[papi.Tree] = ???
   private[meta] def isSubType(tpe1: papi.Type, tpe2: papi.Type): Boolean = ???
