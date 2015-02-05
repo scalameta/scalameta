@@ -11,6 +11,7 @@ import scala.reflect.{ClassTag, classTag}
 import scala.meta.ui.{Exception => SemanticException, _}
 import scala.meta.semantic.{Context => SemanticContext}
 import scala.meta.internal.{ast => impl} // necessary only to implement APIs, not to define them
+import scala.meta.internal.{hygiene => h} // necessary only to implement APIs, not to define them
 import scala.reflect.runtime.{universe => ru} // necessary only for a very hacky approximation of hygiene
 
 package object semantic {
@@ -247,7 +248,27 @@ package object semantic {
       }
     }
     @hosted def members: Seq[Member] = internalAll[Member](_ => true)
-    @hosted def members(name: Name): Member = internalSingle[Member](name.toString, m => (name.isInstanceOf[Term.Name] && m.isInstanceOf[Member.Term]) || (name.isInstanceOf[Type.Name] && m.isInstanceOf[Member.Type]), if (name.isInstanceOf[Term.Name]) "term members" else "type members")
+    @hosted def members(name: Name): Member = {
+      val filter = (m: Member) => (name.isInstanceOf[Term.Name] && m.isInstanceOf[Member.Term]) || (name.isInstanceOf[Type.Name] && m.isInstanceOf[Member.Type])
+      val description = if (name.isInstanceOf[Term.Name]) "term members" else "type members"
+      internalSingle[Member](name.toString, filter, description)
+    }
+    @hosted def members[T <: Member : ClassTag](member: T): T = {
+      val all = implicitly[SemanticContext].members(tree).collect{ case x: T => x }
+      val thisName = member.ref match {
+        case _: impl.Term.This => ???
+        case name: impl.Name => name
+      }
+      all.filter(that => {
+        def thisDenot = thisName.denot.require[h.Denotation.Precomputed]
+        def thatDenot = that.ref.require[impl.Name].denot.require[h.Denotation.Precomputed]
+        scala.util.Try(thisDenot.symbol == thatDenot.symbol).getOrElse(false)
+      }) match {
+        case Seq() => throw new SemanticException(s"no prototype for $member found in ${tree.show[Summary]}")
+        case Seq(single) => single
+        case _ => unreachable
+      }
+    }
     @hosted def packages: Seq[Member.Term] = internalAll[Member.Term](_.isPackage)
     @hosted def packages(name: String): Member.Term = internalSingle[Member.Term](name, _.isPackage, "packages")
     @hosted def packages(name: scala.Symbol): Member.Term = packages(name.toString)
