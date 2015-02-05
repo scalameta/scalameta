@@ -321,4 +321,13 @@ package object semantic {
     @hosted def tparams(name: String): Type.Param = internalSingle[Type.Param](name, _ => true, "type parameters")
     @hosted def tparams(name: scala.Symbol): Type.Param = tparams(name.toString)
   }
+
+  // ===========================
+  // PART 5: BINDINGS
+  // ===========================
+
+  implicit class SemanticNameOps(val tree: Name) extends AnyVal {
+    def isBinder = tree.parent.map(parent => parent.isInstanceOf[impl.Pat.Var] || parent.isInstanceOf[impl.Member]).getOrElse(false)
+    def isReference = !isBinder
+  }
 }
