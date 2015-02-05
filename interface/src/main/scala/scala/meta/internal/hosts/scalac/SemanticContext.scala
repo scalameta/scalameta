@@ -27,8 +27,8 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
   import g.Quasiquote
   import scala.reflect.internal.Flags._
   implicit val c: ScalametaSemanticContext = this
-
   def dialect: scala.meta.dialects.Scala211.type = scala.meta.dialects.Scala211
+
   private[meta] def attrs(tree: papi.Tree): Seq[scala.meta.semantic.Attr] = {
     def attrType(tree: papi.Tree): List[scala.meta.semantic.Attr] = {
       tree match {
@@ -56,12 +56,15 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
     }
     attrType(tree) ++ attrDefns(tree)
   }
+
   private[meta] lazy val root: papi.Scope = p.Pkg(p.Term.Name("_root_").withDenot(g.NoPrefix, g.rootMirror.RootPackage), LazySeq(members(root).map(_.require[p.Stat])))
   private[meta] def owner(tree: papi.Tree): papi.Scope = ???
   private[meta] def members(scope: papi.Scope): Seq[papi.Tree] = ???
+
   private[meta] def isSubType(tpe1: papi.Type, tpe2: papi.Type): Boolean = ???
   private[meta] def lub(tpes: Seq[papi.Type]): papi.Type = ???
   private[meta] def glb(tpes: Seq[papi.Type]): papi.Type = ???
+
   private[meta] def parents(member: papi.Member): Seq[papi.Member] = ???
   private[meta] def children(member: papi.Member): Seq[papi.Member] = ???
 
