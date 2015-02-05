@@ -129,8 +129,9 @@ class ConverterMacros(val c: whitebox.Context) extends MacroToolkit {
       ))
       val instanceImpls = instances.filter(!_.notImplemented).map(instance => atPos(instance.pos)(
         q"""
-          private def ${instance.impl}(in: ${instance.in}): $companion.${instance.sig}.Out = {
+          private def ${instance.impl}(in0: ${instance.in}): $companion.${instance.sig}.Out = {
             // TODO: fix the duplication wrt Ensugar
+            val in = $DeriveInternal.customPrologue(in0)
             def logFailure() = {
               def summary(x: Any) = x match { case x: Product => x.productPrefix; case null => "null"; case _ => x.getClass }
               var details = in.toString.replace("\n", "")
@@ -147,7 +148,7 @@ class ConverterMacros(val c: whitebox.Context) extends MacroToolkit {
                 ..${prelude.collect { case imp: Import => imp }}
                 in match { case ..${instance.clauses} }
               }
-              out.withOriginal(in)
+              $DeriveInternal.customEpilogue(out)
             } catch {
               case err: _root_.java.lang.AssertionError => logFailure(); throw err
               case err: _root_.org.scalameta.UnreachableError.type => logFailure(); throw err
@@ -193,6 +194,8 @@ package object internal {
   def computeConverters[T](typeclassCompanion: Any)(x: T): Unit = macro WhiteboxMacros.computeConverters
   def lubConverters[T, U]: Any = macro WhiteboxMacros.lubConverters[T, U]
   def connectConverters[T](x: T): Any = macro WhiteboxMacros.connectConverters
+  def customPrologue[T](x: T): T = macro WhiteboxMacros.customPrologue[T]
+  def customEpilogue[T](x: T): T = macro WhiteboxMacros.customEpilogue[T]
 
   class WhiteboxMacros(val c: whitebox.Context) extends MacroToolkit {
     import c.universe._
@@ -642,6 +645,39 @@ package object internal {
       val polysel = gen.mkAttributedSelect(pre, m)
       val sel = TypeApply(polysel, List(TypeTree(arg.tpe))).setType(appliedType(polysel.tpe, arg.tpe))
       Apply(sel, List(arg)).setType(sel.tpe.finalResultType)
+    }
+    def customPrologue[T](x: Tree)(implicit T: c.WeakTypeTag[T]): Tree = {
+      // do nothing, there hasn't been need for a custom prologue yet
+      x
+    }
+    def customEpilogue[T](x: Tree)(implicit T: c.WeakTypeTag[T]): Tree = {
+      val isTree = T.tpe <:< c.mirror.staticClass("scala.meta.internal.ast.Tree").asType.toType
+      val isMember = T.tpe <:< c.mirror.staticClass("scala.meta.internal.ast.Member").asType.toType && T.tpe.decl(TermName("name")) != NoSymbol
+      if (isMember) {
+        val nameField = T.tpe.decl(TermName("name"))
+        val maybeName = if (nameField.info.resultType.typeSymbol == symbolOf[Option[_]]) q"$x.name" else q"Some($x.name)"
+        q"""
+          def updateCache(member: ${x.tpe}, maybeName: _root_.scala.Option[_root_.scala.meta.internal.ast.Name]): _root_.scala.Unit = {
+            maybeName match {
+              case _root_.scala.Some(name) if _root_.scala.meta.semantic.`package`.SemanticNameOps(name).isBinder =>
+                val denot = name.denot
+                _root_.org.scalameta.invariants.require(member != null && denot != _root_.scala.meta.internal.hygiene.Denotation.Zero)
+                _root_.org.scalameta.invariants.require(member != null && denot.symbol != _root_.scala.meta.internal.hygiene.Symbol.Zero)
+                _root_.org.scalameta.invariants.require(member != null && !hsymToPmemberCache.contains(denot.symbol))
+                hsymToPmemberCache(denot.symbol) = $x
+              case _ =>
+                // do nothing
+            }
+          }
+          val result = $x.withOriginal(in)
+          updateCache(result, $maybeName)
+          result
+        """
+      } else if (isTree) {
+        q"$x.withOriginal(in)"
+      } else {
+        x
+      }
     }
   }
 }
