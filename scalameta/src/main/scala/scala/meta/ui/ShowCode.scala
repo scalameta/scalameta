@@ -343,7 +343,7 @@ object Code {
     case t: Pkg            => s(kw("package"), " ", t.ref, r(t.stats.map(n(_))))
     case t: Pkg.Object     => s(kw("package"), " ", a(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
     case t: Ctor.Primary   => s(a(t.mods, " ", t.mods.nonEmpty && t.paramss.nonEmpty), t.paramss)
-    case t: Ctor.Secondary => s(a(t.mods, " "), kw("def"), " ", kw("this"), t.paramss, " ", t.body)
+    case t: Ctor.Secondary => s(a(t.mods, " "), kw("def"), " ", kw("this"), t.paramss, if (t.body.isInstanceOf[Term.Block]) " " else " = ", t.body)
 
     // Template
     case t: Template =>
