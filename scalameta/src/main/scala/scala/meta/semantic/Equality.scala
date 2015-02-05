@@ -71,6 +71,10 @@ trait Helpers {
 }
 
 object equals extends Helpers {
+  private def compare(denot1: Denotation, denot2: Denotation): Boolean = {
+    denot1 != Denotation.Zero && denot2 != Denotation.Zero && denot1 == denot2
+  }
+
   private def structuralEquals(tree1: Tree, tree2: Tree): Boolean = {
     // NOTE: for an exhaustive list of tree field types see
     // see /foundation/src/main/scala/org/scalameta/ast/internal.scala
@@ -88,15 +92,14 @@ object equals extends Helpers {
   private def semanticEquals(tree1: Tree, tree2: Tree): Boolean = {
     (tree1, tree2) match {
       case (NonRef(tree1), NonRef(tree2)) => structuralEquals(tree1, tree2)
-      case (NamelikeRef(name1), NamelikeRef(name2)) => name1.sigma.resolve(name1) == name2.sigma.resolve(name2)
+      case (NamelikeRef(name1), NamelikeRef(name2)) => compare(name1.sigma.resolve(name1), name2.sigma.resolve(name2))
       case (EquatableRef(tree1), EquatableRef(tree2)) => structuralEquals(tree1, tree2)
       case _ => false
     }
   }
 
   def apply(tree1: api.Tree, tree2: api.Tree): Boolean = {
-    if (tree1 == null && tree2 == null) return true
-    if (tree1 != null ^ tree2 != null) return false
+    if (tree1 == null || tree2 == null) return tree1 == null && tree2 == null
     if (tree1.isInstanceOf[Ctor.Ref] ^ tree2.isInstanceOf[Ctor.Ref]) return false
     if (tree1.isInstanceOf[Term.Ref] ^ tree2.isInstanceOf[Term.Ref]) return false
     if (tree1.isInstanceOf[Type.Ref] ^ tree2.isInstanceOf[Type.Ref]) return false
