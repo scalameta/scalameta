@@ -73,19 +73,6 @@ package object semantic {
     }
   }
 
-  sealed trait HasPrefix[T <: Tree, U <: Type]
-  object HasPrefix {
-    implicit def Ref[T <: meta.Ref]: HasPrefix[T, meta.Type] = null
-    implicit def Member[T <: meta.Member]: HasPrefix[T, meta.Type] = null
-    implicit def TermName[T <: meta.Term.Name]: HasPrefix[T, meta.Type] = null
-  }
-
-  implicit class SemanticPrefixableOps[T <: Tree, U <: meta.Type](val tree: T)(implicit ev: HasPrefix[T, U]) {
-    @hosted def prefix: Option[U] = ???
-    @hosted def in(prefix: U): T = in(Some(prefix))
-    @hosted def in(prefix: Option[U]): T = ???
-  }
-
   // ===========================
   // PART 2: TYPES
   // ===========================
