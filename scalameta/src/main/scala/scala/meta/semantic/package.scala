@@ -233,9 +233,17 @@ package object semantic {
     @hosted private[meta] def internalSingle[T <: Member : ClassTag](name: String, filter: T => Boolean, diagnostic: String): T = {
       val filtered = internalAll[T](x => x.ref.toString == name && filter(x))
       filtered match {
+        case Seq() => throw new SemanticException(s"no $name $diagnostic found in ${tree.show[Summary]}")
         case Seq(single) => single
         case Seq(_, _*) => throw new SemanticException(s"multiple $name $diagnostic found in ${tree.show[Summary]}")
+      }
+    }
+    @hosted private[meta] def internalMulti[T <: Member : ClassTag](name: String, filter: T => Boolean, diagnostic: String): Seq[T] = {
+      val filtered = internalAll[T](x => x.ref.toString == name && filter(x))
+      filtered match {
         case Seq() => throw new SemanticException(s"no $name $diagnostic found in ${tree.show[Summary]}")
+        case Seq(single) => List(single)
+        case Seq(multi @ _*) => multi.toList
       }
     }
     @hosted def members: Seq[Member] = internalAll[Member](_ => true)
@@ -263,6 +271,8 @@ package object semantic {
     @hosted def defs: Seq[Member.Term] = internalAll[Member.Term](_.isDef)
     @hosted def defs(name: String): Member.Term = internalSingle[Member.Term](name, _.isDef, "defs")
     @hosted def defs(name: scala.Symbol): Member.Term = defs(name.toString)
+    @hosted def overloads(name: String): Seq[Member.Term] = internalMulti[Member.Term](name, _.isDef, "defs")
+    @hosted def overloads(name: scala.Symbol): Seq[Member.Term] = overloads(name.toString)
     @hosted def types: Seq[Member.Type] = internalAll[Member.Type](m => m.isAbstractType || m.isAliasType)
     @hosted def types(name: String): Member.Type = internalSingle[Member.Type](name, m => m.isAbstractType || m.isAliasType, "types")
     @hosted def types(name: scala.Symbol): Member.Type = types(name.toString)
