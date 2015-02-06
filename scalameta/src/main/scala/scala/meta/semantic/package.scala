@@ -27,10 +27,26 @@ package object semantic {
     implicit def TermName[T <: meta.Term.Name]: HasTpe[T, meta.Type] = null
   }
 
-  implicit class SemanticTypeableOps[T <: Tree, U <: Type : ClassTag](val tree: T)(implicit ev: HasTpe[T, U]) {
+  implicit class SemanticTypeableOps[T <: Tree, U <: Type](val tree: T)(implicit ev: HasTpe[T, U], tag: ClassTag[U]) {
     @hosted def tpe: U = tree match {
-      case tree: impl.Term => implicitly[SemanticContext].tpe(tree).require[U]
-      case tree: impl.Member => implicitly[SemanticContext].tpe(tree).require[U]
+      case tree: impl.Term => implicitly[SemanticContext].tpe(tree).asInstanceOf[U]
+      // NOTE: impl.Term.Name is handled in the impl.Term case above
+      case tree: impl.Decl.Def => tree.decltpe.asInstanceOf[U]
+      case tree: impl.Decl.Type => tree.name.asInstanceOf[U]
+      case tree: impl.Defn.Def => tree.decltpe.getOrElse(tree.body.asInstanceOf[meta.Term].tpe).asInstanceOf[U]
+      case tree: impl.Defn.Macro => tree.tpe.asInstanceOf[U]
+      case tree: impl.Defn.Type => tree.name.asInstanceOf[U]
+      case tree: impl.Defn.Class => tree.name.asInstanceOf[U]
+      case tree: impl.Defn.Trait => tree.name.asInstanceOf[U]
+      case tree: impl.Defn.Object => impl.Type.Singleton(tree.name).asInstanceOf[U]
+      case       impl.Pkg(name: impl.Term.Name, _) => impl.Type.Singleton(name).asInstanceOf[U]
+      case       impl.Pkg(impl.Term.Select(_, name: impl.Term.Name), _) => impl.Type.Singleton(name).asInstanceOf[U]
+      case tree: impl.Pkg.Object => impl.Type.Singleton(tree.name).asInstanceOf[U]
+      case tree: impl.Term.Param if tree.parent.map(_.isInstanceOf[impl.Template]).getOrElse(false) => ??? // TODO: don't forget to intersect with the owner type
+      case tree: impl.Term.Param => tree.decltpe.getOrElse(???).asInstanceOf[U] // TODO: infer it from context
+      case tree: impl.Type.Param => tree.name.asInstanceOf[U]
+      case tree: impl.Ctor.Primary => tree.owner.asInstanceOf[meta.Member].tpe.asInstanceOf[U]
+      case tree: impl.Ctor.Secondary => tree.owner.asInstanceOf[meta.Member].tpe.asInstanceOf[U]
       case tree => throw new SemanticException(s"tpe is undefined for ${tree.show[Summary]}")
     }
   }
@@ -42,7 +58,7 @@ package object semantic {
     implicit def TypeRef[T <: meta.Type.Ref]: HasDefns[T, meta.Member] = null // Type.Ref can refer to both types (regular types) and terms (singleton types)
   }
 
-  implicit class SemanticDefnableOps[T <: Tree, U <: meta.Member : ClassTag](val tree: T)(implicit ev: HasDefns[T, U]) {
+  implicit class SemanticDefnableOps[T <: Tree, U <: meta.Member](val tree: T)(implicit ev: HasDefns[T, U], tag: ClassTag[U]) {
     @hosted def defns: Seq[U] = tree match {
       case tree: impl.Ref => implicitly[SemanticContext].defns(tree).map(_.require[U])
       case tree => throw new SemanticException(s"defns is undefined for ${tree.show[Summary]}")

@@ -13,7 +13,6 @@ trait Context {
   def dialect: Dialect
 
   def tpe(term: Term): Type
-  def tpe(member: Member): Type
   def defns(ref: Ref): Seq[Member]
   def members(tpe: Type): Seq[Member]
 
