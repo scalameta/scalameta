@@ -19,7 +19,6 @@ import org.scalameta.invariants._
 import org.scalameta.unreachable
 import org.scalameta.reflection._
 import scala.meta.internal.{hygiene => h}
-import scala.meta.semantic.{Attr => a}
 import java.util.UUID.randomUUID
 
 class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticContext with GlobalToolkit with MetaToolkit {
@@ -29,41 +28,29 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
   implicit val c: ScalametaSemanticContext = this
   def dialect: scala.meta.dialects.Scala211.type = scala.meta.dialects.Scala211
 
-  private[meta] def attrs(tree: papi.Tree): Seq[scala.meta.semantic.Attr] = {
-    def attrType(tree: papi.Tree): List[scala.meta.semantic.Attr] = {
-      tree match {
-        case tree: p.Term =>
-          val gtpeFromOriginal = tree.originalTree.map(_.tpe)
-          val gtpeFromDenotation = tree.originalPre.flatMap(gpre => tree.originalSym.map(gsym => gsym.infoIn(gpre)))
-          val gtpe = gtpeFromOriginal.orElse(gtpeFromOriginal).requireGet
-          val widenedGtpe = gtpe.widen // TODO: Type.widen in core is still ???, so we implicitly widen here
-          List(a.Type(toApproximateScalameta(widenedGtpe)))
-        case _ =>
-          Nil
-      }
-    }
-    def attrDefns(tree: papi.Tree): List[scala.meta.semantic.Attr] = {
-      tree match {
-        case tree: p.Ref =>
-          import scala.meta.semantic.`package`._
-          val gpre = tree.originalPre.requireGet
-          val gsyms = tree.originalSym.map(_.alternatives).requireGet
-          val pmembers = gsyms.map(gsym => toApproximateScalameta(gpre, gsym))
-          List(a.Defns(pmembers))
-        case _ =>
-          Nil
-      }
-    }
-    attrType(tree) ++ attrDefns(tree)
+  private[meta] def tpe(term: papi.Term): papi.Type = {
+    val tree = term.require[p.Term]
+    val gtpeFromOriginal = tree.originalTree.map(_.tpe)
+    val gtpeFromDenotation = tree.originalPre.flatMap(gpre => tree.originalSym.map(gsym => gsym.infoIn(gpre)))
+    val gtpe = gtpeFromOriginal.orElse(gtpeFromOriginal).requireGet
+    val widenedGtpe = gtpe.widen // TODO: Type.widen in core is still ???, so we implicitly widen here
+    toApproximateScalameta(widenedGtpe)
+  }
+  private[meta] def defns(ref: papi.Ref): Seq[papi.Member] = {
+    val tree = ref.require[p.Ref]
+    val gpre = tree.originalPre.requireGet
+    val gsyms = tree.originalSym.map(_.alternatives).requireGet
+    gsyms.map(gsym => toApproximateScalameta(gpre, gsym))
+  }
+  private[meta] def members(tpe: papi.Type): Seq[papi.Member] = {
+    val ppre = tpe.require[p.Type]
+    val gpre = toScalareflect(ppre)
+    gpre.members.sorted.toList.map(gsym => toApproximateScalameta(gpre, gsym))
   }
 
-  private[meta] lazy val root: papi.Scope = p.Pkg(p.Term.Name("_root_").withDenot(g.NoPrefix, g.rootMirror.RootPackage), LazySeq(members(root).map(_.asInstanceOf[p.Stat])))
-  private[meta] def owner(member: papi.Member): papi.Scope = ???
-  private[meta] def members(scope: papi.Scope): Seq[papi.Member] = ???
-
-  private[meta] def isSubType(tpe1: papi.Type, tpe2: papi.Type): Boolean = ???
-  private[meta] def lub(tpes: Seq[papi.Type]): papi.Type = ???
-  private[meta] def glb(tpes: Seq[papi.Type]): papi.Type = ???
+  private[meta] def isSubType(tpe1: papi.Type, tpe2: papi.Type): Boolean = toScalareflect(tpe1.require[p.Type]) <:< toScalareflect(tpe2.require[p.Type])
+  private[meta] def lub(tpes: Seq[papi.Type]): papi.Type = toApproximateScalameta(g.lub(tpes.map(tpe => toScalareflect(tpe.require[p.Type])).toList))
+  private[meta] def glb(tpes: Seq[papi.Type]): papi.Type = toApproximateScalameta(g.glb(tpes.map(tpe => toScalareflect(tpe.require[p.Type])).toList))
 
   private[meta] def parents(member: papi.Member): Seq[papi.Member] = ???
   private[meta] def children(member: papi.Member): Seq[papi.Member] = ???
@@ -1056,5 +1043,9 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
       }
       result.withOriginal(in)
     })
+  }
+
+  object toScalareflect {
+    def apply(tpe: p.Type): g.Type = ???
   }
 }
