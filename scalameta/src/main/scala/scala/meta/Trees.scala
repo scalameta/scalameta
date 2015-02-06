@@ -181,7 +181,7 @@ package scala.meta.internal.ast {
     @ast class Bind(lhs: Pat.Var, rhs: Pat.Arg) extends Pat
     @ast class Alternative(lhs: Pat, rhs: Pat) extends Pat
     @ast class Tuple(elements: Seq[Pat] @nonEmpty) extends Pat
-    @ast class Extract(ref: Term.Ref, targs: Seq[Type], elements: Seq[Pat.Arg]) extends Pat {
+    @ast class Extract(ref: Term.Ref, targs: Seq[Type], args: Seq[Pat.Arg]) extends Pat {
       require(ref.isStableId)
     }
     @ast class ExtractInfix(lhs: Pat, ref: Term.Name, rhs: Seq[Pat.Arg] @nonEmpty) extends Pat {

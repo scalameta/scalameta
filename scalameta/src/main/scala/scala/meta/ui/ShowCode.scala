@@ -148,7 +148,7 @@ object Code {
         case p: Pat.Bind => unreachable
         case p: Pat.Alternative => true
         case p: Pat.Tuple => true
-        case p: Pat.Extract => p.elements.exists(_ eq t)
+        case p: Pat.Extract => p.args.exists(_ eq t)
         case p: Pat.ExtractInfix => (p.lhs eq t) || p.rhs.exists(_ eq t)
         case p: Pat.Interpolate => p.args.exists(_ eq t)
         case p: Pat.Typed => unreachable
@@ -302,7 +302,7 @@ object Code {
       m(Pattern2, s(p(SimplePattern, t.lhs), separator, kw(designator), " ", p(AnyPattern3, t.rhs)))
     case t: Pat.Alternative      => m(Pattern, s(p(Pattern, t.lhs), " ", kw("|"), " ", p(Pattern, t.rhs)))
     case t: Pat.Tuple            => m(SimplePattern, s("(", r(t.elements, ", "), ")"))
-    case t: Pat.Extract          => m(SimplePattern, s(t.ref, t.targs, t.elements))
+    case t: Pat.Extract          => m(SimplePattern, s(t.ref, t.targs, t.args))
     case t: Pat.ExtractInfix     =>
       m(Pattern3(t.ref.value), s(p(Pattern3(t.ref.value), t.lhs, left = true), " ", t.ref, " ", t.rhs match {
         case pat :: Nil => s(p(Pattern3(t.ref.value), pat, right = true))
