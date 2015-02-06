@@ -17,7 +17,6 @@ class InfrastructureSuite extends FunSuite {
     implicit object FooContext extends Context {
       def dialect: Dialect = Scala211
       private[meta] def attrs(tree: Tree): Seq[Attr] = ???
-      private[meta] def root: Scope = ???
       private[meta] def owner(member: Member): Scope = ???
       private[meta] def members(scope: Scope): Seq[Member] = ???
       private[meta] def isSubType(tpe1: Type, tpe2: Type): Boolean = ???

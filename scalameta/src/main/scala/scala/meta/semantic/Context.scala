@@ -14,7 +14,6 @@ trait Context {
 
   def attrs(tree: Tree): Seq[Attr]
 
-  def root: Scope
   def owner(member: Member): Scope
   def members(scope: Scope): Seq[Member]
 

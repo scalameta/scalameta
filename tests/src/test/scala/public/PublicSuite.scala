@@ -162,8 +162,8 @@ class PublicSuite extends FunSuite {
   // TODO: this error is somewhat confusing
   test("semantic context APIs (opaque)") {
     assert(typecheckError("""
-      (??? : scala.meta.semantic.Context).root
-    """) === "method root in trait Context cannot be accessed in scala.meta.semantic.Context")
+      (??? : scala.meta.semantic.Context).isSubType(???, ???)
+    """) === "method isSubType in trait Context cannot be accessed in scala.meta.semantic.Context")
   }
 
   test("semantic context APIs (the only transparent one)") {
