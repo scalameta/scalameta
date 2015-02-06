@@ -8,6 +8,7 @@ import scala.{Seq => _}
 import scala.collection.immutable._
 import scala.reflect.ClassTag
 import scala.meta.internal.ast._
+import scala.meta.internal.{ast => impl}
 import scala.meta.Origin
 import scala.meta.syntactic.tokenizers.Chars.{isOperatorPart, isScalaLetter}
 import scala.meta.syntactic.tokenizers.Token._
@@ -18,7 +19,7 @@ import org.scalameta.invariants._
 object SyntacticInfo {
   private[meta] val unaryOps = Set("-", "+", "~", "!")
   private[meta] def isUnaryOp(s: String): Boolean = unaryOps contains s
-  implicit class SyntacticNameOps(val name: Name) extends AnyVal {
+  implicit class SyntacticTermNameOps(val name: Term.Name) extends AnyVal {
     import name._
     def isLeftAssoc: Boolean = value.last != ':'
     def isUnaryOp: Boolean = SyntacticInfo.isUnaryOp(value)
@@ -92,6 +93,15 @@ object SyntacticInfo {
       case _: Term.Name | Term.Select(_: Term.Super, _) => true
       case Term.Select(qual: Term.Ref, _)               => qual.isPath
       case _                                            => false
+    }
+  }
+  implicit class SyntacticTemplateOps(val tree: Template) extends AnyVal {
+    def isCompoundTypeCompatible: Boolean = {
+      tree.early.isEmpty &&
+      tree.parents.forall(!_.isInstanceOf[Term.Apply]) &&
+      tree.self.name.isInstanceOf[Name.Anonymous] &&
+      tree.self.decltpe.isEmpty &&
+      tree.stats.map(_.forall(_.isRefineStat)).getOrElse(true)
     }
   }
   implicit class RichMod(val mod: Mod) extends AnyVal {
@@ -429,14 +439,14 @@ abstract class AbstractParser { parser =>
 
   /** Convert tree to formal parameter. */
   def convertToParam(tree: Term): Option[Term.Param] = tree match {
-    case name: Name =>
-      Some(Term.Param(Nil, Some(name.toTermName), None, None))
+    case name: Term.Name =>
+      Some(Term.Param(Nil, name, None, None))
     case Term.Placeholder() =>
-      Some(Term.Param(Nil, None, None, None))
-    case Term.Ascribe(name: Name, tpt) =>
-      Some(Term.Param(Nil, Some(name.toTermName), Some(tpt), None))
+      Some(Term.Param(Nil, Name.Anonymous(), None, None))
+    case Term.Ascribe(name: Term.Name, tpt) =>
+      Some(Term.Param(Nil, name, Some(tpt), None))
     case Term.Ascribe(Term.Placeholder(), tpt) =>
-      Some(Term.Param(Nil, None, Some(tpt), None))
+      Some(Term.Param(Nil, Name.Anonymous(), Some(tpt), None))
     case Lit.Unit() =>
       None
     case other =>
@@ -445,9 +455,9 @@ abstract class AbstractParser { parser =>
 
   def convertToTypeId(ref: Term.Ref): Option[Type] = ref match {
     case Term.Select(qual: Term.Ref, name) =>
-      Some(Type.Select(qual, name.toTypeName))
+      Some(Type.Select(qual, Type.Name(name.value)))
     case name: Term.Name =>
-      Some(name.toTypeName)
+      Some(Type.Name(name.value))
     case _ =>
       None
   }
@@ -551,7 +561,7 @@ abstract class AbstractParser { parser =>
 
   def checkHeadAssoc[T: OpCtx](leftAssoc: Boolean) = checkAssoc(opctx.head.operator, leftAssoc)
 
-  def checkAssoc(op: Name, leftAssoc: Boolean): Unit = (
+  def checkAssoc(op: Term.Name, leftAssoc: Boolean): Unit = (
     if (op.isLeftAssoc != leftAssoc)
       syntaxError("left- and right-associative operators with same precedence may not be mixed")
   )
@@ -767,19 +777,9 @@ abstract class AbstractParser { parser =>
     def functionTypes(): List[Type.Arg] = commaSeparated(functionArgType())
   }
 
-  // TODO: can we get away without this?
-  implicit class NameToName(name: Name) {
-    def toTypeName: Type.Name = name match {
-      case name: Type.Name => name
-      case _              => Type.Name(name.value)
-    }
-    def toTermName: Term.Name = name match {
-      case name: Term.Name => name
-      case _              => Term.Name(name.value)
-    }
-  }
-
-  def name[T](ctor: String => T, advance: Boolean): T = token match {
+  private trait AllowedName[T]
+  private object AllowedName { implicit object Term extends AllowedName[impl.Term.Name]; implicit object Type extends AllowedName[impl.Type.Name] }
+  private def name[T: AllowedName](ctor: String => T, advance: Boolean): T = token match {
     case token: Ident =>
       val name = token.code.stripPrefix("`").stripSuffix("`")
       val res = ctor(name)
@@ -1875,7 +1875,7 @@ abstract class AbstractParser { parser =>
         Some(expr())
       }
     }
-    Term.Param(mods, Some(name), Some(tpt), default)
+    Term.Param(mods, name, Some(tpt), default)
   }
 
   /** {{{
@@ -1908,8 +1908,8 @@ abstract class AbstractParser { parser =>
         } else annots
       } else annots
     val nameopt =
-      if (token.is[Ident]) Some(typeName())
-      else if (token.is[`_ `]) { next(); None }
+      if (token.is[Ident]) typeName()
+      else if (token.is[`_ `]) { next(); Name.Anonymous() }
       else syntaxError("identifier or `_' expected")
     val tparams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
     val typeBounds = this.typeBounds()
@@ -2348,7 +2348,7 @@ abstract class AbstractParser { parser =>
     if (token.is[`{`]) {
       // @S: pre template body cannot stub like post body can!
       val (self, body) = templateBody(isPre = true)
-      if (token.is[`with`] && self.name.isEmpty && self.decltpe.isEmpty) {
+      if (token.is[`with`] && self.name.isInstanceOf[Name.Anonymous] && self.decltpe.isEmpty) {
         val edefs = body.map(ensureEarlyDef)
         next()
         val parents = templateParents()
@@ -2411,7 +2411,7 @@ abstract class AbstractParser { parser =>
         if (parenMeansSyntaxError) syntaxError("traits or objects may not have parameters")
         else syntaxError("unexpected opening parenthesis")
       }
-      (Term.Param(Nil, None, None, None), None)
+      (Term.Param(Nil, Name.Anonymous(), None, None), None)
     }
   }
 
@@ -2465,24 +2465,24 @@ abstract class AbstractParser { parser =>
    * @param isPre specifies whether in early initializer (true) or not (false)
    */
   def templateStatSeq(isPre : Boolean): (Term.Param, List[Stat]) = {
-    var self: Term.Param = Term.Param(Nil, None, None, None)
+    var self: Term.Param = Term.Param(Nil, Name.Anonymous(), None, None)
     var firstOpt: Option[Term] = None
     if (token.is[ExprIntro]) {
       val first = expr(InTemplate) // @S: first statement is potentially converted so cannot be stubbed.
       if (token.is[`=>`]) {
         first match {
-          case name: Name =>
-            self = Term.Param(Nil, Some(name.toTermName), None, None)
           case Term.Placeholder() =>
-            self = Term.Param(Nil, None, None, None)
+            self = Term.Param(Nil, Name.Anonymous(), None, None)
           case Term.This(None) =>
-            self = Term.Param(Nil, None, None, None)
-          case Term.Ascribe(name: Name, tpt) =>
-            self = Term.Param(Nil, Some(name.toTermName), Some(tpt), None)
+            self = Term.Param(Nil, Name.Anonymous(), None, None)
+          case name: Term.Name =>
+            self = Term.Param(Nil, name, None, None)
           case Term.Ascribe(Term.Placeholder(), tpt) =>
-            self = Term.Param(Nil, None, Some(tpt), None)
+            self = Term.Param(Nil, Name.Anonymous(), Some(tpt), None)
           case Term.Ascribe(tree @ Term.This(None), tpt) =>
-            self = Term.Param(Nil, None, Some(tpt), None)
+            self = Term.Param(Nil, Name.Anonymous(), Some(tpt), None)
+          case Term.Ascribe(name: Term.Name, tpt) =>
+            self = Term.Param(Nil, name, Some(tpt), None)
           case _ =>
         }
         next()

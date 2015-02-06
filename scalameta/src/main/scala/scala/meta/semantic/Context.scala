@@ -3,7 +3,6 @@ package semantic
 
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
-import scala.meta.internal.hygiene.Symbol
 import org.scalameta.annotations._
 import scala.annotation._
 
@@ -12,11 +11,9 @@ import scala.annotation._
 trait Context {
   def dialect: Dialect
 
-  def attrs(tree: Tree): Seq[Attr]
-
-  def root: Scope
-  def owner(member: Member): Scope
-  def members(scope: Scope): Seq[Member]
+  def tpe(term: Term): Type
+  def defns(ref: Ref): Seq[Member]
+  def members(tpe: Type): Seq[Member]
 
   def isSubType(tpe1: Type, tpe2: Type): Boolean
   def lub(tpes: Seq[Type]): Type

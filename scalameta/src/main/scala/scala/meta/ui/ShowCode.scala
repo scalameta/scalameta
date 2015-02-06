@@ -124,7 +124,7 @@ object Code {
 
   def templ(templ: Template)(implicit dialect: Dialect) =
     // TODO: consider XXX.isEmpty
-    if (templ.early.isEmpty && templ.parents.isEmpty && templ.self.name.isEmpty && templ.self.decltpe.isEmpty && templ.stats.isEmpty) s()
+    if (templ.early.isEmpty && templ.parents.isEmpty && templ.self.name.isInstanceOf[Name.Anonymous] && templ.self.decltpe.isEmpty && templ.stats.isEmpty) s()
     else if (templ.parents.nonEmpty || templ.early.nonEmpty) s(" extends ", templ)
     else s(" ", templ)
 
@@ -148,7 +148,7 @@ object Code {
         case p: Pat.Bind => unreachable
         case p: Pat.Alternative => true
         case p: Pat.Tuple => true
-        case p: Pat.Extract => p.elements.exists(_ eq t)
+        case p: Pat.Extract => p.args.exists(_ eq t)
         case p: Pat.ExtractInfix => (p.lhs eq t) || p.rhs.exists(_ eq t)
         case p: Pat.Interpolate => p.args.exists(_ eq t)
         case p: Pat.Typed => unreachable
@@ -185,6 +185,9 @@ object Code {
   // Branches
   // TODO: this match is not exhaustive: if I remove Mod.Package, then I get no warning
   implicit def codeTree[T <: api.Tree](implicit dialect: Dialect): Code[T] = Code { x => (x: api.Tree) match {
+    // Name
+    case t: Name.Anonymous       => s("_")
+
     // Term
     case t: Term if t.isCtorCall => if (t.isInstanceOf[Ctor.Ref.Function]) s("=>") else s(p(AnnotTyp, t.ctorTpe), t.ctorArgss)
     case t: Term.This            => m(SimpleExpr1, s(t.qual.map(s(_, ".")).getOrElse(s()), kw("this")))
@@ -217,11 +220,11 @@ object Code {
       import Term.{Block, Function}
       def pstats(s: Seq[Stat]) = r(s.map(i(_)), "")
       t match {
-        case Block(Function(Term.Param(mods, Some(name), tptopt, _) :: Nil, Block(stats)) :: Nil) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
+        case Block(Function(Term.Param(mods, name: Term.Name, tptopt, _) :: Nil, Block(stats)) :: Nil) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
           m(SimpleExpr, s("{ ", kw("implicit"), " ", name, tptopt.map(s(kw(":"), " ", _)).getOrElse(s()), " ", kw("=>"), " ", pstats(stats), n("}")))
-        case Block(Function(Term.Param(mods, Some(name), None, _) :: Nil, Block(stats)) :: Nil) =>
+        case Block(Function(Term.Param(mods, name: Term.Name, None, _) :: Nil, Block(stats)) :: Nil) =>
           m(SimpleExpr, s("{ ", name, " ", kw("=>"), " ", pstats(stats), n("}")))
-        case Block(Function(Term.Param(_, None, _, _) :: Nil, Block(stats)) :: Nil) =>
+        case Block(Function(Term.Param(_, _: Name.Anonymous, _, _) :: Nil, Block(stats)) :: Nil) =>
           m(SimpleExpr, s("{ ", kw("_"), " ", kw("=>"), " ", pstats(stats), n("}")))
         case Block(Function(params, Block(stats)) :: Nil) =>
           m(SimpleExpr, s("{ (", r(params, ", "), ") => ", pstats(stats), n("}")))
@@ -239,11 +242,11 @@ object Code {
         t.finallyp.map { finallyp => s(" ", kw("finally"), " ", finallyp) }.getOrElse(s())))
     case t: Term.Function        =>
       t match {
-        case Term.Function(Term.Param(mods, Some(name), tptopt, _) :: Nil, body) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
+        case Term.Function(Term.Param(mods, name: Term.Name, tptopt, _) :: Nil, body) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
           m(Expr, s(kw("implicit"), " ", name, tptopt.map(s(kw(":"), " ", _)).getOrElse(s()), " ", kw("=>"), " ", p(Expr, body)))
-        case Term.Function(Term.Param(mods, Some(name), None, _) :: Nil, body) =>
+        case Term.Function(Term.Param(mods, name: Term.Name, None, _) :: Nil, body) =>
           m(Expr, s(name, " ", kw("=>"), " ", p(Expr, body)))
-        case Term.Function(Term.Param(_, None, _, _) :: Nil, body) =>
+        case Term.Function(Term.Param(_, _: Name.Anonymous, _, _) :: Nil, body) =>
           m(Expr, s(kw("_"), " ", kw("=>"), " ", p(Expr, body)))
         case Term.Function(params, body) =>
           m(Expr, s("(", r(params, ", "), ") ", kw("=>"), " ", p(Expr, body)))
@@ -260,7 +263,7 @@ object Code {
     case t: Term.Arg.Repeated    => s(p(PostfixExpr, t.arg), kw(":"), " ", kw("_*"))
     case t: Term.Param           =>
       val mods = t.mods.filter(!_.isInstanceOf[Mod.Implicit]) // NOTE: `implicit` in parameters is skipped in favor of `implicit` in the enclosing parameter list
-      s(a(mods, " "), t.name.map(_.value).getOrElse("_"), t.decltpe, t.default.map(s(" ", kw("="), " ", _)).getOrElse(s()))
+      s(a(mods, " "), t.name, t.decltpe, t.default.map(s(" ", kw("="), " ", _)).getOrElse(s()))
 
     // Type
     case t: Type.Name         => m(Path, if (guessIsBackquoted(t)) s("`", t.value, "`") else s(t.value))
@@ -288,7 +291,7 @@ object Code {
       val variance = t.mods.foldLeft("")((curr, m) => if (m.isInstanceOf[Mod.Covariant]) "+" else if (m.isInstanceOf[Mod.Contravariant]) "-" else curr)
       val mods = t.mods.filter(m => !m.isInstanceOf[Mod.Covariant] && !m.isInstanceOf[Mod.Contravariant])
       require(t.mods.length - mods.length <= 1)
-      s(a(mods, " "), variance, t.name.map(_.value).getOrElse("_"), t.tparams, cbounds, vbounds, tbounds)
+      s(a(mods, " "), variance, t.name, t.tparams, cbounds, vbounds, tbounds)
 
     // Pat
     case _: Pat.Wildcard         => m(SimplePattern, kw("_"))
@@ -299,7 +302,7 @@ object Code {
       m(Pattern2, s(p(SimplePattern, t.lhs), separator, kw(designator), " ", p(AnyPattern3, t.rhs)))
     case t: Pat.Alternative      => m(Pattern, s(p(Pattern, t.lhs), " ", kw("|"), " ", p(Pattern, t.rhs)))
     case t: Pat.Tuple            => m(SimplePattern, s("(", r(t.elements, ", "), ")"))
-    case t: Pat.Extract          => m(SimplePattern, s(t.ref, t.targs, t.elements))
+    case t: Pat.Extract          => m(SimplePattern, s(t.ref, t.targs, t.args))
     case t: Pat.ExtractInfix     =>
       m(Pattern3(t.ref.value), s(p(Pattern3(t.ref.value), t.lhs, left = true), " ", t.ref, " ", t.rhs match {
         case pat :: Nil => s(p(Pattern3(t.ref.value), pat, right = true))
@@ -347,14 +350,14 @@ object Code {
 
     // Template
     case t: Template =>
-      val isBodyEmpty = t.self.name.isEmpty && t.self.decltpe.isEmpty && t.stats.isEmpty
+      val isBodyEmpty = t.self.name.isInstanceOf[Name.Anonymous] && t.self.decltpe.isEmpty && t.stats.isEmpty
       val isTemplateEmpty = t.early.isEmpty && t.parents.isEmpty && isBodyEmpty
       if (isTemplateEmpty) s()
       else {
         val isOneLiner = t.stats.map(stats => stats.length == 0 || (stats.length == 1 && !s(stats.head).toString.contains(EOL))).getOrElse(true)
         val pearly = if (!t.early.isEmpty) s("{ ", r(t.early, "; "), " } with ") else s()
         val pparents = a(r(t.parents, " with "), " ", !t.parents.isEmpty && !isBodyEmpty)
-        val pbody = (t.self.name.nonEmpty || t.self.decltpe.nonEmpty, t.stats.nonEmpty, t.stats.getOrElse(Nil)) match {
+        val pbody = (!t.self.name.isInstanceOf[Name.Anonymous] || t.self.decltpe.nonEmpty, t.stats.nonEmpty, t.stats.getOrElse(Nil)) match {
           case (false, false, _) => s()
           case (true, false, _) => s("{ ", t.self, " => }")
           case (false, true, List()) if isOneLiner => s("{}")

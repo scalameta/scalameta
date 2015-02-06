@@ -17,7 +17,7 @@ trait CommonTrees {
 
   object EmptySelf {
     def unapply(tree: Tree): Boolean = tree match {
-      case Term.Param(Nil, None, None, None) => true
+      case Term.Param(Nil, Name.Anonymous(), None, None) => true
       case _ => false
     }
   }
@@ -31,7 +31,7 @@ trait CommonTrees {
 
   object EmptyTemplate {
     def unapply(tree: Tree): Boolean = tree match {
-      case Template(Nil, Nil, Term.Param(Nil, None, None, None), None) => true
+      case Template(Nil, Nil, EmptySelf(), None) => true
       case _ => false
     }
   }

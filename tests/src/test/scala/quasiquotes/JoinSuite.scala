@@ -47,7 +47,7 @@ class JoinSuite extends FunSuite {
     assert(stats.length === 3)
     val Defn.Val(Nil, List(Pat.Var(Term.Name("xtemp"))), None, Term.Name("x")) = stats(0)
     val Defn.Val(Nil, List(Pat.Var(Term.Name("ytemp"))), None, Term.Name("y")) = stats(1)
-    val Term.New(Template(Nil, Nil, Term.Param(Nil, None, None, None), Some(valsout))) = stats(2)
+    val Term.New(Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), Some(valsout))) = stats(2)
     // TODO: FIXME
     // assert(valsout.length === 2)
     // assert(valsout(0).toString === valsin(0).toString)

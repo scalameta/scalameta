@@ -59,7 +59,7 @@ package scala.meta {
   @branch trait Template extends Tree
   @branch trait Mod extends Tree
   @branch trait Enumerator extends Tree
-  @branch trait Importee extends Tree
+  @branch trait Importee extends Tree with Ref
   @branch trait Case extends Tree with Scope
   @branch trait Source extends Tree
 }
@@ -69,14 +69,15 @@ package scala.meta.internal.ast {
 
   @branch trait Ref extends api.Ref with Tree
   @branch trait Name extends api.Name with Ref { def value: String; def denot: Denotation; def sigma: Sigma }
+  object Name { @ast class Anonymous extends Name with api.Term.Name with api.Type.Name { def value = "_" } }
   @branch trait Stat extends api.Stat with Tree
   @branch trait Scope extends api.Scope with Tree
 
   @branch trait Term extends api.Term with Stat with Term.Arg
   object Term {
     @branch trait Ref extends api.Term.Ref with Term with impl.Ref
-    @ast class This(qual: Option[Predef.String]) extends Term.Ref
-    @ast class Super(thisp: Option[Predef.String], superp: Option[Predef.String]) extends Term.Ref
+    @ast class This(qual: Option[Predef.String]) extends Term.Ref with impl.Name { def value = "this" }
+    @ast class Super(thisp: Option[Predef.String], superp: Option[Predef.String]) extends Term.Ref with impl.Name { def value = "super" }
     @ast class Name(value: Predef.String @nonEmpty) extends api.Term.Name with impl.Name with Term.Ref with Pat with Member {
       // TODO: revisit this once we have trivia in place
       // require(keywords.contains(value) ==> isBackquoted)
@@ -108,7 +109,7 @@ package scala.meta.internal.ast {
     @ast class TryWithCases(expr: Term, catchp: Seq[Case], finallyp: Option[Term]) extends Term
     @ast class TryWithTerm(expr: Term, catchp: Term, finallyp: Option[Term]) extends Term
     @ast class Function(params: Seq[Term.Param], body: Term) extends Term with Scope {
-      require(params.forall(param => (param.name.nonEmpty ==> param.default.isEmpty)))
+      require(params.forall(param => (param.name.isInstanceOf[impl.Name.Anonymous] ==> param.default.isEmpty)))
       require(params.exists(_.mods.exists(_.isInstanceOf[Mod.Implicit])) ==> (params.length == 1))
     }
     @ast class PartialFunction(cases: Seq[Case] @nonEmpty) extends Term
@@ -126,7 +127,7 @@ package scala.meta.internal.ast {
       @ast class Named(name: Name, rhs: Term) extends Arg
       @ast class Repeated(arg: Term) extends Arg
     }
-    @ast class Param(mods: Seq[Mod], name: Option[impl.Term.Name], decltpe: Option[Type.Arg], default: Option[Term]) extends api.Term.Param with Member.Term
+    @ast class Param(mods: Seq[Mod], name: api.Term.Name, decltpe: Option[Type.Arg], default: Option[Term]) extends api.Term.Param with Member.Term
   }
 
   @branch trait Type extends api.Type with Tree with Type.Arg with Scope
@@ -166,7 +167,7 @@ package scala.meta.internal.ast {
       @ast class Repeated(tpe: Type) extends Arg
     }
     @ast class Param(mods: Seq[Mod],
-                     name: Option[impl.Type.Name],
+                     name: api.Type.Name,
                      tparams: Seq[impl.Type.Param],
                      contextBounds: Seq[impl.Type],
                      viewBounds: Seq[impl.Type],
@@ -180,7 +181,7 @@ package scala.meta.internal.ast {
     @ast class Bind(lhs: Pat.Var, rhs: Pat.Arg) extends Pat
     @ast class Alternative(lhs: Pat, rhs: Pat) extends Pat
     @ast class Tuple(elements: Seq[Pat] @nonEmpty) extends Pat
-    @ast class Extract(ref: Term.Ref, targs: Seq[Type], elements: Seq[Pat.Arg]) extends Pat {
+    @ast class Extract(ref: Term.Ref, targs: Seq[Type], args: Seq[Pat.Arg]) extends Pat {
       require(ref.isStableId)
     }
     @ast class ExtractInfix(lhs: Pat, ref: Term.Name, rhs: Seq[Pat.Arg] @nonEmpty) extends Pat {
@@ -366,7 +367,7 @@ package scala.meta.internal.ast {
     @ast class Clause(ref: Term.Ref, sels: Seq[Selector] @nonEmpty) extends Tree {
       require(ref.isStableId)
     }
-    @branch trait Selector extends api.Importee with Tree
+    @branch trait Selector extends api.Importee with Tree with Ref
     object Selector {
       @ast class Wildcard() extends Selector
       @ast class Name(value: String) extends Selector
