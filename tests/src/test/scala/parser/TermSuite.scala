@@ -155,26 +155,26 @@ class TermSuite extends ParseSuite {
   }
 
   test("(x => x)") {
-    val Function(Term.Param(Nil, Some(TermName("x")), None, None) :: Nil,
+    val Function(Term.Param(Nil, TermName("x"), None, None) :: Nil,
                  TermName("x")) = term("(x => x)")
   }
 
   test("(x: Int) => x") {
-    val Function(Term.Param(Nil, Some(TermName("x")), Some(TypeName("Int")), None) :: Nil,
+    val Function(Term.Param(Nil, TermName("x"), Some(TypeName("Int")), None) :: Nil,
                  TermName("x")) = term("(x: Int) => x")
   }
 
   test("(_: Int) => x") {
-    val Function(Term.Param(Nil, None, Some(TypeName("Int")), None) :: Nil,
+    val Function(Term.Param(Nil, Name.Anonymous(), Some(TypeName("Int")), None) :: Nil,
                  TermName("x")) = term("(_: Int) => x")
   }
 
   test("_ => ()") {
-    val Function(Term.Param(Nil, None, None, None) :: Nil, Lit.Unit()) = term("_ => ()")
+    val Function(Term.Param(Nil, Name.Anonymous(), None, None) :: Nil, Lit.Unit()) = term("_ => ()")
   }
 
   test("{ implicit x => () }") {
-    val Block(Function(Term.Param(Mod.Implicit() :: Nil, Some(TermName("x")), None, None) :: Nil,
+    val Block(Function(Term.Param(Mod.Implicit() :: Nil, TermName("x"), None, None) :: Nil,
                        Block(Lit.Unit() :: Nil)) :: Nil) = term("{ implicit x => () }")
   }
 
@@ -285,7 +285,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("new { self: T => }") {
-    val New(Template(Nil, Nil, Term.Param(Nil, Some(TermName("self")), Some(TypeName("T")), None), Some(Nil))) =
+    val New(Template(Nil, Nil, Term.Param(Nil, TermName("self"), Some(TypeName("T")), None), Some(Nil))) =
       term("new { self: T => }")
   }
 
@@ -314,7 +314,7 @@ class TermSuite extends ParseSuite {
     val Term.Block(List(
       Defn.Class(
         List(Mod.Case()), Type.Name("C"), Nil,
-        Ctor.Primary(Nil, Ctor.Name("this"), List(List(Term.Param(Nil, Some(Term.Name("x")), Some(Type.Name("Int")), None)))),
+        Ctor.Primary(Nil, Ctor.Name("this"), List(List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None)))),
         EmptyTemplate()))) = term("{ case class C(x: Int); }")
   }
 }

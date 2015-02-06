@@ -69,6 +69,7 @@ package scala.meta.internal.ast {
 
   @branch trait Ref extends api.Ref with Tree
   @branch trait Name extends api.Name with Ref { def value: String; def denot: Denotation; def sigma: Sigma }
+  object Name { @ast class Anonymous extends Name with api.Term.Name with api.Type.Name { def value = "_" } }
   @branch trait Stat extends api.Stat with Tree
   @branch trait Scope extends api.Scope with Tree
 
@@ -108,7 +109,7 @@ package scala.meta.internal.ast {
     @ast class TryWithCases(expr: Term, catchp: Seq[Case], finallyp: Option[Term]) extends Term
     @ast class TryWithTerm(expr: Term, catchp: Term, finallyp: Option[Term]) extends Term
     @ast class Function(params: Seq[Term.Param], body: Term) extends Term with Scope {
-      require(params.forall(param => (param.name.nonEmpty ==> param.default.isEmpty)))
+      require(params.forall(param => (param.name.isInstanceOf[impl.Name.Anonymous] ==> param.default.isEmpty)))
       require(params.exists(_.mods.exists(_.isInstanceOf[Mod.Implicit])) ==> (params.length == 1))
     }
     @ast class PartialFunction(cases: Seq[Case] @nonEmpty) extends Term
@@ -126,7 +127,7 @@ package scala.meta.internal.ast {
       @ast class Named(name: Name, rhs: Term) extends Arg
       @ast class Repeated(arg: Term) extends Arg
     }
-    @ast class Param(mods: Seq[Mod], name: Option[impl.Term.Name], decltpe: Option[Type.Arg], default: Option[Term]) extends api.Term.Param with Member.Term
+    @ast class Param(mods: Seq[Mod], name: api.Term.Name, decltpe: Option[Type.Arg], default: Option[Term]) extends api.Term.Param with Member.Term
   }
 
   @branch trait Type extends api.Type with Tree with Type.Arg with Scope
@@ -166,7 +167,7 @@ package scala.meta.internal.ast {
       @ast class Repeated(tpe: Type) extends Arg
     }
     @ast class Param(mods: Seq[Mod],
-                     name: Option[impl.Type.Name],
+                     name: api.Type.Name,
                      tparams: Seq[impl.Type.Param],
                      contextBounds: Seq[impl.Type],
                      viewBounds: Seq[impl.Type],

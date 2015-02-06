@@ -100,6 +100,7 @@ package object semantic {
         case denot: h.Denotation.Precomputed => denot.copy(prefix = h.Prefix.Zero)
       }
       val prefixlessName = tree.name match {
+        case name: impl.Name.Anonymous => name
         case name: impl.Term.Name => name.copy(denot = stripPrefix(name.denot))
         case name: impl.Type.Name => name.copy(denot = stripPrefix(name.denot))
         case name: impl.Ctor.Name => name.copy(denot = stripPrefix(name.denot))
@@ -127,18 +128,16 @@ package object semantic {
         case       impl.Pkg(impl.Term.Select(_, name: impl.Term.Name), _) => name
         case tree: impl.Pkg.Object => tree.name
         case tree: impl.Term.Param if tree.parent.map(_.isInstanceOf[impl.Template]).getOrElse(false) => impl.Term.This(???)
-        case tree: impl.Term.Param if tree.name.isDefined => tree.name.get
-        case tree: impl.Term.Param => throw new SemanticException(s"can't reference an anonymous parameter ${tree.show[Summary]}")
-        case tree: impl.Type.Param if tree.name.isDefined => tree.name.get
-        case tree: impl.Type.Param => throw new SemanticException(s"can't reference an anonymous parameter ${tree.show[Summary]}")
+        case tree: impl.Term.Param => tree.name
+        case tree: impl.Type.Param => tree.name
         case tree: impl.Ctor.Primary => tree.name
         case tree: impl.Ctor.Secondary => tree.name
       }
     }
     @hosted def isAnonymous: Boolean = {
       tree.require[impl.Member] match {
-        case tree: impl.Term.Param => tree.name.isEmpty
-        case tree: impl.Type.Param => tree.name.isEmpty
+        case tree: impl.Term.Param => tree.name.isAnonymous
+        case tree: impl.Type.Param => tree.name.isAnonymous
         case _ => false
       }
     }
@@ -338,7 +337,11 @@ package object semantic {
   // ===========================
 
   implicit class SemanticNameOps(val tree: Name) extends AnyVal {
-    def isBinder = tree.parent.map(parent => parent.isInstanceOf[impl.Pat.Var] || parent.isInstanceOf[impl.Member]).getOrElse(false)
-    def isReference = !isBinder
+    def isBinder: Boolean = tree.parent.map(parent => parent.isInstanceOf[impl.Pat.Var] || parent.isInstanceOf[impl.Member]).getOrElse(false)
+    def isReference: Boolean = !isBinder
+    def isAnonymous: Boolean = tree.isInstanceOf[impl.Name.Anonymous]
+  }
+  implicit class SemanticTermNameOps(val tree: Term.Name) extends AnyVal {
+    def isAnonymous: Boolean = tree.isInstanceOf[impl.Name.Anonymous]
   }
 }
