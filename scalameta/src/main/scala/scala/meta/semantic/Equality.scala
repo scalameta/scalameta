@@ -19,9 +19,9 @@ import impl._
 
 // In the implementation that follows we do the following to compare these refs:
 // 1) XXX.Name vs name-like XXX.Select, where XXX can be Term, Type or Ctor.Ref, are compared equal if they refer to the same defn
-// 2) XXX.Select vs XXX.Select are compared structurally
-// 3) YYY.ZZZ, where ZZZ can be Project, Singleton and Function are compared structurally
-// 4) other refs (i.e. Term.This and Term.Super) are always compared unequal, because I don't yet know how to do hygiene for them
+// 2) Term.This vs Term.This, as well as Term.Super vs Term.Super are compared equal if they refer to the same defn
+// 3) XXX.Select vs XXX.Select are compared structurally
+// 4) YYY.ZZZ, where ZZZ can be Project, Singleton and Function are compared structurally
 
 // TODO: we should also use our compiler plugin powers to warn on Ref/Def comparisons
 // because those indicate mistakes like `case q"foo.$bar" if bar == t"Foo".defs("bar") => ...`
@@ -49,21 +49,31 @@ trait Helpers {
     }
   }
 
-  object EquatableRef {
-    def unapply(tree: Tree): Option[Tree] = {
+  object ThisRef {
+    def unapply(tree: Tree): Option[Term.This] = {
       tree match {
-        case UnfortunateRef(_) => None
-        case _: Ref => Some(tree)
+        case tree: Term.This => Some(tree)
         case _ => None
       }
     }
   }
 
-  object UnfortunateRef {
+  object SuperRef {
+    def unapply(tree: Tree): Option[Term.Super] = {
+      tree match {
+        case tree: Term.Super => Some(tree)
+        case _ => None
+      }
+    }
+  }
+
+  object EquatableRef {
     def unapply(tree: Tree): Option[Tree] = {
       tree match {
-        case _: Term.This => Some(tree)
-        case _: Term.Super => Some(tree)
+        case NamelikeRef(_) => None
+        case ThisRef(_) => None
+        case SuperRef(_) => None
+        case _: Ref => Some(tree)
         case _ => None
       }
     }
@@ -71,7 +81,11 @@ trait Helpers {
 }
 
 object equals extends Helpers {
-  private def compare(denot1: Denotation, denot2: Denotation): Boolean = {
+  private def refersToSameDefn(name1: Name, name2: Name): Boolean = {
+    refersToSameDefn(name1.sigma.resolve(name1), name2.sigma.resolve(name2))
+  }
+
+  private def refersToSameDefn(denot1: Denotation, denot2: Denotation): Boolean = {
     denot1 != Denotation.Zero && denot2 != Denotation.Zero && denot1 == denot2
   }
 
@@ -92,7 +106,9 @@ object equals extends Helpers {
   private def semanticEquals(tree1: Tree, tree2: Tree): Boolean = {
     (tree1, tree2) match {
       case (NonRef(tree1), NonRef(tree2)) => structuralEquals(tree1, tree2)
-      case (NamelikeRef(name1), NamelikeRef(name2)) => compare(name1.sigma.resolve(name1), name2.sigma.resolve(name2))
+      case (NamelikeRef(name1), NamelikeRef(name2)) => refersToSameDefn(name1, name2)
+      case (ThisRef(this1), ThisRef(this2)) => refersToSameDefn(this1, this2)
+      case (SuperRef(super1), SuperRef(super2)) => refersToSameDefn(super1, super2)
       case (EquatableRef(tree1), EquatableRef(tree2)) => structuralEquals(tree1, tree2)
       case _ => false
     }

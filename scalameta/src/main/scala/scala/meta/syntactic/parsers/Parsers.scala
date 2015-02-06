@@ -2471,18 +2471,18 @@ abstract class AbstractParser { parser =>
       val first = expr(InTemplate) // @S: first statement is potentially converted so cannot be stubbed.
       if (token.is[`=>`]) {
         first match {
-          case name: Name =>
-            self = Term.Param(Nil, Some(name.toTermName), None, None)
           case Term.Placeholder() =>
             self = Term.Param(Nil, None, None, None)
           case Term.This(None) =>
             self = Term.Param(Nil, None, None, None)
-          case Term.Ascribe(name: Name, tpt) =>
-            self = Term.Param(Nil, Some(name.toTermName), Some(tpt), None)
+          case name: Name =>
+            self = Term.Param(Nil, Some(name.toTermName), None, None)
           case Term.Ascribe(Term.Placeholder(), tpt) =>
             self = Term.Param(Nil, None, Some(tpt), None)
           case Term.Ascribe(tree @ Term.This(None), tpt) =>
             self = Term.Param(Nil, None, Some(tpt), None)
+          case Term.Ascribe(name: Name, tpt) =>
+            self = Term.Param(Nil, Some(name.toTermName), Some(tpt), None)
           case _ =>
         }
         next()

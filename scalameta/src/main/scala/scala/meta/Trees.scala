@@ -75,8 +75,8 @@ package scala.meta.internal.ast {
   @branch trait Term extends api.Term with Stat with Term.Arg
   object Term {
     @branch trait Ref extends api.Term.Ref with Term with impl.Ref
-    @ast class This(qual: Option[Predef.String]) extends Term.Ref
-    @ast class Super(thisp: Option[Predef.String], superp: Option[Predef.String]) extends Term.Ref
+    @ast class This(qual: Option[Predef.String]) extends Term.Ref with impl.Name { def value = "this" }
+    @ast class Super(thisp: Option[Predef.String], superp: Option[Predef.String]) extends Term.Ref with impl.Name { def value = "super" }
     @ast class Name(value: Predef.String @nonEmpty) extends api.Term.Name with impl.Name with Term.Ref with Pat with Member {
       // TODO: revisit this once we have trivia in place
       // require(keywords.contains(value) ==> isBackquoted)
