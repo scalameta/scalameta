@@ -520,12 +520,37 @@ package object internal {
         case "toScalameta" =>
           val pre @ q"$h.toScalameta" = c.prefix.tree
           val sym = c.macroApplication.symbol
-          val x1 = q"""
-            val result = (new { val global: $h.g.type = $h.g } with $ToolkitTrait).ensugar($x)
-            if (System.getProperty("ensugar.debug") != null) { _root_.scala.Console.err.println(result); _root_.scala.Console.err.println($h.g.showRaw(result, printIds = true, printTypes = true)) }
-            result
+          val ensugared = q"""
+            val ensugared = (new { val global: $h.g.type = $h.g } with $ToolkitTrait).ensugar($x)
+            if (System.getProperty("ensugar.debug") != null) { _root_.scala.Console.err.println(ensugared); _root_.scala.Console.err.println($h.g.showRaw(ensugared, printIds = true, printTypes = true)) }
+            ensugared
           """
-          convert(x1, c.typecheck(x1).tpe, c.weakTypeOf[Pt], allowDerived = true, allowInputDowncasts = true, allowOutputDowncasts = true, pre = pre.tpe, sym = sym)
+          val result = convert(ensugared, c.typecheck(ensugared).tpe, c.weakTypeOf[Pt], allowDerived = true, allowInputDowncasts = true, allowOutputDowncasts = true, pre = pre.tpe, sym = sym)
+          q"""
+            val converted = $result
+            def cacheAllMembers(x: _root_.scala.meta.internal.ast.Tree): Unit = {
+              def cache(x: _root_.scala.meta.internal.ast.Member): Unit = {
+                val name = _root_.scala.meta.semantic.`package`.SemanticMemberOps(x).name.asInstanceOf[_root_.scala.meta.internal.ast.Name]
+                if (_root_.scala.meta.semantic.`package`.SemanticNameOps(name).isBinder) {
+                  val denot = name.denot
+                  _root_.org.scalameta.invariants.require(x != null && denot != _root_.scala.meta.internal.hygiene.Denotation.Zero)
+                  _root_.org.scalameta.invariants.require(x != null && denot.symbol != _root_.scala.meta.internal.hygiene.Symbol.Zero)
+                  _root_.org.scalameta.invariants.require(x != null && !$h.hsymToPmemberCache.contains(denot.symbol))
+                  $h.hsymToPmemberCache(denot.symbol) = x
+                }
+              }
+              def loop(x: Any): Unit = x match {
+                case x: _root_.scala.meta.internal.ast.Tree => cacheAllMembers(x)
+                case x: List[_] => x.foreach(loop)
+                case x: Some[_] => loop(x.get)
+                case x => // do nothing
+              }
+              x match { case x: _root_.scala.meta.internal.ast.Member => cache(x); case _ => }
+              x.productIterator.map(loop)
+            }
+            cacheAllMembers(converted.asInstanceOf[_root_.scala.meta.internal.ast.Tree])
+            converted
+          """
         case _ =>
           c.abort(c.enclosingPosition, "unknown target: " + target.name)
       }
@@ -652,27 +677,7 @@ package object internal {
     }
     def customEpilogue[T](x: Tree)(implicit T: c.WeakTypeTag[T]): Tree = {
       val isTree = T.tpe <:< c.mirror.staticClass("scala.meta.internal.ast.Tree").asType.toType
-      val isMember = T.tpe <:< c.mirror.staticClass("scala.meta.internal.ast.Member").asType.toType && T.tpe.decl(TermName("name")) != NoSymbol
-      if (isMember) {
-        q"""
-          def updateCache(member: ${x.tpe}, name: _root_.scala.meta.internal.ast.Name): _root_.scala.Unit = {
-            if (_root_.scala.meta.semantic.`package`.SemanticNameOps(name).isBinder) {
-              val denot = name.denot
-              _root_.org.scalameta.invariants.require(member != null && denot != _root_.scala.meta.internal.hygiene.Denotation.Zero)
-              _root_.org.scalameta.invariants.require(member != null && denot.symbol != _root_.scala.meta.internal.hygiene.Symbol.Zero)
-              _root_.org.scalameta.invariants.require(member != null && !hsymToPmemberCache.contains(denot.symbol))
-              hsymToPmemberCache(denot.symbol) = $x
-            }
-          }
-          val result = $x.withOriginal(in)
-          updateCache(result, $x.name.asInstanceOf[_root_.scala.meta.internal.ast.Name])
-          result
-        """
-      } else if (isTree) {
-        q"$x.withOriginal(in)"
-      } else {
-        x
-      }
+      if (isTree) q"$x.withOriginal(in)" else x
     }
   }
 }

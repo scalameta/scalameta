@@ -189,7 +189,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
   }
 
   // TODO: remember positions. actually, in scalac they are almost accurate, so it would be a shame to discard them
-  private val hsymToPmemberCache = mutable.Map[h.Symbol, p.Member]()
+  val hsymToPmemberCache = mutable.Map[h.Symbol, p.Member]()
   @converter def toScalameta(in: Any, pt: Pt): Any = {
     object Helpers extends g.ReificationSupportImpl { self =>
       def pctorcall(in: g.Tree, gtpt: g.Tree, gctor: g.Symbol, gargss: Seq[Seq[g.Tree]]): p.Term = {
