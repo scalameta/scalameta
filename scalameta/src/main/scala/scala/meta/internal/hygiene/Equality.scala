@@ -1,4 +1,6 @@
-package scala.meta.internal.hygiene
+package scala.meta
+package internal
+package hygiene
 
 import org.scalameta.invariants._
 import org.scalameta.unreachable

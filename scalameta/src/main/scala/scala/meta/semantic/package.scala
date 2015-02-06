@@ -24,7 +24,7 @@ package object semantic {
     // TODO: design the attr hierarchy of semantic facts that can be figured out about trees
     // TODO: examples: a type of a tree, a definition/definitions the tree refers to, maybe a desugaring, etc
     // TODO: see https://github.com/JetBrains/intellij-scala/blob/master/src/org/jetbrains/plugins/scala/lang/resolve/ScalaResolveResult.scala#L24
-    // TODO: but keep in mind that some of the facts (denotations) are now stored in tree fields (see Hygiene.scala for more information)
+    // TODO: but keep in mind that some of the facts (denotations) are now stored in tree fields (see internal/hygiene/package.scala for more information)
     @leaf class Type(tpe: scala.meta.Type) extends Attr
     @leaf class Defns(defns: Seq[scala.meta.Member] @nonEmpty) extends Attr
   }
