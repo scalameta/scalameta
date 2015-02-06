@@ -19,8 +19,7 @@ class InfrastructureSuite extends FunSuite {
       private[meta] def tpe(term: Term): Type = ???
       private[meta] def tpe(member: Member): Type = ???
       private[meta] def defns(ref: Ref): Seq[Member] = ???
-      private[meta] def owner(member: Member): Scope = ???
-      private[meta] def members(scope: Scope): Seq[Member] = ???
+      private[meta] def members(tpe: Type): Seq[Member] = ???
       private[meta] def isSubType(tpe1: Type, tpe2: Type): Boolean = ???
       private[meta] def lub(tpes: Seq[Type]): Type = ???
       private[meta] def glb(tpes: Seq[Type]): Type = ???

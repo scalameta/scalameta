@@ -101,10 +101,7 @@ package object semantic {
       }
       prefixlessName.defn
     }
-    @hosted def owner: Scope = {
-      tree match { case name: Term.Name => require(name.isBinder); case _ => }
-      implicitly[SemanticContext].owner(tree)
-    }
+    @hosted def owner: Scope = ???
     @hosted def name: Name = {
       tree.require[impl.Member] match {
         case tree: impl.Term.Name => tree
@@ -242,12 +239,60 @@ package object semantic {
   // ===========================
 
   implicit class SemanticScopeOps(val tree: Scope) extends AnyVal {
-    @hosted private[meta] def internalAll[T: ClassTag](filter: T => Boolean): Seq[T] = {
-      val partiallyFiltered = implicitly[SemanticContext].members(tree).collect{ case x: T => x }
-      partiallyFiltered.filter(filter)
+    @hosted private[meta] def internalAll: Seq[Member] = {
+      def membersOfStats(stats: Seq[impl.Tree]) = stats.collect{
+        case name: Term.Name if name.isBinder => name
+        case member: Member => member
+      }
+      def membersOfEnumerator(enum: impl.Enumerator) = enum match {
+        case impl.Enumerator.Generator(pat, _) => membersOfPat(pat)
+        case impl.Enumerator.Val(pat, _) => membersOfPat(pat)
+        case impl.Enumerator.Guard(_) => Nil
+      }
+      def membersOfPat(pat: impl.Pat.Arg): Seq[impl.Member] = pat match {
+        case impl.Term.Name(_) => Nil
+        case impl.Term.Select(_, _) => Nil
+        case impl.Pat.Wildcard() => Nil
+        case impl.Pat.Var(name) => List(name)
+        case impl.Pat.Bind(lhs, rhs) => membersOfPat(lhs) ++ membersOfPat(rhs)
+        case impl.Pat.Alternative(lhs, rhs) => membersOfPat(lhs) ++ membersOfPat(rhs)
+        case impl.Pat.Tuple(elements) => elements.flatMap(membersOfPat)
+        case impl.Pat.Extract(_, _, elements) => elements.flatMap(membersOfPat)
+        case impl.Pat.ExtractInfix(lhs, _, rhs) => membersOfPat(lhs) ++ rhs.flatMap(membersOfPat)
+        case impl.Pat.Interpolate(_, _, args) => args.flatMap(membersOfPat)
+        case impl.Pat.Typed(lhs, _) => membersOfPat(lhs)
+        case impl.Pat.Arg.SeqWildcard() => Nil
+        case _: impl.Lit => Nil
+      }
+      tree.require[impl.Scope] match {
+        case tree: impl.Term.Block => membersOfStats(tree.stats)
+        case tree: impl.Term.Function => tree.params
+        case tree: impl.Term.For => tree.enums.flatMap(membersOfEnumerator)
+        case tree: impl.Term.ForYield => tree.enums.flatMap(membersOfEnumerator)
+        case tree: impl.Case => membersOfPat(tree.pat)
+        case tree: impl.Type => implicitly[SemanticContext].members(tree)
+        case tree: impl.Term.Name => Nil
+        case tree: impl.Term.Param => Nil
+        case tree: impl.Type.Param => tree.tparams
+        case tree: impl.Decl.Def => tree.tparams ++ tree.paramss.flatten
+        case tree: impl.Decl.Type => tree.tparams
+        case tree: impl.Defn.Def => tree.tparams ++ tree.paramss.flatten
+        case tree: impl.Defn.Macro => tree.tparams ++ tree.paramss.flatten
+        case tree: impl.Defn.Type => tree.tparams
+        case tree: impl.Defn.Class => tree.tparams ++ tree.tpe.members
+        case tree: impl.Defn.Trait => tree.tparams ++ tree.tpe.members
+        case tree: impl.Defn.Object => tree.tparams ++ tree.tpe.members
+        case tree: impl.Pkg => tree.tpe.members
+        case tree: impl.Pkg.Object => tree.tparams ++ tree.tpe.members
+        case tree: impl.Ctor.Primary => tree.paramss.flatten
+        case tree: impl.Ctor.Secondary => tree.paramss.flatten
+      }
+    }
+    @hosted private[meta] def internalFilter[T: ClassTag](filter: T => Boolean): Seq[T] = {
+      internalAll.collect{ case x: T => x }.filter(filter)
     }
     @hosted private[meta] def internalSingle[T <: Member : ClassTag](name: String, filter: T => Boolean, diagnostic: String): T = {
-      val filtered = internalAll[T](x => x.name.toString == name && filter(x))
+      val filtered = internalFilter[T](x => x.name.toString == name && filter(x))
       filtered match {
         case Seq() => throw new SemanticException(s"no $name $diagnostic found in ${tree.show[Summary]}")
         case Seq(single) => single
@@ -255,14 +300,14 @@ package object semantic {
       }
     }
     @hosted private[meta] def internalMulti[T <: Member : ClassTag](name: String, filter: T => Boolean, diagnostic: String): Seq[T] = {
-      val filtered = internalAll[T](x => x.name.toString == name && filter(x))
+      val filtered = internalFilter[T](x => x.name.toString == name && filter(x))
       filtered match {
         case Seq() => throw new SemanticException(s"no $name $diagnostic found in ${tree.show[Summary]}")
         case Seq(single) => List(single)
         case Seq(multi @ _*) => multi.toList
       }
     }
-    @hosted def members: Seq[Member] = internalAll[Member](_ => true)
+    @hosted def members: Seq[Member] = internalFilter[Member](_ => true)
     @hosted def members(name: Name): Member = {
       val filter = (m: Member) => (name.isInstanceOf[Term.Name] && m.isInstanceOf[Member.Term]) || (name.isInstanceOf[Type.Name] && m.isInstanceOf[Member.Type])
       val description = if (name.isInstanceOf[Term.Name]) "term members" else "type members"
@@ -275,8 +320,7 @@ package object semantic {
         case _: impl.Term.Super =>
           ???
         case thisName: impl.Name =>
-          val all = implicitly[SemanticContext].members(tree).collect{ case x: T => x }
-          all.filter(that => {
+          internalFilter[T](that => {
             def thisDenot = thisName.denot.require[h.Denotation.Precomputed]
             def thatDenot = that.name.require[impl.Name].denot.require[h.Denotation.Precomputed]
             scala.util.Try(thisDenot.symbol == thatDenot.symbol).getOrElse(false)
@@ -287,39 +331,39 @@ package object semantic {
           }
       }
     }
-    @hosted def packages: Seq[Member.Term] = internalAll[Member.Term](_.isPackage)
+    @hosted def packages: Seq[Member.Term] = internalFilter[Member.Term](_.isPackage)
     @hosted def packages(name: String): Member.Term = internalSingle[Member.Term](name, _.isPackage, "packages")
     @hosted def packages(name: scala.Symbol): Member.Term = packages(name.toString)
-    @hosted def ctor: Member.Term = internalAll[Member.Term](_ => true) match { case Seq(primary, _*) => primary; case _ => throw new SemanticException(s"no constructors found in ${tree.show[Summary]}") }
-    @hosted def ctors: Seq[Member.Term] = internalAll[Member.Term](_ => true)
-    @hosted def classes: Seq[Member.Type] = internalAll[Member.Type](_.isClass)
+    @hosted def ctor: Member.Term = internalFilter[Member.Term](_ => true) match { case Seq(primary, _*) => primary; case _ => throw new SemanticException(s"no constructors found in ${tree.show[Summary]}") }
+    @hosted def ctors: Seq[Member.Term] = internalFilter[Member.Term](_ => true)
+    @hosted def classes: Seq[Member.Type] = internalFilter[Member.Type](_.isClass)
     @hosted def classes(name: String): Member.Type = internalSingle[Member.Type](name, _.isClass, "classes")
     @hosted def classes(name: scala.Symbol): Member.Type = classes(name.toString)
-    @hosted def traits: Seq[Member.Type] = internalAll[Member.Type](_.isTrait)
+    @hosted def traits: Seq[Member.Type] = internalFilter[Member.Type](_.isTrait)
     @hosted def traits(name: String): Member.Type = internalSingle[Member.Type](name, _.isTrait, "traits")
     @hosted def traits(name: scala.Symbol): Member.Type = traits(name.toString)
-    @hosted def objects: Seq[Member.Term] = internalAll[Member.Term](_.isObject)
+    @hosted def objects: Seq[Member.Term] = internalFilter[Member.Term](_.isObject)
     @hosted def objects(name: String): Member.Term = internalSingle[Member.Term](name, _.isObject, "objects")
     @hosted def objects(name: scala.Symbol): Member.Term = objects(name.toString)
-    @hosted def vars: Seq[Term.Name] = internalAll[Term.Name](_.isVar)
+    @hosted def vars: Seq[Term.Name] = internalFilter[Term.Name](_.isVar)
     @hosted def vars(name: String): Term.Name = internalSingle[Term.Name](name, _.isVar, "vars")
     @hosted def vars(name: scala.Symbol): Term.Name = vars(name.toString)
-    @hosted def vals: Seq[Term.Name] = internalAll[Term.Name](_.isVal)
+    @hosted def vals: Seq[Term.Name] = internalFilter[Term.Name](_.isVal)
     @hosted def vals(name: String): Term.Name = internalSingle[Term.Name](name, _.isVal, "vals")
     @hosted def vals(name: scala.Symbol): Term.Name = vals(name.toString)
-    @hosted def defs: Seq[Member.Term] = internalAll[Member.Term](_.isDef)
+    @hosted def defs: Seq[Member.Term] = internalFilter[Member.Term](_.isDef)
     @hosted def defs(name: String): Member.Term = internalSingle[Member.Term](name, _.isDef, "defs")
     @hosted def defs(name: scala.Symbol): Member.Term = defs(name.toString)
     @hosted def overloads(name: String): Seq[Member.Term] = internalMulti[Member.Term](name, _.isDef, "defs")
     @hosted def overloads(name: scala.Symbol): Seq[Member.Term] = overloads(name.toString)
-    @hosted def types: Seq[Member.Type] = internalAll[Member.Type](m => m.isAbstractType || m.isAliasType)
+    @hosted def types: Seq[Member.Type] = internalFilter[Member.Type](m => m.isAbstractType || m.isAliasType)
     @hosted def types(name: String): Member.Type = internalSingle[Member.Type](name, m => m.isAbstractType || m.isAliasType, "types")
     @hosted def types(name: scala.Symbol): Member.Type = types(name.toString)
-    @hosted def params: Seq[Term.Param] = internalAll[Term.Param](_ => true)
+    @hosted def params: Seq[Term.Param] = internalFilter[Term.Param](_ => true)
     @hosted def paramss: Seq[Seq[Term.Param]] = ???
     @hosted def params(name: String): Term.Param = internalSingle[Term.Param](name, _ => true, "parameters")
     @hosted def params(name: scala.Symbol): Term.Param = params(name.toString)
-    @hosted def tparams: Seq[Type.Param] = internalAll[Type.Param](_ => true)
+    @hosted def tparams: Seq[Type.Param] = internalFilter[Type.Param](_ => true)
     @hosted def tparams(name: String): Type.Param = internalSingle[Type.Param](name, _ => true, "type parameters")
     @hosted def tparams(name: scala.Symbol): Type.Param = tparams(name.toString)
   }

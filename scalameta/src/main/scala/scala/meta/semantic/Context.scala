@@ -15,9 +15,7 @@ trait Context {
   def tpe(term: Term): Type
   def tpe(member: Member): Type
   def defns(ref: Ref): Seq[Member]
-
-  def owner(member: Member): Scope
-  def members(scope: Scope): Seq[Member]
+  def members(tpe: Type): Seq[Member]
 
   def isSubType(tpe1: Type, tpe2: Type): Boolean
   def lub(tpes: Seq[Type]): Type
