@@ -94,6 +94,15 @@ package object semantic {
   // ===========================
 
   implicit class SemanticMemberOps(val tree: Member) extends AnyVal {
+    // TODO: An alternative design for typeSignatureIn that is very much worth exploring
+    // consists in lazy recalculation of signatures produced by Scope.members.
+    // Much like we plan to remember lexical contexts, we could also remember type parameters to be instantiated.
+    // For example, `t"List[Int]".defs("head")` would give us `def head: A = ...`,
+    // with A carrying information about the fact that it should be substituted for Int.
+    // My only immediate concern here is what to do with `show[Code]`, but that we can figure out.
+    // Even though this design looks more principled and arguably more elegant that eager recalculation,
+    // I ended up not going for it, because it is much less straightforward implementation-wise,
+    // and any time savings are worth very much at this stage of the project.
     @hosted def source: Member = {
       def stripPrefix(denot: h.Denotation) = denot match {
         case h.Denotation.Zero => h.Denotation.Zero
