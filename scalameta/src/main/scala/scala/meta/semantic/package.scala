@@ -99,8 +99,7 @@ package object semantic {
         case h.Denotation.Zero => h.Denotation.Zero
         case denot: h.Denotation.Precomputed => denot.copy(prefix = h.Prefix.Zero)
       }
-      val name = source.ref match { case name: impl.Name => name; case _ => unreachable }
-      val prefixlessName = name match {
+      val prefixlessName = tree.name match {
         case name: impl.Term.Name => name.copy(denot = stripPrefix(name.denot))
         case name: impl.Type.Name => name.copy(denot = stripPrefix(name.denot))
         case name: impl.Ctor.Name => name.copy(denot = stripPrefix(name.denot))
@@ -113,7 +112,7 @@ package object semantic {
       tree match { case name: Term.Name => require(name.isBinder); case _ => }
       implicitly[SemanticContext].owner(tree)
     }
-    @hosted def ref: Ref = {
+    @hosted def name: Name = {
       tree.require[impl.Member] match {
         case tree: impl.Term.Name => tree
         case tree: impl.Decl.Def => tree.name
@@ -136,12 +135,19 @@ package object semantic {
         case tree: impl.Ctor.Secondary => tree.name
       }
     }
+    @hosted def isAnonymous: Boolean = {
+      tree.require[impl.Member] match {
+        case tree: impl.Term.Param => tree.name.isEmpty
+        case tree: impl.Type.Param => tree.name.isEmpty
+        case _ => false
+      }
+    }
     @hosted def parents: Seq[Member] = implicitly[SemanticContext].parents(tree)
     @hosted def children: Seq[Member] = implicitly[SemanticContext].children(tree)
     @hosted def companion: Member = {
       val candidates = {
-        if (tree.isClass || tree.isTrait) tree.owner.members.filter(m => m.isObject && m.ref.toString == tree.ref.toString)
-        else if (tree.isObject) tree.owner.members.filter(m => (m.isClass || m.isTrait) && m.ref.toString == tree.ref.toString)
+        if (tree.isClass || tree.isTrait) tree.owner.members.filter(m => m.isObject && m.name.toString == tree.name.toString)
+        else if (tree.isObject) tree.owner.members.filter(m => (m.isClass || m.isTrait) && m.name.toString == tree.name.toString)
         else throw new SemanticException(s"can't have companions for ${tree.show[Summary]}")
       }
       require(candidates.length < 2)
@@ -216,14 +222,14 @@ package object semantic {
   }
 
   implicit class SemanticTermMemberOps(val tree: Member.Term) extends AnyVal {
-    @hosted def ref: Term.Ref = new SemanticMemberOps(tree).ref.require[Term.Ref]
+    @hosted def name: Name with Term.Ref = new SemanticMemberOps(tree).name.require[Name with Term.Ref]
     @hosted def parents: Seq[Member.Term] = new SemanticMemberOps(tree).parents.require[Seq[Member.Term]]
     @hosted def children: Seq[Member.Term] = new SemanticMemberOps(tree).children.require[Seq[Member.Term]]
     @hosted def companion: Member.Type = new SemanticMemberOps(tree).companion.require[Member.Type]
   }
 
   implicit class SemanticTypeMemberOps(val tree: Member.Type) extends AnyVal {
-    @hosted def ref: Type.Ref = new SemanticMemberOps(tree).ref.require[Type.Ref]
+    @hosted def name: Type.Name = new SemanticMemberOps(tree).name.require[Type.Name]
     @hosted def parents: Seq[Member.Type] = new SemanticMemberOps(tree).parents.require[Seq[Member.Type]]
     @hosted def children: Seq[Member.Type] = new SemanticMemberOps(tree).parents.require[Seq[Member.Type]]
     @hosted def companion: Member.Term = new SemanticMemberOps(tree).companion.require[Member.Term]
@@ -250,7 +256,7 @@ package object semantic {
       partiallyFiltered.filter(filter)
     }
     @hosted private[meta] def internalSingle[T <: Member : ClassTag](name: String, filter: T => Boolean, diagnostic: String): T = {
-      val filtered = internalAll[T](x => x.ref.toString == name && filter(x))
+      val filtered = internalAll[T](x => x.name.toString == name && filter(x))
       filtered match {
         case Seq() => throw new SemanticException(s"no $name $diagnostic found in ${tree.show[Summary]}")
         case Seq(single) => single
@@ -258,7 +264,7 @@ package object semantic {
       }
     }
     @hosted private[meta] def internalMulti[T <: Member : ClassTag](name: String, filter: T => Boolean, diagnostic: String): Seq[T] = {
-      val filtered = internalAll[T](x => x.ref.toString == name && filter(x))
+      val filtered = internalAll[T](x => x.name.toString == name && filter(x))
       filtered match {
         case Seq() => throw new SemanticException(s"no $name $diagnostic found in ${tree.show[Summary]}")
         case Seq(single) => List(single)
@@ -272,20 +278,22 @@ package object semantic {
       internalSingle[Member](name.toString, filter, description)
     }
     @hosted def members[T <: Member : ClassTag](member: T): T = {
-      val all = implicitly[SemanticContext].members(tree).collect{ case x: T => x }
-      val thisName = member.ref match {
-        case _: impl.Term.This => ???
-        case name: impl.Name => name
-        case _ => unreachable
-      }
-      all.filter(that => {
-        def thisDenot = thisName.denot.require[h.Denotation.Precomputed]
-        def thatDenot = that.ref.require[impl.Name].denot.require[h.Denotation.Precomputed]
-        scala.util.Try(thisDenot.symbol == thatDenot.symbol).getOrElse(false)
-      }) match {
-        case Seq() => throw new SemanticException(s"no prototype for $member found in ${tree.show[Summary]}")
-        case Seq(single) => single
-        case _ => unreachable
+      member.name match {
+        case _: impl.Term.This =>
+          ???
+        case _: impl.Term.Super =>
+          ???
+        case thisName: impl.Name =>
+          val all = implicitly[SemanticContext].members(tree).collect{ case x: T => x }
+          all.filter(that => {
+            def thisDenot = thisName.denot.require[h.Denotation.Precomputed]
+            def thatDenot = that.name.require[impl.Name].denot.require[h.Denotation.Precomputed]
+            scala.util.Try(thisDenot.symbol == thatDenot.symbol).getOrElse(false)
+          }) match {
+            case Seq() => throw new SemanticException(s"no prototype for $member found in ${tree.show[Summary]}")
+            case Seq(single) => single
+            case _ => unreachable
+          }
       }
     }
     @hosted def packages: Seq[Member.Term] = internalAll[Member.Term](_.isPackage)
