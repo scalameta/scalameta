@@ -14,16 +14,16 @@ import impl._
 // 2) some structurally equal refs may compare unequal when they refer to different defns
 
 // Now let's go through all of our refs and see how we should compare them.
-// At the moment, we have 12 different AST nodes that are subtype of Ref:
+// At the moment, we have 16 different AST nodes that are subtype of Ref:
 // Term.This, Term.Super, Term.Name, Term.Select,
 // Type.Name, Type.Select, Type.Project, Type.Singleton,
-// Ctor.Ref.Name, Ctor.Ref.Select, Ctor.Ref.Project, Ctor.Ref.Function.
+// Ctor.Ref.Name, Ctor.Ref.Select, Ctor.Ref.Project, Ctor.Ref.Function,
+// Selector.Wildcard, Selector.Name, Selector.Rename, Selector.Unimport.
 
 // In the implementation that follows we do the following to compare these refs:
 // 1) XXX.Name vs name-like XXX.Select, where XXX can be Term, Type or Ctor.Ref, are compared equal if they refer to the same defn
 // 2) Term.This vs Term.This, as well as Term.Super vs Term.Super are compared equal if they refer to the same defn
-// 3) XXX.Select vs XXX.Select are compared structurally
-// 4) YYY.ZZZ, where ZZZ can be Project, Singleton and Function are compared structurally
+// 3) YYY.ZZZ vs YYY.ZZZ for the rest of the refs are compared structurally
 
 // TODO: we should also use our compiler plugin powers to warn on Ref/Def comparisons
 // because those indicate mistakes like `case q"foo.$bar" if bar == t"Foo".defs("bar") => ...`

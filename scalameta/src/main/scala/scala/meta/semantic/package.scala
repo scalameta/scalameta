@@ -19,51 +19,34 @@ package object semantic {
   // PART 1: ATTRIBUTES
   // ===========================
 
-  @root trait Attr
-  object Attr {
-    // TODO: design the attr hierarchy of semantic facts that can be figured out about trees
-    // TODO: examples: a type of a tree, a definition/definitions the tree refers to, maybe a desugaring, etc
-    // TODO: see https://github.com/JetBrains/intellij-scala/blob/master/src/org/jetbrains/plugins/scala/lang/resolve/ScalaResolveResult.scala#L24
-    // TODO: but keep in mind that some of the facts (denotations) are now stored in tree fields (see internal/hygiene/package.scala for more information)
-    @leaf class Type(tpe: scala.meta.Type) extends Attr
-    @leaf class Defns(defns: Seq[scala.meta.Member] @nonEmpty) extends Attr
-  }
-
-  implicit class SemanticTreeOps(val tree: Tree) extends AnyVal {
-    @hosted private[meta] def internalAttr[T: ClassTag]: T = {
-      val relevant = tree.attrs.collect{ case x: T => x }
-      require(relevant.length < 2)
-      relevant match {
-        case Seq(tpe) => tpe
-        case Seq() => throw new SemanticException(s"failed to figure out ${classTag[T].runtimeClass.getName.toLowerCase} of ${tree.show[Summary]}")
-        case _ => unreachable
-      }
-    }
-    @hosted def attrs: Seq[Attr] = implicitly[SemanticContext].attrs(tree)
-  }
-
   sealed trait HasTpe[T <: Tree, U <: Type.Arg]
   object HasTpe {
     implicit def Term[T <: meta.Term]: HasTpe[T, meta.Type] = null
     implicit def Member[T <: meta.Member]: HasTpe[T, meta.Type] = null
     implicit def TermParam[T <: meta.Term.Param]: HasTpe[T, meta.Type.Arg] = null
-    implicit def Template[T <: meta.Template]: HasTpe[T, meta.Type] = null
+    implicit def TermName[T <: meta.Term.Name]: HasTpe[T, meta.Type] = null
   }
 
   implicit class SemanticTypeableOps[T <: Tree, U <: Type : ClassTag](val tree: T)(implicit ev: HasTpe[T, U]) {
-    @hosted def tpe: U = tree.internalAttr[Attr.Type].tpe.require[U]
+    @hosted def tpe: U = tree match {
+      case tree: impl.Term => implicitly[SemanticContext].tpe(tree).require[U]
+      case tree: impl.Member => implicitly[SemanticContext].tpe(tree).require[U]
+      case tree => throw new SemanticException(s"tpe is undefined for ${tree.show[Summary]}")
+    }
   }
 
-  sealed trait HasDefn[T <: Tree, U <: Member]
-  object HasDefn {
-    implicit def Ref[T <: meta.Ref]: HasDefn[T, meta.Member] = null
-    implicit def TermRef[T <: meta.Term.Ref]: HasDefn[T, meta.Member.Term] = null
-    implicit def TypeRef[T <: meta.Type.Ref]: HasDefn[T, meta.Member] = null // Type.Ref can refer to both types (regular types) and terms (singleton types)
-    implicit def Importee[T <: meta.Importee]: HasDefn[T, meta.Member] = null
+  sealed trait HasDefns[T <: Tree, U <: Member]
+  object HasDefns {
+    implicit def Ref[T <: meta.Ref]: HasDefns[T, meta.Member] = null
+    implicit def TermRef[T <: meta.Term.Ref]: HasDefns[T, meta.Member.Term] = null
+    implicit def TypeRef[T <: meta.Type.Ref]: HasDefns[T, meta.Member] = null // Type.Ref can refer to both types (regular types) and terms (singleton types)
   }
 
-  implicit class SemanticDefnableOps[T <: Tree, U <: meta.Member](val tree: T)(implicit ev: HasDefn[T, U]) {
-    @hosted def defns: Seq[U] = tree.internalAttr[Attr.Defns].defns.require[Seq[U]]
+  implicit class SemanticDefnableOps[T <: Tree, U <: meta.Member : ClassTag](val tree: T)(implicit ev: HasDefns[T, U]) {
+    @hosted def defns: Seq[U] = tree match {
+      case tree: impl.Ref => implicitly[SemanticContext].defns(tree).map(_.require[U])
+      case tree => throw new SemanticException(s"defns is undefined for ${tree.show[Summary]}")
+    }
     @hosted def defn: U = {
       defns match {
         case Seq(single) => single

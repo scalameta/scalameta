@@ -59,7 +59,7 @@ package scala.meta {
   @branch trait Template extends Tree
   @branch trait Mod extends Tree
   @branch trait Enumerator extends Tree
-  @branch trait Importee extends Tree
+  @branch trait Importee extends Tree with Ref
   @branch trait Case extends Tree with Scope
   @branch trait Source extends Tree
 }
@@ -367,7 +367,7 @@ package scala.meta.internal.ast {
     @ast class Clause(ref: Term.Ref, sels: Seq[Selector] @nonEmpty) extends Tree {
       require(ref.isStableId)
     }
-    @branch trait Selector extends api.Importee with Tree
+    @branch trait Selector extends api.Importee with Tree with Ref
     object Selector {
       @ast class Wildcard() extends Selector
       @ast class Name(value: String) extends Selector

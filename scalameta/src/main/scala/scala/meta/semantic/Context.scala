@@ -12,7 +12,9 @@ import scala.annotation._
 trait Context {
   def dialect: Dialect
 
-  def attrs(tree: Tree): Seq[Attr]
+  def tpe(term: Term): Type
+  def tpe(member: Member): Type
+  def defns(ref: Ref): Seq[Member]
 
   def owner(member: Member): Scope
   def members(scope: Scope): Seq[Member]

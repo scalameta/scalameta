@@ -155,8 +155,8 @@ class PublicSuite extends FunSuite {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.semantic._
-      (??? : Tree).internalAttr[Attr.Type]
-    """) === "method internalAttr in class SemanticTreeOps cannot be accessed in scala.meta.semantic.package.SemanticTreeOps")
+      (??? : Member).internalAll(???)
+    """) === "method internalAll in class SemanticScopeOps cannot be accessed in scala.meta.semantic.package.SemanticScopeOps")
   }
 
   // TODO: this error is somewhat confusing
