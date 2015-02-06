@@ -153,7 +153,7 @@
                      | Quasiquote
 ---------------------|------------------------------
  Primary Ctor        | `ctor"..$mods def this(..$paramss)"`
- Secondary Ctor      | `ctor"..$mods def this(..$paramss) = { this(...$aexprss); ..$stats }"`
+ Secondary Ctor      | `ctor"..$mods def this(..$paramss) = $expr"`
  Name Reference      | `ctor"$ctorname"`
  Select Reference    | `ctor"$ref.$ctorname"`
  Project Reference   | `ctor"$tpe#$ctorname"`
@@ -221,7 +221,7 @@
 
       | Quasiquote
 ------|---------------------------
- Case | `p"$pat if $condopt => ..$stat"`
+ Case | `p"$pat if $condopt => $expr"`
 
 ## Naming conventions
 
