@@ -95,6 +95,15 @@ object SyntacticInfo {
       case _                                            => false
     }
   }
+  implicit class SyntacticTemplateOps(val tree: Template) extends AnyVal {
+    def isCompoundTypeCompatible: Boolean = {
+      tree.early.isEmpty &&
+      tree.parents.forall(!_.isInstanceOf[Term.Apply]) &&
+      tree.self.name.isInstanceOf[Name.Anonymous] &&
+      tree.self.decltpe.isEmpty &&
+      tree.stats.map(_.forall(_.isRefineStat)).getOrElse(true)
+    }
+  }
   implicit class RichMod(val mod: Mod) extends AnyVal {
     def isAccess: Boolean = mod match {
       case _: Mod.Private         => true
