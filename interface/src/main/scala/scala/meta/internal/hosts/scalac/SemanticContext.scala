@@ -16,8 +16,9 @@ import org.scalameta.collections._
 import org.scalameta.convert._
 import org.scalameta.convert.auto._
 import org.scalameta.invariants._
-import org.scalameta.unreachable
+import org.scalameta.meta.{Toolkit => MetaToolkit, _}
 import org.scalameta.reflection._
+import org.scalameta.unreachable
 import scala.meta.internal.{hygiene => h}
 import java.util.UUID.randomUUID
 
@@ -470,7 +471,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
 
     import Helpers._
     val TermQuote = "shadow scala.meta quasiquotes"
-    in.asInstanceOf[g.Tree].ensureAttributed()
+    in.asInstanceOf[g.Tree].requireAttributed()
     in match {
       case g.EmptyTree =>
         unreachable
@@ -1046,6 +1047,9 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
   }
 
   object toScalareflect {
-    def apply(tpe: p.Type): g.Type = ???
+    def apply(tpe: p.Type): g.Type = {
+      tpe.requireAttributed()
+      ???
+    }
   }
 }
