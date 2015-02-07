@@ -86,6 +86,9 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
         else if (gsym.isType) h.Signature.Type
         else unreachable
       }
+      // NOTE: so far, our current model is to ignore the existence of getters and setters
+      // therefore, we should make sure that they don't end up here
+      require(!gsym.isGetter && !gsym.isSetter)
       if (gsym.isModuleClass || gsym.isPackageClass) convert(gsym.asClass.module)
       else if (gsym == g.rootMirror.RootClass || gsym == g.rootMirror.RootPackage) h.Symbol.Root
       else if (isGlobal(gsym)) h.Symbol.Global(convert(gsym.owner), gsym.name.decodedName.toString, signature(gsym))
