@@ -110,7 +110,8 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
             else "L" + sym.fullName.replace(".", "/") + ";"
           }
           val g.MethodType(params, ret) = gsym.info.erasure
-          s"(" + params.map(param => jvmSignature(param.info)).mkString("") + ")" + jvmSignature(ret)
+          val jvmRet = if (!gsym.isConstructor) ret else g.definitions.UnitClass.tpe
+          s"(" + params.map(param => jvmSignature(param.info)).mkString("") + ")" + jvmSignature(jvmRet)
         }
         if (gsym.isMethod && !gsym.asMethod.isGetter) h.Signature.Method(jvmSignature)
         else if (gsym.isTerm) h.Signature.Term
