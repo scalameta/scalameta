@@ -535,8 +535,8 @@ package object internal {
                   val denot = name.denot
                   _root_.org.scalameta.invariants.require(x != null && denot != _root_.scala.meta.internal.hygiene.Denotation.Zero)
                   _root_.org.scalameta.invariants.require(x != null && denot.symbol != _root_.scala.meta.internal.hygiene.Symbol.Zero)
-                  _root_.org.scalameta.invariants.require(x != null && !$h.hsymToPmemberCache.contains(denot.symbol))
-                  $h.hsymToPmemberCache(denot.symbol) = x
+                  _root_.org.scalameta.invariants.require(x != null && !$h.hsymToVerbatimPmemberCache.contains(denot.symbol))
+                  $h.hsymToVerbatimPmemberCache(denot.symbol) = x
                 }
               }
               def loop(x: Any): Unit = x match {

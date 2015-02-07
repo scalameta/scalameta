@@ -39,7 +39,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
       case _ => throw new SemanticException("implementation restriction: internal cache has no type associated with ${term.show[Summary]}")
     }
     val widenedGtpe = gtpe.widen // TODO: Type.widen in core is still ???, so we implicitly widen here
-    toApproximateScalameta(widenedGtpe)
+    toApproximateScalameta(widenedGtpe).asInstanceOf[papi.Type]
   }
   private[meta] def defns(ref: papi.Ref): Seq[papi.Member] = {
     val tree = ref.require[p.Ref]
@@ -56,8 +56,8 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
   }
 
   private[meta] def isSubType(tpe1: papi.Type, tpe2: papi.Type): Boolean = toScalareflect(tpe1.require[p.Type]) <:< toScalareflect(tpe2.require[p.Type])
-  private[meta] def lub(tpes: Seq[papi.Type]): papi.Type = toApproximateScalameta(g.lub(tpes.map(tpe => toScalareflect(tpe.require[p.Type])).toList))
-  private[meta] def glb(tpes: Seq[papi.Type]): papi.Type = toApproximateScalameta(g.glb(tpes.map(tpe => toScalareflect(tpe.require[p.Type])).toList))
+  private[meta] def lub(tpes: Seq[papi.Type]): papi.Type = toApproximateScalameta(g.lub(tpes.map(tpe => toScalareflect(tpe.require[p.Type])).toList)).asInstanceOf[papi.Type]
+  private[meta] def glb(tpes: Seq[papi.Type]): papi.Type = toApproximateScalameta(g.glb(tpes.map(tpe => toScalareflect(tpe.require[p.Type])).toList)).asInstanceOf[papi.Type]
 
   private[meta] def parents(member: papi.Member): Seq[papi.Member] = ???
   private[meta] def children(member: papi.Member): Seq[papi.Member] = ???
@@ -69,11 +69,13 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
     case class Original(goriginal: Any) extends ScratchpadDatum
   }
 
-  private val gsymToHsymCache = mutable.Map[g.Symbol, h.Symbol]()
+  private val symCache = TwoWayCache[g.Symbol, h.Symbol]()
+  private val getterCache = TwoWayCache[g.Symbol, h.Symbol]()
+  private val setterCache = TwoWayCache[g.Symbol, h.Symbol]()
   private implicit class RichScratchpadTree[T <: p.Tree](ptree: T) {
     // TODO: `convert` is somewhat copy/pasted from core/quasiquotes/Macros.scala
     // however, there's no way for us to share those implementations until we bootstrap
-    private def convert(gsym: g.Symbol): h.Symbol = gsymToHsymCache.getOrElseUpdate(gsym, {
+    private def convert(gsym: g.Symbol): h.Symbol = symCache.getOrElseUpdate(gsym, {
       def isGlobal(gsym: g.Symbol): Boolean = {
         def definitelyLocal = gsym == g.NoSymbol || gsym.name.toString.startsWith("<local ") || (gsym.owner.isMethod && !gsym.isParameter)
         def isParentGlobal = gsym.hasPackageFlag || isGlobal(gsym.owner)
@@ -97,7 +99,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
     })
     private def denot(gpre: g.Type, gsym: g.Symbol): h.Denotation = {
       require(gpre != g.NoType)
-      val hpre = if (gpre != g.NoPrefix) h.Prefix.Type(toApproximateScalameta(gpre)) else h.Prefix.Zero
+      val hpre = if (gpre != g.NoPrefix) h.Prefix.Type(toApproximateScalameta(gpre).asInstanceOf[p.Type]) else h.Prefix.Zero
       val hsym = convert(gsym)
       h.Denotation.Precomputed(hpre, hsym)
     }
@@ -144,7 +146,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
     }
   }
 
-  implicit class RichToScalametaTree(gtree: g.Tree) {
+  private implicit class RichToScalametaTree(gtree: g.Tree) {
     def alias: String = gtree match {
       case gtree: g.ModuleDef if gtree.symbol.isPackageObject => gtree.symbol.owner.name.decodedName.toString
       case gtree: g.NameTree => gtree.name.decodedName.toString
@@ -152,10 +154,10 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
       case g.Super(_, name) => name.decodedName.toString
     }
   }
-  implicit class RichToScalametaName(gname: g.Name) {
+  private implicit class RichToScalametaName(gname: g.Name) {
     def looksLikeInfix = !gname.decoded.forall(c => Character.isLetter(c) || Character.isDigit(c) || c == '_') || gname == g.nme.eq || gname == g.nme.ne
   }
-  implicit class RichToScalametaSymbol(gsym: g.Symbol) {
+  private implicit class RichToScalametaSymbol(gsym: g.Symbol) {
     def isAnonymous: Boolean = {
       // NOTE: not all symbols whose names start with x$ are placeholders
       // there are also at least artifact vals created for named arguments
@@ -177,13 +179,13 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
     def rawcvt(in: g.Tree): pTermOrTypeName = dumbcvt(in).withDenot(gsym).asInstanceOf[pTermOrTypeName]
     def anoncvt(in: g.Tree): pTermOrTypeOrAnonymousName = (if (gsym.isAnonymous) p.Name.Anonymous() else dumbcvt(in)).withDenot(gsym).asInstanceOf[pTermOrTypeOrAnonymousName]
   }
-  implicit class RichToScalametaTermSymbol(gsym: g.TermSymbol) {
+  private implicit class RichToScalametaTermSymbol(gsym: g.TermSymbol) {
     type pTermOrAnonymousName = papi.Term.Name with p.Name{type ThisType >: p.Term.Name with p.Name.Anonymous <: p.Name}
     def precvt(pre: g.Type, in: g.Tree): p.Term.Name = (gsym: g.Symbol).precvt(pre, in).asInstanceOf[p.Term.Name]
     def rawcvt(in: g.Tree, allowNoSymbol: Boolean = false): p.Term.Name = (gsym: g.Symbol).rawcvt(in).asInstanceOf[p.Term.Name]
     def anoncvt(in: g.ValDef): pTermOrAnonymousName = (gsym: g.Symbol).anoncvt(in).asInstanceOf[pTermOrAnonymousName]
   }
-  implicit class RichToScalametaTypeSymbol(gsym: g.TypeSymbol) {
+  private implicit class RichToScalametaTypeSymbol(gsym: g.TypeSymbol) {
     type pTypeOrAnonymousName = papi.Type.Name with p.Name{type ThisType >: p.Type.Name with p.Name.Anonymous <: p.Name}
     def precvt(pre: g.Type, in: g.Tree): p.Type.Name = (gsym: g.Symbol).precvt(pre, in).asInstanceOf[p.Type.Name]
     def rawcvt(in: g.Tree): p.Type.Name = (gsym: g.Symbol).rawcvt(in).asInstanceOf[p.Type.Name]
@@ -191,7 +193,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
   }
 
   // TODO: remember positions. actually, in scalac they are almost accurate, so it would be a shame to discard them
-  val hsymToPmemberCache = mutable.Map[h.Symbol, p.Member]()
+  val hsymToVerbatimPmemberCache = mutable.Map[h.Symbol, p.Member]()
   @converter def toScalameta(in: Any, pt: Pt): Any = {
     object Helpers extends g.ReificationSupportImpl { self =>
       def pctorcall(in: g.Tree, gtpt: g.Tree, gctor: g.Symbol, gargss: Seq[Seq[g.Tree]]): p.Term = {
@@ -870,7 +872,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
   }
 
   // TODO: strangely enough, these caches don't improve performance in a measurable fashion
-  private val gtpeToPtpeCache = mutable.Map[g.Type, p.Type]()
+  private val tpeCache = TwoWayCache[g.Type, p.Type.Arg]()
   private val gsymToPmemberCache = mutable.Map[(g.Type, g.Symbol), p.Member]()
   object toApproximateScalameta {
     private def pannot(gannot: g.AnnotationInfo): p.Mod.Annot = {
@@ -904,13 +906,17 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
     }
     private def pvparamtpe(gtpe: g.Type): p.Type.Arg = {
       def unwrap(ptpe: p.Type): p.Type = ptpe.asInstanceOf[p.Type.Apply].args.head
-      if (g.definitions.isRepeatedParamType(gtpe)) p.Type.Arg.Repeated(unwrap(apply(gtpe)))
-      else if (g.definitions.isByNameParamType(gtpe)) p.Type.Arg.ByName(unwrap(apply(gtpe)))
+      if (g.definitions.isRepeatedParamType(gtpe)) p.Type.Arg.Repeated(unwrap(apply(gtpe).asInstanceOf[p.Type]))
+      else if (g.definitions.isByNameParamType(gtpe)) p.Type.Arg.ByName(unwrap(apply(gtpe).asInstanceOf[p.Type]))
       else apply(gtpe)
     }
     private def ptypebounds(gtpe: g.Type): p.Type.Bounds = gtpe match {
-      case g.TypeBounds(glo, ghi) => p.Type.Bounds(if (glo =:= g.typeOf[Nothing]) None else Some(apply(glo)), if (ghi =:= g.typeOf[Any]) None else Some(apply(ghi)))
-      case _ => unreachable
+      case g.TypeBounds(glo, ghi) =>
+        val plo = if (glo =:= g.typeOf[Nothing]) None else Some(apply(glo).asInstanceOf[p.Type])
+        val phi = if (ghi =:= g.typeOf[Any]) None else Some(apply(ghi).asInstanceOf[p.Type])
+        p.Type.Bounds(plo, phi)
+      case _ =>
+        unreachable
     }
     private def pvparam(gsym: g.Symbol): p.Term.Param = {
       require(gsym.isTerm)
@@ -926,8 +932,8 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
       p.Type.Param(pmods(gsym), gsym.asType.anoncvt(g.internal.typeDef(gsym)), ptparams(gsym.typeParams), Nil, Nil, ptypebounds(gsym.info.depoly)).withOriginal(gsym)
     }
     private def ptparams(gsyms: List[g.Symbol]): Seq[p.Type.Param] = gsyms.map(ptparam)
-    def apply(gtpe: g.Type): p.Type = gtpeToPtpeCache.getOrElseUpdate(gtpe, {
-      def loop(gtpe: g.Type): p.Type = {
+    def apply(gtpe: g.Type): p.Type.Arg = tpeCache.getOrElseUpdate(gtpe, {
+      def loop(gtpe: g.Type): p.Type.Arg = {
         val in = gtpe
         val result = gtpe match {
           case g.NoPrefix =>
@@ -1014,19 +1020,69 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
                   p.Type.Select(preref, sym.asType.precvt(pre, g.Ident(sym)))
                 }
               case _ =>
-                p.Type.Project(loop(pre), sym.asType.precvt(pre, g.Ident(sym)))
+                p.Type.Project(loop(pre).asInstanceOf[p.Type], sym.asType.precvt(pre, g.Ident(sym)))
             }).withOriginal(in)
             if (args.isEmpty) ref
-            else p.Type.Apply(ref, args.map(loop))
+            else p.Type.Apply(ref, args.map(arg => loop(arg).asInstanceOf[p.Type]))
           case g.RefinedType(parents, decls) =>
-            val pstmts = decls.sorted.toList.map(gsym => apply(in, gsym).asInstanceOf[p.Stat])
-            p.Type.Compound(parents.map(loop), pstmts)
+            // TODO: detect `val x, y: Int`
+            // NOTE: due to the way we represent vals and vars, multiple g.Symbols can correspond to a single p.Member
+            // therefore the logic of conversion between g.RefinedType and p.Type.Compound is so complicated:
+            // 1) It needs to ensugar getters and setters to vals and vars
+            // 2) It can't use standard h.Symbol creation facilities, because symCache only works for 1-to-1 correspondence
+            @root trait Stat
+            object Stat {
+              @leaf class Getter(gget: g.Symbol) extends Stat
+              @leaf class Setter(gget: g.Symbol, gset: g.Symbol) extends Stat
+              @leaf class Other(gsym: g.Symbol) extends Stat
+            }
+            val gstats = decls.sorted.toList
+            val stats = mutable.ListBuffer[Stat]()
+            var i = 0
+            while (i < gstats.length) {
+              val gsym = gstats(i)
+              if (gsym.isGetter) {
+                val isSetter = (i + 1) < gstats.length && gstats(i + 1).isSetter
+                if (isSetter) { stats += Stat.Setter(gstats(i), gstats(i + 1)); i += 1 }
+                else stats += Stat.Getter(gsym)
+              } else if (gsym.isSetter) {
+                unreachable
+              } else {
+                stats += Stat.Other(gsym)
+              }
+              i += 1
+            }
+            val pstats = stats.toList.map({
+              case Stat.Getter(gget) =>
+                val hsymbol = getterCache.getOrElseUpdate(gget, h.Symbol.Local(randomUUID().toString))
+                val hdenot = h.Denotation.Precomputed(h.Prefix.Zero, hsymbol) // TODO: actually, prefix here is not zero
+                val pname = p.Term.Name(gget.name.toString, hdenot, h.Sigma.Naive)
+                p.Decl.Val(pmods(gget), List(p.Pat.Var(pname)), apply(gget.info.resultType.depoly).asInstanceOf[p.Type])
+              case Stat.Setter(gget, gset) =>
+                val hsymbol = {
+                  require(!(getterCache.contains(gget) ^ setterCache.contains(gset)))
+                  if (!getterCache.contains(gget)) {
+                    val result = h.Symbol.Local(randomUUID().toString)
+                    getterCache(gget) = result
+                    setterCache(gset) = result
+                  }
+                  getterCache(gget)
+                }
+                val hdenot = h.Denotation.Precomputed(h.Prefix.Zero, hsymbol) // TODO: actually, prefix here is not zero
+                val pname = p.Term.Name(gget.name.toString, hdenot, h.Sigma.Naive)
+                p.Decl.Var(pmods(gget), List(p.Pat.Var(pname)), apply(gget.info.resultType.depoly).asInstanceOf[p.Type])
+              case Stat.Other(gsym) =>
+                apply(g.NoPrefix, gsym).asInstanceOf[p.Stat]
+            })
+            p.Type.Compound(parents.map(parent => loop(parent).asInstanceOf[p.Type]), pstats)
           case g.ExistentialType(quantified, underlying) =>
             // TODO: infer type placeholders where they were specified explicitly
-            val pstmts: Seq[p.Stat] = quantified.map(gsym => apply(g.NoPrefix, gsym).asInstanceOf[p.Stat])
-            p.Type.Existential(loop(underlying), pstmts)
+            // TODO: both `type` and `val` quantifiers are represented with TypeSymbols in scala.reflect
+            // see the p.Type => g.Type converter to see how this works and how to adapt this to a different direction of conversion
+            val pstats: Seq[p.Stat] = quantified.map(gsym => apply(g.NoPrefix, gsym).asInstanceOf[p.Stat])
+            p.Type.Existential(loop(underlying).asInstanceOf[p.Type], pstats)
           case g.AnnotatedType(annots, underlying) =>
-            p.Type.Annotate(loop(underlying), pannots(annots))
+            p.Type.Annotate(loop(underlying).asInstanceOf[p.Type], pannots(annots))
           case _ =>
             sys.error(s"unsupported type $in, designation = ${in.getClass}, structure = ${g.showRaw(in, printIds = true, printTypes = true)}")
         }
@@ -1045,15 +1101,15 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
         case TraitSymbol(sym) => p.Defn.Trait(pmods(sym), sym.rawcvt(g.Ident(sym)), ptparams(sym.typeParams), dummyCtor, dummyTemplate)
         case PkgObjectSymbol(sym) => p.Pkg.Object(Nil, sym.rawcvt(g.Ident(sym)), dummyCtor, dummyTemplate)
         case ObjectSymbol(sym) => p.Defn.Object(pmods(sym), sym.rawcvt(g.Ident(sym)), dummyCtor, dummyTemplate)
-        case AbstractValSymbol(sym) => p.Decl.Val(pmods(sym), List(p.Pat.Var(sym.rawcvt(g.ValDef(sym)))), apply(sym.info.depoly)).pats.head.require[p.Pat.Var].name
-        case ValSymbol(sym) => p.Defn.Val(pmods(sym), List(p.Pat.Var(sym.rawcvt(g.ValDef(sym)))), Some(apply(sym.info.depoly)), dummyBody).pats.head.require[p.Pat.Var].name
-        case AbstractVarSymbol(sym) => p.Decl.Var(pmods(sym), List(p.Pat.Var(sym.rawcvt(g.ValDef(sym)))), apply(sym.info.depoly)).pats.head.require[p.Pat.Var].name
-        case VarSymbol(sym) => p.Defn.Var(pmods(sym), List(p.Pat.Var(sym.rawcvt(g.ValDef(sym)))), Some(apply(sym.info.depoly)), Some(dummyBody)).pats.head.require[p.Pat.Var].name
-        case AbstractDefSymbol(sym) => p.Decl.Def(pmods(sym), sym.rawcvt(g.DefDef(sym, g.EmptyTree)), ptparams(sym.typeParams), pvparamss(sym.paramss), apply(sym.info.finalResultType))
-        case DefSymbol(sym) => p.Defn.Def(pmods(sym), sym.rawcvt(g.DefDef(sym, g.EmptyTree)), ptparams(sym.typeParams), pvparamss(sym.paramss), Some(apply(sym.info.finalResultType)), dummyBody)
-        case MacroSymbol(sym) => p.Defn.Macro(pmods(sym), sym.rawcvt(g.DefDef(sym, g.EmptyTree)), ptparams(sym.typeParams), pvparamss(sym.paramss), apply(sym.info.finalResultType), dummyBody)
+        case AbstractValSymbol(sym) => p.Decl.Val(pmods(sym), List(p.Pat.Var(sym.rawcvt(g.ValDef(sym)))), apply(sym.info.depoly).asInstanceOf[p.Type]).pats.head.require[p.Pat.Var].name
+        case ValSymbol(sym) => p.Defn.Val(pmods(sym), List(p.Pat.Var(sym.rawcvt(g.ValDef(sym)))), Some(apply(sym.info.depoly).asInstanceOf[p.Type]), dummyBody).pats.head.require[p.Pat.Var].name
+        case AbstractVarSymbol(sym) => p.Decl.Var(pmods(sym), List(p.Pat.Var(sym.rawcvt(g.ValDef(sym)))), apply(sym.info.depoly).asInstanceOf[p.Type]).pats.head.require[p.Pat.Var].name
+        case VarSymbol(sym) => p.Defn.Var(pmods(sym), List(p.Pat.Var(sym.rawcvt(g.ValDef(sym)))), Some(apply(sym.info.depoly).asInstanceOf[p.Type]), Some(dummyBody)).pats.head.require[p.Pat.Var].name
+        case AbstractDefSymbol(sym) => p.Decl.Def(pmods(sym), sym.rawcvt(g.DefDef(sym, g.EmptyTree)), ptparams(sym.typeParams), pvparamss(sym.paramss), apply(sym.info.finalResultType).asInstanceOf[p.Type])
+        case DefSymbol(sym) => p.Defn.Def(pmods(sym), sym.rawcvt(g.DefDef(sym, g.EmptyTree)), ptparams(sym.typeParams), pvparamss(sym.paramss), Some(apply(sym.info.finalResultType).asInstanceOf[p.Type]), dummyBody)
+        case MacroSymbol(sym) => p.Defn.Macro(pmods(sym), sym.rawcvt(g.DefDef(sym, g.EmptyTree)), ptparams(sym.typeParams), pvparamss(sym.paramss), apply(sym.info.finalResultType).asInstanceOf[p.Type], dummyBody)
         case AbstractTypeSymbol(sym) => p.Decl.Type(pmods(sym), sym.rawcvt(g.TypeDef(sym)), ptparams(sym.typeParams), ptypebounds(sym.info.depoly))
-        case AliasTypeSymbol(sym) => p.Defn.Type(pmods(sym), sym.rawcvt(g.TypeDef(sym, g.TypeTree(sym.info))), ptparams(sym.typeParams), apply(sym.info.depoly))
+        case AliasTypeSymbol(sym) => p.Defn.Type(pmods(sym), sym.rawcvt(g.TypeDef(sym, g.TypeTree(sym.info))), ptparams(sym.typeParams), apply(sym.info.depoly).asInstanceOf[p.Type])
         case _ => sys.error(s"unsupported symbol $in, designation = ${in.getClass}, flags = ${in.flags}")
       }
       result.withOriginal(in)
@@ -1061,9 +1117,235 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
   }
 
   object toScalareflect {
-    def apply(tpe: p.Type): g.Type = {
-      tpe.requireAttributed()
+    private def gannotinfo(pannot: p.Mod.Annot): g.AnnotationInfo = {
+      val gtpe = apply(pannot.tree.ctorTpe)
+      val gargss = pannot.tree.ctorArgss.map(_.map(apply))
+      if (gargss.length > 1) throw new SemanticException("implementation restriction: annotations with multiple argument lists are not supported by scalac")
+      if (gtpe <:< g.definitions.StaticAnnotationClass.tpe) {
+        g.AnnotationInfo(gtpe, gargss.head.toList, Nil)
+      } else {
+        require(gtpe <:< g.definitions.ClassfileAnnotationClass.tpe)
+        ???
+      }
+    }
+    private def gannotinfos(pannots: Seq[p.Mod.Annot]): List[g.AnnotationInfo] = {
+      pannots.map(gannotinfo).toList
+    }
+    private def gtypeBounds(pbounds: p.Type.Bounds): g.TypeBounds = {
+      val glo = pbounds.lo.map(apply).getOrElse(g.definitions.NothingClass.tpe)
+      val ghi = pbounds.hi.map(apply).getOrElse(g.definitions.AnyClass.tpe)
+      g.TypeBounds(glo, ghi)
+    }
+    private implicit class RichScalareflectSymbol(gsym: g.Symbol) {
+      private def mimicMods(pmods: Seq[p.Mod], ptree: p.Tree): Unit = {
+        pmods.foreach({
+          case pmod: p.Mod.Annot => gsym.withAnnotations(List(gannotinfo(pmod)))
+          case pmod: p.Mod.Private => gsym.setFlag(PRIVATE)
+          case pmod: p.Mod.PrivateThis => gsym.setFlag(LOCAL)
+          case pmod: p.Mod.PrivateWithin => ???
+          case pmod: p.Mod.Protected => gsym.setFlag(PROTECTED)
+          case pmod: p.Mod.ProtectedThis => gsym.setFlag(LOCAL)
+          case pmod: p.Mod.ProtectedWithin => ???
+          case pmod: p.Mod.Implicit => gsym.setFlag(IMPLICIT)
+          case pmod: p.Mod.Final => gsym.setFlag(FINAL)
+          case pmod: p.Mod.Sealed => gsym.setFlag(SEALED)
+          case pmod: p.Mod.Override => gsym.setFlag(OVERRIDE)
+          case pmod: p.Mod.Case => gsym.setFlag(CASE)
+          case pmod: p.Mod.Abstract => gsym.setFlag(ABSTRACT)
+          case pmod: p.Mod.Covariant => gsym.setFlag(COVARIANT)
+          case pmod: p.Mod.Contravariant => gsym.setFlag(CONTRAVARIANT)
+          case pmod: p.Mod.Lazy => gsym.setFlag(LAZY)
+          case pmod: p.Mod.ValParam => // do nothing
+          case pmod: p.Mod.VarParam => // do nothing
+        })
+        // TODO: INTERFACE, MUTABLE, STATIC, PRESUPER, INCONSTRUCTOR, STABLE, *ACCESSOR, EXISTENTIAL
+        ptree match { case p.Term.Param(_, _, Some(tpe), _) if apply(tpe).typeSymbol == g.definitions.ByNameParamClass => gsym.setFlag(BYNAMEPARAM); case _ => }
+        if (gsym.hasFlag(ABSTRACT) && gsym.hasFlag(OVERRIDE)) { gsym.resetFlag(ABSTRACT | OVERRIDE); gsym.setFlag(ABSOVERRIDE) }
+        if (ptree.isInstanceOf[p.Defn.Trait]) gsym.setFlag(TRAIT)
+        ptree match { case ptree: p.Term.Param if ptree.default.nonEmpty => gsym.setFlag(DEFAULTPARAM); case _ => }
+        ptree match { case ptree: p.Defn.Var if ptree.rhs.isEmpty => gsym.setFlag(DEFAULTINIT); case _ => }
+      }
+      private def gtparams(ptparams: Seq[p.Type.Param]): List[g.Symbol] = {
+        ptparams.map(ptparam => {
+          val htparam = ptparam.name.asInstanceOf[p.Name].denot.symbol
+          val gtparam = symCache.getOrElseUpdate(htparam, gsym.newTypeSymbol(g.TypeName(ptparam.name.toString), newFlags = PARAM | DEFERRED))
+          gtparam.mimic(ptparam)
+        }).toList
+      }
+      private def gparams(pparams: Seq[p.Term.Param]): List[g.Symbol] = {
+        pparams.map(pparam => {
+          val hparam = pparam.name.asInstanceOf[p.Name].denot.symbol
+          val gparam = symCache.getOrElseUpdate(hparam, gsym.newTermSymbol(g.TermName(pparam.name.toString), newFlags = PARAM))
+          gparam.mimic(pparam)
+        }).toList
+      }
+      private def mimicInfo(ptree: p.Tree): Unit = {
+        ptree match {
+          case p.Decl.Val(_, _, ptpe) if gsym.isGetter =>
+            gsym.setInfo(g.NullaryMethodType(apply(ptpe)))
+          case p.Decl.Var(_, _, ptpe) if gsym.isGetter =>
+            gsym.setInfo(g.NullaryMethodType(apply(ptpe)))
+          case p.Decl.Var(_, _, ptpe) if gsym.isSetter =>
+            val gparams = List(gsym.newTermSymbol(g.TermName("x$1"), newFlags = PARAM).setInfo(apply(ptpe)))
+            val gret = g.definitions.UnitClass.tpe
+            gsym.setInfo(g.MethodType(gparams, gret))
+          case p.Decl.Def(_, _, ptparams, pparamss, ptpe) =>
+            val gprecachedTparams = gtparams(ptparams)
+            val gprecachedParamss = pparamss.map(gparams)
+            val gmethodType = gprecachedParamss.foldLeft(apply(ptpe))((curr, gparams) => g.MethodType(gparams, curr))
+            gsym.setInfo(g.genPolyType(gprecachedTparams, gmethodType))
+          case p.Decl.Type(_, _, ptparams, ptypeBounds) =>
+            gsym.setInfo(g.genPolyType(gtparams(ptparams), gtypeBounds(ptypeBounds)))
+          case p.Defn.Type(_, _, ptparams, ptpe) =>
+            gsym.setInfo(g.genPolyType(gtparams(ptparams), apply(ptpe)))
+          case p.Type.Param(_, _, ptparams, pcontextBounds, pviewBounds, ptypeBounds) =>
+            require(pcontextBounds.isEmpty && pviewBounds.isEmpty)
+            gsym.setInfo(g.genPolyType(gtparams(ptparams), gtypeBounds(ptypeBounds)))
+          case p.Term.Param(_, _, pdecltpe, pdefault) =>
+            require(pdecltpe.nonEmpty && pdefault.isEmpty)
+            gsym.setInfo(apply(pdecltpe.get))
+          case _ =>
+            ???
+        }
+      }
+      def mimic(ptree: p.Tree): g.Symbol = {
+        if (!gsym.hasRawInfo) {
+          import scala.language.reflectiveCalls
+          mimicMods(ptree.asInstanceOf[{ def mods: Seq[p.Mod] }].mods, ptree)
+          mimicInfo(ptree)
+        }
+        gsym
+      }
+    }
+    private def gowner(ptree: p.Tree): g.Symbol = {
+      // TODO: we probably need something other than NoSymbol for RefinedType.decls and ExistentialType.quants
+      // I always had no idea about how this works in scala. I guess, it's time for find out :)
+      g.NoSymbol
+    }
+    def apply(ptree: p.Tree): g.Tree = {
       ???
     }
+    def apply(ptpe: p.Type.Arg): g.Type = tpeCache.getOrElseUpdate(ptpe, {
+      def loop(ptpe: p.Type.Arg): g.Type = ptpe match {
+        case pname: p.Type.Name =>
+          ???
+        case p.Type.Select(pqual, pname) =>
+          ???
+        case p.Type.Project(pqual, pname) =>
+          ???
+        case p.Type.Singleton(pref) =>
+          ???
+        case p.Type.Apply(ptpe, pargs) =>
+          g.appliedType(loop(ptpe), pargs.map(loop).toList)
+        case p.Type.ApplyInfix(plhs, pop, prhs) =>
+          g.appliedType(loop(pop), List(loop(plhs), loop(prhs)))
+        case p.Type.Function(pparams, pres) =>
+          g.appliedType(g.definitions.FunctionClass(pparams.length + 1), (pparams :+ pres).map(loop).toList)
+        case p.Type.Tuple(pelements) =>
+          g.appliedType(g.definitions.TupleClass(pelements.length), pelements.map(loop).toList)
+        case p.Type.Compound(ptpes, prefinement) =>
+          // NOTE: `C { val x: Int; var y: Long; def z: Float; type T <: Double; type U = String }` is represented as:
+          // RefinedType(List(TypeRef(ThisType(Test#7837), Test.C#7939, List())), Scope(TermName("x")#16204, TermName("y")#16205, TermName("y_$eq")#16206, TermName("z")#16207, TypeName("T")#16208, TypeName("U")#16209))
+          // value x, flags = 138412112 (DEFERRED | METHOD | STABLE | ACCESSOR), info = => Int
+          // method y, flags = 134217808 (DEFERRED | METHOD | ACCESSOR), info = => Long
+          // method y_=, flags = 134217808 (DEFERRED | METHOD | ACCESSOR), info = (x$1: Long)Unit
+          // method z, flags = 80 (DEFERRED | METHOD), info = => Float
+          // type T, flags = 16 (DEFERRED), info =  <: Double
+          // type U, flags = 0, info = String
+          // NOTE: due to the way we represent vals and vars, a single p.Member can give rise to multiple g.Symbols
+          // therefore the logic of conversion between p.Type.Compound and g.RefinedType is so complicated:
+          // 1) It needs to desugar vals and vars into getters and setters
+          // 2) It can't use standard g.Symbol creation facilities, because symCache only works for 1-to-1 correspondence
+          val gscope = g.newScope
+          def namesPrefine(prefine: p.Stat) = prefine match {
+            case p.Decl.Val(_, vars, _) => vars.map(_.name)
+            case p.Decl.Var(_, vars, _) => vars.map(_.name)
+            case p.Decl.Def(_, name, _, _, _) => List(name)
+            case p.Decl.Type(_, name, _, _) => List(name)
+            case p.Defn.Type(_, name, _, _) => List(name)
+            case _ => unreachable
+          }
+          val pexplodedRefinement = prefinement.flatMap(prefine => namesPrefine(prefine).map(pname => prefine -> pname))
+          val refinement = pexplodedRefinement.flatMap({ case (prefine, pname) =>
+            def mkTerm(name: String, flags: Long) = gowner(prefine).newTermSymbol(g.TermName(pname.toString), newFlags = flags)
+            def mkType(name: String, flags: Long) = gowner(prefine).newTypeSymbol(g.TypeName(pname.toString), newFlags = flags)
+            val hrefine = pname.denot.symbol
+            val grefines = prefine match {
+              case _: p.Decl.Val =>
+                val ggetter = getterCache.getOrElseUpdate(hrefine, mkTerm(pname.toString, DEFERRED | METHOD | STABLE | ACCESSOR))
+                List(ggetter)
+              case _: p.Decl.Var =>
+                val ggetter = getterCache.getOrElseUpdate(hrefine, mkTerm(pname.toString, DEFERRED | METHOD | ACCESSOR))
+                val gsetter = setterCache.getOrElseUpdate(hrefine, mkTerm(pname.toString + "_=", DEFERRED | METHOD | ACCESSOR))
+                List(ggetter, gsetter)
+              case _: p.Decl.Def =>
+                List(symCache.getOrElseUpdate(hrefine, mkTerm(pname.toString, METHOD)))
+              case _: p.Decl.Type =>
+                List(symCache.getOrElseUpdate(hrefine, mkType(pname.toString, DEFERRED)))
+              case _: p.Defn.Type =>
+                List(symCache.getOrElseUpdate(hrefine, mkType(pname.toString, 0)))
+              case _ =>
+                unreachable
+            }
+            grefines.map(grefine => prefine -> gscope.enter(grefine))
+          })
+          refinement.foreach({ case (prefine, grefine) => grefine.mimic(prefine) })
+          g.refinedType(ptpes.map(loop).toList, gowner(ptpe), gscope, g.NoPosition)
+        case p.Type.Existential(ptpe, pquants) =>
+          // NOTE: `C forSome { val x: Int; type T <: AnyRef }` is represented as:
+          // ExistentialType(List(TypeName("x.type")#16433, TypeName("T")#16434), TypeRef(ThisType(Test#7837), Test.C#7939, List()))
+          // type x.type, flags = 34359738384 (DEFERRED | EXISTENTIAL), info =  <: Int with Singleton
+          // type T, flags = 34359738384 (DEFERRED | EXISTENTIAL), info =  <: AnyRef
+          def namesPquant(pquant: p.Stat) = pquant match {
+            case p.Decl.Val(_, pats, _) => pats.map(_.name)
+            case p.Decl.Type(_, name, _, _) => List(name)
+            case _ => unreachable
+          }
+          def createGquant(pname: p.Name, pquant: p.Stat): g.Symbol = pquant match {
+            case p.Decl.Val(mods, _, _) => gowner(pquant).newTypeSymbol(g.TypeName(pname.toString + ".type"), newFlags = DEFERRED | EXISTENTIAL)
+            case p.Decl.Type(mods, _, _, _) => gowner(pquant).newTypeSymbol(g.TypeName(pname.toString), newFlags = DEFERRED | EXISTENTIAL)
+            case _ => unreachable
+          }
+          val pexplodedQuants = pquants.flatMap(pquant => namesPquant(pquant).map(pname => pquant -> pname))
+          val quants = pexplodedQuants.map({ case (pquant, pname) =>
+            val gquant = symCache.getOrElseUpdate(pname.denot.symbol, createGquant(pname, pquant))
+            pquant -> gquant
+          })
+          quants.foreach{
+            case (pquant: p.Decl.Val, gquant) =>
+              // NOTE: this can't use mimic because of the need to model the weird desugaring scheme employed by scalac
+              val upperBound = g.intersectionType(List(loop(pquant.decltpe), g.definitions.SingletonClass.tpe), gowner(pquant))
+              gquant.setInfo(g.TypeBounds.upper(upperBound))
+            case (pquant: p.Decl.Type, gquant) =>
+              gquant.mimic(pquant)
+            case _ =>
+              unreachable
+          }
+          g.ExistentialType(quants.map(_._2).toList, loop(ptpe))
+        case p.Type.Annotate(ptpe, pannots) =>
+          g.AnnotatedType(gannotinfos(pannots), loop(ptpe))
+        case p.Type.Placeholder(pbounds) =>
+          ???
+        case p.Type.Arg.ByName(ptpe) =>
+          g.appliedType(g.definitions.ByNameParamClass, List(loop(ptpe)))
+        case p.Type.Arg.Repeated(ptpe) =>
+          g.appliedType(g.definitions.RepeatedParamClass, List(loop(ptpe)))
+        case plit: p.Lit =>
+          plit match {
+            case p.Lit.Bool(value) => g.ConstantType(g.Constant(value))
+            case p.Lit.Int(value) => g.ConstantType(g.Constant(value))
+            case p.Lit.Long(value) => g.ConstantType(g.Constant(value))
+            case p.Lit.Float(value) => g.ConstantType(g.Constant(value))
+            case p.Lit.Double(value) => g.ConstantType(g.Constant(value))
+            case p.Lit.Char(value) => g.ConstantType(g.Constant(value))
+            case p.Lit.String(value) => g.ConstantType(g.Constant(value))
+            case p.Lit.Symbol(value) => unreachable
+            case p.Lit.Null() => g.ConstantType(g.Constant(null))
+            case p.Lit.Unit() => g.ConstantType(g.Constant(()))
+          }
+      }
+      ptpe.requireAttributed()
+      loop(ptpe)
+    })
   }
 }
