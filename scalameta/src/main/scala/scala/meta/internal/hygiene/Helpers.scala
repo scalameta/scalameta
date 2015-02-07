@@ -12,82 +12,39 @@ object NonRef {
   }
 }
 
-object NamelikeRef {
+object NameRef {
   def unapply(tree: Tree): Option[Name] = {
     tree match {
       case name: Term.Name => Some(name)
       case name: Type.Name => Some(name)
       case name: Ctor.Name => Some(name)
-      case Term.Select(NamelikeRef(_), name) => Some(name)
-      case Type.Select(NamelikeRef(_), name) => Some(name)
-      case Ctor.Ref.Select(NamelikeRef(_), name) => Some(name)
+      case Term.Select(NameRef(_), name) => Some(name)
+      case Type.Select(NameRef(_), name) => Some(name)
+      case Ctor.Ref.Select(NameRef(_), name) => Some(name)
       case _ => None
     }
   }
 }
 
-object ThisRef {
-  def unapply(tree: Tree): Option[Term.This] = {
+object OpaqueRef {
+  def unapply(tree: Tree): Option[(Name, Int)] = {
     tree match {
-      case tree: Term.This => Some(tree)
+      case tree: Term.This => Some((tree, Term.This.$tag))
+      case tree: Term.Super => Some((tree, Term.Super.$tag))
+      case tree: Mod.PrivateThis => Some((tree, Mod.PrivateThis.$tag))
+      case tree: Mod.PrivateWithin => Some((tree, Mod.PrivateWithin.$tag))
+      case tree: Mod.ProtectedThis => Some((tree, Mod.ProtectedThis.$tag))
+      case tree: Mod.ProtectedWithin => Some((tree, Mod.ProtectedWithin.$tag))
       case _ => None
     }
   }
 }
 
-object SuperRef {
-  def unapply(tree: Tree): Option[Term.Super] = {
-    tree match {
-      case tree: Term.Super => Some(tree)
-      case _ => None
-    }
-  }
-}
-
-object PrivateThisRef {
-  def unapply(tree: Tree): Option[Mod.PrivateThis] = {
-    tree match {
-      case tree: Mod.PrivateThis => Some(tree)
-      case _ => None
-    }
-  }
-}
-
-object PrivateWithinRef {
-  def unapply(tree: Tree): Option[Mod.PrivateWithin] = {
-    tree match {
-      case tree: Mod.PrivateWithin => Some(tree)
-      case _ => None
-    }
-  }
-}
-
-object ProtectedThisRef {
-  def unapply(tree: Tree): Option[Mod.ProtectedThis] = {
-    tree match {
-      case tree: Mod.ProtectedThis => Some(tree)
-      case _ => None
-    }
-  }
-}
-
-object ProtectedWithinRef {
-  def unapply(tree: Tree): Option[Mod.ProtectedWithin] = {
-    tree match {
-      case tree: Mod.ProtectedWithin => Some(tree)
-      case _ => None
-    }
-  }
-}
-
-object EquatableRef {
+object StructuralRef {
   def unapply(tree: Tree): Option[Tree] = {
     tree match {
-      case NamelikeRef(_) => None
-      case ThisRef(_) => None
-      case SuperRef(_) => None
-      case PrivateWithinRef(_) => None
-      case ProtectedWithinRef(_) => None
+      case NameRef(_) => None
+      case OpaqueRef(_, _) => None
       case _: Ref => Some(tree)
       case _ => None
     }

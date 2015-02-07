@@ -57,14 +57,9 @@ object equals {
   private def semanticEquals(tree1: Tree, tree2: Tree): Boolean = {
     (tree1, tree2) match {
       case (NonRef(tree1), NonRef(tree2)) => structuralEquals(tree1, tree2)
-      case (NamelikeRef(name1), NamelikeRef(name2)) => refersToSameDefn(name1, name2)
-      case (ThisRef(ref1), ThisRef(ref2)) => refersToSameDefn(ref1, ref2)
-      case (SuperRef(ref1), SuperRef(ref2)) => refersToSameDefn(ref1, ref2)
-      case (PrivateThisRef(ref1), PrivateThisRef(ref2)) => refersToSameDefn(ref1, ref2)
-      case (PrivateWithinRef(ref1), PrivateWithinRef(ref2)) => refersToSameDefn(ref1, ref2)
-      case (ProtectedThisRef(ref1), ProtectedThisRef(ref2)) => refersToSameDefn(ref1, ref2)
-      case (ProtectedWithinRef(ref1), ProtectedWithinRef(ref2)) => refersToSameDefn(ref1, ref2)
-      case (EquatableRef(tree1), EquatableRef(tree2)) => structuralEquals(tree1, tree2)
+      case (NameRef(name1), NameRef(name2)) => refersToSameDefn(name1, name2)
+      case (OpaqueRef(name1, tag1), OpaqueRef(name2, tag2)) => tag1 == tag2 && refersToSameDefn(name1, name2)
+      case (StructuralRef(tree1), StructuralRef(tree2)) => structuralEquals(tree1, tree2)
       case _ => false
     }
   }
@@ -98,7 +93,7 @@ object hashcode {
 
   private def semanticHashcode(tree: Tree): Int = {
     tree match {
-      case NamelikeRef(name) => name.sigma.resolve(name).hashCode()
+      case NameRef(name) => name.sigma.resolve(name).hashCode()
       case _ => structuralHashcode(tree)
     }
   }
