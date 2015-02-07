@@ -9,6 +9,8 @@ package object invariants {
   // TODO: add pretty printed support for implication
   implicit class Implication(left: Boolean) {
     def ==>(right: Boolean) = !left || right
+    def <==(right: Boolean) = (right ==> left)
+    def <==>(right: Boolean) = (left ==> right) && (right ==> left)
   }
   implicit class RequireDowncast[T](x: T) {
     def require[U <: T : ClassTag]: U = macro Macros.requireDowncast[U]
@@ -116,6 +118,8 @@ package invariants {
         case q"$x.forall($y)" => Forall(Atom(x), Atom(y))
         case q"$x.exists($y)" => Exists(Atom(x), Atom(y))
         case q"$_.Implication($x).==>($y)" => Imply(Atom(x), Atom(y))
+        case q"$_.Implication($x).<==($y)" => Imply(Atom(y), Atom(x))
+        case q"$_.Implication($x).<==>($y)" => And(Imply(Atom(x), Atom(y)), Imply(Atom(y), Atom(x)))
         case x => Atom(x)
       }
 
