@@ -11,6 +11,7 @@ import scala.meta.internal.{ast => p}
 import scala.meta.syntactic.parsers.SyntacticInfo._
 import scala.tools.nsc.{Global => ScalaGlobal}
 import scala.meta.semantic.{Context => ScalametaSemanticContext}
+import scala.meta.ui.{Exception => SemanticException, _}
 import org.scalameta.adt._
 import org.scalameta.collections._
 import org.scalameta.convert._
@@ -33,14 +34,19 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
     val tree = term.require[p.Term]
     val gtpeFromOriginal = tree.originalTree.map(_.tpe)
     val gtpeFromDenotation = tree.originalPre.flatMap(gpre => tree.originalSym.map(gsym => gsym.infoIn(gpre)))
-    val gtpe = gtpeFromOriginal.orElse(gtpeFromOriginal).requireGet
+    val gtpe = gtpeFromOriginal.orElse(gtpeFromDenotation) match {
+      case Some(gtpe) => gtpe
+      case _ => throw new SemanticException("implementation restriction: internal cache has no type associated with ${term.show[Summary]}")
+    }
     val widenedGtpe = gtpe.widen // TODO: Type.widen in core is still ???, so we implicitly widen here
     toApproximateScalameta(widenedGtpe)
   }
   private[meta] def defns(ref: papi.Ref): Seq[papi.Member] = {
     val tree = ref.require[p.Ref]
-    val gpre = tree.originalPre.requireGet
-    val gsyms = tree.originalSym.map(_.alternatives).requireGet
+    val (gpre, gsyms) = (tree.originalPre, tree.originalSym.map(_.alternatives)) match {
+      case (Some(gpre), Some(gsyms)) => (gpre, gsyms)
+      case _ => throw new SemanticException("implementation restriction: internal cache has no definition associated with ${term.show[Summary]}")
+    }
     gsyms.map(gsym => toApproximateScalameta(gpre, gsym))
   }
   private[meta] def members(tpe: papi.Type): Seq[papi.Member] = {
