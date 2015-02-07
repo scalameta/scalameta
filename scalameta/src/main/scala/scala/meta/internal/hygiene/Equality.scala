@@ -94,6 +94,7 @@ object hashcode {
   private def semanticHashcode(tree: Tree): Int = {
     tree match {
       case NameRef(name) => name.sigma.resolve(name).hashCode()
+      case OpaqueRef(name, tag) => name.sigma.resolve(name).hashCode() * 37 + tag
       case _ => structuralHashcode(tree)
     }
   }
