@@ -122,6 +122,10 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
         case ptree: p.Ctor.Name => ptree.copy(denot = denot(gpre, gsym), sigma = h.Sigma.Naive)
         case ptree: p.Term.This => ptree.copy(denot = denot(gpre, gsym), sigma = h.Sigma.Naive)
         case ptree: p.Term.Super => ptree.copy(denot = denot(gpre, gsym), sigma = h.Sigma.Naive)
+        case ptree: p.Mod.PrivateThis => ptree.copy(denot = denot(gpre, gsym), sigma = h.Sigma.Naive)
+        case ptree: p.Mod.PrivateWithin => ptree.copy(denot = denot(gpre, gsym), sigma = h.Sigma.Naive)
+        case ptree: p.Mod.ProtectedThis => ptree.copy(denot = denot(gpre, gsym), sigma = h.Sigma.Naive)
+        case ptree: p.Mod.ProtectedWithin => ptree.copy(denot = denot(gpre, gsym), sigma = h.Sigma.Naive)
         case _ => unreachable
       }
       ptree1.withScratchpad(scratchpad).asInstanceOf[T]
@@ -263,14 +267,14 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
             // so we can't invoke paccessqual on them, because that will produce crazy results
             Nil
           } else if (gmods.hasFlag(LOCAL)) {
-            if (gmods.hasFlag(PROTECTED)) List(p.Mod.ProtectedThis().withOriginal(gpriv))
-            else if (gmods.hasFlag(PRIVATE)) List(p.Mod.PrivateThis().withOriginal(gpriv))
+            if (gmods.hasFlag(PROTECTED)) List(p.Mod.ProtectedThis().withDenot(gpriv))
+            else if (gmods.hasFlag(PRIVATE)) List(p.Mod.PrivateThis().withDenot(gpriv))
             else unreachable
           } else if (gmods.hasAccessBoundary && gpriv != g.NoSymbol) {
             // TODO: `private[pkg] class C` doesn't have PRIVATE in its flags
             // so we need to account for that!
-            if (gmods.hasFlag(PROTECTED)) List(p.Mod.ProtectedWithin(gpriv.name.toString).withOriginal(gpriv))
-            else List(p.Mod.PrivateWithin(gpriv.name.toString).withOriginal(gpriv))
+            if (gmods.hasFlag(PROTECTED)) List(p.Mod.ProtectedWithin(gpriv.name.toString).withDenot(gpriv))
+            else List(p.Mod.PrivateWithin(gpriv.name.toString).withDenot(gpriv))
           } else {
             if (gmods.hasFlag(PROTECTED)) List(p.Mod.Protected())
             else if (gmods.hasFlag(PRIVATE)) List(p.Mod.Private())
