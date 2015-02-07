@@ -14,14 +14,24 @@ trait Attributed {
   // TODO: so wow, much copy/paste (wrt reflection/Attributed.scala)
   implicit class RichAttributedMetaTree(tree: Tree) {
     def requireAttributed(): Unit = {
-      val offenders = mutable.ListBuffer[(Tree, List[Tree])]()
-      def traverse(tree: Tree, path: List[Tree]): Unit = {
+      val offenders = mutable.ListBuffer[(Tree, List[String])]()
+      def traverse(tree: Tree, path: List[String]): Unit = {
         def check(tree: Tree): Boolean = tree match {
-          case tree: impl.Name => tree.denot != Denotation.Zero && tree.sigma != Sigma.Zero
-          case _ => true
+          case tree: impl.Name =>
+            (tree.denot, tree.sigma) match {
+              case (Denotation.Precomputed(Prefix.Zero, _), Sigma.Naive) =>
+                true
+              case (Denotation.Precomputed(Prefix.Type(prefix), _), Sigma.Naive) =>
+                traverse(prefix, path :+ "Denotation")
+                true
+              case _ =>
+                false
+            }
+          case _ =>
+            true
         }
         def loop(x: Any): Unit = x match {
-          case x: Tree => traverse(x, path :+ tree)
+          case x: Tree => traverse(x, path :+ tree.productPrefix)
           case x: List[_] => x.foreach(loop)
           case x: Some[_] => loop(x.get)
           case x => // do nothing
@@ -41,13 +51,8 @@ trait Attributed {
         val offenderPrintout = grouped.flatMap(_._2).map({ case (tree, path) =>
           var prefix = tree.toString.replace("\n", " ")
           if (prefix.length > 60) prefix = prefix.take(60) + "..."
-          var suffix = path.scanLeft("")((suffix, tree) => {
-            if (suffix.length == 0) tree.productPrefix
-            else tree.productPrefix + " > " + suffix
-          }) match {
-            case _ :+ last if last.length <= 40 => last
-            case list => "... " + list.dropWhile(_.length <= 40).head.takeRight(40)
-          }
+          val s_path = path.mkString(" > ")
+          var suffix = if (s_path.length <= 40) s_path else "... " + s_path.takeRight(40)
           if (suffix != "") suffix = s" ($suffix)"
           s"$prefix$suffix"
         }).zipWithIndex.map{ case (s, i) => s"${i + 1}: $s" }.mkString("\n")
