@@ -1403,7 +1403,18 @@ class ToolboxContext(tb: ToolBox[ru.type]) extends ScalahostSemanticContext(tb.g
 }
 
 object Scalahost {
-  def mkSemanticContext[G <: ScalaGlobal](g: G): ScalametaSemanticContext with ScalahostSemanticContext[G] = new ScalahostSemanticContext[G](g)
-  def mkMacroContext[G <: ScalaGlobal](rc: ScalareflectMacroContext): ScalametaMacroContext with ScalahostMacroContext[G] = new ScalahostMacroContext[G](rc)
-  def mkToolboxContext(mirror: ru.Mirror, options: String = ""): ToolboxContext = new ToolboxContext(mirror.mkToolBox(mkSilentFrontEnd(), options))
+  def mkSemanticContext[G <: ScalaGlobal](g: G): ScalametaSemanticContext with ScalahostSemanticContext[G] = {
+    new ScalahostSemanticContext[G](g)
+  }
+  def mkMacroContext[G <: ScalaGlobal](rc: ScalareflectMacroContext): ScalametaMacroContext with ScalahostMacroContext[G] = {
+    new ScalahostMacroContext[G](rc)
+  }
+  def mkToolboxContext(mirror: ru.Mirror, options: String = ""): ToolboxContext = {
+    val scalahostJar = {
+      try getClass.getProtectionDomain().getCodeSource().getLocation().getFile()
+      catch { case ex: Throwable => throw new scala.Exception("failed to auto-load the scalahost plugin", ex) }
+    }
+    val scalahostOptions = " -Xplugin:" + scalahostJar + " -Xplugin-require:scalahost"
+    new ToolboxContext(mirror.mkToolBox(mkSilentFrontEnd(), options + scalahostOptions))
+  }
 }
