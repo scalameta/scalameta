@@ -17,7 +17,9 @@ import scala.meta.macros.{Context => ScalametaMacroContext}
 import scala.meta.internal.hosts.scalac.{MacroContext => ScalahostMacroContext}
 import scala.meta.ui.{Exception => SemanticException, _}
 import scala.reflect.runtime.{universe => ru}
+import scala.reflect.internal.util.NoSourceFile
 import scala.tools.reflect.{ToolBox, mkSilentFrontEnd}
+import scala.compat.Platform.EOL
 import org.scalameta.adt._
 import org.scalameta.collections._
 import org.scalameta.convert._
@@ -1386,7 +1388,18 @@ extends ScalahostSemanticContext[G](scalareflectMacroContext.universe.asInstance
 }
 
 class ToolboxContext(tb: ToolBox[ru.type]) extends ScalahostSemanticContext(tb.global) {
-  def define(tree: ru.Tree): Unit = ???
+  def define(rutree: ru.ImplDef): p.Tree = {
+    val gtree = g.mkImporter(ru).importTree(rutree).asInstanceOf[g.ImplDef]
+    val gpkg = g.PackageDef(g.Ident(g.nme.EMPTY_PACKAGE_NAME), List(gtree))
+    val gunit = new g.CompilationUnit(NoSourceFile)
+    gunit.body = gpkg
+    val grun = new g.Run
+    g.reporter.reset()
+    grun.compileUnits(List(gunit), grun.namerPhase)
+    if (tb.frontEnd.hasErrors) sys.error("reflective compilation has failed:" + EOL + EOL + (tb.frontEnd.infos map (_.msg) mkString EOL))
+    val gtypedtree = gunit.body.asInstanceOf[g.PackageDef].stats.head
+    toScalameta(gtypedtree, classOf[papi.Stat])
+  }
 }
 
 object Scalahost {
