@@ -88,7 +88,28 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
         !definitelyLocal && isParentGlobal
       }
       def signature(gsym: g.Symbol): h.Signature = {
-        lazy val jvmSignature = g.exitingDelambdafy(new g.genASM.JPlainBuilder(null, false).descriptor(gsym))
+        lazy val jvmSignature = {
+          // NOTE: unfortunately, this simple-looking facility generates side effects that corrupt the state of the compiler
+          // in particular, mixin composition stops working correctly, at least for `object Main extends App`
+          // g.exitingDelambdafy(new g.genASM.JPlainBuilder(null, false).descriptor(gsym))
+          def jvmSignature(tpe: g.Type): String = {
+            val g.TypeRef(_, sym, args) = tpe
+            require(args.nonEmpty ==> (sym == g.definitions.ArrayClass))
+            if (sym == g.definitions.UnitClass) "V"
+            else if (sym == g.definitions.BooleanClass) "Z"
+            else if (sym == g.definitions.CharClass) "C"
+            else if (sym == g.definitions.ByteClass) "B"
+            else if (sym == g.definitions.ShortClass) "S"
+            else if (sym == g.definitions.IntClass) "I"
+            else if (sym == g.definitions.FloatClass) "F"
+            else if (sym == g.definitions.LongClass) "J"
+            else if (sym == g.definitions.DoubleClass) "D"
+            else if (sym == g.definitions.ArrayClass) "[" + jvmSignature(args.head)
+            else "L" + sym.fullName.replace(".", "/") + ";"
+          }
+          val g.MethodType(params, ret) = gsym.info.erasure
+          s"(" + params.map(param => jvmSignature(param.info)).mkString("") + ")" + jvmSignature(ret)
+        }
         if (gsym.isMethod && !gsym.asMethod.isGetter) h.Signature.Method(jvmSignature)
         else if (gsym.isTerm) h.Signature.Term
         else if (gsym.isType) h.Signature.Type
