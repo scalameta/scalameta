@@ -67,8 +67,30 @@ class Macros[C <: Context](val c: C) extends AdtReflection with AdtLiftables wit
       }
       def signature(sym: ReflectSymbol): MetaSignature = {
         if (sym.isMethod && !sym.asMethod.isGetter) {
-          val g = c.universe.asInstanceOf[scala.tools.nsc.Global]
-          val jvmSignature = g.exitingDelambdafy(new g.genASM.JPlainBuilder(null, false).descriptor(sym.asInstanceOf[g.Symbol]))
+          val jvmSignature = {
+            // NOTE: unfortunately, this simple-looking facility generates side effects that corrupt the state of the compiler
+            // in particular, mixin composition stops working correctly, at least for `object Main extends App`
+            // val g = c.universe.asInstanceOf[scala.tools.nsc.Global]
+            // g.exitingDelambdafy(new g.genASM.JPlainBuilder(null, false).descriptor(gsym))
+            def jvmSignature(tpe: ReflectType): String = {
+              val TypeRef(_, sym, args) = tpe
+              require(args.nonEmpty ==> (sym == definitions.ArrayClass))
+              if (sym == definitions.UnitClass) "V"
+              else if (sym == definitions.BooleanClass) "Z"
+              else if (sym == definitions.CharClass) "C"
+              else if (sym == definitions.ByteClass) "B"
+              else if (sym == definitions.ShortClass) "S"
+              else if (sym == definitions.IntClass) "I"
+              else if (sym == definitions.FloatClass) "F"
+              else if (sym == definitions.LongClass) "J"
+              else if (sym == definitions.DoubleClass) "D"
+              else if (sym == definitions.ArrayClass) "[" + jvmSignature(args.head)
+              else "L" + sym.fullName.replace(".", "/") + ";"
+            }
+            val MethodType(params, ret) = sym.info.erasure
+            val jvmRet = if (!sym.isConstructor) ret else definitions.UnitClass.toType
+            s"(" + params.map(param => jvmSignature(param.info)).mkString("") + ")" + jvmSignature(jvmRet)
+          }
           MetaSignature.Method(jvmSignature)
         }
         else if (sym.isTerm) MetaSignature.Term
