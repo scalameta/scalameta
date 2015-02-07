@@ -16,6 +16,8 @@ import scala.reflect.macros.contexts.{Context => ScalareflectMacroContext}
 import scala.meta.macros.{Context => ScalametaMacroContext}
 import scala.meta.internal.hosts.scalac.{MacroContext => ScalahostMacroContext}
 import scala.meta.ui.{Exception => SemanticException, _}
+import scala.reflect.runtime.{universe => ru}
+import scala.tools.reflect.{ToolBox, mkSilentFrontEnd}
 import org.scalameta.adt._
 import org.scalameta.collections._
 import org.scalameta.convert._
@@ -1362,7 +1364,12 @@ extends ScalahostSemanticContext[G](scalareflectMacroContext.universe.asInstance
   private[meta] def resources: Map[String, Array[Byte]] = ???
 }
 
+class ToolboxContext(tb: ToolBox[ru.type]) extends ScalahostSemanticContext(tb.global) {
+  def define(tree: ru.Tree): Unit = ???
+}
+
 object Scalahost {
   def mkSemanticContext[G <: ScalaGlobal](g: G): ScalametaSemanticContext with ScalahostSemanticContext[G] = new ScalahostSemanticContext[G](g)
   def mkMacroContext[G <: ScalaGlobal](rc: ScalareflectMacroContext): ScalametaMacroContext with ScalahostMacroContext[G] = new ScalahostMacroContext[G](rc)
+  def mkToolboxContext(mirror: ru.Mirror, options: String = ""): ToolboxContext = new ToolboxContext(mirror.mkToolBox(mkSilentFrontEnd(), options))
 }
