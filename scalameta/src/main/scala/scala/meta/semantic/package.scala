@@ -113,7 +113,11 @@ package object semantic {
         case name: impl.Type.Name => name.copy(denot = stripPrefix(name.denot))
         case name: impl.Ctor.Name => name.copy(denot = stripPrefix(name.denot))
         case name: impl.Term.This => name.copy(denot = stripPrefix(name.denot))
-        case name: impl.Term.Super => name.copy(denot = stripPrefix(name.denot))
+        case name: impl.Term.Super => unreachable
+        case name: impl.Mod.PrivateThis => unreachable
+        case name: impl.Mod.PrivateWithin => unreachable
+        case name: impl.Mod.ProtectedThis => unreachable
+        case name: impl.Mod.ProtectedWithin => unreachable
       }
       prefixlessName.defn
     }

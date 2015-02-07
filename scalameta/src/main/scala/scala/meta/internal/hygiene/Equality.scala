@@ -14,15 +14,16 @@ import impl._
 // 2) some structurally equal refs may compare unequal when they refer to different defns
 
 // Now let's go through all of our refs and see how we should compare them.
-// At the moment, we have 16 different AST nodes that are subtype of Ref:
+// At the moment, we have 20 different AST nodes that are subtype of Ref:
 // Term.This, Term.Super, Term.Name, Term.Select,
 // Type.Name, Type.Select, Type.Project, Type.Singleton,
 // Ctor.Ref.Name, Ctor.Ref.Select, Ctor.Ref.Project, Ctor.Ref.Function,
-// Selector.Wildcard, Selector.Name, Selector.Rename, Selector.Unimport.
+// Selector.Wildcard, Selector.Name, Selector.Rename, Selector.Unimport,
+// Mod.PrivateThis, Mod.PrivateWithin, Mod.ProtectedThis, Mod.ProtectedWithin.
 
 // In the implementation that follows we do the following to compare these refs:
 // 1) XXX.Name vs name-like XXX.Select, where XXX can be Term, Type or Ctor.Ref, are compared equal if they refer to the same defn
-// 2) Term.This vs Term.This, as well as Term.Super vs Term.Super are compared equal if they refer to the same defn
+// 2) Term.This, Term.Super, as well as all PrivateXXX/ProtectedXXX are compared equal to themselves if they refer to the same defn
 // 3) YYY.ZZZ vs YYY.ZZZ for the rest of the refs are compared structurally
 
 // TODO: we should also use our compiler plugin powers to warn on Ref/Def comparisons
@@ -30,59 +31,7 @@ import impl._
 // TODO: we should really generate bodies of those `equals` and `hashcode` with macros
 // and check whether that would be faster that doing productPrefix/productElements
 
-trait Helpers {
-  object NonRef {
-    def unapply(tree: Tree): Option[Tree] = {
-      if (tree.isInstanceOf[Ref]) None else Some(tree)
-    }
-  }
-
-  object NamelikeRef {
-    def unapply(tree: Tree): Option[Name] = {
-      tree match {
-        case name: Term.Name => Some(name)
-        case name: Type.Name => Some(name)
-        case name: Ctor.Name => Some(name)
-        case Term.Select(NamelikeRef(_), name) => Some(name)
-        case Type.Select(NamelikeRef(_), name) => Some(name)
-        case Ctor.Ref.Select(NamelikeRef(_), name) => Some(name)
-        case _ => None
-      }
-    }
-  }
-
-  object ThisRef {
-    def unapply(tree: Tree): Option[Term.This] = {
-      tree match {
-        case tree: Term.This => Some(tree)
-        case _ => None
-      }
-    }
-  }
-
-  object SuperRef {
-    def unapply(tree: Tree): Option[Term.Super] = {
-      tree match {
-        case tree: Term.Super => Some(tree)
-        case _ => None
-      }
-    }
-  }
-
-  object EquatableRef {
-    def unapply(tree: Tree): Option[Tree] = {
-      tree match {
-        case NamelikeRef(_) => None
-        case ThisRef(_) => None
-        case SuperRef(_) => None
-        case _: Ref => Some(tree)
-        case _ => None
-      }
-    }
-  }
-}
-
-object equals extends Helpers {
+object equals {
   private def refersToSameDefn(name1: Name, name2: Name): Boolean = {
     refersToSameDefn(name1.sigma.resolve(name1), name2.sigma.resolve(name2))
   }
@@ -109,8 +58,12 @@ object equals extends Helpers {
     (tree1, tree2) match {
       case (NonRef(tree1), NonRef(tree2)) => structuralEquals(tree1, tree2)
       case (NamelikeRef(name1), NamelikeRef(name2)) => refersToSameDefn(name1, name2)
-      case (ThisRef(this1), ThisRef(this2)) => refersToSameDefn(this1, this2)
-      case (SuperRef(super1), SuperRef(super2)) => refersToSameDefn(super1, super2)
+      case (ThisRef(ref1), ThisRef(ref2)) => refersToSameDefn(ref1, ref2)
+      case (SuperRef(ref1), SuperRef(ref2)) => refersToSameDefn(ref1, ref2)
+      case (PrivateThisRef(ref1), PrivateThisRef(ref2)) => refersToSameDefn(ref1, ref2)
+      case (PrivateWithinRef(ref1), PrivateWithinRef(ref2)) => refersToSameDefn(ref1, ref2)
+      case (ProtectedThisRef(ref1), ProtectedThisRef(ref2)) => refersToSameDefn(ref1, ref2)
+      case (ProtectedWithinRef(ref1), ProtectedWithinRef(ref2)) => refersToSameDefn(ref1, ref2)
       case (EquatableRef(tree1), EquatableRef(tree2)) => structuralEquals(tree1, tree2)
       case _ => false
     }
@@ -127,7 +80,7 @@ object equals extends Helpers {
 
 // TODO: no idea how to generate good hashcodes, but for now it doesn't matter much, I guess
 // therefore I just took a random advice from StackOverflow: http://stackoverflow.com/questions/113511/hash-code-implementation
-object hashcode extends Helpers {
+object hashcode {
   private def structuralHashcode(tree: Tree): Int = {
     // NOTE: for an exhaustive list of tree field types see
     // see /foundation/src/main/scala/org/scalameta/ast/internal.scala

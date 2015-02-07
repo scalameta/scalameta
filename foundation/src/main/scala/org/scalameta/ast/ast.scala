@@ -61,7 +61,11 @@ class AstMacros(val c: Context) {
             fullName == "scala.meta.internal.ast.Ctor.Ref.Name" ||
             fullName == "scala.meta.internal.ast.Term.This" ||
             fullName == "scala.meta.internal.ast.Term.Super" ||
-            fullName == "scala.meta.internal.ast.Name.Anonymous") {
+            fullName == "scala.meta.internal.ast.Name.Anonymous" ||
+            fullName == "scala.meta.internal.ast.Mod.PrivateThis" ||
+            fullName == "scala.meta.internal.ast.Mod.PrivateWithin" ||
+            fullName == "scala.meta.internal.ast.Mod.ProtectedThis" ||
+            fullName == "scala.meta.internal.ast.Mod.ProtectedWithin") {
           (rawparamss.head ++ List(denotParam, sigmaParam)) +: rawparamss.tail
         } else {
           rawparamss

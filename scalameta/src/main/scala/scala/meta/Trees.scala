@@ -337,11 +337,11 @@ package scala.meta.internal.ast {
       require(tree.isCtorCall)
     }
     @ast class Private extends Mod
-    @ast class PrivateThis extends Mod
-    @ast class PrivateWithin(name: Predef.String) extends Mod
+    @ast class PrivateThis extends Mod with Name { def value = "this" }
+    @ast class PrivateWithin(name: Predef.String) extends Mod with Name { def value = name }
     @ast class Protected extends Mod
-    @ast class ProtectedThis extends Mod
-    @ast class ProtectedWithin(name: Predef.String) extends Mod
+    @ast class ProtectedThis extends Mod with Name { def value = "this" }
+    @ast class ProtectedWithin(name: Predef.String) extends Mod with Name { def value = name }
     @ast class Implicit() extends Mod
     @ast class Final() extends Mod
     @ast class Sealed() extends Mod
