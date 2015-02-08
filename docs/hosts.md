@@ -61,6 +61,8 @@ We understand that this API is at odds with the goals of statelessness and platf
 | `def isSubType(tpe1: Type, tpe2: Type): Boolean`          | Subtyping check.
 | `def lub(tpes: Seq[Type]): Type`                          | Least upper bound.
 | `def glb(tpes: Seq[Type]): Type`                          | Greatest lower bound.
+| `def widen(tpe: Type): Type`                              | If a given type is a singleton type, widen it. Otherwise, return the input type back.
+| `def dealias(tpe: Type): Type`                            | If a given type is a type alias or an application thereof, resolve it. Otherwise, return the input type back.
 | `def parents(member: Member): Seq[Member]`                | Direct parents (i.e. superclasses or overriddens) of a given member. If the provided member has been obtained using `members` via some prefix or by instantiating some type parameters, then the results of this method should also have corresponding type parameters instantiated.
 | `def children(member: Member): Seq[Member]`               | Direct children (i.e. subclasses or overriders) of a given member in the closed world reflected by the host. If the provided member has been obtained using `members` via some prefix by instantiating some type parameters, then the results of this method should also have corresponding type parameters instantiated.
 | `def warning(msg: String): Unit`                          | Produces a warning with a given message. For now, hosts are free to choose the presentation for warnings. Later we will provide a notion of positions.
