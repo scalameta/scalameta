@@ -37,7 +37,7 @@ trait HijackAnalyzer {
         }
       }
     }
-    val globalClass: Class[_] = if (isRepl) classOf[NscReplGlobal] else if (isInteractive) classOf[NscInteractiveGlobal] else classOf[NscGlobal]
+    val globalClass: Class[_] = if (isRepl) global.getClass else if (isInteractive) classOf[NscInteractiveGlobal] else classOf[NscGlobal]
     val analyzerField = globalClass.getDeclaredField("analyzer")
     analyzerField.setAccessible(true)
     analyzerField.set(global, analyzer)

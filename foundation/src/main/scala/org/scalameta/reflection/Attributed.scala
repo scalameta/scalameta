@@ -12,7 +12,7 @@ trait Attributed {
   import scala.reflect.internal.Flags._
 
   implicit class RichAttributedTree(tree: Tree) {
-    def ensureAttributed(): Unit = {
+    def requireAttributed(): Unit = {
       var erroneous = 0
       var unattributed = 0
       val offenders = mutable.ListBuffer[(Tree, List[Tree])]()

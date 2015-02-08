@@ -59,7 +59,6 @@ trait Expansion extends scala.reflect.internal.show.Printers {
             import global.{Tree => ScalaTree}
             import scala.meta.{Tree => ScalametaTree, Term => ScalametaTerm}
             import scala.meta.internal.eval.{eval => scalametaEval}
-            import scala.meta.ui._
             import org.scalameta.unreachable
             lazy val hc = Scalahost.mkMacroContext[global.type](rc)
             lazy val scalareflectInvocation: ScalaTree = {

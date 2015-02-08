@@ -530,13 +530,13 @@ package object internal {
             val converted = $result
             def cacheAllMembers(x: _root_.scala.meta.internal.ast.Tree): Unit = {
               def cache(x: _root_.scala.meta.internal.ast.Member): Unit = {
-                val name = _root_.scala.meta.semantic.`package`.SemanticMemberOps(x).name.asInstanceOf[_root_.scala.meta.internal.ast.Name]
-                if (_root_.scala.meta.semantic.`package`.SemanticNameOps(name).isBinder) {
+                val name = _root_.scala.meta.`package`.SemanticMemberOps(x).name.asInstanceOf[_root_.scala.meta.internal.ast.Name]
+                if (_root_.scala.meta.`package`.SemanticNameOps(name).isBinder) {
                   val denot = name.denot
                   _root_.org.scalameta.invariants.require(x != null && denot != _root_.scala.meta.internal.hygiene.Denotation.Zero)
                   _root_.org.scalameta.invariants.require(x != null && denot.symbol != _root_.scala.meta.internal.hygiene.Symbol.Zero)
-                  _root_.org.scalameta.invariants.require(x != null && !$h.hsymToPmemberCache.contains(denot.symbol))
-                  $h.hsymToPmemberCache(denot.symbol) = x
+                  _root_.org.scalameta.invariants.require(x != null && !$h.hsymToNativePmemberCache.contains(denot.symbol))
+                  $h.hsymToNativePmemberCache(denot.symbol) = x
                 }
               }
               def loop(x: Any): Unit = x match {
