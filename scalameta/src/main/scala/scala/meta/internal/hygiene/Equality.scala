@@ -57,7 +57,7 @@ object equals {
   private def semanticEquals(tree1: Tree, tree2: Tree): Boolean = {
     (tree1, tree2) match {
       case (NonRef(tree1), NonRef(tree2)) => structuralEquals(tree1, tree2)
-      case (NameRef(name1), NameRef(name2)) => refersToSameDefn(name1, name2)
+      case (NameRef(name1, tag1), NameRef(name2, tag2)) => tag1 == tag2 && refersToSameDefn(name1, name2)
       case (OpaqueRef(name1, tag1), OpaqueRef(name2, tag2)) => tag1 == tag2 && refersToSameDefn(name1, name2)
       case (StructuralRef(tree1), StructuralRef(tree2)) => structuralEquals(tree1, tree2)
       case _ => false
@@ -65,11 +65,8 @@ object equals {
   }
 
   def apply(tree1: api.Tree, tree2: api.Tree): Boolean = {
-    if (tree1 == null || tree2 == null) return tree1 == null && tree2 == null
-    if (tree1.isInstanceOf[Ctor.Ref] ^ tree2.isInstanceOf[Ctor.Ref]) return false
-    if (tree1.isInstanceOf[Term.Ref] ^ tree2.isInstanceOf[Term.Ref]) return false
-    if (tree1.isInstanceOf[Type.Ref] ^ tree2.isInstanceOf[Type.Ref]) return false
-    semanticEquals(tree1.require[impl.Tree], tree2.require[impl.Tree])
+    if (tree1 == null || tree2 == null) tree1 == null && tree2 == null
+    else semanticEquals(tree1.require[impl.Tree], tree2.require[impl.Tree])
   }
 }
 
@@ -93,7 +90,7 @@ object hashcode {
 
   private def semanticHashcode(tree: Tree): Int = {
     tree match {
-      case NameRef(name) => name.sigma.resolve(name).hashCode()
+      case NameRef(name, tag) => name.sigma.resolve(name).hashCode() * 37 + tag
       case OpaqueRef(name, tag) => name.sigma.resolve(name).hashCode() * 37 + tag
       case _ => structuralHashcode(tree)
     }

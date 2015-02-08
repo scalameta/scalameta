@@ -13,14 +13,14 @@ object NonRef {
 }
 
 object NameRef {
-  def unapply(tree: Tree): Option[Name] = {
+  def unapply(tree: Tree): Option[(Name, Int)] = {
     tree match {
-      case name: Term.Name => Some(name)
-      case name: Type.Name => Some(name)
-      case name: Ctor.Name => Some(name)
-      case Term.Select(NameRef(_), name) => Some(name)
-      case Type.Select(NameRef(_), name) => Some(name)
-      case Ctor.Ref.Select(NameRef(_), name) => Some(name)
+      case name: Term.Name => Some((name, Term.Name.$tag))
+      case name: Type.Name => Some((name, Type.Name.$tag))
+      case name: Ctor.Name => Some((name, Ctor.Name.$tag))
+      case Term.Select(NameRef(_, _), name) => Some((name, Term.Name.$tag))
+      case Type.Select(NameRef(_, _), name) => Some((name, Type.Name.$tag))
+      case Ctor.Ref.Select(NameRef(_, _), name) => Some((name, Ctor.Name.$tag))
       case _ => None
     }
   }
@@ -43,7 +43,7 @@ object OpaqueRef {
 object StructuralRef {
   def unapply(tree: Tree): Option[Tree] = {
     tree match {
-      case NameRef(_) => None
+      case NameRef(_, _) => None
       case OpaqueRef(_, _) => None
       case _: Ref => Some(tree)
       case _ => None
