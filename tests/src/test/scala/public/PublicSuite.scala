@@ -156,7 +156,7 @@ class PublicSuite extends FunSuite {
       import scala.meta._
       import scala.meta.semantic._
       (??? : Member).internalAll(???)
-    """) === "method internalAll in class SemanticScopeOps cannot be accessed in scala.meta.semantic.package.SemanticScopeOps")
+    """) === "method internalAll in class SemanticScopeOps cannot be accessed in meta.semantic.SemanticScopeOps")
   }
 
   // TODO: this error is somewhat confusing

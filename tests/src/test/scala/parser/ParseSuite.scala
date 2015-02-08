@@ -1,6 +1,7 @@
 import org.scalatest._
 import scala.meta.syntactic._
 import scala.meta.syntactic.parsers._
+import scala.meta.syntactic.tokenizers._
 import scala.meta.Dialect
 
 class ParseSuite extends FunSuite with CommonTrees {

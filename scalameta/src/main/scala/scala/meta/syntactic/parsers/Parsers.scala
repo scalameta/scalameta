@@ -11,6 +11,7 @@ import scala.meta.internal.ast._
 import scala.meta.internal.{ast => impl}
 import scala.meta.Origin
 import scala.meta.syntactic.tokenizers.Chars.{isOperatorPart, isScalaLetter}
+import scala.meta.syntactic.tokenizers.Token
 import scala.meta.syntactic.tokenizers.Token._
 import org.scalameta.tokens._
 import org.scalameta.unreachable

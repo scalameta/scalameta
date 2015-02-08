@@ -13,6 +13,7 @@ class BootstrapSuite extends ParseSuite {
       def bootstrapTest(src: File): Unit = {
         test(src.getAbsolutePath) {
           import scala.meta.syntactic._
+          import scala.meta.syntactic.tokenizers._
           import scala.meta.ui._
           import scala.meta.dialects.Scala211
           val toks = src.tokens
