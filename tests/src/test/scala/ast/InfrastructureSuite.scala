@@ -2,7 +2,6 @@ package scala.meta
 
 import org.scalatest._
 import scala.meta._
-import scala.meta.syntactic.quasiquotes._
 import scala.meta.semantic.Context
 import scala.meta.internal.hygiene.Symbol
 import scala.{Seq => _}

@@ -3,7 +3,6 @@ package syntactic
 
 import scala.meta.syntactic.parsers._
 import scala.meta.syntactic.tokenizers._
-import scala.meta.syntactic.quasiquotes._
 import org.scalameta.annotations._
 import org.scalameta.convert._
 import scala.annotation.implicitNotFound

@@ -1,7 +1,6 @@
 import org.scalatest._
 import scala.meta._
 import scala.meta.dialects.Scala211
-import scala.meta.semantic.quasiquotes._
 
 class HygieneSuite extends FunSuite {
   test("q\"List\"") {

@@ -24,8 +24,8 @@ class QuasiquoteMacros(val c: Context) {
       val qmodule = q"""
         object ${TermName(qname)} {
           import scala.language.experimental.macros
-          def apply[T](args: T*)(implicit dialect: _root_.scala.meta.Dialect): _root_.scala.meta.Tree = macro $mname.applyImpl
-          def unapply(scrutinee: Any): $qtypesLub = macro ???
+          def apply[T](args: T*)(implicit dialect: _root_.scala.meta.Dialect, flavor: _root_.scala.meta.quasiquotes.Flavor): _root_.scala.meta.Tree = macro $mname.applyImpl
+          def unapply(scrutinee: Any)(implicit dialect: _root_.scala.meta.Dialect, flavor: _root_.scala.meta.quasiquotes.Flavor): $qtypesLub = macro ???
         }
       """
       val qunsafeResults = qtypes.map(qtype => q"_root_.scala.meta.`package`.RichOrigin(s).parse[$qtype]")
@@ -34,7 +34,7 @@ class QuasiquoteMacros(val c: Context) {
       val qparser = q"(s: _root_.scala.Predef.String) => $qparseResult"
       val q"..$applyimpls" = q"""
         import scala.reflect.macros.whitebox.Context
-        def applyImpl(c: Context)(args: c.Tree*)(dialect: c.Tree): c.Tree = {
+        def applyImpl(c: Context)(args: c.Tree*)(dialect: c.Tree, flavor: c.Tree): c.Tree = {
           val helper = new _root_.scala.meta.internal.quasiquotes.Macros[c.type](c)
           implicit val dialectInstance: _root_.scala.meta.Dialect = {
             // We want to have a higher-order way to abstract over differences in dialects
@@ -52,7 +52,7 @@ class QuasiquoteMacros(val c: Context) {
             else if (dialect.tpe.termSymbol == c.mirror.staticModule("_root_.scala.meta.dialects.Dotty")) _root_.scala.meta.dialects.Dotty
             else c.abort(c.enclosingPosition, "can't use the " + dialect + " dialect in quasiquotes")
           }
-          helper.apply(c.macroApplication, $qparser)
+          helper.apply(c.macroApplication, flavor, $qparser)
         }
       """
       val cdef1 = q"$mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..${qmodule +: stats} }"

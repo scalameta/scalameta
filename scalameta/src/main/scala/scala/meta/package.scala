@@ -26,4 +26,8 @@ package object meta extends MacroApi with SyntacticApi with SemanticApi with UIA
   @quasiquote[Enumerator]('enumerator) implicit class EnumeratorQuote(ctx: StringContext)
   @quasiquote[Importee]('importee)     implicit class ImporteeQuote(ctx: StringContext)
   @quasiquote[Source]('source)         implicit class SourceQuote(ctx: StringContext)
+
+  // NOTE: so far, there's no difference between syntactic and semantic quasiquotes
+  // therefore, I'm going to auto-enable semantic quasiquotes by default for the time being
+  implicit val autoSemanticQuasiquotes = scala.meta.semantic.quasiquotes.enableSemanticQuasiquotes
 }
