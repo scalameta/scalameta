@@ -992,6 +992,16 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
                 require(quant.name.toString.endsWith(".type"))
                 val preref = p.Term.Name(g.Ident(g.TermName(quant.name.toString.stripSuffix(".type"))).alias).withDenot(quant).withOriginal(quant)
                 p.Term.Select(preref, sym.asTerm.precvt(pre, g.Ident(sym)).withOriginal(in))
+              case pre: g.TypeRef =>
+                // TODO: wow, so much for the hypothesis that all post-typer types are representable with syntax
+                // here's one for you: take a look at `context.unit.synthetics.get` in Typers.scala
+                // the prefix of the selection is typed as `Typers.this.global.CompilationUnit#synthetics.type`
+                // from what I can see, we should represent this type as an existential, i.e.
+                // `_1.synthetics.type forSome { val _1: Typers.this.global.CompilationUnit }`
+                // however that representation would require non-trivial effort to pull off
+                // (because we'll have to carry around that p.Type.Existential and unwrap it when anyone wants to use it)
+                // therefore for now I'm just putting a stub here
+                sym.asTerm.rawcvt(g.Ident(sym))
               case _ =>
                 sys.error(s"unsupported type $in, prefix = ${pre.getClass}, structure = ${g.showRaw(in, printIds = true, printTypes = true)}")
             }).withOriginal(in)
