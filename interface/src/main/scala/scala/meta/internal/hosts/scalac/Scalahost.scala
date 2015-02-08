@@ -114,7 +114,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
           s"(" + params.map(param => jvmSignature(param.info)).mkString("") + ")" + jvmSignature(jvmRet)
         }
         if (gsym.isMethod && !gsym.asMethod.isGetter) h.Signature.Method(jvmSignature)
-        else if (gsym.isTerm) h.Signature.Term
+        else if (gsym.isTerm || (gsym.hasFlag(DEFERRED | EXISTENTIAL) && gsym.name.toString.endsWith(".type"))) h.Signature.Term
         else if (gsym.isType) h.Signature.Type
         else unreachable
       }
@@ -971,71 +971,52 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
           case g.NoType =>
             unreachable
           case in @ g.SuperType(thistpe, supertpe) =>
-            val p.Type.Singleton(p.Term.This(pthisname)) = loop(thistpe)
-            require(supertpe.typeSymbol.isType)
-            val supersym = supertpe.typeSymbol.asType
-            val superoriginal = g.Super(g.This(g.tpnme.EMPTY), g.tpnme.EMPTY).setType(in)
-            val superdumb = p.Term.Super(pthisname, Some(supersym.name.toString)).withOriginal(superoriginal)
+            require(thistpe.isInstanceOf[g.ThisType] && thistpe.typeSymbol.isType && supertpe.typeSymbol.isType)
+            val superdumb = p.Term.Super(Some(thistpe.typeSymbol.name.toString), Some(supertpe.typeSymbol.name.toString)).withOriginal(in)
             p.Type.Singleton(superdumb.withDenot(thistpe, supertpe.typeSymbol))
           case in @ g.ThisType(sym) =>
-            p.Type.Singleton({
-              if (sym.isPackageClass) {
-                def moduleRef(gsym: g.Symbol): g.Tree = {
-                  def loop(gsym: g.Symbol): g.Tree = {
-                    if (gsym.isPackageClass) loop(gsym.asClass.module)
-                    else if (gsym.isClass) g.This(gsym).setType(gsym.tpe)
-                    else {
-                      val isIdent = gsym.owner == g.NoSymbol || gsym.owner == g.rootMirror.RootClass || gsym.owner == g.rootMirror.EmptyPackageClass
-                      if (isIdent) g.Ident(gsym).setType(gsym.tpe)
-                      else g.Select(loop(gsym.owner), gsym).setType(gsym.tpe)
-                    }
-                  }
-                  loop(gsym)
-                }
-                val isIdent = sym.owner == g.NoSymbol || sym.owner == g.rootMirror.RootClass || sym.owner == g.rootMirror.EmptyPackageClass
-                if (isIdent) toScalameta(moduleRef(sym), classOf[p.Term.Name])
-                else toScalameta(moduleRef(sym), classOf[p.Term.Select])
-              } else {
-                p.Term.This(None).withOriginal(g.This(g.tpnme.EMPTY).setType(in)).withDenot(in.prefix.orElse(g.NoPrefix), in.typeSymbol)
-              }
-            })
+            require(sym.isClass)
+            if (sym.isModuleClass) p.Type.Singleton(sym.module.asTerm.rawcvt(g.Ident(sym.module)).withOriginal(in))
+            else p.Type.Singleton(p.Term.This(Some(sym.name.toString)).withDenot(sym).withOriginal(in))
           case in @ g.SingleType(pre, sym) =>
             require(sym.isTerm)
-            val ref = pre match {
-              case g.NoPrefix =>
-                sym.asTerm.rawcvt(g.Ident(sym))
-              case _: g.SingletonType =>
-                val p.Type.Singleton(preref) = loop(pre)
-                p.Term.Select(preref, sym.asTerm.precvt(pre, g.Ident(sym))).withOriginal(g.Ident(sym).setType(in))
-              case g.TypeRef(g.NoPrefix, quantifier, Nil) if quantifier.hasFlag(DEFERRED | EXISTENTIAL) =>
-                // happens when we convert the prefix type of `settings.language.contains`
-                // which is `_4.MultiChoiceSetting[_4.languageFeatures.type]`
-                // _4.languageFeatures.type gives rise to this weird SingleType of a TypeRef type
-                // what's extra weird is that `quantifier` is a type here, not a term
-                // TODO: you know what?! I'll just bail
-                sym.asTerm.rawcvt(g.Ident(sym))
-              case _ =>
-                sys.error(s"unsupported type $in, prefix = ${pre.getClass}, structure = ${g.showRaw(in, printIds = true, printTypes = true)}")
-            }
-            p.Type.Singleton(ref)
-          case in @ g.TypeRef(pre: g.SingletonType, sym, args) if sym.isModuleClass || sym.isPackageClass =>
-            require(args.isEmpty)
-            apply(g.SingleType(pre, sym.module))
-          case in @ g.TypeRef(pre, sym, args) =>
-            println(g.showRaw(in, printIds = true, printTypes = true))
-            require(sym.isType)
             val ref = (pre match {
               case g.NoPrefix =>
-                sym.asType.rawcvt(g.Ident(sym))
-              case _: g.SingletonType =>
-                if (pre.typeSymbol.isPackageClass) {
-                  sym.asType.precvt(pre, g.Ident(sym))
-                } else {
-                  val p.Type.Singleton(preref) = loop(pre)
-                  p.Type.Select(preref, sym.asType.precvt(pre, g.Ident(sym)))
-                }
+                sym.asTerm.rawcvt(g.Ident(sym))
+              case pre if pre.typeSymbol.isStaticOwner =>
+                sym.asTerm.rawcvt(g.Ident(sym))
+              case pre: g.SingletonType =>
+                val p.Type.Singleton(preref) = loop(pre)
+                p.Term.Select(preref, sym.asTerm.precvt(pre, g.Ident(sym)).withOriginal(in))
+              case pre @ g.TypeRef(g.NoPrefix, quant, Nil) if quant.hasFlag(DEFERRED | EXISTENTIAL) =>
+                require(quant.name.toString.endsWith(".type"))
+                val preref = p.Term.Name(g.Ident(g.TermName(quant.name.toString.stripSuffix(".type"))).alias).withDenot(quant).withOriginal(quant)
+                p.Term.Select(preref, sym.asTerm.precvt(pre, g.Ident(sym)).withOriginal(in))
               case _ =>
-                p.Type.Project(loop(pre).asInstanceOf[p.Type], sym.asType.precvt(pre, g.Ident(sym)))
+                sys.error(s"unsupported type $in, prefix = ${pre.getClass}, structure = ${g.showRaw(in, printIds = true, printTypes = true)}")
+            }).withOriginal(in)
+            // NOTE: we can't just emit p.Type.Singleton(p.Term.Name(...).withDenot(pre, sym))
+            // because in some situations (when the prefix is not stable) that will be a lie
+            // because naked names are supposed to be usable without a prefix
+            p.Type.Singleton(ref)
+          case in @ g.TypeRef(pre, sym, args) =>
+            require(sym.isType)
+            val ref = ({
+              if (sym.isModuleClass) {
+                apply(g.SingleType(pre, sym.module)).asInstanceOf[p.Type]
+              } else {
+                pre match {
+                  case g.NoPrefix =>
+                    sym.asType.rawcvt(g.Ident(sym))
+                  case pre if pre.typeSymbol.isStaticOwner =>
+                    sym.asType.rawcvt(g.Ident(sym))
+                  case pre: g.SingletonType =>
+                    val p.Type.Singleton(preref) = loop(pre)
+                    p.Type.Select(preref, sym.asType.precvt(pre, g.Ident(sym)).withOriginal(in))
+                  case _ =>
+                    p.Type.Project(loop(pre).asInstanceOf[p.Type], sym.asType.precvt(pre, g.Ident(sym)).withOriginal(in))
+                }
+              }
             }).withOriginal(in)
             if (args.isEmpty) ref
             else p.Type.Apply(ref, args.map(arg => loop(arg).asInstanceOf[p.Type]))
@@ -1090,12 +1071,23 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
                 apply(g.NoPrefix, gsym).asInstanceOf[p.Stat]
             })
             p.Type.Compound(parents.map(parent => loop(parent).asInstanceOf[p.Type]), pstats)
-          case g.ExistentialType(quantified, underlying) =>
+          case g.ExistentialType(quants, underlying) =>
             // TODO: infer type placeholders where they were specified explicitly
-            // TODO: both `type` and `val` quantifiers are represented with TypeSymbols in scala.reflect
-            // see the p.Type => g.Type converter to see how this works and how to adapt this to a different direction of conversion
-            val pstats: Seq[p.Stat] = quantified.map(gsym => apply(g.NoPrefix, gsym).asInstanceOf[p.Stat])
-            p.Type.Existential(loop(underlying).asInstanceOf[p.Type], pstats)
+            require(quants.forall(quant => quant.isType && quant.hasFlag(DEFERRED | EXISTENTIAL)))
+            val pquants = quants.map(quant => {
+              val name = quant.name.toString
+              if (name.endsWith(".type")) {
+                val pname = p.Term.Name(g.Ident(g.TermName(name.stripSuffix(".type"))).alias).withDenot(quant).withOriginal(quant)
+                val g.TypeBounds(_, hi @ g.RefinedType(List(tpe, singleton), g.Scope())) = quant.info
+                require(singleton == g.definitions.SingletonClass.tpe)
+                val ptpe = apply(tpe).asInstanceOf[p.Type]
+                p.Decl.Val(Nil, List(p.Pat.Var(pname).withOriginal(quant)), ptpe).withOriginal(quant)
+              } else {
+                val pname = quant.asType.rawcvt(g.Ident(quant)).withOriginal(quant)
+                p.Decl.Type(Nil, pname, ptparams(quant.typeParams), ptypebounds(quant.info.depoly)).withOriginal(quant)
+              }
+            })
+            p.Type.Existential(loop(underlying).asInstanceOf[p.Type], pquants)
           case g.AnnotatedType(annots, underlying) =>
             p.Type.Annotate(loop(underlying).asInstanceOf[p.Type], pannots(annots))
           case g.ConstantType(const) =>
