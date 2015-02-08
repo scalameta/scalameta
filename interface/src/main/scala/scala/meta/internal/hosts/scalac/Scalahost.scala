@@ -77,39 +77,11 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
     case class Original(goriginal: Any) extends ScratchpadDatum
   }
 
-  private val symCache = TwoWayCache[g.Symbol, h.Symbol]()
-  private val getterCache = TwoWayCache[g.Symbol, h.Symbol]()
-  private val setterCache = TwoWayCache[g.Symbol, h.Symbol]()
   private implicit class RichScratchpadTree[T <: p.Tree](ptree: T) {
-    // TODO: `convert` is somewhat copy/pasted from core/quasiquotes/Macros.scala
-    // however, there's no way for us to share those implementations until we bootstrap
-    private def convert(gsym: g.Symbol): h.Symbol = symCache.getOrElseUpdate(gsym, {
-      def isGlobal(gsym: g.Symbol): Boolean = {
-        def definitelyLocal = gsym == g.NoSymbol || gsym.name.toString.startsWith("<local ") || (gsym.owner.isMethod && !gsym.isParameter)
-        def isParentGlobal = gsym.hasPackageFlag || isGlobal(gsym.owner)
-        !definitelyLocal && isParentGlobal
-      }
-      def signature(gsym: g.Symbol): h.Signature = {
-        if (gsym.isMethod && !gsym.asMethod.isGetter) h.Signature.Method(gsym.jvmsig)
-        else if (gsym.isTerm || (gsym.hasFlag(DEFERRED | EXISTENTIAL) && gsym.name.toString.endsWith(".type"))) h.Signature.Term
-        else if (gsym.isType) h.Signature.Type
-        else unreachable
-      }
-      // TODO: implement this
-      // // NOTE: so far, our current model is to ignore the existence of getters and setters
-      // // therefore, we should make sure that they don't end up here
-      // require(!gsym.isGetter && !gsym.isSetter)
-      if (gsym.isModuleClass || gsym.isPackageClass) convert(gsym.asClass.module)
-      else if (gsym == g.NoSymbol) h.Symbol.Zero
-      else if (gsym == g.rootMirror.RootPackage) h.Symbol.Root
-      else if (gsym == g.rootMirror.EmptyPackage) h.Symbol.Empty
-      else if (isGlobal(gsym)) h.Symbol.Global(convert(gsym.owner), gsym.name.decodedName.toString, signature(gsym))
-      else h.Symbol.Local(randomUUID().toString)
-    })
     private def denot(gpre: g.Type, gsym: g.Symbol): h.Denotation = {
       require(gpre != g.NoType)
       val hpre = if (gpre != g.NoPrefix) h.Prefix.Type(toApproximateScalameta(gpre).asInstanceOf[p.Type]) else h.Prefix.Zero
-      val hsym = convert(gsym)
+      val hsym = symbolTable(gsym)
       h.Denotation.Precomputed(hpre, hsym)
     }
     def withDenot(gsym: g.Symbol)(implicit ev: CanHaveDenot[T]): T = {
@@ -203,7 +175,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
   }
 
   // TODO: remember positions. actually, in scalac they are almost accurate, so it would be a shame to discard them
-  val hsymToVerbatimPmemberCache = mutable.Map[h.Symbol, p.Member]()
+  val hsymToNativePmemberCache = mutable.Map[h.Symbol, p.Member]()
   @converter def toScalameta(in: Any, pt: Pt): Any = {
     object Helpers extends g.ReificationSupportImpl { self =>
       def pctorcall(in: g.Tree, gtpt: g.Tree, gctor: g.Symbol, gargss: Seq[Seq[g.Tree]]): p.Term = {
@@ -1042,19 +1014,14 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
             }
             val pstats = stats.toList.map({
               case Stat.Getter(gget) =>
-                val hsymbol = getterCache.getOrElseUpdate(gget, h.Symbol.Local(randomUUID().toString))
+                val hsymbol = symbolTable.getOrElseUpdateGetter(gget, h.Symbol.Local(randomUUID().toString))
                 val hdenot = h.Denotation.Precomputed(h.Prefix.Zero, hsymbol) // TODO: actually, prefix here is not zero
                 val pname = p.Term.Name(gget.name.toString, hdenot, h.Sigma.Naive)
                 p.Decl.Val(pmods(gget), List(p.Pat.Var(pname)), apply(gget.info.resultType.depoly).asInstanceOf[p.Type])
               case Stat.Setter(gget, gset) =>
                 val hsymbol = {
-                  require(!(getterCache.contains(gget) ^ setterCache.contains(gset)))
-                  if (!getterCache.contains(gget)) {
-                    val result = h.Symbol.Local(randomUUID().toString)
-                    getterCache(gget) = result
-                    setterCache(gset) = result
-                  }
-                  getterCache(gget)
+                  val result = symbolTable.getOrElseUpdateGetter(gget, h.Symbol.Local(randomUUID().toString))
+                  symbolTable.getOrElseUpdateSetter(gset, result)
                 }
                 val hdenot = h.Denotation.Precomputed(h.Prefix.Zero, hsymbol) // TODO: actually, prefix here is not zero
                 val pname = p.Term.Name(gget.name.toString, hdenot, h.Sigma.Naive)
@@ -1105,29 +1072,42 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
       }
       loop(gtpe)
     })
-    def apply(pre: g.Type, sym: g.Symbol): p.Member = gsymToPmemberCache.getOrElseUpdate((pre, sym), {
-      def dummyTemplate = p.Template(Nil, Nil, p.Term.Param(Nil, p.Name.Anonymous(), None, None), None)
-      def dummyCtor = p.Ctor.Primary(Nil, p.Ctor.Name("this"), Nil)
-      def dummyBody = p.Term.Name("???")
-      val in = sym
-      val result = in match {
-        case PkgSymbol(sym) => p.Pkg(sym.rawcvt(g.Ident(sym)), Nil)
-        case ClassSymbol(sym) => p.Defn.Class(pmods(sym), sym.rawcvt(g.Ident(sym)), ptparams(sym.typeParams), dummyCtor, dummyTemplate)
-        case TraitSymbol(sym) => p.Defn.Trait(pmods(sym), sym.rawcvt(g.Ident(sym)), ptparams(sym.typeParams), dummyCtor, dummyTemplate)
-        case PkgObjectSymbol(sym) => p.Pkg.Object(Nil, sym.rawcvt(g.Ident(sym)), dummyCtor, dummyTemplate)
-        case ObjectSymbol(sym) => p.Defn.Object(pmods(sym), sym.rawcvt(g.Ident(sym)), dummyCtor, dummyTemplate)
-        case AbstractValSymbol(sym) => p.Decl.Val(pmods(sym), List(p.Pat.Var(sym.rawcvt(g.ValDef(sym)))), apply(sym.info.depoly).asInstanceOf[p.Type]).pats.head.require[p.Pat.Var].name
-        case ValSymbol(sym) => p.Defn.Val(pmods(sym), List(p.Pat.Var(sym.rawcvt(g.ValDef(sym)))), Some(apply(sym.info.depoly).asInstanceOf[p.Type]), dummyBody).pats.head.require[p.Pat.Var].name
-        case AbstractVarSymbol(sym) => p.Decl.Var(pmods(sym), List(p.Pat.Var(sym.rawcvt(g.ValDef(sym)))), apply(sym.info.depoly).asInstanceOf[p.Type]).pats.head.require[p.Pat.Var].name
-        case VarSymbol(sym) => p.Defn.Var(pmods(sym), List(p.Pat.Var(sym.rawcvt(g.ValDef(sym)))), Some(apply(sym.info.depoly).asInstanceOf[p.Type]), Some(dummyBody)).pats.head.require[p.Pat.Var].name
-        case AbstractDefSymbol(sym) => p.Decl.Def(pmods(sym), sym.rawcvt(g.DefDef(sym, g.EmptyTree)), ptparams(sym.typeParams), pvparamss(sym.paramss), apply(sym.info.finalResultType).asInstanceOf[p.Type])
-        case DefSymbol(sym) => p.Defn.Def(pmods(sym), sym.rawcvt(g.DefDef(sym, g.EmptyTree)), ptparams(sym.typeParams), pvparamss(sym.paramss), Some(apply(sym.info.finalResultType).asInstanceOf[p.Type]), dummyBody)
-        case MacroSymbol(sym) => p.Defn.Macro(pmods(sym), sym.rawcvt(g.DefDef(sym, g.EmptyTree)), ptparams(sym.typeParams), pvparamss(sym.paramss), apply(sym.info.finalResultType).asInstanceOf[p.Type], dummyBody)
-        case AbstractTypeSymbol(sym) => p.Decl.Type(pmods(sym), sym.rawcvt(g.TypeDef(sym)), ptparams(sym.typeParams), ptypebounds(sym.info.depoly))
-        case AliasTypeSymbol(sym) => p.Defn.Type(pmods(sym), sym.rawcvt(g.TypeDef(sym, g.TypeTree(sym.info))), ptparams(sym.typeParams), apply(sym.info.depoly).asInstanceOf[p.Type])
-        case _ => sys.error(s"unsupported symbol $in, designation = ${in.getClass}, flags = ${in.flags}")
+    def apply(gpre: g.Type, gsym: g.Symbol): p.Member = gsymToPmemberCache.getOrElseUpdate((gpre, gsym), {
+      def approximateSymbol(gsym: g.Symbol): p.Member = {
+        def dummyTemplate = p.Template(Nil, Nil, p.Term.Param(Nil, p.Name.Anonymous(), None, None), None)
+        def dummyCtor = p.Ctor.Primary(Nil, p.Ctor.Name("this"), Nil)
+        def dummyBody = p.Term.Name("???")
+        val result = gsym match {
+          case PkgSymbol(gsym) => p.Pkg(gsym.rawcvt(g.Ident(gsym)), Nil)
+          case ClassSymbol(gsym) => p.Defn.Class(pmods(gsym), gsym.rawcvt(g.Ident(gsym)), ptparams(gsym.typeParams), dummyCtor, dummyTemplate)
+          case TraitSymbol(gsym) => p.Defn.Trait(pmods(gsym), gsym.rawcvt(g.Ident(gsym)), ptparams(gsym.typeParams), dummyCtor, dummyTemplate)
+          case PkgObjectSymbol(gsym) => p.Pkg.Object(Nil, gsym.rawcvt(g.Ident(gsym)), dummyCtor, dummyTemplate)
+          case ObjectSymbol(gsym) => p.Defn.Object(pmods(gsym), gsym.rawcvt(g.Ident(gsym)), dummyCtor, dummyTemplate)
+          case AbstractValSymbol(gsym) => p.Decl.Val(pmods(gsym), List(p.Pat.Var(gsym.rawcvt(g.ValDef(gsym)))), apply(gsym.info.depoly).asInstanceOf[p.Type]).pats.head.require[p.Pat.Var].name
+          case ValSymbol(gsym) => p.Defn.Val(pmods(gsym), List(p.Pat.Var(gsym.rawcvt(g.ValDef(gsym)))), Some(apply(gsym.info.depoly).asInstanceOf[p.Type]), dummyBody).pats.head.require[p.Pat.Var].name
+          case AbstractVarSymbol(gsym) => p.Decl.Var(pmods(gsym), List(p.Pat.Var(gsym.rawcvt(g.ValDef(gsym)))), apply(gsym.info.depoly).asInstanceOf[p.Type]).pats.head.require[p.Pat.Var].name
+          case VarSymbol(gsym) => p.Defn.Var(pmods(gsym), List(p.Pat.Var(gsym.rawcvt(g.ValDef(gsym)))), Some(apply(gsym.info.depoly).asInstanceOf[p.Type]), Some(dummyBody)).pats.head.require[p.Pat.Var].name
+          case AbstractDefSymbol(gsym) => p.Decl.Def(pmods(gsym), gsym.rawcvt(g.DefDef(gsym, g.EmptyTree)), ptparams(gsym.typeParams), pvparamss(gsym.paramss), apply(gsym.info.finalResultType).asInstanceOf[p.Type])
+          case DefSymbol(gsym) => p.Defn.Def(pmods(gsym), gsym.rawcvt(g.DefDef(gsym, g.EmptyTree)), ptparams(gsym.typeParams), pvparamss(gsym.paramss), Some(apply(gsym.info.finalResultType).asInstanceOf[p.Type]), dummyBody)
+          case MacroSymbol(gsym) => p.Defn.Macro(pmods(gsym), gsym.rawcvt(g.DefDef(gsym, g.EmptyTree)), ptparams(gsym.typeParams), pvparamss(gsym.paramss), apply(gsym.info.finalResultType).asInstanceOf[p.Type], dummyBody)
+          case AbstractTypeSymbol(gsym) => p.Decl.Type(pmods(gsym), gsym.rawcvt(g.TypeDef(gsym)), ptparams(gsym.typeParams), ptypebounds(gsym.info.depoly))
+          case AliasTypeSymbol(gsym) => p.Defn.Type(pmods(gsym), gsym.rawcvt(g.TypeDef(gsym, g.TypeTree(gsym.info))), ptparams(gsym.typeParams), apply(gsym.info.depoly).asInstanceOf[p.Type])
+          case _ => sys.error(s"unsupported symbol $gsym, designation = ${gsym.getClass}, flags = ${gsym.flags}")
+        }
+        result.withOriginal(gsym)
       }
-      result.withOriginal(in)
+      def applyPrefix(gpre: g.Type, pmem: p.Member): p.Member = {
+        if (gpre == g.NoPrefix) pmem
+        else {
+          // TODO: implement me! it might not be that hard, to be honest
+          // 1) Replace Type.Name(tparam) in pmem and its denotations with values obtained from gpre
+          // 2) Replace Term.This(pmem.owner) in pmem and its denotations with apply(gpre)
+          pmem
+        }
+      }
+      val maybeNativePmember = symbolTable.get(gsym).flatMap(hsym => hsymToNativePmemberCache.get(hsym))
+      val pmember = maybeNativePmember.getOrElse(approximateSymbol(gsym))
+      applyPrefix(gpre, pmember)
     })
   }
 
@@ -1183,14 +1163,14 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
       private def gtparams(ptparams: Seq[p.Type.Param]): List[g.Symbol] = {
         ptparams.map(ptparam => {
           val htparam = ptparam.name.asInstanceOf[p.Name].denot.symbol
-          val gtparam = symCache.getOrElseUpdate(htparam, gsym.newTypeSymbol(g.TypeName(ptparam.name.toString), newFlags = PARAM | DEFERRED))
+          val gtparam = symbolTable.getOrElseUpdate(htparam, gsym.newTypeSymbol(g.TypeName(ptparam.name.toString), newFlags = PARAM | DEFERRED))
           gtparam.mimic(ptparam)
         }).toList
       }
       private def gparams(pparams: Seq[p.Term.Param]): List[g.Symbol] = {
         pparams.map(pparam => {
           val hparam = pparam.name.asInstanceOf[p.Name].denot.symbol
-          val gparam = symCache.getOrElseUpdate(hparam, gsym.newTermSymbol(g.TermName(pparam.name.toString), newFlags = PARAM))
+          val gparam = symbolTable.getOrElseUpdate(hparam, gsym.newTermSymbol(g.TermName(pparam.name.toString), newFlags = PARAM))
           gparam.mimic(pparam)
         }).toList
       }
@@ -1243,36 +1223,20 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
         case h.Prefix.Type(ptpe) => apply(ptpe.asInstanceOf[p.Type])
       }
     }
-    private def gknownsym(hsym: h.Symbol): g.Symbol = {
-      symCache.getOrElseUpdate(hsym, {
-        def resolve(gsym: g.Symbol, name: String, hsig: h.Signature): g.Symbol = hsig match {
-          case h.Signature.Type => gsym.info.decl(g.TypeName(name)).asType
-          case h.Signature.Term => gsym.info.decl(g.TermName(name)).suchThat(galt => galt.isGetter || !galt.isMethod)
-          case h.Signature.Method(jvmsig) => gsym.info.decl(g.TermName(name)).suchThat(galt => galt.isMethod && galt.jvmsig == jvmsig)
-        }
-        hsym match {
-          case h.Symbol.Zero => g.NoSymbol
-          case h.Symbol.Root => g.rootMirror.RootPackage
-          case h.Symbol.Empty => g.rootMirror.EmptyPackage
-          case h.Symbol.Global(howner, name, hsig) => resolve(gknownsym(howner), name, hsig)
-          case h.Symbol.Local(id) => throw new SemanticException(s"implementation restriction: internal cache has no symbol associated with $hsym")
-        }
-      })
-    }
     def apply(ptree: p.Tree): g.Tree = {
       ???
     }
     def apply(ptpe: p.Type.Arg): g.Type = tpeCache.getOrElseUpdate(ptpe, {
       def loop(ptpe: p.Type.Arg): g.Type = ptpe match {
         case pname: p.Type.Name =>
-          g.TypeRef(gprefix(pname.denot.prefix), gknownsym(pname.denot.symbol), Nil)
+          g.TypeRef(gprefix(pname.denot.prefix), symbolTable(pname.denot.symbol), Nil)
         case p.Type.Select(pqual, pname) =>
-          g.TypeRef(loop(p.Type.Singleton(pqual)), gknownsym(pname.denot.symbol), Nil)
+          g.TypeRef(loop(p.Type.Singleton(pqual)), symbolTable(pname.denot.symbol), Nil)
         case p.Type.Project(pqual, pname) =>
-          g.TypeRef(loop(pqual), gknownsym(pname.denot.symbol), Nil)
+          g.TypeRef(loop(pqual), symbolTable(pname.denot.symbol), Nil)
         case p.Type.Singleton(pref) =>
           def singleType(pname: p.Term.Name): g.Type = {
-            val gsym = gknownsym(pname.denot.symbol)
+            val gsym = symbolTable(pname.denot.symbol)
             if (gsym.isModuleClass) g.ThisType(gsym)
             else g.SingleType(gprefix(pname.denot.prefix), gsym)
           }
@@ -1280,14 +1244,14 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
             val gpre = gprefix(psuper.denot.prefix)
             val gmixsym = psuper.denot.symbol match {
               case h.Symbol.Zero => g.intersectionType(gpre.typeSymbol.info.parents)
-              case hsym => gpre.typeSymbol.info.baseType(gknownsym(hsym))
+              case hsym => gpre.typeSymbol.info.baseType(symbolTable(hsym))
             }
             g.SuperType(gpre, gmixsym)
           }
           pref match {
             case pname: p.Term.Name => singleType(pname)
             case p.Term.Select(_, pname) => singleType(pname)
-            case pref: p.Term.This => g.ThisType(gknownsym(pref.denot.symbol))
+            case pref: p.Term.This => g.ThisType(symbolTable(pref.denot.symbol))
             case pref: p.Term.Super => superType(pref)
           }
         case p.Type.Apply(ptpe, pargs) =>
@@ -1327,18 +1291,18 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
             val hrefine = pname.denot.symbol
             val grefines = prefine match {
               case _: p.Decl.Val =>
-                val ggetter = getterCache.getOrElseUpdate(hrefine, mkTerm(pname.toString, DEFERRED | METHOD | STABLE | ACCESSOR))
+                val ggetter = symbolTable.getOrElseUpdateGetter(hrefine, mkTerm(pname.toString, DEFERRED | METHOD | STABLE | ACCESSOR))
                 List(ggetter)
               case _: p.Decl.Var =>
-                val ggetter = getterCache.getOrElseUpdate(hrefine, mkTerm(pname.toString, DEFERRED | METHOD | ACCESSOR))
-                val gsetter = setterCache.getOrElseUpdate(hrefine, mkTerm(pname.toString + "_=", DEFERRED | METHOD | ACCESSOR))
+                val ggetter = symbolTable.getOrElseUpdateGetter(hrefine, mkTerm(pname.toString, DEFERRED | METHOD | ACCESSOR))
+                val gsetter = symbolTable.getOrElseUpdateGetter(hrefine, mkTerm(pname.toString + "_=", DEFERRED | METHOD | ACCESSOR))
                 List(ggetter, gsetter)
               case _: p.Decl.Def =>
-                List(symCache.getOrElseUpdate(hrefine, mkTerm(pname.toString, METHOD)))
+                List(symbolTable.getOrElseUpdate(hrefine, mkTerm(pname.toString, METHOD)))
               case _: p.Decl.Type =>
-                List(symCache.getOrElseUpdate(hrefine, mkType(pname.toString, DEFERRED)))
+                List(symbolTable.getOrElseUpdate(hrefine, mkType(pname.toString, DEFERRED)))
               case _: p.Defn.Type =>
-                List(symCache.getOrElseUpdate(hrefine, mkType(pname.toString, 0)))
+                List(symbolTable.getOrElseUpdate(hrefine, mkType(pname.toString, 0)))
               case _ =>
                 unreachable
             }
@@ -1363,7 +1327,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
           }
           val pexplodedQuants = pquants.flatMap(pquant => namesPquant(pquant).map(pname => pquant -> pname))
           val quants = pexplodedQuants.map({ case (pquant, pname) =>
-            val gquant = symCache.getOrElseUpdate(pname.denot.symbol, createGquant(pname, pquant))
+            val gquant = symbolTable.getOrElseUpdate(pname.denot.symbol, createGquant(pname, pquant))
             pquant -> gquant
           })
           quants.foreach{
@@ -1402,6 +1366,63 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
       ptpe.requireAttributed()
       loop(ptpe)
     })
+  }
+
+  private object symbolTable {
+    private val symCache = TwoWayCache[g.Symbol, h.Symbol]()
+    private val getterCache = TwoWayCache[g.Symbol, h.Symbol]()
+    private val setterCache = TwoWayCache[g.Symbol, h.Symbol]()
+
+    // TODO: `apply` is somewhat copy/pasted from core/quasiquotes/Macros.scala
+    // however, there's no way for us to share those implementations until we bootstrap
+    def apply(gsym: g.Symbol): h.Symbol = symCache.getOrElseUpdate(gsym, {
+      def isGlobal(gsym: g.Symbol): Boolean = {
+        def definitelyLocal = gsym == g.NoSymbol || gsym.name.toString.startsWith("<local ") || (gsym.owner.isMethod && !gsym.isParameter)
+        def isParentGlobal = gsym.hasPackageFlag || isGlobal(gsym.owner)
+        !definitelyLocal && isParentGlobal
+      }
+      def signature(gsym: g.Symbol): h.Signature = {
+        if (gsym.isMethod && !gsym.asMethod.isGetter) h.Signature.Method(gsym.jvmsig)
+        else if (gsym.isTerm || (gsym.hasFlag(DEFERRED | EXISTENTIAL) && gsym.name.toString.endsWith(".type"))) h.Signature.Term
+        else if (gsym.isType) h.Signature.Type
+        else unreachable
+      }
+      // TODO: implement this
+      // // NOTE: so far, our current model is to ignore the existence of getters and setters
+      // // therefore, we should make sure that they don't end up here
+      // require(!gsym.isGetter && !gsym.isSetter)
+      if (gsym.isModuleClass || gsym.isPackageClass) apply(gsym.asClass.module)
+      else if (gsym == g.NoSymbol) h.Symbol.Zero
+      else if (gsym == g.rootMirror.RootPackage) h.Symbol.Root
+      else if (gsym == g.rootMirror.EmptyPackage) h.Symbol.Empty
+      else if (isGlobal(gsym)) h.Symbol.Global(apply(gsym.owner), gsym.name.decodedName.toString, signature(gsym))
+      else h.Symbol.Local(randomUUID().toString)
+    })
+
+    def get(gsym: g.Symbol): Option[h.Symbol] = symCache.get(gsym)
+    def getOrElseUpdate(gsym: g.Symbol, hsym: => h.Symbol): h.Symbol = symCache.getOrElseUpdate(gsym, hsym)
+    def getOrElseUpdateGetter(gsym: g.Symbol, hsym: => h.Symbol): h.Symbol = getterCache.getOrElseUpdate(gsym, hsym)
+    def getOrElseUpdateSetter(gsym: g.Symbol, hsym: => h.Symbol): h.Symbol = setterCache.getOrElseUpdate(gsym, hsym)
+
+    def apply(hsym: h.Symbol): g.Symbol = symCache.getOrElseUpdate(hsym, {
+      def resolve(gsym: g.Symbol, name: String, hsig: h.Signature): g.Symbol = hsig match {
+        case h.Signature.Type => gsym.info.decl(g.TypeName(name)).asType
+        case h.Signature.Term => gsym.info.decl(g.TermName(name)).suchThat(galt => galt.isGetter || !galt.isMethod)
+        case h.Signature.Method(jvmsig) => gsym.info.decl(g.TermName(name)).suchThat(galt => galt.isMethod && galt.jvmsig == jvmsig)
+      }
+      hsym match {
+        case h.Symbol.Zero => g.NoSymbol
+        case h.Symbol.Root => g.rootMirror.RootPackage
+        case h.Symbol.Empty => g.rootMirror.EmptyPackage
+        case h.Symbol.Global(howner, name, hsig) => resolve(apply(howner), name, hsig)
+        case h.Symbol.Local(id) => throw new SemanticException(s"implementation restriction: internal cache has no symbol associated with $hsym")
+      }
+    })
+
+    def get(hsym: h.Symbol): Option[g.Symbol] = symCache.get(hsym)
+    def getOrElseUpdate(hsym: h.Symbol, gsym: => g.Symbol): g.Symbol = symCache.getOrElseUpdate(hsym, gsym)
+    def getOrElseUpdateGetter(hsym: h.Symbol, gsym: => g.Symbol): g.Symbol = getterCache.getOrElseUpdate(hsym, gsym)
+    def getOrElseUpdateSetter(hsym: h.Symbol, gsym: => g.Symbol): g.Symbol = setterCache.getOrElseUpdate(hsym, gsym)
   }
 }
 

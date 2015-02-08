@@ -7,6 +7,7 @@ class TwoWayCache[T, U] {
   private lazy val u2t = mutable.Map[U, T]()
 
   def apply(t: T)(implicit ev: OverloadHack1) = t2u(t)
+  def get(t: T)(implicit ev: OverloadHack1) = t2u.get(t)
   def contains(t: T)(implicit ev: OverloadHack1) = t2u.contains(t)
   def update(t: T, u: U)(implicit ev: OverloadHack1) = { t2u(t) = u; u2t(u) = t }
   def getOrElseUpdate(t: T, op: => U)(implicit ev: OverloadHack1) = {
@@ -16,6 +17,7 @@ class TwoWayCache[T, U] {
   }
 
   def apply(u: U)(implicit ev: OverloadHack2) = u2t(u)
+  def get(u: U)(implicit ev: OverloadHack2) = u2t.get(u)
   def contains(u: U)(implicit ev: OverloadHack2) = u2t.contains(u)
   def update(u: U, t: T)(implicit ev: OverloadHack2) = { u2t(u) = t; t2u(t) = u; u2t(u) = t }
   def getOrElseUpdate(u: U, op: => T)(implicit ev: OverloadHack2) = {
