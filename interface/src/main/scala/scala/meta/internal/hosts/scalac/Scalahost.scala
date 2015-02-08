@@ -46,8 +46,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
       case Some(gtpe) => gtpe
       case _ => throw new SemanticException("implementation restriction: internal cache has no type associated with ${term.show[Summary]}")
     }
-    val widenedGtpe = gtpe.widen // TODO: Type.widen in core is still ???, so we implicitly widen here
-    toApproximateScalameta(widenedGtpe).asInstanceOf[papi.Type]
+    toApproximateScalameta(gtpe).asInstanceOf[papi.Type]
   }
   private[meta] def defns(ref: papi.Ref): Seq[papi.Member] = {
     def tryScratchpad(pref: p.Ref): Option[Seq[papi.Member]] = {
@@ -83,6 +82,8 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
   private[meta] def isSubType(tpe1: papi.Type, tpe2: papi.Type): Boolean = toScalareflect(tpe1.require[p.Type]) <:< toScalareflect(tpe2.require[p.Type])
   private[meta] def lub(tpes: Seq[papi.Type]): papi.Type = toApproximateScalameta(g.lub(tpes.map(tpe => toScalareflect(tpe.require[p.Type])).toList)).asInstanceOf[papi.Type]
   private[meta] def glb(tpes: Seq[papi.Type]): papi.Type = toApproximateScalameta(g.glb(tpes.map(tpe => toScalareflect(tpe.require[p.Type])).toList)).asInstanceOf[papi.Type]
+  private[meta] def widen(tpe: papi.Type): papi.Type = toApproximateScalameta(toScalareflect(tpe.require[p.Type]).widen).asInstanceOf[papi.Type]
+  private[meta] def dealias(tpe: papi.Type): papi.Type = toApproximateScalameta(toScalareflect(tpe.require[p.Type]).dealias).asInstanceOf[papi.Type]
 
   private[meta] def parents(member: papi.Member): Seq[papi.Member] = ???
   private[meta] def children(member: papi.Member): Seq[papi.Member] = ???
