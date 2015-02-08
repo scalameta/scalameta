@@ -90,30 +90,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
         !definitelyLocal && isParentGlobal
       }
       def signature(gsym: g.Symbol): h.Signature = {
-        lazy val jvmSignature = {
-          // NOTE: unfortunately, this simple-looking facility generates side effects that corrupt the state of the compiler
-          // in particular, mixin composition stops working correctly, at least for `object Main extends App`
-          // g.exitingDelambdafy(new g.genASM.JPlainBuilder(null, false).descriptor(gsym))
-          def jvmSignature(tpe: g.Type): String = {
-            val g.TypeRef(_, sym, args) = tpe
-            require(args.nonEmpty ==> (sym == g.definitions.ArrayClass))
-            if (sym == g.definitions.UnitClass) "V"
-            else if (sym == g.definitions.BooleanClass) "Z"
-            else if (sym == g.definitions.CharClass) "C"
-            else if (sym == g.definitions.ByteClass) "B"
-            else if (sym == g.definitions.ShortClass) "S"
-            else if (sym == g.definitions.IntClass) "I"
-            else if (sym == g.definitions.FloatClass) "F"
-            else if (sym == g.definitions.LongClass) "J"
-            else if (sym == g.definitions.DoubleClass) "D"
-            else if (sym == g.definitions.ArrayClass) "[" + jvmSignature(args.head)
-            else "L" + sym.fullName.replace(".", "/") + ";"
-          }
-          val g.MethodType(params, ret) = gsym.info.erasure
-          val jvmRet = if (!gsym.isConstructor) ret else g.definitions.UnitClass.tpe
-          s"(" + params.map(param => jvmSignature(param.info)).mkString("") + ")" + jvmSignature(jvmRet)
-        }
-        if (gsym.isMethod && !gsym.asMethod.isGetter) h.Signature.Method(jvmSignature)
+        if (gsym.isMethod && !gsym.asMethod.isGetter) h.Signature.Method(gsym.jvmsig)
         else if (gsym.isTerm || (gsym.hasFlag(DEFERRED | EXISTENTIAL) && gsym.name.toString.endsWith(".type"))) h.Signature.Term
         else if (gsym.isType) h.Signature.Type
         else unreachable
@@ -123,6 +100,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
       // // therefore, we should make sure that they don't end up here
       // require(!gsym.isGetter && !gsym.isSetter)
       if (gsym.isModuleClass || gsym.isPackageClass) convert(gsym.asClass.module)
+      else if (gsym == g.NoSymbol) h.Symbol.Zero
       else if (gsym == g.rootMirror.RootPackage) h.Symbol.Root
       else if (gsym == g.rootMirror.EmptyPackage) h.Symbol.Empty
       else if (isGlobal(gsym)) h.Symbol.Global(convert(gsym.owner), gsym.name.decodedName.toString, signature(gsym))
@@ -144,7 +122,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
     }
     def withDenot(gpre: g.Type, gsym: g.Symbol)(implicit ev: CanHaveDenot[T]): T = {
       val ptree0 = ptree // NOTE: this is here only to provide an unqualified Ident for the `require` macro
-      require(ptree0.isInstanceOf[p.Name] && gpre != null && gsym != g.NoSymbol)
+      require(ptree0.isInstanceOf[p.Name] && gpre != null && ((gsym == g.NoSymbol) ==> ptree.isInstanceOf[p.Term.Super]))
       val scratchpad = ptree.scratchpad :+ ScratchpadDatum.Denotation(gpre, gsym)
       val ptree1 = ptree match {
         case ptree: p.Name.Anonymous => ptree.copy(denot = denot(gpre, gsym), sigma = h.Sigma.Naive)
@@ -975,7 +953,9 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
           case in @ g.SuperType(thistpe, supertpe) =>
             require(thistpe.isInstanceOf[g.ThisType] && thistpe.typeSymbol.isType && supertpe.typeSymbol.isType)
             val superdumb = p.Term.Super(Some(thistpe.typeSymbol.name.toString), Some(supertpe.typeSymbol.name.toString)).withOriginal(in)
-            p.Type.Singleton(superdumb.withDenot(thistpe, supertpe.typeSymbol))
+            val superpre = thistpe
+            val supersym = if (supertpe.isInstanceOf[g.RefinedType]) g.NoSymbol else supertpe.typeSymbol
+            p.Type.Singleton(superdumb.withDenot(thistpe, supersym))
           case in @ g.ThisType(sym) =>
             require(sym.isClass)
             if (sym.isModuleClass) p.Type.Singleton(sym.module.asTerm.rawcvt(g.Ident(sym.module)).withOriginal(in))
@@ -984,9 +964,9 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
             require(sym.isTerm)
             val ref = (pre match {
               case g.NoPrefix =>
-                sym.asTerm.rawcvt(g.Ident(sym))
+                sym.asTerm.precvt(pre, g.Ident(sym))
               case pre if pre.typeSymbol.isStaticOwner =>
-                sym.asTerm.rawcvt(g.Ident(sym))
+                sym.asTerm.precvt(pre, g.Ident(sym))
               case pre: g.SingletonType =>
                 val p.Type.Singleton(preref) = loop(pre)
                 p.Term.Select(preref, sym.asTerm.precvt(pre, g.Ident(sym)).withOriginal(in))
@@ -1003,7 +983,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
                 // however that representation would require non-trivial effort to pull off
                 // (because we'll have to carry around that p.Type.Existential and unwrap it when anyone wants to use it)
                 // therefore for now I'm just putting a stub here
-                sym.asTerm.rawcvt(g.Ident(sym))
+                sym.asTerm.precvt(pre, g.Ident(sym))
               case _ =>
                 sys.error(s"unsupported type $in, prefix = ${pre.getClass}, structure = ${g.showRaw(in, printIds = true, printTypes = true)}")
             }).withOriginal(in)
@@ -1019,9 +999,9 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
               } else {
                 pre match {
                   case g.NoPrefix =>
-                    sym.asType.rawcvt(g.Ident(sym))
+                    sym.asType.precvt(pre, g.Ident(sym))
                   case pre if pre.typeSymbol.isStaticOwner =>
-                    sym.asType.rawcvt(g.Ident(sym))
+                    sym.asType.precvt(pre, g.Ident(sym))
                   case pre: g.SingletonType =>
                     val p.Type.Singleton(preref) = loop(pre)
                     p.Type.Select(preref, sym.asType.precvt(pre, g.Ident(sym)).withOriginal(in))
@@ -1257,19 +1237,59 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
       // I always had no idea about how this works in scala. I guess, it's time for find out :)
       g.NoSymbol
     }
+    private def gprefix(hprefix: h.Prefix): g.Type = {
+      hprefix match {
+        case h.Prefix.Zero => g.NoPrefix
+        case h.Prefix.Type(ptpe) => apply(ptpe.asInstanceOf[p.Type])
+      }
+    }
+    private def gknownsym(hsym: h.Symbol): g.Symbol = {
+      symCache.getOrElseUpdate(hsym, {
+        def resolve(gsym: g.Symbol, name: String, hsig: h.Signature): g.Symbol = hsig match {
+          case h.Signature.Type => gsym.info.decl(g.TypeName(name)).asType
+          case h.Signature.Term => gsym.info.decl(g.TermName(name)).suchThat(galt => galt.isGetter || !galt.isMethod)
+          case h.Signature.Method(jvmsig) => gsym.info.decl(g.TermName(name)).suchThat(galt => galt.isMethod && galt.jvmsig == jvmsig)
+        }
+        hsym match {
+          case h.Symbol.Zero => g.NoSymbol
+          case h.Symbol.Root => g.rootMirror.RootPackage
+          case h.Symbol.Empty => g.rootMirror.EmptyPackage
+          case h.Symbol.Global(howner, name, hsig) => resolve(gknownsym(howner), name, hsig)
+          case h.Symbol.Local(id) => throw new SemanticException(s"implementation restriction: internal cache has no symbol associated with $hsym")
+        }
+      })
+    }
     def apply(ptree: p.Tree): g.Tree = {
       ???
     }
     def apply(ptpe: p.Type.Arg): g.Type = tpeCache.getOrElseUpdate(ptpe, {
       def loop(ptpe: p.Type.Arg): g.Type = ptpe match {
         case pname: p.Type.Name =>
-          ???
+          g.TypeRef(gprefix(pname.denot.prefix), gknownsym(pname.denot.symbol), Nil)
         case p.Type.Select(pqual, pname) =>
           ???
         case p.Type.Project(pqual, pname) =>
           ???
         case p.Type.Singleton(pref) =>
-          ???
+          def singleType(pname: p.Term.Name): g.Type = {
+            val gsym = gknownsym(pname.denot.symbol)
+            if (gsym.isModuleClass) g.ThisType(gsym)
+            else g.SingleType(gprefix(pname.denot.prefix), gsym)
+          }
+          def superType(psuper: p.Term.Super): g.Type = {
+            val gpre = gprefix(psuper.denot.prefix)
+            val gmixsym = psuper.denot.symbol match {
+              case h.Symbol.Zero => g.intersectionType(gpre.typeSymbol.info.parents)
+              case hsym => gpre.typeSymbol.info.baseType(gknownsym(hsym))
+            }
+            g.SuperType(gpre, gmixsym)
+          }
+          pref match {
+            case pname: p.Term.Name => singleType(pname)
+            case p.Term.Select(_, pname) => singleType(pname)
+            case pref: p.Term.This => g.ThisType(gknownsym(pref.denot.symbol))
+            case pref: p.Term.Super => superType(pref)
+          }
         case p.Type.Apply(ptpe, pargs) =>
           g.appliedType(loop(ptpe), pargs.map(loop).toList)
         case p.Type.ApplyInfix(plhs, pop, prhs) =>

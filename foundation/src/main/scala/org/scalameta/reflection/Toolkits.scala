@@ -16,6 +16,7 @@ trait GlobalToolkit extends MacroToolkit
                        with TypeHelpers
                        with Ensugar
                        with Syntaxize
-                       with Attributed {
+                       with Attributed
+                       with Platform {
   val global: Global
 }
