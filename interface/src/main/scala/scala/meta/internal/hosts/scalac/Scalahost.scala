@@ -1267,9 +1267,9 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
         case pname: p.Type.Name =>
           g.TypeRef(gprefix(pname.denot.prefix), gknownsym(pname.denot.symbol), Nil)
         case p.Type.Select(pqual, pname) =>
-          ???
+          g.TypeRef(loop(p.Type.Singleton(pqual)), gknownsym(pname.denot.symbol), Nil)
         case p.Type.Project(pqual, pname) =>
-          ???
+          g.TypeRef(loop(pqual), gknownsym(pname.denot.symbol), Nil)
         case p.Type.Singleton(pref) =>
           def singleType(pname: p.Term.Name): g.Type = {
             val gsym = gknownsym(pname.denot.symbol)
