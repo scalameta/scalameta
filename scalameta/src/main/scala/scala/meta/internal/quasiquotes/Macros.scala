@@ -104,20 +104,26 @@ class Macros[C <: Context](val c: C) extends AdtReflection with AdtLiftables wit
           else sym.owner.asInstanceOf[scala.reflect.internal.Symbols#Symbol].thisType.asInstanceOf[ReflectType]
         }
         def singletonType(pre: ReflectType, sym: ReflectSymbol): MetaType = {
-          impl.Type.Singleton(impl.Term.Name(sym.name.toString, denot(pre, sym), Sigma.Naive))
+          val name = {
+            if (sym == c.mirror.RootClass || sym == c.mirror.RootPackage) "_root_"
+            else if (sym == c.mirror.EmptyPackageClass || sym == c.mirror.EmptyPackage) "_empty_"
+            else sym.name.toString
+          }
+          impl.Type.Singleton(impl.Term.Name(name, denot(pre, sym), Sigma.Naive))
         }
         val pre1 = pre.orElse(defaultPrefix(sym))
         pre1 match {
           case NoPrefix => MetaPrefix.Zero
           case ThisType(sym) => MetaPrefix.Type(singletonType(NoType, sym))
           case SingleType(pre, sym) => MetaPrefix.Type(singletonType(pre, sym))
-          case TypeRef(pre, sym, Nil) if sym.isModule || sym.isModuleClass || sym.isPackage || sym.isPackageClass => MetaPrefix.Type(singletonType(pre, sym))
+          case TypeRef(pre, sym, Nil) if sym.isModule || sym.isModuleClass => MetaPrefix.Type(singletonType(pre, sym))
           case _ => sys.error(s"unsupported type ${pre1}, designation = ${pre1.getClass}, structure = ${showRaw(pre1, printIds = true, printTypes = true)}")
         }
       }
       def convertSymbol(sym: ReflectSymbol): MetaSymbol = {
-        if (sym.isModuleClass || sym.isPackageClass) convertSymbol(sym.asClass.module)
-        else if (sym == c.mirror.RootClass || sym == c.mirror.RootPackage) MetaSymbol.Root
+        if (sym.isModuleClass) convertSymbol(sym.asClass.module)
+        else if (sym == c.mirror.RootPackage) MetaSymbol.Root
+        else if (sym == c.mirror.EmptyPackage) MetaSymbol.Empty
         else MetaSymbol.Global(convertSymbol(sym.owner), sym.name.decodedName.toString, signature(sym))
       }
       require(pre != null && sym != NoSymbol && isGlobal(sym))
