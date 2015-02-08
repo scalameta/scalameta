@@ -18,9 +18,11 @@ object ScalaHostBuild extends Build {
     id = "root",
     base = file("root"),
     settings = sharedSettings ++ commonDependencies ++ Seq(
-      dontPackage
+      dontPackage,
+      usePlugin(plugin),
+      replIntegration
     )
-  ) aggregate (plugin, tests)
+  ) aggregate (plugin, tests) dependsOn (plugin, foundation, interface)
 
   lazy val foundation = Project(
     id   = "scalahost-foundation",
