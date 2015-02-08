@@ -1445,11 +1445,15 @@ object Scalahost {
     new ScalahostMacroContext[G](rc)
   }
   def mkToolboxContext(mirror: ru.Mirror, options: String = ""): ToolboxContext = {
-    val scalahostJar = {
-      try getClass.getProtectionDomain().getCodeSource().getLocation().getFile()
-      catch { case ex: Throwable => throw new scala.Exception("failed to auto-load the scalahost plugin", ex) }
+    var toolboxOptions = options
+    if (!toolboxOptions.contains("-Xplugin-require:scalahost")) {
+      val scalahostJar = {
+        try getClass.getProtectionDomain().getCodeSource().getLocation().getFile()
+        catch { case ex: Throwable => throw new scala.Exception("failed to auto-load the scalahost plugin", ex) }
+      }
+      val scalahostOptions = " -Xplugin:" + scalahostJar + " -Xplugin-require:scalahost"
+      toolboxOptions += scalahostOptions
     }
-    val scalahostOptions = " -Xplugin:" + scalahostJar + " -Xplugin-require:scalahost"
-    new ToolboxContext(mirror.mkToolBox(mkSilentFrontEnd(), options + scalahostOptions))
+    new ToolboxContext(mirror.mkToolBox(mkSilentFrontEnd(), toolboxOptions))
   }
 }
