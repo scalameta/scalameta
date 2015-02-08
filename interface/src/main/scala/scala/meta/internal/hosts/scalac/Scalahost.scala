@@ -970,6 +970,13 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
             unreachable
           case g.NoType =>
             unreachable
+          case in @ g.SuperType(thistpe, supertpe) =>
+            val p.Type.Singleton(p.Term.This(pthisname)) = loop(thistpe)
+            require(supertpe.typeSymbol.isType)
+            val supersym = supertpe.typeSymbol.asType
+            val superoriginal = g.Super(g.This(g.tpnme.EMPTY), g.tpnme.EMPTY).setType(in)
+            val superdumb = p.Term.Super(pthisname, Some(supersym.name.toString)).withOriginal(superoriginal)
+            p.Type.Singleton(superdumb.withDenot(thistpe, supertpe.typeSymbol))
           case in @ g.ThisType(sym) =>
             p.Type.Singleton({
               if (sym.isPackageClass) {
@@ -992,13 +999,6 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
                 p.Term.This(None).withOriginal(g.This(g.tpnme.EMPTY).setType(in)).withDenot(in.prefix.orElse(g.NoPrefix), in.typeSymbol)
               }
             })
-          case in @ g.SuperType(thistpe, supertpe) =>
-            val p.Type.Singleton(p.Term.This(pthisname)) = loop(thistpe)
-            require(supertpe.typeSymbol.isType)
-            val supersym = supertpe.typeSymbol.asType
-            val superoriginal = g.Super(g.This(g.tpnme.EMPTY), g.tpnme.EMPTY).setType(in)
-            val superdumb = p.Term.Super(pthisname, Some(supersym.name.toString)).withOriginal(superoriginal)
-            p.Type.Singleton(superdumb.withDenot(thistpe, supertpe.typeSymbol))
           case in @ g.SingleType(pre, sym) =>
             require(sym.isTerm)
             val ref = pre match {
@@ -1018,26 +1018,11 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
                 sys.error(s"unsupported type $in, prefix = ${pre.getClass}, structure = ${g.showRaw(in, printIds = true, printTypes = true)}")
             }
             p.Type.Singleton(ref)
-          case in @ g.ConstantType(const) =>
-            const.value match {
-              case null => p.Lit.Null()
-              case () => p.Lit.Unit()
-              case v: Boolean => p.Lit.Bool(v)
-              case v: Byte => ???
-              case v: Short => ???
-              case v: Int => p.Lit.Int(v)
-              case v: Long => p.Lit.Long(v)
-              case v: Float => p.Lit.Float(v)
-              case v: Double => p.Lit.Double(v)
-              case v: String => p.Lit.String(v)
-              case v: Char => p.Lit.Char(v)
-              case v: g.Type => unreachable
-              case v: g.Symbol => unreachable
-            }
           case in @ g.TypeRef(pre: g.SingletonType, sym, args) if sym.isModuleClass || sym.isPackageClass =>
             require(args.isEmpty)
             apply(g.SingleType(pre, sym.module))
           case in @ g.TypeRef(pre, sym, args) =>
+            println(g.showRaw(in, printIds = true, printTypes = true))
             require(sym.isType)
             val ref = (pre match {
               case g.NoPrefix =>
@@ -1113,6 +1098,22 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
             p.Type.Existential(loop(underlying).asInstanceOf[p.Type], pstats)
           case g.AnnotatedType(annots, underlying) =>
             p.Type.Annotate(loop(underlying).asInstanceOf[p.Type], pannots(annots))
+          case g.ConstantType(const) =>
+            const.value match {
+              case null => p.Lit.Null()
+              case () => p.Lit.Unit()
+              case v: Boolean => p.Lit.Bool(v)
+              case v: Byte => ???
+              case v: Short => ???
+              case v: Int => p.Lit.Int(v)
+              case v: Long => p.Lit.Long(v)
+              case v: Float => p.Lit.Float(v)
+              case v: Double => p.Lit.Double(v)
+              case v: String => p.Lit.String(v)
+              case v: Char => p.Lit.Char(v)
+              case v: g.Type => unreachable
+              case v: g.Symbol => unreachable
+            }
           case _ =>
             sys.error(s"unsupported type $in, designation = ${in.getClass}, structure = ${g.showRaw(in, printIds = true, printTypes = true)}")
         }
