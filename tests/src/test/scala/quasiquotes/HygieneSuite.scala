@@ -1,8 +1,6 @@
 import org.scalatest._
 import scala.meta._
 import scala.meta.dialects.Scala211
-import scala.meta.semantic.quasiquotes._
-import scala.meta.ui._
 
 class HygieneSuite extends FunSuite {
   test("q\"List\"") {
@@ -10,14 +8,14 @@ class HygieneSuite extends FunSuite {
       |Term.Name("List")[1]
       |[1] Type.Singleton(Term.Name("package")[2])::scala.package.List
       |[2] Type.Singleton(Term.Name("scala")[3])::scala.package
-      |[3] Type.Singleton(Term.Name("<root>")[4])::scala
+      |[3] Type.Singleton(Term.Name("_root_")[4])::scala
       |[4] 0::_root_
     """.stripMargin.trim)
   }
   test("q\"scala.collection.immutable.List\"") {
     assert(q"scala.collection.immutable.List".show[Semantics] === """
       |Term.Select(Term.Select(Term.Select(Term.Name("scala")[1], Term.Name("collection")[2]), Term.Name("immutable")[3]), Term.Name("List")[4])
-      |[1] Type.Singleton(Term.Name("<root>")[5])::scala
+      |[1] Type.Singleton(Term.Name("_root_")[5])::scala
       |[2] Type.Singleton(Term.Name("scala")[1])::scala.collection
       |[3] Type.Singleton(Term.Name("collection")[2])::scala.collection.immutable
       |[4] Type.Singleton(Term.Name("immutable")[3])::scala.collection.immutable.List
@@ -29,7 +27,7 @@ class HygieneSuite extends FunSuite {
       |Type.Singleton(Term.Name("List")[1])
       |[1] Type.Singleton(Term.Name("package")[2])::scala.package.List
       |[2] Type.Singleton(Term.Name("scala")[3])::scala.package
-      |[3] Type.Singleton(Term.Name("<root>")[4])::scala
+      |[3] Type.Singleton(Term.Name("_root_")[4])::scala
       |[4] 0::_root_
     """.stripMargin.trim)
   }
@@ -39,8 +37,16 @@ class HygieneSuite extends FunSuite {
       |[1] Type.Singleton(Term.Name("package")[3])::scala.package#List
       |[2] Type.Singleton(Term.Name("scala")[4])::scala#Int
       |[3] Type.Singleton(Term.Name("scala")[4])::scala.package
-      |[4] Type.Singleton(Term.Name("<root>")[5])::scala
+      |[4] Type.Singleton(Term.Name("_root_")[5])::scala
       |[5] 0::_root_
+    """.stripMargin.trim)
+  }
+  test("t\"HygieneSuite\"") {
+    assert(t"HygieneSuite".show[Semantics] === """
+      |Type.Name("HygieneSuite")[1]
+      |[1] Type.Singleton(Term.Name("_empty_")[2])::_empty_#HygieneSuite
+      |[2] Type.Singleton(Term.Name("_root_")[3])::_empty_
+      |[3] 0::_root_
     """.stripMargin.trim)
   }
   test("not yet supported: t\"List[X]\"") {

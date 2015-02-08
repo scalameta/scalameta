@@ -64,6 +64,7 @@ object Semantics {
         def loop(sym: Symbol): String = sym match {
           case Symbol.Zero => "0"
           case Symbol.Root => "_root_"
+          case Symbol.Empty => "_empty_"
           case Symbol.Global(owner, name, Signature.Type) => loop(owner) + "#" + name
           case Symbol.Global(owner, name, Signature.Term) => loop(owner) + "." + name
           case Symbol.Global(owner, name, Signature.Method(jvmSignature)) => loop(owner) + "." + name + jvmSignature

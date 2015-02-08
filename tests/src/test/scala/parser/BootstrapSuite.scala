@@ -12,8 +12,7 @@ class BootstrapSuite extends ParseSuite {
     def loop(dir: File): Unit = {
       def bootstrapTest(src: File): Unit = {
         test(src.getAbsolutePath) {
-          import scala.meta.syntactic._
-          import scala.meta.ui._
+          import scala.meta._
           import scala.meta.dialects.Scala211
           val toks = src.tokens
           val content = scala.io.Source.fromFile(src).mkString

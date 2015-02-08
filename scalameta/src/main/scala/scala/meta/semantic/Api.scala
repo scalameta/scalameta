@@ -1,4 +1,5 @@
 package scala.meta
+package semantic
 
 import org.scalameta.adt._
 import org.scalameta.annotations._
@@ -14,7 +15,7 @@ import scala.meta.internal.{ast => impl} // necessary only to implement APIs, no
 import scala.meta.internal.{hygiene => h} // necessary only to implement APIs, not to define them
 import scala.reflect.runtime.{universe => ru} // necessary only for a very hacky approximation of hygiene
 
-package object semantic {
+trait Api {
   // ===========================
   // PART 1: ATTRIBUTES
   // ===========================
@@ -76,11 +77,11 @@ package object semantic {
   // PART 2: TYPES
   // ===========================
 
-  implicit class SemanticTypeOps(val tree: Type) extends AnyVal {
+  implicit class SemanticTypeOps(val tree: Type) {
     @hosted def <:<(other: Type): Boolean = implicitly[SemanticContext].isSubType(tree, other)
     @hosted def weak_<:<(other: Type): Boolean = ???
-    @hosted def widen: Type = ???
-    @hosted def dealias: Type = ???
+    @hosted def widen: Type = implicitly[SemanticContext].widen(tree)
+    @hosted def dealias: Type = implicitly[SemanticContext].dealias(tree)
     @hosted def companion: Type.Ref = ???
     @hosted def parents: Seq[Type] = ???
   }
@@ -92,7 +93,7 @@ package object semantic {
   // PART 3: MEMBERS
   // ===========================
 
-  implicit class SemanticMemberOps(val tree: Member) extends AnyVal {
+  implicit class SemanticMemberOps(val tree: Member) {
     // TODO: An alternative design for typeSignatureIn that is very much worth exploring
     // consists in lazy recalculation of signatures produced by Scope.members.
     // Much like we plan to remember lexical contexts, we could also remember type parameters to be instantiated.
@@ -113,7 +114,11 @@ package object semantic {
         case name: impl.Type.Name => name.copy(denot = stripPrefix(name.denot))
         case name: impl.Ctor.Name => name.copy(denot = stripPrefix(name.denot))
         case name: impl.Term.This => name.copy(denot = stripPrefix(name.denot))
-        case name: impl.Term.Super => name.copy(denot = stripPrefix(name.denot))
+        case name: impl.Term.Super => unreachable
+        case name: impl.Mod.PrivateThis => unreachable
+        case name: impl.Mod.PrivateWithin => unreachable
+        case name: impl.Mod.ProtectedThis => unreachable
+        case name: impl.Mod.ProtectedWithin => unreachable
       }
       prefixlessName.defn
     }
@@ -225,25 +230,25 @@ package object semantic {
     @hosted def isVarParam: Boolean = ???
   }
 
-  implicit class SemanticTermMemberOps(val tree: Member.Term) extends AnyVal {
+  implicit class SemanticTermMemberOps(val tree: Member.Term) {
     @hosted def name: Name with Term.Ref = new SemanticMemberOps(tree).name.require[Name with Term.Ref]
     @hosted def parents: Seq[Member.Term] = new SemanticMemberOps(tree).parents.require[Seq[Member.Term]]
     @hosted def children: Seq[Member.Term] = new SemanticMemberOps(tree).children.require[Seq[Member.Term]]
     @hosted def companion: Member.Type = new SemanticMemberOps(tree).companion.require[Member.Type]
   }
 
-  implicit class SemanticTypeMemberOps(val tree: Member.Type) extends AnyVal {
+  implicit class SemanticTypeMemberOps(val tree: Member.Type) {
     @hosted def name: Type.Name = new SemanticMemberOps(tree).name.require[Type.Name]
     @hosted def parents: Seq[Member.Type] = new SemanticMemberOps(tree).parents.require[Seq[Member.Type]]
     @hosted def children: Seq[Member.Type] = new SemanticMemberOps(tree).parents.require[Seq[Member.Type]]
     @hosted def companion: Member.Term = new SemanticMemberOps(tree).companion.require[Member.Term]
   }
 
-  implicit class SemanticTermParameterOps(val tree: Term.Param) extends AnyVal {
+  implicit class SemanticTermParameterOps(val tree: Term.Param) {
     @hosted def default: Option[meta.Term] = tree.require[impl.Term.Param].default
   }
 
-  implicit class SemanticTypeParameterOps(val tree: Type.Param) extends AnyVal {
+  implicit class SemanticTypeParameterOps(val tree: Type.Param) {
     @hosted def contextBounds: Seq[meta.Type] = tree.require[impl.Type.Param].contextBounds
     @hosted def viewBounds: Seq[meta.Type] = tree.require[impl.Type.Param].viewBounds
     @hosted def lo: meta.Type = tree.require[impl.Type.Param].lo
@@ -254,7 +259,7 @@ package object semantic {
   // PART 4: SCOPES
   // ===========================
 
-  implicit class SemanticScopeOps(val tree: Scope) extends AnyVal {
+  implicit class SemanticScopeOps(val tree: Scope) {
     @hosted private[meta] def internalAll: Seq[Member] = {
       def membersOfStats(stats: Seq[impl.Tree]) = stats.collect{
         case name: Term.Name if name.isBinder => name
@@ -388,12 +393,12 @@ package object semantic {
   // PART 5: BINDINGS
   // ===========================
 
-  implicit class SemanticNameOps(val tree: Name) extends AnyVal {
+  implicit class SemanticNameOps(val tree: Name) {
     def isBinder: Boolean = tree.parent.map(parent => parent.isInstanceOf[impl.Pat.Var] || parent.isInstanceOf[impl.Member]).getOrElse(false)
     def isReference: Boolean = !isBinder
     def isAnonymous: Boolean = tree.isInstanceOf[impl.Name.Anonymous]
   }
-  implicit class SemanticTermNameOps(val tree: Term.Name) extends AnyVal {
+  implicit class SemanticTermNameOps(val tree: Term.Name) {
     def isAnonymous: Boolean = tree.isInstanceOf[impl.Name.Anonymous]
   }
 }

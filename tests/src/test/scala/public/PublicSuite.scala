@@ -7,21 +7,20 @@ import org.scalameta.tests._
 class PublicSuite extends FunSuite {
   test("macro APIs without import") {
     assert(typecheckError("""
-      import scala.meta._
       warning("hello world!")
     """) === "not found: value warning")
   }
 
   test("macro APIs without context") {
     assert(typecheckError("""
-      import scala.meta.macros._
+      import scala.meta._
       warning("hello world!")
     """) === "this method requires an implicit scala.meta.macros.Context")
   }
 
   test("macro APIs when everything's correct") {
     assert(typecheckError("""
-      import scala.meta.macros._
+      import scala.meta._
       implicit val c: scala.meta.macros.Context = ???
       warning("hello world!")
     """) === "")
@@ -55,17 +54,47 @@ class PublicSuite extends FunSuite {
     """) === "can't use the dialect dialect in quasiquotes")
   }
 
-  test("quasiquotes without flavor") {
+  // TODO: now this is really weird!
+  // why doesn't it unimport autoSemanticQuasiquotes?!
+  test("quasiquotes without flavor - no import") {
+    assert(typecheckError("""
+      import scala.meta.{autoSemanticQuasiquotes => _, _}
+      import scala.meta.dialects.Scala211
+      q"hello"
+    """) === "")
+  }
+
+  test("quasiquotes without flavor - ambiguity 1") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
+      import scala.meta.syntactic.quasiquotes._
       q"hello"
-    """) === "choose the flavor of quasiquotes by importing either scala.meta.syntactic.quasiquotes._ or scala.meta.semantic.quasiquotes._")
+    """) === """
+      |ambiguous implicit values:
+      | both value autoSemanticQuasiquotes in package meta of type => meta.semantic.quasiquotes.enableSemanticQuasiquotes.type
+      | and object enableSyntacticQuasiquotes in package quasiquotes of type meta.syntactic.quasiquotes.enableSyntacticQuasiquotes.type
+      | match expected type scala.meta.quasiquotes.Flavor
+    """.trim.stripMargin)
+  }
+
+  test("quasiquotes without flavor - ambiguity 2") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      import scala.meta.semantic.quasiquotes._
+      q"hello"
+    """) === """
+      |ambiguous implicit values:
+      | both value autoSemanticQuasiquotes in package meta of type => meta.semantic.quasiquotes.enableSemanticQuasiquotes.type
+      | and object enableSemanticQuasiquotes in package quasiquotes of type meta.semantic.quasiquotes.enableSemanticQuasiquotes.type
+      | match expected type scala.meta.quasiquotes.Flavor
+    """.trim.stripMargin)
   }
 
   test("syntactic quasiquotes when everything's correct (static dialect)") {
     assert(typecheckError("""
-      import scala.meta._
+      import scala.meta.{autoSemanticQuasiquotes => _, _}
       import scala.meta.dialects.Scala211
       import scala.meta.syntactic.quasiquotes._
       q"hello"
@@ -74,7 +103,7 @@ class PublicSuite extends FunSuite {
 
   test("syntactic quasiquotes when everything's correct (static context)") {
     assert(typecheckError("""
-      import scala.meta._
+      import scala.meta.{autoSemanticQuasiquotes => _, _}
       trait MyContext extends scala.meta.semantic.Context {
         def dialect: scala.meta.dialects.Scala211.type = scala.meta.dialects.Scala211
       }
@@ -88,7 +117,6 @@ class PublicSuite extends FunSuite {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
-      import scala.meta.semantic.quasiquotes._
       q"hello"
     """) === "")
   }
@@ -100,22 +128,19 @@ class PublicSuite extends FunSuite {
         def dialect: scala.meta.dialects.Scala211.type = scala.meta.dialects.Scala211
       }
       implicit val c: MyContext = ???
-      import scala.meta.semantic.quasiquotes._
       q"hello"
     """) === "")
   }
 
   test("semantic APIs without import") {
     assert(typecheckError("""
-      import scala.meta._
-      (??? : Ref).defn
-    """) === "value defn is not a member of scala.meta.Ref")
+      (??? : scala.meta.Ref).defn
+    """) === "this method requires an implicit scala.meta.semantic.Context")
   }
 
   test("semantic APIs without context") {
     assert(typecheckError("""
       import scala.meta._
-      import scala.meta.semantic._
       (??? : Ref).defn
     """) === "this method requires an implicit scala.meta.semantic.Context")
   }
@@ -123,7 +148,6 @@ class PublicSuite extends FunSuite {
   test("semantic APIs when everything's correct") {
     assert(typecheckError("""
       import scala.meta._
-      import scala.meta.semantic._
       implicit val c: scala.meta.semantic.Context = ???
       (??? : Ref).defn
     """) === "")
@@ -154,9 +178,8 @@ class PublicSuite extends FunSuite {
   test("internal helpers of semantic APIs") {
     assert(typecheckError("""
       import scala.meta._
-      import scala.meta.semantic._
       (??? : Member).internalAll(???)
-    """) === "method internalAll in class SemanticScopeOps cannot be accessed in scala.meta.semantic.package.SemanticScopeOps")
+    """) === "method internalAll in class SemanticScopeOps cannot be accessed in meta.SemanticScopeOps")
   }
 
   // TODO: this error is somewhat confusing
@@ -174,15 +197,13 @@ class PublicSuite extends FunSuite {
 
   test("parse without import") {
     assert(typecheckError("""
-      import scala.meta._
-      "".parse[Term]
+      "".parse[scala.meta.Term]
     """) === "value parse is not a member of String")
   }
 
   test("parse without origin-likeness") {
     assert(typecheckError("""
       import scala.meta._
-      import scala.meta.syntactic._
       1.parse[Term]
     """) === "don't know how to convert Int to scala.meta.Origin")
   }
@@ -190,7 +211,6 @@ class PublicSuite extends FunSuite {
   test("parse without dialect") {
     assert(typecheckError("""
       import scala.meta._
-      import scala.meta.syntactic._
       "".parse[Term]
     """) === "don't know what dialect to use here (to fix this, import something from scala.dialects, e.g. scala.meta.dialects.Scala211)")
   }
@@ -198,7 +218,6 @@ class PublicSuite extends FunSuite {
   test("parse without parseability") {
     assert(typecheckError("""
       import scala.meta._
-      import scala.meta.syntactic._
       import scala.meta.dialects.Scala211
       "".parse[Int]
     """) === "don't know how to parse Int (if you're sure that Int is parseable, double-check that you've imported a dialect, e.g. scala.meta.dialects.Scala211)")
@@ -207,7 +226,6 @@ class PublicSuite extends FunSuite {
   test("parse when everything's correct (static dialect)") {
     assert(typecheckError("""
       import scala.meta._
-      import scala.meta.syntactic._
       import scala.meta.dialects.Scala211
       "".parse[Term]
     """) === "")
@@ -216,7 +234,6 @@ class PublicSuite extends FunSuite {
   test("parse when everything's correct (dynamic dialect)") {
     assert(typecheckError("""
       import scala.meta._
-      import scala.meta.syntactic._
       implicit val dialect: scala.meta.Dialect = ???
       "".parse[Term]
     """) === "")
@@ -225,7 +242,6 @@ class PublicSuite extends FunSuite {
   test("parse when everything's correct (static context)") {
     assert(typecheckError("""
       import scala.meta._
-      import scala.meta.syntactic._
       trait MyContext extends scala.meta.semantic.Context {
         def dialect: scala.meta.dialects.Scala211.type = scala.meta.dialects.Scala211
       }
@@ -237,7 +253,6 @@ class PublicSuite extends FunSuite {
   test("parse when everything's correct (dynamic context)") {
     assert(typecheckError("""
       import scala.meta._
-      import scala.meta.syntactic._
       implicit val c: scala.meta.semantic.Context = ???
       "".parse[Term]
     """) === "")
@@ -245,7 +260,6 @@ class PublicSuite extends FunSuite {
 
   test("tokens without import") {
     assert(typecheckError("""
-      import scala.meta._
       "".tokens
     """) === "value tokens is not a member of String")
   }
@@ -253,7 +267,6 @@ class PublicSuite extends FunSuite {
   test("tokens without origin-likeness") {
     assert(typecheckError("""
       import scala.meta._
-      import scala.meta.syntactic._
       1.tokens
     """) === "don't know how to convert Int to scala.meta.Origin")
   }
@@ -261,7 +274,6 @@ class PublicSuite extends FunSuite {
   test("tokens without dialect") {
     assert(typecheckError("""
       import scala.meta._
-      import scala.meta.syntactic._
       "".tokens
     """) === "don't know what dialect to use here (to fix this, import something from scala.dialects, e.g. scala.meta.dialects.Scala211)")
   }
@@ -269,7 +281,6 @@ class PublicSuite extends FunSuite {
   test("tokens when everything's correct (static dialect)") {
     assert(typecheckError("""
       import scala.meta._
-      import scala.meta.syntactic._
       import scala.meta.dialects.Scala211
       "".tokens
     """) === "")
@@ -278,7 +289,6 @@ class PublicSuite extends FunSuite {
   test("tokens when everything's correct (dynamic dialect)") {
     assert(typecheckError("""
       import scala.meta._
-      import scala.meta.syntactic._
       implicit val dialect: scala.meta.Dialect = ???
       "".tokens
     """) === "")
@@ -287,7 +297,6 @@ class PublicSuite extends FunSuite {
   test("tokens when everything's correct (static context)") {
     assert(typecheckError("""
       import scala.meta._
-      import scala.meta.syntactic._
       trait MyContext extends scala.meta.semantic.Context {
         def dialect: scala.meta.dialects.Scala211.type = scala.meta.dialects.Scala211
       }
@@ -299,7 +308,6 @@ class PublicSuite extends FunSuite {
   test("tokens when everything's correct (dynamic context)") {
     assert(typecheckError("""
       import scala.meta._
-      import scala.meta.syntactic._
       implicit val c: scala.meta.semantic.Context = ???
       "".tokens
     """) === "")
@@ -307,15 +315,13 @@ class PublicSuite extends FunSuite {
 
   test("show[Code] without import") {
     assert(typecheckError("""
-      import scala.meta._
-      (??? : Tree).show[Code]
-    """) === "value show is not a member of scala.meta.Tree")
+      (??? : scala.meta.Tree).show[Code]
+    """) === "not found: type Code")
   }
 
   test("show[Code] without dialect") {
     assert(typecheckError("""
       import scala.meta._
-      import scala.meta.ui._
       (??? : Tree).show[Code]
     """) === "don't know how to show[Code] for scala.meta.Tree (if you're prettyprinting a tree, be sure to import a dialect, e.g. scala.meta.dialects.Scala211)")
   }
@@ -323,7 +329,6 @@ class PublicSuite extends FunSuite {
   test("show[Code] when everything's correct (static dialect)") {
     assert(typecheckError("""
       import scala.meta._
-      import scala.meta.ui._
       import scala.meta.dialects.Scala211
       (??? : Tree).show[Code]
     """) === "")
@@ -332,7 +337,6 @@ class PublicSuite extends FunSuite {
   test("show[Code] when everything's correct (dynamic dialect)") {
     assert(typecheckError("""
       import scala.meta._
-      import scala.meta.ui._
       implicit val dialect: scala.meta.Dialect = ???
       (??? : Tree).show[Code]
     """) === "")
@@ -341,7 +345,6 @@ class PublicSuite extends FunSuite {
   test("show[Code] when everything's correct (static context)") {
     assert(typecheckError("""
       import scala.meta._
-      import scala.meta.ui._
       trait MyContext extends scala.meta.semantic.Context {
         def dialect: scala.meta.dialects.Scala211.type = scala.meta.dialects.Scala211
       }
@@ -353,7 +356,6 @@ class PublicSuite extends FunSuite {
   test("show[Code] when everything's correct (dynamic context)") {
     assert(typecheckError("""
       import scala.meta._
-      import scala.meta.ui._
       implicit val c: scala.meta.semantic.Context = ???
       (??? : Tree).show[Code]
     """) === "")
@@ -361,30 +363,34 @@ class PublicSuite extends FunSuite {
 
   test("show[Raw] without import") {
     assert(typecheckError("""
-      import scala.meta._
-      (??? : Tree).show[Raw]
-    """) === "value show is not a member of scala.meta.Tree")
+      (??? : scala.meta.Tree).show[Raw]
+    """) === "not found: type Raw")
   }
 
   test("show[Raw] when everything's correct") {
     assert(typecheckError("""
       import scala.meta._
-      import scala.meta.ui._
       (??? : Tree).show[Raw]
     """) === "")
   }
 
-  test("show[Summary] without import") {
+  test("show[Summary] without import - 1") {
+    assert(typecheckError("""
+      (??? : scala.meta.Tree).show[Summary]
+    """) === "not found: type Summary")
+  }
+
+  test("show[Summary] without import - 2") {
     assert(typecheckError("""
       import scala.meta._
       (??? : Tree).show[Summary]
-    """) === "value show is not a member of scala.meta.Tree")
+    """) === "not found: type Summary")
   }
 
   test("show[Summary] without dialect") {
     assert(typecheckError("""
       import scala.meta._
-      import scala.meta.ui._
+      import scala.meta.ui.Summary
       (??? : Tree).show[Summary]
     """) === "don't know how to show[Summary] for scala.meta.Tree (if you're prettyprinting a tree, be sure to import a dialect, e.g. scala.meta.dialects.Scala211)")
   }
@@ -392,7 +398,7 @@ class PublicSuite extends FunSuite {
   test("show[Summary] when everything's correct (static dialect)") {
     assert(typecheckError("""
       import scala.meta._
-      import scala.meta.ui._
+      import scala.meta.ui.Summary
       import scala.meta.dialects.Scala211
       (??? : Tree).show[Summary]
     """) === "")
@@ -401,7 +407,7 @@ class PublicSuite extends FunSuite {
   test("show[Summary] when everything's correct (dynamic dialect)") {
     assert(typecheckError("""
       import scala.meta._
-      import scala.meta.ui._
+      import scala.meta.ui.Summary
       implicit val dialect: scala.meta.Dialect = ???
       (??? : Tree).show[Summary]
     """) === "")
@@ -410,7 +416,7 @@ class PublicSuite extends FunSuite {
   test("show[Summary] when everything's correct (static context)") {
     assert(typecheckError("""
       import scala.meta._
-      import scala.meta.ui._
+      import scala.meta.ui.Summary
       trait MyContext extends scala.meta.semantic.Context {
         def dialect: scala.meta.dialects.Scala211.type = scala.meta.dialects.Scala211
       }
@@ -422,7 +428,7 @@ class PublicSuite extends FunSuite {
   test("show[Summary] when everything's correct (dynamic context)") {
     assert(typecheckError("""
       import scala.meta._
-      import scala.meta.ui._
+      import scala.meta.ui.Summary
       implicit val c: scala.meta.semantic.Context = ???
       (??? : Tree).show[Summary]
     """) === "")
@@ -430,15 +436,13 @@ class PublicSuite extends FunSuite {
 
   test("show[Semantics] without import") {
     assert(typecheckError("""
-      import scala.meta._
-      (??? : Tree).show[Semantics]
-    """) === "value show is not a member of scala.meta.Tree")
+      (??? : scala.meta.Tree).show[Semantics]
+    """) === "not found: type Semantics")
   }
 
   test("show[Semantics] when everything's correct") {
     assert(typecheckError("""
       import scala.meta._
-      import scala.meta.ui._
       (??? : Tree).show[Semantics]
     """) === "")
   }

@@ -7,8 +7,8 @@ import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.meta.internal.ast._
 import scala.{meta => api}
-import scala.meta.syntactic.tokenizers.Token
 import scala.annotation.implicitNotFound
+import scala.meta.syntactic.tokenizers.Token._
 
 @implicitNotFound(msg = "don't know how to show[Raw] for ${T}")
 trait Raw[T] extends Show[T]
@@ -36,7 +36,7 @@ object Raw {
   }, ")"))
 
   implicit def rawToken[T <: Token]: Raw[T] = Raw { x =>
-    val prefix = (x: Token) match { case x: Token.EOF => "EOF"; case x: Token.Dynamic => x.code; case x: Token.Static => x.name }
+    val prefix = (x: Token) match { case x: EOF => "EOF"; case x: Dynamic => x.code; case x: Static => x.name }
     s(prefix, " (", x.start.toString, "..", x.end.toString, ")")
   }
 }

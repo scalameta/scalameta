@@ -6,7 +6,6 @@ import Show.{ sequence => s, repeat => r, indent => i, newline => n, meta => m, 
 import scala.meta.syntactic.parsers.SyntacticInfo._
 import scala.meta.syntactic.tokenizers.Chars._
 import scala.meta.syntactic.tokenizers.keywords
-import scala.meta.syntactic.tokenizers.Token
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.meta.internal.ast._

@@ -1,19 +1,19 @@
 package scala.meta
+package syntactic
 
 import scala.meta.syntactic.parsers._
 import scala.meta.syntactic.tokenizers._
-import scala.meta.syntactic.quasiquotes._
 import org.scalameta.annotations._
 import org.scalameta.convert._
 import scala.annotation.implicitNotFound
 
-package object syntactic {
-  // ===========================
-  // PART 1: PARSING
-  // ===========================
+trait Api {
   type Token = scala.meta.syntactic.tokenizers.Token
   val Token = scala.meta.syntactic.tokenizers.Token
 
+  // ===========================
+  // PART 1: PARSING
+  // ===========================
   @implicitNotFound(msg = "don't know how to parse ${T} (if you're sure that ${T} is parseable, double-check that you've imported a dialect, e.g. scala.meta.dialects.Scala211)")
   trait Parse[T] extends Convert[Origin, T]
   object Parse {

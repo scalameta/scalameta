@@ -24,6 +24,7 @@ object Signature {
 object Symbol {
   @leaf object Zero extends Symbol
   @leaf object Root extends Symbol
+  @leaf object Empty extends Symbol
   @leaf class Global(owner: Symbol, name: String, signature: Signature) extends Symbol
   @leaf class Local(id: String) extends Symbol
 }

@@ -9,7 +9,6 @@ import org.scalameta.ast.{Liftables => AstLiftables}
 import org.scalameta.invariants._
 import org.scalameta.unreachable
 import scala.meta.internal.hygiene.{Symbol => MetaSymbol, Prefix => MetaPrefix, Signature => MetaSignature, _}
-import scala.meta.ui._
 
 // TODO: ideally, we would like to bootstrap these macros on top of scala.meta
 // so that quasiquotes can be interpreted by any host, not just scalac
@@ -31,11 +30,10 @@ class Macros[C <: Context](val c: C) extends AdtReflection with AdtLiftables wit
   val ScalaNil = ScalaPackageObjectClass.info.decl(TermName("Nil"))
   val ScalaSeq = ScalaPackageObjectClass.info.decl(TermName("Seq"))
 
-  def apply(macroApplication: ReflectTree, metaParse: String => MetaTree): ReflectTree = {
-    val SyntacticFlavor = symbolOf[scala.meta.syntactic.quasiquotes.Enable.type]
-    val SemanticFlavor = symbolOf[scala.meta.semantic.quasiquotes.Enable.type]
-    val flavor = c.inferImplicitValue(typeOf[scala.meta.quasiquotes.Flavor]).tpe.typeSymbol
-    flavor match {
+  def apply(macroApplication: ReflectTree, flavor: ReflectTree, metaParse: String => MetaTree): ReflectTree = {
+    val SyntacticFlavor = symbolOf[scala.meta.syntactic.quasiquotes.enableSyntacticQuasiquotes.type]
+    val SemanticFlavor = symbolOf[scala.meta.semantic.quasiquotes.enableSemanticQuasiquotes.type]
+    flavor.tpe.typeSymbol match {
       case SyntacticFlavor =>
         val (skeleton, dummies) = parseSkeleton(macroApplication, metaParse)
         reifySkeleton(skeleton, dummies)
@@ -45,12 +43,12 @@ class Macros[C <: Context](val c: C) extends AdtReflection with AdtLiftables wit
         val maybeAttributedSkeleton = scala.util.Try(attributeSkeleton(skeleton)).getOrElse(skeleton)
         reifySkeleton(maybeAttributedSkeleton, dummies)
       case _ =>
-        c.abort(c.enclosingPosition, "choose the flavor of quasiquotes by importing either scala.meta.syntactic.quasiquotes._ or scala.meta.semantic.quasiquotes._")
+        c.abort(c.enclosingPosition, "unrecognized quasiquote flavor: only scala.meta.syntactic.quasiquotes.enableSyntacticQuasiquotes and scala.meta.semantic.quasiquotes.enableSemanticQuasiquotes are supported")
     }
   }
 
   private def parseSkeleton(macroApplication: ReflectTree, metaParse: String => MetaTree): (MetaTree, List[Dummy]) = {
-    val q"$_($_.apply(..$partlits)).$_.apply[..$_](..$argtrees)($dialect)" = macroApplication
+    val q"$_($_.apply(..$partlits)).$_.apply[..$_](..$argtrees)($dialect, $_)" = macroApplication
     val parts = partlits.map{ case q"${part: String}" => part }
     def ndots(s: String): Int = if (s.endsWith(".")) ndots(s.stripSuffix(".")) + 1 else 0
     val dummies = argtrees.zipWithIndex.map{ case (tree, i) => Dummy(c.freshName("dummy"), ndots(parts(i)), tree) }
@@ -67,8 +65,30 @@ class Macros[C <: Context](val c: C) extends AdtReflection with AdtLiftables wit
       }
       def signature(sym: ReflectSymbol): MetaSignature = {
         if (sym.isMethod && !sym.asMethod.isGetter) {
-          val g = c.universe.asInstanceOf[scala.tools.nsc.Global]
-          val jvmSignature = g.exitingDelambdafy(new g.genASM.JPlainBuilder(null, false).descriptor(sym.asInstanceOf[g.Symbol]))
+          val jvmSignature = {
+            // NOTE: unfortunately, this simple-looking facility generates side effects that corrupt the state of the compiler
+            // in particular, mixin composition stops working correctly, at least for `object Main extends App`
+            // val g = c.universe.asInstanceOf[scala.tools.nsc.Global]
+            // g.exitingDelambdafy(new g.genASM.JPlainBuilder(null, false).descriptor(gsym))
+            def jvmSignature(tpe: ReflectType): String = {
+              val TypeRef(_, sym, args) = tpe
+              require(args.nonEmpty ==> (sym == definitions.ArrayClass))
+              if (sym == definitions.UnitClass) "V"
+              else if (sym == definitions.BooleanClass) "Z"
+              else if (sym == definitions.CharClass) "C"
+              else if (sym == definitions.ByteClass) "B"
+              else if (sym == definitions.ShortClass) "S"
+              else if (sym == definitions.IntClass) "I"
+              else if (sym == definitions.FloatClass) "F"
+              else if (sym == definitions.LongClass) "J"
+              else if (sym == definitions.DoubleClass) "D"
+              else if (sym == definitions.ArrayClass) "[" + jvmSignature(args.head)
+              else "L" + sym.fullName.replace(".", "/") + ";"
+            }
+            val MethodType(params, ret) = sym.info.erasure
+            val jvmRet = if (!sym.isConstructor) ret else definitions.UnitClass.toType
+            s"(" + params.map(param => jvmSignature(param.info)).mkString("") + ")" + jvmSignature(jvmRet)
+          }
           MetaSignature.Method(jvmSignature)
         }
         else if (sym.isTerm) MetaSignature.Term
@@ -82,20 +102,26 @@ class Macros[C <: Context](val c: C) extends AdtReflection with AdtLiftables wit
           else sym.owner.asInstanceOf[scala.reflect.internal.Symbols#Symbol].thisType.asInstanceOf[ReflectType]
         }
         def singletonType(pre: ReflectType, sym: ReflectSymbol): MetaType = {
-          impl.Type.Singleton(impl.Term.Name(sym.name.toString, denot(pre, sym), Sigma.Naive))
+          val name = {
+            if (sym == c.mirror.RootClass || sym == c.mirror.RootPackage) "_root_"
+            else if (sym == c.mirror.EmptyPackageClass || sym == c.mirror.EmptyPackage) "_empty_"
+            else sym.name.toString
+          }
+          impl.Type.Singleton(impl.Term.Name(name, denot(pre, sym), Sigma.Naive))
         }
         val pre1 = pre.orElse(defaultPrefix(sym))
         pre1 match {
           case NoPrefix => MetaPrefix.Zero
           case ThisType(sym) => MetaPrefix.Type(singletonType(NoType, sym))
           case SingleType(pre, sym) => MetaPrefix.Type(singletonType(pre, sym))
-          case TypeRef(pre, sym, Nil) if sym.isModule || sym.isModuleClass || sym.isPackage || sym.isPackageClass => MetaPrefix.Type(singletonType(pre, sym))
+          case TypeRef(pre, sym, Nil) if sym.isModule || sym.isModuleClass => MetaPrefix.Type(singletonType(pre, sym))
           case _ => sys.error(s"unsupported type ${pre1}, designation = ${pre1.getClass}, structure = ${showRaw(pre1, printIds = true, printTypes = true)}")
         }
       }
       def convertSymbol(sym: ReflectSymbol): MetaSymbol = {
-        if (sym.isModuleClass || sym.isPackageClass) convertSymbol(sym.asClass.module)
-        else if (sym == c.mirror.RootClass || sym == c.mirror.RootPackage) MetaSymbol.Root
+        if (sym.isModuleClass) convertSymbol(sym.asClass.module)
+        else if (sym == c.mirror.RootPackage) MetaSymbol.Root
+        else if (sym == c.mirror.EmptyPackage) MetaSymbol.Empty
         else MetaSymbol.Global(convertSymbol(sym.owner), sym.name.decodedName.toString, signature(sym))
       }
       require(pre != null && sym != NoSymbol && isGlobal(sym))

@@ -23,7 +23,7 @@ import scala.meta.Origin
     }
     buf.toString
   }
-  final override def toString = scala.meta.ui.ShowOps(this).show[scala.meta.ui.Raw]
+  final override def toString = this.show[Raw]
 }
 
 object Token {

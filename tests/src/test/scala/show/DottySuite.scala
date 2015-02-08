@@ -1,5 +1,5 @@
 import org.scalatest._
-import scala.meta.ui._
+import scala.meta._
 import scala.meta.dialects.Dotty
 
 class DottySuite extends ParseSuite {
