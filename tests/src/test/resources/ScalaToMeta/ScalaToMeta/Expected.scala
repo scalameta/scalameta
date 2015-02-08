@@ -5,7 +5,6 @@ import scala.reflect.runtime.{ universe => ru }
 import scala.tools.reflect.{ ToolBox, ToolBoxError }
 import scala.compat.Platform.EOL
 import scala.meta._
-import scala.meta.ui._
 import scala.meta.internal.hosts.scalac.Scalahost
 import org.scalameta.reflection._
 class ScalaToMeta extends FunSuite {

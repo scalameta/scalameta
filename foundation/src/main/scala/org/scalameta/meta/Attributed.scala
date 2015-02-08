@@ -2,10 +2,8 @@ package org.scalameta.meta
 
 import scala.{meta => api}
 import scala.meta.internal.{ast => impl}
-import scala.meta._
-import scala.meta.ui._
+import scala.meta.{Exception => SemanticException, _}
 import scala.collection.mutable
-import scala.meta.ui.{Exception => SemanticException}
 import scala.meta.internal.hygiene._
 
 trait Attributed {

@@ -2,7 +2,6 @@ package org.scalameta.meta
 
 import scala.{meta => api}
 import scala.meta._
-import scala.meta.ui._
 
 trait Denotations {
   self: Toolkit =>
