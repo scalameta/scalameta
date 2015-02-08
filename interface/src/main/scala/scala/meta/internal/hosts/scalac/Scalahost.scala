@@ -123,7 +123,8 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
       // // therefore, we should make sure that they don't end up here
       // require(!gsym.isGetter && !gsym.isSetter)
       if (gsym.isModuleClass || gsym.isPackageClass) convert(gsym.asClass.module)
-      else if (gsym == g.rootMirror.RootClass || gsym == g.rootMirror.RootPackage) h.Symbol.Root
+      else if (gsym == g.rootMirror.RootPackage) h.Symbol.Root
+      else if (gsym == g.rootMirror.EmptyPackage) h.Symbol.Empty
       else if (isGlobal(gsym)) h.Symbol.Global(convert(gsym.owner), gsym.name.decodedName.toString, signature(gsym))
       else h.Symbol.Local(randomUUID().toString)
     })
@@ -178,6 +179,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
 
   private implicit class RichToScalametaTree(gtree: g.Tree) {
     def alias: String = gtree match {
+      case _ if gtree.symbol == g.rootMirror.EmptyPackage || gtree.symbol == g.rootMirror.EmptyPackageClass => "_empty_"
       case gtree: g.ModuleDef if gtree.symbol.isPackageObject => gtree.symbol.owner.name.decodedName.toString
       case gtree: g.NameTree => gtree.name.decodedName.toString
       case g.This(name) => name.decodedName.toString
