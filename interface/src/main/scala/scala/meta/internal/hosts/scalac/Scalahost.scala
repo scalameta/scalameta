@@ -1396,14 +1396,23 @@ extends ScalahostSemanticContext[G](scalareflectMacroContext.universe.asInstance
 class ToolboxContext(tb: ToolBox[ru.type]) extends ScalahostSemanticContext(tb.global) {
   def define(rutree: ru.ImplDef): p.Tree = {
     val gtree = g.mkImporter(ru).importTree(rutree).asInstanceOf[g.ImplDef]
-    val gpkg = g.PackageDef(g.Ident(g.nme.EMPTY_PACKAGE_NAME), List(gtree))
-    val gunit = new g.CompilationUnit(NoSourceFile)
-    gunit.body = gpkg
-    val grun = new g.Run
-    g.reporter.reset()
-    grun.compileUnits(List(gunit), grun.namerPhase)
-    if (tb.frontEnd.hasErrors) sys.error("reflective compilation has failed:" + EOL + EOL + (tb.frontEnd.infos map (_.msg) mkString EOL))
-    val gtypedtree = gunit.body.asInstanceOf[g.PackageDef].stats.head
+    val gtypedtree = {
+      import g._
+      import analyzer._
+      val pkg = PackageDef(Ident(nme.EMPTY_PACKAGE_NAME), List(gtree))
+      val run = new Run
+      reporter.reset()
+      phase = run.namerPhase
+      globalPhase = run.namerPhase
+      val namer = newNamer(rootContext(NoCompilationUnit))
+      namer.enterSym(pkg)
+      phase = run.typerPhase
+      globalPhase = run.typerPhase
+      val typer = newTyper(rootContext(NoCompilationUnit))
+      val typedpkg = typer.typed(pkg).asInstanceOf[Tree]
+      if (tb.frontEnd.hasErrors) sys.error("reflective compilation has failed:" + EOL + EOL + (tb.frontEnd.infos map (_.msg) mkString EOL))
+      typedpkg.asInstanceOf[PackageDef].stats.head
+    }
     toScalameta(gtypedtree, classOf[papi.Stat])
   }
 }
