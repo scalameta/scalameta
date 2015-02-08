@@ -50,12 +50,29 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
     toApproximateScalameta(widenedGtpe).asInstanceOf[papi.Type]
   }
   private[meta] def defns(ref: papi.Ref): Seq[papi.Member] = {
-    val tree = ref.require[p.Ref]
-    val (gpre, gsyms) = (tree.originalPre, tree.originalSym.map(_.alternatives)) match {
-      case (Some(gpre), Some(gsyms)) => (gpre, gsyms)
-      case _ => throw new SemanticException("implementation restriction: internal cache has no definition associated with ${term.show[Summary]}")
+    def tryScratchpad(pref: p.Ref): Option[Seq[papi.Member]] = {
+      for { gpre <- pref.originalPre; gsyms <- pref.originalSym.map(_.alternatives) }
+      yield gsyms.map(gsym => toApproximateScalameta(gpre, gsym))
     }
-    gsyms.map(gsym => toApproximateScalameta(gpre, gsym))
+    def tryNative(pref: p.Ref): Seq[papi.Member] = {
+      def resolveName(pname: p.Name): Seq[papi.Member] = {
+        val gpre = pname.denot.prefix match { case h.Prefix.Zero => g.NoPrefix; case h.Prefix.Type(ptpe) => toScalareflect(ptpe.asInstanceOf[p.Type]) }
+        val gsym = symbolTable.get(pname.denot.symbol).getOrElse(throw new SemanticException("implementation restriction: internal cache has no definition associated with ${term.show[Summary]}"))
+        List(toApproximateScalameta(gpre, gsym))
+      }
+      pref match {
+        case pname: p.Name => resolveName(pname)
+        case p.Term.Select(_, pname) => defns(pname)
+        case p.Type.Select(_, pname) => defns(pname)
+        case p.Type.Project(_, pname) => defns(pname)
+        case p.Type.Singleton(pref) => defns(pref)
+        case p.Ctor.Ref.Select(_, pname) => defns(pname)
+        case p.Ctor.Ref.Project(_, pname) => defns(pname)
+        case p.Ctor.Ref.Function(pname) => defns(pname)
+        case _: p.Import.Selector => ???
+      }
+    }
+    tryScratchpad(ref.require[p.Ref]).getOrElse(tryNative(ref.require[p.Ref]))
   }
   private[meta] def members(tpe: papi.Type): Seq[papi.Member] = {
     val ppre = tpe.require[p.Type]
