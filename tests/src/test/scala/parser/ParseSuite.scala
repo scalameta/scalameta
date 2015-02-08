@@ -1,8 +1,6 @@
 import org.scalatest._
-import scala.meta.syntactic._
-import scala.meta.syntactic.parsers._
-import scala.meta.syntactic.tokenizers._
-import scala.meta.Dialect
+import scala.meta._
+import scala.meta.syntactic.parsers.Parser
 
 class ParseSuite extends FunSuite with CommonTrees {
   val EOL = scala.compat.Platform.EOL

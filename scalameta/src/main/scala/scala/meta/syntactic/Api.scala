@@ -9,6 +9,9 @@ import org.scalameta.convert._
 import scala.annotation.implicitNotFound
 
 trait Api {
+  type Token = scala.meta.syntactic.tokenizers.Token
+  val Token = scala.meta.syntactic.tokenizers.Token
+
   // ===========================
   // PART 1: PARSING
   // ===========================

@@ -1,7 +1,7 @@
 package scala.meta
 package ui
 
-import org.scalameta.show._
+import org.scalameta.show.Show
 import Show.{ sequence => s, repeat => r, indent => i, newline => n }
 import scala.compat.Platform.EOL
 import scala.annotation.implicitNotFound

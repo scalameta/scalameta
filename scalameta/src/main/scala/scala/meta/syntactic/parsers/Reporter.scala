@@ -2,9 +2,6 @@ package scala.meta
 package syntactic
 package parsers
 
-import scala.meta.syntactic.tokenizers.Token
-import scala.meta.ui.Exception
-
 // TODO: when I grow up I want to become a monad, just like my daddy
 // TODO: when we have Positions, attach them to the exception being thrown
 // TODO: when we have working `Tree.tokens`, use `at.tokens` instead of `currentToken`

@@ -2,8 +2,6 @@ package scala.meta
 package syntactic
 package tokenizers
 
-import scala.meta.ui.Exception
-
 // NOTE: moved to the package object
 // type Offset = Int
 

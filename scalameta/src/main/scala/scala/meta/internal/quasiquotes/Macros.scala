@@ -9,7 +9,6 @@ import org.scalameta.ast.{Liftables => AstLiftables}
 import org.scalameta.invariants._
 import org.scalameta.unreachable
 import scala.meta.internal.hygiene.{Symbol => MetaSymbol, Prefix => MetaPrefix, Signature => MetaSignature, _}
-import scala.meta.ui._
 
 // TODO: ideally, we would like to bootstrap these macros on top of scala.meta
 // so that quasiquotes can be interpreted by any host, not just scalac
