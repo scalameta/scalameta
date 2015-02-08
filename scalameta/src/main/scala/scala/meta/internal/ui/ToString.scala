@@ -2,7 +2,7 @@ package scala.meta
 package internal
 package ui
 
-object show {
+object toString {
   def apply(tree: Tree) = {
     // TODO: I've no idea why it's necessary to explicitly write `package` here
     // otherwise I'm getting compilation errors and that merits an investigation

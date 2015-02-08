@@ -17,7 +17,7 @@ package scala.meta {
     final override def canEqual(that: Any): Boolean = that.isInstanceOf[Tree]
     final override def equals(that: Any): Boolean = that match { case that: Tree => scala.meta.internal.hygiene.equals(this, that); case _ => false }
     final override def hashCode: Int = scala.meta.internal.hygiene.hashcode(this)
-    final override def toString = scala.meta.internal.ui.show(this)
+    final override def toString = scala.meta.internal.ui.toString(this)
   }
 
   @branch trait Ref extends Tree
