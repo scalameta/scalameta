@@ -381,7 +381,14 @@ trait Api {
     @hosted def types(name: String): Member.Type = internalSingle[Member.Type](name, m => m.isAbstractType || m.isAliasType, "types")
     @hosted def types(name: scala.Symbol): Member.Type = types(name.toString)
     @hosted def params: Seq[Term.Param] = internalFilter[Term.Param](_ => true)
-    @hosted def paramss: Seq[Seq[Term.Param]] = ???
+    @hosted def paramss: Seq[Seq[Term.Param]] = tree match {
+      case tree: impl.Decl.Def => tree.paramss
+      case tree: impl.Defn.Def => tree.paramss
+      case tree: impl.Defn.Macro => tree.paramss
+      case tree: impl.Ctor.Primary => tree.paramss
+      case tree: impl.Ctor.Secondary => tree.paramss
+      case _ => Nil
+    }
     @hosted def params(name: String): Term.Param = internalSingle[Term.Param](name, _ => true, "parameters")
     @hosted def params(name: scala.Symbol): Term.Param = params(name.toString)
     @hosted def tparams: Seq[Type.Param] = internalFilter[Type.Param](_ => true)
