@@ -13,7 +13,7 @@ trait Platform {
       transformedType(tpe) match {
         case TypeRef(_, sym, args) =>
           require(args.nonEmpty ==> (sym == ArrayClass && args.length == 1))
-          if (sym == UnitClass) "V"
+          if (sym == UnitClass || sym == BoxedUnitClass) "V"
           else if (sym == BooleanClass) "Z"
           else if (sym == CharClass) "C"
           else if (sym == ByteClass) "B"
