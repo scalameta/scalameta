@@ -14,6 +14,7 @@ class InfrastructureSuite extends FunSuite {
     tree.toString // check well-formedness
     implicit object FooContext extends Context {
       def dialect: Dialect = Scala211
+      private[meta] def desugar(term: Term): Term = ???
       private[meta] def tpe(term: Term): Type = ???
       private[meta] def defns(ref: Ref): Seq[Member] = ???
       private[meta] def members(tpe: Type): Seq[Member] = ???
