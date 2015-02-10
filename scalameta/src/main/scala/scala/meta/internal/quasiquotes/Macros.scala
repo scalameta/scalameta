@@ -73,7 +73,7 @@ class Macros[C <: Context](val c: C) extends AdtReflection with AdtLiftables wit
             def jvmSignature(tpe: ReflectType): String = {
               val TypeRef(_, sym, args) = tpe
               require(args.nonEmpty ==> (sym == definitions.ArrayClass))
-              if (sym == definitions.UnitClass) "V"
+              if (sym == definitions.UnitClass || sym == c.mirror.staticClass("scala.runtime.BoxedUnit")) "V"
               else if (sym == definitions.BooleanClass) "Z"
               else if (sym == definitions.CharClass) "C"
               else if (sym == definitions.ByteClass) "B"

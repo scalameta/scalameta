@@ -260,6 +260,29 @@ trait Api {
   // ===========================
 
   implicit class SemanticScopeOps(val tree: Scope) {
+    @hosted private[meta] def deriveEvidences(tparam: Type.Param): Seq[Term.Param] = {
+      def deriveEvidence(evidenceTpe: Type): Term.Param = {
+        // TODO: it's almost a decent parameter except for the facts that:
+        // 1) the tree doesn't have a parent or a denotation, and we'd have remember that it comes from tparam
+        //    otherwise, tree.owner is going crash (luckily, i can't imagine this tree participating in other semantic calls)
+        // 2) the name is anonymous, but it's not actually a correct way of modelling it,
+        //    because the user can refer to that name via implicit search
+        //    so far we strip off all desugarings and, hence, all inferred implicit arguments, so that's not a problem for us, but it will be
+        // NOTE: potential solution would involve having the symbol of the parameter to be of a special, new kind
+        // Symbol.Synthetic(origin: Symbol, generator: ???)
+        impl.Term.Param(List(impl.Mod.Implicit()), impl.Name.Anonymous(), Some(evidenceTpe.asInstanceOf[impl.Type]), None)
+      }
+      def deriveViewEvidence(tpe: Type) = deriveEvidence(impl.Type.Function(List(tparam.name.asInstanceOf[impl.Type]), tpe.asInstanceOf[impl.Type]))
+      def deriveContextEvidence(tpe: Type) = deriveEvidence(impl.Type.Apply(tpe.asInstanceOf[impl.Type], List(tparam.name.asInstanceOf[impl.Type])))
+      tparam.viewBounds.map(deriveViewEvidence) ++ tparam.contextBounds.map(deriveContextEvidence)
+    }
+    @hosted private[meta] def mergeEvidences(paramss: Seq[Seq[Term.Param]], evidences: Seq[Term.Param]): Seq[Seq[Term.Param]] = {
+      paramss match {
+        case init :+ last if last.exists(_.isImplicit) => init :+ (last ++ evidences)
+        case init :+ last => init :+ last :+ evidences
+        case Nil => List(evidences)
+      }
+    }
     @hosted private[meta] def internalAll: Seq[Member] = {
       def membersOfStats(stats: Seq[impl.Tree]) = stats.collect{
         case name: Term.Name if name.isBinder => name
@@ -295,18 +318,18 @@ trait Api {
         case tree: impl.Term.Name => Nil
         case tree: impl.Term.Param => Nil
         case tree: impl.Type.Param => tree.tparams
-        case tree: impl.Decl.Def => tree.tparams ++ tree.paramss.flatten
+        case tree: impl.Decl.Def => tree.tparams ++ mergeEvidences(tree.paramss, tree.tparams.flatMap(deriveEvidences)).flatten
         case tree: impl.Decl.Type => tree.tparams
-        case tree: impl.Defn.Def => tree.tparams ++ tree.paramss.flatten
-        case tree: impl.Defn.Macro => tree.tparams ++ tree.paramss.flatten
+        case tree: impl.Defn.Def => tree.tparams ++ mergeEvidences(tree.paramss, tree.tparams.flatMap(deriveEvidences)).flatten
+        case tree: impl.Defn.Macro => tree.tparams ++ mergeEvidences(tree.paramss, tree.tparams.flatMap(deriveEvidences)).flatten
         case tree: impl.Defn.Type => tree.tparams
         case tree: impl.Defn.Class => tree.tparams ++ tree.tpe.members
         case tree: impl.Defn.Trait => tree.tparams ++ tree.tpe.members
         case tree: impl.Defn.Object => tree.tparams ++ tree.tpe.members
         case tree: impl.Pkg => tree.tpe.members
         case tree: impl.Pkg.Object => tree.tparams ++ tree.tpe.members
-        case tree: impl.Ctor.Primary => tree.paramss.flatten
-        case tree: impl.Ctor.Secondary => tree.paramss.flatten
+        case tree: impl.Ctor.Primary => mergeEvidences(tree.paramss, tree.tparams.flatMap(deriveEvidences)).flatten
+        case tree: impl.Ctor.Secondary => mergeEvidences(tree.paramss, tree.tparams.flatMap(deriveEvidences)).flatten
       }
     }
     @hosted private[meta] def internalFilter[T: ClassTag](filter: T => Boolean): Seq[T] = {
@@ -381,7 +404,14 @@ trait Api {
     @hosted def types(name: String): Member.Type = internalSingle[Member.Type](name, m => m.isAbstractType || m.isAliasType, "types")
     @hosted def types(name: scala.Symbol): Member.Type = types(name.toString)
     @hosted def params: Seq[Term.Param] = internalFilter[Term.Param](_ => true)
-    @hosted def paramss: Seq[Seq[Term.Param]] = ???
+    @hosted def paramss: Seq[Seq[Term.Param]] = tree match {
+      case tree: impl.Decl.Def => mergeEvidences(tree.paramss, tree.tparams.flatMap(deriveEvidences))
+      case tree: impl.Defn.Def => mergeEvidences(tree.paramss, tree.tparams.flatMap(deriveEvidences))
+      case tree: impl.Defn.Macro => mergeEvidences(tree.paramss, tree.tparams.flatMap(deriveEvidences))
+      case tree: impl.Ctor.Primary => mergeEvidences(tree.paramss, tree.tparams.flatMap(deriveEvidences))
+      case tree: impl.Ctor.Secondary => mergeEvidences(tree.paramss, tree.tparams.flatMap(deriveEvidences))
+      case _ => Nil
+    }
     @hosted def params(name: String): Term.Param = internalSingle[Term.Param](name, _ => true, "parameters")
     @hosted def params(name: scala.Symbol): Term.Param = params(name.toString)
     @hosted def tparams: Seq[Type.Param] = internalFilter[Type.Param](_ => true)
