@@ -53,6 +53,7 @@ We understand that this API is at odds with the goals of statelessness and platf
 | Method                                                    | Notes
 |-----------------------------------------------------------|-----------------------------------------------------------------
 | `def dialect: Dialect`                                    | See [dialects/Dialect.scala](/scalameta/dialects/Dialect.scala)
+| `def desugar(term: Term): Term`                           | Expands a given term into its full form, introducing inferred term and type arguments, calls to magic methods, such as `apply` or `update`, etc. Language features to be supported: implicit conversion/argument inference, type argument inference, apply insertion, empty argument list insertion, assignment desugaring (`_=`, `update`), string interpolation desugaring, for loop desugaring, dynamic desugaring.
 | `def tpe(term: Term): Type`                               | Type of a given term.
 | `def defns(ref: Ref): Seq[Member]`                        | Definitions that a given reference refers to. Can return multiple results if a reference resolves to several overloaded members.
 | `def owner(member: Member): Scope`                        | This isn't actually a method in `Context`, and it's here only to emphasize a peculiarity of our API. <br/><br/> The reason for that is that scala.meta trees always track their parents, so with a tree in hand it's very easy to navigate its enclosures up until an owning scope.

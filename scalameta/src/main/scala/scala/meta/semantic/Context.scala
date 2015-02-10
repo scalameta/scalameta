@@ -11,6 +11,7 @@ import scala.annotation._
 trait Context {
   def dialect: Dialect
 
+  def desugar(term: Term): Term
   def tpe(term: Term): Type
   def defns(ref: Ref): Seq[Member]
   def members(tpe: Type): Seq[Member]
