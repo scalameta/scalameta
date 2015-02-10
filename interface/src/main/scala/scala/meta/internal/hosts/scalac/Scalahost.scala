@@ -38,6 +38,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
   implicit val c: ScalametaSemanticContext = this
   def dialect: scala.meta.dialects.Scala211.type = scala.meta.dialects.Scala211
 
+  private[meta] def desugar(term: papi.Term): papi.Term = ???
   private[meta] def tpe(term: papi.Term): papi.Type = {
     val tree = term.require[p.Term]
     val gtpeFromOriginal = tree.originalTree.map(_.tpe)
