@@ -17,6 +17,7 @@ trait GlobalToolkit extends MacroToolkit
                        with Ensugar
                        with Syntaxize
                        with Attributed
-                       with Platform {
+                       with Platform
+                       with LogicalSymbols {
   val global: Global
 }
