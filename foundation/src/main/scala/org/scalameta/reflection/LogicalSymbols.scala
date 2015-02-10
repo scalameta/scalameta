@@ -5,14 +5,10 @@ import scala.collection.immutable.Seq
 import scala.collection.mutable
 import org.scalameta.invariants._
 import org.scalameta.unreachable
+import scala.reflect.internal.Flags._
 
 trait LogicalSymbols {
   self: GlobalToolkit =>
-
-  lazy val l: LogicalSymbol.type = LogicalSymbol
-  import global.{Symbol => _, _}
-  import definitions._
-  import scala.reflect.internal.Flags._
 
   implicit class RichLogicalSymbol(gsym: global.Symbol) {
     def logical: l.Symbol = logicalSymbols(List(gsym)).head
@@ -36,6 +32,7 @@ trait LogicalSymbols {
     def gsymbols: Seq[global.Symbol] = symbols
   }
 
+  lazy val l: LogicalSymbol.type = LogicalSymbol
   object LogicalSymbol {
     type Symbol = LogicalSymbol
 
@@ -69,7 +66,7 @@ trait LogicalSymbols {
     // type T, class AbstractTypeSymbol, flags = 16 (DEFERRED)
     // > type T = X { type T <: Int }
     // type T, class AbstractTypeSymbol, flags = 16 (DEFERRED)
-    // > type T = X forSome { val T <: Int }
+    // > type T = X forSome { type T <: Int }
     // type T, class AbstractTypeSymbol, flags = 34359738384 (DEFERRED | EXISTENTIAL)
     case class AbstractType(symbol: global.Symbol) extends LogicalSymbol
 
@@ -155,16 +152,74 @@ trait LogicalSymbols {
     case class TypeParameter(symbol: global.Symbol) extends LogicalSymbol
   }
 
-  // TODO:
-  // 1) ban moduleclass
-  // 2) ban packageclass
-  // 3) ban skolems
-
   private def logicalSymbols(gsyms: Seq[global.Symbol]): Seq[l.Symbol] = {
     val result = mutable.ListBuffer[l.Symbol]()
     val iterator = gsyms.iterator
     while (iterator.hasNext) {
-      val gsym = iterator.next()
+      val gsym = {
+        var result = iterator.next()
+        result = result.deSkolemize
+        if (result.isModuleClass) result = result.module
+        result
+      }
+      val lsym = {
+        if (gsym.isTerm && !gsym.isMethod && !gsym.isModule) {
+          if (gsym.hasFlag(PARAM)) l.TermParameter(gsym)
+          else {
+            require(gsym.hasFlag(PRIVATE | LOCAL))
+            if (gsym.hasFlag(MUTABLE)) l.Var(gsym, global.NoSymbol, global.NoSymbol)
+            else l.Val(gsym, global.NoSymbol)
+          }
+        } else if (gsym.isMethod) {
+          require(gsym.hasFlag(METHOD))
+          if (gsym.hasFlag(ACCESSOR)) {
+            if (gsym.hasFlag(STABLE)) {
+              if (gsym.hasFlag(DEFERRED)) l.AbstractVal(gsym)
+              else l.Val(global.NoSymbol, gsym)
+            } else {
+              if (!gsym.name.endsWith(global.nme.SETTER_SUFFIX)) {
+                if (gsym.hasFlag(DEFERRED)) l.AbstractVar(gsym, global.NoSymbol)
+                else l.Var(global.NoSymbol, gsym, global.NoSymbol)
+              } else {
+                if (gsym.hasFlag(DEFERRED)) l.AbstractVar(global.NoSymbol, gsym)
+                else l.Var(global.NoSymbol, global.NoSymbol, gsym)
+              }
+            }
+          } else {
+            if (gsym.hasFlag(MACRO)) l.Macro(gsym)
+            else if (gsym.isPrimaryConstructor) l.PrimaryCtor(gsym)
+            else if (gsym.isConstructor) l.SecondaryCtor(gsym)
+            else if (gsym.hasFlag(DEFERRED)) l.AbstractDef(gsym)
+            else l.Def(gsym)
+          }
+        } else if (gsym.isModule) {
+          require(gsym.hasFlag(MODULE))
+          if (gsym.hasFlag(PACKAGE)) {
+            l.Package(gsym, gsym.moduleClass)
+          } else {
+            if (gsym.name == global.nme.PACKAGE) l.PackageObject(gsym, gsym.moduleClass)
+            else l.Object(gsym, gsym.moduleClass)
+          }
+        } else if (gsym.isType && !gsym.isClass) {
+          if (gsym.hasFlag(PARAM)) {
+            l.TypeParameter(gsym)
+          } else if (gsym.hasFlag(DEFERRED)) {
+            if (gsym.hasFlag(EXISTENTIAL)) {
+              if (gsym.name.endsWith(global.nme.SINGLETON_SUFFIX)) l.AbstractVal(gsym)
+              else l.AbstractType(gsym)
+            } else {
+              l.AbstractType(gsym)
+            }
+          } else {
+            l.Type(gsym)
+          }
+        } else if (gsym.isClass) {
+          if (gsym.hasFlag(TRAIT)) l.Trait(gsym)
+          else l.Clazz(gsym)
+        } else {
+          sys.error(s"unsupported symbol ${gsym}, designation = ${gsym.getClass}, info = ${global.showRaw(gsym.info, printIds = true, printTypes = true)}")
+        }
+      }
       ???
     }
     result.toList

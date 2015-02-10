@@ -12,7 +12,6 @@ trait MacroToolkit extends Metadata {
 // however that's not an immediate blocker, so I leave that for future work
 trait GlobalToolkit extends MacroToolkit
                        with TreeHelpers
-                       with SymbolHelpers
                        with TypeHelpers
                        with Ensugar
                        with Syntaxize

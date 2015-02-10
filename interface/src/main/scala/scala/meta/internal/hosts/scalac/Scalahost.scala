@@ -965,8 +965,8 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
                 val p.Type.Singleton(preref) = loop(pre)
                 p.Term.Select(preref, sym.asTerm.precvt(pre, g.Ident(sym)).withOriginal(in))
               case pre @ g.TypeRef(g.NoPrefix, quant, Nil) if quant.hasFlag(DEFERRED | EXISTENTIAL) =>
-                require(quant.name.toString.endsWith(".type"))
-                val preref = p.Term.Name(g.Ident(g.TermName(quant.name.toString.stripSuffix(".type"))).alias).withDenot(quant).withOriginal(quant)
+                require(quant.name.endsWith(g.nme.SINGLETON_SUFFIX))
+                val preref = p.Term.Name(g.Ident(quant.name.toString.stripSuffix(g.nme.SINGLETON_SUFFIX)).alias).withDenot(quant).withOriginal(quant)
                 p.Term.Select(preref, sym.asTerm.precvt(pre, g.Ident(sym)).withOriginal(in))
               case pre: g.TypeRef =>
                 // TODO: wow, so much for the hypothesis that all post-typer types are representable with syntax
@@ -1105,8 +1105,8 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
       private def mkGterm(name: String, flags: Long) = gsym.newTermSymbol(g.TermName(name), newFlags = flags)
       private def mkGtype(name: String, flags: Long) = gsym.newTypeSymbol(g.TypeName(name), newFlags = flags)
       def mkLabstractVal(name: String) = l.AbstractVal(mkGterm(name, DEFERRED | METHOD | STABLE | ACCESSOR))
-      def mkLexistentialVal(name: String)  = l.AbstractType(mkGterm(name + ".type", DEFERRED | EXISTENTIAL))
-      def mkLabstractVar(name: String) = l.AbstractVar(mkGterm(name, DEFERRED | METHOD | ACCESSOR), mkGterm(name + "_=", DEFERRED | METHOD | ACCESSOR))
+      def mkLexistentialVal(name: String)  = l.AbstractType(mkGterm(name + g.nme.SINGLETON_SUFFIX, DEFERRED | EXISTENTIAL))
+      def mkLabstractVar(name: String) = l.AbstractVar(mkGterm(name, DEFERRED | METHOD | ACCESSOR), mkGterm(name + g.nme.SETTER_SUFFIX, DEFERRED | METHOD | ACCESSOR))
       def mkLabstractDef(name: String) = l.AbstractDef(mkGterm(name, METHOD))
       def mkLabstractType(name: String) = l.AbstractType(mkGtype(name, DEFERRED))
       def mkLexistentialType(name: String) = l.AbstractType(mkGtype(name, DEFERRED | EXISTENTIAL))
@@ -1321,7 +1321,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
       }
       def signature(gsym: g.Symbol): h.Signature = {
         if (gsym.isMethod && !gsym.asMethod.isGetter) h.Signature.Method(gsym.jvmsig)
-        else if (gsym.isTerm || (gsym.hasFlag(DEFERRED | EXISTENTIAL) && gsym.name.toString.endsWith(".type"))) h.Signature.Term
+        else if (gsym.isTerm || (gsym.hasFlag(DEFERRED | EXISTENTIAL) && gsym.name.endsWith(g.nme.SINGLETON_SUFFIX))) h.Signature.Term
         else if (gsym.isType) h.Signature.Type
         else unreachable
       }
@@ -1330,7 +1330,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
       if (gsym == g.NoSymbol) h.Symbol.Zero
       else if (gsym == g.rootMirror.RootPackage) h.Symbol.Root
       else if (gsym == g.rootMirror.EmptyPackage) h.Symbol.Empty
-      else if (isGlobal(gsym)) h.Symbol.Global(apply(gsym.owner), gsym.name.decodedName.toString, signature(gsym))
+      else if (isGlobal(gsym)) h.Symbol.Global(apply(gsym.owner.logical), gsym.name.decodedName.toString, signature(gsym))
       else h.Symbol.Local(randomUUID().toString)
     })
 
@@ -1347,8 +1347,8 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
       }
       hsym match {
         case h.Symbol.Zero => l.None
-        case h.Symbol.Root => l.Package(g.rootMirror.RootPackage)
-        case h.Symbol.Empty => l.Package(g.rootMirror.EmptyPackage)
+        case h.Symbol.Root => l.Package(g.rootMirror.RootPackage, g.rootMirror.RootClass)
+        case h.Symbol.Empty => l.Package(g.rootMirror.EmptyPackage, g.rootMirror.EmptyPackageClass)
         case h.Symbol.Global(howner, name, hsig) => resolve(apply(howner), name, hsig)
         case h.Symbol.Local(id) => throw new SemanticException(s"implementation restriction: internal cache has no symbol associated with $hsym")
       }
