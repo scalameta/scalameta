@@ -110,7 +110,7 @@ trait Api {
       }
       val prefixlessName = tree.name match {
         case name: impl.Name.Anonymous => name
-        case name: impl.Term.Name => name.copy(denot = stripPrefix(name.denot))
+        case name: impl.Term.Name if name.isBinder => name.copy(denot = stripPrefix(name.denot))
         case name: impl.Type.Name => name.copy(denot = stripPrefix(name.denot))
         case name: impl.Ctor.Name => name.copy(denot = stripPrefix(name.denot))
         case name: impl.Term.This => name.copy(denot = stripPrefix(name.denot))
@@ -125,7 +125,7 @@ trait Api {
     @hosted def owner: Scope = ???
     @hosted def name: Name = {
       tree.require[impl.Member] match {
-        case tree: impl.Term.Name => tree
+        case tree: impl.Term.Name if tree.isBinder => tree
         case tree: impl.Decl.Def => tree.name
         case tree: impl.Decl.Type => tree.name
         case tree: impl.Defn.Def => tree.name
@@ -168,7 +168,7 @@ trait Api {
     }
     @hosted def mods: Seq[Mod] = {
       tree.require[impl.Member] match {
-        case tree: impl.Term.Name => firstNonPatParent(tree).collect{case member: Member => member}.map(_.mods).getOrElse(Nil)
+        case tree: impl.Term.Name if name.isBinder => firstNonPatParent(tree).collect{case member: Member => member}.map(_.mods).getOrElse(Nil)
         case tree: impl.Decl.Def => tree.mods
         case tree: impl.Decl.Type => tree.mods
         case tree: impl.Defn.Def => tree.mods
