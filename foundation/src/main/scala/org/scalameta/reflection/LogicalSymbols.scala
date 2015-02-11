@@ -50,92 +50,94 @@ trait LogicalSymbols {
     }
 
     // > val x: Int
-    // value x, class MethodSymbol, flags = 138412112 (DEFERRED | METHOD | STABLE | ACCESSOR)
+    // value x, 'x', class MethodSymbol, flags = 138412112 (DEFERRED | METHOD | STABLE | ACCESSOR)
     // > type T = X { val x: Int }
-    // value x, class MethodSymbol, flags = 138412112 (DEFERRED | METHOD | STABLE | ACCESSOR)
+    // value x, 'x', class MethodSymbol, flags = 138412112 (DEFERRED | METHOD | STABLE | ACCESSOR)
     // > type T = X forSome { val x: Int }
-    // type x.type, class AbstractTypeSymbol, flags = 34359738384 (DEFERRED | EXISTENTIAL)
+    // type x.type, 'x.type', class AbstractTypeSymbol, flags = 34359738384 (DEFERRED | EXISTENTIAL)
     case class AbstractVal(getter: global.Symbol) extends LogicalSymbol {
       def name = getter.name.toString
       def symbol = getter
     }
 
     // > var x: Int
-    // method x, class MethodSymbol, flags = 134217808 (DEFERRED | METHOD | ACCESSOR)
-    // method x_=, class MethodSymbol, flags = 134217808 (DEFERRED | METHOD | ACCESSOR)
+    // method x, 'x', class MethodSymbol, flags = 134217808 (DEFERRED | METHOD | ACCESSOR)
+    // method x_=, 'x_$eq', class MethodSymbol, flags = 134217808 (DEFERRED | METHOD | ACCESSOR)
     // > type T = X { var x: Int }
-    // method x, class MethodSymbol, flags = 134217808 (DEFERRED | METHOD | ACCESSOR)
-    // method x_=, class MethodSymbol, flags = 134217808 (DEFERRED | METHOD | ACCESSOR)
+    // method x, 'x', class MethodSymbol, flags = 134217808 (DEFERRED | METHOD | ACCESSOR)
+    // method x_=, 'x_$eq', class MethodSymbol, flags = 134217808 (DEFERRED | METHOD | ACCESSOR)
     case class AbstractVar(getter: global.Symbol, setter: global.Symbol) extends LogicalSymbol {
       def name = getter.orElse(setter).name.getterName.toString
       def symbol = getter
     }
 
     // > def x: Int
-    // method x, class MethodSymbol, flags = 80 (DEFERRED | METHOD)
+    // method x, 'x', class MethodSymbol, flags = 80 (DEFERRED | METHOD)
     // > type T = X { def x: Int }
-    // method x, class MethodSymbol, flags = 80 (DEFERRED | METHOD)
+    // method x, 'x', class MethodSymbol, flags = 80 (DEFERRED | METHOD)
     case class AbstractDef(symbol: global.Symbol) extends LogicalSymbol {
       def name = symbol.name.toString
     }
 
     // > type T
-    // type T, class AbstractTypeSymbol, flags = 16 (DEFERRED)
+    // type T, 'T', class AbstractTypeSymbol, flags = 16 (DEFERRED)
     // > type T = X { type T <: Int }
-    // type T, class AbstractTypeSymbol, flags = 16 (DEFERRED)
+    // type T, 'T', class AbstractTypeSymbol, flags = 16 (DEFERRED)
     // > type T = X forSome { type T <: Int }
-    // type T, class AbstractTypeSymbol, flags = 34359738384 (DEFERRED | EXISTENTIAL)
+    // type T, 'T', class AbstractTypeSymbol, flags = 34359738384 (DEFERRED | EXISTENTIAL)
     case class AbstractType(symbol: global.Symbol) extends LogicalSymbol {
       def name = symbol.name.toString
     }
 
     // > val x = 2
-    // value x, class MethodSymbol, flags = 138412096 (METHOD | STABLE | ACCESSOR) + maybe PARAMACCESSOR
-    // value x, class TermSymbol, flags = 17592186568708 (PRIVATE | LOCAL | TRIEDCOOKING) + maybe PARAMACCESSOR
+    // value x, 'x', class MethodSymbol, flags = 138412096 (METHOD | STABLE | ACCESSOR) + maybe PARAMACCESSOR
+    // value x, 'x ', class TermSymbol, flags = 17592186568708 (PRIVATE | LOCAL | TRIEDCOOKING) + maybe PARAMACCESSOR
     // > private[this] val x = 2
-    // value x, class TermSymbol, flags = 524292 (PRIVATE | LOCAL) + maybe PARAMACCESSOR
+    // value x, 'x', class TermSymbol, flags = 524292 (PRIVATE | LOCAL) + maybe PARAMACCESSOR
     // > locally { val x = 2 }
-    // value x, class TermSymbol, flags = 0
+    // value x, 'x', class TermSymbol, flags = 0
     case class Val(field: global.Symbol, getter: global.Symbol) extends LogicalSymbol {
       def name = field.orElse(getter).name.getterName.toString
       def symbol = getter.orElse(field)
+      override def isComplete = symbol != global.NoSymbol
     }
 
     // > var x = 2
-    // method x, class MethodSymbol, flags = 134217792 (METHOD | ACCESSOR) + maybe PARAMACCESSOR
-    // method x_=, class MethodSymbol, flags = 134217792 (METHOD | ACCESSOR) + maybe PARAMACCESSOR
-    // variable x, class TermSymbol, flags = 17592186572804 (PRIVATE | MUTABLE | LOCAL | TRIEDCOOKING) + maybe PARAMACCESSOR
+    // method x, 'x', class MethodSymbol, flags = 134217792 (METHOD | ACCESSOR) + maybe PARAMACCESSOR + maybe DEFAULTINIT
+    // method x_=, 'x_$eq', class MethodSymbol, flags = 134217792 (METHOD | ACCESSOR) + maybe PARAMACCESSOR + maybe DEFAULTINIT
+    // variable x, 'x ', class TermSymbol, flags = 17592186572804 (PRIVATE | MUTABLE | LOCAL | TRIEDCOOKING) + maybe PARAMACCESSOR
     // > private[this] var x = 2
-    // variable x, class TermSymbol, flags = 528388 (PRIVATE | MUTABLE | LOCAL) + maybe PARAMACCESSOR
+    // variable x, 'x', class TermSymbol, flags = 528388 (PRIVATE | MUTABLE | LOCAL) + maybe PARAMACCESSOR + maybe DEFAULTINIT
     // > locally { var x = 2 }
-    // variable x, class TermSymbol, flags = 4096 (MUTABLE)
+    // variable x, 'x', class TermSymbol, flags = 4096 (MUTABLE)
     case class Var(field: global.Symbol, getter: global.Symbol, setter: global.Symbol) extends LogicalSymbol {
       def name = field.orElse(getter).orElse(setter).getterName.toString
       def symbol = getter.orElse(field)
+      override def isComplete = symbol != global.NoSymbol
     }
 
     // > def x = 2
-    // method x, class MethodSymbol, flags = 64 (METHOD)
+    // method x, 'x', class MethodSymbol, flags = 64 (METHOD)
     case class Def(symbol: global.Symbol) extends LogicalSymbol {
       def name = symbol.name.toString
     }
 
     // > def x: Int = macro ???
-    // macro method x, class MethodSymbol, flags = 32832 (METHOD | MACRO)
+    // macro method x, 'x', class MethodSymbol, flags = 32832 (METHOD | MACRO)
     case class Macro(symbol: global.Symbol) extends LogicalSymbol {
       def name = symbol.name.toString
     }
 
     // > type T = Int
-    // type T, class AliasTypeSymbol, flags = 0 ()
+    // type T, 'T', class AliasTypeSymbol, flags = 0 ()
     // > type T = X { type T = Int }
-    // type T, class AliasTypeSymbol, flags = 0 ()
+    // type T, 'T', class AliasTypeSymbol, flags = 0 ()
     case class Type(symbol: global.Symbol) extends LogicalSymbol {
       def name = symbol.name.toString
     }
 
     // > class C
-    // class C, class ClassSymbol, flags = 0 ()
+    // class C, 'C', class ClassSymbol, flags = 0 ()
     // NOTE: [warn] LogicalSymbols.scala:108:
     // Class org.scalameta.reflection.LogicalSymbols$LogicalSymbol$Class
     // differs only in case from org.scalameta.reflection.LogicalSymbols$LogicalSymbol$class.
@@ -145,60 +147,60 @@ trait LogicalSymbols {
     }
 
     // > trait T
-    // trait T, class ClassSymbol, flags = 33554568 (ABSTRACT | INTERFACE | TRAIT)
+    // trait T, 'T', class ClassSymbol, flags = 33554568 (ABSTRACT | INTERFACE | TRAIT)
     // > trait T { def x = 2 }
-    // trait T, class ClassSymbol, flags = 33554440 (ABSTRACT | TRAIT)
+    // trait T, 'T', class ClassSymbol, flags = 33554440 (ABSTRACT | TRAIT)
     case class Trait(symbol: global.Symbol) extends LogicalSymbol {
       def name = symbol.name.toString
     }
 
     // > object M
-    // object M, class ModuleSymbol, flags = 256 (MODULE)
+    // object M, 'M', class ModuleSymbol, flags = 256 (MODULE)
     case class Object(module: global.Symbol, moduleClass: global.Symbol) extends LogicalSymbol {
       def name = module.name.toString
       def symbol = module
     }
 
     // > package scala
-    // package scala, class ModuleSymbol, flags = 17592187109664 (FINAL | MODULE | PACKAGE | JAVA | TRIEDCOOKING)
+    // package scala, 'scala', class ModuleSymbol, flags = 17592187109664 (FINAL | MODULE | PACKAGE | JAVA | TRIEDCOOKING)
     case class Package(module: global.Symbol, moduleClass: global.Symbol) extends LogicalSymbol {
       def name = module.name.toString
       def symbol = module
     }
 
     // > package object scala
-    // package object scala, class ModuleSymbol, flags = 256 (MODULE)
+    // package object scala, 'package', class ModuleSymbol, flags = 256 (MODULE)
     case class PackageObject(module: global.Symbol, moduleClass: global.Symbol) extends LogicalSymbol {
       def name = module.name.toString
       def symbol = module
     }
 
     // > class C(x: Int)
-    // constructor C, class MethodSymbol, flags = 64 (METHOD)
+    // constructor C, '<init>', class MethodSymbol, flags = 64 (METHOD)
     case class PrimaryCtor(symbol: global.Symbol) extends LogicalSymbol {
       def name = symbol.name.toString
     }
 
     // > def this() = this(2)
-    // constructor C, class MethodSymbol, flags = 64 (METHOD)
+    // constructor C, '<init>', class MethodSymbol, flags = 64 (METHOD)
     case class SecondaryCtor(symbol: global.Symbol) extends LogicalSymbol {
       def name = symbol.name.toString
     }
 
     // > class C(x: Int)
-    // value x, class TermSymbol, flags = 537395204 (PRIVATE | LOCAL | PARAMACCESSOR)
+    // value x, 'x', class TermSymbol, flags = 537395204 (PRIVATE | LOCAL | PARAMACCESSOR)
     // constructor C, class MethodSymbol, flags = 64 (METHOD)
-    // value x, class TermSymbol, flags = 8192 (PARAM)
+    // value x, 'x', class TermSymbol, flags = 8192 (PARAM)
     // > def foo(x: Int) = ???
-    // value x, class TermSymbol, flags = 8192 (PARAM)
+    // value x, 'x', class TermSymbol, flags = 8192 (PARAM)
     case class TermParameter(symbol: global.Symbol) extends LogicalSymbol {
       def name = symbol.name.toString
     }
 
     // > class C[T]
-    // type T, class AbstractTypeSymbol, flags = 8208 (DEFERRED | PARAM)
+    // type T, 'T', class AbstractTypeSymbol, flags = 8208 (DEFERRED | PARAM)
     // > def foo[T] = ???
-    // type T, class TypeSkolem, flags = 8208 (DEFERRED | PARAM)
+    // type T, 'T', class TypeSkolem, flags = 8208 (DEFERRED | PARAM)
     case class TypeParameter(symbol: global.Symbol) extends LogicalSymbol {
       def name = symbol.name.toString
     }

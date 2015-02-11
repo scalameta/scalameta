@@ -15,7 +15,7 @@ import scala.meta.internal.hosts.scalac.{SemanticContext => ScalahostSemanticCon
 import scala.reflect.macros.contexts.{Context => ScalareflectMacroContext}
 import scala.meta.macros.{Context => ScalametaMacroContext}
 import scala.meta.internal.hosts.scalac.{MacroContext => ScalahostMacroContext}
-import scala.meta.ui.{Exception => SemanticException, _}
+import scala.meta.ui.{Exception => SemanticException}
 import scala.reflect.runtime.{universe => ru}
 import scala.reflect.internal.util.NoSourceFile
 import scala.tools.reflect.{ToolBox, mkSilentFrontEnd}
@@ -77,7 +77,17 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
   private[meta] def members(tpe: papi.Type): Seq[papi.Member] = {
     val ppre = tpe.require[p.Type]
     val gpre = toScalareflect(ppre)
-    gpre.members.logical.map(lsym => toApproximateScalameta(gpre, lsym))
+    val pfakeCtors = {
+      val gpresym = gpre.typeSymbol
+      val needsFakeCtor = gpresym.isTrait || (gpresym.isModuleClass && !gpresym.isPackageClass)
+      if (needsFakeCtor) {
+        val pname = p.Ctor.Name(gpresym.name.toString).withDenot(gpresym.module.orElse(gpresym))
+        List(p.Ctor.Primary(Nil, pname, Nil))
+      } else {
+        Nil
+      }
+    }
+    pfakeCtors ++ gpre.members.logical.map(lsym => toApproximateScalameta(gpre, lsym))
   }
 
   private[meta] def isSubType(tpe1: papi.Type, tpe2: papi.Type): Boolean = toScalareflect(tpe1.require[p.Type]) <:< toScalareflect(tpe2.require[p.Type])
@@ -139,8 +149,13 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
     def withOriginal(gtpe: g.Type): T = ptree.appendScratchpad(ScratchpadDatum.Original(gtpe)).asInstanceOf[T]
     def withOriginal(lsym: l.Symbol): T = ptree.appendScratchpad(ScratchpadDatum.Original(lsym)).asInstanceOf[T]
     def withOriginal(gsym: g.Symbol): T = ptree.withOriginal(gsym.logical)
+    def withOriginal(gannot: g.AnnotationInfo): T = ptree.appendScratchpad(ScratchpadDatum.Original(gannot)).asInstanceOf[T]
     def originalTree: Option[g.Tree] = ptree.scratchpad.collect { case ScratchpadDatum.Original(goriginal: g.Tree) => goriginal }.headOption
-    def originalTpe: Option[g.Type] = ptree.scratchpad.collect { case ScratchpadDatum.Original(goriginal: g.Type) => goriginal }.headOption
+    def originalTpe: Option[g.Type] = {
+      val fromOriginal = ptree.scratchpad.collect { case ScratchpadDatum.Original(goriginal: g.Type) => goriginal }.headOption
+      val fromAnnot = ptree.scratchpad.collect { case ScratchpadDatum.Original(goriginal: g.AnnotationInfo) => goriginal }.headOption
+      fromOriginal.orElse(fromAnnot.map(_.tpe))
+    }
     def originalPre: Option[g.Type] = ptree.scratchpad.collect { case ScratchpadDatum.Denotation(gpre: g.Type, _) => gpre }.headOption
     def originalSym: Option[l.Symbol] = {
       val fromOriginal = ptree.scratchpad.collect { case ScratchpadDatum.Original(loriginal: l.Symbol) => loriginal }.headOption
@@ -195,31 +210,32 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
     def rawcvt(in: g.Tree): p.Type.Name = (gsym: g.Symbol).rawcvt(in).asInstanceOf[p.Type.Name]
     def anoncvt(in: g.TypeDef): pTypeOrAnonymousName = (gsym: g.Symbol).anoncvt(in).asInstanceOf[pTypeOrAnonymousName]
   }
+  private def pctorref(ptpt: p.Type, gctor: g.Symbol): p.Term = {
+    object pTypes {
+      def unapply(tpes: Seq[p.Type.Arg]): Option[Seq[p.Type]] = {
+        if (tpes.forall(_.isInstanceOf[p.Type])) Some(tpes.map(_.asInstanceOf[p.Type]))
+        else None
+      }
+    }
+    val result = ptpt match {
+      case p.Type.Name(value) => p.Ctor.Name(value).withDenot(gctor)
+      case p.Type.Select(qual, name) => p.Ctor.Ref.Select(qual, p.Ctor.Name(name.value).withDenot(qual.originalTree.requireGet.tpe, gctor))
+      case p.Type.Project(qual, name) => p.Ctor.Ref.Project(qual, p.Ctor.Name(name.value).withDenot(qual.originalTree.requireGet.tpe, gctor))
+      case p.Type.Function(pTypes(params), ret) => p.Term.ApplyType(p.Ctor.Ref.Function(p.Ctor.Name("=>").withDenot(gctor)), params :+ ret)
+      case p.Type.Annotate(tpe, annots) => p.Term.Annotate(pctorref(tpe, gctor), annots)
+      case p.Type.Apply(tpe, args) => p.Term.ApplyType(pctorref(tpe, gctor), args)
+      case _ => unreachable
+    }
+    val original = ptpt.scratchpad.collect{case ScratchpadDatum.Original(goriginal) => goriginal}.head
+    result.appendScratchpad(ScratchpadDatum.Original(original))
+  }
 
   // TODO: remember positions. actually, in scalac they are almost accurate, so it would be a shame to discard them
   val hsymToNativePmemberCache = mutable.Map[h.Symbol, p.Member]()
   @converter def toScalameta(in: Any, pt: Pt): Any = {
     object Helpers extends g.ReificationSupportImpl { self =>
       def pctorcall(in: g.Tree, gtpt: g.Tree, gctor: g.Symbol, gargss: Seq[Seq[g.Tree]]): p.Term = {
-        def pctorref(ptpt: p.Type): p.Term = {
-          object pTypes {
-            def unapply(tpes: Seq[p.Type.Arg]): Option[Seq[p.Type]] = {
-              if (tpes.forall(_.isInstanceOf[p.Type])) Some(tpes.map(_.asInstanceOf[p.Type]))
-              else None
-            }
-          }
-          val result = ptpt match {
-            case p.Type.Name(value) => p.Ctor.Name(value).withDenot(gctor)
-            case p.Type.Select(qual, name) => p.Ctor.Ref.Select(qual, p.Ctor.Name(name.value).withDenot(qual.originalTree.requireGet.tpe, gctor))
-            case p.Type.Project(qual, name) => p.Ctor.Ref.Project(qual, p.Ctor.Name(name.value).withDenot(qual.originalTree.requireGet.tpe, gctor))
-            case p.Type.Function(pTypes(params), ret) => p.Term.ApplyType(p.Ctor.Ref.Function(p.Ctor.Name("=>").withDenot(gctor)), params :+ ret)
-            case p.Type.Annotate(tpe, annots) => p.Term.Annotate(pctorref(tpe), annots)
-            case p.Type.Apply(tpe, args) => p.Term.ApplyType(pctorref(tpe), args)
-            case _ => unreachable
-          }
-          result.withOriginal(ptpt.originalTree.requireGet)
-        }
-        val pcore = pctorref(gtpt.cvt_! : p.Type)
+        val pcore = pctorref(gtpt.cvt_! : p.Type, gctor)
         val pargss = gargss.map(_.map(parg))
         pargss.foldLeft(pcore)((pcurr, pargs) => p.Term.Apply(pcurr, pargs)).withOriginal(in)
       }
@@ -879,9 +895,54 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
   private val tpeCache = TwoWayCache[g.Type, p.Type.Arg]()
   private val lsymToPmemberCache = mutable.Map[(g.Type, l.Symbol), p.Member]()
   object toApproximateScalameta {
+    private def plit(gconst: g.Constant): p.Lit = gconst.value match {
+      case null => p.Lit.Null()
+      case () => p.Lit.Unit()
+      case v: Boolean => p.Lit.Bool(v)
+      case v: Byte => ???
+      case v: Short => ???
+      case v: Int => p.Lit.Int(v)
+      case v: Long => p.Lit.Long(v)
+      case v: Float => p.Lit.Float(v)
+      case v: Double => p.Lit.Double(v)
+      case v: String => p.Lit.String(v)
+      case v: Char => p.Lit.Char(v)
+      case v: g.Type => unreachable
+      case v: g.Symbol => unreachable
+    }
     private def pannot(gannot: g.AnnotationInfo): p.Mod.Annot = {
-      val g.AnnotationInfo(gatp, gargs, gassocs) = gannot
-      p.Mod.Annot(???)
+      def pannotcore(gannot: g.AnnotationInfo): p.Term = {
+        val g.AnnotationInfo(gatp, gargs, gassocs) = gannot
+        val gctor = gatp.decl(g.nme.CONSTRUCTOR).alternatives.head // TODO: manual overload resolution!
+        val patp = apply(gatp).asInstanceOf[p.Type]
+        val pargs = {
+          if (gassocs.nonEmpty) {
+            def loop(garg: g.ClassfileAnnotArg): p.Term = garg match {
+              case g.LiteralAnnotArg(const) =>
+                plit(const).withOriginal(g.Literal(const).setType(g.ConstantType(const)))
+              case g.ArrayAnnotArg(args) =>
+                val parray = g.definitions.ArrayModule.rawcvt(g.Ident(g.definitions.ArrayModule))
+                p.Term.Apply(parray, args.map(loop).toList)
+              case g.NestedAnnotArg(gannot: g.AnnotationInfo) =>
+                pannotcore(gannot)
+              case _ =>
+                unreachable
+            }
+            gassocs.map({ case (gname, garg) =>
+              val gparam = gctor.paramss.flatten.find(_.name == gname).get.asTerm
+              val pname = gparam.rawcvt(g.Ident(gparam))
+              p.Term.Arg.Named(pname, loop(garg))
+            })
+          } else {
+            def loop(garg: g.Tree): p.Term = toScalameta(ensugar(garg), classOf[p.Term])
+            gargs.map(loop)
+          }
+        }
+        val pcore = pctorref(patp, gctor)
+        if (pargs.isEmpty) pcore
+        else p.Term.Apply(pcore, pargs).withOriginal(gannot)
+      }
+      p.Mod.Annot(pannotcore(gannot)).withOriginal(gannot)
     }
     private def pannots(gannots: List[g.AnnotationInfo]): Seq[p.Mod.Annot] = {
       gannots.filter(gannot => {
@@ -891,102 +952,112 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
         !isOldMacroSignature && !isNewMacroSignature
       }).map(pannot)
     }
-    private def pmods(gsym0: g.Symbol): Seq[p.Mod] = {
-      // TODO: bring this up to sync with toScalameta.pmods
-      val gsym = gsym0.getterIn(gsym0.owner).orElse(gsym0)
-      val pmods = scala.collection.mutable.ListBuffer[p.Mod]()
-      pmods ++= pannots(gsym0.annotations)
-      if (gsym.isImplicit) pmods += p.Mod.Implicit()
-      if (gsym.isFinal) pmods += p.Mod.Final()
-      if (gsym.isSealed) pmods += p.Mod.Sealed()
-      if (gsym.isOverride) pmods += p.Mod.Override()
-      if (gsym.isCase) pmods += p.Mod.Case()
-      if (gsym.isAbstract && !gsym.isParameter && !gsym.isTrait) pmods += p.Mod.Abstract()
-      if (gsym.isAbstractOverride) { pmods += p.Mod.Abstract(); pmods += p.Mod.Override() }
-      if (gsym.isCovariant) pmods += p.Mod.Covariant()
-      if (gsym.isContravariant) pmods += p.Mod.Contravariant()
-      if (gsym.isLazy) pmods += p.Mod.Lazy()
-      pmods.toList
+    private def pmods(lsym: l.Symbol): Seq[p.Mod] = {
+      def annotationMods(lsym: l.Symbol): Seq[p.Mod] = {
+        // TODO: collect annotations scattered over synthetic members
+        pannots(lsym.gsymbol.annotations)
+      }
+      def accessQualifierMods(lsym: l.Symbol): Seq[p.Mod] = {
+        val gsym = lsym.gsymbol
+        val gpriv = gsym.privateWithin.orElse(gsym.owner)
+        if (gsym.hasFlag(LOCAL)) {
+          if (gsym.hasFlag(PROTECTED)) List(p.Mod.ProtectedThis().withDenot(gpriv))
+          else if (gsym.hasFlag(PRIVATE)) List(p.Mod.PrivateThis().withDenot(gpriv))
+          else unreachable
+        } else if (gsym.hasAccessBoundary && gpriv != g.NoSymbol) {
+          // TODO: `private[pkg] class C` doesn't have PRIVATE in its flags
+          // so we need to account for that!
+          if (gsym.hasFlag(PROTECTED)) List(p.Mod.ProtectedWithin(gpriv.name.toString).withDenot(gpriv))
+          else List(p.Mod.PrivateWithin(gpriv.name.toString).withDenot(gpriv))
+        } else {
+          if (gsym.hasFlag(PROTECTED)) List(p.Mod.Protected())
+          else if (gsym.hasFlag(PRIVATE)) List(p.Mod.Private())
+          else Nil
+        }
+      }
+      def otherMods(lsym: l.Symbol): Seq[p.Mod] = {
+        val gsym = lsym.gsymbol
+        val pmods = scala.collection.mutable.ListBuffer[p.Mod]()
+        if (gsym.isImplicit) pmods += p.Mod.Implicit()
+        if (gsym.isFinal) pmods += p.Mod.Final()
+        if (gsym.isSealed) pmods += p.Mod.Sealed()
+        if (gsym.isOverride) pmods += p.Mod.Override()
+        if (gsym.isCase) pmods += p.Mod.Case()
+        if (gsym.isAbstract && !gsym.isParameter && !gsym.isTrait) pmods += p.Mod.Abstract()
+        if (gsym.isAbstractOverride) { pmods += p.Mod.Abstract(); pmods += p.Mod.Override() }
+        if (gsym.isCovariant) pmods += p.Mod.Covariant()
+        if (gsym.isContravariant) pmods += p.Mod.Contravariant()
+        if (gsym.isLazy) pmods += p.Mod.Lazy()
+        pmods.toList
+      }
+      def valVarParamMods(lsym: l.Symbol): Seq[p.Mod] = {
+        val pmods = scala.collection.mutable.ListBuffer[p.Mod]()
+        val ggetter = lsym.gsymbol.owner.filter(_.isPrimaryConstructor).map(_.owner.info.member(lsym.gsymbol.name))
+        val gfield = ggetter.map(_.owner.info.member(ggetter.localName))
+        val isApplicable = lsym.gsymbol.owner.isPrimaryConstructor && gfield != g.NoSymbol
+        if (isApplicable && gfield.isMutable) pmods += p.Mod.VarParam()
+        if (isApplicable && !gfield.isMutable && !gfield.owner.isCase) pmods += p.Mod.ValParam()
+        pmods.toList
+      }
+      val result = annotationMods(lsym) ++ accessQualifierMods(lsym) ++ otherMods(lsym) ++ valVarParamMods(lsym)
+      // TODO: we can't discern `class C(x: Int)` and `class C(private[this] val x: Int)`
+      // so let's err on the side of the more popular option
+      if (lsym.gsymbol.owner.isPrimaryConstructor) result.filter(!_.isInstanceOf[p.Mod.PrivateThis]) else result
     }
-    private def pvparamtpe(gtpe: g.Type): p.Type.Arg = {
-      def unwrap(ptpe: p.Type): p.Type = ptpe.asInstanceOf[p.Type.Apply].args.head
-      if (g.definitions.isRepeatedParamType(gtpe)) p.Type.Arg.Repeated(unwrap(apply(gtpe).asInstanceOf[p.Type]))
-      else if (g.definitions.isByNameParamType(gtpe)) p.Type.Arg.ByName(unwrap(apply(gtpe).asInstanceOf[p.Type]))
-      else apply(gtpe)
-    }
-    private def ptypebounds(gtpe: g.Type): p.Type.Bounds = gtpe match {
-      case g.TypeBounds(glo, ghi) =>
-        val plo = if (glo =:= g.typeOf[Nothing]) None else Some(apply(glo).asInstanceOf[p.Type])
-        val phi = if (ghi =:= g.typeOf[Any]) None else Some(apply(ghi).asInstanceOf[p.Type])
-        p.Type.Bounds(plo, phi)
-      case _ =>
-        unreachable
-    }
-    private def pvparam(gsym: g.Symbol): p.Term.Param = {
-      require(gsym.isTerm)
-      // TODO: discern inferred and explicitly specified vparamtpe
-      // TODO: somehow figure out the default argument from a parameter symbol if it is specified
-      p.Term.Param(pmods(gsym), gsym.asTerm.anoncvt(g.internal.valDef(gsym)), Some(pvparamtpe(gsym.info.depoly)), None).withOriginal(gsym)
-    }
-    private def pvparams(gsyms: List[g.Symbol]): Seq[p.Term.Param] = gsyms.map(pvparam)
-    private def pvparamss(gsymss: List[List[g.Symbol]]): Seq[Seq[p.Term.Param]] = gsymss.map(pvparams)
-    private def ptparam(gsym: g.Symbol): p.Type.Param = {
-      // TODO: undo desugarings of context and view bounds
-      require(gsym.isType)
-      p.Type.Param(pmods(gsym), gsym.asType.anoncvt(g.internal.typeDef(gsym)), ptparams(gsym.typeParams), Nil, Nil, ptypebounds(gsym.info.depoly)).withOriginal(gsym)
-    }
-    private def ptparams(gsyms: List[g.Symbol]): Seq[p.Type.Param] = gsyms.map(ptparam)
     def apply(gtpe: g.Type): p.Type.Arg = tpeCache.getOrElseUpdate(gtpe, {
-      def loop(gtpe: g.Type): p.Type.Arg = {
-        val in = gtpe
-        val result = gtpe match {
-          case g.NoPrefix =>
-            unreachable
-          case g.NoType =>
-            unreachable
-          case in @ g.SuperType(thistpe, supertpe) =>
-            require(thistpe.isInstanceOf[g.ThisType] && thistpe.typeSymbol.isType && supertpe.typeSymbol.isType)
-            val superdumb = p.Term.Super(Some(thistpe.typeSymbol.name.toString), Some(supertpe.typeSymbol.name.toString)).withOriginal(in)
-            val superpre = thistpe
-            val supersym = if (supertpe.isInstanceOf[g.RefinedType]) g.NoSymbol else supertpe.typeSymbol
-            p.Type.Singleton(superdumb.withDenot(thistpe, supersym))
-          case in @ g.ThisType(sym) =>
-            require(sym.isClass)
-            if (sym.isModuleClass) p.Type.Singleton(sym.module.asTerm.rawcvt(g.Ident(sym.module)).withOriginal(in))
-            else p.Type.Singleton(p.Term.This(Some(sym.name.toString)).withDenot(sym).withOriginal(in))
-          case in @ g.SingleType(pre, sym) =>
-            require(sym.isTerm)
-            val ref = (pre match {
-              case g.NoPrefix =>
-                sym.asTerm.precvt(pre, g.Ident(sym))
-              case pre if pre.typeSymbol.isStaticOwner =>
-                sym.asTerm.precvt(pre, g.Ident(sym))
-              case pre: g.SingletonType =>
-                val p.Type.Singleton(preref) = loop(pre)
-                p.Term.Select(preref, sym.asTerm.precvt(pre, g.Ident(sym)).withOriginal(in))
-              case pre @ g.TypeRef(g.NoPrefix, quant, Nil) if quant.hasFlag(DEFERRED | EXISTENTIAL) =>
-                require(quant.name.endsWith(g.nme.SINGLETON_SUFFIX))
-                val preref = p.Term.Name(g.Ident(quant.name.toString.stripSuffix(g.nme.SINGLETON_SUFFIX)).alias).withDenot(quant).withOriginal(quant)
-                p.Term.Select(preref, sym.asTerm.precvt(pre, g.Ident(sym)).withOriginal(in))
-              case pre: g.TypeRef =>
-                // TODO: wow, so much for the hypothesis that all post-typer types are representable with syntax
-                // here's one for you: take a look at `context.unit.synthetics.get` in Typers.scala
-                // the prefix of the selection is typed as `Typers.this.global.CompilationUnit#synthetics.type`
-                // from what I can see, we should represent this type as an existential, i.e.
-                // `_1.synthetics.type forSome { val _1: Typers.this.global.CompilationUnit }`
-                // however that representation would require non-trivial effort to pull off
-                // (because we'll have to carry around that p.Type.Existential and unwrap it when anyone wants to use it)
-                // therefore for now I'm just putting a stub here
-                sym.asTerm.precvt(pre, g.Ident(sym))
-              case _ =>
-                sys.error(s"unsupported type $in, prefix = ${pre.getClass}, structure = ${g.showRaw(in, printIds = true, printTypes = true)}")
-            }).withOriginal(in)
-            // NOTE: we can't just emit p.Type.Singleton(p.Term.Name(...).withDenot(pre, sym))
-            // because in some situations (when the prefix is not stable) that will be a lie
-            // because naked names are supposed to be usable without a prefix
-            p.Type.Singleton(ref)
-          case in @ g.TypeRef(pre, sym, args) =>
-            require(sym.isType)
+      val result = gtpe match {
+        case g.NoPrefix =>
+          unreachable
+        case g.NoType =>
+          unreachable
+        case g.SuperType(thistpe, supertpe) =>
+          require(thistpe.isInstanceOf[g.ThisType] && thistpe.typeSymbol.isType && supertpe.typeSymbol.isType)
+          val superdumb = p.Term.Super(Some(thistpe.typeSymbol.name.toString), Some(supertpe.typeSymbol.name.toString)).withOriginal(gtpe)
+          val superpre = thistpe
+          val supersym = if (supertpe.isInstanceOf[g.RefinedType]) g.NoSymbol else supertpe.typeSymbol
+          p.Type.Singleton(superdumb.withDenot(thistpe, supersym))
+        case g.ThisType(sym) =>
+          require(sym.isClass)
+          if (sym.isModuleClass) p.Type.Singleton(sym.module.asTerm.rawcvt(g.Ident(sym.module)).withOriginal(gtpe))
+          else p.Type.Singleton(p.Term.This(Some(sym.name.toString)).withDenot(sym).withOriginal(gtpe))
+        case g.SingleType(pre, sym) =>
+          require(sym.isTerm)
+          val ref = (pre match {
+            case g.NoPrefix =>
+              sym.asTerm.precvt(pre, g.Ident(sym))
+            case pre if pre.typeSymbol.isStaticOwner =>
+              sym.asTerm.precvt(pre, g.Ident(sym))
+            case pre: g.SingletonType =>
+              val p.Type.Singleton(preref) = apply(pre)
+              p.Term.Select(preref, sym.asTerm.precvt(pre, g.Ident(sym)).withOriginal(gtpe))
+            case pre @ g.TypeRef(g.NoPrefix, quant, Nil) if quant.hasFlag(DEFERRED | EXISTENTIAL) =>
+              require(quant.name.endsWith(g.nme.SINGLETON_SUFFIX))
+              val preref = p.Term.Name(g.Ident(quant.name.toString.stripSuffix(g.nme.SINGLETON_SUFFIX)).alias).withDenot(quant).withOriginal(quant)
+              p.Term.Select(preref, sym.asTerm.precvt(pre, g.Ident(sym)).withOriginal(gtpe))
+            case pre: g.TypeRef =>
+              // TODO: wow, so much for the hypothesis that all post-typer types are representable with syntax
+              // here's one for you: take a look at `context.unit.synthetics.get` in Typers.scala
+              // the prefix of the selection is typed as `Typers.this.global.CompilationUnit#synthetics.type`
+              // from what I can see, we should represent this type as an existential, i.e.
+              // `_1.synthetics.type forSome { val _1: Typers.this.global.CompilationUnit }`
+              // however that representation would require non-trivial effort to pull off
+              // (because we'll have to carry around that p.Type.Existential and unwrap it when anyone wants to use it)
+              // therefore for now I'm just putting a stub here
+              sym.asTerm.precvt(pre, g.Ident(sym))
+            case _ =>
+              sys.error(s"unsupported type $gtpe, prefix = ${pre.getClass}, structure = ${g.showRaw(gtpe, printIds = true, printTypes = true)}")
+          }).withOriginal(gtpe)
+          // NOTE: we can't just emit p.Type.Singleton(p.Term.Name(...).withDenot(pre, sym))
+          // because in some situations (when the prefix is not stable) that will be a lie
+          // because naked names are supposed to be usable without a prefix
+          p.Type.Singleton(ref)
+        case g.TypeRef(pre, sym, args) =>
+          require(sym.isType)
+          if (sym == g.definitions.RepeatedParamClass) {
+            p.Type.Arg.Repeated(apply(args.head).asInstanceOf[p.Type])
+          } else if (sym == g.definitions.ByNameParamClass) {
+            p.Type.Arg.ByName(apply(args.head).asInstanceOf[p.Type])
+          } else {
             val ref = ({
               if (sym.isModuleClass) {
                 apply(g.SingleType(pre, sym.module)).asInstanceOf[p.Type]
@@ -997,74 +1068,140 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
                   case pre if pre.typeSymbol.isStaticOwner =>
                     sym.asType.precvt(pre, g.Ident(sym))
                   case pre: g.SingletonType =>
-                    val p.Type.Singleton(preref) = loop(pre)
-                    p.Type.Select(preref, sym.asType.precvt(pre, g.Ident(sym)).withOriginal(in))
+                    val p.Type.Singleton(preref) = apply(pre)
+                    p.Type.Select(preref, sym.asType.precvt(pre, g.Ident(sym)).withOriginal(gtpe))
                   case _ =>
-                    p.Type.Project(loop(pre).asInstanceOf[p.Type], sym.asType.precvt(pre, g.Ident(sym)).withOriginal(in))
+                    p.Type.Project(apply(pre).asInstanceOf[p.Type], sym.asType.precvt(pre, g.Ident(sym)).withOriginal(gtpe))
                 }
               }
-            }).withOriginal(in)
+            }).withOriginal(gtpe)
             if (args.isEmpty) ref
-            else p.Type.Apply(ref, args.map(arg => loop(arg).asInstanceOf[p.Type]))
-          case g.RefinedType(parents, decls) =>
-            // TODO: detect `val x, y: Int`
-            val pdecls = decls.logical.map(ldecl => apply(g.NoPrefix, ldecl)).toList // TODO: actually, prefix here is not empty
-            p.Type.Compound(parents.map(parent => loop(parent).asInstanceOf[p.Type]), pdecls.map(_.stat))
-          case g.ExistentialType(quants, underlying) =>
-            // TODO: infer type placeholders where they were specified explicitly
-            require(quants.forall(quant => quant.isType && quant.hasFlag(DEFERRED | EXISTENTIAL)))
-            val pquants = quants.logical.map(lquant => apply(g.NoPrefix, lquant)).toList // TODO: actually, prefix here is not empty
-            p.Type.Existential(loop(underlying).asInstanceOf[p.Type], pquants.map(_.stat))
-          case g.AnnotatedType(annots, underlying) =>
-            p.Type.Annotate(loop(underlying).asInstanceOf[p.Type], pannots(annots))
-          case g.ConstantType(const) =>
-            const.value match {
-              case null => p.Lit.Null()
-              case () => p.Lit.Unit()
-              case v: Boolean => p.Lit.Bool(v)
-              case v: Byte => ???
-              case v: Short => ???
-              case v: Int => p.Lit.Int(v)
-              case v: Long => p.Lit.Long(v)
-              case v: Float => p.Lit.Float(v)
-              case v: Double => p.Lit.Double(v)
-              case v: String => p.Lit.String(v)
-              case v: Char => p.Lit.Char(v)
-              case v: g.Type => unreachable
-              case v: g.Symbol => unreachable
-            }
-          case _ =>
-            sys.error(s"unsupported type $in, designation = ${in.getClass}, structure = ${g.showRaw(in, printIds = true, printTypes = true)}")
-        }
-        result.withOriginal(in)
+            else p.Type.Apply(ref, args.map(arg => apply(arg).asInstanceOf[p.Type]))
+          }
+        case g.RefinedType(parents, decls) =>
+          // TODO: detect `val x, y: Int`
+          val pdecls = decls.logical.map(ldecl => apply(g.NoPrefix, ldecl)).toList // TODO: actually, prefix here is not empty
+          p.Type.Compound(parents.map(parent => apply(parent).asInstanceOf[p.Type]), pdecls.map(_.stat))
+        case g.ExistentialType(quants, underlying) =>
+          // TODO: infer type placeholders where they were specified explicitly
+          require(quants.forall(quant => quant.isType && quant.hasFlag(DEFERRED | EXISTENTIAL)))
+          val pquants = quants.logical.map(lquant => apply(g.NoPrefix, lquant)).toList // TODO: actually, prefix here is not empty
+          p.Type.Existential(apply(underlying).asInstanceOf[p.Type], pquants.map(_.stat))
+        case g.AnnotatedType(annots, underlying) =>
+          p.Type.Annotate(apply(underlying).asInstanceOf[p.Type], pannots(annots))
+        case g.ConstantType(const) =>
+          plit(const)
+        case _ =>
+          sys.error(s"unsupported type $gtpe, designation = ${gtpe.getClass}, structure = ${g.showRaw(gtpe, printIds = true, printTypes = true)}")
       }
-      loop(gtpe)
+      result.withOriginal(gtpe)
     })
     def apply(gpre: g.Type, lsym: l.Symbol): p.Member = lsymToPmemberCache.getOrElseUpdate((gpre, lsym), {
       def approximateSymbol(lsym: l.Symbol): p.Member = {
-        // def dummyTemplate = p.Template(Nil, Nil, p.Term.Param(Nil, p.Name.Anonymous(), None, None), None)
-        // def dummyCtor = p.Ctor.Primary(Nil, p.Ctor.Name("this"), Nil)
-        // def dummyBody = p.Term.Name("???")
-        // val result = gsym match {
-        //   case PkgSymbol(gsym) => p.Pkg(gsym.rawcvt(g.Ident(gsym)), Nil)
-        //   case ClassSymbol(gsym) => p.Defn.Class(pmods(gsym), gsym.rawcvt(g.Ident(gsym)), ptparams(gsym.typeParams), dummyCtor, dummyTemplate)
-        //   case TraitSymbol(gsym) => p.Defn.Trait(pmods(gsym), gsym.rawcvt(g.Ident(gsym)), ptparams(gsym.typeParams), dummyCtor, dummyTemplate)
-        //   case PkgObjectSymbol(gsym) => p.Pkg.Object(Nil, gsym.rawcvt(g.Ident(gsym)), dummyCtor, dummyTemplate)
-        //   case ObjectSymbol(gsym) => p.Defn.Object(pmods(gsym), gsym.rawcvt(g.Ident(gsym)), dummyCtor, dummyTemplate)
-        //   case AbstractValSymbol(gsym) => p.Decl.Val(pmods(gsym), List(p.Pat.Var(gsym.rawcvt(g.ValDef(gsym)))), apply(gsym.info.depoly).asInstanceOf[p.Type]).pats.head.require[p.Pat.Var].name
-        //   case ValSymbol(gsym) => p.Defn.Val(pmods(gsym), List(p.Pat.Var(gsym.rawcvt(g.ValDef(gsym)))), Some(apply(gsym.info.depoly).asInstanceOf[p.Type]), dummyBody).pats.head.require[p.Pat.Var].name
-        //   case AbstractVarSymbol(gsym) => p.Decl.Var(pmods(gsym), List(p.Pat.Var(gsym.rawcvt(g.ValDef(gsym)))), apply(gsym.info.depoly).asInstanceOf[p.Type]).pats.head.require[p.Pat.Var].name
-        //   case VarSymbol(gsym) => p.Defn.Var(pmods(gsym), List(p.Pat.Var(gsym.rawcvt(g.ValDef(gsym)))), Some(apply(gsym.info.depoly).asInstanceOf[p.Type]), Some(dummyBody)).pats.head.require[p.Pat.Var].name
-        //   case AbstractDefSymbol(gsym) => p.Decl.Def(pmods(gsym), gsym.rawcvt(g.DefDef(gsym, g.EmptyTree)), ptparams(gsym.typeParams), pvparamss(gsym.paramss), apply(gsym.info.finalResultType).asInstanceOf[p.Type])
-        //   case DefSymbol(gsym) => p.Defn.Def(pmods(gsym), gsym.rawcvt(g.DefDef(gsym, g.EmptyTree)), ptparams(gsym.typeParams), pvparamss(gsym.paramss), Some(apply(gsym.info.finalResultType).asInstanceOf[p.Type]), dummyBody)
-        //   case MacroSymbol(gsym) => p.Defn.Macro(pmods(gsym), gsym.rawcvt(g.DefDef(gsym, g.EmptyTree)), ptparams(gsym.typeParams), pvparamss(gsym.paramss), apply(gsym.info.finalResultType).asInstanceOf[p.Type], dummyBody)
-        //   case AbstractTypeSymbol(gsym) => p.Decl.Type(pmods(gsym), gsym.rawcvt(g.TypeDef(gsym)), ptparams(gsym.typeParams), ptypebounds(gsym.info.depoly))
-        //   case AliasTypeSymbol(gsym) => p.Defn.Type(pmods(gsym), gsym.rawcvt(g.TypeDef(gsym, g.TypeTree(gsym.info))), ptparams(gsym.typeParams), apply(gsym.info.depoly).asInstanceOf[p.Type])
-        //   case _ => sys.error(s"unsupported symbol $gsym, designation = ${gsym.getClass}, flags = ${gsym.flags}")
-        // }
-        // result.withOriginal(gsym)
-        val result: p.Member = ???
-        result.withOriginal(lsym)
+        // NOTE: we don't need to clear the LOCAL_SUFFIX_STRING from the name of `lsym.gsymbol`
+        // because it's always guaranteed not to end with LOCAL_SUFFIX_STRING
+        // see LogicalSymbols.scala for more information
+        def gsym = lsym.gsymbol
+        def ginfo = gsym.moduleClass.orElse(gsym).infoIn(gpre)
+        def pmods = this.pmods(lsym)
+        def pname = lsym match {
+          case l.PrimaryCtor(gsym) => p.Ctor.Name(gsym.owner.name.toString).withDenot(gpre, gsym).withOriginal(gsym)
+          case l.SecondaryCtor(gsym) => p.Ctor.Name(gsym.owner.name.toString).withDenot(gpre, gsym).withOriginal(gsym)
+          case _ => gsym.precvt(gpre, g.Ident(gsym))
+        }
+        def ptparams = ginfo.typeParams.map(gtparam => apply(g.NoPrefix, l.TypeParameter(gtparam)).asInstanceOf[p.Type.Param])
+        def pvparamss = ginfo.paramss.map(_.map(gvparam => apply(g.NoPrefix, l.TermParameter(gvparam)).asInstanceOf[p.Term.Param]))
+        def ptpe = apply(ginfo.depoly.finalResultType)
+        def ptpeBounds = ginfo.depoly match {
+          case gtpe @ g.TypeBounds(glo, ghi) =>
+            val plo = if (glo =:= g.typeOf[Nothing]) None else Some(apply(glo).asInstanceOf[p.Type])
+            val phi = if (ghi =:= g.typeOf[Any]) None else Some(apply(ghi).asInstanceOf[p.Type])
+            p.Type.Bounds(plo, phi).withOriginal(gtpe)
+        }
+        def punknownTerm = {
+          val gsys = g.definitions.SysPackage
+          val gsysError = gsys.info.decl(g.TermName("error"))
+          val psysError = p.Term.Select(p.Term.Name("sys").withDenot(gsys), p.Term.Name("error").withDenot(gsys))
+          p.Term.Apply(psysError, List(p.Lit.String("couldn't load tree"))).withOriginal(g.definitions.NothingClass.tpe)
+        }
+        def pbody = punknownTerm
+        def pmaybeBody = if (gsym.hasFlag(DEFAULTINIT)) None else Some(pbody)
+        def pfakeCtor = {
+          val pname = p.Ctor.Name(gsym.name.toString).withDenot(gpre, gsym.module.orElse(gsym))
+          p.Ctor.Primary(Nil, pname, Nil)
+        }
+        def pctor = lsym match {
+          case l.Clazz(gsym) =>
+            val gctorsym = gsym.primaryConstructor
+            val gctorinfo = gctorsym.infoIn(gpre)
+            val pctorname = p.Ctor.Name(gsym.name.toString).withDenot(gpre, gctorsym).withOriginal(gctorsym)
+            val pctorparamss = gctorinfo.paramss.map(_.map(gvparam => apply(g.NoPrefix, l.TermParameter(gvparam)).asInstanceOf[p.Term.Param]))
+            p.Ctor.Primary(this.pmods(l.PrimaryCtor(gctorsym)), pctorname, pctorparamss)
+          case _ =>
+            pfakeCtor
+        }
+        def ptemplate = {
+          val (pearly, plate) = pstats.partition(_.originalSym match {
+            case Some(l.Val(gfield, _)) => gfield.hasFlag(PRESUPER)
+            case Some(l.Var(gfield, _, _)) => gfield.hasFlag(PRESUPER)
+            case _ => false
+          })
+          val g.ClassInfoType(gparents, _, _) = ginfo
+          val pparents = gparents.map(gparent => {
+            val ptpe = apply(gparent).asInstanceOf[p.Type]
+            val gctor = gparent.typeSymbol.primaryConstructor.orElse(gparent.typeSymbol)
+            pctorref(ptpe, gctor)
+          })
+          // TODO: apply gpre to pselftpe!!
+          val pselftpe = if (gsym.thisSym != gsym) Some(apply(gsym.thisSym.tpe).asInstanceOf[p.Type]) else None
+          val pself = p.Term.Param(Nil, p.Name.Anonymous(), pselftpe, None)
+          p.Template(pearly, pparents, pself, Some(plate))
+        }
+        def pstats = {
+          val gstatowner = gsym match { case gclass: g.ClassSymbol => gclass; case gmodule: g.ModuleSymbol => gmodule.moduleClass.asClass }
+          val gstatpre = gstatowner.toTypeIn(gpre)
+          gstatpre.decls.logical.map(lsym => toApproximateScalameta(gstatpre, lsym)).map(_.stat)
+        }
+        def pmaybeDefault = if (gsym.hasFlag(DEFAULTPARAM)) Some(pbody) else None
+        def pcontextBounds = {
+          val gevidences = gsym.owner.paramss.flatten.filter(_.name.startsWith(g.nme.EVIDENCE_PARAM_PREFIX))
+          val gcontextBounds = gevidences.map(gev => gev.tpe.typeArgs match {
+            case List(gtarg) if gtarg.typeSymbol == gsym => gev.tpe.typeSymbol
+            case _ => g.NoSymbol
+          }).filter(_ != g.NoSymbol)
+          gcontextBounds.map(gbound => gbound.asType.rawcvt(g.Ident(gbound)))
+        }
+        def pviewBounds = {
+          val gevidences = gsym.owner.paramss.flatten.filter(_.name.startsWith(g.nme.EVIDENCE_PARAM_PREFIX))
+          val gviewBounds = gevidences.map(gev => gev.tpe.typeArgs match {
+            case List(gfrom, gto) if gfrom.typeSymbol == gsym => gto.typeSymbol
+            case _ => g.NoSymbol
+          }).filter(_ != g.NoSymbol)
+          gviewBounds.map(gbound => gbound.asType.rawcvt(g.Ident(gbound)))
+        }
+        val pmember: p.Member = lsym match {
+          case l.None => unreachable
+          case _: l.AbstractVal => p.Decl.Val(pmods, List(p.Pat.Var(pname.asInstanceOf[p.Term.Name])), ptpe.asInstanceOf[p.Type]).member
+          case _: l.AbstractVar => p.Decl.Var(pmods, List(p.Pat.Var(pname.asInstanceOf[p.Term.Name])), ptpe.asInstanceOf[p.Type]).member
+          case _: l.AbstractDef => p.Decl.Def(pmods, pname.asInstanceOf[p.Term.Name], ptparams, pvparamss, ptpe.asInstanceOf[p.Type])
+          case _: l.AbstractType => p.Decl.Type(pmods, pname.asInstanceOf[p.Type.Name], ptparams, ptpeBounds)
+          case _: l.Val => p.Defn.Val(pmods, List(p.Pat.Var(pname.asInstanceOf[p.Term.Name])), Some(ptpe.asInstanceOf[p.Type]), pbody).member
+          case _: l.Var => p.Defn.Var(pmods, List(p.Pat.Var(pname.asInstanceOf[p.Term.Name])), Some(ptpe.asInstanceOf[p.Type]), pmaybeBody).member
+          case _: l.Def => p.Defn.Def(pmods, pname.asInstanceOf[p.Term.Name], ptparams, pvparamss, Some(ptpe.asInstanceOf[p.Type]), pbody)
+          case _: l.Macro => p.Defn.Def(pmods, pname.asInstanceOf[p.Term.Name], ptparams, pvparamss, Some(ptpe.asInstanceOf[p.Type]), pbody)
+          case _: l.Type => p.Defn.Type(pmods, pname.asInstanceOf[p.Type.Name], ptparams, ptpe.asInstanceOf[p.Type])
+          case _: l.Clazz => p.Defn.Class(pmods, pname.asInstanceOf[p.Type.Name], ptparams, pctor, ptemplate)
+          case _: l.Trait => p.Defn.Trait(pmods, pname.asInstanceOf[p.Type.Name], ptparams, pctor, ptemplate)
+          case _: l.Object => p.Defn.Object(pmods, pname.asInstanceOf[p.Term.Name], pctor, ptemplate)
+          case _: l.Package => p.Pkg(pname.asInstanceOf[p.Term.Name], pstats)
+          case _: l.PackageObject => p.Pkg.Object(pmods, pname.asInstanceOf[p.Term.Name], pctor, ptemplate)
+          case _: l.PrimaryCtor => p.Ctor.Primary(pmods, pname.asInstanceOf[p.Ctor.Name], pvparamss)
+          case _: l.SecondaryCtor => p.Ctor.Secondary(pmods, pname.asInstanceOf[p.Ctor.Name], pvparamss, pbody)
+          case _: l.TermParameter => p.Term.Param(pmods, pname.asInstanceOf[p.Term.Name], Some(ptpe), pmaybeDefault)
+          case _: l.TypeParameter => p.Type.Param(pmods, pname.asInstanceOf[p.Type.Name], ptparams, pcontextBounds, pviewBounds, ptpeBounds)
+          case _ => sys.error(s"unsupported symbol $lsym, designation = ${gsym.getClass}, flags = ${gsym.flags}")
+        }
+        pmember.withOriginal(lsym)
       }
       def applyPrefix(gpre: g.Type, pmem: p.Member): p.Member = {
         if (gpre == g.NoPrefix) pmem
@@ -1075,9 +1212,9 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
           pmem
         }
       }
-      val maybeNativePmember = symbolTable.get(lsym).flatMap(hsym => hsymToNativePmemberCache.get(hsym))
-      val pmember = maybeNativePmember.getOrElse(approximateSymbol(lsym))
-      applyPrefix(gpre, pmember)
+      val maybeSourceNativePmember = symbolTable.get(lsym).flatMap(hsym => hsymToNativePmemberCache.get(hsym))
+      val maybeNativePmember = maybeSourceNativePmember.map(applyPrefix(gpre, _))
+      maybeNativePmember.getOrElse(approximateSymbol(lsym))
     })
   }
 
