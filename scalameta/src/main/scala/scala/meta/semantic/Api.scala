@@ -203,7 +203,6 @@ trait Api {
     @hosted def isPrivate: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Private]) || tree.mods.exists(_.isInstanceOf[impl.Mod.PrivateThis]) || tree.mods.exists(_.isInstanceOf[impl.Mod.PrivateWithin])
     @hosted def isProtected: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Protected]) || tree.mods.exists(_.isInstanceOf[impl.Mod.ProtectedThis]) || tree.mods.exists(_.isInstanceOf[impl.Mod.ProtectedWithin])
     @hosted def isPublic: Boolean = !tree.isPrivate && !tree.isProtected
-    @hosted def accessBoundary: Member = ???
     @hosted def isImplicit: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Implicit])
     @hosted def isFinal: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Final]) || tree.isObject
     @hosted def isSealed: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Sealed])
@@ -224,10 +223,10 @@ trait Api {
     @hosted def isAbstractOverride: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Abstract]) && tree.mods.exists(_.isInstanceOf[impl.Mod.Override])
     @hosted def isParam: Boolean = tree.isInstanceOf[impl.Term.Param]
     @hosted def isTypeParam: Boolean = tree.isInstanceOf[impl.Type.Param]
-    @hosted def isByNameParam: Boolean = ???
-    @hosted def isVarargParam: Boolean = ???
-    @hosted def isValParam: Boolean = ???
-    @hosted def isVarParam: Boolean = ???
+    @hosted def isByNameParam: Boolean = tree match { case impl.Term.Param(_, _, Some(impl.Type.Arg.ByName(_)), _) => true; case _ => false }
+    @hosted def isVarargParam: Boolean = tree match { case impl.Term.Param(_, _, Some(impl.Type.Arg.Repeated(_)), _) => true; case _ => false }
+    @hosted def isValParam: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.ValParam])
+    @hosted def isVarParam: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.VarParam])
   }
 
   implicit class SemanticTermMemberOps(val tree: Member.Term) {
