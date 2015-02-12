@@ -1151,11 +1151,11 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
         // NOTE: we don't need to clear the LOCAL_SUFFIX_STRING from the name of `lsym.gsymbol`
         // because it's always guaranteed not to end with LOCAL_SUFFIX_STRING
         // see LogicalSymbols.scala for more information
-        def gsym = lsym.gsymbol
-        def ginfo = gsym.moduleClass.orElse(gsym).infoIn(gpre)
-        def gtparams = ginfo.typeParams
-        def gvparamss = ginfo.paramss
-        def gtpe = {
+        lazy val gsym = lsym.gsymbol
+        lazy val ginfo = gsym.moduleClass.orElse(gsym).infoIn(gpre)
+        lazy val gtparams = ginfo.typeParams
+        lazy val gvparamss = ginfo.paramss
+        lazy val gtpe = {
           // NOTE: strips off only those vparams and tparams that are part of the definition
           // we don't want to, for example, damage type lambdas
           def loop(gtpe: g.Type): g.Type = gtpe match {
@@ -1172,34 +1172,34 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
           }
           loop(ginfo)
         }
-        def pmods = this.pmods(lsym)
-        def pname = lsym match {
+        lazy val pmods = this.pmods(lsym)
+        lazy val pname = lsym match {
           case l.PrimaryCtor(gsym) => p.Ctor.Name(gsym.owner.name.toString).withDenot(gpre, gsym).withOriginal(gsym)
           case l.SecondaryCtor(gsym) => p.Ctor.Name(gsym.owner.name.toString).withDenot(gpre, gsym).withOriginal(gsym)
           case _ => gsym.precvt(gpre, g.Ident(gsym))
         }
-        def ptparams = gtparams.map(gtparam => apply(g.NoPrefix, l.TypeParameter(gtparam)).asInstanceOf[p.Type.Param])
-        def pvparamss = gvparamss.map(_.map(gvparam => apply(g.NoPrefix, l.TermParameter(gvparam)).asInstanceOf[p.Term.Param]))
-        def ptpe = apply(gtpe)
-        def ptpeBounds = gtpe match {
+        lazy val ptparams = gtparams.map(gtparam => apply(g.NoPrefix, l.TypeParameter(gtparam)).asInstanceOf[p.Type.Param])
+        lazy val pvparamss = gvparamss.map(_.map(gvparam => apply(g.NoPrefix, l.TermParameter(gvparam)).asInstanceOf[p.Term.Param]))
+        lazy val ptpe = apply(gtpe)
+        lazy val ptpeBounds = gtpe match {
           case gtpe @ g.TypeBounds(glo, ghi) =>
             val plo = if (glo =:= g.typeOf[Nothing]) None else Some(apply(glo).asInstanceOf[p.Type])
             val phi = if (ghi =:= g.typeOf[Any]) None else Some(apply(ghi).asInstanceOf[p.Type])
             p.Type.Bounds(plo, phi).withOriginal(gtpe)
         }
-        def punknownTerm = {
+        lazy val punknownTerm = {
           val gsys = g.definitions.SysPackage
           val gsysError = gsys.info.decl(g.TermName("error"))
           val psysError = p.Term.Select(p.Term.Name("sys").withDenot(gsys), p.Term.Name("error").withDenot(gsys))
           p.Term.Apply(psysError, List(p.Lit.String("couldn't load tree"))).withOriginal(g.definitions.NothingClass.tpe)
         }
-        def pbody = punknownTerm
-        def pmaybeBody = if (gsym.hasFlag(DEFAULTINIT)) None else Some(pbody)
-        def pfakeCtor = {
+        lazy val pbody = punknownTerm
+        lazy val pmaybeBody = if (gsym.hasFlag(DEFAULTINIT)) None else Some(pbody)
+        lazy val pfakeCtor = {
           val pname = p.Ctor.Name(gsym.name.toString).withDenot(gpre, gsym.module.orElse(gsym))
           p.Ctor.Primary(Nil, pname, Nil)
         }
-        def pctor = lsym match {
+        lazy val pctor = lsym match {
           case l.Clazz(gsym) =>
             val gctorsym = gsym.primaryConstructor
             val gctorinfo = gctorsym.infoIn(gpre)
@@ -1209,7 +1209,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
           case _ =>
             pfakeCtor
         }
-        def ptemplate = {
+        lazy val ptemplate = {
           val (pearly, plate) = pstats.partition(_.originalSym match {
             case Some(l.Val(gfield, _)) => gfield.hasFlag(PRESUPER)
             case Some(l.Var(gfield, _, _)) => gfield.hasFlag(PRESUPER)
@@ -1226,13 +1226,13 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
           val pself = p.Term.Param(Nil, p.Name.Anonymous(), pselftpe, None)
           p.Template(pearly, pparents, pself, Some(plate))
         }
-        def pstats = {
+        lazy val pstats = {
           val gstatowner = gsym match { case gclass: g.ClassSymbol => gclass; case gmodule: g.ModuleSymbol => gmodule.moduleClass.asClass }
           val gstatpre = gstatowner.toTypeIn(gpre)
           gstatpre.decls.logical.map(lsym => toApproximateScalameta(gstatpre, lsym)).map(_.stat)
         }
-        def pmaybeDefault = if (gsym.hasFlag(DEFAULTPARAM)) Some(pbody) else None
-        def pcontextBounds = {
+        lazy val pmaybeDefault = if (gsym.hasFlag(DEFAULTPARAM)) Some(pbody) else None
+        lazy val pcontextBounds = {
           val gevidences = gsym.owner.paramss.flatten.filter(_.name.startsWith(g.nme.EVIDENCE_PARAM_PREFIX))
           val gcontextBounds = gevidences.map(gev => gev.tpe.typeArgs match {
             case List(gtarg) if gtarg.typeSymbol == gsym => gev.tpe.typeSymbol
@@ -1240,7 +1240,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
           }).filter(_ != g.NoSymbol)
           gcontextBounds.map(gbound => gbound.asType.rawcvt(g.Ident(gbound)))
         }
-        def pviewBounds = {
+        lazy val pviewBounds = {
           val gevidences = gsym.owner.paramss.flatten.filter(_.name.startsWith(g.nme.EVIDENCE_PARAM_PREFIX))
           val gviewBounds = gevidences.map(gev => gev.tpe.typeArgs match {
             case List(gfrom, gto) if gfrom.typeSymbol == gsym => gto.typeSymbol
