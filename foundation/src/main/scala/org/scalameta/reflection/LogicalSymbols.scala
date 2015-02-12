@@ -39,7 +39,7 @@ trait LogicalSymbols {
     def gsymbol: global.Symbol = symbol
     def gsymbols: Seq[global.Symbol] = symbols
     def isComplete: Boolean = !isIncomplete
-    def isIncomplete: Boolean = this.productIterator.exists(_ == global.NoSymbol)
+    def isIncomplete: Boolean = symbol == global.NoSymbol
   }
 
   lazy val l: LogicalSymbol.type = LogicalSymbol
@@ -318,6 +318,7 @@ trait LogicalSymbols {
         val partial = result(i)
         val found = completeResult.indexWhere(accum => accum.productPrefix == partial.productPrefix && accum.name == partial.name)
         if (found != -1) completeResult(found) = merge(completeResult(found), partial)
+        else completeResult += result(i)
         i += 1
       }
       require(completeResult.forall(_.isComplete))
