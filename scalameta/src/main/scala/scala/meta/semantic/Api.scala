@@ -20,6 +20,18 @@ trait Api {
   // PART 1: ATTRIBUTES
   // ===========================
 
+  sealed trait HasDesugaring[T <: Tree, U <: Tree]
+  object HasDesugaring {
+    implicit def Term[T <: meta.Term]: HasDesugaring[T, meta.Term] = null
+  }
+
+  implicit class SemanticDesugarableOps[T <: Tree, U <: Tree](val tree: T)(implicit ev: HasDesugaring[T, U], tag: ClassTag[U]) {
+    @hosted def desugar: U = tree match {
+      case tree: impl.Term => implicitly[SemanticContext].desugar(tree).asInstanceOf[U]
+      case tree => throw new SemanticException(s"desugar is undefined for ${tree.show[Summary]}")
+    }
+  }
+
   sealed trait HasTpe[T <: Tree, U <: Type.Arg]
   object HasTpe {
     implicit def Term[T <: meta.Term]: HasTpe[T, meta.Type] = null
