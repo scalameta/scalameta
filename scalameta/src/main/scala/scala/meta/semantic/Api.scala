@@ -372,15 +372,15 @@ trait Api {
     @hosted private[meta] def internalSingle[T <: Member : ClassTag](name: String, filter: T => Boolean, diagnostic: String): T = {
       val filtered = internalFilter[T](x => x.name.toString == name && filter(x))
       filtered match {
-        case Seq() => throw new SemanticException(s"no $name $diagnostic found in ${tree.show[Summary]}")
+        case Seq() => throw new SemanticException(s"""no $diagnostic named "$name" found in ${tree.show[Summary]}""")
         case Seq(single) => single
-        case Seq(_, _*) => throw new SemanticException(s"multiple $name $diagnostic found in ${tree.show[Summary]}")
+        case Seq(_, _*) => throw new SemanticException(s"""multiple $diagnostic named "$name" found in ${tree.show[Summary]}""")
       }
     }
     @hosted private[meta] def internalMulti[T <: Member : ClassTag](name: String, filter: T => Boolean, diagnostic: String): Seq[T] = {
       val filtered = internalFilter[T](x => x.name.toString == name && filter(x))
       filtered match {
-        case Seq() => throw new SemanticException(s"no $name $diagnostic found in ${tree.show[Summary]}")
+        case Seq() => throw new SemanticException(s"""no $diagnostic named "$name" found in ${tree.show[Summary]}""")
         case Seq(single) => List(single)
         case Seq(multi @ _*) => multi.toList
       }
