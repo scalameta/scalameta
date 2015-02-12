@@ -1246,7 +1246,8 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
         lazy val pviewBounds = {
           val gevidences = gsym.owner.paramss.flatten.filter(_.name.startsWith(g.nme.EVIDENCE_PARAM_PREFIX))
           val gviewBounds = gevidences.map(gev => gev.tpe.typeArgs match {
-            case List(gfrom, gto) if gfrom.typeSymbol == gsym => gto.typeSymbol
+            // TODO: hygiene!
+            case List(gfrom, gto) if gfrom.typeSymbol.name == gsym.name => gto.typeSymbol
             case _ => g.NoSymbol
           }).filter(_ != g.NoSymbol)
           gviewBounds.map(gbound => gbound.asType.rawcvt(g.Ident(gbound)))
@@ -1254,7 +1255,8 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
         lazy val pcontextBounds = {
           val gevidences = gsym.owner.paramss.flatten.filter(_.name.startsWith(g.nme.EVIDENCE_PARAM_PREFIX))
           val gcontextBounds = gevidences.map(gev => gev.tpe.typeArgs match {
-            case List(gtarg) if gtarg.typeSymbol == gsym => gev.tpe.typeSymbol
+            // TODO: hygiene!
+            case List(gtarg) if gtarg.typeSymbol.name == gsym.name => gev.tpe.typeSymbol
             case _ => g.NoSymbol
           }).filter(_ != g.NoSymbol)
           gcontextBounds.map(gbound => gbound.asType.rawcvt(g.Ident(gbound)))
