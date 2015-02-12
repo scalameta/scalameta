@@ -107,6 +107,26 @@
  Sequence Wildcard | `p"_*"`
  Pattern           | `p"$pat"`
 
+## Type Patterns (meta.Pat.Type)
+
+                   | Quasiquote
+-------------------|------------------------------
+ Wildcard          | `pt"_"`
+ Var               | `pt"name"`
+ Name              | `pt"`name`"`
+ Selection         | `pt"$ref.$tname"`
+ Projection        | `pt"$ptpe#$tname"`
+ Singleton         | `pt"$ref.type"`
+ Application       | `pt"$ptpe[..$ptpes]`
+ Infix Application | `pt"$ptpe $tname $ptpe"`
+ Function          | `pt"(..$ptpes) => $ptpe"`
+ Tuple             | `pt"(..$ptpes)"`
+ Compound          | `pt"..$ptpes { ..$stats }"`
+ Existential       | `pt"$ptpe forSome { ..$stats }"`
+ Annotate          | `pt"$ptpe ..@$expr"`
+ Placeholder       | `pt"_ >: $tpeopt <: tpeopt"`
+ Literal           | `pt"$lit"`
+
 ## Statements (meta.Stat)
 
             | Quasiquote
@@ -237,6 +257,7 @@
  meta.Mod            | `$mod`        | `mod`
  meta.Pat            | `$pat`        | `p`
  meta.Pat.Arg        | `$apat`       | `p`
+ meta.Pat.Type       | `$ptpe`       | `pt`
  meta.Importee       | `$importee`   | `importee`
  meta.Stat           | `$stat`       | `q`
  meta.Template       | `$template`   | `template`
