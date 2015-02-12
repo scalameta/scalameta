@@ -38,7 +38,7 @@ trait TreeHelpers {
       case Defn.Val(_, List(Pat.Var.Term(name)), _, _) => name
       case Defn.Var(_, List(Pat.Var.Term(name)), _, _) => name
       case tree: Member => tree
-      case _ => unreachable
+      case _ => sys.error(s"unsupported stat ${stat.productPrefix}: $stat")
     }
   }
 
@@ -49,7 +49,7 @@ trait TreeHelpers {
     def stat: Stat = member match {
       case tree: Term.Name if tree.isBinder => firstNonPatParent(tree).get.asInstanceOf[Stat]
       case stat: Stat => stat
-      case _ => unreachable
+      case _ => sys.error(s"unsupported member ${member.productPrefix}: $member")
     }
   }
 }
