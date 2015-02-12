@@ -20,6 +20,7 @@ package object meta extends MacroApi with SyntacticApi with SemanticApi with UIA
   @quasiquote[Type.Arg]('t)            implicit class TypeQuote(ctx: StringContext)
   @quasiquote[Type.Param]('tparam)     implicit class TypeParamQuote(ctx: StringContext)
   @quasiquote[Case, Pat.Arg]('p)       implicit class CaseOrPatternQuote(ctx: StringContext)
+  @quasiquote[Pat.Type]('pt)           implicit class PatternTypeQuote(ctx: StringContext)
   @quasiquote[Ctor.Ref, Term]('ctor)   implicit class CtorQuote(ctx: StringContext)
   @quasiquote[Template]('template)     implicit class TemplateQuote(ctx: StringContext)
   @quasiquote[Mod]('mod)               implicit class ModQuote(ctx: StringContext)

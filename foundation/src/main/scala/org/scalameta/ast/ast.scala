@@ -65,8 +65,7 @@ class AstMacros(val c: Context) {
             fullName == "scala.meta.internal.ast.Mod.PrivateThis" ||
             fullName == "scala.meta.internal.ast.Mod.PrivateWithin" ||
             fullName == "scala.meta.internal.ast.Mod.ProtectedThis" ||
-            fullName == "scala.meta.internal.ast.Mod.ProtectedWithin" ||
-            fullName == "scala.meta.internal.ast.Pat.Type.Name") {
+            fullName == "scala.meta.internal.ast.Mod.ProtectedWithin") {
           (rawparamss.head ++ List(denotParam, sigmaParam)) +: rawparamss.tail
         } else {
           rawparamss
