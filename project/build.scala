@@ -1,8 +1,9 @@
 import sbt._
 import Keys._
+import com.typesafe.sbt.SbtScalariform
 
 object build extends Build {
-  lazy val sharedSettings = Defaults.defaultSettings ++ Seq(
+  lazy val sharedSettings = Defaults.defaultSettings ++ SbtScalariform.scalariformSettings ++ Seq(
     scalaVersion := "2.11.5",
     crossVersion := CrossVersion.binary,
     version := "0.1.0-SNAPSHOT",
@@ -124,16 +125,17 @@ object build extends Build {
   ) settings (
     test in Test := (test in tests in Test).value,
     packagedArtifacts := Map.empty
-  ) aggregate (interpreter, tests)
+  ) aggregate (interpreter_, tests)
 
-  lazy val interpreter = Project(
-    id = "interpreter",
-    base = file("interpreter")
+  lazy val interpreter_ = Project(
+    id = "interpreter_",
+    base = file("core")
   ) settings (
     publishableSettings: _*
   ) settings (
     scalaSource in Compile <<= (baseDirectory in Compile)(base => base),
-    libraryDependencies += "org.scalameta" % "scalameta_2.11" % "0.1.0-SNAPSHOT"
+    libraryDependencies += "org.scalameta" % "scalameta_2.11" % "0.1.0-SNAPSHOT",
+    libraryDependencies += "org.scalameta" % "scalahost_2.11.5" % "0.1.0-SNAPSHOT"
   )
 
   lazy val sandbox = Project(
@@ -143,7 +145,7 @@ object build extends Build {
     sharedSettings: _*
   ) settings (
     scalaSource in Compile <<= (baseDirectory in Compile)(base => base)
-  ) dependsOn (interpreter)
+  ) dependsOn (interpreter_)
 
   lazy val tests = Project(
     id = "tests",
@@ -155,5 +157,5 @@ object build extends Build {
     libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
     libraryDependencies += "org.scalameta" % "scalameta_2.11" % "0.1.0-SNAPSHOT",
     packagedArtifacts := Map.empty
-  ) dependsOn (interpreter)
+  ) dependsOn (interpreter_)
 }

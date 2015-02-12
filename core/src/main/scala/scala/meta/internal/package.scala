@@ -1,7 +1,7 @@
 package scala.meta.internal
 
 import scala.meta._
-import scala.meta.internal.eval.interpreter._
+import scala.meta.internal.interpreter._
 
 package object eval {
   implicit class EvalOps(val term: Term) extends AnyVal {
