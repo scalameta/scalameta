@@ -1153,6 +1153,8 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
         // see LogicalSymbols.scala for more information
         def gsym = lsym.gsymbol
         def ginfo = gsym.moduleClass.orElse(gsym).infoIn(gpre)
+        def gtparams = ginfo.typeParams
+        def gvparamss = ginfo.paramss
         def gtpe = {
           // NOTE: strips off only those vparams and tparams that are part of the definition
           // we don't want to, for example, damage type lambdas
@@ -1160,10 +1162,10 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
             case g.NullaryMethodType(gret) =>
               loop(gret)
             case g.MethodType(gvparams, gret) =>
-              if (gvparams.forall(gsym => ginfo.paramss.flatten.exists(_ == gsym))) loop(gret)
+              if (gvparams.forall(gsym => gvparamss.flatten.exists(_ == gsym))) loop(gret)
               else gtpe
             case g.PolyType(gtparams, gret) =>
-              if (gtparams.forall(gsym => ginfo.typeParams.exists(_ == gsym))) loop(gret)
+              if (gtparams.forall(gsym => gtparams.exists(_ == gsym))) loop(gret)
               else gret
             case _ =>
               gtpe
@@ -1176,8 +1178,8 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
           case l.SecondaryCtor(gsym) => p.Ctor.Name(gsym.owner.name.toString).withDenot(gpre, gsym).withOriginal(gsym)
           case _ => gsym.precvt(gpre, g.Ident(gsym))
         }
-        def ptparams = ginfo.typeParams.map(gtparam => apply(g.NoPrefix, l.TypeParameter(gtparam)).asInstanceOf[p.Type.Param])
-        def pvparamss = ginfo.paramss.map(_.map(gvparam => apply(g.NoPrefix, l.TermParameter(gvparam)).asInstanceOf[p.Term.Param]))
+        def ptparams = gtparams.map(gtparam => apply(g.NoPrefix, l.TypeParameter(gtparam)).asInstanceOf[p.Type.Param])
+        def pvparamss = gvparamss.map(_.map(gvparam => apply(g.NoPrefix, l.TermParameter(gvparam)).asInstanceOf[p.Term.Param]))
         def ptpe = apply(gtpe)
         def ptpeBounds = gtpe match {
           case gtpe @ g.TypeBounds(glo, ghi) =>
