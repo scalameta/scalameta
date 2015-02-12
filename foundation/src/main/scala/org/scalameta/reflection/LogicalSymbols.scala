@@ -13,7 +13,12 @@ trait LogicalSymbols {
   import global.AnyNameOps
 
   implicit class RichLogicalSymbol(gsym: global.Symbol) {
-    def logical: l.Symbol = logicalSymbols(List(gsym)).head
+    def logical: l.Symbol = {
+      val gsym0 = gsym
+      val results = logicalSymbols(List(gsym0))
+      require(gsym0 != null && results != null && results.length == 1)
+      results.head
+    }
   }
 
   implicit class RichLogicalScope(gscope: global.Scope) {
