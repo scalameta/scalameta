@@ -100,7 +100,7 @@ trait Ensugar {
                   def summary(tree: Tree) = tree.toString.replace("\n", "").take(40)
                   Console.err.println(s"$name: ${summary(tree)} => ${summary(result)}")
                 }
-                if (result.tpe != tree.tpe) Some(duplicateAndKeepPositions(result).setType(tree.tpe))
+                if (result.tpe != tree.tpe && tree.tpe != null) Some(duplicateAndKeepPositions(result).setType(tree.tpe))
                 else Some(result)
               case _ =>
                 None
