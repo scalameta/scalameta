@@ -605,9 +605,9 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
         require(in.symbol.isType)
         val pname = in.symbol.asType.anoncvt(in)
         val tparams = tparams0.map(_.appendMetadata("originalContextBounds" -> Nil).appendMetadata("originalViewBounds" -> Nil))
-        val pcontextbounds = in.metadata("originalContextBounds").asInstanceOf[List[g.Tree]].map(_.cvt_! : p.Type)
         val pviewbounds = in.metadata("originalViewBounds").asInstanceOf[List[g.Tree]].map(_.cvt_! : p.Type)
-        p.Type.Param(pmods(in), pname, tparams.cvt, pcontextbounds, pviewbounds, ptypebounds(tpt))
+        val pcontextbounds = in.metadata("originalContextBounds").asInstanceOf[List[g.Tree]].map(_.cvt_! : p.Type)
+        p.Type.Param(pmods(in), pname, tparams.cvt, ptypebounds(tpt), pviewbounds, pcontextbounds)
       case in @ g.TypeDef(_, _, tparams0, tpt) if pt <:< typeOf[p.Stat] =>
         require(in.symbol.isType)
         val tparams = tparams0.map(_.appendMetadata("originalContextBounds" -> Nil).appendMetadata("originalViewBounds" -> Nil))
@@ -1243,14 +1243,6 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
           lcensoredDecls.map(lsym => toApproximateScalameta(gstatpre, lsym)).map(_.stat)
         }
         lazy val pmaybeDefault = if (gsym.hasFlag(DEFAULTPARAM)) Some(pbody) else None
-        lazy val pcontextBounds = {
-          val gevidences = gsym.owner.paramss.flatten.filter(_.name.startsWith(g.nme.EVIDENCE_PARAM_PREFIX))
-          val gcontextBounds = gevidences.map(gev => gev.tpe.typeArgs match {
-            case List(gtarg) if gtarg.typeSymbol == gsym => gev.tpe.typeSymbol
-            case _ => g.NoSymbol
-          }).filter(_ != g.NoSymbol)
-          gcontextBounds.map(gbound => gbound.asType.rawcvt(g.Ident(gbound)))
-        }
         lazy val pviewBounds = {
           val gevidences = gsym.owner.paramss.flatten.filter(_.name.startsWith(g.nme.EVIDENCE_PARAM_PREFIX))
           val gviewBounds = gevidences.map(gev => gev.tpe.typeArgs match {
@@ -1258,6 +1250,14 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
             case _ => g.NoSymbol
           }).filter(_ != g.NoSymbol)
           gviewBounds.map(gbound => gbound.asType.rawcvt(g.Ident(gbound)))
+        }
+        lazy val pcontextBounds = {
+          val gevidences = gsym.owner.paramss.flatten.filter(_.name.startsWith(g.nme.EVIDENCE_PARAM_PREFIX))
+          val gcontextBounds = gevidences.map(gev => gev.tpe.typeArgs match {
+            case List(gtarg) if gtarg.typeSymbol == gsym => gev.tpe.typeSymbol
+            case _ => g.NoSymbol
+          }).filter(_ != g.NoSymbol)
+          gcontextBounds.map(gbound => gbound.asType.rawcvt(g.Ident(gbound)))
         }
         val pmember: p.Member = lsym match {
           case l.None => unreachable
@@ -1280,7 +1280,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
           case _: l.TermBind => p.Pat.Var.Term(pname.asInstanceOf[p.Term.Name]).name
           case _: l.TypeBind => p.Pat.Var.Type(pname.asInstanceOf[p.Type.Name]).name
           case _: l.TermParameter => p.Term.Param(pmods, pname.asInstanceOf[p.Term.Name], Some(ptpe), pmaybeDefault)
-          case _: l.TypeParameter => p.Type.Param(pmods, pname.asInstanceOf[p.Type.Name], ptparams, pcontextBounds, pviewBounds, ptpeBounds)
+          case _: l.TypeParameter => p.Type.Param(pmods, pname.asInstanceOf[p.Type.Name], ptparams, ptpeBounds, pviewBounds, pcontextBounds)
           case _ => sys.error(s"unsupported symbol $lsym, designation = ${gsym.getClass}, flags = ${gsym.flags}")
         }
         pmember.withOriginal(lsym)
@@ -1402,7 +1402,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
             gsym.setInfo(g.genPolyType(gtparams(ptparams), gtypeBounds(ptypeBounds)))
           case (p.Defn.Type(_, _, ptparams, ptpe), l.Type(gsym)) =>
             gsym.setInfo(g.genPolyType(gtparams(ptparams), apply(ptpe)))
-          case (p.Type.Param(_, _, ptparams, pcontextBounds, pviewBounds, ptypeBounds), l.TypeParameter(gsym)) =>
+          case (p.Type.Param(_, _, ptparams, ptypeBounds, pviewBounds, pcontextBounds), l.TypeParameter(gsym)) =>
             require(pcontextBounds.isEmpty && pviewBounds.isEmpty)
             gsym.setInfo(g.genPolyType(gtparams(ptparams), gtypeBounds(ptypeBounds)))
           case (p.Term.Param(_, _, pdecltpe, pdefault), l.TermParameter(gsym)) =>
