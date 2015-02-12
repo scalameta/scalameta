@@ -23,7 +23,7 @@ import impl._
 // Mod.PrivateThis, Mod.PrivateWithin, Mod.ProtectedThis, Mod.ProtectedWithin.
 
 // In the implementation that follows we do the following to compare these refs:
-// 1) XXX.Name vs name-like XXX.Select, where XXX can be Term, Type or Ctor.Ref, are compared equal if they refer to the same defn
+// 1) XXX.Name vs name-like XXX.Select/Type.Project, where XXX can be Term, Type or Ctor.Ref, are compared equal if they refer to the same defn
 // 2) Term.This, Term.Super, as well as all PrivateXXX/ProtectedXXX are compared equal to themselves if they refer to the same defn
 // 3) YYY.ZZZ vs YYY.ZZZ for the rest of the refs are compared structurally
 
