@@ -53,9 +53,9 @@
 
             | Quasiquote
 ------------|------------------------------
- Named      | `aexpr"$name = $expr"`
- Repeated   | `aexpr"$expr: _*"`
- Expression | `aexpr"$expr"`
+ Named      | `arg"$name = $expr"`
+ Repeated   | `arg"$expr: _*"`
+ Expression | `arg"$expr"`
 
 ## Types (meta.Type)
 
