@@ -1937,8 +1937,8 @@ abstract class AbstractParser { parser =>
       else syntaxError("identifier or `_' expected")
     val tparams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
     val typeBounds = this.typeBounds()
-    val contextBounds = new ListBuffer[Type]
     val viewBounds = new ListBuffer[Type]
+    val contextBounds = new ListBuffer[Type]
     if (ctxBoundsAllowed) {
       while (token.is[`<%`]) {
         // TODO: syntax profile?
@@ -1956,7 +1956,7 @@ abstract class AbstractParser { parser =>
         contextBounds += typ()
       }
     }
-    Type.Param(mods, nameopt, tparams, contextBounds.toList, viewBounds.toList, typeBounds)
+    Type.Param(mods, nameopt, tparams, typeBounds, viewBounds.toList, contextBounds.toList)
   }
 
   /** {{{

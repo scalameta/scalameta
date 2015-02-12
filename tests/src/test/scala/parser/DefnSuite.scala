@@ -41,7 +41,7 @@ class DefnSuite extends ParseSuite {
 
   test("type F[T] = List[T]") {
     val Defn.Type(Nil, Type.Name("F"),
-                  Type.Param(Nil, Type.Name("T"), Nil, Nil, Nil, Type.Bounds(None, None)) :: Nil,
+                  Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil) :: Nil,
                   Type.Apply(Type.Name("List"), Type.Name("T") :: Nil)) = templStat("type F[T] = List[T]")
   }
 
@@ -51,20 +51,20 @@ class DefnSuite extends ParseSuite {
 
   test("def x[A <: B] = 2") {
     val Defn.Def(Nil, Term.Name("x"),
-                 Type.Param(Nil, Type.Name("A"), Nil, Nil, Nil, Type.Bounds(None, Some(Type.Name("B")))) :: Nil,
+                 Type.Param(Nil, Type.Name("A"), Nil, Type.Bounds(None, Some(Type.Name("B"))), Nil, Nil) :: Nil,
                  Nil, None, Lit.Int(2)) = templStat("def x[A <: B] = 2")
   }
 
   test("def x[A <% B] = 2") {
     val Defn.Def(Nil, Term.Name("x"),
-                 Type.Param(Nil, Type.Name("A"), Nil, Nil, Type.Name("B") :: Nil, Type.Bounds(None, None)) :: Nil,
+                 Type.Param(Nil, Type.Name("A"), Nil, Type.Bounds(None, None), Type.Name("B") :: Nil, Nil) :: Nil,
                  Nil, None, Lit.Int(2)) = templStat("def x[A <% B] = 2")
   }
 
 
   test("def x[A: B] = 2") {
     val Defn.Def(Nil, Term.Name("x"),
-                 Type.Param(Nil, Type.Name("A"), Nil, Type.Name("B") :: Nil, Nil, Type.Bounds(None, None)) :: Nil,
+                 Type.Param(Nil, Type.Name("A"), Nil, Type.Bounds(None, None), Nil, Type.Name("B") :: Nil) :: Nil,
                  Nil, None, Lit.Int(2)) = templStat("def x[A: B] = 2")
   }
 

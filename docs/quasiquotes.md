@@ -166,7 +166,7 @@
                 | Quasiquote
 ----------------|-------------------------------------------------
  Term Param     | `param"..$mods $name: $atpeopt = $defaultopt"`
- Type Param     | `param"..$mods type $tname[..$tparams] <% ..$tpes : ..$tpes >: $tpeopt <: $tpeopt"`
+ Type Param     | `param"..$mods type $tname[..$tparams] >: $tpeopt <: $tpeopt <% ..$tpes : ..$tpes"`
 
 ## Constructors (meta.Member) and Constructor References (meta.Ctor.Ref and meta.Term)
 
