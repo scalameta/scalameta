@@ -260,8 +260,15 @@ trait Ensugar {
 
         object ClassOfWithOriginal extends SingleEnsugarer {
           def ensugar(tree: Tree): Option[Tree] = (tree, tree.metadata.get("originalClassOf").map(_.asInstanceOf[Tree].duplicate)) match {
-            case (tree @ Literal(Constant(tpe: Type)), Some(original)) => Some(original.setType(tree.tpe))
-            case _ => None
+            case (tree @ Literal(Constant(tpe: Type)), Some(original)) =>
+              Some(original.setType(tree.tpe))
+            case (tree @ Literal(Constant(tpe: Type)), None) =>
+              // NOTE: unfortunately, there are places in the compiler that we can't override (e.g. addThrowsAnnotation)
+              // therefore, we have to come up with something even if we don't have an original
+              val classOf = Ident(Predef_classOf).setType(Predef_classOf.info)
+              Some(TypeApply(classOf, List(Ident(tpe.typeSymbol).setType(tpe))).setType(ClassType(tpe)))
+            case _ =>
+              None
           }
         }
 
