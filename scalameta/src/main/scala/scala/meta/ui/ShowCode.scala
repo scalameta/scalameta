@@ -323,11 +323,12 @@ object Code {
         case (part, arg)                                => s(part, "${", arg, "}")
       }
       m(SimplePattern, s(t.prefix, "\"", r(zipped), t.parts.last, "\""))
-    case t: Pat.Typed            => m(Pattern1, s(p(SimplePattern, t.lhs), kw(":"), " ", p(Typ, t.rhs)))
+    case t: Pat.Typed            => m(Pattern1, s(p(SimplePattern, t.lhs), kw(":"), " ", p(CompoundTyp, t.rhs)))
     case _: Pat.Arg.SeqWildcard  => m(SimplePattern, kw("_*"))
 
     // Pat.Type
     // TODO: fix copy/paste with Type
+    case t: Pat.Type.Wildcard    => m(SimpleTyp, s("_"))
     case t: Pat.Var.Type         => m(SimpleTyp, s(t.name.value))
     case t: Pat.Type.Project     => m(SimpleTyp, s(t.qual, kw("#"), t.name))
     case t: Pat.Type.Apply       => m(SimpleTyp, s(p(SimpleTyp, t.tpe), kw("["), r(t.args.map(arg => p(Typ, arg)), ", "), kw("]")))

@@ -322,4 +322,24 @@ class ScalaSuite extends ParseSuite {
     assert(tree4.show[Raw] === "Pat.Extract(Term.Name(\"f\"), Nil, List(Term.Name(\"X\")))")
     assert(tree4.show[Code] === "f(X)")
   }
+
+  test("case _: Int") {
+    assert(pat("_: Int").show[Code] === "_: Int")
+  }
+
+  test("case _: t") {
+    assert(pat("_: t").show[Code] === "_: t")
+  }
+
+  test("case _: F[t]") {
+    assert(pat("_: F[t]").show[Code] === "_: F[t]")
+  }
+
+  test("case _: F[_]") {
+    assert(pat("_: F[_]").show[Code] === "_: F[_]")
+  }
+
+  test("case _: (t Map u)") {
+    assert(pat("_: (t Map u)").show[Code] === "_: (t Map u)")
+  }
 }
