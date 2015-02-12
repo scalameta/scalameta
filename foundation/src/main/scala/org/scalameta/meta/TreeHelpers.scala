@@ -33,10 +33,10 @@ trait TreeHelpers {
       case _ => Nil
     }
     def member: Member = stat match {
-      case Decl.Val(_, List(Pat.Var(name)), _) => name
-      case Decl.Var(_, List(Pat.Var(name)), _) => name
-      case Defn.Val(_, List(Pat.Var(name)), _, _) => name
-      case Defn.Var(_, List(Pat.Var(name)), _, _) => name
+      case Decl.Val(_, List(Pat.Var.Term(name)), _) => name
+      case Decl.Var(_, List(Pat.Var.Term(name)), _) => name
+      case Defn.Val(_, List(Pat.Var.Term(name)), _, _) => name
+      case Defn.Var(_, List(Pat.Var.Term(name)), _, _) => name
       case tree: Member => tree
       case _ => unreachable
     }
@@ -49,6 +49,7 @@ trait TreeHelpers {
     def stat: Stat = member match {
       case tree: Term.Name if tree.isBinder => firstNonPatParent(tree).get.asInstanceOf[Stat]
       case stat: Stat => stat
+      case _ => unreachable
     }
   }
 }

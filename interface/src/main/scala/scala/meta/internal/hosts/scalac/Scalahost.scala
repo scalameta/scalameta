@@ -229,6 +229,56 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
     val original = ptpt.scratchpad.collect{case ScratchpadDatum.Original(goriginal) => goriginal}.head
     result.appendScratchpad(ScratchpadDatum.Original(original))
   }
+  private def pctorcalltpe(pctorcall: p.Term): p.Type = {
+    def loop(pctorref: p.Term): p.Type = {
+      val result = pctorref match {
+        case p.Ctor.Name(value) => p.Type.Name(value).withDenot(pctorref.originalPre.requireGet, pctorref.originalSym.requireGet)
+        case p.Ctor.Ref.Select(qual, name) => p.Type.Select(qual, loop(name).require[p.Type.Name])
+        case p.Ctor.Ref.Project(qual, name) => p.Type.Project(qual, loop(name).require[p.Type.Name])
+        case p.Ctor.Ref.Function(_) => unreachable
+        case p.Term.ApplyType(p.Ctor.Ref.Function(_), targs) => p.Type.Function(targs.init, targs.last)
+        case p.Term.ApplyType(callee, targs) => p.Type.Apply(loop(callee), targs)
+        case p.Term.Annotate(annottee, annots) => p.Type.Annotate(loop(annottee), annots)
+        case _ => unreachable
+      }
+      result.withOriginal(pctorref.originalTree.requireGet)
+    }
+    pctorcall match {
+      case p.Term.Apply(callee, _) => pctorcalltpe(callee)
+      case _ => loop(pctorcall)
+    }
+  }
+  private def pctorcallargs(pctorcall: p.Term): Seq[Seq[p.Term.Arg]] = {
+    pctorcall match {
+      case _: p.Ctor.Ref => Nil
+      case p.Term.ApplyType(callee, _) => pctorcallargs(callee)
+      case p.Term.Apply(callee, args) => pctorcallargs(callee) :+ args
+      case p.Term.Annotate(annottee, _) => annottee.ctorArgss
+      case _ => unreachable
+    }
+  }
+  private def ppattpe(ptpe: p.Type): p.Pat.Type = {
+    def loop(ptpe: p.Type): p.Pat.Type = {
+      val result = ptpe match {
+        case ptpe: p.Type.Name => ptpe
+        case ptpe: p.Type.Select => ptpe
+        case p.Type.Project(pqual, pname) => p.Pat.Type.Project(loop(pqual), pname)
+        case ptpe: p.Type.Singleton => ptpe
+        case p.Type.Apply(ptpe, args) => p.Pat.Type.Apply(loop(ptpe), args.map(loop))
+        case p.Type.ApplyInfix(plhs, pop, prhs) => p.Pat.Type.ApplyInfix(loop(plhs), pop, loop(prhs))
+        case p.Type.Function(pparams, pres) => p.Pat.Type.Function(pparams.map(param => loop(param.require[p.Type])), loop(pres))
+        case p.Type.Tuple(pelements) => p.Pat.Type.Tuple(pelements.map(loop))
+        case p.Type.Compound(ptpes, prefinement) => p.Pat.Type.Compound(ptpes.map(loop), prefinement)
+        case p.Type.Existential(ptpe, pquants) => p.Pat.Type.Existential(loop(ptpe), pquants)
+        case p.Type.Annotate(ptpe, pannots) => p.Pat.Type.Annotate(loop(ptpe), pannots)
+        case ptpe: p.Type.Placeholder => ptpe
+        case ptpe: p.Lit => ptpe
+      }
+      val original = ptpe.scratchpad.collect{case ScratchpadDatum.Original(goriginal) => goriginal}.head
+      result.appendScratchpad(ScratchpadDatum.Original(original))
+    }
+    loop(ptpe)
+  }
 
   // TODO: remember positions. actually, in scalac they are almost accurate, so it would be a shame to discard them
   val hsymToNativePmemberCache = mutable.Map[h.Symbol, p.Member]()
@@ -238,34 +288,6 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
         val pcore = pctorref(gtpt.cvt_! : p.Type, gctor)
         val pargss = gargss.map(_.map(parg))
         pargss.foldLeft(pcore)((pcurr, pargs) => p.Term.Apply(pcurr, pargs)).withOriginal(in)
-      }
-      def pctorcalltpe(pctorcall: p.Term): p.Type = {
-        def loop(pctorref: p.Term): p.Type = {
-          val result = pctorref match {
-            case p.Ctor.Name(value) => p.Type.Name(value).withDenot(pctorref.originalPre.requireGet, pctorref.originalSym.requireGet)
-            case p.Ctor.Ref.Select(qual, name) => p.Type.Select(qual, loop(name).require[p.Type.Name])
-            case p.Ctor.Ref.Project(qual, name) => p.Type.Project(qual, loop(name).require[p.Type.Name])
-            case p.Ctor.Ref.Function(_) => unreachable
-            case p.Term.ApplyType(p.Ctor.Ref.Function(_), targs) => p.Type.Function(targs.init, targs.last)
-            case p.Term.ApplyType(callee, targs) => p.Type.Apply(loop(callee), targs)
-            case p.Term.Annotate(annottee, annots) => p.Type.Annotate(loop(annottee), annots)
-            case _ => unreachable
-          }
-          result.withOriginal(pctorref.originalTree.requireGet)
-        }
-        pctorcall match {
-          case p.Term.Apply(callee, _) => pctorcalltpe(callee)
-          case _ => loop(pctorcall)
-        }
-      }
-      def pctorcallargs(pctorcall: p.Term): Seq[Seq[p.Term.Arg]] = {
-        pctorcall match {
-          case _: p.Ctor.Ref => Nil
-          case p.Term.ApplyType(callee, _) => pctorcallargs(callee)
-          case p.Term.Apply(callee, args) => pctorcallargs(callee) :+ args
-          case p.Term.Annotate(annottee, _) => annottee.ctorArgss
-          case _ => unreachable
-        }
       }
       def pfakector(gparent: g.MemberDef): p.Ctor.Primary = {
         val name = p.Ctor.Name(gparent.name.toString).withDenot(gparent.symbol)
@@ -555,11 +577,12 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
         require(in.symbol.isTerm)
         require(in.symbol.isDeferred ==> rhs.isEmpty)
         require(in.symbol.hasFlag(DEFAULTINIT) ==> rhs.isEmpty)
+        val pname = p.Pat.Var.Term(in.symbol.asTerm.rawcvt(in))
         (in.symbol.isDeferred, in.symbol.isMutable || in.mods.isMutable) match {
-          case (true, false) => p.Decl.Val(pmods(in), List(p.Pat.Var(in.symbol.asTerm.rawcvt(in))), tpt.cvt_!)
-          case (true, true) => p.Decl.Var(pmods(in), List(p.Pat.Var(in.symbol.asTerm.rawcvt(in))), tpt.cvt_!)
-          case (false, false) => p.Defn.Val(pmods(in), List(p.Pat.Var(in.symbol.asTerm.rawcvt(in))), if (tpt.nonEmpty) Some[p.Type](tpt.cvt_!) else None, rhs.cvt_!)
-          case (false, true) => p.Defn.Var(pmods(in), List(p.Pat.Var(in.symbol.asTerm.rawcvt(in))), if (tpt.nonEmpty) Some[p.Type](tpt.cvt_!) else None, if (rhs.nonEmpty) Some[p.Term](rhs.cvt_!) else None)
+          case (true, false) => p.Decl.Val(pmods(in), List(pname), tpt.cvt_!)
+          case (true, true) => p.Decl.Var(pmods(in), List(pname), tpt.cvt_!)
+          case (false, false) => p.Defn.Val(pmods(in), List(pname), if (tpt.nonEmpty) Some[p.Type](tpt.cvt_!) else None, rhs.cvt_!)
+          case (false, true) => p.Defn.Var(pmods(in), List(pname), if (tpt.nonEmpty) Some[p.Type](tpt.cvt_!) else None, if (rhs.nonEmpty) Some[p.Term](rhs.cvt_!) else None)
         }
       case in @ g.DefDef(_, _, _, _, _, _) =>
         require(in.symbol.isMethod)
@@ -642,26 +665,23 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
       case g.Ident(g.nme.WILDCARD) =>
         p.Pat.Wildcard()
       case g.Bind(g.tpnme.WILDCARD, g.EmptyTree) =>
-        // TODO: we can't do p.Pat.Wildcard(), because we expect a meta.Type here
-        // NOTE: it looks like bounds in type wildcards aren't allowed by Scala's typechecker
-        // so we just insert empty type bounds here
-        p.Type.Placeholder(p.Type.Bounds(None, None))
+        p.Pat.Type.Wildcard()
       case g.Star(g.Ident(g.nme.WILDCARD)) =>
         p.Pat.Arg.SeqWildcard()
       case in @ g.Bind(_, g.Ident(g.nme.WILDCARD)) =>
         // TODO: discern `case x => ...` and `case x @ _ => ...`
         require(in.symbol.isTerm)
-        p.Pat.Var(in.symbol.asTerm.rawcvt(in))
+        p.Pat.Var.Term(in.symbol.asTerm.rawcvt(in))
       case in @ g.Bind(_, g.EmptyTree) =>
         require(in.symbol.isType)
-        in.symbol.asType.rawcvt(in)
+        p.Pat.Var.Type(in.symbol.asType.rawcvt(in))
       case in @ g.Bind(_, g.Typed(g.Ident(g.nme.WILDCARD), tpt)) =>
         require(in.symbol.isTerm)
-        p.Pat.Typed(p.Pat.Var(in.symbol.asTerm.rawcvt(in)), tpt.cvt_!)
+        p.Pat.Typed(p.Pat.Var.Term(in.symbol.asTerm.rawcvt(in)), tpt.cvt_!)
       case in @ g.Bind(name, tree) =>
         require(in.symbol.isTerm)
         require(name == in.symbol.name)
-        p.Pat.Bind(p.Pat.Var(in.symbol.asTerm.rawcvt(in)), tree.cvt_!)
+        p.Pat.Bind(p.Pat.Var.Term(in.symbol.asTerm.rawcvt(in)), tree.cvt_!)
       case g.Function(params, body) =>
         // NOTE: need to be careful to discern `_ + 2` and `_ => 2`
         // because in both cases parameter names are `x$...`
@@ -840,6 +860,9 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
       case g.Annotated(annot, arg) if pt <:< typeOf[p.Type] =>
         val (parg, pannots) = (arg.cvt_! : p.Type) match { case p.Type.Annotate(arg, annots) => (arg, annots); case arg => (arg, Nil) }
         p.Type.Annotate(parg, pannots :+ pannot(annot))
+      case g.Annotated(annot, arg) if pt <:< typeOf[p.Pat.Type] =>
+        val (parg, pannots) = (arg.cvt_! : p.Pat.Type) match { case p.Pat.Type.Annotate(arg, annots) => (arg, annots); case arg => (arg, Nil) }
+        p.Pat.Type.Annotate(parg, pannots :+ pannot(annot))
       case g.ArrayValue(_, _) =>
         unreachable
       case g.InjectDerivedValue(_) =>
@@ -854,11 +877,16 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
         unreachable
       case in @ g.SingletonTypeTree(ref) =>
         p.Type.Singleton(ref.cvt_!)
-      case in @ g.CompoundTypeTree(templ) =>
+      case in @ g.CompoundTypeTree(templ) if pt <:< typeOf[p.Type] =>
         val template @ p.Template(early, parents, _, stats) = templ.cvt : p.Template
         require(template.isCompoundTypeCompatible)
         p.Type.Compound(parents.map(pctorcalltpe), stats.getOrElse(Nil))
-      case in @ g.AppliedTypeTree(tpt, args) =>
+      case in @ g.CompoundTypeTree(templ) if pt <:< typeOf[p.Pat.Type] =>
+        // TODO: this doesn't handle situations like `List(42) match { case _: (List[t] { def head: Int }) => }`
+        val template @ p.Template(early, parents, _, stats) = templ.cvt : p.Template
+        require(template.isCompoundTypeCompatible)
+        p.Pat.Type.Compound(parents.map(pctorcalltpe).map(ppattpe), stats.getOrElse(Nil))
+      case in @ g.AppliedTypeTree(tpt, args) if pt <:< typeOf[p.Type] =>
         // TODO: infer whether that was really Apply, Function or Tuple
         // TODO: precisely infer whether that was infix application or normal application
         if (g.definitions.FunctionClass.seq.contains(tpt.tpe.typeSymbolDirect)) p.Type.Function(args.init.cvt_!, args.last.cvt_!)
@@ -867,22 +895,25 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
           case g.AppliedTypeTree(tpt @ g.Ident(name), List(lhs, rhs)) if name.looksLikeInfix => p.Type.ApplyInfix(lhs.cvt_!, tpt.cvt_!, rhs.cvt_!)
           case _ => p.Type.Apply(tpt.cvt_!, args.cvt_!)
         }
-      case in @ g.ExistentialTypeTree(tpt, whereClauses) =>
-        val isShorthand = whereClauses.exists(_.symbol.isAnonymous)
-        object rememberBounds extends g.Transformer {
-          override def transform(tree: g.Tree): g.Tree = tree match {
-            case tree @ g.Ident(_) =>
-              whereClauses.find(_.symbol == tree.symbol) match {
-                case Some(g.TypeDef(_, _, _, tpt)) => tree.appendMetadata("originalBounds" -> tpt)
-                case _ => super.transform(tree)
-              }
-            case _ =>
-              super.transform(tree)
-          }
+      case in @ g.AppliedTypeTree(tpt, args) if pt <:< typeOf[p.Pat.Type] =>
+        // TODO: infer whether that was really Apply, Function or Tuple
+        // TODO: precisely infer whether that was infix application or normal application
+        if (g.definitions.FunctionClass.seq.contains(tpt.tpe.typeSymbolDirect)) p.Pat.Type.Function(args.init.cvt_!, args.last.cvt_!)
+        else if (g.definitions.TupleClass.seq.contains(tpt.tpe.typeSymbolDirect) && args.length > 1) p.Pat.Type.Tuple(args.cvt_!)
+        else in match {
+          case g.AppliedTypeTree(tpt @ g.Ident(name), List(lhs, rhs)) if name.looksLikeInfix => p.Pat.Type.ApplyInfix(lhs.cvt_!, tpt.cvt_!, rhs.cvt_!)
+          case _ => p.Pat.Type.Apply(tpt.cvt_!, args.cvt_!)
         }
-        if (isShorthand) (rememberBounds.transform(tpt).cvt_! : p.Type) else p.Type.Existential(tpt.cvt_!, whereClauses.cvt_!)
-      case in @ g.SelectFromTypeTree(qual, name) =>
+      case in @ g.ExistentialTypeTree(tpt, whereClauses) if pt <:< typeOf[p.Type] =>
+        val isShorthand = whereClauses.exists(_.symbol.isAnonymous)
+        if (isShorthand) (in.shorthand.cvt_! : p.Type) else p.Type.Existential(tpt.cvt_!, whereClauses.cvt_!)
+      case in @ g.ExistentialTypeTree(tpt, whereClauses) if pt <:< typeOf[p.Pat.Type] =>
+        val isShorthand = whereClauses.exists(_.symbol.isAnonymous)
+        if (isShorthand) (in.shorthand.cvt_! : p.Pat.Type) else p.Pat.Type.Existential(tpt.cvt_!, whereClauses.cvt_!)
+      case in @ g.SelectFromTypeTree(qual, name) if pt <:< typeOf[p.Type] =>
         p.Type.Project(qual.cvt_!, in.symbol.asType.precvt(qual.tpe, in))
+      case in @ g.SelectFromTypeTree(qual, name) if pt <:< typeOf[p.Pat.Type] =>
+        p.Pat.Type.Project(qual.cvt_!, in.symbol.asType.precvt(qual.tpe, in))
       case in @ g.TypeBoundsTree(_, _) =>
         unreachable
       // NOTE: this derivation is ambiguous because of at least g.ValDef, g.TypeDef and g.Typed
@@ -1181,12 +1212,12 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
         }
         val pmember: p.Member = lsym match {
           case l.None => unreachable
-          case _: l.AbstractVal => p.Decl.Val(pmods, List(p.Pat.Var(pname.asInstanceOf[p.Term.Name])), ptpe.asInstanceOf[p.Type]).member
-          case _: l.AbstractVar => p.Decl.Var(pmods, List(p.Pat.Var(pname.asInstanceOf[p.Term.Name])), ptpe.asInstanceOf[p.Type]).member
+          case _: l.AbstractVal => p.Decl.Val(pmods, List(p.Pat.Var.Term(pname.asInstanceOf[p.Term.Name])), ptpe.asInstanceOf[p.Type]).member
+          case _: l.AbstractVar => p.Decl.Var(pmods, List(p.Pat.Var.Term(pname.asInstanceOf[p.Term.Name])), ptpe.asInstanceOf[p.Type]).member
           case _: l.AbstractDef => p.Decl.Def(pmods, pname.asInstanceOf[p.Term.Name], ptparams, pvparamss, ptpe.asInstanceOf[p.Type])
           case _: l.AbstractType => p.Decl.Type(pmods, pname.asInstanceOf[p.Type.Name], ptparams, ptpeBounds)
-          case _: l.Val => p.Defn.Val(pmods, List(p.Pat.Var(pname.asInstanceOf[p.Term.Name])), Some(ptpe.asInstanceOf[p.Type]), pbody).member
-          case _: l.Var => p.Defn.Var(pmods, List(p.Pat.Var(pname.asInstanceOf[p.Term.Name])), Some(ptpe.asInstanceOf[p.Type]), pmaybeBody).member
+          case _: l.Val => p.Defn.Val(pmods, List(p.Pat.Var.Term(pname.asInstanceOf[p.Term.Name])), Some(ptpe.asInstanceOf[p.Type]), pbody).member
+          case _: l.Var => p.Defn.Var(pmods, List(p.Pat.Var.Term(pname.asInstanceOf[p.Term.Name])), Some(ptpe.asInstanceOf[p.Type]), pmaybeBody).member
           case _: l.Def => p.Defn.Def(pmods, pname.asInstanceOf[p.Term.Name], ptparams, pvparamss, Some(ptpe.asInstanceOf[p.Type]), pbody)
           case _: l.Macro => p.Defn.Def(pmods, pname.asInstanceOf[p.Term.Name], ptparams, pvparamss, Some(ptpe.asInstanceOf[p.Type]), pbody)
           case _: l.Type => p.Defn.Type(pmods, pname.asInstanceOf[p.Type.Name], ptparams, ptpe.asInstanceOf[p.Type])

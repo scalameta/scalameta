@@ -336,9 +336,15 @@ package object internal {
           (prelude ++ clauses).foreach(_.foreach(sub => if (sub.symbol != null) expected -= sub.symbol))
           val unmatched = expected.filter(sym => {
             sym.fullName != "scala.meta.internal.ast.Pat.Interpolate" &&
-            sym.fullName != "scala.meta.internal.ast.Ctor.Ref.Name" // Ctor.Name is an alias to Ctor.Ref.Name, and it is very well used in the converter
+            sym.fullName != "scala.meta.internal.ast.Ctor.Ref.Name" && // Ctor.Name is an alias to Ctor.Ref.Name, and it is very well used in the converter
+            sym.fullName != "scala.meta.internal.ast.Ctor.Name" && // handled in a helper outside the @converter
+            sym.fullName != "scala.meta.internal.ast.Ctor.Ref.Select" && // handled in a helper outside the @converter
+            sym.fullName != "scala.meta.internal.ast.Ctor.Ref.Project" && // handled in a helper outside the @converter
+            sym.fullName != "scala.meta.internal.ast.Ctor.Ref.Function" && // handled in a helper outside the @converter
+            sym.fullName != "scala.meta.internal.ast.Type.Name" // handled in a helper outside the @converter
           })
-          if (unmatched.nonEmpty) c.error(c.enclosingPosition, "@converter is not exhaustive in its outputs; missing: " + unmatched)
+          val s_unmatched = unmatched.map(sym => sym.fullName.replace("scala.meta.internal.ast.", "")).mkString(", ")
+          if (unmatched.nonEmpty) c.error(c.enclosingPosition, "@converter is not exhaustive in its outputs; missing: " + s_unmatched)
           unmatched.isEmpty
         }
         // val tups = clauses.map{ case CaseDef(pat, _, body) => (pat.tpe.toString.replace("HostContext.this.", ""), cleanLub(List(precisetpe(body))).toString.replace("scala.meta.", "p."), precisetpe(body).toString.replace("scala.meta.", "p.")) }
