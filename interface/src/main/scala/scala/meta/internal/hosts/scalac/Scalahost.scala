@@ -966,7 +966,8 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
             })
           } else {
             def loop(garg: g.Tree): p.Term = toScalameta(ensugar(garg), classOf[p.Term])
-            gargs.map(loop)
+            if (gannot.atp.typeSymbol == g.definitions.ThrowsClass) Nil
+            else gargs.map(loop)
           }
         }
         val pcore = pctorref(patp, gctor)
