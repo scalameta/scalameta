@@ -187,6 +187,22 @@ trait LogicalSymbols {
       def name = symbol.name.toString
     }
 
+    // > Nil match { case x => ??? }
+    // value x, 'x', class TermSymbol, flags = 0
+    // NOTE: this symbol can't be distinguished from a local val
+    // so I've patched the analyzer to attach metadata that would allow that
+    case class TermBind(symbol: global.Symbol) extends LogicalSymbol {
+      def name = symbol.name.toString
+    }
+
+    // > Nil match { case _: List[t] => ??? }
+    // type t, 't', class AbstractTypeSymbol, flags = 16 (DEFERRED)
+    // NOTE: this symbol can't be distinguished from a local type
+    // so I've patched the analyzer to attach metadata that would allow that
+    case class TypeBind(symbol: global.Symbol) extends LogicalSymbol {
+      def name = symbol.name.toString
+    }
+
     // > class C(x: Int)
     // value x, 'x', class TermSymbol, flags = 537395204 (PRIVATE | LOCAL | PARAMACCESSOR)
     // constructor C, class MethodSymbol, flags = 64 (METHOD)
@@ -222,9 +238,11 @@ trait LogicalSymbols {
         } else if (gsym.isTerm && !gsym.isMethod && !gsym.isModule) {
           if (gsym.hasFlag(PARAM)) l.TermParameter(gsym)
           else {
-            require(gsym.hasFlag(PRIVATE | LOCAL))
             if (gsym.hasFlag(MUTABLE)) l.Var(gsym, gsym.getter, gsym.setter)
-            else l.Val(gsym, gsym.getter)
+            else {
+              if (gsym.metadata.get("isPatternVariable").map(_.asInstanceOf[Boolean]).getOrElse(false)) l.TermBind(gsym)
+              else l.Val(gsym, gsym.getter)
+            }
           }
         } else if (gsym.isMethod) {
           require(gsym.hasFlag(METHOD))
@@ -264,7 +282,8 @@ trait LogicalSymbols {
               if (gsym.name.endsWith(global.nme.SINGLETON_SUFFIX)) l.AbstractVal(gsym)
               else l.AbstractType(gsym)
             } else {
-              l.AbstractType(gsym)
+              if (gsym.metadata.get("isPatternVariable").map(_.asInstanceOf[Boolean]).getOrElse(false)) l.TypeBind(gsym)
+              else l.AbstractType(gsym)
             }
           } else {
             l.Type(gsym)

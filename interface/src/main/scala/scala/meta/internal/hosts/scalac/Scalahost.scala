@@ -1228,6 +1228,8 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
           case _: l.PackageObject => p.Pkg.Object(pmods, pname.asInstanceOf[p.Term.Name], pctor, ptemplate)
           case _: l.PrimaryCtor => p.Ctor.Primary(pmods, pname.asInstanceOf[p.Ctor.Name], pvparamss)
           case _: l.SecondaryCtor => p.Ctor.Secondary(pmods, pname.asInstanceOf[p.Ctor.Name], pvparamss, pbody)
+          case _: l.TermBind => p.Pat.Var.Term(pname.asInstanceOf[p.Term.Name]).name
+          case _: l.TypeBind => p.Pat.Var.Type(pname.asInstanceOf[p.Type.Name]).name
           case _: l.TermParameter => p.Term.Param(pmods, pname.asInstanceOf[p.Term.Name], Some(ptpe), pmaybeDefault)
           case _: l.TypeParameter => p.Type.Param(pmods, pname.asInstanceOf[p.Type.Name], ptparams, pcontextBounds, pviewBounds, ptpeBounds)
           case _ => sys.error(s"unsupported symbol $lsym, designation = ${gsym.getClass}, flags = ${gsym.flags}")

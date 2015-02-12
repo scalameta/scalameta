@@ -1461,6 +1461,63 @@ trait ScalahostAnalyzer extends NscAnalyzer with GlobalToolkit {
           Typed(arg1, resultingTypeTree(atype)) setPos tree.pos setType atype
         }
       }
+      def typedBind(tree: Bind): Tree = {
+        val name = tree.name
+        val body = tree.body
+        name match {
+          case name: TypeName  => assert(body == EmptyTree, context.unit + " typedBind: " + name.debugString + " " + body + " " + body.getClass)
+            val sym =
+              if (tree.symbol != NoSymbol) tree.symbol
+              else {
+                val result = {
+                  if (isFullyDefined(pt)) context.owner.newAliasType(name, tree.pos) setInfo pt
+                  else context.owner.newAbstractType(name, tree.pos) setInfo TypeBounds.empty
+                }
+                // NOTE: this is a meaningful difference from the code in Typers.scala
+                //-result
+                result.appendMetadata("isPatternVariable" -> true)
+              }
+
+            if (name != tpnme.WILDCARD) namer.enterInScope(sym)
+            else context.scope.enter(sym)
+
+            tree setSymbol sym setType sym.tpeHK
+
+          case name: TermName  =>
+            val sym =
+              if (tree.symbol != NoSymbol) tree.symbol
+              else {
+                // NOTE: this is a meaningful difference from the code in Typers.scala
+                //-context.owner.newValue(name, tree.pos)
+                context.owner.newValue(name, tree.pos).appendMetadata("isPatternVariable" -> true)
+              }
+
+            if (name != nme.WILDCARD) {
+              if (context.inPatAlternative)
+                VariableInPatternAlternativeError(tree)
+
+              namer.enterInScope(sym)
+            }
+
+            val body1 = typed(body, mode, pt)
+            val impliedType = patmat.binderTypeImpliedByPattern(body1, pt, sym) // SI-1503, SI-5204
+            val symTp =
+              if (treeInfo.isSequenceValued(body)) seqType(impliedType)
+              else impliedType
+            sym setInfo symTp
+
+            // have to imperatively set the symbol for this bind to keep it in sync with the symbols used in the body of a case
+            // when type checking a case we imperatively update the symbols in the body of the case
+            // those symbols are bound by the symbols in the Binds in the pattern of the case,
+            // so, if we set the symbols in the case body, but not in the patterns,
+            // then re-type check the casedef (for a second try in typedApply for example -- SI-1832),
+            // we are no longer in sync: the body has symbols set that do not appear in the patterns
+            // since body1 is not necessarily equal to body, we must return a copied tree,
+            // but we must still mutate the original bind
+            tree setSymbol sym
+            treeCopy.Bind(tree, name, body1) setSymbol sym setType body1.tpe
+        }
+      }
       // ========================
       // NOTE: The code above is almost completely copy/pasted from Typers.scala.
       // The changes there are mostly mechanical (indentation), but those, which are non-trivial (e.g. appending metadata to trees)
@@ -1479,6 +1536,7 @@ trait ScalahostAnalyzer extends NscAnalyzer with GlobalToolkit {
           case tree @ Typed(expr, tpt) => typedTyped(tree)
           case tree @ Apply(fun, args) => typedApply(tree)
           case tree @ Annotated(annot, arg) => typedAnnotated(tree)
+          case tree @ Bind(name, body) => typedBind(tree)
           case _ => super.typed1(tree, mode, pt)
         }
         // TODO: wat do these methods even mean, and how do they differ?
