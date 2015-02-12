@@ -1189,10 +1189,12 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
             p.Type.Bounds(plo, phi).withOriginal(gtpe)
         }
         lazy val punknownTerm = {
-          val gsys = g.definitions.SysPackage
-          val gsysError = gsys.info.decl(g.TermName("error"))
-          val psysError = p.Term.Select(p.Term.Name("sys").withDenot(gsys), p.Term.Name("error").withDenot(gsys))
-          p.Term.Apply(psysError, List(p.Lit.String("couldn't load tree"))).withOriginal(g.definitions.NothingClass.tpe)
+          // TODO: think of something both concise and distinctive
+          // val gsys = g.definitions.SysPackage
+          // val gsysError = gsys.info.decl(g.TermName("error"))
+          // val psysError = p.Term.Select(p.Term.Name("sys").withDenot(gsys), p.Term.Name("error").withDenot(gsys))
+          // p.Term.Apply(psysError, List(p.Lit.String("couldn't load tree"))).withOriginal(g.definitions.NothingClass.tpe)
+          p.Term.Name("???").withDenot(g.definitions.Predef_???).withOriginal(g.definitions.Predef_???)
         }
         lazy val pbody = punknownTerm
         lazy val pmaybeBody = if (gsym.hasFlag(DEFAULTINIT)) None else Some(pbody)
