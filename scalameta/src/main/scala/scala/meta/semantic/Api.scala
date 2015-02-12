@@ -347,7 +347,7 @@ trait Api {
         case tree: impl.Term.For => tree.enums.flatMap(membersOfEnumerator)
         case tree: impl.Term.ForYield => tree.enums.flatMap(membersOfEnumerator)
         case tree: impl.Case => membersOfPat(tree.pat)
-        case tree: impl.Type.Name => Nil
+        case tree: impl.Type.Name if tree.isBinder => Nil
         case tree: impl.Type => implicitly[SemanticContext].members(tree)
         case tree: impl.Term.Name => Nil
         case tree: impl.Term.Param => Nil
