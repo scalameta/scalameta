@@ -1160,7 +1160,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
             case g.NullaryMethodType(gret) =>
               loop(gret)
             case g.MethodType(gvparams, gret) =>
-              if (gvparams.forall(gsym => ginfo.paramss.exists(_ == gsym))) loop(gret)
+              if (gvparams.forall(gsym => ginfo.paramss.flatten.exists(_ == gsym))) loop(gret)
               else gtpe
             case g.PolyType(gtparams, gret) =>
               if (gtparams.forall(gsym => ginfo.typeParams.exists(_ == gsym))) loop(gret)
