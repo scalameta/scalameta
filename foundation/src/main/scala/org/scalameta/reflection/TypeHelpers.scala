@@ -12,9 +12,20 @@ trait TypeHelpers {
   import definitions._
 
   implicit class RichHelperType(tpe: Type) {
-    def depoly: Type = tpe match {
-      case PolyType(_, tpe) => tpe.depoly
-      case _ => tpe
+    def etaReduce: Type = EtaReduce.unapply(tpe).getOrElse(tpe)
+  }
+
+  object EtaReduce {
+    def unapply(tpe: Type): Option[Type] = tpe match {
+      case PolyType(tparams, TypeRef(pre, sym, targs)) =>
+        val canReduce = tparams.zip(targs).forall({
+          case (tparam, TypeRef(_, targsym, Nil)) => tparam == targsym
+          case _ => false
+        })
+        if (canReduce) Some(TypeRef(pre, sym, Nil))
+        else None
+      case _ =>
+        None
     }
   }
 }

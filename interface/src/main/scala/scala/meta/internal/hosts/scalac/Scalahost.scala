@@ -1122,6 +1122,24 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
           p.Type.Annotate(apply(underlying).asInstanceOf[p.Type], pannots(annots))
         case g.ConstantType(const) =>
           plit(const)
+        case tpe @ g.PolyType(tparams, ret) =>
+          // NOTE: it turns out that we can't avoid polytypes here
+          // even though we never need to carry around type signatures of our members (those members are their own type signatures!)
+          // there are legitimate polytypes, namely type lambdas
+          tpe match {
+            case EtaReduce(tpe) =>
+              apply(tpe)
+            case _ =>
+              // NOTE: `[A]T` is represented as `({ type λ[A] = T })#λ`
+              // NOTE: it's good that we cache the gtpe => ptpe conversion
+              // because otherwise, when repeatedly faced with the same polytype, we'd keep on churning out new hsymbols
+              // and those would not compare equal on the scala.meta side
+              val hsymbol = h.Symbol.Local(randomUUID().toString)
+              val pname = p.Type.Name("λ", h.Denotation.Precomputed(h.Prefix.Zero, hsymbol), h.Sigma.Naive)
+              val ptparams = tparams.logical.map(ltparam => apply(g.NoPrefix, ltparam).asInstanceOf[p.Type.Param])
+              val plambda = p.Defn.Type(Nil, pname, ptparams, apply(ret).asInstanceOf[p.Type])
+              p.Type.Project(p.Type.Compound(Nil, List(plambda)), pname)
+          }
         case _ =>
           sys.error(s"unsupported type $gtpe, designation = ${gtpe.getClass}, structure = ${g.showRaw(gtpe, printIds = true, printTypes = true)}")
       }
@@ -1135,6 +1153,23 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
         // see LogicalSymbols.scala for more information
         def gsym = lsym.gsymbol
         def ginfo = gsym.moduleClass.orElse(gsym).infoIn(gpre)
+        def gtpe = {
+          // NOTE: strips off only those vparams and tparams that are part of the definition
+          // we don't want to, for example, damage type lambdas
+          def loop(gtpe: g.Type): g.Type = gtpe match {
+            case g.NullaryMethodType(gret) =>
+              loop(gret)
+            case g.MethodType(gvparams, gret) =>
+              if (gvparams.forall(gsym => ginfo.paramss.exists(_ == gsym))) loop(gret)
+              else gtpe
+            case g.PolyType(gtparams, gret) =>
+              if (gtparams.forall(gsym => ginfo.typeParams.exists(_ == gsym))) loop(gret)
+              else gret
+            case _ =>
+              gtpe
+          }
+          loop(ginfo)
+        }
         def pmods = this.pmods(lsym)
         def pname = lsym match {
           case l.PrimaryCtor(gsym) => p.Ctor.Name(gsym.owner.name.toString).withDenot(gpre, gsym).withOriginal(gsym)
@@ -1143,8 +1178,8 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
         }
         def ptparams = ginfo.typeParams.map(gtparam => apply(g.NoPrefix, l.TypeParameter(gtparam)).asInstanceOf[p.Type.Param])
         def pvparamss = ginfo.paramss.map(_.map(gvparam => apply(g.NoPrefix, l.TermParameter(gvparam)).asInstanceOf[p.Term.Param]))
-        def ptpe = apply(ginfo.depoly.finalResultType)
-        def ptpeBounds = ginfo.depoly match {
+        def ptpe = apply(gtpe)
+        def ptpeBounds = gtpe match {
           case gtpe @ g.TypeBounds(glo, ghi) =>
             val plo = if (glo =:= g.typeOf[Nothing]) None else Some(apply(glo).asInstanceOf[p.Type])
             val phi = if (ghi =:= g.typeOf[Any]) None else Some(apply(ghi).asInstanceOf[p.Type])
