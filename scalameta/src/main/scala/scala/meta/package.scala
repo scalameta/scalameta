@@ -20,14 +20,11 @@ package object meta extends MacroApi with SyntacticApi with SemanticApi with UIA
   @quasiquote[Type.Arg]('t)            implicit class TypeQuote(ctx: StringContext)
   @quasiquote[Type.Param]('tparam)     implicit class TypeParamQuote(ctx: StringContext)
   @quasiquote[Case, Pat.Arg]('p)       implicit class CaseOrPatternQuote(ctx: StringContext)
+  @quasiquote[Pat.Type]('pt)           implicit class PatternTypeQuote(ctx: StringContext)
   @quasiquote[Ctor.Ref, Term]('ctor)   implicit class CtorQuote(ctx: StringContext)
   @quasiquote[Template]('template)     implicit class TemplateQuote(ctx: StringContext)
   @quasiquote[Mod]('mod)               implicit class ModQuote(ctx: StringContext)
   @quasiquote[Enumerator]('enumerator) implicit class EnumeratorQuote(ctx: StringContext)
   @quasiquote[Importee]('importee)     implicit class ImporteeQuote(ctx: StringContext)
   @quasiquote[Source]('source)         implicit class SourceQuote(ctx: StringContext)
-
-  // NOTE: so far, there's no difference between syntactic and semantic quasiquotes
-  // therefore, I'm going to auto-enable semantic quasiquotes by default for the time being
-  implicit val autoSemanticQuasiquotes = scala.meta.semantic.quasiquotes.enableSemanticQuasiquotes
 }

@@ -28,6 +28,7 @@ trait Api {
     implicit def parseTypeParam(implicit dialect: Dialect): Parse[Type.Param] = apply(origin => new Parser(origin).parseTypeParam())
     implicit def parsePat(implicit dialect: Dialect): Parse[Pat] = apply(origin => new Parser(origin).parsePat())
     implicit def parsePatArg(implicit dialect: Dialect): Parse[Pat.Arg] = apply(origin => new Parser(origin).parsePatArg())
+    implicit def parsePatType(implicit dialect: Dialect): Parse[Pat.Type] = apply(origin => new Parser(origin).parsePatType())
     implicit def parseCase(implicit dialect: Dialect): Parse[Case] = apply(origin => new Parser(origin).parseCase())
     implicit def parseCtorRef(implicit dialect: Dialect): Parse[Ctor.Ref] = apply(origin => new Parser(origin).parseCtorRef())
     implicit def parseTemplate(implicit dialect: Dialect): Parse[Template] = apply(origin => new Parser(origin).parseTemplate())

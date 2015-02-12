@@ -329,6 +329,7 @@ abstract class AbstractParser { parser =>
   def parseTypeParam(): Type.Param = ???
   def parsePat(): Pat = ???
   def parsePatArg(): Pat.Arg = parseRule(_.pattern())
+  def parsePatType(): Pat.Type = ???
   def parseCase(): Case = ???
   def parseCtorRef(): Ctor.Ref = ???
   def parseTemplate(): Template = ???

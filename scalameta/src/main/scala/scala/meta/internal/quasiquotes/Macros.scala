@@ -30,25 +30,15 @@ class Macros[C <: Context](val c: C) extends AdtReflection with AdtLiftables wit
   val ScalaNil = ScalaPackageObjectClass.info.decl(TermName("Nil"))
   val ScalaSeq = ScalaPackageObjectClass.info.decl(TermName("Seq"))
 
-  def apply(macroApplication: ReflectTree, flavor: ReflectTree, metaParse: String => MetaTree): ReflectTree = {
-    val SyntacticFlavor = symbolOf[scala.meta.syntactic.quasiquotes.enableSyntacticQuasiquotes.type]
-    val SemanticFlavor = symbolOf[scala.meta.semantic.quasiquotes.enableSemanticQuasiquotes.type]
-    flavor.tpe.typeSymbol match {
-      case SyntacticFlavor =>
-        val (skeleton, dummies) = parseSkeleton(macroApplication, metaParse)
-        reifySkeleton(skeleton, dummies)
-      case SemanticFlavor =>
-        // TODO: this is a very naive approach to hygiene, and it will be replaced as soon as possible
-        val (skeleton, dummies) = parseSkeleton(macroApplication, metaParse)
-        val maybeAttributedSkeleton = scala.util.Try(attributeSkeleton(skeleton)).getOrElse(skeleton)
-        reifySkeleton(maybeAttributedSkeleton, dummies)
-      case _ =>
-        c.abort(c.enclosingPosition, "unrecognized quasiquote flavor: only scala.meta.syntactic.quasiquotes.enableSyntacticQuasiquotes and scala.meta.semantic.quasiquotes.enableSemanticQuasiquotes are supported")
-    }
+  def apply(macroApplication: ReflectTree, metaParse: String => MetaTree): ReflectTree = {
+    // TODO: this is a very naive approach to hygiene, and it will be replaced as soon as possible
+    val (skeleton, dummies) = parseSkeleton(macroApplication, metaParse)
+    val maybeAttributedSkeleton = scala.util.Try(attributeSkeleton(skeleton)).getOrElse(skeleton)
+    reifySkeleton(maybeAttributedSkeleton, dummies)
   }
 
   private def parseSkeleton(macroApplication: ReflectTree, metaParse: String => MetaTree): (MetaTree, List[Dummy]) = {
-    val q"$_($_.apply(..$partlits)).$_.apply[..$_](..$argtrees)($dialect, $_)" = macroApplication
+    val q"$_($_.apply(..$partlits)).$_.apply[..$_](..$argtrees)($dialect)" = macroApplication
     val parts = partlits.map{ case q"${part: String}" => part }
     def ndots(s: String): Int = if (s.endsWith(".")) ndots(s.stripSuffix(".")) + 1 else 0
     val dummies = argtrees.zipWithIndex.map{ case (tree, i) => Dummy(c.freshName("dummy"), ndots(parts(i)), tree) }

@@ -54,66 +54,7 @@ class PublicSuite extends FunSuite {
     """) === "can't use the dialect dialect in quasiquotes")
   }
 
-  // TODO: now this is really weird!
-  // why doesn't it unimport autoSemanticQuasiquotes?!
-  test("quasiquotes without flavor - no import") {
-    assert(typecheckError("""
-      import scala.meta.{autoSemanticQuasiquotes => _, _}
-      import scala.meta.dialects.Scala211
-      q"hello"
-    """) === "")
-  }
-
-  test("quasiquotes without flavor - ambiguity 1") {
-    assert(typecheckError("""
-      import scala.meta._
-      import scala.meta.dialects.Scala211
-      import scala.meta.syntactic.quasiquotes._
-      q"hello"
-    """) === """
-      |ambiguous implicit values:
-      | both value autoSemanticQuasiquotes in package meta of type => meta.semantic.quasiquotes.enableSemanticQuasiquotes.type
-      | and object enableSyntacticQuasiquotes in package quasiquotes of type meta.syntactic.quasiquotes.enableSyntacticQuasiquotes.type
-      | match expected type scala.meta.quasiquotes.Flavor
-    """.trim.stripMargin)
-  }
-
-  test("quasiquotes without flavor - ambiguity 2") {
-    assert(typecheckError("""
-      import scala.meta._
-      import scala.meta.dialects.Scala211
-      import scala.meta.semantic.quasiquotes._
-      q"hello"
-    """) === """
-      |ambiguous implicit values:
-      | both value autoSemanticQuasiquotes in package meta of type => meta.semantic.quasiquotes.enableSemanticQuasiquotes.type
-      | and object enableSemanticQuasiquotes in package quasiquotes of type meta.semantic.quasiquotes.enableSemanticQuasiquotes.type
-      | match expected type scala.meta.quasiquotes.Flavor
-    """.trim.stripMargin)
-  }
-
-  test("syntactic quasiquotes when everything's correct (static dialect)") {
-    assert(typecheckError("""
-      import scala.meta.{autoSemanticQuasiquotes => _, _}
-      import scala.meta.dialects.Scala211
-      import scala.meta.syntactic.quasiquotes._
-      q"hello"
-    """) === "")
-  }
-
-  test("syntactic quasiquotes when everything's correct (static context)") {
-    assert(typecheckError("""
-      import scala.meta.{autoSemanticQuasiquotes => _, _}
-      trait MyContext extends scala.meta.semantic.Context {
-        def dialect: scala.meta.dialects.Scala211.type = scala.meta.dialects.Scala211
-      }
-      implicit val c: MyContext = ???
-      import scala.meta.syntactic.quasiquotes._
-      q"hello"
-    """) === "")
-  }
-
-  test("semantic quasiquotes when everything's correct (static dialect)") {
+  test("quasiquotes when everything's correct (static dialect)") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -121,7 +62,7 @@ class PublicSuite extends FunSuite {
     """) === "")
   }
 
-  test("semantic quasiquotes when everything's correct (static context)") {
+  test("quasiquotes when everything's correct (static context)") {
     assert(typecheckError("""
       import scala.meta._
       trait MyContext extends scala.meta.semantic.Context {

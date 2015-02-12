@@ -20,6 +20,18 @@ trait Api {
   // PART 1: ATTRIBUTES
   // ===========================
 
+  sealed trait HasDesugaring[T <: Tree, U <: Tree]
+  object HasDesugaring {
+    implicit def Term[T <: meta.Term]: HasDesugaring[T, meta.Term] = null
+  }
+
+  implicit class SemanticDesugarableOps[T <: Tree, U <: Tree](val tree: T)(implicit ev: HasDesugaring[T, U], tag: ClassTag[U]) {
+    @hosted def desugar: U = tree match {
+      case tree: impl.Term => implicitly[SemanticContext].desugar(tree).asInstanceOf[U]
+      case tree => throw new SemanticException(s"desugar is undefined for ${tree.show[Summary]}")
+    }
+  }
+
   sealed trait HasTpe[T <: Tree, U <: Type.Arg]
   object HasTpe {
     implicit def Term[T <: meta.Term]: HasTpe[T, meta.Type] = null
@@ -32,6 +44,7 @@ trait Api {
     @hosted def tpe: U = tree match {
       case tree: impl.Term => implicitly[SemanticContext].tpe(tree).asInstanceOf[U]
       // NOTE: impl.Term.Name is handled in the impl.Term case above
+      case tree: impl.Type.Name => tree.asInstanceOf[U]
       case tree: impl.Decl.Def => tree.decltpe.asInstanceOf[U]
       case tree: impl.Decl.Type => tree.name.asInstanceOf[U]
       case tree: impl.Defn.Def => tree.decltpe.getOrElse(tree.body.asInstanceOf[meta.Term].tpe).asInstanceOf[U]
@@ -112,7 +125,7 @@ trait Api {
       val prefixlessName = tree.name match {
         case name: impl.Name.Anonymous => name
         case name: impl.Term.Name if name.isBinder => name.copy(denot = stripPrefix(name.denot))
-        case name: impl.Type.Name => name.copy(denot = stripPrefix(name.denot))
+        case name: impl.Type.Name if name.isBinder => name.copy(denot = stripPrefix(name.denot))
         case name: impl.Ctor.Name => name.copy(denot = stripPrefix(name.denot))
         case name: impl.Term.This => name.copy(denot = stripPrefix(name.denot))
         case name: impl.Term.Super => unreachable
@@ -127,6 +140,7 @@ trait Api {
     @hosted def name: Name = {
       tree.require[impl.Member] match {
         case tree: impl.Term.Name if tree.isBinder => tree
+        case tree: impl.Type.Name if tree.isBinder => tree
         case tree: impl.Decl.Def => tree.name
         case tree: impl.Decl.Type => tree.name
         case tree: impl.Defn.Def => tree.name
@@ -169,7 +183,8 @@ trait Api {
     }
     @hosted def mods: Seq[Mod] = {
       tree.require[impl.Member] match {
-        case tree: impl.Term.Name if name.isBinder => firstNonPatParent(tree).collect{case member: Member => member}.map(_.mods).getOrElse(Nil)
+        case tree: impl.Term.Name => firstNonPatParent(tree).collect{case member: Member => member}.map(_.mods).getOrElse(Nil)
+        case tree: impl.Type.Name => Nil
         case tree: impl.Decl.Def => tree.mods
         case tree: impl.Decl.Type => tree.mods
         case tree: impl.Defn.Def => tree.mods
@@ -332,6 +347,7 @@ trait Api {
         case tree: impl.Term.For => tree.enums.flatMap(membersOfEnumerator)
         case tree: impl.Term.ForYield => tree.enums.flatMap(membersOfEnumerator)
         case tree: impl.Case => membersOfPat(tree.pat)
+        case tree: impl.Type.Name => Nil
         case tree: impl.Type => implicitly[SemanticContext].members(tree)
         case tree: impl.Term.Name => Nil
         case tree: impl.Term.Param => Nil
