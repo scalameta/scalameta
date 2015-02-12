@@ -135,7 +135,7 @@ object Code {
       // this is purely an implementation artifact and will be fixed once we have tokens
       t.value != "this" && (keywords.contains(t.value) || t.value.contains(" "))
     }
-    def isAmbiguousWithPatVar(t: Term.Name, p: Tree): Boolean = {
+    def isAmbiguousWithPatVarTerm(t: Term.Name, p: Tree): Boolean = {
       // TODO: the `eq` trick is very unreliable, but I can't come up with anything better at the moment
       // since the whole guessXXX business is going to be obsoleted by tokens very soon, I'm leaving this as is
       val looksLikePatVar = t.value.head.isLower && t.value.head.isLetter
@@ -143,7 +143,7 @@ object Code {
         case p: Term.Name => unreachable
         case p: Term.Select => false
         case p: Pat.Wildcard => unreachable
-        case p: Pat.Var => false
+        case p: Pat.Var.Term => false
         case p: Pat.Bind => unreachable
         case p: Pat.Alternative => true
         case p: Pat.Tuple => true
@@ -161,12 +161,22 @@ object Code {
       }
       looksLikePatVar && thisLocationAlsoAcceptsPatVars
     }
+    def isAmbiguousWithPatVarType(t: Type.Name, p: Tree): Boolean = {
+      // TODO: figure this out with Martin
+      // `x match { case _: t => }` produces a Type.Name
+      // `x match { case _: List[t] => }` produces a Pat.Var.Type
+      // `x match { case _: List[`t`] => }` produces a Pat.Var.Type as well
+      // the rules look really inconsistent and probably that's just an oversight
+      false
+    }
     (t, t.parent) match {
-      case (t: Term.Name, Some(p: Tree)) => isAmbiguousWithPatVar(t, p) || cantBeWrittenWithoutBackquotes(t)
+      case (t: Term.Name, Some(p: Tree)) => isAmbiguousWithPatVarTerm(t, p) || cantBeWrittenWithoutBackquotes(t)
+      case (t: Type.Name, Some(p: Tree)) => isAmbiguousWithPatVarType(t, p) || cantBeWrittenWithoutBackquotes(t)
       case _ => cantBeWrittenWithoutBackquotes(t)
     }
   }
   private def guessHasRefinement(t: Type.Compound): Boolean = t.refinement.nonEmpty
+  private def guessHasRefinement(t: Pat.Type.Compound): Boolean = t.refinement.nonEmpty
   private def guessIsPostfix(t: Term.Select): Boolean = false
   private def guessHasExpr(t: Term.Return): Boolean = t.expr match { case Lit.Unit() => false; case _ => true }
   private def guessHasElsep(t: Term.If): Boolean = t.elsep match { case Lit.Unit() => false; case _ => true }
@@ -293,8 +303,8 @@ object Code {
       s(a(mods, " "), variance, t.name, t.tparams, cbounds, vbounds, tbounds)
 
     // Pat
+    case t: Pat.Var.Term         => m(SimplePattern, s(t.name.value))
     case _: Pat.Wildcard         => m(SimplePattern, kw("_"))
-    case t: Pat.Var              => m(SimplePattern, s(t.name.value))
     case t: Pat.Bind             =>
       val separator = if (t.rhs.isInstanceOf[Pat.Arg.SeqWildcard] && dialect.bindToSeqWildcardDesignator == ":") ""  else " "
       val designator = if (t.rhs.isInstanceOf[Pat.Arg.SeqWildcard]) dialect.bindToSeqWildcardDesignator else "@"
@@ -315,6 +325,20 @@ object Code {
       m(SimplePattern, s(t.prefix, "\"", r(zipped), t.parts.last, "\""))
     case t: Pat.Typed            => m(Pattern1, s(p(SimplePattern, t.lhs), kw(":"), " ", p(Typ, t.rhs)))
     case _: Pat.Arg.SeqWildcard  => m(SimplePattern, kw("_*"))
+
+    // Pat.Type
+    // TODO: fix copy/paste with Type
+    case t: Pat.Var.Type         => m(SimpleTyp, s(t.name.value))
+    case t: Pat.Type.Project     => m(SimpleTyp, s(t.qual, kw("#"), t.name))
+    case t: Pat.Type.Apply       => m(SimpleTyp, s(p(SimpleTyp, t.tpe), kw("["), r(t.args.map(arg => p(Typ, arg)), ", "), kw("]")))
+    case t: Pat.Type.ApplyInfix  => m(InfixTyp(t.op.value), s(p(InfixTyp(t.op.value), t.lhs, left = true), " ", t.op, " ", p(InfixTyp(t.op.value), t.rhs, right = true)))
+    case t: Pat.Type.Function    =>
+      val params = if (t.params.size == 1) s(p(AnyInfixTyp, t.params.head)) else s("(", r(t.params.map(param => p(ParamTyp, param)), ", "), ")")
+      m(Typ, s(params, " ", kw("=>"), " ", p(Typ, t.res)))
+    case t: Pat.Type.Tuple       => m(SimpleTyp, s("(", r(t.elements, ", "), ")"))
+    case t: Pat.Type.Compound    => m(CompoundTyp, s(r(t.tpes.map(tpe => p(AnnotTyp, tpe)), " with "), a(" {", a(" ", r(t.refinement, "; "), " "), "}", guessHasRefinement(t))))
+    case t: Pat.Type.Existential => m(Typ, s(p(AnyInfixTyp, t.tpe), " ", kw("forSome"), " { ", r(t.quants, "; "), " }"))
+    case t: Pat.Type.Annotate    => m(AnnotTyp, s(p(SimpleTyp, t.tpe), " ", t.annots))
 
     // Lit
     case t: Lit.Bool    => m(Literal, s(t.value.toString))

@@ -57,6 +57,7 @@ trait Api {
     implicit def Ref[T <: meta.Ref]: HasDefns[T, meta.Member] = null
     implicit def TermRef[T <: meta.Term.Ref]: HasDefns[T, meta.Member.Term] = null
     implicit def TypeRef[T <: meta.Type.Ref]: HasDefns[T, meta.Member] = null // Type.Ref can refer to both types (regular types) and terms (singleton types)
+    implicit def PatTypeRef[T <: meta.Pat.Type.Ref]: HasDefns[T, meta.Member] = null // Pat.Type.Ref works the same as Type.Ref
   }
 
   implicit class SemanticDefnableOps[T <: Tree, U <: meta.Member](val tree: T)(implicit ev: HasDefns[T, U], tag: ClassTag[U]) {
@@ -285,6 +286,7 @@ trait Api {
     @hosted private[meta] def internalAll: Seq[Member] = {
       def membersOfStats(stats: Seq[impl.Tree]) = stats.collect{
         case name: Term.Name if name.isBinder => name
+        case name: Type.Name if name.isBinder => unreachable
         case member: Member => member
       }
       def membersOfEnumerator(enum: impl.Enumerator) = enum match {
@@ -292,19 +294,36 @@ trait Api {
         case impl.Enumerator.Val(pat, _) => membersOfPat(pat)
         case impl.Enumerator.Guard(_) => Nil
       }
+      def membersOfPatType(ptpe: impl.Pat.Type): Seq[impl.Member] = ptpe match {
+        case impl.Pat.Type.Wildcard() => Nil
+        case impl.Pat.Var.Type(name) => List(name)
+        case impl.Type.Name(_) => Nil
+        case impl.Type.Select(_, _) => Nil
+        case impl.Pat.Type.Project(ptpe, _) => membersOfPatType(ptpe)
+        case impl.Type.Singleton(_) => Nil
+        case impl.Pat.Type.Apply(tpe, args) => membersOfPatType(tpe) ++ args.flatMap(membersOfPatType)
+        case impl.Pat.Type.ApplyInfix(lhs, _, rhs) => membersOfPatType(lhs) ++ membersOfPatType(rhs)
+        case impl.Pat.Type.Function(params, res) => params.flatMap(membersOfPatType) ++ membersOfPatType(res)
+        case impl.Pat.Type.Tuple(elements) => elements.flatMap(membersOfPatType)
+        case impl.Pat.Type.Compound(tpes, _) => tpes.flatMap(membersOfPatType)
+        case impl.Pat.Type.Existential(tpe, _) => membersOfPatType(tpe)
+        case impl.Pat.Type.Annotate(tpe, _) => membersOfPatType(tpe)
+        case impl.Type.Placeholder(_) => Nil
+        case _: impl.Lit => Nil
+      }
       def membersOfPat(pat: impl.Pat.Arg): Seq[impl.Member] = pat match {
-        case impl.Term.Name(_) => Nil
-        case impl.Term.Select(_, _) => Nil
         case impl.Pat.Wildcard() => Nil
-        case impl.Pat.Var(name) => List(name)
+        case impl.Pat.Var.Term(name) => List(name)
         case impl.Pat.Bind(lhs, rhs) => membersOfPat(lhs) ++ membersOfPat(rhs)
         case impl.Pat.Alternative(lhs, rhs) => membersOfPat(lhs) ++ membersOfPat(rhs)
         case impl.Pat.Tuple(elements) => elements.flatMap(membersOfPat)
         case impl.Pat.Extract(_, _, elements) => elements.flatMap(membersOfPat)
         case impl.Pat.ExtractInfix(lhs, _, rhs) => membersOfPat(lhs) ++ rhs.flatMap(membersOfPat)
         case impl.Pat.Interpolate(_, _, args) => args.flatMap(membersOfPat)
-        case impl.Pat.Typed(lhs, _) => membersOfPat(lhs)
+        case impl.Pat.Typed(lhs, ptpe) => membersOfPat(lhs) ++ membersOfPatType(ptpe)
         case impl.Pat.Arg.SeqWildcard() => Nil
+        case impl.Term.Name(_) => Nil
+        case impl.Term.Select(_, _) => Nil
         case _: impl.Lit => Nil
       }
       tree.require[impl.Scope] match {
@@ -423,7 +442,11 @@ trait Api {
   // ===========================
 
   implicit class SemanticNameOps(val tree: Name) {
-    def isBinder: Boolean = tree.parent.map(parent => parent.isInstanceOf[impl.Pat.Var] || parent.isInstanceOf[impl.Member]).getOrElse(false)
+    def isBinder: Boolean = {
+      def isBindingPattern(parent: Tree) = parent.isInstanceOf[impl.Pat.Var.Term] || parent.isInstanceOf[impl.Pat.Var.Type]
+      def isDefinitionName(parent: Tree) = parent.isInstanceOf[impl.Member]
+      tree.parent.map(parent => isBindingPattern(parent) || isDefinitionName(parent)).getOrElse(false)
+    }
     def isReference: Boolean = !isBinder
     def isAnonymous: Boolean = tree.isInstanceOf[impl.Name.Anonymous]
   }

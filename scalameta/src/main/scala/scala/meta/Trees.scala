@@ -44,6 +44,10 @@ package scala.meta {
   @branch trait Pat extends Tree with Pat.Arg
   object Pat {
     @branch trait Arg extends Tree
+    @branch trait Type extends Tree
+    object Type {
+      @branch trait Ref extends Type
+    }
   }
 
   @branch trait Member extends Tree with Scope
@@ -78,7 +82,7 @@ package scala.meta.internal.ast {
     @branch trait Ref extends api.Term.Ref with Term with impl.Ref
     @ast class This(qual: Option[Predef.String]) extends Term.Ref with impl.Name { def value = "this" }
     @ast class Super(thisp: Option[Predef.String], superp: Option[Predef.String]) extends Term.Ref with impl.Name { def value = "super" }
-    @ast class Name(value: Predef.String @nonEmpty) extends api.Term.Name with impl.Name with Term.Ref with Pat with Member {
+    @ast class Name(value: Predef.String @nonEmpty) extends api.Term.Name with impl.Name with Term.Ref with Pat with impl.Member.Term {
       // TODO: revisit this once we have trivia in place
       // require(keywords.contains(value) ==> isBackquoted)
     }
@@ -133,15 +137,15 @@ package scala.meta.internal.ast {
   @branch trait Type extends api.Type with Tree with Type.Arg with Scope
   object Type {
     @branch trait Ref extends api.Type.Ref with Type with impl.Ref
-    @ast class Name(value: String @nonEmpty) extends api.Type.Name with impl.Name with Type.Ref {
+    @ast class Name(value: String @nonEmpty) extends api.Type.Name with impl.Name with Type.Ref with impl.Member.Type with Pat.Type.Ref {
       // TODO: revisit this once we have trivia in place
       // require(keywords.contains(value) ==> isBackquoted)
     }
-    @ast class Select(qual: Term.Ref, name: Type.Name) extends Type.Ref {
+    @ast class Select(qual: Term.Ref, name: Type.Name) extends Type.Ref with Pat.Type.Ref {
       require(qual.isPath || qual.isInstanceOf[Term.Super])
     }
     @ast class Project(qual: Type, name: Type.Name) extends Type.Ref
-    @ast class Singleton(ref: Term.Ref) extends Type.Ref {
+    @ast class Singleton(ref: Term.Ref) extends Type.Ref with Pat.Type.Ref {
       require(ref.isPath || ref.isInstanceOf[Term.Super])
     }
     @ast class Apply(tpe: Type, args: Seq[Type] @nonEmpty) extends Type
@@ -159,7 +163,7 @@ package scala.meta.internal.ast {
       require(quants.forall(_.isExistentialStat))
     }
     @ast class Annotate(tpe: Type, annots: Seq[Mod.Annot] @nonEmpty) extends Type
-    @ast class Placeholder(bounds: Bounds) extends Type
+    @ast class Placeholder(bounds: Bounds) extends Type with Pat.Type
     @ast class Bounds(lo: Option[Type], hi: Option[Type]) extends Tree
     @branch trait Arg extends api.Type.Arg with Tree
     object Arg {
@@ -176,12 +180,16 @@ package scala.meta.internal.ast {
 
   @branch trait Pat extends api.Pat with Tree with Pat.Arg
   object Pat {
+    @branch trait Var extends Tree
+    object Var {
+      @ast class Term(name: impl.Term.Name) extends Var with Pat
+      @ast class Type(name: impl.Type.Name) extends Var with Pat.Type
+    }
     @ast class Wildcard() extends Pat
-    @ast class Var(name: Term.Name) extends Pat
-    @ast class Bind(lhs: Pat.Var, rhs: Pat.Arg) extends Pat
+    @ast class Bind(lhs: Pat.Var.Term, rhs: Pat.Arg) extends Pat
     @ast class Alternative(lhs: Pat, rhs: Pat) extends Pat
     @ast class Tuple(elements: Seq[Pat] @nonEmpty) extends Pat
-    @ast class Extract(ref: Term.Ref, targs: Seq[Type], args: Seq[Pat.Arg]) extends Pat {
+    @ast class Extract(ref: Term.Ref, targs: Seq[impl.Type], args: Seq[Pat.Arg]) extends Pat {
       require(ref.isStableId)
     }
     @ast class ExtractInfix(lhs: Pat, ref: Term.Name, rhs: Seq[Pat.Arg] @nonEmpty) extends Pat {
@@ -190,16 +198,37 @@ package scala.meta.internal.ast {
     @ast class Interpolate(prefix: Term.Name, parts: Seq[Lit.String] @nonEmpty, args: Seq[Pat]) extends Pat {
       require(parts.length == args.length + 1)
     }
-    @ast class Typed(lhs: Pat, rhs: Type) extends Pat {
-      require(lhs.isInstanceOf[Pat.Wildcard] || lhs.isInstanceOf[Pat.Var])
+    @ast class Typed(lhs: Pat, rhs: Pat.Type) extends Pat {
+      require(lhs.isInstanceOf[Pat.Wildcard] || lhs.isInstanceOf[Pat.Var.Term])
     }
     @branch trait Arg extends api.Pat.Arg with Tree
     object Arg {
       @ast class SeqWildcard() extends Arg
     }
+    @branch trait Type extends api.Pat.Type with Tree
+    object Type {
+      @branch trait Ref extends api.Pat.Type.Ref with Pat.Type with impl.Ref
+      @ast class Wildcard() extends Pat.Type
+      @ast class Project(qual: Pat.Type, name: impl.Type.Name) extends Pat.Type with Pat.Type.Ref
+      @ast class Apply(tpe: Pat.Type, args: Seq[Pat.Type] @nonEmpty) extends Pat.Type
+      @ast class ApplyInfix(lhs: Pat.Type, op: Name, rhs: Pat.Type) extends Pat.Type
+      @ast class Function(params: Seq[Pat.Type], res: Pat.Type) extends Pat.Type
+      @ast class Tuple(elements: Seq[Pat.Type] @nonEmpty) extends Pat.Type {
+        require(elements.length > 1)
+      }
+      @ast class Compound(tpes: Seq[Pat.Type], refinement: Seq[Stat]) extends Pat.Type {
+        // TODO: revisit this once we have trivia in place
+        // require(tpes.length == 1 ==> hasRefinement)
+        require(refinement.forall(_.isRefineStat))
+      }
+      @ast class Existential(tpe: Pat.Type, quants: Seq[Stat] @nonEmpty) extends Pat.Type {
+        require(quants.forall(_.isExistentialStat))
+      }
+      @ast class Annotate(tpe: Pat.Type, annots: Seq[Mod.Annot] @nonEmpty) extends Pat.Type
+    }
   }
 
-  @branch trait Lit extends Term with Pat with Type
+  @branch trait Lit extends Term with Pat with Type with Pat.Type
   object Lit {
     @ast class Bool(value: scala.Boolean) extends Lit
     @ast class Int(value: scala.Int) extends Lit
@@ -222,10 +251,10 @@ package scala.meta.internal.ast {
   @branch trait Decl extends Stat
   object Decl {
     @ast class Val(mods: Seq[Mod],
-                   pats: Seq[Pat.Var] @nonEmpty,
+                   pats: Seq[Pat.Var.Term] @nonEmpty,
                    decltpe: impl.Type) extends Decl
     @ast class Var(mods: Seq[Mod],
-                   pats: Seq[Pat.Var] @nonEmpty,
+                   pats: Seq[Pat.Var.Term] @nonEmpty,
                    decltpe: impl.Type) extends Decl
     @ast class Def(mods: Seq[Mod],
                    name: Term.Name,
@@ -248,7 +277,7 @@ package scala.meta.internal.ast {
                    pats: Seq[Pat] @nonEmpty,
                    decltpe: Option[impl.Type],
                    rhs: Option[Term]) extends Defn {
-      require(rhs.isEmpty ==> pats.forall(_.isInstanceOf[Pat.Var]))
+      require(rhs.isEmpty ==> pats.forall(_.isInstanceOf[Pat.Var.Term]))
       require(decltpe.nonEmpty || rhs.nonEmpty)
     }
     @ast class Def(mods: Seq[Mod],
