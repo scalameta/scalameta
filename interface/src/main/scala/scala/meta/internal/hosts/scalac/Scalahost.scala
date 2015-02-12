@@ -1090,7 +1090,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
           } else if (sym == g.definitions.ByNameParamClass) {
             p.Type.Arg.ByName(apply(args.head).asInstanceOf[p.Type])
           } else {
-            val ref = ({
+            val pref = ({
               if (sym.isModuleClass) {
                 apply(g.SingleType(pre, sym.module)).asInstanceOf[p.Type]
               } else {
@@ -1107,8 +1107,14 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
                 }
               }
             }).withOriginal(gtpe)
-            if (args.isEmpty) ref
-            else p.Type.Apply(ref, args.map(arg => apply(arg).asInstanceOf[p.Type]))
+            val pargs = args.map(arg => apply(arg).asInstanceOf[p.Type])
+            if (args.isEmpty) pref
+            else {
+              if (g.definitions.FunctionClass.seq.contains(sym)) p.Type.Function(pargs.init, pargs.last)
+              else if (g.definitions.TupleClass.seq.contains(sym) && pargs.length > 1) p.Type.Tuple(pargs)
+              else if (sym.name.looksLikeInfix && pref.isInstanceOf[p.Type.Name] && pargs.length == 2) p.Type.ApplyInfix(pargs(0), pref.asInstanceOf[p.Type.Name], pargs(1))
+              else p.Type.Apply(pref, pargs)
+            }
           }
         case g.RefinedType(parents, decls) =>
           // TODO: detect `val x, y: Int`
