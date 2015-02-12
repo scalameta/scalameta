@@ -1128,6 +1128,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
       result.withOriginal(gtpe)
     })
     def apply(gpre: g.Type, lsym: l.Symbol): p.Member = lsymToPmemberCache.getOrElseUpdate((gpre, lsym), {
+      if (sys.props("member.debug") != null) println((gpre, lsym))
       def approximateSymbol(lsym: l.Symbol): p.Member = {
         // NOTE: we don't need to clear the LOCAL_SUFFIX_STRING from the name of `lsym.gsymbol`
         // because it's always guaranteed not to end with LOCAL_SUFFIX_STRING
