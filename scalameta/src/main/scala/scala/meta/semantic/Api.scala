@@ -37,7 +37,7 @@ trait Api {
     implicit def Term[T <: meta.Term]: HasTpe[T, meta.Type] = null
     implicit def Member[T <: meta.Member]: HasTpe[T, meta.Type] = null
     implicit def TermParam[T <: meta.Term.Param]: HasTpe[T, meta.Type.Arg] = null
-    implicit def TermName[T <: meta.Term.Name]: HasTpe[T, meta.Type] = null
+    implicit def TermAndMember[T <: meta.Term with meta.Member]: HasTpe[T, meta.Type] = null
   }
 
   implicit class SemanticTypeableOps[T <: Tree, U <: Type](val tree: T)(implicit ev: HasTpe[T, U], tag: ClassTag[U]) {
@@ -71,6 +71,7 @@ trait Api {
     implicit def TermRef[T <: meta.Term.Ref]: HasDefns[T, meta.Member.Term] = null
     implicit def TypeRef[T <: meta.Type.Ref]: HasDefns[T, meta.Member] = null // Type.Ref can refer to both types (regular types) and terms (singleton types)
     implicit def PatTypeRef[T <: meta.Pat.Type.Ref]: HasDefns[T, meta.Member] = null // Pat.Type.Ref works the same as Type.Ref
+    implicit def TypeRefAndPatTypeRef[T <: meta.Type.Ref with meta.Pat.Type.Ref]: HasDefns[T, meta.Member] = null
   }
 
   implicit class SemanticDefnableOps[T <: Tree, U <: meta.Member](val tree: T)(implicit ev: HasDefns[T, U], tag: ClassTag[U]) {
