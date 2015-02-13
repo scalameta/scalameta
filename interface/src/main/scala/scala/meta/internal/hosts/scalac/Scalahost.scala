@@ -85,13 +85,8 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
     val gtpe = toScalareflect(tpe.require[p.Type])
     val pfakeCtors = {
       val gpresym = gtpe.typeSymbol
-      val needsFakeCtor = gpresym.isTrait || (gpresym.isModuleClass && !gpresym.isPackageClass)
-      if (needsFakeCtor) {
-        val pname = p.Ctor.Name(gpresym.name.toString).withDenot(gpresym.module.orElse(gpresym))
-        List(p.Ctor.Primary(Nil, pname, Nil))
-      } else {
-        Nil
-      }
+      if (gpresym.isTrait) List(p.Ctor.Primary(Nil, p.Ctor.Name(gpresym.name.toString).withDenot(gpresym), List(List())))
+      else Nil
     }
     pfakeCtors ++ gtpe.members.logical.map(lsym => toApproximateScalameta(gtpe, lsym))
   }
@@ -331,6 +326,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
         pargss.foldLeft(pcore)((pcurr, pargs) => p.Term.Apply(pcurr, pargs)).withOriginal(in)
       }
       def pfakector(gparent: g.MemberDef): p.Ctor.Primary = {
+        val ctor = if (gparent.isInstanceOf[g.ClassDef]) gparent.symbol else gparent.symbol.primaryConstructor
         val name = p.Ctor.Name(gparent.name.toString).withDenot(gparent.symbol)
         p.Ctor.Primary(Nil, name, Nil)
       }
@@ -1255,18 +1251,22 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
         }
         lazy val pmaybeBody = if (gsym.hasFlag(DEFAULTINIT)) None else Some(pbody)
         lazy val pfakeCtor = {
-          val pname = p.Ctor.Name(gsym.name.toString).withDenot(gpre, gsym.module.orElse(gsym))
+          val pname = p.Ctor.Name(gsym.name.toString).withDenot(gpre, gsym)
           p.Ctor.Primary(Nil, pname, Nil)
         }
-        lazy val pctor = lsym match {
-          case l.Clazz(gsym) =>
-            val gctorsym = gsym.primaryConstructor
+        lazy val pctor = {
+          if (lsym.isInstanceOf[l.Clazz] || lsym.isInstanceOf[l.Object]) {
+            val gctorsym = lsym.gsymbol.primaryConstructor
             val gctorinfo = gctorsym.infoIn(gpre)
             val pctorname = p.Ctor.Name(gsym.name.toString).withDenot(gpre, gctorsym).withOriginal(gctorsym)
-            val pctorparamss = gctorinfo.paramss.map(_.map(gvparam => apply(g.NoPrefix, l.TermParameter(gvparam)).asInstanceOf[p.Term.Param]))
+            val pctorparamss = {
+              if (lsym.isInstanceOf[l.Clazz]) gctorinfo.paramss.map(_.map(gvparam => apply(g.NoPrefix, l.TermParameter(gvparam)).asInstanceOf[p.Term.Param]))
+              else Nil // NOTE: synthetic constructors for modules have a fake List(List()) parameter list
+            }
             p.Ctor.Primary(this.pmods(l.PrimaryCtor(gctorsym)), pctorname, pctorparamss)
-          case _ =>
+          } else {
             pfakeCtor
+          }
         }
         lazy val ptemplate = {
           val (pearly, plate) = pstats.partition(_.originalSym match {
