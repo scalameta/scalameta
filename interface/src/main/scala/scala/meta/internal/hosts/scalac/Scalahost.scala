@@ -15,7 +15,7 @@ import scala.meta.internal.hosts.scalac.{SemanticContext => ScalahostSemanticCon
 import scala.reflect.macros.contexts.{Context => ScalareflectMacroContext}
 import scala.meta.macros.{Context => ScalametaMacroContext}
 import scala.meta.internal.hosts.scalac.{MacroContext => ScalahostMacroContext}
-import scala.meta.ui.{Exception => SemanticException}
+import scala.meta.ui.{Exception => SemanticException, Summary}
 import scala.reflect.runtime.{universe => ru}
 import scala.reflect.internal.util.NoSourceFile
 import scala.tools.reflect.{ToolBox, mkSilentFrontEnd}
@@ -45,7 +45,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
     val gtpeFromDenotation = tree.originalPre.flatMap(gpre => tree.originalSym.map(lsym => lsym.gsymbol.infoIn(gpre).finalResultType))
     val gtpe = gtpeFromOriginal.orElse(gtpeFromDenotation) match {
       case Some(gtpe) => gtpe
-      case _ => throw new SemanticException("implementation restriction: internal cache has no type associated with ${term.show[Summary]}")
+      case _ => throw new SemanticException(s"implementation restriction: internal cache has no type associated with ${term.show[Summary]}")
     }
     toApproximateScalameta(gtpe).asInstanceOf[papi.Type]
   }
@@ -57,7 +57,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
     def tryNative(pref: p.Ref): Seq[papi.Member] = {
       def resolveName(pname: p.Name): Seq[papi.Member] = {
         val gpre = pname.denot.prefix match { case h.Prefix.Zero => g.NoPrefix; case h.Prefix.Type(ptpe) => toScalareflect(ptpe.asInstanceOf[p.Type]) }
-        val lsym = symbolTable.get(pname.denot.symbol).getOrElse(throw new SemanticException("implementation restriction: internal cache has no definition associated with ${term.show[Summary]}"))
+        val lsym = symbolTable.get(pname.denot.symbol).getOrElse(throw new SemanticException(s"implementation restriction: internal cache has no definition associated with ${ref.show[Summary]}"))
         List(toApproximateScalameta(gpre, lsym))
       }
       pref match {
@@ -1339,7 +1339,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
     private def gannotinfo(pannot: p.Mod.Annot): g.AnnotationInfo = {
       val gtpe = apply(pannot.tree.ctorTpe)
       val gargss = pannot.tree.ctorArgss.map(_.map(apply))
-      if (gargss.length > 1) throw new SemanticException("implementation restriction: annotations with multiple argument lists are not supported by scalac")
+      if (gargss.length > 1) throw new SemanticException(s"implementation restriction: annotations with multiple argument lists are not supported by scalac")
       if (gtpe <:< g.definitions.StaticAnnotationClass.tpe) {
         g.AnnotationInfo(gtpe, gargss.head.toList, Nil)
       } else {
