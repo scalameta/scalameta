@@ -1244,7 +1244,14 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
           // p.Term.Apply(psysError, List(p.Lit.String("couldn't load tree"))).withOriginal(g.definitions.NothingClass.tpe)
           p.Term.Name("???").withDenot(g.definitions.Predef_???).withOriginal(g.definitions.Predef_???)
         }
-        lazy val pbody = punknownTerm
+        lazy val pbody = lsym match {
+          case l.SecondaryCtor(gsym) =>
+            val gctor = gsym.owner.primaryConstructor
+            val pctorref = p.Ctor.Name(gsym.owner.name.toString).withDenot(gpre, gctor).withOriginal(gctor)
+            p.Term.Apply(pctorref, List(punknownTerm))
+          case _ =>
+            punknownTerm
+        }
         lazy val pmaybeBody = if (gsym.hasFlag(DEFAULTINIT)) None else Some(pbody)
         lazy val pfakeCtor = {
           val pname = p.Ctor.Name(gsym.name.toString).withDenot(gpre, gsym.module.orElse(gsym))
