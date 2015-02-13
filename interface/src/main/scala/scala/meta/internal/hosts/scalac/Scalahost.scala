@@ -1599,6 +1599,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
         else if (gsym.isType) h.Signature.Type
         else unreachable
       }
+      if (sys.props("convert.debug") != null) println(lsym)
       val gsym = lsym.gsymbol
       require(!gsym.isModuleClass && !gsym.isPackageClass)
       if (gsym == g.NoSymbol) h.Symbol.Zero
@@ -1611,6 +1612,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
     def lookupOrElseUpdate(lsym: l.Symbol, hsym: => h.Symbol): h.Symbol = symCache.getOrElseUpdate(lsym, hsym)
 
     def convert(hsym: h.Symbol): l.Symbol = symCache.getOrElseUpdate(hsym, {
+      if (sys.props("convert.debug") != null) println(hsym)
       def resolve(lsym: l.Symbol, name: String, hsig: h.Signature): l.Symbol = {
         val gsym = hsig match {
           case h.Signature.Type => lsym.gsymbol.info.decl(g.TypeName(name)).asType
