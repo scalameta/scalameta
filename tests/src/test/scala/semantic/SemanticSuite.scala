@@ -278,8 +278,6 @@ class SemanticSuite extends FunSuite {
       |final def !=(_: Any): Boolean = ???
       |final def ##(): Int = ???
       |final def synchronized[T0](_: T0): T0 = ???
-      |final def $isInstanceOf[T0](): Boolean = ???
-      |final def $asInstanceOf[T0](): T0 = ???
       |final def isInstanceOf[T0]: Boolean = ???
       |final def asInstanceOf[T0]: T0 = ???
     """.trim.stripMargin)
@@ -481,8 +479,6 @@ class SemanticSuite extends FunSuite {
       |final def !=(_: Any): Boolean = ???
       |final def ##(): Int = ???
       |final def synchronized[T0](_: T0): T0 = ???
-      |final def $isInstanceOf[T0](): Boolean = ???
-      |final def $asInstanceOf[T0](): T0 = ???
       |final def isInstanceOf[T0]: Boolean = ???
       |final def asInstanceOf[T0]: T0 = ???
     """.trim.stripMargin)
@@ -518,8 +514,6 @@ class SemanticSuite extends FunSuite {
       |final def !=(_: Any): Boolean = ???
       |final def ##(): Int = ???
       |final def synchronized[T0](_: T0): T0 = ???
-      |final def $isInstanceOf[T0](): Boolean = ???
-      |final def $asInstanceOf[T0](): T0 = ???
       |final def isInstanceOf[T0]: Boolean = ???
       |final def asInstanceOf[T0]: T0 = ???
     """.trim.stripMargin)

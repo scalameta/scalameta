@@ -301,7 +301,8 @@ trait LogicalSymbols {
         }
       }
       val isTraitCtor = gsym.isPrimaryConstructor && gsym.name == global.nme.MIXIN_CONSTRUCTOR
-      if (!isTraitCtor) rawResult += lsym
+      val isHiddenInstanceOf = gsym == global.definitions.Object_isInstanceOf || gsym == global.definitions.Object_asInstanceOf
+      if (!isTraitCtor && !isHiddenInstanceOf) rawResult += lsym
     }
     val result = rawResult.toVector.distinct
     if (result.exists(_.isIncomplete)) {
