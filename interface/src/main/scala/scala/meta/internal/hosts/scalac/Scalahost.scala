@@ -1611,12 +1611,15 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
     def lookupOrElseUpdate(lsym: l.Symbol, hsym: => h.Symbol): h.Symbol = symCache.getOrElseUpdate(lsym, hsym)
 
     def convert(hsym: h.Symbol): l.Symbol = symCache.getOrElseUpdate(hsym, {
-      def resolve(lsym: l.Symbol, name: String, hsig: h.Signature): l.Symbol = hsig match {
-        case h.Signature.Type => lsym.gsymbol.info.decl(g.TypeName(name)).asType.logical
-        case h.Signature.Term => lsym.gsymbol.info.decl(g.TermName(name)).suchThat(galt => galt.isGetter || !galt.isMethod).logical
-        case h.Signature.Method(jvmsig) => lsym.gsymbol.info.decl(g.TermName(name)).suchThat(galt => galt.isMethod && galt.jvmsig == jvmsig).logical
-        case h.Signature.TypeParameter => lsym.gsymbol.typeParams.filter(_.name.toString == name).head.logical
-        case h.Signature.TermParameter => lsym.gsymbol.paramss.flatten.filter(_.name.toString == name).head.logical
+      def resolve(lsym: l.Symbol, name: String, hsig: h.Signature): l.Symbol = {
+        val gsym = hsig match {
+          case h.Signature.Type => lsym.gsymbol.info.decl(g.TypeName(name)).asType
+          case h.Signature.Term => lsym.gsymbol.info.decl(g.TermName(name)).suchThat(galt => galt.isGetter || !galt.isMethod).asTerm
+          case h.Signature.Method(jvmsig) => lsym.gsymbol.info.decl(g.TermName(name)).suchThat(galt => galt.isMethod && galt.jvmsig == jvmsig).asTerm
+          case h.Signature.TypeParameter => lsym.gsymbol.typeParams.filter(_.name.toString == name).head
+          case h.Signature.TermParameter => lsym.gsymbol.paramss.flatten.filter(_.name.toString == name).head
+        }
+        gsym.logical
       }
       hsym match {
         case h.Symbol.Zero => l.None
