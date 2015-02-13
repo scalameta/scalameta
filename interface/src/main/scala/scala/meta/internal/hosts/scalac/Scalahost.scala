@@ -1647,7 +1647,7 @@ extends ScalahostSemanticContext[G](scalareflectMacroContext.universe.asInstance
   private[meta] def resources: Map[String, Array[Byte]] = ???
 }
 
-class EasyContext(customGlobal: ScalaGlobal) extends ScalahostSemanticContext(customGlobal) {
+class StandaloneContext(customGlobal: ScalaGlobal) extends ScalahostSemanticContext(customGlobal) {
   private val reporter: StoreReporter = g.reporter.asInstanceOf[StoreReporter]
   def define(code: String): p.Tree = {
     val gtree = g.newUnitParser(code, "<scalahost>").parse()
@@ -1678,7 +1678,7 @@ object Scalahost {
   def mkMacroContext[G <: ScalaGlobal](rc: ScalareflectMacroContext): ScalametaMacroContext with ScalahostMacroContext[G] = {
     new ScalahostMacroContext[G](rc)
   }
-  def mkEasyContext(options: String = ""): EasyContext = {
+  def mkStandaloneContext(options: String = ""): StandaloneContext = {
     var compilerOptions = options
     if (!compilerOptions.contains("-Xplugin-require:scalahost")) {
       val scalahostJar = {
@@ -1700,6 +1700,6 @@ object Scalahost {
       global.globalPhase = run.parserPhase
       global
     }
-    new EasyContext(customGlobal)
+    new StandaloneContext(customGlobal)
   }
 }

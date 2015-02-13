@@ -9,7 +9,7 @@ class SemanticSuite extends FunSuite {
   private val classpathOptions = s"-cp ${sys.props("sbt.paths.scala-library.jar")}"
   private val pluginOptions = s"-Xplugin:${sys.props("sbt.paths.plugin.jar")} -Xplugin-require:scalahost"
   private val options = classpathOptions + " " + pluginOptions
-  implicit val c = Scalahost.mkEasyContext(options)
+  implicit val c = Scalahost.mkStandaloneContext(options)
 
   test("subtyping") {
     assert(t"List[Int]" <:< t"List[Any]")

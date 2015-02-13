@@ -20,12 +20,12 @@ class ReplSuite extends FunSuite {
       |val classpathOptions = "-cp " + sys.props("sbt.paths.scala-library.jar")
       |val pluginOptions = "-Xplugin:" + sys.props("sbt.paths.plugin.jar") + " -Xplugin-require:scalahost"
       |val options = classpathOptions + " " + pluginOptions
-      |implicit val c = Scalahost.mkEasyContext(options)
+      |implicit val c = Scalahost.mkStandaloneContext(options)
       |t"List[Int]" <:< t"List[Any]"
     """.stripMargin.trim)
     .replace(sys.props("sbt.paths.scala-library.jar"), "<path/to/scala-library.jar>")
     .replace(sys.props("sbt.paths.plugin.jar"), "<path/to/plugin.jar>")
-    .replaceAll("EasyContext@[0-9a-fA-F]+", "EasyContext@<memoryAddress>")
+    .replaceAll("StandaloneContext@[0-9a-fA-F]+", "StandaloneContext@<memoryAddress>")
     === """
       |scala> import scala.meta._
       |import scala.meta._
@@ -42,8 +42,8 @@ class ReplSuite extends FunSuite {
       |scala> val options = classpathOptions + " " + pluginOptions
       |options: String = -cp <path/to/scala-library.jar> -Xplugin:<path/to/plugin.jar> -Xplugin-require:scalahost
       |
-      |scala> implicit val c = Scalahost.mkEasyContext(options)
-      |c: scala.meta.internal.hosts.scalac.EasyContext = scala.meta.internal.hosts.scalac.EasyContext@<memoryAddress>
+      |scala> implicit val c = Scalahost.mkStandaloneContext(options)
+      |c: scala.meta.internal.hosts.scalac.StandaloneContext = scala.meta.internal.hosts.scalac.StandaloneContext@<memoryAddress>
       |
       |scala> t"List[Int]" <:< t"List[Any]"
       |res0: Boolean = true
