@@ -1273,7 +1273,10 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
             case Some(l.Var(gfield, _, _)) => gfield.hasFlag(PRESUPER)
             case _ => false
           })
-          val g.ClassInfoType(gparents, _, _) = ginfo
+          val gparents = ginfo match {
+            case g.ClassInfoType(gparents, _, _) => gparents
+            case g.PolyType(_, g.ClassInfoType(gparents, _, _)) => gparents
+          }
           val pparents = gparents.map(gparent => {
             val ptpe = apply(gparent).asInstanceOf[p.Type]
             val gctor = gparent.typeSymbol.primaryConstructor.orElse(gparent.typeSymbol)
