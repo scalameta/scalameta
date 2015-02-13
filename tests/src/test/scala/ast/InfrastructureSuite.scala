@@ -21,6 +21,7 @@ class InfrastructureSuite extends FunSuite {
       private[meta] def isSubType(tpe1: Type, tpe2: Type): Boolean = ???
       private[meta] def lub(tpes: Seq[Type]): Type = ???
       private[meta] def glb(tpes: Seq[Type]): Type = ???
+      private[meta] def parents(tpe: Type): Seq[Type] = ???
       private[meta] def widen(tpe: Type): Type = ???
       private[meta] def dealias(tpe: Type): Type = ???
       private[meta] def parents(member: Member): Seq[Member] = ???

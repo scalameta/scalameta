@@ -19,6 +19,7 @@ trait Context {
   def isSubType(tpe1: Type, tpe2: Type): Boolean
   def lub(tpes: Seq[Type]): Type
   def glb(tpes: Seq[Type]): Type
+  def parents(tpe: Type): Seq[Type]
   def widen(tpe: Type): Type
   def dealias(tpe: Type): Type
 

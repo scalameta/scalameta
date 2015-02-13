@@ -97,7 +97,7 @@ trait Api {
     @hosted def widen: Type = implicitly[SemanticContext].widen(tree)
     @hosted def dealias: Type = implicitly[SemanticContext].dealias(tree)
     @hosted def companion: Type.Ref = ???
-    @hosted def parents: Seq[Type] = ???
+    @hosted def parents: Seq[Type] = implicitly[SemanticContext].parents(tree)
   }
 
   @hosted def lub(tpes: Seq[Type]): Type = implicitly[SemanticContext].lub(tpes)
