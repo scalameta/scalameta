@@ -173,6 +173,7 @@ object Settings {
 
   lazy val replIntegration = initialCommands in console := """
     import scala.meta._
+    import scala.meta.internal.{ast => impl}
     import scala.meta.internal.hosts.scalac.Scalahost
     val options = "-Xplugin:" + sys.props("sbt.paths.plugin.jar") + " -Xplugin-require:scalahost"
     implicit val c = Scalahost.mkToolboxContext(scala.reflect.runtime.currentMirror, options = options)
