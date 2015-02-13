@@ -161,6 +161,8 @@ object Settings {
     fullClasspath in Test := {
       val defaultValue = (fullClasspath in Test).value
       val classpath = defaultValue.files.map(_.getAbsolutePath)
+      val scalaLibrary = classpath.map(_.toString).find(_.contains("scala-library")).get
+      System.setProperty("sbt.paths.scala-library.jar", scalaLibrary)
       System.setProperty("sbt.paths.tests.classpath", classpath.mkString(java.io.File.pathSeparatorChar.toString))
       defaultValue
     },
@@ -176,6 +178,6 @@ object Settings {
     import scala.meta.internal.{ast => impl}
     import scala.meta.internal.hosts.scalac.Scalahost
     val options = "-Xplugin:" + sys.props("sbt.paths.plugin.jar") + " -Xplugin-require:scalahost"
-    implicit val c = Scalahost.mkToolboxContext(scala.reflect.runtime.currentMirror, options = options)
+    implicit val c = Scalahost.mkEasyContext(options = options)
   """
 }

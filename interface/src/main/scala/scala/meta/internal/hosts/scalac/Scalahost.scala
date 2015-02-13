@@ -9,7 +9,9 @@ import scala.reflect.runtime.universe.{Type => Pt, typeOf}
 import scala.{meta => papi}
 import scala.meta.internal.{ast => p}
 import scala.meta.syntactic.parsers.SyntacticInfo._
-import scala.tools.nsc.{Global => ScalaGlobal}
+import scala.tools.cmd.CommandLineParser
+import scala.tools.nsc.{Global => ScalaGlobal, CompilerCommand, Settings}
+import scala.tools.nsc.reporters.StoreReporter
 import scala.meta.semantic.{Context => ScalametaSemanticContext}
 import scala.meta.internal.hosts.scalac.{SemanticContext => ScalahostSemanticContext}
 import scala.reflect.macros.contexts.{Context => ScalareflectMacroContext}
@@ -18,7 +20,6 @@ import scala.meta.internal.hosts.scalac.{MacroContext => ScalahostMacroContext}
 import scala.meta.ui.{Exception => SemanticException, Summary}
 import scala.reflect.runtime.{universe => ru}
 import scala.reflect.internal.util.NoSourceFile
-import scala.tools.reflect.{ToolBox, mkSilentFrontEnd}
 import scala.compat.Platform.EOL
 import org.scalameta.adt._
 import org.scalameta.collections._
@@ -1644,11 +1645,12 @@ extends ScalahostSemanticContext[G](scalareflectMacroContext.universe.asInstance
   private[meta] def resources: Map[String, Array[Byte]] = ???
 }
 
-class ToolboxContext(tb: ToolBox[ru.type]) extends ScalahostSemanticContext(tb.global) {
+class EasyContext(customGlobal: ScalaGlobal) extends ScalahostSemanticContext(customGlobal) {
+  private val reporter: StoreReporter = g.reporter.asInstanceOf[StoreReporter]
   def define(code: String): p.Tree = {
     val gtree = g.newUnitParser(code, "<scalahost>").parse()
     val gtypedtree = {
-      import g._
+      import g.{reporter => _, _}
       import analyzer._
       val run = new Run
       reporter.reset()
@@ -1660,7 +1662,7 @@ class ToolboxContext(tb: ToolBox[ru.type]) extends ScalahostSemanticContext(tb.g
       globalPhase = run.typerPhase
       val typer = newTyper(rootContext(NoCompilationUnit))
       val typedpkg = typer.typed(gtree).asInstanceOf[Tree]
-      if (tb.frontEnd.hasErrors) sys.error("reflective compilation has failed:" + EOL + EOL + (tb.frontEnd.infos map (_.msg) mkString EOL))
+      if (reporter.hasErrors) sys.error("typecheck has failed:" + EOL + EOL + (reporter.infos map (_.msg) mkString EOL))
       typedpkg.asInstanceOf[PackageDef].stats.head
     }
     toScalameta(gtypedtree, classOf[papi.Stat])
@@ -1674,16 +1676,28 @@ object Scalahost {
   def mkMacroContext[G <: ScalaGlobal](rc: ScalareflectMacroContext): ScalametaMacroContext with ScalahostMacroContext[G] = {
     new ScalahostMacroContext[G](rc)
   }
-  def mkToolboxContext(mirror: ru.Mirror, options: String = ""): ToolboxContext = {
-    var toolboxOptions = options
-    if (!toolboxOptions.contains("-Xplugin-require:scalahost")) {
+  def mkEasyContext(options: String = ""): EasyContext = {
+    var compilerOptions = options
+    if (!compilerOptions.contains("-Xplugin-require:scalahost")) {
       val scalahostJar = {
         try getClass.getProtectionDomain().getCodeSource().getLocation().getFile()
         catch { case ex: Throwable => throw new scala.Exception("failed to auto-load the scalahost plugin", ex) }
       }
       val scalahostOptions = " -Xplugin:" + scalahostJar + " -Xplugin-require:scalahost"
-      toolboxOptions += scalahostOptions
+      compilerOptions += scalahostOptions
     }
-    new ToolboxContext(mirror.mkToolBox(mkSilentFrontEnd(), toolboxOptions))
+    val customGlobal = {
+      val args = CommandLineParser.tokenize(compilerOptions)
+      val emptySettings = new Settings(error => sys.error("compilation has failed: " + error))
+      val reporter = new StoreReporter()
+      val command = new CompilerCommand(args, emptySettings)
+      val settings = command.settings
+      val global = new ScalaGlobal(settings, reporter)
+      val run = new global.Run
+      global.phase = run.parserPhase
+      global.globalPhase = run.parserPhase
+      global
+    }
+    new EasyContext(customGlobal)
   }
 }
