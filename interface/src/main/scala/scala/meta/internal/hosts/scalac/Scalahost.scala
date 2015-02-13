@@ -83,12 +83,12 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
 
   private[meta] def members(tpe: papi.Type): Seq[papi.Member] = {
     val gtpe = toScalareflect(tpe.require[p.Type])
-    val pfakeCtors = {
+    val pfakectors = {
       val gpresym = gtpe.typeSymbol
       if (gpresym.isTrait) List(p.Ctor.Primary(Nil, p.Ctor.Name(gpresym.name.toString).withDenot(gpresym), List(List())))
       else Nil
     }
-    pfakeCtors ++ gtpe.members.logical.map(lsym => toApproximateScalameta(gtpe, lsym))
+    pfakectors ++ gtpe.members.logical.map(lsym => toApproximateScalameta(gtpe, lsym))
   }
 
   private[meta] def isSubType(tpe1: papi.Type, tpe2: papi.Type): Boolean = {
@@ -1250,7 +1250,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
             punknownTerm
         }
         lazy val pmaybeBody = if (gsym.hasFlag(DEFAULTINIT)) None else Some(pbody)
-        lazy val pfakeCtor = {
+        lazy val pfakector = {
           val pname = p.Ctor.Name(gsym.name.toString).withDenot(gpre, gsym)
           p.Ctor.Primary(Nil, pname, Nil)
         }
@@ -1265,7 +1265,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
             }
             p.Ctor.Primary(this.pmods(l.PrimaryCtor(gctorsym)), pctorname, pctorparamss)
           } else {
-            pfakeCtor
+            pfakector
           }
         }
         lazy val ptemplate = {
