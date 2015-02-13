@@ -13,6 +13,7 @@ trait TypeHelpers {
 
   implicit class RichHelperType(tpe: Type) {
     def etaReduce: Type = EtaReduce.unapply(tpe).getOrElse(tpe)
+    def directBaseTypes: List[Type] = ???
   }
 
   object EtaReduce {

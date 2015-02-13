@@ -90,13 +90,44 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
     pfakeCtors ++ gpre.members.logical.map(lsym => toApproximateScalameta(gpre, lsym))
   }
 
-  private[meta] def isSubType(tpe1: papi.Type, tpe2: papi.Type): Boolean = toScalareflect(tpe1.require[p.Type]) <:< toScalareflect(tpe2.require[p.Type])
-  private[meta] def lub(tpes: Seq[papi.Type]): papi.Type = toApproximateScalameta(g.lub(tpes.map(tpe => toScalareflect(tpe.require[p.Type])).toList)).asInstanceOf[papi.Type]
-  private[meta] def glb(tpes: Seq[papi.Type]): papi.Type = toApproximateScalameta(g.glb(tpes.map(tpe => toScalareflect(tpe.require[p.Type])).toList)).asInstanceOf[papi.Type]
-  private[meta] def widen(tpe: papi.Type): papi.Type = toApproximateScalameta(toScalareflect(tpe.require[p.Type]).widen).asInstanceOf[papi.Type]
-  private[meta] def dealias(tpe: papi.Type): papi.Type = toApproximateScalameta(toScalareflect(tpe.require[p.Type]).dealias).asInstanceOf[papi.Type]
+  private[meta] def isSubType(tpe1: papi.Type, tpe2: papi.Type): Boolean = {
+    val gtpe1 = toScalareflect(tpe1.require[p.Type])
+    val gtpe2 = toScalareflect(tpe2.require[p.Type])
+    gtpe1 <:< gtpe2
+  }
+
+  private[meta] def lub(tpes: Seq[papi.Type]): papi.Type = {
+    val gtpes = tpes.map(tpe => toScalareflect(tpe.require[p.Type])).toList
+    val presult = toApproximateScalameta(g.lub(gtpes))
+    presult.asInstanceOf[papi.Type]
+  }
+
+  private[meta] def glb(tpes: Seq[papi.Type]): papi.Type = {
+    val gtpes = tpes.map(tpe => toScalareflect(tpe.require[p.Type])).toList
+    val presult = toApproximateScalameta(g.glb(gtpes))
+    presult.asInstanceOf[papi.Type]
+  }
+
+  private[meta] def parents(tpe: papi.Type): Seq[papi.Type] = {
+    val gtpe = toScalareflect(tpe.require[p.Type])
+    val presults = gtpe.directBaseTypes.map(toApproximateScalameta.apply)
+    presults.map(_.asInstanceOf[papi.Type])
+  }
+
+  private[meta] def widen(tpe: papi.Type): papi.Type = {
+    val gtpe = toScalareflect(tpe.require[p.Type])
+    val presult = toApproximateScalameta(gtpe.widen)
+    presult.asInstanceOf[papi.Type]
+  }
+
+  private[meta] def dealias(tpe: papi.Type): papi.Type = {
+    val gtpe = toScalareflect(tpe.require[p.Type])
+    val presult = toApproximateScalameta(gtpe.dealias)
+    presult.asInstanceOf[papi.Type]
+  }
 
   private[meta] def parents(member: papi.Member): Seq[papi.Member] = ???
+
   private[meta] def children(member: papi.Member): Seq[papi.Member] = ???
 
   // NOTE: this is an exhaustive list of payloads that can be attached to scratchpads of converted trees
