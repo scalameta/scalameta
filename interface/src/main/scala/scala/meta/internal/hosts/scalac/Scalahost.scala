@@ -83,12 +83,14 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
 
   private[meta] def members(tpe: papi.Type): Seq[papi.Member] = {
     val gtpe = toScalareflect(tpe.require[p.Type])
+    val gmembers = gtpe.members.filter(_ != g.rootMirror.RootPackage)
+    val pmembers = gmembers.logical.map(lsym => toApproximateScalameta(gtpe, lsym))
     val pfakectors = {
       val gpresym = gtpe.typeSymbol
       if (gpresym.isTrait) List(p.Ctor.Primary(Nil, p.Ctor.Name(gpresym.name.toString).withDenot(gpresym), List(List())))
       else Nil
     }
-    pfakectors ++ gtpe.members.logical.map(lsym => toApproximateScalameta(gtpe, lsym))
+    pfakectors ++ pmembers
   }
 
   private[meta] def isSubType(tpe1: papi.Type, tpe2: papi.Type): Boolean = {
