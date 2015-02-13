@@ -2,6 +2,10 @@ package scala.meta
 package internal
 package ui
 
+import scala.meta.internal.{ast => impl}
+import scala.meta.dialects.`package`.Scala211
+import scala.meta.ui.Code.codeTree
+
 object toString {
   def apply(tree: Tree) = {
     // NOTE: if we leave implicit inference to chance, we're going to get
@@ -11,8 +15,11 @@ object toString {
     // import scala.meta.ui.Code
     // import scala.meta.dialects.`package`.Scala211
     // tree.show[Code]
-    val dialect = scala.meta.dialects.`package`.Scala211
-    val prettyprinter = scala.meta.ui.Code.codeTree[Tree](dialect)
-    prettyprinter(tree).toString
+    val prettyprinter = codeTree[Tree](Scala211)
+    val code = prettyprinter(tree).toString
+    tree match {
+      case impl.Ctor.Primary(_, name, _) => s"def this$code"
+      case _ => code
+    }
   }
 }

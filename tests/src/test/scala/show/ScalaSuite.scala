@@ -342,4 +342,15 @@ class ScalaSuite extends ParseSuite {
   test("case _: (t Map u)") {
     assert(pat("_: (t Map u)").show[Code] === "_: (t Map u)")
   }
+
+  test("constructors") {
+    import scala.meta.internal.ast._
+    val tree @ Defn.Class(_, _, _, primary, Template(_, _, _, Some(secondary :: Nil))) = templStat("class C(x: Int) { def this() = this(42) }")
+    assert(tree.show[Code] === "class C(x: Int) { def this() = this(42) }")
+    assert(primary.show[Code] === "(x: Int)")
+    assert(secondary.show[Code] === "def this() = this(42)")
+    assert(tree.toString === "class C(x: Int) { def this() = this(42) }")
+    assert(primary.toString === "def this(x: Int)")
+    assert(secondary.toString === "def this() = this(42)")
+  }
 }
