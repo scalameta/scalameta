@@ -1290,13 +1290,13 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
           val pself = p.Term.Param(Nil, p.Name.Anonymous(), pselftpe, None)
           p.Template(pearly, pparents, pself, Some(plate))
         }
-        lazy val pstats = {
+        lazy val pstats = LazySeq({
           val gstatowner = gsym match { case gclass: g.ClassSymbol => gclass; case gmodule: g.ModuleSymbol => gmodule.moduleClass.asClass }
           val gstatpre = gstatowner.toTypeIn(gpre)
           val ldecls = gstatpre.decls.logical
           val lcensoredDecls = ldecls.filter(!_.isInstanceOf[l.PrimaryCtor])
           lcensoredDecls.map(lsym => toApproximateScalameta(gstatpre, lsym)).map(_.stat)
-        }
+        })
         lazy val pmaybeDefault = if (gsym.hasFlag(DEFAULTPARAM)) Some(pbody) else None
         lazy val pviewBounds = {
           val gevidences = gsym.owner.paramss.flatten.filter(_.name.startsWith(g.nme.EVIDENCE_PARAM_PREFIX))
