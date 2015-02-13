@@ -1183,6 +1183,8 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
         lazy val pname = lsym match {
           case l.PrimaryCtor(gsym) => p.Ctor.Name(gsym.owner.name.toString).withDenot(gpre, gsym).withOriginal(gsym)
           case l.SecondaryCtor(gsym) => p.Ctor.Name(gsym.owner.name.toString).withDenot(gpre, gsym).withOriginal(gsym)
+          case l.TermParameter(gsym) => gsym.anoncvt(g.Ident(gsym))
+          case l.TypeParameter(gsym) => gsym.anoncvt(g.Ident(gsym))
           case _ => gsym.precvt(gpre, g.Ident(gsym))
         }
         lazy val ptparams = gtparams.map(gtparam => apply(g.NoPrefix, l.TypeParameter(gtparam)).asInstanceOf[p.Type.Param])
@@ -1281,8 +1283,8 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
           case _: l.SecondaryCtor => p.Ctor.Secondary(pmods, pname.asInstanceOf[p.Ctor.Name], pvparamss, pbody)
           case _: l.TermBind => p.Pat.Var.Term(pname.asInstanceOf[p.Term.Name]).name
           case _: l.TypeBind => p.Pat.Var.Type(pname.asInstanceOf[p.Type.Name]).name
-          case _: l.TermParameter => p.Term.Param(pmods, pname.asInstanceOf[p.Term.Name], Some(ptpe), pmaybeDefault)
-          case _: l.TypeParameter => p.Type.Param(pmods, pname.asInstanceOf[p.Type.Name], ptparams, ptpeBounds, pviewBounds, pcontextBounds)
+          case _: l.TermParameter => p.Term.Param(pmods, pname.asInstanceOf[papi.Term.Name], Some(ptpe), pmaybeDefault)
+          case _: l.TypeParameter => p.Type.Param(pmods, pname.asInstanceOf[papi.Type.Name], ptparams, ptpeBounds, pviewBounds, pcontextBounds)
           case _ => sys.error(s"unsupported symbol $lsym, designation = ${gsym.getClass}, flags = ${gsym.flags}")
         }
         pmember.withOriginal(lsym)
