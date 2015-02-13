@@ -57,7 +57,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
     def tryNative(pref: p.Ref): Seq[papi.Member] = {
       def resolveName(pname: p.Name): Seq[papi.Member] = {
         val gpre = pname.denot.prefix match { case h.Prefix.Zero => g.NoPrefix; case h.Prefix.Type(ptpe) => toScalareflect(ptpe.asInstanceOf[p.Type]) }
-        val lsym = symbolTable.lookupOrElseUpdate(pname.denot.symbol, throw new SemanticException(s"implementation restriction: internal cache has no definition associated with ${ref.show[Summary]}"))
+        val lsym = symbolTable.convert(pname.denot.symbol)
         List(toApproximateScalameta(gpre, lsym))
       }
       pref match {
