@@ -294,13 +294,13 @@ object Code {
     case t: Type.Arg.Repeated => m(ParamTyp, s(p(Typ, t.tpe), kw("*")))
     case t: Type.Arg.ByName   => m(ParamTyp, s(kw("=>"), " ", p(Typ, t.tpe)))
     case t: Type.Param        =>
-      val cbounds = r(t.contextBounds.map { s(kw(":"), " ", _) })
-      val vbounds = r(t.viewBounds.map { s(" ", kw("<%"), " ", _) })
-      val tbounds = s(t.typeBounds)
-      val variance = t.mods.foldLeft("")((curr, m) => if (m.isInstanceOf[Mod.Covariant]) "+" else if (m.isInstanceOf[Mod.Contravariant]) "-" else curr)
       val mods = t.mods.filter(m => !m.isInstanceOf[Mod.Covariant] && !m.isInstanceOf[Mod.Contravariant])
       require(t.mods.length - mods.length <= 1)
-      s(a(mods, " "), variance, t.name, t.tparams, cbounds, vbounds, tbounds)
+      val variance = t.mods.foldLeft("")((curr, m) => if (m.isInstanceOf[Mod.Covariant]) "+" else if (m.isInstanceOf[Mod.Contravariant]) "-" else curr)
+      val tbounds = s(t.typeBounds)
+      val vbounds = r(t.viewBounds.map { s(" ", kw("<%"), " ", _) })
+      val cbounds = r(t.contextBounds.map { s(kw(":"), " ", _) })
+      s(a(mods, " "), variance, t.name, t.tparams, tbounds, vbounds, cbounds)
 
     // Pat
     case t: Pat.Var.Term         => m(SimplePattern, s(t.name.value))

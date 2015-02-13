@@ -97,7 +97,7 @@ trait Api {
     @hosted def widen: Type = implicitly[SemanticContext].widen(tree)
     @hosted def dealias: Type = implicitly[SemanticContext].dealias(tree)
     @hosted def companion: Type.Ref = ???
-    @hosted def parents: Seq[Type] = ???
+    @hosted def parents: Seq[Type] = implicitly[SemanticContext].parents(tree)
   }
 
   @hosted def lub(tpes: Seq[Type]): Type = implicitly[SemanticContext].lub(tpes)
@@ -347,7 +347,7 @@ trait Api {
         case tree: impl.Term.For => tree.enums.flatMap(membersOfEnumerator)
         case tree: impl.Term.ForYield => tree.enums.flatMap(membersOfEnumerator)
         case tree: impl.Case => membersOfPat(tree.pat)
-        case tree: impl.Type.Name => Nil
+        case tree: impl.Type.Name if tree.isBinder => Nil
         case tree: impl.Type => implicitly[SemanticContext].members(tree)
         case tree: impl.Term.Name => Nil
         case tree: impl.Term.Param => Nil
@@ -372,15 +372,15 @@ trait Api {
     @hosted private[meta] def internalSingle[T <: Member : ClassTag](name: String, filter: T => Boolean, diagnostic: String): T = {
       val filtered = internalFilter[T](x => x.name.toString == name && filter(x))
       filtered match {
-        case Seq() => throw new SemanticException(s"no $name $diagnostic found in ${tree.show[Summary]}")
+        case Seq() => throw new SemanticException(s"""no $diagnostic named "$name" found in ${tree.show[Summary]}""")
         case Seq(single) => single
-        case Seq(_, _*) => throw new SemanticException(s"multiple $name $diagnostic found in ${tree.show[Summary]}")
+        case Seq(_, _*) => throw new SemanticException(s"""multiple $diagnostic named "$name" found in ${tree.show[Summary]}""")
       }
     }
     @hosted private[meta] def internalMulti[T <: Member : ClassTag](name: String, filter: T => Boolean, diagnostic: String): Seq[T] = {
       val filtered = internalFilter[T](x => x.name.toString == name && filter(x))
       filtered match {
-        case Seq() => throw new SemanticException(s"no $name $diagnostic found in ${tree.show[Summary]}")
+        case Seq() => throw new SemanticException(s"""no $diagnostic named "$name" found in ${tree.show[Summary]}""")
         case Seq(single) => List(single)
         case Seq(multi @ _*) => multi.toList
       }

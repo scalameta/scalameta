@@ -62,6 +62,7 @@ We understand that this API is at odds with the goals of statelessness and platf
 | `def isSubType(tpe1: Type, tpe2: Type): Boolean`          | Subtyping check.
 | `def lub(tpes: Seq[Type]): Type`                          | Least upper bound.
 | `def glb(tpes: Seq[Type]): Type`                          | Greatest lower bound.
+| `def parents(tpe: Type): Seq[Type]`                       | Direct supertypes of a given type. If the given type has some type parameters instantiated, then the results of this method should also have corresponding type parameters instantiated.
 | `def widen(tpe: Type): Type`                              | If a given type is a singleton type, widen it. Otherwise, return the input type back.
 | `def dealias(tpe: Type): Type`                            | If a given type is a type alias or an application thereof, resolve it. Otherwise, return the input type back.
 | `def parents(member: Member): Seq[Member]`                | Direct parents (i.e. superclasses or overriddens) of a given member. If the provided member has been obtained using `members` via some prefix or by instantiating some type parameters, then the results of this method should also have corresponding type parameters instantiated.

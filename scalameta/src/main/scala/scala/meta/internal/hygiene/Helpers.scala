@@ -20,6 +20,7 @@ object NameRef {
       case name: Ctor.Name => Some((name, Ctor.Name.$tag))
       case Term.Select(NameRef(_, _), name) => Some((name, Term.Name.$tag))
       case Type.Select(NameRef(_, _), name) => Some((name, Type.Name.$tag))
+      case Type.Project(NameRef(_, _), name) => Some((name, Type.Name.$tag))
       case Ctor.Ref.Select(NameRef(_, _), name) => Some((name, Ctor.Name.$tag))
       case _ => None
     }
