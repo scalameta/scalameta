@@ -300,7 +300,8 @@ trait LogicalSymbols {
           sys.error(s"unsupported symbol ${gsym}, designation = ${gsym.getClass}, info = ${global.showRaw(gsym.info, printIds = true, printTypes = true)}")
         }
       }
-      rawResult += lsym
+      val isTraitCtor = gsym.isPrimaryConstructor && gsym.name == global.nme.MIXIN_CONSTRUCTOR
+      if (!isTraitCtor) rawResult += lsym
     }
     val result = rawResult.toVector.distinct
     if (result.exists(_.isIncomplete)) {
