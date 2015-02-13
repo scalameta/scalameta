@@ -57,7 +57,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
     def tryNative(pref: p.Ref): Seq[papi.Member] = {
       def resolveName(pname: p.Name): Seq[papi.Member] = {
         val gpre = pname.denot.prefix match { case h.Prefix.Zero => g.NoPrefix; case h.Prefix.Type(ptpe) => toScalareflect(ptpe.asInstanceOf[p.Type]) }
-        val lsym = symbolTable.get(pname.denot.symbol).getOrElse(throw new SemanticException(s"implementation restriction: internal cache has no definition associated with ${ref.show[Summary]}"))
+        val lsym = symbolTable.lookupOrElseUpdate(pname.denot.symbol, throw new SemanticException(s"implementation restriction: internal cache has no definition associated with ${ref.show[Summary]}"))
         List(toApproximateScalameta(gpre, lsym))
       }
       pref match {
@@ -141,7 +141,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
     private def denot(gpre: g.Type, lsym: l.Symbol): h.Denotation = {
       require(gpre != g.NoType)
       val hpre = if (gpre != g.NoPrefix) h.Prefix.Type(toApproximateScalameta(gpre).asInstanceOf[p.Type]) else h.Prefix.Zero
-      val hsym = symbolTable(lsym)
+      val hsym = symbolTable.convert(lsym)
       h.Denotation.Precomputed(hpre, hsym)
     }
     def withDenot(gsym: g.Symbol)(implicit ev: CanHaveDenot[T]): T = ptree.withDenot(gsym.logical)
@@ -1329,7 +1329,8 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
           pmem
         }
       }
-      val maybeSourceNativePmember = symbolTable.get(lsym).flatMap(hsym => hsymToNativePmemberCache.get(hsym))
+      val hsym = symbolTable.convert(lsym)
+      val maybeSourceNativePmember = hsymToNativePmemberCache.get(hsym)
       val maybeNativePmember = maybeSourceNativePmember.map(applyPrefix(gpre, _))
       maybeNativePmember.getOrElse(approximateSymbol(lsym))
     })
@@ -1402,7 +1403,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
         ptparams.map(ptparam => {
           val htparam = ptparam.name.asInstanceOf[p.Name].denot.symbol
           val gowner = { require(lsym.gsymbols.length == 1); lsym.gsymbol }
-          val ltparam = symbolTable.getOrElseUpdate(htparam, gowner.mkLtypeParameter(ptparam.name.toString))
+          val ltparam = symbolTable.lookupOrElseUpdate(htparam, gowner.mkLtypeParameter(ptparam.name.toString))
           ltparam.mimic(ptparam).gsymbol
         }).toList
       }
@@ -1410,7 +1411,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
         pparams.map(pparam => {
           val hparam = pparam.name.asInstanceOf[p.Name].denot.symbol
           val gowner = { require(lsym.gsymbols.length == 1); lsym.gsymbol }
-          val lparam = symbolTable.getOrElseUpdate(hparam, gowner.mkLtermParameter(pparam.name.toString))
+          val lparam = symbolTable.lookupOrElseUpdate(hparam, gowner.mkLtermParameter(pparam.name.toString))
           lparam.mimic(pparam).gsymbol
         }).toList
       }
@@ -1473,14 +1474,14 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
     def apply(ptpe: p.Type.Arg): g.Type = tpeCache.getOrElseUpdate(ptpe, {
       def loop(ptpe: p.Type.Arg): g.Type = ptpe match {
         case pname: p.Type.Name =>
-          g.TypeRef(gprefix(pname.denot.prefix), symbolTable(pname.denot.symbol).gsymbol, Nil)
+          g.TypeRef(gprefix(pname.denot.prefix), symbolTable.convert(pname.denot.symbol).gsymbol, Nil)
         case p.Type.Select(pqual, pname) =>
-          g.TypeRef(loop(p.Type.Singleton(pqual)), symbolTable(pname.denot.symbol).gsymbol, Nil)
+          g.TypeRef(loop(p.Type.Singleton(pqual)), symbolTable.convert(pname.denot.symbol).gsymbol, Nil)
         case p.Type.Project(pqual, pname) =>
-          g.TypeRef(loop(pqual), symbolTable(pname.denot.symbol).gsymbol, Nil)
+          g.TypeRef(loop(pqual), symbolTable.convert(pname.denot.symbol).gsymbol, Nil)
         case p.Type.Singleton(pref) =>
           def singleType(pname: p.Term.Name): g.Type = {
-            val gsym = symbolTable(pname.denot.symbol).gsymbol
+            val gsym = symbolTable.convert(pname.denot.symbol).gsymbol
             if (gsym.isModuleClass) g.ThisType(gsym)
             else g.SingleType(gprefix(pname.denot.prefix), gsym)
           }
@@ -1488,14 +1489,14 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
             val gpre = gprefix(psuper.denot.prefix)
             val gmixsym = psuper.denot.symbol match {
               case h.Symbol.Zero => g.intersectionType(gpre.typeSymbol.info.parents)
-              case hsym => gpre.typeSymbol.info.baseType(symbolTable(hsym).gsymbol)
+              case hsym => gpre.typeSymbol.info.baseType(symbolTable.convert(hsym).gsymbol)
             }
             g.SuperType(gpre, gmixsym)
           }
           pref match {
             case pname: p.Term.Name => singleType(pname)
             case p.Term.Select(_, pname) => singleType(pname)
-            case pref: p.Term.This => g.ThisType(symbolTable(pref.denot.symbol).gsymbol)
+            case pref: p.Term.This => g.ThisType(symbolTable.convert(pref.denot.symbol).gsymbol)
             case pref: p.Term.Super => superType(pref)
           }
         case p.Type.Apply(ptpe, pargs) =>
@@ -1510,7 +1511,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
           val gscope = g.newScope
           val pexplodedRefinement = prefinement.flatMap(prefine => prefine.binders.map(pname => prefine -> pname))
           val refinement = pexplodedRefinement.map({ case (prefine, pname) =>
-            val lrefine = symbolTable.getOrElseUpdate(pname.denot.symbol, prefine match {
+            val lrefine = symbolTable.lookupOrElseUpdate(pname.denot.symbol, prefine match {
               case _: p.Decl.Val => gowner(prefine).mkLabstractVal(pname.toString)
               case _: p.Decl.Var => gowner(prefine).mkLabstractVar(pname.toString)
               case _: p.Decl.Def => gowner(prefine).mkLabstractDef(pname.toString)
@@ -1526,7 +1527,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
         case p.Type.Existential(ptpe, pquants) =>
           val pexplodedQuants = pquants.flatMap(pquant => pquant.binders.map(pname => pquant -> pname))
           val quants = pexplodedQuants.map({ case (pquant, pname) =>
-            val lquant = symbolTable.getOrElseUpdate(pname.denot.symbol, pquant match {
+            val lquant = symbolTable.lookupOrElseUpdate(pname.denot.symbol, pquant match {
               case _: p.Decl.Val => gowner(pquant).mkLexistentialVal(pname.toString)
               case _: p.Decl.Type => gowner(pquant).mkLexistentialType(pname.toString)
               case _ => unreachable
@@ -1565,9 +1566,9 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
   private object symbolTable {
     private val symCache = TwoWayCache[l.Symbol, h.Symbol]()
 
-    // TODO: `apply` is somewhat copy/pasted from core/quasiquotes/Macros.scala
+    // TODO: `convert` is somewhat copy/pasted from core/quasiquotes/Macros.scala
     // however, there's no way for us to share those implementations until we bootstrap
-    def apply(lsym: l.Symbol): h.Symbol = symCache.getOrElseUpdate(lsym, {
+    def convert(lsym: l.Symbol): h.Symbol = symCache.getOrElseUpdate(lsym, {
       def isGlobal(gsym: g.Symbol): Boolean = {
         def definitelyLocal = gsym == g.NoSymbol || gsym.name.toString.startsWith("<local ") || (gsym.owner.isMethod && !gsym.isParameter)
         def isParentGlobal = gsym.hasPackageFlag || isGlobal(gsym.owner)
@@ -1584,14 +1585,13 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
       if (gsym == g.NoSymbol) h.Symbol.Zero
       else if (gsym == g.rootMirror.RootPackage) h.Symbol.Root
       else if (gsym == g.rootMirror.EmptyPackage) h.Symbol.Empty
-      else if (isGlobal(gsym)) h.Symbol.Global(apply(gsym.owner.logical), gsym.name.decodedName.toString, signature(gsym))
+      else if (isGlobal(gsym)) h.Symbol.Global(convert(gsym.owner.logical), gsym.name.decodedName.toString, signature(gsym))
       else h.Symbol.Local(randomUUID().toString)
     })
 
-    def get(lsym: l.Symbol): Option[h.Symbol] = symCache.get(lsym)
-    def getOrElseUpdate(lsym: l.Symbol, hsym: => h.Symbol): h.Symbol = symCache.getOrElseUpdate(lsym, hsym)
+    def lookupOrElseUpdate(lsym: l.Symbol, hsym: => h.Symbol): h.Symbol = symCache.getOrElseUpdate(lsym, hsym)
 
-    def apply(hsym: h.Symbol): l.Symbol = symCache.getOrElseUpdate(hsym, {
+    def convert(hsym: h.Symbol): l.Symbol = symCache.getOrElseUpdate(hsym, {
       def resolve(lsym: l.Symbol, name: String, hsig: h.Signature): l.Symbol = hsig match {
         case h.Signature.Type => lsym.gsymbol.info.decl(g.TypeName(name)).asType.logical
         case h.Signature.Term => lsym.gsymbol.info.decl(g.TermName(name)).suchThat(galt => galt.isGetter || !galt.isMethod).logical
@@ -1603,13 +1603,12 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
         case h.Symbol.Zero => l.None
         case h.Symbol.Root => l.Package(g.rootMirror.RootPackage, g.rootMirror.RootClass)
         case h.Symbol.Empty => l.Package(g.rootMirror.EmptyPackage, g.rootMirror.EmptyPackageClass)
-        case h.Symbol.Global(howner, name, hsig) => resolve(apply(howner), name, hsig)
+        case h.Symbol.Global(howner, name, hsig) => resolve(convert(howner), name, hsig)
         case h.Symbol.Local(id) => throw new SemanticException(s"implementation restriction: internal cache has no symbol associated with $hsym")
       }
     })
 
-    def get(hsym: h.Symbol): Option[l.Symbol] = symCache.get(hsym)
-    def getOrElseUpdate(hsym: h.Symbol, lsym: => l.Symbol): l.Symbol = symCache.getOrElseUpdate(hsym, lsym)
+    def lookupOrElseUpdate(hsym: h.Symbol, lsym: => l.Symbol): l.Symbol = symCache.getOrElseUpdate(hsym, lsym)
   }
 }
 
