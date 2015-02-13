@@ -38,7 +38,10 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
   implicit val c: ScalametaSemanticContext = this
   def dialect: scala.meta.dialects.Scala211.type = scala.meta.dialects.Scala211
 
-  private[meta] def desugar(term: papi.Term): papi.Term = ???
+  private[meta] def desugar(term: papi.Term): papi.Term = {
+    ???
+  }
+
   private[meta] def tpe(term: papi.Term): papi.Type = {
     val tree = term.require[p.Term]
     val gtpeFromOriginal = tree.originalTree.map(_.tpe)
@@ -49,6 +52,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
     }
     toApproximateScalameta(gtpe).asInstanceOf[papi.Type]
   }
+
   private[meta] def defns(ref: papi.Ref): Seq[papi.Member] = {
     def tryScratchpad(pref: p.Ref): Option[Seq[papi.Member]] = {
       for { gpre <- pref.originalPre; lsym <- pref.originalSym }
@@ -72,13 +76,14 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
         case _: p.Import.Selector => ???
       }
     }
+    ref.requireAttributed()
     tryScratchpad(ref.require[p.Ref]).getOrElse(tryNative(ref.require[p.Ref]))
   }
+
   private[meta] def members(tpe: papi.Type): Seq[papi.Member] = {
-    val ppre = tpe.require[p.Type]
-    val gpre = toScalareflect(ppre)
+    val gtpe = toScalareflect(tpe.require[p.Type])
     val pfakeCtors = {
-      val gpresym = gpre.typeSymbol
+      val gpresym = gtpe.typeSymbol
       val needsFakeCtor = gpresym.isTrait || (gpresym.isModuleClass && !gpresym.isPackageClass)
       if (needsFakeCtor) {
         val pname = p.Ctor.Name(gpresym.name.toString).withDenot(gpresym.module.orElse(gpresym))
@@ -87,7 +92,7 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
         Nil
       }
     }
-    pfakeCtors ++ gpre.members.logical.map(lsym => toApproximateScalameta(gpre, lsym))
+    pfakeCtors ++ gtpe.members.logical.map(lsym => toApproximateScalameta(gtpe, lsym))
   }
 
   private[meta] def isSubType(tpe1: papi.Type, tpe2: papi.Type): Boolean = {
@@ -126,9 +131,13 @@ class SemanticContext[G <: ScalaGlobal](val g: G) extends ScalametaSemanticConte
     presult.asInstanceOf[papi.Type]
   }
 
-  private[meta] def parents(member: papi.Member): Seq[papi.Member] = ???
+  private[meta] def parents(member: papi.Member): Seq[papi.Member] = {
+    ???
+  }
 
-  private[meta] def children(member: papi.Member): Seq[papi.Member] = ???
+  private[meta] def children(member: papi.Member): Seq[papi.Member] = {
+    ???
+  }
 
   // NOTE: this is an exhaustive list of payloads that can be attached to scratchpads of converted trees
   private sealed trait ScratchpadDatum
