@@ -4,7 +4,7 @@ package ui
 
 import scala.meta.internal.{ast => impl}
 import scala.meta.dialects.`package`.Scala211
-import scala.meta.ui.Code.codeTree
+import scala.meta.ui.Code.{codeTree, Style}
 
 object toString {
   def apply(tree: Tree) = {
@@ -15,7 +15,7 @@ object toString {
     // import scala.meta.ui.Code
     // import scala.meta.dialects.`package`.Scala211
     // tree.show[Code]
-    val prettyprinter = codeTree[Tree](Scala211)
+    val prettyprinter = codeTree[Tree](Scala211, Style.Unabridged)
     val code = prettyprinter(tree).toString
     tree match {
       case impl.Ctor.Primary(_, name, _) => s"def this$code"
