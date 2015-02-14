@@ -265,6 +265,7 @@ trait Api {
   }
 
   implicit class SemanticTermMemberOps(val tree: Member.Term) {
+    @hosted def source: Member.Term = new SemanticMemberOps(tree).name.require[Member.Term]
     @hosted def name: Name with Term.Ref = new SemanticMemberOps(tree).name.require[Name with Term.Ref]
     @hosted def parents: Seq[Member.Term] = new SemanticMemberOps(tree).parents.require[Seq[Member.Term]]
     @hosted def children: Seq[Member.Term] = new SemanticMemberOps(tree).children.require[Seq[Member.Term]]
@@ -272,6 +273,7 @@ trait Api {
   }
 
   implicit class SemanticTypeMemberOps(val tree: Member.Type) {
+    @hosted def source: Member.Type = new SemanticMemberOps(tree).name.require[Member.Type]
     @hosted def name: Type.Name = new SemanticMemberOps(tree).name.require[Type.Name]
     @hosted def parents: Seq[Member.Type] = new SemanticMemberOps(tree).parents.require[Seq[Member.Type]]
     @hosted def children: Seq[Member.Type] = new SemanticMemberOps(tree).parents.require[Seq[Member.Type]]

@@ -94,25 +94,170 @@ class PublicSuite extends FunSuite {
     """) === "")
   }
 
-  test("semantic APIs working correctly with different input types") {
-    class dontExecuteJustCompile {
-      import scala.meta.semantic._
+  test("Tree.desugar") {
+    assert(typecheckError("""
+      import scala.meta._
       import scala.{meta => api}
       import scala.meta.internal.{ast => impl}
-      implicit val c: Context = ???
-      val term1a: api.Term = ???
-      (term1a.tpe: api.Type)
-      val term2a: api.Term with api.Type = ???
-      (term2a.tpe: api.Type)
-      val term3a: api.Term.Ref = ???
-      (term3a.tpe: api.Type)
-      val term1b: impl.Term = ???
-      (term1b.tpe: api.Type)
-      val term2b: impl.Term with impl.Type = ???
-      (term2b.tpe: api.Type)
-      val term3b: impl.Term.Ref = ???
-      (term3b.tpe: api.Type)
-    }
+      (??? : api.Tree).desugar
+    """) === "value desugar is not a member of scala.meta.Tree")
+  }
+
+  test("Term.desugar") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      implicit val c: scala.meta.semantic.Context = ???
+      import scala.{meta => api}
+      import scala.meta.internal.{ast => impl}
+      ((??? : api.Term).desugar): api.Term
+      ((??? : impl.Term).desugar): api.Term
+    """) === "")
+  }
+
+  test("Tree.tpe") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      implicit val c: scala.meta.semantic.Context = ???
+      import scala.{meta => api}
+      import scala.meta.internal.{ast => impl}
+      (??? : api.Tree).tpe
+    """) === "value tpe is not a member of scala.meta.Tree")
+  }
+
+  test("Type.tpe") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      implicit val c: scala.meta.semantic.Context = ???
+      import scala.{meta => api}
+      import scala.meta.internal.{ast => impl}
+      t"List".tpe
+    """) === "value tpe is not a member of meta.internal.ast.Type.Name")
+  }
+
+  test("Term.tpe") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      implicit val c: scala.meta.semantic.Context = ???
+      import scala.{meta => api}
+      import scala.meta.internal.{ast => impl}
+      ((??? : api.Term).tpe): api.Type
+      ((??? : impl.Term).tpe): api.Type
+      q"x".tpe: api.Type
+    """) === "")
+  }
+
+  test("Member.tpe") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      implicit val c: scala.meta.semantic.Context = ???
+      import scala.{meta => api}
+      import scala.meta.internal.{ast => impl}
+      ((??? : api.Member).tpe): api.Type
+      ((??? : impl.Member).tpe): api.Type
+      q"class C".tpe: api.Type
+    """) === "")
+  }
+
+  test("Tree.defn") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      implicit val c: scala.meta.semantic.Context = ???
+      import scala.{meta => api}
+      import scala.meta.internal.{ast => impl}
+      (??? : api.Tree).defn
+    """) === "value defn is not a member of scala.meta.Tree")
+  }
+
+  test("Type.Apply.defn") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      implicit val c: scala.meta.semantic.Context = ???
+      import scala.{meta => api}
+      import scala.meta.internal.{ast => impl}
+      t"List[Int]".defn
+    """) === "value defn is not a member of meta.internal.ast.Type.Apply")
+  }
+
+  test("Ref.defn") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      implicit val c: scala.meta.semantic.Context = ???
+      import scala.{meta => api}
+      import scala.meta.internal.{ast => impl}
+      (??? : api.Ref).defn: api.Member
+      (??? : api.Term.Ref).defn: api.Member.Term
+      (??? : api.Type.Ref).defn: api.Member
+      (??? : impl.Ref).defn: api.Member
+      (??? : impl.Term.Ref).defn: api.Member.Term
+      (??? : impl.Type.Ref).defn: api.Member
+      q"x".defns: scala.collection.immutable.Seq[api.Member.Term]
+      q"x".defn: api.Member.Term
+      t"x".defns: scala.collection.immutable.Seq[api.Member]
+      t"x".defn: api.Member
+      q"class C".name.defn: api.Member
+      q"class C".source.name.defn: api.Member
+      q"object M".name.defn: api.Member.Term
+      q"object M".source.name.defn: api.Member.Term
+    """) === "")
+  }
+
+  test("Tree.members") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      implicit val c: scala.meta.semantic.Context = ???
+      import scala.{meta => api}
+      import scala.meta.internal.{ast => impl}
+      (??? : api.Tree).members
+    """) === "value members is not a member of scala.meta.Tree")
+  }
+
+  test("Term.members") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      implicit val c: scala.meta.semantic.Context = ???
+      import scala.{meta => api}
+      import scala.meta.internal.{ast => impl}
+      q"scala".members
+    """) === "value members is not a member of meta.internal.ast.Term.Name")
+  }
+
+  test("Type.members") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      implicit val c: scala.meta.semantic.Context = ???
+      import scala.{meta => api}
+      import scala.meta.internal.{ast => impl}
+      (??? : api.Type).members: scala.collection.immutable.Seq[api.Member]
+      (??? : impl.Type).members: scala.collection.immutable.Seq[api.Member]
+      t"List".members: scala.collection.immutable.Seq[api.Member]
+      q"List".tpe.members: scala.collection.immutable.Seq[api.Member]
+    """) === "")
+  }
+
+  test("Member.members") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      implicit val c: scala.meta.semantic.Context = ???
+      import scala.{meta => api}
+      import scala.meta.internal.{ast => impl}
+      (??? : api.Member).members: scala.collection.immutable.Seq[api.Member]
+      (??? : impl.Member).members: scala.collection.immutable.Seq[api.Member]
+      t"List".defs("head"): api.Member.Term
+      t"List".defs("head").paramss: scala.collection.immutable.Seq[scala.collection.immutable.Seq[api.Member.Term]]
+      t"List".defn.tparams: scala.collection.immutable.Seq[api.Member.Type]
+    """) === "")
   }
 
   // TODO: this error is somewhat confusing
