@@ -29,7 +29,18 @@ trait Api {
   }
 
   implicit class SemanticMemberTpeOps(val tree: Member) {
-    @hosted def tpe: Type.Arg = tpe.require[impl.Member] match {
+    @hosted private def SeqRef: impl.Type.Name = {
+      val hScala = h.Symbol.Global(h.Symbol.Root, "scala", h.Signature.Term)
+      val hCollection = h.Symbol.Global(hScala, "collection", h.Signature.Term)
+      val hSeq = h.Symbol.Global(hCollection, "Seq", h.Signature.Type)
+      impl.Type.Name("Seq", h.Denotation.Precomputed(h.Prefix.Zero, hSeq), h.Sigma.Naive)
+    }
+    @hosted private def dearg(tpe: Type.Arg): Type = tpe.require[impl.Type.Arg] match {
+      case impl.Type.Arg.ByName(tpe) => impl.Type.Apply(SeqRef, List(tpe))
+      case impl.Type.Arg.Repeated(tpe) => tpe
+      case tpe: impl.Type => tpe
+    }
+    @hosted def tpe: Type = tpe.require[impl.Member] match {
       case tree: impl.Pat.Var.Term => tree.name.tpe
       case tree: impl.Pat.Var.Type => tree.name
       case tree: impl.Decl.Def => tree.decltpe
@@ -44,7 +55,7 @@ trait Api {
       case       impl.Pkg(impl.Term.Select(_, name: impl.Term.Name), _) => impl.Type.Singleton(name)
       case tree: impl.Pkg.Object => impl.Type.Singleton(tree.name)
       case tree: impl.Term.Param if tree.parent.map(_.isInstanceOf[impl.Template]).getOrElse(false) => ??? // TODO: don't forget to intersect with the owner type
-      case tree: impl.Term.Param => tree.decltpe.getOrElse(???) // TODO: infer it from context
+      case tree: impl.Term.Param => dearg(tree.decltpe.getOrElse(???)) // TODO: infer it from context
       case tree: impl.Type.Param => tree.name
       case tree: impl.Ctor.Primary => tree.owner.require[meta.Member].tpe
       case tree: impl.Ctor.Secondary => tree.owner.require[meta.Member].tpe
@@ -362,11 +373,11 @@ trait Api {
         case tree: impl.Defn.Def => tree.tparams ++ mergeEvidences(tree.paramss, tree.tparams.flatMap(deriveEvidences)).flatten
         case tree: impl.Defn.Macro => tree.tparams ++ mergeEvidences(tree.paramss, tree.tparams.flatMap(deriveEvidences)).flatten
         case tree: impl.Defn.Type => tree.tparams
-        case tree: impl.Defn.Class => tree.tparams ++ tree.tpe.require[impl.Type].members
-        case tree: impl.Defn.Trait => tree.tparams ++ tree.tpe.require[impl.Type].members
-        case tree: impl.Defn.Object => tree.tparams ++ tree.tpe.require[impl.Type].members
-        case tree: impl.Pkg => tree.tpe.require[impl.Type].members
-        case tree: impl.Pkg.Object => tree.tparams ++ tree.tpe.require[impl.Type].members
+        case tree: impl.Defn.Class => tree.tparams ++ tree.tpe.members
+        case tree: impl.Defn.Trait => tree.tparams ++ tree.tpe.members
+        case tree: impl.Defn.Object => tree.tparams ++ tree.tpe.members
+        case tree: impl.Pkg => tree.tpe.members
+        case tree: impl.Pkg.Object => tree.tparams ++ tree.tpe.members
         case tree: impl.Ctor.Primary => mergeEvidences(tree.paramss, tree.tparams.flatMap(deriveEvidences)).flatten
         case tree: impl.Ctor.Secondary => mergeEvidences(tree.paramss, tree.tparams.flatMap(deriveEvidences)).flatten
         case tree: impl.Case => membersOfPat(tree.pat)
