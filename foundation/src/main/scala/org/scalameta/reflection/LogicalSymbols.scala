@@ -228,9 +228,11 @@ trait LogicalSymbols {
   }
 
   private def allowSymbol(gsym: g.Symbol): Boolean = {
-    // NOTE: need to allow synthetic parameter names like x$1 or _$2
     if (!gsym.exists) return false
-    if ((gsym.isClass || gsym.isModule) && gsym.name.decoded.contains("$")) return false
+    // NOTE: need to allow synthetic parameter names like x$1 or _$2, so I'm only checking for isClass || isModule
+    // TODO: should ban those pesky anonymous classes, but that's not going to work now because of prefixes
+    // we need to think how to model prefixes of anonymous classes and then proceed with the ban
+    if ((gsym.isClass || gsym.isModule) && gsym.owner.isPackageClass && gsym.name.decoded.contains("$")) return false
     if (gsym.isPrimaryConstructor && gsym.name == g.nme.MIXIN_CONSTRUCTOR) return false
     if (gsym == g.definitions.Object_isInstanceOf || gsym == g.definitions.Object_asInstanceOf) return false
     return true
