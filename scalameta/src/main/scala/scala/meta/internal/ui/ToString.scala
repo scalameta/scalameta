@@ -15,7 +15,7 @@ object toString {
     // import scala.meta.ui.Code
     // import scala.meta.dialects.`package`.Scala211
     // tree.show[Code]
-    val prettyprinter = codeTree[Tree](Scala211, Style.Unabridged)
+    val prettyprinter = codeTree[Tree](Scala211, Style.Lazy)
     val code = prettyprinter(tree).toString
     tree match {
       case impl.Ctor.Primary(_, name, _) => s"def this$code"

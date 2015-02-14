@@ -11,6 +11,7 @@ import scala.collection.immutable.Seq
 import scala.meta.internal.ast._
 import scala.{meta => api}
 import org.scalameta.adt._
+import org.scalameta.collections._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
 import scala.compat.Platform.EOL
@@ -27,6 +28,7 @@ object Code {
 
   @root trait Style
   object Style {
+    @leaf object Lazy extends Style
     @leaf implicit object Unabridged extends Style
   }
 
@@ -371,30 +373,41 @@ object Code {
     case t: Defn.Object    => s(a(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
     case t: Defn.Def       => s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, t.decltpe, " = ", t.body)
     case t: Defn.Macro     => s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, kw(":"), " ", t.tpe, " ", kw("="), " ", kw("macro"), " ", t.body)
-    case t: Pkg if guessHasBraces(t) => s(kw("package"), " ", t.ref, " {", r(t.stats.map(i(_)), ""), n("}"))
-    case t: Pkg            => s(kw("package"), " ", t.ref, r(t.stats.map(n(_))))
+    case t: Pkg            =>
+      if (style == Style.Lazy && t.stats.isLazy) s(kw("package"), " ", t.ref, " { ... }")
+      else if (guessHasBraces(t)) s(kw("package"), " ", t.ref, " {", r(t.stats.map(i(_)), ""), n("}"))
+      else s(kw("package"), " ", t.ref, r(t.stats.map(n(_))))
     case t: Pkg.Object     => s(kw("package"), " ", a(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
     case t: Ctor.Primary   => s(a(t.mods, " ", t.mods.nonEmpty && t.paramss.nonEmpty), t.paramss)
     case t: Ctor.Secondary => s(a(t.mods, " "), kw("def"), " ", kw("this"), t.paramss, if (t.body.isInstanceOf[Term.Block]) " " else " = ", t.body)
 
     // Template
     case t: Template =>
-      val isBodyEmpty = t.self.name.isInstanceOf[Name.Anonymous] && t.self.decltpe.isEmpty && t.stats.isEmpty
+      val isSelfEmpty = t.self.name.isInstanceOf[Name.Anonymous] && t.self.decltpe.isEmpty
+      val isSelfNonEmpty = !isSelfEmpty
+      val isBodyEmpty = isSelfEmpty && t.stats.isEmpty
       val isTemplateEmpty = t.early.isEmpty && t.parents.isEmpty && isBodyEmpty
       if (isTemplateEmpty) s()
       else {
-        val isOneLiner = t.stats.map(stats => stats.length == 0 || (stats.length == 1 && !s(stats.head).toString.contains(EOL))).getOrElse(true)
         val pearly = if (!t.early.isEmpty) s("{ ", r(t.early, "; "), " } with ") else s()
         val pparents = a(r(t.parents, " with "), " ", !t.parents.isEmpty && !isBodyEmpty)
-        val pbody = (!t.self.name.isInstanceOf[Name.Anonymous] || t.self.decltpe.nonEmpty, t.stats.nonEmpty, t.stats.getOrElse(Nil)) match {
-          case (false, false, _) => s()
-          case (true, false, _) => s("{ ", t.self, " => }")
-          case (false, true, Seq()) if isOneLiner => s("{}")
-          case (false, true, Seq(stat)) if isOneLiner => s("{ ", stat, " }")
-          case (false, true, stats) => s("{", r(stats.map(i(_)), ""), n("}"))
-          case (true, true, Seq()) if isOneLiner => s("{ ", t.self, " => }")
-          case (true, true, Seq(stat)) if isOneLiner => s("{ ", t.self, " => ", stat, " }")
-          case (true, true, stats) => s("{ ", t.self, " =>", r(stats.map(i(_)), ""), n("}"))
+        val pbody = {
+          if (style == Style.Lazy && t.stats.getOrElse(Nil).isLazy) {
+            if (isSelfNonEmpty) s("{ ", t.self, " => ... }")
+            else s("{ ... }")
+          } else {
+            val isOneLiner = t.stats.map(stats => stats.length == 0 || (stats.length == 1 && !s(stats.head).toString.contains(EOL))).getOrElse(true)
+            (isSelfNonEmpty, t.stats.nonEmpty, t.stats.getOrElse(Nil)) match {
+              case (false, false, _) => s()
+              case (true, false, _) => s("{ ", t.self, " => }")
+              case (false, true, Seq()) if isOneLiner => s("{}")
+              case (false, true, Seq(stat)) if isOneLiner => s("{ ", stat, " }")
+              case (false, true, stats) => s("{", r(stats.map(i(_)), ""), n("}"))
+              case (true, true, Seq()) if isOneLiner => s("{ ", t.self, " => }")
+              case (true, true, Seq(stat)) if isOneLiner => s("{ ", t.self, " => ", stat, " }")
+              case (true, true, stats) => s("{ ", t.self, " =>", r(stats.map(i(_)), ""), n("}"))
+            }
+          }
         }
         s(pearly, pparents, pbody)
       }

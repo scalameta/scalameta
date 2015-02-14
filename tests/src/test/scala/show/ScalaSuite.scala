@@ -353,4 +353,14 @@ class ScalaSuite extends ParseSuite {
     assert(primary.toString === "def this(x: Int)")
     assert(secondary.toString === "def this() = this(42)")
   }
+
+  test("lazy printing") {
+    import scala.meta.internal.ast._
+    val tree1 = Pkg(Term.Name("test"), List(templStat("class C")).toStream)
+    assert(tree1.toString === "package test { ... }")
+    val emptyCtor = Ctor.Primary(Nil, Ctor.Name("this"), Nil)
+    val emptyTemplate = Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), Some(Nil.toStream))
+    val tree2 = Pkg.Object(Nil, Term.Name("test"), emptyCtor, emptyTemplate)
+    assert(tree2.toString === "package object test { ... }")
+  }
 }
