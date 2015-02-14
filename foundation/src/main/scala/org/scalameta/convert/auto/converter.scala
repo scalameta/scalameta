@@ -106,7 +106,7 @@ class ConverterMacros(val c: whitebox.Context) extends MacroToolkit {
       // because template statements get typechecked after val synthesis take place
       // and we can't afford this, because we need to get these converters computed before anything else takes place
       val computeConverters = atPos(ddef.pos)(q"""
-        val $dummy = $DeriveInternal.computeConverters($wrapper.$companion){
+        protected[meta] val computeConverters = $DeriveInternal.computeConverters($wrapper.$companion){
           @$DeriveInternal.declNames(..${instances.filter(!_.notImplemented).map(_.decl.toString)})
           def dummy(in: Any): Any = {
             ..$rawprelude
