@@ -518,4 +518,12 @@ class SemanticSuite extends FunSuite {
       |final def asInstanceOf[T0]: T0 = ???
     """.trim.stripMargin)
   }
+
+  test("t\"scala.type\".members") {
+    intercept[SemanticException] {
+      val expectedFail = "Input scala.meta tree is not fully attributed and can't be converted to a scala.reflect artifact."
+      try t"scala.type".members
+      catch { case ex: SemanticException => assert(ex.msg.trim.startsWith(expectedFail)); throw ex }
+    }
+  }
 }
