@@ -210,7 +210,7 @@ package invariants {
       val q"$_($x)" = c.prefix.tree
       q"""
         val temp = ${c.untypecheck(x)}
-        org.scalameta.invariants.require(temp != null && _root_.scala.reflect.classTag[$U].runtimeClass.isAssignableFrom(temp.getClass))
+        _root_.org.scalameta.invariants.require(temp != null && _root_.scala.reflect.classTag[$U].runtimeClass.isAssignableFrom(temp.getClass))
         temp.asInstanceOf[$U]
       """
     }
@@ -218,7 +218,7 @@ package invariants {
       val q"$_($x)" = c.prefix.tree
       q"""
         val temp = ${c.untypecheck(x)}
-        org.scalameta.invariants.require(temp != null && temp.isDefined)
+        _root_.org.scalameta.invariants.require(temp != null && temp.isDefined)
         temp.get
       """
     }
