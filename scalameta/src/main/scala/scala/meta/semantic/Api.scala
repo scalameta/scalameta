@@ -20,72 +20,51 @@ trait Api {
   // PART 1: ATTRIBUTES
   // ===========================
 
-  sealed trait HasDesugaring[T <: Tree, U <: Tree]
-  object HasDesugaring {
-    implicit def Term[T <: meta.Term]: HasDesugaring[T, meta.Term] = null
+  implicit class SemanticTermDesugarOps(val tree: Term) {
+    @hosted def desugar: Term = implicitly[SemanticContext].desugar(tree)
   }
 
-  implicit class SemanticDesugarableOps[T <: Tree, U <: Tree](val tree: T)(implicit ev: HasDesugaring[T, U], tag: ClassTag[U]) {
-    @hosted def desugar: U = tree match {
-      case tree: impl.Term => implicitly[SemanticContext].desugar(tree).asInstanceOf[U]
-      case tree => throw new SemanticException(s"desugar is undefined for ${tree.show[Summary]}")
-    }
+  implicit class SemanticTermTpeOps(val tree: Term) {
+    @hosted def tpe: Type = implicitly[SemanticContext].tpe(tree)
   }
 
-  sealed trait HasTpe[T <: Tree, U <: Type.Arg]
-  object HasTpe {
-    implicit def Term[T <: meta.Term]: HasTpe[T, meta.Type] = null
-    implicit def Member[T <: meta.Member]: HasTpe[T, meta.Type] = null
-    implicit def TermParam[T <: meta.Term.Param]: HasTpe[T, meta.Type.Arg] = null
-    implicit def TermAndMember[T <: meta.Term with meta.Member]: HasTpe[T, meta.Type] = null
-  }
-
-  implicit class SemanticTypeableOps[T <: Tree, U <: Type](val tree: T)(implicit ev: HasTpe[T, U], tag: ClassTag[U]) {
-    @hosted def tpe: U = tree match {
-      case tree: impl.Term => implicitly[SemanticContext].tpe(tree).asInstanceOf[U]
-      case tree: impl.Pat.Var.Term => tree.name.tpe.asInstanceOf[U]
-      case tree: impl.Pat.Var.Type => tree.name.asInstanceOf[U]
-      case tree: impl.Decl.Def => tree.decltpe.asInstanceOf[U]
-      case tree: impl.Decl.Type => tree.name.asInstanceOf[U]
-      case tree: impl.Defn.Def => tree.decltpe.getOrElse(tree.body.asInstanceOf[meta.Term].tpe).asInstanceOf[U]
-      case tree: impl.Defn.Macro => tree.tpe.asInstanceOf[U]
-      case tree: impl.Defn.Type => tree.name.asInstanceOf[U]
-      case tree: impl.Defn.Class => tree.name.asInstanceOf[U]
-      case tree: impl.Defn.Trait => tree.name.asInstanceOf[U]
-      case tree: impl.Defn.Object => impl.Type.Singleton(tree.name).asInstanceOf[U]
-      case       impl.Pkg(name: impl.Term.Name, _) => impl.Type.Singleton(name).asInstanceOf[U]
-      case       impl.Pkg(impl.Term.Select(_, name: impl.Term.Name), _) => impl.Type.Singleton(name).asInstanceOf[U]
-      case tree: impl.Pkg.Object => impl.Type.Singleton(tree.name).asInstanceOf[U]
+  implicit class SemanticMemberTpeOps(val tree: Member) {
+    @hosted def tpe: Type.Arg = tpe.asInstanceOf[impl.Member] match {
+      case tree: impl.Pat.Var.Term => tree.name.tpe
+      case tree: impl.Pat.Var.Type => tree.name
+      case tree: impl.Decl.Def => tree.decltpe
+      case tree: impl.Decl.Type => tree.name
+      case tree: impl.Defn.Def => tree.decltpe.getOrElse(tree.body.tpe)
+      case tree: impl.Defn.Macro => tree.tpe
+      case tree: impl.Defn.Type => tree.name
+      case tree: impl.Defn.Class => tree.name
+      case tree: impl.Defn.Trait => tree.name
+      case tree: impl.Defn.Object => impl.Type.Singleton(tree.name)
+      case       impl.Pkg(name: impl.Term.Name, _) => impl.Type.Singleton(name)
+      case       impl.Pkg(impl.Term.Select(_, name: impl.Term.Name), _) => impl.Type.Singleton(name)
+      case tree: impl.Pkg.Object => impl.Type.Singleton(tree.name)
       case tree: impl.Term.Param if tree.parent.map(_.isInstanceOf[impl.Template]).getOrElse(false) => ??? // TODO: don't forget to intersect with the owner type
-      case tree: impl.Term.Param => tree.decltpe.getOrElse(???).asInstanceOf[U] // TODO: infer it from context
-      case tree: impl.Type.Param => tree.name.asInstanceOf[U]
-      case tree: impl.Ctor.Primary => tree.owner.asInstanceOf[meta.Member].tpe.asInstanceOf[U]
-      case tree: impl.Ctor.Secondary => tree.owner.asInstanceOf[meta.Member].tpe.asInstanceOf[U]
-      case tree => throw new SemanticException(s"tpe is undefined for ${tree.show[Summary]}")
+      case tree: impl.Term.Param => tree.decltpe.getOrElse(???) // TODO: infer it from context
+      case tree: impl.Type.Param => tree.name
+      case tree: impl.Ctor.Primary => tree.owner.asInstanceOf[meta.Member].tpe
+      case tree: impl.Ctor.Secondary => tree.owner.asInstanceOf[meta.Member].tpe
     }
   }
 
-  sealed trait HasDefns[T <: Tree, U <: Member]
-  object HasDefns {
-    implicit def Ref[T <: meta.Ref]: HasDefns[T, meta.Member] = null
-    implicit def TermRef[T <: meta.Term.Ref]: HasDefns[T, meta.Member.Term] = null
-    implicit def TypeRef[T <: meta.Type.Ref]: HasDefns[T, meta.Member] = null // Type.Ref can refer to both types (regular types) and terms (singleton types)
-    implicit def PatTypeRef[T <: meta.Pat.Type.Ref]: HasDefns[T, meta.Member] = null // Pat.Type.Ref works the same as Type.Ref
-    implicit def TypeRefAndPatTypeRef[T <: meta.Type.Ref with meta.Pat.Type.Ref]: HasDefns[T, meta.Member] = null
-  }
-
-  implicit class SemanticDefnableOps[T <: Tree, U <: meta.Member](val tree: T)(implicit ev: HasDefns[T, U], tag: ClassTag[U]) {
-    @hosted def defns: Seq[U] = tree match {
-      case tree: impl.Ref => implicitly[SemanticContext].defns(tree).map(_.require[U])
-      case tree => throw new SemanticException(s"defns is undefined for ${tree.show[Summary]}")
-    }
-    @hosted def defn: U = {
+  implicit class SemanticRefDefnOps(val tree: Ref) {
+    @hosted def defns: Seq[Member] = implicitly[SemanticContext].defns(tree)
+    @hosted def defn: Member = {
       defns match {
         case Seq(single) => single
         case Seq(_, _*) => throw new SemanticException(s"multiple definitions found for ${tree.show[Summary]}")
         case Seq() => unreachable
       }
     }
+  }
+
+  implicit class SemanticTermRefDefnOps(val tree: Term.Ref) {
+    @hosted def defns: Seq[Member.Term] = (tree: Ref).defns.map(_.asInstanceOf[Member.Term])
+    @hosted def defn: Member.Term = (tree: Ref).defn.asInstanceOf[Member.Term]
   }
 
   // ===========================
@@ -383,11 +362,11 @@ trait Api {
         case tree: impl.Defn.Def => tree.tparams ++ mergeEvidences(tree.paramss, tree.tparams.flatMap(deriveEvidences)).flatten
         case tree: impl.Defn.Macro => tree.tparams ++ mergeEvidences(tree.paramss, tree.tparams.flatMap(deriveEvidences)).flatten
         case tree: impl.Defn.Type => tree.tparams
-        case tree: impl.Defn.Class => tree.tparams ++ tree.tpe.members
-        case tree: impl.Defn.Trait => tree.tparams ++ tree.tpe.members
-        case tree: impl.Defn.Object => tree.tparams ++ tree.tpe.members
-        case tree: impl.Pkg => tree.tpe.members
-        case tree: impl.Pkg.Object => tree.tparams ++ tree.tpe.members
+        case tree: impl.Defn.Class => tree.tparams ++ tree.tpe.asInstanceOf[impl.Type].members
+        case tree: impl.Defn.Trait => tree.tparams ++ tree.tpe.asInstanceOf[impl.Type].members
+        case tree: impl.Defn.Object => tree.tparams ++ tree.tpe.asInstanceOf[impl.Type].members
+        case tree: impl.Pkg => tree.tpe.asInstanceOf[impl.Type].members
+        case tree: impl.Pkg.Object => tree.tparams ++ tree.tpe.asInstanceOf[impl.Type].members
         case tree: impl.Ctor.Primary => mergeEvidences(tree.paramss, tree.tparams.flatMap(deriveEvidences)).flatten
         case tree: impl.Ctor.Secondary => mergeEvidences(tree.paramss, tree.tparams.flatMap(deriveEvidences)).flatten
         case tree: impl.Case => membersOfPat(tree.pat)
