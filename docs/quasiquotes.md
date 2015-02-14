@@ -182,15 +182,6 @@
  Applied Reference   | `ctor"$ctorref(...$aexprss)"`
  Tapplied Reference  | `ctor"$ctorref[..$atpes]"`
 
-                | Quasiquote
-----------------|------------------------------
- Val            | `q"..$mods val ..$pats: $tpeopt = $expr"`
- Var            | `q"..$mods var ..$pats: $tpeopt = $expropt"`
- Def            | `q"..$mods def $name[..$tparams](...$paramss): $tpeopt = $expr"`
- Macro          | `q"..$mods def $name[..$tparams](...$paramss): $tpe = macro $expr"`
- Primary Ctor   | `q"..$mods def this(..$paramss)"`
- Secondary Ctor | `q"..$mods def this(..$paramss) = { this(...$aexprss); ..$stats }"`
-
 ## Template (meta.Template)
 
            | Quasiquote
