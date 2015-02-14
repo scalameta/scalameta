@@ -6,6 +6,7 @@ import scala.org.scalameta.reflection.TreeHelpers
 
 trait MacroToolkit extends Metadata {
   val global: MacroUniverse
+  lazy val g: global.type = g
 }
 
 // TODO: quite probably we can relax the requirements from Global to MacroUniverse
@@ -13,6 +14,7 @@ trait MacroToolkit extends Metadata {
 trait GlobalToolkit extends MacroToolkit
                        with TreeHelpers
                        with TypeHelpers
+                       with SymbolHelpers
                        with Ensugar
                        with Syntaxize
                        with Attributed

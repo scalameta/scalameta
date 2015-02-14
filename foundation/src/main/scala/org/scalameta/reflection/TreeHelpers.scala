@@ -31,6 +31,24 @@ trait TreeHelpers {
     }
   }
 
+  implicit class RichAliasHelperTree(tree: Tree) {
+    def alias: String = tree match {
+      case _ if tree.symbol == rootMirror.EmptyPackage || tree.symbol == rootMirror.EmptyPackageClass => "_empty_"
+      case tree: ModuleDef if tree.symbol.isPackageObject => tree.symbol.owner.name.decodedName.toString
+      case tree: NameTree => tree.name.decodedName.toString
+      case This(name) => name.decodedName.toString
+      case Super(_, name) => name.decodedName.toString
+    }
+  }
+
+  protected implicit class RichFoundationHelperName(name: Name) {
+    def looksLikeInfix = {
+      val hasSymbolicName = !name.decoded.forall(c => Character.isLetter(c) || Character.isDigit(c) || c == '_')
+      val idiomaticallyUsedAsInfix = name == nme.eq || name == nme.ne
+      hasSymbolicName || idiomaticallyUsedAsInfix
+    }
+  }
+
   implicit class RichFoundationHelperTree[T <: Tree](tree: T) {
     def copyAttrs(other: Tree): T = tree.copyAttrs(other)
   }

@@ -1,5 +1,4 @@
 package org.scalameta.meta
 
-trait Toolkit extends Denotations
-                 with Attributed
+trait Toolkit extends Attributed
                  with TreeHelpers

@@ -10,10 +10,10 @@ import scala.reflect.internal.Flags._
 trait LogicalSymbols {
   self: GlobalToolkit =>
 
-  import global.AnyNameOps
+  import g.AnyNameOps
 
-  implicit class RichLogicalSymbol(gsym: global.Symbol) {
-    def logical: l.Symbol = {
+  implicit class RichLogicalSymbol(gsym: g.Symbol) {
+    def toLogical: l.Symbol = {
       val gsym0 = gsym
       val results = logicalSymbols(List(gsym0))
       require(gsym0 != null && results != null && results.length == 1)
@@ -21,25 +21,25 @@ trait LogicalSymbols {
     }
   }
 
-  implicit class RichLogicalScope(gscope: global.Scope) {
-    def logical: Seq[l.Symbol] = gscope match {
-      case gscope: global.MemberScope => gscope.sorted.toList.logical
-      case _ => gscope.toList.logical
+  implicit class RichLogicalScope(gscope: g.Scope) {
+    def toLogical: Seq[l.Symbol] = gscope match {
+      case gscope: g.MemberScope => gscope.sorted.toList.toLogical
+      case _ => gscope.toList.toLogical
     }
   }
 
-  implicit class RichLogicalSymbols(gsyms: Seq[global.Symbol]) {
-    def logical: Seq[l.Symbol] = logicalSymbols(gsyms)
+  implicit class RichLogicalSymbols(gsyms: Seq[g.Symbol]) {
+    def toLogical: Seq[l.Symbol] = logicalSymbols(gsyms)
   }
 
   sealed trait LogicalSymbol extends Product {
     def name: String
-    def symbol: global.Symbol
-    def symbols: Seq[global.Symbol] = this.productIterator.collect({case sym: global.Symbol => sym}).filter(_ != global.NoSymbol).toList
-    def gsymbol: global.Symbol = symbol
-    def gsymbols: Seq[global.Symbol] = symbols
+    def symbol: g.Symbol
+    def symbols: Seq[g.Symbol] = this.productIterator.collect({case sym: g.Symbol => sym}).filter(_ != g.NoSymbol).toList
+    def gsymbol: g.Symbol = symbol
+    def gsymbols: Seq[g.Symbol] = symbols
     def isComplete: Boolean = !isIncomplete
-    def isIncomplete: Boolean = symbol == global.NoSymbol
+    def isIncomplete: Boolean = symbol == g.NoSymbol
   }
 
   lazy val l: LogicalSymbol.type = LogicalSymbol
@@ -49,8 +49,8 @@ trait LogicalSymbols {
     // not representable with syntax
     // is here simply to provide an encoding for compiler's NoSymbol
     case object None extends LogicalSymbol {
-      def name = global.nme.NO_NAME.toString
-      def symbol = global.NoSymbol
+      def name = g.nme.NO_NAME.toString
+      def symbol = g.NoSymbol
       override def isComplete = true
     }
 
@@ -60,7 +60,7 @@ trait LogicalSymbols {
     // value x, 'x', class MethodSymbol, flags = 138412112 (DEFERRED | METHOD | STABLE | ACCESSOR)
     // > type T = X forSome { val x: Int }
     // type x.type, 'x.type', class AbstractTypeSymbol, flags = 34359738384 (DEFERRED | EXISTENTIAL)
-    case class AbstractVal(getter: global.Symbol) extends LogicalSymbol {
+    case class AbstractVal(getter: g.Symbol) extends LogicalSymbol {
       def name = getter.name.toString
       def symbol = getter
     }
@@ -71,7 +71,7 @@ trait LogicalSymbols {
     // > type T = X { var x: Int }
     // method x, 'x', class MethodSymbol, flags = 134217808 (DEFERRED | METHOD | ACCESSOR)
     // method x_=, 'x_$eq', class MethodSymbol, flags = 134217808 (DEFERRED | METHOD | ACCESSOR)
-    case class AbstractVar(getter: global.Symbol, setter: global.Symbol) extends LogicalSymbol {
+    case class AbstractVar(getter: g.Symbol, setter: g.Symbol) extends LogicalSymbol {
       def name = getter.orElse(setter).name.getterName.toString
       def symbol = getter
     }
@@ -80,7 +80,7 @@ trait LogicalSymbols {
     // method x, 'x', class MethodSymbol, flags = 80 (DEFERRED | METHOD)
     // > type T = X { def x: Int }
     // method x, 'x', class MethodSymbol, flags = 80 (DEFERRED | METHOD)
-    case class AbstractDef(symbol: global.Symbol) extends LogicalSymbol {
+    case class AbstractDef(symbol: g.Symbol) extends LogicalSymbol {
       def name = symbol.name.toString
     }
 
@@ -90,7 +90,7 @@ trait LogicalSymbols {
     // type T, 'T', class AbstractTypeSymbol, flags = 16 (DEFERRED)
     // > type T = X forSome { type T <: Int }
     // type T, 'T', class AbstractTypeSymbol, flags = 34359738384 (DEFERRED | EXISTENTIAL)
-    case class AbstractType(symbol: global.Symbol) extends LogicalSymbol {
+    case class AbstractType(symbol: g.Symbol) extends LogicalSymbol {
       def name = symbol.name.toString
     }
 
@@ -101,10 +101,10 @@ trait LogicalSymbols {
     // value x, 'x', class TermSymbol, flags = 524292 (PRIVATE | LOCAL) + maybe PARAMACCESSOR
     // > locally { val x = 2 }
     // value x, 'x', class TermSymbol, flags = 0
-    case class Val(field: global.Symbol, getter: global.Symbol) extends LogicalSymbol {
+    case class Val(field: g.Symbol, getter: g.Symbol) extends LogicalSymbol {
       def name = field.orElse(getter).name.getterName.toString
       def symbol = getter.orElse(field)
-      override def isComplete = symbol != global.NoSymbol
+      override def isComplete = symbol != g.NoSymbol
     }
 
     // > var x = 2
@@ -115,21 +115,21 @@ trait LogicalSymbols {
     // variable x, 'x', class TermSymbol, flags = 528388 (PRIVATE | MUTABLE | LOCAL) + maybe PARAMACCESSOR + maybe DEFAULTINIT
     // > locally { var x = 2 }
     // variable x, 'x', class TermSymbol, flags = 4096 (MUTABLE)
-    case class Var(field: global.Symbol, getter: global.Symbol, setter: global.Symbol) extends LogicalSymbol {
+    case class Var(field: g.Symbol, getter: g.Symbol, setter: g.Symbol) extends LogicalSymbol {
       def name = field.orElse(getter).orElse(setter).getterName.toString
       def symbol = getter.orElse(field)
-      override def isComplete = symbol != global.NoSymbol
+      override def isComplete = symbol != g.NoSymbol
     }
 
     // > def x = 2
     // method x, 'x', class MethodSymbol, flags = 64 (METHOD)
-    case class Def(symbol: global.Symbol) extends LogicalSymbol {
+    case class Def(symbol: g.Symbol) extends LogicalSymbol {
       def name = symbol.name.toString
     }
 
     // > def x: Int = macro ???
     // macro method x, 'x', class MethodSymbol, flags = 32832 (METHOD | MACRO)
-    case class Macro(symbol: global.Symbol) extends LogicalSymbol {
+    case class Macro(symbol: g.Symbol) extends LogicalSymbol {
       def name = symbol.name.toString
     }
 
@@ -137,7 +137,7 @@ trait LogicalSymbols {
     // type T, 'T', class AliasTypeSymbol, flags = 0 ()
     // > type T = X { type T = Int }
     // type T, 'T', class AliasTypeSymbol, flags = 0 ()
-    case class Type(symbol: global.Symbol) extends LogicalSymbol {
+    case class Type(symbol: g.Symbol) extends LogicalSymbol {
       def name = symbol.name.toString
     }
 
@@ -147,7 +147,7 @@ trait LogicalSymbols {
     // Class org.scalameta.reflection.LogicalSymbols$LogicalSymbol$Class
     // differs only in case from org.scalameta.reflection.LogicalSymbols$LogicalSymbol$class.
     // Such classes will overwrite one another on case-insensitive filesystems.
-    case class Clazz(symbol: global.Symbol) extends LogicalSymbol {
+    case class Clazz(symbol: g.Symbol) extends LogicalSymbol {
       def name = symbol.name.toString
     }
 
@@ -155,40 +155,40 @@ trait LogicalSymbols {
     // trait T, 'T', class ClassSymbol, flags = 33554568 (ABSTRACT | INTERFACE | TRAIT)
     // > trait T { def x = 2 }
     // trait T, 'T', class ClassSymbol, flags = 33554440 (ABSTRACT | TRAIT)
-    case class Trait(symbol: global.Symbol) extends LogicalSymbol {
+    case class Trait(symbol: g.Symbol) extends LogicalSymbol {
       def name = symbol.name.toString
     }
 
     // > object M
     // object M, 'M', class ModuleSymbol, flags = 256 (MODULE)
-    case class Object(module: global.Symbol, moduleClass: global.Symbol) extends LogicalSymbol {
+    case class Object(module: g.Symbol, moduleClass: g.Symbol) extends LogicalSymbol {
       def name = module.name.toString
       def symbol = module
     }
 
     // > package scala
     // package scala, 'scala', class ModuleSymbol, flags = 17592187109664 (FINAL | MODULE | PACKAGE | JAVA | TRIEDCOOKING)
-    case class Package(module: global.Symbol, moduleClass: global.Symbol) extends LogicalSymbol {
+    case class Package(module: g.Symbol, moduleClass: g.Symbol) extends LogicalSymbol {
       def name = module.name.toString
       def symbol = module
     }
 
     // > package object scala
     // package object scala, 'package', class ModuleSymbol, flags = 256 (MODULE)
-    case class PackageObject(module: global.Symbol, moduleClass: global.Symbol) extends LogicalSymbol {
+    case class PackageObject(module: g.Symbol, moduleClass: g.Symbol) extends LogicalSymbol {
       def name = module.name.toString
       def symbol = module
     }
 
     // > class C(x: Int)
     // constructor C, '<init>', class MethodSymbol, flags = 64 (METHOD)
-    case class PrimaryCtor(symbol: global.Symbol) extends LogicalSymbol {
+    case class PrimaryCtor(symbol: g.Symbol) extends LogicalSymbol {
       def name = symbol.name.toString
     }
 
     // > def this() = this(2)
     // constructor C, '<init>', class MethodSymbol, flags = 64 (METHOD)
-    case class SecondaryCtor(symbol: global.Symbol) extends LogicalSymbol {
+    case class SecondaryCtor(symbol: g.Symbol) extends LogicalSymbol {
       def name = symbol.name.toString
     }
 
@@ -196,7 +196,7 @@ trait LogicalSymbols {
     // value x, 'x', class TermSymbol, flags = 0
     // NOTE: this symbol can't be distinguished from a local val
     // so I've patched the analyzer to attach metadata that would allow that
-    case class TermBind(symbol: global.Symbol) extends LogicalSymbol {
+    case class TermBind(symbol: g.Symbol) extends LogicalSymbol {
       def name = symbol.name.toString
     }
 
@@ -204,7 +204,7 @@ trait LogicalSymbols {
     // type t, 't', class AbstractTypeSymbol, flags = 16 (DEFERRED)
     // NOTE: this symbol can't be distinguished from a local type
     // so I've patched the analyzer to attach metadata that would allow that
-    case class TypeBind(symbol: global.Symbol) extends LogicalSymbol {
+    case class TypeBind(symbol: g.Symbol) extends LogicalSymbol {
       def name = symbol.name.toString
     }
 
@@ -214,7 +214,7 @@ trait LogicalSymbols {
     // value x, 'x', class TermSymbol, flags = 8192 (PARAM)
     // > def foo(x: Int) = ???
     // value x, 'x', class TermSymbol, flags = 8192 (PARAM)
-    case class TermParameter(symbol: global.Symbol) extends LogicalSymbol {
+    case class TermParameter(symbol: g.Symbol) extends LogicalSymbol {
       def name = symbol.name.toString
     }
 
@@ -222,12 +222,12 @@ trait LogicalSymbols {
     // type T, 'T', class AbstractTypeSymbol, flags = 8208 (DEFERRED | PARAM)
     // > def foo[T] = ???
     // type T, 'T', class TypeSkolem, flags = 8208 (DEFERRED | PARAM)
-    case class TypeParameter(symbol: global.Symbol) extends LogicalSymbol {
+    case class TypeParameter(symbol: g.Symbol) extends LogicalSymbol {
       def name = symbol.name.toString
     }
   }
 
-  private def logicalSymbols(gsyms: Seq[global.Symbol]): Seq[l.Symbol] = {
+  private def logicalSymbols(gsyms: Seq[g.Symbol]): Seq[l.Symbol] = {
     val rawResult = mutable.ListBuffer[l.Symbol]()
     val iterator = gsyms.iterator
     while (iterator.hasNext) {
@@ -238,7 +238,7 @@ trait LogicalSymbols {
         result
       }
       val lsym = {
-        if (gsym == global.NoSymbol) {
+        if (gsym == g.NoSymbol) {
           l.None
         } else if (gsym.isTerm && !gsym.isMethod && !gsym.isModule) {
           if (gsym.hasFlag(PARAM)) l.TermParameter(gsym)
@@ -256,7 +256,7 @@ trait LogicalSymbols {
               if (gsym.hasFlag(DEFERRED)) l.AbstractVal(gsym)
               else l.Val(gsym.accessed, gsym)
             } else {
-              if (!gsym.name.endsWith(global.nme.SETTER_SUFFIX)) {
+              if (!gsym.name.endsWith(g.nme.SETTER_SUFFIX)) {
                 if (gsym.hasFlag(DEFERRED)) l.AbstractVar(gsym, gsym.setter)
                 else l.Var(gsym.accessed, gsym, gsym.setter)
               } else {
@@ -276,7 +276,7 @@ trait LogicalSymbols {
           if (gsym.hasFlag(PACKAGE)) {
             l.Package(gsym, gsym.moduleClass)
           } else {
-            if (gsym.name == global.nme.PACKAGE) l.PackageObject(gsym, gsym.moduleClass)
+            if (gsym.name == g.nme.PACKAGE) l.PackageObject(gsym, gsym.moduleClass)
             else l.Object(gsym, gsym.moduleClass)
           }
         } else if (gsym.isType && !gsym.isClass) {
@@ -284,7 +284,7 @@ trait LogicalSymbols {
             l.TypeParameter(gsym)
           } else if (gsym.hasFlag(DEFERRED)) {
             if (gsym.hasFlag(EXISTENTIAL)) {
-              if (gsym.name.endsWith(global.nme.SINGLETON_SUFFIX)) l.AbstractVal(gsym)
+              if (gsym.name.endsWith(g.nme.SINGLETON_SUFFIX)) l.AbstractVal(gsym)
               else l.AbstractType(gsym)
             } else {
               if (gsym.metadata.get("isPatternVariable").map(_.asInstanceOf[Boolean]).getOrElse(false)) l.TypeBind(gsym)
@@ -297,11 +297,11 @@ trait LogicalSymbols {
           if (gsym.hasFlag(TRAIT)) l.Trait(gsym)
           else l.Clazz(gsym)
         } else {
-          sys.error(s"unsupported symbol ${gsym}, designation = ${gsym.getClass}, info = ${global.showRaw(gsym.info, printIds = true, printTypes = true)}")
+          sys.error(s"unsupported symbol ${gsym}, designation = ${gsym.getClass}, info = ${g.showRaw(gsym.info, printIds = true, printTypes = true)}")
         }
       }
-      val isTraitCtor = gsym.isPrimaryConstructor && gsym.name == global.nme.MIXIN_CONSTRUCTOR
-      val isHiddenInstanceOf = gsym == global.definitions.Object_isInstanceOf || gsym == global.definitions.Object_asInstanceOf
+      val isTraitCtor = gsym.isPrimaryConstructor && gsym.name == g.nme.MIXIN_CONSTRUCTOR
+      val isHiddenInstanceOf = gsym == g.definitions.Object_isInstanceOf || gsym == g.definitions.Object_asInstanceOf
       if (!isTraitCtor && !isHiddenInstanceOf) rawResult += lsym
     }
     val result = rawResult.toVector.distinct
