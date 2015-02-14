@@ -18,6 +18,7 @@ class AstMacros(val c: Context) {
   val HygieneInternal = q"_root_.scala.meta.internal.hygiene"
   def impl(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
+      def is(abbrev: String) = c.internal.enclosingOwner.fullName + "." + cdef.name == "scala.meta.internal.ast." + abbrev
       val q"$mods class $name[..$tparams] $ctorMods(...$rawparamss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
       val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" = mdef
       val bparams1 = ListBuffer[ValDef]() // boilerplate params
@@ -55,17 +56,9 @@ class AstMacros(val c: Context) {
       val denotParam = q"@$AstInternal.auxiliary val denot: $HygieneInternal.Denotation = $HygieneInternal.Denotation.Zero"
       val sigmaParam = q"@$AstInternal.auxiliary val sigma: $HygieneInternal.Sigma = $HygieneInternal.Sigma.Zero"
       val paramss = {
-        val fullName = c.internal.enclosingOwner.fullName + "." + cdef.name
-        if (fullName == "scala.meta.internal.ast.Term.Name" ||
-            fullName == "scala.meta.internal.ast.Type.Name" ||
-            fullName == "scala.meta.internal.ast.Ctor.Ref.Name" ||
-            fullName == "scala.meta.internal.ast.Term.This" ||
-            fullName == "scala.meta.internal.ast.Term.Super" ||
-            fullName == "scala.meta.internal.ast.Name.Anonymous" ||
-            fullName == "scala.meta.internal.ast.Mod.PrivateThis" ||
-            fullName == "scala.meta.internal.ast.Mod.PrivateWithin" ||
-            fullName == "scala.meta.internal.ast.Mod.ProtectedThis" ||
-            fullName == "scala.meta.internal.ast.Mod.ProtectedWithin") {
+        if (is("Name.Anonymous") || is("Term.Name") || is("Type.Name") || is("Ctor.Ref.Name") ||
+            is("Term.This") || is("Term.Super") || is("Mod.PrivateThis") || is("Mod.ProtectedThis") ||
+            is("Mod.PrivateWithin") || is("Mod.ProtectedWithin")) {
           (rawparamss.head ++ List(denotParam, sigmaParam)) +: rawparamss.tail
         } else {
           rawparamss
@@ -140,7 +133,28 @@ class AstMacros(val c: Context) {
       internalBody ++= requires
       val paramInitss = internalLocalss.map(_.map{ case (local, internal) => q"$AstInternal.initParam($local)" })
       internalBody += q"val node = new $name(null, null, _root_.scala.collection.immutable.Nil)(...$paramInitss)"
-      internalBody ++= internalLocalss.flatten.map{ case (local, internal) => q"$AstInternal.storeField(node.$internal, $local)" }
+      internalBody ++= internalLocalss.flatten.flatMap{ case (local, internal) =>
+        val (validators, assignee) = {
+          // TODO: this is totally ugly. we need to come up with a way to express this in a sane way.
+          val validateLocal = TermName("validate" + local.toString.capitalize)
+          if (is("Pkg") && local.toString == "stats") {
+            val validators = List(q"def $validateLocal(stat: Stat) = { require(stat.isTopLevelStat); stat }")
+            (validators, q"$local.map($validateLocal)")
+          } else if ((is("Defn.Trait") || is("Defn.Object") || is("Pkg.Object")) && local.toString == "templ") {
+            val validators = List(q"def $validateLocal(stats: Seq[Stat]) = stats.map(stat => { require(!stat.isInstanceOf[Ctor]); stat })")
+            (validators, q"$local.copy(stats = $local.stats.map($validateLocal))")
+          } else if (is("Template") && local.toString == "early") {
+            val validators = List(q"def $validateLocal(stat: Stat) = { require(stat.isEarlyStat && parents.nonEmpty); stat }")
+            (validators, q"$local.map($validateLocal)")
+          } else if (is("Template") && local.toString == "stats") {
+            val validators = List(q"def $validateLocal(stats: Seq[Stat]) = stats.map(stat => { require(stat.isTemplateStat); stat })")
+            (validators, q"$local.map($validateLocal)")
+          } else {
+            (Nil, q"$local")
+          }
+        }
+        validators :+ q"$AstInternal.storeField(node.$internal, $assignee)"
+      }
       internalBody += q"node"
       val internalArgss = paramss.map(_.map(p => q"${p.name}"))
       mstats1 += q"""

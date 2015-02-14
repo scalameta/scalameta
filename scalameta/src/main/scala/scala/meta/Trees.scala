@@ -306,14 +306,16 @@ package scala.meta.internal.ast {
                      tparams: Seq[impl.Type.Param],
                      ctor: Ctor.Primary,
                      templ: Template) extends Defn with Member.Type {
-      require(templ.stats.forall(!_.isInstanceOf[Ctor]))
+      // TODO: hardcoded in the @ast macro, find out a better way
+      // require(templ.stats.getOrElse(Nil).forall(!_.isInstanceOf[Ctor]))
       require(ctor.mods.isEmpty && ctor.paramss.isEmpty)
     }
     @ast class Object(mods: Seq[Mod],
                       name: Term.Name,
                       ctor: Ctor.Primary,
                       templ: Template) extends Defn with Member.Term {
-      require(templ.stats.forall(!_.isInstanceOf[Ctor]))
+      // TODO: hardcoded in the @ast macro, find out a better way
+      // require(templ.stats.getOrElse(Nil).forall(!_.isInstanceOf[Ctor]))
       require(ctor.mods.isEmpty && ctor.paramss.isEmpty)
     }
   }
@@ -321,12 +323,14 @@ package scala.meta.internal.ast {
   @ast class Pkg(ref: Term.Ref, stats: Seq[Stat])
        extends Member.Term with Stat {
     require(ref.isQualId)
-    require(stats.forall(_.isTopLevelStat))
+    // TODO: hardcoded in the @ast macro, find out a better way
+    // require(stats.forall(_.isTopLevelStat))
   }
   object Pkg {
     @ast class Object(mods: Seq[Mod], name: Term.Name, ctor: Ctor.Primary, templ: Template)
          extends Member.Term with Stat {
-      require(templ.stats.forall(!_.isInstanceOf[Ctor]))
+      // TODO: hardcoded in the @ast macro, find out a better way
+      // require(templ.stats.getOrElse(Nil).forall(!_.isInstanceOf[Ctor]))
     }
   }
 
@@ -357,9 +361,10 @@ package scala.meta.internal.ast {
                       self: Term.Param,
                       stats: Option[Seq[Stat]]) extends api.Template with Tree {
     require(parents.forall(_.isCtorCall))
-    require(early.nonEmpty ==> parents.nonEmpty)
-    require(early.forall(_.isEarlyStat))
-    require(stats.getOrElse(Nil).forall(_.isTemplateStat))
+    // TODO: hardcoded in the @ast macro, find out a better way
+    // require(early.nonEmpty ==> parents.nonEmpty)
+    // require(early.forall(_.isEarlyStat))
+    // require(stats.getOrElse(Nil).forall(_.isTemplateStat))
   }
 
   @branch trait Mod extends api.Mod with Tree

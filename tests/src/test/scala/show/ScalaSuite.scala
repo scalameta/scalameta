@@ -356,11 +356,18 @@ class ScalaSuite extends ParseSuite {
 
   test("lazy printing") {
     import scala.meta.internal.ast._
-    val tree1 = Pkg(Term.Name("test"), List(templStat("class C")).toStream)
-    assert(tree1.toString === "package test { ... }")
     val emptyCtor = Ctor.Primary(Nil, Ctor.Name("this"), Nil)
-    val emptyTemplate = Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), Some(Nil.toStream))
-    val tree2 = Pkg.Object(Nil, Term.Name("test"), emptyCtor, emptyTemplate)
-    assert(tree2.toString === "package object test { ... }")
+    val lazyStats = templStat("class C") #:: ??? #:: Stream.empty
+    val lazyTemplate = Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), Some(lazyStats))
+    val tree1 = Defn.Class(Nil, Type.Name("test"), Nil, emptyCtor, lazyTemplate)
+    assert(tree1.toString === "class test { ... }")
+    val tree2 = Defn.Trait(Nil, Type.Name("test"), Nil, emptyCtor, lazyTemplate)
+    assert(tree2.toString === "trait test { ... }")
+    val tree3 = Defn.Object(Nil, Term.Name("test"), emptyCtor, lazyTemplate)
+    assert(tree3.toString === "object test { ... }")
+    val tree4 = Pkg(Term.Name("test"), lazyStats)
+    assert(tree4.toString === "package test { ... }")
+    val tree5 = Pkg.Object(Nil, Term.Name("test"), emptyCtor, lazyTemplate)
+    assert(tree5.toString === "package object test { ... }")
   }
 }
