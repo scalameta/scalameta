@@ -191,7 +191,6 @@ trait ToPmember extends GlobalToolkit with MetaToolkit {
           val gstatpre = gstatowner.toTypeIn(gpre)
           val ldecls = gstatpre.decls.toLogical
           val lcensoredDecls = ldecls.filter(!_.isInstanceOf[l.PrimaryCtor])
-          lcensoredDecls.foreach(println)
           lcensoredDecls.map(_.toPmember(gstatpre)).map(_.stat)
         })
         lazy val pmaybeDefault = if (gsym.hasFlag(DEFAULTPARAM)) Some(pbody) else None
