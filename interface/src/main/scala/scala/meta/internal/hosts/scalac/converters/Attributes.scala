@@ -37,7 +37,7 @@ trait Attributes extends GlobalToolkit with MetaToolkit {
       require(gpre != g.NoType)
       val hpre = {
         if (gpre == g.NoPrefix) h.Prefix.Zero
-        else h.Prefix.Type(gpre.toPtype.asInstanceOf[p.Type])
+        else h.Prefix.Type(gpre.toPtype)
       }
       val hsym = symbolTable.convert(lsym)
       h.Denotation.Precomputed(hpre, hsym)

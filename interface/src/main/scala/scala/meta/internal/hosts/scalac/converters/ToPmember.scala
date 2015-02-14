@@ -124,10 +124,11 @@ trait ToPmember extends GlobalToolkit with MetaToolkit {
         lazy val ptparams = gtparams.map(gtparam => l.TypeParameter(gtparam).toPmember(g.NoPrefix).asInstanceOf[p.Type.Param])
         lazy val pvparamss = gvparamss.map(_.map(gvparam => l.TermParameter(gvparam).toPmember(g.NoPrefix).asInstanceOf[p.Term.Param]))
         lazy val ptpe = gtpe.toPtype
+        lazy val ptpearg = gtpe.toPtypeArg
         lazy val ptpeBounds = gtpe match {
           case gtpe @ g.TypeBounds(glo, ghi) =>
-            val plo = if (glo =:= g.typeOf[Nothing]) None else Some(glo.toPtype.asInstanceOf[p.Type])
-            val phi = if (ghi =:= g.typeOf[Any]) None else Some(ghi.toPtype.asInstanceOf[p.Type])
+            val plo = if (glo =:= g.typeOf[Nothing]) None else Some(glo.toPtype)
+            val phi = if (ghi =:= g.typeOf[Any]) None else Some(ghi.toPtype)
             p.Type.Bounds(plo, phi).withOriginal(gtpe)
         }
         lazy val punknownTerm = {
@@ -176,12 +177,12 @@ trait ToPmember extends GlobalToolkit with MetaToolkit {
             case g.PolyType(_, g.ClassInfoType(gparents, _, _)) => gparents
           }
           val pparents = gparents.map(gparent => {
-            val ptpe = gparent.toPtype.asInstanceOf[p.Type]
+            val ptpe = gparent.toPtype
             val gctor = gparent.typeSymbol.primaryConstructor.orElse(gparent.typeSymbol)
             ptpe.ctorRef(gctor)
           })
           // TODO: apply gpre to pselftpe
-          val pselftpe = if (gsym.thisSym != gsym) Some(gsym.thisSym.tpe.toPtype.asInstanceOf[p.Type]) else None
+          val pselftpe = if (gsym.thisSym != gsym) Some(gsym.thisSym.tpe.toPtype) else None
           val pself = p.Term.Param(Nil, p.Name.Anonymous(), pselftpe, None)
           p.Template(pearly, pparents, pself, Some(plate))
         }
@@ -213,15 +214,15 @@ trait ToPmember extends GlobalToolkit with MetaToolkit {
         }
         val pmember: p.Member = lsym match {
           case l.None => unreachable
-          case _: l.AbstractVal => p.Decl.Val(pmods, List(p.Pat.Var.Term(pname.asInstanceOf[p.Term.Name])), ptpe.asInstanceOf[p.Type]).member
-          case _: l.AbstractVar => p.Decl.Var(pmods, List(p.Pat.Var.Term(pname.asInstanceOf[p.Term.Name])), ptpe.asInstanceOf[p.Type]).member
-          case _: l.AbstractDef => p.Decl.Def(pmods, pname.asInstanceOf[p.Term.Name], ptparams, pvparamss, ptpe.asInstanceOf[p.Type])
+          case _: l.AbstractVal => p.Decl.Val(pmods, List(p.Pat.Var.Term(pname.asInstanceOf[p.Term.Name])), ptpe).member
+          case _: l.AbstractVar => p.Decl.Var(pmods, List(p.Pat.Var.Term(pname.asInstanceOf[p.Term.Name])), ptpe).member
+          case _: l.AbstractDef => p.Decl.Def(pmods, pname.asInstanceOf[p.Term.Name], ptparams, pvparamss, ptpe)
           case _: l.AbstractType => p.Decl.Type(pmods, pname.asInstanceOf[p.Type.Name], ptparams, ptpeBounds)
-          case _: l.Val => p.Defn.Val(pmods, List(p.Pat.Var.Term(pname.asInstanceOf[p.Term.Name])), Some(ptpe.asInstanceOf[p.Type]), pbody).member
-          case _: l.Var => p.Defn.Var(pmods, List(p.Pat.Var.Term(pname.asInstanceOf[p.Term.Name])), Some(ptpe.asInstanceOf[p.Type]), pmaybeBody).member
-          case _: l.Def => p.Defn.Def(pmods, pname.asInstanceOf[p.Term.Name], ptparams, pvparamss, Some(ptpe.asInstanceOf[p.Type]), pbody)
-          case _: l.Macro => p.Defn.Def(pmods, pname.asInstanceOf[p.Term.Name], ptparams, pvparamss, Some(ptpe.asInstanceOf[p.Type]), pbody)
-          case _: l.Type => p.Defn.Type(pmods, pname.asInstanceOf[p.Type.Name], ptparams, ptpe.asInstanceOf[p.Type])
+          case _: l.Val => p.Defn.Val(pmods, List(p.Pat.Var.Term(pname.asInstanceOf[p.Term.Name])), Some(ptpe), pbody).member
+          case _: l.Var => p.Defn.Var(pmods, List(p.Pat.Var.Term(pname.asInstanceOf[p.Term.Name])), Some(ptpe), pmaybeBody).member
+          case _: l.Def => p.Defn.Def(pmods, pname.asInstanceOf[p.Term.Name], ptparams, pvparamss, Some(ptpe), pbody)
+          case _: l.Macro => p.Defn.Def(pmods, pname.asInstanceOf[p.Term.Name], ptparams, pvparamss, Some(ptpe), pbody)
+          case _: l.Type => p.Defn.Type(pmods, pname.asInstanceOf[p.Type.Name], ptparams, ptpe)
           case _: l.Clazz => p.Defn.Class(pmods, pname.asInstanceOf[p.Type.Name], ptparams, pctor, ptemplate)
           case _: l.Trait => p.Defn.Trait(pmods, pname.asInstanceOf[p.Type.Name], ptparams, pctor, ptemplate)
           case _: l.Object => p.Defn.Object(pmods, pname.asInstanceOf[p.Term.Name], pctor, ptemplate)
@@ -231,7 +232,7 @@ trait ToPmember extends GlobalToolkit with MetaToolkit {
           case _: l.SecondaryCtor => p.Ctor.Secondary(pmods, pname.asInstanceOf[p.Ctor.Name], pvparamss, pbody)
           case _: l.TermBind => p.Pat.Var.Term(pname.asInstanceOf[p.Term.Name])
           case _: l.TypeBind => p.Pat.Var.Type(pname.asInstanceOf[p.Type.Name])
-          case _: l.TermParameter => p.Term.Param(pmods, pname.asInstanceOf[papi.Term.Name], Some(ptpe), pmaybeDefault)
+          case _: l.TermParameter => p.Term.Param(pmods, pname.asInstanceOf[papi.Term.Name], Some(ptpearg), pmaybeDefault)
           case _: l.TypeParameter => p.Type.Param(pmods, pname.asInstanceOf[papi.Type.Name], ptparams, ptpeBounds, pviewBounds, pcontextBounds)
           case _ => sys.error(s"unsupported symbol $lsym, designation = ${gsym.getClass}, flags = ${gsym.flags}")
         }

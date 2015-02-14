@@ -32,7 +32,7 @@ class SemanticContext[G <: ScalaGlobal](val global: G) extends ConverterApi(glob
       case Some(gtpe) => gtpe
       case _ => throw new SemanticException(s"implementation restriction: internal cache has no type associated with ${term.show[Summary]}")
     }
-    gtpe.toPtype.asInstanceOf[papi.Type]
+    gtpe.toPtype
   }
 
   private[meta] def defns(ref: papi.Ref): Seq[papi.Member] = {
@@ -85,27 +85,27 @@ class SemanticContext[G <: ScalaGlobal](val global: G) extends ConverterApi(glob
 
   private[meta] def lub(tpes: Seq[papi.Type]): papi.Type = {
     val gtpes = tpes.map(_.asInstanceOf[p.Type].toGtype).toList
-    g.lub(gtpes).toPtype.asInstanceOf[papi.Type]
+    g.lub(gtpes).toPtype
   }
 
   private[meta] def glb(tpes: Seq[papi.Type]): papi.Type = {
     val gtpes = tpes.map(_.asInstanceOf[p.Type].toGtype).toList
-    g.glb(gtpes).toPtype.asInstanceOf[papi.Type]
+    g.glb(gtpes).toPtype
   }
 
   private[meta] def parents(tpe: papi.Type): Seq[papi.Type] = {
     val gtpe = tpe.asInstanceOf[p.Type].toGtype
-    gtpe.directBaseTypes.map(_.toPtype.asInstanceOf[papi.Type])
+    gtpe.directBaseTypes.map(_.toPtype)
   }
 
   private[meta] def widen(tpe: papi.Type): papi.Type = {
     val gtpe = tpe.asInstanceOf[p.Type].toGtype
-    gtpe.widen.toPtype.asInstanceOf[papi.Type]
+    gtpe.widen.toPtype
   }
 
   private[meta] def dealias(tpe: papi.Type): papi.Type = {
     val gtpe = tpe.asInstanceOf[p.Type].toGtype
-    gtpe.dealias.toPtype.asInstanceOf[papi.Type]
+    gtpe.dealias.toPtype
   }
 
   private[meta] def parents(member: papi.Member): Seq[papi.Member] = {

@@ -24,7 +24,7 @@ trait ToPannot extends GlobalToolkit with MetaToolkit {
       def pannotcore(gannot: g.AnnotationInfo): p.Term = {
         val g.AnnotationInfo(gatp, gargs, gassocs) = gannot
         val gctor = gatp.decl(g.nme.CONSTRUCTOR).alternatives.head // TODO: manual overload resolution!
-        val patp = gatp.toPtype.asInstanceOf[p.Type]
+        val patp = gatp.toPtype
         val pargs = {
           if (gassocs.nonEmpty) {
             def loop(garg: g.ClassfileAnnotArg): p.Term = garg match {

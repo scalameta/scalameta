@@ -26,7 +26,8 @@ trait ToPtype extends GlobalToolkit with MetaToolkit {
   self: Api =>
 
   protected implicit class RichToPtype(gtpe: g.Type) {
-    def toPtype: p.Type.Arg = tpeCache.getOrElseUpdate(gtpe, {
+    def toPtype: p.Type = gtpe.toPtypeArg.asInstanceOf[p.Type]
+    def toPtypeArg: p.Type.Arg = tpeCache.getOrElseUpdate(gtpe, {
       val result = gtpe match {
         case g.NoPrefix =>
           unreachable
@@ -76,13 +77,13 @@ trait ToPtype extends GlobalToolkit with MetaToolkit {
         case g.TypeRef(pre, sym, args) =>
           require(sym.isType)
           if (sym == g.definitions.RepeatedParamClass) {
-            p.Type.Arg.Repeated(args.head.toPtype.asInstanceOf[p.Type])
+            p.Type.Arg.Repeated(args.head.toPtype)
           } else if (sym == g.definitions.ByNameParamClass) {
-            p.Type.Arg.ByName(args.head.toPtype.asInstanceOf[p.Type])
+            p.Type.Arg.ByName(args.head.toPtype)
           } else {
             val pref = ({
               if (sym.isModuleClass) {
-                g.SingleType(pre, sym.module).toPtype.asInstanceOf[p.Type]
+                g.SingleType(pre, sym.module).toPtype
               } else {
                 pre match {
                   case g.NoPrefix =>
@@ -93,11 +94,11 @@ trait ToPtype extends GlobalToolkit with MetaToolkit {
                     val p.Type.Singleton(preref) = pre.toPtype
                     p.Type.Select(preref, sym.asType.precvt(pre, g.Ident(sym)).withOriginal(gtpe))
                   case _ =>
-                    p.Type.Project(pre.toPtype.asInstanceOf[p.Type], sym.asType.precvt(pre, g.Ident(sym)).withOriginal(gtpe))
+                    p.Type.Project(pre.toPtype, sym.asType.precvt(pre, g.Ident(sym)).withOriginal(gtpe))
                 }
               }
             }).withOriginal(gtpe)
-            val pargs = args.map(_.toPtype.asInstanceOf[p.Type])
+            val pargs = args.map(_.toPtype)
             if (args.isEmpty) pref
             else {
               if (g.definitions.FunctionClass.seq.contains(sym)) p.Type.Function(pargs.init, pargs.last)
@@ -109,14 +110,14 @@ trait ToPtype extends GlobalToolkit with MetaToolkit {
         case g.RefinedType(parents, decls) =>
           // TODO: detect `val x, y: Int`
           val pdecls = decls.toLogical.map(_.toPmember(g.NoPrefix)).toList // TODO: actually, prefix here is not empty
-          p.Type.Compound(parents.map(_.toPtype.asInstanceOf[p.Type]), pdecls.map(_.stat))
+          p.Type.Compound(parents.map(_.toPtype), pdecls.map(_.stat))
         case g.ExistentialType(quants, underlying) =>
           // TODO: infer type placeholders where they were specified explicitly
           require(quants.forall(quant => quant.isType && quant.hasFlag(DEFERRED | EXISTENTIAL)))
           val pquants = quants.toLogical.map(_.toPmember(g.NoPrefix)).toList // TODO: actually, prefix here is not empty
-          p.Type.Existential(underlying.toPtype.asInstanceOf[p.Type], pquants.map(_.stat))
+          p.Type.Existential(underlying.toPtype, pquants.map(_.stat))
         case g.AnnotatedType(annots, underlying) =>
-          p.Type.Annotate(underlying.toPtype.asInstanceOf[p.Type], annots.toPannots)
+          p.Type.Annotate(underlying.toPtype, annots.toPannots)
         case g.ConstantType(const) =>
           const.rawcvt
         case tpe @ g.PolyType(tparams, ret) =>
@@ -134,7 +135,7 @@ trait ToPtype extends GlobalToolkit with MetaToolkit {
               val hsymbol = h.Symbol.Local(randomUUID().toString)
               val pname = p.Type.Name("λ", h.Denotation.Precomputed(h.Prefix.Zero, hsymbol), h.Sigma.Naive)
               val ptparams = tparams.toLogical.map(_.toPmember(g.NoPrefix).asInstanceOf[p.Type.Param])
-              val plambda = p.Defn.Type(Nil, pname, ptparams, ret.toPtype.asInstanceOf[p.Type])
+              val plambda = p.Defn.Type(Nil, pname, ptparams, ret.toPtype)
               p.Type.Project(p.Type.Compound(Nil, List(plambda)), pname)
           }
         case _ =>
