@@ -399,7 +399,8 @@ trait ToPtree extends GlobalToolkit with MetaToolkit {
           // NOTE: if we're converting a template of a CompoundTypeTree
           // then it won't have any symbol set, so our p.Name.Anonymous is going to remain denotation-less
           val pdumbselfname = if (gself.name == g.nme.WILDCARD) p.Name.Anonymous() else p.Term.Name(gself.alias)
-          val pselfname = if (in.symbol.owner != g.NoSymbol) pdumbselfname.withDenot(in.symbol.owner) else pdumbselfname
+          val gselfsym = in.symbol.owner.thisSym
+          val pselfname = if (in.symbol.owner != gselfsym) pdumbselfname.withDenot(gselfsym) else pdumbselfname
           val pselftpe = if (gself.tpt.nonEmpty) Some[p.Type.Arg](pvparamtpe(gself.tpt)) else None
           p.Term.Param(Nil, pselfname, pselftpe, None).withOriginal(gself)
         }
