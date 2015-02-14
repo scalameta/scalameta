@@ -121,8 +121,8 @@ trait ToPmember extends GlobalToolkit with MetaToolkit {
           case l.TypeParameter(gsym) => gsym.anoncvt(g.Ident(gsym))
           case _ => gsym.precvt(gpre, g.Ident(gsym))
         }
-        lazy val ptparams = gtparams.map(gtparam => l.TypeParameter(gtparam).toPmember(g.NoPrefix).asInstanceOf[p.Type.Param])
-        lazy val pvparamss = gvparamss.map(_.map(gvparam => l.TermParameter(gvparam).toPmember(g.NoPrefix).asInstanceOf[p.Term.Param]))
+        lazy val ptparams = gtparams.map(gtparam => l.TypeParameter(gtparam).toPmember(g.NoPrefix).require[p.Type.Param])
+        lazy val pvparamss = gvparamss.map(_.map(gvparam => l.TermParameter(gvparam).toPmember(g.NoPrefix).require[p.Term.Param]))
         lazy val ptpe = gtpe.toPtype
         lazy val ptpearg = gtpe.toPtypeArg
         lazy val ptpeBounds = gtpe match {
@@ -158,7 +158,7 @@ trait ToPmember extends GlobalToolkit with MetaToolkit {
             val gctorinfo = gctorsym.infoIn(gpre)
             val pctorname = p.Ctor.Name(gsym.name.toString).withDenot(gpre, gctorsym).withOriginal(gctorsym)
             val pctorparamss = {
-              if (lsym.isInstanceOf[l.Clazz]) gctorinfo.paramss.map(_.map(gvparam => l.TermParameter(gvparam).toPmember(g.NoPrefix).asInstanceOf[p.Term.Param]))
+              if (lsym.isInstanceOf[l.Clazz]) gctorinfo.paramss.map(_.map(gvparam => l.TermParameter(gvparam).toPmember(g.NoPrefix).require[p.Term.Param]))
               else Nil // NOTE: synthetic constructors for modules have a fake List(List()) parameter list
             }
             p.Ctor.Primary(this.pmods(l.PrimaryCtor(gctorsym)), pctorname, pctorparamss)
@@ -214,26 +214,26 @@ trait ToPmember extends GlobalToolkit with MetaToolkit {
         }
         val pmember: p.Member = lsym match {
           case l.None => unreachable
-          case _: l.AbstractVal => p.Decl.Val(pmods, List(p.Pat.Var.Term(pname.asInstanceOf[p.Term.Name])), ptpe).member
-          case _: l.AbstractVar => p.Decl.Var(pmods, List(p.Pat.Var.Term(pname.asInstanceOf[p.Term.Name])), ptpe).member
-          case _: l.AbstractDef => p.Decl.Def(pmods, pname.asInstanceOf[p.Term.Name], ptparams, pvparamss, ptpe)
-          case _: l.AbstractType => p.Decl.Type(pmods, pname.asInstanceOf[p.Type.Name], ptparams, ptpeBounds)
-          case _: l.Val => p.Defn.Val(pmods, List(p.Pat.Var.Term(pname.asInstanceOf[p.Term.Name])), Some(ptpe), pbody).member
-          case _: l.Var => p.Defn.Var(pmods, List(p.Pat.Var.Term(pname.asInstanceOf[p.Term.Name])), Some(ptpe), pmaybeBody).member
-          case _: l.Def => p.Defn.Def(pmods, pname.asInstanceOf[p.Term.Name], ptparams, pvparamss, Some(ptpe), pbody)
-          case _: l.Macro => p.Defn.Def(pmods, pname.asInstanceOf[p.Term.Name], ptparams, pvparamss, Some(ptpe), pbody)
-          case _: l.Type => p.Defn.Type(pmods, pname.asInstanceOf[p.Type.Name], ptparams, ptpe)
-          case _: l.Clazz => p.Defn.Class(pmods, pname.asInstanceOf[p.Type.Name], ptparams, pctor, ptemplate)
-          case _: l.Trait => p.Defn.Trait(pmods, pname.asInstanceOf[p.Type.Name], ptparams, pctor, ptemplate)
-          case _: l.Object => p.Defn.Object(pmods, pname.asInstanceOf[p.Term.Name], pctor, ptemplate)
-          case _: l.Package => p.Pkg(pname.asInstanceOf[p.Term.Name], pstats)
-          case _: l.PackageObject => p.Pkg.Object(pmods, pname.asInstanceOf[p.Term.Name], pctor, ptemplate)
-          case _: l.PrimaryCtor => p.Ctor.Primary(pmods, pname.asInstanceOf[p.Ctor.Name], pvparamss)
-          case _: l.SecondaryCtor => p.Ctor.Secondary(pmods, pname.asInstanceOf[p.Ctor.Name], pvparamss, pbody)
-          case _: l.TermBind => p.Pat.Var.Term(pname.asInstanceOf[p.Term.Name])
-          case _: l.TypeBind => p.Pat.Var.Type(pname.asInstanceOf[p.Type.Name])
-          case _: l.TermParameter => p.Term.Param(pmods, pname.asInstanceOf[papi.Term.Name], Some(ptpearg), pmaybeDefault)
-          case _: l.TypeParameter => p.Type.Param(pmods, pname.asInstanceOf[papi.Type.Name], ptparams, ptpeBounds, pviewBounds, pcontextBounds)
+          case _: l.AbstractVal => p.Decl.Val(pmods, List(p.Pat.Var.Term(pname.require[p.Term.Name])), ptpe).member
+          case _: l.AbstractVar => p.Decl.Var(pmods, List(p.Pat.Var.Term(pname.require[p.Term.Name])), ptpe).member
+          case _: l.AbstractDef => p.Decl.Def(pmods, pname.require[p.Term.Name], ptparams, pvparamss, ptpe)
+          case _: l.AbstractType => p.Decl.Type(pmods, pname.require[p.Type.Name], ptparams, ptpeBounds)
+          case _: l.Val => p.Defn.Val(pmods, List(p.Pat.Var.Term(pname.require[p.Term.Name])), Some(ptpe), pbody).member
+          case _: l.Var => p.Defn.Var(pmods, List(p.Pat.Var.Term(pname.require[p.Term.Name])), Some(ptpe), pmaybeBody).member
+          case _: l.Def => p.Defn.Def(pmods, pname.require[p.Term.Name], ptparams, pvparamss, Some(ptpe), pbody)
+          case _: l.Macro => p.Defn.Def(pmods, pname.require[p.Term.Name], ptparams, pvparamss, Some(ptpe), pbody)
+          case _: l.Type => p.Defn.Type(pmods, pname.require[p.Type.Name], ptparams, ptpe)
+          case _: l.Clazz => p.Defn.Class(pmods, pname.require[p.Type.Name], ptparams, pctor, ptemplate)
+          case _: l.Trait => p.Defn.Trait(pmods, pname.require[p.Type.Name], ptparams, pctor, ptemplate)
+          case _: l.Object => p.Defn.Object(pmods, pname.require[p.Term.Name], pctor, ptemplate)
+          case _: l.Package => p.Pkg(pname.require[p.Term.Name], pstats)
+          case _: l.PackageObject => p.Pkg.Object(pmods, pname.require[p.Term.Name], pctor, ptemplate)
+          case _: l.PrimaryCtor => p.Ctor.Primary(pmods, pname.require[p.Ctor.Name], pvparamss)
+          case _: l.SecondaryCtor => p.Ctor.Secondary(pmods, pname.require[p.Ctor.Name], pvparamss, pbody)
+          case _: l.TermBind => p.Pat.Var.Term(pname.require[p.Term.Name])
+          case _: l.TypeBind => p.Pat.Var.Type(pname.require[p.Type.Name])
+          case _: l.TermParameter => p.Term.Param(pmods, pname.require[papi.Term.Name], Some(ptpearg), pmaybeDefault)
+          case _: l.TypeParameter => p.Type.Param(pmods, pname.require[papi.Type.Name], ptparams, ptpeBounds, pviewBounds, pcontextBounds)
           case _ => sys.error(s"unsupported symbol $lsym, designation = ${gsym.getClass}, flags = ${gsym.flags}")
         }
         pmember.withOriginal(lsym)

@@ -245,7 +245,7 @@ trait LogicalSymbols {
           else {
             if (gsym.hasFlag(MUTABLE)) l.Var(gsym, gsym.getter, gsym.setter)
             else {
-              if (gsym.metadata.get("isPatternVariable").map(_.asInstanceOf[Boolean]).getOrElse(false)) l.TermBind(gsym)
+              if (gsym.metadata.get("isPatternVariable").map(_.require[Boolean]).getOrElse(false)) l.TermBind(gsym)
               else l.Val(gsym, gsym.getter)
             }
           }
@@ -287,7 +287,7 @@ trait LogicalSymbols {
               if (gsym.name.endsWith(g.nme.SINGLETON_SUFFIX)) l.AbstractVal(gsym)
               else l.AbstractType(gsym)
             } else {
-              if (gsym.metadata.get("isPatternVariable").map(_.asInstanceOf[Boolean]).getOrElse(false)) l.TypeBind(gsym)
+              if (gsym.metadata.get("isPatternVariable").map(_.require[Boolean]).getOrElse(false)) l.TypeBind(gsym)
               else l.AbstractType(gsym)
             }
           } else {

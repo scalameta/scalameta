@@ -2,6 +2,7 @@ package scala.meta
 package internal.hosts.scalac
 package contexts
 
+import org.scalameta.invariants._
 import scala.meta.semantic.{Context => ScalametaSemanticContext}
 import scala.meta.internal.hosts.scalac.contexts.{SemanticContext => ScalahostSemanticContext}
 import scala.compat.Platform.EOL
@@ -11,7 +12,7 @@ import scala.{meta => papi}
 import scala.meta.internal.{ast => p}
 
 class StandaloneContext(options: String) extends ScalahostSemanticContext(mkGlobal(options)) {
-  private val reporter: StoreReporter = g.reporter.asInstanceOf[StoreReporter]
+  private val reporter: StoreReporter = g.reporter.require[StoreReporter]
   def define(code: String): p.Tree = {
     val gtree = g.newUnitParser(code, "<scalahost>").parse()
     val gtypedtree = {
@@ -26,9 +27,9 @@ class StandaloneContext(options: String) extends ScalahostSemanticContext(mkGlob
       phase = run.typerPhase
       globalPhase = run.typerPhase
       val typer = newTyper(rootContext(NoCompilationUnit))
-      val typedpkg = typer.typed(gtree).asInstanceOf[Tree]
+      val typedpkg = typer.typed(gtree).require[Tree]
       if (reporter.hasErrors) sys.error("typecheck has failed:" + EOL + EOL + (reporter.infos map (_.msg) mkString EOL))
-      typedpkg.asInstanceOf[PackageDef].stats.head
+      typedpkg.require[PackageDef].stats.head
     }
     val _ = toPtree.computeConverters // TODO: necessary because of macro expansion order
     toPtree(gtypedtree, classOf[papi.Stat])

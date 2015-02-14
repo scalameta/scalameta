@@ -112,7 +112,7 @@ trait TreeHelpers {
   }
 
   object DesugaredSetter {
-    def unapply(tree: Tree): Option[(Tree, Tree)] = tree.metadata.get("originalAssign").map(_.asInstanceOf[(Tree, Name, List[Tree])]) match {
+    def unapply(tree: Tree): Option[(Tree, Tree)] = tree.metadata.get("originalAssign").map(_.require[(Tree, Name, List[Tree])]) match {
       case Some((Desugared(lhs), name: TermName, Desugared(List(rhs)))) if nme.isSetterName(tree.symbol.name) && name == nme.EQL =>
         require(lhs.symbol.name.setterName == tree.symbol.name)
         Some((lhs, rhs))
@@ -132,7 +132,7 @@ trait TreeHelpers {
   }
 
   object DesugaredOpAssign {
-    def unapply(tree: Tree): Option[(Tree, List[Tree])] = tree.metadata.get("originalAssign").map(_.asInstanceOf[(Tree, Name, List[Tree])]) match {
+    def unapply(tree: Tree): Option[(Tree, List[Tree])] = tree.metadata.get("originalAssign").map(_.require[(Tree, Name, List[Tree])]) match {
       // TODO: can't use `args` here, because they might be untyped, so we have to workaround
       // case Some((Desugared(qual), name: TermName, Desugared(args))) if name != nme.EQL =>
       case Some((Desugared(qual), name: TermName, _)) if name != nme.EQL =>
@@ -182,17 +182,17 @@ trait TreeHelpers {
   object DesugaredInterpolation {
     private object StringParts {
       def unapply(trees: List[Tree]): Option[List[Literal]] = {
-        if (trees.forall(_.isInstanceOf[Literal])) Some(trees.asInstanceOf[List[Literal]])
+        if (trees.forall(_.isInstanceOf[Literal])) Some(trees.require[List[Literal]])
         else None
       }
     }
     def unapply(tree: Tree): Option[(Select, List[Literal], List[Tree])] = tree match {
       case Apply(fn @ q"$stringContext.apply(..${StringParts(parts)}).$prefix", args)
       if stringContext.symbol == StringContextClass.companion =>
-        Some((fn.asInstanceOf[Select], parts, args))
+        Some((fn.require[Select], parts, args))
       case DesugaredApply(fn @ q"$stringContext.apply(..${StringParts(parts)}).$prefix", args)
       if stringContext.symbol == StringContextClass.companion =>
-        Some((fn.asInstanceOf[Select], parts, args))
+        Some((fn.require[Select], parts, args))
       case _ =>
         None
     }

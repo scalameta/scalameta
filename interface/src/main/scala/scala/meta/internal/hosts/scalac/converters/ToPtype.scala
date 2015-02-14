@@ -26,7 +26,7 @@ trait ToPtype extends GlobalToolkit with MetaToolkit {
   self: Api =>
 
   protected implicit class RichToPtype(gtpe: g.Type) {
-    def toPtype: p.Type = gtpe.toPtypeArg.asInstanceOf[p.Type]
+    def toPtype: p.Type = gtpe.toPtypeArg.require[p.Type]
     def toPtypeArg: p.Type.Arg = tpeCache.getOrElseUpdate(gtpe, {
       val result = gtpe match {
         case g.NoPrefix =>
@@ -103,7 +103,7 @@ trait ToPtype extends GlobalToolkit with MetaToolkit {
             else {
               if (g.definitions.FunctionClass.seq.contains(sym)) p.Type.Function(pargs.init, pargs.last)
               else if (g.definitions.TupleClass.seq.contains(sym) && pargs.length > 1) p.Type.Tuple(pargs)
-              else if (sym.name.looksLikeInfix && pref.isInstanceOf[p.Type.Name] && pargs.length == 2) p.Type.ApplyInfix(pargs(0), pref.asInstanceOf[p.Type.Name], pargs(1))
+              else if (sym.name.looksLikeInfix && pref.isInstanceOf[p.Type.Name] && pargs.length == 2) p.Type.ApplyInfix(pargs(0), pref.require[p.Type.Name], pargs(1))
               else p.Type.Apply(pref, pargs)
             }
           }
@@ -134,7 +134,7 @@ trait ToPtype extends GlobalToolkit with MetaToolkit {
               // and those would not compare equal on the scala.meta side
               val hsymbol = h.Symbol.Local(randomUUID().toString)
               val pname = p.Type.Name("λ", h.Denotation.Precomputed(h.Prefix.Zero, hsymbol), h.Sigma.Naive)
-              val ptparams = tparams.toLogical.map(_.toPmember(g.NoPrefix).asInstanceOf[p.Type.Param])
+              val ptparams = tparams.toLogical.map(_.toPmember(g.NoPrefix).require[p.Type.Param])
               val plambda = p.Defn.Type(Nil, pname, ptparams, ret.toPtype)
               p.Type.Project(p.Type.Compound(Nil, List(plambda)), pname)
           }

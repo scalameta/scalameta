@@ -23,7 +23,7 @@ trait TrickyConversions extends GlobalToolkit with MetaToolkit {
     def ctorRef(gctor: g.Symbol): p.Term = {
       object pTypes {
         def unapply(tpes: Seq[p.Type.Arg]): Option[Seq[p.Type]] = {
-          if (tpes.forall(_.isInstanceOf[p.Type])) Some(tpes.map(_.asInstanceOf[p.Type]))
+          if (tpes.forall(_.isInstanceOf[p.Type])) Some(tpes.map(_.require[p.Type]))
           else None
         }
       }

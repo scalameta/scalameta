@@ -47,7 +47,7 @@ trait ToPannot extends GlobalToolkit with MetaToolkit {
             def loop(garg: g.Tree): p.Term = {
               // TODO: think of a better way to express this
               // and, by the way, why is an implicit context needed here at all?
-              implicit val c: ScalametaSemanticContext = self.asInstanceOf[ScalametaSemanticContext]
+              implicit val c: ScalametaSemanticContext = self.require[ScalametaSemanticContext]
               toPtree(garg, classOf[p.Term])
             }
             if (gannot.atp.typeSymbol == g.definitions.ThrowsClass) Nil

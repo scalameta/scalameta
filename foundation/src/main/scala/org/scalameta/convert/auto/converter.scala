@@ -357,7 +357,7 @@ package object internal {
         if (isValid) {
           val nontrivialClauses = clauses.filter(clause => clause.body.symbol != scalameta_unreachable && clause.body.symbol != Predef_???)
           val ins = nontrivialClauses.map(_.pat.tpe)
-          val pts = nontrivialClauses.map(clause => c.typecheck(clause.metadata("pt").asInstanceOf[Tree], mode = c.TYPEmode).tpe)
+          val pts = nontrivialClauses.map(clause => c.typecheck(clause.metadata("pt").require[Tree], mode = c.TYPEmode).tpe)
           val underivedOuts = nontrivialClauses.map(_.body).map(body => if (body.symbol != Auto_derive) precisetpe(body) else NoType)
           val outs = nontrivialClauses.map({ case CaseDef(pat, _, body) =>
             if (body.symbol != Auto_derive) precisetpe(body)
@@ -395,10 +395,10 @@ package object internal {
         }
         def pickleConverter(converter: SharedConverter): Tree = q"""
           new $ComputedConvertersDatabearer(
-            ${smuggleType(converter.in.asInstanceOf[Type])},
-            ${smuggleType(converter.pt.asInstanceOf[Type])},
-            ${smuggleType(converter.out.asInstanceOf[Type])},
-            ${converter.module.asInstanceOf[Tree]},
+            ${smuggleType(converter.in.require[Type])},
+            ${smuggleType(converter.pt.require[Type])},
+            ${smuggleType(converter.out.require[Type])},
+            ${converter.module.require[Tree]},
             ${converter.method},
             ${Literal(Constant(null))},
             ${converter.derived}

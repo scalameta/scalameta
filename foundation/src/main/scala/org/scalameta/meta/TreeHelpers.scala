@@ -43,10 +43,10 @@ trait TreeHelpers {
 
   implicit class RichStatMember(member: Member) {
     private def firstNonPatParent(pat: Pat): Option[Tree] = {
-      pat.parent.collect{case pat: Pat => pat}.flatMap(firstNonPatParent).orElse(pat.parent.map(_.asInstanceOf[Tree]))
+      pat.parent.collect{case pat: Pat => pat}.flatMap(firstNonPatParent).orElse(pat.parent.map(_.require[Tree]))
     }
     def stat: Stat = member match {
-      case tree: Pat.Var.Term => firstNonPatParent(tree).get.asInstanceOf[Stat]
+      case tree: Pat.Var.Term => firstNonPatParent(tree).get.require[Stat]
       case stat: Stat => stat
       case _ => sys.error(s"unsupported member ${member.productPrefix}: $member")
     }

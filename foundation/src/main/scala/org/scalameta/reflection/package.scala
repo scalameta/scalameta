@@ -1,5 +1,6 @@
 package org.scalameta
 
+import org.scalameta.invariants._
 import scala.reflect.runtime.{universe => ru}
 import scala.reflect.runtime.universe._
 import scala.tools.reflect.ToolBox
@@ -16,7 +17,7 @@ package object reflection {
       m_api.setAccessible(true)
       val api = m_api.invoke(withCompilerApi)
       val m_compiler = api.getClass.getDeclaredMethods.filter(_.getName == "compiler").head
-      m_compiler.invoke(api).asInstanceOf[scala.tools.nsc.Global]
+      m_compiler.invoke(api).require[scala.tools.nsc.Global]
     }
   }
   def mkGlobal(options: String): Global = {

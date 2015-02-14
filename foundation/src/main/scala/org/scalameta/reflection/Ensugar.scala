@@ -1,6 +1,7 @@
 package org.scalameta.reflection
 
 import scala.tools.nsc.Global
+import scala.reflect.{ClassTag, classTag}
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 import scala.org.scalameta.reflection.TreeHelpers
@@ -26,11 +27,11 @@ trait Ensugar {
 
   object Desugared {
     private val trivialSignature = new EnsugarSignature[Tree, Tree]{}
-    def unapply(tree: Tree): Some[Tree] = Some(ensugar(tree)(trivialSignature))
-    def unapply(trees: List[Tree]): Some[List[Tree]] = Some(trees.map(tree => ensugar(tree)(trivialSignature)))
+    def unapply(tree: Tree): Some[Tree] = Some(ensugar(tree)(trivialSignature, classTag[Tree]))
+    def unapply(trees: List[Tree]): Some[List[Tree]] = Some(trees.map(tree => ensugar(tree)(trivialSignature, classTag[Tree])))
   }
 
-  def ensugar[Input <: Tree, Output <: Tree](tree: Input)(implicit ev: EnsugarSignature[Input, Output]): Output = {
+  def ensugar[Input <: Tree, Output <: Tree](tree: Input)(implicit ev: EnsugarSignature[Input, Output], tag: ClassTag[Output]): Output = {
     def loop(tree: Tree): Tree = {
       object transformer extends Transformer {
         override def transform(tree: Tree): Tree = {
@@ -125,7 +126,7 @@ trait Ensugar {
         // NOTE: this is the newly established desugaring protocol
         // if a transformer wants to be friendly to us, they can use this protocol to simplify our lives
         object DesugaringProtocol extends SingleEnsugarer {
-          def ensugar(tree: Tree): Option[Tree] = tree.metadata.get("original").map(_.asInstanceOf[Tree].duplicate)
+          def ensugar(tree: Tree): Option[Tree] = tree.metadata.get("original").map(_.require[Tree].duplicate)
         }
 
         // TODO: remember macro expansions here, because the host will need to convert and attach them to expandee's attrs
@@ -155,7 +156,7 @@ trait Ensugar {
             }
             // NOTE: the expandeeTree metadata is attached by scala.meta macro expansion
             // the MacroExpansionAttachment attachment is attached by scala.reflect macro expansion
-            (tree.metadata.get("expandeeTree").map(_.asInstanceOf[Tree]), tree.attachments.get[analyzer.MacroExpansionAttachment]) match {
+            (tree.metadata.get("expandeeTree").map(_.require[Tree]), tree.attachments.get[analyzer.MacroExpansionAttachment]) match {
               case (Some(original), _) => Some(strip(postprocess(original.duplicate)))
               case (None, Some(analyzer.MacroExpansionAttachment(original, _))) => Some(strip(postprocess(original.duplicate)))
               case _ => None
@@ -179,7 +180,7 @@ trait Ensugar {
             case tree @ TypeTree() if tree.original != null =>
               val original = tree.original match {
                 case original @ SingletonTypeTree(_) =>
-                  treeCopy.SingletonTypeTree(original, original.metadata("originalRef").asInstanceOf[Tree].duplicate)
+                  treeCopy.SingletonTypeTree(original, original.metadata("originalRef").require[Tree].duplicate)
                 case original @ CompoundTypeTree(templ) =>
                   // NOTE: this attachment is only going to work past typer
                   // but since we're not yet going to implement whitebox macros, that's not yet a problem
@@ -199,20 +200,20 @@ trait Ensugar {
                   // NOTE: apparently arg from the original is broken as well, so we need to fix it up before use
                   // NOTE: another fun thing is that the original of the annottee can be either a TypeTree or an attributed TypTree
                   // that's caused by the fact that the TypTree => TypeTree adaptation doesn't happen in FUNmode
-                  object OriginalAnnottee { def unapply(tree: Tree) = tree.metadata.get("originalAnnottee").map(_.asInstanceOf[Tree]) }
+                  object OriginalAnnottee { def unapply(tree: Tree) = tree.metadata.get("originalAnnottee").map(_.require[Tree]) }
                   def loop(tree: Tree, annots: List[Tree]): Tree = (tree, annots) match {
                     case (tree @ Annotated(_, arg), annot :: rest) => treeCopy.Annotated(tree, annot, loop(arg, rest))
                     case (OriginalAnnottee(TypeTreeWithOriginal(tree)), Nil) => tree
                     case (OriginalAnnottee(tree), Nil) => tree
                     case _ => unreachable
                   }
-                  val annots = tree.tpe.asInstanceOf[AnnotatedType].annotations.map(_.original)
+                  val annots = tree.tpe.require[AnnotatedType].annotations.map(_.original)
                   require(annots.forall(_.nonEmpty))
                   loop(original, annots)
                 case original @ ExistentialTypeTree(_, _) =>
                   // NOTE: original.tpt is partially screwed up and original.whereClauses is untyped
                   // therefore we look into the attachment, which has both tpt and whereClauses in their post-typecheck state
-                  val ExistentialTypeTree(TypeTreeWithOriginal(tpt), whereClauses) = original.metadata("typedExistentialTypeTree").asInstanceOf[Tree].duplicate
+                  val ExistentialTypeTree(TypeTreeWithOriginal(tpt), whereClauses) = original.metadata("typedExistentialTypeTree").require[Tree].duplicate
                   treeCopy.ExistentialTypeTree(original, tpt, whereClauses)
                 case original =>
                   original
@@ -230,8 +231,8 @@ trait Ensugar {
         // TODO: test the situation when tree.symbol is a package object
         object RefTreeWithOriginal extends SingleEnsugarer {
           def ensugar(tree: Tree): Option[Tree] = {
-            object OriginalIdent { def unapply(tree: Tree): Option[Ident] = tree.metadata.get("originalIdent").map(_.asInstanceOf[Ident].duplicate) }
-            object OriginalSelect { def unapply(tree: Tree): Option[Name] = tree.metadata.get("originalName").map(_.asInstanceOf[Name]) }
+            object OriginalIdent { def unapply(tree: Tree): Option[Ident] = tree.metadata.get("originalIdent").map(_.require[Ident].duplicate) }
+            object OriginalSelect { def unapply(tree: Tree): Option[Name] = tree.metadata.get("originalName").map(_.require[Name]) }
             (tree, tree) match {
               // Ident => This is a very uncommon situation, which happens when we typecheck a self reference
               // unfortunately, this self reference can't have a symbol, because self doesn't have a symbol, so we have to do some encoding
@@ -245,21 +246,21 @@ trait Ensugar {
         }
 
         object TemplateWithOriginal extends SingleEnsugarer {
-          def ensugar(tree: Tree): Option[Tree] = (tree, tree.metadata.get("originalParents").map(_.asInstanceOf[List[Tree]].map(_.duplicate))) match {
+          def ensugar(tree: Tree): Option[Tree] = (tree, tree.metadata.get("originalParents").map(_.require[List[Tree]].map(_.duplicate))) match {
             case (tree @ Template(_, self, body), Some(original)) => Some(treeCopy.Template(tree, original, self, body).removeMetadata("originalParents"))
             case _ => None
           }
         }
 
         object SuperWithOriginal extends SingleEnsugarer {
-          def ensugar(tree: Tree): Option[Tree] = (tree, tree.metadata.get("originalThis").map(_.asInstanceOf[This].duplicate)) match {
+          def ensugar(tree: Tree): Option[Tree] = (tree, tree.metadata.get("originalThis").map(_.require[This].duplicate)) match {
             case (tree @ Super(qual, mix), Some(originalThis)) => Some(treeCopy.Super(tree, originalThis, mix).removeMetadata("originalThis"))
             case _ => None
           }
         }
 
         object ClassOfWithOriginal extends SingleEnsugarer {
-          def ensugar(tree: Tree): Option[Tree] = (tree, tree.metadata.get("originalClassOf").map(_.asInstanceOf[Tree].duplicate)) match {
+          def ensugar(tree: Tree): Option[Tree] = (tree, tree.metadata.get("originalClassOf").map(_.require[Tree].duplicate)) match {
             case (tree @ Literal(Constant(tpe: Type)), Some(original)) =>
               Some(original.setType(tree.tpe))
             case (tree @ Literal(Constant(tpe: Type)), None) =>
@@ -273,7 +274,7 @@ trait Ensugar {
         }
 
         object SelfWithOriginal extends SingleEnsugarer {
-          def ensugar(tree: Tree): Option[Tree] = tree.metadata.get("originalSelf").map(_.asInstanceOf[Tree].duplicate.removeMetadata("originalSelf"))
+          def ensugar(tree: Tree): Option[Tree] = tree.metadata.get("originalSelf").map(_.require[Tree].duplicate.removeMetadata("originalSelf"))
         }
 
         private def isInferred(tree: Tree): Boolean = tree match {
@@ -415,14 +416,14 @@ trait Ensugar {
                 }
                 val originalBody = macroSigs(tree) match {
                   case legacySig :: scalametaSig :: Nil =>
-                    Some(parseMacroSig(scalametaSig)("implDdef").asInstanceOf[DefDef].rhs)
+                    Some(parseMacroSig(scalametaSig)("implDdef").require[DefDef].rhs)
                   case legacySig :: Nil =>
                     // TODO: obtain the impl ref exactly how it was written by the programmer
                     val legacy = parseMacroSig(legacySig)
-                    val className = legacy("className").asInstanceOf[String]
-                    val methodName = legacy("methodName").asInstanceOf[String]
-                    val isBundle = legacy("isBundle").asInstanceOf[Boolean]
-                    val targs = legacy("targs").asInstanceOf[List[Tree]]
+                    val className = legacy("className").require[String]
+                    val methodName = legacy("methodName").require[String]
+                    val isBundle = legacy("isBundle").require[Boolean]
+                    val targs = legacy("targs").require[List[Tree]]
                     require(className.endsWith("$") ==> !isBundle)
                     val containerSym = if (isBundle) rootMirror.staticClass(className) else rootMirror.staticModule(className.stripSuffix("$"))
                     val container = Ident(containerSym).setType(if (isBundle) containerSym.asType.toType else containerSym.info)
@@ -559,7 +560,7 @@ trait Ensugar {
         }
 
         object ApplicationWithArrayInstantiation extends SingleEnsugarer {
-          def ensugar(tree: Tree): Option[Tree] = tree.metadata.get("originalArray").map(_.asInstanceOf[Tree].duplicate)
+          def ensugar(tree: Tree): Option[Tree] = tree.metadata.get("originalArray").map(_.require[Tree].duplicate)
         }
 
         // TODO: test how this works with new
@@ -574,7 +575,7 @@ trait Ensugar {
         object ApplicationWithNamesOrDefaults extends SingleEnsugarer {
           def ensugar(tree: Tree): Option[Tree] = {
             object OriginalApply {
-              def unapply(tree: Tree) = tree.metadata.get("originalApply").map(_.asInstanceOf[Apply].duplicate)
+              def unapply(tree: Tree) = tree.metadata.get("originalApply").map(_.require[Apply].duplicate)
             }
             def isNameDefaultQual(tree: Tree) = tree match {
               case ValDef(_, name, _, _) => name.startsWith(nme.QUAL_PREFIX)
@@ -650,7 +651,7 @@ trait Ensugar {
                 }
               }
               val result = loop(app, depth = argss.length - 1)
-              val original = tree.metadata("originalApply").asInstanceOf[Apply].duplicate
+              val original = tree.metadata("originalApply").require[Apply].duplicate
               Some(correlate(result, original).removeMetadata("originalApply"))
             }
           }
@@ -759,7 +760,7 @@ trait Ensugar {
             case ty @ Typed(_, tt @ TypeTreeWithRawOriginal(AnnotatedWithAnns(_, arg))) if arg.isTerm =>
               // NOTE: annot from original is unattributed, so we can't use it
               val original @ Annotated(_, arg) = tt.original
-              val List(annot, _*) = tree.tpe.asInstanceOf[AnnotatedType].annotations.map(_.original)
+              val List(annot, _*) = tree.tpe.require[AnnotatedType].annotations.map(_.original)
               Some(treeCopy.Annotated(original, annot, arg))
             case _ =>
               None
@@ -768,8 +769,8 @@ trait Ensugar {
 
         object EtaExpansion extends SingleEnsugarer {
           def ensugar(tree: Tree): Option[Tree] = {
-            val manualEta = tree.metadata.get("originalManualEta").map(_.asInstanceOf[Tree])
-            val autoEta = tree.metadata.get("originalAutoEta").map(_.asInstanceOf[Tree])
+            val manualEta = tree.metadata.get("originalManualEta").map(_.require[Tree])
+            val autoEta = tree.metadata.get("originalAutoEta").map(_.require[Tree])
             def stripMetadata(tree: Tree) = tree.removeMetadata("originalManualEta").removeMetadata("originalAutoEta")
             (manualEta, autoEta) match {
               case (Some(original), _) => Some(Typed(stripMetadata(original), Function(Nil, EmptyTree)).setType(tree.tpe))
@@ -782,7 +783,7 @@ trait Ensugar {
         // TODO: support constant folding of singleton-typed method calls
         // grep for `constfold(treeCopy.Apply(tree, fun, args1) setType ifPatternSkipFormals(restpe))` for the place to start
         object InlinedConstant extends SingleEnsugarer {
-          def ensugar(tree: Tree): Option[Tree] = tree.metadata.get("originalConstant").map(_.asInstanceOf[Tree].duplicate.removeMetadata("originalConstant"))
+          def ensugar(tree: Tree): Option[Tree] = tree.metadata.get("originalConstant").map(_.require[Tree].duplicate.removeMetadata("originalConstant"))
         }
 
         // TODO: support things like `locally{}`
@@ -804,7 +805,7 @@ trait Ensugar {
       val preliminaryResult = transformer.transform(duplicatedInput)
       preliminaryResult // NOTE: empty trees are no longer collapsed
     }
-    loop(tree).asInstanceOf[Output]
+    loop(tree).require[Output]
   }
 }
 

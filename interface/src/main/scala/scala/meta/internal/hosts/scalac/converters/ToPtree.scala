@@ -114,7 +114,7 @@ trait ToPtree extends GlobalToolkit with MetaToolkit {
         if (gmdef.symbol.owner.isPrimaryConstructor) result.filter(!_.isInstanceOf[p.Mod.PrivateThis]) else result
       }
       def pvparamtpe(gtpt: g.Tree): p.Type.Arg = {
-        def unwrap(ptpe: p.Type): p.Type = ptpe.asInstanceOf[p.Type.Apply].args.head
+        def unwrap(ptpe: p.Type): p.Type = ptpe.require[p.Type.Apply].args.head
         if (g.definitions.isRepeatedParamType(gtpt.tpe)) p.Type.Arg.Repeated(unwrap(gtpt.cvt_! : p.Type)).withOriginal(gtpt)
         else if (g.definitions.isByNameParamType(gtpt.tpe)) p.Type.Arg.ByName(unwrap(gtpt.cvt_! : p.Type)).withOriginal(gtpt)
         else (gtpt.cvt_! : p.Type)
@@ -203,7 +203,7 @@ trait ToPtree extends GlobalToolkit with MetaToolkit {
           val pstat = gstat match {
             case in @ PatDefCore(pat, rhs) =>
               if (in.symbol.isSynthetic && in.symbol.isArtifact) i += g.definitions.TupleClass.seq.indexOf(in.symbol.info.typeSymbolDirect) + 1
-              val modbearer = gstats(i - 1).asInstanceOf[g.MemberDef] // TODO: mods for nullary patterns get irrevocably lost (`implicit val List() = List()`)
+              val modbearer = gstats(i - 1).require[g.MemberDef] // TODO: mods for nullary patterns get irrevocably lost (`implicit val List() = List()`)
               if (!modbearer.symbol.isMutable) p.Defn.Val(pmods(modbearer), List(pat.cvt_! : p.Pat), None, rhs.cvt_!)
               else p.Defn.Var(pmods(modbearer), List(pat.cvt_! : p.Pat), None, Some[p.Term](rhs.cvt_!))
             case in @ AnonymousClassDef(templ) =>
@@ -214,7 +214,7 @@ trait ToPtree extends GlobalToolkit with MetaToolkit {
               object Right {
                 def unapply(gtree: g.Tree): Option[(g.Select, g.Tree, List[g.Tree])] = gtree match {
                   case g.treeInfo.Applied(op @ g.Select(qual, _), targs, List(List(leftRef @ g.Ident(_)))) if in.symbol == leftRef.symbol =>
-                    val op1 = g.duplicateAndKeepPositions(op).setType(g.treeInfo.dissectApplied(gtree).callee.tpe).asInstanceOf[g.Select]
+                    val op1 = g.duplicateAndKeepPositions(op).setType(g.treeInfo.dissectApplied(gtree).callee.tpe).require[g.Select]
                     Some((op1, qual, targs))
                   case _ =>
                     None
@@ -250,9 +250,9 @@ trait ToPtree extends GlobalToolkit with MetaToolkit {
                       case gtree @ g.Apply(fn, args) => g.treeCopy.Apply(gtree, loop(fn), args)
                       case gtree @ g.Select(qual, name) => g.treeCopy.Select(gtree, loop(qual), name)
                     }
-                    loop(gstat).asInstanceOf[g.Apply]
+                    loop(gstat).require[g.Apply]
                   }
-                  canonicalize(gparent.asInstanceOf[g.Block]).cvt_! : p.Term
+                  canonicalize(gparent.require[g.Block]).cvt_! : p.Term
               }
             case in @ InlinableHoistedTemporaryVal(_, _) =>
               val inlinees = gstats.collect({ case InlinableHoistedTemporaryVal(sym, rhs) => (sym -> rhs) }).toMap
@@ -287,7 +287,7 @@ trait ToPtree extends GlobalToolkit with MetaToolkit {
 
     import Helpers._
     val TermQuote = "shadow scala.meta quasiquotes"
-    in.asInstanceOf[g.Tree].requireAttributed()
+    in.require[g.Tree].requireAttributed()
     in match {
       case g.EmptyTree =>
         unreachable
@@ -309,7 +309,7 @@ trait ToPtree extends GlobalToolkit with MetaToolkit {
           require(implicits.isEmpty) // NOTE: no context bounds for traits
           p.Defn.Trait(pmods(in), in.symbol.asClass.rawcvt(in), tparams.cvt, pfakector(in), templ.cvt)
         } else {
-          val gctor = templ.body.find(_.symbol == in.symbol.primaryConstructor).get.asInstanceOf[g.DefDef]
+          val gctor = templ.body.find(_.symbol == in.symbol.primaryConstructor).get.require[g.DefDef]
           val q"$_ def $_[..$_](...$impreciseExplicitss)(implicit ..$implicits0): $_ = $_" = gctor
           // TODO: discern `class C` and `class C()`
           val explicitss = if (impreciseExplicitss.flatten.isEmpty) List() else impreciseExplicitss
@@ -363,8 +363,8 @@ trait ToPtree extends GlobalToolkit with MetaToolkit {
         require(in.symbol.isType)
         val pname = in.symbol.asType.anoncvt(in)
         val tparams = tparams0.map(_.appendMetadata("originalContextBounds" -> Nil).appendMetadata("originalViewBounds" -> Nil))
-        val pviewbounds = in.metadata("originalViewBounds").asInstanceOf[List[g.Tree]].map(_.cvt_! : p.Type)
-        val pcontextbounds = in.metadata("originalContextBounds").asInstanceOf[List[g.Tree]].map(_.cvt_! : p.Type)
+        val pviewbounds = in.metadata("originalViewBounds").require[List[g.Tree]].map(_.cvt_! : p.Type)
+        val pcontextbounds = in.metadata("originalContextBounds").require[List[g.Tree]].map(_.cvt_! : p.Type)
         p.Type.Param(pmods(in), pname, tparams.cvt, ptypebounds(tpt), pviewbounds, pcontextbounds)
       case in @ g.TypeDef(_, _, tparams0, tpt) if pt <:< typeOf[p.Stat] =>
         require(in.symbol.isType)
@@ -411,7 +411,7 @@ trait ToPtree extends GlobalToolkit with MetaToolkit {
         // and it shouldn't be a p.Term.Block, but rather a resulting stat instead
         val gstats = in.stats :+ in.expr
         (gstats, Helpers.pstats(in, gstats)) match {
-          case ((nel @ _ :+ _) :+ gexpr, Nil :+ pstat) => pstat.asInstanceOf[p.Term]
+          case ((nel @ _ :+ _) :+ gexpr, Nil :+ pstat) => pstat.require[p.Term]
           case (_, pstats) => p.Term.Block(pstats)
         }
       case in @ g.CaseDef(pat, guard, body @ q"..$stats") =>
@@ -419,7 +419,7 @@ trait ToPtree extends GlobalToolkit with MetaToolkit {
       case g.Alternative(fst :: snd :: Nil) =>
         p.Pat.Alternative(fst.cvt_!, snd.cvt_!)
       case in @ g.Alternative(hd :: rest) =>
-        p.Pat.Alternative(hd.cvt_!, g.Alternative(rest).setType(in.tpe).asInstanceOf[g.Alternative].cvt)
+        p.Pat.Alternative(hd.cvt_!, g.Alternative(rest).setType(in.tpe).require[g.Alternative].cvt)
       case g.Ident(g.nme.WILDCARD) =>
         p.Pat.Wildcard()
       case g.Bind(g.tpnme.WILDCARD, g.EmptyTree) =>
@@ -589,7 +589,7 @@ trait ToPtree extends GlobalToolkit with MetaToolkit {
         if (in.name == g.nme.CONSTRUCTOR) p.Ctor.Name("this").withDenot(in.symbol)
         else if (in.isTerm && in.symbol.isType) p.Term.Name(in.alias)
         else if (in.isTerm && in.symbol.isAnonymous) p.Term.Placeholder()
-        else if (in.isType && in.symbol.isAnonymous) p.Type.Placeholder(ptypebounds(in.metadata("originalBounds").asInstanceOf[g.Tree]))
+        else if (in.isType && in.symbol.isAnonymous) p.Type.Placeholder(ptypebounds(in.metadata("originalBounds").require[g.Tree]))
         else in.symbol.rawcvt(in)
       case g.ReferenceToBoxed(_) =>
         ???

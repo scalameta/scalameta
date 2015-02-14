@@ -3,6 +3,7 @@ package scala.tools.nsc.typechecker
 
 import scala.tools.nsc.Global
 import scala.tools.nsc.typechecker.{Analyzer => NscAnalyzer}
+import org.scalameta.invariants._
 import org.scalameta.reflection._
 import scala.reflect.internal.Mode
 import scala.reflect.internal.Mode._
@@ -635,7 +636,7 @@ trait ScalahostAnalyzer extends NscAnalyzer with GlobalToolkit {
           }
         // NOTE: this is a meaningful difference from the code in Typers.scala
         //-}
-        }).appendMetadata("typedExistentialTypeTree" -> treeCopy.ExistentialTypeTree(tree, tpt1, whereClauses1.asInstanceOf[List[MemberDef]]))
+        }).appendMetadata("typedExistentialTypeTree" -> treeCopy.ExistentialTypeTree(tree, tpt1, whereClauses1.require[List[MemberDef]]))
         TypeTree(newExistentialType(tparams, tp)) setOriginal original
       }
       )
@@ -936,7 +937,7 @@ trait ScalahostAnalyzer extends NscAnalyzer with GlobalToolkit {
             case Select(_, _) => treeCopy.Select(tree, qual, name)
             case SelectFromTypeTree(_, _) => treeCopy.SelectFromTypeTree(tree, qual, name)
           }
-          val (result, accessibleError) = silent(_.asInstanceOf[ScalahostTyper].makeAccessible(tree1, sym, qual.tpe, qual)) match {
+          val (result, accessibleError) = silent(_.require[ScalahostTyper].makeAccessible(tree1, sym, qual.tpe, qual)) match {
             case SilentTypeError(err: AccessTypeError) =>
               (tree1, Some(err))
             case SilentTypeError(err) =>

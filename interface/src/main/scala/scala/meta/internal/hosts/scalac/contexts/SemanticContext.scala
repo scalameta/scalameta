@@ -2,6 +2,7 @@ package scala.meta
 package internal.hosts.scalac
 package contexts
 
+import org.scalameta.invariants._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.meta.semantic.{Context => ScalametaSemanticContext}
@@ -25,7 +26,7 @@ class SemanticContext[G <: ScalaGlobal](val global: G) extends ConverterApi(glob
   }
 
   private[meta] def tpe(term: papi.Term): papi.Type = {
-    val tree = term.asInstanceOf[p.Term]
+    val tree = term.require[p.Term]
     val gtpeFromOriginal = tree.originalTree.map(_.tpe)
     val gtpeFromDenotation = tree.originalPre.flatMap(gpre => tree.originalSym.map(_.gsymbol.infoIn(gpre).finalResultType))
     val gtpe = gtpeFromOriginal.orElse(gtpeFromDenotation) match {
@@ -44,7 +45,7 @@ class SemanticContext[G <: ScalaGlobal](val global: G) extends ConverterApi(glob
       def resolveName(pname: p.Name): Seq[papi.Member] = {
         val gpre = pname.denot.prefix match {
           case h.Prefix.Zero => g.NoPrefix
-          case h.Prefix.Type(ptpe) => ptpe.asInstanceOf[p.Type].toGtype
+          case h.Prefix.Type(ptpe) => ptpe.require[p.Type].toGtype
         }
         val lsym = symbolTable.convert(pname.denot.symbol)
         List(lsym.toPmember(gpre))
@@ -62,11 +63,11 @@ class SemanticContext[G <: ScalaGlobal](val global: G) extends ConverterApi(glob
       }
     }
     ref.requireAttributed()
-    tryScratchpad(ref.asInstanceOf[p.Ref]).getOrElse(tryNative(ref.asInstanceOf[p.Ref]))
+    tryScratchpad(ref.require[p.Ref]).getOrElse(tryNative(ref.require[p.Ref]))
   }
 
   private[meta] def members(tpe: papi.Type): Seq[papi.Member] = {
-    val gtpe = tpe.asInstanceOf[p.Type].toGtype
+    val gtpe = tpe.require[p.Type].toGtype
     val gmembers = gtpe.members.filter(_ != g.rootMirror.RootPackage)
     val pmembers = gmembers.toLogical.map(_.toPmember(gtpe))
     val pfakectors = {
@@ -78,33 +79,33 @@ class SemanticContext[G <: ScalaGlobal](val global: G) extends ConverterApi(glob
   }
 
   private[meta] def isSubType(tpe1: papi.Type, tpe2: papi.Type): Boolean = {
-    val gtpe1 = tpe1.asInstanceOf[p.Type].toGtype
-    val gtpe2 = tpe2.asInstanceOf[p.Type].toGtype
+    val gtpe1 = tpe1.require[p.Type].toGtype
+    val gtpe2 = tpe2.require[p.Type].toGtype
     gtpe1 <:< gtpe2
   }
 
   private[meta] def lub(tpes: Seq[papi.Type]): papi.Type = {
-    val gtpes = tpes.map(_.asInstanceOf[p.Type].toGtype).toList
+    val gtpes = tpes.map(_.require[p.Type].toGtype).toList
     g.lub(gtpes).toPtype
   }
 
   private[meta] def glb(tpes: Seq[papi.Type]): papi.Type = {
-    val gtpes = tpes.map(_.asInstanceOf[p.Type].toGtype).toList
+    val gtpes = tpes.map(_.require[p.Type].toGtype).toList
     g.glb(gtpes).toPtype
   }
 
   private[meta] def parents(tpe: papi.Type): Seq[papi.Type] = {
-    val gtpe = tpe.asInstanceOf[p.Type].toGtype
+    val gtpe = tpe.require[p.Type].toGtype
     gtpe.directBaseTypes.map(_.toPtype)
   }
 
   private[meta] def widen(tpe: papi.Type): papi.Type = {
-    val gtpe = tpe.asInstanceOf[p.Type].toGtype
+    val gtpe = tpe.require[p.Type].toGtype
     gtpe.widen.toPtype
   }
 
   private[meta] def dealias(tpe: papi.Type): papi.Type = {
-    val gtpe = tpe.asInstanceOf[p.Type].toGtype
+    val gtpe = tpe.require[p.Type].toGtype
     gtpe.dealias.toPtype
   }
 

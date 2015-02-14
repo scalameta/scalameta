@@ -84,7 +84,7 @@ trait ToGtype extends GlobalToolkit with MetaToolkit {
       }
       private def gtparams(ptparams: Seq[p.Type.Param]): List[g.Symbol] = {
         ptparams.map(ptparam => {
-          val htparam = ptparam.name.asInstanceOf[p.Name].denot.symbol
+          val htparam = ptparam.name.require[p.Name].denot.symbol
           val gowner = { require(lsym.gsymbols.length == 1); lsym.gsymbol }
           val ltparam = symbolTable.lookupOrElseUpdate(htparam, gowner.mkLtypeParameter(ptparam.name.toString))
           ltparam.mimic(ptparam).gsymbol
@@ -92,7 +92,7 @@ trait ToGtype extends GlobalToolkit with MetaToolkit {
       }
       private def gparams(pparams: Seq[p.Term.Param]): List[g.Symbol] = {
         pparams.map(pparam => {
-          val hparam = pparam.name.asInstanceOf[p.Name].denot.symbol
+          val hparam = pparam.name.require[p.Name].denot.symbol
           val gowner = { require(lsym.gsymbols.length == 1); lsym.gsymbol }
           val lparam = symbolTable.lookupOrElseUpdate(hparam, gowner.mkLtermParameter(pparam.name.toString))
           lparam.mimic(pparam).gsymbol
@@ -134,7 +134,7 @@ trait ToGtype extends GlobalToolkit with MetaToolkit {
       def mimic(ptree: p.Tree): l.Symbol = {
         if (!lsym.gsymbol.hasRawInfo) {
           import scala.language.reflectiveCalls
-          mimicMods(ptree.asInstanceOf[{ def mods: Seq[p.Mod] }].mods, ptree)
+          mimicMods(ptree.require[{ def mods: Seq[p.Mod] }].mods, ptree)
           mimicInfo(ptree)
         }
         lsym
@@ -148,7 +148,7 @@ trait ToGtype extends GlobalToolkit with MetaToolkit {
     private def gprefix(hprefix: h.Prefix): g.Type = {
       hprefix match {
         case h.Prefix.Zero => g.NoPrefix
-        case h.Prefix.Type(ptpe) => ptpe.asInstanceOf[p.Type].toGtype
+        case h.Prefix.Type(ptpe) => ptpe.require[p.Type].toGtype
       }
     }
     def toGtype: g.Type = tpeCache.getOrElseUpdate(ptpe, {

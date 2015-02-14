@@ -35,7 +35,7 @@ trait Platform {
       // NOTE: unfortunately, this simple-looking facility generates side effects that corrupt the state of the compiler
       // in particular, mixin composition stops working correctly, at least for `object Main extends App`
       // exitingDelambdafy(new genASM.JPlainBuilder(null, false).descriptor(sym))
-      if (sym.isConstructor) sym.info.erasure.asInstanceOf[MethodType].copy(resultType = UnitClass.tpe).jvmsig
+      if (sym.isConstructor) sym.info.erasure.require[MethodType].copy(resultType = UnitClass.tpe).jvmsig
       else sym.info.jvmsig
     }
   }

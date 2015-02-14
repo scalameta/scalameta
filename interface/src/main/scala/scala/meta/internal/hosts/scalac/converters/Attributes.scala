@@ -8,6 +8,7 @@ import org.scalameta.invariants._
 import org.scalameta.unreachable
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
+import scala.reflect.ClassTag
 import scala.tools.nsc.{Global => ScalaGlobal}
 import scala.{meta => papi}
 import scala.meta.internal.{ast => p}
@@ -32,7 +33,7 @@ trait Attributes extends GlobalToolkit with MetaToolkit {
     implicit def Name[T <: papi.Name]: CanHaveDenot[T] = null
   }
 
-  protected implicit class RichAttributesTree[T <: p.Tree](ptree: T) {
+  protected implicit class RichAttributesTree[T <: p.Tree : ClassTag](ptree: T) {
     private def denot(gpre: g.Type, lsym: l.Symbol): h.Denotation = {
       require(gpre != g.NoType)
       val hpre = {
@@ -76,13 +77,13 @@ trait Attributes extends GlobalToolkit with MetaToolkit {
         case ptree: p.Mod.ProtectedWithin => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
         case _ => unreachable
       }
-      ptree1.withScratchpad(scratchpad).asInstanceOf[T]
+      ptree1.withScratchpad(scratchpad).require[T]
     }
-    def withOriginal(gtree: g.Tree): T = ptree.appendScratchpad(ScratchpadDatum.Original(gtree)).asInstanceOf[T]
-    def withOriginal(gtpe: g.Type): T = ptree.appendScratchpad(ScratchpadDatum.Original(gtpe)).asInstanceOf[T]
-    def withOriginal(lsym: l.Symbol): T = ptree.appendScratchpad(ScratchpadDatum.Original(lsym)).asInstanceOf[T]
+    def withOriginal(gtree: g.Tree): T = ptree.appendScratchpad(ScratchpadDatum.Original(gtree)).require[T]
+    def withOriginal(gtpe: g.Type): T = ptree.appendScratchpad(ScratchpadDatum.Original(gtpe)).require[T]
+    def withOriginal(lsym: l.Symbol): T = ptree.appendScratchpad(ScratchpadDatum.Original(lsym)).require[T]
     def withOriginal(gsym: g.Symbol): T = ptree.withOriginal(gsym.toLogical)
-    def withOriginal(gannot: g.AnnotationInfo): T = ptree.appendScratchpad(ScratchpadDatum.Original(gannot)).asInstanceOf[T]
+    def withOriginal(gannot: g.AnnotationInfo): T = ptree.appendScratchpad(ScratchpadDatum.Original(gannot)).require[T]
     def originalTree: Option[g.Tree] = {
       ptree.scratchpad.collect { case ScratchpadDatum.Original(goriginal: g.Tree) => goriginal }.headOption
     }

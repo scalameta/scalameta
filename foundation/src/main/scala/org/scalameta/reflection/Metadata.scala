@@ -8,6 +8,7 @@ trait Metadata {
   import decorators._
   import scala.reflect.ClassTag
   import scala.reflect.macros.Attachments
+  import org.scalameta.invariants._
 
   // NOTE: this boilerplate is unfortunately necessary, because we don't expose Attachable in the public API
   trait Attachable[-T] {
@@ -39,7 +40,7 @@ trait Metadata {
     def appendMetadata(kvps: (String, Any)*): T = { kvps.foreach(kvp => carrier.metadata += kvp); carrier }
     def removeMetadata(keys: String*): T = { keys.foreach(key => carrier.metadata -= key); carrier }
     def hasMetadata(key: String): Boolean = metadata.get(key).isDefined
-    def scratchpad: List[Any] = carrier.metadata.get("scratchpad").map(_.asInstanceOf[List[Any]]).getOrElse(Nil)
+    def scratchpad: List[Any] = carrier.metadata.get("scratchpad").map(_.require[List[Any]]).getOrElse(Nil)
     def appendScratchpad(datum: Any): T = carrier.appendMetadata("scratchpad" -> (carrier.scratchpad :+ datum))
   }
 
@@ -51,7 +52,7 @@ trait Metadata {
     def contains(key: String): Boolean = toMap.contains(key)
     def apply(key: String): Any = toMap(key)
     def get(key: String): Option[Any] = toMap.get(key)
-    def getOrElse[T](key: String, value: T): T = toMap.get(key).map(_.asInstanceOf[T]).getOrElse(value)
+    def getOrElse[T: ClassTag](key: String, value: T): T = toMap.get(key).map(_.require[T]).getOrElse(value)
     def update(key: String, value: Any): Unit = transform(_ + (key -> value))
     def +=(kvp: (String, Any)): Unit = update(kvp._1, kvp._2)
     def ++=(other: Map[String, Any]): Unit = transform(_ ++ other)
