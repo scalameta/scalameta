@@ -43,7 +43,7 @@ class ReplSuite extends FunSuite {
       |options: String = -cp <path/to/scala-library.jar> -Xplugin:<path/to/plugin.jar> -Xplugin-require:scalahost
       |
       |scala> implicit val c = Scalahost.mkStandaloneContext(options)
-      |c: scala.meta.internal.hosts.scalac.StandaloneContext = scala.meta.internal.hosts.scalac.StandaloneContext@<memoryAddress>
+      |c: scala.meta.internal.hosts.scalac.contexts.StandaloneContext = scala.meta.internal.hosts.scalac.contexts.StandaloneContext@<memoryAddress>
       |
       |scala> t"List[Int]" <:< t"List[Any]"
       |res0: Boolean = true

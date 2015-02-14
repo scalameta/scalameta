@@ -2,6 +2,8 @@ package scala.meta
 package internal.hosts.scalac
 package contexts
 
+import scala.{Seq => _}
+import scala.collection.immutable.Seq
 import scala.meta.semantic.{Context => ScalametaSemanticContext}
 import scala.meta.internal.hosts.scalac.contexts.{SemanticContext => ScalahostSemanticContext}
 import scala.meta.internal.hosts.scalac.converters.{Api => ConverterApi}

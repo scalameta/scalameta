@@ -13,7 +13,8 @@ import scala.util.control.ControlThrowable
 import scala.collection.mutable
 import scala.reflect.macros.contexts.{Context => ScalareflectMacroContext}
 import scala.meta.macros.{Context => ScalametaMacroContext}
-import scala.meta.internal.hosts.scalac.{MacroContext => ScalahostMacroContext, PluginBase => ScalahostPlugin, Scalahost}
+import scala.meta.internal.hosts.scalac.contexts.{MacroContext => ScalahostMacroContext}
+import scala.meta.internal.hosts.scalac.{PluginBase => ScalahostPlugin, Scalahost}
 
 trait Expansion extends scala.reflect.internal.show.Printers {
   self: ScalahostPlugin =>
