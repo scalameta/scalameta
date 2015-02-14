@@ -167,11 +167,13 @@ trait ToPmember extends GlobalToolkit with MetaToolkit {
           }
         }
         lazy val ptemplate = {
-          val (pearly, plate) = pstats.partition(_.originalSym match {
+          def isEarly(pstat: p.Stat) = pstat.originalSym match {
             case Some(l.Val(gfield, _)) => gfield.hasFlag(PRESUPER)
             case Some(l.Var(gfield, _, _)) => gfield.hasFlag(PRESUPER)
             case _ => false
-          })
+          }
+          val pearly = LazySeq(pstats.filter(pstat => isEarly(pstat)))
+          val plate = LazySeq(pstats.filter(pstat => !isEarly(pstat)))
           val gparents = ginfo match {
             case g.ClassInfoType(gparents, _, _) => gparents
             case g.PolyType(_, g.ClassInfoType(gparents, _, _)) => gparents
