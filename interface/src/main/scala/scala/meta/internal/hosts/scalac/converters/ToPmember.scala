@@ -178,7 +178,8 @@ trait ToPmember extends GlobalToolkit with MetaToolkit {
           }
           val pparents = gparents.map(gparent => {
             val ptpe = gparent.toPtype
-            val gctor = gparent.typeSymbol.primaryConstructor.orElse(gparent.typeSymbol)
+            var gctor = gparent.typeSymbol.primaryConstructor.orElse(gparent.typeSymbol)
+            if (gctor.name == g.nme.MIXIN_CONSTRUCTOR) gctor = gparent.typeSymbol
             ptpe.ctorRef(gctor)
           })
           // TODO: apply gpre to pselftpe
