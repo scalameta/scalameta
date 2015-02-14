@@ -223,13 +223,7 @@ class SemanticSuite extends FunSuite {
       |@deprecatedOverriding("Enforce contract of toTraversable that if it is Traversable it returns itself.", "2.11.0") def toTraversable: Traversable[A] = ???
       |override def to[Col[_]](implicit cbf: CanBuildFrom[Nothing, A, Col[A]]): Col[A] = ???
       |def withFilter(p: A => Boolean): FilterMonadic[A, List[A]] = ???
-      |class WithFilter(p: A => Boolean) extends AnyRef with FilterMonadic[A, Repr] {
-      |  private[this] val p: A => Boolean = ???
-      |  def map[B, That](f: A => B)(implicit bf: CanBuildFrom[List[A], B, That]): That = ???
-      |  def flatMap[B, That](f: A => GenTraversableOnce[B])(implicit bf: CanBuildFrom[List[A], B, That]): That = ???
-      |  def foreach[U](f: A => U): Unit = ???
-      |  def withFilter(q: A => Boolean): List#WithFilter = ???
-      |}
+      |class WithFilter(p: A => Boolean) extends AnyRef with FilterMonadic[A, Repr] { ... }
       |def par: ParSeq[A] = ???
       |protected[this] def reversed: List[A] = ???
       |def nonEmpty: Boolean = ???
@@ -424,13 +418,7 @@ class SemanticSuite extends FunSuite {
       |@deprecatedOverriding("Enforce contract of toTraversable that if it is Traversable it returns itself.", "2.11.0") def toTraversable: Traversable[Int] = ???
       |override def to[Col[_]](implicit cbf: CanBuildFrom[Nothing, Int, Col[Int]]): Col[Int] = ???
       |def withFilter(p: Int => Boolean): FilterMonadic[Int, List[Int]] = ???
-      |class WithFilter(p: A => Boolean) extends AnyRef with FilterMonadic[A, Repr] {
-      |  private[this] val p: Int => Boolean = ???
-      |  def map[B, That](f: Int => B)(implicit bf: CanBuildFrom[List[Int], B, That]): That = ???
-      |  def flatMap[B, That](f: Int => GenTraversableOnce[B])(implicit bf: CanBuildFrom[List[Int], B, That]): That = ???
-      |  def foreach[U](f: Int => U): Unit = ???
-      |  def withFilter(q: Int => Boolean): List[Int]#WithFilter = ???
-      |}
+      |class WithFilter(p: A => Boolean) extends AnyRef with FilterMonadic[A, Repr] { ... }
       |def par: ParSeq[Int] = ???
       |protected[this] def reversed: List[Int] = ???
       |def nonEmpty: Boolean = ???
@@ -525,5 +513,11 @@ class SemanticSuite extends FunSuite {
       try t"scala.type".members
       catch { case ex: SemanticException => assert(ex.msg.trim.startsWith(expectedFail)); throw ex }
     }
+  }
+
+  test("t\"scala.collection.immutable.List\".defn") {
+    assert(t"scala.collection.immutable.List".defn.toString === """
+      |@SerialVersionUID(value = -6084104484083858598l) sealed abstract class List[+A]() extends AbstractSeq[A] with LinearSeq[A] with Product with GenericTraversableTemplate[A, List] with LinearSeqOptimized[A, List[A]] with Serializable { ... }
+    """.trim.stripMargin)
   }
 }
