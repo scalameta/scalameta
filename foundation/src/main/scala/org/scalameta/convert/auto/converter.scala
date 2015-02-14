@@ -426,7 +426,7 @@ package object internal {
           val ann = sym.annotations.find(_.tree.tpe.typeSymbol == ComputedConvertersAnnotation)
           val args = ann.map(_.tree.children.last match {
             case q"$_.$_[..$_]($_.$_[..$_](..$args))" => args
-            case _ => c.abort(c.enclosingPosition, "something went wrong: can't load converters")
+            case _ => c.abort(c.enclosingPosition, "something went really wrong: can't load converters")
           })
           val result = args.map(_.map(_ match { case q"""new $_(
             ${UnsmuggleType(in)},
