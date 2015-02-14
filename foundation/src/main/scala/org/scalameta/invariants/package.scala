@@ -13,7 +13,7 @@ package object invariants {
     def <==>(right: Boolean) = (left ==> right) && (right ==> left)
   }
   implicit class RequireDowncast[T](x: T) {
-    def require[U <: T : ClassTag]: U = macro Macros.requireDowncast[U]
+    def require[U: ClassTag]: U = macro Macros.requireCast[U]
   }
   implicit class RequireSome[T](x: Option[T]) {
     def requireGet: T = macro Macros.requireGet
@@ -206,7 +206,7 @@ package invariants {
         }
       """
     }
-    def requireDowncast[U](ev: c.Tree)(U: c.WeakTypeTag[U]): c.Tree = {
+    def requireCast[U](ev: c.Tree)(U: c.WeakTypeTag[U]): c.Tree = {
       val q"$_($x)" = c.prefix.tree
       q"""
         val temp = ${c.untypecheck(x)}

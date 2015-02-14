@@ -119,7 +119,7 @@ object SyntacticInfo {
     def has[T <: Mod](implicit tag: ClassTag[T]): Boolean =
       mods.exists { _.getClass == tag.runtimeClass }
     def getAll[T <: Mod](implicit tag: ClassTag[T]): List[T] =
-      mods.collect { case m if m.getClass == tag.runtimeClass => m.asInstanceOf[T] }
+      mods.collect { case m if m.getClass == tag.runtimeClass => m.require[T] }
     def access: Option[Mod] = mods.collectFirst{ case m if m.isAccess => m }
   }
   implicit class RichStat(val stat: Stat) extends AnyVal {
@@ -503,7 +503,7 @@ abstract class AbstractParser { parser =>
     makeTuple[Type](body, () => unreachable, Type.Tuple(_))
 
   def makeTuplePatParens(bodyf: => List[Pat.Arg]): Pat = {
-    val body = inParens(if (token.is[`)`]) Nil else bodyf.map(_.asInstanceOf[Pat]))
+    val body = inParens(if (token.is[`)`]) Nil else bodyf.map(_.require[Pat]))
     makeTuple[Pat](body, () => Lit.Unit(), Pat.Tuple(_))
   }
 
@@ -914,7 +914,7 @@ abstract class AbstractParser { parser =>
   }
 
   def interpolate[Ctx, Ret](arg: () => Ctx, result: (Term.Name, List[Lit.String], List[Ctx]) => Ret): Ret = {
-    val interpolator = Term.Name(token.asInstanceOf[Interpolation.Id].code) // termName() for INTERPOLATIONID
+    val interpolator = Term.Name(token.require[Interpolation.Id].code) // termName() for INTERPOLATIONID
     next()
     val partsBuf = new ListBuffer[Lit.String]
     val argsBuf = new ListBuffer[Ctx]
@@ -947,7 +947,7 @@ abstract class AbstractParser { parser =>
   }
 
   def interpolatePat(): Pat.Interpolate =
-    interpolate[Pat, Pat.Interpolate](arg = () => dropAnyBraces(pattern().asInstanceOf[Pat]), result = Pat.Interpolate(_, _, _))
+    interpolate[Pat, Pat.Interpolate](arg = () => dropAnyBraces(pattern().require[Pat]), result = Pat.Interpolate(_, _, _))
 
 /* ------------- NEW LINES ------------------------------------------------- */
 
@@ -1064,7 +1064,7 @@ abstract class AbstractParser { parser =>
       }
       catchopt match {
         case None => Term.TryWithCases(body, Nil, finallyopt)
-        case Some(cases: List[_]) => Term.TryWithCases(body, cases.asInstanceOf[List[Case]], finallyopt)
+        case Some(cases: List[_]) => Term.TryWithCases(body, cases.require[List[Case]], finallyopt)
         case Some(term: Term) => Term.TryWithTerm(body, term, finallyopt)
         case _ => unreachable
       }
@@ -1366,7 +1366,7 @@ abstract class AbstractParser { parser =>
   def block(): Term = mkBlock(blockStatSeq())
 
   def caseClause(): Case =
-    Case(pattern().asInstanceOf[Pat], guard(), { accept[`=>`]; Term.Block(blockStatSeq()) })
+    Case(pattern().require[Pat], guard(), { accept[`=>`]; Term.Block(blockStatSeq()) })
 
   /** {{{
    *  CaseClauses ::= CaseClause {CaseClause}
@@ -1439,8 +1439,8 @@ abstract class AbstractParser { parser =>
       if (allowNestedIf) loop()
       else Nil
 
-    (if (hasEq) Enumerator.Val(pat.asInstanceOf[Pat], rhs)
-     else Enumerator.Generator(pat.asInstanceOf[Pat], rhs)) :: tail
+    (if (hasEq) Enumerator.Val(pat.require[Pat], rhs)
+     else Enumerator.Generator(pat.require[Pat], rhs)) :: tail
   }
 
 /* -------- PATTERNS ------------------------------------------- */
@@ -1474,7 +1474,7 @@ abstract class AbstractParser { parser =>
     def pattern(): Pat.Arg = {
       def loop(pat: Pat.Arg): Pat.Arg =
         if (!isRawBar) pat
-        else { next(); Pat.Alternative(pat.asInstanceOf[Pat], pattern().asInstanceOf[Pat]) }
+        else { next(); Pat.Alternative(pat.require[Pat], pattern().require[Pat]) }
       loop(pattern1())
     }
 
@@ -2072,7 +2072,7 @@ abstract class AbstractParser { parser =>
   def patDefOrDcl(mods: List[Mod]): Stat = {
     val isMutable = token.is[`var`]
     next()
-    val lhs: List[Pat] = commaSeparated(noSeq.pattern2().asInstanceOf[Pat]).map {
+    val lhs: List[Pat] = commaSeparated(noSeq.pattern2().require[Pat]).map {
       case name: Term.Name => Pat.Var.Term(name) // TODO: val `x`: Int should be parsed as Decl.Val(..., Pat.Var.Term(Term.Name("x")), ...)
       case pat => pat
     }
@@ -2119,7 +2119,7 @@ abstract class AbstractParser { parser =>
     def warnProcedureDeprecation =
       deprecationWarning(s"Procedure syntax is deprecated. Convert procedure `$name` to method by adding `: Unit`.")
     val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
-    val paramss = paramClauses(ownerIsType = false).asInstanceOf[Seq[Seq[Term.Param]]]
+    val paramss = paramClauses(ownerIsType = false).require[Seq[Seq[Term.Param]]]
     newLineOptWhenFollowedBy[`{`]
     var restype = fromWithinReturnType(typedOpt())
     if (token.is[StatSep] || token.is[`}`]) {
@@ -2316,7 +2316,7 @@ abstract class AbstractParser { parser =>
     next()
     // TODO: ownerIsType = true is most likely a bug here
     // secondary constructors can't have val/var parameters
-    val paramss = paramClauses(ownerIsType = true).asInstanceOf[Seq[Seq[Term.Param]]]
+    val paramss = paramClauses(ownerIsType = true).require[Seq[Seq[Term.Param]]]
     newLineOptWhenFollowedBy[`{`]
     val body = token match {
       case _: `{` => constrBlock()
@@ -2328,7 +2328,7 @@ abstract class AbstractParser { parser =>
   def constructorCall(tpe: Type, allowArgss: Boolean = true): Term = {
     object Types {
       def unapply(tpes: Seq[Type.Arg]): Option[Seq[Type]] = {
-        if (tpes.forall(_.isInstanceOf[Type])) Some(tpes.map(_.asInstanceOf[Type]))
+        if (tpes.forall(_.isInstanceOf[Type])) Some(tpes.map(_.require[Type]))
         else None
       }
     }

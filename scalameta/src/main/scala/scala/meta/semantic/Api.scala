@@ -29,7 +29,7 @@ trait Api {
   }
 
   implicit class SemanticMemberTpeOps(val tree: Member) {
-    @hosted def tpe: Type.Arg = tpe.asInstanceOf[impl.Member] match {
+    @hosted def tpe: Type.Arg = tpe.require[impl.Member] match {
       case tree: impl.Pat.Var.Term => tree.name.tpe
       case tree: impl.Pat.Var.Type => tree.name
       case tree: impl.Decl.Def => tree.decltpe
@@ -46,8 +46,8 @@ trait Api {
       case tree: impl.Term.Param if tree.parent.map(_.isInstanceOf[impl.Template]).getOrElse(false) => ??? // TODO: don't forget to intersect with the owner type
       case tree: impl.Term.Param => tree.decltpe.getOrElse(???) // TODO: infer it from context
       case tree: impl.Type.Param => tree.name
-      case tree: impl.Ctor.Primary => tree.owner.asInstanceOf[meta.Member].tpe
-      case tree: impl.Ctor.Secondary => tree.owner.asInstanceOf[meta.Member].tpe
+      case tree: impl.Ctor.Primary => tree.owner.require[meta.Member].tpe
+      case tree: impl.Ctor.Secondary => tree.owner.require[meta.Member].tpe
     }
   }
 
@@ -63,8 +63,8 @@ trait Api {
   }
 
   implicit class SemanticTermRefDefnOps(val tree: Term.Ref) {
-    @hosted def defns: Seq[Member.Term] = (tree: Ref).defns.map(_.asInstanceOf[Member.Term])
-    @hosted def defn: Member.Term = (tree: Ref).defn.asInstanceOf[Member.Term]
+    @hosted def defns: Seq[Member.Term] = (tree: Ref).defns.map(_.require[Member.Term])
+    @hosted def defn: Member.Term = (tree: Ref).defn.require[Member.Term]
   }
 
   // ===========================
@@ -293,10 +293,10 @@ trait Api {
         //    so far we strip off all desugarings and, hence, all inferred implicit arguments, so that's not a problem for us, but it will be
         // NOTE: potential solution would involve having the symbol of the parameter to be of a special, new kind
         // Symbol.Synthetic(origin: Symbol, generator: ???)
-        impl.Term.Param(List(impl.Mod.Implicit()), impl.Name.Anonymous(), Some(evidenceTpe.asInstanceOf[impl.Type]), None)
+        impl.Term.Param(List(impl.Mod.Implicit()), impl.Name.Anonymous(), Some(evidenceTpe.require[impl.Type]), None)
       }
-      def deriveViewEvidence(tpe: Type) = deriveEvidence(impl.Type.Function(List(tparam.name.asInstanceOf[impl.Type]), tpe.asInstanceOf[impl.Type]))
-      def deriveContextEvidence(tpe: Type) = deriveEvidence(impl.Type.Apply(tpe.asInstanceOf[impl.Type], List(tparam.name.asInstanceOf[impl.Type])))
+      def deriveViewEvidence(tpe: Type) = deriveEvidence(impl.Type.Function(List(tparam.name.require[impl.Type]), tpe.require[impl.Type]))
+      def deriveContextEvidence(tpe: Type) = deriveEvidence(impl.Type.Apply(tpe.require[impl.Type], List(tparam.name.require[impl.Type])))
       tparam.viewBounds.map(deriveViewEvidence) ++ tparam.contextBounds.map(deriveContextEvidence)
     }
     @hosted private[meta] def mergeEvidences(paramss: Seq[Seq[Term.Param]], evidences: Seq[Term.Param]): Seq[Seq[Term.Param]] = {
@@ -362,11 +362,11 @@ trait Api {
         case tree: impl.Defn.Def => tree.tparams ++ mergeEvidences(tree.paramss, tree.tparams.flatMap(deriveEvidences)).flatten
         case tree: impl.Defn.Macro => tree.tparams ++ mergeEvidences(tree.paramss, tree.tparams.flatMap(deriveEvidences)).flatten
         case tree: impl.Defn.Type => tree.tparams
-        case tree: impl.Defn.Class => tree.tparams ++ tree.tpe.asInstanceOf[impl.Type].members
-        case tree: impl.Defn.Trait => tree.tparams ++ tree.tpe.asInstanceOf[impl.Type].members
-        case tree: impl.Defn.Object => tree.tparams ++ tree.tpe.asInstanceOf[impl.Type].members
-        case tree: impl.Pkg => tree.tpe.asInstanceOf[impl.Type].members
-        case tree: impl.Pkg.Object => tree.tparams ++ tree.tpe.asInstanceOf[impl.Type].members
+        case tree: impl.Defn.Class => tree.tparams ++ tree.tpe.require[impl.Type].members
+        case tree: impl.Defn.Trait => tree.tparams ++ tree.tpe.require[impl.Type].members
+        case tree: impl.Defn.Object => tree.tparams ++ tree.tpe.require[impl.Type].members
+        case tree: impl.Pkg => tree.tpe.require[impl.Type].members
+        case tree: impl.Pkg.Object => tree.tparams ++ tree.tpe.require[impl.Type].members
         case tree: impl.Ctor.Primary => mergeEvidences(tree.paramss, tree.tparams.flatMap(deriveEvidences)).flatten
         case tree: impl.Ctor.Secondary => mergeEvidences(tree.paramss, tree.tparams.flatMap(deriveEvidences)).flatten
         case tree: impl.Case => membersOfPat(tree.pat)
