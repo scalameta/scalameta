@@ -325,7 +325,9 @@ package scala.meta.internal.ast {
   }
   object Pkg {
     @ast class Object(mods: Seq[Mod], name: Term.Name, ctor: Ctor.Primary, templ: Template)
-         extends Member.Term with Stat
+         extends Member.Term with Stat {
+      require(templ.stats.forall(!_.isInstanceOf[Ctor]))
+    }
   }
 
   @branch trait Ctor extends Tree with Member.Term
