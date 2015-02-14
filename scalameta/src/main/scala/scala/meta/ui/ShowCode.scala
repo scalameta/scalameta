@@ -384,11 +384,11 @@ object Code {
         val pbody = (!t.self.name.isInstanceOf[Name.Anonymous] || t.self.decltpe.nonEmpty, t.stats.nonEmpty, t.stats.getOrElse(Nil)) match {
           case (false, false, _) => s()
           case (true, false, _) => s("{ ", t.self, " => }")
-          case (false, true, List()) if isOneLiner => s("{}")
-          case (false, true, List(stat)) if isOneLiner => s("{ ", stat, " }")
+          case (false, true, Seq()) if isOneLiner => s("{}")
+          case (false, true, Seq(stat)) if isOneLiner => s("{ ", stat, " }")
           case (false, true, stats) => s("{", r(stats.map(i(_)), ""), n("}"))
-          case (true, true, List()) if isOneLiner => s("{ ", t.self, " => }")
-          case (true, true, List(stat)) if isOneLiner => s("{ ", t.self, " => ", stat, " }")
+          case (true, true, Seq()) if isOneLiner => s("{ ", t.self, " => }")
+          case (true, true, Seq(stat)) if isOneLiner => s("{ ", t.self, " => ", stat, " }")
           case (true, true, stats) => s("{ ", t.self, " =>", r(stats.map(i(_)), ""), n("}"))
         }
         s(pearly, pparents, pbody)
