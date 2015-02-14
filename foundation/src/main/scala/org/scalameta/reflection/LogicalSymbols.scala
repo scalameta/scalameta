@@ -227,6 +227,13 @@ trait LogicalSymbols {
     }
   }
 
+  private def allowSymbol(gsym: g.Symbol): Boolean = {
+    if (gsym.name.decoded.contains("$")) return false
+    if (gsym.isPrimaryConstructor && gsym.name == g.nme.MIXIN_CONSTRUCTOR) return false
+    if (gsym == g.definitions.Object_isInstanceOf || gsym == g.definitions.Object_asInstanceOf) return false
+    return true
+  }
+
   private def logicalSymbols(gsyms: Seq[g.Symbol]): Seq[l.Symbol] = {
     val rawResult = mutable.ListBuffer[l.Symbol]()
     val iterator = gsyms.iterator
@@ -237,72 +244,72 @@ trait LogicalSymbols {
         if (result.isModuleClass) result = result.module
         result
       }
-      val lsym = {
-        if (gsym == g.NoSymbol) {
-          l.None
-        } else if (gsym.isTerm && !gsym.isMethod && !gsym.isModule) {
-          if (gsym.hasFlag(PARAM)) l.TermParameter(gsym)
-          else {
-            if (gsym.hasFlag(MUTABLE)) l.Var(gsym, gsym.getter, gsym.setter)
+      if (allowSymbol(gsym)) {
+        val lsym = {
+          if (gsym == g.NoSymbol) {
+            l.None
+          } else if (gsym.isTerm && !gsym.isMethod && !gsym.isModule) {
+            if (gsym.hasFlag(PARAM)) l.TermParameter(gsym)
             else {
-              if (gsym.metadata.get("isPatternVariable").map(_.require[Boolean]).getOrElse(false)) l.TermBind(gsym)
-              else l.Val(gsym, gsym.getter)
-            }
-          }
-        } else if (gsym.isMethod) {
-          require(gsym.hasFlag(METHOD))
-          if (gsym.hasFlag(ACCESSOR)) {
-            if (gsym.hasFlag(STABLE)) {
-              if (gsym.hasFlag(DEFERRED)) l.AbstractVal(gsym)
-              else l.Val(gsym.accessed, gsym)
-            } else {
-              if (!gsym.name.endsWith(g.nme.SETTER_SUFFIX)) {
-                if (gsym.hasFlag(DEFERRED)) l.AbstractVar(gsym, gsym.setter)
-                else l.Var(gsym.accessed, gsym, gsym.setter)
-              } else {
-                if (gsym.hasFlag(DEFERRED)) l.AbstractVar(gsym.getter, gsym)
-                else l.Var(gsym.accessed, gsym.getter, gsym)
+              if (gsym.hasFlag(MUTABLE)) l.Var(gsym, gsym.getter, gsym.setter)
+              else {
+                if (gsym.metadata.get("isPatternVariable").map(_.require[Boolean]).getOrElse(false)) l.TermBind(gsym)
+                else l.Val(gsym, gsym.getter)
               }
             }
-          } else {
-            if (gsym.hasFlag(MACRO)) l.Macro(gsym)
-            else if (gsym.isPrimaryConstructor) l.PrimaryCtor(gsym)
-            else if (gsym.isConstructor) l.SecondaryCtor(gsym)
-            else if (gsym.hasFlag(DEFERRED)) l.AbstractDef(gsym)
-            else l.Def(gsym)
-          }
-        } else if (gsym.isModule) {
-          require(gsym.hasFlag(MODULE))
-          if (gsym.hasFlag(PACKAGE)) {
-            l.Package(gsym, gsym.moduleClass)
-          } else {
-            if (gsym.name == g.nme.PACKAGE) l.PackageObject(gsym, gsym.moduleClass)
-            else l.Object(gsym, gsym.moduleClass)
-          }
-        } else if (gsym.isType && !gsym.isClass) {
-          if (gsym.hasFlag(PARAM)) {
-            l.TypeParameter(gsym)
-          } else if (gsym.hasFlag(DEFERRED)) {
-            if (gsym.hasFlag(EXISTENTIAL)) {
-              if (gsym.name.endsWith(g.nme.SINGLETON_SUFFIX)) l.AbstractVal(gsym)
-              else l.AbstractType(gsym)
+          } else if (gsym.isMethod) {
+            require(gsym.hasFlag(METHOD))
+            if (gsym.hasFlag(ACCESSOR)) {
+              if (gsym.hasFlag(STABLE)) {
+                if (gsym.hasFlag(DEFERRED)) l.AbstractVal(gsym)
+                else l.Val(gsym.accessed, gsym)
+              } else {
+                if (!gsym.name.endsWith(g.nme.SETTER_SUFFIX)) {
+                  if (gsym.hasFlag(DEFERRED)) l.AbstractVar(gsym, gsym.setter)
+                  else l.Var(gsym.accessed, gsym, gsym.setter)
+                } else {
+                  if (gsym.hasFlag(DEFERRED)) l.AbstractVar(gsym.getter, gsym)
+                  else l.Var(gsym.accessed, gsym.getter, gsym)
+                }
+              }
             } else {
-              if (gsym.metadata.get("isPatternVariable").map(_.require[Boolean]).getOrElse(false)) l.TypeBind(gsym)
-              else l.AbstractType(gsym)
+              if (gsym.hasFlag(MACRO)) l.Macro(gsym)
+              else if (gsym.isPrimaryConstructor) l.PrimaryCtor(gsym)
+              else if (gsym.isConstructor) l.SecondaryCtor(gsym)
+              else if (gsym.hasFlag(DEFERRED)) l.AbstractDef(gsym)
+              else l.Def(gsym)
             }
+          } else if (gsym.isModule) {
+            require(gsym.hasFlag(MODULE))
+            if (gsym.hasFlag(PACKAGE)) {
+              l.Package(gsym, gsym.moduleClass)
+            } else {
+              if (gsym.name == g.nme.PACKAGE) l.PackageObject(gsym, gsym.moduleClass)
+              else l.Object(gsym, gsym.moduleClass)
+            }
+          } else if (gsym.isType && !gsym.isClass) {
+            if (gsym.hasFlag(PARAM)) {
+              l.TypeParameter(gsym)
+            } else if (gsym.hasFlag(DEFERRED)) {
+              if (gsym.hasFlag(EXISTENTIAL)) {
+                if (gsym.name.endsWith(g.nme.SINGLETON_SUFFIX)) l.AbstractVal(gsym)
+                else l.AbstractType(gsym)
+              } else {
+                if (gsym.metadata.get("isPatternVariable").map(_.require[Boolean]).getOrElse(false)) l.TypeBind(gsym)
+                else l.AbstractType(gsym)
+              }
+            } else {
+              l.Type(gsym)
+            }
+          } else if (gsym.isClass) {
+            if (gsym.hasFlag(TRAIT)) l.Trait(gsym)
+            else l.Clazz(gsym)
           } else {
-            l.Type(gsym)
+            sys.error(s"unsupported symbol ${gsym}, designation = ${gsym.getClass}, info = ${g.showRaw(gsym.info, printIds = true, printTypes = true)}")
           }
-        } else if (gsym.isClass) {
-          if (gsym.hasFlag(TRAIT)) l.Trait(gsym)
-          else l.Clazz(gsym)
-        } else {
-          sys.error(s"unsupported symbol ${gsym}, designation = ${gsym.getClass}, info = ${g.showRaw(gsym.info, printIds = true, printTypes = true)}")
         }
+        rawResult += lsym
       }
-      val isTraitCtor = gsym.isPrimaryConstructor && gsym.name == g.nme.MIXIN_CONSTRUCTOR
-      val isHiddenInstanceOf = gsym == g.definitions.Object_isInstanceOf || gsym == g.definitions.Object_asInstanceOf
-      if (!isTraitCtor && !isHiddenInstanceOf) rawResult += lsym
     }
     val result = rawResult.toVector.distinct
     if (result.exists(_.isIncomplete)) {
