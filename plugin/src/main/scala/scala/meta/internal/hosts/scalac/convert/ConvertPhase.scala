@@ -30,7 +30,7 @@ trait ConvertPhase {
 
     override def newPhase(prev: Phase): StdPhase = new StdPhase(prev) {
       override def apply(unit: CompilationUnit) {
-        val punit = c.toEnsugaredPtree(unit.body, classOf[Source])
+        val punit = c.toPtree(unit.body, classOf[Source])
         unit.body.appendMetadata("scalameta" -> punit)
       }
     }

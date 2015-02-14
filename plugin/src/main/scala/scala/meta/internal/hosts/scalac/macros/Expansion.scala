@@ -74,7 +74,7 @@ trait Expansion extends scala.reflect.internal.show.Printers {
             }
             lazy val scalametaInvocation: ScalametaTree = {
               // TODO: implement this
-              // hc.toEnsugaredPtree(scalareflectInvocation)
+              // hc.toPtree(scalareflectInvocation)
               ???
             }
             lazy val scalametaResult: Any = scalametaInvocation match {

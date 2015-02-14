@@ -16,7 +16,7 @@ import java.util.UUID.randomUUID
 
 // This module exposes a method that can convert scala.reflect types into equivalent scala.meta types.
 // It is impossible to attach custom information to types, so we can't guarantee high-fidelity
-// of the conversion in the sense that ToEnsugaredPtree guarantees.
+// of the conversion in the sense that toPtree guarantees.
 //
 // Nevertheless, this shouldn't be a problem for us, because our representation doesn't care about
 // particularities of short names, fully-qualified names, etc. The only potentially negative effect here

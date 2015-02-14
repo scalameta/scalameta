@@ -30,7 +30,7 @@ class StandaloneContext(options: String) extends ScalahostSemanticContext(mkGlob
       if (reporter.hasErrors) sys.error("typecheck has failed:" + EOL + EOL + (reporter.infos map (_.msg) mkString EOL))
       typedpkg.asInstanceOf[PackageDef].stats.head
     }
-    val _ = toEnsugaredPtree.computeConverters // TODO: necessary because of macro expansion order
-    toEnsugaredPtree(gtypedtree, classOf[papi.Stat])
+    val _ = toPtree.computeConverters // TODO: necessary because of macro expansion order
+    toPtree(gtypedtree, classOf[papi.Stat])
   }
 }

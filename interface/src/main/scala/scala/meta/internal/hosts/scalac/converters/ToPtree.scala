@@ -33,13 +33,13 @@ import scala.meta.syntactic.parsers.SyntacticInfo.{SyntacticTermOps => _, _}
 // a lot of notational weirdness and itself has an implementation whose LOC count
 // surpasses the LOC count of this file. I think that, at a point when we can afford big refactorings,
 // we need to drop the annotation and rewrite everything without its help.
-trait ToEnsugaredPtree extends GlobalToolkit with MetaToolkit {
+trait ToPtree extends GlobalToolkit with MetaToolkit {
   self: Api =>
 
   val TermQuote = "shadow scala.meta quasiquotes"
   import g.Quasiquote
 
-  @converter def toEnsugaredPtree(in: Any, pt: Pt): Any = {
+  @converter def toPtree(in: Any, pt: Pt): Any = {
     object Helpers extends g.ReificationSupportImpl { self =>
       def pctorcall(in: g.Tree, gtpt: g.Tree, gctor: g.Symbol, gargss: Seq[Seq[g.Tree]]): p.Term = {
         val pcore = (gtpt.cvt_! : p.Type).ctorRef(gctor)
