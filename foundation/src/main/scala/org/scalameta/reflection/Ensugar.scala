@@ -402,40 +402,7 @@ trait Ensugar {
           def ensugar(tree: Tree): Option[Tree] = {
             tree match {
               case tree: DefDef if !tree.hasMetadata("originalMacro") =>
-                def macroSigs(tree: Tree) = tree match {
-                  case tree: DefDef => tree.symbol.annotations.filter(_.tree.tpe.typeSymbol.fullName == "scala.reflect.macros.internal.macroImpl")
-                  case _ => Nil
-                }
-                def parseMacroSig(sig: AnnotationInfo) = {
-                  val q"new $_[..$_]($_(..$args)[..$targs])" = sig.tree
-                  val metadata = args.collect{
-                    case Assign(Literal(Constant(s: String)), Literal(Constant(v))) => s -> v
-                    case Assign(Literal(Constant(s: String)), tree) => s -> loop(tree)
-                  }.toMap
-                  metadata + ("targs" -> targs.map(loop))
-                }
-                val originalBody = macroSigs(tree) match {
-                  case legacySig :: scalametaSig :: Nil =>
-                    Some(parseMacroSig(scalametaSig)("implDdef").require[DefDef].rhs)
-                  case legacySig :: Nil =>
-                    // TODO: obtain the impl ref exactly how it was written by the programmer
-                    val legacy = parseMacroSig(legacySig)
-                    val className = legacy("className").require[String]
-                    val methodName = legacy("methodName").require[String]
-                    val isBundle = legacy("isBundle").require[Boolean]
-                    val targs = legacy("targs").require[List[Tree]]
-                    require(className.endsWith("$") ==> !isBundle)
-                    val containerSym = if (isBundle) rootMirror.staticClass(className) else rootMirror.staticModule(className.stripSuffix("$"))
-                    val container = Ident(containerSym).setType(if (isBundle) containerSym.asType.toType else containerSym.info)
-                    val methodSym = containerSym.info.member(TermName(methodName))
-                    var implRef: Tree = Select(container, methodSym).setType(methodSym.info)
-                    if (targs.nonEmpty) implRef = TypeApply(implRef, targs).setType(appliedType(methodSym.info, targs.map(_.tpe)))
-                    Some(implRef)
-                  case _ :: _ =>
-                    unreachable
-                  case _ =>
-                    None
-                }
+                val originalBody = loop(tree.symbol.macroBody.tree) match { case EmptyTree => None; case tree => Some(tree) }
                 originalBody.map(originalBody => copyDefDef(tree)(rhs = originalBody).appendMetadata("originalMacro" -> tree))
               case _ => None
             }

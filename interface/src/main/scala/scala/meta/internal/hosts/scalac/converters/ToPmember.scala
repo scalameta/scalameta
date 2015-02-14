@@ -13,6 +13,8 @@ import scala.tools.nsc.{Global => ScalaGlobal}
 import scala.reflect.internal.Flags._
 import scala.{meta => papi}
 import scala.meta.internal.{ast => p}
+import scala.meta.internal.{hygiene => h}
+import scala.meta.semantic.{Context => ScalametaSemanticContext}
 
 // This module exposes a method that can convert scala.reflect symbols into equivalent scala.meta members.
 // There are some peculiarities that you'll need to know about it:
@@ -117,7 +119,8 @@ trait ToPmember extends GlobalToolkit with MetaToolkit {
         lazy val pname = lsym match {
           case l.PrimaryCtor(gsym) => p.Ctor.Name(gsym.owner.name.toString).withDenot(gpre, gsym).withOriginal(gsym)
           case l.SecondaryCtor(gsym) => p.Ctor.Name(gsym.owner.name.toString).withDenot(gpre, gsym).withOriginal(gsym)
-          case l.TermParameter(gsym) => gsym.anoncvt(g.Ident(gsym))
+          case l.TermParameter(gsym) if !gsym.owner.isMethod => gsym.anoncvt(g.Ident(gsym))
+          case l.TermParameter(gsym) => gsym.asTerm.rawcvt(g.Ident(gsym))
           case l.TypeParameter(gsym) => gsym.anoncvt(g.Ident(gsym))
           case _ => gsym.precvt(gpre, g.Ident(gsym))
         }
@@ -131,21 +134,92 @@ trait ToPmember extends GlobalToolkit with MetaToolkit {
             val phi = if (ghi =:= g.typeOf[Any]) None else Some(ghi.toPtype)
             p.Type.Bounds(plo, phi).withOriginal(gtpe)
         }
-        lazy val punknownTerm = {
-          // TODO: think of something both concise and distinctive
-          // val gsys = g.definitions.SysPackage
-          // val gsysError = gsys.info.decl(g.TermName("error"))
-          // val psysError = p.Term.Select(p.Term.Name("sys").withDenot(gsys), p.Term.Name("error").withDenot(gsys))
-          // p.Term.Apply(psysError, List(p.Lit.String("couldn't load tree"))).withOriginal(g.definitions.NothingClass.tpe)
-          p.Term.Name("???").withDenot(g.definitions.Predef_???).withOriginal(g.definitions.Predef_???)
-        }
-        lazy val pbody = lsym match {
-          case l.SecondaryCtor(gsym) =>
-            val gctor = gsym.owner.primaryConstructor
-            val pctorref = p.Ctor.Name(gsym.owner.name.toString).withDenot(gpre, gctor).withOriginal(gctor)
-            p.Term.Apply(pctorref, List(punknownTerm))
-          case _ =>
-            punknownTerm
+        lazy val pbody: p.Term = {
+          def pcallInterpreter(methName: String, methSig: String, pargs: Seq[p.Term]) = {
+            def hmoduleSymbol(fullName: String) = fullName.split('.').foldLeft(h.Symbol.Root: h.Symbol)((acc, curr) => h.Symbol.Global(acc, curr, h.Signature.Term))
+            val hintp = h.Denotation.Precomputed(h.Prefix.Zero, hmoduleSymbol("scala.meta.internal.eval.interpreter"))
+            val pintp = p.Term.Name("interpreter", hintp, h.Sigma.Naive)
+            val hmeth = h.Denotation.Precomputed(h.Prefix.Zero, h.Symbol.Global(hintp.symbol, methName, h.Signature.Method(methSig)))
+            // val pmeth = p.Term.Select(pintp, p.Term.Name(methName, hmeth, h.Sigma.Naive))
+            val pmeth = p.Term.Name(methName, hmeth, h.Sigma.Naive)
+            p.Term.Apply(pmeth, pargs)
+          }
+          def pincompatibleMacro = {
+            pcallInterpreter("incompatibleMacro", "()V", Nil)
+          }
+          def ploadField(gfield: g.Symbol) = {
+            val className = g.transformedType(gfield.owner.tpe).toString
+            val fieldSig = gfield.name.encoded + ":" + gfield.tpe.jvmsig
+            val pintpArgs = List(p.Lit.String(className + "." + fieldSig))
+            val pintpCall = pcallInterpreter("jvmField", "(Ljava/lang/String;)Ljava/lang/reflect/Field;", pintpArgs)
+            val gField_get = g.typeOf[java.lang.reflect.Field].member(g.TermName("get"))
+            val pget = p.Term.Select(pintpCall, p.Term.Name("get").withDenot(gField_get))
+            p.Term.Apply(pget, List(p.Term.This(None).withDenot(gfield.owner)))
+          }
+          def pintrinsic(gmeth: g.Symbol) = {
+            val className = g.transformedType(gmeth.owner.tpe).toString
+            val methodSig = gmeth.name.encoded + gmeth.tpe.jvmsig
+            val pintpArgs = {
+              val pthisarg = p.Term.This(None).withDenot(gmeth.owner)
+              val potherargs = gmeth.paramss.flatten.map(gparam => gparam.asTerm.rawcvt(g.Ident(gparam)))
+              p.Lit.String(className + "." + methodSig) +: pthisarg +: potherargs
+            }
+            pcallInterpreter("intrinsic", "(Ljava/lang/String;Lscala/collection/Seq;)Ljava/lang/Object;", pintpArgs)
+          }
+          def pinvokeMethod(gmeth: g.Symbol) = {
+            val className = g.transformedType(gmeth.owner.tpe).toString
+            val methodSig = gmeth.name.encoded + gmeth.tpe.jvmsig
+            val pintpArgs = List(p.Lit.String(className + "." + methodSig))
+            val pintpCall = pcallInterpreter("jvmMethod", "(Ljava/lang/String;)Ljava/lang/reflect/Method;", pintpArgs)
+            val gMethod_invoke = g.typeOf[java.lang.reflect.Method].member(g.TermName("invoke"))
+            val pinvoke = p.Term.Select(pintpCall, p.Term.Name("invoke").withDenot(gMethod_invoke))
+            val pargs = {
+              val pthisarg = p.Term.This(None).withDenot(gmeth.owner)
+              val potherargs = gmeth.paramss.flatten.map(gparam => gparam.asTerm.rawcvt(g.Ident(gparam)))
+              pthisarg +: potherargs
+            }
+            p.Term.Apply(pinvoke, pargs)
+          }
+          lsym match {
+            case l.Val(gfield, gget) =>
+              if (gget == g.NoSymbol) ploadField(gfield)
+              else pinvokeMethod(gget)
+            case l.Var(gfield, gget, _) =>
+              if (gget == g.NoSymbol) ploadField(gfield)
+              else pinvokeMethod(gget)
+            case l.AbstractDef(gsym) =>
+              if (gsym.isIntrinsic) pintrinsic(gsym)
+              else unreachable
+            case l.Def(gsym) =>
+              if (gsym.isIntrinsic) pintrinsic(gsym)
+              else pinvokeMethod(gsym)
+            case l.Macro(gsym) =>
+              gsym.macroBody match {
+                case MacroBody.None => unreachable
+                case MacroBody.Reflect(_) => pincompatibleMacro
+                case MacroBody.Meta(body) => {
+                  // TODO: think of a better way to express this
+                  // and, by the way, why is an implicit context needed here at all?
+                  implicit val c: ScalametaSemanticContext = self.require[ScalametaSemanticContext]
+                  toPtree(body, classOf[p.Term])
+                }
+              }
+            case l.SecondaryCtor(gsym) =>
+              val gctor = gsym.owner.primaryConstructor
+              val pctorref = p.Ctor.Name(gsym.owner.name.toString).withDenot(gpre, gctor).withOriginal(gctor)
+              // TODO: implement this in the same way as field accesses and method calls are implemented
+              val punknownTerm = p.Term.Name("???").withDenot(g.definitions.Predef_???).withOriginal(g.definitions.Predef_???)
+              p.Term.Apply(pctorref, List(punknownTerm))
+            case l.TermParameter(gsym) =>
+              val paramPos = gsym.owner.paramss.flatten.indexWhere(_.name == gsym.name)
+              require(paramPos != -1)
+              val gdefaultGetterName = gsym.owner.name + "$default$" + (paramPos + 1)
+              val gdefaultGetter = gsym.owner.owner.info.decl(g.TermName(gdefaultGetterName))
+              require(gdefaultGetter != g.NoSymbol)
+              pinvokeMethod(gdefaultGetter)
+            case _ =>
+              unreachable
+          }
         }
         lazy val pmaybeBody = if (gsym.hasFlag(DEFAULTINIT)) None else Some(pbody)
         lazy val pfakector = {
@@ -219,12 +293,13 @@ trait ToPmember extends GlobalToolkit with MetaToolkit {
           case l.None => unreachable
           case _: l.AbstractVal => p.Decl.Val(pmods, List(p.Pat.Var.Term(pname.require[p.Term.Name])), ptpe).member
           case _: l.AbstractVar => p.Decl.Var(pmods, List(p.Pat.Var.Term(pname.require[p.Term.Name])), ptpe).member
+          case _: l.AbstractDef if lsym.gsymbol.isIntrinsic => p.Defn.Def(pmods, pname.require[p.Term.Name], ptparams, pvparamss, Some(ptpe), pbody)
           case _: l.AbstractDef => p.Decl.Def(pmods, pname.require[p.Term.Name], ptparams, pvparamss, ptpe)
           case _: l.AbstractType => p.Decl.Type(pmods, pname.require[p.Type.Name], ptparams, ptpeBounds)
           case _: l.Val => p.Defn.Val(pmods, List(p.Pat.Var.Term(pname.require[p.Term.Name])), Some(ptpe), pbody).member
           case _: l.Var => p.Defn.Var(pmods, List(p.Pat.Var.Term(pname.require[p.Term.Name])), Some(ptpe), pmaybeBody).member
           case _: l.Def => p.Defn.Def(pmods, pname.require[p.Term.Name], ptparams, pvparamss, Some(ptpe), pbody)
-          case _: l.Macro => p.Defn.Def(pmods, pname.require[p.Term.Name], ptparams, pvparamss, Some(ptpe), pbody)
+          case _: l.Macro => p.Defn.Macro(pmods, pname.require[p.Term.Name], ptparams, pvparamss, ptpe, pbody)
           case _: l.Type => p.Defn.Type(pmods, pname.require[p.Type.Name], ptparams, ptpe)
           case _: l.Clazz => p.Defn.Class(pmods, pname.require[p.Type.Name], ptparams, pctor, ptemplate)
           case _: l.Trait => p.Defn.Trait(pmods, pname.require[p.Type.Name], ptparams, pctor, ptemplate)

@@ -237,6 +237,7 @@ trait LogicalSymbols {
     }
     if (!gsym.exists) return false
     if (gsym.name.decoded.contains("$") && !allowSynthetic(gsym)) return false
+    if (gsym.name.toString.contains(g.nme.DEFAULT_GETTER_STRING)) return false
     if (gsym.isPrimaryConstructor && gsym.name == g.nme.MIXIN_CONSTRUCTOR) return false
     if (gsym == g.definitions.Object_isInstanceOf || gsym == g.definitions.Object_asInstanceOf) return false
     return true
