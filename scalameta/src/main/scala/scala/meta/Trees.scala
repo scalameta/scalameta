@@ -46,7 +46,7 @@ package scala.meta {
     @branch trait Arg extends Tree
     @branch trait Type extends Tree
     object Type {
-      @branch trait Ref extends Type
+      @branch trait Ref extends Type with api.Ref
     }
   }
 
