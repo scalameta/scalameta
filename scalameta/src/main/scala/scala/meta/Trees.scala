@@ -28,7 +28,7 @@ package scala.meta {
   @branch trait Term extends Stat with Term.Arg
   object Term {
     @branch trait Ref extends Term with api.Ref
-    @branch trait Name extends api.Name with Term.Ref with Pat with Member
+    @branch trait Name extends api.Name with Term.Ref with Pat
     @branch trait Arg extends Tree
     @branch trait Param extends Member.Term
   }
@@ -82,7 +82,7 @@ package scala.meta.internal.ast {
     @branch trait Ref extends api.Term.Ref with Term with impl.Ref
     @ast class This(qual: Option[Predef.String]) extends Term.Ref with impl.Name { def value = "this" }
     @ast class Super(thisp: Option[Predef.String], superp: Option[Predef.String]) extends Term.Ref with impl.Name { def value = "super" }
-    @ast class Name(value: Predef.String @nonEmpty) extends api.Term.Name with impl.Name with Term.Ref with Pat with impl.Member.Term {
+    @ast class Name(value: Predef.String @nonEmpty) extends api.Term.Name with impl.Name with Term.Ref with Pat {
       // TODO: revisit this once we have trivia in place
       // require(keywords.contains(value) ==> isBackquoted)
     }
@@ -137,7 +137,7 @@ package scala.meta.internal.ast {
   @branch trait Type extends api.Type with Tree with Type.Arg with Scope
   object Type {
     @branch trait Ref extends api.Type.Ref with Type with impl.Ref
-    @ast class Name(value: String @nonEmpty) extends api.Type.Name with impl.Name with Type.Ref with impl.Member.Type with Pat.Type.Ref {
+    @ast class Name(value: String @nonEmpty) extends api.Type.Name with impl.Name with Type.Ref with Pat.Type.Ref {
       // TODO: revisit this once we have trivia in place
       // require(keywords.contains(value) ==> isBackquoted)
     }
@@ -182,8 +182,8 @@ package scala.meta.internal.ast {
   object Pat {
     @branch trait Var extends Tree
     object Var {
-      @ast class Term(name: impl.Term.Name) extends Var with Pat
-      @ast class Type(name: impl.Type.Name) extends Var with Pat.Type
+      @ast class Term(name: impl.Term.Name) extends Var with Pat with Member.Term
+      @ast class Type(name: impl.Type.Name) extends Var with Pat.Type with Member.Type
     }
     @ast class Wildcard() extends Pat
     @ast class Bind(lhs: Pat.Var.Term, rhs: Pat.Arg) extends Pat

@@ -43,8 +43,8 @@ trait Api {
   implicit class SemanticTypeableOps[T <: Tree, U <: Type](val tree: T)(implicit ev: HasTpe[T, U], tag: ClassTag[U]) {
     @hosted def tpe: U = tree match {
       case tree: impl.Term => implicitly[SemanticContext].tpe(tree).asInstanceOf[U]
-      // NOTE: impl.Term.Name is handled in the impl.Term case above
-      case tree: impl.Type.Name => tree.asInstanceOf[U]
+      case tree: impl.Pat.Var.Term => tree.name.tpe.asInstanceOf[U]
+      case tree: impl.Pat.Var.Type => tree.name.asInstanceOf[U]
       case tree: impl.Decl.Def => tree.decltpe.asInstanceOf[U]
       case tree: impl.Decl.Type => tree.name.asInstanceOf[U]
       case tree: impl.Defn.Def => tree.decltpe.getOrElse(tree.body.asInstanceOf[meta.Term].tpe).asInstanceOf[U]
@@ -126,8 +126,8 @@ trait Api {
       }
       val prefixlessName = tree.name match {
         case name: impl.Name.Anonymous => name
-        case name: impl.Term.Name if name.isBinder => name.copy(denot = stripPrefix(name.denot))
-        case name: impl.Type.Name if name.isBinder => name.copy(denot = stripPrefix(name.denot))
+        case name: impl.Term.Name => name.copy(denot = stripPrefix(name.denot))
+        case name: impl.Type.Name => name.copy(denot = stripPrefix(name.denot))
         case name: impl.Ctor.Name => name.copy(denot = stripPrefix(name.denot))
         case name: impl.Term.This => name.copy(denot = stripPrefix(name.denot))
         case name: impl.Term.Super => unreachable
@@ -141,8 +141,8 @@ trait Api {
     @hosted def owner: Scope = ???
     @hosted def name: Name = {
       tree.require[impl.Member] match {
-        case tree: impl.Term.Name if tree.isBinder => tree
-        case tree: impl.Type.Name if tree.isBinder => tree
+        case tree: impl.Pat.Var.Term => tree.name
+        case tree: impl.Pat.Var.Type => tree.name
         case tree: impl.Decl.Def => tree.name
         case tree: impl.Decl.Type => tree.name
         case tree: impl.Defn.Def => tree.name
@@ -185,8 +185,8 @@ trait Api {
     }
     @hosted def mods: Seq[Mod] = {
       tree.require[impl.Member] match {
-        case tree: impl.Term.Name => firstNonPatParent(tree).collect{case member: Member => member}.map(_.mods).getOrElse(Nil)
-        case tree: impl.Type.Name => Nil
+        case tree: impl.Pat.Var.Term => firstNonPatParent(tree).collect{case member: Member => member}.map(_.mods).getOrElse(Nil)
+        case tree: impl.Pat.Var.Type => Nil
         case tree: impl.Decl.Def => tree.mods
         case tree: impl.Decl.Type => tree.mods
         case tree: impl.Defn.Def => tree.mods
@@ -204,9 +204,19 @@ trait Api {
       }
     }
     @hosted def annots: Seq[Term] = tree.mods.collect{ case impl.Mod.Annot(ref) => ref }
-    @hosted private def firstNonPatParent(pat: Pat): Option[Tree] = pat.parent.collect{case pat: Pat => pat}.flatMap(firstNonPatParent).orElse(pat.parent)
-    @hosted def isVal: Boolean = Some(tree).collect{case name: Term.Name => name}.flatMap(firstNonPatParent).map(s => s.isInstanceOf[impl.Decl.Val] || s.isInstanceOf[impl.Defn.Val]).getOrElse(false)
-    @hosted def isVar: Boolean = Some(tree).collect{case name: Term.Name => name}.flatMap(firstNonPatParent).map(s => s.isInstanceOf[impl.Decl.Var] || s.isInstanceOf[impl.Defn.Var]).getOrElse(false)
+    @hosted private def firstNonPatParent(pat: Pat): Option[Tree] = {
+      pat.parent.collect{case pat: Pat => pat}.flatMap(firstNonPatParent).orElse(pat.parent)
+    }
+    @hosted def isVal: Boolean = {
+      val patVarTerm = Some(tree).collect{case tree: impl.Pat.Var.Term => tree}
+      val relevantParent = patVarTerm.flatMap(firstNonPatParent)
+      relevantParent.map(s => s.isInstanceOf[impl.Decl.Val] || s.isInstanceOf[impl.Defn.Val]).getOrElse(false)
+    }
+    @hosted def isVar: Boolean = {
+      val patVarTerm = Some(tree).collect{case tree: impl.Pat.Var.Term => tree}
+      val relevantParent = patVarTerm.flatMap(firstNonPatParent)
+      relevantParent.map(s => s.isInstanceOf[impl.Decl.Var] || s.isInstanceOf[impl.Defn.Var]).getOrElse(false)
+    }
     @hosted def isDef: Boolean = tree.isInstanceOf[impl.Decl.Def] || tree.isInstanceOf[impl.Defn.Def]
     @hosted def isCtor: Boolean = tree.isInstanceOf[impl.Ctor.Primary] || tree.isInstanceOf[impl.Ctor.Secondary]
     @hosted def isPrimaryCtor: Boolean = tree.isInstanceOf[impl.Ctor.Primary]
@@ -218,8 +228,16 @@ trait Api {
     @hosted def isObject: Boolean = tree.isInstanceOf[impl.Defn.Object]
     @hosted def isPackage: Boolean = tree.isInstanceOf[impl.Pkg]
     @hosted def isPackageObject: Boolean = tree.isInstanceOf[impl.Pkg.Object]
-    @hosted def isPrivate: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Private]) || tree.mods.exists(_.isInstanceOf[impl.Mod.PrivateThis]) || tree.mods.exists(_.isInstanceOf[impl.Mod.PrivateWithin])
-    @hosted def isProtected: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Protected]) || tree.mods.exists(_.isInstanceOf[impl.Mod.ProtectedThis]) || tree.mods.exists(_.isInstanceOf[impl.Mod.ProtectedWithin])
+    @hosted def isPrivate: Boolean = (
+      tree.mods.exists(_.isInstanceOf[impl.Mod.Private]) ||
+      tree.mods.exists(_.isInstanceOf[impl.Mod.PrivateThis]) ||
+      tree.mods.exists(_.isInstanceOf[impl.Mod.PrivateWithin])
+    )
+    @hosted def isProtected: Boolean = (
+      tree.mods.exists(_.isInstanceOf[impl.Mod.Protected]) ||
+      tree.mods.exists(_.isInstanceOf[impl.Mod.ProtectedThis]) ||
+      tree.mods.exists(_.isInstanceOf[impl.Mod.ProtectedWithin])
+    )
     @hosted def isPublic: Boolean = !tree.isPrivate && !tree.isProtected
     @hosted def isImplicit: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Implicit])
     @hosted def isFinal: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Final]) || tree.isObject
@@ -234,12 +252,21 @@ trait Api {
       isSyntacticOverride || isSemanticOverride
     }
     @hosted def isCase: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Case])
-    @hosted def isAbstract: Boolean = (!isAbstractOverride && tree.mods.exists(_.isInstanceOf[impl.Mod.Abstract])) || tree.isInstanceOf[impl.Decl]
+    @hosted def isAbstract: Boolean = {
+      val isAbstractClass = !isAbstractOverride && tree.mods.exists(_.isInstanceOf[impl.Mod.Abstract])
+      val isAbstractMember = tree.isInstanceOf[impl.Decl]
+      isAbstractClass || isAbstractMember
+    }
     @hosted def isCovariant: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Covariant])
     @hosted def isContravariant: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Contravariant])
     @hosted def isLazy: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Lazy])
-    @hosted def isAbstractOverride: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Abstract]) && tree.mods.exists(_.isInstanceOf[impl.Mod.Override])
-    @hosted def isParam: Boolean = tree.isInstanceOf[impl.Term.Param]
+    @hosted def isAbstractOverride: Boolean = (
+      tree.mods.exists(_.isInstanceOf[impl.Mod.Abstract]) &&
+      tree.mods.exists(_.isInstanceOf[impl.Mod.Override])
+    )
+    @hosted def isTermBind: Boolean = !tree.isVal && !tree.isVar && tree.isInstanceOf[impl.Pat.Var.Term]
+    @hosted def isTypeBind: Boolean = tree.isInstanceOf[impl.Pat.Var.Type]
+    @hosted def isTermParam: Boolean = tree.isInstanceOf[impl.Term.Param]
     @hosted def isTypeParam: Boolean = tree.isInstanceOf[impl.Type.Param]
     @hosted def isByNameParam: Boolean = tree match { case impl.Term.Param(_, _, Some(impl.Type.Arg.ByName(_)), _) => true; case _ => false }
     @hosted def isVarargParam: Boolean = tree match { case impl.Term.Param(_, _, Some(impl.Type.Arg.Repeated(_)), _) => true; case _ => false }
@@ -302,8 +329,6 @@ trait Api {
     }
     @hosted private[meta] def internalAll: Seq[Member] = {
       def membersOfStats(stats: Seq[impl.Tree]) = stats.collect{
-        case name: Term.Name if name.isBinder => name
-        case name: Type.Name if name.isBinder => unreachable
         case member: Member => member
       }
       def membersOfEnumerator(enum: impl.Enumerator) = enum match {
@@ -313,7 +338,7 @@ trait Api {
       }
       def membersOfPatType(ptpe: impl.Pat.Type): Seq[impl.Member] = ptpe match {
         case impl.Pat.Type.Wildcard() => Nil
-        case impl.Pat.Var.Type(name) => List(name)
+        case ptpe @ impl.Pat.Var.Type(_) => List(ptpe)
         case impl.Type.Name(_) => Nil
         case impl.Type.Select(_, _) => Nil
         case impl.Pat.Type.Project(ptpe, _) => membersOfPatType(ptpe)
@@ -330,7 +355,7 @@ trait Api {
       }
       def membersOfPat(pat: impl.Pat.Arg): Seq[impl.Member] = pat match {
         case impl.Pat.Wildcard() => Nil
-        case impl.Pat.Var.Term(name) => List(name)
+        case pat @ impl.Pat.Var.Term(name) => List(pat)
         case impl.Pat.Bind(lhs, rhs) => membersOfPat(lhs) ++ membersOfPat(rhs)
         case impl.Pat.Alternative(lhs, rhs) => membersOfPat(lhs) ++ membersOfPat(rhs)
         case impl.Pat.Tuple(elements) => elements.flatMap(membersOfPat)
@@ -348,12 +373,11 @@ trait Api {
         case tree: impl.Term.Function => tree.params
         case tree: impl.Term.For => tree.enums.flatMap(membersOfEnumerator)
         case tree: impl.Term.ForYield => tree.enums.flatMap(membersOfEnumerator)
-        case tree: impl.Case => membersOfPat(tree.pat)
-        case tree: impl.Type.Name if tree.isBinder => Nil
-        case tree: impl.Type => implicitly[SemanticContext].members(tree)
-        case tree: impl.Term.Name => Nil
         case tree: impl.Term.Param => Nil
+        case tree: impl.Type => implicitly[SemanticContext].members(tree)
         case tree: impl.Type.Param => tree.tparams
+        case tree: impl.Pat.Var.Term => Nil
+        case tree: impl.Pat.Var.Type => Nil
         case tree: impl.Decl.Def => tree.tparams ++ mergeEvidences(tree.paramss, tree.tparams.flatMap(deriveEvidences)).flatten
         case tree: impl.Decl.Type => tree.tparams
         case tree: impl.Defn.Def => tree.tparams ++ mergeEvidences(tree.paramss, tree.tparams.flatMap(deriveEvidences)).flatten
@@ -366,6 +390,7 @@ trait Api {
         case tree: impl.Pkg.Object => tree.tparams ++ tree.tpe.members
         case tree: impl.Ctor.Primary => mergeEvidences(tree.paramss, tree.tparams.flatMap(deriveEvidences)).flatten
         case tree: impl.Ctor.Secondary => mergeEvidences(tree.paramss, tree.tparams.flatMap(deriveEvidences)).flatten
+        case tree: impl.Case => membersOfPat(tree.pat)
       }
     }
     @hosted private[meta] def internalFilter[T: ClassTag](filter: T => Boolean): Seq[T] = {
@@ -425,12 +450,12 @@ trait Api {
     @hosted def objects: Seq[Member.Term] = internalFilter[Member.Term](_.isObject)
     @hosted def objects(name: String): Member.Term = internalSingle[Member.Term](name, _.isObject, "objects")
     @hosted def objects(name: scala.Symbol): Member.Term = objects(name.toString)
-    @hosted def vars: Seq[Term.Name] = internalFilter[Term.Name](_.isVar)
-    @hosted def vars(name: String): Term.Name = internalSingle[Term.Name](name, _.isVar, "vars")
-    @hosted def vars(name: scala.Symbol): Term.Name = vars(name.toString)
-    @hosted def vals: Seq[Term.Name] = internalFilter[Term.Name](_.isVal)
-    @hosted def vals(name: String): Term.Name = internalSingle[Term.Name](name, _.isVal, "vals")
-    @hosted def vals(name: scala.Symbol): Term.Name = vals(name.toString)
+    @hosted def vars: Seq[Member.Term] = internalFilter[impl.Pat.Var.Term](_.isVar)
+    @hosted def vars(name: String): Member.Term = internalSingle[impl.Pat.Var.Term](name, _.isVar, "vars")
+    @hosted def vars(name: scala.Symbol):Member.Term = vars(name.toString)
+    @hosted def vals: Seq[Member.Term] = internalFilter[impl.Pat.Var.Term](_.isVal)
+    @hosted def vals(name: String): Member.Term = internalSingle[impl.Pat.Var.Term](name, _.isVal, "vals")
+    @hosted def vals(name: scala.Symbol): Member.Term = vals(name.toString)
     @hosted def defs: Seq[Member.Term] = internalFilter[Member.Term](_.isDef)
     @hosted def defs(name: String): Member.Term = internalSingle[Member.Term](name, _.isDef, "defs")
     @hosted def defs(name: scala.Symbol): Member.Term = defs(name.toString)
@@ -460,15 +485,8 @@ trait Api {
   // ===========================
 
   implicit class SemanticNameOps(val tree: Name) {
-    def isBinder: Boolean = {
-      def isBindingPattern(parent: Tree) = parent.isInstanceOf[impl.Pat.Var.Term] || parent.isInstanceOf[impl.Pat.Var.Type]
-      def isDefinitionName(parent: Tree) = parent.isInstanceOf[impl.Member]
-      tree.parent.map(parent => isBindingPattern(parent) || isDefinitionName(parent)).getOrElse(false)
-    }
+    def isBinder: Boolean = tree.parent.map(_.isInstanceOf[impl.Member]).getOrElse(false)
     def isReference: Boolean = !isBinder
-    def isAnonymous: Boolean = tree.isInstanceOf[impl.Name.Anonymous]
-  }
-  implicit class SemanticTermNameOps(val tree: Term.Name) {
     def isAnonymous: Boolean = tree.isInstanceOf[impl.Name.Anonymous]
   }
 }
