@@ -13,7 +13,6 @@ trait TreeHelpers {
 
   implicit class RichNameStat(stat: Stat) {
     def binders: Seq[Name] = stat match {
-      case tree: Term.Name if tree.isBinder => List(tree)
       case tree: Decl.Val => tree.pats.map(_.name)
       case tree: Decl.Var => tree.pats.map(_.name)
       case tree: Decl.Def => List(tree.name)
@@ -33,10 +32,10 @@ trait TreeHelpers {
       case _ => Nil
     }
     def member: Member = stat match {
-      case Decl.Val(_, List(Pat.Var.Term(name)), _) => name
-      case Decl.Var(_, List(Pat.Var.Term(name)), _) => name
-      case Defn.Val(_, List(Pat.Var.Term(name)), _, _) => name
-      case Defn.Var(_, List(Pat.Var.Term(name)), _, _) => name
+      case Decl.Val(_, List(member: Pat.Var.Term), _) => member
+      case Decl.Var(_, List(member: Pat.Var.Term), _) => member
+      case Defn.Val(_, List(member: Pat.Var.Term), _, _) => member
+      case Defn.Var(_, List(member: Pat.Var.Term), _, _) => member
       case tree: Member => tree
       case _ => sys.error(s"unsupported stat ${stat.productPrefix}: $stat")
     }
@@ -47,7 +46,7 @@ trait TreeHelpers {
       pat.parent.collect{case pat: Pat => pat}.flatMap(firstNonPatParent).orElse(pat.parent.map(_.asInstanceOf[Tree]))
     }
     def stat: Stat = member match {
-      case tree: Term.Name if tree.isBinder => firstNonPatParent(tree).get.asInstanceOf[Stat]
+      case tree: Pat.Var.Term => firstNonPatParent(tree).get.asInstanceOf[Stat]
       case stat: Stat => stat
       case _ => sys.error(s"unsupported member ${member.productPrefix}: $member")
     }
