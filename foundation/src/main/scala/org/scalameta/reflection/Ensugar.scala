@@ -77,6 +77,7 @@ trait Ensugar {
                 case EtaExpansion(original) => Some(original)
                 case InlinedConstant(original) => Some(original)
                 case InsertedUnit(original) => Some(original)
+                case LiteralWithoutType(original) => Some(original)
                 case _ => None
               }
             }
@@ -758,6 +759,13 @@ trait Ensugar {
           def ensugar(tree: Tree): Option[Tree] = tree match {
             case Block(List(expr), unit @ Literal(Constant(()))) if unit.hasMetadata("insertedUnit") => Some(expr)
             case tree @ Block(init :+ last, unit @ Literal(Constant(()))) if last.isInstanceOf[MemberDef] => Some(treeCopy.Block(tree, init, last))
+            case _ => None
+          }
+        }
+
+        object LiteralWithoutType extends SingleEnsugarer {
+          def ensugar(tree: Tree): Option[Tree] = tree match {
+            case tree: Literal if tree.tpe == null => Some(tree.setType(tree.value.tpe))
             case _ => None
           }
         }
