@@ -353,7 +353,7 @@ object Code {
     case t: Lit.Byte    => m(Literal, s("ByteLiterals.", if (t.value == 0) "Zero" else if (t.value > 0) "Plus" + t.value else "Minus" + t.value))
     case t: Lit.Short   => m(Literal, s("ShortLiterals.", if (t.value == 0) "Zero" else if (t.value > 0) "Plus" + t.value else "Minus" + t.value))
     case t: Lit.Int     => m(Literal, s(t.value.toString))
-    case t: Lit.Long    => m(Literal, s(t.value.toString + "l"))
+    case t: Lit.Long    => m(Literal, s(t.value.toString + "L"))
     case t: Lit.Float   => m(Literal, s(t.value.toString + "f"))
     case t: Lit.Double  => m(Literal, s(t.value.toString + "d"))
     case t: Lit.Char    => m(Literal, s(enquote(t.value.toString, SingleQuotes)))
