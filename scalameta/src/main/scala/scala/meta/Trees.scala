@@ -231,6 +231,8 @@ package scala.meta.internal.ast {
   @branch trait Lit extends Term with Pat with Type with Pat.Type
   object Lit {
     @ast class Bool(value: scala.Boolean) extends Lit
+    @ast class Byte(value: scala.Byte) extends Lit
+    @ast class Short(value: scala.Short) extends Lit
     @ast class Int(value: scala.Int) extends Lit
     @ast class Long(value: scala.Long) extends Lit
     @ast class Float(value: scala.Float) extends Lit
