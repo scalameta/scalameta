@@ -4,108 +4,83 @@ import scala.tools.nsc.Global
 import scala.reflect.internal.Flags
 import scala.collection.mutable
 import org.scalameta.invariants._
+import org.scalameta.unreachable
+import org.scalameta.adt._
 
 trait SymbolHelpers {
   self: GlobalToolkit =>
 
   import global.{require => _, _}
   import definitions._
+  lazy val runDefinitions = currentRun.runDefinitions
 
-  object PkgSymbol {
-    def unapply(sym: Symbol): Option[ModuleSymbol] = {
-      if (sym.hasPackageFlag) Some(sym.asModule)
-      else None
-    }
+  sealed trait MacroBody { def tree: Tree }
+  object MacroBody {
+    case object None extends MacroBody { def tree = EmptyTree }
+    case class FastTrack(sym: Symbol) extends MacroBody { def tree = EmptyTree }
+    case class Reflect(tree: Tree) extends MacroBody
+    case class Meta(tree: Tree) extends MacroBody
   }
 
-  object ClassSymbol {
-    def unapply(sym: Symbol): Option[ClassSymbol] = {
-      if (sym.isClass && !sym.isTrait) Some(sym.asClass)
-      else None
+  implicit class RichHelperSymbol(sym: Symbol) {
+    def isAnonymous: Boolean = {
+      // NOTE: not all symbols whose names start with x$ are placeholders
+      // there are also at least artifact vals created for named arguments
+      val isTermPlaceholder = sym.isTerm && sym.isParameter && sym.name.startsWith(nme.FRESH_TERM_NAME_PREFIX)
+      val isTypePlaceholder = sym.isType && sym.isAbstract && sym.name.startsWith("_$")
+      val isAnonymousSelfName = sym.name.startsWith(nme.FRESH_TERM_NAME_PREFIX) || sym.name == nme.this_
+      val isAnonymousSelf = sym.isTerm && isAnonymousSelfName && sym.owner.isClass // TODO: more precise detection, probably via attachments
+      val isAnonymousTypeParameter = sym.name == tpnme.WILDCARD
+      isTermPlaceholder || isTypePlaceholder || isAnonymousSelf || isAnonymousTypeParameter
     }
-  }
 
-  object TraitSymbol {
-    def unapply(sym: Symbol): Option[ClassSymbol] = {
-      if (sym.isTrait) Some(sym.asClass)
-      else None
+    def macroBody: MacroBody = {
+      def macroSigs(sym: Symbol) = {
+        if (sym.isMethod) sym.annotations.filter(_.tree.tpe.typeSymbol.fullName == "scala.reflect.macros.internal.macroImpl")
+        else Nil
+      }
+      def parseMacroSig(sig: AnnotationInfo) = {
+        val q"new $_[..$_]($_(..$args)[..$targs])" = sig.tree
+        val metadata = args.collect{
+          case Assign(Literal(Constant(s: String)), Literal(Constant(v))) => s -> v
+          case Assign(Literal(Constant(s: String)), tree) => s -> tree
+        }.toMap
+        metadata + ("targs" -> targs)
+      }
+      if (g.analyzer.fastTrack.contains(sym)) MacroBody.FastTrack(sym)
+      else macroSigs(sym) match {
+        case legacySig :: scalametaSig :: Nil =>
+          MacroBody.Meta(parseMacroSig(scalametaSig)("implDdef").require[DefDef].rhs)
+        case legacySig :: Nil =>
+          // TODO: obtain the impl ref exactly how it was written by the programmer
+          val legacy = parseMacroSig(legacySig)
+          val className = legacy("className").require[String]
+          val methodName = legacy("methodName").require[String]
+          val isBundle = legacy("isBundle").require[Boolean]
+          val targs = legacy("targs").require[List[Tree]]
+          require(className.endsWith("$") ==> !isBundle)
+          val containerSym = if (isBundle) rootMirror.staticClass(className) else rootMirror.staticModule(className.stripSuffix("$"))
+          val container = Ident(containerSym).setType(if (isBundle) containerSym.asType.toType else containerSym.info)
+          val methodSym = containerSym.info.member(TermName(methodName))
+          var implRef: Tree = Select(container, methodSym).setType(methodSym.info)
+          if (targs.nonEmpty) implRef = TypeApply(implRef, targs).setType(appliedType(methodSym.info, targs.map(_.tpe)))
+          MacroBody.Reflect(implRef)
+        case _ :: _ =>
+          unreachable
+        case _ =>
+          MacroBody.None
+      }
     }
-  }
 
-  object PkgObjectSymbol {
-    def unapply(sym: Symbol): Option[ModuleSymbol] = {
-      if (sym.isModule && sym.name == nme.PACKAGE) Some(sym.asModule)
-      else None
-    }
-  }
-
-  object ObjectSymbol {
-    def unapply(sym: Symbol): Option[ModuleSymbol] = {
-      if (sym.isModule && sym.name != nme.PACKAGE) Some(sym.asModule)
-      else None
-    }
-  }
-
-  object AbstractValSymbol {
-    def unapply(sym: Symbol): Option[TermSymbol] = {
-      if (sym.isTerm && !sym.isMethod && !sym.isModule && !sym.isMutable && sym.isDeferred) Some(sym.asTerm)
-      else None
-    }
-  }
-
-  object ValSymbol {
-    def unapply(sym: Symbol): Option[TermSymbol] = {
-      if (sym.isTerm && !sym.isMethod && !sym.isModule && !sym.isMutable && !sym.isDeferred) Some(sym.asTerm)
-      else None
-    }
-  }
-
-  object AbstractVarSymbol {
-    def unapply(sym: Symbol): Option[TermSymbol] = {
-      if (sym.isTerm && !sym.isMethod && !sym.isModule && sym.isMutable && sym.isDeferred) Some(sym.asTerm)
-      else None
-    }
-  }
-
-  object VarSymbol {
-    def unapply(sym: Symbol): Option[TermSymbol] = {
-      if (sym.isTerm && !sym.isMethod && !sym.isModule && sym.isMutable && !sym.isDeferred) Some(sym.asTerm)
-      else None
-    }
-  }
-
-  object AbstractDefSymbol {
-    def unapply(sym: Symbol): Option[MethodSymbol] = {
-      if (sym.isMethod && !sym.isMacro && sym.isDeferred) Some(sym.asMethod)
-      else None
-    }
-  }
-
-  object DefSymbol {
-    def unapply(sym: Symbol): Option[MethodSymbol] = {
-      if (sym.isMethod && !sym.isMacro && !sym.isDeferred) Some(sym.asMethod)
-      else None
-    }
-  }
-
-  object MacroSymbol {
-    def unapply(sym: Symbol): Option[MethodSymbol] = {
-      if (sym.isMethod && sym.isMacro) Some(sym.asMethod)
-      else None
-    }
-  }
-
-  object AbstractTypeSymbol {
-    def unapply(sym: Symbol): Option[TypeSymbol] = {
-      if (sym.isType && sym.isAbstractType) Some(sym.asType)
-      else None
-    }
-  }
-
-  object AliasTypeSymbol {
-    def unapply(sym: Symbol): Option[TypeSymbol] = {
-      if (sym.isType && sym.isAliasType) Some(sym.asType)
-      else None
+    def isIntrinsic: Boolean = {
+      // NOTE: copy/paste from JavaMirrors
+      def isGetClass(sym: Symbol) = (sym.name string_== "getClass") && sym.paramss.flatten.isEmpty
+      def isStringConcat(sym: Symbol) = sym == String_+ || (sym.owner.isPrimitiveValueClass && sym.isMethod && sym.asMethod.returnType =:= StringClass.toType)
+      val bytecodelessMethodOwners = Set[Symbol](AnyClass, AnyValClass, AnyRefClass, ObjectClass, ArrayClass) ++ ScalaPrimitiveValueClasses
+      val bytecodefulObjectMethods = Set[Symbol](Object_clone, Object_equals, Object_finalize, Object_hashCode, Object_toString,
+                                                 Object_notify, Object_notifyAll) ++ ObjectClass.info.member(nme.wait_).asTerm.alternatives.map(_.asMethod)
+      if (isGetClass(sym) || isStringConcat(sym) || sym.owner.isPrimitiveValueClass || sym == runDefinitions.Predef_classOf || sym.isMacro) return true
+      bytecodelessMethodOwners(sym.owner) && !bytecodefulObjectMethods(sym)
     }
   }
 }

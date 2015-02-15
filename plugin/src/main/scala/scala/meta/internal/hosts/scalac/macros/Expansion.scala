@@ -2,6 +2,8 @@ package scala.meta
 package internal.hosts.scalac
 package macros
 
+import org.scalameta.reflection._
+import org.scalameta.invariants._
 import scala.reflect.internal.Flags._
 import scala.reflect.internal.Mode
 import scala.reflect.internal.util.Collections._
@@ -13,7 +15,8 @@ import scala.util.control.ControlThrowable
 import scala.collection.mutable
 import scala.reflect.macros.contexts.{Context => ScalareflectMacroContext}
 import scala.meta.macros.{Context => ScalametaMacroContext}
-import scala.meta.internal.hosts.scalac.{MacroContext => ScalahostMacroContext, PluginBase => ScalahostPlugin, Scalahost}
+import scala.meta.internal.hosts.scalac.contexts.{MacroContext => ScalahostMacroContext}
+import scala.meta.internal.hosts.scalac.{PluginBase => ScalahostPlugin, Scalahost}
 
 trait Expansion extends scala.reflect.internal.show.Printers {
   self: ScalahostPlugin =>
@@ -33,20 +36,20 @@ trait Expansion extends scala.reflect.internal.show.Printers {
             val macros = Class.forName("scala.tools.nsc.typechecker.Macros$class", false, getClass.getClassLoader)
             val isDelayedMethod = macros.getDeclaredMethods().filter(_.getName == "isDelayed").head
             isDelayedMethod.setAccessible(true)
-            isDelayedMethod.invoke(null, analyzer, tree).asInstanceOf[Boolean]
+            isDelayedMethod.invoke(null, analyzer, tree).require[Boolean]
           }
           private def appendDelayed(tree: Tree, undets: mutable.Set[Int]): Unit = {
             val macros = Class.forName("scala.tools.nsc.typechecker.Macros", false, getClass.getClassLoader)
             val delayedGetter = macros.getDeclaredMethods().filter(_.getName == "scala$tools$nsc$typechecker$Macros$$delayed").head
             delayedGetter.setAccessible(true)
-            val delayed = delayedGetter.invoke(this).asInstanceOf[mutable.WeakHashMap[Tree, scala.collection.mutable.Set[Int]]]
+            val delayed = delayedGetter.invoke(this).require[mutable.WeakHashMap[Tree, scala.collection.mutable.Set[Int]]]
             delayed += tree -> undets
           }
           private def calculateUndetparams(expandee: Tree): mutable.Set[Int] = {
             val macros = Class.forName("scala.tools.nsc.typechecker.Macros$class", false, getClass.getClassLoader)
             val calculatedUndetparamsMethod = macros.getDeclaredMethods().filter(_.getName == "scala$tools$nsc$typechecker$Macros$$calculateUndetparams").head
             calculatedUndetparamsMethod.setAccessible(true)
-            calculatedUndetparamsMethod.invoke(null, analyzer, expandee).asInstanceOf[mutable.Set[Int]]
+            calculatedUndetparamsMethod.invoke(null, analyzer, expandee).require[mutable.Set[Int]]
           }
           private def macroArgs(): MacroArgs = {
             val treeInfo.Applied(core, _, _) = expandee
@@ -73,7 +76,7 @@ trait Expansion extends scala.reflect.internal.show.Printers {
             }
             lazy val scalametaInvocation: ScalametaTree = {
               // TODO: implement this
-              // hc.toScalameta(scalareflectInvocation)
+              // hc.toPtree(scalareflectInvocation)
               ???
             }
             lazy val scalametaResult: Any = scalametaInvocation match {

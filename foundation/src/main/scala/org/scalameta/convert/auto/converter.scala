@@ -11,7 +11,7 @@ import org.scalameta.invariants._
 import org.scalameta.reflection._
 
 // NOTE: a macro annotation that converts naive patmat-based converters
-// like `@converter def toScalameta(in: Any, pt: Pt): Any = in match { ... }`
+// like `@converter def toPtree(in: Any, pt: Pt): Any = in match { ... }`
 // into a typeclass, a number of instances (created from patmat clauses) and some glue
 // see the resulting quasiquote of ConverterMacros.converter to get a better idea what's going on
 // has a number of quirks to accommodate ambiguous conversions and other fun stuff, which I should document later (TODO)
@@ -106,7 +106,7 @@ class ConverterMacros(val c: whitebox.Context) extends MacroToolkit {
       // because template statements get typechecked after val synthesis take place
       // and we can't afford this, because we need to get these converters computed before anything else takes place
       val computeConverters = atPos(ddef.pos)(q"""
-        val $dummy = $DeriveInternal.computeConverters($wrapper.$companion){
+        protected[meta] val computeConverters = $DeriveInternal.computeConverters($wrapper.$companion){
           @$DeriveInternal.declNames(..${instances.filter(!_.notImplemented).map(_.decl.toString)})
           def dummy(in: Any): Any = {
             ..$rawprelude
@@ -272,7 +272,7 @@ package object internal {
     def computeConverters(typeclassCompanion: Tree)(x: Tree): Tree = {
       import c.internal._, decorators._
       val q"{ ${dummy @ q"def $_(in: $_): $_ = { ..$prelude; in match { case ..$clauses } }"}; () }" = x
-      def toScalametaConverters: List[SharedConverter] = {
+      def toPtreeConverters: List[SharedConverter] = {
         def precisetpe(tree: Tree): Type = tree match {
           case If(_, thenp, elsep) => lub(List(precisetpe(thenp), precisetpe(elsep)))
           case Match(_, cases) => lub(cases.map(tree => precisetpe(tree.body)))
@@ -336,9 +336,16 @@ package object internal {
           (prelude ++ clauses).foreach(_.foreach(sub => if (sub.symbol != null) expected -= sub.symbol))
           val unmatched = expected.filter(sym => {
             sym.fullName != "scala.meta.internal.ast.Pat.Interpolate" &&
-            sym.fullName != "scala.meta.internal.ast.Ctor.Ref.Name" // Ctor.Name is an alias to Ctor.Ref.Name, and it is very well used in the converter
+            sym.fullName != "scala.meta.internal.ast.Ctor.Ref.Name" && // Ctor.Name is an alias to Ctor.Ref.Name, and it is very well used in the converter
+            sym.fullName != "scala.meta.internal.ast.Ctor.Name" && // handled in a helper outside the @converter
+            sym.fullName != "scala.meta.internal.ast.Ctor.Ref.Select" && // handled in a helper outside the @converter
+            sym.fullName != "scala.meta.internal.ast.Ctor.Ref.Project" && // handled in a helper outside the @converter
+            sym.fullName != "scala.meta.internal.ast.Ctor.Ref.Function" && // handled in a helper outside the @converter
+            sym.fullName != "scala.meta.internal.ast.Type.Name" && // handled in a helper outside the @converter
+            !sym.fullName.startsWith("scala.meta.internal.ast.Lit") // handled in a helper outside the @converter
           })
-          if (unmatched.nonEmpty) c.error(c.enclosingPosition, "@converter is not exhaustive in its outputs; missing: " + unmatched)
+          val s_unmatched = unmatched.map(sym => sym.fullName.replace("scala.meta.internal.ast.", "")).mkString(", ")
+          if (unmatched.nonEmpty) c.error(c.enclosingPosition, "@converter is not exhaustive in its outputs; missing: " + s_unmatched)
           unmatched.isEmpty
         }
         // val tups = clauses.map{ case CaseDef(pat, _, body) => (pat.tpe.toString.replace("HostContext.this.", ""), cleanLub(List(precisetpe(body))).toString.replace("scala.meta.", "p."), precisetpe(body).toString.replace("scala.meta.", "p.")) }
@@ -350,7 +357,7 @@ package object internal {
         if (isValid) {
           val nontrivialClauses = clauses.filter(clause => clause.body.symbol != scalameta_unreachable && clause.body.symbol != Predef_???)
           val ins = nontrivialClauses.map(_.pat.tpe)
-          val pts = nontrivialClauses.map(clause => c.typecheck(clause.metadata("pt").asInstanceOf[Tree], mode = c.TYPEmode).tpe)
+          val pts = nontrivialClauses.map(clause => c.typecheck(clause.metadata("pt").require[Tree], mode = c.TYPEmode).tpe)
           val underivedOuts = nontrivialClauses.map(_.body).map(body => if (body.symbol != Auto_derive) precisetpe(body) else NoType)
           val outs = nontrivialClauses.map({ case CaseDef(pat, _, body) =>
             if (body.symbol != Auto_derive) precisetpe(body)
@@ -372,7 +379,7 @@ package object internal {
       val target = typeclassCompanion.symbol.owner
       if (!target.isModuleClass) c.abort(c.enclosingPosition, s"something went wrong: unexpected typeclass companion $typeclassCompanion")
       val converters = target.name.toString match {
-        case "toScalameta" => toScalametaConverters
+        case "toPtree" => toPtreeConverters
         case _ => c.abort(c.enclosingPosition, "unknown target: " + target.name)
       }
       // val tups = converters.map{ case SharedConverter(in: Type, out: Type, method: Tree, derived) => ((if (derived) "*" else "") + in.toString.replace("Host.this.", ""), cleanLub(List(out)).toString.replace("scala.meta.", "p."), out.toString.replace("scala.meta.", "p."), method) }
@@ -388,10 +395,10 @@ package object internal {
         }
         def pickleConverter(converter: SharedConverter): Tree = q"""
           new $ComputedConvertersDatabearer(
-            ${smuggleType(converter.in.asInstanceOf[Type])},
-            ${smuggleType(converter.pt.asInstanceOf[Type])},
-            ${smuggleType(converter.out.asInstanceOf[Type])},
-            ${converter.module.asInstanceOf[Tree]},
+            ${smuggleType(converter.in.require[Type])},
+            ${smuggleType(converter.pt.require[Type])},
+            ${smuggleType(converter.out.require[Type])},
+            ${converter.module.require[Tree]},
             ${converter.method},
             ${Literal(Constant(null))},
             ${converter.derived}
@@ -419,7 +426,7 @@ package object internal {
           val ann = sym.annotations.find(_.tree.tpe.typeSymbol == ComputedConvertersAnnotation)
           val args = ann.map(_.tree.children.last match {
             case q"$_.$_[..$_]($_.$_[..$_](..$args))" => args
-            case _ => c.abort(c.enclosingPosition, "something went wrong: can't load converters")
+            case _ => c.abort(c.enclosingPosition, "something went really wrong: can't load converters")
           })
           val result = args.map(_.map(_ match { case q"""new $_(
             ${UnsmuggleType(in)},
@@ -517,8 +524,8 @@ package object internal {
     def lookupConvertersWithPt[In: c.WeakTypeTag, Pt: c.WeakTypeTag](x: c.Tree, pt: c.Tree): c.Tree = {
       val target = c.macroApplication.symbol.owner
       target.name.toString match {
-        case "toScalameta" =>
-          val pre @ q"$h.toScalameta" = c.prefix.tree
+        case "toPtree" =>
+          val pre @ q"$h.toPtree" = c.prefix.tree
           val sym = c.macroApplication.symbol
           val ensugared = q"""
             val ensugared = (new { val global: $h.g.type = $h.g } with $ToolkitTrait).ensugar($x)

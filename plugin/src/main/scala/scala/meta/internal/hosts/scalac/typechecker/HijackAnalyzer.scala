@@ -2,6 +2,7 @@ package scala.meta
 package internal.hosts.scalac
 package typechecker
 
+import org.scalameta.invariants._
 import scala.tools.nsc.{Global => NscGlobal, Phase, SubComponent}
 import scala.tools.nsc.plugins.{Plugin => NscPlugin, PluginComponent => NscPluginComponent}
 import scala.collection.mutable
@@ -19,7 +20,9 @@ trait HijackAnalyzer {
     val isInteractive = global.isInstanceOf[NscInteractiveGlobal]
     val analyzer = {
       if (isInteractive) {
-        new { val global: self.global.type with NscInteractiveGlobal = self.global.asInstanceOf[self.global.type with NscInteractiveGlobal] } with ScalahostAnalyzer with NscInteractiveAnalyzer {
+        new {
+          val global: self.global.type with NscInteractiveGlobal = self.global.asInstanceOf[self.global.type with NscInteractiveGlobal]
+        } with ScalahostAnalyzer with NscInteractiveAnalyzer {
           override def newTyper(context: Context) = new ScalahostTyper(context) with InteractiveTyper
         }
       } else {
@@ -43,14 +46,14 @@ trait HijackAnalyzer {
     analyzerField.set(global, analyzer)
 
     val phasesSetMapGetter = classOf[NscGlobal].getDeclaredMethod("phasesSet")
-    val phasesSet = phasesSetMapGetter.invoke(global).asInstanceOf[mutable.Set[SubComponent]]
+    val phasesSet = phasesSetMapGetter.invoke(global).require[mutable.Set[SubComponent]]
     if (phasesSet.exists(_.phaseName == "typer")) { // `scalac -help` doesn't instantiate standard phases
       def subcomponentNamed(name: String) = phasesSet.find(_.phaseName == name).head
       val oldScs @ List(oldNamer, oldPackageobjects, oldTyper) = List(subcomponentNamed("namer"), subcomponentNamed("packageobjects"), subcomponentNamed("typer"))
       val newScs = List(analyzer.namerFactory, analyzer.packageObjects, analyzer.typerFactory)
       def hijackDescription(pt: SubComponent, sc: SubComponent) = {
         val phasesDescMapGetter = classOf[NscGlobal].getDeclaredMethod("phasesDescMap")
-        val phasesDescMap = phasesDescMapGetter.invoke(global).asInstanceOf[mutable.Map[SubComponent, String]]
+        val phasesDescMap = phasesDescMapGetter.invoke(global).require[mutable.Map[SubComponent, String]]
         phasesDescMap(sc) = phasesDescMap(pt)
       }
       oldScs zip newScs foreach { case (pt, sc) => hijackDescription(pt, sc) }
@@ -58,6 +61,6 @@ trait HijackAnalyzer {
       phasesSet ++= newScs
     }
 
-    analyzer.asInstanceOf[global.analyzer.type]
+    analyzer.require[global.analyzer.type]
   }
 }

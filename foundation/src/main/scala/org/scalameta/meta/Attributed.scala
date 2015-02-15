@@ -35,7 +35,7 @@ trait Attributed {
           case x => // do nothing
         }
         if (!check(tree)) offenders += ((tree, path))
-        tree.productIterator.map(loop)
+        tree.productIterator.toList.map(loop)
       }
       traverse(tree, Nil)
       if (offenders.nonEmpty) {
