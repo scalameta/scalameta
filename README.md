@@ -71,6 +71,7 @@ which are now generalized and called `show[Code]` and `show[Raw]`:
 ```
 scala> res0.show[Code]
 res1: String = class C { def x = 2 }
+
 scala> res0.show[Raw]
 res2: String = Defn.Class(Nil, Type.Name("C"), Nil, Ctor.Primary(Nil, Ctor.Ref.Name("this"), Nil), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), Some(List(Defn.Def(Nil, Term.Name("x"), Nil, Nil, None, Lit.Int(2))))))
 ```
@@ -89,8 +90,10 @@ Functionality of our parser is exposed in two simple methods: `tokens` and `pars
 ```
 scala> "class C { def x = 2 }".tokens
 res3: Vector[meta.Token] = Vector(class (0..4),   (5..5), C (6..6),   (7..7), { (8..8),   (9..9), def (10..12),   (13..13), x (14..14),   (15..15), = (16..16),   (17..17), 2 (18..18),   (19..19), } (20..20), EOF (21..20))
+
 scala> "class C { def x = 2 }".parse[Stat]
 res4: scala.meta.Stat = class C { def x = 2 }
+
 scala> "class C { def x = 2 }".parse[Term]
 scala.meta.ui.Exception: syntax error at class (0..4): illegal start of simple expression: class (0..4)
   at scala.meta.ui.Exception$.apply(Exception.scala:5)
@@ -132,8 +135,16 @@ class C {
   def x = 2
   def y = new C().x
 }
+
 scala> res6.show[Raw]
-res7: String = Defn.Class(Nil, Type.Name("C"), Nil, Ctor.Primary(Nil, Ctor.Ref.Name("this"), Nil), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), Some(List(Defn.Def(Nil, Term.Name("x"), Nil, Nil, None, Lit.Int(2)), Defn.Def(Nil, Term.Name("y"), Nil, Nil, None, Term.Select(Term.New(Template(Nil, List(Term.Apply(Ctor.Ref.Name("C"), Nil)), Term.Param(Nil, Name.Anonymous(), None, None), None)), Term.Name("x")))))))
+res7: String = Defn.Class(
+  Nil, Type.Name("C"), Nil, 
+  Ctor.Primary(Nil, Ctor.Ref.Name("this"), Nil), 
+  Template(
+    Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), 
+    Some(List(
+      Defn.Def(Nil, Term.Name("x"), Nil, Nil, None, Lit.Int(2)), 
+      Defn.Def(Nil, Term.Name("y"), Nil, Nil, None, Term.Select(Term.New(Template(Nil, List(Term.Apply(Ctor.Ref.Name("C"), Nil)), Term.Param(Nil, Name.Anonymous(), None, None), None)), Term.Name("x")))))))
 ```
 
 We can see that all definitions, including the class C and methods x and y have names at their core.
@@ -270,8 +281,10 @@ we can take our type quasiquote and use it like we'd use a type in scala.reflect
 ```
 scala> t"List[Int]" <:< t"List[Any]"
 res14: Boolean = true
+
 scala> t"List[Int]".defs
 res15: scala.collection.immutable.Seq[scala.meta.Member.Term] = List(...)
+
 scala> res15.foreach(println)
 override def companion: GenericCompanion[List] = ...
 def ::[B >: Int](x: B): List[B] = ...
@@ -318,8 +331,10 @@ If you can understand how a type can be equal to a name, then you understand the
 // NOTE: in the future, we'll be using quasiquotes here!
 scala> import scala.meta.internal.ast._
 import scala.meta.internal.ast._
+
 scala> val Defn.Type(_, name, _, _) = member
 name: meta.internal.ast.Type.Name = List
+
 scala> tpe == name
 res21: Boolean = true
 ```
