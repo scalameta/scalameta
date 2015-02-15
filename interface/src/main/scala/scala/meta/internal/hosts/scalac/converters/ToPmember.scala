@@ -110,6 +110,10 @@ trait ToPmember extends GlobalToolkit with MetaToolkit {
             case g.PolyType(gtparams, gret) =>
               if (gtparams.forall(gsym => gtparams.exists(_ == gsym))) loop(gret)
               else gret
+            case g.ExistentialType(quants, gtpe) =>
+              // NOTE: apparently, sometimes we can get stuff like `ExistentialType(..., NullaryMethodType(...))`
+              // see Enumeration.vmap for an example
+              g.ExistentialType(quants, loop(gtpe))
             case _ =>
               gtpe
           }
