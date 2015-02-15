@@ -523,7 +523,7 @@ class SemanticSuite extends FunSuite {
 
   test("t\"scala.collection.immutable.List\".defn") {
     assert(t"scala.collection.immutable.List".defn.toString === """
-      |@SerialVersionUID(value = -6084104484083858598l) sealed abstract class List[+A]() extends AbstractSeq[A] with LinearSeq[A] with Product with GenericTraversableTemplate[A, List] with LinearSeqOptimized[A, List[A]] with Serializable { ... }
+      |@SerialVersionUID(value = -6084104484083858598L) sealed abstract class List[+A]() extends AbstractSeq[A] with LinearSeq[A] with Product with GenericTraversableTemplate[A, List] with LinearSeqOptimized[A, List[A]] with Serializable { ... }
     """.trim.stripMargin)
   }
 
