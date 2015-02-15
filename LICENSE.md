@@ -1,4 +1,4 @@
-Copyright (c) 2014 EPFL
+Copyright (c) 2014-2015 EPFL
 
 All rights reserved.
 
