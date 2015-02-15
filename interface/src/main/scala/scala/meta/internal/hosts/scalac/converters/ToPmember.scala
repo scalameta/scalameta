@@ -201,6 +201,7 @@ trait ToPmember extends GlobalToolkit with MetaToolkit {
                   // TODO: think of a better way to express this
                   // and, by the way, why is an implicit context needed here at all?
                   implicit val c: ScalametaSemanticContext = self.require[ScalametaSemanticContext]
+                  val _ = toPtree.computeConverters // TODO: that's a hack!
                   toPtree(body, classOf[p.Term])
                 }
               }
@@ -228,7 +229,7 @@ trait ToPmember extends GlobalToolkit with MetaToolkit {
         }
         lazy val pctor = {
           if (lsym.isInstanceOf[l.Clazz] || lsym.isInstanceOf[l.Object]) {
-            val gctorsym = lsym.gsymbol.primaryConstructor
+            val gctorsym = lsym.gsymbol.moduleClass.orElse(lsym.gsymbol).primaryConstructor
             val gctorinfo = gctorsym.infoIn(gpre)
             val pctorname = p.Ctor.Name(gsym.name.toString).withDenot(gpre, gctorsym).withOriginal(gctorsym)
             val pctorparamss = {

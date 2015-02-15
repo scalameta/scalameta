@@ -47,7 +47,7 @@ trait ToPtree extends GlobalToolkit with MetaToolkit {
         pargss.foldLeft(pcore)((pcurr, pargs) => p.Term.Apply(pcurr, pargs)).withOriginal(in)
       }
       def pfakector(gparent: g.MemberDef): p.Ctor.Primary = {
-        val ctor = if (gparent.isInstanceOf[g.ClassDef]) gparent.symbol else gparent.symbol.primaryConstructor
+        val ctor = gparent match { case _: g.ClassDef => gparent.symbol; case _: g.ModuleDef => gparent.symbol.moduleClass.primaryConstructor }
         val name = p.Ctor.Name(gparent.name.toString).withDenot(gparent.symbol)
         p.Ctor.Primary(Nil, name, Nil)
       }
