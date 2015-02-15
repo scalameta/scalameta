@@ -46,13 +46,13 @@ trait ToP extends GlobalToolkit with MetaToolkit {
   }
 
   protected implicit class RichToScalametaConstant(gconst: g.Constant) {
-    type pConst = p.Lit{type ThisType >: p.Lit.Null with p.Lit.Unit with p.Lit.Bool with p.Lit.Int with p.Lit.Long with p.Lit.Float with p.Lit.Double with p.Lit.String with p.Lit.Char <: p.Lit}
+    type pConst = p.Lit{type ThisType >: p.Lit.Null with p.Lit.Unit with p.Lit.Bool with p.Lit.Byte with p.Lit.Short with p.Lit.Int with p.Lit.Long with p.Lit.Float with p.Lit.Double with p.Lit.String with p.Lit.Char <: p.Lit}
     def rawcvt: pConst = gconst.value match {
       case null => p.Lit.Null()
       case () => p.Lit.Unit()
       case v: Boolean => p.Lit.Bool(v)
-      case v: Byte => ???
-      case v: Short => ???
+      case v: Byte => p.Lit.Byte(v)
+      case v: Short => p.Lit.Short(v)
       case v: Int => p.Lit.Int(v)
       case v: Long => p.Lit.Long(v)
       case v: Float => p.Lit.Float(v)

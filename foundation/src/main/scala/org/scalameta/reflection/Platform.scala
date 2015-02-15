@@ -26,6 +26,8 @@ trait Platform {
           else "L" + sym.fullName.replace(".", "/") + ";"
         case MethodType(params, ret) =>
           s"(" + params.map(_.jvmsig).mkString("") + ")" + ret.jvmsig
+        case ConstantType(value) =>
+          value.tpe.widen.jvmsig
       }
     }
   }
