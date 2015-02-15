@@ -3,8 +3,6 @@
          | Quasiquote
 ---------|------------------------------
  Boolean | `q"true"`, `q"false"`, `q"$bool"`
- Byte    | `q"$byte"`
- Short   | `q"$short"`
  Int     | `q"1"`, `q"$int"`
  Long    | `q"1L"`, `q"$long"`
  Float   | `q"1.0f"`, `q"$float"`
