@@ -11,6 +11,7 @@ import scala.collection.immutable.Seq
 import scala.meta.internal.ast._
 import scala.{meta => api}
 import org.scalameta.adt._
+import org.scalameta.collections._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
 import scala.compat.Platform.EOL
@@ -24,6 +25,12 @@ import scala.annotation.implicitNotFound
 trait Code[T] extends Show[T]
 object Code {
   def apply[T](f: T => Show.Result): Code[T] = new Code[T] { def apply(input: T) = f(input) }
+
+  @root trait Style
+  object Style {
+    @leaf object Lazy extends Style
+    @leaf implicit object Unabridged extends Style
+  }
 
   // NOTE: these groups closely follow non-terminals in the grammar spec from SLS, except for:
   // 1) we don't care about tracking non-terminals (with m() and/or p()) when that doesn't affect parenthesization
@@ -72,7 +79,7 @@ object Code {
   }
   import SyntacticGroup.Type._, SyntacticGroup.Term._, SyntacticGroup.Pat._, SyntacticGroup.Literal, SyntacticGroup.Path
 
-  def p(og: SyntacticGroup, t: Tree, left: Boolean = false, right: Boolean = false)(implicit dialect: Dialect) = {
+  def p(og: SyntacticGroup, t: Tree, left: Boolean = false, right: Boolean = false)(implicit dialect: Dialect, style: Style) = {
     def opNeedsParens(oo: String, io: String, customAssoc: Boolean, customPrecedence: Boolean): Boolean = {
       implicit class MySyntacticInfo(name: String) {
         def isleftassoc: Boolean = if (customAssoc) name.last != ':' else true
@@ -121,7 +128,7 @@ object Code {
     if (danger) s(" " +keyword) else s(keyword)
   })
 
-  def templ(templ: Template)(implicit dialect: Dialect) =
+  def templ(templ: Template)(implicit dialect: Dialect, style: Style) =
     // TODO: consider XXX.isEmpty
     if (templ.early.isEmpty && templ.parents.isEmpty && templ.self.name.isInstanceOf[Name.Anonymous] && templ.self.decltpe.isEmpty && templ.stats.isEmpty) s()
     else if (templ.parents.nonEmpty || templ.early.nonEmpty) s(" extends ", templ)
@@ -193,7 +200,7 @@ object Code {
 
   // Branches
   // TODO: this match is not exhaustive: if I remove Mod.Package, then I get no warning
-  implicit def codeTree[T <: api.Tree](implicit dialect: Dialect): Code[T] = Code { x => (x: api.Tree) match {
+  implicit def codeTree[T <: api.Tree](implicit dialect: Dialect, style: Style): Code[T] = Code { x => (x: api.Tree) match {
     // Name
     case t: Name.Anonymous       => s("_")
 
@@ -344,7 +351,7 @@ object Code {
     // Lit
     case t: Lit.Bool    => m(Literal, s(t.value.toString))
     case t: Lit.Int     => m(Literal, s(t.value.toString))
-    case t: Lit.Long    => m(Literal, s(t.value.toString + "l"))
+    case t: Lit.Long    => m(Literal, s(t.value.toString + "L"))
     case t: Lit.Float   => m(Literal, s(t.value.toString + "f"))
     case t: Lit.Double  => m(Literal, s(t.value.toString + "d"))
     case t: Lit.Char    => m(Literal, s(enquote(t.value.toString, SingleQuotes)))
@@ -366,30 +373,41 @@ object Code {
     case t: Defn.Object    => s(a(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
     case t: Defn.Def       => s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, t.decltpe, " = ", t.body)
     case t: Defn.Macro     => s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, kw(":"), " ", t.tpe, " ", kw("="), " ", kw("macro"), " ", t.body)
-    case t: Pkg if guessHasBraces(t) => s(kw("package"), " ", t.ref, " {", r(t.stats.map(i(_)), ""), n("}"))
-    case t: Pkg            => s(kw("package"), " ", t.ref, r(t.stats.map(n(_))))
+    case t: Pkg            =>
+      if (style == Style.Lazy && t.stats.isLazy) s(kw("package"), " ", t.ref, " { ... }")
+      else if (guessHasBraces(t)) s(kw("package"), " ", t.ref, " {", r(t.stats.map(i(_)), ""), n("}"))
+      else s(kw("package"), " ", t.ref, r(t.stats.map(n(_))))
     case t: Pkg.Object     => s(kw("package"), " ", a(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
     case t: Ctor.Primary   => s(a(t.mods, " ", t.mods.nonEmpty && t.paramss.nonEmpty), t.paramss)
     case t: Ctor.Secondary => s(a(t.mods, " "), kw("def"), " ", kw("this"), t.paramss, if (t.body.isInstanceOf[Term.Block]) " " else " = ", t.body)
 
     // Template
     case t: Template =>
-      val isBodyEmpty = t.self.name.isInstanceOf[Name.Anonymous] && t.self.decltpe.isEmpty && t.stats.isEmpty
+      val isSelfEmpty = t.self.name.isInstanceOf[Name.Anonymous] && t.self.decltpe.isEmpty
+      val isSelfNonEmpty = !isSelfEmpty
+      val isBodyEmpty = isSelfEmpty && t.stats.isEmpty
       val isTemplateEmpty = t.early.isEmpty && t.parents.isEmpty && isBodyEmpty
       if (isTemplateEmpty) s()
       else {
-        val isOneLiner = t.stats.map(stats => stats.length == 0 || (stats.length == 1 && !s(stats.head).toString.contains(EOL))).getOrElse(true)
         val pearly = if (!t.early.isEmpty) s("{ ", r(t.early, "; "), " } with ") else s()
         val pparents = a(r(t.parents, " with "), " ", !t.parents.isEmpty && !isBodyEmpty)
-        val pbody = (!t.self.name.isInstanceOf[Name.Anonymous] || t.self.decltpe.nonEmpty, t.stats.nonEmpty, t.stats.getOrElse(Nil)) match {
-          case (false, false, _) => s()
-          case (true, false, _) => s("{ ", t.self, " => }")
-          case (false, true, List()) if isOneLiner => s("{}")
-          case (false, true, List(stat)) if isOneLiner => s("{ ", stat, " }")
-          case (false, true, stats) => s("{", r(stats.map(i(_)), ""), n("}"))
-          case (true, true, List()) if isOneLiner => s("{ ", t.self, " => }")
-          case (true, true, List(stat)) if isOneLiner => s("{ ", t.self, " => ", stat, " }")
-          case (true, true, stats) => s("{ ", t.self, " =>", r(stats.map(i(_)), ""), n("}"))
+        val pbody = {
+          if (style == Style.Lazy && t.stats.getOrElse(Nil).isLazy) {
+            if (isSelfNonEmpty) s("{ ", t.self, " => ... }")
+            else s("{ ... }")
+          } else {
+            val isOneLiner = t.stats.map(stats => stats.length == 0 || (stats.length == 1 && !s(stats.head).toString.contains(EOL))).getOrElse(true)
+            (isSelfNonEmpty, t.stats.nonEmpty, t.stats.getOrElse(Nil)) match {
+              case (false, false, _) => s()
+              case (true, false, _) => s("{ ", t.self, " => }")
+              case (false, true, Seq()) if isOneLiner => s("{}")
+              case (false, true, Seq(stat)) if isOneLiner => s("{ ", stat, " }")
+              case (false, true, stats) => s("{", r(stats.map(i(_)), ""), n("}"))
+              case (true, true, Seq()) if isOneLiner => s("{ ", t.self, " => }")
+              case (true, true, Seq(stat)) if isOneLiner => s("{ ", t.self, " => ", stat, " }")
+              case (true, true, stats) => s("{ ", t.self, " =>", r(stats.map(i(_)), ""), n("}"))
+            }
+          }
         }
         s(pearly, pparents, pbody)
       }
@@ -435,30 +453,50 @@ object Code {
   } }
 
   // Multiples and optionals
-  private implicit def codeArgs(implicit dialect: Dialect): Code[Seq[Term.Arg]] = Code {
+  private implicit def codeArgs(implicit dialect: Dialect, style: Style): Code[Seq[Term.Arg]] = Code {
     case (b: Term.Block) :: Nil => s(" ", b)
     case args                   => s("(", r(args, ", "), ")")
   }
-  private implicit def codeArgss(implicit dialect: Dialect): Code[Seq[Seq[Term.Arg]]] = Code { r(_) }
-  private implicit def codeTargs(implicit dialect: Dialect): Code[Seq[Type]] = Code { targs =>
+  private implicit def codeArgss(implicit dialect: Dialect, style: Style): Code[Seq[Seq[Term.Arg]]] = Code {
+    r(_)
+  }
+  private implicit def codeTargs(implicit dialect: Dialect, style: Style): Code[Seq[Type]] = Code { targs =>
     if (targs.isEmpty) s()
     else s("[", r(targs, ", "), "]")
   }
-  private implicit def codePats(implicit dialect: Dialect): Code[Seq[Pat]] = Code { pats => s("(", r(pats, ", "), ")") }
-  private implicit def codePatArgs(implicit dialect: Dialect): Code[Seq[Pat.Arg]] = Code { pats => s("(", r(pats, ", "), ")") }
-  private implicit def codeMods(implicit dialect: Dialect): Code[Seq[Mod]] = Code { mods => if (mods.nonEmpty) r(mods, " ") else s() }
-  private implicit def codeAnnots(implicit dialect: Dialect): Code[Seq[Mod.Annot]] = Code { annots => if (annots.nonEmpty) r(annots, " ") else s() }
-  private implicit def codeParams[P <: Term.Param](implicit dialect: Dialect): Code[Seq[P]] = Code { params => s("(", r(params, ", "), ")") }
-  private implicit def codeParamss[P <: Term.Param](implicit dialect: Dialect): Code[Seq[Seq[P]]] = Code { paramss => r(paramss.map(params =>
-    s("(", a("implicit ", r(params, ", "), params.exists(_.mods.exists(_.isInstanceOf[Mod.Implicit]))), ")")
-  ), "")}
-  private implicit def codeTparams(implicit dialect: Dialect): Code[Seq[Type.Param]] = Code { tparams =>
+  private implicit def codePats(implicit dialect: Dialect, style: Style): Code[Seq[Pat]] = Code { pats =>
+    s("(", r(pats, ", "), ")")
+  }
+  private implicit def codePatArgs(implicit dialect: Dialect, style: Style): Code[Seq[Pat.Arg]] = Code { pats =>
+    s("(", r(pats, ", "), ")")
+  }
+  private implicit def codeMods(implicit dialect: Dialect, style: Style): Code[Seq[Mod]] = Code { mods =>
+    if (mods.nonEmpty) r(mods, " ") else s()
+  }
+  private implicit def codeAnnots(implicit dialect: Dialect, style: Style): Code[Seq[Mod.Annot]] = Code { annots =>
+    if (annots.nonEmpty) r(annots, " ") else s()
+  }
+  private implicit def codeParams[P <: Term.Param](implicit dialect: Dialect, style: Style): Code[Seq[P]] = Code { params =>
+    s("(", r(params, ", "), ")")
+  }
+  private implicit def codeParamss[P <: Term.Param](implicit dialect: Dialect, style: Style): Code[Seq[Seq[P]]] = Code { paramss =>
+    r(paramss.map(params => {
+      s("(", a("implicit ", r(params, ", "), params.exists(_.mods.exists(_.isInstanceOf[Mod.Implicit]))), ")")
+    }), "")
+  }
+  private implicit def codeTparams(implicit dialect: Dialect, style: Style): Code[Seq[Type.Param]] = Code { tparams =>
     if (tparams.nonEmpty) s("[", r(tparams, ", "), "]") else s()
   }
-  private implicit def codeTypeArgOpt(implicit dialect: Dialect): Code[Option[Type.Arg]] = Code { _.map { t => s(kw(":"), " ", t) }.getOrElse(s()) }
-  private implicit def codeTypeOpt(implicit dialect: Dialect): Code[Option[Type]] = Code { _.map { t => s(kw(":"), " ", t) }.getOrElse(s()) }
-  private implicit def codeTermNameOpt(implicit dialect: Dialect): Code[Option[Term.Name]] = Code { _.map(s(_)).getOrElse(s(")")) }
-  private implicit def codeImportSels(implicit dialect: Dialect): Code[Seq[Import.Selector]] = Code {
+  private implicit def codeTypeArgOpt(implicit dialect: Dialect, style: Style): Code[Option[Type.Arg]] = Code {
+    _.map { t => s(kw(":"), " ", t) }.getOrElse(s())
+  }
+  private implicit def codeTypeOpt(implicit dialect: Dialect, style: Style): Code[Option[Type]] = Code {
+    _.map { t => s(kw(":"), " ", t) }.getOrElse(s())
+  }
+  private implicit def codeTermNameOpt(implicit dialect: Dialect, style: Style): Code[Option[Term.Name]] = Code {
+    _.map(s(_)).getOrElse(s(")"))
+  }
+  private implicit def codeImportSels(implicit dialect: Dialect, style: Style): Code[Seq[Import.Selector]] = Code {
     case (t: Import.Selector.Name) :: Nil     => s(t)
     case (t: Import.Selector.Wildcard) :: Nil => s(t)
     case sels                                 => s("{ ", r(sels, ", "), " }")

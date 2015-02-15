@@ -13,7 +13,7 @@ package object invariants {
     def <==>(right: Boolean) = (left ==> right) && (right ==> left)
   }
   implicit class RequireDowncast[T](x: T) {
-    def require[U <: T : ClassTag]: U = macro Macros.requireDowncast[U]
+    def require[U: ClassTag]: U = macro Macros.requireCast[U]
   }
   implicit class RequireSome[T](x: Option[T]) {
     def requireGet: T = macro Macros.requireGet
@@ -206,11 +206,12 @@ package invariants {
         }
       """
     }
-    def requireDowncast[U](ev: c.Tree)(U: c.WeakTypeTag[U]): c.Tree = {
+    def requireCast[U](ev: c.Tree)(U: c.WeakTypeTag[U]): c.Tree = {
       val q"$_($x)" = c.prefix.tree
       q"""
         val temp = ${c.untypecheck(x)}
-        org.scalameta.invariants.require(temp != null && _root_.scala.reflect.classTag[$U].runtimeClass.isAssignableFrom(temp.getClass))
+        val tempClass = if (temp != null) temp.getClass else null
+        _root_.org.scalameta.invariants.require(tempClass != null && _root_.scala.reflect.classTag[$U].unapply(temp).isDefined)
         temp.asInstanceOf[$U]
       """
     }
@@ -218,7 +219,7 @@ package invariants {
       val q"$_($x)" = c.prefix.tree
       q"""
         val temp = ${c.untypecheck(x)}
-        org.scalameta.invariants.require(temp != null && temp.isDefined)
+        _root_.org.scalameta.invariants.require(temp != null && temp.isDefined)
         temp.get
       """
     }

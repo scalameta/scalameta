@@ -149,9 +149,20 @@ class Macros[C <: Context](val c: C) extends AdtReflection with AdtLiftables wit
     val denotWarn = sys.props("denot.warn") != null
     if (denotDebug) { println("meta = " + meta); println(meta.show[Raw]) }
     try {
-      val (reflectParse, reflectMode) = meta match {
-        case _: scala.meta.Term => ((code: String) => c.parse(code), c.TERMmode)
-        case _: scala.meta.Type => ((code: String) => c.parse(s"type T = $code").asInstanceOf[TypeDef].rhs, c.TYPEmode)
+      def typecheckTerm(tree: ReflectTree) = {
+        val result = c.typecheck(tree, mode = c.TERMmode, silent = true)
+        if (result != EmptyTree) result
+        else {
+          import scala.reflect.internal.Mode
+          import scala.reflect.internal.Mode._
+          val TERMQUALmode = EXPRmode | QUALmode
+          c.typecheck(tree, mode = TERMQUALmode.asInstanceOf[c.TypecheckMode], silent = false)
+        }
+      }
+      def typecheckType(tree: ReflectTree) = c.typecheck(tree, mode = c.TYPEmode, silent = false)
+      val (reflectParse, reflectTypecheck) = meta match {
+        case _: scala.meta.Term => ((code: String) => c.parse(code), (tree: ReflectTree) => typecheckTerm(tree))
+        case _: scala.meta.Type => ((code: String) => c.parse(s"type T = $code").asInstanceOf[TypeDef].rhs, (tree: ReflectTree) => typecheckType(tree))
         case _ => sys.error("attribution of " + meta.productPrefix + " is not supported yet")
       }
       val reflect = {
@@ -164,7 +175,8 @@ class Macros[C <: Context](val c: C) extends AdtReflection with AdtLiftables wit
           else if (symbol == SeqModule && !meta.toString.contains(".Seq")) ScalaSeq
           else symbol
         }
-        var result = c.typecheck(reflectParse(meta.toString), mode = reflectMode, silent = false)
+        val untypedResult = reflectParse(meta.toString)
+        var result = reflectTypecheck(untypedResult)
         if (result match { case _: SingletonTypeTree => true; case _ => false }) result = SingletonTypeTree(Ident(undealias(result.tpe.termSymbol)))
         if (result.symbol != undealias(result.symbol)) result = Ident(undealias(result.symbol))
         result

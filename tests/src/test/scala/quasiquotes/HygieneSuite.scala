@@ -22,6 +22,13 @@ class HygieneSuite extends FunSuite {
       |[5] 0::_root_
     """.stripMargin.trim)
   }
+  test("q\"scala\"") {
+    assert(q"scala".show[Semantics] === """
+      |Term.Name("scala")[1]
+      |[1] Type.Singleton(Term.Name("_root_")[2])::scala
+      |[2] 0::_root_
+    """.stripMargin.trim)
+  }
   test("t\"List.type\"") {
     assert(t"List.type".show[Semantics] === """
       |Type.Singleton(Term.Name("List")[1])

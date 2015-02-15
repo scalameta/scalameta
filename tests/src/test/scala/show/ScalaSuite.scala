@@ -217,9 +217,13 @@ class ScalaSuite extends ParseSuite {
     assert(templStat("true").show[Code] === "true")
     assert(templStat("false").show[Code] === "false")
     assert(templStat("0").show[Code] === "0")
-    assert(templStat("0l").show[Code] === "0l")
+    assert(templStat("0l").show[Code] === "0L")
+    assert(templStat("0L").show[Code] === "0L")
     assert(templStat("0f").show[Code] === "0.0f")
+    assert(templStat("0F").show[Code] === "0.0f")
+    assert(templStat("0.0").show[Code] === "0.0d")
     assert(templStat("0d").show[Code] === "0.0d")
+    assert(templStat("0D").show[Code] === "0.0d")
     assert(templStat("'0'").show[Code] === "'0'")
     assert(templStat("\"0\"").show[Code] === "\"0\"")
     assert(templStat("'zero").show[Code] === "'zero")
@@ -341,5 +345,33 @@ class ScalaSuite extends ParseSuite {
 
   test("case _: (t Map u)") {
     assert(pat("_: (t Map u)").show[Code] === "_: (t Map u)")
+  }
+
+  test("constructors") {
+    import scala.meta.internal.ast._
+    val tree @ Defn.Class(_, _, _, primary, Template(_, _, _, Some(secondary :: Nil))) = templStat("class C(x: Int) { def this() = this(42) }")
+    assert(tree.show[Code] === "class C(x: Int) { def this() = this(42) }")
+    assert(primary.show[Code] === "(x: Int)")
+    assert(secondary.show[Code] === "def this() = this(42)")
+    assert(tree.toString === "class C(x: Int) { def this() = this(42) }")
+    assert(primary.toString === "def this(x: Int)")
+    assert(secondary.toString === "def this() = this(42)")
+  }
+
+  test("lazy printing") {
+    import scala.meta.internal.ast._
+    val emptyCtor = Ctor.Primary(Nil, Ctor.Name("this"), Nil)
+    val lazyStats = templStat("class C") #:: ??? #:: Stream.empty
+    val lazyTemplate = Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), Some(lazyStats))
+    val tree1 = Defn.Class(Nil, Type.Name("test"), Nil, emptyCtor, lazyTemplate)
+    assert(tree1.toString === "class test { ... }")
+    val tree2 = Defn.Trait(Nil, Type.Name("test"), Nil, emptyCtor, lazyTemplate)
+    assert(tree2.toString === "trait test { ... }")
+    val tree3 = Defn.Object(Nil, Term.Name("test"), emptyCtor, lazyTemplate)
+    assert(tree3.toString === "object test { ... }")
+    val tree4 = Pkg(Term.Name("test"), lazyStats)
+    assert(tree4.toString === "package test { ... }")
+    val tree5 = Pkg.Object(Nil, Term.Name("test"), emptyCtor, lazyTemplate)
+    assert(tree5.toString === "package object test { ... }")
   }
 }

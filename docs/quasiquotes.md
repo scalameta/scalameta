@@ -5,8 +5,8 @@
  Boolean | `q"true"`, `q"false"`, `q"$bool"`
  Int     | `q"1"`, `q"$int"`
  Long    | `q"1L"`, `q"$long"`
- Float   | `q"1.0"`, `q"$float"`
- Double  | `q"1.0d"`, `q"$double"`
+ Float   | `q"1.0f"`, `q"$float"`
+ Double  | `q"1.0"`, `q"1.0d"`, `q"$double"`
  Char    | `q" 'c' "`, `q"$char"`
  String  | `q""" "s" """`, `q"$str"`
  Symbol  | `q" 's "`, `q"$symbol"`
@@ -181,15 +181,6 @@
  Annotated Reference | `ctor"$ctorname ..@$expr"`
  Applied Reference   | `ctor"$ctorref(...$aexprss)"`
  Tapplied Reference  | `ctor"$ctorref[..$atpes]"`
-
-                | Quasiquote
-----------------|------------------------------
- Val            | `q"..$mods val ..$pats: $tpeopt = $expr"`
- Var            | `q"..$mods var ..$pats: $tpeopt = $expropt"`
- Def            | `q"..$mods def $name[..$tparams](...$paramss): $tpeopt = $expr"`
- Macro          | `q"..$mods def $name[..$tparams](...$paramss): $tpe = macro $expr"`
- Primary Ctor   | `q"..$mods def this(..$paramss)"`
- Secondary Ctor | `q"..$mods def this(..$paramss) = { this(...$aexprss); ..$stats }"`
 
 ## Template (meta.Template)
 
