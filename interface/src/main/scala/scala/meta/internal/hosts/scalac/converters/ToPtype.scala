@@ -55,7 +55,8 @@ trait ToPtype extends GlobalToolkit with MetaToolkit {
               p.Term.Select(preref, sym.asTerm.precvt(pre, g.Ident(sym)).withOriginal(gtpe))
             case pre @ g.TypeRef(g.NoPrefix, quant, Nil) if quant.hasFlag(DEFERRED | EXISTENTIAL) =>
               require(quant.name.endsWith(g.nme.SINGLETON_SUFFIX))
-              val preref = p.Term.Name(g.Ident(quant.name.toString.stripSuffix(g.nme.SINGLETON_SUFFIX)).alias).withDenot(quant).withOriginal(quant)
+              val prename = g.Ident(quant.name.toString.stripSuffix(g.nme.SINGLETON_SUFFIX)).alias
+              val preref = p.Term.Name(prename).withDenot(quant).withOriginal(quant)
               p.Term.Select(preref, sym.asTerm.precvt(pre, g.Ident(sym)).withOriginal(gtpe))
             case pre: g.TypeRef =>
               // TODO: wow, so much for the hypothesis that all post-typer types are representable with syntax

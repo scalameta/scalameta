@@ -117,16 +117,34 @@ trait ToPmember extends GlobalToolkit with MetaToolkit {
         }
         lazy val pmods = this.pmods(lsym)
         lazy val pname = lsym match {
-          case l.PrimaryCtor(gsym) => p.Ctor.Name(gsym.owner.name.toString).withDenot(gpre, gsym).withOriginal(gsym)
-          case l.SecondaryCtor(gsym) => p.Ctor.Name(gsym.owner.name.toString).withDenot(gpre, gsym).withOriginal(gsym)
-          case l.TermParameter(gsym) if !gsym.owner.isMethod => gsym.anoncvt(g.Ident(gsym))
-          case l.TermParameter(gsym) => gsym.asTerm.rawcvt(g.Ident(gsym))
-          case l.TypeParameter(gsym) => gsym.anoncvt(g.Ident(gsym))
-          case _ => gsym.precvt(gpre, g.Ident(gsym))
+          case l.AbstractVal(gsym) if gsym.hasFlag(EXISTENTIAL) =>
+            val name = g.Ident(gsym.name.toString.stripSuffix(g.nme.SINGLETON_SUFFIX)).alias
+            p.Term.Name(name).withDenot(gpre, gsym).withOriginal(gsym)
+          case l.AbstractVal(gsym) =>
+            gsym.precvt(gpre, g.Ident(gsym))
+          case l.PrimaryCtor(gsym) =>
+            p.Ctor.Name(gsym.owner.name.toString).withDenot(gpre, gsym).withOriginal(gsym)
+          case l.SecondaryCtor(gsym) =>
+            p.Ctor.Name(gsym.owner.name.toString).withDenot(gpre, gsym).withOriginal(gsym)
+          case l.TermParameter(gsym) if !gsym.owner.isMethod =>
+            gsym.anoncvt(g.Ident(gsym))
+          case l.TermParameter(gsym) =>
+            gsym.asTerm.rawcvt(g.Ident(gsym))
+          case l.TypeParameter(gsym) =>
+            gsym.anoncvt(g.Ident(gsym))
+          case _ =>
+            gsym.precvt(gpre, g.Ident(gsym))
         }
         lazy val ptparams = gtparams.map(gtparam => l.TypeParameter(gtparam).toPmember(g.NoPrefix).require[p.Type.Param])
         lazy val pvparamss = gvparamss.map(_.map(gvparam => l.TermParameter(gvparam).toPmember(g.NoPrefix).require[p.Term.Param]))
-        lazy val ptpe = gtpe.toPtype
+        lazy val ptpe = lsym match {
+          case l.AbstractVal(gsym) if gsym.hasFlag(EXISTENTIAL) =>
+            val g.TypeBounds(_, g.RefinedType(List(gtpe, singleton), g.Scope())) = gsym.info
+            require(singleton =:= g.definitions.SingletonClass.tpe)
+            gtpe.toPtype
+          case _ =>
+            gtpe.toPtype
+        }
         lazy val ptpearg = gtpe.toPtypeArg
         lazy val ptpeBounds = gtpe match {
           case gtpe @ g.TypeBounds(glo, ghi) =>
