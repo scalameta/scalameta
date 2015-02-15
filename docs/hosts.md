@@ -1,14 +1,14 @@
 ### Host implementor notes
 
-scala.meta provides foundational data structures for metaprogramming defined in [Trees.scala](/scalameta/Trees.scala) along with several levels of APIs (syntactic and semantic).
+scala.meta provides foundational data structures for metaprogramming defined in [Trees.scala](/scalameta/src/main/scala/scala/meta/Trees.scala) along with several levels of APIs (syntactic and semantic).
 
-While syntactic services are implemented in scala.meta itself, semantic services require external implementations called hosts, because it would be unreasonable for us to, say, implement Scala's type inference or implicit resolution algorithms from scratch. In [semantic/Context.scala](/scalameta/semantic/Context.scala) and  [macros/Context.scala](/scalameta/macros/Context.scala) we have encapsulated a minimalistic API surface that's required from hosts.
+While syntactic services are implemented in scala.meta itself, semantic services require external implementations called hosts, because it would be unreasonable for us to, say, implement Scala's type inference or implicit resolution algorithms from scratch. In [semantic/Context.scala](/scalameta/src/main/scala/scala/meta/semantic/Context.scala) and  [macros/Context.scala](/scalameta/src/main/scala/scala/meta/macros/Context.scala) we have encapsulated a minimalistic API surface that's required from hosts.
 
 Here is some preliminary documentation on the functionality expected from hosts along with certain background information about scala.meta's data structures.
 
 ### Trees
 
-scala.meta trees provide comprehensive coverage of syntactic structures that comprise Scala. They are predefined in [Trees.scala](/scalameta/Trees.scala) in the form of a sealed hierarchy, which means that hosts neither need nor can create custom subclasses of `Tree`.
+scala.meta trees provide comprehensive coverage of syntactic structures that comprise Scala. They are predefined in [Trees.scala](/scalameta/src/main/scala/scala/meta/Trees.scala) in the form of a sealed hierarchy, which means that hosts neither need nor can create custom subclasses of `Tree`.
 
 Hosts are, however, required to create instances of scala.meta trees to be returned from various host APIs, so here we will outline the guidelines that were used to design scala.meta trees in order to allude to expected usage scenarios:
 
@@ -52,7 +52,7 @@ We understand that this API is at odds with the goals of statelessness and platf
 
 | Method                                                    | Notes
 |-----------------------------------------------------------|-----------------------------------------------------------------
-| `def dialect: Dialect`                                    | See [dialects/Dialect.scala](/scalameta/dialects/Dialect.scala)
+| `def dialect: Dialect`                                    | See [dialects/Dialect.scala](/scalameta/src/main/scala/scala/meta/dialects/Dialect.scala)
 | `def desugar(term: Term): Term`                           | Expands a given term into its full form, introducing inferred term and type arguments, calls to magic methods, such as `apply` or `update`, etc. Language features to be supported: implicit conversion/argument inference, type argument inference, apply insertion, empty argument list insertion, assignment desugaring (`_=`, `update`), string interpolation desugaring, for loop desugaring, dynamic desugaring.
 | `def tpe(term: Term): Type`                               | Type of a given term.
 | `def defns(ref: Ref): Seq[Member]`                        | Definitions that a given reference refers to. Can return multiple results if a reference resolves to several overloaded members.
