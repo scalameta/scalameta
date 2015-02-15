@@ -17,6 +17,7 @@ trait SymbolHelpers {
   sealed trait MacroBody { def tree: Tree }
   object MacroBody {
     case object None extends MacroBody { def tree = EmptyTree }
+    case class FastTrack(sym: Symbol) extends MacroBody { def tree = EmptyTree }
     case class Reflect(tree: Tree) extends MacroBody
     case class Meta(tree: Tree) extends MacroBody
   }
@@ -46,7 +47,8 @@ trait SymbolHelpers {
         }.toMap
         metadata + ("targs" -> targs)
       }
-      macroSigs(sym) match {
+      if (g.analyzer.fastTrack.contains(sym)) MacroBody.FastTrack(sym)
+      else macroSigs(sym) match {
         case legacySig :: scalametaSig :: Nil =>
           MacroBody.Meta(parseMacroSig(scalametaSig)("implDdef").require[DefDef].rhs)
         case legacySig :: Nil =>

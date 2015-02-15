@@ -222,6 +222,7 @@ trait ToPmember extends GlobalToolkit with MetaToolkit {
             case l.Macro(gsym) =>
               gsym.macroBody match {
                 case MacroBody.None => unreachable
+                case MacroBody.FastTrack(_) => pincompatibleMacro
                 case MacroBody.Reflect(_) => pincompatibleMacro
                 case MacroBody.Meta(body) => {
                   // TODO: think of a better way to express this
