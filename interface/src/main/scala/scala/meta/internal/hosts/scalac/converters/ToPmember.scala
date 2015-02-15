@@ -231,13 +231,17 @@ trait ToPmember extends GlobalToolkit with MetaToolkit {
         lazy val pctor = {
           if (lsym.isInstanceOf[l.Clazz] || lsym.isInstanceOf[l.Object]) {
             val gctorsym = lsym.gsymbol.moduleClass.orElse(lsym.gsymbol).primaryConstructor
-            val gctorinfo = gctorsym.infoIn(gpre)
-            val pctorname = p.Ctor.Name(gsym.name.toString).withDenot(gpre, gctorsym).withOriginal(gctorsym)
-            val pctorparamss = {
-              if (lsym.isInstanceOf[l.Clazz]) gctorinfo.paramss.map(_.map(gvparam => l.TermParameter(gvparam).toPmember(g.NoPrefix).require[p.Term.Param]))
-              else Nil // NOTE: synthetic constructors for modules have a fake List(List()) parameter list
+            if (gctorsym != g.NoSymbol) {
+              val gctorinfo = gctorsym.infoIn(gpre)
+              val pctorname = p.Ctor.Name(gsym.name.toString).withDenot(gpre, gctorsym).withOriginal(gctorsym)
+              val pctorparamss = {
+                if (lsym.isInstanceOf[l.Clazz]) gctorinfo.paramss.map(_.map(gvparam => l.TermParameter(gvparam).toPmember(g.NoPrefix).require[p.Term.Param]))
+                else Nil // NOTE: synthetic constructors for modules have a fake List(List()) parameter list
+              }
+              p.Ctor.Primary(this.pmods(l.PrimaryCtor(gctorsym)), pctorname, pctorparamss)
+            } else {
+              pfakector
             }
-            p.Ctor.Primary(this.pmods(l.PrimaryCtor(gctorsym)), pctorname, pctorparamss)
           } else {
             pfakector
           }
