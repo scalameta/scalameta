@@ -215,8 +215,9 @@ trait ToPmember extends GlobalToolkit with MetaToolkit {
               val paramPos = gsym.owner.paramss.flatten.indexWhere(_.name == gsym.name)
               require(paramPos != -1)
               val gdefaultGetterName = gsym.owner.name + "$default$" + (paramPos + 1)
-              val gdefaultGetter = gsym.owner.owner.info.decl(g.TermName(gdefaultGetterName))
-              require(gdefaultGetter != g.NoSymbol)
+              var gdefaultGetterOwner = if (!gsym.owner.isConstructor) gsym.owner.owner else gsym.owner.owner.companion
+              val gdefaultGetter = gdefaultGetterOwner.info.decl(g.TermName(gdefaultGetterName).encodedName)
+              require(gdefaultGetterName != null && gdefaultGetterOwner != null && gdefaultGetter != g.NoSymbol)
               pinvokeMethod(gdefaultGetter)
             case _ =>
               unreachable
