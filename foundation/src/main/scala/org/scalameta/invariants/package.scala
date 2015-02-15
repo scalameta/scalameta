@@ -211,7 +211,7 @@ package invariants {
       q"""
         val temp = ${c.untypecheck(x)}
         val tempClass = if (temp != null) temp.getClass else null
-        require(tempClass != null && _root_.scala.reflect.classTag[$U].unapply(temp).isDefined)
+        _root_.org.scalameta.invariants.require(tempClass != null && _root_.scala.reflect.classTag[$U].unapply(temp).isDefined)
         temp.asInstanceOf[$U]
       """
     }
