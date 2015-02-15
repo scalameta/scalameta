@@ -40,7 +40,7 @@ trait Api {
       case impl.Type.Arg.Repeated(tpe) => tpe
       case tpe: impl.Type => tpe
     }
-    @hosted def tpe: Type = tpe.require[impl.Member] match {
+    @hosted def tpe: Type = tree.require[impl.Member] match {
       case tree: impl.Pat.Var.Term => tree.name.tpe
       case tree: impl.Pat.Var.Type => tree.name
       case tree: impl.Decl.Def => tree.decltpe
