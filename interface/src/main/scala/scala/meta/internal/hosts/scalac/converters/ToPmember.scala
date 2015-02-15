@@ -146,6 +146,10 @@ trait ToPmember extends GlobalToolkit with MetaToolkit {
             val g.TypeBounds(_, g.RefinedType(List(gtpe, singleton), g.Scope())) = gsym.info
             require(singleton =:= g.definitions.SingletonClass.tpe)
             gtpe.toPtype
+          case l.Val(_, _) =>
+            gtpe.normalizeVararg.toPtype
+          case l.Var(_, _, _) =>
+            gtpe.normalizeVararg.toPtype
           case _ =>
             gtpe.toPtype
         }

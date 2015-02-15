@@ -13,6 +13,10 @@ trait TypeHelpers {
 
   implicit class RichHelperType(tpe: Type) {
     def etaReduce: Type = EtaReduce.unapply(tpe).getOrElse(tpe)
+    def normalizeVararg: Type = tpe match {
+      case TypeRef(_, sym, List(arg)) if sym == RepeatedParamClass => appliedType(SeqClass, arg)
+      case _ => tpe
+    }
     def directBaseTypes: List[Type] = ???
   }
 
