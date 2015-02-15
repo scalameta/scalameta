@@ -88,17 +88,19 @@ trait Attributes extends GlobalToolkit with MetaToolkit {
       ptree.scratchpad.collect { case ScratchpadDatum.Original(goriginal: g.Tree) => goriginal }.headOption
     }
     def originalTpe: Option[g.Type] = {
-      val fromOriginal = ptree.scratchpad.collect { case ScratchpadDatum.Original(goriginal: g.Type) => goriginal }.headOption
+      val fromOriginalTpe = ptree.scratchpad.collect { case ScratchpadDatum.Original(goriginal: g.Type) => goriginal }.headOption
+      val fromOriginalTree = ptree.scratchpad.collect { case ScratchpadDatum.Original(goriginal: g.Tree) => goriginal }.headOption
       val fromAnnot = ptree.scratchpad.collect { case ScratchpadDatum.Original(goriginal: g.AnnotationInfo) => goriginal }.headOption
-      fromOriginal.orElse(fromAnnot.map(_.tpe))
+      fromOriginalTpe.orElse(fromOriginalTree.map(_.tpe)).orElse(fromAnnot.map(_.tpe))
     }
     def originalPre: Option[g.Type] = {
       ptree.scratchpad.collect { case ScratchpadDatum.Denotation(gpre: g.Type, _) => gpre }.headOption
     }
     def originalSym: Option[l.Symbol] = {
-      val fromOriginal = ptree.scratchpad.collect { case ScratchpadDatum.Original(loriginal: l.Symbol) => loriginal }.headOption
+      val fromOriginalSym = ptree.scratchpad.collect { case ScratchpadDatum.Original(loriginal: l.Symbol) => loriginal }.headOption
+      val fromOriginalTree = ptree.scratchpad.collect { case ScratchpadDatum.Original(goriginal: g.Tree) => goriginal }.headOption
       val fromDenot = ptree.scratchpad.collect { case ScratchpadDatum.Denotation(_, lsym: l.Symbol) => lsym }.headOption
-      fromOriginal.orElse(fromDenot)
+      fromOriginalSym.orElse(fromOriginalTree.map(_.symbol.toLogical)).orElse(fromDenot)
     }
   }
 }

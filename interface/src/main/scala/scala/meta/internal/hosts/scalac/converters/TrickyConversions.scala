@@ -29,8 +29,8 @@ trait TrickyConversions extends GlobalToolkit with MetaToolkit {
       }
       val result = ptpe match {
         case p.Type.Name(value) => p.Ctor.Name(value).withDenot(gctor)
-        case p.Type.Select(qual, name) => p.Ctor.Ref.Select(qual, p.Ctor.Name(name.value).withDenot(qual.originalTree.requireGet.tpe, gctor))
-        case p.Type.Project(qual, name) => p.Ctor.Ref.Project(qual, p.Ctor.Name(name.value).withDenot(qual.originalTree.requireGet.tpe, gctor))
+        case p.Type.Select(qual, name) => p.Ctor.Ref.Select(qual, p.Ctor.Name(name.value).withDenot(qual.originalTpe.requireGet, gctor))
+        case p.Type.Project(qual, name) => p.Ctor.Ref.Project(qual, p.Ctor.Name(name.value).withDenot(qual.originalTpe.requireGet, gctor))
         case p.Type.Function(pTypes(params), ret) => p.Term.ApplyType(p.Ctor.Ref.Function(p.Ctor.Name("=>").withDenot(gctor)), params :+ ret)
         case p.Type.Annotate(tpe, annots) => p.Term.Annotate(tpe.ctorRef(gctor), annots)
         case p.Type.Apply(tpe, args) => p.Term.ApplyType(tpe.ctorRef(gctor), args)
