@@ -344,7 +344,7 @@ which gives rise to scala.meta's semantic API, a clearly defined and intuitive w
 All the bookkeeping information that makes this possible is hidden behind names and only names,
 which provides a simple and reliable mental model for understanding scala.meta programs.
 
-### Future work
+### Roadmap
 
   1. Replace manual tree construction/deconstruction via `import scala.meta.internal.ast._` with familiar quasiquote-based API. The `internal` API will either be hidden and discouraged or will go into oblivion completely.
 
@@ -353,6 +353,8 @@ which provides a simple and reliable mental model for understanding scala.meta p
   3. Transparently and automatically persist typed syntax trees of programs being compiled, so that they can be redistributed via Maven repositories and then obtained by metaprograms on demand.
 
   4. Develop more hosts. Firstly, we plan to allow writing macros in scala.meta, which means that it will be possible to write metaprograms against syntactic and semantic APIs of scala.meta, and then have the macro engine automatically call those metaprograms and pass them an instance of `scala.meta.semantic.Context`. Secondly, we may want to explore and expose other kinds of hosts (e.g. a host based on an SBT project).
+
+  5. Implement full-fledged support for hygiene. This will make names remember and preserve their meaning regardless of whether the enclosing quasiquotes can or cannot be typechecked statically.
 
 ### Summary
 
