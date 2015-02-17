@@ -344,6 +344,16 @@ which gives rise to scala.meta's semantic API, a clearly defined and intuitive w
 All the bookkeeping information that makes this possible is hidden behind names and only names,
 which provides a simple and reliable mental model for understanding scala.meta programs.
 
+### Future work
+
+  1. Replace manual tree construction/deconstruction via `import scala.meta.internal.ast._` with familiar quasiquote-based API. The `internal` API will either be hidden and discouraged or will go into oblivion completely.
+
+  2. Remember all the details of how underlying programs were written (formatting, comments, etc). After this is implemented, it will become possible to implement precise code rewritings that don't lose any formatting. Also, we will get position information, which will allow to emit targetted warning and error messages.
+
+  3. Transparently and automatically persist typed syntax trees of programs being compiled, so that they can be redistributed via Maven repositories and then obtained by metaprograms on demand.
+
+  4. Develop more hosts. Firstly, we plan to allow writing macros in scala.meta, which means that it will be possible to write metaprograms against syntactic and semantic APIs of scala.meta, and then have the macro engine automatically call those metaprograms and pass them an instance of `scala.meta.semantic.Context`. Secondly, we may want to explore and expose other kinds of hosts (e.g. a host based on an SBT project).
+
 ### Summary
 
 Scala.meta is a next-generation metaprogramming toolkit for Scala that focuses on simplicity, robustness and portability.
