@@ -1,3 +1,5 @@
+### Internal structure of scala.meta ASTs
+
 We use macro annotations to generate swaths of boilerplate that are required for our abstract syntax trees
 to be efficient and convenient. Here's the code that we write in [Trees.scala](/scalameta/Trees.scala):
 
