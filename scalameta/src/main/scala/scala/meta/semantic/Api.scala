@@ -280,14 +280,14 @@ trait Api {
   }
 
   implicit class SemanticTermParameterOps(val tree: Term.Param) {
-    @hosted def default: Option[meta.Term] = tree.require[impl.Term.Param].default
+    @hosted def default: Option[Term] = tree.require[impl.Term.Param].default
   }
 
   implicit class SemanticTypeParameterOps(val tree: Type.Param) {
-    @hosted def contextBounds: Seq[meta.Type] = tree.require[impl.Type.Param].contextBounds
-    @hosted def viewBounds: Seq[meta.Type] = tree.require[impl.Type.Param].viewBounds
-    @hosted def lo: meta.Type = tree.require[impl.Type.Param].lo
-    @hosted def hi: meta.Type = tree.require[impl.Type.Param].hi
+    @hosted def contextBounds: Seq[Type] = tree.require[impl.Type.Param].contextBounds
+    @hosted def viewBounds: Seq[Type] = tree.require[impl.Type.Param].viewBounds
+    @hosted def lo: Type = tree.require[impl.Type.Param].lo
+    @hosted def hi: Type = tree.require[impl.Type.Param].hi
   }
 
   // ===========================
