@@ -281,6 +281,7 @@ trait Api {
 
   implicit class SemanticTermParameterOps(val tree: Term.Param) {
     @hosted def default: Option[Term] = tree.require[impl.Term.Param].default
+    @hosted def field: Member.Term = tree.owner.owner.members(tree.name).require[Member.Term]
   }
 
   implicit class SemanticTypeParameterOps(val tree: Type.Param) {
