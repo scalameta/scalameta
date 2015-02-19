@@ -128,7 +128,6 @@ trait Api {
       }
       prefixlessName.defn
     }
-    @hosted def owner: Scope = ???
     @hosted def name: Name = {
       tree.require[impl.Member] match {
         case tree: impl.Pat.Var.Term => tree.name
@@ -296,6 +295,7 @@ trait Api {
   // ===========================
 
   implicit class SemanticScopeOps(val tree: Scope) {
+    @hosted def owner: Scope = ???
     @hosted private[meta] def deriveEvidences(tparam: Type.Param): Seq[Term.Param] = {
       def deriveEvidence(evidenceTpe: Type): Term.Param = {
         // TODO: it's almost a decent parameter except for the facts that:
