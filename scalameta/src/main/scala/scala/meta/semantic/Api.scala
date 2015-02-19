@@ -294,6 +294,22 @@ trait Api {
   // PART 4: SCOPES
   // ===========================
 
+  // TODO: so what I wanted to do with Scope.members is to have four overloads:
+  // * Name => Member
+  // * Term.Name => Member.Term
+  // * Type.Name => Member.Type
+  // * T <: Member => T <: Member
+  // unfortunately, if I try to introduce all the overloads, scalac compiler gets seriously confused
+  // therefore, I'm essentially forced to use a type class here
+  // another good idea would be to name these methods differently
+  sealed trait ScopeMembersSignature[T, U]
+  object ScopeMembersSignature {
+    implicit def NameToMember[T <: Name]: ScopeMembersSignature[T, Member] = null
+    implicit def TermNameToTermMember[T <: Term.Name]: ScopeMembersSignature[T, Member.Term] = null
+    implicit def TypeNameToTypeMember[T <: Type.Name]: ScopeMembersSignature[T, Member.Type] = null
+    implicit def MemberToMember[T <: Member]: ScopeMembersSignature[T, T] = null
+  }
+
   implicit class SemanticScopeOps(val tree: Scope) {
     @hosted def owner: Scope = ???
     @hosted private[meta] def deriveEvidences(tparam: Type.Param): Seq[Term.Param] = {
@@ -405,28 +421,32 @@ trait Api {
       }
     }
     @hosted def members: Seq[Member] = internalFilter[Member](_ => true)
-    @hosted def members(name: Name): Member = {
-      val filter = (m: Member) => (name.isInstanceOf[Term.Name] && m.isInstanceOf[Member.Term]) || (name.isInstanceOf[Type.Name] && m.isInstanceOf[Member.Type])
-      val description = if (name.isInstanceOf[Term.Name]) "term members" else "type members"
-      internalSingle[Member](name.toString, filter, description)
-    }
-    @hosted def members[T <: Member : ClassTag](member: T): T = {
-      member.name match {
-        case _: impl.Term.This =>
-          ???
-        case _: impl.Term.Super =>
-          ???
-        case thisName: impl.Name =>
-          internalFilter[T](that => {
-            def thisDenot = thisName.denot.require[h.Denotation.Precomputed]
-            def thatDenot = that.name.require[impl.Name].denot.require[h.Denotation.Precomputed]
-            scala.util.Try(thisDenot.symbol == thatDenot.symbol).getOrElse(false)
-          }) match {
-            case Seq() => throw new SemanticException(s"no prototype for $member found in ${tree.show[Summary]}")
-            case Seq(single) => single
-            case _ => unreachable
-          }
-      }
+    @hosted def members[T : ClassTag, U : ClassTag](param: T)(implicit ev: ScopeMembersSignature[T, U]): U = param match {
+      case name: Name =>
+        name match {
+          case name: Term.Name => internalSingle[Member.Term](name.toString, _ => true, "term members").require[U]
+          case name: Type.Name => internalSingle[Member.Type](name.toString, _ => true, "type members").require[U]
+          case _ => throw new SemanticException(s"""no member named $name found in ${tree.show[Summary]}""")
+        }
+      case member: Member =>
+        member.name match {
+          case _: impl.Term.This =>
+            ???
+          case _: impl.Term.Super =>
+            ???
+          case thisName: impl.Name =>
+            internalFilter[T](that => {
+              def thisDenot = thisName.denot.require[h.Denotation.Precomputed]
+              def thatDenot = that.require[impl.Member].name.require[impl.Name].denot.require[h.Denotation.Precomputed]
+              scala.util.Try(thisDenot.symbol == thatDenot.symbol).getOrElse(false)
+            }) match {
+              case Seq() => throw new SemanticException(s"no prototype for $member found in ${tree.show[Summary]}")
+              case Seq(single) => single.require[U]
+              case _ => unreachable
+            }
+        }
+      case _ =>
+        unreachable
     }
     @hosted def packages: Seq[Member.Term] = internalFilter[Member.Term](_.isPackage)
     @hosted def packages(name: String): Member.Term = internalSingle[Member.Term](name, _.isPackage, "packages")
