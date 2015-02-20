@@ -32,14 +32,14 @@ trait ToP extends GlobalToolkit with MetaToolkit {
   }
 
   protected implicit class RichToScalametaTermSymbol(gsym: g.TermSymbol) {
-    type pTermOrAnonymousName = papi.Term.Name with p.Name{type ThisType >: p.Term.Name with p.Name.Anonymous <: p.Name}
+    type pTermOrAnonymousName = p.Name{type ThisType >: p.Term.Name with p.Name.Anonymous <: p.Name}
     def precvt(pre: g.Type, in: g.Tree): p.Term.Name = (gsym: g.Symbol).precvt(pre, in).require[p.Term.Name]
     def rawcvt(in: g.Tree, allowNoSymbol: Boolean = false): p.Term.Name = (gsym: g.Symbol).rawcvt(in).require[p.Term.Name]
     def anoncvt(in: g.ValDef): pTermOrAnonymousName = (gsym: g.Symbol).anoncvt(in).require[pTermOrAnonymousName]
   }
 
   protected implicit class RichToScalametaTypeSymbol(gsym: g.TypeSymbol) {
-    type pTypeOrAnonymousName = papi.Type.Name with p.Name{type ThisType >: p.Type.Name with p.Name.Anonymous <: p.Name}
+    type pTypeOrAnonymousName = p.Name{type ThisType >: p.Type.Name with p.Name.Anonymous <: p.Name}
     def precvt(pre: g.Type, in: g.Tree): p.Type.Name = (gsym: g.Symbol).precvt(pre, in).require[p.Type.Name]
     def rawcvt(in: g.Tree): p.Type.Name = (gsym: g.Symbol).rawcvt(in).require[p.Type.Name]
     def anoncvt(in: g.TypeDef): pTypeOrAnonymousName = (gsym: g.Symbol).anoncvt(in).require[pTypeOrAnonymousName]
