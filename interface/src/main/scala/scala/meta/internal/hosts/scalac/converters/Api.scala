@@ -3,11 +3,11 @@ package internal.hosts.scalac
 package converters
 
 abstract class Api(global: scala.tools.nsc.Global)
-extends ToP
-   with ToPannot
-   with ToPmember
-   with ToPtree
-   with ToPtype
+extends ToM
+   with ToMannot
+   with ToMmember
+   with ToMtree
+   with ToMtype
    with ToGtree
    with ToGtype
    with Attributes
