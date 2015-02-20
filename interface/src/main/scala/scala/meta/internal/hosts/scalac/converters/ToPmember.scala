@@ -343,8 +343,8 @@ trait ToPmember extends GlobalToolkit with MetaToolkit {
           case _: l.SecondaryCtor => p.Ctor.Secondary(pmods, pname.require[p.Ctor.Name], pvparamss, pbody)
           case _: l.TermBind => p.Pat.Var.Term(pname.require[p.Term.Name])
           case _: l.TypeBind => p.Pat.Var.Type(pname.require[p.Type.Name])
-          case _: l.TermParameter => p.Term.Param(pmods, pname.require[papi.Term.Name], Some(ptpearg), pmaybeDefault)
-          case _: l.TypeParameter => p.Type.Param(pmods, pname.require[papi.Type.Name], ptparams, ptpeBounds, pviewBounds, pcontextBounds)
+          case _: l.TermParameter => p.Term.Param(pmods, pname, Some(ptpearg), pmaybeDefault)
+          case _: l.TypeParameter => p.Type.Param(pmods, pname, ptparams, ptpeBounds, pviewBounds, pcontextBounds)
           case _ => sys.error(s"unsupported symbol $lsym, designation = ${gsym.getClass}, flags = ${gsym.flags}")
         }
         pmember.withOriginal(lsym)
