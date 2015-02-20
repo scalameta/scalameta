@@ -59,10 +59,10 @@ class ScalaToMeta extends FunSuite {
       for (workItem <- unit.toCheck) workItem()
       throwIfErrors()
       implicit val c = Scalahost.mkSemanticContext[compiler.type](compiler)
-      val ptree = c.toPtree(unit.body, classOf[Source])
-      if (debug) println(ptree.show[Code])
-      if (debug) println(ptree.show[Raw])
-      result = ptree.show[Code]
+      val mtree = c.toMtree(unit.body, classOf[Source])
+      if (debug) println(mtree.show[Code])
+      if (debug) println(mtree.show[Raw])
+      result = mtree.show[Code]
     }
     val m_withCompilerApi = tb.getClass.getDeclaredMethod("withCompilerApi")
     val o_withCompilerApi = m_withCompilerApi.invoke(tb)

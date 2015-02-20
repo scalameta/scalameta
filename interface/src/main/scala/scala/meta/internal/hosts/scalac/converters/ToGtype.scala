@@ -10,7 +10,7 @@ import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.tools.nsc.{Global => ScalaGlobal}
 import scala.reflect.internal.Flags._
-import scala.meta.internal.{ast => p}
+import scala.meta.internal.{ast => m}
 import scala.meta.internal.{hygiene => h}
 import scala.meta.ui.{Exception => SemanticException}
 
@@ -19,10 +19,10 @@ import scala.meta.ui.{Exception => SemanticException}
 trait ToGtype extends GlobalToolkit with MetaToolkit {
   self: Api =>
 
-  protected implicit class ToGtype(ptpe: p.Type.Arg) {
-    private def gannotinfo(pannot: p.Mod.Annot): g.AnnotationInfo = {
-      val gtpe = pannot.tree.ctorTpe.toGtype
-      val gargss = pannot.tree.ctorArgss.map(_.map(_.toGtree))
+  protected implicit class ToGtype(mtpe: m.Type.Arg) {
+    private def gannotinfo(mannot: m.Mod.Annot): g.AnnotationInfo = {
+      val gtpe = mannot.tree.ctorTpe.toGtype
+      val gargss = mannot.tree.ctorArgss.map(_.map(_.toGtree))
       if (gargss.length > 1) throw new SemanticException(s"implementation restriction: annotations with multiple argument lists are not supported by scalac")
       if (gtpe <:< g.definitions.StaticAnnotationClass.tpe) {
         g.AnnotationInfo(gtpe, gargss.head.toList, Nil)
@@ -31,12 +31,12 @@ trait ToGtype extends GlobalToolkit with MetaToolkit {
         ???
       }
     }
-    private def gannotinfos(pannots: Seq[p.Mod.Annot]): List[g.AnnotationInfo] = {
-      pannots.map(gannotinfo).toList
+    private def gannotinfos(mannots: Seq[m.Mod.Annot]): List[g.AnnotationInfo] = {
+      mannots.map(gannotinfo).toList
     }
-    private def gtypeBounds(pbounds: p.Type.Bounds): g.TypeBounds = {
-      val glo = pbounds.lo.map(_.toGtype).getOrElse(g.definitions.NothingClass.tpe)
-      val ghi = pbounds.hi.map(_.toGtype).getOrElse(g.definitions.AnyClass.tpe)
+    private def gtypeBounds(mbounds: m.Type.Bounds): g.TypeBounds = {
+      val glo = mbounds.lo.map(_.toGtype).getOrElse(g.definitions.NothingClass.tpe)
+      val ghi = mbounds.hi.map(_.toGtype).getOrElse(g.definitions.AnyClass.tpe)
       g.TypeBounds(glo, ghi)
     }
     private implicit class RichGlobalSymbol(gsym: g.Symbol) {
@@ -53,94 +53,94 @@ trait ToGtype extends GlobalToolkit with MetaToolkit {
       def mkLtypeParameter(name: String) = l.TypeParameter(mkGtype(name, PARAM | DEFERRED))
     }
     private implicit class RichLogicalSymbol(lsym: l.Symbol) {
-      private def mimicMods(pmods: Seq[p.Mod], ptree: p.Tree): Unit = {
+      private def mimicMods(mmods: Seq[m.Mod], mtree: m.Tree): Unit = {
         val gsym = lsym.gsymbol // TODO: check that this is correct
-        pmods.foreach({
-          case pmod: p.Mod.Annot => gsym.withAnnotations(List(gannotinfo(pmod)))
-          case pmod: p.Mod.Private => gsym.setFlag(PRIVATE)
-          case pmod: p.Mod.PrivateThis => gsym.setFlag(LOCAL)
-          case pmod: p.Mod.PrivateWithin => ???
-          case pmod: p.Mod.Protected => gsym.setFlag(PROTECTED)
-          case pmod: p.Mod.ProtectedThis => gsym.setFlag(LOCAL)
-          case pmod: p.Mod.ProtectedWithin => ???
-          case pmod: p.Mod.Implicit => gsym.setFlag(IMPLICIT)
-          case pmod: p.Mod.Final => gsym.setFlag(FINAL)
-          case pmod: p.Mod.Sealed => gsym.setFlag(SEALED)
-          case pmod: p.Mod.Override => gsym.setFlag(OVERRIDE)
-          case pmod: p.Mod.Case => gsym.setFlag(CASE)
-          case pmod: p.Mod.Abstract => gsym.setFlag(ABSTRACT)
-          case pmod: p.Mod.Covariant => gsym.setFlag(COVARIANT)
-          case pmod: p.Mod.Contravariant => gsym.setFlag(CONTRAVARIANT)
-          case pmod: p.Mod.Lazy => gsym.setFlag(LAZY)
-          case pmod: p.Mod.ValParam => // do nothing
-          case pmod: p.Mod.VarParam => // do nothing
+        mmods.foreach({
+          case mmod: m.Mod.Annot => gsym.withAnnotations(List(gannotinfo(mmod)))
+          case mmod: m.Mod.Private => gsym.setFlag(PRIVATE)
+          case mmod: m.Mod.PrivateThis => gsym.setFlag(LOCAL)
+          case mmod: m.Mod.PrivateWithin => ???
+          case mmod: m.Mod.Protected => gsym.setFlag(PROTECTED)
+          case mmod: m.Mod.ProtectedThis => gsym.setFlag(LOCAL)
+          case mmod: m.Mod.ProtectedWithin => ???
+          case mmod: m.Mod.Implicit => gsym.setFlag(IMPLICIT)
+          case mmod: m.Mod.Final => gsym.setFlag(FINAL)
+          case mmod: m.Mod.Sealed => gsym.setFlag(SEALED)
+          case mmod: m.Mod.Override => gsym.setFlag(OVERRIDE)
+          case mmod: m.Mod.Case => gsym.setFlag(CASE)
+          case mmod: m.Mod.Abstract => gsym.setFlag(ABSTRACT)
+          case mmod: m.Mod.Covariant => gsym.setFlag(COVARIANT)
+          case mmod: m.Mod.Contravariant => gsym.setFlag(CONTRAVARIANT)
+          case mmod: m.Mod.Lazy => gsym.setFlag(LAZY)
+          case mmod: m.Mod.ValParam => // do nothing
+          case mmod: m.Mod.VarParam => // do nothing
         })
         // TODO: INTERFACE, MUTABLE, STATIC, PRESUPER, INCONSTRUCTOR, STABLE, *ACCESSOR, EXISTENTIAL
-        ptree match { case p.Term.Param(_, _, Some(tpe), _) if tpe.toGtype.typeSymbol == g.definitions.ByNameParamClass => gsym.setFlag(BYNAMEPARAM); case _ => }
+        mtree match { case m.Term.Param(_, _, Some(tpe), _) if tpe.toGtype.typeSymbol == g.definitions.ByNameParamClass => gsym.setFlag(BYNAMEPARAM); case _ => }
         if (gsym.hasFlag(ABSTRACT) && gsym.hasFlag(OVERRIDE)) { gsym.resetFlag(ABSTRACT | OVERRIDE); gsym.setFlag(ABSOVERRIDE) }
-        if (ptree.isInstanceOf[p.Defn.Trait]) gsym.setFlag(TRAIT)
-        ptree match { case ptree: p.Term.Param if ptree.default.nonEmpty => gsym.setFlag(DEFAULTPARAM); case _ => }
-        ptree match { case ptree: p.Defn.Var if ptree.rhs.isEmpty => gsym.setFlag(DEFAULTINIT); case _ => }
+        if (mtree.isInstanceOf[m.Defn.Trait]) gsym.setFlag(TRAIT)
+        mtree match { case mtree: m.Term.Param if mtree.default.nonEmpty => gsym.setFlag(DEFAULTPARAM); case _ => }
+        mtree match { case mtree: m.Defn.Var if mtree.rhs.isEmpty => gsym.setFlag(DEFAULTINIT); case _ => }
       }
-      private def gtparams(ptparams: Seq[p.Type.Param]): List[g.Symbol] = {
-        ptparams.map(ptparam => {
-          val htparam = ptparam.name.require[p.Name].denot.symbol
+      private def gtparams(mtparams: Seq[m.Type.Param]): List[g.Symbol] = {
+        mtparams.map(mtparam => {
+          val htparam = mtparam.name.require[m.Name].denot.symbol
           val gowner = { require(lsym.gsymbols.length == 1); lsym.gsymbol }
-          val ltparam = symbolTable.lookupOrElseUpdate(htparam, gowner.mkLtypeParameter(ptparam.name.toString))
-          ltparam.mimic(ptparam).gsymbol
+          val ltparam = symbolTable.lookupOrElseUpdate(htparam, gowner.mkLtypeParameter(mtparam.name.toString))
+          ltparam.mimic(mtparam).gsymbol
         }).toList
       }
-      private def gparams(pparams: Seq[p.Term.Param]): List[g.Symbol] = {
-        pparams.map(pparam => {
-          val hparam = pparam.name.require[p.Name].denot.symbol
+      private def gparams(mparams: Seq[m.Term.Param]): List[g.Symbol] = {
+        mparams.map(mparam => {
+          val hparam = mparam.name.require[m.Name].denot.symbol
           val gowner = { require(lsym.gsymbols.length == 1); lsym.gsymbol }
-          val lparam = symbolTable.lookupOrElseUpdate(hparam, gowner.mkLtermParameter(pparam.name.toString))
-          lparam.mimic(pparam).gsymbol
+          val lparam = symbolTable.lookupOrElseUpdate(hparam, gowner.mkLtermParameter(mparam.name.toString))
+          lparam.mimic(mparam).gsymbol
         }).toList
       }
-      private def mimicInfo(ptree: p.Tree): Unit = {
-        (ptree, lsym) match {
-          case (p.Decl.Val(_, _, ptpe), l.AbstractVal(gsym)) =>
+      private def mimicInfo(mtree: m.Tree): Unit = {
+        (mtree, lsym) match {
+          case (m.Decl.Val(_, _, mtpe), l.AbstractVal(gsym)) =>
             if (gsym.hasFlag(EXISTENTIAL)) {
-              val upperBound = g.intersectionType(List(ptpe.toGtype, g.definitions.SingletonClass.tpe), gsym.owner)
+              val upperBound = g.intersectionType(List(mtpe.toGtype, g.definitions.SingletonClass.tpe), gsym.owner)
               gsym.setInfo(g.TypeBounds.upper(upperBound))
             } else {
-              gsym.setInfo(g.NullaryMethodType(ptpe.toGtype))
+              gsym.setInfo(g.NullaryMethodType(mtpe.toGtype))
             }
-          case (p.Decl.Var(_, _, ptpe), l.AbstractVar(ggetter, gsetter)) =>
-            ggetter.setInfo(g.NullaryMethodType(ptpe.toGtype))
-            val gsetterParams = List(gsetter.newTermSymbol(g.TermName("x$1"), newFlags = PARAM).setInfo(ptpe.toGtype))
+          case (m.Decl.Var(_, _, mtpe), l.AbstractVar(ggetter, gsetter)) =>
+            ggetter.setInfo(g.NullaryMethodType(mtpe.toGtype))
+            val gsetterParams = List(gsetter.newTermSymbol(g.TermName("x$1"), newFlags = PARAM).setInfo(mtpe.toGtype))
             val gsetterRet = g.definitions.UnitClass.tpe
             gsetter.setInfo(g.MethodType(gsetterParams, gsetterRet))
-          case (p.Decl.Def(_, _, ptparams, pparamss, ptpe), l.AbstractDef(gsym)) =>
-            val gprecachedTparams = gtparams(ptparams)
-            val gprecachedParamss = pparamss.map(gparams)
-            val gmethodType = gprecachedParamss.foldLeft(ptpe.toGtype)((curr, gparams) => g.MethodType(gparams, curr))
+          case (m.Decl.Def(_, _, mtparams, mparamss, mtpe), l.AbstractDef(gsym)) =>
+            val gprecachedTparams = gtparams(mtparams)
+            val gprecachedParamss = mparamss.map(gparams)
+            val gmethodType = gprecachedParamss.foldLeft(mtpe.toGtype)((curr, gparams) => g.MethodType(gparams, curr))
             gsym.setInfo(g.genPolyType(gprecachedTparams, gmethodType))
-          case (p.Decl.Type(_, _, ptparams, ptypeBounds), l.AbstractType(gsym)) =>
-            gsym.setInfo(g.genPolyType(gtparams(ptparams), gtypeBounds(ptypeBounds)))
-          case (p.Defn.Type(_, _, ptparams, ptpe), l.Type(gsym)) =>
-            gsym.setInfo(g.genPolyType(gtparams(ptparams), ptpe.toGtype))
-          case (p.Type.Param(_, _, ptparams, ptypeBounds, pviewBounds, pcontextBounds), l.TypeParameter(gsym)) =>
-            require(pcontextBounds.isEmpty && pviewBounds.isEmpty)
-            gsym.setInfo(g.genPolyType(gtparams(ptparams), gtypeBounds(ptypeBounds)))
-          case (p.Term.Param(_, _, pdecltpe, pdefault), l.TermParameter(gsym)) =>
-            require(pdecltpe.nonEmpty && pdefault.isEmpty)
-            gsym.setInfo(pdecltpe.get.toGtype)
+          case (m.Decl.Type(_, _, mtparams, mtypebounds), l.AbstractType(gsym)) =>
+            gsym.setInfo(g.genPolyType(gtparams(mtparams), gtypeBounds(mtypebounds)))
+          case (m.Defn.Type(_, _, mtparams, mtpe), l.Type(gsym)) =>
+            gsym.setInfo(g.genPolyType(gtparams(mtparams), mtpe.toGtype))
+          case (m.Type.Param(_, _, mtparams, mtypebounds, mviewbounds, mcontextbounds), l.TypeParameter(gsym)) =>
+            require(mcontextbounds.isEmpty && mviewbounds.isEmpty)
+            gsym.setInfo(g.genPolyType(gtparams(mtparams), gtypeBounds(mtypebounds)))
+          case (m.Term.Param(_, _, mdecltpe, mdefault), l.TermParameter(gsym)) =>
+            require(mdecltpe.nonEmpty && mdefault.isEmpty)
+            gsym.setInfo(mdecltpe.get.toGtype)
           case _ =>
             ???
         }
       }
-      def mimic(ptree: p.Tree): l.Symbol = {
+      def mimic(mtree: m.Tree): l.Symbol = {
         if (!lsym.gsymbol.hasRawInfo) {
           import scala.language.reflectiveCalls
-          mimicMods(ptree.require[{ def mods: Seq[p.Mod] }].mods, ptree)
-          mimicInfo(ptree)
+          mimicMods(mtree.require[{ def mods: Seq[m.Mod] }].mods, mtree)
+          mimicInfo(mtree)
         }
         lsym
       }
     }
-    private def gowner(ptree: p.Tree): g.Symbol = {
+    private def gowner(mtree: m.Tree): g.Symbol = {
       // TODO: we probably need something other than NoSymbol for RefinedType.decls and ExistentialType.quants
       // I always had no idea about how this works in scala. I guess, it's time for find out :)
       g.NoSymbol
@@ -148,98 +148,98 @@ trait ToGtype extends GlobalToolkit with MetaToolkit {
     private def gprefix(hprefix: h.Prefix): g.Type = {
       hprefix match {
         case h.Prefix.Zero => g.NoPrefix
-        case h.Prefix.Type(ptpe) => ptpe.require[p.Type].toGtype
+        case h.Prefix.Type(mtpe) => mtpe.require[m.Type].toGtype
       }
     }
-    def toGtype: g.Type = tpeCache.getOrElseUpdate(ptpe, {
-      def loop(ptpe: p.Type.Arg): g.Type = ptpe match {
-        case pname: p.Type.Name =>
-          g.TypeRef(gprefix(pname.denot.prefix), symbolTable.convert(pname.denot.symbol).gsymbol, Nil)
-        case p.Type.Select(pqual, pname) =>
-          g.TypeRef(loop(p.Type.Singleton(pqual)), symbolTable.convert(pname.denot.symbol).gsymbol, Nil)
-        case p.Type.Project(pqual, pname) =>
-          g.TypeRef(loop(pqual), symbolTable.convert(pname.denot.symbol).gsymbol, Nil)
-        case p.Type.Singleton(pref) =>
-          def singleType(pname: p.Term.Name): g.Type = {
-            val gsym = symbolTable.convert(pname.denot.symbol).gsymbol
+    def toGtype: g.Type = tpeCache.getOrElseUpdate(mtpe, {
+      def loop(mtpe: m.Type.Arg): g.Type = mtpe match {
+        case mname: m.Type.Name =>
+          g.TypeRef(gprefix(mname.denot.prefix), symbolTable.convert(mname.denot.symbol).gsymbol, Nil)
+        case m.Type.Select(mqual, mname) =>
+          g.TypeRef(loop(m.Type.Singleton(mqual)), symbolTable.convert(mname.denot.symbol).gsymbol, Nil)
+        case m.Type.Project(mqual, mname) =>
+          g.TypeRef(loop(mqual), symbolTable.convert(mname.denot.symbol).gsymbol, Nil)
+        case m.Type.Singleton(mref) =>
+          def singleType(mname: m.Term.Name): g.Type = {
+            val gsym = symbolTable.convert(mname.denot.symbol).gsymbol
             if (gsym.isModuleClass) g.ThisType(gsym)
-            else g.SingleType(gprefix(pname.denot.prefix), gsym)
+            else g.SingleType(gprefix(mname.denot.prefix), gsym)
           }
-          def superType(psuper: p.Term.Super): g.Type = {
-            val gpre = gprefix(psuper.denot.prefix)
-            val gmixsym = psuper.denot.symbol match {
+          def superType(msuper: m.Term.Super): g.Type = {
+            val gpre = gprefix(msuper.denot.prefix)
+            val gmixsym = msuper.denot.symbol match {
               case h.Symbol.Zero => g.intersectionType(gpre.typeSymbol.info.parents)
               case hsym => gpre.typeSymbol.info.baseType(symbolTable.convert(hsym).gsymbol)
             }
             g.SuperType(gpre, gmixsym)
           }
-          pref match {
-            case pname: p.Term.Name => singleType(pname)
-            case p.Term.Select(_, pname) => singleType(pname)
-            case pref: p.Term.This => g.ThisType(symbolTable.convert(pref.denot.symbol).gsymbol)
-            case pref: p.Term.Super => superType(pref)
+          mref match {
+            case mname: m.Term.Name => singleType(mname)
+            case m.Term.Select(_, mname) => singleType(mname)
+            case mref: m.Term.This => g.ThisType(symbolTable.convert(mref.denot.symbol).gsymbol)
+            case mref: m.Term.Super => superType(mref)
           }
-        case p.Type.Apply(ptpe, pargs) =>
-          g.appliedType(loop(ptpe), pargs.map(loop).toList)
-        case p.Type.ApplyInfix(plhs, pop, prhs) =>
-          g.appliedType(loop(pop), List(loop(plhs), loop(prhs)))
-        case p.Type.Function(pparams, pres) =>
-          g.appliedType(g.definitions.FunctionClass(pparams.length + 1), (pparams :+ pres).map(loop).toList)
-        case p.Type.Tuple(pelements) =>
-          g.appliedType(g.definitions.TupleClass(pelements.length), pelements.map(loop).toList)
-        case p.Type.Compound(ptpes, prefinement) =>
+        case m.Type.Apply(mtpe, margs) =>
+          g.appliedType(loop(mtpe), margs.map(loop).toList)
+        case m.Type.ApplyInfix(mlhs, mop, mrhs) =>
+          g.appliedType(loop(mop), List(loop(mlhs), loop(mrhs)))
+        case m.Type.Function(mparams, mres) =>
+          g.appliedType(g.definitions.FunctionClass(mparams.length + 1), (mparams :+ mres).map(loop).toList)
+        case m.Type.Tuple(melements) =>
+          g.appliedType(g.definitions.TupleClass(melements.length), melements.map(loop).toList)
+        case m.Type.Compound(mtpes, mrefinement) =>
           val gscope = g.newScope
-          val pexplodedRefinement = prefinement.flatMap(prefine => prefine.binders.map(pname => prefine -> pname))
-          val refinement = pexplodedRefinement.map({ case (prefine, pname) =>
-            val lrefine = symbolTable.lookupOrElseUpdate(pname.denot.symbol, prefine match {
-              case _: p.Decl.Val => gowner(prefine).mkLabstractVal(pname.toString)
-              case _: p.Decl.Var => gowner(prefine).mkLabstractVar(pname.toString)
-              case _: p.Decl.Def => gowner(prefine).mkLabstractDef(pname.toString)
-              case _: p.Decl.Type => gowner(prefine).mkLabstractType(pname.toString)
-              case _: p.Defn.Type => gowner(prefine).mkLtype(pname.toString)
+          val mexplodedRefinement = mrefinement.flatMap(mrefine => mrefine.binders.map(mname => mrefine -> mname))
+          val refinement = mexplodedRefinement.map({ case (mrefine, mname) =>
+            val lrefine = symbolTable.lookupOrElseUpdate(mname.denot.symbol, mrefine match {
+              case _: m.Decl.Val => gowner(mrefine).mkLabstractVal(mname.toString)
+              case _: m.Decl.Var => gowner(mrefine).mkLabstractVar(mname.toString)
+              case _: m.Decl.Def => gowner(mrefine).mkLabstractDef(mname.toString)
+              case _: m.Decl.Type => gowner(mrefine).mkLabstractType(mname.toString)
+              case _: m.Defn.Type => gowner(mrefine).mkLtype(mname.toString)
               case _ => unreachable
             })
             lrefine.gsymbols.foreach(gscope.enter)
-            prefine -> lrefine
+            mrefine -> lrefine
           })
-          refinement.foreach({ case (prefine, lrefine) => lrefine.mimic(prefine) })
-          g.refinedType(ptpes.map(loop).toList, gowner(ptpe), gscope, g.NoPosition)
-        case p.Type.Existential(ptpe, pquants) =>
-          val pexplodedQuants = pquants.flatMap(pquant => pquant.binders.map(pname => pquant -> pname))
-          val quants = pexplodedQuants.map({ case (pquant, pname) =>
-            val lquant = symbolTable.lookupOrElseUpdate(pname.denot.symbol, pquant match {
-              case _: p.Decl.Val => gowner(pquant).mkLexistentialVal(pname.toString)
-              case _: p.Decl.Type => gowner(pquant).mkLexistentialType(pname.toString)
+          refinement.foreach({ case (mrefine, lrefine) => lrefine.mimic(mrefine) })
+          g.refinedType(mtpes.map(loop).toList, gowner(mtpe), gscope, g.NoPosition)
+        case m.Type.Existential(mtpe, mquants) =>
+          val mexplodedQuants = mquants.flatMap(mquant => mquant.binders.map(mname => mquant -> mname))
+          val quants = mexplodedQuants.map({ case (mquant, mname) =>
+            val lquant = symbolTable.lookupOrElseUpdate(mname.denot.symbol, mquant match {
+              case _: m.Decl.Val => gowner(mquant).mkLexistentialVal(mname.toString)
+              case _: m.Decl.Type => gowner(mquant).mkLexistentialType(mname.toString)
               case _ => unreachable
             })
-            pquant -> lquant
+            mquant -> lquant
           })
-          quants.foreach({ case (pquant, lquant) => lquant.mimic(pquant) })
-          g.ExistentialType(quants.flatMap(_._2.gsymbols).toList, loop(ptpe))
-        case p.Type.Annotate(ptpe, pannots) =>
-          g.AnnotatedType(gannotinfos(pannots), loop(ptpe))
-        case p.Type.Placeholder(pbounds) =>
+          quants.foreach({ case (mquant, lquant) => lquant.mimic(mquant) })
+          g.ExistentialType(quants.flatMap(_._2.gsymbols).toList, loop(mtpe))
+        case m.Type.Annotate(mtpe, mannots) =>
+          g.AnnotatedType(gannotinfos(mannots), loop(mtpe))
+        case m.Type.Placeholder(mbounds) =>
           ???
-        case p.Type.Arg.ByName(ptpe) =>
-          g.appliedType(g.definitions.ByNameParamClass, List(loop(ptpe)))
-        case p.Type.Arg.Repeated(ptpe) =>
-          g.appliedType(g.definitions.RepeatedParamClass, List(loop(ptpe)))
-        case plit: p.Lit =>
-          plit match {
-            case p.Lit.Bool(value) => g.ConstantType(g.Constant(value))
-            case p.Lit.Int(value) => g.ConstantType(g.Constant(value))
-            case p.Lit.Long(value) => g.ConstantType(g.Constant(value))
-            case p.Lit.Float(value) => g.ConstantType(g.Constant(value))
-            case p.Lit.Double(value) => g.ConstantType(g.Constant(value))
-            case p.Lit.Char(value) => g.ConstantType(g.Constant(value))
-            case p.Lit.String(value) => g.ConstantType(g.Constant(value))
-            case p.Lit.Symbol(value) => unreachable
-            case p.Lit.Null() => g.ConstantType(g.Constant(null))
-            case p.Lit.Unit() => g.ConstantType(g.Constant(()))
+        case m.Type.Arg.ByName(mtpe) =>
+          g.appliedType(g.definitions.ByNameParamClass, List(loop(mtpe)))
+        case m.Type.Arg.Repeated(mtpe) =>
+          g.appliedType(g.definitions.RepeatedParamClass, List(loop(mtpe)))
+        case mlit: m.Lit =>
+          mlit match {
+            case m.Lit.Bool(value) => g.ConstantType(g.Constant(value))
+            case m.Lit.Int(value) => g.ConstantType(g.Constant(value))
+            case m.Lit.Long(value) => g.ConstantType(g.Constant(value))
+            case m.Lit.Float(value) => g.ConstantType(g.Constant(value))
+            case m.Lit.Double(value) => g.ConstantType(g.Constant(value))
+            case m.Lit.Char(value) => g.ConstantType(g.Constant(value))
+            case m.Lit.String(value) => g.ConstantType(g.Constant(value))
+            case m.Lit.Symbol(value) => unreachable
+            case m.Lit.Null() => g.ConstantType(g.Constant(null))
+            case m.Lit.Unit() => g.ConstantType(g.Constant(()))
           }
       }
-      ptpe.requireAttributed()
-      loop(ptpe)
+      mtpe.requireAttributed()
+      loop(mtpe)
     })
   }
 }

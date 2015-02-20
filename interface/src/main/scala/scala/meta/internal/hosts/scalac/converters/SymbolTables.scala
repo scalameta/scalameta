@@ -11,7 +11,7 @@ import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.reflect.internal.Flags._
 import scala.tools.nsc.{Global => ScalaGlobal}
-import scala.meta.internal.{ast => p}
+import scala.meta.internal.{ast => m}
 import scala.meta.internal.{hygiene => h}
 import scala.meta.ui.{Exception => SemanticException}
 import java.util.UUID.randomUUID

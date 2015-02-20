@@ -11,7 +11,7 @@ import org.scalameta.invariants._
 import org.scalameta.reflection._
 
 // NOTE: a macro annotation that converts naive patmat-based converters
-// like `@converter def toPtree(in: Any, pt: Pt): Any = in match { ... }`
+// like `@converter def toMtree(in: Any, pt: Pt): Any = in match { ... }`
 // into a typeclass, a number of instances (created from patmat clauses) and some glue
 // see the resulting quasiquote of ConverterMacros.converter to get a better idea what's going on
 // has a number of quirks to accommodate ambiguous conversions and other fun stuff, which I should document later (TODO)
@@ -89,7 +89,7 @@ class ConverterMacros(val c: whitebox.Context) extends MacroToolkit {
       clauses.foreach(clause => clause match {
         case cq"$pat if $guard => $body" =>
           val in = intpe(pat)
-          val out = outpe(guard).orElse(tq"p.Tree")
+          val out = outpe(guard).orElse(tq"m.Tree")
           val guardlessClause = atPos(clause.pos)(cq"$pat => $body")
           val notImplemented = body match { case q"unreachable" => true; case q"???" => true; case _ => false }
           val notBounded = outpe(guard).isEmpty
@@ -252,12 +252,12 @@ package object internal {
           // being propagated into inferred types
           // that can lead to disasters like
           //
-          //   val pthis = if (qual != g.tpnme.EMPTY) Some(qual.cvt) else None
-          //   p.Qual.Super(pthis, psuper)
+          //   val mthis = if (qual != g.tpnme.EMPTY) Some(qual.cvt) else None
+          //   m.Qual.Super(mthis, msuper)
           //
           // here, regardless of the actual type of `qual.cvt`, the typecheck will succeed
           // because `Some(qual.cvt)` has type `Some[Nothing]`, pthis has type `Option[Nothing]`,
-          // and, consequently, pthis will fit the `Option[p.Qual.Name]` required by `p.Qual.Super.qual`
+          // and, consequently, mthis will fit the `Option[m.Qual.Name]` required by `m.Qual.Super.qual`
           // if the actual type is incorrect, that'll be a ClassCastException
           case RawCvt(convertee, force) => Some((convertee, WildcardType, force))
           case Ascribe(RawCvt(convertee, force), pt) => Some((convertee, pt, force))
@@ -272,7 +272,7 @@ package object internal {
     def computeConverters(typeclassCompanion: Tree)(x: Tree): Tree = {
       import c.internal._, decorators._
       val q"{ ${dummy @ q"def $_(in: $_): $_ = { ..$prelude; in match { case ..$clauses } }"}; () }" = x
-      def toPtreeConverters: List[SharedConverter] = {
+      def toMtreeConverters: List[SharedConverter] = {
         def precisetpe(tree: Tree): Type = tree match {
           case If(_, thenp, elsep) => lub(List(precisetpe(thenp), precisetpe(elsep)))
           case Match(_, cases) => lub(cases.map(tree => precisetpe(tree.body)))
@@ -379,7 +379,7 @@ package object internal {
       val target = typeclassCompanion.symbol.owner
       if (!target.isModuleClass) c.abort(c.enclosingPosition, s"something went wrong: unexpected typeclass companion $typeclassCompanion")
       val converters = target.name.toString match {
-        case "toPtree" => toPtreeConverters
+        case "toMtree" => toMtreeConverters
         case _ => c.abort(c.enclosingPosition, "unknown target: " + target.name)
       }
       // val tups = converters.map{ case SharedConverter(in: Type, out: Type, method: Tree, derived) => ((if (derived) "*" else "") + in.toString.replace("Host.this.", ""), cleanLub(List(out)).toString.replace("scala.meta.", "p."), out.toString.replace("scala.meta.", "p."), method) }
@@ -524,8 +524,8 @@ package object internal {
     def lookupConvertersWithPt[In: c.WeakTypeTag, Pt: c.WeakTypeTag](x: c.Tree, pt: c.Tree): c.Tree = {
       val target = c.macroApplication.symbol.owner
       target.name.toString match {
-        case "toPtree" =>
-          val pre @ q"$h.toPtree" = c.prefix.tree
+        case "toMtree" =>
+          val pre @ q"$h.toMtree" = c.prefix.tree
           val sym = c.macroApplication.symbol
           val ensugared = q"""
             val ensugared = (new { val global: $h.g.type = $h.g } with $ToolkitTrait).ensugar($x)
@@ -542,8 +542,8 @@ package object internal {
                   val denot = name.denot
                   _root_.org.scalameta.invariants.require(x != null && denot != _root_.scala.meta.internal.hygiene.Denotation.Zero)
                   _root_.org.scalameta.invariants.require(x != null && denot.symbol != _root_.scala.meta.internal.hygiene.Symbol.Zero)
-                  _root_.org.scalameta.invariants.require(x != null && !$h.hsymToNativePmemberCache.contains(denot.symbol))
-                  $h.hsymToNativePmemberCache(denot.symbol) = x
+                  _root_.org.scalameta.invariants.require(x != null && !$h.hsymToNativeMmemberCache.contains(denot.symbol))
+                  $h.hsymToNativeMmemberCache(denot.symbol) = x
                 }
               }
               def loop(x: Any): Unit = x match {

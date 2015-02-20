@@ -10,8 +10,8 @@ import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.reflect.ClassTag
 import scala.tools.nsc.{Global => ScalaGlobal}
-import scala.{meta => papi}
-import scala.meta.internal.{ast => p}
+import scala.{meta => mapi}
+import scala.meta.internal.{ast => m}
 import scala.meta.internal.{hygiene => h}
 import scala.reflect.internal.Flags._
 
@@ -30,15 +30,15 @@ trait Attributes extends GlobalToolkit with MetaToolkit {
 
   protected trait CanHaveDenot[T <: Tree]
   protected object CanHaveDenot {
-    implicit def Name[T <: papi.Name]: CanHaveDenot[T] = null
+    implicit def Name[T <: mapi.Name]: CanHaveDenot[T] = null
   }
 
-  protected implicit class RichAttributesTree[T <: p.Tree : ClassTag](ptree: T) {
+  protected implicit class RichAttributesTree[T <: m.Tree : ClassTag](ptree: T) {
     private def denot(gpre: g.Type, lsym: l.Symbol): h.Denotation = {
       require(gpre != g.NoType)
       val hpre = {
         if (gpre == g.NoPrefix) h.Prefix.Zero
-        else h.Prefix.Type(gpre.toPtype)
+        else h.Prefix.Type(gpre.toMtype)
       }
       val hsym = symbolTable.convert(lsym)
       h.Denotation.Precomputed(hpre, hsym)
@@ -59,22 +59,22 @@ trait Attributes extends GlobalToolkit with MetaToolkit {
     }
     def withDenot(gpre: g.Type, lsym: l.Symbol)(implicit ev: CanHaveDenot[T]): T = {
       val ptree0 = ptree // NOTE: this is here only to provide an unqualified Ident for the `require` macro
-      require(ptree0.isInstanceOf[p.Name] && gpre != null && ((lsym == l.None) ==> ptree.isInstanceOf[p.Term.Super]))
+      require(ptree0.isInstanceOf[m.Name] && gpre != null && ((lsym == l.None) ==> ptree.isInstanceOf[m.Term.Super]))
       val scratchpad = ptree.scratchpad :+ ScratchpadDatum.Denotation(gpre, lsym)
       val ptree1 = ptree match {
-        case ptree: p.Name.Anonymous => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
-        case ptree: p.Term.Name => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
-        case ptree: p.Type.Name => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
+        case ptree: m.Name.Anonymous => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
+        case ptree: m.Term.Name => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
+        case ptree: m.Type.Name => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
         // TODO: some ctor refs don't have corresponding constructor symbols in Scala (namely, ones for traits)
         // in these cases, our lsym is going to be a symbol of the trait in question
         // we need to account for that in `symbolTable.convert` and create a constructor symbol of our own
-        case ptree: p.Ctor.Name => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
-        case ptree: p.Term.This => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
-        case ptree: p.Term.Super => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
-        case ptree: p.Mod.PrivateThis => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
-        case ptree: p.Mod.PrivateWithin => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
-        case ptree: p.Mod.ProtectedThis => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
-        case ptree: p.Mod.ProtectedWithin => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
+        case ptree: m.Ctor.Name => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
+        case ptree: m.Term.This => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
+        case ptree: m.Term.Super => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
+        case ptree: m.Mod.PrivateThis => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
+        case ptree: m.Mod.PrivateWithin => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
+        case ptree: m.Mod.ProtectedThis => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
+        case ptree: m.Mod.ProtectedWithin => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
         case _ => unreachable
       }
       ptree1.withScratchpad(scratchpad).require[T]
