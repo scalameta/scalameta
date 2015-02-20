@@ -30,7 +30,7 @@ package scala.meta {
     @branch trait Ref extends Term with api.Ref
     @branch trait Name extends api.Name with Term.Ref with Pat
     @branch trait Arg extends Tree
-    @branch trait Param extends Member.Term
+    @branch trait Param extends Member
   }
 
   @branch trait Type extends Tree with Type.Arg with Scope
@@ -38,7 +38,7 @@ package scala.meta {
     @branch trait Ref extends Type with api.Ref
     @branch trait Name extends api.Name with Type.Ref
     @branch trait Arg extends Tree
-    @branch trait Param extends Member.Type
+    @branch trait Param extends Member
   }
 
   @branch trait Pat extends Tree with Pat.Arg
@@ -73,7 +73,7 @@ package scala.meta.internal.ast {
 
   @branch trait Ref extends api.Ref with Tree
   @branch trait Name extends api.Name with Ref { def value: String; def denot: Denotation; def sigma: Sigma }
-  object Name { @ast class Anonymous extends Name with api.Term.Name with api.Type.Name { def value = "_" } }
+  object Name { @ast class Anonymous extends Name { def value = "_" } }
   @branch trait Stat extends api.Stat with Tree
   @branch trait Scope extends api.Scope with Tree
 
@@ -131,7 +131,9 @@ package scala.meta.internal.ast {
       @ast class Named(name: Name, rhs: Term) extends Arg
       @ast class Repeated(arg: Term) extends Arg
     }
-    @ast class Param(mods: Seq[Mod], name: api.Term.Name, decltpe: Option[Type.Arg], default: Option[Term]) extends api.Term.Param with Member.Term
+    @ast class Param(mods: Seq[Mod], name: impl.Name, decltpe: Option[Type.Arg], default: Option[Term]) extends api.Term.Param with Member {
+      require(name.isInstanceOf[impl.Name.Anonymous] || name.isInstanceOf[Term.Name])
+    }
   }
 
   @branch trait Type extends api.Type with Tree with Type.Arg with Scope
@@ -171,11 +173,13 @@ package scala.meta.internal.ast {
       @ast class Repeated(tpe: Type) extends Arg
     }
     @ast class Param(mods: Seq[Mod],
-                     name: api.Type.Name,
+                     name: impl.Name,
                      tparams: Seq[impl.Type.Param],
                      typeBounds: impl.Type.Bounds,
                      viewBounds: Seq[impl.Type],
-                     contextBounds: Seq[impl.Type]) extends api.Type.Param with Member.Type
+                     contextBounds: Seq[impl.Type]) extends api.Type.Param with Member {
+      require(name.isInstanceOf[impl.Name.Anonymous] || name.isInstanceOf[Type.Name])
+    }
   }
 
   @branch trait Pat extends api.Pat with Tree with Pat.Arg

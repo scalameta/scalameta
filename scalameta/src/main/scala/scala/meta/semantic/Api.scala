@@ -56,7 +56,7 @@ trait Api {
       case tree: impl.Pkg.Object => impl.Type.Singleton(tree.name)
       case tree: impl.Term.Param if tree.parent.map(_.isInstanceOf[impl.Template]).getOrElse(false) => ??? // TODO: don't forget to intersect with the owner type
       case tree: impl.Term.Param => dearg(tree.decltpe.getOrElse(???)) // TODO: infer it from context
-      case tree: impl.Type.Param => tree.name
+      case tree: impl.Type.Param => tree.name.require[Type.Name]
       case tree: impl.Ctor.Primary => tree.owner.require[meta.Member].tpe
       case tree: impl.Ctor.Secondary => tree.owner.require[meta.Member].tpe
     }
@@ -265,7 +265,7 @@ trait Api {
 
   implicit class SemanticTermMemberOps(val tree: Member.Term) {
     @hosted def source: Member.Term = new SemanticMemberOps(tree).name.require[Member.Term]
-    @hosted def name: Name with Term.Ref = new SemanticMemberOps(tree).name.require[Name with Term.Ref]
+    @hosted def name: Term.Name = new SemanticMemberOps(tree).name.require[Term.Name]
     @hosted def parents: Seq[Member.Term] = new SemanticMemberOps(tree).parents.require[Seq[Member.Term]]
     @hosted def children: Seq[Member.Term] = new SemanticMemberOps(tree).children.require[Seq[Member.Term]]
     @hosted def companion: Member.Type = new SemanticMemberOps(tree).companion.require[Member.Type]
@@ -295,19 +295,17 @@ trait Api {
   // PART 4: SCOPES
   // ===========================
 
-  // TODO: so what I wanted to do with Scope.members is to have four overloads:
+  // TODO: so what I wanted to do with Scope.members is to have three overloads:
+  // * () => Seq[Member]
   // * Name => Member
-  // * Term.Name => Member.Term
-  // * Type.Name => Member.Type
   // * T <: Member => T <: Member
   // unfortunately, if I try to introduce all the overloads, scalac compiler gets seriously confused
+  // when I'm trying to call members for any kind of name
   // therefore, I'm essentially forced to use a type class here
   // another good idea would be to name these methods differently
   sealed trait ScopeMembersSignature[T, U]
   object ScopeMembersSignature {
     implicit def NameToMember[T <: Name]: ScopeMembersSignature[T, Member] = null
-    implicit def TermNameToTermMember[T <: Term.Name]: ScopeMembersSignature[T, Member.Term] = null
-    implicit def TypeNameToTypeMember[T <: Type.Name]: ScopeMembersSignature[T, Member.Type] = null
     implicit def MemberToMember[T <: Member]: ScopeMembersSignature[T, T] = null
   }
 
