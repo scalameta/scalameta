@@ -202,8 +202,10 @@ class PublicSuite extends FunSuite {
       q"x".defn: api.Member.Term
       t"x".defns: scala.collection.immutable.Seq[api.Member]
       t"x".defn: api.Member
+      q"class C".name: api.Type.Name
       q"class C".name.defn: api.Member
       q"class C".source.name.defn: api.Member
+      q"object M".name: api.Term.Name
       q"object M".name.defn: api.Member.Term
       q"object M".source.name.defn: api.Member.Term
     """) === "")
@@ -254,9 +256,11 @@ class PublicSuite extends FunSuite {
       import scala.meta.internal.{ast => impl}
       (??? : api.Member).members: scala.collection.immutable.Seq[api.Member]
       (??? : impl.Member).members: scala.collection.immutable.Seq[api.Member]
+      (??? : api.Member).members(q"foo"): api.Member
+      (??? : api.Member).members(t"foo"): api.Member
       t"List".defs("head"): api.Member.Term
-      t"List".defs("head").paramss: scala.collection.immutable.Seq[scala.collection.immutable.Seq[api.Member.Term]]
-      t"List".defn.tparams: scala.collection.immutable.Seq[api.Member.Type]
+      t"List".defs("head").paramss: scala.collection.immutable.Seq[scala.collection.immutable.Seq[api.Member]]
+      t"List".defn.tparams: scala.collection.immutable.Seq[api.Member]
     """) === "")
   }
 
