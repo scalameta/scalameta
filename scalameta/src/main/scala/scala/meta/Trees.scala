@@ -377,6 +377,12 @@ package scala.meta.internal.ast {
     val Name = Ref.Name
     type Name = Ref.Name
     object Ref {
+      // TODO: current design with Ctor.Name(value) has a problem of sometimes meaningless `value`
+      // for example, q"def this() = ..." is going to have Ctor.Name("this"), because we're parsing
+      // this constructor outside of any enclosure, so we can't call it Ctor.Name("C") or Ctor.Name("D")
+      // an alternative design might reintroduce the Ctor.Ref ast node that would have the structure of:
+      // Ctor.Ref(tpe: Type, ctor: Ctor.Name), where Ctor.Name would be Ctor.Name()
+      // in that design, we also won't have to convert between Type and Ctor.Ref hierarchies, which is a definite plus
       @ast class Name(value: String @nonEmpty) extends impl.Name with Ref
       @ast class Select(qual: Term.Ref, name: Name) extends Ref
       @ast class Project(qual: Type, name: Name) extends Ref
