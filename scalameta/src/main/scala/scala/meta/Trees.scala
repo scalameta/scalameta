@@ -411,6 +411,9 @@ package scala.meta.internal.ast {
     @ast class Covariant() extends Mod
     @ast class Contravariant() extends Mod
     @ast class Lazy() extends Mod
+    // TODO: ValParam and VarParam being mods might not be the best idea ever
+    // however the alternative is to have a dedicated XXX.Param type for class/trait parameters
+    // and that has proven to be very clunky (e.g. such XXX.Param type has to be a supertype for Term.Param)
     @ast class ValParam() extends Mod
     @ast class VarParam() extends Mod
   }
