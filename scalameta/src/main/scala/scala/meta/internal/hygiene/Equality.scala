@@ -50,7 +50,7 @@ private[meta] object equals {
       case (Seq(xs1 @ _*), Seq(xs2 @ _*)) => xs1.zip(xs2).forall{ case (x1, x2) => loop(x1, x2) }
       case (x1, x2) => x1 == x2
     }
-    def tagsEqual = tree1.$tag == tree2.$tag
+    def tagsEqual = tree1.internalTag == tree2.internalTag
     def fieldsEqual = tree1.productIterator.toList.zip(tree2.productIterator.toList).forall{ case (x1, x2) => loop(x1, x2) }
     tagsEqual && fieldsEqual
   }
@@ -84,7 +84,7 @@ private[meta] object hashcode {
       case Seq(xs @ _*) => xs.foldLeft(0)((acc, curr) => acc * 37 + loop(curr))
       case x => x.hashCode
     }
-    val tagPart = tree.$tag
+    val tagPart = tree.internalTag
     val fieldPart = loop(tree.productIterator.toList)
     tagPart * 37 + fieldPart
   }
