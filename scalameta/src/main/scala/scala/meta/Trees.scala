@@ -20,25 +20,38 @@ package scala.meta {
     final override def toString = scala.meta.internal.ui.toString(this)
   }
 
-  @branch trait Ref extends Tree
   @branch trait Name extends Ref
+  object Name {
+    @branch trait Anonymous extends Name with Term.Param.Name with Type.Param.Name with AccessBoundary
+    @branch trait Indeterminate extends Name with AccessBoundary
+    @branch trait Imported extends Name
+    @branch trait AccessBoundary extends Name
+  }
+
+  @branch trait Ref extends Tree
   @branch trait Stat extends Tree
   @branch trait Scope extends Tree
 
   @branch trait Term extends Stat with Term.Arg
   object Term {
     @branch trait Ref extends Term with api.Ref
-    @branch trait Name extends api.Name with Term.Ref with Pat
+    @branch trait Name extends api.Name with Term.Ref with Pat with Param.Name with Name.AccessBoundary
     @branch trait Arg extends Tree
     @branch trait Param extends Member
+    object Param {
+      @branch trait Name extends api.Name
+    }
   }
 
   @branch trait Type extends Tree with Type.Arg with Scope
   object Type {
     @branch trait Ref extends Type with api.Ref
-    @branch trait Name extends api.Name with Type.Ref
+    @branch trait Name extends api.Name with Type.Ref with Pat.Type.Ref with Param.Name with Name.AccessBoundary
     @branch trait Arg extends Tree
     @branch trait Param extends Member
+    object Param {
+      @branch trait Name extends api.Name
+    }
   }
 
   @branch trait Pat extends Tree with Pat.Arg
@@ -71,18 +84,24 @@ package scala.meta {
 package scala.meta.internal.ast {
   @branch trait Tree extends api.Tree
 
-  @branch trait Ref extends api.Ref with Tree
   @branch trait Name extends api.Name with Ref { def value: String; def denot: Denotation; def sigma: Sigma }
-  object Name { @ast class Anonymous extends Name { def value = "_" } }
+  object Name {
+    @ast class Anonymous extends api.Name.Anonymous with Name with Term.Param.Name with Type.Param.Name with AccessBoundary { def value = "_" }
+    @ast class Indeterminate(value: Predef.String @nonEmpty) extends api.Name.Indeterminate with Name with AccessBoundary
+    @ast class Imported(value: Predef.String @nonEmpty) extends api.Name.Imported with Name
+    @branch trait AccessBoundary extends api.Name.AccessBoundary with Name
+  }
+
+  @branch trait Ref extends api.Ref with Tree
   @branch trait Stat extends api.Stat with Tree
   @branch trait Scope extends api.Scope with Tree
 
   @branch trait Term extends api.Term with Stat with Term.Arg
   object Term {
     @branch trait Ref extends api.Term.Ref with Term with impl.Ref
-    @ast class This(qual: Option[Predef.String]) extends Term.Ref with impl.Name { def value = "this" }
+    @ast class This(qual: Option[Predef.String]) extends Term.Ref with impl.Name with impl.Name.AccessBoundary { def value = "this" }
     @ast class Super(thisp: Option[Predef.String], superp: Option[Predef.String]) extends Term.Ref with impl.Name { def value = "super" }
-    @ast class Name(value: Predef.String @nonEmpty) extends api.Term.Name with impl.Name with Term.Ref with Pat {
+    @ast class Name(value: Predef.String @nonEmpty) extends api.Term.Name with impl.Name with Term.Ref with Pat with Param.Name with impl.Name.AccessBoundary {
       // TODO: revisit this once we have trivia in place
       // require(keywords.contains(value) ==> isBackquoted)
     }
@@ -131,15 +150,16 @@ package scala.meta.internal.ast {
       @ast class Named(name: Name, rhs: Term) extends Arg
       @ast class Repeated(arg: Term) extends Arg
     }
-    @ast class Param(mods: Seq[Mod], name: impl.Name, decltpe: Option[Type.Arg], default: Option[Term]) extends api.Term.Param with Member {
-      require(name.isInstanceOf[impl.Name.Anonymous] || name.isInstanceOf[Term.Name])
+    @ast class Param(mods: Seq[Mod], name: Param.Name, decltpe: Option[Type.Arg], default: Option[Term]) extends api.Term.Param with Member
+    object Param {
+      @branch trait Name extends api.Term.Param.Name
     }
   }
 
   @branch trait Type extends api.Type with Tree with Type.Arg with Scope
   object Type {
     @branch trait Ref extends api.Type.Ref with Type with impl.Ref
-    @ast class Name(value: String @nonEmpty) extends api.Type.Name with impl.Name with Type.Ref with Pat.Type.Ref {
+    @ast class Name(value: String @nonEmpty) extends api.Type.Name with impl.Name with Type.Ref with Pat.Type.Ref with Param.Name with impl.Name.AccessBoundary {
       // TODO: revisit this once we have trivia in place
       // require(keywords.contains(value) ==> isBackquoted)
     }
@@ -173,12 +193,13 @@ package scala.meta.internal.ast {
       @ast class Repeated(tpe: Type) extends Arg
     }
     @ast class Param(mods: Seq[Mod],
-                     name: impl.Name,
+                     name: Param.Name,
                      tparams: Seq[impl.Type.Param],
                      typeBounds: impl.Type.Bounds,
                      viewBounds: Seq[impl.Type],
-                     contextBounds: Seq[impl.Type]) extends api.Type.Param with Member {
-      require(name.isInstanceOf[impl.Name.Anonymous] || name.isInstanceOf[Type.Name])
+                     contextBounds: Seq[impl.Type]) extends api.Type.Param with Member
+    object Param {
+      @branch trait Name extends api.Type.Param.Name
     }
   }
 
@@ -378,12 +399,8 @@ package scala.meta.internal.ast {
     @ast class Annot(tree: Term) extends Mod {
       require(tree.isCtorCall)
     }
-    @ast class Private extends Mod
-    @ast class PrivateThis extends Mod with Name { def value = "this" }
-    @ast class PrivateWithin(name: Predef.String) extends Mod with Name { def value = name }
-    @ast class Protected extends Mod
-    @ast class ProtectedThis extends Mod with Name { def value = "this" }
-    @ast class ProtectedWithin(name: Predef.String) extends Mod with Name { def value = name }
+    @ast class Private(within: Name.AccessBoundary) extends Mod
+    @ast class Protected(within: Name.AccessBoundary) extends Mod
     @ast class Implicit() extends Mod
     @ast class Final() extends Mod
     @ast class Sealed() extends Mod
@@ -412,9 +429,9 @@ package scala.meta.internal.ast {
     @branch trait Selector extends api.Importee with Tree with Ref
     object Selector {
       @ast class Wildcard() extends Selector
-      @ast class Name(value: String) extends Selector
-      @ast class Rename(from: String, to: String) extends Selector
-      @ast class Unimport(name: String) extends Selector
+      @ast class Name(value: impl.Name.Imported) extends Selector
+      @ast class Rename(from: impl.Name.Imported, to: impl.Name.Imported) extends Selector
+      @ast class Unimport(name: impl.Name.Imported) extends Selector
     }
   }
 

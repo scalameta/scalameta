@@ -116,15 +116,13 @@ trait Api {
       }
       val prefixlessName = tree.name match {
         case name: impl.Name.Anonymous => name
+        case name: impl.Name.Indeterminate => name
+        case name: impl.Name.Imported => name
         case name: impl.Term.Name => name.copy(denot = stripPrefix(name.denot))
         case name: impl.Type.Name => name.copy(denot = stripPrefix(name.denot))
         case name: impl.Ctor.Name => name.copy(denot = stripPrefix(name.denot))
         case name: impl.Term.This => name.copy(denot = stripPrefix(name.denot))
         case name: impl.Term.Super => unreachable
-        case name: impl.Mod.PrivateThis => unreachable
-        case name: impl.Mod.PrivateWithin => unreachable
-        case name: impl.Mod.ProtectedThis => unreachable
-        case name: impl.Mod.ProtectedWithin => unreachable
       }
       prefixlessName.defn
     }
@@ -217,17 +215,10 @@ trait Api {
     @hosted def isObject: Boolean = tree.isInstanceOf[impl.Defn.Object]
     @hosted def isPackage: Boolean = tree.isInstanceOf[impl.Pkg]
     @hosted def isPackageObject: Boolean = tree.isInstanceOf[impl.Pkg.Object]
-    @hosted def isPrivate: Boolean = (
-      tree.mods.exists(_.isInstanceOf[impl.Mod.Private]) ||
-      tree.mods.exists(_.isInstanceOf[impl.Mod.PrivateThis]) ||
-      tree.mods.exists(_.isInstanceOf[impl.Mod.PrivateWithin])
-    )
-    @hosted def isProtected: Boolean = (
-      tree.mods.exists(_.isInstanceOf[impl.Mod.Protected]) ||
-      tree.mods.exists(_.isInstanceOf[impl.Mod.ProtectedThis]) ||
-      tree.mods.exists(_.isInstanceOf[impl.Mod.ProtectedWithin])
-    )
+    @hosted def isPrivate: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Private])
+    @hosted def isProtected: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Protected])
     @hosted def isPublic: Boolean = !tree.isPrivate && !tree.isProtected
+    @hosted def accessBoundary: Option[Name.AccessBoundary] = tree.mods.collectFirst { case impl.Mod.Private(name) => name; case impl.Mod.Protected(name) => name }
     @hosted def isImplicit: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Implicit])
     @hosted def isFinal: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Final]) || tree.isObject
     @hosted def isSealed: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Sealed])
@@ -280,11 +271,15 @@ trait Api {
   }
 
   implicit class SemanticTermParameterOps(val tree: Term.Param) {
+    @hosted def source: Term.Param = new SemanticMemberOps(tree).name.require[Term.Param]
+    @hosted def name: Term.Param.Name = new SemanticMemberOps(tree).name.require[Term.Param.Name]
     @hosted def default: Option[Term] = tree.require[impl.Term.Param].default
     @hosted def field: Member.Term = tree.owner.owner.members(tree.name).require[Member.Term]
   }
 
   implicit class SemanticTypeParameterOps(val tree: Type.Param) {
+    @hosted def source: Type.Param = new SemanticMemberOps(tree).name.require[Type.Param]
+    @hosted def name: Type.Param.Name = new SemanticMemberOps(tree).name.require[Type.Param.Name]
     @hosted def contextBounds: Seq[Type] = tree.require[impl.Type.Param].contextBounds
     @hosted def viewBounds: Seq[Type] = tree.require[impl.Type.Param].viewBounds
     @hosted def lo: Type = tree.require[impl.Type.Param].lo

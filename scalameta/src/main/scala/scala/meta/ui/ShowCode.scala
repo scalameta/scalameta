@@ -203,6 +203,8 @@ object Code {
   implicit def codeTree[T <: api.Tree](implicit dialect: Dialect, style: Style): Code[T] = Code { x => (x: api.Tree) match {
     // Name
     case t: Name.Anonymous       => s("_")
+    case t: Name.Indeterminate   => if (guessIsBackquoted(t)) s("`", t.value, "`") else s(t.value)
+    case t: Name.Imported        => if (guessIsBackquoted(t)) s("`", t.value, "`") else s(t.value)
 
     // Term
     case t: Term if t.isCtorCall => if (t.isInstanceOf[Ctor.Ref.Function]) s("=>") else s(p(AnnotTyp, t.ctorTpe), t.ctorArgss)
@@ -415,24 +417,22 @@ object Code {
       }
 
     // Mod
-    case t: Mod.Annot                => s(kw("@"), p(SimpleTyp, t.tree.ctorTpe), t.tree.ctorArgss)
-    case t: Mod.Private              => s(kw("private"))
-    case t: Mod.PrivateThis          => s(kw("private"), kw("["), kw("this"), kw("]"))
-    case t: Mod.PrivateWithin        => s(kw("private"), kw("["), t.name, kw("]"))
-    case t: Mod.Protected            => s(kw("protected"))
-    case t: Mod.ProtectedThis        => s(kw("protected"), kw("["), kw("this"), kw("]"))
-    case t: Mod.ProtectedWithin      => s(kw("protected"), kw("["), t.name, kw("]"))
-    case _: Mod.Implicit             => kw("implicit")
-    case _: Mod.Final                => kw("final")
-    case _: Mod.Sealed               => kw("sealed")
-    case _: Mod.Override             => kw("override")
-    case _: Mod.Case                 => kw("case")
-    case _: Mod.Abstract             => kw("abstract")
-    case _: Mod.Covariant            => kw("+")
-    case _: Mod.Contravariant        => kw("-")
-    case _: Mod.Lazy                 => kw("lazy")
-    case _: Mod.ValParam             => kw("val")
-    case _: Mod.VarParam             => kw("var")
+    case Mod.Annot(tree)                 => s(kw("@"), p(SimpleTyp, tree.ctorTpe), tree.ctorArgss)
+    case Mod.Private(Name.Anonymous())   => s(kw("private"))
+    case Mod.Private(name)               => s(kw("private"), kw("["), s(name), kw("]"))
+    case Mod.Protected(Name.Anonymous()) => s(kw("protected"))
+    case Mod.Protected(name)             => s(kw("protected"), kw("["), s(name), kw("]"))
+    case _: Mod.Implicit                 => kw("implicit")
+    case _: Mod.Final                    => kw("final")
+    case _: Mod.Sealed                   => kw("sealed")
+    case _: Mod.Override                 => kw("override")
+    case _: Mod.Case                     => kw("case")
+    case _: Mod.Abstract                 => kw("abstract")
+    case _: Mod.Covariant                => kw("+")
+    case _: Mod.Contravariant            => kw("-")
+    case _: Mod.Lazy                     => kw("lazy")
+    case _: Mod.ValParam                 => kw("val")
+    case _: Mod.VarParam                 => kw("var")
 
     // Enumerator
     case t: Enumerator.Val           => s(p(Pattern1, t.pat), " = ", p(Expr, t.rhs))

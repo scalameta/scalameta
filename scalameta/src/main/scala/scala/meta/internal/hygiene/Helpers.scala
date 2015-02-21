@@ -32,10 +32,8 @@ object OpaqueRef {
     tree match {
       case tree: Term.This => Some((tree, Term.This.$tag))
       case tree: Term.Super => Some((tree, Term.Super.$tag))
-      case tree: Mod.PrivateThis => Some((tree, Mod.PrivateThis.$tag))
-      case tree: Mod.PrivateWithin => Some((tree, Mod.PrivateWithin.$tag))
-      case tree: Mod.ProtectedThis => Some((tree, Mod.ProtectedThis.$tag))
-      case tree: Mod.ProtectedWithin => Some((tree, Mod.ProtectedWithin.$tag))
+      case tree: Name.Indeterminate => Some((tree, Name.Indeterminate.$tag))
+      case tree: Name.Imported => Some((tree, Name.Imported.$tag))
       case _ => None
     }
   }
