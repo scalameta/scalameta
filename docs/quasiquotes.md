@@ -85,7 +85,7 @@
  Repeated | `t"$tpe *"`
  Type     | `t"$tpe"`
 
-## Patterns (meta.Pat)
+## Patterns (meta.Pat) and Cases (meta.Case)
 
                | Quasiquote
 ---------------|----------------------------
@@ -101,6 +101,7 @@
  Name          | ``p"`name`"``
  Selection     | `p"$expr.$name"`
  Literal       | `p"$lit"`
+ Case          | `p"case $pat if $condopt => $expr"`
 
 ## Argument Patterns (meta.Pat.Arg)
 
@@ -225,12 +226,6 @@
  Rname    | `importee"$iname => $iname"`
  Unimport  | `importee"$iname => _"`
  Wildcard  | `importee"_"`
-
-## Cases (meta.Case)
-
-      | Quasiquote
-------|---------------------------
- Case | `p"$pat if $condopt => $expr"`
 
 ## Naming conventions
 

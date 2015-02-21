@@ -11,6 +11,8 @@ private[meta] trait Quasiquotes {
   // that would probably allow us for every AST node to have an associated quasiquote interpolator in the doc
   // upd. this might also require non-local macro expansion because of hierarchical structure of the `scala.meta` package
   // (if we annotate scala.meta.package.Type.Arg, we need to somehow put the TypeQuote implicit class into scala.meta.package)
+  // TODO: overloading Case and Pat.Arg within p"..." is probably not the best idea
+  // however, cas"..." is so ugly that I'm willing to be conceptually impure here
   @quasiquote[Stat]('q)                implicit class XtensionQuasiquoteTerm(ctx: StringContext)
   @quasiquote[Term.Arg]('arg)          implicit class XtensionQuasiquoteTermArg(ctx: StringContext)
   @quasiquote[Term.Param]('param)      implicit class XtensionQuasiquoteTermParam(ctx: StringContext)
