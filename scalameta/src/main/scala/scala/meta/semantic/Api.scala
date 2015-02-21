@@ -629,8 +629,10 @@ private[meta] trait Api {
         }
         result.withScratchpad(tpe.scratchpad)
       }
-      val prefixedCtor = tree.members(ctor.defn).name.require[Ctor.Name]
-      loop(tree.require[impl.Type], prefixedCtor.require[impl.Ctor.Name])
+      // TODO: if we uncomment this, that'll lead to a stackoverflow in scalahost
+      // it's okay, but at least we could verify that ctor's prefix is coherent with tree
+      // val prefixedCtor = tree.members(ctor.defn).name.require[Ctor.Name]
+      loop(tree.require[impl.Type], ctor.require[impl.Ctor.Name])
     }
   }
 }
