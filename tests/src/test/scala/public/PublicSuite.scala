@@ -270,7 +270,7 @@ class PublicSuite extends FunSuite {
     assert(typecheckError("""
       import scala.meta._
       (??? : Member).internalAll(???)
-    """) === "method internalAll in trait SemanticScopeLikeOps cannot be accessed in meta.SemanticScopeOps")
+    """) === "method internalAll in trait XtensionSemanticScopeLike cannot be accessed in meta.XtensionSemanticScope")
   }
 
   // TODO: this error is somewhat confusing
