@@ -162,6 +162,8 @@
  Object         | `q"..$mods object $ename extends $template"`
  Package Object | `q"package object $ename extends $template"`
  Package        | `q"package $ref { ..$stats }"`
+ Primary Ctor   | `q"..$mods def this(..$paramss)"`
+ Secondary Ctor | `q"..$mods def this(..$paramss) = $expr"`
 
 ### Params
 
@@ -174,8 +176,6 @@
 
                      | Quasiquote
 ---------------------|------------------------------
- Primary Ctor        | `ctor"..$mods def this(..$paramss)"`
- Secondary Ctor      | `ctor"..$mods def this(..$paramss) = $expr"`
  Name Reference      | `ctor"$ctorname"`
  Select Reference    | `ctor"$ref.$ctorname"`
  Project Reference   | `ctor"$tpe#$ctorname"`
