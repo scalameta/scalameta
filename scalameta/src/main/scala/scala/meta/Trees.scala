@@ -206,6 +206,38 @@ package scala.meta.internal.ast {
 
   @branch trait Pat extends api.Pat with Tree with Pat.Arg
   object Pat {
+    // TODO: Introduction of Pat.Var.Term and Pat.Var.Type is a very far-reaching design decision.
+    //
+    // Here we would like to model Scala's extravagant binding rules for term and type variables in patterns,
+    // according to which both `x` and ``x`` might mean same or different things depending on whether they are used
+    // a) in normal contexts, b) in patterns, c) in special parts of patterns.
+    // Concretely, `X` in `X + 2` and `case X` means the same, whereas `x` in `x + 2` and `x` does not.
+    // Also, `T` in `val x: T = ...` and `case x: T => ...` means the same, whereas `t` in the same conditions does not.
+    //
+    // The two approaches to this are as follows:
+    // 1) Model names in both bindee and binder roles as the same AST node (i.e. Term.Name for terms and Type.Name for types)
+    // 2) Model bindees as Term.Name/Type.Name and binders as Pat.Var.Term and Pat.Var.Type
+    //
+    // Benefits of the first approach:
+    // + One less AST node for terms
+    // + A lot less AST nodes for types (type vars are viral in type patterns, so we have to replicate almost the entire type hierarchy!)
+    //
+    // Benefits of the second approach:
+    // + Impossible to mix up bindee/binder roles when unquoting
+    // + The aforementioned safety guarantee is static
+    // + Trivial to figure out whether a name is a bindee or binder
+    // + Does not conflate Name and Member (in the first approach, Name has to be Member, because names in binder role are members)
+    //
+    // Here are the arguments that attempt to adjust the first approach to address the lack of benefits of the second approach:
+    // + Term.Name and Type.Name are names, so they have denotations, and that's where we can keep track of the role.
+    //   We have to make sure that we unquote binder names correctly (not $x, but ${x.name}).
+    //   We also have to make sure that we unquote pattern types correctly, and that should be done in a deep fashion!
+    // + On multiple occasions, we have sacrificed static safety guarantees in favor of more compact solutions.
+    // + In the first approach, it's also possible to figure out the role of a given name, even though in a bit trickier fashion.
+    // + This conflation might be unfortunate, but it doesn't create soundness holes.
+    //
+    // After a lot of deliberation, I've picked the second approach.
+    // However the benefits of the first approach are definitely tangible, and we will need to revisit this choice later.
     @branch trait Var extends Tree
     object Var {
       @ast class Term(name: impl.Term.Name) extends Var with Pat with Member.Term
