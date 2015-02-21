@@ -222,15 +222,16 @@ class PublicSuite extends FunSuite {
     """) === "value members is not a member of scala.meta.Tree")
   }
 
-  test("Term.members") {
+  test("Ref.members") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
       implicit val c: scala.meta.semantic.Context = ???
       import scala.{meta => api}
       import scala.meta.internal.{ast => impl}
-      q"scala".members
-    """) === "value members is not a member of meta.internal.ast.Term.Name")
+      q"scala".members: scala.collection.immutable.Seq[api.Member]
+      q"(1 + 2).toString".members: scala.collection.immutable.Seq[api.Member]
+    """) === "")
   }
 
   test("Type.members") {
@@ -269,7 +270,7 @@ class PublicSuite extends FunSuite {
     assert(typecheckError("""
       import scala.meta._
       (??? : Member).internalAll(???)
-    """) === "method internalAll in class SemanticScopeOps cannot be accessed in meta.SemanticScopeOps")
+    """) === "method internalAll in trait SemanticScopeLikeOps cannot be accessed in meta.SemanticScopeOps")
   }
 
   // TODO: this error is somewhat confusing
