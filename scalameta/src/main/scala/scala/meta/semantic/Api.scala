@@ -618,10 +618,11 @@ private[meta] trait Api {
             else None
           }
         }
+        def adjustValue(ctor: impl.Ctor.Name, value: String) = impl.Ctor.Name(value, ctor.denot, ctor.sigma).withScratchpad(ctor.scratchpad)
         val result = tpe match {
-          case impl.Type.Name(_) => ctor
-          case impl.Type.Select(qual, _) => impl.Ctor.Ref.Select(qual, ctor)
-          case impl.Type.Project(qual, _) => impl.Ctor.Ref.Project(qual, ctor)
+          case impl.Type.Name(value) => adjustValue(ctor, value)
+          case impl.Type.Select(qual, impl.Type.Name(value)) => impl.Ctor.Ref.Select(qual, adjustValue(ctor, value))
+          case impl.Type.Project(qual, impl.Type.Name(value)) => impl.Ctor.Ref.Project(qual, adjustValue(ctor, value))
           case impl.Type.Function(Types(params), ret) => impl.Term.ApplyType(impl.Ctor.Ref.Function(ctor), params :+ ret)
           case impl.Type.Annotate(tpe, annots) => impl.Term.Annotate(loop(tpe, ctor), annots)
           case impl.Type.Apply(tpe, args) => impl.Term.ApplyType(loop(tpe, ctor), args)
