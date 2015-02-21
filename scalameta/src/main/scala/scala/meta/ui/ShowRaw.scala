@@ -8,7 +8,7 @@ import scala.collection.immutable.Seq
 import scala.meta.internal.ast._
 import scala.{meta => api}
 import scala.annotation.implicitNotFound
-import scala.meta.syntactic.tokenizers.Token._
+import scala.meta.syntactic.Token._
 
 @implicitNotFound(msg = "don't know how to show[Raw] for ${T}")
 trait Raw[T] extends Show[T]

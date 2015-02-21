@@ -65,7 +65,7 @@ class LiftableMacros(val c: Context) extends AdtReflection {
       $u.Liftable(($mainParam: ${weakTypeOf[T]}) => {
         object $mainModule {
           val materializeAst = "shadow the ast materializer"
-          val TermQuote = "shadow scala.meta quasiquotes"
+          val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
           ..$liftLeafs
           implicit def $mainMethod[T <: ${root.sym}]: $u.Liftable[T] = $u.Liftable(($localParam: T) => {
             var result: $u.Tree = null

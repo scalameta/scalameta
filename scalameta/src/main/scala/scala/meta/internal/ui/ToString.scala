@@ -6,7 +6,7 @@ import scala.meta.internal.{ast => impl}
 import scala.meta.dialects.`package`.Scala211
 import scala.meta.ui.Code.{codeTree, Style}
 
-object toString {
+private[meta] object toString {
   def apply(tree: Tree) = {
     // NOTE: if we leave implicit inference to chance, we're going to get
     // `illegal cyclic reference involving package object meta`

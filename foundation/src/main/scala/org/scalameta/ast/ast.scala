@@ -56,9 +56,9 @@ class AstMacros(val c: Context) {
       val denotParam = q"@$AstInternal.auxiliary val denot: $HygieneInternal.Denotation = $HygieneInternal.Denotation.Zero"
       val sigmaParam = q"@$AstInternal.auxiliary val sigma: $HygieneInternal.Sigma = $HygieneInternal.Sigma.Zero"
       val paramss = {
-        if (is("Name.Anonymous") || is("Term.Name") || is("Type.Name") || is("Ctor.Ref.Name") ||
-            is("Term.This") || is("Term.Super") || is("Mod.PrivateThis") || is("Mod.ProtectedThis") ||
-            is("Mod.PrivateWithin") || is("Mod.ProtectedWithin")) {
+        if (is("Name.Anonymous") || is("Name.Indeterminate") || is("Name.Imported") ||
+            is("Term.Name") || is("Type.Name") || is("Ctor.Ref.Name") ||
+            is("Term.This") || is("Term.Super")) {
           (rawparamss.head ++ List(denotParam, sigmaParam)) +: rawparamss.tail
         } else {
           rawparamss
@@ -101,8 +101,8 @@ class AstMacros(val c: Context) {
 
       // step 6: generate boilerplate required by the @ast infrastructure
       stats1 += q"override type ThisType = $name"
-      stats1 += q"override def $$tag: _root_.scala.Int = $mname.$$tag"
-      mstats1 += q"def $$tag: _root_.scala.Int = $AdtInternal.calculateTag[$name]"
+      stats1 += q"override def internalTag: _root_.scala.Int = $mname.internalTag"
+      mstats1 += q"def internalTag: _root_.scala.Int = $AdtInternal.calculateTag[$name]"
       // TODO: remove leafClass and leafCompanion from here
       anns1 += q"new $AstInternal.astClass"
       anns1 += q"new $AdtInternal.leafClass"

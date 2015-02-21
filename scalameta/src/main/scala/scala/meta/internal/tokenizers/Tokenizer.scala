@@ -1,5 +1,5 @@
 package scala.meta
-package syntactic
+package internal
 package tokenizers
 
 import scala.collection.{immutable, mutable}
@@ -8,7 +8,7 @@ import org.scalameta.invariants._
 import Chars.{CR, LF, FF}
 import LegacyToken._
 
-object tokenize {
+private[meta] object tokenize {
   def apply(origin: Origin)(implicit dialect: Dialect): Vector[Token] = {
     def legacyTokenToToken(curr: LegacyTokenData): Token = {
       (curr.token: @scala.annotation.switch) match {

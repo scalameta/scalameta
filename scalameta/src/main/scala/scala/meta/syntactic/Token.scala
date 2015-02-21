@@ -1,6 +1,5 @@
 package scala.meta
 package syntactic
-package tokenizers
 
 import org.scalameta.tokens._
 import scala.reflect.ClassTag
@@ -11,8 +10,8 @@ import scala.meta.Origin
   def is[T: ClassTag]: Boolean    = implicitly[ClassTag[T]].runtimeClass.isAssignableFrom(this.getClass)
   def isNot[T: ClassTag]: Boolean = !is[T]
   def origin: Origin
-  def start: Offset
-  def end: Offset
+  def start: Int
+  def end: Int
   def name: String
   def code: String = {
     val buf = new StringBuffer
@@ -140,7 +139,7 @@ object Token {
   @token class `\r`(origin: Origin, start: Int) extends Whitespace
   @token class `\n`(origin: Origin, start: Int) extends Whitespace with StatSep with CantStartStat
   // TODO: \n\n is a virtual token emitted by TokIterator to appease the semi-ported scalac parser
-  // it will never occur in a token stream produced by RichOrigin.tokens
+  // it will never occur in a token stream produced by RichOriginLike.tokens
   @token class `\n\n`(origin: Origin, start: Int) extends Whitespace with StatSep with CantStartStat
   @token class `\f`(origin: Origin, start: Int) extends Whitespace
 

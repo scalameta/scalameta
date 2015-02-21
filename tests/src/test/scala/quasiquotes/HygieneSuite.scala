@@ -41,10 +41,10 @@ class HygieneSuite extends FunSuite {
   test("t\"List[Int]\"") {
     assert(t"List[Int]".show[Semantics] === """
       |Type.Apply(Type.Name("List")[1], List(Type.Name("Int")[2]))
-      |[1] Type.Singleton(Term.Name("package")[3])::scala.package#List
-      |[2] Type.Singleton(Term.Name("scala")[4])::scala#Int
-      |[3] Type.Singleton(Term.Name("scala")[4])::scala.package
-      |[4] Type.Singleton(Term.Name("_root_")[5])::scala
+      |[1] Type.Singleton(Term.Name("package")[4])::scala.package#List
+      |[2] Type.Singleton(Term.Name("scala")[3])::scala#Int
+      |[3] Type.Singleton(Term.Name("_root_")[5])::scala
+      |[4] Type.Singleton(Term.Name("scala")[3])::scala.package
       |[5] 0::_root_
     """.stripMargin.trim)
   }

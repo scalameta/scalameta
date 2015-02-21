@@ -1,5 +1,5 @@
 package scala.meta
-package syntactic
+package internal
 package parsers
 
 import scala.collection.{ mutable, immutable }
@@ -10,16 +10,16 @@ import scala.reflect.ClassTag
 import scala.meta.internal.ast._
 import scala.meta.internal.{ast => impl}
 import scala.meta.Origin
-import scala.meta.syntactic.tokenizers.Chars.{isOperatorPart, isScalaLetter}
-import scala.meta.syntactic.tokenizers.Token._
+import scala.meta.internal.tokenizers.Chars.{isOperatorPart, isScalaLetter}
+import scala.meta.syntactic.Token._
 import org.scalameta.tokens._
 import org.scalameta.unreachable
 import org.scalameta.invariants._
 
-object SyntacticInfo {
+private[meta] object SyntacticInfo {
   private[meta] val unaryOps = Set("-", "+", "~", "!")
   private[meta] def isUnaryOp(s: String): Boolean = unaryOps contains s
-  implicit class SyntacticTermNameOps(val name: Term.Name) extends AnyVal {
+  implicit class XtensionSyntacticTermName(name: Term.Name) {
     import name._
     def isLeftAssoc: Boolean = value.last != ':'
     def isUnaryOp: Boolean = SyntacticInfo.isUnaryOp(value)
@@ -44,7 +44,7 @@ object SyntacticInfo {
         case _               => 10
       }
   }
-  implicit class SyntacticTermOps(val tree: Term) extends AnyVal {
+  implicit class XtensionTermOps(tree: Term) {
     def isCtorCall: Boolean = tree match {
       case _: Ctor.Ref => true
       case Term.ApplyType(callee, _) => callee.isCtorCall
@@ -82,7 +82,7 @@ object SyntacticInfo {
       }
     }
   }
-  implicit class SyntacticTermRefOps(val tree: Term.Ref) extends AnyVal {
+  implicit class XtensionTermRefOps(tree: Term.Ref) {
     def isPath: Boolean = tree.isStableId || tree.isInstanceOf[Term.This]
     def isQualId: Boolean = tree match {
       case _: Term.Name                   => true
@@ -95,7 +95,7 @@ object SyntacticInfo {
       case _                                            => false
     }
   }
-  implicit class SyntacticTemplateOps(val tree: Template) extends AnyVal {
+  implicit class XtensionTemplateOps(tree: Template) {
     def isCompoundTypeCompatible: Boolean = {
       tree.early.isEmpty &&
       tree.parents.forall(!_.isInstanceOf[Term.Apply]) &&
@@ -104,25 +104,21 @@ object SyntacticInfo {
       tree.stats.map(_.forall(_.isRefineStat)).getOrElse(true)
     }
   }
-  implicit class RichMod(val mod: Mod) extends AnyVal {
-    def isAccess: Boolean = mod match {
+  implicit class XtensionMod(mod: Mod) {
+    def hasAccessBoundary: Boolean = mod match {
       case _: Mod.Private         => true
-      case _: Mod.PrivateThis     => true
-      case _: Mod.PrivateWithin   => true
       case _: Mod.Protected       => true
-      case _: Mod.ProtectedThis   => true
-      case _: Mod.ProtectedWithin => true
       case _                      => false
     }
   }
-  implicit class RichMods(val mods: List[Mod]) extends AnyVal {
+  implicit class XtensionMods(mods: List[Mod]) {
     def has[T <: Mod](implicit tag: ClassTag[T]): Boolean =
       mods.exists { _.getClass == tag.runtimeClass }
     def getAll[T <: Mod](implicit tag: ClassTag[T]): List[T] =
       mods.collect { case m if m.getClass == tag.runtimeClass => m.require[T] }
-    def access: Option[Mod] = mods.collectFirst{ case m if m.isAccess => m }
+    def accessBoundary: Option[Name.AccessBoundary] = mods.collectFirst{ case Mod.Private(name) => name; case Mod.Protected(name) => name }
   }
-  implicit class RichStat(val stat: Stat) extends AnyVal {
+  implicit class XtensionStat(stat: Stat) {
     def isTopLevelStat: Boolean = stat match {
       case _: Import => true
       case _: Pkg => true
@@ -166,7 +162,7 @@ object SyntacticInfo {
 }
 import SyntacticInfo._
 
-class Parser(val origin: Origin)(implicit val dialect: Dialect) extends AbstractParser {
+private[meta] class Parser(val origin: Origin)(implicit val dialect: Dialect) extends AbstractParser {
   def this(code: String)(implicit dialect: Dialect) = this(Origin.String(code))
 
   // implementation restrictions wrt various dialect properties
@@ -262,15 +258,15 @@ class Parser(val origin: Origin)(implicit val dialect: Dialect) extends Abstract
   def xmlLiteralPattern(): Pat = ??? // xmlp.xLiteralPattern
 }
 
-class Location private(val value: Int) extends AnyVal
-object Location {
+private[meta] class Location private(val value: Int) extends AnyVal
+private[meta] object Location {
   val Local      = new Location(0)
   val InBlock    = new Location(1)
   val InTemplate = new Location(2)
 }
 import Location.{ Local, InBlock, InTemplate }
 
-abstract class AbstractParser { parser =>
+private[meta] abstract class AbstractParser { parser =>
   trait TokenIterator extends Iterator[Token] { def token: Token; def fork: TokenIterator }
   var in: TokenIterator
   def token = in.token
@@ -1718,30 +1714,25 @@ abstract class AbstractParser { parser =>
    *  }}}
    */
   def accessModifierOpt(): Option[Mod] = {
-    val originalTok = in.token
-    val (isNaked, isLocal, name) = {
-      if (in.token.is[`private`] || in.token.is[`protected`]) {
-        next()
-        if (in.token.isNot[`[`]) (true, false, None)
-        else {
-          next()
-          val result = if (in.token.is[`this`]) { next(); (false, true, None) }
-                    else (false, false, Some(termName().value))
-          accept[`]`]
-          result
-        }
-      } else {
-        (false, false, None)
+    if (in.token.is[`private`] || in.token.is[`protected`]) {
+      val mod = in.token match {
+        case _: `private` => (name: Name.AccessBoundary) => Mod.Private(name)
+        case _: `protected` => (name: Name.AccessBoundary) => Mod.Protected(name)
+        case _ => unreachable
       }
-    }
-    (originalTok, isNaked, isLocal, name) match {
-      case (_: `private`,   true,  false, None)       => Some(Mod.Private())
-      case (_: `private`,   false, true,  None)       => Some(Mod.PrivateThis())
-      case (_: `private`,   false, false, Some(name)) => Some(Mod.PrivateWithin(name))
-      case (_: `protected`, true,  false, None)       => Some(Mod.Protected())
-      case (_: `protected`, false, true,  None)       => Some(Mod.ProtectedThis())
-      case (_: `protected`, false, false, Some(name)) => Some(Mod.ProtectedWithin(name))
-      case _                                          => None
+      next()
+      if (in.token.isNot[`[`]) Some(mod(Name.Anonymous()))
+      else {
+        next()
+        val result = {
+          if (in.token.is[`this`]) { next(); Some(mod(Term.This(None))) }
+          else { val name = termName(); Some(mod(Name.Indeterminate(name.value))) }
+        }
+        accept[`]`]
+        result
+      }
+    } else {
+      None
     }
   }
 
@@ -1770,7 +1761,7 @@ abstract class AbstractParser { parser =>
         case _: `override`  => loop(addMod(mods, Mod.Override()))
         case _: `private`
            | _: `protected` =>
-          mods.filter(_.isAccess).foreach(_ => syntaxError("duplicate private/protected qualifier"))
+          mods.filter(_.hasAccessBoundary).foreach(_ => syntaxError("duplicate access qualifier"))
           val optmod = accessModifierOpt()
           optmod.map { mod => loop(addMod(mods, mod, advance = false)) }.getOrElse(mods)
         case _: `\n` if !isLocal => next(); loop(mods)
@@ -1873,15 +1864,11 @@ abstract class AbstractParser { parser =>
       if (tpt.isInstanceOf[Type.Arg.ByName]) {
         def mayNotBeByName(subj: String) =
           syntaxError(s"$subj parameters may not be call-by-name")
-        val isLocalToThis: Boolean =
-          if (ownerIsCase) (mods.access match {
-            case Some(Mod.PrivateThis()) => true
-            case _ => false
-          }) else (mods.access match {
-            case Some(Mod.PrivateThis()) => true
-            case None if !isValParam && !isVarParam => true
-            case _ => false
-          })
+        val isLocalToThis: Boolean = {
+          val isExplicitlyLocal = mods.accessBoundary.map(_.isInstanceOf[Term.This]).getOrElse(false)
+          if (ownerIsCase) isExplicitlyLocal
+          else isExplicitlyLocal || (!isValParam && !isVarParam)
+        }
         if (ownerIsType && !isLocalToThis) {
           if (isVarParam)
             mayNotBeByName("`var'")
@@ -1991,7 +1978,7 @@ abstract class AbstractParser { parser =>
     sid match {
       case Term.Select(sid: Term.Ref, name: Term.Name) if sid.isStableId =>
         if (token.is[`.`]) dotselectors
-        else Import.Clause(sid, Import.Selector.Name(name.value) :: Nil)
+        else Import.Clause(sid, Import.Selector.Name(Name.Imported(name.value)) :: Nil)
       case _ => dotselectors
     }
   }
@@ -2006,7 +1993,7 @@ abstract class AbstractParser { parser =>
 
   def importWildcardOrName(): Import.Selector =
     if (token.is[`_ `]) { next(); Import.Selector.Wildcard() }
-    else { val name = termName(); Import.Selector.Name(name.value) }
+    else { val name = termName(); Import.Selector.Name(Name.Imported(name.value)) }
 
   /** {{{
    *  ImportSelector ::= Id [`=>' Id | `=>' `_']

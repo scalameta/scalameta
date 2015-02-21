@@ -4,7 +4,7 @@ package macros
 import org.scalameta.adt._
 import org.scalameta.annotations._
 
-trait Api {
+private[meta] trait Api {
   @hosted(macroApi = true) def warning(msg: String): Unit = ???
   @hosted(macroApi = true) def error(msg: String): Unit = ???
   @hosted(macroApi = true) def abort(msg: String): Nothing = ???

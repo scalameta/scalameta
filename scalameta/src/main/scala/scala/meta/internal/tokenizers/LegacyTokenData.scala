@@ -1,12 +1,12 @@
 package scala.meta
-package syntactic
+package internal
 package tokenizers
 
 import scala.util.Try
 import LegacyToken._
 import Chars._
 
-trait LegacyTokenData {
+private[meta] trait LegacyTokenData {
   /** the next token */
   var token: LegacyToken = EMPTY
 

@@ -3,9 +3,9 @@ package ui
 
 import org.scalameta.show._
 import Show.{ sequence => s, repeat => r, indent => i, newline => n, meta => m, adorn => a, function => fn }
-import scala.meta.syntactic.parsers.SyntacticInfo._
-import scala.meta.syntactic.tokenizers.Chars._
-import scala.meta.syntactic.tokenizers.keywords
+import scala.meta.internal.parsers.SyntacticInfo._
+import scala.meta.internal.tokenizers.Chars._
+import scala.meta.internal.tokenizers.keywords
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.meta.internal.ast._
@@ -81,7 +81,7 @@ object Code {
 
   def p(og: SyntacticGroup, t: Tree, left: Boolean = false, right: Boolean = false)(implicit dialect: Dialect, style: Style) = {
     def opNeedsParens(oo: String, io: String, customAssoc: Boolean, customPrecedence: Boolean): Boolean = {
-      implicit class MySyntacticInfo(name: String) {
+      implicit class XtensionMySyntacticInfo(name: String) {
         def isleftassoc: Boolean = if (customAssoc) name.last != ':' else true
         def isrightassoc: Boolean = !isleftassoc
         def precedence: Int = if (customPrecedence) Term.Name(name).precedence else 0
@@ -203,6 +203,8 @@ object Code {
   implicit def codeTree[T <: api.Tree](implicit dialect: Dialect, style: Style): Code[T] = Code { x => (x: api.Tree) match {
     // Name
     case t: Name.Anonymous       => s("_")
+    case t: Name.Indeterminate   => if (guessIsBackquoted(t)) s("`", t.value, "`") else s(t.value)
+    case t: Name.Imported        => if (guessIsBackquoted(t)) s("`", t.value, "`") else s(t.value)
 
     // Term
     case t: Term if t.isCtorCall => if (t.isInstanceOf[Ctor.Ref.Function]) s("=>") else s(p(AnnotTyp, t.ctorTpe), t.ctorArgss)
@@ -350,6 +352,8 @@ object Code {
 
     // Lit
     case t: Lit.Bool    => m(Literal, s(t.value.toString))
+    case t: Lit.Byte    => m(Literal, s("ByteLiterals.", if (t.value == 0) "Zero" else if (t.value > 0) "Plus" + t.value else "Minus" + t.value))
+    case t: Lit.Short   => m(Literal, s("ShortLiterals.", if (t.value == 0) "Zero" else if (t.value > 0) "Plus" + t.value else "Minus" + t.value))
     case t: Lit.Int     => m(Literal, s(t.value.toString))
     case t: Lit.Long    => m(Literal, s(t.value.toString + "L"))
     case t: Lit.Float   => m(Literal, s(t.value.toString + "f"))
@@ -413,24 +417,22 @@ object Code {
       }
 
     // Mod
-    case t: Mod.Annot                => s(kw("@"), p(SimpleTyp, t.tree.ctorTpe), t.tree.ctorArgss)
-    case t: Mod.Private              => s(kw("private"))
-    case t: Mod.PrivateThis          => s(kw("private"), kw("["), kw("this"), kw("]"))
-    case t: Mod.PrivateWithin        => s(kw("private"), kw("["), t.name, kw("]"))
-    case t: Mod.Protected            => s(kw("protected"))
-    case t: Mod.ProtectedThis        => s(kw("protected"), kw("["), kw("this"), kw("]"))
-    case t: Mod.ProtectedWithin      => s(kw("protected"), kw("["), t.name, kw("]"))
-    case _: Mod.Implicit             => kw("implicit")
-    case _: Mod.Final                => kw("final")
-    case _: Mod.Sealed               => kw("sealed")
-    case _: Mod.Override             => kw("override")
-    case _: Mod.Case                 => kw("case")
-    case _: Mod.Abstract             => kw("abstract")
-    case _: Mod.Covariant            => kw("+")
-    case _: Mod.Contravariant        => kw("-")
-    case _: Mod.Lazy                 => kw("lazy")
-    case _: Mod.ValParam             => kw("val")
-    case _: Mod.VarParam             => kw("var")
+    case Mod.Annot(tree)                 => s(kw("@"), p(SimpleTyp, tree.ctorTpe), tree.ctorArgss)
+    case Mod.Private(Name.Anonymous())   => s(kw("private"))
+    case Mod.Private(name)               => s(kw("private"), kw("["), s(name), kw("]"))
+    case Mod.Protected(Name.Anonymous()) => s(kw("protected"))
+    case Mod.Protected(name)             => s(kw("protected"), kw("["), s(name), kw("]"))
+    case _: Mod.Implicit                 => kw("implicit")
+    case _: Mod.Final                    => kw("final")
+    case _: Mod.Sealed                   => kw("sealed")
+    case _: Mod.Override                 => kw("override")
+    case _: Mod.Case                     => kw("case")
+    case _: Mod.Abstract                 => kw("abstract")
+    case _: Mod.Covariant                => kw("+")
+    case _: Mod.Contravariant            => kw("-")
+    case _: Mod.Lazy                     => kw("lazy")
+    case _: Mod.ValParam                 => kw("val")
+    case _: Mod.VarParam                 => kw("var")
 
     // Enumerator
     case t: Enumerator.Val           => s(p(Pattern1, t.pat), " = ", p(Expr, t.rhs))

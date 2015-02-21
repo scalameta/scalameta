@@ -7,15 +7,15 @@ import scala.reflect.{ClassTag, classTag}
 package object invariants {
   def require(x: Boolean): Unit = macro Macros.require
   // TODO: add pretty printed support for implication
-  implicit class Implication(left: Boolean) {
+  implicit class XtensionImplication(left: Boolean) {
     def ==>(right: Boolean) = !left || right
     def <==(right: Boolean) = (right ==> left)
     def <==>(right: Boolean) = (left ==> right) && (right ==> left)
   }
-  implicit class RequireDowncast[T](x: T) {
+  implicit class XtensionRequireCast[T](x: T) {
     def require[U: ClassTag]: U = macro Macros.requireCast[U]
   }
-  implicit class RequireSome[T](x: Option[T]) {
+  implicit class XtensionRequireGet[T](x: Option[T]) {
     def requireGet: T = macro Macros.requireGet
   }
 }

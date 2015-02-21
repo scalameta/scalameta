@@ -133,8 +133,9 @@ class PublicSuite extends FunSuite {
       implicit val c: scala.meta.semantic.Context = ???
       import scala.{meta => api}
       import scala.meta.internal.{ast => impl}
-      t"List".tpe
-    """) === "value tpe is not a member of meta.internal.ast.Type.Name")
+      t"List".tpe: api.Type
+      t"List[Int]".tpe: api.Type
+    """) === "")
   }
 
   test("Term.tpe") {
@@ -222,15 +223,16 @@ class PublicSuite extends FunSuite {
     """) === "value members is not a member of scala.meta.Tree")
   }
 
-  test("Term.members") {
+  test("Ref.members") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
       implicit val c: scala.meta.semantic.Context = ???
       import scala.{meta => api}
       import scala.meta.internal.{ast => impl}
-      q"scala".members
-    """) === "value members is not a member of meta.internal.ast.Term.Name")
+      q"scala".members: scala.collection.immutable.Seq[api.Member]
+      q"(1 + 2).toString".members: scala.collection.immutable.Seq[api.Member]
+    """) === "")
   }
 
   test("Type.members") {
@@ -269,7 +271,7 @@ class PublicSuite extends FunSuite {
     assert(typecheckError("""
       import scala.meta._
       (??? : Member).internalAll(???)
-    """) === "method internalAll in class SemanticScopeOps cannot be accessed in meta.SemanticScopeOps")
+    """) === "method internalAll in trait XtensionSemanticScopeLike cannot be accessed in meta.XtensionSemanticScope")
   }
 
   // TODO: this error is somewhat confusing
@@ -318,6 +320,7 @@ class PublicSuite extends FunSuite {
       import scala.meta._
       import scala.meta.dialects.Scala211
       "".parse[Term]
+      (??? : Origin).parse[Term]
     """) === "")
   }
 
@@ -326,6 +329,7 @@ class PublicSuite extends FunSuite {
       import scala.meta._
       implicit val dialect: scala.meta.Dialect = ???
       "".parse[Term]
+      (??? : Origin).parse[Term]
     """) === "")
   }
 
@@ -337,6 +341,7 @@ class PublicSuite extends FunSuite {
       }
       implicit val c: MyContext = ???
       "".parse[Term]
+      (??? : Origin).parse[Term]
     """) === "")
   }
 
@@ -345,6 +350,7 @@ class PublicSuite extends FunSuite {
       import scala.meta._
       implicit val c: scala.meta.semantic.Context = ???
       "".parse[Term]
+      (??? : Origin).parse[Term]
     """) === "")
   }
 
@@ -373,6 +379,7 @@ class PublicSuite extends FunSuite {
       import scala.meta._
       import scala.meta.dialects.Scala211
       "".tokens
+      (??? : Origin).tokens
     """) === "")
   }
 
@@ -381,6 +388,7 @@ class PublicSuite extends FunSuite {
       import scala.meta._
       implicit val dialect: scala.meta.Dialect = ???
       "".tokens
+      (??? : Origin).tokens
     """) === "")
   }
 
@@ -392,6 +400,7 @@ class PublicSuite extends FunSuite {
       }
       implicit val c: MyContext = ???
       "".tokens
+      (??? : Origin).tokens
     """) === "")
   }
 
@@ -400,6 +409,7 @@ class PublicSuite extends FunSuite {
       import scala.meta._
       implicit val c: scala.meta.semantic.Context = ???
       "".tokens
+      (??? : Origin).tokens
     """) === "")
   }
 
@@ -461,66 +471,6 @@ class PublicSuite extends FunSuite {
     assert(typecheckError("""
       import scala.meta._
       (??? : Tree).show[Raw]
-    """) === "")
-  }
-
-  test("show[Summary] without import - 1") {
-    assert(typecheckError("""
-      (??? : scala.meta.Tree).show[Summary]
-    """) === "not found: type Summary")
-  }
-
-  test("show[Summary] without import - 2") {
-    assert(typecheckError("""
-      import scala.meta._
-      (??? : Tree).show[Summary]
-    """) === "not found: type Summary")
-  }
-
-  test("show[Summary] without dialect") {
-    assert(typecheckError("""
-      import scala.meta._
-      import scala.meta.ui.Summary
-      (??? : Tree).show[Summary]
-    """) === "don't know how to show[Summary] for scala.meta.Tree (if you're prettyprinting a tree, be sure to import a dialect, e.g. scala.meta.dialects.Scala211)")
-  }
-
-  test("show[Summary] when everything's correct (static dialect)") {
-    assert(typecheckError("""
-      import scala.meta._
-      import scala.meta.ui.Summary
-      import scala.meta.dialects.Scala211
-      (??? : Tree).show[Summary]
-    """) === "")
-  }
-
-  test("show[Summary] when everything's correct (dynamic dialect)") {
-    assert(typecheckError("""
-      import scala.meta._
-      import scala.meta.ui.Summary
-      implicit val dialect: scala.meta.Dialect = ???
-      (??? : Tree).show[Summary]
-    """) === "")
-  }
-
-  test("show[Summary] when everything's correct (static context)") {
-    assert(typecheckError("""
-      import scala.meta._
-      import scala.meta.ui.Summary
-      trait MyContext extends scala.meta.semantic.Context {
-        def dialect: scala.meta.dialects.Scala211.type = scala.meta.dialects.Scala211
-      }
-      implicit val c: MyContext = ???
-      (??? : Tree).show[Summary]
-    """) === "")
-  }
-
-  test("show[Summary] when everything's correct (dynamic context)") {
-    assert(typecheckError("""
-      import scala.meta._
-      import scala.meta.ui.Summary
-      implicit val c: scala.meta.semantic.Context = ???
-      (??? : Tree).show[Summary]
     """) === "")
   }
 

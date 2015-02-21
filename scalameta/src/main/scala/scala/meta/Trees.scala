@@ -1,14 +1,7 @@
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import org.scalameta.ast._
-import org.scalameta.invariants._
-import org.scalameta.annotations._
-import org.scalameta.unreachable
 import scala.{meta => api}
-import scala.meta.internal.{ast => impl} // necessary only to define internal classes, not to define the APIs
-import scala.meta.internal.hygiene._ // necessary only to define internal classes, not to define the APIs
-import scala.meta.syntactic.parsers.SyntacticInfo._ // necessary only for sanity checks in trees
-import scala.meta.syntactic.tokenizers.keywords // necessary only for sanity checks in trees
 
 package scala.meta {
   @root trait Tree extends Product {
@@ -20,25 +13,38 @@ package scala.meta {
     final override def toString = scala.meta.internal.ui.toString(this)
   }
 
-  @branch trait Ref extends Tree
   @branch trait Name extends Ref
+  object Name {
+    @branch trait Anonymous extends Name with Term.Param.Name with Type.Param.Name with AccessBoundary
+    @branch trait Indeterminate extends Name with AccessBoundary
+    @branch trait Imported extends Name
+    @branch trait AccessBoundary extends Name
+  }
+
+  @branch trait Ref extends Tree
   @branch trait Stat extends Tree
   @branch trait Scope extends Tree
 
   @branch trait Term extends Stat with Term.Arg
   object Term {
     @branch trait Ref extends Term with api.Ref
-    @branch trait Name extends api.Name with Term.Ref with Pat
+    @branch trait Name extends api.Name with Term.Ref with Pat with Param.Name with Name.AccessBoundary
     @branch trait Arg extends Tree
     @branch trait Param extends Member
+    object Param {
+      @branch trait Name extends api.Name
+    }
   }
 
   @branch trait Type extends Tree with Type.Arg with Scope
   object Type {
     @branch trait Ref extends Type with api.Ref
-    @branch trait Name extends api.Name with Type.Ref
+    @branch trait Name extends api.Name with Type.Ref with Pat.Type.Ref with Param.Name with Name.AccessBoundary
     @branch trait Arg extends Tree
     @branch trait Param extends Member
+    object Param {
+      @branch trait Name extends api.Name
+    }
   }
 
   @branch trait Pat extends Tree with Pat.Arg
@@ -58,6 +64,7 @@ package scala.meta {
 
   object Ctor {
     @branch trait Ref extends Term.Ref
+    @branch trait Name extends api.Name with Ref with Term
   }
 
   @branch trait Template extends Tree
@@ -69,20 +76,34 @@ package scala.meta {
 }
 
 package scala.meta.internal.ast {
+  import org.scalameta.invariants._
+  import org.scalameta.annotations._
+  import org.scalameta.unreachable
+  import scala.meta.internal.{ast => impl}
+  import scala.meta.internal.hygiene._
+  import scala.meta.internal.parsers.SyntacticInfo._
+  import scala.meta.internal.tokenizers.keywords
+
   @branch trait Tree extends api.Tree
 
-  @branch trait Ref extends api.Ref with Tree
   @branch trait Name extends api.Name with Ref { def value: String; def denot: Denotation; def sigma: Sigma }
-  object Name { @ast class Anonymous extends Name { def value = "_" } }
+  object Name {
+    @ast class Anonymous extends api.Name.Anonymous with Name with Term.Param.Name with Type.Param.Name with AccessBoundary { def value = "_" }
+    @ast class Indeterminate(value: Predef.String @nonEmpty) extends api.Name.Indeterminate with Name with AccessBoundary
+    @ast class Imported(value: Predef.String @nonEmpty) extends api.Name.Imported with Name
+    @branch trait AccessBoundary extends api.Name.AccessBoundary with Name
+  }
+
+  @branch trait Ref extends api.Ref with Tree
   @branch trait Stat extends api.Stat with Tree
   @branch trait Scope extends api.Scope with Tree
 
   @branch trait Term extends api.Term with Stat with Term.Arg
   object Term {
     @branch trait Ref extends api.Term.Ref with Term with impl.Ref
-    @ast class This(qual: Option[Predef.String]) extends Term.Ref with impl.Name { def value = "this" }
+    @ast class This(qual: Option[Predef.String]) extends Term.Ref with impl.Name with impl.Name.AccessBoundary { def value = "this" }
     @ast class Super(thisp: Option[Predef.String], superp: Option[Predef.String]) extends Term.Ref with impl.Name { def value = "super" }
-    @ast class Name(value: Predef.String @nonEmpty) extends api.Term.Name with impl.Name with Term.Ref with Pat {
+    @ast class Name(value: Predef.String @nonEmpty) extends api.Term.Name with impl.Name with Term.Ref with Pat with Param.Name with impl.Name.AccessBoundary {
       // TODO: revisit this once we have trivia in place
       // require(keywords.contains(value) ==> isBackquoted)
     }
@@ -131,15 +152,16 @@ package scala.meta.internal.ast {
       @ast class Named(name: Name, rhs: Term) extends Arg
       @ast class Repeated(arg: Term) extends Arg
     }
-    @ast class Param(mods: Seq[Mod], name: impl.Name, decltpe: Option[Type.Arg], default: Option[Term]) extends api.Term.Param with Member {
-      require(name.isInstanceOf[impl.Name.Anonymous] || name.isInstanceOf[Term.Name])
+    @ast class Param(mods: Seq[Mod], name: Param.Name, decltpe: Option[Type.Arg], default: Option[Term]) extends api.Term.Param with Member
+    object Param {
+      @branch trait Name extends api.Term.Param.Name
     }
   }
 
   @branch trait Type extends api.Type with Tree with Type.Arg with Scope
   object Type {
     @branch trait Ref extends api.Type.Ref with Type with impl.Ref
-    @ast class Name(value: String @nonEmpty) extends api.Type.Name with impl.Name with Type.Ref with Pat.Type.Ref {
+    @ast class Name(value: String @nonEmpty) extends api.Type.Name with impl.Name with Type.Ref with Pat.Type.Ref with Param.Name with impl.Name.AccessBoundary {
       // TODO: revisit this once we have trivia in place
       // require(keywords.contains(value) ==> isBackquoted)
     }
@@ -173,17 +195,50 @@ package scala.meta.internal.ast {
       @ast class Repeated(tpe: Type) extends Arg
     }
     @ast class Param(mods: Seq[Mod],
-                     name: impl.Name,
+                     name: Param.Name,
                      tparams: Seq[impl.Type.Param],
                      typeBounds: impl.Type.Bounds,
                      viewBounds: Seq[impl.Type],
-                     contextBounds: Seq[impl.Type]) extends api.Type.Param with Member {
-      require(name.isInstanceOf[impl.Name.Anonymous] || name.isInstanceOf[Type.Name])
+                     contextBounds: Seq[impl.Type]) extends api.Type.Param with Member
+    object Param {
+      @branch trait Name extends api.Type.Param.Name
     }
   }
 
   @branch trait Pat extends api.Pat with Tree with Pat.Arg
   object Pat {
+    // TODO: Introduction of Pat.Var.Term and Pat.Var.Type is a very far-reaching design decision.
+    //
+    // Here we would like to model Scala's extravagant binding rules for term and type variables in patterns,
+    // according to which both `x` and ``x`` might mean same or different things depending on whether they are used
+    // a) in normal contexts, b) in patterns, c) in special parts of patterns.
+    // Concretely, `X` in `X + 2` and `case X` means the same, whereas `x` in `x + 2` and `x` does not.
+    // Also, `T` in `val x: T = ...` and `case x: T => ...` means the same, whereas `t` in the same conditions does not.
+    //
+    // The two approaches to this are as follows:
+    // 1) Model names in both bindee and binder roles as the same AST node (i.e. Term.Name for terms and Type.Name for types)
+    // 2) Model bindees as Term.Name/Type.Name and binders as Pat.Var.Term and Pat.Var.Type
+    //
+    // Benefits of the first approach:
+    // + One less AST node for terms
+    // + A lot less AST nodes for types (type vars are viral in type patterns, so we have to replicate almost the entire type hierarchy!)
+    //
+    // Benefits of the second approach:
+    // + Impossible to mix up bindee/binder roles when unquoting
+    // + The aforementioned safety guarantee is static
+    // + Trivial to figure out whether a name is a bindee or binder
+    // + Does not conflate Name and Member (in the first approach, Name has to be Member, because names in binder role are members)
+    //
+    // Here are the arguments that attempt to adjust the first approach to address the lack of benefits of the second approach:
+    // + Term.Name and Type.Name are names, so they have denotations, and that's where we can keep track of the role.
+    //   We have to make sure that we unquote binder names correctly (not $x, but ${x.name}).
+    //   We also have to make sure that we unquote pattern types correctly, and that should be done in a deep fashion!
+    // + On multiple occasions, we have sacrificed static safety guarantees in favor of more compact solutions.
+    // + In the first approach, it's also possible to figure out the role of a given name, even though in a bit trickier fashion.
+    // + This conflation might be unfortunate, but it doesn't create soundness holes.
+    //
+    // After a lot of deliberation, I've picked the second approach.
+    // However the benefits of the first approach are definitely tangible, and we will need to revisit this choice later.
     @branch trait Var extends Tree
     object Var {
       @ast class Term(name: impl.Term.Name) extends Var with Pat with Member.Term
@@ -215,7 +270,7 @@ package scala.meta.internal.ast {
       @ast class Wildcard() extends Pat.Type
       @ast class Project(qual: Pat.Type, name: impl.Type.Name) extends Pat.Type with Pat.Type.Ref
       @ast class Apply(tpe: Pat.Type, args: Seq[Pat.Type] @nonEmpty) extends Pat.Type
-      @ast class ApplyInfix(lhs: Pat.Type, op: Name, rhs: Pat.Type) extends Pat.Type
+      @ast class ApplyInfix(lhs: Pat.Type, op: impl.Type.Name, rhs: Pat.Type) extends Pat.Type
       @ast class Function(params: Seq[Pat.Type], res: Pat.Type) extends Pat.Type
       @ast class Tuple(elements: Seq[Pat.Type] @nonEmpty) extends Pat.Type {
         require(elements.length > 1)
@@ -235,6 +290,8 @@ package scala.meta.internal.ast {
   @branch trait Lit extends Term with Pat with Type with Pat.Type
   object Lit {
     @ast class Bool(value: scala.Boolean) extends Lit
+    @ast class Byte(value: scala.Byte) extends Lit
+    @ast class Short(value: scala.Short) extends Lit
     @ast class Int(value: scala.Int) extends Lit
     @ast class Long(value: scala.Long) extends Lit
     @ast class Float(value: scala.Float) extends Lit
@@ -353,7 +410,13 @@ package scala.meta.internal.ast {
     val Name = Ref.Name
     type Name = Ref.Name
     object Ref {
-      @ast class Name(value: String @nonEmpty) extends impl.Name with Ref
+      // TODO: current design with Ctor.Name(value) has a problem of sometimes meaningless `value`
+      // for example, q"def this() = ..." is going to have Ctor.Name("this"), because we're parsing
+      // this constructor outside of any enclosure, so we can't call it Ctor.Name("C") or Ctor.Name("D")
+      // an alternative design might reintroduce the Ctor.Ref ast node that would have the structure of:
+      // Ctor.Ref(tpe: Type, ctor: Ctor.Name), where Ctor.Name would be Ctor.Name()
+      // in that design, we also won't have to convert between Type and Ctor.Ref hierarchies, which is a definite plus
+      @ast class Name(value: String @nonEmpty) extends api.Ctor.Name with impl.Name with Ref
       @ast class Select(qual: Term.Ref, name: Name) extends Ref
       @ast class Project(qual: Type, name: Name) extends Ref
       @ast class Function(name: Name) extends Ref
@@ -376,12 +439,8 @@ package scala.meta.internal.ast {
     @ast class Annot(tree: Term) extends Mod {
       require(tree.isCtorCall)
     }
-    @ast class Private extends Mod
-    @ast class PrivateThis extends Mod with Name { def value = "this" }
-    @ast class PrivateWithin(name: Predef.String) extends Mod with Name { def value = name }
-    @ast class Protected extends Mod
-    @ast class ProtectedThis extends Mod with Name { def value = "this" }
-    @ast class ProtectedWithin(name: Predef.String) extends Mod with Name { def value = name }
+    @ast class Private(within: Name.AccessBoundary) extends Mod
+    @ast class Protected(within: Name.AccessBoundary) extends Mod
     @ast class Implicit() extends Mod
     @ast class Final() extends Mod
     @ast class Sealed() extends Mod
@@ -391,6 +450,9 @@ package scala.meta.internal.ast {
     @ast class Covariant() extends Mod
     @ast class Contravariant() extends Mod
     @ast class Lazy() extends Mod
+    // TODO: ValParam and VarParam being mods might not be the best idea ever
+    // however the alternative is to have a dedicated XXX.Param type for class/trait parameters
+    // and that has proven to be very clunky (e.g. such XXX.Param type has to be a supertype for Term.Param)
     @ast class ValParam() extends Mod
     @ast class VarParam() extends Mod
   }
@@ -410,9 +472,9 @@ package scala.meta.internal.ast {
     @branch trait Selector extends api.Importee with Tree with Ref
     object Selector {
       @ast class Wildcard() extends Selector
-      @ast class Name(value: String) extends Selector
-      @ast class Rename(from: String, to: String) extends Selector
-      @ast class Unimport(name: String) extends Selector
+      @ast class Name(value: impl.Name.Imported) extends Selector
+      @ast class Rename(from: impl.Name.Imported, to: impl.Name.Imported) extends Selector
+      @ast class Unimport(name: impl.Name.Imported) extends Selector
     }
   }
 

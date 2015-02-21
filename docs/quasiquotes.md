@@ -3,6 +3,8 @@
          | Quasiquote
 ---------|------------------------------
  Boolean | `q"true"`, `q"false"`, `q"$bool"`
+ Byte    | `q"$byte"`
+ Short   | `q"$short"`
  Int     | `q"1"`, `q"$int"`
  Long    | `q"1L"`, `q"$long"`
  Float   | `q"1.0f"`, `q"$float"`
@@ -83,7 +85,7 @@
  Repeated | `t"$tpe *"`
  Type     | `t"$tpe"`
 
-## Patterns (meta.Pat)
+## Patterns (meta.Pat) and Cases (meta.Case)
 
                | Quasiquote
 ---------------|----------------------------
@@ -96,9 +98,10 @@
  Infix Extract | `p"$pat $name (..$apats)"`
  Interpolation | `p""" $name"$${..$pats}" """`
  Typed         | `p"$pat: $tpe"`
- Name          | `p"`name`"`
+ Name          | ``p"`name`"``
  Selection     | `p"$expr.$name"`
  Literal       | `p"$lit"`
+ Case          | `p"case $pat if $condopt => $expr"`
 
 ## Argument Patterns (meta.Pat.Arg)
 
@@ -113,7 +116,7 @@
 -------------------|------------------------------
  Wildcard          | `pt"_"`
  Var               | `pt"name"`
- Name              | `pt"`name`"`
+ Name              | ``pt"`name`"``
  Selection         | `pt"$ref.$tname"`
  Projection        | `pt"$ptpe#$tname"`
  Singleton         | `pt"$ref.type"`
@@ -160,20 +163,20 @@
  Object         | `q"..$mods object $name extends $template"`
  Package Object | `q"package object $name extends $template"`
  Package        | `q"package $ref { ..$stats }"`
+ Primary Ctor   | `q"..$mods def this(..$paramss)"`
+ Secondary Ctor | `q"..$mods def this(..$paramss) = $expr"`
 
 ### Params
 
                 | Quasiquote
 ----------------|-------------------------------------------------
- Term Param     | `param"..$mods $name: $atpeopt = $defaultopt"`
- Type Param     | `param"..$mods type $tname[..$tparams] >: $tpeopt <: $tpeopt <% ..$tpes : ..$tpes"`
+ Term Param     | `param"..$mods $pname: $atpeopt = $defaultopt"`
+ Type Param     | `param"..$mods type $tpname[..$tparams] >: $tpeopt <: $tpeopt <% ..$tpes : ..$tpes"`
 
-## Constructors (meta.Member) and Constructor References (meta.Ctor.Ref and meta.Term)
+## Constructor References (meta.Ctor.Ref and meta.Term)
 
                      | Quasiquote
 ---------------------|------------------------------
- Primary Ctor        | `ctor"..$mods def this(..$paramss)"`
- Secondary Ctor      | `ctor"..$mods def this(..$paramss) = $expr"`
  Name Reference      | `ctor"$ctorname"`
  Select Reference    | `ctor"$ref.$ctorname"`
  Project Reference   | `ctor"$tpe#$ctorname"`
@@ -193,12 +196,8 @@
                   | Quasiquote
 ------------------|-----------------
  Annotation       | `mod"@$expr"`
- Private          | `mod"private"`
- Private Within   | `mod"private[$str]"`
- Private This     | `mod"private[this]"`
- Protected        | `mod"protected"`
- Protected Within | `mod"protected[$str]"`
- Protected This   | `mod"protected[this]"`
+ Private          | `mod"private"`, `mod"private[$bname]"`
+ Protected        | `mod"protected"`, `mod"protected[$bname]"`
  Implicit         | `mod"implicit"`
  Final            | `mod"final"`
  Sealed           | `mod"sealed"`
@@ -223,45 +222,43 @@
 
            | Quasiquote
 -----------|---------------------------
- Name      | `importee"$str"`
- Rename    | `importee"$str => $str"`
- Unimport  | `importee"$str => _"`
+ Name      | `importee"$iname"`
+ Rename    | `importee"$iname => $iname"`
+ Unimport  | `importee"$iname => _"`
  Wildcard  | `importee"_"`
-
-## Cases (meta.Case)
-
-      | Quasiquote
-------|---------------------------
- Case | `p"$pat if $condopt => $expr"`
 
 ## Naming conventions
 
 ### Shorthands and interpolators
 
- Type                | Shorthand     | Interpolator
----------------------|---------------|--------------
- meta.Case           | `$case`       | `p`
- meta.Ctor.Ref       | `$ctorref`    | `ctor`
-                     | `$ctorname`   | `ctor`
- meta.Enumerator     | `$enumerator` | `enumerator`
- meta.Member         | `$member`     | `q`
- meta.Mod            | `$mod`        | `mod`
- meta.Pat            | `$pat`        | `p`
- meta.Pat.Arg        | `$apat`       | `p`
- meta.Pat.Type       | `$ptpe`       | `pt`
- meta.Importee       | `$importee`   | `importee`
- meta.Stat           | `$stat`       | `q`
- meta.Template       | `$template`   | `template`
- meta.Term           | `$expr`       | `q`
- meta.Term.Arg       | `$aexpr`      | `arg`
- meta.Term.Name      | `$name`       | `q`
- meta.Term.Ref       | `$ref`        | `q`
- meta.Term.Param     | `$param`      | `param`
- meta.Type           | `$tpe`        | `t`
- meta.Type.Arg       | `$atpe`       | `t`
- meta.Type.Name      | `$tname`      | `t`
- meta.Type.Param     | `$tparam`     | `tparam`
-                     | `$lit`        | `q`
+ Type                     | Shorthand     | Interpolator
+--------------------------|---------------|--------------
+ meta.Case                | `$case`       | `p`
+ meta.Ctor.Name           | `$ctorname`   | `ctor`
+ meta.Ctor.Ref            | `$ctorref`    | `ctor`
+ meta.Enumerator          | `$enumerator` | `enumerator`
+ meta.Member              | `$member`     | `q`
+ meta.Mod                 | `$mod`        | `mod`
+ meta.Name.Imported       | `$iname`      | Can't be constructed, only extracted from `importee"..."`
+ meta.Name.AccessBoundary | `$bname`      | `q`, `t`, anonymous names can't be constructed, only extracted from `mod"..."`
+ meta.Pat                 | `$pat`        | `p`
+ meta.Pat.Arg             | `$apat`       | `p`
+ meta.Pat.Type            | `$ptpe`       | `pt`
+ meta.Importee            | `$importee`   | `importee`
+ meta.Stat                | `$stat`       | `q`
+ meta.Template            | `$template`   | `template`
+ meta.Term                | `$expr`       | `q`
+ meta.Term.Arg            | `$aexpr`      | `arg`
+ meta.Term.Name           | `$name`       | `q`
+ meta.Term.Ref            | `$ref`        | `q`
+ meta.Term.Param          | `$param`      | `param`
+ meta.Term.Param.Name     | `$pname`      | `q`, anonymous names can't be constructed, only extracted from `param`
+ meta.Type                | `$tpe`        | `t`
+ meta.Type.Arg            | `$atpe`       | `t`
+ meta.Type.Name           | `$tname`      | `t`
+ meta.Type.Param          | `$tparam`     | `tparam`
+ meta.Type.Param.Name     | `$tpname`     | `t`, anonymous names can't be constructed, only extracted from `tparam`
+                          | `$lit`        | `q`
 
 ### Suffix name modifiers
 

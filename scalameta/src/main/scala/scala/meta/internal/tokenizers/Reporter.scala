@@ -1,12 +1,12 @@
 package scala.meta
-package syntactic
+package internal
 package tokenizers
 
 // NOTE: moved to the package object
 // type Offset = Int
 
 // TODO: when I grow up I want to become a monad, just like my daddy
-trait Reporter {
+private[meta] trait Reporter {
   def currentOffset: Offset
   def deprecationWarning(msg: String, at: Offset = currentOffset): Unit      = ()
   def readerError(msg: String, at: Offset = currentOffset): Nothing          = throw Exception(s"$msg at $at")
@@ -14,6 +14,6 @@ trait Reporter {
   def incompleteInputError(msg: String, at: Offset = currentOffset): Nothing = throw Exception(s"incomplete input at $at: $msg")
 }
 
-object Reporter {
+private[meta] object Reporter {
   def apply(current: () => Offset) = new Reporter { def currentOffset = current() }
 }

@@ -11,7 +11,7 @@ trait AdtReflection {
   import internal._
   import decorators._
 
-  implicit class AdtSymbolOps(val sym: Symbol) {
+  implicit class XtensionAdtSymbol(sym: Symbol) {
     def isAdt: Boolean = sym.isClass && (sym.asClass.toType <:< typeOf[AdtInternal.Adt])
     private def hasAnnotation[T: ClassTag] = { sym.initialize; sym.annotations.exists(_.tree.tpe.typeSymbol.fullName == classTag[T].runtimeClass.getCanonicalName) }
     def isRoot: Boolean = hasAnnotation[AdtInternal.root]
@@ -26,7 +26,7 @@ trait AdtReflection {
     def asField: Field = new Field(sym)
   }
 
-  private implicit class PrivateAdtSymbolOps(val sym: Symbol) {
+  private implicit class PrivateXtensionAdtSymbol(sym: Symbol) {
     private def ensureModule(sym: Symbol): Symbol = if (sym.isModuleClass) sym.owner.info.member(sym.name.toTermName) else sym
     def branches: List[Symbol] = { sym.initialize; sym.asClass.knownDirectSubclasses.toList.filter(_.isBranch) }
     def allBranches: List[Symbol] = sym.branches ++ sym.branches.flatMap(_.allBranches).distinct

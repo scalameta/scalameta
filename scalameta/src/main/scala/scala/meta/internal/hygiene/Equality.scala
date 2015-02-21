@@ -14,13 +14,13 @@ import impl._
 // 2) some structurally equal refs may compare unequal when they refer to different defns
 
 // Now let's go through all of our refs and see how we should compare them.
-// At the moment, we have 21 different AST nodes that are subtype of Ref:
+// At the moment, we have 19 different AST nodes that are subtype of Ref:
 // Term.This, Term.Super, Term.Name, Term.Select,
 // Type.Name, Type.Select, Type.Project, Type.Singleton,
 // Pat.Type.Project,
 // Ctor.Ref.Name, Ctor.Ref.Select, Ctor.Ref.Project, Ctor.Ref.Function,
 // Selector.Wildcard, Selector.Name, Selector.Rename, Selector.Unimport,
-// Mod.PrivateThis, Mod.PrivateWithin, Mod.ProtectedThis, Mod.ProtectedWithin.
+// Name.Indeterminate, Name.Imported.
 
 // In the implementation that follows we do the following to compare these refs:
 // 1) XXX.Name vs name-like XXX.Select/Type.Project, where XXX can be Term, Type or Ctor.Ref, are compared equal if they refer to the same defn
@@ -32,7 +32,7 @@ import impl._
 // TODO: we should really generate bodies of those `equals` and `hashcode` with macros
 // and check whether that would be faster that doing productPrefix/productElements
 
-object equals {
+private[meta] object equals {
   private def refersToSameDefn(name1: Name, name2: Name): Boolean = {
     refersToSameDefn(name1.sigma.resolve(name1), name2.sigma.resolve(name2))
   }
@@ -50,7 +50,7 @@ object equals {
       case (Seq(xs1 @ _*), Seq(xs2 @ _*)) => xs1.zip(xs2).forall{ case (x1, x2) => loop(x1, x2) }
       case (x1, x2) => x1 == x2
     }
-    def tagsEqual = tree1.$tag == tree2.$tag
+    def tagsEqual = tree1.internalTag == tree2.internalTag
     def fieldsEqual = tree1.productIterator.toList.zip(tree2.productIterator.toList).forall{ case (x1, x2) => loop(x1, x2) }
     tagsEqual && fieldsEqual
   }
@@ -73,7 +73,7 @@ object equals {
 
 // TODO: no idea how to generate good hashcodes, but for now it doesn't matter much, I guess
 // therefore I just took a random advice from StackOverflow: http://stackoverflow.com/questions/113511/hash-code-implementation
-object hashcode {
+private[meta] object hashcode {
   private def structuralHashcode(tree: Tree): Int = {
     // NOTE: for an exhaustive list of tree field types see
     // see /foundation/src/main/scala/org/scalameta/ast/internal.scala
@@ -84,7 +84,7 @@ object hashcode {
       case Seq(xs @ _*) => xs.foldLeft(0)((acc, curr) => acc * 37 + loop(curr))
       case x => x.hashCode
     }
-    val tagPart = tree.$tag
+    val tagPart = tree.internalTag
     val fieldPart = loop(tree.productIterator.toList)
     tagPart * 37 + fieldPart
   }

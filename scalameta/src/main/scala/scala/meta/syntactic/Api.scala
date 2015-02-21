@@ -1,15 +1,15 @@
 package scala.meta
 package syntactic
 
-import scala.meta.syntactic.parsers._
-import scala.meta.syntactic.tokenizers._
+import scala.meta.internal.parsers._
+import scala.meta.internal.tokenizers._
 import org.scalameta.annotations._
 import org.scalameta.convert._
 import scala.annotation.implicitNotFound
 
-trait Api {
-  type Token = scala.meta.syntactic.tokenizers.Token
-  val Token = scala.meta.syntactic.tokenizers.Token
+private[meta] trait Api {
+  type Token = scala.meta.syntactic.Token
+  val Token = scala.meta.syntactic.Token
 
   // ===========================
   // PART 1: PARSING
@@ -38,7 +38,7 @@ trait Api {
     implicit def parseSource(implicit dialect: Dialect): Parse[Source] = apply(origin => new Parser(origin).parseSource())
   }
 
-  implicit class RichOrigin[T](val originLike: T) {
+  implicit class XtensionOriginLike[T](originLike: T) {
     def parse[U](implicit convert: Convert[T, Origin], dialect: Dialect, parse: Parse[U]): U = parse(convert(originLike))
     def tokens(implicit convert: Convert[T, Origin], dialect: Dialect): Vector[Token] = tokenize(convert(originLike))
   }

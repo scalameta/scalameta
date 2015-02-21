@@ -1,5 +1,5 @@
 package scala.meta
-package syntactic
+package internal
 
 package object tokenizers {
   type Offset = Int
