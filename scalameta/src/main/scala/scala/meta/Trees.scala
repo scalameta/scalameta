@@ -64,6 +64,7 @@ package scala.meta {
 
   object Ctor {
     @branch trait Ref extends Term.Ref
+    @branch trait Name extends api.Name with Ref with Term
   }
 
   @branch trait Template extends Tree
@@ -415,7 +416,7 @@ package scala.meta.internal.ast {
       // an alternative design might reintroduce the Ctor.Ref ast node that would have the structure of:
       // Ctor.Ref(tpe: Type, ctor: Ctor.Name), where Ctor.Name would be Ctor.Name()
       // in that design, we also won't have to convert between Type and Ctor.Ref hierarchies, which is a definite plus
-      @ast class Name(value: String @nonEmpty) extends impl.Name with Ref
+      @ast class Name(value: String @nonEmpty) extends api.Ctor.Name with impl.Name with Ref
       @ast class Select(qual: Term.Ref, name: Name) extends Ref
       @ast class Project(qual: Type, name: Name) extends Ref
       @ast class Function(name: Name) extends Ref

@@ -475,8 +475,18 @@ private[meta] trait Api {
     @hosted def packages: Seq[Member.Term] = internalFilter[Member.Term](_.isPackage)
     @hosted def packages(name: String): Member.Term = internalSingle[Member.Term](name, _.isPackage, "packages")
     @hosted def packages(name: scala.Symbol): Member.Term = packages(name.toString)
-    @hosted def ctor: Member.Term = internalFilter[Member.Term](_ => true) match { case Seq(primary, _*) => primary; case _ => throw new SemanticException(s"no constructors found in ${tree.show[Summary]}") }
-    @hosted def ctors: Seq[Member.Term] = internalFilter[Member.Term](_ => true)
+    @hosted def ctor: Term = {
+      val member = internalFilter[Member.Term](_ => true) match { case Seq(primary, _*) => primary; case _ => throw new SemanticException(s"no constructors found in ${tree.show[Summary]}") }
+      val owner = member.owner.require[Member]
+      owner.tpe.ctorRef(member.name.require[Ctor.Name])
+    }
+    @hosted def ctors: Seq[Term] = {
+      val members = internalFilter[Member.Term](_ => true)
+      members.map(member => {
+        val owner = member.owner.require[Member]
+        owner.tpe.ctorRef(member.name.require[Ctor.Name])
+      })
+    }
     @hosted def classes: Seq[Member.Type] = internalFilter[Member.Type](_.isClass)
     @hosted def classes(name: String): Member.Type = internalSingle[Member.Type](name, _.isClass, "classes")
     @hosted def classes(name: scala.Symbol): Member.Type = classes(name.toString)
@@ -588,6 +598,31 @@ private[meta] trait Api {
         result.withScratchpad(tpe.scratchpad)
       }
       loop(tree.require[impl.Pat.Type])
+    }
+  }
+
+  implicit class XtensionTypeToCtorRef(tree: Type) {
+    @hosted def ctorRef(ctor: Ctor.Name): Term = {
+      def loop(tpe: impl.Type, ctor: impl.Ctor.Name): impl.Term = {
+        object Types {
+          def unapply(tpes: Seq[impl.Type.Arg]): Option[Seq[impl.Type]] = {
+            if (tpes.forall(_.isInstanceOf[impl.Type])) Some(tpes.map(_.require[impl.Type]))
+            else None
+          }
+        }
+        val result = tpe match {
+          case impl.Type.Name(_) => ctor
+          case impl.Type.Select(qual, _) => impl.Ctor.Ref.Select(qual, ctor)
+          case impl.Type.Project(qual, _) => impl.Ctor.Ref.Project(qual, ctor)
+          case impl.Type.Function(Types(params), ret) => impl.Term.ApplyType(impl.Ctor.Ref.Function(ctor), params :+ ret)
+          case impl.Type.Annotate(tpe, annots) => impl.Term.Annotate(loop(tpe, ctor), annots)
+          case impl.Type.Apply(tpe, args) => impl.Term.ApplyType(loop(tpe, ctor), args)
+          case _ => unreachable
+        }
+        result.withScratchpad(tpe.scratchpad)
+      }
+      val prefixedCtor = tree.members(ctor.defn).name.require[Ctor.Name]
+      loop(tree.require[impl.Type], prefixedCtor.require[impl.Ctor.Name])
     }
   }
 }
