@@ -148,13 +148,6 @@ trait Api {
         case tree: impl.Ctor.Secondary => tree.name
       }
     }
-    @hosted def isAnonymous: Boolean = {
-      tree.require[impl.Member] match {
-        case tree: impl.Term.Param => tree.name.isAnonymous
-        case tree: impl.Type.Param => tree.name.isAnonymous
-        case _ => false
-      }
-    }
     @hosted def parents: Seq[Member] = implicitly[SemanticContext].parents(tree)
     @hosted def children: Seq[Member] = implicitly[SemanticContext].children(tree)
     @hosted def companion: Member = {
@@ -248,6 +241,13 @@ trait Api {
     @hosted def isTypeBind: Boolean = tree.isInstanceOf[impl.Pat.Var.Type]
     @hosted def isTermParam: Boolean = tree.isInstanceOf[impl.Term.Param]
     @hosted def isTypeParam: Boolean = tree.isInstanceOf[impl.Type.Param]
+    @hosted def isAnonymous: Boolean = {
+      tree.require[impl.Member] match {
+        case tree: impl.Term.Param => tree.name.isInstanceOf[impl.Name.Anonymous]
+        case tree: impl.Type.Param => tree.name.isInstanceOf[impl.Name.Anonymous]
+        case _ => false
+      }
+    }
     @hosted def isByNameParam: Boolean = tree match { case impl.Term.Param(_, _, Some(impl.Type.Arg.ByName(_)), _) => true; case _ => false }
     @hosted def isVarargParam: Boolean = tree match { case impl.Term.Param(_, _, Some(impl.Type.Arg.Repeated(_)), _) => true; case _ => false }
     @hosted def isValParam: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.ValParam])
@@ -493,6 +493,5 @@ trait Api {
   implicit class SemanticNameOps(val tree: Name) {
     def isBinder: Boolean = tree.parent.map(_.isInstanceOf[impl.Member]).getOrElse(false)
     def isReference: Boolean = !isBinder
-    def isAnonymous: Boolean = tree.isInstanceOf[impl.Name.Anonymous]
   }
 }
