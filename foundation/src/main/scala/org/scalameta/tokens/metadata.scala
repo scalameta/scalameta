@@ -18,7 +18,7 @@ object TokenMetadata {
 class TokenMetadataMacros(val c: Context) {
   import c.universe._
   import c.internal._
-  lazy val TokenClass = rootMirror.staticClass("scala.meta.syntactic.tokenizers.Token")
+  lazy val TokenClass = rootMirror.staticClass("scala.meta.syntactic.Token")
   lazy val TokenMarkerClass = rootMirror.staticModule("org.scalameta.tokens.internal.package").info.decl(TypeName("tokenClass")).asClass
   def materialize[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
     if ((T.tpe <:< TokenClass.toType) && T.tpe.typeSymbol.annotations.exists(_.tree.tpe.typeSymbol == TokenMarkerClass)) {

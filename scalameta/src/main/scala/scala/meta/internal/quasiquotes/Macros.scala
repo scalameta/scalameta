@@ -12,7 +12,7 @@ import scala.meta.internal.hygiene.{Symbol => MetaSymbol, Prefix => MetaPrefix, 
 
 // TODO: ideally, we would like to bootstrap these macros on top of scala.meta
 // so that quasiquotes can be interpreted by any host, not just scalac
-class Macros[C <: Context](val c: C) extends AdtReflection with AdtLiftables with AstLiftables {
+private[meta] class Macros[C <: Context](val c: C) extends AdtReflection with AdtLiftables with AstLiftables {
   val u: c.universe.type = c.universe
   import c.internal._
   import decorators._

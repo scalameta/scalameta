@@ -6,13 +6,13 @@ import scala.{meta => api}
 import scala.meta.internal.{ast => impl}
 import impl._
 
-object NonRef {
+private[meta] object NonRef {
   def unapply(tree: Tree): Option[Tree] = {
     if (tree.isInstanceOf[Ref]) None else Some(tree)
   }
 }
 
-object NameRef {
+private[meta] object NameRef {
   def unapply(tree: Tree): Option[(Name, Int)] = {
     tree match {
       case name: Term.Name => Some((name, Term.Name.$tag))
@@ -27,7 +27,7 @@ object NameRef {
   }
 }
 
-object OpaqueRef {
+private[meta] object OpaqueRef {
   def unapply(tree: Tree): Option[(Name, Int)] = {
     tree match {
       case tree: Term.This => Some((tree, Term.This.$tag))
@@ -39,7 +39,7 @@ object OpaqueRef {
   }
 }
 
-object StructuralRef {
+private[meta] object StructuralRef {
   def unapply(tree: Tree): Option[Tree] = {
     tree match {
       case NameRef(_, _) => None

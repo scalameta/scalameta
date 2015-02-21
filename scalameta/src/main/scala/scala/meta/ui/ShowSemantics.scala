@@ -9,7 +9,7 @@ import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.meta.internal.ast._
 import scala.{meta => api}
-import scala.meta.syntactic.tokenizers.Token
+import scala.meta.syntactic.Token
 import scala.annotation.implicitNotFound
 import scala.collection.mutable
 import scala.meta.internal.hygiene._

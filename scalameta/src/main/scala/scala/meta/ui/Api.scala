@@ -4,7 +4,7 @@ package ui
 import scala.language.higherKinds
 import org.scalameta.show._
 
-trait Api {
+private[meta] trait Api {
   type Exception = scala.meta.ui.Exception
   val Exception = scala.meta.ui.Exception
 

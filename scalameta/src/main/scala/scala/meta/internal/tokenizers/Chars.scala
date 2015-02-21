@@ -1,5 +1,5 @@
 package scala.meta
-package syntactic
+package internal
 package tokenizers
 
 import scala.annotation.{ tailrec, switch }
@@ -7,7 +7,7 @@ import java.lang.{ Character => JCharacter }
 import scala.language.postfixOps
 
 /** Contains constants and classifier methods for characters */
-object Chars {
+private[meta] object Chars {
   // Be very careful touching these.
   // Apparently trivial changes to the way you write these constants
   // will cause Scanners.scala to go from a nice efficient switch to

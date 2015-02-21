@@ -13,9 +13,10 @@ import scala.meta.ui.{Exception => SemanticException, _}
 import scala.meta.semantic.{Context => SemanticContext}
 import scala.meta.internal.{ast => impl} // necessary only to implement APIs, not to define them
 import scala.meta.internal.{hygiene => h} // necessary only to implement APIs, not to define them
+import scala.meta.internal.ui.Summary // necessary only to implement APIs, not to define them
 import scala.reflect.runtime.{universe => ru} // necessary only for a very hacky approximation of hygiene
 
-trait Api {
+private[meta] trait Api {
   // ===========================
   // PART 1: ATTRIBUTES
   // ===========================

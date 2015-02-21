@@ -1,10 +1,10 @@
 package scala.meta
-package syntactic
+package internal
 package tokenizers
 
 import Chars._
 
-trait CharArrayReaderData {
+private[meta] trait CharArrayReaderData {
   /** the last read character */
   var ch: Char = _
 
@@ -20,7 +20,7 @@ trait CharArrayReaderData {
   protected var lastUnicodeOffset = -1
 }
 
-class CharArrayReader(val buf: Array[Char],
+private[meta] class CharArrayReader(val buf: Array[Char],
                       error: (String, Offset) => Unit,
                       decodeUni: Boolean = true) extends CharArrayReaderData { self =>
   /** Is last character a unicode escape \\uxxxx? */

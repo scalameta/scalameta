@@ -1,11 +1,11 @@
 package scala.meta
-package syntactic
+package internal
 package parsers
 
 // TODO: when I grow up I want to become a monad, just like my daddy
 // TODO: when we have Positions, attach them to the exception being thrown
 // TODO: when we have working `Tree.tokens`, use `at.tokens` instead of `currentToken`
-trait Reporter {
+private[meta] trait Reporter {
   def currentToken: Token
   def deprecationWarning(msg: String): Unit           = ()
   def deprecationWarning(msg: String, at: Tree): Unit = ()
@@ -13,6 +13,6 @@ trait Reporter {
   def syntaxError(msg: String, at: Tree): Nothing     = throw Exception(s"syntax error at $currentToken: $msg")
 }
 
-object Reporter {
+private[meta] object Reporter {
   def apply(current: () => Token) = new Reporter { def currentToken = current() }
 }

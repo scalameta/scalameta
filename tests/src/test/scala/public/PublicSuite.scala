@@ -473,66 +473,6 @@ class PublicSuite extends FunSuite {
     """) === "")
   }
 
-  test("show[Summary] without import - 1") {
-    assert(typecheckError("""
-      (??? : scala.meta.Tree).show[Summary]
-    """) === "not found: type Summary")
-  }
-
-  test("show[Summary] without import - 2") {
-    assert(typecheckError("""
-      import scala.meta._
-      (??? : Tree).show[Summary]
-    """) === "not found: type Summary")
-  }
-
-  test("show[Summary] without dialect") {
-    assert(typecheckError("""
-      import scala.meta._
-      import scala.meta.ui.Summary
-      (??? : Tree).show[Summary]
-    """) === "don't know how to show[Summary] for scala.meta.Tree (if you're prettyprinting a tree, be sure to import a dialect, e.g. scala.meta.dialects.Scala211)")
-  }
-
-  test("show[Summary] when everything's correct (static dialect)") {
-    assert(typecheckError("""
-      import scala.meta._
-      import scala.meta.ui.Summary
-      import scala.meta.dialects.Scala211
-      (??? : Tree).show[Summary]
-    """) === "")
-  }
-
-  test("show[Summary] when everything's correct (dynamic dialect)") {
-    assert(typecheckError("""
-      import scala.meta._
-      import scala.meta.ui.Summary
-      implicit val dialect: scala.meta.Dialect = ???
-      (??? : Tree).show[Summary]
-    """) === "")
-  }
-
-  test("show[Summary] when everything's correct (static context)") {
-    assert(typecheckError("""
-      import scala.meta._
-      import scala.meta.ui.Summary
-      trait MyContext extends scala.meta.semantic.Context {
-        def dialect: scala.meta.dialects.Scala211.type = scala.meta.dialects.Scala211
-      }
-      implicit val c: MyContext = ???
-      (??? : Tree).show[Summary]
-    """) === "")
-  }
-
-  test("show[Summary] when everything's correct (dynamic context)") {
-    assert(typecheckError("""
-      import scala.meta._
-      import scala.meta.ui.Summary
-      implicit val c: scala.meta.semantic.Context = ???
-      (??? : Tree).show[Summary]
-    """) === "")
-  }
-
   test("show[Semantics] without import") {
     assert(typecheckError("""
       (??? : scala.meta.Tree).show[Semantics]

@@ -32,7 +32,7 @@ import impl._
 // TODO: we should really generate bodies of those `equals` and `hashcode` with macros
 // and check whether that would be faster that doing productPrefix/productElements
 
-object equals {
+private[meta] object equals {
   private def refersToSameDefn(name1: Name, name2: Name): Boolean = {
     refersToSameDefn(name1.sigma.resolve(name1), name2.sigma.resolve(name2))
   }
@@ -73,7 +73,7 @@ object equals {
 
 // TODO: no idea how to generate good hashcodes, but for now it doesn't matter much, I guess
 // therefore I just took a random advice from StackOverflow: http://stackoverflow.com/questions/113511/hash-code-implementation
-object hashcode {
+private[meta] object hashcode {
   private def structuralHashcode(tree: Tree): Int = {
     // NOTE: for an exhaustive list of tree field types see
     // see /foundation/src/main/scala/org/scalameta/ast/internal.scala

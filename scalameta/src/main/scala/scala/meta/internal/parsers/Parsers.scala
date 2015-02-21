@@ -1,5 +1,5 @@
 package scala.meta
-package syntactic
+package internal
 package parsers
 
 import scala.collection.{ mutable, immutable }
@@ -10,13 +10,13 @@ import scala.reflect.ClassTag
 import scala.meta.internal.ast._
 import scala.meta.internal.{ast => impl}
 import scala.meta.Origin
-import scala.meta.syntactic.tokenizers.Chars.{isOperatorPart, isScalaLetter}
-import scala.meta.syntactic.tokenizers.Token._
+import scala.meta.internal.tokenizers.Chars.{isOperatorPart, isScalaLetter}
+import scala.meta.syntactic.Token._
 import org.scalameta.tokens._
 import org.scalameta.unreachable
 import org.scalameta.invariants._
 
-object SyntacticInfo {
+private[meta] object SyntacticInfo {
   private[meta] val unaryOps = Set("-", "+", "~", "!")
   private[meta] def isUnaryOp(s: String): Boolean = unaryOps contains s
   implicit class SyntacticTermNameOps(name: Term.Name) {
@@ -162,7 +162,7 @@ object SyntacticInfo {
 }
 import SyntacticInfo._
 
-class Parser(val origin: Origin)(implicit val dialect: Dialect) extends AbstractParser {
+private[meta] class Parser(val origin: Origin)(implicit val dialect: Dialect) extends AbstractParser {
   def this(code: String)(implicit dialect: Dialect) = this(Origin.String(code))
 
   // implementation restrictions wrt various dialect properties
@@ -258,15 +258,15 @@ class Parser(val origin: Origin)(implicit val dialect: Dialect) extends Abstract
   def xmlLiteralPattern(): Pat = ??? // xmlp.xLiteralPattern
 }
 
-class Location private(val value: Int) extends AnyVal
-object Location {
+private[meta] class Location private(val value: Int) extends AnyVal
+private[meta] object Location {
   val Local      = new Location(0)
   val InBlock    = new Location(1)
   val InTemplate = new Location(2)
 }
 import Location.{ Local, InBlock, InTemplate }
 
-abstract class AbstractParser { parser =>
+private[meta] abstract class AbstractParser { parser =>
   trait TokenIterator extends Iterator[Token] { def token: Token; def fork: TokenIterator }
   var in: TokenIterator
   def token = in.token

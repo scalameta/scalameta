@@ -1,14 +1,7 @@
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import org.scalameta.ast._
-import org.scalameta.invariants._
-import org.scalameta.annotations._
-import org.scalameta.unreachable
 import scala.{meta => api}
-import scala.meta.internal.{ast => impl} // necessary only to define internal classes, not to define the APIs
-import scala.meta.internal.hygiene._ // necessary only to define internal classes, not to define the APIs
-import scala.meta.syntactic.parsers.SyntacticInfo._ // necessary only for sanity checks in trees
-import scala.meta.syntactic.tokenizers.keywords // necessary only for sanity checks in trees
 
 package scala.meta {
   @root trait Tree extends Product {
@@ -82,6 +75,14 @@ package scala.meta {
 }
 
 package scala.meta.internal.ast {
+  import org.scalameta.invariants._
+  import org.scalameta.annotations._
+  import org.scalameta.unreachable
+  import scala.meta.internal.{ast => impl}
+  import scala.meta.internal.hygiene._
+  import scala.meta.internal.parsers.SyntacticInfo._
+  import scala.meta.internal.tokenizers.keywords
+
   @branch trait Tree extends api.Tree
 
   @branch trait Name extends api.Name with Ref { def value: String; def denot: Denotation; def sigma: Sigma }

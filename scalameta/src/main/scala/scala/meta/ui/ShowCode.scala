@@ -3,9 +3,9 @@ package ui
 
 import org.scalameta.show._
 import Show.{ sequence => s, repeat => r, indent => i, newline => n, meta => m, adorn => a, function => fn }
-import scala.meta.syntactic.parsers.SyntacticInfo._
-import scala.meta.syntactic.tokenizers.Chars._
-import scala.meta.syntactic.tokenizers.keywords
+import scala.meta.internal.parsers.SyntacticInfo._
+import scala.meta.internal.tokenizers.Chars._
+import scala.meta.internal.tokenizers.keywords
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.meta.internal.ast._

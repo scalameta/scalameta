@@ -1,15 +1,15 @@
 package scala.meta
 package syntactic
 
-import scala.meta.syntactic.parsers._
-import scala.meta.syntactic.tokenizers._
+import scala.meta.internal.parsers._
+import scala.meta.internal.tokenizers._
 import org.scalameta.annotations._
 import org.scalameta.convert._
 import scala.annotation.implicitNotFound
 
-trait Api {
-  type Token = scala.meta.syntactic.tokenizers.Token
-  val Token = scala.meta.syntactic.tokenizers.Token
+private[meta] trait Api {
+  type Token = scala.meta.syntactic.Token
+  val Token = scala.meta.syntactic.Token
 
   // ===========================
   // PART 1: PARSING
