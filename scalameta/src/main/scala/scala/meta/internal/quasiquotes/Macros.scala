@@ -20,7 +20,7 @@ private[meta] class Macros(val c: Context) extends AdtReflection with AdtLiftabl
   import c.universe.{Tree => ReflectTree, Symbol => ReflectSymbol, Type => ReflectType}
   import scala.meta.{Tree => MetaTree, Type => MetaType}
   import scala.meta.internal.{ast => impl}
-  val TermQuote = "shadow scala.meta quasiquotes"
+  val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
   case class Dummy(id: String, ndots: Int, arg: ReflectTree)
 
   import definitions._

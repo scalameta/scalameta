@@ -21,15 +21,15 @@ private[meta] trait Api {
   // PART 1: ATTRIBUTES
   // ===========================
 
-  implicit class SemanticTermDesugarOps(tree: Term) {
+  implicit class XtensionSemanticTermDesugar(tree: Term) {
     @hosted def desugar: Term = implicitly[SemanticContext].desugar(tree)
   }
 
-  implicit class SemanticTermTpeOps(tree: Term) {
+  implicit class XtensionSemanticTermTpe(tree: Term) {
     @hosted def tpe: Type = implicitly[SemanticContext].tpe(tree)
   }
 
-  implicit class SemanticMemberTpeOps(tree: Member) {
+  implicit class XtensionSemanticMemberTpe(tree: Member) {
     @hosted private def SeqRef: impl.Type.Name = {
       val hScala = h.Symbol.Global(h.Symbol.Root, "scala", h.Signature.Term)
       val hCollection = h.Symbol.Global(hScala, "collection", h.Signature.Term)
@@ -63,7 +63,7 @@ private[meta] trait Api {
     }
   }
 
-  implicit class SemanticRefDefnOps(tree: Ref) {
+  implicit class XtensionSemanticRefDefn(tree: Ref) {
     @hosted def defns: Seq[Member] = implicitly[SemanticContext].defns(tree)
     @hosted def defn: Member = {
       defns match {
@@ -74,14 +74,14 @@ private[meta] trait Api {
     }
   }
 
-  implicit class SemanticTermRefDefnOps(tree: Term.Ref) {
+  implicit class XtensionSemanticTermRefDefn(tree: Term.Ref) {
     @hosted def defns: Seq[Member.Term] = (tree: Ref).defns.map(_.require[Member.Term])
     @hosted def defn: Member.Term = (tree: Ref).defn.require[Member.Term]
   }
 
   // NOTE: the types here are intentionally just Member, not Member.Type
   // because Type.Refs can refer to both type members (obviously) and term members (singleton types)
-  implicit class SemanticTypeRefDefnOps(tree: Type.Ref) {
+  implicit class XtensionSemanticTypeRefDefn(tree: Type.Ref) {
     @hosted def defns: Seq[Member] = (tree: Ref).defns
     @hosted def defn: Member = (tree: Ref).defn
   }
@@ -90,7 +90,7 @@ private[meta] trait Api {
   // PART 2: TYPES
   // ===========================
 
-  implicit class SemanticTypeOps(tree: Type) {
+  implicit class XtensionSemanticType(tree: Type) {
     @hosted def <:<(other: Type): Boolean = implicitly[SemanticContext].isSubType(tree, other)
     @hosted def weak_<:<(other: Type): Boolean = ???
     @hosted def =:=(other: Type): Boolean = (tree =:= other) && (other =:= tree)
@@ -107,7 +107,7 @@ private[meta] trait Api {
   // PART 3: MEMBERS
   // ===========================
 
-  trait SemanticMemberLikeOps {
+  trait XtensionSemanticMemberLike {
     @hosted protected def tree: Member
     // TODO: An alternative design for typeSignatureIn that is very much worth exploring
     // consists in lazy recalculation of signatures produced by Scope.members.
@@ -263,52 +263,52 @@ private[meta] trait Api {
     @hosted def isVarParam: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.VarParam])
   }
 
-  implicit class SemanticMemberOps(member: Member) extends SemanticMemberLikeOps {
+  implicit class XtensionSemanticMember(member: Member) extends XtensionSemanticMemberLike {
     @hosted protected def tree: Member = member
   }
 
-  implicit class SemanticRefMemberLikeOps(ref: Ref) extends SemanticMemberLikeOps {
+  implicit class XtensionSemanticRefMemberLike(ref: Ref) extends XtensionSemanticMemberLike {
     @hosted protected def tree: Member = ref.defn
   }
 
-  implicit class SemanticTermMemberOps(tree: Member.Term) {
-    @hosted def source: Member.Term = new SemanticMemberOps(tree).name.require[Member.Term]
-    @hosted def name: Term.Name = new SemanticMemberOps(tree).name.require[Term.Name]
-    @hosted def parents: Seq[Member.Term] = new SemanticMemberOps(tree).parents.require[Seq[Member.Term]]
-    @hosted def children: Seq[Member.Term] = new SemanticMemberOps(tree).children.require[Seq[Member.Term]]
-    @hosted def companion: Member.Type = new SemanticMemberOps(tree).companion.require[Member.Type]
+  implicit class XtensionSemanticTermMember(tree: Member.Term) {
+    @hosted def source: Member.Term = new XtensionSemanticMember(tree).name.require[Member.Term]
+    @hosted def name: Term.Name = new XtensionSemanticMember(tree).name.require[Term.Name]
+    @hosted def parents: Seq[Member.Term] = new XtensionSemanticMember(tree).parents.require[Seq[Member.Term]]
+    @hosted def children: Seq[Member.Term] = new XtensionSemanticMember(tree).children.require[Seq[Member.Term]]
+    @hosted def companion: Member.Type = new XtensionSemanticMember(tree).companion.require[Member.Type]
   }
 
-  implicit class SemanticTermRefMemberLikeOps(tree: Term.Ref) {
-    @hosted def source: Member.Term = new SemanticRefMemberLikeOps(tree).name.require[Member.Term]
-    @hosted def name: Term.Name = new SemanticRefMemberLikeOps(tree).name.require[Term.Name]
-    @hosted def parents: Seq[Member.Term] = new SemanticRefMemberLikeOps(tree).parents.require[Seq[Member.Term]]
-    @hosted def children: Seq[Member.Term] = new SemanticRefMemberLikeOps(tree).children.require[Seq[Member.Term]]
-    @hosted def companion: Member.Type = new SemanticRefMemberLikeOps(tree).companion.require[Member.Type]
+  implicit class XtensionSemanticTermRefMemberLike(tree: Term.Ref) {
+    @hosted def source: Member.Term = new XtensionSemanticRefMemberLike(tree).name.require[Member.Term]
+    @hosted def name: Term.Name = new XtensionSemanticRefMemberLike(tree).name.require[Term.Name]
+    @hosted def parents: Seq[Member.Term] = new XtensionSemanticRefMemberLike(tree).parents.require[Seq[Member.Term]]
+    @hosted def children: Seq[Member.Term] = new XtensionSemanticRefMemberLike(tree).children.require[Seq[Member.Term]]
+    @hosted def companion: Member.Type = new XtensionSemanticRefMemberLike(tree).companion.require[Member.Type]
   }
 
-  implicit class SemanticTypeMemberOps(tree: Member.Type) {
-    @hosted def source: Member.Type = new SemanticMemberOps(tree).name.require[Member.Type]
-    @hosted def name: Type.Name = new SemanticMemberOps(tree).name.require[Type.Name]
-    @hosted def parents: Seq[Member.Type] = new SemanticMemberOps(tree).parents.require[Seq[Member.Type]]
-    @hosted def children: Seq[Member.Type] = new SemanticMemberOps(tree).parents.require[Seq[Member.Type]]
-    @hosted def companion: Member.Term = new SemanticMemberOps(tree).companion.require[Member.Term]
+  implicit class XtensionSemanticTypeMember(tree: Member.Type) {
+    @hosted def source: Member.Type = new XtensionSemanticMember(tree).name.require[Member.Type]
+    @hosted def name: Type.Name = new XtensionSemanticMember(tree).name.require[Type.Name]
+    @hosted def parents: Seq[Member.Type] = new XtensionSemanticMember(tree).parents.require[Seq[Member.Type]]
+    @hosted def children: Seq[Member.Type] = new XtensionSemanticMember(tree).parents.require[Seq[Member.Type]]
+    @hosted def companion: Member.Term = new XtensionSemanticMember(tree).companion.require[Member.Term]
   }
 
   // NOTE: no additional methods here unlike in SemanticTermRefMemberLikeOps
   // because Type.Refs can refer to both type members (obviously) and term members (singleton types)
-  implicit class SemanticTypeRefMemberLikeOps(tree: Type.Ref)
+  implicit class XtensionSemanticTypeRefMemberLike(tree: Type.Ref)
 
-  implicit class SemanticTermParameterOps(tree: Term.Param) {
-    @hosted def source: Term.Param = new SemanticMemberOps(tree).name.require[Term.Param]
-    @hosted def name: Term.Param.Name = new SemanticMemberOps(tree).name.require[Term.Param.Name]
+  implicit class XtensionSemanticTermParam(tree: Term.Param) {
+    @hosted def source: Term.Param = new XtensionSemanticMember(tree).name.require[Term.Param]
+    @hosted def name: Term.Param.Name = new XtensionSemanticMember(tree).name.require[Term.Param.Name]
     @hosted def default: Option[Term] = tree.require[impl.Term.Param].default
     @hosted def field: Member.Term = tree.owner.owner.members(tree.name).require[Member.Term]
   }
 
-  implicit class SemanticTypeParameterOps(tree: Type.Param) {
-    @hosted def source: Type.Param = new SemanticMemberOps(tree).name.require[Type.Param]
-    @hosted def name: Type.Param.Name = new SemanticMemberOps(tree).name.require[Type.Param.Name]
+  implicit class XtensionSemanticTypeParam(tree: Type.Param) {
+    @hosted def source: Type.Param = new XtensionSemanticMember(tree).name.require[Type.Param]
+    @hosted def name: Type.Param.Name = new XtensionSemanticMember(tree).name.require[Type.Param.Name]
     @hosted def contextBounds: Seq[Type] = tree.require[impl.Type.Param].contextBounds
     @hosted def viewBounds: Seq[Type] = tree.require[impl.Type.Param].viewBounds
     @hosted def lo: Type = tree.require[impl.Type.Param].lo
@@ -327,13 +327,13 @@ private[meta] trait Api {
   // when I'm trying to call members for any kind of name
   // therefore, I'm essentially forced to use a type class here
   // another good idea would be to name these methods differently
-  sealed trait ScopeMembersSignature[T, U]
-  object ScopeMembersSignature {
-    implicit def NameToMember[T <: Name]: ScopeMembersSignature[T, Member] = null
-    implicit def MemberToMember[T <: Member]: ScopeMembersSignature[T, T] = null
+  sealed trait XtensionMembersSignature[T, U]
+  object XtensionMembersSignature {
+    implicit def NameToMember[T <: Name]: XtensionMembersSignature[T, Member] = null
+    implicit def MemberToMember[T <: Member]: XtensionMembersSignature[T, T] = null
   }
 
-  trait SemanticScopeLikeOps {
+  trait XtensionSemanticScopeLike {
     @hosted protected def tree: Scope
     @hosted def owner: Scope = ???
     @hosted private[meta] def deriveEvidences(tparam: Type.Param): Seq[Term.Param] = {
@@ -445,7 +445,7 @@ private[meta] trait Api {
       }
     }
     @hosted def members: Seq[Member] = internalFilter[Member](_ => true)
-    @hosted def members[T : ClassTag, U : ClassTag](param: T)(implicit ev: ScopeMembersSignature[T, U]): U = param match {
+    @hosted def members[T : ClassTag, U : ClassTag](param: T)(implicit ev: XtensionMembersSignature[T, U]): U = param match {
       case name: Name =>
         name match {
           case name: Term.Name => internalSingle[Member.Term](name.toString, _ => true, "term members").require[U]
@@ -516,15 +516,15 @@ private[meta] trait Api {
     @hosted def tparams(name: scala.Symbol): Type.Param = tparams(name.toString)
   }
 
-  implicit class SemanticScopeOps(scope: Scope) extends SemanticScopeLikeOps {
+  implicit class XtensionSemanticScope(scope: Scope) extends XtensionSemanticScopeLike {
     @hosted protected def tree: Scope = scope
   }
 
-  implicit class SemanticRefScopeLikeOps(ref: Ref) extends SemanticScopeLikeOps {
+  implicit class XtensionSemanticRefScopeLike(ref: Ref) extends XtensionSemanticScopeLike {
     @hosted protected def tree: Scope = ref.defn
   }
 
-  implicit class SemanticTypeNameScopeLikeOps(name: Type.Name) extends SemanticScopeLikeOps {
+  implicit class XtensionSemanticTypeNameScopeLike(name: Type.Name) extends XtensionSemanticScopeLike {
     @hosted protected def tree: Scope = name
   }
 
@@ -532,7 +532,7 @@ private[meta] trait Api {
   // PART 5: BINDINGS
   // ===========================
 
-  implicit class SemanticNameOps(tree: Name) {
+  implicit class XtensionSemanticName(tree: Name) {
     def isBinder: Boolean = tree.parent.map(_.isInstanceOf[impl.Member]).getOrElse(false)
     def isReference: Boolean = !isBinder
   }
