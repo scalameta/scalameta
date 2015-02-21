@@ -13,7 +13,7 @@ trait Api {
   type Semantics[T] = scala.meta.ui.Semantics[T]
 
   // NOTE: I wish there was a way to avoid duplication and ambiguities wrt org.scalameta.show
-  implicit class ShowOps[T](val x: T) {
+  implicit class ShowOps[T](x: T) {
     def show[Style[X] <: Show[X]](implicit style: Style[T]): String = style(x).toString
   }
 }

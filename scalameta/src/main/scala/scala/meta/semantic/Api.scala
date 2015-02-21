@@ -20,15 +20,15 @@ trait Api {
   // PART 1: ATTRIBUTES
   // ===========================
 
-  implicit class SemanticTermDesugarOps(val tree: Term) {
+  implicit class SemanticTermDesugarOps(tree: Term) {
     @hosted def desugar: Term = implicitly[SemanticContext].desugar(tree)
   }
 
-  implicit class SemanticTermTpeOps(val tree: Term) {
+  implicit class SemanticTermTpeOps(tree: Term) {
     @hosted def tpe: Type = implicitly[SemanticContext].tpe(tree)
   }
 
-  implicit class SemanticMemberTpeOps(val tree: Member) {
+  implicit class SemanticMemberTpeOps(tree: Member) {
     @hosted private def SeqRef: impl.Type.Name = {
       val hScala = h.Symbol.Global(h.Symbol.Root, "scala", h.Signature.Term)
       val hCollection = h.Symbol.Global(hScala, "collection", h.Signature.Term)
@@ -62,7 +62,7 @@ trait Api {
     }
   }
 
-  implicit class SemanticRefDefnOps(val tree: Ref) {
+  implicit class SemanticRefDefnOps(tree: Ref) {
     @hosted def defns: Seq[Member] = implicitly[SemanticContext].defns(tree)
     @hosted def defn: Member = {
       defns match {
@@ -73,14 +73,14 @@ trait Api {
     }
   }
 
-  implicit class SemanticTermRefDefnOps(val tree: Term.Ref) {
+  implicit class SemanticTermRefDefnOps(tree: Term.Ref) {
     @hosted def defns: Seq[Member.Term] = (tree: Ref).defns.map(_.require[Member.Term])
     @hosted def defn: Member.Term = (tree: Ref).defn.require[Member.Term]
   }
 
   // NOTE: the types here are intentionally just Member, not Member.Type
   // because Type.Refs can refer to both type members (obviously) and term members (singleton types)
-  implicit class SemanticTypeRefDefnOps(val tree: Type.Ref) {
+  implicit class SemanticTypeRefDefnOps(tree: Type.Ref) {
     @hosted def defns: Seq[Member] = (tree: Ref).defns
     @hosted def defn: Member = (tree: Ref).defn
   }
@@ -89,7 +89,7 @@ trait Api {
   // PART 2: TYPES
   // ===========================
 
-  implicit class SemanticTypeOps(val tree: Type) {
+  implicit class SemanticTypeOps(tree: Type) {
     @hosted def <:<(other: Type): Boolean = implicitly[SemanticContext].isSubType(tree, other)
     @hosted def weak_<:<(other: Type): Boolean = ???
     @hosted def =:=(other: Type): Boolean = (tree =:= other) && (other =:= tree)
@@ -262,15 +262,15 @@ trait Api {
     @hosted def isVarParam: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.VarParam])
   }
 
-  implicit class SemanticMemberOps(val member: Member) extends SemanticMemberLikeOps {
+  implicit class SemanticMemberOps(member: Member) extends SemanticMemberLikeOps {
     @hosted protected def tree: Member = member
   }
 
-  implicit class SemanticRefMemberLikeOps(val ref: Ref) extends SemanticMemberLikeOps {
+  implicit class SemanticRefMemberLikeOps(ref: Ref) extends SemanticMemberLikeOps {
     @hosted protected def tree: Member = ref.defn
   }
 
-  implicit class SemanticTermMemberOps(val tree: Member.Term) {
+  implicit class SemanticTermMemberOps(tree: Member.Term) {
     @hosted def source: Member.Term = new SemanticMemberOps(tree).name.require[Member.Term]
     @hosted def name: Term.Name = new SemanticMemberOps(tree).name.require[Term.Name]
     @hosted def parents: Seq[Member.Term] = new SemanticMemberOps(tree).parents.require[Seq[Member.Term]]
@@ -278,7 +278,7 @@ trait Api {
     @hosted def companion: Member.Type = new SemanticMemberOps(tree).companion.require[Member.Type]
   }
 
-  implicit class SemanticTermRefMemberLikeOps(val tree: Term.Ref) {
+  implicit class SemanticTermRefMemberLikeOps(tree: Term.Ref) {
     @hosted def source: Member.Term = new SemanticRefMemberLikeOps(tree).name.require[Member.Term]
     @hosted def name: Term.Name = new SemanticRefMemberLikeOps(tree).name.require[Term.Name]
     @hosted def parents: Seq[Member.Term] = new SemanticRefMemberLikeOps(tree).parents.require[Seq[Member.Term]]
@@ -286,7 +286,7 @@ trait Api {
     @hosted def companion: Member.Type = new SemanticRefMemberLikeOps(tree).companion.require[Member.Type]
   }
 
-  implicit class SemanticTypeMemberOps(val tree: Member.Type) {
+  implicit class SemanticTypeMemberOps(tree: Member.Type) {
     @hosted def source: Member.Type = new SemanticMemberOps(tree).name.require[Member.Type]
     @hosted def name: Type.Name = new SemanticMemberOps(tree).name.require[Type.Name]
     @hosted def parents: Seq[Member.Type] = new SemanticMemberOps(tree).parents.require[Seq[Member.Type]]
@@ -296,16 +296,16 @@ trait Api {
 
   // NOTE: no additional methods here unlike in SemanticTermRefMemberLikeOps
   // because Type.Refs can refer to both type members (obviously) and term members (singleton types)
-  implicit class SemanticTypeRefMemberLikeOps(val tree: Type.Ref)
+  implicit class SemanticTypeRefMemberLikeOps(tree: Type.Ref)
 
-  implicit class SemanticTermParameterOps(val tree: Term.Param) {
+  implicit class SemanticTermParameterOps(tree: Term.Param) {
     @hosted def source: Term.Param = new SemanticMemberOps(tree).name.require[Term.Param]
     @hosted def name: Term.Param.Name = new SemanticMemberOps(tree).name.require[Term.Param.Name]
     @hosted def default: Option[Term] = tree.require[impl.Term.Param].default
     @hosted def field: Member.Term = tree.owner.owner.members(tree.name).require[Member.Term]
   }
 
-  implicit class SemanticTypeParameterOps(val tree: Type.Param) {
+  implicit class SemanticTypeParameterOps(tree: Type.Param) {
     @hosted def source: Type.Param = new SemanticMemberOps(tree).name.require[Type.Param]
     @hosted def name: Type.Param.Name = new SemanticMemberOps(tree).name.require[Type.Param.Name]
     @hosted def contextBounds: Seq[Type] = tree.require[impl.Type.Param].contextBounds
@@ -515,15 +515,15 @@ trait Api {
     @hosted def tparams(name: scala.Symbol): Type.Param = tparams(name.toString)
   }
 
-  implicit class SemanticScopeOps(val scope: Scope) extends SemanticScopeLikeOps {
+  implicit class SemanticScopeOps(scope: Scope) extends SemanticScopeLikeOps {
     @hosted protected def tree: Scope = scope
   }
 
-  implicit class SemanticRefScopeLikeOps(val ref: Ref) extends SemanticScopeLikeOps {
+  implicit class SemanticRefScopeLikeOps(ref: Ref) extends SemanticScopeLikeOps {
     @hosted protected def tree: Scope = ref.defn
   }
 
-  implicit class SemanticTypeNameScopeLikeOps(val name: Type.Name) extends SemanticScopeLikeOps {
+  implicit class SemanticTypeNameScopeLikeOps(name: Type.Name) extends SemanticScopeLikeOps {
     @hosted protected def tree: Scope = name
   }
 
@@ -531,7 +531,7 @@ trait Api {
   // PART 5: BINDINGS
   // ===========================
 
-  implicit class SemanticNameOps(val tree: Name) {
+  implicit class SemanticNameOps(tree: Name) {
     def isBinder: Boolean = tree.parent.map(_.isInstanceOf[impl.Member]).getOrElse(false)
     def isReference: Boolean = !isBinder
   }

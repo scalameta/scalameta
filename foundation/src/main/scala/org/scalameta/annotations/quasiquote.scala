@@ -28,7 +28,7 @@ class QuasiquoteMacros(val c: Context) {
           def unapply(scrutinee: Any)(implicit dialect: _root_.scala.meta.Dialect): $qtypesLub = macro ???
         }
       """
-      val qunsafeResults = qtypes.map(qtype => q"_root_.scala.meta.`package`.RichOrigin(s).parse[$qtype]")
+      val qunsafeResults = qtypes.map(qtype => q"_root_.scala.meta.`package`.RichOriginLike(s).parse[$qtype]")
       var qsafeResult = qunsafeResults.map(qunsafeParser => q"_root_.scala.util.Try($qunsafeParser)").reduce((acc, curr) => q"$acc.orElse($curr)")
       val qparseResult = if (qunsafeResults.length == 1) qunsafeResults.head else q"$qsafeResult.get"
       val qparser = q"(s: _root_.scala.Predef.String) => $qparseResult"

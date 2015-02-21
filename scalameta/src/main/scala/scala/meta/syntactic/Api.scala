@@ -38,7 +38,7 @@ trait Api {
     implicit def parseSource(implicit dialect: Dialect): Parse[Source] = apply(origin => new Parser(origin).parseSource())
   }
 
-  implicit class RichOrigin[T](val originLike: T) {
+  implicit class RichOriginLike[T](originLike: T) {
     def parse[U](implicit convert: Convert[T, Origin], dialect: Dialect, parse: Parse[U]): U = parse(convert(originLike))
     def tokens(implicit convert: Convert[T, Origin], dialect: Dialect): Vector[Token] = tokenize(convert(originLike))
   }

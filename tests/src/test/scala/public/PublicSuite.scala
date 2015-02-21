@@ -319,6 +319,7 @@ class PublicSuite extends FunSuite {
       import scala.meta._
       import scala.meta.dialects.Scala211
       "".parse[Term]
+      (??? : Origin).parse[Term]
     """) === "")
   }
 
@@ -327,6 +328,7 @@ class PublicSuite extends FunSuite {
       import scala.meta._
       implicit val dialect: scala.meta.Dialect = ???
       "".parse[Term]
+      (??? : Origin).parse[Term]
     """) === "")
   }
 
@@ -338,6 +340,7 @@ class PublicSuite extends FunSuite {
       }
       implicit val c: MyContext = ???
       "".parse[Term]
+      (??? : Origin).parse[Term]
     """) === "")
   }
 
@@ -346,6 +349,7 @@ class PublicSuite extends FunSuite {
       import scala.meta._
       implicit val c: scala.meta.semantic.Context = ???
       "".parse[Term]
+      (??? : Origin).parse[Term]
     """) === "")
   }
 
@@ -374,6 +378,7 @@ class PublicSuite extends FunSuite {
       import scala.meta._
       import scala.meta.dialects.Scala211
       "".tokens
+      (??? : Origin).tokens
     """) === "")
   }
 
@@ -382,6 +387,7 @@ class PublicSuite extends FunSuite {
       import scala.meta._
       implicit val dialect: scala.meta.Dialect = ???
       "".tokens
+      (??? : Origin).tokens
     """) === "")
   }
 
@@ -393,6 +399,7 @@ class PublicSuite extends FunSuite {
       }
       implicit val c: MyContext = ???
       "".tokens
+      (??? : Origin).tokens
     """) === "")
   }
 
@@ -401,6 +408,7 @@ class PublicSuite extends FunSuite {
       import scala.meta._
       implicit val c: scala.meta.semantic.Context = ???
       "".tokens
+      (??? : Origin).tokens
     """) === "")
   }
 
