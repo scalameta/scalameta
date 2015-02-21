@@ -29,6 +29,10 @@ private[meta] trait Api {
     @hosted def tpe: Type = implicitly[SemanticContext].tpe(tree)
   }
 
+  implicit class XtensionSemanticTypeTpe(tree: Type) {
+    @hosted def tpe: Type = tree
+  }
+
   implicit class XtensionSemanticMemberTpe(tree: Member) {
     @hosted private def SeqRef: impl.Type.Name = {
       val hScala = h.Symbol.Global(h.Symbol.Root, "scala", h.Signature.Term)
@@ -599,6 +603,10 @@ private[meta] trait Api {
       }
       loop(tree.require[impl.Pat.Type])
     }
+  }
+
+  implicit class XtensionSemanticPatTypeWithTypeToType(tree: Pat.Type with Type) {
+    @hosted def tpe: Type = tree
   }
 
   implicit class XtensionTypeToCtorRef(tree: Type) {

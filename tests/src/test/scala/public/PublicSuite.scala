@@ -133,8 +133,9 @@ class PublicSuite extends FunSuite {
       implicit val c: scala.meta.semantic.Context = ???
       import scala.{meta => api}
       import scala.meta.internal.{ast => impl}
-      t"List".tpe
-    """) === "value tpe is not a member of meta.internal.ast.Type.Name")
+      t"List".tpe: api.Type
+      t"List[Int]".tpe: api.Type
+    """) === "")
   }
 
   test("Term.tpe") {
