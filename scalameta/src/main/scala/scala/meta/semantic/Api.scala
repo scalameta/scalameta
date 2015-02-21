@@ -538,8 +538,8 @@ private[meta] trait Api {
     @hosted protected def tree: Scope = ref.defn
   }
 
-  implicit class XtensionSemanticTypeNameScopeLike(name: Type.Name) extends XtensionSemanticScopeLike {
-    @hosted protected def tree: Scope = name
+  implicit class XtensionSemanticTypeRefScopeLike(ref: Type.Ref) extends XtensionSemanticScopeLike {
+    @hosted protected def tree: Scope = ref
   }
 
   // ===========================
