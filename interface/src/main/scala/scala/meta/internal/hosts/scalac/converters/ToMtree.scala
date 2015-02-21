@@ -42,7 +42,8 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
   @converter def toMtree(in: Any, pt: Pt): Any = {
     object Helpers extends g.ReificationSupportImpl { self =>
       def mctorcall(in: g.Tree, gtpt: g.Tree, gctor: g.Symbol, gargss: Seq[Seq[g.Tree]]): m.Term = {
-        val mcore = (gtpt.cvt_! : m.Type).ctorRef(gctor)
+        val mctor = m.Ctor.Name(gtpt.tpe.typeSymbolDirect.name.decoded).withDenot(gtpt.tpe, gctor)
+        val mcore = (gtpt.cvt_! : m.Type).ctorRef(mctor).require[m.Term]
         val margss = gargss.map(_.map(marg))
         margss.foldLeft(mcore)((mcurr, margs) => m.Term.Apply(mcurr, margs)).withOriginal(in)
       }

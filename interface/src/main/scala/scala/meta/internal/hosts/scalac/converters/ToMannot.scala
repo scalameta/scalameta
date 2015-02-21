@@ -44,12 +44,13 @@ trait ToMannot extends GlobalToolkit with MetaToolkit {
               m.Term.Arg.Named(mname, loop(garg))
             })
           } else {
-            def loop(garg: g.Tree): m.Term = toMtree(garg, classOf[m.Term])
+            def loop(garg: g.Tree): m.Term = { val _ = toMtree.computeConverters; toMtree(garg, classOf[m.Term]) }
             if (gannot.atp.typeSymbol == g.definitions.ThrowsClass) Nil
             else gargs.map(loop)
           }
         }
-        val mcore = matp.ctorRef(gctor)
+        val mctor = m.Ctor.Name(gatp.typeSymbolDirect.name.decoded).withDenot(gatp, gctor)
+        val mcore = matp.ctorRef(mctor).require[m.Term]
         if (margs.isEmpty) mcore
         else m.Term.Apply(mcore, margs).withOriginal(gannot)
       }

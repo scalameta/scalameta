@@ -15,7 +15,6 @@ extends ToM
    with ToGtype
    with Attributes
    with SymbolTables
-   with TrickyConversions
    with Caches {
   implicit val c: ScalametaSemanticContext
 }

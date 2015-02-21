@@ -13,6 +13,7 @@ import scala.reflect.internal.Flags._
 import scala.meta.internal.{ast => m}
 import scala.meta.internal.{hygiene => h}
 import scala.meta.ui.{Exception => SemanticException}
+import scala.meta.internal.parsers.SyntacticInfo.XtensionTermOps
 
 // This module exposes a method to convert from scala.meta types to scala.reflect types.
 // The logic is mostly straightforward except for when we need to create symbols for compound and existential types.
@@ -21,7 +22,7 @@ trait ToGtype extends GlobalToolkit with MetaToolkit {
 
   protected implicit class ToGtype(mtpe: m.Type.Arg) {
     private def gannotinfo(mannot: m.Mod.Annot): g.AnnotationInfo = {
-      val gtpe = mannot.tree.ctorTpe.toGtype
+      val gtpe = mannot.tree.tpe.require[m.Type].toGtype
       val gargss = mannot.tree.ctorArgss.map(_.map(_.toGtree))
       if (gargss.length > 1) throw new SemanticException(s"implementation restriction: annotations with multiple argument lists are not supported by scalac")
       if (gtpe <:< g.definitions.StaticAnnotationClass.tpe) {
