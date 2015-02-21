@@ -223,7 +223,7 @@
            | Quasiquote
 -----------|---------------------------
  Name      | `importee"$iname"`
- Rname    | `importee"$iname => $iname"`
+ Rename    | `importee"$iname => $iname"`
  Unimport  | `importee"$iname => _"`
  Wildcard  | `importee"_"`
 
