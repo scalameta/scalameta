@@ -172,7 +172,7 @@
  Term Param     | `param"..$mods $pname: $atpeopt = $defaultopt"`
  Type Param     | `param"..$mods type $tpname[..$tparams] >: $tpeopt <: $tpeopt <% ..$tpes : ..$tpes"`
 
-## Constructors (meta.Member) and Constructor References (meta.Ctor.Ref and meta.Term)
+## Constructor References (meta.Ctor.Ref and meta.Term)
 
                      | Quasiquote
 ---------------------|------------------------------
