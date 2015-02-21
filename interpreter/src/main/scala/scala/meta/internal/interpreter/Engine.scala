@@ -2,7 +2,6 @@ package scala.meta.internal.eval
 package interpreter
 
 import scala.meta._
-import scala.meta.ui._
 import scala.meta.dialects.Scala211
 
 object Interpreter {
