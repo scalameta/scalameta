@@ -16,7 +16,7 @@ class ParseSuite extends FunSuite with CommonTrees {
 
 package scala.meta.internal.parsers {
   object Helpers {
-    implicit class RichCode(code: String) {
+    implicit class XtensionCode(code: String) {
       def parseRule[T](rule: Parser => T)(implicit dialect: Dialect): T = new Parser(code).parseRule(rule)
     }
   }

@@ -81,7 +81,7 @@ object Code {
 
   def p(og: SyntacticGroup, t: Tree, left: Boolean = false, right: Boolean = false)(implicit dialect: Dialect, style: Style) = {
     def opNeedsParens(oo: String, io: String, customAssoc: Boolean, customPrecedence: Boolean): Boolean = {
-      implicit class MySyntacticInfo(name: String) {
+      implicit class XtensionMySyntacticInfo(name: String) {
         def isleftassoc: Boolean = if (customAssoc) name.last != ':' else true
         def isrightassoc: Boolean = !isleftassoc
         def precedence: Int = if (customPrecedence) Term.Name(name).precedence else 0

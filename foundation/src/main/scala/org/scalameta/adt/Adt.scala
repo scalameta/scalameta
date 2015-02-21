@@ -161,7 +161,7 @@ class AdtHelperMacros(val c: Context) {
   import decorators._
   import Internal.TagAttachment
 
-  implicit class RichSymbol(sym: Symbol) {
+  implicit class XtensionSymbol(sym: Symbol) {
     def nonEmpty = {
       val tptAnns = sym.info match {
         case AnnotatedType(anns, _) => anns

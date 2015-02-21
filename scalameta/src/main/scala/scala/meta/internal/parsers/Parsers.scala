@@ -19,7 +19,7 @@ import org.scalameta.invariants._
 private[meta] object SyntacticInfo {
   private[meta] val unaryOps = Set("-", "+", "~", "!")
   private[meta] def isUnaryOp(s: String): Boolean = unaryOps contains s
-  implicit class SyntacticTermNameOps(name: Term.Name) {
+  implicit class XtensionSyntacticTermName(name: Term.Name) {
     import name._
     def isLeftAssoc: Boolean = value.last != ':'
     def isUnaryOp: Boolean = SyntacticInfo.isUnaryOp(value)
@@ -44,7 +44,7 @@ private[meta] object SyntacticInfo {
         case _               => 10
       }
   }
-  implicit class SyntacticTermOps(tree: Term) {
+  implicit class XtensionTermOps(tree: Term) {
     def isCtorCall: Boolean = tree match {
       case _: Ctor.Ref => true
       case Term.ApplyType(callee, _) => callee.isCtorCall
@@ -82,7 +82,7 @@ private[meta] object SyntacticInfo {
       }
     }
   }
-  implicit class SyntacticTermRefOps(tree: Term.Ref) {
+  implicit class XtensionTermRefOps(tree: Term.Ref) {
     def isPath: Boolean = tree.isStableId || tree.isInstanceOf[Term.This]
     def isQualId: Boolean = tree match {
       case _: Term.Name                   => true
@@ -95,7 +95,7 @@ private[meta] object SyntacticInfo {
       case _                                            => false
     }
   }
-  implicit class SyntacticTemplateOps(tree: Template) {
+  implicit class XtensionTemplateOps(tree: Template) {
     def isCompoundTypeCompatible: Boolean = {
       tree.early.isEmpty &&
       tree.parents.forall(!_.isInstanceOf[Term.Apply]) &&
@@ -104,21 +104,21 @@ private[meta] object SyntacticInfo {
       tree.stats.map(_.forall(_.isRefineStat)).getOrElse(true)
     }
   }
-  implicit class RichMod(mod: Mod) {
+  implicit class XtensionMod(mod: Mod) {
     def hasAccessBoundary: Boolean = mod match {
       case _: Mod.Private         => true
       case _: Mod.Protected       => true
       case _                      => false
     }
   }
-  implicit class RichMods(mods: List[Mod]) {
+  implicit class XtensionMods(mods: List[Mod]) {
     def has[T <: Mod](implicit tag: ClassTag[T]): Boolean =
       mods.exists { _.getClass == tag.runtimeClass }
     def getAll[T <: Mod](implicit tag: ClassTag[T]): List[T] =
       mods.collect { case m if m.getClass == tag.runtimeClass => m.require[T] }
     def accessBoundary: Option[Name.AccessBoundary] = mods.collectFirst{ case Mod.Private(name) => name; case Mod.Protected(name) => name }
   }
-  implicit class RichStat(stat: Stat) {
+  implicit class XtensionStat(stat: Stat) {
     def isTopLevelStat: Boolean = stat match {
       case _: Import => true
       case _: Pkg => true
