@@ -22,7 +22,7 @@ trait Ensugar {
   import treeInfo._
   import scala.reflect.internal.Flags._
 
-  import org.scalameta.invariants.Implication
+  import org.scalameta.invariants.XtensionImplication
   private def require[T](x: T): Unit = macro org.scalameta.invariants.Macros.require
 
   object Desugared {

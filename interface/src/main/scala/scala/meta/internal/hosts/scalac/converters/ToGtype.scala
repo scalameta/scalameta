@@ -13,6 +13,7 @@ import scala.reflect.internal.Flags._
 import scala.meta.internal.{ast => m}
 import scala.meta.internal.{hygiene => h}
 import scala.meta.ui.{Exception => SemanticException}
+import scala.meta.internal.parsers.SyntacticInfo.XtensionTermOps
 
 // This module exposes a method to convert from scala.meta types to scala.reflect types.
 // The logic is mostly straightforward except for when we need to create symbols for compound and existential types.
@@ -21,7 +22,7 @@ trait ToGtype extends GlobalToolkit with MetaToolkit {
 
   protected implicit class ToGtype(mtpe: m.Type.Arg) {
     private def gannotinfo(mannot: m.Mod.Annot): g.AnnotationInfo = {
-      val gtpe = mannot.tree.ctorTpe.toGtype
+      val gtpe = mannot.tree.tpe.require[m.Type].toGtype
       val gargss = mannot.tree.ctorArgss.map(_.map(_.toGtree))
       if (gargss.length > 1) throw new SemanticException(s"implementation restriction: annotations with multiple argument lists are not supported by scalac")
       if (gtpe <:< g.definitions.StaticAnnotationClass.tpe) {
@@ -57,12 +58,12 @@ trait ToGtype extends GlobalToolkit with MetaToolkit {
         val gsym = lsym.gsymbol // TODO: check that this is correct
         mmods.foreach({
           case mmod: m.Mod.Annot => gsym.withAnnotations(List(gannotinfo(mmod)))
-          case mmod: m.Mod.Private => gsym.setFlag(PRIVATE)
-          case mmod: m.Mod.PrivateThis => gsym.setFlag(LOCAL)
-          case mmod: m.Mod.PrivateWithin => ???
-          case mmod: m.Mod.Protected => gsym.setFlag(PROTECTED)
-          case mmod: m.Mod.ProtectedThis => gsym.setFlag(LOCAL)
-          case mmod: m.Mod.ProtectedWithin => ???
+          case m.Mod.Private(m.Name.Anonymous()) => gsym.setFlag(PRIVATE)
+          case m.Mod.Private(m.Term.This(_)) => gsym.setFlag(PRIVATE | LOCAL)
+          case m.Mod.Private(_) => ???
+          case m.Mod.Protected(m.Name.Anonymous()) => gsym.setFlag(PROTECTED)
+          case m.Mod.Protected(m.Term.This(_)) => gsym.setFlag(PROTECTED | LOCAL)
+          case m.Mod.Protected(_) => ???
           case mmod: m.Mod.Implicit => gsym.setFlag(IMPLICIT)
           case mmod: m.Mod.Final => gsym.setFlag(FINAL)
           case mmod: m.Mod.Sealed => gsym.setFlag(SEALED)

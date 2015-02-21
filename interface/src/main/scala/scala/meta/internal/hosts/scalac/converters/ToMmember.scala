@@ -45,17 +45,17 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
         val gsym = lsym.gsymbol
         val gpriv = gsym.privateWithin.orElse(gsym.owner)
         if (gsym.hasFlag(LOCAL)) {
-          if (gsym.hasFlag(PROTECTED)) List(m.Mod.ProtectedThis().withDenot(gpriv))
-          else if (gsym.hasFlag(PRIVATE)) List(m.Mod.PrivateThis().withDenot(gpriv))
+          if (gsym.hasFlag(PROTECTED)) List(m.Mod.Protected(m.Term.This(None).withDenot(gpriv)))
+          else if (gsym.hasFlag(PRIVATE)) List(m.Mod.Private(m.Term.This(None).withDenot(gpriv)))
           else unreachable
         } else if (gsym.hasAccessBoundary && gpriv != g.NoSymbol) {
           // TODO: `private[pkg] class C` doesn't have PRIVATE in its flags
           // so we need to account for that!
-          if (gsym.hasFlag(PROTECTED)) List(m.Mod.ProtectedWithin(gpriv.name.toString).withDenot(gpriv))
-          else List(m.Mod.PrivateWithin(gpriv.name.toString).withDenot(gpriv))
+          if (gsym.hasFlag(PROTECTED)) List(m.Mod.Protected(gpriv.rawcvt(g.Ident(gpriv)).require[m.Name.AccessBoundary]))
+          else List(m.Mod.Private(gpriv.rawcvt(g.Ident(gpriv)).require[m.Name.AccessBoundary]))
         } else {
-          if (gsym.hasFlag(PROTECTED)) List(m.Mod.Protected())
-          else if (gsym.hasFlag(PRIVATE)) List(m.Mod.Private())
+          if (gsym.hasFlag(PROTECTED)) List(m.Mod.Protected(m.Name.Anonymous().withDenot(gsym.owner)))
+          else if (gsym.hasFlag(PRIVATE)) List(m.Mod.Private(m.Name.Anonymous().withDenot(gsym.owner)))
           else Nil
         }
       }
@@ -86,7 +86,10 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
       val result = annotationMods(lsym) ++ accessQualifierMods(lsym) ++ otherMods(lsym) ++ valVarParamMods(lsym)
       // TODO: we can't discern `class C(x: Int)` and `class C(private[this] val x: Int)`
       // so let's err on the side of the more popular option
-      if (lsym.gsymbol.owner.isPrimaryConstructor) result.filter(!_.isInstanceOf[m.Mod.PrivateThis]) else result
+      if (lsym.gsymbol.owner.isPrimaryConstructor) result.filter({
+        case m.Mod.Private(m.Term.This(_)) => false
+        case _ => true
+      }) else result
     }
     def toMmember(gpre: g.Type): m.Member = lsymToMmemberCache.getOrElseUpdate((gpre, lsym), {
       if (sys.props("member.debug") != null) println((gpre, lsym))
@@ -224,13 +227,7 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
                 case MacroBody.None => unreachable
                 case MacroBody.FastTrack(_) => mincompatibleMacro
                 case MacroBody.Reflect(_) => mincompatibleMacro
-                case MacroBody.Meta(body) => {
-                  // TODO: think of a better way to express this
-                  // and, by the way, why is an implicit context needed here at all?
-                  implicit val c: ScalametaSemanticContext = self.require[ScalametaSemanticContext]
-                  val _ = toMtree.computeConverters // TODO: that's a hack!
-                  toMtree(body, classOf[m.Term])
-                }
+                case MacroBody.Meta(body) => { val _ = toMtree.computeConverters; toMtree(body, classOf[m.Term]) }
               }
             case l.SecondaryCtor(gsym) =>
               val gctor = gsym.owner.primaryConstructor
@@ -289,7 +286,8 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
             val mtpe = gparent.toMtype
             var gctor = gparent.typeSymbol.primaryConstructor.orElse(gparent.typeSymbol)
             if (gctor.name == g.nme.MIXIN_CONSTRUCTOR) gctor = gparent.typeSymbol
-            mtpe.ctorRef(gctor)
+            val mctor = m.Ctor.Name(gparent.typeSymbolDirect.name.decoded).withDenot(gparent, gctor)
+            mtpe.ctorRef(mctor).require[m.Term]
           })
           // TODO: apply gpre to mselftpe
           val mselftpe = if (gsym.thisSym != gsym) Some(gsym.thisSym.tpe.toMtype) else None
@@ -343,8 +341,8 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
           case _: l.SecondaryCtor => m.Ctor.Secondary(mmods, mname.require[m.Ctor.Name], mvparamss, mbody)
           case _: l.TermBind => m.Pat.Var.Term(mname.require[m.Term.Name])
           case _: l.TypeBind => m.Pat.Var.Type(mname.require[m.Type.Name])
-          case _: l.TermParameter => m.Term.Param(mmods, mname, Some(mtpearg), mmaybeDefault)
-          case _: l.TypeParameter => m.Type.Param(mmods, mname, mtparams, mtpebounds, mviewbounds, mcontextbounds)
+          case _: l.TermParameter => m.Term.Param(mmods, mname.require[m.Term.Param.Name], Some(mtpearg), mmaybeDefault)
+          case _: l.TypeParameter => m.Type.Param(mmods, mname.require[m.Type.Param.Name], mtparams, mtpebounds, mviewbounds, mcontextbounds)
           case _ => sys.error(s"unsupported symbol $lsym, designation = ${gsym.getClass}, flags = ${gsym.flags}")
         }
         mmember.withOriginal(lsym)
