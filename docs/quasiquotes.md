@@ -22,11 +22,11 @@
  This              | `q"$stropt.this"`
  Super             | `q"$stropt.super[$stropt]"`
  Name              | `q"name"`
- Selection         | `q"$expr.$name"`
- Interpolation     | `q""" $name"$${..$exprs}" """`
+ Selection         | `q"$expr.$ename"`
+ Interpolation     | `q""" $ename"$${..$exprs}" """`
  Application       | `q"$expr(..$aexprs)"`
  Type Application  | `q"$expr[..$tpes]"`
- Infix Application | `q"$expr $name[..$tpes] (..$aexprs)"`
+ Infix Application | `q"$expr $ename[..$tpes] (..$aexprs)"`
  Unary Application | `q"!$expr", q"~$expr", q"-$expr", "+$expr"`
  Assign            | `q"$ref = $expr"`
  Update            | `q"$expr(..$aexprs) = $expr"`
@@ -55,7 +55,7 @@
 
             | Quasiquote
 ------------|------------------------------
- Named      | `arg"$name = $expr"`
+ Named      | `arg"$ename = $expr"`
  Repeated   | `arg"$expr: _*"`
  Expression | `arg"$expr"`
 
@@ -91,15 +91,15 @@
 ---------------|----------------------------
  Wildcard      | `p"_"`
  Var           | `p"name"`
- Bind          | `p"$name @ $pat"`
+ Bind          | `p"$ename @ $pat"`
  Alternative   | `p"$pat | $pat"`
  Tuple         | `p"(..$pats)"`
  Extract       | `p"$ref[..$tpes](..$apats)"`
- Infix Extract | `p"$pat $name (..$apats)"`
- Interpolation | `p""" $name"$${..$pats}" """`
+ Infix Extract | `p"$pat $ename (..$apats)"`
+ Interpolation | `p""" $ename"$${..$pats}" """`
  Typed         | `p"$pat: $tpe"`
- Name          | `p"`name`"`
- Selection     | `p"$expr.$name"`
+ Name          | ``p"`name`"``
+ Selection     | `p"$expr.$ename"`
  Literal       | `p"$lit"`
 
 ## Argument Patterns (meta.Pat.Arg)
@@ -115,7 +115,7 @@
 -------------------|------------------------------
  Wildcard          | `pt"_"`
  Var               | `pt"name"`
- Name              | `pt"`name`"`
+ Name              | ``pt"`name`"``
  Selection         | `pt"$ref.$tname"`
  Projection        | `pt"$ptpe#$tname"`
  Singleton         | `pt"$ref.type"`
@@ -143,9 +143,9 @@
 
            | Quasiquote
 -----------|------------------------------
- Val       | `q"..$mods val ..$names: $tpe"`
- Var       | `q"..$mods var ..$names: $tpe"`
- Def       | `q"..$mods def $name[..$tparams](...$paramss): $tpe"`
+ Val       | `q"..$mods val ..$enames: $tpe"`
+ Var       | `q"..$mods var ..$enames: $tpe"`
+ Def       | `q"..$mods def $ename[..$tparams](...$paramss): $tpe"`
  Type      | `q"..$mods type $tname[..$tparams] >: $tpeopt <: tpeopt"`
 
 ### Definitions
@@ -154,20 +154,20 @@
 ----------------|------------------------------
  Val            | `q"..$mods val ..$pats: $tpeopt = $expr"`
  Var            | `q"..$mods var ..$pats: $tpeopt = $expropt"`
- Def            | `q"..$mods def $name[..$tparams](...$paramss): $tpeopt = $expr"`
- Macro          | `q"..$mods def $name[..$tparams](...$paramss): $tpe = macro $expr"`
+ Def            | `q"..$mods def $ename[..$tparams](...$paramss): $tpeopt = $expr"`
+ Macro          | `q"..$mods def $ename[..$tparams](...$paramss): $tpe = macro $expr"`
  Type           | `q"..$mods type $tname[..$tparams] = $tpe"`
  Class          | `q"..$mods class $tname[..$tparams] $member extends $template"`
  Trait          | `q"..$mods trait $tname[..$tparams] extends $template"`
- Object         | `q"..$mods object $name extends $template"`
- Package Object | `q"package object $name extends $template"`
+ Object         | `q"..$mods object $ename extends $template"`
+ Package Object | `q"package object $ename extends $template"`
  Package        | `q"package $ref { ..$stats }"`
 
 ### Params
 
                 | Quasiquote
 ----------------|-------------------------------------------------
- Term Param     | `param"..$mods $name: $atpeopt = $defaultopt"`
+ Term Param     | `param"..$mods $ename: $atpeopt = $defaultopt"`
  Type Param     | `param"..$mods type $tname[..$tparams] >: $tpeopt <: $tpeopt <% ..$tpes : ..$tpes"`
 
 ## Constructors (meta.Member) and Constructor References (meta.Ctor.Ref and meta.Term)
@@ -248,6 +248,7 @@
  meta.Enumerator     | `$enumerator` | `enumerator`
  meta.Member         | `$member`     | `q`
  meta.Mod            | `$mod`        | `mod`
+ meta.Name           | `$name`       | `q`, `t`
  meta.Pat            | `$pat`        | `p`
  meta.Pat.Arg        | `$apat`       | `p`
  meta.Pat.Type       | `$ptpe`       | `pt`
@@ -256,7 +257,7 @@
  meta.Template       | `$template`   | `template`
  meta.Term           | `$expr`       | `q`
  meta.Term.Arg       | `$aexpr`      | `arg`
- meta.Term.Name      | `$name`       | `q`
+ meta.Term.Name      | `$ename`      | `q`
  meta.Term.Ref       | `$ref`        | `q`
  meta.Term.Param     | `$param`      | `param`
  meta.Type           | `$tpe`        | `t`
