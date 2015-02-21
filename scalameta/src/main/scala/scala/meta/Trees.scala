@@ -269,7 +269,7 @@ package scala.meta.internal.ast {
       @ast class Wildcard() extends Pat.Type
       @ast class Project(qual: Pat.Type, name: impl.Type.Name) extends Pat.Type with Pat.Type.Ref
       @ast class Apply(tpe: Pat.Type, args: Seq[Pat.Type] @nonEmpty) extends Pat.Type
-      @ast class ApplyInfix(lhs: Pat.Type, op: Name, rhs: Pat.Type) extends Pat.Type
+      @ast class ApplyInfix(lhs: Pat.Type, op: impl.Type.Name, rhs: Pat.Type) extends Pat.Type
       @ast class Function(params: Seq[Pat.Type], res: Pat.Type) extends Pat.Type
       @ast class Tuple(elements: Seq[Pat.Type] @nonEmpty) extends Pat.Type {
         require(elements.length > 1)
