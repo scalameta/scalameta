@@ -57,12 +57,12 @@ trait ToGtype extends GlobalToolkit with MetaToolkit {
         val gsym = lsym.gsymbol // TODO: check that this is correct
         mmods.foreach({
           case mmod: m.Mod.Annot => gsym.withAnnotations(List(gannotinfo(mmod)))
-          case mmod: m.Mod.Private => gsym.setFlag(PRIVATE)
-          case mmod: m.Mod.PrivateThis => gsym.setFlag(LOCAL)
-          case mmod: m.Mod.PrivateWithin => ???
-          case mmod: m.Mod.Protected => gsym.setFlag(PROTECTED)
-          case mmod: m.Mod.ProtectedThis => gsym.setFlag(LOCAL)
-          case mmod: m.Mod.ProtectedWithin => ???
+          case m.Mod.Private(m.Name.Anonymous()) => gsym.setFlag(PRIVATE)
+          case m.Mod.Private(m.Term.This(_)) => gsym.setFlag(PRIVATE | LOCAL)
+          case m.Mod.Private(_) => ???
+          case m.Mod.Protected(m.Name.Anonymous()) => gsym.setFlag(PROTECTED)
+          case m.Mod.Protected(m.Term.This(_)) => gsym.setFlag(PROTECTED | LOCAL)
+          case m.Mod.Protected(_) => ???
           case mmod: m.Mod.Implicit => gsym.setFlag(IMPLICIT)
           case mmod: m.Mod.Final => gsym.setFlag(FINAL)
           case mmod: m.Mod.Sealed => gsym.setFlag(SEALED)

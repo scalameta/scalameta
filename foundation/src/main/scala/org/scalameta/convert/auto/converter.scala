@@ -335,7 +335,8 @@ package object internal {
           val expected = mutable.Set(allLeafCompanions(root).distinct: _*)
           (prelude ++ clauses).foreach(_.foreach(sub => if (sub.symbol != null) expected -= sub.symbol))
           val unmatched = expected.filter(sym => {
-            sym.fullName != "scala.meta.internal.ast.Pat.Interpolate" &&
+            sym.fullName != "scala.meta.internal.ast.Name.Indeterminate" && // never produced by the converter
+            sym.fullName != "scala.meta.internal.ast.Pat.Interpolate" && // not implemented yet
             sym.fullName != "scala.meta.internal.ast.Ctor.Ref.Name" && // Ctor.Name is an alias to Ctor.Ref.Name, and it is very well used in the converter
             sym.fullName != "scala.meta.internal.ast.Ctor.Name" && // handled in a helper outside the @converter
             sym.fullName != "scala.meta.internal.ast.Ctor.Ref.Select" && // handled in a helper outside the @converter
@@ -537,8 +538,8 @@ package object internal {
             val converted = $result
             def cacheAllMembers(x: _root_.scala.meta.internal.ast.Tree): Unit = {
               def cache(x: _root_.scala.meta.internal.ast.Member): Unit = {
-                val name = _root_.scala.meta.`package`.SemanticMemberOps(x).name.asInstanceOf[_root_.scala.meta.internal.ast.Name]
-                if (_root_.scala.meta.`package`.SemanticNameOps(name).isBinder) {
+                val name = _root_.scala.meta.`package`.XtensionSemanticMember(x).name.asInstanceOf[_root_.scala.meta.internal.ast.Name]
+                if (_root_.scala.meta.`package`.XtensionSemanticName(name).isBinder) {
                   val denot = name.denot
                   _root_.org.scalameta.invariants.require(x != null && denot != _root_.scala.meta.internal.hygiene.Denotation.Zero)
                   _root_.org.scalameta.invariants.require(x != null && denot.symbol != _root_.scala.meta.internal.hygiene.Symbol.Zero)

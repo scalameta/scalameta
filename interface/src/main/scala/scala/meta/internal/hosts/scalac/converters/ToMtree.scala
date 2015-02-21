@@ -16,7 +16,7 @@ import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
 import scala.reflect.runtime.universe.{Type => Pt}
 import scala.meta.internal.{hygiene => h}
-import scala.meta.syntactic.parsers.SyntacticInfo.{SyntacticTermOps => _, _}
+import scala.meta.internal.parsers.SyntacticInfo.{XtensionTermOps => _, _}
 
 // This module exposes a method that can convert scala.reflect trees into high-fidelity scala.meta trees.
 //
@@ -36,7 +36,7 @@ import scala.meta.syntactic.parsers.SyntacticInfo.{SyntacticTermOps => _, _}
 trait ToMtree extends GlobalToolkit with MetaToolkit {
   self: Api =>
 
-  val TermQuote = "shadow scala.meta quasiquotes"
+  val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
   import g.Quasiquote
 
   @converter def toMtree(in: Any, pt: Pt): Any = {
@@ -70,17 +70,17 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
             // so we can't invoke paccessqual on them, because that will produce crazy results
             Nil
           } else if (gmods.hasFlag(LOCAL)) {
-            if (gmods.hasFlag(PROTECTED)) List(m.Mod.ProtectedThis().withDenot(gpriv))
-            else if (gmods.hasFlag(PRIVATE)) List(m.Mod.PrivateThis().withDenot(gpriv))
+            if (gmods.hasFlag(PROTECTED)) List(m.Mod.Protected(m.Term.This(None).withDenot(gpriv)))
+            else if (gmods.hasFlag(PRIVATE)) List(m.Mod.Private(m.Term.This(None).withDenot(gpriv)))
             else unreachable
           } else if (gmods.hasAccessBoundary && gpriv != g.NoSymbol) {
             // TODO: `private[pkg] class C` doesn't have PRIVATE in its flags
             // so we need to account for that!
-            if (gmods.hasFlag(PROTECTED)) List(m.Mod.ProtectedWithin(gpriv.name.toString).withDenot(gpriv))
-            else List(m.Mod.PrivateWithin(gpriv.name.toString).withDenot(gpriv))
+            if (gmods.hasFlag(PROTECTED)) List(m.Mod.Protected(gpriv.rawcvt(g.Ident(gpriv)).require[m.Name.AccessBoundary]))
+            else List(m.Mod.Private(gpriv.rawcvt(g.Ident(gpriv)).require[m.Name.AccessBoundary]))
           } else {
-            if (gmods.hasFlag(PROTECTED)) List(m.Mod.Protected())
-            else if (gmods.hasFlag(PRIVATE)) List(m.Mod.Private())
+            if (gmods.hasFlag(PROTECTED)) List(m.Mod.Protected(m.Name.Anonymous().withDenot(gsym.owner)))
+            else if (gmods.hasFlag(PRIVATE)) List(m.Mod.Private(m.Name.Anonymous().withDenot(gsym.owner)))
             else Nil
           }
         }
@@ -111,7 +111,10 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
         val result = annotationMods(gmdef) ++ accessQualifierMods(gmdef) ++ otherMods(gmdef) ++ valVarParamMods(gmdef)
         // TODO: we can't discern `class C(x: Int)` and `class C(private[this] val x: Int)`
         // so let's err on the side of the more popular option
-        if (gmdef.symbol.owner.isPrimaryConstructor) result.filter(!_.isInstanceOf[m.Mod.PrivateThis]) else result
+        if (gmdef.symbol.owner.isPrimaryConstructor) result.filter({
+          case m.Mod.Private(m.Term.This(_)) => false
+          case _ => true
+        }) else result
       }
       def mvparamtpe(gtpt: g.Tree): m.Type.Arg = {
         def unwrap(mtpe: m.Type): m.Type = mtpe.require[m.Type.Apply].args.head
@@ -286,7 +289,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
     }
 
     import Helpers._
-    val TermQuote = "shadow scala.meta quasiquotes"
+    val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
     in.require[g.Tree].requireAttributed()
     in match {
       case g.EmptyTree =>
@@ -325,7 +328,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
       case in @ g.ValDef(_, _, tpt, rhs) if pt <:< typeOf[m.Term.Param] =>
         // TODO: how do we really distinguish `case class C(val x: Int)` and `case class C(x: Int)`?
         require(in != g.noSelfType && in.symbol.isTerm)
-        val mname = in.symbol.asTerm.anoncvt(in)
+        val mname = in.symbol.asTerm.anoncvt(in).require[m.Term.Param.Name]
         val mtpe = if (tpt.nonEmpty) Some[m.Type.Arg](mvparamtpe(tpt)) else None
         val mdefault = if (rhs.nonEmpty) Some[m.Term](rhs.cvt_!) else None
         require(in.symbol.isAnonymous ==> mdefault.isEmpty)
@@ -361,7 +364,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
         }
       case in @ g.TypeDef(_, _, tparams0, tpt) if pt <:< typeOf[m.Type.Param] =>
         require(in.symbol.isType)
-        val mname = in.symbol.asType.anoncvt(in)
+        val mname = in.symbol.asType.anoncvt(in).require[m.Type.Param.Name]
         val tparams = tparams0.map(_.appendMetadata("originalContextBounds" -> Nil).appendMetadata("originalViewBounds" -> Nil))
         val mviewbounds = in.metadata("originalViewBounds").require[List[g.Tree]].map(_.cvt_! : m.Type)
         val mcontextbounds = in.metadata("originalContextBounds").require[List[g.Tree]].map(_.cvt_! : m.Type)
@@ -381,11 +384,12 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
       case in @ g.Import(expr, selectors) =>
         // TODO: collapse desugared chains of imports
         // TODO: distinguish `import foo.x` from `import foo.{x => x}`
+        // TODO: populate denotations
         m.Import(List(m.Import.Clause(expr.cvt_!, selectors.map({
           case g.ImportSelector(g.nme.WILDCARD, _, null, _)           => m.Import.Selector.Wildcard()
-          case g.ImportSelector(name1, _, name2, _) if name1 == name2 => m.Import.Selector.Name(name1.toString)
-          case g.ImportSelector(name1, _, name2, _) if name1 != name2 => m.Import.Selector.Rename(name1.toString, name2.toString)
-          case g.ImportSelector(name, _, g.nme.WILDCARD, _)           => m.Import.Selector.Unimport(name.toString)
+          case g.ImportSelector(name1, _, name2, _) if name1 == name2 => m.Import.Selector.Name(m.Name.Imported(name1.toString))
+          case g.ImportSelector(name1, _, name2, _) if name1 != name2 => m.Import.Selector.Rename(m.Name.Imported(name1.toString), m.Name.Imported(name2.toString))
+          case g.ImportSelector(name, _, g.nme.WILDCARD, _)           => m.Import.Selector.Unimport(m.Name.Imported(name.toString))
         }))))
       case in @ g.Template(_, _, _) =>
         val SyntacticTemplate(gsupersym, gparents, gself, gearlydefns, gstats) = in
@@ -626,12 +630,12 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
       case in @ g.CompoundTypeTree(templ) if pt <:< typeOf[m.Type] =>
         val template @ m.Template(early, parents, _, stats) = templ.cvt : m.Template
         require(template.isCompoundTypeCompatible)
-        m.Type.Compound(parents.map(_.ctorTpe), stats.getOrElse(Nil))
+        m.Type.Compound(parents.map(_.tpe.require[m.Type]), stats.getOrElse(Nil))
       case in @ g.CompoundTypeTree(templ) if pt <:< typeOf[m.Pat.Type] =>
         // TODO: this doesn't handle situations like `List(42) match { case _: (List[t] { def head: Int }) => }`
         val template @ m.Template(early, parents, _, stats) = templ.cvt : m.Template
         require(template.isCompoundTypeCompatible)
-        m.Pat.Type.Compound(parents.map(_.ctorTpe).map(_.patTpe), stats.getOrElse(Nil))
+        m.Pat.Type.Compound(parents.map(_.tpe.pat.require[m.Pat.Type]), stats.getOrElse(Nil))
       case in @ g.AppliedTypeTree(tpt, args) if pt <:< typeOf[m.Type] =>
         // TODO: infer whether that was really Apply, Function or Tuple
         // TODO: precisely infer whether that was infix application or normal application

@@ -44,12 +44,7 @@ trait ToMannot extends GlobalToolkit with MetaToolkit {
               m.Term.Arg.Named(mname, loop(garg))
             })
           } else {
-            def loop(garg: g.Tree): m.Term = {
-              // TODO: think of a better way to express this
-              // and, by the way, why is an implicit context needed here at all?
-              implicit val c: ScalametaSemanticContext = self.require[ScalametaSemanticContext]
-              toMtree(garg, classOf[m.Term])
-            }
+            def loop(garg: g.Tree): m.Term = toMtree(garg, classOf[m.Term])
             if (gannot.atp.typeSymbol == g.definitions.ThrowsClass) Nil
             else gargs.map(loop)
           }

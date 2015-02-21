@@ -2,7 +2,10 @@ package scala.meta
 package internal.hosts.scalac
 package converters
 
-abstract class Api(global: scala.tools.nsc.Global)
+import scala.tools.nsc.{Global => ScalaGlobal}
+import scala.meta.semantic.{Context => ScalametaSemanticContext}
+
+abstract class Api(global: ScalaGlobal)
 extends ToM
    with ToMannot
    with ToMmember
@@ -13,4 +16,6 @@ extends ToM
    with Attributes
    with SymbolTables
    with TrickyConversions
-   with Caches
+   with Caches {
+  implicit val c: ScalametaSemanticContext
+}

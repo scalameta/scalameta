@@ -16,6 +16,7 @@ import scala.meta.internal.{ast => m}
 // 2) Pattern types <-> Types
 // These conversions need to account for metadata that we've attached or about to attach to scala.meta trees,
 // so we can't move them to `org.scalameta.meta` and need this module to be part of the SemanticContext cake.
+// TODO: this file should go away, because theoretically all these methods now have equivalents in semantic/Api.scala
 trait TrickyConversions extends GlobalToolkit with MetaToolkit {
   self: Api =>
 
@@ -69,31 +70,6 @@ trait TrickyConversions extends GlobalToolkit with MetaToolkit {
         case m.Term.Annotate(mannottee, _) => mannottee.ctorArgss
         case _ => unreachable
       }
-    }
-  }
-
-  protected implicit class RichPatTpeTree(mtpe: m.Type) {
-    def patTpe: m.Pat.Type = {
-      def loop(mtpe: m.Type): m.Pat.Type = {
-        val result = mtpe match {
-          case mtpe: m.Type.Name => mtpe
-          case mtpe: m.Type.Select => mtpe
-          case m.Type.Project(mqual, mname) => m.Pat.Type.Project(loop(mqual), mname)
-          case mtpe: m.Type.Singleton => mtpe
-          case m.Type.Apply(mtpe, args) => m.Pat.Type.Apply(loop(mtpe), args.map(loop))
-          case m.Type.ApplyInfix(mlhs, mop, mrhs) => m.Pat.Type.ApplyInfix(loop(mlhs), mop, loop(mrhs))
-          case m.Type.Function(mparams, mres) => m.Pat.Type.Function(mparams.map(param => loop(param.require[m.Type])), loop(mres))
-          case m.Type.Tuple(melements) => m.Pat.Type.Tuple(melements.map(loop))
-          case m.Type.Compound(mtpes, mrefinement) => m.Pat.Type.Compound(mtpes.map(loop), mrefinement)
-          case m.Type.Existential(mtpe, mquants) => m.Pat.Type.Existential(loop(mtpe), mquants)
-          case m.Type.Annotate(mtpe, mannots) => m.Pat.Type.Annotate(loop(mtpe), mannots)
-          case mtpe: m.Type.Placeholder => mtpe
-          case mtpe: m.Lit => mtpe
-        }
-        val original = mtpe.scratchpad.collect{case ScratchpadDatum.Original(goriginal) => goriginal}.head
-        result.appendScratchpad(ScratchpadDatum.Original(original))
-      }
-      loop(mtpe)
     }
   }
 }

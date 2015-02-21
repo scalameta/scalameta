@@ -63,6 +63,8 @@ trait Attributes extends GlobalToolkit with MetaToolkit {
       val scratchpad = ptree.scratchpad :+ ScratchpadDatum.Denotation(gpre, lsym)
       val ptree1 = ptree match {
         case ptree: m.Name.Anonymous => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
+        case ptree: m.Name.Indeterminate => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
+        case ptree: m.Name.Imported => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
         case ptree: m.Term.Name => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
         case ptree: m.Type.Name => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
         // TODO: some ctor refs don't have corresponding constructor symbols in Scala (namely, ones for traits)
@@ -71,10 +73,6 @@ trait Attributes extends GlobalToolkit with MetaToolkit {
         case ptree: m.Ctor.Name => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
         case ptree: m.Term.This => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
         case ptree: m.Term.Super => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
-        case ptree: m.Mod.PrivateThis => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
-        case ptree: m.Mod.PrivateWithin => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
-        case ptree: m.Mod.ProtectedThis => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
-        case ptree: m.Mod.ProtectedWithin => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
         case _ => unreachable
       }
       ptree1.withScratchpad(scratchpad).require[T]
