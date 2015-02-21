@@ -13,8 +13,8 @@ import org.scalameta.invariants._
 // For local symbols, things are much simpler - we require unique ids, whose generation is feasible,
 // because everyone who can create those symbols is localized to the same compilation unit.
 
-@root trait Signature
-object Signature {
+@root private[meta] trait Signature
+private[meta] object Signature {
   @leaf object Type extends Signature
   @leaf object Term extends Signature
   @leaf class Method(jvmSignature: String) extends Signature
@@ -22,8 +22,8 @@ object Signature {
   @leaf object TermParameter extends Signature
 }
 
-@root trait Symbol
-object Symbol {
+@root private[meta] trait Symbol
+private[meta] object Symbol {
   @leaf object Zero extends Symbol
   @leaf object Root extends Symbol
   @leaf object Empty extends Symbol
@@ -38,8 +38,8 @@ object Symbol {
 // However, when comparing trees, we don't have a typechecker, so we need to figure out what else is necessary.
 // Another essential thing apart from symbols is prefixes. Let's hope that this is it.
 
-@root trait Prefix
-object Prefix {
+@root private[meta] trait Prefix
+private[meta] object Prefix {
   @leaf object Zero extends Prefix
   @leaf class Type(tpe: scala.meta.Type) extends Prefix
 }
@@ -49,8 +49,8 @@ object Prefix {
 // Also, hopefully, it's only necessary to define denotations for all names in a tree
 // to guarantee hygienic comparisons and name lookups.
 
-@root trait Denotation { def prefix: Prefix; def symbol: Symbol }
-object Denotation {
+@root private[meta] trait Denotation { def prefix: Prefix; def symbol: Symbol }
+private[meta] object Denotation {
   @leaf object Zero extends Denotation { def prefix = Prefix.Zero; def symbol = Symbol.Zero; }
   @leaf class Precomputed(prefix: Prefix, symbol: Symbol) extends Denotation
 }

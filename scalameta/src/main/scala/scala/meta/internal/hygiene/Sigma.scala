@@ -29,8 +29,8 @@ import scala.meta.internal.{ast => impl}
 // they will just look into `tree.denotation` and return that value. We are also going to pre-typecheck
 // quasiquotes and pre-populate denotations, so that these naive sigmas can get at least some job done.
 
-@root trait Sigma { def resolve(name: Name): Denotation }
-object Sigma {
+@root private[meta] trait Sigma { def resolve(name: Name): Denotation }
+private[meta] object Sigma {
   @leaf object Zero extends Sigma { def resolve(name: Name) = Denotation.Zero }
   @leaf object Naive extends Sigma { def resolve(name: Name) = name.require[impl.Name].denot }
 }
