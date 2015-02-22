@@ -6,17 +6,20 @@ import scala.tools.nsc.plugins.{Plugin => NscPlugin, PluginComponent => NscPlugi
 import typechecker.HijackAnalyzer
 import macros.{MacroPlugin => ScalahostMacroPlugin}
 import convert.ConvertPhase
+import compat.ParadiseCompat
 import org.scalameta.reflection._
 
 trait PluginBase extends NscPlugin
                     with HijackAnalyzer
                     with ScalahostMacroPlugin
+                    with ParadiseCompat
                     with ConvertPhase
                     with PluginSettings
                     with GlobalToolkit {
-  val hijackedAnalyzer = hijackAnalyzer()
-  if (global.analyzer ne hijackedAnalyzer) sys.error("failed to hijack analyzer")
+  val (newAnalyzer, oldAnalyzer) = hijackAnalyzer()
+  if (global.analyzer ne newAnalyzer) sys.error("failed to hijack analyzer")
   global.analyzer.addMacroPlugin(scalahostMacroPlugin)
+  ifNecessaryReenableMacroParadise(oldAnalyzer)
 }
 
 class Plugin(val global: Global) extends PluginBase {
