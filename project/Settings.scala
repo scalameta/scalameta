@@ -19,6 +19,7 @@ object Settings {
     scalacOptions ++= Seq("-feature", "-deprecation", "-unchecked"),
     parallelExecution in Test := false, // hello, reflection sync!!
     logBuffered := false,
+    traceLevel := 0,
     commands += cls,
     scalaHome := {
       val scalaHome = System.getProperty("scalahost.scala.home")
