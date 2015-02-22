@@ -24,6 +24,7 @@ object Types {
   type T10 = (X, X)
   type T11 = X { def x: Int }
   type T12 = B with Y { def x: Int }
+  type T12x = x5.type { type T = Int }
 
   new X{} match { case x13: X => }
 

@@ -623,14 +623,13 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
       case in @ g.SingletonTypeTree(ref) =>
         m.Type.Singleton(ref.cvt_!)
       case in @ g.CompoundTypeTree(templ) if pt <:< typeOf[m.Type] =>
-        val template @ m.Template(early, parents, _, stats) = templ.cvt : m.Template
-        require(template.isCompoundTypeCompatible)
-        m.Type.Compound(parents.map(_.tpe.require[m.Type]), stats.getOrElse(Nil))
+        val SyntacticTemplate(gsupersym, gparents, gself, gearlydefns, gstats) = templ
+        require(gsupersym == g.NoSymbol && gself == g.noSelfType && gearlydefns.isEmpty)
+        m.Type.Compound(gparents.cvt_!, gstats.cvt_!)
       case in @ g.CompoundTypeTree(templ) if pt <:< typeOf[m.Pat.Type] =>
-        // TODO: this doesn't handle situations like `List(42) match { case _: (List[t] { def head: Int }) => }`
-        val template @ m.Template(early, parents, _, stats) = templ.cvt : m.Template
-        require(template.isCompoundTypeCompatible)
-        m.Pat.Type.Compound(parents.map(_.tpe.pat.require[m.Pat.Type]), stats.getOrElse(Nil))
+        val SyntacticTemplate(gsupersym, gparents, gself, gearlydefns, gstats) = templ
+        require(gsupersym == g.NoSymbol && gself == g.noSelfType && gearlydefns.isEmpty)
+        m.Pat.Type.Compound(gparents.cvt_!, gstats.cvt_!)
       case in @ g.AppliedTypeTree(tpt, args) if pt <:< typeOf[m.Type.Arg] =>
         // TODO: infer whether that was really Apply, Function or Tuple
         // TODO: precisely infer whether that was infix application or normal application
