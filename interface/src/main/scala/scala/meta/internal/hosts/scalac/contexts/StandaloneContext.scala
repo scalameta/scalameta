@@ -29,9 +29,9 @@ class StandaloneContext(options: String) extends ScalahostSemanticContext(mkGlob
       val typer = newTyper(rootContext(NoCompilationUnit))
       val typedpkg = typer.typed(gtree).require[Tree]
       if (reporter.hasErrors) sys.error("typecheck has failed:" + EOL + EOL + (reporter.infos map (_.msg) mkString EOL))
-      typedpkg.require[PackageDef].stats.head
+      typedpkg.require[PackageDef]
     }
     val _ = toMtree.computeConverters // TODO: necessary because of macro expansion order
-    toMtree(gtypedtree, classOf[mapi.Stat])
+    toMtree(gtypedtree, classOf[mapi.Source])
   }
 }
