@@ -66,7 +66,7 @@ trait SymbolHelpers {
           if (targs.nonEmpty) implRef = TypeApply(implRef, targs).setType(appliedType(methodSym.info, targs.map(_.tpe)))
           MacroBody.Reflect(implRef)
         case _ :: _ =>
-          unreachable
+          unreachable(debug(macroSigs(sym)))
         case _ =>
           MacroBody.None
       }

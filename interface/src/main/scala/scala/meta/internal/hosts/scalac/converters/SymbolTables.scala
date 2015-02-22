@@ -37,7 +37,7 @@ trait SymbolTables extends GlobalToolkit with MetaToolkit {
         if (gsym.isMethod && !gsym.asMethod.isGetter) h.Signature.Method(gsym.jvmsig)
         else if (gsym.isTerm || (gsym.hasFlag(DEFERRED | EXISTENTIAL) && gsym.name.endsWith(g.nme.SINGLETON_SUFFIX))) h.Signature.Term
         else if (gsym.isType) h.Signature.Type
-        else unreachable
+        else unreachable(debug(gsym, gsym.flags, gsym.getClass, gsym.owner))
       }
       if (sys.props("convert.debug") != null) println(lsym)
       val gsym = lsym.gsymbol

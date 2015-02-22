@@ -14,9 +14,8 @@ trait LogicalSymbols {
 
   implicit class RichLogicalSymbol(gsym: g.Symbol) {
     def toLogical: l.Symbol = {
-      val gsym0 = gsym
-      val results = logicalSymbols(List(gsym0))
-      require(gsym0 != null && results != null && results.length == 1)
+      val results = logicalSymbols(List(gsym))
+      require(results.length == 1 && debug(gsym, results))
       results.head
     }
   }
@@ -332,7 +331,7 @@ trait LogicalSymbols {
           case (l.AbstractVar(g1, s1), l.AbstractVar(g2, s2)) => l.AbstractVar(g1.orElse(g2), s1.orElse(s2))
           case (l.Val(f1, g1), l.Val(f2, g2)) => l.Val(f1.orElse(f2), g1.orElse(g2))
           case (l.Var(f1, g1, s1), l.Var(f2, g2, s2)) => l.Var(f1.orElse(f2), g1.orElse(g2), s1.orElse(s2))
-          case _ => unreachable
+          case _ => unreachable(debug(lsym1, lsym2))
         }
         val partial = result(i)
         val found = completeResult.indexWhere(accum => accum.productPrefix == partial.productPrefix && accum.name == partial.name)

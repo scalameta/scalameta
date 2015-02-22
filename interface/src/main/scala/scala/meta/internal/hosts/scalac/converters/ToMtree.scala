@@ -73,7 +73,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
           } else if (gmods.hasFlag(LOCAL)) {
             if (gmods.hasFlag(PROTECTED)) List(m.Mod.Protected(m.Term.This(None).withDenot(gpriv)))
             else if (gmods.hasFlag(PRIVATE)) List(m.Mod.Private(m.Term.This(None).withDenot(gpriv)))
-            else unreachable
+            else unreachable(debug(gmods))
           } else if (gmods.hasAccessBoundary && gpriv != g.NoSymbol) {
             // TODO: `private[pkg] class C` doesn't have PRIVATE in its flags
             // so we need to account for that!
@@ -119,7 +119,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
       }
       def mtypebounds(gtpt: g.Tree): m.Type.Bounds = gtpt match {
         case g.TypeBoundsTree(glo, ghi) => m.Type.Bounds(if (glo.isEmpty) None else Some[m.Type](glo.cvt_!), if (ghi.isEmpty) None else Some[m.Type](ghi.cvt_!))
-        case _ => unreachable
+        case _ => unreachable(debug(gtpt, g.showRaw(gtpt)))
       }
       def marg(garg: g.Tree): m.Term.Arg = garg match {
         case g.Typed(expr, g.Ident(g.tpnme.WILDCARD_STAR)) => m.Term.Arg.Repeated(expr.cvt_!)
@@ -374,7 +374,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
         rhs match {
           case q"if ($cond) { $body; $cont } else ()" if name.startsWith(g.nme.WHILE_PREFIX) => m.Term.While(cond.cvt_!, body.cvt_!)
           case q"$body; if ($cond) $cont else ()" if name.startsWith(g.nme.DO_WHILE_PREFIX) => m.Term.Do(body.cvt_!, cond.cvt_!)
-          case _ => unreachable
+          case _ => unreachable(debug(rhs, g.showRaw(rhs)))
         }
       case in @ g.Import(expr, selectors) =>
         // TODO: collapse desugared chains of imports

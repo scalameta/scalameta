@@ -198,7 +198,7 @@ trait ToGtype extends GlobalToolkit with MetaToolkit {
               case _: m.Decl.Def => gowner(mrefine).mkLabstractDef(mname.toString)
               case _: m.Decl.Type => gowner(mrefine).mkLabstractType(mname.toString)
               case _: m.Defn.Type => gowner(mrefine).mkLtype(mname.toString)
-              case _ => unreachable
+              case _ => unreachable(debug(mrefine, mrefine.show[Raw]))
             })
             lrefine.gsymbols.foreach(gscope.enter)
             mrefine -> lrefine
@@ -211,7 +211,7 @@ trait ToGtype extends GlobalToolkit with MetaToolkit {
             val lquant = symbolTable.lookupOrElseUpdate(mname.denot.symbol, mquant match {
               case _: m.Decl.Val => gowner(mquant).mkLexistentialVal(mname.toString)
               case _: m.Decl.Type => gowner(mquant).mkLexistentialType(mname.toString)
-              case _ => unreachable
+              case _ => unreachable(debug(mquant, mquant.show[Raw]))
             })
             mquant -> lquant
           })
