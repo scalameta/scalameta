@@ -99,13 +99,18 @@ trait ToMtype extends GlobalToolkit with MetaToolkit {
                 }
               }
             }).withOriginal(gtpe)
-            val margs = args.map(_.toMtype)
             if (args.isEmpty) mref
             else {
-              if (g.definitions.FunctionClass.seq.contains(sym)) m.Type.Function(margs.init, margs.last)
-              else if (g.definitions.TupleClass.seq.contains(sym) && margs.length > 1) m.Type.Tuple(margs)
-              else if (sym.name.looksLikeInfix && mref.isInstanceOf[m.Type.Name] && margs.length == 2) m.Type.ApplyInfix(margs(0), mref.require[m.Type.Name], margs(1))
-              else m.Type.Apply(mref, margs)
+              if (g.definitions.FunctionClass.seq.contains(sym) && args.nonEmpty) {
+                val funargs :+ funret = args
+                m.Type.Function(funargs.map(_.toMtypeArg), funret.toMtype)
+              } else if (g.definitions.TupleClass.seq.contains(sym) && args.length > 1) {
+                m.Type.Tuple(args.map(_.toMtype))
+              } else if (sym.name.looksLikeInfix && mref.isInstanceOf[m.Type.Name] && args.length == 2) {
+                m.Type.ApplyInfix(args(0).toMtype, mref.require[m.Type.Name], args(1).toMtype)
+              } else {
+                m.Type.Apply(mref, args.map(_.toMtype))
+              }
             }
           }
         case g.RefinedType(parents, decls) =>
