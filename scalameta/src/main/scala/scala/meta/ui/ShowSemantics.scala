@@ -47,7 +47,7 @@ object Semantics {
           (x.denot, x.sigma) match {
             case (denot: Denotation.Precomputed, Sigma.Naive) => s"[${id(denot)}]"
             case (Denotation.Zero, Sigma.Zero) => "[0]"
-            case _ => unreachable
+            case (denot, sigma) => unreachable(debug(denot, sigma))
           }
         case _ => ""
       }

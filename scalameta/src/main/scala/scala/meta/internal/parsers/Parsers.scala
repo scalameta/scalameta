@@ -52,23 +52,29 @@ private[meta] object SyntacticInfo {
       case Term.Annotate(annottee, _) => annottee.isCtorCall
       case _ => false
     }
-    def ctorTpe: Type = tree match {
-      case Ctor.Name(value) => Type.Name(value)
-      case Ctor.Ref.Select(qual, name) => Type.Select(qual, Type.Name(name.value))
-      case Ctor.Ref.Project(qual, name) => Type.Project(qual, Type.Name(name.value))
-      case Ctor.Ref.Function(_) => unreachable
-      case Term.ApplyType(Ctor.Ref.Function(_), targs) => Type.Function(targs.init, targs.last)
-      case Term.ApplyType(callee, targs) => Type.Apply(callee.ctorTpe, targs)
-      case Term.Apply(callee, _) => callee.ctorTpe
-      case Term.Annotate(annottee, annots) => Type.Annotate(annottee.ctorTpe, annots)
-      case _ => unreachable
+    def ctorTpe: Type = {
+      def loop(tree: Tree): Type = tree match {
+        case Ctor.Name(value) => Type.Name(value)
+        case Ctor.Ref.Select(qual, name) => Type.Select(qual, Type.Name(name.value))
+        case Ctor.Ref.Project(qual, name) => Type.Project(qual, Type.Name(name.value))
+        case Ctor.Ref.Function(_) => unreachable(debug(XtensionTermOps.this.tree, XtensionTermOps.this.tree.show[Raw]))
+        case Term.ApplyType(Ctor.Ref.Function(_), targs) => Type.Function(targs.init, targs.last)
+        case Term.ApplyType(callee, targs) => Type.Apply(loop(callee), targs)
+        case Term.Apply(callee, _) => callee.ctorTpe
+        case Term.Annotate(annottee, annots) => Type.Annotate(loop(annottee), annots)
+        case _ => unreachable(debug(XtensionTermOps.this.tree, XtensionTermOps.this.tree.show[Raw], tree, tree.show[Raw]))
+      }
+      loop(tree)
     }
-    def ctorArgss: Seq[Seq[Term.Arg]] = tree match {
-      case _: Ctor.Ref => Nil
-      case Term.ApplyType(callee, _) => callee.ctorArgss
-      case Term.Apply(callee, args) => callee.ctorArgss :+ args
-      case Term.Annotate(annottee, _) => annottee.ctorArgss
-      case _ => unreachable
+    def ctorArgss: Seq[Seq[Term.Arg]] = {
+      def loop(tree: Tree): Seq[Seq[Term.Arg]] = tree match {
+        case _: Ctor.Ref => Nil
+        case Term.ApplyType(callee, _) => callee.ctorArgss
+        case Term.Apply(callee, args) => callee.ctorArgss :+ args
+        case Term.Annotate(annottee, _) => annottee.ctorArgss
+        case _ => unreachable(debug(XtensionTermOps.this.tree, XtensionTermOps.this.tree.show[Raw]))
+      }
+      loop(tree)
     }
     def isCtorBody: Boolean = {
       def isSuperCall(tree: Tree): Boolean = tree match {
@@ -93,15 +99,6 @@ private[meta] object SyntacticInfo {
       case _: Term.Name | Term.Select(_: Term.Super, _) => true
       case Term.Select(qual: Term.Ref, _)               => qual.isPath
       case _                                            => false
-    }
-  }
-  implicit class XtensionTemplateOps(tree: Template) {
-    def isCompoundTypeCompatible: Boolean = {
-      tree.early.isEmpty &&
-      tree.parents.forall(!_.isInstanceOf[Term.Apply]) &&
-      tree.self.name.isInstanceOf[Name.Anonymous] &&
-      tree.self.decltpe.isEmpty &&
-      tree.stats.map(_.forall(_.isRefineStat)).getOrElse(true)
     }
   }
   implicit class XtensionMod(mod: Mod) {
@@ -533,7 +530,7 @@ private[meta] abstract class AbstractParser { parser =>
       def binop(opinfo: OpInfo[List[Term.Arg]], rhs: List[Term.Arg]): List[Term.Arg] = {
         val lhs = makeTupleTerm(opinfo.lhs map {
           case t: Term => t
-          case other   => unreachable
+          case other   => unreachable(debug(other, other.show[Raw]))
         })
         Term.ApplyInfix(lhs, opinfo.operator, opinfo.targs, rhs) :: Nil
       }
@@ -566,7 +563,7 @@ private[meta] abstract class AbstractParser { parser =>
   def finishPostfixOp(base: List[OpInfo[List[Term.Arg]]], opinfo: OpInfo[List[Term.Arg]]): List[Term.Arg] =
     Term.Select(reduceStack(base, opinfo.lhs) match {
       case (t: Term) :: Nil => t
-      case _                => unreachable
+      case other            => unreachable(debug(other))
     }, opinfo.operator) :: Nil
 
   def finishBinaryOp[T: OpCtx](opinfo: OpInfo[T], rhs: T): T = opctx.binop(opinfo, rhs)
@@ -920,7 +917,7 @@ private[meta] abstract class AbstractParser { parser =>
       case token: Interpolation.SpliceStart => next(); argsBuf += arg(); loop()
       case token: Interpolation.SpliceEnd => next(); loop()
       case token: Interpolation.End => next(); // just return
-      case _ => unreachable
+      case _ => debug(token, token.show[Raw])
     }
     loop()
     result(interpolator, partsBuf.toList, argsBuf.toList)
@@ -1062,7 +1059,7 @@ private[meta] abstract class AbstractParser { parser =>
         case None => Term.TryWithCases(body, Nil, finallyopt)
         case Some(cases: List[_]) => Term.TryWithCases(body, cases.require[List[Case]], finallyopt)
         case Some(term: Term) => Term.TryWithTerm(body, term, finallyopt)
-        case _ => unreachable
+        case _ => unreachable(debug(catchopt))
       }
     case _: `while` =>
       next()
@@ -1191,7 +1188,7 @@ private[meta] abstract class AbstractParser { parser =>
 
     reduceStack(base, loop(prefixExpr() :: Nil)) match {
       case (t: Term) :: Nil => t
-      case _                => unreachable
+      case other            => unreachable(debug(other))
     }
   }
 
@@ -1652,7 +1649,7 @@ private[meta] abstract class AbstractParser { parser =>
           case (_, name: Term.Name) if isVarPattern => Pat.Var.Term(name)
           case (_, name: Term.Name)                 => name
           case (_, select: Term.Select)             => select
-          case _                                    => unreachable
+          case _                                    => unreachable(debug(token, token.show[Raw], sid, sid.show[Raw]))
         }
       case _: `_ ` =>
         next()
@@ -1718,7 +1715,7 @@ private[meta] abstract class AbstractParser { parser =>
       val mod = in.token match {
         case _: `private` => (name: Name.AccessBoundary) => Mod.Private(name)
         case _: `protected` => (name: Name.AccessBoundary) => Mod.Protected(name)
-        case _ => unreachable
+        case other => unreachable(debug(other, other.show[Raw]))
       }
       next()
       if (in.token.isNot[`[`]) Some(mod(Name.Anonymous()))
@@ -2006,7 +2003,7 @@ private[meta] abstract class AbstractParser { parser =>
         importWildcardOrName() match {
           case to: Import.Selector.Name     => Import.Selector.Rename(from.value, to.value)
           case to: Import.Selector.Wildcard => Import.Selector.Unimport(from.value)
-          case _                            => unreachable
+          case other                        => unreachable(debug(other, other.show[Raw]))
         }
       case other => other
     }
