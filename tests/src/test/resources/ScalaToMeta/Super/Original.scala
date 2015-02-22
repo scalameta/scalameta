@@ -7,4 +7,10 @@ object Super {
   new T1 with T2 {
     override def foo: Int = super.foo
   }
+
+  trait T3 { def foo: Unit }
+  trait T4 extends T3 {
+    this: C =>
+    abstract override def foo: Unit = super.foo
+  }
 }

@@ -130,7 +130,13 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
       def margss(gargss: List[List[g.Tree]]): Seq[Seq[m.Term.Arg]] = gargss.map(margs)
       def mstats(gparent: g.Tree, gstats: List[g.Tree]): List[m.Stat] = {
         object PatDefCore {
-          def unapply(tree: g.MemberDef): Option[(g.Tree, g.Tree)] = tree match {
+          object MaybeTyped {
+            def unapply(tree: g.Tree): Option[(g.Tree, g.Tree)] = tree match {
+              case g.Typed(tree, tpt) => Some((tree, tpt))
+              case tree => Some((tree, g.EmptyTree))
+            }
+          }
+          def unapply(tree: g.MemberDef): Option[(g.Tree, g.Tree, g.Tree)] = tree match {
             // CASE #1: 0 and 2+ patterns in a val definition
             // ~$ typecheck 'locally { val List() = List() }'
             // [[syntax trees at end of typer]]// Scala source: tmp1T1gLt
@@ -152,9 +158,9 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
             // btw we can't trust annot.tpe.typeSymbol, because annot.tpe is bugged
             // for example, @unchecked in `List[Int] @unchecked` has type `List[Int] @unchecked` instead of the correct `unchecked`
             // see https://github.com/scala/scala/blob/73fb460c1cd20ee97556ec0867d17efaa795d129/src/compiler/scala/tools/nsc/typechecker/Typers.scala#L4048
-            case in @ g.ValDef(_, _, g.EmptyTree, g.Match(g.Annotated(annot @ g.treeInfo.Applied(core, _, _), rhs), List(g.CaseDef(pat, g.EmptyTree, _))))
+            case in @ g.ValDef(_, _, g.EmptyTree, g.Match(MaybeTyped(g.Annotated(annot @ g.treeInfo.Applied(core, _, _), rhs), tpt), List(g.CaseDef(pat, g.EmptyTree, _))))
             if core.tpe.finalResultType.typeSymbolDirect == g.symbolOf[unchecked] && in.symbol.isSynthetic && in.symbol.isArtifact =>
-              Some((pat, rhs))
+              Some((pat, tpt, rhs))
             // CASE #2: 1 pattern in a val definition
             // ~$ typecheck 'locally { val List(x) = List() }'
             // [[syntax trees at end of typer]]// Scala source: tmpHlTi6k
@@ -164,16 +170,16 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
             //   };
             //   ()
             // })
-            case in @ g.ValDef(_, _, g.EmptyTree, g.Match(g.Annotated(annot @ g.treeInfo.Applied(core, _, _), rhs), List(g.CaseDef(pat, g.EmptyTree, body @ g.Ident(_)))))
+            case in @ g.ValDef(_, _, g.EmptyTree, g.Match(MaybeTyped(g.Annotated(annot @ g.treeInfo.Applied(core, _, _), rhs), tpt), List(g.CaseDef(pat, g.EmptyTree, body @ g.Ident(_)))))
             if core.tpe.finalResultType.typeSymbolDirect == g.symbolOf[unchecked] =>
               val binds = pat.collect{ case x: g.Bind => x }
-              if (binds.length == 1 && binds.head.symbol == body.symbol) Some((pat, rhs))
+              if (binds.length == 1 && binds.head.symbol == body.symbol) Some((pat, tpt, rhs))
               else None
             // CASE #3: funnily enough, in a very degenerate case, we can also ends up with a def with the same structure
             // try `locally { implicit lazy val List() = List() }` if you care to know more
-            case in @ g.DefDef(_, _, Nil, Nil, g.EmptyTree, g.Match(g.Annotated(annot @ g.treeInfo.Applied(core, _, _), rhs), List(g.CaseDef(pat, g.EmptyTree, _))))
+            case in @ g.DefDef(_, _, Nil, Nil, g.EmptyTree, g.Match(MaybeTyped(g.Annotated(annot @ g.treeInfo.Applied(core, _, _), rhs), tpt), List(g.CaseDef(pat, g.EmptyTree, _))))
             if core.tpe.finalResultType.typeSymbolDirect == g.symbolOf[unchecked] && in.symbol.isSynthetic && in.symbol.isArtifact =>
-              Some((pat, rhs))
+              Some((pat, tpt, rhs))
             case _ =>
               None
           }
@@ -199,11 +205,12 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
           val gstat = gstats(i)
           i += 1
           val mstat = gstat match {
-            case in @ PatDefCore(pat, rhs) =>
+            case in @ PatDefCore(pat, tpt, rhs) =>
               if (in.symbol.isSynthetic && in.symbol.isArtifact) i += g.definitions.TupleClass.seq.indexOf(in.symbol.info.typeSymbolDirect) + 1
               val modbearer = gstats(i - 1).require[g.MemberDef] // TODO: mods for nullary patterns get irrevocably lost (`implicit val List() = List()`)
-              if (!modbearer.symbol.isMutable) m.Defn.Val(mmods(modbearer), List(pat.cvt_! : m.Pat), None, rhs.cvt_!)
-              else m.Defn.Var(mmods(modbearer), List(pat.cvt_! : m.Pat), None, Some[m.Term](rhs.cvt_!))
+              val mtpt = if (tpt.nonEmpty) Some[m.Type](tpt.cvt_!) else None
+              if (!modbearer.symbol.isMutable) m.Defn.Val(mmods(modbearer), List(pat.cvt_! : m.Pat), mtpt, rhs.cvt_!)
+              else m.Defn.Var(mmods(modbearer), List(pat.cvt_! : m.Pat), mtpt, Some[m.Term](rhs.cvt_!))
             case in @ AnonymousClassDef(templ) =>
               i += 1
               val q"new $$anon()" = gstats(i - 1)
@@ -562,7 +569,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
         superdumb.withDenot(qual.tpe, in.tpe.typeSymbol)
       case in @ g.This(qual) =>
         require(!in.symbol.isPackageClass)
-        m.Term.This(if (qual != g.tpnme.EMPTY) Some(in.symbol.name.toString) else None).withDenot(in.tpe.prefix, in.symbol)
+        m.Term.This(if (qual != g.tpnme.EMPTY) Some(in.symbol.name.toString) else None).withDenot(in.tpe, in.symbol)
       case in: g.PostfixSelect =>
         unreachable
       case in @ g.Select(qual, name) =>
@@ -574,7 +581,13 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
             val in1 = g.treeCopy.Select(in, qual, g.TermName(name.toString.stripPrefix("unary_")))
             m.Term.ApplyUnary(in.symbol.asTerm.precvt(qual.tpe, in1), qual.cvt_!)
           } else {
-            m.Term.Select(qual.cvt_!, in.symbol.asTerm.precvt(qual.tpe, in))
+            if (qual.isInstanceOf[g.This] && in.symbol == g.definitions.NilModule) {
+              // TODO: this is a hack to handle `gen.mkNil` emitted during parsing
+              // such weird occasion can happen when we parse attributes in XML syntax
+              in.symbol.asTerm.precvt(qual.tpe, g.Ident(in.symbol))
+            } else {
+              m.Term.Select(qual.cvt_!, in.symbol.asTerm.precvt(qual.tpe, in))
+            }
           }
         } else {
           m.Type.Select(qual.cvt_!, in.symbol.asType.precvt(qual.tpe, in))
