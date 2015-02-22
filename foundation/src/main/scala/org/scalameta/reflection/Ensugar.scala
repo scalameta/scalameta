@@ -313,7 +313,10 @@ trait Ensugar {
 
         object MemberDefWithAnnotations extends SingleEnsugarer {
           def ensugar(tree: Tree): Option[Tree] = {
-            def isSyntheticAnnotation(ann: AnnotationInfo): Boolean = ann.atp.typeSymbol.fullName == "scala.reflect.macros.internal.macroImpl"
+            def isSyntheticAnnotation(ann: AnnotationInfo): Boolean = {
+              ann.atp.typeSymbol.fullName == "scala.reflect.macros.internal.macroImpl" ||
+              ann.atp.typeSymbol.fullName == "scala.annotation.compileTimeOnly"
+            }
             def hasDesugaredAnnots(mdef: MemberDef): Boolean = mdef.mods.annotations.isEmpty && tree.symbol.annotations.filterNot(isSyntheticAnnotation).nonEmpty
             def ensugarAnnots(mdef: MemberDef): Modifiers = mdef.mods.withAnnotations(mdef.symbol.annotations.flatMap(ensugarAnnotation))
             def ensugarAnnotation(ann: AnnotationInfo): Option[Tree] = ann.original match {
