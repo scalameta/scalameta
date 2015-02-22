@@ -29,7 +29,7 @@ class SemanticSuite extends FunSuite {
     }
     val classDef = c.define("class C { def foo = List(1, 2, 3) }")
     classDef match {
-      case impl.Defn.Class(_, _, _, _, impl.Template(_, _, _, Some(List(impl.Defn.Def(_, _, _, _, _, body))))) =>
+      case impl.Source(List(impl.Defn.Class(_, _, _, _, impl.Template(_, _, _, Some(List(impl.Defn.Def(_, _, _, _, _, body))))))) =>
         assert(body.show[Code] == "List(1, 2, 3)")
         assert(body.show[Semantics] === """
           |Term.Apply(Term.Name("List")[1], List(Lit.Int(1), Lit.Int(2), Lit.Int(3)))

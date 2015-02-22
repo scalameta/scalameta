@@ -327,45 +327,61 @@ trait Ensugar {
             def ensugarAnnots(mdef: MemberDef): Modifiers = mdef.mods.withAnnotations(mdef.symbol.annotations.flatMap(ensugarAnnotation))
             def ensugarAnnotation(ann: AnnotationInfo): Option[Tree] = ann.original match {
               case original if original.nonEmpty && original.tpe != null => Some(original)
-              case original if original.nonEmpty && original.tpe == null => Some(fixupAttributesOfClassfileAnnotOriginal(original))
+              case original if original.nonEmpty && original.tpe == null => Some(fixupAttributesOfClassfileAnnotOriginal(ann, original))
               case EmptyTree if isSyntheticAnnotation(ann) => None
               case EmptyTree => unreachable(debug(ann))
             }
-            def fixupAttributesOfClassfileAnnotOriginal(original: Tree): Tree = {
+            def fixupAttributesOfClassfileAnnotOriginal(ann: AnnotationInfo, original: Tree): Tree = {
               // TODO: support classfile annotation args (non-literal ann.original.argss are untyped at the moment)
               // TODO: originals of classfile annotations don't have tpe set at the top level (Apply.tpe)
               // until this is fixed, we have to work around. luckily, this isn't hard at all
               // TODO: tree2ConstArg does some seriously crazy transformations, which are hardly generalizable
               // since I don't have much time, I'll just support a couple of those for now
               val Apply(fn, args) = original
-              def typify(arg: Tree): Tree = {
+              require(ann.assocs.length == args.length && debug(ann, original))
+              def typify(carg: ClassfileAnnotArg, arg: Tree): Tree = {
                 arg match {
                   case arg @ Literal(const @ Constant(value)) =>
                     arg.setType(ConstantType(const))
                   case arg @ Select(x: Literal, op) =>
                     val sym = x.value.tpe.member(op.encodedName)
                     require(sym != NoSymbol && !sym.isOverloaded)
-                    treeCopy.Select(arg, typify(x), op).setSymbol(sym).setType(sym.info.finalResultType)
+                    treeCopy.Select(arg, typify(UnmappableAnnotArg, x), op).setSymbol(sym).setType(sym.info.finalResultType)
                   case arg @ Apply(core @ Select(x: Literal, op), List(y: Literal)) =>
                     val sym = x.value.tpe.member(op.encodedName).suchThat(sym => sym.paramss.flatten.map(_.info) == List(y.value.tpe))
                     require(sym != NoSymbol && !sym.isOverloaded)
-                    val typedCore = treeCopy.Select(core, typify(x), op).setSymbol(sym).setType(sym.info)
-                    treeCopy.Apply(arg, typedCore, List(typify(y))).setType(sym.info.finalResultType)
+                    val typedCore = treeCopy.Select(core, typify(UnmappableAnnotArg, x), op).setSymbol(sym).setType(sym.info)
+                    treeCopy.Apply(arg, typedCore, List(typify(UnmappableAnnotArg, y))).setType(sym.info.finalResultType)
                   case arg @ Apply(Select(New(tpt), nme.CONSTRUCTOR), args) =>
                     ???
                   case arg @ Apply(fn, args) =>
                     ???
                   case arg @ Typed(expr, tpt) =>
-                    treeCopy.Typed(arg, typify(expr), EmptyTree)
+                    treeCopy.Typed(arg, typify(carg, expr), EmptyTree)
+                  case arg @ Ident(enumField) =>
+                    val LiteralAnnotArg(Constant(enumFieldSym: Symbol)) = carg
+                    val enumClassSym = enumFieldSym.owner.owner.info.member(enumFieldSym.owner.name.toTypeName)
+                    treeCopy.Ident(arg, enumField).setSymbol(enumFieldSym).setType(enumClassSym.tpe)
+                  case arg @ Select(enumClass: Ident, enumField) =>
+                    // TODO: I don't like the duplication wrt `arg @ Ident(enumField)`
+                    val LiteralAnnotArg(Constant(enumFieldSym: Symbol)) = carg
+                    val enumClassSym = enumFieldSym.owner.owner.info.member(enumFieldSym.owner.name.toTypeName)
+                    val typedEnumClass = enumClass.setSymbol(enumClassSym).setType(enumClassSym.tpe)
+                    treeCopy.Select(arg, typedEnumClass, enumField).setSymbol(enumFieldSym).setType(enumClassSym.tpe)
+                  case arg =>
+                    unreachable(debug(arg, showRaw(arg, printIds = true, printTypes = true), carg))
                 }
               }
-              val typedArgs = args.map({
-                case arg @ AssignOrNamedArg(_, rhs) if arg.hasMetadata("insertedValue") =>
-                  typify(rhs)
-                case arg @ AssignOrNamedArg(lhs @ Ident(name), rhs) =>
+              val typedArgs = ann.assocs.zip(args).map({
+                case ((_, carg), arg @ AssignOrNamedArg(_, rhs)) if arg.hasMetadata("insertedValue") =>
+                  typify(carg, rhs)
+                case ((cname, carg), arg @ AssignOrNamedArg(lhs @ Ident(name), rhs)) =>
                   val param = fn.symbol.paramss.flatten.find(_.name == name).get
+                  require(cname == param.name)
                   val typedLhs = Ident(param).setType(rhs.tpe)
-                  AssignOrNamedArg(typedLhs, typify(rhs))
+                  AssignOrNamedArg(typedLhs, typify(carg, rhs))
+                case (assoc, arg) =>
+                  unreachable(debug(arg, showRaw(arg, printIds = true, printTypes = true), assoc))
               })
               treeCopy.Apply(original, fn, typedArgs).setType(fn.tpe.finalResultType)
             }
