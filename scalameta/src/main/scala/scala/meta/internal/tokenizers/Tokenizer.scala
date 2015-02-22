@@ -98,7 +98,7 @@ private[meta] object tokenize {
           else if (curr.strVal == "\r") Token.`\r`(origin, curr.offset)
           else if (curr.strVal == "\n") Token.`\n`(origin, curr.offset)
           else if (curr.strVal == "\f") Token.`\f`(origin, curr.offset)
-          else unreachable
+          else unreachable(debug(curr.strVal))
 
         case COMMENT   => Token.Comment(origin, curr.offset, curr.endOffset)
 

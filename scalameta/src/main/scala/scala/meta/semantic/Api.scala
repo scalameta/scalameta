@@ -9,7 +9,7 @@ import scala.{Seq => _}
 import scala.annotation.compileTimeOnly
 import scala.collection.immutable.Seq
 import scala.reflect.{ClassTag, classTag}
-import scala.meta.ui.{Exception => SemanticException, _}
+import scala.meta.ui.{Exception => SemanticException}
 import scala.meta.semantic.{Context => SemanticContext}
 import scala.meta.internal.{ast => impl} // necessary only to implement APIs, not to define them
 import scala.meta.internal.{hygiene => h} // necessary only to implement APIs, not to define them
@@ -73,7 +73,7 @@ private[meta] trait Api {
       defns match {
         case Seq(single) => single
         case Seq(_, _*) => throw new SemanticException(s"multiple definitions found for ${tree.show[Summary]}")
-        case Seq() => unreachable
+        case Seq() => unreachable(debug(tree, tree.show[Raw]))
       }
     }
   }
@@ -135,7 +135,7 @@ private[meta] trait Api {
         case name: impl.Type.Name => name.copy(denot = stripPrefix(name.denot))
         case name: impl.Ctor.Name => name.copy(denot = stripPrefix(name.denot))
         case name: impl.Term.This => name.copy(denot = stripPrefix(name.denot))
-        case name: impl.Term.Super => unreachable
+        case name: impl.Term.Super => unreachable(debug(tree, tree.show[Raw]))
       }
       prefixlessName.defn
     }
@@ -173,7 +173,7 @@ private[meta] trait Api {
       candidates match {
         case Seq(companion) => companion
         case Seq() => throw new SemanticException(s"no companions for ${tree.show[Summary]}")
-        case _ => unreachable
+        case _ => unreachable(debug(tree, tree.show[Raw]))
       }
     }
     @hosted def mods: Seq[Mod] = {
@@ -470,11 +470,11 @@ private[meta] trait Api {
             }) match {
               case Seq() => throw new SemanticException(s"no prototype for $member found in ${tree.show[Summary]}")
               case Seq(single) => single.require[U]
-              case _ => unreachable
+              case _ => unreachable(debug(member, member.show[Raw]))
             }
         }
       case _ =>
-        unreachable
+        unreachable(debug(param, param.getClass))
     }
     @hosted def packages: Seq[Member.Term] = internalFilter[Member.Term](_.isPackage)
     @hosted def packages(name: String): Member.Term = internalSingle[Member.Term](name, _.isPackage, "packages")
@@ -627,7 +627,7 @@ private[meta] trait Api {
           case impl.Type.Annotate(tpe, annots) => impl.Term.Annotate(loop(tpe, ctor), annots)
           case impl.Type.Apply(tpe, args) => impl.Term.ApplyType(loop(tpe, ctor), args)
           case impl.Type.ApplyInfix(lhs, op, rhs) => impl.Term.ApplyType(loop(op, ctor), List(lhs, rhs))
-          case _ => unreachable
+          case _ => unreachable(debug(tree, tree.show[Raw], tpe, tpe.show[Raw]))
         }
         result.withScratchpad(tpe.scratchpad)
       }

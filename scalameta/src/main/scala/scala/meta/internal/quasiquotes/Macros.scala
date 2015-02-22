@@ -107,7 +107,7 @@ private[meta] class Macros(val c: Context) extends AdtReflection with AdtLiftabl
         }
         else if (sym.isTerm) MetaSignature.Term
         else if (sym.isType) MetaSignature.Type
-        else unreachable
+        else unreachable(debug(sym, sym.flags, sym.getClass, sym.owner))
       }
       def convertPrefix(pre: ReflectType): MetaPrefix = {
         def defaultPrefix(sym: ReflectSymbol): ReflectType = {
