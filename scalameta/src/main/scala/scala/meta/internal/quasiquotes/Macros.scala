@@ -138,7 +138,7 @@ private[meta] class Macros(val c: Context) extends AdtReflection with AdtLiftabl
         else if (sym == c.mirror.EmptyPackage) MetaSymbol.Empty
         else MetaSymbol.Global(convertSymbol(sym.owner), sym.name.decodedName.toString, signature(sym))
       }
-      require(pre != null && sym != NoSymbol && isGlobal(sym))
+      require(isGlobal(sym) && debug(pre, sym))
       Denotation.Precomputed(convertPrefix(pre), convertSymbol(sym))
     }
     def correlate(meta: MetaTree, reflect: ReflectTree): MetaTree = (meta, reflect) match {

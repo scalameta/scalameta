@@ -17,6 +17,7 @@ class InvariantSuite extends FunSuite {
         """.trim.stripMargin)
     }
   }
+
   test("secondary constructors in templates") {
     import scala.meta.internal.{ast => impl}
     val primaryCtor = impl.Ctor.Primary(Nil, impl.Ctor.Name("this"), Nil)
@@ -28,5 +29,23 @@ class InvariantSuite extends FunSuite {
     intercept[InvariantFailedException] { impl.Defn.Object(Nil, impl.Term.Name("test"), primaryCtor, template) }
     intercept[InvariantFailedException] { impl.Pkg(impl.Term.Name("test"), stats) }
     intercept[InvariantFailedException] { impl.Pkg.Object(Nil, impl.Term.Name("test"), primaryCtor, template) }
+  }
+
+  test("even more informative error messages") {
+    val y = 2
+    try {
+      case class C(x: Int) { require(x != 3 && debug(x, y)) }
+      new C(3)
+    } catch {
+      case ex: InvariantFailedException =>
+        assert(ex.getMessage === """
+          |invariant failed:
+          |when verifying C.this.x.!=(3).&&(org.scalameta.invariants.`package`.debug(C.this.x, y))
+          |found that C.this.x is equal to 3
+          |where C = C(3)
+          |where C.this.x = 3
+          |where y = 2
+        """.trim.stripMargin)
+    }
   }
 }

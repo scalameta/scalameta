@@ -6,6 +6,7 @@ import scala.reflect.{ClassTag, classTag}
 
 package object invariants {
   def require(x: Boolean): Unit = macro Macros.require
+  def debug(xs: Any*): Boolean = true
   // TODO: add pretty printed support for implication
   implicit class XtensionImplication(left: Boolean) {
     def ==>(right: Boolean) = !left || right
@@ -198,11 +199,22 @@ package invariants {
       }
       freeLocalFinder.traverse(x)
       val freeLocals = freeLocalFinder.freeLocals.map(tree => tree.symbol.name.toString -> tree.duplicate).toMap
+      object debugFinder extends Traverser {
+        private val invariantsPackageObject = c.mirror.staticPackage("org.scalameta.invariants").info.member(termNames.PACKAGE).asModule
+        private val invariantsDebug = invariantsPackageObject.info.member(TermName("debug")).asMethod
+        val debuggees = scala.collection.mutable.ListBuffer[Tree]()
+        override def traverse(tree: Tree): Unit = tree match {
+          case Apply(fun, args) if fun.symbol == invariantsDebug => debuggees ++= args
+          case tree => super.traverse(tree)
+        }
+      }
+      debugFinder.traverse(x)
+      val allDebuggees = freeLocals ++ debugFinder.debuggees.map(tree => tree.toString -> tree.duplicate).toMap
       // println(x -> freeLocals)
       q"""
         ${c.untypecheck(prop.emit)} match {
           case (true, _) => ()
-          case (false, $failures) => _root_.org.scalameta.invariants.InvariantFailedException.raise(${showCode(x)}, $failures, $freeLocals)
+          case (false, $failures) => _root_.org.scalameta.invariants.InvariantFailedException.raise(${showCode(x)}, $failures, $allDebuggees)
         }
       """
     }
