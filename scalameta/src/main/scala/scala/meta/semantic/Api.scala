@@ -626,6 +626,7 @@ private[meta] trait Api {
           case impl.Type.Function(Types(params), ret) => impl.Term.ApplyType(impl.Ctor.Ref.Function(ctor), params :+ ret)
           case impl.Type.Annotate(tpe, annots) => impl.Term.Annotate(loop(tpe, ctor), annots)
           case impl.Type.Apply(tpe, args) => impl.Term.ApplyType(loop(tpe, ctor), args)
+          case impl.Type.ApplyInfix(lhs, op, rhs) => impl.Term.ApplyType(loop(op, ctor), List(lhs, rhs))
           case _ => unreachable
         }
         result.withScratchpad(tpe.scratchpad)
