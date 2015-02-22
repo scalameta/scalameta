@@ -235,7 +235,7 @@ trait LogicalSymbols {
       val allowedPrefixes = List("$repl_$init", "$line", "$read", "$eval")
       !gsym.owner.isPackageClass || allowedPrefixes.exists(prefix => gsym.name.decoded.startsWith(prefix))
     }
-    if (!gsym.exists) return false
+    if (gsym != g.NoSymbol && !gsym.exists) return false
     if (gsym.name.decoded.contains("$") && !allowSynthetic(gsym)) return false
     if (gsym.name.toString.contains(g.nme.DEFAULT_GETTER_STRING)) return false
     if (gsym.isPrimaryConstructor && gsym.name == g.nme.MIXIN_CONSTRUCTOR) return false
