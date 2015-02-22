@@ -581,7 +581,13 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
             val in1 = g.treeCopy.Select(in, qual, g.TermName(name.toString.stripPrefix("unary_")))
             m.Term.ApplyUnary(in.symbol.asTerm.precvt(qual.tpe, in1), qual.cvt_!)
           } else {
-            m.Term.Select(qual.cvt_!, in.symbol.asTerm.precvt(qual.tpe, in))
+            if (qual.isInstanceOf[g.This] && in.symbol == g.definitions.NilModule) {
+              // TODO: this is a hack to handle `gen.mkNil` emitted during parsing
+              // such weird occasion can happen when we parse attributes in XML syntax
+              in.symbol.asTerm.precvt(qual.tpe, g.Ident(in.symbol))
+            } else {
+              m.Term.Select(qual.cvt_!, in.symbol.asTerm.precvt(qual.tpe, in))
+            }
           }
         } else {
           m.Type.Select(qual.cvt_!, in.symbol.asType.precvt(qual.tpe, in))
