@@ -101,15 +101,6 @@ private[meta] object SyntacticInfo {
       case _                                            => false
     }
   }
-  implicit class XtensionTemplateOps(tree: Template) {
-    def isCompoundTypeCompatible: Boolean = {
-      tree.early.isEmpty &&
-      tree.parents.forall(!_.isInstanceOf[Term.Apply]) &&
-      tree.self.name.isInstanceOf[Name.Anonymous] &&
-      tree.self.decltpe.isEmpty &&
-      tree.stats.map(_.forall(_.isRefineStat)).getOrElse(true)
-    }
-  }
   implicit class XtensionMod(mod: Mod) {
     def hasAccessBoundary: Boolean = mod match {
       case _: Mod.Private         => true
