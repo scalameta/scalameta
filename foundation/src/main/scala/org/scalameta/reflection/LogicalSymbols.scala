@@ -258,6 +258,7 @@ trait LogicalSymbols {
           if (gsym == g.NoSymbol) {
             l.None
           } else if (gsym.isTerm && !gsym.isMethod && !gsym.isModule) {
+            require(!gsym.owner.isRefinementClass)
             if (gsym.hasFlag(PARAM)) l.TermParameter(gsym)
             else {
               if (gsym.hasFlag(MUTABLE)) l.Var(gsym, gsym.getter, gsym.setter)
@@ -270,14 +271,14 @@ trait LogicalSymbols {
             require(gsym.hasFlag(METHOD))
             if (gsym.hasFlag(ACCESSOR)) {
               if (gsym.hasFlag(STABLE)) {
-                if (gsym.hasFlag(DEFERRED)) l.AbstractVal(gsym)
+                if (gsym.hasFlag(DEFERRED) || gsym.owner.isRefinementClass) l.AbstractVal(gsym)
                 else l.Val(gsym.accessed, gsym)
               } else {
                 if (!gsym.name.endsWith(g.nme.SETTER_SUFFIX)) {
-                  if (gsym.hasFlag(DEFERRED)) l.AbstractVar(gsym, gsym.setter)
+                  if (gsym.hasFlag(DEFERRED) || gsym.owner.isRefinementClass) l.AbstractVar(gsym, gsym.setter)
                   else l.Var(gsym.accessed, gsym, gsym.setter)
                 } else {
-                  if (gsym.hasFlag(DEFERRED)) l.AbstractVar(gsym.getter, gsym)
+                  if (gsym.hasFlag(DEFERRED) || gsym.owner.isRefinementClass) l.AbstractVar(gsym.getter, gsym)
                   else l.Var(gsym.accessed, gsym.getter, gsym)
                 }
               }
@@ -285,7 +286,7 @@ trait LogicalSymbols {
               if (gsym.hasFlag(MACRO)) l.Macro(gsym)
               else if (gsym.isPrimaryConstructor) l.PrimaryCtor(gsym)
               else if (gsym.isConstructor) l.SecondaryCtor(gsym)
-              else if (gsym.hasFlag(DEFERRED)) l.AbstractDef(gsym)
+              else if (gsym.hasFlag(DEFERRED) || gsym.owner.isRefinementClass) l.AbstractDef(gsym)
               else l.Def(gsym)
             }
           } else if (gsym.isModule) {
