@@ -47,7 +47,7 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
         if (gsym.hasFlag(LOCAL)) {
           if (gsym.hasFlag(PROTECTED)) List(m.Mod.Protected(m.Term.This(None).withDenot(gpriv)))
           else if (gsym.hasFlag(PRIVATE)) List(m.Mod.Private(m.Term.This(None).withDenot(gpriv)))
-          else unreachable
+          else unreachable(debug(gsym, gsym.flags, gsym.getClass, gsym.owner))
         } else if (gsym.hasAccessBoundary && gpriv != g.NoSymbol) {
           // TODO: `private[pkg] class C` doesn't have PRIVATE in its flags
           // so we need to account for that!
@@ -218,13 +218,13 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
               else minvokeMethod(gget)
             case l.AbstractDef(gsym) =>
               if (gsym.isIntrinsic) mintrinsic(gsym)
-              else unreachable
+              else unreachable(debug(gsym, gsym.flags, gsym.getClass, gsym.owner))
             case l.Def(gsym) =>
               if (gsym.isIntrinsic) mintrinsic(gsym)
               else minvokeMethod(gsym)
             case l.Macro(gsym) =>
               gsym.macroBody match {
-                case MacroBody.None => unreachable
+                case MacroBody.None => unreachable(debug(gsym, gsym.flags, gsym.getClass, gsym.owner))
                 case MacroBody.FastTrack(_) => mincompatibleMacro
                 case MacroBody.Reflect(_) => mincompatibleMacro
                 case MacroBody.Meta(body) => { val _ = toMtree.computeConverters; toMtree(body, classOf[m.Term]) }
@@ -241,10 +241,10 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
               val gdefaultGetterName = gsym.owner.name + "$default$" + (paramPos + 1)
               var gdefaultGetterOwner = if (!gsym.owner.isConstructor) gsym.owner.owner else gsym.owner.owner.companion
               val gdefaultGetter = gdefaultGetterOwner.info.decl(g.TermName(gdefaultGetterName).encodedName)
-              require(gdefaultGetterName != null && gdefaultGetterOwner != null && gdefaultGetter != g.NoSymbol)
+              require(gdefaultGetter != g.NoSymbol && debug(gsym, gdefaultGetterOwner, gdefaultGetterName))
               minvokeMethod(gdefaultGetter)
             case _ =>
-              unreachable
+              unreachable(debug(lsym, lsym.gsymbol, lsym.gsymbol.flags, lsym.gsymbol.getClass, lsym.gsymbol.owner))
           }
         }
         lazy val mmaybeBody = if (gsym.hasFlag(DEFAULTINIT)) None else Some(mbody)
@@ -321,7 +321,7 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
           gcontextBounds.map(gbound => gbound.asType.rawcvt(g.Ident(gbound)))
         }
         val mmember: m.Member = lsym match {
-          case l.None => unreachable
+          case l.None => unreachable(debug(lsym.gsymbol, lsym.gsymbol.flags, lsym.gsymbol.getClass, lsym.gsymbol.owner))
           case _: l.AbstractVal => m.Decl.Val(mmods, List(m.Pat.Var.Term(mname.require[m.Term.Name])), mtpe).member
           case _: l.AbstractVar => m.Decl.Var(mmods, List(m.Pat.Var.Term(mname.require[m.Term.Name])), mtpe).member
           case _: l.AbstractDef if lsym.gsymbol.isIntrinsic => m.Defn.Def(mmods, mname.require[m.Term.Name], mtparams, mvparamss, Some(mtpe), mbody)

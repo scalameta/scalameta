@@ -73,7 +73,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
           } else if (gmods.hasFlag(LOCAL)) {
             if (gmods.hasFlag(PROTECTED)) List(m.Mod.Protected(m.Term.This(None).withDenot(gpriv)))
             else if (gmods.hasFlag(PRIVATE)) List(m.Mod.Private(m.Term.This(None).withDenot(gpriv)))
-            else unreachable
+            else unreachable(debug(gmods))
           } else if (gmods.hasAccessBoundary && gpriv != g.NoSymbol) {
             // TODO: `private[pkg] class C` doesn't have PRIVATE in its flags
             // so we need to account for that!
@@ -117,15 +117,9 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
           case _ => true
         }) else result
       }
-      def mvparamtpe(gtpt: g.Tree): m.Type.Arg = {
-        def unwrap(mtpe: m.Type): m.Type = mtpe.require[m.Type.Apply].args.head
-        if (g.definitions.isRepeatedParamType(gtpt.tpe)) m.Type.Arg.Repeated(unwrap(gtpt.cvt_! : m.Type)).withOriginal(gtpt)
-        else if (g.definitions.isByNameParamType(gtpt.tpe)) m.Type.Arg.ByName(unwrap(gtpt.cvt_! : m.Type)).withOriginal(gtpt)
-        else (gtpt.cvt_! : m.Type)
-      }
       def mtypebounds(gtpt: g.Tree): m.Type.Bounds = gtpt match {
         case g.TypeBoundsTree(glo, ghi) => m.Type.Bounds(if (glo.isEmpty) None else Some[m.Type](glo.cvt_!), if (ghi.isEmpty) None else Some[m.Type](ghi.cvt_!))
-        case _ => unreachable
+        case _ => unreachable(debug(gtpt, g.showRaw(gtpt)))
       }
       def marg(garg: g.Tree): m.Term.Arg = garg match {
         case g.Typed(expr, g.Ident(g.tpnme.WILDCARD_STAR)) => m.Term.Arg.Repeated(expr.cvt_!)
@@ -330,7 +324,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
         // TODO: how do we really distinguish `case class C(val x: Int)` and `case class C(x: Int)`?
         require(in != g.noSelfType && in.symbol.isTerm)
         val mname = in.symbol.asTerm.anoncvt(in).require[m.Term.Param.Name]
-        val mtpe = if (tpt.nonEmpty) Some[m.Type.Arg](mvparamtpe(tpt)) else None
+        val mtpe = if (tpt.nonEmpty) Some[m.Type.Arg](tpt.cvt_!) else None
         val mdefault = if (rhs.nonEmpty) Some[m.Term](rhs.cvt_!) else None
         require(in.symbol.isAnonymous ==> mdefault.isEmpty)
         m.Term.Param(mmods(in), mname, mtpe, mdefault)
@@ -380,7 +374,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
         rhs match {
           case q"if ($cond) { $body; $cont } else ()" if name.startsWith(g.nme.WHILE_PREFIX) => m.Term.While(cond.cvt_!, body.cvt_!)
           case q"$body; if ($cond) $cont else ()" if name.startsWith(g.nme.DO_WHILE_PREFIX) => m.Term.Do(body.cvt_!, cond.cvt_!)
-          case _ => unreachable
+          case _ => unreachable(debug(rhs, g.showRaw(rhs)))
         }
       case in @ g.Import(expr, selectors) =>
         // TODO: collapse desugared chains of imports
@@ -406,7 +400,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
           val mdumbselfname = if (gself.name == g.nme.WILDCARD) m.Name.Anonymous() else m.Term.Name(gself.alias)
           val gselfsym = in.symbol.owner.thisSym
           val mselfname = if (in.symbol.owner != gselfsym) mdumbselfname.withDenot(gselfsym) else mdumbselfname
-          val mselftpe = if (gself.tpt.nonEmpty) Some[m.Type.Arg](mvparamtpe(gself.tpt)) else None
+          val mselftpe = if (gself.tpt.nonEmpty) Some[m.Type](gself.tpt.cvt_!) else None
           m.Term.Param(Nil, mselfname, mselftpe, None).withOriginal(gself)
         }
         val hasStats = gstats.nonEmpty || in.symbol.owner.name == g.tpnme.ANON_CLASS_NAME
@@ -629,18 +623,19 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
       case in @ g.SingletonTypeTree(ref) =>
         m.Type.Singleton(ref.cvt_!)
       case in @ g.CompoundTypeTree(templ) if pt <:< typeOf[m.Type] =>
-        val template @ m.Template(early, parents, _, stats) = templ.cvt : m.Template
-        require(template.isCompoundTypeCompatible)
-        m.Type.Compound(parents.map(_.tpe.require[m.Type]), stats.getOrElse(Nil))
+        val SyntacticTemplate(gsupersym, gparents, gself, gearlydefns, gstats) = templ
+        require(gsupersym == g.NoSymbol && gself == g.noSelfType && gearlydefns.isEmpty)
+        m.Type.Compound(gparents.cvt_!, gstats.cvt_!)
       case in @ g.CompoundTypeTree(templ) if pt <:< typeOf[m.Pat.Type] =>
-        // TODO: this doesn't handle situations like `List(42) match { case _: (List[t] { def head: Int }) => }`
-        val template @ m.Template(early, parents, _, stats) = templ.cvt : m.Template
-        require(template.isCompoundTypeCompatible)
-        m.Pat.Type.Compound(parents.map(_.tpe.pat.require[m.Pat.Type]), stats.getOrElse(Nil))
-      case in @ g.AppliedTypeTree(tpt, args) if pt <:< typeOf[m.Type] =>
+        val SyntacticTemplate(gsupersym, gparents, gself, gearlydefns, gstats) = templ
+        require(gsupersym == g.NoSymbol && gself == g.noSelfType && gearlydefns.isEmpty)
+        m.Pat.Type.Compound(gparents.cvt_!, gstats.cvt_!)
+      case in @ g.AppliedTypeTree(tpt, args) if pt <:< typeOf[m.Type.Arg] =>
         // TODO: infer whether that was really Apply, Function or Tuple
         // TODO: precisely infer whether that was infix application or normal application
-        if (g.definitions.FunctionClass.seq.contains(tpt.tpe.typeSymbolDirect)) m.Type.Function(args.init.cvt_!, args.last.cvt_!)
+        if (g.definitions.RepeatedParamClass == tpt.tpe.typeSymbolDirect) m.Type.Arg.Repeated(args.head.cvt_!)
+        else if (g.definitions.ByNameParamClass == tpt.tpe.typeSymbolDirect) m.Type.Arg.ByName(args.head.cvt_!)
+        else if (g.definitions.FunctionClass.seq.contains(tpt.tpe.typeSymbolDirect)) m.Type.Function(args.init.cvt_!, args.last.cvt_!)
         else if (g.definitions.TupleClass.seq.contains(tpt.tpe.typeSymbolDirect) && args.length > 1) m.Type.Tuple(args.cvt_!)
         else in match {
           case g.AppliedTypeTree(tpt @ g.Ident(name), List(lhs, rhs)) if name.looksLikeInfix => m.Type.ApplyInfix(lhs.cvt_!, tpt.cvt_!, rhs.cvt_!)

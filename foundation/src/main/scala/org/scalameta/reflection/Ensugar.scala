@@ -87,7 +87,7 @@ trait Ensugar {
             }
           } catch {
             case err: _root_.java.lang.AssertionError => logFailure(); throw err
-            case err: _root_.org.scalameta.UnreachableError.type => logFailure(); throw err
+            case err: _root_.org.scalameta.UnreachableError => logFailure(); throw err
             case ex: _root_.scala.Exception => logFailure(); throw ex
           }
         }
@@ -206,7 +206,7 @@ trait Ensugar {
                     case (tree @ Annotated(_, arg), annot :: rest) => treeCopy.Annotated(tree, annot, loop(arg, rest))
                     case (OriginalAnnottee(TypeTreeWithOriginal(tree)), Nil) => tree
                     case (OriginalAnnottee(tree), Nil) => tree
-                    case _ => unreachable
+                    case _ => unreachable(debug(tree, annots))
                   }
                   val annots = tree.tpe.require[AnnotatedType].annotations.map(_.original)
                   require(annots.forall(_.nonEmpty))
@@ -320,7 +320,7 @@ trait Ensugar {
               case original if original.nonEmpty && original.tpe != null => Some(original)
               case original if original.nonEmpty && original.tpe == null => Some(fixupAttributesOfClassfileAnnotOriginal(original))
               case EmptyTree if isSyntheticAnnotation(ann) => None
-              case EmptyTree => unreachable
+              case EmptyTree => unreachable(debug(ann))
             }
             def fixupAttributesOfClassfileAnnotOriginal(original: Tree): Tree = {
               // TODO: support classfile annotation args (non-literal ann.original.argss are untyped at the moment)

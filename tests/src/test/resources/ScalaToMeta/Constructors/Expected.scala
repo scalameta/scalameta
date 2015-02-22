@@ -13,4 +13,6 @@ object Constructors {
     }
   }
   class C6[T: scala.reflect.ClassTag](x: Int) { def this() = this(0) }
+  class C7[T, U]
+  new C7[Int, Int]
 }

@@ -81,7 +81,7 @@ trait Expansion extends scala.reflect.internal.show.Printers {
             }
             lazy val scalametaResult: Any = scalametaInvocation match {
               case term: ScalametaTerm => scalametaEval(term)
-              case _ => unreachable
+              case other => unreachable(debug(other, other.show[Raw]))
             }
             lazy val scalareflectResult: Any = scalametaResult match {
               case scalametaTree: ScalametaTree =>

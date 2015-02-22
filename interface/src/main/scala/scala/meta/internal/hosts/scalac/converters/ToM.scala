@@ -24,7 +24,7 @@ trait ToM extends GlobalToolkit with MetaToolkit {
     private def dumbcvt(in: g.Tree): m.Name = {
       if (gsym.isTerm) m.Term.Name(in.alias)
       else if (gsym.isType) m.Type.Name(in.alias)
-      else unreachable
+      else unreachable(debug(gsym, gsym.flags, gsym.getClass, gsym.owner))
     }
     def precvt(pre: g.Type, in: g.Tree): mTermOrTypeName = dumbcvt(in).withDenot(pre, gsym).require[mTermOrTypeName]
     def rawcvt(in: g.Tree): mTermOrTypeName = dumbcvt(in).withDenot(gsym).require[mTermOrTypeName]
@@ -59,8 +59,8 @@ trait ToM extends GlobalToolkit with MetaToolkit {
       case v: Double => m.Lit.Double(v)
       case v: String => m.Lit.String(v)
       case v: Char => m.Lit.Char(v)
-      case v: g.Type => unreachable
-      case v: g.Symbol => unreachable
+      case v: g.Type => unreachable(debug(gconst))
+      case v: g.Symbol => unreachable(debug(gconst))
     }
   }
 }

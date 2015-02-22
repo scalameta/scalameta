@@ -58,8 +58,7 @@ trait Attributes extends GlobalToolkit with MetaToolkit {
       ptree.withDenot(gpre, gsym.toLogical)
     }
     def withDenot(gpre: g.Type, lsym: l.Symbol)(implicit ev: CanHaveDenot[T]): T = {
-      val ptree0 = ptree // NOTE: this is here only to provide an unqualified Ident for the `require` macro
-      require(ptree0.isInstanceOf[m.Name] && gpre != null && ((lsym == l.None) ==> ptree.isInstanceOf[m.Term.Super]))
+      require(((lsym == l.None) ==> ptree.isInstanceOf[m.Term.Super]) && debug(ptree, gpre, lsym))
       val scratchpad = ptree.scratchpad :+ ScratchpadDatum.Denotation(gpre, lsym)
       val ptree1 = ptree match {
         case ptree: m.Name.Anonymous => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
@@ -73,7 +72,7 @@ trait Attributes extends GlobalToolkit with MetaToolkit {
         case ptree: m.Ctor.Name => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
         case ptree: m.Term.This => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
         case ptree: m.Term.Super => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
-        case _ => unreachable
+        case _ => unreachable(debug(ptree, ptree.show[Raw]))
       }
       ptree1.withScratchpad(scratchpad).require[T]
     }

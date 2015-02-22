@@ -14,9 +14,8 @@ trait LogicalSymbols {
 
   implicit class RichLogicalSymbol(gsym: g.Symbol) {
     def toLogical: l.Symbol = {
-      val gsym0 = gsym
-      val results = logicalSymbols(List(gsym0))
-      require(gsym0 != null && results != null && results.length == 1)
+      val results = logicalSymbols(List(gsym))
+      require(results.length == 1 && debug(gsym, results))
       results.head
     }
   }
@@ -235,7 +234,7 @@ trait LogicalSymbols {
       val allowedPrefixes = List("$repl_$init", "$line", "$read", "$eval")
       !gsym.owner.isPackageClass || allowedPrefixes.exists(prefix => gsym.name.decoded.startsWith(prefix))
     }
-    if (!gsym.exists) return false
+    if (gsym != g.NoSymbol && !gsym.exists) return false
     if (gsym.name.decoded.contains("$") && !allowSynthetic(gsym)) return false
     if (gsym.name.toString.contains(g.nme.DEFAULT_GETTER_STRING)) return false
     if (gsym.isPrimaryConstructor && gsym.name == g.nme.MIXIN_CONSTRUCTOR) return false
@@ -258,6 +257,7 @@ trait LogicalSymbols {
           if (gsym == g.NoSymbol) {
             l.None
           } else if (gsym.isTerm && !gsym.isMethod && !gsym.isModule) {
+            require(!gsym.owner.isRefinementClass)
             if (gsym.hasFlag(PARAM)) l.TermParameter(gsym)
             else {
               if (gsym.hasFlag(MUTABLE)) l.Var(gsym, gsym.getter, gsym.setter)
@@ -270,14 +270,14 @@ trait LogicalSymbols {
             require(gsym.hasFlag(METHOD))
             if (gsym.hasFlag(ACCESSOR)) {
               if (gsym.hasFlag(STABLE)) {
-                if (gsym.hasFlag(DEFERRED)) l.AbstractVal(gsym)
+                if (gsym.hasFlag(DEFERRED) || gsym.owner.isRefinementClass) l.AbstractVal(gsym)
                 else l.Val(gsym.accessed, gsym)
               } else {
                 if (!gsym.name.endsWith(g.nme.SETTER_SUFFIX)) {
-                  if (gsym.hasFlag(DEFERRED)) l.AbstractVar(gsym, gsym.setter)
+                  if (gsym.hasFlag(DEFERRED) || gsym.owner.isRefinementClass) l.AbstractVar(gsym, gsym.setter)
                   else l.Var(gsym.accessed, gsym, gsym.setter)
                 } else {
-                  if (gsym.hasFlag(DEFERRED)) l.AbstractVar(gsym.getter, gsym)
+                  if (gsym.hasFlag(DEFERRED) || gsym.owner.isRefinementClass) l.AbstractVar(gsym.getter, gsym)
                   else l.Var(gsym.accessed, gsym.getter, gsym)
                 }
               }
@@ -285,7 +285,7 @@ trait LogicalSymbols {
               if (gsym.hasFlag(MACRO)) l.Macro(gsym)
               else if (gsym.isPrimaryConstructor) l.PrimaryCtor(gsym)
               else if (gsym.isConstructor) l.SecondaryCtor(gsym)
-              else if (gsym.hasFlag(DEFERRED)) l.AbstractDef(gsym)
+              else if (gsym.hasFlag(DEFERRED) || gsym.owner.isRefinementClass) l.AbstractDef(gsym)
               else l.Def(gsym)
             }
           } else if (gsym.isModule) {
@@ -331,7 +331,7 @@ trait LogicalSymbols {
           case (l.AbstractVar(g1, s1), l.AbstractVar(g2, s2)) => l.AbstractVar(g1.orElse(g2), s1.orElse(s2))
           case (l.Val(f1, g1), l.Val(f2, g2)) => l.Val(f1.orElse(f2), g1.orElse(g2))
           case (l.Var(f1, g1, s1), l.Var(f2, g2, s2)) => l.Var(f1.orElse(f2), g1.orElse(g2), s1.orElse(s2))
-          case _ => unreachable
+          case _ => unreachable(debug(lsym1, lsym2))
         }
         val partial = result(i)
         val found = completeResult.indexWhere(accum => accum.productPrefix == partial.productPrefix && accum.name == partial.name)

@@ -151,7 +151,7 @@ class ConverterMacros(val c: whitebox.Context) extends MacroToolkit {
               $DeriveInternal.customEpilogue(out)
             } catch {
               case err: _root_.java.lang.AssertionError => logFailure(); throw err
-              case err: _root_.org.scalameta.UnreachableError.type => logFailure(); throw err
+              case err: _root_.org.scalameta.UnreachableError => logFailure(); throw err
               case ex: _root_.scala.Exception => logFailure(); throw ex
             }
           }
@@ -207,7 +207,7 @@ package object internal {
     val Predef_??? = typeOf[Predef.type].member(TermName("$qmark$qmark$qmark")).asMethod
     val List_apply = typeOf[List.type].member(TermName("apply")).asMethod
     val Some_apply = typeOf[Some.type].member(TermName("apply")).asMethod
-    val scalameta_unreachable = typeOf[org.scalameta.`package`.type].member(TermName("unreachable")).asMethod
+    val UnreachableError_raise = typeOf[org.scalameta.UnreachableError.type].member(TermName("raise")).asMethod
     val Auto_derive = typeOf[org.scalameta.convert.auto.`package`.type].member(TermName("derive")).asMethod
     val SeqClass = symbolOf[scala.collection.immutable.Seq[_]]
     val Ops_cvt = typeOf[org.scalameta.convert.auto.`package`.Ops].member(TermName("cvt")).asMethod
@@ -219,6 +219,14 @@ package object internal {
     val PersistedWildcardType = typeOf[WildcardDummy]
     val DeriveInternal = q"_root_.org.scalameta.convert.auto.internal"
     val ToolkitTrait = tq"_root_.org.scalameta.reflection.GlobalToolkit"
+    implicit class RichUnimplementedTree(tree: Tree) {
+      def isUnreachableError: Boolean = tree match {
+        case Typed(typee, _) if typee.symbol == UnreachableError_raise => true
+        case _ => false
+      }
+      def isPredef_??? : Boolean = tree.symbol == Predef_???
+      def isUnimplemented: Boolean = tree.isUnreachableError || tree.isPredef_???
+    }
     object Cvt {
       def unapply(x: Tree): Option[(Tree, Type, Boolean)] = {
         object RawCvt {
@@ -292,13 +300,11 @@ package object internal {
         }
         def validateAllowedOutputs(): Boolean = {
           var isValid = true
-          clauses.foreach(clause => {
-            val body = clause.body
-            if (body.symbol != scalameta_unreachable && body.symbol != Predef_??? && body.symbol != Auto_derive) {
-              val tpe = precisetpe(body)
-              if (tpe =:= NothingTpe) { isValid = false; c.error(clause.pos, "must not convert to Nothing") }
-              if (!(tpe <:< typeOf[scala.meta.Tree])) { isValid = false; c.error(clause.pos, s"must only convert to trees or intersections thereof, found ${precisetpe(body)}") }
-            }
+          val validatableClauses = clauses.filter(clause => !clause.body.isUnimplemented && clause.body.symbol != Auto_derive)
+          validatableClauses.foreach(clause => {
+            val tpe = precisetpe(clause.body)
+            if (tpe =:= NothingTpe) { isValid = false; c.error(clause.pos, "must not convert to Nothing") }
+            if (!(tpe <:< typeOf[scala.meta.Tree])) { isValid = false; c.error(clause.pos, s"must only convert to trees or intersections thereof, found $tpe") }
           })
           isValid
         }
@@ -356,7 +362,7 @@ package object internal {
         // ???
         val isValid = List(validateAllowedInputs(), validateAllowedOutputs(), validateExhaustiveInputs(), validateExhaustiveOutputs()).forall(Predef.identity)
         if (isValid) {
-          val nontrivialClauses = clauses.filter(clause => clause.body.symbol != scalameta_unreachable && clause.body.symbol != Predef_???)
+          val nontrivialClauses = clauses.filter(!_.body.isUnimplemented)
           val ins = nontrivialClauses.map(_.pat.tpe)
           val pts = nontrivialClauses.map(clause => c.typecheck(clause.metadata("pt").require[Tree], mode = c.TYPEmode).tpe)
           val underivedOuts = nontrivialClauses.map(_.body).map(body => if (body.symbol != Auto_derive) precisetpe(body) else NoType)
@@ -541,9 +547,9 @@ package object internal {
                 val name = _root_.scala.meta.`package`.XtensionSemanticMember(x).name.asInstanceOf[_root_.scala.meta.internal.ast.Name]
                 if (_root_.scala.meta.`package`.XtensionSemanticName(name).isBinder) {
                   val denot = name.denot
-                  _root_.org.scalameta.invariants.require(x != null && denot != _root_.scala.meta.internal.hygiene.Denotation.Zero)
-                  _root_.org.scalameta.invariants.require(x != null && denot.symbol != _root_.scala.meta.internal.hygiene.Symbol.Zero)
-                  _root_.org.scalameta.invariants.require(x != null && !$h.hsymToNativeMmemberCache.contains(denot.symbol))
+                  _root_.org.scalameta.invariants.require(denot != _root_.scala.meta.internal.hygiene.Denotation.Zero && _root_.org.scalameta.invariants.debug(x))
+                  _root_.org.scalameta.invariants.require(denot.symbol != _root_.scala.meta.internal.hygiene.Symbol.Zero && _root_.org.scalameta.invariants.debug(x))
+                  _root_.org.scalameta.invariants.require(!$h.hsymToNativeMmemberCache.contains(denot.symbol) && _root_.org.scalameta.invariants.debug(x))
                   $h.hsymToNativeMmemberCache(denot.symbol) = x
                 }
               }
@@ -666,7 +672,7 @@ package object internal {
           sym.info match {
             case TypeBounds(RefinedType(parents, Scope()), _) => parents
             case TypeBounds(parent, _) => List(parent)
-            case _ => unreachable
+            case _ => unreachable(debug(sym.info, showRaw(sym.info)))
           }
         case tpe =>
           List(tpe)

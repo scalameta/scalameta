@@ -36,7 +36,7 @@ trait ToMannot extends GlobalToolkit with MetaToolkit {
               case g.NestedAnnotArg(gannot: g.AnnotationInfo) =>
                 mannotcore(gannot)
               case _ =>
-                unreachable
+                unreachable(debug(garg))
             }
             gassocs.map({ case (gname, garg) =>
               val gparam = gctor.paramss.flatten.find(_.name == gname).get.asTerm
