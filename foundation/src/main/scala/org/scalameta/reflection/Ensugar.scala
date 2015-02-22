@@ -141,7 +141,7 @@ trait Ensugar {
               def mkImplicitly(tp: Type) = gen.mkNullaryCall(Predef_implicitly, List(tp)).setType(tp)
               val sym = original.symbol
               original match {
-                // this hack is necessary until I fix implicit macros
+                // NOTE: this hack is necessary until I fix implicit macros
                 // so far tag materialization is implemented by sneaky macros hidden in scala-compiler.jar
                 // hence we cannot reify references to them, because noone will be able to see them later
                 // when implicit macros are fixed, these sneaky macros will move to corresponding companion objects
@@ -149,6 +149,10 @@ trait Ensugar {
                 case Apply(TypeApply(_, List(tt)), _) if sym == materializeClassTag            => mkImplicitly(appliedType(ClassTagClass, tt.tpe))
                 case Apply(TypeApply(_, List(tt)), List(pre)) if sym == materializeWeakTypeTag => mkImplicitly(typeRef(pre.tpe, WeakTypeTagClass, List(tt.tpe)))
                 case Apply(TypeApply(_, List(tt)), List(pre)) if sym == materializeTypeTag     => mkImplicitly(typeRef(pre.tpe, TypeTagClass, List(tt.tpe)))
+                // NOTE: don't unexpand macro annotations, because we won't be able to make sense of them
+                // at the moment in scala.meta we're only worried about blackbox macros
+                // so let's not worry about such blatantly whitebox beasts as macro annotations
+                case Apply(qual: Select, _) if qual.symbol.name == TermName("macroTransform")  => tree
                 case _                                                                         => original
               }
             }
