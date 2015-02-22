@@ -4,7 +4,7 @@ import scala.compat.Platform.EOL
 
 class InvariantFailedException(message: String) extends Exception(message)
 object InvariantFailedException {
-  def raise(invariant: String, failures: List[String], debuggees: Map[String, Any]): InvariantFailedException = {
+  def raise(invariant: String, failures: List[String], debuggees: Map[String, Any]): Nothing = {
     val mandatory = s"""
       |invariant failed:
       |when verifying $invariant
