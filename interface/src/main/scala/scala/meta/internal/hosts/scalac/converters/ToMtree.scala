@@ -569,7 +569,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
         superdumb.withDenot(qual.tpe, in.tpe.typeSymbol)
       case in @ g.This(qual) =>
         require(!in.symbol.isPackageClass)
-        m.Term.This(if (qual != g.tpnme.EMPTY) Some(in.symbol.name.toString) else None).withDenot(in.tpe.prefix, in.symbol)
+        m.Term.This(if (qual != g.tpnme.EMPTY) Some(in.symbol.name.toString) else None).withDenot(in.tpe, in.symbol)
       case in: g.PostfixSelect =>
         unreachable
       case in @ g.Select(qual, name) =>

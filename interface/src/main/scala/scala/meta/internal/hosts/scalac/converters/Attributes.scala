@@ -58,7 +58,7 @@ trait Attributes extends GlobalToolkit with MetaToolkit {
       ptree.withDenot(gpre, gsym.toLogical)
     }
     def withDenot(gpre: g.Type, lsym: l.Symbol)(implicit ev: CanHaveDenot[T]): T = {
-      require(((lsym == l.None) ==> ptree.isInstanceOf[m.Term.Super]) && debug(ptree, gpre, lsym))
+      require(((lsym == l.None) ==> (ptree.isInstanceOf[m.Term.This] || ptree.isInstanceOf[m.Term.Super])) && debug(ptree, gpre, lsym))
       val scratchpad = ptree.scratchpad :+ ScratchpadDatum.Denotation(gpre, lsym)
       val ptree1 = ptree match {
         case ptree: m.Name.Anonymous => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
