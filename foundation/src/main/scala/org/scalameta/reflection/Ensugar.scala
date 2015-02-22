@@ -189,7 +189,9 @@ trait Ensugar {
                 case original @ CompoundTypeTree(templ) =>
                   // NOTE: this attachment is only going to work past typer
                   // but since we're not yet going to implement whitebox macros, that's not yet a problem
-                  require(templ.self == noSelfType)
+                  // TODO: the right part of the disjunction is actually a workaround for kind-projector
+                  // https://github.com/non/kind-projector/commit/92d29780fbe0f165ea07b30af50282373ab744b3#diff-891bfdd6bdb4da8c60e45436f0440276R68
+                  require(templ.self == noSelfType || (templ.self.name == nme.WILDCARD && templ.self.tpt.tpe == null))
                   val Some(CompoundTypeTreeOriginalAttachment(parents1, stats1)) = templ.attachments.get[CompoundTypeTreeOriginalAttachment]
                   val templ1 = treeCopy.Template(templ, parents1.map(_.duplicate), noSelfType, stats1.map(_.duplicate)).setType(NoType).setSymbol(NoSymbol)
                   treeCopy.CompoundTypeTree(original, templ1)
