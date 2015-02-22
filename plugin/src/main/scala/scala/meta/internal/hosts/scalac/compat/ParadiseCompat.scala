@@ -38,11 +38,17 @@ trait ParadiseCompat {
     // NOTE: if both scalahost and macro paradise are active, and macro paradise was registered after scalahost
     // then pluginsEnterStats will produce incorrect results
     // that's a bug in scalac, so we need to work around until the fix is published (https://github.com/scala/scala/pull/4353)
-    val stackTrace = Thread.currentThread().getStackTrace()
-    val trimmed1 = stackTrace.dropWhile(f => f.getClassName != "scala.tools.nsc.typechecker.AnalyzerPlugins$class" && f.getMethodName != "invoke")
-    val trimmed2 = trimmed1.dropWhile(f => f.getClassName == "scala.tools.nsc.typechecker.AnalyzerPlugins$class" && f.getMethodName == "invoke")
-    val designation = trimmed2.headOption.map(_.getMethodName).getOrElse("")
-    val needsWorkaround = designation == "pluginsEnterStats"
-    needsWorkaround
+    val methMacroPlugins = analyzer.getClass.getDeclaredMethods.find(_.getName.endsWith("$macroPlugins")).head
+    val macroPlugins = methMacroPlugins.invoke(analyzer).asInstanceOf[List[NscMacroPlugin]]
+    if (macroPlugins.length > 1) {
+      val stackTrace = Thread.currentThread().getStackTrace()
+      val trimmed1 = stackTrace.dropWhile(f => f.getClassName != "scala.tools.nsc.typechecker.AnalyzerPlugins$class" && f.getMethodName != "invoke")
+      val trimmed2 = trimmed1.dropWhile(f => f.getClassName == "scala.tools.nsc.typechecker.AnalyzerPlugins$class" && f.getMethodName == "invoke")
+      val designation = trimmed2.headOption.map(_.getMethodName).getOrElse("")
+      val needsWorkaround = designation == "pluginsEnterStats"
+      needsWorkaround
+    } else {
+      false
+    }
   }
 }
