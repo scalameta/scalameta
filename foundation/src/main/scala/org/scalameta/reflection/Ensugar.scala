@@ -358,6 +358,16 @@ trait Ensugar {
                     ???
                   case arg @ Typed(expr, tpt) =>
                     treeCopy.Typed(arg, typify(carg, expr), EmptyTree)
+                  case arg @ Ident(enumField) =>
+                    val LiteralAnnotArg(Constant(enumFieldSym: Symbol)) = carg
+                    val enumClassSym = enumFieldSym.owner.owner.info.member(enumFieldSym.owner.name.toTypeName)
+                    treeCopy.Ident(arg, enumField).setSymbol(enumFieldSym).setType(enumClassSym.tpe)
+                  case arg @ Select(enumClass: Ident, enumField) =>
+                    // TODO: I don't like the duplication wrt `arg @ Ident(enumField)`
+                    val LiteralAnnotArg(Constant(enumFieldSym: Symbol)) = carg
+                    val enumClassSym = enumFieldSym.owner.owner.info.member(enumFieldSym.owner.name.toTypeName)
+                    val typedEnumClass = enumClass.setSymbol(enumClassSym).setType(enumClassSym.tpe)
+                    treeCopy.Select(arg, typedEnumClass, enumField).setSymbol(enumFieldSym).setType(enumClassSym.tpe)
                   case arg =>
                     unreachable(debug(arg, showRaw(arg, printIds = true, printTypes = true), carg))
                 }
