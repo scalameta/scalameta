@@ -19,6 +19,10 @@ object Vals {
   var List(x10, y10) = List(11, 12)
   implicit val List(x11, y11) = List(13, 14)
   implicit lazy val List(x12, y12) = List(15, 16)
+  val List(x13, y13): List[Int] = List(17, 18)
+  var List(x14, y14): List[Int] = List(19, 20)
+  implicit val List(x15, y15): List[Int] = List(21, 22)
+  implicit lazy val List(x16, y17): List[Int] = List(23, 24)
   locally {
     val List() = List()
     val List() = List()
@@ -36,6 +40,10 @@ object Vals {
     var List(x10, y10) = List(11, 12)
     implicit val List(x11, y11) = List(13, 14)
     implicit lazy val List(x12, y12) = List(15, 16)
+    val List(x13, y13): List[Int] = List(17, 18)
+    var List(x14, y14): List[Int] = List(19, 20)
+    implicit val List(x15, y15): List[Int] = List(21, 22)
+    implicit lazy val List(x16, y17): List[Int] = List(23, 24)
   }
   trait Trait1 {
     val List() = List()
@@ -54,6 +62,10 @@ object Vals {
     var List(x10, y10) = List(11, 12)
     implicit val List(x11, y11) = List(13, 14)
     implicit lazy val List(x12, y12) = List(15, 16)
+    val List(x13, y13): List[Int] = List(17, 18)
+    var List(x14, y14): List[Int] = List(19, 20)
+    implicit val List(x15, y15): List[Int] = List(21, 22)
+    implicit lazy val List(x16, y17): List[Int] = List(23, 24)
   }
   trait Trait2 {
     val x1: Int
