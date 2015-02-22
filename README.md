@@ -104,7 +104,7 @@ scala.meta.ui.Exception: syntax error at class (0..4): illegal start of simple e
 ```
 
 The full list of tokens returned by the tokenizer can be found in
-[Token.scala](/scalameta/src/main/scala/scala/meta/syntactic/tokenizers/Token.scala).
+[Token.scala](/scalameta/src/main/scala/scala/meta/syntactic/Token.scala).
 The full list of non-terminals that can be used as targets for the parser is provided
 as a list of implicit instances of the Parse[T] typeclass
 in [syntactic/Api.scala](/scalameta/src/main/scala/scala/meta/syntactic/Api.scala).
