@@ -124,6 +124,8 @@ trait ToMtype extends GlobalToolkit with MetaToolkit {
           m.Type.Existential(underlying.toMtype, mquants.map(_.stat))
         case g.AnnotatedType(annots, underlying) =>
           m.Type.Annotate(underlying.toMtype, annots.toMannots)
+        case g.ConstantType(const @ g.Constant(tpe: g.Type)) =>
+          tpe.widen.toMtype
         case g.ConstantType(const) =>
           const.rawcvt
         case tpe @ g.PolyType(tparams, ret) =>
