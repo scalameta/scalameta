@@ -630,7 +630,12 @@ trait Ensugar {
               def correlate(tree1: Tree, tree0: Tree): Tree = {
                 def lookupParam(name: Name): Symbol = app.symbol.info.paramss.flatten.find(_.name.toString == name.toString).get
                 def correlateArgs(args1: List[Tree], args0: List[Tree]): List[Tree] = {
-                  require(args1.length == args0.length)
+                  // TODO: this is necessary to compile spray.httpx.marshalling.package.scala
+                  // in that file, we have the following application:
+                  // where args0 = List(value, `package`.this.marshal$default$2[Nothing])
+                  // where args1 = List(value = value)
+                  // I think that originalApply gets overwritten here, but I don't have time to debug that
+                  require(args1.length <= args0.length)
                   args1.zip(args0).map({
                     case (arg1 @ AssignOrNamedArg(_, _), arg0 @ AssignOrNamedArg(_, _)) => arg1
                     case (arg1 @ AssignOrNamedArg(_, rhs), arg0) => rhs
