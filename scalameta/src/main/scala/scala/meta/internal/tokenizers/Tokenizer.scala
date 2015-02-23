@@ -9,108 +9,108 @@ import Chars.{CR, LF, FF}
 import LegacyToken._
 
 private[meta] object tokenize {
-  def apply(origin: Origin)(implicit dialect: Dialect): Vector[Token] = {
+  def apply(input: Input)(implicit dialect: Dialect): Vector[Token] = {
     def legacyTokenToToken(curr: LegacyTokenData): Token = {
       (curr.token: @scala.annotation.switch) match {
-        case CHARLIT         => Token.Literal.Char(origin, curr.offset, curr.endOffset, curr.charVal)
-        case INTLIT          => Token.Literal.Int(origin, curr.offset, curr.endOffset, isNegated => curr.intVal(isNegated).map(_.toInt).get)
-        case LONGLIT         => Token.Literal.Long(origin, curr.offset, curr.endOffset, isNegated => curr.intVal(isNegated).get)
-        case FLOATLIT        => Token.Literal.Float(origin, curr.offset, curr.endOffset, isNegated => curr.floatVal(isNegated).map(_.toFloat).get)
-        case DOUBLELIT       => Token.Literal.Double(origin, curr.offset, curr.endOffset, isNegated => curr.floatVal(isNegated).get)
-        case STRINGLIT       => Token.Literal.String(origin, curr.offset, curr.endOffset, curr.strVal)
-        case SYMBOLLIT       => Token.Literal.Symbol(origin, curr.offset, curr.endOffset, scala.Symbol(curr.strVal))
+        case CHARLIT         => Token.Literal.Char(input, curr.offset, curr.endOffset, curr.charVal)
+        case INTLIT          => Token.Literal.Int(input, curr.offset, curr.endOffset, isNegated => curr.intVal(isNegated).map(_.toInt).get)
+        case LONGLIT         => Token.Literal.Long(input, curr.offset, curr.endOffset, isNegated => curr.intVal(isNegated).get)
+        case FLOATLIT        => Token.Literal.Float(input, curr.offset, curr.endOffset, isNegated => curr.floatVal(isNegated).map(_.toFloat).get)
+        case DOUBLELIT       => Token.Literal.Double(input, curr.offset, curr.endOffset, isNegated => curr.floatVal(isNegated).get)
+        case STRINGLIT       => Token.Literal.String(input, curr.offset, curr.endOffset, curr.strVal)
+        case SYMBOLLIT       => Token.Literal.Symbol(input, curr.offset, curr.endOffset, scala.Symbol(curr.strVal))
 
-        case IDENTIFIER       => Token.Ident(origin, curr.offset, curr.endOffset)
-        case BACKQUOTED_IDENT => Token.Ident(origin, curr.offset, curr.endOffset)
-        case INTERPOLATIONID  => Token.Interpolation.Id(origin, curr.offset, curr.endOffset)
+        case IDENTIFIER       => Token.Ident(input, curr.offset, curr.endOffset)
+        case BACKQUOTED_IDENT => Token.Ident(input, curr.offset, curr.endOffset)
+        case INTERPOLATIONID  => Token.Interpolation.Id(input, curr.offset, curr.endOffset)
 
-        case NEW   => Token.`new`(origin, curr.offset)
-        case THIS  => Token.`this`(origin, curr.offset)
-        case SUPER => Token.`super`(origin, curr.offset)
-        case NULL  => Token.`null`(origin, curr.offset)
-        case TRUE  => Token.`true`(origin, curr.offset)
-        case FALSE => Token.`false`(origin, curr.offset)
+        case NEW   => Token.`new`(input, curr.offset)
+        case THIS  => Token.`this`(input, curr.offset)
+        case SUPER => Token.`super`(input, curr.offset)
+        case NULL  => Token.`null`(input, curr.offset)
+        case TRUE  => Token.`true`(input, curr.offset)
+        case FALSE => Token.`false`(input, curr.offset)
 
-        case IMPLICIT  => Token.`implicit`(origin, curr.offset)
-        case OVERRIDE  => Token.`override`(origin, curr.offset)
-        case PROTECTED => Token.`protected`(origin, curr.offset)
-        case PRIVATE   => Token.`private`(origin, curr.offset)
-        case ABSTRACT  => Token.`abstract`(origin, curr.offset)
-        case FINAL     => Token.`final`(origin, curr.offset)
-        case SEALED    => Token.`sealed`(origin, curr.offset)
-        case LAZY      => Token.`lazy`(origin, curr.offset)
-        case MACRO     => Token.`macro`(origin, curr.offset)
+        case IMPLICIT  => Token.`implicit`(input, curr.offset)
+        case OVERRIDE  => Token.`override`(input, curr.offset)
+        case PROTECTED => Token.`protected`(input, curr.offset)
+        case PRIVATE   => Token.`private`(input, curr.offset)
+        case ABSTRACT  => Token.`abstract`(input, curr.offset)
+        case FINAL     => Token.`final`(input, curr.offset)
+        case SEALED    => Token.`sealed`(input, curr.offset)
+        case LAZY      => Token.`lazy`(input, curr.offset)
+        case MACRO     => Token.`macro`(input, curr.offset)
 
-        case PACKAGE    => Token.`package `(origin, curr.offset)
-        case IMPORT     => Token.`import`(origin, curr.offset)
-        case CLASS      => Token.`class `(origin, curr.offset)
+        case PACKAGE    => Token.`package `(input, curr.offset)
+        case IMPORT     => Token.`import`(input, curr.offset)
+        case CLASS      => Token.`class `(input, curr.offset)
         case CASECLASS  => unreachable
-        case OBJECT     => Token.`object`(origin, curr.offset)
+        case OBJECT     => Token.`object`(input, curr.offset)
         case CASEOBJECT => unreachable
-        case TRAIT      => Token.`trait`(origin, curr.offset)
-        case EXTENDS    => Token.`extends`(origin, curr.offset)
-        case WITH       => Token.`with`(origin, curr.offset)
-        case TYPE       => Token.`type`(origin, curr.offset)
-        case FORSOME    => Token.`forSome`(origin, curr.offset)
-        case DEF        => Token.`def`(origin, curr.offset)
-        case VAL        => Token.`val`(origin, curr.offset)
-        case VAR        => Token.`var`(origin, curr.offset)
+        case TRAIT      => Token.`trait`(input, curr.offset)
+        case EXTENDS    => Token.`extends`(input, curr.offset)
+        case WITH       => Token.`with`(input, curr.offset)
+        case TYPE       => Token.`type`(input, curr.offset)
+        case FORSOME    => Token.`forSome`(input, curr.offset)
+        case DEF        => Token.`def`(input, curr.offset)
+        case VAL        => Token.`val`(input, curr.offset)
+        case VAR        => Token.`var`(input, curr.offset)
 
-        case IF      => Token.`if`(origin, curr.offset)
+        case IF      => Token.`if`(input, curr.offset)
         case THEN    => unreachable
-        case ELSE    => Token.`else`(origin, curr.offset)
-        case WHILE   => Token.`while`(origin, curr.offset)
-        case DO      => Token.`do`(origin, curr.offset)
-        case FOR     => Token.`for`(origin, curr.offset)
-        case YIELD   => Token.`yield`(origin, curr.offset)
-        case THROW   => Token.`throw`(origin, curr.offset)
-        case TRY     => Token.`try`(origin, curr.offset)
-        case CATCH   => Token.`catch`(origin, curr.offset)
-        case FINALLY => Token.`finally`(origin, curr.offset)
-        case CASE    => Token.`case`(origin, curr.offset)
-        case RETURN  => Token.`return`(origin, curr.offset)
-        case MATCH   => Token.`match`(origin, curr.offset)
+        case ELSE    => Token.`else`(input, curr.offset)
+        case WHILE   => Token.`while`(input, curr.offset)
+        case DO      => Token.`do`(input, curr.offset)
+        case FOR     => Token.`for`(input, curr.offset)
+        case YIELD   => Token.`yield`(input, curr.offset)
+        case THROW   => Token.`throw`(input, curr.offset)
+        case TRY     => Token.`try`(input, curr.offset)
+        case CATCH   => Token.`catch`(input, curr.offset)
+        case FINALLY => Token.`finally`(input, curr.offset)
+        case CASE    => Token.`case`(input, curr.offset)
+        case RETURN  => Token.`return`(input, curr.offset)
+        case MATCH   => Token.`match`(input, curr.offset)
 
-        case LPAREN   => Token.`(`(origin, curr.offset)
-        case RPAREN   => Token.`)`(origin, curr.offset)
-        case LBRACKET => Token.`[`(origin, curr.offset)
-        case RBRACKET => Token.`]`(origin, curr.offset)
-        case LBRACE   => Token.`{`(origin, curr.offset)
-        case RBRACE   => Token.`}`(origin, curr.offset)
+        case LPAREN   => Token.`(`(input, curr.offset)
+        case RPAREN   => Token.`)`(input, curr.offset)
+        case LBRACKET => Token.`[`(input, curr.offset)
+        case RBRACKET => Token.`]`(input, curr.offset)
+        case LBRACE   => Token.`{`(input, curr.offset)
+        case RBRACE   => Token.`}`(input, curr.offset)
 
-        case COMMA     => Token.`,`(origin, curr.offset)
-        case SEMI      => Token.`;`(origin, curr.offset)
-        case DOT       => Token.`.`(origin, curr.offset)
-        case COLON     => Token.`:`(origin, curr.offset)
-        case EQUALS    => Token.`=`(origin, curr.offset)
-        case AT        => Token.`@`(origin, curr.offset)
-        case HASH      => Token.`#`(origin, curr.offset)
-        case USCORE    => Token.`_ `(origin, curr.offset)
-        case ARROW     => Token.`=>`(origin, curr.offset, curr.endOffset)
-        case LARROW    => Token.`<-`(origin, curr.offset, curr.endOffset)
-        case SUBTYPE   => Token.`<:`(origin, curr.offset)
-        case SUPERTYPE => Token.`>:`(origin, curr.offset)
-        case VIEWBOUND => Token.`<%`(origin, curr.offset)
+        case COMMA     => Token.`,`(input, curr.offset)
+        case SEMI      => Token.`;`(input, curr.offset)
+        case DOT       => Token.`.`(input, curr.offset)
+        case COLON     => Token.`:`(input, curr.offset)
+        case EQUALS    => Token.`=`(input, curr.offset)
+        case AT        => Token.`@`(input, curr.offset)
+        case HASH      => Token.`#`(input, curr.offset)
+        case USCORE    => Token.`_ `(input, curr.offset)
+        case ARROW     => Token.`=>`(input, curr.offset, curr.endOffset)
+        case LARROW    => Token.`<-`(input, curr.offset, curr.endOffset)
+        case SUBTYPE   => Token.`<:`(input, curr.offset)
+        case SUPERTYPE => Token.`>:`(input, curr.offset)
+        case VIEWBOUND => Token.`<%`(input, curr.offset)
 
         case WHITESPACE =>
-          if (curr.strVal == " ") Token.` `(origin, curr.offset)
-          else if (curr.strVal == "\t") Token.`\t`(origin, curr.offset)
-          else if (curr.strVal == "\r") Token.`\r`(origin, curr.offset)
-          else if (curr.strVal == "\n") Token.`\n`(origin, curr.offset)
-          else if (curr.strVal == "\f") Token.`\f`(origin, curr.offset)
+          if (curr.strVal == " ") Token.` `(input, curr.offset)
+          else if (curr.strVal == "\t") Token.`\t`(input, curr.offset)
+          else if (curr.strVal == "\r") Token.`\r`(input, curr.offset)
+          else if (curr.strVal == "\n") Token.`\n`(input, curr.offset)
+          else if (curr.strVal == "\f") Token.`\f`(input, curr.offset)
           else unreachable(debug(curr.strVal))
 
-        case COMMENT   => Token.Comment(origin, curr.offset, curr.endOffset)
+        case COMMENT   => Token.Comment(input, curr.offset, curr.endOffset)
 
-        case EOF       => Token.EOF(origin)
-        case XMLSTART  => Token.XMLStart(origin, curr.offset, curr.endOffset)
+        case EOF       => Token.EOF(input)
+        case XMLSTART  => Token.XMLStart(input, curr.offset, curr.endOffset)
 
         case EMPTY    => unreachable
         case UNDEF    => unreachable
         case ERROR    => unreachable
       }
     }
-    val scanner = new LegacyScanner(origin)
+    val scanner = new LegacyScanner(input)
     val buf = scanner.reader.buf
 
     var legacyTokenBuf = new mutable.UnrolledBuffer[LegacyTokenData]
@@ -153,16 +153,16 @@ private[meta] object tokenize {
         while (startEnd < buf.length && buf(startEnd) == '\"') startEnd += 1
         val numStartQuotes = startEnd - prev.endOffset - 1
         val numQuotes = if (numStartQuotes <= 2) 1 else 3
-        def emitStart(offset: Offset) = tokens += Token.Interpolation.Start(origin, offset, offset + numQuotes - 1)
-        def emitEnd(offset: Offset) = tokens += Token.Interpolation.End(origin, offset, offset + numQuotes - 1)
+        def emitStart(offset: Offset) = tokens += Token.Interpolation.Start(input, offset, offset + numQuotes - 1)
+        def emitEnd(offset: Offset) = tokens += Token.Interpolation.End(input, offset, offset + numQuotes - 1)
         def emitContents(): Unit = {
           require(curr.token == STRINGPART || curr.token == STRINGLIT)
           if (curr.token == STRINGPART) {
-            tokens += Token.Interpolation.Part(origin, curr.offset, curr.endOffset)
+            tokens += Token.Interpolation.Part(input, curr.offset, curr.endOffset)
             require(buf(curr.endOffset + 1) == '$')
             val dollarOffset = curr.endOffset + 1
-            def emitSpliceStart(offset: Offset) = tokens += Token.Interpolation.SpliceStart(origin, offset)
-            def emitSpliceEnd(offset: Offset) = tokens += Token.Interpolation.SpliceEnd(origin, offset)
+            def emitSpliceStart(offset: Offset) = tokens += Token.Interpolation.SpliceStart(input, offset)
+            def emitSpliceEnd(offset: Offset) = tokens += Token.Interpolation.SpliceEnd(input, offset)
             def requireExpectedToken(expected: LegacyToken) = { require(curr.token == expected) }
             def emitExpectedToken(expected: LegacyToken) = { require(curr.token == expected); emitToken() }
             if (buf(dollarOffset + 1) == '{') {
@@ -189,7 +189,7 @@ private[meta] object tokenize {
             }
           } else {
             curr.endOffset -= numQuotes
-            tokens += Token.Interpolation.Part(origin, curr.offset, curr.endOffset)
+            tokens += Token.Interpolation.Part(input, curr.offset, curr.endOffset)
             require(buf(curr.endOffset + 1) == '\"')
             nextToken()
           }

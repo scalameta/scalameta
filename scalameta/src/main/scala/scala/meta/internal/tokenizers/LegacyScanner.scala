@@ -9,13 +9,12 @@ import scala.language.postfixOps
 import mutable.{ ListBuffer, ArrayBuffer }
 import Chars._
 import LegacyToken._
-import scala.meta.Origin
 
-private[meta] class LegacyScanner(val origin: Origin, decodeUni: Boolean = true)(implicit val dialect: Dialect) {
+private[meta] class LegacyScanner(val input: Input, decodeUni: Boolean = true)(implicit val dialect: Dialect) {
   val curr: LegacyTokenData   = new LegacyTokenData {}
   val next: LegacyTokenData   = new LegacyTokenData {}
   val prev: LegacyTokenData   = new LegacyTokenData {}
-  val reader: CharArrayReader = new CharArrayReader(origin.content, reporter.readerError, decodeUni)
+  val reader: CharArrayReader = new CharArrayReader(input.content, reporter.readerError, decodeUni)
   val reporter: Reporter      = Reporter(() => curr.offset)
 
   import curr._, reader._, reporter._

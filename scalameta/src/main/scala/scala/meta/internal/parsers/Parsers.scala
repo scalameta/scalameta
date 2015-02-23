@@ -9,7 +9,6 @@ import scala.collection.immutable._
 import scala.reflect.ClassTag
 import scala.meta.internal.ast._
 import scala.meta.internal.{ast => impl}
-import scala.meta.Origin
 import scala.meta.internal.tokenizers.Chars.{isOperatorPart, isScalaLetter}
 import scala.meta.syntactic.Token._
 import org.scalameta.tokens._
@@ -159,13 +158,13 @@ private[meta] object SyntacticInfo {
 }
 import SyntacticInfo._
 
-private[meta] class Parser(val origin: Origin)(implicit val dialect: Dialect) extends AbstractParser {
-  def this(code: String)(implicit dialect: Dialect) = this(Origin.String(code))
+private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) extends AbstractParser {
+  def this(code: String)(implicit dialect: Dialect) = this(Input.String(code))
 
   // implementation restrictions wrt various dialect properties
   require(Set("@", ":").contains(dialect.bindToSeqWildcardDesignator))
 
-  /** The parse starting point depends on whether the origin file is self-contained:
+  /** The parse starting point depends on whether the input is self-contained:
    *  if not, the AST will be supplemented.
    */
   def parseStartRule = () => compilationUnit()
@@ -233,7 +232,7 @@ private[meta] class Parser(val origin: Origin)(implicit val dialect: Dialect) ex
             (sepRegions.isEmpty || sepRegions.head == '}')) {
           tokenPos = lastNewlinePos
           token = tokens(tokenPos)
-          if (newlines) token = `\n\n`(token.origin, token.start)
+          if (newlines) token = `\n\n`(token.input, token.start)
           token
         } else {
           pos = nextPos - 1
@@ -244,7 +243,7 @@ private[meta] class Parser(val origin: Origin)(implicit val dialect: Dialect) ex
     def fork: TokenIterator = new CrazyTokenIterator(pos, tokenPos, token, sepRegions)
   }
 
-  val tokens = origin.tokens
+  val tokens = input.tokens
   var in: TokenIterator = new CrazyTokenIterator()
 
   /** the markup parser */
@@ -271,7 +270,7 @@ private[meta] abstract class AbstractParser { parser =>
   def nextOnce() = next()
   def nextTwice() = { next(); next() }
   def nextThrice() = { next(); next(); next() }
-  val origin: Origin
+  val input: Input
   val dialect: Dialect
 
   val reporter = Reporter(() => in.token)
@@ -287,7 +286,7 @@ private[meta] abstract class AbstractParser { parser =>
   }
 
   /** Perform an operation while peeking ahead.
-   *  Recover to original state in case of exception.
+   *  Recover to inputal state in case of exception.
    */
   @inline def peekingAhead[T](tree: => T): T = {
     val forked = in.fork

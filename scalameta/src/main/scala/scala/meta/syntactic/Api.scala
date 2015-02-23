@@ -11,35 +11,38 @@ private[meta] trait Api {
   type Token = scala.meta.syntactic.Token
   val Token = scala.meta.syntactic.Token
 
+  type Input = scala.meta.syntactic.Input
+  val Input = scala.meta.syntactic.Input
+
   // ===========================
   // PART 1: PARSING
   // ===========================
   @implicitNotFound(msg = "don't know how to parse ${T} (if you're sure that ${T} is parseable, double-check that you've imported a dialect, e.g. scala.meta.dialects.Scala211)")
-  trait Parse[T] extends Convert[Origin, T]
+  trait Parse[T] extends Convert[Input, T]
   object Parse {
-    def apply[T](f: Origin => T): Parse[T] = new Parse[T] { def apply(origin: Origin): T = f(origin) }
-    implicit def parseStat(implicit dialect: Dialect): Parse[Stat] = apply(origin => new Parser(origin).parseStat())
-    implicit def parseStats(implicit dialect: Dialect): Parse[List[Stat]] = apply(origin => new Parser(origin).parseStats())
-    implicit def parseTerm(implicit dialect: Dialect): Parse[Term] = apply(origin => new Parser(origin).parseTerm())
-    implicit def parseTermArg(implicit dialect: Dialect): Parse[Term.Arg] = apply(origin => new Parser(origin).parseTermArg())
-    implicit def parseTermParam(implicit dialect: Dialect): Parse[Term.Param] = apply(origin => new Parser(origin).parseTermParam())
-    implicit def parseType(implicit dialect: Dialect): Parse[Type] = apply(origin => new Parser(origin).parseType())
-    implicit def parseTypeArg(implicit dialect: Dialect): Parse[Type.Arg] = apply(origin => new Parser(origin).parseTypeArg())
-    implicit def parseTypeParam(implicit dialect: Dialect): Parse[Type.Param] = apply(origin => new Parser(origin).parseTypeParam())
-    implicit def parsePat(implicit dialect: Dialect): Parse[Pat] = apply(origin => new Parser(origin).parsePat())
-    implicit def parsePatArg(implicit dialect: Dialect): Parse[Pat.Arg] = apply(origin => new Parser(origin).parsePatArg())
-    implicit def parsePatType(implicit dialect: Dialect): Parse[Pat.Type] = apply(origin => new Parser(origin).parsePatType())
-    implicit def parseCase(implicit dialect: Dialect): Parse[Case] = apply(origin => new Parser(origin).parseCase())
-    implicit def parseCtorRef(implicit dialect: Dialect): Parse[Ctor.Ref] = apply(origin => new Parser(origin).parseCtorRef())
-    implicit def parseTemplate(implicit dialect: Dialect): Parse[Template] = apply(origin => new Parser(origin).parseTemplate())
-    implicit def parseMod(implicit dialect: Dialect): Parse[Mod] = apply(origin => new Parser(origin).parseMod())
-    implicit def parseEnumerator(implicit dialect: Dialect): Parse[Enumerator] = apply(origin => new Parser(origin).parseEnumerator())
-    implicit def parseImportee(implicit dialect: Dialect): Parse[Importee] = apply(origin => new Parser(origin).parseImportee())
-    implicit def parseSource(implicit dialect: Dialect): Parse[Source] = apply(origin => new Parser(origin).parseSource())
+    def apply[T](f: Input => T): Parse[T] = new Parse[T] { def apply(input: Input): T = f(input) }
+    implicit def parseStat(implicit dialect: Dialect): Parse[Stat] = apply(input => new Parser(input).parseStat())
+    implicit def parseStats(implicit dialect: Dialect): Parse[List[Stat]] = apply(input => new Parser(input).parseStats())
+    implicit def parseTerm(implicit dialect: Dialect): Parse[Term] = apply(input => new Parser(input).parseTerm())
+    implicit def parseTermArg(implicit dialect: Dialect): Parse[Term.Arg] = apply(input => new Parser(input).parseTermArg())
+    implicit def parseTermParam(implicit dialect: Dialect): Parse[Term.Param] = apply(input => new Parser(input).parseTermParam())
+    implicit def parseType(implicit dialect: Dialect): Parse[Type] = apply(input => new Parser(input).parseType())
+    implicit def parseTypeArg(implicit dialect: Dialect): Parse[Type.Arg] = apply(input => new Parser(input).parseTypeArg())
+    implicit def parseTypeParam(implicit dialect: Dialect): Parse[Type.Param] = apply(input => new Parser(input).parseTypeParam())
+    implicit def parsePat(implicit dialect: Dialect): Parse[Pat] = apply(input => new Parser(input).parsePat())
+    implicit def parsePatArg(implicit dialect: Dialect): Parse[Pat.Arg] = apply(input => new Parser(input).parsePatArg())
+    implicit def parsePatType(implicit dialect: Dialect): Parse[Pat.Type] = apply(input => new Parser(input).parsePatType())
+    implicit def parseCase(implicit dialect: Dialect): Parse[Case] = apply(input => new Parser(input).parseCase())
+    implicit def parseCtorRef(implicit dialect: Dialect): Parse[Ctor.Ref] = apply(input => new Parser(input).parseCtorRef())
+    implicit def parseTemplate(implicit dialect: Dialect): Parse[Template] = apply(input => new Parser(input).parseTemplate())
+    implicit def parseMod(implicit dialect: Dialect): Parse[Mod] = apply(input => new Parser(input).parseMod())
+    implicit def parseEnumerator(implicit dialect: Dialect): Parse[Enumerator] = apply(input => new Parser(input).parseEnumerator())
+    implicit def parseImportee(implicit dialect: Dialect): Parse[Importee] = apply(input => new Parser(input).parseImportee())
+    implicit def parseSource(implicit dialect: Dialect): Parse[Source] = apply(input => new Parser(input).parseSource())
   }
 
   implicit class XtensionOriginLike[T](originLike: T) {
-    def parse[U](implicit convert: Convert[T, Origin], dialect: Dialect, parse: Parse[U]): U = parse(convert(originLike))
-    def tokens(implicit convert: Convert[T, Origin], dialect: Dialect): Vector[Token] = tokenize(convert(originLike))
+    def parse[U](implicit convert: Convert[T, Input], dialect: Dialect, parse: Parse[U]): U = parse(convert(originLike))
+    def tokens(implicit convert: Convert[T, Input], dialect: Dialect): Vector[Token] = tokenize(convert(originLike))
   }
 }

@@ -293,11 +293,11 @@ class PublicSuite extends FunSuite {
     """) === "value parse is not a member of String")
   }
 
-  test("parse without origin-likeness") {
+  test("parse without input-likeness") {
     assert(typecheckError("""
       import scala.meta._
       1.parse[Term]
-    """) === "don't know how to convert Int to scala.meta.Origin")
+    """) === "don't know how to convert Int to meta.Input")
   }
 
   test("parse without dialect") {
@@ -320,7 +320,7 @@ class PublicSuite extends FunSuite {
       import scala.meta._
       import scala.meta.dialects.Scala211
       "".parse[Term]
-      (??? : Origin).parse[Term]
+      (??? : Input).parse[Term]
     """) === "")
   }
 
@@ -329,7 +329,7 @@ class PublicSuite extends FunSuite {
       import scala.meta._
       implicit val dialect: scala.meta.Dialect = ???
       "".parse[Term]
-      (??? : Origin).parse[Term]
+      (??? : Input).parse[Term]
     """) === "")
   }
 
@@ -341,7 +341,7 @@ class PublicSuite extends FunSuite {
       }
       implicit val c: MyContext = ???
       "".parse[Term]
-      (??? : Origin).parse[Term]
+      (??? : Input).parse[Term]
     """) === "")
   }
 
@@ -350,7 +350,7 @@ class PublicSuite extends FunSuite {
       import scala.meta._
       implicit val c: scala.meta.semantic.Context = ???
       "".parse[Term]
-      (??? : Origin).parse[Term]
+      (??? : Input).parse[Term]
     """) === "")
   }
 
@@ -360,11 +360,11 @@ class PublicSuite extends FunSuite {
     """) === "value tokens is not a member of String")
   }
 
-  test("tokens without origin-likeness") {
+  test("tokens without input-likeness") {
     assert(typecheckError("""
       import scala.meta._
       1.tokens
-    """) === "don't know how to convert Int to scala.meta.Origin")
+    """) === "don't know how to convert Int to meta.Input")
   }
 
   test("tokens without dialect") {
@@ -379,7 +379,7 @@ class PublicSuite extends FunSuite {
       import scala.meta._
       import scala.meta.dialects.Scala211
       "".tokens
-      (??? : Origin).tokens
+      (??? : Input).tokens
     """) === "")
   }
 
@@ -388,7 +388,7 @@ class PublicSuite extends FunSuite {
       import scala.meta._
       implicit val dialect: scala.meta.Dialect = ???
       "".tokens
-      (??? : Origin).tokens
+      (??? : Input).tokens
     """) === "")
   }
 
@@ -400,7 +400,7 @@ class PublicSuite extends FunSuite {
       }
       implicit val c: MyContext = ???
       "".tokens
-      (??? : Origin).tokens
+      (??? : Input).tokens
     """) === "")
   }
 
@@ -409,7 +409,7 @@ class PublicSuite extends FunSuite {
       import scala.meta._
       implicit val c: scala.meta.semantic.Context = ???
       "".tokens
-      (??? : Origin).tokens
+      (??? : Input).tokens
     """) === "")
   }
 

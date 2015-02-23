@@ -110,7 +110,7 @@ as a list of implicit instances of the Parse[T] typeclass
 in [syntactic/Api.scala](/scalameta/src/main/scala/scala/meta/syntactic/Api.scala).
 
 As a quick remark, you can tokenize and parse anything that can be converted to
-an [Origin](/scalameta/src/main/scala/scala/meta/Origin.scala) by the means of
+an [Input](/scalameta/src/main/scala/scala/meta/syntactic/Input.scala) by the means of
 the [Convert](/foundation/src/main/scala/org/scalameta/convert/Convert.scala) typeclass.
 At the moment, it's just strings and files, but you can provide your own instances
 that will then seamlessly work with the existing API.
@@ -138,12 +138,12 @@ class C {
 
 scala> res6.show[Raw]
 res7: String = Defn.Class(
-  Nil, Type.Name("C"), Nil, 
-  Ctor.Primary(Nil, Ctor.Ref.Name("this"), Nil), 
+  Nil, Type.Name("C"), Nil,
+  Ctor.Primary(Nil, Ctor.Ref.Name("this"), Nil),
   Template(
-    Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), 
+    Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None),
     Some(List(
-      Defn.Def(Nil, Term.Name("x"), Nil, Nil, None, Lit.Int(2)), 
+      Defn.Def(Nil, Term.Name("x"), Nil, Nil, None, Lit.Int(2)),
       Defn.Def(Nil, Term.Name("y"), Nil, Nil, None, Term.Select(Term.New(Template(Nil, List(Term.Apply(Ctor.Ref.Name("C"), Nil)), Term.Param(Nil, Name.Anonymous(), None, None), None)), Term.Name("x")))))))
 ```
 
