@@ -263,7 +263,7 @@ private[meta] object Location {
 import Location.{ Local, InBlock, InTemplate }
 
 private[meta] abstract class AbstractParser { parser =>
-  trait TokenIterator extends Iterator[Token] { def token: Token; def fork: TokenIterator }
+  trait TokenIterator extends Iterator[Token] { def tokenPos: Int; def token: Token; def fork: TokenIterator }
   var in: TokenIterator
   def token = in.token
   def next() = in.next()
@@ -272,6 +272,11 @@ private[meta] abstract class AbstractParser { parser =>
   def nextThrice() = { next(); next(); next() }
   val input: Input
   val dialect: Dialect
+
+  def pos = in.tokenPos
+  def atPos[T <: Tree](start: Int, end: Int)(tree: T): T = tree.internalCopy(origin = Origin.Parsed(input, dialect, start, end)).asInstanceOf[T]
+  def atPos[T <: Tree](prototype: Tree)(tree: T): T = tree.internalCopy(origin = prototype.origin).asInstanceOf[T]
+  def autoPos[T <: Tree](body: => T): T = { val start = pos; val result = body; val end = pos; atPos(start, end)(body) }
 
   val reporter = Reporter(() => in.token)
   import reporter._
@@ -297,22 +302,24 @@ private[meta] abstract class AbstractParser { parser =>
 
   def parseStartRule: () => Source
 
-  def parseRule[T](rule: this.type => T): T = {
+  def parseRule[T <: Tree](rule: this.type => T): T = {
+    // NOTE: can't require pos to be at -1, because TokIterator auto-rewinds when constructed
+    // require(pos == -1 && debug(pos))
+    val start = 0
     val t = rule(this)
+    val end = pos - 1
     accept[EOF]
-    t
+    atPos(start, end)(t)
   }
 
   // Entry points for Parse[T]
   // Used for quasiquotes as well as for ad-hoc parsing
-  def parseStat(): Stat = parseRule(parser => parser.statSeq(parser.templateStat.orElse(parser.topStat))) match {
+  def parseStat(): Stat = parseRule(parser => parser.statSeq(parser.templateStat.orElse(parser.topStat)) match {
     case stat :: Nil => stat
     case stats if stats.forall(_.isBlockStat) => Term.Block(stats)
-    // TODO: haha, Source itself is not a stat
-    // case stats if stats.forall(_.isTopLevelStat) => Source(stats)
+    case stats if stats.forall(_.isTopLevelStat) => Source(stats)
     case _ => syntaxError("these statements can't be mixed together")
-  }
-  def parseStats(): List[Stat] = parseRule(_.templateStats())
+  })
   def parseTerm(): Term = parseRule(_.expr())
   def parseTermArg(): Term.Arg = ???
   def parseTermParam(): Term.Param = ???
@@ -1115,7 +1122,7 @@ private[meta] abstract class AbstractParser { parser =>
           case _ =>
         }
       } else if (token.is[`:`]) {
-        val colonPos = next()
+        next()
         if (token.is[`@`]) {
           t = Term.Annotate(t, annots(skipNewLines = false))
         } else {

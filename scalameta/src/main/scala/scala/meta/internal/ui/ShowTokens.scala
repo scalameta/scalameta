@@ -19,7 +19,7 @@ private[meta] object Tokens {
     def text(x: Tree) = {
       x.origin match {
         case Origin.None => s("<Origin.None>")
-        case Origin.Parsed(tokens) => s(tokens.mkString)
+        case Origin.Parsed(_, _, _, _) => s(x.origin.tokens.mkString)
         case Origin.Transformed(_) => s("<Origin.Transformed>")
       }
     }
@@ -36,8 +36,8 @@ private[meta] object Tokens {
       }
       def color(x: Tree): String = x.origin match {
         case Origin.None => RED
-        case Origin.Parsed(_) => GREEN
-        case Origin.Transformed(tree) => color(x)
+        case Origin.Parsed(_, _, _, _) => GREEN
+        case Origin.Transformed(tree) => color(tree)
       }
       s((x.productPrefix + "(").colored(color(x)), r(x.productIterator.toList.map(el => loop(el, color(x))), ", ".colored(color(x))), ")".colored(color(x)))
     }

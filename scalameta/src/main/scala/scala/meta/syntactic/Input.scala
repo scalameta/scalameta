@@ -3,9 +3,13 @@ package syntactic
 
 import org.scalameta.adt._
 import org.scalameta.convert._
+import scala.collection.mutable
+import scala.meta.internal.tokenizers._
 
 @root trait Input {
   def content: Array[Char]
+  private val tokenCache = mutable.Map[Dialect, Vector[Token]]()
+  def tokens(implicit dialect: Dialect): Vector[Token] = tokenCache.getOrElseUpdate(dialect, tokenize(this))
 }
 
 object Input {

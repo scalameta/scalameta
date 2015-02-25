@@ -22,7 +22,6 @@ private[meta] trait Api {
   object Parse {
     def apply[T](f: Input => T): Parse[T] = new Parse[T] { def apply(input: Input): T = f(input) }
     implicit def parseStat(implicit dialect: Dialect): Parse[Stat] = apply(input => new Parser(input).parseStat())
-    implicit def parseStats(implicit dialect: Dialect): Parse[List[Stat]] = apply(input => new Parser(input).parseStats())
     implicit def parseTerm(implicit dialect: Dialect): Parse[Term] = apply(input => new Parser(input).parseTerm())
     implicit def parseTermArg(implicit dialect: Dialect): Parse[Term.Arg] = apply(input => new Parser(input).parseTermArg())
     implicit def parseTermParam(implicit dialect: Dialect): Parse[Term.Param] = apply(input => new Parser(input).parseTermParam())
