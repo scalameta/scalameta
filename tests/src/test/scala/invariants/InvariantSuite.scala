@@ -55,7 +55,6 @@ class InvariantSuite extends FunSuite {
       unreachable
     } catch {
       case ex: UnreachableError =>
-        println(ex.getMessage)
         assert(ex.getMessage === """
           |this code path should've been unreachable
         """.trim.stripMargin)
@@ -69,7 +68,6 @@ class InvariantSuite extends FunSuite {
       new C(3)
     } catch {
       case ex: UnreachableError =>
-        println(ex.getMessage)
         assert(ex.getMessage === """
           |this code path should've been unreachable
           |where C.this.x = 3
