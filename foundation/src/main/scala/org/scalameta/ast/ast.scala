@@ -70,11 +70,13 @@ class AstMacros(val c: Context) {
       bparams1 += q"protected val internalPrototype: $name"
       bparams1 += q"protected val internalParent: _root_.scala.meta.Tree"
       bparams1 += q"protected val internalScratchpad: $scratchpadType"
+      bparams1 += q"protected val internalOrigin: _root_.scala.meta.Origin"
       def internalize(name: TermName) = TermName("_" + name.toString)
       val internalCopyInitss = paramss.map(_.map(p => q"$AstInternal.initField(this.${internalize(p.name)})"))
-      val internalCopyBody = q"new ThisType(prototype.asInstanceOf[ThisType], parent, scratchpad)(...$internalCopyInitss)"
-      stats1 += q"private[meta] def internalCopy(prototype: _root_.scala.meta.Tree = this, parent: _root_.scala.meta.Tree = internalParent, scratchpad: $scratchpadType = internalScratchpad): ThisType = $internalCopyBody"
+      val internalCopyBody = q"new ThisType(prototype.asInstanceOf[ThisType], parent, scratchpad, origin)(...$internalCopyInitss)"
+      stats1 += q"private[meta] def internalCopy(prototype: _root_.scala.meta.Tree = this, parent: _root_.scala.meta.Tree = internalParent, scratchpad: $scratchpadType = internalScratchpad, origin: _root_.scala.meta.Origin = internalOrigin): ThisType = $internalCopyBody"
       stats1 += q"def parent: _root_.scala.Option[_root_.scala.meta.Tree] = if (internalParent != null) _root_.scala.Some(internalParent) else _root_.scala.None"
+      stats1 += q"def origin: _root_.scala.meta.Origin = internalOrigin"
 
       // step 5: turn all parameters into private internal vars, create getters and setters
       val fieldParamss = paramss
@@ -89,13 +91,15 @@ class AstMacros(val c: Context) {
           }
         """
       }
-      val copyDefaultss = fieldParamss.map(_.map(p => {
+      val fieldDefaultss = fieldParamss.map(_.map(p => {
         if (p.name == denotParam.name) denotParam.rhs
         else if (p.name == sigmaParam.name) sigmaParam.rhs
         else q"this.${p.name}"
       }))
-      val copyParamss = fieldParamss.zip(copyDefaultss).map{ case (f, d) => f.zip(d).map { case (p, default) => q"val ${p.name}: ${p.tpt} = $default" } }
-      val copyArgss = fieldParamss.map(_.map(p => q"${p.name}"))
+      val copyFieldParamss = fieldParamss.zip(fieldDefaultss).map{ case (f, d) => f.zip(d).map { case (p, default) => q"val ${p.name}: ${p.tpt} = $default" } }
+      val copyFieldArgss = fieldParamss.map(_.map(p => q"${p.name}"))
+      val copyParamss = copyFieldParamss.init :+ (copyFieldParamss.last :+ q"val origin: _root_.scala.meta.Origin = _root_.scala.meta.Origin.Transformed(this)")
+      val copyArgss = copyFieldArgss.init :+ (copyFieldArgss.last :+ q"origin")
       // TODO: would be useful to turn copy into a macro, so that its calls are guaranteed to be inlined
       stats1 += q"def copy(...$copyParamss): ThisType = $mname.apply(...$copyArgss)"
 
@@ -121,8 +125,10 @@ class AstMacros(val c: Context) {
       stats1 += q"override def productIterator: _root_.scala.Iterator[_root_.scala.Any] = _root_.scala.runtime.ScalaRunTime.typedProductIterator(this)"
 
       // step 8: generate Companion.apply
-      val applyParamss = paramss.map(_.map(_.duplicate))
-      val internalParamss = paramss.map(_.map(p => q"@..${p.mods.annotations} val ${p.name}: ${p.tpt}"))
+      val applyFieldParamss = paramss.map(_.map(_.duplicate))
+      val applyParamss = applyFieldParamss.init :+ (applyFieldParamss.last :+ q"val origin: _root_.scala.meta.Origin = _root_.scala.meta.Origin.None")
+      val internalFieldParamss = paramss.map(_.map(p => q"@..${p.mods.annotations} val ${p.name}: ${p.tpt}"))
+      val internalParamss = internalFieldParamss.init :+ (internalFieldParamss.last :+ q"val origin: _root_.scala.meta.Origin")
       val internalBody = ListBuffer[Tree]()
       val internalLocalss = paramss.map(_.map(p => (p.name, internalize(p.name))))
       internalBody += q"$AdtInternal.hierarchyCheck[$name]"
@@ -132,7 +138,7 @@ class AstMacros(val c: Context) {
       internalBody ++= imports
       internalBody ++= requires
       val paramInitss = internalLocalss.map(_.map{ case (local, internal) => q"$AstInternal.initParam($local)" })
-      internalBody += q"val node = new $name(null, null, _root_.scala.collection.immutable.Nil)(...$paramInitss)"
+      internalBody += q"val node = new $name(null, null, _root_.scala.collection.immutable.Nil, origin)(...$paramInitss)"
       internalBody ++= internalLocalss.flatten.flatMap{ case (local, internal) =>
         val (validators, assignee) = {
           // TODO: this is totally ugly. we need to come up with a way to express this in a sane way.
@@ -156,7 +162,8 @@ class AstMacros(val c: Context) {
         validators :+ q"$AstInternal.storeField(node.$internal, $assignee)"
       }
       internalBody += q"node"
-      val internalArgss = paramss.map(_.map(p => q"${p.name}"))
+      val internalFieldArgss = paramss.map(_.map(p => q"${p.name}"))
+      val internalArgss = internalFieldArgss.init :+ (internalFieldArgss.last :+ q"origin")
       mstats1 += q"""
         def apply(...$applyParamss): $name = {
           def internal(...$internalParamss): $name = {

@@ -1,5 +1,4 @@
-package scala
-package meta
+package scala.meta
 
 import org.scalameta.annotations._
 import scala.meta._

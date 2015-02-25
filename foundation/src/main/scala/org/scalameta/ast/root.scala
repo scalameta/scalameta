@@ -18,6 +18,7 @@ class RootMacros(val c: Context) {
       val Tree = tq"_root_.scala.meta.Tree"
       val Datum = tq"_root_.scala.Any"
       val Data = tq"_root_.scala.collection.immutable.Seq[$Datum]"
+      val Origin = tq"_root_.scala.meta.Origin"
       val Adt = q"_root_.org.scalameta.adt"
       val AstInternal = q"_root_.org.scalameta.ast.internal"
       val q"..$boilerplate" = q"""
@@ -36,7 +37,8 @@ class RootMacros(val c: Context) {
         protected def internalPrototype: ThisType
         protected def internalParent: $Tree
         protected def internalScratchpad: $Data
-        private[meta] def internalCopy(prototype: $Tree = internalPrototype, parent: $Tree = internalParent, scratchpad: $Data = internalScratchpad): ThisType
+        protected def internalOrigin: $Origin
+        private[meta] def internalCopy(prototype: $Tree = internalPrototype, parent: $Tree = internalParent, scratchpad: $Data = internalScratchpad, origin: $Origin = internalOrigin): ThisType
       """
       val stats1 = stats ++ boilerplate
       val anns1 = q"new $AstInternal.root" +: q"new $Adt.root" +: anns
