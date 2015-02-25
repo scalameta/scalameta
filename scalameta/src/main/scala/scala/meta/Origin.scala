@@ -21,14 +21,14 @@ object Origin {
     val end = -1
   }
 
-  @leaf class Parsed(input: Input, dialect: Dialect, startToken: Int, endToken: Int) extends Origin {
+  @leaf class Parsed(input: Input, dialect: Dialect, startTokenPos: Int, endTokenPos: Int) extends Origin {
     private implicit val thisDialect: Dialect = this.dialect
     require(input.tokens.last.is[Token.EOF])
-    require(0 <= startToken && startToken < input.tokens.length - 1)
-    require(0 <= endToken && endToken < input.tokens.length - 1)
-    require(startToken <= endToken + 1)
-    val start = input.tokens.apply(startToken).start
-    val end = input.tokens.apply(endToken).end
+    require(0 <= startTokenPos && startTokenPos < input.tokens.length - 1)
+    require(0 <= endTokenPos && endTokenPos < input.tokens.length - 1)
+    require(startTokenPos <= endTokenPos + 1)
+    val start = input.tokens.apply(startTokenPos).start
+    val end = input.tokens.apply(endTokenPos).end
   }
 
   // TODO: also include information about the transformer

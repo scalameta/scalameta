@@ -175,6 +175,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) exte
   // this leads to extremely dirty and seriously crazy code, which I'd like to replace in the future
   private class CrazyTokenIterator(
     var pos: Int = -1,
+    var prevTokenPos: Int = -1,
     var tokenPos: Int = -1,
     var token: Token = null,
     var sepRegions: List[Char] = Nil
@@ -187,7 +188,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) exte
     def next(): Token = {
       if (!hasNext) throw new NoSuchElementException()
       pos += 1
-      val prevPos = tokenPos
+      prevTokenPos = tokenPos
       val prev = token
       val curr = tokens(pos)
       val nextPos = {
@@ -213,7 +214,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) exte
         token = curr
         token
       } else {
-        var i = prevPos + 1
+        var i = prevTokenPos + 1
         var lastNewlinePos = -1
         var newlineStreak = false
         var newlines = false
@@ -240,7 +241,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) exte
         }
       }
     }
-    def fork: TokenIterator = new CrazyTokenIterator(pos, tokenPos, token, sepRegions)
+    def fork: TokenIterator = new CrazyTokenIterator(pos, prevTokenPos, tokenPos, token, sepRegions)
   }
 
   val tokens = input.tokens
@@ -263,7 +264,7 @@ private[meta] object Location {
 import Location.{ Local, InBlock, InTemplate }
 
 private[meta] abstract class AbstractParser { parser =>
-  trait TokenIterator extends Iterator[Token] { def tokenPos: Int; def token: Token; def fork: TokenIterator }
+  trait TokenIterator extends Iterator[Token] { def prevTokenPos: Int; def tokenPos: Int; def token: Token; def fork: TokenIterator }
   var in: TokenIterator
   def token = in.token
   def next() = in.next()
@@ -273,10 +274,32 @@ private[meta] abstract class AbstractParser { parser =>
   val input: Input
   val dialect: Dialect
 
-  def pos = in.tokenPos
-  def atPos[T <: Tree](start: Int, end: Int)(tree: T): T = tree.internalCopy(origin = Origin.Parsed(input, dialect, start, end)).asInstanceOf[T]
-  def atPos[T <: Tree](prototype: Tree)(tree: T): T = tree.internalCopy(origin = prototype.origin).asInstanceOf[T]
-  def autoPos[T <: Tree](body: => T): T = { val start = pos; val result = body; val end = pos; atPos(start, end)(body) }
+  import scala.language.implicitConversions
+  sealed trait Pos
+  case class TokenPos(tokenPos: Int) extends Pos
+  implicit def intToTokenPos(tokenPos: Int): TokenPos = TokenPos(tokenPos)
+  case class TreePos(tree: Tree) extends Pos
+  implicit def treeToTreePos(tree: Tree): TreePos = TreePos(tree)
+  implicit def optionTreeToPos(tree: Option[Tree]): Pos = tree.map(TreePos).getOrElse(AutoPos)
+  case object AutoPos extends Pos
+  def auto = AutoPos
+
+  def atPos[T <: Tree](pos: Pos)(body: => T): T = atPos(pos, pos)(body)
+  def atPos[T <: Tree](start: Pos, end: Pos)(body: => T): T = {
+    val startTokenPos = start match {
+      case TokenPos(tokenPos) => tokenPos
+      case TreePos(tree) => tree.origin.require[Origin.Parsed].startTokenPos
+      case AutoPos => in.tokenPos
+    }
+    val result = body
+    val endTokenPos = end match {
+      case TokenPos(tokenPos) => tokenPos
+      case TreePos(tree) => tree.origin.require[Origin.Parsed].endTokenPos
+      case AutoPos => if (in.tokenPos != startTokenPos) in.prevTokenPos else startTokenPos - 1
+    }
+    result.internalCopy(origin = Origin.Parsed(input, dialect, startTokenPos, endTokenPos)).asInstanceOf[T]
+  }
+  def autoPos[T <: Tree](body: => T): T = atPos(start = auto, end = auto)(body)
 
   val reporter = Reporter()
   import reporter._
@@ -303,11 +326,13 @@ private[meta] abstract class AbstractParser { parser =>
   def parseStartRule: () => Source
 
   def parseRule[T <: Tree](rule: this.type => T): T = {
-    // NOTE: can't require pos to be at -1, because TokIterator auto-rewinds when constructed
-    // require(pos == -1 && debug(pos))
+    // NOTE: can't require in.tokenPos to be at -1, because TokIterator auto-rewinds when created
+    // require(in.tokenPos == -1 && debug(in.tokenPos))
     val start = 0
     val t = rule(this)
-    val end = pos - 1
+    // NOTE: can't have in.prevTokenPos here
+    // because we need to subsume all the trailing trivia
+    val end = in.tokenPos - 1
     accept[EOF]
     atPos(start, end)(t)
   }
@@ -441,13 +466,13 @@ private[meta] abstract class AbstractParser { parser =>
   /** Convert tree to formal parameter. */
   def convertToParam(tree: Term): Option[Term.Param] = tree match {
     case name: Term.Name =>
-      Some(Term.Param(Nil, name, None, None))
-    case Term.Placeholder() =>
-      Some(Term.Param(Nil, Name.Anonymous(), None, None))
+      Some(atPos(tree)(Term.Param(Nil, name, None, None)))
+    case name: Term.Placeholder =>
+      Some(atPos(tree)(Term.Param(Nil, atPos(name)(Name.Anonymous()), None, None)))
     case Term.Ascribe(name: Term.Name, tpt) =>
-      Some(Term.Param(Nil, name, Some(tpt), None))
-    case Term.Ascribe(Term.Placeholder(), tpt) =>
-      Some(Term.Param(Nil, Name.Anonymous(), Some(tpt), None))
+      Some(atPos(tree)(Term.Param(Nil, name, Some(tpt), None)))
+    case Term.Ascribe(name: Term.Placeholder, tpt) =>
+      Some(atPos(tree)(Term.Param(Nil, atPos(name)(Name.Anonymous()), Some(tpt), None)))
     case Lit.Unit() =>
       None
     case other =>
@@ -456,9 +481,9 @@ private[meta] abstract class AbstractParser { parser =>
 
   def convertToTypeId(ref: Term.Ref): Option[Type] = ref match {
     case Term.Select(qual: Term.Ref, name) =>
-      Some(Type.Select(qual, Type.Name(name.value)))
+      Some(atPos(ref)(Type.Select(qual, atPos(name)(Type.Name(name.value)))))
     case name: Term.Name =>
-      Some(Type.Name(name.value))
+      Some(atPos(name)(Type.Name(name.value)))
     case _ =>
       None
   }
@@ -492,17 +517,24 @@ private[meta] abstract class AbstractParser { parser =>
   }
 
   def makeTupleTerm(body: List[Term]): Term = {
+    // TODO: we can't make this autoPos, unlike makeTupleTermParens
+    // see comments to makeTupleType for discussion
     makeTuple[Term](body, () => Lit.Unit(), Term.Tuple(_))
   }
 
-  def makeTupleTermParens(bodyf: => List[Term]) =
+  def makeTupleTermParens(bodyf: => List[Term]) = autoPos {
     makeTupleTerm(inParens(if (token.is[`)`]) Nil else bodyf))
+  }
 
   // TODO: make zero tuple for types Lit.Unit() too?
-  def makeTupleType(body: List[Type]): Type =
+  def makeTupleType(body: List[Type]): Type = {
+    // TODO: we can't make this autoPos, unlike makeTuplePatParens
+    // because, by the time control reaches this method, we're already past the closing parenthesis
+    // therefore, we'll rely on our callers to assign positions to the tuple we return
     makeTuple[Type](body, () => unreachable, Type.Tuple(_))
+  }
 
-  def makeTuplePatParens(bodyf: => List[Pat.Arg]): Pat = {
+  def makeTuplePatParens(bodyf: => List[Pat.Arg]): Pat = autoPos {
     val body = inParens(if (token.is[`)`]) Nil else bodyf.map(_.require[Pat]))
     makeTuple[Pat](body, () => Lit.Unit(), Pat.Tuple(_))
   }
@@ -535,10 +567,12 @@ private[meta] abstract class AbstractParser { parser =>
         OpInfo(tree, name, targs)
       }
       def binop(opinfo: OpInfo[List[Term.Arg]], rhs: List[Term.Arg]): List[Term.Arg] = {
+        // TODO: figure out the position here
         val lhs = makeTupleTerm(opinfo.lhs map {
           case t: Term => t
           case other   => unreachable(debug(other, other.show[Raw]))
         })
+        // TODO: figure out the position here
         Term.ApplyInfix(lhs, opinfo.operator, opinfo.targs, rhs) :: Nil
       }
     }
@@ -553,6 +587,7 @@ private[meta] abstract class AbstractParser { parser =>
           case Pat.Tuple(args) => args.toList
           case _               => List(rhs)
         }
+        // TODO: figure out the position here
         Pat.ExtractInfix(opinfo.lhs, opinfo.operator, args)
       }
     }
@@ -568,6 +603,7 @@ private[meta] abstract class AbstractParser { parser =>
   )
 
   def finishPostfixOp(base: List[OpInfo[List[Term.Arg]]], opinfo: OpInfo[List[Term.Arg]]): List[Term.Arg] =
+    // TODO: figure out the position here
     Term.Select(reduceStack(base, opinfo.lhs) match {
       case (t: Term) :: Nil => t
       case other            => unreachable(debug(other))
@@ -615,7 +651,9 @@ private[meta] abstract class AbstractParser { parser =>
     def argType(): Type
     def functionArgType(): Type.Arg
 
-    private def tupleInfixType(): Type = {
+    private def tupleInfixType(): Type = autoPos {
+      require(token.is[`(`] && debug(token))
+      val openParenPos = in.tokenPos
       next()
       if (token.is[`)`]) {
         next()
@@ -624,16 +662,17 @@ private[meta] abstract class AbstractParser { parser =>
       }
       else {
         val ts = functionTypes()
+        val closeParenPos = in.tokenPos
         accept[`)`]
         if (token.is[`=>`]) {
           next()
           Type.Function(ts, typ())
         } else {
-          val tuple = makeTupleType(ts map {
+          val tuple = atPos(openParenPos, closeParenPos)(makeTupleType(ts map {
             case t: Type              => t
             case p: Type.Arg.ByName   => syntaxError("by name type not allowed here", at = p)
             case p: Type.Arg.Repeated => syntaxError("repeated type not allowed here", at = p)
-          })
+          }))
           infixTypeRest(
             compoundTypeRest(Some(
               annotTypeRest(
@@ -644,11 +683,6 @@ private[meta] abstract class AbstractParser { parser =>
         }
       }
     }
-    private def makeExistentialTypeTree(t: Type): Type.Existential = {
-      // EmptyTrees in the result of refinement() stand for parse errors
-      // so it's okay for us to filter them out here
-      Type.Existential(t, existentialStats())
-    }
 
     /** {{{
      *  Type ::= InfixType `=>' Type
@@ -658,14 +692,14 @@ private[meta] abstract class AbstractParser { parser =>
      *  ExistentialDcl    ::= type TypeDcl | val ValDcl
      *  }}}
      */
-    def typ(): Type = {
+    def typ(): Type = autoPos {
       val t: Type =
         if (token.is[`(`]) tupleInfixType()
         else infixType(InfixMode.FirstOp)
 
       token match {
         case _: `=>`      => next(); Type.Function(List(t), typ())
-        case _: `forSome` => next(); makeExistentialTypeTree(t)
+        case _: `forSome` => next(); Type.Existential(t, existentialStats())
         case _            => t
       }
     }
@@ -692,10 +726,10 @@ private[meta] abstract class AbstractParser { parser =>
      *  }}}
      */
     def simpleType(): Type = {
-      simpleTypeRest(token match {
-        case _: `(`   => makeTupleType(inParens(types()))
+      simpleTypeRest(autoPos(token match {
+        case _: `(`  => autoPos(makeTupleType(inParens(types())))
         case _: `_ ` => next(); wildcardType()
-        case _        =>
+        case _       =>
           val ref: Term.Ref = path()
           if (token.isNot[`.`])
             convertToTypeId(ref) getOrElse { syntaxError("identifier expected", at = ref) }
@@ -704,18 +738,15 @@ private[meta] abstract class AbstractParser { parser =>
             accept[`type`]
             Type.Singleton(ref)
           }
-      })
+      }))
     }
 
-    private def typeProjection(qual: Type): Type.Project = {
-      next()
-      Type.Project(qual, typeName())
-    }
     def simpleTypeRest(t: Type): Type = token match {
-      case _: `#` => simpleTypeRest(typeProjection(t))
-      case _: `[` => simpleTypeRest(Type.Apply(t, typeArgs()))
+      case _: `#` => next(); simpleTypeRest(atPos(t, auto)(Type.Project(t, typeName())))
+      case _: `[` => simpleTypeRest(atPos(t, auto)(Type.Apply(t, typeArgs())))
       case _      => t
     }
+
 
     /** {{{
      *  CompoundType ::= ModType {with ModType} [Refinement]
@@ -728,7 +759,7 @@ private[meta] abstract class AbstractParser { parser =>
     )
 
     // TODO: warn about def f: Unit { } case?
-    def compoundTypeRest(t: Option[Type]): Type = {
+    def compoundTypeRest(t: Option[Type]): Type = atPos(t, auto) {
       val ts = new ListBuffer[Type] ++ t
       while (token.is[`with`]) {
         next()
@@ -748,14 +779,14 @@ private[meta] abstract class AbstractParser { parser =>
       }
     }
 
-    def infixTypeRest(t: Type, mode: InfixMode.Value): Type = {
+    def infixTypeRest(t: Type, mode: InfixMode.Value): Type = atPos(t, auto) {
       if (isIdentExcept("*")) {
         val name = termName(advance = false)
         val leftAssoc = name.isLeftAssoc
         if (mode != InfixMode.FirstOp) checkAssoc(name, leftAssoc = mode == InfixMode.LeftOp)
         val op = typeName()
         newLineOptWhenFollowing(_.is[TypeIntro])
-        def mkOp(t1: Type) = Type.ApplyInfix(t, op, t1)
+        def mkOp(t1: Type) = atPos(t, t1)(Type.ApplyInfix(t, op, t1))
         if (leftAssoc)
           infixTypeRest(mkOp(compoundType()), InfixMode.LeftOp)
         else
@@ -780,10 +811,10 @@ private[meta] abstract class AbstractParser { parser =>
 
   private trait AllowedName[T]
   private object AllowedName { implicit object Term extends AllowedName[impl.Term.Name]; implicit object Type extends AllowedName[impl.Type.Name] }
-  private def name[T: AllowedName](ctor: String => T, advance: Boolean): T = token match {
+  private def name[T <: Tree : AllowedName](ctor: String => T, advance: Boolean): T = token match {
     case token: Ident =>
       val name = token.code.stripPrefix("`").stripSuffix("`")
-      val res = ctor(name)
+      val res = atPos(in.tokenPos, in.tokenPos)(ctor(name))
       if (advance) next()
       res
     case _ =>
@@ -799,7 +830,7 @@ private[meta] abstract class AbstractParser { parser =>
    *  }}}
    */
   // TODO: this has to be rewritten
-  def path(thisOK: Boolean = true): Term.Ref = {
+  def path(thisOK: Boolean = true): Term.Ref = autoPos {
     def stop = token.isNot[`.`] || ahead { token.isNot[`this`] && token.isNot[`super`] && !token.is[Ident] }
     if (token.is[`this`]) {
       next()
@@ -1293,27 +1324,29 @@ private[meta] abstract class AbstractParser { parser =>
     case t                                 => t
   }
 
-  def argsToTerm(args: List[Term.Arg]): Term = {
-    def loop(args: List[Term.Arg]): List[Term] = args match {
-      case Nil                              => Nil
-      case (t: Term) :: rest                => t :: loop(rest)
-      case (nmd: Term.Arg.Named) :: rest    => Term.Assign(nmd.name, nmd.rhs) :: loop(rest)
-      case (rep: Term.Arg.Repeated) :: rest => syntaxError("repeated argument not allowed here", at = rep)
-    }
-    makeTupleTerm(loop(args))
-  }
-
-  def argumentExprsOrPrefixExpr(): List[Term.Arg] =
+  def argumentExprsOrPrefixExpr(): List[Term.Arg] = {
     if (token.isNot[`{`] && token.isNot[`(`]) prefixExpr() :: Nil
     else {
+      def argsToTerm(args: List[Term.Arg], openParenPos: Int, closeParenPos: Int): Term = {
+        def loop(args: List[Term.Arg]): List[Term] = args match {
+          case Nil                              => Nil
+          case (t: Term) :: rest                => t :: loop(rest)
+          case (nmd: Term.Arg.Named) :: rest    => Term.Assign(nmd.name, nmd.rhs) :: loop(rest)
+          case (rep: Term.Arg.Repeated) :: rest => syntaxError("repeated argument not allowed here", at = rep)
+        }
+        atPos(openParenPos, closeParenPos)(makeTupleTerm(loop(args)))
+      }
+      val openParenPos = in.tokenPos
       val args = argumentExprs()
+      val closeParenPos = in.prevTokenPos
       token match {
         case _: `.` | _: `[` | _: `(` | _: `{` | _: `_ ` =>
-          simpleExprRest(argsToTerm(args), canApply = true) :: Nil
+          simpleExprRest(argsToTerm(args, openParenPos, closeParenPos), canApply = true) :: Nil
         case _ =>
           args
       }
     }
+  }
 
   /** {{{
    *  ArgumentExprs ::= `(' [Exprs] `)'
