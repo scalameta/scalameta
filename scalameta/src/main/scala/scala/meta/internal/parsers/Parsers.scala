@@ -278,7 +278,7 @@ private[meta] abstract class AbstractParser { parser =>
   def atPos[T <: Tree](prototype: Tree)(tree: T): T = tree.internalCopy(origin = prototype.origin).asInstanceOf[T]
   def autoPos[T <: Tree](body: => T): T = { val start = pos; val result = body; val end = pos; atPos(start, end)(body) }
 
-  val reporter = Reporter(() => in.token)
+  val reporter = Reporter()
   import reporter._
 
   /** Scoping operator used to temporarily look into the future.
@@ -315,10 +315,11 @@ private[meta] abstract class AbstractParser { parser =>
   // Entry points for Parse[T]
   // Used for quasiquotes as well as for ad-hoc parsing
   def parseStat(): Stat = parseRule(parser => parser.statSeq(parser.templateStat.orElse(parser.topStat)) match {
+    case Nil => syntaxError("unexpected end of input", at = token)
     case stat :: Nil => stat
     case stats if stats.forall(_.isBlockStat) => Term.Block(stats)
     case stats if stats.forall(_.isTopLevelStat) => Source(stats)
-    case _ => syntaxError("these statements can't be mixed together")
+    case other => syntaxError("these statements can't be mixed together", at = other.head)
   })
   def parseTerm(): Term = parseRule(_.expr())
   def parseTermArg(): Term.Arg = ???
@@ -391,7 +392,7 @@ private[meta] abstract class AbstractParser { parser =>
     finally inFunReturnType = saved
   }
 
-  def syntaxErrorExpected[T: TokenMetadata]: Nothing = syntaxError(s"${implicitly[TokenMetadata[T]].name} expected but ${token.name} found.")
+  def syntaxErrorExpected[T: TokenMetadata]: Nothing = syntaxError(s"${implicitly[TokenMetadata[T]].name} expected but ${token.name} found.", at = token)
 
   /** Consume one token of the specified type, or signal an error if it is not there. */
   def accept[T: TokenMetadata]: Unit =
@@ -450,7 +451,7 @@ private[meta] abstract class AbstractParser { parser =>
     case Lit.Unit() =>
       None
     case other =>
-      syntaxError(s"$other, not a legal formal parameter", at = other)
+      syntaxError(s"not a legal formal parameter", at = other)
   }
 
   def convertToTypeId(ref: Term.Ref): Option[Type] = ref match {
@@ -544,7 +545,7 @@ private[meta] abstract class AbstractParser { parser =>
     implicit object `Pat Context` extends OpCtx[Pat] {
       def opinfo(tree: Pat): OpInfo[Pat] = {
         val name = termName()
-        if (token.is[`[`]) syntaxError("infix patterns cannot have type arguments")
+        if (token.is[`[`]) syntaxError("infix patterns cannot have type arguments", at = token)
         OpInfo(tree, name, Nil)
       }
       def binop(opinfo: OpInfo[Pat], rhs: Pat): Pat = {
@@ -563,7 +564,7 @@ private[meta] abstract class AbstractParser { parser =>
 
   def checkAssoc(op: Term.Name, leftAssoc: Boolean): Unit = (
     if (op.isLeftAssoc != leftAssoc)
-      syntaxError("left- and right-associative operators with same precedence may not be mixed")
+      syntaxError("left- and right-associative operators with same precedence may not be mixed", at = op)
   )
 
   def finishPostfixOp(base: List[OpInfo[List[Term.Arg]]], opinfo: OpInfo[List[Term.Arg]]): List[Term.Arg] =
@@ -697,7 +698,7 @@ private[meta] abstract class AbstractParser { parser =>
         case _        =>
           val ref: Term.Ref = path()
           if (token.isNot[`.`])
-            convertToTypeId(ref) getOrElse { syntaxError("identifier expected") }
+            convertToTypeId(ref) getOrElse { syntaxError("identifier expected", at = ref) }
           else {
             next()
             accept[`type`]
@@ -896,17 +897,17 @@ private[meta] abstract class AbstractParser { parser =>
    */
   def literal(isNegated: Boolean = false): Lit = {
     val res = token match {
-      case token: Literal.Char    => Lit.Char(token.value)
-      case token: Literal.Int     => Lit.Int(token.value(isNegated))
-      case token: Literal.Long    => Lit.Long(token.value(isNegated))
-      case token: Literal.Float   => Lit.Float(token.value(isNegated))
-      case token: Literal.Double  => Lit.Double(token.value(isNegated))
-      case token: Literal.String  => Lit.String(token.value)
-      case token: Literal.Symbol  => Lit.Symbol(token.value)
-      case token: `true`          => Lit.Bool(true)
-      case token: `false`         => Lit.Bool(false)
-      case token: `null`          => Lit.Null()
-      case _                    => syntaxError("illegal literal")
+      case token: Literal.Char   => Lit.Char(token.value)
+      case token: Literal.Int    => Lit.Int(token.value(isNegated))
+      case token: Literal.Long   => Lit.Long(token.value(isNegated))
+      case token: Literal.Float  => Lit.Float(token.value(isNegated))
+      case token: Literal.Double => Lit.Double(token.value(isNegated))
+      case token: Literal.String => Lit.String(token.value)
+      case token: Literal.Symbol => Lit.Symbol(token.value)
+      case token: `true`         => Lit.Bool(true)
+      case token: `false`        => Lit.Bool(false)
+      case token: `null`         => Lit.Null()
+      case _                     => unreachable(debug(token))
     }
     next()
     res
@@ -940,7 +941,7 @@ private[meta] abstract class AbstractParser { parser =>
         // case _: `_ ` => freshPlaceholder()       // ifonly etapolation
         case _: `{`     => dropTrivialBlock(expr()) // dropAnyBraces(expr0(Local))
         case _: `this`  => next(); Term.This(None)
-        case _          => syntaxError("error in interpolated string: identifier or block expected")
+        case _          => syntaxError("error in interpolated string: identifier or block expected", at = token)
       }
     }, result = Term.Interpolate(_, _, _))
   }
@@ -1252,7 +1253,7 @@ private[meta] abstract class AbstractParser { parser =>
           next()
           Term.New(template())
         case _ =>
-          syntaxError(s"illegal start of simple expression: $token")
+          syntaxError(s"illegal start of simple expression", at = token)
       }
     simpleExprRest(t, canApply = canApply)
   }
@@ -1422,8 +1423,8 @@ private[meta] abstract class AbstractParser { parser =>
     val hasEq = token.is[`=`]
 
     if (hasVal) {
-      if (hasEq) deprecationWarning("val keyword in for comprehension is deprecated")
-      else syntaxError("val in for comprehension must be followed by assignment")
+      if (hasEq) deprecationWarning("val keyword in for comprehension is deprecated", at = token)
+      else syntaxError("val in for comprehension must be followed by assignment", at = token)
     }
 
     if (hasEq && eqOK) next()
@@ -1516,7 +1517,7 @@ private[meta] abstract class AbstractParser { parser =>
       else {
         p match {
           case p: Term.Name =>
-            syntaxError("Pattern variables must start with a lower-case letter. (SLS 8.1.1.)")
+            syntaxError("Pattern variables must start with a lower-case letter. (SLS 8.1.1.)", at = p)
           case p: Pat.Var.Term if dialect.bindToSeqWildcardDesignator == ":" && isColonWildcardStar =>
             nextThrice()
             Pat.Bind(p, Pat.Arg.SeqWildcard())
@@ -1547,7 +1548,7 @@ private[meta] abstract class AbstractParser { parser =>
       if (token.isNot[`@`]) p
       else p match {
         case p: Term.Name =>
-          syntaxError("Pattern variables must start with a lower-case letter. (SLS 8.1.1.)")
+          syntaxError("Pattern variables must start with a lower-case letter. (SLS 8.1.1.)", at = p)
         case p: Pat.Var.Term =>
           next()
           Pat.Bind(p, pattern3())
@@ -1589,7 +1590,7 @@ private[meta] abstract class AbstractParser { parser =>
       checkWildStar getOrElse loop(top)
     }
 
-    def badPattern3(): Nothing = {
+    def badPattern3(token: Token): Nothing = {
       def isComma                = token.is[`,`]
       def isDelimiter            = token.is[`)`] || token.is[`}`]
       def isCommaOrDelimiter     = isComma || isDelimiter
@@ -1611,7 +1612,7 @@ private[meta] abstract class AbstractParser { parser =>
       val msg = if (subtext != null) s"$preamble $subtext" else "illegal start of simple pattern"
       // better recovery if don't skip delims of patterns
       val skip = !isCommaOrDelimiter || isSeqPatternClose
-      syntaxError(msg)
+      syntaxError(msg, at = token)
     }
 
     /** {{{
@@ -1629,8 +1630,8 @@ private[meta] abstract class AbstractParser { parser =>
      */
     def simplePattern(): Pat =
       // simple diagnostics for this entry point
-      simplePattern(() => syntaxError("illegal start of simple pattern"))
-    def simplePattern(onError: () => Nothing): Pat = token match {
+      simplePattern(token => syntaxError("illegal start of simple pattern", at = token))
+    def simplePattern(onError: Token => Nothing): Pat = token match {
       case _: Ident | _: `this` =>
         val isBackquoted = token.code.endsWith("`")
         val sid = stableId()
@@ -1651,7 +1652,7 @@ private[meta] abstract class AbstractParser { parser =>
         }
         (token, sid) match {
           case (_: `(`, _)                          => Pat.Extract(sid, targs, argumentPatterns())
-          case (_, _) if targs.nonEmpty             => syntaxError("pattern must be a value")
+          case (_, _) if targs.nonEmpty             => syntaxError("pattern must be a value", at = token)
           case (_, name: Term.Name) if isVarPattern => Pat.Var.Term(name)
           case (_, name: Term.Name)                 => name
           case (_, select: Term.Select)             => select
@@ -1669,7 +1670,7 @@ private[meta] abstract class AbstractParser { parser =>
       case _: XMLStart =>
         xmlLiteralPattern()
       case _ =>
-        onError()
+        onError(token)
     }
   }
   /** The implementation of the context sensitive methods for parsing outside of patterns. */
@@ -1764,7 +1765,7 @@ private[meta] abstract class AbstractParser { parser =>
         case _: `override`  => loop(addMod(mods, Mod.Override()))
         case _: `private`
            | _: `protected` =>
-          mods.filter(_.hasAccessBoundary).foreach(_ => syntaxError("duplicate access qualifier"))
+          mods.filter(_.hasAccessBoundary).foreach(mod => syntaxError("duplicate access qualifier", at = mod))
           val optmod = accessModifierOpt()
           optmod.map { mod => loop(addMod(mods, mod, advance = false)) }.getOrElse(mods)
         case _: `\n` if !isLocal => next(); loop(mods)
@@ -1866,7 +1867,7 @@ private[meta] abstract class AbstractParser { parser =>
       val tpt = paramType()
       if (tpt.isInstanceOf[Type.Arg.ByName]) {
         def mayNotBeByName(subj: String) =
-          syntaxError(s"$subj parameters may not be call-by-name")
+          syntaxError(s"$subj parameters may not be call-by-name", at = name)
         val isLocalToThis: Boolean = {
           val isExplicitlyLocal = mods.accessBoundary.map(_.isInstanceOf[Term.This]).getOrElse(false)
           if (ownerIsCase) isExplicitlyLocal
@@ -1924,7 +1925,7 @@ private[meta] abstract class AbstractParser { parser =>
     val nameopt =
       if (token.is[Ident]) typeName()
       else if (token.is[`_ `]) { next(); Name.Anonymous() }
-      else syntaxError("identifier or `_' expected")
+      else syntaxError("identifier or `_' expected", at = token)
     val tparams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
     val typeBounds = this.typeBounds()
     val viewBounds = new ListBuffer[Type]
@@ -2107,7 +2108,7 @@ private[meta] abstract class AbstractParser { parser =>
 
   def funDefRest(mods: List[Mod], name: Term.Name): Stat = {
     def warnProcedureDeprecation =
-      deprecationWarning(s"Procedure syntax is deprecated. Convert procedure `$name` to method by adding `: Unit`.")
+      deprecationWarning(s"Procedure syntax is deprecated. Convert procedure `$name` to method by adding `: Unit`.", at = name)
     val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
     val paramss = paramClauses(ownerIsType = false).require[Seq[Seq[Term.Param]]]
     newLineOptWhenFollowedBy[`{`]
@@ -2135,7 +2136,7 @@ private[meta] abstract class AbstractParser { parser =>
       }
       if (isMacro) restype match {
         case Some(restype) => Defn.Macro(mods, name, tparams, paramss, restype, rhs)
-        case None          => syntaxError("macros must have explicitly specified return types")
+        case None          => syntaxError("macros must have explicitly specified return types", at = name)
       } else Defn.Def(mods, name, tparams, paramss, restype, rhs)
     }
   }
@@ -2197,7 +2198,7 @@ private[meta] abstract class AbstractParser { parser =>
       case _: `>:` | _: `<:` | _: `,` | _: `}` | _: StatSep =>
         Decl.Type(mods, name, tparams, typeBounds())
       case _ =>
-        syntaxError("`=', `>:', or `<:' expected")
+        syntaxError("`=', `>:', or `<:' expected", at = token)
     }
   }
 
@@ -2227,7 +2228,7 @@ private[meta] abstract class AbstractParser { parser =>
         next()
         objectDef(mods :+ Mod.Case())
       case _ =>
-        syntaxError(s"expected start of definition")
+        syntaxError(s"expected start of definition", at = token)
     }
   }
 
@@ -2329,7 +2330,8 @@ private[meta] abstract class AbstractParser { parser =>
       case Type.Function(Types(params), ret) => Term.ApplyType(Ctor.Ref.Function(Ctor.Name("=>")), params :+ ret)
       case Type.Annotate(tpe, annots) => Term.Annotate(convert(tpe), annots)
       case Type.Apply(tpe, args) => Term.ApplyType(convert(tpe), args)
-      case _ => syntaxError("this type can't be used in a constructor call")
+      case Type.ApplyInfix(lhs, op, rhs) => Term.ApplyType(convert(op), List(lhs, rhs))
+      case _ => syntaxError("this type can't be used in a constructor call", at = tpe)
     }
     val argss = if (token.isNot[`(`]) Nil else if (allowArgss) multipleArgumentExprs() else List(argumentExprs())
     argss.foldLeft(convert(tpe))((curr, args) => Term.Apply(curr, args))
@@ -2422,8 +2424,8 @@ private[meta] abstract class AbstractParser { parser =>
       (self, Some(body))
     } else {
       if (token.is[`(`]) {
-        if (parenMeansSyntaxError) syntaxError("traits or objects may not have parameters")
-        else syntaxError("unexpected opening parenthesis")
+        if (parenMeansSyntaxError) syntaxError("traits or objects may not have parameters", at = token)
+        else syntaxError("unexpected opening parenthesis", at = token)
       }
       (Term.Param(Nil, Name.Anonymous(), None, None), None)
     }
@@ -2447,7 +2449,7 @@ private[meta] abstract class AbstractParser { parser =>
     val stats = new ListBuffer[T]
     while (!token.is[StatSeqEnd]) {
       if (statpf.isDefinedAt(token)) stats += statpf(token)
-      else if (!token.is[StatSep]) syntaxError(errorMsg)
+      else if (!token.is[StatSep]) syntaxError(errorMsg, at = token)
       acceptStatSepOpt()
     }
     stats.toList
@@ -2554,7 +2556,7 @@ private[meta] abstract class AbstractParser { parser =>
       syntaxError(
         "illegal start of declaration"+
         (if (inFunReturnType) " (possible cause: missing `=' in front of current method body)"
-         else ""))
+         else ""), at = token)
     } else None
 
   def localDef(implicitMod: Option[Mod.Implicit]): Stat = {
@@ -2607,7 +2609,7 @@ private[meta] abstract class AbstractParser { parser =>
       }
       else {
         val addendum = if (token.is[Modifier]) " (no modifiers allowed here)" else ""
-        syntaxError("illegal start of statement" + addendum)
+        syntaxError("illegal start of statement" + addendum, at = token)
       }
     }
     stats.toList
