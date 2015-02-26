@@ -1184,6 +1184,7 @@ private[meta] abstract class AbstractParser { parser =>
    */
 
   def implicitClosure(location: Location): Term.Function = {
+    require(token.isNot[`implicit`] && debug(token))
     val implicitPos = in.prevTokenPos
     val paramName = termName()
     val paramTpt = if (token.is[`:`]) Some(typeOrInfixType(location)) else None
@@ -1248,7 +1249,7 @@ private[meta] abstract class AbstractParser { parser =>
    */
   def simpleExpr(): Term = autoPos {
     var canApply = true
-    val t: Term =
+    val t: Term = {
       token match {
         case _: Literal =>
           literal()
@@ -1273,6 +1274,7 @@ private[meta] abstract class AbstractParser { parser =>
         case _ =>
           syntaxError(s"illegal start of simple expression", at = token)
       }
+    }
     simpleExprRest(t, canApply = canApply)
   }
 
@@ -2397,7 +2399,7 @@ private[meta] abstract class AbstractParser { parser =>
    *  EarlyDef      ::= Annotations Modifiers PatDef
    *  }}}
    */
-  def template(): Template = {
+  def template(): Template = autoPos {
     newLineOptWhenFollowedBy[`{`]
     if (token.is[`{`]) {
       // @S: pre template body cannot stub like post body can!
@@ -2439,11 +2441,10 @@ private[meta] abstract class AbstractParser { parser =>
     if (token.is[`extends`] /* || token.is[`<:`] && mods.isTrait */) {
       next()
       template()
-    }
-    else {
-      newLineOptWhenFollowedBy[`{`]
-      val (self, body) = templateBodyOpt(parenMeansSyntaxError = owner.isTrait || owner.isTerm)
-      Template(Nil, Nil, self, body)
+    } else {
+      val startPos = in.tokenPos
+      val (self, body) = templateBodyOpt(parenMeansSyntaxError = !owner.isClass)
+      atPos(startPos, auto)(Template(Nil, Nil, self, body))
     }
   }
 
@@ -2465,7 +2466,7 @@ private[meta] abstract class AbstractParser { parser =>
         if (parenMeansSyntaxError) syntaxError("traits or objects may not have parameters", at = token)
         else syntaxError("unexpected opening parenthesis", at = token)
       }
-      (Term.Param(Nil, Name.Anonymous(), None, None), None)
+      (autoPos(Term.Param(Nil, autoPos(Name.Anonymous()), None, None)), None)
     }
   }
 
@@ -2505,8 +2506,7 @@ private[meta] abstract class AbstractParser { parser =>
   def topStatSeq(): List[Stat] = statSeq(topStat, errorMsg = "expected class or object definition")
   def topStat: PartialFunction[Token, Stat] = {
     case _: `package `  =>
-      next()
-      packageOrPackageObject()
+      packageOrPackageObjectDef()
     case _: `import` =>
       importStmt()
     case _: `@` | _: TemplateIntro | _: Modifier =>
@@ -2519,24 +2519,24 @@ private[meta] abstract class AbstractParser { parser =>
    * @param isPre specifies whether in early initializer (true) or not (false)
    */
   def templateStatSeq(isPre : Boolean): (Term.Param, List[Stat]) = {
-    var self: Term.Param = Term.Param(Nil, Name.Anonymous(), None, None)
+    var self: Term.Param = autoPos(Term.Param(Nil, Name.Anonymous(), None, None))
     var firstOpt: Option[Term] = None
     if (token.is[ExprIntro]) {
       val first = expr(InTemplate) // @S: first statement is potentially converted so cannot be stubbed.
       if (token.is[`=>`]) {
         first match {
-          case Term.Placeholder() =>
-            self = Term.Param(Nil, Name.Anonymous(), None, None)
-          case Term.This(None) =>
-            self = Term.Param(Nil, Name.Anonymous(), None, None)
+          case name: Term.Placeholder =>
+            self = atPos(first, first)(Term.Param(Nil, atPos(name, name)(Name.Anonymous()), None, None))
+          case name @ Term.This(None) =>
+            self = atPos(first, first)(Term.Param(Nil, atPos(name, name)(Name.Anonymous()), None, None))
           case name: Term.Name =>
-            self = Term.Param(Nil, name, None, None)
-          case Term.Ascribe(Term.Placeholder(), tpt) =>
-            self = Term.Param(Nil, Name.Anonymous(), Some(tpt), None)
-          case Term.Ascribe(tree @ Term.This(None), tpt) =>
-            self = Term.Param(Nil, Name.Anonymous(), Some(tpt), None)
+            self = atPos(first, first)(Term.Param(Nil, name, None, None))
+          case Term.Ascribe(name: Term.Placeholder, tpt) =>
+            self = atPos(first, first)(Term.Param(Nil, atPos(name, name)(Name.Anonymous()), Some(tpt), None))
+          case Term.Ascribe(name @ Term.This(None), tpt) =>
+            self = atPos(first, first)(Term.Param(Nil, atPos(name, name)(Name.Anonymous()), Some(tpt), None))
           case Term.Ascribe(name: Term.Name, tpt) =>
-            self = Term.Param(Nil, name, Some(tpt), None)
+            self = atPos(first, first)(Term.Param(Nil, name, Some(tpt), None))
           case _ =>
         }
         next()
@@ -2630,9 +2630,10 @@ private[meta] abstract class AbstractParser { parser =>
       }
       else if (token.is[DefIntro] || token.is[LocalModifier] || token.is[`@`]) {
         if (token.is[`implicit`]) {
+          val implicitPos = in.tokenPos
           next()
           if (token.is[Ident]) stats += implicitClosure(InBlock)
-          else stats += localDef(Some(Mod.Implicit()))
+          else stats += localDef(Some(atPos(implicitPos, implicitPos)(Mod.Implicit())))
         } else {
           stats += localDef(None)
         }
@@ -2654,62 +2655,57 @@ private[meta] abstract class AbstractParser { parser =>
   }
 
 
-  def packageOrPackageObject(): Stat =
-    if (token.is[`object`]) {
-      next()
-      packageObject()
-    } else {
-      Pkg(qualId(), inBracesOrNil(topStatSeq()))
-    }
+  def packageOrPackageObjectDef(): Stat = autoPos {
+    require(token.is[`package `] && debug(token))
+    if (ahead(token.is[`object`])) packageObjectDef()
+    else packageDef()
+  }
 
-  def packageObject(): Pkg.Object =
+  def packageDef(): Pkg = autoPos {
+    accept[`package `]
+    Pkg(qualId(), inBracesOrNil(topStatSeq()))
+  }
+
+  def packageObjectDef(): Pkg.Object = autoPos {
+    accept[`package `]
+    accept[`object`]
     Pkg.Object(Nil, termName(), primaryCtor(OwnedByObject), templateOpt(OwnedByObject))
+  }
 
   /** {{{
    *  CompilationUnit ::= {package QualId semi} TopStatSeq
    *  }}}
    */
-  def compilationUnit(): Source = {
-    def packageStats(): (List[Term.Ref], List[Stat])  = {
-      val refs = new ListBuffer[Term.Ref]
-      val ts = new ListBuffer[Stat]
-      while (token.is[`;`] || token.is[`\n`]) next()
-      if (token.is[`package `]) {
+  def compilationUnit(): Source = autoPos {
+    def bracelessPackageStats(): Seq[Stat] = {
+      if (token.is[EOF]) {
+        Nil
+      } else if (token.is[StatSep]) {
         next()
-        if (token.is[`object`]) {
-          next()
-          ts += packageObject()
-          if (token.isNot[EOF]) {
-            acceptStatSep()
-            ts ++= topStatSeq()
-          }
+        bracelessPackageStats()
+      } else if (token.is[`package `] && ahead(token.is[`object`])) {
+        val startPos = in.tokenPos
+        accept[`package `]
+        val qid = qualId()
+        if (token.is[`{`]) {
+          val pkg = atPos(startPos, auto)(Pkg(qid, inBraces(topStatSeq())))
+          acceptStatSepOpt()
+          pkg +: bracelessPackageStats()
         } else {
-          val qid = qualId()
-
-          if (token.is[EOF]) {
-            refs += qid
-          } else if (token.is[StatSep]) {
-            next()
-            refs += qid
-            val (nrefs, nstats) = packageStats()
-            refs ++= nrefs
-            ts ++= nstats
-          } else {
-            ts += inBraces(Pkg(qid, topStatSeq()))
-            acceptStatSepOpt()
-            ts ++= topStatSeq()
-          }
+          List(atPos(startPos, auto)(Pkg(qid, bracelessPackageStats())))
         }
+      } else if (token.is[`{`]) {
+        inBraces(topStatSeq())
       } else {
-        ts ++= topStatSeq()
+        topStatSeq()
       }
-      (refs.toList, ts.toList)
     }
-
-    val (refs, stats) = packageStats()
-    refs match {
-      case Nil          => Source(stats)
-      case init :+ last => Source(init.foldRight(Pkg(last, stats)) { (ref, acc) => Pkg(ref, acc :: Nil) } :: Nil)
+    if (token.is[`package `] && !ahead(token.is[`object`])) {
+      val startPos = in.tokenPos
+      accept[`package `]
+      Source(List(atPos(startPos, auto)(Pkg(qualId(), bracelessPackageStats()))))
+    } else {
+      Source(topStatSeq())
     }
   }
 }
