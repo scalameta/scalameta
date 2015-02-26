@@ -2127,12 +2127,13 @@ private[meta] abstract class AbstractParser { parser =>
    *  }}}
    */
   def funDefOrDclOrSecondaryCtor(mods: List[Mod]): Stat = {
-    if (ahead(token.isNot[`this`])) funDefRest(mods, termName())
+    if (ahead(token.isNot[`this`])) funDefRest(mods)
     else secondaryCtor(mods)
   }
 
-  def funDefRest(mods: List[Mod], name: Term.Name): Stat = atPos(mods, auto) {
+  def funDefRest(mods: List[Mod]): Stat = atPos(mods, auto) {
     accept[`def`]
+    val name = termName()
     def warnProcedureDeprecation =
       deprecationWarning(s"Procedure syntax is deprecated. Convert procedure `$name` to method by adding `: Unit`.", at = name)
     val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
