@@ -1069,7 +1069,7 @@ private[meta] abstract class AbstractParser { parser =>
       val thenp = expr()
       if (token.is[`else`]) { next(); Term.If(cond, thenp, expr()) }
       else if (token.is[`;`] && ahead { token.is[`else`] }) { next(); next(); Term.If(cond, thenp, expr()) }
-      else { Term.If(cond, thenp, Lit.Unit()) }
+      else { Term.If(cond, thenp, atPos(in.tokenPos, in.prevTokenPos)(Lit.Unit())) }
     case _: `try` =>
       next()
       val body: Term = token match {
