@@ -39,6 +39,8 @@ object Origin {
   }
 
   // TODO: also include information about the transformer
+  // TODO: tokens should be more complicated than just a forwarder to tree.origin.tokens
+  // if we take a tree, then replace one of its subnodes with a synthetic subnode, then we've just lost tokens
   @leaf class Transformed(tree: Tree) extends Origin {
     def input = tree.origin.input
     def dialect = tree.origin.dialect
