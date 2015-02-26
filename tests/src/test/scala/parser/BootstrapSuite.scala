@@ -11,7 +11,7 @@ class BootstrapSuite extends ParseSuite {
   if (isProjectRoot(dir)) {
     def loop(dir: File): Unit = {
       def bootstrapTest(src: File): Unit = {
-        test(src.getAbsolutePath) {
+        test("tokenize " + src.getAbsolutePath) {
           import scala.meta._
           import scala.meta.dialects.Scala211
           val toks = src.tokens
@@ -43,6 +43,38 @@ class BootstrapSuite extends ParseSuite {
             println("ACTUAL: \n" + toks.map(_.show[Code]).mkString)
           }
           assert(!isFail)
+        }
+        test("parse " + src.getAbsolutePath) {
+          try {
+            import scala.meta._
+            import scala.meta.dialects.Scala211
+            val tree = src.parse[Source]
+            // check #1: everything's positioned
+            def check(tree: Tree): Boolean = {
+              def loop(x: Any): Boolean = x match {
+                case x: Tree => check(x)
+                case x: ::[_] => x.forall(loop)
+                case x: Some[_] => loop(x.get)
+                case x => true
+              }
+              tree.origin match {
+                case _: Origin.Parsed => tree.productIterator.toList.forall(loop)
+                case _ => false
+              }
+            }
+            if (!check(tree)) {
+              import scala.meta.ui.Positions.Colorful
+              println(tree.show[Positions])
+              assert(false)
+            }
+            // check #2: everything's covered
+            val codec = scala.io.Codec(java.nio.charset.Charset.forName("UTF-8"))
+            val content = scala.io.Source.fromFile(src)(codec).mkString
+            assert(tree.origin.start == 0)
+            assert(tree.origin.end == content.length - 1)
+          } catch {
+            case ex: scala.meta.ui.Exception if ex.msg.contains("XML literals are not supported") => pending
+          }
         }
       }
       dir.listFiles.filter(_.isFile).filter(_.getName.endsWith(".scala")).map(bootstrapTest)
