@@ -24,9 +24,9 @@ object Origin {
   @leaf class Parsed(input: Input, dialect: Dialect, startTokenPos: Int, endTokenPos: Int) extends Origin {
     private implicit val thisDialect: Dialect = this.dialect
     require(input.tokens.last.is[Token.EOF])
-    require(0 <= startTokenPos && startTokenPos < input.tokens.length - 1)
-    require(0 <= endTokenPos && endTokenPos < input.tokens.length - 1)
-    require(startTokenPos <= endTokenPos + 1)
+    require(0 <= startTokenPos && startTokenPos < input.tokens.length - 1 && debug(startTokenPos, input.tokens.length))
+    require(0 <= endTokenPos && endTokenPos < input.tokens.length - 1 && debug(endTokenPos, input.tokens.length))
+    require(startTokenPos <= endTokenPos + 1 && debug(startTokenPos, endTokenPos))
     val start = input.tokens.apply(startTokenPos).start
     val end = input.tokens.apply(endTokenPos).end
   }

@@ -292,11 +292,12 @@ private[meta] abstract class AbstractParser { parser =>
       case AutoPos => in.tokenPos
     }
     val result = body
-    val endTokenPos = end match {
+    var endTokenPos = end match {
       case TokenPos(tokenPos) => tokenPos
       case TreePos(tree) => tree.origin.require[Origin.Parsed].endTokenPos
       case AutoPos => in.prevTokenPos
     }
+    if (endTokenPos < startTokenPos) endTokenPos = startTokenPos - 1
     result.origin match {
       case Origin.Parsed(_, _, startTokenPos0, endTokenPos0) if startTokenPos == startTokenPos0 && endTokenPos == endTokenPos0 => result
       case _ => result.internalCopy(origin = Origin.Parsed(input, dialect, startTokenPos, endTokenPos)).asInstanceOf[T]
