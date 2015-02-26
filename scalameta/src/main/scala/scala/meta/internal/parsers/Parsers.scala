@@ -246,13 +246,6 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) exte
 
   val tokens = input.tokens
   var in: TokenIterator = new CrazyTokenIterator()
-
-  /** the markup parser */
-  // private[this] lazy val xmlp = new MarkupParser(this, preserveWS = true)
-  // object symbXMLBuilder extends SymbolicXMLBuilder(this, preserveWS = true)
-  // TODO: implement XML support
-  def xmlLiteral(): Term = ??? //xmlp.xLiteral
-  def xmlLiteralPattern(): Pat = ??? // xmlp.xLiteralPattern
 }
 
 private[meta] class Location private(val value: Int) extends AnyVal
@@ -1242,7 +1235,7 @@ private[meta] abstract class AbstractParser { parser =>
         atPos(op, auto)(Term.ApplyUnary(op, simpleExpr()))
     }
 
-  def xmlLiteral(): Term
+  def xmlLiteral(): Term = syntaxError("XML literals are not supported", at = in.token)
 
   /** {{{
    *  SimpleExpr    ::= new (ClassTemplate | TemplateBody)
@@ -1738,7 +1731,7 @@ private[meta] abstract class AbstractParser { parser =>
     if (token.is[`)`]) Nil
     else seqPatterns()
   }
-  def xmlLiteralPattern(): Pat
+  def xmlLiteralPattern(): Pat = syntaxError("XML literals are not supported", at = in.token)
 
 /* -------- MODIFIERS and ANNOTATIONS ------------------------------------------- */
 
