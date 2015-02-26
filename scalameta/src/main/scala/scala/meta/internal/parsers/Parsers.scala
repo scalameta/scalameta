@@ -1133,12 +1133,12 @@ private[meta] abstract class AbstractParser { parser =>
       next()
       implicitClosure(location)
     case _ =>
-      var t: Term = postfixExpr()
+      var t: Term = autoPos(postfixExpr())
       if (token.is[`=`]) {
         t match {
           case ref: Term.Ref =>
             next()
-            t = Term.Assign(ref, expr())
+            t = atPos(ref, auto)(Term.Assign(ref, expr()))
           case app: Term.Apply =>
             def decompose(term: Term): (Term, List[List[Term.Arg]]) = term match {
               case Term.Apply(fun, args) =>
@@ -1149,24 +1149,24 @@ private[meta] abstract class AbstractParser { parser =>
             }
             val (core, argss) = decompose(app)
             next()
-            t = Term.Update(core, argss, expr())
+            t = atPos(core, auto)(Term.Update(core, argss, expr()))
           case _ =>
         }
       } else if (token.is[`:`]) {
         next()
         if (token.is[`@`]) {
-          t = Term.Annotate(t, annots(skipNewLines = false))
+          t = atPos(t, auto)(Term.Annotate(t, annots(skipNewLines = false)))
         } else {
           t = {
             val tpt = typeOrInfixType(location)
             // this does not correspond to syntax, but is necessary to
             // accept closures. We might restrict closures to be between {...} only.
-            Term.Ascribe(t, tpt)
+            atPos(t, tpt)(Term.Ascribe(t, tpt))
           }
         }
       } else if (token.is[`match`]) {
         next()
-        t = Term.Match(t, inBracesOrNil(caseClauses()))
+        t = atPos(t, auto)(Term.Match(t, inBracesOrNil(caseClauses())))
       }
       // in order to allow anonymous functions as statements (as opposed to expressions) inside
       // templates, we have to disambiguate them from self type declarations - bug #1565
@@ -1178,7 +1178,7 @@ private[meta] abstract class AbstractParser { parser =>
       }
       if (token.is[`=>`] && (location != InTemplate || lhsIsTypedParamList)) {
         next()
-        t = Term.Function(convertToParams(t), if (location != InBlock) expr() else block())
+        t = atPos(t, auto)(Term.Function(convertToParams(t), if (location != InBlock) expr() else block()))
       }
       t
   })
