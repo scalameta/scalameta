@@ -15,7 +15,7 @@ object build extends Build {
     publishArtifact in Test := false,
     scalacOptions ++= Seq("-deprecation", "-feature", "-optimise", "-unchecked"),
     scalacOptions in (Compile, doc) ++= Seq("-skip-packages", "scala.meta.internal.ast:scala.meta.internal.hygiene"),
-    scalacOptions in (Compile, doc) ++= Seq("-implicits", "-implicits-hide:.,scala.meta.syntactic.Api.XtensionOriginLike,scala.meta.ui.Api.XtensionShow"),
+    scalacOptions in (Compile, doc) ++= Seq("-implicits", "-implicits-hide:.,scala.meta.syntactic.Api.XtensionInputLike,scala.meta.ui.Api.XtensionShow"),
     scalacOptions in (Compile, doc) ++= Seq("-groups"),
     parallelExecution in Test := false, // hello, reflection sync!!
     logBuffered := false,

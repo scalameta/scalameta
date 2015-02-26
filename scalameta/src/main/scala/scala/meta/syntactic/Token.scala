@@ -138,7 +138,7 @@ object Token {
   @token class `\r`(input: Input, start: Int) extends Whitespace
   @token class `\n`(input: Input, start: Int) extends Whitespace with StatSep with CantStartStat
   // TODO: \n\n is a virtual token emitted by TokIterator to appease the semi-ported scalac parser
-  // it will never occur in a token stream produced by RichOriginLike.tokens
+  // it will never occur in a token stream produced by XtensionInputLike.tokens
   @token class `\n\n`(input: Input, start: Int) extends Whitespace with StatSep with CantStartStat
   @token class `\f`(input: Input, start: Int) extends Whitespace
 

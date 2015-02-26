@@ -40,8 +40,8 @@ private[meta] trait Api {
     implicit def parseSource(implicit dialect: Dialect): Parse[Source] = apply(input => new Parser(input).parseSource())
   }
 
-  implicit class XtensionOriginLike[T](originLike: T) {
-    def parse[U](implicit convert: Convert[T, Input], dialect: Dialect, parse: Parse[U]): U = parse(convert(originLike))
-    def tokens(implicit convert: Convert[T, Input], dialect: Dialect): Vector[Token] = tokenize(convert(originLike))
+  implicit class XtensionInputLike[T](inputLike: T) {
+    def parse[U](implicit convert: Convert[T, Input], dialect: Dialect, parse: Parse[U]): U = parse(convert(inputLike))
+    def tokens(implicit convert: Convert[T, Input], dialect: Dialect): Vector[Token] = tokenize(convert(inputLike))
   }
 }
