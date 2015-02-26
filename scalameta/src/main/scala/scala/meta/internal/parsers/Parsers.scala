@@ -2689,13 +2689,14 @@ private[meta] abstract class AbstractParser { parser =>
    *  }}}
    */
   def compilationUnit(): Source = autoPos {
+    def inBracelessPackage() = token.is[`package `] && !ahead(token.is[`object`]) && ahead{ qualId(); token.isNot[`{`] }
     def bracelessPackageStats(): Seq[Stat] = {
       if (token.is[EOF]) {
         Nil
       } else if (token.is[StatSep]) {
         next()
         bracelessPackageStats()
-      } else if (token.is[`package `] && ahead(token.is[`object`])) {
+      } else if (token.is[`package `] && !ahead(token.is[`object`])) {
         val startPos = in.tokenPos
         accept[`package `]
         val qid = qualId()
@@ -2712,7 +2713,7 @@ private[meta] abstract class AbstractParser { parser =>
         topStatSeq()
       }
     }
-    if (token.is[`package `] && !ahead(token.is[`object`])) {
+    if (inBracelessPackage) {
       val startPos = in.tokenPos
       accept[`package `]
       Source(List(atPos(startPos, auto)(Pkg(qualId(), bracelessPackageStats()))))
