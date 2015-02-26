@@ -8,7 +8,7 @@ import scala.{meta => api}
 import scala.meta.internal.{ast => impl}
 import impl._
 
-// NOTE: Hygienic comparison operates exactly like structural comparion
+// NOTE: Hygienic comparison operates exactly like structural comparison
 // with a single exception of refs being treated differently, namely:
 // 1) some structurally unequal refs (even having different types!) may compare equal when they refer to same defns
 // 2) some structurally equal refs may compare unequal when they refer to different defns

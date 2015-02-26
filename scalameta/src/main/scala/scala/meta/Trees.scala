@@ -7,6 +7,7 @@ package scala.meta {
   @root trait Tree extends Product {
     type ThisType <: Tree
     def parent: Option[Tree]
+    def origin: Origin
     final override def canEqual(that: Any): Boolean = that.isInstanceOf[Tree]
     final override def equals(that: Any): Boolean = that match { case that: Tree => scala.meta.internal.hygiene.equals(this, that); case _ => false }
     final override def hashCode: Int = scala.meta.internal.hygiene.hashcode(this)
@@ -72,7 +73,7 @@ package scala.meta {
   @branch trait Enumerator extends Tree
   @branch trait Importee extends Tree with Ref
   @branch trait Case extends Tree with Scope
-  @branch trait Source extends Tree
+  @branch trait Source extends Tree with Stat
 }
 
 package scala.meta.internal.ast {
@@ -480,7 +481,7 @@ package scala.meta.internal.ast {
 
   @ast class Case(pat: Pat, cond: Option[Term], body: Term.Block) extends api.Case with Tree with Scope
 
-  @ast class Source(stats: Seq[Stat]) extends api.Source with Tree {
+  @ast class Source(stats: Seq[Stat]) extends api.Source with Tree with Stat {
     require(stats.forall(_.isTopLevelStat))
   }
 }

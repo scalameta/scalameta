@@ -9,14 +9,13 @@ import scala.language.postfixOps
 import mutable.{ ListBuffer, ArrayBuffer }
 import Chars._
 import LegacyToken._
-import scala.meta.Origin
 
-private[meta] class LegacyScanner(val origin: Origin, decodeUni: Boolean = true)(implicit val dialect: Dialect) {
+private[meta] class LegacyScanner(val input: Input, decodeUni: Boolean = true)(implicit val dialect: Dialect) {
   val curr: LegacyTokenData   = new LegacyTokenData {}
   val next: LegacyTokenData   = new LegacyTokenData {}
   val prev: LegacyTokenData   = new LegacyTokenData {}
-  val reader: CharArrayReader = new CharArrayReader(origin.content, reporter.readerError, decodeUni)
-  val reporter: Reporter      = Reporter(() => curr.offset)
+  val reader: CharArrayReader = new CharArrayReader(input.content, reporter.readerError, decodeUni)
+  val reporter: Reporter      = Reporter()
 
   import curr._, reader._, reporter._
 
@@ -46,7 +45,7 @@ private[meta] class LegacyScanner(val origin: Origin, decodeUni: Boolean = true)
   @tailrec final def skipNestedComments(): Unit = ch match {
     case '/' => maybeOpen() ; skipNestedComments()
     case '*' => if (!maybeClose()) skipNestedComments()
-    case SU  => incompleteInputError("unclosed comment")
+    case SU  => incompleteInputError("unclosed comment", at = offset)
     case _   => putCommentChar() ; skipNestedComments()
   }
   def skipDocComment(): Unit = skipNestedComments()
@@ -89,7 +88,7 @@ private[meta] class LegacyScanner(val origin: Origin, decodeUni: Boolean = true)
   def resume(lastCode: LegacyToken) = {
     token = lastCode
     if (next.token != EMPTY)
-      syntaxError("unexpected end of input: possible missing '}' in XML block")
+      syntaxError("unexpected end of input: possible missing '}' in XML block", at = offset)
 
     nextToken()
   }
@@ -120,7 +119,7 @@ private[meta] class LegacyScanner(val origin: Origin, decodeUni: Boolean = true)
         token = kw2legacytoken(name)
         if (token == IDENTIFIER) {
           if (emitIdentifierDeprecationWarnings)
-            deprecationWarning(s"$name is now a reserved word; usage as an identifier is deprecated")
+            deprecationWarning(s"$name is now a reserved word; usage as an identifier is deprecated", at = token)
         }
       }
     }
@@ -405,7 +404,7 @@ private[meta] class LegacyScanner(val origin: Origin, decodeUni: Boolean = true)
               token = CHARLIT
               setStrVal()
             } else {
-              syntaxError("unclosed character literal")
+              syntaxError("unclosed character literal", at = offset)
             }
           }
         }
@@ -436,7 +435,7 @@ private[meta] class LegacyScanner(val origin: Origin, decodeUni: Boolean = true)
       case SU =>
         if (isAtEnd) token = EOF
         else {
-          syntaxError("illegal character")
+          syntaxError("illegal character", at = offset)
           nextChar()
         }
       case _ =>
@@ -454,7 +453,7 @@ private[meta] class LegacyScanner(val origin: Origin, decodeUni: Boolean = true)
             nextChar()
             getOperatorRest()
           } else {
-            syntaxError("illegal character '" + ("" + '\\' + 'u' + "%04x".format(ch.toInt)) + "'")
+            syntaxError("illegal character '" + ("" + '\\' + 'u' + "%04x".format(ch.toInt)) + "'", at = offset)
             nextChar()
           }
         }
@@ -470,9 +469,9 @@ private[meta] class LegacyScanner(val origin: Origin, decodeUni: Boolean = true)
     if (ch == '`') {
       nextChar()
       finishNamed(BACKQUOTED_IDENT)
-      if (name.length == 0) syntaxError("empty quoted identifier")
+      if (name.length == 0) syntaxError("empty quoted identifier", at = offset)
     }
-    else syntaxError("unclosed quoted identifier")
+    else syntaxError("unclosed quoted identifier", at = offset)
   }
 
   private def getIdentRest(): Unit = (ch: @switch) match {
@@ -554,7 +553,7 @@ private[meta] class LegacyScanner(val origin: Origin, decodeUni: Boolean = true)
       setStrVal()
       nextChar()
       token = STRINGLIT
-    } else syntaxError("unclosed string literal")
+    } else syntaxError("unclosed string literal", at = offset)
   }
 
   private def getRawStringLit(): Unit = {
@@ -566,7 +565,7 @@ private[meta] class LegacyScanner(val origin: Origin, decodeUni: Boolean = true)
       } else
         getRawStringLit()
     } else if (ch == SU) {
-      incompleteInputError("unclosed multi-line string literal")
+      incompleteInputError("unclosed multi-line string literal", at = offset)
     } else {
       putChar(ch)
       nextRawChar()
@@ -624,15 +623,15 @@ private[meta] class LegacyScanner(val origin: Origin, decodeUni: Boolean = true)
           next.token = kw2legacytoken(next.name)
         }
       } else {
-        syntaxError("invalid string interpolation: `$$', `$'ident or `$'BlockExpr expected")
+        syntaxError("invalid string interpolation: `$$', `$'ident or `$'BlockExpr expected", at = offset)
       }
     } else {
       val isUnclosedLiteral = !isUnicodeEscape && (ch == SU || (!multiLine && (ch == CR || ch == LF)))
       if (isUnclosedLiteral) {
         if (multiLine)
-          incompleteInputError("unclosed multi-line string literal")
+          incompleteInputError("unclosed multi-line string literal", at = offset)
         else
-          syntaxError("unclosed string literal")
+          syntaxError("unclosed string literal", at = offset)
       }
       else {
         putChar(ch)
@@ -767,7 +766,7 @@ private[meta] class LegacyScanner(val origin: Origin, decodeUni: Boolean = true)
 
   def checkNoLetter() {
     if (isIdentifierPart(ch) && ch >= ' ')
-      syntaxError("Invalid literal number")
+      syntaxError("Invalid literal number", at = offset)
   }
 
   /** Read a number into strVal and set base
@@ -801,7 +800,7 @@ private[meta] class LegacyScanner(val origin: Origin, decodeUni: Boolean = true)
       else {
         // Checking for base == 8 is not enough, because base = 8 is set
         // as soon as a 0 is read in `case '0'` of method fetchToken.
-        if (base == 8 && notSingleZero) syntaxError("Non-zero integral values may not have a leading zero.")
+        if (base == 8 && notSingleZero) syntaxError("Non-zero integral values may not have a leading zero.", at = offset)
         if (isL) {
           putChar(ch)
           setStrVal()

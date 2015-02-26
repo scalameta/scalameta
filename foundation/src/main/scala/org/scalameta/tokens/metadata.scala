@@ -26,7 +26,7 @@ class TokenMetadataMacros(val c: Context) {
         val ctor = T.tpe.typeSymbol.info.decls.collect{case m: MethodSymbol if m.isPrimaryConstructor => m}.head
         val argss = ctor.paramLists.map(_.map(p => {
           if (p.info =:= typeOf[String]) Literal(Constant(""))
-          else if (p.info.typeSymbol.fullName == "scala.meta.Origin") q"_root_.scala.meta.Origin.None"
+          else if (p.info.typeSymbol.fullName == "scala.meta.syntactic.Input") q"_root_.scala.meta.syntactic.Input.None"
           else gen.mkZero(p.info)
         }))
         q"new $T(...$argss).name"
