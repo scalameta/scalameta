@@ -486,4 +486,52 @@ class PublicSuite extends FunSuite {
       (??? : Tree).show[Semantics]
     """) === "")
   }
+
+  test("show[Positions] without import") {
+    assert(typecheckError("""
+      (??? : scala.meta.Tree).show[Positions]
+    """) === "not found: type Positions")
+  }
+
+  test("show[Positions] without dialect") {
+    assert(typecheckError("""
+      import scala.meta._
+      (??? : Tree).show[Positions]
+    """) === "don't know how to show[Positions] for scala.meta.Tree (if you're prettyprinting a tree, be sure to import a dialect, e.g. scala.meta.dialects.Scala211)")
+  }
+
+  test("show[Positions] when everything's correct (static dialect)") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      (??? : Tree).show[Positions]
+    """) === "")
+  }
+
+  test("show[Positions] when everything's correct (dynamic dialect)") {
+    assert(typecheckError("""
+      import scala.meta._
+      implicit val dialect: scala.meta.Dialect = ???
+      (??? : Tree).show[Positions]
+    """) === "")
+  }
+
+  test("show[Positions] when everything's correct (static context)") {
+    assert(typecheckError("""
+      import scala.meta._
+      trait MyContext extends scala.meta.semantic.Context {
+        def dialect: scala.meta.dialects.Scala211.type = scala.meta.dialects.Scala211
+      }
+      implicit val c: MyContext = ???
+      (??? : Tree).show[Positions]
+    """) === "")
+  }
+
+  test("show[Positions] when everything's correct (dynamic context)") {
+    assert(typecheckError("""
+      import scala.meta._
+      implicit val c: scala.meta.semantic.Context = ???
+      (??? : Tree).show[Positions]
+    """) === "")
+  }
 }

@@ -11,6 +11,7 @@ private[meta] trait Api {
   type Code[T] = scala.meta.ui.Code[T]
   type Raw[T] = scala.meta.ui.Raw[T]
   type Semantics[T] = scala.meta.ui.Semantics[T]
+  type Positions[T] = scala.meta.ui.Positions[T]
 
   // NOTE: I wish there was a way to avoid duplication and ambiguities wrt org.scalameta.show
   implicit class XtensionShow[T](x: T) {
