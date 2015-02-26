@@ -157,5 +157,23 @@ object build extends Build {
     libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
     libraryDependencies += "org.scalameta" % "scalameta_2.11" % "0.1.0-SNAPSHOT",
     packagedArtifacts := Map.empty
-  ) dependsOn (interpreter_)
+  ) settings (
+    exposeClasspaths("tests"): _*
+  )dependsOn (interpreter_)
+
+  def exposeClasspaths(projectName: String) = Seq(
+    fullClasspath in Test := {
+      val defaultValue = (fullClasspath in Test).value
+      val classpath = defaultValue.files.map(_.getAbsolutePath)
+      val scalaLibrary = classpath.map(_.toString).find(_.contains("scala-library")).get
+      System.setProperty("sbt.paths.scala-library.jar", scalaLibrary)
+      System.setProperty("sbt.paths.tests.classpath", classpath.mkString(java.io.File.pathSeparatorChar.toString))
+      defaultValue
+    },
+    resourceDirectory in Test := {
+      val defaultValue = (resourceDirectory in Test).value
+      System.setProperty("sbt.paths.tests.resources", defaultValue.getAbsolutePath)
+      defaultValue
+    }
+  )
 }
