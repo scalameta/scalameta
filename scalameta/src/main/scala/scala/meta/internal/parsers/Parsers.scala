@@ -1020,8 +1020,11 @@ private[meta] abstract class AbstractParser { parser =>
     if (location == Local) typ()
     else startInfixType()
 
-  def annotTypeRest(t: Type): Type =
-    atPos(t, auto)(Type.Annotate(t, annots(skipNewLines = false)))
+  def annotTypeRest(t: Type): Type = atPos(t, auto) {
+    val annots = this.annots(skipNewLines = false)
+    if (annots.isEmpty) t
+    else Type.Annotate(t, annots)
+  }
 
 /* ----------- EXPRESSIONS ------------------------------------------------ */
 
