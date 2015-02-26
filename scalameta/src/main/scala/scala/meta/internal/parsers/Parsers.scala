@@ -609,7 +609,7 @@ private[meta] abstract class AbstractParser { parser =>
       case (t: Term) :: Nil => t
       case other => unreachable(debug(other))
     }
-    atPos(qual, endPos)(Term.Select(qual, opinfo.operator)) :: Nil
+    atPos(qual, opinfo.operator)(Term.Select(qual, opinfo.operator)) :: Nil
   }
 
   def finishBinaryOp[T: OpCtx](opinfo: OpInfo[T], rhs: T, endPos: Pos): T = opctx.binop(opinfo, rhs, endPos)
