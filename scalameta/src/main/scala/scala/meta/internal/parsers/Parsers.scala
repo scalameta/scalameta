@@ -300,6 +300,7 @@ private[meta] abstract class AbstractParser { parser =>
     if (endTokenPos < startTokenPos) endTokenPos = startTokenPos - 1
     result.origin match {
       case Origin.Parsed(_, _, startTokenPos0, endTokenPos0) if startTokenPos == startTokenPos0 && endTokenPos == endTokenPos0 => result
+      case Origin.Parsed(_, _, _, _) => result
       case _ => result.internalCopy(origin = Origin.Parsed(input, dialect, startTokenPos, endTokenPos)).asInstanceOf[T]
     }
   }
@@ -1059,8 +1060,8 @@ private[meta] abstract class AbstractParser { parser =>
   def expr(): Term = expr(Local)
 
   // TODO: when parsing `(2 + 3)`, do we want the ApplyInfix's position to include parentheses?
-  // if yes, then nothing has to change here
-  // if no, we need eschew autoPos here, because it forces those parentheses on the result of calling prefixExpr
+  // if yes, then we need to allow atPos to rewrite positions
+  // if no, nothing has to change here
   def expr(location: Location): Term = autoPos(token match {
     case _: `if` =>
       next()
