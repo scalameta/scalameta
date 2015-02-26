@@ -19,7 +19,7 @@ private[meta] object Tokens {
     def text(x: Tree) = {
       x.origin match {
         case Origin.None => s("<Origin.None>")
-        case Origin.Parsed(_, _, _, _) => s(x.origin.tokens.map(_.code).mkString)
+        case Origin.Parsed(_, _, start, end) => s(x.origin.tokens.map(_.code).mkString)
         case Origin.Transformed(_) => s("<Origin.Transformed>")
       }
     }

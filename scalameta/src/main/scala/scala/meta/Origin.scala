@@ -10,7 +10,7 @@ import org.scalameta.invariants._
   def dialect: Dialect
   def start: Int
   def end: Int
-  def tokens: Seq[Token] = input.tokens(dialect).slice(start, end + 1)
+  def tokens: Seq[Token]
 }
 
 object Origin {
@@ -19,6 +19,7 @@ object Origin {
     val dialect = scala.meta.dialects.Scala211
     val start = 0
     val end = -1
+    def tokens = Nil
   }
 
   @leaf class Parsed(input: Input, dialect: Dialect, startTokenPos: Int, endTokenPos: Int) extends Origin {
@@ -34,6 +35,7 @@ object Origin {
     private implicit lazy val thisDialect: Dialect = this.dialect
     val start = input.tokens.apply(startTokenPos).start
     val end = input.tokens.apply(endTokenPos).end
+    def tokens: Seq[Token] = input.tokens(dialect).slice(startTokenPos, endTokenPos + 1)
   }
 
   // TODO: also include information about the transformer
@@ -42,5 +44,6 @@ object Origin {
     def dialect = tree.origin.dialect
     def start = tree.origin.start
     def end = tree.origin.end
+    def tokens = tree.origin.tokens
   }
 }
