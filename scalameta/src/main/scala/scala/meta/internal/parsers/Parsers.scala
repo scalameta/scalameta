@@ -2149,12 +2149,12 @@ private[meta] abstract class AbstractParser { parser =>
     if (token.is[StatSep] || token.is[`}`]) {
       if (restype.isEmpty) {
         warnProcedureDeprecation
-        Decl.Def(mods, name, tparams, paramss, Type.Name("Unit")) // TODO: hygiene!
+        Decl.Def(mods, name, tparams, paramss, atPos(in.tokenPos, in.prevTokenPos)(Type.Name("Unit"))) // TODO: hygiene!
       } else
         Decl.Def(mods, name, tparams, paramss, restype.get)
     } else if (restype.isEmpty && token.is[`{`]) {
       warnProcedureDeprecation
-      Defn.Def(mods, name, tparams, paramss, Some(Type.Name("Unit")), expr()) // TODO: hygiene!
+      Defn.Def(mods, name, tparams, paramss, Some(atPos(in.tokenPos, in.prevTokenPos)(Type.Name("Unit"))), expr()) // TODO: hygiene!
     } else {
       var isMacro = false
       val rhs = {
