@@ -956,13 +956,13 @@ private[meta] abstract class AbstractParser { parser =>
   }
 
   def interpolate[Ctx <: Tree, Ret <: Tree](arg: () => Ctx, result: (Term.Name, List[Lit.String], List[Ctx]) => Ret): Ret = autoPos {
-    val interpolator = atPos(in.tokenPos, auto)(Term.Name(token.require[Interpolation.Id].code)) // termName() for INTERPOLATIONID
+    val interpolator = atPos(in.tokenPos, in.tokenPos)(Term.Name(token.require[Interpolation.Id].code)) // termName() for INTERPOLATIONID
     next()
     val partsBuf = new ListBuffer[Lit.String]
     val argsBuf = new ListBuffer[Ctx]
     def loop(): Unit = token match {
       case token: Interpolation.Start => next(); loop()
-      case token: Interpolation.Part => partsBuf += Lit.String(token.code); next(); loop()
+      case token: Interpolation.Part => partsBuf += atPos(in.tokenPos, in.tokenPos)(Lit.String(token.code)); next(); loop()
       case token: Interpolation.SpliceStart => next(); argsBuf += arg(); loop()
       case token: Interpolation.SpliceEnd => next(); loop()
       case token: Interpolation.End => next(); // just return
