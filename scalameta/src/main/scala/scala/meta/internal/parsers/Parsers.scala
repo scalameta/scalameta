@@ -1271,7 +1271,7 @@ private[meta] abstract class AbstractParser { parser =>
           path()
         case _: `_ ` =>
           next()
-          Term.Placeholder()
+          atPos(in.prevTokenPos, in.prevTokenPos)(Term.Placeholder())
         case _: `(` =>
           makeTupleTermParens(commaSeparated(expr()))
         case _: `{` =>
@@ -1280,7 +1280,7 @@ private[meta] abstract class AbstractParser { parser =>
         case _: `new` =>
           canApply = false
           next()
-          Term.New(template())
+          atPos(in.prevTokenPos, auto)(Term.New(template()))
         case _ =>
           syntaxError(s"illegal start of simple expression", at = token)
       }
