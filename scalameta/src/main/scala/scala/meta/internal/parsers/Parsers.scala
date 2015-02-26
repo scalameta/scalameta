@@ -181,7 +181,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) exte
     var sepRegions: List[Char] = Nil
   ) extends TokenIterator {
     require(tokens.nonEmpty)
-    if (pos == -1) next() // TODO: only do next() if we've been just created. forks can't go for next()
+    if (pos == -1) next() // NOTE: only do next() if we've been just created. forks can't go for next()
     def isTrivia(token: Token) = !nonTrivia(token)
     def nonTrivia(token: Token) = token.isNot[Whitespace] && token.isNot[Comment]
     def hasNext: Boolean = tokens.drop(pos + 1).exists(nonTrivia)
@@ -521,7 +521,7 @@ private[meta] abstract class AbstractParser { parser =>
   }
 
   def makeTupleTerm(body: List[Term]): Term = {
-    // TODO: we can't make this autoPos, unlike makeTupleTermParens
+    // NOTE: we can't make this autoPos, unlike makeTupleTermParens
     // see comments to makeTupleType for discussion
     makeTuple[Term](body, () => Lit.Unit(), Term.Tuple(_))
   }
@@ -532,7 +532,7 @@ private[meta] abstract class AbstractParser { parser =>
 
   // TODO: make zero tuple for types Lit.Unit() too?
   def makeTupleType(body: List[Type]): Type = {
-    // TODO: we can't make this autoPos, unlike makeTuplePatParens
+    // NOTE: we can't make this autoPos, unlike makeTuplePatParens
     // because, by the time control reaches this method, we're already past the closing parenthesis
     // therefore, we'll rely on our callers to assign positions to the tuple we return
     // we can't do atPos(body.first, body.last) either, because that wouldn't account for parentheses
