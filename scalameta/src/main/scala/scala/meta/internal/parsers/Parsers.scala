@@ -2277,8 +2277,9 @@ private[meta] abstract class AbstractParser { parser =>
   def primaryCtor(owner: TemplateOwner): Ctor.Primary = autoPos {
     if (!owner.isClass) return Ctor.Primary(Nil, atPos(in.tokenPos, in.prevTokenPos)(Ctor.Name("this")), Nil)
     val mods = constructorAnnots() ++ accessModifierOpt()
+    val name = atPos(in.tokenPos, in.prevTokenPos)(Ctor.Name("this"))
     val paramss = paramClauses(ownerIsType = true, owner == OwnedByCaseClass)
-    Ctor.Primary(mods, atPos(in.tokenPos, in.prevTokenPos)(Ctor.Name("this")), paramss)
+    Ctor.Primary(mods, name, paramss)
   }
 
   def secondaryCtor(mods: List[Mod]): Ctor.Secondary = atPos(mods, auto) {
