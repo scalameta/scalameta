@@ -272,7 +272,7 @@ private[meta] abstract class AbstractParser { parser =>
   def nextTwice() = { next(); next() }
   def nextThrice() = { next(); next(); next() }
   val input: Input
-  val dialect: Dialect
+  implicit val dialect: Dialect
 
   import scala.language.implicitConversions
   sealed trait Pos
