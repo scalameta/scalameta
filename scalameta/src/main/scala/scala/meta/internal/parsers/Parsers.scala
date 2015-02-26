@@ -275,6 +275,7 @@ private[meta] abstract class AbstractParser { parser =>
   implicit def treeToTreePos(tree: Tree): TreePos = TreePos(tree)
   implicit def optionTreeToPos(tree: Option[Tree]): Pos = tree.map(TreePos).getOrElse(AutoPos)
   implicit def modsToPos(mods: List[Mod]): Pos = mods.headOption.map(TreePos).getOrElse(AutoPos)
+  implicit class XtensionTreePos(tree: Tree) { def pos = treeToTreePos(tree) }
   case object AutoPos extends Pos
   def auto = AutoPos
 
@@ -551,48 +552,45 @@ private[meta] abstract class AbstractParser { parser =>
   }
 
   // TODO: couldn't make this final, because of a patmat warning
-  case class OpInfo[T: OpCtx](lhs: T, operator: Term.Name, targs: List[Type]) {
+  case class OpInfo[T: OpCtx](startPos: Pos, lhs: T, endPos: Pos, operator: Term.Name, targs: List[Type]) {
     def precedence = operator.precedence
   }
 
   sealed abstract class OpCtx[T] {
-    def opinfo(tree: T): OpInfo[T]
-    def binop(opinfo: OpInfo[T], rhs: T): T
+    def opinfo(startPos: Pos, tree: T, endPos: Pos): OpInfo[T]
+    def binop(opinfo: OpInfo[T], rhs: T, endPos: Pos): T
     var stack: List[OpInfo[T]] = Nil
     def head = stack.head
-    def push(top: T): Unit = stack ::= opinfo(top)
+    def push(startPos: Pos, top: T, endPos: Pos): Unit = stack ::= opinfo(startPos, top, endPos)
     def pop(): OpInfo[T] = try head finally stack = stack.tail
   }
   object OpCtx {
     implicit object `List Term.Arg Context` extends OpCtx[List[Term.Arg]] {
-      def opinfo(tree: List[Term.Arg]): OpInfo[List[Term.Arg]] = {
+      def opinfo(startPos: Pos, tree: List[Term.Arg], endPos: Pos): OpInfo[List[Term.Arg]] = {
         val name = termName()
         val targs = if (token.is[`[`]) exprTypeArgs() else Nil
-        OpInfo(tree, name, targs)
+        OpInfo(startPos, tree, endPos, name, targs)
       }
-      def binop(opinfo: OpInfo[List[Term.Arg]], rhs: List[Term.Arg]): List[Term.Arg] = {
-        // TODO: figure out the position here
-        val lhs = makeTupleTerm(opinfo.lhs map {
+      def binop(opinfo: OpInfo[List[Term.Arg]], rhs: List[Term.Arg], endPos: Pos): List[Term.Arg] = {
+        val lhs = atPos(opinfo.startPos, opinfo.endPos)(makeTupleTerm(opinfo.lhs map {
           case t: Term => t
           case other   => unreachable(debug(other, other.show[Raw]))
-        })
-        // TODO: figure out the position here
-        Term.ApplyInfix(lhs, opinfo.operator, opinfo.targs, rhs) :: Nil
+        }))
+        atPos(opinfo.startPos, endPos)(Term.ApplyInfix(lhs, opinfo.operator, opinfo.targs, rhs)) :: Nil
       }
     }
     implicit object `Pat Context` extends OpCtx[Pat] {
-      def opinfo(tree: Pat): OpInfo[Pat] = {
+      def opinfo(startPos: Pos, tree: Pat, endPos: Pos): OpInfo[Pat] = {
         val name = termName()
         if (token.is[`[`]) syntaxError("infix patterns cannot have type arguments", at = token)
-        OpInfo(tree, name, Nil)
+        OpInfo(startPos, tree, endPos, name, Nil)
       }
-      def binop(opinfo: OpInfo[Pat], rhs: Pat): Pat = {
+      def binop(opinfo: OpInfo[Pat], rhs: Pat, endPos: Pos): Pat = {
         val args = rhs match {
           case Pat.Tuple(args) => args.toList
           case _               => List(rhs)
         }
-        // TODO: figure out the position here
-        Pat.ExtractInfix(opinfo.lhs, opinfo.operator, args)
+        atPos(opinfo.startPos, endPos)(Pat.ExtractInfix(opinfo.lhs, opinfo.operator, args))
       }
     }
   }
@@ -606,23 +604,24 @@ private[meta] abstract class AbstractParser { parser =>
       syntaxError("left- and right-associative operators with same precedence may not be mixed", at = op)
   )
 
-  def finishPostfixOp(base: List[OpInfo[List[Term.Arg]]], opinfo: OpInfo[List[Term.Arg]]): List[Term.Arg] =
-    // TODO: figure out the position here
-    Term.Select(reduceStack(base, opinfo.lhs) match {
+  def finishPostfixOp(base: List[OpInfo[List[Term.Arg]]], opinfo: OpInfo[List[Term.Arg]], endPos: Pos): List[Term.Arg] = {
+    val qual = reduceStack(base, opinfo.lhs, endPos) match {
       case (t: Term) :: Nil => t
-      case other            => unreachable(debug(other))
-    }, opinfo.operator) :: Nil
+      case other => unreachable(debug(other))
+    }
+    atPos(qual, endPos)(Term.Select(qual, opinfo.operator)) :: Nil
+  }
 
-  def finishBinaryOp[T: OpCtx](opinfo: OpInfo[T], rhs: T): T = opctx.binop(opinfo, rhs)
+  def finishBinaryOp[T: OpCtx](opinfo: OpInfo[T], rhs: T, endPos: Pos): T = opctx.binop(opinfo, rhs, endPos)
 
-  def reduceStack[T: OpCtx](base: List[OpInfo[T]], top: T): T = {
+  def reduceStack[T: OpCtx](base: List[OpInfo[T]], top: T, endPos: Pos): T = {
     val opPrecedence = if (token.is[Ident]) termName(advance = false).precedence else 0
     val leftAssoc    = !token.is[Ident] || termName(advance = false).isLeftAssoc
 
-    reduceStack(base, top, opPrecedence, leftAssoc)
+    reduceStack(base, top, opPrecedence, leftAssoc, endPos)
   }
 
-  def reduceStack[T: OpCtx](base: List[OpInfo[T]], top: T, opPrecedence: Int, leftAssoc: Boolean): T = {
+  def reduceStack[T: OpCtx](base: List[OpInfo[T]], top: T, opPrecedence: Int, leftAssoc: Boolean, endPos: Pos): T = {
     def isDone          = opctx.stack == base
     def lowerPrecedence = !isDone && (opPrecedence < opctx.head.precedence)
     def samePrecedence  = !isDone && (opPrecedence == opctx.head.precedence)
@@ -635,7 +634,7 @@ private[meta] abstract class AbstractParser { parser =>
       if (!canReduce) top
       else {
         val info = opctx.pop()
-        loop(finishBinaryOp(info, top))
+        loop(finishBinaryOp(info, top, endPos))
       }
 
     loop(top)
@@ -1059,6 +1058,9 @@ private[meta] abstract class AbstractParser { parser =>
    */
   def expr(): Term = expr(Local)
 
+  // TODO: when parsing `(2 + 3)`, do we want the ApplyInfix's position to include parentheses?
+  // if yes, then nothing has to change here
+  // if no, we need eschew autoPos here, because it forces those parentheses on the result of calling prefixExpr
   def expr(location: Location): Term = autoPos(token match {
     case _: `if` =>
       next()
@@ -1206,16 +1208,28 @@ private[meta] abstract class AbstractParser { parser =>
     val ctx  = opctx[List[Term.Arg]]
     val base = ctx.stack
 
-    def loop(top: List[Term.Arg]): List[Term.Arg] =
+    def loop(startPos: Pos, top: List[Term.Arg], endPos: Pos): List[Term.Arg] = {
       if (!token.is[Ident]) top
       else {
-        ctx.push(reduceStack(base, top))
+        ctx.push(startPos, reduceStack(base, top, endPos), endPos)
         newLineOptWhenFollowing(_.is[ExprIntro])
-        if (token.is[ExprIntro]) loop(argumentExprsOrPrefixExpr())
-        else finishPostfixOp(base, ctx.pop())
+        if (token.is[ExprIntro]) {
+          val startToken1 = in.token
+          var startPos1: Pos = TokenPos(in.tokenPos)
+          val top1 = argumentExprsOrPrefixExpr()
+          var endPos1: Pos = TokenPos(in.prevTokenPos)
+          if (startToken1.isNot[`{`] && startToken1.isNot[`(`]) startPos1 = TreePos(top1.head)
+          if (startToken1.isNot[`{`] && startToken1.isNot[`(`]) endPos1 = TreePos(top1.head)
+          loop(startPos1, top1, endPos1)
+        } else {
+          finishPostfixOp(base, ctx.pop(), endPos)
+        }
       }
+    }
+    val top0 = prefixExpr() :: Nil
+    val top = loop(top0.head.pos, top0, top0.head.pos)
 
-    reduceStack(base, loop(prefixExpr() :: Nil)) match {
+    reduceStack(base, top, in.prevTokenPos) match {
       case (t: Term) :: Nil => t
       case other            => unreachable(debug(other))
     }
@@ -1606,9 +1620,9 @@ private[meta] abstract class AbstractParser { parser =>
         )
         case _ => None
       }
-      def loop(top: Pat): Pat = reduceStack(base, top) match {
-        case next if isIdentExcept("|") => ctx.push(next); loop(simplePattern(badPattern3))
-        case next                      => next
+      def loop(top: Pat): Pat = reduceStack(base, top, top.pos) match {
+        case next if isIdentExcept("|") => ctx.push(next.pos, next, next.pos); loop(simplePattern(badPattern3))
+        case next                       => next
       }
       checkWildStar getOrElse loop(top)
     }
@@ -1618,9 +1632,9 @@ private[meta] abstract class AbstractParser { parser =>
       def isDelimiter            = token.is[`)`] || token.is[`}`]
       def isCommaOrDelimiter     = isComma || isDelimiter
       val (isUnderscore, isStar) = opctx[Pat].stack match {
-        case OpInfo(Pat.Wildcard(), Term.Name("*"), _) :: _ => (true,   true)
-        case OpInfo(_, Term.Name("*"), _) :: _              => (false,  true)
-        case _                                              => (false, false)
+        case OpInfo(_, Pat.Wildcard(), _, Term.Name("*"), _) :: _ => (true,   true)
+        case OpInfo(_, _, _, Term.Name("*"), _) :: _              => (false,  true)
+        case _                                                    => (false, false)
       }
       def isSeqPatternClose = isUnderscore && isStar && isSequenceOK && isDelimiter
       val preamble = "bad simple pattern:"
