@@ -284,7 +284,6 @@ private[meta] abstract class AbstractParser { parser =>
   case object AutoPos extends Pos
   def auto = AutoPos
 
-  def atPos[T <: Tree](pos: Pos)(body: => T): T = atPos(pos, pos)(body)
   def atPos[T <: Tree](start: Pos, end: Pos)(body: => T): T = {
     val startTokenPos = start match {
       case TokenPos(tokenPos) => tokenPos
@@ -295,7 +294,7 @@ private[meta] abstract class AbstractParser { parser =>
     val endTokenPos = end match {
       case TokenPos(tokenPos) => tokenPos
       case TreePos(tree) => tree.origin.require[Origin.Parsed].endTokenPos
-      case AutoPos => if (in.tokenPos != startTokenPos) in.prevTokenPos else startTokenPos - 1
+      case AutoPos => in.prevTokenPos
     }
     result.internalCopy(origin = Origin.Parsed(input, dialect, startTokenPos, endTokenPos)).asInstanceOf[T]
   }
@@ -466,13 +465,13 @@ private[meta] abstract class AbstractParser { parser =>
   /** Convert tree to formal parameter. */
   def convertToParam(tree: Term): Option[Term.Param] = tree match {
     case name: Term.Name =>
-      Some(atPos(tree)(Term.Param(Nil, name, None, None)))
+      Some(atPos(tree, tree)(Term.Param(Nil, name, None, None)))
     case name: Term.Placeholder =>
-      Some(atPos(tree)(Term.Param(Nil, atPos(name)(Name.Anonymous()), None, None)))
+      Some(atPos(tree, tree)(Term.Param(Nil, atPos(name, name)(Name.Anonymous()), None, None)))
     case Term.Ascribe(name: Term.Name, tpt) =>
-      Some(atPos(tree)(Term.Param(Nil, name, Some(tpt), None)))
+      Some(atPos(tree, tree)(Term.Param(Nil, name, Some(tpt), None)))
     case Term.Ascribe(name: Term.Placeholder, tpt) =>
-      Some(atPos(tree)(Term.Param(Nil, atPos(name)(Name.Anonymous()), Some(tpt), None)))
+      Some(atPos(tree, tree)(Term.Param(Nil, atPos(name, name)(Name.Anonymous()), Some(tpt), None)))
     case Lit.Unit() =>
       None
     case other =>
@@ -481,9 +480,9 @@ private[meta] abstract class AbstractParser { parser =>
 
   def convertToTypeId(ref: Term.Ref): Option[Type] = ref match {
     case Term.Select(qual: Term.Ref, name) =>
-      Some(atPos(ref)(Type.Select(qual, atPos(name)(Type.Name(name.value)))))
+      Some(atPos(ref, ref)(Type.Select(qual, atPos(name, name)(Type.Name(name.value)))))
     case name: Term.Name =>
-      Some(atPos(name)(Type.Name(name.value)))
+      Some(atPos(name, name)(Type.Name(name.value)))
     case _ =>
       None
   }
@@ -531,6 +530,7 @@ private[meta] abstract class AbstractParser { parser =>
     // TODO: we can't make this autoPos, unlike makeTuplePatParens
     // because, by the time control reaches this method, we're already past the closing parenthesis
     // therefore, we'll rely on our callers to assign positions to the tuple we return
+    // we can't do atPos(body.first, body.last) either, because that wouldn't account for parentheses
     makeTuple[Type](body, () => unreachable, Type.Tuple(_))
   }
 
@@ -728,7 +728,7 @@ private[meta] abstract class AbstractParser { parser =>
     def simpleType(): Type = {
       simpleTypeRest(autoPos(token match {
         case _: `(`  => autoPos(makeTupleType(inParens(types())))
-        case _: `_ ` => next(); wildcardType()
+        case _: `_ ` => next(); atPos(in.prevTokenPos, auto)(Type.Placeholder(typeBounds()))
         case _       =>
           val ref: Term.Ref = path()
           if (token.isNot[`.`])
@@ -814,7 +814,7 @@ private[meta] abstract class AbstractParser { parser =>
   private def name[T <: Tree : AllowedName](ctor: String => T, advance: Boolean): T = token match {
     case token: Ident =>
       val name = token.code.stripPrefix("`").stripSuffix("`")
-      val res = atPos(in.tokenPos, in.tokenPos)(ctor(name))
+      val res = atPos(in.tokenPos, auto)(ctor(name))
       if (advance) next()
       res
     case _ =>
@@ -830,11 +830,11 @@ private[meta] abstract class AbstractParser { parser =>
    *  }}}
    */
   // TODO: this has to be rewritten
-  def path(thisOK: Boolean = true): Term.Ref = autoPos {
+  def path(thisOK: Boolean = true): Term.Ref = {
     def stop = token.isNot[`.`] || ahead { token.isNot[`this`] && token.isNot[`super`] && !token.is[Ident] }
     if (token.is[`this`]) {
       next()
-      val thisnone = Term.This(None)
+      val thisnone = atPos(in.prevTokenPos, auto)(Term.This(None))
       if (stop && thisOK) thisnone
       else {
         accept[`.`]
@@ -842,9 +842,9 @@ private[meta] abstract class AbstractParser { parser =>
       }
     } else if (token.is[`super`]) {
       next()
-      val superp = Term.Super(None, mixinQualifierOpt())
+      val superp = atPos(in.prevTokenPos, auto)(Term.Super(None, mixinQualifierOpt()))
       accept[`.`]
-      val supersel = Term.Select(superp, termName())
+      val supersel = atPos(superp, auto)(Term.Select(superp, termName()))
       if (stop) supersel
       else {
         next()
@@ -857,7 +857,7 @@ private[meta] abstract class AbstractParser { parser =>
         next()
         if (token.is[`this`]) {
           next()
-          val thisid = Term.This(Some(name.value))
+          val thisid = atPos(name, auto)(Term.This(Some(name.value)))
           if (stop && thisOK) thisid
           else {
             accept[`.`]
@@ -865,9 +865,9 @@ private[meta] abstract class AbstractParser { parser =>
           }
         } else if (token.is[`super`]) {
           next()
-          val superp = Term.Super(Some(name.value), mixinQualifierOpt())
+          val superp = atPos(name, auto)(Term.Super(Some(name.value), mixinQualifierOpt()))
           accept[`.`]
-          val supersel = Term.Select(superp, termName())
+          val supersel = atPos(superp, auto)(Term.Select(superp, termName()))
           if (stop) supersel
           else {
             next()
@@ -880,7 +880,7 @@ private[meta] abstract class AbstractParser { parser =>
     }
   }
 
-  def selector(t: Term): Term.Select = Term.Select(t, termName())
+  def selector(t: Term): Term.Select = atPos(t, auto)(Term.Select(t, termName()))
   def selectors(t: Term.Ref): Term.Ref ={
     val t1 = selector(t)
     if (token.is[`.`] && ahead { token.is[Ident] }) {
@@ -926,7 +926,7 @@ private[meta] abstract class AbstractParser { parser =>
    *                  | null
    *  }}}
    */
-  def literal(isNegated: Boolean = false): Lit = {
+  def literal(isNegated: Boolean = false): Lit = autoPos {
     val res = token match {
       case token: Literal.Char   => Lit.Char(token.value)
       case token: Literal.Int    => Lit.Int(token.value(isNegated))
@@ -944,8 +944,8 @@ private[meta] abstract class AbstractParser { parser =>
     res
   }
 
-  def interpolate[Ctx, Ret](arg: () => Ctx, result: (Term.Name, List[Lit.String], List[Ctx]) => Ret): Ret = {
-    val interpolator = Term.Name(token.require[Interpolation.Id].code) // termName() for INTERPOLATIONID
+  def interpolate[Ctx <: Tree, Ret <: Tree](arg: () => Ctx, result: (Term.Name, List[Lit.String], List[Ctx]) => Ret): Ret = autoPos {
+    val interpolator = atPos(in.tokenPos, auto)(Term.Name(token.require[Interpolation.Id].code)) // termName() for INTERPOLATIONID
     next()
     val partsBuf = new ListBuffer[Lit.String]
     val argsBuf = new ListBuffer[Ctx]
@@ -955,7 +955,7 @@ private[meta] abstract class AbstractParser { parser =>
       case token: Interpolation.SpliceStart => next(); argsBuf += arg(); loop()
       case token: Interpolation.SpliceEnd => next(); loop()
       case token: Interpolation.End => next(); // just return
-      case _ => debug(token, token.show[Raw])
+      case _ => unreachable(debug(token, token.show[Raw]))
     }
     loop()
     result(interpolator, partsBuf.toList, argsBuf.toList)
@@ -971,7 +971,7 @@ private[meta] abstract class AbstractParser { parser =>
         case _: Ident   => termName()
         // case _: `_ ` => freshPlaceholder()       // ifonly etapolation
         case _: `{`     => dropTrivialBlock(expr()) // dropAnyBraces(expr0(Local))
-        case _: `this`  => next(); Term.This(None)
+        case _: `this`  => next(); atPos(in.prevTokenPos, auto)(Term.This(None))
         case _          => syntaxError("error in interpolated string: identifier or block expected", at = token)
       }
     }, result = Term.Interpolate(_, _, _))
@@ -1016,26 +1016,15 @@ private[meta] abstract class AbstractParser { parser =>
     else startInfixType()
 
   def annotTypeRest(t: Type): Type =
-    (t /: annots(skipNewLines = false)) { case (t, annot) => Type.Annotate(t, annot :: Nil) }
-
-  /** {{{
-   *  WildcardType ::= `_' TypeBounds
-   *  }}}
-   */
-  def wildcardType(): Type = Type.Placeholder(typeBounds())
+    atPos(t, auto)(Type.Annotate(t, annots(skipNewLines = false)))
 
 /* ----------- EXPRESSIONS ------------------------------------------------ */
 
   def condExpr(): Term = {
-    if (token.is[`(`]) {
-      next()
-      val r = expr()
-      accept[`)`]
-      r
-    } else {
-      accept[`(`]
-      Lit.Bool(true)
-    }
+    accept[`(`]
+    val r = expr()
+    accept[`)`]
+    r
   }
 
   /** {{{
@@ -1063,7 +1052,7 @@ private[meta] abstract class AbstractParser { parser =>
    */
   def expr(): Term = expr(Local)
 
-  def expr(location: Location): Term = token match {
+  def expr(location: Location): Term = autoPos(token match {
     case _: `if` =>
       next()
       val cond = condExpr()
@@ -1127,11 +1116,12 @@ private[meta] abstract class AbstractParser { parser =>
     case _: `return` =>
       next()
       if (token.is[ExprIntro]) Term.Return(expr())
-      else Term.Return(Lit.Unit())
+      else Term.Return(atPos(in.tokenPos, auto)(Lit.Unit()))
     case _: `throw` =>
       next()
       Term.Throw(expr())
     case _: `implicit` =>
+      next()
       implicitClosure(location)
     case _ =>
       var t: Term = postfixExpr()
@@ -1179,12 +1169,10 @@ private[meta] abstract class AbstractParser { parser =>
       }
       if (token.is[`=>`] && (location != InTemplate || lhsIsTypedParamList)) {
         next()
-        t = {
-          Term.Function(convertToParams(t), if (location != InBlock) expr() else block())
-        }
+        t = Term.Function(convertToParams(t), if (location != InBlock) expr() else block())
       }
       t
-  }
+  })
 
   /** {{{
    *  Expr ::= implicit Id => Expr
@@ -1192,17 +1180,12 @@ private[meta] abstract class AbstractParser { parser =>
    */
 
   def implicitClosure(location: Location): Term.Function = {
-    val param0 = convertToParam {
-      val name = termName()
-      if (token.isNot[`:`]) name
-      else {
-        next()
-        Term.Ascribe(expr, typeOrInfixType(location))
-      }
-    }.get
-    val param = param0.copy(mods = Mod.Implicit() +: param0.mods)
+    val implicitPos = in.prevTokenPos
+    val paramName = termName()
+    val paramTpt = if (token.is[`:`]) Some(typeOrInfixType(location)) else None
+    val param = atPos(implicitPos, auto)(Term.Param(List(atPos(implicitPos, implicitPos)(Mod.Implicit())), paramName, paramTpt, None))
     accept[`=>`]
-    Term.Function(List(param), if (location != InBlock) expr() else block())
+    atPos(implicitPos, auto)(Term.Function(List(param), if (location != InBlock) expr() else block()))
   }
 
   /** {{{
@@ -1241,7 +1224,7 @@ private[meta] abstract class AbstractParser { parser =>
       if (op.value == "-" && token.is[NumericLiteral])
         simpleExprRest(literal(isNegated = true), canApply = true)
       else
-        Term.ApplyUnary(op, simpleExpr())
+        atPos(op, auto)(Term.ApplyUnary(op, simpleExpr()))
     }
 
   def xmlLiteral(): Term
@@ -1259,7 +1242,7 @@ private[meta] abstract class AbstractParser { parser =>
    *                  |  SimpleExpr1 ArgumentExprs
    *  }}}
    */
-  def simpleExpr(): Term = {
+  def simpleExpr(): Term = autoPos {
     var canApply = true
     val t: Term =
       token match {
@@ -1289,7 +1272,7 @@ private[meta] abstract class AbstractParser { parser =>
     simpleExprRest(t, canApply = canApply)
   }
 
-  def simpleExprRest(t: Term, canApply: Boolean): Term = {
+  def simpleExprRest(t: Term, canApply: Boolean): Term = atPos(t, auto) {
     if (canApply) newLineOptWhenFollowedBy[`{`]
     token match {
       case _: `.` =>
@@ -1300,28 +1283,20 @@ private[meta] abstract class AbstractParser { parser =>
           case _: Term.Name | _: Term.Select | _: Term.Apply =>
             var app: Term = t
             while (token.is[`[`])
-              app = Term.ApplyType(app, exprTypeArgs())
+              app = atPos(t, auto)(Term.ApplyType(app, exprTypeArgs()))
 
             simpleExprRest(app, canApply = true)
           case _ =>
             t
         }
       case _: `(` | _: `{` if (canApply) =>
-        simpleExprRest(Term.Apply(t, argumentExprs()), canApply = true)
+        simpleExprRest(atPos(t, auto)(Term.Apply(t, argumentExprs())), canApply = true)
       case _: `_ ` =>
         next()
         Term.Eta(t)
       case _ =>
         t
     }
-  }
-
-  /** Translates an Assign(_, _) node to AssignOrNamedArg(_, _) if
-   *  the lhs is a simple ident. Otherwise returns unchanged.
-   */
-  def assignmentToMaybeNamedArg(tree: Term): Term.Arg = tree match {
-    case Term.Assign(name: Term.Name, rhs) => Term.Arg.Named(name, rhs)
-    case t                                 => t
   }
 
   def argumentExprsOrPrefixExpr(): List[Term.Arg] = {
@@ -1331,7 +1306,7 @@ private[meta] abstract class AbstractParser { parser =>
         def loop(args: List[Term.Arg]): List[Term] = args match {
           case Nil                              => Nil
           case (t: Term) :: rest                => t :: loop(rest)
-          case (nmd: Term.Arg.Named) :: rest    => Term.Assign(nmd.name, nmd.rhs) :: loop(rest)
+          case (nmd: Term.Arg.Named) :: rest    => atPos(nmd, nmd)(Term.Assign(nmd.name, nmd.rhs)) :: loop(rest)
           case (rep: Term.Arg.Repeated) :: rest => syntaxError("repeated argument not allowed here", at = rep)
         }
         atPos(openParenPos, closeParenPos)(makeTupleTerm(loop(args)))
@@ -1358,9 +1333,9 @@ private[meta] abstract class AbstractParser { parser =>
       expr() match {
         case Term.Ascribe(t, Type.Placeholder(Type.Bounds(None, None))) if isIdentOf("*") =>
           next()
-          Term.Arg.Repeated(t)
+          atPos(t, auto)(Term.Arg.Repeated(t))
         case Term.Assign(t: Term.Name, rhs) =>
-          Term.Arg.Named(t, rhs)
+          atPos(t, auto)(Term.Arg.Named(t, rhs))
         case other =>
           other
       }
