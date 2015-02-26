@@ -286,15 +286,21 @@ private[meta] abstract class AbstractParser { parser =>
   def auto = AutoPos
 
   def atPos[T <: Tree](start: Pos, end: Pos)(body: => T): T = {
+    implicit class XtensionTree(tree: Tree) {
+      def requirePosition: Origin.Parsed = tree.origin match {
+        case position: Origin.Parsed => position
+        case _ => unreachable(debug(tree.show[Positions]))
+      }
+    }
     val startTokenPos = start match {
       case TokenPos(tokenPos) => tokenPos
-      case TreePos(tree) => tree.origin.require[Origin.Parsed].startTokenPos
+      case TreePos(tree) => tree.requirePosition.startTokenPos
       case AutoPos => in.tokenPos
     }
     val result = body
     var endTokenPos = end match {
       case TokenPos(tokenPos) => tokenPos
-      case TreePos(tree) => tree.origin.require[Origin.Parsed].endTokenPos
+      case TreePos(tree) => tree.requirePosition.endTokenPos
       case AutoPos => in.prevTokenPos
     }
     if (endTokenPos < startTokenPos) endTokenPos = startTokenPos - 1
