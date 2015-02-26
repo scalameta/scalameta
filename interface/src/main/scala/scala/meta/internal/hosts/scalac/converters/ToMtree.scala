@@ -270,6 +270,11 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
                 }
               }
               inliner.transform(gstats(i - 1)).copyAttrs(gparent).cvt_! : m.Term
+            case in @ g.PackageDef(pid, stats) =>
+              stats match {
+                case List(pkgobject: g.ModuleDef) if pkgobject.symbol.isPackageObject => pkgobject.cvt_! : m.Pkg.Object
+                case _ => m.Pkg(pid.cvt_!, mstats(in, stats))
+              }
             case in =>
               in.cvt_! : m.Stat
           }
@@ -298,15 +303,15 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
         unreachable
       case g.UnmappableTree =>
         unreachable
-      case in @ g.PackageDef(pid, stats) if pt <:< typeOf[m.Stat] =>
-        require(pid.name != g.nme.EMPTY_PACKAGE_NAME)
-        stats match {
-          case List(pkgobject: g.ModuleDef) if pkgobject.symbol.isPackageObject => pkgobject.cvt_! : m.Pkg.Object
-          case _ => m.Pkg(pid.cvt_!, mstats(in, stats))
+      case in @ g.PackageDef(pid, stats) =>
+        val mstats = {
+          if (pid.name == g.nme.EMPTY_PACKAGE_NAME) Helpers.mstats(in, stats)
+          else stats match {
+            case List(pkgobject: g.ModuleDef) if pkgobject.symbol.isPackageObject => List(pkgobject.cvt_! : m.Pkg.Object)
+            case _ => List(m.Pkg(pid.cvt_!, Helpers.mstats(in, stats)))
+          }
         }
-      case in @ g.PackageDef(pid, stats) if pt <:< typeOf[m.Source] =>
-        if (pid.name == g.nme.EMPTY_PACKAGE_NAME) m.Source(mstats(in, stats))
-        else m.Source(List(in.cvt_! : m.Stat))
+        m.Source(mstats)
       case in @ g.ClassDef(_, _, tparams0, templ) =>
         require(in.symbol.isClass)
         if (in.symbol.isTrait) {
