@@ -22,11 +22,16 @@ object Origin {
   }
 
   @leaf class Parsed(input: Input, dialect: Dialect, startTokenPos: Int, endTokenPos: Int) extends Origin {
-    private implicit val thisDialect: Dialect = this.dialect
-    require(input.tokens.last.is[Token.EOF])
-    require(0 <= startTokenPos && startTokenPos < input.tokens.length - 1 && debug(startTokenPos, input.tokens.length))
-    require(0 <= endTokenPos && endTokenPos < input.tokens.length - 1 && debug(endTokenPos, input.tokens.length))
-    require(startTokenPos <= endTokenPos + 1 && debug(startTokenPos, endTokenPos))
+    locally {
+      var maxStartTokenPos = input.tokens.length - 1
+      if (startTokenPos > endTokenPos) maxStartTokenPos += 1
+      val maxEndTokenPos = input.tokens.length - 1
+      require(input.tokens.last.is[Token.EOF])
+      require(0 <= startTokenPos && startTokenPos < maxStartTokenPos && debug(startTokenPos, input.tokens.length))
+      require(0 <= endTokenPos && endTokenPos < maxEndTokenPos && debug(endTokenPos, input.tokens.length))
+      require(startTokenPos <= endTokenPos + 1 && debug(startTokenPos, endTokenPos))
+    }
+    private implicit lazy val thisDialect: Dialect = this.dialect
     val start = input.tokens.apply(startTokenPos).start
     val end = input.tokens.apply(endTokenPos).end
   }
