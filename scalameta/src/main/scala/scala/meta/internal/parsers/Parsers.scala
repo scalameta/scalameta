@@ -819,7 +819,7 @@ private[meta] abstract class AbstractParser { parser =>
   private def name[T <: Tree : AllowedName](ctor: String => T, advance: Boolean): T = token match {
     case token: Ident =>
       val name = token.code.stripPrefix("`").stripSuffix("`")
-      val res = atPos(in.tokenPos, auto)(ctor(name))
+      val res = atPos(in.tokenPos, in.tokenPos)(ctor(name))
       if (advance) next()
       res
     case _ =>
