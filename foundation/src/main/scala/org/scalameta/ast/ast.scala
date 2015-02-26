@@ -148,7 +148,7 @@ class AstMacros(val c: Context) {
             (validators, q"$local.map($validateLocal)")
           } else if ((is("Defn.Trait") || is("Defn.Object") || is("Pkg.Object")) && local.toString == "templ") {
             val validators = List(q"def $validateLocal(stats: Seq[Stat]) = stats.map(stat => { require(!stat.isInstanceOf[Ctor]); stat })")
-            (validators, q"$local.copy(stats = $local.stats.map($validateLocal))")
+            (validators, q"$local.copy(stats = $local.stats.map($validateLocal), origin = $local.origin)")
           } else if (is("Template") && local.toString == "early") {
             val validators = List(q"def $validateLocal(stat: Stat) = { require(stat.isEarlyStat && parents.nonEmpty); stat }")
             (validators, q"$local.map($validateLocal)")
