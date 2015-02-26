@@ -15,7 +15,8 @@ class BootstrapSuite extends ParseSuite {
           import scala.meta._
           import scala.meta.dialects.Scala211
           val toks = src.tokens
-          val content = scala.io.Source.fromFile(src).mkString
+          val codec = scala.io.Codec(java.nio.charset.Charset.forName("UTF-8"))
+          val content = scala.io.Source.fromFile(src)(codec).mkString
           // check #1: everything's covered
           var isFail = false
           def fail(msg: String) = { isFail = true; println(msg) }

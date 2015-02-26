@@ -1,6 +1,7 @@
 package scala.meta
 package syntactic
 
+import java.nio.charset.Charset
 import org.scalameta.adt._
 import org.scalameta.convert._
 import scala.collection.mutable
@@ -19,12 +20,12 @@ object Input {
   @leaf class String(s: scala.Predef.String) extends Input {
     lazy val content = s.toArray
   }
-  @leaf class File(f: java.io.File) extends Input {
-    lazy val content = scala.io.Source.fromFile(f).mkString.toArray
+  @leaf class File(f: java.io.File, charset: Charset) extends Input {
+    lazy val content = scala.io.Source.fromFile(f)(scala.io.Codec(charset)).mkString.toArray
   }
   object File {
-    def apply(path: Predef.String): Input.File = Input.File(new java.io.File(path))
+    def apply(path: Predef.String): Input.File = Input.File(new java.io.File(path), Charset.forName("UTF-8"))
   }
   implicit val stringToOrigin: Convert[scala.Predef.String, Input] = Convert.apply(Input.String(_))
-  implicit val fileToOrigin: Convert[java.io.File, Input] = Convert.apply(Input.File(_))
+  implicit val fileToOrigin: Convert[java.io.File, Input] = Convert.apply(f => Input.File(f, Charset.forName("UTF-8")))
 }
