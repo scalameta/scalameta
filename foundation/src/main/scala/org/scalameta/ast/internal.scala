@@ -49,7 +49,7 @@ object internal {
           bsym == symbolOf[scala.Equals] ||
           root.info.baseClasses.contains(bsym)
         if (!exempt && !bsym.isRoot && !bsym.isBranch && !bsym.isLeaf) c.abort(c.enclosingPosition, s"outsider parent of a $designation: ${bsym.fullName}")
-        // NOTE: turned off because we can't have @ast hierarchy sealed anymore
+        // NOTE: sealedness is turned off because we can't have @ast hierarchy sealed anymore
         // hopefully, in the future we'll find a way to restore sealedness
         // if (!exempt && !bsym.isSealed && !bsym.isFinal) c.abort(c.enclosingPosition, s"unsealed parent of a $designation: ${bsym.fullName}")
       }

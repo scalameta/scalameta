@@ -25,40 +25,55 @@ class AdtMacros(val c: Context) {
   val Internal = q"_root_.org.scalameta.adt.Internal"
 
   def root(annottees: Tree*): Tree = {
-    def transform(cdef: ClassDef): ClassDef = {
+    def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       val ClassDef(mods @ Modifiers(flags, privateWithin, anns), name, tparams, Template(parents, self, stats)) = cdef
+      val ModuleDef(mmods, mname, Template(mparents, mself, mstats)) = mdef
+      val stats1 = ListBuffer[Tree]() ++ stats
+      val mstats1 = ListBuffer[Tree]() ++ mstats
+
       if (mods.hasFlag(SEALED)) c.abort(cdef.pos, "sealed is redundant for @root traits")
       if (mods.hasFlag(FINAL)) c.abort(cdef.pos, "@root traits cannot be final")
-      val flags1 = ((flags.asInstanceOf[Long] | SEALED.asInstanceOf[Long]) & ~(INTERFACE.asInstanceOf[Long])).asInstanceOf[FlagSet]
-      val thisType = if (stats.collect{ case TypeDef(_, TypeName("ThisType"), _, _) => () }.isEmpty) q"type ThisType <: ${cdef.name}" else q"()"
-      val tag = q"def internalTag: _root_.scala.Int"
-      val hierarchyCheck = q"$Internal.hierarchyCheck[${cdef.name}]"
-      val stats1 = stats :+ thisType :+ tag :+ hierarchyCheck
-      val anns1 = q"new $Internal.root" +: anns
+      val flags1 = flags | SEALED
+      val needsThisType = stats.collect{ case TypeDef(_, TypeName("ThisType"), _, _) => () }.isEmpty
+      if (needsThisType) stats1 += q"type ThisType <: $name"
+      stats1 += q"def internalTag: _root_.scala.Int"
+      mstats1 += q"$Internal.hierarchyCheck[$name]"
+      val anns1 = anns :+ q"new $Internal.root"
       val parents1 = parents :+ tq"$Internal.Adt"
-      ClassDef(Modifiers(flags1, privateWithin, anns1), name, tparams, Template(parents1, self, stats1))
+
+      val cdef1 = ClassDef(Modifiers(flags1, privateWithin, anns1), name, tparams, Template(parents1, self, stats1.toList))
+      val mdef1 = ModuleDef(mmods, mname, Template(mparents, mself, mstats1.toList))
+      List(cdef1, mdef1)
     }
     val expanded = annottees match {
-      case (cdef @ ClassDef(mods, _, _, _)) :: rest if mods.hasFlag(TRAIT) => transform(cdef) :: rest
+      case (cdef @ ClassDef(mods, _, _, _)) :: (mdef: ModuleDef) :: rest if mods.hasFlag(TRAIT) => transform(cdef, mdef) ++ rest
+      case (cdef @ ClassDef(mods, _, _, _)) :: rest if mods.hasFlag(TRAIT) => transform(cdef, q"object ${cdef.name.toTermName}") ++ rest
       case annottee :: rest => c.abort(annottee.pos, "only traits can be @root")
     }
     q"{ ..$expanded; () }"
   }
 
   def branch(annottees: Tree*): Tree = {
-    def transform(cdef: ClassDef): ClassDef = {
+    def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       val ClassDef(mods @ Modifiers(flags, privateWithin, anns), name, tparams, Template(parents, self, stats)) = cdef
+      val ModuleDef(mmods, mname, Template(mparents, mself, mstats)) = mdef
+      val stats1 = ListBuffer[Tree]() ++ stats
+      val mstats1 = ListBuffer[Tree]() ++ mstats
+
       if (mods.hasFlag(SEALED)) c.abort(cdef.pos, "sealed is redundant for @branch traits")
       if (mods.hasFlag(FINAL)) c.abort(cdef.pos, "@branch traits cannot be final")
-      val flags1 = ((flags.asInstanceOf[Long] | SEALED.asInstanceOf[Long]) & ~(INTERFACE.asInstanceOf[Long])).asInstanceOf[FlagSet]
-      val thisType = q"type ThisType <: ${cdef.name}"
-      val hierarchyCheck = q"$Internal.hierarchyCheck[${cdef.name}]"
-      val stats1 = stats :+ thisType :+ hierarchyCheck
-      val anns1 = q"new $Internal.branch" +: anns
-      ClassDef(Modifiers(flags1, privateWithin, anns1), name, tparams, Template(parents, self, stats1))
+      val flags1 = flags | SEALED
+      stats1 += q"type ThisType <: $name"
+      mstats1 += q"$Internal.hierarchyCheck[$name]"
+      val anns1 = anns :+ q"new $Internal.branch"
+
+      val cdef1 = ClassDef(Modifiers(flags1, privateWithin, anns1), name, tparams, Template(parents, self, stats1.toList))
+      val mdef1 = ModuleDef(mmods, mname, Template(mparents, mself, mstats1.toList))
+      List(cdef1, mdef1)
     }
     val expanded = annottees match {
-      case (cdef @ ClassDef(mods, _, _, _)) :: rest if mods.hasFlag(TRAIT) => transform(cdef) :: rest
+      case (cdef @ ClassDef(mods, _, _, _)) :: (mdef: ModuleDef) :: rest if mods.hasFlag(TRAIT) => transform(cdef, mdef) ++ rest
+      case (cdef @ ClassDef(mods, _, _, _)) :: rest if mods.hasFlag(TRAIT) => transform(cdef, q"object ${cdef.name.toTermName}") ++ rest
       case annottee :: rest => c.abort(annottee.pos, "only traits can be @branch")
     }
     q"{ ..$expanded; () }"
@@ -96,8 +111,8 @@ class AdtMacros(val c: Context) {
       stats1 += q"override type ThisType = $name"
       stats1 += q"override def internalTag: _root_.scala.Int = $mname.internalTag"
       mstats1 += q"def internalTag: _root_.scala.Int = $Internal.calculateTag[$name]"
-      stats1 += q"$Internal.hierarchyCheck[ThisType]"
-      stats1 += q"$Internal.immutabilityCheck[ThisType]"
+      mstats1 += q"$Internal.hierarchyCheck[$name]"
+      mstats1 += q"$Internal.immutabilityCheck[$name]"
       anns1 += q"new $Internal.leafClass"
       manns1 += q"new $Internal.leafCompanion"
       parents1 += tq"_root_.scala.Product"

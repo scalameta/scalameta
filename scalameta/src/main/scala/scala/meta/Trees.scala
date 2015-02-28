@@ -29,7 +29,7 @@ package scala.meta {
   @branch trait Term extends Stat with Term.Arg
   object Term {
     @branch trait Ref extends Term with api.Ref
-    @branch trait Name extends api.Name with Term.Ref with Pat with Param.Name with Name.AccessBoundary
+    @branch trait Name extends api.Name with Term.Ref with Pat with Param.Name with api.Name.AccessBoundary
     @branch trait Arg extends Tree
     @branch trait Param extends Member
     object Param {
@@ -40,7 +40,7 @@ package scala.meta {
   @branch trait Type extends Tree with Type.Arg with Scope
   object Type {
     @branch trait Ref extends Type with api.Ref
-    @branch trait Name extends api.Name with Type.Ref with Pat.Type.Ref with Param.Name with Name.AccessBoundary
+    @branch trait Name extends api.Name with Type.Ref with Pat.Type.Ref with Param.Name with api.Name.AccessBoundary
     @branch trait Arg extends Tree
     @branch trait Param extends Member
     object Param {

@@ -3,6 +3,7 @@ package org.scalameta.ast
 import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
 import scala.reflect.macros.whitebox.Context
+import scala.collection.mutable.ListBuffer
 
 class root extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro RootMacros.impl
@@ -11,24 +12,32 @@ class root extends StaticAnnotation {
 class RootMacros(val c: Context) {
   import c.universe._
   import Flag._
+  lazy val Tree = tq"_root_.scala.meta.Tree"
+  lazy val Datum = tq"_root_.scala.Any"
+  lazy val Data = tq"_root_.scala.collection.immutable.Seq[$Datum]"
+  lazy val Origin = tq"_root_.scala.meta.Origin"
+  lazy val AdtInternal = q"_root_.org.scalameta.adt.Internal"
+  lazy val AstInternal = q"_root_.org.scalameta.ast.internal"
   def impl(annottees: Tree*): Tree = {
-    def transform(cdef: ClassDef): ClassDef = {
+    def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       val q"${mods @ Modifiers(flags, privateWithin, anns)} trait $name[..$tparams] extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
-      // NOTE: turned off because we can't have @ast hierarchy sealed anymore
+      val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" = mdef
+      val stats1 = ListBuffer[Tree]() ++ stats
+      val mstats1 = ListBuffer[Tree]() ++ mstats
+
+      // NOTE: sealedness is turned off because we can't have @ast hierarchy sealed anymore
       // hopefully, in the future we'll find a way to restore sealedness
       if (mods.hasFlag(SEALED)) c.abort(cdef.pos, "@root traits cannot be sealed")
       if (mods.hasFlag(FINAL)) c.abort(cdef.pos, "@root traits cannot be final")
-      val flags1 = (flags.asInstanceOf[Long] & ~(INTERFACE.asInstanceOf[Long])).asInstanceOf[FlagSet]
+      val flags1 = flags // TODO: flags | SEALED
+      val needsThisType = stats.collect{ case TypeDef(_, TypeName("ThisType"), _, _) => () }.isEmpty
+      if (needsThisType) stats1 += q"type ThisType <: $name"
+      stats1 += q"def internalTag: _root_.scala.Int"
+      mstats1 += q"$AstInternal.hierarchyCheck[$name]"
+      val anns1 = anns :+ q"new $AdtInternal.root" :+ q"new $AstInternal.root"
+      val parents1 = parents :+ tq"$AstInternal.Ast"
+
       // TODO: think of better ways to abstract this away from the public API
-      val Tree = tq"_root_.scala.meta.Tree"
-      val Datum = tq"_root_.scala.Any"
-      val Data = tq"_root_.scala.collection.immutable.Seq[$Datum]"
-      val Origin = tq"_root_.scala.meta.Origin"
-      val AdtInternal = q"_root_.org.scalameta.adt.Internal"
-      val AstInternal = q"_root_.org.scalameta.ast.internal"
-      val thisType = if (stats.collect{ case TypeDef(_, TypeName("ThisType"), _, _) => () }.isEmpty) q"type ThisType <: ${cdef.name}" else q"()"
-      val tag = q"def internalTag: _root_.scala.Int"
-      val hierarchyCheck = q"$AstInternal.hierarchyCheck[${cdef.name}]"
       val q"..$boilerplate" = q"""
         // NOTE: these are internal APIs designed to be used only by hosts
         // TODO: these APIs will most likely change in the future
@@ -48,13 +57,15 @@ class RootMacros(val c: Context) {
         protected def internalOrigin: $Origin
         private[meta] def internalCopy(prototype: $Tree = internalPrototype, parent: $Tree = internalParent, scratchpad: $Data = internalScratchpad, origin: $Origin = internalOrigin): ThisType
       """
-      val stats1 = (stats ++ boilerplate) :+ thisType :+ tag :+ hierarchyCheck
-      val anns1 = q"new $AdtInternal.root" +: q"new $AstInternal.root" +: anns
-      val parents1 = parents :+ tq"$AstInternal.Ast"
-      q"${Modifiers(flags1, privateWithin, anns1)} trait $name[..$tparams] extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
+      stats1 ++= boilerplate
+
+      val cdef1 = q"${Modifiers(flags1, privateWithin, anns1)} trait $name[..$tparams] extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
+      val mdef1 = q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
+      List(cdef1, mdef1)
     }
     val expanded = annottees match {
-      case (cdef @ ClassDef(mods, _, _, _)) :: rest if mods.hasFlag(TRAIT) => transform(cdef) :: rest
+      case (cdef @ ClassDef(mods, _, _, _)) :: (mdef: ModuleDef) :: rest if mods.hasFlag(TRAIT) => transform(cdef, mdef) ++ rest
+      case (cdef @ ClassDef(mods, _, _, _)) :: rest if mods.hasFlag(TRAIT) => transform(cdef, q"object ${cdef.name.toTermName}") ++ rest
       case annottee :: rest => c.abort(annottee.pos, "only traits can be @root")
     }
     q"{ ..$expanded; () }"
