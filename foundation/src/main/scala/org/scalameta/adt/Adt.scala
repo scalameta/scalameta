@@ -29,11 +29,11 @@ class AdtMacros(val c: Context) {
       val ClassDef(mods @ Modifiers(flags, privateWithin, anns), name, tparams, Template(parents, self, stats)) = cdef
       if (mods.hasFlag(SEALED)) c.abort(cdef.pos, "sealed is redundant for @root traits")
       if (mods.hasFlag(FINAL)) c.abort(cdef.pos, "@root traits cannot be final")
-      val flags1 = flags | SEALED
-      val thisType = if (stats.collect{ case TypeDef(_, TypeName("ThisType"), _, _) => () }.isEmpty) q"type ThisType <: ${cdef.name}" else q""
+      val flags1 = ((flags.asInstanceOf[Long] | SEALED.asInstanceOf[Long]) & ~(INTERFACE.asInstanceOf[Long])).asInstanceOf[FlagSet]
+      val thisType = if (stats.collect{ case TypeDef(_, TypeName("ThisType"), _, _) => () }.isEmpty) q"type ThisType <: ${cdef.name}" else q"()"
       val tag = q"def internalTag: _root_.scala.Int"
       val hierarchyCheck = q"$Internal.hierarchyCheck[${cdef.name}]"
-      val stats1 = thisType +: tag +: hierarchyCheck +: stats
+      val stats1 = stats :+ thisType :+ tag :+ hierarchyCheck
       val anns1 = q"new $Internal.root" +: anns
       val parents1 = parents :+ tq"$Internal.Adt"
       ClassDef(Modifiers(flags1, privateWithin, anns1), name, tparams, Template(parents1, self, stats1))
@@ -50,10 +50,10 @@ class AdtMacros(val c: Context) {
       val ClassDef(mods @ Modifiers(flags, privateWithin, anns), name, tparams, Template(parents, self, stats)) = cdef
       if (mods.hasFlag(SEALED)) c.abort(cdef.pos, "sealed is redundant for @branch traits")
       if (mods.hasFlag(FINAL)) c.abort(cdef.pos, "@branch traits cannot be final")
-      val flags1 = flags | SEALED
+      val flags1 = ((flags.asInstanceOf[Long] | SEALED.asInstanceOf[Long]) & ~(INTERFACE.asInstanceOf[Long])).asInstanceOf[FlagSet]
       val thisType = q"type ThisType <: ${cdef.name}"
       val hierarchyCheck = q"$Internal.hierarchyCheck[${cdef.name}]"
-      val stats1 = thisType +: hierarchyCheck +: stats
+      val stats1 = stats :+ thisType :+ hierarchyCheck
       val anns1 = q"new $Internal.branch" +: anns
       ClassDef(Modifiers(flags1, privateWithin, anns1), name, tparams, Template(parents, self, stats1))
     }
@@ -154,7 +154,9 @@ object Internal {
   def immutabilityCheck[T]: Unit = macro AdtHelperMacros.immutabilityCheck[T]
 }
 
-class AdtHelperMacros(val c: Context) {
+class AdtHelperMacros(val c: Context) extends AdtReflection {
+  val u: c.universe.type = c.universe
+  val mirror: u.Mirror = c.mirror
   import c.universe._
   import definitions._
   import c.internal._
@@ -170,18 +172,14 @@ class AdtHelperMacros(val c: Context) {
       def hasNonEmpty(anns: List[Annotation]) = anns.exists(_.tree.tpe =:= typeOf[nonEmpty])
       hasNonEmpty(sym.annotations) || hasNonEmpty(tptAnns)
     }
-    def isRoot = { sym.initialize; sym.annotations.exists(_.tree.tpe =:= typeOf[Internal.root]) }
-    def isBranch = { sym.initialize; sym.annotations.exists(_.tree.tpe =:= typeOf[Internal.branch]) }
-    def isLeafClass = { sym.initialize; sym.annotations.exists(_.tree.tpe =:= typeOf[Internal.leafClass]) }
-    def isLeafCompanion = { sym.initialize; sym.annotations.exists(_.tree.tpe =:= typeOf[Internal.leafCompanion]) }
-    def root = sym.asClass.baseClasses.reverse.find(_.isRoot).getOrElse(NoSymbol)
   }
 
   def calculateTag[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
     val sym = T.tpe.typeSymbol.asClass
     val tag = sym.attachments.get[TagAttachment].map(_.counter).getOrElse {
-      val att = sym.root.attachments.get[TagAttachment].map(att => att.copy(counter = att.counter + 1)).getOrElse(new TagAttachment(1))
-      sym.root.updateAttachment(att)
+      val root = sym.asAdt.root.sym
+      val att = root.attachments.get[TagAttachment].map(att => att.copy(counter = att.counter + 1)).getOrElse(new TagAttachment(1))
+      root.updateAttachment(att)
       sym.updateAttachment(att)
       att.counter
     }
@@ -190,7 +188,7 @@ class AdtHelperMacros(val c: Context) {
 
   def nullCheck(x: c.Tree): c.Tree = {
     if (x.tpe.baseClasses.contains(ObjectClass)) q"_root_.org.scalameta.invariants.require($x != null)"
-    else q""
+    else q"()"
   }
 
   def emptyCheck(x: c.Tree): c.Tree = {
@@ -198,14 +196,14 @@ class AdtHelperMacros(val c: Context) {
       try x.symbol.asTerm.accessed.nonEmpty
       catch { case _: AssertionError => x.symbol.nonEmpty }
     if (emptyCheckRequested) q"_root_.org.scalameta.invariants.require($x.nonEmpty)"
-    else q""
+    else q"()"
   }
 
   def hierarchyCheck[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
     val sym = T.tpe.typeSymbol.asClass
-    val designation = if (sym.isRoot) "root" else if (sym.isBranch) "branch" else if (sym.isLeafClass) "leaf" else ???
+    val designation = if (sym.isRoot) "root" else if (sym.isBranch) "branch" else if (sym.isLeaf) "leaf" else ???
     val roots = sym.baseClasses.filter(_.isRoot)
-    if (roots.length == 0 && sym.isLeafClass) c.abort(c.enclosingPosition, s"rootless leaf is disallowed")
+    if (roots.length == 0 && sym.isLeaf) c.abort(c.enclosingPosition, s"rootless leaf is disallowed")
     else if (roots.length > 1) c.abort(c.enclosingPosition, s"multiple roots for a $designation: " + (roots.map(_.fullName).init.mkString(", ")) + " and " + roots.last.fullName)
     val root = roots.headOption.getOrElse(NoSymbol)
     sym.baseClasses.map(_.asClass).foreach{bsym =>
@@ -218,10 +216,10 @@ class AdtHelperMacros(val c: Context) {
         bsym == symbolOf[scala.Product] ||
         bsym == symbolOf[scala.Equals] ||
         root.info.baseClasses.contains(bsym)
-      if (!exempt && !bsym.isRoot && !bsym.isBranch && !bsym.isLeafClass) c.abort(c.enclosingPosition, s"outsider parent of a $designation: ${bsym.fullName}")
+      if (!exempt && !bsym.isRoot && !bsym.isBranch && !bsym.isLeaf) c.abort(c.enclosingPosition, s"outsider parent of a $designation: ${bsym.fullName}")
       if (!exempt && !bsym.isSealed && !bsym.isFinal) c.abort(c.enclosingPosition, s"unsealed parent of a $designation: ${bsym.fullName}")
     }
-    q""
+    q"()"
   }
 
   def immutabilityCheck[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
@@ -232,6 +230,6 @@ class AdtHelperMacros(val c: Context) {
       vals.foreach(v => ()) // TODO: deep immutability check
     }
     check(T.tpe.typeSymbol.asClass)
-    q""
+    q"()"
   }
 }

@@ -131,7 +131,8 @@ class AstMacros(val c: Context) {
       val internalParamss = internalFieldParamss.init :+ (internalFieldParamss.last :+ q"val origin: _root_.scala.meta.Origin")
       val internalBody = ListBuffer[Tree]()
       val internalLocalss = paramss.map(_.map(p => (p.name, internalize(p.name))))
-      internalBody += q"$AdtInternal.hierarchyCheck[$name]"
+      internalBody += q"$AstInternal.hierarchyCheck[$name]"
+      internalBody += q"$AstInternal.register[${cdef.name}]"
       // internalBody += q"$AdtInternal.immutabilityCheck[$name]"
       internalBody ++= internalLocalss.flatten.map{ case (local, internal) => q"$AdtInternal.nullCheck($local)" }
       internalBody ++= internalLocalss.flatten.map{ case (local, internal) => q"$AdtInternal.emptyCheck($local)" }

@@ -13,14 +13,22 @@ class RootMacros(val c: Context) {
   import Flag._
   def impl(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef): ClassDef = {
-      val q"${Modifiers(flags, privateWithin, anns)} trait $name[..$tparams] extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
+      val q"${mods @ Modifiers(flags, privateWithin, anns)} trait $name[..$tparams] extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
+      // NOTE: turned off because we can't have @ast hierarchy sealed anymore
+      // hopefully, in the future we'll find a way to restore sealedness
+      if (mods.hasFlag(SEALED)) c.abort(cdef.pos, "@root traits cannot be sealed")
+      if (mods.hasFlag(FINAL)) c.abort(cdef.pos, "@root traits cannot be final")
+      val flags1 = (flags.asInstanceOf[Long] & ~(INTERFACE.asInstanceOf[Long])).asInstanceOf[FlagSet]
       // TODO: think of better ways to abstract this away from the public API
       val Tree = tq"_root_.scala.meta.Tree"
       val Datum = tq"_root_.scala.Any"
       val Data = tq"_root_.scala.collection.immutable.Seq[$Datum]"
       val Origin = tq"_root_.scala.meta.Origin"
-      val Adt = q"_root_.org.scalameta.adt"
+      val AdtInternal = q"_root_.org.scalameta.adt.Internal"
       val AstInternal = q"_root_.org.scalameta.ast.internal"
+      val thisType = if (stats.collect{ case TypeDef(_, TypeName("ThisType"), _, _) => () }.isEmpty) q"type ThisType <: ${cdef.name}" else q"()"
+      val tag = q"def internalTag: _root_.scala.Int"
+      val hierarchyCheck = q"$AstInternal.hierarchyCheck[${cdef.name}]"
       val q"..$boilerplate" = q"""
         // NOTE: these are internal APIs designed to be used only by hosts
         // TODO: these APIs will most likely change in the future
@@ -40,10 +48,10 @@ class RootMacros(val c: Context) {
         protected def internalOrigin: $Origin
         private[meta] def internalCopy(prototype: $Tree = internalPrototype, parent: $Tree = internalParent, scratchpad: $Data = internalScratchpad, origin: $Origin = internalOrigin): ThisType
       """
-      val stats1 = stats ++ boilerplate
-      val anns1 = q"new $AstInternal.root" +: q"new $Adt.root" +: anns
+      val stats1 = (stats ++ boilerplate) :+ thisType :+ tag :+ hierarchyCheck
+      val anns1 = q"new $AdtInternal.root" +: q"new $AstInternal.root" +: anns
       val parents1 = parents :+ tq"$AstInternal.Ast"
-      q"${Modifiers(flags, privateWithin, anns1)} trait $name[..$tparams] extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
+      q"${Modifiers(flags1, privateWithin, anns1)} trait $name[..$tparams] extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
     }
     val expanded = annottees match {
       case (cdef @ ClassDef(mods, _, _, _)) :: rest if mods.hasFlag(TRAIT) => transform(cdef) :: rest

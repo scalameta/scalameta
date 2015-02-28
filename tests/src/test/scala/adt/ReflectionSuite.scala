@@ -4,6 +4,11 @@ import scala.meta.internal.ast.Term.{If, Name}
 class ReflectionSuite extends AdtSuite {
   import AdtReflection._
 
+  // NOTE: these counts are important
+  // because our AdtReflection infrastructure for @ast classes is very fragile
+  // therefore we do need additional safeguards in place to prevent silent failures
+  // I understand that it's inconvenient to update these numbers every time something changes
+  // but please deal with that (or come up with a more effective way of testing AdtReflection)
   test("root") {
     assert(symbolOf[Tree].isRoot)
     assert(symbolOf[Tree].asRoot.allBranches.length === 65)

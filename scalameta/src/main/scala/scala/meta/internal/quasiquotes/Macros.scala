@@ -14,6 +14,7 @@ import scala.meta.internal.hygiene.{Symbol => MetaSymbol, Prefix => MetaPrefix, 
 // so that quasiquotes can be interpreted by any host, not just scalac
 private[meta] class Macros(val c: Context) extends AdtReflection with AdtLiftables with AstLiftables {
   val u: c.universe.type = c.universe
+  val mirror: u.Mirror = c.mirror
   import c.internal._
   import decorators._
   import c.universe.{Tree => _, Symbol => _, Type => _, _}

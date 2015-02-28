@@ -484,4 +484,8 @@ package scala.meta.internal.ast {
   @ast class Source(stats: Seq[Stat]) extends api.Source with Tree with Stat {
     require(stats.forall(_.isTopLevelStat))
   }
+
+  // NOTE: this is only necessary, because we can no longer utilize knownDirectSubclasses
+  // hopefully, in the future we will find a way to restore sealedness of the @ast hierarchy
+  @registry object Registry
 }

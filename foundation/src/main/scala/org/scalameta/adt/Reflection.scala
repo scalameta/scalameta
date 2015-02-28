@@ -4,9 +4,11 @@ import scala.reflect.api.Universe
 import org.scalameta.adt.{Internal => AdtInternal}
 import org.scalameta.ast.{internal => AstInternal}
 import scala.reflect.{classTag, ClassTag}
+import scala.collection.mutable
 
 trait AdtReflection {
   val u: Universe
+  val mirror: u.Mirror
   import u._
   import internal._
   import decorators._
@@ -26,11 +28,38 @@ trait AdtReflection {
     def asField: Field = new Field(sym)
   }
 
+  private lazy val ScalaMetaTree: Symbol = scala.util.Try(mirror.staticClass("scala.meta.Tree")).getOrElse(NoSymbol)
+  private lazy val scalaMetaRegistry: Map[Symbol, List[Symbol]] = {
+    val registryModule = mirror.staticModule("scala.meta.internal.ast.Registry")
+    val allMethod = registryModule.info.decl(TermName("all")).asMethod
+    allMethod.initialize
+    val registryAnnotation = allMethod.annotations.find(_.tree.tpe.typeSymbol.fullName == classTag[AstInternal.registry].runtimeClass.getCanonicalName)
+    registryAnnotation match {
+      case Some(ann) =>
+        val q"new $_(($_(..${fullNames: List[String]}): $_))" = ann.tree
+        val registry = mutable.Map[Symbol, List[Symbol]]()
+        fullNames.map(mirror.staticClass).foreach(sym => {
+          val parents = sym.info.asInstanceOf[ClassInfoType].parents.map(_.typeSymbol)
+          val relevantParents = parents.filter(p => p.isClass && p.asClass.baseClasses.contains(ScalaMetaTree))
+          relevantParents.foreach(parent => registry(parent) = registry.getOrElseUpdate(parent, Nil) :+ sym)
+        })
+        registry.toMap
+      case None =>
+        sys.error("fatal error reading scala.meta.registry")
+    }
+  }
+
   private implicit class PrivateXtensionAdtSymbol(sym: Symbol) {
+    private def figureOutDirectSubclasses(sym: ClassSymbol): List[Symbol] = {
+      if (sym.isSealed) sym.knownDirectSubclasses.toList.sortBy(_.fullName)
+      else if (sym.baseClasses.contains(ScalaMetaTree)) scalaMetaRegistry(sym)
+      else sys.error("failed to figure out direct subclasses for ${sym.fullName}")
+    }
+
     private def ensureModule(sym: Symbol): Symbol = if (sym.isModuleClass) sym.owner.info.member(sym.name.toTermName) else sym
-    def branches: List[Symbol] = { sym.initialize; sym.asClass.knownDirectSubclasses.toList.filter(_.isBranch) }
+    def branches: List[Symbol] = { sym.initialize; figureOutDirectSubclasses(sym.asClass).toList.filter(_.isBranch) }
     def allBranches: List[Symbol] = (sym.branches ++ sym.branches.flatMap(_.allBranches)).distinct
-    def leafs: List[Symbol] = { sym.initialize; sym.asClass.knownDirectSubclasses.toList.filter(_.isLeaf).map(ensureModule) }
+    def leafs: List[Symbol] = { sym.initialize; figureOutDirectSubclasses(sym.asClass).toList.filter(_.isLeaf).map(ensureModule) }
     def allLeafs: List[Symbol] = (sym.leafs ++ sym.branches.flatMap(_.allLeafs)).map(ensureModule).distinct
 
     def root: Symbol = sym.asClass.baseClasses.reverse.find(_.isRoot).getOrElse(NoSymbol)

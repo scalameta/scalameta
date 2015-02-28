@@ -1331,6 +1331,7 @@ private[meta] abstract class AbstractParser { parser =>
           case (t: Term) :: rest                => t :: loop(rest)
           case (nmd: Term.Arg.Named) :: rest    => atPos(nmd, nmd)(Term.Assign(nmd.name, nmd.rhs)) :: loop(rest)
           case (rep: Term.Arg.Repeated) :: rest => syntaxError("repeated argument not allowed here", at = rep)
+          case _                                => unreachable(debug(args))
         }
         atPos(openParenPos, closeParenPos)(makeTupleTerm(loop(args)))
       }

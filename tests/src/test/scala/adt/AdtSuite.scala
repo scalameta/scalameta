@@ -3,6 +3,9 @@ import scala.reflect.runtime.universe._
 import scala.reflect.runtime.{universe => ru}
 
 class AdtSuite extends FunSuite {
-  object AdtReflection extends { val u: ru.type = ru } with org.scalameta.adt.AdtReflection
+  object AdtReflection extends {
+    val u: ru.type = ru
+    val mirror: u.Mirror = u.runtimeMirror(classOf[scala.meta.Tree].getClassLoader)
+  } with org.scalameta.adt.AdtReflection
   def symbolOf[T: TypeTag]: TypeSymbol = ru.symbolOf[T]
 }
