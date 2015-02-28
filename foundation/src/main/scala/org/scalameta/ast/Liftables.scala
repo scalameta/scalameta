@@ -51,11 +51,16 @@ class LiftableMacros(val c: Context) extends AdtReflection {
       })
       val body = {
         def reify = if (leaf.sym.isClass) q"$u.Apply($namePath, $args)" else q"$namePath"
-        if (!(leaf.tpe <:< c.mirror.staticClass("scala.meta.Name").asType.toType)) reify
-        else q"""
-          val maybeUnquotee = dummies.collectFirst{ case Dummy(id, 0 | 1, unquotee) if (id: String) == ($localParam.value: String) => unquotee }
-          maybeUnquotee.getOrElse($reify)
-        """
+        val NameTpe = c.mirror.staticClass("scala.meta.Name").asType.toType
+        val UnquoteTpe = c.mirror.staticClass("scala.meta.internal.ast.Unquote").asType.toType
+        if ((leaf.tpe <:< NameTpe) && !(leaf.tpe <:< UnquoteTpe)) {
+          q"""
+            val maybeUnquotee = dummies.collectFirst{ case Dummy(id, 0 | 1, unquotee) if (id: String) == ($localParam.value: String) => unquotee }
+            maybeUnquotee.getOrElse($reify)
+          """
+        } else {
+          reify
+        }
       }
       q"def $name($localParam: ${leaf.tpe}): $u.Tree = $body"
     })

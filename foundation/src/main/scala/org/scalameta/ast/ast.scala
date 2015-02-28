@@ -19,9 +19,9 @@ class AstMacros(val c: Context) {
   def impl(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       def is(abbrev: String) = c.internal.enclosingOwner.fullName + "." + cdef.name == "scala.meta.internal.ast." + abbrev
-      val q"$amods class $iname[..$tparams] $ctorMods(...$rawparamss) extends { ..$earlydefns } with ..$iparents { $aself => ..$astats }" = cdef
-      val aname = TypeName("Api")
-      val name = TypeName("Impl")
+      val q"$imods class $iname[..$tparams] $ctorMods(...$rawparamss) extends { ..$earlydefns } with ..$iparents { $aself => ..$astats }" = cdef
+      val aname = if (is("Unquote")) iname else TypeName("Api")
+      val name = if (is("Unquote")) iname else TypeName("Impl")
       val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" = mdef
       val bparams1 = ListBuffer[ValDef]() // boilerplate params
       val paramss1 = ListBuffer[List[ValDef]]() // payload params
@@ -30,11 +30,11 @@ class AstMacros(val c: Context) {
       val istats1 = ListBuffer[Tree]()
       val astats1 = ListBuffer[Tree]()
       val stats1 = ListBuffer[Tree]()
-      val aanns1 = ListBuffer[Tree]() ++ amods.annotations
-      def amods1 = amods.mapAnnotations(_ => aanns1.toList)
+      val ianns1 = ListBuffer[Tree]() ++ imods.annotations
+      def imods1 = imods.mapAnnotations(_ => ianns1.toList)
       val iparents1 = ListBuffer[Tree]() ++ iparents
-      val aparents1 = List(tq"$iname")
-      val parents1 = List(tq"$aname")
+      def aparents1 = if (is("Unquote")) iparents1 else List(tq"$iname")
+      def parents1 = if (is("Unquote")) iparents1 else List(tq"$aname")
       val mstats1 = ListBuffer[Tree]() ++ mstats
       val manns1 = ListBuffer[Tree]() ++ mmods.annotations
       def mmods1 = mmods.mapAnnotations(_ => manns1.toList)
@@ -45,10 +45,10 @@ class AstMacros(val c: Context) {
       def finalize(mods: Modifiers) = Modifiers(mods.flags | FINAL, mods.privateWithin, mods.annotations)
 
       // step 1: validate the shape of the class
-      if (amods.hasFlag(SEALED)) c.abort(cdef.pos, "sealed is redundant for @ast classes")
-      if (amods.hasFlag(FINAL)) c.abort(cdef.pos, "final is redundant for @ast classes")
-      if (amods.hasFlag(CASE)) c.abort(cdef.pos, "case is redundant for @ast classes")
-      if (amods.hasFlag(ABSTRACT)) c.abort(cdef.pos, "@ast classes cannot be abstract")
+      if (imods.hasFlag(SEALED)) c.abort(cdef.pos, "sealed is redundant for @ast classes")
+      if (imods.hasFlag(FINAL)) c.abort(cdef.pos, "final is redundant for @ast classes")
+      if (imods.hasFlag(CASE)) c.abort(cdef.pos, "case is redundant for @ast classes")
+      if (imods.hasFlag(ABSTRACT)) c.abort(cdef.pos, "@ast classes cannot be abstract")
       if (ctorMods.flags != NoFlags) c.abort(cdef.pos, "@ast classes must define a public primary constructor")
       if (rawparamss.length == 0) c.abort(cdef.pos, "@leaf classes must define a non-empty parameter list")
 
@@ -123,8 +123,8 @@ class AstMacros(val c: Context) {
       astats1 += q"override def internalTag: _root_.scala.Int = $mname.internalTag"
       mstats1 += q"def internalTag: _root_.scala.Int = $AdtInternal.calculateTag[$iname]"
       // TODO: remove leafClass and leafCompanion from here
-      aanns1 += q"new $AstInternal.astClass"
-      aanns1 += q"new $AdtInternal.leafClass"
+      ianns1 += q"new $AstInternal.astClass"
+      ianns1 += q"new $AdtInternal.leafClass"
       manns1 += q"new $AstInternal.astCompanion"
       manns1 += q"new $AdtInternal.leafCompanion"
 
@@ -210,14 +210,21 @@ class AstMacros(val c: Context) {
         }
       }
 
-      mstats1 += q"import _root_.scala.language.experimental.{macros => prettyPlease}"
-      mstats1 += q"import _root_.scala.language.implicitConversions"
-      mstats1 += q"implicit def interfaceToApi(interface: $iname): $aname = macro $AstInternal.Macros.interfaceToApi[$iname, $aname]"
-      mstats1 += q"trait $aname[..$tparams] extends ..$aparents1 { $aself => ..$astats1 }"
-      mstats1 += q"private[${mname.toTypeName}] final class $name[..$tparams] $ctorMods(...${bparams1 +: paramss1}) extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
-      val cdef1 = q"$amods1 trait $iname extends ..$iparents1 { $iself => ..$istats1 }"
-      val mdef1 = q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
-      List(cdef1, mdef1)
+      if (is("Unquote")) {
+        val ustats1 = stats1 ++ astats1
+        val cdef1 = q"${finalize(imods1)} class $name[..$tparams] $ctorMods(...${bparams1 +: paramss1}) extends { ..$earlydefns } with ..$parents1 { $self => ..$ustats1 }"
+        val mdef1 = q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
+        List(cdef1, mdef1)
+      } else {
+        mstats1 += q"import _root_.scala.language.experimental.{macros => prettyPlease}"
+        mstats1 += q"import _root_.scala.language.implicitConversions"
+        mstats1 += q"implicit def interfaceToApi(interface: $iname): $aname = macro $AstInternal.Macros.interfaceToApi[$iname, $aname]"
+        mstats1 += q"trait $aname[..$tparams] extends ..$aparents1 { $aself => ..$astats1 }"
+        mstats1 += q"private[${mname.toTypeName}] final class $name[..$tparams] $ctorMods(...${bparams1 +: paramss1}) extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
+        val cdef1 = q"$imods1 trait $iname extends ..$iparents1 { $iself => ..$istats1 }"
+        val mdef1 = q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
+        List(cdef1, mdef1)
+      }
     }
     val expanded = annottees match {
       case (cdef: ClassDef) :: (mdef: ModuleDef) :: rest => transform(cdef, mdef) ++ rest

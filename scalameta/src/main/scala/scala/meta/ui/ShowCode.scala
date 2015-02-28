@@ -201,6 +201,9 @@ object Code {
   // Branches
   // TODO: this match is not exhaustive: if I remove Mod.Package, then I get no warning
   implicit def codeTree[T <: api.Tree](implicit dialect: Dialect, style: Style): Code[T] = Code { x => (x: api.Tree) match {
+    // Bottom
+    case t: Unquote              => s("${...}")
+
     // Name
     case t: Name.Anonymous       => s("_")
     case t: Name.Indeterminate   => if (guessIsBackquoted(t)) s("`", t.value, "`") else s(t.value)

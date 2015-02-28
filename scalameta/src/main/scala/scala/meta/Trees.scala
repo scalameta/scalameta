@@ -485,6 +485,8 @@ package scala.meta.internal.ast {
     require(stats.forall(_.isTopLevelStat))
   }
 
+  @bottom @ast class Unquote() extends Tree
+
   // NOTE: this is only necessary, because we can no longer utilize knownDirectSubclasses
   // hopefully, in the future we will find a way to restore sealedness of the @ast hierarchy
   @registry object Registry
