@@ -57,6 +57,9 @@ object internal {
       }
       q"()"
     }
+    def interfaceToApi[I, A](interface: c.Tree)(implicit I: c.WeakTypeTag[I], A: c.WeakTypeTag[A]): c.Tree = {
+      q"$interface.asInstanceOf[$A]"
+    }
     def register[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
       // NOTE: unfortunately, we can't call Symbol.addChild manually here
       // if we do that, then pattern matcher will go nuts

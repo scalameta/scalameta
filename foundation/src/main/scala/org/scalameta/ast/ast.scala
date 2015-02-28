@@ -19,16 +19,22 @@ class AstMacros(val c: Context) {
   def impl(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       def is(abbrev: String) = c.internal.enclosingOwner.fullName + "." + cdef.name == "scala.meta.internal.ast." + abbrev
-      val q"$imods class $iname[..$tparams] $ctorMods(...$rawparamss) extends { ..$earlydefns } with ..$iparents { $iself => ..$istats }" = cdef
-      val name = TypeName("Impl") // TODO: this name is kinda lame
+      val q"$amods class $iname[..$tparams] $ctorMods(...$rawparamss) extends { ..$earlydefns } with ..$iparents { $aself => ..$astats }" = cdef
+      val aname = TypeName("Api")
+      val name = TypeName("Impl")
       val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" = mdef
       val bparams1 = ListBuffer[ValDef]() // boilerplate params
       val paramss1 = ListBuffer[List[ValDef]]() // payload params
+      val iself = noSelfType
+      val self = aself
       val istats1 = ListBuffer[Tree]()
+      val astats1 = ListBuffer[Tree]()
       val stats1 = ListBuffer[Tree]()
-      val ianns1 = ListBuffer[Tree]() ++ imods.annotations
-      def imods1 = imods.mapAnnotations(_ => ianns1.toList)
+      val aanns1 = ListBuffer[Tree]() ++ amods.annotations
+      def amods1 = amods.mapAnnotations(_ => aanns1.toList)
       val iparents1 = ListBuffer[Tree]() ++ iparents
+      val aparents1 = List(tq"$iname")
+      val parents1 = List(tq"$aname")
       val mstats1 = ListBuffer[Tree]() ++ mstats
       val manns1 = ListBuffer[Tree]() ++ mmods.annotations
       def mmods1 = mmods.mapAnnotations(_ => manns1.toList)
@@ -39,19 +45,19 @@ class AstMacros(val c: Context) {
       def finalize(mods: Modifiers) = Modifiers(mods.flags | FINAL, mods.privateWithin, mods.annotations)
 
       // step 1: validate the shape of the class
-      if (imods.hasFlag(SEALED)) c.abort(cdef.pos, "sealed is redundant for @ast classes")
-      if (imods.hasFlag(FINAL)) c.abort(cdef.pos, "final is redundant for @ast classes")
-      if (imods.hasFlag(CASE)) c.abort(cdef.pos, "case is redundant for @ast classes")
-      if (imods.hasFlag(ABSTRACT)) c.abort(cdef.pos, "@ast classes cannot be abstract")
+      if (amods.hasFlag(SEALED)) c.abort(cdef.pos, "sealed is redundant for @ast classes")
+      if (amods.hasFlag(FINAL)) c.abort(cdef.pos, "final is redundant for @ast classes")
+      if (amods.hasFlag(CASE)) c.abort(cdef.pos, "case is redundant for @ast classes")
+      if (amods.hasFlag(ABSTRACT)) c.abort(cdef.pos, "@ast classes cannot be abstract")
       if (ctorMods.flags != NoFlags) c.abort(cdef.pos, "@ast classes must define a public primary constructor")
       if (rawparamss.length == 0) c.abort(cdef.pos, "@leaf classes must define a non-empty parameter list")
 
       // step 2: validate the body of the class
-      val (idefns, irest1) = istats.partition(_.isDef)
-      val (iimports, irest2) = irest1.partition(_ match { case _: Import => true; case _ => false })
-      istats1 ++= idefns
-      istats1 ++= iimports
-      val (requires, illegal) = irest2.partition(_ match { case q"require($what)" => true; case _ => false })
+      val (adefns, arest1) = astats.partition(_.isDef)
+      val (aimports, arest2) = arest1.partition(_ match { case _: Import => true; case _ => false })
+      astats1 ++= adefns
+      astats1 ++= aimports
+      val (requires, illegal) = arest2.partition(_ match { case q"require($what)" => true; case _ => false })
       illegal.foreach(stmt => c.abort(stmt.pos, "only invariants and definitions are allowed in @ast classes"))
 
       // step 3: calculate the parameters of the class
@@ -83,7 +89,7 @@ class AstMacros(val c: Context) {
       // step 5: turn all parameters into vars, create getters and setters
       val fieldParamss = paramss
       paramss1 ++= fieldParamss.map(_.map{ case p @ q"$mods val $name: $tpt = $default" => q"${undefault(unoverride(unprivatize(varify(mods))))} val ${internalize(p.name)}: $tpt" })
-      istats1 ++= fieldParamss.flatten.map(p => {
+      astats1 ++= fieldParamss.flatten.map(p => {
         var getterAnns = List(q"new $AstInternal.astField")
         if (p.mods.annotations.exists(_.toString.contains("auxiliary"))) getterAnns :+= q"new $AstInternal.auxiliary"
         val getterMods = Modifiers(DEFERRED, typeNames.EMPTY, getterAnns)
@@ -109,28 +115,28 @@ class AstMacros(val c: Context) {
       val copyParamss = copyFieldParamss.init :+ (copyFieldParamss.last :+ q"val origin: _root_.scala.meta.Origin = _root_.scala.meta.Origin.Transformed(this)")
       val copyArgss = copyFieldArgss.init :+ (copyFieldArgss.last :+ q"origin")
       // TODO: would be useful to turn copy into a macro, so that its calls are guaranteed to be inlined
-      istats1 += q"def copy(...$copyParamss): ThisType = $mname.apply(...$copyArgss)"
+      astats1 += q"def copy(...$copyParamss): ThisType = $mname.apply(...$copyArgss)"
 
       // step 6: generate boilerplate required by the @ast infrastructure
       istats1 += q"override type ThisType = $iname"
-      istats1 += q"override def internalTag: _root_.scala.Int = $mname.internalTag"
+      astats1 += q"override def internalTag: _root_.scala.Int = $mname.internalTag"
       mstats1 += q"def internalTag: _root_.scala.Int = $AdtInternal.calculateTag[$iname]"
       // TODO: remove leafClass and leafCompanion from here
-      ianns1 += q"new $AstInternal.astClass"
-      ianns1 += q"new $AdtInternal.leafClass"
+      aanns1 += q"new $AstInternal.astClass"
+      aanns1 += q"new $AdtInternal.leafClass"
       manns1 += q"new $AstInternal.astCompanion"
       manns1 += q"new $AdtInternal.leafCompanion"
 
       // step 7: implement Product
       val productParamss = rawparamss.map(_.map(_.duplicate))
       iparents1 += tq"_root_.scala.Product"
-      istats1 += q"override def productPrefix: _root_.scala.Predef.String = $AstInternal.productPrefix[ThisType]"
-      istats1 += q"override def productArity: _root_.scala.Int = ${productParamss.head.length}"
+      astats1 += q"override def productPrefix: _root_.scala.Predef.String = $AstInternal.productPrefix[ThisType]"
+      astats1 += q"override def productArity: _root_.scala.Int = ${productParamss.head.length}"
       val pelClauses = ListBuffer[Tree]()
       pelClauses ++= 0.to(productParamss.head.length - 1).map(i => cq"$i => this.${productParamss.head(i).name}")
       pelClauses += cq"_ => throw new _root_.scala.IndexOutOfBoundsException(n.toString)"
-      istats1 += q"override def productElement(n: _root_.scala.Int): Any = n match { case ..$pelClauses }"
-      istats1 += q"override def productIterator: _root_.scala.Iterator[_root_.scala.Any] = _root_.scala.runtime.ScalaRunTime.typedProductIterator(this)"
+      astats1 += q"override def productElement(n: _root_.scala.Int): Any = n match { case ..$pelClauses }"
+      astats1 += q"override def productIterator: _root_.scala.Iterator[_root_.scala.Any] = _root_.scala.runtime.ScalaRunTime.typedProductIterator(this)"
 
       // step 8: generate Companion.apply
       val applyFieldParamss = paramss.map(_.map(_.duplicate))
@@ -144,7 +150,7 @@ class AstMacros(val c: Context) {
       // internalBody += q"$AdtInternal.immutabilityCheck[$iname]"
       internalBody ++= internalLocalss.flatten.map{ case (local, internal) => q"$AdtInternal.nullCheck($local)" }
       internalBody ++= internalLocalss.flatten.map{ case (local, internal) => q"$AdtInternal.emptyCheck($local)" }
-      internalBody ++= iimports
+      internalBody ++= aimports
       internalBody ++= requires
       val paramInitss = internalLocalss.map(_.map{ case (local, internal) => q"$AstInternal.initParam($local)" })
       internalBody += q"val node = new $name(null, null, _root_.scala.collection.immutable.Nil, origin)(...$paramInitss)"
@@ -189,11 +195,11 @@ class AstMacros(val c: Context) {
       if (needsUnapply) {
         if (unapplyParams.length != 0) {
           // TODO: re-enable name-based pattern matching once https://issues.scala-lang.org/browse/SI-9029 is fixed
-          // istats1 += q"@_root_.scala.inline final def isDefined = !isEmpty"
-          // istats1 += q"@_root_.scala.inline final def isEmpty = false"
+          // astats1 += q"@_root_.scala.inline final def isDefined = !isEmpty"
+          // astats1 += q"@_root_.scala.inline final def isEmpty = false"
           // val getBody = if (unapplyParams.length == 1) q"this.${unapplyParams.head.name}" else q"this"
-          // istats1 += q"@_root_.scala.inline final def get = $getBody"
-          // unapplyParams.zipWithIndex.foreach({ case (p, i) => istats1 += q"@_root_.scala.inline final def ${TermName("_" + (i + 1))} = this.${p.name}" })
+          // astats1 += q"@_root_.scala.inline final def get = $getBody"
+          // unapplyParams.zipWithIndex.foreach({ case (p, i) => astats1 += q"@_root_.scala.inline final def ${TermName("_" + (i + 1))} = this.${p.name}" })
           // mstats1 += q"@_root_.scala.inline final def unapply(x: $name): $name = x"
           val successTargs = tq"(..${unapplyParamss.head.map(p => p.tpt)})"
           val successArgs = q"(..${unapplyParamss.head.map(p => q"x.${p.name}")})"
@@ -203,8 +209,12 @@ class AstMacros(val c: Context) {
         }
       }
 
-      mstats1 += q"private[${mname.toTypeName}] final class $name[..$tparams] $ctorMods(...${bparams1 +: paramss1}) extends { ..$earlydefns } with $iname { $iself => ..$stats1 }"
-      val cdef1 = q"$imods1 trait $iname[..$tparams] extends ..$iparents1 { $iself => ..$istats1 }"
+      mstats1 += q"import _root_.scala.language.experimental.{macros => prettyPlease}"
+      mstats1 += q"import _root_.scala.language.implicitConversions"
+      mstats1 += q"implicit def interfaceToApi(interface: $iname): $aname = macro $AstInternal.Macros.interfaceToApi[$iname, $aname]"
+      mstats1 += q"trait $aname[..$tparams] extends ..$aparents1 { $aself => ..$astats1 }"
+      mstats1 += q"private[${mname.toTypeName}] final class $name[..$tparams] $ctorMods(...${bparams1 +: paramss1}) extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
+      val cdef1 = q"$amods1 trait $iname extends ..$iparents1 { $iself => ..$istats1 }"
       val mdef1 = q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
       List(cdef1, mdef1)
     }
