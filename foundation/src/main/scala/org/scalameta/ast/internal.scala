@@ -2,6 +2,7 @@ package org.scalameta.ast
 
 import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
+import scala.annotation.meta.getter
 import scala.reflect.macros.blackbox.Context
 
 object internal {
@@ -10,7 +11,8 @@ object internal {
   class branch extends StaticAnnotation
   class astClass extends StaticAnnotation
   class astCompanion extends StaticAnnotation
-  class auxiliary extends StaticAnnotation
+  @getter class astField extends StaticAnnotation
+  @getter class auxiliary extends StaticAnnotation
   class registry(fullNames: List[String]) extends StaticAnnotation
 
   def hierarchyCheck[T]: Unit = macro Macros.hierarchyCheck[T]

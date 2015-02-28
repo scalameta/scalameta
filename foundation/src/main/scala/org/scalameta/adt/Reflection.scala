@@ -19,8 +19,14 @@ trait AdtReflection {
     def isRoot: Boolean = hasAnnotation[AdtInternal.root]
     def isBranch: Boolean = hasAnnotation[AdtInternal.branch]
     def isLeaf: Boolean = hasAnnotation[AdtInternal.leafClass]
-    def isPayload: Boolean = sym.isTerm && sym.isParameter && !sym.isAuxiliary
-    def isAuxiliary: Boolean = hasAnnotation[AstInternal.auxiliary]
+    def isField: Boolean = {
+      val isMethodInLeafClass = sym.isMethod && sym.owner.isLeaf
+      val isParamGetter = sym.isTerm && sym.asTerm.isParamAccessor && sym.asTerm.isGetter
+      val isAstField = hasAnnotation[AstInternal.astField]
+      isMethodInLeafClass && (isParamGetter || isAstField)
+    }
+    def isPayload: Boolean = sym.isField && !sym.isAuxiliary
+    def isAuxiliary: Boolean = sym.isField && hasAnnotation[AstInternal.auxiliary]
     def asAdt: Adt = if (isRoot) sym.asRoot else if (isBranch) sym.asBranch else if (isLeaf) sym.asLeaf else sys.error("not an adt")
     def asRoot: Root = new Root(sym)
     def asBranch: Branch = new Branch(sym)
@@ -63,9 +69,8 @@ trait AdtReflection {
     def allLeafs: List[Symbol] = (sym.leafs ++ sym.branches.flatMap(_.allLeafs)).map(ensureModule).distinct
 
     def root: Symbol = sym.asClass.baseClasses.reverse.find(_.isRoot).getOrElse(NoSymbol)
-    private def lastParamList: List[Symbol] = sym.info.decls.collect{ case ctor: MethodSymbol if ctor.isPrimaryConstructor => ctor }.head.paramLists.last
-    def fields: List[Symbol] = lastParamList.filter(p => p.isPayload)
-    def allFields: List[Symbol] = lastParamList
+    def fields: List[Symbol] = allFields.filter(p => p.isPayload)
+    def allFields: List[Symbol] = sym.info.decls.filter(_.isField).toList
   }
 
   trait CommonApi {
@@ -102,9 +107,9 @@ trait AdtReflection {
     override def toString = s"leaf $prefix"
   }
   class Field(val sym: Symbol) {
-    require(sym.isTerm && sym.isParameter)
+    require(sym.isField)
     def name: TermName = TermName(sym.name.toString.stripPrefix("_"))
-    def tpe: Type = sym.info
+    def tpe: Type = sym.info.finalResultType
     def isPayload: Boolean = sym.isPayload
     def isAuxiliary: Boolean = sym.isAuxiliary
     override def toString = s"field $name: $tpe" + (if (isAuxiliary) " (auxiliary)" else "")
