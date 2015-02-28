@@ -6,7 +6,7 @@ class ReflectionSuite extends AdtSuite {
 
   test("root") {
     assert(symbolOf[Tree].isRoot)
-    assert(symbolOf[Tree].asRoot.allBranches.length === 71)
+    assert(symbolOf[Tree].asRoot.allBranches.length === 65)
     assert(symbolOf[Tree].asRoot.allLeafs.length === 130)
   }
 

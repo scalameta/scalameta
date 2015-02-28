@@ -29,9 +29,9 @@ trait AdtReflection {
   private implicit class PrivateXtensionAdtSymbol(sym: Symbol) {
     private def ensureModule(sym: Symbol): Symbol = if (sym.isModuleClass) sym.owner.info.member(sym.name.toTermName) else sym
     def branches: List[Symbol] = { sym.initialize; sym.asClass.knownDirectSubclasses.toList.filter(_.isBranch) }
-    def allBranches: List[Symbol] = sym.branches ++ sym.branches.flatMap(_.allBranches).distinct
+    def allBranches: List[Symbol] = (sym.branches ++ sym.branches.flatMap(_.allBranches)).distinct
     def leafs: List[Symbol] = { sym.initialize; sym.asClass.knownDirectSubclasses.toList.filter(_.isLeaf).map(ensureModule) }
-    def allLeafs: List[Symbol] = sym.leafs ++ sym.branches.flatMap(_.allLeafs).distinct.map(ensureModule)
+    def allLeafs: List[Symbol] = (sym.leafs ++ sym.branches.flatMap(_.allLeafs)).map(ensureModule).distinct
 
     def root: Symbol = sym.asClass.baseClasses.reverse.find(_.isRoot).getOrElse(NoSymbol)
     private def lastParamList: List[Symbol] = sym.info.decls.collect{ case ctor: MethodSymbol if ctor.isPrimaryConstructor => ctor }.head.paramLists.last
