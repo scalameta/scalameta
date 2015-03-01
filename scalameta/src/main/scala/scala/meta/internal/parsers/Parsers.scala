@@ -2021,7 +2021,7 @@ private[meta] abstract class AbstractParser { parser =>
     sid match {
       case Term.Select(sid: Term.Ref, name: Term.Name) if sid.isStableId =>
         if (token.is[`.`]) dotselectors
-        else Import.Clause(sid, atPos(name, name)(Import.Selector.Name(atPos(name, name)(Name.Imported(name.value)))) :: Nil)
+        else Import.Clause(sid, atPos(name, name)(Import.Selector.Name(atPos(name, name)(Name.Indeterminate(name.value)))) :: Nil)
       case _ => dotselectors
     }
   }
@@ -2036,7 +2036,7 @@ private[meta] abstract class AbstractParser { parser =>
 
   def importWildcardOrName(): Import.Selector = autoPos {
     if (token.is[`_ `]) { next(); Import.Selector.Wildcard() }
-    else { val name = termName(); Import.Selector.Name(atPos(name, name)(Name.Imported(name.value))) }
+    else { val name = termName(); Import.Selector.Name(atPos(name, name)(Name.Indeterminate(name.value))) }
   }
 
   /** {{{

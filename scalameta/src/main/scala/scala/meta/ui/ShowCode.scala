@@ -207,7 +207,6 @@ object Code {
     // Name
     case t: Name.Anonymous       => s("_")
     case t: Name.Indeterminate   => if (guessIsBackquoted(t)) s("`", t.value, "`") else s(t.value)
-    case t: Name.Imported        => if (guessIsBackquoted(t)) s("`", t.value, "`") else s(t.value)
 
     // Term
     case t: Term if t.isCtorCall => if (t.isInstanceOf[Ctor.Ref.Function]) s("=>") else s(p(AnnotTyp, t.ctorTpe), t.ctorArgss)

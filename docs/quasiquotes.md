@@ -239,7 +239,7 @@
  meta.Enumerator          | `$enumerator` | `enumerator`
  meta.Member              | `$member`     | `q`
  meta.Mod                 | `$mod`        | `mod`
- meta.Name.Imported       | `$iname`      | Can't be constructed, only extracted from `importee"..."`
+ meta.Name.Indeterminate  | `$iname`      | Can't be constructed, only extracted from `importee"..."` and `mod"..."`
  meta.Name.AccessBoundary | `$bname`      | `q`, `t`, anonymous names can't be constructed, only extracted from `mod"..."`
  meta.Pat                 | `$pat`        | `p`
  meta.Pat.Arg             | `$apat`       | `p`

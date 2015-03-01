@@ -18,7 +18,6 @@ package scala.meta {
   object Name {
     @branch trait Anonymous extends Name with Term.Param.Name with Type.Param.Name with AccessBoundary
     @branch trait Indeterminate extends Name with AccessBoundary
-    @branch trait Imported extends Name
     @branch trait AccessBoundary extends Name
   }
 
@@ -91,7 +90,6 @@ package scala.meta.internal.ast {
   object Name {
     @ast class Anonymous extends api.Name.Anonymous with Name with Term.Param.Name with Type.Param.Name with AccessBoundary { def value = "_" }
     @ast class Indeterminate(value: Predef.String @nonEmpty) extends api.Name.Indeterminate with Name with AccessBoundary
-    @ast class Imported(value: Predef.String @nonEmpty) extends api.Name.Imported with Name
     @branch trait AccessBoundary extends api.Name.AccessBoundary with Name
   }
 
@@ -473,9 +471,9 @@ package scala.meta.internal.ast {
     @branch trait Selector extends api.Importee with Tree with Ref
     object Selector {
       @ast class Wildcard() extends Selector
-      @ast class Name(value: impl.Name.Imported) extends Selector
-      @ast class Rename(from: impl.Name.Imported, to: impl.Name.Imported) extends Selector
-      @ast class Unimport(name: impl.Name.Imported) extends Selector
+      @ast class Name(value: impl.Name.Indeterminate) extends Selector
+      @ast class Rename(from: impl.Name.Indeterminate, to: impl.Name.Indeterminate) extends Selector
+      @ast class Unimport(name: impl.Name.Indeterminate) extends Selector
     }
   }
 

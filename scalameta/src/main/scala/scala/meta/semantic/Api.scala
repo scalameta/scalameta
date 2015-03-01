@@ -130,7 +130,6 @@ private[meta] trait Api {
       val prefixlessName = tree.name match {
         case name: impl.Name.Anonymous => name
         case name: impl.Name.Indeterminate => name
-        case name: impl.Name.Imported => name
         case name: impl.Term.Name => name.copy(denot = stripPrefix(name.denot))
         case name: impl.Type.Name => name.copy(denot = stripPrefix(name.denot))
         case name: impl.Ctor.Name => name.copy(denot = stripPrefix(name.denot))

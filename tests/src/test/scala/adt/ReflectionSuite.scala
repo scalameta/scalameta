@@ -12,8 +12,8 @@ class ReflectionSuite extends AdtSuite {
   // but please deal with that (or come up with a more effective way of testing AdtReflection)
   test("root") {
     assert(symbolOf[Tree].isRoot)
-    assert(symbolOf[Tree].asRoot.allBranches.length === 65)
-    assert(symbolOf[Tree].asRoot.allLeafs.length === 131)
+    assert(symbolOf[Tree].asRoot.allBranches.length === 64)
+    assert(symbolOf[Tree].asRoot.allLeafs.length === 130)
   }
 
   test("If") {
@@ -87,7 +87,7 @@ class ReflectionSuite extends AdtSuite {
       |scala.meta.internal.ast.Ctor.Name
       |scala.meta.internal.ast.Ctor.Primary
       |scala.meta.internal.ast.Name.AccessBoundary
-      |scala.meta.internal.ast.Name.Imported
+      |scala.meta.internal.ast.Name.Indeterminate
       |scala.meta.internal.ast.Pat
       |scala.meta.internal.ast.Pat.Arg
       |scala.meta.internal.ast.Pat.Type

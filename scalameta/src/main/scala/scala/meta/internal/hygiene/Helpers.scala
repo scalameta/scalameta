@@ -33,7 +33,6 @@ private[meta] object OpaqueRef {
       case tree: Term.This => Some((tree, Term.This.internalTag))
       case tree: Term.Super => Some((tree, Term.Super.internalTag))
       case tree: Name.Indeterminate => Some((tree, Name.Indeterminate.internalTag))
-      case tree: Name.Imported => Some((tree, Name.Imported.internalTag))
       case _ => None
     }
   }
