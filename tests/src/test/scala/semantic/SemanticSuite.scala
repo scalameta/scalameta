@@ -56,13 +56,13 @@ class SemanticSuite extends FunSuite {
     assert(t"List".defn.show[Code] == "type List[+A] = List[A]")
     assert(t"List".defn.show[Semantics] == """
       |Defn.Type(Nil, Type.Name("List")[1], List(Type.Param(List(Mod.Covariant()), Type.Name("A")[2], Nil, Type.Bounds(None, None), Nil, Nil)), Type.Apply(Type.Name("List")[3], List(Type.Name("A")[2])))
-      |[1] Type.Singleton(Term.Name("package")[5])::scala.package#List
+      |[1] Type.Singleton(Term.Name("package")[4])::scala.package#List
       |[2] 0::scala.package#List#A
-      |[3] Type.Singleton(Term.Name("immutable")[4])::scala.collection.immutable#List
-      |[4] Type.Singleton(Term.Name("collection")[7])::scala.collection.immutable
-      |[5] Type.Singleton(Term.Name("scala")[6])::scala.package
-      |[6] Type.Singleton(Term.Name("_root_")[8])::scala
-      |[7] Type.Singleton(Term.Name("scala")[6])::scala.collection
+      |[3] Type.Singleton(Term.Name("immutable")[5])::scala.collection.immutable#List
+      |[4] Type.Singleton(Term.Name("scala")[7])::scala.package
+      |[5] Type.Singleton(Term.Name("collection")[6])::scala.collection.immutable
+      |[6] Type.Singleton(Term.Name("scala")[7])::scala.collection
+      |[7] Type.Singleton(Term.Name("_root_")[8])::scala
       |[8] 0::_root_
     """.trim.stripMargin)
   }

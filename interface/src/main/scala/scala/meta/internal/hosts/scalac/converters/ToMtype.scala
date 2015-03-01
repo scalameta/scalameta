@@ -35,14 +35,17 @@ trait ToMtype extends GlobalToolkit with MetaToolkit {
           unreachable
         case g.SuperType(thistpe, supertpe) =>
           require(thistpe.isInstanceOf[g.ThisType] && thistpe.typeSymbol.isType && supertpe.typeSymbol.isType)
-          val superdumb = m.Term.Super(Some(thistpe.typeSymbol.name.toString), Some(supertpe.typeSymbol.name.toString)).withOriginal(gtpe)
-          val superpre = thistpe
           val supersym = if (supertpe.isInstanceOf[g.RefinedType]) g.NoSymbol else supertpe.typeSymbol
-          m.Type.Singleton(superdumb.withDenot(thistpe, supersym))
+          val superqual = m.Name.Indeterminate(g.Ident(thistpe.typeSymbol).alias).withDenot(thistpe.typeSymbol).withOriginal(gtpe)
+          val supermix = ({
+            if (supersym == g.NoSymbol) m.Name.Anonymous()
+            else m.Name.Indeterminate(g.Ident(supertpe.typeSymbol).alias)
+          }).withDenot(thistpe, supersym).withOriginal(gtpe)
+          m.Type.Singleton(m.Term.Super(superqual, supermix))
         case g.ThisType(sym) =>
           require(sym.isClass)
           if (sym.isModuleClass) m.Type.Singleton(sym.module.asTerm.rawcvt(g.Ident(sym.module)).withOriginal(gtpe))
-          else m.Type.Singleton(m.Term.This(Some(sym.name.toString)).withDenot(sym).withOriginal(gtpe))
+          else m.Type.Singleton(m.Term.This(m.Name.Indeterminate(g.Ident(sym).alias).withDenot(sym).withOriginal(gtpe)).withOriginal(gtpe))
         case g.SingleType(pre, sym) =>
           require(sym.isTerm)
           val ref = (pre match {

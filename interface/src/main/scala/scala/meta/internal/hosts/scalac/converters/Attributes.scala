@@ -58,20 +58,17 @@ trait Attributes extends GlobalToolkit with MetaToolkit {
       ptree.withDenot(gpre, gsym.toLogical)
     }
     def withDenot(gpre: g.Type, lsym: l.Symbol)(implicit ev: CanHaveDenot[T]): T = {
-      require(((lsym == l.None) ==> (ptree.isInstanceOf[m.Term.This] || ptree.isInstanceOf[m.Term.Super])) && debug(ptree, gpre, lsym))
+      require(((lsym == l.None) ==> (ptree.isInstanceOf[m.Name.Anonymous])) && debug(ptree, gpre, lsym))
       val scratchpad = ptree.scratchpad :+ ScratchpadDatum.Denotation(gpre, lsym)
       val ptree1 = ptree match {
         case ptree: m.Name.Anonymous => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
         case ptree: m.Name.Indeterminate => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
-        case ptree: m.Name.Imported => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
         case ptree: m.Term.Name => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
         case ptree: m.Type.Name => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
         // TODO: some ctor refs don't have corresponding constructor symbols in Scala (namely, ones for traits)
         // in these cases, our lsym is going to be a symbol of the trait in question
         // we need to account for that in `symbolTable.convert` and create a constructor symbol of our own
         case ptree: m.Ctor.Name => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
-        case ptree: m.Term.This => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
-        case ptree: m.Term.Super => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
         case _ => unreachable(debug(ptree, ptree.show[Raw]))
       }
       ptree1.withScratchpad(scratchpad).require[T]

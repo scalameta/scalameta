@@ -219,6 +219,7 @@ package object internal {
     val PersistedWildcardType = typeOf[WildcardDummy]
     val DeriveInternal = q"_root_.org.scalameta.convert.auto.internal"
     val ToolkitTrait = tq"_root_.org.scalameta.reflection.GlobalToolkit"
+    val TreeTpe = c.mirror.staticClass("scala.meta.Tree").toType
     implicit class RichUnimplementedTree(tree: Tree) {
       def isUnreachableError: Boolean = tree match {
         case Typed(typee, _) if typee.symbol == UnreachableError_raise => true
@@ -282,8 +283,8 @@ package object internal {
       val q"{ ${dummy @ q"def $_(in: $_): $_ = { ..$prelude; in match { case ..$clauses } }"}; () }" = x
       def toMtreeConverters: List[SharedConverter] = {
         def precisetpe(tree: Tree): Type = tree match {
-          case If(_, thenp, elsep) => lub(List(precisetpe(thenp), precisetpe(elsep)))
-          case Match(_, cases) => lub(cases.map(tree => precisetpe(tree.body)))
+          case If(_, thenp, elsep) => preciseLub(List(precisetpe(thenp), precisetpe(elsep)))
+          case Match(_, cases) => preciseLub(cases.map(tree => precisetpe(tree.body)))
           case Block(_, expr) => precisetpe(expr)
           case tree => tree.tpe
         }
@@ -323,25 +324,16 @@ package object internal {
           unmatched.isEmpty
         }
         def validateExhaustiveOutputs(): Boolean = {
-          val root = typeOf[scala.meta.Tree].typeSymbol.asClass
-          def allLeafCompanions(csym: ClassSymbol): List[Symbol] = {
-            val _ = csym.info // workaround for a knownDirectSubclasses bug
-            if (csym.isSealed) csym.knownDirectSubclasses.toList.map(_.asClass).flatMap(allLeafCompanions)
-            else if (csym.isFinal) {
-              // somehow calling companionSymbol on results of knownDirectSubclasses is flaky
-              val companion = csym.owner.info.member(csym.name.toTermName)
-              if (companion == NoSymbol) c.abort(c.enclosingPosition, "companionless leaf in @root hierarchy")
-              List(csym.companion)
-            } else if (csym.isModuleClass) {
-              // haven't encountered bugs here, but just in case
-              if (csym.module == NoSymbol) c.abort(c.enclosingPosition, "moduleless leaf in @root hierarchy")
-              List(csym.module)
-            } else c.abort(c.enclosingPosition, "open class in a @root hierarchy: " + csym)
-          }
-          val expected = mutable.Set(allLeafCompanions(root).distinct: _*)
+          val leafs = symbolOf[scala.meta.Tree].asRoot.allLeafs
+          val companions = leafs.map(leaf => {
+            // somehow calling companionSymbol on results of knownDirectSubclasses is flaky
+            // therefore, I'm doing exactly what companionSymbol should do, but manually
+            val companion = leaf.sym.owner.info.member(leaf.sym.name.toTermName)
+            companion.orElse(c.abort(c.enclosingPosition, "companionless leaf in @root hierarchy"))
+          })
+          val expected = mutable.Set(companions: _*)
           (prelude ++ clauses).foreach(_.foreach(sub => if (sub.symbol != null) expected -= sub.symbol))
           val unmatched = expected.filter(sym => {
-            sym.fullName != "scala.meta.internal.ast.Name.Indeterminate" && // never produced by the converter
             sym.fullName != "scala.meta.internal.ast.Pat.Interpolate" && // not implemented yet
             sym.fullName != "scala.meta.internal.ast.Ctor.Ref.Name" && // Ctor.Name is an alias to Ctor.Ref.Name, and it is very well used in the converter
             sym.fullName != "scala.meta.internal.ast.Ctor.Name" && // handled in a helper outside the @converter
@@ -349,7 +341,8 @@ package object internal {
             sym.fullName != "scala.meta.internal.ast.Ctor.Ref.Project" && // handled in a helper outside the @converter
             sym.fullName != "scala.meta.internal.ast.Ctor.Ref.Function" && // handled in a helper outside the @converter
             sym.fullName != "scala.meta.internal.ast.Type.Name" && // handled in a helper outside the @converter
-            !sym.fullName.startsWith("scala.meta.internal.ast.Lit") // handled in a helper outside the @converter
+            !sym.fullName.startsWith("scala.meta.internal.ast.Lit") && // handled in a helper outside the @converter
+            sym.fullName != "scala.meta.internal.ast.Unquote" // never produced by the converter
           })
           val s_unmatched = unmatched.map(sym => sym.fullName.replace("scala.meta.internal.ast.", "")).mkString(", ")
           if (unmatched.nonEmpty) c.error(c.enclosingPosition, "@converter is not exhaustive in its outputs; missing: " + s_unmatched)
@@ -652,30 +645,79 @@ package object internal {
         transformer.transform(x).setType(ret)
       }
     }
+    object Scope {
+      def unapplySeq(scope: Scope): Some[Seq[Symbol]] = Some(scope.toList)
+    }
+    object ThisType {
+      def unapply(sym: Symbol): Option[(Symbol, Type, Type)] = {
+        if (sym.name == TypeName("ThisType")) {
+          sym.info match {
+            case TypeBounds(lo, hi) => Some((sym, lo, hi))
+            case _ => None
+          }
+        } else {
+          None
+        }
+      }
+    }
+    // NOTE: Previously, when @ast classes were really classes, we were using the standard `lub` function.
+    //
+    // What was useful about it is that it allowed us to emulate union types.
+    // For example, for List(Defn.Class, Defn.Trait) it would return:
+    // Member.Type with Defn{type ThisType >: Defn.Trait with Defn.Class <: Member.Type with Defn}.
+    // Now, when @ast classes are publicly represented as traits, lub is less useful:
+    // Member.Type with Defn{type ThisType <: Member.Type with Defn}.
+    //
+    // Therefore, what we will do here is produce the lub as it could be seen before,
+    // restoring the balance in the universe.
+    //
+    // Annoyingly enough, in the new scheme of things, sometimes we don't even get refined types
+    // e.g. for List(Decl.Var, Decl.Var, Defn.Val, Defn.Var), we simply get Stat, which is totally unacceptable.
+    // Allright, time to build the refined type manually.
+    def preciseLub(tpes0: List[Type]): Type = {
+      val tpes = {
+        val tpes1 = tpes0.filter(tpe => !(tpe =:= NothingTpe))
+        tpes1.flatMap({
+          case RefinedType(_, Scope(ThisType(_, RefinedType(tpes1, _), _))) => tpes1
+          case tpe1 => List(tpe1)
+        })
+      }
+      val crudeLub = lub(tpes)
+      if (tpes.length > 1 && tpes.forall(_ <:< TreeTpe)) {
+        val parents = crudeLub match { case RefinedType(parents, _) => parents; case tpe => List(tpe) }
+        val thisOwner = {
+          val poweru = u.asInstanceOf[scala.reflect.internal.SymbolTable]
+          val result = c.internal.enclosingOwner.asInstanceOf[poweru.Symbol].newRefinementClass(poweru.NoPosition)
+          result.asInstanceOf[u.Symbol]
+        }
+        val thisScope = {
+          val thisType = thisOwner.newTypeSymbol(TypeName("ThisType"), flags = DEFERRED)
+          thisType.setInfo(typeBounds(intersectionType(tpes), intersectionType(parents)))
+          newScopeWith(thisType)
+        }
+        val preciseLub = refinedType(parents, thisScope)
+        thisOwner.setInfo(preciseLub)
+        preciseLub
+      } else {
+        crudeLub
+      }
+    }
     // NOTE: postprocessing is not mandatory, but it's sort of necessary to simplify types
     // due to the fact that we have `type ThisType` in every root, branch and leaf node
     // lubs of node types can have really baroque ThisType refinements :)
     def cleanLub(tpes: List[Type]): Type = {
-      object Scope { def unapplySeq(scope: Scope): Some[Seq[Symbol]] = Some(scope.toList) }
-      object ThisType { def unapply(sym: Symbol): Boolean = sym.name == TypeName("ThisType") }
       lub(tpes).dealias match {
-        case RefinedType(List(underlying), Scope(ThisType())) => underlying
-        case RefinedType(parents, Scope(ThisType())) => cleanLub(parents)
+        case RefinedType(List(underlying), Scope(ThisType(_, _, _))) => underlying
+        case RefinedType(parents, Scope(ThisType(_, _, _))) => cleanLub(parents)
         case lub => lub
       }
     }
     def extractIntersections(tpe: Type): List[Type] = {
-      object Scope { def unapplySeq(scope: Scope): Some[Seq[Symbol]] = Some(scope.toList) }
-      object ThisType { def unapply(sym: Symbol): Option[Symbol] = if (sym.name == TypeName("ThisType")) Some(sym) else None }
       tpe.dealias match {
-        case RefinedType(_, Scope(ThisType(sym))) =>
-          sym.info match {
-            case TypeBounds(RefinedType(parents, Scope()), _) => parents
-            case TypeBounds(parent, _) => List(parent)
-            case _ => unreachable(debug(sym.info, showRaw(sym.info)))
-          }
-        case tpe =>
-          List(tpe)
+        case RefinedType(_, Scope(ThisType(sym, NothingTpe, _))) => unreachable
+        case RefinedType(_, Scope(ThisType(sym, RefinedType(parents, Scope()), _))) => parents
+        case RefinedType(_, Scope(ThisType(sym, parent, _))) => List(parent)
+        case tpe => List(tpe)
       }
     }
     def mkAttributedApply(m: MethodSymbol, arg: Tree): Apply = {

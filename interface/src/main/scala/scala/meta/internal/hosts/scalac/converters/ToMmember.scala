@@ -45,14 +45,14 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
         val gsym = lsym.gsymbol
         val gpriv = gsym.privateWithin.orElse(gsym.owner)
         if (gsym.hasFlag(LOCAL)) {
-          if (gsym.hasFlag(PROTECTED)) List(m.Mod.Protected(m.Term.This(None).withDenot(gpriv)))
-          else if (gsym.hasFlag(PRIVATE)) List(m.Mod.Private(m.Term.This(None).withDenot(gpriv)))
+          if (gsym.hasFlag(PROTECTED)) List(m.Mod.Protected(m.Term.This(m.Name.Anonymous().withDenot(gpriv))))
+          else if (gsym.hasFlag(PRIVATE)) List(m.Mod.Private(m.Term.This(m.Name.Anonymous().withDenot(gpriv))))
           else unreachable(debug(gsym, gsym.flags, gsym.getClass, gsym.owner))
         } else if (gsym.hasAccessBoundary && gpriv != g.NoSymbol) {
           // TODO: `private[pkg] class C` doesn't have PRIVATE in its flags
           // so we need to account for that!
-          if (gsym.hasFlag(PROTECTED)) List(m.Mod.Protected(gpriv.rawcvt(g.Ident(gpriv)).require[m.Name.AccessBoundary]))
-          else List(m.Mod.Private(gpriv.rawcvt(g.Ident(gpriv)).require[m.Name.AccessBoundary]))
+          if (gsym.hasFlag(PROTECTED)) List(m.Mod.Protected(gpriv.rawcvt(g.Ident(gpriv)).require[m.Name.Qualifier]))
+          else List(m.Mod.Private(gpriv.rawcvt(g.Ident(gpriv)).require[m.Name.Qualifier]))
         } else {
           if (gsym.hasFlag(PROTECTED)) List(m.Mod.Protected(m.Name.Anonymous().withDenot(gsym.owner)))
           else if (gsym.hasFlag(PRIVATE)) List(m.Mod.Private(m.Name.Anonymous().withDenot(gsym.owner)))
@@ -183,13 +183,13 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
             val mintpCall = mcallInterpreter("jvmField", "(Ljava/lang/String;)Ljava/lang/reflect/Field;", mintpArgs)
             val gField_get = g.typeOf[java.lang.reflect.Field].member(g.TermName("get"))
             val mget = m.Term.Select(mintpCall, m.Term.Name("get").withDenot(gField_get))
-            m.Term.Apply(mget, List(m.Term.This(None).withDenot(gfield.owner)))
+            m.Term.Apply(mget, List(m.Term.This(m.Name.Anonymous().withDenot(gfield.owner))))
           }
           def mintrinsic(gmeth: g.Symbol) = {
             val className = g.transformedType(gmeth.owner.tpe).toString
             val methodSig = gmeth.name.encoded + gmeth.tpe.jvmsig
             val mintpArgs = {
-              val mthisarg = m.Term.This(None).withDenot(gmeth.owner)
+              val mthisarg = m.Term.This(m.Name.Anonymous().withDenot(gmeth.owner))
               val motherargs = gmeth.paramss.flatten.map(gparam => gparam.asTerm.rawcvt(g.Ident(gparam)))
               m.Lit.String(className + "." + methodSig) +: mthisarg +: motherargs
             }
@@ -203,7 +203,7 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
             val gMethod_invoke = g.typeOf[java.lang.reflect.Method].member(g.TermName("invoke"))
             val minvoke = m.Term.Select(mintpCall, m.Term.Name("invoke").withDenot(gMethod_invoke))
             val margs = {
-              val mthisarg = m.Term.This(None).withDenot(gmeth.owner)
+              val mthisarg = m.Term.This(m.Name.Anonymous().withDenot(gmeth.owner))
               val motherargs = gmeth.paramss.flatten.map(gparam => gparam.asTerm.rawcvt(g.Ident(gparam)))
               mthisarg +: motherargs
             }
