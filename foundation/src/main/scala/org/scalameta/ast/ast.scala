@@ -89,7 +89,7 @@ class AstMacros(val c: Context) {
       // step 5: turn all parameters into vars, create getters and setters
       val fieldParamss = paramss
       paramss1 ++= fieldParamss.map(_.map{ case p @ q"$mods val $name: $tpt = $default" => q"${undefault(unoverride(unprivatize(varify(mods))))} val ${internalize(p.name)}: $tpt" })
-      astats1 ++= fieldParamss.flatten.map(p => {
+      istats1 ++= fieldParamss.flatten.map(p => {
         var getterAnns = List(q"new $AstInternal.astField")
         if (p.mods.annotations.exists(_.toString.contains("auxiliary"))) getterAnns :+= q"new $AstInternal.auxiliary"
         val getterMods = Modifiers(DEFERRED, typeNames.EMPTY, getterAnns)
