@@ -223,7 +223,7 @@ private[meta] trait Api {
     @hosted def isPrivate: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Private])
     @hosted def isProtected: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Protected])
     @hosted def isPublic: Boolean = !tree.isPrivate && !tree.isProtected
-    @hosted def accessBoundary: Option[Name.AccessBoundary] = tree.mods.collectFirst { case impl.Mod.Private(name) => name; case impl.Mod.Protected(name) => name }
+    @hosted def accessBoundary: Option[Name.Qualifier] = tree.mods.collectFirst { case impl.Mod.Private(name) => name; case impl.Mod.Protected(name) => name }
     @hosted def isImplicit: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Implicit])
     @hosted def isFinal: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Final]) || tree.isObject
     @hosted def isSealed: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Sealed])

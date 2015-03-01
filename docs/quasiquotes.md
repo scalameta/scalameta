@@ -196,8 +196,8 @@
                   | Quasiquote
 ------------------|-----------------
  Annotation       | `mod"@$expr"`
- Private          | `mod"private"`, `mod"private[$bname]"`
- Protected        | `mod"protected"`, `mod"protected[$bname]"`
+ Private          | `mod"private"`, `mod"private[$qname]"`
+ Protected        | `mod"protected"`, `mod"protected[$qname]"`
  Implicit         | `mod"implicit"`
  Final            | `mod"final"`
  Sealed           | `mod"sealed"`
@@ -240,7 +240,7 @@
  meta.Member              | `$member`     | `q`
  meta.Mod                 | `$mod`        | `mod`
  meta.Name.Indeterminate  | `$iname`      | Can't be constructed, only extracted from `importee"..."` and `mod"..."`
- meta.Name.AccessBoundary | `$bname`      | `q`, `t`, anonymous names can't be constructed, only extracted from `mod"..."`
+ meta.Name.Qualifier      | `$qname`      | `q`, `t`, anonymous names can't be constructed, only extracted from `mod"..."`
  meta.Pat                 | `$pat`        | `p`
  meta.Pat.Arg             | `$apat`       | `p`
  meta.Pat.Type            | `$ptpe`       | `pt`

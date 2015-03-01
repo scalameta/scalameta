@@ -112,7 +112,7 @@ private[meta] object SyntacticInfo {
       mods.exists { _.getClass == tag.runtimeClass }
     def getAll[T <: Mod](implicit tag: ClassTag[T]): List[T] =
       mods.collect { case m if m.getClass == tag.runtimeClass => m.require[T] }
-    def accessBoundary: Option[Name.AccessBoundary] = mods.collectFirst{ case Mod.Private(name) => name; case Mod.Protected(name) => name }
+    def accessBoundary: Option[Name.Qualifier] = mods.collectFirst{ case Mod.Private(name) => name; case Mod.Protected(name) => name }
   }
   implicit class XtensionStat(stat: Stat) {
     def isTopLevelStat: Boolean = stat match {
@@ -1759,8 +1759,8 @@ private[meta] abstract class AbstractParser { parser =>
     if (in.token.is[`private`] || in.token.is[`protected`]) {
       Some(autoPos {
         val mod = in.token match {
-          case _: `private` => (name: Name.AccessBoundary) => Mod.Private(name)
-          case _: `protected` => (name: Name.AccessBoundary) => Mod.Protected(name)
+          case _: `private` => (name: Name.Qualifier) => Mod.Private(name)
+          case _: `protected` => (name: Name.Qualifier) => Mod.Protected(name)
           case other => unreachable(debug(other, other.show[Raw]))
         }
         next()

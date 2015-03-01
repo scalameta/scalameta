@@ -86,8 +86,8 @@ class ReflectionSuite extends AdtSuite {
       |scala.collection.immutable.Seq[scala.meta.internal.ast.Type]
       |scala.meta.internal.ast.Ctor.Name
       |scala.meta.internal.ast.Ctor.Primary
-      |scala.meta.internal.ast.Name.AccessBoundary
       |scala.meta.internal.ast.Name.Indeterminate
+      |scala.meta.internal.ast.Name.Qualifier
       |scala.meta.internal.ast.Pat
       |scala.meta.internal.ast.Pat.Arg
       |scala.meta.internal.ast.Pat.Type
