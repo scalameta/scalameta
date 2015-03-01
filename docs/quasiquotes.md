@@ -19,8 +19,8 @@
 
                    | Quasiquote
 -------------------|------------------
- This              | `q"$stropt.this"`
- Super             | `q"$stropt.super[$stropt]"`
+ This              | `q"this"`, `q"$qname.this"`
+ Super             | `q"super"`, `q"$qname.super"`, `q"super[$qname]"`, `q"$qname.super[$qname]"`
  Name              | `q"name"`
  Selection         | `q"$expr.$name"`
  Interpolation     | `q""" $name"$${..$exprs}" """`
@@ -196,8 +196,8 @@
                   | Quasiquote
 ------------------|-----------------
  Annotation       | `mod"@$expr"`
- Private          | `mod"private"`, `mod"private[$bname]"`
- Protected        | `mod"protected"`, `mod"protected[$bname]"`
+ Private          | `mod"private"`, `mod"private[$qname]"`
+ Protected        | `mod"protected"`, `mod"protected[$qname]"`
  Implicit         | `mod"implicit"`
  Final            | `mod"final"`
  Sealed           | `mod"sealed"`
@@ -239,8 +239,8 @@
  meta.Enumerator          | `$enumerator` | `enumerator`
  meta.Member              | `$member`     | `q`
  meta.Mod                 | `$mod`        | `mod`
- meta.Name.Imported       | `$iname`      | Can't be constructed, only extracted from `importee"..."`
- meta.Name.AccessBoundary | `$bname`      | `q`, `t`, anonymous names can't be constructed, only extracted from `mod"..."`
+ meta.Name.Indeterminate  | `$iname`      | Can't be constructed, only extracted from `importee"..."` and `mod"..."`
+ meta.Name.Qualifier      | `$qname`      | `q`, `t`, anonymous names can't be constructed, only extracted from `mod"..."`
  meta.Pat                 | `$pat`        | `p`
  meta.Pat.Arg             | `$apat`       | `p`
  meta.Pat.Type            | `$ptpe`       | `pt`

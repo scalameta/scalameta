@@ -130,12 +130,9 @@ private[meta] trait Api {
       val prefixlessName = tree.name match {
         case name: impl.Name.Anonymous => name
         case name: impl.Name.Indeterminate => name
-        case name: impl.Name.Imported => name
         case name: impl.Term.Name => name.copy(denot = stripPrefix(name.denot))
         case name: impl.Type.Name => name.copy(denot = stripPrefix(name.denot))
         case name: impl.Ctor.Name => name.copy(denot = stripPrefix(name.denot))
-        case name: impl.Term.This => name.copy(denot = stripPrefix(name.denot))
-        case name: impl.Term.Super => unreachable(debug(tree, tree.show[Raw]))
       }
       prefixlessName.defn
     }
@@ -154,7 +151,6 @@ private[meta] trait Api {
         case       impl.Pkg(name: impl.Term.Name, _) => name
         case       impl.Pkg(impl.Term.Select(_, name: impl.Term.Name), _) => name
         case tree: impl.Pkg.Object => tree.name
-        case tree: impl.Term.Param if tree.parent.map(_.isInstanceOf[impl.Template]).getOrElse(false) => impl.Term.This(???)
         case tree: impl.Term.Param => tree.name
         case tree: impl.Type.Param => tree.name
         case tree: impl.Ctor.Primary => tree.name
@@ -224,7 +220,7 @@ private[meta] trait Api {
     @hosted def isPrivate: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Private])
     @hosted def isProtected: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Protected])
     @hosted def isPublic: Boolean = !tree.isPrivate && !tree.isProtected
-    @hosted def accessBoundary: Option[Name.AccessBoundary] = tree.mods.collectFirst { case impl.Mod.Private(name) => name; case impl.Mod.Protected(name) => name }
+    @hosted def accessBoundary: Option[Name.Qualifier] = tree.mods.collectFirst { case impl.Mod.Private(name) => name; case impl.Mod.Protected(name) => name }
     @hosted def isImplicit: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Implicit])
     @hosted def isFinal: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Final]) || tree.isObject
     @hosted def isSealed: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.Sealed])
@@ -458,10 +454,6 @@ private[meta] trait Api {
         }
       case member: Member =>
         member.name match {
-          case _: impl.Term.This =>
-            ???
-          case _: impl.Term.Super =>
-            ???
           case thisName: impl.Name =>
             internalFilter[T](that => {
               def thisDenot = thisName.denot.require[h.Denotation.Precomputed]

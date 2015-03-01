@@ -1,4 +1,4 @@
-import scala.meta.internal.ast._, Term.{Name => TermName, _}, Type.{Name => TypeName}
+import scala.meta.internal.ast._, Term.{Name => TermName, _}, Type.{Name => TypeName}, Name.{Anonymous, Indeterminate}
 import scala.meta.dialects.Scala211
 
 class TermSuite extends ParseSuite {
@@ -27,30 +27,30 @@ class TermSuite extends ParseSuite {
   }
 
   test("foo.this") {
-    val This(Some("foo")) = term("foo.this")
+    val This(Indeterminate("foo")) = term("foo.this")
   }
 
   test("this") {
-    val This(None) = term("this")
+    val This(Anonymous()) = term("this")
   }
 
   test("a.super[b].c") {
-    val Select(Super(Some("a"), Some("b")),
+    val Select(Super(Indeterminate("a"), Indeterminate("b")),
                TermName("c")) = term("a.super[b].c")
   }
 
   test("super[b].c") {
-    val Select(Super(None, Some("b")),
+    val Select(Super(Anonymous(), Indeterminate("b")),
                TermName("c")) = term("super[b].c")
   }
 
   test("a.super.c") {
-    val Select(Super(Some("a"), None),
+    val Select(Super(Indeterminate("a"), Anonymous()),
                TermName("c")) = term("a.super.c")
   }
 
   test("super.c") {
-    val Select(Super(None, None), TermName("c")) = term("super.c")
+    val Select(Super(Anonymous(), Anonymous()), TermName("c")) = term("super.c")
   }
 
   test("s\"a $b c\"") {
@@ -165,12 +165,12 @@ class TermSuite extends ParseSuite {
   }
 
   test("(_: Int) => x") {
-    val Function(Term.Param(Nil, Name.Anonymous(), Some(TypeName("Int")), None) :: Nil,
+    val Function(Term.Param(Nil, Anonymous(), Some(TypeName("Int")), None) :: Nil,
                  TermName("x")) = term("(_: Int) => x")
   }
 
   test("_ => ()") {
-    val Function(Term.Param(Nil, Name.Anonymous(), None, None) :: Nil, Lit.Unit()) = term("_ => ()")
+    val Function(Term.Param(Nil, Anonymous(), None, None) :: Nil, Lit.Unit()) = term("_ => ()")
   }
 
   test("{ implicit x => () }") {

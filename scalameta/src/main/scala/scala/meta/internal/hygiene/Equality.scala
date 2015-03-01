@@ -14,13 +14,13 @@ import impl._
 // 2) some structurally equal refs may compare unequal when they refer to different defns
 
 // Now let's go through all of our refs and see how we should compare them.
-// At the moment, we have 19 different AST nodes that are subtype of Ref:
-// Term.This, Term.Super, Term.Name, Term.Select,
+// At the moment, we have 16 different AST nodes that are subtype of Ref:
+// Name.Indeterminate,
+// Term.Name, Term.Select,
 // Type.Name, Type.Select, Type.Project, Type.Singleton,
 // Pat.Type.Project,
 // Ctor.Ref.Name, Ctor.Ref.Select, Ctor.Ref.Project, Ctor.Ref.Function,
-// Selector.Wildcard, Selector.Name, Selector.Rename, Selector.Unimport,
-// Name.Indeterminate, Name.Imported.
+// Selector.Wildcard, Selector.Name, Selector.Rename, Selector.Unimport.
 
 // In the implementation that follows we do the following to compare these refs:
 // 1) XXX.Name vs name-like XXX.Select/Type.Project, where XXX can be Term, Type or Ctor.Ref, are compared equal if they refer to the same defn

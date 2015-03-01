@@ -2,6 +2,7 @@ package org.scalameta.ast
 
 import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
+import scala.annotation.meta.getter
 import scala.reflect.macros.blackbox.Context
 
 object internal {
@@ -10,8 +11,11 @@ object internal {
   class branch extends StaticAnnotation
   class astClass extends StaticAnnotation
   class astCompanion extends StaticAnnotation
-  class auxiliary extends StaticAnnotation
+  @getter class astField extends StaticAnnotation
+  @getter class auxiliary extends StaticAnnotation
+  class registry(fullNames: List[String]) extends StaticAnnotation
 
+  def hierarchyCheck[T]: Unit = macro Macros.hierarchyCheck[T]
   def productPrefix[T]: String = macro Macros.productPrefix[T]
   def loadField[T](f: T): Unit = macro Macros.loadField
   def storeField[T](f: T, v: T): Unit = macro Macros.storeField
@@ -20,12 +24,42 @@ object internal {
 
   class Macros(val c: Context) extends org.scalameta.adt.AdtReflection {
     val u: c.universe.type = c.universe
+    val mirror: u.Mirror = c.mirror
     import c.universe._
+    import c.internal._
+    import decorators._
     import definitions._
-    def productPrefix[T](implicit T: c.WeakTypeTag[T]) = {
+    def hierarchyCheck[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
+      val sym = T.tpe.typeSymbol.asClass
+      val designation = if (sym.isRoot) "root" else if (sym.isBranch) "branch" else if (sym.isLeaf) "leaf" else ???
+      val roots = sym.baseClasses.filter(_.isRoot)
+      if (roots.length == 0 && sym.isLeaf) c.abort(c.enclosingPosition, s"rootless leaf is disallowed")
+      else if (roots.length > 1) c.abort(c.enclosingPosition, s"multiple roots for a $designation: " + (roots.map(_.fullName).init.mkString(", ")) + " and " + roots.last.fullName)
+      val root = roots.headOption.getOrElse(NoSymbol)
+      sym.baseClasses.map(_.asClass).foreach{bsym =>
+        val exempt =
+          bsym.isModuleClass ||
+          bsym == ObjectClass ||
+          bsym == AnyClass ||
+          bsym == symbolOf[scala.Serializable] ||
+          bsym == symbolOf[java.io.Serializable] ||
+          bsym == symbolOf[scala.Product] ||
+          bsym == symbolOf[scala.Equals] ||
+          root.info.baseClasses.contains(bsym)
+        if (!exempt && !bsym.isRoot && !bsym.isBranch && !bsym.isLeaf) c.abort(c.enclosingPosition, s"outsider parent of a $designation: ${bsym.fullName}")
+        // NOTE: sealedness is turned off because we can't have @ast hierarchy sealed anymore
+        // hopefully, in the future we'll find a way to restore sealedness
+        // if (!exempt && !bsym.isSealed && !bsym.isFinal) c.abort(c.enclosingPosition, s"unsealed parent of a $designation: ${bsym.fullName}")
+      }
+      q"()"
+    }
+    def interfaceToApi[I, A](interface: c.Tree)(implicit I: c.WeakTypeTag[I], A: c.WeakTypeTag[A]): c.Tree = {
+      q"$interface.asInstanceOf[$A]"
+    }
+    def productPrefix[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
       q"${T.tpe.typeSymbol.asLeaf.prefix}"
     }
-    def loadField(f: c.Tree) = {
+    def loadField(f: c.Tree): c.Tree = {
       val q"this.$finternalName" = f
       def uncapitalize(s: String) = if (s.length == 0) "" else { val chars = s.toCharArray; chars(0) = chars(0).toLower; new String(chars) }
       val fname = TermName(finternalName.toString.stripPrefix("_"))
@@ -42,7 +76,7 @@ object internal {
         """
       }
       f.tpe.finalResultType match {
-        case Primitive(tpe) => q""
+        case Primitive(tpe) => q"()"
         case Tree(tpe) => lazyLoad(pf => q"$pf.internalCopy(prototype = $pf, parent = this)")
         case OptionTree(tpe) => lazyLoad(pf => q"$pf.map(el => el.internalCopy(prototype = el, parent = this))")
         case OptionSeqTree(tpe) => lazyLoad(pf => q"$pf.map(_.map(el => el.internalCopy(prototype = el, parent = this)))")
@@ -50,9 +84,9 @@ object internal {
         case SeqSeqTree(tpe) => lazyLoad(pf => q"$pf.map(_.map(el => el.internalCopy(prototype = el, parent = this)))")
       }
     }
-    def storeField(f: c.Tree, v: c.Tree) = {
+    def storeField(f: c.Tree, v: c.Tree): c.Tree = {
       f.tpe.finalResultType match {
-        case Primitive(tpe) => q""
+        case Primitive(tpe) => q"()"
         case Tree(tpe) => q"$f = $v.internalCopy(prototype = $v, parent = node)"
         case OptionTree(tpe) => q"$f = $v.map(el => el.internalCopy(prototype = el, parent = node))"
         case OptionSeqTree(tpe) => q"$f = $v.map(_.map(el => el.internalCopy(prototype = el, parent = node)))"
@@ -61,7 +95,7 @@ object internal {
         case tpe => c.abort(c.enclosingPosition, s"unsupported field type $tpe")
       }
     }
-    def initField(f: c.Tree) = {
+    def initField(f: c.Tree): c.Tree = {
       f.tpe.finalResultType match {
         case Primitive(tpe) => q"$f"
         case Tree(tpe) => q"null"

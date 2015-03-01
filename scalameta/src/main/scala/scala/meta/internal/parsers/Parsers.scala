@@ -112,7 +112,7 @@ private[meta] object SyntacticInfo {
       mods.exists { _.getClass == tag.runtimeClass }
     def getAll[T <: Mod](implicit tag: ClassTag[T]): List[T] =
       mods.collect { case m if m.getClass == tag.runtimeClass => m.require[T] }
-    def accessBoundary: Option[Name.AccessBoundary] = mods.collectFirst{ case Mod.Private(name) => name; case Mod.Protected(name) => name }
+    def accessBoundary: Option[Name.Qualifier] = mods.collectFirst{ case Mod.Private(name) => name; case Mod.Protected(name) => name }
   }
   implicit class XtensionStat(stat: Stat) {
     def isTopLevelStat: Boolean = stat match {
@@ -836,16 +836,18 @@ private[meta] abstract class AbstractParser { parser =>
   def path(thisOK: Boolean = true): Term.Ref = {
     def stop = token.isNot[`.`] || ahead { token.isNot[`this`] && token.isNot[`super`] && !token.is[Ident] }
     if (token.is[`this`]) {
+      val anonqual = atPos(in.tokenPos, in.prevTokenPos)(Name.Anonymous())
       next()
-      val thisnone = atPos(in.prevTokenPos, auto)(Term.This(None))
-      if (stop && thisOK) thisnone
+      val thisp = atPos(in.prevTokenPos, auto)(Term.This(anonqual))
+      if (stop && thisOK) thisp
       else {
         accept[`.`]
-        selectors(thisnone)
+        selectors(thisp)
       }
     } else if (token.is[`super`]) {
+      val anonqual = atPos(in.tokenPos, in.prevTokenPos)(Name.Anonymous())
       next()
-      val superp = atPos(in.prevTokenPos, auto)(Term.Super(None, mixinQualifierOpt()))
+      val superp = atPos(in.prevTokenPos, auto)(Term.Super(anonqual, mixinQualifier()))
       accept[`.`]
       val supersel = atPos(superp, auto)(Term.Select(superp, termName()))
       if (stop) supersel
@@ -855,20 +857,21 @@ private[meta] abstract class AbstractParser { parser =>
       }
     } else {
       val name = termName()
+      val qual = atPos(name, name)(Name.Indeterminate(name.value))
       if (stop) name
       else {
         next()
         if (token.is[`this`]) {
           next()
-          val thisid = atPos(name, auto)(Term.This(Some(name.value)))
-          if (stop && thisOK) thisid
+          val thisp = atPos(name, auto)(Term.This(qual))
+          if (stop && thisOK) thisp
           else {
             accept[`.`]
-            selectors(thisid)
+            selectors(thisp)
           }
         } else if (token.is[`super`]) {
           next()
-          val superp = atPos(name, auto)(Term.Super(Some(name.value), mixinQualifierOpt()))
+          val superp = atPos(name, auto)(Term.Super(qual, mixinQualifier()))
           accept[`.`]
           val supersel = atPos(superp, auto)(Term.Select(superp, termName()))
           if (stop) supersel
@@ -884,7 +887,7 @@ private[meta] abstract class AbstractParser { parser =>
   }
 
   def selector(t: Term): Term.Select = atPos(t, auto)(Term.Select(t, termName()))
-  def selectors(t: Term.Ref): Term.Ref ={
+  def selectors(t: Term.Ref): Term.Ref = {
     val t1 = selector(t)
     if (token.is[`.`] && ahead { token.is[Ident] }) {
       next()
@@ -897,9 +900,16 @@ private[meta] abstract class AbstractParser { parser =>
   *   MixinQualifier ::= `[' Id `]'
   *   }}}
   */
-  def mixinQualifierOpt(): Option[String] =
-    if (token.is[`[`]) Some(inBrackets(typeName().value))
-    else None
+  def mixinQualifier(): Name.Qualifier = {
+    if (token.is[`[`]) {
+      inBrackets {
+        val name = typeName()
+        atPos(name, name)(Name.Indeterminate(name.value))
+      }
+    } else {
+      atPos(in.tokenPos, in.prevTokenPos)(Name.Anonymous())
+    }
+  }
 
   /** {{{
    *  StableId ::= Id
@@ -974,7 +984,7 @@ private[meta] abstract class AbstractParser { parser =>
         case _: Ident   => termName()
         // case _: `_ ` => freshPlaceholder()       // ifonly etapolation
         case _: `{`     => dropTrivialBlock(expr()) // dropAnyBraces(expr0(Local))
-        case _: `this`  => next(); atPos(in.prevTokenPos, auto)(Term.This(None))
+        case _: `this`  => val qual = atPos(in.tokenPos, in.prevTokenPos)(Name.Anonymous()); next(); atPos(in.prevTokenPos, auto)(Term.This(qual))
         case _          => syntaxError("error in interpolated string: identifier or block expected", at = token)
       }
     }, result = Term.Interpolate(_, _, _))
@@ -1331,6 +1341,7 @@ private[meta] abstract class AbstractParser { parser =>
           case (t: Term) :: rest                => t :: loop(rest)
           case (nmd: Term.Arg.Named) :: rest    => atPos(nmd, nmd)(Term.Assign(nmd.name, nmd.rhs)) :: loop(rest)
           case (rep: Term.Arg.Repeated) :: rest => syntaxError("repeated argument not allowed here", at = rep)
+          case _                                => unreachable(debug(args))
         }
         atPos(openParenPos, closeParenPos)(makeTupleTerm(loop(args)))
       }
@@ -1758,8 +1769,8 @@ private[meta] abstract class AbstractParser { parser =>
     if (in.token.is[`private`] || in.token.is[`protected`]) {
       Some(autoPos {
         val mod = in.token match {
-          case _: `private` => (name: Name.AccessBoundary) => Mod.Private(name)
-          case _: `protected` => (name: Name.AccessBoundary) => Mod.Protected(name)
+          case _: `private` => (name: Name.Qualifier) => Mod.Private(name)
+          case _: `protected` => (name: Name.Qualifier) => Mod.Protected(name)
           case other => unreachable(debug(other, other.show[Raw]))
         }
         next()
@@ -1767,8 +1778,14 @@ private[meta] abstract class AbstractParser { parser =>
         else {
           next()
           val result = {
-            if (in.token.is[`this`]) { next(); mod(atPos(in.prevTokenPos, auto)(Term.This(None))) }
-            else { val name = termName(); mod(atPos(name, name)(Name.Indeterminate(name.value))) }
+            if (in.token.is[`this`]) {
+              val qual = atPos(in.tokenPos, in.prevTokenPos)(Name.Anonymous())
+              next()
+              mod(atPos(in.prevTokenPos, auto)(Term.This(qual)))
+            } else {
+              val name = termName()
+              mod(atPos(name, name)(Name.Indeterminate(name.value)))
+            }
           }
           accept[`]`]
           result
@@ -2020,7 +2037,7 @@ private[meta] abstract class AbstractParser { parser =>
     sid match {
       case Term.Select(sid: Term.Ref, name: Term.Name) if sid.isStableId =>
         if (token.is[`.`]) dotselectors
-        else Import.Clause(sid, atPos(name, name)(Import.Selector.Name(atPos(name, name)(Name.Imported(name.value)))) :: Nil)
+        else Import.Clause(sid, atPos(name, name)(Import.Selector.Name(atPos(name, name)(Name.Indeterminate(name.value)))) :: Nil)
       case _ => dotselectors
     }
   }
@@ -2035,7 +2052,7 @@ private[meta] abstract class AbstractParser { parser =>
 
   def importWildcardOrName(): Import.Selector = autoPos {
     if (token.is[`_ `]) { next(); Import.Selector.Wildcard() }
-    else { val name = termName(); Import.Selector.Name(atPos(name, name)(Name.Imported(name.value))) }
+    else { val name = termName(); Import.Selector.Name(atPos(name, name)(Name.Indeterminate(name.value))) }
   }
 
   /** {{{
@@ -2549,13 +2566,13 @@ private[meta] abstract class AbstractParser { parser =>
         first match {
           case name: Term.Placeholder =>
             self = atPos(first, first)(Term.Param(Nil, atPos(name, name)(Name.Anonymous()), None, None))
-          case name @ Term.This(None) =>
+          case name @ Term.This(Name.Anonymous()) =>
             self = atPos(first, first)(Term.Param(Nil, atPos(name, name)(Name.Anonymous()), None, None))
           case name: Term.Name =>
             self = atPos(first, first)(Term.Param(Nil, name, None, None))
           case Term.Ascribe(name: Term.Placeholder, tpt) =>
             self = atPos(first, first)(Term.Param(Nil, atPos(name, name)(Name.Anonymous()), Some(tpt), None))
-          case Term.Ascribe(name @ Term.This(None), tpt) =>
+          case Term.Ascribe(name @ Term.This(Name.Anonymous()), tpt) =>
             self = atPos(first, first)(Term.Param(Nil, atPos(name, name)(Name.Anonymous()), Some(tpt), None))
           case Term.Ascribe(name: Term.Name, tpt) =>
             self = atPos(first, first)(Term.Param(Nil, name, Some(tpt), None))

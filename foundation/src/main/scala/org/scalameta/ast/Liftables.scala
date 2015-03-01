@@ -15,11 +15,12 @@ trait Liftables {
 
 class LiftableMacros(val c: Context) extends AdtReflection {
   val u: c.universe.type = c.universe
+  val mirror: u.Mirror = c.mirror
   import c.universe._
   def impl[T: WeakTypeTag]: c.Tree = {
     val root = weakTypeOf[T].typeSymbol.asAdt.root
     val leafs = weakTypeOf[T].typeSymbol.asAdt.root.allLeafs
-    if (leafs.isEmpty) c.abort(c.enclosingPosition, s"$root hasn't been initialized properly")
+    if (leafs.isEmpty) c.abort(c.enclosingPosition, s"$root has no known leafs")
     val u = q"${c.prefix}.u"
     val mainParam = c.freshName(TermName("x"))
     val mainModule = c.freshName(TermName("Module"))
@@ -50,11 +51,16 @@ class LiftableMacros(val c: Context) extends AdtReflection {
       })
       val body = {
         def reify = if (leaf.sym.isClass) q"$u.Apply($namePath, $args)" else q"$namePath"
-        if (!(leaf.tpe <:< c.mirror.staticClass("scala.meta.Name").asType.toType)) reify
-        else q"""
-          val maybeUnquotee = dummies.collectFirst{ case Dummy(id, 0 | 1, unquotee) if (id: String) == ($localParam.value: String) => unquotee }
-          maybeUnquotee.getOrElse($reify)
-        """
+        val NameTpe = c.mirror.staticClass("scala.meta.Name").asType.toType
+        val UnquoteTpe = c.mirror.staticClass("scala.meta.internal.ast.Unquote").asType.toType
+        if ((leaf.tpe <:< NameTpe) && !(leaf.tpe <:< UnquoteTpe)) {
+          q"""
+            val maybeUnquotee = dummies.collectFirst{ case Dummy(id, 0 | 1, unquotee) if (id: String) == ($localParam.value: String) => unquotee }
+            maybeUnquotee.getOrElse($reify)
+          """
+        } else {
+          reify
+        }
       }
       q"def $name($localParam: ${leaf.tpe}): $u.Tree = $body"
     })

@@ -201,15 +201,22 @@ object Code {
   // Branches
   // TODO: this match is not exhaustive: if I remove Mod.Package, then I get no warning
   implicit def codeTree[T <: api.Tree](implicit dialect: Dialect, style: Style): Code[T] = Code { x => (x: api.Tree) match {
+    // Bottom
+    case t: Unquote              => s("${...}")
+
     // Name
     case t: Name.Anonymous       => s("_")
     case t: Name.Indeterminate   => if (guessIsBackquoted(t)) s("`", t.value, "`") else s(t.value)
-    case t: Name.Imported        => if (guessIsBackquoted(t)) s("`", t.value, "`") else s(t.value)
 
     // Term
     case t: Term if t.isCtorCall => if (t.isInstanceOf[Ctor.Ref.Function]) s("=>") else s(p(AnnotTyp, t.ctorTpe), t.ctorArgss)
-    case t: Term.This            => m(SimpleExpr1, s(t.qual.map(s(_, ".")).getOrElse(s()), kw("this")))
-    case t: Term.Super           => s(t.thisp.map(thisp => s(thisp, ".")).getOrElse(s()), kw("super"), t.superp.map(st => s("[", st, "]")).getOrElse(s()))
+    case t: Term.This            =>
+      val qual = if (t.qual.isInstanceOf[Name.Anonymous]) s() else s(t.qual, ".")
+      m(Path, qual, kw("this"))
+    case t: Term.Super           =>
+      val thisqual = if (t.thisp.isInstanceOf[Name.Anonymous]) s() else s(t.thisp, ".")
+      val superqual = if (t.superp.isInstanceOf[Name.Anonymous]) s() else s("[", t.superp, "]")
+      m(Path, s(thisqual, kw("super"), superqual))
     case t: Term.Name            => m(Path, if (guessIsBackquoted(t)) s("`", t.value, "`") else s(t.value))
     case t: Term.Select          => m(Path, s(p(SimpleExpr, t.qual), if (guessIsPostfix(t)) " " else ".", t.name))
     case t: Term.Interpolate     =>

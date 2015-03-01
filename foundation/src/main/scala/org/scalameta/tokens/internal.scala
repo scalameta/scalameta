@@ -19,7 +19,7 @@ package object internal {
     def staticDynamicCheck[T](implicit T: c.WeakTypeTag[T]) = {
       if ((T.tpe <:< StaticTokenClass.toType) && (T.tpe <:< DynamicTokenClass.toType)) c.abort(c.enclosingPosition, s"${T.tpe} is classified as both static and dynamic token")
       if (!(T.tpe <:< StaticTokenClass.toType) && !(T.tpe <:< DynamicTokenClass.toType)) c.abort(c.enclosingPosition, s"${T.tpe} is classified as neither static nor dynamic token")
-      q""
+      q"()"
     }
   }
 }

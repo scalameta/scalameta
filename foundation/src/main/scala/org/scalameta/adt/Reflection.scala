@@ -4,9 +4,11 @@ import scala.reflect.api.Universe
 import org.scalameta.adt.{Internal => AdtInternal}
 import org.scalameta.ast.{internal => AstInternal}
 import scala.reflect.{classTag, ClassTag}
+import scala.collection.mutable
 
 trait AdtReflection {
   val u: Universe
+  val mirror: u.Mirror
   import u._
   import internal._
   import decorators._
@@ -17,8 +19,14 @@ trait AdtReflection {
     def isRoot: Boolean = hasAnnotation[AdtInternal.root]
     def isBranch: Boolean = hasAnnotation[AdtInternal.branch]
     def isLeaf: Boolean = hasAnnotation[AdtInternal.leafClass]
-    def isPayload: Boolean = sym.isTerm && sym.isParameter && !sym.isAuxiliary
-    def isAuxiliary: Boolean = hasAnnotation[AstInternal.auxiliary]
+    def isField: Boolean = {
+      val isMethodInLeafClass = sym.isMethod && sym.owner.isLeaf
+      val isParamGetter = sym.isTerm && sym.asTerm.isParamAccessor && sym.asTerm.isGetter && sym.isPublic
+      val isAstField = hasAnnotation[AstInternal.astField]
+      isMethodInLeafClass && (isParamGetter || isAstField)
+    }
+    def isPayload: Boolean = sym.isField && !sym.isAuxiliary
+    def isAuxiliary: Boolean = sym.isField && hasAnnotation[AstInternal.auxiliary]
     def asAdt: Adt = if (isRoot) sym.asRoot else if (isBranch) sym.asBranch else if (isLeaf) sym.asLeaf else sys.error("not an adt")
     def asRoot: Root = new Root(sym)
     def asBranch: Branch = new Branch(sym)
@@ -26,17 +34,36 @@ trait AdtReflection {
     def asField: Field = new Field(sym)
   }
 
+  private lazy val ScalaMetaTree: Symbol = scala.util.Try(mirror.staticClass("scala.meta.Tree")).getOrElse(NoSymbol)
+  private lazy val scalaMetaRegistry: Map[Symbol, List[Symbol]] = {
+    val unquoteClass = mirror.staticClass("scala.meta.internal.ast.Unquote")
+    val registry = mutable.Map[Symbol, List[Symbol]]()
+    unquoteClass.baseClasses.foreach(sym => {
+      if (sym.fullName.startsWith("scala.meta.")) {
+        val parents = sym.info.asInstanceOf[ClassInfoType].parents.map(_.typeSymbol)
+        val relevantParents = parents.filter(p => p.isClass && p.asClass.baseClasses.contains(ScalaMetaTree))
+        relevantParents.foreach(parent => registry(parent) = registry.getOrElseUpdate(parent, Nil) :+ sym)
+      }
+    })
+    registry.toMap
+  }
+
   private implicit class PrivateXtensionAdtSymbol(sym: Symbol) {
+    private def figureOutDirectSubclasses(sym: ClassSymbol): List[Symbol] = {
+      if (sym.isSealed) sym.knownDirectSubclasses.toList.sortBy(_.fullName)
+      else if (sym.baseClasses.contains(ScalaMetaTree)) scalaMetaRegistry(sym)
+      else sys.error("failed to figure out direct subclasses for ${sym.fullName}")
+    }
+
     private def ensureModule(sym: Symbol): Symbol = if (sym.isModuleClass) sym.owner.info.member(sym.name.toTermName) else sym
-    def branches: List[Symbol] = { sym.initialize; sym.asClass.knownDirectSubclasses.toList.filter(_.isBranch) }
-    def allBranches: List[Symbol] = sym.branches ++ sym.branches.flatMap(_.allBranches).distinct
-    def leafs: List[Symbol] = { sym.initialize; sym.asClass.knownDirectSubclasses.toList.filter(_.isLeaf).map(ensureModule) }
-    def allLeafs: List[Symbol] = sym.leafs ++ sym.branches.flatMap(_.allLeafs).distinct.map(ensureModule)
+    def branches: List[Symbol] = { sym.initialize; figureOutDirectSubclasses(sym.asClass).toList.filter(_.isBranch) }
+    def allBranches: List[Symbol] = (sym.branches ++ sym.branches.flatMap(_.allBranches)).distinct
+    def leafs: List[Symbol] = { sym.initialize; figureOutDirectSubclasses(sym.asClass).toList.filter(_.isLeaf).map(ensureModule) }
+    def allLeafs: List[Symbol] = (sym.leafs ++ sym.branches.flatMap(_.allLeafs)).map(ensureModule).distinct
 
     def root: Symbol = sym.asClass.baseClasses.reverse.find(_.isRoot).getOrElse(NoSymbol)
-    private def lastParamList: List[Symbol] = sym.info.decls.collect{ case ctor: MethodSymbol if ctor.isPrimaryConstructor => ctor }.head.paramLists.last
-    def fields: List[Symbol] = lastParamList.filter(p => p.isPayload)
-    def allFields: List[Symbol] = lastParamList
+    def fields: List[Symbol] = allFields.filter(p => p.isPayload)
+    def allFields: List[Symbol] = sym.info.decls.filter(_.isField).toList
   }
 
   trait CommonApi {
@@ -73,9 +100,9 @@ trait AdtReflection {
     override def toString = s"leaf $prefix"
   }
   class Field(val sym: Symbol) {
-    require(sym.isTerm && sym.isParameter)
+    require(sym.isField)
     def name: TermName = TermName(sym.name.toString.stripPrefix("_"))
-    def tpe: Type = sym.info
+    def tpe: Type = sym.info.finalResultType
     def isPayload: Boolean = sym.isPayload
     def isAuxiliary: Boolean = sym.isAuxiliary
     override def toString = s"field $name: $tpe" + (if (isAuxiliary) " (auxiliary)" else "")
