@@ -71,14 +71,14 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
             // so we can't invoke paccessqual on them, because that will produce crazy results
             Nil
           } else if (gmods.hasFlag(LOCAL)) {
-            if (gmods.hasFlag(PROTECTED)) List(m.Mod.Protected(m.Term.This(None).withDenot(gpriv)))
-            else if (gmods.hasFlag(PRIVATE)) List(m.Mod.Private(m.Term.This(None).withDenot(gpriv)))
+            if (gmods.hasFlag(PROTECTED)) List(m.Mod.Protected(m.Term.This(m.Name.Anonymous().withDenot(gpriv))))
+            else if (gmods.hasFlag(PRIVATE)) List(m.Mod.Private(m.Term.This(m.Name.Anonymous().withDenot(gpriv))))
             else unreachable(debug(gmods))
           } else if (gmods.hasAccessBoundary && gpriv != g.NoSymbol) {
             // TODO: `private[pkg] class C` doesn't have PRIVATE in its flags
             // so we need to account for that!
-            if (gmods.hasFlag(PROTECTED)) List(m.Mod.Protected(gpriv.rawcvt(g.Ident(gpriv)).require[m.Name.AccessBoundary]))
-            else List(m.Mod.Private(gpriv.rawcvt(g.Ident(gpriv)).require[m.Name.AccessBoundary]))
+            if (gmods.hasFlag(PROTECTED)) List(m.Mod.Protected(gpriv.rawcvt(g.Ident(gpriv)).require[m.Name.Qualifier]))
+            else List(m.Mod.Private(gpriv.rawcvt(g.Ident(gpriv)).require[m.Name.Qualifier]))
           } else {
             if (gmods.hasFlag(PROTECTED)) List(m.Mod.Protected(m.Name.Anonymous().withDenot(gsym.owner)))
             else if (gmods.hasFlag(PRIVATE)) List(m.Mod.Private(m.Name.Anonymous().withDenot(gsym.owner)))
@@ -394,9 +394,9 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
         // TODO: populate denotations
         m.Import(List(m.Import.Clause(expr.cvt_!, selectors.map({
           case g.ImportSelector(g.nme.WILDCARD, _, null, _)           => m.Import.Selector.Wildcard()
-          case g.ImportSelector(name1, _, name2, _) if name1 == name2 => m.Import.Selector.Name(m.Name.Imported(name1.toString))
-          case g.ImportSelector(name1, _, name2, _) if name1 != name2 => m.Import.Selector.Rename(m.Name.Imported(name1.toString), m.Name.Imported(name2.toString))
-          case g.ImportSelector(name, _, g.nme.WILDCARD, _)           => m.Import.Selector.Unimport(m.Name.Imported(name.toString))
+          case g.ImportSelector(name1, _, name2, _) if name1 == name2 => m.Import.Selector.Name(m.Name.Indeterminate(name1.toString))
+          case g.ImportSelector(name1, _, name2, _) if name1 != name2 => m.Import.Selector.Rename(m.Name.Indeterminate(name1.toString), m.Name.Indeterminate(name2.toString))
+          case g.ImportSelector(name, _, g.nme.WILDCARD, _)           => m.Import.Selector.Unimport(m.Name.Indeterminate(name.toString))
         }))))
       case in @ g.Template(_, _, _) =>
         val SyntacticTemplate(gsupersym, gparents, gself, gearlydefns, gstats) = in
@@ -570,11 +570,13 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
         unreachable
       case in @ g.Super(qual @ g.This(_), mix) =>
         require(in.symbol.isClass)
-        val superdumb = m.Term.Super((qual.cvt : m.Term.This).qual, if (mix != g.tpnme.EMPTY) Some(in.mix.toString) else None)
-        superdumb.withDenot(qual.tpe, in.tpe.typeSymbol)
+        val mthis = (qual.cvt : m.Term.This).qual
+        val msuperdumb = if (mix != g.tpnme.EMPTY) m.Name.Indeterminate(in.mix.toString) else m.Name.Anonymous()
+        m.Term.Super(mthis, msuperdumb.withDenot(qual.tpe, in.tpe.typeSymbol))
       case in @ g.This(qual) =>
         require(!in.symbol.isPackageClass)
-        m.Term.This(if (qual != g.tpnme.EMPTY) Some(in.symbol.name.toString) else None).withDenot(in.tpe, in.symbol)
+        val mqualdumb = if (qual != g.tpnme.EMPTY) m.Name.Indeterminate(g.Ident(in.symbol).alias) else m.Name.Anonymous()
+        m.Term.This(mqualdumb.withDenot(in.tpe, in.symbol))
       case in: g.PostfixSelect =>
         unreachable
       case in @ g.Select(qual, name) =>
