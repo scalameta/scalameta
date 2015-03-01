@@ -1,5 +1,5 @@
 import scala.meta.internal.ast.{Name => _, _}, Import._, Selector._, Term.{This, Name => TermName, Select, Super}
-import scala.meta.internal.ast.Name.Indeterminate
+import scala.meta.internal.ast.Name.{Anonymous, Indeterminate}
 import scala.meta.dialects.Scala211
 
 class ImportSuite extends ParseSuite {
@@ -13,12 +13,12 @@ class ImportSuite extends ParseSuite {
   }
 
   test("import super.foo.bar") {
-    val Import(Clause(Select(Super(None, None), TermName("foo")), Name(Indeterminate("bar")) :: Nil) :: Nil) =
+    val Import(Clause(Select(Super(Anonymous(), Anonymous()), TermName("foo")), Name(Indeterminate("bar")) :: Nil) :: Nil) =
       templStat("import super.foo.bar")
   }
 
   test("import this.foo.bar") {
-    val Import(Clause(Select(This(None), TermName("foo")), Name(Indeterminate("bar")) :: Nil) :: Nil) =
+    val Import(Clause(Select(This(Anonymous()), TermName("foo")), Name(Indeterminate("bar")) :: Nil) :: Nil) =
       templStat("import this.foo.bar")
   }
 
@@ -28,12 +28,12 @@ class ImportSuite extends ParseSuite {
   }
 
   test("import super.foo._") {
-    val Import(Clause(Select(Super(None, None), TermName("foo")), Wildcard() :: Nil) :: Nil) =
+    val Import(Clause(Select(Super(Anonymous(), Anonymous()), TermName("foo")), Wildcard() :: Nil) :: Nil) =
       templStat("import super.foo._")
   }
 
   test("import this.foo._") {
-    val Import(Clause(Select(This(None), TermName("foo")), Wildcard() :: Nil) :: Nil) =
+    val Import(Clause(Select(This(Anonymous()), TermName("foo")), Wildcard() :: Nil) :: Nil) =
       templStat("import this.foo._")
   }
 

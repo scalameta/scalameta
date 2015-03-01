@@ -30,8 +30,6 @@ private[meta] object NameRef {
 private[meta] object OpaqueRef {
   def unapply(tree: Tree): Option[(Name, Int)] = {
     tree match {
-      case tree: Term.This => Some((tree, Term.This.internalTag))
-      case tree: Term.Super => Some((tree, Term.Super.internalTag))
       case tree: Name.Indeterminate => Some((tree, Name.Indeterminate.internalTag))
       case _ => None
     }

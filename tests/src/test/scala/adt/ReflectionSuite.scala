@@ -57,7 +57,6 @@ class ReflectionSuite extends AdtSuite {
       |scala.Float
       |scala.Int
       |scala.Long
-      |scala.Option[String]
       |scala.Option[scala.collection.immutable.Seq[scala.meta.internal.ast.Stat]]
       |scala.Option[scala.meta.internal.ast.Term]
       |scala.Option[scala.meta.internal.ast.Type.Arg]

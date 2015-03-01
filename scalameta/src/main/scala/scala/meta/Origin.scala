@@ -29,12 +29,12 @@ object Origin {
       val maxEndTokenPos = input.tokens.length - 1
       require(input.tokens.last.is[Token.EOF])
       require(0 <= startTokenPos && startTokenPos < maxStartTokenPos && debug(startTokenPos, input.tokens.length))
-      require(0 <= endTokenPos && endTokenPos < maxEndTokenPos && debug(endTokenPos, input.tokens.length))
+      require(-1 <= endTokenPos && endTokenPos < maxEndTokenPos && debug(endTokenPos, input.tokens.length))
       require(startTokenPos <= endTokenPos + 1 && debug(startTokenPos, endTokenPos))
     }
     private implicit lazy val thisDialect: Dialect = this.dialect
     val start = input.tokens.apply(startTokenPos).start
-    val end = input.tokens.apply(endTokenPos).end
+    val end = if (endTokenPos != -1) input.tokens.apply(endTokenPos).end else -1
     def tokens: Seq[Token] = input.tokens(dialect).slice(startTokenPos, endTokenPos + 1)
   }
 

@@ -210,8 +210,13 @@ object Code {
 
     // Term
     case t: Term if t.isCtorCall => if (t.isInstanceOf[Ctor.Ref.Function]) s("=>") else s(p(AnnotTyp, t.ctorTpe), t.ctorArgss)
-    case t: Term.This            => m(SimpleExpr1, s(t.qual.map(s(_, ".")).getOrElse(s()), kw("this")))
-    case t: Term.Super           => s(t.thisp.map(thisp => s(thisp, ".")).getOrElse(s()), kw("super"), t.superp.map(st => s("[", st, "]")).getOrElse(s()))
+    case t: Term.This            =>
+      val qual = if (t.qual.isInstanceOf[Name.Anonymous]) s() else s(t.qual, ".")
+      m(Path, qual, kw("this"))
+    case t: Term.Super           =>
+      val thisqual = if (t.thisp.isInstanceOf[Name.Anonymous]) s() else s(t.thisp, ".")
+      val superqual = if (t.superp.isInstanceOf[Name.Anonymous]) s() else s("[", t.superp, "]")
+      m(Path, s(thisqual, kw("super"), superqual))
     case t: Term.Name            => m(Path, if (guessIsBackquoted(t)) s("`", t.value, "`") else s(t.value))
     case t: Term.Select          => m(Path, s(p(SimpleExpr, t.qual), if (guessIsPostfix(t)) " " else ".", t.name))
     case t: Term.Interpolate     =>

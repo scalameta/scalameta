@@ -18,7 +18,7 @@ package scala.meta {
   object Name {
     @branch trait Anonymous extends Name with Term.Param.Name with Type.Param.Name with Qualifier
     @branch trait Indeterminate extends Name with Qualifier
-    @branch trait Qualifier extends Name
+    @branch trait Qualifier extends Ref
   }
 
   @branch trait Ref extends Tree
@@ -90,7 +90,7 @@ package scala.meta.internal.ast {
   object Name {
     @ast class Anonymous extends api.Name.Anonymous with Name with Term.Param.Name with Type.Param.Name with Qualifier { def value = "_" }
     @ast class Indeterminate(value: Predef.String @nonEmpty) extends api.Name.Indeterminate with Name with Qualifier
-    @branch trait Qualifier extends api.Name.Qualifier with Name
+    @branch trait Qualifier extends api.Name.Qualifier with Ref
   }
 
   @branch trait Ref extends api.Ref with Tree
@@ -100,8 +100,12 @@ package scala.meta.internal.ast {
   @branch trait Term extends api.Term with Stat with Term.Arg
   object Term {
     @branch trait Ref extends api.Term.Ref with Term with impl.Ref
-    @ast class This(qual: Option[Predef.String]) extends Term.Ref with impl.Name with impl.Name.Qualifier { def value = "this" }
-    @ast class Super(thisp: Option[Predef.String], superp: Option[Predef.String]) extends Term.Ref with impl.Name { def value = "super" }
+    @ast class This(qual: impl.Name.Qualifier) extends Term.Ref with impl.Name.Qualifier {
+      require(!qual.isInstanceOf[Term.This])
+    }
+    @ast class Super(thisp: impl.Name.Qualifier, superp: impl.Name.Qualifier) extends Term.Ref {
+      require(!thisp.isInstanceOf[Term.This] && !superp.isInstanceOf[Term.This])
+    }
     @ast class Name(value: Predef.String @nonEmpty) extends api.Term.Name with impl.Name with Term.Ref with Pat with Param.Name with impl.Name.Qualifier {
       // TODO: revisit this once we have trivia in place
       // require(keywords.contains(value) ==> isBackquoted)

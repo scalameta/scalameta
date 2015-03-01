@@ -1,4 +1,4 @@
-import scala.meta.internal.ast._, Term.{Name => TermName, Super}, Type.{Name => TypeName, _}
+import scala.meta.internal.ast._, Term.{Name => TermName, Super}, Type.{Name => TypeName, _}, Name.{Anonymous, Indeterminate}
 import scala.meta.dialects.Scala211
 
 class TypeSuite extends ParseSuite {
@@ -31,11 +31,11 @@ class TypeSuite extends ParseSuite {
   }
 
   test("super.T") {
-    val Select(Super(None, None), TypeName("T")) = tpe("super.T")
+    val Select(Super(Anonymous(), Anonymous()), TypeName("T")) = tpe("super.T")
   }
 
   test("this.T") {
-    val Select(Term.This(None), TypeName("T")) = tpe("this.T")
+    val Select(Term.This(Anonymous()), TypeName("T")) = tpe("this.T")
   }
 
   test("(A, B)") {

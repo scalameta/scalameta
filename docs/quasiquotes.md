@@ -19,8 +19,8 @@
 
                    | Quasiquote
 -------------------|------------------
- This              | `q"$stropt.this"`
- Super             | `q"$stropt.super[$stropt]"`
+ This              | `q"this"`, `q"$qname.this"`
+ Super             | `q"super"`, `q"$qname.super"`, `q"super[$qname]"`, `q"$qname.super[$qname]"`
  Name              | `q"name"`
  Selection         | `q"$expr.$name"`
  Interpolation     | `q""" $name"$${..$exprs}" """`
