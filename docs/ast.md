@@ -13,25 +13,10 @@ abstract trait If extends Term with _root_.scala.Product {
   @new _root_.org.scalameta.ast.internal.astField() def cond: Term;
   @new _root_.org.scalameta.ast.internal.astField() def thenp: Term;
   @new _root_.org.scalameta.ast.internal.astField() def elsep: Term;
-  def copy(cond: Term = this.cond, thenp: Term = this.thenp, elsep: Term = this.elsep, origin: _root_.scala.meta.Origin = _root_.scala.meta.Origin.Transformed(this)): ThisType = If.apply(cond, thenp, elsep, origin);
-  override type ThisType = If;
-  override def internalTag: _root_.scala.Int = If.internalTag;
-  override def productPrefix: _root_.scala.Predef.String = _root_.org.scalameta.ast.internal.productPrefix[ThisType];
-  override def productArity: _root_.scala.Int = 3;
-  override def productElement(n: _root_.scala.Int): Any = n match {
-    case 0 => this.cond
-    case 1 => this.thenp
-    case 2 => this.elsep
-    case _ => throw new _root_.scala.IndexOutOfBoundsException(n.toString)
-  };
-  override def productIterator: _root_.scala.Iterator[_root_.scala.Any] = _root_.scala.runtime.ScalaRunTime.typedProductIterator(this)
+  override type ThisType <: If
 }
 @new _root_.org.scalameta.ast.internal.astCompanion() @new _root_.org.scalameta.adt.Internal.leafCompanion()
 object If extends scala.AnyRef {
-  def <init>() = {
-    super.<init>();
-    ()
-  };
   def internalTag: _root_.scala.Int = _root_.org.scalameta.adt.Internal.calculateTag[If];
   def apply(cond: Term, thenp: Term, elsep: Term, origin: _root_.scala.meta.Origin = _root_.scala.meta.Origin.None): If = {
     def internal(cond: Term, thenp: Term, elsep: Term, origin: _root_.scala.meta.Origin): If = {
@@ -55,6 +40,23 @@ object If extends scala.AnyRef {
     _root_.scala.None
   else
     _root_.scala.Some(scala.Tuple3(x.cond, x.thenp, x.elsep));
+  import _root_.scala.language.experimental.{macros=>prettyPlease};
+  import _root_.scala.language.implicitConversions;
+  implicit <macro> def interfaceToApi(interface: If): Api = _root_.org.scalameta.ast.internal.Macros.interfaceToApi[If, Api];
+  abstract trait Api extends If {
+    def copy(cond: Term = this.cond, thenp: Term = this.thenp, elsep: Term = this.elsep, origin: _root_.scala.meta.Origin = _root_.scala.meta.Origin.Transformed(this)): ThisType = If.apply(cond, thenp, elsep, origin);
+    override type ThisType = If;
+    override def internalTag: _root_.scala.Int = If.internalTag;
+    override def productPrefix: _root_.scala.Predef.String = _root_.org.scalameta.ast.internal.productPrefix[ThisType];
+    override def productArity: _root_.scala.Int = 3;
+    override def productElement(n: _root_.scala.Int): Any = n match {
+      case 0 => this.cond
+      case 1 => this.thenp
+      case 2 => this.elsep
+      case _ => throw new _root_.scala.IndexOutOfBoundsException(n.toString)
+    };
+    override def productIterator: _root_.scala.Iterator[_root_.scala.Any] = _root_.scala.runtime.ScalaRunTime.typedProductIterator(this)
+  };
   private[If] final class Impl (
     protected val internalPrototype: If,
     protected val internalParent: _root_.scala.meta.Tree,
@@ -90,29 +92,11 @@ object If extends scala.AnyRef {
 Here's the same code after typechecking with helper def macros expanded:
 
 ```
-@@<?> @@<?> abstract trait If extends AnyRef with scala.meta.internal.ast.Term with Product {
-  def /*If*/$init$(): Unit = {
-    ()
-  };
+@org.scalameta.ast.internal.astClass @org.scalameta.adt.Internal.leafClass abstract trait If extends AnyRef with scala.meta.internal.ast.Term with Product {
   @org.scalameta.ast.internal.astField def cond: scala.meta.internal.ast.Term;
   @org.scalameta.ast.internal.astField def thenp: scala.meta.internal.ast.Term;
   @org.scalameta.ast.internal.astField def elsep: scala.meta.internal.ast.Term;
-  def copy(cond: scala.meta.internal.ast.Term = this.cond, thenp: scala.meta.internal.ast.Term = this.thenp, elsep: scala.meta.internal.ast.Term = this.elsep, origin: scala.meta.Origin = scala.meta.Origin.Transformed.apply(this)): If.this.ThisType = Term.this.If.apply(cond, thenp, elsep, origin);
-  <synthetic> def copy$default$1: scala.meta.internal.ast.Term = this.cond;
-  <synthetic> def copy$default$2: scala.meta.internal.ast.Term = this.thenp;
-  <synthetic> def copy$default$3: scala.meta.internal.ast.Term = this.elsep;
-  <synthetic> def copy$default$4: scala.meta.Origin = scala.meta.Origin.Transformed.apply(this);
-  override type ThisType = scala.meta.internal.ast.Term.If;
-  override def internalTag: Int = Term.this.If.internalTag;
-  override def productPrefix: String = ("Term.If": String);
-  override def productArity: Int = 3;
-  override def productElement(n: Int): Any = n match {
-    case 0 => this.cond
-    case 1 => this.thenp
-    case 2 => this.elsep
-    case _ => throw new scala.`package`.IndexOutOfBoundsException(n.toString())
-  };
-  override def productIterator: Iterator[Any] = scala.runtime.ScalaRunTime.typedProductIterator[Nothing](this)
+  override type ThisType <: scala.meta.internal.ast.Term.If
 };
 @@<?> @@<?> object If extends scala.AnyRef {
   def <init>(): scala.meta.internal.ast.Term.If.type = {
@@ -170,7 +154,31 @@ Here's the same code after typechecking with helper def macros expanded:
     scala.None
   else
     scala.Some.apply[(scala.meta.internal.ast.Term, scala.meta.internal.ast.Term, scala.meta.internal.ast.Term)](scala.Tuple3.apply[scala.meta.internal.ast.Term, scala.meta.internal.ast.Term, scala.meta.internal.ast.Term](x.cond, x.thenp, x.elsep));
-  final private[If] class Impl extends AnyRef with scala.meta.internal.ast.Term.If {
+  import scala.language.experimental.{macros=>prettyPlease};
+  import scala.language.implicitConversions;
+  @scala.reflect.macros.internal.macroImpl(`macro`("macroEngine" = "v7.0 (implemented in Scala 2.11.0-M8)", "isBundle" = true, "isBlackbox" = true, "className" = "org.scalameta.ast.internal$Macros", "methodName" = "interfaceToApi", "signature" = List(List(-3), List(0, 1)))[scala.meta.internal.ast.Term.If, scala.meta.internal.ast.Term.If.Api]) implicit <macro> def interfaceToApi(interface: scala.meta.internal.ast.Term.If): scala.meta.internal.ast.Term.If.Api = new org.scalameta.ast.internal.Macros(null).interfaceToApi[scala.meta.internal.ast.Term.If, scala.meta.internal.ast.Term.If.Api];
+  abstract trait Api extends AnyRef with scala.meta.internal.ast.Term.If {
+    def /*Api*/$init$(): Unit = {
+      ()
+    };
+    def copy(cond: scala.meta.internal.ast.Term = this.cond, thenp: scala.meta.internal.ast.Term = this.thenp, elsep: scala.meta.internal.ast.Term = this.elsep, origin: scala.meta.Origin = scala.meta.Origin.Transformed.apply(this)): Api.this.ThisType = Term.this.If.apply(cond, thenp, elsep, origin);
+    <synthetic> def copy$default$1: scala.meta.internal.ast.Term = this.cond;
+    <synthetic> def copy$default$2: scala.meta.internal.ast.Term = this.thenp;
+    <synthetic> def copy$default$3: scala.meta.internal.ast.Term = this.elsep;
+    <synthetic> def copy$default$4: scala.meta.Origin = scala.meta.Origin.Transformed.apply(this);
+    override type ThisType = scala.meta.internal.ast.Term.If;
+    override def internalTag: Int = Term.this.If.internalTag;
+    override def productPrefix: String = ("Term.If": String);
+    override def productArity: Int = 3;
+    override def productElement(n: Int): Any = n match {
+      case 0 => this.cond
+      case 1 => this.thenp
+      case 2 => this.elsep
+      case _ => throw new scala.`package`.IndexOutOfBoundsException(n.toString())
+    };
+    override def productIterator: Iterator[Any] = scala.runtime.ScalaRunTime.typedProductIterator[Nothing](this)
+  };
+  final private[If] class Impl extends AnyRef with scala.meta.internal.ast.Term.If.Api {
     <paramaccessor> private[this] val internalPrototype: scala.meta.internal.ast.Term.If = _;
     <stable> <accessor> <paramaccessor> protected def internalPrototype: scala.meta.internal.ast.Term.If = Impl.this.internalPrototype;
     <paramaccessor> private[this] val internalParent: scala.meta.Tree = _;
