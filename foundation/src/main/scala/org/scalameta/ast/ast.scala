@@ -147,7 +147,6 @@ class AstMacros(val c: Context) {
       val internalBody = ListBuffer[Tree]()
       val internalLocalss = paramss.map(_.map(p => (p.name, internalize(p.name))))
       internalBody += q"$AstInternal.hierarchyCheck[$iname]"
-      internalBody += q"$AstInternal.register[$iname]"
       // internalBody += q"$AdtInternal.immutabilityCheck[$iname]"
       internalBody ++= internalLocalss.flatten.map{ case (local, internal) => q"$AdtInternal.nullCheck($local)" }
       internalBody ++= internalLocalss.flatten.map{ case (local, internal) => q"$AdtInternal.emptyCheck($local)" }

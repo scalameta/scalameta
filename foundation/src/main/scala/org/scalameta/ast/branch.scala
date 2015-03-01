@@ -28,7 +28,6 @@ class BranchMacros(val c: Context) {
       val flags1 = flags // TODO: flags | SEALED
       stats1 += q"type ThisType <: $name"
       mstats1 += q"$AstInternal.hierarchyCheck[$name]"
-      mstats1 += q"$AstInternal.register[$name]"
       val anns1 = anns :+ q"new $AdtInternal.branch" :+ q"new $AstInternal.branch"
 
       val cdef1 = ClassDef(Modifiers(flags1, privateWithin, anns1), name, tparams, Template(parents, self, stats1.toList))

@@ -21,7 +21,6 @@ object If extends scala.AnyRef {
   def apply(cond: Term, thenp: Term, elsep: Term, origin: _root_.scala.meta.Origin = _root_.scala.meta.Origin.None): If = {
     def internal(cond: Term, thenp: Term, elsep: Term, origin: _root_.scala.meta.Origin): If = {
       _root_.org.scalameta.ast.internal.hierarchyCheck[If];
-      _root_.org.scalameta.ast.internal.register[If];
       _root_.org.scalameta.adt.Internal.nullCheck(cond);
       _root_.org.scalameta.adt.Internal.nullCheck(thenp);
       _root_.org.scalameta.adt.Internal.nullCheck(elsep);

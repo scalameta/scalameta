@@ -22,10 +22,6 @@ object internal {
   def initField[T](f: T): T = macro Macros.initField
   def initParam[T](f: T): T = macro Macros.initField
 
-  case class RegistryAttachment(fullNames: List[String])
-  def register[T]: Unit = macro Macros.register[T]
-  def buildRegistry[T]: List[String] = macro Macros.buildRegistry[T]
-
   class Macros(val c: Context) extends org.scalameta.adt.AdtReflection {
     val u: c.universe.type = c.universe
     val mirror: u.Mirror = c.mirror
@@ -59,28 +55,6 @@ object internal {
     }
     def interfaceToApi[I, A](interface: c.Tree)(implicit I: c.WeakTypeTag[I], A: c.WeakTypeTag[A]): c.Tree = {
       q"$interface.asInstanceOf[$A]"
-    }
-    def register[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
-      // NOTE: unfortunately, we can't call Symbol.addChild manually here
-      // if we do that, then pattern matcher will go nuts
-      // val directParents = T.tpe.typeSymbol.info.asInstanceOf[ClassInfoType].parents
-      // directParents.foreach(ptpe => {
-      //   val poweru = u.asInstanceOf[scala.reflect.internal.SymbolTable]
-      //   val psym = ptpe.typeSymbol.asInstanceOf[poweru.Symbol]
-      //   psym.addChild(T.tpe.typeSymbol.asInstanceOf[poweru.Symbol])
-      // })
-      val registry = c.mirror.staticModule("scala.meta.internal.ast.Registry")
-      val att0 = registry.attachments.get[RegistryAttachment].getOrElse(new RegistryAttachment(Nil))
-      val att1 = att0.copy(fullNames = att0.fullNames :+ T.tpe.typeSymbol.fullName)
-      registry.updateAttachment(att1)
-      q"()"
-    }
-    def buildRegistry[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
-      val att = T.tpe.typeSymbol.asClass.module.attachments.get[RegistryAttachment]
-      att match {
-        case Some(RegistryAttachment(fullNames)) => q"$fullNames"
-        case _ => c.abort(c.enclosingPosition, "fatal error building scala.meta registry")
-      }
     }
     def productPrefix[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
       q"${T.tpe.typeSymbol.asLeaf.prefix}"
