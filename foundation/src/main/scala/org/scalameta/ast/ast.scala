@@ -118,7 +118,8 @@ class AstMacros(val c: Context) {
       astats1 += q"def copy(...$copyParamss): ThisType = $mname.apply(...$copyArgss)"
 
       // step 6: generate boilerplate required by the @ast infrastructure
-      istats1 += q"override type ThisType = $iname"
+      istats1 += q"override type ThisType <: $iname"
+      astats1 += q"override type ThisType = $iname"
       astats1 += q"override def internalTag: _root_.scala.Int = $mname.internalTag"
       mstats1 += q"def internalTag: _root_.scala.Int = $AdtInternal.calculateTag[$iname]"
       // TODO: remove leafClass and leafCompanion from here
