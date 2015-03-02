@@ -167,7 +167,11 @@ trait ScalahostAnalyzer extends NscAnalyzer with GlobalToolkit {
           val cbody1 = treeCopy.Block(cbody, preSuperStats, superCall1)
           val clazz = context.owner
             assert(clazz != NoSymbol, templ)
-          val dummy = context.outer.owner.newLocalDummy(templ.pos)
+          // SI-9086 The position of this symbol is material: implicit search will avoid triggering
+          //         cyclic errors in an implicit search in argument to the super constructor call on
+          //         account of the "ignore symbols without complete info that succeed the implicit search"
+          //         in this source file. See `ImplicitSearch#isValid` and `ImplicitInfo#isCyclicOrErroneous`.
+          val dummy = context.outer.owner.newLocalDummy(context.owner.pos)
           val cscope = context.outer.makeNewScope(ctor, dummy)
           if (dummy.isTopLevel) currentRun.symSource(dummy) = currentUnit.source.file
           val cbody2 = { // called both during completion AND typing.
@@ -278,6 +282,16 @@ trait ScalahostAnalyzer extends NscAnalyzer with GlobalToolkit {
               }
               orElse { _ =>
                 val resetTree = resetAttrs(original)
+                resetTree match {
+                  case treeInfo.Applied(fun, targs, args) =>
+                    if (fun.symbol != null && fun.symbol.isError)
+                      // SI-9041 Without this, we leak error symbols past the typer!
+                      // because the fallback typechecking notices the error-symbol,
+                      // refuses to re-attempt typechecking, and presumes that someone
+                      // else was responsible for issuing the related type error!
+                      fun.setSymbol(NoSymbol)
+                  case _ =>
+                }
                 debuglog(s"fallback on implicits: ${tree}/$resetTree")
                 val tree1 = typed(resetTree, mode)
                 // Q: `typed` already calls `pluginsTyped` and `adapt`. the only difference here is that
@@ -409,7 +423,7 @@ trait ScalahostAnalyzer extends NscAnalyzer with GlobalToolkit {
 
       // Ignore type errors raised in later phases that are due to mismatching types with existential skolems
       // We have lift crashing in 2.9 with an adapt failure in the pattern matcher.
-      // Here's my hypothsis why this happens. The pattern matcher defines a variable of type
+      // Here's my hypothesis why this happens. The pattern matcher defines a variable of type
       //
       //   val x: T = expr
       //
@@ -1293,7 +1307,7 @@ trait ScalahostAnalyzer extends NscAnalyzer with GlobalToolkit {
       def tryTypedApply(fun: Tree, args: List[Tree]): Tree = {
         val start = if (Statistics.canEnable) Statistics.startTimer(failedApplyNanos) else null
 
-        def onError(typeErrors: Seq[AbsTypeError]): Tree = {
+        def onError(typeErrors: Seq[AbsTypeError], warnings: Seq[(Position, String)]): Tree = {
           if (Statistics.canEnable) Statistics.stopTimer(failedApplyNanos, start)
 
           // If the problem is with raw types, copnvert to existentials and try again.
@@ -1341,10 +1355,14 @@ trait ScalahostAnalyzer extends NscAnalyzer with GlobalToolkit {
             }
           }
           typeErrors foreach context.issue
+          warnings foreach { case (p, m) => context.warning(p, m) }
           setError(treeCopy.Apply(tree, fun, args))
         }
 
-        silent(_.doTypedApply(tree, fun, args, mode, pt)) orElse onError
+        silent(_.doTypedApply(tree, fun, args, mode, pt)) match {
+          case SilentResultValue(value) => value
+          case e: SilentTypeError => onError(e.errors, e.warnings)
+        }
       }
       def normalTypedApply(tree: Tree, fun: Tree, args: List[Tree]) = {
         // TODO: replace `fun.symbol.isStable` by `treeInfo.isStableIdentifierPattern(fun)`
@@ -1394,6 +1412,7 @@ trait ScalahostAnalyzer extends NscAnalyzer with GlobalToolkit {
           case err: SilentTypeError =>
             onError({
               err.reportableErrors foreach context.issue
+              err.warnings foreach { case (p, m) => context.warning(p, m) }
               args foreach (arg => typed(arg, mode, ErrorType))
               setError(tree)
             })
