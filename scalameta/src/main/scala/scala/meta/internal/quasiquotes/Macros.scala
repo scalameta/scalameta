@@ -70,7 +70,7 @@ private[meta] class Macros(val c: Context) extends AdtReflection with AdtLiftabl
   }
 
   private def parseSkeleton(macroApplication: ReflectTree, metaDialect: MetaDialect, metaParse: MetaParser): MetaTree = {
-    implicit val implicitMetaDialect: MetaDialect = metaDialect
+    implicit val quasiquoteDialect: MetaDialect = scala.meta.dialects.Quasiquote(metaDialect)
     val wholeFileSource = macroApplication.pos.source
     val wholeFileInput = {
       if (wholeFileSource.file.file != null) Input.File(wholeFileSource.file.file)

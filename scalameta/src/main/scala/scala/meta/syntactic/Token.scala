@@ -148,9 +148,13 @@ object Token {
 
   @token class Comment(input: Input, start: Int, end: Int) extends Dynamic with Token { def name = "comment" }
 
+  // NOTE: in order to maintain compatibility with scala.reflect's implementation,
+  // rank = 1 means .., rank = 2 means ..., etc
+  @token class Ellipsis(input: Input, start: Int, end: Int, rank: Int) extends Dynamic with Token { def name = "." * (rank + 1) }
+
   // TODO: after we bootstrap, Unquote.tree will become scala.meta.Tree
   // however, for now, we will keep it at Any in order to also support scala.reflect trees
-  @token class Unquote(input: Input, start: Int, end: Int, tree: Any) extends Dynamic with Token { def name = "unquote" }
+  @token class Unquote(input: Input, start: Int, end: Int, tree: Any) extends Dynamic with Token { def name = "unquote " + tree }
 
   @token class EOF(input: Input) extends Static with StatSep with StatSeqEnd with CaseDefEnd with CantStartStat {
     def name = "end of file"

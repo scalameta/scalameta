@@ -416,6 +416,13 @@ private[meta] class LegacyScanner(val input: Input, decodeUni: Boolean = true)(i
         nextChar()
         if ('0' <= ch && ch <= '9') {
           putChar('.'); getFraction()
+        } else if (dialect.allowEllipses && ch == '.') {
+          base = 0
+          while (ch == '.') {
+            base += 1
+            nextChar()
+          }
+          token = ELLIPSIS
         } else {
           token = DOT
         }
