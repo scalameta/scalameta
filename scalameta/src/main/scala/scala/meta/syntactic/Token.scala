@@ -150,14 +150,7 @@ object Token {
 
   // TODO: after we bootstrap, Unquote.tree will become scala.meta.Tree
   // however, for now, we will keep it at Any in order to also support scala.reflect trees
-  @token class Unquote(tree: Any) extends Static {
-    def input = Input.None
-    def start = 0
-    def end = -1
-    def adjust(input: Input = this.input, start: Param[Int] = Default, end: Param[Int] = Default, delta: Param[Int] = Default): Unquote = throw new UnsupportedOperationException("adjust on Token.Unquote")
-    def name = "unquote"
-    override def code = "${...}"
-  }
+  @token class Unquote(input: Input, start: Int, end: Int, tree: Any) extends Dynamic with Token { def name = "unquote" }
 
   @token class EOF(input: Input) extends Static with StatSep with StatSeqEnd with CaseDefEnd with CantStartStat {
     def name = "end of file"

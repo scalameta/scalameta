@@ -63,56 +63,105 @@ private[meta] class Macros(val c: Context) extends AdtReflection with AdtLiftabl
     val parserModuleGetter = metaPackageClass.getDeclaredMethod(parserModule.name.toString)
     val parserModuleInstance = parserModuleGetter.invoke(null)
     val parserMethod = parserModuleInstance.getClass.getDeclaredMethods().find(_.getName == "parse").head
-    (input: Input, dialect: Dialect) => parserMethod.invoke(parserModuleInstance, input, dialect).asInstanceOf[MetaTree]
+    (input: Input, dialect: Dialect) => {
+      try parserMethod.invoke(parserModuleInstance, input, dialect).asInstanceOf[MetaTree]
+      catch { case ex: java.lang.reflect.InvocationTargetException => throw ex.getTargetException }
+    }
   }
 
   private def parseSkeleton(macroApplication: ReflectTree, metaDialect: MetaDialect, metaParse: MetaParser): MetaTree = {
     implicit val implicitMetaDialect: MetaDialect = metaDialect
+    val wholeFileSource = macroApplication.pos.source
+    val wholeFileInput = {
+      if (wholeFileSource.file.file != null) Input.File(wholeFileSource.file.file)
+      else Input.Chars(wholeFileSource.content) // NOTE: can happen in REPL or in custom Global
+    }
     macroApplication match {
       case q"$_($_.apply(..$parts)).$_.apply[..$_](..$args)($_)" if parts.length == args.length + 1 =>
         val parttokenss = parts.map{
           case partlit @ q"${part: String}" =>
-            val source = macroApplication.pos.source
+            // Step 1: Compute start and end of the part.
+            // Also provide facilities to map offsets between part and wholeFileSource.
+            // The mapping is not Predef.identity because of $$ (explained below).
             val dollars = mutable.ListBuffer[Int]()
             val start = partlit.pos.start
             var remaining = part.length
             var end = start - 1
             while (remaining > 0) {
               end += 1
-              if (source.content(end) == '$') {
+              if (wholeFileSource.content(end) == '$') {
                 dollars += end
                 end += 1
-                require(source.content(end) == '$')
+                require(wholeFileSource.content(end) == '$')
               }
               remaining -= 1
             }
-            val tokens = part.tokens
-            val preciseTokens = new immutable.VectorBuilder[MetaToken]()
-            val wholeFile = {
-              if (source.file.file != null) Input.File(source.file.file)
-              else Input.Chars(source.content)
+            // NOTE: Here's an example of a translation for q"a+$$b+$$c".
+            // This is how the [start..end] fragment of `wholeFileSource` is going to look like:
+            //     2345678910
+            //     a+$$b+$$c
+            // This is what we'll see in `part`:
+            //     0123456
+            //     a+$b+$c
+            // Let's translate a part offset 6 (i.e. the position of `c`) to a source offset.
+            // `dollars` are going to be ListBuffer(4, 8).
+            // First we add `start` to the part offset, obtaining 8.
+            // Next we check whether 8 is greater than the 0th dollar, i.e. 4.
+            // Yes, it is, so we increment it (to account for doubling of the dollar) and recur.
+            // Now we check whether 9 is greater than the 1st dollar, i.e. 8.
+            // Yes, it is, so we increment it (to account for doubling of the dollar) and recur.
+            // Now we check whether 10 is greater than the 2nd dollar, but it doesn't exist, so we return.
+            def partOffsetToSourceOffset(partOffset: Int): Int = {
+              def loop(offset: Int, dollarIndex: Int): Int = {
+                if (dollarIndex >= dollars.length || offset < dollars(dollarIndex)) offset
+                else loop(offset + 1, dollarIndex + 1)
+              }
+              loop(partOffset + start, 0)
             }
-            val slice = Input.Slice(wholeFile, start, end)
-            var i = 0
-            var delta = 0
-            while (i < tokens.length) {
-              val token = tokens(i)
-              if (delta < dollars.length && token.start >= dollars(delta)) delta += 1
-              preciseTokens += token.adjust(input = slice, delta = delta)
-              i += 1
+
+            // Step 2: Tokenize the part translating tokenization exceptions.
+            // Output tokens will be bound to a synthetic Input.String, which isn't yet correlated with `wholeFileSource`.
+            val crudeTokens = {
+              try part.tokens
+              catch {
+                case TokenizeException(_, partOffset, message) =>
+                  val sourceOffset = partOffsetToSourceOffset(partOffset)
+                  val sourcePosition = partlit.pos.focus.withPoint(sourceOffset)
+                  c.abort(sourcePosition, message)
+              }
             }
-            preciseTokens.result
+
+            // Step 3: Prettify the tokens by relating them to `wholeFileSource`.
+            // To do that, we create Input.Slice over the `wholeFileSource` and fixup positions to account for $$s.
+            crudeTokens.map(crudeToken => {
+              val delta = partOffsetToSourceOffset(crudeToken.start) - (start + crudeToken.start)
+              crudeToken.adjust(input = Input.Slice(wholeFileInput, start, end), delta = delta)
+            })
           case part =>
             c.abort(part.pos, "quasiquotes can only be used with literal strings")
         }
-        def merge(parttokens: Vector[MetaToken], arg: ReflectTree) = {
-          val payload :+ eof = parttokens
+        def merge(index: Int, parttokens: Vector[MetaToken], arg: ReflectTree) = {
+          implicit class RichToken(token: Token) { def absoluteStart = token.start + token.input.require[scala.meta.syntactic.Input.Slice].start }
+          val partpayload :+ eof = parttokens
           require(eof.is[Token.EOF] && debug(parttokens))
-          payload :+ MetaToken.Unquote(arg)
+          val unquoteStart = eof.absoluteStart
+          val unquoteEnd = parttokenss(index + 1).head.absoluteStart - 1
+          val unquoteInput = Input.Slice(wholeFileInput, unquoteStart, unquoteEnd)
+          partpayload :+ MetaToken.Unquote(unquoteInput, 0, unquoteEnd - unquoteStart, arg)
         }
-        val tokens = parttokenss.init.zip(args).flatMap((merge _).tupled) ++ parttokenss.last
+        val zipper = parttokenss.init.zip(args).zipWithIndex.map({ case ((ts, a), i) => (i, ts, a) })
+        val tokens = zipper.flatMap((merge _).tupled) ++ parttokenss.last
         if (sys.props("quasiquote.debug") != null) println(tokens)
-        metaParse(Input.Tokens(tokens.toVector), metaDialect)
+        try {
+          metaParse(Input.Tokens(tokens.toVector), metaDialect)
+        } catch {
+          case ParseException(_, token, message) =>
+            val scala.meta.syntactic.Input.Slice(input, start, end) = token.input
+            require(input == wholeFileInput && debug(token))
+            val sourceOffset = start + token.start
+            val sourcePosition = macroApplication.pos.focus.withPoint(sourceOffset)
+            c.abort(sourcePosition, message)
+        }
       case _ =>
         c.abort(macroApplication.pos, s"fatal error initializing quasiquote macro: ${showRaw(macroApplication)}")
     }
