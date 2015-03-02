@@ -107,6 +107,7 @@ private[meta] class Macros(val c: Context) extends AdtReflection with AdtLiftabl
         }
         def merge(parttokens: Vector[MetaToken], arg: ReflectTree) = parttokens :+ MetaToken.Unquote(arg)
         val tokens = parttokenss.init.zip(args).flatMap((merge _).tupled) ++ parttokenss.last
+        if (sys.props("quasiquote.debug") != null) println(tokens)
         metaParse(Input.Tokens(tokens.toVector), metaDialect)
       case _ =>
         c.abort(macroApplication.pos, s"fatal error initializing quasiquote macro: ${showRaw(macroApplication)}")
