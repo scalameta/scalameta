@@ -12,8 +12,7 @@ import scala.tools.nsc.{Global => ScalaGlobal}
 import scala.reflect.internal.Flags._
 import scala.meta.internal.{ast => m}
 import scala.meta.internal.{hygiene => h}
-import scala.meta.ui.{Exception => SemanticException}
-import scala.meta.internal.parsers.SyntacticInfo.XtensionTermOps
+import scala.meta.internal.parsers.Helpers.XtensionTermOps
 
 // This module exposes a method to convert from scala.meta types to scala.reflect types.
 // The logic is mostly straightforward except for when we need to create symbols for compound and existential types.

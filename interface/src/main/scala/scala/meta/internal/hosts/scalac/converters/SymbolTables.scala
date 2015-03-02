@@ -13,7 +13,6 @@ import scala.reflect.internal.Flags._
 import scala.tools.nsc.{Global => ScalaGlobal}
 import scala.meta.internal.{ast => m}
 import scala.meta.internal.{hygiene => h}
-import scala.meta.ui.{Exception => SemanticException}
 import java.util.UUID.randomUUID
 
 // This module tracks the correspondence between scala.reflect and scala.meta symbols.
