@@ -3,7 +3,7 @@ import Keys._
 
 object build extends Build {
   lazy val sharedSettings = Defaults.defaultSettings ++ Seq(
-    scalaVersion := "2.11.5",
+    scalaVersion := "2.11.6",
     crossVersion := CrossVersion.binary,
     version := "0.1.0-SNAPSHOT",
     organization := "org.scalameta",
@@ -67,7 +67,7 @@ object build extends Build {
         </developer>
       </developers>
     ),
-    addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0-M3" cross CrossVersion.full)
+    addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0-M5" cross CrossVersion.full)
   )
 
   // http://stackoverflow.com/questions/20665007/how-to-publish-only-when-on-master-branch-under-travis-and-sbt-0-13
