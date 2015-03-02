@@ -73,7 +73,7 @@ class BootstrapSuite extends ParseSuite {
             assert(tree.origin.start == 0)
             assert(tree.origin.end == content.length - 1)
           } catch {
-            case ex: scala.meta.ui.Exception if ex.msg.contains("XML literals are not supported") => pending
+            case ex: scala.meta.ParseException if ex.msg.contains("XML literals are not supported") => pending
           }
         }
       }

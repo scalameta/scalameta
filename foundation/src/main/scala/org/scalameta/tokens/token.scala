@@ -88,7 +88,7 @@ class TokenMacros(val c: Context) {
             case (false, true) =>
               this.adjust(input = input, start = this.start + delta.get, end = this.end + delta.get)
             case (true, true) =>
-              throw new _root_.scala.meta.ui.Exception("you can specify either start/end or delta, but not both")
+              throw new _root_.scala.`package`.UnsupportedOperationException("you can specify either start/end or delta, but not both")
           }
         """
         stats1 += q"def adjust($paramInput, $paramStart, $paramEnd, $paramDelta): ThisType = $body"

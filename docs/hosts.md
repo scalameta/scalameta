@@ -74,4 +74,4 @@ We understand that this API is at odds with the goals of statelessness and platf
 
 ### Error handling
 
-scala.meta expects hosts to signal errors by throwing exceptions derived from `scala.meta.ui.Exception`. Users of scala.meta might be shielded from these exceptions by an additional error handling layer inside scala.meta, but that shouldn't be a concern for host implementors. At the moment, we don't expose any exception hierarchy, and the only way for the host to elaborate on the details of emitted errors is passing a custom error message. This might change later.
+scala.meta expects hosts to signal errors by throwing exceptions of type `scala.meta.SemanticException`. Users of scala.meta might be shielded from these exceptions by an additional error handling layer inside scala.meta, but that shouldn't be a concern for host implementors. At the moment, we don't expose any exception hierarchy, and the only way for the host to elaborate on the details of emitted errors is passing a custom error message. This might change later.
