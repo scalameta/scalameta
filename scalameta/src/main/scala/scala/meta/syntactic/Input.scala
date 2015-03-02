@@ -4,6 +4,7 @@ package syntactic
 import java.nio.charset.Charset
 import org.scalameta.adt._
 import org.scalameta.convert._
+import org.scalameta.invariants._
 import scala.collection.mutable
 import scala.meta.internal.tokenizers._
 
@@ -17,6 +18,11 @@ object Input {
   final case object None extends Input {
     lazy val content = new Array[Char](0)
   }
+  final case class Slice(input: Input, start: Int, end: Int) extends Input {
+    require(0 <= start && start <= input.content.length)
+    require(-1 <= end && end < input.content.length)
+    lazy val content = input.content.slice(start, end + 1)
+  }
   final case class String(s: scala.Predef.String) extends Input {
     lazy val content = s.toArray
   }
@@ -26,6 +32,11 @@ object Input {
   object File {
     def apply(path: Predef.String): Input.File = Input.File(new java.io.File(path), Charset.forName("UTF-8"))
   }
-  implicit val stringToOrigin: Convert[scala.Predef.String, Input] = Convert.apply(Input.String(_))
-  implicit val fileToOrigin: Convert[java.io.File, Input] = Convert.apply(f => Input.File(f, Charset.forName("UTF-8")))
+  final case class Tokens(precomputedTokens: Vector[Token]) extends Input {
+    lazy val content = precomputedTokens.map(_.code).mkString.toArray
+    override def tokens(implicit dialect: Dialect) = precomputedTokens
+  }
+  implicit val stringToInput: Convert[scala.Predef.String, Input] = Convert.apply(Input.String(_))
+  implicit val fileToInput: Convert[java.io.File, Input] = Convert.apply(f => Input.File(f, Charset.forName("UTF-8")))
+  implicit val tokensToInput: Convert[Vector[Token], Input] = Convert.apply(Input.Tokens(_))
 }

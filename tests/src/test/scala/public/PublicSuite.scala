@@ -320,7 +320,6 @@ class PublicSuite extends FunSuite {
       import scala.meta._
       import scala.meta.dialects.Scala211
       "".parse[Term]
-      (??? : Input).parse[Term]
     """) === "")
   }
 
@@ -329,7 +328,6 @@ class PublicSuite extends FunSuite {
       import scala.meta._
       implicit val dialect: scala.meta.Dialect = ???
       "".parse[Term]
-      (??? : Input).parse[Term]
     """) === "")
   }
 
@@ -341,7 +339,6 @@ class PublicSuite extends FunSuite {
       }
       implicit val c: MyContext = ???
       "".parse[Term]
-      (??? : Input).parse[Term]
     """) === "")
   }
 
@@ -350,7 +347,17 @@ class PublicSuite extends FunSuite {
       import scala.meta._
       implicit val c: scala.meta.semantic.Context = ???
       "".parse[Term]
+    """) === "")
+  }
+
+  test("parse with various input types") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
       (??? : Input).parse[Term]
+      (??? : String).parse[Term]
+      (??? : java.io.File).parse[Term]
+      (??? : Vector[Token]).parse[Term]
     """) === "")
   }
 
@@ -379,7 +386,6 @@ class PublicSuite extends FunSuite {
       import scala.meta._
       import scala.meta.dialects.Scala211
       "".tokens
-      (??? : Input).tokens
     """) === "")
   }
 
@@ -388,7 +394,6 @@ class PublicSuite extends FunSuite {
       import scala.meta._
       implicit val dialect: scala.meta.Dialect = ???
       "".tokens
-      (??? : Input).tokens
     """) === "")
   }
 
@@ -400,7 +405,6 @@ class PublicSuite extends FunSuite {
       }
       implicit val c: MyContext = ???
       "".tokens
-      (??? : Input).tokens
     """) === "")
   }
 
@@ -409,7 +413,17 @@ class PublicSuite extends FunSuite {
       import scala.meta._
       implicit val c: scala.meta.semantic.Context = ???
       "".tokens
+    """) === "")
+  }
+
+  test("tokens with various input types") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
       (??? : Input).tokens
+      (??? : String).tokens
+      (??? : java.io.File).tokens
+      (??? : Vector[Token]).tokens
     """) === "")
   }
 

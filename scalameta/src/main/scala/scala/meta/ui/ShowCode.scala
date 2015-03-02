@@ -3,7 +3,7 @@ package ui
 
 import org.scalameta.show._
 import Show.{ sequence => s, repeat => r, indent => i, newline => n, meta => m, adorn => a, function => fn }
-import scala.meta.internal.parsers.SyntacticInfo._
+import scala.meta.internal.parsers.Helpers._
 import scala.meta.internal.tokenizers.Chars._
 import scala.meta.internal.tokenizers.keywords
 import scala.{Seq => _}
