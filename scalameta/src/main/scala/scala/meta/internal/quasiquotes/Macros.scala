@@ -105,7 +105,11 @@ private[meta] class Macros(val c: Context) extends AdtReflection with AdtLiftabl
           case part =>
             c.abort(part.pos, "quasiquotes can only be used with literal strings")
         }
-        def merge(parttokens: Vector[MetaToken], arg: ReflectTree) = parttokens :+ MetaToken.Unquote(arg)
+        def merge(parttokens: Vector[MetaToken], arg: ReflectTree) = {
+          val payload :+ eof = parttokens
+          require(eof.is[Token.EOF] && debug(parttokens))
+          payload :+ MetaToken.Unquote(arg)
+        }
         val tokens = parttokenss.init.zip(args).flatMap((merge _).tupled) ++ parttokenss.last
         if (sys.props("quasiquote.debug") != null) println(tokens)
         metaParse(Input.Tokens(tokens.toVector), metaDialect)
