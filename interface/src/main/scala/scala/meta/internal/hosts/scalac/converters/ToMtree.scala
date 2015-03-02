@@ -16,7 +16,7 @@ import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
 import scala.reflect.runtime.universe.{Type => Pt}
 import scala.meta.internal.{hygiene => h}
-import scala.meta.internal.parsers.SyntacticInfo.{XtensionTermOps => _, _}
+import scala.meta.internal.parsers.Helpers.{XtensionTermOps => _, _}
 
 // This module exposes a method that can convert scala.reflect trees into high-fidelity scala.meta trees.
 //

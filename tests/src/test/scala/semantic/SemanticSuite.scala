@@ -1,7 +1,6 @@
 import org.scalatest._
 import scala.compat.Platform.EOL
 import scala.meta._
-import scala.meta.{Exception => SemanticException}
 import scala.meta.internal.{ast => impl}
 
 class SemanticDummy {

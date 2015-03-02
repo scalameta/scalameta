@@ -12,7 +12,6 @@ import scala.tools.nsc.{Global => ScalaGlobal}
 import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
 import scala.meta.internal.{hygiene => h}
-import scala.meta.ui.{Exception => SemanticException}
 import scala.meta.internal.ui.Summary
 
 class SemanticContext[G <: ScalaGlobal](val global: G) extends ConverterApi(global) with ScalametaSemanticContext {
