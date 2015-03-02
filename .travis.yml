@@ -2,7 +2,7 @@ language: scala
 script:
   - sbt ++$TRAVIS_SCALA_VERSION clean update compile test package
 scala:
-  - 2.11.5
+  - 2.11.6
 jdk:
   - openjdk6
   - openjdk7
