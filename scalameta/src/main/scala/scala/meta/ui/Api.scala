@@ -5,9 +5,6 @@ import scala.language.higherKinds
 import org.scalameta.show._
 
 private[meta] trait Api {
-  type Exception = scala.meta.ui.Exception
-  val Exception = scala.meta.ui.Exception
-
   type Code[T] = scala.meta.ui.Code[T]
   type Raw[T] = scala.meta.ui.Raw[T]
   type Semantics[T] = scala.meta.ui.Semantics[T]

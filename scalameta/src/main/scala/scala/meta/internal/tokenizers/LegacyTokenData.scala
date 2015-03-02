@@ -7,6 +7,9 @@ import LegacyToken._
 import Chars._
 
 private[meta] trait LegacyTokenData {
+  /** the input that is currently being tokenized */
+  var input: Input = Input.None
+
   /** the next token */
   var token: LegacyToken = EMPTY
 
@@ -29,6 +32,7 @@ private[meta] trait LegacyTokenData {
   var base: Int = 0
 
   def copyFrom(td: LegacyTokenData): this.type = {
+    this.input = td.input
     this.token = td.token
     this.offset = td.offset
     this.lastOffset = td.lastOffset
@@ -40,6 +44,9 @@ private[meta] trait LegacyTokenData {
   }
 
   override def toString = s"{token = $token, position = $offset..$endOffset, lastOffset = $lastOffset, name = $name, strVal = $strVal, base = $base}"
+
+  val reporter: Reporter = Reporter(input)
+  import reporter._
 
   /** Convert current strVal to char value
    */
@@ -65,15 +72,13 @@ private[meta] trait LegacyTokenData {
         while (i < len) {
           val d = digit2int(input charAt i, base)
           if (d < 0) {
-            throw new Exception("malformed integer number")
-            return 0
+            syntaxError("malformed integer number", at = offset)
           }
           if (value < 0 ||
               limit / (base / divider) < value ||
               limit - (d / divider) < value * (base / divider) &&
               !(negated && limit == value * base - 1 + d)) {
-                throw new Exception("integer number too large")
-                return 0
+                syntaxError("integer number too large", at = offset)
               }
           value = value * base + d
           i += 1
@@ -100,9 +105,9 @@ private[meta] trait LegacyTokenData {
         )
       }
       if (value > limit)
-        throw new Exception("floating point number too large")
+        syntaxError("floating point number too large", at = offset)
       if (isDeprecatedForm)
-        throw new Exception("floating point number is missing digit after dot")
+        syntaxError("floating point number is missing digit after dot", at = offset)
 
       if (negated) -value else value
     }

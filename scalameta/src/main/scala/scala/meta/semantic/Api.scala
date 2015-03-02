@@ -9,7 +9,6 @@ import scala.{Seq => _}
 import scala.annotation.compileTimeOnly
 import scala.collection.immutable.Seq
 import scala.reflect.{ClassTag, classTag}
-import scala.meta.ui.{Exception => SemanticException}
 import scala.meta.semantic.{Context => SemanticContext}
 import scala.meta.internal.{ast => impl} // necessary only to implement APIs, not to define them
 import scala.meta.internal.{hygiene => h} // necessary only to implement APIs, not to define them

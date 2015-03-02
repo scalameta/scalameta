@@ -6,168 +6,69 @@ import scala.collection.{ mutable, immutable }
 import mutable.{ ListBuffer, StringBuilder }
 import scala.{Seq => _}
 import scala.collection.immutable._
-import scala.reflect.ClassTag
 import scala.meta.internal.ast._
 import scala.meta.internal.{ast => impl}
-import scala.meta.internal.tokenizers.Chars.{isOperatorPart, isScalaLetter}
+import scala.meta.internal.parsers.Location._
+import scala.meta.internal.parsers.Helpers._
 import scala.meta.syntactic.Token._
 import org.scalameta.tokens._
 import org.scalameta.unreachable
 import org.scalameta.invariants._
 
-private[meta] object SyntacticInfo {
-  private[meta] val unaryOps = Set("-", "+", "~", "!")
-  private[meta] def isUnaryOp(s: String): Boolean = unaryOps contains s
-  implicit class XtensionSyntacticTermName(name: Term.Name) {
-    import name._
-    def isLeftAssoc: Boolean = value.last != ':'
-    def isUnaryOp: Boolean = SyntacticInfo.isUnaryOp(value)
-    def isAssignmentOp = value match {
-      case "!=" | "<=" | ">=" | "" => false
-      case _                       => (value.last == '=' && value.head != '='
-                                       && isOperatorPart(value.head))
-    }
-    // opPrecedence?
-    def precedence: Int =
-      if (isAssignmentOp) 0
-      else if (isScalaLetter(value.head)) 1
-      else (value.head: @scala.annotation.switch) match {
-        case '|'             => 2
-        case '^'             => 3
-        case '&'             => 4
-        case '=' | '!'       => 5
-        case '<' | '>'       => 6
-        case ':'             => 7
-        case '+' | '-'       => 8
-        case '*' | '/' | '%' => 9
-        case _               => 10
-      }
-  }
-  implicit class XtensionTermOps(tree: Term) {
-    def isCtorCall: Boolean = tree match {
-      case _: Ctor.Ref => true
-      case Term.ApplyType(callee, _) => callee.isCtorCall
-      case Term.Apply(callee, _) => callee.isCtorCall
-      case Term.Annotate(annottee, _) => annottee.isCtorCall
-      case _ => false
-    }
-    def ctorTpe: Type = {
-      def loop(tree: Tree): Type = tree match {
-        case Ctor.Name(value) => Type.Name(value)
-        case Ctor.Ref.Select(qual, name) => Type.Select(qual, Type.Name(name.value))
-        case Ctor.Ref.Project(qual, name) => Type.Project(qual, Type.Name(name.value))
-        case Ctor.Ref.Function(_) => unreachable(debug(XtensionTermOps.this.tree, XtensionTermOps.this.tree.show[Raw]))
-        case Term.ApplyType(Ctor.Ref.Function(_), targs) => Type.Function(targs.init, targs.last)
-        case Term.ApplyType(callee, targs) => Type.Apply(loop(callee), targs)
-        case Term.Apply(callee, _) => callee.ctorTpe
-        case Term.Annotate(annottee, annots) => Type.Annotate(loop(annottee), annots)
-        case _ => unreachable(debug(XtensionTermOps.this.tree, XtensionTermOps.this.tree.show[Raw], tree, tree.show[Raw]))
-      }
-      loop(tree)
-    }
-    def ctorArgss: Seq[Seq[Term.Arg]] = {
-      def loop(tree: Tree): Seq[Seq[Term.Arg]] = tree match {
-        case _: Ctor.Ref => Nil
-        case Term.ApplyType(callee, _) => callee.ctorArgss
-        case Term.Apply(callee, args) => callee.ctorArgss :+ args
-        case Term.Annotate(annottee, _) => annottee.ctorArgss
-        case _ => unreachable(debug(XtensionTermOps.this.tree, XtensionTermOps.this.tree.show[Raw]))
-      }
-      loop(tree)
-    }
-    def isCtorBody: Boolean = {
-      def isSuperCall(tree: Tree): Boolean = tree match {
-        case _: Ctor.Name => true
-        case Term.Apply(fn, _) => isSuperCall(fn)
-        case _ => false // you can't write `this[...](...)`
-      }
-      tree match {
-        case Term.Block(superCall +: _) => isSuperCall(superCall)
-        case superCall => isSuperCall(superCall)
-      }
-    }
-  }
-  implicit class XtensionTermRefOps(tree: Term.Ref) {
-    def isPath: Boolean = tree.isStableId || tree.isInstanceOf[Term.This]
-    def isQualId: Boolean = tree match {
-      case _: Term.Name                   => true
-      case Term.Select(qual: Term.Ref, _) => qual.isQualId
-      case _                              => false
-    }
-    def isStableId: Boolean = tree match {
-      case _: Term.Name | Term.Select(_: Term.Super, _) => true
-      case Term.Select(qual: Term.Ref, _)               => qual.isPath
-      case _                                            => false
-    }
-  }
-  implicit class XtensionMod(mod: Mod) {
-    def hasAccessBoundary: Boolean = mod match {
-      case _: Mod.Private         => true
-      case _: Mod.Protected       => true
-      case _                      => false
-    }
-  }
-  implicit class XtensionMods(mods: List[Mod]) {
-    def has[T <: Mod](implicit tag: ClassTag[T]): Boolean =
-      mods.exists { _.getClass == tag.runtimeClass }
-    def getAll[T <: Mod](implicit tag: ClassTag[T]): List[T] =
-      mods.collect { case m if m.getClass == tag.runtimeClass => m.require[T] }
-    def accessBoundary: Option[Name.Qualifier] = mods.collectFirst{ case Mod.Private(name) => name; case Mod.Protected(name) => name }
-  }
-  implicit class XtensionStat(stat: Stat) {
-    def isTopLevelStat: Boolean = stat match {
-      case _: Import => true
-      case _: Pkg => true
-      case _: Defn.Class => true
-      case _: Defn.Trait => true
-      case _: Defn.Object => true
-      case _: Pkg.Object => true
-      case _ => false
-    }
-    def isTemplateStat: Boolean = stat match {
-      case _: Import => true
-      case _: Term => true
-      case _: Decl => true
-      case _: Defn => true
-      case _: Ctor.Secondary => true
-      case _ => false
-    }
-    def isBlockStat: Boolean = stat match {
-      case _: Import => true
-      case _: Term => true
-      case stat: Defn.Var => stat.rhs.isDefined
-      case _: Defn => true
-      case _ => false
-    }
-    def isRefineStat: Boolean = stat match {
-      case _: Decl => true
-      case _: Defn.Type => true
-      case _ => false
-    }
-    def isExistentialStat: Boolean = stat match {
-      case _: Decl.Val => true
-      case _: Decl.Type => true
-      case _ => false
-    }
-    def isEarlyStat: Boolean = stat match {
-      case _: Defn.Val => true
-      case _: Defn.Var => true
-      case _ => false
-    }
-  }
-}
-import SyntacticInfo._
-
-private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) extends AbstractParser {
-  def this(code: String)(implicit dialect: Dialect) = this(Input.String(code))
-
+private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { parser =>
   // implementation restrictions wrt various dialect properties
   require(Set("@", ":").contains(dialect.bindToSeqWildcardDesignator))
 
-  /** The parse starting point depends on whether the input is self-contained:
-   *  if not, the AST will be supplemented.
-   */
-  def parseStartRule = () => compilationUnit()
+/* ------------- PARSER ENTRY POINTS -------------------------------------------- */
+
+  def parseRule[T <: Tree](rule: this.type => T): T = {
+    // NOTE: can't require in.tokenPos to be at -1, because TokIterator auto-rewinds when created
+    // require(in.tokenPos == -1 && debug(in.tokenPos))
+    val start = 0
+    val t = rule(this)
+    // NOTE: can't have in.prevTokenPos here
+    // because we need to subsume all the trailing trivia
+    val end = in.tokenPos - 1
+    accept[EOF]
+    atPos(start, end)(t)
+  }
+
+  // Entry points for Parse[T]
+  // Used for quasiquotes as well as for ad-hoc parsing
+  def parseStat(): Stat = parseRule(parser => parser.statSeq(parser.templateStat.orElse(parser.topStat)) match {
+    case Nil => reporter.syntaxError("unexpected end of input", at = token)
+    case stat :: Nil => stat
+    case stats if stats.forall(_.isBlockStat) => Term.Block(stats)
+    case stats if stats.forall(_.isTopLevelStat) => Source(stats)
+    case other => reporter.syntaxError("these statements can't be mixed together", at = other.head)
+  })
+  def parseTerm(): Term = parseRule(_.expr())
+  def parseTermArg(): Term.Arg = ???
+  def parseTermParam(): Term.Param = ???
+  def parseType(): Type = parseRule(_.typ())
+  def parseTypeArg(): Type.Arg = parseRule(_.paramType())
+  def parseTypeParam(): Type.Param = ???
+  def parsePat(): Pat = ???
+  def parsePatArg(): Pat.Arg = parseRule(_.pattern())
+  def parsePatType(): Pat.Type = ???
+  def parseCase(): Case = ???
+  def parseCtorRef(): Ctor.Ref = ???
+  def parseTemplate(): Template = ???
+  def parseMod(): Mod = ???
+  def parseEnumerator(): Enumerator = ???
+  def parseImportee(): Importee = ???
+  def parseSource(): Source = parseRule(_.compilationUnit())
+
+/* ------------- PARSER TOKENS -------------------------------------------- */
+
+  val tokens = input.tokens
+  trait TokenIterator extends Iterator[Token] { def prevTokenPos: Int; def tokenPos: Int; def token: Token; def fork: TokenIterator }
+  var in: TokenIterator = new CrazyTokenIterator()
+  def token = in.token
+  def next() = in.next()
+  def nextOnce() = next()
+  def nextTwice() = { next(); next() }
+  def nextThrice() = { next(); next(); next() }
 
   // NOTE: Scala's parser isn't ready to accept whitespace and comment tokens,
   // so we have to filter them out, because otherwise we'll get errors like `expected blah, got whitespace`
@@ -233,7 +134,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) exte
             (sepRegions.isEmpty || sepRegions.head == '}')) {
           tokenPos = lastNewlinePos
           token = tokens(tokenPos)
-          if (newlines) token = `\n\n`(token.input, token.start)
+          if (newlines) token = `\n\n`(parser.input, token.start)
           token
         } else {
           pos = nextPos - 1
@@ -244,69 +145,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) exte
     def fork: TokenIterator = new CrazyTokenIterator(pos, prevTokenPos, tokenPos, token, sepRegions)
   }
 
-  val tokens = input.tokens
-  var in: TokenIterator = new CrazyTokenIterator()
-}
-
-private[meta] class Location private(val value: Int) extends AnyVal
-private[meta] object Location {
-  val Local      = new Location(0)
-  val InBlock    = new Location(1)
-  val InTemplate = new Location(2)
-}
-import Location.{ Local, InBlock, InTemplate }
-
-private[meta] abstract class AbstractParser { parser =>
-  trait TokenIterator extends Iterator[Token] { def prevTokenPos: Int; def tokenPos: Int; def token: Token; def fork: TokenIterator }
-  var in: TokenIterator
-  def token = in.token
-  def next() = in.next()
-  def nextOnce() = next()
-  def nextTwice() = { next(); next() }
-  def nextThrice() = { next(); next(); next() }
-  val input: Input
-  implicit val dialect: Dialect
-
-  import scala.language.implicitConversions
-  sealed trait Pos
-  case class TokenPos(tokenPos: Int) extends Pos
-  implicit def intToTokenPos(tokenPos: Int): TokenPos = TokenPos(tokenPos)
-  case class TreePos(tree: Tree) extends Pos
-  implicit def treeToTreePos(tree: Tree): TreePos = TreePos(tree)
-  implicit def optionTreeToPos(tree: Option[Tree]): Pos = tree.map(TreePos).getOrElse(AutoPos)
-  implicit def modsToPos(mods: List[Mod]): Pos = mods.headOption.map(TreePos).getOrElse(AutoPos)
-  implicit class XtensionTreePos(tree: Tree) { def pos = treeToTreePos(tree) }
-  case object AutoPos extends Pos
-  def auto = AutoPos
-
-  def atPos[T <: Tree](start: Pos, end: Pos)(body: => T): T = {
-    implicit class XtensionTree(tree: Tree) {
-      def requirePosition: Origin.Parsed = tree.origin match {
-        case position: Origin.Parsed => position
-        case _ => unreachable(debug(tree.show[Positions]))
-      }
-    }
-    val startTokenPos = start match {
-      case TokenPos(tokenPos) => tokenPos
-      case TreePos(tree) => tree.requirePosition.startTokenPos
-      case AutoPos => in.tokenPos
-    }
-    val result = body
-    var endTokenPos = end match {
-      case TokenPos(tokenPos) => tokenPos
-      case TreePos(tree) => tree.requirePosition.endTokenPos
-      case AutoPos => in.prevTokenPos
-    }
-    if (endTokenPos < startTokenPos) endTokenPos = startTokenPos - 1
-    result.origin match {
-      case Origin.Parsed(_, _, startTokenPos0, endTokenPos0) if startTokenPos == startTokenPos0 && endTokenPos == endTokenPos0 => result
-      case _ => result.internalCopy(origin = Origin.Parsed(input, dialect, startTokenPos, endTokenPos)).asInstanceOf[T]
-    }
-  }
-  def autoPos[T <: Tree](body: => T): T = atPos(start = auto, end = auto)(body)
-
-  val reporter = Reporter()
-  import reporter._
+/* ------------- PARSER COMMON -------------------------------------------- */
 
   /** Scoping operator used to temporarily look into the future.
    *  Backs up token iterator before evaluating a block and restores it after.
@@ -326,48 +165,6 @@ private[meta] abstract class AbstractParser { parser =>
     // try it, in case it is recoverable
     try tree catch { case e: Exception => in = forked ; throw e }
   }
-
-  def parseStartRule: () => Source
-
-  def parseRule[T <: Tree](rule: this.type => T): T = {
-    // NOTE: can't require in.tokenPos to be at -1, because TokIterator auto-rewinds when created
-    // require(in.tokenPos == -1 && debug(in.tokenPos))
-    val start = 0
-    val t = rule(this)
-    // NOTE: can't have in.prevTokenPos here
-    // because we need to subsume all the trailing trivia
-    val end = in.tokenPos - 1
-    accept[EOF]
-    atPos(start, end)(t)
-  }
-
-  // Entry points for Parse[T]
-  // Used for quasiquotes as well as for ad-hoc parsing
-  def parseStat(): Stat = parseRule(parser => parser.statSeq(parser.templateStat.orElse(parser.topStat)) match {
-    case Nil => syntaxError("unexpected end of input", at = token)
-    case stat :: Nil => stat
-    case stats if stats.forall(_.isBlockStat) => Term.Block(stats)
-    case stats if stats.forall(_.isTopLevelStat) => Source(stats)
-    case other => syntaxError("these statements can't be mixed together", at = other.head)
-  })
-  def parseTerm(): Term = parseRule(_.expr())
-  def parseTermArg(): Term.Arg = ???
-  def parseTermParam(): Term.Param = ???
-  def parseType(): Type = parseRule(_.typ())
-  def parseTypeArg(): Type.Arg = parseRule(_.paramType())
-  def parseTypeParam(): Type.Param = ???
-  def parsePat(): Pat = ???
-  def parsePatArg(): Pat.Arg = parseRule(_.pattern())
-  def parsePatType(): Pat.Type = ???
-  def parseCase(): Case = ???
-  def parseCtorRef(): Ctor.Ref = ???
-  def parseTemplate(): Template = ???
-  def parseMod(): Mod = ???
-  def parseEnumerator(): Enumerator = ???
-  def parseImportee(): Importee = ???
-  def parseSource(): Source = parseRule(_.parseStartRule())
-
-/* ------------- PARSER COMMON -------------------------------------------- */
 
   /** Methods inParensOrError and similar take a second argument which, should
    *  the next token not be the expected opener (e.g. token.`(`) will be returned
@@ -411,7 +208,50 @@ private[meta] abstract class AbstractParser { parser =>
     ret
   }
 
+/* ------------- POSITION HANDLING ------------------------------------------- */
+
+  import scala.language.implicitConversions
+  sealed trait Pos
+  case class TokenPos(tokenPos: Int) extends Pos
+  implicit def intToTokenPos(tokenPos: Int): TokenPos = TokenPos(tokenPos)
+  case class TreePos(tree: Tree) extends Pos
+  implicit def treeToTreePos(tree: Tree): TreePos = TreePos(tree)
+  implicit def optionTreeToPos(tree: Option[Tree]): Pos = tree.map(TreePos).getOrElse(AutoPos)
+  implicit def modsToPos(mods: List[Mod]): Pos = mods.headOption.map(TreePos).getOrElse(AutoPos)
+  implicit class XtensionTreePos(tree: Tree) { def pos = treeToTreePos(tree) }
+  case object AutoPos extends Pos
+  def auto = AutoPos
+
+  def atPos[T <: Tree](start: Pos, end: Pos)(body: => T): T = {
+    implicit class XtensionTree(tree: Tree) {
+      def requirePosition: Origin.Parsed = tree.origin match {
+        case position: Origin.Parsed => position
+        case _ => unreachable(debug(tree.show[Positions]))
+      }
+    }
+    val startTokenPos = start match {
+      case TokenPos(tokenPos) => tokenPos
+      case TreePos(tree) => tree.requirePosition.startTokenPos
+      case AutoPos => in.tokenPos
+    }
+    val result = body
+    var endTokenPos = end match {
+      case TokenPos(tokenPos) => tokenPos
+      case TreePos(tree) => tree.requirePosition.endTokenPos
+      case AutoPos => in.prevTokenPos
+    }
+    if (endTokenPos < startTokenPos) endTokenPos = startTokenPos - 1
+    result.origin match {
+      case Origin.Parsed(_, _, startTokenPos0, endTokenPos0) if startTokenPos == startTokenPos0 && endTokenPos == endTokenPos0 => result
+      case _ => result.internalCopy(origin = Origin.Parsed(input, dialect, startTokenPos, endTokenPos)).asInstanceOf[T]
+    }
+  }
+  def autoPos[T <: Tree](body: => T): T = atPos(start = auto, end = auto)(body)
+
 /* ------------- ERROR HANDLING ------------------------------------------- */
+
+  val reporter = Reporter()
+  import reporter._
 
   private var inFunReturnType = false
   @inline private def fromWithinReturnType[T](body: => T): T = {
@@ -452,7 +292,7 @@ private[meta] abstract class AbstractParser { parser =>
     case id: Ident if pred(id.code.stripPrefix("`").stripSuffix("`")) => true
     case _                                                            => false
   }
-  def isUnaryOp: Boolean            = isIdentAnd(SyntacticInfo.isUnaryOp)
+  def isUnaryOp: Boolean            = isIdentAnd(Helpers.isUnaryOp)
   def isIdentExcept(except: String) = isIdentAnd(_ != except)
   def isIdentOf(name: String)       = isIdentAnd(_ == name)
   def isRawStar: Boolean            = isIdentOf("*")
@@ -2382,7 +2222,7 @@ private[meta] abstract class AbstractParser { parser =>
       // the Type.ApplyInfix => Term.ApplyType conversion is weird as well
       def mkCtorRefFunction(tpe: Type) = {
         val origin = tpe.origin.require[Origin.Parsed]
-        val allTokens = origin.input.tokens(dialect).zipWithIndex
+        val allTokens = parser.input.tokens(dialect).zipWithIndex
         val arrowPos = allTokens.indexWhere{ case (el, i) => el.is[`=>`] && origin.startTokenPos <= i && i <= origin.endTokenPos }
         atPos(arrowPos, arrowPos)(Ctor.Ref.Function(atPos(arrowPos, arrowPos)(Ctor.Name("=>"))))
       }
@@ -2748,4 +2588,11 @@ private[meta] abstract class AbstractParser { parser =>
       Source(topStatSeq())
     }
   }
+}
+
+class Location private(val value: Int) extends AnyVal
+object Location {
+  val Local      = new Location(0)
+  val InBlock    = new Location(1)
+  val InTemplate = new Location(2)
 }

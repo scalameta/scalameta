@@ -12,6 +12,10 @@ trait Dialect {
   // The sequence of characters that's used to express a bind
   // to a sequence wildcard pattern.
   def bindToSeqWildcardDesignator: String
+
+  // Permission to tokenize repeated dots as ellipses.
+  // Necessary to support quasiquotes, e.g. `q"foo(..$args)"`.
+  def allowEllipses: Boolean
 }
 
 object Dialect {
@@ -27,12 +31,20 @@ object Dialect {
 
 package object dialects {
   implicit object Scala211 extends Dialect {
-    // List(1, 2, 3) match { case List(xs @ _*) => ... }
-    def bindToSeqWildcardDesignator = "@"
+    override def toString = "Scala211"
+    def bindToSeqWildcardDesignator = "@" // List(1, 2, 3) match { case List(xs @ _*) => ... }
+    def allowEllipses: Boolean = false // Vanilla Scala doesn't support ellipses, somewhat similar concept is varargs and _*
   }
 
   implicit object Dotty extends Dialect {
-    // List(1, 2, 3) match { case List(xs: _*) => ... }
-    def bindToSeqWildcardDesignator = ":"
+    override def toString = "Dotty"
+    def bindToSeqWildcardDesignator = ":" // // List(1, 2, 3) match { case List(xs: _*) => ... }
+    def allowEllipses: Boolean = false // Vanilla Dotty doesn't support ellipses, somewhat similar concept is varargs and _*
+  }
+
+  def Quasiquote(dialect: Dialect): Dialect = new Dialect {
+    override def toString = s"Quasiquotes(${dialect.toString})"
+    def bindToSeqWildcardDesignator = dialect.bindToSeqWildcardDesignator
+    def allowEllipses: Boolean = true
   }
 }

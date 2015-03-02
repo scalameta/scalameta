@@ -95,8 +95,8 @@ scala> "class C { def x = 2 }".parse[Stat]
 res4: scala.meta.Stat = class C { def x = 2 }
 
 scala> "class C { def x = 2 }".parse[Term]
-scala.meta.ui.Exception: syntax error at class (0..4): illegal start of simple expression: class (0..4)
-  at scala.meta.ui.Exception$.apply(Exception.scala:5)
+scala.meta.ParseException: illegal start of simple expression at class (0..4)
+  at scala.meta.ParseException$.apply(Exception.scala:5)
   at scala.meta.syntactic.parsers.Reporter$class.syntaxError(Reporter.scala:12)
   at scala.meta.syntactic.parsers.Reporter$$anon$1.syntaxError(Reporter.scala:17)
   at scala.meta.syntactic.parsers.AbstractParser.simpleExpr(Parsers.scala:1256)

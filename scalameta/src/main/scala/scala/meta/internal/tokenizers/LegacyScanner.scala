@@ -15,9 +15,12 @@ private[meta] class LegacyScanner(val input: Input, decodeUni: Boolean = true)(i
   val next: LegacyTokenData   = new LegacyTokenData {}
   val prev: LegacyTokenData   = new LegacyTokenData {}
   val reader: CharArrayReader = new CharArrayReader(input.content, reporter.readerError, decodeUni)
-  val reporter: Reporter      = Reporter()
+  val reporter: Reporter      = Reporter(input)
 
   import curr._, reader._, reporter._
+  curr.input = this.input
+  next.input = this.input
+  prev.input = this.input
 
   private def isDigit(c: Char) = java.lang.Character isDigit c
   private var openComments = 0
@@ -413,6 +416,13 @@ private[meta] class LegacyScanner(val input: Input, decodeUni: Boolean = true)(i
         nextChar()
         if ('0' <= ch && ch <= '9') {
           putChar('.'); getFraction()
+        } else if (dialect.allowEllipses && ch == '.') {
+          base = 0
+          while (ch == '.') {
+            base += 1
+            nextChar()
+          }
+          token = ELLIPSIS
         } else {
           token = DOT
         }

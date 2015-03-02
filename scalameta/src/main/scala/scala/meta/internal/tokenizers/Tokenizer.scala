@@ -102,6 +102,8 @@ private[meta] object tokenize {
 
         case COMMENT   => Token.Comment(input, curr.offset, curr.endOffset)
 
+        case ELLIPSIS  => Token.Ellipsis(input, curr.offset, curr.endOffset, curr.base)
+
         case EOF       => Token.EOF(input)
         case XMLSTART  => Token.XMLStart(input, curr.offset, curr.endOffset)
 

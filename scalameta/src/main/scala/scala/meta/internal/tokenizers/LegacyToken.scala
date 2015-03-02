@@ -110,6 +110,8 @@ private[meta] object LegacyToken {
   final val WHITESPACE = 201
   final val COMMENT = 300
 
+  final val ELLIPSIS = 400
+
   val kw2legacytoken = Map[String, LegacyToken](
     "abstract"  -> ABSTRACT,
     "case"      -> CASE,

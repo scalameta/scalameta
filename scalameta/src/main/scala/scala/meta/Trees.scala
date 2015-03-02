@@ -81,7 +81,7 @@ package scala.meta.internal.ast {
   import org.scalameta.unreachable
   import scala.meta.internal.{ast => impl}
   import scala.meta.internal.hygiene._
-  import scala.meta.internal.parsers.SyntacticInfo._
+  import scala.meta.internal.parsers.Helpers._
   import scala.meta.internal.tokenizers.keywords
 
   @branch trait Tree extends api.Tree

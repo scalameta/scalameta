@@ -10,9 +10,9 @@ import scala.collection.immutable.Seq
 trait Liftables {
   val u: scala.reflect.macros.Universe
   implicit def materializeAdt[T <: Adt]: u.Liftable[T] = macro LiftableMacros.impl[T]
+  implicit def liftSeq[T](implicit ev: u.Liftable[T]): u.Liftable[Seq[T]] = u.Liftable { seq => u.Liftable.liftList[T](ev).apply(seq.toList) }
 }
 
-// TODO: copy/paste wrt org.scalameta.ast.LiftableMacros
 class LiftableMacros(val c: Context) extends AdtReflection {
   val u: c.universe.type = c.universe
   val mirror: u.Mirror = c.mirror
@@ -24,7 +24,7 @@ class LiftableMacros(val c: Context) extends AdtReflection {
     val u = q"${c.prefix}.u"
     val mainParam = c.freshName(TermName("x"))
     val mainModule = c.freshName(TermName("Module"))
-    val mainMethod = c.freshName(TermName("instanceFor" + root.prefix.capitalize.replace(".", "")))
+    val mainMethod = TermName("liftableSub" + root.prefix.capitalize.replace(".", ""))
     val localParam = c.freshName(TermName("x"))
     val leafLiftNames = leafs.map(leaf => c.freshName(TermName("lift" + leaf.prefix.capitalize.replace(".", ""))))
     val liftLeafs = leafs.zip(leafLiftNames).map({ case (leaf, name) =>
