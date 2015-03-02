@@ -4,25 +4,28 @@ package quasiquotes
 
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
+import scala.collection.{immutable, mutable}
 import org.scalameta.adt.{Liftables => AdtLiftables, AdtReflection}
-import org.scalameta.ast.{Liftables => AstLiftables}
 import org.scalameta.invariants._
 import org.scalameta.unreachable
+import scala.meta.{Token => MetaToken}
+import scala.meta.internal.hygiene.{Denotation => MetaDenotation, Sigma => MetaSigma, _}
 import scala.meta.internal.hygiene.{Symbol => MetaSymbol, Prefix => MetaPrefix, Signature => MetaSignature, _}
+import scala.meta.internal.tokenizers.{LegacyScanner, LegacyToken}
 
 // TODO: ideally, we would like to bootstrap these macros on top of scala.meta
 // so that quasiquotes can be interpreted by any host, not just scalac
-private[meta] class Macros(val c: Context) extends AdtReflection with AdtLiftables with AstLiftables {
+private[meta] class Macros(val c: Context) extends AdtReflection with AdtLiftables {
   val u: c.universe.type = c.universe
   val mirror: u.Mirror = c.mirror
   import c.internal._
   import decorators._
   import c.universe.{Tree => _, Symbol => _, Type => _, _}
   import c.universe.{Tree => ReflectTree, Symbol => ReflectSymbol, Type => ReflectType}
-  import scala.meta.{Tree => MetaTree, Type => MetaType}
+  import scala.meta.{Tree => MetaTree, Type => MetaType, Input => MetaInput, Dialect => MetaDialect}
+  type MetaParser = (MetaInput, MetaDialect) => MetaTree
   import scala.meta.internal.{ast => impl}
   val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
-  case class Dummy(id: String, ndots: Int, arg: ReflectTree)
 
   import definitions._
   val SeqModule = c.mirror.staticModule("scala.collection.Seq")
@@ -31,43 +34,83 @@ private[meta] class Macros(val c: Context) extends AdtReflection with AdtLiftabl
   val ScalaNil = ScalaPackageObjectClass.info.decl(TermName("Nil"))
   val ScalaSeq = ScalaPackageObjectClass.info.decl(TermName("Seq"))
 
-  def apply(args: c.Tree*)(dialect: c.Tree): ReflectTree = {
-    def metaParse(s: String): MetaTree = {
-      val dialectInstance: _root_.scala.meta.Dialect = {
-        // We want to have a higher-order way to abstract over differences in dialects
-        // and we're using implicits for that (implicits are values => values are higher-order => good).
-        //
-        // However, quasiquotes use macros, and macros are first-order, so we have a problem here.
-        // Concretely, here we need to convert an implicit argument to a macro (the `dialect` tree)
-        // into an instance of `Dialect` that we'll pass to the parser.
-        //
-        // TODO: For now I'll just prohibit quasiquotes for situations when `dialect` doesn't point to either Scala211 or Dotty.
-        // A natural extension to this would be to allow any static value, not just predefined dialects.
-        // Later on, we could further relax this restriction by doing parsing for a superset of all dialects and then
-        // delaying validation of resulting ASTs until runtime.
-        if (dialect.tpe.termSymbol == c.mirror.staticModule("_root_.scala.meta.dialects.Scala211")) _root_.scala.meta.dialects.Scala211
-        else if (dialect.tpe.termSymbol == c.mirror.staticModule("_root_.scala.meta.dialects.Dotty")) _root_.scala.meta.dialects.Dotty
-        else c.abort(c.enclosingPosition, "can't use the " + dialect + " dialect in quasiquotes")
-      }
-      val parserModule = c.macroApplication.symbol.owner.owner.companion
-      val metaPackageClass = Class.forName("scala.meta.package", true, classOf[scala.meta.Tree].getClassLoader)
-      val parserModuleGetter = metaPackageClass.getDeclaredMethod(parserModule.name.toString)
-      val parserModuleInstance = parserModuleGetter.invoke(null)
-      val parserMethod = parserModuleInstance.getClass.getDeclaredMethods().find(_.getName == "parse").head
-      parserMethod.invoke(parserModuleInstance, s, dialectInstance).asInstanceOf[MetaTree]
-    }
-    val (skeleton, dummies) = parseSkeleton(c.macroApplication, metaParse)
+  def apply(args: ReflectTree*)(dialect: ReflectTree): ReflectTree = {
+    val skeleton = parseSkeleton(c.macroApplication, instantiateDialect(dialect), instantiateParser(c.macroApplication.symbol))
     val maybeAttributedSkeleton = scala.util.Try(attributeSkeleton(skeleton)).getOrElse(skeleton)
-    reifySkeleton(maybeAttributedSkeleton, dummies)
+    reifySkeleton(maybeAttributedSkeleton)
   }
 
-  private def parseSkeleton(macroApplication: ReflectTree, metaParse: String => MetaTree): (MetaTree, List[Dummy]) = {
-    val q"$_($_.apply(..$partlits)).$_.apply[..$_](..$argtrees)($_)" = macroApplication
-    val parts = partlits.map{ case q"${part: String}" => part }
-    def ndots(s: String): Int = if (s.endsWith(".")) ndots(s.stripSuffix(".")) + 1 else 0
-    val dummies = argtrees.zipWithIndex.map{ case (tree, i) => Dummy(c.freshName("dummy"), ndots(parts(i)), tree) }
-    val snippet = (parts.init.zip(dummies).flatMap{ case (part, Dummy(id, ndots, _)) => List(if (ndots != 1) part.stripSuffix("." * ndots) else part, s"$id") } :+ parts.last).mkString("")
-    (metaParse(snippet), dummies)
+  private def instantiateDialect(dialect: ReflectTree): MetaDialect = {
+    // We want to have a higher-order way to abstract over differences in dialects
+    // and we're using implicits for that (implicits are values => values are higher-order => good).
+    //
+    // However, quasiquotes use macros, and macros are first-order, so we have a problem here.
+    // Concretely, here we need to convert an implicit argument to a macro (the `dialect` tree)
+    // into an instance of `Dialect` that we'll pass to the parser.
+    //
+    // TODO: For now I'll just prohibit quasiquotes for situations when `dialect` doesn't point to either Scala211 or Dotty.
+    // A natural extension to this would be to allow any static value, not just predefined dialects.
+    // Later on, we could further relax this restriction by doing parsing for a superset of all dialects and then
+    // delaying validation of resulting ASTs until runtime.
+    if (dialect.tpe.termSymbol == c.mirror.staticModule("_root_.scala.meta.dialects.Scala211")) _root_.scala.meta.dialects.Scala211
+    else if (dialect.tpe.termSymbol == c.mirror.staticModule("_root_.scala.meta.dialects.Dotty")) _root_.scala.meta.dialects.Dotty
+    else c.abort(c.enclosingPosition, "can't use the " + dialect + " dialect in quasiquotes")
+  }
+
+  private def instantiateParser(interpolator: ReflectSymbol): MetaParser = {
+    val parserModule = interpolator.owner.owner.companion
+    val metaPackageClass = Class.forName("scala.meta.package", true, classOf[scala.meta.Tree].getClassLoader)
+    val parserModuleGetter = metaPackageClass.getDeclaredMethod(parserModule.name.toString)
+    val parserModuleInstance = parserModuleGetter.invoke(null)
+    val parserMethod = parserModuleInstance.getClass.getDeclaredMethods().find(_.getName == "parse").head
+    (input: Input, dialect: Dialect) => parserMethod.invoke(parserModuleInstance, input, dialect).asInstanceOf[MetaTree]
+  }
+
+  private def parseSkeleton(macroApplication: ReflectTree, metaDialect: MetaDialect, metaParse: MetaParser): MetaTree = {
+    implicit val implicitMetaDialect: MetaDialect = metaDialect
+    macroApplication match {
+      case q"$_($_.apply(..$parts)).$_.apply[..$_](..$args)($_)" if parts.length == args.length + 1 =>
+        val parttokenss = parts.map{
+          case partlit @ q"${part: String}" =>
+            val source = macroApplication.pos.source
+            val dollars = mutable.ListBuffer[Int]()
+            val start = partlit.pos.start
+            var remaining = part.length
+            var end = start - 1
+            while (remaining > 0) {
+              end += 1
+              if (source.content(end) == '$') {
+                dollars += end
+                end += 1
+                require(source.content(end) == '$')
+              }
+              remaining -= 1
+            }
+            val tokens = part.tokens
+            val preciseTokens = new immutable.VectorBuilder[MetaToken]()
+            val wholeFile = {
+              if (source.file.file != null) Input.File(source.file.file)
+              else Input.Chars(source.content)
+            }
+            val slice = Input.Slice(wholeFile, start, end)
+            var i = 0
+            var delta = 0
+            while (i < tokens.length) {
+              val token = tokens(i)
+              if (delta < dollars.length && token.start >= dollars(delta)) delta += 1
+              preciseTokens += token.adjust(input = slice, delta = delta)
+              i += 1
+            }
+            preciseTokens.result
+          case part =>
+            c.abort(part.pos, "quasiquotes can only be used with literal strings")
+        }
+        def merge(parttokens: Vector[MetaToken], arg: ReflectTree) = parttokens :+ MetaToken.Unquote(arg)
+        val tokens = parttokenss.init.zip(args).flatMap((merge _).tupled) ++ parttokenss.last
+        metaParse(Input.Tokens(tokens.toVector), metaDialect)
+      case _ =>
+        c.abort(macroApplication.pos, s"fatal error initializing quasiquote macro: ${showRaw(macroApplication)}")
+    }
   }
 
   // TODO: this is a very naive approach to hygiene, and it will be replaced as soon as possible
@@ -218,8 +261,16 @@ private[meta] class Macros(val c: Context) extends AdtReflection with AdtLiftabl
     }
   }
 
-  private def reifySkeleton(meta: MetaTree, dummies: List[Dummy]): ReflectTree = {
-    implicitly[Liftable[MetaTree]].apply(meta)
+  private def reifySkeleton(meta: MetaTree): ReflectTree = {
+    // NOTE: we could write just `implicitly[Liftable[MetaTree]].apply(meta)`
+    // but that would bloat the code significantly with duplicated instances for denotations and sigmas
+    object LiftableInstances {
+      lazy implicit val liftableDenotation: Liftable[MetaDenotation] = materializeAdt[MetaDenotation]
+      lazy implicit val liftableSigma: Liftable[MetaSigma] = materializeAdt[MetaSigma]
+      lazy implicit val liftableTree: Liftable[MetaTree] = materializeAdt[Tree]
+      implicit def liftableSubTree[T <: MetaTree]: Liftable[T] = Liftable((tree: T) => liftableTree(tree))
+    }
+    LiftableInstances.liftableTree.apply(meta)
   }
 
   def unapply(scrutinee: c.Tree)(dialect: c.Tree): ReflectTree = {

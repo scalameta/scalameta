@@ -15,6 +15,9 @@ class TokenMacros(val c: Context) {
   import Flag._
   val Adt = q"_root_.org.scalameta.adt"
   val TokenInternal = q"_root_.org.scalameta.tokens.internal"
+  val Invariants = q"_root_.org.scalameta.invariants.`package`"
+  val Default = q"_root_.org.scalameta.default"
+  val Unsupported = tq"_root_.scala.`package`.UnsupportedOperationException"
   def impl(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       val q"$mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
@@ -49,6 +52,47 @@ class TokenMacros(val c: Context) {
 
       // step 3: ensure that the token is correctly classified as either static or dynamic
       stats1 += q"$TokenInternal.staticDynamicCheck[$name]"
+
+      // step 4: generate implementation of `def adjust`
+      val needsAdjust = !stats.exists{ case DefDef(_, TermName("adjust"), _, _, _, _) => true; case _ => false }
+      if (needsAdjust) {
+        val paramInput = q"val input: _root_.scala.meta.Input = this.input"
+        val paramStart = q"val start: $Default.Param[_root_.scala.Int] = $Default.Param.Default"
+        val paramEnd = q"val end: $Default.Param[_root_.scala.Int] = $Default.Param.Default"
+        val paramDelta = q"val delta: $Default.Param[_root_.scala.Int] = $Default.Param.Default"
+        val adjustResult = {
+          if (code == "EOF") q"this.copy(input = input)"
+          else if (isStaticToken) q"this.copy(input = input, start = startValue)"
+          else q"this.copy(input = input, start = startValue, end = endValue)"
+        }
+        val adjustError = {
+          if (code == "EOF") "position-changing adjust on Token.EOF"
+          else if (isStaticToken) s"end-changing adjust on Tokens.${escape(code)}"
+          else "fatal error in the token infrastructure"
+        }
+        val body = q"""
+          (start.nonEmpty || end.nonEmpty, delta.nonEmpty) match {
+            case (false, false) =>
+              this.copy(input = input)
+            case (true, false) =>
+              val startValue = start.getOrElse(this.start)
+              val endValue = end.getOrElse(this.end)
+              val result = $adjustResult
+              if (result.start != startValue || result.end != endValue) {
+                var message = $adjustError
+                message += (": expected " + result.start + ".." + result.end)
+                message += (", actual " + startValue + ".." + endValue)
+                throw new $Unsupported(message)
+              }
+              result
+            case (false, true) =>
+              this.adjust(input = input, start = this.start + delta.get, end = this.end + delta.get)
+            case (true, true) =>
+              throw new _root_.scala.meta.ui.Exception("you can specify either start/end or delta, but not both")
+          }
+        """
+        stats1 += q"def adjust($paramInput, $paramStart, $paramEnd, $paramDelta): ThisType = $body"
+      }
 
       val cdef1 = q"$mods1 class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats1 }"
       val mdef1 = q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"

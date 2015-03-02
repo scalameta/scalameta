@@ -30,13 +30,16 @@ object Input {
     lazy val content = scala.io.Source.fromFile(f)(scala.io.Codec(charset)).mkString.toArray
   }
   object File {
-    def apply(path: Predef.String): Input.File = Input.File(new java.io.File(path), Charset.forName("UTF-8"))
+    def apply(path: Predef.String): Input.File = Input.File(new java.io.File(path))
+    def apply(f: java.io.File): Input.File = Input.File(f, Charset.forName("UTF-8"))
   }
   final case class Tokens(precomputedTokens: Vector[Token]) extends Input {
     lazy val content = precomputedTokens.map(_.code).mkString.toArray
     override def tokens(implicit dialect: Dialect) = precomputedTokens
   }
+  final case class Chars(content: Array[Char]) extends Input
   implicit val stringToInput: Convert[scala.Predef.String, Input] = Convert.apply(Input.String(_))
   implicit val fileToInput: Convert[java.io.File, Input] = Convert.apply(f => Input.File(f, Charset.forName("UTF-8")))
   implicit val tokensToInput: Convert[Vector[Token], Input] = Convert.apply(Input.Tokens(_))
+  implicit val charsToInput: Convert[Array[Char], Input] = Convert.apply(Input.Chars(_))
 }

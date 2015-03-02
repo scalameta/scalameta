@@ -2,15 +2,19 @@ package scala.meta
 package syntactic
 
 import org.scalameta.tokens._
+import org.scalameta.default._
+import org.scalameta.default.Param._
 import scala.reflect.ClassTag
 import scala.language.experimental.macros
 
 @root trait Token {
+  type ThisType <: Token
   def is[T: ClassTag]: Boolean    = implicitly[ClassTag[T]].runtimeClass.isAssignableFrom(this.getClass)
   def isNot[T: ClassTag]: Boolean = !is[T]
   def input: Input
   def start: Int
   def end: Int
+  def adjust(input: Input = this.input, start: Param[Int] = Default, end: Param[Int] = Default, delta: Param[Int] = Default): ThisType
   def name: String
   def code: String = {
     val buf = new StringBuffer
@@ -144,7 +148,23 @@ object Token {
 
   @token class Comment(input: Input, start: Int, end: Int) extends Dynamic with Token { def name = "comment" }
 
-  @token class EOF(input: Input) extends Static with StatSep with StatSeqEnd with CaseDefEnd with CantStartStat { def name = "end of file"; override def code = ""; def start = input.content.length; def end = input.content.length - 1 }
+  // TODO: after we bootstrap, Unquote.tree will become scala.meta.Tree
+  // however, for now, we will keep it at Any in order to also support scala.reflect trees
+  @token class Unquote(tree: Any) extends Static {
+    def input = Input.None
+    def start = 0
+    def end = -1
+    def adjust(input: Input = this.input, start: Param[Int] = Default, end: Param[Int] = Default, delta: Param[Int] = Default): Unquote = throw new UnsupportedOperationException("adjust on Token.Unquote")
+    def name = "unquote"
+    override def code = "${...}"
+  }
+
+  @token class EOF(input: Input) extends Static with StatSep with StatSeqEnd with CaseDefEnd with CantStartStat {
+    def name = "end of file"
+    override def code = ""
+    def start = input.content.length
+    def end = input.content.length - 1
+  }
 
   // TODO: implement XML literals
   @token class XMLStart(input: Input, start: Int, end: Int) extends Dynamic with Token with ExprIntro with CanEndStat { def name = ??? }

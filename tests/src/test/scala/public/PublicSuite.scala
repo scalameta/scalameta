@@ -358,6 +358,7 @@ class PublicSuite extends FunSuite {
       (??? : String).parse[Term]
       (??? : java.io.File).parse[Term]
       (??? : Vector[Token]).parse[Term]
+      (??? : Array[Char]).parse[Term]
     """) === "")
   }
 
@@ -423,6 +424,7 @@ class PublicSuite extends FunSuite {
       (??? : Input).tokens
       (??? : String).tokens
       (??? : java.io.File).tokens
+      (??? : Vector[Token]).tokens
       (??? : Vector[Token]).tokens
     """) === "")
   }
