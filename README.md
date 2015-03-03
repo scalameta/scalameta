@@ -192,7 +192,7 @@ For instance, let's dig into the List that we obtained and get its member method
 
 ```
 scala> res8.defs("apply")
-res10: scala.meta.Member.Term = override def apply[A](xs: A*): List[A] = jvmMethod("scala.collection.immutable.List.type.apply(Lscala/collection/Seq;)Lscala/collection/immutable/List;").invoke(this, xs)
+res10: scala.meta.Member.Term = override def apply[A](xs: A*): List[A] = jvmMethod("Lscala/collection/immutable/List$;", "apply", "(Lscala/collection/Seq;)Lscala/collection/immutable/List;").invoke(this, xs)
 ```
 
 Note that in addition to signatures, members also carry their bodies. In fact, a `Member` obtained via `Ref.defn`
