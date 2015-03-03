@@ -177,29 +177,27 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
             mcallInterpreter("incompatibleMacro", "()V", Nil)
           }
           def mloadField(gfield: g.Symbol) = {
-            val className = g.transformedType(gfield.owner.tpe).toString
-            val fieldSig = gfield.name.encoded + ":" + gfield.tpe.jvmsig
-            val mintpArgs = List(m.Lit.String(className + "." + fieldSig))
-            val mintpCall = mcallInterpreter("jvmField", "(Ljava/lang/String;)Ljava/lang/reflect/Field;", mintpArgs)
+            val mintpSig = "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String)Ljava/lang/reflect/Field;"
+            val mintpArgs = List(gfield.owner.tpe.jvmsig, gfield.name.encoded, gfield.tpe.jvmsig).map(s => m.Lit.String(s))
+            val mintpCall = mcallInterpreter("jvmField", mintpSig, mintpArgs)
             val gField_get = g.typeOf[java.lang.reflect.Field].member(g.TermName("get"))
             val mget = m.Term.Select(mintpCall, m.Term.Name("get").withDenot(gField_get))
             m.Term.Apply(mget, List(m.Term.This(m.Name.Anonymous().withDenot(gfield.owner))))
           }
           def mintrinsic(gmeth: g.Symbol) = {
-            val className = g.transformedType(gmeth.owner.tpe).toString
-            val methodSig = gmeth.name.encoded + gmeth.tpe.jvmsig
+            val mintpSig = "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lscala/collection/Seq;)Ljava/lang/Object;"
             val mintpArgs = {
-              val mthisarg = m.Term.This(m.Name.Anonymous().withDenot(gmeth.owner))
+              val msigargs = List(gmeth.owner.tpe.jvmsig, gmeth.name.encoded, gmeth.tpe.jvmsig).map(s => m.Lit.String(s))
+              val mthisarg = List(m.Term.This(m.Name.Anonymous().withDenot(gmeth.owner)))
               val motherargs = gmeth.paramss.flatten.map(gparam => gparam.asTerm.rawcvt(g.Ident(gparam)))
-              m.Lit.String(className + "." + methodSig) +: mthisarg +: motherargs
+              msigargs ++ mthisarg ++ motherargs
             }
-            mcallInterpreter("intrinsic", "(Ljava/lang/String;Lscala/collection/Seq;)Ljava/lang/Object;", mintpArgs)
+            mcallInterpreter("intrinsic", mintpSig, mintpArgs)
           }
           def minvokeMethod(gmeth: g.Symbol) = {
-            val className = g.transformedType(gmeth.owner.tpe).toString
-            val methodSig = gmeth.name.encoded + gmeth.tpe.jvmsig
-            val mintpArgs = List(m.Lit.String(className + "." + methodSig))
-            val mintpCall = mcallInterpreter("jvmMethod", "(Ljava/lang/String;)Ljava/lang/reflect/Method;", mintpArgs)
+            val mintpSig = "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/reflect/Method;"
+            val mintpArgs = List(gmeth.owner.tpe.jvmsig, gmeth.name.encoded, gmeth.tpe.jvmsig).map(s => m.Lit.String(s))
+            val mintpCall = mcallInterpreter("jvmMethod", mintpSig, mintpArgs)
             val gMethod_invoke = g.typeOf[java.lang.reflect.Method].member(g.TermName("invoke"))
             val minvoke = m.Term.Select(mintpCall, m.Term.Name("invoke").withDenot(gMethod_invoke))
             val margs = {

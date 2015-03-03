@@ -23,7 +23,7 @@ trait Platform {
           else if (sym == LongClass) "J"
           else if (sym == DoubleClass) "D"
           else if (sym == ArrayClass) "[" + args.head.jvmsig
-          else "L" + sym.fullName.replace(".", "/") + ";"
+          else "L" + sym.fullName.replace(".", "/") + (if (sym.isModuleClass) "$" else "") + ";"
         case MethodType(params, ret) =>
           s"(" + params.map(_.jvmsig).mkString("") + ")" + ret.jvmsig
         case ConstantType(value) =>
