@@ -176,12 +176,17 @@ object Token {
 
   // NOTE: in order to maintain compatibility with scala.reflect's implementation,
   // Ellipsis.rank = 1 means .., Ellipsis.rank = 2 means ..., etc
+  @token class Ellipsis(start: Int, end: Int, rank: Int) extends Dynamic {
+    def name = "." * (rank + 1)
+  }
+
   // TODO: after we bootstrap, Unquote.tree will become scala.meta.Tree
   // however, for now, we will keep it at Any in order to also support scala.reflect trees
-  @branch trait Wildcard extends Token {
+  @token class Unquote(start: Int, end: Int, tree: Any) extends Dynamic {
+    def name = "unquote " + tree
     override def is[T: ClassTag]: Boolean = {
       val T = implicitly[ClassTag[T]].runtimeClass
-      lazy val nonTrivialNonWildcardNext = {
+      lazy val nonTrivialNext = {
         def loop(token: Token): Token = if (token.is[Trivia]) loop(token.next) else token
         loop(this.next)
       }
@@ -198,16 +203,14 @@ object Token {
       else if (T == classOf[StatSeqEnd]) false
       else if (T == classOf[Whitespace]) false
       else if (T == classOf[CaseIntro]) false
-      else if (T == classOf[DclIntro]) nonTrivialNonWildcardNext.is[DclIntro]
-      else if (T == classOf[DefIntro]) nonTrivialNonWildcardNext.is[DefIntro]
-      else if (T == classOf[TemplateIntro]) nonTrivialNonWildcardNext.is[TemplateIntro]
+      else if (T == classOf[DclIntro]) nonTrivialNext.is[DclIntro]
+      else if (T == classOf[DefIntro]) nonTrivialNext.is[DefIntro]
+      else if (T == classOf[TemplateIntro]) nonTrivialNext.is[TemplateIntro]
       else if (T == classOf[ExprIntro]) true
       else if (T == classOf[TypeIntro]) true
       else super.is[T]
     }
   }
-  @token class Ellipsis(start: Int, end: Int, rank: Int) extends Dynamic with Wildcard { def name = "." * (rank + 1) }
-  @token class Unquote(start: Int, end: Int, tree: Any) extends Dynamic with Wildcard { def name = "unquote " + tree }
 
   @token class BOF() extends Static {
     def name = "beginning of file"
