@@ -104,7 +104,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         if (curr.is[`(`]) sepRegions = ')' :: sepRegions
         else if (curr.is[`[`]) sepRegions = ']' :: sepRegions
         else if (curr.is[`{`]) sepRegions = '}' :: sepRegions
-        else if (curr.is[`case`] && !next.is[`class `] && !next.is[`object`]) sepRegions = '\u21d2' :: sepRegions
+        else if (curr.is[CaseIntro]) sepRegions = '\u21d2' :: sepRegions
         else if (curr.is[`}`]) {
           while (!sepRegions.isEmpty && sepRegions.head != '}') sepRegions = sepRegions.tail
           if (!sepRegions.isEmpty) sepRegions = sepRegions.tail
@@ -934,7 +934,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
           next()
           if (token.isNot[`{`]) Some(expr())
           else inBraces {
-            if (token.is[`case`] && !ahead(token.is[`class `] || token.is[`object`])) Some(caseClauses())
+            if (token.is[CaseIntro]) Some(caseClauses())
             else Some(expr())
           }
         }
@@ -1228,7 +1228,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
    */
   def blockExpr(): Term = autoPos {
     inBraces {
-      if (token.is[`case`] && !ahead(token.is[`class `] || token.is[`object`])) Term.PartialFunction(caseClauses())
+      if (token.is[CaseIntro]) Term.PartialFunction(caseClauses())
       else block()
     }
   }
@@ -2050,14 +2050,13 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     newLinesOpt()
     val name = typeName()
     val tparams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
+    def aliasType() = Defn.Type(mods, name, tparams, typ())
+    def abstractType() = Decl.Type(mods, name, tparams, typeBounds())
     token match {
-      case _: `=` =>
-        next()
-        Defn.Type(mods, name, tparams, typ())
-      case _: `>:` | _: `<:` | _: `,` | _: `}` | _: StatSep =>
-        Decl.Type(mods, name, tparams, typeBounds())
-      case _ =>
-        syntaxError("`=', `>:', or `<:' expected", at = token)
+      case _: `=` => next(); aliasType()
+      case _: `>:` | _: `<:` | _: `,` | _: `}` => abstractType()
+      case token if token.is[StatSep] => abstractType()
+      case _ => syntaxError("`=', `>:', or `<:' expected", at = token)
     }
   }
 
@@ -2084,7 +2083,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         classDef(mods :+ atPos(casePos, casePos)(Mod.Case()))
       case _: `object` =>
         objectDef(mods)
-      case _: `case` if ahead(token.is[`object`])=>
+      case _: `case` if ahead(token.is[`object`]) =>
         val casePos = in.tokenPos
         next()
         objectDef(mods :+ atPos(casePos, casePos)(Mod.Case()))
@@ -2385,11 +2384,11 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
    */
   def topStatSeq(): List[Stat] = statSeq(topStat, errorMsg = "expected class or object definition")
   def topStat: PartialFunction[Token, Stat] = {
-    case _: `package `  =>
+    case token if token.is[`package `]  =>
       packageOrPackageObjectDef()
-    case _: `import` =>
+    case token if token.is[`import`] =>
       importStmt()
-    case _: `@` | _: TemplateIntro | _: Modifier =>
+    case token if token.is[TemplateIntro] =>
       topLevelTmplDef
   }
 
@@ -2440,11 +2439,11 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
    */
   def templateStats(): List[Stat] = statSeq(templateStat)
   def templateStat: PartialFunction[Token, Stat] = {
-    case _: `import` =>
+    case token if token.is[`import`] =>
       importStmt()
-    case _: DefIntro | _: Modifier | _: `@` =>
+    case token if token.is[DefIntro] =>
       nonLocalDefOrDcl
-    case _: ExprIntro =>
+    case token if token.is[ExprIntro] =>
       expr(InTemplate)
   }
 
@@ -2502,13 +2501,12 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
    */
   def blockStatSeq(): List[Stat] = {
     val stats = new ListBuffer[Stat]
-    while ((!token.is[StatSeqEnd] && !token.is[CaseDefEnd]) ||
-           (token.is[`case`] && ahead(token.is[`class `] || token.is[`object`]))) {
+    while (!token.is[StatSeqEnd] && !token.is[CaseDefEnd]) {
       if (token.is[`import`]) {
         stats += importStmt()
         acceptStatSepOpt()
       }
-      else if (token.is[DefIntro] || token.is[LocalModifier] || token.is[`@`]) {
+      else if (token.is[DefIntro] && !token.is[NonlocalModifier]) {
         if (token.is[`implicit`]) {
           val implicitPos = in.tokenPos
           next()

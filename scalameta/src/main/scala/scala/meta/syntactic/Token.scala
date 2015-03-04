@@ -41,14 +41,15 @@ object Token {
   @branch trait Static extends Token
   @branch trait Dynamic extends Token
 
+  @branch trait Trivia extends Token
   @branch trait TypeIntro extends Token
   @branch trait ExprIntro extends Token
+  @branch trait CaseIntro extends Token
   @branch trait DefIntro extends Token
   @branch trait TemplateIntro extends DefIntro
   @branch trait DclIntro extends DefIntro
   @branch trait StatSeqEnd extends Token
   @branch trait CaseDefEnd extends Token
-
   @branch trait CantStartStat extends Token
   @branch trait CanEndStat extends Token
 
@@ -56,11 +57,11 @@ object Token {
 
   object Interpolation {
     @token class Id(start: Int, end: Int) extends Dynamic with ExprIntro { def name = "interpolation id" }
-    @token class Start(start: Int, end: Int) extends Dynamic with Token { def name = "interpolation start" }
-    @token class Part(start: Int, end: Int) extends Dynamic with Token { def name = "interpolation part" }
-    @token class SpliceStart(start: Int) extends Static with Token { def name = "splice start"; override def code = "$" }
-    @token class SpliceEnd(start: Int) extends Static with Token { def name = "splice end"; override def code = "" }
-    @token class End(start: Int, end: Int) extends Dynamic with Token with CanEndStat { def name = "interpolation end" }
+    @token class Start(start: Int, end: Int) extends Dynamic { def name = "interpolation start" }
+    @token class Part(start: Int, end: Int) extends Dynamic { def name = "interpolation part" }
+    @token class SpliceStart(start: Int) extends Static { def name = "splice start"; override def code = "$" }
+    @token class SpliceEnd(start: Int) extends Static { def name = "splice end"; override def code = "" }
+    @token class End(start: Int, end: Int) extends Dynamic with CanEndStat { def name = "interpolation end" }
   }
 
   @branch trait Literal extends ExprIntro with CanEndStat
@@ -80,8 +81,22 @@ object Token {
   @token class `true`(start: Int) extends Keyword with StaticLiteral
   @token class `false`(start: Int) extends Keyword with StaticLiteral
 
-  @branch trait Keyword extends Static with Token
-  @token class `case`(start: Int) extends Keyword with CaseDefEnd with TemplateIntro
+  @branch trait Keyword extends Static
+  @token class `case`(start: Int) extends Keyword {
+    override def is[T: ClassTag]: Boolean = {
+      val T = implicitly[ClassTag[T]].runtimeClass
+      lazy val caseClassOrCaseObject = {
+        def loop(token: Token): Token = if (token.is[Trivia]) loop(token.next) else token
+        val nonTrivialNext = loop(this.next)
+        nonTrivialNext.is[`class `] || nonTrivialNext.is[`object`]
+      }
+      if (T == classOf[DefIntro]) caseClassOrCaseObject
+      else if (T == classOf[TemplateIntro]) caseClassOrCaseObject
+      else if (T == classOf[CaseDefEnd]) !caseClassOrCaseObject
+      else if (T == classOf[CaseIntro]) !caseClassOrCaseObject
+      else super.is[T]
+    }
+  }
   @token class `catch`(start: Int) extends Keyword with CantStartStat
   @token class `class `(start: Int) extends Keyword with TemplateIntro
   @token class `def`(start: Int) extends Keyword with DclIntro
@@ -111,16 +126,17 @@ object Token {
   @token class `with`(start: Int) extends Keyword with CantStartStat
   @token class `yield`(start: Int) extends Keyword with CantStartStat
 
-  @branch trait Modifier extends Token
+  @branch trait Modifier extends Token with DefIntro with TemplateIntro
+  @branch trait NonlocalModifier extends Modifier
   @branch trait LocalModifier extends Modifier
   @token class `abstract`(start: Int) extends LocalModifier with Keyword
   @token class `final`(start: Int) extends LocalModifier with Keyword
   @token class `sealed`(start: Int) extends LocalModifier with Keyword
   @token class `implicit`(start: Int) extends LocalModifier with Keyword
   @token class `lazy`(start: Int) extends LocalModifier with Keyword
-  @token class `private`(start: Int) extends Modifier with Keyword
-  @token class `protected`(start: Int) extends Modifier with Keyword
-  @token class `override`(start: Int) extends Modifier with Keyword
+  @token class `private`(start: Int) extends NonlocalModifier with Keyword
+  @token class `protected`(start: Int) extends NonlocalModifier with Keyword
+  @token class `override`(start: Int) extends NonlocalModifier with Keyword
 
   @branch trait Delim extends Token
   @branch trait StaticDelim extends Delim with Static
@@ -137,7 +153,7 @@ object Token {
   @token class `:`(start: Int) extends StaticDelim with CantStartStat
   @token class `.`(start: Int) extends StaticDelim with CantStartStat
   @token class `=`(start: Int) extends StaticDelim with CantStartStat
-  @token class `@`(start: Int) extends StaticDelim with TypeIntro
+  @token class `@`(start: Int) extends StaticDelim with TypeIntro with DefIntro with TemplateIntro
   @token class `#`(start: Int) extends StaticDelim with CantStartStat
   @token class `_ `(start: Int) extends StaticDelim with ExprIntro with TypeIntro with CanEndStat
   @token class `=>`(start: Int, end: Int) extends DynamicDelim with CantStartStat { def name = "right arrow" }
@@ -146,7 +162,7 @@ object Token {
   @token class `>:`(start: Int) extends StaticDelim with CantStartStat
   @token class `<%`(start: Int) extends StaticDelim with CantStartStat
 
-  @branch trait Whitespace extends Static with Token
+  @branch trait Whitespace extends Static with Trivia
   @token class ` `(start: Int) extends Whitespace
   @token class `\t`(start: Int) extends Whitespace
   @token class `\r`(start: Int) extends Whitespace
@@ -156,15 +172,15 @@ object Token {
   @token class `\n\n`(start: Int) extends Whitespace with StatSep with CantStartStat
   @token class `\f`(start: Int) extends Whitespace
 
-  @token class Comment(start: Int, end: Int) extends Dynamic with Token { def name = "comment" }
+  @token class Comment(start: Int, end: Int) extends Dynamic with Trivia { def name = "comment" }
 
   // NOTE: in order to maintain compatibility with scala.reflect's implementation,
   // rank = 1 means .., rank = 2 means ..., etc
-  @token class Ellipsis(start: Int, end: Int, rank: Int) extends Dynamic with Token { def name = "." * (rank + 1) }
+  @token class Ellipsis(start: Int, end: Int, rank: Int) extends Dynamic { def name = "." * (rank + 1) }
 
   // TODO: after we bootstrap, Unquote.tree will become scala.meta.Tree
   // however, for now, we will keep it at Any in order to also support scala.reflect trees
-  @token class Unquote(start: Int, end: Int, tree: Any) extends Dynamic with Token { def name = "unquote " + tree }
+  @token class Unquote(start: Int, end: Int, tree: Any) extends Dynamic { def name = "unquote " + tree }
 
   @token class BOF() extends Static {
     def name = "beginning of file"
@@ -181,7 +197,7 @@ object Token {
   }
 
   // TODO: implement XML literals
-  @token class XMLStart(start: Int, end: Int) extends Dynamic with Token with ExprIntro with CanEndStat { def name = ??? }
+  @token class XMLStart(start: Int, end: Int) extends Dynamic with ExprIntro with CanEndStat { def name = ??? }
 
   @adt.root trait Prototype { def input: Input }
   object Prototype {
