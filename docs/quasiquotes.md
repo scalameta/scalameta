@@ -232,6 +232,12 @@
  Unimport  | `importee"$iname => _"`
  Wildcard  | `importee"_"`
 
+## Sources (meta.Source)
+
+           | Quasiquote
+-----------|---------------------------
+ Source    | `source"..$stats"`
+
 ## Naming conventions
 
 ### Shorthands and interpolators
