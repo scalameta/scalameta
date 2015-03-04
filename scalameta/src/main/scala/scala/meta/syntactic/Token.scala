@@ -101,16 +101,16 @@ object Token {
   @token class `with`(input: Input, start: Int) extends Keyword with CantStartStat
   @token class `yield`(input: Input, start: Int) extends Keyword with CantStartStat
 
-  @branch trait Modifier extends Keyword
+  @branch trait Modifier extends Token
   @branch trait LocalModifier extends Modifier
-  @token class `abstract`(input: Input, start: Int) extends LocalModifier
-  @token class `final`(input: Input, start: Int) extends LocalModifier
-  @token class `sealed`(input: Input, start: Int) extends LocalModifier
-  @token class `implicit`(input: Input, start: Int) extends LocalModifier
-  @token class `lazy`(input: Input, start: Int) extends LocalModifier
-  @token class `private`(input: Input, start: Int) extends Modifier
-  @token class `protected`(input: Input, start: Int) extends Modifier
-  @token class `override`(input: Input, start: Int) extends Modifier
+  @token class `abstract`(input: Input, start: Int) extends LocalModifier with Keyword
+  @token class `final`(input: Input, start: Int) extends LocalModifier with Keyword
+  @token class `sealed`(input: Input, start: Int) extends LocalModifier with Keyword
+  @token class `implicit`(input: Input, start: Int) extends LocalModifier with Keyword
+  @token class `lazy`(input: Input, start: Int) extends LocalModifier with Keyword
+  @token class `private`(input: Input, start: Int) extends Modifier with Keyword
+  @token class `protected`(input: Input, start: Int) extends Modifier with Keyword
+  @token class `override`(input: Input, start: Int) extends Modifier with Keyword
 
   @branch trait Delim extends Token
   @branch trait StaticDelim extends Delim with Static
