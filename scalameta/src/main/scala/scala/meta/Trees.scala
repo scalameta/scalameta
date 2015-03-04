@@ -439,8 +439,8 @@ package scala.meta.internal.ast {
 
   @branch trait Mod extends api.Mod with Tree
   object Mod {
-    @ast class Annot(tree: Term) extends Mod {
-      require(tree.isCtorCall)
+    @ast class Annot(body: Term) extends Mod {
+      require(body.isCtorCall)
     }
     @ast class Private(within: Name.Qualifier) extends Mod
     @ast class Protected(within: Name.Qualifier) extends Mod
@@ -487,5 +487,7 @@ package scala.meta.internal.ast {
     require(stats.forall(_.isTopLevelStat))
   }
 
-  @bottom @ast class Unquote() extends Tree
+  // TODO: after we bootstrap, Unquote.tree will become scala.meta.Tree
+  // however, for now, we will keep it at Any in order to also support scala.reflect trees
+  @bottom @ast class Unquote(tree: Any, expected: Class[_ <: impl.Tree]) extends Tree
 }

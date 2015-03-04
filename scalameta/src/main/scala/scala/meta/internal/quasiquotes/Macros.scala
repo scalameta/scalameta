@@ -145,21 +145,28 @@ private[meta] class Macros(val c: Context) extends AdtReflection with AdtLiftabl
           val part = {
             val bof +: payload :+ eof = parttokens
             require(bof.is[Token.BOF] && eof.is[Token.EOF] && debug(parttokens))
-            if (index == 0) bof +: payload else payload
+            val prefix = if (index == 0) Vector(bof) else Vector()
+            val suffix = if (index == parttokenss.length - 1) Vector(eof) else Vector()
+            prefix ++ payload ++ suffix
           }
           val unquote = {
-            val unquoteStart = parttokens.last.absoluteStart
-            val unquoteEnd = parttokenss(index + 1).head.absoluteStart - 1
-            val unquoteInput = Input.Slice(wholeFileInput, unquoteStart, unquoteEnd)
-            MetaToken.Unquote(unquoteInput, quasiquoteDialect, 0, 0, unquoteEnd - unquoteStart, arg)
+            if (arg.isEmpty) {
+              Vector()
+            } else {
+              val unquoteStart = parttokens.last.absoluteStart
+              val unquoteEnd = parttokenss(index + 1).head.absoluteStart - 1
+              val unquoteInput = Input.Slice(wholeFileInput, unquoteStart, unquoteEnd)
+              Vector(MetaToken.Unquote(unquoteInput, quasiquoteDialect, 0, 0, unquoteEnd - unquoteStart, arg))
+            }
           }
-          part :+ unquote
+          part ++ unquote
         }
-        val zipper = parttokenss.init.zip(args).zipWithIndex.map({ case ((ts, a), i) => (i, ts, a) })
-        val tokens = zipper.flatMap((merge _).tupled) ++ parttokenss.last
+        val tokens = parttokenss.zip(args :+ EmptyTree).zipWithIndex.flatMap({ case ((ts, a), i) => merge(i, ts, a) })
         if (sys.props("quasiquote.debug") != null) println(tokens)
         try {
-          metaParse(Input.Tokens(tokens.toVector), metaDialect)
+          val syntax = metaParse(Input.Tokens(tokens.toVector), metaDialect)
+          if (sys.props("quasiquote.debug") != null) { println(syntax.show[Code]); println(syntax.show[Raw]) }
+          syntax
         } catch {
           case ParseException(_, token, message) =>
             val scala.meta.syntactic.Input.Slice(input, start, end) = token.input
@@ -327,10 +334,12 @@ private[meta] class Macros(val c: Context) extends AdtReflection with AdtLiftabl
     object LiftableInstances {
       lazy implicit val liftableDenotation: Liftable[MetaDenotation] = materializeAdt[MetaDenotation]
       lazy implicit val liftableSigma: Liftable[MetaSigma] = materializeAdt[MetaSigma]
-      lazy implicit val liftableTree: Liftable[MetaTree] = materializeAdt[Tree]
+      lazy implicit val liftableTree: Liftable[MetaTree] = materializeAdt[MetaTree]
       implicit def liftableSubTree[T <: MetaTree]: Liftable[T] = Liftable((tree: T) => liftableTree(tree))
     }
-    LiftableInstances.liftableTree.apply(meta)
+    val reflect = LiftableInstances.liftableTree.apply(meta)
+    if (sys.props("quasiquote.debug") != null) println(reflect)
+    reflect
   }
 
   def unapply(scrutinee: c.Tree)(dialect: c.Tree): ReflectTree = {

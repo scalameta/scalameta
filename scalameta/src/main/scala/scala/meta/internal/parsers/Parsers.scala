@@ -2,15 +2,18 @@ package scala.meta
 package internal
 package parsers
 
+import scala.reflect.{ClassTag, classTag}
 import scala.collection.{ mutable, immutable }
 import mutable.{ ListBuffer, StringBuilder }
 import scala.{Seq => _}
 import scala.collection.immutable._
 import scala.meta.internal.ast._
+import scala.{meta => api}
 import scala.meta.internal.{ast => impl}
 import scala.meta.internal.parsers.Location._
 import scala.meta.internal.parsers.Helpers._
 import scala.meta.syntactic.Token._
+import scala.meta.syntactic.{Token => tok}
 import org.scalameta.tokens._
 import org.scalameta.unreachable
 import org.scalameta.invariants._
@@ -301,6 +304,18 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   def isColonWildcardStar: Boolean  = token.is[`:`] && ahead(token.is[`_ `] && ahead(isIdentOf("*")))
 
 /* ---------- TREE CONSTRUCTION ------------------------------------------- */
+
+  def unquote[T <: Tree : ClassTag]: T = {
+    token match {
+      case token: tok.Unquote =>
+        next()
+        val T = classTag[T].runtimeClass.asInstanceOf[Class[_ <: Tree]]
+        require(!T.getClass.getName.startsWith("scala.meta.internal.ast.") && debug(T))
+        atPos(in.prevTokenPos, auto)(impl.Unquote(token.tree, T).asInstanceOf[T])
+      case _ =>
+        unreachable(debug(token))
+    }
+  }
 
   /** Convert tree to formal parameter list. */
   def convertToParams(tree: Term): List[Term.Param] = tree match {
@@ -655,12 +670,14 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
 
   private trait AllowedName[T]
   private object AllowedName { implicit object Term extends AllowedName[impl.Term.Name]; implicit object Type extends AllowedName[impl.Type.Name] }
-  private def name[T <: Tree : AllowedName](ctor: String => T, advance: Boolean): T = token match {
+  private def name[T <: Tree : AllowedName : ClassTag](ctor: String => T, advance: Boolean): T = token match {
     case token: Ident =>
       val name = token.code.stripPrefix("`").stripSuffix("`")
       val res = atPos(in.tokenPos, in.tokenPos)(ctor(name))
       if (advance) next()
       res
+    case token: tok.Unquote =>
+      unquote[T]
     case _ =>
       syntaxErrorExpected[Ident]
   }
@@ -1139,6 +1156,8 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
           canApply = false
           next()
           atPos(in.prevTokenPos, auto)(Term.New(template()))
+        case token: tok.Unquote =>
+          unquote[Term]
         case _ =>
           syntaxError(s"illegal start of simple expression", at = token)
       }
@@ -1558,6 +1577,8 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         makeTuplePatParens(noSeq.patterns())
       case _: XMLStart =>
         xmlLiteralPattern()
+      case token: tok.Unquote =>
+        unquote[Pat]
       case _ =>
         onError(token)
     })

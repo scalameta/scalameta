@@ -42,7 +42,8 @@ class ReflectionSuite extends AdtSuite {
   // We need to keep an eye on possible field types to make sure that they are unquotable.
   test("allFields") {
     import scala.reflect.runtime.universe.{AnnotatedType, AnnotatedTypeTag}
-    val allFields = symbolOf[Tree].asRoot.allLeafs.flatMap(_.allFields)
+    val irrelevant = Set("scala.meta.internal.ast.Ellipsis", "scala.meta.internal.ast.Unquote")
+    val allFields = symbolOf[Tree].asRoot.allLeafs.filter(leaf => !irrelevant(leaf.sym.fullName)).flatMap(_.allFields)
     val duplicateFieldTpes = allFields.map(_.tpe).map{ case AnnotatedType(_, tpe) => tpe; case tpe => tpe }
     // NOTE: we can't just do `duplicateFieldTpes.distinct`, because that doesn't account for `=:=`
     val distinctFieldTpes = ListBuffer[scala.reflect.runtime.universe.Type]()

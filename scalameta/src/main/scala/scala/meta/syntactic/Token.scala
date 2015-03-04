@@ -177,13 +177,13 @@ object Token {
   // NOTE: in order to maintain compatibility with scala.reflect's implementation,
   // Ellipsis.rank = 1 means .., Ellipsis.rank = 2 means ..., etc
   @token class Ellipsis(start: Int, end: Int, rank: Int) extends Dynamic {
-    def name = "." * (rank + 1)
+    def name = "ellipsis"
   }
 
   // TODO: after we bootstrap, Unquote.tree will become scala.meta.Tree
   // however, for now, we will keep it at Any in order to also support scala.reflect trees
   @token class Unquote(start: Int, end: Int, tree: Any) extends Dynamic {
-    def name = "unquote " + tree
+    def name = "unquote"
     override def is[T: ClassTag]: Boolean = {
       val T = implicitly[ClassTag[T]].runtimeClass
       lazy val nonTrivialNext = {
