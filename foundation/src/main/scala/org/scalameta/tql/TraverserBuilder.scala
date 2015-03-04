@@ -9,8 +9,11 @@ class TraverserBuilderMacros(val c: Context) extends AdtReflection {
   import c.universe._
   val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
 
+  /* Get all leaves for the root (i.e. all Tree cases) */
   def getAllLeaves(root: Root) = root.allLeafs
 
+  /* Change order of the leaves to have the ones corresponding to the symbol passed as first, first - this is use
+   * to reduce latency overhead in the traversing process. */
   def changeOrderOf(firsts: List[Symbol], allLeafs: List[Symbol]): List[Symbol] = {
     val tmp = firsts.map(_.fullName)
     val rest = for {leaf <- allLeafs if !(tmp contains leaf.fullName)} yield leaf
@@ -18,6 +21,7 @@ class TraverserBuilderMacros(val c: Context) extends AdtReflection {
     leafFist ++ rest
   }
 
+  /* Git all leaves sorted, return their companion object. */
   def getAllLeafsOrderedInTree[T : c.WeakTypeTag](firsts: c.Tree*): List[c.Tree] = {
     val leaves: List[Leaf] = getAllLeaves(u.symbolOf[T].asRoot)
     //weird hack so that the types are set in each symbol and the buildImpl function doesn't fail
@@ -27,12 +31,15 @@ class TraverserBuilderMacros(val c: Context) extends AdtReflection {
   }
 
 
+  /* Construct the Traverser based on all leaves. */
   def buildFromTopSymbolDelegate[T : c.WeakTypeTag, A : c.WeakTypeTag](f: c.Tree, firsts: c.Tree*): c.Tree = {
     val allLeafs = getAllLeafsOrderedInTree[T](firsts: _*)
     buildImplDelegate[T, A](f, allLeafs: _*)
   }
 
-  //trick to make it work with the Name unapply.
+  /* Return an option containing the list of parameters in the tree 'typ', along with their respective type.
+   * NB: Trick to make it work with the Name unapply.
+   */
   def getParamsWithTypes(typ: c.Type): Option[(List[TermName], List[c.Type])] = {
     val fields = typ.companion.typeSymbol.asLeaf.fields
     if (!fields.isEmpty){
@@ -40,12 +47,6 @@ class TraverserBuilderMacros(val c: Context) extends AdtReflection {
     }
     else
       None
-  }
-
-  def buildImpl[T : c.WeakTypeTag, A : c.WeakTypeTag](f: c.Tree, objs: c.Tree*): c.Tree = {
-    val parameter = TermName(c.freshName)
-    val cases = buildCases[T, A](f, objs.toList, parameter)
-    buildFuncWith[T, A](cases, parameter)
   }
 
   def buildFuncWith[T : c.WeakTypeTag, A : c.WeakTypeTag](cases: List[c.Tree], parameter: TermName): c.Tree = {
@@ -57,12 +58,14 @@ class TraverserBuilderMacros(val c: Context) extends AdtReflection {
     """
   }
 
+  /* Build all cases for the objs (leaves) passed in parameters. */
   def buildImplDelegate[T : c.WeakTypeTag, A : c.WeakTypeTag](f: c.Tree, objs: c.Tree*): c.Tree = {
     val parameter = c.internal.enclosingOwner.asMethod.paramLists.head.head.name.toTermName //LOL
     val cases = buildCases[T, A](f, objs.toList, parameter)
     buildDelegateWith[T, A](cases, parameter)
   }
 
+  /* Construct the global match{} frame, with all the cases. */
   def buildDelegateWith[T : c.WeakTypeTag, A : c.WeakTypeTag](cases: List[c.Tree], parameter: TermName): c.Tree = {
     q"""
       $parameter match {
@@ -72,6 +75,7 @@ class TraverserBuilderMacros(val c: Context) extends AdtReflection {
      """
   }
 
+  /* Construct all cases to be put in the match */
   def buildCases[T : c.WeakTypeTag, A : c.WeakTypeTag]
                 (f: c.Tree, objs: List[c.Tree],
                  parameter: TermName): List[c.Tree] =
@@ -84,6 +88,7 @@ class TraverserBuilderMacros(val c: Context) extends AdtReflection {
     } yield cq"$pat => $stat"
 
 
+  /* Creating an enumeration for each one of the parameters:  Seq, Seq of Seq, Optional. */
   def createEnum[T : c.WeakTypeTag, A : c.WeakTypeTag]
                 (f: c.Tree, name: TermName, typ: c.Type)/*: List[Option[(TermName, TermName, c.Tree)]] */= {
     val aTpe = implicitly[c.WeakTypeTag[A]]
@@ -97,6 +102,8 @@ class TraverserBuilderMacros(val c: Context) extends AdtReflection {
         Some(q"_root_.scala.meta.internal.tql.TraverserHelper.traverseSeq($f, $name)")
       case t if t <:< weakTypeOf[scala.collection.immutable.Seq[scala.collection.immutable.Seq[T]]] =>
         Some(q"_root_.scala.meta.internal.tql.TraverserHelper.traverseSeqOfSeq($f, $name)")
+      case t if t <:< weakTypeOf[scala.Option[scala.collection.immutable.Seq[T]]] =>
+        Some(q"_root_.scala.meta.internal.tql.TraverserHelper.traverseOptionalSeq($f, $name)")
       case t if t <:< weakTypeOf[scala.Option[T]] =>
         Some(q"_root_.scala.meta.internal.tql.TraverserHelper.optional($f, $name)")
       case _ => None
@@ -105,6 +112,8 @@ class TraverserBuilderMacros(val c: Context) extends AdtReflection {
   }
 
 
+  /* Construct one case match, for each one of the objects. Also received the list of arguments of the current
+   * object. */
   def caseMatch[T : c.WeakTypeTag, A : c.WeakTypeTag](f: c.Tree, constructor: c.Tree, origin: TermName,
                                                       names: List[TermName], types: List[c.Type]): Option[c.Tree] = {
 
