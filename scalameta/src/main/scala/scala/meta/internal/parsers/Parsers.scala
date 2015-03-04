@@ -135,7 +135,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
             (sepRegions.isEmpty || sepRegions.head == '}')) {
           tokenPos = lastNewlinePos
           token = tokens(tokenPos)
-          if (newlines) token = `\n\n`(parser.input, token.start)
+          if (newlines) token = `\n\n`(token.input, token.dialect, token.index, token.start)
           token
         } else {
           pos = nextPos - 1

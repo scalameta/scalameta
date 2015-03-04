@@ -151,7 +151,7 @@ private[meta] class Macros(val c: Context) extends AdtReflection with AdtLiftabl
             val unquoteStart = parttokens.last.absoluteStart
             val unquoteEnd = parttokenss(index + 1).head.absoluteStart - 1
             val unquoteInput = Input.Slice(wholeFileInput, unquoteStart, unquoteEnd)
-            MetaToken.Unquote(unquoteInput, 0, unquoteEnd - unquoteStart, arg)
+            MetaToken.Unquote(unquoteInput, quasiquoteDialect, 0, 0, unquoteEnd - unquoteStart, arg)
           }
           part :+ unquote
         }

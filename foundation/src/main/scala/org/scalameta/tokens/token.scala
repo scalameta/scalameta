@@ -18,6 +18,13 @@ class TokenMacros(val c: Context) {
   val Invariants = q"_root_.org.scalameta.invariants.`package`"
   val Default = q"_root_.org.scalameta.default"
   val Unsupported = tq"_root_.scala.`package`.UnsupportedOperationException"
+  val Input = tq"_root_.scala.meta.syntactic.Input"
+  val Dialect = tq"_root_.scala.meta.Dialect"
+  val Prototype = tq"_root_.scala.meta.syntactic.Token.Prototype"
+  val None = q"_root_.scala.meta.syntactic.Token.Prototype.None"
+  val Some = q"_root_.scala.meta.syntactic.Token.Prototype.Some"
+  val Require = q"_root_.org.scalameta.invariants.`package`.require"
+  val Debug = q"_root_.org.scalameta.invariants.`package`.debug"
   def impl(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       val q"$mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
@@ -56,14 +63,16 @@ class TokenMacros(val c: Context) {
       // step 4: generate implementation of `def adjust`
       val needsAdjust = !stats.exists{ case DefDef(_, TermName("adjust"), _, _, _, _) => true; case _ => false }
       if (needsAdjust) {
-        val paramInput = q"val input: _root_.scala.meta.Input = this.input"
+        val paramInput = q"val input: $Input = this.input"
+        val paramDialect = q"val dialect: $Dialect = this.dialect"
+        val paramIndex = q"val index: $Default.Param[_root_.scala.Int] = $Default.Param.Default"
         val paramStart = q"val start: $Default.Param[_root_.scala.Int] = $Default.Param.Default"
         val paramEnd = q"val end: $Default.Param[_root_.scala.Int] = $Default.Param.Default"
         val paramDelta = q"val delta: $Default.Param[_root_.scala.Int] = $Default.Param.Default"
         val adjustResult = {
-          if (code == "BOF" || code == "EOF") q"this.copy(input = input)"
-          else if (isStaticToken) q"this.copy(input = input, start = startValue)"
-          else q"this.copy(input = input, start = startValue, end = endValue)"
+          if (code == "BOF" || code == "EOF") q"this.copy(input = input, dialect = dialect, index = indexValue, prototype = $Some(this))"
+          else if (isStaticToken) q"this.copy(input = input, dialect = dialect, index = indexValue, start = startValue, prototype = $Some(this))"
+          else q"this.copy(input = input, dialect = dialect, index = indexValue, start = startValue, end = endValue, prototype = $Some(this))"
         }
         val adjustError = {
           if (code == "BOF" || code == "EOF") s"position-changing adjust on Token.${escape(code)}"
@@ -71,9 +80,10 @@ class TokenMacros(val c: Context) {
           else "fatal error in the token infrastructure"
         }
         val body = q"""
+          val indexValue = index.getOrElse(this.index)
           (start.nonEmpty || end.nonEmpty, delta.nonEmpty) match {
             case (false, false) =>
-              this.copy(input = input)
+              this.copy(input = input, dialect = dialect, index = indexValue, prototype = $Some(this))
             case (true, false) =>
               val startValue = start.getOrElse(this.start)
               val endValue = end.getOrElse(this.end)
@@ -86,15 +96,37 @@ class TokenMacros(val c: Context) {
               }
               result
             case (false, true) =>
-              this.adjust(input = input, start = this.start + delta.get, end = this.end + delta.get)
+              this.adjust(input = input, dialect = dialect, index = index, start = this.start + delta.get, end = this.end + delta.get)
             case (true, true) =>
               throw new _root_.scala.`package`.UnsupportedOperationException("you can specify either start/end or delta, but not both")
           }
         """
-        stats1 += q"def adjust($paramInput, $paramStart, $paramEnd, $paramDelta): ThisType = $body"
+        stats1 += q"def adjust($paramInput, $paramDialect, $paramIndex, $paramStart, $paramEnd, $paramDelta): ThisType = $body"
       }
 
-      val cdef1 = q"$mods1 class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats1 }"
+      // step 5: generate the boilerplate fields
+      def prependInputDialectIndex(params: List[ValDef]): List[ValDef] = {
+        val paramInput = q"val input: $Input"
+        val paramDialect = q"val dialect: $Dialect"
+        val paramIndex = q"val index: _root_.scala.Int"
+        paramInput +: paramDialect +: paramIndex +: params
+      }
+      def appendPrototype(params: List[ValDef]): List[ValDef] = {
+        val paramPrototype = q"$DEFAULTPARAM val prototype: $Prototype = $None"
+        params :+ paramPrototype
+      }
+      var paramss1 = prependInputDialectIndex(paramss.head) +: paramss.tail
+      paramss1 = paramss1.init :+ appendPrototype(paramss1.last)
+
+      // step 6: generate validators
+      stats1 += q"$Require(0 <= index && $Debug(this))" // TODO: can't validate the upper bound for index here
+      stats1 += q"$Require(0 <= start && start <= input.content.length && $Debug(this))"
+      if (!isStaticToken) {
+        stats1 += q"$Require(-1 <= end && end < input.content.length && $Debug(this))"
+        stats1 += q"$Require(start <= end + 1 && $Debug(this))"
+      }
+
+      val cdef1 = q"$mods1 class $name[..$tparams] $ctorMods(...$paramss1) extends { ..$earlydefns } with ..$parents { $self => ..$stats1 }"
       val mdef1 = q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
       List(cdef1, mdef1)
     }
