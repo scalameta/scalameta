@@ -61,12 +61,12 @@ class TokenMacros(val c: Context) {
         val paramEnd = q"val end: $Default.Param[_root_.scala.Int] = $Default.Param.Default"
         val paramDelta = q"val delta: $Default.Param[_root_.scala.Int] = $Default.Param.Default"
         val adjustResult = {
-          if (code == "EOF") q"this.copy(input = input)"
+          if (code == "BOF" || code == "EOF") q"this.copy(input = input)"
           else if (isStaticToken) q"this.copy(input = input, start = startValue)"
           else q"this.copy(input = input, start = startValue, end = endValue)"
         }
         val adjustError = {
-          if (code == "EOF") "position-changing adjust on Token.EOF"
+          if (code == "BOF" || code == "EOF") s"position-changing adjust on Token.${escape(code)}"
           else if (isStaticToken) s"end-changing adjust on Tokens.${escape(code)}"
           else "fatal error in the token infrastructure"
         }

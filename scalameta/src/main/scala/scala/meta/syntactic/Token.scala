@@ -156,6 +156,13 @@ object Token {
   // however, for now, we will keep it at Any in order to also support scala.reflect trees
   @token class Unquote(input: Input, start: Int, end: Int, tree: Any) extends Dynamic with Token { def name = "unquote " + tree }
 
+  @token class BOF(input: Input) extends Static {
+    def name = "beginning of file"
+    override def code = ""
+    def start = 0
+    def end = -1
+  }
+
   @token class EOF(input: Input) extends Static with StatSep with StatSeqEnd with CaseDefEnd with CantStartStat {
     def name = "end of file"
     override def code = ""

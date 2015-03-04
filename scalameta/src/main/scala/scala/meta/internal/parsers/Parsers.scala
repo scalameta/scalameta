@@ -25,6 +25,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     // NOTE: can't require in.tokenPos to be at -1, because TokIterator auto-rewinds when created
     // require(in.tokenPos == -1 && debug(in.tokenPos))
     val start = 0
+    accept[BOF]
     val t = rule(this)
     // NOTE: can't have in.prevTokenPos here
     // because we need to subsume all the trailing trivia

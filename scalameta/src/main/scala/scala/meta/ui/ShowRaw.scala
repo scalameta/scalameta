@@ -36,7 +36,7 @@ object Raw {
   }, ")"))
 
   implicit def rawToken[T <: Token]: Raw[T] = Raw { x =>
-    val prefix = (x: Token) match { case x: EOF => "EOF"; case x: Dynamic => x.code; case x: Static => x.name }
+    val prefix = (x: Token) match { case x: BOF => "BOF"; case x: EOF => "EOF"; case x: Dynamic => x.code; case x: Static => x.name }
     s(prefix, " (", x.start.toString, "..", x.end.toString, ")")
   }
 }

@@ -111,6 +111,7 @@ class ShowTokenSuite extends ParseSuite {
 
   test("showRaw without comments - easy") {
     assert(tokenize("class C  {\t val x = 2}\n\n").map(_.show[Raw]).mkString("\n") === """
+      |BOF (0..-1)
       |class (0..4)
       |  (5..5)
       |C (6..6)
@@ -165,6 +166,7 @@ class ShowTokenSuite extends ParseSuite {
       |  val `world` = 42
       |}
     """.trim.stripMargin.replace("QQQ", "\"\"\"")).map(_.show[Raw]).mkString("\n") === """
+      |BOF (0..-1)
       |class (0..4)
       |  (5..5)
       |C (6..6)
@@ -461,6 +463,7 @@ class ShowTokenSuite extends ParseSuite {
       |  qQQQclass ${Y}QQQ
       |}
     """.trim.stripMargin.replace("QQQ", "\"\"\"")).map(_.show[Raw]).mkString("\n") === """
+      |BOF (0..-1)
       |class (0..4)
       |  (5..5)
       |C (6..6)
@@ -584,6 +587,7 @@ class ShowTokenSuite extends ParseSuite {
 
   test("showRaw with comments - easy") {
     assert(tokenize("class C  /*hello world*/{\t val x = 2}\n//bye-bye world\n").map(_.show[Raw]).mkString("\n") === """
+      |BOF (0..-1)
       |class (0..4)
       |  (5..5)
       |C (6..6)
@@ -610,6 +614,7 @@ class ShowTokenSuite extends ParseSuite {
 
   test("showRaw with comments - tricky") {
     assert(tokenize("x ~/**/y").map(_.show[Raw]).mkString("\n") === """
+      |BOF (0..-1)
       |x (0..0)
       |  (1..1)
       |~ (2..2)
@@ -621,6 +626,7 @@ class ShowTokenSuite extends ParseSuite {
 
   test("interpolation start & end - episode 01") {
     assert(tokenize("q\"\"").map(_.show[Raw]).mkString("\n") === """
+      |BOF (0..-1)
       |q (0..0)
       |" (1..1)
       | (2..1)
@@ -631,6 +637,7 @@ class ShowTokenSuite extends ParseSuite {
 
   test("interpolation start & end - episode 02") {
     assert(tokenize("q\"\";").map(_.show[Raw]).mkString("\n") === """
+      |BOF (0..-1)
       |q (0..0)
       |" (1..1)
       | (2..1)
@@ -642,6 +649,7 @@ class ShowTokenSuite extends ParseSuite {
 
   test("interpolation start & end - episode 03") {
     assert(tokenize("q\"a\"").map(_.show[Raw]).mkString("\n") === """
+      |BOF (0..-1)
       |q (0..0)
       |" (1..1)
       |a (2..2)
@@ -652,6 +660,7 @@ class ShowTokenSuite extends ParseSuite {
 
   test("interpolation start & end - episode 04") {
     assert(tokenize("q\"a\";").map(_.show[Raw]).mkString("\n") === """
+      |BOF (0..-1)
       |q (0..0)
       |" (1..1)
       |a (2..2)
@@ -663,6 +672,7 @@ class ShowTokenSuite extends ParseSuite {
 
   test("interpolation start & end - episode 05") {
     assert(tokenize("q\"\"\"\"\"\"").map(_.show[Raw]).mkString("\n") === """
+      |BOF (0..-1)
       |q (0..0)
       |QQQ (1..3)
       | (4..3)
@@ -673,6 +683,7 @@ class ShowTokenSuite extends ParseSuite {
 
   test("interpolation start & end - episode 06") {
     assert(tokenize("q\"\"\"\"\"\";").map(_.show[Raw]).mkString("\n") === """
+      |BOF (0..-1)
       |q (0..0)
       |QQQ (1..3)
       | (4..3)
@@ -684,6 +695,7 @@ class ShowTokenSuite extends ParseSuite {
 
   test("interpolation start & end - episode 07") {
     assert(tokenize("q\"\"\"a\"\"\"").map(_.show[Raw]).mkString("\n") === """
+      |BOF (0..-1)
       |q (0..0)
       |QQQ (1..3)
       |a (4..4)
@@ -694,6 +706,7 @@ class ShowTokenSuite extends ParseSuite {
 
   test("interpolation start & end - episode 08") {
     assert(tokenize("q\"\"\"a\"\"\";").map(_.show[Raw]).mkString("\n") === """
+      |BOF (0..-1)
       |q (0..0)
       |QQQ (1..3)
       |a (4..4)
@@ -705,6 +718,7 @@ class ShowTokenSuite extends ParseSuite {
 
   test("$this") {
     assert(tokenize("q\"$this\"").map(_.show[Raw]).mkString("\n") === """
+      |BOF (0..-1)
       |q (0..0)
       |" (1..1)
       | (2..1)
@@ -719,6 +733,7 @@ class ShowTokenSuite extends ParseSuite {
 
   test("monocle") {
     assert(tokenize("x => x").map(_.show[Raw]).mkString("\n") === """
+      |BOF (0..-1)
       |x (0..0)
       |  (1..1)
       |right arrow (2..3)
@@ -727,6 +742,7 @@ class ShowTokenSuite extends ParseSuite {
       |EOF (6..5)
     """.trim.stripMargin)
     assert(tokenize("x ⇒ x").map(_.show[Raw]).mkString("\n") === """
+      |BOF (0..-1)
       |x (0..0)
       |  (1..1)
       |right arrow (2..2)
@@ -735,6 +751,7 @@ class ShowTokenSuite extends ParseSuite {
       |EOF (5..4)
     """.trim.stripMargin)
     assert(tokenize("for (x <- xs) println(x)").map(_.show[Raw]).mkString("\n") === """
+      |BOF (0..-1)
       |for (0..2)
       |  (3..3)
       |( (4..4)
@@ -752,6 +769,7 @@ class ShowTokenSuite extends ParseSuite {
       |EOF (24..23)
     """.trim.stripMargin)
     assert(tokenize("for (x ← xs) println(x)").map(_.show[Raw]).mkString("\n") === """
+      |BOF (0..-1)
       |for (0..2)
       |  (3..3)
       |( (4..4)
@@ -772,6 +790,7 @@ class ShowTokenSuite extends ParseSuite {
 
   test("-2147483648") {
     assert(tokenize("-2147483648").map(_.show[Raw]).mkString("\n") === """
+      |BOF (0..-1)
       |- (0..0)
       |2147483648 (1..10)
       |EOF (11..10)

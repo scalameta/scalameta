@@ -129,6 +129,7 @@ private[meta] object tokenize {
     val legacyTokens = legacyTokenBuf.toVector
 
     var tokens = new mutable.UnrolledBuffer[Token]
+    tokens += Token.BOF(input)
     def loop(startingFrom: Int, braceBalance: Int = 0, returnWhenBraceBalanceHitsZero: Boolean = false): Int = {
       var i = startingFrom
       def prev = legacyTokens(i - 1)

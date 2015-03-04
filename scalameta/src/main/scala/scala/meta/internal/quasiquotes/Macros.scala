@@ -142,12 +142,18 @@ private[meta] class Macros(val c: Context) extends AdtReflection with AdtLiftabl
         }
         def merge(index: Int, parttokens: Vector[MetaToken], arg: ReflectTree) = {
           implicit class RichToken(token: Token) { def absoluteStart = token.start + token.input.require[scala.meta.syntactic.Input.Slice].start }
-          val partpayload :+ eof = parttokens
-          require(eof.is[Token.EOF] && debug(parttokens))
-          val unquoteStart = eof.absoluteStart
-          val unquoteEnd = parttokenss(index + 1).head.absoluteStart - 1
-          val unquoteInput = Input.Slice(wholeFileInput, unquoteStart, unquoteEnd)
-          partpayload :+ MetaToken.Unquote(unquoteInput, 0, unquoteEnd - unquoteStart, arg)
+          val part = {
+            val bof +: payload :+ eof = parttokens
+            require(bof.is[Token.BOF] && eof.is[Token.EOF] && debug(parttokens))
+            if (index == 0) bof +: payload else payload
+          }
+          val unquote = {
+            val unquoteStart = parttokens.last.absoluteStart
+            val unquoteEnd = parttokenss(index + 1).head.absoluteStart - 1
+            val unquoteInput = Input.Slice(wholeFileInput, unquoteStart, unquoteEnd)
+            MetaToken.Unquote(unquoteInput, 0, unquoteEnd - unquoteStart, arg)
+          }
+          part :+ unquote
         }
         val zipper = parttokenss.init.zip(args).zipWithIndex.map({ case ((ts, a), i) => (i, ts, a) })
         val tokens = zipper.flatMap((merge _).tupled) ++ parttokenss.last
