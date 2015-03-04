@@ -3,6 +3,7 @@ package internal
 package parsers
 
 import scala.reflect.{ClassTag, classTag}
+import scala.runtime.ScalaRunTime
 import scala.collection.{ mutable, immutable }
 import mutable.{ ListBuffer, StringBuilder }
 import scala.{Seq => _}
@@ -305,7 +306,14 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
 
 /* ---------- TREE CONSTRUCTION ------------------------------------------- */
 
-  def ellipsis[T <: Tree : ClassTag](body: => T): T = autoPos {
+  def ellipsis[T <: Tree : ClassTag](expectedRank: Int, body: => T): T = autoPos {
+    lazy val pt = {
+      def loop(i: Int, T: Class[_]): Class[_] = {
+        if (i == 0) T
+        else loop(i - 1, ScalaRunTime.arrayClass(T))
+      }
+      loop(expectedRank, classTag[T].runtimeClass)
+    }
     token match {
       case ellipsis: tok.Ellipsis =>
         next()
@@ -313,7 +321,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
           case _: `(` => inParens(body)
           case _: `{` => inBraces(body)
           case _ => body
-        }).asInstanceOf[T]
+        }, pt).asInstanceOf[T]
       case _ =>
         unreachable(debug(token))
     }
@@ -323,7 +331,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     token match {
       case unquote: tok.Unquote =>
         next()
-        val T = classTag[T].runtimeClass.asInstanceOf[Class[_ <: Tree]]
+        val T = classTag[T].runtimeClass
         require(!T.getClass.getName.startsWith("scala.meta.internal.ast.") && debug(T))
         impl.Unquote(unquote.tree, T).asInstanceOf[T]
       case _ =>
@@ -2402,7 +2410,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     val stats = new ListBuffer[T]
     while (!token.is[StatSeqEnd]) {
       def isDefinedInEllipsis = { if (token.is[`(`] || token.is[`{`]) next(); statpf.isDefinedAt(token) }
-      if (token.is[tok.Ellipsis] && ahead(isDefinedInEllipsis)) stats += ellipsis(statpf(token))
+      if (token.is[tok.Ellipsis] && ahead(isDefinedInEllipsis)) stats += ellipsis(1, statpf(token))
       else if (statpf.isDefinedAt(token)) stats += statpf(token)
       else if (!token.is[StatSep]) syntaxError(errorMsg, at = token)
       acceptStatSepOpt()
