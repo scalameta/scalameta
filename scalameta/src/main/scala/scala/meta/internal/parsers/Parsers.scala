@@ -305,13 +305,27 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
 
 /* ---------- TREE CONSTRUCTION ------------------------------------------- */
 
-  def unquote[T <: Tree : ClassTag]: T = {
+  def ellipsis[T <: Tree : ClassTag](body: => T): T = autoPos {
     token match {
-      case token: tok.Unquote =>
+      case ellipsis: tok.Ellipsis =>
+        next()
+        impl.Ellipsis(ellipsis.rank, token match {
+          case _: `(` => inParens(body)
+          case _: `{` => inBraces(body)
+          case _ => body
+        }).asInstanceOf[T]
+      case _ =>
+        unreachable(debug(token))
+    }
+  }
+
+  def unquote[T <: Tree : ClassTag]: T = autoPos {
+    token match {
+      case unquote: tok.Unquote =>
         next()
         val T = classTag[T].runtimeClass.asInstanceOf[Class[_ <: Tree]]
         require(!T.getClass.getName.startsWith("scala.meta.internal.ast.") && debug(T))
-        atPos(in.prevTokenPos, auto)(impl.Unquote(token.tree, T).asInstanceOf[T])
+        impl.Unquote(unquote.tree, T).asInstanceOf[T]
       case _ =>
         unreachable(debug(token))
     }
@@ -2383,11 +2397,13 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
 
 /* -------- STATSEQS ------------------------------------------- */
 
-  def statSeq[T <: Tree](statpf: PartialFunction[Token, T],
-                         errorMsg: String = "illegal start of definition"): List[T] = {
+  def statSeq[T <: Tree : ClassTag](statpf: PartialFunction[Token, T],
+                                    errorMsg: String = "illegal start of definition"): List[T] = {
     val stats = new ListBuffer[T]
     while (!token.is[StatSeqEnd]) {
-      if (statpf.isDefinedAt(token)) stats += statpf(token)
+      def isDefinedInEllipsis = { if (token.is[`(`] || token.is[`{`]) next(); statpf.isDefinedAt(token) }
+      if (token.is[tok.Ellipsis] && ahead(isDefinedInEllipsis)) stats += ellipsis(statpf(token))
+      else if (statpf.isDefinedAt(token)) stats += statpf(token)
       else if (!token.is[StatSep]) syntaxError(errorMsg, at = token)
       acceptStatSepOpt()
     }

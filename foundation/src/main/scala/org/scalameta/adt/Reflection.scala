@@ -36,9 +36,11 @@ trait AdtReflection {
 
   private lazy val ScalaMetaTree: Symbol = scala.util.Try(mirror.staticClass("scala.meta.Tree")).getOrElse(NoSymbol)
   private lazy val scalaMetaRegistry: Map[Symbol, List[Symbol]] = {
+    val ellipsisClass = mirror.staticClass("scala.meta.internal.ast.Ellipsis")
     val unquoteClass = mirror.staticClass("scala.meta.internal.ast.Unquote")
     val registry = mutable.Map[Symbol, List[Symbol]]()
-    unquoteClass.baseClasses.foreach(sym => {
+    val astClasses = ellipsisClass +: unquoteClass.baseClasses
+    astClasses.foreach(sym => {
       if (sym.fullName.startsWith("scala.meta.")) {
         val parents = sym.info.asInstanceOf[ClassInfoType].parents.map(_.typeSymbol)
         val relevantParents = parents.filter(p => p.isClass && p.asClass.baseClasses.contains(ScalaMetaTree))

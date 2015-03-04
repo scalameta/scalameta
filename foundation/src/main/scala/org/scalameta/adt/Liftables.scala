@@ -29,7 +29,9 @@ class LiftableMacros(val c: Context) extends AdtReflection {
     val leafLiftNames = leafs.map(leaf => c.freshName(TermName("lift" + leaf.prefix.capitalize.replace(".", ""))))
     val liftLeafs = leafs.zip(leafLiftNames).map({ case (leaf, name) =>
       // TODO: it should be possible to customize liftable codegen by providing implicit instances on the outside
-      if (leaf.sym.fullName == "scala.meta.internal.ast.Unquote") {
+      if (leaf.sym.fullName == "scala.meta.internal.ast.Ellipsis") {
+        q"def $name($localParam: ${leaf.tpe}): $u.Tree = ???"
+      } else if (leaf.sym.fullName == "scala.meta.internal.ast.Unquote") {
         q"def $name($localParam: ${leaf.tpe}): $u.Tree = $localParam.tree.asInstanceOf[$u.Tree]"
       } else {
         val init = q"""$u.Ident($u.TermName("_root_"))""": Tree

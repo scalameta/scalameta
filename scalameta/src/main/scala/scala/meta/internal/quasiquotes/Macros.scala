@@ -334,10 +334,9 @@ private[meta] class Macros(val c: Context) extends AdtReflection with AdtLiftabl
     object LiftableInstances {
       lazy implicit val liftableDenotation: Liftable[MetaDenotation] = materializeAdt[MetaDenotation]
       lazy implicit val liftableSigma: Liftable[MetaSigma] = materializeAdt[MetaSigma]
-      lazy implicit val liftableTree: Liftable[MetaTree] = materializeAdt[MetaTree]
-      implicit def liftableSubTree[T <: MetaTree]: Liftable[T] = Liftable((tree: T) => liftableTree(tree))
+      implicit def liftableSubTree[T <: MetaTree]: Liftable[T] = Liftable((tree: T) => materializeAdt[MetaTree].apply(tree))
     }
-    val reflect = LiftableInstances.liftableTree.apply(meta)
+    val reflect = LiftableInstances.liftableSubTree[MetaTree].apply(meta)
     if (sys.props("quasiquote.debug") != null) println(reflect)
     reflect
   }

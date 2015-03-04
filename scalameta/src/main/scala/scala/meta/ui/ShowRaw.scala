@@ -18,8 +18,10 @@ object Raw {
 
   // TODO: would be nice to generate this with a macro for all tree nodes that we have
   implicit def rawTree[T <: api.Tree]: Raw[T] = Raw(x => s(x.productPrefix, "(", x match {
+    case x: impl.Ellipsis =>
+      s(x.rank.toString, ", ", x.tree.show[Raw])
     case x: impl.Unquote =>
-      s(x.tree.toString, ", classOf[", x.expected.getName, "]")
+      s(x.tree.toString, ", classOf[", x.pt.getName, "]")
     case x: Lit.String =>
       s(enquote(x.value, DoubleQuotes))
     case x: Lit =>

@@ -40,7 +40,7 @@ class BottomMacros(val c: Context) {
             drilldown(name.toString, inner = false)(super.traverse(tree))
           case ClassDef(Modifiers(_, _, anns), name, _, impl) =>
             if (inner) c.abort(tree.pos, "@ast classes can't be inner")
-            if (anns.exists(_.toString == "new ast()") && name != cdef.name) {
+            if (anns.exists(_.toString == "new ast()") && !anns.exists(_.toString == "new bottom()")) {
               astClasses += Select(module, name)
               val q"$_ class $_[..$_] $_(...$paramss) extends { ..$_ } with ..$_ { $_ => ..$_ }" = tree
               astFields ++= paramss.flatten.map(_.name)

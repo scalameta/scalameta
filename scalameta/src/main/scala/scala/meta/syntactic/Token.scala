@@ -19,7 +19,9 @@ import scala.language.experimental.macros
   def dialect: Dialect
   def index: Int
   def prev: Token = if (index > 0) input.tokens(dialect).apply(index - 1) else this
+  def nontrivialPrev: Token = if (prev.is[Token.Trivia]) prev.prev else prev
   def next: Token = if (index < input.tokens(dialect).length) input.tokens(dialect).apply(index + 1) else this
+  def nontrivialNext: Token = if (next.is[Token.Trivia]) next.next else next
   def start: Int
   def end: Int
   def adjust(input: Input = this.input, dialect: Dialect = this.dialect, index: Param[Int] = Default, start: Param[Int] = Default, end: Param[Int] = Default, delta: Param[Int] = Default): ThisType
@@ -85,11 +87,7 @@ object Token {
   @token class `case`(start: Int) extends Keyword {
     override def is[T: ClassTag]: Boolean = {
       val T = implicitly[ClassTag[T]].runtimeClass
-      lazy val caseClassOrCaseObject = {
-        def loop(token: Token): Token = if (token.is[Trivia]) loop(token.next) else token
-        val nonTrivialNext = loop(this.next)
-        nonTrivialNext.is[`class `] || nonTrivialNext.is[`object`]
-      }
+      lazy val caseClassOrCaseObject = nontrivialNext.is[`class `] || nontrivialNext.is[`object`]
       if (T == classOf[DefIntro]) caseClassOrCaseObject
       else if (T == classOf[TemplateIntro]) caseClassOrCaseObject
       else if (T == classOf[CaseDefEnd]) !caseClassOrCaseObject
@@ -174,40 +172,17 @@ object Token {
 
   @token class Comment(start: Int, end: Int) extends Dynamic with Trivia { def name = "comment" }
 
-  // NOTE: in order to maintain compatibility with scala.reflect's implementation,
-  // Ellipsis.rank = 1 means .., Ellipsis.rank = 2 means ..., etc
-  @token class Ellipsis(start: Int, end: Int, rank: Int) extends Dynamic {
-    def name = "ellipsis"
-  }
+  // NOTE: see comment to scala.meta.internal.ast.Ellipsis
+  @token class Ellipsis(start: Int, end: Int, rank: Int) extends Dynamic with CanEndStat { def name = "ellipsis" }
 
-  // TODO: after we bootstrap, Unquote.tree will become scala.meta.Tree
-  // however, for now, we will keep it at Any in order to also support scala.reflect trees
-  @token class Unquote(start: Int, end: Int, tree: Any) extends Dynamic {
+  // NOTE: see comment to scala.meta.internal.ast.Unquote
+  @token class Unquote(start: Int, end: Int, tree: Any) extends Dynamic with CanEndStat with ExprIntro with TypeIntro {
     def name = "unquote"
     override def is[T: ClassTag]: Boolean = {
       val T = implicitly[ClassTag[T]].runtimeClass
-      lazy val nonTrivialNext = {
-        def loop(token: Token): Token = if (token.is[Trivia]) loop(token.next) else token
-        loop(this.next)
-      }
-      if (T == classOf[CanEndStat]) true
-      else if (T == classOf[CantStartStat]) false
-      else if (T == classOf[CaseDefEnd]) false
-      else if (T == classOf[Delim]) false
-      else if (T == classOf[Keyword]) false
-      else if (T == classOf[Literal]) false
-      else if (T == classOf[LocalModifier]) false
-      else if (T == classOf[Modifier]) false
-      else if (T == classOf[NonlocalModifier]) false
-      else if (T == classOf[StatSep]) false
-      else if (T == classOf[StatSeqEnd]) false
-      else if (T == classOf[Whitespace]) false
-      else if (T == classOf[CaseIntro]) false
-      else if (T == classOf[DclIntro]) nonTrivialNext.is[DclIntro]
-      else if (T == classOf[DefIntro]) nonTrivialNext.is[DefIntro]
-      else if (T == classOf[TemplateIntro]) nonTrivialNext.is[TemplateIntro]
-      else if (T == classOf[ExprIntro]) true
-      else if (T == classOf[TypeIntro]) true
+      if (T == classOf[DclIntro]) nontrivialNext.is[DclIntro]
+      else if (T == classOf[DefIntro]) nontrivialNext.is[DefIntro]
+      else if (T == classOf[TemplateIntro]) nontrivialNext.is[TemplateIntro]
       else super.is[T]
     }
   }

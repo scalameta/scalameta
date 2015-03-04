@@ -13,7 +13,7 @@ class ReflectionSuite extends AdtSuite {
   test("root") {
     assert(symbolOf[Tree].isRoot)
     assert(symbolOf[Tree].asRoot.allBranches.length === 64)
-    assert(symbolOf[Tree].asRoot.allLeafs.length === 130)
+    assert(symbolOf[Tree].asRoot.allLeafs.length === 131)
   }
 
   test("If") {
