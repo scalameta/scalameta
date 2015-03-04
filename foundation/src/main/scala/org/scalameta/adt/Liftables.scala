@@ -4,13 +4,10 @@ import scala.language.experimental.macros
 import scala.reflect.macros.blackbox.Context
 import org.scalameta.unreachable
 import org.scalameta.adt.Internal.Adt
-import scala.{Seq => _}
-import scala.collection.immutable.Seq
 
 trait Liftables {
   val u: scala.reflect.macros.Universe
   implicit def materializeAdt[T <: Adt]: u.Liftable[T] = macro LiftableMacros.impl[T]
-  implicit def liftSeq[T](implicit ev: u.Liftable[T]): u.Liftable[Seq[T]] = u.Liftable { seq => u.Liftable.liftList[T](ev).apply(seq.toList) }
 }
 
 class LiftableMacros(val c: Context) extends AdtReflection {
@@ -29,10 +26,12 @@ class LiftableMacros(val c: Context) extends AdtReflection {
     val leafLiftNames = leafs.map(leaf => c.freshName(TermName("lift" + leaf.prefix.capitalize.replace(".", ""))))
     val liftLeafs = leafs.zip(leafLiftNames).map({ case (leaf, name) =>
       // TODO: it should be possible to customize liftable codegen by providing implicit instances on the outside
+      // we can't just do `inferImplicitValue(leaf.tpe)`, because that'll lead to a stack overflow
+      // we need to do something pickling-like, but I just don't have time to implement that right now
       if (leaf.sym.fullName == "scala.meta.internal.ast.Ellipsis") {
-        q"def $name($localParam: ${leaf.tpe}): $u.Tree = ???"
+        q"def $name($localParam: ${leaf.tpe}): $u.Tree = liftEllipsis.apply($localParam)"
       } else if (leaf.sym.fullName == "scala.meta.internal.ast.Unquote") {
-        q"def $name($localParam: ${leaf.tpe}): $u.Tree = $localParam.tree.asInstanceOf[$u.Tree]"
+        q"def $name($localParam: ${leaf.tpe}): $u.Tree = liftUnquote.apply($localParam)"
       } else {
         val init = q"""$u.Ident($u.TermName("_root_"))""": Tree
         val namePath = leaf.sym.fullName.split('.').foldLeft(init)((acc, part) => q"$u.Select($acc, $u.TermName($part))")

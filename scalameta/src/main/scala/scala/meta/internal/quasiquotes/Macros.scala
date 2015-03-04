@@ -2,6 +2,8 @@ package scala.meta
 package internal
 package quasiquotes
 
+import scala.{Seq => _}
+import scala.collection.immutable.Seq
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 import scala.collection.{immutable, mutable}
@@ -24,6 +26,7 @@ private[meta] class Macros(val c: Context) extends AdtReflection with AdtLiftabl
   import c.universe.{Tree => ReflectTree, Symbol => ReflectSymbol, Type => ReflectType}
   import scala.meta.{Tree => MetaTree, Type => MetaType, Input => MetaInput, Dialect => MetaDialect}
   type MetaParser = (MetaInput, MetaDialect) => MetaTree
+  import scala.{meta => api}
   import scala.meta.internal.{ast => impl}
   val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
 
@@ -329,14 +332,35 @@ private[meta] class Macros(val c: Context) extends AdtReflection with AdtLiftabl
   }
 
   private def reifySkeleton(meta: MetaTree): ReflectTree = {
-    // NOTE: we could write just `implicitly[Liftable[MetaTree]].apply(meta)`
-    // but that would bloat the code significantly with duplicated instances for denotations and sigmas
-    object LiftableInstances {
+    object Lifts {
+      def liftTree(tree: api.Tree): u.Tree = {
+        Liftables.liftableSubTree(tree)
+      }
+      def liftTrees(trees: Seq[Tree]): u.Tree = {
+        Liftable.liftList[Tree](Liftables.liftableSubTree).apply(trees.toList)
+      }
+      def liftTreess(treess: Seq[Seq[Tree]]): u.Tree = {
+        Liftable.liftList[Seq[Tree]](Liftables.liftableSubTrees).apply(treess.toList)
+      }
+      def liftEllipsis(ellipsis: impl.Ellipsis): u.Tree = {
+        ???
+      }
+      def liftUnquote(unquote: impl.Unquote): u.Tree = {
+        unquote.tree.asInstanceOf[ReflectTree]
+      }
+    }
+    object Liftables {
+      // NOTE: we could write just `implicitly[Liftable[MetaTree]].apply(meta)`
+      // but that would bloat the code significantly with duplicated instances for denotations and sigmas
       lazy implicit val liftableDenotation: Liftable[MetaDenotation] = materializeAdt[MetaDenotation]
       lazy implicit val liftableSigma: Liftable[MetaSigma] = materializeAdt[MetaSigma]
-      implicit def liftableSubTree[T <: MetaTree]: Liftable[T] = Liftable((tree: T) => materializeAdt[MetaTree].apply(tree))
+      implicit def liftableSubTree[T <: api.Tree]: Liftable[T] = Liftable((tree: T) => materializeAdt[api.Tree].apply(tree))
+      implicit def liftableSubTrees[T <: api.Tree]: Liftable[Seq[T]] = Liftable((trees: Seq[T]) => Lifts.liftTrees(trees))
+      implicit def liftableSubTreess[T <: api.Tree]: Liftable[Seq[Seq[T]]] = Liftable((treess: Seq[Seq[T]]) => Lifts.liftTreess(treess))
+      lazy implicit val liftEllipsis: Liftable[impl.Ellipsis] = Liftable((ellipsis: impl.Ellipsis) => Lifts.liftEllipsis(ellipsis))
+      lazy implicit val liftUnquote: Liftable[impl.Unquote] = Liftable((unquote: impl.Unquote) => Lifts.liftUnquote(unquote))
     }
-    val reflect = LiftableInstances.liftableSubTree[MetaTree].apply(meta)
+    val reflect = Lifts.liftTree(meta)
     if (sys.props("quasiquote.debug") != null) println(reflect)
     reflect
   }
