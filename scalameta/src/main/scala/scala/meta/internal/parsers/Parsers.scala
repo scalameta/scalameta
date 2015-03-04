@@ -40,7 +40,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     case stat :: Nil => stat
     case stats if stats.forall(_.isBlockStat) => Term.Block(stats)
     case stats if stats.forall(_.isTopLevelStat) => Source(stats)
-    case other => reporter.syntaxError("these statements can't be mixed together", at = other.head)
+    case other => reporter.syntaxError("these statements can't be mixed together", at = tokens.head)
   })
   def parseTerm(): Term = parseRule(_.expr())
   def parseTermArg(): Term.Arg = ???
