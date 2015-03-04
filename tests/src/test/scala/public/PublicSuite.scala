@@ -425,7 +425,7 @@ class PublicSuite extends FunSuite {
       (??? : String).tokens
       (??? : java.io.File).tokens
       (??? : Vector[Token]).tokens
-      (??? : Vector[Token]).tokens
+      (??? : Array[Char]).tokens
     """) === "")
   }
 
