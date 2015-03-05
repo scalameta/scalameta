@@ -19,7 +19,7 @@ private[meta] object toString {
     val code = prettyprinter(tree).toString
     tree match {
       case impl.Unquote(_, _) => code
-      case impl.Ellipsis(_, _, _) => code
+      case impl.Ellipsis(_, _) => code
       case impl.Ctor.Primary(_, name, _) => s"def this$code"
       case _ => code
     }

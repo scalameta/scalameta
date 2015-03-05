@@ -150,4 +150,13 @@ private[meta] object Helpers {
       case _ => false
     }
   }
+  implicit class XtensionEllipsis(ellipsis: Ellipsis) {
+    def rank: Int = {
+      def loop(clazz: Class[_], curr: Int): Int = {
+        if (clazz.isArray) loop(clazz.getComponentType, curr + 1)
+        else curr
+      }
+      loop(ellipsis.pt, 0)
+    }
+  }
 }

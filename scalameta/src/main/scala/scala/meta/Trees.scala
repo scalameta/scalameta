@@ -489,9 +489,9 @@ package scala.meta.internal.ast {
     require(stats.forall(_.isTopLevelStat))
   }
 
-  // NOTE: in order to maintain conceptual compatibility with scala.reflect's implementation,
-  // Ellipsis.rank = 1 means .., Ellipsis.rank = 2 means ..., etc
-  @bottom @ast class Ellipsis(rank: Int, tree: Tree, pt: Class[_]) extends Tree {
+  // NOTE: here's how Ellipsis.pt maps to hole's rank in scala.reflect's parlance,
+  // pt being Array[T] means rank 1 means .., pt being Array[Array[T]] means rank 2 means ..., etc
+  @bottom @ast class Ellipsis(tree: Tree, pt: Class[_]) extends Tree {
     require(pt.isArray)
   }
 

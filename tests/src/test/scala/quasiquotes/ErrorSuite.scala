@@ -16,7 +16,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin)
   }
 
-  test("q\"foo($x)\"") {
+  test("q\"foo($x)\" when x has incompatible type") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -31,7 +31,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin)
   }
 
-  test("q\"foo(..$xs)\"") {
+  test("q\"foo(..$xs)\" when xs has incompatible type") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -43,6 +43,21 @@ class ErrorSuite extends FunSuite {
       | required: scala.collection.immutable.Seq[scala.meta.Term.Arg]
       |      q"foo(..$xs)"
       |              ^
+    """.trim.stripMargin)
+  }
+
+  test("q\"...$xs\"") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val xss = List(List(q"x"))
+      q"...$xss"
+    """) === """
+      |<macro>:5: rank mismatch when splicing;
+      | found   : ...
+      | required: ..
+      |      q"...$xss"
+      |        ^
     """.trim.stripMargin)
   }
 }

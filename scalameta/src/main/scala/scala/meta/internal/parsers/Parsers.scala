@@ -2,6 +2,7 @@ package scala.meta
 package internal
 package parsers
 
+import scala.compat.Platform.EOL
 import scala.reflect.{ClassTag, classTag}
 import scala.runtime.ScalaRunTime
 import scala.collection.{ mutable, immutable }
@@ -306,22 +307,27 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
 
 /* ---------- TREE CONSTRUCTION ------------------------------------------- */
 
-  def ellipsis[T <: Tree : ClassTag](expectedRank: Int, body: => T): T = autoPos {
-    lazy val pt = {
-      def loop(i: Int, T: Class[_]): Class[_] = {
-        if (i == 0) T
-        else loop(i - 1, ScalaRunTime.arrayClass(T))
-      }
-      loop(expectedRank, classTag[T].runtimeClass)
-    }
+  def ellipsis[T <: Tree : ClassTag](rank: Int, body: => T): T = autoPos {
     token match {
       case ellipsis: tok.Ellipsis =>
-        next()
-        impl.Ellipsis(ellipsis.rank, token match {
-          case _: `(` => inParens(body)
-          case _: `{` => inBraces(body)
-          case _ => body
-        }, pt).asInstanceOf[T]
+        if (ellipsis.rank != rank) {
+          val errorMessage = s"rank mismatch when splicing;$EOL found   : ${"." * (ellipsis.rank + 1)}$EOL required: ${"." * (rank + 1)}"
+          syntaxError(errorMessage, at = ellipsis)
+        } else {
+          next()
+          val pt = {
+            def loop(i: Int, T: Class[_]): Class[_] = {
+              if (i == 0) T
+              else loop(i - 1, ScalaRunTime.arrayClass(T))
+            }
+            loop(rank, classTag[T].runtimeClass)
+          }
+          impl.Ellipsis(token match {
+            case _: `(` => inParens(body)
+            case _: `{` => inBraces(body)
+            case _ => body
+          }, pt).asInstanceOf[T]
+        }
       case _ =>
         unreachable(debug(token))
     }
