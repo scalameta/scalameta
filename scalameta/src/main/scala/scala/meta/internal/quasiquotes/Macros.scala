@@ -22,8 +22,8 @@ private[meta] class Macros(val c: Context) extends AdtReflection with AdtLiftabl
   val mirror: u.Mirror = c.mirror
   import c.internal._
   import decorators._
-  import c.universe.{Tree => _, Symbol => _, Type => _, _}
-  import c.universe.{Tree => ReflectTree, Symbol => ReflectSymbol, Type => ReflectType}
+  import c.universe.{Tree => _, Symbol => _, Type => _, Position => _, _}
+  import c.universe.{Tree => ReflectTree, Symbol => ReflectSymbol, Type => ReflectType, Position => ReflectPosition}
   import scala.meta.{Tree => MetaTree, Type => MetaType, Input => MetaInput, Dialect => MetaDialect}
   type MetaParser = (MetaInput, MetaDialect) => MetaTree
   import scala.{meta => api}
@@ -38,7 +38,7 @@ private[meta] class Macros(val c: Context) extends AdtReflection with AdtLiftabl
   val ScalaSeq = ScalaPackageObjectClass.info.decl(TermName("Seq"))
 
   def apply(args: ReflectTree*)(dialect: ReflectTree): ReflectTree = {
-    val skeleton = parseSkeleton(c.macroApplication, instantiateDialect(dialect), instantiateParser(c.macroApplication.symbol))
+    val skeleton = parseSkeleton(instantiateDialect(dialect), instantiateParser(c.macroApplication.symbol))
     val maybeAttributedSkeleton = scala.util.Try(attributeSkeleton(skeleton)).getOrElse(skeleton)
     reifySkeleton(maybeAttributedSkeleton)
   }
@@ -72,14 +72,9 @@ private[meta] class Macros(val c: Context) extends AdtReflection with AdtLiftabl
     }
   }
 
-  private def parseSkeleton(macroApplication: ReflectTree, metaDialect: MetaDialect, metaParse: MetaParser): MetaTree = {
+  private def parseSkeleton(metaDialect: MetaDialect, metaParse: MetaParser): MetaTree = {
     implicit val quasiquoteDialect: MetaDialect = scala.meta.dialects.Quasiquote(metaDialect)
-    val wholeFileSource = macroApplication.pos.source
-    val wholeFileInput = {
-      if (wholeFileSource.file.file != null) Input.File(wholeFileSource.file.file)
-      else Input.Chars(wholeFileSource.content) // NOTE: can happen in REPL or in custom Global
-    }
-    macroApplication match {
+    c.macroApplication match {
       case q"$_($_.apply(..$parts)).$_.apply[..$_](..$args)($_)" if parts.length == args.length + 1 =>
         val parttokenss = parts.map{
           case partlit @ q"${part: String}" =>
@@ -171,16 +166,24 @@ private[meta] class Macros(val c: Context) extends AdtReflection with AdtLiftabl
           if (sys.props("quasiquote.debug") != null) { println(syntax.show[Code]); println(syntax.show[Raw]) }
           syntax
         } catch {
-          case ParseException(_, token, message) =>
-            val scala.meta.syntactic.Input.Slice(input, start, end) = token.input
-            require(input == wholeFileInput && debug(token))
-            val sourceOffset = start + token.start
-            val sourcePosition = macroApplication.pos.focus.withPoint(sourceOffset)
-            c.abort(sourcePosition, message)
+          case ParseException(_, token, message) => c.abort(translatePosition(token), message)
         }
       case _ =>
-        c.abort(macroApplication.pos, s"fatal error initializing quasiquote macro: ${showRaw(macroApplication)}")
+        c.abort(c.macroApplication.pos, s"fatal error initializing quasiquote macro: ${showRaw(c.macroApplication)}")
     }
+  }
+
+  private lazy val wholeFileSource = c.macroApplication.pos.source
+  private lazy val wholeFileInput = {
+    if (wholeFileSource.file.file != null) Input.File(wholeFileSource.file.file)
+    else Input.Chars(wholeFileSource.content) // NOTE: can happen in REPL or in custom Global
+  }
+
+  private def translatePosition(token: MetaToken): ReflectPosition = {
+    val scala.meta.syntactic.Input.Slice(input, start, end) = token.input
+    require(input == wholeFileInput && debug(token))
+    val sourceOffset = start + token.start
+    c.macroApplication.pos.focus.withPoint(sourceOffset)
   }
 
   // TODO: this is a very naive approach to hygiene, and it will be replaced as soon as possible
@@ -336,16 +339,34 @@ private[meta] class Macros(val c: Context) extends AdtReflection with AdtLiftabl
       def liftTree(tree: api.Tree): u.Tree = {
         Liftables.liftableSubTree(tree)
       }
-      def liftTrees(trees: Seq[Tree]): u.Tree = {
-        Liftable.liftList[Tree](Liftables.liftableSubTree).apply(trees.toList)
+      def liftTrees(trees: Seq[api.Tree]): u.Tree = {
+        def loop(trees: List[api.Tree], acc: u.Tree, prefix: List[api.Tree]): u.Tree = trees match {
+          case (ellipsis: impl.Ellipsis) +: rest =>
+            if (acc.isEmpty && prefix.isEmpty) loop(rest, liftEllipsis(ellipsis), Nil)
+            else if (acc.isEmpty) loop(rest, prefix.foldRight(acc)((curr, acc) => q"${liftTree(curr)} +: $acc"), Nil)
+            else loop(rest, q"$acc ++ ${liftEllipsis(ellipsis)}", Nil)
+          case other +: rest =>
+            if (acc.isEmpty) loop(rest, acc, prefix :+ other)
+            else { require(prefix.isEmpty && debug(trees, acc, prefix)); q"$acc :+ ${liftTree(other)}" }
+          case Nil =>
+            if (acc.isEmpty) q"_root_.scala.collection.immutable.Seq(..${prefix.map(liftTree)})"
+            else acc
+        }
+        loop(trees.toList, EmptyTree, Nil)
       }
-      def liftTreess(treess: Seq[Seq[Tree]]): u.Tree = {
-        Liftable.liftList[Seq[Tree]](Liftables.liftableSubTrees).apply(treess.toList)
+      def liftTreess(treess: Seq[Seq[api.Tree]]): u.Tree = {
+        Liftable.liftList[Seq[api.Tree]](Liftables.liftableSubTrees).apply(treess.toList)
       }
       def liftEllipsis(ellipsis: impl.Ellipsis): u.Tree = {
-        ???
+        // TODO: check `ellipsis.rank` against `ellipsis.pt` and unlift if necessary
+        // TODO: check `Unquote.tpe` against `Unquote.pt` and `ellipsis.pt` and unlift if necessary
+        ellipsis.tree match {
+          case impl.Unquote(tree, pt) => tree.asInstanceOf[u.Tree]
+          case _ => c.abort(translatePosition(ellipsis.origin.tokens.head), "complex ellipses are not supported yet")
+        }
       }
       def liftUnquote(unquote: impl.Unquote): u.Tree = {
+        // TODO: check `unquote.tree.tpe` against `unquote.pt` and unlift if necessary
         unquote.tree.asInstanceOf[ReflectTree]
       }
     }
