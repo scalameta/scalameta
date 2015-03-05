@@ -60,4 +60,19 @@ class ErrorSuite extends FunSuite {
       |        ^
     """.trim.stripMargin)
   }
+
+  test("q\"foo[..$terms]\"") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val terms = List(q"T", q"U")
+      q"foo[..$terms]"
+    """) === """
+      |<macro>:5: type mismatch when splicing;
+      | found   : List[scala.meta.Term.Name]
+      | required: scala.collection.immutable.Seq[scala.meta.Type]
+      |      q"foo[..$terms]"
+      |              ^
+    """.trim.stripMargin)
+  }
 }

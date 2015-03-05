@@ -368,6 +368,8 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   }
 
   def convertToTypeId(ref: Term.Ref): Option[Type] = ref match {
+    case impl.Unquote(tree, _) =>
+      Some(atPos(ref, ref)(impl.Unquote(tree, classOf[Type])))
     case Term.Select(qual: Term.Ref, name) =>
       Some(atPos(ref, ref)(Type.Select(qual, atPos(name, name)(Type.Name(name.value)))))
     case name: Term.Name =>
@@ -743,12 +745,12 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       }
     } else {
       val name = termName()
-      val qual = atPos(name, name)(Name.Indeterminate(name.value))
       if (stop) name
       else {
         next()
         if (token.is[`this`]) {
           next()
+          val qual = atPos(name, name)(Name.Indeterminate(name.value))
           val thisp = atPos(name, auto)(Term.This(qual))
           if (stop && thisOK) thisp
           else {
@@ -757,6 +759,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
           }
         } else if (token.is[`super`]) {
           next()
+          val qual = atPos(name, name)(Name.Indeterminate(name.value))
           val superp = atPos(name, auto)(Term.Super(qual, mixinQualifier()))
           accept[`.`]
           val supersel = atPos(superp, auto)(Term.Select(superp, termName()))
