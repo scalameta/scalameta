@@ -48,6 +48,7 @@ private[meta] object Helpers {
     }
     def ctorTpe: Type = {
       def loop(tree: Tree): Type = tree match {
+        case Unquote(tree, _) => Unquote(tree, classOf[Type])
         case Ctor.Name(value) => Type.Name(value)
         case Ctor.Ref.Select(qual, name) => Type.Select(qual, Type.Name(name.value))
         case Ctor.Ref.Project(qual, name) => Type.Project(qual, Type.Name(name.value))
