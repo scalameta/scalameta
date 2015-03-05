@@ -12,8 +12,8 @@ trait Liftables {
 }
 
 class LiftableMacros(val c: Context) extends AdtReflection {
-  val u: c.universe.type = c.universe
-  val mirror: u.Mirror = c.mirror
+  lazy val u: c.universe.type = c.universe
+  lazy val mirror: u.Mirror = c.mirror
   import c.universe._
   def impl[T: WeakTypeTag]: c.Tree = {
     val root = weakTypeOf[T].typeSymbol.asAdt.root

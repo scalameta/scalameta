@@ -18,8 +18,8 @@ import scala.meta.internal.tokenizers.{LegacyScanner, LegacyToken}
 // TODO: ideally, we would like to bootstrap these macros on top of scala.meta
 // so that quasiquotes can be interpreted by any host, not just scalac
 private[meta] class ReificationMacros(val c: Context) extends AdtReflection with AdtLiftables {
-  val u: c.universe.type = c.universe
-  val mirror: u.Mirror = c.mirror
+  lazy val u: c.universe.type = c.universe
+  lazy val mirror: u.Mirror = c.mirror
   import c.internal._
   import decorators._
   import c.universe.{Tree => _, Symbol => _, Type => _, Position => _, _}
