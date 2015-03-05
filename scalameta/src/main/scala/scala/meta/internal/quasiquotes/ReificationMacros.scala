@@ -27,12 +27,18 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
   import c.internal._
   import decorators._
   import c.universe.{Tree => _, Symbol => _, Type => _, Position => _, _}
-  import c.universe.{Tree => ReflectTree, Symbol => ReflectSymbol, Type => ReflectType, Position => ReflectPosition}
+  import c.universe.{Tree => ReflectTree, Symbol => ReflectSymbol, Type => ReflectType, Position => ReflectPosition, Bind => ReflectBind}
   import scala.meta.{Tree => MetaTree, Type => MetaType, Input => MetaInput, Dialect => MetaDialect}
   type MetaParser = (MetaInput, MetaDialect) => MetaTree
   import scala.{meta => api}
   import scala.meta.internal.{ast => impl}
   val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
+
+  sealed trait Mode { def isTerm = this == Mode.Term; def isPattern = this.isInstanceOf[Mode.Pattern] }
+  object Mode {
+    object Term extends Mode
+    case class Pattern(dummy: ReflectTree, unquotees: List[ReflectBind]) extends Mode
+  }
 
   import definitions._
   val SeqModule = c.mirror.staticModule("scala.collection.Seq")
@@ -40,15 +46,13 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
   val ScalaList = ScalaPackageObjectClass.info.decl(TermName("List"))
   val ScalaNil = ScalaPackageObjectClass.info.decl(TermName("Nil"))
   val ScalaSeq = ScalaPackageObjectClass.info.decl(TermName("Seq"))
-  val InternalLift = c.mirror.staticModule("scala.meta.internal.quasiquotes.Lift")
-  val InternalUnlift = c.mirror.staticModule("scala.meta.internal.quasiquotes.Unlift")
 
   def apply(args: ReflectTree*)(dialect: ReflectTree): ReflectTree = expand(dialect)
   def unapply(scrutinee: ReflectTree)(dialect: ReflectTree): ReflectTree = expand(dialect)
   def expand(dialect: ReflectTree): ReflectTree = {
-    val skeleton = parseSkeleton(instantiateDialect(dialect), instantiateParser(c.macroApplication.symbol))
+    val (skeleton, mode) = parseSkeleton(instantiateDialect(dialect), instantiateParser(c.macroApplication.symbol))
     val maybeAttributedSkeleton = scala.util.Try(attributeSkeleton(skeleton)).getOrElse(skeleton)
-    reifySkeleton(maybeAttributedSkeleton, isPattern = c.macroApplication.symbol.name == TermName("unapply"))
+    reifySkeleton(maybeAttributedSkeleton, mode)
   }
 
   private def instantiateDialect(dialect: ReflectTree): MetaDialect = {
@@ -80,104 +84,127 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
     }
   }
 
-  private def parseSkeleton(metaDialect: MetaDialect, metaParse: MetaParser): MetaTree = {
-    implicit val quasiquoteDialect: MetaDialect = scala.meta.dialects.Quasiquote(metaDialect)
-    c.macroApplication match {
-      case q"$_($_.apply(..$parts)).$_.apply[..$_](..$args)($_)" if parts.length == args.length + 1 =>
-        val parttokenss = parts.map{
-          case partlit @ q"${part: String}" =>
-            // Step 1: Compute start and end of the part.
-            // Also provide facilities to map offsets between part and wholeFileSource.
-            // The mapping is not Predef.identity because of $$ (explained below).
-            val dollars = mutable.ListBuffer[Int]()
-            val start = partlit.pos.start
-            var remaining = part.length
-            var end = start - 1
-            while (remaining > 0) {
-              end += 1
-              if (wholeFileSource.content(end) == '$') {
-                dollars += end
-                end += 1
-                require(wholeFileSource.content(end) == '$')
+  private def parseSkeleton(metaDialect: MetaDialect, metaParse: MetaParser): (MetaTree, Mode) = {
+    val (parts, args, mode) = {
+      try {
+        c.macroApplication match {
+          case q"$_($_.apply(..$parts)).$_.apply[..$_](..$args)($_)" =>
+            require(parts.length == args.length + 1)
+            (parts, args, Mode.Term)
+          case q"$_($_.apply(..$parts)).$_.unapply[..$_](${dummy: Ident})($_)" =>
+            require(dummy.name == TermName("<unapply-selector>"))
+            val args = c.internal.subpatterns(dummy).get
+            require(parts.length == args.length + 1)
+            val freshPrefix = c.freshName("unquotee")
+            val unquotees = args.zipWithIndex.map({ case (arg, i) =>
+              val name = TermName(freshPrefix + "$" + i)
+              arg match {
+                case Bind(_, Typed(Ident(termNames.WILDCARD), tpt)) => atPos(arg.pos)(pq"$name: $tpt")
+                case Typed(Ident(termNames.WILDCARD), tpt)          => atPos(arg.pos)(pq"$name: $tpt")
+                case pat                                            => atPos(arg.pos)(pq"$name")
               }
-              remaining -= 1
-            }
-            // NOTE: Here's an example of a translation for q"a+$$b+$$c".
-            // This is how the [start..end] fragment of `wholeFileSource` is going to look like:
-            //     2345678910
-            //     a+$$b+$$c
-            // This is what we'll see in `part`:
-            //     0123456
-            //     a+$b+$c
-            // Let's translate a part offset 6 (i.e. the position of `c`) to a source offset.
-            // `dollars` are going to be ListBuffer(4, 8).
-            // First we add `start` to the part offset, obtaining 8.
-            // Next we check whether 8 is greater than the 0th dollar, i.e. 4.
-            // Yes, it is, so we increment it (to account for doubling of the dollar) and recur.
-            // Now we check whether 9 is greater than the 1st dollar, i.e. 8.
-            // Yes, it is, so we increment it (to account for doubling of the dollar) and recur.
-            // Now we check whether 10 is greater than the 2nd dollar, but it doesn't exist, so we return.
-            def partOffsetToSourceOffset(partOffset: Int): Int = {
-              def loop(offset: Int, dollarIndex: Int): Int = {
-                if (dollarIndex >= dollars.length || offset < dollars(dollarIndex)) offset
-                else loop(offset + 1, dollarIndex + 1)
-              }
-              loop(partOffset + start, 0)
-            }
-
-            // Step 2: Tokenize the part translating tokenization exceptions.
-            // Output tokens will be bound to a synthetic Input.String, which isn't yet correlated with `wholeFileSource`.
-            val crudeTokens = {
-              try part.tokens
-              catch {
-                case TokenizeException(_, partOffset, message) =>
-                  val sourceOffset = partOffsetToSourceOffset(partOffset)
-                  val sourcePosition = partlit.pos.focus.withPoint(sourceOffset)
-                  c.abort(sourcePosition, message)
-              }
-            }
-
-            // Step 3: Prettify the tokens by relating them to `wholeFileSource`.
-            // To do that, we create Input.Slice over the `wholeFileSource` and fixup positions to account for $$s.
-            crudeTokens.map(crudeToken => {
-              val delta = partOffsetToSourceOffset(crudeToken.start) - (start + crudeToken.start)
-              crudeToken.adjust(input = Input.Slice(wholeFileInput, start, end), delta = delta)
             })
-          case part =>
-            c.abort(part.pos, "quasiquotes can only be used with literal strings")
+            (parts, unquotees, Mode.Pattern(dummy, unquotees))
         }
-        def merge(index: Int, parttokens: Vector[MetaToken], arg: ReflectTree) = {
-          implicit class RichToken(token: Token) { def absoluteStart = token.start + token.input.require[scala.meta.syntactic.Input.Slice].start }
-          val part = {
-            val bof +: payload :+ eof = parttokens
-            require(bof.is[Token.BOF] && eof.is[Token.EOF] && debug(parttokens))
-            val prefix = if (index == 0) Vector(bof) else Vector()
-            val suffix = if (index == parttokenss.length - 1) Vector(eof) else Vector()
-            prefix ++ payload ++ suffix
+      } catch {
+        case ex: Exception =>
+          if (sys.props("quasiquote.debug") != null) println(ex.toString)
+          c.abort(c.macroApplication.pos, s"fatal error initializing quasiquote macro: ${showRaw(c.macroApplication)}")
+      }
+    }
+    val parttokenss = parts.map{
+      case partlit @ q"${part: String}" =>
+        // Step 1: Compute start and end of the part.
+        // Also provide facilities to map offsets between part and wholeFileSource.
+        // The mapping is not Predef.identity because of $$ (explained below).
+        val dollars = mutable.ListBuffer[Int]()
+        val start = partlit.pos.start
+        var remaining = part.length
+        var end = start - 1
+        while (remaining > 0) {
+          end += 1
+          if (wholeFileSource.content(end) == '$') {
+            dollars += end
+            end += 1
+            require(wholeFileSource.content(end) == '$')
           }
-          val unquote = {
-            if (arg.isEmpty) {
-              Vector()
-            } else {
-              val unquoteStart = parttokens.last.absoluteStart
-              val unquoteEnd = parttokenss(index + 1).head.absoluteStart - 1
-              val unquoteInput = Input.Slice(wholeFileInput, unquoteStart, unquoteEnd)
-              Vector(MetaToken.Unquote(unquoteInput, quasiquoteDialect, 0, 0, unquoteEnd - unquoteStart, arg))
-            }
+          remaining -= 1
+        }
+        // NOTE: Here's an example of a translation for q"a+$$b+$$c".
+        // This is how the [start..end] fragment of `wholeFileSource` is going to look like:
+        //     2345678910
+        //     a+$$b+$$c
+        // This is what we'll see in `part`:
+        //     0123456
+        //     a+$b+$c
+        // Let's translate a part offset 6 (i.e. the position of `c`) to a source offset.
+        // `dollars` are going to be ListBuffer(4, 8).
+        // First we add `start` to the part offset, obtaining 8.
+        // Next we check whether 8 is greater than the 0th dollar, i.e. 4.
+        // Yes, it is, so we increment it (to account for doubling of the dollar) and recur.
+        // Now we check whether 9 is greater than the 1st dollar, i.e. 8.
+        // Yes, it is, so we increment it (to account for doubling of the dollar) and recur.
+        // Now we check whether 10 is greater than the 2nd dollar, but it doesn't exist, so we return.
+        def partOffsetToSourceOffset(partOffset: Int): Int = {
+          def loop(offset: Int, dollarIndex: Int): Int = {
+            if (dollarIndex >= dollars.length || offset < dollars(dollarIndex)) offset
+            else loop(offset + 1, dollarIndex + 1)
           }
-          part ++ unquote
+          loop(partOffset + start, 0)
         }
-        val tokens = parttokenss.zip(args :+ EmptyTree).zipWithIndex.flatMap({ case ((ts, a), i) => merge(i, ts, a) })
-        if (sys.props("quasiquote.debug") != null) println(tokens)
-        try {
-          val syntax = metaParse(Input.Tokens(tokens.toVector), metaDialect)
-          if (sys.props("quasiquote.debug") != null) { println(syntax.show[Code]); println(syntax.show[Raw]) }
-          syntax
-        } catch {
-          case ParseException(_, token, message) => c.abort(token.pos, message)
+
+        // Step 2: Tokenize the part translating tokenization exceptions.
+        // Output tokens will be bound to a synthetic Input.String, which isn't yet correlated with `wholeFileSource`.
+        val crudeTokens = {
+          implicit val tokenizationDialect: MetaDialect = scala.meta.dialects.Quasiquote(metaDialect)
+          try part.tokens
+          catch {
+            case TokenizeException(_, partOffset, message) =>
+              val sourceOffset = partOffsetToSourceOffset(partOffset)
+              val sourcePosition = partlit.pos.focus.withPoint(sourceOffset)
+              c.abort(sourcePosition, message)
+          }
         }
-      case _ =>
-        c.abort(c.macroApplication.pos, s"fatal error initializing quasiquote macro: ${showRaw(c.macroApplication)}")
+
+        // Step 3: Prettify the tokens by relating them to `wholeFileSource`.
+        // To do that, we create Input.Slice over the `wholeFileSource` and fixup positions to account for $$s.
+        crudeTokens.map(crudeToken => {
+          val delta = partOffsetToSourceOffset(crudeToken.start) - (start + crudeToken.start)
+          crudeToken.adjust(input = Input.Slice(wholeFileInput, start, end), delta = delta)
+        })
+      case part =>
+        c.abort(part.pos, "quasiquotes can only be used with literal strings")
+    }
+    def merge(index: Int, parttokens: Vector[MetaToken], arg: ReflectTree) = {
+      implicit class RichToken(token: Token) { def absoluteStart = token.start + token.input.require[scala.meta.syntactic.Input.Slice].start }
+      val part = {
+        val bof +: payload :+ eof = parttokens
+        require(bof.is[Token.BOF] && eof.is[Token.EOF] && debug(parttokens))
+        val prefix = if (index == 0) Vector(bof) else Vector()
+        val suffix = if (index == parttokenss.length - 1) Vector(eof) else Vector()
+        prefix ++ payload ++ suffix
+      }
+      val unquote = {
+        if (arg.isEmpty) {
+          Vector()
+        } else {
+          val unquoteStart = parttokens.last.absoluteStart
+          val unquoteEnd = parttokenss(index + 1).head.absoluteStart - 1
+          val unquoteInput = Input.Slice(wholeFileInput, unquoteStart, unquoteEnd)
+          Vector(MetaToken.Unquote(unquoteInput, scala.meta.dialects.Quasiquote(metaDialect), 0, 0, unquoteEnd - unquoteStart, arg))
+        }
+      }
+      part ++ unquote
+    }
+    val tokens = parttokenss.zip(args :+ EmptyTree).zipWithIndex.flatMap({ case ((ts, a), i) => merge(i, ts, a) })
+    if (sys.props("quasiquote.debug") != null) println(tokens)
+    try {
+      implicit val parsingDialect: MetaDialect = scala.meta.dialects.Quasiquote(metaDialect)
+      val syntax = metaParse(Input.Tokens(tokens.toVector), metaDialect)
+      if (sys.props("quasiquote.debug") != null) { println(syntax.show[Code]); println(syntax.show[Raw]) }
+      (syntax, mode)
+    } catch {
+      case ParseException(_, token, message) => c.abort(token.pos, message)
     }
   }
 
@@ -346,8 +373,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
     }
   }
 
-  private def reifySkeleton(meta: MetaTree, isPattern: Boolean): ReflectTree = {
-    val isExpr = !isPattern
+  private def reifySkeleton(meta: MetaTree, mode: Mode): ReflectTree = {
     val pendingEllipses = mutable.Stack[impl.Ellipsis]()
     implicit class XtensionClazz(clazz: Class[_]) {
       def unwrap: Class[_] = {
@@ -387,7 +413,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
           case (ellipsis: impl.Ellipsis) +: rest =>
             if (acc.isEmpty && prefix.isEmpty) loop(rest, liftEllipsis(ellipsis), Nil)
             else if (acc.isEmpty) loop(rest, prefix.foldRight(acc)((curr, acc) => q"${liftTree(curr)} +: ${liftEllipsis(ellipsis)}"), Nil)
-            else if (isExpr) loop(rest, q"$acc ++ ${liftEllipsis(ellipsis)}", Nil)
+            else if (mode.isTerm) loop(rest, q"$acc ++ ${liftEllipsis(ellipsis)}", Nil)
             else {
               val hint = {
                 "Note that you can splice out a sequence when pattern matching," +
@@ -406,6 +432,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
         loop(trees.toList, EmptyTree, Nil)
       }
       def liftTreess(treess: Seq[Seq[api.Tree]]): u.Tree = {
+        // TODO: implement support for construction and deconstruction with ...
         Liftable.liftList[Seq[api.Tree]](Liftables.liftableSubTrees).apply(treess.toList)
       }
       def liftEllipsis(ellipsis: impl.Ellipsis): u.Tree = {
@@ -422,8 +449,17 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
       def liftUnquote(unquote: impl.Unquote): u.Tree = {
         val tree = unquote.tree.asInstanceOf[u.Tree]
         val pt = unquote.pt.wrap(pendingEllipses.map(_.rank).sum).toTpe
-        val reifier = if (isExpr) q"$InternalLift" else q"$InternalUnlift"
-        atPos(unquote.pos)(q"$reifier[$pt]($tree)")
+        val reifier = {
+          if (mode.isTerm) q"_root_.scala.meta.internal.quasiquotes.Lift[$pt]($tree)"
+          else {
+            // TODO: unfortunately, this doesn't work, so we'll have to work around
+            // q"_root_.scala.meta.internal.quasiquotes.Unlift[$pt]($tree)"
+            val bundle = new ConversionMacros(c)
+            val unlifted = bundle.unliftUnapply(tree.asInstanceOf[bundle.c.Tree])(c.WeakTypeTag(pt).asInstanceOf[bundle.c.WeakTypeTag[_]])
+            unlifted.asInstanceOf[c.Tree]
+          }
+        }
+        atPos(unquote.pos)(reifier)
       }
     }
     object Liftables {
@@ -437,14 +473,29 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
       lazy implicit val liftEllipsis: Liftable[impl.Ellipsis] = Liftable((ellipsis: impl.Ellipsis) => Lifts.liftEllipsis(ellipsis))
       lazy implicit val liftUnquote: Liftable[impl.Unquote] = Liftable((unquote: impl.Unquote) => Lifts.liftUnquote(unquote))
     }
-    val internalResult = Lifts.liftTree(meta)
-    if (sys.props("quasiquote.debug") != null) println(internalResult)
-    if (isExpr) {
-      val publicResult = q"$InternalUnlift[${c.macroApplication.tpe}]($internalResult)"
-      if (sys.props("quasiquote.debug") != null) println(publicResult)
-      publicResult
-    } else {
-      ???
+    mode match {
+      case Mode.Term =>
+        val internalResult = Lifts.liftTree(meta)
+        if (sys.props("quasiquote.debug") != null) println(internalResult)
+        q"_root_.scala.meta.internal.quasiquotes.Unlift[${c.macroApplication.tpe}]($internalResult)"
+      case Mode.Pattern(dummy, unquotees) =>
+        // inspired by https://github.com/densh/joyquote/blob/master/src/main/scala/JoyQuote.scala
+        val (thenp, elsep) = {
+          if (unquotees.isEmpty) (q"true", q"false")
+          else (q"_root_.scala.Some((..${unquotees.map(_.name)}))", q"_root_.scala.None")
+        }
+        val internalResult = q"""
+          new {
+            def unapply(input: _root_.scala.meta.Tree) = {
+              input match {
+                case ${Lifts.liftTree(meta)} => $thenp
+                case _ => $elsep
+              }
+            }
+          }.unapply($dummy)
+        """
+        if (sys.props("quasiquote.debug") != null) println(internalResult)
+        internalResult // TODO: q"_root_.scala.meta.internal.quasiquotes.Lift[${dummy.tpe}]($internalResult)"
     }
   }
 }

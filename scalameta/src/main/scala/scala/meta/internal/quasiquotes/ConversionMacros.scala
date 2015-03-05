@@ -54,7 +54,11 @@ private[meta] class ConversionMacros(val c: Context) extends AstReflection {
   }
 
   def liftUnapply[I](outside: c.Tree)(implicit I: c.WeakTypeTag[I]): c.Tree = {
-    c.abort(c.enclosingPosition, "Lift.unapply is not implemented yet")
+    // TODO: Here's an interesting idea that I'd like to explore.
+    // How about we allow things like `42 match { case q"$x" => x }`?
+    // For that to work, we just need to wrap the reification result into `Lift.unapply`!
+    // NOTE: also see the TODO in the last lines in ReificationMacros.reifySkeleton
+    ???
   }
 
   def unliftApply[O](inside: c.Tree)(implicit O: c.WeakTypeTag[O]): c.Tree = {
@@ -64,7 +68,19 @@ private[meta] class ConversionMacros(val c: Context) extends AstReflection {
   }
 
   def unliftUnapply[O](inside: c.Tree)(implicit O: c.WeakTypeTag[O]): c.Tree = {
-    c.abort(c.enclosingPosition, "Unlift.unapply is not implemented yet")
+    // TODO: this macro is implemented differently from other extractor macros
+    // because it's called in a very unusual hacky way, which needs to be fixed
+    inside match {
+      case pq"$name: $tpt" =>
+        val insideTpe = {
+          try c.typecheck(tpt, c.TYPEmode, silent = false)
+          catch { case c.TypecheckException(pos, msg) => c.abort(pos.asInstanceOf[c.Position], msg) }
+        }
+        val outsideTpe = O.tpe
+        sys.error(s"not yet implemented: Unlift.unapply[$insideTpe, $outsideTpe]")
+      case other =>
+        other
+    }
   }
 }
 
