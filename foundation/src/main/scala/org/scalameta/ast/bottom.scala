@@ -53,7 +53,8 @@ class BottomMacros(val c: Context) {
       astClassDetector.traverse(enclosingUnit)
       val parents1 = parents ++ astClassDetector.astClasses
       val stats1 = stats ++ astClassDetector.astFields.distinct.map(name => {
-        val impl = q"""throw new _root_.scala.`package`.UnsupportedOperationException("can't call inherited methods on @bottom classes")"""
+        val message = s"unsupported ${if (name.toString == "Unquote") "unquoting" else "splicing"} position"
+        val impl = q"throw new _root_.scala.`package`.UnsupportedOperationException($message)"
         q"override def $name: _root_.scala.Nothing = $impl"
       })
       ClassDef(mods, name, tparams, Template(parents1, self, stats1))
