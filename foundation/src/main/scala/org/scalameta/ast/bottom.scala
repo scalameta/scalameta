@@ -51,13 +51,14 @@ class BottomMacros(val c: Context) {
         }
       }
       astClassDetector.traverse(enclosingUnit)
+      val mods1 = Modifiers(mods.flags, TypeName("meta"), mods.annotations)
       val parents1 = parents ++ astClassDetector.astClasses
       val stats1 = stats ++ astClassDetector.astFields.distinct.map(name => {
         val message = s"unsupported ${if (name.toString == "Unquote") "unquoting" else "splicing"} position"
         val impl = q"throw new _root_.scala.`package`.UnsupportedOperationException($message)"
         q"override def $name: _root_.scala.Nothing = $impl"
       })
-      ClassDef(mods, name, tparams, Template(parents1, self, stats1))
+      ClassDef(mods1, name, tparams, Template(parents1, self, stats1))
     }
     val expanded = annottees match {
       case (cdef @ ClassDef(mods, _, _, _)) :: rest if !mods.hasFlag(TRAIT) => transform(cdef) :: rest
