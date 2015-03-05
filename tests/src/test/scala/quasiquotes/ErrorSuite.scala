@@ -20,11 +20,12 @@ class ErrorSuite extends FunSuite {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
-      val x = 42
+      class Dummy
+      val x = new Dummy
       q"foo($x)"
     """) === """
-      |<macro>:5: type mismatch when unquoting;
-      | found   : Int
+      |<macro>:6: type mismatch when unquoting;
+      | found   : Dummy
       | required: scala.meta.Term.Arg
       |      q"foo($x)"
       |            ^
@@ -35,11 +36,12 @@ class ErrorSuite extends FunSuite {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
-      val xs = List(42)
+      class Dummy
+      val xs = List(new Dummy)
       q"foo(..$xs)"
     """) === """
-      |<macro>:5: type mismatch when splicing;
-      | found   : List[Int]
+      |<macro>:6: type mismatch when splicing;
+      | found   : List[Dummy]
       | required: scala.collection.immutable.Seq[scala.meta.Term.Arg]
       |      q"foo(..$xs)"
       |              ^

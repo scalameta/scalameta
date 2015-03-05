@@ -38,6 +38,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
   val ScalaList = ScalaPackageObjectClass.info.decl(TermName("List"))
   val ScalaNil = ScalaPackageObjectClass.info.decl(TermName("Nil"))
   val ScalaSeq = ScalaPackageObjectClass.info.decl(TermName("Seq"))
+  val MetaLiftable = symbolOf[scala.meta.Liftable[_, _]]
 
   def apply(args: ReflectTree*)(dialect: ReflectTree): ReflectTree = {
     val skeleton = parseSkeleton(instantiateDialect(dialect), instantiateParser(c.macroApplication.symbol))
@@ -394,9 +395,16 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
           if (needsCast) q"$tree.asInstanceOf[$pt]"
           else tree
         } else {
-          // TODO: support for lifting/unlifting
-          val errorMessage = s"type mismatch when $action;$EOL found   : ${tree.tpe}$EOL required: ${pt.publish}"
-          c.abort(at, errorMessage)
+          val liftable = c.inferImplicitValue(appliedType(MetaLiftable, tree.tpe, pt.publish), silent = true)
+          if (liftable.nonEmpty) {
+            val lifted = q"$liftable.apply($tree)"
+            val needsCast = !(pt.publish =:= pt)
+            if (needsCast) q"$lifted.asInstanceOf[$pt]"
+            else lifted
+          } else {
+            val errorMessage = s"type mismatch when $action;$EOL found   : ${tree.tpe}$EOL required: ${pt.publish}"
+            c.abort(at, errorMessage)
+          }
         }
       }
       def liftEllipsis(ellipsis: impl.Ellipsis): u.Tree = {
