@@ -172,10 +172,12 @@ object Token {
 
   @token class Comment(start: Int, end: Int) extends Dynamic with Trivia { def name = "comment" }
 
-  // NOTE: see comment to scala.meta.internal.ast.Ellipsis
+  // NOTE: in order to maintain conceptual compatibility with scala.reflect's implementation,
+  // Ellipsis.rank = 1 means .., Ellipsis.rank = 2 means ..., etc
   @token class Ellipsis(start: Int, end: Int, rank: Int) extends Dynamic with CanEndStat { def name = "ellipsis" }
 
-  // NOTE: see comment to scala.meta.internal.ast.Unquote
+  // TODO: after we bootstrap, Unquote.tree will become scala.meta.Tree
+  // however, for now, we will keep it at Any in order to also support scala.reflect trees
   @token class Unquote(start: Int, end: Int, tree: Any) extends Dynamic with CanEndStat with ExprIntro with TypeIntro {
     def name = "unquote"
     override def is[T: ClassTag]: Boolean = {

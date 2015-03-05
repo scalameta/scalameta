@@ -371,22 +371,22 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   }
 
   /** {{{ part { `sep` part } }}},or if sepFirst is true, {{{ { `sep` part } }}}. */
-  final def tokenSeparated[Sep: TokenMetadata, T](sepFirst: Boolean, part: => T): List[T] = {
+  final def tokenSeparated[Sep: TokenMetadata, T <: Tree : ClassTag](sepFirst: Boolean, part: => T): List[T] = {
+    def partOrEllipsis = if (token.is[tok.Ellipsis] && !sepFirst) ellipsis(1, part) else part
     val ts = new ListBuffer[T]
     if (!sepFirst)
-      ts += part
-
+      ts += partOrEllipsis
     while (token.is[Sep]) {
       next()
-      ts += part
+      ts += partOrEllipsis
     }
     ts.toList
   }
 
-  @inline final def commaSeparated[T](part: => T): List[T] =
+  @inline final def commaSeparated[T <: Tree : ClassTag](part: => T): List[T] =
     tokenSeparated[`,`, T](sepFirst = false, part)
 
-  @inline final def caseSeparated[T](part: => T): List[T] =
+  @inline final def caseSeparated[T <: Tree : ClassTag](part: => T): List[T] =
     tokenSeparated[`case`, T](sepFirst = true, part)
 
   def readAnnots(part: => Mod.Annot): List[Mod.Annot] =
@@ -1247,6 +1247,8 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   def argumentExprs(): List[Term.Arg] = {
     def args(): List[Term.Arg] = commaSeparated {
       expr() match {
+        case t @ impl.Unquote(tree, _) =>
+          atPos(t, t)(impl.Unquote(tree, classOf[Term.Arg]))
         case Term.Ascribe(t, Type.Placeholder(Type.Bounds(None, None))) if isIdentOf("*") =>
           next()
           atPos(t, auto)(Term.Arg.Repeated(t))

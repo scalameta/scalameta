@@ -168,7 +168,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
           if (sys.props("quasiquote.debug") != null) { println(syntax.show[Code]); println(syntax.show[Raw]) }
           syntax
         } catch {
-          case ParseException(_, token, message) => c.abort(translatePosition(token), message)
+          case ParseException(_, token, message) => c.abort(token.pos, message)
         }
       case _ =>
         c.abort(c.macroApplication.pos, s"fatal error initializing quasiquote macro: ${showRaw(c.macroApplication)}")
@@ -180,12 +180,16 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
     if (wholeFileSource.file.file != null) Input.File(wholeFileSource.file.file)
     else Input.Chars(wholeFileSource.content) // NOTE: can happen in REPL or in custom Global
   }
-
-  private def translatePosition(token: MetaToken): ReflectPosition = {
-    val scala.meta.syntactic.Input.Slice(input, start, end) = token.input
-    require(input == wholeFileInput && debug(token))
-    val sourceOffset = start + token.start
-    c.macroApplication.pos.focus.withPoint(sourceOffset)
+  implicit class XtensionTokenPos(token: MetaToken) {
+    def pos: ReflectPosition = {
+      val scala.meta.syntactic.Input.Slice(input, start, end) = token.input
+      require(input == wholeFileInput && debug(token))
+      val sourceOffset = start + token.start
+      c.macroApplication.pos.focus.withPoint(sourceOffset)
+    }
+  }
+  implicit class XtensionTreePos(tree: MetaTree) {
+    def pos = tree.origin.tokens.headOption.map(_.pos).getOrElse(NoPosition)
   }
 
   // TODO: this is a very naive approach to hygiene, and it will be replaced as soon as possible
@@ -338,9 +342,14 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
 
   private def reifySkeleton(meta: MetaTree): ReflectTree = {
     implicit class XtensionClazz(clazz: Class[_]) {
+      def unwrap: Class[_] = {
+        if (clazz.isArray) clazz.getComponentType.unwrap
+        else clazz
+      }
       def toTpe: u.Type = {
         if (clazz.isArray) {
-          appliedType(ArrayClass, clazz.getComponentType.toTpe)
+          val SeqClass = mirror.staticClass("scala.collection.immutable.Seq")
+          appliedType(SeqClass, clazz.getComponentType.toTpe)
         } else {
           def loop(owner: u.Symbol, parts: List[String]): u.Symbol = parts match {
             case part :: Nil =>
@@ -365,7 +374,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
         def loop(trees: List[api.Tree], acc: u.Tree, prefix: List[api.Tree]): u.Tree = trees match {
           case (ellipsis: impl.Ellipsis) +: rest =>
             if (acc.isEmpty && prefix.isEmpty) loop(rest, liftEllipsis(ellipsis), Nil)
-            else if (acc.isEmpty) loop(rest, prefix.foldRight(acc)((curr, acc) => q"${liftTree(curr)} +: $acc"), Nil)
+            else if (acc.isEmpty) loop(rest, prefix.foldRight(acc)((curr, acc) => q"${liftTree(curr)} +: ${liftEllipsis(ellipsis)}"), Nil)
             else loop(rest, q"$acc ++ ${liftEllipsis(ellipsis)}", Nil)
           case other +: rest =>
             if (acc.isEmpty) loop(rest, acc, prefix :+ other)
@@ -379,25 +388,28 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
       def liftTreess(treess: Seq[Seq[api.Tree]]): u.Tree = {
         Liftable.liftList[Seq[api.Tree]](Liftables.liftableSubTrees).apply(treess.toList)
       }
-      def liftEllipsis(ellipsis: impl.Ellipsis): u.Tree = {
-        // TODO: check `ellipsis.rank` against `ellipsis.pt` and unlift if necessary
-        // TODO: check `Unquote.tpe` against `Unquote.pt` and `ellipsis.pt` and unlift if necessary
-        ellipsis.tree match {
-          case impl.Unquote(tree, pt) => tree.asInstanceOf[u.Tree]
-          case _ => c.abort(translatePosition(ellipsis.origin.tokens.head), "complex ellipses are not supported yet")
-        }
-      }
-      def liftUnquote(unquote: impl.Unquote): u.Tree = {
-        val tree = unquote.tree.asInstanceOf[u.Tree]
-        if (tree.tpe <:< unquote.pt.toTpe.publish) {
-          val needsCast = !(tree.tpe <:< unquote.pt.toTpe)
-          if (needsCast) q"$tree.asInstanceOf[${unquote.pt.toTpe}]"
+      private def insert(tree: u.Tree, pt: u.Type, action: String, at: u.Position): u.Tree = {
+        if (tree.tpe <:< pt.publish) {
+          val needsCast = !(tree.tpe <:< pt)
+          if (needsCast) q"$tree.asInstanceOf[$pt]"
           else tree
         } else {
           // TODO: support for lifting/unlifting
-          val errorMessage = s"type mismatch;$EOL found   : ${tree.tpe.toString}$EOL required: ${unquote.pt.toTpe.toString}"
-          c.abort(translatePosition(unquote.origin.tokens.head), errorMessage)
+          val errorMessage = s"type mismatch when $action;$EOL found   : ${tree.tpe}$EOL required: ${pt.publish}"
+          c.abort(at, errorMessage)
         }
+      }
+      def liftEllipsis(ellipsis: impl.Ellipsis): u.Tree = {
+        ellipsis.tree match {
+          case unquote: impl.Unquote =>
+            require(ellipsis.pt.unwrap.isAssignableFrom(unquote.pt) && debug(ellipsis, ellipsis.show[Raw]))
+            insert(unquote.tree.asInstanceOf[u.Tree], ellipsis.pt.toTpe, "splicing", at = unquote.pos)
+          case _ =>
+            c.abort(ellipsis.pos, "complex ellipses are not supported yet")
+        }
+      }
+      def liftUnquote(unquote: impl.Unquote): u.Tree = {
+        insert(unquote.tree.asInstanceOf[u.Tree], unquote.pt.toTpe, "unquoting", at = unquote.pos)
       }
     }
     object Liftables {
