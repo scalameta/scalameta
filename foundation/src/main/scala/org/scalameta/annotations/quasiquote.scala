@@ -12,7 +12,7 @@ class QuasiquoteMacros(val c: Context) {
   import c.universe._
   import Flag._
   val ReificationMacros = q"_root_.scala.meta.internal.quasiquotes.ReificationMacros"
-  val SignatureMacros = q"_root_.scala.meta.internal.quasiquotes.SignatureMacros"
+  val LiftMacros = q"_root_.scala.meta.internal.quasiquotes.LiftMacros"
   def impl(annottees: c.Tree*): c.Tree = {
     val q"new $_[..$qtypes](scala.Symbol(${qname: String})).macroTransform(..$_)" = c.macroApplication
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
@@ -27,7 +27,7 @@ class QuasiquoteMacros(val c: Context) {
         q"""
           object ${TermName(qname)} {
             import scala.language.experimental.macros
-            def apply[T](args: T*)(implicit dialect: _root_.scala.meta.Dialect): $qtypesLub = macro $ReificationMacros.apply
+            def apply[T >: Any](args: T*)(implicit dialect: _root_.scala.meta.Dialect): $qtypesLub = macro $ReificationMacros.apply
             def unapply(scrutinee: Any)(implicit dialect: _root_.scala.meta.Dialect): Any = macro $ReificationMacros.unapply
           }
         """
@@ -38,12 +38,8 @@ class QuasiquoteMacros(val c: Context) {
         val qparseResult = if (qunsafeResults.length == 1) qunsafeResults.head else q"$qsafeResult.get"
         q"private[meta] def parse(input: _root_.scala.meta.`package`.Input)(implicit dialect: _root_.scala.meta.Dialect) = $qparseResult"
       }
-      // TODO: find a better place for this macro
-      // I tried to fit it into scala.meta.internal.quasiquotes, but that required creating a whole new file just for the sake of it
-      val qilem = q"import _root_.scala.language.experimental.{macros => prettyPlease}"
-      val qpublish = q"def publish(tree: _root_.scala.meta.Tree): Any = macro $SignatureMacros.publish"
       val stats1 = stats :+ qmodule
-      val mstats1 = mstats :+ qparser :+ qilem :+ qpublish
+      val mstats1 = mstats :+ qparser
       val cdef1 = q"$mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats1 }"
       val mdef1 = q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
       List(cdef1, mdef1)

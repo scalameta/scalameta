@@ -311,10 +311,28 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     token match {
       case ellipsis: tok.Ellipsis =>
         if (ellipsis.rank != rank) {
-          val errorMessage = s"rank mismatch when splicing;$EOL found   : ${"." * (ellipsis.rank + 1)}$EOL required: ${"." * (rank + 1)}"
+          val errorMessage = s"rank mismatch when unquoting;$EOL found   : ${"." * (ellipsis.rank + 1)}$EOL required: ${"." * (rank + 1)}"
           syntaxError(errorMessage, at = ellipsis)
         } else {
           next()
+          val tree = {
+            val result = token match {
+              case _: `(` => inParens(body)
+              case _: `{` => inBraces(body)
+              case _ => body
+            }
+            result match {
+              case unquote: impl.Unquote =>
+                // NOTE: In the case of an unquote nested directly under ellipsis, we get a bit of a mixup.
+                // Unquote's pt may not be directly equal unwrapped ellipsis's pt, but be its refinement instead.
+                // For example, in `new { ..$stats }`, ellipsis's pt is Seq[Stat], but unquote's pt is Term.
+                // This is an artifact of the current implementation, so we just need to keep it mind and work around it.
+                require(classTag[T].runtimeClass.isAssignableFrom(unquote.pt) && debug(ellipsis, result, result.show[Raw]))
+                atPos(unquote, unquote)(impl.Unquote(unquote.tree, classTag[T].runtimeClass))
+              case other =>
+                other
+            }
+          }
           val pt = {
             def loop(i: Int, T: Class[_]): Class[_] = {
               if (i == 0) T
@@ -322,11 +340,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
             }
             loop(rank, classTag[T].runtimeClass)
           }
-          impl.Ellipsis(token match {
-            case _: `(` => inParens(body)
-            case _: `{` => inBraces(body)
-            case _ => body
-          }, pt).asInstanceOf[T]
+          impl.Ellipsis(tree, pt).asInstanceOf[T]
         }
       case _ =>
         unreachable(debug(token))

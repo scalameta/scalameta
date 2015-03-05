@@ -4,6 +4,7 @@ package quasiquotes
 
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
+import scala.runtime.ScalaRunTime
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 import scala.collection.{immutable, mutable}
@@ -14,6 +15,7 @@ import org.scalameta.unreachable
 import scala.meta.{Token => MetaToken}
 import scala.meta.internal.hygiene.{Denotation => MetaDenotation, Sigma => MetaSigma, _}
 import scala.meta.internal.hygiene.{Symbol => MetaSymbol, Prefix => MetaPrefix, Signature => MetaSignature, _}
+import scala.meta.internal.parsers.Helpers._
 import scala.meta.internal.tokenizers.{LegacyScanner, LegacyToken}
 import scala.compat.Platform.EOL
 
@@ -38,12 +40,15 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
   val ScalaList = ScalaPackageObjectClass.info.decl(TermName("List"))
   val ScalaNil = ScalaPackageObjectClass.info.decl(TermName("Nil"))
   val ScalaSeq = ScalaPackageObjectClass.info.decl(TermName("Seq"))
-  val MetaLiftable = symbolOf[scala.meta.Liftable[_, _]]
+  val InternalLift = c.mirror.staticModule("scala.meta.internal.quasiquotes.Lift")
+  val InternalUnlift = c.mirror.staticModule("scala.meta.internal.quasiquotes.Unlift")
 
-  def apply(args: ReflectTree*)(dialect: ReflectTree): ReflectTree = {
+  def apply(args: ReflectTree*)(dialect: ReflectTree): ReflectTree = expand(dialect)
+  def unapply(scrutinee: ReflectTree)(dialect: ReflectTree): ReflectTree = expand(dialect)
+  def expand(dialect: ReflectTree): ReflectTree = {
     val skeleton = parseSkeleton(instantiateDialect(dialect), instantiateParser(c.macroApplication.symbol))
     val maybeAttributedSkeleton = scala.util.Try(attributeSkeleton(skeleton)).getOrElse(skeleton)
-    reifySkeleton(maybeAttributedSkeleton)
+    reifySkeleton(maybeAttributedSkeleton, isPattern = c.macroApplication.symbol.name == TermName("unapply"))
   }
 
   private def instantiateDialect(dialect: ReflectTree): MetaDialect = {
@@ -341,11 +346,17 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
     }
   }
 
-  private def reifySkeleton(meta: MetaTree): ReflectTree = {
+  private def reifySkeleton(meta: MetaTree, isPattern: Boolean): ReflectTree = {
+    val isExpr = !isPattern
+    val pendingEllipses = mutable.Stack[impl.Ellipsis]()
     implicit class XtensionClazz(clazz: Class[_]) {
       def unwrap: Class[_] = {
         if (clazz.isArray) clazz.getComponentType.unwrap
         else clazz
+      }
+      def wrap(rank: Int): Class[_] = {
+        if (rank == 0) clazz
+        else ScalaRunTime.arrayClass(clazz).wrap(rank - 1)
       }
       def toTpe: u.Type = {
         if (clazz.isArray) {
@@ -376,7 +387,15 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
           case (ellipsis: impl.Ellipsis) +: rest =>
             if (acc.isEmpty && prefix.isEmpty) loop(rest, liftEllipsis(ellipsis), Nil)
             else if (acc.isEmpty) loop(rest, prefix.foldRight(acc)((curr, acc) => q"${liftTree(curr)} +: ${liftEllipsis(ellipsis)}"), Nil)
-            else loop(rest, q"$acc ++ ${liftEllipsis(ellipsis)}", Nil)
+            else if (isExpr) loop(rest, q"$acc ++ ${liftEllipsis(ellipsis)}", Nil)
+            else {
+              val hint = {
+                "Note that you can splice out a sequence when pattern matching," +
+                "it just cannot follow another sequence either directly or indirectly."
+              }
+              val errorMessage = s"rank mismatch when unquoting;$EOL found   : ${ellipsis.rank}$EOL required: no dots$EOL$hint"
+              c.abort(ellipsis.pos, errorMessage)
+            }
           case other +: rest =>
             if (acc.isEmpty) loop(rest, acc, prefix :+ other)
             else { require(prefix.isEmpty && debug(trees, acc, prefix)); q"$acc :+ ${liftTree(other)}" }
@@ -389,35 +408,22 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
       def liftTreess(treess: Seq[Seq[api.Tree]]): u.Tree = {
         Liftable.liftList[Seq[api.Tree]](Liftables.liftableSubTrees).apply(treess.toList)
       }
-      private def insert(tree: u.Tree, pt: u.Type, action: String, at: u.Position): u.Tree = {
-        if (tree.tpe <:< pt.publish) {
-          val needsCast = !(tree.tpe <:< pt)
-          if (needsCast) q"$tree.asInstanceOf[$pt]"
-          else tree
-        } else {
-          val liftable = c.inferImplicitValue(appliedType(MetaLiftable, tree.tpe, pt.publish), silent = true)
-          if (liftable.nonEmpty) {
-            val lifted = q"$liftable.apply($tree)"
-            val needsCast = !(pt.publish =:= pt)
-            if (needsCast) q"$lifted.asInstanceOf[$pt]"
-            else lifted
-          } else {
-            val errorMessage = s"type mismatch when $action;$EOL found   : ${tree.tpe}$EOL required: ${pt.publish}"
-            c.abort(at, errorMessage)
-          }
-        }
-      }
       def liftEllipsis(ellipsis: impl.Ellipsis): u.Tree = {
-        ellipsis.tree match {
-          case unquote: impl.Unquote =>
-            require(ellipsis.pt.unwrap.isAssignableFrom(unquote.pt) && debug(ellipsis, ellipsis.show[Raw]))
-            insert(unquote.tree.asInstanceOf[u.Tree], ellipsis.pt.toTpe, "splicing", at = unquote.pos)
-          case _ =>
-            c.abort(ellipsis.pos, "complex ellipses are not supported yet")
+        try {
+          pendingEllipses.push(ellipsis)
+          ellipsis.tree match {
+            case unquote: impl.Unquote => liftUnquote(unquote)
+            case _ => c.abort(ellipsis.pos, "complex ellipses are not supported yet")
+          }
+        } finally {
+          pendingEllipses.pop()
         }
       }
       def liftUnquote(unquote: impl.Unquote): u.Tree = {
-        insert(unquote.tree.asInstanceOf[u.Tree], unquote.pt.toTpe, "unquoting", at = unquote.pos)
+        val tree = unquote.tree.asInstanceOf[u.Tree]
+        val pt = unquote.pt.wrap(pendingEllipses.map(_.rank).sum).toTpe
+        val reifier = if (isExpr) q"$InternalLift" else q"$InternalUnlift"
+        atPos(unquote.pos)(q"$reifier[$pt]($tree)")
       }
     }
     object Liftables {
@@ -432,12 +438,13 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
       lazy implicit val liftUnquote: Liftable[impl.Unquote] = Liftable((unquote: impl.Unquote) => Lifts.liftUnquote(unquote))
     }
     val internalResult = Lifts.liftTree(meta)
-    val publicResult = q"${c.macroApplication.symbol.owner.owner.companion}.publish($internalResult)"
-    if (sys.props("quasiquote.debug") != null) println(publicResult)
-    publicResult
-  }
-
-  def unapply(scrutinee: c.Tree)(dialect: c.Tree): ReflectTree = {
-    c.abort(c.enclosingPosition, "pattern matching for scala.meta quasiquotes hasn't been implemented yet")
+    if (sys.props("quasiquote.debug") != null) println(internalResult)
+    if (isExpr) {
+      val publicResult = q"$InternalUnlift[${c.macroApplication.tpe}]($internalResult)"
+      if (sys.props("quasiquote.debug") != null) println(publicResult)
+      publicResult
+    } else {
+      ???
+    }
   }
 }

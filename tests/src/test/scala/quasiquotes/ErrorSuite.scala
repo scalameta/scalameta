@@ -40,7 +40,7 @@ class ErrorSuite extends FunSuite {
       val xs = List(new Dummy)
       q"foo(..$xs)"
     """) === """
-      |<macro>:6: type mismatch when splicing;
+      |<macro>:6: type mismatch when unquoting;
       | found   : List[Dummy]
       | required: scala.collection.immutable.Seq[scala.meta.Term.Arg]
       |      q"foo(..$xs)"
@@ -55,7 +55,7 @@ class ErrorSuite extends FunSuite {
       val xss = List(List(q"x"))
       q"...$xss"
     """) === """
-      |<macro>:5: rank mismatch when splicing;
+      |<macro>:5: rank mismatch when unquoting;
       | found   : ...
       | required: ..
       |      q"...$xss"
@@ -70,7 +70,7 @@ class ErrorSuite extends FunSuite {
       val terms = List(q"T", q"U")
       q"foo[..$terms]"
     """) === """
-      |<macro>:5: type mismatch when splicing;
+      |<macro>:5: type mismatch when unquoting;
       | found   : List[scala.meta.Term.Name]
       | required: scala.collection.immutable.Seq[scala.meta.Type]
       |      q"foo[..$terms]"
