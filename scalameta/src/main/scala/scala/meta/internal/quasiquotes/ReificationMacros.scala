@@ -8,16 +8,18 @@ import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 import scala.collection.{immutable, mutable}
 import org.scalameta.adt.{Liftables => AdtLiftables, Reflection => AdtReflection}
+import org.scalameta.ast.{Reflection => AstReflection}
 import org.scalameta.invariants._
 import org.scalameta.unreachable
 import scala.meta.{Token => MetaToken}
 import scala.meta.internal.hygiene.{Denotation => MetaDenotation, Sigma => MetaSigma, _}
 import scala.meta.internal.hygiene.{Symbol => MetaSymbol, Prefix => MetaPrefix, Signature => MetaSignature, _}
 import scala.meta.internal.tokenizers.{LegacyScanner, LegacyToken}
+import scala.compat.Platform.EOL
 
 // TODO: ideally, we would like to bootstrap these macros on top of scala.meta
 // so that quasiquotes can be interpreted by any host, not just scalac
-private[meta] class ReificationMacros(val c: Context) extends AdtReflection with AdtLiftables {
+private[meta] class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables {
   lazy val u: c.universe.type = c.universe
   lazy val mirror: u.Mirror = c.mirror
   import c.internal._
@@ -335,6 +337,26 @@ private[meta] class ReificationMacros(val c: Context) extends AdtReflection with
   }
 
   private def reifySkeleton(meta: MetaTree): ReflectTree = {
+    implicit class XtensionClazz(clazz: Class[_]) {
+      def toTpe: u.Type = {
+        if (clazz.isArray) {
+          appliedType(ArrayClass, clazz.getComponentType.toTpe)
+        } else {
+          def loop(owner: u.Symbol, parts: List[String]): u.Symbol = parts match {
+            case part :: Nil =>
+              if (clazz.getName.endsWith("$")) owner.info.decl(TermName(part))
+              else owner.info.decl(TypeName(part))
+            case part :: rest =>
+              loop(owner.info.decl(TermName(part)), rest)
+            case Nil =>
+              unreachable(debug(clazz))
+          }
+          val name = scala.reflect.NameTransformer.decode(clazz.getName)
+          val result = loop(mirror.RootPackage, name.stripSuffix("$").split(Array('.', '$')).toList)
+          if (result.isModule) result.asModule.info else result.asClass.toType
+        }
+      }
+    }
     object Lifts {
       def liftTree(tree: api.Tree): u.Tree = {
         Liftables.liftableSubTree(tree)
@@ -366,8 +388,16 @@ private[meta] class ReificationMacros(val c: Context) extends AdtReflection with
         }
       }
       def liftUnquote(unquote: impl.Unquote): u.Tree = {
-        // TODO: check `unquote.tree.tpe` against `unquote.pt` and unlift if necessary
-        unquote.tree.asInstanceOf[ReflectTree]
+        val tree = unquote.tree.asInstanceOf[u.Tree]
+        if (tree.tpe <:< unquote.pt.toTpe.publish) {
+          val needsCast = !(tree.tpe <:< unquote.pt.toTpe)
+          if (needsCast) q"$tree.asInstanceOf[${unquote.pt.toTpe}]"
+          else tree
+        } else {
+          // TODO: support for lifting/unlifting
+          val errorMessage = s"type mismatch;$EOL found   : ${tree.tpe.toString}$EOL required: ${unquote.pt.toTpe.toString}"
+          c.abort(translatePosition(unquote.origin.tokens.head), errorMessage)
+        }
       }
     }
     object Liftables {
@@ -384,9 +414,7 @@ private[meta] class ReificationMacros(val c: Context) extends AdtReflection with
     val internalResult = Lifts.liftTree(meta)
     val publicResult = q"${c.macroApplication.symbol.owner.owner.companion}.publish($internalResult)"
     if (sys.props("quasiquote.debug") != null) println(publicResult)
-    // TODO: enable this
-    // publicResult
-    internalResult
+    publicResult
   }
 
   def unapply(scrutinee: c.Tree)(dialect: c.Tree): ReflectTree = {

@@ -491,9 +491,13 @@ package scala.meta.internal.ast {
 
   // NOTE: in order to maintain conceptual compatibility with scala.reflect's implementation,
   // Ellipsis.rank = 1 means .., Ellipsis.rank = 2 means ..., etc
-  @bottom @ast class Ellipsis(rank: Int, tree: Tree, pt: Class[_]) extends Tree
+  @bottom @ast class Ellipsis(rank: Int, tree: Tree, pt: Class[_]) extends Tree {
+    require(pt.isArray)
+  }
 
   // TODO: after we bootstrap, Unquote.tree will become scala.meta.Tree
   // however, for now, we will keep it at Any in order to also support scala.reflect trees
-  @bottom @ast class Unquote(tree: Any, pt: Class[_]) extends Tree
+  @bottom @ast class Unquote(tree: Any, pt: Class[_]) extends Tree {
+    require(classOf[api.Tree].isAssignableFrom(pt))
+  }
 }

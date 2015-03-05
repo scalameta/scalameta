@@ -2,8 +2,6 @@ package org.scalameta.ast
 
 import org.scalameta.adt.{Reflection => AdtReflection}
 import org.scalameta.ast.{Reflection => AstReflection}
-import org.scalameta.invariants._
-import org.scalameta.unreachable
 
 trait Reflection extends AdtReflection {
   import u._
@@ -42,7 +40,6 @@ trait Reflection extends AdtReflection {
       case TypeRef(_, sym, Nil) if sym.isInternalTree =>
         val publicParents = sym.asClass.baseClasses.filter(_.isPublicTree)
         val minimalParents = publicParents.filter(p1 => !publicParents.exists(p2 => p1 != p2 && p2.asClass.toType <:< p1.asClass.toType))
-        require(minimalParents.length > 0 && debug(tpe, minimalParents))
         intersectionType(minimalParents.sortBy(_.weight).map(_.asClass.toType))
       case tpe =>
         tpe

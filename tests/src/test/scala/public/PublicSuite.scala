@@ -183,7 +183,7 @@ class PublicSuite extends FunSuite {
       import scala.{meta => api}
       import scala.meta.internal.{ast => impl}
       t"List[Int]".defn
-    """) === "value defn is not a member of meta.internal.ast.Type.Apply")
+    """) === "value defn is not a member of scala.meta.Type")
   }
 
   test("Ref.defn") {
