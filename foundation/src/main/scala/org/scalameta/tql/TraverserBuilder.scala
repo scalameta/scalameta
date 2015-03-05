@@ -1,7 +1,7 @@
 package org.scalameta.tql
 
 import scala.reflect.macros.whitebox.Context
-import org.scalameta.adt._
+import org.scalameta.adt.{Reflection => AdtReflection}
 
 class TraverserBuilderMacros(val c: Context) extends AdtReflection {
   val u: c.universe.type = c.universe

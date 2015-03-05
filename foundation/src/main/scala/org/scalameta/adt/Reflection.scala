@@ -6,7 +6,7 @@ import org.scalameta.ast.{internal => AstInternal}
 import scala.reflect.{classTag, ClassTag}
 import scala.collection.mutable
 
-trait AdtReflection {
+trait Reflection {
   val u: Universe
   val mirror: u.Mirror
   import u._
@@ -68,8 +68,7 @@ trait AdtReflection {
     def allFields: List[Symbol] = sym.info.decls.filter(_.isField).toList
   }
 
-  trait CommonApi {
-    def sym: Symbol
+  abstract class Adt(val sym: Symbol) {
     def tpe: Type = if (sym.isTerm) sym.info else sym.asType.toType
     def prefix: String = {
       def loop(sym: Symbol): String = {
@@ -80,8 +79,8 @@ trait AdtReflection {
     }
     def root = sym.root.asRoot
   }
-  abstract class Adt(val sym: Symbol) extends CommonApi
-  trait NonLeafApi extends CommonApi {
+  trait NonLeafApi extends Adt {
+    def all: List[Adt] = List(this) ++ this.allBranches ++ this.allLeafs
     def branches: List[Branch] = sym.branches.map(_.asBranch)
     def allBranches: List[Branch] = sym.allBranches.map(_.asBranch)
     def leafs: List[Leaf] = sym.leafs.map(_.asLeaf)

@@ -2,7 +2,7 @@ package scala.meta
 package internal
 package tql
 
-import org.scalameta.adt._
+import org.scalameta.adt.{Reflection => AdtReflection}
 import scala.reflect.macros.blackbox.Context
 import scala.meta.tql._
 

@@ -4,6 +4,7 @@ import scala.language.experimental.macros
 import scala.reflect.macros.blackbox.Context
 import org.scalameta.unreachable
 import org.scalameta.adt.Internal.Adt
+import org.scalameta.adt.{Reflection => AdtReflection}
 
 trait Liftables {
   val u: scala.reflect.macros.Universe

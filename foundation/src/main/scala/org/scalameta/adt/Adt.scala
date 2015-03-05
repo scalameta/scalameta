@@ -5,6 +5,7 @@ import scala.annotation.StaticAnnotation
 import org.scalameta.invariants.nonEmpty
 import scala.reflect.macros.whitebox.Context
 import scala.collection.mutable.ListBuffer
+import org.scalameta.adt.{Reflection => AdtReflection}
 
 class root extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro AdtMacros.root

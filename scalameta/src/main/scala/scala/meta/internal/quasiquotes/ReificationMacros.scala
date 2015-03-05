@@ -7,7 +7,7 @@ import scala.collection.immutable.Seq
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 import scala.collection.{immutable, mutable}
-import org.scalameta.adt.{Liftables => AdtLiftables, AdtReflection}
+import org.scalameta.adt.{Liftables => AdtLiftables, Reflection => AdtReflection}
 import org.scalameta.invariants._
 import org.scalameta.unreachable
 import scala.meta.{Token => MetaToken}
@@ -17,7 +17,7 @@ import scala.meta.internal.tokenizers.{LegacyScanner, LegacyToken}
 
 // TODO: ideally, we would like to bootstrap these macros on top of scala.meta
 // so that quasiquotes can be interpreted by any host, not just scalac
-private[meta] class Macros(val c: Context) extends AdtReflection with AdtLiftables {
+private[meta] class ReificationMacros(val c: Context) extends AdtReflection with AdtLiftables {
   val u: c.universe.type = c.universe
   val mirror: u.Mirror = c.mirror
   import c.internal._
@@ -381,9 +381,12 @@ private[meta] class Macros(val c: Context) extends AdtReflection with AdtLiftabl
       lazy implicit val liftEllipsis: Liftable[impl.Ellipsis] = Liftable((ellipsis: impl.Ellipsis) => Lifts.liftEllipsis(ellipsis))
       lazy implicit val liftUnquote: Liftable[impl.Unquote] = Liftable((unquote: impl.Unquote) => Lifts.liftUnquote(unquote))
     }
-    val reflect = Lifts.liftTree(meta)
-    if (sys.props("quasiquote.debug") != null) println(reflect)
-    reflect
+    val internalResult = Lifts.liftTree(meta)
+    val publicResult = q"${c.macroApplication.symbol.owner.owner.companion}.publish($internalResult)"
+    if (sys.props("quasiquote.debug") != null) println(publicResult)
+    // TODO: enable this
+    // publicResult
+    internalResult
   }
 
   def unapply(scrutinee: c.Tree)(dialect: c.Tree): ReflectTree = {

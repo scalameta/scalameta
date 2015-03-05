@@ -4,6 +4,7 @@ import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
 import scala.annotation.meta.getter
 import scala.reflect.macros.blackbox.Context
+import org.scalameta.adt.{Reflection => AdtReflection}
 
 object internal {
   trait Ast extends org.scalameta.adt.Internal.Adt
@@ -22,7 +23,7 @@ object internal {
   def initField[T](f: T): T = macro Macros.initField
   def initParam[T](f: T): T = macro Macros.initField
 
-  class Macros(val c: Context) extends org.scalameta.adt.AdtReflection {
+  class Macros(val c: Context) extends AdtReflection {
     val u: c.universe.type = c.universe
     val mirror: u.Mirror = c.mirror
     import c.universe._

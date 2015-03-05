@@ -56,6 +56,8 @@ package scala.meta {
     }
   }
 
+  @branch trait Lit extends Term with Pat with Type with Pat.Type
+
   @branch trait Member extends Tree with Scope
   object Member {
     @branch trait Term extends Member
@@ -157,7 +159,7 @@ package scala.meta.internal.ast {
     }
     @ast class Param(mods: Seq[Mod], name: Param.Name, decltpe: Option[Type.Arg], default: Option[Term]) extends api.Term.Param with Member
     object Param {
-      @branch trait Name extends api.Term.Param.Name
+      @branch trait Name extends impl.Name with api.Term.Param.Name
     }
   }
 
@@ -204,7 +206,7 @@ package scala.meta.internal.ast {
                      viewBounds: Seq[impl.Type],
                      contextBounds: Seq[impl.Type]) extends api.Type.Param with Member
     object Param {
-      @branch trait Name extends api.Type.Param.Name
+      @branch trait Name extends impl.Name with api.Type.Param.Name
     }
   }
 
@@ -290,7 +292,7 @@ package scala.meta.internal.ast {
     }
   }
 
-  @branch trait Lit extends Term with Pat with Type with Pat.Type
+  @branch trait Lit extends Term with Pat with Type with Pat.Type with api.Lit
   object Lit {
     @ast class Bool(value: scala.Boolean) extends Lit
     @ast class Byte(value: scala.Byte) extends Lit
