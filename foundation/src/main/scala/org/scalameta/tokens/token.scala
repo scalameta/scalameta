@@ -118,14 +118,6 @@ class TokenMacros(val c: Context) {
       var paramss1 = prependInputDialectIndex(paramss.head) +: paramss.tail
       paramss1 = paramss1.init :+ appendPrototype(paramss1.last)
 
-      // step 6: generate validators
-      stats1 += q"$Require(0 <= index && $Debug(this))" // TODO: can't validate the upper bound for index here
-      stats1 += q"$Require(0 <= start && start <= input.content.length && $Debug(this))"
-      if (!isStaticToken) {
-        stats1 += q"$Require(-1 <= end && end < input.content.length && $Debug(this))"
-        stats1 += q"$Require(start <= end + 1 && $Debug(this))"
-      }
-
       val cdef1 = q"$mods1 class $name[..$tparams] $ctorMods(...$paramss1) extends { ..$earlydefns } with ..$parents { $self => ..$stats1 }"
       val mdef1 = q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
       List(cdef1, mdef1)

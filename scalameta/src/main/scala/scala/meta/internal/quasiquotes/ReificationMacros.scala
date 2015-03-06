@@ -209,7 +209,9 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
     if (sys.props("quasiquote.debug") != null) println(tokens)
     try {
       implicit val parsingDialect: MetaDialect = scala.meta.dialects.Quasiquote(metaDialect)
-      val syntax = metaParse(Input.Tokens(tokens.toVector), metaDialect)
+      val input = Input.Tokens(tokens.toVector)
+      if (sys.props("quasiquote.debug") != null) println(input.tokens)
+      val syntax = metaParse(input, metaDialect)
       if (sys.props("quasiquote.debug") != null) { println(syntax.show[Code]); println(syntax.show[Raw]) }
       (syntax, mode)
     } catch {
@@ -224,9 +226,10 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
   }
   implicit class XtensionTokenPos(token: MetaToken) {
     def pos: ReflectPosition = {
-      val scala.meta.syntactic.Input.Slice(input, start, end) = token.input
-      require(input == wholeFileInput && debug(token))
-      val sourceOffset = start + token.start
+      val scala.meta.syntactic.Token.Prototype.Some(prototype) = token.prototype
+      val scala.meta.syntactic.Input.Slice(input, start, end) = prototype.input
+      require(input == wholeFileInput && debug(prototype))
+      val sourceOffset = start + prototype.start
       c.macroApplication.pos.focus.withPoint(sourceOffset)
     }
   }
