@@ -343,6 +343,7 @@ package object internal {
             sym.fullName != "scala.meta.internal.ast.Type.Name" && // handled in a helper outside the @converter
             !sym.fullName.startsWith("scala.meta.internal.ast.Lit") && // handled in a helper outside the @converter
             sym.fullName != "scala.meta.internal.ast.Unquote" && // never produced by the converter
+            sym.fullName != "scala.meta.internal.ast.Ellipsis" && // never produced by the converter
             sym.fullName != "scala.meta.internal.ast.Mod.Ffi" // never produced by the converter
           })
           val s_unmatched = unmatched.map(sym => sym.fullName.replace("scala.meta.internal.ast.", "")).mkString(", ")

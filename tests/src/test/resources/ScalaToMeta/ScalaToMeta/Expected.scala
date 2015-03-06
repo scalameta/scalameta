@@ -39,12 +39,9 @@ class ScalaToMeta extends FunSuite {
       globalPhase = run.phaseNamed("packageobjects")
       val openPackageObjectsTraverser = new Traverser {
         override def traverse(tree: Tree): Unit = tree match {
-          case ModuleDef(_, _, _) =>
-            if (tree.symbol.name == nme.PACKAGEkw) openPackageModule(tree.symbol, tree.symbol.owner)
-          case ClassDef(_, _, _, _) =>
-            ()
-          case _ =>
-            super.traverse(tree)
+          case ModuleDef(_, _, _) => if (tree.symbol.name == nme.PACKAGEkw) openPackageModule(tree.symbol, tree.symbol.owner)
+          case ClassDef(_, _, _, _) => ()
+          case _ => super.traverse(tree)
         }
       }
       openPackageObjectsTraverser(unit.body)
@@ -68,8 +65,7 @@ class ScalaToMeta extends FunSuite {
     val o_withCompilerApi = m_withCompilerApi.invoke(tb)
     val m_apply = o_withCompilerApi.getClass.getDeclaredMethods.find(_.getName == "apply").get
     try m_apply.invoke(o_withCompilerApi, cont _) catch scala.reflect.runtime.ReflectionUtils.unwrapHandler({
-      case ex =>
-        throw ex
+      case ex => throw ex
     })
     result
   }
