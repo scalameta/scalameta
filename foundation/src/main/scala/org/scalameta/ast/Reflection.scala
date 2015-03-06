@@ -9,16 +9,16 @@ trait Reflection extends AdtReflection {
   import decorators._
   import definitions._
 
-  val ApiTreeClass = mirror.staticClass("scala.meta.Tree")
-  val ImplTreeClass = mirror.staticClass("scala.meta.internal.ast.Tree")
-  val ImplEllipsisClass = mirror.staticClass("scala.meta.internal.ast.Ellipsis")
-  val ImplUnquoteClass = mirror.staticClass("scala.meta.internal.ast.Unquote")
-  val ApiNameQualifierClass = mirror.staticModule("scala.meta.Name").info.decl(TypeName("Qualifier")).asClass
-  val ApiStatClass = mirror.staticClass("scala.meta.Stat")
-  val ApiScopeClass = mirror.staticClass("scala.meta.Scope")
-  val PatClass = mirror.staticClass("scala.meta.Pat")
-  val PatTypeClass = mirror.staticModule("scala.meta.Pat").info.decl(TypeName("Type")).asClass
-  val PatTypeRefClass = mirror.staticModule("scala.meta.Pat").info.decl(TermName("Type")).info.decl(TypeName("Ref")).asClass
+  lazy val ApiTreeClass = mirror.staticClass("scala.meta.Tree")
+  lazy val ImplTreeClass = mirror.staticClass("scala.meta.internal.ast.Tree")
+  lazy val ImplEllipsisClass = mirror.staticClass("scala.meta.internal.ast.Ellipsis")
+  lazy val ImplUnquoteClass = mirror.staticClass("scala.meta.internal.ast.Unquote")
+  lazy val ApiNameQualifierClass = mirror.staticModule("scala.meta.Name").info.decl(TypeName("Qualifier")).asClass
+  lazy val ApiStatClass = mirror.staticClass("scala.meta.Stat")
+  lazy val ApiScopeClass = mirror.staticClass("scala.meta.Scope")
+  lazy val PatClass = mirror.staticClass("scala.meta.Pat")
+  lazy val PatTypeClass = mirror.staticModule("scala.meta.Pat").info.decl(TypeName("Type")).asClass
+  lazy val PatTypeRefClass = mirror.staticModule("scala.meta.Pat").info.decl(TermName("Type")).info.decl(TypeName("Ref")).asClass
 
   private implicit class PrivateXtensionAstSymbol(sym: Symbol) {
     def isPublicTree = sym.isClass && (sym.asClass.toType <:< ApiTreeClass.toType) && !sym.isInternalTree
