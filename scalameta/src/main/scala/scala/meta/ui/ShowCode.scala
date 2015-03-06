@@ -29,7 +29,8 @@ object Code {
   @root trait Style
   object Style {
     @leaf object Lazy extends Style
-    @leaf implicit object Unabridged extends Style
+    @leaf implicit object Eager extends Style
+    @leaf object WithFfi extends Style
   }
 
   // NOTE: these groups closely follow non-terminals in the grammar spec from SLS, except for:
@@ -441,6 +442,7 @@ object Code {
     case _: Mod.Lazy                     => kw("lazy")
     case _: Mod.ValParam                 => kw("val")
     case _: Mod.VarParam                 => kw("var")
+    case Mod.Ffi(signature)              => s(kw("@"), "ffi(", s(enquote(signature, if (signature.contains(EOL)) TripleQuotes else DoubleQuotes)), ")")
 
     // Enumerator
     case t: Enumerator.Val           => s(p(Pattern1, t.pat), " = ", p(Expr, t.rhs))
@@ -497,7 +499,8 @@ object Code {
     s("(", r(pats, ", "), ")")
   }
   private implicit def codeMods(implicit dialect: Dialect, style: Style): Code[Seq[Mod]] = Code { mods =>
-    if (mods.nonEmpty) r(mods, " ") else s()
+    val filteredMods = mods.filter(mod => style == Style.WithFfi || !mod.isInstanceOf[Mod.Ffi])
+    if (filteredMods.nonEmpty) r(filteredMods, " ") else s()
   }
   private implicit def codeAnnots(implicit dialect: Dialect, style: Style): Code[Seq[Mod.Annot]] = Code { annots =>
     if (annots.nonEmpty) r(annots, " ") else s()

@@ -192,7 +192,7 @@ For instance, let's dig into the List that we obtained and get its member method
 
 ```
 scala> res8.defs("apply")
-res10: scala.meta.Member.Term = override def apply[A](xs: A*): List[A] = jvmMethod("Lscala/collection/immutable/List$;", "apply", "(Lscala/collection/Seq;)Lscala/collection/immutable/List;").invoke(this, xs)
+res10: scala.meta.Member.Term = override def apply[A](xs: A*): List[A] = ???
 ```
 
 Note that in addition to signatures, members also carry their bodies. In fact, a `Member` obtained via `Ref.defn`
@@ -200,8 +200,7 @@ and a `Member` obtained by parsing and typechecking corresponding source code ar
 because of the overarching principle of scala.meta - everything should be represented and operated on via concrete syntax.
 This is going to be somewhat tricky to implement, but with the help of the recent initiative of persisting
 typed syntax trees we will get there. In the meanwhile, `Ref.defns` is going to include full bodies only
-for members declared in the currently processed compilation run, and otherwise scala.meta will operate
-in compatibility mode as demonstrated in the printout above.
+for members declared in the currently processed compilation run.
 
 ### Hygiene
 
