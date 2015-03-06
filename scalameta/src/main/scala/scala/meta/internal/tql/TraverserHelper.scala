@@ -46,6 +46,15 @@ object TraverserHelper {
     Some((if (hasChanged) collection.immutable.Seq(buffer: _*) else seq, acc))
   }
 
+
+  def traverseOptionalSeq[U, T <: U with AnyRef: ClassTag, A: Monoid](
+              f: Traverser[U]#Matcher[A],
+              a: Option[Seq[T]]): Option[(Option[Seq[T]], A)] = Some(
+    a.flatMap (traverseSeq(f, _))
+    .collect{case (x: Seq[T], y) => (Some(x), y)}
+    .getOrElse(None, implicitly[Monoid[A]].zero))
+
+
   def optional[U, T <: U with AnyRef : ClassTag, A: Monoid](
               f:  Traverser[U]#Matcher[A],
               a: Option[T]): Option[(Option[T], A)] = Some(a
