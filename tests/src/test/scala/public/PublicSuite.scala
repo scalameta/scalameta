@@ -51,7 +51,7 @@ class PublicSuite extends FunSuite {
       import scala.meta._
       implicit val dialect: scala.meta.Dialect = ???
       q"hello"
-    """) === "can't use the dialect dialect in quasiquotes")
+    """) === "dialect does not have precise enough type to be used in quasiquotes (to fix this, import something from scala.dialects, e.g. scala.meta.dialects.Scala211)")
   }
 
   test("quasiquotes when everything's correct (static dialect)") {

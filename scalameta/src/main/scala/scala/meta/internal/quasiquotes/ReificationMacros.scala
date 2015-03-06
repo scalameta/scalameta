@@ -76,7 +76,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
     // delaying validation of resulting ASTs until runtime.
     if (dialect.tpe.termSymbol == c.mirror.staticModule("_root_.scala.meta.dialects.Scala211")) _root_.scala.meta.dialects.Scala211
     else if (dialect.tpe.termSymbol == c.mirror.staticModule("_root_.scala.meta.dialects.Dotty")) _root_.scala.meta.dialects.Dotty
-    else c.abort(c.enclosingPosition, "can't use the " + dialect + " dialect in quasiquotes")
+    else c.abort(c.enclosingPosition, dialect + " does not have precise enough type to be used in quasiquotes (to fix this, import something from scala.dialects, e.g. scala.meta.dialects.Scala211)")
   }
 
   private def instantiateParser(interpolator: ReflectSymbol): MetaParser = {
