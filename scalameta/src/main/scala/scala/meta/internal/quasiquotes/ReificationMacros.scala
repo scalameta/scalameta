@@ -509,7 +509,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
         val internalResult = Lifts.liftTree(meta)
         if (sys.props("quasiquote.debug") != null) {
           println(internalResult)
-          println(showRaw(internalResult))
+          // println(showRaw(internalResult))
         }
         q"$InternalUnlift[${c.macroApplication.tpe}]($internalResult)"
       case Mode.Pattern(dummy, holes) =>
@@ -542,7 +542,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
         """
         if (sys.props("quasiquote.debug") != null) {
           println(internalResult)
-          println(showRaw(internalResult))
+          // println(showRaw(internalResult))
         }
         internalResult // TODO: q"InternalLift[${dummy.tpe}]($internalResult)"
     }

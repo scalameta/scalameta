@@ -34,7 +34,15 @@ class QuasiquoteMacros(val c: Context) {
       }
       val qparser = {
         val qunsafeResults = qtypes.map(qtype => q"_root_.scala.meta.`package`.XtensionInputLike(input).parse[$qtype]")
-        var qsafeResult = qunsafeResults.map(qunsafeParser => q"_root_.scala.util.Try($qunsafeParser)").reduce((acc, curr) => q"$acc.orElse($curr)")
+        val qsafeResults = qunsafeResults.map(qunsafeParser => q"_root_.scala.util.Try($qunsafeParser)")
+        val gsafeResultsWithLogging = qsafeResults.map(qsafeResult => q"""
+          $qsafeResult.recover({
+            case ex: _root_.scala.Exception =>
+              if (_root_.scala.sys.`package`.props("quasiquote.debug") != null) println(ex)
+              throw ex
+          })
+        """)
+        var qsafeResult = gsafeResultsWithLogging.reduce((acc, curr) => q"$acc.orElse($curr)")
         val qparseResult = if (qunsafeResults.length == 1) qunsafeResults.head else q"$qsafeResult.get"
         q"private[meta] def parse(input: _root_.scala.meta.`package`.Input)(implicit dialect: _root_.scala.meta.Dialect) = $qparseResult"
       }
