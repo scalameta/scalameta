@@ -49,6 +49,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
   val ScalaList = ScalaPackageObjectClass.info.decl(TermName("List"))
   val ScalaNil = ScalaPackageObjectClass.info.decl(TermName("Nil"))
   val ScalaSeq = ScalaPackageObjectClass.info.decl(TermName("Seq"))
+  val ImmutableSeq = mirror.staticClass("scala.collection.immutable.Seq")
   val InternalLift = c.mirror.staticModule("scala.meta.internal.quasiquotes.Lift")
   val InternalUnlift = c.mirror.staticModule("scala.meta.internal.quasiquotes.Unlift")
   val QuasiquotePrefix = c.freshName("quasiquote")
@@ -387,8 +388,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
       }
       def toTpe: u.Type = {
         if (clazz.isArray) {
-          val SeqClass = mirror.staticClass("scala.collection.immutable.Seq")
-          appliedType(SeqClass, clazz.getComponentType.toTpe)
+          appliedType(ImmutableSeq, clazz.getComponentType.toTpe)
         } else {
           def loop(owner: u.Symbol, parts: List[String]): u.Symbol = parts match {
             case part :: Nil =>
@@ -408,7 +408,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
     implicit class XtensionRankedTree(tree: u.Tree) {
       def wrap(rank: Int): u.Tree = {
         if (rank == 0) tree
-        else AppliedTypeTree(q"${symbolOf[scala.collection.immutable.Seq[_]]}", List(tree))
+        else AppliedTypeTree(tq"$ImmutableSeq", List(tree))
       }
     }
     object Lifts {
