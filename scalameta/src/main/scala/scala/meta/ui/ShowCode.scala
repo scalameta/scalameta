@@ -456,7 +456,23 @@ object Code {
     case t: Import                   => s(kw("import"), " ", r(t.clauses, ", "))
 
     // Case
-    case t: Case  => s("case ", p(Pattern, t.pat), t.cond.map { cond => s(" ", kw("if"), " ", p(PostfixExpr, cond)) }.getOrElse(s()), " ", kw("=>"), r(t.body.stats.map(i(_)), ""))
+    case t: Case  =>
+      val ppat = p(Pattern, t.pat)
+      val pcond = t.cond.map(cond => s(" ", kw("if"), " ", p(PostfixExpr, cond))).getOrElse(s())
+      val isOneLiner = {
+        def isOneLiner(t: Case) = t.stats.length == 0 || (t.stats.length == 1 && !s(t.stats.head).toString.contains(EOL))
+        t.parent match {
+          case Some(Term.Match(_, cases)) => cases.forall(isOneLiner)
+          case Some(Term.PartialFunction(cases)) => cases.forall(isOneLiner)
+          case _ => isOneLiner(t)
+        }
+      }
+      val pbody = (t.stats, isOneLiner) match {
+        case (Nil, true) => s("")
+        case (List(stat), true) => s(" ", stat)
+        case (stats, _) => r(t.body.stats.map(i(_)), "")
+      }
+      s("case ", ppat, pcond, " ", kw("=>"), pbody)
 
     // Source
     case t: Source                   => r(t.stats, EOL)

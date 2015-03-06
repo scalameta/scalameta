@@ -160,4 +160,10 @@ private[meta] object Helpers {
       loop(ellipsis.pt, 0)
     }
   }
+  implicit class XtensionCase(tree: Case) {
+    def stats: Seq[Stat] = tree.body match {
+      case Term.Block(stats) => stats
+      case body => List(body)
+    }
+  }
 }
