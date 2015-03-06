@@ -114,8 +114,8 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
           c.abort(c.macroApplication.pos, s"fatal error initializing quasiquote macro: ${showRaw(c.macroApplication)}")
       }
     }
-    val parttokenss = parts.map{
-      case partlit @ q"${part: String}" =>
+    val parttokenss = parts.zip(args :+ EmptyTree).map{
+      case (partlit @ q"${part: String}", arg) =>
         // Step 1: Compute start and end of the part.
         // Also provide facilities to map offsets between part and wholeFileSource.
         // The mapping is not Predef.identity because of $$ (explained below).
@@ -162,9 +162,16 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
           try part.tokens
           catch {
             case TokenizeException(_, partOffset, message) =>
-              val sourceOffset = partOffsetToSourceOffset(partOffset)
-              val sourcePosition = partlit.pos.focus.withPoint(sourceOffset)
-              c.abort(sourcePosition, message)
+              if (message.startsWith("unclosed ") && arg.nonEmpty) {
+                // NOTE: arg.pos is not precise enough
+                // val unquotePosition = arg.pos
+                val unquotePosition = partlit.pos.focus.withPoint(end + 1)
+                c.abort(unquotePosition, "can't unquote into " + message.stripPrefix("unclosed ") + "s")
+              } else {
+                val sourceOffset = partOffsetToSourceOffset(partOffset)
+                val sourcePosition = partlit.pos.focus.withPoint(sourceOffset)
+                c.abort(sourcePosition, message)
+              }
           }
         }
 
@@ -174,7 +181,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
           val delta = partOffsetToSourceOffset(crudeToken.start) - (start + crudeToken.start)
           crudeToken.adjust(input = Input.Slice(wholeFileInput, start, end), delta = delta)
         })
-      case part =>
+      case (part, arg) =>
         c.abort(part.pos, "quasiquotes can only be used with literal strings")
     }
     def merge(index: Int, parttokens: Vector[MetaToken], arg: ReflectTree) = {

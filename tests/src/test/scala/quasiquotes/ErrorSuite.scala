@@ -99,4 +99,17 @@ class ErrorSuite extends FunSuite {
       |                                 ^
     """.trim.stripMargin)
   }
+
+  test("q\"\"\" \"$x\" \"\"\"\"") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val x = "hello"
+      qQQQ "$x" QQQ
+    """) === """
+      |<macro>:5: can't unquote into string literals
+      |      qQQQ "$x" QQQ
+      |            ^
+    """.replace("QQQ", "\"\"\"").trim.stripMargin)
+  }
 }
