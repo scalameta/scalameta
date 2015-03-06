@@ -432,12 +432,12 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
 
   /** {{{ part { `sep` part } }}},or if sepFirst is true, {{{ { `sep` part } }}}. */
   final def tokenSeparated[Sep: TokenMetadata, T <: Tree : ClassTag](sepFirst: Boolean, part: => T): List[T] = {
-    def partOrEllipsis = if (token.is[tok.Ellipsis] && !sepFirst) ellipsis(1, part) else part
+    def partOrEllipsis = if (token.is[tok.Ellipsis]) ellipsis(1, part) else part
     val ts = new ListBuffer[T]
     if (!sepFirst)
       ts += partOrEllipsis
-    while (token.is[Sep]) {
-      next()
+    while (token.is[Sep] || token.is[tok.Ellipsis]) {
+      if (token.is[Sep]) next()
       ts += partOrEllipsis
     }
     ts.toList
@@ -1374,14 +1374,20 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
 
   def caseClause(): Case = atPos(in.prevTokenPos, auto) {
     require(token.isNot[`case`] && debug(token))
-    Case(pattern().require[Pat], guard(), {
-      accept[`=>`]
-      autoPos(blockStatSeq() match {
-        case List(unquote: impl.Unquote) => Term.Block(List(unquote))
-        case List(blk: Term.Block) => blk
-        case stats => Term.Block(stats)
-      })
-    })
+    token match {
+      case token: tok.Unquote if token.prev.is[tok.Ellipsis] =>
+        next()
+        impl.Unquote(token.tree, classOf[Case])
+      case token =>
+        Case(pattern().require[Pat], guard(), {
+          accept[`=>`]
+          autoPos(blockStatSeq() match {
+            case List(unquote: impl.Unquote) => Term.Block(List(unquote))
+            case List(blk: Term.Block) => blk
+            case stats => Term.Block(stats)
+          })
+        })
+    }
   }
 
   /** {{{
