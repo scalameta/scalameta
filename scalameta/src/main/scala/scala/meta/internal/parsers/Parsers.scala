@@ -1669,41 +1669,52 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
 
 /* -------- MODIFIERS and ANNOTATIONS ------------------------------------------- */
 
+  def accessModifier(): Mod = autoPos {
+    val mod = in.token match {
+      case _: `private` => (name: Name.Qualifier) => Mod.Private(name)
+      case _: `protected` => (name: Name.Qualifier) => Mod.Protected(name)
+      case other => unreachable(debug(other, other.show[Raw]))
+    }
+    next()
+    if (in.token.isNot[`[`]) mod(autoPos(Name.Anonymous()))
+    else {
+      next()
+      val result = {
+        if (in.token.is[`this`]) {
+          val qual = atPos(in.tokenPos, in.prevTokenPos)(Name.Anonymous())
+          next()
+          mod(atPos(in.prevTokenPos, auto)(Term.This(qual)))
+        } else {
+          val name = termName()
+          mod(atPos(name, name)(Name.Indeterminate(name.value)))
+        }
+      }
+      accept[`]`]
+      result
+    }
+  }
+
   /** {{{
    *  AccessModifier ::= (private | protected) [AccessQualifier]
    *  AccessQualifier ::= `[' (Id | this) `]'
    *  }}}
    */
   def accessModifierOpt(): Option[Mod] = {
-    if (in.token.is[`private`] || in.token.is[`protected`]) {
-      Some(autoPos {
-        val mod = in.token match {
-          case _: `private` => (name: Name.Qualifier) => Mod.Private(name)
-          case _: `protected` => (name: Name.Qualifier) => Mod.Protected(name)
-          case other => unreachable(debug(other, other.show[Raw]))
-        }
-        next()
-        if (in.token.isNot[`[`]) mod(autoPos(Name.Anonymous()))
-        else {
-          next()
-          val result = {
-            if (in.token.is[`this`]) {
-              val qual = atPos(in.tokenPos, in.prevTokenPos)(Name.Anonymous())
-              next()
-              mod(atPos(in.prevTokenPos, auto)(Term.This(qual)))
-            } else {
-              val name = termName()
-              mod(atPos(name, name)(Name.Indeterminate(name.value)))
-            }
-          }
-          accept[`]`]
-          result
-        }
-      })
-    } else {
-      None
-    }
+    if (token.is[`private`] || token.is[`protected`]) Some(accessModifier())
+    else None
   }
+
+  def modifier(): Mod = autoPos(token match {
+    case _: `abstract`  => next(); Mod.Abstract()
+    case _: `final`     => next(); Mod.Final()
+    case _: `sealed`    => next(); Mod.Sealed()
+    case _: `implicit`  => next(); Mod.Implicit()
+    case _: `lazy`      => next(); Mod.Lazy()
+    case _: `override`  => next(); Mod.Override()
+    case _: `private`   => accessModifier()
+    case _: `protected` => accessModifier()
+    case _              => syntaxError(s"modifier expected but ${token.name} found.", at = token)
+  })
 
   /** {{{
    *  Modifiers ::= {Modifier}
@@ -1713,29 +1724,20 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
    *  }}}
    */
   def modifiers(isLocal: Boolean = false): List[Mod] = {
-    def addMod(mods: List[Mod], mod: Mod, advance: Boolean = true): List[Mod] = {
-      mods.foreach { m => if (m.productPrefix == mod.productPrefix) syntaxError("repeated modifier", at = mod) }
-      if (advance) next()
+    def appendMod(mods: List[Mod], mod: Mod): List[Mod] = {
+      def validate() = {
+        if (isLocal && !mod.origin.tokens.head.is[LocalModifier]) syntaxError("illegal modifier for a local definition", at = mod)
+        mods.foreach(m => if (m.productPrefix == mod.productPrefix) syntaxError("repeated modifier", at = mod))
+        if (mod.hasAccessBoundary) mods.filter(_.hasAccessBoundary).foreach(mod => syntaxError("duplicate access qualifier", at = mod))
+      }
+      validate()
       mods :+ mod
     }
-    def acceptable = if (isLocal) token.is[LocalModifier] else true
-    def loop(mods: List[Mod]): List[Mod] =
-      if (!acceptable) mods
-      else (token match {
-        case _: `abstract`  => loop(addMod(mods, atPos(in.tokenPos, in.tokenPos)(Mod.Abstract())))
-        case _: `final`     => loop(addMod(mods, atPos(in.tokenPos, in.tokenPos)(Mod.Final())))
-        case _: `sealed`    => loop(addMod(mods, atPos(in.tokenPos, in.tokenPos)(Mod.Sealed())))
-        case _: `implicit`  => loop(addMod(mods, atPos(in.tokenPos, in.tokenPos)(Mod.Implicit())))
-        case _: `lazy`      => loop(addMod(mods, atPos(in.tokenPos, in.tokenPos)(Mod.Lazy())))
-        case _: `override`  => loop(addMod(mods, atPos(in.tokenPos, in.tokenPos)(Mod.Override())))
-        case _: `private`
-           | _: `protected` =>
-          mods.filter(_.hasAccessBoundary).foreach(mod => syntaxError("duplicate access qualifier", at = mod))
-          val optmod = accessModifierOpt()
-          optmod.map { mod => loop(addMod(mods, mod, advance = false)) }.getOrElse(mods)
-        case _: `\n` if !isLocal => next(); loop(mods)
-        case _                   => mods
-      })
+    def loop(mods: List[Mod]): List[Mod] = token match {
+      case _: Modifier         => loop(appendMod(mods, modifier()))
+      case _: `\n` if !isLocal => next(); loop(mods)
+      case _                   => mods
+    }
     loop(Nil)
   }
 
@@ -2595,8 +2597,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         next()
       }
       else {
-        val addendum = if (token.is[Modifier]) " (no modifiers allowed here)" else ""
-        syntaxError("illegal start of statement" + addendum, at = token)
+        syntaxError("illegal start of statement", at = token)
       }
     }
     stats.toList
