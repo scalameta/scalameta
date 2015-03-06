@@ -15,6 +15,7 @@ class SemanticSuite extends FunSuite {
   private val pluginOptions = s"-Xplugin:${sys.props("sbt.paths.plugin.jar")} -Xplugin-require:scalahost"
   private val options = classpathOptions + " " + pluginOptions
   implicit val c = Scalahost.mkStandaloneContext(options)
+  implicit val codeStyle = scala.meta.ui.Code.Style.WithFfi
 
   test("subtyping") {
     assert(t"List[Int]" <:< t"List[Any]")
@@ -88,427 +89,439 @@ class SemanticSuite extends FunSuite {
   }
 
   test("t\"List\".members") {
-    assert(t"List".members.mkString(EOL) === """
-      |def this()
-      |override def companion: GenericCompanion[List] = jvmMethod("Lscala/collection/immutable/List;", "companion", "()Lscala/collection/generic/GenericCompanion;").invoke(this)
-      |def ::[B >: A](x: B): List[B] = jvmMethod("Lscala/collection/immutable/List;", "$colon$colon", "(Ljava/lang/Object;)Lscala/collection/immutable/List;").invoke(this, x)
-      |def :::[B >: A](prefix: List[B]): List[B] = jvmMethod("Lscala/collection/immutable/List;", "$colon$colon$colon", "(Lscala/collection/immutable/List;)Lscala/collection/immutable/List;").invoke(this, prefix)
-      |def reverse_:::[B >: A](prefix: List[B]): List[B] = jvmMethod("Lscala/collection/immutable/List;", "reverse_$colon$colon$colon", "(Lscala/collection/immutable/List;)Lscala/collection/immutable/List;").invoke(this, prefix)
-      |@inline final def mapConserve[B >: A <: AnyRef](f: A => B): List[B] = jvmMethod("Lscala/collection/immutable/List;", "mapConserve", "(Lscala/Function1;)Lscala/collection/immutable/List;").invoke(this, f)
-      |override def ++[B >: A, That](that: GenTraversableOnce[B])(implicit bf: CanBuildFrom[List[A], B, That]): That = jvmMethod("Lscala/collection/immutable/List;", "$plus$plus", "(Lscala/collection/GenTraversableOnce;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, that, bf)
-      |override def +:[B >: A, That](elem: B)(implicit bf: CanBuildFrom[List[A], B, That]): That = jvmMethod("Lscala/collection/immutable/List;", "$plus$colon", "(Ljava/lang/Object;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, elem, bf)
-      |override def toList: List[A] = jvmMethod("Lscala/collection/immutable/List;", "toList", "()Lscala/collection/immutable/List;").invoke(this)
-      |override def take(n: Int): List[A] = jvmMethod("Lscala/collection/immutable/List;", "take", "(I)Lscala/collection/immutable/List;").invoke(this, n)
-      |override def drop(n: Int): List[A] = jvmMethod("Lscala/collection/immutable/List;", "drop", "(I)Lscala/collection/immutable/List;").invoke(this, n)
-      |override def slice(from: Int, until: Int): List[A] = jvmMethod("Lscala/collection/immutable/List;", "slice", "(II)Lscala/collection/immutable/List;").invoke(this, from, until)
-      |override def takeRight(n: Int): List[A] = jvmMethod("Lscala/collection/immutable/List;", "takeRight", "(I)Lscala/collection/immutable/List;").invoke(this, n)
-      |override def splitAt(n: Int): (List[A], List[A]) = jvmMethod("Lscala/collection/immutable/List;", "splitAt", "(I)Lscala/Tuple2;").invoke(this, n)
-      |@noinline final override def map[B, That](f: A => B)(implicit bf: CanBuildFrom[List[A], B, That]): That = jvmMethod("Lscala/collection/immutable/List;", "map", "(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, f, bf)
-      |@noinline final override def collect[B, That](pf: PartialFunction[A, B])(implicit bf: CanBuildFrom[List[A], B, That]): That = jvmMethod("Lscala/collection/immutable/List;", "collect", "(Lscala/PartialFunction;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, pf, bf)
-      |@noinline final override def flatMap[B, That](f: A => GenTraversableOnce[B])(implicit bf: CanBuildFrom[List[A], B, That]): That = jvmMethod("Lscala/collection/immutable/List;", "flatMap", "(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, f, bf)
-      |@inline final override def takeWhile(p: A => Boolean): List[A] = jvmMethod("Lscala/collection/immutable/List;", "takeWhile", "(Lscala/Function1;)Lscala/collection/immutable/List;").invoke(this, p)
-      |@inline final override def dropWhile(p: A => Boolean): List[A] = jvmMethod("Lscala/collection/immutable/List;", "dropWhile", "(Lscala/Function1;)Lscala/collection/immutable/List;").invoke(this, p)
-      |@inline final override def span(p: A => Boolean): (List[A], List[A]) = jvmMethod("Lscala/collection/immutable/List;", "span", "(Lscala/Function1;)Lscala/Tuple2;").invoke(this, p)
-      |@inline final override def foreach[U](f: A => U): Unit = jvmMethod("Lscala/collection/immutable/List;", "foreach", "(Lscala/Function1;)V").invoke(this, f)
-      |override def reverse: List[A] = jvmMethod("Lscala/collection/immutable/List;", "reverse", "()Lscala/collection/immutable/List;").invoke(this)
-      |override def foldRight[B](z: B)(op: (A, B) => B): B = jvmMethod("Lscala/collection/immutable/List;", "foldRight", "(Ljava/lang/Object;Lscala/Function2;)Ljava/lang/Object;").invoke(this, z, op)
-      |override def stringPrefix: String = jvmMethod("Lscala/collection/immutable/List;", "stringPrefix", "()Ljava/lang/String;").invoke(this)
-      |override def toStream: Stream[A] = jvmMethod("Lscala/collection/immutable/List;", "toStream", "()Lscala/collection/immutable/Stream;").invoke(this)
-      |protected final def writeReplace(): AnyRef = jvmMethod("Lscala/collection/immutable/List;", "writeReplace", "()Ljava/lang/Object;").invoke(this)
-      |def length: Int = jvmMethod("Lscala/collection/LinearSeqOptimized;", "length", "()I").invoke(this)
-      |def apply(n: Int): A = jvmMethod("Lscala/collection/LinearSeqOptimized;", "apply", "(I)Ljava/lang/Object;").invoke(this, n)
-      |override def forall(p: A => Boolean): Boolean = jvmMethod("Lscala/collection/LinearSeqOptimized;", "forall", "(Lscala/Function1;)Z").invoke(this, p)
-      |override def exists(p: A => Boolean): Boolean = jvmMethod("Lscala/collection/LinearSeqOptimized;", "exists", "(Lscala/Function1;)Z").invoke(this, p)
-      |override def contains[A1 >: A](elem: A1): Boolean = jvmMethod("Lscala/collection/LinearSeqOptimized;", "contains", "(Ljava/lang/Object;)Z").invoke(this, elem)
-      |override def find(p: A => Boolean): Option[A] = jvmMethod("Lscala/collection/LinearSeqOptimized;", "find", "(Lscala/Function1;)Lscala/Option;").invoke(this, p)
-      |override def foldLeft[B](z: B)(f: (B, A) => B): B = jvmMethod("Lscala/collection/LinearSeqOptimized;", "foldLeft", "(Ljava/lang/Object;Lscala/Function2;)Ljava/lang/Object;").invoke(this, z, f)
-      |override def reduceLeft[B >: A](f: (B, A) => B): B = jvmMethod("Lscala/collection/LinearSeqOptimized;", "reduceLeft", "(Lscala/Function2;)Ljava/lang/Object;").invoke(this, f)
-      |override def reduceRight[B >: A](op: (A, B) => B): B = jvmMethod("Lscala/collection/LinearSeqOptimized;", "reduceRight", "(Lscala/Function2;)Ljava/lang/Object;").invoke(this, op)
-      |override def last: A = jvmMethod("Lscala/collection/LinearSeqOptimized;", "last", "()Ljava/lang/Object;").invoke(this)
-      |override def dropRight(n: Int): List[A] = jvmMethod("Lscala/collection/LinearSeqOptimized;", "dropRight", "(I)Lscala/collection/LinearSeqOptimized;").invoke(this, n)
-      |override def sameElements[B >: A](that: GenIterable[B]): Boolean = jvmMethod("Lscala/collection/LinearSeqOptimized;", "sameElements", "(Lscala/collection/GenIterable;)Z").invoke(this, that)
-      |override def lengthCompare(len: Int): Int = jvmMethod("Lscala/collection/LinearSeqOptimized;", "lengthCompare", "(I)I").invoke(this, len)
-      |override def isDefinedAt(x: Int): Boolean = jvmMethod("Lscala/collection/LinearSeqOptimized;", "isDefinedAt", "(I)Z").invoke(this, x)
-      |override def segmentLength(p: A => Boolean, from: Int): Int = jvmMethod("Lscala/collection/LinearSeqOptimized;", "segmentLength", "(Lscala/Function1;I)I").invoke(this, p, from)
-      |override def indexWhere(p: A => Boolean, from: Int): Int = jvmMethod("Lscala/collection/LinearSeqOptimized;", "indexWhere", "(Lscala/Function1;I)I").invoke(this, p, from)
-      |override def lastIndexWhere(p: A => Boolean, end: Int): Int = jvmMethod("Lscala/collection/LinearSeqOptimized;", "lastIndexWhere", "(Lscala/Function1;I)I").invoke(this, p, end)
-      |def productElement(n: Int): Any
-      |def productArity: Int
-      |def productIterator: Iterator[Any] = jvmMethod("Lscala/Product;", "productIterator", "()Lscala/collection/Iterator;").invoke(this)
-      |def productPrefix: String = jvmMethod("Lscala/Product;", "productPrefix", "()Ljava/lang/String;").invoke(this)
-      |override def seq: LinearSeq[A] = jvmMethod("Lscala/collection/immutable/LinearSeq;", "seq", "()Lscala/collection/immutable/LinearSeq;").invoke(this)
-      |protected[this] override def thisCollection: LinearSeq[A] = jvmMethod("Lscala/collection/LinearSeqLike;", "thisCollection", "()Lscala/collection/LinearSeq;").invoke(this)
-      |protected[this] override def toCollection(repr: List[A]): LinearSeq[A] = jvmMethod("Lscala/collection/LinearSeqLike;", "toCollection", "(Lscala/collection/LinearSeqLike;)Lscala/collection/LinearSeq;").invoke(this, repr)
-      |override def hashCode(): Int = jvmMethod("Lscala/collection/LinearSeqLike;", "hashCode", "()I").invoke(this)
-      |override def iterator: Iterator[A] = jvmMethod("Lscala/collection/LinearSeqLike;", "iterator", "()Lscala/collection/Iterator;").invoke(this)
-      |@tailrec final override def corresponds[B](that: GenSeq[B])(p: (A, B) => Boolean): Boolean = jvmMethod("Lscala/collection/LinearSeqLike;", "corresponds", "(Lscala/collection/GenSeq;Lscala/Function2;)Z").invoke(this, that, p)
-      |override def toSeq: Seq[A] = jvmMethod("Lscala/collection/immutable/Seq;", "toSeq", "()Lscala/collection/immutable/Seq;").invoke(this)
-      |protected[this] override def parCombiner: Combiner[A, ParSeq[A]] = jvmMethod("Lscala/collection/immutable/Seq;", "parCombiner", "()Lscala/collection/parallel/Combiner;").invoke(this)
-      |override def isEmpty: Boolean = jvmMethod("Lscala/collection/SeqLike;", "isEmpty", "()Z").invoke(this)
-      |override def size: Int = jvmMethod("Lscala/collection/SeqLike;", "size", "()I").invoke(this)
-      |def permutations: Iterator[List[A]] = jvmMethod("Lscala/collection/SeqLike;", "permutations", "()Lscala/collection/Iterator;").invoke(this)
-      |def combinations(n: Int): Iterator[List[A]] = jvmMethod("Lscala/collection/SeqLike;", "combinations", "(I)Lscala/collection/Iterator;").invoke(this, n)
-      |def reverseMap[B, That](f: A => B)(implicit bf: CanBuildFrom[List[A], B, That]): That = jvmMethod("Lscala/collection/SeqLike;", "reverseMap", "(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, f, bf)
-      |def reverseIterator: Iterator[A] = jvmMethod("Lscala/collection/SeqLike;", "reverseIterator", "()Lscala/collection/Iterator;").invoke(this)
-      |def startsWith[B](that: GenSeq[B], offset: Int): Boolean = jvmMethod("Lscala/collection/SeqLike;", "startsWith", "(Lscala/collection/GenSeq;I)Z").invoke(this, that, offset)
-      |def endsWith[B](that: GenSeq[B]): Boolean = jvmMethod("Lscala/collection/SeqLike;", "endsWith", "(Lscala/collection/GenSeq;)Z").invoke(this, that)
-      |def indexOfSlice[B >: A](that: GenSeq[B]): Int = jvmMethod("Lscala/collection/SeqLike;", "indexOfSlice", "(Lscala/collection/GenSeq;)I").invoke(this, that)
-      |def indexOfSlice[B >: A](that: GenSeq[B], from: Int): Int = jvmMethod("Lscala/collection/SeqLike;", "indexOfSlice", "(Lscala/collection/GenSeq;I)I").invoke(this, that, from)
-      |def lastIndexOfSlice[B >: A](that: GenSeq[B]): Int = jvmMethod("Lscala/collection/SeqLike;", "lastIndexOfSlice", "(Lscala/collection/GenSeq;)I").invoke(this, that)
-      |def lastIndexOfSlice[B >: A](that: GenSeq[B], end: Int): Int = jvmMethod("Lscala/collection/SeqLike;", "lastIndexOfSlice", "(Lscala/collection/GenSeq;I)I").invoke(this, that, end)
-      |def containsSlice[B](that: GenSeq[B]): Boolean = jvmMethod("Lscala/collection/SeqLike;", "containsSlice", "(Lscala/collection/GenSeq;)Z").invoke(this, that)
-      |override def union[B >: A, That](that: GenSeq[B])(implicit bf: CanBuildFrom[List[A], B, That]): That = jvmMethod("Lscala/collection/SeqLike;", "union", "(Lscala/collection/GenSeq;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, that, bf)
-      |def diff[B >: A](that: GenSeq[B]): List[A] = jvmMethod("Lscala/collection/SeqLike;", "diff", "(Lscala/collection/GenSeq;)Ljava/lang/Object;").invoke(this, that)
-      |def intersect[B >: A](that: GenSeq[B]): List[A] = jvmMethod("Lscala/collection/SeqLike;", "intersect", "(Lscala/collection/GenSeq;)Ljava/lang/Object;").invoke(this, that)
-      |def distinct: List[A] = jvmMethod("Lscala/collection/SeqLike;", "distinct", "()Ljava/lang/Object;").invoke(this)
-      |def patch[B >: A, That](from: Int, patch: GenSeq[B], replaced: Int)(implicit bf: CanBuildFrom[List[A], B, That]): That = jvmMethod("Lscala/collection/SeqLike;", "patch", "(ILscala/collection/GenSeq;ILscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, from, patch, replaced, bf)
-      |def updated[B >: A, That](index: Int, elem: B)(implicit bf: CanBuildFrom[List[A], B, That]): That = jvmMethod("Lscala/collection/SeqLike;", "updated", "(ILjava/lang/Object;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, index, elem, bf)
-      |def :+[B >: A, That](elem: B)(implicit bf: CanBuildFrom[List[A], B, That]): That = jvmMethod("Lscala/collection/SeqLike;", "$colon$plus", "(Ljava/lang/Object;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, elem, bf)
-      |def padTo[B >: A, That](len: Int, elem: B)(implicit bf: CanBuildFrom[List[A], B, That]): That = jvmMethod("Lscala/collection/SeqLike;", "padTo", "(ILjava/lang/Object;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, len, elem, bf)
-      |def sortWith(lt: (A, A) => Boolean): List[A] = jvmMethod("Lscala/collection/SeqLike;", "sortWith", "(Lscala/Function2;)Ljava/lang/Object;").invoke(this, lt)
-      |def sortBy[B](f: A => B)(implicit ord: Ordering[B]): List[A] = jvmMethod("Lscala/collection/SeqLike;", "sortBy", "(Lscala/Function1;Lscala/math/Ordering;)Ljava/lang/Object;").invoke(this, f, ord)
-      |def sorted[B >: A](implicit ord: Ordering[B]): List[A] = jvmMethod("Lscala/collection/SeqLike;", "sorted", "(Lscala/math/Ordering;)Ljava/lang/Object;").invoke(this, ord)
-      |def indices: Range = jvmMethod("Lscala/collection/SeqLike;", "indices", "()Lscala/collection/immutable/Range;").invoke(this)
-      |override def view: AnyRef with SeqView[A, List[A]] = jvmMethod("Lscala/collection/SeqLike;", "view", "()Lscala/collection/SeqView;").invoke(this)
-      |override def view(from: Int, until: Int): SeqView[A, List[A]] = jvmMethod("Lscala/collection/SeqLike;", "view", "(II)Lscala/collection/SeqView;").invoke(this, from, until)
-      |override def toString(): String = jvmMethod("Lscala/collection/SeqLike;", "toString", "()Ljava/lang/String;").invoke(this)
-      |def prefixLength(p: A => Boolean): Int = jvmMethod("Lscala/collection/GenSeqLike;", "prefixLength", "(Lscala/Function1;)I").invoke(this, p)
-      |def indexWhere(p: A => Boolean): Int = jvmMethod("Lscala/collection/GenSeqLike;", "indexWhere", "(Lscala/Function1;)I").invoke(this, p)
-      |def indexOf[B >: A](elem: B): Int = jvmMethod("Lscala/collection/GenSeqLike;", "indexOf", "(Ljava/lang/Object;)I").invoke(this, elem)
-      |def indexOf[B >: A](elem: B, from: Int): Int = jvmMethod("Lscala/collection/GenSeqLike;", "indexOf", "(Ljava/lang/Object;I)I").invoke(this, elem, from)
-      |def lastIndexOf[B >: A](elem: B): Int = jvmMethod("Lscala/collection/GenSeqLike;", "lastIndexOf", "(Ljava/lang/Object;)I").invoke(this, elem)
-      |def lastIndexOf[B >: A](elem: B, end: Int): Int = jvmMethod("Lscala/collection/GenSeqLike;", "lastIndexOf", "(Ljava/lang/Object;I)I").invoke(this, elem, end)
-      |def lastIndexWhere(p: A => Boolean): Int = jvmMethod("Lscala/collection/GenSeqLike;", "lastIndexWhere", "(Lscala/Function1;)I").invoke(this, p)
-      |def startsWith[B](that: GenSeq[B]): Boolean = jvmMethod("Lscala/collection/GenSeqLike;", "startsWith", "(Lscala/collection/GenSeq;)Z").invoke(this, that)
-      |override def equals(that: Any): Boolean = jvmMethod("Lscala/collection/GenSeqLike;", "equals", "(Ljava/lang/Object;)Z").invoke(this, that)
-      |def orElse[A1 <: Int, B1 >: A](that: PartialFunction[A1, B1]): PartialFunction[A1, B1] = jvmMethod("Lscala/PartialFunction;", "orElse", "(Lscala/PartialFunction;)Lscala/PartialFunction;").invoke(this, that)
-      |override def andThen[C](k: A => C): PartialFunction[Int, C] = jvmMethod("Lscala/PartialFunction;", "andThen", "(Lscala/Function1;)Lscala/PartialFunction;").invoke(this, k)
-      |def lift: Int => Option[A] = jvmMethod("Lscala/PartialFunction;", "lift", "()Lscala/Function1;").invoke(this)
-      |def applyOrElse[A1 <: Int, B1 >: A](x: A1, default: A1 => B1): B1 = jvmMethod("Lscala/PartialFunction;", "applyOrElse", "(Ljava/lang/Object;Lscala/Function1;)Ljava/lang/Object;").invoke(this, x, default)
-      |def runWith[U](action: A => U): Int => Boolean = jvmMethod("Lscala/PartialFunction;", "runWith", "(Lscala/Function1;)Lscala/Function1;").invoke(this, action)
-      |@unspecialized def compose[A](g: A => Int): A => A = jvmMethod("Lscala/Function1;", "compose", "(Lscala/Function1;)Lscala/Function1;").invoke(this, g)
-      |override def toIterable: Iterable[A] = jvmMethod("Lscala/collection/IterableLike;", "toIterable", "()Lscala/collection/Iterable;").invoke(this)
-      |@deprecatedOverriding("toIterator should stay consistent with iterator for all Iterables: override iterator instead.", "2.11.0") override def toIterator: Iterator[A] = jvmMethod("Lscala/collection/IterableLike;", "toIterator", "()Lscala/collection/Iterator;").invoke(this)
-      |override def head: A = jvmMethod("Lscala/collection/IterableLike;", "head", "()Ljava/lang/Object;").invoke(this)
-      |def grouped(size: Int): Iterator[List[A]] = jvmMethod("Lscala/collection/IterableLike;", "grouped", "(I)Lscala/collection/Iterator;").invoke(this, size)
-      |def sliding(size: Int): Iterator[List[A]] = jvmMethod("Lscala/collection/IterableLike;", "sliding", "(I)Lscala/collection/Iterator;").invoke(this, size)
-      |def sliding(size: Int, step: Int): Iterator[List[A]] = jvmMethod("Lscala/collection/IterableLike;", "sliding", "(II)Lscala/collection/Iterator;").invoke(this, size, step)
-      |override def copyToArray[B >: A](xs: Array[B], start: Int, len: Int): Unit = jvmMethod("Lscala/collection/IterableLike;", "copyToArray", "(Ljava/lang/Object;II)V").invoke(this, xs, start, len)
-      |def zip[A1 >: A, B, That](that: GenIterable[B])(implicit bf: CanBuildFrom[List[A], (A1, B), That]): That = jvmMethod("Lscala/collection/IterableLike;", "zip", "(Lscala/collection/GenIterable;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, that, bf)
-      |def zipAll[B, A1 >: A, That](that: GenIterable[B], thisElem: A1, thatElem: B)(implicit bf: CanBuildFrom[List[A], (A1, B), That]): That = jvmMethod("Lscala/collection/IterableLike;", "zipAll", "(Lscala/collection/GenIterable;Ljava/lang/Object;Ljava/lang/Object;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, that, thisElem, thatElem, bf)
-      |def zipWithIndex[A1 >: A, That](implicit bf: CanBuildFrom[List[A], (A1, Int), That]): That = jvmMethod("Lscala/collection/IterableLike;", "zipWithIndex", "(Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, bf)
-      |override def canEqual(that: Any): Boolean = jvmMethod("Lscala/collection/IterableLike;", "canEqual", "(Ljava/lang/Object;)Z").invoke(this, that)
-      |protected[this] def newBuilder: Builder[A, List[A]] = jvmMethod("Lscala/collection/generic/GenericTraversableTemplate;", "newBuilder", "()Lscala/collection/mutable/Builder;").invoke(this)
-      |def genericBuilder[B]: Builder[B, List[B]] = jvmMethod("Lscala/collection/generic/GenericTraversableTemplate;", "genericBuilder", "()Lscala/collection/mutable/Builder;").invoke(this)
-      |def unzip[A1, A2](implicit asPair: A => (A1, A2)): (List[A1], List[A2]) = jvmMethod("Lscala/collection/generic/GenericTraversableTemplate;", "unzip", "(Lscala/Function1;)Lscala/Tuple2;").invoke(this, asPair)
-      |def unzip3[A1, A2, A3](implicit asTriple: A => (A1, A2, A3)): (List[A1], List[A2], List[A3]) = jvmMethod("Lscala/collection/generic/GenericTraversableTemplate;", "unzip3", "(Lscala/Function1;)Lscala/Tuple3;").invoke(this, asTriple)
-      |def flatten[B](implicit asTraversable: A => GenTraversableOnce[B]): List[B] = jvmMethod("Lscala/collection/generic/GenericTraversableTemplate;", "flatten", "(Lscala/Function1;)Lscala/collection/GenTraversable;").invoke(this, asTraversable)
-      |@migration("`transpose` throws an `IllegalArgumentException` if collections are not uniformly sized.", "2.9.0") def transpose[B](implicit asTraversable: A => GenTraversableOnce[B]): List[List[B]] = jvmMethod("Lscala/collection/generic/GenericTraversableTemplate;", "transpose", "(Lscala/Function1;)Lscala/collection/GenTraversable;").invoke(this, asTraversable)
+    assert(t"List".members.map(_.show[Code]).mkString(EOL) === """
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, $lessinit$greater, ()Lscala/collection/immutable/List;)") ()
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, companion, ()Lscala/collection/generic/GenericCompanion;)") override def companion: GenericCompanion[List] = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, $colon$colon, (Ljava/lang/Object;)Lscala/collection/immutable/List;)") def ::[B >: A](x: B): List[B] = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, $colon$colon$colon, (Lscala/collection/immutable/List;)Lscala/collection/immutable/List;)") def :::[B >: A](prefix: List[B]): List[B] = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, reverse_$colon$colon$colon, (Lscala/collection/immutable/List;)Lscala/collection/immutable/List;)") def reverse_:::[B >: A](prefix: List[B]): List[B] = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, mapConserve, (Lscala/Function1;)Lscala/collection/immutable/List;)") @inline final def mapConserve[B >: A <: AnyRef](f: A => B): List[B] = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, $plus$plus, (Lscala/collection/GenTraversableOnce;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") override def ++[B >: A, That](that: GenTraversableOnce[B])(implicit bf: CanBuildFrom[List[A], B, That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, $plus$colon, (Ljava/lang/Object;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") override def +:[B >: A, That](elem: B)(implicit bf: CanBuildFrom[List[A], B, That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, toList, ()Lscala/collection/immutable/List;)") override def toList: List[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, take, (I)Lscala/collection/immutable/List;)") override def take(n: Int): List[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, drop, (I)Lscala/collection/immutable/List;)") override def drop(n: Int): List[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, slice, (II)Lscala/collection/immutable/List;)") override def slice(from: Int, until: Int): List[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, takeRight, (I)Lscala/collection/immutable/List;)") override def takeRight(n: Int): List[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, splitAt, (I)Lscala/Tuple2;)") override def splitAt(n: Int): (List[A], List[A]) = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, map, (Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") @noinline final override def map[B, That](f: A => B)(implicit bf: CanBuildFrom[List[A], B, That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, collect, (Lscala/PartialFunction;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") @noinline final override def collect[B, That](pf: PartialFunction[A, B])(implicit bf: CanBuildFrom[List[A], B, That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, flatMap, (Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") @noinline final override def flatMap[B, That](f: A => GenTraversableOnce[B])(implicit bf: CanBuildFrom[List[A], B, That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, takeWhile, (Lscala/Function1;)Lscala/collection/immutable/List;)") @inline final override def takeWhile(p: A => Boolean): List[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, dropWhile, (Lscala/Function1;)Lscala/collection/immutable/List;)") @inline final override def dropWhile(p: A => Boolean): List[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, span, (Lscala/Function1;)Lscala/Tuple2;)") @inline final override def span(p: A => Boolean): (List[A], List[A]) = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, foreach, (Lscala/Function1;)V)") @inline final override def foreach[U](f: A => U): Unit = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, reverse, ()Lscala/collection/immutable/List;)") override def reverse: List[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, foldRight, (Ljava/lang/Object;Lscala/Function2;)Ljava/lang/Object;)") override def foldRight[B](z: B)(op: (A, B) => B): B = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, stringPrefix, ()Ljava/lang/String;)") override def stringPrefix: String = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, toStream, ()Lscala/collection/immutable/Stream;)") override def toStream: Stream[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, writeReplace, ()Ljava/lang/Object;)") protected final def writeReplace(): AnyRef = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqOptimized;, length, ()I)") def length: Int = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqOptimized;, apply, (I)Ljava/lang/Object;)") def apply(n: Int): A = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqOptimized;, forall, (Lscala/Function1;)Z)") override def forall(p: A => Boolean): Boolean = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqOptimized;, exists, (Lscala/Function1;)Z)") override def exists(p: A => Boolean): Boolean = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqOptimized;, contains, (Ljava/lang/Object;)Z)") override def contains[A1 >: A](elem: A1): Boolean = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqOptimized;, find, (Lscala/Function1;)Lscala/Option;)") override def find(p: A => Boolean): Option[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqOptimized;, foldLeft, (Ljava/lang/Object;Lscala/Function2;)Ljava/lang/Object;)") override def foldLeft[B](z: B)(f: (B, A) => B): B = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqOptimized;, reduceLeft, (Lscala/Function2;)Ljava/lang/Object;)") override def reduceLeft[B >: A](f: (B, A) => B): B = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqOptimized;, reduceRight, (Lscala/Function2;)Ljava/lang/Object;)") override def reduceRight[B >: A](op: (A, B) => B): B = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqOptimized;, last, ()Ljava/lang/Object;)") override def last: A = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqOptimized;, dropRight, (I)Lscala/collection/LinearSeqOptimized;)") override def dropRight(n: Int): List[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqOptimized;, sameElements, (Lscala/collection/GenIterable;)Z)") override def sameElements[B >: A](that: GenIterable[B]): Boolean = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqOptimized;, lengthCompare, (I)I)") override def lengthCompare(len: Int): Int = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqOptimized;, isDefinedAt, (I)Z)") override def isDefinedAt(x: Int): Boolean = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqOptimized;, segmentLength, (Lscala/Function1;I)I)") override def segmentLength(p: A => Boolean, from: Int): Int = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqOptimized;, indexWhere, (Lscala/Function1;I)I)") override def indexWhere(p: A => Boolean, from: Int): Int = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqOptimized;, lastIndexWhere, (Lscala/Function1;I)I)") override def lastIndexWhere(p: A => Boolean, end: Int): Int = ???
+      |@ffi("jvmMethod(Lscala/Product;, productElement, (I)Ljava/lang/Object;)") def productElement(n: Int): Any
+      |@ffi("jvmMethod(Lscala/Product;, productArity, ()I)") def productArity: Int
+      |@ffi("jvmMethod(Lscala/Product;, productIterator, ()Lscala/collection/Iterator;)") def productIterator: Iterator[Any] = ???
+      |@ffi("jvmMethod(Lscala/Product;, productPrefix, ()Ljava/lang/String;)") def productPrefix: String = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/LinearSeq;, seq, ()Lscala/collection/immutable/LinearSeq;)") override def seq: LinearSeq[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqLike;, thisCollection, ()Lscala/collection/LinearSeq;)") protected[this] override def thisCollection: LinearSeq[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqLike;, toCollection, (Lscala/collection/LinearSeqLike;)Lscala/collection/LinearSeq;)") protected[this] override def toCollection(repr: List[A]): LinearSeq[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqLike;, hashCode, ()I)") override def hashCode(): Int = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqLike;, iterator, ()Lscala/collection/Iterator;)") override def iterator: Iterator[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqLike;, corresponds, (Lscala/collection/GenSeq;Lscala/Function2;)Z)") @tailrec final override def corresponds[B](that: GenSeq[B])(p: (A, B) => Boolean): Boolean = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/Seq;, toSeq, ()Lscala/collection/immutable/Seq;)") override def toSeq: Seq[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/Seq;, parCombiner, ()Lscala/collection/parallel/Combiner;)") protected[this] override def parCombiner: Combiner[A, ParSeq[A]] = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, isEmpty, ()Z)") override def isEmpty: Boolean = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, size, ()I)") override def size: Int = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, permutations, ()Lscala/collection/Iterator;)") def permutations: Iterator[List[A]] = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, combinations, (I)Lscala/collection/Iterator;)") def combinations(n: Int): Iterator[List[A]] = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, reverseMap, (Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def reverseMap[B, That](f: A => B)(implicit bf: CanBuildFrom[List[A], B, That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, reverseIterator, ()Lscala/collection/Iterator;)") def reverseIterator: Iterator[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, startsWith, (Lscala/collection/GenSeq;I)Z)") def startsWith[B](that: GenSeq[B], offset: Int): Boolean = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, endsWith, (Lscala/collection/GenSeq;)Z)") def endsWith[B](that: GenSeq[B]): Boolean = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, indexOfSlice, (Lscala/collection/GenSeq;)I)") def indexOfSlice[B >: A](that: GenSeq[B]): Int = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, indexOfSlice, (Lscala/collection/GenSeq;I)I)") def indexOfSlice[B >: A](that: GenSeq[B], from: Int): Int = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, lastIndexOfSlice, (Lscala/collection/GenSeq;)I)") def lastIndexOfSlice[B >: A](that: GenSeq[B]): Int = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, lastIndexOfSlice, (Lscala/collection/GenSeq;I)I)") def lastIndexOfSlice[B >: A](that: GenSeq[B], end: Int): Int = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, containsSlice, (Lscala/collection/GenSeq;)Z)") def containsSlice[B](that: GenSeq[B]): Boolean = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, union, (Lscala/collection/GenSeq;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") override def union[B >: A, That](that: GenSeq[B])(implicit bf: CanBuildFrom[List[A], B, That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, diff, (Lscala/collection/GenSeq;)Ljava/lang/Object;)") def diff[B >: A](that: GenSeq[B]): List[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, intersect, (Lscala/collection/GenSeq;)Ljava/lang/Object;)") def intersect[B >: A](that: GenSeq[B]): List[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, distinct, ()Ljava/lang/Object;)") def distinct: List[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, patch, (ILscala/collection/GenSeq;ILscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def patch[B >: A, That](from: Int, patch: GenSeq[B], replaced: Int)(implicit bf: CanBuildFrom[List[A], B, That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, updated, (ILjava/lang/Object;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def updated[B >: A, That](index: Int, elem: B)(implicit bf: CanBuildFrom[List[A], B, That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, $colon$plus, (Ljava/lang/Object;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def :+[B >: A, That](elem: B)(implicit bf: CanBuildFrom[List[A], B, That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, padTo, (ILjava/lang/Object;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def padTo[B >: A, That](len: Int, elem: B)(implicit bf: CanBuildFrom[List[A], B, That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, sortWith, (Lscala/Function2;)Ljava/lang/Object;)") def sortWith(lt: (A, A) => Boolean): List[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, sortBy, (Lscala/Function1;Lscala/math/Ordering;)Ljava/lang/Object;)") def sortBy[B](f: A => B)(implicit ord: Ordering[B]): List[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, sorted, (Lscala/math/Ordering;)Ljava/lang/Object;)") def sorted[B >: A](implicit ord: Ordering[B]): List[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, indices, ()Lscala/collection/immutable/Range;)") def indices: Range = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, view, ()Lscala/collection/SeqView;)") override def view: AnyRef with SeqView[A, List[A]] = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, view, (II)Lscala/collection/SeqView;)") override def view(from: Int, until: Int): SeqView[A, List[A]] = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, toString, ()Ljava/lang/String;)") override def toString(): String = ???
+      |@ffi("jvmMethod(Lscala/collection/GenSeqLike;, prefixLength, (Lscala/Function1;)I)") def prefixLength(p: A => Boolean): Int = ???
+      |@ffi("jvmMethod(Lscala/collection/GenSeqLike;, indexWhere, (Lscala/Function1;)I)") def indexWhere(p: A => Boolean): Int = ???
+      |@ffi("jvmMethod(Lscala/collection/GenSeqLike;, indexOf, (Ljava/lang/Object;)I)") def indexOf[B >: A](elem: B): Int = ???
+      |@ffi("jvmMethod(Lscala/collection/GenSeqLike;, indexOf, (Ljava/lang/Object;I)I)") def indexOf[B >: A](elem: B, from: Int): Int = ???
+      |@ffi("jvmMethod(Lscala/collection/GenSeqLike;, lastIndexOf, (Ljava/lang/Object;)I)") def lastIndexOf[B >: A](elem: B): Int = ???
+      |@ffi("jvmMethod(Lscala/collection/GenSeqLike;, lastIndexOf, (Ljava/lang/Object;I)I)") def lastIndexOf[B >: A](elem: B, end: Int): Int = ???
+      |@ffi("jvmMethod(Lscala/collection/GenSeqLike;, lastIndexWhere, (Lscala/Function1;)I)") def lastIndexWhere(p: A => Boolean): Int = ???
+      |@ffi("jvmMethod(Lscala/collection/GenSeqLike;, startsWith, (Lscala/collection/GenSeq;)Z)") def startsWith[B](that: GenSeq[B]): Boolean = ???
+      |@ffi("jvmMethod(Lscala/collection/GenSeqLike;, equals, (Ljava/lang/Object;)Z)") override def equals(that: Any): Boolean = ???
+      |@ffi("jvmMethod(Lscala/PartialFunction;, orElse, (Lscala/PartialFunction;)Lscala/PartialFunction;)") def orElse[A1 <: Int, B1 >: A](that: PartialFunction[A1, B1]): PartialFunction[A1, B1] = ???
+      |@ffi("jvmMethod(Lscala/PartialFunction;, andThen, (Lscala/Function1;)Lscala/PartialFunction;)") override def andThen[C](k: A => C): PartialFunction[Int, C] = ???
+      |@ffi("jvmMethod(Lscala/PartialFunction;, lift, ()Lscala/Function1;)") def lift: Int => Option[A] = ???
+      |@ffi("jvmMethod(Lscala/PartialFunction;, applyOrElse, (Ljava/lang/Object;Lscala/Function1;)Ljava/lang/Object;)") def applyOrElse[A1 <: Int, B1 >: A](x: A1, default: A1 => B1): B1 = ???
+      |@ffi("jvmMethod(Lscala/PartialFunction;, runWith, (Lscala/Function1;)Lscala/Function1;)") def runWith[U](action: A => U): Int => Boolean = ???
+      |@ffi("jvmMethod(Lscala/Function1;, compose, (Lscala/Function1;)Lscala/Function1;)") @unspecialized def compose[A](g: A => Int): A => A = ???
+      |@ffi("jvmMethod(Lscala/collection/IterableLike;, toIterable, ()Lscala/collection/Iterable;)") override def toIterable: Iterable[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/IterableLike;, toIterator, ()Lscala/collection/Iterator;)") @deprecatedOverriding("toIterator should stay consistent with iterator for all Iterables: override iterator instead.", "2.11.0") override def toIterator: Iterator[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/IterableLike;, head, ()Ljava/lang/Object;)") override def head: A = ???
+      |@ffi("jvmMethod(Lscala/collection/IterableLike;, grouped, (I)Lscala/collection/Iterator;)") def grouped(size: Int): Iterator[List[A]] = ???
+      |@ffi("jvmMethod(Lscala/collection/IterableLike;, sliding, (I)Lscala/collection/Iterator;)") def sliding(size: Int): Iterator[List[A]] = ???
+      |@ffi("jvmMethod(Lscala/collection/IterableLike;, sliding, (II)Lscala/collection/Iterator;)") def sliding(size: Int, step: Int): Iterator[List[A]] = ???
+      |@ffi("jvmMethod(Lscala/collection/IterableLike;, copyToArray, (Ljava/lang/Object;II)V)") override def copyToArray[B >: A](xs: Array[B], start: Int, len: Int): Unit = ???
+      |@ffi("jvmMethod(Lscala/collection/IterableLike;, zip, (Lscala/collection/GenIterable;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def zip[A1 >: A, B, That](that: GenIterable[B])(implicit bf: CanBuildFrom[List[A], (A1, B), That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/IterableLike;, zipAll, (Lscala/collection/GenIterable;Ljava/lang/Object;Ljava/lang/Object;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def zipAll[B, A1 >: A, That](that: GenIterable[B], thisElem: A1, thatElem: B)(implicit bf: CanBuildFrom[List[A], (A1, B), That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/IterableLike;, zipWithIndex, (Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def zipWithIndex[A1 >: A, That](implicit bf: CanBuildFrom[List[A], (A1, Int), That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/IterableLike;, canEqual, (Ljava/lang/Object;)Z)") override def canEqual(that: Any): Boolean = ???
+      |@ffi("jvmMethod(Lscala/collection/generic/GenericTraversableTemplate;, newBuilder, ()Lscala/collection/mutable/Builder;)") protected[this] def newBuilder: Builder[A, List[A]] = ???
+      |@ffi("jvmMethod(Lscala/collection/generic/GenericTraversableTemplate;, genericBuilder, ()Lscala/collection/mutable/Builder;)") def genericBuilder[B]: Builder[B, List[B]] = ???
+      |@ffi("jvmMethod(Lscala/collection/generic/GenericTraversableTemplate;, unzip, (Lscala/Function1;)Lscala/Tuple2;)") def unzip[A1, A2](implicit asPair: A => (A1, A2)): (List[A1], List[A2]) = ???
+      |@ffi("jvmMethod(Lscala/collection/generic/GenericTraversableTemplate;, unzip3, (Lscala/Function1;)Lscala/Tuple3;)") def unzip3[A1, A2, A3](implicit asTriple: A => (A1, A2, A3)): (List[A1], List[A2], List[A3]) = ???
+      |@ffi("jvmMethod(Lscala/collection/generic/GenericTraversableTemplate;, flatten, (Lscala/Function1;)Lscala/collection/GenTraversable;)") def flatten[B](implicit asTraversable: A => GenTraversableOnce[B]): List[B] = ???
+      |@ffi("jvmMethod(Lscala/collection/generic/GenericTraversableTemplate;, transpose, (Lscala/Function1;)Lscala/collection/GenTraversable;)") @migration("`transpose` throws an `IllegalArgumentException` if collections are not uniformly sized.", "2.9.0") def transpose[B](implicit asTraversable: A => GenTraversableOnce[B]): List[List[B]] = ???
       |protected[this] type Self = List[A]
-      |def repr: List[A] = jvmMethod("Lscala/collection/TraversableLike;", "repr", "()Ljava/lang/Object;").invoke(this)
-      |final def isTraversableAgain: Boolean = jvmMethod("Lscala/collection/TraversableLike;", "isTraversableAgain", "()Z").invoke(this)
-      |def hasDefiniteSize: Boolean = jvmMethod("Lscala/collection/TraversableLike;", "hasDefiniteSize", "()Z").invoke(this)
-      |def ++:[B >: A, That](that: TraversableOnce[B])(implicit bf: CanBuildFrom[List[A], B, That]): That = jvmMethod("Lscala/collection/TraversableLike;", "$plus$plus$colon", "(Lscala/collection/TraversableOnce;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, that, bf)
-      |def ++:[B >: A, That](that: Traversable[B])(implicit bf: CanBuildFrom[List[A], B, That]): That = jvmMethod("Lscala/collection/TraversableLike;", "$plus$plus$colon", "(Lscala/collection/Traversable;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, that, bf)
-      |def filter(p: A => Boolean): List[A] = jvmMethod("Lscala/collection/TraversableLike;", "filter", "(Lscala/Function1;)Ljava/lang/Object;").invoke(this, p)
-      |def filterNot(p: A => Boolean): List[A] = jvmMethod("Lscala/collection/TraversableLike;", "filterNot", "(Lscala/Function1;)Ljava/lang/Object;").invoke(this, p)
-      |def partition(p: A => Boolean): (List[A], List[A]) = jvmMethod("Lscala/collection/TraversableLike;", "partition", "(Lscala/Function1;)Lscala/Tuple2;").invoke(this, p)
-      |def groupBy[K](f: A => K): Map[K, List[A]] = jvmMethod("Lscala/collection/TraversableLike;", "groupBy", "(Lscala/Function1;)Lscala/collection/immutable/Map;").invoke(this, f)
-      |def scan[B >: A, That](z: B)(op: (B, B) => B)(implicit cbf: CanBuildFrom[List[A], B, That]): That = jvmMethod("Lscala/collection/TraversableLike;", "scan", "(Ljava/lang/Object;Lscala/Function2;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, z, op, cbf)
-      |def scanLeft[B, That](z: B)(op: (B, A) => B)(implicit bf: CanBuildFrom[List[A], B, That]): That = jvmMethod("Lscala/collection/TraversableLike;", "scanLeft", "(Ljava/lang/Object;Lscala/Function2;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, z, op, bf)
-      |@migration("The behavior of `scanRight` has changed. The previous behavior can be reproduced with scanRight.reverse.", "2.9.0") def scanRight[B, That](z: B)(op: (A, B) => B)(implicit bf: CanBuildFrom[List[A], B, That]): That = jvmMethod("Lscala/collection/TraversableLike;", "scanRight", "(Ljava/lang/Object;Lscala/Function2;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, z, op, bf)
-      |def headOption: Option[A] = jvmMethod("Lscala/collection/TraversableLike;", "headOption", "()Lscala/Option;").invoke(this)
-      |override def tail: List[A] = jvmMethod("Lscala/collection/TraversableLike;", "tail", "()Ljava/lang/Object;").invoke(this)
-      |def lastOption: Option[A] = jvmMethod("Lscala/collection/TraversableLike;", "lastOption", "()Lscala/Option;").invoke(this)
-      |def init: List[A] = jvmMethod("Lscala/collection/TraversableLike;", "init", "()Ljava/lang/Object;").invoke(this)
-      |private[scala] def sliceWithKnownDelta(from: Int, until: Int, delta: Int): List[A] = jvmMethod("Lscala/collection/TraversableLike;", "sliceWithKnownDelta", "(III)Ljava/lang/Object;").invoke(this, from, until, delta)
-      |private[scala] def sliceWithKnownBound(from: Int, until: Int): List[A] = jvmMethod("Lscala/collection/TraversableLike;", "sliceWithKnownBound", "(II)Ljava/lang/Object;").invoke(this, from, until)
-      |def tails: Iterator[List[A]] = jvmMethod("Lscala/collection/TraversableLike;", "tails", "()Lscala/collection/Iterator;").invoke(this)
-      |def inits: Iterator[List[A]] = jvmMethod("Lscala/collection/TraversableLike;", "inits", "()Lscala/collection/Iterator;").invoke(this)
-      |@deprecatedOverriding("Enforce contract of toTraversable that if it is Traversable it returns itself.", "2.11.0") def toTraversable: Traversable[A] = jvmMethod("Lscala/collection/TraversableLike;", "toTraversable", "()Lscala/collection/Traversable;").invoke(this)
-      |override def to[Col[_]](implicit cbf: CanBuildFrom[Nothing, A, Col[A]]): Col[A] = jvmMethod("Lscala/collection/TraversableLike;", "to", "(Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, cbf)
-      |def withFilter(p: A => Boolean): FilterMonadic[A, List[A]] = jvmMethod("Lscala/collection/TraversableLike;", "withFilter", "(Lscala/Function1;)Lscala/collection/generic/FilterMonadic;").invoke(this, p)
-      |class WithFilter(p: A => Boolean) extends AnyRef with FilterMonadic[A, Repr] { ... }
-      |def par: ParSeq[A] = jvmMethod("Lscala/collection/Parallelizable;", "par", "()Lscala/collection/Parallel;").invoke(this)
-      |protected[this] def reversed: List[A] = jvmMethod("Lscala/collection/TraversableOnce;", "reversed", "()Lscala/collection/immutable/List;").invoke(this)
-      |def nonEmpty: Boolean = jvmMethod("Lscala/collection/TraversableOnce;", "nonEmpty", "()Z").invoke(this)
-      |def count(p: A => Boolean): Int = jvmMethod("Lscala/collection/TraversableOnce;", "count", "(Lscala/Function1;)I").invoke(this, p)
-      |def collectFirst[B](pf: PartialFunction[A, B]): Option[B] = jvmMethod("Lscala/collection/TraversableOnce;", "collectFirst", "(Lscala/PartialFunction;)Lscala/Option;").invoke(this, pf)
-      |def /:[B](z: B)(op: (B, A) => B): B = jvmMethod("Lscala/collection/TraversableOnce;", "$div$colon", "(Ljava/lang/Object;Lscala/Function2;)Ljava/lang/Object;").invoke(this, z, op)
-      |def :\[B](z: B)(op: (A, B) => B): B = jvmMethod("Lscala/collection/TraversableOnce;", "$colon$bslash", "(Ljava/lang/Object;Lscala/Function2;)Ljava/lang/Object;").invoke(this, z, op)
-      |def reduceLeftOption[B >: A](op: (B, A) => B): Option[B] = jvmMethod("Lscala/collection/TraversableOnce;", "reduceLeftOption", "(Lscala/Function2;)Lscala/Option;").invoke(this, op)
-      |def reduceRightOption[B >: A](op: (A, B) => B): Option[B] = jvmMethod("Lscala/collection/TraversableOnce;", "reduceRightOption", "(Lscala/Function2;)Lscala/Option;").invoke(this, op)
-      |def reduce[A1 >: A](op: (A1, A1) => A1): A1 = jvmMethod("Lscala/collection/TraversableOnce;", "reduce", "(Lscala/Function2;)Ljava/lang/Object;").invoke(this, op)
-      |def reduceOption[A1 >: A](op: (A1, A1) => A1): Option[A1] = jvmMethod("Lscala/collection/TraversableOnce;", "reduceOption", "(Lscala/Function2;)Lscala/Option;").invoke(this, op)
-      |def fold[A1 >: A](z: A1)(op: (A1, A1) => A1): A1 = jvmMethod("Lscala/collection/TraversableOnce;", "fold", "(Ljava/lang/Object;Lscala/Function2;)Ljava/lang/Object;").invoke(this, z, op)
-      |def aggregate[B](z: => B)(seqop: (B, A) => B, combop: (B, B) => B): B = jvmMethod("Lscala/collection/TraversableOnce;", "aggregate", "(Lscala/Function0;Lscala/Function2;Lscala/Function2;)Ljava/lang/Object;").invoke(this, z, seqop, combop)
-      |def sum[B >: A](implicit num: Numeric[B]): B = jvmMethod("Lscala/collection/TraversableOnce;", "sum", "(Lscala/math/Numeric;)Ljava/lang/Object;").invoke(this, num)
-      |def product[B >: A](implicit num: Numeric[B]): B = jvmMethod("Lscala/collection/TraversableOnce;", "product", "(Lscala/math/Numeric;)Ljava/lang/Object;").invoke(this, num)
-      |def min[B >: A](implicit cmp: Ordering[B]): A = jvmMethod("Lscala/collection/TraversableOnce;", "min", "(Lscala/math/Ordering;)Ljava/lang/Object;").invoke(this, cmp)
-      |def max[B >: A](implicit cmp: Ordering[B]): A = jvmMethod("Lscala/collection/TraversableOnce;", "max", "(Lscala/math/Ordering;)Ljava/lang/Object;").invoke(this, cmp)
-      |def maxBy[B](f: A => B)(implicit cmp: Ordering[B]): A = jvmMethod("Lscala/collection/TraversableOnce;", "maxBy", "(Lscala/Function1;Lscala/math/Ordering;)Ljava/lang/Object;").invoke(this, f, cmp)
-      |def minBy[B](f: A => B)(implicit cmp: Ordering[B]): A = jvmMethod("Lscala/collection/TraversableOnce;", "minBy", "(Lscala/Function1;Lscala/math/Ordering;)Ljava/lang/Object;").invoke(this, f, cmp)
-      |def copyToBuffer[B >: A](dest: Buffer[B]): Unit = jvmMethod("Lscala/collection/TraversableOnce;", "copyToBuffer", "(Lscala/collection/mutable/Buffer;)V").invoke(this, dest)
-      |def copyToArray[B >: A](xs: Array[B], start: Int): Unit = jvmMethod("Lscala/collection/TraversableOnce;", "copyToArray", "(Ljava/lang/Object;I)V").invoke(this, xs, start)
-      |def copyToArray[B >: A](xs: Array[B]): Unit = jvmMethod("Lscala/collection/TraversableOnce;", "copyToArray", "(Ljava/lang/Object;)V").invoke(this, xs)
-      |def toArray[B >: A: ClassTag](implicit evidence$1: ClassTag[B]): Array[B] = jvmMethod("Lscala/collection/TraversableOnce;", "toArray", "(Lscala/reflect/ClassTag;)Ljava/lang/Object;").invoke(this, evidence$1)
-      |def toIndexedSeq: IndexedSeq[A] = jvmMethod("Lscala/collection/TraversableOnce;", "toIndexedSeq", "()Lscala/collection/immutable/IndexedSeq;").invoke(this)
-      |def toBuffer[B >: A]: Buffer[B] = jvmMethod("Lscala/collection/TraversableOnce;", "toBuffer", "()Lscala/collection/mutable/Buffer;").invoke(this)
-      |def toSet[B >: A]: Set[B] = jvmMethod("Lscala/collection/TraversableOnce;", "toSet", "()Lscala/collection/immutable/Set;").invoke(this)
-      |def toVector: Vector[A] = jvmMethod("Lscala/collection/TraversableOnce;", "toVector", "()Lscala/collection/immutable/Vector;").invoke(this)
-      |def toMap[T, U](implicit ev: A <:< (T, U)): Map[T, U] = jvmMethod("Lscala/collection/TraversableOnce;", "toMap", "(Lscala/Predef/$less$colon$less;)Lscala/collection/immutable/Map;").invoke(this, ev)
-      |def mkString(start: String, sep: String, end: String): String = jvmMethod("Lscala/collection/TraversableOnce;", "mkString", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;").invoke(this, start, sep, end)
-      |def mkString(sep: String): String = jvmMethod("Lscala/collection/TraversableOnce;", "mkString", "(Ljava/lang/String;)Ljava/lang/String;").invoke(this, sep)
-      |def mkString: String = jvmMethod("Lscala/collection/TraversableOnce;", "mkString", "()Ljava/lang/String;").invoke(this)
-      |def addString(b: StringBuilder, start: String, sep: String, end: String): StringBuilder = jvmMethod("Lscala/collection/TraversableOnce;", "addString", "(Lscala/collection/mutable/StringBuilder;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lscala/collection/mutable/StringBuilder;").invoke(this, b, start, sep, end)
-      |def addString(b: StringBuilder, sep: String): StringBuilder = jvmMethod("Lscala/collection/TraversableOnce;", "addString", "(Lscala/collection/mutable/StringBuilder;Ljava/lang/String;)Lscala/collection/mutable/StringBuilder;").invoke(this, b, sep)
-      |def addString(b: StringBuilder): StringBuilder = jvmMethod("Lscala/collection/TraversableOnce;", "addString", "(Lscala/collection/mutable/StringBuilder;)Lscala/collection/mutable/StringBuilder;").invoke(this, b)
-      |final def getClass(): Class[?0] forSome { type ?0 } = intrinsic("Ljava/lang/Object;", "getClass", "()Ljava/lang/Class;", this)
-      |@throws[CloneNotSupportedException] protected[lang] def clone(): Object = jvmMethod("Ljava/lang/Object;", "clone", "()Ljava/lang/Object;").invoke(this)
-      |final def notify(): Unit = jvmMethod("Ljava/lang/Object;", "notify", "()V").invoke(this)
-      |final def notifyAll(): Unit = jvmMethod("Ljava/lang/Object;", "notifyAll", "()V").invoke(this)
-      |@throws[InterruptedException] final def wait(x$1: Long): Unit = jvmMethod("Ljava/lang/Object;", "wait", "(J)V").invoke(this, x$1)
-      |@throws[InterruptedException] final def wait(x$1: Long, x$2: Int): Unit = jvmMethod("Ljava/lang/Object;", "wait", "(JI)V").invoke(this, x$1, x$2)
-      |@throws[InterruptedException] final def wait(): Unit = jvmMethod("Ljava/lang/Object;", "wait", "()V").invoke(this)
-      |@throws[Throwable] protected[lang] def finalize(): Unit = jvmMethod("Ljava/lang/Object;", "finalize", "()V").invoke(this)
-      |final def eq(x$1: AnyRef): Boolean = intrinsic("Ljava/lang/Object;", "eq", "(Ljava/lang/Object;)Z", this, x$1)
-      |final def ne(x$1: AnyRef): Boolean = intrinsic("Ljava/lang/Object;", "ne", "(Ljava/lang/Object;)Z", this, x$1)
-      |final def ==(x$1: Any): Boolean = intrinsic("Ljava/lang/Object;", "$eq$eq", "(Ljava/lang/Object;)Z", this, x$1)
-      |final def !=(x$1: Any): Boolean = intrinsic("Ljava/lang/Object;", "$bang$eq", "(Ljava/lang/Object;)Z", this, x$1)
-      |final def ##(): Int = intrinsic("Ljava/lang/Object;", "$hash$hash", "()I", this)
-      |final def synchronized[T0](x$1: T0): T0 = intrinsic("Ljava/lang/Object;", "synchronized", "(Ljava/lang/Object;)Ljava/lang/Object;", this, x$1)
-      |final def isInstanceOf[T0]: Boolean = intrinsic("Ljava/lang/Object;", "isInstanceOf", "()Z", this)
-      |final def asInstanceOf[T0]: T0 = intrinsic("Ljava/lang/Object;", "asInstanceOf", "()Ljava/lang/Object;", this)
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, repr, ()Ljava/lang/Object;)") def repr: List[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, isTraversableAgain, ()Z)") final def isTraversableAgain: Boolean = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, hasDefiniteSize, ()Z)") def hasDefiniteSize: Boolean = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, $plus$plus$colon, (Lscala/collection/TraversableOnce;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def ++:[B >: A, That](that: TraversableOnce[B])(implicit bf: CanBuildFrom[List[A], B, That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, $plus$plus$colon, (Lscala/collection/Traversable;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def ++:[B >: A, That](that: Traversable[B])(implicit bf: CanBuildFrom[List[A], B, That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, filter, (Lscala/Function1;)Ljava/lang/Object;)") def filter(p: A => Boolean): List[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, filterNot, (Lscala/Function1;)Ljava/lang/Object;)") def filterNot(p: A => Boolean): List[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, partition, (Lscala/Function1;)Lscala/Tuple2;)") def partition(p: A => Boolean): (List[A], List[A]) = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, groupBy, (Lscala/Function1;)Lscala/collection/immutable/Map;)") def groupBy[K](f: A => K): Map[K, List[A]] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, scan, (Ljava/lang/Object;Lscala/Function2;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def scan[B >: A, That](z: B)(op: (B, B) => B)(implicit cbf: CanBuildFrom[List[A], B, That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, scanLeft, (Ljava/lang/Object;Lscala/Function2;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def scanLeft[B, That](z: B)(op: (B, A) => B)(implicit bf: CanBuildFrom[List[A], B, That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, scanRight, (Ljava/lang/Object;Lscala/Function2;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") @migration("The behavior of `scanRight` has changed. The previous behavior can be reproduced with scanRight.reverse.", "2.9.0") def scanRight[B, That](z: B)(op: (A, B) => B)(implicit bf: CanBuildFrom[List[A], B, That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, headOption, ()Lscala/Option;)") def headOption: Option[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, tail, ()Ljava/lang/Object;)") override def tail: List[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, lastOption, ()Lscala/Option;)") def lastOption: Option[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, init, ()Ljava/lang/Object;)") def init: List[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, sliceWithKnownDelta, (III)Ljava/lang/Object;)") private[scala] def sliceWithKnownDelta(from: Int, until: Int, delta: Int): List[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, sliceWithKnownBound, (II)Ljava/lang/Object;)") private[scala] def sliceWithKnownBound(from: Int, until: Int): List[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, tails, ()Lscala/collection/Iterator;)") def tails: Iterator[List[A]] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, inits, ()Lscala/collection/Iterator;)") def inits: Iterator[List[A]] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, toTraversable, ()Lscala/collection/Traversable;)") @deprecatedOverriding("Enforce contract of toTraversable that if it is Traversable it returns itself.", "2.11.0") def toTraversable: Traversable[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, to, (Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") override def to[Col[_]](implicit cbf: CanBuildFrom[Nothing, A, Col[A]]): Col[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, withFilter, (Lscala/Function1;)Lscala/collection/generic/FilterMonadic;)") def withFilter(p: A => Boolean): FilterMonadic[A, List[A]] = ???
+      |class WithFilter(p: A => Boolean) extends AnyRef with FilterMonadic[A, Repr] {
+      |  @ffi("jvmField(Lscala/collection/TraversableLike/WithFilter;, p, Lscala/Function1;)") private[this] val p: A => Boolean = ???
+      |  @ffi("jvmMethod(Lscala/collection/TraversableLike/WithFilter;, map, (Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def map[B, That](f: A => B)(implicit bf: CanBuildFrom[List[A], B, That]): That = ???
+      |  @ffi("jvmMethod(Lscala/collection/TraversableLike/WithFilter;, flatMap, (Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def flatMap[B, That](f: A => GenTraversableOnce[B])(implicit bf: CanBuildFrom[List[A], B, That]): That = ???
+      |  @ffi("jvmMethod(Lscala/collection/TraversableLike/WithFilter;, foreach, (Lscala/Function1;)V)") def foreach[U](f: A => U): Unit = ???
+      |  @ffi("jvmMethod(Lscala/collection/TraversableLike/WithFilter;, withFilter, (Lscala/Function1;)Lscala/collection/TraversableLike/WithFilter;)") def withFilter(q: A => Boolean): List#WithFilter = ???
+      |}
+      |@ffi("jvmMethod(Lscala/collection/Parallelizable;, par, ()Lscala/collection/Parallel;)") def par: ParSeq[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, reversed, ()Lscala/collection/immutable/List;)") protected[this] def reversed: List[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, nonEmpty, ()Z)") def nonEmpty: Boolean = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, count, (Lscala/Function1;)I)") def count(p: A => Boolean): Int = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, collectFirst, (Lscala/PartialFunction;)Lscala/Option;)") def collectFirst[B](pf: PartialFunction[A, B]): Option[B] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, $div$colon, (Ljava/lang/Object;Lscala/Function2;)Ljava/lang/Object;)") def /:[B](z: B)(op: (B, A) => B): B = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, $colon$bslash, (Ljava/lang/Object;Lscala/Function2;)Ljava/lang/Object;)") def :\[B](z: B)(op: (A, B) => B): B = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, reduceLeftOption, (Lscala/Function2;)Lscala/Option;)") def reduceLeftOption[B >: A](op: (B, A) => B): Option[B] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, reduceRightOption, (Lscala/Function2;)Lscala/Option;)") def reduceRightOption[B >: A](op: (A, B) => B): Option[B] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, reduce, (Lscala/Function2;)Ljava/lang/Object;)") def reduce[A1 >: A](op: (A1, A1) => A1): A1 = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, reduceOption, (Lscala/Function2;)Lscala/Option;)") def reduceOption[A1 >: A](op: (A1, A1) => A1): Option[A1] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, fold, (Ljava/lang/Object;Lscala/Function2;)Ljava/lang/Object;)") def fold[A1 >: A](z: A1)(op: (A1, A1) => A1): A1 = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, aggregate, (Lscala/Function0;Lscala/Function2;Lscala/Function2;)Ljava/lang/Object;)") def aggregate[B](z: => B)(seqop: (B, A) => B, combop: (B, B) => B): B = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, sum, (Lscala/math/Numeric;)Ljava/lang/Object;)") def sum[B >: A](implicit num: Numeric[B]): B = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, product, (Lscala/math/Numeric;)Ljava/lang/Object;)") def product[B >: A](implicit num: Numeric[B]): B = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, min, (Lscala/math/Ordering;)Ljava/lang/Object;)") def min[B >: A](implicit cmp: Ordering[B]): A = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, max, (Lscala/math/Ordering;)Ljava/lang/Object;)") def max[B >: A](implicit cmp: Ordering[B]): A = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, maxBy, (Lscala/Function1;Lscala/math/Ordering;)Ljava/lang/Object;)") def maxBy[B](f: A => B)(implicit cmp: Ordering[B]): A = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, minBy, (Lscala/Function1;Lscala/math/Ordering;)Ljava/lang/Object;)") def minBy[B](f: A => B)(implicit cmp: Ordering[B]): A = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, copyToBuffer, (Lscala/collection/mutable/Buffer;)V)") def copyToBuffer[B >: A](dest: Buffer[B]): Unit = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, copyToArray, (Ljava/lang/Object;I)V)") def copyToArray[B >: A](xs: Array[B], start: Int): Unit = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, copyToArray, (Ljava/lang/Object;)V)") def copyToArray[B >: A](xs: Array[B]): Unit = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, toArray, (Lscala/reflect/ClassTag;)Ljava/lang/Object;)") def toArray[B >: A: ClassTag](implicit evidence$1: ClassTag[B]): Array[B] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, toIndexedSeq, ()Lscala/collection/immutable/IndexedSeq;)") def toIndexedSeq: IndexedSeq[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, toBuffer, ()Lscala/collection/mutable/Buffer;)") def toBuffer[B >: A]: Buffer[B] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, toSet, ()Lscala/collection/immutable/Set;)") def toSet[B >: A]: Set[B] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, toVector, ()Lscala/collection/immutable/Vector;)") def toVector: Vector[A] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, toMap, (Lscala/Predef/$less$colon$less;)Lscala/collection/immutable/Map;)") def toMap[T, U](implicit ev: A <:< (T, U)): Map[T, U] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, mkString, (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;)") def mkString(start: String, sep: String, end: String): String = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, mkString, (Ljava/lang/String;)Ljava/lang/String;)") def mkString(sep: String): String = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, mkString, ()Ljava/lang/String;)") def mkString: String = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, addString, (Lscala/collection/mutable/StringBuilder;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lscala/collection/mutable/StringBuilder;)") def addString(b: StringBuilder, start: String, sep: String, end: String): StringBuilder = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, addString, (Lscala/collection/mutable/StringBuilder;Ljava/lang/String;)Lscala/collection/mutable/StringBuilder;)") def addString(b: StringBuilder, sep: String): StringBuilder = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, addString, (Lscala/collection/mutable/StringBuilder;)Lscala/collection/mutable/StringBuilder;)") def addString(b: StringBuilder): StringBuilder = ???
+      |@ffi("scalaIntrinsic(Ljava/lang/Object;, getClass, ()Ljava/lang/Class;)") final def getClass(): Class[?0] forSome { type ?0 } = ???
+      |@ffi("jvmMethod(Ljava/lang/Object;, clone, ()Ljava/lang/Object;)") @throws[CloneNotSupportedException] protected[lang] def clone(): Object = ???
+      |@ffi("jvmMethod(Ljava/lang/Object;, notify, ()V)") final def notify(): Unit = ???
+      |@ffi("jvmMethod(Ljava/lang/Object;, notifyAll, ()V)") final def notifyAll(): Unit = ???
+      |@ffi("jvmMethod(Ljava/lang/Object;, wait, (J)V)") @throws[InterruptedException] final def wait(x$1: Long): Unit = ???
+      |@ffi("jvmMethod(Ljava/lang/Object;, wait, (JI)V)") @throws[InterruptedException] final def wait(x$1: Long, x$2: Int): Unit = ???
+      |@ffi("jvmMethod(Ljava/lang/Object;, wait, ()V)") @throws[InterruptedException] final def wait(): Unit = ???
+      |@ffi("jvmMethod(Ljava/lang/Object;, finalize, ()V)") @throws[Throwable] protected[lang] def finalize(): Unit = ???
+      |@ffi("scalaIntrinsic(Ljava/lang/Object;, eq, (Ljava/lang/Object;)Z)") final def eq(x$1: AnyRef): Boolean = ???
+      |@ffi("scalaIntrinsic(Ljava/lang/Object;, ne, (Ljava/lang/Object;)Z)") final def ne(x$1: AnyRef): Boolean = ???
+      |@ffi("scalaIntrinsic(Ljava/lang/Object;, $eq$eq, (Ljava/lang/Object;)Z)") final def ==(x$1: Any): Boolean = ???
+      |@ffi("scalaIntrinsic(Ljava/lang/Object;, $bang$eq, (Ljava/lang/Object;)Z)") final def !=(x$1: Any): Boolean = ???
+      |@ffi("scalaIntrinsic(Ljava/lang/Object;, $hash$hash, ()I)") final def ##(): Int = ???
+      |@ffi("scalaIntrinsic(Ljava/lang/Object;, synchronized, (Ljava/lang/Object;)Ljava/lang/Object;)") final def synchronized[T0](x$1: T0): T0 = ???
+      |@ffi("scalaIntrinsic(Ljava/lang/Object;, isInstanceOf, ()Z)") final def isInstanceOf[T0]: Boolean = ???
+      |@ffi("scalaIntrinsic(Ljava/lang/Object;, asInstanceOf, ()Ljava/lang/Object;)") final def asInstanceOf[T0]: T0 = ???
     """.trim.stripMargin)
   }
 
   test("t\"List[Int]\".members") {
-    assert(t"List[Int]".members.mkString(EOL) === """
-      |def this()
-      |override def companion: GenericCompanion[List] = jvmMethod("Lscala/collection/immutable/List;", "companion", "()Lscala/collection/generic/GenericCompanion;").invoke(this)
-      |def ::[B >: Int](x: B): List[B] = jvmMethod("Lscala/collection/immutable/List;", "$colon$colon", "(Ljava/lang/Object;)Lscala/collection/immutable/List;").invoke(this, x)
-      |def :::[B >: Int](prefix: List[B]): List[B] = jvmMethod("Lscala/collection/immutable/List;", "$colon$colon$colon", "(Lscala/collection/immutable/List;)Lscala/collection/immutable/List;").invoke(this, prefix)
-      |def reverse_:::[B >: Int](prefix: List[B]): List[B] = jvmMethod("Lscala/collection/immutable/List;", "reverse_$colon$colon$colon", "(Lscala/collection/immutable/List;)Lscala/collection/immutable/List;").invoke(this, prefix)
-      |@inline final def mapConserve[B >: Int <: AnyRef](f: Int => B): List[B] = jvmMethod("Lscala/collection/immutable/List;", "mapConserve", "(Lscala/Function1;)Lscala/collection/immutable/List;").invoke(this, f)
-      |override def ++[B >: Int, That](that: GenTraversableOnce[B])(implicit bf: CanBuildFrom[List[Int], B, That]): That = jvmMethod("Lscala/collection/immutable/List;", "$plus$plus", "(Lscala/collection/GenTraversableOnce;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, that, bf)
-      |override def +:[B >: Int, That](elem: B)(implicit bf: CanBuildFrom[List[Int], B, That]): That = jvmMethod("Lscala/collection/immutable/List;", "$plus$colon", "(Ljava/lang/Object;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, elem, bf)
-      |override def toList: List[Int] = jvmMethod("Lscala/collection/immutable/List;", "toList", "()Lscala/collection/immutable/List;").invoke(this)
-      |override def take(n: Int): List[Int] = jvmMethod("Lscala/collection/immutable/List;", "take", "(I)Lscala/collection/immutable/List;").invoke(this, n)
-      |override def drop(n: Int): List[Int] = jvmMethod("Lscala/collection/immutable/List;", "drop", "(I)Lscala/collection/immutable/List;").invoke(this, n)
-      |override def slice(from: Int, until: Int): List[Int] = jvmMethod("Lscala/collection/immutable/List;", "slice", "(II)Lscala/collection/immutable/List;").invoke(this, from, until)
-      |override def takeRight(n: Int): List[Int] = jvmMethod("Lscala/collection/immutable/List;", "takeRight", "(I)Lscala/collection/immutable/List;").invoke(this, n)
-      |override def splitAt(n: Int): (List[Int], List[Int]) = jvmMethod("Lscala/collection/immutable/List;", "splitAt", "(I)Lscala/Tuple2;").invoke(this, n)
-      |@noinline final override def map[B, That](f: Int => B)(implicit bf: CanBuildFrom[List[Int], B, That]): That = jvmMethod("Lscala/collection/immutable/List;", "map", "(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, f, bf)
-      |@noinline final override def collect[B, That](pf: PartialFunction[Int, B])(implicit bf: CanBuildFrom[List[Int], B, That]): That = jvmMethod("Lscala/collection/immutable/List;", "collect", "(Lscala/PartialFunction;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, pf, bf)
-      |@noinline final override def flatMap[B, That](f: Int => GenTraversableOnce[B])(implicit bf: CanBuildFrom[List[Int], B, That]): That = jvmMethod("Lscala/collection/immutable/List;", "flatMap", "(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, f, bf)
-      |@inline final override def takeWhile(p: Int => Boolean): List[Int] = jvmMethod("Lscala/collection/immutable/List;", "takeWhile", "(Lscala/Function1;)Lscala/collection/immutable/List;").invoke(this, p)
-      |@inline final override def dropWhile(p: Int => Boolean): List[Int] = jvmMethod("Lscala/collection/immutable/List;", "dropWhile", "(Lscala/Function1;)Lscala/collection/immutable/List;").invoke(this, p)
-      |@inline final override def span(p: Int => Boolean): (List[Int], List[Int]) = jvmMethod("Lscala/collection/immutable/List;", "span", "(Lscala/Function1;)Lscala/Tuple2;").invoke(this, p)
-      |@inline final override def foreach[U](f: Int => U): Unit = jvmMethod("Lscala/collection/immutable/List;", "foreach", "(Lscala/Function1;)V").invoke(this, f)
-      |override def reverse: List[Int] = jvmMethod("Lscala/collection/immutable/List;", "reverse", "()Lscala/collection/immutable/List;").invoke(this)
-      |override def foldRight[B](z: B)(op: (Int, B) => B): B = jvmMethod("Lscala/collection/immutable/List;", "foldRight", "(Ljava/lang/Object;Lscala/Function2;)Ljava/lang/Object;").invoke(this, z, op)
-      |override def stringPrefix: String = jvmMethod("Lscala/collection/immutable/List;", "stringPrefix", "()Ljava/lang/String;").invoke(this)
-      |override def toStream: Stream[Int] = jvmMethod("Lscala/collection/immutable/List;", "toStream", "()Lscala/collection/immutable/Stream;").invoke(this)
-      |protected final def writeReplace(): AnyRef = jvmMethod("Lscala/collection/immutable/List;", "writeReplace", "()Ljava/lang/Object;").invoke(this)
-      |def length: Int = jvmMethod("Lscala/collection/LinearSeqOptimized;", "length", "()I").invoke(this)
-      |def apply(n: Int): Int = jvmMethod("Lscala/collection/LinearSeqOptimized;", "apply", "(I)Ljava/lang/Object;").invoke(this, n)
-      |override def forall(p: Int => Boolean): Boolean = jvmMethod("Lscala/collection/LinearSeqOptimized;", "forall", "(Lscala/Function1;)Z").invoke(this, p)
-      |override def exists(p: Int => Boolean): Boolean = jvmMethod("Lscala/collection/LinearSeqOptimized;", "exists", "(Lscala/Function1;)Z").invoke(this, p)
-      |override def contains[A1 >: Int](elem: A1): Boolean = jvmMethod("Lscala/collection/LinearSeqOptimized;", "contains", "(Ljava/lang/Object;)Z").invoke(this, elem)
-      |override def find(p: Int => Boolean): Option[Int] = jvmMethod("Lscala/collection/LinearSeqOptimized;", "find", "(Lscala/Function1;)Lscala/Option;").invoke(this, p)
-      |override def foldLeft[B](z: B)(f: (B, Int) => B): B = jvmMethod("Lscala/collection/LinearSeqOptimized;", "foldLeft", "(Ljava/lang/Object;Lscala/Function2;)Ljava/lang/Object;").invoke(this, z, f)
-      |override def reduceLeft[B >: Int](f: (B, Int) => B): B = jvmMethod("Lscala/collection/LinearSeqOptimized;", "reduceLeft", "(Lscala/Function2;)Ljava/lang/Object;").invoke(this, f)
-      |override def reduceRight[B >: Int](op: (Int, B) => B): B = jvmMethod("Lscala/collection/LinearSeqOptimized;", "reduceRight", "(Lscala/Function2;)Ljava/lang/Object;").invoke(this, op)
-      |override def last: Int = jvmMethod("Lscala/collection/LinearSeqOptimized;", "last", "()Ljava/lang/Object;").invoke(this)
-      |override def dropRight(n: Int): List[Int] = jvmMethod("Lscala/collection/LinearSeqOptimized;", "dropRight", "(I)Lscala/collection/LinearSeqOptimized;").invoke(this, n)
-      |override def sameElements[B >: Int](that: GenIterable[B]): Boolean = jvmMethod("Lscala/collection/LinearSeqOptimized;", "sameElements", "(Lscala/collection/GenIterable;)Z").invoke(this, that)
-      |override def lengthCompare(len: Int): Int = jvmMethod("Lscala/collection/LinearSeqOptimized;", "lengthCompare", "(I)I").invoke(this, len)
-      |override def isDefinedAt(x: Int): Boolean = jvmMethod("Lscala/collection/LinearSeqOptimized;", "isDefinedAt", "(I)Z").invoke(this, x)
-      |override def segmentLength(p: Int => Boolean, from: Int): Int = jvmMethod("Lscala/collection/LinearSeqOptimized;", "segmentLength", "(Lscala/Function1;I)I").invoke(this, p, from)
-      |override def indexWhere(p: Int => Boolean, from: Int): Int = jvmMethod("Lscala/collection/LinearSeqOptimized;", "indexWhere", "(Lscala/Function1;I)I").invoke(this, p, from)
-      |override def lastIndexWhere(p: Int => Boolean, end: Int): Int = jvmMethod("Lscala/collection/LinearSeqOptimized;", "lastIndexWhere", "(Lscala/Function1;I)I").invoke(this, p, end)
-      |def productElement(n: Int): Any
-      |def productArity: Int
-      |def productIterator: Iterator[Any] = jvmMethod("Lscala/Product;", "productIterator", "()Lscala/collection/Iterator;").invoke(this)
-      |def productPrefix: String = jvmMethod("Lscala/Product;", "productPrefix", "()Ljava/lang/String;").invoke(this)
-      |override def seq: LinearSeq[Int] = jvmMethod("Lscala/collection/immutable/LinearSeq;", "seq", "()Lscala/collection/immutable/LinearSeq;").invoke(this)
-      |protected[this] override def thisCollection: LinearSeq[Int] = jvmMethod("Lscala/collection/LinearSeqLike;", "thisCollection", "()Lscala/collection/LinearSeq;").invoke(this)
-      |protected[this] override def toCollection(repr: List[Int]): LinearSeq[Int] = jvmMethod("Lscala/collection/LinearSeqLike;", "toCollection", "(Lscala/collection/LinearSeqLike;)Lscala/collection/LinearSeq;").invoke(this, repr)
-      |override def hashCode(): Int = jvmMethod("Lscala/collection/LinearSeqLike;", "hashCode", "()I").invoke(this)
-      |override def iterator: Iterator[Int] = jvmMethod("Lscala/collection/LinearSeqLike;", "iterator", "()Lscala/collection/Iterator;").invoke(this)
-      |@tailrec final override def corresponds[B](that: GenSeq[B])(p: (Int, B) => Boolean): Boolean = jvmMethod("Lscala/collection/LinearSeqLike;", "corresponds", "(Lscala/collection/GenSeq;Lscala/Function2;)Z").invoke(this, that, p)
-      |override def toSeq: Seq[Int] = jvmMethod("Lscala/collection/immutable/Seq;", "toSeq", "()Lscala/collection/immutable/Seq;").invoke(this)
-      |protected[this] override def parCombiner: Combiner[Int, ParSeq[Int]] = jvmMethod("Lscala/collection/immutable/Seq;", "parCombiner", "()Lscala/collection/parallel/Combiner;").invoke(this)
-      |override def isEmpty: Boolean = jvmMethod("Lscala/collection/SeqLike;", "isEmpty", "()Z").invoke(this)
-      |override def size: Int = jvmMethod("Lscala/collection/SeqLike;", "size", "()I").invoke(this)
-      |def permutations: Iterator[List[Int]] = jvmMethod("Lscala/collection/SeqLike;", "permutations", "()Lscala/collection/Iterator;").invoke(this)
-      |def combinations(n: Int): Iterator[List[Int]] = jvmMethod("Lscala/collection/SeqLike;", "combinations", "(I)Lscala/collection/Iterator;").invoke(this, n)
-      |def reverseMap[B, That](f: Int => B)(implicit bf: CanBuildFrom[List[Int], B, That]): That = jvmMethod("Lscala/collection/SeqLike;", "reverseMap", "(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, f, bf)
-      |def reverseIterator: Iterator[Int] = jvmMethod("Lscala/collection/SeqLike;", "reverseIterator", "()Lscala/collection/Iterator;").invoke(this)
-      |def startsWith[B](that: GenSeq[B], offset: Int): Boolean = jvmMethod("Lscala/collection/SeqLike;", "startsWith", "(Lscala/collection/GenSeq;I)Z").invoke(this, that, offset)
-      |def endsWith[B](that: GenSeq[B]): Boolean = jvmMethod("Lscala/collection/SeqLike;", "endsWith", "(Lscala/collection/GenSeq;)Z").invoke(this, that)
-      |def indexOfSlice[B >: Int](that: GenSeq[B]): Int = jvmMethod("Lscala/collection/SeqLike;", "indexOfSlice", "(Lscala/collection/GenSeq;)I").invoke(this, that)
-      |def indexOfSlice[B >: Int](that: GenSeq[B], from: Int): Int = jvmMethod("Lscala/collection/SeqLike;", "indexOfSlice", "(Lscala/collection/GenSeq;I)I").invoke(this, that, from)
-      |def lastIndexOfSlice[B >: Int](that: GenSeq[B]): Int = jvmMethod("Lscala/collection/SeqLike;", "lastIndexOfSlice", "(Lscala/collection/GenSeq;)I").invoke(this, that)
-      |def lastIndexOfSlice[B >: Int](that: GenSeq[B], end: Int): Int = jvmMethod("Lscala/collection/SeqLike;", "lastIndexOfSlice", "(Lscala/collection/GenSeq;I)I").invoke(this, that, end)
-      |def containsSlice[B](that: GenSeq[B]): Boolean = jvmMethod("Lscala/collection/SeqLike;", "containsSlice", "(Lscala/collection/GenSeq;)Z").invoke(this, that)
-      |override def union[B >: Int, That](that: GenSeq[B])(implicit bf: CanBuildFrom[List[Int], B, That]): That = jvmMethod("Lscala/collection/SeqLike;", "union", "(Lscala/collection/GenSeq;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, that, bf)
-      |def diff[B >: Int](that: GenSeq[B]): List[Int] = jvmMethod("Lscala/collection/SeqLike;", "diff", "(Lscala/collection/GenSeq;)Ljava/lang/Object;").invoke(this, that)
-      |def intersect[B >: Int](that: GenSeq[B]): List[Int] = jvmMethod("Lscala/collection/SeqLike;", "intersect", "(Lscala/collection/GenSeq;)Ljava/lang/Object;").invoke(this, that)
-      |def distinct: List[Int] = jvmMethod("Lscala/collection/SeqLike;", "distinct", "()Ljava/lang/Object;").invoke(this)
-      |def patch[B >: Int, That](from: Int, patch: GenSeq[B], replaced: Int)(implicit bf: CanBuildFrom[List[Int], B, That]): That = jvmMethod("Lscala/collection/SeqLike;", "patch", "(ILscala/collection/GenSeq;ILscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, from, patch, replaced, bf)
-      |def updated[B >: Int, That](index: Int, elem: B)(implicit bf: CanBuildFrom[List[Int], B, That]): That = jvmMethod("Lscala/collection/SeqLike;", "updated", "(ILjava/lang/Object;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, index, elem, bf)
-      |def :+[B >: Int, That](elem: B)(implicit bf: CanBuildFrom[List[Int], B, That]): That = jvmMethod("Lscala/collection/SeqLike;", "$colon$plus", "(Ljava/lang/Object;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, elem, bf)
-      |def padTo[B >: Int, That](len: Int, elem: B)(implicit bf: CanBuildFrom[List[Int], B, That]): That = jvmMethod("Lscala/collection/SeqLike;", "padTo", "(ILjava/lang/Object;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, len, elem, bf)
-      |def sortWith(lt: (Int, Int) => Boolean): List[Int] = jvmMethod("Lscala/collection/SeqLike;", "sortWith", "(Lscala/Function2;)Ljava/lang/Object;").invoke(this, lt)
-      |def sortBy[B](f: Int => B)(implicit ord: Ordering[B]): List[Int] = jvmMethod("Lscala/collection/SeqLike;", "sortBy", "(Lscala/Function1;Lscala/math/Ordering;)Ljava/lang/Object;").invoke(this, f, ord)
-      |def sorted[B >: Int](implicit ord: Ordering[B]): List[Int] = jvmMethod("Lscala/collection/SeqLike;", "sorted", "(Lscala/math/Ordering;)Ljava/lang/Object;").invoke(this, ord)
-      |def indices: Range = jvmMethod("Lscala/collection/SeqLike;", "indices", "()Lscala/collection/immutable/Range;").invoke(this)
-      |override def view: AnyRef with SeqView[Int, List[Int]] = jvmMethod("Lscala/collection/SeqLike;", "view", "()Lscala/collection/SeqView;").invoke(this)
-      |override def view(from: Int, until: Int): SeqView[Int, List[Int]] = jvmMethod("Lscala/collection/SeqLike;", "view", "(II)Lscala/collection/SeqView;").invoke(this, from, until)
-      |override def toString(): String = jvmMethod("Lscala/collection/SeqLike;", "toString", "()Ljava/lang/String;").invoke(this)
-      |def prefixLength(p: Int => Boolean): Int = jvmMethod("Lscala/collection/GenSeqLike;", "prefixLength", "(Lscala/Function1;)I").invoke(this, p)
-      |def indexWhere(p: Int => Boolean): Int = jvmMethod("Lscala/collection/GenSeqLike;", "indexWhere", "(Lscala/Function1;)I").invoke(this, p)
-      |def indexOf[B >: Int](elem: B): Int = jvmMethod("Lscala/collection/GenSeqLike;", "indexOf", "(Ljava/lang/Object;)I").invoke(this, elem)
-      |def indexOf[B >: Int](elem: B, from: Int): Int = jvmMethod("Lscala/collection/GenSeqLike;", "indexOf", "(Ljava/lang/Object;I)I").invoke(this, elem, from)
-      |def lastIndexOf[B >: Int](elem: B): Int = jvmMethod("Lscala/collection/GenSeqLike;", "lastIndexOf", "(Ljava/lang/Object;)I").invoke(this, elem)
-      |def lastIndexOf[B >: Int](elem: B, end: Int): Int = jvmMethod("Lscala/collection/GenSeqLike;", "lastIndexOf", "(Ljava/lang/Object;I)I").invoke(this, elem, end)
-      |def lastIndexWhere(p: Int => Boolean): Int = jvmMethod("Lscala/collection/GenSeqLike;", "lastIndexWhere", "(Lscala/Function1;)I").invoke(this, p)
-      |def startsWith[B](that: GenSeq[B]): Boolean = jvmMethod("Lscala/collection/GenSeqLike;", "startsWith", "(Lscala/collection/GenSeq;)Z").invoke(this, that)
-      |override def equals(that: Any): Boolean = jvmMethod("Lscala/collection/GenSeqLike;", "equals", "(Ljava/lang/Object;)Z").invoke(this, that)
-      |def orElse[A1 <: Int, B1 >: Int](that: PartialFunction[A1, B1]): PartialFunction[A1, B1] = jvmMethod("Lscala/PartialFunction;", "orElse", "(Lscala/PartialFunction;)Lscala/PartialFunction;").invoke(this, that)
-      |override def andThen[C](k: Int => C): PartialFunction[Int, C] = jvmMethod("Lscala/PartialFunction;", "andThen", "(Lscala/Function1;)Lscala/PartialFunction;").invoke(this, k)
-      |def lift: Int => Option[Int] = jvmMethod("Lscala/PartialFunction;", "lift", "()Lscala/Function1;").invoke(this)
-      |def applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: A1 => B1): B1 = jvmMethod("Lscala/PartialFunction;", "applyOrElse", "(Ljava/lang/Object;Lscala/Function1;)Ljava/lang/Object;").invoke(this, x, default)
-      |def runWith[U](action: Int => U): Int => Boolean = jvmMethod("Lscala/PartialFunction;", "runWith", "(Lscala/Function1;)Lscala/Function1;").invoke(this, action)
-      |@unspecialized def compose[A](g: A => Int): A => Int = jvmMethod("Lscala/Function1;", "compose", "(Lscala/Function1;)Lscala/Function1;").invoke(this, g)
-      |override def toIterable: Iterable[Int] = jvmMethod("Lscala/collection/IterableLike;", "toIterable", "()Lscala/collection/Iterable;").invoke(this)
-      |@deprecatedOverriding("toIterator should stay consistent with iterator for all Iterables: override iterator instead.", "2.11.0") override def toIterator: Iterator[Int] = jvmMethod("Lscala/collection/IterableLike;", "toIterator", "()Lscala/collection/Iterator;").invoke(this)
-      |override def head: Int = jvmMethod("Lscala/collection/IterableLike;", "head", "()Ljava/lang/Object;").invoke(this)
-      |def grouped(size: Int): Iterator[List[Int]] = jvmMethod("Lscala/collection/IterableLike;", "grouped", "(I)Lscala/collection/Iterator;").invoke(this, size)
-      |def sliding(size: Int): Iterator[List[Int]] = jvmMethod("Lscala/collection/IterableLike;", "sliding", "(I)Lscala/collection/Iterator;").invoke(this, size)
-      |def sliding(size: Int, step: Int): Iterator[List[Int]] = jvmMethod("Lscala/collection/IterableLike;", "sliding", "(II)Lscala/collection/Iterator;").invoke(this, size, step)
-      |override def copyToArray[B >: Int](xs: Array[B], start: Int, len: Int): Unit = jvmMethod("Lscala/collection/IterableLike;", "copyToArray", "(Ljava/lang/Object;II)V").invoke(this, xs, start, len)
-      |def zip[A1 >: Int, B, That](that: GenIterable[B])(implicit bf: CanBuildFrom[List[Int], (A1, B), That]): That = jvmMethod("Lscala/collection/IterableLike;", "zip", "(Lscala/collection/GenIterable;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, that, bf)
-      |def zipAll[B, A1 >: Int, That](that: GenIterable[B], thisElem: A1, thatElem: B)(implicit bf: CanBuildFrom[List[Int], (A1, B), That]): That = jvmMethod("Lscala/collection/IterableLike;", "zipAll", "(Lscala/collection/GenIterable;Ljava/lang/Object;Ljava/lang/Object;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, that, thisElem, thatElem, bf)
-      |def zipWithIndex[A1 >: Int, That](implicit bf: CanBuildFrom[List[Int], (A1, Int), That]): That = jvmMethod("Lscala/collection/IterableLike;", "zipWithIndex", "(Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, bf)
-      |override def canEqual(that: Any): Boolean = jvmMethod("Lscala/collection/IterableLike;", "canEqual", "(Ljava/lang/Object;)Z").invoke(this, that)
-      |protected[this] def newBuilder: Builder[Int, List[Int]] = jvmMethod("Lscala/collection/generic/GenericTraversableTemplate;", "newBuilder", "()Lscala/collection/mutable/Builder;").invoke(this)
-      |def genericBuilder[B]: Builder[B, List[B]] = jvmMethod("Lscala/collection/generic/GenericTraversableTemplate;", "genericBuilder", "()Lscala/collection/mutable/Builder;").invoke(this)
-      |def unzip[A1, A2](implicit asPair: Int => (A1, A2)): (List[A1], List[A2]) = jvmMethod("Lscala/collection/generic/GenericTraversableTemplate;", "unzip", "(Lscala/Function1;)Lscala/Tuple2;").invoke(this, asPair)
-      |def unzip3[A1, A2, A3](implicit asTriple: Int => (A1, A2, A3)): (List[A1], List[A2], List[A3]) = jvmMethod("Lscala/collection/generic/GenericTraversableTemplate;", "unzip3", "(Lscala/Function1;)Lscala/Tuple3;").invoke(this, asTriple)
-      |def flatten[B](implicit asTraversable: Int => GenTraversableOnce[B]): List[B] = jvmMethod("Lscala/collection/generic/GenericTraversableTemplate;", "flatten", "(Lscala/Function1;)Lscala/collection/GenTraversable;").invoke(this, asTraversable)
-      |@migration("`transpose` throws an `IllegalArgumentException` if collections are not uniformly sized.", "2.9.0") def transpose[B](implicit asTraversable: Int => GenTraversableOnce[B]): List[List[B]] = jvmMethod("Lscala/collection/generic/GenericTraversableTemplate;", "transpose", "(Lscala/Function1;)Lscala/collection/GenTraversable;").invoke(this, asTraversable)
+    assert(t"List[Int]".members.map(_.show[Code]).mkString(EOL) === """
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, $lessinit$greater, ()Lscala/collection/immutable/List;)") ()
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, companion, ()Lscala/collection/generic/GenericCompanion;)") override def companion: GenericCompanion[List] = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, $colon$colon, (Ljava/lang/Object;)Lscala/collection/immutable/List;)") def ::[B >: Int](x: B): List[B] = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, $colon$colon$colon, (Lscala/collection/immutable/List;)Lscala/collection/immutable/List;)") def :::[B >: Int](prefix: List[B]): List[B] = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, reverse_$colon$colon$colon, (Lscala/collection/immutable/List;)Lscala/collection/immutable/List;)") def reverse_:::[B >: Int](prefix: List[B]): List[B] = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, mapConserve, (Lscala/Function1;)Lscala/collection/immutable/List;)") @inline final def mapConserve[B >: Int <: AnyRef](f: Int => B): List[B] = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, $plus$plus, (Lscala/collection/GenTraversableOnce;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") override def ++[B >: Int, That](that: GenTraversableOnce[B])(implicit bf: CanBuildFrom[List[Int], B, That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, $plus$colon, (Ljava/lang/Object;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") override def +:[B >: Int, That](elem: B)(implicit bf: CanBuildFrom[List[Int], B, That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, toList, ()Lscala/collection/immutable/List;)") override def toList: List[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, take, (I)Lscala/collection/immutable/List;)") override def take(n: Int): List[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, drop, (I)Lscala/collection/immutable/List;)") override def drop(n: Int): List[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, slice, (II)Lscala/collection/immutable/List;)") override def slice(from: Int, until: Int): List[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, takeRight, (I)Lscala/collection/immutable/List;)") override def takeRight(n: Int): List[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, splitAt, (I)Lscala/Tuple2;)") override def splitAt(n: Int): (List[Int], List[Int]) = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, map, (Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") @noinline final override def map[B, That](f: Int => B)(implicit bf: CanBuildFrom[List[Int], B, That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, collect, (Lscala/PartialFunction;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") @noinline final override def collect[B, That](pf: PartialFunction[Int, B])(implicit bf: CanBuildFrom[List[Int], B, That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, flatMap, (Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") @noinline final override def flatMap[B, That](f: Int => GenTraversableOnce[B])(implicit bf: CanBuildFrom[List[Int], B, That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, takeWhile, (Lscala/Function1;)Lscala/collection/immutable/List;)") @inline final override def takeWhile(p: Int => Boolean): List[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, dropWhile, (Lscala/Function1;)Lscala/collection/immutable/List;)") @inline final override def dropWhile(p: Int => Boolean): List[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, span, (Lscala/Function1;)Lscala/Tuple2;)") @inline final override def span(p: Int => Boolean): (List[Int], List[Int]) = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, foreach, (Lscala/Function1;)V)") @inline final override def foreach[U](f: Int => U): Unit = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, reverse, ()Lscala/collection/immutable/List;)") override def reverse: List[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, foldRight, (Ljava/lang/Object;Lscala/Function2;)Ljava/lang/Object;)") override def foldRight[B](z: B)(op: (Int, B) => B): B = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, stringPrefix, ()Ljava/lang/String;)") override def stringPrefix: String = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, toStream, ()Lscala/collection/immutable/Stream;)") override def toStream: Stream[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/List;, writeReplace, ()Ljava/lang/Object;)") protected final def writeReplace(): AnyRef = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqOptimized;, length, ()I)") def length: Int = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqOptimized;, apply, (I)Ljava/lang/Object;)") def apply(n: Int): Int = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqOptimized;, forall, (Lscala/Function1;)Z)") override def forall(p: Int => Boolean): Boolean = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqOptimized;, exists, (Lscala/Function1;)Z)") override def exists(p: Int => Boolean): Boolean = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqOptimized;, contains, (Ljava/lang/Object;)Z)") override def contains[A1 >: Int](elem: A1): Boolean = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqOptimized;, find, (Lscala/Function1;)Lscala/Option;)") override def find(p: Int => Boolean): Option[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqOptimized;, foldLeft, (Ljava/lang/Object;Lscala/Function2;)Ljava/lang/Object;)") override def foldLeft[B](z: B)(f: (B, Int) => B): B = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqOptimized;, reduceLeft, (Lscala/Function2;)Ljava/lang/Object;)") override def reduceLeft[B >: Int](f: (B, Int) => B): B = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqOptimized;, reduceRight, (Lscala/Function2;)Ljava/lang/Object;)") override def reduceRight[B >: Int](op: (Int, B) => B): B = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqOptimized;, last, ()Ljava/lang/Object;)") override def last: Int = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqOptimized;, dropRight, (I)Lscala/collection/LinearSeqOptimized;)") override def dropRight(n: Int): List[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqOptimized;, sameElements, (Lscala/collection/GenIterable;)Z)") override def sameElements[B >: Int](that: GenIterable[B]): Boolean = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqOptimized;, lengthCompare, (I)I)") override def lengthCompare(len: Int): Int = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqOptimized;, isDefinedAt, (I)Z)") override def isDefinedAt(x: Int): Boolean = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqOptimized;, segmentLength, (Lscala/Function1;I)I)") override def segmentLength(p: Int => Boolean, from: Int): Int = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqOptimized;, indexWhere, (Lscala/Function1;I)I)") override def indexWhere(p: Int => Boolean, from: Int): Int = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqOptimized;, lastIndexWhere, (Lscala/Function1;I)I)") override def lastIndexWhere(p: Int => Boolean, end: Int): Int = ???
+      |@ffi("jvmMethod(Lscala/Product;, productElement, (I)Ljava/lang/Object;)") def productElement(n: Int): Any
+      |@ffi("jvmMethod(Lscala/Product;, productArity, ()I)") def productArity: Int
+      |@ffi("jvmMethod(Lscala/Product;, productIterator, ()Lscala/collection/Iterator;)") def productIterator: Iterator[Any] = ???
+      |@ffi("jvmMethod(Lscala/Product;, productPrefix, ()Ljava/lang/String;)") def productPrefix: String = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/LinearSeq;, seq, ()Lscala/collection/immutable/LinearSeq;)") override def seq: LinearSeq[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqLike;, thisCollection, ()Lscala/collection/LinearSeq;)") protected[this] override def thisCollection: LinearSeq[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqLike;, toCollection, (Lscala/collection/LinearSeqLike;)Lscala/collection/LinearSeq;)") protected[this] override def toCollection(repr: List[Int]): LinearSeq[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqLike;, hashCode, ()I)") override def hashCode(): Int = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqLike;, iterator, ()Lscala/collection/Iterator;)") override def iterator: Iterator[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/LinearSeqLike;, corresponds, (Lscala/collection/GenSeq;Lscala/Function2;)Z)") @tailrec final override def corresponds[B](that: GenSeq[B])(p: (Int, B) => Boolean): Boolean = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/Seq;, toSeq, ()Lscala/collection/immutable/Seq;)") override def toSeq: Seq[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/immutable/Seq;, parCombiner, ()Lscala/collection/parallel/Combiner;)") protected[this] override def parCombiner: Combiner[Int, ParSeq[Int]] = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, isEmpty, ()Z)") override def isEmpty: Boolean = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, size, ()I)") override def size: Int = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, permutations, ()Lscala/collection/Iterator;)") def permutations: Iterator[List[Int]] = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, combinations, (I)Lscala/collection/Iterator;)") def combinations(n: Int): Iterator[List[Int]] = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, reverseMap, (Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def reverseMap[B, That](f: Int => B)(implicit bf: CanBuildFrom[List[Int], B, That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, reverseIterator, ()Lscala/collection/Iterator;)") def reverseIterator: Iterator[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, startsWith, (Lscala/collection/GenSeq;I)Z)") def startsWith[B](that: GenSeq[B], offset: Int): Boolean = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, endsWith, (Lscala/collection/GenSeq;)Z)") def endsWith[B](that: GenSeq[B]): Boolean = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, indexOfSlice, (Lscala/collection/GenSeq;)I)") def indexOfSlice[B >: Int](that: GenSeq[B]): Int = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, indexOfSlice, (Lscala/collection/GenSeq;I)I)") def indexOfSlice[B >: Int](that: GenSeq[B], from: Int): Int = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, lastIndexOfSlice, (Lscala/collection/GenSeq;)I)") def lastIndexOfSlice[B >: Int](that: GenSeq[B]): Int = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, lastIndexOfSlice, (Lscala/collection/GenSeq;I)I)") def lastIndexOfSlice[B >: Int](that: GenSeq[B], end: Int): Int = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, containsSlice, (Lscala/collection/GenSeq;)Z)") def containsSlice[B](that: GenSeq[B]): Boolean = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, union, (Lscala/collection/GenSeq;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") override def union[B >: Int, That](that: GenSeq[B])(implicit bf: CanBuildFrom[List[Int], B, That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, diff, (Lscala/collection/GenSeq;)Ljava/lang/Object;)") def diff[B >: Int](that: GenSeq[B]): List[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, intersect, (Lscala/collection/GenSeq;)Ljava/lang/Object;)") def intersect[B >: Int](that: GenSeq[B]): List[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, distinct, ()Ljava/lang/Object;)") def distinct: List[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, patch, (ILscala/collection/GenSeq;ILscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def patch[B >: Int, That](from: Int, patch: GenSeq[B], replaced: Int)(implicit bf: CanBuildFrom[List[Int], B, That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, updated, (ILjava/lang/Object;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def updated[B >: Int, That](index: Int, elem: B)(implicit bf: CanBuildFrom[List[Int], B, That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, $colon$plus, (Ljava/lang/Object;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def :+[B >: Int, That](elem: B)(implicit bf: CanBuildFrom[List[Int], B, That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, padTo, (ILjava/lang/Object;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def padTo[B >: Int, That](len: Int, elem: B)(implicit bf: CanBuildFrom[List[Int], B, That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, sortWith, (Lscala/Function2;)Ljava/lang/Object;)") def sortWith(lt: (Int, Int) => Boolean): List[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, sortBy, (Lscala/Function1;Lscala/math/Ordering;)Ljava/lang/Object;)") def sortBy[B](f: Int => B)(implicit ord: Ordering[B]): List[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, sorted, (Lscala/math/Ordering;)Ljava/lang/Object;)") def sorted[B >: Int](implicit ord: Ordering[B]): List[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, indices, ()Lscala/collection/immutable/Range;)") def indices: Range = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, view, ()Lscala/collection/SeqView;)") override def view: AnyRef with SeqView[Int, List[Int]] = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, view, (II)Lscala/collection/SeqView;)") override def view(from: Int, until: Int): SeqView[Int, List[Int]] = ???
+      |@ffi("jvmMethod(Lscala/collection/SeqLike;, toString, ()Ljava/lang/String;)") override def toString(): String = ???
+      |@ffi("jvmMethod(Lscala/collection/GenSeqLike;, prefixLength, (Lscala/Function1;)I)") def prefixLength(p: Int => Boolean): Int = ???
+      |@ffi("jvmMethod(Lscala/collection/GenSeqLike;, indexWhere, (Lscala/Function1;)I)") def indexWhere(p: Int => Boolean): Int = ???
+      |@ffi("jvmMethod(Lscala/collection/GenSeqLike;, indexOf, (Ljava/lang/Object;)I)") def indexOf[B >: Int](elem: B): Int = ???
+      |@ffi("jvmMethod(Lscala/collection/GenSeqLike;, indexOf, (Ljava/lang/Object;I)I)") def indexOf[B >: Int](elem: B, from: Int): Int = ???
+      |@ffi("jvmMethod(Lscala/collection/GenSeqLike;, lastIndexOf, (Ljava/lang/Object;)I)") def lastIndexOf[B >: Int](elem: B): Int = ???
+      |@ffi("jvmMethod(Lscala/collection/GenSeqLike;, lastIndexOf, (Ljava/lang/Object;I)I)") def lastIndexOf[B >: Int](elem: B, end: Int): Int = ???
+      |@ffi("jvmMethod(Lscala/collection/GenSeqLike;, lastIndexWhere, (Lscala/Function1;)I)") def lastIndexWhere(p: Int => Boolean): Int = ???
+      |@ffi("jvmMethod(Lscala/collection/GenSeqLike;, startsWith, (Lscala/collection/GenSeq;)Z)") def startsWith[B](that: GenSeq[B]): Boolean = ???
+      |@ffi("jvmMethod(Lscala/collection/GenSeqLike;, equals, (Ljava/lang/Object;)Z)") override def equals(that: Any): Boolean = ???
+      |@ffi("jvmMethod(Lscala/PartialFunction;, orElse, (Lscala/PartialFunction;)Lscala/PartialFunction;)") def orElse[A1 <: Int, B1 >: Int](that: PartialFunction[A1, B1]): PartialFunction[A1, B1] = ???
+      |@ffi("jvmMethod(Lscala/PartialFunction;, andThen, (Lscala/Function1;)Lscala/PartialFunction;)") override def andThen[C](k: Int => C): PartialFunction[Int, C] = ???
+      |@ffi("jvmMethod(Lscala/PartialFunction;, lift, ()Lscala/Function1;)") def lift: Int => Option[Int] = ???
+      |@ffi("jvmMethod(Lscala/PartialFunction;, applyOrElse, (Ljava/lang/Object;Lscala/Function1;)Ljava/lang/Object;)") def applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: A1 => B1): B1 = ???
+      |@ffi("jvmMethod(Lscala/PartialFunction;, runWith, (Lscala/Function1;)Lscala/Function1;)") def runWith[U](action: Int => U): Int => Boolean = ???
+      |@ffi("jvmMethod(Lscala/Function1;, compose, (Lscala/Function1;)Lscala/Function1;)") @unspecialized def compose[A](g: A => Int): A => Int = ???
+      |@ffi("jvmMethod(Lscala/collection/IterableLike;, toIterable, ()Lscala/collection/Iterable;)") override def toIterable: Iterable[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/IterableLike;, toIterator, ()Lscala/collection/Iterator;)") @deprecatedOverriding("toIterator should stay consistent with iterator for all Iterables: override iterator instead.", "2.11.0") override def toIterator: Iterator[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/IterableLike;, head, ()Ljava/lang/Object;)") override def head: Int = ???
+      |@ffi("jvmMethod(Lscala/collection/IterableLike;, grouped, (I)Lscala/collection/Iterator;)") def grouped(size: Int): Iterator[List[Int]] = ???
+      |@ffi("jvmMethod(Lscala/collection/IterableLike;, sliding, (I)Lscala/collection/Iterator;)") def sliding(size: Int): Iterator[List[Int]] = ???
+      |@ffi("jvmMethod(Lscala/collection/IterableLike;, sliding, (II)Lscala/collection/Iterator;)") def sliding(size: Int, step: Int): Iterator[List[Int]] = ???
+      |@ffi("jvmMethod(Lscala/collection/IterableLike;, copyToArray, (Ljava/lang/Object;II)V)") override def copyToArray[B >: Int](xs: Array[B], start: Int, len: Int): Unit = ???
+      |@ffi("jvmMethod(Lscala/collection/IterableLike;, zip, (Lscala/collection/GenIterable;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def zip[A1 >: Int, B, That](that: GenIterable[B])(implicit bf: CanBuildFrom[List[Int], (A1, B), That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/IterableLike;, zipAll, (Lscala/collection/GenIterable;Ljava/lang/Object;Ljava/lang/Object;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def zipAll[B, A1 >: Int, That](that: GenIterable[B], thisElem: A1, thatElem: B)(implicit bf: CanBuildFrom[List[Int], (A1, B), That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/IterableLike;, zipWithIndex, (Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def zipWithIndex[A1 >: Int, That](implicit bf: CanBuildFrom[List[Int], (A1, Int), That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/IterableLike;, canEqual, (Ljava/lang/Object;)Z)") override def canEqual(that: Any): Boolean = ???
+      |@ffi("jvmMethod(Lscala/collection/generic/GenericTraversableTemplate;, newBuilder, ()Lscala/collection/mutable/Builder;)") protected[this] def newBuilder: Builder[Int, List[Int]] = ???
+      |@ffi("jvmMethod(Lscala/collection/generic/GenericTraversableTemplate;, genericBuilder, ()Lscala/collection/mutable/Builder;)") def genericBuilder[B]: Builder[B, List[B]] = ???
+      |@ffi("jvmMethod(Lscala/collection/generic/GenericTraversableTemplate;, unzip, (Lscala/Function1;)Lscala/Tuple2;)") def unzip[A1, A2](implicit asPair: Int => (A1, A2)): (List[A1], List[A2]) = ???
+      |@ffi("jvmMethod(Lscala/collection/generic/GenericTraversableTemplate;, unzip3, (Lscala/Function1;)Lscala/Tuple3;)") def unzip3[A1, A2, A3](implicit asTriple: Int => (A1, A2, A3)): (List[A1], List[A2], List[A3]) = ???
+      |@ffi("jvmMethod(Lscala/collection/generic/GenericTraversableTemplate;, flatten, (Lscala/Function1;)Lscala/collection/GenTraversable;)") def flatten[B](implicit asTraversable: Int => GenTraversableOnce[B]): List[B] = ???
+      |@ffi("jvmMethod(Lscala/collection/generic/GenericTraversableTemplate;, transpose, (Lscala/Function1;)Lscala/collection/GenTraversable;)") @migration("`transpose` throws an `IllegalArgumentException` if collections are not uniformly sized.", "2.9.0") def transpose[B](implicit asTraversable: Int => GenTraversableOnce[B]): List[List[B]] = ???
       |protected[this] type Self = List[Int]
-      |def repr: List[Int] = jvmMethod("Lscala/collection/TraversableLike;", "repr", "()Ljava/lang/Object;").invoke(this)
-      |final def isTraversableAgain: Boolean = jvmMethod("Lscala/collection/TraversableLike;", "isTraversableAgain", "()Z").invoke(this)
-      |def hasDefiniteSize: Boolean = jvmMethod("Lscala/collection/TraversableLike;", "hasDefiniteSize", "()Z").invoke(this)
-      |def ++:[B >: Int, That](that: TraversableOnce[B])(implicit bf: CanBuildFrom[List[Int], B, That]): That = jvmMethod("Lscala/collection/TraversableLike;", "$plus$plus$colon", "(Lscala/collection/TraversableOnce;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, that, bf)
-      |def ++:[B >: Int, That](that: Traversable[B])(implicit bf: CanBuildFrom[List[Int], B, That]): That = jvmMethod("Lscala/collection/TraversableLike;", "$plus$plus$colon", "(Lscala/collection/Traversable;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, that, bf)
-      |def filter(p: Int => Boolean): List[Int] = jvmMethod("Lscala/collection/TraversableLike;", "filter", "(Lscala/Function1;)Ljava/lang/Object;").invoke(this, p)
-      |def filterNot(p: Int => Boolean): List[Int] = jvmMethod("Lscala/collection/TraversableLike;", "filterNot", "(Lscala/Function1;)Ljava/lang/Object;").invoke(this, p)
-      |def partition(p: Int => Boolean): (List[Int], List[Int]) = jvmMethod("Lscala/collection/TraversableLike;", "partition", "(Lscala/Function1;)Lscala/Tuple2;").invoke(this, p)
-      |def groupBy[K](f: Int => K): Map[K, List[Int]] = jvmMethod("Lscala/collection/TraversableLike;", "groupBy", "(Lscala/Function1;)Lscala/collection/immutable/Map;").invoke(this, f)
-      |def scan[B >: Int, That](z: B)(op: (B, B) => B)(implicit cbf: CanBuildFrom[List[Int], B, That]): That = jvmMethod("Lscala/collection/TraversableLike;", "scan", "(Ljava/lang/Object;Lscala/Function2;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, z, op, cbf)
-      |def scanLeft[B, That](z: B)(op: (B, Int) => B)(implicit bf: CanBuildFrom[List[Int], B, That]): That = jvmMethod("Lscala/collection/TraversableLike;", "scanLeft", "(Ljava/lang/Object;Lscala/Function2;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, z, op, bf)
-      |@migration("The behavior of `scanRight` has changed. The previous behavior can be reproduced with scanRight.reverse.", "2.9.0") def scanRight[B, That](z: B)(op: (Int, B) => B)(implicit bf: CanBuildFrom[List[Int], B, That]): That = jvmMethod("Lscala/collection/TraversableLike;", "scanRight", "(Ljava/lang/Object;Lscala/Function2;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, z, op, bf)
-      |def headOption: Option[Int] = jvmMethod("Lscala/collection/TraversableLike;", "headOption", "()Lscala/Option;").invoke(this)
-      |override def tail: List[Int] = jvmMethod("Lscala/collection/TraversableLike;", "tail", "()Ljava/lang/Object;").invoke(this)
-      |def lastOption: Option[Int] = jvmMethod("Lscala/collection/TraversableLike;", "lastOption", "()Lscala/Option;").invoke(this)
-      |def init: List[Int] = jvmMethod("Lscala/collection/TraversableLike;", "init", "()Ljava/lang/Object;").invoke(this)
-      |private[scala] def sliceWithKnownDelta(from: Int, until: Int, delta: Int): List[Int] = jvmMethod("Lscala/collection/TraversableLike;", "sliceWithKnownDelta", "(III)Ljava/lang/Object;").invoke(this, from, until, delta)
-      |private[scala] def sliceWithKnownBound(from: Int, until: Int): List[Int] = jvmMethod("Lscala/collection/TraversableLike;", "sliceWithKnownBound", "(II)Ljava/lang/Object;").invoke(this, from, until)
-      |def tails: Iterator[List[Int]] = jvmMethod("Lscala/collection/TraversableLike;", "tails", "()Lscala/collection/Iterator;").invoke(this)
-      |def inits: Iterator[List[Int]] = jvmMethod("Lscala/collection/TraversableLike;", "inits", "()Lscala/collection/Iterator;").invoke(this)
-      |@deprecatedOverriding("Enforce contract of toTraversable that if it is Traversable it returns itself.", "2.11.0") def toTraversable: Traversable[Int] = jvmMethod("Lscala/collection/TraversableLike;", "toTraversable", "()Lscala/collection/Traversable;").invoke(this)
-      |override def to[Col[_]](implicit cbf: CanBuildFrom[Nothing, Int, Col[Int]]): Col[Int] = jvmMethod("Lscala/collection/TraversableLike;", "to", "(Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;").invoke(this, cbf)
-      |def withFilter(p: Int => Boolean): FilterMonadic[Int, List[Int]] = jvmMethod("Lscala/collection/TraversableLike;", "withFilter", "(Lscala/Function1;)Lscala/collection/generic/FilterMonadic;").invoke(this, p)
-      |class WithFilter(p: A => Boolean) extends AnyRef with FilterMonadic[A, Repr] { ... }
-      |def par: ParSeq[Int] = jvmMethod("Lscala/collection/Parallelizable;", "par", "()Lscala/collection/Parallel;").invoke(this)
-      |protected[this] def reversed: List[Int] = jvmMethod("Lscala/collection/TraversableOnce;", "reversed", "()Lscala/collection/immutable/List;").invoke(this)
-      |def nonEmpty: Boolean = jvmMethod("Lscala/collection/TraversableOnce;", "nonEmpty", "()Z").invoke(this)
-      |def count(p: Int => Boolean): Int = jvmMethod("Lscala/collection/TraversableOnce;", "count", "(Lscala/Function1;)I").invoke(this, p)
-      |def collectFirst[B](pf: PartialFunction[Int, B]): Option[B] = jvmMethod("Lscala/collection/TraversableOnce;", "collectFirst", "(Lscala/PartialFunction;)Lscala/Option;").invoke(this, pf)
-      |def /:[B](z: B)(op: (B, Int) => B): B = jvmMethod("Lscala/collection/TraversableOnce;", "$div$colon", "(Ljava/lang/Object;Lscala/Function2;)Ljava/lang/Object;").invoke(this, z, op)
-      |def :\[B](z: B)(op: (Int, B) => B): B = jvmMethod("Lscala/collection/TraversableOnce;", "$colon$bslash", "(Ljava/lang/Object;Lscala/Function2;)Ljava/lang/Object;").invoke(this, z, op)
-      |def reduceLeftOption[B >: Int](op: (B, Int) => B): Option[B] = jvmMethod("Lscala/collection/TraversableOnce;", "reduceLeftOption", "(Lscala/Function2;)Lscala/Option;").invoke(this, op)
-      |def reduceRightOption[B >: Int](op: (Int, B) => B): Option[B] = jvmMethod("Lscala/collection/TraversableOnce;", "reduceRightOption", "(Lscala/Function2;)Lscala/Option;").invoke(this, op)
-      |def reduce[A1 >: Int](op: (A1, A1) => A1): A1 = jvmMethod("Lscala/collection/TraversableOnce;", "reduce", "(Lscala/Function2;)Ljava/lang/Object;").invoke(this, op)
-      |def reduceOption[A1 >: Int](op: (A1, A1) => A1): Option[A1] = jvmMethod("Lscala/collection/TraversableOnce;", "reduceOption", "(Lscala/Function2;)Lscala/Option;").invoke(this, op)
-      |def fold[A1 >: Int](z: A1)(op: (A1, A1) => A1): A1 = jvmMethod("Lscala/collection/TraversableOnce;", "fold", "(Ljava/lang/Object;Lscala/Function2;)Ljava/lang/Object;").invoke(this, z, op)
-      |def aggregate[B](z: => B)(seqop: (B, Int) => B, combop: (B, B) => B): B = jvmMethod("Lscala/collection/TraversableOnce;", "aggregate", "(Lscala/Function0;Lscala/Function2;Lscala/Function2;)Ljava/lang/Object;").invoke(this, z, seqop, combop)
-      |def sum[B >: Int](implicit num: Numeric[B]): B = jvmMethod("Lscala/collection/TraversableOnce;", "sum", "(Lscala/math/Numeric;)Ljava/lang/Object;").invoke(this, num)
-      |def product[B >: Int](implicit num: Numeric[B]): B = jvmMethod("Lscala/collection/TraversableOnce;", "product", "(Lscala/math/Numeric;)Ljava/lang/Object;").invoke(this, num)
-      |def min[B >: Int](implicit cmp: Ordering[B]): Int = jvmMethod("Lscala/collection/TraversableOnce;", "min", "(Lscala/math/Ordering;)Ljava/lang/Object;").invoke(this, cmp)
-      |def max[B >: Int](implicit cmp: Ordering[B]): Int = jvmMethod("Lscala/collection/TraversableOnce;", "max", "(Lscala/math/Ordering;)Ljava/lang/Object;").invoke(this, cmp)
-      |def maxBy[B](f: Int => B)(implicit cmp: Ordering[B]): Int = jvmMethod("Lscala/collection/TraversableOnce;", "maxBy", "(Lscala/Function1;Lscala/math/Ordering;)Ljava/lang/Object;").invoke(this, f, cmp)
-      |def minBy[B](f: Int => B)(implicit cmp: Ordering[B]): Int = jvmMethod("Lscala/collection/TraversableOnce;", "minBy", "(Lscala/Function1;Lscala/math/Ordering;)Ljava/lang/Object;").invoke(this, f, cmp)
-      |def copyToBuffer[B >: Int](dest: Buffer[B]): Unit = jvmMethod("Lscala/collection/TraversableOnce;", "copyToBuffer", "(Lscala/collection/mutable/Buffer;)V").invoke(this, dest)
-      |def copyToArray[B >: Int](xs: Array[B], start: Int): Unit = jvmMethod("Lscala/collection/TraversableOnce;", "copyToArray", "(Ljava/lang/Object;I)V").invoke(this, xs, start)
-      |def copyToArray[B >: Int](xs: Array[B]): Unit = jvmMethod("Lscala/collection/TraversableOnce;", "copyToArray", "(Ljava/lang/Object;)V").invoke(this, xs)
-      |def toArray[B >: Int: ClassTag](implicit evidence$1: ClassTag[B]): Array[B] = jvmMethod("Lscala/collection/TraversableOnce;", "toArray", "(Lscala/reflect/ClassTag;)Ljava/lang/Object;").invoke(this, evidence$1)
-      |def toIndexedSeq: IndexedSeq[Int] = jvmMethod("Lscala/collection/TraversableOnce;", "toIndexedSeq", "()Lscala/collection/immutable/IndexedSeq;").invoke(this)
-      |def toBuffer[B >: Int]: Buffer[B] = jvmMethod("Lscala/collection/TraversableOnce;", "toBuffer", "()Lscala/collection/mutable/Buffer;").invoke(this)
-      |def toSet[B >: Int]: Set[B] = jvmMethod("Lscala/collection/TraversableOnce;", "toSet", "()Lscala/collection/immutable/Set;").invoke(this)
-      |def toVector: Vector[Int] = jvmMethod("Lscala/collection/TraversableOnce;", "toVector", "()Lscala/collection/immutable/Vector;").invoke(this)
-      |def toMap[T, U](implicit ev: Int <:< (T, U)): Map[T, U] = jvmMethod("Lscala/collection/TraversableOnce;", "toMap", "(Lscala/Predef/$less$colon$less;)Lscala/collection/immutable/Map;").invoke(this, ev)
-      |def mkString(start: String, sep: String, end: String): String = jvmMethod("Lscala/collection/TraversableOnce;", "mkString", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;").invoke(this, start, sep, end)
-      |def mkString(sep: String): String = jvmMethod("Lscala/collection/TraversableOnce;", "mkString", "(Ljava/lang/String;)Ljava/lang/String;").invoke(this, sep)
-      |def mkString: String = jvmMethod("Lscala/collection/TraversableOnce;", "mkString", "()Ljava/lang/String;").invoke(this)
-      |def addString(b: StringBuilder, start: String, sep: String, end: String): StringBuilder = jvmMethod("Lscala/collection/TraversableOnce;", "addString", "(Lscala/collection/mutable/StringBuilder;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lscala/collection/mutable/StringBuilder;").invoke(this, b, start, sep, end)
-      |def addString(b: StringBuilder, sep: String): StringBuilder = jvmMethod("Lscala/collection/TraversableOnce;", "addString", "(Lscala/collection/mutable/StringBuilder;Ljava/lang/String;)Lscala/collection/mutable/StringBuilder;").invoke(this, b, sep)
-      |def addString(b: StringBuilder): StringBuilder = jvmMethod("Lscala/collection/TraversableOnce;", "addString", "(Lscala/collection/mutable/StringBuilder;)Lscala/collection/mutable/StringBuilder;").invoke(this, b)
-      |final def getClass(): Class[?0] forSome { type ?0 } = intrinsic("Ljava/lang/Object;", "getClass", "()Ljava/lang/Class;", this)
-      |@throws[CloneNotSupportedException] protected[lang] def clone(): Object = jvmMethod("Ljava/lang/Object;", "clone", "()Ljava/lang/Object;").invoke(this)
-      |final def notify(): Unit = jvmMethod("Ljava/lang/Object;", "notify", "()V").invoke(this)
-      |final def notifyAll(): Unit = jvmMethod("Ljava/lang/Object;", "notifyAll", "()V").invoke(this)
-      |@throws[InterruptedException] final def wait(x$1: Long): Unit = jvmMethod("Ljava/lang/Object;", "wait", "(J)V").invoke(this, x$1)
-      |@throws[InterruptedException] final def wait(x$1: Long, x$2: Int): Unit = jvmMethod("Ljava/lang/Object;", "wait", "(JI)V").invoke(this, x$1, x$2)
-      |@throws[InterruptedException] final def wait(): Unit = jvmMethod("Ljava/lang/Object;", "wait", "()V").invoke(this)
-      |@throws[Throwable] protected[lang] def finalize(): Unit = jvmMethod("Ljava/lang/Object;", "finalize", "()V").invoke(this)
-      |final def eq(x$1: AnyRef): Boolean = intrinsic("Ljava/lang/Object;", "eq", "(Ljava/lang/Object;)Z", this, x$1)
-      |final def ne(x$1: AnyRef): Boolean = intrinsic("Ljava/lang/Object;", "ne", "(Ljava/lang/Object;)Z", this, x$1)
-      |final def ==(x$1: Any): Boolean = intrinsic("Ljava/lang/Object;", "$eq$eq", "(Ljava/lang/Object;)Z", this, x$1)
-      |final def !=(x$1: Any): Boolean = intrinsic("Ljava/lang/Object;", "$bang$eq", "(Ljava/lang/Object;)Z", this, x$1)
-      |final def ##(): Int = intrinsic("Ljava/lang/Object;", "$hash$hash", "()I", this)
-      |final def synchronized[T0](x$1: T0): T0 = intrinsic("Ljava/lang/Object;", "synchronized", "(Ljava/lang/Object;)Ljava/lang/Object;", this, x$1)
-      |final def isInstanceOf[T0]: Boolean = intrinsic("Ljava/lang/Object;", "isInstanceOf", "()Z", this)
-      |final def asInstanceOf[T0]: T0 = intrinsic("Ljava/lang/Object;", "asInstanceOf", "()Ljava/lang/Object;", this)
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, repr, ()Ljava/lang/Object;)") def repr: List[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, isTraversableAgain, ()Z)") final def isTraversableAgain: Boolean = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, hasDefiniteSize, ()Z)") def hasDefiniteSize: Boolean = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, $plus$plus$colon, (Lscala/collection/TraversableOnce;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def ++:[B >: Int, That](that: TraversableOnce[B])(implicit bf: CanBuildFrom[List[Int], B, That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, $plus$plus$colon, (Lscala/collection/Traversable;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def ++:[B >: Int, That](that: Traversable[B])(implicit bf: CanBuildFrom[List[Int], B, That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, filter, (Lscala/Function1;)Ljava/lang/Object;)") def filter(p: Int => Boolean): List[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, filterNot, (Lscala/Function1;)Ljava/lang/Object;)") def filterNot(p: Int => Boolean): List[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, partition, (Lscala/Function1;)Lscala/Tuple2;)") def partition(p: Int => Boolean): (List[Int], List[Int]) = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, groupBy, (Lscala/Function1;)Lscala/collection/immutable/Map;)") def groupBy[K](f: Int => K): Map[K, List[Int]] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, scan, (Ljava/lang/Object;Lscala/Function2;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def scan[B >: Int, That](z: B)(op: (B, B) => B)(implicit cbf: CanBuildFrom[List[Int], B, That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, scanLeft, (Ljava/lang/Object;Lscala/Function2;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def scanLeft[B, That](z: B)(op: (B, Int) => B)(implicit bf: CanBuildFrom[List[Int], B, That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, scanRight, (Ljava/lang/Object;Lscala/Function2;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") @migration("The behavior of `scanRight` has changed. The previous behavior can be reproduced with scanRight.reverse.", "2.9.0") def scanRight[B, That](z: B)(op: (Int, B) => B)(implicit bf: CanBuildFrom[List[Int], B, That]): That = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, headOption, ()Lscala/Option;)") def headOption: Option[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, tail, ()Ljava/lang/Object;)") override def tail: List[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, lastOption, ()Lscala/Option;)") def lastOption: Option[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, init, ()Ljava/lang/Object;)") def init: List[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, sliceWithKnownDelta, (III)Ljava/lang/Object;)") private[scala] def sliceWithKnownDelta(from: Int, until: Int, delta: Int): List[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, sliceWithKnownBound, (II)Ljava/lang/Object;)") private[scala] def sliceWithKnownBound(from: Int, until: Int): List[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, tails, ()Lscala/collection/Iterator;)") def tails: Iterator[List[Int]] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, inits, ()Lscala/collection/Iterator;)") def inits: Iterator[List[Int]] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, toTraversable, ()Lscala/collection/Traversable;)") @deprecatedOverriding("Enforce contract of toTraversable that if it is Traversable it returns itself.", "2.11.0") def toTraversable: Traversable[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, to, (Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") override def to[Col[_]](implicit cbf: CanBuildFrom[Nothing, Int, Col[Int]]): Col[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableLike;, withFilter, (Lscala/Function1;)Lscala/collection/generic/FilterMonadic;)") def withFilter(p: Int => Boolean): FilterMonadic[Int, List[Int]] = ???
+      |class WithFilter(p: A => Boolean) extends AnyRef with FilterMonadic[A, Repr] {
+      |  @ffi("jvmField(Lscala/collection/TraversableLike/WithFilter;, p, Lscala/Function1;)") private[this] val p: Int => Boolean = ???
+      |  @ffi("jvmMethod(Lscala/collection/TraversableLike/WithFilter;, map, (Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def map[B, That](f: Int => B)(implicit bf: CanBuildFrom[List[Int], B, That]): That = ???
+      |  @ffi("jvmMethod(Lscala/collection/TraversableLike/WithFilter;, flatMap, (Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def flatMap[B, That](f: Int => GenTraversableOnce[B])(implicit bf: CanBuildFrom[List[Int], B, That]): That = ???
+      |  @ffi("jvmMethod(Lscala/collection/TraversableLike/WithFilter;, foreach, (Lscala/Function1;)V)") def foreach[U](f: Int => U): Unit = ???
+      |  @ffi("jvmMethod(Lscala/collection/TraversableLike/WithFilter;, withFilter, (Lscala/Function1;)Lscala/collection/TraversableLike/WithFilter;)") def withFilter(q: Int => Boolean): List[Int]#WithFilter = ???
+      |}
+      |@ffi("jvmMethod(Lscala/collection/Parallelizable;, par, ()Lscala/collection/Parallel;)") def par: ParSeq[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, reversed, ()Lscala/collection/immutable/List;)") protected[this] def reversed: List[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, nonEmpty, ()Z)") def nonEmpty: Boolean = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, count, (Lscala/Function1;)I)") def count(p: Int => Boolean): Int = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, collectFirst, (Lscala/PartialFunction;)Lscala/Option;)") def collectFirst[B](pf: PartialFunction[Int, B]): Option[B] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, $div$colon, (Ljava/lang/Object;Lscala/Function2;)Ljava/lang/Object;)") def /:[B](z: B)(op: (B, Int) => B): B = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, $colon$bslash, (Ljava/lang/Object;Lscala/Function2;)Ljava/lang/Object;)") def :\[B](z: B)(op: (Int, B) => B): B = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, reduceLeftOption, (Lscala/Function2;)Lscala/Option;)") def reduceLeftOption[B >: Int](op: (B, Int) => B): Option[B] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, reduceRightOption, (Lscala/Function2;)Lscala/Option;)") def reduceRightOption[B >: Int](op: (Int, B) => B): Option[B] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, reduce, (Lscala/Function2;)Ljava/lang/Object;)") def reduce[A1 >: Int](op: (A1, A1) => A1): A1 = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, reduceOption, (Lscala/Function2;)Lscala/Option;)") def reduceOption[A1 >: Int](op: (A1, A1) => A1): Option[A1] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, fold, (Ljava/lang/Object;Lscala/Function2;)Ljava/lang/Object;)") def fold[A1 >: Int](z: A1)(op: (A1, A1) => A1): A1 = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, aggregate, (Lscala/Function0;Lscala/Function2;Lscala/Function2;)Ljava/lang/Object;)") def aggregate[B](z: => B)(seqop: (B, Int) => B, combop: (B, B) => B): B = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, sum, (Lscala/math/Numeric;)Ljava/lang/Object;)") def sum[B >: Int](implicit num: Numeric[B]): B = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, product, (Lscala/math/Numeric;)Ljava/lang/Object;)") def product[B >: Int](implicit num: Numeric[B]): B = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, min, (Lscala/math/Ordering;)Ljava/lang/Object;)") def min[B >: Int](implicit cmp: Ordering[B]): Int = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, max, (Lscala/math/Ordering;)Ljava/lang/Object;)") def max[B >: Int](implicit cmp: Ordering[B]): Int = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, maxBy, (Lscala/Function1;Lscala/math/Ordering;)Ljava/lang/Object;)") def maxBy[B](f: Int => B)(implicit cmp: Ordering[B]): Int = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, minBy, (Lscala/Function1;Lscala/math/Ordering;)Ljava/lang/Object;)") def minBy[B](f: Int => B)(implicit cmp: Ordering[B]): Int = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, copyToBuffer, (Lscala/collection/mutable/Buffer;)V)") def copyToBuffer[B >: Int](dest: Buffer[B]): Unit = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, copyToArray, (Ljava/lang/Object;I)V)") def copyToArray[B >: Int](xs: Array[B], start: Int): Unit = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, copyToArray, (Ljava/lang/Object;)V)") def copyToArray[B >: Int](xs: Array[B]): Unit = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, toArray, (Lscala/reflect/ClassTag;)Ljava/lang/Object;)") def toArray[B >: Int: ClassTag](implicit evidence$1: ClassTag[B]): Array[B] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, toIndexedSeq, ()Lscala/collection/immutable/IndexedSeq;)") def toIndexedSeq: IndexedSeq[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, toBuffer, ()Lscala/collection/mutable/Buffer;)") def toBuffer[B >: Int]: Buffer[B] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, toSet, ()Lscala/collection/immutable/Set;)") def toSet[B >: Int]: Set[B] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, toVector, ()Lscala/collection/immutable/Vector;)") def toVector: Vector[Int] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, toMap, (Lscala/Predef/$less$colon$less;)Lscala/collection/immutable/Map;)") def toMap[T, U](implicit ev: Int <:< (T, U)): Map[T, U] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, mkString, (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;)") def mkString(start: String, sep: String, end: String): String = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, mkString, (Ljava/lang/String;)Ljava/lang/String;)") def mkString(sep: String): String = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, mkString, ()Ljava/lang/String;)") def mkString: String = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, addString, (Lscala/collection/mutable/StringBuilder;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lscala/collection/mutable/StringBuilder;)") def addString(b: StringBuilder, start: String, sep: String, end: String): StringBuilder = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, addString, (Lscala/collection/mutable/StringBuilder;Ljava/lang/String;)Lscala/collection/mutable/StringBuilder;)") def addString(b: StringBuilder, sep: String): StringBuilder = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, addString, (Lscala/collection/mutable/StringBuilder;)Lscala/collection/mutable/StringBuilder;)") def addString(b: StringBuilder): StringBuilder = ???
+      |@ffi("scalaIntrinsic(Ljava/lang/Object;, getClass, ()Ljava/lang/Class;)") final def getClass(): Class[?0] forSome { type ?0 } = ???
+      |@ffi("jvmMethod(Ljava/lang/Object;, clone, ()Ljava/lang/Object;)") @throws[CloneNotSupportedException] protected[lang] def clone(): Object = ???
+      |@ffi("jvmMethod(Ljava/lang/Object;, notify, ()V)") final def notify(): Unit = ???
+      |@ffi("jvmMethod(Ljava/lang/Object;, notifyAll, ()V)") final def notifyAll(): Unit = ???
+      |@ffi("jvmMethod(Ljava/lang/Object;, wait, (J)V)") @throws[InterruptedException] final def wait(x$1: Long): Unit = ???
+      |@ffi("jvmMethod(Ljava/lang/Object;, wait, (JI)V)") @throws[InterruptedException] final def wait(x$1: Long, x$2: Int): Unit = ???
+      |@ffi("jvmMethod(Ljava/lang/Object;, wait, ()V)") @throws[InterruptedException] final def wait(): Unit = ???
+      |@ffi("jvmMethod(Ljava/lang/Object;, finalize, ()V)") @throws[Throwable] protected[lang] def finalize(): Unit = ???
+      |@ffi("scalaIntrinsic(Ljava/lang/Object;, eq, (Ljava/lang/Object;)Z)") final def eq(x$1: AnyRef): Boolean = ???
+      |@ffi("scalaIntrinsic(Ljava/lang/Object;, ne, (Ljava/lang/Object;)Z)") final def ne(x$1: AnyRef): Boolean = ???
+      |@ffi("scalaIntrinsic(Ljava/lang/Object;, $eq$eq, (Ljava/lang/Object;)Z)") final def ==(x$1: Any): Boolean = ???
+      |@ffi("scalaIntrinsic(Ljava/lang/Object;, $bang$eq, (Ljava/lang/Object;)Z)") final def !=(x$1: Any): Boolean = ???
+      |@ffi("scalaIntrinsic(Ljava/lang/Object;, $hash$hash, ()I)") final def ##(): Int = ???
+      |@ffi("scalaIntrinsic(Ljava/lang/Object;, synchronized, (Ljava/lang/Object;)Ljava/lang/Object;)") final def synchronized[T0](x$1: T0): T0 = ???
+      |@ffi("scalaIntrinsic(Ljava/lang/Object;, isInstanceOf, ()Z)") final def isInstanceOf[T0]: Boolean = ???
+      |@ffi("scalaIntrinsic(Ljava/lang/Object;, asInstanceOf, ()Ljava/lang/Object;)") final def asInstanceOf[T0]: T0 = ???
     """.trim.stripMargin)
   }
 
   test("t\"scala.compat.Platform.type\".members") {
-    assert(t"scala.compat.Platform.type".members.mkString(EOL) === """
-      |def this()
+    assert(t"scala.compat.Platform.type".members.map(_.show[Code]).mkString(EOL) === """
+      |@ffi("jvmMethod(Lscala/compat/Platform$;, $lessinit$greater, ()Lscala/compat/Platform$;)") ()
       |type StackOverflowError = StackOverflowError
       |type ConcurrentModificationException = ConcurrentModificationException
-      |@inline def arraycopy(src: AnyRef, srcPos: Int, dest: AnyRef, destPos: Int, length: Int): Unit = jvmMethod("Lscala/compat/Platform$;", "arraycopy", "(Ljava/lang/Object;ILjava/lang/Object;II)V").invoke(this, src, srcPos, dest, destPos, length)
-      |@inline def createArray(elemClass: Class[_$1] forSome { type _$1 }, length: Int): AnyRef = jvmMethod("Lscala/compat/Platform$;", "createArray", "(Ljava/lang/Class;I)Ljava/lang/Object;").invoke(this, elemClass, length)
-      |@inline def arrayclear(arr: Array[Int]): Unit = jvmMethod("Lscala/compat/Platform$;", "arrayclear", "([I)V").invoke(this, arr)
-      |@inline def getClassForName(name: String): Class[_$2] forSome { type _$2 } = jvmMethod("Lscala/compat/Platform$;", "getClassForName", "(Ljava/lang/String;)Ljava/lang/Class;").invoke(this, name)
+      |@ffi("jvmMethod(Lscala/compat/Platform$;, arraycopy, (Ljava/lang/Object;ILjava/lang/Object;II)V)") @inline def arraycopy(src: AnyRef, srcPos: Int, dest: AnyRef, destPos: Int, length: Int): Unit = ???
+      |@ffi("jvmMethod(Lscala/compat/Platform$;, createArray, (Ljava/lang/Class;I)Ljava/lang/Object;)") @inline def createArray(elemClass: Class[_$1] forSome { type _$1 }, length: Int): AnyRef = ???
+      |@ffi("jvmMethod(Lscala/compat/Platform$;, arrayclear, ([I)V)") @inline def arrayclear(arr: Array[Int]): Unit = ???
+      |@ffi("jvmMethod(Lscala/compat/Platform$;, getClassForName, (Ljava/lang/String;)Ljava/lang/Class;)") @inline def getClassForName(name: String): Class[_$2] forSome { type _$2 } = ???
       |EOL
-      |@inline def currentTime: Long = jvmMethod("Lscala/compat/Platform$;", "currentTime", "()J").invoke(this)
-      |@inline def collectGarbage(): Unit = jvmMethod("Lscala/compat/Platform$;", "collectGarbage", "()V").invoke(this)
-      |@inline def defaultCharsetName: String = jvmMethod("Lscala/compat/Platform$;", "defaultCharsetName", "()Ljava/lang/String;").invoke(this)
-      |final def getClass(): Class[?0] forSome { type ?0 } = intrinsic("Ljava/lang/Object;", "getClass", "()Ljava/lang/Class;", this)
-      |def hashCode(): Int = jvmMethod("Ljava/lang/Object;", "hashCode", "()I").invoke(this)
-      |def equals(x$1: Any): Boolean = jvmMethod("Ljava/lang/Object;", "equals", "(Ljava/lang/Object;)Z").invoke(this, x$1)
-      |@throws[CloneNotSupportedException] protected[lang] def clone(): Object = jvmMethod("Ljava/lang/Object;", "clone", "()Ljava/lang/Object;").invoke(this)
-      |def toString(): String = jvmMethod("Ljava/lang/Object;", "toString", "()Ljava/lang/String;").invoke(this)
-      |final def notify(): Unit = jvmMethod("Ljava/lang/Object;", "notify", "()V").invoke(this)
-      |final def notifyAll(): Unit = jvmMethod("Ljava/lang/Object;", "notifyAll", "()V").invoke(this)
-      |@throws[InterruptedException] final def wait(x$1: Long): Unit = jvmMethod("Ljava/lang/Object;", "wait", "(J)V").invoke(this, x$1)
-      |@throws[InterruptedException] final def wait(x$1: Long, x$2: Int): Unit = jvmMethod("Ljava/lang/Object;", "wait", "(JI)V").invoke(this, x$1, x$2)
-      |@throws[InterruptedException] final def wait(): Unit = jvmMethod("Ljava/lang/Object;", "wait", "()V").invoke(this)
-      |@throws[Throwable] protected[lang] def finalize(): Unit = jvmMethod("Ljava/lang/Object;", "finalize", "()V").invoke(this)
-      |final def eq(x$1: AnyRef): Boolean = intrinsic("Ljava/lang/Object;", "eq", "(Ljava/lang/Object;)Z", this, x$1)
-      |final def ne(x$1: AnyRef): Boolean = intrinsic("Ljava/lang/Object;", "ne", "(Ljava/lang/Object;)Z", this, x$1)
-      |final def ==(x$1: Any): Boolean = intrinsic("Ljava/lang/Object;", "$eq$eq", "(Ljava/lang/Object;)Z", this, x$1)
-      |final def !=(x$1: Any): Boolean = intrinsic("Ljava/lang/Object;", "$bang$eq", "(Ljava/lang/Object;)Z", this, x$1)
-      |final def ##(): Int = intrinsic("Ljava/lang/Object;", "$hash$hash", "()I", this)
-      |final def synchronized[T0](x$1: T0): T0 = intrinsic("Ljava/lang/Object;", "synchronized", "(Ljava/lang/Object;)Ljava/lang/Object;", this, x$1)
-      |final def isInstanceOf[T0]: Boolean = intrinsic("Ljava/lang/Object;", "isInstanceOf", "()Z", this)
-      |final def asInstanceOf[T0]: T0 = intrinsic("Ljava/lang/Object;", "asInstanceOf", "()Ljava/lang/Object;", this)
+      |@ffi("jvmMethod(Lscala/compat/Platform$;, currentTime, ()J)") @inline def currentTime: Long = ???
+      |@ffi("jvmMethod(Lscala/compat/Platform$;, collectGarbage, ()V)") @inline def collectGarbage(): Unit = ???
+      |@ffi("jvmMethod(Lscala/compat/Platform$;, defaultCharsetName, ()Ljava/lang/String;)") @inline def defaultCharsetName: String = ???
+      |@ffi("scalaIntrinsic(Ljava/lang/Object;, getClass, ()Ljava/lang/Class;)") final def getClass(): Class[?0] forSome { type ?0 } = ???
+      |@ffi("jvmMethod(Ljava/lang/Object;, hashCode, ()I)") def hashCode(): Int = ???
+      |@ffi("jvmMethod(Ljava/lang/Object;, equals, (Ljava/lang/Object;)Z)") def equals(x$1: Any): Boolean = ???
+      |@ffi("jvmMethod(Ljava/lang/Object;, clone, ()Ljava/lang/Object;)") @throws[CloneNotSupportedException] protected[lang] def clone(): Object = ???
+      |@ffi("jvmMethod(Ljava/lang/Object;, toString, ()Ljava/lang/String;)") def toString(): String = ???
+      |@ffi("jvmMethod(Ljava/lang/Object;, notify, ()V)") final def notify(): Unit = ???
+      |@ffi("jvmMethod(Ljava/lang/Object;, notifyAll, ()V)") final def notifyAll(): Unit = ???
+      |@ffi("jvmMethod(Ljava/lang/Object;, wait, (J)V)") @throws[InterruptedException] final def wait(x$1: Long): Unit = ???
+      |@ffi("jvmMethod(Ljava/lang/Object;, wait, (JI)V)") @throws[InterruptedException] final def wait(x$1: Long, x$2: Int): Unit = ???
+      |@ffi("jvmMethod(Ljava/lang/Object;, wait, ()V)") @throws[InterruptedException] final def wait(): Unit = ???
+      |@ffi("jvmMethod(Ljava/lang/Object;, finalize, ()V)") @throws[Throwable] protected[lang] def finalize(): Unit = ???
+      |@ffi("scalaIntrinsic(Ljava/lang/Object;, eq, (Ljava/lang/Object;)Z)") final def eq(x$1: AnyRef): Boolean = ???
+      |@ffi("scalaIntrinsic(Ljava/lang/Object;, ne, (Ljava/lang/Object;)Z)") final def ne(x$1: AnyRef): Boolean = ???
+      |@ffi("scalaIntrinsic(Ljava/lang/Object;, $eq$eq, (Ljava/lang/Object;)Z)") final def ==(x$1: Any): Boolean = ???
+      |@ffi("scalaIntrinsic(Ljava/lang/Object;, $bang$eq, (Ljava/lang/Object;)Z)") final def !=(x$1: Any): Boolean = ???
+      |@ffi("scalaIntrinsic(Ljava/lang/Object;, $hash$hash, ()I)") final def ##(): Int = ???
+      |@ffi("scalaIntrinsic(Ljava/lang/Object;, synchronized, (Ljava/lang/Object;)Ljava/lang/Object;)") final def synchronized[T0](x$1: T0): T0 = ???
+      |@ffi("scalaIntrinsic(Ljava/lang/Object;, isInstanceOf, ()Z)") final def isInstanceOf[T0]: Boolean = ???
+      |@ffi("scalaIntrinsic(Ljava/lang/Object;, asInstanceOf, ()Ljava/lang/Object;)") final def asInstanceOf[T0]: T0 = ???
     """.trim.stripMargin)
   }
 
@@ -529,9 +542,9 @@ class SemanticSuite extends FunSuite {
   test("t\"SemanticDummy\".defn") {
     assert(t"SemanticDummy".defn.show[Code] === """
       |class SemanticDummy() extends AnyRef {
-      |  private[this] val x: Int = jvmField("LSemanticDummy;", "x", "I").get(this)
-      |  val y: Int = jvmMethod("LSemanticDummy;", "y", "()I").invoke(this)
-      |  def foo(w: Int = jvmMethod("LSemanticDummy;", "foo$default$1", "()I").invoke(this)): Int = jvmMethod("LSemanticDummy;", "foo", "(I)I").invoke(this, w)
+      |  @ffi("jvmField(LSemanticDummy;, x, I)") private[this] val x: Int = ???
+      |  @ffi("jvmMethod(LSemanticDummy;, y, ()I)") val y: Int = ???
+      |  @ffi("jvmMethod(LSemanticDummy;, foo, (I)I)") def foo(@ffi("jvmMethod(LSemanticDummy;, foo$default$1, ()I)") w: Int = ???): Int = ???
       |}
     """.trim.stripMargin)
   }
@@ -539,116 +552,116 @@ class SemanticSuite extends FunSuite {
   test("t\"Int\".defn") {
     assert(t"Int".defn.show[Code] === """
       |final abstract class Int() extends AnyVal {
-      |  def toByte: Byte = intrinsic("I", "toByte", "()B", this)
-      |  def toShort: Short = intrinsic("I", "toShort", "()S", this)
-      |  def toChar: Char = intrinsic("I", "toChar", "()C", this)
-      |  def toInt: Int = intrinsic("I", "toInt", "()I", this)
-      |  def toLong: Long = intrinsic("I", "toLong", "()J", this)
-      |  def toFloat: Float = intrinsic("I", "toFloat", "()F", this)
-      |  def toDouble: Double = intrinsic("I", "toDouble", "()D", this)
-      |  def unary_~ : Int = intrinsic("I", "unary_$tilde", "()I", this)
-      |  def unary_+ : Int = intrinsic("I", "unary_$plus", "()I", this)
-      |  def unary_- : Int = intrinsic("I", "unary_$minus", "()I", this)
-      |  def +(x: String): String = intrinsic("I", "$plus", "(Ljava/lang/String;)Ljava/lang/String;", this, x)
-      |  def <<(x: Int): Int = intrinsic("I", "$less$less", "(I)I", this, x)
-      |  def <<(x: Long): Int = intrinsic("I", "$less$less", "(J)I", this, x)
-      |  def >>>(x: Int): Int = intrinsic("I", "$greater$greater$greater", "(I)I", this, x)
-      |  def >>>(x: Long): Int = intrinsic("I", "$greater$greater$greater", "(J)I", this, x)
-      |  def >>(x: Int): Int = intrinsic("I", "$greater$greater", "(I)I", this, x)
-      |  def >>(x: Long): Int = intrinsic("I", "$greater$greater", "(J)I", this, x)
-      |  def ==(x: Byte): Boolean = intrinsic("I", "$eq$eq", "(B)Z", this, x)
-      |  def ==(x: Short): Boolean = intrinsic("I", "$eq$eq", "(S)Z", this, x)
-      |  def ==(x: Char): Boolean = intrinsic("I", "$eq$eq", "(C)Z", this, x)
-      |  def ==(x: Int): Boolean = intrinsic("I", "$eq$eq", "(I)Z", this, x)
-      |  def ==(x: Long): Boolean = intrinsic("I", "$eq$eq", "(J)Z", this, x)
-      |  def ==(x: Float): Boolean = intrinsic("I", "$eq$eq", "(F)Z", this, x)
-      |  def ==(x: Double): Boolean = intrinsic("I", "$eq$eq", "(D)Z", this, x)
-      |  def !=(x: Byte): Boolean = intrinsic("I", "$bang$eq", "(B)Z", this, x)
-      |  def !=(x: Short): Boolean = intrinsic("I", "$bang$eq", "(S)Z", this, x)
-      |  def !=(x: Char): Boolean = intrinsic("I", "$bang$eq", "(C)Z", this, x)
-      |  def !=(x: Int): Boolean = intrinsic("I", "$bang$eq", "(I)Z", this, x)
-      |  def !=(x: Long): Boolean = intrinsic("I", "$bang$eq", "(J)Z", this, x)
-      |  def !=(x: Float): Boolean = intrinsic("I", "$bang$eq", "(F)Z", this, x)
-      |  def !=(x: Double): Boolean = intrinsic("I", "$bang$eq", "(D)Z", this, x)
-      |  def <(x: Byte): Boolean = intrinsic("I", "$less", "(B)Z", this, x)
-      |  def <(x: Short): Boolean = intrinsic("I", "$less", "(S)Z", this, x)
-      |  def <(x: Char): Boolean = intrinsic("I", "$less", "(C)Z", this, x)
-      |  def <(x: Int): Boolean = intrinsic("I", "$less", "(I)Z", this, x)
-      |  def <(x: Long): Boolean = intrinsic("I", "$less", "(J)Z", this, x)
-      |  def <(x: Float): Boolean = intrinsic("I", "$less", "(F)Z", this, x)
-      |  def <(x: Double): Boolean = intrinsic("I", "$less", "(D)Z", this, x)
-      |  def <=(x: Byte): Boolean = intrinsic("I", "$less$eq", "(B)Z", this, x)
-      |  def <=(x: Short): Boolean = intrinsic("I", "$less$eq", "(S)Z", this, x)
-      |  def <=(x: Char): Boolean = intrinsic("I", "$less$eq", "(C)Z", this, x)
-      |  def <=(x: Int): Boolean = intrinsic("I", "$less$eq", "(I)Z", this, x)
-      |  def <=(x: Long): Boolean = intrinsic("I", "$less$eq", "(J)Z", this, x)
-      |  def <=(x: Float): Boolean = intrinsic("I", "$less$eq", "(F)Z", this, x)
-      |  def <=(x: Double): Boolean = intrinsic("I", "$less$eq", "(D)Z", this, x)
-      |  def >(x: Byte): Boolean = intrinsic("I", "$greater", "(B)Z", this, x)
-      |  def >(x: Short): Boolean = intrinsic("I", "$greater", "(S)Z", this, x)
-      |  def >(x: Char): Boolean = intrinsic("I", "$greater", "(C)Z", this, x)
-      |  def >(x: Int): Boolean = intrinsic("I", "$greater", "(I)Z", this, x)
-      |  def >(x: Long): Boolean = intrinsic("I", "$greater", "(J)Z", this, x)
-      |  def >(x: Float): Boolean = intrinsic("I", "$greater", "(F)Z", this, x)
-      |  def >(x: Double): Boolean = intrinsic("I", "$greater", "(D)Z", this, x)
-      |  def >=(x: Byte): Boolean = intrinsic("I", "$greater$eq", "(B)Z", this, x)
-      |  def >=(x: Short): Boolean = intrinsic("I", "$greater$eq", "(S)Z", this, x)
-      |  def >=(x: Char): Boolean = intrinsic("I", "$greater$eq", "(C)Z", this, x)
-      |  def >=(x: Int): Boolean = intrinsic("I", "$greater$eq", "(I)Z", this, x)
-      |  def >=(x: Long): Boolean = intrinsic("I", "$greater$eq", "(J)Z", this, x)
-      |  def >=(x: Float): Boolean = intrinsic("I", "$greater$eq", "(F)Z", this, x)
-      |  def >=(x: Double): Boolean = intrinsic("I", "$greater$eq", "(D)Z", this, x)
-      |  def |(x: Byte): Int = intrinsic("I", "$bar", "(B)I", this, x)
-      |  def |(x: Short): Int = intrinsic("I", "$bar", "(S)I", this, x)
-      |  def |(x: Char): Int = intrinsic("I", "$bar", "(C)I", this, x)
-      |  def |(x: Int): Int = intrinsic("I", "$bar", "(I)I", this, x)
-      |  def |(x: Long): Long = intrinsic("I", "$bar", "(J)J", this, x)
-      |  def &(x: Byte): Int = intrinsic("I", "$amp", "(B)I", this, x)
-      |  def &(x: Short): Int = intrinsic("I", "$amp", "(S)I", this, x)
-      |  def &(x: Char): Int = intrinsic("I", "$amp", "(C)I", this, x)
-      |  def &(x: Int): Int = intrinsic("I", "$amp", "(I)I", this, x)
-      |  def &(x: Long): Long = intrinsic("I", "$amp", "(J)J", this, x)
-      |  def ^(x: Byte): Int = intrinsic("I", "$up", "(B)I", this, x)
-      |  def ^(x: Short): Int = intrinsic("I", "$up", "(S)I", this, x)
-      |  def ^(x: Char): Int = intrinsic("I", "$up", "(C)I", this, x)
-      |  def ^(x: Int): Int = intrinsic("I", "$up", "(I)I", this, x)
-      |  def ^(x: Long): Long = intrinsic("I", "$up", "(J)J", this, x)
-      |  def +(x: Byte): Int = intrinsic("I", "$plus", "(B)I", this, x)
-      |  def +(x: Short): Int = intrinsic("I", "$plus", "(S)I", this, x)
-      |  def +(x: Char): Int = intrinsic("I", "$plus", "(C)I", this, x)
-      |  def +(x: Int): Int = intrinsic("I", "$plus", "(I)I", this, x)
-      |  def +(x: Long): Long = intrinsic("I", "$plus", "(J)J", this, x)
-      |  def +(x: Float): Float = intrinsic("I", "$plus", "(F)F", this, x)
-      |  def +(x: Double): Double = intrinsic("I", "$plus", "(D)D", this, x)
-      |  def -(x: Byte): Int = intrinsic("I", "$minus", "(B)I", this, x)
-      |  def -(x: Short): Int = intrinsic("I", "$minus", "(S)I", this, x)
-      |  def -(x: Char): Int = intrinsic("I", "$minus", "(C)I", this, x)
-      |  def -(x: Int): Int = intrinsic("I", "$minus", "(I)I", this, x)
-      |  def -(x: Long): Long = intrinsic("I", "$minus", "(J)J", this, x)
-      |  def -(x: Float): Float = intrinsic("I", "$minus", "(F)F", this, x)
-      |  def -(x: Double): Double = intrinsic("I", "$minus", "(D)D", this, x)
-      |  def *(x: Byte): Int = intrinsic("I", "$times", "(B)I", this, x)
-      |  def *(x: Short): Int = intrinsic("I", "$times", "(S)I", this, x)
-      |  def *(x: Char): Int = intrinsic("I", "$times", "(C)I", this, x)
-      |  def *(x: Int): Int = intrinsic("I", "$times", "(I)I", this, x)
-      |  def *(x: Long): Long = intrinsic("I", "$times", "(J)J", this, x)
-      |  def *(x: Float): Float = intrinsic("I", "$times", "(F)F", this, x)
-      |  def *(x: Double): Double = intrinsic("I", "$times", "(D)D", this, x)
-      |  def /(x: Byte): Int = intrinsic("I", "$div", "(B)I", this, x)
-      |  def /(x: Short): Int = intrinsic("I", "$div", "(S)I", this, x)
-      |  def /(x: Char): Int = intrinsic("I", "$div", "(C)I", this, x)
-      |  def /(x: Int): Int = intrinsic("I", "$div", "(I)I", this, x)
-      |  def /(x: Long): Long = intrinsic("I", "$div", "(J)J", this, x)
-      |  def /(x: Float): Float = intrinsic("I", "$div", "(F)F", this, x)
-      |  def /(x: Double): Double = intrinsic("I", "$div", "(D)D", this, x)
-      |  def %(x: Byte): Int = intrinsic("I", "$percent", "(B)I", this, x)
-      |  def %(x: Short): Int = intrinsic("I", "$percent", "(S)I", this, x)
-      |  def %(x: Char): Int = intrinsic("I", "$percent", "(C)I", this, x)
-      |  def %(x: Int): Int = intrinsic("I", "$percent", "(I)I", this, x)
-      |  def %(x: Long): Long = intrinsic("I", "$percent", "(J)J", this, x)
-      |  def %(x: Float): Float = intrinsic("I", "$percent", "(F)F", this, x)
-      |  def %(x: Double): Double = intrinsic("I", "$percent", "(D)D", this, x)
-      |  override def getClass(): Class[Int] = intrinsic("I", "getClass", "()Ljava/lang/Class;", this)
+      |  @ffi("scalaIntrinsic(I, toByte, ()B)") def toByte: Byte = ???
+      |  @ffi("scalaIntrinsic(I, toShort, ()S)") def toShort: Short = ???
+      |  @ffi("scalaIntrinsic(I, toChar, ()C)") def toChar: Char = ???
+      |  @ffi("scalaIntrinsic(I, toInt, ()I)") def toInt: Int = ???
+      |  @ffi("scalaIntrinsic(I, toLong, ()J)") def toLong: Long = ???
+      |  @ffi("scalaIntrinsic(I, toFloat, ()F)") def toFloat: Float = ???
+      |  @ffi("scalaIntrinsic(I, toDouble, ()D)") def toDouble: Double = ???
+      |  @ffi("scalaIntrinsic(I, unary_$tilde, ()I)") def unary_~ : Int = ???
+      |  @ffi("scalaIntrinsic(I, unary_$plus, ()I)") def unary_+ : Int = ???
+      |  @ffi("scalaIntrinsic(I, unary_$minus, ()I)") def unary_- : Int = ???
+      |  @ffi("scalaIntrinsic(I, $plus, (Ljava/lang/String;)Ljava/lang/String;)") def +(x: String): String = ???
+      |  @ffi("scalaIntrinsic(I, $less$less, (I)I)") def <<(x: Int): Int = ???
+      |  @ffi("scalaIntrinsic(I, $less$less, (J)I)") def <<(x: Long): Int = ???
+      |  @ffi("scalaIntrinsic(I, $greater$greater$greater, (I)I)") def >>>(x: Int): Int = ???
+      |  @ffi("scalaIntrinsic(I, $greater$greater$greater, (J)I)") def >>>(x: Long): Int = ???
+      |  @ffi("scalaIntrinsic(I, $greater$greater, (I)I)") def >>(x: Int): Int = ???
+      |  @ffi("scalaIntrinsic(I, $greater$greater, (J)I)") def >>(x: Long): Int = ???
+      |  @ffi("scalaIntrinsic(I, $eq$eq, (B)Z)") def ==(x: Byte): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $eq$eq, (S)Z)") def ==(x: Short): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $eq$eq, (C)Z)") def ==(x: Char): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $eq$eq, (I)Z)") def ==(x: Int): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $eq$eq, (J)Z)") def ==(x: Long): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $eq$eq, (F)Z)") def ==(x: Float): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $eq$eq, (D)Z)") def ==(x: Double): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $bang$eq, (B)Z)") def !=(x: Byte): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $bang$eq, (S)Z)") def !=(x: Short): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $bang$eq, (C)Z)") def !=(x: Char): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $bang$eq, (I)Z)") def !=(x: Int): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $bang$eq, (J)Z)") def !=(x: Long): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $bang$eq, (F)Z)") def !=(x: Float): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $bang$eq, (D)Z)") def !=(x: Double): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $less, (B)Z)") def <(x: Byte): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $less, (S)Z)") def <(x: Short): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $less, (C)Z)") def <(x: Char): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $less, (I)Z)") def <(x: Int): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $less, (J)Z)") def <(x: Long): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $less, (F)Z)") def <(x: Float): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $less, (D)Z)") def <(x: Double): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $less$eq, (B)Z)") def <=(x: Byte): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $less$eq, (S)Z)") def <=(x: Short): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $less$eq, (C)Z)") def <=(x: Char): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $less$eq, (I)Z)") def <=(x: Int): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $less$eq, (J)Z)") def <=(x: Long): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $less$eq, (F)Z)") def <=(x: Float): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $less$eq, (D)Z)") def <=(x: Double): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $greater, (B)Z)") def >(x: Byte): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $greater, (S)Z)") def >(x: Short): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $greater, (C)Z)") def >(x: Char): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $greater, (I)Z)") def >(x: Int): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $greater, (J)Z)") def >(x: Long): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $greater, (F)Z)") def >(x: Float): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $greater, (D)Z)") def >(x: Double): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $greater$eq, (B)Z)") def >=(x: Byte): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $greater$eq, (S)Z)") def >=(x: Short): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $greater$eq, (C)Z)") def >=(x: Char): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $greater$eq, (I)Z)") def >=(x: Int): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $greater$eq, (J)Z)") def >=(x: Long): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $greater$eq, (F)Z)") def >=(x: Float): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $greater$eq, (D)Z)") def >=(x: Double): Boolean = ???
+      |  @ffi("scalaIntrinsic(I, $bar, (B)I)") def |(x: Byte): Int = ???
+      |  @ffi("scalaIntrinsic(I, $bar, (S)I)") def |(x: Short): Int = ???
+      |  @ffi("scalaIntrinsic(I, $bar, (C)I)") def |(x: Char): Int = ???
+      |  @ffi("scalaIntrinsic(I, $bar, (I)I)") def |(x: Int): Int = ???
+      |  @ffi("scalaIntrinsic(I, $bar, (J)J)") def |(x: Long): Long = ???
+      |  @ffi("scalaIntrinsic(I, $amp, (B)I)") def &(x: Byte): Int = ???
+      |  @ffi("scalaIntrinsic(I, $amp, (S)I)") def &(x: Short): Int = ???
+      |  @ffi("scalaIntrinsic(I, $amp, (C)I)") def &(x: Char): Int = ???
+      |  @ffi("scalaIntrinsic(I, $amp, (I)I)") def &(x: Int): Int = ???
+      |  @ffi("scalaIntrinsic(I, $amp, (J)J)") def &(x: Long): Long = ???
+      |  @ffi("scalaIntrinsic(I, $up, (B)I)") def ^(x: Byte): Int = ???
+      |  @ffi("scalaIntrinsic(I, $up, (S)I)") def ^(x: Short): Int = ???
+      |  @ffi("scalaIntrinsic(I, $up, (C)I)") def ^(x: Char): Int = ???
+      |  @ffi("scalaIntrinsic(I, $up, (I)I)") def ^(x: Int): Int = ???
+      |  @ffi("scalaIntrinsic(I, $up, (J)J)") def ^(x: Long): Long = ???
+      |  @ffi("scalaIntrinsic(I, $plus, (B)I)") def +(x: Byte): Int = ???
+      |  @ffi("scalaIntrinsic(I, $plus, (S)I)") def +(x: Short): Int = ???
+      |  @ffi("scalaIntrinsic(I, $plus, (C)I)") def +(x: Char): Int = ???
+      |  @ffi("scalaIntrinsic(I, $plus, (I)I)") def +(x: Int): Int = ???
+      |  @ffi("scalaIntrinsic(I, $plus, (J)J)") def +(x: Long): Long = ???
+      |  @ffi("scalaIntrinsic(I, $plus, (F)F)") def +(x: Float): Float = ???
+      |  @ffi("scalaIntrinsic(I, $plus, (D)D)") def +(x: Double): Double = ???
+      |  @ffi("scalaIntrinsic(I, $minus, (B)I)") def -(x: Byte): Int = ???
+      |  @ffi("scalaIntrinsic(I, $minus, (S)I)") def -(x: Short): Int = ???
+      |  @ffi("scalaIntrinsic(I, $minus, (C)I)") def -(x: Char): Int = ???
+      |  @ffi("scalaIntrinsic(I, $minus, (I)I)") def -(x: Int): Int = ???
+      |  @ffi("scalaIntrinsic(I, $minus, (J)J)") def -(x: Long): Long = ???
+      |  @ffi("scalaIntrinsic(I, $minus, (F)F)") def -(x: Float): Float = ???
+      |  @ffi("scalaIntrinsic(I, $minus, (D)D)") def -(x: Double): Double = ???
+      |  @ffi("scalaIntrinsic(I, $times, (B)I)") def *(x: Byte): Int = ???
+      |  @ffi("scalaIntrinsic(I, $times, (S)I)") def *(x: Short): Int = ???
+      |  @ffi("scalaIntrinsic(I, $times, (C)I)") def *(x: Char): Int = ???
+      |  @ffi("scalaIntrinsic(I, $times, (I)I)") def *(x: Int): Int = ???
+      |  @ffi("scalaIntrinsic(I, $times, (J)J)") def *(x: Long): Long = ???
+      |  @ffi("scalaIntrinsic(I, $times, (F)F)") def *(x: Float): Float = ???
+      |  @ffi("scalaIntrinsic(I, $times, (D)D)") def *(x: Double): Double = ???
+      |  @ffi("scalaIntrinsic(I, $div, (B)I)") def /(x: Byte): Int = ???
+      |  @ffi("scalaIntrinsic(I, $div, (S)I)") def /(x: Short): Int = ???
+      |  @ffi("scalaIntrinsic(I, $div, (C)I)") def /(x: Char): Int = ???
+      |  @ffi("scalaIntrinsic(I, $div, (I)I)") def /(x: Int): Int = ???
+      |  @ffi("scalaIntrinsic(I, $div, (J)J)") def /(x: Long): Long = ???
+      |  @ffi("scalaIntrinsic(I, $div, (F)F)") def /(x: Float): Float = ???
+      |  @ffi("scalaIntrinsic(I, $div, (D)D)") def /(x: Double): Double = ???
+      |  @ffi("scalaIntrinsic(I, $percent, (B)I)") def %(x: Byte): Int = ???
+      |  @ffi("scalaIntrinsic(I, $percent, (S)I)") def %(x: Short): Int = ???
+      |  @ffi("scalaIntrinsic(I, $percent, (C)I)") def %(x: Char): Int = ???
+      |  @ffi("scalaIntrinsic(I, $percent, (I)I)") def %(x: Int): Int = ???
+      |  @ffi("scalaIntrinsic(I, $percent, (J)J)") def %(x: Long): Long = ???
+      |  @ffi("scalaIntrinsic(I, $percent, (F)F)") def %(x: Float): Float = ???
+      |  @ffi("scalaIntrinsic(I, $percent, (D)D)") def %(x: Double): Double = ???
+      |  @ffi("scalaIntrinsic(I, getClass, ()Ljava/lang/Class;)") override def getClass(): Class[Int] = ???
       |}
     """.trim.stripMargin)
   }
@@ -915,12 +928,12 @@ class SemanticSuite extends FunSuite {
       |package collection { ... }
       |package compat { ... }
       |package concurrent { ... }
-      |@getter @setter @beanGetter @beanSetter class deprecated(message: String = jvmMethod("Lscala/deprecated$;", "$lessinit$greater$default$1", "()Ljava/lang/String;").invoke(this), since: String = jvmMethod("Lscala/deprecated$;", "$lessinit$greater$default$2", "()Ljava/lang/String;").invoke(this)) extends Annotation with StaticAnnotation { ... }
+      |@getter @setter @beanGetter @beanSetter class deprecated(message: String = ???, since: String = ???) extends Annotation with StaticAnnotation { ... }
       |object deprecated extends AnyRef { ... }
-      |private[scala] class deprecatedInheritance(message: String = jvmMethod("Lscala/deprecatedInheritance$;", "$lessinit$greater$default$1", "()Ljava/lang/String;").invoke(this), since: String = jvmMethod("Lscala/deprecatedInheritance$;", "$lessinit$greater$default$2", "()Ljava/lang/String;").invoke(this)) extends Annotation with StaticAnnotation { ... }
+      |private[scala] class deprecatedInheritance(message: String = ???, since: String = ???) extends Annotation with StaticAnnotation { ... }
       |private[scala] object deprecatedInheritance extends AnyRef { ... }
       |@param class deprecatedName(name: Symbol) extends Annotation with StaticAnnotation { ... }
-      |private[scala] class deprecatedOverriding(message: String = jvmMethod("Lscala/deprecatedOverriding$;", "$lessinit$greater$default$1", "()Ljava/lang/String;").invoke(this), since: String = jvmMethod("Lscala/deprecatedOverriding$;", "$lessinit$greater$default$2", "()Ljava/lang/String;").invoke(this)) extends Annotation with StaticAnnotation { ... }
+      |private[scala] class deprecatedOverriding(message: String = ???, since: String = ???) extends Annotation with StaticAnnotation { ... }
       |private[scala] object deprecatedOverriding extends AnyRef { ... }
       |class inline() extends Annotation with StaticAnnotation { ... }
       |package io { ... }
@@ -938,7 +951,7 @@ class SemanticSuite extends FunSuite {
       |class specialized(group: SpecializedGroup) extends Annotation with StaticAnnotation { ... }
       |package sys { ... }
       |package text { ... }
-      |class throws[T <: Throwable](cause: String = jvmMethod("Lscala/throws$;", "$lessinit$greater$default$1", "()Ljava/lang/String;").invoke(this)) extends Annotation with StaticAnnotation { ... }
+      |class throws[T <: Throwable](cause: String = ???) extends Annotation with StaticAnnotation { ... }
       |object throws extends AnyRef { ... }
       |package tools { ... }
       |@field class transient() extends Annotation with StaticAnnotation { ... }

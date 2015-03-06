@@ -122,7 +122,71 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
           }
           loop(ginfo)
         }
-        lazy val mmods = this.mmods(lsym)
+        lazy val mmods = {
+          val mffi: List[m.Mod.Ffi] = {
+            def ffiScalaIntrinsic(gmeth: g.Symbol) = {
+              val className = gmeth.owner.tpe.jvmsig
+              val methodName = gmeth.name.encoded
+              val methodSig = gmeth.tpe.jvmsig
+              List(m.Mod.Ffi(s"scalaIntrinsic($className, $methodName, $methodSig)"))
+            }
+            def ffiScalaReflectMacro(gmacro: g.Symbol) = {
+              List(m.Mod.Ffi("scalaReflectMacro"))
+            }
+            def ffiJvmField(gfield: g.Symbol) = {
+              val className = gfield.owner.tpe.jvmsig
+              val fieldName = gfield.name.encoded
+              val fieldSig = gfield.tpe.jvmsig
+              List(m.Mod.Ffi(s"jvmField($className, $fieldName, $fieldSig)"))
+            }
+            def ffiJvmMethod(gmeth: g.Symbol) = {
+              val className = gmeth.owner.tpe.jvmsig
+              val methodName = gmeth.name.encoded
+              val methodSig = gmeth.tpe.jvmsig
+              List(m.Mod.Ffi(s"jvmMethod($className, $methodName, $methodSig)"))
+            }
+            lsym match {
+              case l.AbstractVal(gget) =>
+                ffiJvmMethod(gget)
+              case l.AbstractVar(gget, gset) =>
+                ffiJvmMethod(gget)
+              case l.Val(gfield, gget) =>
+                if (gget == g.NoSymbol) ffiJvmField(gfield)
+                else ffiJvmMethod(gget)
+              case l.Var(gfield, gget, _) =>
+                if (gget == g.NoSymbol) ffiJvmField(gfield)
+                else ffiJvmMethod(gget)
+              case l.AbstractDef(gsym) =>
+                if (gsym.isIntrinsic) ffiScalaIntrinsic(gsym)
+                else ffiJvmMethod(gsym)
+              case l.Def(gsym) =>
+                if (gsym.isIntrinsic) ffiScalaIntrinsic(gsym)
+                else ffiJvmMethod(gsym)
+              case l.Macro(gsym) =>
+                gsym.macroBody match {
+                  case MacroBody.None => unreachable(debug(gsym, gsym.flags, gsym.getClass, gsym.owner))
+                  case MacroBody.FastTrack(_) => ffiScalaReflectMacro(gsym)
+                  case MacroBody.Reflect(_) => ffiScalaReflectMacro(gsym)
+                  case MacroBody.Meta(body) => Nil
+                }
+              case l.PrimaryCtor(gsym) =>
+                ffiJvmMethod(gsym)
+              case l.SecondaryCtor(gsym) =>
+                ffiJvmMethod(gsym)
+              case l.TermParameter(gsym) if gsym.hasFlag(DEFAULTPARAM) =>
+                val paramPos = gsym.owner.paramss.flatten.indexWhere(_.name == gsym.name)
+                require(paramPos != -1)
+                val gdefaultGetterName = gsym.owner.name + "$default$" + (paramPos + 1)
+                var gdefaultGetterOwner = if (!gsym.owner.isConstructor) gsym.owner.owner else gsym.owner.owner.companion
+                val gdefaultGetter = gdefaultGetterOwner.info.decl(g.TermName(gdefaultGetterName).encodedName)
+                require(gdefaultGetter != g.NoSymbol && debug(gsym, gdefaultGetterOwner, gdefaultGetterName))
+                ffiJvmMethod(gdefaultGetter)
+              case _ =>
+                Nil
+            }
+          }
+          mffi ++ this.mmods(lsym)
+        }
         lazy val mname = lsym match {
           case l.AbstractVal(gsym) if gsym.hasFlag(EXISTENTIAL) =>
             val name = g.Ident(gsym.name.toString.stripSuffix(g.nme.SINGLETON_SUFFIX)).alias
@@ -164,85 +228,19 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
             m.Type.Bounds(mlo, mhi).withOriginal(gtpe)
         }
         lazy val mbody: m.Term = {
-          def mcallInterpreter(methName: String, methSig: String, margs: Seq[m.Term]) = {
-            def hmoduleSymbol(fullName: String) = fullName.split('.').foldLeft(h.Symbol.Root: h.Symbol)((acc, curr) => h.Symbol.Global(acc, curr, h.Signature.Term))
-            val hintp = h.Denotation.Precomputed(h.Prefix.Zero, hmoduleSymbol("scala.meta.internal.eval.interpreter"))
-            val mintp = m.Term.Name("interpreter", hintp, h.Sigma.Naive)
-            val hmeth = h.Denotation.Precomputed(h.Prefix.Zero, h.Symbol.Global(hintp.symbol, methName, h.Signature.Method(methSig)))
-            // val mmeth = m.Term.Select(mintp, m.Term.Name(methName, hmeth, h.Sigma.Naive))
-            val mmeth = m.Term.Name(methName, hmeth, h.Sigma.Naive)
-            m.Term.Apply(mmeth, margs)
-          }
-          def mincompatibleMacro = {
-            mcallInterpreter("incompatibleMacro", "()V", Nil)
-          }
-          def mloadField(gfield: g.Symbol) = {
-            val mintpSig = "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String)Ljava/lang/reflect/Field;"
-            val mintpArgs = List(gfield.owner.tpe.jvmsig, gfield.name.encoded, gfield.tpe.jvmsig).map(s => m.Lit.String(s))
-            val mintpCall = mcallInterpreter("jvmField", mintpSig, mintpArgs)
-            val gField_get = g.typeOf[java.lang.reflect.Field].member(g.TermName("get"))
-            val mget = m.Term.Select(mintpCall, m.Term.Name("get").withDenot(gField_get))
-            m.Term.Apply(mget, List(m.Term.This(m.Name.Anonymous().withDenot(gfield.owner))))
-          }
-          def mintrinsic(gmeth: g.Symbol) = {
-            val mintpSig = "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lscala/collection/Seq;)Ljava/lang/Object;"
-            val mintpArgs = {
-              val msigargs = List(gmeth.owner.tpe.jvmsig, gmeth.name.encoded, gmeth.tpe.jvmsig).map(s => m.Lit.String(s))
-              val mthisarg = List(m.Term.This(m.Name.Anonymous().withDenot(gmeth.owner)))
-              val motherargs = gmeth.paramss.flatten.map(gparam => gparam.asTerm.rawcvt(g.Ident(gparam)))
-              msigargs ++ mthisarg ++ motherargs
-            }
-            mcallInterpreter("intrinsic", mintpSig, mintpArgs)
-          }
-          def minvokeMethod(gmeth: g.Symbol) = {
-            val mintpSig = "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/reflect/Method;"
-            val mintpArgs = List(gmeth.owner.tpe.jvmsig, gmeth.name.encoded, gmeth.tpe.jvmsig).map(s => m.Lit.String(s))
-            val mintpCall = mcallInterpreter("jvmMethod", mintpSig, mintpArgs)
-            val gMethod_invoke = g.typeOf[java.lang.reflect.Method].member(g.TermName("invoke"))
-            val minvoke = m.Term.Select(mintpCall, m.Term.Name("invoke").withDenot(gMethod_invoke))
-            val margs = {
-              val mthisarg = m.Term.This(m.Name.Anonymous().withDenot(gmeth.owner))
-              val motherargs = gmeth.paramss.flatten.map(gparam => gparam.asTerm.rawcvt(g.Ident(gparam)))
-              mthisarg +: motherargs
-            }
-            m.Term.Apply(minvoke, margs)
-          }
+          val munknownTerm = m.Term.Name("???").withDenot(g.definitions.Predef_???).withOriginal(g.definitions.Predef_???)
           lsym match {
-            case l.Val(gfield, gget) =>
-              if (gget == g.NoSymbol) mloadField(gfield)
-              else minvokeMethod(gget)
-            case l.Var(gfield, gget, _) =>
-              if (gget == g.NoSymbol) mloadField(gfield)
-              else minvokeMethod(gget)
-            case l.AbstractDef(gsym) =>
-              if (gsym.isIntrinsic) mintrinsic(gsym)
-              else unreachable(debug(gsym, gsym.flags, gsym.getClass, gsym.owner))
-            case l.Def(gsym) =>
-              if (gsym.isIntrinsic) mintrinsic(gsym)
-              else minvokeMethod(gsym)
             case l.Macro(gsym) =>
               gsym.macroBody match {
-                case MacroBody.None => unreachable(debug(gsym, gsym.flags, gsym.getClass, gsym.owner))
-                case MacroBody.FastTrack(_) => mincompatibleMacro
-                case MacroBody.Reflect(_) => mincompatibleMacro
                 case MacroBody.Meta(body) => { val _ = toMtree.computeConverters; toMtree(body, classOf[m.Term]) }
+                case _ => munknownTerm
               }
             case l.SecondaryCtor(gsym) =>
               val gctor = gsym.owner.primaryConstructor
               val mctorref = m.Ctor.Name(gsym.owner.name.toString).withDenot(gpre, gctor).withOriginal(gctor)
-              // TODO: implement this in the same way as field accesses and method calls are implemented
-              val munknownTerm = m.Term.Name("???").withDenot(g.definitions.Predef_???).withOriginal(g.definitions.Predef_???)
               m.Term.Apply(mctorref, List(munknownTerm))
-            case l.TermParameter(gsym) =>
-              val paramPos = gsym.owner.paramss.flatten.indexWhere(_.name == gsym.name)
-              require(paramPos != -1)
-              val gdefaultGetterName = gsym.owner.name + "$default$" + (paramPos + 1)
-              var gdefaultGetterOwner = if (!gsym.owner.isConstructor) gsym.owner.owner else gsym.owner.owner.companion
-              val gdefaultGetter = gdefaultGetterOwner.info.decl(g.TermName(gdefaultGetterName).encodedName)
-              require(gdefaultGetter != g.NoSymbol && debug(gsym, gdefaultGetterOwner, gdefaultGetterName))
-              minvokeMethod(gdefaultGetter)
             case _ =>
-              unreachable(debug(lsym, lsym.gsymbol, lsym.gsymbol.flags, lsym.gsymbol.getClass, lsym.gsymbol.owner))
+              munknownTerm
           }
         }
         lazy val mmaybeBody = if (gsym.hasFlag(DEFAULTINIT)) None else Some(mbody)
