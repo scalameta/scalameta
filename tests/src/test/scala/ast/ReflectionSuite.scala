@@ -332,6 +332,7 @@ class ReflectionSuite extends AstSuite {
         report += ""
       }
     })
+    // NOTE: if something in this report changes, you must update requirements in impl.Unquote's body
     assert(report.mkString(EOL) === """
       |scala.meta.internal.ast.Term.Block -> scala.meta.Term with scala.meta.Scope
       |field Case.body: scala.meta.internal.ast.Term.Block

@@ -391,7 +391,6 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       case unquote: tok.Unquote =>
         next()
         val T = classTag[T].runtimeClass
-        require(!T.getClass.getName.startsWith("scala.meta.internal.ast.") && debug(T))
         impl.Unquote(unquote.tree, T).asInstanceOf[T]
       case _ =>
         unreachable(debug(token))

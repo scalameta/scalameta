@@ -498,7 +498,14 @@ package scala.meta.internal.ast {
 
   // TODO: after we bootstrap, Unquote.tree will become scala.meta.Tree
   // however, for now, we will keep it at Any in order to also support scala.reflect trees
+  // NOTE: before you remove one of these requirements, you must know what's going on in the "allFields.unquote" test
   @bottom @ast class Unquote(tree: Any, pt: Class[_]) extends Tree {
     require(classOf[api.Tree].isAssignableFrom(pt))
+    require(pt != classOf[Term.Block])
+    require(pt != classOf[Type.Bounds])
+    require(pt != classOf[Ctor.Primary])
+    require(pt != classOf[Import.Clause])
+    require(pt != classOf[Lit.String])
+    require(pt != classOf[Mod.Annot])
   }
 }
