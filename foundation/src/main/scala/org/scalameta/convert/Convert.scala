@@ -3,6 +3,10 @@ package org.scalameta
 import scala.annotation.implicitNotFound
 
 package convert {
+  // NOTE: neither A nor B can have variance annotations
+  // we can't turn A into -A because contravariant implicits don't work
+  // we can't turn B into +B because a converter from A to B isn't necessarily a conversion from A to a supertype of B
+  // take serialization, for instance. a deserializer for Foo is not the same as a deserializer for AnyRef.
   @implicitNotFound("don't know how to convert ${A} to ${B}")
   trait Convert[A, B] {
     def apply(a: A): B

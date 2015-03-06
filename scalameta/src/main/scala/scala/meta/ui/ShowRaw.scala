@@ -7,6 +7,7 @@ import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.meta.internal.ast._
 import scala.{meta => api}
+import scala.meta.internal.{ast => impl}
 import scala.annotation.implicitNotFound
 import scala.meta.syntactic.Token._
 
@@ -17,6 +18,10 @@ object Raw {
 
   // TODO: would be nice to generate this with a macro for all tree nodes that we have
   implicit def rawTree[T <: api.Tree]: Raw[T] = Raw(x => s(x.productPrefix, "(", x match {
+    case x: impl.Ellipsis =>
+      s(x.tree.show[Raw], ", classOf[", x.pt.getName, "]")
+    case x: impl.Unquote =>
+      s(x.tree.toString, ", classOf[", x.pt.getName, "]")
     case x: Lit.String =>
       s(enquote(x.value, DoubleQuotes))
     case x: Lit =>
@@ -36,7 +41,7 @@ object Raw {
   }, ")"))
 
   implicit def rawToken[T <: Token]: Raw[T] = Raw { x =>
-    val prefix = (x: Token) match { case x: EOF => "EOF"; case x: Dynamic => x.code; case x: Static => x.name }
+    val prefix = (x: Token) match { case x: BOF => "BOF"; case x: EOF => "EOF"; case x: Dynamic => x.code; case x: Static => x.name }
     s(prefix, " (", x.start.toString, "..", x.end.toString, ")")
   }
 }

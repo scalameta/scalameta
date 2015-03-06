@@ -166,12 +166,17 @@
  Primary Ctor   | `q"..$mods def this(..$paramss)"`
  Secondary Ctor | `q"..$mods def this(..$paramss) = $expr"`
 
-### Params
+### Value Parameters (meta.Term.Param)
 
                 | Quasiquote
 ----------------|-------------------------------------------------
  Term Param     | `param"..$mods $pname: $atpeopt = $defaultopt"`
- Type Param     | `param"..$mods type $tpname[..$tparams] >: $tpeopt <: $tpeopt <% ..$tpes : ..$tpes"`
+
+### Type Parameters (meta.Type.Param)
+
+                | Quasiquote
+----------------|-------------------------------------------------
+ Type Param     | `tparam"..$mods $tpname[..$tparams] >: $tpeopt <: $tpeopt <% ..$tpes : ..$tpes"`
 
 ## Constructor References (meta.Ctor.Ref and meta.Term)
 
@@ -226,6 +231,12 @@
  Rename    | `importee"$iname => $iname"`
  Unimport  | `importee"$iname => _"`
  Wildcard  | `importee"_"`
+
+## Sources (meta.Source)
+
+           | Quasiquote
+-----------|---------------------------
+ Source    | `source"..$stats"`
 
 ## Naming conventions
 

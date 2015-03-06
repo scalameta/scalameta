@@ -1,11 +1,11 @@
 package org.scalameta.tql
 
 import scala.reflect.macros.whitebox.Context
-import org.scalameta.adt._
+import org.scalameta.adt.{Reflection => AdtReflection}
 
 class TraverserBuilderMacros(val c: Context) extends AdtReflection {
-  val u: c.universe.type = c.universe
-  val mirror: u.Mirror = c.mirror
+  lazy val u: c.universe.type = c.universe
+  lazy val mirror: u.Mirror = c.mirror
   import c.universe._
   val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
 

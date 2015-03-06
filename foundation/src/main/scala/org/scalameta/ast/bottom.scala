@@ -40,7 +40,7 @@ class BottomMacros(val c: Context) {
             drilldown(name.toString, inner = false)(super.traverse(tree))
           case ClassDef(Modifiers(_, _, anns), name, _, impl) =>
             if (inner) c.abort(tree.pos, "@ast classes can't be inner")
-            if (anns.exists(_.toString == "new ast()") && name != cdef.name) {
+            if (anns.exists(_.toString == "new ast()") && !anns.exists(_.toString == "new bottom()")) {
               astClasses += Select(module, name)
               val q"$_ class $_[..$_] $_(...$paramss) extends { ..$_ } with ..$_ { $_ => ..$_ }" = tree
               astFields ++= paramss.flatten.map(_.name)
@@ -51,12 +51,14 @@ class BottomMacros(val c: Context) {
         }
       }
       astClassDetector.traverse(enclosingUnit)
+      val mods1 = Modifiers(mods.flags, TypeName("meta"), mods.annotations)
       val parents1 = parents ++ astClassDetector.astClasses
       val stats1 = stats ++ astClassDetector.astFields.distinct.map(name => {
-        val impl = q"""throw new _root_.scala.`package`.UnsupportedOperationException("can't call inherited methods on @bottom classes")"""
+        val message = s"unsupported ${if (name.toString == "Unquote") "unquoting" else "splicing"} position"
+        val impl = q"throw new _root_.scala.`package`.UnsupportedOperationException($message)"
         q"override def $name: _root_.scala.Nothing = $impl"
       })
-      ClassDef(mods, name, tparams, Template(parents1, self, stats1))
+      ClassDef(mods1, name, tparams, Template(parents1, self, stats1))
     }
     val expanded = annottees match {
       case (cdef @ ClassDef(mods, _, _, _)) :: rest if !mods.hasFlag(TRAIT) => transform(cdef) :: rest

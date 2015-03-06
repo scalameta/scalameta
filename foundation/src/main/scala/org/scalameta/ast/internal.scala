@@ -4,6 +4,7 @@ import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
 import scala.annotation.meta.getter
 import scala.reflect.macros.blackbox.Context
+import org.scalameta.adt.{Reflection => AdtReflection}
 
 object internal {
   trait Ast extends org.scalameta.adt.Internal.Adt
@@ -22,9 +23,9 @@ object internal {
   def initField[T](f: T): T = macro Macros.initField
   def initParam[T](f: T): T = macro Macros.initField
 
-  class Macros(val c: Context) extends org.scalameta.adt.AdtReflection {
-    val u: c.universe.type = c.universe
-    val mirror: u.Mirror = c.mirror
+  class Macros(val c: Context) extends AdtReflection {
+    lazy val u: c.universe.type = c.universe
+    lazy val mirror: u.Mirror = c.mirror
     import c.universe._
     import c.internal._
     import decorators._
@@ -76,6 +77,7 @@ object internal {
         """
       }
       f.tpe.finalResultType match {
+        case Any(tpe) => q"()"
         case Primitive(tpe) => q"()"
         case Tree(tpe) => lazyLoad(pf => q"$pf.internalCopy(prototype = $pf, parent = this)")
         case OptionTree(tpe) => lazyLoad(pf => q"$pf.map(el => el.internalCopy(prototype = el, parent = this))")
@@ -86,6 +88,7 @@ object internal {
     }
     def storeField(f: c.Tree, v: c.Tree): c.Tree = {
       f.tpe.finalResultType match {
+        case Any(tpe) => q"()"
         case Primitive(tpe) => q"()"
         case Tree(tpe) => q"$f = $v.internalCopy(prototype = $v, parent = node)"
         case OptionTree(tpe) => q"$f = $v.map(el => el.internalCopy(prototype = el, parent = node))"
@@ -97,6 +100,7 @@ object internal {
     }
     def initField(f: c.Tree): c.Tree = {
       f.tpe.finalResultType match {
+        case Any(tpe) => q"$f"
         case Primitive(tpe) => q"$f"
         case Tree(tpe) => q"null"
         case OptionTree(tpe) => q"null"
@@ -104,6 +108,12 @@ object internal {
         case SeqTree(tpe) => q"null"
         case SeqSeqTree(tpe) => q"null"
         case tpe => c.abort(c.enclosingPosition, s"unsupported field type $tpe")
+      }
+    }
+    private object Any {
+      def unapply(tpe: Type): Option[Type] = {
+        if (tpe =:= AnyTpe) Some(tpe)
+        else None
       }
     }
     private object Primitive {
@@ -114,6 +124,7 @@ object internal {
         else if (tpe.typeSymbol == OptionClass && Primitive.unapply(tpe.typeArgs.head).nonEmpty) Some(tpe)
         else if (tpe.baseClasses.contains(c.mirror.staticClass("scala.meta.internal.hygiene.Denotation"))) Some(tpe)
         else if (tpe.baseClasses.contains(c.mirror.staticClass("scala.meta.internal.hygiene.Sigma"))) Some(tpe)
+        else if (tpe.typeSymbol == ClassClass) Some(tpe)
         else None
       }
     }

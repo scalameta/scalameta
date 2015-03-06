@@ -6,7 +6,7 @@ import org.scalameta.ast.{internal => AstInternal}
 import scala.reflect.{classTag, ClassTag}
 import scala.collection.mutable
 
-trait AdtReflection {
+trait Reflection {
   val u: Universe
   val mirror: u.Mirror
   import u._
@@ -36,9 +36,11 @@ trait AdtReflection {
 
   private lazy val ScalaMetaTree: Symbol = scala.util.Try(mirror.staticClass("scala.meta.Tree")).getOrElse(NoSymbol)
   private lazy val scalaMetaRegistry: Map[Symbol, List[Symbol]] = {
+    val ellipsisClass = mirror.staticClass("scala.meta.internal.ast.Ellipsis")
     val unquoteClass = mirror.staticClass("scala.meta.internal.ast.Unquote")
     val registry = mutable.Map[Symbol, List[Symbol]]()
-    unquoteClass.baseClasses.foreach(sym => {
+    val astClasses = ellipsisClass +: unquoteClass.baseClasses
+    astClasses.foreach(sym => {
       if (sym.fullName.startsWith("scala.meta.")) {
         val parents = sym.info.asInstanceOf[ClassInfoType].parents.map(_.typeSymbol)
         val relevantParents = parents.filter(p => p.isClass && p.asClass.baseClasses.contains(ScalaMetaTree))
@@ -66,8 +68,7 @@ trait AdtReflection {
     def allFields: List[Symbol] = sym.info.decls.filter(_.isField).toList
   }
 
-  trait CommonApi {
-    def sym: Symbol
+  abstract class Adt(val sym: Symbol) {
     def tpe: Type = if (sym.isTerm) sym.info else sym.asType.toType
     def prefix: String = {
       def loop(sym: Symbol): String = {
@@ -78,8 +79,8 @@ trait AdtReflection {
     }
     def root = sym.root.asRoot
   }
-  abstract class Adt(val sym: Symbol) extends CommonApi
-  trait NonLeafApi extends CommonApi {
+  trait NonLeafApi extends Adt {
+    def all: List[Adt] = List(this) ++ this.allBranches ++ this.allLeafs
     def branches: List[Branch] = sym.branches.map(_.asBranch)
     def allBranches: List[Branch] = sym.allBranches.map(_.asBranch)
     def leafs: List[Leaf] = sym.leafs.map(_.asLeaf)
@@ -101,10 +102,11 @@ trait AdtReflection {
   }
   class Field(val sym: Symbol) {
     require(sym.isField)
+    def owner: Leaf = sym.owner.asLeaf
     def name: TermName = TermName(sym.name.toString.stripPrefix("_"))
     def tpe: Type = sym.info.finalResultType
     def isPayload: Boolean = sym.isPayload
     def isAuxiliary: Boolean = sym.isAuxiliary
-    override def toString = s"field $name: $tpe" + (if (isAuxiliary) " (auxiliary)" else "")
+    override def toString = s"field ${owner.prefix}.$name: $tpe" + (if (isAuxiliary) " (auxiliary)" else "")
   }
 }

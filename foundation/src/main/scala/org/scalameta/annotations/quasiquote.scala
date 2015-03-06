@@ -11,6 +11,8 @@ class quasiquote[T](qname: scala.Symbol) extends StaticAnnotation {
 class QuasiquoteMacros(val c: Context) {
   import c.universe._
   import Flag._
+  val ReificationMacros = q"_root_.scala.meta.internal.quasiquotes.ReificationMacros"
+  val LiftMacros = q"_root_.scala.meta.internal.quasiquotes.LiftMacros"
   def impl(annottees: c.Tree*): c.Tree = {
     val q"new $_[..$qtypes](scala.Symbol(${qname: String})).macroTransform(..$_)" = c.macroApplication
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
@@ -25,19 +27,29 @@ class QuasiquoteMacros(val c: Context) {
         q"""
           object ${TermName(qname)} {
             import scala.language.experimental.macros
-            def apply[T](args: T*)(implicit dialect: _root_.scala.meta.Dialect): $qtypesLub = macro _root_.scala.meta.internal.quasiquotes.Macros.apply
-            def unapply(scrutinee: Any)(implicit dialect: _root_.scala.meta.Dialect): Any = macro _root_.scala.meta.internal.quasiquotes.Macros.unapply
+            def apply[T >: Any](args: T*)(implicit dialect: _root_.scala.meta.Dialect): $qtypesLub = macro $ReificationMacros.apply
+            def unapply(scrutinee: Any)(implicit dialect: _root_.scala.meta.Dialect): Any = macro $ReificationMacros.unapply
           }
         """
       }
       val qparser = {
         val qunsafeResults = qtypes.map(qtype => q"_root_.scala.meta.`package`.XtensionInputLike(input).parse[$qtype]")
-        var qsafeResult = qunsafeResults.map(qunsafeParser => q"_root_.scala.util.Try($qunsafeParser)").reduce((acc, curr) => q"$acc.orElse($curr)")
+        val qsafeResults = qunsafeResults.map(qunsafeParser => q"_root_.scala.util.Try($qunsafeParser)")
+        val gsafeResultsWithLogging = qsafeResults.map(qsafeResult => q"""
+          $qsafeResult.recover({
+            case ex: _root_.scala.Exception =>
+              if (_root_.scala.sys.`package`.props("quasiquote.debug") != null) ex.printStackTrace()
+              throw ex
+          })
+        """)
+        var qsafeResult = gsafeResultsWithLogging.reduce((acc, curr) => q"$acc.orElse($curr)")
         val qparseResult = if (qunsafeResults.length == 1) qunsafeResults.head else q"$qsafeResult.get"
         q"private[meta] def parse(input: _root_.scala.meta.`package`.Input)(implicit dialect: _root_.scala.meta.Dialect) = $qparseResult"
       }
-      val cdef1 = q"$mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..${qmodule +: stats} }"
-      val mdef1 = q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..${mstats :+ qparser} }"
+      val stats1 = stats :+ qmodule
+      val mstats1 = mstats :+ qparser
+      val cdef1 = q"$mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats1 }"
+      val mdef1 = q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
       List(cdef1, mdef1)
     }
     val expanded = annottees match {

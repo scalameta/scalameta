@@ -20,8 +20,8 @@ class AstMacros(val c: Context) {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       def is(abbrev: String) = c.internal.enclosingOwner.fullName + "." + cdef.name == "scala.meta.internal.ast." + abbrev
       val q"$imods class $iname[..$tparams] $ctorMods(...$rawparamss) extends { ..$earlydefns } with ..$iparents { $aself => ..$astats }" = cdef
-      val aname = if (is("Unquote")) iname else TypeName("Api")
-      val name = if (is("Unquote")) iname else TypeName("Impl")
+      val aname = if (is("Ellipsis") || is("Unquote")) iname else TypeName("Api")
+      val name = if (is("Ellipsis") || is("Unquote")) iname else TypeName("Impl")
       val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" = mdef
       val bparams1 = ListBuffer[ValDef]() // boilerplate params
       val paramss1 = ListBuffer[List[ValDef]]() // payload params
@@ -33,8 +33,8 @@ class AstMacros(val c: Context) {
       val ianns1 = ListBuffer[Tree]() ++ imods.annotations
       def imods1 = imods.mapAnnotations(_ => ianns1.toList)
       val iparents1 = ListBuffer[Tree]() ++ iparents
-      def aparents1 = if (is("Unquote")) iparents1 else List(tq"$iname")
-      def parents1 = if (is("Unquote")) iparents1 else List(tq"$aname")
+      def aparents1 = if (is("Ellipsis") || is("Unquote")) iparents1 else List(tq"$iname")
+      def parents1 = if (is("Ellipsis") || is("Unquote")) iparents1 else List(tq"$aname")
       val mstats1 = ListBuffer[Tree]() ++ mstats
       val manns1 = ListBuffer[Tree]() ++ mmods.annotations
       def mmods1 = mmods.mapAnnotations(_ => manns1.toList)
@@ -209,7 +209,7 @@ class AstMacros(val c: Context) {
         }
       }
 
-      if (is("Unquote")) {
+      if (is("Ellipsis") || is("Unquote")) {
         val ustats1 = stats1 ++ astats1
         val cdef1 = q"${finalize(imods1)} class $name[..$tparams] $ctorMods(...${bparams1 +: paramss1}) extends { ..$earlydefns } with ..$parents1 { $self => ..$ustats1 }"
         val mdef1 = q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"

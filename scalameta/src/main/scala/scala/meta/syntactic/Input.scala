@@ -23,7 +23,7 @@ object Input {
     require(-1 <= end && end < input.content.length)
     lazy val content = input.content.slice(start, end + 1)
   }
-  final case class String(s: scala.Predef.String) extends Input {
+  final case class String(s: Predef.String) extends Input {
     lazy val content = s.toArray
   }
   final case class File(f: java.io.File, charset: Charset) extends Input {
@@ -33,9 +33,25 @@ object Input {
     def apply(path: Predef.String): Input.File = Input.File(new java.io.File(path))
     def apply(f: java.io.File): Input.File = Input.File(f, Charset.forName("UTF-8"))
   }
-  final case class Tokens(precomputedTokens: Vector[Token]) extends Input {
-    lazy val content = precomputedTokens.map(_.code).mkString.toArray
+  final class Tokens private (private var precomputedContent: Predef.String, private var precomputedTokens: Vector[Token]) extends Input {
+    lazy val content = precomputedContent.toArray
     override def tokens(implicit dialect: Dialect) = precomputedTokens
+    override def toString = s"Tokens(" + precomputedTokens + ")"
+  }
+  object Tokens {
+    def apply(tokens: Vector[Token]): Tokens = {
+      val instance = new Tokens("", Vector())
+      var currentLength = 0
+      instance.precomputedContent = tokens.map(_.code).mkString
+      instance.precomputedTokens = tokens.zipWithIndex.map({ case (token, i) =>
+        val adjustedStart = currentLength
+        val adjustedEnd = currentLength + token.end - token.start
+        val adjustedToken = token.adjust(input = instance, index = i, start = adjustedStart, end = adjustedEnd)
+        currentLength += token.code.length
+        adjustedToken
+      })
+      instance
+    }
   }
   final case class Chars(content: Array[Char]) extends Input
   implicit val stringToInput: Convert[scala.Predef.String, Input] = Convert.apply(Input.String(_))

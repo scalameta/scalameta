@@ -23,7 +23,7 @@ object typecheckError {
       case _ => c.abort(c.enclosingPosition, "this macro only works with literal strings")
     }
     val tree = {
-      try c.parse(s_code)
+      try c.parse(s_code.replace("QQQ", "\"\"\""))
       catch { case ex: ParseException => c.abort(c.enclosingPosition, "this code fails to parse") }
     }
     def format(ex: TypecheckException) = {
