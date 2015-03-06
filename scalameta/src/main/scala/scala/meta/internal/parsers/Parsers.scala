@@ -49,20 +49,59 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     case other => reporter.syntaxError("these statements can't be mixed together", at = tokens.head)
   })
   def parseTerm(): Term = parseRule(_.expr())
-  def parseTermArg(): Term.Arg = ???
-  def parseTermParam(): Term.Param = ???
+  def parseTermArg(): Term.Arg = parseRule(_.argumentExpr())
+  def parseTermParam(): Term.Param = parseRule(_.param(ownerIsCase = false, ownerIsType = true, isImplicit = false))
   def parseType(): Type = parseRule(_.typ())
   def parseTypeArg(): Type.Arg = parseRule(_.paramType())
-  def parseTypeParam(): Type.Param = ???
-  def parsePat(): Pat = ???
+  def parseTypeParam(): Type.Param = parseRule(_.typeParam(ownerIsType = true, ctxBoundsAllowed = true))
+  def parsePat(): Pat = {
+    parseRule(_.pattern()) match {
+      case pat: Pat => pat
+      case other => reporter.syntaxError("argument patterns are not allowed here", at = other)
+    }
+  }
   def parsePatArg(): Pat.Arg = parseRule(_.pattern())
-  def parsePatType(): Pat.Type = ???
-  def parseCase(): Case = ???
+  def parsePatType(): Pat.Type = parseRule(_.patternTyp())
+  def parseCase(): Case = parseRule{parser => parser.accept[`case`]; parser.caseClause()}
   def parseCtorRef(): Ctor.Ref = ???
-  def parseTemplate(): Template = ???
-  def parseMod(): Mod = ???
-  def parseEnumerator(): Enumerator = ???
-  def parseImportee(): Importee = ???
+  def parseTemplate(): Template = parseRule(_.template())
+  def parseMod(): Mod = {
+    implicit class XtensionParser(parser: this.type) {
+      def annot() = parser.annots(skipNewLines = false) match {
+        case annot :: Nil =>
+          annot
+        case annot :: other :: _ =>
+          val token = other.origin.tokens.head
+          parser.reporter.syntaxError(s"end of file expected but ${token.name} found.", at = token)
+        case Nil =>
+          unreachable(debug(input, dialect))
+      }
+    }
+    parseRule(parser => parser.autoPos(parser.token match {
+      case _: `@`              => parser.annot()
+      case _: `private`        => parser.accessModifier()
+      case _: `protected`      => parser.accessModifier()
+      case _: `implicit`       => parser.next(); Mod.Implicit()
+      case _: `final`          => parser.next(); Mod.Final()
+      case _: `sealed`         => parser.next(); Mod.Sealed()
+      case _: `override`       => parser.next(); Mod.Override()
+      case _: `case`           => parser.next(); Mod.Case()
+      case _: `abstract`       => parser.next(); Mod.Abstract()
+      case _ if isIdentOf("+") => parser.next(); Mod.Covariant()
+      case _ if isIdentOf("-") => parser.next(); Mod.Contravariant()
+      case _: `lazy`           => parser.next(); Mod.Lazy()
+      case _: `val`            => parser.next(); Mod.ValParam()
+      case _: `var`            => parser.next(); Mod.VarParam()
+      case _                   => parser.reporter.syntaxError(s"modifier expected but ${parser.token.name} found.", at = parser.token)
+    }))
+  }
+  def parseEnumerator(): Enumerator = {
+    parseRule(_.enumerator(isFirst = false, allowNestedIf = false) match {
+      case enumerator :: Nil => enumerator
+      case other => unreachable(debug(input, dialect, other))
+    })
+  }
+  def parseImportee(): Importee = parseRule(_.importSelector())
   def parseSource(): Source = parseRule(_.compilationUnit())
 
 /* ------------- PARSER TOKENS -------------------------------------------- */
@@ -710,6 +749,32 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
      */
     def types(): List[Type] = commaSeparated(argType())
     def functionTypes(): List[Type.Arg] = commaSeparated(functionArgType())
+
+    // TODO: I have a feeling that we no longer need PatternContextSensitive
+    // now that we have Pat.Type separate from Type
+    def patternTyp() = {
+      def convert(tpe: Type): Pat.Type = tpe match {
+        case tpe: Type.Name => atPos(tpe, tpe)(Pat.Var.Type(tpe))
+        case Type.Placeholder(Type.Bounds(None, None)) => atPos(tpe, tpe)(Pat.Type.Wildcard())
+        case _ => loop(tpe)
+      }
+      def loop(tpe: Type): Pat.Type = tpe match {
+        case tpe: Type.Name => tpe
+        case tpe: Type.Select => tpe
+        case Type.Project(qual, name) => atPos(tpe, tpe)(Pat.Type.Project(loop(qual), name))
+        case tpe: Type.Singleton => tpe
+        case Type.Apply(underlying, args) => atPos(tpe, tpe)(Pat.Type.Apply(loop(underlying), args.map(convert)))
+        case Type.ApplyInfix(lhs, op, rhs) => atPos(tpe, tpe)(Pat.Type.ApplyInfix(loop(lhs), op, loop(rhs)))
+        case Type.Function(params, res) => atPos(tpe, tpe)(Pat.Type.Function(params.map(p => loop(p.require[Type])), loop(res)))
+        case Type.Tuple(elements) => atPos(tpe, tpe)(Pat.Type.Tuple(elements.map(loop)))
+        case Type.Compound(tpes, refinement) => atPos(tpe, tpe)(Pat.Type.Compound(tpes.map(loop), refinement))
+        case Type.Existential(underlying, quants) => atPos(tpe, tpe)(Pat.Type.Existential(loop(underlying), quants))
+        case Type.Annotate(underlying, annots) => atPos(tpe, tpe)(Pat.Type.Annotate(loop(underlying), annots))
+        case tpe: Type.Placeholder => tpe
+        case tpe: Lit => tpe
+      }
+      loop(compoundType())
+    }
   }
 
   private trait AllowedName[T]
@@ -1262,30 +1327,29 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     }
   }
 
+  def argumentExpr(): Term.Arg = {
+    expr() match {
+      case t @ impl.Unquote(tree, _) =>
+        atPos(t, t)(impl.Unquote(tree, classOf[Term.Arg]))
+      case Term.Ascribe(t, Type.Placeholder(Type.Bounds(None, None))) if isIdentOf("*") =>
+        next()
+        atPos(t, auto)(Term.Arg.Repeated(t))
+      case Term.Assign(t: Term.Name, rhs) =>
+        atPos(t, auto)(Term.Arg.Named(t, rhs))
+      case other =>
+        other
+    }
+  }
+
   /** {{{
    *  ArgumentExprs ::= `(' [Exprs] `)'
    *                  | [nl] BlockExpr
    *  }}}
    */
-  def argumentExprs(): List[Term.Arg] = {
-    def args(): List[Term.Arg] = commaSeparated {
-      expr() match {
-        case t @ impl.Unquote(tree, _) =>
-          atPos(t, t)(impl.Unquote(tree, classOf[Term.Arg]))
-        case Term.Ascribe(t, Type.Placeholder(Type.Bounds(None, None))) if isIdentOf("*") =>
-          next()
-          atPos(t, auto)(Term.Arg.Repeated(t))
-        case Term.Assign(t: Term.Name, rhs) =>
-          atPos(t, auto)(Term.Arg.Named(t, rhs))
-        case other =>
-          other
-      }
-    }
-    token match {
-      case _: `{` => List(blockExpr())
-      case _: `(` => inParens(if (token.is[`)`]) Nil else args())
-      case _      => Nil
-    }
+  def argumentExprs(): List[Term.Arg] = token match {
+    case _: `{` => List(blockExpr())
+    case _: `(` => inParens(if (token.is[`)`]) Nil else commaSeparated(argumentExpr))
+    case _      => Nil
   }
 
   /** {{{
@@ -1443,29 +1507,6 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
      *  }}}
      */
     def pattern1(): Pat.Arg = autoPos {
-      def patternType(): Pat.Type = {
-        def convert(tpe: Type): Pat.Type = tpe match {
-          case tpe: Type.Name => atPos(tpe, tpe)(Pat.Var.Type(tpe))
-          case Type.Placeholder(Type.Bounds(None, None)) => atPos(tpe, tpe)(Pat.Type.Wildcard())
-          case _ => loop(tpe)
-        }
-        def loop(tpe: Type): Pat.Type = tpe match {
-          case tpe: Type.Name => tpe
-          case tpe: Type.Select => tpe
-          case Type.Project(qual, name) => atPos(tpe, tpe)(Pat.Type.Project(loop(qual), name))
-          case tpe: Type.Singleton => tpe
-          case Type.Apply(underlying, args) => atPos(tpe, tpe)(Pat.Type.Apply(loop(underlying), args.map(convert)))
-          case Type.ApplyInfix(lhs, op, rhs) => atPos(tpe, tpe)(Pat.Type.ApplyInfix(loop(lhs), op, loop(rhs)))
-          case Type.Function(params, res) => atPos(tpe, tpe)(Pat.Type.Function(params.map(p => loop(p.require[Type])), loop(res)))
-          case Type.Tuple(elements) => atPos(tpe, tpe)(Pat.Type.Tuple(elements.map(loop)))
-          case Type.Compound(tpes, refinement) => atPos(tpe, tpe)(Pat.Type.Compound(tpes.map(loop), refinement))
-          case Type.Existential(underlying, quants) => atPos(tpe, tpe)(Pat.Type.Existential(loop(underlying), quants))
-          case Type.Annotate(underlying, annots) => atPos(tpe, tpe)(Pat.Type.Annotate(loop(underlying), annots))
-          case tpe: Type.Placeholder => tpe
-          case tpe: Lit => tpe
-        }
-        loop(compoundType())
-      }
       val p = pattern2()
       if (token.isNot[`:`]) p
       else {
@@ -1478,13 +1519,13 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
             Pat.Bind(p, wildcard)
           case p: Pat.Var.Term =>
             nextOnce()
-            Pat.Typed(p, patternType())
+            Pat.Typed(p, patternTyp())
           case p: Pat.Wildcard if dialect.bindToSeqWildcardDesignator == ":" && isColonWildcardStar =>
             nextThrice()
             Pat.Arg.SeqWildcard()
           case p: Pat.Wildcard =>
             nextOnce()
-            Pat.Typed(p, patternType())
+            Pat.Typed(p, patternTyp())
           case p =>
             p
         }
@@ -1652,8 +1693,9 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
    *  they are all initiated from non-pattern context.
    */
   def typ(): Type      = outPattern.typ()
+  def patternTyp()     = outPattern.patternTyp()
   def startInfixType() = outPattern.infixType(InfixMode.FirstOp)
-  def startModType() = outPattern.annotType()
+  def startModType()   = outPattern.annotType()
   def exprTypeArgs()   = outPattern.typeArgs()
   def exprSimpleType() = outPattern.simpleType()
 
