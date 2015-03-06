@@ -25,9 +25,16 @@ class TokenMetadataMacros(val c: Context) {
       val nameBody = {
         val ctor = T.tpe.typeSymbol.info.decls.collect{case m: MethodSymbol if m.isPrimaryConstructor => m}.head
         val argss = ctor.paramLists.map(_.map(p => {
-          if (p.info =:= typeOf[String]) Literal(Constant(""))
-          else if (p.info.typeSymbol.fullName == "scala.meta.syntactic.Input") q"_root_.scala.meta.syntactic.Input.None"
-          else gen.mkZero(p.info)
+          if (p.name == TermName("input")) q"_root_.scala.meta.syntactic.Input.None"
+          else if (p.name == TermName("dialect")) q"_root_.scala.meta.dialects.Scala211"
+          else if (p.name == TermName("index")) q"0"
+          else if (p.name == TermName("start")) q"0"
+          else if (p.name == TermName("end")) q"-1"
+          else if (p.name == TermName("value")) gen.mkZero(p.info)
+          else if (p.name == TermName("rank")) q"0"
+          else if (p.name == TermName("tree")) q"null"
+          else if (p.name == TermName("prototype")) q"_root_.scala.meta.syntactic.Token.Prototype.None"
+          else c.abort(c.enclosingPosition, s"unsupported parameter: $p")
         }))
         q"new $T(...$argss).name"
       }

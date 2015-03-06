@@ -202,7 +202,8 @@ object Code {
   // TODO: this match is not exhaustive: if I remove Mod.Package, then I get no warning
   implicit def codeTree[T <: api.Tree](implicit dialect: Dialect, style: Style): Code[T] = Code { x => (x: api.Tree) match {
     // Bottom
-    case t: Unquote              => s("${...}")
+    case t: Ellipsis             => s("." * (t.rank + 1), a("{", t.tree, "}", !t.tree.isInstanceOf[Unquote]))
+    case t: Unquote              => s("${", t.tree.toString, " @ ", t.pt.getName.stripPrefix("scala.meta.").stripPrefix("internal.ast."), "}")
 
     // Name
     case t: Name.Anonymous       => s("_")
@@ -455,7 +456,23 @@ object Code {
     case t: Import                   => s(kw("import"), " ", r(t.clauses, ", "))
 
     // Case
-    case t: Case  => s("case ", p(Pattern, t.pat), t.cond.map { cond => s(" ", kw("if"), " ", p(PostfixExpr, cond)) }.getOrElse(s()), " ", kw("=>"), r(t.body.stats.map(i(_)), ""))
+    case t: Case  =>
+      val ppat = p(Pattern, t.pat)
+      val pcond = t.cond.map(cond => s(" ", kw("if"), " ", p(PostfixExpr, cond))).getOrElse(s())
+      val isOneLiner = {
+        def isOneLiner(t: Case) = t.stats.length == 0 || (t.stats.length == 1 && !s(t.stats.head).toString.contains(EOL))
+        t.parent match {
+          case Some(Term.Match(_, cases)) => cases.forall(isOneLiner)
+          case Some(Term.PartialFunction(cases)) => cases.forall(isOneLiner)
+          case _ => isOneLiner(t)
+        }
+      }
+      val pbody = (t.stats, isOneLiner) match {
+        case (Nil, true) => s("")
+        case (List(stat), true) => s(" ", stat)
+        case (stats, _) => r(t.body.stats.map(i(_)), "")
+      }
+      s("case ", ppat, pcond, " ", kw("=>"), pbody)
 
     // Source
     case t: Source                   => r(t.stats, EOL)

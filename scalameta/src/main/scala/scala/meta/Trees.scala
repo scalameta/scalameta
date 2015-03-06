@@ -56,6 +56,8 @@ package scala.meta {
     }
   }
 
+  @branch trait Lit extends Term with Pat with Type with Pat.Type
+
   @branch trait Member extends Tree with Scope
   object Member {
     @branch trait Term extends Member
@@ -157,7 +159,7 @@ package scala.meta.internal.ast {
     }
     @ast class Param(mods: Seq[Mod], name: Param.Name, decltpe: Option[Type.Arg], default: Option[Term]) extends api.Term.Param with Member
     object Param {
-      @branch trait Name extends api.Term.Param.Name
+      @branch trait Name extends impl.Name with api.Term.Param.Name
     }
   }
 
@@ -204,7 +206,7 @@ package scala.meta.internal.ast {
                      viewBounds: Seq[impl.Type],
                      contextBounds: Seq[impl.Type]) extends api.Type.Param with Member
     object Param {
-      @branch trait Name extends api.Type.Param.Name
+      @branch trait Name extends impl.Name with api.Type.Param.Name
     }
   }
 
@@ -290,7 +292,7 @@ package scala.meta.internal.ast {
     }
   }
 
-  @branch trait Lit extends Term with Pat with Type with Pat.Type
+  @branch trait Lit extends Term with Pat with Type with Pat.Type with api.Lit
   object Lit {
     @ast class Bool(value: scala.Boolean) extends Lit
     @ast class Byte(value: scala.Byte) extends Lit
@@ -439,8 +441,8 @@ package scala.meta.internal.ast {
 
   @branch trait Mod extends api.Mod with Tree
   object Mod {
-    @ast class Annot(tree: Term) extends Mod {
-      require(tree.isCtorCall)
+    @ast class Annot(body: Term) extends Mod {
+      require(body.isCtorCall)
     }
     @ast class Private(within: Name.Qualifier) extends Mod
     @ast class Protected(within: Name.Qualifier) extends Mod
@@ -487,5 +489,15 @@ package scala.meta.internal.ast {
     require(stats.forall(_.isTopLevelStat))
   }
 
-  @bottom @ast class Unquote() extends Tree
+  // NOTE: here's how Ellipsis.pt maps to hole's rank in scala.reflect's parlance,
+  // pt being Array[T] means rank 1 means .., pt being Array[Array[T]] means rank 2 means ..., etc
+  @bottom @ast class Ellipsis(tree: Tree, pt: Class[_]) extends Tree {
+    require(pt.isArray)
+  }
+
+  // TODO: after we bootstrap, Unquote.tree will become scala.meta.Tree
+  // however, for now, we will keep it at Any in order to also support scala.reflect trees
+  @bottom @ast class Unquote(tree: Any, pt: Class[_]) extends Tree {
+    require(classOf[api.Tree].isAssignableFrom(pt))
+  }
 }

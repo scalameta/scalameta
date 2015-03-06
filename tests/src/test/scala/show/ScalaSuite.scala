@@ -172,8 +172,7 @@ class ScalaSuite extends ParseSuite {
   test("parentheses in patterns") {
     assert(templStat("x match { case (xs: List[Int]) :+ x => ??? }").show[Code] === """
       |x match {
-      |  case (xs: List[Int]) :+ x =>
-      |    ???
+      |  case (xs: List[Int]) :+ x => ???
       |}
     """.trim.stripMargin)
   }
@@ -182,8 +181,7 @@ class ScalaSuite extends ParseSuite {
     assert(templStat("List(x, y) :: z").show[Code] == "List(x, y) :: z")
     assert(templStat("x match { case List(x, y) :: z => ??? }").show[Code] === """
       |x match {
-      |  case List(x, y) :: z =>
-      |    ???
+      |  case List(x, y) :: z => ???
       |}
     """.trim.stripMargin)
   }
@@ -373,5 +371,25 @@ class ScalaSuite extends ParseSuite {
     assert(tree4.toString === "package test { ... }")
     val tree5 = Pkg.Object(Nil, Term.Name("test"), emptyCtor, lazyTemplate)
     assert(tree5.toString === "package object test { ... }")
+  }
+
+  test("smart case printing - oneliner in one line") {
+    import scala.meta.internal.ast._
+    val Term.Match(_, case1 :: Nil) = templStat("??? match { case x => x }")
+    assert(case1.toString === "case x => x")
+  }
+
+  test("smart case printing - oneliner in multiple lines") {
+    import scala.meta.internal.ast._
+    val Term.Match(_, case1 :: case2 :: Nil) = templStat("??? match { case x => x; case List(x, y) => println(x); println(y) }")
+    assert(case1.toString === """
+      |case x =>
+      |  x
+    """.trim.stripMargin)
+    assert(case2.toString === """
+      |case List(x, y) =>
+      |  println(x)
+      |  println(y)
+    """.trim.stripMargin)
   }
 }
