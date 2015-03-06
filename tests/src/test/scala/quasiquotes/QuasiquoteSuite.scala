@@ -40,4 +40,12 @@ class QuasiquoteSuite extends FunSuite {
         assert(z.show[Code] === "3")
     }
   }
+
+  test("q\"foo($x, ..$ys, $z, ..$ts)\"") {
+    val x = q"1"
+    val ys = List(q"2")
+    val z = q"3"
+    val ts = Nil
+    assert(q"foo($x, ..$ys, $z, ..$ts)".show[Code] === "foo(1, 2, 3)")
+  }
 }

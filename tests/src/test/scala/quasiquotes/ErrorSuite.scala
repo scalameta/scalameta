@@ -77,4 +77,26 @@ class ErrorSuite extends FunSuite {
       |              ^
     """.trim.stripMargin)
   }
+
+  test("q\"foo($x, ..$ys, $z, ..$ts)\"") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val tree = q"foo(1, 2, 3)"
+      tree match {
+        case q"$_($x, ..$ys, $z, ..$ts)" =>
+          println(x)
+          println(ys)
+          println(z)
+      }
+    """) === """
+      |<macro>:6: rank mismatch when unquoting;
+      | found   : ..
+      | required: no dots
+      |Note that you can extract a sequence into an unquote when pattern matching,
+      |it just cannot follow another sequence either directly or indirectly.
+      |        case q"$_($x, ..$ys, $z, ..$ts)" =>
+      |                                 ^
+    """.trim.stripMargin)
+  }
 }

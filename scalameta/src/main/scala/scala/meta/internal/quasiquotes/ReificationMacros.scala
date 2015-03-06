@@ -418,25 +418,27 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
       def liftTrees(trees: Seq[api.Tree]): u.Tree = {
         def loop(trees: List[api.Tree], acc: u.Tree, prefix: List[api.Tree]): u.Tree = trees match {
           case (ellipsis: impl.Ellipsis) +: rest =>
-            if (acc.isEmpty && prefix.isEmpty) loop(rest, liftEllipsis(ellipsis), Nil)
-            else if (acc.isEmpty) loop(rest, prefix.foldRight(acc)((curr, acc) => {
-              // NOTE: We cannot do just q"${liftTree(curr)} +: ${liftEllipsis(ellipsis)}"
-              // because that creates a synthetic temp variable that doesn't make any sense in a pattern.
-              // Neither can we do q"${liftEllipsis(ellipsis)}.+:(${liftTree(curr)})",
-              // because that still wouldn't work in pattern mode.
-              // Finally, we can't do something like q"+:(${liftEllipsis(ellipsis)}, (${liftTree(curr)}))",
-              // because would violate evaluation order guarantees that we must keep.
-              if (mode.isTerm) q"${liftTree(curr)} +: ${liftEllipsis(ellipsis)}"
-              else pq"${liftTree(curr)} +: ${liftEllipsis(ellipsis)}"
-            }), Nil)
-            else {
+            if (acc.isEmpty) {
+              if (prefix.isEmpty) loop(rest, liftEllipsis(ellipsis), Nil)
+              else loop(rest, prefix.foldRight(acc)((curr, acc) => {
+                // NOTE: We cannot do just q"${liftTree(curr)} +: ${liftEllipsis(ellipsis)}"
+                // because that creates a synthetic temp variable that doesn't make any sense in a pattern.
+                // Neither can we do q"${liftEllipsis(ellipsis)}.+:(${liftTree(curr)})",
+                // because that still wouldn't work in pattern mode.
+                // Finally, we can't do something like q"+:(${liftEllipsis(ellipsis)}, (${liftTree(curr)}))",
+                // because would violate evaluation order guarantees that we must keep.
+                if (mode.isTerm) q"${liftTree(curr)} +: ${liftEllipsis(ellipsis)}"
+                else pq"${liftTree(curr)} +: ${liftEllipsis(ellipsis)}"
+              }), Nil)
+            } else {
+              require(prefix.isEmpty && debug(trees, acc, prefix))
               if (mode.isTerm) loop(rest, q"$acc ++ ${liftEllipsis(ellipsis)}", Nil)
               else {
                 val hint = {
-                  "Note that you can splice out a sequence when pattern matching," +
+                  "Note that you can extract a sequence into an unquote when pattern matching," + EOL+
                   "it just cannot follow another sequence either directly or indirectly."
                 }
-                val errorMessage = s"rank mismatch when unquoting;$EOL found   : ${ellipsis.rank}$EOL required: no dots$EOL$hint"
+                val errorMessage = s"rank mismatch when unquoting;$EOL found   : ${"." * (ellipsis.rank + 1)}$EOL required: no dots$EOL$hint"
                 c.abort(ellipsis.pos, errorMessage)
               }
             }
@@ -444,8 +446,8 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
             if (acc.isEmpty) loop(rest, acc, prefix :+ other)
             else {
               require(prefix.isEmpty && debug(trees, acc, prefix))
-              if (mode.isTerm) q"$acc :+ ${liftTree(other)}"
-              else pq"$acc :+ ${liftTree(other)}"
+              if (mode.isTerm) loop(rest, q"$acc :+ ${liftTree(other)}", Nil)
+              else loop(rest, pq"$acc :+ ${liftTree(other)}", Nil)
             }
           case Nil =>
             // NOTE: Luckily, at least this quasiquote works fine both in term and pattern modes
