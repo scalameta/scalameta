@@ -376,7 +376,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
 
   private def reifySkeleton(meta: MetaTree, mode: Mode): ReflectTree = {
     val pendingEllipses = mutable.Stack[impl.Ellipsis]()
-    implicit class XtensionClazz(clazz: Class[_]) {
+    implicit class XtensionRankedClazz(clazz: Class[_]) {
       def unwrap: Class[_] = {
         if (clazz.isArray) clazz.getComponentType.unwrap
         else clazz
@@ -405,6 +405,12 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
         }
       }
     }
+    implicit class XtensionRankedTree(tree: u.Tree) {
+      def wrap(rank: Int): u.Tree = {
+        if (rank == 0) tree
+        else AppliedTypeTree(q"${symbolOf[scala.collection.immutable.Seq[_]]}", List(tree))
+      }
+    }
     object Lifts {
       def liftTree(tree: api.Tree): u.Tree = {
         Liftables.liftableSubTree(tree)
@@ -413,20 +419,36 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
         def loop(trees: List[api.Tree], acc: u.Tree, prefix: List[api.Tree]): u.Tree = trees match {
           case (ellipsis: impl.Ellipsis) +: rest =>
             if (acc.isEmpty && prefix.isEmpty) loop(rest, liftEllipsis(ellipsis), Nil)
-            else if (acc.isEmpty) loop(rest, prefix.foldRight(acc)((curr, acc) => q"${liftTree(curr)} +: ${liftEllipsis(ellipsis)}"), Nil)
-            else if (mode.isTerm) loop(rest, q"$acc ++ ${liftEllipsis(ellipsis)}", Nil)
+            else if (acc.isEmpty) loop(rest, prefix.foldRight(acc)((curr, acc) => {
+              // NOTE: We cannot do just q"${liftTree(curr)} +: ${liftEllipsis(ellipsis)}"
+              // because that creates a synthetic temp variable that doesn't make any sense in a pattern.
+              // Neither can we do q"${liftEllipsis(ellipsis)}.+:(${liftTree(curr)})",
+              // because that still wouldn't work in pattern mode.
+              // Finally, we can't do something like q"+:(${liftEllipsis(ellipsis)}, (${liftTree(curr)}))",
+              // because would violate evaluation order guarantees that we must keep.
+              if (mode.isTerm) q"${liftTree(curr)} +: ${liftEllipsis(ellipsis)}"
+              else pq"${liftTree(curr)} +: ${liftEllipsis(ellipsis)}"
+            }), Nil)
             else {
-              val hint = {
-                "Note that you can splice out a sequence when pattern matching," +
-                "it just cannot follow another sequence either directly or indirectly."
+              if (mode.isTerm) loop(rest, q"$acc ++ ${liftEllipsis(ellipsis)}", Nil)
+              else {
+                val hint = {
+                  "Note that you can splice out a sequence when pattern matching," +
+                  "it just cannot follow another sequence either directly or indirectly."
+                }
+                val errorMessage = s"rank mismatch when unquoting;$EOL found   : ${ellipsis.rank}$EOL required: no dots$EOL$hint"
+                c.abort(ellipsis.pos, errorMessage)
               }
-              val errorMessage = s"rank mismatch when unquoting;$EOL found   : ${ellipsis.rank}$EOL required: no dots$EOL$hint"
-              c.abort(ellipsis.pos, errorMessage)
             }
           case other +: rest =>
             if (acc.isEmpty) loop(rest, acc, prefix :+ other)
-            else { require(prefix.isEmpty && debug(trees, acc, prefix)); q"$acc :+ ${liftTree(other)}" }
+            else {
+              require(prefix.isEmpty && debug(trees, acc, prefix))
+              if (mode.isTerm) q"$acc :+ ${liftTree(other)}"
+              else pq"$acc :+ ${liftTree(other)}"
+            }
           case Nil =>
+            // NOTE: Luckily, at least this quasiquote works fine both in term and pattern modes
             if (acc.isEmpty) q"_root_.scala.collection.immutable.Seq(..${prefix.map(liftTree)})"
             else acc
         }
@@ -461,8 +483,9 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
             // Therefore, we're forced to take a two-step unquoting scheme: a) match everything in the corresponding hole,
             // b) call Unlift.unapply as a normal method in the right-hand side part of the pattern matching clause.
             val hole = holes.find(hole => tree.equalsStructure(pq"${hole.name}")).getOrElse(sys.error(s"fatal error reifying pattern quasiquote: $unquote, $holes"))
-            val pt = hole.arg match { case pq"_: $pt" => pt; case pq"$_: $pt" => pt; case _ => tq"_root_.scala.meta.Tree" }
-            hole.reifier = atPos(unquote.pos)(q"$InternalUnlift.unapply[$pt](${hole.name})") // TODO: make reifier immutable somehow
+            val unrankedPt = hole.arg match { case pq"_: $pt" => pt; case pq"$_: $pt" => pt; case _ => tq"_root_.scala.meta.Tree" }
+            val rankedPt = unrankedPt.wrap(pendingEllipses.map(_.rank).sum)
+            hole.reifier = atPos(unquote.pos)(q"$InternalUnlift.unapply[$rankedPt](${hole.name})") // TODO: make reifier immutable somehow
             pq"${hole.name}"
         }
         atPos(unquote.pos)(realWorldReifier)
@@ -482,7 +505,10 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
     mode match {
       case Mode.Term =>
         val internalResult = Lifts.liftTree(meta)
-        if (sys.props("quasiquote.debug") != null) println(internalResult)
+        if (sys.props("quasiquote.debug") != null) {
+          println(internalResult)
+          println(showRaw(internalResult))
+        }
         q"$InternalUnlift[${c.macroApplication.tpe}]($internalResult)"
       case Mode.Pattern(dummy, holes) =>
         // inspired by https://github.com/densh/joyquote/blob/master/src/main/scala/JoyQuote.scala
@@ -512,7 +538,10 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
             }
           }.unapply($dummy)
         """
-        if (sys.props("quasiquote.debug") != null) println(internalResult)
+        if (sys.props("quasiquote.debug") != null) {
+          println(internalResult)
+          println(showRaw(internalResult))
+        }
         internalResult // TODO: q"InternalLift[${dummy.tpe}]($internalResult)"
     }
   }

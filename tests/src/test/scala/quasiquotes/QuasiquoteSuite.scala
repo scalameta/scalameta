@@ -31,4 +31,13 @@ class QuasiquoteSuite extends FunSuite {
         assert(x == 42)
     }
   }
+
+  test("q\"$foo(${x: Int}, ..$ys, $z)\"") {
+    q"foo(1, 2, 3)" match {
+      case q"$_(${x: Int}, ..$y, $z)" =>
+        assert(x === 1)
+        assert(y.map(_.show[Code]) === List("2"))
+        assert(z.show[Code] === "3")
+    }
+  }
 }
