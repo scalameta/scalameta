@@ -1511,6 +1511,8 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       if (token.isNot[`:`]) p
       else {
         p match {
+          case p: impl.Unquote =>
+            p
           case p: Pat.Var.Term if dialect.bindToSeqWildcardDesignator == ":" && isColonWildcardStar =>
             nextOnce()
             val wildcard = autoPos({ nextTwice(); Pat.Arg.SeqWildcard() })
@@ -1541,6 +1543,8 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       val p = pattern3()
       if (token.isNot[`@`]) p
       else p match {
+        case p: impl.Unquote =>
+          p
         case p: Term.Name =>
           syntaxError("Pattern variables must start with a lower-case letter. (SLS 8.1.1.)", at = p)
         case p: Pat.Var.Term =>
