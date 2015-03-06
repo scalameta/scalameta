@@ -102,10 +102,11 @@ trait Reflection {
   }
   class Field(val sym: Symbol) {
     require(sym.isField)
+    def owner: Leaf = sym.owner.asLeaf
     def name: TermName = TermName(sym.name.toString.stripPrefix("_"))
     def tpe: Type = sym.info.finalResultType
     def isPayload: Boolean = sym.isPayload
     def isAuxiliary: Boolean = sym.isAuxiliary
-    override def toString = s"field $name: $tpe" + (if (isAuxiliary) " (auxiliary)" else "")
+    override def toString = s"field ${owner.prefix}.$name: $tpe" + (if (isAuxiliary) " (auxiliary)" else "")
   }
 }

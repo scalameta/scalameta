@@ -759,6 +759,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         case _ => loop(tpe)
       }
       def loop(tpe: Type): Pat.Type = tpe match {
+        case impl.Unquote(tree, _) => atPos(tpe, tpe)(impl.Unquote(tree, classOf[Pat.Type]))
         case tpe: Type.Name => tpe
         case tpe: Type.Select => tpe
         case Type.Project(qual, name) => atPos(tpe, tpe)(Pat.Type.Project(loop(qual), name))

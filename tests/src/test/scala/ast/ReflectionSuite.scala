@@ -1,7 +1,6 @@
-import scala.meta.Tree
-import scala.meta.internal.ast.Term.{If, Name}
 import scala.compat.Platform.EOL
 import scala.collection.mutable.ListBuffer
+import scala.reflect.runtime.universe._
 
 class ReflectionSuite extends AstSuite {
   import AstReflection._
@@ -11,104 +10,35 @@ class ReflectionSuite extends AstSuite {
   // I understand that it's inconvenient to update these numbers every time something changes,
   // but please deal with that (or come up with a more effective way of testing AstReflection)
   test("root") {
-    assert(symbolOf[Tree].isRoot)
-    assert(symbolOf[Tree].asRoot.allBranches.length === 65)
-    assert(symbolOf[Tree].asRoot.allLeafs.length === 132)
+    assert(symbolOf[scala.meta.Tree].isRoot)
+    assert(symbolOf[scala.meta.Tree].asRoot.allBranches.length === 65)
+    assert(symbolOf[scala.meta.Tree].asRoot.allLeafs.length === 132)
   }
 
   test("If") {
-    val iff = symbolOf[If].asLeaf
+    val iff = symbolOf[scala.meta.internal.ast.Term.If].asLeaf
     val List(f1, f2, f3) = iff.fields
-    assert(f1.toString === "field cond: scala.meta.internal.ast.Term")
-    assert(f2.toString === "field thenp: scala.meta.internal.ast.Term")
-    assert(f3.toString === "field elsep: scala.meta.internal.ast.Term")
+    assert(f1.toString === "field Term.If.cond: scala.meta.internal.ast.Term")
+    assert(f2.toString === "field Term.If.thenp: scala.meta.internal.ast.Term")
+    assert(f3.toString === "field Term.If.elsep: scala.meta.internal.ast.Term")
     val List(a1, a2, a3) = iff.allFields
-    assert(a1.toString === "field cond: scala.meta.internal.ast.Term")
-    assert(a2.toString === "field thenp: scala.meta.internal.ast.Term")
-    assert(a3.toString === "field elsep: scala.meta.internal.ast.Term")
+    assert(a1.toString === "field Term.If.cond: scala.meta.internal.ast.Term")
+    assert(a2.toString === "field Term.If.thenp: scala.meta.internal.ast.Term")
+    assert(a3.toString === "field Term.If.elsep: scala.meta.internal.ast.Term")
   }
 
   test("Term.Name") {
-    val iff = symbolOf[Name].asLeaf
+    val iff = symbolOf[scala.meta.internal.ast.Term.Name].asLeaf
     val List(f1) = iff.fields
-    assert(f1.toString === "field value: String @org.scalameta.invariants.nonEmpty")
+    assert(f1.toString === "field Term.Name.value: String @org.scalameta.invariants.nonEmpty")
     val List(a1, a2, a3) = iff.allFields
-    assert(a1.toString === "field value: String @org.scalameta.invariants.nonEmpty")
-    assert(a2.toString === "field denot: scala.meta.internal.hygiene.Denotation (auxiliary)")
-    assert(a3.toString === "field sigma: scala.meta.internal.hygiene.Sigma (auxiliary)")
+    assert(a1.toString === "field Term.Name.value: String @org.scalameta.invariants.nonEmpty")
+    assert(a2.toString === "field Term.Name.denot: scala.meta.internal.hygiene.Denotation (auxiliary)")
+    assert(a3.toString === "field Term.Name.sigma: scala.meta.internal.hygiene.Sigma (auxiliary)")
   }
 
-  // NOTE: Similarly to the `root` test, this test is annoying, but also important.
-  // We need to keep an eye on possible field types to make sure that they are unquotable.
-  test("allFields") {
-    import scala.reflect.runtime.universe.{AnnotatedType, AnnotatedTypeTag}
-    val irrelevant = Set("scala.meta.internal.ast.Ellipsis", "scala.meta.internal.ast.Unquote")
-    val allFields = symbolOf[Tree].asRoot.allLeafs.filter(leaf => !irrelevant(leaf.sym.fullName)).flatMap(_.fields)
-    val duplicateFieldTpes = allFields.map(_.tpe).map{ case AnnotatedType(_, tpe) => tpe; case tpe => tpe }
-    // NOTE: we can't just do `duplicateFieldTpes.distinct`, because that doesn't account for `=:=`
-    val distinctFieldTpes = ListBuffer[scala.reflect.runtime.universe.Type]()
-    duplicateFieldTpes.foreach(tpe => if (!distinctFieldTpes.exists(_ =:= tpe)) distinctFieldTpes += tpe)
-    val allFieldTpes = distinctFieldTpes.toList
-    assert(allFieldTpes.sortBy(_.toString).mkString(EOL) === """
-      |String
-      |scala.Boolean
-      |scala.Byte
-      |scala.Char
-      |scala.Double
-      |scala.Float
-      |scala.Int
-      |scala.Long
-      |scala.Option[scala.collection.immutable.Seq[scala.meta.internal.ast.Stat]]
-      |scala.Option[scala.meta.internal.ast.Term]
-      |scala.Option[scala.meta.internal.ast.Type.Arg]
-      |scala.Option[scala.meta.internal.ast.Type]
-      |scala.Short
-      |scala.Symbol
-      |scala.collection.immutable.Seq[scala.collection.immutable.Seq[scala.meta.internal.ast.Term.Arg]]
-      |scala.collection.immutable.Seq[scala.collection.immutable.Seq[scala.meta.internal.ast.Term.Param]]
-      |scala.collection.immutable.Seq[scala.meta.internal.ast.Case]
-      |scala.collection.immutable.Seq[scala.meta.internal.ast.Enumerator]
-      |scala.collection.immutable.Seq[scala.meta.internal.ast.Import.Clause]
-      |scala.collection.immutable.Seq[scala.meta.internal.ast.Import.Selector]
-      |scala.collection.immutable.Seq[scala.meta.internal.ast.Lit.String]
-      |scala.collection.immutable.Seq[scala.meta.internal.ast.Mod.Annot]
-      |scala.collection.immutable.Seq[scala.meta.internal.ast.Mod]
-      |scala.collection.immutable.Seq[scala.meta.internal.ast.Pat.Arg]
-      |scala.collection.immutable.Seq[scala.meta.internal.ast.Pat.Type]
-      |scala.collection.immutable.Seq[scala.meta.internal.ast.Pat.Var.Term]
-      |scala.collection.immutable.Seq[scala.meta.internal.ast.Pat]
-      |scala.collection.immutable.Seq[scala.meta.internal.ast.Stat]
-      |scala.collection.immutable.Seq[scala.meta.internal.ast.Term.Arg]
-      |scala.collection.immutable.Seq[scala.meta.internal.ast.Term.Param]
-      |scala.collection.immutable.Seq[scala.meta.internal.ast.Term]
-      |scala.collection.immutable.Seq[scala.meta.internal.ast.Type.Arg]
-      |scala.collection.immutable.Seq[scala.meta.internal.ast.Type.Param]
-      |scala.collection.immutable.Seq[scala.meta.internal.ast.Type]
-      |scala.meta.internal.ast.Ctor.Name
-      |scala.meta.internal.ast.Ctor.Primary
-      |scala.meta.internal.ast.Name.Indeterminate
-      |scala.meta.internal.ast.Name.Qualifier
-      |scala.meta.internal.ast.Pat
-      |scala.meta.internal.ast.Pat.Arg
-      |scala.meta.internal.ast.Pat.Type
-      |scala.meta.internal.ast.Pat.Var.Term
-      |scala.meta.internal.ast.Template
-      |scala.meta.internal.ast.Term
-      |scala.meta.internal.ast.Term.Block
-      |scala.meta.internal.ast.Term.Name
-      |scala.meta.internal.ast.Term.Param
-      |scala.meta.internal.ast.Term.Param.Name
-      |scala.meta.internal.ast.Term.Ref
-      |scala.meta.internal.ast.Type
-      |scala.meta.internal.ast.Type.Bounds
-      |scala.meta.internal.ast.Type.Name
-      |scala.meta.internal.ast.Type.Param.Name
-    """.trim.stripMargin)
-  }
-
-  // NOTE: Similarly to the `root` and `allFields` test, this test is annoying, but also important.
-  test("publish") {
-    val all = symbolOf[Tree].asRoot.all.sortBy(_.sym.fullName)
+  test("all.publish") {
+    val all = symbolOf[scala.meta.Tree].asRoot.all.sortBy(_.sym.fullName)
     val published = all.map(adt => (adt.tpe, adt.tpe.publish))
     val columnSize = published.map(_._1.typeSymbol.fullName.length).max
     assert(published.map(kvp => s"%-${columnSize}s => %s".format(kvp._1, kvp._2)).mkString(EOL) === """
@@ -310,6 +240,125 @@ class ReflectionSuite extends AstSuite {
       |scala.meta.internal.ast.Type.Singleton           => scala.meta.Type.Ref with scala.meta.Pat.Type.Ref
       |scala.meta.internal.ast.Type.Tuple               => scala.meta.Type
       |scala.meta.internal.ast.Unquote                  => Nothing
+    """.trim.stripMargin)
+  }
+
+  test("allFields.publish") {
+    val irrelevant = Set("scala.meta.internal.ast.Ellipsis", "scala.meta.internal.ast.Unquote")
+    val allRelevantFields = symbolOf[scala.meta.Tree].asRoot.allLeafs.filter(leaf => !irrelevant(leaf.sym.fullName)).flatMap(_.fields)
+    val duplicateRelevantFieldTpes = allRelevantFields.map(_.tpe).map{ case AnnotatedType(_, tpe) => tpe; case tpe => tpe }
+    // NOTE: we can't just do `duplicateRelevantFieldTpes.distinct`, because that doesn't account for `=:=`
+    val distinctRelevantFieldTpes = ListBuffer[Type]()
+    duplicateRelevantFieldTpes.foreach(tpe => if (!distinctRelevantFieldTpes.exists(_ =:= tpe)) distinctRelevantFieldTpes += tpe)
+    assert(distinctRelevantFieldTpes.sortBy(_.toString).mkString(EOL) === """
+      |String
+      |scala.Boolean
+      |scala.Byte
+      |scala.Char
+      |scala.Double
+      |scala.Float
+      |scala.Int
+      |scala.Long
+      |scala.Option[scala.collection.immutable.Seq[scala.meta.internal.ast.Stat]]
+      |scala.Option[scala.meta.internal.ast.Term]
+      |scala.Option[scala.meta.internal.ast.Type.Arg]
+      |scala.Option[scala.meta.internal.ast.Type]
+      |scala.Short
+      |scala.Symbol
+      |scala.collection.immutable.Seq[scala.collection.immutable.Seq[scala.meta.internal.ast.Term.Arg]]
+      |scala.collection.immutable.Seq[scala.collection.immutable.Seq[scala.meta.internal.ast.Term.Param]]
+      |scala.collection.immutable.Seq[scala.meta.internal.ast.Case]
+      |scala.collection.immutable.Seq[scala.meta.internal.ast.Enumerator]
+      |scala.collection.immutable.Seq[scala.meta.internal.ast.Import.Clause]
+      |scala.collection.immutable.Seq[scala.meta.internal.ast.Import.Selector]
+      |scala.collection.immutable.Seq[scala.meta.internal.ast.Lit.String]
+      |scala.collection.immutable.Seq[scala.meta.internal.ast.Mod.Annot]
+      |scala.collection.immutable.Seq[scala.meta.internal.ast.Mod]
+      |scala.collection.immutable.Seq[scala.meta.internal.ast.Pat.Arg]
+      |scala.collection.immutable.Seq[scala.meta.internal.ast.Pat.Type]
+      |scala.collection.immutable.Seq[scala.meta.internal.ast.Pat.Var.Term]
+      |scala.collection.immutable.Seq[scala.meta.internal.ast.Pat]
+      |scala.collection.immutable.Seq[scala.meta.internal.ast.Stat]
+      |scala.collection.immutable.Seq[scala.meta.internal.ast.Term.Arg]
+      |scala.collection.immutable.Seq[scala.meta.internal.ast.Term.Param]
+      |scala.collection.immutable.Seq[scala.meta.internal.ast.Term]
+      |scala.collection.immutable.Seq[scala.meta.internal.ast.Type.Arg]
+      |scala.collection.immutable.Seq[scala.meta.internal.ast.Type.Param]
+      |scala.collection.immutable.Seq[scala.meta.internal.ast.Type]
+      |scala.meta.internal.ast.Ctor.Name
+      |scala.meta.internal.ast.Ctor.Primary
+      |scala.meta.internal.ast.Name.Indeterminate
+      |scala.meta.internal.ast.Name.Qualifier
+      |scala.meta.internal.ast.Pat
+      |scala.meta.internal.ast.Pat.Arg
+      |scala.meta.internal.ast.Pat.Type
+      |scala.meta.internal.ast.Pat.Var.Term
+      |scala.meta.internal.ast.Template
+      |scala.meta.internal.ast.Term
+      |scala.meta.internal.ast.Term.Block
+      |scala.meta.internal.ast.Term.Name
+      |scala.meta.internal.ast.Term.Param
+      |scala.meta.internal.ast.Term.Param.Name
+      |scala.meta.internal.ast.Term.Ref
+      |scala.meta.internal.ast.Type
+      |scala.meta.internal.ast.Type.Bounds
+      |scala.meta.internal.ast.Type.Name
+      |scala.meta.internal.ast.Type.Param.Name
+    """.trim.stripMargin)
+  }
+
+  test("allFields.unquote") {
+    implicit class XtensionType(tpe: Type) {
+      def unwrap: Type = tpe match {
+        case AnnotatedType(_, tpe) => tpe.unwrap
+        case _ if tpe.typeSymbol == symbolOf[Option[_]] => tpe.typeArgs.head.unwrap
+        case _ if tpe.typeSymbol == symbolOf[scala.collection.immutable.Seq[_]] => tpe.typeArgs.head.unwrap
+        case tpe => tpe
+      }
+    }
+    val all = symbolOf[scala.meta.Tree].asRoot.all.sortBy(_.sym.fullName)
+    val allLeafs = symbolOf[scala.meta.Tree].asRoot.allLeafs.sortBy(_.sym.fullName)
+    val irrelevantLeafNames = Set("scala.meta.internal.ast.Ellipsis", "scala.meta.internal.ast.Unquote")
+    val allRelevantLeafs = allLeafs.filter(leaf => !irrelevantLeafNames(leaf.sym.fullName))
+    val allRelevantFields = allRelevantLeafs.flatMap(_.fields)
+    val distinctRelevantFieldTpes = ListBuffer[Type]()
+    allRelevantFields.map(_.tpe.unwrap).foreach(tpe => if (!distinctRelevantFieldTpes.exists(_ =:= tpe)) distinctRelevantFieldTpes += tpe)
+    val report = ListBuffer[String]()
+    distinctRelevantFieldTpes.map(ftpe => {
+      val ambig = allRelevantLeafs.filter(node => (node.tpe.publish <:< ftpe.publish) && !(node.tpe <:< ftpe))
+      if (ambig.nonEmpty) {
+        report += s"$ftpe -> ${ftpe.publish}"
+        allRelevantFields.filter(f => f.tpe.unwrap =:= ftpe).foreach(f => report += f.toString)
+        report += ""
+      }
+    })
+    assert(report.mkString(EOL) === """
+      |scala.meta.internal.ast.Term.Block -> scala.meta.Term with scala.meta.Scope
+      |field Case.body: scala.meta.internal.ast.Term.Block
+      |
+      |scala.meta.internal.ast.Type.Bounds -> scala.meta.Tree
+      |field Decl.Type.bounds: scala.meta.internal.ast.Type.Bounds
+      |field Type.Param.typeBounds: scala.meta.internal.ast.Type.Bounds
+      |field Type.Placeholder.bounds: scala.meta.internal.ast.Type.Bounds
+      |
+      |scala.meta.internal.ast.Ctor.Primary -> scala.meta.Member.Term
+      |field Defn.Class.ctor: scala.meta.internal.ast.Ctor.Primary
+      |field Defn.Object.ctor: scala.meta.internal.ast.Ctor.Primary
+      |field Defn.Trait.ctor: scala.meta.internal.ast.Ctor.Primary
+      |field Pkg.Object.ctor: scala.meta.internal.ast.Ctor.Primary
+      |
+      |scala.meta.internal.ast.Import.Clause -> scala.meta.Tree
+      |field Import.clauses: scala.collection.immutable.Seq[scala.meta.internal.ast.Import.Clause] @org.scalameta.invariants.nonEmpty
+      |
+      |scala.meta.internal.ast.Lit.String -> scala.meta.Lit
+      |field Pat.Interpolate.parts: scala.collection.immutable.Seq[scala.meta.internal.ast.Lit.String] @org.scalameta.invariants.nonEmpty
+      |field Term.Interpolate.parts: scala.collection.immutable.Seq[scala.meta.internal.ast.Lit.String] @org.scalameta.invariants.nonEmpty
+      |
+      |scala.meta.internal.ast.Mod.Annot -> scala.meta.Mod
+      |field Pat.Type.Annotate.annots: scala.collection.immutable.Seq[scala.meta.internal.ast.Mod.Annot] @org.scalameta.invariants.nonEmpty
+      |field Term.Annotate.annots: scala.collection.immutable.Seq[scala.meta.internal.ast.Mod.Annot] @org.scalameta.invariants.nonEmpty
+      |field Type.Annotate.annots: scala.collection.immutable.Seq[scala.meta.internal.ast.Mod.Annot] @org.scalameta.invariants.nonEmpty
+      |
     """.trim.stripMargin)
   }
 }
