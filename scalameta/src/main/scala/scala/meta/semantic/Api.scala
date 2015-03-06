@@ -541,6 +541,31 @@ private[meta] trait Api {
     def isReference: Boolean = !isBinder
   }
 
+  private object Fresh {
+    private var id = new java.util.concurrent.atomic.AtomicInteger()
+    def nextId() = id.incrementAndGet()
+  }
+
+  implicit class XtensionSemanticTermModule(tree: Term.type) {
+    def fresh(): Term.Name = fresh("fresh")
+    def fresh(prefix: String): Term.Name = impl.Term.Name(prefix + Fresh.nextId())
+  }
+
+  implicit class XtensionSemanticTypeModule(tree: Type.type) {
+    def fresh(): Type.Name = fresh("fresh")
+    def fresh(prefix: String): Type.Name = impl.Type.Name(prefix + Fresh.nextId())
+  }
+
+  implicit class XtensionSemanticPatModule(tree: Pat.type) {
+    def fresh(): Pat with Member.Term = impl.Pat.Var.Term(Term.fresh().require[impl.Term.Name])
+    def fresh(prefix: String): Pat with Member.Term = impl.Pat.Var.Term(Term.fresh(prefix).require[impl.Term.Name])
+  }
+
+  implicit class XtensionSemanticPatTypeModule(tree: Pat.Type.type) {
+    def fresh(): Pat.Type with Member.Type = impl.Pat.Var.Type(Type.fresh().require[impl.Type.Name])
+    def fresh(prefix: String): Pat.Type with Member.Type = impl.Pat.Var.Type(Type.fresh(prefix).require[impl.Type.Name])
+  }
+
   // ===========================
   // PART 6: REPRESENTATION CONVERSIONS
   // ===========================
