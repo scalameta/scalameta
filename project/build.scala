@@ -4,7 +4,7 @@ import com.typesafe.sbt.SbtScalariform
 
 object build extends Build {
   lazy val sharedSettings = Defaults.defaultSettings ++ SbtScalariform.scalariformSettings ++ Seq(
-    scalaVersion := "2.11.5",
+    scalaVersion := "2.11.6",
     crossVersion := CrossVersion.binary,
     version := "0.1.0-SNAPSHOT",
     organization := "org.scalameta",
@@ -135,7 +135,7 @@ object build extends Build {
   ) settings (
     scalaSource in Compile <<= (baseDirectory in Compile)(base => base),
     libraryDependencies += "org.scalameta" % "scalameta_2.11" % "0.1.0-SNAPSHOT",
-    libraryDependencies += "org.scalameta" % "scalahost_2.11.5" % "0.1.0-SNAPSHOT"
+    libraryDependencies += "org.scalameta" % "scalahost_2.11.6" % "0.1.0-SNAPSHOT"
   )
 
   lazy val sandbox = Project(
@@ -156,6 +156,7 @@ object build extends Build {
     libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.3" % "test",
     libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
     libraryDependencies += "org.scalameta" % "scalameta_2.11" % "0.1.0-SNAPSHOT",
+    testOptions in Test += Tests.Argument("-oDF"),
     packagedArtifacts := Map.empty
   ) settings (
     exposeClasspaths("tests"): _*
