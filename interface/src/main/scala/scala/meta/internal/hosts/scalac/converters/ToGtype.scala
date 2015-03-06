@@ -21,8 +21,8 @@ trait ToGtype extends GlobalToolkit with MetaToolkit {
 
   protected implicit class ToGtype(mtpe: m.Type.Arg) {
     private def gannotinfo(mannot: m.Mod.Annot): g.AnnotationInfo = {
-      val gtpe = mannot.tree.tpe.require[m.Type].toGtype
-      val gargss = mannot.tree.ctorArgss.map(_.map(_.toGtree))
+      val gtpe = mannot.body.tpe.require[m.Type].toGtype
+      val gargss = mannot.body.ctorArgss.map(_.map(_.toGtree))
       if (gargss.length > 1) throw new SemanticException(s"implementation restriction: annotations with multiple argument lists are not supported by scalac")
       if (gtpe <:< g.definitions.StaticAnnotationClass.tpe) {
         g.AnnotationInfo(gtpe, gargss.head.toList, Nil)

@@ -4,14 +4,12 @@ object Join {
   def impl(c: Context)(x: c.Tree, y: c.Tree) = {
     import c.universe._
     def fields(tree: Tree) = tree.tpe.members.collect({
-      case m: TermSymbol if m.isGetter =>
-        m
+      case m: TermSymbol if m.isGetter => m
     })
     val xfields = fields(x).map(f => f -> q"xtemp")
     val yfields = fields(y).map(f => f -> q"ytemp")
     val getters = (xfields ++ yfields).map({
-      case (f, ref) =>
-        q"val ${f.name} = $ref.${f.name}"
+      case (f, ref) => q"val ${f.name} = $ref.${f.name}"
     })
     q"""
       val xtemp = $x
