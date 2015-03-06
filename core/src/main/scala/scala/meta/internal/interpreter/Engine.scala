@@ -43,14 +43,14 @@ object Interpreter {
       case i.Term.ApplyInfix(lhs, op, _, args) =>
         val method = lhs.tpe.members.filter(_.name == op).head
         val (lhsV, newEnv) = eval(lhs, env)
-        val (rhsVs, callEnv) = evalArgs(args, env)
+        val (rhsVs, callEnv) = evalSeq(args, env)
         methodCall(method, lhsV, rhsVs, callEnv)
 
       case i.Term.Apply(lhs, args) =>
         val method = lhs.tpe.members.filter(_.name.toString == "apply").head
 
         val (lhsV, newEnv) = eval(lhs, env)
-        val (rhsVs, callEnv) = evalArgs(args, env)
+        val (rhsVs, callEnv) = evalSeq(args, env)
         methodCall(method, lhsV, rhsVs, callEnv)
 
       case i.Term.If(cond, thn, elze) =>
@@ -73,6 +73,13 @@ object Interpreter {
           }
         }, t"Any => Any"), env)
 
+      // String interpolators
+      case i.Term.Interpolate(i.Term.Name("s"), strings, terms) =>
+        val (evalTerms, env1) = evalSeq(terms, env)
+        val (evalStrings, env2) = evalSeq(strings, env1)
+        val res = evalStrings.map(_.ref).zipAll(evalTerms.map(_.ref.toString), "", "").foldLeft("")((res, s) => res + s._1 + s._2)
+        (Object(res, t"String"), env2)
+
       case _ => sys.error(s"""
         |unsupported tree:
         |${term.show[Code]}
@@ -81,17 +88,13 @@ object Interpreter {
     }
   }
 
-  /*
-   * Method arguments in Scala are evaluated from left to right within a single parameter list.
-   */
-  def evalArgs(args: Seq[i.Term.Arg], env: Env)(implicit c: Context): (List[Object], Env) = {
-    args.foldLeft(((Nil: List[Object]), env)) { (acc, arg) =>
+  def evalSeq[T <: Tree](terms: Seq[T], env: Env)(implicit c: Context): (Seq[Object], Env) =
+    terms.foldLeft((Seq[Object](), env)) { (acc, arg) =>
       val (res, newEnv) = eval(arg, acc._2)
       (acc._1 :+ res, newEnv)
     }
-  }
 
-  def methodCall(member: Member, lhs: Object, rhs: List[Object], env: Env)(implicit c: Context): (Object, Env) = {
+  def methodCall(member: Member, lhs: Object, rhs: Seq[Object], env: Env)(implicit c: Context): (Object, Env) = {
     member match {
       // abstract method
       case m @ i.Decl.Def(mods, _, _, paramss, _) => // interface
@@ -100,12 +103,12 @@ object Interpreter {
         methodCallByMods(mods, paramss, lhs, rhs, env)
     }
   }
-  def methodCallByMods(mods: Seq[i.Mod], params: Seq[Seq[i.Term.Param]], lhs: Object, rhs: List[Object], env: Env)(implicit c: Context) = {
+  def methodCallByMods(mods: Seq[i.Mod], params: Seq[Seq[i.Term.Param]], lhs: Object, rhs: Seq[Object], env: Env)(implicit c: Context) = {
     val jvmMethod: String = mods.collect({ case i.Mod.Ffi(s) => s }).head
     val rgx = """(.*)\((.*), (.*), (.*)""".r
     jvmMethod.substring(0, jvmMethod.length - 1) match {
       case rgx("scalaIntrinsic", lhsJTp, nme, argsRetJTp) =>
-        ScalaEmulator.emulate(List(lhsJTp, nme, argsRetJTp), lhs :: rhs, env)
+        ScalaEmulator.emulate(List(lhsJTp, nme, argsRetJTp), lhs +: rhs, env)
       case rgx("jvmMethod", lhsJTp, nme, argsRetJTp) =>
         methodCallByJavaSignature(params, lhs, rhs, lhsJTp, nme, argsRetJTp, env)
       case _ => // call method in the interpreter
@@ -113,7 +116,7 @@ object Interpreter {
     }
   }
   def methodCallByJavaSignature(
-    params: Seq[Seq[i.Term.Param]], lhs: Object, rhs: List[Object],
+    params: Seq[Seq[i.Term.Param]], lhs: Object, rhs: Seq[Object],
     lhsJTp: String, nme: String, argsRetJTp: String, env: Env)(implicit c: Context) = {
     val paramsRegex = """\((.*)\).*""".r
     val paramsRegex(jvmParams) = argsRetJTp

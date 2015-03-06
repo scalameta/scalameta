@@ -52,8 +52,10 @@ class BasicInterpretationSpec extends FlatSpec with ShouldMatchers {
     // Higher-order functions
     interpret("""val f = (x: String) => x + "2"; f("4")""")
 
-    // String interpolators
-    // interpret("""s"Begin: ${val x = 1; x +1} end"""") should be(2)
+    // String interpolation
+    interpret("""s"Begin ${val x = 1; x + 1} the end"""") should be("Begin 2 the end")
+
+    // Pattern matching
 
     // Using higher-order functions.
     // interpret("""val lst = List(1,2,3); lst.map(x => x + 1)""")
