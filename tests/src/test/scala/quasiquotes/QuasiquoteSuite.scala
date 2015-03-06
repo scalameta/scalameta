@@ -48,4 +48,15 @@ class QuasiquoteSuite extends FunSuite {
     val ts = Nil
     assert(q"foo($x, ..$ys, $z, ..$ts)".show[Code] === "foo(1, 2, 3)")
   }
+
+  test("p\"case $x: T => \"") {
+    val x = p"x"
+    assert(p"case $x: T => ".show[Code] === "case x: T =>")
+  }
+
+  test("p\"case $x @ $y => \"") {
+    val x = p"x"
+    val y = p"List(1, 2, 3)"
+    assert(p"case $x @ $y => ".show[Code] === "case x @ List(1, 2, 3) =>")
+  }
 }
