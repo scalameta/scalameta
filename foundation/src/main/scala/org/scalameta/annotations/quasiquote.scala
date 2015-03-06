@@ -38,7 +38,7 @@ class QuasiquoteMacros(val c: Context) {
         val gsafeResultsWithLogging = qsafeResults.map(qsafeResult => q"""
           $qsafeResult.recover({
             case ex: _root_.scala.Exception =>
-              if (_root_.scala.sys.`package`.props("quasiquote.debug") != null) println(ex)
+              if (_root_.scala.sys.`package`.props("quasiquote.debug") != null) ex.printStackTrace()
               throw ex
           })
         """)
