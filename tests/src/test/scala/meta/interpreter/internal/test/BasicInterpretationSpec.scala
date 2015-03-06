@@ -56,7 +56,12 @@ class BasicInterpretationSpec extends FlatSpec with ShouldMatchers {
     interpret("""s"Begin ${val x = 1; x + 1} the end"""") should be("Begin 2 the end")
 
     // Pattern matching
+    //    interpret("""s"Hi" match {case x: String => x}""") should be("Hi")
 
+    // Exceptions 
+    // intercept[RuntimeException] {
+    //   interpret("""sys.error("Catch me outside!")""")
+    // }
     // Using higher-order functions.
     // interpret("""val lst = List(1,2,3); lst.map(x => x + 1)""")
     // interpret("""List((1,2), (2,3), (3,4)).map(x => x._1 + 1)
@@ -64,4 +69,3 @@ class BasicInterpretationSpec extends FlatSpec with ShouldMatchers {
   }
 
 }
-

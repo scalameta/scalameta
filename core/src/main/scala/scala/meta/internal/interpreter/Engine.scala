@@ -80,6 +80,21 @@ object Interpreter {
         val res = evalStrings.map(_.ref).zipAll(evalTerms.map(_.ref.toString), "", "").foldLeft("")((res, s) => res + s._1 + s._2)
         (Object(res, t"String"), env2)
 
+      // Pattern matching 
+      case i.Term.Match(lhs, cases) =>
+        /*val (lhsV, env1) = eval(lhs, env)
+        var env2 = env1
+        cases.collectFirst {
+          case i.Case(pattern, guard, block) if ({
+            { val (res, env3) = ???; env2 = env3; res } &&
+              { val (res, env3) = ???; env2 = env3; res }
+            ???
+          }) =>
+            eval(block, env2)
+        }
+        //List())*/
+        ???
+
       case _ => sys.error(s"""
         |unsupported tree:
         |${term.show[Code]}
@@ -103,6 +118,7 @@ object Interpreter {
         methodCallByMods(mods, paramss, lhs, rhs, env)
     }
   }
+
   def methodCallByMods(mods: Seq[i.Mod], params: Seq[Seq[i.Term.Param]], lhs: Object, rhs: Seq[Object], env: Env)(implicit c: Context) = {
     val jvmMethod: String = mods.collect({ case i.Mod.Ffi(s) => s }).head
     val rgx = """(.*)\((.*), (.*), (.*)""".r
