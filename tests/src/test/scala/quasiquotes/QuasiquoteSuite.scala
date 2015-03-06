@@ -23,4 +23,12 @@ class QuasiquoteSuite extends FunSuite {
     implicit def custom[U >: List[Term]]: Liftable[List[Int], U] = Liftable(_.map(x => q"$x"))
     assert(q"foo(..${List(1, 2, 3)})".show[Code] === "foo(1, 2, 3)")
   }
+
+  test("q\"$foo(${x: Int})\"") {
+    q"foo(42)" match {
+      case q"$foo(${x: Int})" =>
+        assert(foo.show[Code] === "foo")
+        assert(x == 42)
+    }
+  }
 }

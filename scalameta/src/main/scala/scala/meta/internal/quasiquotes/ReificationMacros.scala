@@ -34,10 +34,13 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
   import scala.meta.internal.{ast => impl}
   val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
 
+  // NOTE: only Mode.Pattern needs holes, and that's only because of Scala's limitations
+  // read a comment in liftUnquote for more information on that
+  case class Hole(name: TermName, arg: ReflectTree, var reifier: ReflectTree)
   sealed trait Mode { def isTerm = this == Mode.Term; def isPattern = this.isInstanceOf[Mode.Pattern] }
   object Mode {
-    object Term extends Mode
-    case class Pattern(dummy: ReflectTree, unquotees: List[ReflectBind]) extends Mode
+    object Term extends Mode { def holes = Nil }
+    case class Pattern(dummy: ReflectTree, holes: List[Hole]) extends Mode
   }
 
   import definitions._
@@ -46,6 +49,9 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
   val ScalaList = ScalaPackageObjectClass.info.decl(TermName("List"))
   val ScalaNil = ScalaPackageObjectClass.info.decl(TermName("Nil"))
   val ScalaSeq = ScalaPackageObjectClass.info.decl(TermName("Seq"))
+  val InternalLift = c.mirror.staticModule("scala.meta.internal.quasiquotes.Lift")
+  val InternalUnlift = c.mirror.staticModule("scala.meta.internal.quasiquotes.Unlift")
+  val QuasiquotePrefix = c.freshName("quasiquote")
 
   def apply(args: ReflectTree*)(dialect: ReflectTree): ReflectTree = expand(dialect)
   def unapply(scrutinee: ReflectTree)(dialect: ReflectTree): ReflectTree = expand(dialect)
@@ -95,16 +101,11 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
             require(dummy.name == TermName("<unapply-selector>"))
             val args = c.internal.subpatterns(dummy).get
             require(parts.length == args.length + 1)
-            val freshPrefix = c.freshName("unquotee")
-            val unquotees = args.zipWithIndex.map({ case (arg, i) =>
-              val name = TermName(freshPrefix + "$" + i)
-              arg match {
-                case Bind(_, Typed(Ident(termNames.WILDCARD), tpt)) => atPos(arg.pos)(pq"$name: $tpt")
-                case Typed(Ident(termNames.WILDCARD), tpt)          => atPos(arg.pos)(pq"$name: $tpt")
-                case pat                                            => atPos(arg.pos)(pq"$name")
-              }
+            val holes = args.zipWithIndex.map({ case (arg, i) =>
+              val name = TermName(QuasiquotePrefix + "$hole$" + i)
+              Hole(name, arg, reifier = EmptyTree) // TODO: make reifier immutable somehow
             })
-            (parts, unquotees, Mode.Pattern(dummy, unquotees))
+            (parts, holes.map(hole => pq"${hole.name}"), Mode.Pattern(dummy, holes))
         }
       } catch {
         case ex: Exception =>
@@ -449,17 +450,22 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
       def liftUnquote(unquote: impl.Unquote): u.Tree = {
         val tree = unquote.tree.asInstanceOf[u.Tree]
         val pt = unquote.pt.wrap(pendingEllipses.map(_.rank).sum).toTpe
-        val reifier = {
-          if (mode.isTerm) q"_root_.scala.meta.internal.quasiquotes.Lift[$pt]($tree)"
-          else {
-            // TODO: unfortunately, this doesn't work, so we'll have to work around
-            // q"_root_.scala.meta.internal.quasiquotes.Unlift[$pt]($tree)"
-            val bundle = new ConversionMacros(c)
-            val unlifted = bundle.unliftUnapply(tree.asInstanceOf[bundle.c.Tree])(c.WeakTypeTag(pt).asInstanceOf[bundle.c.WeakTypeTag[_]])
-            unlifted.asInstanceOf[c.Tree]
-          }
+        val idealReifier = if (mode.isTerm) q"$InternalLift[$pt]($tree)" else q"$InternalUnlift[$pt]($tree)"
+        val realWorldReifier = mode match {
+          case Mode.Term =>
+            idealReifier
+          case Mode.Pattern(_, holes) =>
+            // TODO: Unfortunately, the way how patterns work prevents us from going the ideal route:
+            // 1) unapplications can't have explicitly specified type arguments
+            // 2) pattern language is very limited and can't express what we want to express in Unlift
+            // Therefore, we're forced to take a two-step unquoting scheme: a) match everything in the corresponding hole,
+            // b) call Unlift.unapply as a normal method in the right-hand side part of the pattern matching clause.
+            val hole = holes.find(hole => tree.equalsStructure(pq"${hole.name}")).getOrElse(sys.error(s"fatal error reifying pattern quasiquote: $unquote, $holes"))
+            val pt = hole.arg match { case pq"_: $pt" => pt; case pq"$_: $pt" => pt; case _ => tq"_root_.scala.meta.Tree" }
+            hole.reifier = atPos(unquote.pos)(q"$InternalUnlift.unapply[$pt](${hole.name})") // TODO: make reifier immutable somehow
+            pq"${hole.name}"
         }
-        atPos(unquote.pos)(reifier)
+        atPos(unquote.pos)(realWorldReifier)
       }
     }
     object Liftables {
@@ -477,25 +483,37 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
       case Mode.Term =>
         val internalResult = Lifts.liftTree(meta)
         if (sys.props("quasiquote.debug") != null) println(internalResult)
-        q"_root_.scala.meta.internal.quasiquotes.Unlift[${c.macroApplication.tpe}]($internalResult)"
-      case Mode.Pattern(dummy, unquotees) =>
+        q"$InternalUnlift[${c.macroApplication.tpe}]($internalResult)"
+      case Mode.Pattern(dummy, holes) =>
         // inspired by https://github.com/densh/joyquote/blob/master/src/main/scala/JoyQuote.scala
+        val pattern = Lifts.liftTree(meta)
         val (thenp, elsep) = {
-          if (unquotees.isEmpty) (q"true", q"false")
-          else (q"_root_.scala.Some((..${unquotees.map(_.name)}))", q"_root_.scala.None")
+          if (holes.isEmpty) (q"true", q"false")
+          else {
+            val resultNames = holes.zipWithIndex.map({ case (_, i) => TermName(QuasiquotePrefix + "$result$" + i) })
+            val resultPatterns = resultNames.map(name => pq"_root_.scala.Some($name)")
+            val resultTerms = resultNames.map(name => q"$name")
+            val thenp = q"""
+              (..${holes.map(_.reifier)}) match {
+                case (..$resultPatterns) => _root_.scala.Some((..$resultTerms))
+                case _ => _root_.scala.None
+              }
+            """
+            (thenp, q"_root_.scala.None")
+          }
         }
         val internalResult = q"""
           new {
             def unapply(input: _root_.scala.meta.Tree) = {
               input match {
-                case ${Lifts.liftTree(meta)} => $thenp
+                case $pattern => $thenp
                 case _ => $elsep
               }
             }
           }.unapply($dummy)
         """
         if (sys.props("quasiquote.debug") != null) println(internalResult)
-        internalResult // TODO: q"_root_.scala.meta.internal.quasiquotes.Lift[${dummy.tpe}]($internalResult)"
+        internalResult // TODO: q"InternalLift[${dummy.tpe}]($internalResult)"
     }
   }
 }

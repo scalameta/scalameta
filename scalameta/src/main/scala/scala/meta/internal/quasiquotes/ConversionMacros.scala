@@ -32,22 +32,24 @@ private[meta] class ConversionMacros(val c: Context) extends AstReflection {
   import definitions._
 
   val MetaLiftable = symbolOf[scala.meta.Liftable[_, _]]
+  val MetaUnliftable = symbolOf[scala.meta.Unliftable[_, _]]
 
   def liftApply[I](outside: c.Tree)(implicit I: c.WeakTypeTag[I]): c.Tree = {
+    val outsideTpe = outside.tpe
     val insideTpe = I.tpe
-    if (outside.tpe <:< insideTpe.publish) {
-      val needsCast = !(outside.tpe <:< insideTpe)
+    if (outsideTpe <:< insideTpe.publish) {
+      val needsCast = !(outsideTpe <:< insideTpe)
       if (needsCast) q"$outside.asInstanceOf[$insideTpe]"
       else outside
     } else {
-      val liftable = c.inferImplicitValue(appliedType(MetaLiftable, outside.tpe, insideTpe.publish), silent = true)
+      val liftable = c.inferImplicitValue(appliedType(MetaLiftable, outsideTpe, insideTpe.publish), silent = true)
       if (liftable.nonEmpty) {
         val lifted = q"$liftable.apply($outside)"
         val needsCast = !(insideTpe.publish =:= insideTpe)
         if (needsCast) q"$lifted.asInstanceOf[$insideTpe]"
         else lifted
       } else {
-        val errorMessage = s"type mismatch when unquoting;$EOL found   : ${outside.tpe}$EOL required: ${insideTpe.publish}"
+        val errorMessage = s"type mismatch when unquoting;$EOL found   : $outsideTpe$EOL required: ${insideTpe.publish}"
         c.abort(c.enclosingPosition, errorMessage)
       }
     }
@@ -68,18 +70,18 @@ private[meta] class ConversionMacros(val c: Context) extends AstReflection {
   }
 
   def unliftUnapply[O](inside: c.Tree)(implicit O: c.WeakTypeTag[O]): c.Tree = {
-    // TODO: this macro is implemented differently from other extractor macros
-    // because it's called in a very unusual hacky way, which needs to be fixed
-    inside match {
-      case pq"$name: $tpt" =>
-        val insideTpe = {
-          try c.typecheck(tpt, c.TYPEmode, silent = false)
-          catch { case c.TypecheckException(pos, msg) => c.abort(pos.asInstanceOf[c.Position], msg) }
-        }
-        val outsideTpe = O.tpe
-        sys.error(s"not yet implemented: Unlift.unapply[$insideTpe, $outsideTpe]")
-      case other =>
-        other
+    val insideTpe = inside.tpe
+    val outsideTpe = O.tpe
+    if (insideTpe.publish <:< outsideTpe) {
+      q"_root_.scala.Some($inside: ${insideTpe.publish})"
+    } else {
+      val unliftable = c.inferImplicitValue(appliedType(MetaUnliftable, insideTpe.publish, outsideTpe), silent = true)
+      if (unliftable.nonEmpty) {
+        q"$unliftable.apply($inside)"
+      } else {
+        val errorMessage = s"type mismatch when unquoting;$EOL found   : ${insideTpe.publish}$EOL required: ${outsideTpe}"
+        c.abort(c.enclosingPosition, errorMessage)
+      }
     }
   }
 }
