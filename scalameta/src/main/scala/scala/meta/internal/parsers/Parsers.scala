@@ -1377,6 +1377,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     Case(pattern().require[Pat], guard(), {
       accept[`=>`]
       autoPos(blockStatSeq() match {
+        case List(unquote: impl.Unquote) => Term.Block(List(unquote))
         case List(blk: Term.Block) => blk
         case stats => Term.Block(stats)
       })
