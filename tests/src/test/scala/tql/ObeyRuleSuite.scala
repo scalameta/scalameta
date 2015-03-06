@@ -32,11 +32,13 @@ class ObeyRuleSuite extends FunSuite {
   val listToSetBool = topDown(transform {
     case tt @ impl.Term.Apply(t @ impl.Term.Select(impl.Term.Apply(impl.Term.Name("List"), _), impl.Term.Name("toSet")), _) =>
       t andCollect tt.toString
+    case tt @ impl.Term.Name("List") =>
+      impl.Term.Name("Set") andCollect tt.toString
   })
 
   test("listToSetBool") {
-    val rewrittenTree = listToSetBool(propagandaTree)
-    val rewrittenCode = rewrittenTree.tree.get
-    assert(rewrittenCode != propagandaCode)
+    val rewrittenResult = listToSetBool(propagandaTree)
+    val rewrittenTree = rewrittenResult.tree.get
+    assert(rewrittenTree.show[Raw] != propagandaTree.show[Raw])
   }
 }
