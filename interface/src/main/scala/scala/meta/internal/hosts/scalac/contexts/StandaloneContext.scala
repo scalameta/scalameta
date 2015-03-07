@@ -43,6 +43,6 @@ class StandaloneContext(options: String) extends ScalahostSemanticContext(mkGlob
   val reporter = new StoreReporter()
   private[meta] def warning(msg: String): Unit = reporter.warning(g.NoPosition, msg)
   private[meta] def error(msg: String): Unit = reporter.error(g.NoPosition, msg)
-  private[meta] def abort(msg: String): Nothing = { reporter.error(g.NoPosition, msg); throw new AbortException(msg) }
+  private[meta] def abort(msg: String): Nothing = { reporter.error(g.NoPosition, msg); sys.error(msg) }
   private[meta] def resources: Map[String, Array[Byte]] = Map()
 }
