@@ -25,7 +25,7 @@ class SemanticSuite extends FunSuite {
     intercept[SemanticException] {
       val expectedFail = "implementation restriction: internal cache has no type associated with List(1, 2, 3)"
       try q"List(1, 2, 3)".tpe
-      catch { case ex: SemanticException => assert(ex.msg.trim.startsWith(expectedFail)); throw ex }
+      catch { case ex: SemanticException => assert(ex.message.trim.startsWith(expectedFail)); throw ex }
     }
     val classDef = c.define("class C { def foo = List(1, 2, 3) }")
     classDef match {
@@ -84,7 +84,7 @@ class SemanticSuite extends FunSuite {
     intercept[SemanticException] {
       val expectedFail = "Input scala.meta tree is not fully attributed and can't be converted to a scala.reflect artifact."
       try t"List[_]".dealias
-      catch { case ex: SemanticException => assert(ex.msg.trim.startsWith(expectedFail)); throw ex }
+      catch { case ex: SemanticException => assert(ex.message.trim.startsWith(expectedFail)); throw ex }
     }
   }
 
@@ -529,7 +529,7 @@ class SemanticSuite extends FunSuite {
     intercept[SemanticException] {
       val expectedFail = "Input scala.meta tree is not fully attributed and can't be converted to a scala.reflect artifact."
       try t"scala.type".members
-      catch { case ex: SemanticException => assert(ex.msg.trim.startsWith(expectedFail)); throw ex }
+      catch { case ex: SemanticException => assert(ex.message.trim.startsWith(expectedFail)); throw ex }
     }
   }
 

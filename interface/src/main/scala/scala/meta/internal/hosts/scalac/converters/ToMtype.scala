@@ -72,7 +72,7 @@ trait ToMtype extends GlobalToolkit with MetaToolkit {
               // therefore for now I'm just putting a stub here
               sym.asTerm.precvt(pre, g.Ident(sym))
             case _ =>
-              sys.error(s"unsupported type $gtpe, prefix = ${pre.getClass}, structure = ${g.showRaw(gtpe, printIds = true, printTypes = true)}")
+              throw new ConvertException(gtpe, s"unsupported type $gtpe, prefix = ${pre.getClass}, structure = ${g.showRaw(gtpe, printIds = true, printTypes = true)}")
           }).withOriginal(gtpe)
           // NOTE: we can't just emit m.Type.Singleton(m.Term.Name(...).withDenot(pre, sym))
           // because in some situations (when the prefix is not stable) that will be a lie
@@ -150,7 +150,7 @@ trait ToMtype extends GlobalToolkit with MetaToolkit {
               m.Type.Project(m.Type.Compound(Nil, List(mlambda)), mname)
           }
         case _ =>
-          sys.error(s"unsupported type $gtpe, designation = ${gtpe.getClass}, structure = ${g.showRaw(gtpe, printIds = true, printTypes = true)}")
+          throw new ConvertException(gtpe, s"unsupported type $gtpe, designation = ${gtpe.getClass}, structure = ${g.showRaw(gtpe, printIds = true, printTypes = true)}")
       }
       result.withOriginal(gtpe)
     })

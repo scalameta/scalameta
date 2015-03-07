@@ -2,6 +2,7 @@ package scala.meta
 package internal.hosts.scalac
 package contexts
 
+import org.scalameta.contexts._
 import org.scalameta.invariants._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
@@ -14,6 +15,7 @@ import scala.meta.internal.{ast => m}
 import scala.meta.internal.{hygiene => h}
 import scala.meta.internal.ui.Summary
 
+@context(translateExceptions = true)
 class SemanticContext[G <: ScalaGlobal](val global: G) extends ConverterApi(global) with ScalametaSemanticContext {
   implicit val c: ScalametaSemanticContext = this
 
@@ -31,7 +33,7 @@ class SemanticContext[G <: ScalaGlobal](val global: G) extends ConverterApi(glob
     val gtpeFromDenotation = tree.originalPre.flatMap(gpre => tree.originalSym.map(_.gsymbol.infoIn(gpre).finalResultType))
     val gtpe = gtpeFromOriginal.orElse(gtpeFromDenotation) match {
       case Some(gtpe) => gtpe
-      case _ => throw new SemanticException(s"implementation restriction: internal cache has no type associated with ${term.show[Summary]}")
+      case _ => throw new ConvertException(term, s"implementation restriction: internal cache has no type associated with ${term.show[Summary]}")
     }
     gtpe.toMtype
   }
