@@ -104,12 +104,12 @@ class SemanticContext[G <: ScalaGlobal](val global: G) extends ConverterApi(glob
   private[meta] def parents(member: mapi.Member): Seq[mapi.Member] = {
     val gpre = member.require[m.Member].toGprefix
     val lsym = member.require[m.Member].toGsymbol
-    lsym.parents.map(_.toMmember(gpre))
+    lsym.parents.map(_.toMmember(gpre)) // TODO: also instantiate type parameters when necessary
   }
 
   private[meta] def children(member: mapi.Member): Seq[mapi.Member] = {
     val gpre = member.require[m.Member].toGprefix
     val lsym = member.require[m.Member].toGsymbol
-    lsym.children.map(_.toMmember(gpre))
+    lsym.children.map(_.toMmember(gpre)) // TODO: also instantiate type parameters when necessary
   }
 }

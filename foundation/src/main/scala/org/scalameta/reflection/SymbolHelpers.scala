@@ -86,7 +86,37 @@ trait SymbolHelpers {
 
   implicit class RichHelperLogicalSymbol(lsym: l.Symbol) {
     def parents: List[l.Symbol] = {
-      ???
+      def overridees = {
+        lsym.symbol.allOverriddenSymbols.take(1).map(_.toLogical)
+      }
+      def superclasses = {
+        val relevantInfo = lsym.symbol.info.typeSymbol.info
+        val parentTypes = relevantInfo.require[g.ClassInfoType].parents
+        parentTypes.map(_.typeSymbol.toLogical)
+      }
+      lsym match {
+        case l.AbstractVal(gget) => overridees
+        case l.AbstractVar(gget, gset) => overridees
+        case l.AbstractDef(gsym) => overridees
+        case l.AbstractType(gsym) => overridees
+        case l.Val(gfield, gget) => overridees
+        case l.Var(gfield, gget, gset) => overridees
+        case l.Def(gsym) => overridees
+        case l.Macro(gsym) => overridees
+        case l.Type(gsym) => overridees
+        case l.Clazz(gsym) => superclasses
+        case l.Trait(gsym) => superclasses
+        case l.Object(gmodule, gmoduleclass) => superclasses
+        case l.Package(gmodule, gmoduleclass) => Nil
+        case l.PackageObject(gmodule, gmoduleclass) => superclasses
+        case l.PrimaryCtor(gsym) => Nil
+        case l.SecondaryCtor(gsym) => Nil
+        case l.TermBind(gsym) => Nil
+        case l.TypeBind(gsym) => Nil
+        case l.TermParameter(gsym) => Nil
+        case l.TypeParameter(gsym) => Nil
+        case _ => unreachable(debug(lsym))
+      }
     }
 
     def children: List[l.Symbol] = {
@@ -104,7 +134,7 @@ trait SymbolHelpers {
         case l.AbstractVal(gget) => overriders
         case l.AbstractVar(gget, gset) => overriders
         case l.AbstractDef(gsym) => overriders
-        case l.AbstractType(gsym) =>overriders
+        case l.AbstractType(gsym) => overriders
         case l.Val(gfield, gget) => overriders
         case l.Var(gfield, gget, gset) => overriders
         case l.Def(gsym) => overriders
