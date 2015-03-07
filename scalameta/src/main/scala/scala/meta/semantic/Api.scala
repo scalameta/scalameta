@@ -335,7 +335,33 @@ private[meta] trait Api {
 
   trait XtensionSemanticScopeLike {
     @hosted protected def tree: Scope
-    @hosted def owner: Scope = ???
+    @hosted def owner: Scope = {
+      def fromSyntax(tree: Tree): Option[Scope] = {
+        tree.parent.flatMap(_ match {
+          case scope: Scope => Some(scope)
+          case other => fromSyntax(other)
+        })
+      }
+      def fromPrefix(prefix: h.Prefix): Option[Member] = {
+        // TODO: this should account for type arguments of the prefix!
+        // TODO: also prefix types are probably more diverse than what's supported now
+        prefix match {
+          case h.Prefix.Type(ref: impl.Type.Ref) => Some(ref.defn)
+          case h.Prefix.Type(impl.Type.Apply(tpe, _)) => fromPrefix(h.Prefix.Type(tpe))
+          case h.Prefix.Type(impl.Type.ApplyInfix(_, tpe, _)) => fromPrefix(h.Prefix.Type(tpe))
+          case _ => None
+        }
+      }
+      tree.require[impl.Scope] match {
+        case member: impl.Member => fromSyntax(member).orElse(fromPrefix(member.name.require[impl.Name].denot.prefix)).get
+        case term: impl.Term => fromSyntax(term).get
+        case pat: impl.Pat => fromSyntax(pat).get
+        case cas: impl.Case => fromSyntax(cas).get
+        case tpe: impl.Type.Ref => tpe.defn.owner
+        case tpe: impl.Type => ???
+        case _ => unreachable(debug(tree))
+      }
+    }
     @hosted private[meta] def deriveEvidences(tparam: Type.Param): Seq[Term.Param] = {
       def deriveEvidence(evidenceTpe: Type): Term.Param = {
         // TODO: it's almost a decent parameter except for the facts that:
