@@ -254,10 +254,11 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
             if (gctorsym != g.NoSymbol) {
               val gctorinfo = gctorsym.infoIn(gpre)
               val mctorname = m.Ctor.Name(gsym.name.toString).withDenot(gpre, gctorsym).withOriginal(gctorsym)
-              val mctorparamss = {
+              var mctorparamss = {
                 if (lsym.isInstanceOf[l.Clazz]) gctorinfo.paramss.map(_.map(gvparam => l.TermParameter(gvparam).toMmember(g.NoPrefix).require[m.Term.Param]))
                 else Nil // NOTE: synthetic constructors for modules have a fake List(List()) parameter list
               }
+              if (mctorparamss.length == 1 && mctorparamss.flatten.length == 0) mctorparamss = Nil
               m.Ctor.Primary(this.mmods(l.PrimaryCtor(gctorsym)), mctorname, mctorparamss)
             } else {
               mfakector
