@@ -276,8 +276,8 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
           val mearly = LazySeq(mstats.filter(mstat => isEarly(mstat)))
           val mlate = LazySeq(mstats.filter(mstat => !isEarly(mstat)))
           val gparents = ginfo match {
-            case g.ClassInfoType(gparents, _, _) => gparents
-            case g.PolyType(_, g.ClassInfoType(gparents, _, _)) => gparents
+            case gtpe: g.ClassInfoType => gtpe.realParents
+            case g.PolyType(_, gtpe: g.ClassInfoType) => gtpe.realParents
           }
           val mparents = gparents.map(gparent => {
             val mtpe = gparent.toMtype

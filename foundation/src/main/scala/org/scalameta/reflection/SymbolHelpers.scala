@@ -91,7 +91,7 @@ trait SymbolHelpers {
       }
       def superclasses = {
         val relevantInfo = lsym.symbol.info.typeSymbol.info
-        val parentTypes = relevantInfo.require[g.ClassInfoType].parents
+        val parentTypes = relevantInfo.require[g.ClassInfoType].realParents
         parentTypes.map(_.typeSymbol.toLogical)
       }
       lsym match {
