@@ -12,6 +12,7 @@ trait MacroPlugin extends Typechecking with Expansion {
   import analyzer.{MacroPlugin => NscMacroPlugin, _}
 
   object scalahostMacroPlugin extends NscMacroPlugin {
+    override def pluginsEnterStats(typer: Typer, stats: List[Tree]): List[Tree] = scalahostEnterStats(typer, stats)
     override def pluginsTypedMacroBody(typer: Typer, ddef: DefDef): Option[Tree] = scalahostTypedMacroBody(typer, ddef)
     override def pluginsIsBlackbox(macroDef: Symbol): Option[Boolean] = scalahostIsBlackbox(macroDef)
     override def pluginsMacroExpand(typer: Typer, expandee: Tree, mode: Mode, pt: Type): Option[Tree] = scalahostMacroExpand(typer, expandee, mode, pt)
