@@ -39,16 +39,19 @@ object Interpreter {
       case i.Lit.Bool(v) =>
         (Object(v, t"Boolean"), env)
 
-      // TODO order of execution method calls
+      // TODO introduce a method in the interpreter!
       case i.Term.ApplyInfix(lhs, op, _, args) =>
         val method = lhs.tpe.members.filter(_.name == op).head
         val (lhsV, newEnv) = eval(lhs, env)
         val (rhsVs, callEnv) = evalSeq(args, env)
         methodCall(method, lhsV, rhsVs, callEnv)
-
+      case i.Term.Apply(i.Term.Select(lhs, rhs), args) =>
+        val (lhsV, newEnv) = eval(lhs, env)
+        val method = lhs.tpe.members.filter(_.name.toString == rhs.name.toString).head
+        val (rhsVs, callEnv) = evalSeq(args, env)
+        methodCall(method, lhsV, rhsVs, callEnv)
       case i.Term.Apply(lhs, args) =>
         val method = lhs.tpe.members.filter(_.name.toString == "apply").head
-
         val (lhsV, newEnv) = eval(lhs, env)
         val (rhsVs, callEnv) = evalSeq(args, env)
         methodCall(method, lhsV, rhsVs, callEnv)
@@ -165,8 +168,10 @@ object Interpreter {
 }
 
 object Utils {
-  def jvmTypeToClass(s: String): Class[_] =
-    Class.forName(s.replaceAll("/", ".").subSequence(1, s.length - 1).toString)
+  def jvmTypeToClass(s: String): Class[_] = s match {
+    case "I" => classOf[Int]
+    case _ => Class.forName(s.replaceAll("/", ".").subSequence(1, s.length - 1).toString)
+  }
 
   def unsupported(t: Tree, msg: String): Nothing = sys.error(s"""
       |unsupported $msg:
