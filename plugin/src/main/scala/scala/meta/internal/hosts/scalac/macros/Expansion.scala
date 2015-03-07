@@ -13,6 +13,7 @@ import scala.reflect.runtime.ReflectionUtils
 import scala.reflect.macros.runtime.AbortMacroException
 import scala.util.control.ControlThrowable
 import scala.collection.mutable
+import scala.meta.dialects.Scala211
 import scala.meta.internal.{ast => m}
 import scala.meta.internal.eval.eval
 import scala.meta.macros.{Context => ScalametaMacroContext}
@@ -67,6 +68,7 @@ trait Expansion extends scala.reflect.internal.show.Printers {
               // val ginvocation: g.Tree = ??? // TODO: needs to be coordinated with the interpreter
               // val minvocation: m.Term = mc.toMtree(minvocation, classOf[m.Term])
               // eval(minvocation)
+              if (sys.props("macro.debug") != null) println(rc.macroApplication)
               val q"$_[..$gtargs](...$gargss)" = rc.macroApplication
               val mtargs = gtargs.map(gtarg => mc.toMtype(gtarg.tpe))
               val margss = mmap(gargss)(mc.toMtree(_, classOf[m.Term]))
@@ -88,12 +90,17 @@ trait Expansion extends scala.reflect.internal.show.Printers {
                 }
                 val jinstance = ReflectionUtils.staticSingletonInstance(jclass)
                 jmeth.setAccessible(true)
-                jmeth.invoke(jinstance, mmacroargs: _*)
+                if (sys.props("macro.debug") != null) println(s"invoking $jmeth(${mmacroargs.mkString(", ")})")
+                val result = jmeth.invoke(jinstance, mmacroargs: _*)
+                if (sys.props("macro.debug") != null) println(result)
+                result
               }
             }
             val gresult: Any = mresult match {
               case mtree: m.Tree =>
+                if (sys.props("macro.debug") != null) println(mtree.show[Raw])
                 val gtree: g.Tree = mc.toGtree(mtree)
+                if (sys.props("macro.debug") != null) println(g.showRaw(gtree))
                 attachExpansionString(expandee, gtree, mtree.show[Code])
                 gtree
               case other =>
