@@ -13,7 +13,9 @@ import scala.reflect.runtime.ReflectionUtils
 import scala.reflect.macros.runtime.AbortMacroException
 import scala.util.control.ControlThrowable
 import scala.collection.mutable
-import scala.reflect.macros.contexts.{Context => ScalareflectMacroContext}
+import scala.meta.dialects.Scala211
+import scala.meta.internal.{ast => m}
+import scala.meta.internal.eval.eval
 import scala.meta.macros.{Context => ScalametaMacroContext}
 import scala.meta.internal.hosts.scalac.contexts.{MacroContext => ScalahostMacroContext}
 import scala.meta.internal.hosts.scalac.{PluginBase => ScalahostPlugin, Scalahost}
@@ -24,7 +26,7 @@ trait Expansion extends scala.reflect.internal.show.Printers {
   import global._
   import definitions._
   import treeInfo._
-  import analyzer.{MacroPlugin => NscMacroPlugin, _}
+  import analyzer.{MacroPlugin => NscMacroPlugin, MacroContext => ScalareflectMacroContext, _}
 
   def scalahostMacroExpand(typer: Typer, expandee: Tree, mode: Mode, pt: Type): Option[Tree] = {
     val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
@@ -59,54 +61,52 @@ trait Expansion extends scala.reflect.internal.show.Printers {
           }
           // NOTE: magic name. essential for detailed and sane stack traces for exceptions in macro expansion logic
           private def macroExpandWithRuntime(rc: ScalareflectMacroContext): Any = {
-            import global.{Tree => ScalaTree}
-            import scala.meta.{Tree => ScalametaTree, Term => ScalametaTerm}
-            import scala.meta.internal.eval.{eval => scalametaEval}
-            import org.scalameta.unreachable
-            lazy val hc = Scalahost.mkMacroContext[global.type](rc)
-            lazy val scalareflectInvocation: ScalaTree = {
-              // TODO: implement this
-              // val applied @ Applied(core, targs, argss) = dissectApplied(expandee)
-              // val implCore = q"${implDdef.symbol}" setType core.tpe
-              // val implTapplied = q"$implCore[..$targs]" setType applied.callee.tpe
-              // val margss = argss.map(_.map(arg => env.bind(arg))) :+ List(env.bind(hc))
-              // val implApplied = q"$implTapplied(...$margss)" setType expandee.tpe
-              // val scalaInvocation = q"{ $implDdef; $implApplied }" setType expandee.tpe
-              implDdef.rhs
+            def fail(errorMessage: String) = throw new AbortMacroException(rc.macroApplication.pos, errorMessage)
+            implicit val mc = Scalahost.mkMacroContext[global.type](rc)
+            val mresult: Any = {
+              // TODO: to be uncommented when the interpreter works
+              // val ginvocation: g.Tree = ??? // TODO: needs to be coordinated with the interpreter
+              // val minvocation: m.Term = mc.toMtree(minvocation, classOf[m.Term])
+              // eval(minvocation)
+              if (sys.props("macro.debug") != null) println(rc.macroApplication)
+              val q"$_[..$gtargs](...$gargss)" = rc.macroApplication
+              val mtargs = gtargs.map(gtarg => mc.toMtype(gtarg.tpe))
+              val margss = mmap(gargss)(mc.toMtree(_, classOf[m.Term]))
+              val mmacroargs = mtargs ++ margss.flatten :+ mc
+              if (currentRun.compiles(rc.macroApplication.symbol)) {
+                fail("implementation restriction: until the TASTY interpreter is implemented, scala.meta macros can only be expanded in a separate compilation run")
+              } else {
+                val jclassloader = {
+                  val findMacroClassLoader = analyzer.getClass.getMethods().filter(_.getName.endsWith("findMacroClassLoader")).head
+                  findMacroClassLoader.setAccessible(true)
+                  findMacroClassLoader.invoke(analyzer).asInstanceOf[ClassLoader]
+                }
+                val jclass = Class.forName(rc.macroApplication.symbol.owner.fullName + "$", true, jclassloader)
+                val jmeths = jclass.getDeclaredMethods().filter(_.getName == rc.macroApplication.symbol.name.encoded + "$impl").toList
+                val jmeth = jmeths match {
+                  case List(single) => single
+                  case Nil => fail("no precompiled implementation found for scala.meta macro")
+                  case other => fail("cannot pick from multiple precompiled implementations for scala.meta macro")
+                }
+                val jinstance = ReflectionUtils.staticSingletonInstance(jclass)
+                jmeth.setAccessible(true)
+                if (sys.props("macro.debug") != null) println(s"invoking $jmeth(${mmacroargs.mkString(", ")})")
+                val result = jmeth.invoke(jinstance, mmacroargs: _*)
+                if (sys.props("macro.debug") != null) println(result)
+                result
+              }
             }
-            lazy val scalametaInvocation: ScalametaTree = {
-              // TODO: implement this
-              // hc.toMtree(scalareflectInvocation)
-              ???
+            val gresult: Any = mresult match {
+              case mtree: m.Tree =>
+                if (sys.props("macro.debug") != null) println(mtree.show[Raw])
+                val gtree: g.Tree = mc.toGtree(mtree)
+                if (sys.props("macro.debug") != null) println(g.showRaw(gtree))
+                attachExpansionString(expandee, gtree, mtree.show[Code])
+                gtree
+              case other =>
+                fail("scala.meta macros must return a scala.meta.Term; returned value is " + (if (other == null) "null" else "of " + other.getClass))
             }
-            lazy val scalametaResult: Any = scalametaInvocation match {
-              case term: ScalametaTerm => scalametaEval(term)
-              case other => unreachable(debug(other, other.show[Raw]))
-            }
-            lazy val scalareflectResult: Any = scalametaResult match {
-              case scalametaTree: ScalametaTree =>
-                // TODO: implement this
-                // val scalareflectTree: ScalareflectTree = hc.fromScalameta(tree)
-                // attachExpansionString(expandee, scalareflectTree, scalametaTree.show[Code])
-                // scalareflectTree
-                ???
-              case other => other
-            }
-            // TODO: unhardcode this
-            // scalareflectResult
-            lazy val hardcodedResult = {
-              val Applied(core, targs, List(List(x, y))) = dissectApplied(expandee)
-              def fields(tree: Tree) = tree.tpe.members.collect{ case m: TermSymbol if m.isGetter => m }
-              val xfields = fields(x).map(f => f -> q"xtemp")
-              val yfields = fields(y).map(f => f -> q"ytemp")
-              val getters = (xfields ++ yfields).map{ case (f, ref) => q"val ${f.name} = $ref.${f.name}" }
-              q"""
-                val xtemp = $x
-                val ytemp = $y
-                new { ..$getters }
-              """
-            }
-            hardcodedResult
+            gresult
           }
           override protected def expand(desugared: Tree): Tree = {
             def showDetailed(tree: Tree) = showRaw(tree, printIds = true, printTypes = true)

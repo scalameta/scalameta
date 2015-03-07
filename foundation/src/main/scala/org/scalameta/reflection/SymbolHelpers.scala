@@ -83,4 +83,76 @@ trait SymbolHelpers {
       bytecodelessMethodOwners(sym.owner) && !bytecodefulObjectMethods(sym)
     }
   }
+
+  implicit class RichHelperLogicalSymbol(lsym: l.Symbol) {
+    def parents: List[l.Symbol] = {
+      def overridees = {
+        lsym.symbol.allOverriddenSymbols.take(1).map(_.toLogical)
+      }
+      def superclasses = {
+        val relevantInfo = lsym.symbol.info.typeSymbol.info
+        val parentTypes = relevantInfo.require[g.ClassInfoType].realParents
+        parentTypes.map(_.typeSymbol.toLogical)
+      }
+      lsym match {
+        case l.AbstractVal(gget) => overridees
+        case l.AbstractVar(gget, gset) => overridees
+        case l.AbstractDef(gsym) => overridees
+        case l.AbstractType(gsym) => overridees
+        case l.Val(gfield, gget) => overridees
+        case l.Var(gfield, gget, gset) => overridees
+        case l.Def(gsym) => overridees
+        case l.Macro(gsym) => overridees
+        case l.Type(gsym) => overridees
+        case l.Clazz(gsym) => superclasses
+        case l.Trait(gsym) => superclasses
+        case l.Object(gmodule, gmoduleclass) => superclasses
+        case l.Package(gmodule, gmoduleclass) => Nil
+        case l.PackageObject(gmodule, gmoduleclass) => superclasses
+        case l.PrimaryCtor(gsym) => Nil
+        case l.SecondaryCtor(gsym) => Nil
+        case l.TermBind(gsym) => Nil
+        case l.TypeBind(gsym) => Nil
+        case l.TermParameter(gsym) => Nil
+        case l.TypeParameter(gsym) => Nil
+        case _ => unreachable(debug(lsym))
+      }
+    }
+
+    def children: List[l.Symbol] = {
+      def overriders = {
+        // TODO: look up children of the owner and then search in their decls
+        ???
+      }
+      def subclasses = {
+        // TODO: the idea is to support all kinds of subclasses here, not only for sealed gsyms
+        // I know how to do that, but there's a long way to go
+        val unordered = lsym.symbol.initialize.knownDirectSubclasses
+        unordered.toList.sortBy(_.name.decoded).map(_.toLogical)
+      }
+      lsym match {
+        case l.AbstractVal(gget) => overriders
+        case l.AbstractVar(gget, gset) => overriders
+        case l.AbstractDef(gsym) => overriders
+        case l.AbstractType(gsym) => overriders
+        case l.Val(gfield, gget) => overriders
+        case l.Var(gfield, gget, gset) => overriders
+        case l.Def(gsym) => overriders
+        case l.Macro(gsym) => overriders
+        case l.Type(gsym) => overriders
+        case l.Clazz(gsym) => subclasses
+        case l.Trait(gsym) => subclasses
+        case l.Object(gmodule, gmoduleclass) => Nil
+        case l.Package(gmodule, gmoduleclass) => Nil
+        case l.PackageObject(gmodule, gmoduleclass) => Nil
+        case l.PrimaryCtor(gsym) => Nil
+        case l.SecondaryCtor(gsym) => Nil
+        case l.TermBind(gsym) => Nil
+        case l.TypeBind(gsym) => Nil
+        case l.TermParameter(gsym) => Nil
+        case l.TypeParameter(gsym) => Nil
+        case _ => unreachable(debug(lsym))
+      }
+    }
+  }
 }

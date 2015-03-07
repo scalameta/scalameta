@@ -11,6 +11,8 @@ extends ToM
    with ToMmember
    with ToMtree
    with ToMtype
+   with ToG
+   with ToGsymbol
    with ToGtree
    with ToGtype
    with Attributes

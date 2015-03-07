@@ -254,10 +254,11 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
             if (gctorsym != g.NoSymbol) {
               val gctorinfo = gctorsym.infoIn(gpre)
               val mctorname = m.Ctor.Name(gsym.name.toString).withDenot(gpre, gctorsym).withOriginal(gctorsym)
-              val mctorparamss = {
+              var mctorparamss = {
                 if (lsym.isInstanceOf[l.Clazz]) gctorinfo.paramss.map(_.map(gvparam => l.TermParameter(gvparam).toMmember(g.NoPrefix).require[m.Term.Param]))
                 else Nil // NOTE: synthetic constructors for modules have a fake List(List()) parameter list
               }
+              if (mctorparamss.length == 1 && mctorparamss.flatten.length == 0) mctorparamss = Nil
               m.Ctor.Primary(this.mmods(l.PrimaryCtor(gctorsym)), mctorname, mctorparamss)
             } else {
               mfakector
@@ -275,8 +276,8 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
           val mearly = LazySeq(mstats.filter(mstat => isEarly(mstat)))
           val mlate = LazySeq(mstats.filter(mstat => !isEarly(mstat)))
           val gparents = ginfo match {
-            case g.ClassInfoType(gparents, _, _) => gparents
-            case g.PolyType(_, g.ClassInfoType(gparents, _, _)) => gparents
+            case gtpe: g.ClassInfoType => gtpe.realParents
+            case g.PolyType(_, gtpe: g.ClassInfoType) => gtpe.realParents
           }
           val mparents = gparents.map(gparent => {
             val mtpe = gparent.toMtype
@@ -339,7 +340,7 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
           case _: l.TypeBind => m.Pat.Var.Type(mname.require[m.Type.Name])
           case _: l.TermParameter => m.Term.Param(mmods, mname.require[m.Term.Param.Name], Some(mtpearg), mmaybeDefault)
           case _: l.TypeParameter => m.Type.Param(mmods, mname.require[m.Type.Param.Name], mtparams, mtpebounds, mviewbounds, mcontextbounds)
-          case _ => sys.error(s"unsupported symbol $lsym, designation = ${gsym.getClass}, flags = ${gsym.flags}")
+          case _ => throw new ConvertException(lsym, s"unsupported symbol $lsym, designation = ${gsym.getClass}, flags = ${gsym.flags}")
         }
         mmember.withOriginal(lsym)
       }

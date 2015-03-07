@@ -67,7 +67,7 @@ trait SymbolTables extends GlobalToolkit with MetaToolkit {
         case h.Symbol.Root => l.Package(g.rootMirror.RootPackage, g.rootMirror.RootClass)
         case h.Symbol.Empty => l.Package(g.rootMirror.EmptyPackage, g.rootMirror.EmptyPackageClass)
         case h.Symbol.Global(howner, name, hsig) => resolve(convert(howner), name, hsig)
-        case h.Symbol.Local(id) => throw new SemanticException(s"implementation restriction: internal cache has no symbol associated with $hsym")
+        case h.Symbol.Local(id) => throw new ConvertException(hsym, s"implementation restriction: internal cache has no symbol associated with $hsym")
       }
     })
 

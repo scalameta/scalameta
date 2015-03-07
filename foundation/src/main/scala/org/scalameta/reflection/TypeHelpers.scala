@@ -20,6 +20,18 @@ trait TypeHelpers {
     def directBaseTypes: List[Type] = ???
   }
 
+  implicit class RichHelperClassInfoType(tpe: ClassInfoType) {
+    def realParents: List[Type] = {
+      tpe.parents match {
+        case classTpe :: traitTpe :: rest if traitTpe <:< classTpe =>
+          // NOTE: this is obviously imprecise, but at least it captures the common case
+          traitTpe :: rest
+        case other =>
+          other
+      }
+    }
+  }
+
   object EtaReduce {
     def unapply(tpe: Type): Option[Type] = tpe match {
       case PolyType(tparams, TypeRef(pre, sym, targs)) =>

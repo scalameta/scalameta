@@ -2,8 +2,10 @@ package scala.meta
 package internal.hosts.scalac
 package contexts
 
+import org.scalameta.contexts._
 import org.scalameta.invariants._
 import scala.meta.semantic.{Context => ScalametaSemanticContext}
+import scala.meta.macros.{Context => ScalametaMacroContext}
 import scala.meta.internal.hosts.scalac.contexts.{SemanticContext => ScalahostSemanticContext}
 import scala.compat.Platform.EOL
 import org.scalameta.reflection.mkGlobal
@@ -11,13 +13,14 @@ import scala.tools.nsc.reporters.StoreReporter
 import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
 
-class StandaloneContext(options: String) extends ScalahostSemanticContext(mkGlobal(options)) {
-  private val reporter: StoreReporter = g.reporter.require[StoreReporter]
+@context(translateExceptions = false)
+class StandaloneContext(options: String) extends ScalahostSemanticContext(mkGlobal(options)) with ScalametaMacroContext {
   def define(code: String): m.Tree = {
-    g.reporter.reset()
+    val reporter: StoreReporter = g.reporter.require[StoreReporter]
+    reporter.reset()
     val gunit = g.newCompilationUnit(code, "<scalahost>")
     val gtree = g.newUnitParser(gunit).parse()
-    if (reporter.hasErrors) sys.error("parse has failed:" + EOL + (reporter.infos map (_.msg) mkString EOL))
+    if (reporter.hasErrors) throw new StandaloneException("parse has failed:" + EOL + (reporter.infos map (_.msg) mkString EOL))
     val gtypedtree = {
       import g.{reporter => _, _}
       import analyzer._
@@ -31,10 +34,15 @@ class StandaloneContext(options: String) extends ScalahostSemanticContext(mkGlob
       val typer = newTyper(rootContext(gunit))
       val typedpkg = typer.typed(gtree).require[Tree]
       for (workItem <- gunit.toCheck) workItem()
-      if (reporter.hasErrors) sys.error("typecheck has failed:" + EOL + (reporter.infos map (_.msg) mkString EOL))
+      if (reporter.hasErrors) throw new StandaloneException("typecheck has failed:" + EOL + (reporter.infos map (_.msg) mkString EOL))
       typedpkg.require[PackageDef]
     }
     val _ = toMtree.computeConverters // TODO: necessary because of macro expansion order
     toMtree(gtypedtree, classOf[mapi.Source])
   }
+  val reporter = new StoreReporter()
+  private[meta] def warning(msg: String): Unit = reporter.warning(g.NoPosition, msg)
+  private[meta] def error(msg: String): Unit = reporter.error(g.NoPosition, msg)
+  private[meta] def abort(msg: String): Nothing = { reporter.error(g.NoPosition, msg); sys.error(msg) }
+  private[meta] def resources: Map[String, Array[Byte]] = Map()
 }
