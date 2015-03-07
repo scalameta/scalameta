@@ -535,13 +535,13 @@ class SemanticSuite extends FunSuite {
 
   test("t\"scala.collection.immutable.List\".defn") {
     assert(t"scala.collection.immutable.List".defn.toString === """
-      |@SerialVersionUID(value = -6084104484083858598L) sealed abstract class List[+A]() extends AbstractSeq[A] with LinearSeq[A] with Product with GenericTraversableTemplate[A, List] with LinearSeqOptimized[A, List[A]] with Serializable { ... }
+      |@SerialVersionUID(value = -6084104484083858598L) sealed abstract class List[+A] extends AbstractSeq[A] with LinearSeq[A] with Product with GenericTraversableTemplate[A, List] with LinearSeqOptimized[A, List[A]] with Serializable { ... }
     """.trim.stripMargin)
   }
 
   test("t\"SemanticDummy\".defn") {
     assert(t"SemanticDummy".defn.show[Code] === """
-      |class SemanticDummy() extends AnyRef {
+      |class SemanticDummy extends AnyRef {
       |  @ffi("jvmField(LSemanticDummy;, x, I)") private[this] val x: Int = ???
       |  @ffi("jvmMethod(LSemanticDummy;, y, ()I)") val y: Int = ???
       |  @ffi("jvmMethod(LSemanticDummy;, foo, (I)I)") def foo(@ffi("jvmMethod(LSemanticDummy;, foo$default$1, ()I)") w: Int = ???): Int = ???
@@ -551,7 +551,7 @@ class SemanticSuite extends FunSuite {
 
   test("t\"Int\".defn") {
     assert(t"Int".defn.show[Code] === """
-      |final abstract class Int() extends AnyVal {
+      |final abstract class Int extends AnyVal {
       |  @ffi("scalaIntrinsic(I, toByte, ()B)") def toByte: Byte = ???
       |  @ffi("scalaIntrinsic(I, toShort, ()S)") def toShort: Short = ???
       |  @ffi("scalaIntrinsic(I, toChar, ()C)") def toChar: Char = ???
@@ -674,15 +674,15 @@ class SemanticSuite extends FunSuite {
       |::
       |type ::[A] = ::[A]
       |class <byname>[+T0] extends AnyRef with Any { ... }
-      |class <repeated...>[+T0] extends AnyRef with Array[T0] { ... }
-      |class <repeated>[+T0] extends AnyRef with Seq[T0] { ... }
+      |class <repeated...>[+T0] extends Array[T0] { ... }
+      |class <repeated>[+T0] extends Seq[T0] { ... }
       |type AbstractMethodError = AbstractMethodError
       |abstract class Any { ... }
       |AnyRef
       |type AnyRef = Object
-      |abstract class AnyVal() extends Any { ... }
-      |private[scala] trait AnyValCompanion extends AnyRef with Specializable { ... }
-      |trait App extends AnyRef with DelayedInit { ... }
+      |abstract class AnyVal extends Any { ... }
+      |private[scala] trait AnyValCompanion extends Specializable { ... }
+      |trait App extends DelayedInit { ... }
       |final class Array[T](_length: Int) extends AnyRef with Serializable with Cloneable { ... }
       |object Array extends FallbackArrayBuilding with Serializable { ... }
       |type ArrayIndexOutOfBoundsException = ArrayIndexOutOfBoundsException
@@ -690,22 +690,22 @@ class SemanticSuite extends FunSuite {
       |type BigDecimal = BigDecimal
       |BigInt
       |type BigInt = BigInt
-      |final abstract class Boolean() extends AnyVal { ... }
-      |object Boolean extends AnyRef with AnyValCompanion { ... }
+      |final abstract class Boolean extends AnyVal { ... }
+      |object Boolean extends AnyValCompanion { ... }
       |type BufferedIterator[+A] = BufferedIterator[A]
-      |final abstract class Byte() extends AnyVal { ... }
-      |object Byte extends AnyRef with AnyValCompanion { ... }
-      |final abstract class Char() extends AnyVal { ... }
-      |object Char extends AnyRef with AnyValCompanion { ... }
+      |final abstract class Byte extends AnyVal { ... }
+      |object Byte extends AnyValCompanion { ... }
+      |final abstract class Char extends AnyVal { ... }
+      |object Char extends AnyValCompanion { ... }
       |type ClassCastException = ClassCastException
-      |trait Cloneable extends Object with Cloneable { ... }
+      |trait Cloneable extends Cloneable { ... }
       |object Console extends DeprecatedConsole with AnsiColor { ... }
       |@deprecated(QQQDelayedInit semantics can be surprising. Support for `App` will continue.
       |See the release notes for more details: https://github.com/scala/scala/releases/tag/v2.11.0-RC1QQQ, "2.11.0") @deprecated("see corresponding Javadoc for more information.", "") trait DelayedInit extends AnyRef { ... }
-      |private[scala] abstract class DeprecatedConsole() extends AnyRef { _: Console.type => ... }
+      |private[scala] abstract class DeprecatedConsole extends AnyRef { _: Console.type => ... }
       |private[scala] trait DeprecatedPredef extends AnyRef { _: Predef.type => ... }
-      |final abstract class Double() extends AnyVal { ... }
-      |object Double extends AnyRef with AnyValCompanion { ... }
+      |final abstract class Double extends AnyVal { ... }
+      |object Double extends AnyValCompanion { ... }
       |trait Dynamic extends Any { ... }
       |Either
       |type Either[+A, +B] = Either[A, B]
@@ -715,9 +715,9 @@ class SemanticSuite extends FunSuite {
       |type Equiv[T] = Equiv[T]
       |type Error = Error
       |type Exception = Exception
-      |class FallbackArrayBuilding() extends AnyRef { ... }
-      |final abstract class Float() extends AnyVal { ... }
-      |object Float extends AnyRef with AnyValCompanion { ... }
+      |class FallbackArrayBuilding extends AnyRef { ... }
+      |final abstract class Float extends AnyVal { ... }
+      |object Float extends AnyValCompanion { ... }
       |Fractional
       |type Fractional[T] = Fractional[T]
       |trait Function0[@specialized(Specializable.Primitives) +R] extends AnyRef { _: () => R => ... }
@@ -749,8 +749,8 @@ class SemanticSuite extends FunSuite {
       |type IndexOutOfBoundsException = IndexOutOfBoundsException
       |IndexedSeq
       |type IndexedSeq[+A] = IndexedSeq[A]
-      |final abstract class Int() extends AnyVal { ... }
-      |object Int extends AnyRef with AnyValCompanion { ... }
+      |final abstract class Int extends AnyVal { ... }
+      |object Int extends AnyValCompanion { ... }
       |Integral
       |type Integral[T] = Integral[T]
       |type InterruptedException = InterruptedException
@@ -762,9 +762,9 @@ class SemanticSuite extends FunSuite {
       |type Left[+A, +B] = Left[A, B]
       |List
       |type List[+A] = List[A]
-      |final abstract class Long() extends AnyVal { ... }
-      |object Long extends AnyRef with AnyValCompanion { ... }
-      |private[scala] abstract class LowPriorityImplicits() extends AnyRef { ... }
+      |final abstract class Long extends AnyVal { ... }
+      |object Long extends AnyValCompanion { ... }
+      |private[scala] abstract class LowPriorityImplicits extends AnyRef { ... }
       |final class MatchError(obj: Any) extends RuntimeException { ... }
       |trait Mutable extends AnyRef { ... }
       |Nil
@@ -778,67 +778,67 @@ class SemanticSuite extends FunSuite {
       |type NumberFormatException = NumberFormatException
       |Numeric
       |type Numeric[T] = Numeric[T]
-      |@SerialVersionUID(value = -114498752079829388L) sealed abstract class Option[+A]() extends AnyRef with Product with Serializable { _: Option[A] => ... }
+      |@SerialVersionUID(value = -114498752079829388L) sealed abstract class Option[+A] extends AnyRef with Product with Serializable { _: Option[A] => ... }
       |object Option extends AnyRef with Serializable { ... }
       |Ordered
       |type Ordered[T] = Ordered[T]
       |Ordering
       |type Ordering[T] = Ordering[T]
-      |trait PartialFunction[-A, +B] extends AnyRef with (A => B) { _: PartialFunction[A, B] => ... }
+      |trait PartialFunction[-A, +B] extends (A => B) { _: PartialFunction[A, B] => ... }
       |object PartialFunction extends AnyRef { ... }
       |type PartialOrdering[T] = PartialOrdering[T]
       |type PartiallyOrdered[T] = PartiallyOrdered[T]
       |object Predef extends LowPriorityImplicits with DeprecatedPredef { ... }
-      |trait Product10[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10] extends Any with Product { ... }
+      |trait Product10[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10] extends Product { ... }
       |object Product10 extends AnyRef { ... }
-      |trait Product11[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10, +T11] extends Any with Product { ... }
+      |trait Product11[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10, +T11] extends Product { ... }
       |object Product11 extends AnyRef { ... }
-      |trait Product12[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10, +T11, +T12] extends Any with Product { ... }
+      |trait Product12[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10, +T11, +T12] extends Product { ... }
       |object Product12 extends AnyRef { ... }
-      |trait Product13[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10, +T11, +T12, +T13] extends Any with Product { ... }
+      |trait Product13[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10, +T11, +T12, +T13] extends Product { ... }
       |object Product13 extends AnyRef { ... }
-      |trait Product14[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10, +T11, +T12, +T13, +T14] extends Any with Product { ... }
+      |trait Product14[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10, +T11, +T12, +T13, +T14] extends Product { ... }
       |object Product14 extends AnyRef { ... }
-      |trait Product15[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10, +T11, +T12, +T13, +T14, +T15] extends Any with Product { ... }
+      |trait Product15[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10, +T11, +T12, +T13, +T14, +T15] extends Product { ... }
       |object Product15 extends AnyRef { ... }
-      |trait Product16[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10, +T11, +T12, +T13, +T14, +T15, +T16] extends Any with Product { ... }
+      |trait Product16[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10, +T11, +T12, +T13, +T14, +T15, +T16] extends Product { ... }
       |object Product16 extends AnyRef { ... }
-      |trait Product17[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10, +T11, +T12, +T13, +T14, +T15, +T16, +T17] extends Any with Product { ... }
+      |trait Product17[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10, +T11, +T12, +T13, +T14, +T15, +T16, +T17] extends Product { ... }
       |object Product17 extends AnyRef { ... }
-      |trait Product18[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10, +T11, +T12, +T13, +T14, +T15, +T16, +T17, +T18] extends Any with Product { ... }
+      |trait Product18[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10, +T11, +T12, +T13, +T14, +T15, +T16, +T17, +T18] extends Product { ... }
       |object Product18 extends AnyRef { ... }
-      |trait Product1[@specialized(Int, Long, Double) +T1] extends Any with Product { ... }
+      |trait Product1[@specialized(Int, Long, Double) +T1] extends Product { ... }
       |object Product1 extends AnyRef { ... }
-      |trait Product19[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10, +T11, +T12, +T13, +T14, +T15, +T16, +T17, +T18, +T19] extends Any with Product { ... }
+      |trait Product19[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10, +T11, +T12, +T13, +T14, +T15, +T16, +T17, +T18, +T19] extends Product { ... }
       |object Product19 extends AnyRef { ... }
-      |trait Product20[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10, +T11, +T12, +T13, +T14, +T15, +T16, +T17, +T18, +T19, +T20] extends Any with Product { ... }
+      |trait Product20[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10, +T11, +T12, +T13, +T14, +T15, +T16, +T17, +T18, +T19, +T20] extends Product { ... }
       |object Product20 extends AnyRef { ... }
-      |trait Product21[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10, +T11, +T12, +T13, +T14, +T15, +T16, +T17, +T18, +T19, +T20, +T21] extends Any with Product { ... }
+      |trait Product21[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10, +T11, +T12, +T13, +T14, +T15, +T16, +T17, +T18, +T19, +T20, +T21] extends Product { ... }
       |object Product21 extends AnyRef { ... }
-      |trait Product22[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10, +T11, +T12, +T13, +T14, +T15, +T16, +T17, +T18, +T19, +T20, +T21, +T22] extends Any with Product { ... }
+      |trait Product22[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10, +T11, +T12, +T13, +T14, +T15, +T16, +T17, +T18, +T19, +T20, +T21, +T22] extends Product { ... }
       |object Product22 extends AnyRef { ... }
-      |trait Product2[@specialized(Int, Long, Double) +T1, @specialized(Int, Long, Double) +T2] extends Any with Product { ... }
+      |trait Product2[@specialized(Int, Long, Double) +T1, @specialized(Int, Long, Double) +T2] extends Product { ... }
       |object Product2 extends AnyRef { ... }
-      |trait Product3[+T1, +T2, +T3] extends Any with Product { ... }
+      |trait Product3[+T1, +T2, +T3] extends Product { ... }
       |object Product3 extends AnyRef { ... }
-      |trait Product4[+T1, +T2, +T3, +T4] extends Any with Product { ... }
+      |trait Product4[+T1, +T2, +T3, +T4] extends Product { ... }
       |object Product4 extends AnyRef { ... }
-      |trait Product5[+T1, +T2, +T3, +T4, +T5] extends Any with Product { ... }
+      |trait Product5[+T1, +T2, +T3, +T4, +T5] extends Product { ... }
       |object Product5 extends AnyRef { ... }
-      |trait Product6[+T1, +T2, +T3, +T4, +T5, +T6] extends Any with Product { ... }
+      |trait Product6[+T1, +T2, +T3, +T4, +T5, +T6] extends Product { ... }
       |object Product6 extends AnyRef { ... }
-      |trait Product7[+T1, +T2, +T3, +T4, +T5, +T6, +T7] extends Any with Product { ... }
+      |trait Product7[+T1, +T2, +T3, +T4, +T5, +T6, +T7] extends Product { ... }
       |object Product7 extends AnyRef { ... }
-      |trait Product8[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8] extends Any with Product { ... }
+      |trait Product8[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8] extends Product { ... }
       |object Product8 extends AnyRef { ... }
-      |trait Product extends Any with Equals { ... }
-      |trait Product9[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9] extends Any with Product { ... }
+      |trait Product extends Equals { ... }
+      |trait Product9[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9] extends Product { ... }
       |object Product9 extends AnyRef { ... }
       |trait Proxy extends Any { ... }
       |object Proxy extends AnyRef { ... }
       |Range
       |type Range = Range
-      |@deprecated("This class will be removed", "2.11.0") @deprecated("see corresponding Javadoc for more information.", "") abstract class Responder[+A]() extends AnyRef with Serializable { ... }
+      |@deprecated("This class will be removed", "2.11.0") @deprecated("see corresponding Javadoc for more information.", "") abstract class Responder[+A] extends AnyRef with Serializable { ... }
       |@deprecated("This object will be removed", "2.11.0") object Responder extends AnyRef with Serializable { ... }
       |Right
       |type Right[+A, +B] = Right[A, B]
@@ -847,10 +847,10 @@ class SemanticSuite extends FunSuite {
       |object ScalaReflectionException extends AbstractFunction1[String, ScalaReflectionException] with Serializable { ... }
       |Seq
       |type Seq[+A] = Seq[A]
-      |class SerialVersionUID(value: Long) extends Annotation with ClassfileAnnotation { ... }
-      |trait Serializable extends Any with Serializable { ... }
-      |final abstract class Short() extends AnyVal { ... }
-      |object Short extends AnyRef with AnyValCompanion { ... }
+      |class SerialVersionUID(value: Long) extends ClassfileAnnotation { ... }
+      |trait Serializable extends Serializable { ... }
+      |final abstract class Short extends AnyVal { ... }
+      |object Short extends AnyValCompanion { ... }
       |final trait Singleton extends Any { ... }
       |@SerialVersionUID(value = 1234815782226070388L) final case class Some[+A](x: A) extends Option[A] with Product with Serializable { ... }
       |object Some extends AnyRef with Serializable { ... }
@@ -913,12 +913,12 @@ class SemanticSuite extends FunSuite {
       |object Tuple8 extends AnyRef with Serializable { ... }
       |@deprecatedInheritance("Tuples will be made final in a future version.", "2.11.0") case class Tuple9[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9](_1: T1, _2: T2, _3: T3, _4: T4, _5: T5, _6: T6, _7: T7, _8: T8, _9: T9) extends AnyRef with Product9[T1, T2, T3, T4, T5, T6, T7, T8, T9] with Product with Serializable { ... }
       |object Tuple9 extends AnyRef with Serializable { ... }
-      |final class UninitializedError() extends RuntimeException { ... }
+      |final class UninitializedError extends RuntimeException { ... }
       |final case class UninitializedFieldError(msg: String) extends RuntimeException with Product with Serializable { ... }
       |object UninitializedFieldError extends AbstractFunction1[String, UninitializedFieldError] with Serializable { ... }
-      |private[scala] abstract class UniquenessCache[K, V >: Null]() extends AnyRef { ... }
-      |final abstract class Unit() extends AnyVal { ... }
-      |object Unit extends AnyRef with AnyValCompanion { ... }
+      |private[scala] abstract class UniquenessCache[K, V >: Null] extends AnyRef { ... }
+      |final abstract class Unit extends AnyVal { ... }
+      |object Unit extends AnyValCompanion { ... }
       |type UnsupportedOperationException = UnsupportedOperationException
       |Vector
       |type Vector[+A] = Vector[A]
@@ -928,36 +928,36 @@ class SemanticSuite extends FunSuite {
       |package collection { ... }
       |package compat { ... }
       |package concurrent { ... }
-      |@getter @setter @beanGetter @beanSetter class deprecated(message: String = ???, since: String = ???) extends Annotation with StaticAnnotation { ... }
+      |@getter @setter @beanGetter @beanSetter class deprecated(message: String = ???, since: String = ???) extends StaticAnnotation { ... }
       |object deprecated extends AnyRef { ... }
-      |private[scala] class deprecatedInheritance(message: String = ???, since: String = ???) extends Annotation with StaticAnnotation { ... }
+      |private[scala] class deprecatedInheritance(message: String = ???, since: String = ???) extends StaticAnnotation { ... }
       |private[scala] object deprecatedInheritance extends AnyRef { ... }
-      |@param class deprecatedName(name: Symbol) extends Annotation with StaticAnnotation { ... }
-      |private[scala] class deprecatedOverriding(message: String = ???, since: String = ???) extends Annotation with StaticAnnotation { ... }
+      |@param class deprecatedName(name: Symbol) extends StaticAnnotation { ... }
+      |private[scala] class deprecatedOverriding(message: String = ???, since: String = ???) extends StaticAnnotation { ... }
       |private[scala] object deprecatedOverriding extends AnyRef { ... }
-      |class inline() extends Annotation with StaticAnnotation { ... }
+      |class inline extends StaticAnnotation { ... }
       |package io { ... }
       |object language extends AnyRef { ... }
       |object languageFeature extends AnyRef { ... }
       |package math { ... }
       |package meta { ... }
-      |class native() extends Annotation with StaticAnnotation { ... }
-      |class noinline() extends Annotation with StaticAnnotation { ... }
+      |class native extends StaticAnnotation { ... }
+      |class noinline extends StaticAnnotation { ... }
       |package org { ... }
       |package ref { ... }
       |package reflect { ... }
-      |class remote() extends Annotation with StaticAnnotation { ... }
+      |class remote extends StaticAnnotation { ... }
       |package runtime { ... }
-      |class specialized(group: SpecializedGroup) extends Annotation with StaticAnnotation { ... }
+      |class specialized(group: SpecializedGroup) extends StaticAnnotation { ... }
       |package sys { ... }
       |package text { ... }
-      |class throws[T <: Throwable](cause: String = ???) extends Annotation with StaticAnnotation { ... }
+      |class throws[T <: Throwable](cause: String = ???) extends StaticAnnotation { ... }
       |object throws extends AnyRef { ... }
       |package tools { ... }
-      |@field class transient() extends Annotation with StaticAnnotation { ... }
-      |class unchecked() extends Annotation { ... }
+      |@field class transient extends StaticAnnotation { ... }
+      |class unchecked extends Annotation { ... }
       |package util { ... }
-      |@field class volatile() extends Annotation with StaticAnnotation { ... }
+      |@field class volatile extends StaticAnnotation { ... }
       |package xml { ... }
     """.trim.stripMargin.replace("QQQ", "\"\"\""))
   }
