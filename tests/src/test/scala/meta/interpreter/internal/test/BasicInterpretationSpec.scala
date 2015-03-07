@@ -55,6 +55,10 @@ class BasicInterpretationSpec extends FlatSpec with ShouldMatchers {
     interpret("""if(true) {val x = 1; x + 1} else {val y = 1; y + 1}""")
   }
 
+  it should "work with tuples" in {
+    interpret("""List((1,2), (2,3), (3,4))""") should be(List((1, 2), (2, 3), (3, 4)))
+  }
+
   it should "support calling functions" in {
     interpret("""val x = List(1,2,3); x take 2""") should be(List(1, 2))
   }
@@ -73,15 +77,15 @@ class BasicInterpretationSpec extends FlatSpec with ShouldMatchers {
   }
 
   it should "handle accessing package objects" in {
-    // intercept[RuntimeException] {
-    // Why is sys not found?
-    interpret("""sys.error("Catch me outside!")""")
-    // }
+    val e = intercept[RuntimeException] {
+      interpret("""sys.error("Catch me outside!")""")
+    }
+    e.getMessage() should be("Catch me outside!")
   }
 
   it should "support passing higher-order functions" in {
+    // TODO can build from hack
     // interpret("""val lst = List(1,2,3); lst.map(x => x + 1)""")
-    // interpret("""List((1,2), (2,3), (3,4)).map(x => x._1 + 1)
   }
 
 }

@@ -84,7 +84,7 @@ object Interpreter {
         val res = evalStrings.map(_.ref).zipAll(evalTerms.map(_.ref.toString), "", "").foldLeft("")((res, s) => res + s._1 + s._2)
         (Object(res, t"String"), env2)
 
-      // Pattern matching 
+      // Pattern matching
       case i.Term.Match(lhs, cases) =>
         val (lhsV, env1) = eval(lhs, env)
         var env2 = env1

@@ -26,11 +26,12 @@ object environment {
       // first look on the stack
       if (stack.head.contains(nme)) {
         stack.head(nme)
-      } else if (nme.isObject) { // then look globally for the object
-        val tmp = nme.tpe.scratchpad.head.toString.drop(9)
-        val qualifiedName = tmp.take(tmp.length - 6)
+      } else if (nme.isPackage && !nme.members.isEmpty) {
         // fetch the object instance reflectively
-        Object(toClass(nme.tpe).getField("MODULE$").get(toClass(nme.tpe)), nme.tpe)
+        Object(toClass(nme).getField("MODULE$").get(toClass(nme)), nme.tpe)
+      } else if (nme.isObject) { // then look globally for the object
+        // fetch the object instance reflectively
+        Object(toClass(nme).getField("MODULE$").get(toClass(nme)), nme.tpe)
       } else {
         ??? // TODO then in the scope of current objects
       }
@@ -38,14 +39,19 @@ object environment {
     }
   }
 
-  def toClass(tpe: Type)(implicit c: Context): Class[_] = {
-    tpe.toString match { // TODO hack
+  def toClass(nme: TName)(implicit c: Context): Class[_] = {
+    val tpeString = nme.tpe.toString
+    tpeString match { // TODO hack
       case "Int" => Class.forName("java.lang.Integer")
+      case "`package`.type" =>
+        val qualifiedName = nme.toString + "." + tpeString.take(tpeString.length - ".type".length).replaceAll("`", "")
+        // TODO owners are not working
+        Class.forName("scala." + qualifiedName + "$")
       case _ =>
-        val tmp = tpe.scratchpad.head.toString.drop(9)
+        val tmp = nme.tpe.scratchpad.head.toString.drop(9)
         val qualifiedName = tmp.take(tmp.length - 6)
         // ASK Eugene
-        if (tpe.toString endsWith ".type") {
+        if (tpeString endsWith ".type") {
           Class.forName(qualifiedName + "$")
         } else {
           Class.forName(qualifiedName)
