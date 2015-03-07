@@ -58,7 +58,7 @@ trait Typechecking {
 
   def scalahostEnterStats(typer: Typer, stats: List[Tree]): List[Tree] = stats.flatMap {
     case ddef @ ScalametaMacro(_, _, _, _, _, _) if !ddef.symbol.owner.isStaticOwner =>
-      typer.context.error(ddef.pos, "implementation restriction: until a TASTY interpreter is implemented, scala.meta macros can only be defined in static objects")
+      typer.context.error(ddef.pos, "implementation restriction: until the TASTY interpreter is implemented, scala.meta macros can only be defined in static objects")
       List(ddef)
     case ddef @ ScalametaMacro(_, name, _, _, _, _) =>
       val implDdef = copyDefDef(scalahostMacroImpl(ddef.asInstanceOf[DefDef]))(mods = Modifiers(PRIVATE), name = TermName(name + "$impl"))
