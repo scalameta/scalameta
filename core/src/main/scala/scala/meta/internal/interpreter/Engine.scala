@@ -63,6 +63,7 @@ object Interpreter {
         // TODO all functions!
         // TODO store the returning env!
         // TODO proper type.
+
         (Object(new Function1[Any, Any] {
           var resultEnv: Env = _
           def apply(x: Any) = {
@@ -82,26 +83,31 @@ object Interpreter {
 
       // Pattern matching 
       case i.Term.Match(lhs, cases) =>
-        /*val (lhsV, env1) = eval(lhs, env)
+        val (lhsV, env1) = eval(lhs, env)
         var env2 = env1
-        cases.collectFirst {
+        cases.collectFirst({
           case i.Case(pattern, guard, block) if ({
-            { val (res, env3) = ???; env2 = env3; res } &&
-              { val (res, env3) = ???; env2 = env3; res }
-            ???
+            { val (res, env3) = evalPattern(lhsV, pattern, env2); env2 = env3; res.as[Boolean] } &&
+              (guard.isEmpty || { val (res, env3) = evalGuard(lhsV, guard.get, env2); env2 = env3; res.as[Boolean] })
           }) =>
             eval(block, env2)
-        }
-        //List())*/
-        ???
+        }).getOrElse(throw new MatchError(lhsV.ref, lhsV.tpe)) // TODO this needs to be an evaluated exception
 
-      case _ => sys.error(s"""
-        |unsupported tree:
-        |${term.show[Code]}
-        |${term.show[Raw]}
-      """.trim.stripMargin)
+      case _ => Utils.unsupported(term, "term")
     }
   }
+
+  def evalPattern(lhs: Object, pattern: i.Pat, env: Env)(implicit c: Context): (Object, Env) = pattern match {
+    case i.Pat.Typed(x, tp) =>
+      (Object(tp == lhs.tpe, t"Boolean"), extendEnv(x, lhs, env))
+    case _ => Utils.unsupported(pattern, "pattern")
+  }
+  def extendEnv(v: i.Tree, lhs: Object, env: Env)(implicit c: Context): Env = v match {
+    case i.Pat.Var.Term(name) => env.push(name, lhs)
+    case _ => Utils.unsupported(v, "variable")
+  }
+
+  def evalGuard(lhs: Object, guard: i.Term, env: Env)(implicit x: Context): (Object, Env) = ???
 
   def evalSeq[T <: Tree](terms: Seq[T], env: Env)(implicit c: Context): (Seq[Object], Env) =
     terms.foldLeft((Seq[Object](), env)) { (acc, arg) =>
@@ -161,4 +167,10 @@ object Interpreter {
 object Utils {
   def jvmTypeToClass(s: String): Class[_] =
     Class.forName(s.replaceAll("/", ".").subSequence(1, s.length - 1).toString)
+
+  def unsupported(t: Tree, msg: String): Nothing = sys.error(s"""
+      |unsupported $msg:
+      |${t.show[Code]}
+      |${t.show[Raw]}
+    """.trim.stripMargin)
 }

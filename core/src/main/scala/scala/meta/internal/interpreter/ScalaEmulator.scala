@@ -12,8 +12,8 @@ import scala.meta.internal.{ ast => i }
 object ScalaEmulator {
   def emulate(lst: Seq[String], args: Seq[Object], env: Env)(implicit c: Context): (Object, Env) = lst match {
     case List("I", "$plus", "(I)I") =>
-      (Object(args.head.ref.asInstanceOf[Int] + args.tail.head.ref.asInstanceOf[Int], t"Int"), env)
+      (Object(args.head.as[Int] + args.tail.head.as[Int], t"Int"), env)
     case List("Ljava/lang/String;", "$plus", "(Ljava/lang/Object;)Ljava/lang/String;") =>
-      (Object(args.head.ref.asInstanceOf[String] + args.tail.head.ref.asInstanceOf[AnyRef].toString, t"String"), env)
+      (Object(args.head.as[String] + args.tail.head.as[AnyRef].toString, t"String"), env)
   }
 }

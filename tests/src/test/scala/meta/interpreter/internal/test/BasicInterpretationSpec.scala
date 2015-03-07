@@ -49,19 +49,20 @@ class BasicInterpretationSpec extends FlatSpec with ShouldMatchers {
     interpret("""List(List(1),List(2),List(3))""") should be(List(List(1), List(2), List(3)))
     interpret("""if(true) {val x = 1; x + 1} else {val y = 1; y + 1}""")
 
-    // Higher-order functions
+    //Higher-order functions
     interpret("""val f = (x: String) => x + "2"; f("4")""")
 
     // String interpolation
     interpret("""s"Begin ${val x = 1; x + 1} the end"""") should be("Begin 2 the end")
 
     // Pattern matching
-    //    interpret("""s"Hi" match {case x: String => x}""") should be("Hi")
+    interpret("""s"Hi" match {case x: String => x}""") should be("Hi")
 
-    // Exceptions 
+    // Exceptions
     // intercept[RuntimeException] {
     //   interpret("""sys.error("Catch me outside!")""")
     // }
+
     // Using higher-order functions.
     // interpret("""val lst = List(1,2,3); lst.map(x => x + 1)""")
     // interpret("""List((1,2), (2,3), (3,4)).map(x => x._1 + 1)

@@ -14,7 +14,9 @@ object environment {
    * Every object is a reference to the heap + additional fields.
    * NOTE: we do not support primitive values for now.
    */
-  final case class Object(ref: Any, tpe: Type, fields: Map[TName, Object] = Map())
+  final case class Object(ref: Any, tpe: Type, fields: Map[TName, Object] = Map()) {
+    def as[T]: T = ref.asInstanceOf[T]
+  }
 
   case class Env(stack: FrameStack, heap: Heap) {
     def push(nme: TName, value: Object): Env =
@@ -37,7 +39,7 @@ object environment {
   }
 
   def toClass(tpe: Type)(implicit c: Context): Class[_] = {
-    tpe.toString match { // TODO hack     
+    tpe.toString match { // TODO hack
       case "Int" => Class.forName("java.lang.Integer")
       case _ =>
         val tmp = tpe.scratchpad.head.toString.drop(9)
