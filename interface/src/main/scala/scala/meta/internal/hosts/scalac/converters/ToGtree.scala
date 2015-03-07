@@ -16,6 +16,8 @@ import scala.meta.internal.{ast => m}
 trait ToGtree extends GlobalToolkit with MetaToolkit {
   self: Api =>
 
+  def toGtree(mtree: m.Tree): g.Tree = mtree.toGtree
+
   protected implicit class RichToGtree(mtree: m.Tree) {
     def toGtree: g.Tree = {
       ???

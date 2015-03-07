@@ -33,12 +33,16 @@ trait Typechecking {
     ddef match {
       case DefDef(mods, name, tparams, vparamss, _, ScalahostMacroBody(body)) if mods.hasFlag(MACRO) =>
         def cleanupMods(mods: Modifiers) = mods &~ IMPLICIT
-        val vparamss1 = mmap(vparamss){
+        val vtparams = tparams match {
+          case Nil => Nil
+          case tparams => List(tparams.map(tparam => q"val ${tparam.name.toTermName}: _root_.scala.meta.Type"))
+        }
+        val vparamss1 = vtparams ++ mmap(vparamss) {
           case p @ q"$mods val $pname: $_ = $_" =>
             val p1 = atPos(p.pos)(q"${cleanupMods(mods)} val $pname: _root_.scala.meta.Term")
             if (isRepeated(p.symbol)) copyValDef(p1)(tpt = tq"_root_.scala.<repeated>[${p1.tpt}]") else p1
         }
-        val c = q"implicit val ${TermName("c$" + globalFreshNameCreator.newName(""))}: _root_.scala.meta.semantic.MacroHost"
+        val c = q"implicit val ${TermName("c$" + globalFreshNameCreator.newName(""))}: _root_.scala.meta.macros.Context"
         val implDdef = atPos(ddef.pos)(q"def $name[..$tparams](...$vparamss1)(implicit $c): _root_.scala.meta.Term = $body")
         val q"{ ${typedImplDdef: DefDef}; () }" = typer.typed(q"{ $implDdef; () }")
         if (typedImplDdef.exists(_.isErroneous)) {

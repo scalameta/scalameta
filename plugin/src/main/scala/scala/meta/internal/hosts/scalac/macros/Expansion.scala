@@ -59,54 +59,23 @@ trait Expansion extends scala.reflect.internal.show.Printers {
           }
           // NOTE: magic name. essential for detailed and sane stack traces for exceptions in macro expansion logic
           private def macroExpandWithRuntime(rc: ScalareflectMacroContext): Any = {
-            import global.{Tree => ScalaTree}
-            import scala.meta.{Tree => ScalametaTree, Term => ScalametaTerm}
+            import global.{Tree => ScalareflectTree}
+            import scala.meta.internal.ast.{Tree => ScalametaTree, Term => ScalametaTerm}
             import scala.meta.internal.eval.{eval => scalametaEval}
             import org.scalameta.unreachable
-            lazy val hc = Scalahost.mkMacroContext[global.type](rc)
-            lazy val scalareflectInvocation: ScalaTree = {
-              // TODO: implement this
-              // val applied @ Applied(core, targs, argss) = dissectApplied(expandee)
-              // val implCore = q"${implDdef.symbol}" setType core.tpe
-              // val implTapplied = q"$implCore[..$targs]" setType applied.callee.tpe
-              // val margss = argss.map(_.map(arg => env.bind(arg))) :+ List(env.bind(hc))
-              // val implApplied = q"$implTapplied(...$margss)" setType expandee.tpe
-              // val scalaInvocation = q"{ $implDdef; $implApplied }" setType expandee.tpe
-              implDdef.rhs
-            }
-            lazy val scalametaInvocation: ScalametaTree = {
-              // TODO: implement this
-              // hc.toMtree(scalareflectInvocation)
-              ???
-            }
-            lazy val scalametaResult: Any = scalametaInvocation match {
-              case term: ScalametaTerm => scalametaEval(term)
-              case other => unreachable(debug(other, other.show[Raw]))
-            }
-            lazy val scalareflectResult: Any = scalametaResult match {
+            implicit val mc = Scalahost.mkMacroContext[global.type](rc)
+            val scalareflectInvocation: ScalareflectTree = ??? // TODO: needs to be coordinated with the interpreter
+            val scalametaInvocation: ScalametaTerm = mc.toMtree(scalareflectInvocation, classOf[ScalametaTerm])
+            val scalametaResult: Any = scalametaEval(scalametaInvocation)
+            val scalareflectResult: Any = scalametaResult match {
               case scalametaTree: ScalametaTree =>
-                // TODO: implement this
-                // val scalareflectTree: ScalareflectTree = hc.fromScalameta(tree)
-                // attachExpansionString(expandee, scalareflectTree, scalametaTree.show[Code])
-                // scalareflectTree
-                ???
-              case other => other
+                val scalareflectTree: ScalareflectTree = mc.toGtree(scalametaTree)
+                attachExpansionString(expandee, scalareflectTree, scalametaTree.show[Code])
+                scalareflectTree
+              case other =>
+                other
             }
-            // TODO: unhardcode this
-            // scalareflectResult
-            lazy val hardcodedResult = {
-              val Applied(core, targs, List(List(x, y))) = dissectApplied(expandee)
-              def fields(tree: Tree) = tree.tpe.members.collect{ case m: TermSymbol if m.isGetter => m }
-              val xfields = fields(x).map(f => f -> q"xtemp")
-              val yfields = fields(y).map(f => f -> q"ytemp")
-              val getters = (xfields ++ yfields).map{ case (f, ref) => q"val ${f.name} = $ref.${f.name}" }
-              q"""
-                val xtemp = $x
-                val ytemp = $y
-                new { ..$getters }
-              """
-            }
-            hardcodedResult
+            scalareflectResult
           }
           override protected def expand(desugared: Tree): Tree = {
             def showDetailed(tree: Tree) = showRaw(tree, printIds = true, printTypes = true)
