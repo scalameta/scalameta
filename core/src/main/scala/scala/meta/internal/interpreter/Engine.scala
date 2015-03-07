@@ -39,6 +39,10 @@ object Interpreter {
       case i.Lit.Bool(v) =>
         (Object(v, t"Boolean"), env)
 
+      case i.Term.Tuple(terms) =>
+        val (res, env1) = evalSeq(terms, env)
+        (Object((res.head.ref, res.tail.head.ref), t"(AnyRef, AnyRef)"), env1) // TODO other cases
+
       // TODO introduce a method in the interpreter!
       case i.Term.ApplyInfix(lhs, op, _, args) =>
         val method = lhs.tpe.members.filter(_.name == op).head
