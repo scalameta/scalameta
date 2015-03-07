@@ -31,6 +31,9 @@ trait Typechecking {
   def scalahostTypedMacroBody(typer: Typer, ddef: DefDef): Option[Tree] = {
     val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
     ddef match {
+      case DefDef(mods, name, tparams, vparamss, TypeTree(), ScalahostMacroBody(body)) if mods.hasFlag(MACRO) =>
+        typer.context.error(ddef.pos, "scala.meta macros must have explicitly specified return types")
+        Some(EmptyTree)
       case DefDef(mods, name, tparams, vparamss, _, ScalahostMacroBody(body)) if mods.hasFlag(MACRO) =>
         def cleanupMods(mods: Modifiers) = mods &~ IMPLICIT
         val vtparams = tparams match {
