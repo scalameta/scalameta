@@ -420,8 +420,8 @@ private[meta] trait Api {
         case tree: impl.Defn.Object => Nil ++ tree.tpe.members
         case tree: impl.Pkg => tree.tpe.members
         case tree: impl.Pkg.Object => Nil ++ tree.tpe.members
-        case tree: impl.Ctor.Primary => mergeEvidences(tree.paramss, tree.tparams.flatMap(deriveEvidences)).flatten
-        case tree: impl.Ctor.Secondary => mergeEvidences(tree.paramss, tree.tparams.flatMap(deriveEvidences)).flatten
+        case tree: impl.Ctor.Primary => mergeEvidences(tree.paramss, tree.owner.tparams.flatMap(deriveEvidences)).flatten
+        case tree: impl.Ctor.Secondary => mergeEvidences(tree.paramss, tree.owner.tparams.flatMap(deriveEvidences)).flatten
         case tree: impl.Case => membersOfPat(tree.pat)
       }
     }
