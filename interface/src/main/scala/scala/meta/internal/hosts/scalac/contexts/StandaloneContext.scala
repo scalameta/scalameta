@@ -5,6 +5,7 @@ package contexts
 import org.scalameta.contexts._
 import org.scalameta.invariants._
 import scala.meta.semantic.{Context => ScalametaSemanticContext}
+import scala.meta.macros.{Context => ScalametaMacroContext}
 import scala.meta.internal.hosts.scalac.contexts.{SemanticContext => ScalahostSemanticContext}
 import scala.compat.Platform.EOL
 import org.scalameta.reflection.mkGlobal
@@ -13,7 +14,7 @@ import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
 
 @context(translateExceptions = false)
-class StandaloneContext(options: String) extends ScalahostSemanticContext(mkGlobal(options)) {
+class StandaloneContext(options: String) extends ScalahostSemanticContext(mkGlobal(options)) with ScalametaMacroContext {
   def define(code: String): m.Tree = {
     val reporter: StoreReporter = g.reporter.require[StoreReporter]
     reporter.reset()
@@ -39,4 +40,9 @@ class StandaloneContext(options: String) extends ScalahostSemanticContext(mkGlob
     val _ = toMtree.computeConverters // TODO: necessary because of macro expansion order
     toMtree(gtypedtree, classOf[mapi.Source])
   }
+  val reporter = new StoreReporter()
+  private[meta] def warning(msg: String): Unit = reporter.warning(g.NoPosition, msg)
+  private[meta] def error(msg: String): Unit = reporter.error(g.NoPosition, msg)
+  private[meta] def abort(msg: String): Nothing = { reporter.error(g.NoPosition, msg); throw new AbortException(msg) }
+  private[meta] def resources: Map[String, Array[Byte]] = Map()
 }
