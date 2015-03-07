@@ -43,26 +43,16 @@ class SemanticContext[G <: ScalaGlobal](val global: G) extends ConverterApi(glob
       for { gpre <- pref.originalPre; lsym <- pref.originalSym }
       yield List(lsym.toMmember(gpre))
     }
-    def tryNative(pref: m.Ref): Seq[mapi.Member] = {
-      def resolveName(pname: m.Name): Seq[mapi.Member] = {
-        val gpre = pname.denot.prefix match {
-          case h.Prefix.Zero => g.NoPrefix
-          case h.Prefix.Type(ptpe) => ptpe.require[m.Type].toGtype
-        }
-        val lsym = symbolTable.convert(pname.denot.symbol)
-        List(lsym.toMmember(gpre))
-      }
-      pref match {
-        case pname: m.Name => resolveName(pname)
-        case m.Term.Select(_, pname) => defns(pname)
-        case m.Type.Select(_, pname) => defns(pname)
-        case m.Type.Project(_, pname) => defns(pname)
-        case m.Type.Singleton(pref) => defns(pref)
-        case m.Ctor.Ref.Select(_, pname) => defns(pname)
-        case m.Ctor.Ref.Project(_, pname) => defns(pname)
-        case m.Ctor.Ref.Function(pname) => defns(pname)
-        case _: m.Import.Selector => ???
-      }
+    def tryNative(pref: m.Ref): Seq[mapi.Member] = pref match {
+      case pname: m.Name => List(pname.toGsymbol.toMmember(pname.toGprefix))
+      case m.Term.Select(_, pname) => defns(pname)
+      case m.Type.Select(_, pname) => defns(pname)
+      case m.Type.Project(_, pname) => defns(pname)
+      case m.Type.Singleton(pref) => defns(pref)
+      case m.Ctor.Ref.Select(_, pname) => defns(pname)
+      case m.Ctor.Ref.Project(_, pname) => defns(pname)
+      case m.Ctor.Ref.Function(pname) => defns(pname)
+      case _: m.Import.Selector => ???
     }
     ref.requireAttributed()
     tryScratchpad(ref.require[m.Ref]).getOrElse(tryNative(ref.require[m.Ref]))
@@ -112,10 +102,14 @@ class SemanticContext[G <: ScalaGlobal](val global: G) extends ConverterApi(glob
   }
 
   private[meta] def parents(member: mapi.Member): Seq[mapi.Member] = {
-    ???
+    val gpre = member.require[m.Member].toGprefix
+    val lsym = member.require[m.Member].toGsymbol
+    lsym.parents.map(_.toMmember(gpre))
   }
 
   private[meta] def children(member: mapi.Member): Seq[mapi.Member] = {
-    ???
+    val gpre = member.require[m.Member].toGprefix
+    val lsym = member.require[m.Member].toGsymbol
+    lsym.children.map(_.toMmember(gpre))
   }
 }

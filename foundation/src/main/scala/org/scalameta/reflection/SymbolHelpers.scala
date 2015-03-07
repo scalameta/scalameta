@@ -83,4 +83,14 @@ trait SymbolHelpers {
       bytecodelessMethodOwners(sym.owner) && !bytecodefulObjectMethods(sym)
     }
   }
+
+  implicit class RichHelperLogicalSymbol(sym: l.Symbol) {
+    def parents: List[l.Symbol] = {
+      ???
+    }
+
+    def children: List[l.Symbol] = {
+      ???
+    }
+  }
 }
