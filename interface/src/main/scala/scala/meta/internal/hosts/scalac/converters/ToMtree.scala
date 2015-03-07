@@ -592,6 +592,10 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
               // TODO: this is a hack to handle `gen.mkNil` emitted during parsing
               // such weird occasion can happen when we parse attributes in XML syntax
               in.symbol.asTerm.precvt(qual.tpe, g.Ident(in.symbol))
+            } else if (qual.isInstanceOf[g.This] && qual.symbol.isPackageClass) {
+              // TODO: not sure whether I should do this check here
+              // or create a separate version of toMtree, e.g. toApproximateMtree
+              in.symbol.asTerm.precvt(qual.tpe, in)
             } else {
               m.Term.Select(qual.cvt_!, in.symbol.asTerm.precvt(qual.tpe, in))
             }
