@@ -13,6 +13,7 @@ trait Context {
 
   def desugar(term: Term): Term
   def tpe(term: Term): Type
+  def tpe(param: Term.Param): Type.Arg
   def defns(ref: Ref): Seq[Member]
   def members(tpe: Type): Seq[Member]
 

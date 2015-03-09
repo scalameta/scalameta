@@ -59,7 +59,7 @@ private[meta] trait Api {
       case       impl.Pkg(impl.Term.Select(_, name: impl.Term.Name), _) => impl.Type.Singleton(name)
       case tree: impl.Pkg.Object => impl.Type.Singleton(tree.name)
       case tree: impl.Term.Param if tree.parent.map(_.isInstanceOf[impl.Template]).getOrElse(false) => ??? // TODO: don't forget to intersect with the owner type
-      case tree: impl.Term.Param => dearg(tree.decltpe.getOrElse(???)) // TODO: infer it from context
+      case tree: impl.Term.Param => dearg(implicitly[SemanticContext].tpe(tree))
       case tree: impl.Type.Param => tree.name.require[Type.Name]
       case tree: impl.Ctor.Primary => tree.owner.require[meta.Member].tpe
       case tree: impl.Ctor.Secondary => tree.owner.require[meta.Member].tpe
