@@ -28,14 +28,21 @@ class SemanticContext[G <: ScalaGlobal](val global: G) extends ConverterApi(glob
   }
 
   private[meta] def tpe(term: mapi.Term): mapi.Type = {
-    val tree = term.require[m.Term]
-    val gtpeFromOriginal = tree.originalTree.map(_.tpe)
+    internalTpe(term.require[m.Term]).require[m.Type]
+  }
+
+  private[meta] def tpe(param: mapi.Term.Param): mapi.Type.Arg = {
+    internalTpe(param.require[m.Term.Param])
+  }
+
+  private def internalTpe(tree: m.Tree): m.Type.Arg = {
+    val gtpeFromOriginal = tree.originalTree.map(gtree => if (gtree.isInstanceOf[g.MemberDef]) gtree.symbol.tpe else gtree.tpe)
     val gtpeFromDenotation = tree.originalPre.flatMap(gpre => tree.originalSym.map(_.gsymbol.infoIn(gpre).finalResultType))
     val gtpe = gtpeFromOriginal.orElse(gtpeFromDenotation) match {
       case Some(gtpe) => gtpe
-      case _ => throw new ConvertException(term, s"implementation restriction: internal cache has no type associated with ${term.show[Summary]}")
+      case _ => throw new ConvertException(tree, s"implementation restriction: internal cache has no type associated with ${tree.show[Summary]}")
     }
-    gtpe.toMtype
+    gtpe.toMtypeArg
   }
 
   private[meta] def defns(ref: mapi.Ref): Seq[mapi.Member] = {
