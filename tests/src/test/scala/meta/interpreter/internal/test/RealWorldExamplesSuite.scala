@@ -49,10 +49,13 @@ class RealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
 
   "An interpreter" should "execute macros for serialization" in {
     val ex = intercept[RuntimeException] {
-      Interpreter.evalFunc(metaprogram, List(t"Int"), List(c))
+      Interpreter.evalFunc(metaprogram, List(t"List"), List(c))
     }
-
-    ex.getMessage() should be("unsupported type Int")
+    ex.getMessage() should be("unsupported ref to List")
+    val ex1 = intercept[RuntimeException] {
+      Interpreter.evalFunc(metaprogram, List(t"TestTraitNonFinal"), List(c))
+    }
+    ex1.getMessage() should be("unsupported ref to List")
   }
 
 }

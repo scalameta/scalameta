@@ -12,21 +12,23 @@ import scala.meta.internal.interpreter.environment._
 
 object Interpreter {
 
-  def evalFunc(metaprogram: i.Tree, argss: Seq[Any]*)(implicit c: Context): Any = {
-    val defn @ i.Defn.Def(mods, nme, _, paramss, _, body) = metaprogram
-    val emptyEnv = Env(List(ListMap[i.Term.Name, Object]()), ListMap[i.Term.Name, Object]())
-    val newEnv = (argss zip paramss).foldLeft(emptyEnv) { (agg, p) =>
-      (p._1 zip p._2).foldLeft(agg) { (agg1, pv) =>
-        agg1.push(pv._2.name.asInstanceOf[i.Term.Name], Object(pv._1, pv._2.tpe))
-      }
-    }
-    eval(body, newEnv)
-  }
+  def evalFunc(metaprogram: i.Tree, argss: Seq[Any]*)(implicit c: Context): Any =
+    evalFunc(metaprogram, argss, Env(List(ListMap[i.Term.Name, Object]()), ListMap[i.Term.Name, Object]()))._1
 
   def eval(term: Term)(implicit c: Context): Any = {
     val (Object(v, tpe, fields), env) =
       eval(term, Env(List(ListMap[i.Term.Name, Object]()), ListMap[i.Term.Name, Object]()))
     v
+  }
+
+  private def evalFunc(metaprogram: i.Tree, argss: Seq[Seq[Any]], env: Env)(implicit c: Context): (Object, Env) = {
+    val defn @ i.Defn.Def(mods, nme, _, paramss, _, body) = metaprogram
+    val newEnv = (argss zip paramss).foldLeft(env) { (agg, p) =>
+      (p._1 zip p._2).foldLeft(agg) { (agg1, pv) =>
+        agg1.push(pv._2.name.asInstanceOf[i.Term.Name], Object(pv._1, pv._2.tpe))
+      }
+    }
+    eval(body, newEnv)
   }
 
   def eval(term: Tree, env: Env)(implicit c: Context): (Object, Env) = {
@@ -50,6 +52,8 @@ object Interpreter {
         (Object(v, t"String"), env)
       case i.Lit.Bool(v) =>
         (Object(v, t"Boolean"), env)
+      case i.Lit.Unit() =>
+        (Object((), t"Unit"), env)
 
       case i.Term.Tuple(terms) =>
         val (res, env1) = evalSeq(terms, env)
@@ -59,7 +63,10 @@ object Interpreter {
         val (lhsV, env1) = eval(lhs, env)
         val method = lhs.tpe.members.filter(_.name == op).head
         methodCall(method, lhsV, Seq(), env1)
-
+      case i.Term.ApplyUnary(nme, lhs) =>
+        val method = lhs.tpe.members.filter(_.name == nme).head
+        val (lhsV, newEnv) = eval(lhs, env)
+        methodCall(method, lhsV, Seq(), newEnv)
       case i.Term.ApplyInfix(lhs, op, _, args) =>
         val method = lhs.tpe.members.filter(_.name == op).head
         val (lhsV, newEnv) = eval(lhs, env)
@@ -80,6 +87,18 @@ object Interpreter {
         val (Object(cV: Boolean, _, _), cEnv: Env) = eval(cond, env)
         if (cV) eval(thn, cEnv)
         else eval(elze, cEnv)
+
+      case func @ i.Defn.Def(mods, nme, _, paramss, retTp, body) =>
+        val funcObj = Object(new Function1[Any, Any] {
+          var resultEnv: Env = env // TODO fix
+          def apply(x: Any) = {
+            val (res, env1) = evalFunc(func, Seq(Seq(x)), resultEnv)
+            resultEnv = env1
+            res.ref
+          }
+        }, t"Any => Any")
+
+        (funcObj, env.push(nme, funcObj))
 
       // TODO specialization
       case i.Term.Function(params, bodyTerm) =>
@@ -124,11 +143,12 @@ object Interpreter {
 
   def evalPattern(lhs: Object, pattern: i.Pat, env: Env)(implicit c: Context): (Object, Env) = pattern match {
     case i.Pat.Typed(x, tp) =>
-      (Object(tp == lhs.tpe, t"Boolean"), extendEnv(x, lhs, env))
+      (Object(tp.tpe <:< lhs.tpe, t"Boolean"), extendEnv(x, lhs, env))
     case i.Pat.Wildcard() =>
       (Object(true, t"Boolean"), env)
     case _ => Utils.unsupported(pattern, "pattern")
   }
+
   def extendEnv(v: i.Tree, lhs: Object, env: Env)(implicit c: Context): Env = v match {
     case i.Pat.Var.Term(name) => env.push(name, lhs)
     case _ => Utils.unsupported(v, "variable")
@@ -171,9 +191,11 @@ object Interpreter {
   def methodCallByJavaSignature(
     params: Seq[Seq[i.Term.Param]], lhs: Object, rhs: Seq[Object],
     lhsJTp: String, nme: String, argsRetJTp: String, env: Env)(implicit c: Context) = {
+
     val paramsRegex = """\((.*)\).*""".r
     val paramsRegex(jvmParams) = argsRetJTp
     val types = jvmParams.replaceAll("(L.*?;|I|B)", "$1,").split(",").toList.filterNot(_.trim.isEmpty).map(Utils.jvmTypeToClass)
+    println("Expected class is: " + Utils.jvmTypeToClass(lhsJTp))
     val jMethod = Utils.jvmTypeToClass(lhsJTp).getMethod(nme, types: _*)
 
     val repeated = params.exists(_.exists {
@@ -187,16 +209,59 @@ object Interpreter {
     else vRHS
     val jvmArgs = args.toSeq.asInstanceOf[Seq[AnyRef]]
     try {
-      // TODO fix the types
-      // Fix[Desugar]: Hardcode the can build froms
+      // FIX[Desugar]: Hardcode the implicit arguments
       val hardWiredArgs = jvmArgs ++ ((lhsJTp, nme, argsRetJTp) match {
         case ("Lscala/collection/immutable/List;", "map", "(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;") =>
           Seq(List.canBuildFrom[AnyRef])
+        case ("Lscala/meta/semantic/Api/XtensionSemanticTypeRefDefn;", "defn", "(Lscala/meta/semantic/Context;)Lscala/meta/Member;") =>
+          val context = env.stack.flatten.find(_._1.toString == "c").head._2.ref
+          Seq(context.asInstanceOf[AnyRef])
+        case ("Lscala/meta/semantic/Api/XtensionSemanticMemberLike;", "isClass", "(Lscala/meta/semantic/Context;)Z") =>
+          val context = env.stack.flatten.find(_._1.toString == "c").head._2.ref
+          Seq(context.asInstanceOf[AnyRef])
+        case ("Lscala/meta/semantic/Api/XtensionSemanticMemberLike;", "isObject", "(Lscala/meta/semantic/Context;)Z") =>
+          val context = env.stack.flatten.find(_._1.toString == "c").head._2.ref
+          Seq(context.asInstanceOf[AnyRef])
+        case ("Lscala/meta/semantic/Api/XtensionSemanticMemberLike;", "isTrait", "(Lscala/meta/semantic/Context;)Z") =>
+          val context = env.stack.flatten.find(_._1.toString == "c").head._2.ref
+          Seq(context.asInstanceOf[AnyRef])
+        case ("Lscala/meta/semantic/Api/XtensionSemanticMemberLike;", "name", "(Lscala/meta/semantic/Context;)Lscala/meta/Name;") =>
+          val context = env.stack.flatten.find(_._1.toString == "c").head._2.ref
+          Seq(context.asInstanceOf[AnyRef])
+        case ("Lscala/meta/semantic/Api/XtensionSemanticMemberLike;", "isSealed", "(Lscala/meta/semantic/Context;)Z") =>
+          val context = env.stack.flatten.find(_._1.toString == "c").head._2.ref
+          Seq(context.asInstanceOf[AnyRef])
+        case ("Lscala/meta/semantic/Api/XtensionSemanticMemberLike;", "children", "(Lscala/meta/semantic/Context;)Lscala/collection/immutable/Seq;") =>
+          val context = env.stack.flatten.find(_._1.toString == "c").head._2.ref
+          Seq(context.asInstanceOf[AnyRef])
+        case ("Lscala/meta/semantic/Api/XtensionSemanticMemberLike;", "isFinal", "(Lscala/meta/semantic/Context;)Z") =>
+          val context = env.stack.flatten.find(_._1.toString == "c").head._2.ref
+          Seq(context.asInstanceOf[AnyRef])
+        case ("Lscala/meta/semantic/Api/XtensionSemanticMemberLike;", "isCase", "(Lscala/meta/semantic/Context;)Z") =>
+          val context = env.stack.flatten.find(_._1.toString == "c").head._2.ref
+          Seq(context.asInstanceOf[AnyRef])
+
         case _ =>
+          println(lhsJTp, nme, argsRetJTp)
           Seq()
       })
 
-      (Object(jMethod.invoke(vLHS, hardWiredArgs: _*), t"List[Int]"), env)
+      // FIX[Desugar]: This part is for extension methods!
+      val extendedLHS = (vLHS, jMethod.getName()) match {
+        case (lhs: i.Type.Name, "defn") =>
+          XtensionSemanticTypeRefDefn(lhs)
+        case (lhs: i.Defn.Type, _) =>
+          XtensionSemanticMember(lhs)
+        case (lhs: i.Defn.Trait, _) =>
+          XtensionSemanticMember(lhs)
+        case (lhs: i.Defn.Class, _) =>
+          XtensionSemanticMember(lhs)
+        case _ =>
+          vLHS
+      }
+      println("Class is:" + extendedLHS.getClass)
+      println(jMethod.getName(), extendedLHS, hardWiredArgs)
+      (Object(jMethod.invoke(extendedLHS, hardWiredArgs: _*), t"List[Int]"), env)
     } catch {
       case e: java.lang.reflect.InvocationTargetException =>
         throw e.getCause()
@@ -207,7 +272,12 @@ object Interpreter {
 object Utils {
   def jvmTypeToClass(s: String): Class[_] = s match {
     case "I" => classOf[Int]
-    case _ => Class.forName(s.replaceAll("/", ".").subSequence(1, s.length - 1).toString)
+    case "Lscala/meta/semantic/Api/XtensionSemanticTypeRefDefn;" => // TODO URGH!      
+      Class.forName("scala.meta.semantic.Api$XtensionSemanticTypeRefDefn")
+    case "Lscala/meta/semantic/Api/XtensionSemanticMemberLike;" => // TODO URGH!
+      Class.forName("scala.meta.semantic.Api$XtensionSemanticMemberLike")
+    case _ =>
+      Class.forName(s.replaceAll("/", ".").subSequence(1, s.length - 1).toString)
   }
 
   def unsupported(t: Tree, msg: String): Nothing = sys.error(s"""
