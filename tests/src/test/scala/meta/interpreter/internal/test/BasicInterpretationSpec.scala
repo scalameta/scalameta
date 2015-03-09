@@ -26,14 +26,6 @@ class BasicInterpretationSpec extends FlatSpec with ShouldMatchers {
     body
   }
 
-  def metaDefine(classes: List[String])(implicit c: StandaloneContext): List[Tree] = {
-    import scala.meta._
-    import scala.meta.internal.hosts.scalac.Scalahost
-    val options = "-cp " + System.getProperty("sbt.paths.tests.classpath")
-    implicit val c = Scalahost.mkStandaloneContext(options)
-    classes.map(clazz => c.define(clazz))
-  }
-
   def interpret(expression: String, classes: List[String] = Nil)(implicit c: StandaloneContext): Any =
     Interpreter.eval(metaExpression(expression))
 
@@ -88,7 +80,7 @@ class BasicInterpretationSpec extends FlatSpec with ShouldMatchers {
   }
 
   it should "support passing higher-order functions to collections" in {
-    interpret("""val lst = List(1,2,3); lst.map(x => x + 1)""")
+    interpret("""val lst = List(1,2,3); lst.map(x => x + 1)""") should be(List(2, 3, 4))
   }
 
 }

@@ -11,6 +11,18 @@ import scala.collection.immutable.ListMap
 import scala.meta.internal.interpreter.environment._
 
 object Interpreter {
+
+  def evalFunc(metaprogram: i.Tree, argss: Seq[Any]*)(implicit c: Context): Any = {
+    val defn @ i.Defn.Def(mods, nme, _, paramss, _, body) = metaprogram
+    val emptyEnv = Env(List(ListMap[i.Term.Name, Object]()), ListMap[i.Term.Name, Object]())
+    val newEnv = (argss zip paramss).foldLeft(emptyEnv) { (agg, p) =>
+      (p._1 zip p._2).foldLeft(agg) { (agg1, pv) =>
+        agg1.push(pv._2.name.asInstanceOf[i.Term.Name], Object(pv._1, pv._2.tpe))
+      }
+    }
+    eval(body, newEnv)
+  }
+
   def eval(term: Term)(implicit c: Context): Any = {
     val (Object(v, tpe, fields), env) =
       eval(term, Env(List(ListMap[i.Term.Name, Object]()), ListMap[i.Term.Name, Object]()))
@@ -78,11 +90,12 @@ object Interpreter {
         (Object(new Function1[Any, Any] {
           var resultEnv: Env = _
           def apply(x: Any) = {
-
-            val newEnv = params.foldLeft(env)((aggEnv, param) => aggEnv.push(param.name.asInstanceOf[i.Term.Name], Object(x, param.tpe)))
+            val newEnv = params.foldLeft(env) { (aggEnv, param) =>
+              aggEnv.push(param.name.asInstanceOf[i.Term.Name], Object(x, param.tpe))
+            }
             val (res, resEnv) = eval(bodyTerm, newEnv)
             resultEnv = resEnv
-            res
+            res.ref
           }
         }, t"Any => Any"), env)
 
@@ -112,6 +125,8 @@ object Interpreter {
   def evalPattern(lhs: Object, pattern: i.Pat, env: Env)(implicit c: Context): (Object, Env) = pattern match {
     case i.Pat.Typed(x, tp) =>
       (Object(tp == lhs.tpe, t"Boolean"), extendEnv(x, lhs, env))
+    case i.Pat.Wildcard() =>
+      (Object(true, t"Boolean"), env)
     case _ => Utils.unsupported(pattern, "pattern")
   }
   def extendEnv(v: i.Tree, lhs: Object, env: Env)(implicit c: Context): Env = v match {

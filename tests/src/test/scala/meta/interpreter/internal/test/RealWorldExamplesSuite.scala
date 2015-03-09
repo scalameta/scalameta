@@ -5,15 +5,17 @@ import scala.meta.semantic._
 import scala.meta.internal.interpreter.Interpreter
 import scala.meta.dialects.Scala211
 import scala.meta._
-import scala.meta.ui._
 import scala.meta.internal.{ ast => impl }
 import scala.meta.internal.hosts.scalac.contexts.StandaloneContext
+import scala.meta.internal.hosts.scalac.Scalahost
+import scala.reflect.{ ClassTag, classTag }
+import scala.meta.internal.{ ast => i }
 
 class RealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
 
-  /*def jarOf[T: ClassTag] = classTag[T].runtimeClass.getProtectionDomain().getCodeSource().getLocation().getFile()
+  def jarOf[T: ClassTag] = classTag[T].runtimeClass.getProtectionDomain().getCodeSource().getLocation().getFile()
   val cp = List(jarOf[org.scalameta.UnreachableError], jarOf[scala.meta.Tree]).mkString(java.io.File.pathSeparator)
-  implicit val c = Scalahost.mkStandaloneContext(s"-cp $cp")
+  implicit val c = Scalahost.mkStandaloneContext(s"-cp $cp:" + System.getProperty("sbt.paths.tests.classpath"))
   val impl.Source(List(impl.Defn.Object(_, _, _, impl.Template(_, _, _, Some(List(_, _, _, metaprogram)))))) = c.define("""
       object DummyContainer {
         import scala.meta._
@@ -45,12 +47,12 @@ class RealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
       }
     """)
 
-  def evalFunc(metaprogram: impl.Tree, args: Seq[Any]*): Any = {
-    ???
-  }
+  "An interpreter" should "execute macros for serialization" in {
+    val ex = intercept[RuntimeException] {
+      Interpreter.evalFunc(metaprogram, List(t"Int"), List(c))
+    }
 
-  "An interpreter" should "execute macros" in {
-    evalFunc(metaprogram, List(t"Int"), List(c))
-  }*/
+    ex.getMessage() should be("unsupported type Int")
+  }
 
 }
