@@ -52,6 +52,13 @@ class SemanticSuite extends FunSuite {
     }
   }
 
+  test("x => x + x") {
+    val result = c.define("class C { def x = List(1).map(x => x + x) }")
+    val impl.Source(List(impl.Defn.Class(_, _, _, _, impl.Template(_, _, _, Some(List(impl.Defn.Def(_, _, _, _, _, body))))))) = result
+    val impl.Term.Apply(_, List(impl.Term.Function(List(x), _))) = body
+    assert(x.tpe == t"Int")
+  }
+
   test("t\"List\".defn") {
     assert(t"List".defn.show[Code] == "type List[+A] = List[A]")
     assert(t"List".defn.show[Semantics] == """

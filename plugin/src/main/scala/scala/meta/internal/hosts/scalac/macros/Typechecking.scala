@@ -53,7 +53,7 @@ trait Typechecking {
         if (isRepeated(p.symbol)) copyValDef(p1)(tpt = tq"_root_.scala.<repeated>[${p1.tpt}]") else p1
     }
     val c = q"implicit val ${TermName("c$" + globalFreshNameCreator.newName(""))}: _root_.scala.meta.macros.Context"
-    atPos(ddef.pos)(q"def $name[..$tparams](...$vparamss1)(implicit $c): _root_.scala.meta.Term = $body")
+    atPos(ddef.pos)(q"def $name(...$vparamss1)(implicit $c): _root_.scala.meta.Term = $body")
   }
 
   def scalahostEnterStats(typer: Typer, stats: List[Tree]): List[Tree] = stats.flatMap {
