@@ -43,7 +43,11 @@ object Interpreter {
         val (res, env1) = evalSeq(terms, env)
         (Object((res.head.ref, res.tail.head.ref), t"(AnyRef, AnyRef)"), env1) // TODO other cases
 
-      // TODO introduce a method in the interpreter!
+      case i.Term.Select(lhs, op) =>
+        val (lhsV, env1) = eval(lhs, env)
+        val method = lhs.tpe.members.filter(_.name == op).head
+        methodCall(method, lhsV, Seq(), env1)
+
       case i.Term.ApplyInfix(lhs, op, _, args) =>
         val method = lhs.tpe.members.filter(_.name == op).head
         val (lhsV, newEnv) = eval(lhs, env)
@@ -74,6 +78,7 @@ object Interpreter {
         (Object(new Function1[Any, Any] {
           var resultEnv: Env = _
           def apply(x: Any) = {
+
             val newEnv = params.foldLeft(env)((aggEnv, param) => aggEnv.push(param.name.asInstanceOf[i.Term.Name], Object(x, param.tpe)))
             val (res, resEnv) = eval(bodyTerm, newEnv)
             resultEnv = resEnv
@@ -129,6 +134,9 @@ object Interpreter {
         methodCallByMods(mods, paramss, lhs, rhs, env)
       case i.Defn.Def(mods, _, _, paramss, _, i.Term.Name("???")) =>
         methodCallByMods(mods, paramss, lhs, rhs, env)
+      case m @ i.Pat.Var.Term(nme) =>
+        methodCallByMods(member.mods.asInstanceOf[scala.collection.Seq[scala.meta.internal.ast.Mod]], Nil, lhs, rhs, env)
+      case _ => Utils.unsupported(member, "member")
     }
   }
 
@@ -144,12 +152,13 @@ object Interpreter {
         ???
     }
   }
+
   def methodCallByJavaSignature(
     params: Seq[Seq[i.Term.Param]], lhs: Object, rhs: Seq[Object],
     lhsJTp: String, nme: String, argsRetJTp: String, env: Env)(implicit c: Context) = {
     val paramsRegex = """\((.*)\).*""".r
     val paramsRegex(jvmParams) = argsRetJTp
-    val types = jvmParams.split(",").map(Utils.jvmTypeToClass).toList
+    val types = jvmParams.replaceAll("(L.*?;|I|B)", "$1,").split(",").toList.filterNot(_.trim.isEmpty).map(Utils.jvmTypeToClass)
     val jMethod = Utils.jvmTypeToClass(lhsJTp).getMethod(nme, types: _*)
 
     val repeated = params.exists(_.exists {
@@ -163,7 +172,16 @@ object Interpreter {
     else vRHS
     val jvmArgs = args.toSeq.asInstanceOf[Seq[AnyRef]]
     try {
-      (Object(jMethod.invoke(vLHS, jvmArgs: _*), t"List[Int]"), env)
+      // TODO fix the types
+      // Fix[Desugar]: Hardcode the can build froms
+      val hardWiredArgs = jvmArgs ++ ((lhsJTp, nme, argsRetJTp) match {
+        case ("Lscala/collection/immutable/List;", "map", "(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;") =>
+          Seq(List.canBuildFrom[AnyRef])
+        case _ =>
+          Seq()
+      })
+
+      (Object(jMethod.invoke(vLHS, hardWiredArgs: _*), t"List[Int]"), env)
     } catch {
       case e: java.lang.reflect.InvocationTargetException =>
         throw e.getCause()

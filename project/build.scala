@@ -134,8 +134,7 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     scalaSource in Compile <<= (baseDirectory in Compile)(base => base),
-    libraryDependencies += "org.scalameta" % "scalameta_2.11" % "0.1.0-SNAPSHOT",
-    libraryDependencies += "org.scalameta" % "scalahost_2.11.6" % "0.1.0-SNAPSHOT"
+    libraryDependencies += "org.scalameta" % "scalameta_2.11" % "0.1.0-SNAPSHOT"
   )
 
   lazy val sandbox = Project(
@@ -156,6 +155,7 @@ object build extends Build {
     libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.3" % "test",
     libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
     libraryDependencies += "org.scalameta" % "scalameta_2.11" % "0.1.0-SNAPSHOT",
+    libraryDependencies += "org.scalameta" % "scalahost_2.11.6" % "0.1.0-SNAPSHOT" % "test",
     testOptions in Test += Tests.Argument("-oDF"),
     packagedArtifacts := Map.empty
   ) settings (

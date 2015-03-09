@@ -51,6 +51,10 @@ class BasicInterpretationSpec extends FlatSpec with ShouldMatchers {
     interpret("""List(List(1),List(2),List(3))""") should be(List(List(1), List(2), List(3)))
   }
 
+  it should "handle method calls on objects on functions with multiple params" in {
+    interpret("""val tpl = Tuple2.apply(2,3); tpl._1""") should be(2)
+  }
+
   it should "deal with conditionals" in {
     interpret("""if(true) {val x = 1; x + 1} else {val y = 1; y + 1}""")
   }
@@ -83,9 +87,8 @@ class BasicInterpretationSpec extends FlatSpec with ShouldMatchers {
     e.getMessage() should be("Catch me outside!")
   }
 
-  it should "support passing higher-order functions" in {
-    // TODO can build from hack
-    // interpret("""val lst = List(1,2,3); lst.map(x => x + 1)""")
+  it should "support passing higher-order functions to collections" in {
+    interpret("""val lst = List(1,2,3); lst.map(x => x + 1)""")
   }
 
 }
