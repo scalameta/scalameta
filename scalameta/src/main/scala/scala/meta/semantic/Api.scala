@@ -172,8 +172,17 @@ private[meta] trait Api {
       }
     }
     @hosted def mods: Seq[Mod] = {
+      def fieldMods(tree: impl.Pat.Var.Term): Seq[Mod] = {
+        firstNonPatParent(tree) match {
+          case Some(parent: impl.Decl.Val) => parent.mods
+          case Some(parent: impl.Decl.Var) => parent.mods
+          case Some(parent: impl.Defn.Val) => parent.mods
+          case Some(parent: impl.Defn.Var) => parent.mods
+          case _ => Nil
+        }
+      }
       tree.require[impl.Member] match {
-        case tree: impl.Pat.Var.Term => firstNonPatParent(tree).collect{case member: Member => member}.map(_.mods).getOrElse(Nil)
+        case tree: impl.Pat.Var.Term => fieldMods(tree)
         case tree: impl.Pat.Var.Type => Nil
         case tree: impl.Decl.Def => tree.mods
         case tree: impl.Decl.Type => tree.mods
