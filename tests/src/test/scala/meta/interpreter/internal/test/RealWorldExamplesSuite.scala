@@ -26,7 +26,7 @@ class RealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
             case ref: Type.Ref =>
               def validateLeaf(leaf: Member) = {
                 if (!leaf.isFinal) sys.error(s"${leaf.name} is not final")
-                if (!leaf.isCase) sys.error(s"${leaf.name} is not sealed")
+                if (!leaf.isCase) sys.error(s"${leaf.name} is not a case class")
                 if (!leaf.tparams.isEmpty) sys.error(s"${leaf.name} is not monomorphic")
               }
               val defn = ref.defn
@@ -47,15 +47,29 @@ class RealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
       }
     """)
 
-  "An interpreter" should "execute macros for serialization" in {
+  "A verification macro" should "reject defns that are not classes, traits or objects" in {
     val ex = intercept[RuntimeException] {
       Interpreter.evalFunc(metaprogram, List(t"List"), List(c))
     }
     ex.getMessage() should be("unsupported ref to List")
+  }
+
+  it should "reject non-final classes" in {
     val ex1 = intercept[RuntimeException] {
       Interpreter.evalFunc(metaprogram, List(t"TestTraitNonFinal"), List(c))
     }
-    ex1.getMessage() should be("unsupported ref to List")
+    ex1.getMessage() should be("XNonFinal is not final")
   }
+
+  it should "reject non-case classes" in {
+    val ex2 = intercept[RuntimeException] {
+      Interpreter.evalFunc(metaprogram, List(t"TestTraitNonCase"), List(c))
+    }
+    ex2.getMessage() should be("XNonCase is not a case class")
+  }
+
+  /*  it should "evaluate the sealed case classes" in {
+    Interpreter.evalFunc(metaprogram, List(t"TestTrait"), List(c))
+  }*/
 
 }

@@ -54,14 +54,19 @@ object build extends Build {
       </issueManagement>
       <developers>
         <developer>
-          <id>xeno-by</id>
-          <name>Eugene Burmako</name>
-          <url>http://xeno.by</url>
-        </developer>
-        <developer>
           <id>vjovanov</id>
           <name>Vojin Jovanovic</name>
           <url>http://github.com/vjovanov</url>
+        </developer>
+        <developer>
+          <id>dedoz</id>
+          <name>Mikhail Mutcianko</name>
+          <url>http://github.com/dedoz</url>
+        </developer>
+        <developer>
+          <id>xeno-by</id>
+          <name>Eugene Burmako</name>
+          <url>http://xeno.by</url>
         </developer>
       </developers>
     )

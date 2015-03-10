@@ -59,4 +59,8 @@ object environment {
 
     }
   }
+
+  trait FunctionEnv {
+    def functionEnv: Env
+  }
 }
