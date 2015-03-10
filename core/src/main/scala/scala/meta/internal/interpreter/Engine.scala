@@ -34,7 +34,7 @@ object Interpreter {
   }
 
   def eval(term: Tree, env: Env)(implicit c: Context): (Object, Env) = {
-    println(s"Evaluating: ${term.show[Semantics]}")
+    println(s"Evaluating: ${term.show[Code]}")
     term match {
       case i.Term.Block(stats) =>
         stats.foldLeft((Object((), t"Unit"), env))((res, stat) => eval(stat, res._2))
@@ -67,7 +67,9 @@ object Interpreter {
         }
 
       case i.Term.Select((lhs: i.Term.Name), op) if lhs.isPackage =>
-        println("Ctor!")
+        (env.lookup(op), env)
+
+      case trm @ i.Term.Select(lhs, op) if op.isObject =>
         (env.lookup(op), env)
 
       case i.Term.Select(lhs, op) =>
@@ -86,7 +88,7 @@ object Interpreter {
         val (rhsVs, callEnv) = evalSeq(args, env)
         methodCall(method, lhsV, rhsVs, callEnv)
 
-      case i.Term.Apply(i.Term.Select(lhs, rhs), args) =>
+      case i.Term.Apply(fun @ i.Term.Select(lhs, rhs), args) if fun.isDef =>
         val (lhsV, newEnv) = eval(lhs, env)
         val method = lhs.tpe.members.filter(_.name == rhs.name).head
         val (rhsVs, callEnv) = evalSeq(args, env)

@@ -43,6 +43,8 @@ object environment {
     val tpeString = nme.tpe.toString
     tpeString match { // TODO hack
       case "Int" => Class.forName("java.lang.Integer")
+      case "Ref.type" =>
+        Class.forName("scala.meta.internal.ast.Ctor$Ref$")
       case "`package`.type" =>
         val qualifiedName = nme.toString + "." + tpeString.take(tpeString.length - ".type".length).replaceAll("`", "")
         // TODO owners are not working

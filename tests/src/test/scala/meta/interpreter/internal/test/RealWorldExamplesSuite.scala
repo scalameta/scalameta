@@ -67,9 +67,9 @@ class RealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
     }
     ex2.getMessage() should be("XNonCase is not a case class")
   }
-
-  /*  it should "evaluate the sealed case classes" in {
-    Interpreter.evalFunc(metaprogram, List(t"TestTrait"), List(c))
-  }*/
+// TODO failing test
+//  it should "evaluate the sealed case classes" in {
+  //  Interpreter.evalFunc(metaprogram, List(t"TestTrait"), List(c))
+ // }
 
 }
