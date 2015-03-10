@@ -41,10 +41,25 @@ object environment {
 
   def toClass(nme: TName)(implicit c: Context): Class[_] = {
     val tpeString = nme.tpe.toString
+    println(tpeString)
     tpeString match { // TODO hack
       case "Int" => Class.forName("java.lang.Integer")
       case "Ref.type" =>
         Class.forName("scala.meta.internal.ast.Ctor$Ref$")
+      case "ApplyType.type" =>
+        Class.forName("scala.meta.internal.ast.Term$ApplyType$")
+      case "Name.type" =>
+        Class.forName("scala.meta.internal.ast.Ctor$Ref$Name$")
+      case "New.type" =>
+        Class.forName("scala.meta.internal.ast.Term$New$")
+      case "Param.type" =>
+        Class.forName("scala.meta.internal.ast.Term$Param$")
+      case "Anonymous.type" =>
+        Class.forName("scala.meta.internal.ast.Name$Anonymous$")
+      case "None.type" =>
+        Class.forName("scala.None$")
+      case "Some.type" =>
+        Class.forName("scala.Some$")
       case "`package`.type" =>
         val qualifiedName = nme.toString + "." + tpeString.take(tpeString.length - ".type".length).replaceAll("`", "")
         // TODO owners are not working

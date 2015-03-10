@@ -100,6 +100,14 @@ object Interpreter {
         val (rhsVs, callEnv) = evalSeq(args, env)
         methodCall(method, lhsV, rhsVs, callEnv)
 
+      // TODO generalize
+      case i.Term.ApplyType(i.Term.Select(lhs, i.Term.Name("asInstanceOf")), tpes) =>
+        val (lhsV, env1) = eval(lhs, env)
+        // TODO does not work
+        // if (lhs.tpe.dealias <:< tpes.head.dealias) (lhsV, env1)
+        if (true) (lhsV, env1)
+        else throw new ClassCastException(s"!${lhs.tpe.dealias} <:< ${tpes.head}")
+
       case i.Term.If(cond, thn, elze) =>
         val (Object(cV: Boolean, _, _), cEnv: Env) = eval(cond, env)
         if (cV) eval(thn, cEnv)
@@ -208,7 +216,7 @@ object Interpreter {
   def methodCallByJavaSignature(
     params: Seq[Seq[i.Term.Param]], lhs: Object, rhs: Seq[Object],
     lhsJTp: String, nme: String, argsRetJTp: String, env: Env)(implicit c: Context) = {
-
+    println(params)
     val paramsRegex = """\((.*)\).*""".r
     val paramsRegex(jvmParams) = argsRetJTp
     val types = jvmParams.replaceAll("(L.*?;|I|B)", "$1,").split(",").toList.filterNot(_.trim.isEmpty).map(Utils.jvmTypeToClass)
@@ -225,8 +233,25 @@ object Interpreter {
     else vRHS
     val jvmArgs = args.toSeq.asInstanceOf[Seq[AnyRef]]
     try {
+      // FIX[Desugar]: This is for by name parameters
+      val extendedRHS = (vLHS.getClass.toString, jMethod.getName()) match {
+        case ("class scala.meta.internal.ast.Ctor$Ref$Name$", "apply") =>
+          jvmArgs ++ Seq[AnyRef](scala.meta.internal.hygiene.Denotation.Zero, scala.meta.internal.hygiene.Sigma.Naive, scala.meta.Origin.None)
+        case ("class scala.meta.internal.ast.Term$ApplyType$", "apply") =>
+          jvmArgs ++ Seq[AnyRef](scala.meta.Origin.None)
+        case ("class scala.meta.internal.ast.Name$Anonymous$", "apply") =>
+          jvmArgs ++ Seq[AnyRef](scala.meta.internal.hygiene.Denotation.Zero, scala.meta.internal.hygiene.Sigma.Naive, scala.meta.Origin.None)
+        case ("class scala.meta.internal.ast.Term$Param$", "apply") =>
+          jvmArgs ++ Seq[AnyRef](scala.meta.Origin.None)
+        case ("class scala.meta.internal.ast.Template$", "apply") =>
+          jvmArgs ++ Seq[AnyRef](scala.meta.Origin.None)
+        case ("class scala.meta.internal.ast.Term$New$", "apply") =>
+          jvmArgs ++ Seq[AnyRef](scala.meta.Origin.None)
+        case _ => jvmArgs
+      }
+
       // FIX[Desugar]: Hardcode the implicit arguments!
-      val hardWiredArgs = jvmArgs ++ ((lhsJTp, nme, argsRetJTp) match {
+      val hardWiredArgs = extendedRHS ++ ((lhsJTp, nme, argsRetJTp) match {
         case ("Lscala/collection/immutable/List;", "map", "(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;") =>
           Seq(List.canBuildFrom[AnyRef])
         case ("Lscala/meta/semantic/Api$XtensionSemanticTypeRefDefn;", "defn", "(Lscala/meta/semantic/Context;)Lscala/meta/Member;") =>
@@ -280,6 +305,7 @@ object Interpreter {
           println("Not extended: " + (vLHS.getClass, jMethod.getName()))
           vLHS
       }
+
       println("Expected class is: " + Utils.jvmTypeToClass(lhsJTp))
       println("Class is:" + extendedLHS.getClass)
       (Object(jMethod.invoke(extendedLHS, hardWiredArgs: _*), t"List[Int]"), env)

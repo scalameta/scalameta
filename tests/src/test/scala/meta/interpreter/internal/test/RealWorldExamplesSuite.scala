@@ -125,13 +125,14 @@ class RealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
     ex2.getMessage() should be("XNonCase is not a case class")
   }
 
+  it should "evaluate the sealed case classes" in {
+    val res = Interpreter.evalFunc(metaprogram, List(t"TestTrait"), List(c))
+    res.asInstanceOf[scala.meta.internal.interpreter.environment.Object].ref.asInstanceOf[i.Tree].show[Code] should be("new Foo[TestTrait] {}")
+  }
+
   // TODO failing test
   //  "Synthesis macro" should "produce a materializer" in {
   //    Interpreter.evalFunc(metaprogram2, List(t"TestTrait"), List(c))
-  //  }
-  // TODO failing test
-  //  it should "evaluate the sealed case classes" in {
-  //    Interpreter.evalFunc(metaprogram, List(t"TestTrait"), List(c))
   //  }
 
 }
