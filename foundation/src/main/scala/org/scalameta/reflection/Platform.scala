@@ -9,6 +9,23 @@ trait Platform {
   import definitions._
 
   implicit class RichPlatformType(tpe: Type) {
+    // TODO: I don't like having to reproduce this logic by hand
+    // but I have no idea what compiler API to use here
+    private def jvmname(sym0: Symbol): String = {
+      def loop(sym: Symbol): String = {
+        val prefix = {
+          if (sym.owner == RootClass || sym.owner == EmptyPackageClass) ""
+          else {
+            val ownerName = loop(sym.owner)
+            val separator = if (sym.owner.isPackageClass) "/" else if (sym.owner.isModuleClass) "" else "$"
+            ownerName + separator
+          }
+        }
+        val suffix = if ((sym.isModule || sym.isModuleClass) && !sym.hasPackageFlag) "$" else ""
+        prefix + sym.name.encoded + suffix
+      }
+      loop(sym0)
+    }
     def jvmsig: String = {
       transformedType(tpe) match {
         case TypeRef(_, sym, args) =>
@@ -23,7 +40,7 @@ trait Platform {
           else if (sym == LongClass) "J"
           else if (sym == DoubleClass) "D"
           else if (sym == ArrayClass) "[" + args.head.jvmsig
-          else "L" + sym.fullName.replace(".", "/") + (if (sym.isModuleClass) "$" else "") + ";"
+          else "L" + jvmname(sym) + ";"
         case MethodType(params, ret) =>
           s"(" + params.map(_.jvmsig).mkString("") + ")" + ret.jvmsig
         case ConstantType(value) =>

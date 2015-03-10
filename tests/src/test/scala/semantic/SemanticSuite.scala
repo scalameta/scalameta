@@ -237,11 +237,11 @@ class SemanticSuite extends FunSuite {
       |@ffi("jvmMethod(Lscala/collection/TraversableLike;, to, (Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") override def to[Col[_]](implicit cbf: CanBuildFrom[Nothing, A, Col[A]]): Col[A] = ???
       |@ffi("jvmMethod(Lscala/collection/TraversableLike;, withFilter, (Lscala/Function1;)Lscala/collection/generic/FilterMonadic;)") def withFilter(p: A => Boolean): FilterMonadic[A, List[A]] = ???
       |class WithFilter(p: A => Boolean) extends AnyRef with FilterMonadic[A, Repr] {
-      |  @ffi("jvmField(Lscala/collection/TraversableLike/WithFilter;, p, Lscala/Function1;)") private[this] val p: A => Boolean = ???
-      |  @ffi("jvmMethod(Lscala/collection/TraversableLike/WithFilter;, map, (Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def map[B, That](f: A => B)(implicit bf: CanBuildFrom[List[A], B, That]): That = ???
-      |  @ffi("jvmMethod(Lscala/collection/TraversableLike/WithFilter;, flatMap, (Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def flatMap[B, That](f: A => GenTraversableOnce[B])(implicit bf: CanBuildFrom[List[A], B, That]): That = ???
-      |  @ffi("jvmMethod(Lscala/collection/TraversableLike/WithFilter;, foreach, (Lscala/Function1;)V)") def foreach[U](f: A => U): Unit = ???
-      |  @ffi("jvmMethod(Lscala/collection/TraversableLike/WithFilter;, withFilter, (Lscala/Function1;)Lscala/collection/TraversableLike/WithFilter;)") def withFilter(q: A => Boolean): List#WithFilter = ???
+      |  @ffi("jvmField(Lscala/collection/TraversableLike$WithFilter;, p, Lscala/Function1;)") private[this] val p: A => Boolean = ???
+      |  @ffi("jvmMethod(Lscala/collection/TraversableLike$WithFilter;, map, (Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def map[B, That](f: A => B)(implicit bf: CanBuildFrom[List[A], B, That]): That = ???
+      |  @ffi("jvmMethod(Lscala/collection/TraversableLike$WithFilter;, flatMap, (Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def flatMap[B, That](f: A => GenTraversableOnce[B])(implicit bf: CanBuildFrom[List[A], B, That]): That = ???
+      |  @ffi("jvmMethod(Lscala/collection/TraversableLike$WithFilter;, foreach, (Lscala/Function1;)V)") def foreach[U](f: A => U): Unit = ???
+      |  @ffi("jvmMethod(Lscala/collection/TraversableLike$WithFilter;, withFilter, (Lscala/Function1;)Lscala/collection/TraversableLike$WithFilter;)") def withFilter(q: A => Boolean): List#WithFilter = ???
       |}
       |@ffi("jvmMethod(Lscala/collection/Parallelizable;, par, ()Lscala/collection/Parallel;)") def par: ParSeq[A] = ???
       |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, reversed, ()Lscala/collection/immutable/List;)") protected[this] def reversed: List[A] = ???
@@ -270,7 +270,7 @@ class SemanticSuite extends FunSuite {
       |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, toBuffer, ()Lscala/collection/mutable/Buffer;)") def toBuffer[B >: A]: Buffer[B] = ???
       |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, toSet, ()Lscala/collection/immutable/Set;)") def toSet[B >: A]: Set[B] = ???
       |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, toVector, ()Lscala/collection/immutable/Vector;)") def toVector: Vector[A] = ???
-      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, toMap, (Lscala/Predef/$less$colon$less;)Lscala/collection/immutable/Map;)") def toMap[T, U](implicit ev: A <:< (T, U)): Map[T, U] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, toMap, (Lscala/Predef$$less$colon$less;)Lscala/collection/immutable/Map;)") def toMap[T, U](implicit ev: A <:< (T, U)): Map[T, U] = ???
       |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, mkString, (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;)") def mkString(start: String, sep: String, end: String): String = ???
       |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, mkString, (Ljava/lang/String;)Ljava/lang/String;)") def mkString(sep: String): String = ???
       |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, mkString, ()Ljava/lang/String;)") def mkString: String = ???
@@ -438,11 +438,11 @@ class SemanticSuite extends FunSuite {
       |@ffi("jvmMethod(Lscala/collection/TraversableLike;, to, (Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") override def to[Col[_]](implicit cbf: CanBuildFrom[Nothing, Int, Col[Int]]): Col[Int] = ???
       |@ffi("jvmMethod(Lscala/collection/TraversableLike;, withFilter, (Lscala/Function1;)Lscala/collection/generic/FilterMonadic;)") def withFilter(p: Int => Boolean): FilterMonadic[Int, List[Int]] = ???
       |class WithFilter(p: A => Boolean) extends AnyRef with FilterMonadic[A, Repr] {
-      |  @ffi("jvmField(Lscala/collection/TraversableLike/WithFilter;, p, Lscala/Function1;)") private[this] val p: Int => Boolean = ???
-      |  @ffi("jvmMethod(Lscala/collection/TraversableLike/WithFilter;, map, (Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def map[B, That](f: Int => B)(implicit bf: CanBuildFrom[List[Int], B, That]): That = ???
-      |  @ffi("jvmMethod(Lscala/collection/TraversableLike/WithFilter;, flatMap, (Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def flatMap[B, That](f: Int => GenTraversableOnce[B])(implicit bf: CanBuildFrom[List[Int], B, That]): That = ???
-      |  @ffi("jvmMethod(Lscala/collection/TraversableLike/WithFilter;, foreach, (Lscala/Function1;)V)") def foreach[U](f: Int => U): Unit = ???
-      |  @ffi("jvmMethod(Lscala/collection/TraversableLike/WithFilter;, withFilter, (Lscala/Function1;)Lscala/collection/TraversableLike/WithFilter;)") def withFilter(q: Int => Boolean): List[Int]#WithFilter = ???
+      |  @ffi("jvmField(Lscala/collection/TraversableLike$WithFilter;, p, Lscala/Function1;)") private[this] val p: Int => Boolean = ???
+      |  @ffi("jvmMethod(Lscala/collection/TraversableLike$WithFilter;, map, (Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def map[B, That](f: Int => B)(implicit bf: CanBuildFrom[List[Int], B, That]): That = ???
+      |  @ffi("jvmMethod(Lscala/collection/TraversableLike$WithFilter;, flatMap, (Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def flatMap[B, That](f: Int => GenTraversableOnce[B])(implicit bf: CanBuildFrom[List[Int], B, That]): That = ???
+      |  @ffi("jvmMethod(Lscala/collection/TraversableLike$WithFilter;, foreach, (Lscala/Function1;)V)") def foreach[U](f: Int => U): Unit = ???
+      |  @ffi("jvmMethod(Lscala/collection/TraversableLike$WithFilter;, withFilter, (Lscala/Function1;)Lscala/collection/TraversableLike$WithFilter;)") def withFilter(q: Int => Boolean): List[Int]#WithFilter = ???
       |}
       |@ffi("jvmMethod(Lscala/collection/Parallelizable;, par, ()Lscala/collection/Parallel;)") def par: ParSeq[Int] = ???
       |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, reversed, ()Lscala/collection/immutable/List;)") protected[this] def reversed: List[Int] = ???
@@ -471,7 +471,7 @@ class SemanticSuite extends FunSuite {
       |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, toBuffer, ()Lscala/collection/mutable/Buffer;)") def toBuffer[B >: Int]: Buffer[B] = ???
       |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, toSet, ()Lscala/collection/immutable/Set;)") def toSet[B >: Int]: Set[B] = ???
       |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, toVector, ()Lscala/collection/immutable/Vector;)") def toVector: Vector[Int] = ???
-      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, toMap, (Lscala/Predef/$less$colon$less;)Lscala/collection/immutable/Map;)") def toMap[T, U](implicit ev: Int <:< (T, U)): Map[T, U] = ???
+      |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, toMap, (Lscala/Predef$$less$colon$less;)Lscala/collection/immutable/Map;)") def toMap[T, U](implicit ev: Int <:< (T, U)): Map[T, U] = ???
       |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, mkString, (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;)") def mkString(start: String, sep: String, end: String): String = ???
       |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, mkString, (Ljava/lang/String;)Ljava/lang/String;)") def mkString(sep: String): String = ???
       |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, mkString, ()Ljava/lang/String;)") def mkString: String = ???
