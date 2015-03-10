@@ -47,6 +47,63 @@ class RealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
       }
     """)
 
+  val impl.Source(List(impl.Defn.Object(_, _, _, impl.Template(_, _, _, Some(List(_, _, _, _, metaprogram2)))))) = c.define(s"""
+      object DummyContainer {
+        import scala.meta._
+        import scala.meta.internal.{ast => impl}
+        import scala.meta.semantic.Context
+        import scala.meta.dialects.Scala211
+        def metaprogram(T: Type)(implicit c: scala.meta.macros.Context) = {
+          T match {
+            case ref: Type.Ref =>
+              val defn = ref.defn
+              if (defn.isClass || defn.isTrait || defn.isObject) {
+                val serializer = Term.fresh(defn.name + "Serializer")
+                val input = Term.fresh("input")
+                val body = {
+                  def serializer(defn: Member, input: Term.Name, tagged: Boolean) = {
+                    val fields = defn.ctor.params.map(_.field)
+                    var entries: Seq[Term] = fields.map { field =>
+                      """ + "q\"\"\"" + """ "\"" + ${field.name.toString} + "\": " + serialize($input.${field.name}) """ + "\"\"\"" + """
+                    }
+                    if (tagged) {
+                      val tag = defn.parents.head.children.indexOf(defn).toString
+                      entries :+= """ + "q\"\"\"" + """ "$$tag: " + $tag """ + "\"\"\"" + """
+                    }
+                    val unwrappedResult = entries.foldLeft(None: Option[Term]) { (acc, curr) =>
+                      acc.map(acc => """ + "q\"\"\"" + """$acc + ", " + $curr""" + "\"\"\"" + """).orElse(Some(curr))
+                    }
+                    val contents = unwrappedResult.getOrElse(""" + "q\"\"\"" + """ "" """ + "\"\"\"" + """)
+                    """ + "q\"\"\"" + """ "{" + $contents + "}" """ + "\"\"\"" + """
+                  }
+                  if (defn.isClass) {
+                    serializer(defn, input, tagged = false)
+                  } else if (defn.isObject) {
+                    serializer(defn, input, tagged = false)
+                  } else if (defn.isTrait) {
+                    val refined = Pat.fresh("input")
+                    val clauses = defn.children.map(leaf => p"case $refined: ${leaf.tpe.pat} => ${serializer(leaf, refined.name, tagged = true)}")
+                    q"$input match { ..$clauses }"
+                  } else {
+                    abort(s"unsupported ref to ${defn.name}")
+                  }
+                }
+                """ + "q\"\"\"" + """
+                  implicit object $serializer extends Serializer[$T] {
+                    def apply($input: $T): String = $body
+                  }
+                  $serializer
+                """ + "\"\"\"" + """
+              } else {
+                abort(s"unsupported ref to ${defn.name}")
+              }
+            case _ =>
+              abort(s"unsupported type $T")
+          }
+        }
+      }
+    """)
+
   "A verification macro" should "reject defns that are not classes, traits or objects" in {
     val ex = intercept[RuntimeException] {
       Interpreter.evalFunc(metaprogram, List(t"List"), List(c))
@@ -67,9 +124,14 @@ class RealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
     }
     ex2.getMessage() should be("XNonCase is not a case class")
   }
-// TODO failing test
-//  it should "evaluate the sealed case classes" in {
-  //  Interpreter.evalFunc(metaprogram, List(t"TestTrait"), List(c))
- // }
+
+  // TODO failing test
+  //  "Synthesis macro" should "produce a materializer" in {
+  //    Interpreter.evalFunc(metaprogram2, List(t"TestTrait"), List(c))
+  //  }
+  // TODO failing test
+  //  it should "evaluate the sealed case classes" in {
+  //    Interpreter.evalFunc(metaprogram, List(t"TestTrait"), List(c))
+  //  }
 
 }
