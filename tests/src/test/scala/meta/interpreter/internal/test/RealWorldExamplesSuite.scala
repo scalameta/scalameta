@@ -130,9 +130,8 @@ class RealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
     res.asInstanceOf[scala.meta.internal.interpreter.environment.Object].ref.asInstanceOf[i.Tree].show[Code] should be("new Foo[TestTrait] {}")
   }
 
-  // TODO failing test
-  //  "Synthesis macro" should "produce a materializer" in {
-  //    Interpreter.evalFunc(metaprogram2, List(t"TestTrait"), List(c))
-  //  }
+  //"Synthesis macro" should "produce a materializer" in {
+  //  Interpreter.evalFunc(metaprogram2, List(t"TestTrait"), List(c))
+  //}
 
 }

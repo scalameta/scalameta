@@ -295,7 +295,7 @@ object Interpreter {
           XtensionSemanticTypeRefDefn(lhs)
         case (lhs: i.Defn.Type, x) if Set("isClass", "isObject", "isTrait", "name") contains (x) =>
           XtensionSemanticMember(lhs)
-        case (lhs: i.Defn.Trait, x) if Set("isClass", "isObject", "isTrait", "isSealed", "children") contains (x) =>
+        case (lhs: i.Defn.Trait, x) if Set("isClass", "isObject", "isTrait", "isSealed", "children", "name") contains (x) =>
           XtensionSemanticMember(lhs)
         case (lhs: i.Defn.Class, x) if Set("isFinal", "isCase", "name") contains (x) =>
           XtensionSemanticMember(lhs)

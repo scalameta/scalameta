@@ -4,6 +4,7 @@ import scala.collection.immutable.ListMap
 import scala.meta._
 import scala.meta.semantic._
 import scala.meta.internal.{ ast => i }
+import scala.meta.dialects.Scala211
 
 object environment {
   type TName = i.Term.Name
@@ -27,11 +28,17 @@ object environment {
       if (stack.head.contains(nme)) {
         stack.head(nme)
       } else if (nme.isPackage && !nme.members.isEmpty) {
-        // fetch the object instance reflectively
+        // fetch the object instance reflectively        
         Object(toClass(nme).getField("MODULE$").get(toClass(nme)), nme.tpe)
       } else if (nme.isObject) { // then look globally for the object
-        // fetch the object instance reflectively
-        Object(toClass(nme).getField("MODULE$").get(toClass(nme)), nme.tpe)
+        nme.tpe.toString match {
+          case "XtensionSemanticTermModule" => // TODO: Desugar
+            val clazz = Class.forName("scala.meta.Term$")
+            Object(XtensionSemanticTermModule(clazz.getField("MODULE$").get(clazz).asInstanceOf[scala.meta.Term.type]), nme.tpe)
+          case _ =>
+            val clazz = toClass(nme)
+            Object(clazz.getField("MODULE$").get(clazz), nme.tpe)
+        }
       } else {
         ??? // TODO then in the scope of current objects
       }
@@ -41,7 +48,7 @@ object environment {
 
   def toClass(nme: TName)(implicit c: Context): Class[_] = {
     val tpeString = nme.tpe.toString
-    println(tpeString)
+    println("nme.tpe.toString:" + tpeString)
     tpeString match { // TODO hack
       case "Int" => Class.forName("java.lang.Integer")
       case "Ref.type" =>
