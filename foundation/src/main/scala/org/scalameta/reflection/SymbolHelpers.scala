@@ -22,6 +22,20 @@ trait SymbolHelpers {
     case class Meta(tree: Tree) extends MacroBody
   }
 
+  implicit class RichHelperClassName(className: String) {
+    def toSymbol: Symbol = {
+      // TODO: again, I wish I could use pre-existing scala.reflect functionality for this...
+      // TODO: duplication wrt ReificationMacros
+      def loop(owner: Symbol, parts: List[String]): Symbol = parts match {
+        case part :: Nil => if (className.endsWith("$")) owner.info.decl(TermName(part)) else owner.info.decl(TypeName(part))
+        case part :: rest => loop(owner.info.decl(TermName(part)), rest)
+        case Nil => unreachable(debug(className))
+      }
+      val parts = scala.reflect.NameTransformer.decode(className).stripSuffix("$").split(Array('.', '$')).toList
+      loop(rootMirror.RootPackage, parts).orElse(loop(rootMirror.EmptyPackage, parts))
+    }
+  }
+
   implicit class RichHelperSymbol(sym: Symbol) {
     def isAnonymous: Boolean = {
       // NOTE: not all symbols whose names start with x$ are placeholders
@@ -59,7 +73,7 @@ trait SymbolHelpers {
           val isBundle = legacy("isBundle").require[Boolean]
           val targs = legacy("targs").require[List[Tree]]
           require(className.endsWith("$") ==> !isBundle)
-          val containerSym = if (isBundle) rootMirror.staticClass(className) else rootMirror.staticModule(className.stripSuffix("$"))
+          val containerSym = className.toSymbol
           val container = Ident(containerSym).setType(if (isBundle) containerSym.asType.toType else containerSym.info)
           val methodSym = containerSym.info.member(TermName(methodName))
           var implRef: Tree = Select(container, methodSym).setType(methodSym.info)
