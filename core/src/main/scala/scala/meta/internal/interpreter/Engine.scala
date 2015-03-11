@@ -207,6 +207,8 @@ object Interpreter {
     jvmMethod.substring(0, jvmMethod.length - 1) match {
       case rgx("scalaIntrinsic", lhsJTp, nme, argsRetJTp) =>
         ScalaEmulator.emulate(List(lhsJTp, nme, argsRetJTp), lhs +: rhs, env)
+      case rgx("jvmMethod", "Ljava/lang/Object;", "$plus", "(Ljava/lang/String;)Ljava/lang/String;") => // ARGH!
+        methodCallByJavaSignature(params, Object(lhs.ref.toString, t"String"), rhs, "Ljava/lang/String;", "concat", "(Ljava/lang/String;)Ljava/lang/String", env)
       case rgx("jvmMethod", lhsJTp, nme, argsRetJTp) =>
         methodCallByJavaSignature(params, lhs, rhs, lhsJTp, nme, argsRetJTp, env)
       case _ => unreachable(debug(jvmMethod.substring(0, jvmMethod.length - 1)))
