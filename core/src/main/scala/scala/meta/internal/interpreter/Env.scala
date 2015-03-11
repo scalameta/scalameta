@@ -28,13 +28,16 @@ object environment {
       if (stack.head.contains(nme)) {
         stack.head(nme)
       } else if (nme.isPackage && !nme.members.isEmpty) {
-        // fetch the object instance reflectively        
+        // fetch the object instance reflectively
         Object(toClass(nme).getField("MODULE$").get(toClass(nme)), nme.tpe)
       } else if (nme.isObject) { // then look globally for the object
         nme.tpe.toString match {
           case "XtensionSemanticTermModule" => // TODO: Desugar
             val clazz = Class.forName("scala.meta.Term$")
             Object(XtensionSemanticTermModule(clazz.getField("MODULE$").get(clazz).asInstanceOf[scala.meta.Term.type]), nme.tpe)
+          case "XtensionSemanticPatModule" =>
+            val clazz = Class.forName("scala.meta.Pat$")
+            Object(XtensionSemanticPatModule(clazz.getField("MODULE$").get(clazz).asInstanceOf[scala.meta.Pat.type]), nme.tpe)
           case _ =>
             val clazz = toClass(nme)
             Object(clazz.getField("MODULE$").get(clazz), nme.tpe)
@@ -67,6 +70,10 @@ object environment {
         Class.forName("scala.None$")
       case "Some.type" =>
         Class.forName("scala.Some$")
+      case "Typed.type" =>
+        Class.forName("scala.meta.internal.ast.Pat$Typed$")
+      case "Block.type" =>
+        Class.forName("scala.meta.internal.ast.Term$Block$")
       case "`package`.type" =>
         val qualifiedName = nme.toString + "." + tpeString.take(tpeString.length - ".type".length).replaceAll("`", "")
         // TODO owners are not working

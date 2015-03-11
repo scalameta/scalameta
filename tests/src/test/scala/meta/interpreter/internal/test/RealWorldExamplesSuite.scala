@@ -62,7 +62,7 @@ class RealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
                 val input = Term.fresh("input")
                 val body = {
                   def serializer(defn: Member, input: Term.Name, tagged: Boolean) = {
-                    val fields = defn.ctor.params.map(_.field)
+                    val fields = defn.ctor.params.map(x => x.field)
                     var entries: Seq[Term] = fields.map { field =>
                       """ + "q\"\"\"" + """ "\"" + ${field.name.toString} + "\": " + serialize($input.${field.name}) """ + "\"\"\"" + """
                     }
