@@ -1,9 +1,8 @@
 import sbt._
 import Keys._
-import com.typesafe.sbt.SbtScalariform
 
 object build extends Build {
-  lazy val sharedSettings = Defaults.defaultSettings ++ SbtScalariform.scalariformSettings ++ Seq(
+  lazy val sharedSettings = Defaults.defaultSettings ++ Seq(
     scalaVersion := "2.11.6",
     crossVersion := CrossVersion.binary,
     version := "0.1.0-SNAPSHOT",
@@ -130,11 +129,11 @@ object build extends Build {
   ) settings (
     test in Test := (test in tests in Test).value,
     packagedArtifacts := Map.empty
-  ) aggregate (interpreter_, tests)
+  ) aggregate (interpreter, tests)
 
-  lazy val interpreter_ = Project(
-    id = "interpreter_",
-    base = file("core")
+  lazy val interpreter = Project(
+    id = "interpreter",
+    base = file("interpreter")
   ) settings (
     publishableSettings: _*
   ) settings (
@@ -149,7 +148,7 @@ object build extends Build {
     sharedSettings: _*
   ) settings (
     scalaSource in Compile <<= (baseDirectory in Compile)(base => base)
-  ) dependsOn (interpreter_)
+  ) dependsOn (interpreter)
 
   lazy val tests = Project(
     id = "tests",
@@ -165,7 +164,7 @@ object build extends Build {
     packagedArtifacts := Map.empty
   ) settings (
     exposeClasspaths("tests"): _*
-  )dependsOn (interpreter_)
+  )dependsOn (interpreter)
 
   def exposeClasspaths(projectName: String) = Seq(
     fullClasspath in Test := {
