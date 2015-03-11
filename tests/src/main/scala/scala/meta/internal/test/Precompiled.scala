@@ -11,3 +11,6 @@ final class YNonCase() extends TestTraitNonCase
 sealed trait TestTrait
 final case class X() extends TestTrait
 final case class Y() extends TestTrait
+
+case object SerObject
+final case class TestCaseClass()

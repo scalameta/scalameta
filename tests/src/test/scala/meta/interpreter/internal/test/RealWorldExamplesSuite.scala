@@ -68,7 +68,7 @@ class RealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
                     }
                     if (tagged) {
                       val tag = defn.parents.head.children.indexOf(defn).toString
-                      entries :+= """ + "q\"\"\"" + """ "$$tag: " + $tag """ + "\"\"\"" + """
+                      entries = entries :+ """ + "q\"\"\"" + """ "$$tag: " + $tag """ + "\"\"\"" + """
                     }
                     val unwrappedResult = entries.foldLeft(None: Option[Term]) { (acc, curr) =>
                       acc.map(acc => """ + "q\"\"\"" + """$acc + ", " + $curr""" + "\"\"\"" + """).orElse(Some(curr))
@@ -125,13 +125,49 @@ class RealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
     ex2.getMessage() should be("XNonCase is not a case class")
   }
 
-  it should "evaluate the sealed case classes" in {
+  it should "verify the sealed case class hierarchies" in {
     val res = Interpreter.evalFunc(metaprogram, List(t"TestTrait"), List(c))
-    res.asInstanceOf[scala.meta.internal.interpreter.environment.Object].ref.asInstanceOf[i.Tree].show[Code] should be("new Foo[TestTrait] {}")
+    res.asInstanceOf[i.Tree].show[Code] should be("new Foo[TestTrait] {}")
   }
 
-  //"Synthesis macro" should "produce a materializer" in {
-  //  Interpreter.evalFunc(metaprogram2, List(t"TestTrait"), List(c))
-  //}
+  it should "verify the case objects" in {
+    val res = Interpreter.evalFunc(metaprogram, List(t"SerObject.type"), List(c))
+    res.asInstanceOf[i.Tree].show[Code] should be("new Foo[SerObject.type] {}")
+  }
+
+  it should "verify the case classes" in {
+    val res = Interpreter.evalFunc(metaprogram, List(t"TestCaseClass"), List(c))
+    res.asInstanceOf[i.Tree].show[Code] should be("new Foo[TestCaseClass] {}")
+  }
+
+  "Synthesis macro" should "produce a materializer" in {
+    val res = Interpreter.evalFunc(metaprogram2, List(t"TestTrait"), List(c))
+    res.asInstanceOf[i.Tree].show[Code] should be("""{
+      |  implicit object TestTraitSerializer1 extends Serializer[TestTrait] {
+      |    def apply(input2: TestTrait): String = input2 match {
+      |      case input3: X => "{" + ("$tag: " + "0") + "}"
+      |      case input3: Y => "{" + ("$tag: " + "1") + "}"
+      |    }
+      |  }
+      |  TestTraitSerializer1
+      |}""".stripMargin)
+
+  }
+
+  it should "generate a serializer for objects" in {
+    val res = Interpreter.evalFunc(metaprogram2, List(t"SerObject.type"), List(c))
+    res.asInstanceOf[i.Tree].show[Code] should be("""{
+      |  implicit object SerObjectSerializer4 extends Serializer[SerObject.type] { def apply(input5: SerObject.type): String = "{" + "" + "}" }
+      |  SerObjectSerializer4
+      |}""".stripMargin)
+  }
+
+  it should "generate a serializer for case classes" in {
+    val res = Interpreter.evalFunc(metaprogram2, List(t"TestCaseClass"), List(c))
+    res.asInstanceOf[i.Tree].show[Code] should be("""{
+      |  implicit object TestCaseClassSerializer6 extends Serializer[TestCaseClass] { def apply(input7: TestCaseClass): String = "{" + "" + "}" }
+      |  TestCaseClassSerializer6
+      |}""".stripMargin)
+  }
 
 }

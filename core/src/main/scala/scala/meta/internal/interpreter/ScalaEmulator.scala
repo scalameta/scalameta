@@ -19,6 +19,10 @@ object ScalaEmulator {
       (Object(args.head.as[Boolean] || args.tail.head.as[Boolean], t"Boolean"), env)
     case List("Z", "unary_$bang", "()Z") =>
       (Object(!args.head.as[Boolean], t"Boolean"), env)
+    case List("Ljava/lang/Object;", "toString", "()Ljava/lang/String;") =>
+      (Object(args.head.ref.toString, t"String"), env)
+    case List("I", "$plus", "(Ljava/lang/String;)Ljava/lang/String;") =>
+      (Object(args.head.ref.toString + args.tail.head.ref.toString, t"String"), env)
     case _ =>
       println(s"Unsupported op: $lst")
       ???
