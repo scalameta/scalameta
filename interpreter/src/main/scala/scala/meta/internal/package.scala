@@ -11,5 +11,5 @@ package object eval {
   def eval(term: Term)(implicit c: semantic.Context): Any = Interpreter.eval(term)
 
   def evalFunc(term: Tree, argss: Seq[Any]*)(implicit c: semantic.Context): Any =
-      Interpreter.evalFunc(term, argss.toSeq:_*)
+      Interpreter.evalFunc(term, argss)
 }

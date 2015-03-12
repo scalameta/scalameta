@@ -14,7 +14,7 @@ import org.scalameta.invariants._
 
 object Interpreter {
 
-  def evalFunc(term: Tree, argss: Seq[Any]*)(implicit c: Context): Any =
+  def evalFunc(term: Tree, argss: Seq[Seq[Any]])(implicit c: Context): Any =
     evalFunc(term, argss, Env(List(ListMap[i.Term.Name, Object]()), ListMap[i.Term.Name, Object]()))._1.ref
 
   def eval(term: Term)(implicit c: Context): Any = {
@@ -34,7 +34,7 @@ object Interpreter {
   }
 
   def eval(term: Tree, env: Env)(implicit c: Context): (Object, Env) = {
-    val res = term match {
+    term match {
       // Quasiquotes (this should not exist)
       case i.Term.Apply(i.Term.Name("Unlift"), List(arg)) =>
         eval(arg, env)
@@ -111,6 +111,12 @@ object Interpreter {
         val method = lhs.tpe.members.filter(_.name == rhs.name).head
         val (rhsVs, callEnv) = evalSeq(args, env)
         methodCall(method, lhsV, rhsVs, callEnv)
+
+      case i.Term.Apply(lhs@i.Term.Name("abort"), List(arg)) if lhs.isDef =>
+        val context = env.stack.flatten.find(_._2.tpe.toString == "Context").head._2.ref.asInstanceOf[scala.meta.macros.Context]
+        val (res, env1) = eval(arg, env)
+        context.abort(res.toString)
+        (res, env1)
 
       case i.Term.Apply(lhs: i.Term.Name, args) if lhs.isDef =>
         val res = eval(lhs, env)
@@ -238,8 +244,6 @@ object Interpreter {
 
       case _ => unreachable(debug(term, term.show[Semantics]))
     }
-
-    res
   }
 
   def evalPattern(lhs: Object, pattern: i.Pat, env: Env)(implicit c: Context): (Object, Env) = pattern match {
@@ -362,68 +366,75 @@ object Interpreter {
           (vLHS, jvmArgs ++ Seq[AnyRef](scala.meta.Origin.None))
         case (vLHS, "Lscala/meta/internal/ast/Template$;", "apply", "(Lscala/collection/immutable/Seq;Lscala/collection/immutable/Seq;Lscala/meta/internal/ast/Term$Param;Lscala/Option;Lscala/meta/Origin;)Lscala/meta/internal/ast/Template;") =>
           (vLHS, jvmArgs ++ Seq[AnyRef](scala.meta.Origin.None))
-
         case (vLHS, "Lscala/meta/internal/ast/Term$New$;", "apply", "(Lscala/meta/internal/ast/Template;Lscala/meta/Origin;)Lscala/meta/internal/ast/Term$New;") =>
+          (vLHS, jvmArgs ++ Seq[AnyRef](scala.meta.Origin.None))
+        case (vLHS,"Lscala/meta/internal/ast/Term$Select$;","apply","(Lscala/meta/internal/ast/Term;Lscala/meta/internal/ast/Term$Name;Lscala/meta/Origin;)Lscala/meta/internal/ast/Term$Select;") =>
+          (vLHS, jvmArgs ++ Seq[AnyRef](scala.meta.Origin.None))
+        case (vLHS,"Lscala/meta/internal/ast/Term$Apply$;","apply","(Lscala/meta/internal/ast/Term;Lscala/collection/immutable/Seq;Lscala/meta/Origin;)Lscala/meta/internal/ast/Term$Apply;") =>
           (vLHS, jvmArgs ++ Seq[AnyRef](scala.meta.Origin.None))
 
         // XtensionSemanticMemberLike
         case (vLHS: Member, "Lscala/meta/semantic/Api$XtensionSemanticMemberLike;", "isFinal", "(Lscala/meta/semantic/Context;)Z") =>
-          val context = env.stack.flatten.find(_._1.toString == "c").head._2.ref
+          val context = env.stack.flatten.find(_._2.tpe.toString == "Context").head._2.ref
           (XtensionSemanticMember(vLHS), jvmArgs ++ Seq(context))
         case (vLHS: Member, "Lscala/meta/semantic/Api$XtensionSemanticMemberLike;", "isClass", "(Lscala/meta/semantic/Context;)Z") =>
-          val context = env.stack.flatten.find(_._1.toString == "c").head._2.ref
+          val context = env.stack.flatten.find(_._2.tpe.toString == "Context").head._2.ref
           (XtensionSemanticMember(vLHS), jvmArgs ++ Seq(context))
         case (vLHS: Member, "Lscala/meta/semantic/Api$XtensionSemanticMemberLike;", "isObject", "(Lscala/meta/semantic/Context;)Z") =>
-          val context = env.stack.flatten.find(_._1.toString == "c").head._2.ref
+          val context = env.stack.flatten.find(_._2.tpe.toString == "Context").head._2.ref
           (XtensionSemanticMember(vLHS), jvmArgs ++ Seq(context))
         case (vLHS: Member, "Lscala/meta/semantic/Api$XtensionSemanticMemberLike;", "isCase", "(Lscala/meta/semantic/Context;)Z") =>
-          val context = env.stack.flatten.find(_._1.toString == "c").head._2.ref
+          val context = env.stack.flatten.find(_._2.tpe.toString == "Context").head._2.ref
           (XtensionSemanticMember(vLHS), jvmArgs ++ Seq(context))
         case (vLHS: Member, "Lscala/meta/semantic/Api$XtensionSemanticMemberLike;", "isTrait", "(Lscala/meta/semantic/Context;)Z") =>
-          val context = env.stack.flatten.find(_._1.toString == "c").head._2.ref
+          val context = env.stack.flatten.find(_._2.tpe.toString == "Context").head._2.ref
           (XtensionSemanticMember(vLHS), jvmArgs ++ Seq(context))
         case (vLHS: Member, "Lscala/meta/semantic/Api$XtensionSemanticMemberLike;", "isSealed", "(Lscala/meta/semantic/Context;)Z") =>
-          val context = env.stack.flatten.find(_._1.toString == "c").head._2.ref
+          val context = env.stack.flatten.find(_._2.tpe.toString == "Context").head._2.ref
           (XtensionSemanticMember(vLHS), jvmArgs ++ Seq(context))
         case (vLHS: Member, "Lscala/meta/semantic/Api$XtensionSemanticMemberLike;", "name", "(Lscala/meta/semantic/Context;)Lscala/meta/Name;") =>
-          val context = env.stack.flatten.find(_._1.toString == "c").head._2.ref
+          val context = env.stack.flatten.find(_._2.tpe.toString == "Context").head._2.ref
           (XtensionSemanticMember(vLHS), jvmArgs ++ Seq(context))
         case (vLHS: i.Member, "Lscala/meta/semantic/Api$XtensionSemanticMemberLike;", "parents", "(Lscala/meta/semantic/Context;)Lscala/collection/immutable/Seq;") =>
-          val context = env.stack.flatten.find(_._1.toString == "c").head._2.ref
+          val context = env.stack.flatten.find(_._2.tpe.toString == "Context").head._2.ref
           (XtensionSemanticMember(vLHS), jvmArgs ++ Seq(context))
         case (vLHS: i.Member, "Lscala/meta/semantic/Api$XtensionSemanticMemberLike;", "children", "(Lscala/meta/semantic/Context;)Lscala/collection/immutable/Seq;") =>
-          val context = env.stack.flatten.find(_._1.toString == "c").head._2.ref
+          val context = env.stack.flatten.find(_._2.tpe.toString == "Context").head._2.ref
           (XtensionSemanticMember(vLHS), jvmArgs ++ Seq(context))
+
 
         // SemanticScopeLike
         case (vLHS: Scope, "Lscala/meta/semantic/Api$XtensionSemanticScopeLike;", "ctor", "(Lscala/meta/semantic/Context;)Lscala/meta/Member$Term;") =>
-          val context = env.stack.flatten.find(_._1.toString == "c").head._2.ref
+          val context = env.stack.flatten.find(_._2.tpe.toString == "Context").head._2.ref
           (XtensionSemanticScope(vLHS), jvmArgs ++ Seq(context))
         case (vLHS: Scope, "Lscala/meta/semantic/Api$XtensionSemanticScopeLike;", "tparams", "(Lscala/meta/semantic/Context;)Lscala/collection/immutable/Seq;") =>
-          val context = env.stack.flatten.find(_._1.toString == "c").head._2.ref
+          val context = env.stack.flatten.find(_._2.tpe.toString == "Context").head._2.ref
           (XtensionSemanticScope(vLHS), jvmArgs ++ Seq(context))
         case (vLHS: Scope, "Lscala/meta/semantic/Api$XtensionSemanticScopeLike;", "params", "(Lscala/meta/semantic/Context;)Lscala/collection/immutable/Seq;") =>
-          val context = env.stack.flatten.find(_._1.toString == "c").head._2.ref
+          val context = env.stack.flatten.find(_._2.tpe.toString == "Context").head._2.ref
           (XtensionSemanticScope(vLHS), jvmArgs ++ Seq(context))
 
         case (vLHS: i.Type.Ref, "Lscala/meta/semantic/Api$XtensionSemanticTypeRefDefn;", "defn", "(Lscala/meta/semantic/Context;)Lscala/meta/Member;") =>
-          val context = env.stack.flatten.find(_._1.toString == "c").head._2.ref
+          val context = env.stack.flatten.find(_._2.tpe.toString == "Context").head._2.ref
           (XtensionSemanticTypeRefDefn(vLHS), jvmArgs ++ Seq(context))
 
         case (vLHS: i.Member.Term, "Lscala/meta/semantic/Api$XtensionSemanticTermMember;", "name", "(Lscala/meta/semantic/Context;)Lscala/meta/Term$Name;") =>
-          val context = env.stack.flatten.find(_._1.toString == "c").head._2.ref
+          val context = env.stack.flatten.find(_._2.tpe.toString == "Context").head._2.ref
           (XtensionSemanticTermMember(vLHS), jvmArgs ++ Seq(context))
 
-        case (vLHS: i.Member.Type, "Lscala/meta/semantic/Api$XtensionSemanticMemberTpe;", "tpe", "(Lscala/meta/semantic/Context;)Lscala/meta/Type;") =>
-          val context = env.stack.flatten.find(_._1.toString == "c").head._2.ref
+        case (vLHS: Term.Param,"Lscala/meta/semantic/Api$XtensionSemanticTermParam;","field","(Lscala/meta/semantic/Context;)Lscala/meta/Member$Term;") =>
+          val context = env.stack.flatten.find(_._2.tpe.toString == "Context").head._2.ref
+          (XtensionSemanticTermParam(vLHS), jvmArgs ++ Seq(context))
+
+        case (vLHS: Member,"Lscala/meta/semantic/Api$XtensionSemanticMemberTpe;","tpe","(Lscala/meta/semantic/Context;)Lscala/meta/Type;") =>
+          val context = env.stack.flatten.find(_._2.tpe.toString == "Context").head._2.ref
           (XtensionSemanticMemberTpe(vLHS), jvmArgs ++ Seq(context))
 
         case (vLHS: Type, "Lscala/meta/semantic/Api$XtensionTypeToPatType;", "pat", "(Lscala/meta/semantic/Context;)Lscala/meta/Pat$Type;") =>
-          val context = env.stack.flatten.find(_._1.toString == "c").head._2.ref
+          val context = env.stack.flatten.find(_._2.tpe.toString == "Context").head._2.ref
           (XtensionTypeToPatType(vLHS), jvmArgs ++ Seq(context))
 
-        case x =>
-          (vLHS, jvmArgs)
+        case x => (vLHS, jvmArgs)
       }
       (Object(jMethod.invoke(eLHS, eArgs: _*), t"List[Int]"), env)
     } catch {

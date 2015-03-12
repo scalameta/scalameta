@@ -80,7 +80,10 @@ object environment {
         Class.forName("scala.meta.internal.ast.Ctor$Primary$")
       case "Def.type" if nme.scratchpad.toString == "List(Denotation(meta.internal.ast.Defn.type,Object(object Def,object Def)))" =>
         Class.forName("scala.meta.internal.ast.Defn$Def$")
-
+      case "Apply.type" =>
+        Class.forName("scala.meta.internal.ast.Term$Apply$")
+      case "Select.type" =>
+        Class.forName("scala.meta.internal.ast.Term$Select$")
       case "`package`.type" =>
         val qualifiedName = nme.toString + "." + tpeString.take(tpeString.length - ".type".length).replaceAll("`", "")
         // TODO owners are not working

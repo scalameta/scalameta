@@ -2,7 +2,7 @@ package scala.meta.interpreter.internal.test
 
 import org.scalatest._
 import scala.meta.semantic._
-import scala.meta.internal.interpreter.Interpreter
+import scala.meta.internal.eval.evalFunc
 import scala.meta.dialects.Scala211
 import scala.meta._
 import scala.meta.internal.{ ast => impl }
@@ -106,42 +106,42 @@ class RealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
 
   "A verification macro" should "reject defns that are not classes, traits or objects" in {
     val ex = intercept[RuntimeException] {
-      Interpreter.evalFunc(metaprogram, List(t"List"), List(c))
+      evalFunc(metaprogram, List(t"List"), List(c))
     }
     ex.getMessage() should be("unsupported ref to List")
   }
 
   it should "reject non-final classes" in {
     val ex1 = intercept[RuntimeException] {
-      Interpreter.evalFunc(metaprogram, List(t"TestTraitNonFinal"), List(c))
+      evalFunc(metaprogram, List(t"TestTraitNonFinal"), List(c))
     }
     ex1.getMessage() should be("XNonFinal is not final")
   }
 
   it should "reject non-case classes" in {
     val ex2 = intercept[RuntimeException] {
-      Interpreter.evalFunc(metaprogram, List(t"TestTraitNonCase"), List(c))
+      evalFunc(metaprogram, List(t"TestTraitNonCase"), List(c))
     }
     ex2.getMessage() should be("XNonCase is not a case class")
   }
 
   it should "verify the sealed case class hierarchies" in {
-    val res = Interpreter.evalFunc(metaprogram, List(t"TestTrait"), List(c))
+    val res = evalFunc(metaprogram, List(t"TestTrait"), List(c))
     res.asInstanceOf[i.Tree].show[Code] should be("new Foo[TestTrait] {}")
   }
 
   it should "verify the case objects" in {
-    val res = Interpreter.evalFunc(metaprogram, List(t"SerObject.type"), List(c))
+    val res = evalFunc(metaprogram, List(t"SerObject.type"), List(c))
     res.asInstanceOf[i.Tree].show[Code] should be("new Foo[SerObject.type] {}")
   }
 
   it should "verify the case classes" in {
-    val res = Interpreter.evalFunc(metaprogram, List(t"TestCaseClass"), List(c))
+    val res = evalFunc(metaprogram, List(t"TestCaseClass"), List(c))
     res.asInstanceOf[i.Tree].show[Code] should be("new Foo[TestCaseClass] {}")
   }
 
   "Synthesis macro" should "produce a materializer" in {
-    val res = Interpreter.evalFunc(metaprogram2, List(t"TestTrait"), List(c))
+    val res = evalFunc(metaprogram2, List(t"TestTrait"), List(c))
     res.asInstanceOf[i.Tree].show[Code] should be("""{
       |  implicit object TestTraitSerializer1 extends Serializer[TestTrait] {
       |    def apply(input2: TestTrait): String = input2 match {
@@ -155,7 +155,7 @@ class RealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
   }
 
   it should "generate a serializer for objects" in {
-    val res = Interpreter.evalFunc(metaprogram2, List(t"SerObject.type"), List(c))
+    val res = evalFunc(metaprogram2, List(t"SerObject.type"), List(c))
     res.asInstanceOf[i.Tree].show[Code] should be("""{
       |  implicit object SerObjectSerializer4 extends Serializer[SerObject.type] { def apply(input5: SerObject.type): String = "{" + "" + "}" }
       |  SerObjectSerializer4
@@ -163,7 +163,7 @@ class RealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
   }
 
   it should "generate a serializer for case classes" in {
-    val res = Interpreter.evalFunc(metaprogram2, List(t"TestCaseClass"), List(c))
+    val res = evalFunc(metaprogram2, List(t"TestCaseClass"), List(c))
     res.asInstanceOf[i.Tree].show[Code] should be("""{
       |  implicit object TestCaseClassSerializer6 extends Serializer[TestCaseClass] { def apply(input7: TestCaseClass): String = "{" + "" + "}" }
       |  TestCaseClassSerializer6
