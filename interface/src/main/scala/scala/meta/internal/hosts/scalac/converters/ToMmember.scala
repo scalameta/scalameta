@@ -216,10 +216,12 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
             m.Term.Name(name).withDenot(gpre, gsym).withOriginal(gsym)
           case l.AbstractVal(gsym) =>
             gsym.precvt(gpre, g.Ident(gsym))
+          case l.PackageObject(gmodule, gmoduleClass) =>
+            m.Term.Name(g.Ident(gmodule.owner).alias).withDenot(gpre, gmodule).withOriginal(gmodule)
           case l.PrimaryCtor(gsym) =>
-            m.Ctor.Name(gsym.owner.name.toString).withDenot(gpre, gsym).withOriginal(gsym)
+            m.Ctor.Name(g.Ident(gsym.owner).alias).withDenot(gpre, gsym).withOriginal(gsym)
           case l.SecondaryCtor(gsym) =>
-            m.Ctor.Name(gsym.owner.name.toString).withDenot(gpre, gsym).withOriginal(gsym)
+            m.Ctor.Name(g.Ident(gsym.owner).alias).withDenot(gpre, gsym).withOriginal(gsym)
           case l.TermParameter(gsym) if !gsym.owner.isMethod =>
             gsym.anoncvt(g.Ident(gsym))
           case l.TermParameter(gsym) =>
@@ -260,7 +262,7 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
               }
             case l.SecondaryCtor(gsym) =>
               val gctor = gsym.owner.primaryConstructor
-              val mctorref = m.Ctor.Name(gsym.owner.name.toString).withDenot(gpre, gctor).withOriginal(gctor)
+              val mctorref = m.Ctor.Name(g.Ident(gsym.owner).alias).withDenot(gpre, gctor).withOriginal(gctor)
               m.Term.Apply(mctorref, List(munknownTerm))
             case _ =>
               munknownTerm
@@ -268,7 +270,7 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
         }
         lazy val mmaybeBody = if (gsym.hasFlag(DEFAULTINIT)) None else Some(mbody)
         lazy val mfakector = {
-          val mname = m.Ctor.Name(gsym.name.toString).withDenot(gpre, gsym)
+          val mname = m.Ctor.Name(g.Ident(gsym).alias).withDenot(gpre, gsym)
           m.Ctor.Primary(Nil, mname, Nil)
         }
         lazy val mctor = {
@@ -276,7 +278,7 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
             val gctorsym = lsym.gsymbol.moduleClass.orElse(lsym.gsymbol).primaryConstructor
             if (gctorsym != g.NoSymbol) {
               val gctorinfo = gctorsym.infoIn(gpre)
-              val mctorname = m.Ctor.Name(gsym.name.toString).withDenot(gpre, gctorsym).withOriginal(gctorsym)
+              val mctorname = m.Ctor.Name(g.Ident(gsym).alias).withDenot(gpre, gctorsym).withOriginal(gctorsym)
               var mctorparamss = {
                 if (lsym.isInstanceOf[l.Clazz]) gctorinfo.paramss.map(_.map(gvparam => l.TermParameter(gvparam).toMmember(g.NoPrefix).require[m.Term.Param]))
                 else Nil // NOTE: synthetic constructors for modules have a fake List(List()) parameter list

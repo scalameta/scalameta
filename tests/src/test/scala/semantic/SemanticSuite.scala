@@ -929,7 +929,6 @@ class SemanticSuite extends FunSuite {
       |type UnsupportedOperationException = UnsupportedOperationException
       |Vector
       |type Vector[+A] = Vector[A]
-      |package object `package` extends AnyRef { ... }
       |package annotation { ... }
       |package beans { ... }
       |package collection { ... }
@@ -955,6 +954,7 @@ class SemanticSuite extends FunSuite {
       |package reflect { ... }
       |class remote extends StaticAnnotation { ... }
       |package runtime { ... }
+      |package object scala extends AnyRef { ... }
       |class specialized(group: SpecializedGroup) extends StaticAnnotation { ... }
       |package sys { ... }
       |package text { ... }
