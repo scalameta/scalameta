@@ -14,23 +14,14 @@ import org.scalameta.invariants._
 
 object Interpreter {
 
-  def evalFunc(term: Tree, argss: Seq[Seq[Any]])(implicit c: Context): Any =
-    evalFunc(term, argss, Env(List(ListMap[m.Term.Name, Object]()), ListMap[m.Term.Name, Object]()))._1.ref
+  def eval(term: Term)(implicit c: Context): Any = eval(term, Map[Term.Name, Any]())
 
-  def eval(term: Term)(implicit c: Context): Any = {
-    val (Object(v, tpe, fields), env) =
-      eval(term, Env(List(ListMap[m.Term.Name, Object]()), ListMap[m.Term.Name, Object]()))
+  def eval(term: Term, env0: Map[Term.Name, Any])(implicit c: Context): Any = {
+    def typeOf(v: Any): Type = if (v.isInstanceOf[Context]) t"Context" else t"Any"
+    val frame0 = ListMap(env0.map{ case (k, v) => (k.asInstanceOf[TName], Object(v, typeOf(v))) }.toList: _*)
+    val env1 = Env(List(frame0), ListMap[m.Term.Name, Object]())
+    val (Object(v, tpe, fields), env2) = eval(term, env1)
     v
-  }
-
-  private def evalFunc(metaprogram: Tree, argss: Seq[Seq[Any]], env: Env)(implicit c: Context): (Object, Env) = {
-    val defn @ m.Defn.Def(mods, nme, _, paramss, _, body) = metaprogram
-    val newEnv = (argss zip paramss).foldLeft(env) { (agg, p) =>
-      (p._1 zip p._2).foldLeft(agg) { (agg1, pv) =>
-        agg1.push(pv._2.name.asInstanceOf[m.Term.Name], Object(pv._1, pv._2.tpe))
-      }
-    }
-    eval(body, newEnv)
   }
 
   def eval(term: Tree, env: Env)(implicit c: Context): (Object, Env) = {
@@ -143,6 +134,18 @@ object Interpreter {
         val (rhsVs2, env3) = evalSeq(args2, env2)
         methodCall(method, lhsV, rhsVs1 ++ rhsVs2, env3)
 
+      case m.Term.Apply(m.Term.Apply(name: m.Term.Name, args1), args2) =>
+        val defn @ m.Defn.Def(_, _, _, paramss, _, body) = name.defn
+        val (rhsVs1, env1) = evalSeq(args1, env)
+        val (rhsVs2, env2) = evalSeq(args2, env1)
+        val argss = List(rhsVs1, rhsVs2)
+        val env3 = (argss zip paramss).foldLeft(env2) { (agg, p) =>
+          (p._1 zip p._2).foldLeft(agg) { (agg1, pv) =>
+            agg1.push(pv._2.name.asInstanceOf[m.Term.Name], pv._1)
+          }
+        }
+        eval(body, env3)
+
       case m.Term.Apply(lhs, args) =>
         val method = lhs.tpe.defs("apply")
         val (lhsV, newEnv) = eval(lhs, env)
@@ -166,6 +169,16 @@ object Interpreter {
         else eval(elze, cEnv)
 
       case func @ m.Defn.Def(mods, nme, _, paramss, retTp, body) =>
+        def evalFunc(metaprogram: Tree, argss: Seq[Seq[Any]], env: Env): (Object, Env) = {
+          val defn @ m.Defn.Def(mods, nme, _, paramss, _, body) = metaprogram
+          val newEnv = (argss zip paramss).foldLeft(env) { (agg, p) =>
+            (p._1 zip p._2).foldLeft(agg) { (agg1, pv) =>
+              agg1.push(pv._2.name.asInstanceOf[m.Term.Name], Object(pv._1, pv._2.tpe))
+            }
+          }
+          eval(body, newEnv)
+        }
+
         // TODO multiple-functions
         paramss.flatten match {
           case p1 :: Nil =>

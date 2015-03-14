@@ -4,6 +4,7 @@ import scala.collection.immutable.ListMap
 import scala.meta._
 import scala.meta.semantic._
 import scala.meta.internal.{ ast => m }
+import scala.meta.internal.{ hygiene => h }
 import scala.meta.dialects.Scala211
 
 object Environment {
@@ -24,8 +25,12 @@ object Environment {
       copy(stack = (stack.head + ((nme -> value))) :: stack.tail)
     def lookup(nme: TName)(implicit c: Context): Object = {
       // first look on the stack
-      if (stack.head.contains(nme)) { // TODO handle stack frames
-        stack.head(nme)
+      val onstack = stack.head.collectFirst{ // TODO handle stack frames
+        case (k, v) if (k == nme) => v
+        case (k, v) if k.denot == h.Denotation.Zero && nme.denot == h.Denotation.Zero && k.value == nme.value => v // HACK!
+      }
+      if (onstack.nonEmpty) {
+        onstack.get
       } else if (nme.isPackage && !nme.members.isEmpty) {
         // fetch the object instance reflectively
         Object(toClass(nme).getField("MODULE$").get(toClass(nme)), nme.tpe)
