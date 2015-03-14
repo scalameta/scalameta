@@ -44,4 +44,10 @@ private[meta] trait Api {
     def parse[U](implicit convert: Convert[T, Input], dialect: Dialect, parse: Parse[U]): U = parse(convert(inputLike))
     def tokens(implicit convert: Convert[T, Input], dialect: Dialect): Vector[Token] = tokenize(convert(inputLike))
   }
+
+  implicit class XtensionParsedTree(tree: Tree) {
+    def start = tree.origin.start
+    def end = tree.origin.end
+    def tokens = tree.origin.tokens
+  }
 }
