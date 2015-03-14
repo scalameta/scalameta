@@ -1,5 +1,7 @@
 package scala.meta.internal.interpreter
 
+import org.scalameta.invariants._
+import org.scalameta.unreachable
 import scala.collection.immutable.ListMap
 import scala.meta._
 import scala.meta.semantic._
@@ -48,7 +50,8 @@ object Environment {
             Object(clazz.getField("MODULE$").get(clazz), nme.tpe)
         }
       } else {
-        ??? // TODO then in the scope of current objects
+        // TODO then in the scope of current objects
+        unreachable(debug(nme, nme.defn))
       }
 
     }
