@@ -145,20 +145,30 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
               val methodSig = gmeth.tpe.jvmsig
               List(m.Mod.Ffi(s"jvmMethod($className, $methodName, $methodSig)"))
             }
+            def ffiJvmErasure(gtpe: g.Type) = {
+              val className = gtpe.jvmsig
+              List(m.Mod.Ffi(s"jvmErasure($className)"))
+            }
+            def ffiJvmPackage(gsym: g.Symbol) = {
+              val packageName = gsym.fullName
+              List(m.Mod.Ffi(s"jvmPackage($packageName)"))
+            }
             lsym match {
               case l.AbstractVal(gget) =>
                 ffiJvmMethod(gget)
               case l.AbstractVar(gget, gset) =>
                 ffiJvmMethod(gget)
+              case l.AbstractDef(gsym) =>
+                if (gsym.isIntrinsic) ffiScalaIntrinsic(gsym)
+                else ffiJvmMethod(gsym)
+              case l.AbstractType(gsym) =>
+                ffiJvmErasure(gsym.tpe)
               case l.Val(gfield, gget) =>
                 if (gget == g.NoSymbol) ffiJvmField(gfield)
                 else ffiJvmMethod(gget)
               case l.Var(gfield, gget, _) =>
                 if (gget == g.NoSymbol) ffiJvmField(gfield)
                 else ffiJvmMethod(gget)
-              case l.AbstractDef(gsym) =>
-                if (gsym.isIntrinsic) ffiScalaIntrinsic(gsym)
-                else ffiJvmMethod(gsym)
               case l.Def(gsym) =>
                 if (gsym.isIntrinsic) ffiScalaIntrinsic(gsym)
                 else ffiJvmMethod(gsym)
@@ -169,6 +179,18 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
                   case MacroBody.Reflect(_) => ffiScalaReflectMacro(gsym)
                   case MacroBody.Meta(body) => Nil
                 }
+              case l.Type(gsym) =>
+                ffiJvmErasure(gsym.tpe)
+              case l.Clazz(gsym) =>
+                ffiJvmErasure(gsym.tpe)
+              case l.Trait(gsym) =>
+                ffiJvmErasure(gsym.tpe)
+              case l.Object(gmodule, gmoduleClass) =>
+                ffiJvmErasure(gmodule.tpe)
+              case l.Package(gmodule, gmoduleClass) =>
+                ffiJvmPackage(gmodule)
+              case l.PackageObject(gmodule, gmoduleClass) =>
+                ffiJvmErasure(gmodule.tpe)
               case l.PrimaryCtor(gsym) =>
                 ffiJvmMethod(gsym)
               case l.SecondaryCtor(gsym) =>
@@ -181,6 +203,7 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
                 val gdefaultGetter = gdefaultGetterOwner.info.decl(g.TermName(gdefaultGetterName).encodedName)
                 require(gdefaultGetter != g.NoSymbol && debug(gsym, gdefaultGetterOwner, gdefaultGetterName))
                 ffiJvmMethod(gdefaultGetter)
+              // TODO: should we also generate ffi information for type parameters? what should it look like?
               case _ =>
                 Nil
             }

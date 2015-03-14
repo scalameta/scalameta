@@ -60,9 +60,9 @@ class SemanticSuite extends FunSuite {
   }
 
   test("t\"List\".defn") {
-    assert(t"List".defn.show[Code] == "type List[+A] = List[A]")
+    assert(t"List".defn.show[Code] == """@ffi("jvmErasure(Lscala/collection/immutable/List;)") type List[+A] = List[A]""")
     assert(t"List".defn.show[Semantics] == """
-      |Defn.Type(Nil, Type.Name("List")[1], List(Type.Param(List(Mod.Covariant()), Type.Name("A")[2], Nil, Type.Bounds(None, None), Nil, Nil)), Type.Apply(Type.Name("List")[3], List(Type.Name("A")[2])))
+      |Defn.Type(List(Mod.Ffi("jvmErasure(Lscala/collection/immutable/List;)")), Type.Name("List")[1], List(Type.Param(List(Mod.Covariant()), Type.Name("A")[2], Nil, Type.Bounds(None, None), Nil, Nil)), Type.Apply(Type.Name("List")[3], List(Type.Name("A")[2])))
       |[1] Type.Singleton(Term.Name("package")[4])::scala.package#List
       |[2] 0::scala.package#List#A
       |[3] Type.Singleton(Term.Name("immutable")[5])::scala.collection.immutable#List
@@ -212,7 +212,7 @@ class SemanticSuite extends FunSuite {
       |@ffi("jvmMethod(Lscala/collection/generic/GenericTraversableTemplate;, unzip3, (Lscala/Function1;)Lscala/Tuple3;)") def unzip3[A1, A2, A3](implicit asTriple: A => (A1, A2, A3)): (List[A1], List[A2], List[A3]) = ???
       |@ffi("jvmMethod(Lscala/collection/generic/GenericTraversableTemplate;, flatten, (Lscala/Function1;)Lscala/collection/GenTraversable;)") def flatten[B](implicit asTraversable: A => GenTraversableOnce[B]): List[B] = ???
       |@ffi("jvmMethod(Lscala/collection/generic/GenericTraversableTemplate;, transpose, (Lscala/Function1;)Lscala/collection/GenTraversable;)") @migration("`transpose` throws an `IllegalArgumentException` if collections are not uniformly sized.", "2.9.0") def transpose[B](implicit asTraversable: A => GenTraversableOnce[B]): List[List[B]] = ???
-      |protected[this] type Self = List[A]
+      |@ffi("jvmErasure(Ljava/lang/Object;)") protected[this] type Self = List[A]
       |@ffi("jvmMethod(Lscala/collection/TraversableLike;, repr, ()Ljava/lang/Object;)") def repr: List[A] = ???
       |@ffi("jvmMethod(Lscala/collection/TraversableLike;, isTraversableAgain, ()Z)") final def isTraversableAgain: Boolean = ???
       |@ffi("jvmMethod(Lscala/collection/TraversableLike;, hasDefiniteSize, ()Z)") def hasDefiniteSize: Boolean = ???
@@ -236,7 +236,7 @@ class SemanticSuite extends FunSuite {
       |@ffi("jvmMethod(Lscala/collection/TraversableLike;, toTraversable, ()Lscala/collection/Traversable;)") @deprecatedOverriding("Enforce contract of toTraversable that if it is Traversable it returns itself.", "2.11.0") def toTraversable: Traversable[A] = ???
       |@ffi("jvmMethod(Lscala/collection/TraversableLike;, to, (Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") override def to[Col[_]](implicit cbf: CanBuildFrom[Nothing, A, Col[A]]): Col[A] = ???
       |@ffi("jvmMethod(Lscala/collection/TraversableLike;, withFilter, (Lscala/Function1;)Lscala/collection/generic/FilterMonadic;)") def withFilter(p: A => Boolean): FilterMonadic[A, List[A]] = ???
-      |class WithFilter(p: A => Boolean) extends AnyRef with FilterMonadic[A, Repr] {
+      |@ffi("jvmErasure(Lscala/collection/TraversableLike$WithFilter;)") class WithFilter(p: A => Boolean) extends AnyRef with FilterMonadic[A, Repr] {
       |  @ffi("jvmField(Lscala/collection/TraversableLike$WithFilter;, p, Lscala/Function1;)") private[this] val p: A => Boolean = ???
       |  @ffi("jvmMethod(Lscala/collection/TraversableLike$WithFilter;, map, (Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def map[B, That](f: A => B)(implicit bf: CanBuildFrom[List[A], B, That]): That = ???
       |  @ffi("jvmMethod(Lscala/collection/TraversableLike$WithFilter;, flatMap, (Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def flatMap[B, That](f: A => GenTraversableOnce[B])(implicit bf: CanBuildFrom[List[A], B, That]): That = ???
@@ -277,7 +277,7 @@ class SemanticSuite extends FunSuite {
       |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, addString, (Lscala/collection/mutable/StringBuilder;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lscala/collection/mutable/StringBuilder;)") def addString(b: StringBuilder, start: String, sep: String, end: String): StringBuilder = ???
       |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, addString, (Lscala/collection/mutable/StringBuilder;Ljava/lang/String;)Lscala/collection/mutable/StringBuilder;)") def addString(b: StringBuilder, sep: String): StringBuilder = ???
       |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, addString, (Lscala/collection/mutable/StringBuilder;)Lscala/collection/mutable/StringBuilder;)") def addString(b: StringBuilder): StringBuilder = ???
-      |@ffi("scalaIntrinsic(Ljava/lang/Object;, getClass, ()Ljava/lang/Class;)") final def getClass(): Class[?0] forSome { type ?0 } = ???
+      |@ffi("scalaIntrinsic(Ljava/lang/Object;, getClass, ()Ljava/lang/Class;)") final def getClass(): Class[?0] forSome { @ffi("jvmErasure(Ljava/lang/Object;)") type ?0 } = ???
       |@ffi("jvmMethod(Ljava/lang/Object;, clone, ()Ljava/lang/Object;)") @throws[CloneNotSupportedException] protected[lang] def clone(): Object = ???
       |@ffi("jvmMethod(Ljava/lang/Object;, notify, ()V)") final def notify(): Unit = ???
       |@ffi("jvmMethod(Ljava/lang/Object;, notifyAll, ()V)") final def notifyAll(): Unit = ???
@@ -413,7 +413,7 @@ class SemanticSuite extends FunSuite {
       |@ffi("jvmMethod(Lscala/collection/generic/GenericTraversableTemplate;, unzip3, (Lscala/Function1;)Lscala/Tuple3;)") def unzip3[A1, A2, A3](implicit asTriple: Int => (A1, A2, A3)): (List[A1], List[A2], List[A3]) = ???
       |@ffi("jvmMethod(Lscala/collection/generic/GenericTraversableTemplate;, flatten, (Lscala/Function1;)Lscala/collection/GenTraversable;)") def flatten[B](implicit asTraversable: Int => GenTraversableOnce[B]): List[B] = ???
       |@ffi("jvmMethod(Lscala/collection/generic/GenericTraversableTemplate;, transpose, (Lscala/Function1;)Lscala/collection/GenTraversable;)") @migration("`transpose` throws an `IllegalArgumentException` if collections are not uniformly sized.", "2.9.0") def transpose[B](implicit asTraversable: Int => GenTraversableOnce[B]): List[List[B]] = ???
-      |protected[this] type Self = List[Int]
+      |@ffi("jvmErasure(Ljava/lang/Object;)") protected[this] type Self = List[Int]
       |@ffi("jvmMethod(Lscala/collection/TraversableLike;, repr, ()Ljava/lang/Object;)") def repr: List[Int] = ???
       |@ffi("jvmMethod(Lscala/collection/TraversableLike;, isTraversableAgain, ()Z)") final def isTraversableAgain: Boolean = ???
       |@ffi("jvmMethod(Lscala/collection/TraversableLike;, hasDefiniteSize, ()Z)") def hasDefiniteSize: Boolean = ???
@@ -437,7 +437,7 @@ class SemanticSuite extends FunSuite {
       |@ffi("jvmMethod(Lscala/collection/TraversableLike;, toTraversable, ()Lscala/collection/Traversable;)") @deprecatedOverriding("Enforce contract of toTraversable that if it is Traversable it returns itself.", "2.11.0") def toTraversable: Traversable[Int] = ???
       |@ffi("jvmMethod(Lscala/collection/TraversableLike;, to, (Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") override def to[Col[_]](implicit cbf: CanBuildFrom[Nothing, Int, Col[Int]]): Col[Int] = ???
       |@ffi("jvmMethod(Lscala/collection/TraversableLike;, withFilter, (Lscala/Function1;)Lscala/collection/generic/FilterMonadic;)") def withFilter(p: Int => Boolean): FilterMonadic[Int, List[Int]] = ???
-      |class WithFilter(p: A => Boolean) extends AnyRef with FilterMonadic[A, Repr] {
+      |@ffi("jvmErasure(Lscala/collection/TraversableLike$WithFilter;)") class WithFilter(p: A => Boolean) extends AnyRef with FilterMonadic[A, Repr] {
       |  @ffi("jvmField(Lscala/collection/TraversableLike$WithFilter;, p, Lscala/Function1;)") private[this] val p: Int => Boolean = ???
       |  @ffi("jvmMethod(Lscala/collection/TraversableLike$WithFilter;, map, (Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def map[B, That](f: Int => B)(implicit bf: CanBuildFrom[List[Int], B, That]): That = ???
       |  @ffi("jvmMethod(Lscala/collection/TraversableLike$WithFilter;, flatMap, (Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;)") def flatMap[B, That](f: Int => GenTraversableOnce[B])(implicit bf: CanBuildFrom[List[Int], B, That]): That = ???
@@ -478,7 +478,7 @@ class SemanticSuite extends FunSuite {
       |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, addString, (Lscala/collection/mutable/StringBuilder;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lscala/collection/mutable/StringBuilder;)") def addString(b: StringBuilder, start: String, sep: String, end: String): StringBuilder = ???
       |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, addString, (Lscala/collection/mutable/StringBuilder;Ljava/lang/String;)Lscala/collection/mutable/StringBuilder;)") def addString(b: StringBuilder, sep: String): StringBuilder = ???
       |@ffi("jvmMethod(Lscala/collection/TraversableOnce;, addString, (Lscala/collection/mutable/StringBuilder;)Lscala/collection/mutable/StringBuilder;)") def addString(b: StringBuilder): StringBuilder = ???
-      |@ffi("scalaIntrinsic(Ljava/lang/Object;, getClass, ()Ljava/lang/Class;)") final def getClass(): Class[?0] forSome { type ?0 } = ???
+      |@ffi("scalaIntrinsic(Ljava/lang/Object;, getClass, ()Ljava/lang/Class;)") final def getClass(): Class[?0] forSome { @ffi("jvmErasure(Ljava/lang/Object;)") type ?0 } = ???
       |@ffi("jvmMethod(Ljava/lang/Object;, clone, ()Ljava/lang/Object;)") @throws[CloneNotSupportedException] protected[lang] def clone(): Object = ???
       |@ffi("jvmMethod(Ljava/lang/Object;, notify, ()V)") final def notify(): Unit = ???
       |@ffi("jvmMethod(Ljava/lang/Object;, notifyAll, ()V)") final def notifyAll(): Unit = ???
@@ -500,17 +500,17 @@ class SemanticSuite extends FunSuite {
   test("t\"scala.compat.Platform.type\".members") {
     assert(t"scala.compat.Platform.type".members.map(_.show[Code]).mkString(EOL) === """
       |@ffi("jvmMethod(Lscala/compat/Platform$;, $lessinit$greater, ()Lscala/compat/Platform$;)") ()
-      |type StackOverflowError = StackOverflowError
-      |type ConcurrentModificationException = ConcurrentModificationException
+      |@ffi("jvmErasure(Ljava/lang/StackOverflowError;)") type StackOverflowError = StackOverflowError
+      |@ffi("jvmErasure(Ljava/util/ConcurrentModificationException;)") type ConcurrentModificationException = ConcurrentModificationException
       |@ffi("jvmMethod(Lscala/compat/Platform$;, arraycopy, (Ljava/lang/Object;ILjava/lang/Object;II)V)") @inline def arraycopy(src: AnyRef, srcPos: Int, dest: AnyRef, destPos: Int, length: Int): Unit = ???
-      |@ffi("jvmMethod(Lscala/compat/Platform$;, createArray, (Ljava/lang/Class;I)Ljava/lang/Object;)") @inline def createArray(elemClass: Class[_$1] forSome { type _$1 }, length: Int): AnyRef = ???
+      |@ffi("jvmMethod(Lscala/compat/Platform$;, createArray, (Ljava/lang/Class;I)Ljava/lang/Object;)") @inline def createArray(elemClass: Class[_$1] forSome { @ffi("jvmErasure(Ljava/lang/Object;)") type _$1 }, length: Int): AnyRef = ???
       |@ffi("jvmMethod(Lscala/compat/Platform$;, arrayclear, ([I)V)") @inline def arrayclear(arr: Array[Int]): Unit = ???
-      |@ffi("jvmMethod(Lscala/compat/Platform$;, getClassForName, (Ljava/lang/String;)Ljava/lang/Class;)") @inline def getClassForName(name: String): Class[_$2] forSome { type _$2 } = ???
+      |@ffi("jvmMethod(Lscala/compat/Platform$;, getClassForName, (Ljava/lang/String;)Ljava/lang/Class;)") @inline def getClassForName(name: String): Class[_$2] forSome { @ffi("jvmErasure(Ljava/lang/Object;)") type _$2 } = ???
       |EOL
       |@ffi("jvmMethod(Lscala/compat/Platform$;, currentTime, ()J)") @inline def currentTime: Long = ???
       |@ffi("jvmMethod(Lscala/compat/Platform$;, collectGarbage, ()V)") @inline def collectGarbage(): Unit = ???
       |@ffi("jvmMethod(Lscala/compat/Platform$;, defaultCharsetName, ()Ljava/lang/String;)") @inline def defaultCharsetName: String = ???
-      |@ffi("scalaIntrinsic(Ljava/lang/Object;, getClass, ()Ljava/lang/Class;)") final def getClass(): Class[?0] forSome { type ?0 } = ???
+      |@ffi("scalaIntrinsic(Ljava/lang/Object;, getClass, ()Ljava/lang/Class;)") final def getClass(): Class[?0] forSome { @ffi("jvmErasure(Ljava/lang/Object;)") type ?0 } = ???
       |@ffi("jvmMethod(Ljava/lang/Object;, hashCode, ()I)") def hashCode(): Int = ???
       |@ffi("jvmMethod(Ljava/lang/Object;, equals, (Ljava/lang/Object;)Z)") def equals(x$1: Any): Boolean = ???
       |@ffi("jvmMethod(Ljava/lang/Object;, clone, ()Ljava/lang/Object;)") @throws[CloneNotSupportedException] protected[lang] def clone(): Object = ???
@@ -548,7 +548,7 @@ class SemanticSuite extends FunSuite {
 
   test("t\"SemanticDummy\".defn") {
     assert(t"SemanticDummy".defn.show[Code] === """
-      |class SemanticDummy extends AnyRef {
+      |@ffi("jvmErasure(LSemanticDummy;)") class SemanticDummy extends AnyRef {
       |  @ffi("jvmField(LSemanticDummy;, x, I)") private[this] val x: Int = ???
       |  @ffi("jvmMethod(LSemanticDummy;, y, ()I)") val y: Int = ???
       |  @ffi("jvmMethod(LSemanticDummy;, foo, (I)I)") def foo(@ffi("jvmMethod(LSemanticDummy;, foo$default$1, ()I)") w: Int = ???): Int = ???
@@ -558,7 +558,7 @@ class SemanticSuite extends FunSuite {
 
   test("t\"Int\".defn") {
     assert(t"Int".defn.show[Code] === """
-      |final abstract class Int extends AnyVal {
+      |@ffi("jvmErasure(I)") final abstract class Int extends AnyVal {
       |  @ffi("scalaIntrinsic(I, toByte, ()B)") def toByte: Byte = ???
       |  @ffi("scalaIntrinsic(I, toShort, ()S)") def toShort: Short = ???
       |  @ffi("scalaIntrinsic(I, toChar, ()C)") def toChar: Char = ???
