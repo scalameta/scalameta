@@ -15,7 +15,7 @@ import scala.meta.internal.{ast => m}
 
 @context(translateExceptions = false)
 class StandaloneContext(options: String) extends ScalahostSemanticContext(mkGlobal(options)) with ScalametaMacroContext {
-  def define(code: String): m.Tree = {
+  def define(code: String): mapi.Source = {
     val reporter: StoreReporter = g.reporter.require[StoreReporter]
     reporter.reset()
     val gunit = g.newCompilationUnit(code, "<scalahost>")
