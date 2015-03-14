@@ -3,7 +3,7 @@ import Keys._
 
 object build extends Build {
   lazy val sharedSettings = Defaults.defaultSettings ++ Seq(
-    scalaVersion := "2.11.5",
+    scalaVersion := "2.11.6",
     crossVersion := CrossVersion.binary,
     version := "0.1.0-SNAPSHOT",
     organization := "org.scalameta",
@@ -53,14 +53,19 @@ object build extends Build {
       </issueManagement>
       <developers>
         <developer>
-          <id>xeno-by</id>
-          <name>Eugene Burmako</name>
-          <url>http://xeno.by</url>
+          <id>vjovanov</id>
+          <name>Vojin Jovanovic</name>
+          <url>http://github.com/vjovanov</url>
         </developer>
         <developer>
           <id>dedoz</id>
           <name>Mikhail Mutcianko</name>
           <url>http://github.com/dedoz</url>
+        </developer>
+        <developer>
+          <id>xeno-by</id>
+          <name>Eugene Burmako</name>
+          <url>http://xeno.by</url>
         </developer>
       </developers>
     )
@@ -154,6 +159,26 @@ object build extends Build {
     libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.3" % "test",
     libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
     libraryDependencies += "org.scalameta" % "scalameta_2.11" % "0.1.0-SNAPSHOT",
+    libraryDependencies += "org.scalameta" % "scalahost_2.11.6" % "0.1.0-SNAPSHOT" % "test",
+    testOptions in Test += Tests.Argument("-oDF"),
     packagedArtifacts := Map.empty
-  ) dependsOn (interpreter)
+  ) settings (
+    exposeClasspaths("tests"): _*
+  )dependsOn (interpreter)
+
+  def exposeClasspaths(projectName: String) = Seq(
+    fullClasspath in Test := {
+      val defaultValue = (fullClasspath in Test).value
+      val classpath = defaultValue.files.map(_.getAbsolutePath)
+      val scalaLibrary = classpath.map(_.toString).find(_.contains("scala-library")).get
+      System.setProperty("sbt.paths.scala-library.jar", scalaLibrary)
+      System.setProperty("sbt.paths.tests.classpath", classpath.mkString(java.io.File.pathSeparatorChar.toString))
+      defaultValue
+    },
+    resourceDirectory in Test := {
+      val defaultValue = (resourceDirectory in Test).value
+      System.setProperty("sbt.paths.tests.resources", defaultValue.getAbsolutePath)
+      defaultValue
+    }
+  )
 }
