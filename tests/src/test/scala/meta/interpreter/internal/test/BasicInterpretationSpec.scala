@@ -29,8 +29,6 @@ class BasicInterpretationSpec extends FlatSpec with ShouldMatchers {
   def interpret(expression: String, classes: List[String] = Nil)(implicit c: StandaloneContext): Any =
     Interpreter.eval(metaExpression(expression))
 
-  import scala.meta._
-  import scala.meta.internal.hosts.scalac.Scalahost
   val options = "-cp " + System.getProperty("sbt.paths.tests.classpath")
   implicit val c = Scalahost.mkStandaloneContext(options)
 
