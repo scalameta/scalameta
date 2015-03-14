@@ -6,7 +6,6 @@ import scala.meta.eval._
 import scala.meta.dialects.Scala211
 import scala.meta._
 import scala.meta.internal.hosts.scalac.contexts.StandaloneContext
-import scala.meta.internal.hosts.scalac.Scalahost
 import scala.reflect.{ ClassTag, classTag }
 import scala.meta.internal.{ ast => m }
 
