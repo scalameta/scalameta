@@ -537,31 +537,7 @@ package object internal {
             ensugared
           """
           val result = convert(ensugared, c.typecheck(ensugared).tpe, c.weakTypeOf[Pt], allowDerived = true, allowInputDowncasts = true, allowOutputDowncasts = true, pre = pre.tpe, sym = sym)
-          q"""
-            val converted = $result
-            def cacheAllMembers(x: _root_.scala.meta.internal.ast.Tree): Unit = {
-              def cache(x: _root_.scala.meta.internal.ast.Member): Unit = {
-                val name = _root_.scala.meta.`package`.XtensionSemanticMember(x).name.asInstanceOf[_root_.scala.meta.internal.ast.Name]
-                if (_root_.scala.meta.`package`.XtensionSemanticName(name).isBinder) {
-                  val denot = name.denot
-                  _root_.org.scalameta.invariants.require(denot != _root_.scala.meta.internal.hygiene.Denotation.Zero && _root_.org.scalameta.invariants.debug(x))
-                  _root_.org.scalameta.invariants.require(denot.symbol != _root_.scala.meta.internal.hygiene.Symbol.Zero && _root_.org.scalameta.invariants.debug(x))
-                  _root_.org.scalameta.invariants.require(!$h.hsymToNativeMmemberCache.contains(denot.symbol) && _root_.org.scalameta.invariants.debug(x))
-                  $h.hsymToNativeMmemberCache(denot.symbol) = x
-                }
-              }
-              def loop(x: Any): Unit = x match {
-                case x: _root_.scala.meta.internal.ast.Tree => cacheAllMembers(x)
-                case x: List[_] => x.foreach(loop)
-                case x: Some[_] => loop(x.get)
-                case x => // do nothing
-              }
-              x match { case x: _root_.scala.meta.internal.ast.Member => cache(x); case _ => }
-              x.productIterator.map(loop)
-            }
-            cacheAllMembers(converted.asInstanceOf[_root_.scala.meta.internal.ast.Tree])
-            converted
-          """
+          q"$h.cacheAllMembers($result)"
         case _ =>
           c.abort(c.enclosingPosition, "unknown target: " + target.name)
       }

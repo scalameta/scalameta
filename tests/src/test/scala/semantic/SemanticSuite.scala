@@ -27,7 +27,7 @@ class SemanticSuite extends FunSuite {
       try q"List(1, 2, 3)".tpe
       catch { case ex: SemanticException => assert(ex.message.trim.startsWith(expectedFail)); throw ex }
     }
-    val classDef = c.define("class C { def foo = List(1, 2, 3) }")
+    val classDef = c.define("class C1 { def foo = List(1, 2, 3) }")
     classDef match {
       case impl.Source(List(impl.Defn.Class(_, _, _, _, impl.Template(_, _, _, Some(List(impl.Defn.Def(_, _, _, _, _, body))))))) =>
         assert(body.show[Code] == "List(1, 2, 3)")
@@ -53,7 +53,7 @@ class SemanticSuite extends FunSuite {
   }
 
   test("x => x + x") {
-    val result = c.define("class C { def x = List(1).map(x => x + x) }")
+    val result = c.define("class C2 { def x = List(1).map(x => x + x) }")
     val impl.Source(List(impl.Defn.Class(_, _, _, _, impl.Template(_, _, _, Some(List(impl.Defn.Def(_, _, _, _, _, body))))))) = result
     val impl.Term.Apply(_, List(impl.Term.Function(List(x), _))) = body
     assert(x.tpe == t"Int")
