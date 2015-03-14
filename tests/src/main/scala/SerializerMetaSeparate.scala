@@ -1,4 +1,4 @@
-package scaladays
+package serializer.meta.separate
 
 import scala.language.experimental.macros
 import scala.meta._
