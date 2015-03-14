@@ -1,5 +1,4 @@
 package scala.meta
-package internal.hosts.scalac
 
 import scala.tools.nsc.{Global => ScalaGlobal}
 import scala.meta.semantic.{Context => ScalametaSemanticContext}

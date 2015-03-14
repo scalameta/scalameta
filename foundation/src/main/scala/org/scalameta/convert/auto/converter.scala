@@ -44,7 +44,7 @@ class ConverterMacros(val c: whitebox.Context) extends MacroToolkit {
       val wrapper = name
       val dummy = c.freshName(TermName("dummy"))
       val typeclass = TypeName(name.toString.capitalize + "Cvt")
-      val exception = tq"_root_.scala.meta.internal.hosts.scalac.ConvertException"
+      val exception = tq"_root_.scala.meta.ConvertException"
       val companion = typeclass.toTermName
       val helperClass = c.freshName(TypeName(name.toString.capitalize + "Helper"))
       val helperInstance = c.freshName(TermName(name.toString.capitalize + "Helper"))
@@ -150,7 +150,7 @@ class ConverterMacros(val c: whitebox.Context) extends MacroToolkit {
               }
               $DeriveInternal.customEpilogue(out)
             } catch {
-              case ex: _root_.scala.meta.internal.hosts.scalac.ConvertException => logFailure(); throw ex
+              case ex: _root_.scala.meta.ConvertException => logFailure(); throw ex
               case err: _root_.java.lang.AssertionError => logFailure(); throw new $exception(in, err.getMessage, _root_.scala.Some(err))
               case err: _root_.org.scalameta.UnreachableError => logFailure(); throw new $exception(in, err.getMessage, _root_.scala.Some(err))
               case ex: _root_.scala.Exception => logFailure(); throw new $exception(in, ex.getMessage, _root_.scala.Some(ex))
@@ -490,7 +490,7 @@ package object internal {
               q"""
                 $x match {
                   case ..$cases
-                  case in => throw new _root_.scala.meta.internal.hosts.scalac.ConvertException(
+                  case in => throw new _root_.scala.meta.ConvertException(
                     culprit = in,
                     message = "error converting from " + ${in.toString} + " to " + ${out.toString} + ": " +
                     "expected input of type " + ${matching.map(_.in).toString} + ", got input of " + in.getClass.toString + ": " + in)
@@ -512,7 +512,7 @@ package object internal {
           if (downcastees.nonEmpty) result = q"""
             $result match {
               case out: $out => out
-              case out => throw new _root_.scala.meta.internal.hosts.scalac.ConvertException(
+              case out => throw new _root_.scala.meta.ConvertException(
                 culprit = $x,
                 message = "error converting from " + ${in.toString} + " to " + ${out.toString} + ": " +
                 "expected output of type " + ${out.toString} + ", got output of " + out.getClass.toString + ": " + out)

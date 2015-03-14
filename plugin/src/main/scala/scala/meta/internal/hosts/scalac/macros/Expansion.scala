@@ -18,7 +18,7 @@ import scala.meta.internal.{ast => m}
 import scala.meta.eval._
 import scala.meta.macros.{Context => ScalametaMacroContext}
 import scala.meta.internal.hosts.scalac.contexts.{MacroContext => ScalahostMacroContext}
-import scala.meta.internal.hosts.scalac.{PluginBase => ScalahostPlugin, Scalahost}
+import scala.meta.internal.hosts.scalac.{PluginBase => ScalahostPlugin}
 
 trait Expansion extends scala.reflect.internal.show.Printers {
   self: ScalahostPlugin =>

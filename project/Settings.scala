@@ -177,7 +177,7 @@ object Settings {
   lazy val replIntegration = initialCommands in console := """
     import scala.meta._
     import scala.meta.internal.{ast => impl}
-    import scala.meta.internal.hosts.scalac.Scalahost
+    import scala.meta.Scalahost
     val options = "-Xplugin:" + sys.props("sbt.paths.plugin.jar") + " -Xplugin-require:scalahost"
     implicit val c = Scalahost.mkStandaloneContext(options = options)
   """
