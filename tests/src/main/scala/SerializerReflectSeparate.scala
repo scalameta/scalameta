@@ -52,7 +52,7 @@ package serialization {
         }
         val fieldNames = sym.primaryConstructor.asMethod.paramLists.head.map(_.name.toTermName)
         var fieldJson = fieldNames.map(fieldName => q"""${"\"" + fieldName.toString + "\": "} + $serialization.serialize($paramName.${fieldName})""")
-        if (tagged) fieldJson :+= q"${"$tag: " + tagFor(sym)}"
+        if (tagged) fieldJson = fieldJson :+ q"${"$tag: " + tagFor(sym)}"
         val unwrappedResult = fieldJson.foldLeft(None: Option[Tree])((acc, curr) => acc.map(acc => q"$acc + ${", "} + $curr").orElse(Some(curr)))
         q""" "{" + ${unwrappedResult.getOrElse(q"")} + "}" """
       }

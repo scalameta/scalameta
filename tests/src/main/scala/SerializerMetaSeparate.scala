@@ -47,13 +47,13 @@ package serialization {
             val input = Term.fresh("input")
             val body = {
               def serializer(defn: Member, input: Term.Name, tagged: Boolean) = {
-                val fields = defn.ctor.params.map(_.field)
+                val fields = defn.ctor.params.map(x => x.field)
                 var entries: Seq[Term] = fields.map { field =>
                   q""" "\"" + ${field.name.toString} + "\": " + serialize($input.${field.name}) """
                 }
                 if (tagged) {
                   val tag = defn.parents.head.children.indexOf(defn).toString
-                  entries :+= q""" "$$tag: " + $tag """
+                  entries = entries :+ q""" "$$tag: " + $tag """
                 }
                 val unwrappedResult = entries.foldLeft(None: Option[Term]) { (acc, curr) =>
                   acc.map(acc => q"""$acc + ", " + $curr""").orElse(Some(curr))
