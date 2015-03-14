@@ -3,11 +3,11 @@ package scala.meta.internal.interpreter
 import scala.collection.immutable.ListMap
 import scala.meta._
 import scala.meta.semantic._
-import scala.meta.internal.{ ast => i }
+import scala.meta.internal.{ ast => m }
 import scala.meta.dialects.Scala211
 
 object environment {
-  type TName = i.Term.Name
+  type TName = m.Term.Name
   type Heap = ListMap[TName, Object]
   type FrameStack = List[ListMap[TName, Object]]
 

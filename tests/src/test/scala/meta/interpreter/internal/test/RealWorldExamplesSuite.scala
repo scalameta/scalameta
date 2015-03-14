@@ -5,21 +5,20 @@ import scala.meta.semantic._
 import scala.meta.internal.eval.evalFunc
 import scala.meta.dialects.Scala211
 import scala.meta._
-import scala.meta.internal.{ ast => impl }
 import scala.meta.internal.hosts.scalac.contexts.StandaloneContext
 import scala.meta.internal.hosts.scalac.Scalahost
 import scala.reflect.{ ClassTag, classTag }
-import scala.meta.internal.{ ast => i }
+import scala.meta.internal.{ ast => m }
 
 class RealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
 
   def jarOf[T: ClassTag] = classTag[T].runtimeClass.getProtectionDomain().getCodeSource().getLocation().getFile()
   val cp = List(jarOf[org.scalameta.UnreachableError], jarOf[scala.meta.Tree]).mkString(java.io.File.pathSeparator)
   implicit val c = Scalahost.mkStandaloneContext(s"-cp $cp:" + System.getProperty("sbt.paths.tests.classpath"))
-  val impl.Source(List(impl.Defn.Object(_, _, _, impl.Template(_, _, _, Some(List(_, _, _, metaprogram)))))) = c.define("""
+  val m.Source(List(m.Defn.Object(_, _, _, m.Template(_, _, _, Some(List(_, _, _, metaprogram)))))) = c.define("""
       object DummyContainer {
         import scala.meta._
-        import scala.meta.internal.{ast => impl}
+        import scala.meta.internal.{ast => m}
         import scala.meta.semantic.Context
         def metaprogram(T: Type)(implicit c: Context) = {
           T match {
@@ -38,8 +37,8 @@ class RealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
               } else {
                 sys.error(s"unsupported ref to ${defn.name}")
               }
-              val parent = impl.Term.ApplyType(impl.Ctor.Ref.Name("Foo"), List(T.asInstanceOf[impl.Type]))
-              impl.Term.New(impl.Template(Nil, List(parent), impl.Term.Param(Nil, impl.Name.Anonymous(), None, None), Some(Nil)))
+              val parent = m.Term.ApplyType(m.Ctor.Ref.Name("Foo"), List(T.asInstanceOf[m.Type]))
+              m.Term.New(m.Template(Nil, List(parent), m.Term.Param(Nil, m.Name.Anonymous(), None, None), Some(Nil)))
             case _ =>
               sys.error(s"unsupported type $T")
           }
@@ -47,10 +46,10 @@ class RealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
       }
     """)
 
-  val impl.Source(List(impl.Defn.Object(_, _, _, impl.Template(_, _, _, Some(List(_, _, _, _, metaprogram2)))))) = c.define(s"""
+  val m.Source(List(m.Defn.Object(_, _, _, m.Template(_, _, _, Some(List(_, _, _, _, metaprogram2)))))) = c.define(s"""
       object DummyContainer {
         import scala.meta._
-        import scala.meta.internal.{ast => impl}
+        import scala.meta.internal.{ast => m}
         import scala.meta.semantic.Context
         import scala.meta.dialects.Scala211
         def metaprogram(T: Type)(implicit c: scala.meta.macros.Context) = {
@@ -127,22 +126,22 @@ class RealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
 
   it should "verify the sealed case class hierarchies" in {
     val res = evalFunc(metaprogram, List(t"TestTrait"), List(c))
-    res.asInstanceOf[i.Tree].show[Code] should be("new Foo[TestTrait] {}")
+    res.asInstanceOf[m.Tree].show[Code] should be("new Foo[TestTrait] {}")
   }
 
   it should "verify the case objects" in {
     val res = evalFunc(metaprogram, List(t"SerObject.type"), List(c))
-    res.asInstanceOf[i.Tree].show[Code] should be("new Foo[SerObject.type] {}")
+    res.asInstanceOf[m.Tree].show[Code] should be("new Foo[SerObject.type] {}")
   }
 
   it should "verify the case classes" in {
     val res = evalFunc(metaprogram, List(t"TestCaseClass"), List(c))
-    res.asInstanceOf[i.Tree].show[Code] should be("new Foo[TestCaseClass] {}")
+    res.asInstanceOf[m.Tree].show[Code] should be("new Foo[TestCaseClass] {}")
   }
 
   "Synthesis macro" should "produce a materializer" in {
     val res = evalFunc(metaprogram2, List(t"TestTrait"), List(c))
-    res.asInstanceOf[i.Tree].show[Code] should be("""{
+    res.asInstanceOf[m.Tree].show[Code] should be("""{
       |  implicit object TestTraitSerializer1 extends Serializer[TestTrait] {
       |    def apply(input2: TestTrait): String = input2 match {
       |      case input3: X => "{" + ("$tag: " + "0") + "}"
@@ -156,7 +155,7 @@ class RealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
 
   it should "generate a serializer for objects" in {
     val res = evalFunc(metaprogram2, List(t"SerObject.type"), List(c))
-    res.asInstanceOf[i.Tree].show[Code] should be("""{
+    res.asInstanceOf[m.Tree].show[Code] should be("""{
       |  implicit object SerObjectSerializer4 extends Serializer[SerObject.type] { def apply(input5: SerObject.type): String = "{" + "" + "}" }
       |  SerObjectSerializer4
       |}""".stripMargin)
@@ -164,7 +163,7 @@ class RealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
 
   it should "generate a serializer for case classes" in {
     val res = evalFunc(metaprogram2, List(t"TestCaseClass"), List(c))
-    res.asInstanceOf[i.Tree].show[Code] should be("""{
+    res.asInstanceOf[m.Tree].show[Code] should be("""{
       |  implicit object TestCaseClassSerializer6 extends Serializer[TestCaseClass] { def apply(input7: TestCaseClass): String = "{" + "" + "}" }
       |  TestCaseClassSerializer6
       |}""".stripMargin)
