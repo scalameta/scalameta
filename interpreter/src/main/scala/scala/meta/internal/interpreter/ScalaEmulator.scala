@@ -1,7 +1,7 @@
 package scala.meta.internal
 package interpreter
 
-import environment._
+import Environment._
 import scala.meta.semantic._
 import scala.meta.semantic.Context
 import scala.meta.dialects.Scala211

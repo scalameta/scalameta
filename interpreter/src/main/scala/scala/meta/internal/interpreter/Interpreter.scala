@@ -8,7 +8,7 @@ import scala.meta.internal.{ ast => m }
 import scala.meta.dialects.Scala211
 
 import scala.collection.immutable.ListMap
-import scala.meta.internal.interpreter.environment._
+import scala.meta.internal.interpreter.Environment._
 import org.scalameta._
 import org.scalameta.invariants._
 

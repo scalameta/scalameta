@@ -6,7 +6,7 @@ import scala.meta.semantic._
 import scala.meta.internal.{ ast => m }
 import scala.meta.dialects.Scala211
 
-object environment {
+object Environment {
   type TName = m.Term.Name
   type Heap = ListMap[TName, Object]
   type FrameStack = List[ListMap[TName, Object]]
