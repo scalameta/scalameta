@@ -26,7 +26,7 @@ trait ConvertPhase {
     override val runsRightAfter = None
     val phaseName = "convert"
     override def description = "convert compiler trees to scala.meta"
-    implicit val c = Scalahost.mkSemanticContext[global.type](global)
+    implicit val c = Scalahost.mkGlobalContext[global.type](global)
 
     override def newPhase(prev: Phase): StdPhase = new StdPhase(prev) {
       override def apply(unit: CompilationUnit) {

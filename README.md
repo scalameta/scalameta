@@ -20,7 +20,7 @@ The public API of this project is minimal and consists of a single module: `scal
 ```scala
 // compile-time context
 import scala.meta._
-implicit val c = Scalahost.mkSemanticContext(global)
+implicit val c = Scalahost.mkGlobalContext(global)
 ```
 
 ```scala

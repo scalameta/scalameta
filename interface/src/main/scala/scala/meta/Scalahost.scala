@@ -9,7 +9,7 @@ import scala.meta.internal.hosts.scalac.contexts.{MacroContext => ScalahostMacro
 import scala.meta.internal.hosts.scalac.contexts.{StandaloneContext => ScalametaStandaloneContext}
 
 object Scalahost {
-  def mkSemanticContext[G <: ScalaGlobal](g: G): ScalametaSemanticContext with ScalahostSemanticContext[G] =
+  def mkGlobalContext[G <: ScalaGlobal](g: G): ScalametaSemanticContext with ScalahostSemanticContext[G] =
     new ScalahostSemanticContext[G](g)
   def mkMacroContext[G <: ScalaGlobal](rc: ScalareflectMacroContext): ScalametaMacroContext with ScalahostMacroContext[G] =
     new ScalahostMacroContext[G](rc)
