@@ -1,3 +1,5 @@
+package serializer.reflect.separate
+
 import scala.reflect.macros.blackbox._
 import scala.language.experimental.macros
 
@@ -8,6 +10,7 @@ package adt {
     def impl[T: c.WeakTypeTag](c: Context) = {
       import c.universe._
       val T = c.weakTypeOf[T]
+      val adt = q"_root_.serializer.reflect.separate.adt"
       def validateLeaf(leaf: ClassSymbol) = {
         if (!leaf.isFinal && !leaf.isModuleClass) c.abort(c.enclosingPosition, s"not `final`: ${leaf.fullName}")
         if (!leaf.isCaseClass) c.abort(c.enclosingPosition, s"not `case`: ${leaf.fullName}")
@@ -20,7 +23,7 @@ package adt {
       } else {
         validateLeaf(sym)
       }
-      q"new _root_.adt.Adt[$T]{}"
+      q"new $adt.Adt[$T]{}"
     }
   }
 }
@@ -38,6 +41,7 @@ package serialization {
     def impl[T: c.WeakTypeTag](c: Context)(adtEvidence: c.Tree) = {
       import c.universe._
       val T = c.weakTypeOf[T]
+      val serialization = q"_root_.serializer.reflect.separate.serialization"
       val sym = T.typeSymbol.asClass
       val objName = c.freshName(TermName(sym.name + "Serializer"))
       val paramName = c.freshName(TermName("x"))
@@ -47,8 +51,8 @@ package serialization {
           family.toList.sortBy(_.name.toString).indexOf(sym).toString
         }
         val fieldNames = sym.primaryConstructor.asMethod.paramLists.head.map(_.name.toTermName)
-        var fieldJson = fieldNames.map(fieldName => q"""${"\"" + fieldName.toString + "\": "} + _root_.serialization.serialize($paramName.${fieldName})""")
-        if (tagged) fieldJson :+= q"${"$tag: " + tagFor(sym)}"
+        var fieldJson = fieldNames.map(fieldName => q"""${"\"" + fieldName.toString + "\": "} + $serialization.serialize($paramName.${fieldName})""")
+        if (tagged) fieldJson = fieldJson :+ q"${"$tag: " + tagFor(sym)}"
         val unwrappedResult = fieldJson.foldLeft(None: Option[Tree])((acc, curr) => acc.map(acc => q"$acc + ${", "} + $curr").orElse(Some(curr)))
         q""" "{" + ${unwrappedResult.getOrElse(q"")} + "}" """
       }
@@ -62,7 +66,7 @@ package serialization {
         }
       }
       q"""
-        implicit object $objName extends _root_.serialization.Serializer[$T] {
+        implicit object $objName extends $serialization.Serializer[$T] {
           def serialize($paramName: $T): String = $body
         }
         $objName

@@ -4,5 +4,5 @@ final case object Nil extends List
 
 object OldSerializer {
   val list: List = Cons(1, Cons(2, Nil))
-  println(serialization.serialize(list))
+  println(serializer.reflect.separate.serialization.serialize(list))
 }
