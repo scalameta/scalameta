@@ -1,5 +1,4 @@
 package scala.meta
-package internal.hosts.scalac
 
 import org.scalameta.adt._
 import org.scalameta.unreachable

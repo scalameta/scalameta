@@ -5,7 +5,6 @@ import scala.reflect.runtime.{ universe => ru }
 import scala.tools.reflect.{ ToolBox, ToolBoxError }
 import scala.compat.Platform.EOL
 import scala.meta._
-import scala.meta.internal.hosts.scalac.Scalahost
 import org.scalameta.reflection._
 class ScalaToMeta extends FunSuite {
   def typecheckConvertAndPrettyprint(code: String, debug: Boolean): String = {
@@ -55,7 +54,7 @@ class ScalaToMeta extends FunSuite {
       if (debug) println(new { val global: compiler.type = compiler } with GlobalToolkit {}.ensugar(unit.body))
       for (workItem <- unit.toCheck) workItem()
       throwIfErrors()
-      implicit val c = Scalahost.mkSemanticContext[compiler.type](compiler)
+      implicit val c = Scalahost.mkGlobalContext[compiler.type](compiler)
       val mtree = c.toMtree(unit.body, classOf[Source])
       if (debug) println(mtree.show[Code])
       if (debug) println(mtree.show[Raw])

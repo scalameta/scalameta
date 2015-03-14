@@ -10,7 +10,6 @@ class SemanticDummy {
 }
 
 class SemanticSuite extends FunSuite {
-  import scala.meta.internal.hosts.scalac.Scalahost
   private val classpathOptions = s"-cp ${sys.props("sbt.paths.tests.classpath")}"
   private val pluginOptions = s"-Xplugin:${sys.props("sbt.paths.plugin.jar")} -Xplugin-require:scalahost"
   private val options = classpathOptions + " " + pluginOptions

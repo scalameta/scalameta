@@ -15,17 +15,17 @@ If you have any comments or suggestions during your journey, let us know at
 
 ### How to use
 
-The public API of this project is minimal and consists of a single module: `scala.meta.internal.hosts.scalac.Scalahost`, which exposes methods to create a `scala.meta.semantic.Context` at compile time (from an instance of `scala.tools.nsc.Global`) and at runtime (from a classpath):
+The public API of this project is minimal and consists of a single module: `scala.meta.Scalahost`, which exposes methods to create a `scala.meta.semantic.Context` at compile time (from an instance of `scala.tools.nsc.Global`) and at runtime (from a classpath):
 
 ```scala
 // compile-time context
-import scala.meta.internal.hosts.scalac.Scalahost
-implicit val c = Scalahost.mkSemanticContext(global)
+import scala.meta._
+implicit val c = Scalahost.mkGlobalContext(global)
 ```
 
 ```scala
 // runtime context
-import scala.meta.internal.hosts.scalac.Scalahost
+import scala.meta._
 implicit val c = Scalahost.mkStandaloneContext("-cp ...")
 ```
 

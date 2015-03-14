@@ -3,7 +3,6 @@ import java.net._
 import java.io._
 import scala.compat.Platform.EOL
 import scala.meta._
-import scala.meta.internal.hosts.scalac.Scalahost
 import org.scalameta.reflection._
 
 class ScalaToMeta extends FunSuite {
