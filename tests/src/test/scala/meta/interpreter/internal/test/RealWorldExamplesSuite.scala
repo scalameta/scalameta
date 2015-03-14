@@ -2,7 +2,7 @@ package scala.meta.interpreter.internal.test
 
 import org.scalatest._
 import scala.meta.semantic._
-import scala.meta.internal.eval._
+import scala.meta.eval._
 import scala.meta.dialects.Scala211
 import scala.meta._
 import scala.meta.internal.hosts.scalac.contexts.StandaloneContext
