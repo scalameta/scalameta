@@ -514,6 +514,7 @@ private[meta] trait Api {
     @hosted def packages: Seq[Member.Term] = internalFilter[Member.Term](_.isPackage)
     @hosted def packages(name: String): Member.Term = internalSingleNamed[Member.Term](name, _.isPackage, "packages")
     @hosted def packages(name: scala.Symbol): Member.Term = packages(name.toString)
+    @hosted def packageObject: Member.Term = internalSingle[impl.Pkg.Object](_.isPackageObject, "package objects")
     @hosted def ctor: Member.Term = internalSingle[Member.Term](_.isPrimaryCtor, "primary constructors")
     @hosted def ctors: Seq[Member.Term] = internalFilter[Member.Term](_.isCtor)
     @hosted def classes: Seq[Member.Type] = internalFilter[Member.Type](_.isClass)
