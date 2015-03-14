@@ -1,13 +1,13 @@
 package scala.meta.internal
 package interpreter
 
-import environment._
+import Environment._
 import scala.meta.semantic._
 import scala.meta.semantic.Context
 import scala.meta.dialects.Scala211
 
 import scala.meta._
-import scala.meta.internal.{ ast => i }
+import scala.meta.internal.{ ast => m }
 
 object ScalaEmulator {
   def emulate(lst: Seq[String], args: Seq[Object], env: Env)(implicit c: Context): (Object, Env) = lst match {
