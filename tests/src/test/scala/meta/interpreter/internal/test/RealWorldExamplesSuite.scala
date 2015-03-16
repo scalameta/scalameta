@@ -8,6 +8,7 @@ import scala.meta._
 import scala.meta.internal.hosts.scalac.contexts.StandaloneContext
 import scala.reflect.{ ClassTag, classTag }
 import scala.meta.internal.{ ast => m }
+import scala.reflect.macros.runtime.AbortMacroException
 
 class RealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
   def evalFunc(defn: m.Defn.Def, argss: Seq[Any]*)(implicit c: semantic.Context): Any = {
@@ -22,42 +23,40 @@ class RealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
   def jarOf[T: ClassTag] = classTag[T].runtimeClass.getProtectionDomain().getCodeSource().getLocation().getFile()
   val cp = List(jarOf[org.scalameta.UnreachableError], jarOf[scala.meta.Tree]).mkString(java.io.File.pathSeparator)
   implicit val c = Scalahost.mkStandaloneContext(s"-cp $cp:" + System.getProperty("sbt.paths.tests.classpath"))
-  val m.Source(List(m.Defn.Object(_, _, _, m.Template(_, _, _, Some(List(_, _, _, metaprogram1: m.Defn.Def)))))) = c.define("""
+  val m.Source(List(m.Defn.Object(_, _, _, m.Template(_, _, _, Some(List(_, _, metaprogram1: m.Defn.Def)))))) = c.define("""
       object DummyContainer1 {
         import scala.meta._
         import scala.meta.internal.{ast => m}
-        import scala.meta.semantic.Context
-        def metaprogram1(T: Type)(implicit c: Context) = {
+        def metaprogram1(T: Type)(implicit c: scala.meta.macros.Context) = {
           T match {
             case ref: Type.Ref =>
               def validateLeaf(leaf: Member) = {
-                if (!leaf.isFinal) sys.error(s"${leaf.name} is not final")
-                if (!leaf.isCase) sys.error(s"${leaf.name} is not a case class")
-                if (!leaf.tparams.isEmpty) sys.error(s"${leaf.name} is not monomorphic")
+                if (!leaf.isFinal) abort(s"${leaf.name} is not final")
+                if (!leaf.isCase) abort(s"${leaf.name} is not a case class")
+                if (!leaf.tparams.isEmpty) abort(s"${leaf.name} is not monomorphic")
               }
               val defn = ref.defn
               if (defn.isClass || defn.isObject) {
                 validateLeaf(defn)
               } else if (defn.isTrait) {
                 if (defn.isSealed) defn.children.foreach(validateLeaf)
-                else sys.error(s"${defn.name} is not sealed")
+                else abort(s"${defn.name} is not sealed")
               } else {
-                sys.error(s"unsupported ref to ${defn.name}")
+                abort(s"unsupported ref to ${defn.name}")
               }
               val parent = m.Term.ApplyType(m.Ctor.Ref.Name("Foo"), List(T.asInstanceOf[m.Type]))
               m.Term.New(m.Template(Nil, List(parent), m.Term.Param(Nil, m.Name.Anonymous(), None, None), Some(Nil)))
             case _ =>
-              sys.error(s"unsupported type $T")
+              abort(s"unsupported type $T")
           }
         }
       }
     """)
 
-  val m.Source(List(m.Defn.Object(_, _, _, m.Template(_, _, _, Some(List(_, _, _, _, metaprogram2: m.Defn.Def)))))) = c.define(s"""
+  val m.Source(List(m.Defn.Object(_, _, _, m.Template(_, _, _, Some(List(_, _, _, metaprogram2: m.Defn.Def)))))) = c.define(s"""
       object DummyContainer2 {
         import scala.meta._
         import scala.meta.internal.{ast => m}
-        import scala.meta.semantic.Context
         import scala.meta.dialects.Scala211
         def metaprogram2(T: Type)(implicit c: scala.meta.macros.Context) = {
           T match {
@@ -111,21 +110,21 @@ class RealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
     """)
 
   "A verification macro" should "reject defns that are not classes, traits or objects" in {
-    val ex = intercept[RuntimeException] {
+    val ex = intercept[AbortMacroException] {
       evalFunc(metaprogram1, List(t"List"), List(c))
     }
     ex.getMessage() should be("unsupported ref to List")
   }
 
   it should "reject non-final classes" in {
-    val ex1 = intercept[RuntimeException] {
+    val ex1 = intercept[AbortMacroException] {
       evalFunc(metaprogram1, List(t"TestTraitNonFinal"), List(c))
     }
     ex1.getMessage() should be("XNonFinal is not final")
   }
 
   it should "reject non-case classes" in {
-    val ex2 = intercept[RuntimeException] {
+    val ex2 = intercept[AbortMacroException] {
       evalFunc(metaprogram1, List(t"TestTraitNonCase"), List(c))
     }
     ex2.getMessage() should be("XNonCase is not a case class")

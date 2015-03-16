@@ -105,9 +105,14 @@ object Interpreter {
 
       case m.Term.Apply(lhs@m.Term.Name("abort"), List(arg)) if lhs.isDef =>
         val context = env.stack.flatten.find(_._2.tpe.toString == "Context").head._2.ref.asInstanceOf[scala.meta.macros.Context]
-        val (res, env1) = eval(arg, env)
-        context.abort(res.toString)
-        (res, env1)
+        val (Object(msg: String, _, _), env1) = eval(arg, env)
+        context.abort(msg)
+        (Object((), t"Nothing"), env1)
+
+      case m.Term.Apply(lhs@m.Term.Name("println"), List(arg)) if lhs.isDef =>
+        val (Object(value, _, _), env1) = eval(arg, env)
+        println(value.toString)
+        (Object((), t"Unit"), env1)
 
       case m.Term.Apply(lhs: m.Term.Name, args) if lhs.isDef =>
         val res = eval(lhs, env)
