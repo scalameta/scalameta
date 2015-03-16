@@ -12,6 +12,7 @@ import org.scalameta.reflection.mkGlobal
 import scala.tools.nsc.reporters.StoreReporter
 import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
+import scala.reflect.macros.runtime.AbortMacroException
 
 @context(translateExceptions = false)
 class StandaloneContext(options: String) extends ScalahostSemanticContext(mkGlobal(options)) with ScalametaMacroContext {
@@ -43,6 +44,6 @@ class StandaloneContext(options: String) extends ScalahostSemanticContext(mkGlob
   val reporter = new StoreReporter()
   private[meta] def warning(msg: String): Unit = reporter.warning(g.NoPosition, msg)
   private[meta] def error(msg: String): Unit = reporter.error(g.NoPosition, msg)
-  private[meta] def abort(msg: String): Nothing = { reporter.error(g.NoPosition, msg); sys.error(msg) }
+  private[meta] def abort(msg: String): Nothing = { reporter.error(g.NoPosition, msg); throw new AbortMacroException(g.NoPosition, msg) }
   private[meta] def resources: Map[String, Array[Byte]] = Map()
 }
