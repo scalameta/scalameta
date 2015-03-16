@@ -160,6 +160,7 @@ object build extends Build {
     libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
     libraryDependencies += "org.scalameta" % "scalameta_2.11" % "0.1.0-SNAPSHOT",
     libraryDependencies += "org.scalameta" % "scalahost_2.11.6" % "0.1.0-SNAPSHOT" % "test",
+    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
     testOptions in Test += Tests.Argument("-oDF"),
     packagedArtifacts := Map.empty
   ) settings (
