@@ -109,6 +109,11 @@ object Interpreter {
         context.abort(msg)
         (Object((), t"Nothing"), env1)
 
+      case m.Term.Apply(lhs@m.Term.Name("println"), List(arg)) if lhs.isDef =>
+        val (Object(value, _, _), env1) = eval(arg, env)
+        println(value.toString)
+        (Object((), t"Unit"), env1)
+
       case m.Term.Apply(lhs: m.Term.Name, args) if lhs.isDef =>
         val res = eval(lhs, env)
         res match {
