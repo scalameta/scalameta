@@ -33,6 +33,8 @@ class LiftableMacros(val c: Context) extends AdtReflection {
         q"def $name($localParam: ${leaf.tpe}): $u.Tree = liftEllipsis.apply($localParam)"
       } else if (leaf.sym.fullName == "scala.meta.internal.ast.Unquote") {
         q"def $name($localParam: ${leaf.tpe}): $u.Tree = liftUnquote.apply($localParam)"
+      } else if (leaf.tpe <:< c.mirror.staticClass("scala.meta.internal.ast.Name").toType) {
+        q"def $name($localParam: ${leaf.tpe}): $u.Tree = liftName.apply($localParam)"
       } else {
         val init = q"""$u.Ident($u.TermName("_root_"))""": Tree
         val namePath = leaf.sym.fullName.split('.').foldLeft(init)((acc, part) => q"$u.Select($acc, $u.TermName($part))")

@@ -59,4 +59,9 @@ class QuasiquoteSuite extends FunSuite {
     val y = p"List(1, 2, 3)"
     assert(p"case $x @ $y => ".show[Code] === "case x @ List(1, 2, 3) =>")
   }
+
+  test("q\"def x = ${body: Int}\"") {
+    val q"def x = ${body: Int}" = q"def x = 42"
+    assert(body === 42)
+  }
 }
