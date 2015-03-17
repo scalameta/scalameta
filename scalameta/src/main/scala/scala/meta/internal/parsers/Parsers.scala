@@ -1932,6 +1932,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   }
 
   def typeParam(ownerIsType: Boolean, ctxBoundsAllowed: Boolean): Type.Param = autoPos {
+    if (token.is[tok.Unquote]) return unquote[Type.Param]
     var mods: List[Mod] = annots(skipNewLines = true)
     if (ownerIsType && token.is[Ident]) {
       if (isIdentOf("+")) {

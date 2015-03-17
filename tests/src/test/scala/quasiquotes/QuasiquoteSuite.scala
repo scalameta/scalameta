@@ -24,7 +24,7 @@ class QuasiquoteSuite extends FunSuite {
     assert(q"foo(..${List(1, 2, 3)})".show[Code] === "foo(1, 2, 3)")
   }
 
-  test("q\"$foo(${x: Int})\"") {
+  test("case q\"$foo(${x: Int})\"") {
     q"foo(42)" match {
       case q"$foo(${x: Int})" =>
         assert(foo.show[Code] === "foo")
@@ -32,7 +32,7 @@ class QuasiquoteSuite extends FunSuite {
     }
   }
 
-  test("q\"$foo(${x: Int}, ..$ys, $z)\"") {
+  test("case q\"$foo(${x: Int}, ..$ys, $z)\"") {
     q"foo(1, 2, 3)" match {
       case q"$_(${x: Int}, ..$y, $z)" =>
         assert(x === 1)
@@ -58,5 +58,16 @@ class QuasiquoteSuite extends FunSuite {
     val x = p"x"
     val y = p"List(1, 2, 3)"
     assert(p"case $x @ $y => ".show[Code] === "case x @ List(1, 2, 3) =>")
+  }
+
+  test("val q\"def x = ${body: Int}\"") {
+    val q"def x = ${body: Int}" = q"def x = 42"
+    assert(body === 42)
+  }
+
+  test("val q\"type $name[$_] = $_\"") {
+    val member = q"type List[+A] = List[A]"
+    val q"type $name[$_] = $_" = member
+    assert(name.show[Code] === "List")
   }
 }
