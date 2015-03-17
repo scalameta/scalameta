@@ -64,9 +64,8 @@ class AstMacros(val c: Context) {
       val denotParam = q"@$AstInternal.auxiliary val denot: $HygieneInternal.Denotation = $HygieneInternal.Denotation.Zero"
       val sigmaParam = q"@$AstInternal.auxiliary val sigma: $HygieneInternal.Sigma = $HygieneInternal.Sigma.Zero"
       val paramss = {
-        if (is("Name.Anonymous") || is("Name.Indeterminate") || is("Name.Imported") ||
-            is("Term.Name") || is("Type.Name") || is("Ctor.Ref.Name") ||
-            is("Term.This") || is("Term.Super")) {
+        if (is("Name.Anonymous") || is("Name.Indeterminate") ||
+            is("Term.Name") || is("Type.Name") || is("Ctor.Ref.Name")) {
           (rawparamss.head ++ List(denotParam, sigmaParam)) +: rawparamss.tail
         } else {
           rawparamss
