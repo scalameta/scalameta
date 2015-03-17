@@ -166,8 +166,8 @@ trait ToGtype extends GlobalToolkit with MetaToolkit {
             else g.SingleType(gprefix(mname.denot.prefix), gsym)
           }
           def superType(msuper: m.Term.Super): g.Type = {
-            val gpre = gprefix(msuper.denot.prefix)
-            val gmixsym = msuper.denot.symbol match {
+            val gpre = gprefix(msuper.thisp.require[m.Name].denot.prefix)
+            val gmixsym = msuper.superp.require[m.Name].denot.symbol match {
               case h.Symbol.Zero => g.intersectionType(gpre.typeSymbol.info.parents)
               case hsym => gpre.typeSymbol.info.baseType(symbolTable.convert(hsym).gsymbol)
             }
@@ -176,7 +176,7 @@ trait ToGtype extends GlobalToolkit with MetaToolkit {
           mref match {
             case mname: m.Term.Name => singleType(mname)
             case m.Term.Select(_, mname) => singleType(mname)
-            case mref: m.Term.This => g.ThisType(symbolTable.convert(mref.denot.symbol).gsymbol)
+            case mref: m.Term.This => g.ThisType(symbolTable.convert(mref.qual.require[m.Name].denot.symbol).gsymbol)
             case mref: m.Term.Super => superType(mref)
           }
         case m.Type.Apply(mtpe, margs) =>
