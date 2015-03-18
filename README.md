@@ -1,5 +1,7 @@
 ### scala.meta
 
+[![Join the chat at https://gitter.im/scalameta/scalameta](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/scalameta/scalameta?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Scala.meta is based on a principle that metaprogramming should be completely decoupled from compiler internals.
 This project is a clean-room implementation of a metaprogramming toolkit for Scala, designed to be simple, robust and portable.
 We are striving for scala.meta to become a successor of scala.reflect, the current de facto standard in Scala ecosystem.
