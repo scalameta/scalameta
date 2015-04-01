@@ -72,6 +72,8 @@ class BootstrapSuite extends ParseSuite {
             val content = scala.io.Source.fromFile(src)(codec).mkString
             assert(tree.origin.start == 0)
             assert(tree.origin.end == content.length - 1)
+            assert(tree.origin.startLine == 0)
+            assert(tree.origin.endLine == content.count(_ == '\n'))
           } catch {
             case ex: scala.meta.ParseException if ex.message.contains("XML literals are not supported") => pending
           }
