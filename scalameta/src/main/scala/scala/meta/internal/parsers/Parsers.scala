@@ -15,7 +15,6 @@ import scala.meta.internal.{ast => impl}
 import scala.meta.internal.parsers.Location._
 import scala.meta.internal.parsers.Helpers._
 import scala.meta.syntactic.Token._
-import scala.meta.syntactic.{Token => tok}
 import org.scalameta.tokens._
 import org.scalameta.unreachable
 import org.scalameta.invariants._
@@ -346,57 +345,6 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
 
 /* ---------- TREE CONSTRUCTION ------------------------------------------- */
 
-  def ellipsis[T <: Tree : ClassTag](rank: Int, body: => T): T = autoPos {
-    token match {
-      case ellipsis: tok.Ellipsis =>
-        if (ellipsis.rank != rank) {
-          val errorMessage = s"rank mismatch when unquoting;$EOL found   : ${"." * (ellipsis.rank + 1)}$EOL required: ${"." * (rank + 1)}"
-          syntaxError(errorMessage, at = ellipsis)
-        } else {
-          next()
-          val tree = {
-            val result = token match {
-              case _: `(` => inParens(body)
-              case _: `{` => inBraces(body)
-              case _ => body
-            }
-            result match {
-              case unquote: impl.Unquote =>
-                // NOTE: In the case of an unquote nested directly under ellipsis, we get a bit of a mixup.
-                // Unquote's pt may not be directly equal unwrapped ellipsis's pt, but be its refinement instead.
-                // For example, in `new { ..$stats }`, ellipsis's pt is Seq[Stat], but unquote's pt is Term.
-                // This is an artifact of the current implementation, so we just need to keep it mind and work around it.
-                require(classTag[T].runtimeClass.isAssignableFrom(unquote.pt) && debug(ellipsis, result, result.show[Raw]))
-                atPos(unquote, unquote)(impl.Unquote(unquote.tree, classTag[T].runtimeClass))
-              case other =>
-                other
-            }
-          }
-          val pt = {
-            def loop(i: Int, T: Class[_]): Class[_] = {
-              if (i == 0) T
-              else loop(i - 1, ScalaRunTime.arrayClass(T))
-            }
-            loop(rank, classTag[T].runtimeClass)
-          }
-          impl.Ellipsis(tree, pt).asInstanceOf[T]
-        }
-      case _ =>
-        unreachable(debug(token))
-    }
-  }
-
-  def unquote[T <: Tree : ClassTag]: T = autoPos {
-    token match {
-      case unquote: tok.Unquote =>
-        next()
-        val T = classTag[T].runtimeClass
-        impl.Unquote(unquote.tree, T).asInstanceOf[T]
-      case _ =>
-        unreachable(debug(token))
-    }
-  }
-
   /** Convert tree to formal parameter list. */
   def convertToParams(tree: Term): List[Term.Param] = tree match {
     case Term.Tuple(ts) => ts.toList flatMap convertToParam
@@ -420,8 +368,6 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   }
 
   def convertToTypeId(ref: Term.Ref): Option[Type] = ref match {
-    case impl.Unquote(tree, _) =>
-      Some(atPos(ref, ref)(impl.Unquote(tree, classOf[Type])))
     case Term.Select(qual: Term.Ref, name) =>
       Some(atPos(ref, ref)(Type.Select(qual, atPos(name, name)(Type.Name(name.value)))))
     case name: Term.Name =>
@@ -432,13 +378,13 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
 
   /** {{{ part { `sep` part } }}},or if sepFirst is true, {{{ { `sep` part } }}}. */
   final def tokenSeparated[Sep: TokenMetadata, T <: Tree : ClassTag](sepFirst: Boolean, part: => T): List[T] = {
-    def partOrEllipsis = if (token.is[tok.Ellipsis]) ellipsis(1, part) else part
     val ts = new ListBuffer[T]
     if (!sepFirst)
-      ts += partOrEllipsis
-    while (token.is[Sep] || token.is[tok.Ellipsis]) {
-      if (token.is[Sep]) next()
-      ts += partOrEllipsis
+      ts += part
+
+    while (token.is[Sep]) {
+      next()
+      ts += part
     }
     ts.toList
   }
@@ -758,7 +704,6 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         case _ => loop(tpe)
       }
       def loop(tpe: Type): Pat.Type = tpe match {
-        case impl.Unquote(tree, _) => atPos(tpe, tpe)(impl.Unquote(tree, classOf[Pat.Type]))
         case tpe: Type.Name => tpe
         case tpe: Type.Select => tpe
         case Type.Project(qual, name) => atPos(tpe, tpe)(Pat.Type.Project(loop(qual), name))
@@ -785,8 +730,6 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       val res = atPos(in.tokenPos, in.tokenPos)(ctor(name))
       if (advance) next()
       res
-    case token: tok.Unquote =>
-      unquote[T]
     case _ =>
       syntaxErrorExpected[Ident]
   }
@@ -1266,8 +1209,6 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
           canApply = false
           next()
           atPos(in.prevTokenPos, auto)(Term.New(template()))
-        case token: tok.Unquote =>
-          unquote[Term]
         case _ =>
           syntaxError(s"illegal start of simple expression", at = token)
       }
@@ -1329,8 +1270,6 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
 
   def argumentExpr(): Term.Arg = {
     expr() match {
-      case t @ impl.Unquote(tree, _) =>
-        atPos(t, t)(impl.Unquote(tree, classOf[Term.Arg]))
       case Term.Ascribe(t, Type.Placeholder(Type.Bounds(None, None))) if isIdentOf("*") =>
         next()
         atPos(t, auto)(Term.Arg.Repeated(t))
@@ -1375,14 +1314,10 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   def caseClause(): Case = atPos(in.prevTokenPos, auto) {
     require(token.isNot[`case`] && debug(token))
     token match {
-      case token: tok.Unquote if token.prev.is[tok.Ellipsis] =>
-        next()
-        impl.Unquote(token.tree, classOf[Case])
       case token =>
         Case(pattern().require[Pat], guard(), {
           accept[`=>`]
           autoPos(blockStatSeq() match {
-            case List(unquote: impl.Unquote) => Term.Block(List(unquote))
             case List(blk: Term.Block) => blk
             case stats => Term.Block(stats)
           })
@@ -1518,9 +1453,6 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       if (token.isNot[`:`]) p
       else {
         p match {
-          case p: impl.Unquote =>
-            nextOnce()
-            Pat.Typed(p, patternTyp())
           case p: Pat.Var.Term if dialect.bindToSeqWildcardDesignator == ":" && isColonWildcardStar =>
             nextOnce()
             val wildcard = autoPos({ nextTwice(); Pat.Arg.SeqWildcard() })
@@ -1551,10 +1483,6 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       val p = pattern3()
       if (token.isNot[`@`]) p
       else p match {
-        case p: impl.Unquote =>
-          next()
-          val unquote = atPos(p, p)(impl.Unquote(p.tree, classOf[Pat.Var.Term]))
-          Pat.Bind(unquote, pattern3())
         case p: Term.Name =>
           syntaxError("Pattern variables must start with a lower-case letter. (SLS 8.1.1.)", at = p)
         case p: Pat.Var.Term =>
@@ -1677,8 +1605,6 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         makeTuplePatParens(noSeq.patterns())
       case _: XMLStart =>
         xmlLiteralPattern()
-      case token: tok.Unquote =>
-        unquote[Pat]
       case _ =>
         onError(token)
     })
@@ -1932,7 +1858,6 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   }
 
   def typeParam(ownerIsType: Boolean, ctxBoundsAllowed: Boolean): Type.Param = autoPos {
-    if (token.is[tok.Unquote]) return unquote[Type.Param]
     var mods: List[Mod] = annots(skipNewLines = true)
     if (ownerIsType && token.is[Ident]) {
       if (isIdentOf("+")) {
@@ -2491,9 +2416,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
                                     errorMsg: String = "illegal start of definition"): List[T] = {
     val stats = new ListBuffer[T]
     while (!token.is[StatSeqEnd]) {
-      def isDefinedInEllipsis = { if (token.is[`(`] || token.is[`{`]) next(); statpf.isDefinedAt(token) }
-      if (token.is[tok.Ellipsis] && ahead(isDefinedInEllipsis)) stats += ellipsis(1, statpf(token))
-      else if (statpf.isDefinedAt(token)) stats += statpf(token)
+      if (statpf.isDefinedAt(token)) stats += statpf(token)
       else if (!token.is[StatSep]) syntaxError(errorMsg, at = token)
       acceptStatSepOpt()
     }
