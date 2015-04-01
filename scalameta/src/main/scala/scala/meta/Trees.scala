@@ -508,4 +508,7 @@ package scala.meta.internal.ast {
     require(pt != classOf[Lit.String])
     require(pt != classOf[Mod.Annot])
   }
+ 
+  // TODO: since trees are no longer sealed, we need a mechanism that would keep track of all of them 
+  @registry object Registry
 }

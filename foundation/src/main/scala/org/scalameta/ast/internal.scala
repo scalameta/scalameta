@@ -14,7 +14,7 @@ object internal {
   class astCompanion extends StaticAnnotation
   @getter class astField extends StaticAnnotation
   @getter class auxiliary extends StaticAnnotation
-  class registry(fullNames: List[String]) extends StaticAnnotation
+  class registry(paths: List[String]) extends StaticAnnotation
 
   def hierarchyCheck[T]: Unit = macro Macros.hierarchyCheck[T]
   def productPrefix[T]: String = macro Macros.productPrefix[T]

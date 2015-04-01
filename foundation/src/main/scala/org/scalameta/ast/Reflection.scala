@@ -1,5 +1,7 @@
 package org.scalameta.ast
 
+import scala.language.implicitConversions
+import org.scalameta.invariants._
 import org.scalameta.adt.{Reflection => AdtReflection}
 import org.scalameta.ast.{Reflection => AstReflection}
 
@@ -44,5 +46,49 @@ trait Reflection extends AdtReflection {
       case tpe =>
         tpe
     })
+  }
+  
+  implicit class XtensionAstTree(tree: Tree) {
+    def detectAst: List[String] = {
+      object astClassDetector extends Traverser {
+        val result = scala.collection.mutable.ListBuffer[String]()
+        var module = "_root_"
+        var inner = false
+        trait Path
+        object Path {
+          private def path(s: String): Path = new Path { override def toString = s }
+          implicit def nameToPath(name: Name): Path = path(name.decodedName.toString)
+          implicit def reftreeToPath(tree: RefTree): Path = path(tree.toString) // TODO: call decodedName on all components of tree
+        }
+        def drilldown[T](current: Path, inner: Boolean)(op: => T) = {
+          val savedModule = this.module
+          val savedInner = this.inner
+          this.module = module + "." + current
+          this.inner = inner
+          val result = op
+          this.inner = savedInner
+          this.module = savedModule
+          result
+        }
+        override def traverse(tree: Tree): Unit = tree match {
+          case PackageDef(pid, stats) =>
+            if (pid.name == termNames.EMPTY_PACKAGE_NAME) super.traverse(tree)
+            else drilldown(pid, inner = false)(super.traverse(tree))
+          case ModuleDef(_, name, _) =>
+            drilldown(name, inner = false)(super.traverse(tree))
+          case ClassDef(Modifiers(_, _, anns), name, _, impl) =>
+            if (anns.exists(_.toString == "new ast()")) {
+              if (inner) sys.error("@ast classes can't be inner: " + name)
+              val q"$_ class $_[..$_] $_(...$paramss) extends { ..$_ } with ..$parents { $_ => ..$_ }" = tree
+              drilldown(name, inner = true)(result += module)
+            }
+            drilldown(name, inner = true)(super.traverse(tree))
+          case _ =>
+            super.traverse(tree)
+        }
+      }
+      astClassDetector.traverse(tree)
+      astClassDetector.result.toList
+    }
   }
 }
