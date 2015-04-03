@@ -34,16 +34,16 @@ trait Reflection {
     def asField: Field = new Field(sym)
   }
   
-  protected def figureOutSubclasses(sym: ClassSymbol): List[Symbol] = {
+  protected def figureOutDirectSubclasses(sym: ClassSymbol): List[Symbol] = {
     if (sym.isSealed) sym.knownDirectSubclasses.toList.sortBy(_.fullName)
     else sys.error(s"failed to figure out direct subclasses for ${sym.fullName}")
   }
 
   private implicit class PrivateXtensionAdtSymbol(sym: Symbol) {
     private def ensureModule(sym: Symbol): Symbol = if (sym.isModuleClass) sym.owner.info.member(sym.name.toTermName) else sym
-    def branches: List[Symbol] = { sym.initialize; figureOutSubclasses(sym.asClass).toList.filter(_.isBranch) }
+    def branches: List[Symbol] = { sym.initialize; figureOutDirectSubclasses(sym.asClass).toList.filter(_.isBranch) }
     def allBranches: List[Symbol] = (sym.branches ++ sym.branches.flatMap(_.allBranches)).distinct
-    def leafs: List[Symbol] = { sym.initialize; figureOutSubclasses(sym.asClass).toList.filter(_.isLeaf).map(ensureModule) }
+    def leafs: List[Symbol] = { sym.initialize; figureOutDirectSubclasses(sym.asClass).toList.filter(_.isLeaf).map(ensureModule) }
     def allLeafs: List[Symbol] = (sym.leafs ++ sym.branches.flatMap(_.allLeafs)).map(ensureModule).distinct
 
     def root: Symbol = sym.asClass.baseClasses.reverse.find(_.isRoot).getOrElse(NoSymbol)

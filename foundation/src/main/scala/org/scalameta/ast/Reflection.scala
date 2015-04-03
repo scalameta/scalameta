@@ -38,25 +38,37 @@ trait Reflection extends AdtReflection {
     }
   }
   
-  override protected def figureOutSubclasses(sym: ClassSymbol): List[Symbol] = {
+  override protected def figureOutDirectSubclasses(sym: ClassSymbol): List[Symbol] = {
+    def fail = sys.error(s"failed to figure out direct subclasses for ${sym.fullName}")
     if (sym.isSealed) sym.knownDirectSubclasses.toList.sortBy(_.fullName)
-    else if (sym.baseClasses.contains(ApiTreeClass)) scalaMetaRegistry(sym)
-    else sys.error(s"failed to figure out direct subclasses for ${sym.fullName}")
+    else if (sym.baseClasses.contains(ApiTreeClass)) scalaMetaRegistry.getOrElse(sym, fail)
+    else fail
   }
 
+  // NOTE: this is supposed to map root/branch/ast classes to their direct subclasses
   private lazy val scalaMetaRegistry: Map[Symbol, List[Symbol]] = {
-    val ellipsisClass = mirror.staticClass("scala.meta.internal.ast.Ellipsis")
-    val unquoteClass = mirror.staticClass("scala.meta.internal.ast.Unquote")
-    val registry = mutable.Map[Symbol, List[Symbol]]()
-    val astClasses = ellipsisClass +: unquoteClass.baseClasses
-    astClasses.foreach(sym => {
-      if (sym.fullName.startsWith("scala.meta.")) {
-        val parents = sym.info.asInstanceOf[ClassInfoType].parents.map(_.typeSymbol)
-        val relevantParents = parents.filter(p => p.isClass && p.asClass.baseClasses.contains(ApiTreeClass))
-        relevantParents.foreach(parent => registry(parent) = registry.getOrElseUpdate(parent, Nil) :+ sym)
-      }
-    })
-    registry.toMap
+    RegistryModule.initialize.annotations match {
+      case List(ann) if ann.tree.tpe =:= RegistryAnnotation.toType =>
+        val q"new $_($_.$_[..$_](..${astPaths: List[String]}))" = ann.tree
+        val astClasses = astPaths.map(astPath => {
+          def locateModule(root: ModuleSymbol, parts: List[String]): ModuleSymbol = parts match {
+            case Nil => root
+            case head :: rest => locateModule(root.info.member(TermName(head)).asModule, rest)
+          }
+          val modulePath :+ className = astPath.split('.').toList
+          locateModule(mirror.RootPackage, modulePath).info.member(TypeName(className)).asClass
+        })
+        val entireHierarchy = astClasses.flatMap(_.baseClasses.map(_.asClass)).distinct.filter(_.toType <:< ApiTreeClass.toType)
+        val registry = mutable.Map[Symbol, List[Symbol]]()
+        entireHierarchy.foreach(sym => {
+          val parents = sym.info.asInstanceOf[ClassInfoType].parents.map(_.typeSymbol)
+          val relevantParents = parents.filter(p => p.isClass && p.asClass.baseClasses.contains(ApiTreeClass))
+          relevantParents.foreach(parent => registry(parent) = registry.getOrElseUpdate(parent, Nil) :+ sym)
+        })
+        registry.toMap
+      case _ =>
+        sys.error("failed to figure out meta trees")
+    }
   }
 
   implicit class XtensionAstType(tpe: Type) {
