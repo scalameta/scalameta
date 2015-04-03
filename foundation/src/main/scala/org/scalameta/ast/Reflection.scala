@@ -14,8 +14,9 @@ trait Reflection extends AdtReflection {
 
   lazy val ApiTreeClass = mirror.staticClass("scala.meta.Tree")
   lazy val ImplTreeClass = mirror.staticClass("scala.meta.internal.ast.Tree")
-  lazy val ImplEllipsisClass = mirror.staticClass("scala.meta.internal.ast.Ellipsis")
-  lazy val ImplUnquoteClass = mirror.staticClass("scala.meta.internal.ast.Unquote")
+  lazy val ImplQuasiClass = mirror.staticClass("scala.meta.internal.ast.Quasi")
+  lazy val ImplEllipsisClass = mirror.staticModule("scala.meta.internal.ast.Quasi").info.member(TypeName("Ellipsis")).asClass
+  lazy val ImplUnquoteClass = mirror.staticModule("scala.meta.internal.ast.Quasi").info.member(TypeName("Unquote")).asClass
   lazy val ApiNameQualifierClass = mirror.staticModule("scala.meta.Name").info.decl(TypeName("Qualifier")).asClass
   lazy val ApiStatClass = mirror.staticClass("scala.meta.Stat")
   lazy val ApiScopeClass = mirror.staticClass("scala.meta.Scope")
@@ -28,7 +29,7 @@ trait Reflection extends AdtReflection {
   private implicit class PrivateXtensionAstSymbol(sym: Symbol) {
     def isPublicTree = sym.isClass && (sym.asClass.toType <:< ApiTreeClass.toType) && !sym.isInternalTree
     def isInternalTree = sym.isClass && (sym.asClass.toType <:< ImplTreeClass.toType)
-    def isBottomTree = sym == ImplEllipsisClass || sym == ImplUnquoteClass
+    def isBottomTree = sym.isClass && (sym.asClass.toType <:< ImplQuasiClass.toType)
     def weight = {
       val moveToRight = Set[Symbol](ApiNameQualifierClass, ApiStatClass, ApiScopeClass, PatTypeClass, PatTypeRefClass)
       val nudgeToRight = Set[Symbol](PatClass)
@@ -58,12 +59,16 @@ trait Reflection extends AdtReflection {
           val modulePath :+ className = astPath.split('.').toList
           locateModule(mirror.RootPackage, modulePath).info.member(TypeName(className)).asClass
         })
-        val entireHierarchy = astClasses.flatMap(_.baseClasses.map(_.asClass)).distinct.filter(_.toType <:< ApiTreeClass.toType)
+        var entireHierarchy = astClasses.flatMap(_.baseClasses.map(_.asClass)).distinct.filter(_.toType <:< ApiTreeClass.toType)
+        // NOTE: no @ast class implements these traits yet, so we have to explicitly add them to the hierarchy
+        // TODO: this line is to be deleted once we finish the migration to the new foundation of quasiquoting
+        entireHierarchy ++= List(ImplQuasiClass, ImplEllipsisClass, ImplUnquoteClass)
         val registry = mutable.Map[Symbol, List[Symbol]]()
+        entireHierarchy.foreach(sym => registry(sym) = Nil)
         entireHierarchy.foreach(sym => {
           val parents = sym.info.asInstanceOf[ClassInfoType].parents.map(_.typeSymbol)
           val relevantParents = parents.filter(p => p.isClass && p.asClass.baseClasses.contains(ApiTreeClass))
-          relevantParents.foreach(parent => registry(parent) = registry.getOrElseUpdate(parent, Nil) :+ sym)
+          relevantParents.foreach(parent => registry(parent) :+= sym)
         })
         registry.toMap
       case _ =>

@@ -386,7 +386,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
   }
 
   private def reifySkeleton(meta: MetaTree, mode: Mode): ReflectTree = {
-    val pendingEllipses = mutable.Stack[impl.Ellipsis]()
+    val pendingEllipses = mutable.Stack[impl.Quasi.Ellipsis]()
     implicit class XtensionRankedClazz(clazz: Class[_]) {
       def unwrap: Class[_] = {
         if (clazz.isArray) clazz.getComponentType.unwrap
@@ -427,7 +427,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
       }
       def liftTrees(trees: Seq[api.Tree]): u.Tree = {
         def loop(trees: List[api.Tree], acc: u.Tree, prefix: List[api.Tree]): u.Tree = trees match {
-          case (ellipsis: impl.Ellipsis) +: rest =>
+          case (ellipsis: impl.Quasi.Ellipsis) +: rest =>
             if (acc.isEmpty) {
               if (prefix.isEmpty) loop(rest, liftEllipsis(ellipsis), Nil)
               else loop(rest, prefix.foldRight(acc)((curr, acc) => {
@@ -470,18 +470,18 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
         // TODO: implement support for construction and deconstruction with ...
         Liftable.liftList[Seq[api.Tree]](Liftables.liftableSubTrees).apply(treess.toList)
       }
-      def liftEllipsis(ellipsis: impl.Ellipsis): u.Tree = {
+      def liftEllipsis(ellipsis: impl.Quasi.Ellipsis): u.Tree = {
         try {
           pendingEllipses.push(ellipsis)
           ellipsis.tree match {
-            case unquote: impl.Unquote => liftUnquote(unquote)
+            case unquote: impl.Quasi.Unquote => liftUnquote(unquote)
             case _ => c.abort(ellipsis.pos, "complex ellipses are not supported yet")
           }
         } finally {
           pendingEllipses.pop()
         }
       }
-      def liftUnquote(unquote: impl.Unquote): u.Tree = {
+      def liftUnquote(unquote: impl.Quasi.Unquote): u.Tree = {
         val tree = unquote.tree.asInstanceOf[u.Tree]
         val pt = unquote.pt.wrap(pendingEllipses.map(_.rank).sum).toTpe
         val idealReifier = if (mode.isTerm) q"$InternalLift[$pt]($tree)" else q"$InternalUnlift[$pt]($tree)"
@@ -511,8 +511,8 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
       implicit def liftableSubTree[T <: api.Tree]: Liftable[T] = Liftable((tree: T) => materializeAst[api.Tree].apply(tree))
       implicit def liftableSubTrees[T <: api.Tree]: Liftable[Seq[T]] = Liftable((trees: Seq[T]) => Lifts.liftTrees(trees))
       implicit def liftableSubTreess[T <: api.Tree]: Liftable[Seq[Seq[T]]] = Liftable((treess: Seq[Seq[T]]) => Lifts.liftTreess(treess))
-      lazy implicit val liftEllipsis: Liftable[impl.Ellipsis] = Liftable((ellipsis: impl.Ellipsis) => Lifts.liftEllipsis(ellipsis))
-      lazy implicit val liftUnquote: Liftable[impl.Unquote] = Liftable((unquote: impl.Unquote) => Lifts.liftUnquote(unquote))
+      lazy implicit val liftEllipsis: Liftable[impl.Quasi.Ellipsis] = Liftable((ellipsis: impl.Quasi.Ellipsis) => Lifts.liftEllipsis(ellipsis))
+      lazy implicit val liftUnquote: Liftable[impl.Quasi.Unquote] = Liftable((unquote: impl.Quasi.Unquote) => Lifts.liftUnquote(unquote))
       lazy implicit val liftName: Liftable[impl.Name] = Liftable((name: impl.Name) => {
         val root = q"_root_": ReflectTree
         val fullProductPrefix = "scala.meta.internal.ast." + name.productPrefix

@@ -48,8 +48,8 @@ private[meta] object Helpers {
     }
     def ctorTpe: Type = {
       def loop(tree: Tree): Type = tree match {
-        case Unquote(tree, _) => Unquote(tree, classOf[Type])
-        case Ctor.Name(value) => Type.Name(value)
+        // case Ctor.Ref.Unquote(tree) => Type.Unquote(tree)
+        case Ctor.Ref.Name(value) => Type.Name(value)
         case Ctor.Ref.Select(qual, name) => Type.Select(qual, Type.Name(name.value))
         case Ctor.Ref.Project(qual, name) => Type.Project(qual, Type.Name(name.value))
         case Ctor.Ref.Function(_) => unreachable(debug(XtensionTermOps.this.tree, XtensionTermOps.this.tree.show[Raw]))
@@ -151,7 +151,7 @@ private[meta] object Helpers {
       case _ => false
     }
   }
-  implicit class XtensionEllipsis(ellipsis: Ellipsis) {
+  implicit class XtensionEllipsis(ellipsis: Quasi.Ellipsis) {
     def rank: Int = {
       def loop(clazz: Class[_], curr: Int): Int = {
         if (clazz.isArray) loop(clazz.getComponentType, curr + 1)

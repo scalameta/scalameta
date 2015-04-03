@@ -490,23 +490,36 @@ package scala.meta.internal.ast {
     require(stats.forall(_.isTopLevelStat))
   }
 
-  // NOTE: here's how Ellipsis.pt maps to hole's rank in scala.reflect's parlance,
-  // pt being Array[T] means rank 1 means .., pt being Array[Array[T]] means rank 2 means ..., etc
-  @bottom @ast class Ellipsis(tree: Tree, pt: Class[_]) extends Tree {
-    require(pt.isArray)
-  }
+  @branch trait Quasi extends Tree  
+  object Quasi {
+    // NOTE: here's how Ellipsis.pt maps to hole's rank in scala.reflect's parlance,
+    // pt being Array[T] means rank 1 means .., pt being Array[Array[T]] means rank 2 means ..., etc
+    @branch trait Ellipsis extends Quasi {
+      def tree: Tree
+      def pt: Class[_]
+      require(pt.isArray)
+    }
+    object Ellipsis {
+      def unapply(ellipsis: Ellipsis): Option[(Tree, Class[_])] = Some((ellipsis.tree, ellipsis.pt))
+    }
 
-  // TODO: after we bootstrap, Unquote.tree will become scala.meta.Tree
-  // however, for now, we will keep it at Any in order to also support scala.reflect trees
-  // NOTE: before you remove one of these requirements, you must know what's going on in the "allFields.unquote" test
-  @bottom @ast class Unquote(tree: Any, pt: Class[_]) extends Tree {
-    require(classOf[api.Tree].isAssignableFrom(pt))
-    require(pt != classOf[Term.Block])
-    require(pt != classOf[Type.Bounds])
-    require(pt != classOf[Ctor.Primary])
-    require(pt != classOf[Import.Clause])
-    require(pt != classOf[Lit.String])
-    require(pt != classOf[Mod.Annot])
+    // TODO: after we bootstrap, Unquote.tree will become scala.meta.Tree
+    // however, for now, we will keep it at Any in order to also support scala.reflect trees
+    // NOTE: before you remove one of these requirements, you must know what's going on in the "allFields.unquote" test
+    @branch trait Unquote extends Quasi {
+      def tree: Any
+      def pt: Class[_]
+      require(classOf[api.Tree].isAssignableFrom(pt))
+      require(pt != classOf[Term.Block])
+      require(pt != classOf[Type.Bounds])
+      require(pt != classOf[Ctor.Primary])
+      require(pt != classOf[Import.Clause])
+      require(pt != classOf[Lit.String])
+      require(pt != classOf[Mod.Annot])
+    }
+    object Unquote {
+      def unapply(unquote: Unquote): Option[(Any, Class[_])] = Some((unquote.tree, unquote.pt))
+    }
   }
  
   // TODO: since trees are no longer sealed, we need a mechanism that would keep track of all of them 

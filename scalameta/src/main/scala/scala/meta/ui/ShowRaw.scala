@@ -17,17 +17,8 @@ object Raw {
   def apply[T](f: T => Show.Result): Raw[T] = new Raw[T] { def apply(input: T) = f(input) }
 
   // TODO: would be nice to generate this with a macro for all tree nodes that we have
-  implicit def rawTree[T <: api.Tree]: Raw[T] = Raw(x => s(x.productPrefix, "(", x match {
-    case x: impl.Ellipsis =>
-      s(x.tree.show[Raw], ", classOf[", x.pt.getName, "]")
-    case x: impl.Unquote =>
-      s(x.tree.toString, ", classOf[", x.pt.getName, "]")
-    case x: Lit.String =>
-      s(enquote(x.value, DoubleQuotes))
-    case x: Lit =>
-      import scala.meta.dialects.Scala211 // show[Raw] is a debug printout, so it doesn't matter much which dialect we're using for that
-      s(x.show[Code])
-    case x =>
+  implicit def rawTree[T <: api.Tree]: Raw[T] = Raw(x => s(x.productPrefix, "(", {
+    def default = {
       def showRaw(x: Any): String = x match {
         case el: String => enquote(el, DoubleQuotes)
         case el: api.Tree => el.show[Raw]
@@ -38,6 +29,13 @@ object Raw {
         case el => el.toString
       }
       r(x.productIterator.map(showRaw).toList, ", ")
+    }
+    x match {
+      case x: impl.Quasi => default
+      case x: Lit.String => s(enquote(x.value, DoubleQuotes))
+      case x: Lit => import scala.meta.dialects.Scala211; s(x.show[Code])
+      case x => default
+    }
   }, ")"))
 
   implicit def rawToken[T <: Token]: Raw[T] = Raw { x =>
