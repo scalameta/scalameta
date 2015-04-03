@@ -67,7 +67,7 @@ object If extends scala.AnyRef {
     var _cond: Term,
     var _thenp: Term,
     var _elsep: Term
-  ) extends If {
+  ) extends If.Api {
     private[meta] def internalCopy(prototype: _root_.scala.meta.Tree = this, parent: _root_.scala.meta.Tree = internalParent, scratchpad: _root_.scala.collection.immutable.Seq[Any] = internalScratchpad, origin: _root_.scala.meta.Origin = internalOrigin): ThisType = new Impl(prototype.asInstanceOf[ThisType], parent, scratchpad, origin)(_root_.org.scalameta.ast.internal.initField(this._cond), _root_.org.scalameta.ast.internal.initField(this._thenp), _root_.org.scalameta.ast.internal.initField(this._elsep));
     def parent: _root_.scala.Option[_root_.scala.meta.Tree] = if (internalParent.$bang$eq(null))
       _root_.scala.Some(internalParent)
