@@ -9,7 +9,7 @@ import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 import scala.collection.{immutable, mutable}
 import org.scalameta.adt.{Liftables => AdtLiftables, Reflection => AdtReflection}
-import org.scalameta.ast.{Reflection => AstReflection}
+import org.scalameta.ast.{Liftables => AstLiftables, Reflection => AstReflection}
 import org.scalameta.invariants._
 import org.scalameta.unreachable
 import scala.meta.{Token => MetaToken}
@@ -21,7 +21,7 @@ import scala.compat.Platform.EOL
 
 // TODO: ideally, we would like to bootstrap these macros on top of scala.meta
 // so that quasiquotes can be interpreted by any host, not just scalac
-private[meta] class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables {
+private[meta] class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables with AstLiftables {
   lazy val u: c.universe.type = c.universe
   lazy val mirror: u.Mirror = c.mirror
   import c.internal._
@@ -508,7 +508,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
       // but that would bloat the code significantly with duplicated instances for denotations and sigmas
       lazy implicit val liftableDenotation: Liftable[MetaDenotation] = materializeAdt[MetaDenotation]
       lazy implicit val liftableSigma: Liftable[MetaSigma] = materializeAdt[MetaSigma]
-      implicit def liftableSubTree[T <: api.Tree]: Liftable[T] = Liftable((tree: T) => materializeAdt[api.Tree].apply(tree))
+      implicit def liftableSubTree[T <: api.Tree]: Liftable[T] = Liftable((tree: T) => materializeAst[api.Tree].apply(tree))
       implicit def liftableSubTrees[T <: api.Tree]: Liftable[Seq[T]] = Liftable((trees: Seq[T]) => Lifts.liftTrees(trees))
       implicit def liftableSubTreess[T <: api.Tree]: Liftable[Seq[Seq[T]]] = Liftable((treess: Seq[Seq[T]]) => Lifts.liftTreess(treess))
       lazy implicit val liftEllipsis: Liftable[impl.Ellipsis] = Liftable((ellipsis: impl.Ellipsis) => Lifts.liftEllipsis(ellipsis))

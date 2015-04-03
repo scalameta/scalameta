@@ -1,6 +1,7 @@
 package org.scalameta.ast
 
 import scala.language.implicitConversions
+import scala.collection.mutable
 import org.scalameta.invariants._
 import org.scalameta.adt.{Reflection => AdtReflection}
 import org.scalameta.ast.{Reflection => AstReflection}
@@ -21,6 +22,8 @@ trait Reflection extends AdtReflection {
   lazy val PatClass = mirror.staticClass("scala.meta.Pat")
   lazy val PatTypeClass = mirror.staticModule("scala.meta.Pat").info.decl(TypeName("Type")).asClass
   lazy val PatTypeRefClass = mirror.staticModule("scala.meta.Pat").info.decl(TermName("Type")).info.decl(TypeName("Ref")).asClass
+  lazy val RegistryModule = mirror.staticModule("scala.meta.internal.ast.Registry")
+  lazy val RegistryAnnotation = mirror.staticModule("org.scalameta.ast.internal").info.member(TypeName("registry")).asClass
 
   private implicit class PrivateXtensionAstSymbol(sym: Symbol) {
     def isPublicTree = sym.isClass && (sym.asClass.toType <:< ApiTreeClass.toType) && !sym.isInternalTree
@@ -33,6 +36,27 @@ trait Reflection extends AdtReflection {
       else if (nudgeToRight(sym)) 1
       else 0
     }
+  }
+  
+  override protected def figureOutSubclasses(sym: ClassSymbol): List[Symbol] = {
+    if (sym.isSealed) sym.knownDirectSubclasses.toList.sortBy(_.fullName)
+    else if (sym.baseClasses.contains(ApiTreeClass)) scalaMetaRegistry(sym)
+    else sys.error(s"failed to figure out direct subclasses for ${sym.fullName}")
+  }
+
+  private lazy val scalaMetaRegistry: Map[Symbol, List[Symbol]] = {
+    val ellipsisClass = mirror.staticClass("scala.meta.internal.ast.Ellipsis")
+    val unquoteClass = mirror.staticClass("scala.meta.internal.ast.Unquote")
+    val registry = mutable.Map[Symbol, List[Symbol]]()
+    val astClasses = ellipsisClass +: unquoteClass.baseClasses
+    astClasses.foreach(sym => {
+      if (sym.fullName.startsWith("scala.meta.")) {
+        val parents = sym.info.asInstanceOf[ClassInfoType].parents.map(_.typeSymbol)
+        val relevantParents = parents.filter(p => p.isClass && p.asClass.baseClasses.contains(ApiTreeClass))
+        relevantParents.foreach(parent => registry(parent) = registry.getOrElseUpdate(parent, Nil) :+ sym)
+      }
+    })
+    registry.toMap
   }
 
   implicit class XtensionAstType(tpe: Type) {
