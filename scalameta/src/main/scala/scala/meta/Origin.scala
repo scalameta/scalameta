@@ -39,7 +39,7 @@ object Origin {
     private implicit lazy val thisDialect: Dialect = this.dialect
     val start = input.tokens.apply(startTokenPos).start
     val end = if (endTokenPos != -1) input.tokens.apply(endTokenPos).end else -1
-    def findLine(x: Int, default: Int) = input match {
+    private def findLine(x: Int, default: Int) = input match {
       case Input.None => default
       case els => els.content.take(x + 1).count(_ == '\n')
     }
