@@ -19,9 +19,12 @@ class AstMacros(val c: Context) {
   def impl(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       def is(abbrev: String) = c.internal.enclosingOwner.fullName + "." + cdef.name == "scala.meta.internal.ast." + abbrev
+      def isQuasi = cdef.name == "Unquote" || cdef.name == "Ellipsis"
       val q"$imods class $iname[..$tparams] $ctorMods(...$rawparamss) extends { ..$earlydefns } with ..$iparents { $aself => ..$astats }" = cdef
-      val aname = if (is("Ellipsis") || is("Unquote")) iname else TypeName("Api")
-      val name = if (is("Ellipsis") || is("Unquote")) iname else TypeName("Impl")
+      val aname = TypeName("Api")
+      val name = if (isQuasi) iname else TypeName("Impl")
+      val uname = TypeName("Unquote")
+      val ename = TypeName("Ellipsis")
       val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" = mdef
       val bparams1 = ListBuffer[ValDef]() // boilerplate params
       val paramss1 = ListBuffer[List[ValDef]]() // payload params
@@ -30,11 +33,22 @@ class AstMacros(val c: Context) {
       val istats1 = ListBuffer[Tree]()
       val astats1 = ListBuffer[Tree]()
       val stats1 = ListBuffer[Tree]()
+      val ustats1 = ListBuffer[Tree]()
+      val estats1 = ListBuffer[Tree]()
       val ianns1 = ListBuffer[Tree]() ++ imods.annotations
       def imods1 = imods.mapAnnotations(_ => ianns1.toList)
+      def umods1 = Modifiers(NoFlags, TypeName("meta"), List(q"new _root_.org.scalameta.ast.ast"))
+      def emods1 = Modifiers(NoFlags, TypeName("meta"), List(q"new _root_.org.scalameta.ast.ast"))
       val iparents1 = ListBuffer[Tree]() ++ iparents
-      def aparents1 = if (is("Ellipsis") || is("Unquote")) iparents1 else List(tq"$iname")
-      def parents1 = if (is("Ellipsis") || is("Unquote")) iparents1 else List(tq"$aname")
+      def aparents1 = if (isQuasi) iparents1 else List(tq"$iname")
+      def parents1 = if (isQuasi) iparents1 else List(tq"$aname")
+      def iparentsdot(what: String) = iparents1.map({
+        case Ident(name) => Select(Ident(name.toTermName), TypeName(what))
+        case Select(qual, name) => Select(Select(qual, name.toTermName), what)
+        case unsupported => c.abort(unsupported.pos, "implementation restriction: unsupported parent")
+      })
+      def uparents1 = tq"_root_.scala.meta.internal.ast.Unquote" +: iparentsdot("Unquote")
+      def eparents1 = tq"_root_.scala.meta.internal.ast.Ellipsis" +: iparentsdot("Ellipsis")
       val mstats1 = ListBuffer[Tree]() ++ mstats
       val manns1 = ListBuffer[Tree]() ++ mmods.annotations
       def mmods1 = mmods.mapAnnotations(_ => manns1.toList)
@@ -103,6 +117,16 @@ class AstMacros(val c: Context) {
             this.$pinternal
           }
         """
+      }
+      ustats1 ++= fieldParamss.flatten.map { p =>
+        val message = s"unsupported unquoting position"
+        val impl = q"throw new _root_.scala.`package`.UnsupportedOperationException($message)"
+        q"override def ${p.name}: _root_.scala.Nothing = $impl"
+      }
+      estats1 ++= fieldParamss.flatten.map { p =>
+        val message = s"unsupported splicing position"
+        val impl = q"throw new _root_.scala.`package`.UnsupportedOperationException($message)"
+        q"override def ${p.name}: _root_.scala.Nothing = $impl"
       }
       val fieldDefaultss = fieldParamss.map(_.map(p => {
         if (p.name == denotParam.name) denotParam.rhs
@@ -208,7 +232,7 @@ class AstMacros(val c: Context) {
         }
       }
 
-      if (is("Ellipsis") || is("Unquote")) {
+      if (isQuasi) {
         val ustats1 = stats1 ++ astats1
         val cdef1 = q"${finalize(imods1)} class $name[..$tparams] $ctorMods(...${bparams1 +: paramss1}) extends { ..$earlydefns } with ..$parents1 { $self => ..$ustats1 }"
         val mdef1 = q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
@@ -219,6 +243,8 @@ class AstMacros(val c: Context) {
         mstats1 += q"implicit def interfaceToApi(interface: $iname): $aname = macro $AstInternal.Macros.interfaceToApi[$iname, $aname]"
         mstats1 += q"trait $aname[..$tparams] extends ..$aparents1 { $aself => ..$astats1 }"
         mstats1 += q"private[${mname.toTypeName}] final class $name[..$tparams] $ctorMods(...${bparams1 +: paramss1}) extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
+        mstats1 += q"$umods1 class $uname(tree: Any) extends ..$uparents1 { ..$ustats1 }"
+        mstats1 += q"$emods1 class $ename(tree: _root_.scala.meta.Tree) extends ..$eparents1 { ..$estats1 }"
         val cdef1 = q"$imods1 trait $iname extends ..$iparents1 { $iself => ..$istats1 }"
         val mdef1 = q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
         List(cdef1, mdef1)
