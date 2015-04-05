@@ -20,12 +20,9 @@ class LinePositionSuite extends ParseSuite {
   )
 
   val findAllDefn = topDown(collect {
-    case clss: impl.Defn.Class =>
-      clss
-    case df: impl.Defn.Def =>
-      df
-    case mtch: impl.Term.Match =>
-      mtch
+    case x: impl.Defn.Class => x
+    case x: impl.Defn.Def => x
+    case x: impl.Term.Match => x
   })
 
   def loop(dir: File): Unit = {
@@ -39,20 +36,20 @@ class LinePositionSuite extends ParseSuite {
         val matches: List[impl.Tree] = findAllDefn(tree)
         matches foreach { mtch =>
           mtch match {
-            case clss: impl.Defn.Class =>
-              val startLine = lines(clss.origin.startLine)
-              val endLine = lines(clss.origin.endLine)
-              assert(startLine.contains("class " + clss.name.toString))
-              assert(clss.origin.startLine <= clss.origin.endLine)
+            case x: impl.Defn.Class =>
+              val startLine = lines(x.origin.startLine)
+              val endLine = lines(x.origin.endLine)
+              assert(startLine.contains("class " + x.name.toString))
+              assert(x.origin.startLine <= x.origin.endLine)
               assert(endLine.endsWith(")") || endLine.trim.endsWith("}") || endLine.endsWith("]") || endLine.contains("extends"))
-            case df: impl.Defn.Def =>
-              val startLine = lines(df.origin.startLine)
-              assert(startLine.contains("def " + df.name.toString))
-              assert(df.origin.startLine <= df.origin.endLine)
-            case mtch: impl.Term.Match =>
-              val startLine = lines(mtch.origin.startLine)
-              val endLine = lines(mtch.origin.endLine)
-              assert(mtch.origin.startLine <= mtch.origin.endLine)
+            case x: impl.Defn.Def =>
+              val startLine = lines(x.origin.startLine)
+              assert(startLine.contains("def " + x.name.toString))
+              assert(x.origin.startLine <= x.origin.endLine)
+            case x: impl.Term.Match =>
+              val startLine = lines(x.origin.startLine)
+              val endLine = lines(x.origin.endLine)
+              assert(x.origin.startLine <= x.origin.endLine)
               assert(startLine.contains("match"))
               assert(endLine.contains("}"))
             case _ => assert(false)
