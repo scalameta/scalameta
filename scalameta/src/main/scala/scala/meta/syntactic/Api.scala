@@ -48,6 +48,8 @@ private[meta] trait Api {
   implicit class XtensionParsedTree(tree: Tree) {
     def start = tree.origin.start
     def end = tree.origin.end
+    def startLine = tree.origin.startLine
+    def endLine = tree.origin.endLine
     def tokens = tree.origin.tokens
   }
 }
