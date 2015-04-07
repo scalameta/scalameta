@@ -43,8 +43,8 @@ object Origin {
       case Input.None => default
       case els => els.content.take(x + 1).count(_ == '\n')
     }
-    val startLine = findLine(start, 0)
-    val endLine = findLine(end, -1)
+    lazy val startLine = findLine(start, 0)
+    lazy val endLine = findLine(end, -1)
 
     def tokens: Seq[Token] = input.tokens(dialect).slice(startTokenPos, endTokenPos + 1)
   }
