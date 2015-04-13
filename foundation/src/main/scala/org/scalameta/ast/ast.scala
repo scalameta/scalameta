@@ -18,8 +18,8 @@ class AstMacros(val c: Context) {
   val HygieneInternal = q"_root_.scala.meta.internal.hygiene"
   def impl(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
-      def is(abbrev: String) = c.internal.enclosingOwner.fullName + "." + cdef.name == "scala.meta.internal.ast." + abbrev
-      def isQuasi = cdef.name == "Unquote" || cdef.name == "Ellipsis"
+      def is(abbrev: String) = c.internal.enclosingOwner.fullName.toString + "." + cdef.name.toString == "scala.meta.internal.ast." + abbrev
+      def isQuasi = cdef.name.toString == "Unquote" || cdef.name.toString == "Ellipsis"
       val q"$imods class $iname[..$tparams] $ctorMods(...$rawparamss) extends { ..$earlydefns } with ..$iparents { $aself => ..$astats }" = cdef
       val aname = TypeName("Api")
       val name = if (isQuasi) iname else TypeName("Impl")
@@ -44,11 +44,11 @@ class AstMacros(val c: Context) {
       def parents1 = if (isQuasi) iparents1 else List(tq"$aname")
       def iparentsdot(what: String) = iparents1.map({
         case Ident(name) => Select(Ident(name.toTermName), TypeName(what))
-        case Select(qual, name) => Select(Select(qual, name.toTermName), what)
+        case Select(qual, name) => Select(Select(qual, name.toTermName), TypeName(what))
         case unsupported => c.abort(unsupported.pos, "implementation restriction: unsupported parent")
       })
-      def uparents1 = tq"_root_.scala.meta.internal.ast.Unquote" +: iparentsdot("Unquote")
-      def eparents1 = tq"_root_.scala.meta.internal.ast.Ellipsis" +: iparentsdot("Ellipsis")
+      def uparents1 = tq"_root_.scala.meta.internal.ast.Quasi.Unquote" +: iparentsdot("Unquote")
+      def eparents1 = tq"_root_.scala.meta.internal.ast.Quasi.Ellipsis" +: iparentsdot("Ellipsis")
       val mstats1 = ListBuffer[Tree]() ++ mstats
       val manns1 = ListBuffer[Tree]() ++ mmods.annotations
       def mmods1 = mmods.mapAnnotations(_ => manns1.toList)
