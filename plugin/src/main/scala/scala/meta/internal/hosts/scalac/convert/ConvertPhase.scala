@@ -29,9 +29,22 @@ trait ConvertPhase {
     implicit val c = Scalahost.mkGlobalContext[global.type](global)
 
     override def newPhase(prev: Phase): StdPhase = new StdPhase(prev) {
+
+      private def merge(semanticTree: Source, syntacticTree: Source): Source = {
+        semanticTree
+      }
+
       override def apply(unit: CompilationUnit) {
-        val munit = c.toMtree(unit.body, classOf[Source])
-        unit.body.appendMetadata("scalameta" -> munit)
+        // TODO: get token from content, infer position in generated tree below somehow
+        // TODO: one easy way would be to parse tree using scalameta (tree lacking semantic info), and move tokens
+        // TODO: from this parsed tree to the changed one
+
+        // TODO: go through names instead, as trees might be different from one to the other. Parsing trees should
+        // TODO. generate name
+        val semanticTree = c.toMtree(unit.body, classOf[Source])
+        val syntacticTree = unit.source.content.mkString("").parse[Source]
+
+        unit.body.appendMetadata("scalameta" -> merge(semanticTree, syntacticTree))
       }
     }
   }
