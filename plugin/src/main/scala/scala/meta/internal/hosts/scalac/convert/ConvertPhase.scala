@@ -31,6 +31,16 @@ trait ConvertPhase {
     override def newPhase(prev: Phase): StdPhase = new StdPhase(prev) {
 
       private def merge(semanticTree: Source, syntacticTree: Source): Source = {
+
+        println("=================================================================================================")
+        println(semanticTree.show[Semantics])
+        println("-------------------------------------------------------------------------------------------------")
+        println(syntacticTree.show[Semantics])
+        println("=================================================================================================")
+        println(syntacticTree.origin.endLine)
+        println(semanticTree.origin)
+        // semanticTree.copy(origin = syntacticTree.origin) // TODO: does not work
+        // semanticTree.copyAttrs(syntacticTree) // TODO: does not work
         semanticTree
       }
 
