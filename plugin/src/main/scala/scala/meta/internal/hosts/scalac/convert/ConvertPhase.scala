@@ -8,6 +8,10 @@ import scala.meta.internal.hosts.scalac.{PluginBase => ScalahostPlugin}
 import scala.reflect.io.AbstractFile
 import org.scalameta.reflection._
 
+import scala.meta.internal.{ ast => api}
+import scala.meta.tql._
+
+
 trait ConvertPhase {
   self: ScalahostPlugin =>
 
@@ -30,18 +34,48 @@ trait ConvertPhase {
 
     override def newPhase(prev: Phase): StdPhase = new StdPhase(prev) {
 
-      private def merge(semanticTree: Source, syntacticTree: Source): Source = {
+      private def merge(semanticTree: api.Source, syntacticTree: api.Source): Source = {
 
-        println("=================================================================================================")
+        def findInSyntactic(name: api.Name): Option[api.Name] = {
+          val traverse = tql.collect {
+            case nm: api.Name if nm.value == name.value => nm
+          }.topDown
+          traverse(syntacticTree).flatMap(_._2.headOption)
+        }
+
+        // TODO: remove
+        /*println("=================================================================================================")
         println(semanticTree.show[Semantics])
         println("-------------------------------------------------------------------------------------------------")
         println(syntacticTree.show[Semantics])
         println("=================================================================================================")
         println(syntacticTree.origin.endLine)
-        println(semanticTree.origin)
-        // semanticTree.copy(origin = syntacticTree.origin) // TODO: does not work
-        // semanticTree.copyAttrs(syntacticTree) // TODO: does not work
-        semanticTree
+        println(semanticTree.origin)*/
+        //semanticTree.copy(origin = syntacticTree.origin)
+
+        val replaceOrigin = tql.transform {
+          case nm: api.Term.Name =>
+            val ret = findInSyntactic(nm) match {
+              case None => nm
+              case Some(sm) => nm.copy(origin = sm.origin)
+            }
+            ret
+            // TODO: add more cases
+        }.topDown
+
+        // TODO: move into test file
+        val check = tql.transform {
+          case nm: api.Name =>
+            print(s"[${nm.origin.start}:${nm.origin.end}]")
+            nm
+        }.topDown
+        val mergedTree = replaceOrigin(semanticTree).map(_._1).getOrElse(semanticTree)
+        println("before ---------------------------------------------------------------------------------------------")
+        check(semanticTree)
+        println("after ----------------------------------------------------------------------------------------------")
+        check(mergedTree)
+
+        mergedTree.asInstanceOf[api.Source]
       }
 
       override def apply(unit: CompilationUnit) {
@@ -51,8 +85,8 @@ trait ConvertPhase {
 
         // TODO: go through names instead, as trees might be different from one to the other. Parsing trees should
         // TODO. generate name
-        val semanticTree = c.toMtree(unit.body, classOf[Source])
-        val syntacticTree = unit.source.content.mkString("").parse[Source]
+        val semanticTree = c.toMtree(unit.body, classOf[Source]).asInstanceOf[api.Source]
+        val syntacticTree = unit.source.content.mkString("").parse[Source].asInstanceOf[api.Source]
 
         unit.body.appendMetadata("scalameta" -> merge(semanticTree, syntacticTree))
       }
