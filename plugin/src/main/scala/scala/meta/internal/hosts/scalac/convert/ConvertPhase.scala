@@ -35,6 +35,18 @@ trait ConvertPhase {
     override def newPhase(prev: Phase): StdPhase = new StdPhase(prev) {
 
       private def merge(semanticTree: api.Source, syntacticTree: api.Source): Source = {
+        // TODO: go through names instead, as trees might be different from one to the other. Parsing trees should
+        // TODO. generate name
+        // TODO: what is the best way to do that then? I can think of two ways:
+        // TODO:    1. Using TQL, go through Semantic tree, find names, and use TQL again to go through the syntactic
+        // TODO     tree to find equivalent name. This is however rather expensive, and does not account for empty
+        // TODO     symbols positions.
+        // TODO:    2. Generate a list of all symbols in the syntactic tree (in topdown, or at least the same way as
+        // TODO:    TQL will traverse the semantic tree; then traverse the semantic tree and pop symbols one by one
+        // TODO:    as they come
+
+        // TODO: copy the source file into origin as well
+        // TODO: this will put origin into name,s what for the test of the tree?
 
         def findInSyntactic(name: api.Name): Option[api.Name] = {
           val traverse = tql.collect {
@@ -79,12 +91,6 @@ trait ConvertPhase {
       }
 
       override def apply(unit: CompilationUnit) {
-        // TODO: get token from content, infer position in generated tree below somehow
-        // TODO: one easy way would be to parse tree using scalameta (tree lacking semantic info), and move tokens
-        // TODO: from this parsed tree to the changed one
-
-        // TODO: go through names instead, as trees might be different from one to the other. Parsing trees should
-        // TODO. generate name
         val semanticTree = c.toMtree(unit.body, classOf[Source]).asInstanceOf[api.Source]
         val syntacticTree = unit.source.content.mkString("").parse[Source].asInstanceOf[api.Source]
 
