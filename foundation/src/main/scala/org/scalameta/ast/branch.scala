@@ -32,15 +32,19 @@ class BranchMacros(val c: Context) {
       mstats1 += q"$AstInternal.hierarchyCheck[$name]"
       val anns1 = anns :+ q"new $AdtInternal.branch" :+ q"new $AstInternal.branch"
 
-      def parentsdot(what: String) = parents.map({
-        case Ident(name) => Select(Ident(name.toTermName), TypeName(what))
-        case Select(qual, name) => Select(Select(qual, name.toTermName), TypeName(what))
-        case unsupported => c.abort(unsupported.pos, "implementation restriction: unsupported parent")
-      })
-      def uparents = tq"$name" +: tq"_root_.scala.meta.internal.ast.Quasi.Unquote" +: parentsdot("Unquote")
-      def eparents = tq"$name" +: tq"_root_.scala.meta.internal.ast.Quasi.Ellipsis" +: parentsdot("Ellipsis")
-      if (!isQuasi) mstats1 += q"@_root_.org.scalameta.ast.branch private[meta] trait Unquote extends ..$uparents"
-      if (!isQuasi) mstats1 += q"@_root_.org.scalameta.ast.branch private[meta] trait Ellipsis extends ..$eparents"
+      if (!isQuasi) {
+        def parentsdot(what: String) = parents.map({
+          case Ident(name) => Select(Ident(name.toTermName), TypeName(what))
+          case Select(qual, name) => Select(Select(qual, name.toTermName), TypeName(what))
+          case unsupported => c.abort(unsupported.pos, "implementation restriction: unsupported parent")
+        })
+        def uparents = tq"$name" +: tq"_root_.scala.meta.internal.ast.Quasi.Unquote" +: parentsdot("Unquote")
+        def eparents = tq"$name" +: tq"_root_.scala.meta.internal.ast.Quasi.Ellipsis" +: parentsdot("Ellipsis")
+        val ustats = List(q"def pt: _root_.java.lang.Class[_] = _root_.scala.Predef.classOf[$name]")
+        val estats = List(q"def pt: _root_.java.lang.Class[_] = _root_.org.scalameta.runtime.arrayClass(_root_.scala.Predef.classOf[$name], rank)")
+        mstats1 += q"@_root_.org.scalameta.ast.ast private[meta] class Unquote(tree: _root_.scala.Any) extends ..$uparents { ..$ustats }"
+        mstats1 += q"@_root_.org.scalameta.ast.ast private[meta] class Ellipsis(tree: _root_.scala.meta.internal.ast.Tree, rank: _root_.scala.Int) extends ..$eparents { ..$estats }"
+      }
 
       val cdef1 = ClassDef(Modifiers(flags1, privateWithin, anns1), name, tparams, Template(parents, self, stats1.toList))
       val mdef1 = ModuleDef(mmods, mname, Template(mparents, mself, mstats1.toList))

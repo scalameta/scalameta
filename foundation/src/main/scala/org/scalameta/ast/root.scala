@@ -59,8 +59,10 @@ class RootMacros(val c: Context) {
       """
       stats1 ++= boilerplate
       
-      mstats1 += q"@_root_.org.scalameta.ast.branch private[meta] trait Unquote extends _root_.scala.meta.internal.ast.Quasi.Unquote"
-      mstats1 += q"@_root_.org.scalameta.ast.branch private[meta] trait Ellipsis extends _root_.scala.meta.internal.ast.Quasi.Ellipsis"
+      val ustats = List(q"def pt: _root_.java.lang.Class[_] = _root_.scala.Predef.classOf[$name]")
+      val estats = List(q"def pt: _root_.java.lang.Class[_] = _root_.org.scalameta.runtime.arrayClass(_root_.scala.Predef.classOf[$name], rank)")
+      mstats1 += q"@_root_.org.scalameta.ast.ast private[meta] class Unquote(tree: _root_.scala.Any) extends _root_.scala.meta.internal.ast.Quasi.Unquote { ..$ustats }"
+      mstats1 += q"@_root_.org.scalameta.ast.ast private[meta] class Ellipsis(tree: _root_.scala.meta.internal.ast.Tree, rank: _root_.scala.Int) extends _root_.scala.meta.internal.ast.Quasi.Ellipsis { ..$estats }"
 
       val cdef1 = q"${Modifiers(flags1, privateWithin, anns1)} trait $name[..$tparams] extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
       val mdef1 = q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
