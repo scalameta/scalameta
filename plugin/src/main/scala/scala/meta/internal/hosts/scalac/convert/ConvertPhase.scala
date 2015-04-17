@@ -11,6 +11,8 @@ import org.scalameta.reflection._
 import scala.meta.internal.{ ast => api}
 import scala.meta.tql._
 
+import scala.reflect.ClassTag
+import scala.reflect.runtime.universe.TypeTag
 
 trait ConvertPhase {
   self: ScalahostPlugin =>
@@ -43,17 +45,94 @@ trait ConvertPhase {
         // TODO     symbols positions.
         // TODO:    2. Generate a list of all symbols in the syntactic tree (in topdown, or at least the same way as
         // TODO:    TQL will traverse the semantic tree; then traverse the semantic tree and pop symbols one by one
-        // TODO:    as they come
+        // TODO:    as they come.
+        // TODO:      => FOLLOWING TESTS (SEE PRINTS BELOW), THIS DOES NOT LOOK LIKE THE BEST APPROACH, OR SHOULD BE
+        // TODO:      => SOMEHOW TUNED. We always have the semantic implementation with more names, especially
+        // TODO:      => following semantic desugaring. This is a problem we will have to tackle somehow.
+        // TODO:      => IT SHOULD BE FINE for normal Scala code however.
 
         // TODO: copy the source file into origin as well
         // TODO: this will put origin into name,s what for the test of the tree?
 
-        def findInSyntactic(name: api.Name): Option[api.Name] = {
+        /* ~~~~ SOLUTION 1 ~~~~ */
+
+        /*def findInSyntactic(name: api.Name): Option[api.Name] = {
           val traverse = tql.collect {
             case nm: api.Name if nm.value == name.value => nm
           }.topDown
           traverse(syntacticTree).flatMap(_._2.headOption)
         }
+
+        val replaceOrigin = tql.transform {
+          case nm: api.Term.Name =>
+            val ret = findInSyntactic(nm) match {
+              case None => nm
+              case Some(sm) => nm.copy(origin = sm.origin)
+            }
+            ret
+            // TODO: add more cases
+        }.topDown
+        val mergedTree = replaceOrigin(semanticTree).map(_._1).getOrElse(semanticTree)*/
+
+        /* ~~~~ SOLUTION 2 ~~~~ */
+
+        /*val syntacticNames: List[api.Name] = {
+          val collect = tql.collect {
+            case nm: api.Name => nm
+          }.topDown
+          collect(syntacticTree).map(_._2).getOrElse(Nil)
+        }
+        val semanticNames: List[api.Name] = {
+          val collect = tql.collect {
+            case nm: api.Name => nm
+          }.topDown
+          collect(semanticTree).map(_._2).getOrElse(Nil)
+        }
+        println(s"Lengths: ${syntacticNames.length}:${semanticNames.length}")
+        if (syntacticNames.length != semanticNames.length)
+          semanticNames.zip(syntacticNames) foreach (println(_))
+
+        /* We can do better! */
+        println(syntacticNames.forall(s => semanticNames.filter(x => x.value == s.value).length > 0)) // This is always false
+        println(semanticNames.forall(s => syntacticNames.filter(x => x.value == s.value).length > 0)) // This is sometimes true
+        */
+
+        /* SOLUTION 3 */
+
+        var syntacticCount = 0
+
+        var syntacticNames: List[api.Name] = {
+          val collect = tql.collect { case nm: api.Name => syntacticCount += 1;nm }.topDown
+          collect(syntacticTree).map(_._2).getOrElse(Nil)
+        }
+        def findSyntacticEquivalent(nm: api.Name): Option[api.Name] = {
+          val pos = syntacticNames.indexWhere(x => ClassTag(x.getClass) == ClassTag(nm.getClass) && x.value == nm.value)
+          val elem = syntacticNames.lift(pos)
+          syntacticNames = syntacticNames.drop(pos)
+          elem
+        }
+
+        var found = 0
+        var notFound = 0
+
+        val replaceOrigin = tql.transform {
+          case nm: api.Name =>
+            val ret = findSyntacticEquivalent(nm) match {
+              case None => notFound = notFound + 1; nm
+              case Some(x) => found = found + 1; nm match { /* Need to ensure case class to use copy constructor */
+                case nms: api.Term.Name => nms.copy(origin = x.origin)
+                case nms: api.Type.Name => nms.copy(origin = x.origin)
+                case nms: api.Ctor.Ref.Name => nms.copy(origin = x.origin)
+                case nms: api.Name.Anonymous => nms.copy(origin = x.origin)
+                case nms: api.Name.Indeterminate => nms.copy(origin = x.origin)
+              }
+            }
+            ret
+        }.topDown
+
+        val mergedTree = replaceOrigin(semanticTree).map(_._1).getOrElse(semanticTree)
+
+        println(s"SyntacticCount: $syntacticCount, found: $found, not found: $notFound")
 
         // TODO: remove
         /*println("=================================================================================================")
@@ -65,27 +144,16 @@ trait ConvertPhase {
         println(semanticTree.origin)*/
         //semanticTree.copy(origin = syntacticTree.origin)
 
-        val replaceOrigin = tql.transform {
-          case nm: api.Term.Name =>
-            val ret = findInSyntactic(nm) match {
-              case None => nm
-              case Some(sm) => nm.copy(origin = sm.origin)
-            }
-            ret
-            // TODO: add more cases
-        }.topDown
-
-        // TODO: move into test file
+        /*// TODO: move into test file
         val check = tql.transform {
           case nm: api.Name =>
             print(s"[${nm.origin.start}:${nm.origin.end}]")
             nm
         }.topDown
-        val mergedTree = replaceOrigin(semanticTree).map(_._1).getOrElse(semanticTree)
-        println("before ---------------------------------------------------------------------------------------------")
+        println("\nbefore ---------------------------------------------------------------------------------------------")
         check(semanticTree)
-        println("after ----------------------------------------------------------------------------------------------")
-        check(mergedTree)
+        println("\nafter ----------------------------------------------------------------------------------------------")
+        check(mergedTree)*/
 
         mergedTree.asInstanceOf[api.Source]
       }
