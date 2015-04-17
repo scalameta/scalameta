@@ -106,7 +106,7 @@ trait ConvertPhase {
         def findSyntacticEquivalent(nm: api.Name): Option[api.Name] = {
           val pos = syntacticNames.indexWhere(x => ClassTag(x.getClass) == ClassTag(nm.getClass) && x.value == nm.value)
           val elem = syntacticNames.lift(pos)
-          syntacticNames = syntacticNames.drop(pos)
+          syntacticNames = syntacticNames.drop(pos + 1)
           elem
         }
 
