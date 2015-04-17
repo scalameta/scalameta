@@ -496,6 +496,7 @@ package scala.meta.internal.ast {
     // pt being Array[T] means rank 1 means .., pt being Array[Array[T]] means rank 2 means ..., etc
     @branch trait Ellipsis extends Quasi {
       def tree: Tree
+      def rank: Int
       def pt: Class[_]
       require(pt.isArray)
     }

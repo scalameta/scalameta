@@ -16,6 +16,8 @@ class BranchMacros(val c: Context) {
   val AstInternal = q"_root_.org.scalameta.ast.internal"
   def impl(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
+      def is(abbrev: String) = c.internal.enclosingOwner.fullName.toString + "." + cdef.name.toString == "scala.meta.internal.ast." + abbrev
+      def isQuasi = cdef.name.toString == "Quasi" || cdef.name.toString == "Unquote" || cdef.name.toString == "Ellipsis"      
       val ClassDef(mods @ Modifiers(flags, privateWithin, anns), name, tparams, Template(parents, self, stats)) = cdef
       val ModuleDef(mmods, mname, Template(mparents, mself, mstats)) = mdef
       val stats1 = ListBuffer[Tree]() ++ stats
@@ -29,6 +31,16 @@ class BranchMacros(val c: Context) {
       stats1 += q"type ThisType <: $name"
       mstats1 += q"$AstInternal.hierarchyCheck[$name]"
       val anns1 = anns :+ q"new $AdtInternal.branch" :+ q"new $AstInternal.branch"
+
+      def parentsdot(what: String) = parents.map({
+        case Ident(name) => Select(Ident(name.toTermName), TypeName(what))
+        case Select(qual, name) => Select(Select(qual, name.toTermName), TypeName(what))
+        case unsupported => c.abort(unsupported.pos, "implementation restriction: unsupported parent")
+      })
+      def uparents = tq"$name" +: tq"_root_.scala.meta.internal.ast.Quasi.Unquote" +: parentsdot("Unquote")
+      def eparents = tq"$name" +: tq"_root_.scala.meta.internal.ast.Quasi.Ellipsis" +: parentsdot("Ellipsis")
+      if (!isQuasi) mstats1 += q"@_root_.org.scalameta.ast.branch private[meta] trait Unquote extends ..$uparents"
+      if (!isQuasi) mstats1 += q"@_root_.org.scalameta.ast.branch private[meta] trait Ellipsis extends ..$eparents"
 
       val cdef1 = ClassDef(Modifiers(flags1, privateWithin, anns1), name, tparams, Template(parents, self, stats1.toList))
       val mdef1 = ModuleDef(mmods, mname, Template(mparents, mself, mstats1.toList))

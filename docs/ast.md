@@ -86,6 +86,26 @@ object If extends scala.AnyRef {
       _root_.org.scalameta.ast.internal.loadField(this._elsep);
       this._elsep
     }
+  };
+  @new _root_.org.scalameta.ast.ast() private[meta] 
+  class Unquote(tree: _root_.scala.Any) 
+  extends If with _root_.scala.meta.internal.ast.Quasi.Unquote with Term.Unquote {
+    override def cond: _root_.scala.Nothing = throw new _root_.scala.`package`.UnsupportedOperationException("unsupported unquoting position");
+    override def thenp: _root_.scala.Nothing = throw new _root_.scala.`package`.UnsupportedOperationException("unsupported unquoting position");
+    override def elsep: _root_.scala.Nothing = throw new _root_.scala.`package`.UnsupportedOperationException("unsupported unquoting position");
+    def pt: _root_.java.lang.Class[_$51] forSome {
+      <synthetic> type _$51
+    } = _root_.scala.Predef.classOf[If]
+  };
+  @new _root_.org.scalameta.ast.ast() private[meta] 
+  class Ellipsis(tree: _root_.scala.meta.internal.ast.Tree, rank: _root_.scala.Int) 
+  extends If with _root_.scala.meta.internal.ast.Quasi.Ellipsis with Term.Ellipsis {
+    override def cond: _root_.scala.Nothing = throw new _root_.scala.`package`.UnsupportedOperationException("unsupported splicing position");
+    override def thenp: _root_.scala.Nothing = throw new _root_.scala.`package`.UnsupportedOperationException("unsupported splicing position");
+    override def elsep: _root_.scala.Nothing = throw new _root_.scala.`package`.UnsupportedOperationException("unsupported splicing position");
+    def pt: _root_.java.lang.Class[_$52] forSome {
+      <synthetic> type _$52
+    } = _root_.org.scalameta.runtime.arrayClass(_root_.scala.Predef.classOf[If], rank)
   }
 }
 ```
@@ -104,40 +124,39 @@ Here's the same code after typechecking with helper def macros expanded:
     If.super.<init>();
     ()
   };
-  def internalTag: Int = 21;
+  def internalTag: Int = 58;
   def apply(cond: scala.meta.internal.ast.Term, thenp: scala.meta.internal.ast.Term, elsep: scala.meta.internal.ast.Term, origin: scala.meta.Origin = scala.meta.Origin.None): scala.meta.internal.ast.Term.If = {
     def internal(cond: scala.meta.internal.ast.Term, thenp: scala.meta.internal.ast.Term, elsep: scala.meta.internal.ast.Term, origin: scala.meta.Origin): scala.meta.internal.ast.Term.If = {
       ((): Unit);
-      ((): Unit);
       ({
-        val result$macro$291: Boolean = cond.!=(null);
-        if (result$macro$291)
+        val result$macro$337: Boolean = cond.!=(null);
+        if (result$macro$337)
           scala.Tuple2.apply[Boolean, scala.collection.immutable.Nil.type](true, immutable.this.Nil)
         else
           scala.Tuple2.apply[Boolean, List[String]](false, immutable.this.List.apply[String]("cond is equal to null"))
       } match {
         case (_1: Boolean, _2: List[String])(Boolean, List[String])(true, _) => ()
-        case (_1: Boolean, _2: List[String])(Boolean, List[String])(false, (failures$macro$290 @ _)) => org.scalameta.invariants.InvariantFailedException.raise("cond.!=(null)", failures$macro$290, scala.collection.immutable.Map.apply[String, scala.meta.internal.ast.Term](scala.Tuple2.apply[String, scala.meta.internal.ast.Term]("cond", cond)))
+        case (_1: Boolean, _2: List[String])(Boolean, List[String])(false, (failures$macro$336 @ _)) => org.scalameta.invariants.InvariantFailedException.raise("cond.!=(null)", failures$macro$336, scala.collection.immutable.Map.apply[String, scala.meta.internal.ast.Term](scala.Tuple2.apply[String, scala.meta.internal.ast.Term]("cond", cond)))
       }: Unit);
       ({
-        val result$macro$293: Boolean = thenp.!=(null);
-        if (result$macro$293)
+        val result$macro$339: Boolean = thenp.!=(null);
+        if (result$macro$339)
           scala.Tuple2.apply[Boolean, scala.collection.immutable.Nil.type](true, immutable.this.Nil)
         else
           scala.Tuple2.apply[Boolean, List[String]](false, immutable.this.List.apply[String]("thenp is equal to null"))
       } match {
         case (_1: Boolean, _2: List[String])(Boolean, List[String])(true, _) => ()
-        case (_1: Boolean, _2: List[String])(Boolean, List[String])(false, (failures$macro$292 @ _)) => org.scalameta.invariants.InvariantFailedException.raise("thenp.!=(null)", failures$macro$292, scala.collection.immutable.Map.apply[String, scala.meta.internal.ast.Term](scala.Tuple2.apply[String, scala.meta.internal.ast.Term]("thenp", thenp)))
+        case (_1: Boolean, _2: List[String])(Boolean, List[String])(false, (failures$macro$338 @ _)) => org.scalameta.invariants.InvariantFailedException.raise("thenp.!=(null)", failures$macro$338, scala.collection.immutable.Map.apply[String, scala.meta.internal.ast.Term](scala.Tuple2.apply[String, scala.meta.internal.ast.Term]("thenp", thenp)))
       }: Unit);
       ({
-        val result$macro$295: Boolean = elsep.!=(null);
-        if (result$macro$295)
+        val result$macro$341: Boolean = elsep.!=(null);
+        if (result$macro$341)
           scala.Tuple2.apply[Boolean, scala.collection.immutable.Nil.type](true, immutable.this.Nil)
         else
           scala.Tuple2.apply[Boolean, List[String]](false, immutable.this.List.apply[String]("elsep is equal to null"))
       } match {
         case (_1: Boolean, _2: List[String])(Boolean, List[String])(true, _) => ()
-        case (_1: Boolean, _2: List[String])(Boolean, List[String])(false, (failures$macro$294 @ _)) => org.scalameta.invariants.InvariantFailedException.raise("elsep.!=(null)", failures$macro$294, scala.collection.immutable.Map.apply[String, scala.meta.internal.ast.Term](scala.Tuple2.apply[String, scala.meta.internal.ast.Term]("elsep", elsep)))
+        case (_1: Boolean, _2: List[String])(Boolean, List[String])(false, (failures$macro$340 @ _)) => org.scalameta.invariants.InvariantFailedException.raise("elsep.!=(null)", failures$macro$340, scala.collection.immutable.Map.apply[String, scala.meta.internal.ast.Term](scala.Tuple2.apply[String, scala.meta.internal.ast.Term]("elsep", elsep)))
       }: Unit);
       ();
       ();
@@ -216,12 +235,12 @@ Here's the same code after typechecking with helper def macros expanded:
         {
           scala.Predef.require(this.internalPrototype.!=(null), "internal error when initializing Impl.cond");
           this._cond_=({
-            <artifact> val qual$19: scala.meta.internal.ast.Term = this.internalPrototype.cond;
-            <artifact> val x$97: scala.meta.internal.ast.Term = this.internalPrototype.cond;
-            <artifact> val x$98: scala.meta.internal.ast.Term.If.Impl = this;
-            <artifact> val x$99: scala.collection.immutable.Seq[Any] @scala.reflect.internal.annotations.uncheckedBounds = qual$19.internalCopy$default$3;
-            <artifact> val x$100: scala.meta.Origin = qual$19.internalCopy$default$4;
-            qual$19.internalCopy(x$97, x$98, x$99, x$100)
+            <artifact> val qual$41: scala.meta.internal.ast.Term = this.internalPrototype.cond;
+            <artifact> val x$186: scala.meta.internal.ast.Term = this.internalPrototype.cond;
+            <artifact> val x$187: scala.meta.internal.ast.Term.If.Impl = this;
+            <artifact> val x$188: scala.collection.immutable.Seq[Any] @scala.reflect.internal.annotations.uncheckedBounds = qual$41.internalCopy$default$3;
+            <artifact> val x$189: scala.meta.Origin = qual$41.internalCopy$default$4;
+            qual$41.internalCopy(x$186, x$187, x$188, x$189)
           })
         }
       else
@@ -233,12 +252,12 @@ Here's the same code after typechecking with helper def macros expanded:
         {
           scala.Predef.require(this.internalPrototype.!=(null), "internal error when initializing Impl.thenp");
           this._thenp_=({
-            <artifact> val qual$20: scala.meta.internal.ast.Term = this.internalPrototype.thenp;
-            <artifact> val x$101: scala.meta.internal.ast.Term = this.internalPrototype.thenp;
-            <artifact> val x$102: scala.meta.internal.ast.Term.If.Impl = this;
-            <artifact> val x$103: scala.collection.immutable.Seq[Any] @scala.reflect.internal.annotations.uncheckedBounds = qual$20.internalCopy$default$3;
-            <artifact> val x$104: scala.meta.Origin = qual$20.internalCopy$default$4;
-            qual$20.internalCopy(x$101, x$102, x$103, x$104)
+            <artifact> val qual$42: scala.meta.internal.ast.Term = this.internalPrototype.thenp;
+            <artifact> val x$190: scala.meta.internal.ast.Term = this.internalPrototype.thenp;
+            <artifact> val x$191: scala.meta.internal.ast.Term.If.Impl = this;
+            <artifact> val x$192: scala.collection.immutable.Seq[Any] @scala.reflect.internal.annotations.uncheckedBounds = qual$42.internalCopy$default$3;
+            <artifact> val x$193: scala.meta.Origin = qual$42.internalCopy$default$4;
+            qual$42.internalCopy(x$190, x$191, x$192, x$193)
           })
         }
       else
@@ -250,18 +269,192 @@ Here's the same code after typechecking with helper def macros expanded:
         {
           scala.Predef.require(this.internalPrototype.!=(null), "internal error when initializing Impl.elsep");
           this._elsep_=({
-            <artifact> val qual$21: scala.meta.internal.ast.Term = this.internalPrototype.elsep;
-            <artifact> val x$105: scala.meta.internal.ast.Term = this.internalPrototype.elsep;
-            <artifact> val x$106: scala.meta.internal.ast.Term.If.Impl = this;
-            <artifact> val x$107: scala.collection.immutable.Seq[Any] @scala.reflect.internal.annotations.uncheckedBounds = qual$21.internalCopy$default$3;
-            <artifact> val x$108: scala.meta.Origin = qual$21.internalCopy$default$4;
-            qual$21.internalCopy(x$105, x$106, x$107, x$108)
+            <artifact> val qual$43: scala.meta.internal.ast.Term = this.internalPrototype.elsep;
+            <artifact> val x$194: scala.meta.internal.ast.Term = this.internalPrototype.elsep;
+            <artifact> val x$195: scala.meta.internal.ast.Term.If.Impl = this;
+            <artifact> val x$196: scala.collection.immutable.Seq[Any] @scala.reflect.internal.annotations.uncheckedBounds = qual$43.internalCopy$default$3;
+            <artifact> val x$197: scala.meta.Origin = qual$43.internalCopy$default$4;
+            qual$43.internalCopy(x$194, x$195, x$196, x$197)
           })
         }
       else
         (): Unit);
       this._elsep
     }
+  };
+  @org.scalameta.ast.internal.astClass @org.scalameta.adt.Internal.leafClass final private[meta] class Unquote extends AnyRef with scala.meta.internal.ast.Term.If with meta.internal.ast.Quasi.Unquote with scala.meta.internal.ast.Term.Unquote with Product {
+    <paramaccessor> private[this] val internalPrototype: scala.meta.internal.ast.Term.If.Unquote = _;
+    <stable> <accessor> <paramaccessor> protected def internalPrototype: scala.meta.internal.ast.Term.If.Unquote = Unquote.this.internalPrototype;
+    <paramaccessor> private[this] val internalParent: scala.meta.Tree = _;
+    <stable> <accessor> <paramaccessor> protected def internalParent: scala.meta.Tree = Unquote.this.internalParent;
+    <paramaccessor> private[this] val internalScratchpad: scala.collection.immutable.Seq[Any] = _;
+    <stable> <accessor> <paramaccessor> protected def internalScratchpad: scala.collection.immutable.Seq[Any] = Unquote.this.internalScratchpad;
+    <paramaccessor> private[this] val internalOrigin: scala.meta.Origin = _;
+    <stable> <accessor> <paramaccessor> protected def internalOrigin: scala.meta.Origin = Unquote.this.internalOrigin;
+    <paramaccessor> private[this] var _tree: Any = _;
+    <accessor> <paramaccessor> def _tree: Any = Unquote.this._tree;
+    <accessor> <paramaccessor> def _tree_=(x$1: Any): Unit = Unquote.this._tree = x$1;
+    def <init>(internalPrototype: scala.meta.internal.ast.Term.If.Unquote, internalParent: scala.meta.Tree, internalScratchpad: scala.collection.immutable.Seq[Any], internalOrigin: scala.meta.Origin)(_tree: Any): scala.meta.internal.ast.Term.If.Unquote = {
+      Unquote.super.<init>();
+      ()
+    };
+    private[meta] def internalCopy(prototype: scala.meta.Tree = this, parent: scala.meta.Tree = Unquote.this.internalParent, scratchpad: scala.collection.immutable.Seq[Any] = Unquote.this.internalScratchpad, origin: scala.meta.Origin = Unquote.this.internalOrigin): Unquote.this.ThisType = new If.this.Unquote(prototype.asInstanceOf[Unquote.this.ThisType], parent, scratchpad, origin)((this._tree: Any));
+    override <synthetic> def internalCopy$default$1: scala.meta.Tree = this;
+    override <synthetic> def internalCopy$default$2: scala.meta.Tree = Unquote.this.internalParent;
+    override <synthetic> def internalCopy$default$3: scala.collection.immutable.Seq[Any] = Unquote.this.internalScratchpad;
+    override <synthetic> def internalCopy$default$4: scala.meta.Origin = Unquote.this.internalOrigin;
+    def parent: Option[scala.meta.Tree] = if (Unquote.this.internalParent.!=(null))
+      scala.Some.apply[scala.meta.Tree](Unquote.this.internalParent)
+    else
+      scala.None;
+    def origin: scala.meta.Origin = Unquote.this.internalOrigin;
+    def tree: Any = {
+      ((): Unit);
+      this._tree
+    };
+    override def cond: Nothing = throw new scala.`package`.UnsupportedOperationException("unsupported unquoting position");
+    override def thenp: Nothing = throw new scala.`package`.UnsupportedOperationException("unsupported unquoting position");
+    override def elsep: Nothing = throw new scala.`package`.UnsupportedOperationException("unsupported unquoting position");
+    def pt: Class[_] = classOf[scala.meta.internal.ast.Term$$If];
+    def copy(tree: Any = this.tree, origin: scala.meta.Origin = scala.meta.Origin.Transformed.apply(this)): Unquote.this.ThisType = If.this.Unquote.apply(tree, origin);
+    <synthetic> def copy$default$1: Any = this.tree;
+    <synthetic> def copy$default$2: scala.meta.Origin = scala.meta.Origin.Transformed.apply(this);
+    override type ThisType = scala.meta.internal.ast.Term.If.Unquote;
+    override def internalTag: Int = If.this.Unquote.internalTag;
+    override def productPrefix: String = ("Term.If.Unquote": String);
+    override def productArity: Int = 1;
+    override def productElement(n: Int): Any = n match {
+      case 0 => this.tree
+      case _ => throw new scala.`package`.IndexOutOfBoundsException(n.toString())
+    };
+    override def productIterator: Iterator[Any] = scala.runtime.ScalaRunTime.typedProductIterator[Nothing](this)
+  };
+  @@<?> @@<?> private[meta] object Unquote extends scala.AnyRef {
+    def <init>(): scala.meta.internal.ast.Term.If.Unquote.type = {
+      Unquote.super.<init>();
+      ()
+    };
+    def internalTag: Int = 59;
+    def apply(tree: Any, origin: scala.meta.Origin = scala.meta.Origin.None): scala.meta.internal.ast.Term.If.Unquote = {
+      def internal(tree: Any, origin: scala.meta.Origin): scala.meta.internal.ast.Term.If.Unquote = {
+        ((): Unit);
+        ();
+        ();
+        val node: scala.meta.internal.ast.Term.If.Unquote = new If.this.Unquote(null, null, scala.collection.immutable.Nil, origin)((tree: Any));
+        ((): Unit);
+        node
+      };
+      internal(tree, origin)
+    };
+    <synthetic> def apply$default$2: scala.meta.Origin = scala.meta.Origin.None;
+    @inline final def unapply(x: scala.meta.internal.ast.Term.If.Unquote): Option[Any] = if (x.==(null))
+      scala.None
+    else
+      scala.Some.apply[Any](x.tree)
+  };
+  @org.scalameta.ast.internal.astClass @org.scalameta.adt.Internal.leafClass final private[meta] class Ellipsis extends AnyRef with scala.meta.internal.ast.Term.If with meta.internal.ast.Quasi.Ellipsis with scala.meta.internal.ast.Term.Ellipsis with Product {
+    <paramaccessor> private[this] val internalPrototype: scala.meta.internal.ast.Term.If.Ellipsis = _;
+    <stable> <accessor> <paramaccessor> protected def internalPrototype: scala.meta.internal.ast.Term.If.Ellipsis = Ellipsis.this.internalPrototype;
+    <paramaccessor> private[this] val internalParent: scala.meta.Tree = _;
+    <stable> <accessor> <paramaccessor> protected def internalParent: scala.meta.Tree = Ellipsis.this.internalParent;
+    <paramaccessor> private[this] val internalScratchpad: scala.collection.immutable.Seq[Any] = _;
+    <stable> <accessor> <paramaccessor> protected def internalScratchpad: scala.collection.immutable.Seq[Any] = Ellipsis.this.internalScratchpad;
+    <paramaccessor> private[this] val internalOrigin: scala.meta.Origin = _;
+    <stable> <accessor> <paramaccessor> protected def internalOrigin: scala.meta.Origin = Ellipsis.this.internalOrigin;
+    <paramaccessor> private[this] var _tree: scala.meta.internal.ast.Tree = _;
+    <accessor> <paramaccessor> def _tree: scala.meta.internal.ast.Tree = Ellipsis.this._tree;
+    <accessor> <paramaccessor> def _tree_=(x$1: scala.meta.internal.ast.Tree): Unit = Ellipsis.this._tree = x$1;
+    <paramaccessor> private[this] var _rank: Int = _;
+    <accessor> <paramaccessor> def _rank: Int = Ellipsis.this._rank;
+    <accessor> <paramaccessor> def _rank_=(x$1: Int): Unit = Ellipsis.this._rank = x$1;
+    def <init>(internalPrototype: scala.meta.internal.ast.Term.If.Ellipsis, internalParent: scala.meta.Tree, internalScratchpad: scala.collection.immutable.Seq[Any], internalOrigin: scala.meta.Origin)(_tree: scala.meta.internal.ast.Tree, _rank: Int): scala.meta.internal.ast.Term.If.Ellipsis = {
+      Ellipsis.super.<init>();
+      ()
+    };
+    private[meta] def internalCopy(prototype: scala.meta.Tree = this, parent: scala.meta.Tree = Ellipsis.this.internalParent, scratchpad: scala.collection.immutable.Seq[Any] = Ellipsis.this.internalScratchpad, origin: scala.meta.Origin = Ellipsis.this.internalOrigin): Ellipsis.this.ThisType = new If.this.Ellipsis(prototype.asInstanceOf[Ellipsis.this.ThisType], parent, scratchpad, origin)((null: scala.meta.internal.ast.Tree), (this._rank: Int));
+    override <synthetic> def internalCopy$default$1: scala.meta.Tree = this;
+    override <synthetic> def internalCopy$default$2: scala.meta.Tree = Ellipsis.this.internalParent;
+    override <synthetic> def internalCopy$default$3: scala.collection.immutable.Seq[Any] = Ellipsis.this.internalScratchpad;
+    override <synthetic> def internalCopy$default$4: scala.meta.Origin = Ellipsis.this.internalOrigin;
+    def parent: Option[scala.meta.Tree] = if (Ellipsis.this.internalParent.!=(null))
+      scala.Some.apply[scala.meta.Tree](Ellipsis.this.internalParent)
+    else
+      scala.None;
+    def origin: scala.meta.Origin = Ellipsis.this.internalOrigin;
+    def tree: scala.meta.internal.ast.Tree = {
+      (if (this._tree.==(null))
+        {
+          scala.Predef.require(this.internalPrototype.!=(null), "internal error when initializing Ellipsis.tree");
+          this._tree_=({
+            <artifact> val qual$44: scala.meta.internal.ast.Tree = this.internalPrototype.tree;
+            <artifact> val x$198: scala.meta.internal.ast.Tree = this.internalPrototype.tree;
+            <artifact> val x$199: scala.meta.internal.ast.Term.If.Ellipsis = this;
+            <artifact> val x$200: scala.collection.immutable.Seq[Any] @scala.reflect.internal.annotations.uncheckedBounds = qual$44.internalCopy$default$3;
+            <artifact> val x$201: scala.meta.Origin = qual$44.internalCopy$default$4;
+            qual$44.internalCopy(x$198, x$199, x$200, x$201)
+          })
+        }
+      else
+        (): Unit);
+      this._tree
+    };
+    def rank: Int = {
+      ((): Unit);
+      this._rank
+    };
+    override def cond: Nothing = throw new scala.`package`.UnsupportedOperationException("unsupported splicing position");
+    override def thenp: Nothing = throw new scala.`package`.UnsupportedOperationException("unsupported splicing position");
+    override def elsep: Nothing = throw new scala.`package`.UnsupportedOperationException("unsupported splicing position");
+    def pt: Class[_] = org.scalameta.runtime.`package`.arrayClass(classOf[scala.meta.internal.ast.Term$$If], Ellipsis.this.rank);
+    def copy(tree: scala.meta.internal.ast.Tree = this.tree, rank: Int = this.rank, origin: scala.meta.Origin = scala.meta.Origin.Transformed.apply(this)): Ellipsis.this.ThisType = If.this.Ellipsis.apply(tree, rank, origin);
+    <synthetic> def copy$default$1: scala.meta.internal.ast.Tree = this.tree;
+    <synthetic> def copy$default$2: Int = this.rank;
+    <synthetic> def copy$default$3: scala.meta.Origin = scala.meta.Origin.Transformed.apply(this);
+    override type ThisType = scala.meta.internal.ast.Term.If.Ellipsis;
+    override def internalTag: Int = If.this.Ellipsis.internalTag;
+    override def productPrefix: String = ("Term.If.Ellipsis": String);
+    override def productArity: Int = 2;
+    override def productElement(n: Int): Any = n match {
+      case 0 => this.tree
+      case 1 => this.rank
+      case _ => throw new scala.`package`.IndexOutOfBoundsException(n.toString())
+    };
+    override def productIterator: Iterator[Any] = scala.runtime.ScalaRunTime.typedProductIterator[Nothing](this)
+  };
+  @@<?> @@<?> private[meta] object Ellipsis extends scala.AnyRef {
+    def <init>(): scala.meta.internal.ast.Term.If.Ellipsis.type = {
+      Ellipsis.super.<init>();
+      ()
+    };
+    def internalTag: Int = 60;
+    def apply(tree: scala.meta.internal.ast.Tree, rank: Int, origin: scala.meta.Origin = scala.meta.Origin.None): scala.meta.internal.ast.Term.If.Ellipsis = {
+      def internal(tree: scala.meta.internal.ast.Tree, rank: Int, origin: scala.meta.Origin): scala.meta.internal.ast.Term.If.Ellipsis = {
+        ((): Unit);
+        ({
+          val result$macro$343: Boolean = tree.!=(null);
+          if (result$macro$343)
+            scala.Tuple2.apply[Boolean, scala.collection.immutable.Nil.type](true, immutable.this.Nil)
+          else
+            scala.Tuple2.apply[Boolean, List[String]](false, immutable.this.List.apply[String]("tree is equal to null"))
+        } match {
+          case (_1: Boolean, _2: List[String])(Boolean, List[String])(true, _) => ()
+          case (_1: Boolean, _2: List[String])(Boolean, List[String])(false, (failures$macro$342 @ _)) => org.scalameta.invariants.InvariantFailedException.raise("tree.!=(null)", failures$macro$342, scala.collection.immutable.Map.apply[String, scala.meta.internal.ast.Tree](scala.Tuple2.apply[String, scala.meta.internal.ast.Tree]("tree", tree)))
+        }: Unit);
+        ();
+        ();
+        ();
+        val node: scala.meta.internal.ast.Term.If.Ellipsis = new If.this.Ellipsis(null, null, scala.collection.immutable.Nil, origin)((null: scala.meta.internal.ast.Tree), (rank: Int));
+        (node._tree_=(tree.internalCopy(tree, node, tree.internalCopy$default$3, tree.internalCopy$default$4)): Unit);
+        ((): Unit);
+        node
+      };
+      internal(tree, rank, origin)
+    };
+    <synthetic> def apply$default$3: scala.meta.Origin = scala.meta.Origin.None;
+    @inline final def unapply(x: scala.meta.internal.ast.Term.If.Ellipsis): Option[(scala.meta.internal.ast.Tree, Int)] = if (x.==(null))
+      scala.None
+    else
+      scala.Some.apply[(scala.meta.internal.ast.Tree, Int)](scala.Tuple2.apply[scala.meta.internal.ast.Tree, Int](x.tree, x.rank))
   }
 };
 ```

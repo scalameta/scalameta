@@ -32,7 +32,7 @@ object internal {
     import definitions._
     def hierarchyCheck[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
       val sym = T.tpe.typeSymbol.asClass
-      val designation = if (sym.isRoot) "root" else if (sym.isBranch) "branch" else if (sym.isLeaf) "leaf" else ???
+      val designation = if (sym.isRoot) "root" else if (sym.isBranch) "branch" else if (sym.isLeaf) "leaf" else "unknown"
       val roots = sym.baseClasses.filter(_.isRoot)
       if (roots.length == 0 && sym.isLeaf) c.abort(c.enclosingPosition, s"rootless leaf is disallowed")
       else if (roots.length > 1) c.abort(c.enclosingPosition, s"multiple roots for a $designation: " + (roots.map(_.fullName).init.mkString(", ")) + " and " + roots.last.fullName)

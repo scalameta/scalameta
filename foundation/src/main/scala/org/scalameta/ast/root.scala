@@ -58,6 +58,9 @@ class RootMacros(val c: Context) {
         private[meta] def internalCopy(prototype: $Tree = internalPrototype, parent: $Tree = internalParent, scratchpad: $Data = internalScratchpad, origin: $Origin = internalOrigin): ThisType
       """
       stats1 ++= boilerplate
+      
+      mstats1 += q"@_root_.org.scalameta.ast.branch private[meta] trait Unquote extends _root_.scala.meta.internal.ast.Quasi.Unquote"
+      mstats1 += q"@_root_.org.scalameta.ast.branch private[meta] trait Ellipsis extends _root_.scala.meta.internal.ast.Quasi.Ellipsis"
 
       val cdef1 = q"${Modifiers(flags1, privateWithin, anns1)} trait $name[..$tparams] extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
       val mdef1 = q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
