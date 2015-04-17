@@ -15,6 +15,7 @@ import scala.meta.internal.{ast => impl}
 import scala.meta.internal.parsers.Location._
 import scala.meta.internal.parsers.Helpers._
 import scala.meta.syntactic.Token._
+import org.scalameta.ast._
 import org.scalameta.tokens._
 import org.scalameta.unreachable
 import org.scalameta.invariants._
@@ -345,6 +346,16 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
 
 /* ---------- TREE CONSTRUCTION ------------------------------------------- */
 
+  def unquote[T <: Tree : AstMetadata]: T = autoPos {
+    token match {
+      case unquote: Unquote =>
+        next()
+        implicitly[AstMetadata[T]].unquote(unquote.tree)
+      case _ =>
+        unreachable(debug(token))
+    }
+  }
+  
   /** Convert tree to formal parameter list. */
   def convertToParams(tree: Term): List[Term.Param] = tree match {
     case Term.Tuple(ts) => ts.toList flatMap convertToParam
@@ -1209,6 +1220,8 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
           canApply = false
           next()
           atPos(in.prevTokenPos, auto)(Term.New(template()))
+        case token: Unquote =>
+          unquote[Term]
         case _ =>
           syntaxError(s"illegal start of simple expression", at = token)
       }
