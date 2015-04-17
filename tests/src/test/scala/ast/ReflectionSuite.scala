@@ -11,7 +11,7 @@ class ReflectionSuite extends AstSuite {
   // but please deal with that (or come up with a more effective way of testing AstReflection)
   test("root") {
     assert(symbolOf[scala.meta.Tree].isRoot)
-    assert(symbolOf[scala.meta.Tree].asRoot.allBranches.length === 68)
+    assert(symbolOf[scala.meta.Tree].asRoot.allBranches.length === 65)
     assert(symbolOf[scala.meta.Tree].asRoot.allLeafs.length === 130)
   }
 
@@ -175,9 +175,6 @@ class ReflectionSuite extends AstSuite {
       |scala.meta.internal.ast.Pat.Wildcard             => scala.meta.Pat
       |scala.meta.internal.ast.Pkg                      => scala.meta.Member.Term with scala.meta.Stat
       |scala.meta.internal.ast.Pkg.Object               => scala.meta.Member.Term with scala.meta.Stat
-      |scala.meta.internal.ast.Quasi                    => Nothing
-      |scala.meta.internal.ast.Quasi.Ellipsis           => Nothing
-      |scala.meta.internal.ast.Quasi.Unquote            => Nothing
       |scala.meta.internal.ast.Ref                      => scala.meta.Ref
       |scala.meta.internal.ast.Scope                    => scala.meta.Scope
       |scala.meta.internal.ast.Source                   => scala.meta.Source

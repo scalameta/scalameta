@@ -59,10 +59,9 @@ trait Reflection extends AdtReflection {
           val modulePath :+ className = astPath.split('.').toList
           locateModule(mirror.RootPackage, modulePath).info.member(TypeName(className)).asClass
         })
-        var entireHierarchy = astClasses.flatMap(_.baseClasses.map(_.asClass)).distinct.filter(_.toType <:< ApiTreeClass.toType)
-        // NOTE: no @ast class implements these traits yet, so we have to explicitly add them to the hierarchy
-        // TODO: this line is to be deleted once we finish the migration to the new foundation of quasiquoting
-        entireHierarchy ++= List(ImplQuasiClass, ImplEllipsisClass, ImplUnquoteClass)
+        var entireHierarchy = astClasses.flatMap(_.baseClasses.map(_.asClass)).distinct
+        entireHierarchy = entireHierarchy.filter(sym => sym.toType <:< ApiTreeClass.toType)
+        entireHierarchy = entireHierarchy.filter(sym => !(sym.toType <:< ImplQuasiClass.toType))
         val registry = mutable.Map[Symbol, List[Symbol]]()
         entireHierarchy.foreach(sym => registry(sym) = Nil)
         entireHierarchy.foreach(sym => {
@@ -79,7 +78,8 @@ trait Reflection extends AdtReflection {
   implicit class XtensionAstType(tpe: Type) {
     def publish: Type = tpe.map({
       case TypeRef(_, sym, Nil) if sym.isBottomTree =>
-        NothingTpe
+        // TODO: I've no idea what this thing was for, so I'm putting a crasher here to figure it out
+        ???
       case TypeRef(_, sym, Nil) if sym.isInternalTree =>
         val publicParents = sym.asClass.baseClasses.filter(_.isPublicTree)
         val minimalParents = publicParents.filter(p1 => !publicParents.exists(p2 => p1 != p2 && p2.asClass.toType <:< p1.asClass.toType))
