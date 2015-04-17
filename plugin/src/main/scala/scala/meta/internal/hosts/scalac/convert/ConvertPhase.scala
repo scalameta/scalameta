@@ -37,19 +37,18 @@ trait ConvertPhase {
     override def newPhase(prev: Phase): StdPhase = new StdPhase(prev) {
 
       private def merge(semanticTree: api.Source, syntacticTree: api.Source): Source = {
-        // TODO: go through names instead, as trees might be different from one to the other. Parsing trees should
-        // TODO. generate name
         // TODO: what is the best way to do that then? I can think of two ways:
-        // TODO:    1. Using TQL, go through Semantic tree, find names, and use TQL again to go through the syntactic
-        // TODO     tree to find equivalent name. This is however rather expensive, and does not account for empty
-        // TODO     symbols positions.
-        // TODO:    2. Generate a list of all symbols in the syntactic tree (in topdown, or at least the same way as
-        // TODO:    TQL will traverse the semantic tree; then traverse the semantic tree and pop symbols one by one
-        // TODO:    as they come.
-        // TODO:      => FOLLOWING TESTS (SEE PRINTS BELOW), THIS DOES NOT LOOK LIKE THE BEST APPROACH, OR SHOULD BE
-        // TODO:      => SOMEHOW TUNED. We always have the semantic implementation with more names, especially
-        // TODO:      => following semantic desugaring. This is a problem we will have to tackle somehow.
-        // TODO:      => IT SHOULD BE FINE for normal Scala code however.
+        //     1. Using TQL, go through Semantic tree, find names, and use TQL again to go through the syntactic
+        //      tree to find equivalent name. This is however rather expensive, and does not account for empty
+        //      symbols positions.
+        //
+        //     2. Generate a list of all symbols in the syntactic tree (in topdown, or at least the same way as
+        //     TQL will traverse the semantic tree; then traverse the semantic tree and pop symbols one by one
+        //     as they come.
+        //
+        //  => in both cases, there is the problem of the desugaring of semantic informations (e.g. quasiquotes),
+        // which leads us to have much more names in source code containing reflection. This should not be
+        // the case for "normal" scala source code not involving reflection.
 
         // TODO: copy the source file into origin as well
         // TODO: this will put origin into name,s what for the test of the tree?
@@ -70,7 +69,6 @@ trait ConvertPhase {
               case Some(sm) => nm.copy(origin = sm.origin)
             }
             ret
-            // TODO: add more cases
         }.topDown
         val mergedTree = replaceOrigin(semanticTree).map(_._1).getOrElse(semanticTree)*/
 
@@ -97,7 +95,7 @@ trait ConvertPhase {
         println(semanticNames.forall(s => syntacticNames.filter(x => x.value == s.value).length > 0)) // This is sometimes true
         */
 
-        /* SOLUTION 3 */
+        /* ~~~~ SOLUTION 3 ~~~~ */
 
         var syntacticCount = 0
 
@@ -132,7 +130,7 @@ trait ConvertPhase {
 
         val mergedTree = replaceOrigin(semanticTree).map(_._1).getOrElse(semanticTree)
 
-        println(s"SyntacticCount: $syntacticCount, found: $found, not found: $notFound")
+        println(s"SyntacticCount: $syntacticCount, found symbols: $found, not found: $notFound")
 
         // TODO: remove
         /*println("=================================================================================================")
