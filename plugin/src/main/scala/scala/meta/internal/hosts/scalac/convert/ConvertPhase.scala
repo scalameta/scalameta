@@ -37,6 +37,7 @@ trait ConvertPhase {
     override def newPhase(prev: Phase): StdPhase = new StdPhase(prev) {
 
       private def merge(semanticTree: api.Source, syntacticTree: api.Source): Source = {
+
         // TODO: what is the best way to do that then? I can think of two ways:
         //     1. Using TQL, go through Semantic tree, find names, and use TQL again to go through the syntactic
         //      tree to find equivalent name. This is however rather expensive, and does not account for empty
@@ -49,6 +50,10 @@ trait ConvertPhase {
         //  => in both cases, there is the problem of the desugaring of semantic informations (e.g. quasiquotes),
         // which leads us to have much more names in source code containing reflection. This should not be
         // the case for "normal" scala source code not involving reflection.
+        //
+        // One possibility for Obey once this is done to keep layout of part of code to reprint, that were transform
+        // and do not have any link with the origin anymore would be to use TQL to find its equivalent, somehow
+        // model its layout, save its comment, and re-use these information in reprinting.
 
         // TODO: copy the source file into origin as well
         // TODO: this will put origin into name,s what for the test of the tree?
@@ -95,12 +100,12 @@ trait ConvertPhase {
         println(semanticNames.forall(s => syntacticNames.filter(x => x.value == s.value).length > 0)) // This is sometimes true
         */
 
-        /* ~~~~ SOLUTION 3 ~~~~ */
+        /* ~~~~ SOLUTION 3 ~~~~ */q
 
         var syntacticCount = 0
 
         var syntacticNames: List[api.Name] = {
-          val collect = tql.collect { case nm: api.Name => syntacticCount += 1;nm }.topDown
+          val collect = tql.collect { case nm: api.Name => println(s"${nm.sigma}, ${nm.denot}");syntacticCount += 1;nm }.topDown
           collect(syntacticTree).map(_._2).getOrElse(Nil)
         }
         def findSyntacticEquivalent(nm: api.Name): Option[api.Name] = {
@@ -115,6 +120,7 @@ trait ConvertPhase {
 
         val replaceOrigin = tql.transform {
           case nm: api.Name =>
+            //println(s"${nm.sigma}, ${nm.denot}")
             val ret = findSyntacticEquivalent(nm) match {
               case None => notFound = notFound + 1; nm
               case Some(x) => found = found + 1; nm match { /* Need to ensure case class to use copy constructor */
@@ -134,13 +140,12 @@ trait ConvertPhase {
 
         // TODO: remove
         /*println("=================================================================================================")
-        println(semanticTree.show[Semantics])
+        println(semanticTree.show[Raw])
         println("-------------------------------------------------------------------------------------------------")
-        println(syntacticTree.show[Semantics])
+        println(syntacticTree.show[Raw])
         println("=================================================================================================")
         println(syntacticTree.origin.endLine)
         println(semanticTree.origin)*/
-        //semanticTree.copy(origin = syntacticTree.origin)
 
         /*// TODO: move into test file
         val check = tql.transform {
@@ -157,6 +162,7 @@ trait ConvertPhase {
       }
 
       override def apply(unit: CompilationUnit) {
+        println(unit.source.path)
         val semanticTree = c.toMtree(unit.body, classOf[Source]).asInstanceOf[api.Source]
         val syntacticTree = unit.source.content.mkString("").parse[Source].asInstanceOf[api.Source]
 
