@@ -100,12 +100,12 @@ trait ConvertPhase {
         println(semanticNames.forall(s => syntacticNames.filter(x => x.value == s.value).length > 0)) // This is sometimes true
         */
 
-        /* ~~~~ SOLUTION 3 ~~~~ */q
+        /* ~~~~ SOLUTION 3 ~~~~ */
 
         var syntacticCount = 0
 
         var syntacticNames: List[api.Name] = {
-          val collect = tql.collect { case nm: api.Name => println(s"${nm.sigma}, ${nm.denot}");syntacticCount += 1;nm }.topDown
+          val collect = tql.collect { case nm: api.Name => syntacticCount += 1;nm }.topDown
           collect(syntacticTree).map(_._2).getOrElse(Nil)
         }
         def findSyntacticEquivalent(nm: api.Name): Option[api.Name] = {
