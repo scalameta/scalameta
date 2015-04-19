@@ -14,6 +14,8 @@ import scala.meta.tql._
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe.TypeTag
 
+import scala.collection.{immutable => imm}
+
 trait ConvertPhase {
   self: ScalahostPlugin =>
 
@@ -36,138 +38,136 @@ trait ConvertPhase {
 
     override def newPhase(prev: Phase): StdPhase = new StdPhase(prev) {
 
-      private def merge(semanticTree: api.Source, syntacticTree: api.Source): Source = {
+      private def merge(parsedTree: api.Source, convertedTree: api.Source): api.Source = {
 
-        // TODO: what is the best way to do that then? I can think of two ways:
-        //     1. Using TQL, go through Semantic tree, find names, and use TQL again to go through the syntactic
-        //      tree to find equivalent name. This is however rather expensive, and does not account for empty
-        //      symbols positions.
-        //
-        //     2. Generate a list of all symbols in the syntactic tree (in topdown, or at least the same way as
-        //     TQL will traverse the semantic tree; then traverse the semantic tree and pop symbols one by one
-        //     as they come.
-        //
-        //  => in both cases, there is the problem of the desugaring of semantic informations (e.g. quasiquotes),
-        // which leads us to have much more names in source code containing reflection. This should not be
-        // the case for "normal" scala source code not involving reflection.
-        //
-        // One possibility for Obey once this is done to keep layout of part of code to reprint, that were transform
-        // and do not have any link with the origin anymore would be to use TQL to find its equivalent, somehow
-        // model its layout, save its comment, and re-use these information in reprinting.
+        def zLoop[T](pTree: imm.Seq[T], cTree: imm.Seq[T], f: (T,T) => api.Tree): imm.Seq[T] = (pTree zip cTree).map(s => f(s._1, s._2).asInstanceOf[T])
 
-        // TODO: copy the source file into origin as well
-        // TODO: this will put origin into name,s what for the test of the tree?
-
-        /* ~~~~ SOLUTION 1 ~~~~ */
-
-        /*def findInSyntactic(name: api.Name): Option[api.Name] = {
-          val traverse = tql.collect {
-            case nm: api.Name if nm.value == name.value => nm
-          }.topDown
-          traverse(syntacticTree).flatMap(_._2.headOption)
+        def zzLoop[T](pTree: imm.Seq[imm.Seq[T]], cTree: imm.Seq[imm.Seq[T]], f: (T, T) => api.Tree): imm.Seq[imm.Seq[T]] = {
+          (pTree zip cTree).map(xs => (xs._1 zip xs._2).map(x => f(x._1, x._2).asInstanceOf[T]))
         }
 
-        val replaceOrigin = tql.transform {
-          case nm: api.Term.Name =>
-            val ret = findInSyntactic(nm) match {
-              case None => nm
-              case Some(sm) => nm.copy(origin = sm.origin)
-            }
-            ret
-        }.topDown
-        val mergedTree = replaceOrigin(semanticTree).map(_._1).getOrElse(semanticTree)*/
-
-        /* ~~~~ SOLUTION 2 ~~~~ */
-
-        /*val syntacticNames: List[api.Name] = {
-          val collect = tql.collect {
-            case nm: api.Name => nm
-          }.topDown
-          collect(syntacticTree).map(_._2).getOrElse(Nil)
-        }
-        val semanticNames: List[api.Name] = {
-          val collect = tql.collect {
-            case nm: api.Name => nm
-          }.topDown
-          collect(semanticTree).map(_._2).getOrElse(Nil)
-        }
-        println(s"Lengths: ${syntacticNames.length}:${semanticNames.length}")
-        if (syntacticNames.length != semanticNames.length)
-          semanticNames.zip(syntacticNames) foreach (println(_))
-
-        /* We can do better! */
-        println(syntacticNames.forall(s => semanticNames.filter(x => x.value == s.value).length > 0)) // This is always false
-        println(semanticNames.forall(s => syntacticNames.filter(x => x.value == s.value).length > 0)) // This is sometimes true
-        */
-
-        /* ~~~~ SOLUTION 3 ~~~~ */
-
-        var syntacticCount = 0
-
-        var syntacticNames: List[api.Name] = {
-          val collect = tql.collect { case nm: api.Name => syntacticCount += 1;nm }.topDown
-          collect(syntacticTree).map(_._2).getOrElse(Nil)
-        }
-        def findSyntacticEquivalent(nm: api.Name): Option[api.Name] = {
-          val pos = syntacticNames.indexWhere(x => ClassTag(x.getClass) == ClassTag(nm.getClass) && x.value == nm.value)
-          val elem = syntacticNames.lift(pos)
-          syntacticNames = syntacticNames.drop(pos + 1)
-          elem
+        def oLoop[T](pTree: Option[T], cTree: Option[T], f: (T, T) => api.Tree): Option[T] = (pTree, cTree) match {
+          case (Some(p), Some(c)) => Some(f(p,c).asInstanceOf[T])
+          case _ => pTree // TODO: error
         }
 
-        var found = 0
-        var notFound = 0
+        def loopName(pTree: api.Name, cTree: api.Name): api.Name = {
+          ((pTree, cTree) match {
+            case (p: api.Term.Name, c: api.Term.Name) =>
+              p.copy(denot = c.denot, sigma = c.sigma)
+            case (p: api.Type.Name, c: api.Type.Name) =>
+              p.copy(denot = c.denot, sigma = c.sigma)
+            case (p: api.Ctor.Ref.Name, c: api.Ctor.Ref.Name) =>
+              p.copy(denot = c.denot, sigma = c.sigma)
+            case (p: api.Name.Anonymous, c: api.Name.Anonymous) =>
+              p.copy(denot = c.denot, sigma = c.sigma)
+            case (p: api.Name.Indeterminate, c: api.Name.Indeterminate) =>
+              p.copy(denot = c.denot, sigma = c.sigma)
+          }).appendScratchpad(cTree.scratchpad)
+        }
 
-        val replaceOrigin = tql.transform {
-          case nm: api.Name =>
-            //println(s"${nm.sigma}, ${nm.denot}")
-            val ret = findSyntacticEquivalent(nm) match {
-              case None => notFound = notFound + 1; nm
-              case Some(x) => found = found + 1; nm match { /* Need to ensure case class to use copy constructor */
-                case nms: api.Term.Name => nms.copy(origin = x.origin)
-                case nms: api.Type.Name => nms.copy(origin = x.origin)
-                case nms: api.Ctor.Ref.Name => nms.copy(origin = x.origin)
-                case nms: api.Name.Anonymous => nms.copy(origin = x.origin)
-                case nms: api.Name.Indeterminate => nms.copy(origin = x.origin)
-              }
-            }
-            ret
-        }.topDown
+        def loopQual(pTree: api.Name.Qualifier, cTree: api.Name.Qualifier): api.Name.Qualifier = pTree // TODO
 
-        val mergedTree = replaceOrigin(semanticTree).map(_._1).getOrElse(semanticTree)
+        def loopTerm(pTree: api.Term, cTree: api.Term): api.Term = {
+          import api.Term._
+          ((pTree, cTree) match {
+            case (p: This, c: This) =>
+              p.copy(loopQual(p.qual, c.qual))
+            case (p: Super, c: Super) =>
+              p.copy(loopQual(p.thisp, c.thisp), loopQual(p.superp, c.superp))
+            case (p: Select, c: Select) =>
+              p.copy(loopTerm(p.qual, c.qual), loopName(p.name, c.name).asInstanceOf[Name])
+            case (p: Interpolate, c: Interpolate) =>
+              p.copy(loopName(p.prefix, c.prefix).asInstanceOf[Name], zLoop(p.parts, c.parts, loopLit), zLoop(p.args, c.args, loopTerm))
+            case (p: Apply, c: Apply) =>
+              p.copy(loopTerm(p.fun, c.fun), zLoop(p.args, c.args, loopTermArg))
+            case (p: ApplyType, c: ApplyType) =>
+              p.copy(loopTerm(p.fun, c.fun), zLoop(p.targs, c.targs, loopType))
+            case (p: ApplyInfix, c: ApplyInfix) =>
+              p.copy(loopTerm(p.lhs, c.lhs), loopName(p.op, c.op).asInstanceOf[Name], zLoop(p.targs, c.targs, loopType), zLoop(p.args, c.args, loopTermArg))
+            case (p: ApplyUnary, c : ApplyUnary) =>
+              p.copy(loopName(p.op, c.op).asInstanceOf[Name], loopTerm(p.arg, c.arg))
+            case (p: Assign, c: Assign) =>
+              p.copy(loopTerm(p.lhs, c.lhs).asInstanceOf[Ref], loopTerm(p.rhs, c.rhs))
+            case (p: Update, c: Update) =>
+              p.copy(loopTerm(p.fun, c.fun), zzLoop(p.argss, c.argss, loopTermArg), loopTerm(p.rhs, c.rhs))
+            case (p: Return, c: Return) =>
+              p.copy(loopTerm(p.expr, c.expr))
+            case (p: Throw, c: Throw) =>
+              p.copy(loopTerm(p.expr, c.expr))
+            case (p: Ascribe, c: Ascribe) =>
+              p.copy(loopTerm(p.expr, c.expr), loopType(p.tpe, c.tpe))
+            case (p: Annotate, c: Annotate) =>
+              p.copy(loopTerm(p.expr, c.expr), zLoop(p.annots, c.annots, loopMod))
+            case (p: Tuple, c: Tuple) =>
+              p.copy(zLoop(p.elements, c.elements, loopTerm))
+            case (p: Block, c: Block) =>
+              p.copy(zLoop(p.stats, c.stats, loopStat))
+            case (p: If, c: If) =>
+              p.copy(loopTerm(p.cond, c.cond), loopTerm(p.thenp, c.thenp), loopTerm(p.elsep, c.elsep))
+            case (p: Match, c: Match) =>
+              p.copy(loopTerm(p.scrut, c.scrut), zLoop(p.cases, c.cases, loopCase))
+            case (p: TryWithCases, c: TryWithCases) =>
+              p.copy(loopTerm(p.expr, c.expr), zLoop(p.catchp, c.catchp, loopCase), oLoop(p.finallyp, c.finallyp, loopTerm))
+            case (p: TryWithTerm, c: TryWithTerm) =>
+              p.copy(loopTerm(p.expr, c.expr), loopTerm(p.catchp, c.catchp), oLoop(p.finallyp, c.finallyp, loopTerm))
+            case (p: Function, c: Function) =>
+              p.copy(zLoop(p.params, c.params, loopParam), loopTerm(p.body, c.body))
+            case (p: PartialFunction, c: PartialFunction) =>
+              p.copy(zLoop(p.cases, c.cases, loopCase))
+            case (p: While, c: While) =>
+              p.copy(loopTerm(p.expr, c.expr), loopTerm(p.body, c.body))
+            case (p: Do, c: Do) =>
+              p.copy(loopTerm(p.body, c.body), loopTerm(p.expr, c.expr))
+            case (p: For, c: For) =>
+              p.copy(zLoop(p.enums, c.enums, loopEnum), loopTerm(p.body, c.body))
+            case (p: ForYield, c: ForYield) =>
+              p.copy(zLoop(p.enums, c.enums, loopEnum), loopTerm(p.body, c.body))
+            case (p: New, c: New) =>
+              p.copy(loopTempl(p.templ, c.templ))
+            case (p: Placeholder, c: Placeholder) =>
+              p
+            case (p: Eta, c: Eta) =>
+              p.copy(loopTerm(p.term, c.term))
+          }).appendScratchpad(cTree.scratchpad)
+        }
 
-        println(s"SyntacticCount: $syntacticCount, found symbols: $found, not found: $notFound")
+        def loopTermArg(pTree: api.Term.Arg, cTree: api.Term.Arg): api.Term.Arg = {
+          import api.Term.Arg._
+          ((pTree, cTree) match {
+            case (p: Named, c: Named) =>
+             p.copy(loopName(p.name, c.name).asInstanceOf[api.Term.Name], loopTerm(p.rhs, c.rhs))
+            case (p: Repeated, c: Repeated) =>
+              p.copy(loopTerm(p.arg, c.arg))
+          }).appendScratchpad(cTree.scratchpad)
+        }
 
-        // TODO: remove
-        /*println("=================================================================================================")
-        println(semanticTree.show[Raw])
-        println("-------------------------------------------------------------------------------------------------")
-        println(syntacticTree.show[Raw])
-        println("=================================================================================================")
-        println(syntacticTree.origin.endLine)
-        println(semanticTree.origin)*/
+        def loopParam(p: api.Term.Param, c: api.Term.Param): api.Term.Param = {
+          import api.Term.Param._
+          p.copy(zLoop(p.mods, c.mods, loopMod), loopName(p.name, c.name).asInstanceOf[Name], oLoop(p.decltpe, c.decltpe, loopTypeArg), oLoop(p.default, c.default, loopTerm)).appendScratchpad(c.scratchpad)
+        }
 
-        /*// TODO: move into test file
-        val check = tql.transform {
-          case nm: api.Name =>
-            print(s"[${nm.origin.start}:${nm.origin.end}]")
-            nm
-        }.topDown
-        println("\nbefore ---------------------------------------------------------------------------------------------")
-        check(semanticTree)
-        println("\nafter ----------------------------------------------------------------------------------------------")
-        check(mergedTree)*/
+        def loopType(pTree: api.Type, cTree: api.Type): api.Type = pTree.appendScratchpad(cTree.scratchpad) // TODO
+        def loopTypeArg(pTree: api.Type.Arg, cTree: api.Type.Arg): api.Type.Arg = pTree.appendScratchpad(cTree.scratchpad) // TODO
+        def loopSource(pTree: api.Source, cTree: api.Source): api.Source = pTree.appendScratchpad(cTree.scratchpad) // TODO
+        def loopLit(pTree: api.Lit, cTree: api.Lit): api.Lit = pTree.appendScratchpad(cTree.scratchpad) // TODO
+        def loopMod(pTree: api.Mod, cTree: api.Mod): api.Mod = pTree.appendScratchpad(cTree.scratchpad) // TODO
+        def loopStat(pTree: api.Stat, cTree: api.Stat): api.Stat = pTree.appendScratchpad(cTree.scratchpad) // TODO
+        def loopCase(pTree: api.Case, cTree: api.Case): api.Case = pTree.appendScratchpad(cTree.scratchpad) // TODO
+        def loopEnum(pTree: api.Enumerator, cTree: api.Enumerator): api.Enumerator = pTree.appendScratchpad(cTree.scratchpad) // TODO
+        def loopTempl(pTree: api.Template, cTree: api.Template): api.Template = pTree.appendScratchpad(cTree.scratchpad) // TODO
 
-        mergedTree.asInstanceOf[api.Source]
+        loopSource(parsedTree, convertedTree)
       }
 
       override def apply(unit: CompilationUnit) {
         println(unit.source.path)
-        val semanticTree = c.toMtree(unit.body, classOf[Source]).asInstanceOf[api.Source]
-        val syntacticTree = unit.source.content.mkString("").parse[Source].asInstanceOf[api.Source]
+        val parsedTree = unit.source.content.mkString("").parse[Source].asInstanceOf[api.Source]
+        val convertedTree = c.toMtree(unit.body, classOf[Source]).asInstanceOf[api.Source]
 
-        unit.body.appendMetadata("scalameta" -> merge(semanticTree, syntacticTree))
+        unit.body.appendMetadata("scalameta" -> merge(parsedTree, convertedTree))
       }
+
     }
   }
 }
