@@ -132,7 +132,7 @@ trait ConvertPhase {
             case (p: api.Lit, c: api.Lit) => loopLit(p, c)
             case (p: Name, c: Name) => loopName(p,c).asInstanceOf[Name]
             case (p: api.Ctor.Name, c: api.Ctor.Name) => loopName(p,c).asInstanceOf[api.Ctor.Name]
-            case (p, c) => println("A" + ClassTag(p.getClass) + "\t" + ClassTag(c.getClass)); p // TODO: remove
+            case (p, c) => println("A" + ClassTag(p.getClass) + "\t" + ClassTag(c.getClass) + "\t" + (ClassTag(p.getClass) == ClassTag(c.getClass))); p // TODO: remove
           }).appendScratchpad(cTree.scratchpad)
         }
 
@@ -144,7 +144,7 @@ trait ConvertPhase {
             case (p: Repeated, c: Repeated) =>
               p.copy(loopTerm(p.arg, c.arg))
             case (p: api.Term, c: api.Term) => loopTerm(p, c)
-            case (p, c) => println("B" + ClassTag(p.getClass) + "\t" + ClassTag(c.getClass)); p // TODO: remove
+            //case (p, c) => println("B" + ClassTag(p.getClass) + "\t" + ClassTag(c.getClass) + "\t" + (ClassTag(p.getClass) == ClassTag(c.getClass))); p // TODO: remove
           }).appendScratchpad(cTree.scratchpad)
         }
 
@@ -183,7 +183,7 @@ trait ConvertPhase {
               p.copy(loopType(p.tpe, c.tpe), zLoop(p.annots, c.annots, loopMod))
             case (p: Placeholder, c: Placeholder) => p
             case (p: Name, c: Name) => loopName(p,c).asInstanceOf[Name]
-            case (p, c) => println("C" + ClassTag(p.getClass) + "\t" + ClassTag(c.getClass)); p // TODO: remove
+            //case (p, c) => println("C" + ClassTag(p.getClass) + "\t" + ClassTag(c.getClass) + "\t" + (ClassTag(p.getClass) == ClassTag(c.getClass))); p // TODO: remove
           }).appendScratchpad(cTree.scratchpad)
         }
 
@@ -195,7 +195,7 @@ trait ConvertPhase {
             case (p: Repeated, c: Repeated) =>
               p.copy(loopType(p.tpe, c.tpe))
             case (p: api.Type, c: api.Type) => loopType(p, c)
-            case (p, c) => println("D" + ClassTag(p.getClass) + "\t" + ClassTag(c.getClass)); p // TODO: remove
+            //case (p, c) => println("D" + ClassTag(p.getClass) + "\t" + ClassTag(c.getClass) + "\t" + (ClassTag(p.getClass) == ClassTag(c.getClass))); p // TODO: remove
           }).appendScratchpad(cTree.scratchpad)
         }
 
@@ -258,7 +258,7 @@ trait ConvertPhase {
               def loopClause(p: Import.Clause, c: Import.Clause): Import.Clause = p.copy(loopTerm(p.ref, c.ref).asInstanceOf[Term.Ref], zLoop(p.sels, c.sels, loopSelector))
               p.copy(zLoop(p.clauses, c.clauses, loopClause))
             case (p: Term, c: Term) => loopTerm(p, c)
-            case (p, c) => println("E" + ClassTag(p.getClass) + "\t" + ClassTag(c.getClass)); p // TODO: remove
+            case (p, c) => println("E" + ClassTag(p.getClass) + "\t" + ClassTag(c.getClass) + "\t" + (ClassTag(p.getClass) == ClassTag(c.getClass))); p // TODO: remove
           }).appendScratchpad(cTree.scratchpad)
         }
 
@@ -310,7 +310,7 @@ trait ConvertPhase {
               )
             case (p: Pat.Typed, c: Pat.Typed) =>
               p.copy(loopPat(p.lhs, c.lhs), loopPatType(p.rhs, c.rhs))
-            case (p, c) => println("F" + ClassTag(p.getClass) + "\t" + ClassTag(c.getClass)); p // TODO: remove
+            //case (p, c) => println("F" + ClassTag(p.getClass) + "\t" + ClassTag(c.getClass) + "\t" + (ClassTag(p.getClass) == ClassTag(c.getClass))); p // TODO: remove
           })
           pTree.appendScratchpad(cTree.scratchpad)
         }
@@ -340,7 +340,7 @@ trait ConvertPhase {
             case (p: Annotate, c:Annotate) =>
               p.copy(loopPatType(p.tpe, c.tpe), zLoop(p.annots, c.annots, loopMod))
             case (p: api.Type.Name, c: api.Type.Name) => loopName(p, c).asInstanceOf[api.Type.Name]
-            case (p, c) => println("G" + ClassTag(p.getClass) + "\t" + ClassTag(c.getClass)); p // TODO: remove
+            //case (p, c) => println("G" + ClassTag(p.getClass) + "\t" + ClassTag(c.getClass) + "\t" + (ClassTag(p.getClass) == ClassTag(c.getClass))); p // TODO: remove
           }).appendScratchpad(cTree.scratchpad)
         }
 
@@ -386,13 +386,13 @@ trait ConvertPhase {
 
         // TODO: remove
         val mergedTree = merge(parsedTree, convertedTree)
-        println(mergedTree.show[Semantics])
+        /*println(mergedTree.show[Semantics])
         val check = tql.transform {
           case nm: api.Name =>
             print(s"[${nm.origin.start}:${nm.origin.end}]")
             nm
         }.topDown
-        check(mergedTree)
+        check(mergedTree)*/
 
         unit.body.appendMetadata("scalameta" -> merge(parsedTree, convertedTree))
       }
