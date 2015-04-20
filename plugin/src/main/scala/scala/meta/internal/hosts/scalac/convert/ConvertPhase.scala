@@ -132,7 +132,19 @@ trait ConvertPhase {
             case (p: api.Lit, c: api.Lit) => loopLit(p, c)
             case (p: Name, c: Name) => loopName(p,c).asInstanceOf[Name]
             case (p: api.Ctor.Name, c: api.Ctor.Name) => loopName(p,c).asInstanceOf[api.Ctor.Name]
-            case (p, c) => println("A" + ClassTag(p.getClass) + "\t" + ClassTag(c.getClass) + "\t" + (ClassTag(p.getClass) == ClassTag(c.getClass))); p // TODO: remove
+              // Handling special cases
+              // TODO: check if (block, _) would not be more appropriate based on what the block contains. Might be doable.
+            case (p: Block, c: Apply) if p.stats.length == 1 => p // TODO
+            case (p: Block, c: Match) if p.stats.length == 1 => p // TODO
+            case (p: Block, c: If) if p.stats.length == 1 => p // TODO
+            case (p: Interpolate, c: Apply) => p // TODO: this is for quasiquote unlifting, should probably be left as is.
+            case (p: Name, c: Select) => p // TODO )
+
+            case (p, c) => println("A" + ClassTag(p.getClass) + "\t" + ClassTag(c.getClass) + "\t" + (ClassTag(p.getClass) == ClassTag(c.getClass)))
+              import scala.meta.dialects.Scala211
+              println(p.show[Code])
+              println(c.show[Code])
+              p
           }).appendScratchpad(cTree.scratchpad)
         }
 
@@ -258,6 +270,9 @@ trait ConvertPhase {
               def loopClause(p: Import.Clause, c: Import.Clause): Import.Clause = p.copy(loopTerm(p.ref, c.ref).asInstanceOf[Term.Ref], zLoop(p.sels, c.sels, loopSelector))
               p.copy(zLoop(p.clauses, c.clauses, loopClause))
             case (p: Term, c: Term) => loopTerm(p, c)
+              // handling special cases
+            case (p: Defn.Def, c: Defn.Macro) => p // TODO
+            case (p: Defn.Macro, c: Defn.Def) => p // TODO
             case (p, c) => println("E" + ClassTag(p.getClass) + "\t" + ClassTag(c.getClass) + "\t" + (ClassTag(p.getClass) == ClassTag(c.getClass))); p // TODO: remove
           }).appendScratchpad(cTree.scratchpad)
         }
