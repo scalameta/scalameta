@@ -38,6 +38,9 @@ trait ConvertPhase {
 
     override def newPhase(prev: Phase): StdPhase = new StdPhase(prev) {
 
+      // TODO: known bug: sometimes, Pat.Var.Term has its name not properly chaned
+      // TODO: known bug: Term.ApplyType(Ctor.Ref.Name, ...) sometimes has its name not properly charged with semantic informations as well.
+      // TODO: cleanup, perhaps re-write using macros.
       private def merge(parsedTree: api.Source, convertedTree: api.Source): api.Source = {
 
         def zLoop[T](pTree: imm.Seq[T], cTree: imm.Seq[T], f: (T,T) => api.Tree): imm.Seq[T] = (pTree zip cTree).map(s => f(s._1, s._2).asInstanceOf[T])
