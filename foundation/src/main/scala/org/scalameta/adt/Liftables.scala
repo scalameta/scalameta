@@ -15,22 +15,38 @@ class LiftableMacros(val c: Context) extends AdtReflection {
   lazy val u: c.universe.type = c.universe
   lazy val mirror: u.Mirror = c.mirror
   import c.universe._
-  def customize(leaf: Leaf, defName: TermName, localName: TermName): Option[DefDef] = None
+  def customAdts(root: Root): Option[List[Adt]] = None
+  def customMatcher(adt: Adt, defName: TermName, localName: TermName): Option[DefDef] = None
   def impl[T: WeakTypeTag]: c.Tree = {
     val root = weakTypeOf[T].typeSymbol.asAdt.root
-    val leafs = weakTypeOf[T].typeSymbol.asAdt.root.allLeafs.sortWith(_.tpe <:< _.tpe)
-    if (leafs.isEmpty) c.abort(c.enclosingPosition, s"$root has no known leafs")
+    val unsortedAdts = customAdts(root).getOrElse(weakTypeOf[T].typeSymbol.asAdt.root.allLeafs)
+    val adts = {
+      // TODO: need to make sure that more specific leafs come before less specific ones
+      // so that we don't get dead code during pattern matching
+      def metric(sym: Symbol): Int = {
+        if (sym == root.sym) 0
+        else {
+          val classSym = if (sym.isModule) sym.asModule.moduleClass else sym.asClass
+          val parents = classSym.info.asInstanceOf[ClassInfoType].parents.map(_.typeSymbol)
+          val relevantParents = parents.filter(_.asType.toType <:< root.tpe)
+          relevantParents.length + relevantParents.map(metric).sum
+        }
+      }
+      unsortedAdts.sortBy(adt => -1 * metric(adt.sym))
+    }
+    if (adts.isEmpty) c.abort(c.enclosingPosition, s"$root has no known leafs")
     val u = q"${c.prefix}.u"
     val mainParam = c.freshName(TermName("x"))
     val mainModule = c.freshName(TermName("Module"))
     val mainMethod = TermName("liftableSub" + root.prefix.capitalize.replace(".", ""))
     val localName = c.freshName(TermName("x"))
-    val defNames = leafs.map(leaf => c.freshName(TermName("lift" + leaf.prefix.capitalize.replace(".", ""))))
-    val liftLeafs = leafs.zip(defNames).map{ case (leaf, defName) =>
-      customize(leaf, defName, localName).getOrElse({
+    val defNames = adts.map(adt => c.freshName(TermName("lift" + adt.prefix.capitalize.replace(".", ""))))
+    val liftAdts = adts.zip(defNames).map{ case (adt, defName) =>
+      customMatcher(adt, defName, localName).getOrElse({
         val init = q"""$u.Ident($u.TermName("_root_"))""": Tree
-        val namePath = leaf.sym.fullName.split('.').foldLeft(init)((acc, part) => q"$u.Select($acc, $u.TermName($part))")
-        val args = leaf.allFields.map(f => {
+        val namePath = adt.sym.fullName.split('.').foldLeft(init)((acc, part) => q"$u.Select($acc, $u.TermName($part))")
+        val fields = adt match { case leaf: Leaf => leaf.allFields; case _ => sys.error(s"fatal error: $adt") }
+        val args = fields.map(f => {
           val fieldName = q"$u.Ident($u.TermName(${f.name.toString}))"
           val fieldValue = q"_root_.scala.Predef.implicitly[$u.Liftable[${f.tpe}]].apply($localName.${f.name})"
           // NOTE: we can't really use AssignOrNamedArg here, sorry
@@ -39,18 +55,18 @@ class LiftableMacros(val c: Context) extends AdtReflection {
           // q"$u.AssignOrNamedArg($fieldName, $fieldValue)"
           q"$fieldValue"
         })
-        val body = if (leaf.sym.isClass) q"$u.Apply($namePath, $args)" else q"$namePath"
-        q"def $defName($localName: ${leaf.tpe}): $u.Tree = $body"
+        val body = if (adt.sym.isClass) q"$u.Apply($namePath, $args)" else q"$namePath"
+        q"def $defName($localName: ${adt.tpe}): $u.Tree = $body"
       })
     }
-    val clauses = leafs.zip(defNames).map({ case (leaf, name) =>
-      cq"$localName: ${leaf.tpe} => $name($localName.asInstanceOf[${leaf.tpe}])"
+    val clauses = adts.zip(defNames).map({ case (adt, name) =>
+      cq"$localName: ${adt.tpe} => $name($localName.asInstanceOf[${adt.tpe}])"
     })
     val result = q"""
       $u.Liftable(($mainParam: ${weakTypeOf[T]}) => {
         object $mainModule {
           val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
-          ..$liftLeafs
+          ..$liftAdts
           implicit def $mainMethod[T <: ${root.sym}]: $u.Liftable[T] = $u.Liftable(($localName: T) => {
             $localName match {
               case ..$clauses

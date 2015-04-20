@@ -59,9 +59,17 @@ trait Reflection extends AdtReflection {
           val modulePath :+ className = astPath.split('.').toList
           locateModule(mirror.RootPackage, modulePath).info.member(TypeName(className)).asClass
         })
-        var entireHierarchy = astClasses.flatMap(_.baseClasses.map(_.asClass)).distinct
-        entireHierarchy = entireHierarchy.filter(sym => sym.toType <:< ApiTreeClass.toType)
-        entireHierarchy = entireHierarchy.filter(sym => !(sym.toType <:< ImplQuasiClass.toType))
+        val entireHierarchy = {
+          var result = astClasses.flatMap(_.baseClasses.map(_.asClass))
+          result = result.filter(sym => sym.toType <:< ApiTreeClass.toType)
+          result = result.flatMap(sym => {
+            val unquote = sym.companion.info.member(TypeName("Unquote")).asClass
+            val ellipsis = sym.companion.info.member(TypeName("Ellipsis")).asClass
+            List(sym, unquote, ellipsis)
+          })
+          result ++= List(ImplQuasiClass, ImplEllipsisClass, ImplUnquoteClass)
+          result.distinct
+        }
         val registry = mutable.Map[Symbol, List[Symbol]]()
         entireHierarchy.foreach(sym => registry(sym) = Nil)
         entireHierarchy.foreach(sym => {
