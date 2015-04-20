@@ -66,7 +66,7 @@ trait ConvertPhase {
           }).appendScratchpad(cTree.scratchpad)
         }
 
-        def loopQual(pTree: api.Name.Qualifier, cTree: api.Name.Qualifier): api.Name.Qualifier = pTree // TODO
+        def loopQual(pTree: api.Name.Qualifier, cTree: api.Name.Qualifier): api.Name.Qualifier = pTree.appendScratchpad(cTree.scratchpad)
 
         def loopTerm(pTree: api.Term, cTree: api.Term): api.Term = {
           import api.Term._
@@ -129,8 +129,10 @@ trait ConvertPhase {
               p
             case (p: Eta, c: Eta) =>
               p.copy(loopTerm(p.term, c.term))
+            case (p: api.Lit, c: api.Lit) => loopLit(p, c)
             case (p: Name, c: Name) => loopName(p,c).asInstanceOf[Name]
-            case (p, c) => println(ClassTag(p.getClass)); p // TODO: remove
+            case (p: api.Ctor.Name, c: api.Ctor.Name) => loopName(p,c).asInstanceOf[api.Ctor.Name]
+            case (p, c) => println("A" + ClassTag(p.getClass) + "\t" + ClassTag(c.getClass)); p // TODO: remove
           }).appendScratchpad(cTree.scratchpad)
         }
 
@@ -141,7 +143,8 @@ trait ConvertPhase {
              p.copy(loopName(p.name, c.name).asInstanceOf[api.Term.Name], loopTerm(p.rhs, c.rhs))
             case (p: Repeated, c: Repeated) =>
               p.copy(loopTerm(p.arg, c.arg))
-            case (p, c) => println(ClassTag(p.getClass)); p // TODO: remove
+            case (p: api.Term, c: api.Term) => loopTerm(p, c)
+            case (p, c) => println("B" + ClassTag(p.getClass) + "\t" + ClassTag(c.getClass)); p // TODO: remove
           }).appendScratchpad(cTree.scratchpad)
         }
 
@@ -179,7 +182,8 @@ trait ConvertPhase {
             case (p: Annotate, c:Annotate) =>
               p.copy(loopType(p.tpe, c.tpe), zLoop(p.annots, c.annots, loopMod))
             case (p: Placeholder, c: Placeholder) => p
-            case (p, c) => println(ClassTag(p.getClass)); p // TODO: remove
+            case (p: Name, c: Name) => loopName(p,c).asInstanceOf[Name]
+            case (p, c) => println("C" + ClassTag(p.getClass) + "\t" + ClassTag(c.getClass)); p // TODO: remove
           }).appendScratchpad(cTree.scratchpad)
         }
 
@@ -190,8 +194,8 @@ trait ConvertPhase {
               p.copy(loopType(p.tpe, c.tpe))
             case (p: Repeated, c: Repeated) =>
               p.copy(loopType(p.tpe, c.tpe))
-            //case (p: Name, c: Name) => loopName(p, c).asInstanceOf[Name]
-            case (p, c) => println(ClassTag(p.getClass)); p // TODO: remove
+            case (p: api.Type, c: api.Type) => loopType(p, c)
+            case (p, c) => println("D" + ClassTag(p.getClass) + "\t" + ClassTag(c.getClass)); p // TODO: remove
           }).appendScratchpad(cTree.scratchpad)
         }
 
@@ -253,7 +257,8 @@ trait ConvertPhase {
               }
               def loopClause(p: Import.Clause, c: Import.Clause): Import.Clause = p.copy(loopTerm(p.ref, c.ref).asInstanceOf[Term.Ref], zLoop(p.sels, c.sels, loopSelector))
               p.copy(zLoop(p.clauses, c.clauses, loopClause))
-            case (p, c) => println(ClassTag(p.getClass)); p // TODO: remove
+            case (p: Term, c: Term) => loopTerm(p, c)
+            case (p, c) => println("E" + ClassTag(p.getClass) + "\t" + ClassTag(c.getClass)); p // TODO: remove
           }).appendScratchpad(cTree.scratchpad)
         }
 
@@ -263,20 +268,55 @@ trait ConvertPhase {
           loopTerm(pTree.body, cTree.body).asInstanceOf[api.Term.Block]
         ).appendScratchpad(cTree.scratchpad)
 
-        def loopLit(pTree: api.Lit, cTree: api.Lit): api.Lit = pTree.appendScratchpad(cTree.scratchpad) // TODO
+        def loopLit(pTree: api.Lit, cTree: api.Lit): api.Lit = pTree.appendScratchpad(cTree.scratchpad)
 
         def loopMod(pTree: api.Mod, cTree: api.Mod): api.Mod = {
           import api.Mod._
           ((pTree, cTree) match {
-            case (p: Annot, c: Annot) => p.copy(loopTerm(p.body, c.body))
-            case (p: Private, c: Private) => p.copy(loopQual(p.within, c.within))
-            case (p: Protected, c: Protected) => p.copy(loopQual(p.within, c.within))
+            case (p: Annot, c: Annot) =>
+              p.copy(loopTerm(p.body, c.body))
+            case (p: Private, c: Private) =>
+              p.copy(loopQual(p.within, c.within))
+            case (p: Protected, c: Protected) =>
+              p.copy(loopQual(p.within, c.within))
             case (p, _) => p
           }).appendScratchpad(cTree.scratchpad)
         }
 
-        def loopPat(pTree: api.Pat, cTree: api.Pat): api.Pat = pTree.appendScratchpad(cTree.scratchpad) // TODO
-        def loopEnum(pTree: api.Enumerator, cTree: api.Enumerator): api.Enumerator = pTree.appendScratchpad(cTree.scratchpad) // TODO
+        def loopPat(pTree: api.Pat, cTree: api.Pat): api.Pat = {
+          import api._
+          ((pTree, cTree) match {
+            case (p: Pat.Var.Term, c: Pat.Var.Term) =>
+              p.copy(loopName(p.name, c.name).asInstanceOf[Term.Name])
+            case (p: Pat.Var.Type, c: Pat.Var.Type) =>
+              p.copy(loopName(p.name, c.name).asInstanceOf[Type.Name])
+            case (p: Pat.Wildcard, c: Pat.Wildcard) =>
+              p
+            case (p: Pat.Bind, c: Pat.Bind) =>
+              p.copy(loopPat(p.lhs, c.lhs).asInstanceOf[Pat.Var.Term], p.rhs.appendScratchpad(c.rhs.scratchpad))
+            case (p: Pat.Alternative, c: Pat.Alternative) =>
+              p.copy(loopPat(p.lhs, c.lhs), loopPat(p.rhs, c.rhs))
+            case (p: Pat.Tuple, c: Pat.Tuple) =>
+              p.copy(zLoop(p.elements, c.elements, loopPat))
+            case (p: Pat.Extract, c: Pat.Extract) =>
+              p.copy(loopTerm(p.ref, c.ref).asInstanceOf[Term.Ref], zLoop(p.targs, c.targs, loopType), zLoop(p.args, c.args, loopPatArg))
+            // TODO
+            case (p, c) => println("F" + ClassTag(p.getClass) + "\t" + ClassTag(c.getClass)); p // TODO: remove
+          })
+          pTree.appendScratchpad(cTree.scratchpad)
+        }
+
+        def loopPatArg(pTree: api.Pat.Arg, cTree: api.Pat.Arg): api.Pat.Arg = pTree.appendScratchpad(cTree.scratchpad)
+
+        def loopEnum(pTree: api.Enumerator, cTree: api.Enumerator): api.Enumerator = {
+          import api._
+          ((pTree, cTree) match {
+            case (p: Enumerator.Generator, c: Enumerator.Generator) => p.copy(loopPat(p.pat, c.pat), loopTerm(p.rhs, c.rhs))
+            case (p: Enumerator.Val, c: Enumerator.Val) => p.copy(loopPat(p.pat, c.pat), loopTerm(p.rhs, c.rhs))
+            case (p: Enumerator.Guard, c: Enumerator.Guard) => p.copy(loopTerm(p.cond, c.cond))
+          }).appendScratchpad(cTree.scratchpad)
+        }
+
         def loopTempl(pTree: api.Template, cTree: api.Template): api.Template = pTree.copy(
           zLoop(pTree.early, cTree.early, loopStat),
           zLoop(pTree.parents, cTree.parents, loopTerm),
@@ -286,7 +326,14 @@ trait ConvertPhase {
               case (_, _) => None
             }
           ).appendScratchpad(cTree.scratchpad) // TODO
-        def loopCtor(pTree: api.Ctor, cTree: api.Ctor): api.Ctor = pTree.appendScratchpad(cTree.scratchpad) // TODO
+
+        def loopCtor(pTree: api.Ctor, cTree: api.Ctor): api.Ctor = {
+          import api.Ctor._
+          ((pTree, cTree) match {
+            case (p: Primary, c: Primary) => p.copy(zLoop(p.mods, c.mods, loopMod), loopName(p.name, c.name).asInstanceOf[Name], zzLoop(p.paramss, c.paramss, loopTermParam))
+            case (p: Secondary, c: Secondary) => p.copy(zLoop(p.mods, c.mods, loopMod), loopName(p.name, c.name).asInstanceOf[Name], zzLoop(p.paramss, c.paramss, loopTermParam), loopTerm(p.body, c.body))
+          }).appendScratchpad(cTree.scratchpad) // TODO
+        }
 
 
         def loopSource(pTree: api.Source, cTree: api.Source): api.Source = {
