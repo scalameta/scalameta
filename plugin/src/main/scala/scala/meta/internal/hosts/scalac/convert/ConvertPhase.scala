@@ -38,9 +38,8 @@ trait ConvertPhase {
 
     override def newPhase(prev: Phase): StdPhase = new StdPhase(prev) {
 
-      // TODO: known bug: sometimes, Pat.Var.Term has its name not properly chaned
-      // TODO: known bug: Term.ApplyType(Ctor.Ref.Name, ...) sometimes has its name not properly charged with semantic informations as well.
-      // TODO: cleanup, perhaps re-write using macros.
+      // TODO: might be useful for portability to rewrite using macros at some point.
+      // TODO: checkout why this breaks ReplSuite.
       private def merge(parsedTree: api.Source, convertedTree: api.Source): api.Source = {
 
         def zLoop[T](f: (T, T) => T)(pTree: imm.Seq[T], cTree: imm.Seq[T]): imm.Seq[T] = (pTree zip cTree).map(s => f(s._1, s._2).asInstanceOf[T])
@@ -51,9 +50,12 @@ trait ConvertPhase {
 
         def oLoop[T](f: (T, T) => T)(pTree: Option[T], cTree: Option[T]): Option[T] = (pTree, cTree) match {
           case (Some(p), Some(c)) => Some(f(p, c).asInstanceOf[T])
-          case (None, None) => None
+          // Handling special cases
+          case (Some(List()), None) => pTree
+          case (None, _) => None // TODO: due to macros, some options can be put in Templates (for instance in ParadiseSuite.scala). This is probably a bug linked to the previous one.
           case _ =>
-            reporter.warning(NoPosition, "An error occured while merging the parsed and the converted tree. The trees where not identical. This should never happen.")
+            println(pTree + "===============" + cTree)
+            reporter.warning(NoPosition, "An error occurred while merging the parsed and the converted tree. The trees were not identical. This should never happen.")
             pTree
         }
 
@@ -291,7 +293,8 @@ trait ConvertPhase {
               p.copy(loop(p.cond, c.cond))
 
             case (p: Template, c: Template) =>
-              p.copy(zLoop(loop[Stat])(p.early, c.early),
+              p.copy(
+                zLoop(loop[Stat])(p.early, c.early),
                 zLoop(loop[Term])(p.parents, c.parents),
                 loop(p.self, c.self),
                 oLoop(zLoop(loop[Stat]))(p.stats, c.stats)
@@ -318,7 +321,7 @@ trait ConvertPhase {
               p // TODO: this seems to be due to a bug (Quasiquotes are expanded here)
 
             case (p, c) =>
-              reporter.warning(NoPosition, "An error occured while merging the parsed and the converted tree. The trees where not identical. This should never happen.")
+              reporter.warning(NoPosition, "An error occurred while merging the parsed and the converted tree. The trees were not identical. This should never happen.")
               p
           }).appendScratchpad(cTree.scratchpad).asInstanceOf[T]
         }
@@ -329,13 +332,8 @@ trait ConvertPhase {
         val parsedTree = unit.source.content.mkString("").parse[Source].asInstanceOf[api.Source]
         val convertedTree = c.toMtree(unit.body, classOf[Source]).asInstanceOf[api.Source]
 
-        // TODO: remove
-        val mergedTree = merge(parsedTree, convertedTree)
-        println(mergedTree.show[Semantics])
-        println("======================================================")
-        println(convertedTree.show[Semantics])
-
         unit.body.appendMetadata("scalameta" -> merge(parsedTree, convertedTree))
+        //unit.body.appendMetadata("scalameta" -> convertedTree)
 
       }
 
