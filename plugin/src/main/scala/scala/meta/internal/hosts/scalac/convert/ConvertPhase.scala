@@ -39,7 +39,6 @@ trait ConvertPhase {
     override def newPhase(prev: Phase): StdPhase = new StdPhase(prev) {
 
       // TODO: might be useful for portability to rewrite using macros at some point.
-      // TODO: checkout why this breaks ReplSuite.
       private def merge(parsedTree: api.Source, convertedTree: api.Source): api.Source = {
 
         def zLoop[T](f: (T, T) => T)(pTree: imm.Seq[T], cTree: imm.Seq[T]): imm.Seq[T] = (pTree zip cTree).map(s => f(s._1, s._2).asInstanceOf[T])
@@ -52,9 +51,8 @@ trait ConvertPhase {
           case (Some(p), Some(c)) => Some(f(p, c).asInstanceOf[T])
           // Handling special cases
           case (Some(List()), None) => pTree
-          case (None, _) => None // TODO: due to macros, some options can be put in Templates (for instance in ParadiseSuite.scala). This is probably a bug linked to the previous one.
+          case (None, _) => None // TODO: due to macros, some options can be put in Templates (for instance in ParadiseSuite.scala).
           case _ =>
-            println(pTree + "===============" + cTree)
             reporter.warning(NoPosition, "An error occurred while merging the parsed and the converted tree. The trees were not identical. This should never happen.")
             pTree
         }
@@ -316,9 +314,9 @@ trait ConvertPhase {
             case (p: api.Type.Name, c: api.Type.Select) =>
               loop(p, c.name)
             case (p: Defn.Def, c: Defn.Macro) =>
-              p // TODO: this seems to be due to a bug (Quasiquotes are expanded here)
+              p // TODO: this seems to be due to the fact that quasiquotes are expanded here
             case (p: Defn.Macro, c: Defn.Def) =>
-              p // TODO: this seems to be due to a bug (Quasiquotes are expanded here)
+              p // TODO: this seems to be due to the fact that quasiquotes are expanded here
 
             case (p, c) =>
               reporter.warning(NoPosition, "An error occurred while merging the parsed and the converted tree. The trees were not identical. This should never happen.")
@@ -333,8 +331,6 @@ trait ConvertPhase {
         val convertedTree = c.toMtree(unit.body, classOf[Source]).asInstanceOf[api.Source]
 
         unit.body.appendMetadata("scalameta" -> merge(parsedTree, convertedTree))
-        //unit.body.appendMetadata("scalameta" -> convertedTree)
-
       }
 
     }
