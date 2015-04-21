@@ -43,13 +43,13 @@ trait ConvertPhase {
       // TODO: cleanup, perhaps re-write using macros.
       private def merge(parsedTree: api.Source, convertedTree: api.Source): api.Source = {
 
-        def zLoop[T](pTree: imm.Seq[T], cTree: imm.Seq[T], f: (T, T) => api.Tree): imm.Seq[T] = (pTree zip cTree).map(s => f(s._1, s._2).asInstanceOf[T])
+        def zLoop[T](f: (T, T) => T)(pTree: imm.Seq[T], cTree: imm.Seq[T]): imm.Seq[T] = (pTree zip cTree).map(s => f(s._1, s._2).asInstanceOf[T])
 
-        def zzLoop[T](pTree: imm.Seq[imm.Seq[T]], cTree: imm.Seq[imm.Seq[T]], f: (T, T) => api.Tree): imm.Seq[imm.Seq[T]] = {
+        def zzLoop[T](f: (T, T) => T)(pTree: imm.Seq[imm.Seq[T]], cTree: imm.Seq[imm.Seq[T]]): imm.Seq[imm.Seq[T]] = {
           (pTree zip cTree).map(xs => (xs._1 zip xs._2).map(x => f(x._1, x._2).asInstanceOf[T]))
         }
 
-        def oLoop[T](pTree: Option[T], cTree: Option[T], f: (T, T) => api.Tree): Option[T] = (pTree, cTree) match {
+        def oLoop[T](f: (T, T) => T)(pTree: Option[T], cTree: Option[T]): Option[T] = (pTree, cTree) match {
           case (Some(p), Some(c)) => Some(f(p, c).asInstanceOf[T])
           case (None, None) => None
           case _ =>
@@ -79,19 +79,19 @@ trait ConvertPhase {
             case (p: Term.Select, c: Term.Select) =>
               p.copy(loop(p.qual, c.qual), loop(p.name, c.name))
             case (p: Term.Interpolate, c: Term.Interpolate) =>
-              p.copy(loop(p.prefix, c.prefix), zLoop(p.parts, c.parts, loop[Lit]), zLoop(p.args, c.args, loop[Term]))
+              p.copy(loop(p.prefix, c.prefix), zLoop(loop[Lit.String])(p.parts, c.parts), zLoop(loop[Term])(p.args, c.args))
             case (p: Term.Apply, c: Term.Apply) =>
-              p.copy(loop(p.fun, c.fun), zLoop(p.args, c.args, loop[Term.Arg]))
+              p.copy(loop(p.fun, c.fun), zLoop(loop[Term.Arg])(p.args, c.args))
             case (p: Term.ApplyType, c: Term.ApplyType) =>
-              p.copy(loop(p.fun, c.fun), zLoop(p.targs, c.targs, loop[Type]))
+              p.copy(loop(p.fun, c.fun), zLoop(loop[Type])(p.targs, c.targs))
             case (p: Term.ApplyInfix, c: Term.ApplyInfix) =>
-              p.copy(loop(p.lhs, c.lhs), loop(p.op, c.op), zLoop(p.targs, c.targs, loop[Type]), zLoop(p.args, c.args, loop[Term.Arg]))
+              p.copy(loop(p.lhs, c.lhs), loop(p.op, c.op), zLoop(loop[Type])(p.targs, c.targs), zLoop(loop[Term.Arg])(p.args, c.args))
             case (p: Term.ApplyUnary, c: Term.ApplyUnary) =>
               p.copy(loop(p.op, c.op), loop(p.arg, c.arg))
             case (p: Term.Assign, c: Term.Assign) =>
               p.copy(loop(p.lhs, c.lhs), loop(p.rhs, c.rhs))
             case (p: Term.Update, c: Term.Update) =>
-              p.copy(loop(p.fun, c.fun), zzLoop(p.argss, c.argss, loop[Term.Arg]), loop(p.rhs, c.rhs))
+              p.copy(loop(p.fun, c.fun), zzLoop(loop[Term.Arg])(p.argss, c.argss), loop(p.rhs, c.rhs))
             case (p: Term.Return, c: Term.Return) =>
               p.copy(loop(p.expr, c.expr))
             case (p: Term.Throw, c: Term.Throw) =>
@@ -99,43 +99,37 @@ trait ConvertPhase {
             case (p: Term.Ascribe, c: Term.Ascribe) =>
               p.copy(loop(p.expr, c.expr), loop(p.tpe, c.tpe))
             case (p: Term.Annotate, c: Term.Annotate) =>
-              p.copy(loop(p.expr, c.expr), zLoop(p.annots, c.annots, loop[Mod]))
+              p.copy(loop(p.expr, c.expr), zLoop(loop[Mod.Annot])(p.annots, c.annots))
             case (p: Term.Tuple, c: Term.Tuple) =>
-              p.copy(zLoop(p.elements, c.elements, loop[Term]))
+              p.copy(zLoop(loop[Term])(p.elements, c.elements))
             case (p: Term.Block, c: Term.Block) =>
-              p.copy(zLoop(p.stats, c.stats, loop[Stat]))
+              p.copy(zLoop(loop[Stat])(p.stats, c.stats))
             case (p: Term.If, c: Term.If) =>
               p.copy(loop(p.cond, c.cond), loop(p.thenp, c.thenp), loop(p.elsep, c.elsep))
             case (p: Term.Match, c: Term.Match) =>
-              p.copy(loop(p.scrut, c.scrut), zLoop(p.cases, c.cases, loop[Case]))
+              p.copy(loop(p.scrut, c.scrut), zLoop(loop[Case])(p.cases, c.cases))
             case (p: Term.TryWithCases, c: Term.TryWithCases) =>
-              p.copy(loop(p.expr, c.expr), zLoop(p.catchp, c.catchp, loop[Case]), oLoop(p.finallyp, c.finallyp, loop[Term]))
+              p.copy(loop(p.expr, c.expr), zLoop(loop[Case])(p.catchp, c.catchp), oLoop(loop[Term])(p.finallyp, c.finallyp))
             case (p: Term.TryWithTerm, c: Term.TryWithTerm) =>
-              p.copy(loop(p.expr, c.expr), loop(p.catchp, c.catchp), oLoop(p.finallyp, c.finallyp, loop[Term]))
+              p.copy(loop(p.expr, c.expr), loop(p.catchp, c.catchp), oLoop(loop[Term])(p.finallyp, c.finallyp))
             case (p: Term.Function, c: Term.Function) =>
-              p.copy(zLoop(p.params, c.params, loop[Term.Param]), loop(p.body, c.body))
+              p.copy(zLoop(loop[Term.Param])(p.params, c.params), loop(p.body, c.body))
             case (p: Term.PartialFunction, c: Term.PartialFunction) =>
-              p.copy(zLoop(p.cases, c.cases, loop[Case]))
+              p.copy(zLoop(loop[Case])(p.cases, c.cases))
             case (p: Term.While, c: Term.While) =>
               p.copy(loop(p.expr, c.expr), loop(p.body, c.body))
             case (p: Term.Do, c: Term.Do) =>
               p.copy(loop(p.body, c.body), loop(p.expr, c.expr))
             case (p: Term.For, c: Term.For) =>
-              p.copy(zLoop(p.enums, c.enums, loop[Enumerator]), loop(p.body, c.body))
+              p.copy(zLoop(loop[Enumerator])(p.enums, c.enums), loop(p.body, c.body))
             case (p: Term.ForYield, c: Term.ForYield) =>
-              p.copy(zLoop(p.enums, c.enums, loop[Enumerator]), loop(p.body, c.body))
+              p.copy(zLoop(loop[Enumerator])(p.enums, c.enums), loop(p.body, c.body))
             case (p: Term.New, c: Term.New) =>
               p.copy(loop(p.templ, c.templ))
             case (p: Term.Placeholder, c: Term.Placeholder) =>
               p
             case (p: Term.Eta, c: Term.Eta) =>
               p.copy(loop(p.term, c.term))
-
-            // Handling special cases
-            case (p: Term.Block, c: Stat) if p.stats.length == 1 =>
-              p.copy(imm.Seq(loop(p.stats.head, c)))
-            case (p: Term.Interpolate, c: Term.Apply) =>
-              p // TODO: this is due to quasiquote expansion - should probably be left as is in the parsed tree.
 
             case (p: Term.Arg.Named, c: Term.Arg.Named) =>
               p.copy(loop(p.name, c.name), loop(p.rhs, c.rhs))
@@ -144,10 +138,10 @@ trait ConvertPhase {
 
             case (p: Term.Param, c: Term.Param) =>
               p.copy(
-                zLoop(p.mods, c.mods, loop[Mod]),
+                zLoop(loop[Mod])(p.mods, c.mods),
                 loop(p.name, c.name),
-                oLoop(p.decltpe, c.decltpe, loop[Type.Arg]),
-                oLoop(p.default, c.default, loop[Term])
+                oLoop(loop[Type.Arg])(p.decltpe, c.decltpe),
+                oLoop(loop[Term])(p.default, c.default)
               )
 
             case (p: Type.Select, c: Type.Select) =>
@@ -157,25 +151,21 @@ trait ConvertPhase {
             case (p: Type.Singleton, c: Type.Singleton) =>
               p.copy(loop(p.ref, c.ref))
             case (p: Type.Apply, c: api.Type.Apply) =>
-              p.copy(loop(p.tpe, c.tpe), zLoop(p.args, c.args, loop[Type]))
+              p.copy(loop(p.tpe, c.tpe), zLoop(loop[Type])(p.args, c.args))
             case (p: Type.ApplyInfix, c: Type.ApplyInfix) =>
               p.copy(loop(p.lhs, c.lhs), loop(p.op, c.op), loop(p.rhs, c.rhs))
             case (p: Type.Function, c: Type.Function) =>
-              p.copy(zLoop(p.params, c.params, loop[Type.Arg]), loop(p.res, c.res))
+              p.copy(zLoop(loop[Type.Arg])(p.params, c.params), loop(p.res, c.res))
             case (p: Type.Tuple, c: Type.Tuple) =>
-              p.copy(zLoop(p.elements, c.elements, loop[Type]))
+              p.copy(zLoop(loop[Type])(p.elements, c.elements))
             case (p: Type.Compound, c: Type.Compound) =>
-              p.copy(zLoop(p.tpes, c.tpes, loop[Type]), zLoop(p.refinement, c.refinement, loop[Stat]))
+              p.copy(zLoop(loop[Type])(p.tpes, c.tpes), zLoop(loop[Stat])(p.refinement, c.refinement))
             case (p: Type.Existential, c: Type.Existential) =>
-              p.copy(loop(p.tpe, c.tpe), zLoop(p.quants, c.quants, loop[Stat]))
+              p.copy(loop(p.tpe, c.tpe), zLoop(loop[Stat])(p.quants, c.quants))
             case (p: Type.Annotate, c: Type.Annotate) =>
-              p.copy(loop(p.tpe, c.tpe), zLoop(p.annots, c.annots, loop[Mod]))
+              p.copy(loop(p.tpe, c.tpe), zLoop(loop[Mod.Annot])(p.annots, c.annots))
             case (p: Type.Placeholder, c: Type.Placeholder) =>
               p
-
-            // Handling special cases
-            case (p: api.Type.Name, c: api.Type.Select) =>
-              loop(p, c.name)
 
             case (p: Type.Arg.ByName, c: Type.Arg.ByName) =>
               p.copy(loop(p.tpe, c.tpe))
@@ -184,47 +174,47 @@ trait ConvertPhase {
 
             case (p: Type.Param, c: Type.Param) =>
               p.copy(
-                zLoop(p.mods, c.mods, loop[Mod]),
+                zLoop(loop[Mod])(p.mods, c.mods),
                 loop(p.name, c.name),
-                zLoop(p.tparams, c.tparams, loop[Type.Param]),
+                zLoop(loop[Type.Param])(p.tparams, c.tparams),
                 loop(p.typeBounds, c.typeBounds),
-                zLoop(p.viewBounds, c.viewBounds, loop[Type]),
-                zLoop(p.contextBounds, c.contextBounds, loop[Type])
+                zLoop(loop[Type])(p.viewBounds, c.viewBounds),
+                zLoop(loop[Type])(p.contextBounds, c.contextBounds)
               )
             case (p: Type.Bounds, c: Type.Bounds) =>
-              p.copy(oLoop(p.lo, c.lo, loop[Type]), oLoop(p.hi, c.hi, loop[Type]))
+              p.copy(oLoop(loop[Type])(p.lo, c.lo), oLoop(loop[Type])(p.hi, c.hi))
 
             case (p: Decl.Val, c: Decl.Val) =>
-              p.copy(zLoop(p.mods, c.mods, loop[Mod]), zLoop(p.pats, c.pats, loop[Pat]), loop(p.decltpe, c.decltpe))
+              p.copy(zLoop(loop[Mod])(p.mods, c.mods), zLoop(loop[Pat.Var.Term])(p.pats, c.pats), loop(p.decltpe, c.decltpe))
             case (p: Decl.Var, c: Decl.Var) =>
-              p.copy(zLoop(p.mods, c.mods, loop[Mod]), zLoop(p.pats, c.pats, loop[Pat]), loop(p.decltpe, c.decltpe))
+              p.copy(zLoop(loop[Mod])(p.mods, c.mods), zLoop(loop[Pat.Var.Term])(p.pats, c.pats), loop(p.decltpe, c.decltpe))
             case (p: Decl.Def, c: Decl.Def) =>
-              p.copy(zLoop(p.mods, c.mods, loop[Mod]), loop(p.name, c.name), zLoop(p.tparams, c.tparams, loop[Type.Param]), zzLoop(p.paramss, c.paramss, loop[Term.Param]), loop(p.decltpe, c.decltpe))
+              p.copy(zLoop(loop[Mod])(p.mods, c.mods), loop(p.name, c.name), zLoop(loop[Type.Param])(p.tparams, c.tparams), zzLoop(loop[Term.Param])(p.paramss, c.paramss), loop(p.decltpe, c.decltpe))
             case (p: Decl.Type, c: Decl.Type) =>
-              p.copy(zLoop(p.mods, c.mods, loop[Mod]), loop(p.name, c.name), zLoop(p.tparams, c.tparams, loop[Type.Param]), loop(p.bounds, c.bounds))
+              p.copy(zLoop(loop[Mod])(p.mods, c.mods), loop(p.name, c.name), zLoop(loop[Type.Param])(p.tparams, c.tparams), loop(p.bounds, c.bounds))
             case (p: Defn.Val, c: Defn.Val) =>
-              p.copy(zLoop(p.mods, c.mods, loop[Mod]), zLoop(p.pats, c.pats, loop[Pat]), oLoop(p.decltpe, c.decltpe, loop[Type]), loop(p.rhs, c.rhs))
+              p.copy(zLoop(loop[Mod])(p.mods, c.mods), zLoop(loop[Pat])(p.pats, c.pats), oLoop(loop[Type])(p.decltpe, c.decltpe), loop(p.rhs, c.rhs))
             case (p: Defn.Var, c: Defn.Var) =>
-              p.copy(zLoop(p.mods, c.mods, loop[Mod]), zLoop(p.pats, c.pats, loop[Pat]), oLoop(p.decltpe, c.decltpe, loop[Type]), oLoop(p.rhs, c.rhs, loop[Term]))
+              p.copy(zLoop(loop[Mod])(p.mods, c.mods), zLoop(loop[Pat])(p.pats, c.pats), oLoop(loop[Type])(p.decltpe, c.decltpe), oLoop(loop[Term])(p.rhs, c.rhs))
             case (p: Defn.Def, c: Defn.Def) =>
-              p.copy(zLoop(p.mods, c.mods, loop[Mod]), loop(p.name, c.name), zLoop(p.tparams, c.tparams, loop[Type.Param]), zzLoop(p.paramss, c.paramss, loop[Term.Param]), oLoop(p.decltpe, c.decltpe, loop[Type]), loop(p.body, c.body))
+              p.copy(zLoop(loop[Mod])(p.mods, c.mods), loop(p.name, c.name), zLoop(loop[Type.Param])(p.tparams, c.tparams), zzLoop(loop[Term.Param])(p.paramss, c.paramss), oLoop(loop[Type])(p.decltpe, c.decltpe), loop(p.body, c.body))
             case (p: Defn.Macro, c: Defn.Macro) =>
-              p.copy(zLoop(p.mods, c.mods, loop[Mod]), loop(p.name, c.name), zLoop(p.tparams, c.tparams, loop[Type.Param]), zzLoop(p.paramss, c.paramss, loop[Term.Param]), loop(p.tpe, c.tpe), loop(p.body, c.body))
+              p.copy(zLoop(loop[Mod])(p.mods, c.mods), loop(p.name, c.name), zLoop( loop[Type.Param])(p.tparams, c.tparams), zzLoop(loop[Term.Param])(p.paramss, c.paramss), loop(p.tpe, c.tpe), loop(p.body, c.body))
             case (p: Defn.Type, c: Defn.Type) =>
-              p.copy(zLoop(p.mods, c.mods, loop[Mod]), loop(p.name, c.name), zLoop(p.tparams, c.tparams, loop[Type.Param]), loop(p.body, c.body))
+              p.copy(zLoop(loop[Mod])(p.mods, c.mods), loop(p.name, c.name), zLoop(loop[Type.Param])(p.tparams, c.tparams), loop(p.body, c.body))
             case (p: Defn.Class, c: Defn.Class) =>
-              p.copy(zLoop(p.mods, c.mods, loop[Mod]), loop(p.name, c.name), zLoop(p.tparams, c.tparams, loop[Type.Param]), loop(p.ctor, c.ctor), loop(p.templ, c.templ))
+              p.copy(zLoop(loop[Mod])(p.mods, c.mods), loop(p.name, c.name), zLoop(loop[Type.Param])(p.tparams, c.tparams), loop(p.ctor, c.ctor), loop(p.templ, c.templ))
             case (p: Defn.Trait, c: Defn.Trait) =>
-              p.copy(zLoop(p.mods, c.mods, loop[Mod]), loop(p.name, c.name), zLoop(p.tparams, c.tparams, loop[Type.Param]), loop(p.ctor, c.ctor), loop(p.templ, c.templ))
+              p.copy(zLoop(loop[Mod])(p.mods, c.mods), loop(p.name, c.name), zLoop(loop[Type.Param])(p.tparams, c.tparams), loop(p.ctor, c.ctor), loop(p.templ, c.templ))
             case (p: Defn.Object, c: Defn.Object) =>
-              p.copy(zLoop(p.mods, c.mods, loop[Mod]), loop(p.name, c.name), loop(p.ctor, c.ctor), loop(p.templ, c.templ))
+              p.copy(zLoop(loop[Mod])(p.mods, c.mods), loop(p.name, c.name), loop(p.ctor, c.ctor), loop(p.templ, c.templ))
             case (p: Pkg, c: Pkg) =>
-              p.copy(loop(p.ref, c.ref), zLoop(p.stats, c.stats, loop[Stat]))
+              p.copy(loop(p.ref, c.ref), zLoop(loop[Stat])(p.stats, c.stats))
 
             case (p: Import, c: Import) =>
-              p.copy(zLoop(p.clauses, c.clauses, loop[Import.Clause]))
+              p.copy(zLoop(loop[Import.Clause])(p.clauses, c.clauses))
             case (p: Import.Clause, c: Import.Clause) =>
-              p.copy(loop(p.ref, c.ref), zLoop(p.sels, c.sels, loop[Import.Selector]))
+              p.copy(loop(p.ref, c.ref), zLoop(loop[Import.Selector])(p.sels, c.sels))
             case (p: Import.Selector.Wildcard, c: Import.Selector.Wildcard) =>
               p
             case (p: Import.Selector.Name, c: Import.Selector.Name) =>
@@ -234,12 +224,8 @@ trait ConvertPhase {
             case (p: Import.Selector.Unimport, c: Import.Selector.Unimport) =>
               p.copy(loop(p.name, c.name))
 
-            // handling special case
-            case (p: Defn.Def, c: Defn.Macro) => p // TODO: this seems to be due to a bug (Quasiquotes are expanded here)
-            case (p: Defn.Macro, c: Defn.Def) => p // TODO: this seems to be due to a bug (Quasiquotes are expanded here)
-
             case (p: Case, c: Case) =>
-              p.copy(loop(p.pat, c.pat),oLoop(p.cond, c.cond, loop[Term]),loop(p.body, c.body))
+              p.copy(loop(p.pat, c.pat),oLoop(loop[Term])(p.cond, c.cond),loop(p.body, c.body))
 
             case (p: Lit, c: Lit) => p
 
@@ -249,26 +235,28 @@ trait ConvertPhase {
               p.copy(loop(p.within, c.within))
             case (p: Mod.Protected, c: Mod.Protected) =>
               p.copy(loop(p.within, c.within))
+            case (p: Mod, c: Mod) =>
+              p
 
             case (p: Pat.Var.Term, c: Pat.Var.Term) =>
               p.copy(loop(p.name, c.name))
             case (p: Pat.Wildcard, c: Pat.Wildcard) =>
               p
             case (p: Pat.Bind, c: Pat.Bind) =>
-              p.copy(loop(p.lhs, c.lhs), p.rhs.appendScratchpad(c.rhs.scratchpad)) // TODO: check that scratchpad
+              p.copy(loop(p.lhs, c.lhs), loop(p.rhs, c.rhs))
             case (p: Pat.Alternative, c: Pat.Alternative) =>
               p.copy(loop(p.lhs, c.lhs), loop(p.rhs, c.rhs))
             case (p: Pat.Tuple, c: Pat.Tuple) =>
-              p.copy(zLoop(p.elements, c.elements, loop[Pat]))
+              p.copy(zLoop(loop[Pat])(p.elements, c.elements))
             case (p: Pat.Extract, c: Pat.Extract) =>
-              p.copy(loop(p.ref, c.ref), zLoop(p.targs, c.targs, loop[Type]), zLoop(p.args, c.args, loop[Pat.Arg]))
+              p.copy(loop(p.ref, c.ref), zLoop(loop[Type])(p.targs, c.targs), zLoop(loop[Pat.Arg])(p.args, c.args))
             case (p: Pat.ExtractInfix, c: Pat.ExtractInfix) =>
-              p.copy(loop(p.lhs, c.lhs), loop(p.ref, c.ref), zLoop(p.rhs, c.rhs, loop[Pat.Arg]))
+              p.copy(loop(p.lhs, c.lhs), loop(p.ref, c.ref), zLoop(loop[Pat.Arg])(p.rhs, c.rhs))
             case (p: Pat.Interpolate, c: Pat.Interpolate) =>
               p.copy(
                 loop(p.prefix, c.prefix),
-                zLoop(p.parts, c.parts, loop[Lit]),
-                zLoop(p.args, c.args, loop[Pat])
+                zLoop(loop[Lit.String])(p.parts, c.parts),
+                zLoop(loop[Pat])(p.args, c.args)
               )
             case (p: Pat.Typed, c: Pat.Typed) =>
               p.copy(loop(p.lhs, c.lhs), loop(p.rhs, c.rhs))
@@ -281,19 +269,19 @@ trait ConvertPhase {
             case (p: Pat.Type.Project, c: Pat.Type.Project) =>
               p.copy(loop(p.qual, c.qual), loop(p.name, c.name))
             case (p: Pat.Type.Apply, c: Pat.Type.Apply) =>
-              p.copy(loop(p.tpe, c.tpe), zLoop(p.args, c.args, loop[Pat.Type]))
+              p.copy(loop(p.tpe, c.tpe), zLoop(loop[Pat.Type])(p.args, c.args))
             case (p: Pat.Type.ApplyInfix, c: Pat.Type.ApplyInfix) =>
               p.copy(loop(p.lhs, c.lhs), loop(p.op, c.op), loop(p.rhs, c.rhs))
             case (p: Pat.Type.Function, c: Pat.Type.Function) =>
-              p.copy(zLoop(p.params, c.params, loop[Pat.Type]), loop(p.res, c.res))
+              p.copy(zLoop(loop[Pat.Type])(p.params, c.params), loop(p.res, c.res))
             case (p: Pat.Type.Tuple, c: Pat.Type.Tuple) =>
-              p.copy(zLoop(p.elements, c.elements, loop[Pat.Type]))
+              p.copy(zLoop(loop[Pat.Type])(p.elements, c.elements))
             case (p: Pat.Type.Compound, c: Pat.Type.Compound) =>
-              p.copy(zLoop(p.tpes, c.tpes, loop[Pat.Type]), zLoop(p.refinement, c.refinement, loop[Stat]))
+              p.copy(zLoop(loop[Pat.Type])(p.tpes, c.tpes), zLoop(loop[Stat])(p.refinement, c.refinement))
             case (p: Pat.Type.Existential, c: Pat.Type.Existential) =>
-              p.copy(loop(p.tpe, c.tpe), zLoop(p.quants, c.quants, loop[Stat]))
+              p.copy(loop(p.tpe, c.tpe), zLoop(loop[Stat])(p.quants, c.quants))
             case (p: Pat.Type.Annotate, c: Pat.Type.Annotate) =>
-              p.copy(loop(p.tpe, c.tpe), zLoop(p.annots, c.annots, loop[Mod]))
+              p.copy(loop(p.tpe, c.tpe), zLoop(loop[Mod.Annot])(p.annots, c.annots))
 
             case (p: Enumerator.Generator, c: Enumerator.Generator) =>
               p.copy(loop(p.pat, c.pat), loop(p.rhs, c.rhs))
@@ -303,23 +291,35 @@ trait ConvertPhase {
               p.copy(loop(p.cond, c.cond))
 
             case (p: Template, c: Template) =>
-              p.copy(zLoop(p.early, c.early, loop[Stat]),
-                zLoop(p.parents, c.parents, loop[Term]),
+              p.copy(zLoop(loop[Stat])(p.early, c.early),
+                zLoop(loop[Term])(p.parents, c.parents),
                 loop(p.self, c.self),
-                (p.stats, c.stats) match {
-                  case (Some(p), Some(c)) => Some(zLoop(p, c, loop[Stat]))
-                  case (_, _) => None
-                }
+                oLoop(zLoop(loop[Stat]))(p.stats, c.stats)
               )
 
             case (p: Ctor.Primary, c: Ctor.Primary) =>
-              p.copy(zLoop(p.mods, c.mods, loop[Mod]), loop(p.name, c.name), zzLoop(p.paramss, c.paramss, loop[Term.Param]))
+              p.copy(zLoop(loop[Mod])(p.mods, c.mods), loop(p.name, c.name), zzLoop(loop[Term.Param])(p.paramss, c.paramss))
             case (p: Ctor.Secondary, c: Ctor.Secondary) =>
-              p.copy(zLoop(p.mods, c.mods, loop[Mod]), loop(p.name, c.name), zzLoop(p.paramss, c.paramss, loop[Term.Param]), loop(p.body, c.body))
+              p.copy(zLoop(loop[Mod])(p.mods, c.mods), loop(p.name, c.name), zzLoop(loop[Term.Param])(p.paramss, c.paramss), loop(p.body, c.body))
 
             case (p: Source, c: Source) =>
-              p.copy(zLoop(p.stats, c.stats, loop[Stat]))
+              p.copy(zLoop(loop[Stat])(p.stats, c.stats))
 
+            // Handling special cases
+            case (p: Term.Block, c: Stat) if p.stats.length == 1 =>
+              p.copy(imm.Seq(loop(p.stats.head, c)))
+            case (p: Term.Interpolate, c: Term.Apply) =>
+              p // TODO: this is due to quasiquote expansion - should probably be left as is in the parsed tree.
+            case (p: api.Type.Name, c: api.Type.Select) =>
+              loop(p, c.name)
+            case (p: Defn.Def, c: Defn.Macro) =>
+              p // TODO: this seems to be due to a bug (Quasiquotes are expanded here)
+            case (p: Defn.Macro, c: Defn.Def) =>
+              p // TODO: this seems to be due to a bug (Quasiquotes are expanded here)
+
+            case (p, c) =>
+              reporter.warning(NoPosition, "An error occured while merging the parsed and the converted tree. The trees where not identical. This should never happen.")
+              p
           }).appendScratchpad(cTree.scratchpad).asInstanceOf[T]
         }
         loop(parsedTree, convertedTree)
