@@ -112,6 +112,8 @@ private[meta] object Helpers {
   }
   implicit class XtensionStat(stat: Stat) {
     def isTopLevelStat: Boolean = stat match {
+      case _: Stat.Unquote => true
+      case _: Stat.Ellipsis => true
       case _: Import => true
       case _: Pkg => true
       case _: Defn.Class => true
@@ -121,6 +123,8 @@ private[meta] object Helpers {
       case _ => false
     }
     def isTemplateStat: Boolean = stat match {
+      case _: Stat.Unquote => true
+      case _: Stat.Ellipsis => true
       case _: Import => true
       case _: Term => true
       case _: Decl => true
@@ -129,6 +133,8 @@ private[meta] object Helpers {
       case _ => false
     }
     def isBlockStat: Boolean = stat match {
+      case _: Stat.Unquote => true
+      case _: Stat.Ellipsis => true
       case _: Import => true
       case _: Term => true
       case stat: Defn.Var => stat.rhs.isDefined
@@ -136,16 +142,22 @@ private[meta] object Helpers {
       case _ => false
     }
     def isRefineStat: Boolean = stat match {
+      case _: Stat.Unquote => true
+      case _: Stat.Ellipsis => true
       case _: Decl => true
       case _: Defn.Type => true
       case _ => false
     }
     def isExistentialStat: Boolean = stat match {
+      case _: Stat.Unquote => true
+      case _: Stat.Ellipsis => true
       case _: Decl.Val => true
       case _: Decl.Type => true
       case _ => false
     }
     def isEarlyStat: Boolean = stat match {
+      case _: Stat.Unquote => true
+      case _: Stat.Ellipsis => true
       case _: Defn.Val => true
       case _: Defn.Var => true
       case _ => false
