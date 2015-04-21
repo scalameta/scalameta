@@ -34,7 +34,7 @@ trait ConvertPhase {
 
     override def newPhase(prev: Phase): StdPhase = new StdPhase(prev) {
 
-      // TODO: might be useful for portability to rewrite using macros at some point.
+      // TODO: might be useful for portability to rewrite using macros at some point
       private def merge(parsedTree: api.Source, convertedTree: api.Source): api.Source = {
 
         def zLoop[T](f: (T, T) => T)(pTree: imm.Seq[T], cTree: imm.Seq[T]): imm.Seq[T] = (pTree zip cTree).map(s => f(s._1, s._2).asInstanceOf[T])
@@ -47,7 +47,7 @@ trait ConvertPhase {
           case (Some(p), Some(c)) => Some(f(p, c).asInstanceOf[T])
           // Handling special cases
           case (Some(List()), None) => pTree
-          case (None, _) => None // TODO: due to macros, some options can be put in Templates (for instance in ParadiseSuite.scala).
+          case (None, _) => None // TODO: due to macros, some options can be put in Templates (for instance in ParadiseSuite.scala)
           case _ =>
             reporter.warning(NoPosition, "An error occurred while merging the parsed and the converted tree. The trees were not identical. This should never happen.")
             pTree
@@ -323,12 +323,10 @@ trait ConvertPhase {
       }
 
       override def apply(unit: CompilationUnit) {
-        val parsedTree = unit.source.content.mkString("").parse[Source].asInstanceOf[api.Source]
+        val parsedTree = scala.meta.syntactic.Input.File(unit.source.path).parse[Source].asInstanceOf[api.Source]
         val convertedTree = c.toMtree(unit.body, classOf[Source]).asInstanceOf[api.Source]
 
         unit.body.appendMetadata("scalameta" -> merge(parsedTree, convertedTree))
       }
-
     }
   }
-}
