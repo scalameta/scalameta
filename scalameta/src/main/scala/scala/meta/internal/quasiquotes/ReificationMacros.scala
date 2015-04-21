@@ -517,7 +517,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
         val root = q"_root_": ReflectTree
         val fullProductPrefix = "scala.meta.internal.ast." + name.productPrefix
         val constructorDeconstructor = fullProductPrefix.split('.').foldLeft(root)((acc, part) => q"$acc.${TermName(part)}")
-        var args = name.productIterator.toList.map { case s: String => q"$s"; case other => unreachable(debug(other)) }
+        var args = name.productIterator.toList.map { case s: String => q"$s"; case other => unreachable(debug(other, other.getClass)) }
         if (mode.isTerm) args ++= List(q"${name.denot}", q"${name.sigma}")
         else () // TODO: figure out how to use denotations in pattern matching
         q"$constructorDeconstructor(..$args)"

@@ -18,9 +18,9 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
   lazy val UnquoteClass = c.mirror.staticModule("scala.meta.internal.ast.Quasi").info.member(TypeName("Unquote")).asClass
   lazy val EllipsisClass = c.mirror.staticModule("scala.meta.internal.ast.Quasi").info.member(TypeName("Ellipsis")).asClass
   override def customAdts(root: Root): Option[List[Adt]] = {
-    val nonQuasis = root.allLeafs.filter(leaf => !(leaf.tpe <:< QuasiClass.toType))
     val justBasicQuasis = List(UnquoteClass.asBranch, EllipsisClass.asBranch)
-    Some(nonQuasis ++ justBasicQuasis)
+    val nonQuasis = root.allLeafs.filter(leaf => !(leaf.tpe <:< QuasiClass.toType))
+    Some(justBasicQuasis ++ nonQuasis)
   }
   override def customMatcher(adt: Adt, defName: TermName, localName: TermName): Option[DefDef] = {
     // TODO: it should be possible to customize liftable codegen by providing implicit instances on the outside

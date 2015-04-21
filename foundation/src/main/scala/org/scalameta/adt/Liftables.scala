@@ -22,19 +22,25 @@ class LiftableMacros(val c: Context) extends AdtReflection {
     val root = weakTypeOf[T].typeSymbol.asAdt.root
     val unsortedAdts = customAdts(root).getOrElse(weakTypeOf[T].typeSymbol.asAdt.root.allLeafs)
     val adts = {
-      // TODO: need to make sure that more specific leafs come before less specific ones
-      // so that we don't get dead code during pattern matching
-      val cache = mutable.Map[Symbol, Int]()
-      def metric(sym: Symbol): Int = cache.getOrElseUpdate(sym, {
-        if (sym == root.sym) 0
-        else {
-          val classSym = if (sym.isModule) sym.asModule.moduleClass else sym.asClass
-          val parents = classSym.info.asInstanceOf[ClassInfoType].parents.map(_.typeSymbol)
-          val relevantParents = parents.filter(_.asType.toType <:< root.tpe)
-          relevantParents.length + relevantParents.map(metric).sum
-        }
-      })
-      unsortedAdts.sortBy(adt => -1 * metric(adt.sym))
+      // TODO: This doesn't quite work, because we can have `A` and `B`, none of which inherits each other,
+      // but then at runtime we get `C` which inherits both and then execution suddenly takes the wrong path.
+      // Real life example: Term.Name and Quasi.Unquote, none of them are related, so we kinda can reorder their cases, right?
+      // Nope! If we get Term.Name.Unquote, then we really need it to go into Quasi.Unquote, but not into Term.Name.
+      // Therefore, simple sorting doesn't work.
+      // // NOTE: need to make sure that more specific leafs come before less specific ones
+      // // so that we don't get dead code during pattern matching
+      // val cache = mutable.Map[Symbol, Int]()
+      // def metric(sym: Symbol): Int = cache.getOrElseUpdate(sym, {
+      //   if (sym == root.sym) 0
+      //   else {
+      //     val classSym = if (sym.isModule) sym.asModule.moduleClass else sym.asClass
+      //     val parents = classSym.info.asInstanceOf[ClassInfoType].parents.map(_.typeSymbol)
+      //     val relevantParents = parents.filter(_.asType.toType <:< root.tpe)
+      //     relevantParents.length + relevantParents.map(metric).sum
+      //   }
+      // })
+      // unsortedAdts.sortBy(adt => -1 * metric(adt.sym))
+      unsortedAdts
     }
     if (adts.isEmpty) c.abort(c.enclosingPosition, s"$root has no known leafs")
     val u = q"${c.prefix}.u"
