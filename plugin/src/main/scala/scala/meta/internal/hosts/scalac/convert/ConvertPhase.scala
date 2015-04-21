@@ -43,361 +43,286 @@ trait ConvertPhase {
       // TODO: cleanup, perhaps re-write using macros.
       private def merge(parsedTree: api.Source, convertedTree: api.Source): api.Source = {
 
-        def zLoop[T](pTree: imm.Seq[T], cTree: imm.Seq[T], f: (T,T) => api.Tree): imm.Seq[T] = (pTree zip cTree).map(s => f(s._1, s._2).asInstanceOf[T])
+        def zLoop[T](pTree: imm.Seq[T], cTree: imm.Seq[T], f: (T, T) => api.Tree): imm.Seq[T] = (pTree zip cTree).map(s => f(s._1, s._2).asInstanceOf[T])
 
         def zzLoop[T](pTree: imm.Seq[imm.Seq[T]], cTree: imm.Seq[imm.Seq[T]], f: (T, T) => api.Tree): imm.Seq[imm.Seq[T]] = {
           (pTree zip cTree).map(xs => (xs._1 zip xs._2).map(x => f(x._1, x._2).asInstanceOf[T]))
         }
 
         def oLoop[T](pTree: Option[T], cTree: Option[T], f: (T, T) => api.Tree): Option[T] = (pTree, cTree) match {
-          case (Some(p), Some(c)) => Some(f(p,c).asInstanceOf[T])
+          case (Some(p), Some(c)) => Some(f(p, c).asInstanceOf[T])
           case (None, None) => None
           case _ =>
             reporter.warning(NoPosition, "An error occured while merging the parsed and the converted tree. The trees where not identical. This should never happen.")
             pTree
         }
 
-        def loopName(pTree: api.Name, cTree: api.Name): api.Name = {
-          ((pTree, cTree) match {
-            case (p: api.Term.Name, c: api.Term.Name) =>
-              p.copy(denot = c.denot, sigma = c.sigma)
-            case (p: api.Type.Name, c: api.Type.Name) =>
-              p.copy(denot = c.denot, sigma = c.sigma)
-            case (p: api.Ctor.Ref.Name, c: api.Ctor.Ref.Name) =>
-              p.copy(denot = c.denot, sigma = c.sigma)
-            case (p: api.Name.Anonymous, c: api.Name.Anonymous) =>
-              p.copy(denot = c.denot, sigma = c.sigma)
-            case (p: api.Name.Indeterminate, c: api.Name.Indeterminate) =>
-              p.copy(denot = c.denot, sigma = c.sigma)
-          }).appendScratchpad(cTree.scratchpad)
-        }
-
-        def loopQual(pTree: api.Name.Qualifier, cTree: api.Name.Qualifier): api.Name.Qualifier = {
-          ((pTree, cTree) match {
-            case (p: api.Term.This, c: api.Term.This) =>
-              loopTerm(p, c)
-            case _ =>
-              loopName(pTree.asInstanceOf[api.Name], cTree.asInstanceOf[api.Name])
-          }).asInstanceOf[api.Name.Qualifier]
-        }
-
-        def loopTerm(pTree: api.Term, cTree: api.Term): api.Term = {
-          import api.Term._
-          ((pTree, cTree) match {
-            case (p: This, c: This) =>
-              p.copy(loopQual(p.qual, c.qual))
-            case (p: Super, c: Super) =>
-              p.copy(loopQual(p.thisp, c.thisp), loopQual(p.superp, c.superp))
-            case (p: Select, c: Select) =>
-              p.copy(loopTerm(p.qual, c.qual), loopName(p.name, c.name).asInstanceOf[Name])
-            case (p: Interpolate, c: Interpolate) =>
-              p.copy(loopName(p.prefix, c.prefix).asInstanceOf[Name], zLoop(p.parts, c.parts, loopLit), zLoop(p.args, c.args, loopTerm))
-            case (p: Apply, c: Apply) =>
-              p.copy(loopTerm(p.fun, c.fun), zLoop(p.args, c.args, loopTermArg))
-            case (p: ApplyType, c: ApplyType) =>
-              p.copy(loopTerm(p.fun, c.fun), zLoop(p.targs, c.targs, loopType))
-            case (p: ApplyInfix, c: ApplyInfix) =>
-              p.copy(loopTerm(p.lhs, c.lhs), loopName(p.op, c.op).asInstanceOf[Name], zLoop(p.targs, c.targs, loopType), zLoop(p.args, c.args, loopTermArg))
-            case (p: ApplyUnary, c : ApplyUnary) =>
-              p.copy(loopName(p.op, c.op).asInstanceOf[Name], loopTerm(p.arg, c.arg))
-            case (p: Assign, c: Assign) =>
-              p.copy(loopTerm(p.lhs, c.lhs).asInstanceOf[Ref], loopTerm(p.rhs, c.rhs))
-            case (p: Update, c: Update) =>
-              p.copy(loopTerm(p.fun, c.fun), zzLoop(p.argss, c.argss, loopTermArg), loopTerm(p.rhs, c.rhs))
-            case (p: Return, c: Return) =>
-              p.copy(loopTerm(p.expr, c.expr))
-            case (p: Throw, c: Throw) =>
-              p.copy(loopTerm(p.expr, c.expr))
-            case (p: Ascribe, c: Ascribe) =>
-              p.copy(loopTerm(p.expr, c.expr), loopType(p.tpe, c.tpe))
-            case (p: Annotate, c: Annotate) =>
-              p.copy(loopTerm(p.expr, c.expr), zLoop(p.annots, c.annots, loopMod))
-            case (p: Tuple, c: Tuple) =>
-              p.copy(zLoop(p.elements, c.elements, loopTerm))
-            case (p: Block, c: Block) =>
-              p.copy(zLoop(p.stats, c.stats, loopStat))
-            case (p: If, c: If) =>
-              p.copy(loopTerm(p.cond, c.cond), loopTerm(p.thenp, c.thenp), loopTerm(p.elsep, c.elsep))
-            case (p: Match, c: Match) =>
-              p.copy(loopTerm(p.scrut, c.scrut), zLoop(p.cases, c.cases, loopCase))
-            case (p: TryWithCases, c: TryWithCases) =>
-              p.copy(loopTerm(p.expr, c.expr), zLoop(p.catchp, c.catchp, loopCase), oLoop(p.finallyp, c.finallyp, loopTerm))
-            case (p: TryWithTerm, c: TryWithTerm) =>
-              p.copy(loopTerm(p.expr, c.expr), loopTerm(p.catchp, c.catchp), oLoop(p.finallyp, c.finallyp, loopTerm))
-            case (p: Function, c: Function) =>
-              p.copy(zLoop(p.params, c.params, loopTermParam), loopTerm(p.body, c.body))
-            case (p: PartialFunction, c: PartialFunction) =>
-              p.copy(zLoop(p.cases, c.cases, loopCase))
-            case (p: While, c: While) =>
-              p.copy(loopTerm(p.expr, c.expr), loopTerm(p.body, c.body))
-            case (p: Do, c: Do) =>
-              p.copy(loopTerm(p.body, c.body), loopTerm(p.expr, c.expr))
-            case (p: For, c: For) =>
-              p.copy(zLoop(p.enums, c.enums, loopEnum), loopTerm(p.body, c.body))
-            case (p: ForYield, c: ForYield) =>
-              p.copy(zLoop(p.enums, c.enums, loopEnum), loopTerm(p.body, c.body))
-            case (p: New, c: New) =>
-              p.copy(loopTempl(p.templ, c.templ))
-            case (p: Placeholder, c: Placeholder) =>
-              p
-            case (p: Eta, c: Eta) =>
-              p.copy(loopTerm(p.term, c.term))
-            case (p: api.Lit, c: api.Lit) => loopLit(p, c)
-            case (p: Name, c: Name) => loopName(p,c).asInstanceOf[Name]
-            case (p: api.Ctor.Name, c: api.Ctor.Name) => loopName(p, c).asInstanceOf[api.Ctor.Name]
-            // Handling special cases
-            case (p: Block, c: api.Stat) if p.stats.length == 1 =>
-              p.copy(imm.Seq(loopStat(p.stats.head, c)))
-            case (p: Interpolate, c: Apply) =>
-              p // TODO: this is due to quasiquote expansion - should probably be left as is in the parsed tree.
-            case (p, c) => p
-          }).appendScratchpad(cTree.scratchpad)
-        }
-
-        def loopTermArg(pTree: api.Term.Arg, cTree: api.Term.Arg): api.Term.Arg = {
-          import api.Term.Arg._
-          ((pTree, cTree) match {
-            case (p: Named, c: Named) =>
-              p.copy(loopName(p.name, c.name).asInstanceOf[api.Term.Name], loopTerm(p.rhs, c.rhs))
-            case (p: Repeated, c: Repeated) =>
-              p.copy(loopTerm(p.arg, c.arg))
-            case (p: api.Term, c: api.Term) => loopTerm(p, c)
-          }).appendScratchpad(cTree.scratchpad)
-        }
-
-        def loopTermParam(p: api.Term.Param, c: api.Term.Param): api.Term.Param = {
-          import api.Term.Param._
-          p.copy(
-            zLoop(p.mods, c.mods, loopMod),
-            loopName(p.name, c.name).asInstanceOf[Name],
-            oLoop(p.decltpe, c.decltpe, loopTypeArg),
-            oLoop(p.default, c.default, loopTerm)
-          ).appendScratchpad(c.scratchpad)
-        }
-
-        def loopType(pTree: api.Type, cTree: api.Type): api.Type = {
-          import api.Type._
-          ((pTree, cTree) match {
-            case (p: Select, c: Select) =>
-              p.copy(loopTerm(p.qual, c.qual).asInstanceOf[api.Term.Ref], loopName(p.name, c.name).asInstanceOf[Name])
-            case (p: Project, c: Project) =>
-              p.copy(loopType(p.qual, c.qual), loopName(p.name, c.name).asInstanceOf[Name])
-            case (p: Singleton, c: Singleton) =>
-              p.copy(loopTerm(p.ref, c.ref).asInstanceOf[api.Term.Ref])
-            case (p: Apply, c: Apply) =>
-              p.copy(loopType(p.tpe, c.tpe), zLoop(p.args, c.args, loopType))
-            case (p: ApplyInfix, c: ApplyInfix) =>
-              p.copy(loopType(p.lhs, c.lhs), loopName(p.op, c.op).asInstanceOf[Name], loopType(p.rhs, c.rhs))
-            case (p: Function, c: Function) =>
-              p.copy(zLoop(p.params, c.params, loopTypeArg), loopType(p.res, c.res))
-            case (p: Tuple, c: Tuple) =>
-              p.copy(zLoop(p.elements, c.elements, loopType))
-            case (p: Compound, c: Compound) =>
-              p.copy(zLoop(p.tpes, c.tpes, loopType), zLoop(p.refinement, c.refinement, loopStat))
-            case (p: Existential, c: Existential) =>
-              p.copy(loopType(p.tpe, c.tpe), zLoop(p.quants, c.quants, loopStat))
-            case (p: Annotate, c:Annotate) =>
-              p.copy(loopType(p.tpe, c.tpe), zLoop(p.annots, c.annots, loopMod))
-            case (p: Placeholder, c: Placeholder) =>
-              p
-            case (p: Name, c: Name) =>
-              loopName(p,c).asInstanceOf[Name]
-            // Handling special cases
-            case (p: Name, c: Select) =>
-              loopName(p, c.name).asInstanceOf[Name]
-            case (p, c) => p
-          }).appendScratchpad(cTree.scratchpad)
-        }
-
-        def loopTypeArg(pTree: api.Type.Arg, cTree: api.Type.Arg): api.Type.Arg = {
-          import api.Type.Arg._
-          ((pTree, cTree) match {
-            case (p: ByName, c: ByName) =>
-              p.copy(loopType(p.tpe, c.tpe))
-            case (p: Repeated, c: Repeated) =>
-              p.copy(loopType(p.tpe, c.tpe))
-            case (p: api.Type, c: api.Type) => loopType(p, c)
-          }).appendScratchpad(cTree.scratchpad)
-        }
-
-        def loopTypeParam(pTree: api.Type.Param, cTree: api.Type.Param): api.Type.Param = {
-          import api.Type.Param._
-          pTree.copy(
-            zLoop(pTree.mods, cTree.mods, loopMod),
-            loopName(pTree.name, cTree.name).asInstanceOf[Name],
-            zLoop(pTree.tparams, cTree.tparams, loopTypeParam),
-            loopBounds(pTree.typeBounds, cTree.typeBounds),
-            zLoop(pTree.viewBounds, cTree.viewBounds, loopType),
-            zLoop(pTree.contextBounds, cTree.contextBounds, loopType)
-          ).appendScratchpad(cTree.scratchpad)
-        }
-
-        def loopBounds(pTree: api.Type.Bounds, cTree: api.Type.Bounds): api.Type.Bounds = {
-          pTree.copy(oLoop(pTree.lo, cTree.lo, loopType), oLoop(pTree.hi, cTree.hi, loopType)).appendScratchpad(cTree.scratchpad)
-        }
-
-        def loopStat(pTree: api.Stat, cTree: api.Stat): api.Stat = {
+        def loop[T <: api.Tree](pTree: T, cTree: T): T = {
           import api._
           ((pTree, cTree) match {
+
+            case (p: Term.Name, c: Term.Name) =>
+              p.copy(denot = c.denot, sigma = c.sigma)
+            case (p: Type.Name, c: Type.Name) =>
+              p.copy(denot = c.denot, sigma = c.sigma)
+            case (p: Ctor.Ref.Name, c: Ctor.Ref.Name) =>
+              p.copy(denot = c.denot, sigma = c.sigma)
+            case (p: Name.Anonymous, c: Name.Anonymous) =>
+              p.copy(denot = c.denot, sigma = c.sigma)
+            case (p: Name.Indeterminate, c: Name.Indeterminate) =>
+              p.copy(denot = c.denot, sigma = c.sigma)
+
+            case (p: Term.This, c: Term.This) =>
+              p.copy(loop(p.qual, c.qual))
+            case (p: Term.Super, c: Term.Super) =>
+              p.copy(loop(p.thisp, c.thisp), loop(p.superp, c.superp))
+            case (p: Term.Select, c: Term.Select) =>
+              p.copy(loop(p.qual, c.qual), loop(p.name, c.name))
+            case (p: Term.Interpolate, c: Term.Interpolate) =>
+              p.copy(loop(p.prefix, c.prefix), zLoop(p.parts, c.parts, loop[Lit]), zLoop(p.args, c.args, loop[Term]))
+            case (p: Term.Apply, c: Term.Apply) =>
+              p.copy(loop(p.fun, c.fun), zLoop(p.args, c.args, loop[Term.Arg]))
+            case (p: Term.ApplyType, c: Term.ApplyType) =>
+              p.copy(loop(p.fun, c.fun), zLoop(p.targs, c.targs, loop[Type]))
+            case (p: Term.ApplyInfix, c: Term.ApplyInfix) =>
+              p.copy(loop(p.lhs, c.lhs), loop(p.op, c.op), zLoop(p.targs, c.targs, loop[Type]), zLoop(p.args, c.args, loop[Term.Arg]))
+            case (p: Term.ApplyUnary, c: Term.ApplyUnary) =>
+              p.copy(loop(p.op, c.op), loop(p.arg, c.arg))
+            case (p: Term.Assign, c: Term.Assign) =>
+              p.copy(loop(p.lhs, c.lhs), loop(p.rhs, c.rhs))
+            case (p: Term.Update, c: Term.Update) =>
+              p.copy(loop(p.fun, c.fun), zzLoop(p.argss, c.argss, loop[Term.Arg]), loop(p.rhs, c.rhs))
+            case (p: Term.Return, c: Term.Return) =>
+              p.copy(loop(p.expr, c.expr))
+            case (p: Term.Throw, c: Term.Throw) =>
+              p.copy(loop(p.expr, c.expr))
+            case (p: Term.Ascribe, c: Term.Ascribe) =>
+              p.copy(loop(p.expr, c.expr), loop(p.tpe, c.tpe))
+            case (p: Term.Annotate, c: Term.Annotate) =>
+              p.copy(loop(p.expr, c.expr), zLoop(p.annots, c.annots, loop[Mod]))
+            case (p: Term.Tuple, c: Term.Tuple) =>
+              p.copy(zLoop(p.elements, c.elements, loop[Term]))
+            case (p: Term.Block, c: Term.Block) =>
+              p.copy(zLoop(p.stats, c.stats, loop[Stat]))
+            case (p: Term.If, c: Term.If) =>
+              p.copy(loop(p.cond, c.cond), loop(p.thenp, c.thenp), loop(p.elsep, c.elsep))
+            case (p: Term.Match, c: Term.Match) =>
+              p.copy(loop(p.scrut, c.scrut), zLoop(p.cases, c.cases, loop[Case]))
+            case (p: Term.TryWithCases, c: Term.TryWithCases) =>
+              p.copy(loop(p.expr, c.expr), zLoop(p.catchp, c.catchp, loop[Case]), oLoop(p.finallyp, c.finallyp, loop[Term]))
+            case (p: Term.TryWithTerm, c: Term.TryWithTerm) =>
+              p.copy(loop(p.expr, c.expr), loop(p.catchp, c.catchp), oLoop(p.finallyp, c.finallyp, loop[Term]))
+            case (p: Term.Function, c: Term.Function) =>
+              p.copy(zLoop(p.params, c.params, loop[Term.Param]), loop(p.body, c.body))
+            case (p: Term.PartialFunction, c: Term.PartialFunction) =>
+              p.copy(zLoop(p.cases, c.cases, loop[Case]))
+            case (p: Term.While, c: Term.While) =>
+              p.copy(loop(p.expr, c.expr), loop(p.body, c.body))
+            case (p: Term.Do, c: Term.Do) =>
+              p.copy(loop(p.body, c.body), loop(p.expr, c.expr))
+            case (p: Term.For, c: Term.For) =>
+              p.copy(zLoop(p.enums, c.enums, loop[Enumerator]), loop(p.body, c.body))
+            case (p: Term.ForYield, c: Term.ForYield) =>
+              p.copy(zLoop(p.enums, c.enums, loop[Enumerator]), loop(p.body, c.body))
+            case (p: Term.New, c: Term.New) =>
+              p.copy(loop(p.templ, c.templ))
+            case (p: Term.Placeholder, c: Term.Placeholder) =>
+              p
+            case (p: Term.Eta, c: Term.Eta) =>
+              p.copy(loop(p.term, c.term))
+
+            // Handling special cases
+            case (p: Term.Block, c: Stat) if p.stats.length == 1 =>
+              p.copy(imm.Seq(loop(p.stats.head, c)))
+            case (p: Term.Interpolate, c: Term.Apply) =>
+              p // TODO: this is due to quasiquote expansion - should probably be left as is in the parsed tree.
+
+            case (p: Term.Arg.Named, c: Term.Arg.Named) =>
+              p.copy(loop(p.name, c.name), loop(p.rhs, c.rhs))
+            case (p: Term.Arg.Repeated, c: Term.Arg.Repeated) =>
+              p.copy(loop(p.arg, c.arg))
+
+            case (p: Term.Param, c: Term.Param) =>
+              p.copy(
+                zLoop(p.mods, c.mods, loop[Mod]),
+                loop(p.name, c.name),
+                oLoop(p.decltpe, c.decltpe, loop[Type.Arg]),
+                oLoop(p.default, c.default, loop[Term])
+              )
+
+            case (p: Type.Select, c: Type.Select) =>
+              p.copy(loop(p.qual, c.qual), loop(p.name, c.name))
+            case (p: api.Type.Project, c: Type.Project) =>
+              p.copy(loop(p.qual, c.qual), loop(p.name, c.name))
+            case (p: Type.Singleton, c: Type.Singleton) =>
+              p.copy(loop(p.ref, c.ref))
+            case (p: Type.Apply, c: api.Type.Apply) =>
+              p.copy(loop(p.tpe, c.tpe), zLoop(p.args, c.args, loop[Type]))
+            case (p: Type.ApplyInfix, c: Type.ApplyInfix) =>
+              p.copy(loop(p.lhs, c.lhs), loop(p.op, c.op), loop(p.rhs, c.rhs))
+            case (p: Type.Function, c: Type.Function) =>
+              p.copy(zLoop(p.params, c.params, loop[Type.Arg]), loop(p.res, c.res))
+            case (p: Type.Tuple, c: Type.Tuple) =>
+              p.copy(zLoop(p.elements, c.elements, loop[Type]))
+            case (p: Type.Compound, c: Type.Compound) =>
+              p.copy(zLoop(p.tpes, c.tpes, loop[Type]), zLoop(p.refinement, c.refinement, loop[Stat]))
+            case (p: Type.Existential, c: Type.Existential) =>
+              p.copy(loop(p.tpe, c.tpe), zLoop(p.quants, c.quants, loop[Stat]))
+            case (p: Type.Annotate, c: Type.Annotate) =>
+              p.copy(loop(p.tpe, c.tpe), zLoop(p.annots, c.annots, loop[Mod]))
+            case (p: Type.Placeholder, c: Type.Placeholder) =>
+              p
+
+            // Handling special cases
+            case (p: api.Type.Name, c: api.Type.Select) =>
+              loop(p, c.name)
+
+            case (p: Type.Arg.ByName, c: Type.Arg.ByName) =>
+              p.copy(loop(p.tpe, c.tpe))
+            case (p: Type.Arg.Repeated, c: Type.Arg.Repeated) =>
+              p.copy(loop(p.tpe, c.tpe))
+
+            case (p: Type.Param, c: Type.Param) =>
+              p.copy(
+                zLoop(p.mods, c.mods, loop[Mod]),
+                loop(p.name, c.name),
+                zLoop(p.tparams, c.tparams, loop[Type.Param]),
+                loop(p.typeBounds, c.typeBounds),
+                zLoop(p.viewBounds, c.viewBounds, loop[Type]),
+                zLoop(p.contextBounds, c.contextBounds, loop[Type])
+              )
+            case (p: Type.Bounds, c: Type.Bounds) =>
+              p.copy(oLoop(p.lo, c.lo, loop[Type]), oLoop(p.hi, c.hi, loop[Type]))
+
             case (p: Decl.Val, c: Decl.Val) =>
-              p.copy(zLoop(p.mods, c.mods, loopMod), zLoop(p.pats, c.pats, loopPat), loopType(p.decltpe, c.decltpe))
+              p.copy(zLoop(p.mods, c.mods, loop[Mod]), zLoop(p.pats, c.pats, loop[Pat]), loop(p.decltpe, c.decltpe))
             case (p: Decl.Var, c: Decl.Var) =>
-              p.copy(zLoop(p.mods, c.mods, loopMod), zLoop(p.pats, c.pats, loopPat), loopType(p.decltpe, c.decltpe))
+              p.copy(zLoop(p.mods, c.mods, loop[Mod]), zLoop(p.pats, c.pats, loop[Pat]), loop(p.decltpe, c.decltpe))
             case (p: Decl.Def, c: Decl.Def) =>
-              p.copy(zLoop(p.mods, c.mods, loopMod), loopName(p.name, c.name).asInstanceOf[Term.Name], zLoop(p.tparams, c.tparams, loopTypeParam), zzLoop(p.paramss, c.paramss, loopTermParam), loopType(p.decltpe, c.decltpe))
+              p.copy(zLoop(p.mods, c.mods, loop[Mod]), loop(p.name, c.name), zLoop(p.tparams, c.tparams, loop[Type.Param]), zzLoop(p.paramss, c.paramss, loop[Term.Param]), loop(p.decltpe, c.decltpe))
             case (p: Decl.Type, c: Decl.Type) =>
-              p.copy(zLoop(p.mods, c.mods, loopMod), loopName(p.name, c.name).asInstanceOf[Type.Name], zLoop(p.tparams, c.tparams, loopTypeParam), loopBounds(p.bounds, c.bounds))
+              p.copy(zLoop(p.mods, c.mods, loop[Mod]), loop(p.name, c.name), zLoop(p.tparams, c.tparams, loop[Type.Param]), loop(p.bounds, c.bounds))
             case (p: Defn.Val, c: Defn.Val) =>
-              p.copy(zLoop(p.mods, c.mods, loopMod), zLoop(p.pats, c.pats, loopPat), oLoop(p.decltpe, c.decltpe, loopType), loopTerm(p.rhs, c.rhs))
+              p.copy(zLoop(p.mods, c.mods, loop[Mod]), zLoop(p.pats, c.pats, loop[Pat]), oLoop(p.decltpe, c.decltpe, loop[Type]), loop(p.rhs, c.rhs))
             case (p: Defn.Var, c: Defn.Var) =>
-              p.copy(zLoop(p.mods, c.mods, loopMod), zLoop(p.pats, c.pats, loopPat), oLoop(p.decltpe, c.decltpe, loopType), oLoop(p.rhs, c.rhs, loopTerm))
+              p.copy(zLoop(p.mods, c.mods, loop[Mod]), zLoop(p.pats, c.pats, loop[Pat]), oLoop(p.decltpe, c.decltpe, loop[Type]), oLoop(p.rhs, c.rhs, loop[Term]))
             case (p: Defn.Def, c: Defn.Def) =>
-              p.copy(zLoop(p.mods, c.mods, loopMod), loopName(p.name, c.name).asInstanceOf[Term.Name], zLoop(p.tparams, c.tparams, loopTypeParam), zzLoop(p.paramss, c.paramss, loopTermParam), oLoop(p.decltpe, c.decltpe, loopType), loopTerm(p.body, c.body))
+              p.copy(zLoop(p.mods, c.mods, loop[Mod]), loop(p.name, c.name), zLoop(p.tparams, c.tparams, loop[Type.Param]), zzLoop(p.paramss, c.paramss, loop[Term.Param]), oLoop(p.decltpe, c.decltpe, loop[Type]), loop(p.body, c.body))
             case (p: Defn.Macro, c: Defn.Macro) =>
-              p.copy(zLoop(p.mods, c.mods, loopMod), loopName(p.name, c.name).asInstanceOf[Term.Name], zLoop(p.tparams, c.tparams, loopTypeParam), zzLoop(p.paramss, c.paramss, loopTermParam), loopType(p.tpe, c.tpe), loopTerm(p.body, c.body))
+              p.copy(zLoop(p.mods, c.mods, loop[Mod]), loop(p.name, c.name), zLoop(p.tparams, c.tparams, loop[Type.Param]), zzLoop(p.paramss, c.paramss, loop[Term.Param]), loop(p.tpe, c.tpe), loop(p.body, c.body))
             case (p: Defn.Type, c: Defn.Type) =>
-              p.copy(zLoop(p.mods, c.mods, loopMod), loopName(p.name, c.name).asInstanceOf[Type.Name], zLoop(p.tparams, c.tparams, loopTypeParam), loopType(p.body, c.body))
+              p.copy(zLoop(p.mods, c.mods, loop[Mod]), loop(p.name, c.name), zLoop(p.tparams, c.tparams, loop[Type.Param]), loop(p.body, c.body))
             case (p: Defn.Class, c: Defn.Class) =>
-              p.copy(zLoop(p.mods, c.mods, loopMod), loopName(p.name, c.name).asInstanceOf[Type.Name], zLoop(p.tparams, c.tparams, loopTypeParam), loopCtor(p.ctor, c.ctor).asInstanceOf[Ctor.Primary], loopTempl(p.templ, c.templ))
+              p.copy(zLoop(p.mods, c.mods, loop[Mod]), loop(p.name, c.name), zLoop(p.tparams, c.tparams, loop[Type.Param]), loop(p.ctor, c.ctor), loop(p.templ, c.templ))
             case (p: Defn.Trait, c: Defn.Trait) =>
-              p.copy(zLoop(p.mods, c.mods, loopMod), loopName(p.name, c.name).asInstanceOf[Type.Name], zLoop(p.tparams, c.tparams, loopTypeParam), loopCtor(p.ctor, c.ctor).asInstanceOf[Ctor.Primary], loopTempl(p.templ, c.templ))
+              p.copy(zLoop(p.mods, c.mods, loop[Mod]), loop(p.name, c.name), zLoop(p.tparams, c.tparams, loop[Type.Param]), loop(p.ctor, c.ctor), loop(p.templ, c.templ))
             case (p: Defn.Object, c: Defn.Object) =>
-              p.copy(zLoop(p.mods, c.mods, loopMod), loopName(p.name, c.name).asInstanceOf[Term.Name], loopCtor(p.ctor, c.ctor).asInstanceOf[Ctor.Primary], loopTempl(p.templ, c.templ))
+              p.copy(zLoop(p.mods, c.mods, loop[Mod]), loop(p.name, c.name), loop(p.ctor, c.ctor), loop(p.templ, c.templ))
             case (p: Pkg, c: Pkg) =>
-              p.copy(loopTerm(p.ref, c.ref).asInstanceOf[Term.Ref], zLoop(p.stats, c.stats, loopStat))
+              p.copy(loop(p.ref, c.ref), zLoop(p.stats, c.stats, loop[Stat]))
+
             case (p: Import, c: Import) =>
-              def loopSelector(pTree: Import.Selector, cTree: Import.Selector): Import.Selector = {
-                import Import.Selector._
-                ((pTree, cTree) match {
-                  case (p: Wildcard, c: Wildcard) => p
-                  case (p: Name, c: Name) => p.copy(loopName(p.value, c.value).asInstanceOf[api.Name.Indeterminate])
-                  case (p: Rename, c: Rename) => p.copy(loopName(p.from, c.from).asInstanceOf[api.Name.Indeterminate], loopName(p.to, c.to).asInstanceOf[api.Name.Indeterminate])
-                  case (p: Unimport, c: Unimport) => p.copy(loopName(p.name, c.name).asInstanceOf[api.Name.Indeterminate])
-                }).appendScratchpad(cTree.scratchpad)
-              }
-              def loopClause(p: Import.Clause, c: Import.Clause): Import.Clause = p.copy(loopTerm(p.ref, c.ref).asInstanceOf[Term.Ref], zLoop(p.sels, c.sels, loopSelector))
-              p.copy(zLoop(p.clauses, c.clauses, loopClause))
-            case (p: Term, c: Term) => loopTerm(p, c)
+              p.copy(zLoop(p.clauses, c.clauses, loop[Import.Clause]))
+            case (p: Import.Clause, c: Import.Clause) =>
+              p.copy(loop(p.ref, c.ref), zLoop(p.sels, c.sels, loop[Import.Selector]))
+            case (p: Import.Selector.Wildcard, c: Import.Selector.Wildcard) =>
+              p
+            case (p: Import.Selector.Name, c: Import.Selector.Name) =>
+              p.copy(loop(p.value, c.value))
+            case (p: Import.Selector.Rename, c: Import.Selector.Rename) =>
+              p.copy(loop(p.from, c.from), loop(p.to, c.to))
+            case (p: Import.Selector.Unimport, c: Import.Selector.Unimport) =>
+              p.copy(loop(p.name, c.name))
+
             // handling special case
             case (p: Defn.Def, c: Defn.Macro) => p // TODO: this seems to be due to a bug (Quasiquotes are expanded here)
             case (p: Defn.Macro, c: Defn.Def) => p // TODO: this seems to be due to a bug (Quasiquotes are expanded here)
-          }).appendScratchpad(cTree.scratchpad)
-        }
 
-        def loopCase(pTree: api.Case, cTree: api.Case): api.Case = pTree.copy(
-          loopPat(pTree.pat, cTree.pat),
-          oLoop(pTree.cond, cTree.cond, loopTerm),
-          loopTerm(pTree.body, cTree.body).asInstanceOf[api.Term.Block]
-        ).appendScratchpad(cTree.scratchpad)
+            case (p: Case, c: Case) =>
+              p.copy(loop(p.pat, c.pat),oLoop(p.cond, c.cond, loop[Term]),loop(p.body, c.body))
 
-        def loopLit(pTree: api.Lit, cTree: api.Lit): api.Lit = pTree.appendScratchpad(cTree.scratchpad)
+            case (p: Lit, c: Lit) => p
 
-        def loopMod(pTree: api.Mod, cTree: api.Mod): api.Mod = {
-          import api.Mod._
-          ((pTree, cTree) match {
-            case (p: Annot, c: Annot) =>
-              p.copy(loopTerm(p.body, c.body))
-            case (p: Private, c: Private) =>
-              p.copy(loopQual(p.within, c.within))
-            case (p: Protected, c: Protected) =>
-              p.copy(loopQual(p.within, c.within))
-            case (p, _) => p
-          }).appendScratchpad(cTree.scratchpad)
-        }
+            case (p: Mod.Annot, c: Mod.Annot) =>
+              p.copy(loop(p.body, c.body))
+            case (p: Mod.Private, c: Mod.Private) =>
+              p.copy(loop(p.within, c.within))
+            case (p: Mod.Protected, c: Mod.Protected) =>
+              p.copy(loop(p.within, c.within))
 
-        def loopPat(pTree: api.Pat, cTree: api.Pat): api.Pat = {
-          import api._
-          ((pTree, cTree) match {
             case (p: Pat.Var.Term, c: Pat.Var.Term) =>
-              p.copy(loopName(p.name, c.name).asInstanceOf[Term.Name])
-            case (p: Pat.Var.Type, c: Pat.Var.Type) =>
-              p.copy(loopName(p.name, c.name).asInstanceOf[Type.Name])
+              p.copy(loop(p.name, c.name))
             case (p: Pat.Wildcard, c: Pat.Wildcard) =>
               p
             case (p: Pat.Bind, c: Pat.Bind) =>
-              p.copy(loopPat(p.lhs, c.lhs).asInstanceOf[Pat.Var.Term], p.rhs.appendScratchpad(c.rhs.scratchpad))
+              p.copy(loop(p.lhs, c.lhs), p.rhs.appendScratchpad(c.rhs.scratchpad)) // TODO: check that scratchpad
             case (p: Pat.Alternative, c: Pat.Alternative) =>
-              p.copy(loopPat(p.lhs, c.lhs), loopPat(p.rhs, c.rhs))
+              p.copy(loop(p.lhs, c.lhs), loop(p.rhs, c.rhs))
             case (p: Pat.Tuple, c: Pat.Tuple) =>
-              p.copy(zLoop(p.elements, c.elements, loopPat))
+              p.copy(zLoop(p.elements, c.elements, loop[Pat]))
             case (p: Pat.Extract, c: Pat.Extract) =>
-              p.copy(loopTerm(p.ref, c.ref).asInstanceOf[Term.Ref], zLoop(p.targs, c.targs, loopType), zLoop(p.args, c.args, loopPatArg))
+              p.copy(loop(p.ref, c.ref), zLoop(p.targs, c.targs, loop[Type]), zLoop(p.args, c.args, loop[Pat.Arg]))
             case (p: Pat.ExtractInfix, c: Pat.ExtractInfix) =>
-              p.copy(loopPat(p.lhs, c.lhs), loopName(p.ref, c.ref).asInstanceOf[Term.Name], zLoop(p.rhs, c.rhs, loopPatArg))
+              p.copy(loop(p.lhs, c.lhs), loop(p.ref, c.ref), zLoop(p.rhs, c.rhs, loop[Pat.Arg]))
             case (p: Pat.Interpolate, c: Pat.Interpolate) =>
               p.copy(
-                loopName(p.prefix, c.prefix).asInstanceOf[Term.Name],
-                zLoop(p.parts, c.parts, loopLit).map(_.asInstanceOf[Lit.String]),
-                zLoop(p.args, c.args, loopPat)
+                loop(p.prefix, c.prefix),
+                zLoop(p.parts, c.parts, loop[Lit]),
+                zLoop(p.args, c.args, loop[Pat])
               )
             case (p: Pat.Typed, c: Pat.Typed) =>
-              p.copy(loopPat(p.lhs, c.lhs), loopPatType(p.rhs, c.rhs))
-            case (p: Name, c: Name) => loopName(p, c).asInstanceOf[Term.Name]
-          })
-          pTree.appendScratchpad(cTree.scratchpad)
-        }
+              p.copy(loop(p.lhs, c.lhs), loop(p.rhs, c.rhs))
 
-        def loopPatArg(pTree: api.Pat.Arg, cTree: api.Pat.Arg): api.Pat.Arg = pTree.appendScratchpad(cTree.scratchpad)
-
-        def loopPatType(pTree: api.Pat.Type, cTree: api.Pat.Type): api.Pat.Type =  {
-          import api.Pat.Type._
-          ((pTree, cTree) match {
-            case (p: Wildcard, c: Wildcard) =>
+            case (p: Pat.Arg, c: Pat.Arg) =>
               p
-            case (p: Project, c: Project) =>
-              p.copy(loopPatType(p.qual, c.qual), loopName(p.name, c.name).asInstanceOf[api.Type.Name])
-            case (p: Apply, c: Apply) =>
-              p.copy(loopPatType(p.tpe, c.tpe), zLoop(p.args, c.args, loopPatType))
-            case (p: ApplyInfix, c: ApplyInfix) =>
-              p.copy(loopPatType(p.lhs, c.lhs), loopName(p.op, c.op).asInstanceOf[api.Type.Name], loopPatType(p.rhs, c.rhs))
 
-            case (p: Function, c: Function) =>
-              p.copy(zLoop(p.params, c.params, loopPatType), loopPatType(p.res, c.res))
-            case (p: Tuple, c: Tuple) =>
-              p.copy(zLoop(p.elements, c.elements, loopPatType))
-            case (p: Compound, c: Compound) =>
-              p.copy(zLoop(p.tpes, c.tpes, loopPatType), zLoop(p.refinement, c.refinement, loopStat))
-            case (p: Existential, c: Existential) =>
-              p.copy(loopPatType(p.tpe, c.tpe), zLoop(p.quants, c.quants, loopStat))
-            case (p: Annotate, c:Annotate) =>
-              p.copy(loopPatType(p.tpe, c.tpe), zLoop(p.annots, c.annots, loopMod))
-            case (p: api.Type.Name, c: api.Type.Name) => loopName(p, c).asInstanceOf[api.Type.Name]
-          }).appendScratchpad(cTree.scratchpad)
+            case (p: Pat.Var.Type, c: Pat.Var.Type) =>
+              p.copy(loop(p.name, c.name))
+            case (p: Pat.Type.Project, c: Pat.Type.Project) =>
+              p.copy(loop(p.qual, c.qual), loop(p.name, c.name))
+            case (p: Pat.Type.Apply, c: Pat.Type.Apply) =>
+              p.copy(loop(p.tpe, c.tpe), zLoop(p.args, c.args, loop[Pat.Type]))
+            case (p: Pat.Type.ApplyInfix, c: Pat.Type.ApplyInfix) =>
+              p.copy(loop(p.lhs, c.lhs), loop(p.op, c.op), loop(p.rhs, c.rhs))
+            case (p: Pat.Type.Function, c: Pat.Type.Function) =>
+              p.copy(zLoop(p.params, c.params, loop[Pat.Type]), loop(p.res, c.res))
+            case (p: Pat.Type.Tuple, c: Pat.Type.Tuple) =>
+              p.copy(zLoop(p.elements, c.elements, loop[Pat.Type]))
+            case (p: Pat.Type.Compound, c: Pat.Type.Compound) =>
+              p.copy(zLoop(p.tpes, c.tpes, loop[Pat.Type]), zLoop(p.refinement, c.refinement, loop[Stat]))
+            case (p: Pat.Type.Existential, c: Pat.Type.Existential) =>
+              p.copy(loop(p.tpe, c.tpe), zLoop(p.quants, c.quants, loop[Stat]))
+            case (p: Pat.Type.Annotate, c: Pat.Type.Annotate) =>
+              p.copy(loop(p.tpe, c.tpe), zLoop(p.annots, c.annots, loop[Mod]))
+
+            case (p: Enumerator.Generator, c: Enumerator.Generator) =>
+              p.copy(loop(p.pat, c.pat), loop(p.rhs, c.rhs))
+            case (p: Enumerator.Val, c: Enumerator.Val) =>
+              p.copy(loop(p.pat, c.pat), loop(p.rhs, c.rhs))
+            case (p: Enumerator.Guard, c: Enumerator.Guard) =>
+              p.copy(loop(p.cond, c.cond))
+
+            case (p: Template, c: Template) =>
+              p.copy(zLoop(p.early, c.early, loop[Stat]),
+                zLoop(p.parents, c.parents, loop[Term]),
+                loop(p.self, c.self),
+                (p.stats, c.stats) match {
+                  case (Some(p), Some(c)) => Some(zLoop(p, c, loop[Stat]))
+                  case (_, _) => None
+                }
+              )
+
+            case (p: Ctor.Primary, c: Ctor.Primary) =>
+              p.copy(zLoop(p.mods, c.mods, loop[Mod]), loop(p.name, c.name), zzLoop(p.paramss, c.paramss, loop[Term.Param]))
+            case (p: Ctor.Secondary, c: Ctor.Secondary) =>
+              p.copy(zLoop(p.mods, c.mods, loop[Mod]), loop(p.name, c.name), zzLoop(p.paramss, c.paramss, loop[Term.Param]), loop(p.body, c.body))
+
+            case (p: Source, c: Source) =>
+              p.copy(zLoop(p.stats, c.stats, loop[Stat]))
+
+          }).appendScratchpad(cTree.scratchpad).asInstanceOf[T]
         }
-
-        def loopEnum(pTree: api.Enumerator, cTree: api.Enumerator): api.Enumerator = {
-          import api._
-          ((pTree, cTree) match {
-            case (p: Enumerator.Generator, c: Enumerator.Generator) => p.copy(loopPat(p.pat, c.pat), loopTerm(p.rhs, c.rhs))
-            case (p: Enumerator.Val, c: Enumerator.Val) => p.copy(loopPat(p.pat, c.pat), loopTerm(p.rhs, c.rhs))
-            case (p: Enumerator.Guard, c: Enumerator.Guard) => p.copy(loopTerm(p.cond, c.cond))
-          }).appendScratchpad(cTree.scratchpad)
-        }
-
-        def loopTempl(pTree: api.Template, cTree: api.Template): api.Template = pTree.copy(
-          zLoop(pTree.early, cTree.early, loopStat),
-          zLoop(pTree.parents, cTree.parents, loopTerm),
-          loopTermParam(pTree.self, cTree.self),
-          (pTree.stats, cTree.stats) match {
-            case (Some(p), Some(c)) => Some(zLoop(p, c, loopStat))
-            case (_, _) => None
-          }
-        ).appendScratchpad(cTree.scratchpad)
-
-        def loopCtor(pTree: api.Ctor, cTree: api.Ctor): api.Ctor = {
-          import api.Ctor._
-          ((pTree, cTree) match {
-            case (p: Primary, c: Primary) => p.copy(zLoop(p.mods, c.mods, loopMod), loopName(p.name, c.name).asInstanceOf[Name], zzLoop(p.paramss, c.paramss, loopTermParam))
-            case (p: Secondary, c: Secondary) => p.copy(zLoop(p.mods, c.mods, loopMod), loopName(p.name, c.name).asInstanceOf[Name], zzLoop(p.paramss, c.paramss, loopTermParam), loopTerm(p.body, c.body))
-          }).appendScratchpad(cTree.scratchpad)
-        }
-
-
-        def loopSource(pTree: api.Source, cTree: api.Source): api.Source = {
-          pTree.copy(zLoop(pTree.stats, cTree.stats, loopStat)).appendScratchpad(cTree.scratchpad)
-        }
-
-        loopSource(parsedTree, convertedTree)
+        loop(parsedTree, convertedTree)
       }
 
       override def apply(unit: CompilationUnit) {
@@ -405,8 +330,10 @@ trait ConvertPhase {
         val convertedTree = c.toMtree(unit.body, classOf[Source]).asInstanceOf[api.Source]
 
         // TODO: remove
-        //val mergedTree = merge(parsedTree, convertedTree)
-        //println(mergedTree.show[Semantics])
+        val mergedTree = merge(parsedTree, convertedTree)
+        println(mergedTree.show[Semantics])
+        println("======================================================")
+        println(convertedTree.show[Semantics])
 
         unit.body.appendMetadata("scalameta" -> merge(parsedTree, convertedTree))
 
