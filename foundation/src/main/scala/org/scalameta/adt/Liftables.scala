@@ -1,5 +1,6 @@
 package org.scalameta.adt
 
+import scala.collection.mutable
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox.Context
 import org.scalameta.unreachable
@@ -23,7 +24,8 @@ class LiftableMacros(val c: Context) extends AdtReflection {
     val adts = {
       // TODO: need to make sure that more specific leafs come before less specific ones
       // so that we don't get dead code during pattern matching
-      def metric(sym: Symbol): Int = {
+      val cache = mutable.Map[Symbol, Int]()
+      def metric(sym: Symbol): Int = cache.getOrElseUpdate(sym, {
         if (sym == root.sym) 0
         else {
           val classSym = if (sym.isModule) sym.asModule.moduleClass else sym.asClass
@@ -31,7 +33,7 @@ class LiftableMacros(val c: Context) extends AdtReflection {
           val relevantParents = parents.filter(_.asType.toType <:< root.tpe)
           relevantParents.length + relevantParents.map(metric).sum
         }
-      }
+      })
       unsortedAdts.sortBy(adt => -1 * metric(adt.sym))
     }
     if (adts.isEmpty) c.abort(c.enclosingPosition, s"$root has no known leafs")
