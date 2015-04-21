@@ -9,10 +9,6 @@ import scala.reflect.io.AbstractFile
 import org.scalameta.reflection._
 
 import scala.meta.internal.{ ast => api}
-import scala.meta.tql._
-
-import scala.reflect.ClassTag
-import scala.reflect.runtime.universe.TypeTag
 
 import scala.collection.{immutable => imm}
 
