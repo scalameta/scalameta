@@ -11,8 +11,8 @@ class ReflectionSuite extends AstSuite {
   // but please deal with that (or come up with a more effective way of testing AstReflection)
   test("root") {
     assert(symbolOf[scala.meta.Tree].isRoot)
-    assert(symbolOf[scala.meta.Tree].asRoot.allBranches.length === 264)
-    assert(symbolOf[scala.meta.Tree].asRoot.allLeafs.length === 522)
+    assert(symbolOf[scala.meta.Tree].asRoot.allBranches.length === 66)
+    assert(symbolOf[scala.meta.Tree].asRoot.allLeafs.length === 326)
   }
 
   test("If") {
@@ -38,8 +38,7 @@ class ReflectionSuite extends AstSuite {
   }
 
   test("all.publish") {
-    def irrelevant(fullName: String) = fullName.endsWith(".Quasi") || fullName.endsWith(".Ellipsis") || fullName.endsWith(".Unquote")
-    val all = symbolOf[scala.meta.Tree].asRoot.all.filter(adt => !irrelevant(adt.sym.fullName)).sortBy(_.sym.fullName)
+    val all = symbolOf[scala.meta.Tree].asRoot.all.filter(!_.sym.fullName.endsWith(".Quasi")).sortBy(_.sym.fullName)
     val published = all.map(adt => (adt.tpe, adt.tpe.publish))
     val columnSize = published.map(_._1.typeSymbol.fullName.length).max
     assert(published.map(kvp => s"%-${columnSize}s => %s".format(kvp._1, kvp._2)).mkString(EOL) === """
@@ -243,8 +242,7 @@ class ReflectionSuite extends AstSuite {
   }
 
   test("allFields.publish") {
-    def irrelevant(fullName: String) = fullName.endsWith(".Quasi") || fullName.endsWith(".Ellipsis") || fullName.endsWith(".Unquote")
-    val allRelevantFields = symbolOf[scala.meta.Tree].asRoot.allLeafs.filter(leaf => !irrelevant(leaf.sym.fullName)).flatMap(_.fields)
+    val allRelevantFields = symbolOf[scala.meta.Tree].asRoot.allLeafs.filter(!_.sym.fullName.endsWith(".Quasi")).flatMap(_.fields)
     val duplicateRelevantFieldTpes = allRelevantFields.map(_.tpe).map{ case AnnotatedType(_, tpe) => tpe; case tpe => tpe }
     // NOTE: we can't just do `duplicateRelevantFieldTpes.distinct`, because that doesn't account for `=:=`
     val distinctRelevantFieldTpes = ListBuffer[Type]()
@@ -317,8 +315,7 @@ class ReflectionSuite extends AstSuite {
     }
     val all = symbolOf[scala.meta.Tree].asRoot.all.sortBy(_.sym.fullName)
     val allLeafs = symbolOf[scala.meta.Tree].asRoot.allLeafs.sortBy(_.sym.fullName)
-    def irrelevantLeafName(fullName: String) = fullName.endsWith(".Quasi") || fullName.endsWith(".Ellipsis") || fullName.endsWith(".Unquote")
-    val allRelevantLeafs = allLeafs.filter(leaf => !irrelevantLeafName(leaf.sym.fullName))
+    val allRelevantLeafs = allLeafs.filter(!_.sym.fullName.endsWith(".Quasi"))
     val allRelevantFields = allRelevantLeafs.flatMap(_.fields)
     val distinctRelevantFieldTpes = ListBuffer[Type]()
     allRelevantFields.map(_.tpe.unwrap).foreach(tpe => if (!distinctRelevantFieldTpes.exists(_ =:= tpe)) distinctRelevantFieldTpes += tpe)
@@ -331,7 +328,7 @@ class ReflectionSuite extends AstSuite {
         report += ""
       }
     })
-    // NOTE: if something in this report changes, you must update requirements in impl.Unquote's body
+    // NOTE: if something in this report changes, you must update requirements in @ast impl (see "step 10: finish codegen for Quasi")
     assert(report.mkString(EOL) === """
       |scala.meta.internal.ast.Term.Block -> scala.meta.Term with scala.meta.Scope
       |field Case.body: scala.meta.internal.ast.Term.Block

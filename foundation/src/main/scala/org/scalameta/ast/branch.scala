@@ -17,7 +17,7 @@ class BranchMacros(val c: Context) {
   def impl(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       def is(abbrev: String) = c.internal.enclosingOwner.fullName.toString + "." + cdef.name.toString == "scala.meta.internal.ast." + abbrev
-      def isQuasi = cdef.name.toString == "Quasi" || cdef.name.toString == "Unquote" || cdef.name.toString == "Ellipsis"      
+      def isQuasi = cdef.name.toString == "Quasi"
       val ClassDef(mods @ Modifiers(flags, privateWithin, anns), name, tparams, Template(parents, self, stats)) = cdef
       val ModuleDef(mmods, mname, Template(mparents, mself, mstats)) = mdef
       val stats1 = ListBuffer[Tree]() ++ stats
@@ -33,29 +33,23 @@ class BranchMacros(val c: Context) {
       val anns1 = anns :+ q"new $AdtInternal.branch" :+ q"new $AstInternal.branch"
 
       if (!isQuasi) {
-        def parentsdot(what: String) = parents.map({
-          case Ident(name) => Select(Ident(name.toTermName), TypeName(what))
-          case Select(qual, name) => Select(Select(qual, name.toTermName), TypeName(what))
+        val qmods = Modifiers(NoFlags, TypeName("meta"), List(q"new _root_.org.scalameta.ast.ast"))
+        val qname = TypeName("Quasi")
+        val qparents = tq"$name" +: tq"_root_.scala.meta.internal.ast.Quasi" +: parents.map({
+          case Ident(name) => Select(Ident(name.toTermName), TypeName("Quasi"))
+          case Select(qual, name) => Select(Select(qual, name.toTermName), TypeName("Quasi"))
           case unsupported => c.abort(unsupported.pos, "implementation restriction: unsupported parent")
         })
-        def quasigetter(name: String, message: String) = {
+        def quasigetter(name: String) = {
+          val unsupportedUnquotingPosition = "unsupported unquoting position"
+          val unsupportedSplicingPosition = "unsupported splicing position"
+          val message = q"if (this.rank == 0) $unsupportedUnquotingPosition else $unsupportedSplicingPosition"
           val impl = q"throw new _root_.scala.`package`.UnsupportedOperationException($message)"
           q"override def ${TermName(name)}: _root_.scala.Nothing = $impl"
         }
-        // TODO: deduplicate!!
-        // Quasi codegen
-        def qparents = tq"$name" +: tq"_root_.scala.meta.internal.ast.Quasi" +: parentsdot("Quasi")
-        mstats1 += q"@_root_.org.scalameta.ast.branch private[meta] trait Quasi extends ..$qparents"
-        // Unquote codegen
-        def uparents = tq"$name" +: tq"Quasi" +: tq"_root_.scala.meta.internal.ast.Quasi.Unquote" +: parentsdot("Unquote")
-        var ustats = List(q"def pt: _root_.java.lang.Class[_] = _root_.scala.Predef.classOf[$name]")
-        if (is("Name") || is("Term.Param.Name") || is("Type.Param.Name")) ustats ++= List("denot", "sigma", "value").map(n => quasigetter(n, "unsupported unquoting position"))
-        mstats1 += q"@_root_.org.scalameta.ast.ast private[meta] class Unquote(tree: _root_.scala.Any) extends ..$uparents { ..$ustats }"
-        // Ellipsis codegen
-        def eparents = tq"$name" +: tq"Quasi" +: tq"_root_.scala.meta.internal.ast.Quasi.Ellipsis" +: parentsdot("Ellipsis")
-        var estats = List(q"def pt: _root_.java.lang.Class[_] = _root_.org.scalameta.runtime.arrayClass(_root_.scala.Predef.classOf[$name], rank)")
-        if (is("Name") || is("Term.Param.Name") || is("Type.Param.Name")) estats ++= List("denot", "sigma", "value").map(n => quasigetter(n, "unsupported splicing position"))
-        mstats1 += q"@_root_.org.scalameta.ast.ast private[meta] class Ellipsis(tree: _root_.scala.meta.internal.ast.Tree, rank: _root_.scala.Int) extends ..$eparents { ..$estats }"
+        var qstats = List(q"def pt: _root_.java.lang.Class[_] = _root_.org.scalameta.runtime.arrayClass(_root_.scala.Predef.classOf[$name], this.rank)")
+        if (is("Name") || is("Term.Param.Name") || is("Type.Param.Name")) qstats ++= List("denot", "sigma", "value").map(quasigetter)
+        mstats1 += q"$qmods class $qname(tree: _root_.scala.Any, rank: _root_.scala.Int) extends ..$qparents { ..$qstats }"
       }
 
       val cdef1 = ClassDef(Modifiers(flags1, privateWithin, anns1), name, tparams, Template(parents, self, stats1.toList))

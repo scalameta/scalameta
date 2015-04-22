@@ -58,12 +58,12 @@ class RootMacros(val c: Context) {
         private[meta] def internalCopy(prototype: $Tree = internalPrototype, parent: $Tree = internalParent, scratchpad: $Data = internalScratchpad, origin: $Origin = internalOrigin): ThisType
       """
       stats1 ++= boilerplate
-      
-      val ustats = List(q"def pt: _root_.java.lang.Class[_] = _root_.scala.Predef.classOf[$name]")
-      val estats = List(q"def pt: _root_.java.lang.Class[_] = _root_.org.scalameta.runtime.arrayClass(_root_.scala.Predef.classOf[$name], rank)")
-      mstats1 += q"@_root_.org.scalameta.ast.branch private[meta] trait Quasi extends _root_.scala.meta.internal.ast.Quasi"
-      mstats1 += q"@_root_.org.scalameta.ast.ast private[meta] class Unquote(tree: _root_.scala.Any) extends _root_.scala.meta.Tree.Quasi with _root_.scala.meta.internal.ast.Quasi.Unquote { ..$ustats }"
-      mstats1 += q"@_root_.org.scalameta.ast.ast private[meta] class Ellipsis(tree: _root_.scala.meta.internal.ast.Tree, rank: _root_.scala.Int) extends _root_.scala.meta.Tree.Quasi with _root_.scala.meta.internal.ast.Quasi.Ellipsis { ..$estats }"
+            
+      val qmods = Modifiers(NoFlags, TypeName("meta"), List(q"new _root_.org.scalameta.ast.ast"))
+      val qname = TypeName("Quasi")
+      val qparents = List(tq"_root_.scala.meta.internal.ast.Quasi")
+      val qstats = List(q"def pt: _root_.java.lang.Class[_] = _root_.org.scalameta.runtime.arrayClass(_root_.scala.Predef.classOf[$name], this.rank)")
+      mstats1 += q"$qmods class $qname(tree: _root_.scala.Any, rank: _root_.scala.Int) extends ..$qparents { ..$qstats }"
 
       val cdef1 = q"${Modifiers(flags1, privateWithin, anns1)} trait $name[..$tparams] extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
       val mdef1 = q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"

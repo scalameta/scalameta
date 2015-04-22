@@ -9,8 +9,7 @@ import java.lang.Class
 @implicitNotFound(msg = "${T} is not an ast class and can't be used here.")
 trait AstMetadata[T] extends ClassTag[T] {
   def runtimeClass: Class[T]
-  def unquote(tree: Any): T
-  def ellipsis(tree: Any, rank: Int): T
+  def quasi(tree: Any, rank: Int): T
 }
 object AstMetadata {
   implicit def materialize[T]: AstMetadata[T] = macro AstMetadataMacros.materialize[T]
@@ -25,8 +24,7 @@ class AstMetadataMacros(val c: Context) {
       q"""
         new _root_.org.scalameta.ast.AstMetadata[$T] {
           def runtimeClass: _root_.java.lang.Class[$T] = implicitly[_root_.scala.reflect.ClassTag[$T]].runtimeClass.asInstanceOf[_root_.java.lang.Class[$T]]
-          def unquote(tree: Any): $T = ${T.tpe.typeSymbol.companion}.Unquote.apply(tree)
-          def ellipsis(tree: Any, rank: Int): $T = ${T.tpe.typeSymbol.companion}.Ellipsis.apply(tree.asInstanceOf[_root_.scala.meta.internal.ast.Tree], rank)
+          def quasi(tree: Any, rank: Int): $T = ${T.tpe.typeSymbol.companion}.Quasi.apply(tree, rank)
         }
       """
     } else {

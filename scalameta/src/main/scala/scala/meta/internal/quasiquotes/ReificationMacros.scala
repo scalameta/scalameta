@@ -386,7 +386,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
   }
 
   private def reifySkeleton(meta: MetaTree, mode: Mode): ReflectTree = {
-    val pendingEllipses = mutable.Stack[impl.Quasi.Ellipsis]()
+    val pendingQuasis = mutable.Stack[impl.Quasi]()
     implicit class XtensionRankedClazz(clazz: Class[_]) {
       def unwrap: Class[_] = {
         if (clazz.isArray) clazz.getComponentType.unwrap
@@ -427,29 +427,30 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
       }
       def liftTrees(trees: Seq[api.Tree]): u.Tree = {
         def loop(trees: List[api.Tree], acc: u.Tree, prefix: List[api.Tree]): u.Tree = trees match {
-          case (ellipsis: impl.Quasi.Ellipsis) +: rest =>
+          // TODO: instead of checking against 1, we should also take pendingQuasis into account
+          case (quasi: impl.Quasi) +: rest if quasi.rank == 1 =>
             if (acc.isEmpty) {
-              if (prefix.isEmpty) loop(rest, liftEllipsis(ellipsis), Nil)
+              if (prefix.isEmpty) loop(rest, liftQuasi(quasi), Nil)
               else loop(rest, prefix.foldRight(acc)((curr, acc) => {
-                // NOTE: We cannot do just q"${liftTree(curr)} +: ${liftEllipsis(ellipsis)}"
+                // NOTE: We cannot do just q"${liftTree(curr)} +: ${liftQuasi(quasi)}"
                 // because that creates a synthetic temp variable that doesn't make any sense in a pattern.
-                // Neither can we do q"${liftEllipsis(ellipsis)}.+:(${liftTree(curr)})",
+                // Neither can we do q"${liftQuasi(quasi)}.+:(${liftTree(curr)})",
                 // because that still wouldn't work in pattern mode.
-                // Finally, we can't do something like q"+:(${liftEllipsis(ellipsis)}, (${liftTree(curr)}))",
+                // Finally, we can't do something like q"+:(${liftQuasi(quasi)}, (${liftTree(curr)}))",
                 // because would violate evaluation order guarantees that we must keep.
-                if (mode.isTerm) q"${liftTree(curr)} +: ${liftEllipsis(ellipsis)}"
-                else pq"${liftTree(curr)} +: ${liftEllipsis(ellipsis)}"
+                if (mode.isTerm) q"${liftTree(curr)} +: ${liftQuasi(quasi)}"
+                else pq"${liftTree(curr)} +: ${liftQuasi(quasi)}"
               }), Nil)
             } else {
               require(prefix.isEmpty && debug(trees, acc, prefix))
-              if (mode.isTerm) loop(rest, q"$acc ++ ${liftEllipsis(ellipsis)}", Nil)
+              if (mode.isTerm) loop(rest, q"$acc ++ ${liftQuasi(quasi)}", Nil)
               else {
                 val hint = {
                   "Note that you can extract a sequence into an unquote when pattern matching," + EOL+
                   "it just cannot follow another sequence either directly or indirectly."
                 }
-                val errorMessage = s"rank mismatch when unquoting;$EOL found   : ${"." * (ellipsis.rank + 1)}$EOL required: no dots$EOL$hint"
-                c.abort(ellipsis.pos, errorMessage)
+                val errorMessage = s"rank mismatch when unquoting;$EOL found   : ${"." * (quasi.rank + 1)}$EOL required: no dots$EOL$hint"
+                c.abort(quasi.pos, errorMessage)
               }
             }
           case other +: rest =>
@@ -470,37 +471,38 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
         // TODO: implement support for construction and deconstruction with ...
         Liftable.liftList[Seq[api.Tree]](Liftables.liftableSubTrees).apply(treess.toList)
       }
-      def liftEllipsis(ellipsis: impl.Quasi.Ellipsis): u.Tree = {
+      def liftQuasi(quasi: impl.Quasi): u.Tree = {
         try {
-          pendingEllipses.push(ellipsis)
-          ellipsis.tree match {
-            case unquote: impl.Quasi.Unquote => liftUnquote(unquote)
-            case _ => c.abort(ellipsis.pos, "complex ellipses are not supported yet")
+          pendingQuasis.push(quasi)
+          if (quasi.rank == 0) {
+            val tree = quasi.tree.asInstanceOf[u.Tree]
+            val pt = quasi.pt.wrap(pendingQuasis.map(_.rank).sum).toTpe
+            val idealReifier = if (mode.isTerm) q"$InternalLift[$pt]($tree)" else q"$InternalUnlift[$pt]($tree)"
+            val realWorldReifier = mode match {
+              case Mode.Term =>
+                idealReifier
+              case Mode.Pattern(_, holes) =>
+                // TODO: Unfortunately, the way how patterns work prevents us from going the ideal route:
+                // 1) unapplications can't have explicitly specified type arguments
+                // 2) pattern language is very limited and can't express what we want to express in Unlift
+                // Therefore, we're forced to take a two-step unquoting scheme: a) match everything in the corresponding hole,
+                // b) call Unlift.unapply as a normal method in the right-hand side part of the pattern matching clause.
+                val hole = holes.find(hole => tree.equalsStructure(pq"${hole.name}")).getOrElse(sys.error(s"fatal error reifying pattern quasiquote: $quasi, $holes"))
+                val unrankedPt = hole.arg match { case pq"_: $pt" => pt; case pq"$_: $pt" => pt; case _ => tq"_root_.scala.meta.Tree" }
+                val rankedPt = unrankedPt.wrap(pendingQuasis.map(_.rank).sum)
+                hole.reifier = atPos(quasi.pos)(q"$InternalUnlift.unapply[$rankedPt](${hole.name})") // TODO: make reifier immutable somehow
+                pq"${hole.name}"
+            }
+            atPos(quasi.pos)(realWorldReifier)
+          } else {
+            quasi.tree match {
+              case quasi: impl.Quasi if quasi.rank == 0 => liftQuasi(quasi)
+              case _ => c.abort(quasi.pos, "complex ellipses are not supported yet")
+            }
           }
         } finally {
-          pendingEllipses.pop()
+          pendingQuasis.pop()
         }
-      }
-      def liftUnquote(unquote: impl.Quasi.Unquote): u.Tree = {
-        val tree = unquote.tree.asInstanceOf[u.Tree]
-        val pt = unquote.pt.wrap(pendingEllipses.map(_.rank).sum).toTpe
-        val idealReifier = if (mode.isTerm) q"$InternalLift[$pt]($tree)" else q"$InternalUnlift[$pt]($tree)"
-        val realWorldReifier = mode match {
-          case Mode.Term =>
-            idealReifier
-          case Mode.Pattern(_, holes) =>
-            // TODO: Unfortunately, the way how patterns work prevents us from going the ideal route:
-            // 1) unapplications can't have explicitly specified type arguments
-            // 2) pattern language is very limited and can't express what we want to express in Unlift
-            // Therefore, we're forced to take a two-step unquoting scheme: a) match everything in the corresponding hole,
-            // b) call Unlift.unapply as a normal method in the right-hand side part of the pattern matching clause.
-            val hole = holes.find(hole => tree.equalsStructure(pq"${hole.name}")).getOrElse(sys.error(s"fatal error reifying pattern quasiquote: $unquote, $holes"))
-            val unrankedPt = hole.arg match { case pq"_: $pt" => pt; case pq"$_: $pt" => pt; case _ => tq"_root_.scala.meta.Tree" }
-            val rankedPt = unrankedPt.wrap(pendingEllipses.map(_.rank).sum)
-            hole.reifier = atPos(unquote.pos)(q"$InternalUnlift.unapply[$rankedPt](${hole.name})") // TODO: make reifier immutable somehow
-            pq"${hole.name}"
-        }
-        atPos(unquote.pos)(realWorldReifier)
       }
     }
     object Liftables {
@@ -511,8 +513,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
       implicit def liftableSubTree[T <: api.Tree]: Liftable[T] = Liftable((tree: T) => materializeAst[api.Tree].apply(tree))
       implicit def liftableSubTrees[T <: api.Tree]: Liftable[Seq[T]] = Liftable((trees: Seq[T]) => Lifts.liftTrees(trees))
       implicit def liftableSubTreess[T <: api.Tree]: Liftable[Seq[Seq[T]]] = Liftable((treess: Seq[Seq[T]]) => Lifts.liftTreess(treess))
-      lazy implicit val liftEllipsis: Liftable[impl.Quasi.Ellipsis] = Liftable((ellipsis: impl.Quasi.Ellipsis) => Lifts.liftEllipsis(ellipsis))
-      lazy implicit val liftUnquote: Liftable[impl.Quasi.Unquote] = Liftable((unquote: impl.Quasi.Unquote) => Lifts.liftUnquote(unquote))
+      lazy implicit val liftQuasi: Liftable[impl.Quasi] = Liftable((quasi: impl.Quasi) => Lifts.liftQuasi(quasi))
       lazy implicit val liftName: Liftable[impl.Name] = Liftable((name: impl.Name) => {
         val root = q"_root_": ReflectTree
         val fullProductPrefix = "scala.meta.internal.ast." + name.productPrefix

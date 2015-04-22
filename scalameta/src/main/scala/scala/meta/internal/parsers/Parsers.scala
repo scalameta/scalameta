@@ -361,18 +361,18 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
               case _ => body
             }
             result match {
-              case unquote: Quasi.Unquote =>
+              case quasi: Quasi =>
                 // NOTE: In the case of an unquote nested directly under ellipsis, we get a bit of a mixup.
                 // Unquote's pt may not be directly equal unwrapped ellipsis's pt, but be its refinement instead.
-                // For example, in `new { ..$stats }`, ellipsis's pt is Seq[Stat], but unquote's pt is Term.
+                // For example, in `new { ..$stats }`, ellipsis's pt is Seq[Stat], but quasi's pt is Term.
                 // This is an artifact of the current implementation, so we just need to keep it mind and work around it.
-                require(classTag[T].runtimeClass.isAssignableFrom(unquote.pt) && debug(ellipsis, result, result.show[Raw]))
-                atPos(unquote, unquote)(implicitly[AstMetadata[T]].unquote(unquote.tree))
+                require(classTag[T].runtimeClass.isAssignableFrom(quasi.pt) && debug(ellipsis, result, result.show[Raw]))
+                atPos(quasi, quasi)(implicitly[AstMetadata[T]].quasi(quasi.tree, quasi.rank))
               case other =>
                 other
             }
           }
-          implicitly[AstMetadata[T]].ellipsis(tree, rank)
+          implicitly[AstMetadata[T]].quasi(tree, rank)
         }
       case _ =>
         unreachable(debug(token))
@@ -383,7 +383,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     token match {
       case unquote: Unquote =>
         next()
-        implicitly[AstMetadata[T]].unquote(unquote.tree)
+        implicitly[AstMetadata[T]].quasi(unquote.tree, 0)
       case _ =>
         unreachable(debug(token))
     }

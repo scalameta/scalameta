@@ -15,8 +15,6 @@ trait Reflection extends AdtReflection {
   lazy val ApiTreeClass = mirror.staticClass("scala.meta.Tree")
   lazy val ImplTreeClass = mirror.staticClass("scala.meta.internal.ast.Tree")
   lazy val ImplQuasiClass = mirror.staticClass("scala.meta.internal.ast.Quasi")
-  lazy val ImplEllipsisClass = mirror.staticModule("scala.meta.internal.ast.Quasi").info.member(TypeName("Ellipsis")).asClass
-  lazy val ImplUnquoteClass = mirror.staticModule("scala.meta.internal.ast.Quasi").info.member(TypeName("Unquote")).asClass
   lazy val ApiNameQualifierClass = mirror.staticModule("scala.meta.Name").info.decl(TypeName("Qualifier")).asClass
   lazy val ApiStatClass = mirror.staticClass("scala.meta.Stat")
   lazy val ApiScopeClass = mirror.staticClass("scala.meta.Scope")
@@ -62,13 +60,8 @@ trait Reflection extends AdtReflection {
         val entireHierarchy = {
           var result = astClasses.flatMap(_.baseClasses.map(_.asClass))
           result = result.filter(sym => sym.toType <:< ApiTreeClass.toType)
-          result = result.flatMap(sym => {
-            val quasi = sym.companion.info.member(TypeName("Quasi")).asClass
-            val unquote = sym.companion.info.member(TypeName("Unquote")).asClass
-            val ellipsis = sym.companion.info.member(TypeName("Ellipsis")).asClass
-            List(sym, quasi, unquote, ellipsis)
-          })
-          result ++= List(ImplQuasiClass, ImplEllipsisClass, ImplUnquoteClass)
+          result = result.flatMap(sym => List(sym, sym.companion.info.member(TypeName("Quasi")).asClass))
+          result :+= ImplQuasiClass
           result.distinct
         }
         val registry = mutable.Map[Symbol, List[Symbol]]()
