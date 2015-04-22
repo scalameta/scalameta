@@ -11,8 +11,8 @@ class ReflectionSuite extends AstSuite {
   // but please deal with that (or come up with a more effective way of testing AstReflection)
   test("root") {
     assert(symbolOf[scala.meta.Tree].isRoot)
-    assert(symbolOf[scala.meta.Tree].asRoot.allBranches.length === 65)
-    assert(symbolOf[scala.meta.Tree].asRoot.allLeafs.length === 130)
+    assert(symbolOf[scala.meta.Tree].asRoot.allBranches.length === 264)
+    assert(symbolOf[scala.meta.Tree].asRoot.allLeafs.length === 522)
   }
 
   test("If") {
@@ -38,7 +38,8 @@ class ReflectionSuite extends AstSuite {
   }
 
   test("all.publish") {
-    val all = symbolOf[scala.meta.Tree].asRoot.all.sortBy(_.sym.fullName)
+    def irrelevant(fullName: String) = fullName.endsWith(".Quasi") || fullName.endsWith(".Ellipsis") || fullName.endsWith(".Unquote")
+    val all = symbolOf[scala.meta.Tree].asRoot.all.filter(adt => !irrelevant(adt.sym.fullName)).sortBy(_.sym.fullName)
     val published = all.map(adt => (adt.tpe, adt.tpe.publish))
     val columnSize = published.map(_._1.typeSymbol.fullName.length).max
     assert(published.map(kvp => s"%-${columnSize}s => %s".format(kvp._1, kvp._2)).mkString(EOL) === """
@@ -242,7 +243,7 @@ class ReflectionSuite extends AstSuite {
   }
 
   test("allFields.publish") {
-    val irrelevant = Set("scala.meta.internal.ast.Ellipsis", "scala.meta.internal.ast.Unquote")
+    def irrelevant(fullName: String) = fullName.endsWith(".Quasi") || fullName.endsWith(".Ellipsis") || fullName.endsWith(".Unquote")
     val allRelevantFields = symbolOf[scala.meta.Tree].asRoot.allLeafs.filter(leaf => !irrelevant(leaf.sym.fullName)).flatMap(_.fields)
     val duplicateRelevantFieldTpes = allRelevantFields.map(_.tpe).map{ case AnnotatedType(_, tpe) => tpe; case tpe => tpe }
     // NOTE: we can't just do `duplicateRelevantFieldTpes.distinct`, because that doesn't account for `=:=`
@@ -316,8 +317,8 @@ class ReflectionSuite extends AstSuite {
     }
     val all = symbolOf[scala.meta.Tree].asRoot.all.sortBy(_.sym.fullName)
     val allLeafs = symbolOf[scala.meta.Tree].asRoot.allLeafs.sortBy(_.sym.fullName)
-    val irrelevantLeafNames = Set("scala.meta.internal.ast.Ellipsis", "scala.meta.internal.ast.Unquote")
-    val allRelevantLeafs = allLeafs.filter(leaf => !irrelevantLeafNames(leaf.sym.fullName))
+    def irrelevantLeafName(fullName: String) = fullName.endsWith(".Quasi") || fullName.endsWith(".Ellipsis") || fullName.endsWith(".Unquote")
+    val allRelevantLeafs = allLeafs.filter(leaf => !irrelevantLeafName(leaf.sym.fullName))
     val allRelevantFields = allRelevantLeafs.flatMap(_.fields)
     val distinctRelevantFieldTpes = ListBuffer[Type]()
     allRelevantFields.map(_.tpe.unwrap).foreach(tpe => if (!distinctRelevantFieldTpes.exists(_ =:= tpe)) distinctRelevantFieldTpes += tpe)
