@@ -43,13 +43,16 @@ class BranchMacros(val c: Context) {
           q"override def ${TermName(name)}: _root_.scala.Nothing = $impl"
         }
         // TODO: deduplicate!!
+        // Quasi codegen
+        def qparents = tq"$name" +: tq"_root_.scala.meta.internal.ast.Quasi" +: parentsdot("Quasi")
+        mstats1 += q"@_root_.org.scalameta.ast.branch private[meta] trait Quasi extends ..$qparents"
         // Unquote codegen
-        def uparents = tq"$name" +: tq"_root_.scala.meta.internal.ast.Quasi.Unquote" +: parentsdot("Unquote")
+        def uparents = tq"$name" +: tq"Quasi" +: tq"_root_.scala.meta.internal.ast.Quasi.Unquote" +: parentsdot("Unquote")
         var ustats = List(q"def pt: _root_.java.lang.Class[_] = _root_.scala.Predef.classOf[$name]")
         if (is("Name") || is("Term.Param.Name") || is("Type.Param.Name")) ustats ++= List("denot", "sigma", "value").map(n => quasigetter(n, "unsupported unquoting position"))
         mstats1 += q"@_root_.org.scalameta.ast.ast private[meta] class Unquote(tree: _root_.scala.Any) extends ..$uparents { ..$ustats }"
         // Ellipsis codegen
-        def eparents = tq"$name" +: tq"_root_.scala.meta.internal.ast.Quasi.Ellipsis" +: parentsdot("Ellipsis")
+        def eparents = tq"$name" +: tq"Quasi" +: tq"_root_.scala.meta.internal.ast.Quasi.Ellipsis" +: parentsdot("Ellipsis")
         var estats = List(q"def pt: _root_.java.lang.Class[_] = _root_.org.scalameta.runtime.arrayClass(_root_.scala.Predef.classOf[$name], rank)")
         if (is("Name") || is("Term.Param.Name") || is("Type.Param.Name")) estats ++= List("denot", "sigma", "value").map(n => quasigetter(n, "unsupported splicing position"))
         mstats1 += q"@_root_.org.scalameta.ast.ast private[meta] class Ellipsis(tree: _root_.scala.meta.internal.ast.Tree, rank: _root_.scala.Int) extends ..$eparents { ..$estats }"

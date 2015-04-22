@@ -63,9 +63,10 @@ trait Reflection extends AdtReflection {
           var result = astClasses.flatMap(_.baseClasses.map(_.asClass))
           result = result.filter(sym => sym.toType <:< ApiTreeClass.toType)
           result = result.flatMap(sym => {
+            val quasi = sym.companion.info.member(TypeName("Quasi")).asClass
             val unquote = sym.companion.info.member(TypeName("Unquote")).asClass
             val ellipsis = sym.companion.info.member(TypeName("Ellipsis")).asClass
-            List(sym, unquote, ellipsis)
+            List(sym, quasi, unquote, ellipsis)
           })
           result ++= List(ImplQuasiClass, ImplEllipsisClass, ImplUnquoteClass)
           result.distinct

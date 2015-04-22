@@ -23,6 +23,7 @@ class AstMacros(val c: Context) {
       val q"$imods class $iname[..$tparams] $ctorMods(...$rawparamss) extends { ..$earlydefns } with ..$iparents { $aself => ..$astats }" = cdef
       val aname = TypeName("Api")
       val name = TypeName("Impl")
+      val qname = TypeName("Quasi")
       val uname = TypeName("Unquote")
       val ename = TypeName("Ellipsis")
       val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" = mdef
@@ -33,10 +34,12 @@ class AstMacros(val c: Context) {
       val istats1 = ListBuffer[Tree]()
       val astats1 = ListBuffer[Tree]()
       val stats1 = ListBuffer[Tree]()
+      val qstats1 = ListBuffer[Tree]()
       val ustats1 = ListBuffer[Tree]()
       val estats1 = ListBuffer[Tree]()
       val ianns1 = ListBuffer[Tree]() ++ imods.annotations
       def imods1 = imods.mapAnnotations(_ => ianns1.toList)
+      def qmods1 = Modifiers(NoFlags, TypeName("meta"), List(q"new _root_.org.scalameta.ast.branch"))
       def umods1 = Modifiers(NoFlags, TypeName("meta"), List(q"new _root_.org.scalameta.ast.ast"))
       def emods1 = Modifiers(NoFlags, TypeName("meta"), List(q"new _root_.org.scalameta.ast.ast"))
       val iparents1 = ListBuffer[Tree]() ++ iparents
@@ -47,8 +50,9 @@ class AstMacros(val c: Context) {
         case Select(qual, name) => Select(Select(qual, name.toTermName), TypeName(what))
         case unsupported => c.abort(unsupported.pos, "implementation restriction: unsupported parent")
       })
-      def uparents1 = tq"$iname" +: tq"_root_.scala.meta.internal.ast.Quasi.Unquote" +: iparentsdot("Unquote")
-      def eparents1 = tq"$iname" +: tq"_root_.scala.meta.internal.ast.Quasi.Ellipsis" +: iparentsdot("Ellipsis")
+      def qparents1 = tq"$iname" +: tq"_root_.scala.meta.internal.ast.Quasi" +: iparentsdot("Quasi")
+      def uparents1 = tq"$iname" +: tq"$qname" +: tq"_root_.scala.meta.internal.ast.Quasi.Unquote" +: iparentsdot("Unquote")
+      def eparents1 = tq"$iname" +: tq"$qname" +: tq"_root_.scala.meta.internal.ast.Quasi.Ellipsis" +: iparentsdot("Ellipsis")
       val mstats1 = ListBuffer[Tree]() ++ mstats
       val manns1 = ListBuffer[Tree]() ++ mmods.annotations
       def mmods1 = mmods.mapAnnotations(_ => manns1.toList)
@@ -242,6 +246,7 @@ class AstMacros(val c: Context) {
       mstats1 += q"implicit def interfaceToApi(interface: $iname): $aname = macro $AstInternal.Macros.interfaceToApi[$iname, $aname]"
       mstats1 += q"trait $aname[..$tparams] extends ..$aparents1 { $aself => ..$astats1 }"
       mstats1 += q"private[${mname.toTypeName}] final class $name[..$tparams] $ctorMods(...${bparams1 +: paramss1}) extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
+      if (!isQuasi) mstats1 += q"$qmods1 trait $qname extends ..$qparents1 { ..$qstats1 }"
       if (!isQuasi) mstats1 += q"$umods1 class $uname(tree: _root_.scala.Any) extends ..$uparents1 { ..$ustats1 }"
       if (!isQuasi) mstats1 += q"$emods1 class $ename(tree: _root_.scala.meta.internal.ast.Tree, rank: _root_.scala.Int) extends ..$eparents1 { ..$estats1 }"
       val cdef1 = q"$imods1 trait $iname extends ..$iparents1 { $iself => ..$istats1 }"
