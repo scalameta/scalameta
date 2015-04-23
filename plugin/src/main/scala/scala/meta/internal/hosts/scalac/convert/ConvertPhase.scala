@@ -17,6 +17,7 @@ trait ConvertPhase {
 
   object ConvertComponent extends NscPluginComponent {
     val global: self.global.type = self.global
+
     import global._
 
     // TODO: ideally we would like to save everything after the very end of typechecking, which is after refchecks
@@ -29,7 +30,9 @@ trait ConvertPhase {
     override val runsAfter = List("typer")
     override val runsRightAfter = None
     val phaseName = "convert"
+
     override def description = "convert compiler trees to scala.meta"
+
     implicit val c = Scalahost.mkGlobalContext[global.type](global)
 
     override def newPhase(prev: Phase): StdPhase = new StdPhase(prev) {
@@ -195,7 +198,7 @@ trait ConvertPhase {
             case (p: Defn.Def, c: Defn.Def) =>
               p.copy(zLoop(loop[Mod])(p.mods, c.mods), loop(p.name, c.name), zLoop(loop[Type.Param])(p.tparams, c.tparams), zzLoop(loop[Term.Param])(p.paramss, c.paramss), oLoop(loop[Type])(p.decltpe, c.decltpe), loop(p.body, c.body))
             case (p: Defn.Macro, c: Defn.Macro) =>
-              p.copy(zLoop(loop[Mod])(p.mods, c.mods), loop(p.name, c.name), zLoop( loop[Type.Param])(p.tparams, c.tparams), zzLoop(loop[Term.Param])(p.paramss, c.paramss), loop(p.tpe, c.tpe), loop(p.body, c.body))
+              p.copy(zLoop(loop[Mod])(p.mods, c.mods), loop(p.name, c.name), zLoop(loop[Type.Param])(p.tparams, c.tparams), zzLoop(loop[Term.Param])(p.paramss, c.paramss), loop(p.tpe, c.tpe), loop(p.body, c.body))
             case (p: Defn.Type, c: Defn.Type) =>
               p.copy(zLoop(loop[Mod])(p.mods, c.mods), loop(p.name, c.name), zLoop(loop[Type.Param])(p.tparams, c.tparams), loop(p.body, c.body))
             case (p: Defn.Class, c: Defn.Class) =>
@@ -221,7 +224,7 @@ trait ConvertPhase {
               p.copy(loop(p.name, c.name))
 
             case (p: Case, c: Case) =>
-              p.copy(loop(p.pat, c.pat),oLoop(loop[Term])(p.cond, c.cond),loop(p.body, c.body))
+              p.copy(loop(p.pat, c.pat), oLoop(loop[Term])(p.cond, c.cond), loop(p.body, c.body))
 
             case (p: Lit, c: Lit) => p
 
@@ -305,6 +308,8 @@ trait ConvertPhase {
             // Handling special cases
             case (p: Term.Block, c: Stat) if p.stats.length == 1 =>
               p.copy(imm.Seq(loop(p.stats.head, c)))
+            case (p: Term.Apply, c: Term) if p.args.length == 0 =>
+              p.copy(loop(p.fun, c))
             case (p: Term.Interpolate, c: Term.Apply) =>
               p // TODO: this is due to quasiquote expansion - should probably be left as is in the parsed tree.
             case (p: api.Type.Name, c: api.Type.Select) =>
@@ -318,6 +323,10 @@ trait ConvertPhase {
               reporter.warning(NoPosition, "An error occurred while merging the parsed and the converted tree. The trees were not identical. This should never happen.")
               p
           }).appendScratchpad(cTree.scratchpad).asInstanceOf[T]
+          // TODO: check if that way of applying the scratchpad is not a problem based on the special cases.
+          // It might happen that some parts of the parsed tree contain semantic informaiton extrapolated from
+          // some of their suparts. This is however narrowed down to blocks and apply with empty arguments,
+          // and should not be a problem.
         }
         loop(parsedTree, convertedTree)
       }
@@ -330,3 +339,4 @@ trait ConvertPhase {
       }
     }
   }
+}
