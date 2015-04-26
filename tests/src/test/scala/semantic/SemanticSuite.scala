@@ -51,11 +51,20 @@ class SemanticSuite extends FunSuite {
     }
   }
 
-  test("x => x + x") {
+  test("q\"x => x + x\".tpe") {
     val result = c.define("class C2 { def x = List(1).map(x => x + x) }")
     val impl.Source(List(impl.Defn.Class(_, _, _, _, impl.Template(_, _, _, Some(List(impl.Defn.Def(_, _, _, _, _, body))))))) = result
     val impl.Term.Apply(_, List(impl.Term.Function(List(x), _))) = body
     assert(x.tpe == t"Int")
+  }
+  
+  test("q\"1 +: List(2, 3)\".tpe") {
+    val classDef = c.define("class C3 { def foo = 1 +: List(2, 3) }")
+    classDef match {
+      case impl.Source(List(impl.Defn.Class(_, _, _, _, impl.Template(_, _, _, Some(List(impl.Defn.Def(_, _, _, _, _, body))))))) =>
+        assert(body.show[Code] == "1 +: List(2, 3)")
+        assert(body.tpe.show[Code] == "List[Int]")
+    }
   }
 
   test("t\"List\".defn") {
