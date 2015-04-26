@@ -17,7 +17,11 @@ object Interpreter {
   def eval(term: Term)(implicit c: Context): Any = eval(term, Map[Term.Name, Any]())
 
   def eval(term: Term, env0: Map[Term.Name, Any])(implicit c: Context): Any = {
-    def typeOf(v: Any): Type = if (v.isInstanceOf[Context]) t"Context" else t"Any"
+    def typeOf(v: Any): Type = {
+      if (v == null) return t"Null"
+      val parts = v.getClass.getName.split(Array('.', '$'))
+      if (v.isInstanceOf[Context]) t"Context" else t"Any"
+    }
     val frame0 = ListMap(env0.map{ case (k, v) => (k.asInstanceOf[TName], Object(v, typeOf(v))) }.toList: _*)
     val env1 = Env(List(frame0), ListMap[m.Term.Name, Object]())
     val (Object(v, tpe, fields), env2) = eval(term, env1)
@@ -164,6 +168,17 @@ object Interpreter {
         // if (lhs.tpe.dealias <:< tpes.head.dealias) (lhsV, env1)
         if (true) (lhsV, env1)
         else throw new ClassCastException(s"!${lhs.tpe.dealias} <:< ${tpes.head}")
+
+      case m.Term.ApplyType(m.Term.Select(tree, m.Term.Name("show")), List(printer)) =>
+        val (Object(treeV: Tree, _, _), env1) = eval(tree, env)
+        val message = {
+          if (printer.toString == "Code") treeV.show[Code]
+          else if (printer.toString == "Raw") treeV.show[Raw]
+          else if (printer.toString == "Semantics") treeV.show[Semantics]
+          else if (printer.toString == "Positions") treeV.show[Positions]
+          else unreachable(debug(tree, printer))
+        }
+        (Object(message, t"String"), env1)
 
       case m.Term.Arg.Named(nme, v) => // TODO keep the function in the context
         eval(v, env)
