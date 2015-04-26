@@ -396,53 +396,19 @@ object Interpreter {
           (vLHS, Seq(() => jvmArgs.head))
 
         // Constructors
-        case (vLHS, "Lscala/meta/internal/ast/Lit$String$;", "apply", "(Ljava/lang/String;Lscala/meta/Origin;)Lscala/meta/internal/ast/Lit$String;") =>
-          (vLHS, jvmArgs ++ Seq(scala.meta.Origin.None))
-        case (vLHS, "Lscala/meta/internal/ast/Term$Name$;", "apply", "(Ljava/lang/String;Lscala/meta/internal/hygiene/Denotation;Lscala/meta/internal/hygiene/Sigma;Lscala/meta/Origin;)Lscala/meta/internal/ast/Term$Name;") =>
-          (vLHS, jvmArgs ++ Seq(scala.meta.Origin.None))
-        case (vLHS, "Lscala/meta/internal/ast/Term$ApplyInfix$;", "apply", "(Lscala/meta/internal/ast/Term;Lscala/meta/internal/ast/Term$Name;Lscala/collection/immutable/Seq;Lscala/collection/immutable/Seq;Lscala/meta/Origin;)Lscala/meta/internal/ast/Term$ApplyInfix;") =>
-          (vLHS, jvmArgs ++ Seq(scala.meta.Origin.None))
-        case (vLHS, "Lscala/meta/internal/ast/Term$Block$;", "apply", "(Lscala/collection/immutable/Seq;Lscala/meta/Origin;)Lscala/meta/internal/ast/Term$Block;") =>
-          (vLHS, jvmArgs ++ Seq(scala.meta.Origin.None))
-        case (vLHS, "Lscala/meta/internal/ast/Case$;", "apply", "(Lscala/meta/internal/ast/Pat;Lscala/Option;Lscala/meta/internal/ast/Term$Block;Lscala/meta/Origin;)Lscala/meta/internal/ast/Case;") =>
-          (vLHS, jvmArgs ++ Seq(scala.meta.Origin.None))
-        case (vLHS, "Lscala/meta/internal/ast/Term$Match$;", "apply", "(Lscala/meta/internal/ast/Term;Lscala/collection/immutable/Seq;Lscala/meta/Origin;)Lscala/meta/internal/ast/Term$Match;") =>
-          (vLHS, jvmArgs ++ Seq(scala.meta.Origin.None))
-        case (vLHS, "Lscala/meta/internal/ast/Mod$Implicit$;", "apply", "(Lscala/meta/Origin;)Lscala/meta/internal/ast/Mod$Implicit;") =>
-          (vLHS, jvmArgs ++ Seq(scala.meta.Origin.None))
-        case (vLHS, "Lscala/meta/internal/ast/Ctor$Ref$Name$;", "apply", "(Ljava/lang/String;Lscala/meta/internal/hygiene/Denotation;Lscala/meta/internal/hygiene/Sigma;Lscala/meta/Origin;)Lscala/meta/internal/ast/Ctor$Ref$Name;") =>
-          val addArgs =
-            if (jvmArgs.size == 1) Seq(scala.meta.internal.hygiene.Denotation.Zero, scala.meta.internal.hygiene.Sigma.Naive, scala.meta.Origin.None)
-            else Seq[AnyRef](scala.meta.Origin.None)
-          (vLHS, jvmArgs ++ addArgs)
-        case (vLHS, "Lscala/meta/internal/ast/Ctor$Ref$Select$;", "apply", "(Lscala/meta/internal/ast/Term$Ref;Lscala/meta/internal/ast/Ctor$Ref$Name;Lscala/meta/Origin;)Lscala/meta/internal/ast/Ctor$Ref$Select;") =>
-          (vLHS, jvmArgs ++ Seq(scala.meta.Origin.None))
-        case (vLHS, "Lscala/meta/internal/ast/Ctor$Primary$;", "apply", "(Lscala/collection/immutable/Seq;Lscala/meta/internal/ast/Ctor$Ref$Name;Lscala/collection/immutable/Seq;Lscala/meta/Origin;)Lscala/meta/internal/ast/Ctor$Primary;") =>
-          (vLHS, jvmArgs ++ Seq(scala.meta.Origin.None))
-        case (vLHS, "Lscala/meta/internal/ast/Name$Anonymous$;", "apply", "(Lscala/meta/internal/hygiene/Denotation;Lscala/meta/internal/hygiene/Sigma;Lscala/meta/Origin;)Lscala/meta/internal/ast/Name$Anonymous;") =>
-          (vLHS, jvmArgs ++ (if (jvmArgs.size == 0) Seq[AnyRef](scala.meta.internal.hygiene.Denotation.Zero, scala.meta.internal.hygiene.Sigma.Naive, scala.meta.Origin.None) else Seq[AnyRef](scala.meta.Origin.None)))
-        case (vLHS, "Lscala/meta/internal/ast/Type$Name$;", "apply", "(Ljava/lang/String;Lscala/meta/internal/hygiene/Denotation;Lscala/meta/internal/hygiene/Sigma;Lscala/meta/Origin;)Lscala/meta/internal/ast/Type$Name;") =>
-          (vLHS, jvmArgs ++ Seq[AnyRef](scala.meta.Origin.None))
-        case (vLHS, "Lscala/meta/internal/ast/Type$Select$;", "apply", "(Lscala/meta/internal/ast/Term$Ref;Lscala/meta/internal/ast/Type$Name;Lscala/meta/Origin;)Lscala/meta/internal/ast/Type$Select;") =>
-          (vLHS, jvmArgs ++ Seq[AnyRef](scala.meta.Origin.None))
-        case (vLHS, "Lscala/meta/internal/ast/Defn$Def$;", "apply", "(Lscala/collection/immutable/Seq;Lscala/meta/internal/ast/Term$Name;Lscala/collection/immutable/Seq;Lscala/collection/immutable/Seq;Lscala/Option;Lscala/meta/internal/ast/Term;Lscala/meta/Origin;)Lscala/meta/internal/ast/Defn$Def;") =>
-          (vLHS, jvmArgs ++ Seq[AnyRef](scala.meta.Origin.None))
-        case (vLHS, "Lscala/meta/internal/ast/Defn$Object$;", "apply", "(Lscala/collection/immutable/Seq;Lscala/meta/internal/ast/Term$Name;Lscala/meta/internal/ast/Ctor$Primary;Lscala/meta/internal/ast/Template;Lscala/meta/Origin;)Lscala/meta/internal/ast/Defn$Object;") =>
-          (vLHS, jvmArgs ++ Seq[AnyRef](scala.meta.Origin.None))
-        case (vLHS, "Lscala/meta/internal/ast/Term$ApplyType$;", "apply", "(Lscala/meta/internal/ast/Term;Lscala/collection/immutable/Seq;Lscala/meta/Origin;)Lscala/meta/internal/ast/Term$ApplyType;") =>
-          (vLHS, jvmArgs ++ Seq[AnyRef](scala.meta.Origin.None))
-        case (vLHS, "Lscala/meta/internal/ast/Term$Param$;", "apply", "(Lscala/collection/immutable/Seq;Lscala/meta/internal/ast/Term$Param$Name;Lscala/Option;Lscala/Option;Lscala/meta/Origin;)Lscala/meta/internal/ast/Term$Param;") =>
-          (vLHS, jvmArgs ++ Seq[AnyRef](scala.meta.Origin.None))
-        case (vLHS, "Lscala/meta/internal/ast/Pat$Typed$;", "apply", "(Lscala/meta/internal/ast/Pat;Lscala/meta/internal/ast/Pat$Type;Lscala/meta/Origin;)Lscala/meta/internal/ast/Pat$Typed;") =>
-          (vLHS, jvmArgs ++ Seq[AnyRef](scala.meta.Origin.None))
-        case (vLHS, "Lscala/meta/internal/ast/Template$;", "apply", "(Lscala/collection/immutable/Seq;Lscala/collection/immutable/Seq;Lscala/meta/internal/ast/Term$Param;Lscala/Option;Lscala/meta/Origin;)Lscala/meta/internal/ast/Template;") =>
-          (vLHS, jvmArgs ++ Seq[AnyRef](scala.meta.Origin.None))
-        case (vLHS, "Lscala/meta/internal/ast/Term$New$;", "apply", "(Lscala/meta/internal/ast/Template;Lscala/meta/Origin;)Lscala/meta/internal/ast/Term$New;") =>
-          (vLHS, jvmArgs ++ Seq[AnyRef](scala.meta.Origin.None))
-        case (vLHS,"Lscala/meta/internal/ast/Term$Select$;","apply","(Lscala/meta/internal/ast/Term;Lscala/meta/internal/ast/Term$Name;Lscala/meta/Origin;)Lscala/meta/internal/ast/Term$Select;") =>
-          (vLHS, jvmArgs ++ Seq[AnyRef](scala.meta.Origin.None))
-        case (vLHS,"Lscala/meta/internal/ast/Term$Apply$;","apply","(Lscala/meta/internal/ast/Term;Lscala/collection/immutable/Seq;Lscala/meta/Origin;)Lscala/meta/internal/ast/Term$Apply;") =>
-          (vLHS, jvmArgs ++ Seq[AnyRef](scala.meta.Origin.None))
+        // Examples:
+        // case (vLHS, "Lscala/meta/internal/ast/Lit$String$;", "apply", "(Ljava/lang/String;Lscala/meta/Origin;)Lscala/meta/internal/ast/Lit$String;") =>
+        // case (vLHS, "Lscala/meta/internal/ast/Term$Name$;", "apply", "(Ljava/lang/String;Lscala/meta/internal/hygiene/Denotation;Lscala/meta/internal/hygiene/Sigma;Lscala/meta/Origin;)Lscala/meta/internal/ast/Term$Name;") =>
+        case (vLHS, astCompanion, "apply", astSignature) if astCompanion.startsWith("Lscala/meta/internal/ast/") && astCompanion.endsWith("$;") =>
+          require(astSignature.endsWith(")" + astCompanion.dropRight(2) + ";") && debug(vLHS, lhsJTp, nme, argsRetJTp))
+          val denotPart = {
+            val needsDenot = astSignature.contains("Lscala/meta/internal/hygiene/Denotation;")
+            val alreadyHasDenot = jvmArgs.exists(_.isInstanceOf[scala.meta.internal.hygiene.Denotation])
+            if (needsDenot && !alreadyHasDenot) Seq(scala.meta.internal.hygiene.Denotation.Zero, scala.meta.internal.hygiene.Sigma.Naive)
+            else Nil
+          }
+          val originPart = Seq(scala.meta.Origin.None)
+          (vLHS, jvmArgs ++ denotPart ++ originPart)
 
         // XtensionSemanticMemberLike
         case (vLHS: Member, "Lscala/meta/semantic/Api$XtensionSemanticMemberLike;", "isFinal", "(Lscala/meta/semantic/Context;)Z") =>
