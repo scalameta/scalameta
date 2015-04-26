@@ -226,8 +226,19 @@ object Interpreter {
                 res.ref
               }
             }, t"${p1.tpe} => Any") // TODO cant get the type if not indicated
-
             (funcObj, env.push(nme, funcObj))
+            
+          case p1 :: p2 :: Nil =>
+            val funcObj = Object(new Function2[Any, Any, Any] with FunctionEnv {
+              var functionEnv: Env = env // TODO fix
+              def apply(x: Any, y: Any) = {
+                val (res, env1) = evalFunc(func, Seq(Seq(x, y)), functionEnv)
+                functionEnv = env1
+                res.ref
+              }
+            }, t"(${p1.tpe}, ${p2.tpe}) => Any") // TODO cant get the type if not indicated
+            (funcObj, env.push(nme, funcObj))
+            
           case p1 :: p2 :: p3 :: Nil =>
             val funcObj = Object(new Function3[Any, Any, Any, Any] with FunctionEnv {
               var functionEnv: Env = env // TODO fix
@@ -237,7 +248,6 @@ object Interpreter {
                 res.ref
               }
             }, t"(${p1.tpe}, ${p2.tpe}, ${p3.tpe}) => Any")
-
             (funcObj, env.push(nme, funcObj))
         }
       case m.Term.Ascribe(v, tp) =>
