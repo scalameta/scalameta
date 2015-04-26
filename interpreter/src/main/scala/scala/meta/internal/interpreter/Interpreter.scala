@@ -469,7 +469,9 @@ object Interpreter {
   // so we have to guess implicit arguments on our own
   implicit class EnvContext(env: Env) {
     def context(implicit c: Context): Context = {
-      env.stack.flatten.find(_._2.tpe <:< t"Context").head._2.ref.asInstanceOf[Context]
+      // TODO: why doesn't this work?
+      // env.stack.flatten.find(_._2.tpe <:< t"Context").head._2.ref.asInstanceOf[Context]
+      c
     }
   }
 }
