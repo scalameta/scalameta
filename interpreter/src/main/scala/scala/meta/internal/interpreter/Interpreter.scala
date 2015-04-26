@@ -19,6 +19,7 @@ object Interpreter {
   def eval(term: Term, env0: Map[Term.Name, Any])(implicit c: Context): Any = {
     def typeOf(v: Any): Type = {
       if (v == null) return t"Null"
+      if (v.isInstanceOf[Context]) return t"Context"
       def loadModule(root: Term.Name, parts: List[String]): Term.Name = parts match {
         case Nil => 
           root
