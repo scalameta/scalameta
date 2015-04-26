@@ -140,15 +140,15 @@ object Interpreter {
           case (Object(lhsV: Function1[Any, Any] with FunctionEnv, tpe, _), newEnv) =>
             val (rhsVs, callEnv) = evalSeq(args, env)
             val res = lhsV.apply(rhsVs(0).ref)
-            (Object(res, t"Any"), lhsV.functionEnv)
+            (Object(res, t"Any"), callEnv)
           case (Object(lhsV: Function2[Any, Any, Any] with FunctionEnv, tpe, _), newEnv) =>
             val (rhsVs, callEnv) = evalSeq(args, env)
             val res = lhsV.apply(rhsVs(0).ref, rhsVs(1).ref)
-            (Object(res, t"Any"), lhsV.functionEnv)
+            (Object(res, t"Any"), callEnv)
           case (Object(lhsV: Function3[Any, Any, Any, Any] with FunctionEnv, tpe, _), newEnv) =>
             val (rhsVs, callEnv) = evalSeq(args, env)
             val res = lhsV.apply(rhsVs(0).ref, rhsVs(1).ref, rhsVs(2).ref)
-            (Object(res, t"Any"), lhsV.functionEnv)
+            (Object(res, t"Any"), callEnv)
         }
 
       // TODO: with quasiquotes this should be easy and more general
