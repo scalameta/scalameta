@@ -57,7 +57,7 @@ object Environment {
           throw new AbortMacroException(NoPosition, "an implementation is missing")
         } else {
           // TODO then in the scope of current objects
-          unreachable(debug(nme, nme.defn))
+          unreachable(debug(stack, nme, nme.defn))
         }
       }
 
