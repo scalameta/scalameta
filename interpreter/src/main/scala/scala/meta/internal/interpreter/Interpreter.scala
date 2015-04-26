@@ -23,7 +23,9 @@ object Interpreter {
         case Nil => 
           root
         case name :: rest => 
-          val child = root.members.filter(m => (m.isPackage || m.isObject) && m.name.toString == name).head.asInstanceOf[Member.Term]
+          val children = root.members.filter(m => (m.isPackage || m.isObject) && m.name.toString == name)
+          if (children.isEmpty) sys.error(s"typeOf(${v.getClass}) has failed: $name not found in $root")
+          val child = children.head.asInstanceOf[Member.Term]
           loadModule(child.name, rest)
       }
       val init :+ last = v.getClass.getName.split(Array('.', '$')).toList
