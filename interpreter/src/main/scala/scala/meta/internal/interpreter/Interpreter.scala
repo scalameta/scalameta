@@ -410,49 +410,27 @@ object Interpreter {
           val originPart = Seq(scala.meta.Origin.None)
           (vLHS, jvmArgs ++ denotPart ++ originPart)
 
-        // XtensionSemanticMemberLike
-        case (vLHS: Member, "Lscala/meta/semantic/Api$XtensionSemanticMemberLike;", "isFinal", "(Lscala/meta/semantic/Context;)Z") =>
+        // Extension methods
+        // Examples:
+        // case (vLHS: Member, "Lscala/meta/semantic/Api$XtensionSemanticMemberLike;", "isFinal", "(Lscala/meta/semantic/Context;)Z") =>
+        // case (vLHS: Scope, "Lscala/meta/semantic/Api$XtensionSemanticScopeLike;", "ctor", "(Lscala/meta/semantic/Context;)Lscala/meta/Member$Term;") =>        
+        // case (vLHS: m.Member.Term, "Lscala/meta/semantic/Api$XtensionSemanticTermMember;", "name", "(Lscala/meta/semantic/Context;)Lscala/meta/Term$Name;") =>
+        case (vLHS: Member, "Lscala/meta/semantic/Api$XtensionSemanticMemberLike;", _, _) =>
           (XtensionSemanticMember(vLHS), jvmArgs ++ Seq(env.context))
-        case (vLHS: Member, "Lscala/meta/semantic/Api$XtensionSemanticMemberLike;", "isClass", "(Lscala/meta/semantic/Context;)Z") =>
-          (XtensionSemanticMember(vLHS), jvmArgs ++ Seq(env.context))
-        case (vLHS: Member, "Lscala/meta/semantic/Api$XtensionSemanticMemberLike;", "isObject", "(Lscala/meta/semantic/Context;)Z") =>
-          (XtensionSemanticMember(vLHS), jvmArgs ++ Seq(env.context))
-        case (vLHS: Member, "Lscala/meta/semantic/Api$XtensionSemanticMemberLike;", "isCase", "(Lscala/meta/semantic/Context;)Z") =>
-          (XtensionSemanticMember(vLHS), jvmArgs ++ Seq(env.context))
-        case (vLHS: Member, "Lscala/meta/semantic/Api$XtensionSemanticMemberLike;", "isTrait", "(Lscala/meta/semantic/Context;)Z") =>
-          (XtensionSemanticMember(vLHS), jvmArgs ++ Seq(env.context))
-        case (vLHS: Member, "Lscala/meta/semantic/Api$XtensionSemanticMemberLike;", "isSealed", "(Lscala/meta/semantic/Context;)Z") =>
-          (XtensionSemanticMember(vLHS), jvmArgs ++ Seq(env.context))
-        case (vLHS: Member, "Lscala/meta/semantic/Api$XtensionSemanticMemberLike;", "name", "(Lscala/meta/semantic/Context;)Lscala/meta/Name;") =>
-          (XtensionSemanticMember(vLHS), jvmArgs ++ Seq(env.context))
-        case (vLHS: m.Member, "Lscala/meta/semantic/Api$XtensionSemanticMemberLike;", "parents", "(Lscala/meta/semantic/Context;)Lscala/collection/immutable/Seq;") =>
-          (XtensionSemanticMember(vLHS), jvmArgs ++ Seq(env.context))
-        case (vLHS: m.Member, "Lscala/meta/semantic/Api$XtensionSemanticMemberLike;", "children", "(Lscala/meta/semantic/Context;)Lscala/collection/immutable/Seq;") =>
-          (XtensionSemanticMember(vLHS), jvmArgs ++ Seq(env.context))
-
-
-        // SemanticScopeLike
-        case (vLHS: Scope, "Lscala/meta/semantic/Api$XtensionSemanticScopeLike;", "ctor", "(Lscala/meta/semantic/Context;)Lscala/meta/Member$Term;") =>
+        case (vLHS: Ref, "Lscala/meta/semantic/Api$XtensionSemanticMemberLike;", _, _) =>
+          (XtensionSemanticRefMemberLike(vLHS), jvmArgs ++ Seq(env.context))
+        case (vLHS: Type.Ref, "Lscala/meta/semantic/Api$XtensionSemanticScopeLike;", _, _) =>
+          (XtensionSemanticTypeRefScopeLike(vLHS), jvmArgs ++ Seq(env.context))
+        case (vLHS: Ref, "Lscala/meta/semantic/Api$XtensionSemanticScopeLike;", _, _) =>
+          (XtensionSemanticRefScopeLike(vLHS), jvmArgs ++ Seq(env.context))
+        case (vLHS: Scope, "Lscala/meta/semantic/Api$XtensionSemanticScopeLike;", _, _) =>
           (XtensionSemanticScope(vLHS), jvmArgs ++ Seq(env.context))
-        case (vLHS: Scope, "Lscala/meta/semantic/Api$XtensionSemanticScopeLike;", "tparams", "(Lscala/meta/semantic/Context;)Lscala/collection/immutable/Seq;") =>
-          (XtensionSemanticScope(vLHS), jvmArgs ++ Seq(env.context))
-        case (vLHS: Scope, "Lscala/meta/semantic/Api$XtensionSemanticScopeLike;", "params", "(Lscala/meta/semantic/Context;)Lscala/collection/immutable/Seq;") =>
-          (XtensionSemanticScope(vLHS), jvmArgs ++ Seq(env.context))
-
-        case (vLHS: m.Type.Ref, "Lscala/meta/semantic/Api$XtensionSemanticTypeRefDefn;", "defn", "(Lscala/meta/semantic/Context;)Lscala/meta/Member;") =>
-          (XtensionSemanticTypeRefDefn(vLHS), jvmArgs ++ Seq(env.context))
-
-        case (vLHS: m.Member.Term, "Lscala/meta/semantic/Api$XtensionSemanticTermMember;", "name", "(Lscala/meta/semantic/Context;)Lscala/meta/Term$Name;") =>
-          (XtensionSemanticTermMember(vLHS), jvmArgs ++ Seq(env.context))
-
-        case (vLHS: Term.Param,"Lscala/meta/semantic/Api$XtensionSemanticTermParam;","field","(Lscala/meta/semantic/Context;)Lscala/meta/Member$Term;") =>
-          (XtensionSemanticTermParam(vLHS), jvmArgs ++ Seq(env.context))
-
-        case (vLHS: Member,"Lscala/meta/semantic/Api$XtensionSemanticMemberTpe;","tpe","(Lscala/meta/semantic/Context;)Lscala/meta/Type;") =>
-          (XtensionSemanticMemberTpe(vLHS), jvmArgs ++ Seq(env.context))
-
-        case (vLHS: Type, "Lscala/meta/semantic/Api$XtensionTypeToPatType;", "pat", "(Lscala/meta/semantic/Context;)Lscala/meta/Pat$Type;") =>
-          (XtensionTypeToPatType(vLHS), jvmArgs ++ Seq(env.context))
+        case (vLHS: Tree, xtensionJvmType, _, _) if xtensionJvmType.startsWith("Lscala/meta/semantic/Api$Xtension") =>
+          val xtensionName = xtensionJvmType.stripPrefix("Lscala/meta/semantic/Api$").stripSuffix(";")
+          val metaPackage = scala.meta.`package`
+          val xtensionFactory = metaPackage.getClass.getMethods.find(_.getName == xtensionName).get
+          val xtension = xtensionFactory.invoke(metaPackage, vLHS)
+          (xtension, jvmArgs ++ Seq(env.context))
 
         case x => (vLHS, jvmArgs)
       }
