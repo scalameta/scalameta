@@ -11,8 +11,8 @@ class ReflectionSuite extends AstSuite {
   // but please deal with that (or come up with a more effective way of testing AstReflection)
   test("root") {
     assert(symbolOf[scala.meta.Tree].isRoot)
-    assert(symbolOf[scala.meta.Tree].asRoot.allBranches.length === 66)
-    assert(symbolOf[scala.meta.Tree].asRoot.allLeafs.length === 326)
+    assert(symbolOf[scala.meta.Tree].asRoot.allBranches.length === 69)
+    assert(symbolOf[scala.meta.Tree].asRoot.allLeafs.length === 329)
   }
 
   test("If") {
@@ -60,6 +60,9 @@ class ReflectionSuite extends AstSuite {
       |scala.meta.Pat.Arg                               => scala.meta.Pat.Arg
       |scala.meta.Pat.Type                              => scala.meta.Pat.Type
       |scala.meta.Pat.Type.Ref                          => scala.meta.Pat.Type.Ref
+      |scala.meta.Pat.Var                               => scala.meta.Pat.Var
+      |scala.meta.Pat.Var.Term                          => scala.meta.Pat.Var.Term
+      |scala.meta.Pat.Var.Type                          => scala.meta.Pat.Var.Type
       |scala.meta.Ref                                   => scala.meta.Ref
       |scala.meta.Scope                                 => scala.meta.Scope
       |scala.meta.Source                                => scala.meta.Source
@@ -169,9 +172,9 @@ class ReflectionSuite extends AstSuite {
       |scala.meta.internal.ast.Pat.Type.Tuple           => scala.meta.Pat.Type
       |scala.meta.internal.ast.Pat.Type.Wildcard        => scala.meta.Pat.Type
       |scala.meta.internal.ast.Pat.Typed                => scala.meta.Pat
-      |scala.meta.internal.ast.Pat.Var                  => scala.meta.Tree
-      |scala.meta.internal.ast.Pat.Var.Term             => scala.meta.Member.Term with scala.meta.Pat
-      |scala.meta.internal.ast.Pat.Var.Type             => scala.meta.Member.Type with scala.meta.Pat.Type
+      |scala.meta.internal.ast.Pat.Var                  => scala.meta.Pat.Var
+      |scala.meta.internal.ast.Pat.Var.Term             => scala.meta.Pat.Var.Term
+      |scala.meta.internal.ast.Pat.Var.Type             => scala.meta.Pat.Var.Type
       |scala.meta.internal.ast.Pat.Wildcard             => scala.meta.Pat
       |scala.meta.internal.ast.Pkg                      => scala.meta.Member.Term with scala.meta.Stat
       |scala.meta.internal.ast.Pkg.Object               => scala.meta.Member.Term with scala.meta.Stat
