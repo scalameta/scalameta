@@ -57,6 +57,11 @@ class BasicInterpretationSpec extends FlatSpec with ShouldMatchers {
     interpret("""val x = List(1,2,3); x take 2""") should be(List(1, 2))
   }
 
+  it should "support infix calls" in {
+    interpret("""List(1, 2) :+ 3""") should be(List(1, 2, 3))
+    interpret("""3 +: List(1, 2)""") should be(List(3, 1, 2))
+  }
+
   it should "handle higher-order functions" in {
     //Higher-order functions
     interpret("""val f = (x: String) => x + "2"; f("4")""")

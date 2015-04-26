@@ -103,10 +103,19 @@ object Interpreter {
         methodCall(method, lhsV, Seq(), newEnv)
 
       case m.Term.ApplyInfix(lhs, op, _, args) =>
-        val method = lhs.tpe.members.filter(_.name == op).head
-        val (lhsV, newEnv) = eval(lhs, env)
-        val (rhsVs, callEnv) = evalSeq(args, env)
-        methodCall(method, lhsV, rhsVs, callEnv)
+        val isLeftAssoc = !op.toString.endsWith(":")
+        if (isLeftAssoc) {
+          val method = lhs.tpe.members.filter(_.name == op).head
+          val (lhsV, newEnv) = eval(lhs, env)
+          val (rhsVs, callEnv) = evalSeq(args, newEnv)
+          methodCall(method, lhsV, rhsVs, callEnv)
+        } else {
+          val Seq(rhs: Term) = args
+          val method = rhs.tpe.members.filter(_.name == op).head
+          val (lhsV, newEnv) = eval(lhs, env)
+          val (rhsV, callEnv) = eval(rhs, newEnv)
+          methodCall(method, rhsV, List(lhsV), callEnv)
+        }
 
       case m.Term.Apply(fun @ m.Term.Select(lhs, rhs), args) if fun.isDef =>
         val (lhsV, newEnv) = eval(lhs, env)
@@ -356,6 +365,8 @@ object Interpreter {
         // List/Seq
         case (vLHS, "Lscala/collection/SeqLike;", "$colon$plus", "(Ljava/lang/Object;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;") =>
           (vLHS, jvmArgs ++ Seq(Seq.canBuildFrom))
+        case (vLHS, "Lscala/collection/immutable/List;", "$plus$colon", "(Ljava/lang/Object;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;") =>
+          (vLHS, jvmArgs ++ Seq(List.canBuildFrom))
         case (vLHS, "Lscala/collection/immutable/List;", "map", "(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;") =>
           (vLHS, jvmArgs ++ Seq(List.canBuildFrom))
         case (vLHS, "Lscala/collection/TraversableLike;", "map", "(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;") =>
