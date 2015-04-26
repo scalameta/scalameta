@@ -50,8 +50,15 @@ object Environment {
             Object(clazz.getField("MODULE$").get(clazz), nme.tpe)
         }
       } else {
-        // TODO then in the scope of current objects
-        unreachable(debug(nme, nme.defn))
+        val ffi = nme.defn.ffi.getOrElse("")
+        if (ffi == "jvmMethod(Lscala/Predef$;, $qmark$qmark$qmark, ()Lscala/Nothing;)") {
+          import scala.reflect.macros.runtime.AbortMacroException
+          import scala.reflect.internal.util.NoPosition
+          throw new AbortMacroException(NoPosition, "an implementation is missing")
+        } else {
+          // TODO then in the scope of current objects
+          unreachable(debug(nme, nme.defn))
+        }
       }
 
     }
