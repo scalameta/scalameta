@@ -36,6 +36,7 @@ object Interpreter {
   }
 
   def eval(term: Tree, env: Env)(implicit c: Context): (Object, Env) = {
+    if (sys.props("interpreter.debug") != null) println(term.toString.replace("\n", " ").take(60))
     term match {
       // Quasiquotes (this should not exist)
       case m.Term.Apply(m.Term.Name("Unlift"), List(arg)) =>
