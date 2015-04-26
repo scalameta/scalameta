@@ -10,7 +10,7 @@ import scala.reflect.{ ClassTag, classTag }
 import scala.meta.internal.{ ast => m }
 import scala.reflect.macros.runtime.AbortMacroException
 
-class RealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
+class OldRealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
   def evalFunc(defn: m.Defn.Def, argss: Seq[Any]*)(implicit c: semantic.Context): Any = {
     val env = scala.collection.mutable.Map[Term.Name, Any]()
     val evalee = argss.foldLeft(defn.name: Term)((curr, args) => {
