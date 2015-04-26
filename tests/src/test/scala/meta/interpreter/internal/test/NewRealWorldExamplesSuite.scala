@@ -135,31 +135,31 @@ class NewRealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
 
   "Synthesis macro" should "produce a materializer" in {
     val res = evalFunc(metaprogram2, List(t"TestTrait"), List(c))
-    res.asInstanceOf[m.Tree].show[Code] should be("""{
-      |  implicit object Serializer41 extends _root_.serialization.Serializer[TestTrait] {
-      |    def apply(x40: TestTrait): _root_.scala.Predef.String = x40 match {
-      |      case x42: X => "{ " + ("$tag" + ": " + "0") + " }"
-      |      case x43: Y => "{ " + ("$tag" + ": " + "1") + " }"
+    res.asInstanceOf[m.Tree].show[Code].replaceAll("Serializer\\d+", "Serializer").replaceAll("x\\d+", "x") should be("""{
+      |  implicit object Serializer extends _root_.serialization.Serializer[TestTrait] {
+      |    def apply(x: TestTrait): _root_.scala.Predef.String = x match {
+      |      case x: X => "{ " + ("$tag" + ": " + "0") + " }"
+      |      case x: Y => "{ " + ("$tag" + ": " + "1") + " }"
       |    }
       |  }
-      |  Serializer41
+      |  Serializer
       |}""".stripMargin)
 
   }
 
   it should "generate a serializer for objects" in {
     val res = evalFunc(metaprogram2, List(t"SerObject.type"), List(c))
-    res.asInstanceOf[m.Tree].show[Code] should be("""{
-      |  implicit object Serializer47 extends _root_.serialization.Serializer[SerObject.type] { def apply(x46: SerObject.type): _root_.scala.Predef.String = "{ " + "" + " }" }
-      |  Serializer47
+    res.asInstanceOf[m.Tree].show[Code].replaceAll("Serializer\\d+", "Serializer").replaceAll("x\\d+", "x") should be("""{
+      |  implicit object Serializer extends _root_.serialization.Serializer[SerObject.type] { def apply(x: SerObject.type): _root_.scala.Predef.String = "{ " + "" + " }" }
+      |  Serializer
       |}""".stripMargin)
   }
 
   it should "generate a serializer for case classes" in {
     val res = evalFunc(metaprogram2, List(t"TestCaseClass"), List(c))
-    res.asInstanceOf[m.Tree].show[Code] should be("""{
-      |  implicit object Serializer51 extends _root_.serialization.Serializer[TestCaseClass] { def apply(x50: TestCaseClass): _root_.scala.Predef.String = "{ " + "" + " }" }
-      |  Serializer51
+    res.asInstanceOf[m.Tree].show[Code].replaceAll("Serializer\\d+", "Serializer").replaceAll("x\\d+", "x") should be("""{
+      |  implicit object Serializer extends _root_.serialization.Serializer[TestCaseClass] { def apply(x: TestCaseClass): _root_.scala.Predef.String = "{ " + "" + " }" }
+      |  Serializer
       |}""".stripMargin)
   }
 

@@ -147,31 +147,31 @@ class OldRealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
 
   "Synthesis macro" should "produce a materializer" in {
     val res = evalFunc(metaprogram2, List(t"TestTrait"), List(c))
-    res.asInstanceOf[m.Tree].show[Code] should be("""{
-      |  implicit object TestTraitSerializer15 extends Serializer[TestTrait] {
-      |    def apply(input16: TestTrait): String = input16 match {
-      |      case input17: X => "{" + ("$tag: " + "0") + "}"
-      |      case input17: Y => "{" + ("$tag: " + "1") + "}"
+    res.asInstanceOf[m.Tree].show[Code].replaceAll("Serializer\\d+", "Serializer").replaceAll("input\\d+", "input") should be("""{
+      |  implicit object TestTraitSerializer extends Serializer[TestTrait] {
+      |    def apply(input: TestTrait): String = input match {
+      |      case input: X => "{" + ("$tag: " + "0") + "}"
+      |      case input: Y => "{" + ("$tag: " + "1") + "}"
       |    }
       |  }
-      |  TestTraitSerializer15
+      |  TestTraitSerializer
       |}""".stripMargin)
 
   }
 
   it should "generate a serializer for objects" in {
     val res = evalFunc(metaprogram2, List(t"SerObject.type"), List(c))
-    res.asInstanceOf[m.Tree].show[Code] should be("""{
-      |  implicit object SerObjectSerializer20 extends Serializer[SerObject.type] { def apply(input21: SerObject.type): String = "{" + "" + "}" }
-      |  SerObjectSerializer20
+    res.asInstanceOf[m.Tree].show[Code].replaceAll("Serializer\\d+", "Serializer").replaceAll("input\\d+", "input") should be("""{
+      |  implicit object SerObjectSerializer extends Serializer[SerObject.type] { def apply(input: SerObject.type): String = "{" + "" + "}" }
+      |  SerObjectSerializer
       |}""".stripMargin)
   }
 
   it should "generate a serializer for case classes" in {
     val res = evalFunc(metaprogram2, List(t"TestCaseClass"), List(c))
-    res.asInstanceOf[m.Tree].show[Code] should be("""{
-      |  implicit object TestCaseClassSerializer24 extends Serializer[TestCaseClass] { def apply(input25: TestCaseClass): String = "{" + "" + "}" }
-      |  TestCaseClassSerializer24
+    res.asInstanceOf[m.Tree].show[Code].replaceAll("Serializer\\d+", "Serializer").replaceAll("input\\d+", "input") should be("""{
+      |  implicit object TestCaseClassSerializer extends Serializer[TestCaseClass] { def apply(input: TestCaseClass): String = "{" + "" + "}" }
+      |  TestCaseClassSerializer
       |}""".stripMargin)
   }
 
