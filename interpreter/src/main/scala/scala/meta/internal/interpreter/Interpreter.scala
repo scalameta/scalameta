@@ -360,6 +360,7 @@ object Interpreter {
     else vRHS
     val jvmArgs = args.toSeq.asInstanceOf[Seq[AnyRef]]
     try {
+      if (sys.props("interpreter.debug") != null) println(s"$lhsJTp.$nme$argsRetJTp")
       val (eLHS, eArgs: Seq[AnyRef]) = (vLHS, lhsJTp, nme, argsRetJTp) match {
         // Std. Library
         // List/Seq
