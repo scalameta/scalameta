@@ -366,6 +366,8 @@ object Interpreter {
         // List/Seq
         case (vLHS, "Lscala/collection/SeqLike;", "$colon$plus", "(Ljava/lang/Object;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;") =>
           (vLHS, jvmArgs ++ Seq(Seq.canBuildFrom))
+        case (vLHS, "Lscala/collection/SeqLike;", "$plus$colon", "(Ljava/lang/Object;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;") =>
+          (vLHS, jvmArgs ++ Seq(Seq.canBuildFrom))
         case (vLHS, "Lscala/collection/immutable/List;", "$plus$colon", "(Ljava/lang/Object;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;") =>
           (vLHS, jvmArgs ++ Seq(List.canBuildFrom))
         case (vLHS, "Lscala/collection/immutable/List;", "map", "(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;") =>
