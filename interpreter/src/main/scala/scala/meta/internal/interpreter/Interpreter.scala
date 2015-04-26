@@ -402,11 +402,15 @@ object Interpreter {
             if (jvmArgs.size == 1) Seq(scala.meta.internal.hygiene.Denotation.Zero, scala.meta.internal.hygiene.Sigma.Naive, scala.meta.Origin.None)
             else Seq[AnyRef](scala.meta.Origin.None)
           (vLHS, jvmArgs ++ addArgs)
+        case (vLHS, "Lscala/meta/internal/ast/Ctor$Ref$Select$;", "apply", "(Lscala/meta/internal/ast/Term$Ref;Lscala/meta/internal/ast/Ctor$Ref$Name;Lscala/meta/Origin;)Lscala/meta/internal/ast/Ctor$Ref$Select;") =>
+          (vLHS, jvmArgs ++ Seq(scala.meta.Origin.None))
         case (vLHS, "Lscala/meta/internal/ast/Ctor$Primary$;", "apply", "(Lscala/collection/immutable/Seq;Lscala/meta/internal/ast/Ctor$Ref$Name;Lscala/collection/immutable/Seq;Lscala/meta/Origin;)Lscala/meta/internal/ast/Ctor$Primary;") =>
           (vLHS, jvmArgs ++ Seq(scala.meta.Origin.None))
         case (vLHS, "Lscala/meta/internal/ast/Name$Anonymous$;", "apply", "(Lscala/meta/internal/hygiene/Denotation;Lscala/meta/internal/hygiene/Sigma;Lscala/meta/Origin;)Lscala/meta/internal/ast/Name$Anonymous;") =>
           (vLHS, jvmArgs ++ (if (jvmArgs.size == 0) Seq[AnyRef](scala.meta.internal.hygiene.Denotation.Zero, scala.meta.internal.hygiene.Sigma.Naive, scala.meta.Origin.None) else Seq[AnyRef](scala.meta.Origin.None)))
         case (vLHS, "Lscala/meta/internal/ast/Type$Name$;", "apply", "(Ljava/lang/String;Lscala/meta/internal/hygiene/Denotation;Lscala/meta/internal/hygiene/Sigma;Lscala/meta/Origin;)Lscala/meta/internal/ast/Type$Name;") =>
+          (vLHS, jvmArgs ++ Seq[AnyRef](scala.meta.Origin.None))
+        case (vLHS, "Lscala/meta/internal/ast/Type$Select$;", "apply", "(Lscala/meta/internal/ast/Term$Ref;Lscala/meta/internal/ast/Type$Name;Lscala/meta/Origin;)Lscala/meta/internal/ast/Type$Select;") =>
           (vLHS, jvmArgs ++ Seq[AnyRef](scala.meta.Origin.None))
         case (vLHS, "Lscala/meta/internal/ast/Defn$Def$;", "apply", "(Lscala/collection/immutable/Seq;Lscala/meta/internal/ast/Term$Name;Lscala/collection/immutable/Seq;Lscala/collection/immutable/Seq;Lscala/Option;Lscala/meta/internal/ast/Term;Lscala/meta/Origin;)Lscala/meta/internal/ast/Defn$Def;") =>
           (vLHS, jvmArgs ++ Seq[AnyRef](scala.meta.Origin.None))
