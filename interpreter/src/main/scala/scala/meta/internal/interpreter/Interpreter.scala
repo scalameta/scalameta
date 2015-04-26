@@ -281,7 +281,7 @@ object Interpreter {
 
   def evalPattern(lhs: Object, pattern: m.Pat, env: Env)(implicit c: Context): (Object, Env) = pattern match {
     case m.Pat.Typed(x, tp) =>
-      (Object(tp.tpe <:< lhs.tpe, t"Boolean"), extendEnv(x, lhs, env))
+      (Object(lhs.tpe <:< tp.tpe, t"Boolean"), extendEnv(x, lhs, env))
     case m.Pat.Wildcard() =>
       (Object(true, t"Boolean"), env)
     case _ => unreachable(debug(pattern, pattern.show[Semantics]))
