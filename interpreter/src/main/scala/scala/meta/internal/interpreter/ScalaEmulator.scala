@@ -13,6 +13,18 @@ object ScalaEmulator {
   def emulate(lst: Seq[String], args: Seq[Object], env: Env)(implicit c: Context): (Object, Env) = lst match {
     case List("I", "$plus", "(I)I") =>
       (Object(args.head.as[Int] + args.tail.head.as[Int], t"Int"), env)
+    case List("I", "$minus", "(I)I") =>
+      (Object(args.head.as[Int] - args.tail.head.as[Int], t"Int"), env)
+    case List("I", "$times", "(I)I") =>
+      (Object(args.head.as[Int] * args.tail.head.as[Int], t"Int"), env)
+    case List("I", "$greater", "(I)I") =>
+      (Object(args.head.as[Int] > args.tail.head.as[Int], t"Boolean"), env)
+    case List("I", "$less", "(I)I") =>
+      (Object(args.head.as[Int] < args.tail.head.as[Int], t"Boolean"), env)
+    case List("I", "$eq$eq", "(I)Z") =>
+      (Object(args.head.as[Int] == args.tail.head.as[Int], t"Boolean"), env)
+    case List("I", "$bang$eq", "(I)Z") =>
+      (Object(args.head.as[Int] != args.tail.head.as[Int], t"Boolean"), env)
     case List("Ljava/lang/String;", "$plus", "(Ljava/lang/Object;)Ljava/lang/String;") =>
       (Object(args.head.as[String] + args.tail.head.as[AnyRef].toString, t"String"), env)
     case List("Z", "$bar$bar", "(Z)Z") =>

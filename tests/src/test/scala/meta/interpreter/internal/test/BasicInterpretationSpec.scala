@@ -66,6 +66,10 @@ class BasicInterpretationSpec extends FlatSpec with ShouldMatchers {
     //Higher-order functions
     interpret("""val f = (x: String) => x + "2"; f("4")""")
   }
+  
+  it should "handle recursive methods" in {
+    interpret("""def fact(x: Int): Int = if (x == 0) 1 else x * fact(x - 1); fact(5)""") should be(120)
+  }
 
   it should "handle string interpolation" in {
     interpret(""" s"Begin ${val x = 1; x + 1} the end" """) should be("Begin 2 the end")

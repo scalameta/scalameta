@@ -218,36 +218,39 @@ object Interpreter {
         // TODO multiple-functions
         paramss.flatten match {
           case p1 :: Nil =>
+            val funcTpe = t"${p1.tpe} => Any"
             val funcObj = Object(new Function1[Any, Any] with FunctionEnv {
               var functionEnv: Env = env // TODO fix
               def apply(x: Any) = {
-                val (res, env1) = evalFunc(func, Seq(Seq(x)), functionEnv)
+                val (res, env1) = evalFunc(func, Seq(Seq(x)), functionEnv.push(nme, Object(this, funcTpe)))
                 functionEnv = env1
                 res.ref
               }
-            }, t"${p1.tpe} => Any") // TODO cant get the type if not indicated
+            }, funcTpe) // TODO cant get the type if not indicated
             (funcObj, env.push(nme, funcObj))
             
           case p1 :: p2 :: Nil =>
+            val funcTpe = t"(${p1.tpe}, ${p2.tpe}) => Any"
             val funcObj = Object(new Function2[Any, Any, Any] with FunctionEnv {
               var functionEnv: Env = env // TODO fix
               def apply(x: Any, y: Any) = {
-                val (res, env1) = evalFunc(func, Seq(Seq(x, y)), functionEnv)
+                val (res, env1) = evalFunc(func, Seq(Seq(x, y)), functionEnv.push(nme, Object(this, funcTpe)))
                 functionEnv = env1
                 res.ref
               }
-            }, t"(${p1.tpe}, ${p2.tpe}) => Any") // TODO cant get the type if not indicated
+            }, funcTpe) // TODO cant get the type if not indicated
             (funcObj, env.push(nme, funcObj))
             
           case p1 :: p2 :: p3 :: Nil =>
+            val funcTpe = t"(${p1.tpe}, ${p2.tpe}, ${p3.tpe}) => Any"
             val funcObj = Object(new Function3[Any, Any, Any, Any] with FunctionEnv {
               var functionEnv: Env = env // TODO fix
               def apply(x: Any, y: Any, z: Any) = {
-                val (res, env1) = evalFunc(func, Seq(Seq(x, y, z)), functionEnv)
+                val (res, env1) = evalFunc(func, Seq(Seq(x, y, z)), functionEnv.push(nme, Object(this, funcTpe)))
                 functionEnv = env1
                 res.ref
               }
-            }, t"(${p1.tpe}, ${p2.tpe}, ${p3.tpe}) => Any")
+            }, funcTpe)
             (funcObj, env.push(nme, funcObj))
         }
       case m.Term.Ascribe(v, tp) =>
