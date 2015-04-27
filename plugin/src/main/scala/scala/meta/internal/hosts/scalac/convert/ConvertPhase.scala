@@ -8,6 +8,9 @@ import scala.meta.internal.hosts.scalac.{PluginBase => ScalahostPlugin}
 import scala.reflect.io.AbstractFile
 import org.scalameta.reflection._
 
+/* TODO: Remove */
+import scala.reflect.ClassTag
+
 import scala.meta.internal.{ ast => api}
 
 import scala.collection.{immutable => imm}
@@ -301,16 +304,63 @@ trait ConvertPhase {
               p.copy(zLoop(loop[Mod])(p.mods, c.mods), loop(p.name, c.name), zzLoop(loop[Term.Param])(p.paramss, c.paramss))
             case (p: Ctor.Secondary, c: Ctor.Secondary) =>
               p.copy(zLoop(loop[Mod])(p.mods, c.mods), loop(p.name, c.name), zzLoop(loop[Term.Param])(p.paramss, c.paramss), loop(p.body, c.body))
+            case (p: Ctor.Ref.Select, c: Ctor.Ref.Select) =>
+              p.copy(loop(p.qual, c.qual), loop(p.name, c.name))
+            case (p: Ctor.Ref.Project, c: Ctor.Ref.Project) =>
+              p.copy(loop(p.qual, c.qual), loop(p.name, c.name))
+            case (p: Ctor.Ref.Function, c: Ctor.Ref.Function) =>
+              p.copy(loop(p.name, c.name))
 
             case (p: Source, c: Source) =>
               p.copy(zLoop(loop[Stat])(p.stats, c.stats))
 
             // Handling special cases
+
+            // Since the converted trees contain more information and have been reorganized (Tuples insteads of specific Apply, Update insteads of specific Apply)
+            // We reproduce here the shape of the converted tree.
+            case (p: Term.Name, Term.Tuple(lst)) if lst.forall(_.isInstanceOf[Term.Name]) && lst.exists(_.asInstanceOf[Term.Name].value == p.value) =>
+              /* Covering cases such as:
+               * p: Term.Name("date")
+               * -------------------------------------------------------------
+               * c: Term.Tuple(List(Term.Name("date"), Term.Name("count")))
+               */
+              loop(p, lst.find(_.asInstanceOf[Term.Name].value == p.value).get)
+              /* Covering cases such as:
+               * p: Ctor.Ref.Name("deprecated")
+               * -------------------------------------------------------------
+               * c: Ctor.Ref.Select(Term.Name("scala"), Ctor.Ref.Name("deprecated"))
+               */
+            case (p: Ctor.Ref.Name, Ctor.Ref.Select(n, c1: Ctor.Ref.Name)) if p.value == c1.value =>
+              loop(p, c1)
             case (p: Term.Block, c: Stat) if p.stats.length == 1 =>
-              p.copy(imm.Seq(loop(p.stats.head, c)))
+              loop(p.stats.head, c)
             case (p: Term.Apply, c: Term) if p.args.length == 0 =>
-              p.copy(loop(p.fun, c))
-            case (p: Term.Interpolate, c: Term.Apply) =>
+              loop(p.fun, c)
+            case (p @ Term.Apply(p1: Term.Select, pargs), Term.Select(Term.Apply(c1, cargs), c2)) =>
+              /* Covering cases such as:
+               * p: Term.Apply(Term.Select(Term.Name("grouped"), Term.Name("maxBy")), List(Term.Select(Term.Select(Term.Placeholder(), Term.Name("_2")), Term.Name("size"))))
+               * -------------------------------------------------------------
+               * c: Term.Select(Term.Apply(Term.Select(Term.Name("grouped"), Term.Name("maxBy")), List(Term.Select(Term.Select(Term.Placeholder(), Term.Name("_2")), Term.Name("size")))), Term.Name("_2"))
+               */
+              p.copy(loop(p1, c1), zLoop(loop[Term.Arg])(pargs, cargs))
+            case (p: Term.ApplyInfix, Term.Apply(c1: Term.Select, cargs)) =>
+              Term.Apply(c1.copy(loop(p.lhs, c1.qual), loop(p.op, c1.name), origin = p.origin), zLoop(loop[Term.Arg])(p.args, cargs)).copy(origin = p.origin)
+            case (p @ Term.Apply(p1: Term.Select, pargs), Term.Update(c1, cargs, c2)) if cargs.size == 1 && cargs.head.size == 1 =>
+              /* Covering cases such as:
+               * p : Term.Apply(Term.Select(Term.Name("Properties"), Term.Name("update")), List(Lit.String("currentValidity"), Term.Select(Term.Name("secs"), Term.Name("toString"))))
+               * -------------------------------------------------------------
+               * c: Term.Update(Term.Name("Properties"), List(List(Lit.String("currentValidity"))), Term.Select(Term.Name("secs"), Term.Name("toString")))
+               */
+              Term.Update(loop(p1.qual, c1), List(zLoop(loop[Term.Arg])(pargs.init, cargs.head)), loop(pargs.last.asInstanceOf[Term], c2)).copy(origin = p.origin)
+            case (p: Type.Apply, Type.Tuple(celems)) =>
+              /* Covering cases such as:
+               * Type.Apply(
+	              * p: Type.Select(Term.Name("scala"), Type.Name("Tuple2")), List(Type.Name("Date"), Type.Name("Date")))
+                * -------------------------------------------------------------
+                * c: Type.Tuple(List(Type.Name("Date"), Type.Name("Date")))
+                */
+                Type.Tuple(zLoop(loop[Type])(p.args,celems)).copy(origin = p.origin)
+              case (p: Term.Interpolate, c: Term.Apply) =>
               p // TODO: this is due to quasiquote expansion - should probably be left as is in the parsed tree.
             case (p: api.Type.Name, c: api.Type.Select) =>
               loop(p, c.name)
@@ -318,6 +368,12 @@ trait ConvertPhase {
               p // TODO: this seems to be due to the fact that quasiquotes are expanded here
             case (p: Defn.Macro, c: Defn.Def) =>
               p // TODO: this seems to be due to the fact that quasiquotes are expanded here
+            case (p, c: Term.Tuple) if c.elements.size > 1 =>
+              /* TODO: sometimes it seems that some things are not agenced in the same way. The converted tree tends to use a lot of
+               * tuple to contain more informations. Might it be something coming from toMTree?
+               * Since in general the structure of the parsed tree prevails, we iterate here on it to avoid breaking it in any case
+               */
+              loop(p, c.elements.head)
 
             case (p, c) =>
               reporter.warning(NoPosition, "An error occurred while merging the parsed and the converted tree. The trees were not identical. This should never happen.")
