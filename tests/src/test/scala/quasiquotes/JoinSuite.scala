@@ -15,10 +15,10 @@ class JoinSuite extends FunSuite {
   }
 
   test("vals") {
-    val fields = List(Term.Name("x") -> Term.Name("xtemp"), Term.Name("y") -> Term.Name("ytemp"))
+    val fields = List(Pat.Var.Term(Term.Name("x")) -> Term.Name("xtemp"), Pat.Var.Term(Term.Name("y")) -> Term.Name("ytemp"))
     val vals = fields.map{ case (f, ref) =>
       import scala.meta._
-      q"val $f = $ref.$f"
+      q"val $f = $ref.${f.name}"
     }
     assert(vals.length === 2)
     val Defn.Val(Nil, List(Pat.Var.Term(Term.Name("x"))), None, Term.Select(Term.Name("xtemp"), Term.Name("x"))) = vals(0)

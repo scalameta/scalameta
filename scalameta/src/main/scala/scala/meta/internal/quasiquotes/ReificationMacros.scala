@@ -29,6 +29,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
   import c.universe.{Tree => _, Symbol => _, Type => _, Position => _, _}
   import c.universe.{Tree => ReflectTree, Symbol => ReflectSymbol, Type => ReflectType, Position => ReflectPosition, Bind => ReflectBind}
   import scala.meta.{Tree => MetaTree, Type => MetaType, Input => MetaInput, Dialect => MetaDialect}
+  import scala.meta.Term.{Name => MetaTermName}
   type MetaParser = (MetaInput, MetaDialect) => MetaTree
   import scala.{meta => api}
   import scala.meta.internal.{ast => impl}
@@ -522,6 +523,22 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
         if (mode.isTerm) args ++= List(q"${name.denot}", q"${name.sigma}")
         else () // TODO: figure out how to use denotations in pattern matching
         q"$constructorDeconstructor(..$args)"
+      })
+      private def validateValPats(pats: Seq[impl.Pat]): Unit = {
+        val invalidQuasis = pats.collect{case q: impl.Quasi => q}.filter(_.tree.asInstanceOf[ReflectTree].tpe <:< typeOf[MetaTermName])
+        def invalidMessage(q: impl.Quasi) = {
+          val action = if (q.rank == 0) "unquote" else "splice"
+          s"can't $action a name here, use a variable pattern instead"
+        }
+        invalidQuasis.foreach(q => c.abort(q.pos, invalidMessage(q)))
+      }
+      lazy implicit val liftDefnVal: Liftable[impl.Defn.Val] = Liftable((v: impl.Defn.Val) => {
+        validateValPats(v.pats)
+        q"_root_.scala.meta.internal.ast.Defn.Val(${v.mods}, ${v.pats}, ${v.decltpe}, ${v.rhs})"
+      })
+      lazy implicit val liftDefnVar: Liftable[impl.Defn.Var] = Liftable((v: impl.Defn.Var) => {
+        validateValPats(v.pats)
+        q"_root_.scala.meta.internal.ast.Defn.Var(${v.mods}, ${v.pats}, ${v.decltpe}, ${v.rhs})"
       })
     }
     mode match {

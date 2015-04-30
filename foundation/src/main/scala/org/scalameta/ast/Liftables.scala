@@ -15,6 +15,9 @@ trait Liftables {
 class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with AstReflection {
   import c.universe._
   lazy val QuasiClass = c.mirror.staticClass("scala.meta.internal.ast.Quasi")
+  lazy val NameClass = c.mirror.staticClass("scala.meta.internal.ast.Name")
+  lazy val DefnValClass = c.mirror.staticModule("scala.meta.internal.ast.Defn").info.member(TypeName("Val")).asClass
+  lazy val DefnVarClass = c.mirror.staticModule("scala.meta.internal.ast.Defn").info.member(TypeName("Var")).asClass
   override def customAdts(root: Root): Option[List[Adt]] = {
     val nonQuasis = root.allLeafs.filter(leaf => !(leaf.tpe <:< QuasiClass.toType))
     Some(QuasiClass.asBranch +: nonQuasis)
@@ -23,12 +26,12 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
     // TODO: it should be possible to customize liftable codegen by providing implicit instances on the outside
     // we can't just do `inferImplicitValue(adt.tpe)`, because that'll lead to a stack overflow
     // we need to do something pickling-like, but I just don't have time to implement that right now
-    if (adt.tpe <:< QuasiClass.toType) {
-      Some(q"def $defName($localName: ${adt.tpe}): ${c.prefix}.u.Tree = liftQuasi.apply($localName)")
-    } else if (adt.tpe <:< c.mirror.staticClass("scala.meta.internal.ast.Name").toType) {
-      Some(q"def $defName($localName: ${adt.tpe}): ${c.prefix}.u.Tree = liftName.apply($localName)")
-    } else {
-      None
-    }
+    def redirectTo(methodName: String) = q"def $defName($localName: ${adt.tpe}): ${c.prefix}.u.Tree = ${TermName(methodName)}.apply($localName)"
+    
+    if (adt.tpe <:< QuasiClass.toType) Some(redirectTo("liftQuasi"))
+    else if (adt.tpe <:< NameClass.toType) Some(redirectTo("liftName"))
+    else if (adt.tpe <:< DefnValClass.toType) Some(redirectTo("liftDefnVal"))
+    else if (adt.tpe <:< DefnVarClass.toType) Some(redirectTo("liftDefnVar"))
+    else None
   }
 }
