@@ -18,6 +18,7 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
   lazy val NameClass = c.mirror.staticClass("scala.meta.internal.ast.Name")
   lazy val DefnValClass = c.mirror.staticModule("scala.meta.internal.ast.Defn").info.member(TypeName("Val")).asClass
   lazy val DefnVarClass = c.mirror.staticModule("scala.meta.internal.ast.Defn").info.member(TypeName("Var")).asClass
+  lazy val PatTypedClass = c.mirror.staticModule("scala.meta.internal.ast.Pat").info.member(TypeName("Typed")).asClass
   override def customAdts(root: Root): Option[List[Adt]] = {
     val nonQuasis = root.allLeafs.filter(leaf => !(leaf.tpe <:< QuasiClass.toType))
     Some(QuasiClass.asBranch +: nonQuasis)
@@ -32,6 +33,7 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
     else if (adt.tpe <:< NameClass.toType) Some(redirectTo("liftName"))
     else if (adt.tpe <:< DefnValClass.toType) Some(redirectTo("liftDefnVal"))
     else if (adt.tpe <:< DefnVarClass.toType) Some(redirectTo("liftDefnVar"))
+    else if (adt.tpe <:< PatTypedClass.toType) Some(redirectTo("liftPatTyped"))
     else None
   }
 }

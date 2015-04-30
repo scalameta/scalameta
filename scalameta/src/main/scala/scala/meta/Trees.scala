@@ -268,7 +268,7 @@ package scala.meta.internal.ast {
       require(parts.length == args.length + 1)
     }
     @ast class Typed(lhs: Pat, rhs: Pat.Type) extends Pat {
-      require(lhs.isInstanceOf[Pat.Wildcard] || lhs.isInstanceOf[Pat.Var.Term])
+      require(lhs.isInstanceOf[Pat.Wildcard] || lhs.isInstanceOf[Pat.Var.Term] || lhs.isInstanceOf[Pat.Quasi])
     }
     @branch trait Arg extends api.Pat.Arg with Tree
     object Arg {

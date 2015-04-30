@@ -524,21 +524,23 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
         else () // TODO: figure out how to use denotations in pattern matching
         q"$constructorDeconstructor(..$args)"
       })
-      private def validateValPats(pats: Seq[impl.Pat]): Unit = {
-        val invalidQuasis = pats.collect{case q: impl.Quasi => q}.filter(_.tree.asInstanceOf[ReflectTree].tpe <:< typeOf[MetaTermName])
-        def invalidMessage(q: impl.Quasi) = {
+      private def prohibitTermName(pat: impl.Pat): Unit = pat match {
+        case q: impl.Quasi if q.tree.asInstanceOf[ReflectTree].tpe <:< typeOf[MetaTermName] =>
           val action = if (q.rank == 0) "unquote" else "splice"
-          s"can't $action a name here, use a variable pattern instead"
-        }
-        invalidQuasis.foreach(q => c.abort(q.pos, invalidMessage(q)))
+          c.abort(q.pos, s"can't $action a name here, use a variable pattern instead")
+        case _ => 
       }
       lazy implicit val liftDefnVal: Liftable[impl.Defn.Val] = Liftable((v: impl.Defn.Val) => {
-        validateValPats(v.pats)
+        v.pats.foreach(prohibitTermName)
         q"_root_.scala.meta.internal.ast.Defn.Val(${v.mods}, ${v.pats}, ${v.decltpe}, ${v.rhs})"
       })
       lazy implicit val liftDefnVar: Liftable[impl.Defn.Var] = Liftable((v: impl.Defn.Var) => {
-        validateValPats(v.pats)
+        v.pats.foreach(prohibitTermName)
         q"_root_.scala.meta.internal.ast.Defn.Var(${v.mods}, ${v.pats}, ${v.decltpe}, ${v.rhs})"
+      })
+      lazy implicit val liftPatTyped: Liftable[impl.Pat.Typed] = Liftable((p: impl.Pat.Typed) => {
+        prohibitTermName(p.lhs)    
+        q"_root_.scala.meta.internal.ast.Pat.Typed(${p.lhs}, ${p.rhs})"    
       })
     }
     mode match {
