@@ -97,7 +97,7 @@
  Extract       | `p"$ref[..$tpes](..$apats)"`
  Infix Extract | `p"$pat $name (..$apats)"`
  Interpolation | `p""" $name"$${..$pats}" """`
- Typed         | `p"$pat: $tpe"`
+ Typed         | `p"$pat: $ptpe"`
  Name          | ``p"`name`"``
  Selection     | `p"$expr.$name"`
  Literal       | `p"$lit"`
