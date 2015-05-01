@@ -28,7 +28,6 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
     // we can't just do `inferImplicitValue(adt.tpe)`, because that'll lead to a stack overflow
     // we need to do something pickling-like, but I just don't have time to implement that right now
     def redirectTo(methodName: String) = q"def $defName($localName: ${adt.tpe}): ${c.prefix}.u.Tree = ${TermName(methodName)}.apply($localName)"
-    
     if (adt.tpe <:< QuasiClass.toType) Some(redirectTo("liftQuasi"))
     else if (adt.tpe <:< NameClass.toType) Some(redirectTo("liftName"))
     else if (adt.tpe <:< DefnValClass.toType) Some(redirectTo("liftDefnVal"))
