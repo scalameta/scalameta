@@ -2,11 +2,11 @@ package scala.meta
 package internal
 package tql
 
-import org.scalameta.adt.{Reflection => AdtReflection}
+import org.scalameta.ast.{Reflection => AstReflection}
 import scala.reflect.macros.blackbox.Context
 import scala.meta.tql._
 
-private[meta] class AllowedTransformationMacros(val c: Context) extends AdtReflection {
+private[meta] class AllowedTransformationMacros(val c: Context) extends AstReflection {
   lazy val u: c.universe.type = c.universe
   lazy val mirror: u.Mirror = c.mirror
   import c.universe._

@@ -11,8 +11,8 @@ class ReflectionSuite extends AstSuite {
   // but please deal with that (or come up with a more effective way of testing AstReflection)
   test("root") {
     assert(symbolOf[scala.meta.Tree].isRoot)
-    assert(symbolOf[scala.meta.Tree].asRoot.allBranches.length === 65)
-    assert(symbolOf[scala.meta.Tree].asRoot.allLeafs.length === 132)
+    assert(symbolOf[scala.meta.Tree].asRoot.allBranches.length === 69)
+    assert(symbolOf[scala.meta.Tree].asRoot.allLeafs.length === 329)
   }
 
   test("If") {
@@ -38,7 +38,7 @@ class ReflectionSuite extends AstSuite {
   }
 
   test("all.publish") {
-    val all = symbolOf[scala.meta.Tree].asRoot.all.sortBy(_.sym.fullName)
+    val all = symbolOf[scala.meta.Tree].asRoot.all.filter(!_.sym.fullName.endsWith(".Quasi")).sortBy(_.sym.fullName)
     val published = all.map(adt => (adt.tpe, adt.tpe.publish))
     val columnSize = published.map(_._1.typeSymbol.fullName.length).max
     assert(published.map(kvp => s"%-${columnSize}s => %s".format(kvp._1, kvp._2)).mkString(EOL) === """
@@ -60,6 +60,9 @@ class ReflectionSuite extends AstSuite {
       |scala.meta.Pat.Arg                               => scala.meta.Pat.Arg
       |scala.meta.Pat.Type                              => scala.meta.Pat.Type
       |scala.meta.Pat.Type.Ref                          => scala.meta.Pat.Type.Ref
+      |scala.meta.Pat.Var                               => scala.meta.Pat.Var
+      |scala.meta.Pat.Var.Term                          => scala.meta.Pat.Var.Term
+      |scala.meta.Pat.Var.Type                          => scala.meta.Pat.Var.Type
       |scala.meta.Ref                                   => scala.meta.Ref
       |scala.meta.Scope                                 => scala.meta.Scope
       |scala.meta.Source                                => scala.meta.Source
@@ -101,7 +104,6 @@ class ReflectionSuite extends AstSuite {
       |scala.meta.internal.ast.Defn.Type                => scala.meta.Member.Type with scala.meta.Stat
       |scala.meta.internal.ast.Defn.Val                 => scala.meta.Stat
       |scala.meta.internal.ast.Defn.Var                 => scala.meta.Stat
-      |scala.meta.internal.ast.Ellipsis                 => Nothing
       |scala.meta.internal.ast.Enumerator               => scala.meta.Enumerator
       |scala.meta.internal.ast.Enumerator.Generator     => scala.meta.Enumerator
       |scala.meta.internal.ast.Enumerator.Guard         => scala.meta.Enumerator
@@ -170,9 +172,9 @@ class ReflectionSuite extends AstSuite {
       |scala.meta.internal.ast.Pat.Type.Tuple           => scala.meta.Pat.Type
       |scala.meta.internal.ast.Pat.Type.Wildcard        => scala.meta.Pat.Type
       |scala.meta.internal.ast.Pat.Typed                => scala.meta.Pat
-      |scala.meta.internal.ast.Pat.Var                  => scala.meta.Tree
-      |scala.meta.internal.ast.Pat.Var.Term             => scala.meta.Member.Term with scala.meta.Pat
-      |scala.meta.internal.ast.Pat.Var.Type             => scala.meta.Member.Type with scala.meta.Pat.Type
+      |scala.meta.internal.ast.Pat.Var                  => scala.meta.Pat.Var
+      |scala.meta.internal.ast.Pat.Var.Term             => scala.meta.Pat.Var.Term
+      |scala.meta.internal.ast.Pat.Var.Type             => scala.meta.Pat.Var.Type
       |scala.meta.internal.ast.Pat.Wildcard             => scala.meta.Pat
       |scala.meta.internal.ast.Pkg                      => scala.meta.Member.Term with scala.meta.Stat
       |scala.meta.internal.ast.Pkg.Object               => scala.meta.Member.Term with scala.meta.Stat
@@ -239,13 +241,11 @@ class ReflectionSuite extends AstSuite {
       |scala.meta.internal.ast.Type.Select              => scala.meta.Type.Ref with scala.meta.Pat.Type.Ref
       |scala.meta.internal.ast.Type.Singleton           => scala.meta.Type.Ref with scala.meta.Pat.Type.Ref
       |scala.meta.internal.ast.Type.Tuple               => scala.meta.Type
-      |scala.meta.internal.ast.Unquote                  => Nothing
     """.trim.stripMargin)
   }
 
   test("allFields.publish") {
-    val irrelevant = Set("scala.meta.internal.ast.Ellipsis", "scala.meta.internal.ast.Unquote")
-    val allRelevantFields = symbolOf[scala.meta.Tree].asRoot.allLeafs.filter(leaf => !irrelevant(leaf.sym.fullName)).flatMap(_.fields)
+    val allRelevantFields = symbolOf[scala.meta.Tree].asRoot.allLeafs.filter(!_.sym.fullName.endsWith(".Quasi")).flatMap(_.fields)
     val duplicateRelevantFieldTpes = allRelevantFields.map(_.tpe).map{ case AnnotatedType(_, tpe) => tpe; case tpe => tpe }
     // NOTE: we can't just do `duplicateRelevantFieldTpes.distinct`, because that doesn't account for `=:=`
     val distinctRelevantFieldTpes = ListBuffer[Type]()
@@ -285,8 +285,8 @@ class ReflectionSuite extends AstSuite {
       |scala.collection.immutable.Seq[scala.meta.internal.ast.Type.Arg]
       |scala.collection.immutable.Seq[scala.meta.internal.ast.Type.Param]
       |scala.collection.immutable.Seq[scala.meta.internal.ast.Type]
-      |scala.meta.internal.ast.Ctor.Name
       |scala.meta.internal.ast.Ctor.Primary
+      |scala.meta.internal.ast.Ctor.Ref.Name
       |scala.meta.internal.ast.Name.Indeterminate
       |scala.meta.internal.ast.Name.Qualifier
       |scala.meta.internal.ast.Pat
@@ -318,8 +318,7 @@ class ReflectionSuite extends AstSuite {
     }
     val all = symbolOf[scala.meta.Tree].asRoot.all.sortBy(_.sym.fullName)
     val allLeafs = symbolOf[scala.meta.Tree].asRoot.allLeafs.sortBy(_.sym.fullName)
-    val irrelevantLeafNames = Set("scala.meta.internal.ast.Ellipsis", "scala.meta.internal.ast.Unquote")
-    val allRelevantLeafs = allLeafs.filter(leaf => !irrelevantLeafNames(leaf.sym.fullName))
+    val allRelevantLeafs = allLeafs.filter(!_.sym.fullName.endsWith(".Quasi"))
     val allRelevantFields = allRelevantLeafs.flatMap(_.fields)
     val distinctRelevantFieldTpes = ListBuffer[Type]()
     allRelevantFields.map(_.tpe.unwrap).foreach(tpe => if (!distinctRelevantFieldTpes.exists(_ =:= tpe)) distinctRelevantFieldTpes += tpe)
@@ -332,7 +331,7 @@ class ReflectionSuite extends AstSuite {
         report += ""
       }
     })
-    // NOTE: if something in this report changes, you must update requirements in impl.Unquote's body
+    // NOTE: if something in this report changes, you must update requirements in @ast impl (see "step 10: finish codegen for Quasi")
     assert(report.mkString(EOL) === """
       |scala.meta.internal.ast.Term.Block -> scala.meta.Term with scala.meta.Scope
       |field Case.body: scala.meta.internal.ast.Term.Block

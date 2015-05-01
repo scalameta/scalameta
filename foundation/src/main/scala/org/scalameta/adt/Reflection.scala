@@ -33,30 +33,13 @@ trait Reflection {
     def asLeaf: Leaf = new Leaf(sym)
     def asField: Field = new Field(sym)
   }
-
-  private lazy val ScalaMetaTree: Symbol = scala.util.Try(mirror.staticClass("scala.meta.Tree")).getOrElse(NoSymbol)
-  private lazy val scalaMetaRegistry: Map[Symbol, List[Symbol]] = {
-    val ellipsisClass = mirror.staticClass("scala.meta.internal.ast.Ellipsis")
-    val unquoteClass = mirror.staticClass("scala.meta.internal.ast.Unquote")
-    val registry = mutable.Map[Symbol, List[Symbol]]()
-    val astClasses = ellipsisClass +: unquoteClass.baseClasses
-    astClasses.foreach(sym => {
-      if (sym.fullName.startsWith("scala.meta.")) {
-        val parents = sym.info.asInstanceOf[ClassInfoType].parents.map(_.typeSymbol)
-        val relevantParents = parents.filter(p => p.isClass && p.asClass.baseClasses.contains(ScalaMetaTree))
-        relevantParents.foreach(parent => registry(parent) = registry.getOrElseUpdate(parent, Nil) :+ sym)
-      }
-    })
-    registry.toMap
+  
+  protected def figureOutDirectSubclasses(sym: ClassSymbol): List[Symbol] = {
+    if (sym.isSealed) sym.knownDirectSubclasses.toList.sortBy(_.fullName)
+    else sys.error(s"failed to figure out direct subclasses for ${sym.fullName}")
   }
 
   private implicit class PrivateXtensionAdtSymbol(sym: Symbol) {
-    private def figureOutDirectSubclasses(sym: ClassSymbol): List[Symbol] = {
-      if (sym.isSealed) sym.knownDirectSubclasses.toList.sortBy(_.fullName)
-      else if (sym.baseClasses.contains(ScalaMetaTree)) scalaMetaRegistry(sym)
-      else sys.error("failed to figure out direct subclasses for ${sym.fullName}")
-    }
-
     private def ensureModule(sym: Symbol): Symbol = if (sym.isModuleClass) sym.owner.info.member(sym.name.toTermName) else sym
     def branches: List[Symbol] = { sym.initialize; figureOutDirectSubclasses(sym.asClass).toList.filter(_.isBranch) }
     def allBranches: List[Symbol] = (sym.branches ++ sym.branches.flatMap(_.allBranches)).distinct

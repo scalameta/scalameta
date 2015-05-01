@@ -1,9 +1,9 @@
 package org.scalameta.tql
 
 import scala.reflect.macros.whitebox.Context
-import org.scalameta.adt.{Reflection => AdtReflection}
+import org.scalameta.ast.{Reflection => AstReflection}
 
-class TraverserBuilderMacros(val c: Context) extends AdtReflection {
+class TraverserBuilderMacros(val c: Context) extends AstReflection {
   lazy val u: c.universe.type = c.universe
   lazy val mirror: u.Mirror = c.mirror
   import c.universe._

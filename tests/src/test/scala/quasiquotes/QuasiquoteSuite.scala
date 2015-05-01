@@ -70,4 +70,13 @@ class QuasiquoteSuite extends FunSuite {
     val q"type $name[$_] = $_" = member
     assert(name.show[Code] === "List")
   }
+
+  test("q\"... match { ..$cases }\"") {
+    val cases = List(p"case foo => bar")
+    assert(q"x match { ..$cases }".show[Code] === """
+      |x match {
+      |  case foo => bar
+      |}
+    """.trim.stripMargin)
+  }
 }

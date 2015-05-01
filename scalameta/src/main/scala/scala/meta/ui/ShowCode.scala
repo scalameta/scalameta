@@ -203,8 +203,8 @@ object Code {
   // TODO: this match is not exhaustive: if I remove Mod.Package, then I get no warning
   implicit def codeTree[T <: api.Tree](implicit dialect: Dialect, style: Style): Code[T] = Code { x => (x: api.Tree) match {
     // Bottom
-    case t: Ellipsis             => s("." * (t.rank + 1), a("{", t.tree, "}", !t.tree.isInstanceOf[Unquote]))
-    case t: Unquote              => s("${", t.tree.toString, " @ ", t.pt.getName.stripPrefix("scala.meta.").stripPrefix("internal.ast."), "}")
+    case t: Quasi if t.rank > 0  => s("." * (t.rank + 1), a("{", t.tree.asInstanceOf[Tree], "}", !t.tree.isInstanceOf[Quasi]))
+    case t: Quasi if t.rank == 0 => s("${", t.tree.toString, " @ ", t.pt.getName.stripPrefix("scala.meta.").stripPrefix("internal.ast."), "}")
 
     // Name
     case t: Name.Anonymous       => s("_")

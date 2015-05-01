@@ -112,4 +112,43 @@ class ErrorSuite extends FunSuite {
       |            ^
     """.replace("QQQ", "\"\"\"").trim.stripMargin)
   }
+
+  test("q\"val $name = foo\"") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val name = q"x"
+      q"val $name = foo"
+    """) === """
+      |<macro>:5: can't unquote a name here, use a variable pattern instead
+      |      q"val $name = foo"
+      |            ^
+    """.trim.stripMargin)
+  }
+
+  test("q\"var $name = foo\"") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val name = q"x"
+      q"var $name = foo"
+    """) === """
+      |<macro>:5: can't unquote a name here, use a variable pattern instead
+      |      q"var $name = foo"
+      |            ^
+    """.trim.stripMargin)
+  }
+
+  test("p\"$name: T\"") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val name = q"x"
+      p"$name: T"
+    """) === """
+      |<macro>:5: can't unquote a name here, use a variable pattern instead
+      |      p"$name: T"
+      |        ^
+    """.trim.stripMargin)
+  }
 }

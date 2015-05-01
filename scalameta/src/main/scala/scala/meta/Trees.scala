@@ -49,6 +49,11 @@ package scala.meta {
 
   @branch trait Pat extends Tree with Pat.Arg
   object Pat {
+    @branch trait Var extends Tree
+    object Var {
+      @branch trait Term extends Var with Pat with Member.Term
+      @branch trait Type extends Var with Pat.Type with Member.Type
+    }
     @branch trait Arg extends Tree
     @branch trait Type extends Tree
     object Type {
@@ -244,10 +249,10 @@ package scala.meta.internal.ast {
     //
     // After a lot of deliberation, I've picked the second approach.
     // However the benefits of the first approach are definitely tangible, and we will need to revisit this choice later.
-    @branch trait Var extends Tree
+    @branch trait Var extends Tree with api.Pat.Var
     object Var {
-      @ast class Term(name: impl.Term.Name) extends Var with Pat with Member.Term
-      @ast class Type(name: impl.Type.Name) extends Var with Pat.Type with Member.Type
+      @ast class Term(name: impl.Term.Name) extends api.Pat.Var.Term with Var with Pat with Member.Term
+      @ast class Type(name: impl.Type.Name) extends api.Pat.Var.Type with Var with Pat.Type with Member.Type
     }
     @ast class Wildcard() extends Pat
     @ast class Bind(lhs: Pat.Var.Term, rhs: Pat.Arg) extends Pat
@@ -263,7 +268,7 @@ package scala.meta.internal.ast {
       require(parts.length == args.length + 1)
     }
     @ast class Typed(lhs: Pat, rhs: Pat.Type) extends Pat {
-      require(lhs.isInstanceOf[Pat.Wildcard] || lhs.isInstanceOf[Pat.Var.Term])
+      require(lhs.isInstanceOf[Pat.Wildcard] || lhs.isInstanceOf[Pat.Var.Term] || lhs.isInstanceOf[Pat.Quasi])
     }
     @branch trait Arg extends api.Pat.Arg with Tree
     object Arg {
@@ -338,13 +343,16 @@ package scala.meta.internal.ast {
     @ast class Val(mods: Seq[Mod],
                    pats: Seq[Pat] @nonEmpty,
                    decltpe: Option[impl.Type],
-                   rhs: Term) extends Defn
+                   rhs: Term) extends Defn {
+      require(pats.forall(!_.isInstanceOf[Term.Name]))
+    }
     @ast class Var(mods: Seq[Mod],
                    pats: Seq[Pat] @nonEmpty,
                    decltpe: Option[impl.Type],
                    rhs: Option[Term]) extends Defn {
-      require(rhs.isEmpty ==> pats.forall(_.isInstanceOf[Pat.Var.Term]))
+      require(pats.forall(!_.isInstanceOf[Term.Name]))
       require(decltpe.nonEmpty || rhs.nonEmpty)
+      require(rhs.isEmpty ==> pats.forall(_.isInstanceOf[Pat.Var.Term]))
     }
     @ast class Def(mods: Seq[Mod],
                    name: Term.Name,
@@ -490,22 +498,14 @@ package scala.meta.internal.ast {
     require(stats.forall(_.isTopLevelStat))
   }
 
-  // NOTE: here's how Ellipsis.pt maps to hole's rank in scala.reflect's parlance,
-  // pt being Array[T] means rank 1 means .., pt being Array[Array[T]] means rank 2 means ..., etc
-  @bottom @ast class Ellipsis(tree: Tree, pt: Class[_]) extends Tree {
-    require(pt.isArray)
-  }
-
-  // TODO: after we bootstrap, Unquote.tree will become scala.meta.Tree
+  // TODO: after we bootstrap, Quasi.tree will become scala.meta.Tree
   // however, for now, we will keep it at Any in order to also support scala.reflect trees
-  // NOTE: before you remove one of these requirements, you must know what's going on in the "allFields.unquote" test
-  @bottom @ast class Unquote(tree: Any, pt: Class[_]) extends Tree {
-    require(classOf[api.Tree].isAssignableFrom(pt))
-    require(pt != classOf[Term.Block])
-    require(pt != classOf[Type.Bounds])
-    require(pt != classOf[Ctor.Primary])
-    require(pt != classOf[Import.Clause])
-    require(pt != classOf[Lit.String])
-    require(pt != classOf[Mod.Annot])
+  @branch trait Quasi extends Tree {
+    def tree: Any
+    def rank: Int
+    def pt: Class[_]
   }
+ 
+  // TODO: since trees are no longer sealed, we need a mechanism that would keep track of all of them 
+  @registry object Registry
 }

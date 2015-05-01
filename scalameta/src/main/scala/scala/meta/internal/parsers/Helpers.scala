@@ -48,8 +48,7 @@ private[meta] object Helpers {
     }
     def ctorTpe: Type = {
       def loop(tree: Tree): Type = tree match {
-        case Unquote(tree, _) => Unquote(tree, classOf[Type])
-        case Ctor.Name(value) => Type.Name(value)
+        case Ctor.Ref.Name(value) => Type.Name(value)
         case Ctor.Ref.Select(qual, name) => Type.Select(qual, Type.Name(name.value))
         case Ctor.Ref.Project(qual, name) => Type.Project(qual, Type.Name(name.value))
         case Ctor.Ref.Function(_) => unreachable(debug(XtensionTermOps.this.tree, XtensionTermOps.this.tree.show[Raw]))
@@ -112,6 +111,7 @@ private[meta] object Helpers {
   }
   implicit class XtensionStat(stat: Stat) {
     def isTopLevelStat: Boolean = stat match {
+      case _: Stat.Quasi => true
       case _: Import => true
       case _: Pkg => true
       case _: Defn.Class => true
@@ -121,6 +121,7 @@ private[meta] object Helpers {
       case _ => false
     }
     def isTemplateStat: Boolean = stat match {
+      case _: Stat.Quasi => true
       case _: Import => true
       case _: Term => true
       case _: Decl => true
@@ -129,6 +130,7 @@ private[meta] object Helpers {
       case _ => false
     }
     def isBlockStat: Boolean = stat match {
+      case _: Stat.Quasi => true
       case _: Import => true
       case _: Term => true
       case stat: Defn.Var => stat.rhs.isDefined
@@ -136,28 +138,22 @@ private[meta] object Helpers {
       case _ => false
     }
     def isRefineStat: Boolean = stat match {
+      case _: Stat.Quasi => true
       case _: Decl => true
       case _: Defn.Type => true
       case _ => false
     }
     def isExistentialStat: Boolean = stat match {
+      case _: Stat.Quasi => true
       case _: Decl.Val => true
       case _: Decl.Type => true
       case _ => false
     }
     def isEarlyStat: Boolean = stat match {
+      case _: Stat.Quasi => true
       case _: Defn.Val => true
       case _: Defn.Var => true
       case _ => false
-    }
-  }
-  implicit class XtensionEllipsis(ellipsis: Ellipsis) {
-    def rank: Int = {
-      def loop(clazz: Class[_], curr: Int): Int = {
-        if (clazz.isArray) loop(clazz.getComponentType, curr + 1)
-        else curr
-      }
-      loop(ellipsis.pt, 0)
     }
   }
   implicit class XtensionCase(tree: Case) {
