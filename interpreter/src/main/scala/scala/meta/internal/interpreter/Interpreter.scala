@@ -17,7 +17,21 @@ object Interpreter {
   def eval(term: Term)(implicit c: Context): Any = eval(term, Map[Term.Name, Any]())
 
   def eval(term: Term, env0: Map[Term.Name, Any])(implicit c: Context): Any = {
-    def typeOf(v: Any): Type = if (v.isInstanceOf[Context]) t"Context" else t"Any"
+    def typeOf(v: Any): Type = {
+      if (v == null) return t"Null"
+      if (v.isInstanceOf[Context]) return t"Context"
+      def loadModule(root: Term.Name, parts: List[String]): Term.Name = parts match {
+        case Nil => 
+          root
+        case name :: rest => 
+          val children = root.members.filter(m => (m.isPackage || m.isObject) && m.name.toString == name)
+          if (children.isEmpty) sys.error(s"typeOf(${v.getClass}) has failed: $name not found in $root")
+          val child = children.head.asInstanceOf[Member.Term]
+          loadModule(child.name, rest)
+      }
+      val init :+ last = v.getClass.getName.split(Array('.', '$')).toList
+      loadModule(q"_root_", init).classes(last).name
+    }
     val frame0 = ListMap(env0.map{ case (k, v) => (k.asInstanceOf[TName], Object(v, typeOf(v))) }.toList: _*)
     val env1 = Env(List(frame0), ListMap[m.Term.Name, Object]())
     val (Object(v, tpe, fields), env2) = eval(term, env1)
@@ -25,6 +39,7 @@ object Interpreter {
   }
 
   def eval(term: Tree, env: Env)(implicit c: Context): (Object, Env) = {
+    if (sys.props("interpreter.debug") != null) println(term.toString.replace("\n", " ").take(60))
     term match {
       // Quasiquotes (this should not exist)
       case m.Term.Apply(m.Term.Name("Unlift"), List(arg)) =>
@@ -92,10 +107,19 @@ object Interpreter {
         methodCall(method, lhsV, Seq(), newEnv)
 
       case m.Term.ApplyInfix(lhs, op, _, args) =>
-        val method = lhs.tpe.members.filter(_.name == op).head
-        val (lhsV, newEnv) = eval(lhs, env)
-        val (rhsVs, callEnv) = evalSeq(args, env)
-        methodCall(method, lhsV, rhsVs, callEnv)
+        val isLeftAssoc = !op.toString.endsWith(":")
+        if (isLeftAssoc) {
+          val method = lhs.tpe.members.filter(_.name == op).head
+          val (lhsV, newEnv) = eval(lhs, env)
+          val (rhsVs, callEnv) = evalSeq(args, newEnv)
+          methodCall(method, lhsV, rhsVs, callEnv)
+        } else {
+          val Seq(rhs: Term) = args
+          val method = rhs.tpe.members.filter(_.name == op).head
+          val (lhsV, newEnv) = eval(lhs, env)
+          val (rhsV, callEnv) = eval(rhs, newEnv)
+          methodCall(method, rhsV, List(lhsV), callEnv)
+        }
 
       case m.Term.Apply(fun @ m.Term.Select(lhs, rhs), args) if fun.isDef =>
         val (lhsV, newEnv) = eval(lhs, env)
@@ -104,9 +128,8 @@ object Interpreter {
         methodCall(method, lhsV, rhsVs, callEnv)
 
       case m.Term.Apply(lhs@m.Term.Name("abort"), List(arg)) if lhs.isDef =>
-        val context = env.stack.flatten.find(_._2.tpe.toString == "Context").head._2.ref.asInstanceOf[scala.meta.macros.Context]
         val (Object(msg: String, _, _), env1) = eval(arg, env)
-        context.abort(msg)
+        env.context.asInstanceOf[scala.meta.macros.Context].abort(msg)
         (Object((), t"Nothing"), env1)
 
       case m.Term.Apply(lhs@m.Term.Name("println"), List(arg)) if lhs.isDef =>
@@ -120,15 +143,15 @@ object Interpreter {
           case (Object(lhsV: Function1[Any, Any] with FunctionEnv, tpe, _), newEnv) =>
             val (rhsVs, callEnv) = evalSeq(args, env)
             val res = lhsV.apply(rhsVs(0).ref)
-            (Object(res, t"Any"), lhsV.functionEnv)
+            (Object(res, t"Any"), callEnv)
           case (Object(lhsV: Function2[Any, Any, Any] with FunctionEnv, tpe, _), newEnv) =>
             val (rhsVs, callEnv) = evalSeq(args, env)
             val res = lhsV.apply(rhsVs(0).ref, rhsVs(1).ref)
-            (Object(res, t"Any"), lhsV.functionEnv)
+            (Object(res, t"Any"), callEnv)
           case (Object(lhsV: Function3[Any, Any, Any, Any] with FunctionEnv, tpe, _), newEnv) =>
             val (rhsVs, callEnv) = evalSeq(args, env)
             val res = lhsV.apply(rhsVs(0).ref, rhsVs(1).ref, rhsVs(2).ref)
-            (Object(res, t"Any"), lhsV.functionEnv)
+            (Object(res, t"Any"), callEnv)
         }
 
       // TODO: with quasiquotes this should be easy and more general
@@ -165,6 +188,17 @@ object Interpreter {
         if (true) (lhsV, env1)
         else throw new ClassCastException(s"!${lhs.tpe.dealias} <:< ${tpes.head}")
 
+      case m.Term.ApplyType(m.Term.Select(tree, m.Term.Name("show")), List(printer)) =>
+        val (Object(treeV: Tree, _, _), env1) = eval(tree, env)
+        val message = {
+          if (printer.toString == "Code") treeV.show[Code]
+          else if (printer.toString == "Raw") treeV.show[Raw]
+          else if (printer.toString == "Semantics") treeV.show[Semantics]
+          else if (printer.toString == "Positions") treeV.show[Positions]
+          else unreachable(debug(tree, printer))
+        }
+        (Object(message, t"String"), env1)
+
       case m.Term.Arg.Named(nme, v) => // TODO keep the function in the context
         eval(v, env)
 
@@ -187,26 +221,39 @@ object Interpreter {
         // TODO multiple-functions
         paramss.flatten match {
           case p1 :: Nil =>
+            val funcTpe = t"${p1.tpe} => Any"
             val funcObj = Object(new Function1[Any, Any] with FunctionEnv {
               var functionEnv: Env = env // TODO fix
               def apply(x: Any) = {
-                val (res, env1) = evalFunc(func, Seq(Seq(x)), functionEnv)
+                val (res, env1) = evalFunc(func, Seq(Seq(x)), functionEnv.push(nme, Object(this, funcTpe)))
                 functionEnv = env1
                 res.ref
               }
-            }, t"${p1.tpe} => Any") // TODO cant get the type if not indicated
-
+            }, funcTpe) // TODO cant get the type if not indicated
             (funcObj, env.push(nme, funcObj))
+            
+          case p1 :: p2 :: Nil =>
+            val funcTpe = t"(${p1.tpe}, ${p2.tpe}) => Any"
+            val funcObj = Object(new Function2[Any, Any, Any] with FunctionEnv {
+              var functionEnv: Env = env // TODO fix
+              def apply(x: Any, y: Any) = {
+                val (res, env1) = evalFunc(func, Seq(Seq(x, y)), functionEnv.push(nme, Object(this, funcTpe)))
+                functionEnv = env1
+                res.ref
+              }
+            }, funcTpe) // TODO cant get the type if not indicated
+            (funcObj, env.push(nme, funcObj))
+            
           case p1 :: p2 :: p3 :: Nil =>
+            val funcTpe = t"(${p1.tpe}, ${p2.tpe}, ${p3.tpe}) => Any"
             val funcObj = Object(new Function3[Any, Any, Any, Any] with FunctionEnv {
               var functionEnv: Env = env // TODO fix
               def apply(x: Any, y: Any, z: Any) = {
-                val (res, env1) = evalFunc(func, Seq(Seq(x, y, z)), functionEnv)
+                val (res, env1) = evalFunc(func, Seq(Seq(x, y, z)), functionEnv.push(nme, Object(this, funcTpe)))
                 functionEnv = env1
                 res.ref
               }
-            }, t"(${p1.tpe}, ${p2.tpe}, ${p3.tpe}) => Any")
-
+            }, funcTpe)
             (funcObj, env.push(nme, funcObj))
         }
       case m.Term.Ascribe(v, tp) =>
@@ -266,7 +313,7 @@ object Interpreter {
 
   def evalPattern(lhs: Object, pattern: m.Pat, env: Env)(implicit c: Context): (Object, Env) = pattern match {
     case m.Pat.Typed(x, tp) =>
-      (Object(tp.tpe <:< lhs.tpe, t"Boolean"), extendEnv(x, lhs, env))
+      (Object(lhs.tpe <:< tp.tpe, t"Boolean"), extendEnv(x, lhs, env))
     case m.Pat.Wildcard() =>
       (Object(true, t"Boolean"), env)
     case _ => unreachable(debug(pattern, pattern.show[Semantics]))
@@ -330,14 +377,15 @@ object Interpreter {
     else vRHS
     val jvmArgs = args.toSeq.asInstanceOf[Seq[AnyRef]]
     try {
+      if (sys.props("interpreter.debug") != null) println(s"$lhsJTp.$nme$argsRetJTp")
       val (eLHS, eArgs: Seq[AnyRef]) = (vLHS, lhsJTp, nme, argsRetJTp) match {
         // Std. Library
         // List/Seq
-        case (vLHS, "Lscala/collection/SeqLike;", "$colon$plus", "(Ljava/lang/Object;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;") =>
+        case (vLHS, "Lscala/collection/SeqLike;", _, signature) if signature.contains("Lscala/collection/generic/CanBuildFrom;") =>
           (vLHS, jvmArgs ++ Seq(Seq.canBuildFrom))
-        case (vLHS, "Lscala/collection/immutable/List;", "map", "(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;") =>
+        case (vLHS, "Lscala/collection/immutable/List;", _, signature) if signature.contains("Lscala/collection/generic/CanBuildFrom;") =>
           (vLHS, jvmArgs ++ Seq(List.canBuildFrom))
-        case (vLHS, "Lscala/collection/TraversableLike;", "map", "(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;") =>
+        case (vLHS, "Lscala/collection/TraversableLike;", _, signature) if signature.contains("Lscala/collection/generic/CanBuildFrom;") =>
           (vLHS, jvmArgs ++ Seq(Traversable.canBuildFrom))
 
         // Option
@@ -347,110 +395,41 @@ object Interpreter {
           (vLHS, Seq(() => jvmArgs.head))
 
         // Constructors
-        case (vLHS, "Lscala/meta/internal/ast/Lit$String$;", "apply", "(Ljava/lang/String;Lscala/meta/Origin;)Lscala/meta/internal/ast/Lit$String;") =>
-          (vLHS, jvmArgs ++ Seq(scala.meta.Origin.None))
-        case (vLHS, "Lscala/meta/internal/ast/Term$Name$;", "apply", "(Ljava/lang/String;Lscala/meta/internal/hygiene/Denotation;Lscala/meta/internal/hygiene/Sigma;Lscala/meta/Origin;)Lscala/meta/internal/ast/Term$Name;") =>
-          (vLHS, jvmArgs ++ Seq(scala.meta.Origin.None))
-        case (vLHS, "Lscala/meta/internal/ast/Term$ApplyInfix$;", "apply", "(Lscala/meta/internal/ast/Term;Lscala/meta/internal/ast/Term$Name;Lscala/collection/immutable/Seq;Lscala/collection/immutable/Seq;Lscala/meta/Origin;)Lscala/meta/internal/ast/Term$ApplyInfix;") =>
-          (vLHS, jvmArgs ++ Seq(scala.meta.Origin.None))
-        case (vLHS, "Lscala/meta/internal/ast/Term$Block$;", "apply", "(Lscala/collection/immutable/Seq;Lscala/meta/Origin;)Lscala/meta/internal/ast/Term$Block;") =>
-          (vLHS, jvmArgs ++ Seq(scala.meta.Origin.None))
-        case (vLHS, "Lscala/meta/internal/ast/Case$;", "apply", "(Lscala/meta/internal/ast/Pat;Lscala/Option;Lscala/meta/internal/ast/Term$Block;Lscala/meta/Origin;)Lscala/meta/internal/ast/Case;") =>
-          (vLHS, jvmArgs ++ Seq(scala.meta.Origin.None))
-        case (vLHS, "Lscala/meta/internal/ast/Term$Match$;", "apply", "(Lscala/meta/internal/ast/Term;Lscala/collection/immutable/Seq;Lscala/meta/Origin;)Lscala/meta/internal/ast/Term$Match;") =>
-          (vLHS, jvmArgs ++ Seq(scala.meta.Origin.None))
-        case (vLHS, "Lscala/meta/internal/ast/Mod$Implicit$;", "apply", "(Lscala/meta/Origin;)Lscala/meta/internal/ast/Mod$Implicit;") =>
-          (vLHS, jvmArgs ++ Seq(scala.meta.Origin.None))
-        case (vLHS, "Lscala/meta/internal/ast/Ctor$Ref$Name$;", "apply", "(Ljava/lang/String;Lscala/meta/internal/hygiene/Denotation;Lscala/meta/internal/hygiene/Sigma;Lscala/meta/Origin;)Lscala/meta/internal/ast/Ctor$Ref$Name;") =>
-          val addArgs =
-            if (jvmArgs.size == 1) Seq(scala.meta.internal.hygiene.Denotation.Zero, scala.meta.internal.hygiene.Sigma.Naive, scala.meta.Origin.None)
-            else Seq[AnyRef](scala.meta.Origin.None)
-          (vLHS, jvmArgs ++ addArgs)
-        case (vLHS, "Lscala/meta/internal/ast/Ctor$Primary$;", "apply", "(Lscala/collection/immutable/Seq;Lscala/meta/internal/ast/Ctor$Ref$Name;Lscala/collection/immutable/Seq;Lscala/meta/Origin;)Lscala/meta/internal/ast/Ctor$Primary;") =>
-          (vLHS, jvmArgs ++ Seq(scala.meta.Origin.None))
-        case (vLHS, "Lscala/meta/internal/ast/Name$Anonymous$;", "apply", "(Lscala/meta/internal/hygiene/Denotation;Lscala/meta/internal/hygiene/Sigma;Lscala/meta/Origin;)Lscala/meta/internal/ast/Name$Anonymous;") =>
-          (vLHS, jvmArgs ++ (if (jvmArgs.size == 0) Seq[AnyRef](scala.meta.internal.hygiene.Denotation.Zero, scala.meta.internal.hygiene.Sigma.Naive, scala.meta.Origin.None) else Seq[AnyRef](scala.meta.Origin.None)))
-        case (vLHS, "Lscala/meta/internal/ast/Type$Name$;", "apply", "(Ljava/lang/String;Lscala/meta/internal/hygiene/Denotation;Lscala/meta/internal/hygiene/Sigma;Lscala/meta/Origin;)Lscala/meta/internal/ast/Type$Name;") =>
-          (vLHS, jvmArgs ++ Seq[AnyRef](scala.meta.Origin.None))
-        case (vLHS, "Lscala/meta/internal/ast/Defn$Def$;", "apply", "(Lscala/collection/immutable/Seq;Lscala/meta/internal/ast/Term$Name;Lscala/collection/immutable/Seq;Lscala/collection/immutable/Seq;Lscala/Option;Lscala/meta/internal/ast/Term;Lscala/meta/Origin;)Lscala/meta/internal/ast/Defn$Def;") =>
-          (vLHS, jvmArgs ++ Seq[AnyRef](scala.meta.Origin.None))
-        case (vLHS, "Lscala/meta/internal/ast/Defn$Object$;", "apply", "(Lscala/collection/immutable/Seq;Lscala/meta/internal/ast/Term$Name;Lscala/meta/internal/ast/Ctor$Primary;Lscala/meta/internal/ast/Template;Lscala/meta/Origin;)Lscala/meta/internal/ast/Defn$Object;") =>
-          (vLHS, jvmArgs ++ Seq[AnyRef](scala.meta.Origin.None))
-        case (vLHS, "Lscala/meta/internal/ast/Term$ApplyType$;", "apply", "(Lscala/meta/internal/ast/Term;Lscala/collection/immutable/Seq;Lscala/meta/Origin;)Lscala/meta/internal/ast/Term$ApplyType;") =>
-          (vLHS, jvmArgs ++ Seq[AnyRef](scala.meta.Origin.None))
-        case (vLHS, "Lscala/meta/internal/ast/Term$Param$;", "apply", "(Lscala/collection/immutable/Seq;Lscala/meta/internal/ast/Term$Param$Name;Lscala/Option;Lscala/Option;Lscala/meta/Origin;)Lscala/meta/internal/ast/Term$Param;") =>
-          (vLHS, jvmArgs ++ Seq[AnyRef](scala.meta.Origin.None))
-        case (vLHS, "Lscala/meta/internal/ast/Pat$Typed$;", "apply", "(Lscala/meta/internal/ast/Pat;Lscala/meta/internal/ast/Pat$Type;Lscala/meta/Origin;)Lscala/meta/internal/ast/Pat$Typed;") =>
-          (vLHS, jvmArgs ++ Seq[AnyRef](scala.meta.Origin.None))
-        case (vLHS, "Lscala/meta/internal/ast/Template$;", "apply", "(Lscala/collection/immutable/Seq;Lscala/collection/immutable/Seq;Lscala/meta/internal/ast/Term$Param;Lscala/Option;Lscala/meta/Origin;)Lscala/meta/internal/ast/Template;") =>
-          (vLHS, jvmArgs ++ Seq[AnyRef](scala.meta.Origin.None))
-        case (vLHS, "Lscala/meta/internal/ast/Term$New$;", "apply", "(Lscala/meta/internal/ast/Template;Lscala/meta/Origin;)Lscala/meta/internal/ast/Term$New;") =>
-          (vLHS, jvmArgs ++ Seq[AnyRef](scala.meta.Origin.None))
-        case (vLHS,"Lscala/meta/internal/ast/Term$Select$;","apply","(Lscala/meta/internal/ast/Term;Lscala/meta/internal/ast/Term$Name;Lscala/meta/Origin;)Lscala/meta/internal/ast/Term$Select;") =>
-          (vLHS, jvmArgs ++ Seq[AnyRef](scala.meta.Origin.None))
-        case (vLHS,"Lscala/meta/internal/ast/Term$Apply$;","apply","(Lscala/meta/internal/ast/Term;Lscala/collection/immutable/Seq;Lscala/meta/Origin;)Lscala/meta/internal/ast/Term$Apply;") =>
-          (vLHS, jvmArgs ++ Seq[AnyRef](scala.meta.Origin.None))
+        // Examples:
+        // case (vLHS, "Lscala/meta/internal/ast/Lit$String$;", "apply", "(Ljava/lang/String;Lscala/meta/Origin;)Lscala/meta/internal/ast/Lit$String;") =>
+        // case (vLHS, "Lscala/meta/internal/ast/Term$Name$;", "apply", "(Ljava/lang/String;Lscala/meta/internal/hygiene/Denotation;Lscala/meta/internal/hygiene/Sigma;Lscala/meta/Origin;)Lscala/meta/internal/ast/Term$Name;") =>
+        case (vLHS, astCompanion, "apply", astSignature) if astCompanion.startsWith("Lscala/meta/internal/ast/") && astCompanion.endsWith("$;") =>
+          require(astSignature.endsWith(")" + astCompanion.dropRight(2) + ";") && debug(vLHS, lhsJTp, nme, argsRetJTp))
+          val denotPart = {
+            val needsDenot = astSignature.contains("Lscala/meta/internal/hygiene/Denotation;")
+            val alreadyHasDenot = jvmArgs.exists(_.isInstanceOf[scala.meta.internal.hygiene.Denotation])
+            if (needsDenot && !alreadyHasDenot) Seq(scala.meta.internal.hygiene.Denotation.Zero, scala.meta.internal.hygiene.Sigma.Naive)
+            else Nil
+          }
+          val originPart = Seq(scala.meta.Origin.None)
+          (vLHS, jvmArgs ++ denotPart ++ originPart)
 
-        // XtensionSemanticMemberLike
-        case (vLHS: Member, "Lscala/meta/semantic/Api$XtensionSemanticMemberLike;", "isFinal", "(Lscala/meta/semantic/Context;)Z") =>
-          val context = env.stack.flatten.find(_._2.tpe.toString == "Context").head._2.ref
-          (XtensionSemanticMember(vLHS), jvmArgs ++ Seq(context))
-        case (vLHS: Member, "Lscala/meta/semantic/Api$XtensionSemanticMemberLike;", "isClass", "(Lscala/meta/semantic/Context;)Z") =>
-          val context = env.stack.flatten.find(_._2.tpe.toString == "Context").head._2.ref
-          (XtensionSemanticMember(vLHS), jvmArgs ++ Seq(context))
-        case (vLHS: Member, "Lscala/meta/semantic/Api$XtensionSemanticMemberLike;", "isObject", "(Lscala/meta/semantic/Context;)Z") =>
-          val context = env.stack.flatten.find(_._2.tpe.toString == "Context").head._2.ref
-          (XtensionSemanticMember(vLHS), jvmArgs ++ Seq(context))
-        case (vLHS: Member, "Lscala/meta/semantic/Api$XtensionSemanticMemberLike;", "isCase", "(Lscala/meta/semantic/Context;)Z") =>
-          val context = env.stack.flatten.find(_._2.tpe.toString == "Context").head._2.ref
-          (XtensionSemanticMember(vLHS), jvmArgs ++ Seq(context))
-        case (vLHS: Member, "Lscala/meta/semantic/Api$XtensionSemanticMemberLike;", "isTrait", "(Lscala/meta/semantic/Context;)Z") =>
-          val context = env.stack.flatten.find(_._2.tpe.toString == "Context").head._2.ref
-          (XtensionSemanticMember(vLHS), jvmArgs ++ Seq(context))
-        case (vLHS: Member, "Lscala/meta/semantic/Api$XtensionSemanticMemberLike;", "isSealed", "(Lscala/meta/semantic/Context;)Z") =>
-          val context = env.stack.flatten.find(_._2.tpe.toString == "Context").head._2.ref
-          (XtensionSemanticMember(vLHS), jvmArgs ++ Seq(context))
-        case (vLHS: Member, "Lscala/meta/semantic/Api$XtensionSemanticMemberLike;", "name", "(Lscala/meta/semantic/Context;)Lscala/meta/Name;") =>
-          val context = env.stack.flatten.find(_._2.tpe.toString == "Context").head._2.ref
-          (XtensionSemanticMember(vLHS), jvmArgs ++ Seq(context))
-        case (vLHS: m.Member, "Lscala/meta/semantic/Api$XtensionSemanticMemberLike;", "parents", "(Lscala/meta/semantic/Context;)Lscala/collection/immutable/Seq;") =>
-          val context = env.stack.flatten.find(_._2.tpe.toString == "Context").head._2.ref
-          (XtensionSemanticMember(vLHS), jvmArgs ++ Seq(context))
-        case (vLHS: m.Member, "Lscala/meta/semantic/Api$XtensionSemanticMemberLike;", "children", "(Lscala/meta/semantic/Context;)Lscala/collection/immutable/Seq;") =>
-          val context = env.stack.flatten.find(_._2.tpe.toString == "Context").head._2.ref
-          (XtensionSemanticMember(vLHS), jvmArgs ++ Seq(context))
-
-
-        // SemanticScopeLike
-        case (vLHS: Scope, "Lscala/meta/semantic/Api$XtensionSemanticScopeLike;", "ctor", "(Lscala/meta/semantic/Context;)Lscala/meta/Member$Term;") =>
-          val context = env.stack.flatten.find(_._2.tpe.toString == "Context").head._2.ref
-          (XtensionSemanticScope(vLHS), jvmArgs ++ Seq(context))
-        case (vLHS: Scope, "Lscala/meta/semantic/Api$XtensionSemanticScopeLike;", "tparams", "(Lscala/meta/semantic/Context;)Lscala/collection/immutable/Seq;") =>
-          val context = env.stack.flatten.find(_._2.tpe.toString == "Context").head._2.ref
-          (XtensionSemanticScope(vLHS), jvmArgs ++ Seq(context))
-        case (vLHS: Scope, "Lscala/meta/semantic/Api$XtensionSemanticScopeLike;", "params", "(Lscala/meta/semantic/Context;)Lscala/collection/immutable/Seq;") =>
-          val context = env.stack.flatten.find(_._2.tpe.toString == "Context").head._2.ref
-          (XtensionSemanticScope(vLHS), jvmArgs ++ Seq(context))
-
-        case (vLHS: m.Type.Ref, "Lscala/meta/semantic/Api$XtensionSemanticTypeRefDefn;", "defn", "(Lscala/meta/semantic/Context;)Lscala/meta/Member;") =>
-          val context = env.stack.flatten.find(_._2.tpe.toString == "Context").head._2.ref
-          (XtensionSemanticTypeRefDefn(vLHS), jvmArgs ++ Seq(context))
-
-        case (vLHS: m.Member.Term, "Lscala/meta/semantic/Api$XtensionSemanticTermMember;", "name", "(Lscala/meta/semantic/Context;)Lscala/meta/Term$Name;") =>
-          val context = env.stack.flatten.find(_._2.tpe.toString == "Context").head._2.ref
-          (XtensionSemanticTermMember(vLHS), jvmArgs ++ Seq(context))
-
-        case (vLHS: Term.Param,"Lscala/meta/semantic/Api$XtensionSemanticTermParam;","field","(Lscala/meta/semantic/Context;)Lscala/meta/Member$Term;") =>
-          val context = env.stack.flatten.find(_._2.tpe.toString == "Context").head._2.ref
-          (XtensionSemanticTermParam(vLHS), jvmArgs ++ Seq(context))
-
-        case (vLHS: Member,"Lscala/meta/semantic/Api$XtensionSemanticMemberTpe;","tpe","(Lscala/meta/semantic/Context;)Lscala/meta/Type;") =>
-          val context = env.stack.flatten.find(_._2.tpe.toString == "Context").head._2.ref
-          (XtensionSemanticMemberTpe(vLHS), jvmArgs ++ Seq(context))
-
-        case (vLHS: Type, "Lscala/meta/semantic/Api$XtensionTypeToPatType;", "pat", "(Lscala/meta/semantic/Context;)Lscala/meta/Pat$Type;") =>
-          val context = env.stack.flatten.find(_._2.tpe.toString == "Context").head._2.ref
-          (XtensionTypeToPatType(vLHS), jvmArgs ++ Seq(context))
+        // Extension methods
+        // Examples:
+        // case (vLHS: Member, "Lscala/meta/semantic/Api$XtensionSemanticMemberLike;", "isFinal", "(Lscala/meta/semantic/Context;)Z") =>
+        // case (vLHS: Scope, "Lscala/meta/semantic/Api$XtensionSemanticScopeLike;", "ctor", "(Lscala/meta/semantic/Context;)Lscala/meta/Member$Term;") =>        
+        // case (vLHS: m.Member.Term, "Lscala/meta/semantic/Api$XtensionSemanticTermMember;", "name", "(Lscala/meta/semantic/Context;)Lscala/meta/Term$Name;") =>
+        case (vLHS: Member, "Lscala/meta/semantic/Api$XtensionSemanticMemberLike;", _, _) =>
+          (XtensionSemanticMember(vLHS), jvmArgs ++ Seq(env.context))
+        case (vLHS: Ref, "Lscala/meta/semantic/Api$XtensionSemanticMemberLike;", _, _) =>
+          (XtensionSemanticRefMemberLike(vLHS), jvmArgs ++ Seq(env.context))
+        case (vLHS: Type.Ref, "Lscala/meta/semantic/Api$XtensionSemanticScopeLike;", _, _) =>
+          (XtensionSemanticTypeRefScopeLike(vLHS), jvmArgs ++ Seq(env.context))
+        case (vLHS: Ref, "Lscala/meta/semantic/Api$XtensionSemanticScopeLike;", _, _) =>
+          (XtensionSemanticRefScopeLike(vLHS), jvmArgs ++ Seq(env.context))
+        case (vLHS: Scope, "Lscala/meta/semantic/Api$XtensionSemanticScopeLike;", _, _) =>
+          (XtensionSemanticScope(vLHS), jvmArgs ++ Seq(env.context))
+        case (vLHS: Tree, xtensionJvmType, _, _) if xtensionJvmType.startsWith("Lscala/meta/semantic/Api$Xtension") =>
+          val xtensionName = xtensionJvmType.stripPrefix("Lscala/meta/semantic/Api$").stripSuffix(";")
+          val metaPackage = scala.meta.`package`
+          val xtensionFactory = metaPackage.getClass.getMethods.find(_.getName == xtensionName).get
+          val xtension = xtensionFactory.invoke(metaPackage, vLHS)
+          (xtension, jvmArgs ++ Seq(env.context))
 
         case x => (vLHS, jvmArgs)
       }
@@ -458,6 +437,16 @@ object Interpreter {
     } catch {
       case e: java.lang.reflect.InvocationTargetException =>
         throw e.getCause()
+    }
+  }
+  // TODO: this class and its method shouldn't exist
+  // the only reason for them to be here is that we don't have an API for desugaring yet
+  // so we have to guess implicit arguments on our own
+  implicit class EnvContext(env: Env) {
+    def context(implicit c: Context): Context = {
+      // TODO: why doesn't this work?
+      // env.stack.flatten.find(_._2.tpe <:< t"Context").head._2.ref.asInstanceOf[Context]
+      c
     }
   }
 }
