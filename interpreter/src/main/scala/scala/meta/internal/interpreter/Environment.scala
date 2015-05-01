@@ -52,9 +52,8 @@ object Environment {
       } else {
         val ffi = nme.defn.ffi.getOrElse("")
         if (ffi == "jvmMethod(Lscala/Predef$;, $qmark$qmark$qmark, ()Lscala/Nothing;)") {
-          import scala.reflect.macros.runtime.AbortMacroException
-          import scala.reflect.internal.util.NoPosition
-          throw new AbortMacroException(NoPosition, "an implementation is missing")
+          // TODO implement exceptions
+          ???
         } else {
           // TODO then in the scope of current objects
           unreachable(debug(stack, nme, nme.defn))

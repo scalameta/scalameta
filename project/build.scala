@@ -138,7 +138,6 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     scalaSource in Compile <<= (baseDirectory in Compile)(base => base),
-    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
     libraryDependencies += "org.scalameta" % "scalameta_2.11" % "0.1.0-SNAPSHOT"
   )
 
