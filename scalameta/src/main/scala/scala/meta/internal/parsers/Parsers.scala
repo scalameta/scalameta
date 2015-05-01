@@ -412,6 +412,8 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   }
 
   def convertToTypeId(ref: Term.Ref): Option[Type] = ref match {
+    case ref: Quasi =>
+      Some(atPos(ref, ref)(Type.Quasi(ref.tree, ref.rank)))
     case Term.Select(qual: Term.Ref, name) =>
       Some(atPos(ref, ref)(Type.Select(qual, atPos(name, name)(Type.Name(name.value)))))
     case name: Term.Name =>
@@ -748,6 +750,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         case _ => loop(tpe)
       }
       def loop(tpe: Type): Pat.Type = tpe match {
+        case q: impl.Quasi => atPos(q, q)(Pat.Type.Quasi(q.tree, q.rank))
         case tpe: Type.Name => tpe
         case tpe: Type.Select => tpe
         case Type.Project(qual, name) => atPos(tpe, tpe)(Pat.Type.Project(loop(qual), name))
@@ -1318,6 +1321,8 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
 
   def argumentExpr(): Term.Arg = {
     expr() match {
+      case q: impl.Quasi =>
+        atPos(q, q)(Term.Arg.Quasi(q.tree, q.rank))
       case Term.Ascribe(t, Type.Placeholder(Type.Bounds(None, None))) if isIdentOf("*") =>
         next()
         atPos(t, auto)(Term.Arg.Repeated(t))
@@ -1366,6 +1371,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         Case(pattern().require[Pat], guard(), {
           accept[`=>`]
           autoPos(blockStatSeq() match {
+            case List(q: impl.Quasi) => Term.Block(List(q))
             case List(blk: Term.Block) => blk
             case stats => Term.Block(stats)
           })
@@ -1915,6 +1921,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   }
 
   def typeParam(ownerIsType: Boolean, ctxBoundsAllowed: Boolean): Type.Param = autoPos {
+    if (token.is[Unquote]) return unquote[Type.Param]
     var mods: List[Mod] = annots(skipNewLines = true)
     if (ownerIsType && token.is[Ident]) {
       if (isIdentOf("+")) {
