@@ -10,6 +10,8 @@ import org.scalameta.invariants._
   def dialect: Dialect
   def start: Int
   def end: Int
+  def startTokenPos: Int
+  def endTokenPos: Int
   def startLine: Int
   def endLine: Int
   def tokens: Seq[Token]
@@ -21,6 +23,8 @@ object Origin {
     val dialect = scala.meta.dialects.Scala211
     val start = 0
     val end = -1
+    val startTokenPos = 0
+    val endTokenPos = -1
     val startLine = 0
     val endLine = -1
     def tokens = Nil
@@ -57,6 +61,8 @@ object Origin {
     def dialect = tree.origin.dialect
     def start = tree.origin.start
     def end = tree.origin.end
+    def startTokenPos = tree.origin.startTokenPos
+    def endTokenPos = tree.origin.endTokenPos
     def startLine = tree.origin.startLine
     def endLine = tree.origin.endLine
     def tokens = tree.origin.tokens
