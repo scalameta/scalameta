@@ -43,10 +43,10 @@ class SemanticSuite extends FunSuite {
           |Type.Apply(Type.Name("List")[1], List(Type.Name("Int")[2]))
           |[1] Type.Singleton(Term.Name("immutable")[4])::scala.collection.immutable#List
           |[2] Type.Singleton(Term.Name("scala")[3])::scala#Int
-          |[3] Type.Singleton(Term.Name("_root_")[6])::scala
-          |[4] Type.Singleton(Term.Name("collection")[5])::scala.collection.immutable
-          |[5] Type.Singleton(Term.Name("scala")[3])::scala.collection
-          |[6] 0::_root_
+          |[3] Type.Singleton(Term.Name("_root_")[5])::scala
+          |[4] Type.Singleton(Term.Name("collection")[6])::scala.collection.immutable
+          |[5] 0::_root_
+          |[6] Type.Singleton(Term.Name("scala")[3])::scala.collection
         """.trim.stripMargin)
     }
   }
@@ -57,7 +57,7 @@ class SemanticSuite extends FunSuite {
     val impl.Term.Apply(_, List(impl.Term.Function(List(x), _))) = body
     assert(x.tpe == t"Int")
   }
-  
+
   test("q\"1 +: List(2, 3)\".tpe") {
     val classDef = c.define("class C3 { def foo = 1 +: List(2, 3) }")
     classDef match {
@@ -88,10 +88,10 @@ class SemanticSuite extends FunSuite {
       |Type.Apply(Type.Name("List")[1], List(Type.Name("Int")[2]))
       |[1] Type.Singleton(Term.Name("immutable")[4])::scala.collection.immutable#List
       |[2] Type.Singleton(Term.Name("scala")[3])::scala#Int
-      |[3] Type.Singleton(Term.Name("_root_")[6])::scala
-      |[4] Type.Singleton(Term.Name("collection")[5])::scala.collection.immutable
-      |[5] Type.Singleton(Term.Name("scala")[3])::scala.collection
-      |[6] 0::_root_
+      |[3] Type.Singleton(Term.Name("_root_")[5])::scala
+      |[4] Type.Singleton(Term.Name("collection")[6])::scala.collection.immutable
+      |[5] 0::_root_
+      |[6] Type.Singleton(Term.Name("scala")[3])::scala.collection
     """.trim.stripMargin)
   }
 
@@ -739,25 +739,25 @@ class SemanticSuite extends FunSuite {
       |trait Function10[-T1, -T2, -T3, -T4, -T5, -T6, -T7, -T8, -T9, -T10, +R] extends AnyRef { _: (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10) => R => ... }
       |trait Function11[-T1, -T2, -T3, -T4, -T5, -T6, -T7, -T8, -T9, -T10, -T11, +R] extends AnyRef { _: (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11) => R => ... }
       |trait Function12[-T1, -T2, -T3, -T4, -T5, -T6, -T7, -T8, -T9, -T10, -T11, -T12, +R] extends AnyRef { _: (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12) => R => ... }
+      |@implicitNotFound("No implicit view available from ${T1} => ${R}.") trait Function1[@specialized(scala.Int, scala.Long, scala.Float, scala.Double) -T1, @specialized(scala.Unit, scala.Boolean, scala.Int, scala.Float, scala.Long, scala.Double) +R] extends AnyRef { _: T1 => R => ... }
       |trait Function13[-T1, -T2, -T3, -T4, -T5, -T6, -T7, -T8, -T9, -T10, -T11, -T12, -T13, +R] extends AnyRef { _: (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13) => R => ... }
       |trait Function14[-T1, -T2, -T3, -T4, -T5, -T6, -T7, -T8, -T9, -T10, -T11, -T12, -T13, -T14, +R] extends AnyRef { _: (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14) => R => ... }
       |trait Function15[-T1, -T2, -T3, -T4, -T5, -T6, -T7, -T8, -T9, -T10, -T11, -T12, -T13, -T14, -T15, +R] extends AnyRef { _: (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15) => R => ... }
       |trait Function16[-T1, -T2, -T3, -T4, -T5, -T6, -T7, -T8, -T9, -T10, -T11, -T12, -T13, -T14, -T15, -T16, +R] extends AnyRef { _: (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16) => R => ... }
       |trait Function17[-T1, -T2, -T3, -T4, -T5, -T6, -T7, -T8, -T9, -T10, -T11, -T12, -T13, -T14, -T15, -T16, -T17, +R] extends AnyRef { _: (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17) => R => ... }
       |trait Function18[-T1, -T2, -T3, -T4, -T5, -T6, -T7, -T8, -T9, -T10, -T11, -T12, -T13, -T14, -T15, -T16, -T17, -T18, +R] extends AnyRef { _: (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18) => R => ... }
-      |@implicitNotFound("No implicit view available from ${T1} => ${R}.") trait Function1[@specialized(scala.Int, scala.Long, scala.Float, scala.Double) -T1, @specialized(scala.Unit, scala.Boolean, scala.Int, scala.Float, scala.Long, scala.Double) +R] extends AnyRef { _: T1 => R => ... }
       |trait Function19[-T1, -T2, -T3, -T4, -T5, -T6, -T7, -T8, -T9, -T10, -T11, -T12, -T13, -T14, -T15, -T16, -T17, -T18, -T19, +R] extends AnyRef { _: (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19) => R => ... }
       |trait Function20[-T1, -T2, -T3, -T4, -T5, -T6, -T7, -T8, -T9, -T10, -T11, -T12, -T13, -T14, -T15, -T16, -T17, -T18, -T19, -T20, +R] extends AnyRef { _: (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20) => R => ... }
       |trait Function21[-T1, -T2, -T3, -T4, -T5, -T6, -T7, -T8, -T9, -T10, -T11, -T12, -T13, -T14, -T15, -T16, -T17, -T18, -T19, -T20, -T21, +R] extends AnyRef { _: (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21) => R => ... }
       |trait Function22[-T1, -T2, -T3, -T4, -T5, -T6, -T7, -T8, -T9, -T10, -T11, -T12, -T13, -T14, -T15, -T16, -T17, -T18, -T19, -T20, -T21, -T22, +R] extends AnyRef { _: (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22) => R => ... }
       |trait Function2[@specialized(scala.Int, scala.Long, scala.Double) -T1, @specialized(scala.Int, scala.Long, scala.Double) -T2, @specialized(scala.Unit, scala.Boolean, scala.Int, scala.Float, scala.Long, scala.Double) +R] extends AnyRef { _: (T1, T2) => R => ... }
+      |object Function extends AnyRef { ... }
       |trait Function3[-T1, -T2, -T3, +R] extends AnyRef { _: (T1, T2, T3) => R => ... }
       |trait Function4[-T1, -T2, -T3, -T4, +R] extends AnyRef { _: (T1, T2, T3, T4) => R => ... }
       |trait Function5[-T1, -T2, -T3, -T4, -T5, +R] extends AnyRef { _: (T1, T2, T3, T4, T5) => R => ... }
       |trait Function6[-T1, -T2, -T3, -T4, -T5, -T6, +R] extends AnyRef { _: (T1, T2, T3, T4, T5, T6) => R => ... }
       |trait Function7[-T1, -T2, -T3, -T4, -T5, -T6, -T7, +R] extends AnyRef { _: (T1, T2, T3, T4, T5, T6, T7) => R => ... }
       |trait Function8[-T1, -T2, -T3, -T4, -T5, -T6, -T7, -T8, +R] extends AnyRef { _: (T1, T2, T3, T4, T5, T6, T7, T8) => R => ... }
-      |object Function extends AnyRef { ... }
       |trait Function9[-T1, -T2, -T3, -T4, -T5, -T6, -T7, -T8, -T9, +R] extends AnyRef { _: (T1, T2, T3, T4, T5, T6, T7, T8, T9) => R => ... }
       |type IllegalArgumentException = IllegalArgumentException
       |trait Immutable extends AnyRef { ... }
@@ -810,6 +810,8 @@ class SemanticSuite extends FunSuite {
       |object Product11 extends AnyRef { ... }
       |trait Product12[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10, +T11, +T12] extends Product { ... }
       |object Product12 extends AnyRef { ... }
+      |trait Product1[@specialized(Int, Long, Double) +T1] extends Product { ... }
+      |object Product1 extends AnyRef { ... }
       |trait Product13[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10, +T11, +T12, +T13] extends Product { ... }
       |object Product13 extends AnyRef { ... }
       |trait Product14[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10, +T11, +T12, +T13, +T14] extends Product { ... }
@@ -822,8 +824,6 @@ class SemanticSuite extends FunSuite {
       |object Product17 extends AnyRef { ... }
       |trait Product18[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10, +T11, +T12, +T13, +T14, +T15, +T16, +T17, +T18] extends Product { ... }
       |object Product18 extends AnyRef { ... }
-      |trait Product1[@specialized(Int, Long, Double) +T1] extends Product { ... }
-      |object Product1 extends AnyRef { ... }
       |trait Product19[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10, +T11, +T12, +T13, +T14, +T15, +T16, +T17, +T18, +T19] extends Product { ... }
       |object Product19 extends AnyRef { ... }
       |trait Product20[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10, +T11, +T12, +T13, +T14, +T15, +T16, +T17, +T18, +T19, +T20] extends Product { ... }
@@ -834,6 +834,7 @@ class SemanticSuite extends FunSuite {
       |object Product22 extends AnyRef { ... }
       |trait Product2[@specialized(Int, Long, Double) +T1, @specialized(Int, Long, Double) +T2] extends Product { ... }
       |object Product2 extends AnyRef { ... }
+      |trait Product extends Equals { ... }
       |trait Product3[+T1, +T2, +T3] extends Product { ... }
       |object Product3 extends AnyRef { ... }
       |trait Product4[+T1, +T2, +T3, +T4] extends Product { ... }
@@ -846,7 +847,6 @@ class SemanticSuite extends FunSuite {
       |object Product7 extends AnyRef { ... }
       |trait Product8[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8] extends Product { ... }
       |object Product8 extends AnyRef { ... }
-      |trait Product extends Equals { ... }
       |trait Product9[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9] extends Product { ... }
       |object Product9 extends AnyRef { ... }
       |trait Proxy extends Any { ... }
@@ -890,6 +890,8 @@ class SemanticSuite extends FunSuite {
       |object Tuple11 extends AnyRef with Serializable { ... }
       |@deprecatedInheritance("Tuples will be made final in a future version.", "2.11.0") case class Tuple12[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10, +T11, +T12](_1: T1, _2: T2, _3: T3, _4: T4, _5: T5, _6: T6, _7: T7, _8: T8, _9: T9, _10: T10, _11: T11, _12: T12) extends AnyRef with Product12[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12] with Product with Serializable { ... }
       |object Tuple12 extends AnyRef with Serializable { ... }
+      |@deprecatedInheritance("Tuples will be made final in a future version.", "2.11.0") case class Tuple1[@specialized(Int, Long, Double) +T1](_1: T1) extends AnyRef with Product1[T1] with Product with Serializable { ... }
+      |object Tuple1 extends AnyRef with Serializable { ... }
       |@deprecatedInheritance("Tuples will be made final in a future version.", "2.11.0") case class Tuple13[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10, +T11, +T12, +T13](_1: T1, _2: T2, _3: T3, _4: T4, _5: T5, _6: T6, _7: T7, _8: T8, _9: T9, _10: T10, _11: T11, _12: T12, _13: T13) extends AnyRef with Product13[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13] with Product with Serializable { ... }
       |object Tuple13 extends AnyRef with Serializable { ... }
       |@deprecatedInheritance("Tuples will be made final in a future version.", "2.11.0") case class Tuple14[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10, +T11, +T12, +T13, +T14](_1: T1, _2: T2, _3: T3, _4: T4, _5: T5, _6: T6, _7: T7, _8: T8, _9: T9, _10: T10, _11: T11, _12: T12, _13: T13, _14: T14) extends AnyRef with Product14[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14] with Product with Serializable { ... }
@@ -902,8 +904,6 @@ class SemanticSuite extends FunSuite {
       |object Tuple17 extends AnyRef with Serializable { ... }
       |@deprecatedInheritance("Tuples will be made final in a future version.", "2.11.0") case class Tuple18[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10, +T11, +T12, +T13, +T14, +T15, +T16, +T17, +T18](_1: T1, _2: T2, _3: T3, _4: T4, _5: T5, _6: T6, _7: T7, _8: T8, _9: T9, _10: T10, _11: T11, _12: T12, _13: T13, _14: T14, _15: T15, _16: T16, _17: T17, _18: T18) extends AnyRef with Product18[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18] with Product with Serializable { ... }
       |object Tuple18 extends AnyRef with Serializable { ... }
-      |@deprecatedInheritance("Tuples will be made final in a future version.", "2.11.0") case class Tuple1[@specialized(Int, Long, Double) +T1](_1: T1) extends AnyRef with Product1[T1] with Product with Serializable { ... }
-      |object Tuple1 extends AnyRef with Serializable { ... }
       |@deprecatedInheritance("Tuples will be made final in a future version.", "2.11.0") case class Tuple19[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10, +T11, +T12, +T13, +T14, +T15, +T16, +T17, +T18, +T19](_1: T1, _2: T2, _3: T3, _4: T4, _5: T5, _6: T6, _7: T7, _8: T8, _9: T9, _10: T10, _11: T11, _12: T12, _13: T13, _14: T14, _15: T15, _16: T16, _17: T17, _18: T18, _19: T19) extends AnyRef with Product19[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19] with Product with Serializable { ... }
       |object Tuple19 extends AnyRef with Serializable { ... }
       |@deprecatedInheritance("Tuples will be made final in a future version.", "2.11.0") case class Tuple20[+T1, +T2, +T3, +T4, +T5, +T6, +T7, +T8, +T9, +T10, +T11, +T12, +T13, +T14, +T15, +T16, +T17, +T18, +T19, +T20](_1: T1, _2: T2, _3: T3, _4: T4, _5: T5, _6: T6, _7: T7, _8: T8, _9: T9, _10: T10, _11: T11, _12: T12, _13: T13, _14: T14, _15: T15, _16: T16, _17: T17, _18: T18, _19: T19, _20: T20) extends AnyRef with Product20[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20] with Product with Serializable { ... }
