@@ -1367,6 +1367,8 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   def caseClause(): Case = atPos(in.prevTokenPos, auto) {
     require(token.isNot[`case`] && debug(token))
     token match {
+      case token: Unquote if token.prev.is[Ellipsis] =>
+        unquote[Case]
       case token =>
         Case(pattern().require[Pat], guard(), {
           accept[`=>`]
