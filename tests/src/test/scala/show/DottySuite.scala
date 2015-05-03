@@ -8,4 +8,7 @@ class DottySuite extends ParseSuite {
     assert(tree.show[Raw] === "Pat.Extract(Term.Name(\"List\"), Nil, List(Pat.Bind(Pat.Var.Term(Term.Name(\"xs\")), Pat.Arg.SeqWildcard())))")
     assert(tree.show[Code] === "List(xs: _*)")
   }
+  test("xml literals") {
+    intercept[TokenizeException]{ term("<foo>{bar}</foo>") }
+  }
 }

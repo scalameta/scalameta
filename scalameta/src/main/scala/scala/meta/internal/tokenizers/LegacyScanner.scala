@@ -310,7 +310,8 @@ private[meta] class LegacyScanner(val input: Input, decodeUni: Boolean = true)(i
           nextChar()
           last match {
             case ' ' | '\t' | '\n' | '{' | '(' | '>' if isNameStart(ch) || ch == '!' || ch == '?' =>
-              token = XMLSTART
+              if (dialect.allowXmlLiterals) token = XMLSTART
+              else syntaxError("xml literals are not supported", at = offset)
             case _ =>
               // Console.println("found '<', but last is '"+in.last+"'"); // DEBUG
               putChar('<')

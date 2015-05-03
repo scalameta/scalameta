@@ -12,6 +12,9 @@ private[meta] object tokenize {
   def apply(input: Input)(implicit dialect: Dialect): Vector[Token] = {
     def legacyTokenToToken(curr: LegacyTokenData, index: Int): Token = {
       (curr.token: @scala.annotation.switch) match {
+        case IDENTIFIER       => Token.Ident(input, dialect, index, curr.offset, curr.endOffset)
+        case BACKQUOTED_IDENT => Token.Ident(input, dialect, index, curr.offset, curr.endOffset)
+
         case CHARLIT         => Token.Literal.Char(input, dialect, index, curr.offset, curr.endOffset, curr.charVal)
         case INTLIT          => Token.Literal.Int(input, dialect, index, curr.offset, curr.endOffset, isNegated => curr.intVal(isNegated).map(_.toInt).get)
         case LONGLIT         => Token.Literal.Long(input, dialect, index, curr.offset, curr.endOffset, isNegated => curr.intVal(isNegated).get)
@@ -23,9 +26,8 @@ private[meta] object tokenize {
         case TRUE            => Token.Literal.`true`(input, dialect, index, curr.offset)
         case FALSE           => Token.Literal.`false`(input, dialect, index, curr.offset)
 
-        case IDENTIFIER       => Token.Ident(input, dialect, index, curr.offset, curr.endOffset)
-        case BACKQUOTED_IDENT => Token.Ident(input, dialect, index, curr.offset, curr.endOffset)
-        case INTERPOLATIONID  => Token.Interpolation.Id(input, dialect, index, curr.offset, curr.endOffset)
+        case INTERPOLATIONID => Token.Interpolation.Id(input, dialect, index, curr.offset, curr.endOffset)
+        case XMLSTART        => Token.Xml.Start(input, dialect, index, curr.offset)
 
         case NEW   => Token.`new`(input, dialect, index, curr.offset)
         case THIS  => Token.`this`(input, dialect, index, curr.offset)
@@ -105,7 +107,6 @@ private[meta] object tokenize {
         case ELLIPSIS  => Token.Ellipsis(input, dialect, index, curr.offset, curr.endOffset, curr.base)
 
         case EOF       => Token.EOF(input, dialect, index)
-        case XMLSTART  => Token.XMLStart(input, dialect, index, curr.offset, curr.endOffset)
 
         case EMPTY    => unreachable
         case UNDEF    => unreachable
@@ -116,14 +117,58 @@ private[meta] object tokenize {
     val buf = scanner.reader.buf
 
     var legacyTokenBuf = new mutable.UnrolledBuffer[LegacyTokenData]
+    var xmlLiteralBuf = new mutable.UnrolledBuffer[String]
+    lazy val xmlLiteralGlobal = {
+      import scala.tools.reflect._
+      import scala.tools.nsc._
+      import scala.tools.nsc.settings._
+      import scala.tools.nsc.reporters._
+      val settings = new Settings(msg => sys.error(s"fatal error parsing xml literal: $msg"))
+      settings.Yrangepos.value = true
+      val reporter = new StoreReporter()
+      val result = new ReflectGlobal(settings, reporter, classOf[List[_]].getClassLoader)
+      result.globalPhase = new result.Run().parserPhase
+      result
+    }
     scanner.foreach(curr => {
-      // TODO: reinstate error handling
-      // try legacyTokenBuf += curr
-      // catch { case e: Exception => scanner.report.error(e.getMessage) }
-      // val tokenGetters = Tokens.getClass.getMethods.filter(_.getParameterTypes().length == 0)
-      // println(tokenGetters.find(m => m.invoke(Tokens) == curr).get.getName)
       val currCopy = new LegacyTokenData{}.copyFrom(curr)
-      if (currCopy.token == EOF) currCopy.offset = buf.length // NOTE: sometimes EOF's offset is `buf.length - 1`, and that might mess things up
+      if (currCopy.token == XMLSTART) {
+        val slice = input.content.drop(Math.max(currCopy.offset, 0))
+        def probe(): Either[String, Int] = {
+          import scala.reflect.io._
+          import scala.reflect.internal.util._
+          import xmlLiteralGlobal._
+          val abstractFile = new VirtualFile("<scalameta-tokenizing-xmlliteral>")
+          val sourceFile = new BatchSourceFile(abstractFile, slice)
+          val unit = new CompilationUnit(sourceFile)
+          def tryParse(action: syntaxAnalyzer.Parser => Tree): Either[(Int, String), Int] = {
+            reporter.reset()
+            val parser = newUnitParser(unit)
+            val result = action(parser)
+            if (reporter.hasErrors) {
+              import scala.language.existentials
+              val infos = reporter.asInstanceOf[scala.tools.nsc.reporters.StoreReporter].infos
+              val error = infos.filter(_.severity == reporter.ERROR).toList.head
+              Left((error.pos.point, error.msg))
+            } else {
+              Right(result.pos.end)
+            }
+          }
+          tryParse(_.xmlLiteralPattern()).fold(_ => tryParse(_.xmlLiteral()).left.map(_._2), result => Right(result))
+        }
+        probe() match {
+          case Left(error) =>
+            scanner.reporter.syntaxError("unexpected shape of xml literal", at = currCopy.offset)
+          case Right(length) =>
+            xmlLiteralBuf += new String(slice.take(length))
+            scanner.reader.charOffset = scanner.curr.offset + length + 1
+            if (scanner.reader.charOffset >= input.content.length) scanner.next.token = EOF
+        }
+      }
+      if (currCopy.token == EOF) {
+        // NOTE: sometimes EOF's offset is `buf.length - 1`, and that might mess things up
+        currCopy.offset = buf.length
+      }
       legacyTokenBuf += currCopy
     })
     val legacyTokens = legacyTokenBuf.toVector
@@ -210,6 +255,12 @@ private[meta] object tokenize {
           case n if 3 <= n && n < 6 => emitStart(curr.offset - 3); emitContents(); emitEnd(curr.offset - 3)
           case 6 => emitStart(curr.offset - 3); emitContents(); emitEnd(curr.offset - 3)
         }
+      }
+
+      if (prev.token == XMLSTART) {
+        val raw = xmlLiteralBuf.remove(0)
+        tokens += Token.Xml.Part(input, dialect, nextIndex(), prev.offset, curr.offset - 1)
+        tokens += Token.Xml.End(input, dialect, nextIndex(), curr.offset - 1)
       }
 
       loop(legacyIndex, braceBalance1, returnWhenBraceBalanceHitsZero)

@@ -132,7 +132,8 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       token.isInstanceOf[Unquote]
     })
     class ExprIntro extends TokenClass(token => {
-      token.isInstanceOf[Ident] || token.isInstanceOf[Interpolation.Id] || token.isInstanceOf[Literal] ||
+      token.isInstanceOf[Ident] || token.isInstanceOf[Literal] ||
+      token.isInstanceOf[Interpolation.Id] || token.isInstanceOf[Xml.Start] ||
       token.isInstanceOf[`do`] || token.isInstanceOf[`for`] || token.isInstanceOf[`if`] ||
       token.isInstanceOf[`new`] || token.isInstanceOf[`return`] || token.isInstanceOf[`super`] ||
       token.isInstanceOf[`this`] || token.isInstanceOf[`throw`] || token.isInstanceOf[`try`] || token.isInstanceOf[`while`] ||
@@ -183,7 +184,8 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       token.isInstanceOf[`\n`] || token.isInstanceOf[`\n\n`] || token.isInstanceOf[EOF]
     })
     class CanEndStat extends TokenClass(token => {
-      token.isInstanceOf[Ident] || token.isInstanceOf[Interpolation.End] || token.isInstanceOf[Literal] ||
+      token.isInstanceOf[Ident] || token.isInstanceOf[Literal] ||
+      token.isInstanceOf[Interpolation.End] || token.isInstanceOf[Xml.End] ||
       token.isInstanceOf[`return`] || token.isInstanceOf[`this`] || token.isInstanceOf[`type`] ||
       token.isInstanceOf[`)`] || token.isInstanceOf[`]`] || token.isInstanceOf[`}`] || token.isInstanceOf[`_ `] ||
       token.isInstanceOf[Ellipsis] || token.isInstanceOf[Unquote]
@@ -1022,17 +1024,32 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   }
 
   def interpolate[Ctx <: Tree, Ret <: Tree](arg: () => Ctx, result: (Term.Name, List[Lit.String], List[Ctx]) => Ret): Ret = autoPos {
-    val interpolator = atPos(in.tokenPos, in.tokenPos)(Term.Name(token.require[Interpolation.Id].code)) // termName() for INTERPOLATIONID
-    next()
+    val interpolator = {
+      if (token.is[Xml.Start]) atPos(in.tokenPos, in.tokenPos)(Term.Name("xml"))
+      else atPos(in.prevTokenPos, in.prevTokenPos)(Term.Name(token.require[Interpolation.Id].code)) // termName() for INTERPOLATIONID
+    }
+    if (token.is[Interpolation.Id]) next()
     val partsBuf = new ListBuffer[Lit.String]
     val argsBuf = new ListBuffer[Ctx]
     def loop(): Unit = token match {
-      case token: Interpolation.Start => next(); loop()
-      case token: Interpolation.Part => partsBuf += atPos(in.tokenPos, in.tokenPos)(Lit.String(token.code)); next(); loop()
-      case token: Interpolation.SpliceStart => next(); argsBuf += arg(); loop()
-      case token: Interpolation.SpliceEnd => next(); loop()
-      case token: Interpolation.End => next(); // just return
-      case _ => unreachable(debug(token, token.show[Raw]))
+      case _: Interpolation.Start | _: Xml.Start =>
+        next()
+        loop()
+      case _: Interpolation.Part | _: Xml.Part =>
+        partsBuf += atPos(in.tokenPos, in.tokenPos)(Lit.String(token.code))
+        next()
+        loop()
+      case _: Interpolation.SpliceStart | _: Xml.SpliceStart =>
+        next()
+        argsBuf += arg()
+        loop()
+      case _: Interpolation.SpliceEnd | _: Xml.SpliceEnd =>
+        next()
+        loop()
+      case _: Interpolation.End | _: Xml.End =>
+        next(); // simply return
+      case _ =>
+        unreachable(debug(token, token.show[Raw]))
     }
     loop()
     result(interpolator, partsBuf.toList, argsBuf.toList)
@@ -1054,8 +1071,15 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     }, result = Term.Interpolate(_, _, _))
   }
 
+  def xmlTerm(): Term.Interpolate =
+    interpolateTerm()
+
   def interpolatePat(): Pat.Interpolate =
     interpolate[Pat, Pat.Interpolate](arg = () => dropAnyBraces(pattern().require[Pat]), result = Pat.Interpolate(_, _, _))
+
+  def xmlPat(): Pat.Interpolate =
+    // TODO: probably should switch into XML pattern mode here
+    interpolatePat()
 
 /* ------------- NEW LINES ------------------------------------------------- */
 
@@ -1323,8 +1347,6 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         atPos(op, auto)(Term.ApplyUnary(op, simpleExpr()))
     }
 
-  def xmlLiteral(): Term = syntaxError("XML literals are not supported", at = in.token)
-
   /** {{{
    *  SimpleExpr    ::= new (ClassTemplate | TemplateBody)
    *                  |  BlockExpr
@@ -1346,8 +1368,8 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
           literal()
         case _: Interpolation.Id =>
           interpolateTerm()
-        case _: XMLStart =>
-          xmlLiteral()
+        case _: Xml.Start =>
+          xmlTerm()
         case _: Ident | _: `this` | _: `super` =>
           path()
         case _: `_ ` =>
@@ -1768,10 +1790,10 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         literal()
       case _: Interpolation.Id =>
         interpolatePat()
+      case _: Xml.Start =>
+        xmlPat()
       case _: `(` =>
         makeTuplePatParens(noSeq.patterns())
-      case _: XMLStart =>
-        xmlLiteralPattern()
       case _: Unquote =>
         unquote[Pat]
       case _ =>

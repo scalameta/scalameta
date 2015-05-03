@@ -34,15 +34,6 @@ object Token {
 
   @token class Ident(start: Int, end: Int) extends Dynamic { def name = "identifier" }
 
-  object Interpolation {
-    @token class Id(start: Int, end: Int) extends Dynamic { def name = "interpolation id" }
-    @token class Start(start: Int, end: Int) extends Dynamic { def name = "interpolation start" }
-    @token class Part(start: Int, end: Int) extends Dynamic { def name = "interpolation part" }
-    @token class SpliceStart(start: Int) extends Static { def name = "splice start"; override def code = "$" }
-    @token class SpliceEnd(start: Int) extends Static { def name = "splice end"; override def code = "" }
-    @token class End(start: Int, end: Int) extends Dynamic { def name = "interpolation end" }
-  }
-
   @branch trait Literal extends Token
   object Literal {
     @token class Int(start: scala.Int, end: scala.Int, value: Boolean => scala.Int) extends Literal with Dynamic { def name = "integer literal" }
@@ -55,6 +46,23 @@ object Token {
     @token class `null`(start: scala.Int) extends Keyword with Literal with Static
     @token class `true`(start: scala.Int) extends Keyword with Literal with Static
     @token class `false`(start: scala.Int) extends Keyword with Literal with Static
+  }
+
+  object Interpolation {
+    @token class Id(start: Int, end: Int) extends Dynamic { def name = "interpolation id" }
+    @token class Start(start: Int, end: Int) extends Dynamic { def name = "interpolation start" }
+    @token class Part(start: Int, end: Int) extends Dynamic { def name = "interpolation part" }
+    @token class SpliceStart(start: Int) extends Static { def name = "splice start"; override def code = "$" }
+    @token class SpliceEnd(start: Int) extends Static { def name = "splice end"; override def code = "" }
+    @token class End(start: Int, end: Int) extends Dynamic { def name = "interpolation end" }
+  }
+
+  object Xml {
+    @token class Start(start: Int) extends Static { def name = "xml start"; override def code = "" }
+    @token class Part(start: Int, end: Int) extends Dynamic { def name = "xml part" }
+    @token class SpliceStart(start: Int) extends Static { def name = "xml splice start"; override def code = "" }
+    @token class SpliceEnd(start: Int) extends Static { def name = "xml splice end"; override def code = "" }
+    @token class End(start: Int) extends Static { def name = "xml end"; override def code = "" }
   }
 
   @branch trait Keyword extends Static
@@ -152,9 +160,6 @@ object Token {
     def start = input.content.length
     def end = input.content.length - 1
   }
-
-  // TODO: implement XML literals
-  @token class XMLStart(start: Int, end: Int) extends Dynamic { def name = ??? }
 
   @adt.root trait Prototype { def input: Input }
   object Prototype {

@@ -796,4 +796,25 @@ class ShowTokenSuite extends ParseSuite {
       |EOF (11..10)
     """.trim.stripMargin.replace("QQQ", "\"\"\""))
   }
+
+  test("simple xml literal - 1") {
+    assert(tokenize("<foo>bar</foo>").map(_.show[Raw]).mkString("\n") === """
+      |BOF (0..-1)
+      |xml start (0..-1)
+      |<foo>bar</foo> (0..13)
+      |xml end (13..12)
+      |EOF (14..13)
+    """.trim.stripMargin.replace("QQQ", "\"\"\""))
+  }
+
+  test("simple xml literal - 2") {
+    // TODO: the whitespace shouldn't be included here - looks like a bug in scalac's MarkupParser
+    assert(tokenize("<foo>bar</foo> ").map(_.show[Raw]).mkString("\n") === """
+      |BOF (0..-1)
+      |xml start (0..-1)
+      |<foo>bar</foo>  (0..14)
+      |xml end (14..13)
+      |EOF (15..14)
+    """.trim.stripMargin.replace("QQQ", "\"\"\""))
+  }
 }
