@@ -12,7 +12,7 @@ import org.scalameta.adt.{Liftables => AdtLiftables, Reflection => AdtReflection
 import org.scalameta.ast.{Liftables => AstLiftables, Reflection => AstReflection}
 import org.scalameta.invariants._
 import org.scalameta.unreachable
-import scala.meta.{Token => MetaToken}
+import scala.meta.{Token => MetaToken, Tokens => MetaTokens}
 import scala.meta.internal.hygiene.{Denotation => MetaDenotation, Sigma => MetaSigma, _}
 import scala.meta.internal.hygiene.{Symbol => MetaSymbol, Prefix => MetaPrefix, Signature => MetaSignature, _}
 import scala.meta.internal.parsers.Helpers._
@@ -115,7 +115,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
           c.abort(c.macroApplication.pos, s"fatal error initializing quasiquote macro: ${showRaw(c.macroApplication)}")
       }
     }
-    val parttokenss = parts.zip(args :+ EmptyTree).map{
+    val parttokenss: List[MetaTokens] = parts.zip(args :+ EmptyTree).map{
       case (partlit @ q"${part: String}", arg) =>
         // Step 1: Compute start and end of the part.
         // Also provide facilities to map offsets between part and wholeFileSource.
@@ -185,32 +185,32 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
       case (part, arg) =>
         c.abort(part.pos, "quasiquotes can only be used with literal strings")
     }
-    def merge(index: Int, parttokens: Vector[MetaToken], arg: ReflectTree) = {
+    def merge(index: Int, parttokens: MetaTokens, arg: ReflectTree): MetaTokens = {
       implicit class RichToken(token: Token) { def absoluteStart = token.start + token.input.require[scala.meta.syntactic.Input.Slice].start }
-      val part = {
+      val part: Tokens = {
         val bof +: payload :+ eof = parttokens
         require(bof.isInstanceOf[Token.BOF] && eof.isInstanceOf[Token.EOF] && debug(parttokens))
-        val prefix = if (index == 0) Vector(bof) else Vector()
-        val suffix = if (index == parttokenss.length - 1) Vector(eof) else Vector()
+        val prefix = if (index == 0) Tokens(bof) else Tokens()
+        val suffix = if (index == parttokenss.length - 1) Tokens(eof) else Tokens()
         prefix ++ payload ++ suffix
       }
-      val unquote = {
+      val unquote: Tokens = {
         if (arg.isEmpty) {
-          Vector()
+          Tokens()
         } else {
           val unquoteStart = parttokens.last.absoluteStart
           val unquoteEnd = parttokenss(index + 1).head.absoluteStart - 1
           val unquoteInput = Input.Slice(wholeFileInput, unquoteStart, unquoteEnd)
-          Vector(MetaToken.Unquote(unquoteInput, scala.meta.dialects.Quasiquote(metaDialect), 0, 0, unquoteEnd - unquoteStart, arg))
+          Tokens(MetaToken.Unquote(unquoteInput, scala.meta.dialects.Quasiquote(metaDialect), 0, 0, unquoteEnd - unquoteStart, arg))
         }
       }
       part ++ unquote
     }
-    val tokens = parttokenss.zip(args :+ EmptyTree).zipWithIndex.flatMap({ case ((ts, a), i) => merge(i, ts, a) })
+    val tokens: Tokens = parttokenss.zip(args :+ EmptyTree).zipWithIndex.flatMap({ case ((ts, a), i) => merge(i, ts, a) }).toTokens
     if (sys.props("quasiquote.debug") != null) println(tokens)
     try {
       implicit val parsingDialect: MetaDialect = scala.meta.dialects.Quasiquote(metaDialect)
-      val input = Input.Tokens(tokens.toVector)
+      val input = Input.Tokens(tokens)
       if (sys.props("quasiquote.debug") != null) println(input.tokens)
       val syntax = metaParse(input, metaDialect)
       if (sys.props("quasiquote.debug") != null) { println(syntax.show[Code]); println(syntax.show[Raw]) }

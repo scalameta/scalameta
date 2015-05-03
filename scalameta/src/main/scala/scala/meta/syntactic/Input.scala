@@ -10,8 +10,8 @@ import scala.meta.internal.tokenizers._
 
 trait Input {
   def content: Array[Char]
-  private val tokenCache = mutable.Map[Dialect, Vector[Token]]()
-  def tokens(implicit dialect: Dialect): Vector[Token] = tokenCache.getOrElseUpdate(dialect, tokenize(this))
+  private val tokenCache = mutable.Map[Dialect, Tokens]()
+  def tokens(implicit dialect: Dialect): Tokens = tokenCache.getOrElseUpdate(dialect, tokenize(this))
 }
 
 object Input {
@@ -33,14 +33,14 @@ object Input {
     def apply(path: Predef.String): Input.File = Input.File(new java.io.File(path))
     def apply(f: java.io.File): Input.File = Input.File(f, Charset.forName("UTF-8"))
   }
-  final class Tokens private (private var precomputedContent: Predef.String, private var precomputedTokens: Vector[Token]) extends Input {
+  final class Tokens private (private var precomputedContent: Predef.String, private var precomputedTokens: scala.meta.syntactic.Tokens) extends Input {
     lazy val content = precomputedContent.toArray
     override def tokens(implicit dialect: Dialect) = precomputedTokens
     override def toString = s"Tokens(" + precomputedTokens + ")"
   }
   object Tokens {
-    def apply(tokens: Vector[Token]): Tokens = {
-      val instance = new Tokens("", Vector())
+    def apply(tokens: scala.meta.syntactic.Tokens): Tokens = {
+      val instance = new Tokens("", null)
       var currentLength = 0
       instance.precomputedContent = tokens.map(_.code).mkString
       instance.precomputedTokens = tokens.zipWithIndex.map({ case (token, i) =>
@@ -56,6 +56,6 @@ object Input {
   final case class Chars(content: Array[Char]) extends Input
   implicit val stringToInput: Convert[scala.Predef.String, Input] = Convert.apply(Input.String(_))
   implicit val fileToInput: Convert[java.io.File, Input] = Convert.apply(f => Input.File(f, Charset.forName("UTF-8")))
-  implicit val tokensToInput: Convert[Vector[Token], Input] = Convert.apply(Input.Tokens(_))
+  implicit val tokensToInput: Convert[scala.meta.syntactic.Tokens, Input] = Convert.apply(Input.Tokens(_))
   implicit val charsToInput: Convert[Array[Char], Input] = Convert.apply(Input.Chars(_))
 }

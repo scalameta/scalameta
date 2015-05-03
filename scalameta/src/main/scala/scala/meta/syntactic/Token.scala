@@ -10,6 +10,7 @@ import scala.language.experimental.macros
 
 @root trait Token {
   def prototype: Token.Prototype
+
   def input: Input
   def dialect: Dialect
   def index: Int
@@ -19,9 +20,7 @@ import scala.language.experimental.macros
   def nontrivialNext: Token = if (next.isInstanceOf[Token.Whitespace] || next.isInstanceOf[Token.Comment]) next.next else next
   def start: Int
   def end: Int
-
-  type ThisType <: Token
-  def adjust(input: Input = this.input, dialect: Dialect = this.dialect, index: Param[Int] = Default, start: Param[Int] = Default, end: Param[Int] = Default, delta: Param[Int] = Default): ThisType
+  def adjust(input: Input = this.input, dialect: Dialect = this.dialect, index: Param[Int] = Default, start: Param[Int] = Default, end: Param[Int] = Default, delta: Param[Int] = Default): Token
 
   def name: String
   def code: String = new String(input.content.slice(start, end + 1))

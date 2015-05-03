@@ -20,6 +20,7 @@ class TokenMacros(val c: Context) {
   val Unsupported = tq"_root_.scala.`package`.UnsupportedOperationException"
   val Input = tq"_root_.scala.meta.syntactic.Input"
   val Dialect = tq"_root_.scala.meta.Dialect"
+  val Token = tq"_root_.scala.meta.syntactic.Token"
   val Prototype = tq"_root_.scala.meta.syntactic.Token.Prototype"
   val None = q"_root_.scala.meta.syntactic.Token.Prototype.None"
   val Some = q"_root_.scala.meta.syntactic.Token.Prototype.Some"
@@ -101,7 +102,7 @@ class TokenMacros(val c: Context) {
               throw new _root_.scala.`package`.UnsupportedOperationException("you can specify either start/end or delta, but not both")
           }
         """
-        stats1 += q"def adjust($paramInput, $paramDialect, $paramIndex, $paramStart, $paramEnd, $paramDelta): ThisType = $body"
+        stats1 += q"def adjust($paramInput, $paramDialect, $paramIndex, $paramStart, $paramEnd, $paramDelta): $Token = $body"
       }
 
       // step 5: generate the boilerplate fields

@@ -12,7 +12,7 @@ import org.scalameta.invariants._
   def end: Int
   def startLine: Int
   def endLine: Int
-  def tokens: Seq[Token]
+  def tokens: Tokens
 }
 
 object Origin {
@@ -23,7 +23,7 @@ object Origin {
     val end = -1
     val startLine = 0
     val endLine = -1
-    def tokens = Nil
+    def tokens = Tokens()
   }
 
   @leaf class Parsed(input: Input, dialect: Dialect, startTokenPos: Int, endTokenPos: Int) extends Origin {
@@ -46,7 +46,7 @@ object Origin {
     lazy val startLine = findLine(start, 0)
     lazy val endLine = findLine(end, -1)
 
-    def tokens: Seq[Token] = input.tokens(dialect).slice(startTokenPos, endTokenPos + 1)
+    def tokens: Tokens = input.tokens(dialect).slice(startTokenPos, endTokenPos + 1)
   }
 
   // TODO: also include information about the transformer

@@ -11,6 +11,12 @@ private[meta] trait Api {
   type Token = scala.meta.syntactic.Token
   val Token = scala.meta.syntactic.Token
 
+  type Tokens = scala.meta.syntactic.Tokens
+  val Tokens = scala.meta.syntactic.Tokens
+  implicit class XtensionTokens(tokens: TraversableOnce[Token]) {
+    def toTokens: Tokens = Tokens(tokens)
+  }
+
   type Input = scala.meta.syntactic.Input
   val Input = scala.meta.syntactic.Input
 
@@ -42,7 +48,7 @@ private[meta] trait Api {
 
   implicit class XtensionInputLike[T](inputLike: T) {
     def parse[U](implicit convert: Convert[T, Input], dialect: Dialect, parse: Parse[U]): U = parse(convert(inputLike))
-    def tokens(implicit convert: Convert[T, Input], dialect: Dialect): Vector[Token] = tokenize(convert(inputLike))
+    def tokens(implicit convert: Convert[T, Input], dialect: Dialect): Tokens = tokenize(convert(inputLike))
   }
 
   implicit class XtensionParsedTree(tree: Tree) {
