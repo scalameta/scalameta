@@ -123,9 +123,6 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     private implicit class XtensionTokenClass(token: Token) {
       def isCaseClassOrObject = token.isInstanceOf[`case`] && (token.nontrivialNext.is[`class `] || token.nontrivialNext.is[`object`])
     }
-    class Trivia extends TokenClass(token => {
-      token.isInstanceOf[Whitespace] || token.isInstanceOf[Comment]
-    })
     class TypeIntro extends TokenClass(token => {
       token.isInstanceOf[Ident] || token.isInstanceOf[`super`] || token.isInstanceOf[`this`] ||
       token.isInstanceOf[`(`] || token.isInstanceOf[`@`] || token.isInstanceOf[`_ `] ||
@@ -233,9 +230,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   ) extends TokenIterator {
     require(tokens.nonEmpty)
     if (pos == -1) next() // NOTE: only do next() if we've been just created. forks can't go for next()
-    def isTrivia(token: Token) = !nonTrivia(token)
-    def nonTrivia(token: Token) = token.isNot[Whitespace] && token.isNot[Comment]
-    def hasNext: Boolean = tokens.drop(pos + 1).exists(nonTrivia)
+    def hasNext: Boolean = tokens.drop(pos + 1).exists(_.isNot[Trivia])
     def next(): Token = {
       if (!hasNext) throw new NoSuchElementException()
       pos += 1
@@ -244,12 +239,12 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       val curr = tokens(pos)
       val nextPos = {
         var i = pos + 1
-        while (i < tokens.length && isTrivia(tokens(i))) i += 1
+        while (i < tokens.length && tokens(i).is[Trivia]) i += 1
         if (i == tokens.length) i = -1
         i
       }
       val next = if (nextPos != -1) tokens(nextPos) else null
-      if (nonTrivia(curr)) {
+      if (curr.isNot[Trivia]) {
         if (curr.is[`(`]) sepRegions = ')' :: sepRegions
         else if (curr.is[`[`]) sepRegions = ']' :: sepRegions
         else if (curr.is[`{`]) sepRegions = '}' :: sepRegions

@@ -127,7 +127,8 @@ object Token {
   @token class `>:`(start: Int) extends Delim with Static
   @token class `<%`(start: Int) extends Delim with Static
 
-  @branch trait Whitespace extends Static
+  @branch trait Trivia extends Token
+  @branch trait Whitespace extends Trivia with Static
   @token class ` `(start: Int) extends Whitespace
   @token class `\t`(start: Int) extends Whitespace
   @token class `\r`(start: Int) extends Whitespace
@@ -136,15 +137,13 @@ object Token {
   // it will never occur in a token stream produced by XtensionInputLike.tokens
   @token class `\n\n`(start: Int) extends Whitespace
   @token class `\f`(start: Int) extends Whitespace
-
-  @token class Comment(start: Int, end: Int) extends Dynamic { def name = "comment" }
+  @token class Comment(start: Int, end: Int) extends Trivia with Dynamic { def name = "comment" }
 
   // NOTE: in order to maintain conceptual compatibility with scala.reflect's implementation,
   // Ellipsis.rank = 1 means .., Ellipsis.rank = 2 means ..., etc
-  @token class Ellipsis(start: Int, end: Int, rank: Int) extends Dynamic { def name = "ellipsis" }
-
   // TODO: after we bootstrap, Unquote.tree will become scala.meta.Tree
   // however, for now, we will keep it at Any in order to also support scala.reflect trees
+  @token class Ellipsis(start: Int, end: Int, rank: Int) extends Dynamic { def name = "ellipsis" }
   @token class Unquote(start: Int, end: Int, tree: Any) extends Dynamic { def name = "unquote" }
 
   @token class BOF() extends Static {
