@@ -24,15 +24,7 @@ import scala.language.experimental.macros
   def adjust(input: Input = this.input, dialect: Dialect = this.dialect, index: Param[Int] = Default, start: Param[Int] = Default, end: Param[Int] = Default, delta: Param[Int] = Default): ThisType
 
   def name: String
-  def code: String = {
-    val buf = new StringBuffer
-    var i = start
-    while (i <= end) {
-      buf.append(input.content(i))
-      i += 1
-    }
-    buf.toString
-  }
+  def code: String = new String(input.content.slice(start, end + 1))
   final override def toString = this.show[Raw]
 }
 
