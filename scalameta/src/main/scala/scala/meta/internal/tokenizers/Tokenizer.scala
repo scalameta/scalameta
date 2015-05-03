@@ -19,6 +19,9 @@ private[meta] object tokenize {
         case DOUBLELIT       => Token.Literal.Double(input, dialect, index, curr.offset, curr.endOffset, isNegated => curr.floatVal(isNegated).get)
         case STRINGLIT       => Token.Literal.String(input, dialect, index, curr.offset, curr.endOffset, curr.strVal)
         case SYMBOLLIT       => Token.Literal.Symbol(input, dialect, index, curr.offset, curr.endOffset, scala.Symbol(curr.strVal))
+        case NULL            => Token.Literal.`null`(input, dialect, index, curr.offset)
+        case TRUE            => Token.Literal.`true`(input, dialect, index, curr.offset)
+        case FALSE           => Token.Literal.`false`(input, dialect, index, curr.offset)
 
         case IDENTIFIER       => Token.Ident(input, dialect, index, curr.offset, curr.endOffset)
         case BACKQUOTED_IDENT => Token.Ident(input, dialect, index, curr.offset, curr.endOffset)
@@ -27,9 +30,6 @@ private[meta] object tokenize {
         case NEW   => Token.`new`(input, dialect, index, curr.offset)
         case THIS  => Token.`this`(input, dialect, index, curr.offset)
         case SUPER => Token.`super`(input, dialect, index, curr.offset)
-        case NULL  => Token.`null`(input, dialect, index, curr.offset)
-        case TRUE  => Token.`true`(input, dialect, index, curr.offset)
-        case FALSE => Token.`false`(input, dialect, index, curr.offset)
 
         case IMPLICIT  => Token.`implicit`(input, dialect, index, curr.offset)
         case OVERRIDE  => Token.`override`(input, dialect, index, curr.offset)

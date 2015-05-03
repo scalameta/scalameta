@@ -189,7 +189,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
       implicit class RichToken(token: Token) { def absoluteStart = token.start + token.input.require[scala.meta.syntactic.Input.Slice].start }
       val part = {
         val bof +: payload :+ eof = parttokens
-        require(bof.is[Token.BOF] && eof.is[Token.EOF] && debug(parttokens))
+        require(bof.isInstanceOf[Token.BOF] && eof.isInstanceOf[Token.EOF] && debug(parttokens))
         val prefix = if (index == 0) Vector(bof) else Vector()
         val suffix = if (index == parttokenss.length - 1) Vector(eof) else Vector()
         prefix ++ payload ++ suffix
@@ -528,7 +528,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
         case q: impl.Quasi if q.tree.asInstanceOf[ReflectTree].tpe <:< typeOf[MetaTermName] =>
           val action = if (q.rank == 0) "unquote" else "splice"
           c.abort(q.pos, s"can't $action a name here, use a variable pattern instead")
-        case _ => 
+        case _ =>
       }
       lazy implicit val liftDefnVal: Liftable[impl.Defn.Val] = Liftable((v: impl.Defn.Val) => {
         v.pats.foreach(prohibitTermName)
@@ -539,8 +539,8 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
         q"_root_.scala.meta.internal.ast.Defn.Var(${v.mods}, ${v.pats}, ${v.decltpe}, ${v.rhs})"
       })
       lazy implicit val liftPatTyped: Liftable[impl.Pat.Typed] = Liftable((p: impl.Pat.Typed) => {
-        prohibitTermName(p.lhs)    
-        q"_root_.scala.meta.internal.ast.Pat.Typed(${p.lhs}, ${p.rhs})"    
+        prohibitTermName(p.lhs)
+        q"_root_.scala.meta.internal.ast.Pat.Typed(${p.lhs}, ${p.rhs})"
       })
     }
     mode match {

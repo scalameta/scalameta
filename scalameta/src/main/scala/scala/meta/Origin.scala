@@ -31,7 +31,7 @@ object Origin {
       var maxStartTokenPos = input.tokens.length - 1
       if (startTokenPos > endTokenPos) maxStartTokenPos += 1
       val maxEndTokenPos = input.tokens.length - 1
-      require(input.tokens.head.is[Token.BOF] && input.tokens.last.is[Token.EOF])
+      require(input.tokens.head.isInstanceOf[Token.BOF] && input.tokens.last.isInstanceOf[Token.EOF])
       require(0 <= startTokenPos && startTokenPos < maxStartTokenPos && debug(startTokenPos, input.tokens.length))
       require(-1 <= endTokenPos && endTokenPos < maxEndTokenPos && debug(endTokenPos, input.tokens.length))
       require(startTokenPos <= endTokenPos + 1 && debug(startTokenPos, endTokenPos))
