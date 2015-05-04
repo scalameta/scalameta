@@ -121,7 +121,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   abstract class TokenClass(fn: Token => Boolean) { def contains(token: Token): Boolean = fn(token) }
   object TokenClass {
     private implicit class XtensionTokenClass(token: Token) {
-      def isCaseClassOrObject = token.isInstanceOf[`case`] && (token.nontrivialNext.is[`class `] || token.nontrivialNext.is[`object`])
+      def isCaseClassOrObject = token.isInstanceOf[`case`] && (token.next.is[`class `] || token.next.is[`object`])
     }
     class TypeIntro extends TokenClass(token => {
       token.isInstanceOf[Ident] || token.isInstanceOf[`super`] || token.isInstanceOf[`this`] ||
@@ -143,19 +143,19 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     class DefIntro extends TokenClass(token => {
       token.isInstanceOf[Modifier] || token.isInstanceOf[`@`] ||
       token.is[TemplateIntro] || token.is[DclIntro] ||
-      (token.isInstanceOf[Unquote] && token.nontrivialNext.isInstanceOf[DefIntro]) ||
+      (token.isInstanceOf[Unquote] && token.next.isInstanceOf[DefIntro]) ||
       (token.isInstanceOf[`case`] && token.isCaseClassOrObject)
     })
     class TemplateIntro extends TokenClass(token => {
       token.isInstanceOf[Modifier] || token.isInstanceOf[`@`] ||
       token.isInstanceOf[`class `] || token.isInstanceOf[`object`] || token.isInstanceOf[`trait`] ||
-      (token.isInstanceOf[Unquote] && token.nontrivialNext.isInstanceOf[TemplateIntro]) ||
+      (token.isInstanceOf[Unquote] && token.next.isInstanceOf[TemplateIntro]) ||
       (token.isInstanceOf[`case`] && token.isCaseClassOrObject)
     })
     class DclIntro extends TokenClass(token => {
       token.isInstanceOf[`def`] || token.isInstanceOf[`type`] ||
       token.isInstanceOf[`val`] || token.isInstanceOf[`var`] ||
-      (token.isInstanceOf[Unquote] && token.nontrivialNext.isInstanceOf[DclIntro])
+      (token.isInstanceOf[Unquote] && token.next.isInstanceOf[DclIntro])
     })
     class NonlocalModifier extends TokenClass(token => {
       token.isInstanceOf[`private`] || token.isInstanceOf[`protected`] || token.isInstanceOf[`override`]
@@ -296,6 +296,19 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       }
     }
     def fork: TokenIterator = new CrazyTokenIterator(pos, prevTokenPos, tokenPos, token, sepRegions)
+  }
+
+  implicit class XtensionPrevNextToken(token: Token) {
+    def prev: Token = {
+      val prev = tokens(Math.max(token.index - 1, 0))
+      if (prev.isInstanceOf[Token.Whitespace] || prev.isInstanceOf[Token.Comment]) prev.prev
+      else prev
+    }
+    def next: Token = {
+      val next = tokens.apply(Math.min(token.index + 1, tokens.length - 1))
+      if (next.isInstanceOf[Token.Whitespace] || next.isInstanceOf[Token.Comment]) next.next
+      else next
+    }
   }
 
 /* ------------- PARSER COMMON -------------------------------------------- */

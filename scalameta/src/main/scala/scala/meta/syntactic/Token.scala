@@ -14,10 +14,6 @@ import scala.language.experimental.macros
   def input: Input
   def dialect: Dialect
   def index: Int
-  def prev: Token = if (index > 0) input.tokens(dialect).apply(index - 1) else this
-  def nontrivialPrev: Token = if (prev.isInstanceOf[Token.Whitespace] || prev.isInstanceOf[Token.Comment]) prev.prev else prev
-  def next: Token = if (index < input.tokens(dialect).length) input.tokens(dialect).apply(index + 1) else this
-  def nontrivialNext: Token = if (next.isInstanceOf[Token.Whitespace] || next.isInstanceOf[Token.Comment]) next.next else next
   def start: Int
   def end: Int
   def adjust(input: Input = this.input, dialect: Dialect = this.dialect, index: Param[Int] = Default, start: Param[Int] = Default, end: Param[Int] = Default, delta: Param[Int] = Default): Token
