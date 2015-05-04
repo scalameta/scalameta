@@ -180,13 +180,13 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
         // To do that, we create Input.Slice over the `wholeFileSource` and fixup positions to account for $$s.
         crudeTokens.map(crudeToken => {
           val delta = partOffsetToSourceOffset(crudeToken.start) - (start + crudeToken.start)
-          crudeToken.adjust(input = Input.Slice(wholeFileInput, start, end), delta = delta)
+          crudeToken.adjust(input = sliceFileInput(start, end), delta = delta)
         })
       case (part, arg) =>
         c.abort(part.pos, "quasiquotes can only be used with literal strings")
     }
     def merge(index: Int, parttokens: MetaTokens, arg: ReflectTree): MetaTokens = {
-      implicit class RichToken(token: Token) { def absoluteStart = token.start + token.input.require[scala.meta.syntactic.Input.Slice].start }
+      implicit class RichToken(token: Token) { def absoluteStart = token.start + token.input.require[SliceInput].start }
       val part: Tokens = {
         val bof +: payload :+ eof = parttokens
         require(bof.isInstanceOf[Token.BOF] && eof.isInstanceOf[Token.EOF] && debug(parttokens))
@@ -200,7 +200,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
         } else {
           val unquoteStart = parttokens.last.absoluteStart
           val unquoteEnd = parttokenss(index + 1).head.absoluteStart - 1
-          val unquoteInput = Input.Slice(wholeFileInput, unquoteStart, unquoteEnd)
+          val unquoteInput = sliceFileInput(unquoteStart, unquoteEnd)
           Tokens(MetaToken.Unquote(unquoteInput, 0, unquoteEnd - unquoteStart, arg))
         }
       }
@@ -210,7 +210,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
     if (sys.props("quasiquote.debug") != null) println(tokens)
     try {
       implicit val parsingDialect: MetaDialect = scala.meta.dialects.Quasiquote(metaDialect)
-      val input = Input.Tokens(tokens)
+      val input = Input.Virtual(tokens)
       if (sys.props("quasiquote.debug") != null) println(input.tokens)
       val syntax = metaParse(input, metaDialect)
       if (sys.props("quasiquote.debug") != null) { println(syntax.show[Code]); println(syntax.show[Raw]) }
@@ -223,11 +223,17 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
   private lazy val wholeFileSource = c.macroApplication.pos.source
   private lazy val wholeFileInput = {
     if (wholeFileSource.file.file != null) Input.File(wholeFileSource.file.file)
-    else Input.Chars(wholeFileSource.content) // NOTE: can happen in REPL or in custom Global
+    else Input.String(new String(wholeFileSource.content)) // NOTE: can happen in REPL or in custom Global
   }
+  private final case class SliceInput(input: Input.Real, start: Int, end: Int) extends Input.Real {
+    require(0 <= start && start <= input.content.length)
+    require(-1 <= end && end < input.content.length)
+    lazy val content = input.content.slice(start, end + 1)
+  }
+  private def sliceFileInput(start: Int, end: Int) = SliceInput(wholeFileInput, start, end)
   implicit class XtensionTokenPos(token: MetaToken) {
     def pos: ReflectPosition = {
-      val scala.meta.syntactic.Input.Slice(input, start, end) = token.input
+      val SliceInput(input, start, end) = token.input
       require(input == wholeFileInput && debug(token))
       val sourceOffset = start + token.start
       c.macroApplication.pos.focus.withPoint(sourceOffset)

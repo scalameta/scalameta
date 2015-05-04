@@ -18,7 +18,7 @@ class TokenMacros(val c: Context) {
   val Invariants = q"_root_.org.scalameta.invariants.`package`"
   val Default = q"_root_.org.scalameta.default"
   val Unsupported = tq"_root_.scala.`package`.UnsupportedOperationException"
-  val Input = tq"_root_.scala.meta.syntactic.Input"
+  val Input = tq"_root_.scala.meta.syntactic.Input.Real"
   val Dialect = tq"_root_.scala.meta.Dialect"
   val Token = tq"_root_.scala.meta.syntactic.Token"
   val Prototype = tq"_root_.scala.meta.syntactic.Token.Prototype"

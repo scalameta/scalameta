@@ -38,7 +38,7 @@ object Positions {
         case el => s(el.toString.colored(color))
       }
       def position(x: Tree): String = x.origin match {
-        case origin: Origin.Parsed => s"[${origin.start}..${origin.end}]"
+        case origin: Origin.Parsed => s"[${origin.start.offset}..${origin.end.offset}]"
         case _ => ""
       }
       def color(x: Tree): String = x.origin match {
