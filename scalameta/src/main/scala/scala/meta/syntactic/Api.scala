@@ -13,8 +13,8 @@ private[meta] trait Api {
 
   type Tokens = scala.meta.syntactic.Tokens
   val Tokens = scala.meta.syntactic.Tokens
-  implicit class XtensionTokens(tokens: TraversableOnce[Token]) {
-    def toTokens: Tokens = Tokens(tokens)
+  implicit class XtensionTokens(tokens: Seq[Token]) {
+    def toTokens: Tokens = Tokens(tokens: _*)
   }
 
   type Input = scala.meta.syntactic.Input

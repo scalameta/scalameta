@@ -230,7 +230,15 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   ) extends TokenIterator {
     require(tokens.nonEmpty)
     if (pos == -1) next() // NOTE: only do next() if we've been just created. forks can't go for next()
-    def hasNext: Boolean = tokens.drop(pos + 1).exists(_.isNot[Trivia])
+    def hasNext: Boolean = {
+      var i = pos + 1
+      var found = false
+      while (i < tokens.length && !found) {
+        found |= tokens(i).isNot[Trivia]
+        i += 1
+      }
+      found
+    }
     def next(): Token = {
       if (!hasNext) throw new NoSuchElementException()
       pos += 1

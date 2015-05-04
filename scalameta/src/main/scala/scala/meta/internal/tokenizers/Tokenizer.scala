@@ -116,8 +116,8 @@ private[meta] object tokenize {
     val scanner = new LegacyScanner(input)
     val buf = scanner.reader.buf
 
-    var legacyTokenBuf = new mutable.UnrolledBuffer[LegacyTokenData]
-    var xmlLiteralBuf = new mutable.UnrolledBuffer[String]
+    var legacyTokenBuf = mutable.ArrayBuilder.make[LegacyTokenData]()
+    var xmlLiteralBuf = new mutable.ListBuffer[String]
     lazy val xmlLiteralGlobal = {
       import scala.tools.reflect._
       import scala.tools.nsc._
@@ -171,11 +171,11 @@ private[meta] object tokenize {
       }
       legacyTokenBuf += currCopy
     })
-    val legacyTokens = legacyTokenBuf.toVector
+    val legacyTokens = legacyTokenBuf.result
 
     var _index = -1
     def nextIndex() = { _index += 1; _index }
-    var tokens = new mutable.UnrolledBuffer[Token]
+    var tokens = new immutable.VectorBuilder[Token]
     tokens += Token.BOF(input, dialect, nextIndex())
 
     def loop(startingFrom: Int, braceBalance: Int = 0, returnWhenBraceBalanceHitsZero: Boolean = false): Int = {
@@ -267,6 +267,6 @@ private[meta] object tokenize {
     }
 
     loop(startingFrom = 0)
-    tokens.toTokens
+    Tokens(tokens.result: _*)
   }
 }
