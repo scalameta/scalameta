@@ -47,7 +47,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     case stat :: Nil => stat
     case stats if stats.forall(_.isBlockStat) => Term.Block(stats)
     case stats if stats.forall(_.isTopLevelStat) => Source(stats)
-    case other => reporter.syntaxError("these statements can't be mixed together", at = tokens.head)
+    case other => reporter.syntaxError("these statements can't be mixed together", at = parserTokens.head)
   })
   def parseTerm(): Term = parseRule(_.expr())
   def parseTermArg(): Term.Arg = parseRule(_.argumentExpr())
@@ -69,13 +69,9 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   def parseMod(): Mod = {
     implicit class XtensionParser(parser: this.type) {
       def annot() = parser.annots(skipNewLines = false) match {
-        case annot :: Nil =>
-          annot
-        case annot :: other :: _ =>
-          val token = other.origin.tokens.head
-          parser.reporter.syntaxError(s"end of file expected but ${token.name} found.", at = token)
-        case Nil =>
-          unreachable(debug(input, dialect))
+        case annot :: Nil => annot
+        case annot :: other :: _ => parser.reporter.syntaxError(s"end of file expected but ${token.name} found.", at = other)
+        case Nil => unreachable(debug(input, dialect))
       }
     }
     parseRule(parser => parser.autoPos(parser.token match {
@@ -104,17 +100,6 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   }
   def parseImportee(): Importee = parseRule(_.importSelector())
   def parseSource(): Source = parseRule(_.compilationUnit())
-
-/* ------------- PARSER TOKENS -------------------------------------------- */
-
-  val tokens = input.tokens
-  trait TokenIterator extends Iterator[Token] { def prevTokenPos: Int; def tokenPos: Int; def token: Token; def fork: TokenIterator }
-  var in: TokenIterator = new CrazyTokenIterator()
-  def token = in.token
-  def next() = in.next()
-  def nextOnce() = next()
-  def nextTwice() = { next(); next() }
-  def nextThrice() = { next(); next(); next() }
 
 /* ------------- PARSER-SPECIFIC TOKEN CLASSIFIERS -------------------------------------------- */
 
@@ -215,101 +200,111 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     def is[T: TokenClassifier]: Boolean = implicitly[TokenClassifier[T]].contains(token)
   }
 
-/* ------------- PARSER-SPECIFIC TOKEN ITERATORS -------------------------------------------- */
-
-  // NOTE: Scala's parser isn't ready to accept whitespace and comment tokens,
-  // so we have to filter them out, because otherwise we'll get errors like `expected blah, got whitespace`
-  // however, in certain tricky cases some whitespace tokens (namely, newlines) do have to be emitted
-  // this leads to extremely dirty and seriously crazy code, which I'd like to replace in the future
-  private class CrazyTokenIterator(
-    var pos: Int = -1,
-    var prevTokenPos: Int = -1,
-    var tokenPos: Int = -1,
-    var token: Token = null,
-    var sepRegions: List[Char] = Nil
-  ) extends TokenIterator {
-    require(tokens.nonEmpty)
-    if (pos == -1) next() // NOTE: only do next() if we've been just created. forks can't go for next()
-    def hasNext: Boolean = {
-      var i = pos + 1
-      var found = false
-      while (i < tokens.length && !found) {
-        found |= tokens(i).isNot[Trivia]
-        i += 1
-      }
-      found
+  implicit class XtensionPrevNextToken(token: Token) {
+    def prev: Token = {
+      val prev = scannerTokens.apply(Math.max(token.index - 1, 0))
+      if (prev.isInstanceOf[Token.Whitespace] || prev.isInstanceOf[Token.Comment]) prev.prev
+      else prev
     }
-    def next(): Token = {
-      if (!hasNext) throw new NoSuchElementException()
-      pos += 1
-      prevTokenPos = tokenPos
-      val prev = token
-      val curr = tokens(pos)
+    def next: Token = {
+      val next = scannerTokens.apply(Math.min(token.index + 1, scannerTokens.length - 1))
+      if (next.isInstanceOf[Token.Whitespace] || next.isInstanceOf[Token.Comment]) next.next
+      else next
+    }
+  }
+
+/* ------------- PARSER-SPECIFIC TOKENS -------------------------------------------- */
+
+  // TODO: Scala's parser isn't ready to accept whitespace and comment tokens,
+  // so we have to filter them out, because otherwise we'll get errors like `expected blah, got whitespace`
+  // However, in certain tricky cases some whitespace tokens (namely, newlines) do have to be emitted.
+  // This leads to extremely dirty and seriously crazy code, which I'd like to replace in the future.
+  // NOTE: Therefore, `tokens` here mean `input.tokens` that are filtered out to match the expectations of Scala's parser.
+  // Correspondingly, `tokenPositions` here mean positions (i.e. indices) of individual elements in `tokens` within `input.tokens`.
+  val scannerTokens = input.tokens
+  val (parserTokens, parserTokenPositions) = {
+    val parserTokens = new immutable.VectorBuilder[Token]()
+    val parserTokenPositions = new immutable.VectorBuilder[Int]()
+    def loop(prevPos: Int, currPos: Int, sepRegions: List[Char]): Unit = {
+      if (currPos >= scannerTokens.length) return
+      val prev = if (prevPos >= 0) scannerTokens(prevPos) else null
+      val curr = scannerTokens(currPos)
       val nextPos = {
-        var i = pos + 1
-        while (i < tokens.length && tokens(i).is[Trivia]) i += 1
-        if (i == tokens.length) i = -1
+        var i = currPos + 1
+        while (i < scannerTokens.length && scannerTokens(i).is[Trivia]) i += 1
+        if (i == scannerTokens.length) i = -1
         i
       }
-      val next = if (nextPos != -1) tokens(nextPos) else null
+      val next = if (nextPos != -1) scannerTokens(nextPos) else null
       if (curr.isNot[Trivia]) {
-        if (curr.is[`(`]) sepRegions = ')' :: sepRegions
-        else if (curr.is[`[`]) sepRegions = ']' :: sepRegions
-        else if (curr.is[`{`]) sepRegions = '}' :: sepRegions
-        else if (curr.is[CaseIntro]) sepRegions = '\u21d2' :: sepRegions
-        else if (curr.is[`}`]) {
-          while (!sepRegions.isEmpty && sepRegions.head != '}') sepRegions = sepRegions.tail
-          if (!sepRegions.isEmpty) sepRegions = sepRegions.tail
-        } else if (curr.is[`]`]) { if (!sepRegions.isEmpty && sepRegions.head == ']') sepRegions = sepRegions.tail }
-        else if (curr.is[`)`]) { if (!sepRegions.isEmpty && sepRegions.head == ')') sepRegions = sepRegions.tail }
-        else if (curr.is[`=>`]) { if (!sepRegions.isEmpty && sepRegions.head == '\u21d2') sepRegions = sepRegions.tail }
-        else () // do nothing for other tokens
-        tokenPos = pos
-        token = curr
-        token
+        parserTokens += curr
+        parserTokenPositions += currPos
+        val sepRegions1 = {
+          if (curr.is[`(`]) ')' :: sepRegions
+          else if (curr.is[`[`]) ']' :: sepRegions
+          else if (curr.is[`{`]) '}' :: sepRegions
+          else if (curr.is[CaseIntro]) '\u21d2' :: sepRegions
+          else if (curr.is[`}`]) {
+            var sepRegions1 = sepRegions
+            while (!sepRegions1.isEmpty && sepRegions1.head != '}') sepRegions1 = sepRegions1.tail
+            if (!sepRegions1.isEmpty) sepRegions1 = sepRegions1.tail
+            sepRegions1
+          } else if (curr.is[`]`]) { if (!sepRegions.isEmpty && sepRegions.head == ']') sepRegions.tail else sepRegions }
+          else if (curr.is[`)`]) { if (!sepRegions.isEmpty && sepRegions.head == ')') sepRegions.tail else sepRegions }
+          else if (curr.is[`=>`]) { if (!sepRegions.isEmpty && sepRegions.head == '\u21d2') sepRegions.tail else sepRegions }
+          else sepRegions // do nothing for other tokens
+        }
+        loop(currPos, currPos + 1, sepRegions1)
       } else {
-        var i = prevTokenPos + 1
+        var i = prevPos + 1
         var lastNewlinePos = -1
         var newlineStreak = false
         var newlines = false
         while (i < nextPos) {
-          if (tokens(i).is[`\n`] || tokens(i).is[`\f`]) {
+          if (scannerTokens(i).is[`\n`] || scannerTokens(i).is[`\f`]) {
             lastNewlinePos = i
             if (newlineStreak) newlines = true
             newlineStreak = true
           }
-          newlineStreak &= tokens(i).is[Whitespace]
+          newlineStreak &= scannerTokens(i).is[Whitespace]
           i += 1
         }
         if (lastNewlinePos != -1 &&
             prev != null && prev.is[CanEndStat] &&
             next != null && next.isNot[CantStartStat] &&
             (sepRegions.isEmpty || sepRegions.head == '}')) {
-          tokenPos = lastNewlinePos
-          token = tokens(tokenPos)
+          var token = scannerTokens(lastNewlinePos)
           if (newlines) token = `\n\n`(token.input, token.dialect, token.index, token.start)
-          token
+          parserTokens += token
+          parserTokenPositions += lastNewlinePos
+          loop(lastNewlinePos, currPos + 1, sepRegions)
         } else {
-          pos = nextPos - 1
-          this.next()
+          loop(prevPos, nextPos, sepRegions)
         }
       }
     }
-    def fork: TokenIterator = new CrazyTokenIterator(pos, prevTokenPos, tokenPos, token, sepRegions)
+    loop(-1, 0, Nil)
+    (parserTokens.result, parserTokenPositions.result)
   }
 
-  implicit class XtensionPrevNextToken(token: Token) {
-    def prev: Token = {
-      val prev = tokens(Math.max(token.index - 1, 0))
-      if (prev.isInstanceOf[Token.Whitespace] || prev.isInstanceOf[Token.Comment]) prev.prev
-      else prev
-    }
-    def next: Token = {
-      val next = tokens.apply(Math.min(token.index + 1, tokens.length - 1))
-      if (next.isInstanceOf[Token.Whitespace] || next.isInstanceOf[Token.Comment]) next.next
-      else next
-    }
+  trait TokenIterator extends Iterator[Token] { def prevTokenPos: Int; def tokenPos: Int; def token: Token; def fork: TokenIterator }
+  var in: TokenIterator = new SimpleTokenIterator()
+  private class SimpleTokenIterator(var i: Int = -1) extends TokenIterator {
+    require(parserTokens.nonEmpty)
+    if (i == -1) next() // NOTE: only do next() if we've been just created. forks can't go for next()
+    def hasNext: Boolean = i < parserTokens.length - 1
+    def next(): Token = { if (!hasNext) throw new NoSuchElementException(); i += 1; parserTokens(i) }
+    def prevTokenPos: Int = if (i > 0) parserTokenPositions(Math.min(i, parserTokens.length - 1) - 1) else -1
+    def tokenPos: Int = if (i > -1) parserTokenPositions(Math.min(i, parserTokens.length - 1)) else -1
+    def token: Token = parserTokens(i)
+    def fork: TokenIterator = new SimpleTokenIterator(i)
   }
+
+  def token = in.token
+  def next() = in.next()
+  def nextOnce() = next()
+  def nextTwice() = { next(); next() }
+  def nextThrice() = { next(); next(); next() }
 
 /* ------------- PARSER COMMON -------------------------------------------- */
 
@@ -2480,7 +2475,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       // the Type.ApplyInfix => Term.ApplyType conversion is weird as well
       def mkCtorRefFunction(tpe: Type) = {
         val origin = tpe.origin.require[Origin.Parsed]
-        val allTokens = parser.input.tokens(dialect).zipWithIndex
+        val allTokens = scannerTokens.zipWithIndex
         val arrowPos = allTokens.indexWhere{ case (el, i) => el.is[`=>`] && origin.startTokenPos <= i && i <= origin.endTokenPos }
         atPos(arrowPos, arrowPos)(Ctor.Ref.Function(atPos(arrowPos, arrowPos)(Ctor.Name("=>"))))
       }
