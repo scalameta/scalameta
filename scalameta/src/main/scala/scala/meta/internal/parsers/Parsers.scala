@@ -216,27 +216,40 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   //    (4..3)
   //   " (4..4)
   //   EOF (5..4)
-  private val scannerTokenCache: Array[Int] = {
-    val result = new Array[Int](input.content.length)
-    var i = 0
-    while (i < scannerTokens.length) {
-      val token = scannerTokens(i)
-      var j = token.start
-      while (j <= token.end) {
-        result(j) = i
-        j += 1
+  private val scannerTokenCache: Array[Int] = input match {
+    case input: Input.Real =>
+      val result = new Array[Int](input.content.length)
+      var i = 0
+      while (i < scannerTokens.length) {
+        val token = scannerTokens(i)
+        var j = token.start
+        while (j <= token.end) {
+          result(j) = i
+          j += 1
+        }
+        i += 1
       }
-      i += 1
-    }
-    result
+      result
+    case input: Input.Virtual =>
+      new Array[Int](0)
   }
   implicit class XtensionTokenIndex(token: Token) {
     def index: Int = {
-      def lurk(roughIndex: Int): Int = {
-        if (scannerTokens(roughIndex) eq token) roughIndex
-        else lurk(roughIndex - 1)
+      def fast() = {
+        def lurk(roughIndex: Int): Int = {
+          require(roughIndex >= 0 && debug(token))
+          if (scannerTokens(roughIndex) eq token) roughIndex
+          else lurk(roughIndex - 1)
+        }
+        lurk(scannerTokenCache(token.start))
       }
-      lurk(scannerTokenCache(token.start))
+      def slow() = {
+        val result = scannerTokens.indexWhere(_ eq token)
+        require(result != -1 && debug(token))
+        result
+      }
+      if (scannerTokenCache.length != 0) fast()
+      else slow()
     }
     def prev: Token = {
       val prev = scannerTokens.apply(Math.max(token.index - 1, 0))

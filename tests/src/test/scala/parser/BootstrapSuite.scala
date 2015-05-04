@@ -70,10 +70,10 @@ class BootstrapSuite extends ParseSuite {
             // check #2: everything's covered
             val codec = scala.io.Codec(java.nio.charset.Charset.forName("UTF-8"))
             val content = scala.io.Source.fromFile(src)(codec).mkString
-            assert(tree.origin.start == 0)
-            assert(tree.origin.end == content.length - 1)
-            assert(tree.origin.startLine == 0)
-            assert(tree.origin.endLine == content.count(_ == '\n'))
+            assert(tree.origin.start.offset == 0)
+            assert(tree.origin.end.offset == content.length - 1)
+            assert(tree.origin.start.line == 0)
+            assert(tree.origin.end.line == content.count(_ == '\n'))
           } catch {
             case ex: scala.meta.ParseException if ex.message.contains("XML literals are not supported") => pending
           }
