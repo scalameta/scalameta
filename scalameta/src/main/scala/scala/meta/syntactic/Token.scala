@@ -9,14 +9,10 @@ import scala.reflect.ClassTag
 import scala.language.experimental.macros
 
 @root trait Token {
-  def prototype: Token.Prototype
-
   def input: Input
-  def dialect: Dialect
   def start: Int
   def end: Int
-  def adjust(input: Input = this.input, dialect: Dialect = this.dialect, index: Param[Int] = Default, start: Param[Int] = Default, end: Param[Int] = Default, delta: Param[Int] = Default): Token
-
+  def adjust(input: Input = this.input, start: Param[Int] = Default, end: Param[Int] = Default, delta: Param[Int] = Default): Token
   def name: String
   def code: String = new String(input.content.slice(start, end + 1))
   final override def toString = this.show[Raw]
@@ -152,11 +148,5 @@ object Token {
     override def code = ""
     def start = input.content.length
     def end = input.content.length - 1
-  }
-
-  @adt.root trait Prototype { def input: Input }
-  object Prototype {
-    @adt.leaf object None extends Prototype { def input = Input.None }
-    @adt.leaf class Some(token: Token) extends Prototype { def input = token.input }
   }
 }

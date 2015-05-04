@@ -201,7 +201,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
           val unquoteStart = parttokens.last.absoluteStart
           val unquoteEnd = parttokenss(index + 1).head.absoluteStart - 1
           val unquoteInput = Input.Slice(wholeFileInput, unquoteStart, unquoteEnd)
-          Tokens(MetaToken.Unquote(unquoteInput, scala.meta.dialects.Quasiquote(metaDialect), 0, 0, unquoteEnd - unquoteStart, arg))
+          Tokens(MetaToken.Unquote(unquoteInput, 0, unquoteEnd - unquoteStart, arg))
         }
       }
       part ++ unquote
@@ -227,10 +227,9 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
   }
   implicit class XtensionTokenPos(token: MetaToken) {
     def pos: ReflectPosition = {
-      val scala.meta.syntactic.Token.Prototype.Some(prototype) = token.prototype
-      val scala.meta.syntactic.Input.Slice(input, start, end) = prototype.input
-      require(input == wholeFileInput && debug(prototype))
-      val sourceOffset = start + prototype.start
+      val scala.meta.syntactic.Input.Slice(input, start, end) = token.input
+      require(input == wholeFileInput && debug(token))
+      val sourceOffset = start + token.start
       c.macroApplication.pos.focus.withPoint(sourceOffset)
     }
   }

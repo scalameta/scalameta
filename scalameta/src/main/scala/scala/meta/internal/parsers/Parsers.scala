@@ -311,7 +311,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
             next != null && next.isNot[CantStartStat] &&
             (sepRegions.isEmpty || sepRegions.head == '}')) {
           var token = scannerTokens(lastNewlinePos)
-          if (newlines) token = `\n\n`(token.input, token.dialect, token.index, token.start)
+          if (newlines) token = `\n\n`(token.input, token.start)
           parserTokens += token
           parserTokenPositions += lastNewlinePos
           loop(lastNewlinePos, currPos + 1, sepRegions)

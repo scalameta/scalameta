@@ -33,25 +33,10 @@ object Input {
     def apply(path: Predef.String): Input.File = Input.File(new java.io.File(path))
     def apply(f: java.io.File): Input.File = Input.File(f, Charset.forName("UTF-8"))
   }
-  final class Tokens private (private var precomputedContent: Predef.String, private var precomputedTokens: scala.meta.syntactic.Tokens) extends Input {
-    lazy val content = precomputedContent.toArray
-    override def tokens(implicit dialect: Dialect) = precomputedTokens
-    override def toString = s"Tokens(" + precomputedTokens + ")"
-  }
-  object Tokens {
-    def apply(tokens: scala.meta.syntactic.Tokens): Tokens = {
-      val instance = new Tokens("", null)
-      var currentLength = 0
-      instance.precomputedContent = tokens.map(_.code).mkString
-      instance.precomputedTokens = tokens.zipWithIndex.map({ case (token, i) =>
-        val adjustedStart = currentLength
-        val adjustedEnd = currentLength + token.end - token.start
-        val adjustedToken = token.adjust(input = instance, index = i, start = adjustedStart, end = adjustedEnd)
-        currentLength += token.code.length
-        adjustedToken
-      })
-      instance
-    }
+  final case class Tokens(payload: scala.meta.syntactic.Tokens) extends Input {
+    lazy val content = payload.map(_.code).mkString.toArray
+    override def tokens(implicit dialect: Dialect) = payload
+    override def toString = payload.toString
   }
   final case class Chars(content: Array[Char]) extends Input
   implicit val stringToInput: Convert[scala.Predef.String, Input] = Convert.apply(Input.String(_))

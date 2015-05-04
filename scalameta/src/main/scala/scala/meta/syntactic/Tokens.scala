@@ -25,6 +25,7 @@ final class Tokens private (repr: Token*) extends Tokens.Projected(repr: _*) {
   // def unzip[A1, A2](implicit asPair: A => (A1, A2)): (CC[A1], CC[A2]) = {
   // def unzip3[A1, A2, A3](implicit asTriple: A => (A1, A2, A3)): (CC[A1], CC[A2], CC[A3]) = {
   // TODO: have I missed anything else?
+  override def toString: String = s"Tokens(${repr.mkString(", ")})"
 }
 
 object Tokens {
