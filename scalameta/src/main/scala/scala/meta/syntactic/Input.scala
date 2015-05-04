@@ -33,6 +33,13 @@ object Input {
     def apply(path: Predef.String): Input.File = Input.File(new java.io.File(path))
     def apply(f: java.io.File): Input.File = Input.File(f, Charset.forName("UTF-8"))
   }
+  // NOTE: This Input is really special in the sense that
+  // doing `input.tokens.head.input` won't return `input`.
+  // Previously, I tried to do Token.adjust on every token in the payload,
+  // so that they point back to the newly created Input.Tokens.
+  // Unfortunately, this runs into performance problems - we really can't afford
+  // to clone an entire token stream every time when a tree undergoes a slight change.
+  // Therefore, I'm letting this inconsistency alone, and we'll see how it pans out.
   final case class Tokens(payload: scala.meta.syntactic.Tokens) extends Input {
     lazy val content = payload.map(_.code).mkString.toArray
     override def tokens(implicit dialect: Dialect) = payload
