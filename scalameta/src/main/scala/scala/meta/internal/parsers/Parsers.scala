@@ -200,7 +200,44 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     def is[T: TokenClassifier]: Boolean = implicitly[TokenClassifier[T]].contains(token)
   }
 
-  implicit class XtensionPrevNextToken(token: Token) {
+  // NOTE: This is a cache that's necessary for reasonable performance of prev/next for tokens.
+  // It maps character positions in input's content into indices in the scannerTokens vector.
+  // One complication here is that there can be multiple tokens that sort of occupy a given position,
+  // so the clients of this cache need to be wary of that!
+  //   17:09 ~/Projects/alt/core/sandbox (master)$ tokenize 'q"$x"'
+  //   // Scala source: /var/folders/n4/39sn1y_d1hn3qjx6h1z3jk8m0000gn/T/tmpeIwaZ8
+  //   BOF (0..-1)
+  //   q (0..0)
+  //   " (1..1)
+  //    (2..1)
+  //   splice start (2..2)
+  //   x (3..3)
+  //   splice end (3..2)
+  //    (4..3)
+  //   " (4..4)
+  //   EOF (5..4)
+  private val scannerTokenCache: Array[Int] = {
+    val result = new Array[Int](input.content.length)
+    var i = 0
+    while (i < scannerTokens.length) {
+      val token = scannerTokens(i)
+      var j = token.start
+      while (j <= token.end) {
+        result(j) = i
+        j += 1
+      }
+      i += 1
+    }
+    result
+  }
+  implicit class XtensionTokenIndex(token: Token) {
+    def index: Int = {
+      def lurk(roughIndex: Int): Int = {
+        if (scannerTokens(roughIndex) eq token) roughIndex
+        else lurk(roughIndex - 1)
+      }
+      lurk(scannerTokenCache(token.start))
+    }
     def prev: Token = {
       val prev = scannerTokens.apply(Math.max(token.index - 1, 0))
       if (prev.isInstanceOf[Token.Whitespace] || prev.isInstanceOf[Token.Comment]) prev.prev
@@ -221,10 +258,10 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   // This leads to extremely dirty and seriously crazy code, which I'd like to replace in the future.
   // NOTE: Therefore, `tokens` here mean `input.tokens` that are filtered out to match the expectations of Scala's parser.
   // Correspondingly, `tokenPositions` here mean positions (i.e. indices) of individual elements in `tokens` within `input.tokens`.
-  val scannerTokens = input.tokens
-  val (parserTokens, parserTokenPositions) = {
+  lazy val scannerTokens = input.tokens
+  lazy val (parserTokens, parserTokenPositions) = {
     val parserTokens = new immutable.VectorBuilder[Token]()
-    val parserTokenPositions = new immutable.VectorBuilder[Int]()
+    val parserTokenPositions = mutable.ArrayBuilder.make[Int]()
     def loop(prevPos: Int, currPos: Int, sepRegions: List[Char]): Unit = {
       if (currPos >= scannerTokens.length) return
       val prev = if (prevPos >= 0) scannerTokens(prevPos) else null
@@ -284,7 +321,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       }
     }
     loop(-1, 0, Nil)
-    (parserTokens.result, parserTokenPositions.result)
+    (Tokens(parserTokens.result: _*), parserTokenPositions.result)
   }
 
   trait TokenIterator extends Iterator[Token] { def prevTokenPos: Int; def tokenPos: Int; def token: Token; def fork: TokenIterator }
@@ -299,7 +336,6 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     def token: Token = parserTokens(i)
     def fork: TokenIterator = new SimpleTokenIterator(i)
   }
-
   def token = in.token
   def next() = in.next()
   def nextOnce() = next()
