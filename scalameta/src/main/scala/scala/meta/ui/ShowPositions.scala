@@ -42,9 +42,8 @@ object Positions {
         case _ => ""
       }
       def color(x: Tree): String = x.origin match {
-        case Origin.None => RED
-        case Origin.Parsed(_, _, _, _) => GREEN
-        case Origin.Transformed(tree) => YELLOW
+        case _: Origin.Parsed => GREEN
+        case _: Origin.Synthetic => RED
       }
       val prefix = (x.productPrefix + position(x) + "(").colored(color(x))
       val fields = r(x.productIterator.toList.map(el => loopField(el, color(x))), ", ".colored(color(x)))
