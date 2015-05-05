@@ -5,7 +5,7 @@ import scala.tools.cmd.CommandLineParser
 import scala.tools.nsc.{Global, CompilerCommand, Settings}
 import scala.tools.nsc.reporters.StoreReporter
 
-package object reflection {
+package object internal {
   def mkGlobal(options: String): Global = {
     var compilerOptions = options
     if (!compilerOptions.contains("-Xplugin-require:scalahost")) {
