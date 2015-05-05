@@ -23,7 +23,7 @@ import scala.meta.internal.hosts.scalac.{PluginBase => ScalahostPlugin}
 trait Expansion extends scala.reflect.internal.show.Printers {
   self: ScalahostPlugin =>
 
-  import global._
+  import global.{Position => ReflectPosition, _}
   import definitions._
   import treeInfo._
   import analyzer.{MacroPlugin => NscMacroPlugin, MacroContext => ScalareflectMacroContext, _}
@@ -174,7 +174,7 @@ trait Expansion extends scala.reflect.internal.show.Printers {
                             //
                             // to allow `macro1` to see the range position of the "foo".
                             val expandedPos = enclosingMacroPosition.focus
-                            def fixPosition(pos: Position) =
+                            def fixPosition(pos: ReflectPosition) =
                               if (pos == NoPosition) expandedPos else pos.focus
                             expanded.foreach(t => t.pos = fixPosition(t.pos))
 

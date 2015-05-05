@@ -99,8 +99,10 @@ trait Ensugar {
               case Some(result) =>
                 if (System.getProperty("ensugar.debug") != null) {
                   val name = this.getClass.getName.stripSuffix("$").stripPrefix("org.scalameta.reflection.Ensugar$transformer$2$")
-                  def summary(tree: Tree) = tree.toString.replace("\n", "").take(40)
-                  Console.err.println(s"$name: ${summary(tree)} => ${summary(result)}")
+                  def summary(tree: Tree) = tree.toString.replace("\n", "").take(80)
+                  val rewriteStatus = s"${summary(tree)} => ${summary(result)}"
+                  val typeStatus = if (result.tpe != tree.tpe && tree.tpe != null) s" (type reset from ${result.tpe} to ${tree.tpe})" else ""
+                  Console.err.println(s"$name: $rewriteStatus$typeStatus")
                 }
                 if (result.tpe != tree.tpe && tree.tpe != null) Some(duplicateAndKeepPositions(result).setType(tree.tpe))
                 else Some(result)

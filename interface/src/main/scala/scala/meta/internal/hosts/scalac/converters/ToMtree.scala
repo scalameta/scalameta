@@ -213,8 +213,8 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
               else m.Defn.Var(mmods(modbearer), List(pat.cvt_! : m.Pat), mtpt, Some[m.Term](rhs.cvt_!))
             case in @ AnonymousClassDef(templ) =>
               i += 1
-              val q"new $$anon()" = gstats(i - 1)
-              m.Term.New(templ.cvt_!)
+              val gstat @ q"new $$anon()" = gstats(i - 1)
+              m.Term.New(templ.cvt_!).withOriginal(gstat)
             case in @ RightAssociativeApplicationLhsTemporaryVal(left) =>
               object Right {
                 def unapply(gtree: g.Tree): Option[(g.Select, g.Tree, List[g.Tree])] = gtree match {
@@ -235,8 +235,8 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
                 //   immutable.this.Nil.::[Int](x$1)
                 // }
                 // so we use this particular shape of a block to detect such applications
-                case Right(op, qual, targs) =>
-                  m.Term.ApplyInfix(left.cvt_!, op.symbol.asTerm.precvt(qual.tpe, op), targs.cvt_!, List(qual.cvt_!))
+                case gstat @ Right(op, qual, targs) =>
+                  m.Term.ApplyInfix(left.cvt_!, op.symbol.asTerm.precvt(qual.tpe, op), targs.cvt_!, List(qual.cvt_!)).withOriginal(gstat)
                 // HOWEVER, under some conditions (but not always!)
                 // applications of right-associative applications can move into the block as follows:
                 // ~$ typecheck '(1 :: Nil)(0)'
@@ -278,7 +278,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
             case in =>
               in.cvt_! : m.Stat
           }
-          result += mstat.withOriginal(gstat)
+          result += mstat
         }
         result.toList
       }
