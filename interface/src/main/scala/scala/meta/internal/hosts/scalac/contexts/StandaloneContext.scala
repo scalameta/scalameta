@@ -8,7 +8,7 @@ import scala.meta.semantic.{Context => ScalametaSemanticContext}
 import scala.meta.macros.{Context => ScalametaMacroContext}
 import scala.meta.internal.hosts.scalac.contexts.{SemanticContext => ScalahostSemanticContext}
 import scala.compat.Platform.EOL
-import org.scalameta.reflection.mkGlobal
+import org.scalameta.internal.mkGlobal
 import scala.tools.nsc.reporters.StoreReporter
 import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
