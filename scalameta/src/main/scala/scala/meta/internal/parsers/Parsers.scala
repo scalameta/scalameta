@@ -15,10 +15,11 @@ import scala.meta.internal.{ast => impl}
 import scala.meta.internal.parsers.Location._
 import scala.meta.internal.parsers.Helpers._
 import scala.meta.syntactic.Token._
-import org.scalameta.ast._
+import org.scalameta.ast.AstMetadata
 import org.scalameta.tokens._
 import org.scalameta.unreachable
 import org.scalameta.invariants._
+import org.scalameta.reflection._
 
 private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { parser =>
   // implementation restrictions wrt various dialect properties
@@ -46,7 +47,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     case stat :: Nil => stat
     case stats if stats.forall(_.isBlockStat) => Term.Block(stats)
     case stats if stats.forall(_.isTopLevelStat) => Source(stats)
-    case other => reporter.syntaxError("these statements can't be mixed together", at = tokens.head)
+    case other => reporter.syntaxError("these statements can't be mixed together", at = parserTokens.head)
   })
   def parseTerm(): Term = parseRule(_.expr())
   def parseTermArg(): Term.Arg = parseRule(_.argumentExpr())
@@ -68,13 +69,9 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   def parseMod(): Mod = {
     implicit class XtensionParser(parser: this.type) {
       def annot() = parser.annots(skipNewLines = false) match {
-        case annot :: Nil =>
-          annot
-        case annot :: other :: _ =>
-          val token = other.origin.tokens.head
-          parser.reporter.syntaxError(s"end of file expected but ${token.name} found.", at = token)
-        case Nil =>
-          unreachable(debug(input, dialect))
+        case annot :: Nil => annot
+        case annot :: other :: _ => parser.reporter.syntaxError(s"end of file expected but ${token.name} found.", at = other)
+        case Nil => unreachable(debug(input, dialect))
       }
     }
     parseRule(parser => parser.autoPos(parser.token match {
@@ -104,91 +101,259 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   def parseImportee(): Importee = parseRule(_.importSelector())
   def parseSource(): Source = parseRule(_.compilationUnit())
 
-/* ------------- PARSER TOKENS -------------------------------------------- */
+/* ------------- PARSER-SPECIFIC TOKEN CLASSIFIERS -------------------------------------------- */
 
-  val tokens = input.tokens
-  trait TokenIterator extends Iterator[Token] { def prevTokenPos: Int; def tokenPos: Int; def token: Token; def fork: TokenIterator }
-  var in: TokenIterator = new CrazyTokenIterator()
-  def token = in.token
-  def next() = in.next()
-  def nextOnce() = next()
-  def nextTwice() = { next(); next() }
-  def nextThrice() = { next(); next(); next() }
+  abstract class TokenClass(fn: Token => Boolean) { def contains(token: Token): Boolean = fn(token) }
+  object TokenClass {
+    private implicit class XtensionTokenClass(token: Token) {
+      def isCaseClassOrObject = token.isInstanceOf[`case`] && (token.next.is[`class `] || token.next.is[`object`])
+    }
+    class TypeIntro extends TokenClass(token => {
+      token.isInstanceOf[Ident] || token.isInstanceOf[`super`] || token.isInstanceOf[`this`] ||
+      token.isInstanceOf[`(`] || token.isInstanceOf[`@`] || token.isInstanceOf[`_ `] ||
+      token.isInstanceOf[Unquote]
+    })
+    class ExprIntro extends TokenClass(token => {
+      token.isInstanceOf[Ident] || token.isInstanceOf[Literal] ||
+      token.isInstanceOf[Interpolation.Id] || token.isInstanceOf[Xml.Start] ||
+      token.isInstanceOf[`do`] || token.isInstanceOf[`for`] || token.isInstanceOf[`if`] ||
+      token.isInstanceOf[`new`] || token.isInstanceOf[`return`] || token.isInstanceOf[`super`] ||
+      token.isInstanceOf[`this`] || token.isInstanceOf[`throw`] || token.isInstanceOf[`try`] || token.isInstanceOf[`while`] ||
+      token.isInstanceOf[`(`] || token.isInstanceOf[`{`] || token.isInstanceOf[`_ `] ||
+      token.isInstanceOf[`Unquote`]
+    })
+    class CaseIntro extends TokenClass(token => {
+      token.isInstanceOf[`case`] && !token.isCaseClassOrObject
+    })
+    class DefIntro extends TokenClass(token => {
+      token.isInstanceOf[Modifier] || token.isInstanceOf[`@`] ||
+      token.is[TemplateIntro] || token.is[DclIntro] ||
+      (token.isInstanceOf[Unquote] && token.next.isInstanceOf[DefIntro]) ||
+      (token.isInstanceOf[`case`] && token.isCaseClassOrObject)
+    })
+    class TemplateIntro extends TokenClass(token => {
+      token.isInstanceOf[Modifier] || token.isInstanceOf[`@`] ||
+      token.isInstanceOf[`class `] || token.isInstanceOf[`object`] || token.isInstanceOf[`trait`] ||
+      (token.isInstanceOf[Unquote] && token.next.isInstanceOf[TemplateIntro]) ||
+      (token.isInstanceOf[`case`] && token.isCaseClassOrObject)
+    })
+    class DclIntro extends TokenClass(token => {
+      token.isInstanceOf[`def`] || token.isInstanceOf[`type`] ||
+      token.isInstanceOf[`val`] || token.isInstanceOf[`var`] ||
+      (token.isInstanceOf[Unquote] && token.next.isInstanceOf[DclIntro])
+    })
+    class NonlocalModifier extends TokenClass(token => {
+      token.isInstanceOf[`private`] || token.isInstanceOf[`protected`] || token.isInstanceOf[`override`]
+    })
+    class LocalModifier extends TokenClass(token => {
+      token.is[Modifier] && !token.is[NonlocalModifier]
+    })
+    class StatSeqEnd extends TokenClass(token => {
+      token.isInstanceOf[`}`] || token.isInstanceOf[EOF]
+    })
+    class CaseDefEnd extends TokenClass(token => {
+      token.isInstanceOf[`}`] || token.isInstanceOf[EOF] ||
+      (token.isInstanceOf[`case`] && !token.isCaseClassOrObject)
+    })
+    class CantStartStat extends TokenClass(token => {
+      token.isInstanceOf[`catch`] || token.isInstanceOf[`else`] || token.isInstanceOf[`extends`] ||
+      token.isInstanceOf[`finally`] || token.isInstanceOf[`forSome`] || token.isInstanceOf[`match`] ||
+      token.isInstanceOf[`with`] || token.isInstanceOf[`yield`] ||
+      token.isInstanceOf[`)`] || token.isInstanceOf[`[`] || token.isInstanceOf[`]`] || token.isInstanceOf[`}`] ||
+      token.isInstanceOf[`,`] || token.isInstanceOf[`:`] || token.isInstanceOf[`.`] || token.isInstanceOf[`=`] ||
+      token.isInstanceOf[`;`] || token.isInstanceOf[`#`] || token.isInstanceOf[`=>`] || token.isInstanceOf[`<-`] ||
+      token.isInstanceOf[`<:`] || token.isInstanceOf[`>:`] || token.isInstanceOf[`<%`] ||
+      token.isInstanceOf[`\n`] || token.isInstanceOf[`\n\n`] || token.isInstanceOf[EOF]
+    })
+    class CanEndStat extends TokenClass(token => {
+      token.isInstanceOf[Ident] || token.isInstanceOf[Literal] ||
+      token.isInstanceOf[Interpolation.End] || token.isInstanceOf[Xml.End] ||
+      token.isInstanceOf[`return`] || token.isInstanceOf[`this`] || token.isInstanceOf[`type`] ||
+      token.isInstanceOf[`)`] || token.isInstanceOf[`]`] || token.isInstanceOf[`}`] || token.isInstanceOf[`_ `] ||
+      token.isInstanceOf[Ellipsis] || token.isInstanceOf[Unquote]
+    })
+    class StatSep extends TokenClass(token => {
+      token.isInstanceOf[`;`] || token.isInstanceOf[`\n`] || token.isInstanceOf[`\n\n`] || token.isInstanceOf[EOF]
+    })
+    class NumericLiteral extends TokenClass(token => {
+      token.isInstanceOf[Literal.Int] || token.isInstanceOf[Literal.Long] ||
+      token.isInstanceOf[Literal.Float] || token.isInstanceOf[Literal.Double]
+    })
+  }
+  import TokenClass._
 
-  // NOTE: Scala's parser isn't ready to accept whitespace and comment tokens,
+  trait TokenClassifier[T] { def contains(token: Token): Boolean }
+  object TokenClassifier {
+    private def apply[T: ClassTag](fn: Token => Boolean): TokenClassifier[T] = {
+      new TokenClassifier[T] { def contains(token: Token) = fn(token) }
+    }
+    implicit def inheritanceBased[T <: Token : ClassTag]: TokenClassifier[T] = apply(token => {
+      token != null && classTag[T].runtimeClass.isAssignableFrom(token.getClass)
+    })
+    implicit def typeclassBased[T <: TokenClass : InstanceTag]: TokenClassifier[T] = apply(token => {
+      instanceOf[T].contains(token)
+    })
+  }
+
+  implicit class XtensionTokenClassification(val token: Token) {
+    def isNot[T: TokenClassifier]: Boolean = !is[T]
+    def is[T: TokenClassifier]: Boolean = implicitly[TokenClassifier[T]].contains(token)
+  }
+
+  // NOTE: This is a cache that's necessary for reasonable performance of prev/next for tokens.
+  // It maps character positions in input's content into indices in the scannerTokens vector.
+  // One complication here is that there can be multiple tokens that sort of occupy a given position,
+  // so the clients of this cache need to be wary of that!
+  //   17:09 ~/Projects/alt/core/sandbox (master)$ tokenize 'q"$x"'
+  //   // Scala source: /var/folders/n4/39sn1y_d1hn3qjx6h1z3jk8m0000gn/T/tmpeIwaZ8
+  //   BOF (0..-1)
+  //   q (0..0)
+  //   " (1..1)
+  //    (2..1)
+  //   splice start (2..2)
+  //   x (3..3)
+  //   splice end (3..2)
+  //    (4..3)
+  //   " (4..4)
+  //   EOF (5..4)
+  private val scannerTokenCache: Array[Int] = input match {
+    case input: Input.Real =>
+      val result = new Array[Int](input.content.length)
+      var i = 0
+      while (i < scannerTokens.length) {
+        val token = scannerTokens(i)
+        var j = token.start
+        while (j <= token.end) {
+          result(j) = i
+          j += 1
+        }
+        i += 1
+      }
+      result
+    case input: Input.Virtual =>
+      new Array[Int](0)
+  }
+  implicit class XtensionTokenIndex(token: Token) {
+    def index: Int = {
+      def fast() = {
+        def lurk(roughIndex: Int): Int = {
+          require(roughIndex >= 0 && debug(token))
+          if (scannerTokens(roughIndex) eq token) roughIndex
+          else lurk(roughIndex - 1)
+        }
+        lurk(scannerTokenCache(token.start))
+      }
+      def slow() = {
+        val result = scannerTokens.indexWhere(_ eq token)
+        require(result != -1 && debug(token))
+        result
+      }
+      if (scannerTokenCache.length != 0) fast()
+      else slow()
+    }
+    def prev: Token = {
+      val prev = scannerTokens.apply(Math.max(token.index - 1, 0))
+      if (prev.isInstanceOf[Token.Whitespace] || prev.isInstanceOf[Token.Comment]) prev.prev
+      else prev
+    }
+    def next: Token = {
+      val next = scannerTokens.apply(Math.min(token.index + 1, scannerTokens.length - 1))
+      if (next.isInstanceOf[Token.Whitespace] || next.isInstanceOf[Token.Comment]) next.next
+      else next
+    }
+  }
+
+/* ------------- PARSER-SPECIFIC TOKENS -------------------------------------------- */
+
+  // TODO: Scala's parser isn't ready to accept whitespace and comment tokens,
   // so we have to filter them out, because otherwise we'll get errors like `expected blah, got whitespace`
-  // however, in certain tricky cases some whitespace tokens (namely, newlines) do have to be emitted
-  // this leads to extremely dirty and seriously crazy code, which I'd like to replace in the future
-  private class CrazyTokenIterator(
-    var pos: Int = -1,
-    var prevTokenPos: Int = -1,
-    var tokenPos: Int = -1,
-    var token: Token = null,
-    var sepRegions: List[Char] = Nil
-  ) extends TokenIterator {
-    require(tokens.nonEmpty)
-    if (pos == -1) next() // NOTE: only do next() if we've been just created. forks can't go for next()
-    def isTrivia(token: Token) = !nonTrivia(token)
-    def nonTrivia(token: Token) = token.isNot[Whitespace] && token.isNot[Comment]
-    def hasNext: Boolean = tokens.drop(pos + 1).exists(nonTrivia)
-    def next(): Token = {
-      if (!hasNext) throw new NoSuchElementException()
-      pos += 1
-      prevTokenPos = tokenPos
-      val prev = token
-      val curr = tokens(pos)
+  // However, in certain tricky cases some whitespace tokens (namely, newlines) do have to be emitted.
+  // This leads to extremely dirty and seriously crazy code, which I'd like to replace in the future.
+  // NOTE: Therefore, `tokens` here mean `input.tokens` that are filtered out to match the expectations of Scala's parser.
+  // Correspondingly, `tokenPositions` here mean positions (i.e. indices) of individual elements in `tokens` within `input.tokens`.
+  lazy val scannerTokens = input.tokens
+  lazy val (parserTokens, parserTokenPositions) = {
+    val parserTokens = new immutable.VectorBuilder[Token]()
+    val parserTokenPositions = mutable.ArrayBuilder.make[Int]()
+    def loop(prevPos: Int, currPos: Int, sepRegions: List[Char]): Unit = {
+      if (currPos >= scannerTokens.length) return
+      val prev = if (prevPos >= 0) scannerTokens(prevPos) else null
+      val curr = scannerTokens(currPos)
       val nextPos = {
-        var i = pos + 1
-        while (i < tokens.length && isTrivia(tokens(i))) i += 1
-        if (i == tokens.length) i = -1
+        var i = currPos + 1
+        while (i < scannerTokens.length && scannerTokens(i).is[Trivia]) i += 1
+        if (i == scannerTokens.length) i = -1
         i
       }
-      val next = if (nextPos != -1) tokens(nextPos) else null
-      if (nonTrivia(curr)) {
-        if (curr.is[`(`]) sepRegions = ')' :: sepRegions
-        else if (curr.is[`[`]) sepRegions = ']' :: sepRegions
-        else if (curr.is[`{`]) sepRegions = '}' :: sepRegions
-        else if (curr.is[CaseIntro]) sepRegions = '\u21d2' :: sepRegions
-        else if (curr.is[`}`]) {
-          while (!sepRegions.isEmpty && sepRegions.head != '}') sepRegions = sepRegions.tail
-          if (!sepRegions.isEmpty) sepRegions = sepRegions.tail
-        } else if (curr.is[`]`]) { if (!sepRegions.isEmpty && sepRegions.head == ']') sepRegions = sepRegions.tail }
-        else if (curr.is[`)`]) { if (!sepRegions.isEmpty && sepRegions.head == ')') sepRegions = sepRegions.tail }
-        else if (curr.is[`=>`]) { if (!sepRegions.isEmpty && sepRegions.head == '\u21d2') sepRegions = sepRegions.tail }
-        else () // do nothing for other tokens
-        tokenPos = pos
-        token = curr
-        token
+      val next = if (nextPos != -1) scannerTokens(nextPos) else null
+      if (curr.isNot[Trivia]) {
+        parserTokens += curr
+        parserTokenPositions += currPos
+        val sepRegions1 = {
+          if (curr.is[`(`]) ')' :: sepRegions
+          else if (curr.is[`[`]) ']' :: sepRegions
+          else if (curr.is[`{`]) '}' :: sepRegions
+          else if (curr.is[CaseIntro]) '\u21d2' :: sepRegions
+          else if (curr.is[`}`]) {
+            var sepRegions1 = sepRegions
+            while (!sepRegions1.isEmpty && sepRegions1.head != '}') sepRegions1 = sepRegions1.tail
+            if (!sepRegions1.isEmpty) sepRegions1 = sepRegions1.tail
+            sepRegions1
+          } else if (curr.is[`]`]) { if (!sepRegions.isEmpty && sepRegions.head == ']') sepRegions.tail else sepRegions }
+          else if (curr.is[`)`]) { if (!sepRegions.isEmpty && sepRegions.head == ')') sepRegions.tail else sepRegions }
+          else if (curr.is[`=>`]) { if (!sepRegions.isEmpty && sepRegions.head == '\u21d2') sepRegions.tail else sepRegions }
+          else sepRegions // do nothing for other tokens
+        }
+        loop(currPos, currPos + 1, sepRegions1)
       } else {
-        var i = prevTokenPos + 1
+        var i = prevPos + 1
         var lastNewlinePos = -1
         var newlineStreak = false
         var newlines = false
         while (i < nextPos) {
-          if (tokens(i).is[`\n`] || tokens(i).is[`\f`]) {
+          if (scannerTokens(i).is[`\n`] || scannerTokens(i).is[`\f`]) {
             lastNewlinePos = i
             if (newlineStreak) newlines = true
             newlineStreak = true
           }
-          newlineStreak &= tokens(i).is[Whitespace]
+          newlineStreak &= scannerTokens(i).is[Whitespace]
           i += 1
         }
         if (lastNewlinePos != -1 &&
             prev != null && prev.is[CanEndStat] &&
             next != null && next.isNot[CantStartStat] &&
             (sepRegions.isEmpty || sepRegions.head == '}')) {
-          tokenPos = lastNewlinePos
-          token = tokens(tokenPos)
-          if (newlines) token = `\n\n`(token.input, token.dialect, token.index, token.start)
-          token
+          var token = scannerTokens(lastNewlinePos)
+          if (newlines) token = `\n\n`(token.input, token.start)
+          parserTokens += token
+          parserTokenPositions += lastNewlinePos
+          loop(lastNewlinePos, currPos + 1, sepRegions)
         } else {
-          pos = nextPos - 1
-          this.next()
+          loop(prevPos, nextPos, sepRegions)
         }
       }
     }
-    def fork: TokenIterator = new CrazyTokenIterator(pos, prevTokenPos, tokenPos, token, sepRegions)
+    loop(-1, 0, Nil)
+    (Tokens(parserTokens.result: _*), parserTokenPositions.result)
   }
+
+  trait TokenIterator extends Iterator[Token] { def prevTokenPos: Int; def tokenPos: Int; def token: Token; def fork: TokenIterator }
+  var in: TokenIterator = new SimpleTokenIterator()
+  private class SimpleTokenIterator(var i: Int = -1) extends TokenIterator {
+    require(parserTokens.nonEmpty)
+    if (i == -1) next() // NOTE: only do next() if we've been just created. forks can't go for next()
+    def hasNext: Boolean = i < parserTokens.length - 1
+    def next(): Token = { if (!hasNext) throw new NoSuchElementException(); i += 1; parserTokens(i) }
+    def prevTokenPos: Int = if (i > 0) parserTokenPositions(Math.min(i, parserTokens.length - 1) - 1) else -1
+    def tokenPos: Int = if (i > -1) parserTokenPositions(Math.min(i, parserTokens.length - 1)) else -1
+    def token: Token = parserTokens(i)
+    def fork: TokenIterator = new SimpleTokenIterator(i)
+  }
+  def token = in.token
+  def next() = in.next()
+  def nextOnce() = next()
+  def nextTwice() = { next(); next() }
+  def nextThrice() = { next(); next(); next() }
 
 /* ------------- PARSER COMMON -------------------------------------------- */
 
@@ -306,16 +471,17 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     finally inFunReturnType = saved
   }
 
-  def syntaxErrorExpected[T: TokenMetadata]: Nothing = syntaxError(s"${implicitly[TokenMetadata[T]].name} expected but ${token.name} found.", at = token)
+  def syntaxErrorExpected[T <: Token : TokenMetadata]: Nothing =
+    syntaxError(s"${implicitly[TokenMetadata[T]].name} expected but ${token.name} found.", at = token)
 
   /** Consume one token of the specified type, or signal an error if it is not there. */
-  def accept[T: TokenMetadata]: Unit =
+  def accept[T <: Token : TokenMetadata]: Unit =
     if (token.is[T]) {
       if (token.isNot[EOF]) next()
     } else syntaxErrorExpected[T]
 
   /** If current token is T consume it. */
-  def acceptOpt[T: TokenMetadata]: Unit =
+  def acceptOpt[T <: Token : TokenMetadata]: Unit =
     if (token.is[T]) next()
 
   /** {{{
@@ -388,7 +554,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         unreachable(debug(token))
     }
   }
-  
+
   /** Convert tree to formal parameter list. */
   def convertToParams(tree: Term): List[Term.Param] = tree match {
     case Term.Tuple(ts) => ts.toList flatMap convertToParam
@@ -901,34 +1067,49 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
    */
   def literal(isNegated: Boolean = false): Lit = autoPos {
     val res = token match {
-      case token: Literal.Char   => Lit.Char(token.value)
-      case token: Literal.Int    => Lit.Int(token.value(isNegated))
-      case token: Literal.Long   => Lit.Long(token.value(isNegated))
-      case token: Literal.Float  => Lit.Float(token.value(isNegated))
-      case token: Literal.Double => Lit.Double(token.value(isNegated))
-      case token: Literal.String => Lit.String(token.value)
-      case token: Literal.Symbol => Lit.Symbol(token.value)
-      case token: `true`         => Lit.Bool(true)
-      case token: `false`        => Lit.Bool(false)
-      case token: `null`         => Lit.Null()
-      case _                     => unreachable(debug(token))
+      case token: Literal.Char    => Lit.Char(token.value)
+      case token: Literal.Int     => Lit.Int(token.value(isNegated))
+      case token: Literal.Long    => Lit.Long(token.value(isNegated))
+      case token: Literal.Float   => Lit.Float(token.value(isNegated))
+      case token: Literal.Double  => Lit.Double(token.value(isNegated))
+      case token: Literal.String  => Lit.String(token.value)
+      case token: Literal.Symbol  => Lit.Symbol(token.value)
+      case token: Literal.`true`  => Lit.Bool(true)
+      case token: Literal.`false` => Lit.Bool(false)
+      case token: Literal.`null`  => Lit.Null()
+      case _                      => unreachable(debug(token))
     }
     next()
     res
   }
 
   def interpolate[Ctx <: Tree, Ret <: Tree](arg: () => Ctx, result: (Term.Name, List[Lit.String], List[Ctx]) => Ret): Ret = autoPos {
-    val interpolator = atPos(in.tokenPos, in.tokenPos)(Term.Name(token.require[Interpolation.Id].code)) // termName() for INTERPOLATIONID
-    next()
+    val interpolator = {
+      if (token.is[Xml.Start]) atPos(in.tokenPos, in.tokenPos)(Term.Name("xml"))
+      else atPos(in.prevTokenPos, in.prevTokenPos)(Term.Name(token.require[Interpolation.Id].code)) // termName() for INTERPOLATIONID
+    }
+    if (token.is[Interpolation.Id]) next()
     val partsBuf = new ListBuffer[Lit.String]
     val argsBuf = new ListBuffer[Ctx]
     def loop(): Unit = token match {
-      case token: Interpolation.Start => next(); loop()
-      case token: Interpolation.Part => partsBuf += atPos(in.tokenPos, in.tokenPos)(Lit.String(token.code)); next(); loop()
-      case token: Interpolation.SpliceStart => next(); argsBuf += arg(); loop()
-      case token: Interpolation.SpliceEnd => next(); loop()
-      case token: Interpolation.End => next(); // just return
-      case _ => unreachable(debug(token, token.show[Raw]))
+      case _: Interpolation.Start | _: Xml.Start =>
+        next()
+        loop()
+      case _: Interpolation.Part | _: Xml.Part =>
+        partsBuf += atPos(in.tokenPos, in.tokenPos)(Lit.String(token.code))
+        next()
+        loop()
+      case _: Interpolation.SpliceStart | _: Xml.SpliceStart =>
+        next()
+        argsBuf += arg()
+        loop()
+      case _: Interpolation.SpliceEnd | _: Xml.SpliceEnd =>
+        next()
+        loop()
+      case _: Interpolation.End | _: Xml.End =>
+        next(); // simply return
+      case _ =>
+        unreachable(debug(token, token.show[Raw]))
     }
     loop()
     result(interpolator, partsBuf.toList, argsBuf.toList)
@@ -950,8 +1131,15 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     }, result = Term.Interpolate(_, _, _))
   }
 
+  def xmlTerm(): Term.Interpolate =
+    interpolateTerm()
+
   def interpolatePat(): Pat.Interpolate =
     interpolate[Pat, Pat.Interpolate](arg = () => dropAnyBraces(pattern().require[Pat]), result = Pat.Interpolate(_, _, _))
+
+  def xmlPat(): Pat.Interpolate =
+    // TODO: probably should switch into XML pattern mode here
+    interpolatePat()
 
 /* ------------- NEW LINES ------------------------------------------------- */
 
@@ -964,7 +1152,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       next()
   }
 
-  def newLineOptWhenFollowedBy[T: TokenMetadata]: Unit = {
+  def newLineOptWhenFollowedBy[T <: Token : TokenMetadata]: Unit = {
     // note: next is defined here because current is token.`\n`
     if (token.is[`\n`] && ahead { token.is[T] }) newLineOpt()
   }
@@ -1219,8 +1407,6 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         atPos(op, auto)(Term.ApplyUnary(op, simpleExpr()))
     }
 
-  def xmlLiteral(): Term = syntaxError("XML literals are not supported", at = in.token)
-
   /** {{{
    *  SimpleExpr    ::= new (ClassTemplate | TemplateBody)
    *                  |  BlockExpr
@@ -1242,8 +1428,8 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
           literal()
         case _: Interpolation.Id =>
           interpolateTerm()
-        case _: XMLStart =>
-          xmlLiteral()
+        case _: Xml.Start =>
+          xmlTerm()
         case _: Ident | _: `this` | _: `super` =>
           path()
         case _: `_ ` =>
@@ -1664,10 +1850,10 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         literal()
       case _: Interpolation.Id =>
         interpolatePat()
+      case _: Xml.Start =>
+        xmlPat()
       case _: `(` =>
         makeTuplePatParens(noSeq.patterns())
-      case _: XMLStart =>
-        xmlLiteralPattern()
       case _: Unquote =>
         unquote[Pat]
       case _ =>
@@ -1969,7 +2155,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   def typeBounds() =
     autoPos(Type.Bounds(bound[`>:`], bound[`<:`]))
 
-  def bound[T: TokenMetadata]: Option[Type] =
+  def bound[T <: Token : TokenMetadata]: Option[Type] =
     if (token.is[T]) { next(); Some(typ()) } else None
 
 /* -------- DEFS ------------------------------------------- */
@@ -2338,7 +2524,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       // the Type.ApplyInfix => Term.ApplyType conversion is weird as well
       def mkCtorRefFunction(tpe: Type) = {
         val origin = tpe.origin.require[Origin.Parsed]
-        val allTokens = parser.input.tokens(dialect).zipWithIndex
+        val allTokens = scannerTokens.zipWithIndex
         val arrowPos = allTokens.indexWhere{ case (el, i) => el.is[`=>`] && origin.startTokenPos <= i && i <= origin.endTokenPos }
         atPos(arrowPos, arrowPos)(Ctor.Ref.Function(atPos(arrowPos, arrowPos)(Ctor.Name("=>"))))
       }

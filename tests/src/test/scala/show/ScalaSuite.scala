@@ -392,4 +392,10 @@ class ScalaSuite extends ParseSuite {
       |  println(y)
     """.trim.stripMargin)
   }
+
+  test("xml literals") {
+    val tree = term("<foo>{bar}</foo>")
+    assert(tree.show[Raw] === """Term.Interpolate(Term.Name("xml"), List(Lit.String("<foo>{bar}</foo>")), Nil)""")
+    assert(tree.show[Code] === """ xml"<foo>{bar}</foo>" """.trim)
+  }
 }

@@ -91,7 +91,7 @@ Functionality of our parser is exposed in two simple methods: `tokens` and `pars
 
 ```
 scala> "class C { def x = 2 }".tokens
-res3: Vector[meta.Token] = Vector(class (0..4),   (5..5), C (6..6),   (7..7), { (8..8),   (9..9), def (10..12),   (13..13), x (14..14),   (15..15), = (16..16),   (17..17), 2 (18..18),   (19..19), } (20..20), EOF (21..20))
+res3: meta.Tokens = Tokens(class (0..4),   (5..5), C (6..6),   (7..7), { (8..8),   (9..9), def (10..12),   (13..13), x (14..14),   (15..15), = (16..16),   (17..17), 2 (18..18),   (19..19), } (20..20), EOF (21..20))
 
 scala> "class C { def x = 2 }".parse[Stat]
 res4: scala.meta.Stat = class C { def x = 2 }

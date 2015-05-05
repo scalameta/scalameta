@@ -8,11 +8,23 @@ import org.scalameta.convert._
 import scala.annotation.implicitNotFound
 
 private[meta] trait Api {
+  type Input = scala.meta.syntactic.Input
+  val Input = scala.meta.syntactic.Input
+
+  type Position = scala.meta.syntactic.Position
+  val Position = scala.meta.syntactic.Position
+
+  type Point = scala.meta.syntactic.Point
+  val Point = scala.meta.syntactic.Point
+
   type Token = scala.meta.syntactic.Token
   val Token = scala.meta.syntactic.Token
 
-  type Input = scala.meta.syntactic.Input
-  val Input = scala.meta.syntactic.Input
+  type Tokens = scala.meta.syntactic.Tokens
+  val Tokens = scala.meta.syntactic.Tokens
+  implicit class XtensionTokens(tokens: Seq[Token]) {
+    def toTokens: Tokens = Tokens(tokens: _*)
+  }
 
   // ===========================
   // PART 1: PARSING
@@ -42,14 +54,15 @@ private[meta] trait Api {
 
   implicit class XtensionInputLike[T](inputLike: T) {
     def parse[U](implicit convert: Convert[T, Input], dialect: Dialect, parse: Parse[U]): U = parse(convert(inputLike))
-    def tokens(implicit convert: Convert[T, Input], dialect: Dialect): Vector[Token] = tokenize(convert(inputLike))
+    def tokens(implicit convert: Convert[T, Input], dialect: Dialect): Tokens = convert(inputLike).tokens
   }
 
-  implicit class XtensionParsedTree(tree: Tree) {
+  implicit class XtensionSyntacticTree(tree: Tree) {
+    def input = tree.origin.input
+    def dialect = tree.origin.dialect
+    def position = tree.origin.position
     def start = tree.origin.start
     def end = tree.origin.end
-    def startLine = tree.origin.startLine
-    def endLine = tree.origin.endLine
     def tokens = tree.origin.tokens
   }
 }

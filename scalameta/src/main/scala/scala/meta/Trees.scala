@@ -505,7 +505,7 @@ package scala.meta.internal.ast {
     def rank: Int
     def pt: Class[_]
   }
- 
-  // TODO: since trees are no longer sealed, we need a mechanism that would keep track of all of them 
+
+  // TODO: since trees are no longer sealed, we need a mechanism that would keep track of all of them
   @registry object Registry
 }

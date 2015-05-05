@@ -12,7 +12,7 @@ import org.scalameta.adt.{Liftables => AdtLiftables, Reflection => AdtReflection
 import org.scalameta.ast.{Liftables => AstLiftables, Reflection => AstReflection}
 import org.scalameta.invariants._
 import org.scalameta.unreachable
-import scala.meta.{Token => MetaToken}
+import scala.meta.{Token => MetaToken, Tokens => MetaTokens}
 import scala.meta.internal.hygiene.{Denotation => MetaDenotation, Sigma => MetaSigma, _}
 import scala.meta.internal.hygiene.{Symbol => MetaSymbol, Prefix => MetaPrefix, Signature => MetaSignature, _}
 import scala.meta.internal.parsers.Helpers._
@@ -115,7 +115,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
           c.abort(c.macroApplication.pos, s"fatal error initializing quasiquote macro: ${showRaw(c.macroApplication)}")
       }
     }
-    val parttokenss = parts.zip(args :+ EmptyTree).map{
+    val parttokenss: List[MetaTokens] = parts.zip(args :+ EmptyTree).map{
       case (partlit @ q"${part: String}", arg) =>
         // Step 1: Compute start and end of the part.
         // Also provide facilities to map offsets between part and wholeFileSource.
@@ -180,37 +180,37 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
         // To do that, we create Input.Slice over the `wholeFileSource` and fixup positions to account for $$s.
         crudeTokens.map(crudeToken => {
           val delta = partOffsetToSourceOffset(crudeToken.start) - (start + crudeToken.start)
-          crudeToken.adjust(input = Input.Slice(wholeFileInput, start, end), delta = delta)
+          crudeToken.adjust(input = sliceFileInput(start, end), delta = delta)
         })
       case (part, arg) =>
         c.abort(part.pos, "quasiquotes can only be used with literal strings")
     }
-    def merge(index: Int, parttokens: Vector[MetaToken], arg: ReflectTree) = {
-      implicit class RichToken(token: Token) { def absoluteStart = token.start + token.input.require[scala.meta.syntactic.Input.Slice].start }
-      val part = {
+    def merge(index: Int, parttokens: MetaTokens, arg: ReflectTree): MetaTokens = {
+      implicit class RichToken(token: Token) { def absoluteStart = token.start + token.input.require[SliceInput].start }
+      val part: Tokens = {
         val bof +: payload :+ eof = parttokens
-        require(bof.is[Token.BOF] && eof.is[Token.EOF] && debug(parttokens))
-        val prefix = if (index == 0) Vector(bof) else Vector()
-        val suffix = if (index == parttokenss.length - 1) Vector(eof) else Vector()
+        require(bof.isInstanceOf[Token.BOF] && eof.isInstanceOf[Token.EOF] && debug(parttokens))
+        val prefix = if (index == 0) Tokens(bof) else Tokens()
+        val suffix = if (index == parttokenss.length - 1) Tokens(eof) else Tokens()
         prefix ++ payload ++ suffix
       }
-      val unquote = {
+      val unquote: Tokens = {
         if (arg.isEmpty) {
-          Vector()
+          Tokens()
         } else {
           val unquoteStart = parttokens.last.absoluteStart
           val unquoteEnd = parttokenss(index + 1).head.absoluteStart - 1
-          val unquoteInput = Input.Slice(wholeFileInput, unquoteStart, unquoteEnd)
-          Vector(MetaToken.Unquote(unquoteInput, scala.meta.dialects.Quasiquote(metaDialect), 0, 0, unquoteEnd - unquoteStart, arg))
+          val unquoteInput = sliceFileInput(unquoteStart, unquoteEnd)
+          Tokens(MetaToken.Unquote(unquoteInput, 0, unquoteEnd - unquoteStart, arg))
         }
       }
       part ++ unquote
     }
-    val tokens = parttokenss.zip(args :+ EmptyTree).zipWithIndex.flatMap({ case ((ts, a), i) => merge(i, ts, a) })
+    val tokens: Tokens = parttokenss.zip(args :+ EmptyTree).zipWithIndex.flatMap({ case ((ts, a), i) => merge(i, ts, a) }).toTokens
     if (sys.props("quasiquote.debug") != null) println(tokens)
     try {
       implicit val parsingDialect: MetaDialect = scala.meta.dialects.Quasiquote(metaDialect)
-      val input = Input.Tokens(tokens.toVector)
+      val input = Input.Virtual(tokens)
       if (sys.props("quasiquote.debug") != null) println(input.tokens)
       val syntax = metaParse(input, metaDialect)
       if (sys.props("quasiquote.debug") != null) { println(syntax.show[Code]); println(syntax.show[Raw]) }
@@ -223,14 +223,19 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
   private lazy val wholeFileSource = c.macroApplication.pos.source
   private lazy val wholeFileInput = {
     if (wholeFileSource.file.file != null) Input.File(wholeFileSource.file.file)
-    else Input.Chars(wholeFileSource.content) // NOTE: can happen in REPL or in custom Global
+    else Input.String(new String(wholeFileSource.content)) // NOTE: can happen in REPL or in custom Global
   }
+  private final case class SliceInput(input: Input.Real, start: Int, end: Int) extends Input.Real {
+    require(0 <= start && start <= input.content.length)
+    require(-1 <= end && end < input.content.length)
+    lazy val content = input.content.slice(start, end + 1)
+  }
+  private def sliceFileInput(start: Int, end: Int) = SliceInput(wholeFileInput, start, end)
   implicit class XtensionTokenPos(token: MetaToken) {
     def pos: ReflectPosition = {
-      val scala.meta.syntactic.Token.Prototype.Some(prototype) = token.prototype
-      val scala.meta.syntactic.Input.Slice(input, start, end) = prototype.input
-      require(input == wholeFileInput && debug(prototype))
-      val sourceOffset = start + prototype.start
+      val SliceInput(input, start, end) = token.input
+      require(input == wholeFileInput && debug(token))
+      val sourceOffset = start + token.start
       c.macroApplication.pos.focus.withPoint(sourceOffset)
     }
   }
@@ -528,7 +533,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
         case q: impl.Quasi if q.tree.asInstanceOf[ReflectTree].tpe <:< typeOf[MetaTermName] =>
           val action = if (q.rank == 0) "unquote" else "splice"
           c.abort(q.pos, s"can't $action a name here, use a variable pattern instead")
-        case _ => 
+        case _ =>
       }
       lazy implicit val liftDefnVal: Liftable[impl.Defn.Val] = Liftable((v: impl.Defn.Val) => {
         v.pats.foreach(prohibitTermName)
@@ -539,8 +544,8 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
         q"_root_.scala.meta.internal.ast.Defn.Var(${v.mods}, ${v.pats}, ${v.decltpe}, ${v.rhs})"
       })
       lazy implicit val liftPatTyped: Liftable[impl.Pat.Typed] = Liftable((p: impl.Pat.Typed) => {
-        prohibitTermName(p.lhs)    
-        q"_root_.scala.meta.internal.ast.Pat.Typed(${p.lhs}, ${p.rhs})"    
+        prohibitTermName(p.lhs)
+        q"_root_.scala.meta.internal.ast.Pat.Typed(${p.lhs}, ${p.rhs})"
       })
     }
     mode match {

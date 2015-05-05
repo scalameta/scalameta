@@ -86,13 +86,13 @@ class AstMacros(val c: Context) {
       bparams1 += q"protected val internalPrototype: $iname"
       bparams1 += q"protected val internalParent: _root_.scala.meta.Tree"
       bparams1 += q"protected val internalScratchpad: $scratchpadType"
-      bparams1 += q"protected val internalOrigin: _root_.scala.meta.Origin"
+      bparams1 += q"protected var internalOrigin: _root_.scala.meta.Origin"
       def internalize(name: TermName) = TermName("_" + name.toString)
       val internalCopyInitss = paramss.map(_.map(p => q"$AstInternal.initField(this.${internalize(p.name)})"))
       val internalCopyBody = q"new $name(prototype.asInstanceOf[ThisType], parent, scratchpad, origin)(...$internalCopyInitss)"
       stats1 += q"private[meta] def internalCopy(prototype: _root_.scala.meta.Tree = this, parent: _root_.scala.meta.Tree = internalParent, scratchpad: $scratchpadType = internalScratchpad, origin: _root_.scala.meta.Origin = internalOrigin): ThisType = $internalCopyBody"
       stats1 += q"def parent: _root_.scala.Option[_root_.scala.meta.Tree] = if (internalParent != null) _root_.scala.Some(internalParent) else _root_.scala.None"
-      stats1 += q"def origin: _root_.scala.meta.Origin = internalOrigin"
+      stats1 += q"def origin: _root_.scala.meta.Origin = { if (internalOrigin == null) internalOrigin = _root_.scala.meta.Origin.Synthetic(this); internalOrigin }"
 
       // step 5: turn all parameters into vars, create getters and setters
       val fieldParamss = paramss
@@ -129,7 +129,7 @@ class AstMacros(val c: Context) {
       }))
       val copyFieldParamss = fieldParamss.zip(fieldDefaultss).map{ case (f, d) => f.zip(d).map { case (p, default) => q"val ${p.name}: ${p.tpt} = $default" } }
       val copyFieldArgss = fieldParamss.map(_.map(p => q"${p.name}"))
-      val copyParamss = copyFieldParamss.init :+ (copyFieldParamss.last :+ q"val origin: _root_.scala.meta.Origin = _root_.scala.meta.Origin.Transformed(this)")
+      val copyParamss = copyFieldParamss.init :+ (copyFieldParamss.last :+ q"val origin: _root_.scala.meta.Origin = null")
       val copyArgss = copyFieldArgss.init :+ (copyFieldArgss.last :+ q"origin")
       // TODO: would be useful to turn copy into a macro, so that its calls are guaranteed to be inlined
       astats1 += q"def copy(...$copyParamss): ThisType = $mname.apply(...$copyArgss)"
@@ -158,7 +158,7 @@ class AstMacros(val c: Context) {
 
       // step 8: generate Companion.apply
       val applyFieldParamss = paramss.map(_.map(_.duplicate))
-      val applyParamss = applyFieldParamss.init :+ (applyFieldParamss.last :+ q"val origin: _root_.scala.meta.Origin = _root_.scala.meta.Origin.None")
+      val applyParamss = applyFieldParamss.init :+ (applyFieldParamss.last :+ q"val origin: _root_.scala.meta.Origin = null")
       val internalFieldParamss = paramss.map(_.map(p => q"@..${p.mods.annotations} val ${p.name}: ${p.tpt}"))
       val internalParamss = internalFieldParamss.init :+ (internalFieldParamss.last :+ q"val origin: _root_.scala.meta.Origin")
       val internalBody = ListBuffer[Tree]()
@@ -225,7 +225,7 @@ class AstMacros(val c: Context) {
           mstats1 += q"@_root_.scala.inline final def unapply(x: $iname): Boolean = true"
         }
       }
-      
+
       // step 10: finish codegen for Quasi
       qstats1 += q"def pt: _root_.java.lang.Class[_] = _root_.org.scalameta.runtime.arrayClass(_root_.scala.Predef.classOf[$iname], this.rank)"
       if (is("Term.Block.Quasi") || is("Type.Bounds.Quasi") || is("Ctor.Primary.Quasi") ||
@@ -233,7 +233,7 @@ class AstMacros(val c: Context) {
         // NOTE: before you remove one or all of these throws, you must know what's going on in the "allFields.unquote" test
         stats1 += q"""throw new _root_.scala.NotImplementedError("implementation restriction: dangerous quasi, see the sources of @ast for more information")"""
       }
-      
+
       mstats1 += q"import _root_.scala.language.experimental.{macros => prettyPlease}"
       mstats1 += q"import _root_.scala.language.implicitConversions"
       mstats1 += q"implicit def interfaceToApi(interface: $iname): $aname = macro $AstInternal.Macros.interfaceToApi[$iname, $aname]"

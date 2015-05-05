@@ -9,103 +9,104 @@ import Chars.{CR, LF, FF}
 import LegacyToken._
 
 private[meta] object tokenize {
-  def apply(input: Input)(implicit dialect: Dialect): Vector[Token] = {
-    def legacyTokenToToken(curr: LegacyTokenData, index: Int): Token = {
+  def apply(input: Input.Real)(implicit dialect: Dialect): Tokens = {
+    def legacyTokenToToken(curr: LegacyTokenData): Token = {
       (curr.token: @scala.annotation.switch) match {
-        case CHARLIT         => Token.Literal.Char(input, dialect, index, curr.offset, curr.endOffset, curr.charVal)
-        case INTLIT          => Token.Literal.Int(input, dialect, index, curr.offset, curr.endOffset, isNegated => curr.intVal(isNegated).map(_.toInt).get)
-        case LONGLIT         => Token.Literal.Long(input, dialect, index, curr.offset, curr.endOffset, isNegated => curr.intVal(isNegated).get)
-        case FLOATLIT        => Token.Literal.Float(input, dialect, index, curr.offset, curr.endOffset, isNegated => curr.floatVal(isNegated).map(_.toFloat).get)
-        case DOUBLELIT       => Token.Literal.Double(input, dialect, index, curr.offset, curr.endOffset, isNegated => curr.floatVal(isNegated).get)
-        case STRINGLIT       => Token.Literal.String(input, dialect, index, curr.offset, curr.endOffset, curr.strVal)
-        case SYMBOLLIT       => Token.Literal.Symbol(input, dialect, index, curr.offset, curr.endOffset, scala.Symbol(curr.strVal))
+        case IDENTIFIER       => Token.Ident(input, curr.offset, curr.endOffset)
+        case BACKQUOTED_IDENT => Token.Ident(input, curr.offset, curr.endOffset)
 
-        case IDENTIFIER       => Token.Ident(input, dialect, index, curr.offset, curr.endOffset)
-        case BACKQUOTED_IDENT => Token.Ident(input, dialect, index, curr.offset, curr.endOffset)
-        case INTERPOLATIONID  => Token.Interpolation.Id(input, dialect, index, curr.offset, curr.endOffset)
+        case CHARLIT         => Token.Literal.Char(input, curr.offset, curr.endOffset, curr.charVal)
+        case INTLIT          => Token.Literal.Int(input, curr.offset, curr.endOffset, isNegated => curr.intVal(isNegated).map(_.toInt).get)
+        case LONGLIT         => Token.Literal.Long(input, curr.offset, curr.endOffset, isNegated => curr.intVal(isNegated).get)
+        case FLOATLIT        => Token.Literal.Float(input, curr.offset, curr.endOffset, isNegated => curr.floatVal(isNegated).map(_.toFloat).get)
+        case DOUBLELIT       => Token.Literal.Double(input, curr.offset, curr.endOffset, isNegated => curr.floatVal(isNegated).get)
+        case STRINGLIT       => Token.Literal.String(input, curr.offset, curr.endOffset, curr.strVal)
+        case SYMBOLLIT       => Token.Literal.Symbol(input, curr.offset, curr.endOffset, scala.Symbol(curr.strVal))
+        case NULL            => Token.Literal.`null`(input, curr.offset)
+        case TRUE            => Token.Literal.`true`(input, curr.offset)
+        case FALSE           => Token.Literal.`false`(input, curr.offset)
 
-        case NEW   => Token.`new`(input, dialect, index, curr.offset)
-        case THIS  => Token.`this`(input, dialect, index, curr.offset)
-        case SUPER => Token.`super`(input, dialect, index, curr.offset)
-        case NULL  => Token.`null`(input, dialect, index, curr.offset)
-        case TRUE  => Token.`true`(input, dialect, index, curr.offset)
-        case FALSE => Token.`false`(input, dialect, index, curr.offset)
+        case INTERPOLATIONID => Token.Interpolation.Id(input, curr.offset, curr.endOffset)
+        case XMLSTART        => Token.Xml.Start(input, curr.offset)
 
-        case IMPLICIT  => Token.`implicit`(input, dialect, index, curr.offset)
-        case OVERRIDE  => Token.`override`(input, dialect, index, curr.offset)
-        case PROTECTED => Token.`protected`(input, dialect, index, curr.offset)
-        case PRIVATE   => Token.`private`(input, dialect, index, curr.offset)
-        case ABSTRACT  => Token.`abstract`(input, dialect, index, curr.offset)
-        case FINAL     => Token.`final`(input, dialect, index, curr.offset)
-        case SEALED    => Token.`sealed`(input, dialect, index, curr.offset)
-        case LAZY      => Token.`lazy`(input, dialect, index, curr.offset)
-        case MACRO     => Token.`macro`(input, dialect, index, curr.offset)
+        case NEW   => Token.`new`(input, curr.offset)
+        case THIS  => Token.`this`(input, curr.offset)
+        case SUPER => Token.`super`(input, curr.offset)
 
-        case PACKAGE    => Token.`package `(input, dialect, index, curr.offset)
-        case IMPORT     => Token.`import`(input, dialect, index, curr.offset)
-        case CLASS      => Token.`class `(input, dialect, index, curr.offset)
+        case IMPLICIT  => Token.`implicit`(input, curr.offset)
+        case OVERRIDE  => Token.`override`(input, curr.offset)
+        case PROTECTED => Token.`protected`(input, curr.offset)
+        case PRIVATE   => Token.`private`(input, curr.offset)
+        case ABSTRACT  => Token.`abstract`(input, curr.offset)
+        case FINAL     => Token.`final`(input, curr.offset)
+        case SEALED    => Token.`sealed`(input, curr.offset)
+        case LAZY      => Token.`lazy`(input, curr.offset)
+        case MACRO     => Token.`macro`(input, curr.offset)
+
+        case PACKAGE    => Token.`package `(input, curr.offset)
+        case IMPORT     => Token.`import`(input, curr.offset)
+        case CLASS      => Token.`class `(input, curr.offset)
         case CASECLASS  => unreachable
-        case OBJECT     => Token.`object`(input, dialect, index, curr.offset)
+        case OBJECT     => Token.`object`(input, curr.offset)
         case CASEOBJECT => unreachable
-        case TRAIT      => Token.`trait`(input, dialect, index, curr.offset)
-        case EXTENDS    => Token.`extends`(input, dialect, index, curr.offset)
-        case WITH       => Token.`with`(input, dialect, index, curr.offset)
-        case TYPE       => Token.`type`(input, dialect, index, curr.offset)
-        case FORSOME    => Token.`forSome`(input, dialect, index, curr.offset)
-        case DEF        => Token.`def`(input, dialect, index, curr.offset)
-        case VAL        => Token.`val`(input, dialect, index, curr.offset)
-        case VAR        => Token.`var`(input, dialect, index, curr.offset)
+        case TRAIT      => Token.`trait`(input, curr.offset)
+        case EXTENDS    => Token.`extends`(input, curr.offset)
+        case WITH       => Token.`with`(input, curr.offset)
+        case TYPE       => Token.`type`(input, curr.offset)
+        case FORSOME    => Token.`forSome`(input, curr.offset)
+        case DEF        => Token.`def`(input, curr.offset)
+        case VAL        => Token.`val`(input, curr.offset)
+        case VAR        => Token.`var`(input, curr.offset)
 
-        case IF      => Token.`if`(input, dialect, index, curr.offset)
+        case IF      => Token.`if`(input, curr.offset)
         case THEN    => unreachable
-        case ELSE    => Token.`else`(input, dialect, index, curr.offset)
-        case WHILE   => Token.`while`(input, dialect, index, curr.offset)
-        case DO      => Token.`do`(input, dialect, index, curr.offset)
-        case FOR     => Token.`for`(input, dialect, index, curr.offset)
-        case YIELD   => Token.`yield`(input, dialect, index, curr.offset)
-        case THROW   => Token.`throw`(input, dialect, index, curr.offset)
-        case TRY     => Token.`try`(input, dialect, index, curr.offset)
-        case CATCH   => Token.`catch`(input, dialect, index, curr.offset)
-        case FINALLY => Token.`finally`(input, dialect, index, curr.offset)
-        case CASE    => Token.`case`(input, dialect, index, curr.offset)
-        case RETURN  => Token.`return`(input, dialect, index, curr.offset)
-        case MATCH   => Token.`match`(input, dialect, index, curr.offset)
+        case ELSE    => Token.`else`(input, curr.offset)
+        case WHILE   => Token.`while`(input, curr.offset)
+        case DO      => Token.`do`(input, curr.offset)
+        case FOR     => Token.`for`(input, curr.offset)
+        case YIELD   => Token.`yield`(input, curr.offset)
+        case THROW   => Token.`throw`(input, curr.offset)
+        case TRY     => Token.`try`(input, curr.offset)
+        case CATCH   => Token.`catch`(input, curr.offset)
+        case FINALLY => Token.`finally`(input, curr.offset)
+        case CASE    => Token.`case`(input, curr.offset)
+        case RETURN  => Token.`return`(input, curr.offset)
+        case MATCH   => Token.`match`(input, curr.offset)
 
-        case LPAREN   => Token.`(`(input, dialect, index, curr.offset)
-        case RPAREN   => Token.`)`(input, dialect, index, curr.offset)
-        case LBRACKET => Token.`[`(input, dialect, index, curr.offset)
-        case RBRACKET => Token.`]`(input, dialect, index, curr.offset)
-        case LBRACE   => Token.`{`(input, dialect, index, curr.offset)
-        case RBRACE   => Token.`}`(input, dialect, index, curr.offset)
+        case LPAREN   => Token.`(`(input, curr.offset)
+        case RPAREN   => Token.`)`(input, curr.offset)
+        case LBRACKET => Token.`[`(input, curr.offset)
+        case RBRACKET => Token.`]`(input, curr.offset)
+        case LBRACE   => Token.`{`(input, curr.offset)
+        case RBRACE   => Token.`}`(input, curr.offset)
 
-        case COMMA     => Token.`,`(input, dialect, index, curr.offset)
-        case SEMI      => Token.`;`(input, dialect, index, curr.offset)
-        case DOT       => Token.`.`(input, dialect, index, curr.offset)
-        case COLON     => Token.`:`(input, dialect, index, curr.offset)
-        case EQUALS    => Token.`=`(input, dialect, index, curr.offset)
-        case AT        => Token.`@`(input, dialect, index, curr.offset)
-        case HASH      => Token.`#`(input, dialect, index, curr.offset)
-        case USCORE    => Token.`_ `(input, dialect, index, curr.offset)
-        case ARROW     => Token.`=>`(input, dialect, index, curr.offset, curr.endOffset)
-        case LARROW    => Token.`<-`(input, dialect, index, curr.offset, curr.endOffset)
-        case SUBTYPE   => Token.`<:`(input, dialect, index, curr.offset)
-        case SUPERTYPE => Token.`>:`(input, dialect, index, curr.offset)
-        case VIEWBOUND => Token.`<%`(input, dialect, index, curr.offset)
+        case COMMA     => Token.`,`(input, curr.offset)
+        case SEMI      => Token.`;`(input, curr.offset)
+        case DOT       => Token.`.`(input, curr.offset)
+        case COLON     => Token.`:`(input, curr.offset)
+        case EQUALS    => Token.`=`(input, curr.offset)
+        case AT        => Token.`@`(input, curr.offset)
+        case HASH      => Token.`#`(input, curr.offset)
+        case USCORE    => Token.`_ `(input, curr.offset)
+        case ARROW     => Token.`=>`(input, curr.offset, curr.endOffset)
+        case LARROW    => Token.`<-`(input, curr.offset, curr.endOffset)
+        case SUBTYPE   => Token.`<:`(input, curr.offset)
+        case SUPERTYPE => Token.`>:`(input, curr.offset)
+        case VIEWBOUND => Token.`<%`(input, curr.offset)
 
         case WHITESPACE =>
-          if (curr.strVal == " ") Token.` `(input, dialect, index, curr.offset)
-          else if (curr.strVal == "\t") Token.`\t`(input, dialect, index, curr.offset)
-          else if (curr.strVal == "\r") Token.`\r`(input, dialect, index, curr.offset)
-          else if (curr.strVal == "\n") Token.`\n`(input, dialect, index, curr.offset)
-          else if (curr.strVal == "\f") Token.`\f`(input, dialect, index, curr.offset)
+          if (curr.strVal == " ") Token.` `(input, curr.offset)
+          else if (curr.strVal == "\t") Token.`\t`(input, curr.offset)
+          else if (curr.strVal == "\r") Token.`\r`(input, curr.offset)
+          else if (curr.strVal == "\n") Token.`\n`(input, curr.offset)
+          else if (curr.strVal == "\f") Token.`\f`(input, curr.offset)
           else unreachable(debug(curr.strVal))
 
-        case COMMENT   => Token.Comment(input, dialect, index, curr.offset, curr.endOffset)
+        case COMMENT   => Token.Comment(input, curr.offset, curr.endOffset)
 
-        case ELLIPSIS  => Token.Ellipsis(input, dialect, index, curr.offset, curr.endOffset, curr.base)
+        case ELLIPSIS  => Token.Ellipsis(input, curr.offset, curr.endOffset, curr.base)
 
-        case EOF       => Token.EOF(input, dialect, index)
-        case XMLSTART  => Token.XMLStart(input, dialect, index, curr.offset, curr.endOffset)
+        case EOF       => Token.EOF(input)
 
         case EMPTY    => unreachable
         case UNDEF    => unreachable
@@ -115,29 +116,71 @@ private[meta] object tokenize {
     val scanner = new LegacyScanner(input)
     val buf = scanner.reader.buf
 
-    var legacyTokenBuf = new mutable.UnrolledBuffer[LegacyTokenData]
+    var legacyTokenBuf = mutable.ArrayBuilder.make[LegacyTokenData]()
+    var xmlLiteralBuf = new mutable.ListBuffer[String]
+    lazy val xmlLiteralGlobal = {
+      import scala.tools.reflect._
+      import scala.tools.nsc._
+      import scala.tools.nsc.settings._
+      import scala.tools.nsc.reporters._
+      val settings = new Settings(msg => sys.error(s"fatal error parsing xml literal: $msg"))
+      settings.Yrangepos.value = true
+      val reporter = new StoreReporter()
+      val result = new ReflectGlobal(settings, reporter, classOf[List[_]].getClassLoader)
+      result.globalPhase = new result.Run().parserPhase
+      result
+    }
     scanner.foreach(curr => {
-      // TODO: reinstate error handling
-      // try legacyTokenBuf += curr
-      // catch { case e: Exception => scanner.report.error(e.getMessage) }
-      // val tokenGetters = Tokens.getClass.getMethods.filter(_.getParameterTypes().length == 0)
-      // println(tokenGetters.find(m => m.invoke(Tokens) == curr).get.getName)
       val currCopy = new LegacyTokenData{}.copyFrom(curr)
-      if (currCopy.token == EOF) currCopy.offset = buf.length // NOTE: sometimes EOF's offset is `buf.length - 1`, and that might mess things up
+      if (currCopy.token == XMLSTART) {
+        val slice = input.content.drop(Math.max(currCopy.offset, 0))
+        def probe(): Either[String, Int] = {
+          import scala.reflect.io._
+          import scala.reflect.internal.util._
+          import xmlLiteralGlobal._
+          val abstractFile = new VirtualFile("<scalameta-tokenizing-xmlliteral>")
+          val sourceFile = new BatchSourceFile(abstractFile, slice)
+          val unit = new CompilationUnit(sourceFile)
+          def tryParse(action: syntaxAnalyzer.Parser => Tree): Either[(Int, String), Int] = {
+            reporter.reset()
+            val parser = newUnitParser(unit)
+            val result = action(parser)
+            if (reporter.hasErrors) {
+              import scala.language.existentials
+              val infos = reporter.asInstanceOf[scala.tools.nsc.reporters.StoreReporter].infos
+              val error = infos.filter(_.severity == reporter.ERROR).toList.head
+              Left((error.pos.point, error.msg))
+            } else {
+              Right(result.pos.end)
+            }
+          }
+          tryParse(_.xmlLiteralPattern()).fold(_ => tryParse(_.xmlLiteral()).left.map(_._2), result => Right(result))
+        }
+        probe() match {
+          case Left(error) =>
+            scanner.reporter.syntaxError("unexpected shape of xml literal", at = currCopy.offset)
+          case Right(length) =>
+            xmlLiteralBuf += new String(slice.take(length))
+            scanner.reader.charOffset = scanner.curr.offset + length + 1
+            if (scanner.reader.charOffset >= input.content.length) scanner.next.token = EOF
+        }
+      }
+      if (currCopy.token == EOF) {
+        // NOTE: sometimes EOF's offset is `buf.length - 1`, and that might mess things up
+        currCopy.offset = buf.length
+      }
       legacyTokenBuf += currCopy
     })
-    val legacyTokens = legacyTokenBuf.toVector
+    val legacyTokens = legacyTokenBuf.result
 
-    var _index = -1
-    def nextIndex() = { _index += 1; _index }
-    var tokens = new mutable.UnrolledBuffer[Token]
-    tokens += Token.BOF(input, dialect, nextIndex())
+    var tokens = new immutable.VectorBuilder[Token]
+    tokens += Token.BOF(input)
 
     def loop(startingFrom: Int, braceBalance: Int = 0, returnWhenBraceBalanceHitsZero: Boolean = false): Int = {
       var legacyIndex = startingFrom
       def prev = legacyTokens(legacyIndex - 1)
       def curr = legacyTokens(legacyIndex)
-      def emitToken() = tokens += legacyTokenToToken(curr, nextIndex())
+      def emitToken() = tokens += legacyTokenToToken(curr)
       def nextToken() = legacyIndex += 1
       if (legacyIndex >= legacyTokens.length) return legacyIndex
 
@@ -159,16 +202,16 @@ private[meta] object tokenize {
         while (startEnd < buf.length && buf(startEnd) == '\"') startEnd += 1
         val numStartQuotes = startEnd - prev.endOffset - 1
         val numQuotes = if (numStartQuotes <= 2) 1 else 3
-        def emitStart(offset: Offset) = tokens += Token.Interpolation.Start(input, dialect, nextIndex(), offset, offset + numQuotes - 1)
-        def emitEnd(offset: Offset) = tokens += Token.Interpolation.End(input, dialect, nextIndex(), offset, offset + numQuotes - 1)
+        def emitStart(offset: Offset) = tokens += Token.Interpolation.Start(input, offset, offset + numQuotes - 1)
+        def emitEnd(offset: Offset) = tokens += Token.Interpolation.End(input, offset, offset + numQuotes - 1)
         def emitContents(): Unit = {
           require(curr.token == STRINGPART || curr.token == STRINGLIT)
           if (curr.token == STRINGPART) {
-            tokens += Token.Interpolation.Part(input, dialect, nextIndex(), curr.offset, curr.endOffset)
+            tokens += Token.Interpolation.Part(input, curr.offset, curr.endOffset)
             require(buf(curr.endOffset + 1) == '$')
             val dollarOffset = curr.endOffset + 1
-            def emitSpliceStart(offset: Offset) = tokens += Token.Interpolation.SpliceStart(input, dialect, nextIndex(), offset)
-            def emitSpliceEnd(offset: Offset) = tokens += Token.Interpolation.SpliceEnd(input, dialect, nextIndex(), offset)
+            def emitSpliceStart(offset: Offset) = tokens += Token.Interpolation.SpliceStart(input, offset)
+            def emitSpliceEnd(offset: Offset) = tokens += Token.Interpolation.SpliceEnd(input, offset)
             def requireExpectedToken(expected: LegacyToken) = { require(curr.token == expected) }
             def emitExpectedToken(expected: LegacyToken) = { require(curr.token == expected); emitToken() }
             if (buf(dollarOffset + 1) == '{') {
@@ -195,7 +238,7 @@ private[meta] object tokenize {
             }
           } else {
             curr.endOffset -= numQuotes
-            tokens += Token.Interpolation.Part(input, dialect, nextIndex(), curr.offset, curr.endOffset)
+            tokens += Token.Interpolation.Part(input, curr.offset, curr.endOffset)
             require(buf(curr.endOffset + 1) == '\"')
             nextToken()
           }
@@ -212,10 +255,16 @@ private[meta] object tokenize {
         }
       }
 
+      if (prev.token == XMLSTART) {
+        val raw = xmlLiteralBuf.remove(0)
+        tokens += Token.Xml.Part(input, prev.offset, curr.offset - 1)
+        tokens += Token.Xml.End(input, curr.offset - 1)
+      }
+
       loop(legacyIndex, braceBalance1, returnWhenBraceBalanceHitsZero)
     }
 
     loop(startingFrom = 0)
-    tokens.toVector
+    Tokens(tokens.result: _*)
   }
 }

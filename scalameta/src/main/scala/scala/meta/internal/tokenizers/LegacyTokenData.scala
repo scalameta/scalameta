@@ -8,7 +8,7 @@ import Chars._
 
 private[meta] trait LegacyTokenData {
   /** the input that is currently being tokenized */
-  var input: Input = Input.None
+  var input: Input.Real = null
 
   /** the next token */
   var token: LegacyToken = EMPTY

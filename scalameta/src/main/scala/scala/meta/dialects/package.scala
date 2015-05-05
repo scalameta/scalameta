@@ -13,6 +13,11 @@ trait Dialect {
   // to a sequence wildcard pattern.
   def bindToSeqWildcardDesignator: String
 
+  // Are XML literals supported by this dialect?
+  // We plan to deprecate XML literal syntax, and some dialects
+  // might go ahead and drop support completely.
+  def allowXmlLiterals: Boolean
+
   // Permission to tokenize repeated dots as ellipses.
   // Necessary to support quasiquotes, e.g. `q"foo(..$args)"`.
   def allowEllipses: Boolean
@@ -33,18 +38,21 @@ package object dialects {
   implicit object Scala211 extends Dialect {
     override def toString = "Scala211"
     def bindToSeqWildcardDesignator = "@" // List(1, 2, 3) match { case List(xs @ _*) => ... }
-    def allowEllipses: Boolean = false // Vanilla Scala doesn't support ellipses, somewhat similar concept is varargs and _*
+    def allowXmlLiterals = true // Not even deprecated yet, so we need to support xml literals
+    def allowEllipses = false // Vanilla Scala doesn't support ellipses, somewhat similar concept is varargs and _*
   }
 
   implicit object Dotty extends Dialect {
     override def toString = "Dotty"
     def bindToSeqWildcardDesignator = ":" // // List(1, 2, 3) match { case List(xs: _*) => ... }
-    def allowEllipses: Boolean = false // Vanilla Dotty doesn't support ellipses, somewhat similar concept is varargs and _*
+    def allowXmlLiterals = false // Dotty parser doesn't have the corresponding code, so it can't really support xml literals
+    def allowEllipses = false // Vanilla Dotty doesn't support ellipses, somewhat similar concept is varargs and _*
   }
 
   def Quasiquote(dialect: Dialect): Dialect = new Dialect {
     override def toString = s"Quasiquotes(${dialect.toString})"
     def bindToSeqWildcardDesignator = dialect.bindToSeqWildcardDesignator
-    def allowEllipses: Boolean = true
+    def allowXmlLiterals = dialect.allowXmlLiterals
+    def allowEllipses = true
   }
 }

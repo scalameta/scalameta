@@ -10,7 +10,7 @@ import mutable.{ ListBuffer, ArrayBuffer }
 import Chars._
 import LegacyToken._
 
-private[meta] class LegacyScanner(val input: Input, decodeUni: Boolean = true)(implicit val dialect: Dialect) {
+private[meta] class LegacyScanner(val input: Input.Real, decodeUni: Boolean = true)(implicit val dialect: Dialect) {
   val curr: LegacyTokenData   = new LegacyTokenData {}
   val next: LegacyTokenData   = new LegacyTokenData {}
   val prev: LegacyTokenData   = new LegacyTokenData {}
@@ -310,7 +310,8 @@ private[meta] class LegacyScanner(val input: Input, decodeUni: Boolean = true)(i
           nextChar()
           last match {
             case ' ' | '\t' | '\n' | '{' | '(' | '>' if isNameStart(ch) || ch == '!' || ch == '?' =>
-              token = XMLSTART
+              if (dialect.allowXmlLiterals) token = XMLSTART
+              else syntaxError("xml literals are not supported", at = offset)
             case _ =>
               // Console.println("found '<', but last is '"+in.last+"'"); // DEBUG
               putChar('<')

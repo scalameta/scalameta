@@ -10,6 +10,11 @@ private[meta] trait Reporter {
     def fallback = ()
     at.origin.tokens.headOption.map(at => deprecationWarning(msg, at)).getOrElse(())
   }
+  def syntaxWarning(msg: String, at: Token): Unit = ()
+  def syntaxWarning(msg: String, at: Tree): Unit = {
+    def fallback = ()
+    at.origin.tokens.headOption.map(at => syntaxWarning(msg, at)).getOrElse(())
+  }
   def syntaxError(msg: String, at: Token): Nothing = throw new ParseException(at.input, at, msg)
   def syntaxError(msg: String, at: Tree): Nothing = syntaxError(msg, at = at.origin.tokens.head)
 }

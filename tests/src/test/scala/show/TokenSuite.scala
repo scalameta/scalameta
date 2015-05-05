@@ -736,7 +736,7 @@ class ShowTokenSuite extends ParseSuite {
       |BOF (0..-1)
       |x (0..0)
       |  (1..1)
-      |right arrow (2..3)
+      |=> (2..3)
       |  (4..4)
       |x (5..5)
       |EOF (6..5)
@@ -745,7 +745,7 @@ class ShowTokenSuite extends ParseSuite {
       |BOF (0..-1)
       |x (0..0)
       |  (1..1)
-      |right arrow (2..2)
+      |⇒ (2..2)
       |  (3..3)
       |x (4..4)
       |EOF (5..4)
@@ -757,7 +757,7 @@ class ShowTokenSuite extends ParseSuite {
       |( (4..4)
       |x (5..5)
       |  (6..6)
-      |left arrow (7..8)
+      |<- (7..8)
       |  (9..9)
       |xs (10..11)
       |) (12..12)
@@ -775,7 +775,7 @@ class ShowTokenSuite extends ParseSuite {
       |( (4..4)
       |x (5..5)
       |  (6..6)
-      |left arrow (7..7)
+      |← (7..7)
       |  (8..8)
       |xs (9..10)
       |) (11..11)
@@ -794,6 +794,27 @@ class ShowTokenSuite extends ParseSuite {
       |- (0..0)
       |2147483648 (1..10)
       |EOF (11..10)
+    """.trim.stripMargin.replace("QQQ", "\"\"\""))
+  }
+
+  test("simple xml literal - 1") {
+    assert(tokenize("<foo>bar</foo>").map(_.show[Raw]).mkString("\n") === """
+      |BOF (0..-1)
+      |xml start (0..-1)
+      |<foo>bar</foo> (0..13)
+      |xml end (13..12)
+      |EOF (14..13)
+    """.trim.stripMargin.replace("QQQ", "\"\"\""))
+  }
+
+  test("simple xml literal - 2") {
+    // TODO: the whitespace shouldn't be included here - looks like a bug in scalac's MarkupParser
+    assert(tokenize("<foo>bar</foo> ").map(_.show[Raw]).mkString("\n") === """
+      |BOF (0..-1)
+      |xml start (0..-1)
+      |<foo>bar</foo>  (0..14)
+      |xml end (14..13)
+      |EOF (15..14)
     """.trim.stripMargin.replace("QQQ", "\"\"\""))
   }
 }
