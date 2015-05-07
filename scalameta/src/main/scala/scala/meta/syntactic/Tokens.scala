@@ -33,6 +33,7 @@ object Tokens {
     if ((tokens: Seq[Token]).isInstanceOf[Tokens]) tokens.asInstanceOf[Tokens]
     else new Tokens(tokens: _*)
   }
+  def unapplySeq(tokens: Tokens): Some[Seq[Token]] = Some(tokens)
 
   class Projected[A](repr: A*)
   extends AbstractSeq[A]
