@@ -10,6 +10,7 @@ import scala.meta.internal.tokenizers._
 
 sealed trait Input {
   def tokens(implicit dialect: Dialect): Tokens
+  def content: Array[Char]
 }
 
 object Input extends InputImplicits {
@@ -40,6 +41,8 @@ object Input extends InputImplicits {
   // Therefore, I'm letting this inconsistency alone, and we'll see how it pans out.
   final case class Virtual(payload: Tokens) extends Input {
     def tokens(implicit dialect: Dialect) = payload
+    import scala.meta.dialects.Scala211
+    def content = tokens.map(_.code).mkString.toArray
   }
 }
 
