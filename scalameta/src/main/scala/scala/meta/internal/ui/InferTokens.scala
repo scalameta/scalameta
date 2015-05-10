@@ -2,20 +2,38 @@ package scala.meta
 package internal
 package ui
 
+import scala.meta.tokenquasiquotes._
+
 // TODO: check for BOF and EOF, EOL, etc.
 // TODO: see for specific cases, as in showCode
 private[meta] object inferTokens {
-  def apply(tree: Tree): Tokens = { // TODO, dummy for now
-    import scala.meta.dialects.Scala211
-    val code = tree.show[Code]
-    (tree match {
-        case _: Source => code.parse[Source]
-        case _: Stat => code.parse[Stat]
-    }).origin.tokens
+  def apply(tree: Tree)(implicit dialect: Dialect): Tokens = { // TODO
+    default(tree)
   }
 
-  /* Will be used to generate synthetic tokens, and recurse in subtrees */
-  private def infer(tree: Tree, indent: Int = 0, dialect: Dialect): Tokens = {
+  implicit class RichTokenSeq(tokenSeq: Seq[Tokens]) {
+    def flattks = {
+        val allTokens = tokenSeq.flatMap(_.repr.toSeq)
+        Tokens(allTokens: _*)
+    }
+  }
+  implicit class RichTree(tree: Tree) {
+    def identTokens = ident(tree.tokens)
+  }
+
+  /* TODO: remove in the future, this is here now for partial implementation
+   * testing. */
+  def default(tree: Tree)(implicit dialect: Dialect): Tokens = {
+    val code = tree.show[Code]
+        (tree match {
+            case _: Source => code.parse[Source]
+            case _: Stat => code.parse[Stat]
+        }).origin.tokens
+  }
+
+
+  /* Generate synthetic tokens */
+  private def infer(tree: Tree)(implicit dialect: Dialect): Tokens = {
     import scala.meta.internal.ast._
     def tkz(tree: Tree): Tokens = tree match {
         // Bottom
@@ -176,14 +194,15 @@ private[meta] object inferTokens {
         case t: Case                     => ???
 
         // Source
-        case t: Source                   => ???
+        case t: Source                   => t.stats.map(_.identTokens).flattks
     }
     tkz(tree.asInstanceOf[scala.meta.internal.ast.Tree])
   }
 
-  /* Will be used to reprint tokens from unmodified trees - but adding proper indentation */
-  private def update(tks: Tokens, indent: Int = 0): Tokens = {
-    ??? // TODO
+  /* Adding proper identation to the token stream (one right shift) */
+  private def ident(tks: Tokens): Tokens = {
+    val ident = "  " // One ident is two spaces
+    tks // TODO
   }
 
 }

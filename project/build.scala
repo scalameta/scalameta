@@ -146,7 +146,8 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided"),
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _ % "provided")
+    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _ % "provided"),
+    libraryDependencies += "com.github.duhemm" %% s"parsermacros-plugin"  % "0.1.0-SNAPSHOT"
   ) dependsOn (foundation)
 
   lazy val sandbox = Project(

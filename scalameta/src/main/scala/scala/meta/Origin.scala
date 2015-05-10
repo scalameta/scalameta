@@ -33,6 +33,6 @@ object Origin {
     lazy val input = Input.Virtual(tokens)
     lazy val dialect = scala.meta.internal.ui.inferDialect(tree)
     lazy val position = Position.Virtual(input)
-    lazy val tokens = scala.meta.internal.ui.inferTokens(tree)
+    lazy val tokens = scala.meta.internal.ui.inferTokens(tree)(dialect)
   }
 }
