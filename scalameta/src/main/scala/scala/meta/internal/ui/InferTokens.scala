@@ -8,7 +8,7 @@ import scala.meta.tokenquasiquotes._
 // TODO: see for specific cases, as in showCode
 private[meta] object inferTokens {
   def apply(tree: Tree)(implicit dialect: Dialect): Tokens = { // TODO
-    default(tree)
+    infer(tree)
   }
 
   implicit class RichTokenSeq(tokenSeq: Seq[Tokens]) {
@@ -23,7 +23,7 @@ private[meta] object inferTokens {
 
   /* TODO: remove in the future, this is here now for partial implementation
    * testing. */
-  def default(tree: Tree)(implicit dialect: Dialect): Tokens = {
+  def generic(tree: Tree)(implicit dialect: Dialect): Tokens = {
     val code = tree.show[Code]
         (tree match {
             case _: Source => code.parse[Source]
