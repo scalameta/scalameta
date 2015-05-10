@@ -10,6 +10,8 @@ class InferSuite extends ParseSuite { // TODO
     def trimTokens(tks: Tokens) = tks.filterNot(tk => tk.isInstanceOf[Token.BOF] || tk.isInstanceOf[Token.EOF])
     val t1 = trimTokens(a.tokens).map(_.show[Code])
     val t2 = trimTokens(b.tokens).map(_.show[Code])
+    if (t1 != t2)
+    println(t1 + "\n" + t2)
     assert(t1 == t2)
   }
 
@@ -20,6 +22,8 @@ class InferSuite extends ParseSuite { // TODO
       println(tree.tokens)
     }
   }
+
+  /* Infering classes */
 
   test("inferSource") {
     val tree = """class Test { 
@@ -109,4 +113,77 @@ class InferSuite extends ParseSuite { // TODO
       .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Defn.Class]
     compareTokenCodes(tree, tree.copy())
   }
+  test("inferClass11") {
+  val tree = """@test @abc case class Test[A, B](var a: Int, val b: String) extends (A => B) with C { 
+               |  def test = 1234 
+               |}"""
+    .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Defn.Class]
+   compareTokenCodes(tree, tree.copy())
+ }
+
+  /* Infering objects */
+
+  test("inferObject1") {
+    val tree = """object Test { 
+                 |  def test = 1234
+                 |  case object AA
+                 |}"""
+      .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Defn.Object]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("inferObject2") {
+    val tree = """@ast @tt object Test { 
+                 |  def test = 1234
+                 |  case object AA
+                 |}"""
+      .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Defn.Object]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("inferObject3") {
+    val tree = """@ast @tt case object Test { 
+                 |  def test = 1234
+                 |  case object AA
+                 |}"""
+      .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Defn.Object]
+    compareTokenCodes(tree, tree.copy())
+  }
+
+  /* Infering Defn.defs */
+
+  test("inferDef1") {
+    val tree = """def aaa = 2132"""
+      .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Defn.Def]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("inferDef2") {
+    val tree = """def aaa() = 2132"""
+      .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Defn.Def]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("inferDef3") {
+    val tree = """def aaa[T](b: T) = 2132"""
+      .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Defn.Def]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("inferDef4") {
+    val tree = """def aaa[T](b: T): Int = 2132"""
+      .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Defn.Def]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("inferDef5") {
+    val tree = """def aaa[T, B](b: T)(c: Int = 0): (T => B) = { 2132 /* This is a comment */ }"""
+      .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Defn.Def]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("inferDef6") {
+    val tree = """implicit def aaa[T, B](b: T)(c: Int = 0): (T => B) = 2132"""
+      .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Defn.Def]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("inferDef7") {
+    val tree = """private[test] def aaa[T, B, E](b: T, a: String)(c: Int = 0): (T => B) = 2132"""
+      .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Defn.Def]
+    compareTokenCodes(tree, tree.copy())
+  }
+  
 }

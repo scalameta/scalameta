@@ -49,6 +49,17 @@ private[meta] object inferTokens {
       def o_o = flattks()(toks" ")()
       def o_o_ = flattks()(toks" ")(toks" ") 
       def `[o,o]` = flattks(toks"[")(toks", ")(toks"]")
+      def `(o,o)` = flattks(toks"(")(toks", ")(toks")")
+    }
+    implicit class RichTreeSeqSeq(trees: Seq[Seq[Tree]]) {
+        def `(o,o)` = {
+            val sq = trees match {
+                case Nil => toks""
+                case _ if trees.length == 1 && trees.head.length == 0 => toks"()"
+                case _ => trees.flatMap(_.`(o,o)`)
+            }
+            Tokens(sq: _*)
+        }
     }
 
     def tkz(tree: Tree): Tokens = tree match {
@@ -165,8 +176,15 @@ private[meta] object inferTokens {
             val ext = if (!t.templ.parents.isEmpty) toks"extends " else toks""
             toks"${t.mods.o_o_}class ${t.name.tks}${t.tparams.`[o,o]`}${t.ctor.tks} $ext${t.templ.tks}"
         case t: Defn.Trait     => ???
-        case t: Defn.Object    => ???
-        case t: Defn.Def       => ???
+        case t: Defn.Object    => 
+            val ext = if (!t.templ.parents.isEmpty) toks"extends " else toks""
+            toks"${t.mods.o_o_}object ${t.name.tks}${t.ctor.tks} $ext${t.templ.tks}"
+        case t: Defn.Def       => 
+            val tpe = t.decltpe match {
+                case None => toks""
+                case Some(tpe) => toks": ${tpe.tks}"
+            }
+            toks"${t.mods.o_o_}def ${t.name.tks}${t.tparams.`[o,o]`}${t.paramss.`(o,o)`}$tpe = ${t.body.tks}"
         case t: Defn.Macro     => ???
         case t: Pkg            => ???
         case t: Pkg.Object     => ???
@@ -217,7 +235,7 @@ private[meta] object inferTokens {
     tkz(tree.asInstanceOf[scala.meta.internal.ast.Tree])
   }
 
-  /* Adding proper identation to the token stream (one right shift) */
+  /* Adding proper identation to the token stream */
   private def ident(tks: Tokens)(implicit ident: String): Tokens = {
     tks // TODO
   }
