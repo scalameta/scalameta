@@ -3,22 +3,13 @@ package internal
 package ui
 
 import scala.meta.tokenquasiquotes._
+import scala.language.implicitConversions
 
 // TODO: check for BOF and EOF, EOL, etc.
 // TODO: see for specific cases, as in showCode
 private[meta] object inferTokens {
   def apply(tree: Tree)(implicit dialect: Dialect): Tokens = {
     infer(tree)
-  }
-
-  implicit class RichTokenSeq(tokenSeq: Seq[Tokens]) {
-    def flattks = {
-        val allTokens = tokenSeq.flatMap(_.repr.toSeq)
-        Tokens(allTokens: _*)
-    }
-  }
-  implicit class RichTree(tree: Tree) {
-    def identTokens = ident(tree.tokens)("  ") // TODO: figure out how to find proper ident string
   }
 
   /* TODO: remove in the future, this is here now for partial implementation
@@ -36,6 +27,30 @@ private[meta] object inferTokens {
   private def infer(tree: Tree)(implicit dialect: Dialect): Tokens = {
     import scala.meta.internal.ast._
     import scala.meta.dialects.Scala211 // TODO: figure out why the implicit in params is not enough
+  
+    implicit def toTokenSeq(tk: Token) = Tokens(tk)
+  
+    implicit class RichTree(tree: Tree) {
+      def tks = ident(tree.tokens)("  ") // TODO: figure out how to find proper ident string
+    }
+    implicit class RichTreeSeq(trees: Seq[Tree]) {
+  
+      /* Flatten tokens corresponding to a sequence of trees together */
+      def flattks(start: Tokens = toks"")(sep: Tokens = toks"")(end: Tokens = toks"") = {
+          val sq = trees match {
+              case Nil => toks""
+              case _ => start ++ trees.init.flatMap(_.tokens.repr ++ sep) ++ trees.last.tokens.repr ++ end
+          }
+          Tokens(sq: _*)
+      }
+  
+      /* various combiners for tokens, o representing subsequence */
+      def oo = flattks()()()
+      def o_o = flattks()(toks" ")()
+      def o_o_ = flattks()(toks" ")(toks" ") 
+      def `[o,o]` = flattks(toks"[")(toks", ")(toks"]")
+    }
+
     def tkz(tree: Tree): Tokens = tree match {
         // Bottom
         case t: Quasi if t.rank > 0  => ???
@@ -147,8 +162,8 @@ private[meta] object inferTokens {
         case t: Defn.Var       => ???
         case t: Defn.Type      => ???
         case t: Defn.Class     => 
-            println(t.templ.tokens)
-            toks"class ${t.name.tokens} ${t.templ.tokens}"
+            val ext = if (!t.templ.parents.isEmpty) toks"extends " else toks""
+            toks"${t.mods.o_o_}class ${t.name.tks}${t.tparams.`[o,o]`}${t.ctor.tks} $ext${t.templ.tks}"
         case t: Defn.Trait     => ???
         case t: Defn.Object    => ???
         case t: Defn.Def       => ???
@@ -197,7 +212,7 @@ private[meta] object inferTokens {
         case t: Case                     => ???
 
         // Source
-        case t: Source                   => t.stats.map(_.identTokens).flattks
+        case t: Source                   => t.stats.oo
     }
     tkz(tree.asInstanceOf[scala.meta.internal.ast.Tree])
   }
