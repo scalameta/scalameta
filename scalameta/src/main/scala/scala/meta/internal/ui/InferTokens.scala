@@ -7,7 +7,7 @@ import scala.meta.tokenquasiquotes._
 // TODO: check for BOF and EOF, EOL, etc.
 // TODO: see for specific cases, as in showCode
 private[meta] object inferTokens {
-  def apply(tree: Tree)(implicit dialect: Dialect): Tokens = { // TODO
+  def apply(tree: Tree)(implicit dialect: Dialect): Tokens = {
     infer(tree)
   }
 
@@ -18,7 +18,7 @@ private[meta] object inferTokens {
     }
   }
   implicit class RichTree(tree: Tree) {
-    def identTokens = ident(tree.tokens)
+    def identTokens = ident(tree.tokens)("  ") // TODO: figure out how to find proper ident string
   }
 
   /* TODO: remove in the future, this is here now for partial implementation
@@ -35,6 +35,7 @@ private[meta] object inferTokens {
   /* Generate synthetic tokens */
   private def infer(tree: Tree)(implicit dialect: Dialect): Tokens = {
     import scala.meta.internal.ast._
+    import scala.meta.dialects.Scala211 // TODO: figure out why the implicit in params is not enough
     def tkz(tree: Tree): Tokens = tree match {
         // Bottom
         case t: Quasi if t.rank > 0  => ???
@@ -145,7 +146,9 @@ private[meta] object inferTokens {
         case t: Defn.Val       => ???
         case t: Defn.Var       => ???
         case t: Defn.Type      => ???
-        case t: Defn.Class     => ???
+        case t: Defn.Class     => 
+            println(t.templ.tokens)
+            toks"class ${t.name.tokens} ${t.templ.tokens}"
         case t: Defn.Trait     => ???
         case t: Defn.Object    => ???
         case t: Defn.Def       => ???
@@ -200,8 +203,7 @@ private[meta] object inferTokens {
   }
 
   /* Adding proper identation to the token stream (one right shift) */
-  private def ident(tks: Tokens): Tokens = {
-    val ident = "  " // One ident is two spaces
+  private def ident(tks: Tokens)(implicit ident: String): Tokens = {
     tks // TODO
   }
 
