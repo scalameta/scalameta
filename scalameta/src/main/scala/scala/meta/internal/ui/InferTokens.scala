@@ -262,15 +262,35 @@ private[meta] object inferTokens {
     tkz(tree.asInstanceOf[scala.meta.internal.ast.Tree])
   }
 
-  // TODO: check what is the best way to do that
+  // TODO: check what is the best way to do that. The problem is as follow
+  //
+  // 1. Identation is already present in original token streams.
+  //   - We can't just add one identation token
+  //   - Moreover, this is even more true that identation is not added to a synthetic tree
+  //   i.e. let say a tree t2 (synth.), which itself contain a tree t3 (original). Then if
+  //        t2 was inside a tree t, we can't simply add identation to all the lines in the 
+  //        token stream of t2, as t3 already had some kind of identation present.
+  //
+  // 2. Identation is not present in generated code
+  //   - But it is practically impossible to infer this at a call to inferToken,
+  //   since a subtree has no knowledge of its parent as is.
+  //
+  // A solution could be:
+  // 1. Tokens contain inputs. we can skip identation for all tokens with real inputs.
+  // 2. We can add one identation shift to all tokens with virtual inputs.
+  // 3. This will have to be based on: 1) the input type; 2) the position in a line.
+  // Line return could be checked at runtime.
+
   /* Adding proper identation to the token stream */
   private def ident(tks: Tokens)(implicit ident: String): Tokens = {
     tks // TODO
   }
 
   // TODO: check if required
-  /* Put back all the positions at the righ places in a sequence of tokens */
-  private def lift(tks: Tokens): Tokens = {
+  // Calls to the token quasiquote is not doing it so far.
+
+  /* Put back all the positions at the righ places in a sequence of tokens. */
+  private def inplace(tks: Tokens): Tokens = {
     tks // TODO
   }
 
