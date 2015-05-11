@@ -45,9 +45,9 @@ private[meta] object inferTokens {
       }
   
       /* various combiners for tokens, o representing subsequence */
-      def oo = flattks()()()
-      def o_o = flattks()(toks" ")()
-      def o_o_ = flattks()(toks" ")(toks" ") 
+      def `oo` = flattks()()()
+      def `o_o` = flattks()(toks" ")()
+      def `o_o_` = flattks()(toks" ")(toks" ") 
       def `[o,o]` = flattks(toks"[")(toks", ")(toks"]")
       def `(o,o)` = flattks(toks"(")(toks", ")(toks")")
     }
@@ -68,7 +68,7 @@ private[meta] object inferTokens {
         case t: Quasi if t.rank == 0 => ???
 
         // Name
-        case t: Name.Anonymous       => ???
+        case t: Name.Anonymous       => toks"_"
         case t: Name.Indeterminate   => ???
 
         // Term
@@ -151,40 +151,47 @@ private[meta] object inferTokens {
         case t: Pat.Type.Annotate    => ???
 
         // Lit
-        case t: Lit.Bool    => ???
+        case t: Lit.Bool if t.value => toks"true"
+        case t: Lit.Bool if !t.value => toks"false"
         case t: Lit.Byte    => ???
         case t: Lit.Short   => ???
         case t: Lit.Int     => ???
         case t: Lit.Long    => ???
-        case t: Lit.Float   => ???
-        case t: Lit.Double  => ???
-        case t: Lit.Char    => ???
+        case t: Lit.Float   => ??? 
+        case t: Lit.Double  => ??? 
+        case t: Lit.Char    => ??? 
         case t: Lit.String  => ???
         case t: Lit.Symbol  => ???
-        case _: Lit.Null    => ???
-        case _: Lit.Unit    => ???
+        case _: Lit.Null    => toks"null"
+        case _: Lit.Unit    => toks"Unit"
 
         // Member
-        case t: Decl.Val       => ???
-        case t: Decl.Var       => ???
-        case t: Decl.Type      => ???
-        case t: Decl.Def       => ???
-        case t: Defn.Val       => ???
-        case t: Defn.Var       => ???
-        case t: Defn.Type      => ???
-        case t: Defn.Class     => 
-            val ext = if (!t.templ.parents.isEmpty) toks"extends " else toks""
-            toks"${t.mods.o_o_}class ${t.name.tks}${t.tparams.`[o,o]`}${t.ctor.tks} $ext${t.templ.tks}"
-        case t: Defn.Trait     => ???
-        case t: Defn.Object    => 
-            val ext = if (!t.templ.parents.isEmpty) toks"extends " else toks""
-            toks"${t.mods.o_o_}object ${t.name.tks}${t.ctor.tks} $ext${t.templ.tks}"
-        case t: Defn.Def       => 
-            val tpe = t.decltpe match {
+        case t: Decl.Val       => 
+            toks"${t.mods.`o_o_`}val ${t.pats.`oo`}: ${t.decltpe.tks}"
+        case t: Decl.Var       =>
+            toks"${t.mods.`o_o_`}var ${t.pats.`oo`}: ${t.decltpe.tks}"
+        case t: Decl.Type      =>
+            toks"${t.mods.`o_o_`}type ${t.name.tks}${t.tparams.`[o,o]`}${apndTpeBounds(t.bounds)}"
+        case t: Decl.Def       => 
+            toks"${t.mods.`o_o_`}def ${t.name.tks}${t.tparams.`[o,o]`}${t.paramss.`(o,o)`}: ${t.decltpe.tks}"
+        case t: Defn.Val       => 
+            toks"${t.mods.`o_o_`}val ${t.pats.`oo`}${apndDeclTpe(t.decltpe)} = ${t.rhs.tks}"
+        case t: Defn.Var       => 
+            val rhs = t.rhs match {
                 case None => toks""
-                case Some(tpe) => toks": ${tpe.tks}"
+                case Some(trm) => toks" = ${trm.tks}"
             }
-            toks"${t.mods.o_o_}def ${t.name.tks}${t.tparams.`[o,o]`}${t.paramss.`(o,o)`}$tpe = ${t.body.tks}"
+            toks"${t.mods.`o_o_`}var ${t.pats.`oo`}${apndDeclTpe(t.decltpe)}$rhs"
+        case t: Defn.Type      =>
+            toks"${t.mods.`o_o_`}type ${t.name.tks}${t.tparams.`[o,o]`} = ${t.body.tks}"
+        case t: Defn.Class     => 
+            toks"${t.mods.`o_o_`}class ${t.name.tks}${t.tparams.`[o,o]`}${t.ctor.tks}${apndTempl(t.templ)}"
+        case t: Defn.Trait     =>
+            toks"${t.mods.`o_o_`}trait ${t.name.tks}${t.tparams.`[o,o]`}${t.ctor.tks}${apndTempl(t.templ)}"
+        case t: Defn.Object    => 
+            toks"${t.mods.`o_o_`}object ${t.name.tks}${t.ctor.tks}${apndTempl(t.templ)}"
+        case t: Defn.Def       => 
+            toks"${t.mods.`o_o_`}def ${t.name.tks}${t.tparams.`[o,o]`}${t.paramss.`(o,o)`}${apndDeclTpe(t.decltpe)} = ${t.body.tks}"
         case t: Defn.Macro     => ???
         case t: Pkg            => ???
         case t: Pkg.Object     => ???
@@ -196,19 +203,19 @@ private[meta] object inferTokens {
 
         // Mod
         case Mod.Annot(tree)                 => ???
-        case Mod.Private(Name.Anonymous())   => ???
-        case Mod.Private(name)               => ???
-        case Mod.Protected(Name.Anonymous()) => ???
-        case Mod.Protected(name)             => ???
-        case _: Mod.Implicit                 => ???
-        case _: Mod.Final                    => ???
-        case _: Mod.Sealed                   => ???
-        case _: Mod.Override                 => ???
-        case _: Mod.Case                     => ???
-        case _: Mod.Abstract                 => ???
+        case Mod.Private(Name.Anonymous())   => toks"private"
+        case Mod.Private(name)               => toks"private[${name.tks}]"
+        case Mod.Protected(Name.Anonymous()) => toks"protected"
+        case Mod.Protected(name)             => toks"protected[${name.tks}]"
+        case _: Mod.Implicit                 => toks"implicit"
+        case _: Mod.Final                    => toks"final"
+        case _: Mod.Sealed                   => toks"sealed"
+        case _: Mod.Override                 => toks"override"
+        case _: Mod.Case                     => toks"case"
+        case _: Mod.Abstract                 => toks"abstract"
         case _: Mod.Covariant                => ???
         case _: Mod.Contravariant            => ???
-        case _: Mod.Lazy                     => ???
+        case _: Mod.Lazy                     => toks"lazy"
         case _: Mod.ValParam                 => ???
         case _: Mod.VarParam                 => ???
         case Mod.Ffi(signature)              => ???
@@ -230,13 +237,40 @@ private[meta] object inferTokens {
         case t: Case                     => ???
 
         // Source
-        case t: Source                   => t.stats.oo
+        case t: Source                   => t.stats.`oo`
     }
+
+    /* Append a template to a defn (class, trait, object) */
+    def apndTempl(t: Template): Tokens = {
+        val ext = if (!t.parents.isEmpty) toks" extends" else toks""
+        val tpl = t.tks match {
+            case tks if tks.repr.isEmpty => toks""
+            case tks => toks" $tks"
+        }
+        toks"$ext$tpl"
+    }
+    /* append a declared type to a val / def / var */
+    def apndDeclTpe(t: Option[Type]): Tokens = t match {
+        case None => toks""
+        case Some(tpe) => toks": ${tpe.tks}"
+    }
+    def apndTpeBounds(t: Type.Bounds): Tokens = {
+        if (t.lo.isDefined || t.hi.isDefined) toks" ${t.tks}"
+        else toks""
+    }
+
     tkz(tree.asInstanceOf[scala.meta.internal.ast.Tree])
   }
 
+  // TODO: check what is the best way to do that
   /* Adding proper identation to the token stream */
   private def ident(tks: Tokens)(implicit ident: String): Tokens = {
+    tks // TODO
+  }
+
+  // TODO: check if required
+  /* Put back all the positions at the righ places in a sequence of tokens */
+  private def lift(tks: Tokens): Tokens = {
     tks // TODO
   }
 
