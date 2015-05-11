@@ -2,12 +2,20 @@ package scala.meta
 package internal
 package ui
 
+import org.scalameta.unreachable
+
+import scala.reflect.macros.blackbox.Context
+import scala.reflect.macros.Universe
+
+import scala.meta.internal.tokenizers.keywords
 import scala.meta.tokenquasiquotes._
+
 import scala.language.implicitConversions
 
 // TODO: check for BOF and EOF, EOL, etc.
 // TODO: see for specific cases, as in showCode
 private[meta] object inferTokens {
+
   def apply(tree: Tree)(implicit dialect: Dialect): Tokens = {
     infer(tree)
   }
@@ -30,9 +38,11 @@ private[meta] object inferTokens {
   
     implicit def toTokenSeq(tk: Token) = Tokens(tk)
   
+    val indentation = toks"  " // TODO: figure out how to find proper indent string
     implicit class RichTree(tree: Tree) {
-      def tks = ident(tree.tokens)("  ") // TODO: figure out how to find proper ident string
+      def tks = indent(tree.tokens)(indentation)
     }
+
     implicit class RichTreeSeq(trees: Seq[Tree]) {
   
       /* Flatten tokens corresponding to a sequence of trees together */
@@ -46,6 +56,10 @@ private[meta] object inferTokens {
   
       /* various combiners for tokens, o representing subsequence */
       def `oo` = flattks()()()
+      // TODO: this is disgusting.
+      val newline = toks"""
+"""
+      def `->o[->o` = flattks(toks"$newline$indentation")(toks"$newline$indentation")(newline)
       def `o_o` = flattks()(toks" ")()
       def `o_o_` = flattks()(toks" ")(toks" ") 
       def `[o,o]` = flattks(toks"[")(toks", ")(toks"]")
@@ -62,6 +76,92 @@ private[meta] object inferTokens {
         }
     }
 
+    /* Append a template to a defn (class, trait, object) */
+    def apndTempl(t: Template): Tokens = {
+        val ext = if (!t.parents.isEmpty) toks" extends" else toks""
+        val tpl = t.tks match {
+            case tks if tks.repr.isEmpty => toks""
+            case tks => toks" $tks"
+        }
+        toks"$ext$tpl"
+    }
+    /* append a declared type to a val / def / var */
+    def apndDeclTpe(t: Option[Type]): Tokens = t match {
+        case None => toks""
+        case Some(tpe) => toks": ${tpe.tks}"
+    }
+    def apndTpeBounds(t: Type.Bounds): Tokens = {
+        if (t.lo.isDefined || t.hi.isDefined) toks" ${t.tks}"
+        else toks""
+    }
+
+    /* The helpers below are heavily based on the ones used for show[Code] */
+    /* TODO: check which ones are useful in our case. Should be all (or most) of them. */
+
+    /*def guessIsBackquoted(t: Name): Boolean = {
+      def cantBeWrittenWithoutBackquotes(t: Name): Boolean = {
+        // TODO: this requires a more thorough implementation
+        // TODO: the `this` check is actually here to correctly prettyprint primary ctor calls in secondary ctors
+        // this is purely an implementation artifact and will be fixed once we have tokens
+        t.value != "this" && (keywords.contains(t.value) || t.value.contains(" "))
+      }
+      def isAmbiguousWithPatVarTerm(t: Term.Name, p: Tree): Boolean = {
+        // TODO: the `eq` trick is very unreliable, but I can't come up with anything better at the moment
+        // since the whole guessXXX business is going to be obsoleted by tokens very soon, I'm leaving this as is
+        val looksLikePatVar = t.value.head.isLower && t.value.head.isLetter
+        val thisLocationAlsoAcceptsPatVars = p match {
+          case p: Term.Name => unreachable
+          case p: Term.Select => false
+          case p: Pat.Wildcard => unreachable
+          case p: Pat.Var.Term => false
+          case p: Pat.Bind => unreachable
+          case p: Pat.Alternative => true
+          case p: Pat.Tuple => true
+          case p: Pat.Extract => p.args.exists(_ eq t)
+          case p: Pat.ExtractInfix => (p.lhs eq t) || p.rhs.exists(_ eq t)
+          case p: Pat.Interpolate => p.args.exists(_ eq t)
+          case p: Pat.Typed => unreachable
+          case p: Pat => unreachable
+          case p: Case => p.pat eq t
+          case p: Defn.Val => p.pats.exists(_ eq t)
+          case p: Defn.Var => p.pats.exists(_ eq t)
+          case p: Enumerator.Generator => p.pat eq t
+          case p: Enumerator.Val => p.pat eq t
+           case _ => false
+        }
+        looksLikePatVar && thisLocationAlsoAcceptsPatVars
+      }
+      def isAmbiguousWithPatVarType(t: Type.Name, p: Tree): Boolean = {
+        // TODO: figure this out with Martin
+        // `x match { case _: t => }` produces a Type.Name
+        // `x match { case _: List[t] => }` produces a Pat.Var.Type
+        // `x match { case _: List[`t`] => }` produces a Pat.Var.Type as well
+        // the rules look really inconsistent and probably that's just an oversight
+        false
+      }
+      (t, t.parent) match {
+        case (t: Term.Name, Some(p: Tree)) => isAmbiguousWithPatVarTerm(t, p) || cantBeWrittenWithoutBackquotes(t)
+        case (t: Type.Name, Some(p: Tree)) => isAmbiguousWithPatVarType(t, p) || cantBeWrittenWithoutBackquotes(t)
+        case _ => cantBeWrittenWithoutBackquotes(t)
+      }
+    }
+    def guessHasRefinement(t: Type.Compound): Boolean = t.refinement.nonEmpty
+    def guessPatHasRefinement(t: Pat.Type.Compound): Boolean = t.refinement.nonEmpty
+    def guessIsPostfix(t: Term.Select): Boolean = false
+    def guessHasExpr(t: Term.Return): Boolean = t.expr match { case Lit.Unit() => false; case _ => true }
+    def guessHasElsep(t: Term.If): Boolean = t.elsep match { case Lit.Unit() => false; case _ => true }
+    def guessHasStats(t: Template): Boolean = t.stats.nonEmpty
+    def guessHasBraces(t: Pkg): Boolean = {
+      def isOnlyChildOfOnlyChild(t: Pkg): Boolean = t.parent match {
+        case Some(pkg: Pkg) => isOnlyChildOfOnlyChild(pkg) && pkg.stats.length == 1
+        case Some(source: Source) => source.stats.length == 1
+        case None => true
+        case _ => unreachable
+      }
+      !isOnlyChildOfOnlyChild(t)
+    }*/
+
+    /* Infer tokens for a given tree, making use of the helpers above */
     def tkz(tree: Tree): Tokens = tree match {
         // Bottom
         case t: Quasi if t.rank > 0  => ???
@@ -163,7 +263,7 @@ private[meta] object inferTokens {
         case t: Lit.String  => ???
         case t: Lit.Symbol  => ???
         case _: Lit.Null    => toks"null"
-        case _: Lit.Unit    => toks"Unit"
+        case _: Lit.Unit    => toks"()"
 
         // Member
         case t: Decl.Val       => 
@@ -192,9 +292,12 @@ private[meta] object inferTokens {
             toks"${t.mods.`o_o_`}object ${t.name.tks}${t.ctor.tks}${apndTempl(t.templ)}"
         case t: Defn.Def       => 
             toks"${t.mods.`o_o_`}def ${t.name.tks}${t.tparams.`[o,o]`}${t.paramss.`(o,o)`}${apndDeclTpe(t.decltpe)} = ${t.body.tks}"
-        case t: Defn.Macro     => ???
-        case t: Pkg            => ???
-        case t: Pkg.Object     => ???
+        case t: Defn.Macro     =>
+            toks"${t.mods.`o_o_`}def ${t.name.tks}${t.tparams.`[o,o]`}${t.paramss.`(o,o)`}: ${t.tpe.tks} = macro ${t.body.tks}"
+        case t: Pkg            => 
+            toks"package ${t.ref.tks} {${t.stats.`->o[->o`}}" // TODO: check that out, seems more complicated in show[Code]
+        case t: Pkg.Object     => 
+            toks"package ${t.mods.`o_o_`}object ${t.name.tks}${apndTempl(t.templ)}"
         case t: Ctor.Primary   => ???
         case t: Ctor.Secondary => ???
 
@@ -213,11 +316,11 @@ private[meta] object inferTokens {
         case _: Mod.Override                 => toks"override"
         case _: Mod.Case                     => toks"case"
         case _: Mod.Abstract                 => toks"abstract"
-        case _: Mod.Covariant                => ???
-        case _: Mod.Contravariant            => ???
+        case _: Mod.Covariant                => toks"+"
+        case _: Mod.Contravariant            => toks"-"
         case _: Mod.Lazy                     => toks"lazy"
-        case _: Mod.ValParam                 => ???
-        case _: Mod.VarParam                 => ???
+        case _: Mod.ValParam                 => toks"val"
+        case _: Mod.VarParam                 => toks"var"
         case Mod.Ffi(signature)              => ???
 
         // Enumerator
@@ -240,49 +343,30 @@ private[meta] object inferTokens {
         case t: Source                   => t.stats.`oo`
     }
 
-    /* Append a template to a defn (class, trait, object) */
-    def apndTempl(t: Template): Tokens = {
-        val ext = if (!t.parents.isEmpty) toks" extends" else toks""
-        val tpl = t.tks match {
-            case tks if tks.repr.isEmpty => toks""
-            case tks => toks" $tks"
-        }
-        toks"$ext$tpl"
-    }
-    /* append a declared type to a val / def / var */
-    def apndDeclTpe(t: Option[Type]): Tokens = t match {
-        case None => toks""
-        case Some(tpe) => toks": ${tpe.tks}"
-    }
-    def apndTpeBounds(t: Type.Bounds): Tokens = {
-        if (t.lo.isDefined || t.hi.isDefined) toks" ${t.tks}"
-        else toks""
-    }
-
     tkz(tree.asInstanceOf[scala.meta.internal.ast.Tree])
   }
 
   // TODO: check what is the best way to do that. The problem is as follow
   //
-  // 1. Identation is already present in original token streams.
-  //   - We can't just add one identation token
-  //   - Moreover, this is even more true that identation is not added to a synthetic tree
+  // 1. Indentation is already present in original token streams.
+  //   - We can't just add one indentation token
+  //   - Moreover, this is even more true that indentation is not added to a synthetic tree
   //   i.e. let say a tree t2 (synth.), which itself contain a tree t3 (original). Then if
-  //        t2 was inside a tree t, we can't simply add identation to all the lines in the 
-  //        token stream of t2, as t3 already had some kind of identation present.
+  //        t2 was inside a tree t, we can't simply add indentation to all the lines in the 
+  //        token stream of t2, as t3 already had some kind of indentation present.
   //
-  // 2. Identation is not present in generated code
+  // 2. Indentation is not present in generated code
   //   - But it is practically impossible to infer this at a call to inferToken,
   //   since a subtree has no knowledge of its parent as is.
   //
   // A solution could be:
-  // 1. Tokens contain inputs. we can skip identation for all tokens with real inputs.
-  // 2. We can add one identation shift to all tokens with virtual inputs.
+  // 1. Tokens contain inputs. we can skip indentation for all tokens with real inputs.
+  // 2. We can add one indentation shift to all tokens with virtual inputs.
   // 3. This will have to be based on: 1) the input type; 2) the position in a line.
   // Line return could be checked at runtime.
 
-  /* Adding proper identation to the token stream */
-  private def ident(tks: Tokens)(implicit ident: String): Tokens = {
+  /* Adding proper indentation to the token stream */
+  private def indent(tks: Tokens)(indent: Tokens): Tokens = {
     tks // TODO
   }
 

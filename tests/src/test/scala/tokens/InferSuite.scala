@@ -252,7 +252,38 @@ class InferSuite extends ParseSuite { // TODO
   /* Infering macros */
   /* -----------------------------------------------------------------------*/
 
-  // TODO
+    test("InferDefnMacro1") {
+    val tree = """def aaa: Int = macro test"""
+      .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Defn.Macro]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferDefnMacro2") {
+    val tree = """def aaa(): Int = macro { x = 4 /* this is wrong! */}"""
+      .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Defn.Macro]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferDefnMacro3") {
+    val tree = """def aaa[T](b: T): (A => B) = macro impl"""
+      .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Defn.Macro]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferDefnMacro4") {
+    val tree = """def aaa[T, B](b: T)(c: Int = 0): (T => B) = macro { impl /* This is a comment */ }"""
+      .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Defn.Macro]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferDefnMacro5") {
+    val tree = """private[test] def aaa[T, B, E](b: T, a: String)(c: Int = 0): (T => B) = macro test"""
+      .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Defn.Macro]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferDefnMacro6") {
+    val tree = """private[test] def aaa[T, B, E](b: T, a: String)(c: Int = 0): (T => B) = macro {
+                 |  def yy = "hi" // this macro will never work
+                 |}"""
+      .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Defn.Macro]
+    compareTokenCodes(tree, tree.copy())
+  }
 
   /* Infering Defn.Type */
   /* -----------------------------------------------------------------------*/
@@ -444,22 +475,44 @@ class InferSuite extends ParseSuite { // TODO
   /* Infering Pkg */
   /* -----------------------------------------------------------------------*/
 
-  // TODO
+  test("inferPkg1") {
+    val tree = """package test {
+                 |  case class test
+                 |}"""
+      .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Pkg]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("inferPkg2") {
+    val tree = """package test {
+                |  case class Test
+                |  object Test
+                |}"""
+      .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Pkg]
+    compareTokenCodes(tree, tree.copy())
+  }
+
+  test("inferPkg3") {
+    val tree = """package test {
+                |  case class Test
+                |  object Test {
+                |    val x = Int
+                |  }
+                |}"""
+      .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Pkg]
+    compareTokenCodes(tree, tree.copy())
+  }
 
   /* Infering Pkg.Object */
   /* -----------------------------------------------------------------------*/
 
-  // TODO
-
-  /* Infering Ctor.Primary */
-  /* -----------------------------------------------------------------------*/
-
-  // TODO
-
-  /* Infering Ctor.Secondary */
-  /* -----------------------------------------------------------------------*/
-
-  // TODO
+  test("inferPkgObject1") {
+    val tree = """package object Test { 
+                 |  def test = 1234
+                 |  case object AA
+                 |}"""
+      .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Pkg.Object]
+    compareTokenCodes(tree, tree.copy())
+  }
 
   /* Infering Source */
   /* -----------------------------------------------------------------------*/
