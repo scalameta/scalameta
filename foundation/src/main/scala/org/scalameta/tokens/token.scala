@@ -65,13 +65,14 @@ class TokenMacros(val c: Context) {
       val needsAdjust = !stats.exists{ case DefDef(_, TermName("adjust"), _, _, _, _) => true; case _ => false }
       if (needsAdjust) {
         val paramInput = q"val input: $Input = this.input"
+        val paramDialect = q"val dialect: $Dialect = this.dialect"
         val paramStart = q"val start: $Default.Param[_root_.scala.Int] = $Default.Param.Default"
         val paramEnd = q"val end: $Default.Param[_root_.scala.Int] = $Default.Param.Default"
         val paramDelta = q"val delta: $Default.Param[_root_.scala.Int] = $Default.Param.Default"
         val adjustResult = {
-          if (code == "BOF" || code == "EOF") q"this.copy(input = input)"
-          else if (isStaticToken) q"this.copy(input = input, start = startValue)"
-          else q"this.copy(input = input, start = startValue, end = endValue)"
+          if (code == "BOF" || code == "EOF") q"this.copy(input = input, dialect = dialect)"
+          else if (isStaticToken) q"this.copy(input = input, dialect = dialect, start = startValue)"
+          else q"this.copy(input = input, dialect = dialect, start = startValue, end = endValue)"
         }
         val adjustError = {
           if (code == "BOF" || code == "EOF") s"position-changing adjust on Token.${escape(code)}"
@@ -81,7 +82,7 @@ class TokenMacros(val c: Context) {
         val body = q"""
           (start.nonEmpty || end.nonEmpty, delta.nonEmpty) match {
             case (false, false) =>
-              this.copy(input = input)
+              this.copy(input = input, dialect = dialect)
             case (true, false) =>
               val startValue = start.getOrElse(this.start)
               val endValue = end.getOrElse(this.end)
@@ -94,16 +95,16 @@ class TokenMacros(val c: Context) {
               }
               result
             case (false, true) =>
-              this.adjust(input = input, start = this.start + delta.get, end = this.end + delta.get)
+              this.adjust(input = input, dialect = dialect, start = this.start + delta.get, end = this.end + delta.get)
             case (true, true) =>
               throw new _root_.scala.`package`.UnsupportedOperationException("you can specify either start/end or delta, but not both")
           }
         """
-        stats1 += q"def adjust($paramInput, $paramStart, $paramEnd, $paramDelta): $Token = $body"
+        stats1 += q"def adjust($paramInput, $paramDialect, $paramStart, $paramEnd, $paramDelta): $Token = $body"
       }
 
       // step 5: generate the boilerplate fields
-      var paramss1 = (q"val input: $Input" +: paramss.head) +: paramss.tail
+      var paramss1 = (q"val input: $Input" +: q"val dialect: $Dialect" +: paramss.head) +: paramss.tail
       val cdef1 = q"$mods1 class $name[..$tparams] $ctorMods(...$paramss1) extends { ..$earlydefns } with ..$parents { $self => ..$stats1 }"
       val mdef1 = q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
       List(cdef1, mdef1)

@@ -201,7 +201,8 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
           val unquoteStart = parttokens.last.absoluteStart
           val unquoteEnd = parttokenss(index + 1).head.absoluteStart - 1
           val unquoteInput = sliceFileInput(unquoteStart, unquoteEnd)
-          Tokens(MetaToken.Unquote(unquoteInput, 0, unquoteEnd - unquoteStart, arg))
+          val unquoteDialect = scala.meta.dialects.Quasiquote(metaDialect)
+          Tokens(MetaToken.Unquote(unquoteInput, unquoteDialect, 0, unquoteEnd - unquoteStart, arg))
         }
       }
       part ++ unquote
