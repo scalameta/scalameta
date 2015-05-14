@@ -265,6 +265,6 @@ private[meta] object tokenize {
     }
 
     loop(startingFrom = 0)
-    Tokens(tokens.result: _*)
+    Tokens.Real(input, dialect, tokens.result: _*)
   }
 }

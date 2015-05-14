@@ -5,6 +5,7 @@ import scala.meta.internal.parsers._
 import scala.meta.internal.tokenizers._
 import org.scalameta.annotations._
 import org.scalameta.convert._
+import org.scalameta.invariants._
 import scala.annotation.implicitNotFound
 
 private[meta] trait Api {
@@ -58,11 +59,27 @@ private[meta] trait Api {
   }
 
   implicit class XtensionSyntacticTree(tree: Tree) {
-    def input = tree.origin.input
-    def dialect = tree.origin.dialect
-    def position = tree.origin.position
-    def start = tree.origin.start
-    def end = tree.origin.end
-    def tokens = tree.origin.tokens
+    def input = tree.tokens.input
+    def dialect = tree.tokens.dialect
+    def position = {
+      // NOTE: can't do Position(tree.tokens.head, tree.tokens.last) because of two reasons:
+      // 1) a tree can have no tokens (e.g. a synthetic primary constructor), but we still need to compute a position from it
+      // 2) if a tree is parsed from Input.Virtual, then we can't really say that it has any position
+      // NOTE: if you're changing this, make sure that you don't degrade
+      // `time parse ~/Projects/core/scalameta/src/main/scala/scala/meta/internal/parsers/Parsers.scala`
+      // I wish we had better benchmarking facilities, of course, but that's what we have right now
+      if (tree.tokens.isInstanceOf[Tokens.Real]) {
+        val tokens = tree.tokens.asInstanceOf[Tokens.Real]
+        Position.Real(tokens.input, tokens.head, tokens.last)
+      } else if (tree.tokens.isInstanceOf[Tokens.Slice]) {
+        val tokens = tree.tokens.asInstanceOf[Tokens.Slice]
+        val basis = tokens.tokens.asInstanceOf[Tokens.Real]
+        Position.Real(basis.input, basis(tokens.from), basis(tokens.until - 1))
+      } else {
+        Position.Virtual(Input.Virtual(tree.tokens))
+      }
+    }
+    def start = tree.position.start
+    def end = tree.position.end
   }
 }

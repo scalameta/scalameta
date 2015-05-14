@@ -4,6 +4,7 @@ package ui
 
 private[meta] object inferTokens {
   def apply(tree: Tree): Tokens = {
+    // TODO: must return Tokens.Synthetic
     ???
   }
 }

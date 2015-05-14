@@ -37,14 +37,10 @@ object Positions {
         case el: Some[_] => s("Some(".colored(color), loopField(el.get, color), ")".colored(color))
         case el => s(el.toString.colored(color))
       }
-      def position(x: Tree): String = x.origin match {
-        case origin: Origin.Parsed => s"[${origin.start.offset}..${origin.end.offset}]"
-        case _ => ""
+      def position(x: Tree): String = {
+        if (x.tokens.isAuthentic) s"[${x.start.offset}..${x.end.offset}]" else ""
       }
-      def color(x: Tree): String = x.origin match {
-        case _: Origin.Parsed => GREEN
-        case _: Origin.Synthetic => RED
-      }
+      def color(x: Tree): String = if (x.tokens.isAuthentic) GREEN else RED
       val prefix = (x.productPrefix + position(x) + "(").colored(color(x))
       val fields = r(x.productIterator.toList.map(el => loopField(el, color(x))), ", ".colored(color(x)))
       val suffix = ")".colored(color(x))

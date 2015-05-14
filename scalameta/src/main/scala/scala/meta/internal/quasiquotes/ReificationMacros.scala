@@ -241,7 +241,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
     }
   }
   implicit class XtensionTreePos(tree: MetaTree) {
-    def pos = tree.origin.tokens.headOption.map(_.pos).getOrElse(NoPosition)
+    def pos = tree.tokens.headOption.map(_.pos).getOrElse(NoPosition)
   }
 
   // TODO: this is a very naive approach to hygiene, and it will be replaced as soon as possible
