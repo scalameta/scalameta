@@ -23,6 +23,44 @@ class InferSuite extends ParseSuite { // TODO
     }
   }
 
+  /* Infer literals */
+
+  test("InferLit1") {
+    val tree = """42"""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Lit.Int]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferLit2") {
+    val tree = """2121421L"""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Lit.Long]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferLit3") {
+    val tree = """23.231F"""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Lit.Float]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferLit4") {
+    val tree = """23.231"""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Lit.Double]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferLit5") {
+    val tree = """'c'"""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Lit.Char]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferLit6") {
+    val tree = """'aabbs"""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Lit.Symbol]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferLit7") {
+    val tree = "\"Hellow world\""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Lit.String]
+    compareTokenCodes(tree, tree.copy())
+  }
+
   /* Infering Decl.Val */
   /* -----------------------------------------------------------------------*/
 

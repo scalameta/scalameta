@@ -30,6 +30,24 @@ private[meta] object inferTokens {
         }).origin.tokens
   }
 
+  /* Generate tokens from various inputs */
+  private def mineLitTk(value: Any): Tokens = {
+    implicit def stringToInput(str: String) = Input.String(str)
+    val str = value.toString
+    val length = str.length
+    // TODO: figure out what action should be taken depending of the boolean
+    // TODO: the strings here should be modified (e.g. adding L for long, etc.)
+    val newTok = value match {
+        case y: Int =>      Token.Literal.Int(str, 0, length, (x: Boolean) => y)
+        case y: Long =>     Token.Literal.Long(str + "L", 0, length + 1, (x: Boolean) => y)
+        case y: Float =>    Token.Literal.Float(str + "F", 0, length + 1, (x: Boolean) => y)
+        case y: Double =>   Token.Literal.Double(str, 0, length, (x: Boolean) => y)
+        case y: Char =>     Token.Literal.Char("'" + str + "'", 0, length + 2, y)
+        case y: Symbol =>   Token.Literal.Symbol(str, 0, length, y)
+        case y: String =>   Token.Literal.String("\"" + str + "\"", 0, length + 2, y)
+    }
+    Tokens(newTok)
+  }
 
   /* Generate synthetic tokens */
   private def infer(tree: Tree)(implicit dialect: Dialect): Tokens = {
@@ -61,6 +79,7 @@ private[meta] object inferTokens {
 """
       def `->o[->o` = flattks(toks"$newline$indentation")(toks"$newline$indentation")(newline)
       def `o_o` = flattks()(toks" ")()
+      def `o,o` = flattks()(toks", ")()
       def `o_o_` = flattks()(toks" ")(toks" ") 
       def `[o,o]` = flattks(toks"[")(toks", ")(toks"]")
       def `(o,o)` = flattks(toks"(")(toks", ")(toks")")
@@ -98,7 +117,7 @@ private[meta] object inferTokens {
     /* The helpers below are heavily based on the ones used for show[Code] */
     /* TODO: check which ones are useful in our case. Should be all (or most) of them. */
 
-    /*def guessIsBackquoted(t: Name): Boolean = {
+    def guessIsBackquoted(t: Name): Boolean = {
       def cantBeWrittenWithoutBackquotes(t: Name): Boolean = {
         // TODO: this requires a more thorough implementation
         // TODO: the `this` check is actually here to correctly prettyprint primary ctor calls in secondary ctors
@@ -145,7 +164,7 @@ private[meta] object inferTokens {
         case _ => cantBeWrittenWithoutBackquotes(t)
       }
     }
-    def guessHasRefinement(t: Type.Compound): Boolean = t.refinement.nonEmpty
+    /*def guessHasRefinement(t: Type.Compound): Boolean = t.refinement.nonEmpty
     def guessPatHasRefinement(t: Pat.Type.Compound): Boolean = t.refinement.nonEmpty
     def guessIsPostfix(t: Term.Select): Boolean = false
     def guessHasExpr(t: Term.Return): Boolean = t.expr match { case Lit.Unit() => false; case _ => true }
@@ -169,7 +188,11 @@ private[meta] object inferTokens {
 
         // Name
         case t: Name.Anonymous       => toks"_"
-        case t: Name.Indeterminate   => ???
+        case t: Name.Indeterminate   =>  ???
+            // TODO: this is not working, define helpers to take strings and other values in parameters.
+            // This will be useful at a lot of places.
+            // if (guessIsBackquoted(t)) toks"`${t.value}`"
+            // else                      toks"${t.value}`"
 
         // Term
         // case t: Term if t.isCtorCall => ??? // TODO
@@ -253,15 +276,15 @@ private[meta] object inferTokens {
         // Lit
         case t: Lit.Bool if t.value => toks"true"
         case t: Lit.Bool if !t.value => toks"false"
-        case t: Lit.Byte    => ???
-        case t: Lit.Short   => ???
-        case t: Lit.Int     => ???
-        case t: Lit.Long    => ???
-        case t: Lit.Float   => ??? 
-        case t: Lit.Double  => ??? 
-        case t: Lit.Char    => ??? 
-        case t: Lit.String  => ???
-        case t: Lit.Symbol  => ???
+        case t: Lit.Byte    => mineLitTk(t.value)
+        case t: Lit.Short   => mineLitTk(t.value)
+        case t: Lit.Int     => mineLitTk(t.value)
+        case t: Lit.Long    => mineLitTk(t.value)
+        case t: Lit.Float   => mineLitTk(t.value)
+        case t: Lit.Double  => mineLitTk(t.value)
+        case t: Lit.Char    => mineLitTk(t.value)
+        case t: Lit.String  => mineLitTk(t.value)
+        case t: Lit.Symbol  => mineLitTk(t.value)
         case _: Lit.Null    => toks"null"
         case _: Lit.Unit    => toks"()"
 
@@ -277,10 +300,7 @@ private[meta] object inferTokens {
         case t: Defn.Val       => 
             toks"${t.mods.`o_o_`}val ${t.pats.`oo`}${apndDeclTpe(t.decltpe)} = ${t.rhs.tks}"
         case t: Defn.Var       => 
-            val rhs = t.rhs match {
-                case None => toks""
-                case Some(trm) => toks" = ${trm.tks}"
-            }
+            val rhs = t.rhs.map(trm => toks" = ${trm.tks}").getOrElse(toks"")
             toks"${t.mods.`o_o_`}var ${t.pats.`oo`}${apndDeclTpe(t.decltpe)}$rhs"
         case t: Defn.Type      =>
             toks"${t.mods.`o_o_`}type ${t.name.tks}${t.tparams.`[o,o]`} = ${t.body.tks}"
@@ -329,12 +349,12 @@ private[meta] object inferTokens {
         case t: Enumerator.Guard         => ???
 
         // Import
-        case t: Import.Selector.Name     => ???
-        case t: Import.Selector.Rename   => ???
-        case t: Import.Selector.Unimport => ???
-        case _: Import.Selector.Wildcard => ???
-        case t: Import.Clause            => ???
-        case t: Import                   => ???
+        case t: Import.Selector.Name     => toks"${t.value.tks}"
+        case t: Import.Selector.Rename   => toks"${t.from.tks} => ${t.to.tks}"
+        case t: Import.Selector.Unimport => toks"${t.name.tks} => _"
+        case _: Import.Selector.Wildcard => toks"_"
+        case t: Import.Clause            => toks"{t.ref.tks}.${t.sels.oo}"
+        case t: Import                   => toks"import ${t.clauses.`o,o`}"
 
         // Case
         case t: Case                     => ???
@@ -357,7 +377,8 @@ private[meta] object inferTokens {
   //
   // 2. Indentation is not present in generated code
   //   - But it is practically impossible to infer this at a call to inferToken,
-  //   since a subtree has no knowledge of its parent as is.
+  //   even if a subtree has some knowledge of its parent (but not the tokens corresponding 
+  //   to its parents - it would lead to recursion explosion).
   //
   // A solution could be:
   // 1. Tokens contain inputs. we can skip indentation for all tokens with real inputs.
