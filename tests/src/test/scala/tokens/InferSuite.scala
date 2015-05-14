@@ -151,9 +151,203 @@ class InferSuite extends ParseSuite { // TODO
       .parse[Term].asInstanceOf[scala.meta.internal.ast.Term.Return]
     compareTokenCodes(tree, tree.copy())
   }
-  test("InferReturn2") {
-    val tree = """return"""
-      .parse[Term].asInstanceOf[scala.meta.internal.ast.Term.Return]
+  test("InferThrow1") {
+    val tree = """throw DummyException"""
+      .parse[Term].asInstanceOf[scala.meta.internal.ast.Term.Throw]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferAscribe1") {
+    val tree = """x: Int"""
+      .parse[Term].asInstanceOf[scala.meta.internal.ast.Term.Ascribe]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferAnnotate1") {
+    val tree = """x: @Test @Via"""
+      .parse[Term].asInstanceOf[scala.meta.internal.ast.Term.Annotate]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferTuple1") {
+    val tree = """(1, 2, 3)"""
+      .parse[Term].asInstanceOf[scala.meta.internal.ast.Term.Tuple]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferBlock1") {
+    val tree = """{
+                 |  val test = 1234
+                 |  test
+                 |}"""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Term.Block]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferBlock2") {
+    val tree = """{ x: Int =>
+                 |  val test = 1234
+                 |  test
+                 |}"""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Term.Block]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferBlock3") {
+    val tree = """{ implicit conn =>
+                 |  val test = 1234
+                 |  test
+                 |}"""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Term.Block]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferBlock4") {
+    val tree = """{ conn =>
+                 |  val test = 1234
+                 |  test
+                 |}"""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Term.Block]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferBlock5") {
+    val tree = """{ (x: Int, y: Int) =>
+                 |  val test = 1234
+                 |  test
+                 |}"""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Term.Block]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferIf1") {
+    val tree = """if (x == 0) {
+                 |  println("hi")
+                 |}"""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Term.If]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferIf2") {
+    val tree = """if (x == 0) {
+                 |  println("hi")
+                 |} else println("hi2")"""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Term.If]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferMatch1") {
+    val tree = """x match {
+                 |  case u: Int => {
+                 |    println("hi") /* this is a comment */
+                 |  }
+                 |  case u: String => println(u)
+                 |}"""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Term.Match]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferTryWithCases1") {
+    val tree = """try {
+                 |  val x = "this is a string"
+                 |  x
+                 |} catch {
+                 |  case NonFatal(err) => {
+                 |    println("hi") /* this is a comment */
+                 |  }
+                 |  case _ => println("Small error...")
+                 |}"""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Term.TryWithCases]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferTryWithCases2") {
+    val tree = """try {
+                 |  val x = "this is a string"
+                 |  x
+                 |} catch {
+                 |  case NonFatal(err) => {
+                 |    println("hi") /* this is a comment */
+                 |  }
+                 |  case _ => println("Small error...")
+                 |} finally {
+                 |  println("This is the end")
+                 |}"""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Term.TryWithCases]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferTryWithTerm1") {
+    val tree = """try {
+                 |  val x = "this is a string"
+                 |  x
+                 |} catch {
+                 |  println("dummy catch!")
+                 |} finally {
+                 |  println("This is the end")
+                 |}"""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Term.TryWithTerm]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferTryWithTerm2") {
+    val tree = """try {
+                 |  val x = "this is a string"
+                 |  x
+                 |} catch {
+                 |  println("dummy catch!")
+                 |}"""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Term.TryWithTerm]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferPartialFunction1") {
+    val tree = """{
+                 |  case x: Int => x * x
+                 |}"""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Term.PartialFunction]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferPartialFunction2") {
+    val tree = """{
+                 |  case x: Int => x.toString
+                 |  case y: String => y
+                 |  case _ => "not something I could print as I want."
+                 |}"""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Term.PartialFunction]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferWhile1") {
+    val tree = """while (true) {
+                 |  println("never ending")
+                 |}"""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Term.While]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferWhile2") {
+    val tree = """while (true) println("never ending")"""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Term.While]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferDo1") {
+    val tree = """do {
+                 |  println("never ending")
+                 |} while (true)"""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Term.Do]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferDo2") {
+    val tree = """do println("never ending") while (true)"""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Term.Do]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferFor1") {
+    val tree = """for (x <- 0 to 10) println(3)"""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Term.For]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferFor2") {
+    val tree = """for (x <- 0 to 10; if x == 2) {
+                 |  println(3)
+                 |}"""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Term.For]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferForYield1") {
+    val tree = """for (x <- 0 to 10) yield x"""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Term.ForYield]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferForYield2") {
+    val tree = """for (x <- 0 to 10; if x == 2) yield {
+                 |  println(3)
+                 |  x
+                 |}"""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Term.ForYield]
     compareTokenCodes(tree, tree.copy())
   }
 
