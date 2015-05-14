@@ -11,8 +11,10 @@ class InferSuite extends ParseSuite { // TODO
   private def compareTokenCodes(a: Tree, b: Tree): Unit = {
     val t1 = trimTokens(a.tokens).map(_.show[Code])
     val t2 = trimTokens(b.tokens).map(_.show[Code])
-    if (t1 != t2)
-    println(t1 + "\n" + t2)
+    if (t1 != t2) {
+      println(a.show[Raw] + "\n" + b.show[Raw])
+      println(t1 + "\n" + t2)
+    }
     assert(t1 == t2)
   }
 
@@ -41,7 +43,122 @@ class InferSuite extends ParseSuite { // TODO
     }
   }
 
+  /* Infer Names */
+  /* -----------------------------------------------------------------------*/
+
+  test("InferNames") {
+    import scala.meta.internal.ast._
+    inferedShouldEqual(Name.Anonymous(), "_")
+    inferedShouldEqual(Name.Indeterminate("`test`"), "`test`")
+    inferedShouldEqual(Name.Indeterminate("test"), "test")
+  }
+
+  /* Infer Terms */
+  /* -----------------------------------------------------------------------*/
+
+  test("InferThis1") {
+    val tree = """rrr.this"""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Term.This]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferThis2") {
+    val tree = """this"""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Term.This]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferSuper1") {
+    import scala.meta.internal.ast._
+    inferedShouldEqual(Term.Super(Name.Indeterminate("rrr"), Name.Anonymous()), "rrr.super")
+    inferedShouldEqual(Term.Super(Name.Anonymous(), Name.Anonymous()), "super")
+    inferedShouldEqual(Term.Super(Name.Anonymous(), Name.Indeterminate("AA")), "super[AA]")
+  }
+  test("InferSelect1") {
+    val tree = """A.b"""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Term.Select]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferInterpolate1") {
+    val str = """ s"the world is blue ${like.an} $orange." """.trim
+    val tree = str.parse[Term].asInstanceOf[scala.meta.internal.ast.Term.Interpolate]
+    inferedShouldEqual(tree.copy(), str)
+  }
+  test("InferApply1") {
+    val tree = """A(b, c)"""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Term.Apply]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferApply2") {
+    val tree = """A[B, C](a, b)"""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Term.Apply]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferApplyType1") {
+    val tree = """A[B, C]"""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Term.ApplyType]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferApplyInfix1") {
+    val tree = """str mkString "," """.trim
+      .parse[Term].asInstanceOf[scala.meta.internal.ast.Term.ApplyInfix]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferApplyInfix2") {
+    val tree = """str mkString ("[", ",", "]") """.trim
+      .parse[Term].asInstanceOf[scala.meta.internal.ast.Term.ApplyInfix]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferApplyUnary1") {
+    val tree = """!str"""
+      .parse[Term].asInstanceOf[scala.meta.internal.ast.Term.ApplyUnary]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferApplyUnary2") {
+    val tree = """!{
+                 |  val y = 23
+                 | y
+                 |}"""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Term.ApplyUnary]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferApplyAssign1") {
+    val tree = """x = 23312"""
+      .parse[Term].asInstanceOf[scala.meta.internal.ast.Term.Assign]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferApplyAssign2") {
+    val tree = """x = {
+                 |  val test = true
+                 |  test
+                 |}"""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Term.Assign]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferApplyUpdate1") {
+    val tree = """x(213) = {
+                 |  val test = true
+                 |  test
+                 |}"""
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Term.Update]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferApplyUpdate2") {
+    val tree = """x(213) = 23312"""
+      .parse[Term].asInstanceOf[scala.meta.internal.ast.Term.Update]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferReturn1") {
+    val tree = """return 31"""
+      .parse[Term].asInstanceOf[scala.meta.internal.ast.Term.Return]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferReturn2") {
+    val tree = """return"""
+      .parse[Term].asInstanceOf[scala.meta.internal.ast.Term.Return]
+    compareTokenCodes(tree, tree.copy())
+  }
+
   /* Infer literals */
+  /* -----------------------------------------------------------------------*/
 
   test("InferLit1") {
     val tree = """42"""

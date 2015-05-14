@@ -88,6 +88,7 @@ private[meta] object inferTokens {
       def `->o->` = flattks(toks"$newline$indentation")(toks"$newline$indentation")(newline)
       def `o_o` = flattks()(toks" ")()
       def `o,o` = flattks()(toks", ")()
+      def `o;o` = flattks()(toks"; ")()
       def `o_o_` = flattks()(toks" ")(toks" ") 
       def `[o,o]` = flattks(toks"[")(toks", ")(toks"]")
       def `(o,o)` = flattks(toks"(")(toks", ")(toks")")
@@ -177,7 +178,6 @@ private[meta] object inferTokens {
     }
     /*def guessHasRefinement(t: Type.Compound): Boolean = t.refinement.nonEmpty
     def guessPatHasRefinement(t: Pat.Type.Compound): Boolean = t.refinement.nonEmpty*/
-    def guessIsPostfix(t: Term.Select): Boolean = false
     def guessHasExpr(t: Term.Return): Boolean = t.expr match { case Lit.Unit() => false; case _ => true }
     def guessHasElsep(t: Term.If): Boolean = t.elsep match { case Lit.Unit() => false; case _ => true }
     /*def guessHasStats(t: Template): Boolean = t.stats.nonEmpty
@@ -204,8 +204,8 @@ private[meta] object inferTokens {
             else                      mineIdentTk(t.value)
 
         // Term
-        case t: Term if t.isCtorCall =>
-            if (t.isInstanceOf[Ctor.Ref.Function]) toks"=>"
+        case t: Term if t.isCtorCall => // TODO: check
+            if (t.isInstanceOf[Ctor.Ref.Function]) toks"=>${t.ctorArgss.`(o,o)`}"
             else                                   toks"${t.ctorTpe.tks}${t.ctorArgss.`(o,o)`}"
         case t: Term.This            =>
             val qual = if (t.qual.isInstanceOf[Name.Anonymous]) toks"" else toks"${t.qual.tks}."
@@ -217,16 +217,14 @@ private[meta] object inferTokens {
         case t: Term.Name            =>
             if (guessIsBackquoted(t)) mineIdentTk("`" + t.value + "`")
             else                      mineIdentTk(t.value)
-        case t: Term.Select          =>
-            if (guessIsPostfix(t))    toks"${t.qual.tks} ${t.name.tks}"
-            else                      toks"${t.qual.tks}.${t.name.tks}"
+        case t: Term.Select          => toks"${t.qual.tks}.${t.name.tks}"
         case t: Term.Interpolate     =>
             val zipped = (t.parts zip t.args) map {
-                case (part, id: Name) if !guessIsBackquoted(id) => toks"${part.tks}$$${id.tks}"  
-                case (part, args) =>                               toks"${part.tks}$${${args.tks}}"  
+                case (part, id: Name) if !guessIsBackquoted(id) => toks"${mineIdentTk(part.value)}$$${mineIdentTk(id.value)}"  
+                case (part, args) =>                               toks"${mineIdentTk(part.value)}$${${args.tks}}"  
             }
             val quote: Tokens = if (t.parts.map(_.value).exists(s => s.contains(EOL) || s.contains("\""))) tripleDoubleQuotes else singleDoubleQuotes
-            toks"${t.prefix.tks}$quote${zipped.`oo`}${t.parts.last.tks}$quote"
+            toks"${mineIdentTk(t.prefix.value)}$quote${zipped.`oo`}${t.parts.last.tks}$quote"
         case t: Term.Apply           => toks"${t.fun.tks}${t.args.`(o,o)`}"
         case t: Term.ApplyType       => toks"${t.fun.tks}${t.targs.`[o,o]`}"
         case t: Term.ApplyInfix      => 
@@ -235,7 +233,8 @@ private[meta] object inferTokens {
                 case args =>                args.`(o,o)`
             }
             toks"${t.lhs.tks} ${t.op.tks} $rhs"
-        case t: Term.ApplyUnary      => toks"${t.op.tks}${t.arg.tks}"
+        case t: Term.ApplyUnary     
+         => toks"${t.op.tks}${t.arg.tks}"
         case t: Term.Assign          => toks"${t.lhs.tks} = ${t.rhs.tks}"
         case t: Term.Update          => toks"${t.fun.tks}${t.argss.`(o,o)`} = ${t.rhs.tks}"
         case t: Term.Return          =>
@@ -249,20 +248,15 @@ private[meta] object inferTokens {
             import Term.{Block, Function}
             t match {
                 case Block(Function(Term.Param(mods, name: Term.Name, tptopt, _) :: Nil, Block(stats)) :: Nil) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
-                    //m(SimpleExpr, s("{ ", kw("implicit"), " ", name, tptopt.map(s(kw(":"), " ", _)).getOrElse(s()), " ", kw("=>"), " ", pstats(stats), n("}")))
-                    val tp = tptopt.map(v => toks": ${v.tks}").getOrElse(toks"")
-                    toks"{ implicit ${name.tks}$tp =>${stats.`->o->`}}"
+                    val tpt = tptopt.map(v => toks": ${v.tks}").getOrElse(toks"")
+                    toks"{ implicit ${name.tks}$tpt =>${stats.`->o->`}}"
                 case Block(Function(Term.Param(mods, name: Term.Name, None, _) :: Nil, Block(stats)) :: Nil) =>
-                    //m(SimpleExpr, s("{ ", name, " ", kw("=>"), " ", pstats(stats), n("}")))
                     toks"{ ${name.tks} =>${stats.`->o->`}}"
                 case Block(Function(Term.Param(_, _: Name.Anonymous, _, _) :: Nil, Block(stats)) :: Nil) =>
-                    //m(SimpleExpr, s("{ ", kw("_"), " ", kw("=>"), " ", pstats(stats), n("}")))
                     toks"{ _ =>${stats.`->o->`}}"
                 case Block(Function(params, Block(stats)) :: Nil) =>
-                    //m(SimpleExpr, s("{ (", r(params, ", "), ") => ", pstats(stats), n("}")))
                     toks"{ ${params.`(o,o)`} =>${stats.`->o->`}}"
                 case _ =>
-                    //m(SimpleExpr, if (t.stats.isEmpty) s("{}") else s("{", pstats(t.stats), n("}")))
                     if (t.stats.isEmpty)    toks"{}"
                     else                    toks"{${t.stats.`->o->`}}"
             }
@@ -275,19 +269,37 @@ private[meta] object inferTokens {
             val catchBlock = if (t.catchp.nonEmpty)  toks" catch {${t.catchp.`->o->`}}" else toks""
             val finallyBlock = if (t.finallyp.isDefined) toks" finally {${t.finallyp.get.`->o->`}}" else toks""
             tryBlock ++ catchBlock ++ finallyBlock
-        case t: Term.TryWithTerm     => ???
-        case t: Term.Function        => ???
-        case t: Term.PartialFunction => ???
-        case t: Term.While           => ???
-        case t: Term.Do              => ???
-        case t: Term.For             => ???
-        case t: Term.ForYield        => ???
-        case t: Term.New             => ???
-        case _: Term.Placeholder     => ???
-        case t: Term.Eta             => ???
-        case t: Term.Arg.Named       => ???
-        case t: Term.Arg.Repeated    => ???
-        case t: Term.Param           => ???
+        case t: Term.TryWithTerm     => 
+        	val tryBlock = toks"try ${t.expr.tks} catch {${t.catchp.`->o->`}}"
+        	val finallyBlock = if (t.finallyp.isDefined) toks" finally {${t.finallyp.get.`->o->`}}" else toks""
+        	tryBlock ++ finallyBlock
+        case t: Term.Function        =>
+              t match {
+       			case Term.Function(Term.Param(mods, name: Term.Name, tptopt, _) :: Nil, body) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
+       				val tpt = tptopt.map(v => toks": ${v.tks}").getOrElse(toks"")
+       				toks"implicit ${name.tks}$tpt =>${body.tks}"
+        		case Term.Function(Term.Param(mods, name: Term.Name, None, _) :: Nil, body) =>
+        			toks"${name.tks} => ${body.tks}"
+        		case Term.Function(Term.Param(_, _: Name.Anonymous, _, _) :: Nil, body) =>
+        			toks"_ => ${body.tks}"
+        		case Term.Function(params, body) =>
+        			toks"${params.`(o,o)`} => ${body.tks}"
+      		}
+        case t: Term.PartialFunction => toks"{${t.cases.`->o->`}}"
+        case t: Term.While           => toks"while (${t.expr.tks}) ${t.body.tks}"
+        case t: Term.Do              => toks"do ${t.body.tks} while (${t.expr.tks})"
+        case t: Term.For             => toks"for (${t.enums.`o;o`}) ${t.body.tks}"
+        case t: Term.ForYield        => toks"for (${t.enums.`o;o`}) yield ${t.body.tks}"
+        case t: Term.New             => toks"new ${t.templ.tks}"
+        case _: Term.Placeholder     => toks"_"
+        case t: Term.Eta             => toks"${t.term.tks} _"
+        case t: Term.Arg.Named       => toks"${t.name.tks} = ${t.rhs.tks}"
+        case t: Term.Arg.Repeated    => toks"${t.arg.tks}: _*"
+        case t: Term.Param           => 
+      		val mods = t.mods.filter(!_.isInstanceOf[Mod.Implicit]) // NOTE: `implicit` in parameters is skipped in favor of `implicit` in the enclosing parameter list
+      		val tpe = t.decltpe.map(v => toks": ${v.tks}").getOrElse(toks"")
+      		val default = t.default.map(v => toks" = ${v.tks}").getOrElse(toks"")
+      		mods.`o_o_` ++ t.name.tks ++ tpe ++ default
 
         // Type
         case t: Type.Name         => 
