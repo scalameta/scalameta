@@ -596,6 +596,26 @@ class InferSuite extends ParseSuite { // TODO
     compareTokenCodes(t1, t1.copy())
   }
 
+  /* Infering Enumerators */
+  /* -----------------------------------------------------------------------*/
+
+  test("Enum1") {
+    val tree = "for (x <- 0 to 10) yield x".parse[Term]
+    val t1 = findFirst(tree)((p: Tree) => p.isInstanceOf[scala.meta.internal.ast.Enumerator.Generator]).asInstanceOf[scala.meta.internal.ast.Enumerator.Generator]
+    compareTokenCodes(t1, t1.copy())
+  }
+  test("Enum2") {
+    val tree = "for (x <- 0 to 10; y = 10) yield x".parse[Term]
+    val t1 = findFirst(tree)((p: Tree) => p.isInstanceOf[scala.meta.internal.ast.Enumerator.Val]).asInstanceOf[scala.meta.internal.ast.Enumerator.Val]
+    compareTokenCodes(t1, t1.copy())
+  }
+  test("Enum3") {
+    val tree = "for (x <- 0 to 10 if x == 0) yield x".parse[Term]
+    //val tree = "for (x <- 0 to 10 if x % 2 == 0) yield x".parse[Term] // TODO: dunno why this does not pass
+    val t1 = findFirst(tree)((p: Tree) => p.isInstanceOf[scala.meta.internal.ast.Enumerator.Guard]).asInstanceOf[scala.meta.internal.ast.Enumerator.Guard]
+    compareTokenCodes(t1, t1.copy())
+  }
+
   /* Infering Imports and Selector */
   /* -----------------------------------------------------------------------*/
 
