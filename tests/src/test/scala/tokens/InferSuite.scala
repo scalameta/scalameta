@@ -1,18 +1,36 @@
 import scala.meta._
 import org.scalatest._
-import scala.meta.dialects.Scala211
 
 import scala.meta.internal.ui.inferTokens
+import scala.meta.dialects.Scala211
 
 class InferSuite extends ParseSuite { // TODO
 
+  private def trimTokens(tks: Tokens) = tks.filterNot(tk => tk.isInstanceOf[Token.BOF] || tk.isInstanceOf[Token.EOF])
+
   private def compareTokenCodes(a: Tree, b: Tree): Unit = {
-    def trimTokens(tks: Tokens) = tks.filterNot(tk => tk.isInstanceOf[Token.BOF] || tk.isInstanceOf[Token.EOF])
     val t1 = trimTokens(a.tokens).map(_.show[Code])
     val t2 = trimTokens(b.tokens).map(_.show[Code])
     if (t1 != t2)
     println(t1 + "\n" + t2)
     assert(t1 == t2)
+  }
+
+  private def inferedShouldEqual(t: Tree, s: String): Unit = {
+    val t1 = trimTokens(t.tokens).map(_.show[Code]).mkString
+    if (t1 != s)
+      println(t1 + "\n" + s)
+    assert(t1 == s)
+  }
+
+  private def findFirst(t: Tree)(p: Tree => Boolean): Tree = {
+    import scala.meta.tql._
+    val find = collect {
+      case l if p(l) => l
+    }.topDownBreak
+    val lst = find(t)
+    assert(!lst.isEmpty)
+    lst.head
   }
 
   private def debug(trees: Tree*): Unit = {
@@ -550,6 +568,52 @@ class InferSuite extends ParseSuite { // TODO
                  |}"""
       .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Pkg.Object]
     compareTokenCodes(tree, tree.copy())
+  }
+
+  /* Infering Mods */
+  /* -----------------------------------------------------------------------*/
+
+  test("Mods1") {
+    import scala.meta.internal.ast._
+    inferedShouldEqual(Mod.Private(Name.Indeterminate("Test")), "private[Test]")
+    inferedShouldEqual(Mod.Private(Name.Anonymous()), "private")
+    inferedShouldEqual(Mod.Protected(Name.Indeterminate("Test")), "protected[Test]")
+    inferedShouldEqual(Mod.Protected(Name.Anonymous()), "protected")
+  }
+  test("Mods2") {
+    val tree = """@test(url = "http://www.something.com") def x = 4""".parse[Stat]
+    val t1 = findFirst(tree)((p: Tree) => p.isInstanceOf[scala.meta.internal.ast.Mod.Annot]).asInstanceOf[scala.meta.internal.ast.Mod.Annot]
+    compareTokenCodes(t1, t1.copy())
+  }
+  test("Mods3") {
+    val tree = """@test(url = "http://www.something.com", v = Seq(1,2,3,4)) def x = 4""".parse[Stat]
+    val t1 = findFirst(tree)((p: Tree) => p.isInstanceOf[scala.meta.internal.ast.Mod.Annot]).asInstanceOf[scala.meta.internal.ast.Mod.Annot]
+    compareTokenCodes(t1, t1.copy())
+  }
+  test("Mods4") {
+    val tree = """@test case class Test(x: Int)""".parse[Stat]
+    val t1 = findFirst(tree)((p: Tree) => p.isInstanceOf[scala.meta.internal.ast.Mod.Annot]).asInstanceOf[scala.meta.internal.ast.Mod.Annot]
+    compareTokenCodes(t1, t1.copy())
+  }
+
+  /* Infering Imports and Selector */
+  /* -----------------------------------------------------------------------*/
+
+  test("SelectorImport1") {
+    val tree = "import scala.meta".parse[Stat].asInstanceOf[scala.meta.internal.ast.Import]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("SelectorImport2") {
+    import scala.meta.internal.ast._
+    inferedShouldEqual(Import.Selector.Wildcard(), "_")
+  }
+  test("SelectorImport3") {
+    import scala.meta.internal.ast._
+    inferedShouldEqual(Import.Selector.Rename(Name.Indeterminate("A"), Name.Indeterminate("B")), "A => B")
+  }
+  test("SelectorImport4") {
+    import scala.meta.internal.ast._
+    inferedShouldEqual(Import.Selector.Unimport(Name.Indeterminate("A")), "A => _")
   }
 
   /* Infering Source */

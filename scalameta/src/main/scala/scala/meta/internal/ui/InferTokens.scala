@@ -7,7 +7,9 @@ import org.scalameta.unreachable
 import scala.reflect.macros.blackbox.Context
 import scala.reflect.macros.Universe
 
+import scala.meta.internal.parsers.Helpers._
 import scala.meta.internal.tokenizers.keywords
+
 import scala.meta.tokenquasiquotes._
 
 import scala.language.implicitConversions
@@ -48,6 +50,9 @@ private[meta] object inferTokens {
     }
     Tokens(newTok)
   }
+
+  /* Generate tokens for idents */
+  private def mineIdentTk(value: String): Tokens = Tokens(Token.Ident(Input.String(value), 0, value.length))
 
   /* Generate synthetic tokens */
   private def infer(tree: Tree)(implicit dialect: Dialect): Tokens = {
@@ -188,17 +193,17 @@ private[meta] object inferTokens {
 
         // Name
         case t: Name.Anonymous       => toks"_"
-        case t: Name.Indeterminate   =>  ???
-            // TODO: this is not working, define helpers to take strings and other values in parameters.
-            // This will be useful at a lot of places.
-            // if (guessIsBackquoted(t)) toks"`${t.value}`"
-            // else                      toks"${t.value}`"
+        case t: Name.Indeterminate   =>  
+            if (guessIsBackquoted(t)) mineIdentTk("`" + t.value + "`")
+            else                      mineIdentTk(t.value)
 
         // Term
-        // case t: Term if t.isCtorCall => ??? // TODO
+        case t: Term if t.isCtorCall => ??? // TODO
         case t: Term.This            => ???
         case t: Term.Super           => ???
-        case t: Term.Name            => ???
+        case t: Term.Name            =>
+            if (guessIsBackquoted(t)) mineIdentTk("`" + t.value + "`")
+            else                      mineIdentTk(t.value)
         case t: Term.Select          => ???
         case t: Term.Interpolate     => ???
         case t: Term.Apply           => ???
@@ -231,7 +236,9 @@ private[meta] object inferTokens {
         case t: Term.Param           => ???
 
         // Type
-        case t: Type.Name         => ???
+        case t: Type.Name         => 
+            if (guessIsBackquoted(t)) mineIdentTk("`" + t.value + "`")
+            else                      mineIdentTk(t.value)
         case t: Type.Select       => ???
         case t: Type.Project      => ???
         case t: Type.Singleton    => ???
@@ -325,7 +332,7 @@ private[meta] object inferTokens {
         case t: Template => ???
 
         // Mod
-        case Mod.Annot(tree)                 => ???
+        case Mod.Annot(tree)                 => toks"@${tree.ctorTpe.tks}${tree.ctorArgss.`(o,o)`}" // TODO: check this one
         case Mod.Private(Name.Anonymous())   => toks"private"
         case Mod.Private(name)               => toks"private[${name.tks}]"
         case Mod.Protected(Name.Anonymous()) => toks"protected"
@@ -353,7 +360,7 @@ private[meta] object inferTokens {
         case t: Import.Selector.Rename   => toks"${t.from.tks} => ${t.to.tks}"
         case t: Import.Selector.Unimport => toks"${t.name.tks} => _"
         case _: Import.Selector.Wildcard => toks"_"
-        case t: Import.Clause            => toks"{t.ref.tks}.${t.sels.oo}"
+        case t: Import.Clause            => toks"{t.ref.tks}.${t.sels.`oo`}"
         case t: Import                   => toks"import ${t.clauses.`o,o`}"
 
         // Case
