@@ -25,7 +25,7 @@ class TokenMetadataMacros(val c: Context) {
       val nameBody = {
         val ctor = T.tpe.typeSymbol.info.decls.collect{case m: MethodSymbol if m.isPrimaryConstructor => m}.head
         val argss = ctor.paramLists.map(_.map(p => {
-          if (p.name == TermName("input")) q"""_root_.scala.meta.syntactic.Input.String("")"""
+          if (p.name == TermName("content")) q"""_root_.scala.meta.syntactic.Input.String("")"""
           else if (p.name == TermName("dialect")) q"""_root_.scala.meta.dialects.Scala211"""
           else if (p.name == TermName("start")) q"0"
           else if (p.name == TermName("end")) q"-1"

@@ -18,7 +18,7 @@ class TokenMacros(val c: Context) {
   val Invariants = q"_root_.org.scalameta.invariants.`package`"
   val Default = q"_root_.org.scalameta.default"
   val Unsupported = tq"_root_.scala.`package`.UnsupportedOperationException"
-  val Input = tq"_root_.scala.meta.syntactic.Input.Real"
+  val Content = tq"_root_.scala.meta.syntactic.Content"
   val Dialect = tq"_root_.scala.meta.Dialect"
   val Token = tq"_root_.scala.meta.syntactic.Token"
   val Prototype = tq"_root_.scala.meta.syntactic.Token.Prototype"
@@ -64,15 +64,15 @@ class TokenMacros(val c: Context) {
       // step 4: generate implementation of `def adjust`
       val needsAdjust = !stats.exists{ case DefDef(_, TermName("adjust"), _, _, _, _) => true; case _ => false }
       if (needsAdjust) {
-        val paramInput = q"val input: $Input = this.input"
+        val paramContent = q"val content: $Content = this.content"
         val paramDialect = q"val dialect: $Dialect = this.dialect"
         val paramStart = q"val start: $Default.Param[_root_.scala.Int] = $Default.Param.Default"
         val paramEnd = q"val end: $Default.Param[_root_.scala.Int] = $Default.Param.Default"
         val paramDelta = q"val delta: $Default.Param[_root_.scala.Int] = $Default.Param.Default"
         val adjustResult = {
-          if (code == "BOF" || code == "EOF") q"this.copy(input = input, dialect = dialect)"
-          else if (isStaticToken) q"this.copy(input = input, dialect = dialect, start = startValue)"
-          else q"this.copy(input = input, dialect = dialect, start = startValue, end = endValue)"
+          if (code == "BOF" || code == "EOF") q"this.copy(content = content, dialect = dialect)"
+          else if (isStaticToken) q"this.copy(content = content, dialect = dialect, start = startValue)"
+          else q"this.copy(content = content, dialect = dialect, start = startValue, end = endValue)"
         }
         val adjustError = {
           if (code == "BOF" || code == "EOF") s"position-changing adjust on Token.${escape(code)}"
@@ -82,7 +82,7 @@ class TokenMacros(val c: Context) {
         val body = q"""
           (start.nonEmpty || end.nonEmpty, delta.nonEmpty) match {
             case (false, false) =>
-              this.copy(input = input, dialect = dialect)
+              this.copy(content = content, dialect = dialect)
             case (true, false) =>
               val startValue = start.getOrElse(this.start)
               val endValue = end.getOrElse(this.end)
@@ -95,16 +95,16 @@ class TokenMacros(val c: Context) {
               }
               result
             case (false, true) =>
-              this.adjust(input = input, dialect = dialect, start = this.start + delta.get, end = this.end + delta.get)
+              this.adjust(content = content, dialect = dialect, start = this.start + delta.get, end = this.end + delta.get)
             case (true, true) =>
               throw new _root_.scala.`package`.UnsupportedOperationException("you can specify either start/end or delta, but not both")
           }
         """
-        stats1 += q"def adjust($paramInput, $paramDialect, $paramStart, $paramEnd, $paramDelta): $Token = $body"
+        stats1 += q"def adjust($paramContent, $paramDialect, $paramStart, $paramEnd, $paramDelta): $Token = $body"
       }
 
       // step 5: generate the boilerplate fields
-      var paramss1 = (q"val input: $Input" +: q"val dialect: $Dialect" +: paramss.head) +: paramss.tail
+      var paramss1 = (q"val content: $Content" +: q"val dialect: $Dialect" +: paramss.head) +: paramss.tail
       val cdef1 = q"$mods1 class $name[..$tparams] $ctorMods(...$paramss1) extends { ..$earlydefns } with ..$parents { $self => ..$stats1 }"
       val mdef1 = q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
       List(cdef1, mdef1)

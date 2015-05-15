@@ -12,6 +12,9 @@ private[meta] trait Api {
   type Input = scala.meta.syntactic.Input
   val Input = scala.meta.syntactic.Input
 
+  type Content = scala.meta.syntactic.Content
+  // val Content = scala.meta.syntactic.Content
+
   type Position = scala.meta.syntactic.Position
   val Position = scala.meta.syntactic.Position
 
@@ -68,15 +71,15 @@ private[meta] trait Api {
       // NOTE: if you're changing this, make sure that you don't degrade
       // `time parse ~/Projects/core/scalameta/src/main/scala/scala/meta/internal/parsers/Parsers.scala`
       // I wish we had better benchmarking facilities, of course, but that's what we have right now
-      if (tree.tokens.isInstanceOf[Tokens.Real]) {
-        val tokens = tree.tokens.asInstanceOf[Tokens.Real]
-        Position.Real(tokens.input, tokens.head, tokens.last)
+      if (tree.tokens.isInstanceOf[Tokens.Tokenized]) {
+        val tokens = tree.tokens.asInstanceOf[Tokens.Tokenized]
+        Position.Range(tokens.input, tokens.head.position.start, tokens.last.position.end)
       } else if (tree.tokens.isInstanceOf[Tokens.Slice]) {
         val tokens = tree.tokens.asInstanceOf[Tokens.Slice]
-        val basis = tokens.tokens.asInstanceOf[Tokens.Real]
-        Position.Real(basis.input, basis(tokens.from), basis(tokens.until - 1))
+        val basis = tokens.tokens.asInstanceOf[Tokens.Tokenized]
+        Position.Range(basis.input, basis(tokens.from).position.start, basis(tokens.until - 1).position.end)
       } else {
-        Position.Virtual(Input.Virtual(tree.tokens))
+        Position.None
       }
     }
     def start = tree.position.start

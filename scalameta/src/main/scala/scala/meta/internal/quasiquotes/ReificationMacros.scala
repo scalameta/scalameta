@@ -177,16 +177,16 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
         }
 
         // Step 3: Prettify the tokens by relating them to `wholeFileSource`.
-        // To do that, we create Input.Slice over the `wholeFileSource` and fixup positions to account for $$s.
+        // To do that, we create InputSlice over the `wholeFileSource` and fixup positions to account for $$s.
         crudeTokens.map(crudeToken => {
           val delta = partOffsetToSourceOffset(crudeToken.start) - (start + crudeToken.start)
-          crudeToken.adjust(input = sliceFileInput(start, end), delta = delta)
+          crudeToken.adjust(content = sliceFileContent(start, end), delta = delta)
         })
       case (part, arg) =>
         c.abort(part.pos, "quasiquotes can only be used with literal strings")
     }
     def merge(index: Int, parttokens: MetaTokens, arg: ReflectTree): MetaTokens = {
-      implicit class RichToken(token: Token) { def absoluteStart = token.start + token.input.require[SliceInput].start }
+      implicit class RichToken(token: Token) { def absoluteStart = token.start + token.content.require[SliceContent].start }
       val part: Tokens = {
         val bof +: payload :+ eof = parttokens
         require(bof.isInstanceOf[Token.BOF] && eof.isInstanceOf[Token.EOF] && debug(parttokens))
@@ -200,9 +200,9 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
         } else {
           val unquoteStart = parttokens.last.absoluteStart
           val unquoteEnd = parttokenss(index + 1).head.absoluteStart - 1
-          val unquoteInput = sliceFileInput(unquoteStart, unquoteEnd)
+          val unquoteContent = sliceFileContent(unquoteStart, unquoteEnd)
           val unquoteDialect = scala.meta.dialects.Quasiquote(metaDialect)
-          Tokens(MetaToken.Unquote(unquoteInput, unquoteDialect, 0, unquoteEnd - unquoteStart, arg))
+          Tokens(MetaToken.Unquote(unquoteContent, unquoteDialect, 0, unquoteEnd - unquoteStart, arg))
         }
       }
       part ++ unquote
@@ -211,9 +211,8 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
     if (sys.props("quasiquote.debug") != null) println(tokens)
     try {
       implicit val parsingDialect: MetaDialect = scala.meta.dialects.Quasiquote(metaDialect)
-      val input = Input.Virtual(tokens)
-      if (sys.props("quasiquote.debug") != null) println(input.tokens)
-      val syntax = metaParse(input, metaDialect)
+      if (sys.props("quasiquote.debug") != null) println(tokens)
+      val syntax = metaParse(tokens, metaDialect)
       if (sys.props("quasiquote.debug") != null) { println(syntax.show[Code]); println(syntax.show[Raw]) }
       (syntax, mode)
     } catch {
@@ -222,20 +221,20 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
   }
 
   private lazy val wholeFileSource = c.macroApplication.pos.source
-  private lazy val wholeFileInput = {
+  private lazy val whileFileContent = {
     if (wholeFileSource.file.file != null) Input.File(wholeFileSource.file.file)
     else Input.String(new String(wholeFileSource.content)) // NOTE: can happen in REPL or in custom Global
   }
-  private final case class SliceInput(input: Input.Real, start: Int, end: Int) extends Input.Real {
-    require(0 <= start && start <= input.content.length)
-    require(-1 <= end && end < input.content.length)
-    lazy val content = input.content.slice(start, end + 1)
+  private final case class SliceContent(content: Content, start: Int, end: Int) extends Content {
+    require(0 <= start && start <= content.chars.length)
+    require(-1 <= end && end < content.chars.length)
+    lazy val chars = content.chars.slice(start, end + 1)
   }
-  private def sliceFileInput(start: Int, end: Int) = SliceInput(wholeFileInput, start, end)
+  private def sliceFileContent(start: Int, end: Int) = SliceContent(whileFileContent, start, end)
   implicit class XtensionTokenPos(token: MetaToken) {
     def pos: ReflectPosition = {
-      val SliceInput(input, start, end) = token.input
-      require(input == wholeFileInput && debug(token))
+      val SliceContent(content, start, end) = token.content
+      require(content == whileFileContent && debug(token))
       val sourceOffset = start + token.start
       c.macroApplication.pos.focus.withPoint(sourceOffset)
     }

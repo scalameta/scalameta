@@ -10,17 +10,17 @@ import mutable.{ ListBuffer, ArrayBuffer }
 import Chars._
 import LegacyToken._
 
-private[meta] class LegacyScanner(val input: Input.Real, decodeUni: Boolean = true)(implicit val dialect: Dialect) {
+private[meta] class LegacyScanner(val content: Content, decodeUni: Boolean = true)(implicit val dialect: Dialect) {
   val curr: LegacyTokenData   = new LegacyTokenData {}
   val next: LegacyTokenData   = new LegacyTokenData {}
   val prev: LegacyTokenData   = new LegacyTokenData {}
-  val reader: CharArrayReader = new CharArrayReader(input.content, reporter.readerError, decodeUni)
-  val reporter: Reporter      = Reporter(input)
+  val reader: CharArrayReader = new CharArrayReader(content.chars, reporter.readerError, decodeUni)
+  val reporter: Reporter      = Reporter(content)
 
   import curr._, reader._, reporter._
-  curr.input = this.input
-  next.input = this.input
-  prev.input = this.input
+  curr.content = this.content
+  next.content = this.content
+  prev.content = this.content
 
   private def isDigit(c: Char) = java.lang.Character isDigit c
   private var openComments = 0
@@ -91,7 +91,7 @@ private[meta] class LegacyScanner(val input: Input.Real, decodeUni: Boolean = tr
   def resume(lastCode: LegacyToken) = {
     token = lastCode
     if (next.token != EMPTY)
-      syntaxError("unexpected end of input: possible missing '}' in XML block", at = offset)
+      syntaxError("unexpected end of content: possible missing '}' in XML block", at = offset)
 
     nextToken()
   }

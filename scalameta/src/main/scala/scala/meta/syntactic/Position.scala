@@ -11,13 +11,13 @@ import org.scalameta.invariants._
 }
 
 object Position {
-  @leaf class Real(input: Input.Real, startToken: Token, endToken: Token) extends Position {
-    lazy val start = Point.Start(startToken)
-    lazy val end = Point.End(endToken)
+  @leaf object None extends Position {
+    def input = Input.None
+    def start = Point.None
+    def end = Point.None
   }
-  @leaf class Virtual(input: Input.Virtual) extends Position {
-    lazy val start = Point.Virtual(input)
-    lazy val end = Point.Virtual(input)
+  @leaf class Range(content: Content, start: Point, end: Point) extends Position {
+    def input = content
   }
 }
 
@@ -29,15 +29,20 @@ object Position {
 }
 
 object Point {
-  @branch trait Real extends Point {
-    def token: Token
-    def offset: Int
+  @leaf object None extends Point {
+    def input = Input.None
+    def offset = -1
+    def line = -1
+    def column = -1
+  }
+  @leaf class Offset(content: Content, offset: Int) extends Point {
+    def input = content
     private lazy val (eolCount, eolPos) = {
       var i = 0
       var eolCount = 0
       var eolPos = -1
-      while (i < Math.min(offset + 1, input.content.length)) {
-        if (input.content(i) == '\n') {
+      while (i < Math.min(offset + 1, content.chars.length)) {
+        if (content.chars(i) == '\n') {
           eolCount += 1
           eolPos = i
         }
@@ -45,19 +50,7 @@ object Point {
       }
       (eolCount, eolPos)
     }
-    def input: Input.Real = token.input.require[Input.Real]
     def line: Int = eolCount
     def column: Int = offset - eolPos + 1
-  }
-  @leaf class Start(token: Token) extends Real {
-    def offset: Int = token.start
-  }
-  @leaf class End(token: Token) extends Real {
-    def offset: Int = token.end
-  }
-  @leaf class Virtual(input: Input.Virtual) extends Point {
-    def offset = -1
-    def line = -1
-    def column = -1
   }
 }

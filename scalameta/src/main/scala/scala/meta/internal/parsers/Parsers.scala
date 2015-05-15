@@ -218,8 +218,8 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   //   " (4..4)
   //   EOF (5..4)
   private val scannerTokenCache: Array[Int] = input match {
-    case input: Input.Real =>
-      val result = new Array[Int](input.content.length)
+    case content: Content =>
+      val result = new Array[Int](content.chars.length)
       var i = 0
       while (i < scannerTokens.length) {
         val token = scannerTokens(i)
@@ -231,7 +231,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         i += 1
       }
       result
-    case input: Input.Virtual =>
+    case _ =>
       new Array[Int](0)
   }
   implicit class XtensionTokenIndex(token: Token) {
