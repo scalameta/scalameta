@@ -5,7 +5,7 @@ package contexts
 import org.scalameta.contexts._
 import org.scalameta.invariants._
 import scala.meta.semantic.{Context => ScalametaSemanticContext}
-import scala.meta.macros.{Context => ScalametaMacroContext}
+import scala.meta.semantic.{Context => ScalametaMacroContext}
 import scala.meta.internal.hosts.scalac.contexts.{SemanticContext => ScalahostSemanticContext}
 import scala.compat.Platform.EOL
 import org.scalameta.internal.mkGlobal
@@ -42,8 +42,4 @@ class StandaloneContext(options: String) extends ScalahostSemanticContext(mkGlob
     toMtree(gtypedtree, classOf[mapi.Source])
   }
   val reporter = new StoreReporter()
-  private[meta] def warning(msg: String): Unit = reporter.warning(g.NoPosition, msg)
-  private[meta] def error(msg: String): Unit = reporter.error(g.NoPosition, msg)
-  private[meta] def abort(msg: String): Nothing = { reporter.error(g.NoPosition, msg); throw new AbortMacroException(g.NoPosition, msg) }
-  private[meta] def resources: Map[String, Array[Byte]] = Map()
 }

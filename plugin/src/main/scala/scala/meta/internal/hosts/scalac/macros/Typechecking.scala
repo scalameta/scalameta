@@ -52,7 +52,7 @@ trait Typechecking {
         val p1 = atPos(p.pos)(q"${cleanupMods(mods)} val $pname: _root_.scala.meta.Term")
         if (isRepeated(p.symbol)) copyValDef(p1)(tpt = tq"_root_.scala.<repeated>[${p1.tpt}]") else p1
     }
-    val c = q"implicit val ${TermName("c$" + globalFreshNameCreator.newName(""))}: _root_.scala.meta.macros.Context"
+    val c = q"implicit val ${TermName("c$" + globalFreshNameCreator.newName(""))}: _root_.scala.meta.semantic.Context"
     atPos(ddef.pos)(q"def $name(...$vparamss1)(implicit $c): _root_.scala.meta.Term = $body")
   }
 
