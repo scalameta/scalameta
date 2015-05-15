@@ -242,8 +242,6 @@ class AstMacros(val c: Context) {
       if (!isQuasi) mstats1 += q"$qmods1 class $qname(tree: _root_.scala.Any, rank: _root_.scala.Int) extends ..$qparents1 { ..$qstats1 }"
       val cdef1 = q"$imods1 trait $iname extends ..$iparents1 { $iself => ..$istats1 }"
       val mdef1 = q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
-      println(cdef1)
-      println(mdef1)
       List(cdef1, mdef1)
     }
     val expanded = annottees match {
