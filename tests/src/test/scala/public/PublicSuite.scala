@@ -7,14 +7,14 @@ import org.scalameta.tests._
 class PublicSuite extends FunSuite {
   test("macro APIs without import") {
     assert(typecheckError("""
-      warning("hello world!")
-    """) === "not found: value warning")
+      resources
+    """) === "not found: value resources")
   }
 
   test("macro APIs without context") {
     assert(typecheckError("""
       import scala.meta._
-      warning("hello world!")
+      resources
     """) === "this method requires an implicit scala.meta.macros.Context")
   }
 
@@ -22,15 +22,15 @@ class PublicSuite extends FunSuite {
     assert(typecheckError("""
       import scala.meta._
       implicit val c: scala.meta.macros.Context = ???
-      warning("hello world!")
+      resources
     """) === "")
   }
 
   // TODO: this error is somewhat confusing
   test("macro context APIs") {
     assert(typecheckError("""
-      (??? : scala.meta.macros.Context).warning("hello world!")
-    """) === "method warning in trait Context cannot be accessed in scala.meta.macros.Context")
+      (??? : scala.meta.macros.Context).resources
+    """) === "method resources in trait Context cannot be accessed in scala.meta.macros.Context")
   }
 
   test("quasiquotes without import") {

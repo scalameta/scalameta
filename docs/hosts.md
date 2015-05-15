@@ -68,11 +68,10 @@ We understand that this API is at odds with the goals of statelessness and platf
 | `def dealias(tpe: Type): Type`                            | If a given type is a type alias or an application thereof, resolve it. Otherwise, return the input type back.
 | `def parents(member: Member): Seq[Member]`                | Direct parents (i.e. superclasses or overriddens) of a given member. If the provided member has been obtained using `members` via some prefix or by instantiating some type parameters, then the results of this method should also have corresponding type parameters instantiated.
 | `def children(member: Member): Seq[Member]`               | Direct children (i.e. subclasses or overriders) of a given member in the closed world reflected by the host. If the provided member has been obtained using `members` via some prefix by instantiating some type parameters, then the results of this method should also have corresponding type parameters instantiated.
-| `def warning(msg: String): Unit`                          | Produces a warning with a given message. For now, hosts are free to choose the presentation for warnings. Later we will provide a notion of positions.
-| `def error(msg: String): Unit`                            | Produces an error with a given message at the position of the macro application. For now, host are free to choose the presentation for errors. Later we will provide a notion of positions.
-| `def abort(msg: String): Nothing`                         | Does the same as `error`, additionally terminating the host.
 | `def resources: Map[String, Array[Byte]]`                 | Returns a map from resource urls to resource contents. Hosts are advised to strive for compatibility between each other. If the same project is compiled, say, by SBT and then by Intellij IDEA plugin, then it is mandatory for urls emitted by `resources` to be the same.
 
 ### Error handling
 
 scala.meta expects hosts to signal errors by throwing exceptions of type `scala.meta.SemanticException`. Users of scala.meta might be shielded from these exceptions by an additional error handling layer inside scala.meta, but that shouldn't be a concern for host implementors. At the moment, we don't expose any exception hierarchy, and the only way for the host to elaborate on the details of emitted errors is passing a custom error message. This might change later.
+
+Hosts must expect scala.meta to signal fatal errors by throwing exceptions of type `scala.meta.AbortException`. If a metaprogram that throws such an exception is run within a host, the host might want to handle the situation in a special way. For instance, it would make sense for an aborted macro expansion tp result in a diagnostic message at a given location.

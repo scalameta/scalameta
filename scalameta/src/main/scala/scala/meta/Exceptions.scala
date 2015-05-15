@@ -11,5 +11,8 @@ extends Exception(s"$message at ${pos.start.offset}..${pos.end.offset}") with Me
 @leaf class ParseException(pos: Position, message: String)
 extends Exception(s"$message at ${pos.start.offset}..${pos.end.offset}") with MetaException
 
-@leaf class SemanticException(message: String, cause: Option[Throwable] = None)
-extends Exception(message, cause.orNull) with MetaException
+@leaf class SemanticException(message: String)
+extends Exception(message) with MetaException
+
+@leaf class AbortException(message: String)
+extends Exception(message) with MetaException
