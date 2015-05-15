@@ -62,27 +62,28 @@ private[meta] trait Api {
   }
 
   implicit class XtensionSyntacticTree(tree: Tree) {
-    def input = tree.tokens.input
-    def dialect = tree.tokens.dialect
-    def position = {
+    def input: Input = tree.tokens.input
+    def dialect: Dialect = tree.tokens.dialect
+    def position: Position = {
       // NOTE: can't do Position(tree.tokens.head, tree.tokens.last) because of two reasons:
       // 1) a tree can have no tokens (e.g. a synthetic primary constructor), but we still need to compute a position from it
       // 2) if a tree is parsed from Input.Virtual, then we can't really say that it has any position
-      // NOTE: if you're changing this, make sure that you don't degrade
-      // `time parse ~/Projects/core/scalameta/src/main/scala/scala/meta/internal/parsers/Parsers.scala`
-      // I wish we had better benchmarking facilities, of course, but that's what we have right now
-      if (tree.tokens.isInstanceOf[Tokens.Tokenized]) {
-        val tokens = tree.tokens.asInstanceOf[Tokens.Tokenized]
-        Position.Range(tokens.input, tokens.head.position.start, tokens.last.position.end)
-      } else if (tree.tokens.isInstanceOf[Tokens.Slice]) {
-        val tokens = tree.tokens.asInstanceOf[Tokens.Slice]
-        val basis = tokens.tokens.asInstanceOf[Tokens.Tokenized]
-        Position.Range(basis.input, basis(tokens.from).position.start, basis(tokens.until - 1).position.end)
-      } else {
-        Position.None
+      // TODO: compute something sensible for Position.point
+      // TODO: WorkaroundTokens is necessary, because otherwise we get a patmat warning
+      import scala.meta.syntactic.{Tokens => WorkaroundTokens}
+      tree.tokens match {
+        case WorkaroundTokens.Slice(WorkaroundTokens.Tokenized(content, _, tokens @ _*), from, until) =>
+          Position.Range(content, tokens(from).position.start, tokens(from).position.start, tokens(until - 1).position.end)
+        case other @ WorkaroundTokens.Slice(basis, from, _) =>
+          Position.Assorted(other, basis(from).position.start)
+        case WorkaroundTokens.Tokenized(content, _, tokens @ _*) =>
+          Position.Range(content, tokens.head.position.start, tokens.head.position.start, tokens.last.position.end)
+        case other =>
+          Position.Assorted(other, other.head.position.start)
       }
     }
-    def start = tree.position.start
-    def end = tree.position.end
+    def start: Point = tree.position.start
+    def point: Point = tree.position.point
+    def end: Point = tree.position.end
   }
 }

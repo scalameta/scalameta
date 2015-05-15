@@ -4,6 +4,12 @@ import org.scalameta.adt._
 import org.scalameta.unreachable
 
 @root trait MetaException extends Exception
-@leaf class TokenizeException(content: Content, offset: Int, message: String) extends Exception(message + " at " + offset) with MetaException
-@leaf class ParseException(input: Input, token: Token, message: String) extends Exception(message + " at " + token) with MetaException
-@leaf class SemanticException(message: String, cause: Option[Throwable] = None) extends Exception(message, cause.orNull) with MetaException
+
+@leaf class TokenizeException(pos: Position, message: String)
+extends Exception(s"$message at ${pos.start.offset}..${pos.end.offset}") with MetaException
+
+@leaf class ParseException(pos: Position, message: String)
+extends Exception(s"$message at ${pos.start.offset}..${pos.end.offset}") with MetaException
+
+@leaf class SemanticException(message: String, cause: Option[Throwable] = None)
+extends Exception(message, cause.orNull) with MetaException

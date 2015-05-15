@@ -231,7 +231,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         i += 1
       }
       result
-    case _ =>
+    case tokens: Tokens =>
       new Array[Int](0)
   }
   implicit class XtensionTokenIndex(token: Token) {

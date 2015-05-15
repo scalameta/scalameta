@@ -12,7 +12,7 @@ import scala.language.experimental.macros
   def input: Content = content
   def content: Content
   def dialect: Dialect
-  def position: Position = Position.Range(content, Point.Offset(content, start), Point.Offset(content, end))
+  def position: Position = Position.Range(content, Point.Offset(content, start), Point.Offset(content, start), Point.Offset(content, end))
   def start: Int
   def end: Int
   def adjust(content: Content = this.content, dialect: Dialect = this.dialect, start: Param[Int] = Default, end: Param[Int] = Default, delta: Param[Int] = Default): Token

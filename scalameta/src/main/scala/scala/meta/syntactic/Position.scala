@@ -7,16 +7,17 @@ import org.scalameta.invariants._
 @root trait Position {
   def input: Input
   def start: Point
+  def point: Point
   def end: Point
 }
 
 object Position {
-  @leaf object None extends Position {
-    def input = Input.None
-    def start = Point.None
-    def end = Point.None
+  @leaf class Assorted(tokens: Tokens, point: Point) extends Position {
+    def input = tokens
+    def start = Point.Assorted(tokens)
+    def end = Point.Assorted(tokens)
   }
-  @leaf class Range(content: Content, start: Point, end: Point) extends Position {
+  @leaf class Range(content: Content, start: Point, point: Point, end: Point) extends Position {
     def input = content
   }
 }
@@ -29,8 +30,8 @@ object Position {
 }
 
 object Point {
-  @leaf object None extends Point {
-    def input = Input.None
+  @leaf class Assorted(tokens: Tokens) extends Point {
+    def input = tokens
     def offset = -1
     def line = -1
     def column = -1

@@ -5,6 +5,7 @@ package quasiquotes
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.runtime.ScalaRunTime
+import scala.language.implicitConversions
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 import scala.collection.{immutable, mutable}
@@ -28,7 +29,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
   import decorators._
   import c.universe.{Tree => _, Symbol => _, Type => _, Position => _, _}
   import c.universe.{Tree => ReflectTree, Symbol => ReflectSymbol, Type => ReflectType, Position => ReflectPosition, Bind => ReflectBind}
-  import scala.meta.{Tree => MetaTree, Type => MetaType, Input => MetaInput, Dialect => MetaDialect}
+  import scala.meta.{Tree => MetaTree, Type => MetaType, Input => MetaInput, Dialect => MetaDialect, Position => MetaPosition}
   import scala.meta.Term.{Name => MetaTermName}
   type MetaParser = (MetaInput, MetaDialect) => MetaTree
   import scala.{meta => api}
@@ -162,14 +163,14 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
           implicit val tokenizationDialect: MetaDialect = scala.meta.dialects.Quasiquote(metaDialect)
           try part.tokens
           catch {
-            case TokenizeException(_, partOffset, message) =>
+            case TokenizeException(partPos, message) =>
               if (message.startsWith("unclosed ") && arg.nonEmpty) {
                 // NOTE: arg.pos is not precise enough
                 // val unquotePosition = arg.pos
                 val unquotePosition = partlit.pos.focus.withPoint(end + 1)
                 c.abort(unquotePosition, "can't unquote into " + message.stripPrefix("unclosed ") + "s")
               } else {
-                val sourceOffset = partOffsetToSourceOffset(partOffset)
+                val sourceOffset = partOffsetToSourceOffset(partPos.start.offset)
                 val sourcePosition = partlit.pos.focus.withPoint(sourceOffset)
                 c.abort(sourcePosition, message)
               }
@@ -216,7 +217,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
       if (sys.props("quasiquote.debug") != null) { println(syntax.show[Code]); println(syntax.show[Raw]) }
       (syntax, mode)
     } catch {
-      case ParseException(_, token, message) => c.abort(token.pos, message)
+      case ParseException(position, message) => c.abort(position, message)
     }
   }
 
@@ -231,16 +232,11 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
     lazy val chars = content.chars.slice(start, end + 1)
   }
   private def sliceFileContent(start: Int, end: Int) = SliceContent(whileFileContent, start, end)
-  implicit class XtensionTokenPos(token: MetaToken) {
-    def pos: ReflectPosition = {
-      val SliceContent(content, start, end) = token.content
-      require(content == whileFileContent && debug(token))
-      val sourceOffset = start + token.start
-      c.macroApplication.pos.focus.withPoint(sourceOffset)
-    }
-  }
-  implicit class XtensionTreePos(tree: MetaTree) {
-    def pos = tree.tokens.headOption.map(_.pos).getOrElse(NoPosition)
+  implicit def metaPositionToReflectPosition(pos: MetaPosition): ReflectPosition = {
+    val SliceContent(content, start, end) = pos.point.input
+    require(content == whileFileContent && debug(pos))
+    val sourceOffset = start + pos.point.offset
+    c.macroApplication.pos.focus.withPoint(sourceOffset)
   }
 
   // TODO: this is a very naive approach to hygiene, and it will be replaced as soon as possible
@@ -456,7 +452,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
                   "it just cannot follow another sequence either directly or indirectly."
                 }
                 val errorMessage = s"rank mismatch when unquoting;$EOL found   : ${"." * (quasi.rank + 1)}$EOL required: no dots$EOL$hint"
-                c.abort(quasi.pos, errorMessage)
+                c.abort(quasi.position, errorMessage)
               }
             }
           case other +: rest =>
@@ -496,14 +492,14 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
                 val hole = holes.find(hole => tree.equalsStructure(pq"${hole.name}")).getOrElse(sys.error(s"fatal error reifying pattern quasiquote: $quasi, $holes"))
                 val unrankedPt = hole.arg match { case pq"_: $pt" => pt; case pq"$_: $pt" => pt; case _ => tq"_root_.scala.meta.Tree" }
                 val rankedPt = unrankedPt.wrap(pendingQuasis.map(_.rank).sum)
-                hole.reifier = atPos(quasi.pos)(q"$InternalUnlift.unapply[$rankedPt](${hole.name})") // TODO: make reifier immutable somehow
+                hole.reifier = atPos(quasi.position)(q"$InternalUnlift.unapply[$rankedPt](${hole.name})") // TODO: make reifier immutable somehow
                 pq"${hole.name}"
             }
-            atPos(quasi.pos)(realWorldReifier)
+            atPos(quasi.position)(realWorldReifier)
           } else {
             quasi.tree match {
               case quasi: impl.Quasi if quasi.rank == 0 => liftQuasi(quasi)
-              case _ => c.abort(quasi.pos, "complex ellipses are not supported yet")
+              case _ => c.abort(quasi.position, "complex ellipses are not supported yet")
             }
           }
         } finally {
@@ -532,7 +528,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
       private def prohibitTermName(pat: impl.Pat): Unit = pat match {
         case q: impl.Quasi if q.tree.asInstanceOf[ReflectTree].tpe <:< typeOf[MetaTermName] =>
           val action = if (q.rank == 0) "unquote" else "splice"
-          c.abort(q.pos, s"can't $action a name here, use a variable pattern instead")
+          c.abort(q.position, s"can't $action a name here, use a variable pattern instead")
         case _ =>
       }
       lazy implicit val liftDefnVal: Liftable[impl.Defn.Val] = Liftable((v: impl.Defn.Val) => {

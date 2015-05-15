@@ -23,9 +23,6 @@ trait Content extends Input {
 }
 
 object Input {
-  case object None extends Input {
-    def tokens(implicit dialect: Dialect) = Tokens()
-  }
   final case class String(s: scala.Predef.String) extends Content {
     lazy val chars = s.toArray
   }
@@ -74,8 +71,6 @@ sealed abstract class Tokens(repr: Token*) extends Tokens.Projection(repr: _*) w
   // def unzip[A1, A2](implicit asPair: A => (A1, A2)): (CC[A1], CC[A2]) = {
   // def unzip3[A1, A2, A3](implicit asTriple: A => (A1, A2, A3)): (CC[A1], CC[A2], CC[A3]) = {
   // TODO: have I missed anything else?
-
-  override def toString: String = s"Tokens(${repr.mkString(", ")})"
 }
 
 object Tokens {
@@ -110,18 +105,21 @@ object Tokens {
   private[meta] case class Tokenized(content: Content, dialect: Dialect, underlying: Token*) extends Tokens(underlying: _*) {
     override def input = content
     override def isAuthentic = true
+    override def toString = s"Tokenized($content, $dialect, $underlying)"
   }
 
   private[meta] case class Adhoc(underlying: Token*) extends Tokens(underlying: _*) {
     override def input = this
     override def dialect = scala.meta.dialects.Scala211
     override def isAuthentic = true
+    override def toString = s"Adhoc($underlying)"
   }
 
   private[meta] case class Synthetic(underlying: Token*) extends Tokens(underlying: _*) {
     override def input = this
     override def dialect = scala.meta.dialects.Scala211
     override def isAuthentic = false
+    override def toString = s"Synthetic($underlying)"
   }
 
   private[meta] case class Slice(tokens: Tokens, from: Int, until: Int) extends Tokens(tokens.view(from, until): _*) {
@@ -130,5 +128,6 @@ object Tokens {
     override def isAuthentic = true
     override def take(n: Int): Tokens = new Slice(tokens, from, Math.min(from + n, until))
     override def drop(n: Int): Tokens = new Slice(tokens, Math.min(from + n, until), until)
+    override def toString = s"Slice($tokens, $from, $until)"
   }
 }

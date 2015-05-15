@@ -3,20 +3,16 @@ package internal
 package parsers
 
 // TODO: when I grow up I want to become a monad, just like my daddy
-// TODO: when we have Positions, attach them to the exception being thrown
 private[meta] trait Reporter {
-  def deprecationWarning(msg: String, at: Token): Unit = ()
-  def deprecationWarning(msg: String, at: Tree): Unit = {
-    def fallback = ()
-    at.tokens.headOption.map(at => deprecationWarning(msg, at)).getOrElse(())
-  }
-  def syntaxWarning(msg: String, at: Token): Unit = ()
-  def syntaxWarning(msg: String, at: Tree): Unit = {
-    def fallback = ()
-    at.tokens.headOption.map(at => syntaxWarning(msg, at)).getOrElse(())
-  }
-  def syntaxError(msg: String, at: Token): Nothing = throw new ParseException(at.input, at, msg)
-  def syntaxError(msg: String, at: Tree): Nothing = syntaxError(msg, at = at.tokens.head)
+  def deprecationWarning(msg: String, at: Position): Unit = ()
+  def deprecationWarning(msg: String, at: Token): Unit = deprecationWarning(msg, at.position)
+  def deprecationWarning(msg: String, at: Tree): Unit = deprecationWarning(msg, at.position)
+  def syntaxWarning(msg: String, at: Position): Unit = ()
+  def syntaxWarning(msg: String, at: Token): Unit = syntaxWarning(msg, at.position)
+  def syntaxWarning(msg: String, at: Tree): Unit = syntaxWarning(msg, at.position)
+  def syntaxError(msg: String, at: Position): Nothing = throw new ParseException(at, msg)
+  def syntaxError(msg: String, at: Token): Nothing = syntaxError(msg, at.position)
+  def syntaxError(msg: String, at: Tree): Nothing = syntaxError(msg, at.position)
 }
 
 private[meta] object Reporter {
