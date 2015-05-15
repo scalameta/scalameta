@@ -91,7 +91,7 @@ private[meta] class LegacyScanner(val content: Content, decodeUni: Boolean = tru
   def resume(lastCode: LegacyToken) = {
     token = lastCode
     if (next.token != EMPTY)
-      syntaxError("unexpected end of content: possible missing '}' in XML block", at = offset)
+      syntaxError("unexpected end of input: possible missing '}' in XML block", at = offset)
 
     nextToken()
   }
