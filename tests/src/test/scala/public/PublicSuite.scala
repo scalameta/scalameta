@@ -5,32 +5,32 @@ import org.scalatest._
 import org.scalameta.tests._
 
 class PublicSuite extends FunSuite {
-  test("macro APIs without import") {
+  test("project APIs without import") {
     assert(typecheckError("""
-      resources
-    """) === "not found: value resources")
+      project
+    """) === "not found: value project")
   }
 
-  test("macro APIs without context") {
+  test("project APIs without context") {
     assert(typecheckError("""
       import scala.meta._
-      resources
-    """) === "this method requires an implicit scala.meta.macros.Context")
+      project
+    """) === "this method requires an implicit scala.meta.projects.Context")
   }
 
-  test("macro APIs when everything's correct") {
+  test("project APIs when everything's correct") {
     assert(typecheckError("""
       import scala.meta._
-      implicit val c: scala.meta.macros.Context = ???
-      resources
+      implicit val c: scala.meta.projects.Context = ???
+      project
     """) === "")
   }
 
   // TODO: this error is somewhat confusing
-  test("macro context APIs") {
+  test("project context APIs") {
     assert(typecheckError("""
-      (??? : scala.meta.macros.Context).resources
-    """) === "method resources in trait Context cannot be accessed in scala.meta.macros.Context")
+      (??? : scala.meta.projects.Context).project
+    """) === "method project in trait Context cannot be accessed in scala.meta.projects.Context")
   }
 
   test("quasiquotes without import") {
