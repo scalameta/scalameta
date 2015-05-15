@@ -55,7 +55,7 @@ class TokenMacros(val c: Context) {
       if (needsName) stats1 += q"def name: _root_.scala.Predef.String = ${escape(code)}"
       if (needsEnd) {
         val codeRef = if (hasCustomCode) q"this.code.length" else q"${code.length}"
-        stats1 += q"def end: _root_.scala.Int = this.start + $codeRef - 1"
+        stats1 += q"def end: _root_.scala.Int = this.start + $codeRef"
       }
 
       // step 3: ensure that the token is correctly classified as either static or dynamic

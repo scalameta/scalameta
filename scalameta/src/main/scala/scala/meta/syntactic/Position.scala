@@ -42,7 +42,7 @@ object Point {
       var i = 0
       var eolCount = 0
       var eolPos = -1
-      while (i < Math.min(offset + 1, content.chars.length)) {
+      while (i < Math.min(offset, content.chars.length)) {
         if (content.chars(i) == '\n') {
           eolCount += 1
           eolPos = i

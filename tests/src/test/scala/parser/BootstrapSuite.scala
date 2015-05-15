@@ -24,7 +24,7 @@ class BootstrapSuite extends ParseSuite {
           val tokenmap = scala.collection.mutable.Map[Int, List[Token]]()
           toks.foreach(tok => {
             var i = tok.start
-            while (i <= tok.end) {
+            while (i < tok.end) {
               if (i < 0 || content.length <= i) fail("TOKEN OUT OF BOUNDS AT " + i + ": " + tok)
               else {
                 tokenmap(i) = tok +: tokenmap.getOrElse(i, Nil)
@@ -68,7 +68,7 @@ class BootstrapSuite extends ParseSuite {
             val codec = scala.io.Codec(java.nio.charset.Charset.forName("UTF-8"))
             val content = scala.io.Source.fromFile(src)(codec).mkString
             assert(tree.start.offset == 0)
-            assert(tree.end.offset == content.length - 1)
+            assert(tree.end.offset == content.length)
             assert(tree.start.line == 0)
             assert(tree.end.line == content.count(_ == '\n'))
           } catch {

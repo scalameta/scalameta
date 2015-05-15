@@ -12,21 +12,21 @@ private[meta] object tokenize {
   def apply(content: Content)(implicit dialect: Dialect): Tokens = {
     def legacyTokenToToken(curr: LegacyTokenData): Token = {
       (curr.token: @scala.annotation.switch) match {
-        case IDENTIFIER       => Token.Ident(content, dialect, curr.offset, curr.endOffset)
-        case BACKQUOTED_IDENT => Token.Ident(content, dialect, curr.offset, curr.endOffset)
+        case IDENTIFIER       => Token.Ident(content, dialect, curr.offset, curr.endOffset + 1)
+        case BACKQUOTED_IDENT => Token.Ident(content, dialect, curr.offset, curr.endOffset + 1)
 
-        case CHARLIT         => Token.Literal.Char(content, dialect, curr.offset, curr.endOffset, curr.charVal)
-        case INTLIT          => Token.Literal.Int(content, dialect, curr.offset, curr.endOffset, isNegated => curr.intVal(isNegated).map(_.toInt).get)
-        case LONGLIT         => Token.Literal.Long(content, dialect, curr.offset, curr.endOffset, isNegated => curr.intVal(isNegated).get)
-        case FLOATLIT        => Token.Literal.Float(content, dialect, curr.offset, curr.endOffset, isNegated => curr.floatVal(isNegated).map(_.toFloat).get)
-        case DOUBLELIT       => Token.Literal.Double(content, dialect, curr.offset, curr.endOffset, isNegated => curr.floatVal(isNegated).get)
-        case STRINGLIT       => Token.Literal.String(content, dialect, curr.offset, curr.endOffset, curr.strVal)
-        case SYMBOLLIT       => Token.Literal.Symbol(content, dialect, curr.offset, curr.endOffset, scala.Symbol(curr.strVal))
+        case CHARLIT         => Token.Literal.Char(content, dialect, curr.offset, curr.endOffset + 1, curr.charVal)
+        case INTLIT          => Token.Literal.Int(content, dialect, curr.offset, curr.endOffset + 1, isNegated => curr.intVal(isNegated).map(_.toInt).get)
+        case LONGLIT         => Token.Literal.Long(content, dialect, curr.offset, curr.endOffset + 1, isNegated => curr.intVal(isNegated).get)
+        case FLOATLIT        => Token.Literal.Float(content, dialect, curr.offset, curr.endOffset + 1, isNegated => curr.floatVal(isNegated).map(_.toFloat).get)
+        case DOUBLELIT       => Token.Literal.Double(content, dialect, curr.offset, curr.endOffset + 1, isNegated => curr.floatVal(isNegated).get)
+        case STRINGLIT       => Token.Literal.String(content, dialect, curr.offset, curr.endOffset + 1, curr.strVal)
+        case SYMBOLLIT       => Token.Literal.Symbol(content, dialect, curr.offset, curr.endOffset + 1, scala.Symbol(curr.strVal))
         case NULL            => Token.Literal.`null`(content, dialect, curr.offset)
         case TRUE            => Token.Literal.`true`(content, dialect, curr.offset)
         case FALSE           => Token.Literal.`false`(content, dialect, curr.offset)
 
-        case INTERPOLATIONID => Token.Interpolation.Id(content, dialect, curr.offset, curr.endOffset)
+        case INTERPOLATIONID => Token.Interpolation.Id(content, dialect, curr.offset, curr.endOffset + 1)
         case XMLSTART        => Token.Xml.Start(content, dialect, curr.offset)
 
         case NEW   => Token.`new`(content, dialect, curr.offset)
@@ -88,8 +88,8 @@ private[meta] object tokenize {
         case AT        => Token.`@`(content, dialect, curr.offset)
         case HASH      => Token.`#`(content, dialect, curr.offset)
         case USCORE    => Token.`_ `(content, dialect, curr.offset)
-        case ARROW     => Token.`=>`(content, dialect, curr.offset, curr.endOffset)
-        case LARROW    => Token.`<-`(content, dialect, curr.offset, curr.endOffset)
+        case ARROW     => Token.`=>`(content, dialect, curr.offset, curr.endOffset + 1)
+        case LARROW    => Token.`<-`(content, dialect, curr.offset, curr.endOffset + 1)
         case SUBTYPE   => Token.`<:`(content, dialect, curr.offset)
         case SUPERTYPE => Token.`>:`(content, dialect, curr.offset)
         case VIEWBOUND => Token.`<%`(content, dialect, curr.offset)
@@ -102,9 +102,9 @@ private[meta] object tokenize {
           else if (curr.strVal == "\f") Token.`\f`(content, dialect, curr.offset)
           else unreachable(debug(curr.strVal))
 
-        case COMMENT   => Token.Comment(content, dialect, curr.offset, curr.endOffset)
+        case COMMENT   => Token.Comment(content, dialect, curr.offset, curr.endOffset + 1)
 
-        case ELLIPSIS  => Token.Ellipsis(content, dialect, curr.offset, curr.endOffset, curr.base)
+        case ELLIPSIS  => Token.Ellipsis(content, dialect, curr.offset, curr.endOffset + 1, curr.base)
 
         case EOF       => Token.EOF(content, dialect)
 
@@ -202,12 +202,12 @@ private[meta] object tokenize {
         while (startEnd < buf.length && buf(startEnd) == '\"') startEnd += 1
         val numStartQuotes = startEnd - prev.endOffset - 1
         val numQuotes = if (numStartQuotes <= 2) 1 else 3
-        def emitStart(offset: Offset) = tokens += Token.Interpolation.Start(content, dialect, offset, offset + numQuotes - 1)
-        def emitEnd(offset: Offset) = tokens += Token.Interpolation.End(content, dialect, offset, offset + numQuotes - 1)
+        def emitStart(offset: Offset) = tokens += Token.Interpolation.Start(content, dialect, offset, offset + numQuotes)
+        def emitEnd(offset: Offset) = tokens += Token.Interpolation.End(content, dialect, offset, offset + numQuotes)
         def emitContents(): Unit = {
           require(curr.token == STRINGPART || curr.token == STRINGLIT)
           if (curr.token == STRINGPART) {
-            tokens += Token.Interpolation.Part(content, dialect, curr.offset, curr.endOffset)
+            tokens += Token.Interpolation.Part(content, dialect, curr.offset, curr.endOffset + 1)
             require(buf(curr.endOffset + 1) == '$')
             val dollarOffset = curr.endOffset + 1
             def emitSpliceStart(offset: Offset) = tokens += Token.Interpolation.SpliceStart(content, dialect, offset)
@@ -238,7 +238,7 @@ private[meta] object tokenize {
             }
           } else {
             curr.endOffset -= numQuotes
-            tokens += Token.Interpolation.Part(content, dialect, curr.offset, curr.endOffset)
+            tokens += Token.Interpolation.Part(content, dialect, curr.offset, curr.endOffset + 1)
             require(buf(curr.endOffset + 1) == '\"')
             nextToken()
           }
@@ -257,7 +257,7 @@ private[meta] object tokenize {
 
       if (prev.token == XMLSTART) {
         val raw = xmlLiteralBuf.remove(0)
-        tokens += Token.Xml.Part(content, dialect, prev.offset, curr.offset - 1)
+        tokens += Token.Xml.Part(content, dialect, prev.offset, curr.offset)
         tokens += Token.Xml.End(content, dialect, curr.offset - 1)
       }
 

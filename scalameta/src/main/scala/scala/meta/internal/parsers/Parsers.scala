@@ -224,7 +224,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       while (i < scannerTokens.length) {
         val token = scannerTokens(i)
         var j = token.start
-        while (j <= token.end) {
+        while (j < token.end) {
           result(j) = i
           j += 1
         }

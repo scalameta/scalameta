@@ -17,7 +17,7 @@ import scala.language.experimental.macros
   def end: Int
   def adjust(content: Content = this.content, dialect: Dialect = this.dialect, start: Param[Int] = Default, end: Param[Int] = Default, delta: Param[Int] = Default): Token
   def name: String
-  def code: String = new String(content.chars.slice(start, end + 1))
+  def code: String = new String(content.chars.slice(start, end))
   final override def toString = this.show[Raw]
 }
 
@@ -143,13 +143,13 @@ object Token {
     def name = "beginning of file"
     override def code = ""
     def start = 0
-    def end = -1
+    def end = 0
   }
 
   @token class EOF() extends Static {
     def name = "end of file"
     override def code = ""
     def start = content.chars.length
-    def end = content.chars.length - 1
+    def end = content.chars.length
   }
 }
