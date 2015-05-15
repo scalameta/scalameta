@@ -16,4 +16,5 @@ private[meta] trait Api {
   }
 
   def abort(msg: String): Nothing = throw new AbortException(msg)
+  def abort(pos: Position, msg: String): Nothing = throw new AbortException(pos, msg)
 }
