@@ -8,7 +8,6 @@ import scala.meta._
 import scala.meta.internal.hosts.scalac.contexts.StandaloneContext
 import scala.reflect.{ ClassTag, classTag }
 import scala.meta.internal.{ ast => m }
-import scala.reflect.macros.runtime.AbortMacroException
 
 class OldRealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
   def evalFunc(defn: m.Defn.Def, argss: Seq[Any]*)(implicit c: semantic.Context): Any = {
@@ -27,7 +26,7 @@ class OldRealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
       object DummyContainer1 {
         import scala.meta._
         import scala.meta.internal.{ast => m}
-        def metaprogram1(T: Type)(implicit c: scala.meta.macros.Context) = {
+        def metaprogram1(T: Type)(implicit c: scala.meta.semantic.Context) = {
           T match {
             case ref: Type.Ref =>
               def validateLeaf(leaf: Member) = {
@@ -58,7 +57,7 @@ class OldRealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
         import scala.meta._
         import scala.meta.internal.{ast => m}
         import scala.meta.dialects.Scala211
-        def metaprogram2(T: Type)(implicit c: scala.meta.macros.Context) = {
+        def metaprogram2(T: Type)(implicit c: scala.meta.semantic.Context) = {
           T match {
             case ref: Type.Ref =>
               val defn = ref.defn
@@ -110,21 +109,21 @@ class OldRealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
     """)
 
   "A verification macro" should "reject defns that are not classes, traits or objects" in {
-    val ex = intercept[AbortMacroException] {
+    val ex = intercept[AbortException] {
       evalFunc(metaprogram1, List(t"List"), List(c))
     }
     ex.getMessage() should be("unsupported ref to List")
   }
 
   it should "reject non-final classes" in {
-    val ex1 = intercept[AbortMacroException] {
+    val ex1 = intercept[AbortException] {
       evalFunc(metaprogram1, List(t"TestTraitNonFinal"), List(c))
     }
     ex1.getMessage() should be("XNonFinal is not final")
   }
 
   it should "reject non-case classes" in {
-    val ex2 = intercept[AbortMacroException] {
+    val ex2 = intercept[AbortException] {
       evalFunc(metaprogram1, List(t"TestTraitNonCase"), List(c))
     }
     ex2.getMessage() should be("XNonCase is not a case class")

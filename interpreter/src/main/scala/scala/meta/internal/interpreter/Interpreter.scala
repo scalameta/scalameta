@@ -21,9 +21,9 @@ object Interpreter {
       if (v == null) return t"Null"
       if (v.isInstanceOf[Context]) return t"Context"
       def loadModule(root: Term.Name, parts: List[String]): Term.Name = parts match {
-        case Nil => 
+        case Nil =>
           root
-        case name :: rest => 
+        case name :: rest =>
           val children = root.members.filter(m => (m.isPackage || m.isObject) && m.name.toString == name)
           if (children.isEmpty) sys.error(s"typeOf(${v.getClass}) has failed: $name not found in $root")
           val child = children.head.asInstanceOf[Member.Term]
@@ -129,7 +129,7 @@ object Interpreter {
 
       case m.Term.Apply(lhs@m.Term.Name("abort"), List(arg)) if lhs.isDef =>
         val (Object(msg: String, _, _), env1) = eval(arg, env)
-        env.context.asInstanceOf[scala.meta.macros.Context].abort(msg)
+        scala.meta.abort(msg)
         (Object((), t"Nothing"), env1)
 
       case m.Term.Apply(lhs@m.Term.Name("println"), List(arg)) if lhs.isDef =>
@@ -231,7 +231,7 @@ object Interpreter {
               }
             }, funcTpe) // TODO cant get the type if not indicated
             (funcObj, env.push(nme, funcObj))
-            
+
           case p1 :: p2 :: Nil =>
             val funcTpe = t"(${p1.tpe}, ${p2.tpe}) => Any"
             val funcObj = Object(new Function2[Any, Any, Any] with FunctionEnv {
@@ -243,7 +243,7 @@ object Interpreter {
               }
             }, funcTpe) // TODO cant get the type if not indicated
             (funcObj, env.push(nme, funcObj))
-            
+
           case p1 :: p2 :: p3 :: Nil =>
             val funcTpe = t"(${p1.tpe}, ${p2.tpe}, ${p3.tpe}) => Any"
             val funcObj = Object(new Function3[Any, Any, Any, Any] with FunctionEnv {
@@ -406,13 +406,13 @@ object Interpreter {
             if (needsDenot && !alreadyHasDenot) Seq(scala.meta.internal.hygiene.Denotation.Zero, scala.meta.internal.hygiene.Sigma.Naive)
             else Nil
           }
-          val originPart = Seq(scala.meta.Origin.None)
+          val originPart = Seq(null)
           (vLHS, jvmArgs ++ denotPart ++ originPart)
 
         // Extension methods
         // Examples:
         // case (vLHS: Member, "Lscala/meta/semantic/Api$XtensionSemanticMemberLike;", "isFinal", "(Lscala/meta/semantic/Context;)Z") =>
-        // case (vLHS: Scope, "Lscala/meta/semantic/Api$XtensionSemanticScopeLike;", "ctor", "(Lscala/meta/semantic/Context;)Lscala/meta/Member$Term;") =>        
+        // case (vLHS: Scope, "Lscala/meta/semantic/Api$XtensionSemanticScopeLike;", "ctor", "(Lscala/meta/semantic/Context;)Lscala/meta/Member$Term;") =>
         // case (vLHS: m.Member.Term, "Lscala/meta/semantic/Api$XtensionSemanticTermMember;", "name", "(Lscala/meta/semantic/Context;)Lscala/meta/Term$Name;") =>
         case (vLHS: Member, "Lscala/meta/semantic/Api$XtensionSemanticMemberLike;", _, _) =>
           (XtensionSemanticMember(vLHS), jvmArgs ++ Seq(env.context))

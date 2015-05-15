@@ -8,7 +8,6 @@ import scala.meta._
 import scala.meta.internal.hosts.scalac.contexts.StandaloneContext
 import scala.reflect.{ ClassTag, classTag }
 import scala.meta.internal.{ ast => m }
-import scala.reflect.macros.runtime.AbortMacroException
 
 class NewRealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
   def evalFunc(defn: m.Defn.Def, argss: Seq[Any]*)(implicit c: semantic.Context): Any = {
@@ -28,7 +27,7 @@ class NewRealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
         import scala.meta._
         import scala.meta.internal.{ast => m}
         import scala.meta.dialects.Scala211
-        def metaprogram1(T: Type)(implicit c: scala.meta.macros.Context) = {
+        def metaprogram1(T: Type)(implicit c: scala.meta.semantic.Context) = {
           T match {
             case ref: Type.Ref =>
               def validate(defn: Member): Unit = {
@@ -56,7 +55,7 @@ class NewRealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
         import scala.meta._
         import scala.meta.internal.{ast => m}
         import scala.meta.dialects.Scala211
-        def metaprogram2(T: Type)(implicit c: scala.meta.macros.Context) = {
+        def metaprogram2(T: Type)(implicit c: scala.meta.semantic.Context) = {
           T match {
             case ref: Type.Ref =>
               def serializerFor(defn: Member, x: Term.Name, tagged: Boolean): Term = {
@@ -85,7 +84,7 @@ class NewRealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
               val name = Term.fresh("Serializer")
               val body = serializerFor(ref.defn, x, tagged = false)
               qQQQ
-                implicit object $name extends _root_.serialization.Serializer[$T] { 
+                implicit object $name extends _root_.serialization.Serializer[$T] {
                   def apply($x: $T): _root_.scala.Predef.String = $body
                 }
                 $name
@@ -98,21 +97,21 @@ class NewRealWorldExamplesSpec extends FlatSpec with ShouldMatchers {
     """.replace("QQQ", "\"\"\""))
 
   "A verification macro" should "reject defns that are not classes, traits or objects" in {
-    val ex = intercept[AbortMacroException] {
+    val ex = intercept[AbortException] {
       evalFunc(metaprogram1, List(t"List"), List(c))
     }
     ex.getMessage() should be("List is not a final class/object or a sealed parent of final classes/objects")
   }
 
   it should "reject non-final classes" in {
-    val ex1 = intercept[AbortMacroException] {
+    val ex1 = intercept[AbortException] {
       evalFunc(metaprogram1, List(t"TestTraitNonFinal"), List(c))
     }
     ex1.getMessage() should be("TestTraitNonFinal is not a final class/object or a sealed parent of final classes/objects")
   }
 
   it should "reject non-case classes" in {
-    val ex2 = intercept[AbortMacroException] {
+    val ex2 = intercept[AbortException] {
       evalFunc(metaprogram1, List(t"TestTraitNonCase"), List(c))
     }
     ex2.getMessage() should be("XNonCase is not a case class or a case object")
