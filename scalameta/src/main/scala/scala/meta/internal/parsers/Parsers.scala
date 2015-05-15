@@ -7,6 +7,7 @@ import scala.reflect.{ClassTag, classTag}
 import scala.runtime.ScalaRunTime
 import scala.collection.{ mutable, immutable }
 import mutable.{ ListBuffer, StringBuilder }
+import scala.annotation.tailrec
 import scala.{Seq => _}
 import scala.collection.immutable._
 import scala.meta.internal.ast._
@@ -217,20 +218,20 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   //   " (4..4)
   //   EOF (5..4)
   private val scannerTokenCache: Array[Int] = input match {
-    case input: Input.Real =>
-      val result = new Array[Int](input.content.length)
+    case content: Content =>
+      val result = new Array[Int](content.chars.length)
       var i = 0
       while (i < scannerTokens.length) {
         val token = scannerTokens(i)
         var j = token.start
-        while (j <= token.end) {
+        while (j < token.end) {
           result(j) = i
           j += 1
         }
         i += 1
       }
       result
-    case input: Input.Virtual =>
+    case tokens: Tokens =>
       new Array[Int](0)
   }
   implicit class XtensionTokenIndex(token: Token) {
@@ -275,7 +276,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   lazy val (parserTokens, parserTokenPositions) = {
     val parserTokens = new immutable.VectorBuilder[Token]()
     val parserTokenPositions = mutable.ArrayBuilder.make[Int]()
-    def loop(prevPos: Int, currPos: Int, sepRegions: List[Char]): Unit = {
+    @tailrec def loop(prevPos: Int, currPos: Int, sepRegions: List[Char]): Unit = {
       if (currPos >= scannerTokens.length) return
       val prev = if (prevPos >= 0) scannerTokens(prevPos) else null
       val curr = scannerTokens(currPos)
@@ -324,7 +325,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
             next != null && next.isNot[CantStartStat] &&
             (sepRegions.isEmpty || sepRegions.head == '}')) {
           var token = scannerTokens(lastNewlinePos)
-          if (newlines) token = `\n\n`(token.input, token.start)
+          if (newlines) token = `\n\n`(token.input, token.dialect, token.start)
           parserTokens += token
           parserTokenPositions += lastNewlinePos
           loop(lastNewlinePos, currPos + 1, sepRegions)
@@ -422,8 +423,10 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
 
   import scala.language.implicitConversions
   sealed trait Pos
-  case class TokenPos(tokenPos: Int) extends Pos
-  implicit def intToTokenPos(tokenPos: Int): TokenPos = TokenPos(tokenPos)
+  case class IndexPos(index: Int) extends Pos
+  implicit def intToIndexPos(index: Int): IndexPos = IndexPos(index)
+  case class TokenPos(token: Token) extends Pos
+  implicit def intToTokenPos(token: Token): TokenPos = TokenPos(token)
   case class TreePos(tree: Tree) extends Pos
   implicit def treeToTreePos(tree: Tree): TreePos = TreePos(tree)
   implicit def optionTreeToPos(tree: Option[Tree]): Pos = tree.map(TreePos).getOrElse(AutoPos)
@@ -434,27 +437,27 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
 
   def atPos[T <: Tree](start: Pos, end: Pos)(body: => T): T = {
     implicit class XtensionTree(tree: Tree) {
-      def requirePosition: Origin.Parsed = tree.origin match {
-        case position: Origin.Parsed => position
-        case _ => unreachable(debug(tree.show[Positions]))
-      }
+      // NOTE: if a tree has synthetic tokens produced by inferTokens,
+      // then their input will be synthetic as well, and here we verify that it's not the case
+      private def requirePositioned() = require(tree.tokens.isAuthentic && debug(tree.show[Code], tree.show[Raw]))
+      def startTokenPos: Int = { requirePositioned(); tree.tokens.require[Tokens.Slice].from }
+      def endTokenPos: Int = { requirePositioned(); tree.tokens.require[Tokens.Slice].until - 1 }
     }
     val startTokenPos = start match {
-      case TokenPos(tokenPos) => tokenPos
-      case TreePos(tree) => tree.requirePosition.startTokenPos
+      case IndexPos(index) => index
+      case TokenPos(token) => token.index
+      case TreePos(tree) => tree.startTokenPos
       case AutoPos => in.tokenPos
     }
     val result = body
     var endTokenPos = end match {
-      case TokenPos(tokenPos) => tokenPos
-      case TreePos(tree) => tree.requirePosition.endTokenPos
+      case IndexPos(index) => index
+      case TokenPos(token) => token.index
+      case TreePos(tree) => tree.endTokenPos
       case AutoPos => in.prevTokenPos
     }
     if (endTokenPos < startTokenPos) endTokenPos = startTokenPos - 1
-    result.origin match {
-      case Origin.Parsed(_, _, startTokenPos0, endTokenPos0) if startTokenPos == startTokenPos0 && endTokenPos == endTokenPos0 => result
-      case _ => result.internalCopy(origin = Origin.Parsed(input, dialect, startTokenPos, endTokenPos)).asInstanceOf[T]
-    }
+    result.internalCopy(tokens = scannerTokens.slice(startTokenPos, endTokenPos + 1)).asInstanceOf[T]
   }
   def autoPos[T <: Tree](body: => T): T = atPos(start = auto, end = auto)(body)
 
@@ -1373,9 +1376,9 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         newLineOptWhenFollowing(_.is[ExprIntro])
         if (token.is[ExprIntro]) {
           val startToken1 = in.token
-          var startPos1: Pos = TokenPos(in.tokenPos)
+          var startPos1: Pos = IndexPos(in.tokenPos)
           val top1 = argumentExprsOrPrefixExpr()
-          var endPos1: Pos = TokenPos(in.prevTokenPos)
+          var endPos1: Pos = IndexPos(in.prevTokenPos)
           if (startToken1.isNot[`{`] && startToken1.isNot[`(`]) startPos1 = TreePos(top1.head)
           if (startToken1.isNot[`{`] && startToken1.isNot[`(`]) endPos1 = TreePos(top1.head)
           loop(startPos1, top1, endPos1)
@@ -1957,7 +1960,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   def modifiers(isLocal: Boolean = false): List[Mod] = {
     def appendMod(mods: List[Mod], mod: Mod): List[Mod] = {
       def validate() = {
-        if (isLocal && !mod.origin.tokens.head.is[LocalModifier]) syntaxError("illegal modifier for a local definition", at = mod)
+        if (isLocal && !mod.tokens.head.is[LocalModifier]) syntaxError("illegal modifier for a local definition", at = mod)
         mods.foreach(m => if (m.productPrefix == mod.productPrefix) syntaxError("repeated modifier", at = mod))
         if (mod.hasAccessBoundary) mods.filter(_.hasAccessBoundary).foreach(mod => syntaxError("duplicate access qualifier", at = mod))
       }
@@ -2523,10 +2526,8 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       // if anything, this mkCtorRefFunction is a testament to how problematic our current encoding is
       // the Type.ApplyInfix => Term.ApplyType conversion is weird as well
       def mkCtorRefFunction(tpe: Type) = {
-        val origin = tpe.origin.require[Origin.Parsed]
-        val allTokens = scannerTokens.zipWithIndex
-        val arrowPos = allTokens.indexWhere{ case (el, i) => el.is[`=>`] && origin.startTokenPos <= i && i <= origin.endTokenPos }
-        atPos(arrowPos, arrowPos)(Ctor.Ref.Function(atPos(arrowPos, arrowPos)(Ctor.Name("=>"))))
+        val arrow = scannerTokens.slice(tpe.tokens.head.index, tpe.tokens.last.index + 1).find(_.is[`=>`]).get
+        atPos(arrow, arrow)(Ctor.Ref.Function(atPos(arrow, arrow)(Ctor.Name("=>"))))
       }
       atPos(tpe, tpe)(tpe match {
         case Type.Name(value) => Ctor.Name(value)

@@ -24,7 +24,7 @@ class BootstrapSuite extends ParseSuite {
           val tokenmap = scala.collection.mutable.Map[Int, List[Token]]()
           toks.foreach(tok => {
             var i = tok.start
-            while (i <= tok.end) {
+            while (i < tok.end) {
               if (i < 0 || content.length <= i) fail("TOKEN OUT OF BOUNDS AT " + i + ": " + tok)
               else {
                 tokenmap(i) = tok +: tokenmap.getOrElse(i, Nil)
@@ -57,10 +57,7 @@ class BootstrapSuite extends ParseSuite {
                 case x: Some[_] => loop(x.get)
                 case x => true
               }
-              tree.origin match {
-                case _: Origin.Parsed => tree.productIterator.toList.forall(loop)
-                case _ => false
-              }
+              tree.tokens.isAuthentic && tree.productIterator.toList.forall(loop)
             }
             if (!check(tree)) {
               import scala.meta.ui.Positions.Colorful
@@ -70,10 +67,10 @@ class BootstrapSuite extends ParseSuite {
             // check #2: everything's covered
             val codec = scala.io.Codec(java.nio.charset.Charset.forName("UTF-8"))
             val content = scala.io.Source.fromFile(src)(codec).mkString
-            assert(tree.origin.start.offset == 0)
-            assert(tree.origin.end.offset == content.length - 1)
-            assert(tree.origin.start.line == 0)
-            assert(tree.origin.end.line == content.count(_ == '\n'))
+            assert(tree.start.offset == 0)
+            assert(tree.end.offset == content.length)
+            assert(tree.start.line == 0)
+            assert(tree.end.line == content.count(_ == '\n'))
           } catch {
             case ex: scala.meta.ParseException if ex.message.contains("XML literals are not supported") => pending
           }

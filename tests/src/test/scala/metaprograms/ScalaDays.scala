@@ -1,5 +1,5 @@
 import scala.meta._
-import scala.meta.macros.Context
+import scala.meta.semantic.Context
 import scala.meta.dialects.Scala211
 
 object ScalaDays {

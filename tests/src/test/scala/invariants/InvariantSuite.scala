@@ -75,4 +75,8 @@ class InvariantSuite extends FunSuite {
         """.trim.stripMargin)
     }
   }
+
+  test("don't evaluate debug")  {
+    require(true && debug(throw new Exception))
+  }
 }

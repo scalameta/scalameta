@@ -31,8 +31,8 @@ private[meta] class ConversionMacros(val c: Context) extends AstReflection {
   import u._
   import definitions._
 
-  val MetaLiftable = symbolOf[scala.meta.Liftable[_, _]]
-  val MetaUnliftable = symbolOf[scala.meta.Unliftable[_, _]]
+  val MetaLift = symbolOf[scala.meta.Lift[_, _]]
+  val MetaUnlift = symbolOf[scala.meta.Unlift[_, _]]
 
   def liftApply[I](outside: c.Tree)(implicit I: c.WeakTypeTag[I]): c.Tree = {
     val outsideTpe = outside.tpe
@@ -42,7 +42,7 @@ private[meta] class ConversionMacros(val c: Context) extends AstReflection {
       if (needsCast) q"$outside.asInstanceOf[$insideTpe]"
       else outside
     } else {
-      val liftable = c.inferImplicitValue(appliedType(MetaLiftable, outsideTpe, insideTpe.publish), silent = true)
+      val liftable = c.inferImplicitValue(appliedType(MetaLift, outsideTpe, insideTpe.publish), silent = true)
       if (liftable.nonEmpty) {
         val lifted = q"$liftable.apply($outside)"
         val needsCast = !(insideTpe.publish =:= insideTpe)
@@ -75,7 +75,7 @@ private[meta] class ConversionMacros(val c: Context) extends AstReflection {
     if (insideTpe.publish <:< outsideTpe) {
       q"_root_.scala.Some($inside: ${insideTpe.publish})"
     } else {
-      val unliftable = c.inferImplicitValue(appliedType(MetaUnliftable, insideTpe.publish, outsideTpe), silent = true)
+      val unliftable = c.inferImplicitValue(appliedType(MetaUnlift, insideTpe.publish, outsideTpe), silent = true)
       if (unliftable.nonEmpty) {
         q"$unliftable.apply($inside)"
       } else {

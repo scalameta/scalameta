@@ -15,7 +15,7 @@ class RootMacros(val c: Context) {
   lazy val Tree = tq"_root_.scala.meta.Tree"
   lazy val Datum = tq"_root_.scala.Any"
   lazy val Data = tq"_root_.scala.collection.immutable.Seq[$Datum]"
-  lazy val Origin = tq"_root_.scala.meta.Origin"
+  lazy val Tokens = tq"_root_.scala.meta.Tokens"
   lazy val AdtInternal = q"_root_.org.scalameta.adt.Internal"
   lazy val AstInternal = q"_root_.org.scalameta.ast.internal"
   def impl(annottees: Tree*): Tree = {
@@ -54,11 +54,11 @@ class RootMacros(val c: Context) {
         protected def internalPrototype: ThisType
         protected def internalParent: $Tree
         protected def internalScratchpad: $Data
-        protected def internalOrigin: $Origin
-        private[meta] def internalCopy(prototype: $Tree = internalPrototype, parent: $Tree = internalParent, scratchpad: $Data = internalScratchpad, origin: $Origin = internalOrigin): ThisType
+        protected def internalTokens: $Tokens
+        private[meta] def internalCopy(prototype: $Tree = internalPrototype, parent: $Tree = internalParent, scratchpad: $Data = internalScratchpad, tokens: $Tokens = internalTokens): ThisType
       """
       stats1 ++= boilerplate
-            
+
       val qmods = Modifiers(NoFlags, TypeName("meta"), List(q"new _root_.org.scalameta.ast.ast"))
       val qname = TypeName("Quasi")
       val qparents = List(tq"_root_.scala.meta.internal.ast.Quasi")

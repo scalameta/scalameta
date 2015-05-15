@@ -211,7 +211,7 @@ class AdtHelperMacros(val c: Context) extends AdtReflection {
     val emptyCheckRequested =
       try x.symbol.asTerm.accessed.nonEmpty
       catch { case _: AssertionError => x.symbol.nonEmpty }
-    if (emptyCheckRequested) q"_root_.org.scalameta.invariants.require($x.nonEmpty)"
+    if (emptyCheckRequested) q"_root_.org.scalameta.invariants.require($x != null && $x.nonEmpty)"
     else q"()"
   }
 
