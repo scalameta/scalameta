@@ -7,6 +7,7 @@ import scala.reflect.{ClassTag, classTag}
 import scala.runtime.ScalaRunTime
 import scala.collection.{ mutable, immutable }
 import mutable.{ ListBuffer, StringBuilder }
+import scala.annotation.tailrec
 import scala.{Seq => _}
 import scala.collection.immutable._
 import scala.meta.internal.ast._
@@ -275,7 +276,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   lazy val (parserTokens, parserTokenPositions) = {
     val parserTokens = new immutable.VectorBuilder[Token]()
     val parserTokenPositions = mutable.ArrayBuilder.make[Int]()
-    def loop(prevPos: Int, currPos: Int, sepRegions: List[Char]): Unit = {
+    @tailrec def loop(prevPos: Int, currPos: Int, sepRegions: List[Char]): Unit = {
       if (currPos >= scannerTokens.length) return
       val prev = if (prevPos >= 0) scannerTokens(prevPos) else null
       val curr = scannerTokens(currPos)
