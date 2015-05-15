@@ -343,29 +343,32 @@ private[meta] object inferTokens {
       	toks"${mods.o_o}$variance${t.name.tks}${t.tparams.`oo`}$tbounds$vbounds$cbounds"
 
       // Pat
-      case t: Pat.Var.Term => ???
-      case _: Pat.Wildcard => ???
-      case t: Pat.Bind => ???
-      case t: Pat.Alternative => ???
-      case t: Pat.Tuple => ???
-      case t: Pat.Extract => ???
+      case t: Pat.Var.Term => mineIdentTk(t.name.value)
+      case _: Pat.Wildcard => toks"_"
+      case t: Pat.Bind => 
+	      val separator: Tokens = if (t.rhs.isInstanceOf[Pat.Arg.SeqWildcard] && dialect.bindToSeqWildcardDesignator == ":") toks""  else toks" "
+	      val designator: Tokens = if (t.rhs.isInstanceOf[Pat.Arg.SeqWildcard] && dialect.bindToSeqWildcardDesignator == ":") toks":" else toks" @"
+	      toks"${t.lhs.tks}$separator$designator ${t.rhs.tks}"
+      case t: Pat.Alternative => toks"${t.lhs.tks} | ${t.rhs.tks}"
+      case t: Pat.Tuple => t.elements.`(o,o)`
+      case t: Pat.Extract => toks"${t.ref.tks}${t.targs.`oo`}${t.args.`oo`}"
       case t: Pat.ExtractInfix => ???
       case t: Pat.Interpolate => ???
-      case t: Pat.Typed => ???
-      case _: Pat.Arg.SeqWildcard => ???
+      case t: Pat.Typed => toks"${t.lhs.tks}: ${t.rhs.tks}"
+      case _: Pat.Arg.SeqWildcard => toks"_*"
 
       // Pat.Type
       // TODO: fix copy/paste with Type
-      case t: Pat.Type.Wildcard => ???
-      case t: Pat.Var.Type => ???
-      case t: Pat.Type.Project => ???
-      case t: Pat.Type.Apply => ???
-      case t: Pat.Type.ApplyInfix => ???
+      case t: Pat.Type.Wildcard => toks"_"
+      case t: Pat.Var.Type => mineIdentTk(t.name.value)
+      case t: Pat.Type.Project => toks"${t.qual.tks}#${t.name.tks}"
+      case t: Pat.Type.Apply => toks"${t.tpe.tks}${t.args.`[o,o]`}"
+      case t: Pat.Type.ApplyInfix => toks"${t.lhs.tks} ${t.op.tks} ${t.rhs.tks}"
       case t: Pat.Type.Function => ???
-      case t: Pat.Type.Tuple => ???
+      case t: Pat.Type.Tuple => t.elements.`(o,o)`
       case t: Pat.Type.Compound => ???
-      case t: Pat.Type.Existential => ???
-      case t: Pat.Type.Annotate => ???
+      case t: Pat.Type.Existential => toks"${t.tpe.tks} forSome { ${t.quants.`o;o`} }"
+      case t: Pat.Type.Annotate => toks"${t.tpe.tks} ${t.annots.`o_o`}"
 
       // Lit
       case t: Lit.Bool if t.value => toks"true"
