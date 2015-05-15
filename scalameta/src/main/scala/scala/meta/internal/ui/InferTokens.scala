@@ -176,8 +176,8 @@ private[meta] object inferTokens {
         case _ => cantBeWrittenWithoutBackquotes(t)
       }
     }
-    /*def guessHasRefinement(t: Type.Compound): Boolean = t.refinement.nonEmpty
-    def guessPatHasRefinement(t: Pat.Type.Compound): Boolean = t.refinement.nonEmpty*/
+    def guessHasRefinement(t: Type.Compound): Boolean = t.refinement.nonEmpty
+    /*def guessPatHasRefinement(t: Pat.Type.Compound): Boolean = t.refinement.nonEmpty*/
     def guessHasExpr(t: Term.Return): Boolean = t.expr match { case Lit.Unit() => false; case _ => true }
     def guessHasElsep(t: Term.If): Boolean = t.elsep match { case Lit.Unit() => false; case _ => true }
     /*def guessHasStats(t: Template): Boolean = t.stats.nonEmpty
@@ -306,21 +306,41 @@ private[meta] object inferTokens {
       case t: Type.Name =>
         if (guessIsBackquoted(t)) mineIdentTk("`" + t.value + "`")
         else mineIdentTk(t.value)
-      case t: Type.Select => ???
-      case t: Type.Project => ???
-      case t: Type.Singleton => ???
-      case t: Type.Apply => ???
-      case t: Type.ApplyInfix => ???
-      case t: Type.Function => ???
-      case t: Type.Tuple => ???
-      case t: Type.Compound => ???
-      case t: Type.Existential => ???
-      case t: Type.Annotate => ???
-      case t: Type.Placeholder => ???
-      case t: Type.Bounds => ???
-      case t: Type.Arg.Repeated => ???
-      case t: Type.Arg.ByName => ???
-      case t: Type.Param => ???
+      case t: Type.Select => toks"${t.qual.tks}.${t.name.tks}"
+      case t: Type.Project => toks"${t.qual.tks}#${t.name.tks}"
+      case t: Type.Singleton => toks"${t.ref.tks}.type"
+      case t: Type.Apply => toks"${t.tpe.tks}[${t.args.`o,o`}]"
+      case t: Type.ApplyInfix => toks"${t.lhs.tks} ${t.op.tks} ${t.rhs.tks}"
+      case t: Type.Function =>
+	      val params = if (t.params.size == 1) t.params.head.tks else t.params.`(o,o)`
+	      toks"$params => ${t.res.tks}"
+      case t: Type.Tuple => t.elements.`(o,o)`
+      case t: Type.Compound => 
+	      val tpes = t.tpes.flattks()(toks" with ")()
+	      if (guessHasRefinement(t))		toks"$tpes { ${t.refinement.`o;o`} }"
+	      else 													tpes		
+      case t: Type.Existential => toks"${t.tpe.tks} forSome { ${t.quants.`o;o`} }"
+      case t: Type.Annotate => toks"${t.tpe.tks} ${t.annots.`o_o`}"
+      case t: Type.Placeholder => toks"_ ${t.bounds.tks}"
+      case t: Type.Bounds => 
+      	val loOpt = t.lo.map(lo => toks">: ${lo.tks}")
+      	val hiOpt = t.hi.map(hi => toks"<: ${hi.tks}")
+      	(loOpt, hiOpt) match {
+      		case (None, None) => toks""
+      		case (Some(hi), None) => hi
+      		case (None, Some(lo)) => lo
+      		case (Some(hi), Some(lo)) => toks"$hi $lo"
+      	}
+      case t: Type.Arg.Repeated => toks"${t.tpe.tks}*"
+      case t: Type.Arg.ByName => toks"=> ${t.tpe.tks}"
+      case t: Type.Param => 
+      	val mods = t.mods.filter(m => !m.isInstanceOf[Mod.Covariant] && !m.isInstanceOf[Mod.Contravariant])
+      	require(t.mods.length - mods.length <= 1)
+      	val variance = t.mods.foldLeft(toks"")((curr, m) => if (m.isInstanceOf[Mod.Covariant]) toks"+" else if (m.isInstanceOf[Mod.Contravariant]) toks"-" else curr)
+      	val tbounds = t.typeBounds.tks
+      	val vbounds = t.viewBounds.flattks(toks" <% ")(toks" <% ")()
+      	val cbounds = t.contextBounds.flattks(toks": ")(toks": ")()
+      	toks"${mods.o_o}$variance${t.name.tks}${t.tparams.`oo`}$tbounds$vbounds$cbounds"
 
       // Pat
       case t: Pat.Var.Term => ???

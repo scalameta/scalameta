@@ -2,7 +2,7 @@ import scala.meta._
 import org.scalatest._
 
 import scala.meta.internal.ui.inferTokens
-import scala.meta.dialects.Scala211
+import scala.meta.dialects.Scala211 // TODO: figure out this in case of use of another dialect
 
 class InferSuite extends ParseSuite { // TODO
 
@@ -350,7 +350,191 @@ class InferSuite extends ParseSuite { // TODO
       .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Term.ForYield]
     compareTokenCodes(tree, tree.copy())
   }
+  test("InferNew1") {
+    val tree = """new A"""
+      .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Term.New]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferNew2") {
+    val tree = """new A(4 /* this is a comment */, 56)"""
+      .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Term.New]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferEta1") {
+    val tree = """Test _"""
+      .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Term.Eta]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferArgs1") {
+    val tree = """A(x = 34, 343)(x :: y: _*)""".parse[Stat]
+    val t1 = findFirst(tree)((p: Tree) => p.isInstanceOf[scala.meta.internal.ast.Term.Arg.Named]).asInstanceOf[scala.meta.internal.ast.Term.Arg.Named]
+    compareTokenCodes(t1, t1.copy())
+  }
+  test("InferArgs2") {
+    val tree = """A(x = 34, 343)(x :: y: _*)""".parse[Stat]
+    val t1 = findFirst(tree)((p: Tree) => p.isInstanceOf[scala.meta.internal.ast.Term.Arg.Repeated]).asInstanceOf[scala.meta.internal.ast.Term.Arg.Repeated]
+    compareTokenCodes(t1, t1.copy())
+  }
+  test("InferParam1") {
+    val tree = """def test(a: Int) = ???""".parse[Stat]
+    val t1 = findFirst(tree)((p: Tree) => p.isInstanceOf[scala.meta.internal.ast.Term.Param]).asInstanceOf[scala.meta.internal.ast.Term.Param]
+    compareTokenCodes(t1, t1.copy())
+  }
+  test("InferParam2") {
+    val tree = """def test(a: Int = 0) = ???""".parse[Stat]
+    val t1 = findFirst(tree)((p: Tree) => p.isInstanceOf[scala.meta.internal.ast.Term.Param]).asInstanceOf[scala.meta.internal.ast.Term.Param]
+    compareTokenCodes(t1, t1.copy())
+  }
+  test("InferParam3") {
+    val tree = """def test(implicit a: Int = 0) = ???""".parse[Stat]
+    val t1 = findFirst(tree)((p: Tree) => p.isInstanceOf[scala.meta.internal.ast.Term.Param]).asInstanceOf[scala.meta.internal.ast.Term.Param]
+    compareTokenCodes(t1, t1.copy())
+  }
 
+  /* Infer types */
+  /* -----------------------------------------------------------------------*/
+
+  test("InferTypeSelect1") {
+    val tree = """A.B"""
+      .stripMargin.parse[Type].asInstanceOf[scala.meta.internal.ast.Type.Select]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferTypeProject1") {
+    val tree = """A#B"""
+      .stripMargin.parse[Type].asInstanceOf[scala.meta.internal.ast.Type.Project]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferTypeSingleton1") {
+    val tree = """A.type"""
+      .stripMargin.parse[Type].asInstanceOf[scala.meta.internal.ast.Type.Singleton]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferTypeApply1") {
+    val tree = """A[B]"""
+      .stripMargin.parse[Type].asInstanceOf[scala.meta.internal.ast.Type.Apply]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferTypeApply2") {
+    val tree = """A[B, C]"""
+      .stripMargin.parse[Type].asInstanceOf[scala.meta.internal.ast.Type.Apply]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferTypeApplyInfix1") {
+    val tree = """A op B"""
+      .stripMargin.parse[Type].asInstanceOf[scala.meta.internal.ast.Type.ApplyInfix]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferTypeFunction1") {
+    val tree = """Int => Int"""
+      .stripMargin.parse[Type].asInstanceOf[scala.meta.internal.ast.Type.Function]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferTypeFunction2") {
+    val tree = """(Int, String) => Int => String"""
+      .stripMargin.parse[Type].asInstanceOf[scala.meta.internal.ast.Type.Function]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferTypeTuple1") { 
+    val tree = """(A, B, C)"""
+      .stripMargin.parse[Type].asInstanceOf[scala.meta.internal.ast.Type.Tuple]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferTypeCompound1") { 
+    val tree = """A with B"""
+      .stripMargin.parse[Type].asInstanceOf[scala.meta.internal.ast.Type.Compound]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferTypeCompound2") { 
+    val tree = """A with B with C"""
+      .stripMargin.parse[Type].asInstanceOf[scala.meta.internal.ast.Type.Compound]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferTypeCompound3") { 
+    val tree = """A with B { def x: Int => Int }"""
+      .stripMargin.parse[Type].asInstanceOf[scala.meta.internal.ast.Type.Compound]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferTypeExistential1") { 
+    val tree = """A forSome { type A }"""
+      .stripMargin.parse[Type].asInstanceOf[scala.meta.internal.ast.Type.Existential]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferTypeExistential2") { 
+    val tree = """A forSome { type A; type B }"""
+      .stripMargin.parse[Type].asInstanceOf[scala.meta.internal.ast.Type.Existential]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferTypeAnnotate1") { 
+    val tree = """A @test"""
+      .stripMargin.parse[Type].asInstanceOf[scala.meta.internal.ast.Type.Annotate]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferTypeAnnotate2") { 
+    val tree = """A @test(url = scala.meta)"""
+      .stripMargin.parse[Type].asInstanceOf[scala.meta.internal.ast.Type.Annotate]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferTypePlaceHolder1") { 
+    val tree = """_ <: A"""
+      .stripMargin.parse[Type].asInstanceOf[scala.meta.internal.ast.Type.Placeholder]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferTypePlaceHolder2") { 
+    val tree = """_ >: A"""
+      .stripMargin.parse[Type].asInstanceOf[scala.meta.internal.ast.Type.Placeholder]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferTypePlaceHolder3") { 
+    val tree = """_ >: B <: A"""
+      .stripMargin.parse[Type].asInstanceOf[scala.meta.internal.ast.Type.Placeholder]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferTypeBounds1") { 
+    val tree = """_ <: A""".parse[Type]
+    val t1 = findFirst(tree)((p: Tree) => p.isInstanceOf[scala.meta.internal.ast.Type.Bounds]).asInstanceOf[scala.meta.internal.ast.Type.Bounds]
+    compareTokenCodes(t1, t1.copy())
+  }
+  test("InferTypeBounds2") { 
+    val tree = """_ >: B <: A """.parse[Type]
+    val t1 = findFirst(tree)((p: Tree) => p.isInstanceOf[scala.meta.internal.ast.Type.Bounds]).asInstanceOf[scala.meta.internal.ast.Type.Bounds]
+    compareTokenCodes(t1, t1.copy())
+  }
+  test("InferTypeBounds3") { 
+    val tree = """_ >: B""".parse[Type]
+    val t1 = findFirst(tree)((p: Tree) => p.isInstanceOf[scala.meta.internal.ast.Type.Bounds]).asInstanceOf[scala.meta.internal.ast.Type.Bounds]
+    compareTokenCodes(t1, t1.copy())
+  }
+  test("InferTypeArgRepeated1") { 
+    val tree = """A*"""
+      .parse[Type.Arg].asInstanceOf[scala.meta.internal.ast.Type.Arg.Repeated]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferTypeParam1") { 
+    val tree = """A"""
+      .parse[Type.Param].asInstanceOf[scala.meta.internal.ast.Type.Param]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferTypeParam2") { 
+    val tree = """+A"""
+      .parse[Type.Param].asInstanceOf[scala.meta.internal.ast.Type.Param]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferTypeParam3") { 
+    val tree = """+A <% C"""
+      .parse[Type.Param].asInstanceOf[scala.meta.internal.ast.Type.Param]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferTypeParam4") { 
+    val tree = """+A <% C: D: E"""
+      .parse[Type.Param].asInstanceOf[scala.meta.internal.ast.Type.Param]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferTypeParam5") { 
+    val tree = """-A: C"""
+      .parse[Type.Param].asInstanceOf[scala.meta.internal.ast.Type.Param]
+    compareTokenCodes(tree, tree.copy())
+  }
+  
   /* Infer literals */
   /* -----------------------------------------------------------------------*/
 
