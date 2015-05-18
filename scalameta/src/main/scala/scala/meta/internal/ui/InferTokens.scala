@@ -3,6 +3,7 @@ package internal
 package ui
 
 import org.scalameta.unreachable
+import org.scalameta.show._
 
 import scala.reflect.macros.blackbox.Context
 import scala.reflect.macros.Universe
@@ -45,10 +46,15 @@ private[meta] object inferTokens {
       case y: Long     => Token.Literal.Long(str + "L", 0, length + 1, (x: Boolean) => y)
       case y: Float    => Token.Literal.Float(str + "F", 0, length + 1, (x: Boolean) => y)
       case y: Double   => Token.Literal.Double(str, 0, length, (x: Boolean) => y)
-      case y: Char     => Token.Literal.Char("'" + str + "'", 0, length + 2, y)
+      case y: Char     => Token.Literal.Char(enquote(str, SingleQuotes), 0, length + 2, y)
       case y: Symbol   => Token.Literal.Symbol(str, 0, length, y)
-      case y: String   => Token.Literal.String("\"" + str + "\"", 0, length + 2, y)
-    }
+      case y: String   => 
+      	val newStr = {
+      		if(y.contains(EOL)) enquote(str, TripleQuotes)
+    			else 	                                 enquote(str, DoubleQuotes)
+    		}
+    		Token.Literal.String(newStr, 0, newStr.length, newStr)
+  	}
     Tokens(newTok)
   }
 
@@ -85,6 +91,7 @@ private[meta] object inferTokens {
 
       /* various combiners for tokens, o representing subsequence */
       def `oo` = flattks()()()
+      def `o[o` = flattks()(newline)()
       def `->o->` = flattks(toks"$newline$indentation")(toks"$newline$indentation", (x: Seq[Token]) => if (!x.isEmpty && x.last.code == "\n") x.init else x)(newline)
       def `->o` = flattks(toks"$newline$indentation")(toks"$newline$indentation", (x: Seq[Token]) => if (!x.isEmpty && x.last.code == "\n") x.init else x)()
       def `o_o` = flattks()(toks" ")()
@@ -119,8 +126,8 @@ private[meta] object inferTokens {
     }
     /* append a declared type to a val / def / var */
     def apndDeclTpe(t: Option[Type]): Tokens = t match {
-      case None => toks""
-      case Some(tpe) => toks": ${tpe.tks}"
+      case Some(tpe) if tpe.tks.length > 0 => toks": ${tpe.tks}"
+      case _ => toks""
     }
     def apndTpeBounds(t: Type.Bounds): Tokens = {
       if (t.lo.isDefined || t.hi.isDefined) toks" ${t.tks}"
@@ -231,15 +238,15 @@ private[meta] object inferTokens {
           case (part, args) => toks"${mineIdentTk(part.value)}$${${args.tks}}"
         }
         val quote: Tokens = if (t.parts.map(_.value).exists(s => s.contains(EOL) || s.contains("\""))) tripleDoubleQuotes else singleDoubleQuotes
-        toks"${mineIdentTk(t.prefix.value)}$quote${zipped.`oo`}${t.parts.last.tks}$quote"
+        toks"${mineIdentTk(t.prefix.value)}$quote${zipped.`oo`}${mineIdentTk(t.parts.last.value)}$quote"
       case t: Term.Apply             => toks"${t.fun.tks}${t.args.`(o,o)`}"
       case t: Term.ApplyType         => toks"${t.fun.tks}${t.targs.`[o,o]`}"
       case t: Term.ApplyInfix        =>
         val rhs = t.args match {
-          case (arg: Term) :: Nil => arg.tks
+          case (arg: Term) :: Nil => toks"(${arg.tks})"
           case args => args.`(o,o)`
         }
-        toks"${t.lhs.tks} ${t.op.tks} $rhs"
+        toks"(${t.lhs.tks} ${t.op.tks} $rhs)"
       case t: Term.ApplyUnary        => toks"${t.op.tks}${t.arg.tks}"
       case t: Term.Assign            => toks"${t.lhs.tks} = ${t.rhs.tks}"
       case t: Term.Update            => toks"${t.fun.tks}${t.argss.`(o,o)`} = ${t.rhs.tks}"
@@ -260,6 +267,8 @@ private[meta] object inferTokens {
             toks"{ ${name.tks} =>${stats.`->o->`}}"
           case Block(Function(Term.Param(_, _: Name.Anonymous, _, _) :: Nil, Block(stats)) :: Nil) =>
             toks"{ _ =>${stats.`->o->`}}"
+          case Block(Function(Nil, Block(stats)) :: Nil) =>
+          	toks"{ () =>${stats.`->o->`}}"
           case Block(Function(params, Block(stats)) :: Nil) if params.length == 1=>
             toks"{ ${params.`o,o`} =>${stats.`->o->`}}"
           case Block(Function(params, Block(stats)) :: Nil) =>
@@ -317,7 +326,7 @@ private[meta] object inferTokens {
       case t: Type.Project => toks"${t.qual.tks}#${t.name.tks}"
       case t: Type.Singleton => toks"${t.ref.tks}.type"
       case t: Type.Apply => toks"${t.tpe.tks}[${t.args.`o,o`}]"
-      case t: Type.ApplyInfix => toks"${t.lhs.tks} ${t.op.tks} ${t.rhs.tks}"
+      case t: Type.ApplyInfix => toks"(${t.lhs.tks} ${t.op.tks} ${t.rhs.tks})"
       case t: Type.Function =>
 	      val params = if (t.params.size == 1) t.params.head.tks else t.params.`(o,o)`
 	      toks"$params => ${t.res.tks}"
@@ -361,15 +370,15 @@ private[meta] object inferTokens {
       case t: Pat.Extract => toks"${t.ref.tks}${t.targs.`[o,o]`}${t.args.`(o,o)`}"
       case t: Pat.ExtractInfix => 
       	t.rhs match {
-      		case x :: Nil => toks"${t.lhs.tks} ${t.ref.tks} ${x.tks}"
-      		case _ => toks"${t.lhs.tks} ${t.ref.tks} ${t.rhs.`(o,o)`}"
+      		case x :: Nil => toks"(${t.lhs.tks} ${t.ref.tks} ${x.tks})"
+      		case _ => toks"(${t.lhs.tks} ${t.ref.tks} ${t.rhs.`(o,o)`})"
       	}
       case t: Pat.Interpolate =>
         val zipped = (t.parts zip t.args) map {
-          case (part, Pat.Var.Term(id: Name)) if !guessIsBackquoted(id) => toks"${part.tks}$$${mineIdentTk(id.value)}"
-          case (part, args) => println(args.show[Raw]);toks"${part.tks}$${${args.tks}}"
+          case (part, Pat.Var.Term(id: Name)) if !guessIsBackquoted(id) => toks"${mineIdentTk(part.value)}$$${mineIdentTk(id.value)}"
+          case (part, args) => toks"${mineIdentTk(part.value)}$${${args.tks}}"
         }
-        toks"${mineIdentTk(t.prefix.value)}$singleDoubleQuotes${zipped.`oo`}${t.parts.last.tks}$singleDoubleQuotes"
+        toks"${mineIdentTk(t.prefix.value)}$singleDoubleQuotes${zipped.`oo`}${mineIdentTk(t.parts.last.value)}$singleDoubleQuotes"
       case t: Pat.Typed => toks"${t.lhs.tks}: ${t.rhs.tks}"
       case _: Pat.Arg.SeqWildcard => toks"_*"
 
@@ -379,7 +388,7 @@ private[meta] object inferTokens {
       case t: Pat.Var.Type => mineIdentTk(t.name.value)
       case t: Pat.Type.Project => toks"${t.qual.tks}#${t.name.tks}"
       case t: Pat.Type.Apply => toks"${t.tpe.tks}${t.args.`[o,o]`}"
-      case t: Pat.Type.ApplyInfix => toks"${t.lhs.tks} ${t.op.tks} ${t.rhs.tks}"
+      case t: Pat.Type.ApplyInfix => toks"(${t.lhs.tks} ${t.op.tks} ${t.rhs.tks})"
       case t: Pat.Type.Function => 
       	val params = if (t.params.size == 1) t.params.head.tks else t.params.`(o,o)`
 	      toks"$params => ${t.res.tks}"
@@ -431,38 +440,33 @@ private[meta] object inferTokens {
       	else 																toks"def this${t.paramss.`(o,o)`} = ${t.body.tks}"
 
       // Template
-      case t: Template => ???
-	    	/*val isSelfEmpty = t.self.name.isInstanceOf[Name.Anonymous] && t.self.decltpe.isEmpty
+      case t: Template =>
+	    	val isSelfEmpty = t.self.name.isInstanceOf[Name.Anonymous] && t.self.decltpe.isEmpty
 	      val isSelfNonEmpty = !isSelfEmpty
 	      val isBodyEmpty = isSelfEmpty && t.stats.isEmpty
 	      val isTemplateEmpty = t.early.isEmpty && t.parents.isEmpty && isBodyEmpty
 	      if (isTemplateEmpty) toks""
 	      else {
-	        val pearly = if (!t.early.isEmpty) toks"{ ${t.early.`o;o`} } with" else toks""
+	        val pearly = if (!t.early.isEmpty) toks"{ ${t.early.`o;o`} } with " else toks""
 	        val pparents = {
-	        	if (!t.parents.isEmpty && !isBodyEmpty) t.parents.flattks()(toks" with ")(toks" ")
+	        	if (!t.parents.isEmpty) t.parents.flattks()(toks" with ")(toks" ")
 	        	else toks""
         	}
 	        val pbody = {
-	          if (style == Style.Lazy && t.stats.getOrElse(Nil).isLazy) {
-	            if (isSelfNonEmpty) toks"{ ${t.self.tks} => ...}"
-	            else toks"{ ... }"
-	          } else {
-	            val isOneLiner = t.stats.map(stats => stats.length == 0 || (stats.length == 1 && !s(stats.head).toString.contains(EOL))).getOrElse(true)
-	            (isSelfNonEmpty, t.stats.nonEmpty, t.stats.getOrElse(Nil)) match {
-	              case (false, false, _) => toks""
-	              case (true, false, _) => toks"{ ${t.self.tks} => }"
-	              case (false, true, Seq()) if isOneLiner => toks"{}"
-	              case (false, true, Seq(stat)) if isOneLiner => toks"{ ${stat.tks} }"
-	              case (false, true, stats) => toks"{${stats.`->o->`}}"
-	              case (true, true, Seq()) if isOneLiner => toks"{ ${t.self.tks} => }"
-	              case (true, true, Seq(stat)) if isOneLiner => toks"{ ${t.self.tks} => ${stat.tks} }"
-	              case (true, true, stats) => toks"{ ${t.self.tks} =>${stats.`->o->`}}"
-	            }
+            val isOneLiner = t.stats.map(stats => stats.length == 0 || (stats.length == 1 && !stats.head.tokens.map(_.show[Code]).mkString.contains(EOL))).getOrElse(true)
+            (isSelfNonEmpty, t.stats.nonEmpty, t.stats.getOrElse(Nil)) match {
+              case (false, false, _) => toks""
+              case (true, false, _) => toks"{ ${t.self.tks} => }"
+              case (false, true, Seq()) if isOneLiner => toks"{}"
+              case (false, true, Seq(stat)) if isOneLiner => toks"{ ${stat.tks} }"
+              case (false, true, stats) => toks"{${stats.`->o->`}}"
+              case (true, true, Seq()) if isOneLiner => toks"{ ${t.self.tks} => }"
+              case (true, true, Seq(stat)) if isOneLiner => toks"{ ${t.self.tks} => ${stat.tks} }"
+              case (true, true, stats) => toks"{ ${t.self.tks} =>${stats.`->o->`}}"
 	          }
 	        }
 	        toks"$pearly$pparents$pbody"
-	      }*/
+	      }
 
       // Mod
       case Mod.Annot(tree)                 => toks"@${tree.ctorTpe.tks}${tree.ctorArgss.`(o,o)`}" // TODO: check
@@ -488,7 +492,7 @@ private[meta] object inferTokens {
       // Enumerator
       case t: Enumerator.Val       => toks"${t.pat.tks} = ${t.rhs.tks}"
       case t: Enumerator.Generator => toks"${t.pat.tks} <- ${t.rhs.tks}"
-      case t: Enumerator.Guard     => toks"if ${t.cond.tks}" // TODO: verify why t.cond does not contain all the condition
+      case t: Enumerator.Guard     => toks"if ${t.cond.tks}"
 
       // Import
       case t: Import.Selector.Name     => toks"${t.value.tks}"
@@ -503,7 +507,7 @@ private[meta] object inferTokens {
 	      val ppat = t.pat.tks
 	      val pcond = t.cond.map(cond => toks" if ${cond.tks}").getOrElse(toks"")
 	      val isOneLiner = {
-	        def isOneLiner(t: Case) = t.stats.length == 0 || (t.stats.length == 1 && !t.stats.head.show[Code].contains(EOL))
+	        def isOneLiner(t: Case) = t.stats.length == 0 || (t.stats.length == 1 && !t.stats.head.tokens.map(_.show[Code]).mkString.contains(EOL))
 	        t.parent match {
 	          case Some(Term.Match(_, cases)) => cases.forall(isOneLiner)
 	          case Some(Term.PartialFunction(cases)) => cases.forall(isOneLiner)
@@ -518,7 +522,7 @@ private[meta] object inferTokens {
 	      toks"case ${t.pat.tks}$pcond =>$pbody"
 
       // Source
-      case t: Source => t.stats.`oo`
+      case t: Source => t.stats.`o[o`
     }
 
     tkz(tree.asInstanceOf[scala.meta.internal.ast.Tree])

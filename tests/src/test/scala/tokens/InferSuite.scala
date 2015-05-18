@@ -98,12 +98,12 @@ class InferSuite extends ParseSuite { // TODO
     compareTokenCodes(tree, tree.copy())
   }
   test("InferApplyInfix1") {
-    val tree = """str mkString "," """.trim
+    val tree = """(str mkString ",")""".trim
       .parse[Term].asInstanceOf[scala.meta.internal.ast.Term.ApplyInfix]
     compareTokenCodes(tree, tree.copy())
   }
   test("InferApplyInfix2") {
-    val tree = """str mkString ("[", ",", "]") """.trim
+    val tree = """(str mkString ("[", ",", "]"))""".trim
       .parse[Term].asInstanceOf[scala.meta.internal.ast.Term.ApplyInfix]
     compareTokenCodes(tree, tree.copy())
   }
@@ -420,7 +420,7 @@ class InferSuite extends ParseSuite { // TODO
     compareTokenCodes(tree, tree.copy())
   }
   test("InferTypeApplyInfix1") {
-    val tree = """A op B"""
+    val tree = """(A op B)"""
       .stripMargin.parse[Type].asInstanceOf[scala.meta.internal.ast.Type.ApplyInfix]
     compareTokenCodes(tree, tree.copy())
   }
@@ -569,17 +569,17 @@ class InferSuite extends ParseSuite { // TODO
     compareTokenCodes(tree, tree.copy())
   }
   test("InferPatExtractInfix1") { 
-    val tree = """x :: xs"""
+    val tree = """(x :: xs)"""
       .parse[Pat].asInstanceOf[scala.meta.internal.ast.Pat.ExtractInfix]
     compareTokenCodes(tree, tree.copy())
   }
   test("InferPatExtractInfix2") { 
-    val tree = """x :: y :: xs"""
+    val tree = """(x :: y :: xs)"""
       .parse[Pat].asInstanceOf[scala.meta.internal.ast.Pat.ExtractInfix]
     compareTokenCodes(tree, tree.copy())
   }
   test("InferPatExtractInfix3") { 
-    val tree = """x :: (xx, y)"""
+    val tree = """(x :: (xx, y))"""
       .parse[Pat].asInstanceOf[scala.meta.internal.ast.Pat.ExtractInfix]
     compareTokenCodes(tree, tree.copy())
   }
