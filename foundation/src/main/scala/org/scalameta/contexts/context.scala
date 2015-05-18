@@ -25,7 +25,7 @@ class ContextMacros(val c: Context) {
             try $body
             catch {
               case ex: _root_.scala.meta.SemanticException => throw ex
-              case other: _root_.scala.Exception => throw new _root_.scala.meta.SemanticException(other.getMessage, Some(other))
+              case other: _root_.scala.Exception => throw new _root_.scala.meta.SemanticException(other.getMessage, other)
             }
           """
           treeCopy.DefDef(stat, mods, name, tparams, vparamss, tpt, body1)

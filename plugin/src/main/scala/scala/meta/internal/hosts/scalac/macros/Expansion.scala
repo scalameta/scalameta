@@ -16,8 +16,6 @@ import scala.collection.mutable
 import scala.meta.dialects.Scala211
 import scala.meta.internal.{ast => m}
 import scala.meta.eval._
-import scala.meta.macros.{Context => ScalametaMacroContext}
-import scala.meta.internal.hosts.scalac.contexts.{MacroContext => ScalahostMacroContext}
 import scala.meta.internal.hosts.scalac.{PluginBase => ScalahostPlugin}
 
 trait Expansion extends scala.reflect.internal.show.Printers {
@@ -191,6 +189,8 @@ trait Expansion extends scala.reflect.internal.show.Printers {
                             popMacroContext()
                             val realex = ReflectionUtils.unwrapThrowable(ex)
                             realex match {
+                              // TODO: translate ex.pos to a scala.reflect position
+                              case ex: AbortException => MacroGeneratedAbort(expandee, new AbortMacroException(expandee.pos, ex.message))
                               case ex: AbortMacroException => MacroGeneratedAbort(expandee, ex)
                               case ex: ControlThrowable => throw ex
                               case ex: TypeError => MacroGeneratedTypeError(expandee, ex)
