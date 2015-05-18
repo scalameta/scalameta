@@ -16,8 +16,10 @@ import scala.meta.tokenquasiquotes._
 
 import scala.language.implicitConversions
 
-// TODO: check for BOF and EOF, EOL, etc.
-// TODO: see for specific cases, as in showCode
+// TODO: figure out various situation where postfix operators, etc. should be in parenthesis. For now: 
+// it is always assumed.
+// TODO: check creation of tokens
+// TODO: move to newest version of SM.
 private[meta] object inferTokens {
 
   def apply(tree: Tree)(implicit dialect: Dialect): Tokens = {
@@ -99,6 +101,7 @@ private[meta] object inferTokens {
       def `o;o` = flattks()(toks"; ")()
       def `o_o_` = flattks()(toks" ")(toks" ")
       def `[o,o]` = flattks(toks"[")(toks", ")(toks"]")
+      def `{o,o}` = flattks(toks"{")(toks", ")(toks"}")
       def `(o,o)` = flattks(toks"(")(toks", ")(toks")")
     }
     implicit class RichTreeSeqSeq(trees: Seq[Seq[Tree]]) {
@@ -139,14 +142,9 @@ private[meta] object inferTokens {
 
     def guessIsBackquoted(t: Name): Boolean = {
       def cantBeWrittenWithoutBackquotes(t: Name): Boolean = {
-        // TODO: this requires a more thorough implementation
-        // TODO: the `this` check is actually here to correctly prettyprint primary ctor calls in secondary ctors
-        // this is purely an implementation artifact and will be fixed once we have tokens
         t.value != "this" && (keywords.contains(t.value) || t.value.contains(" "))
       }
       def isAmbiguousWithPatVarTerm(t: Term.Name, p: Tree): Boolean = {
-        // TODO: the `eq` trick is very unreliable, but I can't come up with anything better at the moment
-        // since the whole guessXXX business is going to be obsoleted by tokens very soon, I'm leaving this as is
         val looksLikePatVar = t.value.head.isLower && t.value.head.isLetter
         val thisLocationAlsoAcceptsPatVars = p match {
           case p: Term.Name              => unreachable
@@ -188,16 +186,6 @@ private[meta] object inferTokens {
     def guessPatHasRefinement(t: Pat.Type.Compound): Boolean = t.refinement.nonEmpty
     def guessHasExpr(t: Term.Return): Boolean = t.expr match { case Lit.Unit() => false; case _ => true }
     def guessHasElsep(t: Term.If): Boolean = t.elsep match { case Lit.Unit() => false; case _ => true }
-    /*def guessHasStats(t: Template): Boolean = t.stats.nonEmpty
-    def guessHasBraces(t: Pkg): Boolean = {
-      def isOnlyChildOfOnlyChild(t: Pkg): Boolean = t.parent match {
-        case Some(pkg: Pkg) => isOnlyChildOfOnlyChild(pkg) && pkg.stats.length == 1
-        case Some(source: Source) => source.stats.length == 1
-        case None => true
-        case _ => unreachable
-      }
-      !isOnlyChildOfOnlyChild(t)
-    }*/
 
     /* Infer tokens for a given tree, making use of the helpers above */
     def tkz(tree: Tree): Tokens = tree match {
@@ -254,8 +242,8 @@ private[meta] object inferTokens {
         if (guessHasExpr(t)) toks"return ${t.expr.tks}"
         else toks"return"
       case t: Term.Throw             => toks"throw ${t.expr.tks}"
-      case t: Term.Ascribe           => toks"${t.expr.tks}: ${t.tpe.tks}"
-      case t: Term.Annotate          => toks"${t.expr.tks}: ${t.annots.`o_o`}"
+      case t: Term.Ascribe           => toks"(${t.expr.tks}: ${t.tpe.tks})"
+      case t: Term.Annotate          => toks"(${t.expr.tks}: ${t.annots.`o_o`})"
       case t: Term.Tuple             => t.elements.`(o,o)`
       case t: Term.Block =>
         import Term.{ Block, Function }
@@ -280,7 +268,7 @@ private[meta] object inferTokens {
       case t: Term.If                =>
         if (guessHasElsep(t)) toks"if (${t.cond.tks}) ${t.thenp.tks} else ${t.elsep.tks}"
         else toks"if (${t.cond.tks}) ${t.thenp.tks}"
-      case t: Term.Match             => toks"${t.scrut.tks} match {${t.cases.`->o->`}}"
+      case t: Term.Match             => toks"(${t.scrut.tks} match {${t.cases.`->o->`}})"
       case t: Term.TryWithCases      =>
         val tryBlock = toks"try ${t.expr.tks}"
         val catchBlock = if (t.catchp.nonEmpty) toks" catch {${t.catchp.`->o->`}}" else toks""
@@ -299,6 +287,8 @@ private[meta] object inferTokens {
             toks"${name.tks} => ${body.tks}"
           case Term.Function(Term.Param(_, _: Name.Anonymous, _, _) :: Nil, body) =>
             toks"_ => ${body.tks}"
+          case Term.Function(Nil, body) =>
+          	toks"() => ${body.tks}"
           case Term.Function(params, body) =>
             toks"${params.`(o,o)`} => ${body.tks}"
         }
@@ -328,8 +318,12 @@ private[meta] object inferTokens {
       case t: Type.Apply => toks"${t.tpe.tks}[${t.args.`o,o`}]"
       case t: Type.ApplyInfix => toks"(${t.lhs.tks} ${t.op.tks} ${t.rhs.tks})"
       case t: Type.Function =>
-	      val params = if (t.params.size == 1) t.params.head.tks else t.params.`(o,o)`
-	      toks"$params => ${t.res.tks}"
+	      val params = {
+	      	if (t.params.isEmpty) 			 toks"()"
+	      	else if (t.params.size == 1) t.params.head.tks 
+	      	else 												 t.params.`(o,o)`
+	      }
+	      toks"($params => ${t.res.tks})"
       case t: Type.Tuple => t.elements.`(o,o)`
       case t: Type.Compound => 
 	      val tpes = t.tpes.flattks()(toks" with ")()
@@ -379,7 +373,7 @@ private[meta] object inferTokens {
           case (part, args) => toks"${mineIdentTk(part.value)}$${${args.tks}}"
         }
         toks"${mineIdentTk(t.prefix.value)}$singleDoubleQuotes${zipped.`oo`}${mineIdentTk(t.parts.last.value)}$singleDoubleQuotes"
-      case t: Pat.Typed => toks"${t.lhs.tks}: ${t.rhs.tks}"
+      case t: Pat.Typed => toks"(${t.lhs.tks}: ${t.rhs.tks})"
       case _: Pat.Arg.SeqWildcard => toks"_*"
 
       // Pat.Type
@@ -499,8 +493,11 @@ private[meta] object inferTokens {
       case t: Import.Selector.Rename   => toks"${t.from.tks} => ${t.to.tks}"
       case t: Import.Selector.Unimport => toks"${t.name.tks} => _"
       case _: Import.Selector.Wildcard => toks"_"
-      case t: Import.Clause            => toks"{t.ref.tks}.${t.sels.`oo`}"
-      case t: Import                   => toks"import ${t.clauses.`o,o`}"
+      case t: Import.Clause            => 
+      	if (t.sels.size == 1 && !t.sels.head.isInstanceOf[Import.Selector.Rename] 
+      		&& !t.sels.head.isInstanceOf[Import.Selector.Unimport]) toks"${t.ref.tks}.${t.sels.`oo`}"
+				else                                            toks"${t.ref.tks}.${t.sels.`{o,o}`}"
+      case t: Import                   =>          toks"import ${t.clauses.`o,o`}"
 
       // Case
       case t: Case => 
