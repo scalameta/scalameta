@@ -86,6 +86,7 @@ private[meta] object inferTokens {
       /* various combiners for tokens, o representing subsequence */
       def `oo` = flattks()()()
       def `->o->` = flattks(toks"$newline$indentation")(toks"$newline$indentation", (x: Seq[Token]) => if (!x.isEmpty && x.last.code == "\n") x.init else x)(newline)
+      def `->o` = flattks(toks"$newline$indentation")(toks"$newline$indentation", (x: Seq[Token]) => if (!x.isEmpty && x.last.code == "\n") x.init else x)()
       def `o_o` = flattks()(toks" ")()
       def `o,o` = flattks()(toks", ")()
       def `o;o` = flattks()(toks"; ")()
@@ -177,7 +178,7 @@ private[meta] object inferTokens {
       }
     }
     def guessHasRefinement(t: Type.Compound): Boolean = t.refinement.nonEmpty
-    /*def guessPatHasRefinement(t: Pat.Type.Compound): Boolean = t.refinement.nonEmpty*/
+    def guessPatHasRefinement(t: Pat.Type.Compound): Boolean = t.refinement.nonEmpty
     def guessHasExpr(t: Term.Return): Boolean = t.expr match { case Lit.Unit() => false; case _ => true }
     def guessHasElsep(t: Term.If): Boolean = t.elsep match { case Lit.Unit() => false; case _ => true }
     /*def guessHasStats(t: Template): Boolean = t.stats.nonEmpty
@@ -194,8 +195,14 @@ private[meta] object inferTokens {
     /* Infer tokens for a given tree, making use of the helpers above */
     def tkz(tree: Tree): Tokens = tree match {
       // Bottom
-      case t: Quasi if t.rank > 0  => ???
-      case t: Quasi if t.rank == 0 => ???
+      case t: Quasi if t.rank > 0  => 
+      	val rank = mineIdentTk("." * (t.rank + 1)) // TODO: should not be mined using Idents
+      	if (!t.tree.isInstanceOf[Quasi])  toks"$rank{${t.tree.asInstanceOf[Tree].tks}}"
+      	else 														  toks"$rank" // TODO: not use, figure out that bit
+      case t: Quasi if t.rank == 0 => 
+      	val innerTreeTks = t.tree.asInstanceOf[Tree].tks
+      	val name = mineIdentTk(t.pt.getName.stripPrefix("scala.meta.").stripPrefix("internal.ast."))
+      	toks"$${$innerTreeTks @ $name}"
 
       // Name
       case t: Name.Anonymous     => toks"_"
@@ -347,13 +354,22 @@ private[meta] object inferTokens {
       case _: Pat.Wildcard => toks"_"
       case t: Pat.Bind => 
 	      val separator: Tokens = if (t.rhs.isInstanceOf[Pat.Arg.SeqWildcard] && dialect.bindToSeqWildcardDesignator == ":") toks""  else toks" "
-	      val designator: Tokens = if (t.rhs.isInstanceOf[Pat.Arg.SeqWildcard] && dialect.bindToSeqWildcardDesignator == ":") toks":" else toks" @"
+	      val designator: Tokens = if (t.rhs.isInstanceOf[Pat.Arg.SeqWildcard] && dialect.bindToSeqWildcardDesignator == ":") toks":" else toks"@"
 	      toks"${t.lhs.tks}$separator$designator ${t.rhs.tks}"
       case t: Pat.Alternative => toks"${t.lhs.tks} | ${t.rhs.tks}"
       case t: Pat.Tuple => t.elements.`(o,o)`
-      case t: Pat.Extract => toks"${t.ref.tks}${t.targs.`oo`}${t.args.`oo`}"
-      case t: Pat.ExtractInfix => ???
-      case t: Pat.Interpolate => ???
+      case t: Pat.Extract => toks"${t.ref.tks}${t.targs.`[o,o]`}${t.args.`(o,o)`}"
+      case t: Pat.ExtractInfix => 
+      	t.rhs match {
+      		case x :: Nil => toks"${t.lhs.tks} ${t.ref.tks} ${x.tks}"
+      		case _ => toks"${t.lhs.tks} ${t.ref.tks} ${t.rhs.`(o,o)`}"
+      	}
+      case t: Pat.Interpolate =>
+        val zipped = (t.parts zip t.args) map {
+          case (part, Pat.Var.Term(id: Name)) if !guessIsBackquoted(id) => toks"${part.tks}$$${mineIdentTk(id.value)}"
+          case (part, args) => println(args.show[Raw]);toks"${part.tks}$${${args.tks}}"
+        }
+        toks"${mineIdentTk(t.prefix.value)}$singleDoubleQuotes${zipped.`oo`}${t.parts.last.tks}$singleDoubleQuotes"
       case t: Pat.Typed => toks"${t.lhs.tks}: ${t.rhs.tks}"
       case _: Pat.Arg.SeqWildcard => toks"_*"
 
@@ -364,9 +380,14 @@ private[meta] object inferTokens {
       case t: Pat.Type.Project => toks"${t.qual.tks}#${t.name.tks}"
       case t: Pat.Type.Apply => toks"${t.tpe.tks}${t.args.`[o,o]`}"
       case t: Pat.Type.ApplyInfix => toks"${t.lhs.tks} ${t.op.tks} ${t.rhs.tks}"
-      case t: Pat.Type.Function => ???
+      case t: Pat.Type.Function => 
+      	val params = if (t.params.size == 1) t.params.head.tks else t.params.`(o,o)`
+	      toks"$params => ${t.res.tks}"
       case t: Pat.Type.Tuple => t.elements.`(o,o)`
-      case t: Pat.Type.Compound => ???
+      case t: Pat.Type.Compound => 
+	      val tpes = t.tpes.flattks()(toks" with ")()
+	      if (guessPatHasRefinement(t))	toks"$tpes { ${t.refinement.`o;o`} }"
+	      else 													tpes		
       case t: Pat.Type.Existential => toks"${t.tpe.tks} forSome { ${t.quants.`o;o`} }"
       case t: Pat.Type.Annotate => toks"${t.tpe.tks} ${t.annots.`o_o`}"
 
@@ -402,11 +423,46 @@ private[meta] object inferTokens {
       case t: Defn.Macro      => toks"${t.mods.`o_o_`}def ${t.name.tks}${t.tparams.`[o,o]`}${t.paramss.`(o,o)`}: ${t.tpe.tks} = macro ${t.body.tks}"
       case t: Pkg             => toks"package ${t.ref.tks} {${t.stats.`->o->`}}" // TODO: check that out, seems more complicated in show[Code]
       case t: Pkg.Object      => toks"package ${t.mods.`o_o_`}object ${t.name.tks}${apndTempl(t.templ)}"
-      case t: Ctor.Primary    => ???
-      case t: Ctor.Secondary  => ???
+      case t: Ctor.Primary    => 
+      	if (t.mods.nonEmpty && t.paramss.nonEmpty) toks"${t.mods.`o_o_`}${t.paramss.`(o,o)`}"
+      	else                                       toks"${t.paramss.`(o,o)`}"
+      case t: Ctor.Secondary  => 
+      	if(t.body.isInstanceOf[Term.Block]) toks"def this${t.paramss.`(o,o)`} ${t.body.tks}"
+      	else 																toks"def this${t.paramss.`(o,o)`} = ${t.body.tks}"
 
       // Template
       case t: Template => ???
+	    	/*val isSelfEmpty = t.self.name.isInstanceOf[Name.Anonymous] && t.self.decltpe.isEmpty
+	      val isSelfNonEmpty = !isSelfEmpty
+	      val isBodyEmpty = isSelfEmpty && t.stats.isEmpty
+	      val isTemplateEmpty = t.early.isEmpty && t.parents.isEmpty && isBodyEmpty
+	      if (isTemplateEmpty) toks""
+	      else {
+	        val pearly = if (!t.early.isEmpty) toks"{ ${t.early.`o;o`} } with" else toks""
+	        val pparents = {
+	        	if (!t.parents.isEmpty && !isBodyEmpty) t.parents.flattks()(toks" with ")(toks" ")
+	        	else toks""
+        	}
+	        val pbody = {
+	          if (style == Style.Lazy && t.stats.getOrElse(Nil).isLazy) {
+	            if (isSelfNonEmpty) toks"{ ${t.self.tks} => ...}"
+	            else toks"{ ... }"
+	          } else {
+	            val isOneLiner = t.stats.map(stats => stats.length == 0 || (stats.length == 1 && !s(stats.head).toString.contains(EOL))).getOrElse(true)
+	            (isSelfNonEmpty, t.stats.nonEmpty, t.stats.getOrElse(Nil)) match {
+	              case (false, false, _) => toks""
+	              case (true, false, _) => toks"{ ${t.self.tks} => }"
+	              case (false, true, Seq()) if isOneLiner => toks"{}"
+	              case (false, true, Seq(stat)) if isOneLiner => toks"{ ${stat.tks} }"
+	              case (false, true, stats) => toks"{${stats.`->o->`}}"
+	              case (true, true, Seq()) if isOneLiner => toks"{ ${t.self.tks} => }"
+	              case (true, true, Seq(stat)) if isOneLiner => toks"{ ${t.self.tks} => ${stat.tks} }"
+	              case (true, true, stats) => toks"{ ${t.self.tks} =>${stats.`->o->`}}"
+	            }
+	          }
+	        }
+	        toks"$pearly$pparents$pbody"
+	      }*/
 
       // Mod
       case Mod.Annot(tree)                 => toks"@${tree.ctorTpe.tks}${tree.ctorArgss.`(o,o)`}" // TODO: check
@@ -425,7 +481,9 @@ private[meta] object inferTokens {
       case _: Mod.Lazy                     => toks"lazy"
       case _: Mod.ValParam                 => toks"val"
       case _: Mod.VarParam                 => toks"var"
-      case Mod.Ffi(signature)              => ??? // TODO
+      case Mod.Ffi(signature)              =>
+      	val quote = if (signature.contains(EOL)) tripleDoubleQuotes else singleDoubleQuotes
+      	toks"@ffi($quote${mineIdentTk(signature)}$quote)" // TODO: should not use mineIdentTk
 
       // Enumerator
       case t: Enumerator.Val       => toks"${t.pat.tks} = ${t.rhs.tks}"
@@ -441,7 +499,23 @@ private[meta] object inferTokens {
       case t: Import                   => toks"import ${t.clauses.`o,o`}"
 
       // Case
-      case t: Case => ???
+      case t: Case => 
+	      val ppat = t.pat.tks
+	      val pcond = t.cond.map(cond => toks" if ${cond.tks}").getOrElse(toks"")
+	      val isOneLiner = {
+	        def isOneLiner(t: Case) = t.stats.length == 0 || (t.stats.length == 1 && !t.stats.head.show[Code].contains(EOL))
+	        t.parent match {
+	          case Some(Term.Match(_, cases)) => cases.forall(isOneLiner)
+	          case Some(Term.PartialFunction(cases)) => cases.forall(isOneLiner)
+	          case _ => isOneLiner(t)
+	        }
+	      }
+	      val pbody = (t.stats, isOneLiner) match {
+	        case (Nil, true) => toks""
+	        case (List(stat), true) => toks" ${stat.tks}"
+	        case (stats, _) => stats.`->o`
+	      }
+	      toks"case ${t.pat.tks}$pcond =>$pbody"
 
       // Source
       case t: Source => t.stats.`oo`

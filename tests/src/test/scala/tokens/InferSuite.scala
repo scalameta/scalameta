@@ -534,6 +534,137 @@ class InferSuite extends ParseSuite { // TODO
       .parse[Type.Param].asInstanceOf[scala.meta.internal.ast.Type.Param]
     compareTokenCodes(tree, tree.copy())
   }
+
+  /* Infer Pats (terms) */
+  /* -----------------------------------------------------------------------*/
+
+  test("InferPatBind1") { 
+    val tree = """t @ Test(x: Int, y: String /* This is a comment */)"""
+      .parse[Pat].asInstanceOf[scala.meta.internal.ast.Pat.Bind]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferPatAlternative1") { 
+    val tree = """Int | String"""
+      .parse[Pat].asInstanceOf[scala.meta.internal.ast.Pat.Alternative]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferPatTuple1") { 
+    val tree = """(x, y)"""
+      .parse[Pat].asInstanceOf[scala.meta.internal.ast.Pat.Tuple]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferPatTuple2") { 
+    val tree = """(x: Int, y: String)"""
+      .parse[Pat].asInstanceOf[scala.meta.internal.ast.Pat.Tuple]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferPatExtract1") { 
+    val tree = """Test(x: Int, y: String)"""
+      .parse[Pat].asInstanceOf[scala.meta.internal.ast.Pat.Extract]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferPatExtract2") { 
+    val tree = """Test[String](x: Int, y: String)"""
+      .parse[Pat].asInstanceOf[scala.meta.internal.ast.Pat.Extract]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferPatExtractInfix1") { 
+    val tree = """x :: xs"""
+      .parse[Pat].asInstanceOf[scala.meta.internal.ast.Pat.ExtractInfix]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferPatExtractInfix2") { 
+    val tree = """x :: y :: xs"""
+      .parse[Pat].asInstanceOf[scala.meta.internal.ast.Pat.ExtractInfix]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferPatExtractInfix3") { 
+    val tree = """x :: (xx, y)"""
+      .parse[Pat].asInstanceOf[scala.meta.internal.ast.Pat.ExtractInfix]
+    compareTokenCodes(tree, tree.copy())
+  }
+  /* TODO: Those test pass properly, but add a character at the end of each name. */
+  /*test("inferPatInterpolate1") { 
+    val tree = """ mys"$something is blue like $an $orange." """.trim
+      .parse[Pat].asInstanceOf[scala.meta.internal.ast.Pat.Interpolate]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("inferPatInterpolate2") { 
+    val tree = """ mys"$something is blue like ${an.orange}." """.trim
+      .parse[Pat].asInstanceOf[scala.meta.internal.ast.Pat.Interpolate]
+    compareTokenCodes(tree, tree.copy())
+  }*/
+  test("InferPatTyped1") { 
+    val tree = """x: Int"""
+      .parse[Pat].asInstanceOf[scala.meta.internal.ast.Pat.Typed]
+    compareTokenCodes(tree, tree.copy())
+  }
+
+  /* Infer Pat (types) */
+  /* -----------------------------------------------------------------------*/
+
+  test("InferPatTypeProject1") {
+    val tree = """A#B"""
+      .stripMargin.parse[Pat.Type].asInstanceOf[scala.meta.internal.ast.Pat.Type.Project]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferPatTypeApply1") {
+    val tree = """A[B]"""
+      .stripMargin.parse[Pat.Type].asInstanceOf[scala.meta.internal.ast.Pat.Type.Apply]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferPatTypeApply2") {
+    val tree = """A[B, C]"""
+      .stripMargin.parse[Pat.Type].asInstanceOf[scala.meta.internal.ast.Pat.Type.Apply]
+    compareTokenCodes(tree, tree.copy())
+  }
+  // TODO: looks like in those cases Type is used directly, not Pat.Type.
+  /*test("InferPatTypeApplyInfix1") {
+    val tree = """A op B"""
+      .stripMargin.parse[Pat.Type].asInstanceOf[scala.meta.internal.ast.Pat.Type.ApplyInfix]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferPatTypeFunction1") {
+    val tree = """Int => Int"""
+      .stripMargin.parse[Pat.Type].asInstanceOf[scala.meta.internal.ast.Pat.Type.Function]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferPatTypeFunction2") {
+    val tree = """(Int, String) => Int => String"""
+      .stripMargin.parse[Pat.Type].asInstanceOf[scala.meta.internal.ast.Pat.Type.Function]
+    compareTokenCodes(tree, tree.copy())
+  }*/
+  test("InferPatTypeTuple1") { 
+    val tree = """(A, B, C)"""
+      .stripMargin.parse[Pat.Type].asInstanceOf[scala.meta.internal.ast.Pat.Type.Tuple]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferPatTypeCompound1") { 
+    val tree = """A with B"""
+      .stripMargin.parse[Pat.Type].asInstanceOf[scala.meta.internal.ast.Pat.Type.Compound]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferPatTypeCompound2") { 
+    val tree = """A with B with C"""
+      .stripMargin.parse[Pat.Type].asInstanceOf[scala.meta.internal.ast.Pat.Type.Compound]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferPatTypeCompound3") { 
+    val tree = """A with B { def x: Int => Int }"""
+      .stripMargin.parse[Pat.Type].asInstanceOf[scala.meta.internal.ast.Pat.Type.Compound]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferPatTypeAnnotate1") { 
+    val tree = """A @test"""
+      .stripMargin.parse[Pat.Type].asInstanceOf[scala.meta.internal.ast.Pat.Type.Annotate]
+    compareTokenCodes(tree, tree.copy())
+  }
+  test("InferPatTypeAnnotate2") { 
+    val tree = """A @test(url = scala.meta)"""
+      .stripMargin.parse[Pat.Type].asInstanceOf[scala.meta.internal.ast.Pat.Type.Annotate]
+    compareTokenCodes(tree, tree.copy())
+  }
+
   
   /* Infer literals */
   /* -----------------------------------------------------------------------*/
@@ -1065,6 +1196,32 @@ class InferSuite extends ParseSuite { // TODO
     compareTokenCodes(tree, tree.copy())
   }
 
+  /* Infering Ctor */
+  /* -----------------------------------------------------------------------*/
+
+  test("CtorPrimary1") {
+    val tree = "class Test(x: Int, val y: String)".parse[Stat]
+    val t1 = findFirst(tree)((p: Tree) => p.isInstanceOf[scala.meta.internal.ast.Ctor.Primary]).asInstanceOf[scala.meta.internal.ast.Ctor.Primary]
+    compareTokenCodes(t1, t1.copy())
+  }
+  test("CtorSecondary1") {
+    val tree = """class Test(x: Int, val y: String) {
+                 |  def this(x: Int, y: Int) = this(x, y.toString)
+                 |}""".stripMargin.parse[Stat]
+    val t1 = findFirst(tree)((p: Tree) => p.isInstanceOf[scala.meta.internal.ast.Ctor.Secondary]).asInstanceOf[scala.meta.internal.ast.Ctor.Secondary]
+    compareTokenCodes(t1, t1.copy())
+  }
+  test("CtorSecondary2") {
+    val tree = """class Test(x: Int, val y: String) {
+                 |  def this(x: Int, y: Int) {
+                 |    this(x, y.toString)
+                 |    /* this is a comment */
+                 |  }
+                 |}""".stripMargin.parse[Stat]
+    val t1 = findFirst(tree)((p: Tree) => p.isInstanceOf[scala.meta.internal.ast.Ctor.Secondary]).asInstanceOf[scala.meta.internal.ast.Ctor.Secondary]
+    compareTokenCodes(t1, t1.copy())
+  }
+
   /* Infering Mods */
   /* -----------------------------------------------------------------------*/
 
@@ -1131,6 +1288,32 @@ class InferSuite extends ParseSuite { // TODO
     inferedShouldEqual(Import.Selector.Unimport(Name.Indeterminate("A")), "A => _")
   }
 
+  /* Infering case */
+  /* -----------------------------------------------------------------------*/
+
+  test("InferCase1") {
+    val tree = """x match {
+                 |  case x: Int => x
+                 |}""".stripMargin.parse[Term]
+    val t1 = findFirst(tree)((p: Tree) => p.isInstanceOf[scala.meta.internal.ast.Case]).asInstanceOf[scala.meta.internal.ast.Case]
+    compareTokenCodes(t1, t1.copy())
+  }
+  test("InferCase2") {
+    val tree = """x match {
+                 |  case _ => x
+                 |}""".stripMargin.parse[Term]
+    val t1 = findFirst(tree)((p: Tree) => p.isInstanceOf[scala.meta.internal.ast.Case]).asInstanceOf[scala.meta.internal.ast.Case]
+    compareTokenCodes(t1, t1.copy())
+  }
+  test("InferCase3") {
+    val tree = """x match {
+                 |  case (x: Int, y: Int) =>
+                 |  val yy = x * y
+                 |  yy
+                 |}""".stripMargin.parse[Term]
+    val t1 = findFirst(tree)((p: Tree) => p.isInstanceOf[scala.meta.internal.ast.Case]).asInstanceOf[scala.meta.internal.ast.Case]
+    compareTokenCodes(t1, t1.copy())
+  }
   /* Infering Source */
   /* -----------------------------------------------------------------------*/
 
