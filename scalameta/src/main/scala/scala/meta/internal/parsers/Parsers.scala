@@ -71,7 +71,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     implicit class XtensionParser(parser: this.type) {
       def annot() = parser.annots(skipNewLines = false) match {
         case annot :: Nil => annot
-        case annot :: other :: _ => parser.reporter.syntaxError(s"end of file expected but ${token.name} found.", at = other)
+        case annot :: other :: _ => parser.reporter.syntaxError(s"end of file expected but ${token.name} found", at = other)
         case Nil => unreachable(debug(input, dialect))
       }
     }
@@ -90,7 +90,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       case _: `lazy`           => parser.next(); Mod.Lazy()
       case _: `val`            => parser.next(); Mod.ValParam()
       case _: `var`            => parser.next(); Mod.VarParam()
-      case _                   => parser.reporter.syntaxError(s"modifier expected but ${parser.token.name} found.", at = parser.token)
+      case _                   => parser.reporter.syntaxError(s"modifier expected but ${parser.token.name} found", at = parser.token)
     }))
   }
   def parseEnumerator(): Enumerator = {
@@ -475,7 +475,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   }
 
   def syntaxErrorExpected[T <: Token : TokenMetadata]: Nothing =
-    syntaxError(s"${implicitly[TokenMetadata[T]].name} expected but ${token.name} found.", at = token)
+    syntaxError(s"${implicitly[TokenMetadata[T]].name} expected but ${token.name} found", at = token)
 
   /** Consume one token of the specified type, or signal an error if it is not there. */
   def accept[T <: Token : TokenMetadata]: Unit =
@@ -1947,7 +1947,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     case _: `override`  => next(); Mod.Override()
     case _: `private`   => accessModifier()
     case _: `protected` => accessModifier()
-    case _              => syntaxError(s"modifier expected but ${token.name} found.", at = token)
+    case _              => syntaxError(s"modifier expected but ${token.name} found", at = token)
   })
 
   /** {{{

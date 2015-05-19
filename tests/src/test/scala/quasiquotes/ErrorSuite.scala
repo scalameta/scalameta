@@ -10,7 +10,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       q"foo + class"
     """) === """
-      |<macro>:4: ; expected but class found.
+      |<macro>:4: ; expected but class found
       |      q"foo + class"
       |              ^
     """.trim.stripMargin)
