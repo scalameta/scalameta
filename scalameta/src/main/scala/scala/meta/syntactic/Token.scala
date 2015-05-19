@@ -9,13 +9,15 @@ import scala.reflect.ClassTag
 import scala.language.experimental.macros
 
 @root trait Token {
-  def input: Input.Real
-  def position: Position.Real = Position.Real(input, this, this)
+  def input: Content = content
+  def content: Content
+  def dialect: Dialect
+  def position: Position = Position.Range(content, Point.Offset(content, start), Point.Offset(content, start), Point.Offset(content, end))
   def start: Int
   def end: Int
-  def adjust(input: Input.Real = this.input, start: Param[Int] = Default, end: Param[Int] = Default, delta: Param[Int] = Default): Token
+  def adjust(content: Content = this.content, dialect: Dialect = this.dialect, start: Param[Int] = Default, end: Param[Int] = Default, delta: Param[Int] = Default): Token
   def name: String
-  def code: String = new String(input.content.slice(start, end + 1))
+  def code: String = new String(content.chars.slice(start, end))
   final override def toString = this.show[Raw]
 }
 
@@ -141,13 +143,13 @@ object Token {
     def name = "beginning of file"
     override def code = ""
     def start = 0
-    def end = -1
+    def end = 0
   }
 
   @token class EOF() extends Static {
     def name = "end of file"
     override def code = ""
-    def start = input.content.length
-    def end = input.content.length - 1
+    def start = content.chars.length
+    def end = content.chars.length
   }
 }

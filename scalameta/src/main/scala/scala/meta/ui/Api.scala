@@ -14,4 +14,7 @@ private[meta] trait Api {
   implicit class XtensionShow[T](x: T) {
     def show[Style[X] <: Show[X]](implicit style: Style[T]): String = style(x).toString
   }
+
+  def abort(msg: String): Nothing = throw new AbortException(msg)
+  def abort(pos: Position, msg: String): Nothing = throw new AbortException(pos, msg)
 }

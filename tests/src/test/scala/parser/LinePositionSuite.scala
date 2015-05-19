@@ -37,19 +37,19 @@ class LinePositionSuite extends ParseSuite {
         matches foreach { mtch =>
           mtch match {
             case x: impl.Defn.Class =>
-              val startLine = lines(x.origin.start.line)
-              val endLine = lines(x.origin.end.line)
+              val startLine = lines(x.start.line)
+              val endLine = lines(x.end.line)
               assert(startLine.contains("class " + x.name.toString))
-              assert(x.origin.start.line <= x.origin.end.line)
+              assert(x.start.line <= x.end.line)
               assert(endLine.endsWith(")") || endLine.trim.endsWith("}") || endLine.endsWith("]") || endLine.contains("extends"))
             case x: impl.Defn.Def =>
-              val startLine = lines(x.origin.start.line)
+              val startLine = lines(x.start.line)
               assert(startLine.contains("def " + x.name.toString))
-              assert(x.origin.start.line <= x.origin.end.line)
+              assert(x.start.line <= x.end.line)
             case x: impl.Term.Match =>
-              val startLine = lines(x.origin.start.line)
-              val endLine = lines(x.origin.end.line)
-              assert(x.origin.start.line <= x.origin.end.line)
+              val startLine = lines(x.start.line)
+              val endLine = lines(x.end.line)
+              assert(x.start.line <= x.end.line)
               assert(startLine.contains("match"))
               assert(endLine.contains("}"))
             case _ => assert(false)

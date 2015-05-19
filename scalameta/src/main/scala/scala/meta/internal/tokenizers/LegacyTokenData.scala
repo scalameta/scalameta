@@ -8,7 +8,7 @@ import Chars._
 
 private[meta] trait LegacyTokenData {
   /** the input that is currently being tokenized */
-  var input: Input.Real = null
+  var content: Content = null
 
   /** the next token */
   var token: LegacyToken = EMPTY
@@ -32,7 +32,7 @@ private[meta] trait LegacyTokenData {
   var base: Int = 0
 
   def copyFrom(td: LegacyTokenData): this.type = {
-    this.input = td.input
+    this.content = td.content
     this.token = td.token
     this.offset = td.offset
     this.lastOffset = td.lastOffset
@@ -45,7 +45,7 @@ private[meta] trait LegacyTokenData {
 
   override def toString = s"{token = $token, position = $offset..$endOffset, lastOffset = $lastOffset, name = $name, strVal = $strVal, base = $base}"
 
-  val reporter: Reporter = Reporter(input)
+  val reporter: Reporter = Reporter(content)
   import reporter._
 
   /** Convert current strVal to char value

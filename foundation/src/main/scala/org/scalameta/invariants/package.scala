@@ -39,10 +39,13 @@ package invariants {
         override def emit = {
           q"""
             val $result = $tree
-            if ($result) (true, Nil)
-            else (false, List($diagnostic))
+            if ($result) (true, _root_.scala.collection.immutable.Nil)
+            else (false, _root_.scala.collection.immutable.List($diagnostic))
           """
         }
+      }
+      case class Debug() extends Prop {
+        override def emit = q"(true, _root_.scala.collection.immutable.Nil)"
       }
       case class Atom(tree: Tree) extends Prop with Simple {
         override def diagnostic = showCode(tree) + " is false"
@@ -80,10 +83,10 @@ package invariants {
               val restFailures = c.freshName(TermName("restFailures"))
               q"""
                 val ($result, $failures) = ${prop.emit}
-                if ($result) (true, Nil)
+                if ($result) (true, _root_.scala.collection.immutable.Nil)
                 else {
                   val ($restResult, $restFailures) = ${loop(rest)}
-                  if ($restResult) (true, Nil)
+                  if ($restResult) (true, _root_.scala.collection.immutable.Nil)
                   else (false, $failures ++ $restFailures)
                 }
               """
@@ -111,6 +114,7 @@ package invariants {
       }
 
       def propify(tree: Tree): Prop = tree match {
+        case q"$_.debug(..$_)" => Debug()
         case q"!$x" => Not(propify(x))
         case q"$x && $y" => And(propify(x), propify(y))
         case q"$x || $y" => Or(propify(x), propify(y))
@@ -146,11 +150,15 @@ package invariants {
           simplify(Exists(list, Atom(negate(fn))))
         case Not(Exists(list, Atom(fn))) =>
           simplify(Forall(list, Atom(negate(fn))))
+        case And(props @ _*) if props.exists(_.isInstanceOf[Debug]) =>
+          simplify(And(props.filter(!_.isInstanceOf[Debug]): _*))
         case And(props @ _*) if props.exists(_.isInstanceOf[And]) =>
           val i = props.indexWhere(_.isInstanceOf[And])
           simplify(And(props.take(i) ++ props(i).asInstanceOf[And].props ++ props.drop(i + 1): _*))
         case And(props @ _*) =>
           And(props.map(simplify): _*)
+        case Or(props @ _*) if props.exists(_.isInstanceOf[Debug]) =>
+          Debug()
         case Or(props @ _*) if props.exists(_.isInstanceOf[Or]) =>
           val i = props.indexWhere(_.isInstanceOf[Or])
           simplify(Or(props.take(i) ++ props(i).asInstanceOf[Or].props ++ props.drop(i + 1): _*))

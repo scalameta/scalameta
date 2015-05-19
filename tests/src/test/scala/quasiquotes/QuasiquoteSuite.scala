@@ -20,7 +20,7 @@ class QuasiquoteSuite extends FunSuite {
   }
 
   test("rank-1 liftables") {
-    implicit def custom[U >: List[Term]]: Liftable[List[Int], U] = Liftable(_.map(x => q"$x"))
+    implicit def custom[U >: List[Term]]: Lift[List[Int], U] = Lift(_.map(x => q"$x"))
     assert(q"foo(..${List(1, 2, 3)})".show[Code] === "foo(1, 2, 3)")
   }
 
