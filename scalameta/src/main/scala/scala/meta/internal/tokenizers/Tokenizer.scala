@@ -154,15 +154,15 @@ private[meta] object tokenize {
               Right(result.pos.end)
             }
           }
-          tryParse(_.xmlLiteralPattern()).fold(_ => tryParse(_.xmlLiteral()).left.map(_._2), result => Right(result))
+          tryParse(_.xmlLiteral()).fold(_ => tryParse(_.xmlLiteralPattern()).left.map(_._2), result => Right(result))
         }
         probe() match {
           case Left(error) =>
             scanner.reporter.syntaxError("unexpected shape of xml literal", at = currCopy.offset)
           case Right(length) =>
             xmlLiteralBuf += new String(slice.take(length))
-            scanner.reader.charOffset = scanner.curr.offset + length + 1
-            if (scanner.reader.charOffset >= content.chars.length) scanner.next.token = EOF
+            scanner.reader.charOffset = scanner.curr.offset + length
+            scanner.reader.nextChar()
         }
       }
       if (currCopy.token == EOF) {
@@ -218,14 +218,14 @@ private[meta] object tokenize {
               emitSpliceStart(dollarOffset)
               nextToken()
               legacyIndex = loop(legacyIndex, braceBalance = 0, returnWhenBraceBalanceHitsZero = true)
-              emitSpliceEnd(curr.offset - 1)
+              emitSpliceEnd(curr.offset)
               emitContents()
             } else if (buf(dollarOffset + 1) == '_') {
               emitSpliceStart(dollarOffset)
               nextToken()
               emitExpectedToken(USCORE)
               nextToken()
-              emitSpliceEnd(curr.offset - 1)
+              emitSpliceEnd(curr.offset)
               emitContents()
             } else {
               emitSpliceStart(dollarOffset)
@@ -233,7 +233,7 @@ private[meta] object tokenize {
               require(curr.token == IDENTIFIER || curr.token == THIS)
               emitToken()
               nextToken()
-              emitSpliceEnd(curr.offset - 1)
+              emitSpliceEnd(curr.offset)
               emitContents()
             }
           } else {
@@ -258,7 +258,7 @@ private[meta] object tokenize {
       if (prev.token == XMLSTART) {
         val raw = xmlLiteralBuf.remove(0)
         tokens += Token.Xml.Part(content, dialect, prev.offset, curr.offset)
-        tokens += Token.Xml.End(content, dialect, curr.offset - 1)
+        tokens += Token.Xml.End(content, dialect, curr.offset)
       }
 
       loop(legacyIndex, braceBalance1, returnWhenBraceBalanceHitsZero)

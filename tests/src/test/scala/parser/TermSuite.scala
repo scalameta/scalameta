@@ -317,4 +317,14 @@ class TermSuite extends ParseSuite {
         Ctor.Primary(Nil, Ctor.Name("this"), List(List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None)))),
         EmptyTemplate()))) = term("{ case class C(x: Int); }")
   }
+
+  test("xml literal - 1") {
+    val Term.Block(List(
+      Defn.Val(Nil, List(Pat.Var.Term(Term.Name("x"))), None, Term.Interpolate(Term.Name("xml"), List(Lit.String("<p/>")), Nil)),
+      Defn.Val(Nil, List(Pat.Var.Term(Term.Name("y"))), None, Term.Name("x")))) =
+    term("""{
+      val x = <p/>
+      val y = x
+    }""")
+  }
 }
