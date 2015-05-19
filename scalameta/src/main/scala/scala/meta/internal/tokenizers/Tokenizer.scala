@@ -154,15 +154,15 @@ private[meta] object tokenize {
               Right(result.pos.end)
             }
           }
-          tryParse(_.xmlLiteralPattern()).fold(_ => tryParse(_.xmlLiteral()).left.map(_._2), result => Right(result))
+          tryParse(_.xmlLiteral()).fold(_ => tryParse(_.xmlLiteralPattern()).left.map(_._2), result => Right(result))
         }
         probe() match {
           case Left(error) =>
             scanner.reporter.syntaxError("unexpected shape of xml literal", at = currCopy.offset)
           case Right(length) =>
             xmlLiteralBuf += new String(slice.take(length))
-            scanner.reader.charOffset = scanner.curr.offset + length + 1
-            if (scanner.reader.charOffset >= content.chars.length) scanner.next.token = EOF
+            scanner.reader.charOffset = scanner.curr.offset + length
+            scanner.reader.nextChar()
         }
       }
       if (currCopy.token == EOF) {

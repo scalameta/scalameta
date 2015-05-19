@@ -812,8 +812,9 @@ class ShowTokenSuite extends ParseSuite {
     assert(tokenize("<foo>bar</foo> ").map(_.show[Raw]).mkString("\n") === """
       |BOF (0..0)
       |xml start (0..0)
-      |<foo>bar</foo>  (0..15)
-      |xml end (15..15)
+      |<foo>bar</foo> (0..14)
+      |xml end (14..14)
+      |  (14..15)
       |EOF (15..15)
     """.trim.stripMargin.replace("QQQ", "\"\"\""))
   }
