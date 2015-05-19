@@ -37,31 +37,31 @@ private[meta] object inferTokens {
   }
 
   /* Generate tokens from various inputs */
-  private def mineLitTk(value: Any): Tokens = {
+  private def mineLitTk(value: Any)(implicit dialect: Dialect): Tokens = {
     implicit def stringToInput(str: String) = Input.String(str)
     val str = value.toString
     val length = str.length
     // TODO: figure out what action should be taken depending of the boolean
     // TODO: the strings here should be modified (e.g. adding L for long, etc.)
     val newTok = value match {
-      case y: Int      => Token.Literal.Int(str, 0, length, (x: Boolean) => y)
-      case y: Long     => Token.Literal.Long(str + "L", 0, length + 1, (x: Boolean) => y)
-      case y: Float    => Token.Literal.Float(str + "F", 0, length + 1, (x: Boolean) => y)
-      case y: Double   => Token.Literal.Double(str, 0, length, (x: Boolean) => y)
-      case y: Char     => Token.Literal.Char(enquote(str, SingleQuotes), 0, length + 2, y)
-      case y: Symbol   => Token.Literal.Symbol(str, 0, length, y)
+      case y: Int      => Token.Literal.Int(str, dialect, 0, length, (x: Boolean) => y)
+      case y: Long     => Token.Literal.Long(str + "L", dialect, 0, length + 1, (x: Boolean) => y)
+      case y: Float    => Token.Literal.Float(str + "F", dialect, 0, length + 1, (x: Boolean) => y)
+      case y: Double   => Token.Literal.Double(str, dialect, 0, length, (x: Boolean) => y)
+      case y: Char     => Token.Literal.Char(enquote(str, SingleQuotes), dialect, 0, length + 2, y)
+      case y: Symbol   => Token.Literal.Symbol(str, dialect, 0, length, y)
       case y: String   => 
       	val newStr = {
       		if(y.contains(EOL)) enquote(str, TripleQuotes)
     			else 	                                 enquote(str, DoubleQuotes)
     		}
-    		Token.Literal.String(newStr, 0, newStr.length, newStr)
+    		Token.Literal.String(newStr, dialect, 0, newStr.length, newStr)
   	}
     Tokens(newTok)
   }
 
   /* Generate tokens for idents */
-  private def mineIdentTk(value: String): Tokens = Tokens(Token.Ident(Input.String(value), 0, value.length))
+  private def mineIdentTk(value: String)(implicit dialect: Dialect): Tokens = Tokens(Token.Ident(Input.String(value), dialect, 0, value.length))
 
   /* Generate synthetic tokens */
   private def infer(tree: Tree)(implicit dialect: Dialect): Tokens = {
@@ -71,9 +71,9 @@ private[meta] object inferTokens {
     implicit def toTokenSeq(tk: Token) = Tokens(tk)
 
     val indentation = toks"  " // TODO: figure out how to find proper indent string
-    val singleDoubleQuotes = Tokens(Token.Ident(Input.String("\""), 0, 1)) // TODO: for this line and below, figure out how to construct those without using Ident, which is a trick.
-    val tripleDoubleQuotes = Tokens(Token.Ident(Input.String("\"\"\""), 0, 3))
-    val newline = Tokens(Token.`\n`(Input.String("\n"), 0))
+    val singleDoubleQuotes = Tokens(Token.Ident(Input.String("\""), dialect, 0, 1)) // TODO: for this line and below, figure out how to construct those without using Ident, which is a trick.
+    val tripleDoubleQuotes = Tokens(Token.Ident(Input.String("\"\"\""), dialect, 0, 3))
+    val newline = Tokens(Token.`\n`(Input.String("\n"), dialect, 0))
 
     implicit class RichTree(tree: Tree) {
       def tks = tree.tokens // TODO: use lif  les
