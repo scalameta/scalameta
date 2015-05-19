@@ -218,14 +218,14 @@ private[meta] object tokenize {
               emitSpliceStart(dollarOffset)
               nextToken()
               legacyIndex = loop(legacyIndex, braceBalance = 0, returnWhenBraceBalanceHitsZero = true)
-              emitSpliceEnd(curr.offset - 1)
+              emitSpliceEnd(curr.offset)
               emitContents()
             } else if (buf(dollarOffset + 1) == '_') {
               emitSpliceStart(dollarOffset)
               nextToken()
               emitExpectedToken(USCORE)
               nextToken()
-              emitSpliceEnd(curr.offset - 1)
+              emitSpliceEnd(curr.offset)
               emitContents()
             } else {
               emitSpliceStart(dollarOffset)
@@ -233,7 +233,7 @@ private[meta] object tokenize {
               require(curr.token == IDENTIFIER || curr.token == THIS)
               emitToken()
               nextToken()
-              emitSpliceEnd(curr.offset - 1)
+              emitSpliceEnd(curr.offset)
               emitContents()
             }
           } else {
@@ -258,7 +258,7 @@ private[meta] object tokenize {
       if (prev.token == XMLSTART) {
         val raw = xmlLiteralBuf.remove(0)
         tokens += Token.Xml.Part(content, dialect, prev.offset, curr.offset)
-        tokens += Token.Xml.End(content, dialect, curr.offset - 1)
+        tokens += Token.Xml.End(content, dialect, curr.offset)
       }
 
       loop(legacyIndex, braceBalance1, returnWhenBraceBalanceHitsZero)
