@@ -48,12 +48,14 @@ private[meta] object inferTokens {
       case y: Long     => Token.Literal.Long(str + "L", dialect, 0, length + 1, (x: Boolean) => y)
       case y: Float    => Token.Literal.Float(str + "F", dialect, 0, length + 1, (x: Boolean) => y)
       case y: Double   => Token.Literal.Double(str, dialect, 0, length, (x: Boolean) => y)
-      case y: Char     => Token.Literal.Char(enquote(str, SingleQuotes), dialect, 0, length + 2, y)
+      case y: Char     => 
+      	val newChar = enquote(str, SingleQuotes)
+      	Token.Literal.Char(newChar, dialect, 0, newChar.length, y)
       case y: Symbol   => Token.Literal.Symbol(str, dialect, 0, length, y)
       case y: String   => 
       	val newStr = {
       		if(y.contains(EOL)) enquote(str, TripleQuotes)
-    			else 	                                 enquote(str, DoubleQuotes)
+    			else 	              enquote(str, DoubleQuotes)
     		}
     		Token.Literal.String(newStr, dialect, 0, newStr.length, newStr)
   	}

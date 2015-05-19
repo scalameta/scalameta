@@ -147,7 +147,7 @@ object build extends Build {
   ) settings (
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided"),
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _ % "provided"),
-    libraryDependencies += "plugin" %% "plugin" % "0.1.0-SNAPSHOT"
+    libraryDependencies += "plugin" %% "plugin" % "0.1.0-SNAPSHOT" // TODO: change/remove once Martin's work is integrated to SM.
   ) dependsOn (foundation)
 
   lazy val sandbox = Project(
