@@ -344,14 +344,14 @@ trait ConvertPhase {
                */
               p.copy(loop(p1, c1), zLoop(loop[Term.Arg])(pargs, cargs))
             case (p: Term.ApplyInfix, Term.Apply(c1: Term.Select, cargs)) =>
-              Term.Apply(c1.copy(loop(p.lhs, c1.qual), loop(p.op, c1.name), origin = p.origin), zLoop(loop[Term.Arg])(p.args, cargs)).copy(origin = p.origin)
+              Term.Apply(c1.copy(loop(p.lhs, c1.qual), loop(p.op, c1.name), tokens = p.tokens), zLoop(loop[Term.Arg])(p.args, cargs)).copy(tokens = p.tokens)
             case (p @ Term.Apply(p1: Term.Select, pargs), Term.Update(c1, cargs, c2)) if cargs.size == 1 && cargs.head.size == 1 =>
               /* Covering cases such as:
                * p : Term.Apply(Term.Select(Term.Name("Properties"), Term.Name("update")), List(Lit.String("currentValidity"), Term.Select(Term.Name("secs"), Term.Name("toString"))))
                * -------------------------------------------------------------
                * c: Term.Update(Term.Name("Properties"), List(List(Lit.String("currentValidity"))), Term.Select(Term.Name("secs"), Term.Name("toString")))
                */
-              Term.Update(loop(p1.qual, c1), List(zLoop(loop[Term.Arg])(pargs.init, cargs.head)), loop(pargs.last.asInstanceOf[Term], c2)).copy(origin = p.origin)
+              Term.Update(loop(p1.qual, c1), List(zLoop(loop[Term.Arg])(pargs.init, cargs.head)), loop(pargs.last.asInstanceOf[Term], c2)).copy(tokens = p.tokens)
             case (p: Type.Apply, Type.Tuple(celems)) =>
               /* Covering cases such as:
                * Type.Apply(
@@ -359,7 +359,7 @@ trait ConvertPhase {
                 * -------------------------------------------------------------
                 * c: Type.Tuple(List(Type.Name("Date"), Type.Name("Date")))
                 */
-                Type.Tuple(zLoop(loop[Type])(p.args,celems)).copy(origin = p.origin)
+                Type.Tuple(zLoop(loop[Type])(p.args,celems)).copy(tokens = p.tokens)
               case (p: Term.Interpolate, c: Term.Apply) =>
               p // TODO: this is due to quasiquote expansion - should probably be left as is in the parsed tree.
             case (p: api.Type.Name, c: api.Type.Select) =>
