@@ -147,7 +147,7 @@ object build extends Build {
   ) settings (
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided"),
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _ % "provided"),
-    libraryDependencies += "com.github.duhemm" %% s"parsermacros-plugin"  % "0.1.0-SNAPSHOT"
+    libraryDependencies += "plugin" %% s"plugin"  % "0.1.0-SNAPSHOT"
   ) dependsOn (foundation)
 
   lazy val sandbox = Project(

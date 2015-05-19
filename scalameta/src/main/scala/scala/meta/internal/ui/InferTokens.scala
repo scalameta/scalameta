@@ -33,7 +33,7 @@ private[meta] object inferTokens {
     (tree match {
       case _: Source => code.parse[Source]
       case _: Stat => code.parse[Stat]
-    }).origin.tokens
+    }).tokens
   }
 
   /* Generate tokens from various inputs */
