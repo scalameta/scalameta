@@ -327,4 +327,13 @@ class TermSuite extends ParseSuite {
       val y = x
     }""")
   }
+
+  test("implicit closure") {
+    val Term.Apply(Term.Name("Action"), List(
+      Term.Block(List(
+        Term.Function(
+          List(Term.Param(List(Mod.Implicit()), Term.Name("request"), Some(Type.Apply(Type.Name("Request"), List(Type.Name("AnyContent")))), None)),
+          Term.Block(List(Term.Name("Ok")))))))) =
+      term("Action { implicit request: Request[AnyContent] => Ok }")
+  }
 }

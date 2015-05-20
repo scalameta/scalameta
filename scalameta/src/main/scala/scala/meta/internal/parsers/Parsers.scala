@@ -1353,7 +1353,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     require(token.isNot[`implicit`] && debug(token))
     val implicitPos = in.prevTokenPos
     val paramName = termName()
-    val paramTpt = if (token.is[`:`]) Some(typeOrInfixType(location)) else None
+    val paramTpt = if (token.is[`:`]) { next(); Some(typeOrInfixType(location)) } else None
     val param = atPos(implicitPos, auto)(Term.Param(List(atPos(implicitPos, implicitPos)(Mod.Implicit())), paramName, paramTpt, None))
     accept[`=>`]
     atPos(implicitPos, auto)(Term.Function(List(param), if (location != InBlock) expr() else block()))
