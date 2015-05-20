@@ -11,6 +11,7 @@ import scala.collection.immutable.Seq
 import scala.compat.Platform.EOL
 import scala.tools.nsc.{Global => ScalaGlobal}
 import scala.tools.nsc.reporters.StoreReporter
+import scala.meta.dialects.Scala211
 import scala.meta.internal.{ast => m}
 import scala.meta.internal.ui.Summary
 

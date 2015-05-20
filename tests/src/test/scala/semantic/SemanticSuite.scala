@@ -2,6 +2,7 @@ import org.scalatest._
 import scala.compat.Platform.EOL
 import scala.meta._
 import scala.meta.internal.{ast => impl}
+import scala.meta.dialects.Scala211
 
 class SemanticDummy {
   private[this] val x = 2
