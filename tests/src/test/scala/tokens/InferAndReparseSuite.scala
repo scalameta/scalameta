@@ -162,6 +162,7 @@ class InferAndReparseSuite extends ParseSuite {
         val newCode = transformed.tree.get.tokens.map(_.show[Code]).mkString
         Try(newCode.parse[Source]) match {
           case Success(_) => /* cool */
+            println(newCode)
           case Failure(err) =>
             println("====================================================")
             println(content)

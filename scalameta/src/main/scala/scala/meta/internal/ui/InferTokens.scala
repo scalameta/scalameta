@@ -16,6 +16,8 @@ import scala.meta.tokenquasiquotes._
 
 import scala.language.implicitConversions
 
+import scala.annotation.tailrec
+
 // TODO: figure out various situation where postfix operators, etc. should be in parenthesis. For now: 
 // it is always assumed.
 // TODO: check creation of tokens
@@ -78,7 +80,7 @@ private[meta] object inferTokens {
     val newline = Tokens(Token.`\n`(Input.String("\n"), dialect, 0))
 
     implicit class RichTree(tree: Tree) {
-      def tks = tree.tokens // TODO: use lif  les
+      def tks = indent(tree.tokens)(indentation) // TODO: use lif  les
       def `->o->` = toks"$newline$indentation${tree.tks}$newline"
     }
 
@@ -96,8 +98,8 @@ private[meta] object inferTokens {
       /* various combiners for tokens, o representing subsequence */
       def `oo` = flattks()()()
       def `o[o` = flattks()(newline)()
-      def `->o->` = flattks(toks"$newline$indentation")(toks"$newline$indentation", (x: Seq[Token]) => if (!x.isEmpty && x.last.code == "\n") x.init else x)(newline)
-      def `->o` = flattks(toks"$newline$indentation")(toks"$newline$indentation", (x: Seq[Token]) => if (!x.isEmpty && x.last.code == "\n") x.init else x)()
+      def `->o->` = flattks(toks"$newline")(toks"$newline", (x: Seq[Token]) => if (!x.isEmpty && x.last.code == "\n") x.init else x)(newline)
+      def `->o` = flattks(toks"$newline")(toks"$newline", (x: Seq[Token]) => if (!x.isEmpty && x.last.code == "\n") x.init else x)()
       def `o_o` = flattks()(toks" ")()
       def `o,o` = flattks()(toks", ")()
       def `o;o` = flattks()(toks"; ")()
@@ -548,8 +550,33 @@ private[meta] object inferTokens {
   // Line return could be checked at runtime.
 
   /* Adding proper indentation to the token stream */
-  private def indent(tks: Tokens)(indent: Tokens): Tokens = {
-    tks // TODO
+
+  // TODO: clean that up, it is far from perfect.
+  private def indent(tks: Tokens)(indent: Tokens)(implicit dialect: Dialect): Tokens = {
+  	import scala.meta.dialects.Scala211 // TODO: remove, figure that out!
+    //tks.foreach { tk => println(tk.input) }
+    // step1: split tokens per line (must contain \n, otherwise do nothing)
+    if (!tks.exists(_.code == "\n")) tks
+    else {
+      val onLine = {
+        @tailrec def loop(in: Seq[Token], out: Seq[Seq[Token]]): Seq[Seq[Token]] = in match {
+        	case Nil => out
+        	case _ if !in.exists(_.code == "\n") => out :+ in
+        	case _ =>
+        			val (bf, af) = in.span(_.code != "\n")
+        			loop(af.tail, out :+ (bf :+ af.head))
+        }
+        loop(tks.repr, Seq())
+      }
+	    // step2: check, for each line, if the line contain synthetic tokens
+	    // step2.1: if so, indent it once
+    	// step2.2: if not, do nothing
+	    val indented = onLine.map { line => 
+	    	if (line.exists(_.input.isInstanceOf[Input.String])) toks"$indent$line".repr
+	    	else                                                 line
+	    }
+    	Tokens(indented.flatten: _*)
+    }
   }
 
   // TODO: check if required

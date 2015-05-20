@@ -2,6 +2,7 @@ import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import org.scalameta.ast._
 import scala.{meta => api}
+import scala.meta.dialects.Scala211 // TODO: remove, do not commit
 
 package scala.meta {
   @root trait Tree extends Product {
