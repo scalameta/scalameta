@@ -327,16 +327,6 @@ object MergeTrees {
           loop(p.fun, c)
 
         // Ex.
-        // p: Term.Apply(Term.Select(Term.Name("grouped"), Term.Name("maxBy")), List(Term.Select(Term.Select(Term.Placeholder(), Term.Name("_2")), Term.Name("size"))))
-        // c: Term.Select(Term.Apply(Term.Select(Term.Name("grouped"), Term.Name("maxBy")), List(Term.Select(Term.Select(Term.Placeholder(), Term.Name("_2")), Term.Name("size")))), Term.Name("_2"))
-        case (p @ Term.Apply(p1: Term.Select, pargs), Term.Select(Term.Apply(c1, cargs), c2)) =>
-          p.copy(loop(p1, c1), zLoop(loop[Term.Arg])(pargs, cargs), tokens = p.tokens)
-
-        // Merging applyInfix'es transformed into Applies.
-        case (p: Term.ApplyInfix, Term.Apply(c1: Term.Select, cargs)) =>
-          p.copy(loop(p.lhs, c1.qual), loop(p.op, c1.name), p.targs, zLoop(loop[Term.Arg])(p.args, cargs), tokens = p.tokens)
-
-        // Ex.
         // p: Term.Apply(Term.Select(Term.Name("Properties"), Term.Name("update")), List(Lit.String("currentValidity"), Term.Select(Term.Name("secs"), Term.Name("toString"))))
         // c: Term.Update(Term.Name("Properties"), List(List(Lit.String("currentValidity"))), Term.Select(Term.Name("secs"), Term.Name("toString")))
         case (p @ Term.Apply(p1: Term.Select, pargs), Term.Update(c1, cargs, c2)) if cargs.size == 1 && cargs.head.size == 1 =>
@@ -349,7 +339,7 @@ object MergeTrees {
           Type.Tuple(zLoop(loop[Type])(p.args, celems), tokens = p.tokens)
 
         // Convering name expantion equivalent as for Ctor
-        case (p: api.Type.Name, c: api.Type.Select) =>
+        case (p: api.Type.Name, c: api.Type.Select) if  p.value == c.name.value =>
           loop(p, c.name)
 
         /* Generic case: parsed tree prevails */
