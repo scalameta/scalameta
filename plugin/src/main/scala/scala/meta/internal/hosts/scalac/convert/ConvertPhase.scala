@@ -33,7 +33,7 @@ trait ConvertPhase {
 
     override def newPhase(prev: Phase): StdPhase = new StdPhase(prev) {
       override def apply(unit: CompilationUnit) {
-        val parsedTree = scala.meta.syntactic.Input.File(unit.source.path).parse[mapi.Source].asInstanceOf[m.Source]
+        val parsedTree = unit.source.content.parse[mapi.Source].asInstanceOf[m.Source]
         val convertedTree = c.toMtree(unit.body, classOf[mapi.Source]).asInstanceOf[m.Source]
         val mergedTree = MergeTrees(parsedTree, convertedTree)
 
