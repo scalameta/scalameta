@@ -10,6 +10,7 @@ import scala.meta.semantic.{Context => ScalametaSemanticContext}
 import scala.meta.internal.hosts.scalac.contexts.{SemanticContext => ScalahostSemanticContext}
 import scala.meta.internal.hosts.scalac.converters.{Api => ConverterApi}
 import scala.tools.nsc.{Global => ScalaGlobal}
+import scala.meta.dialects.Scala211
 import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
 import scala.meta.internal.{hygiene => h}

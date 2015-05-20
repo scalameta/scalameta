@@ -16,6 +16,7 @@ class ReplSuite extends FunSuite {
   test("semantic APIs") {
     assert(repl("""
       |import scala.meta._
+      |import scala.meta.dialects.Scala211
       |val classpathOptions = "-cp " + sys.props("sbt.paths.scala-library.jar")
       |val pluginOptions = "-Xplugin:" + sys.props("sbt.paths.plugin.jar") + " -Xplugin-require:scalahost"
       |val options = classpathOptions + " " + pluginOptions
@@ -28,6 +29,9 @@ class ReplSuite extends FunSuite {
     === """
       |scala> import scala.meta._
       |import scala.meta._
+      |
+      |scala> import scala.meta.dialects.Scala211
+      |import scala.meta.dialects.Scala211
       |
       |scala> val classpathOptions = "-cp " + sys.props("sbt.paths.scala-library.jar")
       |classpathOptions: String = -cp <path/to/scala-library.jar>

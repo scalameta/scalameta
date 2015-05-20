@@ -6,6 +6,7 @@ import scala.tools.reflect.{ToolBox, ToolBoxError}
 import scala.compat.Platform.EOL
 import scala.meta._
 import org.scalameta.reflection._
+import scala.meta.dialects.Scala211
 
 class ScalaToMeta extends FunSuite {
   def typecheckConvertAndPrettyprint(code: String, debug: Boolean): String = {
