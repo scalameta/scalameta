@@ -5,6 +5,7 @@ package convert
 import scala.tools.nsc.{Global, Phase, SubComponent}
 import scala.tools.nsc.plugins.{Plugin => NscPlugin, PluginComponent => NscPluginComponent}
 import scala.meta.internal.hosts.scalac.{PluginBase => ScalahostPlugin}
+import scala.meta.internal.{ ast => api }
 import scala.reflect.io.AbstractFile
 import org.scalameta.reflection._
 
@@ -30,8 +31,11 @@ trait ConvertPhase {
 
     override def newPhase(prev: Phase): StdPhase = new StdPhase(prev) {
       override def apply(unit: CompilationUnit) {
-        val munit = c.toMtree(unit.body, classOf[Source])
-        unit.body.appendMetadata("scalameta" -> munit)
+        val parsedTree = scala.meta.syntactic.Input.File(unit.source.path).parse[Source].asInstanceOf[api.Source]
+        val convertedTree = c.toMtree(unit.body, classOf[Source]).asInstanceOf[api.Source]
+
+        // TODO: once parsed trees are enriched with semantic information, there will be no need to store the two trees anymore.
+        unit.body.appendMetadata("scalametaSemantic" -> convertedTree).appendMetadata("scalametaSyntactic" -> MergeTrees(parsedTree, convertedTree))
       }
     }
   }
