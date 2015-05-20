@@ -5,7 +5,8 @@ package convert
 import scala.tools.nsc.{ Global, Phase, SubComponent }
 import scala.tools.nsc.plugins.{ Plugin => NscPlugin, PluginComponent => NscPluginComponent }
 import scala.meta.internal.hosts.scalac.{ PluginBase => ScalahostPlugin }
-import scala.meta.internal.{ ast => api }
+import scala.{meta => mapi}
+import scala.meta.internal.{ast => m}
 import scala.reflect.io.AbstractFile
 import org.scalameta.reflection._
 
@@ -16,21 +17,21 @@ import scala.collection.{ immutable => imm }
  * information such as Tokens.
 
  * Sometimes, converted trees contain more information than their parsed equivalents in their structure: for instance, Updates
- * and Tuples are already converted as such. Sometimes it happens that namespaces are added, transforming Names into 
- * Selects. Some of those information are interesting at the semantic level, so we transfer them to the parsed tree. 
+ * and Tuples are already converted as such. Sometimes it happens that namespaces are added, transforming Names into
+ * Selects. Some of those information are interesting at the semantic level, so we transfer them to the parsed tree.
  * We do that only when required, as we want the form of the parsed tree to prevail in case of non classified differences.
  *
  * I am more and more concern regarding the fact that this might not be a viable solution for the long term. As mentioned,
- * it might be better to parse the tree and add semantic information from scalac directly on top of it rather than 
+ * it might be better to parse the tree and add semantic information from scalac directly on top of it rather than
  * converting it. The current merging of trees relies on many layers:
- * First, the conversion by toMTree must not leave any ambiguity, and then some ambiguities might be added by the fact 
- * that the two tree differ during the merging. It does the trick for tools like Obey while running on complex projects 
+ * First, the conversion by toMTree must not leave any ambiguity, and then some ambiguities might be added by the fact
+ * that the two tree differ during the merging. It does the trick for tools like Obey while running on complex projects
  * (Tested on various Play apps), but it might return warnings in some corner cases were not covered. This would have to
  * be tested more thoroughly.
  */
 object MergeTrees {
 
-  def apply(parsedTree: api.Source, convertedTree: api.Source): api.Source = {
+  def apply(parsedTree: m.Source, convertedTree: m.Source): m.Source = {
 
     def zLoop[T](f: (T, T) => T)(pTree: imm.Seq[T], cTree: imm.Seq[T]): imm.Seq[T] = (pTree zip cTree).map(s => f(s._1, s._2).asInstanceOf[T])
 
@@ -43,8 +44,8 @@ object MergeTrees {
       case _ => pTree
     }
 
-    def loop[T <: api.Tree](pTree: T, cTree: T): T = {
-      import api._
+    def loop[T <: m.Tree](pTree: T, cTree: T): T = {
+      import m._
       ((pTree, cTree) match {
 
         /* Handling normal cases */
@@ -134,11 +135,11 @@ object MergeTrees {
         // Types
         case (p: Type.Select, c: Type.Select) =>
           p.copy(loop(p.qual, c.qual), loop(p.name, c.name), tokens = p.tokens)
-        case (p: api.Type.Project, c: Type.Project) =>
+        case (p: m.Type.Project, c: Type.Project) =>
           p.copy(loop(p.qual, c.qual), loop(p.name, c.name), tokens = p.tokens)
         case (p: Type.Singleton, c: Type.Singleton) =>
           p.copy(loop(p.ref, c.ref), tokens = p.tokens)
-        case (p: Type.Apply, c: api.Type.Apply) =>
+        case (p: Type.Apply, c: m.Type.Apply) =>
           p.copy(loop(p.tpe, c.tpe), zLoop(loop[Type])(p.args, c.args), tokens = p.tokens)
         case (p: Type.ApplyInfix, c: Type.ApplyInfix) =>
           p.copy(loop(p.lhs, c.lhs), loop(p.op, c.op), loop(p.rhs, c.rhs), tokens = p.tokens)
@@ -310,7 +311,7 @@ object MergeTrees {
         // Since the converted trees contain more information and have been reorganized (Tuples insteads of specific Apply, Update insteads of specific Apply)
         // We reproduce here the shape of the converted tree.
 
-        // Ex. 
+        // Ex.
         // p: Ctor.Ref.name("deprecated"),
         // c: Ctor.Ref.Select(Term.Name("scala"), Ctor.Ref.Name("deprecated"))
         case (p: Ctor.Ref.Name, Ctor.Ref.Select(n, c1: Ctor.Ref.Name)) if p.value == c1.value =>
@@ -339,7 +340,7 @@ object MergeTrees {
           Type.Tuple(zLoop(loop[Type])(p.args, celems), tokens = p.tokens)
 
         // Convering name expantion equivalent as for Ctor
-        case (p: api.Type.Name, c: api.Type.Select) if  p.value == c.name.value =>
+        case (p: m.Type.Name, c: m.Type.Select) if  p.value == c.name.value =>
           loop(p, c.name)
 
         /* Generic case: parsed tree prevails */

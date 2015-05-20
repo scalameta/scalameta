@@ -4,8 +4,10 @@ package convert
 
 import scala.tools.nsc.{Global, Phase, SubComponent}
 import scala.tools.nsc.plugins.{Plugin => NscPlugin, PluginComponent => NscPluginComponent}
+import scala.meta.dialects.Scala211
 import scala.meta.internal.hosts.scalac.{PluginBase => ScalahostPlugin}
-import scala.meta.internal.{ ast => api }
+import scala.{meta => mapi}
+import scala.meta.internal.{ast => m}
 import scala.reflect.io.AbstractFile
 import org.scalameta.reflection._
 
@@ -31,11 +33,16 @@ trait ConvertPhase {
 
     override def newPhase(prev: Phase): StdPhase = new StdPhase(prev) {
       override def apply(unit: CompilationUnit) {
-        val parsedTree = scala.meta.syntactic.Input.File(unit.source.path).parse[Source].asInstanceOf[api.Source]
-        val convertedTree = c.toMtree(unit.body, classOf[Source]).asInstanceOf[api.Source]
+        val parsedTree = scala.meta.syntactic.Input.File(unit.source.path).parse[mapi.Source].asInstanceOf[m.Source]
+        val convertedTree = c.toMtree(unit.body, classOf[mapi.Source]).asInstanceOf[m.Source]
+        val mergedTree = MergeTrees(parsedTree, convertedTree)
 
-        // TODO: once parsed trees are enriched with semantic information, there will be no need to store the two trees anymore.
-        unit.body.appendMetadata("scalametaSemantic" -> convertedTree).appendMetadata("scalametaSyntactic" -> MergeTrees(parsedTree, convertedTree))
+        // TODO: once the converter is rewritten to produce syntax-aware trees,
+        // we can delete MergeTrees and do just use convertedTree for everything
+        unit.body
+            .appendMetadata("scalameta" -> convertedTree)
+            .appendMetadata("scalametaSemantic" -> convertedTree)
+            .appendMetadata("scalametaSyntactic" -> mergedTree)
       }
     }
   }
