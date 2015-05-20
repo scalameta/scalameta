@@ -131,7 +131,7 @@ object build extends Build {
   ) aggregate (scalameta, foundation, tests)
 
   lazy val foundation = Project(
-    id   = "scalameta-foundation",
+    id   = "foundation",
     base = file("foundation")
   ) settings (
     publishableSettings: _*
