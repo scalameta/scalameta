@@ -71,7 +71,7 @@ private[meta] trait Api {
     @hosted def defn: Member = {
       defns match {
         case Seq(single) => single
-        case Seq(_, _*) => throw new SemanticException(s"multiple definitions found for ${tree.show[Summary]}")
+        case Seq(_, _*) => throw new SemanticException(s"multiple definitions found for ${showSummary(tree)}")
         case Seq() => unreachable(debug(tree, tree.show[Raw]))
       }
     }
@@ -162,12 +162,12 @@ private[meta] trait Api {
       val candidates = {
         if (tree.isClass || tree.isTrait) tree.owner.members.filter(m => m.isObject && m.name.toString == tree.name.toString)
         else if (tree.isObject) tree.owner.members.filter(m => (m.isClass || m.isTrait) && m.name.toString == tree.name.toString)
-        else throw new SemanticException(s"can't have companions for ${tree.show[Summary]}")
+        else throw new SemanticException(s"can't have companions for ${showSummary(tree)}")
       }
       require(candidates.length < 2)
       candidates match {
         case Seq(companion) => companion
-        case Seq() => throw new SemanticException(s"no companions for ${tree.show[Summary]}")
+        case Seq() => throw new SemanticException(s"no companions for ${showSummary(tree)}")
         case _ => unreachable(debug(tree, tree.show[Raw]))
       }
     }
@@ -466,23 +466,23 @@ private[meta] trait Api {
     @hosted private[meta] def internalSingle[T <: Member : ClassTag](filter: T => Boolean, diagnostic: String): T = {
       val filtered = internalFilter[T](filter)
       filtered match {
-        case Seq() => throw new SemanticException(s"""no $diagnostic found in ${tree.show[Summary]}""")
+        case Seq() => throw new SemanticException(s"""no $diagnostic found in ${showSummary(tree)}""")
         case Seq(single) => single
-        case Seq(_, _*) => throw new SemanticException(s"""multiple $diagnostic found in ${tree.show[Summary]}""")
+        case Seq(_, _*) => throw new SemanticException(s"""multiple $diagnostic found in ${showSummary(tree)}""")
       }
     }
     @hosted private[meta] def internalSingleNamed[T <: Member : ClassTag](name: String, filter: T => Boolean, diagnostic: String): T = {
       val filtered = internalFilter[T](x => x.name.toString == name && filter(x))
       filtered match {
-        case Seq() => throw new SemanticException(s"""no $diagnostic named "$name" found in ${tree.show[Summary]}""")
+        case Seq() => throw new SemanticException(s"""no $diagnostic named "$name" found in ${showSummary(tree)}""")
         case Seq(single) => single
-        case Seq(_, _*) => throw new SemanticException(s"""multiple $diagnostic named "$name" found in ${tree.show[Summary]}""")
+        case Seq(_, _*) => throw new SemanticException(s"""multiple $diagnostic named "$name" found in ${showSummary(tree)}""")
       }
     }
     @hosted private[meta] def internalMulti[T <: Member : ClassTag](name: String, filter: T => Boolean, diagnostic: String): Seq[T] = {
       val filtered = internalFilter[T](x => x.name.toString == name && filter(x))
       filtered match {
-        case Seq() => throw new SemanticException(s"""no $diagnostic named "$name" found in ${tree.show[Summary]}""")
+        case Seq() => throw new SemanticException(s"""no $diagnostic named "$name" found in ${showSummary(tree)}""")
         case Seq(single) => List(single)
         case Seq(multi @ _*) => multi.toList
       }
@@ -493,7 +493,7 @@ private[meta] trait Api {
         name match {
           case name: Term.Name => internalSingleNamed[Member.Term](name.toString, _ => true, "term members").require[U]
           case name: Type.Name => internalSingleNamed[Member.Type](name.toString, _ => true, "type members").require[U]
-          case _ => throw new SemanticException(s"""no member named $name found in ${tree.show[Summary]}""")
+          case _ => throw new SemanticException(s"""no member named $name found in ${showSummary(tree)}""")
         }
       case member: Member =>
         member.name match {
@@ -503,7 +503,7 @@ private[meta] trait Api {
               def thatDenot = that.require[impl.Member].name.require[impl.Name].denot.require[h.Denotation.Precomputed]
               scala.util.Try(thisDenot.symbol == thatDenot.symbol).getOrElse(false)
             }) match {
-              case Seq() => throw new SemanticException(s"no prototype for $member found in ${tree.show[Summary]}")
+              case Seq() => throw new SemanticException(s"no prototype for $member found in ${showSummary(tree)}")
               case Seq(single) => single.require[U]
               case _ => unreachable(debug(member, member.show[Raw]))
             }
@@ -687,5 +687,14 @@ private[meta] trait Api {
       // val prefixedCtor = tree.members(ctor.defn).name.require[Ctor.Name]
       loop(tree.require[impl.Type], ctor.require[impl.Ctor.Name])
     }
+  }
+
+  // TODO: Previously, we had a `dialectFromSemanticContext` implicit, which obviated the need in this method.
+  // However, this dialect materializer was really half-hearted in the sense that it worked for prettyprinting
+  // but not for quasiquotes (since quasiquotes need a dialect at compile time, not a potentially runtime dialect).
+  // Until this problem is fixed, I'm disabling the materializer altogether.
+  private def showSummary(tree: Tree)(implicit c: SemanticContext) {
+    implicit val d: Dialect = c.dialect
+    tree.show[Summary]
   }
 }
