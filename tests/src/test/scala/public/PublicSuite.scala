@@ -54,21 +54,10 @@ class PublicSuite extends FunSuite {
     """) === "dialect does not have precise enough type to be used in quasiquotes (to fix this, import something from scala.dialects, e.g. scala.meta.dialects.Scala211)")
   }
 
-  test("quasiquotes when everything's correct (static dialect)") {
+  test("quasiquotes when everything's correct") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
-      q"hello"
-    """) === "")
-  }
-
-  test("quasiquotes when everything's correct (static context)") {
-    assert(typecheckError("""
-      import scala.meta._
-      trait MyContext extends scala.meta.semantic.Context {
-        def dialect: scala.meta.dialects.Scala211.type = scala.meta.dialects.Scala211
-      }
-      implicit val c: MyContext = ???
       q"hello"
     """) === "")
   }
@@ -331,25 +320,6 @@ class PublicSuite extends FunSuite {
     """) === "")
   }
 
-  test("parse when everything's correct (static context)") {
-    assert(typecheckError("""
-      import scala.meta._
-      trait MyContext extends scala.meta.semantic.Context {
-        def dialect: scala.meta.dialects.Scala211.type = scala.meta.dialects.Scala211
-      }
-      implicit val c: MyContext = ???
-      "".parse[Term]
-    """) === "")
-  }
-
-  test("parse when everything's correct (dynamic context)") {
-    assert(typecheckError("""
-      import scala.meta._
-      implicit val c: scala.meta.semantic.Context = ???
-      "".parse[Term]
-    """) === "")
-  }
-
   test("parse with various input types") {
     assert(typecheckError("""
       import scala.meta._
@@ -398,25 +368,6 @@ class PublicSuite extends FunSuite {
     """) === "")
   }
 
-  test("tokens when everything's correct (static context)") {
-    assert(typecheckError("""
-      import scala.meta._
-      trait MyContext extends scala.meta.semantic.Context {
-        def dialect: scala.meta.dialects.Scala211.type = scala.meta.dialects.Scala211
-      }
-      implicit val c: MyContext = ???
-      "".tokens
-    """) === "")
-  }
-
-  test("tokens when everything's correct (dynamic context)") {
-    assert(typecheckError("""
-      import scala.meta._
-      implicit val c: scala.meta.semantic.Context = ???
-      "".tokens
-    """) === "")
-  }
-
   test("tokens with various input types") {
     assert(typecheckError("""
       import scala.meta._
@@ -454,25 +405,6 @@ class PublicSuite extends FunSuite {
     assert(typecheckError("""
       import scala.meta._
       implicit val dialect: scala.meta.Dialect = ???
-      (??? : Tree).show[Code]
-    """) === "")
-  }
-
-  test("show[Code] when everything's correct (static context)") {
-    assert(typecheckError("""
-      import scala.meta._
-      trait MyContext extends scala.meta.semantic.Context {
-        def dialect: scala.meta.dialects.Scala211.type = scala.meta.dialects.Scala211
-      }
-      implicit val c: MyContext = ???
-      (??? : Tree).show[Code]
-    """) === "")
-  }
-
-  test("show[Code] when everything's correct (dynamic context)") {
-    assert(typecheckError("""
-      import scala.meta._
-      implicit val c: scala.meta.semantic.Context = ???
       (??? : Tree).show[Code]
     """) === "")
   }
@@ -528,25 +460,6 @@ class PublicSuite extends FunSuite {
     assert(typecheckError("""
       import scala.meta._
       implicit val dialect: scala.meta.Dialect = ???
-      (??? : Tree).show[Positions]
-    """) === "")
-  }
-
-  test("show[Positions] when everything's correct (static context)") {
-    assert(typecheckError("""
-      import scala.meta._
-      trait MyContext extends scala.meta.semantic.Context {
-        def dialect: scala.meta.dialects.Scala211.type = scala.meta.dialects.Scala211
-      }
-      implicit val c: MyContext = ???
-      (??? : Tree).show[Positions]
-    """) === "")
-  }
-
-  test("show[Positions] when everything's correct (dynamic context)") {
-    assert(typecheckError("""
-      import scala.meta._
-      implicit val c: scala.meta.semantic.Context = ???
       (??? : Tree).show[Positions]
     """) === "")
   }

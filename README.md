@@ -37,9 +37,8 @@ import scala.meta.dialects.Scala211
 
 Semantic APIs require a full-blown typechecker to make sense of code, enabling scala.meta to resolve references, list members and so on.
 Implementing such a typechecker would be a humongous task, so we piggyback on existing implementations (e.g. scalac or Intellij),
-called *hosts*, to obtain necessary information.
-This means that, in order to use semantic APIs, you will have to have a host (an instance of scala.meta.semantic.Context) at hand.
-Good news is that, when you have a host, you don't need to select a dialect - each host knows the dialect that it works with:.
+called *hosts*, to obtain necessary information. This means that, in order to use semantic APIs, you will have to have a host
+(an instance of scala.meta.semantic.Context) at hand:
 
 ```
 import scala.meta._
