@@ -2,9 +2,11 @@ import scala.meta._
 import org.scalatest._
 
 import scala.meta.internal.ui.inferTokens
-import scala.meta.dialects.Scala211 // TODO: figure out this in case of use of another dialect
+import scala.meta.dialects.Scala211
 
-class InferSuite extends ParseSuite { // TODO
+import org.scalatest.FunSuite
+
+class InferSuite extends FunSuite {
 
   private def trimTokens(tks: Tokens) = tks.filterNot(tk => tk.isInstanceOf[Token.BOF] || tk.isInstanceOf[Token.EOF])
 

@@ -7,16 +7,20 @@ import scala.meta.dialects.Scala211
 import scala.meta.internal.{ast => impl}
 import scala.meta.tql._
 
+import org.scalatest.FunSuite
+
 import scala.util.{Try, Failure, Success}
 
-class InferAndReparseSuite extends ParseSuite {
+class InferAndReparseSuite extends FunSuite {
   var dir = new File(new File(System.getProperty("sbt.paths.tests.source")).getAbsolutePath)
   def isProjectRoot(dir: File) = dir != null && new File(dir.getAbsolutePath + File.separatorChar + "project" + File.separatorChar + "build.scala").exists
   while (dir != null && !isProjectRoot(dir)) dir = dir.getParentFile
   test("ProjectDir (" + dir.getAbsolutePath + ")")(assert(isProjectRoot(dir)))
 
+  // Avoiding XML literals
   val ignoredFiles = List("build.scala")
 
+  // Force synthetic tokens for all tree nodes using TQL
   val transformAll = topDown(transform {
 
       case t: impl.Term.This => t.copy() andCollect Unit
@@ -121,7 +125,7 @@ class InferAndReparseSuite extends ParseSuite {
 
       case t: impl.Template => t.copy() andCollect Unit
 
-      case t: impl.Mod.Annot => t.copy() andCollect Unit // TODO
+      case t: impl.Mod.Annot => t.copy() andCollect Unit
       case t: impl.Mod.Private => t.copy() andCollect Unit
       case t: impl.Mod.Protected => t.copy() andCollect Unit
       case t: impl.Mod.Implicit => t.copy() andCollect Unit
@@ -146,7 +150,7 @@ class InferAndReparseSuite extends ParseSuite {
       case t: impl.Import.Selector.Wildcard => t.copy() andCollect Unit
       case t: impl.Import => t.copy() andCollect Unit
 
-      case t: impl.Case => t.copy() andCollect Unit // TODO
+      case t: impl.Case => t.copy() andCollect Unit
 
       case t: impl.Source => t.copy() andCollect Unit
   })
@@ -162,7 +166,13 @@ class InferAndReparseSuite extends ParseSuite {
         val newCode = transformed.tree.get.tokens.map(_.show[Code]).mkString
         Try(newCode.parse[Source]) match {
           case Success(_) => /* cool */
+            println("====================================================")
+            println(content)
+            println("----------------------------------------------------")
             println(newCode)
+            println("----------------------------------------------------")
+            println(parsed.show[Code])
+            println("====================================================")
           case Failure(err) =>
             println("====================================================")
             println(content)

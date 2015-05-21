@@ -106,6 +106,8 @@ private[meta] object inferTokens {
        */
       def `oo` = flattks()()()
       def `o->o` = flattks()(newline)()
+      def `->o->` = flattks(newline)(newline)(newline)
+      def `->o` = flattks(newline)(newline)()
       def `o_o` = flattks()(toks" ")()
       def `o,o` = flattks()(toks", ")()
       def `o;o` = flattks()(toks"; ")()
@@ -206,6 +208,15 @@ private[meta] object inferTokens {
     def guessPatHasRefinement(t: Pat.Type.Compound): Boolean = t.refinement.nonEmpty
     def guessHasExpr(t: Term.Return): Boolean = t.expr match { case Lit.Unit() => false; case _ => true }
     def guessHasElsep(t: Term.If): Boolean = t.elsep match { case Lit.Unit() => false; case _ => true }
+    def guessHasBraces(t: Pkg): Boolean = {
+    def isOnlyChildOfOnlyChild(t: Pkg): Boolean = t.parent match {
+      case Some(pkg: Pkg) => isOnlyChildOfOnlyChild(pkg) && pkg.stats.length == 1
+      case Some(source: Source) => source.stats.length == 1
+      case None => true
+      case _ => unreachable
+    }
+    !isOnlyChildOfOnlyChild(t)
+  }
 
     /* Infer tokens for a given tree, making use of the helpers above */
     def tkz(tree: Tree): Tokens = tree match {
@@ -444,7 +455,9 @@ private[meta] object inferTokens {
       case t: Defn.Object => toks"${t.mods.`o_o_`}object ${t.name.tks}${t.ctor.tks}${apndTempl(t.templ)}"
       case t: Defn.Def => toks"${t.mods.`o_o_`}def ${t.name.tks}${t.tparams.`[o,o]`}${t.paramss.`(o,o)`}${apndDeclTpe(t.decltpe)} = ${t.body.tks}"
       case t: Defn.Macro => toks"${t.mods.`o_o_`}def ${t.name.tks}${t.tparams.`[o,o]`}${t.paramss.`(o,o)`}: ${t.tpe.tks} = macro ${t.body.tks}"
-      case t: Pkg => toks"package ${t.ref.tks} {${t.stats.`[->o->`}}" // TODO: check that out, seems more complicated in show[Code]
+      case t: Pkg => 
+      	if(guessHasBraces(t)) toks"package ${t.ref.tks}{${t.stats.`[->o`}}"
+      	else toks"package ${t.ref.tks}${t.stats.`->o`}"
       case t: Pkg.Object => toks"package ${t.mods.`o_o_`}object ${t.name.tks}${apndTempl(t.templ)}"
       case t: Ctor.Primary =>
         if (t.mods.nonEmpty && t.paramss.nonEmpty) toks"${t.mods.`o_o_`}${t.paramss.`(o,o)`}"
@@ -584,10 +597,7 @@ private[meta] object inferTokens {
     // step2.1: if so, indent it once
     // step2.2: if not, do nothing
     val toIndent = if (withoutBounds && onLine.length > 1) onLine.tail.init else onLine
-    val indented = toIndent.map { line =>
-      if (line.exists(_.input.isInstanceOf[Input.String])) toks"$indent$line".repr
-      else line
-    }
+    val indented = toIndent map (line =>toks"$indent$line".repr)
     if (withoutBounds && onLine.length > 1) Tokens((onLine.head ++ indented.flatten ++ onLine.last): _*)
     else Tokens(indented.flatten: _*)
   }
