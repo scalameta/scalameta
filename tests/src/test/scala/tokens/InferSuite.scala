@@ -700,7 +700,7 @@ class InferSuite extends ParseSuite { // TODO
     compareTokenCodes(tree, tree.copy())
   }
   test("InferLit7") {
-    val tree = "\"Hellow world\""
+    val tree = "\"Hello world\""
       .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Lit.String]
     compareTokenCodes(tree, tree.copy())
   }

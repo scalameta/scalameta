@@ -21,11 +21,13 @@ import scala.annotation.tailrec
 // TODO: figure out various situation where postfix operators, etc. should be in parenthesis. For now: 
 // it is always assumed.
 // TODO: check creation of tokens
-// TODO: move to newest version of SM.
+// TODO: figure out indentation (see below)
+// TODO: checkout how to avoid the import problem of dialect for quasiquotes. 
+//   => Send mail to Eugene tomorrow
 private[meta] object inferTokens {
 
-  def apply(tree: Tree)(implicit dialect: Dialect): Tokens = {
-    infer(tree)
+  def apply(tree: Tree): Tokens = {
+    infer(tree)(scala.meta.dialects.Scala211)
   }
 
   /* TODO: remove in the future, this is here now for partial implementation
@@ -72,34 +74,42 @@ private[meta] object inferTokens {
     import scala.meta.internal.ast._
     import scala.meta.dialects.Scala211 // TODO: figure out why the implicit in params is not enough
 
-    implicit def toTokenSeq(tk: Token) = Tokens(tk)
-
     val indentation = toks"  " // TODO: figure out how to find proper indent string
     val singleDoubleQuotes = Tokens(Token.Ident(Input.String("\""), dialect, 0, 1)) // TODO: for this line and below, figure out how to construct those without using Ident, which is a trick.
     val tripleDoubleQuotes = Tokens(Token.Ident(Input.String("\"\"\""), dialect, 0, 3))
+    val dot = Tokens(Token.Ident(Input.String("."), dialect, 0, 1))
     val newline = Tokens(Token.`\n`(Input.String("\n"), dialect, 0))
 
     implicit class RichTree(tree: Tree) {
-      def tks = indent(tree.tokens)(indentation) // TODO: use lif  les
+      def tks = tree match {
+      	/* Add indentations for stats only */
+      	case _: Case => indent(tree.tokens)(indentation)
+      	case _: Term => tree.tokens
+      	case _: Stat => indent(tree.tokens)(indentation)
+      	case _ => tree.tokens
+      }
       def `->o->` = toks"$newline$indentation${tree.tks}$newline"
     }
 
     implicit class RichTreeSeq(trees: Seq[Tree]) {
 
       /* Flatten tokens corresponding to a sequence of trees together. Can transform tokens corresponding to each tree using a first-order function. */
+      // TODO: see if we should not remove "op", it's not used for now.
+      // TODO: it was used before for (x: Seq[Token]) => if (!x.isEmpty && x.last.code == "\n") x.init else x
+      // in ->o and ->o->.
       def flattks(start: Tokens = toks"")(sep: Tokens = toks"", op: (Seq[Token] => Seq[Token]) = (x: Seq[Token]) => x)(end: Tokens = toks"") = {
         val sq = trees match {
           case Nil => toks""
-          case _ => start ++ trees.init.flatMap(v => op(v.tokens.repr) ++ sep) ++ op(trees.last.tokens.repr) ++ end
+          case _ => start ++ trees.init.flatMap(v => op(v.tks.repr) ++ sep) ++ op(trees.last.tks.repr) ++ end
         }
         Tokens(sq: _*)
       }
 
       /* various combiners for tokens, o representing subsequence */
       def `oo` = flattks()()()
-      def `o[o` = flattks()(newline)()
-      def `->o->` = flattks(toks"$newline")(toks"$newline", (x: Seq[Token]) => if (!x.isEmpty && x.last.code == "\n") x.init else x)(newline)
-      def `->o` = flattks(toks"$newline")(toks"$newline", (x: Seq[Token]) => if (!x.isEmpty && x.last.code == "\n") x.init else x)()
+      def `o->o` = flattks()(newline)()
+      def `->o->` = flattks(newline)(newline)(newline)
+      def `->o` = flattks(newline)(newline)()
       def `o_o` = flattks()(toks" ")()
       def `o,o` = flattks()(toks", ")()
       def `o;o` = flattks()(toks"; ")()
@@ -195,9 +205,9 @@ private[meta] object inferTokens {
     def tkz(tree: Tree): Tokens = tree match {
       // Bottom
       case t: Quasi if t.rank > 0  => 
-      	val rank = mineIdentTk("." * (t.rank + 1)) // TODO: should not be mined using Idents
+      	val rank = Tokens((0 to t.rank) map (dot):_*)
       	if (!t.tree.isInstanceOf[Quasi])  toks"$rank{${t.tree.asInstanceOf[Tree].tks}}"
-      	else 														  toks"$rank" // TODO: not use, figure out that bit
+      	else 														  rank
       case t: Quasi if t.rank == 0 => 
       	val innerTreeTks = t.tree.asInstanceOf[Tree].tks
       	val name = mineIdentTk(t.pt.getName.stripPrefix("scala.meta.").stripPrefix("internal.ast."))
@@ -210,7 +220,7 @@ private[meta] object inferTokens {
         else mineIdentTk(t.value)
 
       // Term
-      case t: Term if t.isCtorCall   => // TODO: check
+      case t: Term if t.isCtorCall   =>
         if (t.isInstanceOf[Ctor.Ref.Function]) toks"=>${t.ctorArgss.`(o,o)`}"
         else toks"${t.ctorTpe.tks}${t.ctorArgss.`(o,o)`}"
       case t: Term.This              =>
@@ -523,7 +533,7 @@ private[meta] object inferTokens {
 	      toks"case ${t.pat.tks}$pcond =>$pbody"
 
       // Source
-      case t: Source => t.stats.`o[o`
+      case t: Source => Tokens(t.stats.flatMap(s => s.tokens.repr ++ newline): _*)
     }
 
     tkz(tree.asInstanceOf[scala.meta.internal.ast.Tree])
@@ -552,31 +562,29 @@ private[meta] object inferTokens {
   /* Adding proper indentation to the token stream */
 
   // TODO: clean that up, it is far from perfect.
-  private def indent(tks: Tokens)(indent: Tokens)(implicit dialect: Dialect): Tokens = {
+  private def indent(tks: Tokens, withoutBounds: Boolean = false)(indent: Tokens)(implicit dialect: Dialect): Tokens = {
   	import scala.meta.dialects.Scala211 // TODO: remove, figure that out!
     //tks.foreach { tk => println(tk.input) }
-    // step1: split tokens per line (must contain \n, otherwise do nothing)
-    if (!tks.exists(_.code == "\n")) tks
-    else {
-      val onLine = {
-        @tailrec def loop(in: Seq[Token], out: Seq[Seq[Token]]): Seq[Seq[Token]] = in match {
-        	case Nil => out
-        	case _ if !in.exists(_.code == "\n") => out :+ in
-        	case _ =>
-        			val (bf, af) = in.span(_.code != "\n")
-        			loop(af.tail, out :+ (bf :+ af.head))
-        }
-        loop(tks.repr, Seq())
+    val onLine = {
+      @tailrec def loop(in: Seq[Token], out: Seq[Seq[Token]]): Seq[Seq[Token]] = in match {
+      	case Nil => out
+      	case _ if !in.exists(_.code == "\n") => out :+ in
+      	case _ =>
+      			val (bf, af) = in.span(_.code != "\n")
+      			loop(af.tail, out :+ (bf :+ af.head))
       }
-	    // step2: check, for each line, if the line contain synthetic tokens
-	    // step2.1: if so, indent it once
-    	// step2.2: if not, do nothing
-	    val indented = onLine.map { line => 
-	    	if (line.exists(_.input.isInstanceOf[Input.String])) toks"$indent$line".repr
-	    	else                                                 line
-	    }
-    	Tokens(indented.flatten: _*)
+      loop(tks.repr, Seq())
     }
+    // step2: check, for each line, if the line contain synthetic tokens
+    // step2.1: if so, indent it once
+  	// step2.2: if not, do nothing
+  	val toIndent = if(withoutBounds && onLine.length >= 2) onLine.tail.init else onLine
+    val indented = toIndent.map { line => 
+    	if (line.exists(_.input.isInstanceOf[Input.String])) toks"$indent$line".repr
+    	else                                                 line
+    }
+  	if(withoutBounds) Tokens((onLine.head ++ indented.flatten ++ onLine.last): _*)
+  	else             Tokens(indented.flatten: _*)
   }
 
   // TODO: check if required
