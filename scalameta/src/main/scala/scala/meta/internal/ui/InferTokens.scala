@@ -18,25 +18,15 @@ import scala.language.implicitConversions
 
 import scala.annotation.tailrec
 
-// TODO: figure out various situation where postfix operators, etc. should be in parenthesis. For now: 
-// it is always assumed.
-// TODO: check creation of tokens
-// TODO: checkout how to avoid the import problem of dialect for quasiquotes. 
-//   => Send mail to Eugene tomorrow
+// TODO: figure out various situation where postfix operators, etc. should be in parenthesis. For now: it is always assumed.
+// TODO: check creation of tokens (using Ident, etc)
+// TODO: put back position to their right place, if required?
+
+// TODO: this infers tokens for the Scala211 dialect due to token quasiquotes (the dialect needs to be explicitly imported). It should be changed in the future.
 private[meta] object inferTokens {
 
   def apply(tree: Tree): Tokens = {
-    infer(tree)(scala.meta.dialects.Scala211)
-  }
-
-  /* TODO: remove in the future, this is here now for partial implementation
-   * testing. */
-  def generic(tree: Tree)(implicit dialect: Dialect): Tokens = {
-    val code = tree.show[Code]
-    (tree match {
-      case _: Source => code.parse[Source]
-      case _: Stat => code.parse[Stat]
-    }).tokens
+    infer(tree)(scala.meta.dialects.Scala211) // as explained above, forcing dialect.
   }
 
   /* Generate tokens from various inputs */
@@ -44,8 +34,7 @@ private[meta] object inferTokens {
     implicit def stringToInput(str: String) = Input.String(str)
     val str = value.toString
     val length = str.length
-    // TODO: figure out what action should be taken depending of the boolean
-    // TODO: the strings here should be modified (e.g. adding L for long, etc.)
+    // TODO: figure out what action should be implemented depending of the boolean in token functions - not sure why it is there
     val newTok = value match {
       case y: Int => Token.Literal.Int(str, dialect, 0, length, (x: Boolean) => y)
       case y: Long => Token.Literal.Long(str + "L", dialect, 0, length + 1, (x: Boolean) => y)
@@ -71,10 +60,11 @@ private[meta] object inferTokens {
   /* Generate synthetic tokens */
   private def infer(tree: Tree)(implicit dialect: Dialect): Tokens = {
     import scala.meta.internal.ast._
-    import scala.meta.dialects.Scala211 // TODO: figure out why the implicit in params is not enough
+    import scala.meta.dialects.Scala211 // Unfortunately
 
     val indentation = toks"  " // TODO: figure out how to find proper indent string
-    val singleDoubleQuotes = Tokens(Token.Ident(Input.String("\""), dialect, 0, 1)) // TODO: for this line and below, figure out how to construct those without using Ident, which is a trick.
+    // TODO: for this line and below, figure out how to construct those without using Ident, which is a trick.
+    val singleDoubleQuotes = Tokens(Token.Ident(Input.String("\""), dialect, 0, 1))
     val tripleDoubleQuotes = Tokens(Token.Ident(Input.String("\"\"\""), dialect, 0, 3))
     val dot = Tokens(Token.Ident(Input.String("."), dialect, 0, 1))
     val newline = Tokens(Token.`\n`(Input.String("\n"), dialect, 0))
@@ -82,7 +72,7 @@ private[meta] object inferTokens {
     implicit class RichTree(tree: Tree) {
       def tks = tree.tokens
       def indTks = indent(tree.tokens)(indentation)
-      def `->o->` = toks"$newline${tree.indTks}$newline"
+      def `[->o->` = toks"$newline${tree.indTks}$newline"
     }
 
     implicit class RichTreeSeq(trees: Seq[Tree]) {
@@ -120,14 +110,6 @@ private[meta] object inferTokens {
     implicit class RichTreeSeqSeq(trees: Seq[Seq[Tree]]) {
     	// TODO: deduplicate
       def `(o,o)` = {
-        val sq = trees match {
-          case Nil => toks""
-          case _ if trees.length == 1 && trees.head.length == 0 => toks"()"
-          case _ => trees.flatMap(_.`(o,o)`)
-        }
-        Tokens(sq: _*)
-      }
-      def `[(o,o)` = {
         val sq = trees match {
           case Nil => toks""
           case _ if trees.length == 1 && trees.head.length == 0 => toks"()"
@@ -305,7 +287,7 @@ private[meta] object inferTokens {
         val finallyBlock = if (t.finallyp.isDefined) toks" finally ${t.finallyp.get.tks}" else toks""
         tryBlock ++ catchBlock ++ finallyBlock
       case t: Term.TryWithTerm =>
-        val tryBlock = toks"try ${t.expr.tks} catch {${t.catchp.`->o->`}}"
+        val tryBlock = toks"try ${t.expr.tks} catch {${t.catchp.`[->o->`}}"
         val finallyBlock = if (t.finallyp.isDefined) toks" finally ${t.finallyp.get.tks}" else toks""
         tryBlock ++ finallyBlock
       case t: Term.Function =>
@@ -495,7 +477,7 @@ private[meta] object inferTokens {
         }
 
       // Mod
-      case Mod.Annot(tree) => toks"@${tree.ctorTpe.tks}${tree.ctorArgss.`[(o,o)`}"
+      case Mod.Annot(tree) => toks"@${tree.ctorTpe.tks}${tree.ctorArgss.`(o,o)`}"
       case Mod.Private(Name.Anonymous()) => toks"private"
       case Mod.Private(name) => toks"private[${name.tks}]"
       case Mod.Protected(Name.Anonymous()) => toks"protected"
@@ -581,7 +563,7 @@ private[meta] object inferTokens {
 
   // TODO: clean that up, it is not perfect.
   private def indent(tks: Seq[Token], withoutBounds: Boolean = false)(indent: Tokens)(implicit dialect: Dialect): Tokens = {
-    import scala.meta.dialects.Scala211 // TODO: remove, figure that out!	
+    import scala.meta.dialects.Scala211 // Unfortunately
     val onLine = {
       @tailrec def loop(in: Seq[Token], out: Seq[Seq[Token]]): Seq[Seq[Token]] = in match {
         case Nil => out
