@@ -21,7 +21,6 @@ import scala.annotation.tailrec
 // TODO: figure out various situation where postfix operators, etc. should be in parenthesis. For now: 
 // it is always assumed.
 // TODO: check creation of tokens
-// TODO: figure out indentation (see below)
 // TODO: checkout how to avoid the import problem of dialect for quasiquotes. 
 //   => Send mail to Eugene tomorrow
 private[meta] object inferTokens {
@@ -580,7 +579,7 @@ private[meta] object inferTokens {
 
   /* Adding proper indentation to the token stream */
 
-  // TODO: clean that up, it is far from perfect.
+  // TODO: clean that up, it is not perfect.
   private def indent(tks: Seq[Token], withoutBounds: Boolean = false)(indent: Tokens)(implicit dialect: Dialect): Tokens = {
     import scala.meta.dialects.Scala211 // TODO: remove, figure that out!	
     val onLine = {
@@ -593,9 +592,6 @@ private[meta] object inferTokens {
       }
       loop(tks.repr, Seq())
     }
-    // step2: check, for each line, if the line contain synthetic tokens
-    // step2.1: if so, indent it once
-    // step2.2: if not, do nothing
     val toIndent = if (withoutBounds && onLine.length > 1) onLine.tail.init else onLine
     val indented = toIndent map (line =>toks"$indent$line".repr)
     if (withoutBounds && onLine.length > 1) Tokens((onLine.head ++ indented.flatten ++ onLine.last): _*)
