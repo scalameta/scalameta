@@ -18,7 +18,6 @@ import scala.language.implicitConversions
 
 import scala.annotation.tailrec
 
-// TODO: check creation of tokens (using Ident, etc)
 // TODO: put back position to their right place, if required?
 
 // TODO: this infers tokens for the Scala211 dialect due to token quasiquotes (the dialect needs to be explicitly imported). It should be changed in the future.
@@ -28,7 +27,7 @@ private[meta] object inferTokens {
     implace(infer(tree)(scala.meta.dialects.Scala211)) // as explained above, forcing dialect.
   }
 
-  /* Generate tokens from various inputs */
+  /* Generate a single token for a literal */
   private def mineLitTk(value: Any)(implicit dialect: Dialect): Tokens = {
     implicit def stringToInput(str: String) = Input.String(str)
     val str = value.toString
@@ -53,29 +52,28 @@ private[meta] object inferTokens {
     Tokens(newTok)
   }
 
-  /* Generate tokens for idents */
+  /* Generate a single token for ident */
   private def mineIdentTk(value: String)(implicit dialect: Dialect): Tokens = Tokens(Token.Ident(Input.String(value), dialect, 0, value.length))
 
-  /* Generate synthetic tokens */
+  /* Global infering function */
   private def infer(tree: Tree)(implicit dialect: Dialect): Tokens = {
     import scala.meta.internal.ast._
     import scala.meta.dialects.Scala211 // Unfortunately
 
-    val indentation = toks"  " // TODO: figure out how to find proper indent string
-    // TODO: for this line and below, figure out how to construct those without using Ident, which is a trick.
-    val singleDoubleQuotes = Tokens(Token.Ident(Input.String("\""), dialect, 0, 1))
-    val tripleDoubleQuotes = Tokens(Token.Ident(Input.String("\"\"\""), dialect, 0, 3))
-    val dot = Tokens(Token.Ident(Input.String("."), dialect, 0, 1))
+    /* partial token vectors used in various constructions */
+    val indentation = toks"  "
+    val singleDoubleQuotes = Tokens(Token.Literal.String(Input.String("\""), dialect, 0, 1, "\""))
+    val tripleDoubleQuotes = Tokens(Token.Literal.String(Input.String("\"\"\""), dialect, 0, 3, "\"\"\""))
+    val dot = Tokens(Token.`.`(Input.String("."), dialect, 0))
     val newline = Tokens(Token.`\n`(Input.String("\n"), dialect, 0))
 
+    /* Enrichments for token manipulation */
     implicit class RichTree(tree: Tree) {
       def tks = tokensWithParents(tree)
       def indTks = indent(tokensWithParents(tree))(indentation)
       def `[->o->` = toks"$newline${tree.indTks}$newline"
     }
-
     implicit class RichTreeSeq(trees: Seq[Tree]) {
-
       /* Flatten tokens corresponding to a sequence of trees together. Can transform tokens corresponding to each tree using a first-order function. */
       def flattks(start: Tokens = toks"")(sep: Tokens = toks"", op: (Tokens => Tokens) = (x: Tokens) => x)(end: Tokens = toks"") = {
         val sq = trees match {
@@ -84,7 +82,6 @@ private[meta] object inferTokens {
         }
         Tokens(sq: _*)
       }
-
       /* various combiners for tokens:
        * - o   representing subsequence
        * - [   represent an indentation
@@ -92,10 +89,8 @@ private[meta] object inferTokens {
        * - _   represent a space
        * -     other tokens represent themselves. 
        */
-
       val indentFun: (Tokens => Tokens) = (s: Tokens) => indent(s)(indentation)
       val avoidDoubleLineFun: (Tokens => Tokens) = (s: Tokens) => if (s.last.code == "\n") Tokens(s.repr.init: _*) else s
-
       def `oo` = flattks()()()
       def `o->o` = flattks()(newline, avoidDoubleLineFun)()
       def `->o->` = flattks(newline)(newline, avoidDoubleLineFun)(newline)
@@ -133,18 +128,20 @@ private[meta] object inferTokens {
       }
       toks"$ext$tpl"
     }
-    /* append a declared type to a val / def / var */
+
+    /* Append a declared type to a val / def / var */
     def apndDeclTpe(t: Option[Type]): Tokens = t match {
       case Some(tpe) if tpe.tks.length > 0 => toks": ${tpe.tks}"
       case _ => toks""
     }
+
+    /* Append bounds to a specific type declaration */
     def apndTpeBounds(t: Type.Bounds): Tokens = {
       if (t.lo.isDefined || t.hi.isDefined) toks" ${t.tks}"
       else toks""
     }
 
     /* The helpers below are heavily based on the ones used for show[Code] */
-
     def guessIsBackquoted(t: Name): Boolean = {
       def cantBeWrittenWithoutBackquotes(t: Name): Boolean = {
         t.value != "this" && (keywords.contains(t.value) || t.value.contains(" "))
@@ -201,11 +198,11 @@ private[meta] object inferTokens {
       !isOnlyChildOfOnlyChild(t)
     }
 
+    /* Infer parenthesis for a token based on its parent and generate the corresponding token stream using the `tkz` dispatcher. */
     def tokensWithParents(tree: Tree): Tokens = {
       val withParents = (tree, tree.parent) match {
         /* Covering cases for calls on Term.Match  */
         case (_: Term.Match, Some(_: Term.Select)) => true
-
         /* Covering cases for Term.ApplyInfix */
         case (_: Term.ApplyInfix, Some(t: Term.ApplyInfix)) => true
         case (_, Some(t: Term.ApplyInfix)) if t.args.length == 1 =>
@@ -218,36 +215,24 @@ private[meta] object inferTokens {
             case _: Term.ForYield => true
             case _ => false
           }
-
         /* Covering cases for Term.Ascibe */
         case (_: Term.Ascribe, Some(_: Term.Match)) => true
         case (_: Term.Ascribe, Some(_: Term.Select)) => true
-
         /* Covering cases for Term.Annotate */
         case (_: Term.Annotate, Some(_: Term.Match)) => true
         case (_: Term.Annotate, Some(_: Term.Select)) => true
-
         /* Covering cases for Type.Function */
         case (_: Type.Function, None) => true /* TODO: figure out why a function in a template as an extends does not have a parent! */
-
         /* Covering cases for Pat.ExtractInfix */
         case (t: Pat.ExtractInfix, Some(_: Pat.ExtractInfix)) => true
-
         /* Covering cases for Pat.Typed */
         case (t: Pat.Typed, Some(_: Pat.ExtractInfix)) => true
-
-        /*case (t: Type.Function,_) => 
-        	println("------------------------")
-        	println(t.show[Raw])
-        	t.parent.map(x => println(x.show[Raw]))
-        	println("------------------------")
-        	false*/
         case _ => false
       }
       if (withParents) toks"(${tree.tokens})" else tree.tokens
     }
 
-    /* Infer tokens for a given tree, making use of the helpers above */
+    /* Infer tokens for a given tree, making use of the helpers above. */
     def tkz(tree: Tree): Tokens = tree match {
       // Bottom
       case t: Quasi if t.rank > 0 =>
