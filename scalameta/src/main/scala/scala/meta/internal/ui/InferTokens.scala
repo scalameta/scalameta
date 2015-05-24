@@ -18,7 +18,6 @@ import scala.language.implicitConversions
 
 import scala.annotation.tailrec
 
-// TODO: figure out various situation where postfix operators, etc. should be in parenthesis. For now: it is always assumed.
 // TODO: check creation of tokens (using Ident, etc)
 // TODO: put back position to their right place, if required?
 
@@ -26,7 +25,7 @@ import scala.annotation.tailrec
 private[meta] object inferTokens {
 
   def apply(tree: Tree): Tokens = {
-    infer(tree)(scala.meta.dialects.Scala211) // as explained above, forcing dialect.
+    implace(infer(tree)(scala.meta.dialects.Scala211)) // as explained above, forcing dialect.
   }
 
   /* Generate tokens from various inputs */
@@ -70,8 +69,8 @@ private[meta] object inferTokens {
     val newline = Tokens(Token.`\n`(Input.String("\n"), dialect, 0))
 
     implicit class RichTree(tree: Tree) {
-      def tks = parenthesize(tree)
-      def indTks = indent(parenthesize(tree))(indentation)
+      def tks = tokensWithParents(tree)
+      def indTks = indent(tokensWithParents(tree))(indentation)
       def `[->o->` = toks"$newline${tree.indTks}$newline"
     }
 
@@ -112,7 +111,6 @@ private[meta] object inferTokens {
       def `[->o` = flattks(newline)(newline, avoidDoubleLineFun andThen indentFun)()
     }
     implicit class RichTreeSeqSeq(trees: Seq[Seq[Tree]]) {
-      // TODO: deduplicate
       def `(o,o)` = {
         val sq = trees match {
           case Nil => toks""
@@ -203,8 +201,50 @@ private[meta] object inferTokens {
       !isOnlyChildOfOnlyChild(t)
     }
 
-    def parenthesize(tree: Tree): Tokens = tree match {
-      case _ => tree.tokens
+    def tokensWithParents(tree: Tree): Tokens = {
+      val withParents = (tree, tree.parent) match {
+        /* Covering cases for calls on Term.Match  */
+        case (_: Term.Match, Some(_: Term.Select)) => true
+
+        /* Covering cases for Term.ApplyInfix */
+        case (_: Term.ApplyInfix, Some(t: Term.ApplyInfix)) => true
+        case (_, Some(t: Term.ApplyInfix)) if t.args.length == 1 =>
+          tree match {
+            case _: Term.If => true
+            case _: Term.Do => true
+            case _: Term.While => true
+            case _: Term.Function => true
+            case _: Term.For => true
+            case _: Term.ForYield => true
+            case _ => false
+          }
+
+        /* Covering cases for Term.Ascibe */
+        case (_: Term.Ascribe, Some(_: Term.Match)) => true
+        case (_: Term.Ascribe, Some(_: Term.Select)) => true
+
+        /* Covering cases for Term.Annotate */
+        case (_: Term.Annotate, Some(_: Term.Match)) => true
+        case (_: Term.Annotate, Some(_: Term.Select)) => true
+
+        /* Covering cases for Type.Function */
+        case (_: Type.Function, None) => true /* TODO: figure out why a function in a template as an extends does not have a parent! */
+
+        /* Covering cases for Pat.ExtractInfix */
+        case (t: Pat.ExtractInfix, Some(_: Pat.ExtractInfix)) => true
+
+        /* Covering cases for Pat.Typed */
+        case (t: Pat.Typed, Some(_: Pat.ExtractInfix)) => true
+
+        /*case (t: Type.Function,_) => 
+        	println("------------------------")
+        	println(t.show[Raw])
+        	t.parent.map(x => println(x.show[Raw]))
+        	println("------------------------")
+        	false*/
+        case _ => false
+      }
+      if (withParents) toks"(${tree.tokens})" else tree.tokens
     }
 
     /* Infer tokens for a given tree, making use of the helpers above */
@@ -247,14 +287,16 @@ private[meta] object inferTokens {
         }
         val quote: Tokens = if (t.parts.map(_.value).exists(s => s.contains(EOL) || s.contains("\""))) tripleDoubleQuotes else singleDoubleQuotes
         toks"${mineIdentTk(t.prefix.value)}$quote${zipped.`oo`}${mineIdentTk(t.parts.last.value)}$quote"
-      case t: Term.Apply => toks"${t.fun.tks}${t.args.`(o,o)`}"
+      case t: Term.Apply =>
+        if (t.args.size == 1 && t.args.head.isInstanceOf[Term.PartialFunction]) toks"${t.fun.tks} ${t.args.`o,o`}"
+        else toks"${t.fun.tks}${t.args.`(o,o)`}"
       case t: Term.ApplyType => toks"${t.fun.tks}${t.targs.`[o,o]`}"
       case t: Term.ApplyInfix =>
         val rhs = t.args match {
-          case (arg: Term) :: Nil => toks"(${arg.tks})"
+          case (arg: Term) :: Nil => toks"${arg.tks}"
           case args => args.`(o,o)`
         }
-        toks"(${t.lhs.tks} ${t.op.tks} $rhs)"
+        toks"${t.lhs.tks} ${t.op.tks} $rhs"
       case t: Term.ApplyUnary => toks"${t.op.tks}${t.arg.tks}"
       case t: Term.Assign => toks"${t.lhs.tks} = ${t.rhs.tks}"
       case t: Term.Update => toks"${t.fun.tks}${t.argss.`(o,o)`} = ${t.rhs.tks}"
@@ -262,8 +304,8 @@ private[meta] object inferTokens {
         if (guessHasExpr(t)) toks"return ${t.expr.tks}"
         else toks"return"
       case t: Term.Throw => toks"throw ${t.expr.tks}"
-      case t: Term.Ascribe => toks"(${t.expr.tks}: ${t.tpe.tks})"
-      case t: Term.Annotate => toks"(${t.expr.tks}: ${t.annots.`o_o`})"
+      case t: Term.Ascribe => toks"${t.expr.tks}: ${t.tpe.tks}"
+      case t: Term.Annotate => toks"${t.expr.tks}: ${t.annots.`o_o`}"
       case t: Term.Tuple => t.elements.`(o,o)`
       case t: Term.Block =>
         import Term.{ Block, Function }
@@ -288,7 +330,7 @@ private[meta] object inferTokens {
       case t: Term.If =>
         if (guessHasElsep(t)) toks"if (${t.cond.tks}) ${t.thenp.tks} else ${t.elsep.tks}"
         else toks"if (${t.cond.tks}) ${t.thenp.tks}"
-      case t: Term.Match => toks"(${t.scrut.tks} match {${t.cases.`[->o->`}})"
+      case t: Term.Match => toks"${t.scrut.tks} match {${t.cases.`[->o->`}}"
       case t: Term.TryWithCases =>
         val tryBlock = toks"try ${t.expr.tks}"
         val catchBlock = if (t.catchp.nonEmpty) toks" catch {${t.catchp.`[->o->`}}" else toks""
@@ -336,14 +378,14 @@ private[meta] object inferTokens {
       case t: Type.Project => toks"${t.qual.tks}#${t.name.tks}"
       case t: Type.Singleton => toks"${t.ref.tks}.type"
       case t: Type.Apply => toks"${t.tpe.tks}[${t.args.`o,o`}]"
-      case t: Type.ApplyInfix => toks"(${t.lhs.tks} ${t.op.tks} ${t.rhs.tks})"
+      case t: Type.ApplyInfix => toks"${t.lhs.tks} ${t.op.tks} ${t.rhs.tks}"
       case t: Type.Function =>
         val params = {
           if (t.params.isEmpty) toks"()"
           else if (t.params.size == 1) t.params.head.tks
           else t.params.`(o,o)`
         }
-        toks"($params => ${t.res.tks})"
+        toks"$params => ${t.res.tks}"
       case t: Type.Tuple => t.elements.`(o,o)`
       case t: Type.Compound =>
         val tpes = t.tpes.flattks()(toks" with ")()
@@ -384,8 +426,8 @@ private[meta] object inferTokens {
       case t: Pat.Extract => toks"${t.ref.tks}${t.targs.`[o,o]`}${t.args.`(o,o)`}"
       case t: Pat.ExtractInfix =>
         t.rhs match {
-          case x :: Nil => toks"(${t.lhs.tks} ${t.ref.tks} ${x.tks})"
-          case _ => toks"(${t.lhs.tks} ${t.ref.tks} ${t.rhs.`(o,o)`})"
+          case x :: Nil => toks"${t.lhs.tks} ${t.ref.tks} ${x.tks}"
+          case _ => toks"${t.lhs.tks} ${t.ref.tks} ${t.rhs.`(o,o)`}"
         }
       case t: Pat.Interpolate =>
         val zipped = (t.parts zip t.args) map {
@@ -393,7 +435,7 @@ private[meta] object inferTokens {
           case (part, args) => toks"${mineIdentTk(part.value)}$${${args.tks}}"
         }
         toks"${mineIdentTk(t.prefix.value)}$singleDoubleQuotes${zipped.`oo`}${mineIdentTk(t.parts.last.value)}$singleDoubleQuotes"
-      case t: Pat.Typed => toks"(${t.lhs.tks}: ${t.rhs.tks})"
+      case t: Pat.Typed => toks"${t.lhs.tks}: ${t.rhs.tks}"
       case _: Pat.Arg.SeqWildcard => toks"_*"
 
       // Pat.Type
@@ -402,7 +444,7 @@ private[meta] object inferTokens {
       case t: Pat.Var.Type => mineIdentTk(t.name.value)
       case t: Pat.Type.Project => toks"${t.qual.tks}#${t.name.tks}"
       case t: Pat.Type.Apply => toks"${t.tpe.tks}${t.args.`[o,o]`}"
-      case t: Pat.Type.ApplyInfix => toks"(${t.lhs.tks} ${t.op.tks} ${t.rhs.tks})"
+      case t: Pat.Type.ApplyInfix => toks"${t.lhs.tks} ${t.op.tks} ${t.rhs.tks}"
       case t: Pat.Type.Function =>
         val params = if (t.params.size == 1) t.params.head.tks else t.params.`(o,o)`
         toks"$params => ${t.res.tks}"
@@ -547,28 +589,7 @@ private[meta] object inferTokens {
     tkz(tree.asInstanceOf[scala.meta.internal.ast.Tree])
   }
 
-  // TODO: check what is the best way to do that. The problem is as follow 
-  //
-  // 1. Indentation is already present in original token streams.
-  //   - We can't just add one indentation token
-  //   - Moreover, this is even more true that indentation is not added to a synthetic tree
-  //   i.e. let say a tree t2 (synth.), which itself contain a tree t3 (original). Then if
-  //        t2 was inside a tree t, we can't simply add indentation to all the lines in the 
-  //        token stream of t2, as t3 already had some kind of indentation present.
-  //
-  // 2. Indentation is not present in generated code
-  //   - But it is practically impossible to infer this at a call to inferToken,
-  //   even if a subtree has some knowledge of its parent (but not the tokens corresponding 
-  //   to its parents - it would lead to recursion explosion).
-  //
-  // A solution could be:
-  // 1. Tokens contain inputs. we can skip indentation for all tokens with real inputs.
-  // 2. We can add one indentation shift to all tokens with virtual inputs.
-  // 3. This will have to be based on: 1) the input type; 2) the position in a line.
-  // Line return could be checked at runtime.
-
   /* Adding proper indentation to the token stream */
-
   private def indent(tks: Tokens)(indent: Tokens)(implicit dialect: Dialect): Tokens = {
     import scala.meta.dialects.Scala211 // Unfortunately
     val onLine = {
@@ -584,9 +605,6 @@ private[meta] object inferTokens {
     val indented = onLine map (line => toks"$indent$line".repr)
     Tokens(indented.flatten: _*)
   }
-
-  // TODO: check if required
-  // Calls to the token quasiquote is not doing it so far.
 
   /* Put back all the positions at the righ places in a sequence of tokens. */
   private def implace(tks: Tokens): Tokens = {

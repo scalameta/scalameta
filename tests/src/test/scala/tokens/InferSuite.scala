@@ -105,12 +105,12 @@ class InferSuite extends FunSuite {
     compareTokenCodes(tree, tree.copy())
   }
   test("InferApplyInfix1") {
-    val tree = """(str mkString (","))""".trim
+    val tree = """str mkString "," """.trim
       .parse[Term].asInstanceOf[scala.meta.internal.ast.Term.ApplyInfix]
     compareTokenCodes(tree, tree.copy())
   }
   test("InferApplyInfix2") {
-    val tree = """(str mkString ("[", ",", "]"))""".trim
+    val tree = """str mkString ("[", ",", "]")""".trim
       .parse[Term].asInstanceOf[scala.meta.internal.ast.Term.ApplyInfix]
     compareTokenCodes(tree, tree.copy())
   }
@@ -164,12 +164,12 @@ class InferSuite extends FunSuite {
     compareTokenCodes(tree, tree.copy())
   }
   test("InferAscribe1") {
-    val tree = """(x: Int)"""
+    val tree = """x: Int"""
       .parse[Term].asInstanceOf[scala.meta.internal.ast.Term.Ascribe]
     compareTokenCodes(tree, tree.copy())
   }
   test("InferAnnotate1") {
-    val tree = """(x: @Test @Via)"""
+    val tree = """x: @Test @Via"""
       .parse[Term].asInstanceOf[scala.meta.internal.ast.Term.Annotate]
     compareTokenCodes(tree, tree.copy())
   }
@@ -233,12 +233,12 @@ class InferSuite extends FunSuite {
     compareTokenCodes(tree, tree.copy())
   }
   test("InferMatch1") {
-    val tree = """(x match {
+    val tree = """x match {
                  |  case u: Int => {
                  |    println("hi") /* this is a comment */
                  |    }
                  |  case u: String => println(u)
-                 |})"""
+                 |}"""
       .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Term.Match]
     compareTokenCodes(tree, tree.copy())
   }
@@ -427,17 +427,17 @@ class InferSuite extends FunSuite {
     compareTokenCodes(tree, tree.copy())
   }
   test("InferTypeApplyInfix1") {
-    val tree = """(A op B)"""
+    val tree = """A op B"""
       .stripMargin.parse[Type].asInstanceOf[scala.meta.internal.ast.Type.ApplyInfix]
     compareTokenCodes(tree, tree.copy())
   }
   test("InferTypeFunction1") {
-    val tree = """(Int => Int)"""
+    val tree = """Int => Int"""
       .stripMargin.parse[Type].asInstanceOf[scala.meta.internal.ast.Type.Function]
     compareTokenCodes(tree, tree.copy())
   }
   test("InferTypeFunction2") {
-    val tree = """((Int, String) => Int => String)"""
+    val tree = """(Int, String) => Int => String"""
       .stripMargin.parse[Type].asInstanceOf[scala.meta.internal.ast.Type.Function]
     compareTokenCodes(tree, tree.copy())
   }
@@ -576,17 +576,12 @@ class InferSuite extends FunSuite {
     compareTokenCodes(tree, tree.copy())
   }
   test("InferPatExtractInfix1") { 
-    val tree = """(x :: xs)"""
+    val tree = """x :: xs"""
       .parse[Pat].asInstanceOf[scala.meta.internal.ast.Pat.ExtractInfix]
     compareTokenCodes(tree, tree.copy())
   }
   test("InferPatExtractInfix2") { 
-    val tree = """(x :: y :: xs)"""
-      .parse[Pat].asInstanceOf[scala.meta.internal.ast.Pat.ExtractInfix]
-    compareTokenCodes(tree, tree.copy())
-  }
-  test("InferPatExtractInfix3") { 
-    val tree = """(x :: (xx, y))"""
+    val tree = """x :: (xx, y)"""
       .parse[Pat].asInstanceOf[scala.meta.internal.ast.Pat.ExtractInfix]
     compareTokenCodes(tree, tree.copy())
   }
@@ -602,7 +597,7 @@ class InferSuite extends FunSuite {
     compareTokenCodes(tree, tree.copy())
   }*/
   test("InferPatTyped1") { 
-    val tree = """(x: Int)"""
+    val tree = """x: Int"""
       .parse[Pat].asInstanceOf[scala.meta.internal.ast.Pat.Typed]
     compareTokenCodes(tree, tree.copy())
   }
