@@ -10,9 +10,14 @@ class InferSuite extends FunSuite {
 
   private def trimTokens(tks: Tokens) = tks.filterNot(tk => tk.isInstanceOf[Token.BOF] || tk.isInstanceOf[Token.EOF])
 
-  private def compareTokenCodes(a: Tree, b: Tree): Unit = {
-    val t1 = trimTokens(a.tokens).map(_.show[Code])
-    val t2 = trimTokens(b.tokens).map(_.show[Code])
+  private def compareTokenCodes(a: Tree, b: Tree, ignoreSpaces: Boolean = true): Unit = {
+    def getCodes(t: Tree) = {
+      val codes = trimTokens(t.tokens).map(_.show[Code])
+      if (ignoreSpaces) codes.filter(_ != " ")
+      else codes
+    }
+    val t1 = getCodes(a)
+    val t2 = getCodes(b)
     if (t1 != t2) {
       println(a.show[Raw] + "\n" + b.show[Raw])
       println(t1 + "\n" + t2)
@@ -231,7 +236,7 @@ class InferSuite extends FunSuite {
     val tree = """(x match {
                  |  case u: Int => {
                  |    println("hi") /* this is a comment */
-                 |  }
+                 |    }
                  |  case u: String => println(u)
                  |})"""
       .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Term.Match]
@@ -1160,32 +1165,13 @@ class InferSuite extends FunSuite {
   /* -----------------------------------------------------------------------*/
 
   test("inferPkg1") {
-    val tree = """package test {
-                 |  case class test
-                 |}"""
-      .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Pkg]
-    compareTokenCodes(tree, tree.copy())
+    val tree = """package test
+                 |case class test
+                 |"""
+      .stripMargin.parse[Source]
+      val t1 = findFirst(tree)((p: Tree) => p.isInstanceOf[scala.meta.internal.ast.Pkg]).asInstanceOf[scala.meta.internal.ast.Pkg]
+    compareTokenCodes(t1, t1.copy())
   }
-  test("inferPkg2") {
-    val tree = """package test {
-                |  case class Test
-                |  object Test
-                |}"""
-      .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Pkg]
-    compareTokenCodes(tree, tree.copy())
-  }
-
-  test("inferPkg3") {
-    val tree = """package test {
-                |  case class Test
-                |  object Test {
-                |    val x = Int
-                |  }
-                |}"""
-      .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Pkg]
-    compareTokenCodes(tree, tree.copy())
-  }
-
   /* Infering Pkg.Object */
   /* -----------------------------------------------------------------------*/
 

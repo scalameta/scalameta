@@ -166,6 +166,13 @@ class InferAndReparseSuite extends FunSuite {
         val newCode = transformed.tree.get.tokens.map(_.show[Code]).mkString
         Try(newCode.parse[Source]) match {
           case Success(_) => /* cool */
+            println("====================================================")
+            println(content)
+            println("----------------------------------------------------")
+            println(newCode)
+            println("----------------------------------------------------")
+            println(parsed.show[Code])
+            println("====================================================")
           case Failure(err) =>
             println("====================================================")
             println(content)

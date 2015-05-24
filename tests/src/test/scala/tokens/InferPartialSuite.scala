@@ -32,6 +32,10 @@ class InferPartialSuite extends FunSuite {
     val transformed = trans(testTree)
     val newCode = transformed.tree.get.tokens.map(_.show[Code]).mkString
     assert(newCode.contains("/* And yet another comment! */"))
+
+    println(testTree.tokens.map(_.code).mkString)
+    println("-----------")
+    testTree.asInstanceOf[impl.Source].stats.foreach {s => println(s.tokens.map(_.code).mkString + "\n")}
   }
 
 }

@@ -70,18 +70,18 @@ private[meta] object inferTokens {
     val newline = Tokens(Token.`\n`(Input.String("\n"), dialect, 0))
 
     implicit class RichTree(tree: Tree) {
-      def tks = tree.tokens
-      def indTks = indent(tree.tokens)(indentation)
+      def tks = parenthesize(tree)
+      def indTks = indent(parenthesize(tree))(indentation)
       def `[->o->` = toks"$newline${tree.indTks}$newline"
     }
 
     implicit class RichTreeSeq(trees: Seq[Tree]) {
 
       /* Flatten tokens corresponding to a sequence of trees together. Can transform tokens corresponding to each tree using a first-order function. */
-      def flattks(start: Tokens = toks"")(sep: Tokens = toks"", op: (Seq[Token] => Seq[Token]) = (x: Seq[Token]) => x)(end: Tokens = toks"") = {
+      def flattks(start: Tokens = toks"")(sep: Tokens = toks"", op: (Tokens => Tokens) = (x: Tokens) => x)(end: Tokens = toks"") = {
         val sq = trees match {
           case Nil => toks""
-          case _ => start ++ trees.init.flatMap(v => op(v.tks.repr) ++ sep) ++ op(trees.last.tks.repr) ++ end
+          case _ => start ++ trees.init.flatMap(v => op(v.tks) ++ sep) ++ op(trees.last.tks) ++ end
         }
         Tokens(sq: _*)
       }
@@ -93,9 +93,13 @@ private[meta] object inferTokens {
        * - _   represent a space
        * -     other tokens represent themselves. 
        */
+
+      val indentFun: (Tokens => Tokens) = (s: Tokens) => indent(s)(indentation)
+      val avoidDoubleLineFun: (Tokens => Tokens) = (s: Tokens) => if (s.last.code == "\n") Tokens(s.repr.init: _*) else s
+
       def `oo` = flattks()()()
-      def `o->o` = flattks()(newline)()
-      def `->o->` = flattks(newline)(newline)(newline)
+      def `o->o` = flattks()(newline, avoidDoubleLineFun)()
+      def `->o->` = flattks(newline)(newline, avoidDoubleLineFun)(newline)
       def `->o` = flattks(newline)(newline)()
       def `o_o` = flattks()(toks" ")()
       def `o,o` = flattks()(toks", ")()
@@ -104,11 +108,11 @@ private[meta] object inferTokens {
       def `[o,o]` = flattks(toks"[")(toks", ")(toks"]")
       def `{o,o}` = flattks(toks"{")(toks", ")(toks"}")
       def `(o,o)` = flattks(toks"(")(toks", ")(toks")")
-      def `[->o->` = flattks(newline)(newline, (s: Seq[Token]) => indent(s)(indentation))(newline)
-      def `[->o` = flattks(newline)(newline, (s: Seq[Token]) => indent(s)(indentation))()
+      def `[->o->` = flattks(newline)(newline, avoidDoubleLineFun andThen indentFun)(newline)
+      def `[->o` = flattks(newline)(newline, avoidDoubleLineFun andThen indentFun)()
     }
     implicit class RichTreeSeqSeq(trees: Seq[Seq[Tree]]) {
-    	// TODO: deduplicate
+      // TODO: deduplicate
       def `(o,o)` = {
         val sq = trees match {
           case Nil => toks""
@@ -190,14 +194,18 @@ private[meta] object inferTokens {
     def guessHasExpr(t: Term.Return): Boolean = t.expr match { case Lit.Unit() => false; case _ => true }
     def guessHasElsep(t: Term.If): Boolean = t.elsep match { case Lit.Unit() => false; case _ => true }
     def guessHasBraces(t: Pkg): Boolean = {
-    def isOnlyChildOfOnlyChild(t: Pkg): Boolean = t.parent match {
-      case Some(pkg: Pkg) => isOnlyChildOfOnlyChild(pkg) && pkg.stats.length == 1
-      case Some(source: Source) => source.stats.length == 1
-      case None => true
-      case _ => unreachable
+      def isOnlyChildOfOnlyChild(t: Pkg): Boolean = t.parent match {
+        case Some(pkg: Pkg) => isOnlyChildOfOnlyChild(pkg) && pkg.stats.length == 1
+        case Some(source: Source) => source.stats.length == 1
+        case None => true
+        case _ => unreachable
+      }
+      !isOnlyChildOfOnlyChild(t)
     }
-    !isOnlyChildOfOnlyChild(t)
-  }
+
+    def parenthesize(tree: Tree): Tokens = tree match {
+      case _ => tree.tokens
+    }
 
     /* Infer tokens for a given tree, making use of the helpers above */
     def tkz(tree: Tree): Tokens = tree match {
@@ -436,9 +444,9 @@ private[meta] object inferTokens {
       case t: Defn.Object => toks"${t.mods.`o_o_`}object ${t.name.tks}${t.ctor.tks}${apndTempl(t.templ)}"
       case t: Defn.Def => toks"${t.mods.`o_o_`}def ${t.name.tks}${t.tparams.`[o,o]`}${t.paramss.`(o,o)`}${apndDeclTpe(t.decltpe)} = ${t.body.tks}"
       case t: Defn.Macro => toks"${t.mods.`o_o_`}def ${t.name.tks}${t.tparams.`[o,o]`}${t.paramss.`(o,o)`}: ${t.tpe.tks} = macro ${t.body.tks}"
-      case t: Pkg => 
-      	if(guessHasBraces(t)) toks"package ${t.ref.tks}{${t.stats.`[->o`}}"
-      	else toks"package ${t.ref.tks}${t.stats.`->o`}"
+      case t: Pkg =>
+        if (guessHasBraces(t)) toks"package ${t.ref.tks}{${t.stats.`[->o->`}}"
+        else toks"package ${t.ref.tks}${t.stats.`->o`}"
       case t: Pkg.Object => toks"package ${t.mods.`o_o_`}object ${t.name.tks}${apndTempl(t.templ)}"
       case t: Ctor.Primary =>
         if (t.mods.nonEmpty && t.paramss.nonEmpty) toks"${t.mods.`o_o_`}${t.paramss.`(o,o)`}"
@@ -561,8 +569,7 @@ private[meta] object inferTokens {
 
   /* Adding proper indentation to the token stream */
 
-  // TODO: clean that up, it is not perfect.
-  private def indent(tks: Seq[Token], withoutBounds: Boolean = false)(indent: Tokens)(implicit dialect: Dialect): Tokens = {
+  private def indent(tks: Tokens)(indent: Tokens)(implicit dialect: Dialect): Tokens = {
     import scala.meta.dialects.Scala211 // Unfortunately
     val onLine = {
       @tailrec def loop(in: Seq[Token], out: Seq[Seq[Token]]): Seq[Seq[Token]] = in match {
@@ -574,18 +581,16 @@ private[meta] object inferTokens {
       }
       loop(tks.repr, Seq())
     }
-    val toIndent = if (withoutBounds && onLine.length > 1) onLine.tail.init else onLine
-    val indented = toIndent map (line =>toks"$indent$line".repr)
-    if (withoutBounds && onLine.length > 1) Tokens((onLine.head ++ indented.flatten ++ onLine.last): _*)
-    else Tokens(indented.flatten: _*)
+    val indented = onLine map (line => toks"$indent$line".repr)
+    Tokens(indented.flatten: _*)
   }
 
   // TODO: check if required
   // Calls to the token quasiquote is not doing it so far.
 
   /* Put back all the positions at the righ places in a sequence of tokens. */
-  private def inplace(tks: Tokens): Tokens = {
-    tks // TODO
+  private def implace(tks: Tokens): Tokens = {
+    //tks.map(x => 1) // TODO
+    tks
   }
-
 }
