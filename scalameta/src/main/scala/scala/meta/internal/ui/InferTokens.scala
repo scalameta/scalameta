@@ -224,9 +224,17 @@ private[meta] object inferTokens {
         /* Covering cases for Type.Function */
         case (_: Type.Function, None) => true /* TODO: figure out why a function in a template as an extends does not have a parent! */
         /* Covering cases for Pat.ExtractInfix */
+        case (t: Pat.Bind, Some(_: Pat.ExtractInfix)) => true
         case (t: Pat.ExtractInfix, Some(_: Pat.ExtractInfix)) => true
         /* Covering cases for Pat.Typed */
         case (t: Pat.Typed, Some(_: Pat.ExtractInfix)) => true
+        /* Covering cases for Term.Unary */
+        case (_, Some(_: Term.ApplyUnary)) =>
+        	tree match {
+        		case _: Term.ApplyInfix => true
+        		case _: Term.If => true
+        		case _ => false
+        	}
         case _ => false
       }
       if (withParents) toks"(${tree.tokens})" else tree.tokens
@@ -326,18 +334,22 @@ private[meta] object inferTokens {
         val finallyBlock = if (t.finallyp.isDefined) toks" finally ${t.finallyp.get.tks}" else toks""
         tryBlock ++ finallyBlock
       case t: Term.Function =>
+      	val cbody = t.body match {
+      		case b: Term.Block if b.stats.size == 1 &&  b.stats.head.isInstanceOf[Term.Block] => b.stats.head.tks
+      		case _ => t.body.tks
+      	}
         t match {
           case Term.Function(Term.Param(mods, name: Term.Name, tptopt, _) :: Nil, body) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
             val tpt = tptopt.map(v => toks": ${v.tks}").getOrElse(toks"")
-            toks"implicit ${name.tks}$tpt =>${body.tks}"
+            toks"implicit ${name.tks}$tpt =>$cbody"
           case Term.Function(Term.Param(mods, name: Term.Name, None, _) :: Nil, body) =>
-            toks"${name.tks} => ${body.tks}"
+            toks"${name.tks} => $cbody"
           case Term.Function(Term.Param(_, _: Name.Anonymous, _, _) :: Nil, body) =>
-            toks"_ => ${body.tks}"
+            toks"_ => $cbody"
           case Term.Function(Nil, body) =>
-            toks"() => ${body.tks}"
+            toks"() => $cbody"
           case Term.Function(params, body) =>
-            toks"${params.`(o,o)`} => ${body.tks}"
+            toks"${params.`(o,o)`} => $cbody"
         }
       case t: Term.PartialFunction => toks"{${t.cases.`[->o->`}}"
       case t: Term.While => toks"while (${t.expr.tks}) ${t.body.tks}"
@@ -476,7 +488,11 @@ private[meta] object inferTokens {
         else toks"package ${t.ref.tks}${t.stats.`->o`}"
       case t: Pkg.Object => toks"package ${t.mods.`o_o_`}object ${t.name.tks}${apndTempl(t.templ)}"
       case t: Ctor.Primary =>
-        if (t.mods.nonEmpty && t.paramss.nonEmpty) toks"${t.mods.`o_o_`}${t.paramss.`(o,o)`}"
+      	val cmods = t.mods match {
+      		case Nil => toks""
+      		case mds => toks" ${mds.`o_o_`}"
+      	}
+        if (t.mods.nonEmpty && t.paramss.nonEmpty) toks"$cmods${t.paramss.`(o,o)`}"
         else toks"${t.paramss.`(o,o)`}"
       case t: Ctor.Secondary =>
         if (t.body.isInstanceOf[Term.Block]) toks"def this${t.paramss.`(o,o)`} ${t.body.tks}"
