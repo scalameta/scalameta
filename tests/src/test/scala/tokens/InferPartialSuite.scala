@@ -27,15 +27,21 @@ class InferPartialSuite extends FunSuite {
     val trans = (transform {
       case t: impl.Defn.Def if t.name.value == "funToReplace" => 
         t.copy(name = impl.Term.Name("aNewName")) andCollect Unit
+      case t: impl.Defn.Val =>
+        t.copy() andCollect Unit
     }).topDown
 
     val transformed = trans(testTree)
     val newCode = transformed.tree.get.tokens.map(_.show[Code]).mkString
-    assert(newCode.contains("/* And yet another comment! */"))
-
+    println("Printing original tokens:")
     println(testTree.tokens.map(_.code).mkString)
     println("-----------")
+    println("Printing tokens corresponding to stats in Source:")
     testTree.asInstanceOf[impl.Source].stats.foreach {s => println(s.tokens.map(_.code).mkString + "\n")}
+    println("-----------")
+    println("Printing tokens after modification by TQL:")
+    println(newCode)
+    assert(newCode.contains("/* Just creating a new case object */"))
   }
 
 }
