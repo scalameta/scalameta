@@ -16,7 +16,8 @@ class LinePositionSuite extends ParseSuite {
   val ignoredFiles = List(
     "build.scala",
     "Token.scala",
-    "Api.scala"
+    "Api.scala",
+    "package.scala"
   )
 
   val findAllDefn = topDown(collect {
