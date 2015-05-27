@@ -109,7 +109,7 @@ class AstMacros(val c: Context) {
         def tokens: _root_.scala.meta.Tokens = {
           internalTokens = internalTokens match {
             case null => _root_.scala.meta.internal.ui.inferTokens(this, None)
-            case _root_.scala.meta.Tokens.Prototype(proto) => _root_.scala.meta.internal.ui.inferTokens(this, Some(proto))
+            case _root_.scala.meta.syntactic.Tokens.Prototype(proto) => _root_.scala.meta.internal.ui.inferTokens(this, Some(proto))
             case other => other
           }
           internalTokens
