@@ -24,7 +24,7 @@ import scala.annotation.tailrec
 private[meta] object inferTokens {
 
   def apply(tree: Tree): Tokens = {
-    implace(infer(tree)(scala.meta.dialects.Scala211)) // as explained above, forcing dialect.
+    infer(tree)(scala.meta.dialects.Scala211) // as explained above, forcing dialect.
   }
 
   /* Generate a single token for a literal */
@@ -230,14 +230,14 @@ private[meta] object inferTokens {
         case (t: Pat.Typed, Some(_: Pat.ExtractInfix)) => true
         /* Covering cases for Term.Unary */
         case (_, Some(_: Term.ApplyUnary)) =>
-        	tree match {
-        		case _: Term.ApplyInfix => true
-        		case _: Term.If => true
-        		case _ => false
-        	}
+          tree match {
+            case _: Term.ApplyInfix => true
+            case _: Term.If => true
+            case _ => false
+          }
         case _ => false
       }
-      if (withParents) toks"(${tree.tokens})" else tree.tokens
+      if (withParents) toks"(${deindent(tree.tokens)})" else deindent(tree.tokens)
     }
 
     /* Infer tokens for a given tree, making use of the helpers above. */
@@ -334,10 +334,10 @@ private[meta] object inferTokens {
         val finallyBlock = if (t.finallyp.isDefined) toks" finally ${t.finallyp.get.tks}" else toks""
         tryBlock ++ finallyBlock
       case t: Term.Function =>
-      	val cbody = t.body match {
-      		case b: Term.Block if b.stats.size == 1 &&  b.stats.head.isInstanceOf[Term.Block] => b.stats.head.tks
-      		case _ => t.body.tks
-      	}
+        val cbody = t.body match {
+          case b: Term.Block if b.stats.size == 1 && b.stats.head.isInstanceOf[Term.Block] => b.stats.head.tks
+          case _ => t.body.tks
+        }
         t match {
           case Term.Function(Term.Param(mods, name: Term.Name, tptopt, _) :: Nil, body) if mods.exists(_.isInstanceOf[Mod.Implicit]) =>
             val tpt = tptopt.map(v => toks": ${v.tks}").getOrElse(toks"")
@@ -488,10 +488,10 @@ private[meta] object inferTokens {
         else toks"package ${t.ref.tks}${t.stats.`->o`}"
       case t: Pkg.Object => toks"package ${t.mods.`o_o_`}object ${t.name.tks}${apndTempl(t.templ)}"
       case t: Ctor.Primary =>
-      	val cmods = t.mods match {
-      		case Nil => toks""
-      		case mds => toks" ${mds.`o_o_`}"
-      	}
+        val cmods = t.mods match {
+          case Nil => toks""
+          case mds => toks" ${mds.`o_o_`}"
+        }
         if (t.mods.nonEmpty && t.paramss.nonEmpty) toks"$cmods${t.paramss.`(o,o)`}"
         else toks"${t.paramss.`(o,o)`}"
       case t: Ctor.Secondary =>
@@ -590,26 +590,48 @@ private[meta] object inferTokens {
     tkz(tree.asInstanceOf[scala.meta.internal.ast.Tree])
   }
 
-  /* Adding proper indentation to the token stream */
-  private def indent(tks: Tokens)(indent: Tokens)(implicit dialect: Dialect): Tokens = {
-    import scala.meta.dialects.Scala211 // Unfortunately
-    val onLine = {
+  implicit class RichTokens(tks: Tokens) {
+    /* Split token stream line-per-line */
+    def onLines = {
       @tailrec def loop(in: Seq[Token], out: Seq[Seq[Token]]): Seq[Seq[Token]] = in match {
         case Nil => out
-        case _ if !in.exists(_.code == "\n") => out :+ in
+        case _ if !in.exists(_.show[Code] == "\n") => out :+ in
         case _ =>
-          val (bf, af) = in.span(_.code != "\n")
+          val (bf, af) = in.span(_.show[Code] != "\n")
           loop(af.tail, out :+ (bf :+ af.head))
       }
       loop(tks.repr, Seq())
     }
-    val indented = onLine map (line => toks"$indent$line".repr)
-    Tokens(indented.flatten: _*)
   }
 
-  /* Put back all the positions at the righ places in a sequence of tokens. */
-  private def implace(tks: Tokens): Tokens = {
-    //tks.map(x => 1) // TODO
-    tks
+  /* Removing original indentation from the token stream to let the inference put them back properly.
+   * Since a unique token by itself does not know if he is authentic or not, we have to remove
+   * the top indentation and re-infer it, to be sure that we have something looking good at the
+   * end. A drawback on this is that we don't keep the original indentation. */
+  private def deindent(tks: Tokens): Tokens =
+    if (tks.isSynthetic || tks.repr.isEmpty) tks
+    else {
+      val lines = tks.onLines
+      /* In many cases, the start of a stat is not on a newline while the end is.
+    	 * As an outcome, we de-indent based on the original indentation of the last line. This is
+    	 * mainly used for block, partial function, etc. */
+      val isIndent = (t: Token) => t.show[Code] == " " || t.show[Code] == "\t" || t.show[Code] == "\r"
+      val lastIndent = lines.last.dropWhile(t => isIndent(t))
+      val toDrop = lines.last.length - lastIndent.length
+      def dropWhileWithMax[T](seq: Seq[T])(f: T => Boolean, max: Int): Seq[T] = {
+        def loop(seq: Seq[T], count: Int = 0): Seq[T] = seq match {
+          case tss if !tss.isEmpty && f(tss.head) && count < max => loop(tss.tail, count + 1)
+          case _ => seq
+        }
+        loop(seq)
+      }
+      val deindented = lines.init map (l => dropWhileWithMax(l)(t => isIndent(t), toDrop))
+      Tokens((deindented :+ lastIndent).flatten: _*)
+    }
+
+  /* Adding proper indentation to the token stream */
+  private def indent(tks: Tokens)(indent: Tokens): Tokens = {
+    val indented = tks.onLines map (line => indent ++ line)
+    Tokens(indented.flatten: _*)
   }
 }

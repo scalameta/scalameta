@@ -15,7 +15,7 @@ class InferPartialSuite extends FunSuite {
         |  def funToReplace(x: Int, y: String) {
         |    val myString = x.toString + ":" + y + string
         |    val res = {
-        |      Test(myString) /* Just creating a new case object */
+        |                                  Test(myString) /* Just creating a new case object */
         |    }
         |    /* And yet another comment! */
         |  }
