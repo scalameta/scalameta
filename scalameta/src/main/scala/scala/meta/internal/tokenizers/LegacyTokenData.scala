@@ -52,65 +52,49 @@ private[meta] trait LegacyTokenData {
    */
   def charVal: Char = if (strVal.length > 0) strVal.charAt(0) else 0
 
-  /** Convert current strVal, base to long value
+  /** Convert current strVal, base to an integer value
    *  This is tricky because of max negative value.
    */
-  def intVal(negated: Boolean): Try[Long] = {
-    def inner(): Long =
-      if (token == CHARLIT && !negated) {
-        charVal.toLong
-      } else {
-        var input = strVal
-        if (input.startsWith("0x") || input.startsWith("0X")) input = input.substring(2)
-        if (input.endsWith("l") || input.endsWith("L")) input = input.substring(0, input.length - 1)
-        var value: Long = 0
-        val divider = if (base == 10) 1 else 2
-        val limit: Long =
-          if (token == LONGLIT) Long.MaxValue else Int.MaxValue
-        var i = 0
-        val len = input.length
-        while (i < len) {
-          val d = digit2int(input charAt i, base)
-          if (d < 0) {
-            syntaxError("malformed integer number", at = offset)
-          }
-          if (value < 0 ||
-              limit / (base / divider) < value ||
-              limit - (d / divider) < value * (base / divider) &&
-              !(negated && limit == value * base - 1 + d)) {
-                syntaxError("integer number too large", at = offset)
-              }
-          value = value * base + d
-          i += 1
-        }
-        if (negated) -value else value
+  private def integerVal(limit: BigInt): BigInt = {
+    var input = strVal
+    if (input.startsWith("0x") || input.startsWith("0X")) input = input.substring(2)
+    if (input.endsWith("l") || input.endsWith("L")) input = input.substring(0, input.length - 1)
+    var value: BigInt = 0
+    val divider = if (base == 10) 1 else 2
+    var i = 0
+    val len = input.length
+    while (i < len) {
+      val d = digit2int(input charAt i, base)
+      if (d < 0) {
+        syntaxError("malformed integer number", at = offset)
       }
-    Try(inner())
+      value = value * base + d
+      i += 1
+    }
+    if (value > limit) syntaxError("integer number too large", at = offset)
+    value
   }
 
   /** Convert current strVal, base to double value
   */
-  def floatVal(negated: Boolean): Try[Double] = {
-    def inner(): Double = {
-      val limit: Double =
-        if (token == DOUBLELIT) Double.MaxValue else Float.MaxValue
-
-      val value: Double = java.lang.Double.valueOf(strVal).doubleValue()
-      def isDeprecatedForm = {
-        val idx = strVal indexOf '.'
-        (idx == strVal.length - 1) || (
-             (idx >= 0)
-          && (idx + 1 < strVal.length)
-          && (!Character.isDigit(strVal charAt (idx + 1)))
-        )
-      }
-      if (value > limit)
-        syntaxError("floating point number too large", at = offset)
-      if (isDeprecatedForm)
-        syntaxError("floating point number is missing digit after dot", at = offset)
-
-      if (negated) -value else value
+  private def floatingVal(limit: Double): Double = {
+    val value: Double = java.lang.Double.valueOf(strVal).doubleValue()
+    def isDeprecatedForm = {
+      val idx = strVal indexOf '.'
+      (idx == strVal.length - 1) || (
+           (idx >= 0)
+        && (idx + 1 < strVal.length)
+        && (!Character.isDigit(strVal charAt (idx + 1)))
+      )
     }
-    Try(inner())
+    if (isDeprecatedForm)
+      syntaxError("floating point number is missing digit after dot", at = offset)
+    if (value > limit) syntaxError("floating point number too large", at = offset)
+    value
   }
+
+  def intVal: BigInt = integerVal(-BigInt(Int.MinValue))
+  def longVal: BigInt = integerVal(-BigInt(Long.MinValue))
+  def floatVal: Float = floatingVal(Float.MaxValue).toFloat
+  def doubleVal: Double = floatingVal(Double.MaxValue)
 }

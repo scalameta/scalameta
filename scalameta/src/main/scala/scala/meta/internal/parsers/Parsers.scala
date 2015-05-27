@@ -1070,17 +1070,40 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
    */
   def literal(isNegated: Boolean = false): Lit = autoPos {
     val res = token match {
-      case token: Literal.Char    => Lit.Char(token.value)
-      case token: Literal.Int     => Lit.Int(token.value(isNegated))
-      case token: Literal.Long    => Lit.Long(token.value(isNegated))
-      case token: Literal.Float   => Lit.Float(token.value(isNegated))
-      case token: Literal.Double  => Lit.Double(token.value(isNegated))
-      case token: Literal.String  => Lit.String(token.value)
-      case token: Literal.Symbol  => Lit.Symbol(token.value)
-      case token: Literal.`true`  => Lit.Bool(true)
-      case token: Literal.`false` => Lit.Bool(false)
-      case token: Literal.`null`  => Lit.Null()
-      case _                      => unreachable(debug(token))
+      case token: Literal.Char =>
+        Lit.Char(token.value)
+      case token: Literal.Int =>
+        val value = if (isNegated) -token.value else token.value
+        if (value > Int.MaxValue) syntaxError("integer number too large", at = token)
+        else if (value < Int.MinValue) syntaxError("integer number too small", at = token)
+        else Lit.Int(value.toInt)
+      case token: Literal.Long =>
+        val value = if (isNegated) -token.value else token.value
+        if (value > Long.MaxValue) syntaxError("integer number too large", at = token)
+        else if (value < Long.MinValue) syntaxError("integer number too small", at = token)
+        else Lit.Long(value.toLong)
+      case token: Literal.Float =>
+        val value = if (isNegated) -token.value else token.value
+        if (value > Float.MaxValue) syntaxError("floating point number too large", at = token)
+        else if (value < Float.MinValue) syntaxError("floating point number too small", at = token)
+        else Lit.Float(value.toLong)
+      case token: Literal.Double  =>
+        val value = if (isNegated) -token.value else token.value
+        if (value > Double.MaxValue) syntaxError("floating point number too large", at = token)
+        else if (value < Double.MinValue) syntaxError("floating point number too small", at = token)
+        else Lit.Double(value.toLong)
+      case token: Literal.String =>
+        Lit.String(token.value)
+      case token: Literal.Symbol =>
+        Lit.Symbol(token.value)
+      case token: Literal.`true` =>
+        Lit.Bool(true)
+      case token: Literal.`false` =>
+        Lit.Bool(false)
+      case token: Literal.`null` =>
+        Lit.Null()
+      case _ =>
+        unreachable(debug(token))
     }
     next()
     res
