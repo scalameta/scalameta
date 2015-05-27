@@ -6,6 +6,9 @@ import scala.collection.generic._
 import scala.collection.mutable.{Builder, ArrayBuilder, ListBuffer}
 import scala.collection.immutable.VectorBuilder
 
+// TODO: We should really give up on trying to use the standard IndexedSeq machinery,
+// because it doesn't give us a good way to load the elements lazily, which is necessary for Tokens.Slice
+// and would obviate the need for the very existence of Tokens.Prototype.
 // TODO: https://www.dropbox.com/s/5xmjr755tnlqcwk/2015-05-04%2013.50.48.jpg?dl=0
 sealed abstract class Tokens(repr: Token*) extends Tokens.Projection(repr: _*) with Input {
   def input: Input
@@ -81,6 +84,17 @@ object Tokens {
     override def dialect = scala.meta.dialects.Scala211
     override def isAuthentic = true
     override def toString = s"Adhoc($underlying)"
+  }
+
+  // NOTE: Actually doesn't contain any tokens and simply signalizes the internal infrastructure
+  // that it's necessary to call inferTokens on the current tree + the prototype (the one that's stored in this object).
+  // Once I get to refactoring Tokens to not inherit from Seq and friends, it'll become possible
+  // to merge this class into Tokens.Synthetic.
+  private[meta] case class Prototype(underlying: Tree) extends Tokens(Nil: _*) {
+    override def input = this
+    override def dialect = scala.meta.dialects.Scala211
+    override def isAuthentic = false
+    override def toString = s"Prototype($underlying)"
   }
 
   private[meta] case class Synthetic(underlying: Token*) extends Tokens(underlying: _*) {

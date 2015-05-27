@@ -90,9 +90,31 @@ class AstMacros(val c: Context) {
       def internalize(name: TermName) = TermName("_" + name.toString)
       val internalCopyInitss = paramss.map(_.map(p => q"$AstInternal.initField(this.${internalize(p.name)})"))
       val internalCopyBody = q"new $name(prototype.asInstanceOf[ThisType], parent, scratchpad, tokens)(...$internalCopyInitss)"
-      stats1 += q"private[meta] def internalCopy(prototype: _root_.scala.meta.Tree = this, parent: _root_.scala.meta.Tree = internalParent, scratchpad: $scratchpadType = internalScratchpad, tokens: _root_.scala.meta.Tokens = internalTokens): ThisType = $internalCopyBody"
-      stats1 += q"def parent: _root_.scala.Option[_root_.scala.meta.Tree] = if (internalParent != null) _root_.scala.Some(internalParent) else _root_.scala.None"
-      stats1 += q"def tokens: _root_.scala.meta.Tokens = { if (internalTokens == null) internalTokens = _root_.scala.meta.internal.ui.inferTokens(this); internalTokens }"
+      stats1 += q"""
+        private[meta] def internalCopy(
+            prototype: _root_.scala.meta.Tree = this,
+            parent: _root_.scala.meta.Tree = internalParent,
+            scratchpad: $scratchpadType = internalScratchpad,
+            tokens: _root_.scala.meta.Tokens = internalTokens): ThisType = {
+          $internalCopyBody
+        }
+      """
+      stats1 += q"""
+        def parent: _root_.scala.Option[_root_.scala.meta.Tree] = {
+          if (internalParent != null) _root_.scala.Some(internalParent)
+          else _root_.scala.None
+        }
+      """
+      stats1 += q"""
+        def tokens: _root_.scala.meta.Tokens = {
+          internalTokens = internalTokens match {
+            case null => _root_.scala.meta.internal.ui.inferTokens(this, None)
+            case _root_.scala.meta.Tokens.Prototype(proto) => _root_.scala.meta.internal.ui.inferTokens(this, Some(proto))
+            case other => other
+          }
+          internalTokens
+        }
+      """
 
       // step 5: turn all parameters into vars, create getters and setters
       val fieldParamss = paramss
@@ -129,7 +151,7 @@ class AstMacros(val c: Context) {
       }))
       val copyFieldParamss = fieldParamss.zip(fieldDefaultss).map{ case (f, d) => f.zip(d).map { case (p, default) => q"val ${p.name}: ${p.tpt} = $default" } }
       val copyFieldArgss = fieldParamss.map(_.map(p => q"${p.name}"))
-      val copyParamss = copyFieldParamss.init :+ (copyFieldParamss.last :+ q"val tokens: _root_.scala.meta.Tokens = null")
+      val copyParamss = copyFieldParamss.init :+ (copyFieldParamss.last :+ q"val tokens: _root_.scala.meta.Tokens = _root_.scala.meta.Tokens.Prototype(this)")
       val copyArgss = copyFieldArgss.init :+ (copyFieldArgss.last :+ q"tokens")
       // TODO: would be useful to turn copy into a macro, so that its calls are guaranteed to be inlined
       astats1 += q"def copy(...$copyParamss): ThisType = $mname.apply(...$copyArgss)"

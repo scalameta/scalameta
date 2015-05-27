@@ -3,7 +3,7 @@ package internal
 package ui
 
 private[meta] object inferTokens {
-  def apply(tree: Tree): Tokens = {
+  def apply(tree: Tree, proto: Option[Tree]): Tokens = {
     // TODO: implement this
     Tokens.Synthetic(Nil: _*)
   }
