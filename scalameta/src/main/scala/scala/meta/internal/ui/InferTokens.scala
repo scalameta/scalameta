@@ -22,26 +22,24 @@ import scala.annotation.tailrec
 
 // TODO: this infers tokens for the Scala211 dialect due to token quasiquotes (the dialect needs to be explicitly imported). It should be changed in the future.
 private[meta] object inferTokens {
-
-  def apply(tree: Tree): Tokens = {
-    infer(tree)(scala.meta.dialects.Scala211) // as explained above, forcing dialect.
+	def apply(tree: Tree, proto: Option[Tree]): Tokens = {
+    infer(tree, proto)(scala.meta.dialects.Scala211) // as explained above, forcing dialect.
   }
 
   /* Generate a single token for a literal */
   private def mineLitTk(value: Any)(implicit dialect: Dialect): Tokens = {
     implicit def stringToInput(str: String) = Input.String(str)
     val str = value.toString
-    val length = str.length
     // TODO: figure out what action should be implemented depending of the boolean in token functions - not sure why it is there
     val newTok = value match {
-      case y: Int => Token.Literal.Int(str, dialect, 0, length, (x: Boolean) => y)
-      case y: Long => Token.Literal.Long(str + "L", dialect, 0, length + 1, (x: Boolean) => y)
-      case y: Float => Token.Literal.Float(str + "F", dialect, 0, length + 1, (x: Boolean) => y)
-      case y: Double => Token.Literal.Double(str, dialect, 0, length, (x: Boolean) => y)
+      case y: Int => Token.Literal.Int(str, dialect, 0, str.length, y)
+      case y: Long => Token.Literal.Long(str + "L", dialect, 0, str.length + 1, y)
+      case y: Float => Token.Literal.Float(str + "F", dialect, 0, str.length + 1, y)
+      case y: Double => Token.Literal.Double(str, dialect, 0, str.length, y)
       case y: Char =>
         val newChar = enquote(str, SingleQuotes)
         Token.Literal.Char(newChar, dialect, 0, newChar.length, y)
-      case y: Symbol => Token.Literal.Symbol(str, dialect, 0, length, y)
+      case y: Symbol => Token.Literal.Symbol(str, dialect, 0, str.length, y)
       case y: String =>
         val newStr = {
           if (y.contains(EOL)) enquote(str, TripleQuotes)
@@ -55,8 +53,11 @@ private[meta] object inferTokens {
   /* Generate a single token for ident */
   private def mineIdentTk(value: String)(implicit dialect: Dialect): Tokens = Tokens(Token.Ident(Input.String(value), dialect, 0, value.length))
 
+    /* Checking if a token is en indentation */
+    val isIndent = (t: Token) => t.show[Code] == " " || t.show[Code] == "\t" || t.show[Code] == "\r"
+
   /* Global infering function */
-  private def infer(tree: Tree)(implicit dialect: Dialect): Tokens = {
+  private def infer(tree: Tree, proto: Option[Tree])(implicit dialect: Dialect): Tokens = {
     import scala.meta.internal.ast._
     import scala.meta.dialects.Scala211 // Unfortunately
 
@@ -584,7 +585,37 @@ private[meta] object inferTokens {
         toks"case ${t.pat.tks}$pcond =>$pbody"
 
       // Source
-      case t: Source => t.stats.`o->o`
+      case t: Source => //t.stats.`o->o`
+      	proto match {
+      		/* If the proto is defined, we can then extract the top-level comment the root contains and re-insert them
+      		 * between the proper statements. We have no quarantee however that the indentation in a stat will correspond
+      		 * to the indentation in the source token stream. As an outcome, we filter all indentation out prior to the
+      		 * comparison. We then do the assumption that the correspondance between the stats from the original tree and
+      		 * the new one are equivalent, i.e. that if a class A was before a class B, the class A is still before the 
+      		 * class B in the modified tree, even if this one or the other might contains more stats (in which case, they
+      		 * are either added or removed). By doing so, we are guaranteed to preserve top-level comments */
+      		case Some(original: Source) =>
+      			val originalTokens = original.tokens.filter(t => !isIndent(t))
+      			val oStatsTokens = original.stats.map(_.tokens.filter(t => !isIndent(t))).repr
+      			val zipped = (oStatsTokens zip t.stats.map(_.tokens.repr))
+      			val oStatsTail = oStatsTokens.drop(zipped.length).map(ts => (ts, Seq[Token]()))
+      			/* Loop and replace the original token streams from Source.stats the new ones */
+      			def loop(stream: Seq[Token], toReplace: Seq[(Seq[Token],Seq[Token])]): Seq[Token] = toReplace match {
+      				case Seq() => stream
+      				case tss => 
+      					val sliceIndex = stream.indexOfSlice(tss.head._1)
+      					loop(stream.patch(sliceIndex, tss.head._2, tss.head._1.length), tss.tail)
+      			}
+      			/* Keeping BOF */
+      			val patchedTokens = 
+      				if (!originalTokens.repr.isEmpty && originalTokens.head.isInstanceOf[Token.BOF]) 
+      					originalTokens.repr.head +: loop(originalTokens.repr.tail, zipped ++ oStatsTail)
+      				else loop(originalTokens.repr, zipped ++ oStatsTail)
+      			val newStats = t.stats.drop(zipped.length).`->o->`
+      			Tokens(patchedTokens ++ newStats: _*)
+      		/* If the proto is not defined, we simply put all statements line per line */
+    			case _ => t.stats.`o->o`
+      	}
     }
 
     tkz(tree.asInstanceOf[scala.meta.internal.ast.Tree])
@@ -608,14 +639,13 @@ private[meta] object inferTokens {
    * Since a unique token by itself does not know if he is authentic or not, we have to remove
    * the top indentation and re-infer it, to be sure that we have something looking good at the
    * end. A drawback on this is that we don't keep the original indentation. */
-  private def deindent(tks: Tokens): Tokens =
-    if (tks.isSynthetic || tks.repr.isEmpty) tks
+  private def deindent(tks: Tokens): Tokens = {
+  	      val lines = tks.onLines
+    if (tks.isSynthetic || tks.repr.isEmpty || lines.length == 1) tks
     else {
-      val lines = tks.onLines
       /* In many cases, the start of a stat is not on a newline while the end is.
     	 * As an outcome, we de-indent based on the original indentation of the last line. This is
     	 * mainly used for block, partial function, etc. */
-      val isIndent = (t: Token) => t.show[Code] == " " || t.show[Code] == "\t" || t.show[Code] == "\r"
       val lastIndent = lines.last.dropWhile(t => isIndent(t))
       val toDrop = lines.last.length - lastIndent.length
       def dropWhileWithMax[T](seq: Seq[T])(f: T => Boolean, max: Int): Seq[T] = {
@@ -628,6 +658,7 @@ private[meta] object inferTokens {
       val deindented = lines.init map (l => dropWhileWithMax(l)(t => isIndent(t), toDrop))
       Tokens((deindented :+ lastIndent).flatten: _*)
     }
+  }
 
   /* Adding proper indentation to the token stream */
   private def indent(tks: Tokens)(indent: Tokens): Tokens = {
