@@ -26,25 +26,44 @@ Hosts are, however, required to create instances of scala.meta trees to be retur
 
     1. Again, if we look into existing reflection facilities of Scala, we'll observe that trees begin their lives naked (just syntax) and then get attributed by the typechecker (i.e. have their `var tpe: Type` and `var symbol: Symbol` fields assigned, typically in place). Semantic operations are only available for attributed trees, and there are some operations that are only available on unattributed trees, which means that the users need to be aware of the distinction. scala.meta unifies these concepts, exposing semantic methods like `Type.<:<` or `Scope.members` that take care of attribution transparently from the user.
 
-  1. Finally, trees are aware of their context. First of all, there's the `Tree.parent` method that can go up the tree structure if the given tree is a part of a bigger tree (as a host implementor, you don't need to worry about maintaining `parent` at all - it is maintained automatically by scala.meta's infrastructure: when a tree is inserted into another tree, it is cloned and gets its `parent` updated accordingly). Also, there's the notion of hygiene (not yet fully implemented) that postulates that trees should generally remember the lexical context of their creation site and respect that context even when they are put into parent that comes from a different context. At this point, the only thing that you need to do to support hygiene is to set denotations in the trees that you return to users (see comments in [Denotations.scala](/scalameta/src/main/scala/scala/meta/internal/hygiene/Denotations.scala) for more information about denotations).
+  1. Finally, trees are aware of their context. First of all, there's the `Tree.parent` method that can go up the tree structure if the given tree is a part of a bigger tree (as a host implementor, you don't need to worry about maintaining `parent` at all - it is maintained automatically by scala.meta's infrastructure: when a tree is inserted into another tree, it is cloned and gets its `parent` updated accordingly). Also, there's the notion of hygiene (not yet fully implemented) that postulates that trees should generally remember the lexical context of their creation site and respect that context even when they are put into parent that comes from a different context. At this point, the only thing that you need to do to support hygiene is to set denotations in the trees that you return to users (see the "Semantics" section for more information about denotations).
 
 ### Immutability
 
 One of the main design goals of scala.meta is to provide a purely functional API to metaprogramming.
 
-Native scala.meta services (parsing, quasiquotes - essentially, everything syntactic) either don't have mutable state at all or have it localized to areas that don't affect publicly observable behavior.
+Native scala.meta services (parsing, quasiquotes - essentially, everything syntactic) either don't have mutable state at all or have it localized to areas that can't affect publicly observable behavior. The same level of robustness is expected from hosts, i.e. all semantic operations provided by hosts must be thread-safe.
 
-The same level of robustness is expected from hosts. Concretely: 1) semantic operations provided by hosts must be thread-safe, 2) data associated with trees using the scratchpad API (see below) must not be mutable. At the moment `scratchpad` and `withScratchpad` use `Any`, but later on we might refine the type signature or reshape the API altogether.
+### Semantics
 
-### Correlation with native trees
+In order to implement semantic operations on scala.meta trees (e.g. resolving references, computing supertypes, etc), you will need to correlate them with your native metaprogramming artifacts such as e.g. scala.reflect symbols or types. To accommodate this need, we provide two facilities to store semantic information in scala.meta trees: 1) denotations, 2) types.
 
-When implementing a host for scala.meta, you will most likely have a need to correlate scala.meta trees and your native trees (and/or other metaprogramming artifacts such as e.g. scala.reflect symbols or types) in order to do things like resolving references, computing supertypes, etc.
+  1. Denotations are exclusive to names (i.e. to trees that inherit from `Name`: Term.Name, Type.Name, Ctor.Name, Name.Anonymous and Name.Indeterminate) and represent definitions that are referenced by those names. More concretely, every name tree has two fields that are `private[meta]`: `val denot: Denotation` and `val sigma: Sigma`.
 
-While, in the ideal world, for that we would like to have a host-independent calculus based on hygiene, designing and implementing it is a huge undertaking, which we don't have time for at the moment. Therefore, for the time being, we expose a theoretically unsatisfying workaround API that can be used to attach arbitrary data to scala.meta trees.
+    1. A `Denotation` consists of a prefix and one or more symbols. A prefix is a type of a term from which a name is selected (`Prefix.Type`) or nothing in case when a name is local to a block (`Prefix.Zero`). A symbol is a unique identifier of a definition referenced by a name (check out the [sources](/scalameta/src/main/scala/scala/meta/internal/hygiene/Denotations.scala) to learn more about the structure of symbols). There can be `Denotation.Zero` that stands for an unknown denotation, `Denotation.Single` to express unambiguously resolved references and `Denotation.Multi` for imports and overloaded methods.
 
-Concretely, every `Tree` has an associated `Seq[Any]` collection that can be accessed via `Tree.scratchpad` and modified in a copy-on-write fashion via `Tree.appendScratchpad(datum: Any)` and `Tree.withScratchpad(data: Seq[Any])`. These APIs are `private[meta]`, so be sure to use it from an appropriately named package (a convention that we use is putting host implementations into the `scala.meta.internal.hosts` package).
+        In the example below, we can see a tree that represents List[Int], with denotations filled in correctly. The numbers in square brackets next to name trees refer to denotations that are printed below, with the parts before :: standing for prefixes and the parts after :: standing for symbols (dots in fully-qualified names are term selections and hashes are type selections).
 
-We understand that this API is at odds with the goals of statelessness and platform independence of scala.meta trees, but we have to accept this for the time being. Providing a principled API for this area of scala.meta is high on our priority list.
+        ```
+        scala> t"List[Int]".show[Semantics]
+        res0: String =
+        Type.Apply(Type.Name("List")[1], List(Type.Name("Int")[2]))
+        [1] Type.Singleton(Term.Name("package")[3])::scala.package#List
+        [2] Type.Singleton(Term.Name("scala")[4])::scala#Int
+        [3] Type.Singleton(Term.Name("scala")[4])::scala.package
+        [4] Type.Singleton(Term.Name("_root_")[5])::scala
+        [5] 0::_root_
+        ```
+
+        While global symbols (i.e. the ones that are visible from other files) are more or less straightforward (you represent them with data structures equivalent to fully-qualified names, with a slight complication for overloaded methods), local symbols require more effort. The tricky thing here is generating unique identifiers for local definitions that symbols refer to and then making sure that you return the same identifier if the same local definition is converted more than once.
+
+    1. A `Sigma` is our implementation vehicle for hygiene. In its signature (`trait Sigma { def resolve(name: Name): Denotation }`), a sigma captures the essence of name resolution, potentially allowing trees to remember their lexical context and then to use it to resolve arbitrary names, computing resulting denotations on the fly. At the moment, our implementation of hygiene is very naive, which is reflected by the fact that there's only one sigma, namely the `Sigma.Naive` object, which is what you're expected to use in every name tree.
+
+  1. Types are exclusive to terms (i.e. to trees that inherit from `Term`). Every term tree has a `private[meta] val tpe: Type` field, which can either be `null` that stands for unknown type) or any other value that stands for a type of that term. While we recognize that representing optionality with nulls is not the best idea, this saves memory and never leaks into the public API, which in our opinion makes such representation acceptable.
+
+When processing a semantic request from a user, you may receive a tree that is in one of three states: A) fully attributed (i.e. every name has a filled-in denotation and every term has a filled-in type - this is most likely a consequence of the tree coming completely from your host), B) unattributed (this can happen when a tree is created by the user, e.g. in a quasiquote), C) a mix of A and B.
+
+In scala.reflect, the metaprogramming API behaves differently depending on the state of input trees (with some functionality only working in state A and some functionality failing in incomprehensible ways for B), so the user has to have a detailed understanding of what's going and to possibly patch the their trees to upgrade to status A. In order to address this problem, scala.meta requires hosts to gracefully handle any combination of A, B and C. Your implementation must be able to produce correct results regardless of the state that input trees are in, doing its best to infer missing semantic information taking into account the lexical context where the tree came from.
 
 ### Context API
 
