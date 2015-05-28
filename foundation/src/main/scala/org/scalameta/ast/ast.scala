@@ -82,19 +82,16 @@ class AstMacros(val c: Context) {
       }
 
       // step 4: create boilerplate bookkeeping parameters
-      val scratchpadType = tq"_root_.scala.collection.immutable.Seq[Any]"
       bparams1 += q"protected val internalPrototype: $iname"
       bparams1 += q"protected val internalParent: _root_.scala.meta.Tree"
-      bparams1 += q"protected val internalScratchpad: $scratchpadType"
       bparams1 += q"protected var internalTokens: _root_.scala.meta.Tokens"
       def internalize(name: TermName) = TermName("_" + name.toString)
       val internalCopyInitss = paramss.map(_.map(p => q"$AstInternal.initField(this.${internalize(p.name)})"))
-      val internalCopyBody = q"new $name(prototype.asInstanceOf[ThisType], parent, scratchpad, tokens)(...$internalCopyInitss)"
+      val internalCopyBody = q"new $name(prototype.asInstanceOf[ThisType], parent, tokens)(...$internalCopyInitss)"
       stats1 += q"""
         private[meta] def internalCopy(
             prototype: _root_.scala.meta.Tree = this,
             parent: _root_.scala.meta.Tree = internalParent,
-            scratchpad: $scratchpadType = internalScratchpad,
             tokens: _root_.scala.meta.Tokens = internalTokens): ThisType = {
           $internalCopyBody
         }
@@ -192,7 +189,7 @@ class AstMacros(val c: Context) {
       internalBody ++= aimports
       internalBody ++= requires
       val paramInitss = internalLocalss.map(_.map{ case (local, internal) => q"$AstInternal.initParam($local)" })
-      internalBody += q"val node = new $name(null, null, _root_.scala.collection.immutable.Nil, tokens)(...$paramInitss)"
+      internalBody += q"val node = new $name(null, null, tokens)(...$paramInitss)"
       internalBody ++= internalLocalss.flatten.flatMap{ case (local, internal) =>
         val (validators, assignee) = {
           // TODO: this is totally ugly. we need to come up with a way to express this in a sane way.
