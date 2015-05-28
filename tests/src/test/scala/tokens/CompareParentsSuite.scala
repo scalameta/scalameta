@@ -187,6 +187,9 @@ class CompareParentsSuite extends FunSuite {
                 val inferTokensOutput = transformAll(parsed).tree.get.tokens.map(_.show[Code]).mkString
                 val parentInShowCode = showCodeOutput.count(p => p == '(' || p == ')')
                 val parentInTokenOutput = inferTokensOutput.count(p => p == '(' || p == ')')
+                if (parentInTokenOutput > parentInShowCode) {
+                    printCodes(showCodeOutput, inferTokensOutput)(None)
+                }
                 assert(parentInTokenOutput <= parentInShowCode)
         }
       }

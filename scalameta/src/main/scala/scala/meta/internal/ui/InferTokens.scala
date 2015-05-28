@@ -18,8 +18,6 @@ import scala.language.implicitConversions
 
 import scala.annotation.tailrec
 
-// TODO: put back position to their right place, if required?
-
 // TODO: this infers tokens for the Scala211 dialect due to token quasiquotes (the dialect needs to be explicitly imported). It should be changed in the future.
 private[meta] object inferTokens {
   def apply(tree: Tree, proto: Option[Tree]): Tokens = {
@@ -101,7 +99,7 @@ private[meta] object inferTokens {
       def `o;o` = flattks()(toks"; ")()
       def `o_o_` = flattks()(toks" ")(toks" ")
       def `[o,o]` = flattks(toks"[")(toks", ")(toks"]")
-      def `{o,o}` = flattks(toks"{")(toks", ")(toks"}")
+      def `{o,o}` = flattks(toks"{ ")(toks", ")(toks" }")
       def `(o,o)` = flattks(toks"(")(toks", ")(toks")")
       def `[->o->` = flattks(newline)(newline, avoidDoubleLineFun andThen indentFun)(newline)
       def `[->o` = flattks(newline)(newline, avoidDoubleLineFun andThen indentFun)()
@@ -205,7 +203,7 @@ private[meta] object inferTokens {
         /* Covering cases for calls on Term.Match  */
         case (_: Term.Match, Some(_: Term.Select)) => true
         /* Covering cases for Term.ApplyInfix */
-        case (_: Term.ApplyInfix, Some(t: Term.ApplyInfix)) => true
+        case (t1: Term.ApplyInfix, Some(t2: Term.ApplyInfix)) if t1.op.value != t2.op.value => true
         case (_, Some(t: Term.ApplyInfix)) if t.args.length == 1 =>
           tree match {
             case _: Term.If => true
@@ -226,10 +224,10 @@ private[meta] object inferTokens {
         case (_: Type.Function, None) => true /* TODO: figure out why a function in a template as an extends does not have a parent! */
         /* Covering cases for Pat.ExtractInfix */
         case (t: Pat.Bind, Some(_: Pat.ExtractInfix)) => true
-        case (t: Pat.ExtractInfix, Some(_: Pat.ExtractInfix)) => true
+        case (t1: Pat.ExtractInfix, Some(t2: Pat.ExtractInfix)) if t1.ref.value != t2.ref.value => true
         /* Covering cases for Pat.Typed */
         case (t: Pat.Typed, Some(_: Pat.ExtractInfix)) => true
-        /* Covering cases for Term.Unary */
+        /* Covering cases for Term.Unary */	
         case (_, Some(_: Term.ApplyUnary)) =>
           tree match {
             case _: Term.ApplyInfix => true
@@ -282,12 +280,13 @@ private[meta] object inferTokens {
         val quote: Tokens = if (t.parts.map(_.value).exists(s => s.contains(EOL) || s.contains("\""))) tripleDoubleQuotes else singleDoubleQuotes
         toks"${mineIdentTk(t.prefix.value)}$quote${zipped.`oo`}${mineIdentTk(t.parts.last.value)}$quote"
       case t: Term.Apply =>
-        if (t.args.size == 1 && t.args.head.isInstanceOf[Term.PartialFunction]) toks"${t.fun.tks} ${t.args.`o,o`}"
+        if (t.args.size == 1 && t.args.head.isInstanceOf[Term.PartialFunction]) toks"${t.fun.tks} ${t.args.head.tks}"
+        else if (t.args.size == 1 && t.args.head.isInstanceOf[Term.Block]) toks"${t.fun.tks} ${t.args.head.tks}"
         else toks"${t.fun.tks}${t.args.`(o,o)`}"
       case t: Term.ApplyType => toks"${t.fun.tks}${t.targs.`[o,o]`}"
       case t: Term.ApplyInfix =>
         val rhs = t.args match {
-          case (arg: Term) :: Nil => toks"${arg.tks}"
+          case (arg: Term) :: Nil => arg.tks
           case args => args.`(o,o)`
         }
         toks"${t.lhs.tks} ${t.op.tks} $rhs"
@@ -509,20 +508,20 @@ private[meta] object inferTokens {
         else {
           val pearly = if (!t.early.isEmpty) toks"{ ${t.early.`o;o`} } with " else toks""
           val pparents = {
-            if (!t.parents.isEmpty) t.parents.flattks()(toks" with ")(toks" ")
+            if (!t.parents.isEmpty) t.parents.flattks()(toks" with ")()
             else toks""
           }
           val pbody = {
             val isOneLiner = t.stats.map(stats => stats.length == 0 || (stats.length == 1 && !stats.head.tokens.map(_.show[Code]).mkString.contains(EOL))).getOrElse(true)
             (isSelfNonEmpty, t.stats.nonEmpty, t.stats.getOrElse(Nil)) match {
               case (false, false, _) => toks""
-              case (true, false, _) => toks"{ ${t.self.tks} => }"
-              case (false, true, Seq()) if isOneLiner => toks"{}"
-              case (false, true, Seq(stat)) if isOneLiner => toks"{ ${stat.tks} }"
-              case (false, true, stats) => toks"{${stats.`[->o->`}}"
-              case (true, true, Seq()) if isOneLiner => toks"{ ${t.self.tks} => }"
-              case (true, true, Seq(stat)) if isOneLiner => toks"{ ${t.self.tks} => ${stat.tks} }"
-              case (true, true, stats) => toks"{ ${t.self.tks} =>${stats.`[->o->`}}"
+              case (true, false, _) => toks" { ${t.self.tks} => }"
+              case (false, true, Seq()) if isOneLiner => toks" {}"
+              case (false, true, Seq(stat)) if isOneLiner => toks" { ${stat.tks} }"
+              case (false, true, stats) => toks" {${stats.`[->o->`}}"
+              case (true, true, Seq()) if isOneLiner => toks" { ${t.self.tks} => }"
+              case (true, true, Seq(stat)) if isOneLiner => toks" { ${t.self.tks} => ${stat.tks} }"
+              case (true, true, stats) => toks" { ${t.self.tks} =>${stats.`[->o->`}}"
             }
           }
           toks"$pearly$pparents$pbody"
