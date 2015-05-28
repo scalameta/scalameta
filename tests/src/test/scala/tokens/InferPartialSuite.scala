@@ -42,6 +42,7 @@ class InferPartialSuite extends FunSuite {
     println("Printing tokens after modification by TQL:")
     println(newCode)
     assert(newCode.contains("/* Just creating a new case object */"))
+    assert(newCode.contains("/* This high-level comment should be persisted */"))
   }
 
 }

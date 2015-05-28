@@ -22,7 +22,7 @@ import scala.annotation.tailrec
 
 // TODO: this infers tokens for the Scala211 dialect due to token quasiquotes (the dialect needs to be explicitly imported). It should be changed in the future.
 private[meta] object inferTokens {
-	def apply(tree: Tree, proto: Option[Tree]): Tokens = {
+  def apply(tree: Tree, proto: Option[Tree]): Tokens = {
     infer(tree, proto)(scala.meta.dialects.Scala211) // as explained above, forcing dialect.
   }
 
@@ -53,8 +53,8 @@ private[meta] object inferTokens {
   /* Generate a single token for ident */
   private def mineIdentTk(value: String)(implicit dialect: Dialect): Tokens = Tokens(Token.Ident(Input.String(value), dialect, 0, value.length))
 
-    /* Checking if a token is en indentation */
-    val isIndent = (t: Token) => t.show[Code] == " " || t.show[Code] == "\t" || t.show[Code] == "\r"
+  /* Checking if a token is en indentation */
+  val isIndent = (t: Token) => t.show[Code] == " " || t.show[Code] == "\t" || t.show[Code] == "\r"
 
   /* Global infering function */
   private def infer(tree: Tree, proto: Option[Tree])(implicit dialect: Dialect): Tokens = {
@@ -586,36 +586,36 @@ private[meta] object inferTokens {
 
       // Source
       case t: Source => //t.stats.`o->o`
-      	proto match {
-      		/* If the proto is defined, we can then extract the top-level comment the root contains and re-insert them
+        proto match {
+          /* If the proto is defined, we can then extract the top-level comment the root contains and re-insert them
       		 * between the proper statements. We have no quarantee however that the indentation in a stat will correspond
       		 * to the indentation in the source token stream. As an outcome, we filter all indentation out prior to the
       		 * comparison. We then do the assumption that the correspondance between the stats from the original tree and
       		 * the new one are equivalent, i.e. that if a class A was before a class B, the class A is still before the 
       		 * class B in the modified tree, even if this one or the other might contains more stats (in which case, they
       		 * are either added or removed). By doing so, we are guaranteed to preserve top-level comments */
-      		case Some(original: Source) =>
-      			val originalTokens = original.tokens.filter(t => !isIndent(t))
-      			val oStatsTokens = original.stats.map(_.tokens.filter(t => !isIndent(t))).repr
-      			val zipped = (oStatsTokens zip t.stats.map(_.tokens.repr))
-      			val oStatsTail = oStatsTokens.drop(zipped.length).map(ts => (ts, Seq[Token]()))
-      			/* Loop and replace the original token streams from Source.stats the new ones */
-      			def loop(stream: Seq[Token], toReplace: Seq[(Seq[Token],Seq[Token])]): Seq[Token] = toReplace match {
-      				case Seq() => stream
-      				case tss => 
-      					val sliceIndex = stream.indexOfSlice(tss.head._1)
-      					loop(stream.patch(sliceIndex, tss.head._2, tss.head._1.length), tss.tail)
-      			}
-      			/* Keeping BOF */
-      			val patchedTokens = 
-      				if (!originalTokens.repr.isEmpty && originalTokens.head.isInstanceOf[Token.BOF]) 
-      					originalTokens.repr.head +: loop(originalTokens.repr.tail, zipped ++ oStatsTail)
-      				else loop(originalTokens.repr, zipped ++ oStatsTail)
-      			val newStats = t.stats.drop(zipped.length).`->o->`
-      			Tokens(patchedTokens ++ newStats: _*)
-      		/* If the proto is not defined, we simply put all statements line per line */
-    			case _ => t.stats.`o->o`
-      	}
+          case Some(original: Source) =>
+            val originalTokens = original.tokens.filter(t => !isIndent(t))
+            val oStatsTokens = original.stats.map(_.tokens.filter(t => !isIndent(t))).repr
+            val zipped = (oStatsTokens zip t.stats.map(_.tokens.repr))
+            val oStatsTail = oStatsTokens.drop(zipped.length).map(ts => (ts, Seq[Token]()))
+            /* Loop and replace the original token streams from Source.stats the new ones */
+            def loop(stream: Seq[Token], toReplace: Seq[(Seq[Token], Seq[Token])]): Seq[Token] = toReplace match {
+              case Seq() => stream
+              case tss =>
+                val sliceIndex = stream.indexOfSlice(tss.head._1)
+                loop(stream.patch(sliceIndex, tss.head._2, tss.head._1.length), tss.tail)
+            }
+            /* Keeping BOF */
+            val patchedTokens =
+              if (!originalTokens.repr.isEmpty && originalTokens.head.isInstanceOf[Token.BOF])
+                originalTokens.repr.head +: loop(originalTokens.repr.tail, zipped ++ oStatsTail)
+              else loop(originalTokens.repr, zipped ++ oStatsTail)
+            val newStats = t.stats.drop(zipped.length).`->o->`
+            Tokens(patchedTokens ++ newStats: _*)
+          /* If the proto is not defined, we simply put all statements line per line */
+          case _ => t.stats.`o->o`
+        }
     }
 
     tkz(tree.asInstanceOf[scala.meta.internal.ast.Tree])
@@ -640,7 +640,7 @@ private[meta] object inferTokens {
    * the top indentation and re-infer it, to be sure that we have something looking good at the
    * end. A drawback on this is that we don't keep the original indentation. */
   private def deindent(tks: Tokens): Tokens = {
-  	      val lines = tks.onLines
+    val lines = tks.onLines
     if (tks.isSynthetic || tks.repr.isEmpty || lines.length == 1) tks
     else {
       /* In many cases, the start of a stat is not on a newline while the end is.

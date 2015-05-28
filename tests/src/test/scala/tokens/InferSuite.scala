@@ -10,7 +10,7 @@ class InferSuite extends FunSuite {
 
   private def trimTokens(tks: Tokens) = tks.filterNot(tk => tk.isInstanceOf[Token.BOF] || tk.isInstanceOf[Token.EOF])
 
-  private def compareTokenCodes(a: Tree, b: Tree, ignoreSpaces: Boolean = true): Unit = {
+  private def compareTokenCodes(a: Tree, b: Tree, ignoreSpaces: Boolean = false): Unit = {
     def getCodes(t: Tree) = {
       val codes = trimTokens(t.tokens).map(_.show[Code])
       if (ignoreSpaces) codes.filter(_ != " ")
@@ -236,7 +236,7 @@ class InferSuite extends FunSuite {
     val tree = """x match {
                  |  case u: Int => {
                  |    println("hi") /* this is a comment */
-                 |    }
+                 |  }
                  |  case u: String => println(u)
                  |}"""
       .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Term.Match]
@@ -1201,7 +1201,7 @@ class InferSuite extends FunSuite {
                  |  }
                  |}""".stripMargin.parse[Stat]
     val t1 = findFirst(tree)((p: Tree) => p.isInstanceOf[scala.meta.internal.ast.Ctor.Secondary]).asInstanceOf[scala.meta.internal.ast.Ctor.Secondary]
-    compareTokenCodes(t1, t1.copy())
+    compareTokenCodes(t1, t1.copy(), true)
   }
 
   /* Infering Mods */
