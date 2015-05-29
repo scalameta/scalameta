@@ -45,7 +45,7 @@ private[meta] trait LegacyTokenData {
 
   override def toString = s"{token = $token, position = $offset..$endOffset, lastOffset = $lastOffset, name = $name, strVal = $strVal, base = $base}"
 
-  val reporter: Reporter = Reporter(content)
+  lazy val reporter: Reporter = Reporter(content)
   import reporter._
 
   /** Convert current strVal to char value
@@ -55,7 +55,7 @@ private[meta] trait LegacyTokenData {
   /** Convert current strVal, base to an integer value
    *  This is tricky because of max negative value.
    */
-  private def integerVal(limit: BigInt): BigInt = {
+  private def integerVal: BigInt = {
     var input = strVal
     if (input.startsWith("0x") || input.startsWith("0X")) input = input.substring(2)
     if (input.endsWith("l") || input.endsWith("L")) input = input.substring(0, input.length - 1)
@@ -71,14 +71,12 @@ private[meta] trait LegacyTokenData {
       value = value * base + d
       i += 1
     }
-    if (value > limit) syntaxError("integer number too large", at = offset)
     value
   }
 
   /** Convert current strVal, base to double value
   */
-  private def floatingVal(limit: Double): Double = {
-    val value: Double = java.lang.Double.valueOf(strVal).doubleValue()
+  private def floatingVal: BigDecimal = {
     def isDeprecatedForm = {
       val idx = strVal indexOf '.'
       (idx == strVal.length - 1) || (
@@ -87,14 +85,18 @@ private[meta] trait LegacyTokenData {
         && (!Character.isDigit(strVal charAt (idx + 1)))
       )
     }
-    if (isDeprecatedForm)
+    if (isDeprecatedForm) {
       syntaxError("floating point number is missing digit after dot", at = offset)
-    if (value > limit) syntaxError("floating point number too large", at = offset)
-    value
+    } else {
+      val designatorSuffixes = List('d', 'D', 'f', 'F')
+      val parsee = if (strVal.nonEmpty && designatorSuffixes.contains(strVal.last)) strVal.dropRight(1) else strVal
+      try BigDecimal(parsee)
+      catch { case ex: Exception => syntaxError("malformed floating point number", at = offset) }
+    }
   }
 
-  def intVal: BigInt = integerVal(-BigInt(Int.MinValue))
-  def longVal: BigInt = integerVal(-BigInt(Long.MinValue))
-  def floatVal: Float = floatingVal(Float.MaxValue).toFloat
-  def doubleVal: Double = floatingVal(Double.MaxValue)
+  def intVal: BigInt = integerVal
+  def longVal: BigInt = integerVal
+  def floatVal: BigDecimal = floatingVal
+  def doubleVal: BigDecimal = floatingVal
 }
