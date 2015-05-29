@@ -1,6 +1,7 @@
 package scala.meta
 
 import org.scalameta.annotations._
+import scala.meta.internal.quasiquotes.TokenReificationMacros
 import scala.meta._
 
 private[meta] trait Quasiquotes {
@@ -25,4 +26,12 @@ private[meta] trait Quasiquotes {
   @quasiquote[Enumerator]('enumerator) implicit class XtensionQuasiquoteEnumerator(ctx: StringContext)
   @quasiquote[Importee]('importee)     implicit class XtensionQuasiquoteImportee(ctx: StringContext)
   @quasiquote[Source]('source)         implicit class XtensionQuasiquoteSource(ctx: StringContext)
+
+  implicit class XtensionQuasiquoteTokens(val ctx: StringContext) {
+    object toks {
+      import scala.language.experimental.macros
+      def apply(args: Any*)(implicit dialect: Dialect): Tokens = macro TokenReificationMacros.apply
+      def unapply(scrutinee: Any)(implicit dialect: Dialect): Any = macro TokenReificationMacros.unapply
+    }
+  }
 }

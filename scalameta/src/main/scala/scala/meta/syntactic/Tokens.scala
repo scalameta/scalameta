@@ -6,6 +6,8 @@ import scala.collection.generic._
 import scala.collection.mutable.{Builder, ArrayBuilder, ListBuffer}
 import scala.collection.immutable.VectorBuilder
 
+import scala.reflect.macros.blackbox.Context
+
 // TODO: We should really give up on trying to use the standard IndexedSeq machinery,
 // because it doesn't give us a good way to load the elements lazily, which is necessary for Tokens.Slice
 // and would obviate the need for the very existence of Tokens.Prototype.
@@ -111,5 +113,37 @@ object Tokens {
     override def take(n: Int): Tokens = new Slice(tokens, from, Math.min(from + n, until))
     override def drop(n: Int): Tokens = new Slice(tokens, Math.min(from + n, until), until)
     override def toString = s"Slice($tokens, $from, $until)"
+  }
+}
+
+trait TokensLiftables extends TokenLiftables {
+  val c: Context
+
+  private val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
+
+  import c.universe._
+
+  implicit def liftTokens: Liftable[Tokens] = Liftable[Tokens] { tokens =>
+    def prepend(tokens: Tokens, t: Tree): Tree =
+      (tokens foldRight t) { case (token, acc) => q"$token +: $acc" }
+
+    def append(t: Tree, tokens: Tokens): Tree =
+      // We call insert tokens again because there may be things that need to be spliced in it
+      q"$t ++ ${insertTokens(tokens)}"
+
+    def insertTokens(tokens: Tokens): Tree = {
+      val (pre, middle) = tokens span (!_.isInstanceOf[Token.Unquote])
+      middle match {
+        case Tokens() =>
+          prepend(pre, q"_root_.scala.meta.syntactic.Tokens()")
+        case Token.Unquote(_, _, _, _, tree: Tree) +: rest =>
+          // If we are splicing only a single token we need to wrap it in a Vector
+          // to be able to append and prepend other tokens to it easily.
+          val quoted = if (tree.tpe <:< typeOf[Token]) q"_root_.scala.meta.syntactic.Tokens($tree)" else tree
+          append(prepend(pre, quoted), Tokens(rest: _*))
+      }
+    }
+
+    insertTokens(tokens)
   }
 }

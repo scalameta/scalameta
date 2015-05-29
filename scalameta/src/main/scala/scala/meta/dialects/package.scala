@@ -2,6 +2,7 @@ package scala.meta
 
 import scala.language.experimental.{macros => prettyPlease}
 import scala.annotation.implicitNotFound
+import scala.reflect.macros.blackbox.Context
 
 // NOTE: can't put Dialect into scala.meta.Dialects
 // because then implicit scope for Dialect lookups will contain members of the package object
@@ -42,5 +43,27 @@ package object dialects {
     def bindToSeqWildcardDesignator = dialect.bindToSeqWildcardDesignator
     def allowXmlLiterals = dialect.allowXmlLiterals
     def allowEllipses = true
+  }
+}
+
+trait DialectLiftables {
+  val c: Context
+
+  private val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
+
+  import c.universe._
+
+  implicit lazy val liftDialect: Liftable[Dialect] = Liftable[Dialect] { dialect =>
+    dialect match {
+      case dialects.Scala211 => q"_root_.scala.meta.dialects.Scala211"
+      case dialects.Dotty    => q"_root_.scala.meta.dialects.Dotty"
+      case other =>
+        q"""new _root_.scala.meta.Dialect {
+              override def toString = ${other.toString}
+              def bindToSeqWildcardDesignator = ${other.bindToSeqWildcardDesignator}
+              def allowXmlLiterals = ${other.allowXmlLiterals}
+              def allowEllipses = ${other.allowEllipses}
+            }"""
+    }
   }
 }
