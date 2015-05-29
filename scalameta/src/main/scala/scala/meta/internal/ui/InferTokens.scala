@@ -68,8 +68,8 @@ private[meta] object inferTokens {
 
     /* Enrichments for token manipulation */
     implicit class RichTree(tree: Tree) {
-      def tks = tokensWithParents(tree)
-      def indTks = indent(tokensWithParents(tree))(indentation)
+      def tks = tokensNeedParens(tree)
+      def indTks = indent(tokensNeedParens(tree))(indentation)
       def `[->o->` = toks"$newline${tree.indTks}$newline"
     }
     implicit class RichTreeSeq(trees: Seq[Tree]) {
@@ -197,13 +197,28 @@ private[meta] object inferTokens {
       !isOnlyChildOfOnlyChild(t)
     }
 
+    /* Checking operator precedence and associativity to see if parenthesis are needed in case of infix call */
+    def opNeedsParens(childOp: String, parentOp: String, isLeft: Boolean, customAssoc: Boolean, customPrecedence: Boolean): Boolean = {
+    	val isRight = !isLeft
+      implicit class XtensionMySyntacticInfo(opName: String) {
+        def isLeftAssoc: Boolean = if (customAssoc) opName.last != ':' else true
+        def precedence: Int = if (customPrecedence) Term.Name(opName).precedence else 0
+      }
+      if (childOp == parentOp) false
+      else {
+      	val (childLAssoc, parentLAssoc) = (childOp.isLeftAssoc, parentOp.isLeftAssoc)
+      	val (childPrec, parentPrec) = (childOp.precedence, parentOp.precedence)
+    		(childLAssoc ^ parentLAssoc) && childPrec <= parentPrec
+      }
+    }
+
     /* Infer parenthesis for a token based on its parent and generate the corresponding token stream using the `tkz` dispatcher. */
-    def tokensWithParents(tree: Tree): Tokens = {
+    def tokensNeedParens(tree: Tree): Tokens = {
       val withParents = (tree, tree.parent) match {
         /* Covering cases for calls on Term.Match  */
         case (_: Term.Match, Some(_: Term.Select)) => true
         /* Covering cases for Term.ApplyInfix */
-        case (t1: Term.ApplyInfix, Some(t2: Term.ApplyInfix)) if t1.op.value != t2.op.value => true
+        case (t1: Term.ApplyInfix, Some(t2: Term.ApplyInfix)) if opNeedsParens(t1.op.value, t2.op.value, isLeft = t2.lhs == t1, customAssoc = true, customPrecedence = true) => true
         case (_, Some(t: Term.ApplyInfix)) if t.args.length == 1 =>
           tree match {
             case _: Term.If => true
@@ -222,12 +237,14 @@ private[meta] object inferTokens {
         case (_: Term.Annotate, Some(_: Term.Select)) => true
         /* Covering cases for Type.Function */
         case (_: Type.Function, None) => true /* TODO: figure out why a function in a template as an extends does not have a parent! */
+        /* Covering cases for Type.ApplyInfix */
+        // TODO
         /* Covering cases for Pat.ExtractInfix */
         case (t: Pat.Bind, Some(_: Pat.ExtractInfix)) => true
         case (t1: Pat.ExtractInfix, Some(t2: Pat.ExtractInfix)) if t1.ref.value != t2.ref.value => true
         /* Covering cases for Pat.Typed */
         case (t: Pat.Typed, Some(_: Pat.ExtractInfix)) => true
-        /* Covering cases for Term.Unary */	
+        /* Covering cases for Term.Unary */
         case (_, Some(_: Term.ApplyUnary)) =>
           tree match {
             case _: Term.ApplyInfix => true

@@ -167,11 +167,6 @@ class CompareParentsSuite extends FunSuite {
     println("====================================================")
   }
 
-  /* RESULTS: (over 141 cases)
-   * InferToken is worse than showCode in 47 cases 
-   * InferToken is equal to showCode in 74 cases
-   * InferToken is better than showCode 40 in cases
-   */
   def loop(dir: File): Unit = {
     def linePositionTest(src: File): Unit = {
       test("Testing number of parentheses for file " + src.getAbsolutePath) {

@@ -13,7 +13,7 @@ import scala.util.{ Try, Failure, Success }
 
 class InferAndReparseSuite extends FunSuite {
   var dir = new File(new File(System.getProperty("sbt.paths.tests.source")).getAbsolutePath)
-  def isProjectRoot(dir: File) = dir != null && new File(dir.getAbsolutePath + File.separatorChar + "project" + File.separatorChar + "build.scala").exists
+  def isProjectRoot(dir: File) = dir != null && netw File(dir.getAbsolutePath + File.separatorChar + "project" + File.separatorChar + "build.scala").exists
   while (dir != null && !isProjectRoot(dir)) dir = dir.getParentFile
   test("ProjectDir (" + dir.getAbsolutePath + ")")(assert(isProjectRoot(dir)))
 
@@ -178,6 +178,7 @@ class InferAndReparseSuite extends FunSuite {
           case Success(reparsed) =>
             /* Let's try to reparse it and compare the outputs */
             val newNewCode = transformAll(reparsed).tree.get.tokens.map(_.show[Code]).mkString
+            //printCodes(content, newNewCode)
             if (newCode != newNewCode) printCodes(content, newCode, newNewCode)(None)
             assert(newCode == newNewCode)
           case Failure(err) =>
