@@ -1,14 +1,13 @@
 package scala.meta
 package syntactic
 
-import org.scalameta.adt // NOTE: no underscore import!
+import org.scalameta.tokens // NOTE: no underscore import!
 import org.scalameta.tokens._
 import org.scalameta.default._
 import org.scalameta.default.Param._
 import scala.reflect.ClassTag
-import scala.language.experimental.macros
 
-@root trait Token {
+@root trait Token extends org.scalameta.tokens.internal.Token {
   def input: Content = content
   def content: Content
   def dialect: Dialect
@@ -151,5 +150,90 @@ object Token {
     override def code = ""
     def start = content.chars.length
     def end = content.chars.length
+  }
+}
+
+// NOTE: We have this unrelated code here, because of how materializeAdt works.
+//
+// Due to an unfortunate limitation of knownDirectSubclasses,
+// all macro applications that depend on that API
+// must come after the classes that they call the API on.
+//
+// That's why if we put TokenLiftables elsewhere, we might run into troubles
+// depending on how the file and its enclosing directories are called.
+// To combat that, we have TokenLiftables right here, guaranteeing that there won't be problems
+// if someone wants to refactor/rename something later.
+trait TokenLiftables extends tokens.Liftables {
+  val c: scala.reflect.macros.blackbox.Context
+  override lazy val u: c.universe.type = c.universe
+
+  import c.universe._
+  private val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
+
+  implicit lazy val liftContent: Liftable[Content] = Liftable[Content] { content =>
+    q"_root_.scala.meta.Input.String(${new String(content.chars)})"
+  }
+
+  implicit lazy val liftDialect: Liftable[Dialect] = Liftable[Dialect] { dialect =>
+    if (dialect == dialects.Scala211) q"_root_.scala.meta.dialects.Scala211"
+    else if (dialect == dialects.Dotty) q"_root_.scala.meta.dialects.Dotty"
+    else {
+      val dialectMethods = typeOf[Dialect].decls.map(sym => {
+        def fail() = c.abort(c.enclosingPosition, "fatal error: unsupported member $sym")
+        if (!sym.isMethod) fail()
+        if (sym.asMethod.paramLists.length != 0) fail()
+        sym.asMethod
+      }).toList
+      def liftProp(name: String): Tree = {
+        val value = dialect.getClass.getDeclaredMethod(name).invoke(dialect).asInstanceOf[Any]
+        value match {
+          case s: String => q"$s"
+          case b: Boolean => q"$b"
+          case _ => c.abort(c.enclosingPosition, "fatal error: unsupported prop $name")
+        }
+      }
+      val props = "toString" +: dialectMethods.map(_.name.toString)
+      val proxies = props.map(p => q"override def ${TermName(p)} = ${liftProp(p)}")
+      q"new _root_.scala.meta.Dialect { ..$proxies }"
+    }
+  }
+
+  implicit lazy val liftBigInt: Liftable[BigInt] = Liftable[BigInt] { v =>
+    q"_root_.scala.math.BigInt(${v.bigInteger.toString})"
+  }
+
+  implicit lazy val liftBigDecimal: Liftable[BigDecimal] = Liftable[BigDecimal] { v =>
+    q"_root_.scala.math.BigDecimal(${v.bigDecimal.toString})"
+  }
+
+  lazy implicit val liftUnquote: Liftable[Token.Unquote] = Liftable[Token.Unquote] { u =>
+    c.abort(c.macroApplication.pos, "fatal error: this shouldn't have happened")
+  }
+
+  // TODO: this can't be `implicit val`, because then the materialization macro will crash in GenICode
+  implicit def liftToken: Liftable[Token] = materializeToken[Token]
+
+  implicit lazy val liftTokens: Liftable[Tokens] = Liftable[Tokens] { tokens =>
+    def prepend(tokens: Tokens, t: Tree): Tree =
+      (tokens foldRight t) { case (token, acc) => q"$token +: $acc" }
+
+    def append(t: Tree, tokens: Tokens): Tree =
+      // We call insert tokens again because there may be things that need to be spliced in it
+      q"$t ++ ${insertTokens(tokens)}"
+
+    def insertTokens(tokens: Tokens): Tree = {
+      val (pre, middle) = tokens span (!_.isInstanceOf[Token.Unquote])
+      middle match {
+        case Tokens() =>
+          prepend(pre, q"_root_.scala.meta.syntactic.Tokens()")
+        case Token.Unquote(_, _, _, _, tree: Tree) +: rest =>
+          // If we are splicing only a single token we need to wrap it in a Vector
+          // to be able to append and prepend other tokens to it easily.
+          val quoted = if (tree.tpe <:< typeOf[Token]) q"_root_.scala.meta.syntactic.Tokens($tree)" else tree
+          append(prepend(pre, quoted), Tokens(rest: _*))
+      }
+    }
+
+    insertTokens(tokens)
   }
 }
