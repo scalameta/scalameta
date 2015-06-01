@@ -153,6 +153,16 @@ object Token {
   }
 }
 
+// NOTE: We have this unrelated code here, because of how materializeAdt works.
+//
+// Due to an unfortunate limitation of knownDirectSubclasses,
+// all macro applications that depend on that API
+// must come after the classes that they call the API on.
+//
+// That's why if we put TokenLiftables elsewhere, we might run into troubles
+// depending on how the file and its enclosing directories are called.
+// To combat that, we have TokenLiftables right here, guaranteeing that there won't be problems
+// if someone wants to refactor/rename something later.
 trait TokenLiftables extends adt.Liftables {
   val c: scala.reflect.macros.blackbox.Context
   override lazy val u: c.universe.type = c.universe
