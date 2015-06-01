@@ -5,6 +5,7 @@ package quasiquotes.tokens
 import scala.reflect.macros.whitebox.Context
 import scala.meta.syntactic.TokenLiftables
 import scala.meta.internal.dialects.InstantiateDialect
+import scala.meta.syntactic.{Token => MetaToken}
 
 /**
  * Object used to extract the underlying code for each token.
@@ -46,8 +47,8 @@ class ReificationMacros(val c: Context) extends TokenLiftables
 
     /** Removes the heading BOF and trailing EOF from a sequence of tokens */
     def trim(toks: Tokens): Tokens = toks match {
-      case (_: Token.BOF) +: toks :+ (_: Token.EOF) => Tokens(toks: _*)
-      case _                                        => toks
+      case (_: MetaToken.BOF) +: toks :+ (_: MetaToken.EOF) => Tokens(toks: _*)
+      case _                                                => toks
     }
 
     val result =
@@ -56,7 +57,7 @@ class ReificationMacros(val c: Context) extends TokenLiftables
           // TODO: Ugh, creating synthetic inputs with semi-meaningless text just to satisfy the framework.
           // This really shows the need in virtual tokens...
           val argAsString = arg(i).toString
-          trim(part.tokens) :+ Token.Unquote(Input.String(argAsString), dialect, 0, argAsString.length - 1, arg(i))
+          trim(part.tokens) :+ MetaToken.Unquote(Input.String(argAsString), dialect, 0, argAsString.length - 1, arg(i))
       } ++ trim(parts.last.tokens)
 
     Tokens(result: _*)
@@ -69,7 +70,7 @@ class ReificationMacros(val c: Context) extends TokenLiftables
 
       case TermName("unapply") =>
         def countEllipsisUnquote(toks: Seq[Token]): Int = toks match {
-          case (_: Token.Ellipsis) +: (_: Token.Unquote) +: rest =>
+          case (_: MetaToken.Ellipsis) +: (_: MetaToken.Unquote) +: rest =>
             1 + countEllipsisUnquote(rest)
           case other +: rest =>
             countEllipsisUnquote(rest)
@@ -82,8 +83,8 @@ class ReificationMacros(val c: Context) extends TokenLiftables
         }
 
         def patternForToken(t: Token) = t match {
-          case t: Token.Unquote => pq"${t.tree.asInstanceOf[c.Tree]}"
-          case t                => pq"_root_.scala.meta.internal.quasiquotes.tokens.TokenExtractor(${t.code})"
+          case t: MetaToken.Unquote => pq"${t.tree.asInstanceOf[c.Tree]}"
+          case t                    => pq"_root_.scala.meta.internal.quasiquotes.tokens.TokenExtractor(${t.code})"
         }
 
         // Split the input in three parts: (before, ..unquote, after).
@@ -91,7 +92,7 @@ class ReificationMacros(val c: Context) extends TokenLiftables
         // `Tokens` using before +: ..unquote :+ after.
         val splitted = {
           def split(toks: Seq[Token]): (Tokens, Option[Token], Tokens) = toks match {
-            case (_: Token.Ellipsis) +: (u: Token.Unquote) +: rest =>
+            case (_: MetaToken.Ellipsis) +: (u: MetaToken.Unquote) +: rest =>
               (Tokens(), Some(u), Tokens(rest: _*))
 
             case t +: rest =>
@@ -142,7 +143,7 @@ class ReificationMacros(val c: Context) extends TokenLiftables
         // would get a Token.Projected[Token])
         val dottedUnquote =
           splitted match {
-            case (before, Some(_), _) => before count (_.isInstanceOf[Token.Unquote])
+            case (before, Some(_), _) => before count (_.isInstanceOf[MetaToken.Unquote])
             case _ => -1
           }
 
