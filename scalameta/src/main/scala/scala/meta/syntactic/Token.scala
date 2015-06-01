@@ -213,7 +213,7 @@ trait TokenLiftables extends adt.Liftables {
   // This liftable is here only because it is required by the Liftables infrastructure.
   // (Unquote has a member of type `Any`)
   private implicit lazy val liftAny: Liftable[Any] = Liftable[Any] { any =>
-    c.abort(c.macroApplication.pos, "Internal error in token quasiquote expansion: Should not try to lift scala.Any.")
+    c.abort(c.macroApplication.pos, "fatal error: this shouldn't have happened")
   }
 
   implicit lazy val liftToken: Liftable[Token] = materializeAdt[Token]

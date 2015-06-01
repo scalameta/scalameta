@@ -78,7 +78,7 @@ class ReificationMacros(val c: Context) extends TokenLiftables
         }
 
         if (countEllipsisUnquote(toks) > 1) {
-          c.abort(c.macroApplication.pos, "Cannot use ellipsis-unquote more than once.")
+          c.abort(c.macroApplication.pos, "cannot use splicing more than once per quasiquote")
         }
 
         def patternForToken(t: Token) = t match {
