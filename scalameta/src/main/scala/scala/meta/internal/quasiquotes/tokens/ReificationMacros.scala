@@ -32,6 +32,7 @@ class ReificationMacros(val c: Context) extends TokenLiftables
       args(i)
 
     case TermName("unapply") =>
+      // TODO: this is a hygiene violation
       val name = TermName(s"x$i")
       pq"$name @ _"
   }
