@@ -67,8 +67,8 @@ private[meta] object inferTokens {
 
     /* Enrichments for token manipulation */
     implicit class RichTree(tree: Tree) {
-      def tks =      tokensNeedParens(tree)
-      def indTks =   indent(tokensNeedParens(tree))(indentation)
+      def tks =      tokensWithParens(tree)
+      def indTks =   indent(tokensWithParens(tree))(indentation)
       def `[->o->` = toks"$newline${tree.indTks}$newline"
     }
     implicit class RichTreeSeq(trees: Seq[Tree]) {
@@ -243,7 +243,7 @@ private[meta] object inferTokens {
     }
 
     /* Infer parentheses for a token based on its parent and generate the corresponding token stream using the `tkz` dispatcher. */
-    def tokensNeedParens(tree: Tree): Tokens = {
+    def tokensWithParens(tree: Tree): Tokens = {
       def impNeedsParens(t: Tree) = t match {
         case _: Term.If =>        true
         case _: Term.Do =>        true
