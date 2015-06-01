@@ -53,6 +53,8 @@ class ReificationMacros(val c: Context) extends TokenLiftables
     val result =
       parts.init.zipWithIndex.flatMap {
         case (part, i) =>
+          // TODO: Ugh, creating synthetic inputs with semi-meaningless text just to satisfy the framework.
+          // This really shows the need in virtual tokens...
           val argAsString = arg(i).toString
           trim(part.tokens) :+ Token.Unquote(Input.String(argAsString), dialect, 0, argAsString.length - 1, arg(i))
       } ++ trim(parts.last.tokens)
