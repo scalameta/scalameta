@@ -81,7 +81,7 @@ class ReificationMacros(val c: Context) extends TokenLiftables
 
         def patternForToken(t: Token) = t match {
           case t: Token.Unquote => pq"${t.tree.asInstanceOf[c.Tree]}"
-          case t                => pq"_root_.scala.meta.internal.tokens.TokenExtractor(${t.code})"
+          case t                => pq"_root_.scala.meta.internal.quasiquotes.tokens.TokenExtractor(${t.code})"
         }
 
         // Split the input in three parts: (before, ..unquote, after).

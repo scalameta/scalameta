@@ -165,16 +165,26 @@ trait TokenLiftables extends adt.Liftables {
   }
 
   implicit lazy val liftDialect: Liftable[Dialect] = Liftable[Dialect] { dialect =>
-    dialect match {
-      case dialects.Scala211 => q"_root_.scala.meta.dialects.Scala211"
-      case dialects.Dotty    => q"_root_.scala.meta.dialects.Dotty"
-      case other =>
-        q"""new _root_.scala.meta.Dialect {
-              override def toString = ${other.toString}
-              def bindToSeqWildcardDesignator = ${other.bindToSeqWildcardDesignator}
-              def allowXmlLiterals = ${other.allowXmlLiterals}
-              def allowEllipses = ${other.allowEllipses}
-            }"""
+    if (dialect == dialects.Scala211) q"_root_.scala.meta.dialects.Scala211"
+    else if (dialect == dialects.Dotty) q"_root_.scala.meta.dialects.Dotty"
+    else {
+      val dialectMethods = typeOf[Dialect].decls.map(sym => {
+        def fail() = c.abort(c.enclosingPosition, "fatal error: unsupported member $sym")
+        if (!sym.isMethod) fail()
+        if (sym.asMethod.paramLists.length != 0) fail()
+        sym.asMethod
+      }).toList
+      def liftProp(name: String): Tree = {
+        val value = dialect.getClass.getDeclaredMethod(name).invoke(dialect).asInstanceOf[Any]
+        value match {
+          case s: String => q"$s"
+          case b: Boolean => q"$b"
+          case _ => c.abort(c.enclosingPosition, "fatal error: unsupported prop $name")
+        }
+      }
+      val props = "toString" +: dialectMethods.map(_.name.toString)
+      val proxies = props.map(p => q"override def ${TermName(p)} = ${liftProp(p)}")
+      q"new _root_.scala.meta.Dialect { ..$proxies }"
     }
   }
 
