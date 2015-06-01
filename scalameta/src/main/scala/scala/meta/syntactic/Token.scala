@@ -6,10 +6,6 @@ import org.scalameta.tokens._
 import org.scalameta.default._
 import org.scalameta.default.Param._
 import scala.reflect.ClassTag
-import scala.reflect.macros.blackbox.Context
-import scala.language.experimental.macros
-
-import scala.meta.DialectLiftables
 
 @root trait Token {
   def input: Content = content
@@ -157,13 +153,31 @@ object Token {
   }
 }
 
-trait TokenLiftables extends adt.Liftables with DialectLiftables with ContentLiftables {
-  val c: Context
+trait TokenLiftables extends adt.Liftables {
+  val c: scala.reflect.macros.blackbox.Context
   override lazy val u: c.universe.type = c.universe
 
   private val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
 
   import c.universe._
+
+  implicit lazy val liftContent: Liftable[Content] = Liftable[Content] { content =>
+    q"_root_.scala.meta.Input.String(${new String(content.chars)})"
+  }
+
+  implicit lazy val liftDialect: Liftable[Dialect] = Liftable[Dialect] { dialect =>
+    dialect match {
+      case dialects.Scala211 => q"_root_.scala.meta.dialects.Scala211"
+      case dialects.Dotty    => q"_root_.scala.meta.dialects.Dotty"
+      case other =>
+        q"""new _root_.scala.meta.Dialect {
+              override def toString = ${other.toString}
+              def bindToSeqWildcardDesignator = ${other.bindToSeqWildcardDesignator}
+              def allowXmlLiterals = ${other.allowXmlLiterals}
+              def allowEllipses = ${other.allowEllipses}
+            }"""
+    }
+  }
 
   implicit def liftBool2T[T: Liftable]: Liftable[Boolean => T] = Liftable[Boolean => T] { f =>
     q"(x: _root_.scala.Boolean) => if (x) ${f(true)} else ${f(false)}"
@@ -184,4 +198,28 @@ trait TokenLiftables extends adt.Liftables with DialectLiftables with ContentLif
   }
 
   implicit lazy val liftToken: Liftable[Token] = materializeAdt[Token]
+
+  implicit def liftTokens: Liftable[Tokens] = Liftable[Tokens] { tokens =>
+    def prepend(tokens: Tokens, t: Tree): Tree =
+      (tokens foldRight t) { case (token, acc) => q"$token +: $acc" }
+
+    def append(t: Tree, tokens: Tokens): Tree =
+      // We call insert tokens again because there may be things that need to be spliced in it
+      q"$t ++ ${insertTokens(tokens)}"
+
+    def insertTokens(tokens: Tokens): Tree = {
+      val (pre, middle) = tokens span (!_.isInstanceOf[Token.Unquote])
+      middle match {
+        case Tokens() =>
+          prepend(pre, q"_root_.scala.meta.syntactic.Tokens()")
+        case Token.Unquote(_, _, _, _, tree: Tree) +: rest =>
+          // If we are splicing only a single token we need to wrap it in a Vector
+          // to be able to append and prepend other tokens to it easily.
+          val quoted = if (tree.tpe <:< typeOf[Token]) q"_root_.scala.meta.syntactic.Tokens($tree)" else tree
+          append(prepend(pre, quoted), Tokens(rest: _*))
+      }
+    }
+
+    insertTokens(tokens)
+  }
 }

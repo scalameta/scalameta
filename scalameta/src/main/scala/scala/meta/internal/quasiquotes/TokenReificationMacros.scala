@@ -7,7 +7,7 @@ import scala.util.matching.Regex
 import scala.meta.{ Tree => MetaTree }
 import scala.reflect.macros.whitebox.Context
 
-import scala.meta.syntactic.{ TokenLiftables, TokensLiftables }
+import scala.meta.syntactic.TokenLiftables
 
 /**
  * Object used to extract the underlying code for each token.
@@ -18,7 +18,7 @@ object TokenExtractor {
 }
 
 class TokenReificationMacros(override val c: Context) extends ReificationMacros(c)
-                                                      with TokensLiftables {
+                                                         with TokenLiftables {
 
   import c.universe.{ Tree => ReflectTree, Liftable => ReflectLiftable, _ }
 
