@@ -6,7 +6,10 @@ import org.scalameta.tokens._
 import org.scalameta.default._
 import org.scalameta.default.Param._
 import scala.reflect.ClassTag
+import scala.reflect.macros.blackbox.Context
 import scala.language.experimental.macros
+
+import scala.meta.DialectLiftables
 
 @root trait Token {
   def input: Content = content
@@ -152,4 +155,33 @@ object Token {
     def start = content.chars.length
     def end = content.chars.length
   }
+}
+
+trait TokenLiftables extends adt.Liftables with DialectLiftables with ContentLiftables {
+  val c: Context
+  override lazy val u: c.universe.type = c.universe
+
+  private val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
+
+  import c.universe._
+
+  implicit def liftBool2T[T: Liftable]: Liftable[Boolean => T] = Liftable[Boolean => T] { f =>
+    q"(x: _root_.scala.Boolean) => if (x) ${f(true)} else ${f(false)}"
+  }
+
+  implicit def liftBigInt: Liftable[BigInt] = Liftable[BigInt] { v =>
+    q"_root_.scala.math.BigInt(${v.bigInteger.toString})"
+  }
+
+  implicit def liftBigDecimal: Liftable[BigDecimal] = Liftable[BigDecimal] { v =>
+    q"_root_.scala.math.BigDecimal(${v.bigDecimal.toString})"
+  }
+
+  // This liftable is here only because it is required by the Liftables infrastructure.
+  // (Unquote has a member of type `Any`)
+  private implicit lazy val liftAny: Liftable[Any] = Liftable[Any] { any =>
+    c.abort(c.macroApplication.pos, "Internal error in token quasiquote expansion: Should not try to lift scala.Any.")
+  }
+
+  implicit lazy val liftToken: Liftable[Token] = materializeAdt[Token]
 }

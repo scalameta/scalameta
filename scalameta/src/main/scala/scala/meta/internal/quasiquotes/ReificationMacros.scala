@@ -64,7 +64,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
     reifySkeleton(maybeAttributedSkeleton, mode)
   }
 
-  private def instantiateDialect(dialect: ReflectTree): MetaDialect = {
+  protected def instantiateDialect(dialect: ReflectTree): MetaDialect = {
     // We want to have a higher-order way to abstract over differences in dialects
     // and we're using implicits for that (implicits are values => values are higher-order => good).
     //
