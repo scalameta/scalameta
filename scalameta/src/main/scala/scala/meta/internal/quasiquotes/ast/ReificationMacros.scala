@@ -1,6 +1,6 @@
 package scala.meta
 package internal
-package quasiquotes
+package quasiquotes.ast
 
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
@@ -14,6 +14,7 @@ import org.scalameta.ast.{Liftables => AstLiftables, Reflection => AstReflection
 import org.scalameta.invariants._
 import org.scalameta.unreachable
 import scala.meta.{Token => MetaToken, Tokens => MetaTokens}
+import scala.meta.internal.dialects.InstantiateDialect
 import scala.meta.internal.hygiene.{Denotation => MetaDenotation, Sigma => MetaSigma, _}
 import scala.meta.internal.hygiene.{Symbol => MetaSymbol, Prefix => MetaPrefix, Signature => MetaSignature, _}
 import scala.meta.internal.parsers.Helpers._
@@ -22,7 +23,7 @@ import scala.compat.Platform.EOL
 
 // TODO: ideally, we would like to bootstrap these macros on top of scala.meta
 // so that quasiquotes can be interpreted by any host, not just scalac
-private[meta] class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables with AstLiftables {
+private[meta] class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialect {
   lazy val u: c.universe.type = c.universe
   lazy val mirror: u.Mirror = c.mirror
   import c.internal._
@@ -52,8 +53,8 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
   val ScalaNil = ScalaPackageObjectClass.info.decl(TermName("Nil"))
   val ScalaSeq = ScalaPackageObjectClass.info.decl(TermName("Seq"))
   val ImmutableSeq = mirror.staticClass("scala.collection.immutable.Seq")
-  val InternalLift = c.mirror.staticModule("scala.meta.internal.quasiquotes.Lift")
-  val InternalUnlift = c.mirror.staticModule("scala.meta.internal.quasiquotes.Unlift")
+  val InternalLift = c.mirror.staticModule("scala.meta.internal.quasiquotes.ast.Lift")
+  val InternalUnlift = c.mirror.staticModule("scala.meta.internal.quasiquotes.ast.Unlift")
   val QuasiquotePrefix = c.freshName("quasiquote")
 
   def apply(args: ReflectTree*)(dialect: ReflectTree): ReflectTree = expand(dialect)
@@ -62,23 +63,6 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
     val (skeleton, mode) = parseSkeleton(instantiateDialect(dialect), instantiateParser(c.macroApplication.symbol))
     val maybeAttributedSkeleton = scala.util.Try(attributeSkeleton(skeleton)).getOrElse(skeleton)
     reifySkeleton(maybeAttributedSkeleton, mode)
-  }
-
-  protected def instantiateDialect(dialect: ReflectTree): MetaDialect = {
-    // We want to have a higher-order way to abstract over differences in dialects
-    // and we're using implicits for that (implicits are values => values are higher-order => good).
-    //
-    // However, quasiquotes use macros, and macros are first-order, so we have a problem here.
-    // Concretely, here we need to convert an implicit argument to a macro (the `dialect` tree)
-    // into an instance of `Dialect` that we'll pass to the parser.
-    //
-    // TODO: For now I'll just prohibit quasiquotes for situations when `dialect` doesn't point to either Scala211 or Dotty.
-    // A natural extension to this would be to allow any static value, not just predefined dialects.
-    // Later on, we could further relax this restriction by doing parsing for a superset of all dialects and then
-    // delaying validation of resulting ASTs until runtime.
-    if (dialect.tpe.termSymbol == c.mirror.staticModule("_root_.scala.meta.dialects.Scala211")) _root_.scala.meta.dialects.Scala211
-    else if (dialect.tpe.termSymbol == c.mirror.staticModule("_root_.scala.meta.dialects.Dotty")) _root_.scala.meta.dialects.Dotty
-    else c.abort(c.enclosingPosition, dialect + " does not have precise enough type to be used in quasiquotes (to fix this, import something from scala.dialects, e.g. scala.meta.dialects.Scala211)")
   }
 
   private def instantiateParser(interpolator: ReflectSymbol): MetaParser = {

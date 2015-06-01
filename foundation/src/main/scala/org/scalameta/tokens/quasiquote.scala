@@ -12,7 +12,7 @@ class QuasiquoteMacros(val c: Context) {
   import c.universe._
   import Flag._
   val Any = tq"_root_.scala.Any"
-  val ReificationMacros = q"_root_.scala.meta.internal.quasiquotes.TokenReificationMacros"
+  val ReificationMacros = q"_root_.scala.meta.internal.quasiquotes.tokens.ReificationMacros"
   val Dialect = tq"_root_.scala.meta.Dialect"
   val Tokens = tq"_root_.scala.meta.syntactic.Tokens"
   def impl(annottees: c.Tree*): c.Tree = {

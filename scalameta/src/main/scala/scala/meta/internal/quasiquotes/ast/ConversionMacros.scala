@@ -1,6 +1,6 @@
 package scala.meta
 package internal
-package quasiquotes
+package quasiquotes.ast
 
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context

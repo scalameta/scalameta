@@ -157,9 +157,8 @@ trait TokenLiftables extends adt.Liftables {
   val c: scala.reflect.macros.blackbox.Context
   override lazy val u: c.universe.type = c.universe
 
-  private val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
-
   import c.universe._
+  private val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
 
   implicit lazy val liftContent: Liftable[Content] = Liftable[Content] { content =>
     q"_root_.scala.meta.Input.String(${new String(content.chars)})"

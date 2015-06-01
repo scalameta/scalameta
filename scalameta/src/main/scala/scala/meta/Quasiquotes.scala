@@ -2,7 +2,6 @@ package scala.meta
 
 import org.scalameta.ast.{quasiquote => astQuasiquote}
 import org.scalameta.tokens.{quasiquote => tokenQuasiquote}
-import scala.meta.internal.quasiquotes.TokenReificationMacros
 import scala.meta._
 
 private[meta] trait Quasiquotes {

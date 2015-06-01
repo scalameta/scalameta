@@ -1,13 +1,10 @@
 package scala.meta
 package internal
-package quasiquotes
+package quasiquotes.tokens
 
-import scala.util.matching.Regex
-
-import scala.meta.{ Tree => MetaTree }
 import scala.reflect.macros.whitebox.Context
-
 import scala.meta.syntactic.TokenLiftables
+import scala.meta.internal.dialects.InstantiateDialect
 
 /**
  * Object used to extract the underlying code for each token.
@@ -17,22 +14,17 @@ object TokenExtractor {
   def unapply(t: Token) = Some(t.code)
 }
 
-class TokenReificationMacros(override val c: Context) extends ReificationMacros(c)
-                                                         with TokenLiftables {
+class ReificationMacros(val c: Context) extends TokenLiftables
+                                           with InstantiateDialect {
 
-  import c.universe.{ Tree => ReflectTree, Liftable => ReflectLiftable, _ }
+  import c.universe._
+  val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
 
-  override def apply(args: ReflectTree*)(dialect: ReflectTree): c.Tree = expand(dialect)
-  override def unapply(scrutinee: ReflectTree)(dialect: ReflectTree): c.Tree = expand(dialect)
+  def apply(args: c.Tree*)(dialect: c.Tree): c.Tree = expand
+  def unapply(scrutinee: c.Tree)(dialect: c.Tree): c.Tree = expand
 
   // Extract the interesting parts of toks"..."
-  private lazy val q"$_($_.apply(..${parts: List[String]})).$_.$method[..$_](..$args)($_)" = c.macroApplication
-
-  /** Removes the heading BOF and trailing EOF from a sequence of tokens */
-  private def trim(toks: Tokens): Tokens = toks match {
-    case (_: Token.BOF) +: tokens :+ (_: Token.EOF) => Tokens(tokens: _*)
-    case _                                          => toks
-  }
+  private lazy val q"$_($_.apply(..${parts: List[String]})).$_.$method[..$_](..$args)($dialectTree)" = c.macroApplication
 
   private def arg(i: Int): c.Tree = method match {
     case TermName("apply") =>
@@ -49,24 +41,29 @@ class TokenReificationMacros(override val c: Context) extends ReificationMacros(
    * The tree of the Unquote token is a scala.meta tree that represents the index of the
    * argument.
    */
-  private def input(implicit dialect: Dialect): Tokens = {
-    val tokens =
+  private lazy val toks: Tokens = {
+    implicit val dialect: Dialect = scala.meta.dialects.Quasiquote(instantiateDialect(dialectTree))
+
+    /** Removes the heading BOF and trailing EOF from a sequence of tokens */
+    def trim(toks: Tokens): Tokens = toks match {
+      case (_: Token.BOF) +: toks :+ (_: Token.EOF) => Tokens(toks: _*)
+      case _                                        => toks
+    }
+
+    val result =
       parts.init.zipWithIndex.flatMap {
         case (part, i) =>
           val argAsString = arg(i).toString
           trim(part.tokens) :+ Token.Unquote(Input.String(argAsString), dialect, 0, argAsString.length - 1, arg(i))
       } ++ trim(parts.last.tokens)
 
-    Tokens(tokens: _*)
+    Tokens(result: _*)
   }
 
-
-  override def expand(dialectTree: c.Tree): c.Tree = {
-    implicit val dialect: Dialect = dialects.Quasiquote(instantiateDialect(dialectTree))
-
+  def expand: c.Tree = {
     method match {
       case TermName("apply") =>
-        q"$input"
+        q"$toks"
 
       case TermName("unapply") =>
         def countEllipsisUnquote(toks: Seq[Token]): Int = toks match {
@@ -78,13 +75,13 @@ class TokenReificationMacros(override val c: Context) extends ReificationMacros(
             0
         }
 
-        if (countEllipsisUnquote(input) > 1) {
+        if (countEllipsisUnquote(toks) > 1) {
           c.abort(c.macroApplication.pos, "Cannot use ellipsis-unquote more than once.")
         }
 
         def patternForToken(t: Token) = t match {
           case t: Token.Unquote => pq"${t.tree.asInstanceOf[c.Tree]}"
-          case t                => pq"_root_.scala.meta.internal.quasiquotes.TokenExtractor(${t.code})"
+          case t                => pq"_root_.scala.meta.internal.tokens.TokenExtractor(${t.code})"
         }
 
         // Split the input in three parts: (before, ..unquote, after).
@@ -103,7 +100,7 @@ class TokenReificationMacros(override val c: Context) extends ReificationMacros(
               (Tokens(), None, Tokens())
           }
 
-          split(input)
+          split(toks)
         }
 
         val pattern =
@@ -136,7 +133,6 @@ class TokenReificationMacros(override val c: Context) extends ReificationMacros(
               (afterPatterns foldLeft withBeforePatterns) {
                 case (acc, pat) => pq"$acc :+ $pat"
               }
-
           }
 
         // Find the number of the (unique) Unquote token that is preceded by an Ellipsis
@@ -177,7 +173,5 @@ class TokenReificationMacros(override val c: Context) extends ReificationMacros(
           }.unapply(..$args)
         """
     }
-
   }
 }
-
