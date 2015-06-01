@@ -12,11 +12,9 @@ class InferParensSuite extends InferSuite {
 
   private def compareTokenCodes(a: Tree, b: Tree): Unit = {
     def trimTokens(tks: Tokens) = tks.filterNot(tk => tk.isInstanceOf[Token.BOF] || tk.isInstanceOf[Token.EOF])
-    val t1 = trimTokens(a.tokens).map(_.show[Code])
-    val t2 = trimTokens(b.tokens).map(_.show[Code])
+    val (t1, t2) = (trimTokens(a.tokens).map(_.show[Code]), trimTokens(b.tokens).map(_.show[Code]))
     if (t1 != t2) {
-      println(a.show[Raw] + "\n" + b.show[Raw])
-      println(t1 + "\n" + t2)
+      println(a.show[Code] + "\n" + b.show[Code])
     }
     assert(t1 == t2)
   }
@@ -58,7 +56,7 @@ class InferParensSuite extends InferSuite {
     """(x eq y) :: xs""".stripMargin.parse[Term]
   }
   test("CheckMixedAssoc9") {
-    """a == b || c == d || y & d""".stripMargin.parse[Term]
+    """a == b || c == d || y && d""".stripMargin.parse[Term]
   }
   test("CheckMixedAssoc10") {
     """a && (b || c)""".stripMargin.parse[Term]
@@ -69,7 +67,7 @@ class InferParensSuite extends InferSuite {
   test("CheckMixedAssoc12") {
     """x :+ y :+ z""".stripMargin.parse[Term]
   }
-  test("CheckMixedAssoc13") {
-    """(a + b + c) && (a + (b + c)) && (a :: b :: c) && ((a :: b) :: c)""".stripMargin.parse[Term]
+  test("CheckMixedAssoc14") {
+    """(x + y) / z""".stripMargin.parse[Term]
   }
 }

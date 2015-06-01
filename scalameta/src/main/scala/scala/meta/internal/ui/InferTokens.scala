@@ -140,6 +140,36 @@ private[meta] object inferTokens {
       else toks""
     }
 
+    /* Append a list of parameters wit implicit modifer properly added */
+    def apndTermParamss(trees: Seq[Seq[Term.Param]]): Tokens = {
+      def apndTermParams(ts: Seq[Term.Param]): Tokens = ts match {
+        case Nil => toks""
+        case x :: Nil if x.mods.exists(_.isInstanceOf[Mod.Implicit]) => 
+          toks"(implicit ${x.tks})"
+        case x :: xs if x.mods.exists(_.isInstanceOf[Mod.Implicit]) => 
+          toks"(implicit ${x.tks}, ${xs.`o,o`})"
+        case _ => ts.`(o,o)`
+      }
+      val sq = trees match {
+        case Nil => toks""
+        case _ if trees.length == 1 && trees.head.length == 0 => toks"()"
+        case _ => trees.flatMap(apndTermParams(_))
+      }
+      Tokens(sq: _*)
+    }
+
+    /* Append a name, but takes care of adding a space if one is needed with what follows (e.g. bind with a name ending with "_"). */
+    def apndBindedName(name: Name): Tokens = name.tks match {
+      case nm if nm.last.show[Code] endsWith "_" => toks"$nm " // NOTE: adding a space if the name ends with _
+      case nm => nm
+    }
+
+    /* Generate tokens for Pats, adding a space if one is needed */
+    def apndDefnDeclPats(pats: Seq[Pat]) = pats.`o,o` match {
+          case ps if ps.last.show[Code] endsWith "_" => toks"$ps " // NOTE: adding a space if the name ends with _
+          case ps => ps
+        }
+
     /* The helpers below are heavily based on the ones used for the original show[Code] implementation. */
     def guessIsBackquoted(t: Name): Boolean = {
       def cantBeWrittenWithoutBackquotes(t: Name): Boolean = {
@@ -207,34 +237,38 @@ private[meta] object inferTokens {
       if (childLAssoc ^ parentLAssoc) true
       else {
         val (childPrec, parentPrec) = (childOp.precedence, parentOp.precedence)
-        if (isLeft) !childLAssoc && childPrec <= parentPrec
+        if (isLeft) !childLAssoc || (childPrec < parentPrec)
         else childLAssoc && childPrec <= parentPrec
       }
     }
 
     /* Infer parentheses for a token based on its parent and generate the corresponding token stream using the `tkz` dispatcher. */
     def tokensNeedParens(tree: Tree): Tokens = {
+      def impNeedsParens(t: Tree) = t match {
+        case _: Term.If =>        true
+        case _: Term.Do =>        true
+        case _: Term.While =>     true
+        case _: Term.Function =>  true
+        case _: Term.For =>       true
+        case _: Term.ForYield =>  true
+        case _: Term.Ascribe =>   true
+        case _: Term.Annotate =>  true
+        case _: Term.Match =>     true
+        case _ =>                 false
+      }
       val withParents = (tree, tree.parent) match {
         /* Covering cases for calls on Term.Match  */
         case (_: Term.Match, Some(_: Term.Select)) =>     true
+        case (t1, Some(t2: Term.Match)) if t2.scrut eq t1 => impNeedsParens(t1)
         /* Covering cases for Term.ApplyInfix */
         case (t1: Term.ApplyInfix, Some(t2: Term.ApplyInfix)) => opNeedsParens(t1.op.value, t2.op.value, isLeft = t2.lhs eq t1, customAssoc = true, customPrecedence = true)
-        case (_, Some(t: Term.ApplyInfix)) if t.args.length == 1 =>
-          tree match {
-            case _: Term.If =>        true
-            case _: Term.Do =>        true
-            case _: Term.While =>     true
-            case _: Term.Function =>  true
-            case _: Term.For =>       true
-            case _: Term.ForYield =>  true
-            case _ =>                 false
-          }
+        case (t1, Some(t2: Term.ApplyInfix)) if t2.args.length == 1 => impNeedsParens(t1)
+        case (_: Term.ApplyInfix, Some(_: Term.Select)) => true
         /* Covering cases for Term.Ascibe */
-        case (_: Term.Ascribe, Some(_: Term.Match)) =>    true
         case (_: Term.Ascribe, Some(_: Term.Select)) =>   true
         /* Covering cases for Term.Annotate */
-        case (_: Term.Annotate, Some(_: Term.Match)) =>   true
         case (_: Term.Annotate, Some(_: Term.Select)) =>  true
+        case (_: Term.Ascribe, Some(_: Term.Annotate)) => true
         /* Covering cases for Type.Function */
          /* TODO: figure out why a function in a template as an extends does not have a parent! */
         case (_: Type.Function, None) =>                  true
@@ -246,6 +280,8 @@ private[meta] object inferTokens {
         case (t1: Pat.ExtractInfix, Some(t2: Pat.ExtractInfix)) => opNeedsParens(t1.ref.value, t2.ref.value, isLeft = t2.lhs eq t1, customAssoc = true, customPrecedence = true)
         /* Covering cases for Pat.Typed */
         case (t: Pat.Typed, Some(_: Pat.ExtractInfix)) => true
+        /* Covering cases for Pat.Alternative */
+        case (_: Pat.Alternative, Some(_: Pat.Bind)) =>   true
         /* Covering cases for Term.Unary */
         case (_, Some(_: Term.ApplyUnary)) =>
           tree match {
@@ -253,6 +289,7 @@ private[meta] object inferTokens {
             case _: Term.If =>         true
             case _ =>                  false
           }
+        case (_: Term.ApplyUnary, Some(_: Term.Select)) => true
         case _ =>                                         false
       }
       if (withParents) toks"(${deindent(tree.tokens)})" else deindent(tree.tokens)
@@ -382,9 +419,10 @@ private[meta] object inferTokens {
       case t: Term.Arg.Repeated =>    toks"${t.arg.tks}: _*"
       case t: Term.Param =>
         val mods = t.mods.filter(!_.isInstanceOf[Mod.Implicit]) // NOTE: `implicit` in parameters is skipped in favor of `implicit` in the enclosing parameter list
+        val tname = apndBindedName(t.name)
         val tpe = t.decltpe.map(v => toks": ${v.tks}").getOrElse(toks"")
         val default = t.default.map(v => toks" = ${v.tks}").getOrElse(toks"")
-        mods.`o_o_` ++ t.name.tks ++ tpe ++ default
+        mods.`o_o_` ++ tname ++ tpe ++ default
 
       // Type
       case t: Type.Name =>
@@ -425,10 +463,11 @@ private[meta] object inferTokens {
         val mods = t.mods.filter(m => !m.isInstanceOf[Mod.Covariant] && !m.isInstanceOf[Mod.Contravariant])
         require(t.mods.length - mods.length <= 1)
         val variance = t.mods.foldLeft(toks"")((curr, m) => if (m.isInstanceOf[Mod.Covariant]) toks"+" else if (m.isInstanceOf[Mod.Contravariant]) toks"-" else curr)
+        val tname = apndBindedName(t.name)
         val tbounds = t.typeBounds.tks
         val vbounds = t.viewBounds.flattks(toks" <% ")(toks" <% ")()
         val cbounds = t.contextBounds.flattks(toks": ")(toks": ")()
-        toks"${mods.o_o}$variance${t.name.tks}${t.tparams.`oo`}$tbounds$vbounds$cbounds"
+        toks"${mods.o_o_}$variance$tname${t.tparams.`[o,o]`}$tbounds$vbounds$cbounds"
 
       // Pat
       case t: Pat.Var.Term =>    mineIdentTk(t.name.value)
@@ -489,34 +528,34 @@ private[meta] object inferTokens {
       case _: Lit.Unit =>             toks"()"
 
       // Member
-      case t: Decl.Val =>      toks"${t.mods.`o_o_`}val ${t.pats.`oo`}: ${t.decltpe.tks}"
-      case t: Decl.Var =>      toks"${t.mods.`o_o_`}var ${t.pats.`oo`}: ${t.decltpe.tks}"
+      case t: Decl.Val =>      toks"${t.mods.`o_o_`}val ${apndDefnDeclPats(t.pats)}: ${t.decltpe.tks}"
+      case t: Decl.Var =>      toks"${t.mods.`o_o_`}var ${apndDefnDeclPats(t.pats)}: ${t.decltpe.tks}"
       case t: Decl.Type =>     toks"${t.mods.`o_o_`}type ${t.name.tks}${t.tparams.`[o,o]`}${apndTpeBounds(t.bounds)}"
-      case t: Decl.Def =>      toks"${t.mods.`o_o_`}def ${t.name.tks}${t.tparams.`[o,o]`}${t.paramss.`(o,o)`}: ${t.decltpe.tks}"
-      case t: Defn.Val =>      toks"${t.mods.`o_o_`}val ${t.pats.`oo`}${apndDeclTpe(t.decltpe)} = ${t.rhs.tks}"
+      case t: Decl.Def =>      toks"${t.mods.`o_o_`}def ${t.name.tks}${t.tparams.`[o,o]`}${apndTermParamss(t.paramss)}: ${t.decltpe.tks}"
+      case t: Defn.Val =>      toks"${t.mods.`o_o_`}val ${apndDefnDeclPats(t.pats)}${apndDeclTpe(t.decltpe)} = ${t.rhs.tks}"
       case t: Defn.Var =>
         val rhs = t.rhs.map(trm => toks" = ${trm.tks}").getOrElse(toks"")
-        toks"${t.mods.`o_o_`}var ${t.pats.`oo`}${apndDeclTpe(t.decltpe)}$rhs"
+        toks"${t.mods.`o_o_`}var ${apndDefnDeclPats(t.pats)}${apndDeclTpe(t.decltpe)}$rhs"
       case t: Defn.Type =>     toks"${t.mods.`o_o_`}type ${t.name.tks}${t.tparams.`[o,o]`} = ${t.body.tks}"
       case t: Defn.Class =>    toks"${t.mods.`o_o_`}class ${t.name.tks}${t.tparams.`[o,o]`}${t.ctor.tks}${apndTempl(t.templ)}"
       case t: Defn.Trait =>    toks"${t.mods.`o_o_`}trait ${t.name.tks}${t.tparams.`[o,o]`}${t.ctor.tks}${apndTempl(t.templ)}"
       case t: Defn.Object =>   toks"${t.mods.`o_o_`}object ${t.name.tks}${t.ctor.tks}${apndTempl(t.templ)}"
-      case t: Defn.Def =>      toks"${t.mods.`o_o_`}def ${t.name.tks}${t.tparams.`[o,o]`}${t.paramss.`(o,o)`}${apndDeclTpe(t.decltpe)} = ${t.body.tks}"
-      case t: Defn.Macro =>    toks"${t.mods.`o_o_`}def ${t.name.tks}${t.tparams.`[o,o]`}${t.paramss.`(o,o)`}: ${t.tpe.tks} = macro ${t.body.tks}"
+      case t: Defn.Def =>      toks"${t.mods.`o_o_`}def ${t.name.tks}${t.tparams.`[o,o]`}${apndTermParamss(t.paramss)}${apndDeclTpe(t.decltpe)} = ${t.body.tks}"
+      case t: Defn.Macro =>    toks"${t.mods.`o_o_`}def ${t.name.tks}${t.tparams.`[o,o]`}${apndTermParamss(t.paramss)}: ${t.tpe.tks} = macro ${t.body.tks}"
       case t: Pkg =>
-        if (guessHasBraces(t)) toks"package ${t.ref.tks}{${t.stats.`[->o->`}}"
+        if (guessHasBraces(t)) toks"package ${t.ref.tks} {${t.stats.`[->o->`}}"
         else toks"package ${t.ref.tks}${t.stats.`->o`}"
       case t: Pkg.Object =>    toks"package ${t.mods.`o_o_`}object ${t.name.tks}${apndTempl(t.templ)}"
       case t: Ctor.Primary =>
-        val cmods = t.mods match {
-          case Nil => toks""
-          case mds => toks" ${mds.`o_o_`}"
-        }
-        if (t.mods.nonEmpty && t.paramss.nonEmpty) toks"$cmods${t.paramss.`(o,o)`}"
-        else toks"${t.paramss.`(o,o)`}"
+        val cmods = t.mods.`o_o`
+        val cparamss = apndTermParamss(t.paramss)
+        if (!t.mods.isEmpty && !t.paramss.isEmpty) toks" $cmods $cparamss"
+        else if (!t.paramss.isEmpty)               toks"$cparamss"
+        else if (!t.mods.isEmpty)                  toks" $cmods"
+        else                                       toks""
       case t: Ctor.Secondary =>
-        if (t.body.isInstanceOf[Term.Block]) toks"def this${t.paramss.`(o,o)`} ${t.body.tks}"
-        else toks"def this${t.paramss.`(o,o)`} = ${t.body.tks}"
+        if (t.body.isInstanceOf[Term.Block]) toks"def this${apndTermParamss(t.paramss)} ${t.body.tks}"
+        else toks"def this${apndTermParamss(t.paramss)} = ${t.body.tks}"
 
       // Template
       case t: Template =>
@@ -550,7 +589,9 @@ private[meta] object inferTokens {
         }
 
       // Mod
-      case Mod.Annot(tree) =>                 toks"@${tree.ctorTpe.tks}${tree.ctorArgss.`(o,o)`}"
+      case Mod.Annot(tree) =>                 
+        if (tree.isInstanceOf[Term.Annotate]) toks"@(${tree.ctorTpe.tks})${tree.ctorArgss.`(o,o)`}"
+        else                                  toks"@${tree.ctorTpe.tks}${tree.ctorArgss.`(o,o)`}"
       case Mod.Private(Name.Anonymous()) =>   toks"private"
       case Mod.Private(name) =>               toks"private[${name.tks}]"
       case Mod.Protected(Name.Anonymous()) => toks"protected"

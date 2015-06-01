@@ -96,7 +96,6 @@ abstract class InferSuite extends ParseSuite {
     case t: impl.Lit.String => t.copy() andCollect Unit
     case t: impl.Lit.Symbol => t.copy() andCollect Unit
     case t: impl.Lit.Null => t.copy() andCollect Unit
-    case t: impl.Lit.Unit => t andCollect Unit
 
     case t: impl.Decl.Val => t.copy() andCollect Unit
     case t: impl.Decl.Var => t.copy() andCollect Unit
