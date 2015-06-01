@@ -131,9 +131,21 @@ class InferParensSuite extends FunSuite {
     """x :+ (y :+ z)""".stripMargin.parse[Term]
   }
   test("CheckMixedAssoc7") {
-    """x eq y :: xs""".stripMargin.parse[Term]
+    """x eq (y :: xs)""".stripMargin.parse[Term]
   }
   test("CheckMixedAssoc8") {
-    """(x eq  y) :: xs""".stripMargin.parse[Term]
+    """(x eq y) :: xs""".stripMargin.parse[Term]
+  }
+  test("CheckMixedAssoc9") {
+    """a == b || c == d || y & d""".stripMargin.parse[Term]
+  }
+  test("CheckMixedAssoc10") {
+    """a && (b || c)""".stripMargin.parse[Term]
+  }
+  test("CheckMixedAssoc11") {
+    """a && b || c""".stripMargin.parse[Term]
+  }
+  test("CheckMixedAssoc12") {
+    """x :+ y :+ z""".stripMargin.parse[Term]
   }
 }

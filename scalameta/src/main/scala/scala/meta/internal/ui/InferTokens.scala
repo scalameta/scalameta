@@ -204,11 +204,12 @@ private[meta] object inferTokens {
         def isLeftAssoc: Boolean = if (customAssoc) opName.last != ':' else true
         def precedence: Int = if (customPrecedence) Term.Name(opName).precedence else 0
       }
-      if (childOp == parentOp) false
+    	val (childLAssoc, parentLAssoc) = (childOp.isLeftAssoc, parentOp.isLeftAssoc)
+      if (childLAssoc ^ parentLAssoc) true
       else {
-      	val (childLAssoc, parentLAssoc) = (childOp.isLeftAssoc, parentOp.isLeftAssoc)
-      	val (childPrec, parentPrec) = (childOp.precedence, parentOp.precedence)
-    		(childLAssoc ^ parentLAssoc) && childPrec <= parentPrec
+        val (childPrec, parentPrec) = (childOp.precedence, parentOp.precedence)
+        if (isLeft) !childLAssoc && childPrec <= parentPrec
+        else childLAssoc && childPrec <= parentPrec
       }
     }
 
@@ -218,7 +219,7 @@ private[meta] object inferTokens {
         /* Covering cases for calls on Term.Match  */
         case (_: Term.Match, Some(_: Term.Select)) => true
         /* Covering cases for Term.ApplyInfix */
-        case (t1: Term.ApplyInfix, Some(t2: Term.ApplyInfix)) if opNeedsParens(t1.op.value, t2.op.value, isLeft = t2.lhs == t1, customAssoc = true, customPrecedence = true) => true
+        case (t1: Term.ApplyInfix, Some(t2: Term.ApplyInfix)) => opNeedsParens(t1.op.value, t2.op.value, isLeft = t2.lhs eq t1, customAssoc = true, customPrecedence = true)
         case (_, Some(t: Term.ApplyInfix)) if t.args.length == 1 =>
           tree match {
             case _: Term.If => true
@@ -238,10 +239,11 @@ private[meta] object inferTokens {
         /* Covering cases for Type.Function */
         case (_: Type.Function, None) => true /* TODO: figure out why a function in a template as an extends does not have a parent! */
         /* Covering cases for Type.ApplyInfix */
-        // TODO
+        case (t1: Type.ApplyInfix, Some(t2: Type.ApplyInfix)) => opNeedsParens(t1.op.value, t2.op. value, isLeft = t2.lhs eq t1, customAssoc = true,customPrecedence = false)
+        case (t1: Pat.Type.ApplyInfix, Some(t2: Pat.Type.ApplyInfix)) => opNeedsParens(t1.op.value, t2.op. value, isLeft = t2.lhs eq t1, customAssoc = true,customPrecedence = false)
         /* Covering cases for Pat.ExtractInfix */
         case (t: Pat.Bind, Some(_: Pat.ExtractInfix)) => true
-        case (t1: Pat.ExtractInfix, Some(t2: Pat.ExtractInfix)) if t1.ref.value != t2.ref.value => true
+        case (t1: Pat.ExtractInfix, Some(t2: Pat.ExtractInfix)) => opNeedsParens(t1.ref.value, t2.ref.value, isLeft = t2.lhs eq t1, customAssoc= true, customPrecedence = true)
         /* Covering cases for Pat.Typed */
         case (t: Pat.Typed, Some(_: Pat.ExtractInfix)) => true
         /* Covering cases for Term.Unary */
