@@ -1,13 +1,13 @@
 package scala.meta
 package syntactic
 
-import org.scalameta.adt // NOTE: no underscore import!
+import org.scalameta.tokens // NOTE: no underscore import!
 import org.scalameta.tokens._
 import org.scalameta.default._
 import org.scalameta.default.Param._
 import scala.reflect.ClassTag
 
-@root trait Token {
+@root trait Token extends org.scalameta.tokens.internal.Token {
   def input: Content = content
   def content: Content
   def dialect: Dialect
@@ -163,7 +163,7 @@ object Token {
 // depending on how the file and its enclosing directories are called.
 // To combat that, we have TokenLiftables right here, guaranteeing that there won't be problems
 // if someone wants to refactor/rename something later.
-trait TokenLiftables extends adt.Liftables {
+trait TokenLiftables extends tokens.Liftables {
   val c: scala.reflect.macros.blackbox.Context
   override lazy val u: c.universe.type = c.universe
 
@@ -198,27 +198,22 @@ trait TokenLiftables extends adt.Liftables {
     }
   }
 
-  implicit def liftBool2T[T: Liftable]: Liftable[Boolean => T] = Liftable[Boolean => T] { f =>
-    q"(x: _root_.scala.Boolean) => if (x) ${f(true)} else ${f(false)}"
-  }
-
-  implicit def liftBigInt: Liftable[BigInt] = Liftable[BigInt] { v =>
+  implicit lazy val liftBigInt: Liftable[BigInt] = Liftable[BigInt] { v =>
     q"_root_.scala.math.BigInt(${v.bigInteger.toString})"
   }
 
-  implicit def liftBigDecimal: Liftable[BigDecimal] = Liftable[BigDecimal] { v =>
+  implicit lazy val liftBigDecimal: Liftable[BigDecimal] = Liftable[BigDecimal] { v =>
     q"_root_.scala.math.BigDecimal(${v.bigDecimal.toString})"
   }
 
-  // This liftable is here only because it is required by the Liftables infrastructure.
-  // (Unquote has a member of type `Any`)
-  private implicit lazy val liftAny: Liftable[Any] = Liftable[Any] { any =>
+  lazy implicit val liftUnquote: Liftable[Token.Unquote] = Liftable[Token.Unquote] { u =>
     c.abort(c.macroApplication.pos, "fatal error: this shouldn't have happened")
   }
 
-  implicit lazy val liftToken: Liftable[Token] = materializeAdt[Token]
+  // TODO: this can't be `implicit val`, because then the materialization macro will crash in GenICode
+  implicit def liftToken: Liftable[Token] = materializeToken[Token]
 
-  implicit def liftTokens: Liftable[Tokens] = Liftable[Tokens] { tokens =>
+  implicit lazy val liftTokens: Liftable[Tokens] = Liftable[Tokens] { tokens =>
     def prepend(tokens: Tokens, t: Tree): Tree =
       (tokens foldRight t) { case (token, acc) => q"$token +: $acc" }
 
