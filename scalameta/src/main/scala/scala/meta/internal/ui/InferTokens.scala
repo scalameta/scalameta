@@ -28,16 +28,15 @@ private[meta] object inferTokens {
   private def mineLitTk(value: Any)(implicit dialect: Dialect): Tokens = {
     implicit def stringToInput(str: String) = Input.String(str)
     val str = value.toString
-    // TODO: figure out what action should be implemented depending of the boolean in token functions - not sure why it is there
     val newTok = value match {
-      case y: Int => Token.Literal.Int(str, dialect, 0, str.length, y)
-      case y: Long => Token.Literal.Long(str + "L", dialect, 0, str.length + 1, y)
-      case y: Float => Token.Literal.Float(str + "F", dialect, 0, str.length + 1, y)
-      case y: Double => Token.Literal.Double(str, dialect, 0, str.length, y)
+      case y: Int =>     Token.Literal.Int(str, dialect, 0, str.length, y)
+      case y: Long =>    Token.Literal.Long(str + "L", dialect, 0, str.length + 1, y)
+      case y: Float =>   Token.Literal.Float(str + "F", dialect, 0, str.length + 1, y)
+      case y: Double =>  Token.Literal.Double(str, dialect, 0, str.length, y)
       case y: Char =>
         val newChar = enquote(str, SingleQuotes)
         Token.Literal.Char(newChar, dialect, 0, newChar.length, y)
-      case y: Symbol => Token.Literal.Symbol(str, dialect, 0, str.length, y)
+      case y: Symbol =>  Token.Literal.Symbol(str, dialect, 0, str.length, y)
       case y: String =>
         val newStr = {
           if (y.contains(EOL)) enquote(str, TripleQuotes)
@@ -51,25 +50,25 @@ private[meta] object inferTokens {
   /* Generate a single token for ident */
   private def mineIdentTk(value: String)(implicit dialect: Dialect): Tokens = Tokens(Token.Ident(Input.String(value), dialect, 0, value.length))
 
-  /* Checking if a token is en indentation */
+  /* Checking if a token is a potential indentation */
   val isIndent = (t: Token) => t.show[Code] == " " || t.show[Code] == "\t" || t.show[Code] == "\r"
 
   /* Global infering function */
   private def infer(tree: Tree, proto: Option[Tree])(implicit dialect: Dialect): Tokens = {
     import scala.meta.internal.ast._
-    import scala.meta.dialects.Scala211 // Unfortunately
+    import scala.meta.dialects.Scala211 // as explained above, forcing dialect.
 
     /* partial token vectors used in various constructions */
-    val indentation = toks"  "
+    val indentation =        toks"  " // In the future, this could be inferred
     val singleDoubleQuotes = Tokens(Token.Literal.String(Input.String("\""), dialect, 0, 1, "\""))
     val tripleDoubleQuotes = Tokens(Token.Literal.String(Input.String("\"\"\""), dialect, 0, 3, "\"\"\""))
-    val dot = Tokens(Token.`.`(Input.String("."), dialect, 0))
-    val newline = Tokens(Token.`\n`(Input.String("\n"), dialect, 0))
+    val dot =                Tokens(Token.`.`(Input.String("."), dialect, 0))
+    val newline =            Tokens(Token.`\n`(Input.String("\n"), dialect, 0))
 
     /* Enrichments for token manipulation */
     implicit class RichTree(tree: Tree) {
-      def tks = tokensNeedParens(tree)
-      def indTks = indent(tokensNeedParens(tree))(indentation)
+      def tks =      tokensNeedParens(tree)
+      def indTks =   indent(tokensNeedParens(tree))(indentation)
       def `[->o->` = toks"$newline${tree.indTks}$newline"
     }
     implicit class RichTreeSeq(trees: Seq[Tree]) {
@@ -88,21 +87,22 @@ private[meta] object inferTokens {
        * - _   represent a space
        * -     other tokens represent themselves. 
        */
-      val indentFun: (Tokens => Tokens) = (s: Tokens) => indent(s)(indentation)
+      val indentFun:          (Tokens => Tokens) = (s: Tokens) => indent(s)(indentation)
+      /* In some construction, the line return is already present in the tokens. This prevents to put a second one and break the layout. */
       val avoidDoubleLineFun: (Tokens => Tokens) = (s: Tokens) => if (s.last.code == "\n") Tokens(s.repr.init: _*) else s
-      def `oo` = flattks()()()
-      def `o->o` = flattks()(newline, avoidDoubleLineFun)()
-      def `->o->` = flattks(newline)(newline, avoidDoubleLineFun)(newline)
-      def `->o` = flattks(newline)(newline)()
-      def `o_o` = flattks()(toks" ")()
-      def `o,o` = flattks()(toks", ")()
-      def `o;o` = flattks()(toks"; ")()
-      def `o_o_` = flattks()(toks" ")(toks" ")
-      def `[o,o]` = flattks(toks"[")(toks", ")(toks"]")
-      def `{o,o}` = flattks(toks"{ ")(toks", ")(toks" }")
-      def `(o,o)` = flattks(toks"(")(toks", ")(toks")")
-      def `[->o->` = flattks(newline)(newline, avoidDoubleLineFun andThen indentFun)(newline)
-      def `[->o` = flattks(newline)(newline, avoidDoubleLineFun andThen indentFun)()
+      def `oo` =       flattks()()()
+      def `o->o` =     flattks()(newline, avoidDoubleLineFun)()
+      def `->o->` =    flattks(newline)(newline, avoidDoubleLineFun)(newline)
+      def `->o` =      flattks(newline)(newline)()
+      def `o_o` =      flattks()(toks" ")()
+      def `o,o` =      flattks()(toks", ")()
+      def `o;o` =      flattks()(toks"; ")()
+      def `o_o_` =     flattks()(toks" ")(toks" ")
+      def `[o,o]` =    flattks(toks"[")(toks", ")(toks"]")
+      def `{o,o}` =    flattks(toks"{ ")(toks", ")(toks" }")
+      def `(o,o)` =    flattks(toks"(")(toks", ")(toks")")
+      def `[->o->` =   flattks(newline)(newline, avoidDoubleLineFun andThen indentFun)(newline)
+      def `[->o` =     flattks(newline)(newline, avoidDoubleLineFun andThen indentFun)()
     }
     implicit class RichTreeSeqSeq(trees: Seq[Seq[Tree]]) {
       def `(o,o)` = {
@@ -123,7 +123,7 @@ private[meta] object inferTokens {
       val ext = if (!t.parents.isEmpty) toks" extends" else toks""
       val tpl = t.tks match {
         case tks if tks.repr.isEmpty => toks""
-        case tks => toks" $tks"
+        case tks =>                     toks" $tks"
       }
       toks"$ext$tpl"
     }
@@ -131,7 +131,7 @@ private[meta] object inferTokens {
     /* Append a declared type to a val / def / var */
     def apndDeclTpe(t: Option[Type]): Tokens = t match {
       case Some(tpe) if tpe.tks.length > 0 => toks": ${tpe.tks}"
-      case _ => toks""
+      case _ =>                               toks""
     }
 
     /* Append bounds to a specific type declaration */
@@ -140,7 +140,7 @@ private[meta] object inferTokens {
       else toks""
     }
 
-    /* The helpers below are heavily based on the ones used for show[Code] */
+    /* The helpers below are heavily based on the ones used for the original show[Code] implementation. */
     def guessIsBackquoted(t: Name): Boolean = {
       def cantBeWrittenWithoutBackquotes(t: Name): Boolean = {
         t.value != "this" && (keywords.contains(t.value) || t.value.contains(" "))
@@ -148,23 +148,23 @@ private[meta] object inferTokens {
       def isAmbiguousWithPatVarTerm(t: Term.Name, p: Tree): Boolean = {
         val looksLikePatVar = t.value.head.isLower && t.value.head.isLetter
         val thisLocationAlsoAcceptsPatVars = p match {
-          case p: Term.Name => unreachable
-          case p: Term.Select => false
-          case p: Pat.Wildcard => unreachable
-          case p: Pat.Var.Term => false
-          case p: Pat.Bind => unreachable
-          case p: Pat.Alternative => true
-          case p: Pat.Tuple => true
-          case p: Pat.Extract => p.args.exists(_ eq t)
-          case p: Pat.ExtractInfix => (p.lhs eq t) || p.rhs.exists(_ eq t)
-          case p: Pat.Interpolate => p.args.exists(_ eq t)
-          case p: Pat.Typed => unreachable
-          case p: Pat => unreachable
-          case p: Case => p.pat eq t
-          case p: Defn.Val => p.pats.exists(_ eq t)
-          case p: Defn.Var => p.pats.exists(_ eq t)
+          case p: Term.Name =>            unreachable
+          case p: Term.Select =>          false
+          case p: Pat.Wildcard =>         unreachable
+          case p: Pat.Var.Term =>         false
+          case p: Pat.Bind =>             unreachable
+          case p: Pat.Alternative =>      true
+          case p: Pat.Tuple =>            true
+          case p: Pat.Extract =>          p.args.exists(_ eq t)
+          case p: Pat.ExtractInfix =>     (p.lhs eq t) || p.rhs.exists(_ eq t)
+          case p: Pat.Interpolate =>      p.args.exists(_ eq t)
+          case p: Pat.Typed =>            unreachable
+          case p: Pat =>                  unreachable
+          case p: Case =>                 p.pat eq t
+          case p: Defn.Val =>             p.pats.exists(_ eq t)
+          case p: Defn.Var =>             p.pats.exists(_ eq t)
           case p: Enumerator.Generator => p.pat eq t
-          case p: Enumerator.Val => p.pat eq t
+          case p: Enumerator.Val =>       p.pat eq t
           case _ => false
         }
         looksLikePatVar && thisLocationAlsoAcceptsPatVars
@@ -189,22 +189,21 @@ private[meta] object inferTokens {
     def guessHasElsep(t: Term.If): Boolean = t.elsep match { case Lit.Unit() => false; case _ => true }
     def guessHasBraces(t: Pkg): Boolean = {
       def isOnlyChildOfOnlyChild(t: Pkg): Boolean = t.parent match {
-        case Some(pkg: Pkg) => isOnlyChildOfOnlyChild(pkg) && pkg.stats.length == 1
+        case Some(pkg: Pkg) =>       isOnlyChildOfOnlyChild(pkg) && pkg.stats.length == 1
         case Some(source: Source) => source.stats.length == 1
-        case None => true
-        case _ => unreachable
+        case None =>                 true
+        case _ =>                    unreachable
       }
       !isOnlyChildOfOnlyChild(t)
     }
 
-    /* Checking operator precedence and associativity to see if parenthesis are needed in case of infix call */
+    /* Checking operator precedence and associativity to see if parentheses are needed in case of infix calls. */
     def opNeedsParens(childOp: String, parentOp: String, isLeft: Boolean, customAssoc: Boolean, customPrecedence: Boolean): Boolean = {
-    	val isRight = !isLeft
       implicit class XtensionMySyntacticInfo(opName: String) {
         def isLeftAssoc: Boolean = if (customAssoc) opName.last != ':' else true
         def precedence: Int = if (customPrecedence) Term.Name(opName).precedence else 0
       }
-    	val (childLAssoc, parentLAssoc) = (childOp.isLeftAssoc, parentOp.isLeftAssoc)
+      val (childLAssoc, parentLAssoc) = (childOp.isLeftAssoc, parentOp.isLeftAssoc)
       if (childLAssoc ^ parentLAssoc) true
       else {
         val (childPrec, parentPrec) = (childOp.precedence, parentOp.precedence)
@@ -213,47 +212,48 @@ private[meta] object inferTokens {
       }
     }
 
-    /* Infer parenthesis for a token based on its parent and generate the corresponding token stream using the `tkz` dispatcher. */
+    /* Infer parentheses for a token based on its parent and generate the corresponding token stream using the `tkz` dispatcher. */
     def tokensNeedParens(tree: Tree): Tokens = {
       val withParents = (tree, tree.parent) match {
         /* Covering cases for calls on Term.Match  */
-        case (_: Term.Match, Some(_: Term.Select)) => true
+        case (_: Term.Match, Some(_: Term.Select)) =>     true
         /* Covering cases for Term.ApplyInfix */
         case (t1: Term.ApplyInfix, Some(t2: Term.ApplyInfix)) => opNeedsParens(t1.op.value, t2.op.value, isLeft = t2.lhs eq t1, customAssoc = true, customPrecedence = true)
         case (_, Some(t: Term.ApplyInfix)) if t.args.length == 1 =>
           tree match {
-            case _: Term.If => true
-            case _: Term.Do => true
-            case _: Term.While => true
-            case _: Term.Function => true
-            case _: Term.For => true
-            case _: Term.ForYield => true
-            case _ => false
+            case _: Term.If =>        true
+            case _: Term.Do =>        true
+            case _: Term.While =>     true
+            case _: Term.Function =>  true
+            case _: Term.For =>       true
+            case _: Term.ForYield =>  true
+            case _ =>                 false
           }
         /* Covering cases for Term.Ascibe */
-        case (_: Term.Ascribe, Some(_: Term.Match)) => true
-        case (_: Term.Ascribe, Some(_: Term.Select)) => true
+        case (_: Term.Ascribe, Some(_: Term.Match)) =>    true
+        case (_: Term.Ascribe, Some(_: Term.Select)) =>   true
         /* Covering cases for Term.Annotate */
-        case (_: Term.Annotate, Some(_: Term.Match)) => true
-        case (_: Term.Annotate, Some(_: Term.Select)) => true
+        case (_: Term.Annotate, Some(_: Term.Match)) =>   true
+        case (_: Term.Annotate, Some(_: Term.Select)) =>  true
         /* Covering cases for Type.Function */
-        case (_: Type.Function, None) => true /* TODO: figure out why a function in a template as an extends does not have a parent! */
+         /* TODO: figure out why a function in a template as an extends does not have a parent! */
+        case (_: Type.Function, None) =>                  true
         /* Covering cases for Type.ApplyInfix */
-        case (t1: Type.ApplyInfix, Some(t2: Type.ApplyInfix)) => opNeedsParens(t1.op.value, t2.op. value, isLeft = t2.lhs eq t1, customAssoc = true,customPrecedence = false)
-        case (t1: Pat.Type.ApplyInfix, Some(t2: Pat.Type.ApplyInfix)) => opNeedsParens(t1.op.value, t2.op. value, isLeft = t2.lhs eq t1, customAssoc = true,customPrecedence = false)
+        case (t1: Type.ApplyInfix, Some(t2: Type.ApplyInfix)) =>         opNeedsParens(t1.op.value, t2.op.value, isLeft = t2.lhs eq t1, customAssoc = true, customPrecedence = false)
+        case (t1: Pat.Type.ApplyInfix, Some(t2: Pat.Type.ApplyInfix)) => opNeedsParens(t1.op.value, t2.op.value, isLeft = t2.lhs eq t1, customAssoc = true, customPrecedence = false)
         /* Covering cases for Pat.ExtractInfix */
         case (t: Pat.Bind, Some(_: Pat.ExtractInfix)) => true
-        case (t1: Pat.ExtractInfix, Some(t2: Pat.ExtractInfix)) => opNeedsParens(t1.ref.value, t2.ref.value, isLeft = t2.lhs eq t1, customAssoc= true, customPrecedence = true)
+        case (t1: Pat.ExtractInfix, Some(t2: Pat.ExtractInfix)) => opNeedsParens(t1.ref.value, t2.ref.value, isLeft = t2.lhs eq t1, customAssoc = true, customPrecedence = true)
         /* Covering cases for Pat.Typed */
         case (t: Pat.Typed, Some(_: Pat.ExtractInfix)) => true
         /* Covering cases for Term.Unary */
         case (_, Some(_: Term.ApplyUnary)) =>
           tree match {
             case _: Term.ApplyInfix => true
-            case _: Term.If => true
-            case _ => false
+            case _: Term.If =>         true
+            case _ =>                  false
           }
-        case _ => false
+        case _ =>                                         false
       }
       if (withParents) toks"(${deindent(tree.tokens)})" else deindent(tree.tokens)
     }
@@ -310,15 +310,15 @@ private[meta] object inferTokens {
         }
         toks"${t.lhs.tks} ${t.op.tks} $rhs"
       case t: Term.ApplyUnary => toks"${t.op.tks}${t.arg.tks}"
-      case t: Term.Assign => toks"${t.lhs.tks} = ${t.rhs.tks}"
-      case t: Term.Update => toks"${t.fun.tks}${t.argss.`(o,o)`} = ${t.rhs.tks}"
+      case t: Term.Assign =>     toks"${t.lhs.tks} = ${t.rhs.tks}"
+      case t: Term.Update =>     toks"${t.fun.tks}${t.argss.`(o,o)`} = ${t.rhs.tks}"
       case t: Term.Return =>
         if (guessHasExpr(t)) toks"return ${t.expr.tks}"
         else toks"return"
-      case t: Term.Throw => toks"throw ${t.expr.tks}"
-      case t: Term.Ascribe => toks"${t.expr.tks}: ${t.tpe.tks}"
-      case t: Term.Annotate => toks"${t.expr.tks}: ${t.annots.`o_o`}"
-      case t: Term.Tuple => t.elements.`(o,o)`
+      case t: Term.Throw =>      toks"throw ${t.expr.tks}"
+      case t: Term.Ascribe =>    toks"${t.expr.tks}: ${t.tpe.tks}"
+      case t: Term.Annotate =>   toks"${t.expr.tks}: ${t.annots.`o_o`}"
+      case t: Term.Tuple =>      t.elements.`(o,o)`
       case t: Term.Block =>
         import Term.{ Block, Function }
         t match {
@@ -371,15 +371,15 @@ private[meta] object inferTokens {
             toks"${params.`(o,o)`} => $cbody"
         }
       case t: Term.PartialFunction => toks"{${t.cases.`[->o->`}}"
-      case t: Term.While => toks"while (${t.expr.tks}) ${t.body.tks}"
-      case t: Term.Do => toks"do ${t.body.tks} while (${t.expr.tks})"
-      case t: Term.For => toks"for (${t.enums.`o;o`}) ${t.body.tks}"
-      case t: Term.ForYield => toks"for (${t.enums.`o;o`}) yield ${t.body.tks}"
-      case t: Term.New => toks"new ${t.templ.tks}"
-      case _: Term.Placeholder => toks"_"
-      case t: Term.Eta => toks"${t.term.tks} _"
-      case t: Term.Arg.Named => toks"${t.name.tks} = ${t.rhs.tks}"
-      case t: Term.Arg.Repeated => toks"${t.arg.tks}: _*"
+      case t: Term.While =>           toks"while (${t.expr.tks}) ${t.body.tks}"
+      case t: Term.Do =>              toks"do ${t.body.tks} while (${t.expr.tks})"
+      case t: Term.For =>             toks"for (${t.enums.`o;o`}) ${t.body.tks}"
+      case t: Term.ForYield =>        toks"for (${t.enums.`o;o`}) yield ${t.body.tks}"
+      case t: Term.New =>             toks"new ${t.templ.tks}"
+      case _: Term.Placeholder =>     toks"_"
+      case t: Term.Eta =>             toks"${t.term.tks} _"
+      case t: Term.Arg.Named =>       toks"${t.name.tks} = ${t.rhs.tks}"
+      case t: Term.Arg.Repeated =>    toks"${t.arg.tks}: _*"
       case t: Term.Param =>
         val mods = t.mods.filter(!_.isInstanceOf[Mod.Implicit]) // NOTE: `implicit` in parameters is skipped in favor of `implicit` in the enclosing parameter list
         val tpe = t.decltpe.map(v => toks": ${v.tks}").getOrElse(toks"")
@@ -390,10 +390,10 @@ private[meta] object inferTokens {
       case t: Type.Name =>
         if (guessIsBackquoted(t)) mineIdentTk("`" + t.value + "`")
         else mineIdentTk(t.value)
-      case t: Type.Select => toks"${t.qual.tks}.${t.name.tks}"
-      case t: Type.Project => toks"${t.qual.tks}#${t.name.tks}"
-      case t: Type.Singleton => toks"${t.ref.tks}.type"
-      case t: Type.Apply => toks"${t.tpe.tks}[${t.args.`o,o`}]"
+      case t: Type.Select =>     toks"${t.qual.tks}.${t.name.tks}"
+      case t: Type.Project =>    toks"${t.qual.tks}#${t.name.tks}"
+      case t: Type.Singleton =>  toks"${t.ref.tks}.type"
+      case t: Type.Apply =>      toks"${t.tpe.tks}[${t.args.`o,o`}]"
       case t: Type.ApplyInfix => toks"${t.lhs.tks} ${t.op.tks} ${t.rhs.tks}"
       case t: Type.Function =>
         val params = {
@@ -402,25 +402,25 @@ private[meta] object inferTokens {
           else t.params.`(o,o)`
         }
         toks"$params => ${t.res.tks}"
-      case t: Type.Tuple => t.elements.`(o,o)`
+      case t: Type.Tuple =>      t.elements.`(o,o)`
       case t: Type.Compound =>
         val tpes = t.tpes.flattks()(toks" with ")()
         if (guessHasRefinement(t)) toks"$tpes { ${t.refinement.`o;o`} }"
         else tpes
-      case t: Type.Existential => toks"${t.tpe.tks} forSome { ${t.quants.`o;o`} }"
-      case t: Type.Annotate => toks"${t.tpe.tks} ${t.annots.`o_o`}"
-      case t: Type.Placeholder => toks"_ ${t.bounds.tks}"
+      case t: Type.Existential =>  toks"${t.tpe.tks} forSome { ${t.quants.`o;o`} }"
+      case t: Type.Annotate =>     toks"${t.tpe.tks} ${t.annots.`o_o`}"
+      case t: Type.Placeholder =>  toks"_ ${t.bounds.tks}"
       case t: Type.Bounds =>
         val loOpt = t.lo.map(lo => toks">: ${lo.tks}")
         val hiOpt = t.hi.map(hi => toks"<: ${hi.tks}")
         (loOpt, hiOpt) match {
-          case (None, None) => toks""
-          case (Some(hi), None) => hi
-          case (None, Some(lo)) => lo
+          case (None, None) =>         toks""
+          case (Some(hi), None) =>     hi
+          case (None, Some(lo)) =>     lo
           case (Some(hi), Some(lo)) => toks"$hi $lo"
         }
       case t: Type.Arg.Repeated => toks"${t.tpe.tks}*"
-      case t: Type.Arg.ByName => toks"=> ${t.tpe.tks}"
+      case t: Type.Arg.ByName =>   toks"=> ${t.tpe.tks}"
       case t: Type.Param =>
         val mods = t.mods.filter(m => !m.isInstanceOf[Mod.Covariant] && !m.isInstanceOf[Mod.Contravariant])
         require(t.mods.length - mods.length <= 1)
@@ -431,15 +431,15 @@ private[meta] object inferTokens {
         toks"${mods.o_o}$variance${t.name.tks}${t.tparams.`oo`}$tbounds$vbounds$cbounds"
 
       // Pat
-      case t: Pat.Var.Term => mineIdentTk(t.name.value)
-      case _: Pat.Wildcard => toks"_"
+      case t: Pat.Var.Term =>    mineIdentTk(t.name.value)
+      case _: Pat.Wildcard =>    toks"_"
       case t: Pat.Bind =>
         val separator: Tokens = if (t.rhs.isInstanceOf[Pat.Arg.SeqWildcard] && dialect.bindToSeqWildcardDesignator == ":") toks"" else toks" "
         val designator: Tokens = if (t.rhs.isInstanceOf[Pat.Arg.SeqWildcard] && dialect.bindToSeqWildcardDesignator == ":") toks":" else toks"@"
         toks"${t.lhs.tks}$separator$designator ${t.rhs.tks}"
       case t: Pat.Alternative => toks"${t.lhs.tks} | ${t.rhs.tks}"
-      case t: Pat.Tuple => t.elements.`(o,o)`
-      case t: Pat.Extract => toks"${t.ref.tks}${t.targs.`[o,o]`}${t.args.`(o,o)`}"
+      case t: Pat.Tuple =>       t.elements.`(o,o)`
+      case t: Pat.Extract =>     toks"${t.ref.tks}${t.targs.`[o,o]`}${t.args.`(o,o)`}"
       case t: Pat.ExtractInfix =>
         t.rhs match {
           case x :: Nil => toks"${t.lhs.tks} ${t.ref.tks} ${x.tks}"
@@ -447,65 +447,66 @@ private[meta] object inferTokens {
         }
       case t: Pat.Interpolate =>
         val zipped = (t.parts zip t.args) map {
-          case (part, Pat.Var.Term(id: Name)) if !guessIsBackquoted(id) => toks"${mineIdentTk(part.value)}$$${mineIdentTk(id.value)}"
-          case (part, args) => toks"${mineIdentTk(part.value)}$${${args.tks}}"
+          case (part, Pat.Var.Term(id: Name)) if !guessIsBackquoted(id) => 
+            toks"${mineIdentTk(part.value)}$$${mineIdentTk(id.value)}"
+          case (part, args) => 
+            toks"${mineIdentTk(part.value)}$${${args.tks}}"
         }
         toks"${mineIdentTk(t.prefix.value)}$singleDoubleQuotes${zipped.`oo`}${mineIdentTk(t.parts.last.value)}$singleDoubleQuotes"
-      case t: Pat.Typed => toks"${t.lhs.tks}: ${t.rhs.tks}"
+      case t: Pat.Typed =>           toks"${t.lhs.tks}: ${t.rhs.tks}"
       case _: Pat.Arg.SeqWildcard => toks"_*"
 
       // Pat.Type
-      // TODO: fix copy/paste with Type
-      case t: Pat.Type.Wildcard => toks"_"
-      case t: Pat.Var.Type => mineIdentTk(t.name.value)
-      case t: Pat.Type.Project => toks"${t.qual.tks}#${t.name.tks}"
-      case t: Pat.Type.Apply => toks"${t.tpe.tks}${t.args.`[o,o]`}"
-      case t: Pat.Type.ApplyInfix => toks"${t.lhs.tks} ${t.op.tks} ${t.rhs.tks}"
+      case t: Pat.Type.Wildcard =>    toks"_"
+      case t: Pat.Var.Type =>         mineIdentTk(t.name.value)
+      case t: Pat.Type.Project =>     toks"${t.qual.tks}#${t.name.tks}"
+      case t: Pat.Type.Apply =>       toks"${t.tpe.tks}${t.args.`[o,o]`}"
+      case t: Pat.Type.ApplyInfix =>  toks"${t.lhs.tks} ${t.op.tks} ${t.rhs.tks}"
       case t: Pat.Type.Function =>
         val params = if (t.params.size == 1) t.params.head.tks else t.params.`(o,o)`
         toks"$params => ${t.res.tks}"
-      case t: Pat.Type.Tuple => t.elements.`(o,o)`
+      case t: Pat.Type.Tuple =>       t.elements.`(o,o)`
       case t: Pat.Type.Compound =>
         val tpes = t.tpes.flattks()(toks" with ")()
         if (guessPatHasRefinement(t)) toks"$tpes { ${t.refinement.`o;o`} }"
         else tpes
       case t: Pat.Type.Existential => toks"${t.tpe.tks} forSome { ${t.quants.`o;o`} }"
-      case t: Pat.Type.Annotate => toks"${t.tpe.tks} ${t.annots.`o_o`}"
+      case t: Pat.Type.Annotate =>    toks"${t.tpe.tks} ${t.annots.`o_o`}"
 
       // Lit
-      case t: Lit.Bool if t.value => toks"true"
+      case t: Lit.Bool if t.value =>  toks"true"
       case t: Lit.Bool if !t.value => toks"false"
-      case t: Lit.Byte => mineLitTk(t.value)
-      case t: Lit.Short => mineLitTk(t.value)
-      case t: Lit.Int => mineLitTk(t.value)
-      case t: Lit.Long => mineLitTk(t.value)
-      case t: Lit.Float => mineLitTk(t.value)
-      case t: Lit.Double => mineLitTk(t.value)
-      case t: Lit.Char => mineLitTk(t.value)
-      case t: Lit.String => mineLitTk(t.value)
-      case t: Lit.Symbol => mineLitTk(t.value)
-      case _: Lit.Null => toks"null"
-      case _: Lit.Unit => toks"()"
+      case t: Lit.Byte =>             mineLitTk(t.value)
+      case t: Lit.Short =>            mineLitTk(t.value)
+      case t: Lit.Int =>              mineLitTk(t.value)
+      case t: Lit.Long =>             mineLitTk(t.value)
+      case t: Lit.Float =>            mineLitTk(t.value)
+      case t: Lit.Double =>           mineLitTk(t.value)
+      case t: Lit.Char =>             mineLitTk(t.value)
+      case t: Lit.String =>           mineLitTk(t.value)
+      case t: Lit.Symbol =>           mineLitTk(t.value)
+      case _: Lit.Null =>             toks"null"
+      case _: Lit.Unit =>             toks"()"
 
       // Member
-      case t: Decl.Val => toks"${t.mods.`o_o_`}val ${t.pats.`oo`}: ${t.decltpe.tks}"
-      case t: Decl.Var => toks"${t.mods.`o_o_`}var ${t.pats.`oo`}: ${t.decltpe.tks}"
-      case t: Decl.Type => toks"${t.mods.`o_o_`}type ${t.name.tks}${t.tparams.`[o,o]`}${apndTpeBounds(t.bounds)}"
-      case t: Decl.Def => toks"${t.mods.`o_o_`}def ${t.name.tks}${t.tparams.`[o,o]`}${t.paramss.`(o,o)`}: ${t.decltpe.tks}"
-      case t: Defn.Val => toks"${t.mods.`o_o_`}val ${t.pats.`oo`}${apndDeclTpe(t.decltpe)} = ${t.rhs.tks}"
+      case t: Decl.Val =>      toks"${t.mods.`o_o_`}val ${t.pats.`oo`}: ${t.decltpe.tks}"
+      case t: Decl.Var =>      toks"${t.mods.`o_o_`}var ${t.pats.`oo`}: ${t.decltpe.tks}"
+      case t: Decl.Type =>     toks"${t.mods.`o_o_`}type ${t.name.tks}${t.tparams.`[o,o]`}${apndTpeBounds(t.bounds)}"
+      case t: Decl.Def =>      toks"${t.mods.`o_o_`}def ${t.name.tks}${t.tparams.`[o,o]`}${t.paramss.`(o,o)`}: ${t.decltpe.tks}"
+      case t: Defn.Val =>      toks"${t.mods.`o_o_`}val ${t.pats.`oo`}${apndDeclTpe(t.decltpe)} = ${t.rhs.tks}"
       case t: Defn.Var =>
         val rhs = t.rhs.map(trm => toks" = ${trm.tks}").getOrElse(toks"")
         toks"${t.mods.`o_o_`}var ${t.pats.`oo`}${apndDeclTpe(t.decltpe)}$rhs"
-      case t: Defn.Type => toks"${t.mods.`o_o_`}type ${t.name.tks}${t.tparams.`[o,o]`} = ${t.body.tks}"
-      case t: Defn.Class => toks"${t.mods.`o_o_`}class ${t.name.tks}${t.tparams.`[o,o]`}${t.ctor.tks}${apndTempl(t.templ)}"
-      case t: Defn.Trait => toks"${t.mods.`o_o_`}trait ${t.name.tks}${t.tparams.`[o,o]`}${t.ctor.tks}${apndTempl(t.templ)}"
-      case t: Defn.Object => toks"${t.mods.`o_o_`}object ${t.name.tks}${t.ctor.tks}${apndTempl(t.templ)}"
-      case t: Defn.Def => toks"${t.mods.`o_o_`}def ${t.name.tks}${t.tparams.`[o,o]`}${t.paramss.`(o,o)`}${apndDeclTpe(t.decltpe)} = ${t.body.tks}"
-      case t: Defn.Macro => toks"${t.mods.`o_o_`}def ${t.name.tks}${t.tparams.`[o,o]`}${t.paramss.`(o,o)`}: ${t.tpe.tks} = macro ${t.body.tks}"
+      case t: Defn.Type =>     toks"${t.mods.`o_o_`}type ${t.name.tks}${t.tparams.`[o,o]`} = ${t.body.tks}"
+      case t: Defn.Class =>    toks"${t.mods.`o_o_`}class ${t.name.tks}${t.tparams.`[o,o]`}${t.ctor.tks}${apndTempl(t.templ)}"
+      case t: Defn.Trait =>    toks"${t.mods.`o_o_`}trait ${t.name.tks}${t.tparams.`[o,o]`}${t.ctor.tks}${apndTempl(t.templ)}"
+      case t: Defn.Object =>   toks"${t.mods.`o_o_`}object ${t.name.tks}${t.ctor.tks}${apndTempl(t.templ)}"
+      case t: Defn.Def =>      toks"${t.mods.`o_o_`}def ${t.name.tks}${t.tparams.`[o,o]`}${t.paramss.`(o,o)`}${apndDeclTpe(t.decltpe)} = ${t.body.tks}"
+      case t: Defn.Macro =>    toks"${t.mods.`o_o_`}def ${t.name.tks}${t.tparams.`[o,o]`}${t.paramss.`(o,o)`}: ${t.tpe.tks} = macro ${t.body.tks}"
       case t: Pkg =>
         if (guessHasBraces(t)) toks"package ${t.ref.tks}{${t.stats.`[->o->`}}"
         else toks"package ${t.ref.tks}${t.stats.`->o`}"
-      case t: Pkg.Object => toks"package ${t.mods.`o_o_`}object ${t.name.tks}${apndTempl(t.templ)}"
+      case t: Pkg.Object =>    toks"package ${t.mods.`o_o_`}object ${t.name.tks}${apndTempl(t.templ)}"
       case t: Ctor.Primary =>
         val cmods = t.mods match {
           case Nil => toks""
@@ -533,55 +534,57 @@ private[meta] object inferTokens {
           val pbody = {
             val isOneLiner = t.stats.map(stats => stats.length == 0 || (stats.length == 1 && !stats.head.tokens.map(_.show[Code]).mkString.contains(EOL))).getOrElse(true)
             (isSelfNonEmpty, t.stats.nonEmpty, t.stats.getOrElse(Nil)) match {
-              case (false, false, _) => toks""
-              case (true, false, _) => toks" { ${t.self.tks} => }"
-              case (false, true, Seq()) if isOneLiner => toks" {}"
-              case (false, true, Seq(stat)) if isOneLiner => toks" { ${stat.tks} }"
-              case (false, true, stats) => toks" {${stats.`[->o->`}}"
-              case (true, true, Seq()) if isOneLiner => toks" { ${t.self.tks} => }"
-              case (true, true, Seq(stat)) if isOneLiner => toks" { ${t.self.tks} => ${stat.tks} }"
-              case (true, true, stats) => toks" { ${t.self.tks} =>${stats.`[->o->`}}"
+              case (false, false, _) =>                      toks""
+              case (true, false, _) =>                       toks"{ ${t.self.tks} => }"
+              case (false, true, Seq()) if isOneLiner =>     toks"{}"
+              case (false, true, Seq(stat)) if isOneLiner => toks"{ ${stat.tks} }"
+              case (false, true, stats) =>                   toks"{${stats.`[->o->`}}"
+              case (true, true, Seq()) if isOneLiner =>      toks"{ ${t.self.tks} => }"
+              case (true, true, Seq(stat)) if isOneLiner =>  toks"{ ${t.self.tks} => ${stat.tks} }"
+              case (true, true, stats) =>                    toks"{ ${t.self.tks} =>${stats.`[->o->`}}"
             }
           }
-          toks"$pearly$pparents$pbody"
+          if ((!t.early.isEmpty || !t.parents.isEmpty) && !pbody.isEmpty) toks"$pearly$pparents $pbody"
+          else if (!t.early.isEmpty || !t.parents.isEmpty) pearly ++ pparents
+          else pbody
         }
 
       // Mod
-      case Mod.Annot(tree) => toks"@${tree.ctorTpe.tks}${tree.ctorArgss.`(o,o)`}"
-      case Mod.Private(Name.Anonymous()) => toks"private"
-      case Mod.Private(name) => toks"private[${name.tks}]"
+      case Mod.Annot(tree) =>                 toks"@${tree.ctorTpe.tks}${tree.ctorArgss.`(o,o)`}"
+      case Mod.Private(Name.Anonymous()) =>   toks"private"
+      case Mod.Private(name) =>               toks"private[${name.tks}]"
       case Mod.Protected(Name.Anonymous()) => toks"protected"
-      case Mod.Protected(name) => toks"protected[${name.tks}]"
-      case _: Mod.Implicit => toks"implicit"
-      case _: Mod.Final => toks"final"
-      case _: Mod.Sealed => toks"sealed"
-      case _: Mod.Override => toks"override"
-      case _: Mod.Case => toks"case"
-      case _: Mod.Abstract => toks"abstract"
-      case _: Mod.Covariant => toks"+"
-      case _: Mod.Contravariant => toks"-"
-      case _: Mod.Lazy => toks"lazy"
-      case _: Mod.ValParam => toks"val"
-      case _: Mod.VarParam => toks"var"
+      case Mod.Protected(name) =>             toks"protected[${name.tks}]"
+      case _: Mod.Implicit =>                 toks"implicit"
+      case _: Mod.Final =>                    toks"final"
+      case _: Mod.Sealed =>                   toks"sealed"
+      case _: Mod.Override =>                 toks"override"
+      case _: Mod.Case =>                     toks"case"
+      case _: Mod.Abstract =>                 toks"abstract"
+      case _: Mod.Covariant =>                toks"+"
+      case _: Mod.Contravariant =>            toks"-"
+      case _: Mod.Lazy =>                     toks"lazy"
+      case _: Mod.ValParam =>                 toks"val"
+      case _: Mod.VarParam =>                 toks"var"
       case Mod.Ffi(signature) =>
         val quote = if (signature.contains(EOL)) tripleDoubleQuotes else singleDoubleQuotes
         toks"@ffi($quote${mineLitTk(signature)}$quote)"
 
       // Enumerator
-      case t: Enumerator.Val => toks"${t.pat.tks} = ${t.rhs.tks}"
+      case t: Enumerator.Val =>       toks"${t.pat.tks} = ${t.rhs.tks}"
       case t: Enumerator.Generator => toks"${t.pat.tks} <- ${t.rhs.tks}"
-      case t: Enumerator.Guard => toks"if ${t.cond.tks}"
+      case t: Enumerator.Guard =>     toks"if ${t.cond.tks}"
 
       // Import
-      case t: Import.Selector.Name => toks"${t.value.tks}"
-      case t: Import.Selector.Rename => toks"${t.from.tks} => ${t.to.tks}"
+      case t: Import.Selector.Name =>     toks"${t.value.tks}"
+      case t: Import.Selector.Rename =>   toks"${t.from.tks} => ${t.to.tks}"
       case t: Import.Selector.Unimport => toks"${t.name.tks} => _"
       case _: Import.Selector.Wildcard => toks"_"
       case t: Import.Clause =>
         if (t.sels.size == 1 && !t.sels.head.isInstanceOf[Import.Selector.Rename]
           && !t.sels.head.isInstanceOf[Import.Selector.Unimport]) toks"${t.ref.tks}.${t.sels.`oo`}"
         else toks"${t.ref.tks}.${t.sels.`{o,o}`}"
-      case t: Import => toks"import ${t.clauses.`o,o`}"
+      case t: Import =>                   toks"import ${t.clauses.`o,o`}"
 
       // Case
       case t: Case =>
@@ -596,22 +599,22 @@ private[meta] object inferTokens {
           }
         }
         val pbody = (t.stats, isOneLiner) match {
-          case (Nil, true) => toks""
+          case (Nil, true) =>        toks""
           case (List(stat), true) => toks" ${stat.tks}"
-          case (stats, _) => stats.`[->o`
+          case (stats, _) =>         stats.`[->o`
         }
         toks"case ${t.pat.tks}$pcond =>$pbody"
 
       // Source
-      case t: Source => //t.stats.`o->o`
+      case t: Source =>
         proto match {
-          /* If the proto is defined, we can then extract the top-level comment the root contains and re-insert them
-      		 * between the proper statements. We have no quarantee however that the indentation in a stat will correspond
-      		 * to the indentation in the source token stream. As an outcome, we filter all indentation out prior to the
-      		 * comparison. We then do the assumption that the correspondance between the stats from the original tree and
-      		 * the new one are equivalent, i.e. that if a class A was before a class B, the class A is still before the 
-      		 * class B in the modified tree, even if this one or the other might contains more stats (in which case, they
-      		 * are either added or removed). By doing so, we are guaranteed to preserve top-level comments */
+          /* If the proto is defined, we can then extract the top-level comments the root contains and re-insert them
+           * between the proper statements. We have no guarantee however that the indentation in a stat will correspond
+           * to the indentation in the source token stream. As an outcome, we filter all indentation out prior to the
+           * comparison. We then do the assumption that the correspondence between the stats from the original tree and
+           * the new one are equivalent, i.e. that if a class A was before a class B, the class A is still before the 
+           * class B in the modified tree, even if this one or the other might contain more stats (in which case, they
+           * are either added or removed at the end). By doing so, we are guaranteed to preserve top-level comments. */
           case Some(original: Source) =>
             val originalTokens = original.tokens.filter(t => !isIndent(t))
             val oStatsTokens = original.stats.map(_.tokens.filter(t => !isIndent(t))).repr
@@ -654,16 +657,17 @@ private[meta] object inferTokens {
   }
 
   /* Removing original indentation from the token stream to let the inference put them back properly.
-   * Since a unique token by itself does not know if he is authentic or not, we have to remove
-   * the top indentation and re-infer it, to be sure that we have something looking good at the
-   * end. A drawback on this is that we don't keep the original indentation. */
+   * Since a unique token by itself does not know if it is authentic or not, we have to remove
+   * the top indentation and re-infer it, to be sure that we have something looking good in the
+   * end. A drawback on this is that we don't fully keep the original indentation. */
   private def deindent(tks: Tokens): Tokens = {
     val lines = tks.onLines
     if (tks.isSynthetic || tks.repr.isEmpty || lines.length == 1) tks
     else {
-      /* In many cases, the start of a stat is not on a newline while the end is.
-    	 * As an outcome, we de-indent based on the original indentation of the last line. This is
-    	 * mainly used for block, partial function, etc. */
+      /* In many cases, the start of a stat is not on a newline, while the end is.
+       * As an outcome, we "de-indent" based on the original indentation of the last line. This is
+       * mainly used for block, partial function, etc. and covers the cases that require such 
+       * re-indentation. */
       val lastIndent = lines.last.dropWhile(t => isIndent(t))
       val toDrop = lines.last.length - lastIndent.length
       def dropWhileWithMax[T](seq: Seq[T])(f: T => Boolean, max: Int): Seq[T] = {
