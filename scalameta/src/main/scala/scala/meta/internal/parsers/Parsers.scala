@@ -1086,12 +1086,12 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         val value = if (isNegated) -token.value else token.value
         if (value > Float.MaxValue) syntaxError("floating point number too large", at = token)
         else if (value < Float.MinValue) syntaxError("floating point number too small", at = token)
-        else Lit.Float(value.toLong)
+        else Lit.Float(value.toFloat)
       case token: Literal.Double  =>
         val value = if (isNegated) -token.value else token.value
         if (value > Double.MaxValue) syntaxError("floating point number too large", at = token)
         else if (value < Double.MinValue) syntaxError("floating point number too small", at = token)
-        else Lit.Double(value.toLong)
+        else Lit.Double(value.toDouble)
       case token: Literal.String =>
         Lit.String(token.value)
       case token: Literal.Symbol =>
