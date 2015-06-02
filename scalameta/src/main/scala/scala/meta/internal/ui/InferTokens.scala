@@ -657,8 +657,8 @@ private[meta] object inferTokens {
            * class B in the modified tree, even if this one or the other might contain more stats (in which case, they
            * are either added or removed at the end). By doing so, we are guaranteed to preserve top-level comments. */
           case Some(original: Source) =>
-            val originalTokens = original.tokens.filter(t => !isIndent(t))
-            val oStatsTokens = original.stats.map(_.tokens.filter(t => !isIndent(t))).repr
+            val originalTokens = original.tokens
+            val oStatsTokens = original.stats.map(_.tokens).repr
             val zipped = (oStatsTokens zip t.stats.map(_.tokens.repr))
             val oStatsTail = oStatsTokens.drop(zipped.length).map(ts => (ts, Seq[Token]()))
             /* Loop and replace the original token streams from Source.stats the new ones */
