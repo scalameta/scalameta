@@ -27,13 +27,15 @@ class ReificationMacros(val c: Context) extends TokenLiftables
   // Extract the interesting parts of toks"..."
   private lazy val q"$_($_.apply(..${parts: List[String]})).$_.$method[..$_](..$args)($dialectTree)" = c.macroApplication
 
+  private val quasiquotePrefix = c.freshName("quasiquote")
+  private def bindingName(i: Int) = TermName(quasiquotePrefix + "$x$" + i)
+
   private def arg(i: Int): c.Tree = method match {
     case TermName("apply") =>
       args(i)
 
     case TermName("unapply") =>
-      // TODO: this is a hygiene violation
-      val name = TermName(s"x$i")
+      val name = bindingName(i)
       pq"$name @ _"
   }
 
@@ -153,7 +155,7 @@ class ReificationMacros(val c: Context) extends TokenLiftables
           else {
             val bindings = parts.init.zipWithIndex map {
               case (_, i) =>
-                val name = TermName(s"x$i")
+                val name = bindingName(i)
                 if (i == dottedUnquote) q"_root_.scala.meta.syntactic.Tokens($name: _*)"
                 else q"$name"
             }
