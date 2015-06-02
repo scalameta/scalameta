@@ -227,7 +227,7 @@ trait TokenLiftables extends tokens.Liftables {
         case Tokens() =>
           prepend(pre, q"_root_.scala.meta.syntactic.Tokens()")
         case Token.Unquote(_, _, _, _, tree: Tree) +: rest =>
-          // If we are splicing only a single token we need to wrap it in a Vector
+          // If we are splicing only a single token we need to wrap it in a Tokens
           // to be able to append and prepend other tokens to it easily.
           val quoted = if (tree.tpe <:< typeOf[Token]) q"_root_.scala.meta.syntactic.Tokens($tree)" else tree
           append(prepend(pre, quoted), Tokens(rest: _*))
