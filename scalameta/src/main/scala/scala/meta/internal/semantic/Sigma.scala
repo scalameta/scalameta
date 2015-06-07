@@ -1,7 +1,8 @@
 package scala.meta
 package internal
-package hygiene
+package semantic
 
+import org.scalameta.adt
 import org.scalameta.adt._
 import org.scalameta.invariants._
 import scala.meta.internal.{ast => impl}
@@ -33,4 +34,11 @@ import scala.meta.internal.{ast => impl}
 object Sigma {
   @leaf object Zero extends Sigma { def resolve(name: Name) = Denotation.Zero }
   @leaf object Naive extends Sigma { def resolve(name: Name) = name.require[impl.Name].denot }
+}
+
+// TODO: This unrelated code is here because of the limitation of knownDirectSubclasses.
+// We would like move it to scala/meta/internal/quasiquotes/ast/ReificationMacros.scala where it belongs,
+// but then we have problems with compilation order.
+trait SigmaLiftables extends adt.Liftables {
+  lazy implicit val liftableSigma: u.Liftable[Sigma] = materializeAdt[Sigma]
 }

@@ -11,7 +11,7 @@ import scala.collection.immutable.Seq
 import scala.reflect.{ClassTag, classTag}
 import scala.meta.semantic.{Context => SemanticContext}
 import scala.meta.internal.{ast => impl} // necessary only to implement APIs, not to define them
-import scala.meta.internal.{hygiene => h} // necessary only to implement APIs, not to define them
+import scala.meta.internal.{semantic => i} // necessary only to implement APIs, not to define them
 import scala.meta.internal.ui.Summary // necessary only to implement APIs, not to define them
 import scala.reflect.runtime.{universe => ru} // necessary only for a very hacky approximation of hygiene
 
@@ -34,10 +34,10 @@ private[meta] trait Api {
 
   implicit class XtensionSemanticMemberTpe(tree: Member) {
     @hosted private def SeqRef: impl.Type.Name = {
-      val hScala = h.Symbol.Global(h.Symbol.Root, "scala", h.Signature.Term)
-      val hCollection = h.Symbol.Global(hScala, "collection", h.Signature.Term)
-      val hSeq = h.Symbol.Global(hCollection, "Seq", h.Signature.Type)
-      impl.Type.Name("Seq", h.Denotation.Precomputed(h.Prefix.Zero, hSeq), h.Sigma.Naive)
+      val iScala = i.Symbol.Global(i.Symbol.Root, "scala", i.Signature.Term)
+      val iCollection = i.Symbol.Global(iScala, "collection", i.Signature.Term)
+      val iSeq = i.Symbol.Global(iCollection, "Seq", i.Signature.Type)
+      impl.Type.Name("Seq", i.Denotation.Precomputed(i.Prefix.Zero, iSeq), i.Sigma.Naive)
     }
     @hosted private def dearg(tpe: Type.Arg): Type = tpe.require[impl.Type.Arg] match {
       case impl.Type.Arg.ByName(tpe) => impl.Type.Apply(SeqRef, List(tpe))
@@ -122,9 +122,9 @@ private[meta] trait Api {
     // I ended up not going for it, because it is much less straightforward implementation-wise,
     // and any time savings are worth very much at this stage of the project.
     @hosted def source: Member = {
-      def stripPrefix(denot: h.Denotation) = denot match {
-        case h.Denotation.Zero => h.Denotation.Zero
-        case denot: h.Denotation.Precomputed => denot.copy(prefix = h.Prefix.Zero)
+      def stripPrefix(denot: i.Denotation) = denot match {
+        case i.Denotation.Zero => i.Denotation.Zero
+        case denot: i.Denotation.Precomputed => denot.copy(prefix = i.Prefix.Zero)
       }
       val prefixlessName = tree.name match {
         case name: impl.Name.Anonymous => name
@@ -351,13 +351,13 @@ private[meta] trait Api {
           case other => fromSyntax(other)
         })
       }
-      def fromPrefix(prefix: h.Prefix): Option[Member] = {
+      def fromPrefix(prefix: i.Prefix): Option[Member] = {
         // TODO: this should account for type arguments of the prefix!
         // TODO: also prefix types are probably more diverse than what's supported now
         prefix match {
-          case h.Prefix.Type(ref: impl.Type.Ref) => Some(ref.defn)
-          case h.Prefix.Type(impl.Type.Apply(tpe, _)) => fromPrefix(h.Prefix.Type(tpe))
-          case h.Prefix.Type(impl.Type.ApplyInfix(_, tpe, _)) => fromPrefix(h.Prefix.Type(tpe))
+          case i.Prefix.Type(ref: impl.Type.Ref) => Some(ref.defn)
+          case i.Prefix.Type(impl.Type.Apply(tpe, _)) => fromPrefix(i.Prefix.Type(tpe))
+          case i.Prefix.Type(impl.Type.ApplyInfix(_, tpe, _)) => fromPrefix(i.Prefix.Type(tpe))
           case _ => None
         }
       }
@@ -499,8 +499,8 @@ private[meta] trait Api {
         member.name match {
           case thisName: impl.Name =>
             internalFilter[T](that => {
-              def thisDenot = thisName.denot.require[h.Denotation.Precomputed]
-              def thatDenot = that.require[impl.Member].name.require[impl.Name].denot.require[h.Denotation.Precomputed]
+              def thisDenot = thisName.denot.require[i.Denotation.Precomputed]
+              def thatDenot = that.require[impl.Member].name.require[impl.Name].denot.require[i.Denotation.Precomputed]
               scala.util.Try(thisDenot.symbol == thatDenot.symbol).getOrElse(false)
             }) match {
               case Seq() => throw new SemanticException(s"no prototype for $member found in ${showSummary(tree)}")

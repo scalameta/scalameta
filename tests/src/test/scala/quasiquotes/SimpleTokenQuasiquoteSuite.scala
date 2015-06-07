@@ -2,6 +2,7 @@ import scala.meta._
 import scala.meta.dialects.Scala211
 
 import scala.meta.Token._
+import scala.meta.syntactic.{Token => MetaToken}
 
 class SimpleTokenQuasiquoteSuite extends TokenQuasiquoteSuite {
   test("`hello world` is correctly tokenized") {
@@ -106,8 +107,7 @@ class SimpleTokenQuasiquoteSuite extends TokenQuasiquoteSuite {
   }
 
   test("Pattern extraction with types specified") {
-    import scala.meta.Token
-    val toks"${hello: Token.Ident} ${world: Token.Ident} ${number: Token.Literal.Int}" = toks"hola mundo 123"
+    val toks"${hello: MetaToken.Ident} ${world: MetaToken.Ident} ${number: MetaToken.Literal.Int}" = toks"hola mundo 123"
     assert(hello isIdentNamed "hola")
     assert(world isIdentNamed "mundo")
     assert(number isIntLit 123)

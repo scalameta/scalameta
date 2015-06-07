@@ -1,7 +1,7 @@
 package scala.meta
 package internal
 
-package object hygiene {
+package object semantic {
   // Our current understanding of hygiene operates based on two primitives:
   // 1) Symbols (dumb unique tokens that can be associated with definitions and references to them)
   // 2) Sigmas (structures that can be attached to trees in order to remember their lexical contexts)

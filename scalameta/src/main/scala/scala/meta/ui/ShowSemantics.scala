@@ -12,7 +12,7 @@ import scala.{meta => api}
 import scala.meta.syntactic.Token
 import scala.annotation.implicitNotFound
 import scala.collection.mutable
-import scala.meta.internal.hygiene._
+import scala.meta.internal.semantic._
 import scala.compat.Platform.EOL
 
 @implicitNotFound(msg = "don't know how to show[Semantics] for ${T}")

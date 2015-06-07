@@ -15,11 +15,16 @@ class AstMacros(val c: Context) {
   import Flag._
   val AdtInternal = q"_root_.org.scalameta.adt.Internal"
   val AstInternal = q"_root_.org.scalameta.ast.internal"
-  val HygieneInternal = q"_root_.scala.meta.internal.hygiene"
+  val SemanticInternal = q"_root_.scala.meta.internal.semantic"
   def impl(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
-      def is(abbrev: String) = c.internal.enclosingOwner.fullName.toString + "." + cdef.name.toString == "scala.meta.internal.ast." + abbrev
+      def fullName = c.internal.enclosingOwner.fullName.toString + "." + cdef.name.toString
+      def is(abbrev: String) = fullName == "scala.meta.internal.ast." + abbrev
       def isQuasi = cdef.name.toString == "Quasi"
+      def isName = is("Name.Anonymous") || is("Name.Indeterminate") || is("Term.Name") || is("Type.Name") || is("Ctor.Ref.Name")
+      def isLit = !isQuasi && fullName.startsWith("scala.meta.internal.ast.Lit")
+      def isCtorRef = !isQuasi && fullName.startsWith("scala.meta.internal.ast.Ctor.Ref")
+      def isTerm = !isQuasi && (fullName.startsWith("scala.meta.internal.ast.Term") || isLit || isCtorRef) && !is("Term.Param")
       val q"$imods class $iname[..$tparams] $ctorMods(...$rawparamss) extends { ..$earlydefns } with ..$iparents { $aself => ..$astats }" = cdef
       val aname = TypeName("Api")
       val name = TypeName("Impl")
@@ -70,16 +75,15 @@ class AstMacros(val c: Context) {
       illegal.foreach(stmt => c.abort(stmt.pos, "only invariants and definitions are allowed in @ast classes"))
 
       // step 3: calculate the parameters of the class
-      val denotParam = q"@$AstInternal.auxiliary val denot: $HygieneInternal.Denotation = $HygieneInternal.Denotation.Zero"
-      val sigmaParam = q"@$AstInternal.auxiliary val sigma: $HygieneInternal.Sigma = $HygieneInternal.Sigma.Zero"
-      val paramss = {
-        if (is("Name.Anonymous") || is("Name.Indeterminate") ||
-            is("Term.Name") || is("Type.Name") || is("Ctor.Ref.Name")) {
-          (rawparamss.head ++ List(denotParam, sigmaParam)) +: rawparamss.tail
-        } else {
-          rawparamss
-        }
-      }
+      val denotParam = q"@$AstInternal.auxiliary val denot: $SemanticInternal.Denotation = $SemanticInternal.Denotation.Zero"
+      val sigmaParam = q"@$AstInternal.auxiliary val sigma: $SemanticInternal.Sigma = $SemanticInternal.Sigma.Zero"
+      val statusParam = q"@$AstInternal.auxiliary val status: $SemanticInternal.Status = $SemanticInternal.Status.Unknown"
+      val expansionParam = q"@$AstInternal.auxiliary val expansion: $SemanticInternal.Expansion = $SemanticInternal.Expansion.Identity"
+      val bonusParams = ListBuffer[ValDef]()
+      if (isName) bonusParams ++= List(denotParam, sigmaParam)
+      if (isTerm || is("Term.Param")) bonusParams ++= List(statusParam)
+      if (isTerm) bonusParams ++= List(expansionParam)
+      val paramss = (rawparamss.head ++ bonusParams.toList) +: rawparamss.tail
 
       // step 4: create boilerplate bookkeeping parameters
       bparams1 += q"protected val internalPrototype: $iname"
@@ -142,9 +146,8 @@ class AstMacros(val c: Context) {
       qstats1 ++= fieldParamss.flatten.map(p => quasigetter(p.name.toString))
       if (is("Name.Anonymous")) qstats1 += quasigetter("value")
       val fieldDefaultss = fieldParamss.map(_.map(p => {
-        if (p.name == denotParam.name) denotParam.rhs
-        else if (p.name == sigmaParam.name) sigmaParam.rhs
-        else q"this.${p.name}"
+        val bonusParam = bonusParams.find(_.name == p.name)
+        bonusParam.map(_.rhs).getOrElse(q"this.${p.name}")
       }))
       val copyFieldParamss = fieldParamss.zip(fieldDefaultss).map{ case (f, d) => f.zip(d).map { case (p, default) => q"val ${p.name}: ${p.tpt} = $default" } }
       val copyFieldArgss = fieldParamss.map(_.map(p => q"${p.name}"))

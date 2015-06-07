@@ -1,6 +1,6 @@
 package scala.meta
 package internal
-package hygiene
+package semantic
 
 import org.scalameta.invariants._
 import org.scalameta.unreachable

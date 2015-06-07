@@ -18,6 +18,7 @@ class LiftableMacros(val c: Context) extends AdtReflection {
   import c.universe._
   def customAdts(root: Root): Option[List[Adt]] = None
   def customMatcher(adt: Adt, defName: TermName, localName: TermName): Option[DefDef] = None
+  def customWrapper(adt: Adt, defName: TermName, localName: TermName, body: Tree): Option[Tree] = None
   def impl[T: WeakTypeTag]: c.Tree = {
     val root = weakTypeOf[T].typeSymbol.asAdt.root
     val unsortedAdts = customAdts(root).getOrElse(weakTypeOf[T].typeSymbol.asAdt.root.allLeafs)
@@ -50,10 +51,10 @@ class LiftableMacros(val c: Context) extends AdtReflection {
     val localName = c.freshName(TermName("x"))
     val defNames = adts.map(adt => c.freshName(TermName("lift" + adt.prefix.capitalize.replace(".", ""))))
     val liftAdts = adts.zip(defNames).map{ case (adt, defName) =>
-      customMatcher(adt, defName, localName).getOrElse({
+      val matcher: DefDef = customMatcher(adt, defName, localName).getOrElse({
         val init = q"""$u.Ident($u.TermName("_root_"))""": Tree
         val namePath = adt.sym.fullName.split('.').foldLeft(init)((acc, part) => q"$u.Select($acc, $u.TermName($part))")
-        val fields = adt match { case leaf: Leaf => leaf.allFields; case _ => sys.error(s"fatal error: $adt") }
+        val fields = adt match { case leaf: Leaf => leaf.fields; case _ => Nil }
         val args = fields.map(f => {
           val fieldName = q"$u.Ident($u.TermName(${f.name.toString}))"
           val fieldValue = q"_root_.scala.Predef.implicitly[$u.Liftable[${f.tpe}]].apply($localName.${f.name})"
@@ -66,6 +67,8 @@ class LiftableMacros(val c: Context) extends AdtReflection {
         val body = if (adt.sym.isClass) q"$u.Apply($namePath, $args)" else q"$namePath"
         q"def $defName($localName: ${adt.tpe}): $u.Tree = $body"
       })
+      val body: Tree = customWrapper(adt, defName, localName, matcher.rhs).getOrElse(matcher.rhs)
+      treeCopy.DefDef(matcher, matcher.mods, matcher.name, matcher.tparams, matcher.vparamss, matcher.tpt, body)
     }
     val clauses = adts.zip(defNames).map({ case (adt, name) =>
       cq"$localName: ${adt.tpe} => $name($localName.asInstanceOf[${adt.tpe}])"

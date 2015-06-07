@@ -4,11 +4,12 @@ abstract class TokenQuasiquoteSuite extends FunSuite {
 
   import scala.meta.{ Token, Tokens }
   import scala.meta.Token._
+  import scala.meta.syntactic.{Token => MetaToken}
 
   implicit class CheckToken(t: Token) {
     def isIdentNamed(name: String): Boolean = t match {
-      case x: Ident => x.code == name
-      case _        => false
+      case x: MetaToken.Ident => x.code == name
+      case _                  => false
     }
 
     def isMinus: Boolean = t isIdentNamed "-"
