@@ -13,8 +13,7 @@ import scala.tools.nsc.{Global => ScalaGlobal}
 import scala.meta.dialects.Scala211
 import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
-import scala.meta.internal.{hygiene => h}
-import scala.meta.internal.ui.Summary
+import scala.meta.internal.{semantic => s}
 
 @context(translateExceptions = true)
 class SemanticContext[G <: ScalaGlobal](val global: G) extends ConverterApi(global) with ScalametaSemanticContext {
@@ -29,29 +28,18 @@ class SemanticContext[G <: ScalaGlobal](val global: G) extends ConverterApi(glob
   }
 
   private[meta] def tpe(term: mapi.Term): mapi.Type = {
-    internalTpe(term.require[m.Term]).require[m.Type]
+    val mtpe = term.requireTyped()
+    mtpe.require[m.Type]
   }
 
   private[meta] def tpe(param: mapi.Term.Param): mapi.Type.Arg = {
-    internalTpe(param.require[m.Term.Param])
-  }
-
-  private def internalTpe(tree: m.Tree): m.Type.Arg = {
-    val gtpeFromOriginal = tree.originalTree.map(gtree => if (gtree.isInstanceOf[g.MemberDef]) gtree.symbol.tpe else gtree.tpe)
-    val gtpeFromDenotation = tree.originalPre.flatMap(gpre => tree.originalSym.map(_.gsymbol.infoIn(gpre).finalResultType))
-    val gtpe = gtpeFromOriginal.orElse(gtpeFromDenotation) match {
-      case Some(gtpe) => gtpe
-      case _ => throw new ConvertException(tree, s"implementation restriction: internal cache has no type associated with ${tree.show[Summary]}")
-    }
-    gtpe.toMtypeArg
+    val mtpe = param.name.requireTyped()
+    mtpe.require[m.Type.Arg]
   }
 
   private[meta] def defns(ref: mapi.Ref): Seq[mapi.Member] = {
-    def tryScratchpad(pref: m.Ref): Option[Seq[mapi.Member]] = {
-      for { gpre <- pref.originalPre; lsym <- pref.originalSym }
-      yield List(lsym.toMmember(gpre))
-    }
-    def tryNative(pref: m.Ref): Seq[mapi.Member] = pref match {
+    ref.requireDenoted()
+    ref match {
       case pname: m.Name => List(pname.toGsymbol.toMmember(pname.toGprefix))
       case m.Term.Select(_, pname) => defns(pname)
       case m.Type.Select(_, pname) => defns(pname)
@@ -62,8 +50,6 @@ class SemanticContext[G <: ScalaGlobal](val global: G) extends ConverterApi(glob
       case m.Ctor.Ref.Function(pname) => defns(pname)
       case _: m.Import.Selector => ???
     }
-    ref.requireAttributed()
-    tryScratchpad(ref.require[m.Ref]).getOrElse(tryNative(ref.require[m.Ref]))
   }
 
   private[meta] def members(tpe: mapi.Type): Seq[mapi.Member] = {

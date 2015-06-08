@@ -1,8 +1,10 @@
 package org.scalameta.meta
 
+import org.scalameta.unreachable
+import org.scalameta.invariants._
 import scala.collection.mutable
 import scala.meta._
-import scala.meta.internal.hygiene._
+import scala.meta.internal.semantic._
 import scala.{meta => api}
 import scala.meta.internal.{ast => impl}
 
@@ -11,15 +13,15 @@ trait Attributed {
 
   // TODO: so wow, much copy/paste (wrt reflection/Attributed.scala)
   implicit class RichAttributedMetaTree(tree: Tree) {
-    def requireAttributed(): Unit = {
+    def requireDenoted(): Unit = {
       val offenders = mutable.ListBuffer[(Tree, List[String])]()
       def traverse(tree: Tree, path: List[String]): Unit = {
         def check(tree: Tree): Boolean = tree match {
           case tree: impl.Name =>
-            (tree.denot, tree.sigma) match {
-              case (Denotation.Precomputed(Prefix.Zero, _), Sigma.Naive) =>
+            tree.denot match {
+              case Denotation.Single(Prefix.Zero, _) =>
                 true
-              case (Denotation.Precomputed(Prefix.Type(prefix), _), Sigma.Naive) =>
+              case Denotation.Single(Prefix.Type(prefix), _) =>
                 traverse(prefix, path :+ "Denotation")
                 true
               case _ =>
@@ -63,6 +65,17 @@ trait Attributed {
           |$tree
           |${tree.show[Semantics]}
         """.stripMargin)
+      }
+    }
+    def requireTyped(): Type.Arg = {
+      def requireTyped(typing: Typing) = typing match {
+        case Typing.Unknown => throw new SemanticException(s"implementation restriction: internal cache has no type associated with $tree")
+        case Typing.Known(tpe) => tpe
+      }
+      tree match {
+        case tree: impl.Term => requireTyped(tree.typing)
+        case tree: impl.Term.Param => requireTyped(tree.typing)
+        case _ => unreachable(debug(tree))
       }
     }
   }

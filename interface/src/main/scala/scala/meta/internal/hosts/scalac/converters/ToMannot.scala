@@ -29,7 +29,7 @@ trait ToMannot extends GlobalToolkit with MetaToolkit {
           if (gassocs.nonEmpty) {
             def loop(garg: g.ClassfileAnnotArg): m.Term = garg match {
               case g.LiteralAnnotArg(gconst) =>
-                gconst.rawcvt.withOriginal(g.Literal(gconst).setType(g.ConstantType(gconst)))
+                gconst.rawcvt.withTpe(g.ConstantType(gconst))
               case g.ArrayAnnotArg(gargs) =>
                 val marray = g.definitions.ArrayModule.rawcvt(g.Ident(g.definitions.ArrayModule))
                 m.Term.Apply(marray, gargs.map(loop).toList)
@@ -52,9 +52,9 @@ trait ToMannot extends GlobalToolkit with MetaToolkit {
         val mctor = m.Ctor.Name(gatp.typeSymbolDirect.name.decoded).withDenot(gatp, gctor)
         val mcore = matp.ctorRef(mctor).require[m.Term]
         if (margs.isEmpty) mcore
-        else m.Term.Apply(mcore, margs).withOriginal(gannot)
+        else m.Term.Apply(mcore, margs).withTpe(gannot.atp)
       }
-      m.Mod.Annot(mannotcore(gannot)).withOriginal(gannot)
+      m.Mod.Annot(mannotcore(gannot))
     }
   }
 

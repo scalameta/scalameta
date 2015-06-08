@@ -15,7 +15,7 @@ import scala.reflect.internal.Flags._
 import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
 import scala.reflect.runtime.universe.{Type => Pt}
-import scala.meta.internal.{hygiene => h}
+import scala.meta.internal.{semantic => s}
 import scala.meta.internal.parsers.Helpers.{XtensionTermOps => _, _}
 
 // This module exposes a method that can convert scala.reflect trees into high-fidelity scala.meta trees.
@@ -45,7 +45,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
         val mctor = m.Ctor.Name(gtpt.tpe.typeSymbolDirect.name.decoded).withDenot(gtpt.tpe, gctor)
         val mcore = (gtpt.cvt_! : m.Type).ctorRef(mctor).require[m.Term]
         val margss = gargss.map(_.map(marg))
-        margss.foldLeft(mcore)((mcurr, margs) => m.Term.Apply(mcurr, margs)).withOriginal(in)
+        margss.foldLeft(mcore)((mcurr, margs) => m.Term.Apply(mcurr, margs)).withTpe(in.tpe)
       }
       def mfakector(gparent: g.MemberDef): m.Ctor.Primary = {
         val ctor = gparent match { case _: g.ClassDef => gparent.symbol; case _: g.ModuleDef => gparent.symbol.moduleClass.primaryConstructor }
@@ -214,7 +214,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
             case in @ AnonymousClassDef(templ) =>
               i += 1
               val gstat @ q"new $$anon()" = gstats(i - 1)
-              m.Term.New(templ.cvt_!).withOriginal(gstat)
+              m.Term.New(templ.cvt_!).withTpe(gstat.tpe)
             case in @ RightAssociativeApplicationLhsTemporaryVal(left) =>
               object Right {
                 def unapply(gtree: g.Tree): Option[(g.Select, g.Tree, List[g.Tree])] = gtree match {
@@ -236,7 +236,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
                 // }
                 // so we use this particular shape of a block to detect such applications
                 case gstat @ Right(op, qual, targs) =>
-                  m.Term.ApplyInfix(left.cvt_!, op.symbol.asTerm.precvt(qual.tpe, op), targs.cvt_!, List(qual.cvt_!)).withOriginal(gstat)
+                  m.Term.ApplyInfix(left.cvt_!, op.symbol.asTerm.precvt(qual.tpe, op), targs.cvt_!, List(qual.cvt_!)).withTpe(gstat.tpe)
                 // HOWEVER, under some conditions (but not always!)
                 // applications of right-associative applications can move into the block as follows:
                 // ~$ typecheck '(1 :: Nil)(0)'
@@ -413,7 +413,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
           val gselfsym = in.symbol.owner.thisSym
           val mselfname = if (in.symbol.owner != gselfsym) mdumbselfname.withDenot(gselfsym) else mdumbselfname
           val mselftpe = if (gself.tpt.nonEmpty) Some[m.Type](gself.tpt.cvt_!) else None
-          m.Term.Param(Nil, mselfname, mselftpe, None).withOriginal(gself)
+          m.Term.Param(Nil, mselfname, mselftpe, None).withTpe(gself.tpt.tpe)
         }
         val hasStats = gstats.nonEmpty || in.symbol.owner.name == g.tpnme.ANON_CLASS_NAME
         m.Template(gearlydefns.cvt_!, mparents, mself, if (hasStats) Some(mstats(in, gstats)) else None)
@@ -427,7 +427,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
           case (_, mstats) => m.Term.Block(mstats)
         }
       case in @ g.CaseDef(pat, guard, body @ q"..$stats") =>
-        m.Case(pat.cvt_!, if (guard.nonEmpty) Some[m.Term](guard.cvt_!) else None, m.Term.Block(mstats(in, stats)).withOriginal(body))
+        m.Case(pat.cvt_!, if (guard.nonEmpty) Some[m.Term](guard.cvt_!) else None, m.Term.Block(mstats(in, stats)).withTpe(body.tpe))
       case g.Alternative(fst :: snd :: Nil) =>
         m.Pat.Alternative(fst.cvt_!, snd.cvt_!)
       case in @ g.Alternative(hd :: rest) =>
@@ -524,7 +524,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
             val g.treeInfo.Applied(ctorref @ g.Select(g.New(tpt), _), _, _) = in
             val argss = if (argss0.isEmpty && in.symbol.info.paramss.flatten.nonEmpty) List(List()) else argss0
             val supercall = mctorcall(in, tpt, ctorref.symbol, argss)
-            val self = m.Term.Param(Nil, m.Name.Anonymous().withDenot(tpt.tpe.typeSymbol), None, None).withOriginal(g.noSelfType)
+            val self = m.Term.Param(Nil, m.Name.Anonymous().withDenot(tpt.tpe.typeSymbol), None, None).withTpe(in.tpe)
             val templ = m.Template(Nil, List(supercall), self, None)
             m.Term.New(templ)
           case DesugaredSetter(lhs, rhs) =>
