@@ -10,11 +10,17 @@ package object tasty {
       oos.writeObject(source)
       oos.close()
       baos.close()
-      baos.toByteArray()
+      val metaBlob = baos.toByteArray()
+      val pickler = new TastyPickler
+      val buf = new TastyBuffer(metaBlob.length)
+      pickler.newSection("META", buf)
+      buf.writeNat(metaBlob.length)
+      metaBlob.foreach(b => buf.writeByte(b.toInt))
+      pickler.assembleParts()
     }
   }
   implicit class XtensionTastyReadTree(dummy: Source.type) {
-    def fromTasty(blob: Array[Byte]): Source = {
+    def fromTasty(tastyBlob: Array[Byte]): Source = {
       // TODO: implement this
       null
     }
