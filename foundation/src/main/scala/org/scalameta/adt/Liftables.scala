@@ -43,7 +43,13 @@ class LiftableMacros(val c: Context) extends AdtReflection {
       // unsortedAdts.sortBy(adt => -1 * metric(adt.sym))
       unsortedAdts
     }
-    if (adts.isEmpty) c.abort(c.enclosingPosition, s"$root has no known leafs")
+    if (adts.isEmpty) {
+      val message =
+        s"materialization failed for Liftable[${weakTypeOf[T]}] " +
+        s"(the most common reason for that is that you cannot materialize ADTs that haven't been compiled yet, "
+        s"i.e. materialization will fail if the file with ADT definitions comes after the file with the materialization call)"
+      c.abort(c.enclosingPosition, message)
+    }
     val u = q"${c.prefix}.u"
     val mainParam = c.freshName(TermName("x"))
     val mainModule = c.freshName(TermName("Module"))
