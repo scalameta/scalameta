@@ -11,7 +11,7 @@ import scala.collection.immutable.Seq
 import scala.reflect.internal.Flags._
 import scala.tools.nsc.{Global => ScalaGlobal}
 import scala.meta.internal.{ast => m}
-import scala.meta.internal.{hygiene => h}
+import scala.meta.internal.{semantic => s}
 import java.util.UUID.randomUUID
 
 // This module exposes a method that can convert scala.reflect types into equivalent scala.meta types.
@@ -38,16 +38,16 @@ trait ToMtype extends GlobalToolkit with MetaToolkit {
         case g.SuperType(thistpe, supertpe) =>
           require(thistpe.isInstanceOf[g.ThisType] && thistpe.typeSymbol.isType && supertpe.typeSymbol.isType)
           val supersym = if (supertpe.isInstanceOf[g.RefinedType]) g.NoSymbol else supertpe.typeSymbol
-          val superqual = m.Name.Indeterminate(g.Ident(thistpe.typeSymbol).alias).withDenot(thistpe.typeSymbol).withOriginal(gtpe)
+          val superqual = m.Name.Indeterminate(g.Ident(thistpe.typeSymbol).alias).withDenot(thistpe.typeSymbol)
           val supermix = ({
             if (supersym == g.NoSymbol) m.Name.Anonymous()
             else m.Name.Indeterminate(g.Ident(supertpe.typeSymbol).alias)
-          }).withDenot(thistpe, supersym).withOriginal(gtpe)
+          }).withDenot(thistpe, supersym)
           m.Type.Singleton(m.Term.Super(superqual, supermix))
         case g.ThisType(sym) =>
           require(sym.isClass)
-          if (sym.isModuleClass) m.Type.Singleton(sym.module.asTerm.rawcvt(g.Ident(sym.module)).withOriginal(gtpe))
-          else m.Type.Singleton(m.Term.This(m.Name.Indeterminate(g.Ident(sym).alias).withDenot(sym).withOriginal(gtpe)).withOriginal(gtpe))
+          if (sym.isModuleClass) m.Type.Singleton(sym.module.asTerm.rawcvt(g.Ident(sym.module)).withTpe(gtpe))
+          else m.Type.Singleton(m.Term.This(m.Name.Indeterminate(g.Ident(sym).alias).withDenot(sym)).withTpe(gtpe))
         case g.SingleType(pre, sym) =>
           require(sym.isTerm)
           val ref = (pre match {
@@ -57,12 +57,12 @@ trait ToMtype extends GlobalToolkit with MetaToolkit {
               sym.asTerm.precvt(pre, g.Ident(sym))
             case pre: g.SingletonType =>
               val m.Type.Singleton(preref) = pre.toMtype
-              m.Term.Select(preref, sym.asTerm.precvt(pre, g.Ident(sym)).withOriginal(gtpe))
+              m.Term.Select(preref, sym.asTerm.precvt(pre, g.Ident(sym)).withTpe(gtpe))
             case pre @ g.TypeRef(g.NoPrefix, quant, Nil) if quant.hasFlag(DEFERRED | EXISTENTIAL) =>
               require(quant.name.endsWith(g.nme.SINGLETON_SUFFIX))
               val prename = g.Ident(quant.name.toString.stripSuffix(g.nme.SINGLETON_SUFFIX)).alias
-              val preref = m.Term.Name(prename).withDenot(quant).withOriginal(quant)
-              m.Term.Select(preref, sym.asTerm.precvt(pre, g.Ident(sym)).withOriginal(gtpe))
+              val preref = m.Term.Name(prename).withDenot(quant).withTpe(quant.tpe)
+              m.Term.Select(preref, sym.asTerm.precvt(pre, g.Ident(sym)).withTpe(gtpe))
             case pre: g.TypeRef =>
               // TODO: wow, so much for the hypothesis that all post-typer types are representable with syntax
               // here's one for you: take a look at `context.unit.synthetics.get` in Typers.scala
@@ -75,7 +75,7 @@ trait ToMtype extends GlobalToolkit with MetaToolkit {
               sym.asTerm.precvt(pre, g.Ident(sym))
             case _ =>
               throw new ConvertException(gtpe, s"unsupported type $gtpe, prefix = ${pre.getClass}, structure = ${g.showRaw(gtpe, printIds = true, printTypes = true)}")
-          }).withOriginal(gtpe)
+          }).withTpe(gtpe)
           // NOTE: we can't just emit m.Type.Singleton(m.Term.Name(...).withDenot(pre, sym))
           // because in some situations (when the prefix is not stable) that will be a lie
           // because naked names are supposed to be usable without a prefix
@@ -98,12 +98,12 @@ trait ToMtype extends GlobalToolkit with MetaToolkit {
                     sym.asType.precvt(pre, g.Ident(sym))
                   case pre: g.SingletonType =>
                     val m.Type.Singleton(preref) = pre.toMtype
-                    m.Type.Select(preref, sym.asType.precvt(pre, g.Ident(sym)).withOriginal(gtpe))
+                    m.Type.Select(preref, sym.asType.precvt(pre, g.Ident(sym)))
                   case _ =>
-                    m.Type.Project(pre.toMtype, sym.asType.precvt(pre, g.Ident(sym)).withOriginal(gtpe))
+                    m.Type.Project(pre.toMtype, sym.asType.precvt(pre, g.Ident(sym)))
                 }
               }
-            }).withOriginal(gtpe)
+            })
             if (args.isEmpty) mref
             else {
               if (g.definitions.FunctionClass.seq.contains(sym) && args.nonEmpty) {
@@ -143,10 +143,10 @@ trait ToMtype extends GlobalToolkit with MetaToolkit {
             case _ =>
               // NOTE: `[A]T` is represented as `({ type λ[A] = T })#λ`
               // NOTE: it's good that we cache the gtpe => ptpe conversion
-              // because otherwise, when repeatedly faced with the same polytype, we'd keep on churning out new hsymbols
+              // because otherwise, when repeatedly faced with the same polytype, we'd keep on churning out new ssymbols
               // and those would not compare equal on the scala.meta side
-              val hsymbol = h.Symbol.Local(randomUUID().toString)
-              val mname = m.Type.Name("λ", h.Denotation.Precomputed(h.Prefix.Zero, hsymbol), h.Sigma.Naive)
+              val ssymbol = s.Symbol.Local(randomUUID().toString)
+              val mname = m.Type.Name("λ", s.Denotation.Single(s.Prefix.Zero, ssymbol))
               val mtparams = tparams.toLogical.map(_.toMmember(g.NoPrefix).require[m.Type.Param])
               val mlambda = m.Defn.Type(Nil, mname, mtparams, ret.toMtype)
               m.Type.Project(m.Type.Compound(Nil, List(mlambda)), mname)
@@ -154,7 +154,7 @@ trait ToMtype extends GlobalToolkit with MetaToolkit {
         case _ =>
           throw new ConvertException(gtpe, s"unsupported type $gtpe, designation = ${gtpe.getClass}, structure = ${g.showRaw(gtpe, printIds = true, printTypes = true)}")
       }
-      result.withOriginal(gtpe)
+      result
     })
   }
 }

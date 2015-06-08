@@ -711,8 +711,11 @@ package object internal {
       x
     }
     def customEpilogue[T](x: Tree)(implicit T: c.WeakTypeTag[T]): Tree = {
-      val isTree = T.tpe <:< c.mirror.staticClass("scala.meta.internal.ast.Tree").asType.toType
-      if (isTree) q"$x.withOriginal(in)" else x
+      val TermTpe = c.mirror.staticClass("scala.meta.internal.ast.Term").asClass.toType
+      val TermParamTpe = c.mirror.staticModule("scala.meta.internal.ast.Term").info.member(TypeName("Param")).asClass.toType
+      if (T.tpe <:< TermTpe) q"$x.withTpe(in.tpe)"
+      else if (T.tpe <:< TermParamTpe) q"$x.withTpe(in.tpe)"
+      else x
     }
   }
 }

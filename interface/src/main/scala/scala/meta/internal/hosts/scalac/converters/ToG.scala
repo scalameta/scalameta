@@ -11,15 +11,15 @@ import scala.collection.immutable.Seq
 import scala.tools.nsc.{Global => ScalaGlobal}
 import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
-import scala.meta.internal.{hygiene => h}
+import scala.meta.internal.{semantic => s}
 
 trait ToG extends GlobalToolkit with MetaToolkit {
   self: Api =>
 
   protected implicit class XtensionNamePrefix(mname: m.Name) {
     def toGprefix = mname.denot.prefix match {
-      case h.Prefix.Zero => g.NoPrefix
-      case h.Prefix.Type(mtpe) => mtpe.require[m.Type].toGtype
+      case s.Prefix.Zero => g.NoPrefix
+      case s.Prefix.Type(mtpe) => mtpe.require[m.Type].toGtype
     }
   }
 

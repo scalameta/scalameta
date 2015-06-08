@@ -11,7 +11,7 @@ import scala.collection.immutable.Seq
 import scala.tools.nsc.{Global => ScalaGlobal}
 import scala.reflect.internal.Flags._
 import scala.meta.internal.{ast => m}
-import scala.meta.internal.{hygiene => h}
+import scala.meta.internal.{semantic => s}
 import scala.meta.internal.parsers.Helpers.XtensionTermOps
 
 // This module exposes a method to convert from scala.meta types to scala.reflect types.
@@ -145,10 +145,10 @@ trait ToGtype extends GlobalToolkit with MetaToolkit {
       // I always had no idea about how this works in scala. I guess, it's time for find out :)
       g.NoSymbol
     }
-    private def gprefix(hprefix: h.Prefix): g.Type = {
+    private def gprefix(hprefix: s.Prefix): g.Type = {
       hprefix match {
-        case h.Prefix.Zero => g.NoPrefix
-        case h.Prefix.Type(mtpe) => mtpe.require[m.Type].toGtype
+        case s.Prefix.Zero => g.NoPrefix
+        case s.Prefix.Type(mtpe) => mtpe.require[m.Type].toGtype
       }
     }
     def toGtype: g.Type = tpeCache.getOrElseUpdate(mtpe, {
@@ -168,8 +168,8 @@ trait ToGtype extends GlobalToolkit with MetaToolkit {
           def superType(msuper: m.Term.Super): g.Type = {
             val gpre = gprefix(msuper.thisp.require[m.Name].denot.prefix)
             val gmixsym = msuper.superp.require[m.Name].denot.symbol match {
-              case h.Symbol.Zero => g.intersectionType(gpre.typeSymbol.info.parents)
-              case hsym => gpre.typeSymbol.info.baseType(symbolTable.convert(hsym).gsymbol)
+              case s.Symbol.Zero => g.intersectionType(gpre.typeSymbol.info.parents)
+              case ssym => gpre.typeSymbol.info.baseType(symbolTable.convert(ssym).gsymbol)
             }
             g.SuperType(gpre, gmixsym)
           }
@@ -238,7 +238,7 @@ trait ToGtype extends GlobalToolkit with MetaToolkit {
             case m.Lit.Unit() => g.ConstantType(g.Constant(()))
           }
       }
-      mtpe.requireAttributed()
+      mtpe.requireDenoted()
       loop(mtpe)
     })
   }

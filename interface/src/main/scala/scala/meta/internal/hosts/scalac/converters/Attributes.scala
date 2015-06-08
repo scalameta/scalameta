@@ -12,7 +12,7 @@ import scala.reflect.ClassTag
 import scala.tools.nsc.{Global => ScalaGlobal}
 import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
-import scala.meta.internal.{hygiene => h}
+import scala.meta.internal.{semantic => s}
 import scala.reflect.internal.Flags._
 
 // This module provides functionality for scala.reflect -> scala.meta conversions
@@ -22,26 +22,24 @@ import scala.reflect.internal.Flags._
 trait Attributes extends GlobalToolkit with MetaToolkit {
   self: Api =>
 
-  protected sealed trait ScratchpadDatum
-  protected object ScratchpadDatum {
-    case class Denotation(gpre: g.Type, lsym: l.Symbol) extends ScratchpadDatum
-    case class Original(goriginal: Any) extends ScratchpadDatum
-  }
-
   protected trait CanHaveDenot[T <: Tree]
-  protected object CanHaveDenot {
-    implicit def Name[T <: mapi.Name]: CanHaveDenot[T] = null
+  protected object CanHaveDenot { implicit def Name[T <: mapi.Name]: CanHaveDenot[T] = null }
+  protected trait CanHaveTpe[T <: Tree]
+  protected object CanHaveTpe {
+    implicit def Term[T <: mapi.Term]: CanHaveTpe[T] = null
+    implicit def TermParam[T <: mapi.Term.Param]: CanHaveTpe[T] = null
+    implicit def Weird[T <: mapi.Term with mapi.Term.Param]: CanHaveTpe[T] = null
   }
 
   protected implicit class RichAttributesTree[T <: m.Tree : ClassTag](ptree: T) {
-    private def denot(gpre: g.Type, lsym: l.Symbol): h.Denotation = {
+    private def denot(gpre: g.Type, lsym: l.Symbol): s.Denotation = {
       require(gpre != g.NoType)
       val hpre = {
-        if (gpre == g.NoPrefix) h.Prefix.Zero
-        else h.Prefix.Type(gpre.toMtype)
+        if (gpre == g.NoPrefix) s.Prefix.Zero
+        else s.Prefix.Type(gpre.toMtype)
       }
-      val hsym = symbolTable.convert(lsym)
-      h.Denotation.Precomputed(hpre, hsym)
+      val ssym = symbolTable.convert(lsym)
+      s.Denotation.Single(hpre, ssym)
     }
     def withDenot(gsym: g.Symbol)(implicit ev: CanHaveDenot[T]): T = {
       ptree.withDenot(gsym.toLogical)
@@ -59,42 +57,35 @@ trait Attributes extends GlobalToolkit with MetaToolkit {
     }
     def withDenot(gpre: g.Type, lsym: l.Symbol)(implicit ev: CanHaveDenot[T]): T = {
       require(((lsym == l.None) ==> (ptree.isInstanceOf[m.Name.Anonymous])) && debug(ptree, gpre, lsym))
-      val scratchpad = ptree.scratchpad :+ ScratchpadDatum.Denotation(gpre, lsym)
       val ptree1 = ptree match {
-        case ptree: m.Name.Anonymous => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
-        case ptree: m.Name.Indeterminate => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
-        case ptree: m.Term.Name => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
-        case ptree: m.Type.Name => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
+        case ptree: m.Name.Anonymous => ptree.copy(denot = denot(gpre, lsym))
+        case ptree: m.Name.Indeterminate => ptree.copy(denot = denot(gpre, lsym))
+        case ptree: m.Term.Name => ptree.copy(denot = denot(gpre, lsym), typing = ptree.typing)
+        case ptree: m.Type.Name => ptree.copy(denot = denot(gpre, lsym))
         // TODO: some ctor refs don't have corresponding constructor symbols in Scala (namely, ones for traits)
         // in these cases, our lsym is going to be a symbol of the trait in question
         // we need to account for that in `symbolTable.convert` and create a constructor symbol of our own
-        case ptree: m.Ctor.Name => ptree.copy(denot = denot(gpre, lsym), sigma = h.Sigma.Naive)
+        case ptree: m.Ctor.Name => ptree.copy(denot = denot(gpre, lsym), typing = ptree.typing)
         case _ => unreachable(debug(ptree, ptree.show[Raw]))
       }
-      ptree1.withScratchpad(scratchpad).require[T]
+      ptree1.require[T]
     }
-    def withOriginal(gtree: g.Tree): T = ptree.appendScratchpad(ScratchpadDatum.Original(gtree)).require[T]
-    def withOriginal(gtpe: g.Type): T = ptree.appendScratchpad(ScratchpadDatum.Original(gtpe)).require[T]
-    def withOriginal(lsym: l.Symbol): T = ptree.appendScratchpad(ScratchpadDatum.Original(lsym)).require[T]
-    def withOriginal(gsym: g.Symbol): T = ptree.withOriginal(gsym.toLogical)
-    def withOriginal(gannot: g.AnnotationInfo): T = ptree.appendScratchpad(ScratchpadDatum.Original(gannot)).require[T]
-    def originalTree: Option[g.Tree] = {
-      ptree.scratchpad.collect { case ScratchpadDatum.Original(goriginal: g.Tree) => goriginal }.headOption
+    private def typing(gtpe: g.Type): s.Typing = {
+      // TODO: implement this!
+      s.Typing.Unknown
     }
-    def originalTpe: Option[g.Type] = {
-      val fromOriginalTpe = ptree.scratchpad.collect { case ScratchpadDatum.Original(goriginal: g.Type) => goriginal }.headOption
-      val fromOriginalTree = ptree.scratchpad.collect { case ScratchpadDatum.Original(goriginal: g.Tree) => goriginal }.headOption
-      val fromAnnot = ptree.scratchpad.collect { case ScratchpadDatum.Original(goriginal: g.AnnotationInfo) => goriginal }.headOption
-      fromOriginalTpe.orElse(fromOriginalTree.map(_.tpe)).orElse(fromAnnot.map(_.tpe))
-    }
-    def originalPre: Option[g.Type] = {
-      ptree.scratchpad.collect { case ScratchpadDatum.Denotation(gpre: g.Type, _) => gpre }.headOption
-    }
-    def originalSym: Option[l.Symbol] = {
-      val fromOriginalSym = ptree.scratchpad.collect { case ScratchpadDatum.Original(loriginal: l.Symbol) => loriginal }.headOption
-      val fromOriginalTree = ptree.scratchpad.collect { case ScratchpadDatum.Original(goriginal: g.Tree) => goriginal }.headOption
-      val fromDenot = ptree.scratchpad.collect { case ScratchpadDatum.Denotation(_, lsym: l.Symbol) => lsym }.headOption
-      fromOriginalSym.orElse(fromOriginalTree.map(_.symbol.toLogical)).orElse(fromDenot)
+    def withTpe(gtpe: g.Type)(implicit ev: CanHaveTpe[T]): T = {
+      // TODO: m.Term doesn't have copy, which is reasonable, because it's a branch trait
+      // TODO: m.Term.Param doesn't have copy, which is totally unreasonable
+      // val ptree1 = ptree match {
+      //   case ptree: m.Term.Name => ptree.copy(denot = ptree.denot, typing = typing(gtpe))
+      //   case ptree: m.Ctor.Name => ptree.copy(denot = ptree.denot, typing = typing(gtpe))
+      //   case ptree: m.Term => ptree.copy(typing = typing(gtpe))
+      //   case ptree: m.Term.Param => ptree.copy(typing = typing(gtpe))
+      //   case _ => unreachable(debug(ptree, ptree.show[Raw]))
+      // }
+      // ptree1.require[T]
+      ptree
     }
   }
 }

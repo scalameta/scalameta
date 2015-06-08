@@ -13,7 +13,7 @@ import scala.tools.nsc.{Global => ScalaGlobal}
 import scala.reflect.internal.Flags._
 import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
-import scala.meta.internal.{hygiene => h}
+import scala.meta.internal.{semantic => s}
 import scala.meta.semantic.{Context => ScalametaSemanticContext}
 
 // This module exposes a method that can convert scala.reflect symbols into equivalent scala.meta members.
@@ -213,15 +213,15 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
         lazy val mname = lsym match {
           case l.AbstractVal(gsym) if gsym.hasFlag(EXISTENTIAL) =>
             val name = g.Ident(gsym.name.toString.stripSuffix(g.nme.SINGLETON_SUFFIX)).alias
-            m.Term.Name(name).withDenot(gpre, gsym).withOriginal(gsym)
+            m.Term.Name(name).withDenot(gpre, gsym)
           case l.AbstractVal(gsym) =>
             gsym.precvt(gpre, g.Ident(gsym))
           case l.PackageObject(gmodule, gmoduleClass) =>
-            m.Term.Name(g.Ident(gmodule.owner).alias).withDenot(gpre, gmodule).withOriginal(gmodule)
+            m.Term.Name(g.Ident(gmodule.owner).alias).withDenot(gpre, gmodule)
           case l.PrimaryCtor(gsym) =>
-            m.Ctor.Name(g.Ident(gsym.owner).alias).withDenot(gpre, gsym).withOriginal(gsym)
+            m.Ctor.Name(g.Ident(gsym.owner).alias).withDenot(gpre, gsym)
           case l.SecondaryCtor(gsym) =>
-            m.Ctor.Name(g.Ident(gsym.owner).alias).withDenot(gpre, gsym).withOriginal(gsym)
+            m.Ctor.Name(g.Ident(gsym.owner).alias).withDenot(gpre, gsym)
           case l.TermParameter(gsym) if !gsym.owner.isMethod =>
             gsym.anoncvt(g.Ident(gsym))
           case l.TermParameter(gsym) =>
@@ -250,10 +250,10 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
           case gtpe @ g.TypeBounds(glo, ghi) =>
             val mlo = if (glo =:= g.typeOf[Nothing]) None else Some(glo.toMtype)
             val mhi = if (ghi =:= g.typeOf[Any]) None else Some(ghi.toMtype)
-            m.Type.Bounds(mlo, mhi).withOriginal(gtpe)
+            m.Type.Bounds(mlo, mhi)
         }
         lazy val mbody: m.Term = {
-          val munknownTerm = m.Term.Name("???").withDenot(g.definitions.Predef_???).withOriginal(g.definitions.Predef_???)
+          val munknownTerm = m.Term.Name("???").withDenot(g.definitions.Predef_???).withTpe(g.definitions.NothingTpe)
           lsym match {
             case l.Macro(gsym) =>
               gsym.macroBody match {
@@ -262,7 +262,7 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
               }
             case l.SecondaryCtor(gsym) =>
               val gctor = gsym.owner.primaryConstructor
-              val mctorref = m.Ctor.Name(g.Ident(gsym.owner).alias).withDenot(gpre, gctor).withOriginal(gctor)
+              val mctorref = m.Ctor.Name(g.Ident(gsym.owner).alias).withDenot(gpre, gctor).withTpe(gctor.infoIn(gpre).finalResultType)
               m.Term.Apply(mctorref, List(munknownTerm))
             case _ =>
               munknownTerm
@@ -278,7 +278,7 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
             val gctorsym = lsym.gsymbol.moduleClass.orElse(lsym.gsymbol).primaryConstructor
             if (gctorsym != g.NoSymbol) {
               val gctorinfo = gctorsym.infoIn(gpre)
-              val mctorname = m.Ctor.Name(g.Ident(gsym).alias).withDenot(gpre, gctorsym).withOriginal(gctorsym)
+              val mctorname = m.Ctor.Name(g.Ident(gsym).alias).withDenot(gpre, gctorsym)
               var mctorparamss = {
                 if (lsym.isInstanceOf[l.Clazz]) gctorinfo.paramss.map(_.map(gvparam => l.TermParameter(gvparam).toMmember(g.NoPrefix).require[m.Term.Param]))
                 else Nil // NOTE: synthetic constructors for modules have a fake List(List()) parameter list
@@ -293,10 +293,18 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
           }
         }
         lazy val mtemplate = {
-          def isEarly(mstat: m.Stat) = mstat.originalSym match {
-            case Some(l.Val(gfield, _)) => gfield.hasFlag(PRESUPER)
-            case Some(l.Var(gfield, _, _)) => gfield.hasFlag(PRESUPER)
-            case _ => false
+          def isEarly(mstat: m.Stat) = {
+            def mfield(mstat: m.Stat): Option[m.Name] = mstat match {
+              case m.Defn.Val(_, List(m.Pat.Var.Term(name)), _, _) => Some(mname)
+              case m.Defn.Var(_, List(m.Pat.Var.Term(name)), _, _) => Some(mname)
+              case _ => None
+            }
+            val sfield = mfield(mstat).map(_.denot.symbol).getOrElse(s.Symbol.Zero)
+            symbolTable.convert(sfield) match {
+              case l.Val(gfield, _) => gfield.hasFlag(PRESUPER)
+              case l.Var(gfield, _, _) => gfield.hasFlag(PRESUPER)
+              case _ => false
+            }
           }
           val mearly = LazySeq(mstats.filter(mstat => isEarly(mstat)))
           val mlate = LazySeq(mstats.filter(mstat => !isEarly(mstat)))
@@ -342,7 +350,7 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
           }).filter(_ != g.NoSymbol)
           gcontextBounds.map(gbound => gbound.asType.rawcvt(g.Ident(gbound)))
         }
-        val mmember: m.Member = lsym match {
+        lsym match {
           case l.None => unreachable(debug(lsym.gsymbol, lsym.gsymbol.flags, lsym.gsymbol.getClass, lsym.gsymbol.owner))
           case _: l.AbstractVal => m.Decl.Val(mmods, List(m.Pat.Var.Term(mname.require[m.Term.Name])), mtpe).member
           case _: l.AbstractVar => m.Decl.Var(mmods, List(m.Pat.Var.Term(mname.require[m.Term.Name])), mtpe).member
@@ -367,7 +375,6 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
           case _: l.TypeParameter => m.Type.Param(mmods, mname.require[m.Type.Param.Name], mtparams, mtpebounds, mviewbounds, mcontextbounds)
           case _ => throw new ConvertException(lsym, s"unsupported symbol $lsym, designation = ${gsym.getClass}, flags = ${gsym.flags}")
         }
-        mmember.withOriginal(lsym)
       }
       def applyPrefix(gpre: g.Type, mmem: m.Member): m.Member = {
         if (gpre == g.NoPrefix) mmem
@@ -378,8 +385,8 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
           mmem
         }
       }
-      val hsym = symbolTable.convert(lsym)
-      val maybeSourceNativePmember = hsymToNativeMmemberCache.get(hsym)
+      val ssym = symbolTable.convert(lsym)
+      val maybeSourceNativePmember = ssymToNativeMmemberCache.get(ssym)
       val maybeNativePmember = maybeSourceNativePmember.map(applyPrefix(gpre, _))
       maybeNativePmember.getOrElse(approximateSymbol(lsym))
     })

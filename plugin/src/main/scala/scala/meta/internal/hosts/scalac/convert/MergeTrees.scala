@@ -44,6 +44,7 @@ object MergeTrees {
       case _ => pTree
     }
 
+    // TODO: also copy typings!
     def loop[T <: m.Tree](pTree: T, cTree: T): T = {
       import m._
       ((pTree, cTree) match {
@@ -52,15 +53,15 @@ object MergeTrees {
 
         // Names
         case (p: Term.Name, c: Term.Name) =>
-          p.copy(denot = c.denot, sigma = c.sigma, tokens = p.tokens)
+          p.copy(denot = c.denot, tokens = p.tokens)
         case (p: Type.Name, c: Type.Name) =>
-          p.copy(denot = c.denot, sigma = c.sigma, tokens = p.tokens)
+          p.copy(denot = c.denot, tokens = p.tokens)
         case (p: Ctor.Ref.Name, c: Ctor.Ref.Name) =>
-          p.copy(denot = c.denot, sigma = c.sigma, tokens = p.tokens)
+          p.copy(denot = c.denot, tokens = p.tokens)
         case (p: Name.Anonymous, c: Name.Anonymous) =>
-          p.copy(denot = c.denot, sigma = c.sigma, tokens = p.tokens)
+          p.copy(denot = c.denot, tokens = p.tokens)
         case (p: Name.Indeterminate, c: Name.Indeterminate) =>
-          p.copy(denot = c.denot, sigma = c.sigma, tokens = p.tokens)
+          p.copy(denot = c.denot, tokens = p.tokens)
 
         // Terms
         case (p: Term.This, c: Term.This) =>
@@ -88,7 +89,7 @@ object MergeTrees {
         case (p: Term.Throw, c: Term.Throw) =>
           p.copy(loop(p.expr, c.expr), tokens = p.tokens)
         case (p: Term.Ascribe, c: Term.Ascribe) =>
-          p.copy(loop(p.expr, c.expr), loop(p.tpe, c.tpe), tokens = p.tokens)
+          p.copy(loop(p.expr, c.expr), loop(p.decltpe, c.decltpe), tokens = p.tokens)
         case (p: Term.Annotate, c: Term.Annotate) =>
           p.copy(loop(p.expr, c.expr), zLoop(loop[Mod.Annot])(p.annots, c.annots), tokens = p.tokens)
         case (p: Term.Tuple, c: Term.Tuple) =>
@@ -186,7 +187,7 @@ object MergeTrees {
         case (p: Defn.Def, c: Defn.Def) =>
           p.copy(zLoop(loop[Mod])(p.mods, c.mods), loop(p.name, c.name), zLoop(loop[Type.Param])(p.tparams, c.tparams), zzLoop(loop[Term.Param])(p.paramss, c.paramss), oLoop(loop[Type])(p.decltpe, c.decltpe), loop(p.body, c.body), tokens = p.tokens)
         case (p: Defn.Macro, c: Defn.Macro) =>
-          p.copy(zLoop(loop[Mod])(p.mods, c.mods), loop(p.name, c.name), zLoop(loop[Type.Param])(p.tparams, c.tparams), zzLoop(loop[Term.Param])(p.paramss, c.paramss), loop(p.tpe, c.tpe), loop(p.body, c.body), tokens = p.tokens)
+          p.copy(zLoop(loop[Mod])(p.mods, c.mods), loop(p.name, c.name), zLoop(loop[Type.Param])(p.tparams, c.tparams), zzLoop(loop[Term.Param])(p.paramss, c.paramss), loop(p.decltpe, c.decltpe), loop(p.body, c.body), tokens = p.tokens)
         case (p: Defn.Type, c: Defn.Type) =>
           p.copy(zLoop(loop[Mod])(p.mods, c.mods), loop(p.name, c.name), zLoop(loop[Type.Param])(p.tparams, c.tparams), loop(p.body, c.body), tokens = p.tokens)
         case (p: Defn.Class, c: Defn.Class) =>
@@ -348,7 +349,7 @@ object MergeTrees {
         // Macros are sometimes expanded, etc. In such a case, this part of tree might lack semantic information.
         case (p, c) =>
           p
-      }).appendScratchpad(cTree.scratchpad).asInstanceOf[T]
+      }).asInstanceOf[T]
     }
     loop(parsedTree, convertedTree)
   }
