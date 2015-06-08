@@ -156,12 +156,13 @@ abstract class ScalahostGenBCode(override val global: NscGlobal) extends scala.t
         import scala.tools.asm.CustomAttr
         if (claszSymbol.isClass) // @DarkDimius is this test needed here?
           for (meta <- cunit.body.metadata.get("scalameta")) {
-            if (!cunit.body.hasMetadata("tastyWritten")) {
-              val binary = meta.asInstanceOf[Source].toTasty
-              val dataAttr = new CustomAttr("TASTY", binary)
-              plainC.visitAttribute(dataAttr)
-              cunit.body.appendMetadata("tastyWritten" -> true)
+            val binary = {
+              if (cunit.body.hasMetadata("tastyWritten")) new Array[Byte](0)
+              else meta.asInstanceOf[Source].toTasty
             }
+            val dataAttr = new CustomAttr("TASTY", binary)
+            plainC.visitAttribute(dataAttr)
+            cunit.body.appendMetadata("tastyWritten" -> true)
           }
 
         // -------------- bean info class, if needed --------------
