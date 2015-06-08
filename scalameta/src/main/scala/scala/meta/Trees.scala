@@ -93,7 +93,7 @@ package scala.meta.internal.ast {
 
   @branch trait Tree extends api.Tree
 
-  @branch trait Name extends api.Name with Ref { def value: String; def denot: Denotation; def sigma: Sigma }
+  @branch trait Name extends api.Name with Ref { def value: String; def denot: Denotation }
   object Name {
     @ast class Anonymous extends api.Name.Anonymous with Name with Term.Param.Name with Type.Param.Name with Qualifier { def value = "_" }
     @ast class Indeterminate(value: Predef.String @nonEmpty) extends api.Name.Indeterminate with Name with Qualifier
@@ -104,7 +104,7 @@ package scala.meta.internal.ast {
   @branch trait Stat extends api.Stat with Tree
   @branch trait Scope extends api.Scope with Tree
 
-  @branch trait Term extends api.Term with Stat with Term.Arg { def status: Status; def expansion: Expansion }
+  @branch trait Term extends api.Term with Stat with Term.Arg { def typing: Typing; def expansion: Expansion }
   object Term {
     @branch trait Ref extends api.Term.Ref with Term with impl.Ref
     @ast class This(qual: impl.Name.Qualifier) extends Term.Ref with impl.Name.Qualifier {

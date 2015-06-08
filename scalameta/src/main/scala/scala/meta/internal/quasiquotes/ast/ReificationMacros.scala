@@ -15,8 +15,8 @@ import org.scalameta.invariants._
 import org.scalameta.unreachable
 import scala.meta.{Token => MetaToken, Tokens => MetaTokens}
 import scala.meta.internal.dialects.InstantiateDialect
-import scala.meta.internal.{semantic => i}
-import scala.meta.internal.semantic.{Denotation => MetaDenotation, Sigma => MetaSigma, _}
+import scala.meta.internal.{semantic => s}
+import scala.meta.internal.semantic.{Denotation => MetaDenotation, _}
 import scala.meta.internal.semantic.{Symbol => MetaSymbol, Prefix => MetaPrefix, Signature => MetaSignature, _}
 import scala.meta.internal.parsers.Helpers._
 import scala.meta.internal.tokenizers.{LegacyScanner, LegacyToken}
@@ -276,7 +276,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
             else if (sym == c.mirror.EmptyPackageClass || sym == c.mirror.EmptyPackage) "_empty_"
             else sym.name.toString
           }
-          impl.Type.Singleton(impl.Term.Name(name, denot(pre, sym), Sigma.Naive))
+          impl.Type.Singleton(impl.Term.Name(name, denot(pre, sym)))
         }
         val pre1 = pre.orElse(defaultPrefix(sym))
         pre1 match {
@@ -300,9 +300,9 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
       case (meta, reflect: TypeTree) =>
         correlate(meta, reflect.original)
       case (meta: impl.Term.Name, reflect: RefTree) =>
-        impl.Term.Name(meta.value, denot(reflect.qualifier.tpe, reflect.symbol), Sigma.Naive)
+        impl.Term.Name(meta.value, denot(reflect.qualifier.tpe, reflect.symbol))
       case (meta: impl.Type.Name, reflect: RefTree) =>
-        impl.Type.Name(meta.value, denot(reflect.qualifier.tpe, reflect.symbol), Sigma.Naive)
+        impl.Type.Name(meta.value, denot(reflect.qualifier.tpe, reflect.symbol))
       case (meta: impl.Ref, reflect: Ident) =>
         val fakePrefix = Ident(reflect.symbol.owner).setType(reflect.symbol.owner.asInstanceOf[scala.reflect.internal.Symbols#Symbol].tpe.asInstanceOf[ReflectType])
         correlate(meta, Select(fakePrefix, reflect.symbol.name).setSymbol(reflect.symbol).setType(reflect.tpe))
@@ -492,10 +492,9 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
         }
       }
     }
-    object Liftables extends i.DenotationLiftables
-                        with i.SigmaLiftables
-                        with i.StatusLiftables
-                        with i.ExpansionLiftables {
+    object Liftables extends s.DenotationLiftables
+                        with s.TypingLiftables
+                        with s.ExpansionLiftables {
       // NOTE: we could write just `implicitly[Liftable[MetaTree]].apply(meta)`
       // but that would bloat the code significantly with duplicated instances for denotations and sigmas
       override lazy val u: c.universe.type = c.universe

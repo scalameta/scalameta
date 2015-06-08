@@ -25,7 +25,7 @@ class ReflectionSuite extends AstSuite {
     assert(a1.toString === "field Term.If.cond: scala.meta.internal.ast.Term")
     assert(a2.toString === "field Term.If.thenp: scala.meta.internal.ast.Term")
     assert(a3.toString === "field Term.If.elsep: scala.meta.internal.ast.Term")
-    assert(a4.toString === "field Term.If.status: scala.meta.internal.semantic.Status (auxiliary)")
+    assert(a4.toString === "field Term.If.typing: scala.meta.internal.semantic.Typing (auxiliary)")
     assert(a5.toString === "field Term.If.expansion: scala.meta.internal.semantic.Expansion (auxiliary)")
   }
 
@@ -33,12 +33,11 @@ class ReflectionSuite extends AstSuite {
     val iff = symbolOf[scala.meta.internal.ast.Term.Name].asLeaf
     val List(f1) = iff.fields
     assert(f1.toString === "field Term.Name.value: String @org.scalameta.invariants.nonEmpty")
-    val List(a1, a2, a3, a4, a5) = iff.allFields
+    val List(a1, a2, a3, a4) = iff.allFields
     assert(a1.toString === "field Term.Name.value: String @org.scalameta.invariants.nonEmpty")
     assert(a2.toString === "field Term.Name.denot: scala.meta.internal.semantic.Denotation (auxiliary)")
-    assert(a3.toString === "field Term.Name.sigma: scala.meta.internal.semantic.Sigma (auxiliary)")
-    assert(a4.toString === "field Term.Name.status: scala.meta.internal.semantic.Status (auxiliary)")
-    assert(a5.toString === "field Term.Name.expansion: scala.meta.internal.semantic.Expansion (auxiliary)")
+    assert(a3.toString === "field Term.Name.typing: scala.meta.internal.semantic.Typing (auxiliary)")
+    assert(a4.toString === "field Term.Name.expansion: scala.meta.internal.semantic.Expansion (auxiliary)")
   }
 
   test("all.publish") {

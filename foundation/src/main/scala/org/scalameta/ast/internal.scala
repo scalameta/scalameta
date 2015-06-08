@@ -119,8 +119,7 @@ object internal {
     private object Primitive {
       val semanticPrimitives = List(
         c.mirror.staticClass("scala.meta.internal.semantic.Denotation"),
-        c.mirror.staticClass("scala.meta.internal.semantic.Sigma"),
-        c.mirror.staticClass("scala.meta.internal.semantic.Status"),
+        c.mirror.staticClass("scala.meta.internal.semantic.Typing"),
         c.mirror.staticClass("scala.meta.internal.semantic.Expansion"))
       def unapply(tpe: Type): Option[Type] = {
         if (tpe =:= typeOf[String] ||

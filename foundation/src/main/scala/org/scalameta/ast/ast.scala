@@ -76,12 +76,11 @@ class AstMacros(val c: Context) {
 
       // step 3: calculate the parameters of the class
       val denotParam = q"@$AstInternal.auxiliary val denot: $SemanticInternal.Denotation = $SemanticInternal.Denotation.Zero"
-      val sigmaParam = q"@$AstInternal.auxiliary val sigma: $SemanticInternal.Sigma = $SemanticInternal.Sigma.Zero"
-      val statusParam = q"@$AstInternal.auxiliary val status: $SemanticInternal.Status = $SemanticInternal.Status.Unknown"
+      val typingParam = q"@$AstInternal.auxiliary val typing: $SemanticInternal.Typing = $SemanticInternal.Typing.Unknown"
       val expansionParam = q"@$AstInternal.auxiliary val expansion: $SemanticInternal.Expansion = $SemanticInternal.Expansion.Identity"
       val bonusParams = ListBuffer[ValDef]()
-      if (isName) bonusParams ++= List(denotParam, sigmaParam)
-      if (isTerm || is("Term.Param")) bonusParams ++= List(statusParam)
+      if (isName) bonusParams ++= List(denotParam)
+      if (isTerm || is("Term.Param")) bonusParams ++= List(typingParam)
       if (isTerm) bonusParams ++= List(expansionParam)
       val paramss = (rawparamss.head ++ bonusParams.toList) +: rawparamss.tail
 

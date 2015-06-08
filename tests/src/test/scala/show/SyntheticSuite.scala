@@ -1,6 +1,6 @@
 import org.scalatest._
 import scala.meta._
-import scala.meta.internal.{semantic => i}
+import scala.meta.internal.{semantic => s}
 import scala.meta.dialects.Scala211
 
 class SyntheticSuite extends ParseSuite {
@@ -8,9 +8,8 @@ class SyntheticSuite extends ParseSuite {
     val tree1 = q"List".asInstanceOf[scala.meta.internal.ast.Term.Name]
     val tree2 = tree1.copy(
       denot = tree1.denot,
-      sigma = tree1.sigma,
-      expansion = i.Expansion.Desugaring(q"scala.collection.immutable.List"),
-      status = i.Status.Typed(t"List.type"))
+      expansion = s.Expansion.Desugaring(q"scala.collection.immutable.List"),
+      typing = s.Typing.Known(t"List.type"))
     assert(tree2.show[Semantics] === """
       |Term.Name("List")[1]{1}<1>
       |[1] Type.Singleton(Term.Name("package")[2])::scala.package.List

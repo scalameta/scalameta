@@ -69,12 +69,12 @@ object Semantics {
             prettyprintPrefix(denot.prefix) + "::" + prettyprintSymbol(denot.symbol)
           }
         }
-        implicit def statusFootnote(status: Status): Footnote = new Footnote {
-          def entity = status
-          def tag = classOf[Status]
-          def prettyprint() = status match {
-            case Status.Unknown => unreachable
-            case Status.Typed(tpe) => if (style == Style.Deep) body(tpe) else tpe.show[Raw]
+        implicit def typingFootnote(typing: Typing): Footnote = new Footnote {
+          def entity = typing
+          def tag = classOf[Typing]
+          def prettyprint() = typing match {
+            case Typing.Unknown => unreachable
+            case Typing.Known(tpe) => if (style == Style.Deep) body(tpe) else tpe.show[Raw]
           }
         }
         implicit def statusExpansion(expansion: Expansion): Footnote = new Footnote {
@@ -110,7 +110,7 @@ object Semantics {
           val sortedMiniCache = miniRepr.toList.sortBy{ case (_, (id, footnote)) => id }
           sortedMiniCache.map{ case (_, (id, footnote)) => s"$bracket1$id$bracket2 ${footnote.prettyprint()}" }
         }
-        (byType(classOf[Denotation], "[", "]") ++ byType(classOf[Status], "{", "}") ++ byType(classOf[Expansion], "<", ">")).mkString(EOL)
+        (byType(classOf[Denotation], "[", "]") ++ byType(classOf[Typing], "{", "}") ++ byType(classOf[Expansion], "<", ">")).mkString(EOL)
       }
     }
     def body(x: api.Tree): String = {
@@ -132,18 +132,18 @@ object Semantics {
       val semantics = {
         val denotPart = x match {
           case x: Name =>
-            (x.denot, x.sigma) match {
-              case (denot: Denotation.Single, Sigma.Naive) => s"[${footnotes.insert(denot)}]"
-              case (Denotation.Zero, Sigma.Zero) => "[0]"
-              case (denot, sigma) => unreachable(debug(denot, sigma))
+            x.denot match {
+              case Denotation.Zero => ""
+              case denot @ Denotation.Single(prefix, symbol) => s"[${footnotes.insert(denot)}]"
             }
-          case _ => ""
+          case _ =>
+            ""
         }
         val statusPart = x match {
           case x: Term =>
-            x.status match {
-              case Status.Unknown => ""
-              case status @ Status.Typed(tpe) => s"{${footnotes.insert(status)}}"
+            x.typing match {
+              case Typing.Unknown => ""
+              case typing @ Typing.Known(tpe) => s"{${footnotes.insert(typing)}}"
             }
           case _ =>
             ""

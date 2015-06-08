@@ -58,12 +58,12 @@ class HygieneSuite extends FunSuite {
   }
   test("not yet supported: t\"List[X]\"") {
     assert(t"List[X]".show[Semantics] === """
-      |Type.Apply(Type.Name("List")[0], List(Type.Name("X")[0]))
+      |Type.Apply(Type.Name("List"), List(Type.Name("X")))
     """.stripMargin.trim)
   }
   test("not yet supported: t\"List[Int] { def head: Int }\"") {
     assert(t"List[Int] { def head: Int }".show[Semantics] === """
-      |Type.Compound(List(Type.Apply(Type.Name("List")[0], List(Type.Name("Int")[0]))), List(Decl.Def(Nil, Term.Name("head")[0], Nil, Nil, Type.Name("Int")[0])))
+      |Type.Compound(List(Type.Apply(Type.Name("List"), List(Type.Name("Int")))), List(Decl.Def(Nil, Term.Name("head"), Nil, Nil, Type.Name("Int"))))
     """.stripMargin.trim)
   }
   test("equality - 1") {

@@ -64,10 +64,10 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
       """
     }
     if (adt.tpe <:< QuasiClass.toType) Some(q"Lifts.liftQuasi($localName)")
-    else if (adt.tpe <:< TermNameClass.toType) Some(reifyAuxiliaryFields(body, "denot", "sigma", "status", "expansion"))
-    else if (adt.tpe <:< CtorRefNameClass.toType) Some(reifyAuxiliaryFields(body, "denot", "sigma", "status", "expansion"))
-    else if (adt.tpe <:< NameClass.toType) Some(reifyAuxiliaryFields(body, "denot", "sigma"))
-    else if (adt.tpe <:< TermClass.toType) Some(reifyAuxiliaryFields(body, "status", "expansion"))
+    else if (adt.tpe <:< TermNameClass.toType) Some(reifyAuxiliaryFields(body, "denot", "typing", "expansion"))
+    else if (adt.tpe <:< CtorRefNameClass.toType) Some(reifyAuxiliaryFields(body, "denot", "typing", "expansion"))
+    else if (adt.tpe <:< NameClass.toType) Some(reifyAuxiliaryFields(body, "denot"))
+    else if (adt.tpe <:< TermClass.toType) Some(reifyAuxiliaryFields(body, "typing", "expansion"))
     else if (adt.tpe <:< DefnValClass.toType) Some(q"{ $localName.pats.foreach(pat => ${prohibitLowercasePat(q"pat")}); $body }")
     else if (adt.tpe <:< DefnVarClass.toType) Some(q"{ $localName.pats.foreach(pat => ${prohibitLowercasePat(q"pat")}); $body }")
     else if (adt.tpe <:< PatTypedClass.toType) Some(q"{ ${prohibitLowercasePat(q"$localName.lhs")}; $body }")
