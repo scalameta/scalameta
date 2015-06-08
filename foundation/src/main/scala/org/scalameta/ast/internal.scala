@@ -117,13 +117,16 @@ object internal {
       }
     }
     private object Primitive {
+      val semanticPrimitives = List(
+        c.mirror.staticClass("scala.meta.internal.semantic.Denotation"),
+        c.mirror.staticClass("scala.meta.internal.semantic.Typing"),
+        c.mirror.staticClass("scala.meta.internal.semantic.Expansion"))
       def unapply(tpe: Type): Option[Type] = {
         if (tpe =:= typeOf[String] ||
             tpe =:= typeOf[scala.Symbol] ||
             ScalaPrimitiveValueClasses.contains(tpe.typeSymbol)) Some(tpe)
         else if (tpe.typeSymbol == OptionClass && Primitive.unapply(tpe.typeArgs.head).nonEmpty) Some(tpe)
-        else if (tpe.baseClasses.contains(c.mirror.staticClass("scala.meta.internal.hygiene.Denotation"))) Some(tpe)
-        else if (tpe.baseClasses.contains(c.mirror.staticClass("scala.meta.internal.hygiene.Sigma"))) Some(tpe)
+        else if (tpe.baseClasses.exists(cls => semanticPrimitives.contains(cls))) Some(tpe)
         else if (tpe.typeSymbol == ClassClass) Some(tpe)
         else None
       }

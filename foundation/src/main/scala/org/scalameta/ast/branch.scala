@@ -48,7 +48,8 @@ class BranchMacros(val c: Context) {
           q"override def ${TermName(name)}: _root_.scala.Nothing = $impl"
         }
         var qstats = List(q"def pt: _root_.java.lang.Class[_] = _root_.org.scalameta.runtime.arrayClass(_root_.scala.Predef.classOf[$name], this.rank)")
-        if (is("Name") || is("Term.Param.Name") || is("Type.Param.Name")) qstats ++= List("denot", "sigma", "value").map(quasigetter)
+        if (is("Name") || is("Term.Param.Name") || is("Type.Param.Name")) qstats ++= List("value", "denot").map(quasigetter)
+        if (is("Term") || is("Lit") || is("Term.Ref") || is("Ctor.Ref")) qstats ++= List("typing", "expansion").map(quasigetter)
         mstats1 += q"$qmods class $qname(tree: _root_.scala.Any, rank: _root_.scala.Int) extends ..$qparents { ..$qstats }"
       }
 

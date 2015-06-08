@@ -1,9 +1,10 @@
 package scala.meta
 package internal
-package hygiene
+package semantic
 
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
+import org.scalameta.adt
 import org.scalameta.adt._
 import org.scalameta.invariants._
 
@@ -52,5 +53,13 @@ object Prefix {
 @root trait Denotation { def prefix: Prefix; def symbol: Symbol }
 object Denotation {
   @leaf object Zero extends Denotation { def prefix = Prefix.Zero; def symbol = Symbol.Zero; }
-  @leaf class Precomputed(prefix: Prefix, symbol: Symbol) extends Denotation
+  @leaf class Single(prefix: Prefix, symbol: Symbol) extends Denotation
+}
+
+// TODO: This unrelated code is here because of the limitation of knownDirectSubclasses.
+// We would like move it to scala/meta/internal/quasiquotes/ast/ReificationMacros.scala where it belongs,
+// but then we have problems with compilation order.
+trait DenotationLiftables extends adt.Liftables {
+  implicit def liftableSubTree[T <: Tree]: u.Liftable[T]
+  lazy implicit val liftableDenotation: u.Liftable[Denotation] = materializeAdt[Denotation]
 }

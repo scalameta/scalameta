@@ -11,7 +11,7 @@ import scala.collection.immutable.Seq
 import scala.reflect.{ClassTag, classTag}
 import scala.meta.semantic.{Context => SemanticContext}
 import scala.meta.internal.{ast => impl} // necessary only to implement APIs, not to define them
-import scala.meta.internal.{hygiene => h} // necessary only to implement APIs, not to define them
+import scala.meta.internal.{semantic => s} // necessary only to implement APIs, not to define them
 import scala.meta.internal.ui.Summary // necessary only to implement APIs, not to define them
 import scala.reflect.runtime.{universe => ru} // necessary only for a very hacky approximation of hygiene
 
@@ -34,10 +34,10 @@ private[meta] trait Api {
 
   implicit class XtensionSemanticMemberTpe(tree: Member) {
     @hosted private def SeqRef: impl.Type.Name = {
-      val hScala = h.Symbol.Global(h.Symbol.Root, "scala", h.Signature.Term)
-      val hCollection = h.Symbol.Global(hScala, "collection", h.Signature.Term)
-      val hSeq = h.Symbol.Global(hCollection, "Seq", h.Signature.Type)
-      impl.Type.Name("Seq", h.Denotation.Precomputed(h.Prefix.Zero, hSeq), h.Sigma.Naive)
+      val iScala = s.Symbol.Global(s.Symbol.Root, "scala", s.Signature.Term)
+      val iCollection = s.Symbol.Global(iScala, "collection", s.Signature.Term)
+      val iSeq = s.Symbol.Global(iCollection, "Seq", s.Signature.Type)
+      impl.Type.Name("Seq", s.Denotation.Single(s.Prefix.Zero, iSeq))
     }
     @hosted private def dearg(tpe: Type.Arg): Type = tpe.require[impl.Type.Arg] match {
       case impl.Type.Arg.ByName(tpe) => impl.Type.Apply(SeqRef, List(tpe))
@@ -122,9 +122,9 @@ private[meta] trait Api {
     // I ended up not going for it, because it is much less straightforward implementation-wise,
     // and any time savings are worth very much at this stage of the project.
     @hosted def source: Member = {
-      def stripPrefix(denot: h.Denotation) = denot match {
-        case h.Denotation.Zero => h.Denotation.Zero
-        case denot: h.Denotation.Precomputed => denot.copy(prefix = h.Prefix.Zero)
+      def stripPrefix(denot: s.Denotation) = denot match {
+        case s.Denotation.Zero => s.Denotation.Zero
+        case denot: s.Denotation.Single => denot.copy(prefix = s.Prefix.Zero)
       }
       val prefixlessName = tree.name match {
         case name: impl.Name.Anonymous => name
@@ -351,13 +351,13 @@ private[meta] trait Api {
           case other => fromSyntax(other)
         })
       }
-      def fromPrefix(prefix: h.Prefix): Option[Member] = {
+      def fromPrefix(prefix: s.Prefix): Option[Member] = {
         // TODO: this should account for type arguments of the prefix!
         // TODO: also prefix types are probably more diverse than what's supported now
         prefix match {
-          case h.Prefix.Type(ref: impl.Type.Ref) => Some(ref.defn)
-          case h.Prefix.Type(impl.Type.Apply(tpe, _)) => fromPrefix(h.Prefix.Type(tpe))
-          case h.Prefix.Type(impl.Type.ApplyInfix(_, tpe, _)) => fromPrefix(h.Prefix.Type(tpe))
+          case s.Prefix.Type(ref: impl.Type.Ref) => Some(ref.defn)
+          case s.Prefix.Type(impl.Type.Apply(tpe, _)) => fromPrefix(s.Prefix.Type(tpe))
+          case s.Prefix.Type(impl.Type.ApplyInfix(_, tpe, _)) => fromPrefix(s.Prefix.Type(tpe))
           case _ => None
         }
       }
@@ -499,8 +499,8 @@ private[meta] trait Api {
         member.name match {
           case thisName: impl.Name =>
             internalFilter[T](that => {
-              def thisDenot = thisName.denot.require[h.Denotation.Precomputed]
-              def thatDenot = that.require[impl.Member].name.require[impl.Name].denot.require[h.Denotation.Precomputed]
+              def thisDenot = thisName.denot.require[s.Denotation.Single]
+              def thatDenot = that.require[impl.Member].name.require[impl.Name].denot.require[s.Denotation.Single]
               scala.util.Try(thisDenot.symbol == thatDenot.symbol).getOrElse(false)
             }) match {
               case Seq() => throw new SemanticException(s"no prototype for $member found in ${showSummary(tree)}")
@@ -608,23 +608,20 @@ private[meta] trait Api {
 
   implicit class XtensionTypeToPatType(tree: Type) {
     @hosted def pat: Pat.Type = {
-      def loop(tpe: impl.Type): impl.Pat.Type = {
-        val result = tpe match {
-          case tpe: impl.Type.Name => tpe
-          case tpe: impl.Type.Select => tpe
-          case impl.Type.Project(qual, name) => impl.Pat.Type.Project(loop(qual), name)
-          case tpe: impl.Type.Singleton => tpe
-          case impl.Type.Apply(tpe, args) => impl.Pat.Type.Apply(loop(tpe), args.map(loop))
-          case impl.Type.ApplyInfix(lhs, op, rhs) => impl.Pat.Type.ApplyInfix(loop(lhs), op, loop(rhs))
-          case impl.Type.Function(params, res) => impl.Pat.Type.Function(params.map(param => loop(param.require[impl.Type])), loop(res))
-          case impl.Type.Tuple(elements) => impl.Pat.Type.Tuple(elements.map(loop))
-          case impl.Type.Compound(tpes, refinement) => impl.Pat.Type.Compound(tpes.map(loop), refinement)
-          case impl.Type.Existential(tpe, quants) => impl.Pat.Type.Existential(loop(tpe), quants)
-          case impl.Type.Annotate(tpe, annots) => impl.Pat.Type.Annotate(loop(tpe), annots)
-          case tpe: impl.Type.Placeholder => tpe
-          case tpe: impl.Lit => tpe
-        }
-        result.withScratchpad(tpe.scratchpad)
+      def loop(tpe: impl.Type): impl.Pat.Type = tpe match {
+        case tpe: impl.Type.Name => tpe
+        case tpe: impl.Type.Select => tpe
+        case impl.Type.Project(qual, name) => impl.Pat.Type.Project(loop(qual), name)
+        case tpe: impl.Type.Singleton => tpe
+        case impl.Type.Apply(tpe, args) => impl.Pat.Type.Apply(loop(tpe), args.map(loop))
+        case impl.Type.ApplyInfix(lhs, op, rhs) => impl.Pat.Type.ApplyInfix(loop(lhs), op, loop(rhs))
+        case impl.Type.Function(params, res) => impl.Pat.Type.Function(params.map(param => loop(param.require[impl.Type])), loop(res))
+        case impl.Type.Tuple(elements) => impl.Pat.Type.Tuple(elements.map(loop))
+        case impl.Type.Compound(tpes, refinement) => impl.Pat.Type.Compound(tpes.map(loop), refinement)
+        case impl.Type.Existential(tpe, quants) => impl.Pat.Type.Existential(loop(tpe), quants)
+        case impl.Type.Annotate(tpe, annots) => impl.Pat.Type.Annotate(loop(tpe), annots)
+        case tpe: impl.Type.Placeholder => tpe
+        case tpe: impl.Lit => tpe
       }
       loop(tree.require[impl.Type])
     }
@@ -632,25 +629,22 @@ private[meta] trait Api {
 
   implicit class XtensionPatTypeToType(tree: Pat.Type) {
     @hosted def tpe: Type = {
-      def loop(tpe: impl.Pat.Type): impl.Type = {
-        val result = tpe match {
-          case tpe: impl.Type.Name => tpe
-          case tpe: impl.Type.Select => tpe
-          case tpe: impl.Type.Singleton => tpe
-          case tpe: impl.Type.Placeholder => tpe
-          case tpe: impl.Pat.Var.Type => ???
-          case tpe: impl.Pat.Type.Wildcard => impl.Type.Placeholder(impl.Type.Bounds(None, None))
-          case impl.Pat.Type.Project(qual, name) => impl.Type.Project(loop(qual), name)
-          case impl.Pat.Type.Apply(tpe, args) => impl.Type.Apply(loop(tpe), args.map(loop))
-          case impl.Pat.Type.ApplyInfix(lhs, op, rhs) => impl.Type.ApplyInfix(loop(lhs), op, loop(rhs))
-          case impl.Pat.Type.Function(params, res) => impl.Type.Function(params.map(loop), loop(res))
-          case impl.Pat.Type.Tuple(elements) => impl.Type.Tuple(elements.map(loop))
-          case impl.Pat.Type.Compound(tpes, refinement) => impl.Type.Compound(tpes.map(loop), refinement)
-          case impl.Pat.Type.Existential(tpe, quants) => impl.Type.Existential(loop(tpe), quants)
-          case impl.Pat.Type.Annotate(tpe, annots) => impl.Type.Annotate(loop(tpe), annots)
-          case tpe: impl.Lit => tpe
-        }
-        result.withScratchpad(tpe.scratchpad)
+      def loop(tpe: impl.Pat.Type): impl.Type = tpe match {
+        case tpe: impl.Type.Name => tpe
+        case tpe: impl.Type.Select => tpe
+        case tpe: impl.Type.Singleton => tpe
+        case tpe: impl.Type.Placeholder => tpe
+        case tpe: impl.Pat.Var.Type => ???
+        case tpe: impl.Pat.Type.Wildcard => impl.Type.Placeholder(impl.Type.Bounds(None, None))
+        case impl.Pat.Type.Project(qual, name) => impl.Type.Project(loop(qual), name)
+        case impl.Pat.Type.Apply(tpe, args) => impl.Type.Apply(loop(tpe), args.map(loop))
+        case impl.Pat.Type.ApplyInfix(lhs, op, rhs) => impl.Type.ApplyInfix(loop(lhs), op, loop(rhs))
+        case impl.Pat.Type.Function(params, res) => impl.Type.Function(params.map(loop), loop(res))
+        case impl.Pat.Type.Tuple(elements) => impl.Type.Tuple(elements.map(loop))
+        case impl.Pat.Type.Compound(tpes, refinement) => impl.Type.Compound(tpes.map(loop), refinement)
+        case impl.Pat.Type.Existential(tpe, quants) => impl.Type.Existential(loop(tpe), quants)
+        case impl.Pat.Type.Annotate(tpe, annots) => impl.Type.Annotate(loop(tpe), annots)
+        case tpe: impl.Lit => tpe
       }
       loop(tree.require[impl.Pat.Type])
     }
@@ -669,8 +663,8 @@ private[meta] trait Api {
             else None
           }
         }
-        def adjustValue(ctor: impl.Ctor.Name, value: String) = impl.Ctor.Name(value, ctor.denot, ctor.sigma).withScratchpad(ctor.scratchpad)
-        val result = tpe match {
+        def adjustValue(ctor: impl.Ctor.Name, value: String) = impl.Ctor.Name(value, ctor.denot)
+        tpe match {
           case impl.Type.Name(value) => adjustValue(ctor, value)
           case impl.Type.Select(qual, impl.Type.Name(value)) => impl.Ctor.Ref.Select(qual, adjustValue(ctor, value))
           case impl.Type.Project(qual, impl.Type.Name(value)) => impl.Ctor.Ref.Project(qual, adjustValue(ctor, value))
@@ -680,7 +674,6 @@ private[meta] trait Api {
           case impl.Type.ApplyInfix(lhs, op, rhs) => impl.Term.ApplyType(loop(op, ctor), List(lhs, rhs))
           case _ => unreachable(debug(tree, tree.show[Raw], tpe, tpe.show[Raw]))
         }
-        result.withScratchpad(tpe.scratchpad)
       }
       // TODO: if we uncomment this, that'll lead to a stackoverflow in scalahost
       // it's okay, but at least we could verify that ctor's prefix is coherent with tree

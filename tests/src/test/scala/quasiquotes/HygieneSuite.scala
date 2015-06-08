@@ -41,10 +41,10 @@ class HygieneSuite extends FunSuite {
   test("t\"List[Int]\"") {
     assert(t"List[Int]".show[Semantics] === """
       |Type.Apply(Type.Name("List")[1], List(Type.Name("Int")[2]))
-      |[1] Type.Singleton(Term.Name("package")[4])::scala.package#List
-      |[2] Type.Singleton(Term.Name("scala")[3])::scala#Int
-      |[3] Type.Singleton(Term.Name("_root_")[5])::scala
-      |[4] Type.Singleton(Term.Name("scala")[3])::scala.package
+      |[1] Type.Singleton(Term.Name("package")[3])::scala.package#List
+      |[2] Type.Singleton(Term.Name("scala")[4])::scala#Int
+      |[3] Type.Singleton(Term.Name("scala")[4])::scala.package
+      |[4] Type.Singleton(Term.Name("_root_")[5])::scala
       |[5] 0::_root_
     """.stripMargin.trim)
   }
@@ -58,12 +58,12 @@ class HygieneSuite extends FunSuite {
   }
   test("not yet supported: t\"List[X]\"") {
     assert(t"List[X]".show[Semantics] === """
-      |Type.Apply(Type.Name("List")[0], List(Type.Name("X")[0]))
+      |Type.Apply(Type.Name("List"), List(Type.Name("X")))
     """.stripMargin.trim)
   }
   test("not yet supported: t\"List[Int] { def head: Int }\"") {
     assert(t"List[Int] { def head: Int }".show[Semantics] === """
-      |Type.Compound(List(Type.Apply(Type.Name("List")[0], List(Type.Name("Int")[0]))), List(Decl.Def(Nil, Term.Name("head")[0], Nil, Nil, Type.Name("Int")[0])))
+      |Type.Compound(List(Type.Apply(Type.Name("List"), List(Type.Name("Int")))), List(Decl.Def(Nil, Term.Name("head"), Nil, Nil, Type.Name("Int"))))
     """.stripMargin.trim)
   }
   test("equality - 1") {

@@ -1,6 +1,6 @@
 package scala.meta
 package internal
-package hygiene
+package semantic
 
 import org.scalameta.invariants._
 import org.scalameta.unreachable
@@ -34,7 +34,7 @@ import impl._
 
 private[meta] object equals {
   private def refersToSameDefn(name1: Name, name2: Name): Boolean = {
-    refersToSameDefn(name1.sigma.resolve(name1), name2.sigma.resolve(name2))
+    refersToSameDefn(name1.denot, name2.denot)
   }
 
   private def refersToSameDefn(denot1: Denotation, denot2: Denotation): Boolean = {
@@ -91,8 +91,8 @@ private[meta] object hashcode {
 
   private def semanticHashcode(tree: Tree): Int = {
     tree match {
-      case NameRef(name, tag) => name.sigma.resolve(name).hashCode() * 37 + tag
-      case OpaqueRef(name, tag) => name.sigma.resolve(name).hashCode() * 37 + tag
+      case NameRef(name, tag) => name.denot.hashCode() * 37 + tag
+      case OpaqueRef(name, tag) => name.denot.hashCode() * 37 + tag
       case _ => structuralHashcode(tree)
     }
   }

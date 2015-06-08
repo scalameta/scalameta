@@ -9,8 +9,8 @@ package scala.meta {
     def parent: Option[Tree]
     def tokens: Tokens
     final override def canEqual(that: Any): Boolean = that.isInstanceOf[Tree]
-    final override def equals(that: Any): Boolean = that match { case that: Tree => scala.meta.internal.hygiene.equals(this, that); case _ => false }
-    final override def hashCode: Int = scala.meta.internal.hygiene.hashcode(this)
+    final override def equals(that: Any): Boolean = that match { case that: Tree => scala.meta.internal.semantic.equals(this, that); case _ => false }
+    final override def hashCode: Int = scala.meta.internal.semantic.hashcode(this)
     final override def toString = scala.meta.internal.ui.toString(this)
   }
 
@@ -87,13 +87,13 @@ package scala.meta.internal.ast {
   import org.scalameta.annotations._
   import org.scalameta.unreachable
   import scala.meta.internal.{ast => impl}
-  import scala.meta.internal.hygiene._
+  import scala.meta.internal.semantic._
   import scala.meta.internal.parsers.Helpers._
   import scala.meta.internal.tokenizers.keywords
 
   @branch trait Tree extends api.Tree
 
-  @branch trait Name extends api.Name with Ref { def value: String; def denot: Denotation; def sigma: Sigma }
+  @branch trait Name extends api.Name with Ref { def value: String; def denot: Denotation }
   object Name {
     @ast class Anonymous extends api.Name.Anonymous with Name with Term.Param.Name with Type.Param.Name with Qualifier { def value = "_" }
     @ast class Indeterminate(value: Predef.String @nonEmpty) extends api.Name.Indeterminate with Name with Qualifier
@@ -104,7 +104,7 @@ package scala.meta.internal.ast {
   @branch trait Stat extends api.Stat with Tree
   @branch trait Scope extends api.Scope with Tree
 
-  @branch trait Term extends api.Term with Stat with Term.Arg
+  @branch trait Term extends api.Term with Stat with Term.Arg { def typing: Typing; def expansion: Expansion }
   object Term {
     @branch trait Ref extends api.Term.Ref with Term with impl.Ref
     @ast class This(qual: impl.Name.Qualifier) extends Term.Ref with impl.Name.Qualifier {
@@ -131,7 +131,7 @@ package scala.meta.internal.ast {
     @ast class Update(fun: Term, argss: Seq[Seq[Arg]], rhs: Term) extends Term
     @ast class Return(expr: Term) extends Term
     @ast class Throw(expr: Term) extends Term
-    @ast class Ascribe(expr: Term, tpe: Type) extends Term
+    @ast class Ascribe(expr: Term, decltpe: Type) extends Term
     @ast class Annotate(expr: Term, annots: Seq[Mod.Annot] @nonEmpty) extends Term
     @ast class Tuple(elements: Seq[Term] @nonEmpty) extends Term {
       require(elements.length > 1)
@@ -364,7 +364,7 @@ package scala.meta.internal.ast {
                      name: Term.Name,
                      tparams: Seq[impl.Type.Param],
                      paramss: Seq[Seq[Term.Param]],
-                     tpe: impl.Type,
+                     decltpe: impl.Type,
                      body: Term) extends Defn with Member.Term
     @ast class Type(mods: Seq[Mod],
                     name: impl.Type.Name,

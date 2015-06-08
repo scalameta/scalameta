@@ -39,23 +39,14 @@ class RootMacros(val c: Context) {
 
       // TODO: think of better ways to abstract this away from the public API
       val q"..$boilerplate" = q"""
-        // NOTE: these are internal APIs designed to be used only by hosts
-        // TODO: these APIs will most likely change in the future
-        // because we would like to make sure that trees are guaranteed to be immutable
-        private[meta] def scratchpad: $Data = internalScratchpad
-        private[meta] def appendScratchpad(datum: $Datum): ThisType = internalCopy(scratchpad = internalScratchpad :+ datum)
-        private[meta] def withScratchpad(data: $Data): ThisType = internalCopy(scratchpad = data)
-        private[meta] def mapScratchpad(f: $Data => $Data): ThisType = internalCopy(scratchpad = f(internalScratchpad))
-
         // NOTE: these are internal APIs that are meant to be used only in the implementation of the framework
         // host implementors should not utilize these APIs
         // TODO: turn the prototype argument of internalCopy into ThisType
         // if done naively, this isn't going to compile for prototypes of @branch traits as ThisType there is abstract
         protected def internalPrototype: ThisType
         protected def internalParent: $Tree
-        protected def internalScratchpad: $Data
         protected def internalTokens: $Tokens
-        private[meta] def internalCopy(prototype: $Tree = internalPrototype, parent: $Tree = internalParent, scratchpad: $Data = internalScratchpad, tokens: $Tokens = internalTokens): ThisType
+        private[meta] def internalCopy(prototype: $Tree = internalPrototype, parent: $Tree = internalParent, tokens: $Tokens = internalTokens): ThisType
       """
       stats1 ++= boilerplate
 

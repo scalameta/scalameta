@@ -15,8 +15,9 @@ import org.scalameta.invariants._
 import org.scalameta.unreachable
 import scala.meta.{Token => MetaToken, Tokens => MetaTokens}
 import scala.meta.internal.dialects.InstantiateDialect
-import scala.meta.internal.hygiene.{Denotation => MetaDenotation, Sigma => MetaSigma, _}
-import scala.meta.internal.hygiene.{Symbol => MetaSymbol, Prefix => MetaPrefix, Signature => MetaSignature, _}
+import scala.meta.internal.{semantic => s}
+import scala.meta.internal.semantic.{Denotation => MetaDenotation, _}
+import scala.meta.internal.semantic.{Symbol => MetaSymbol, Prefix => MetaPrefix, Signature => MetaSignature, _}
 import scala.meta.internal.parsers.Helpers._
 import scala.meta.internal.tokenizers.{LegacyScanner, LegacyToken}
 import scala.compat.Platform.EOL
@@ -275,7 +276,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
             else if (sym == c.mirror.EmptyPackageClass || sym == c.mirror.EmptyPackage) "_empty_"
             else sym.name.toString
           }
-          impl.Type.Singleton(impl.Term.Name(name, denot(pre, sym), Sigma.Naive))
+          impl.Type.Singleton(impl.Term.Name(name, denot(pre, sym)))
         }
         val pre1 = pre.orElse(defaultPrefix(sym))
         pre1 match {
@@ -293,15 +294,15 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
         else MetaSymbol.Global(convertSymbol(sym.owner), sym.name.decodedName.toString, signature(sym))
       }
       require(isGlobal(sym) && debug(pre, sym))
-      Denotation.Precomputed(convertPrefix(pre), convertSymbol(sym))
+      Denotation.Single(convertPrefix(pre), convertSymbol(sym))
     }
     def correlate(meta: MetaTree, reflect: ReflectTree): MetaTree = (meta, reflect) match {
       case (meta, reflect: TypeTree) =>
         correlate(meta, reflect.original)
       case (meta: impl.Term.Name, reflect: RefTree) =>
-        impl.Term.Name(meta.value, denot(reflect.qualifier.tpe, reflect.symbol), Sigma.Naive)
+        impl.Term.Name(meta.value, denot(reflect.qualifier.tpe, reflect.symbol))
       case (meta: impl.Type.Name, reflect: RefTree) =>
-        impl.Type.Name(meta.value, denot(reflect.qualifier.tpe, reflect.symbol), Sigma.Naive)
+        impl.Type.Name(meta.value, denot(reflect.qualifier.tpe, reflect.symbol))
       case (meta: impl.Ref, reflect: Ident) =>
         val fakePrefix = Ident(reflect.symbol.owner).setType(reflect.symbol.owner.asInstanceOf[scala.reflect.internal.Symbols#Symbol].tpe.asInstanceOf[ReflectType])
         correlate(meta, Select(fakePrefix, reflect.symbol.name).setSymbol(reflect.symbol).setType(reflect.tpe))
@@ -491,42 +492,15 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
         }
       }
     }
-    object Liftables {
+    object Liftables extends s.DenotationLiftables
+                        with s.TypingLiftables
+                        with s.ExpansionLiftables {
       // NOTE: we could write just `implicitly[Liftable[MetaTree]].apply(meta)`
       // but that would bloat the code significantly with duplicated instances for denotations and sigmas
-      lazy implicit val liftableDenotation: Liftable[MetaDenotation] = materializeAdt[MetaDenotation]
-      lazy implicit val liftableSigma: Liftable[MetaSigma] = materializeAdt[MetaSigma]
+      override lazy val u: c.universe.type = c.universe
       implicit def liftableSubTree[T <: api.Tree]: Liftable[T] = Liftable((tree: T) => materializeAst[api.Tree].apply(tree))
       implicit def liftableSubTrees[T <: api.Tree]: Liftable[Seq[T]] = Liftable((trees: Seq[T]) => Lifts.liftTrees(trees))
       implicit def liftableSubTreess[T <: api.Tree]: Liftable[Seq[Seq[T]]] = Liftable((treess: Seq[Seq[T]]) => Lifts.liftTreess(treess))
-      lazy implicit val liftQuasi: Liftable[impl.Quasi] = Liftable((quasi: impl.Quasi) => Lifts.liftQuasi(quasi))
-      lazy implicit val liftName: Liftable[impl.Name] = Liftable((name: impl.Name) => {
-        val root = q"_root_": ReflectTree
-        val fullProductPrefix = "scala.meta.internal.ast." + name.productPrefix
-        val constructorDeconstructor = fullProductPrefix.split('.').foldLeft(root)((acc, part) => q"$acc.${TermName(part)}")
-        var args = name.productIterator.toList.map { case s: String => q"$s"; case other => unreachable(debug(other, other.getClass)) }
-        if (mode.isTerm) args ++= List(q"${name.denot}", q"${name.sigma}")
-        else () // TODO: figure out how to use denotations in pattern matching
-        q"$constructorDeconstructor(..$args)"
-      })
-      private def prohibitTermName(pat: impl.Pat): Unit = pat match {
-        case q: impl.Quasi if q.tree.asInstanceOf[ReflectTree].tpe <:< typeOf[MetaTermName] =>
-          val action = if (q.rank == 0) "unquote" else "splice"
-          c.abort(q.position, s"can't $action a name here, use a variable pattern instead")
-        case _ =>
-      }
-      lazy implicit val liftDefnVal: Liftable[impl.Defn.Val] = Liftable((v: impl.Defn.Val) => {
-        v.pats.foreach(prohibitTermName)
-        q"_root_.scala.meta.internal.ast.Defn.Val(${v.mods}, ${v.pats}, ${v.decltpe}, ${v.rhs})"
-      })
-      lazy implicit val liftDefnVar: Liftable[impl.Defn.Var] = Liftable((v: impl.Defn.Var) => {
-        v.pats.foreach(prohibitTermName)
-        q"_root_.scala.meta.internal.ast.Defn.Var(${v.mods}, ${v.pats}, ${v.decltpe}, ${v.rhs})"
-      })
-      lazy implicit val liftPatTyped: Liftable[impl.Pat.Typed] = Liftable((p: impl.Pat.Typed) => {
-        prohibitTermName(p.lhs)
-        q"_root_.scala.meta.internal.ast.Pat.Typed(${p.lhs}, ${p.rhs})"
-      })
     }
     mode match {
       case Mode.Term =>

@@ -240,7 +240,7 @@ object Code {
     case t: Term.Update          => m(Expr1, s(p(SimpleExpr1, t.fun), t.argss, " ", kw("="), " ", p(Expr, t.rhs)))
     case t: Term.Return          => m(Expr1, s(kw("return"), if (guessHasExpr(t)) s(" ", p(Expr, t.expr)) else s()))
     case t: Term.Throw           => m(Expr1, s(kw("throw"), " ", p(Expr, t.expr)))
-    case t: Term.Ascribe         => m(Expr1, s(p(PostfixExpr, t.expr), kw(":"), " ", t.tpe))
+    case t: Term.Ascribe         => m(Expr1, s(p(PostfixExpr, t.expr), kw(":"), " ", t.decltpe))
     case t: Term.Annotate        => m(Expr1, s(p(PostfixExpr, t.expr), kw(":"), " ", t.annots))
     case t: Term.Tuple           => m(SimpleExpr1, s("(", r(t.elements, ", "), ")"))
     case t: Term.Block           =>
@@ -385,7 +385,7 @@ object Code {
     case t: Defn.Trait     => s(a(t.mods, " "), kw("trait"), " ", t.name, t.tparams, templ(t.templ))
     case t: Defn.Object    => s(a(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
     case t: Defn.Def       => s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, t.decltpe, " = ", t.body)
-    case t: Defn.Macro     => s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, kw(":"), " ", t.tpe, " ", kw("="), " ", kw("macro"), " ", t.body)
+    case t: Defn.Macro     => s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, kw(":"), " ", t.decltpe, " ", kw("="), " ", kw("macro"), " ", t.body)
     case t: Pkg            =>
       if (style == Style.Lazy && t.stats.isLazy) s(kw("package"), " ", t.ref, " { ... }")
       else if (guessHasBraces(t)) s(kw("package"), " ", t.ref, " {", r(t.stats.map(i(_)), ""), n("}"))
