@@ -13,16 +13,28 @@ package object tasty {
       val metaBlob = baos.toByteArray()
       val pickler = new TastyPickler
       val buf = new TastyBuffer(metaBlob.length)
-      pickler.newSection("META", buf)
+      pickler.newSection("Scalameta", buf)
       buf.writeNat(metaBlob.length)
-      metaBlob.foreach(b => buf.writeByte(b.toInt))
+      buf.writeBytes(metaBlob, metaBlob.length)
       pickler.assembleParts()
     }
   }
   implicit class XtensionTastyReadTree(dummy: Source.type) {
-    def fromTasty(tastyBlob: Array[Byte]): Source = {
-      // TODO: implement this
-      null
+    def fromTasty(tastyBlob: Array[Byte]): Option[Source] = {
+      val unpickler = new TastyUnpickler(tastyBlob)
+      class ScalametaUnpickler extends TastyUnpickler.SectionUnpickler[Array[Byte]]("Scalameta") {
+        def unpickle(reader: TastyReader, tastyName: TastyName.Table) = {
+          val length = reader.readNat()
+          reader.readBytes(length)
+        }
+      }
+      val metaBlob = unpickler.unpickle(new ScalametaUnpickler)
+      metaBlob.map(metaBlob => {
+        import java.io._
+        val bais = new ByteArrayInputStream(metaBlob)
+        val ois = new ObjectInputStream(bais)
+        ois.readObject.asInstanceOf[Source]
+      })
     }
   }
 }
