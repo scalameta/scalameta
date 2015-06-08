@@ -9,11 +9,13 @@ import org.scalameta.invariants._
 @root trait Status
 object Status {
   @leaf object Unknown extends Status
+  @leaf class Typed(tpe: Type) extends Status
 }
 
 // TODO: This unrelated code is here because of the limitation of knownDirectSubclasses.
 // We would like move it to scala/meta/internal/quasiquotes/ast/ReificationMacros.scala where it belongs,
 // but then we have problems with compilation order.
 trait StatusLiftables extends adt.Liftables {
+  implicit def liftableSubTree[T <: Tree]: u.Liftable[T]
   lazy implicit val liftableStatus: u.Liftable[Status] = materializeAdt[Status]
 }

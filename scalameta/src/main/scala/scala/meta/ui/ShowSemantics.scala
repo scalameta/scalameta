@@ -1,6 +1,7 @@
 package scala.meta
 package ui
 
+import org.scalameta.adt._
 import org.scalameta.show._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
@@ -14,18 +15,104 @@ import scala.annotation.implicitNotFound
 import scala.collection.mutable
 import scala.meta.internal.semantic._
 import scala.compat.Platform.EOL
+import scala.language.implicitConversions
 
 @implicitNotFound(msg = "don't know how to show[Semantics] for ${T}")
 trait Semantics[T] extends Show[T]
 object Semantics {
   def apply[T](f: T => Show.Result): Semantics[T] = new Semantics[T] { def apply(input: T) = f(input) }
 
+  @root trait Style
+  object Style {
+    @leaf object Shallow extends Style
+    @leaf implicit object Deep extends Style
+  }
+
   // TODO: would be nice to generate this with a macro for all tree nodes that we have
-  implicit def semanticsTree[T <: api.Tree]: Semantics[T] = Semantics(x => {
-    var _nextId = 1
-    def nextId() = { val id = _nextId; _nextId = _nextId + 1; id }
-    val denots = mutable.Map[Denotation, Int]()
-    def id(x: Denotation): Int = denots.getOrElseUpdate(x, nextId())
+  implicit def semanticsTree[T <: api.Tree](implicit style: Style): Semantics[T] = new Semantics[T] {
+    object footnotes {
+      trait Footnote {
+        def entity: Any
+        def tag: Class[_]
+        def prettyprint(): String
+        final override def toString: String = s"Footnote($entity)"
+        final override def equals(that: Any): Boolean = entity.equals(that)
+        final override def hashCode: Int = entity.hashCode()
+      }
+      object Footnote {
+        implicit def denotFootnote(denot: Denotation): Footnote = new Footnote {
+          def entity = denot
+          def tag = classOf[Denotation]
+          def prettyprint() = {
+            def prettyprintPrefix(pre: Prefix): String = {
+              pre match {
+                case Prefix.Zero => "0"
+                case Prefix.Type(tpe) => if (style == Style.Deep) body(tpe) else tpe.show[Raw]
+              }
+            }
+            def prettyprintSymbol(sym: Symbol): String = {
+              def loop(sym: Symbol): String = sym match {
+                case Symbol.Zero => "0"
+                case Symbol.Root => "_root_"
+                case Symbol.Empty => "_empty_"
+                case Symbol.Global(owner, name, Signature.Type) => loop(owner) + "#" + name
+                case Symbol.Global(owner, name, Signature.Term) => loop(owner) + "." + name
+                case Symbol.Global(owner, name, Signature.Method(jvmSignature)) => loop(owner) + "." + name + jvmSignature
+                case Symbol.Global(owner, name, Signature.TypeParameter) => loop(owner) + "[" + name + "]"
+                case Symbol.Global(owner, name, Signature.TermParameter) => loop(owner) + "(" + name + ")"
+                case Symbol.Local(id) => "local#" + id
+              }
+              var result = loop(sym)
+              if (result != "_root_") result = result.stripPrefix("_root_.")
+              result
+            }
+            prettyprintPrefix(denot.prefix) + "::" + prettyprintSymbol(denot.symbol)
+          }
+        }
+        implicit def statusFootnote(status: Status): Footnote = new Footnote {
+          def entity = status
+          def tag = classOf[Status]
+          def prettyprint() = status match {
+            case Status.Unknown => unreachable
+            case Status.Typed(tpe) => if (style == Style.Deep) body(tpe) else tpe.show[Raw]
+          }
+        }
+        implicit def statusExpansion(expansion: Expansion): Footnote = new Footnote {
+          def entity = expansion
+          def tag = classOf[Expansion]
+          def prettyprint() = expansion match {
+            case Expansion.Identity => unreachable
+            case Expansion.Desugaring(term) => if (style == Style.Deep) body(term) else term.show[Raw]
+          }
+        }
+      }
+      private var size = 0
+      private val repr = mutable.Map[Class[_], mutable.Map[Any, (Int, Footnote)]]()
+      def insert[T <% Footnote](x: T): Int = {
+        val footnote = implicitly[T => Footnote].apply(x)
+        val miniRepr = repr.getOrElseUpdate(footnote.tag, mutable.Map[Any, (Int, Footnote)]())
+        if (!miniRepr.contains(x)) size += 1
+        val maxId = (miniRepr.values.map(_._1) ++ List(0)).max
+        miniRepr.getOrElseUpdate(x, (maxId + 1, footnote))._1
+      }
+      override def toString: String = {
+        if (style == Style.Deep) {
+          var prevSize = 0 // NOTE: prettyprint may side-effect on footnotes
+          do {
+            prevSize = size
+            val stableMinis = repr.toList.sortBy(_._1.getName).map(_._2)
+            val stableFootnotes = stableMinis.flatMap(_.toList.sortBy(_._2._1).map(_._2._2))
+            stableFootnotes.foreach(_.prettyprint())
+          } while (size != prevSize)
+        }
+        def byType(tag: Class[_], bracket1: String, bracket2: String): List[String] = {
+          val miniRepr = repr.getOrElseUpdate(tag, mutable.Map[Any, (Int, Footnote)]())
+          val sortedMiniCache = miniRepr.toList.sortBy{ case (_, (id, footnote)) => id }
+          sortedMiniCache.map{ case (_, (id, footnote)) => s"$bracket1$id$bracket2 ${footnote.prettyprint()}" }
+        }
+        (byType(classOf[Denotation], "[", "]") ++ byType(classOf[Status], "{", "}") ++ byType(classOf[Expansion], "<", ">")).mkString(EOL)
+      }
+    }
     def body(x: api.Tree): String = {
       def whole(x: Any): String = x match {
         case x: String => enquote(x, DoubleQuotes)
@@ -42,49 +129,42 @@ object Semantics {
         case x => x.productIterator.map(whole).mkString(", ")
       }
       val syntax = x.productPrefix + "(" + contents(x) + ")"
-      val semantics = x match {
-        case x: Name =>
-          (x.denot, x.sigma) match {
-            case (denot: Denotation.Single, Sigma.Naive) => s"[${id(denot)}]"
-            case (Denotation.Zero, Sigma.Zero) => "[0]"
-            case (denot, sigma) => unreachable(debug(denot, sigma))
-          }
-        case _ => ""
+      val semantics = {
+        val denotPart = x match {
+          case x: Name =>
+            (x.denot, x.sigma) match {
+              case (denot: Denotation.Single, Sigma.Naive) => s"[${footnotes.insert(denot)}]"
+              case (Denotation.Zero, Sigma.Zero) => "[0]"
+              case (denot, sigma) => unreachable(debug(denot, sigma))
+            }
+          case _ => ""
+        }
+        val statusPart = x match {
+          case x: Term =>
+            x.status match {
+              case Status.Unknown => ""
+              case status @ Status.Typed(tpe) => s"{${footnotes.insert(status)}}"
+            }
+          case _ =>
+            ""
+        }
+        val expansionPart = x match {
+          case x: Term =>
+            x.expansion match {
+              case Expansion.Identity => ""
+              case expansion @ Expansion.Desugaring(term) => s"<${footnotes.insert(expansion)}>"
+            }
+          case _ =>
+            ""
+        }
+        denotPart + statusPart + expansionPart
       }
       syntax + semantics
     }
-    def footer(): String = {
-      def prettyprintPrefix(pre: Prefix): String = {
-        pre match {
-          case Prefix.Zero => "0"
-          case Prefix.Type(tpe) => body(tpe)
-        }
-      }
-      def prettyprintSymbol(sym: Symbol): String = {
-        def loop(sym: Symbol): String = sym match {
-          case Symbol.Zero => "0"
-          case Symbol.Root => "_root_"
-          case Symbol.Empty => "_empty_"
-          case Symbol.Global(owner, name, Signature.Type) => loop(owner) + "#" + name
-          case Symbol.Global(owner, name, Signature.Term) => loop(owner) + "." + name
-          case Symbol.Global(owner, name, Signature.Method(jvmSignature)) => loop(owner) + "." + name + jvmSignature
-          case Symbol.Global(owner, name, Signature.TypeParameter) => loop(owner) + "[" + name + "]"
-          case Symbol.Global(owner, name, Signature.TermParameter) => loop(owner) + "(" + name + ")"
-          case Symbol.Local(id) => "local#" + id
-        }
-        var result = loop(sym)
-        if (result != "_root_") result = result.stripPrefix("_root_.")
-        result
-      }
-      def prettyprintDenotation(denot: Denotation): String = {
-        prettyprintPrefix(denot.prefix) + "::" + prettyprintSymbol(denot.symbol)
-      }
-      var prevSize = 0
-      do { prevSize = denots.size; denots.keys.toList.foreach(prettyprintDenotation) }
-      while (denots.size != prevSize)
-      if (denots.isEmpty) ""
-      else EOL + denots.toList.sortBy{ case (k, v) => v }.map{ case (k, v) => s"[$v] ${prettyprintDenotation(k)}" }.mkString(EOL)
+    def apply(x: T): Show.Result = {
+      val bodyPart = body(x) // NOTE: body may side-effect on footnotes
+      val footnotePart = footnotes.toString
+      s(bodyPart, if (footnotePart.nonEmpty) EOL + footnotePart else footnotePart)
     }
-    s(body(x) + footer())
-  })
+  }
 }
