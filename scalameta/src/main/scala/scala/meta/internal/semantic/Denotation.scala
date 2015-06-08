@@ -53,7 +53,7 @@ object Prefix {
 @root trait Denotation { def prefix: Prefix; def symbol: Symbol }
 object Denotation {
   @leaf object Zero extends Denotation { def prefix = Prefix.Zero; def symbol = Symbol.Zero; }
-  @leaf class Precomputed(prefix: Prefix, symbol: Symbol) extends Denotation
+  @leaf class Single(prefix: Prefix, symbol: Symbol) extends Denotation
 }
 
 // TODO: This unrelated code is here because of the limitation of knownDirectSubclasses.

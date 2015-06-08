@@ -37,7 +37,7 @@ private[meta] trait Api {
       val iScala = i.Symbol.Global(i.Symbol.Root, "scala", i.Signature.Term)
       val iCollection = i.Symbol.Global(iScala, "collection", i.Signature.Term)
       val iSeq = i.Symbol.Global(iCollection, "Seq", i.Signature.Type)
-      impl.Type.Name("Seq", i.Denotation.Precomputed(i.Prefix.Zero, iSeq), i.Sigma.Naive)
+      impl.Type.Name("Seq", i.Denotation.Single(i.Prefix.Zero, iSeq), i.Sigma.Naive)
     }
     @hosted private def dearg(tpe: Type.Arg): Type = tpe.require[impl.Type.Arg] match {
       case impl.Type.Arg.ByName(tpe) => impl.Type.Apply(SeqRef, List(tpe))
@@ -124,7 +124,7 @@ private[meta] trait Api {
     @hosted def source: Member = {
       def stripPrefix(denot: i.Denotation) = denot match {
         case i.Denotation.Zero => i.Denotation.Zero
-        case denot: i.Denotation.Precomputed => denot.copy(prefix = i.Prefix.Zero)
+        case denot: i.Denotation.Single => denot.copy(prefix = i.Prefix.Zero)
       }
       val prefixlessName = tree.name match {
         case name: impl.Name.Anonymous => name
@@ -499,8 +499,8 @@ private[meta] trait Api {
         member.name match {
           case thisName: impl.Name =>
             internalFilter[T](that => {
-              def thisDenot = thisName.denot.require[i.Denotation.Precomputed]
-              def thatDenot = that.require[impl.Member].name.require[impl.Name].denot.require[i.Denotation.Precomputed]
+              def thisDenot = thisName.denot.require[i.Denotation.Single]
+              def thatDenot = that.require[impl.Member].name.require[impl.Name].denot.require[i.Denotation.Single]
               scala.util.Try(thisDenot.symbol == thatDenot.symbol).getOrElse(false)
             }) match {
               case Seq() => throw new SemanticException(s"no prototype for $member found in ${showSummary(tree)}")

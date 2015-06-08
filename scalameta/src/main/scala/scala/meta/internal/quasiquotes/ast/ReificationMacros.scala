@@ -294,7 +294,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
         else MetaSymbol.Global(convertSymbol(sym.owner), sym.name.decodedName.toString, signature(sym))
       }
       require(isGlobal(sym) && debug(pre, sym))
-      Denotation.Precomputed(convertPrefix(pre), convertSymbol(sym))
+      Denotation.Single(convertPrefix(pre), convertSymbol(sym))
     }
     def correlate(meta: MetaTree, reflect: ReflectTree): MetaTree = (meta, reflect) match {
       case (meta, reflect: TypeTree) =>

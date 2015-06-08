@@ -45,7 +45,7 @@ object Semantics {
       val semantics = x match {
         case x: Name =>
           (x.denot, x.sigma) match {
-            case (denot: Denotation.Precomputed, Sigma.Naive) => s"[${id(denot)}]"
+            case (denot: Denotation.Single, Sigma.Naive) => s"[${id(denot)}]"
             case (Denotation.Zero, Sigma.Zero) => "[0]"
             case (denot, sigma) => unreachable(debug(denot, sigma))
           }
