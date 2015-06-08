@@ -35,7 +35,7 @@ class RootMacros(val c: Context) {
       stats1 += q"def internalTag: _root_.scala.Int"
       mstats1 += q"$AstInternal.hierarchyCheck[$name]"
       val anns1 = anns :+ q"new $AdtInternal.root" :+ q"new $AstInternal.root"
-      val parents1 = parents :+ tq"$AstInternal.Ast"
+      val parents1 = parents :+ tq"$AstInternal.Ast" :+ tq"_root_.scala.Product" :+ tq"_root_.scala.Serializable"
 
       // TODO: think of better ways to abstract this away from the public API
       val q"..$boilerplate" = q"""

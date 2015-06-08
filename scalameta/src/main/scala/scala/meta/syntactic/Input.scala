@@ -19,6 +19,8 @@ object Input {
   }
   final case class File(f: java.io.File, charset: Charset) extends Content {
     lazy val chars = scala.io.Source.fromFile(f)(scala.io.Codec(charset)).mkString.toArray
+    private def writeObject(out: java.io.ObjectOutputStream) = { out.writeObject(f); out.writeObject(charset.name) }
+    private def readObject(in: java.io.ObjectInputStream) = { File(in.readObject.asInstanceOf[java.io.File], Charset.forName(in.readObject.asInstanceOf[Predef.String])) }
   }
   object File {
     def apply(path: Predef.String): Input.File = Input.File(new java.io.File(path))
