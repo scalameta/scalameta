@@ -6,7 +6,7 @@ import scala.collection.immutable.ListMap
 import scala.meta._
 import scala.meta.semantic._
 import scala.meta.internal.{ ast => m }
-import scala.meta.internal.{ hygiene => h }
+import scala.meta.internal.{ semantic => s }
 import scala.meta.dialects.Scala211
 
 object Environment {
@@ -29,7 +29,7 @@ object Environment {
       // first look on the stack
       val onstack = stack.head.collectFirst{ // TODO handle stack frames
         case (k, v) if (k == nme) => v
-        case (k, v) if k.denot == h.Denotation.Zero && nme.denot == h.Denotation.Zero && k.value == nme.value => v // HACK!
+        case (k, v) if k.denot == s.Denotation.Zero && nme.denot == s.Denotation.Zero && k.value == nme.value => v // HACK!
       }
       if (onstack.nonEmpty) {
         onstack.get

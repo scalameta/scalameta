@@ -402,8 +402,8 @@ object Interpreter {
           require(astSignature.endsWith(")" + astCompanion.dropRight(2) + ";") && debug(vLHS, lhsJTp, nme, argsRetJTp))
           val denotPart = {
             val needsDenot = astSignature.contains("Lscala/meta/internal/hygiene/Denotation;")
-            val alreadyHasDenot = jvmArgs.exists(_.isInstanceOf[scala.meta.internal.hygiene.Denotation])
-            if (needsDenot && !alreadyHasDenot) Seq(scala.meta.internal.hygiene.Denotation.Zero, scala.meta.internal.hygiene.Sigma.Naive)
+            val alreadyHasDenot = jvmArgs.exists(_.isInstanceOf[scala.meta.internal.semantic.Denotation])
+            if (needsDenot && !alreadyHasDenot) Seq(scala.meta.internal.semantic.Denotation.Zero)
             else Nil
           }
           val originPart = Seq(null)
