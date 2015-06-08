@@ -7,7 +7,7 @@ import scala.annotation.implicitNotFound
 // because then implicit scope for Dialect lookups will contain members of the package object
 // i.e. both Scala211 and Dotty, which is definitely not what we want
 @implicitNotFound("don't know what dialect to use here (to fix this, import something from scala.dialects, e.g. scala.meta.dialects.Scala211)")
-trait Dialect {
+trait Dialect extends Serializable {
   // The sequence of characters that's used to express a bind
   // to a sequence wildcard pattern.
   def bindToSeqWildcardDesignator: String

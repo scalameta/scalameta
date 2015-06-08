@@ -4,7 +4,7 @@ import org.scalameta.ast._
 import scala.{meta => api}
 
 package scala.meta {
-  @root trait Tree extends Product {
+  @root trait Tree extends Product with Serializable {
     type ThisType <: Tree
     def parent: Option[Tree]
     def tokens: Tokens

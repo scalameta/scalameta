@@ -40,7 +40,7 @@ class AdtMacros(val c: Context) {
       stats1 += q"def internalTag: _root_.scala.Int"
       mstats1 += q"$Internal.hierarchyCheck[$name]"
       val anns1 = anns :+ q"new $Internal.root"
-      val parents1 = parents :+ tq"$Internal.Adt"
+      val parents1 = parents :+ tq"$Internal.Adt" :+ tq"_root_.scala.Product" :+ tq"_root_.scala.Serializable"
 
       val cdef1 = ClassDef(Modifiers(flags1, privateWithin, anns1), name, tparams, Template(parents1, self, stats1.toList))
       val mdef1 = ModuleDef(mmods, mname, Template(mparents, mself, mstats1.toList))

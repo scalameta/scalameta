@@ -7,7 +7,7 @@ import org.scalameta.default._
 import org.scalameta.default.Param._
 import scala.reflect.ClassTag
 
-@root trait Token extends org.scalameta.tokens.internal.Token {
+@root trait Token {
   def input: Content = content
   def content: Content
   def dialect: Dialect
