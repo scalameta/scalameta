@@ -9,10 +9,13 @@ import scala.collection.immutable.Seq
 import scala.collection.mutable
 import scala.meta.semantic.{Context => ScalametaSemanticContext}
 import scala.meta.projects.{Context => ScalametaProjectContext}
+import scala.meta.internal.{ast => impl}
+import scala.meta.internal.hosts.scalac.converters.MergeTrees
 
 @context(translateExceptions = false)
 class ProjectContext(sourcepath: String, classpath: String) extends ScalametaSemanticContext with ScalametaProjectContext {
   private val c = new StandaloneContext(s"-classpath $classpath")
+  private implicit val d: Dialect = c.dialect
   def dialect: Dialect = c.dialect
   def desugar(term: Term): Term = c.desugar(term)
   def tpe(term: Term): Type = c.tpe(term)
@@ -34,42 +37,41 @@ class ProjectContext(sourcepath: String, classpath: String) extends ScalametaSem
     import java.io._
     import scala.tools.asm._
     import scala.meta.internal.hosts.scalac.tasty._
-    val classpathEntries = classpath.split(File.pathSeparatorChar).toList
-    val sources = classpathEntries.flatMap(entryPath => {
-      val entryFile = new File(entryPath)
-      val entrySources = mutable.ListBuffer[Source]()
-      // TODO: support additional types of classpath entries, e.g. jar files
-      if (entryFile.isDirectory) {
-        def loop(entryFile: File): Unit = {
-          def visit(entryFile: File): Unit = {
-            if (entryFile.getName.endsWith(".class")) {
-              val in = new FileInputStream(entryFile)
-              try {
-                val classReader = new ClassReader(in)
-                classReader.accept(new ClassVisitor(Opcodes.ASM4) {
-                  override def visitAttribute(attr: Attribute) {
-                    if (attr.`type` == "TASTY") {
-                      val valueField = attr.getClass.getDeclaredField("value")
-                      valueField.setAccessible(true)
-                      val value = valueField.get(attr).asInstanceOf[Array[Byte]]
-                      entrySources ++= Source.fromTasty(value)
-                    }
-                    super.visitAttribute(attr)
-                  }
-                }, 0)
-              } finally {
-                in.close()
-              }
-            }
-          }
-          entryFile.listFiles.filter(_.isFile).foreach(visit)
-          entryFile.listFiles.filter(_.isDirectory).foreach(loop)
-        }
-        loop(entryFile)
+    def lurk(file: File): List[File] = {
+      if (file.isDirectory) {
+        val shallowFiles = file.listFiles.filter(_.isFile).toList
+        val recursiveFiles = file.listFiles.filter(_.isDirectory).flatMap(lurk).toList
+        shallowFiles ++ recursiveFiles
+      } else {
+        Nil
       }
+    }
+    val sourcepathSources = lurk(new File(sourcepath)).filter(_.getName.endsWith(".scala")).map(_.parse[Source])
+    val classpathEntries = classpath.split(File.pathSeparatorChar).toList
+    val classpathSources = classpathEntries.flatMap(entryPath => {
+      val entryClasses = lurk(new File(entryPath)).filter(_.getName.endsWith(".class"))
+      val entrySources = mutable.ListBuffer[Source]()
+      entryClasses.foreach(entryClass => {
+        val in = new FileInputStream(entryClass)
+        try {
+          val classReader = new ClassReader(in)
+          classReader.accept(new ClassVisitor(Opcodes.ASM4) {
+            override def visitAttribute(attr: Attribute) {
+              if (attr.`type` == "TASTY") {
+                val valueField = attr.getClass.getDeclaredField("value")
+                valueField.setAccessible(true)
+                val value = valueField.get(attr).asInstanceOf[Array[Byte]]
+                entrySources ++= Source.fromTasty(value)
+              }
+              super.visitAttribute(attr)
+            }
+          }, 0)
+        } finally {
+          in.close()
+        }
+      })
       entrySources.toList
     })
-    // TODO: correlate sources loaded from TASTY and sources from sourcepath
-    sources
+    sourcepathSources.zip(classpathSources).map({ case (ss, cs) => MergeTrees(ss.asInstanceOf[impl.Source], cs.asInstanceOf[impl.Source]) })
   }
 }

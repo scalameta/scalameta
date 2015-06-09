@@ -1,10 +1,9 @@
 package scala.meta
 package internal.hosts.scalac
-package convert
+package converters
 
 import scala.tools.nsc.{ Global, Phase, SubComponent }
 import scala.tools.nsc.plugins.{ Plugin => NscPlugin, PluginComponent => NscPluginComponent }
-import scala.meta.internal.hosts.scalac.{ PluginBase => ScalahostPlugin }
 import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
 import scala.reflect.io.AbstractFile

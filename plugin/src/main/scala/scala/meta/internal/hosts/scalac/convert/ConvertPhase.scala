@@ -8,6 +8,7 @@ import scala.meta.dialects.Scala211
 import scala.meta.internal.hosts.scalac.{PluginBase => ScalahostPlugin}
 import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
+import scala.meta.internal.hosts.scalac.converters.MergeTrees
 import scala.reflect.io.AbstractFile
 import org.scalameta.reflection._
 
