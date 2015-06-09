@@ -2,9 +2,11 @@ package scala.meta
 package internal
 package quasiquotes.tokens
 
+import org.scalameta.convert._
 import scala.reflect.macros.whitebox.Context
 import scala.meta.syntactic.TokenLiftables
 import scala.meta.internal.dialects.InstantiateDialect
+import scala.meta.syntactic.{Token, Tokens, Input}
 import scala.meta.syntactic.{Token => MetaToken}
 
 /**
@@ -37,6 +39,10 @@ class ReificationMacros(val c: Context) extends TokenLiftables
     case TermName("unapply") =>
       val name = bindingName(i)
       pq"$name @ _"
+  }
+
+  implicit class XtensionInputLike[T](inputLike: T) {
+    def tokens(implicit convert: Convert[T, Input], dialect: Dialect): Tokens = convert(inputLike).tokens
   }
 
   /**

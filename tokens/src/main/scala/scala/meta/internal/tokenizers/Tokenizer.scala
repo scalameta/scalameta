@@ -7,6 +7,7 @@ import org.scalameta.unreachable
 import org.scalameta.invariants._
 import Chars.{CR, LF, FF}
 import LegacyToken._
+import scala.meta.syntactic._
 
 private[meta] object tokenize {
   def apply(content: Content)(implicit dialect: Dialect): Tokens = {

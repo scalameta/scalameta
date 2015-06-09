@@ -139,6 +139,16 @@ object build extends Build {
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided")
   )
 
+  lazy val tokens = Project(
+    id   = "tokens",
+    base = file("tokens")
+  ) settings (
+    publishableSettings: _*
+  ) settings (
+    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided"),
+    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _ % "provided")
+  ) dependsOn (foundation)
+
   lazy val scalameta = Project(
     id   = "scalameta",
     base = file("scalameta")
@@ -147,7 +157,7 @@ object build extends Build {
   ) settings (
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided"),
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _ % "provided")
-  ) dependsOn (foundation)
+  ) dependsOn (foundation, tokens)
 
   lazy val sandbox = Project(
     id   = "sandbox",

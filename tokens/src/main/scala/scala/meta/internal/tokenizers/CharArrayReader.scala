@@ -3,6 +3,7 @@ package internal
 package tokenizers
 
 import Chars._
+import scala.meta.syntactic._
 
 private[meta] trait CharArrayReaderData {
   /** the last read character */

@@ -17,7 +17,11 @@ import scala.reflect.ClassTag
   def adjust(content: Content = this.content, dialect: Dialect = this.dialect, start: Param[Int] = Default, end: Param[Int] = Default, delta: Param[Int] = Default): Token
   def name: String
   def code: String = new String(content.chars.slice(start, end))
-  final override def toString = this.show[Raw]
+  final override def toString = {
+    import Token._
+    val prefix = this match { case x: BOF => "BOF"; case x: EOF => "EOF"; case x: Dynamic => x.code; case x: Static => x.name }
+    prefix + " (" + start.toString + ".." + end.toString + ")"
+  }
 }
 
 object Token {
