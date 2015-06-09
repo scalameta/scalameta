@@ -21,6 +21,7 @@ package object tasty {
   }
   implicit class XtensionTastyReadTree(dummy: Source.type) {
     def fromTasty(tastyBlob: Array[Byte]): Option[Source] = {
+      if (tastyBlob.length == 0) return None
       val unpickler = new TastyUnpickler(tastyBlob)
       class ScalametaUnpickler extends TastyUnpickler.SectionUnpickler[Array[Byte]]("Scalameta") {
         def unpickle(reader: TastyReader, tastyName: TastyName.Table) = {
