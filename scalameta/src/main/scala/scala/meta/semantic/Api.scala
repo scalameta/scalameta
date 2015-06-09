@@ -281,7 +281,7 @@ private[meta] trait Api {
   }
 
   implicit class XtensionSemanticTermMember(tree: Member.Term) {
-    @hosted def source: Member.Term = new XtensionSemanticMember(tree).name.require[Member.Term]
+    @hosted def source: Member.Term = new XtensionSemanticMember(tree).source.require[Member.Term]
     @hosted def name: Term.Name = new XtensionSemanticMember(tree).name.require[Term.Name]
     @hosted def parents: Seq[Member.Term] = new XtensionSemanticMember(tree).parents.require[Seq[Member.Term]]
     @hosted def children: Seq[Member.Term] = new XtensionSemanticMember(tree).children.require[Seq[Member.Term]]
@@ -289,7 +289,7 @@ private[meta] trait Api {
   }
 
   implicit class XtensionSemanticTermRefMemberLike(tree: Term.Ref) {
-    @hosted def source: Member.Term = new XtensionSemanticRefMemberLike(tree).name.require[Member.Term]
+    @hosted def source: Member.Term = new XtensionSemanticRefMemberLike(tree).source.require[Member.Term]
     @hosted def name: Term.Name = new XtensionSemanticRefMemberLike(tree).name.require[Term.Name]
     @hosted def parents: Seq[Member.Term] = new XtensionSemanticRefMemberLike(tree).parents.require[Seq[Member.Term]]
     @hosted def children: Seq[Member.Term] = new XtensionSemanticRefMemberLike(tree).children.require[Seq[Member.Term]]
@@ -297,10 +297,10 @@ private[meta] trait Api {
   }
 
   implicit class XtensionSemanticTypeMember(tree: Member.Type) {
-    @hosted def source: Member.Type = new XtensionSemanticMember(tree).name.require[Member.Type]
+    @hosted def source: Member.Type = new XtensionSemanticMember(tree).source.require[Member.Type]
     @hosted def name: Type.Name = new XtensionSemanticMember(tree).name.require[Type.Name]
     @hosted def parents: Seq[Member.Type] = new XtensionSemanticMember(tree).parents.require[Seq[Member.Type]]
-    @hosted def children: Seq[Member.Type] = new XtensionSemanticMember(tree).parents.require[Seq[Member.Type]]
+    @hosted def children: Seq[Member.Type] = new XtensionSemanticMember(tree).children.require[Seq[Member.Type]]
     @hosted def companion: Member.Term = new XtensionSemanticMember(tree).companion.require[Member.Term]
   }
 
