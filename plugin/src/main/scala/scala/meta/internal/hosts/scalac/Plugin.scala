@@ -4,6 +4,7 @@ package internal.hosts.scalac
 import scala.tools.nsc.Global
 import scala.tools.nsc.plugins.{Plugin => NscPlugin, PluginComponent => NscPluginComponent}
 import typechecker.HijackAnalyzer
+import backend.HijackBackend
 import macros.{MacroPlugin => ScalahostMacroPlugin}
 import convert.ConvertPhase
 import compat.ParadiseCompat
@@ -11,6 +12,7 @@ import org.scalameta.reflection._
 
 trait PluginBase extends NscPlugin
                     with HijackAnalyzer
+                    with HijackBackend
                     with ScalahostMacroPlugin
                     with ParadiseCompat
                     with ConvertPhase
@@ -20,6 +22,9 @@ trait PluginBase extends NscPlugin
   if (global.analyzer ne newAnalyzer) sys.error("failed to hijack analyzer")
   global.analyzer.addMacroPlugin(scalahostMacroPlugin)
   ifNecessaryReenableMacroParadise(oldAnalyzer)
+  val (newBackend, oldBackend) = hijackBackend()
+  // TODO: looks like it doesn't get hijacked cleanly...
+  // if (global.genBCode ne newBackend) sys.error("failed to hijack backend")
 }
 
 class Plugin(val global: Global) extends PluginBase {

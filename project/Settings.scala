@@ -16,7 +16,7 @@ object Settings {
     description := "Scala host for scala.meta",
     resolvers += Resolver.sonatypeRepo("snapshots"),
     resolvers += Resolver.sonatypeRepo("releases"),
-    scalacOptions ++= Seq("-feature", "-deprecation", "-unchecked"),
+    scalacOptions ++= Seq("-feature", "-deprecation", "-unchecked", "-Ybackend:GenBCode"),
     parallelExecution in Test := false, // hello, reflection sync!!
     logBuffered := false,
     traceLevel := 0,

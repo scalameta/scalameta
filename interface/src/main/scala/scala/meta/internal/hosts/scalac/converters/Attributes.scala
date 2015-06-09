@@ -71,21 +71,20 @@ trait Attributes extends GlobalToolkit with MetaToolkit {
       ptree1.require[T]
     }
     private def typing(gtpe: g.Type): s.Typing = {
-      // TODO: implement this!
-      s.Typing.Unknown
+      s.Typing.Known(gtpe.toMtypeArg)
     }
     def withTpe(gtpe: g.Type)(implicit ev: CanHaveTpe[T]): T = {
       // TODO: m.Term doesn't have copy, which is reasonable, because it's a branch trait
       // TODO: m.Term.Param doesn't have copy, which is totally unreasonable
-      // val ptree1 = ptree match {
+      val ptree1 = ptree match {
       //   case ptree: m.Term.Name => ptree.copy(denot = ptree.denot, typing = typing(gtpe))
-      //   case ptree: m.Ctor.Name => ptree.copy(denot = ptree.denot, typing = typing(gtpe))
       //   case ptree: m.Term => ptree.copy(typing = typing(gtpe))
       //   case ptree: m.Term.Param => ptree.copy(typing = typing(gtpe))
       //   case _ => unreachable(debug(ptree, ptree.show[Raw]))
-      // }
-      // ptree1.require[T]
-      ptree
+        case ptree: m.Ctor.Name => ptree.copy(denot = ptree.denot, typing = typing(gtpe))
+        case _ => ptree
+      }
+      ptree1.require[T]
     }
   }
 }

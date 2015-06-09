@@ -1,10 +1,9 @@
 package scala.meta
 package internal.hosts.scalac
-package convert
+package converters
 
 import scala.tools.nsc.{ Global, Phase, SubComponent }
 import scala.tools.nsc.plugins.{ Plugin => NscPlugin, PluginComponent => NscPluginComponent }
-import scala.meta.internal.hosts.scalac.{ PluginBase => ScalahostPlugin }
 import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
 import scala.reflect.io.AbstractFile
@@ -57,7 +56,7 @@ object MergeTrees {
         case (p: Type.Name, c: Type.Name) =>
           p.copy(denot = c.denot, tokens = p.tokens)
         case (p: Ctor.Ref.Name, c: Ctor.Ref.Name) =>
-          p.copy(denot = c.denot, tokens = p.tokens)
+          p.copy(denot = c.denot, typing = c.typing, tokens = p.tokens)
         case (p: Name.Anonymous, c: Name.Anonymous) =>
           p.copy(denot = c.denot, tokens = p.tokens)
         case (p: Name.Indeterminate, c: Name.Indeterminate) =>
