@@ -4,17 +4,25 @@ import scala.meta._
 import scala.meta.dialects.Scala211
 
 class SerializationSuite extends FunSuite {
-  private def trySerialize(x: Any): Unit = {
-    val baos = new ByteArrayOutputStream();
-    val oos = new ObjectOutputStream(baos);
-    oos.writeObject(x);
-    oos.close();
-    baos.close();
+  private def tryRoundtrip(x: Any): Unit = {
+    val baos = new ByteArrayOutputStream()
+    val oos = new ObjectOutputStream(baos)
+    oos.writeObject(x)
+    oos.close()
+    baos.close()
+    // TODO: commented out because of an exception described in:
+    // https://groups.google.com/forum/#!topic/scala-user/6aLchfkzEH4
+    //
+    // val bais = new ByteArrayInputStream(baos.toByteArray)
+    // val ois = new ObjectInputStream(bais)
+    // ois.readObject.asInstanceOf[Source]
+    // ois.close()
+    // bais.close()
   }
 
   test("Input.String-based trees are serializable") {
     val source = "class C".parse[Source]
-    trySerialize(source)
+    tryRoundtrip(source)
   }
 
   test("Input.File-based trees are serializable") {
@@ -24,6 +32,6 @@ class SerializationSuite extends FunSuite {
     writer.write("class C")
     writer.close()
     val source = file.parse[Source]
-    trySerialize(source)
+    tryRoundtrip(source)
   }
 }
