@@ -56,7 +56,7 @@ object MergeTrees {
         case (p: Type.Name, c: Type.Name) =>
           p.copy(denot = c.denot, tokens = p.tokens)
         case (p: Ctor.Ref.Name, c: Ctor.Ref.Name) =>
-          p.copy(denot = c.denot, tokens = p.tokens)
+          p.copy(denot = c.denot, typing = c.typing, tokens = p.tokens)
         case (p: Name.Anonymous, c: Name.Anonymous) =>
           p.copy(denot = c.denot, tokens = p.tokens)
         case (p: Name.Indeterminate, c: Name.Indeterminate) =>
