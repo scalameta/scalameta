@@ -9,7 +9,7 @@ import scala.collection.{immutable, mutable}
 
 // TODO: Input is really sealed, with the only two direct subclasses being Content and Tokens
 // however, I don't really feel like mixing all the three concepts in a single file
-trait Input {
+trait Input extends Serializable {
   def tokens(implicit dialect: Dialect): Tokens
 }
 

@@ -87,7 +87,7 @@ class AstMacros(val c: Context) {
       // step 4: create boilerplate bookkeeping parameters
       bparams1 += q"protected val internalPrototype: $iname"
       bparams1 += q"protected val internalParent: _root_.scala.meta.Tree"
-      bparams1 += q"protected var internalTokens: _root_.scala.meta.Tokens"
+      bparams1 += q"@_root_.scala.transient protected var internalTokens: _root_.scala.meta.Tokens"
       def internalize(name: TermName) = TermName("_" + name.toString)
       val internalCopyInitss = paramss.map(_.map(p => q"$AstInternal.initField(this.${internalize(p.name)})"))
       val internalCopyBody = q"new $name(prototype.asInstanceOf[ThisType], parent, tokens)(...$internalCopyInitss)"
