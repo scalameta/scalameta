@@ -17,6 +17,8 @@ import org.scalameta.unreachable
 import scala.compat.Platform.EOL
 import scala.annotation.implicitNotFound
 
+// TODO: Remove original show[Code], now in comments, once InferToken is accepted.
+
 // TODO: fix occasional incorrectness when semicolons are omitted
 // TODO: soft wrapping
 // TODO: one mega instance for tree isn't nice, maybe separate instances for leafs and inferred instances for branches
@@ -26,7 +28,17 @@ trait Code[T] extends Show[T]
 object Code {
   def apply[T](f: T => Show.Result): Code[T] = new Code[T] { def apply(input: T) = f(input) }
 
+  // TODO: take style into account for inferToken?
   @root trait Style
+  object Style {
+    @leaf object Lazy extends Style
+    @leaf implicit object Eager extends Style
+    @leaf object WithFfi extends Style
+  }
+
+   implicit def codeTree[T <: api.Tree](implicit dialect: Dialect, style: Style): Code[T] = Code { (x: api.Tree) => s(x.tokens.map(_.show[Code]).mkString) }
+
+  /*@root trait Style
   object Style {
     @leaf object Lazy extends Style
     @leaf implicit object Eager extends Style
@@ -529,7 +541,7 @@ object Code {
     case (t: Import.Selector.Name) :: Nil     => s(t)
     case (t: Import.Selector.Wildcard) :: Nil => s(t)
     case sels                                 => s("{ ", r(sels, ", "), " }")
-  }
+  }*/
 
   implicit def codeToken[T <: Token]: Code[T] = Code { x => s(x.code) }
 }
