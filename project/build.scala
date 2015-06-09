@@ -128,7 +128,7 @@ object build extends Build {
   ) settings (
     test in Test := (test in tests in Test).value,
     packagedArtifacts := Map.empty
-  ) aggregate (scalameta, foundation, tests)
+  ) aggregate (scalameta, tokens, foundation, tests)
 
   lazy val foundation = Project(
     id   = "foundation",
