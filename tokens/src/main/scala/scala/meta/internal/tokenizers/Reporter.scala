@@ -2,6 +2,8 @@ package scala.meta
 package internal
 package tokenizers
 
+import scala.meta.syntactic._
+
 // TODO: when I grow up I want to become a monad, just like my daddy
 // TODO: distinguish flavors of errors with exception types
 private[meta] trait Reporter {

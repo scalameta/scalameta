@@ -8,6 +8,6 @@ import Show.{sequence => s, repeat => r, indent => i, newline => n, meta => m, a
 trait Code[T] extends Show[T]
 object Code {
   def apply[T](f: T => Show.Result): Code[T] = new Code[T] { def apply(input: T) = f(input) }
-  implicit def codeTree[T <: api.Tree](implicit dialect: Dialect, style: Style): Code[T] = Code { (x: api.Tree) => s(x.tokens.map(_.show[Code]).mkString) }
+  implicit def codeTree[T <: Tree](implicit dialect: Dialect): Code[T] = Code { (x: Tree) => s(x.tokens.map(_.show[Code]).mkString) }
   implicit def codeToken[T <: Token]: Code[T] = Code { x => s(x.code) }
 }
