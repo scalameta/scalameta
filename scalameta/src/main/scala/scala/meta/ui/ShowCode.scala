@@ -1,6 +1,7 @@
 package scala.meta
 package ui
 
+import scala.annotation.implicitNotFound
 import org.scalameta.show._
 import Show.{sequence => s, repeat => r, indent => i, newline => n, meta => m, adorn => a, function => fn}
 

@@ -351,7 +351,7 @@ private[meta] object inferTokens {
         if (guessHasExpr(t)) toks"return ${t.expr.tks}"
         else toks"return"
       case t: Term.Throw =>      toks"throw ${t.expr.tks}"
-      case t: Term.Ascribe =>    toks"${t.expr.tks}: ${t.tpe.tks}"
+      case t: Term.Ascribe =>    toks"${t.expr.tks}: ${t.decltpe.tks}"
       case t: Term.Annotate =>   toks"${t.expr.tks}: ${t.annots.`o_o`}"
       case t: Term.Tuple =>      t.elements.`(o,o)`
       case t: Term.Block =>
@@ -539,7 +539,7 @@ private[meta] object inferTokens {
       case t: Defn.Trait =>    toks"${t.mods.`o_o_`}trait ${t.name.tks}${t.tparams.`[o,o]`}${t.ctor.tks}${apndTempl(t.templ)}"
       case t: Defn.Object =>   toks"${t.mods.`o_o_`}object ${t.name.tks}${t.ctor.tks}${apndTempl(t.templ)}"
       case t: Defn.Def =>      toks"${t.mods.`o_o_`}def ${t.name.tks}${t.tparams.`[o,o]`}${apndTermParamss(t.paramss)}${apndDeclTpe(t.decltpe)} = ${t.body.tks}"
-      case t: Defn.Macro =>    toks"${t.mods.`o_o_`}def ${t.name.tks}${t.tparams.`[o,o]`}${apndTermParamss(t.paramss)}: ${t.tpe.tks} = macro ${t.body.tks}"
+      case t: Defn.Macro =>    toks"${t.mods.`o_o_`}def ${t.name.tks}${t.tparams.`[o,o]`}${apndTermParamss(t.paramss)}: ${t.decltpe.tks} = macro ${t.body.tks}"
       case t: Pkg =>
         if (guessHasBraces(t)) toks"package ${t.ref.tks} {${t.stats.`[->o->`}}"
         else toks"package ${t.ref.tks}${t.stats.`->o`}"

@@ -126,7 +126,7 @@ class TraverserBuilderMacros(val c: Context) extends AstReflection {
       val addResults = results.tail.foldLeft[c.Tree](q"${results.head}")((a, b) => q"$a + $b")
       val paramsWithNewParams = parameters.unzip._1.zip(enums.map(_.map(_._1)))
       val reconstructParams = paramsWithNewParams.map(x => x._2.getOrElse(x._1))
-      val reconstruct = q"$constructor(..$reconstructParams, tokens = _root_.scala.meta.Tokens.Prototype($origin))"
+      val reconstruct = q"$constructor(..$reconstructParams, tokens = _root_.scala.meta.internal.ui.PrototypeTokens($origin))"
       val eqList = paramsWithNewParams.foldLeft[c.Tree](q"true"){
         (acc, x) => q"$acc && ${x._2.map(y => q"($y eq ${x._1})").getOrElse(q"true")}"}
 
