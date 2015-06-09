@@ -19,6 +19,10 @@ import scala.language.implicitConversions
 import scala.annotation.tailrec
 
 // TODO: this infers tokens for the Scala211 dialect due to token quasiquotes (the dialect needs to be explicitly imported). It should be changed in the future.
+// TODO: fix occasional incorrectness when semicolons are omitted
+// TODO: soft wrapping
+// TODO: one mega instance for tree isn't nice, maybe separate instances for leafs and inferred instances for branches
+// TODO: review https://github.com/scalameta/scalameta/pull/141 and apply fixes from there to here
 private[meta] object inferTokens {
   def apply(tree: Tree, proto: Option[Tree]): Tokens = {
     infer(tree, proto)(scala.meta.dialects.Scala211) // as explained above, forcing dialect.
@@ -85,7 +89,7 @@ private[meta] object inferTokens {
        * - [   represent an indentation
        * - ->  represent a new line
        * - _   represent a space
-       * -     other tokens represent themselves. 
+       * -     other tokens represent themselves.
        */
       val indentFun:          (Tokens => Tokens) = (s: Tokens) => indent(s)(indentation)
       /* In some construction, the line return is already present in the tokens. This prevents to put a second one and break the layout. */
@@ -144,9 +148,9 @@ private[meta] object inferTokens {
     def apndTermParamss(trees: Seq[Seq[Term.Param]]): Tokens = {
       def apndTermParams(ts: Seq[Term.Param]): Tokens = ts match {
         case Nil => toks""
-        case x :: Nil if x.mods.exists(_.isInstanceOf[Mod.Implicit]) => 
+        case x :: Nil if x.mods.exists(_.isInstanceOf[Mod.Implicit]) =>
           toks"(implicit ${x.tks})"
-        case x :: xs if x.mods.exists(_.isInstanceOf[Mod.Implicit]) => 
+        case x :: xs if x.mods.exists(_.isInstanceOf[Mod.Implicit]) =>
           toks"(implicit ${x.tks}, ${xs.`o,o`})"
         case _ => ts.`(o,o)`
       }
@@ -486,9 +490,9 @@ private[meta] object inferTokens {
         }
       case t: Pat.Interpolate =>
         val zipped = (t.parts zip t.args) map {
-          case (part, Pat.Var.Term(id: Name)) if !guessIsBackquoted(id) => 
+          case (part, Pat.Var.Term(id: Name)) if !guessIsBackquoted(id) =>
             toks"${mineIdentTk(part.value)}$$${mineIdentTk(id.value)}"
-          case (part, args) => 
+          case (part, args) =>
             toks"${mineIdentTk(part.value)}$${${args.tks}}"
         }
         toks"${mineIdentTk(t.prefix.value)}$singleDoubleQuotes${zipped.`oo`}${mineIdentTk(t.parts.last.value)}$singleDoubleQuotes"
@@ -589,7 +593,7 @@ private[meta] object inferTokens {
         }
 
       // Mod
-      case Mod.Annot(tree) =>                 
+      case Mod.Annot(tree) =>
         if (tree.isInstanceOf[Term.Annotate]) toks"@(${tree.ctorTpe.tks})${tree.ctorArgss.`(o,o)`}"
         else                                  toks"@${tree.ctorTpe.tks}${tree.ctorArgss.`(o,o)`}"
       case Mod.Private(Name.Anonymous()) =>   toks"private"
@@ -653,7 +657,7 @@ private[meta] object inferTokens {
            * between the proper statements. We have no guarantee however that the indentation in a stat will correspond
            * to the indentation in the source token stream. As an outcome, we filter all indentation out prior to the
            * comparison. We then do the assumption that the correspondence between the stats from the original tree and
-           * the new one are equivalent, i.e. that if a class A was before a class B, the class A is still before the 
+           * the new one are equivalent, i.e. that if a class A was before a class B, the class A is still before the
            * class B in the modified tree, even if this one or the other might contain more stats (in which case, they
            * are either added or removed at the end). By doing so, we are guaranteed to preserve top-level comments. */
           case Some(original: Source) =>
@@ -707,7 +711,7 @@ private[meta] object inferTokens {
     else {
       /* In many cases, the start of a stat is not on a newline, while the end is.
        * As an outcome, we "de-indent" based on the original indentation of the last line. This is
-       * mainly used for block, partial function, etc. and covers the cases that require such 
+       * mainly used for block, partial function, etc. and covers the cases that require such
        * re-indentation. */
       val lastIndent = lines.last.dropWhile(t => isIndent(t))
       val toDrop = lines.last.length - lastIndent.length
