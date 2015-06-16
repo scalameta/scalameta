@@ -40,7 +40,7 @@ In order to implement semantic operations on scala.meta trees (e.g. resolving re
 
   1. Denotations are exclusive to names (i.e. to trees that inherit from `Name`: Term.Name, Type.Name, Ctor.Name, Name.Anonymous and Name.Indeterminate) and represent definitions that are referenced by those names. More concretely, every name tree has a `private[meta]` field: `val denot: Denotation`. A `Denotation` consists of a prefix and one or more symbols. A prefix is a type of a term from which a name is selected (`Prefix.Type`) or nothing in case when a name is local to a block (`Prefix.Zero`). A symbol is a unique identifier of a definition referenced by a name (check out the [sources](/scalameta/src/main/scala/scala/meta/internal/semantic/Denotations.scala) to learn more about the structure of symbols). There can be `Denotation.Zero` that stands for an unknown denotation, `Denotation.Single` to express unambiguously resolved references and `Denotation.Multi` for imports and overloaded methods.
 
-        In the example below, we can see a tree that represents List[Int], with denotations filled in correctly. The numbers in square brackets next to name trees refer to denotations that are printed below, with the parts before :: standing for prefixes and the parts after :: standing for symbols (dots in fully-qualified names are term selections and hashes are type selections).
+    In the example below, we can see a tree that represents List[Int], with denotations filled in correctly. The numbers in square brackets next to name trees refer to denotations that are printed below, with the parts before :: standing for prefixes and the parts after :: standing for symbols (dots in fully-qualified names are term selections and hashes are type selections).
 
         ```
         scala> t"List[Int]".show[Semantics]
@@ -53,7 +53,7 @@ In order to implement semantic operations on scala.meta trees (e.g. resolving re
         [5] 0::_root_
         ```
 
-        While global symbols (i.e. the ones that are visible from other files) are more or less straightforward (you represent them with data structures equivalent to fully-qualified names, with a slight complication for overloaded methods), local symbols require more effort. The tricky thing here is generating unique identifiers for local definitions that symbols refer to and then making sure that you return the same identifier if the same local definition is converted more than once.
+    While global symbols (i.e. the ones that are visible from other files) are more or less straightforward (you represent them with data structures equivalent to fully-qualified names, with a slight complication for overloaded methods), local symbols require more effort. The tricky thing here is generating unique identifiers for local definitions that symbols refer to and then making sure that you return the same identifier if the same local definition is converted more than once.
 
   1. Typings are exclusive to terms (i.e. to trees that inherit from `Term`) and provide types for these terms. This piece of information is not mandatory, because it is possible to recompute all typings that have been done during typechecking having denotations and expansions at hand, but you may find it useful to precache type information when converting your native representation of terms to scala.meta trees.
 
