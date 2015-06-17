@@ -79,4 +79,28 @@ class QuasiquoteSuite extends FunSuite {
       |}
     """.trim.stripMargin)
   }
+
+  test(""" q"$qname.this" """) {
+    q""" class A { class B { def foo = q"$A.this" } } """
+  }
+
+  test(""" q"$qname.this" """) {
+    class A { class B { def foo = q"$A.this" } }
+  }
+
+  test(""" val q"$fn(..$args)" = q"foo(x, y)" """) {
+    val q"$fn(..$args)" = q"foo(x, y)"
+  }
+
+  test(""" val q"$fn(x, y)" = q"foo(x, y)" """) {
+    val q"$fn(x, y)" = q"foo(x, y)"
+  }
+
+  test(""" val q"$fn(x, $y)" = q"foo(x, y)" """) {
+    val q"$fn(x, $y)" = q"foo(x, y)"
+  }
+
+  test(""" val q"$fn(x, $yy)" = q"foo(x, y)" """) {
+    val q"$fn(x, $yy)" = q"foo(x, y)"
+  }
 }
