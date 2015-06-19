@@ -24,21 +24,13 @@ class QuasiquoteSuite extends FunSuite {
     assert(p"case $x @ $y => ".show[Code] === "case x @ List(1, 2, 3) =>")
   }
 
-  test("unquote q\"foo($term, ..$terms, $term)\"") {
+  test("q\"foo($term, ..$terms, $term)\"") {
     val term = q"x"
     val terms = List(q"y", q"z")
     assert(q"foo($term, ..$terms, $term)".show[Code] === "foo(x, y, z, x)")
   }
 
-  test("unlift q\"foo($term, ..$terms, $term)\"") {
-    val q"foo($term1, ..$terms, $term2)" = q"foo(q, w, e, 42)"
-    assert(term1.show[Code] == "q")
-    assert(terms(0).show[Code] == "w")
-    assert(terms(1).show[Code] == "e")
-    assert(term2.show[Code] === "42")
-  }
-
-  test("unlift case q\"$foo(${x: Int})\"") {
+  test("case q\"$foo(${x: Int})\"") {
     q"foo(42)" match {
       case q"$foo(${x: Int})" =>
         assert(foo.show[Code] === "foo")
@@ -46,7 +38,7 @@ class QuasiquoteSuite extends FunSuite {
     }
   }
 
-  test("unlift case q\"$foo(${x: Int}, ..$ys, $z)\"") {
+  test("case q\"$foo(${x: Int}, ..$ys, $z)\"") {
     q"foo(1, 2, 3)" match {
       case q"$_(${x: Int}, ..$y, $z)" =>
         assert(x === 1)
@@ -55,7 +47,7 @@ class QuasiquoteSuite extends FunSuite {
     }
   }
 
-  test("unquote q\"foo($x, ..$ys, $z, ..$ts)\"") {
+  test("q\"foo($x, ..$ys, $z, ..$ts)\"") {
     val x = q"1"
     val ys = List(q"2")
     val z = q"3"
@@ -63,25 +55,18 @@ class QuasiquoteSuite extends FunSuite {
     assert(q"foo($x, ..$ys, $z, ..$ts)".show[Code] === "foo(1, 2, 3)")
   }
 
-  test("unlift q\"foo($x, ..$ys, $z)\"") {
-    val q"foo($x, ..$ys, $z)" = q"foo(1, 2, 3)"
-    assert(x.show[Code] === "1")
-    assert(ys(0).show[Code] === "2")
-    assert(z.show[Code] === "3")
-  }
-
-  test("unquote val q\"type $name[$_] = $_\"") {
+  test("val q\"type $name[$_] = $_\"") {
     val member = q"type List[+A] = List[A]"
     val q"type $name[$_] = $_" = member
     assert(name.show[Code] === "List")
   }
 
-  test("unlift val q\"def x = ${body: Int}\"") {
+  test("val q\"def x = ${body: Int}\"") {
     val q"def x = ${body: Int}" = q"def x = 42"
     assert(body === 42)
   }
 
-  test("unquote q\"... match { ..$cases }\"") {
+  test("q\"... match { ..$cases }\"") {
     val cases = List(p"case foo => bar")
     assert(q"x match { ..$cases }".show[Code] === """
       |x match {
@@ -102,42 +87,24 @@ class QuasiquoteSuite extends FunSuite {
 //    assert(method.show[Code] === "x")
 //  }
 
-  test("unquote q\"$expr.$name\"") {
+  test("q\"$expr.$name\"") {
     val expr = q"foo"
     val name = q"bar"
     assert(q"$expr.$name".show[Code] === "foo.bar")
   }
 
-  //  test("unlift q\"$expr.$name\"") {
-  //    val q"$expr.$name" = q"foo.bar" // fixme test is broken, so even does not compile (change `name` => `nme`)
-  //    assert(expr.show[Code] === "foo")
-  //    assert(name.show[Code] === "bar")
-  //  }
-
-  test("unquote q\"$expr($name)\"") {
+  test("q\"$expr($name)\"") {
     val expr = q"foo"
     val name = q"bar"
     assert(q"$expr($name)".show[Code] === "foo(bar)")
   }
 
-  test("unlift q\"$expr($name)\"") {
-    val q"$expr($name)" = q"foo(bar)" // compare to test("unlift q\"$expr.$name\""), this one compiles
-    assert(expr.show[Code] === "foo")
-    assert(name.show[Code] === "bar")
-  }
-
-  test("unquote q\"foo[..$tpes]\"") {
+  test("q\"foo[..$tpes]\"") {
     val types = List(t"T", t"U")
     assert(q"foo[..$types]".show[Code] === "foo[T, U]")
   }
 
-  test("unlift q\"foo[..$types]\"") {
-    val q"foo[..$types]" = q"foo[T, U]"
-    assert(types(0).show[Code] === "T")
-    assert(types(1).show[Code] === "U")
-  }
-
-//  test("unquote q\"$expr $name[..$tpes] (..$aexprs)\"") {
+//  test("q\"$expr $name[..$tpes] (..$aexprs)\"") {
 //    val expr = q"x"
 //    val name = q"method"
 //    val tpes = List(t"T", t"U")
