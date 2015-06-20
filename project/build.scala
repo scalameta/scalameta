@@ -177,6 +177,7 @@ object build extends Build {
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _),
     libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.3" % "test",
     libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
+    scalacOptions += "-Xfatal-warnings",
     packagedArtifacts := Map.empty,
     sourceDirectory in Test := {
       val defaultValue = (sourceDirectory in Test).value

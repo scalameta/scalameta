@@ -79,4 +79,9 @@ class QuasiquoteSuite extends FunSuite {
       |}
     """.trim.stripMargin)
   }
+
+  test("val q\"$x\" = ...") {
+    val q"$x" = q"42"
+    assert(x.show[Code] === "42")
+  }
 }

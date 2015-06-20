@@ -528,16 +528,11 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
             (thenp, q"_root_.scala.None")
           }
         }
-        val internalResult = q"""
-          new {
-            def unapply(input: _root_.scala.meta.Tree) = {
-              input match {
-                case $pattern => $thenp
-                case _ => $elsep
-              }
-            }
-          }.unapply($dummy)
-        """
+        val matchp = pattern match {
+          case Bind(_, Ident(termNames.WILDCARD)) => q"input match { case $pattern => $thenp }"
+          case _ => q"input match { case $pattern => $thenp; case _ => $elsep }"
+        }
+        val internalResult = q"new { def unapply(input: _root_.scala.meta.Tree) = $matchp }.unapply($dummy)"
         if (sys.props("quasiquote.debug") != null) {
           println(internalResult)
           // println(showRaw(internalResult))
