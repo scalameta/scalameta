@@ -17,6 +17,7 @@ object build extends Build {
     scalacOptions in (Compile, doc) ++= Seq("-skip-packages", "scala.meta.internal.ast:scala.meta.internal.semantic:scala.meta.internal.tql"),
     scalacOptions in (Compile, doc) ++= Seq("-implicits", "-implicits-hide:.,scala.meta.syntactic.Api.XtensionInputLike,scala.meta.ui.Api.XtensionShow"),
     scalacOptions in (Compile, doc) ++= Seq("-groups"),
+    scalacOptions in Test ++= Seq("-Xfatal-warnings"),
     parallelExecution in Test := false, // hello, reflection sync!!
     logBuffered := false,
     scalaHome := {
