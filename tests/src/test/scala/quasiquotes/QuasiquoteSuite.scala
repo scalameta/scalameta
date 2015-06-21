@@ -231,6 +231,10 @@ class QuasiquoteSuite extends FunSuite {
 //    val q"new $template" = q"new Foo" // fixme test is broken, so even does not compile
 //  }
 
+  test("q\"_\"") {
+    assert(q"_".show[Code] === "_")
+  }
+
   test("q\"$expr _\"") {
     val q"$expr _" = q"foo _"
     assert(expr.show[Code] === "foo")
