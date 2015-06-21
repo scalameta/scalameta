@@ -241,8 +241,8 @@ class QuasiquoteSuite extends FunSuite {
     assert(q"$lit".show[Code] === "42")
   }
 
-//  test("pattern matching q\"$lit\"") {
-//    val q"$lit" = q"42"
-//    assert(lit.show[Code] === "42") // fixme test produces warnings
-//  }
+  test("val q\"$x\" = ...") {
+    val q"$x" = q"42"
+    assert(x.show[Code] === "42")
+  }
 }
