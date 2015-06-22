@@ -112,6 +112,13 @@ class QuasiquoteSuite extends FunSuite {
 //    assert(q"$expr $name[..$tpes] (..$aexprs)".show[Code] === "x method[T, U](1, b)") // fixme test is broken, so even does not compile
 //  }
 
+  test("q\"$a $b $c\"") {
+    val a = q"x"
+    val b = q"y"
+    val c = q"z"
+    assert(q"$a $b $c".show[Code] === "x y z") // fixme test is broken, so even does not compile
+  }
+
   test("q\"!$expr\"") {
     val q"!$x" = q"!foo"
     assert(x.show[Code] === "foo")
