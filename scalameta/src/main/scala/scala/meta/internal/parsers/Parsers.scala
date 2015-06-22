@@ -1393,7 +1393,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     val base = ctx.stack
 
     def loop(startPos: Pos, top: List[Term.Arg], endPos: Pos): List[Term.Arg] = {
-      if (!token.is[Ident]) top
+      if (!token.is[Ident] && !token.is[Unquote]) top
       else {
         ctx.push(startPos, reduceStack(base, top, endPos), endPos)
         newLineOptWhenFollowing(_.is[ExprIntro])
