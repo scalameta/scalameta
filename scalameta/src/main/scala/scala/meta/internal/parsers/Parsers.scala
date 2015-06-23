@@ -1496,7 +1496,8 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
           case _ =>
             t
         }
-      case _: `(` | _: `{` if (canApply) =>
+      case _: `=` | _: `(` | _: `{` if (canApply) =>
+        if (token.is[`=`]) next()
         simpleExprRest(atPos(t, auto)(Term.Apply(t, argumentExprs())), canApply = true)
       case _: `_ ` =>
         next()
