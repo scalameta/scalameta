@@ -32,6 +32,22 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin)
   }
 
+  test("q\"$x\" when x has incompatible type") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      class Dummy
+      val x = new Dummy
+      q"$x"
+    """) === """
+      |<macro>:6: type mismatch when unquoting;
+      | found   : Dummy
+      | required: scala.meta.Term
+      |      q"$x"
+      |        ^
+    """.trim.stripMargin)
+  }
+
   test("q\"foo(..$xs)\" when xs has incompatible type") {
     assert(typecheckError("""
       import scala.meta._
@@ -48,7 +64,37 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin)
   }
 
-  test("q\"...$xs\"") {
+  test("q\"foo($xs)\" when xs has incompatible type") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val xs = List(q"x")
+      q"foo($xs)"
+    """) contains """
+                               |<macro>:5: type mismatch when unquoting;
+                               | found   : List[scala.meta.internal.ast.Term.Name]
+                               | required: scala.meta.Term.Arg
+                               |      q"foo($xs)"
+                               |            ^
+    """.trim.stripMargin)
+  }
+
+  test("q\"$xs\" when xs has incompatible type") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val xs = List(q"x")
+      q"$xs"
+    """) contains """
+                               |<macro>:5: type mismatch when unquoting;
+                               | found   : List[scala.meta.internal.ast.Term.Name]
+                               | required: scala.meta.Term
+                               |      q"$xs"
+                               |        ^
+    """.trim.stripMargin)
+  }
+
+  test("q\"...$xss\"") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -63,6 +109,36 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin)
   }
 
+  test("q\"..$xss\"") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val xss = List(List(q"x"))
+      q"..$xss"
+    """) === """
+                          |<macro>:5: type mismatch when unquoting;
+                          | found   : List[List[scala.meta.internal.ast.Term.Name]]
+                          | required: scala.collection.immutable.Seq[scala.meta.Stat]
+                          |      q"..$xss"
+                          |          ^
+    """.trim.stripMargin)
+  }
+
+  test("q\"$xss\"") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val xss = List(List(q"x"))
+      q"$xss"
+    """) === """
+                          |<macro>:5: type mismatch when unquoting;
+                          | found   : List[List[scala.meta.internal.ast.Term.Name]]
+                          | required: scala.meta.Term
+                          |      q"$xss"
+                          |        ^
+    """.trim.stripMargin)
+  }
+
   test("q\"foo[..$terms]\"") {
     // FIXME: looks our new scheme of ast reification breaks quasiquote error reporting
     // the failure doesn't look severe, so I'm just going to comment out this test for the time being
@@ -73,7 +149,7 @@ class ErrorSuite extends FunSuite {
     //   q"foo[..$terms]"
     // """) === """
     //   |<macro>:5: type mismatch when unquoting;
-    //   | found   : List[scala.meta.Term.Name]
+    //   | found   : List[scala.meta.Term.Name] // List[scala.meta.internal.ast.Term.Name] ?
     //   | required: scala.collection.immutable.Seq[scala.meta.Type]
     //   |      q"foo[..$terms]"
     //   |              ^
@@ -153,4 +229,107 @@ class ErrorSuite extends FunSuite {
       |        ^
     """.trim.stripMargin)
   }
+
+  test("""q"$qname" when qname has incompatible type """) {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val name = t"x"
+      q"$name"
+                           """) === """
+                             |<macro>:5: type mismatch when unquoting;
+                             | found   : scala.meta.internal.ast.Type.Name
+                             | required: scala.meta.Term
+                             |      q"$name"
+                             |        ^
+                           """.trim.stripMargin)
+  }
+
+  test("""q"expr: $tpe" when tpe has incompatible type """) {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val tpe = q"T"
+      q"expr: $tpe"
+                          """) === """
+                                                |<macro>:5: type mismatch when unquoting;
+                                                | found   : scala.meta.internal.ast.Term.Name
+                                                | required: scala.meta.Type
+                                                |      q"expr: $tpe"
+                                                |              ^
+                                   """.trim.stripMargin)
+  }
+
+  test("""q"$expr: tpe" when expr has incompatible type """) {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val expr = t"x"
+      q"$expr: tpe"
+                          """) === """
+                                                |<macro>:5: type mismatch when unquoting;
+                                                | found   : scala.meta.internal.ast.Type.Name
+                                                | required: scala.meta.Term
+                                                |      q"$expr: tpe"
+                                                |        ^
+                                   """.trim.stripMargin)
+  }
+
+  test("""q"expr: tpes" """) {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val tpes = List(q"T")
+      q"expr: ..$tpes"
+                          """) === """
+                                                |<macro>:5: identifier expected but ellipsis found
+                                                |      q"expr: ..$tpes"
+                                                |              ^
+                                   """.trim.stripMargin)
+  }
+
+  test("""q"expr.$name" when name has incompatible type """) {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val name = t"T"
+      q"expr.$name"
+                          """) === """
+                                                |<macro>:5: type mismatch when unquoting;
+                                                | found   : scala.meta.internal.ast.Type.Name
+                                                | required: scala.meta.Term.Name
+                                                |      q"expr.$name"
+                                                |             ^
+                                   """.trim.stripMargin)
+  }
+
+  test("""q"$expr.name" when expr has incompatible type """) {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val expr = t"T"
+      q"$expr.name"
+                          """) === """
+                                     |<macro>:5: type mismatch when unquoting;
+                                     | found   : scala.meta.internal.ast.Type.Name
+                                     | required: scala.meta.Term
+                                     |      q"$expr.name"
+                                     |        ^
+                                   """.trim.stripMargin)
+  }
+
+  test("""q"expr.names" """) {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val names = List(q"T")
+      q"expr. ..$names"
+                          """) === """
+                                                |<macro>:5: identifier expected but ellipsis found
+                                                |      q"expr. ..$names"
+                                                |              ^
+                                   """.trim.stripMargin)
+  }
+
+  
 }
