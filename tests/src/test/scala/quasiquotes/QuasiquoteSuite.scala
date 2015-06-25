@@ -147,10 +147,10 @@ class QuasiquoteSuite extends FunSuite {
 
   test(""" val q"$x.$y = $z.$w" = q"a.b = c.d"""") {
     val q"$x.$y = $z.$w" = q"a.b = c.d"
-    assert(x.show[Code] === a)
-    assert(y.show[Code] === b)
-    assert(z.show[Code] === c)
-    assert(w.show[Code] === d)
+    assert(x.show[Code] === "a")
+    assert(y.show[Code] === "b")
+    assert(z.show[Code] === "c")
+    assert(w.show[Code] === "d")
   }
 
   test("q\"$expr(..$aexprs) = $expr\"") {
