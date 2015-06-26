@@ -1317,10 +1317,6 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       next()
       implicitClosure(location)
     case _ =>
-      val backupUnquoteRef = token match {
-          case unquote: Unquote => autoPos(implicitly[AstMetadata[Term.Ref]].quasi(unquote.tree, 0))
-          case _ => null // just to match types, NPE here is impossible since variable is used iff token is Unquote
-      }
       var t: Term = autoPos(postfixExpr())
       if (token.is[`=`]) {
         t match {
@@ -1340,7 +1336,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
             t = atPos(core, auto)(Term.Update(core, argss, expr()))
           case q: Term.Quasi =>
             next()
-            t = atPos(q, auto)(Term.Assign(backupUnquoteRef, expr()))
+            t = atPos(q, auto)(Term.Assign(atPos(q, q)(Term.Ref.Quasi(q.tree, q.rank)), expr()))
           case _ =>
         }
       } else if (token.is[`:`]) {
