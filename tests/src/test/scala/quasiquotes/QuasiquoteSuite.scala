@@ -186,6 +186,11 @@ class QuasiquoteSuite extends FunSuite {
 //    assert(q"(..$terms)".show[Code] === "(y, z)") // fixme test is broken, so even does not compile
 //  }
 
+  //  test("""val q"(..$params)" = q"(x: Int, y: String)" """) {
+  //    val q"(..$params)" = q"(x: Int, y: String)" // fixme test is broken, so even does not compile
+  //    assert
+  //  }
+
 //  test("q\"{ ..$stats }\"") {
 //    val stats = List(q"val x = 1", q"val y = 2")
 //    q"{ ..$stats }"
@@ -213,8 +218,12 @@ class QuasiquoteSuite extends FunSuite {
 //      q"try foo catch { case _ => } finally bar" // fixme test is broken, so even does not compile
 //  }
 
+//  test("""q"(i: Int) => 42" """) {
+//    q"(i: Int) => 42"
+//  }
+//
 //  test("q\"(..$params) => $expr\"") {
-//    val q"(..$params) => $expr" = q"(x: Int, y: String) => 42" // fixme test is broken, so even does not compile
+//    val q"(..$params) => $expr" = q"(x: Int, y: String) => 42"
 //  }
 
   test("q\"{ ..case $cases }\"") {
