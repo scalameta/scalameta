@@ -70,12 +70,12 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val xs = List(q"x")
       q"foo($xs)"
-    """) contains """
-                               |<macro>:5: type mismatch when unquoting;
-                               | found   : List[scala.meta.internal.ast.Term.Name]
-                               | required: scala.meta.Term.Arg
-                               |      q"foo($xs)"
-                               |            ^
+    """) === """
+      |<macro>:5: type mismatch when unquoting;
+      | found   : List[scala.meta.internal.ast.Term.Name]
+      | required: scala.meta.Term.Arg
+      |      q"foo($xs)"
+      |            ^
     """.trim.stripMargin)
   }
 
@@ -85,12 +85,12 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val xs = List(q"x")
       q"$xs"
-    """) contains """
-                               |<macro>:5: type mismatch when unquoting;
-                               | found   : List[scala.meta.internal.ast.Term.Name]
-                               | required: scala.meta.Term
-                               |      q"$xs"
-                               |        ^
+    """) === """
+      |<macro>:5: type mismatch when unquoting;
+      | found   : List[scala.meta.internal.ast.Term.Name]
+      | required: scala.meta.Term
+      |      q"$xs"
+      |        ^
     """.trim.stripMargin)
   }
 
@@ -116,11 +116,11 @@ class ErrorSuite extends FunSuite {
       val xss = List(List(q"x"))
       q"..$xss"
     """) === """
-                          |<macro>:5: type mismatch when unquoting;
-                          | found   : List[List[scala.meta.internal.ast.Term.Name]]
-                          | required: scala.collection.immutable.Seq[scala.meta.Stat]
-                          |      q"..$xss"
-                          |          ^
+      |<macro>:5: type mismatch when unquoting;
+      | found   : List[List[scala.meta.internal.ast.Term.Name]]
+      | required: scala.collection.immutable.Seq[scala.meta.Stat]
+      |      q"..$xss"
+      |          ^
     """.trim.stripMargin)
   }
 
@@ -131,11 +131,11 @@ class ErrorSuite extends FunSuite {
       val xss = List(List(q"x"))
       q"$xss"
     """) === """
-                          |<macro>:5: type mismatch when unquoting;
-                          | found   : List[List[scala.meta.internal.ast.Term.Name]]
-                          | required: scala.meta.Term
-                          |      q"$xss"
-                          |        ^
+      |<macro>:5: type mismatch when unquoting;
+      | found   : List[List[scala.meta.internal.ast.Term.Name]]
+      | required: scala.meta.Term
+      |      q"$xss"
+      |        ^
     """.trim.stripMargin)
   }
 
@@ -149,7 +149,7 @@ class ErrorSuite extends FunSuite {
     //   q"foo[..$terms]"
     // """) === """
     //   |<macro>:5: type mismatch when unquoting;
-    //   | found   : List[scala.meta.Term.Name] // List[scala.meta.internal.ast.Term.Name] ?
+    //   | found   : List[scala.meta.Term.Name]
     //   | required: scala.collection.immutable.Seq[scala.meta.Type]
     //   |      q"foo[..$terms]"
     //   |              ^
@@ -236,13 +236,13 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val name = t"x"
       q"$name"
-                           """) === """
-                             |<macro>:5: type mismatch when unquoting;
-                             | found   : scala.meta.internal.ast.Type.Name
-                             | required: scala.meta.Term
-                             |      q"$name"
-                             |        ^
-                           """.trim.stripMargin)
+    """) === """
+      |<macro>:5: type mismatch when unquoting;
+      | found   : scala.meta.internal.ast.Type.Name
+      | required: scala.meta.Term
+      |      q"$name"
+      |        ^
+    """.trim.stripMargin)
   }
 
   test("""q"expr: $tpe" when tpe has incompatible type """) {
@@ -251,13 +251,13 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val tpe = q"T"
       q"expr: $tpe"
-                          """) === """
-                                                |<macro>:5: type mismatch when unquoting;
-                                                | found   : scala.meta.internal.ast.Term.Name
-                                                | required: scala.meta.Type
-                                                |      q"expr: $tpe"
-                                                |              ^
-                                   """.trim.stripMargin)
+    """) === """
+      |<macro>:5: type mismatch when unquoting;
+      | found   : scala.meta.internal.ast.Term.Name
+      | required: scala.meta.Type
+      |      q"expr: $tpe"
+      |              ^
+    """.trim.stripMargin)
   }
 
   test("""q"$expr: tpe" when expr has incompatible type """) {
@@ -266,13 +266,13 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val expr = t"x"
       q"$expr: tpe"
-                          """) === """
-                                                |<macro>:5: type mismatch when unquoting;
-                                                | found   : scala.meta.internal.ast.Type.Name
-                                                | required: scala.meta.Term
-                                                |      q"$expr: tpe"
-                                                |        ^
-                                   """.trim.stripMargin)
+    """) === """
+      |<macro>:5: type mismatch when unquoting;
+      | found   : scala.meta.internal.ast.Type.Name
+      | required: scala.meta.Term
+      |      q"$expr: tpe"
+      |        ^
+    """.trim.stripMargin)
   }
 
   test("""q"expr: tpes" """) {
@@ -281,11 +281,11 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val tpes = List(q"T")
       q"expr: ..$tpes"
-                          """) === """
-                                                |<macro>:5: identifier expected but ellipsis found
-                                                |      q"expr: ..$tpes"
-                                                |              ^
-                                   """.trim.stripMargin)
+     """) === """
+       |<macro>:5: identifier expected but ellipsis found
+       |      q"expr: ..$tpes"
+       |              ^
+     """.trim.stripMargin)
   }
 
   test("""q"expr.$name" when name has incompatible type """) {
@@ -294,13 +294,13 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val name = t"T"
       q"expr.$name"
-                          """) === """
-                                                |<macro>:5: type mismatch when unquoting;
-                                                | found   : scala.meta.internal.ast.Type.Name
-                                                | required: scala.meta.Term.Name
-                                                |      q"expr.$name"
-                                                |             ^
-                                   """.trim.stripMargin)
+     """) === """
+       |<macro>:5: type mismatch when unquoting;
+       | found   : scala.meta.internal.ast.Type.Name
+       | required: scala.meta.Term.Name
+       |      q"expr.$name"
+       |             ^
+     """.trim.stripMargin)
   }
 
   test("""q"$expr.name" when expr has incompatible type """) {
@@ -309,13 +309,13 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val expr = t"T"
       q"$expr.name"
-                          """) === """
-                                     |<macro>:5: type mismatch when unquoting;
-                                     | found   : scala.meta.internal.ast.Type.Name
-                                     | required: scala.meta.Term
-                                     |      q"$expr.name"
-                                     |        ^
-                                   """.trim.stripMargin)
+     """) === """
+       |<macro>:5: type mismatch when unquoting;
+       | found   : scala.meta.internal.ast.Type.Name
+       | required: scala.meta.Term
+       |      q"$expr.name"
+       |        ^
+     """.trim.stripMargin)
   }
 
   test("""q"expr.names" """) {
@@ -324,10 +324,10 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val names = List(q"T")
       q"expr. ..$names"
-                          """) === """
-                                                |<macro>:5: identifier expected but ellipsis found
-                                                |      q"expr. ..$names"
-                                                |              ^
-                                   """.trim.stripMargin)
+      """) === """
+        |<macro>:5: identifier expected but ellipsis found
+        |      q"expr. ..$names"
+        |              ^
+      """.trim.stripMargin)
   }
 }
