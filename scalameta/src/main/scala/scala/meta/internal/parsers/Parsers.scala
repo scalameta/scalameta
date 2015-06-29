@@ -1334,6 +1334,9 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
             val (core, argss) = decompose(app)
             next()
             t = atPos(core, auto)(Term.Update(core, argss, expr()))
+          case q: Term.Quasi =>
+            next()
+            t = atPos(q, auto)(Term.Assign(atPos(q, q)(Term.Ref.Quasi(q.tree, q.rank)), expr()))
           case _ =>
         }
       } else if (token.is[`:`]) {
@@ -1393,7 +1396,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     val base = ctx.stack
 
     def loop(startPos: Pos, top: List[Term.Arg], endPos: Pos): List[Term.Arg] = {
-      if (!token.is[Ident]) top
+      if (!token.is[Ident] && !token.is[Unquote]) top
       else {
         ctx.push(startPos, reduceStack(base, top, endPos), endPos)
         newLineOptWhenFollowing(_.is[ExprIntro])
