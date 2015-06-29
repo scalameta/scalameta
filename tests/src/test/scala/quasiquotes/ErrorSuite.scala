@@ -281,11 +281,11 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val tpes = List(q"T")
       q"expr: ..$tpes"
-     """) === """
-       |<macro>:5: identifier expected but ellipsis found
-       |      q"expr: ..$tpes"
-       |              ^
-     """.trim.stripMargin)
+    """) === """
+      |<macro>:5: identifier expected but ellipsis found
+      |      q"expr: ..$tpes"
+      |              ^
+    """.trim.stripMargin)
   }
 
   test("""q"expr.$name" when name has incompatible type """) {
@@ -294,13 +294,13 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val name = t"T"
       q"expr.$name"
-     """) === """
-       |<macro>:5: type mismatch when unquoting;
-       | found   : scala.meta.internal.ast.Type.Name
-       | required: scala.meta.Term.Name
-       |      q"expr.$name"
-       |             ^
-     """.trim.stripMargin)
+    """) === """
+      |<macro>:5: type mismatch when unquoting;
+      | found   : scala.meta.internal.ast.Type.Name
+      | required: scala.meta.Term.Name
+      |      q"expr.$name"
+      |             ^
+    """.trim.stripMargin)
   }
 
   test("""q"$expr.name" when expr has incompatible type """) {
@@ -309,13 +309,13 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val expr = t"T"
       q"$expr.name"
-     """) === """
-       |<macro>:5: type mismatch when unquoting;
-       | found   : scala.meta.internal.ast.Type.Name
-       | required: scala.meta.Term
-       |      q"$expr.name"
-       |        ^
-     """.trim.stripMargin)
+    """) === """
+      |<macro>:5: type mismatch when unquoting;
+      | found   : scala.meta.internal.ast.Type.Name
+      | required: scala.meta.Term
+      |      q"$expr.name"
+      |        ^
+    """.trim.stripMargin)
   }
 
   test("""q"expr.names" """) {
@@ -324,10 +324,10 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val names = List(q"T")
       q"expr. ..$names"
-      """) === """
-        |<macro>:5: identifier expected but ellipsis found
-        |      q"expr. ..$names"
-        |              ^
-      """.trim.stripMargin)
+    """) === """
+      |<macro>:5: identifier expected but ellipsis found
+      |      q"expr. ..$names"
+      |              ^
+    """.trim.stripMargin)
   }
 }
