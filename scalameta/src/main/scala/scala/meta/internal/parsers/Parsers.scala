@@ -1355,12 +1355,12 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         next()
         t = atPos(t, auto)(Term.Match(t, inBracesOrNil(caseClauses())))
       }
-      // in order to allow anonymous functions as statements (as opposed to expressions) inside
-      // templates, we have to disambiguate them from self type declarations - bug #1565
-      // The case still missed is unparenthesized single argument, like "x: Int => x + 1", which
-      // may be impossible to distinguish from a self-type and so remains an error.  (See #1564)
+
+      lazy val isInBraces = t.tokens.nonEmpty && t.tokens.head.is[`(`] && t.tokens.last.is[`)`]
       def lhsIsTypedParamList() = t match {
-        case Term.Tuple(xs) if xs.forall(_.isInstanceOf[Term.Ascribe]) => true
+        case Term.Tuple(xs) if xs.forall(_.isInstanceOf[Term.Ascribe]) => true // (x: Int, y: Int) is typed Tuple
+        case _: Term.Ascribe if isInBraces => true // (x: Int) is not Tuple, but is typed
+        case _: Lit.Unit if isInBraces => true // () is not Tuple, but is considered as typed
         case _ => false
       }
       if (token.is[`=>`] && (location != InTemplate || lhsIsTypedParamList)) {
