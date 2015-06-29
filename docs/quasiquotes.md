@@ -30,7 +30,7 @@
  Unary Application | `q"!$expr", q"~$expr", q"-$expr", "+$expr"`
  Assign            | `q"$ref = $expr"`
  Update            | `q"$expr(..$aexprs) = $expr"`
- Return            | `q"return $expropt"`
+ Return            | `q"return $expr"`
  Throw             | `q"throw $expr"`
  Ascribe           | `q"$expr: $tpe"`
  Annotate          | `q"$expr: ..@$expr"`
