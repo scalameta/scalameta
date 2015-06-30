@@ -1356,7 +1356,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         t = atPos(t, auto)(Term.Match(t, inBracesOrNil(caseClauses())))
       }
 
-      lazy val isInBraces = t.tokens.head.code == "(" && t.tokens.last.code == ")"
+      lazy val isInBraces = t.tokens.nonEmpty && t.tokens.head.is[`(`] && t.tokens.last.is[`)`]
       def lhsIsTypedParamList() = t match {
         case Term.Tuple(xs) if xs.forall(_.isInstanceOf[Term.Ascribe]) => true // (x: Int, y: Int) is typed Tuple
         case _: Term.Ascribe if isInBraces => true // (x: Int) is not Tuple, but is typed
