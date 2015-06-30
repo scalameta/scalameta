@@ -1356,11 +1356,11 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         t = atPos(t, auto)(Term.Match(t, inBracesOrNil(caseClauses())))
       }
 
-      lazy val isInBraces: Boolean = t.show[Code].matches("\\(.*\\)") // @Eugene any ideas, how to check condition better?
+      lazy val isInBraces = t.tokens.head.code == "(" && t.tokens.last.code == ")"
       def lhsIsTypedParamList() = t match {
-        case Term.Tuple(xs) if xs.forall(_.isInstanceOf[Term.Ascribe]) => true
-        case _: Term.Ascribe if isInBraces => true
-        case _: Lit.Unit if isInBraces => true
+        case Term.Tuple(xs) if xs.forall(_.isInstanceOf[Term.Ascribe]) => true // (x: Int, y: Int) is typed Tuple
+        case _: Term.Ascribe if isInBraces => true // (x: Int) is not Tuple, but is typed
+        case _: Lit.Unit if isInBraces => true // () is not Tuple, but is considered as typed
         case _ => false
       }
       if (token.is[`=>`] && (location != InTemplate || lhsIsTypedParamList)) {
