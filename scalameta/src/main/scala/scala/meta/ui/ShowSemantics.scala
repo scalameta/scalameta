@@ -66,7 +66,8 @@ object Semantics {
               if (result != "_root_") result = result.stripPrefix("_root_.")
               result
             }
-            prettyprintPrefix(denot.prefix) + "::" + prettyprintSymbol(denot.symbol)
+            val symbol = denot.require[Denotation.Single].symbol
+            prettyprintPrefix(denot.prefix) + "::" + prettyprintSymbol(symbol)
           }
         }
         implicit def typingFootnote(typing: Typing): Footnote = new Footnote {
@@ -133,8 +134,12 @@ object Semantics {
         val denotPart = x match {
           case x: Name =>
             x.denot match {
-              case Denotation.Zero => ""
-              case denot @ Denotation.Single(prefix, symbol) => s"[${footnotes.insert(denot)}]"
+              case Denotation.Zero =>
+                ""
+              case denot @ Denotation.Single(prefix, symbol) =>
+                s"[${footnotes.insert(denot)}]"
+              case denot @ Denotation.Multi(prefix, symbols) =>
+                s"[${symbols.map(symbol => footnotes.insert(Denotation.Single(prefix, symbol))).mkString(", ")}]"
             }
           case _ =>
             ""
