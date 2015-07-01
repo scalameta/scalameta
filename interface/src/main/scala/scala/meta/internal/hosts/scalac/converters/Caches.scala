@@ -24,9 +24,8 @@ trait Caches extends GlobalToolkit with MetaToolkit {
 
   def cacheAllMembers[T <: m.Tree](x: T): T = {
     def cache(x: m.Member): Unit = {
-      val denot = x.name.require[m.Name].denot
       if (x.name.isBinder && !x.isInstanceOf[m.Ctor.Primary] && !x.name.isInstanceOf[m.Name.Anonymous]) {
-        require(denot != s.Denotation.Zero && debug(x, x.show[Structure]))
+        val denot = x.name.require[m.Name].denot.require[s.Denotation.Single]
         require(denot.symbol != s.Symbol.Zero && debug(x, x.show[Structure]))
         // TODO: it seems that we can't have this yet
         // require(!ssymToNativeMmemberCache.contains(denot.symbol) && debug(x, x.show[Structure]))

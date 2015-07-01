@@ -84,7 +84,7 @@ trait ToGtype extends GlobalToolkit with MetaToolkit {
       }
       private def gtparams(mtparams: Seq[m.Type.Param]): List[g.Symbol] = {
         mtparams.map(mtparam => {
-          val htparam = mtparam.name.require[m.Name].denot.symbol
+          val htparam = mtparam.name.require[m.Name].denot.requireSymbol
           val gowner = { require(lsym.gsymbols.length == 1); lsym.gsymbol }
           val ltparam = symbolTable.lookupOrElseUpdate(htparam, gowner.mkLtypeParameter(mtparam.name.toString))
           ltparam.mimic(mtparam).gsymbol
@@ -92,7 +92,7 @@ trait ToGtype extends GlobalToolkit with MetaToolkit {
       }
       private def gparams(mparams: Seq[m.Term.Param]): List[g.Symbol] = {
         mparams.map(mparam => {
-          val hparam = mparam.name.require[m.Name].denot.symbol
+          val hparam = mparam.name.require[m.Name].denot.requireSymbol
           val gowner = { require(lsym.gsymbols.length == 1); lsym.gsymbol }
           val lparam = symbolTable.lookupOrElseUpdate(hparam, gowner.mkLtermParameter(mparam.name.toString))
           lparam.mimic(mparam).gsymbol
@@ -154,20 +154,20 @@ trait ToGtype extends GlobalToolkit with MetaToolkit {
     def toGtype: g.Type = tpeCache.getOrElseUpdate(mtpe, {
       def loop(mtpe: m.Type.Arg): g.Type = mtpe match {
         case mname: m.Type.Name =>
-          g.TypeRef(gprefix(mname.denot.prefix), symbolTable.convert(mname.denot.symbol).gsymbol, Nil)
+          g.TypeRef(gprefix(mname.denot.prefix), symbolTable.convert(mname.denot.requireSymbol).gsymbol, Nil)
         case m.Type.Select(mqual, mname) =>
-          g.TypeRef(loop(m.Type.Singleton(mqual)), symbolTable.convert(mname.denot.symbol).gsymbol, Nil)
+          g.TypeRef(loop(m.Type.Singleton(mqual)), symbolTable.convert(mname.denot.requireSymbol).gsymbol, Nil)
         case m.Type.Project(mqual, mname) =>
-          g.TypeRef(loop(mqual), symbolTable.convert(mname.denot.symbol).gsymbol, Nil)
+          g.TypeRef(loop(mqual), symbolTable.convert(mname.denot.requireSymbol).gsymbol, Nil)
         case m.Type.Singleton(mref) =>
           def singleType(mname: m.Term.Name): g.Type = {
-            val gsym = symbolTable.convert(mname.denot.symbol).gsymbol
+            val gsym = symbolTable.convert(mname.denot.requireSymbol).gsymbol
             if (gsym.isModuleClass) g.ThisType(gsym)
             else g.SingleType(gprefix(mname.denot.prefix), gsym)
           }
           def superType(msuper: m.Term.Super): g.Type = {
             val gpre = gprefix(msuper.thisp.require[m.Name].denot.prefix)
-            val gmixsym = msuper.superp.require[m.Name].denot.symbol match {
+            val gmixsym = msuper.superp.require[m.Name].denot.requireSymbol match {
               case s.Symbol.Zero => g.intersectionType(gpre.typeSymbol.info.parents)
               case ssym => gpre.typeSymbol.info.baseType(symbolTable.convert(ssym).gsymbol)
             }
@@ -176,7 +176,7 @@ trait ToGtype extends GlobalToolkit with MetaToolkit {
           mref match {
             case mname: m.Term.Name => singleType(mname)
             case m.Term.Select(_, mname) => singleType(mname)
-            case mref: m.Term.This => g.ThisType(symbolTable.convert(mref.qual.require[m.Name].denot.symbol).gsymbol)
+            case mref: m.Term.This => g.ThisType(symbolTable.convert(mref.qual.require[m.Name].denot.requireSymbol).gsymbol)
             case mref: m.Term.Super => superType(mref)
           }
         case m.Type.Apply(mtpe, margs) =>
@@ -191,7 +191,7 @@ trait ToGtype extends GlobalToolkit with MetaToolkit {
           val gscope = g.newScope
           val mexplodedRefinement = mrefinement.flatMap(mrefine => mrefine.binders.map(mname => mrefine -> mname))
           val refinement = mexplodedRefinement.map({ case (mrefine, mname) =>
-            val lrefine = symbolTable.lookupOrElseUpdate(mname.denot.symbol, mrefine match {
+            val lrefine = symbolTable.lookupOrElseUpdate(mname.denot.requireSymbol, mrefine match {
               case _: m.Decl.Val => gowner(mrefine).mkLabstractVal(mname.toString)
               case _: m.Decl.Var => gowner(mrefine).mkLabstractVar(mname.toString)
               case _: m.Decl.Def => gowner(mrefine).mkLabstractDef(mname.toString)
@@ -207,7 +207,7 @@ trait ToGtype extends GlobalToolkit with MetaToolkit {
         case m.Type.Existential(mtpe, mquants) =>
           val mexplodedQuants = mquants.flatMap(mquant => mquant.binders.map(mname => mquant -> mname))
           val quants = mexplodedQuants.map({ case (mquant, mname) =>
-            val lquant = symbolTable.lookupOrElseUpdate(mname.denot.symbol, mquant match {
+            val lquant = symbolTable.lookupOrElseUpdate(mname.denot.requireSymbol, mquant match {
               case _: m.Decl.Val => gowner(mquant).mkLexistentialVal(mname.toString)
               case _: m.Decl.Type => gowner(mquant).mkLexistentialType(mname.toString)
               case _ => unreachable(debug(mquant, mquant.show[Structure]))

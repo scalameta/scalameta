@@ -11,7 +11,6 @@ import scala.meta.internal.{ast => impl}
 trait Attributed {
   self: Toolkit =>
 
-  // TODO: so wow, much copy/paste (wrt reflection/Attributed.scala)
   implicit class RichAttributedMetaTree(tree: Tree) {
     def requireDenoted(): Unit = {
       val offenders = mutable.ListBuffer[(Tree, List[String])]()
@@ -22,6 +21,11 @@ trait Attributed {
               case Denotation.Single(Prefix.Zero, _) =>
                 true
               case Denotation.Single(Prefix.Type(prefix), _) =>
+                traverse(prefix, path :+ "Denotation")
+                true
+              case Denotation.Multi(Prefix.Zero, _) =>
+                true
+              case Denotation.Multi(Prefix.Type(prefix), _) =>
                 traverse(prefix, path :+ "Denotation")
                 true
               case _ =>
