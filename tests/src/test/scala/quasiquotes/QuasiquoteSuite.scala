@@ -181,15 +181,17 @@ class QuasiquoteSuite extends FunSuite {
 //    val q"$a: ..@$b" = q"foo: @bar @baz"
 //  }
 
-//  test("q\"(..$exprs)\"") {
-//    val terms = List(q"y", q"z")
-//    assert(q"(..$terms)".show[Syntax] === "(y, z)") // fixme test is broken, so even does not compile
-//  }
+  test("q\"(..$exprs)\"") {
+    val terms = List(q"y", q"z")
+    assert(q"(..$terms)".show[Syntax] === "(y, z)")
+  }
 
-  //  test("""val q"(..$params)" = q"(x: Int, y: String)" """) {
-  //    val q"(..$params)" = q"(x: Int, y: String)" // fixme test is broken, so even does not compile
-  //    assert
-  //  }
+  test("""val q"(..$params)" = q"(x: Int, y: String)" """) {
+    val q"(..$params)" = q"(x: Int, y: String)"
+    assert(params.toString === "List(x: Int, y: String)")
+    assert(params(0).show[Syntax] === "x: Int")
+    assert(params(1).show[Syntax] === "y: String")
+  }
 
 //  test("q\"{ ..$stats }\"") {
 //    val stats = List(q"val x = 1", q"val y = 2")
@@ -218,9 +220,10 @@ class QuasiquoteSuite extends FunSuite {
 //      q"try foo catch { case _ => } finally bar" // fixme test is broken, so even does not compile
 //  }
 
-//  test("""q"(i: Int) => 42" """) {
-//    q"(i: Int) => 42"
-//  }
+  test("""q"(i: Int) => 42" """) {
+    q"(i: Int) => 42" // should compile
+  }
+
 //
 //  test("q\"(..$params) => $expr\"") {
 //    val q"(..$params) => $expr" = q"(x: Int, y: String) => 42"
