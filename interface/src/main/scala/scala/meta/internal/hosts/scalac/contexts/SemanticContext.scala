@@ -40,7 +40,7 @@ class SemanticContext[G <: ScalaGlobal](val global: G) extends ConverterApi(glob
   private[meta] def defns(ref: mapi.Ref): Seq[mapi.Member] = {
     ref.requireDenoted()
     ref match {
-      case pname: m.Name => List(pname.toGsymbol.toMmember(pname.toGprefix))
+      case pname: m.Name => pname.toGsymbols.map(_.toMmember(pname.toGprefix))
       case m.Term.Select(_, pname) => defns(pname)
       case m.Type.Select(_, pname) => defns(pname)
       case m.Type.Project(_, pname) => defns(pname)
@@ -97,13 +97,13 @@ class SemanticContext[G <: ScalaGlobal](val global: G) extends ConverterApi(glob
 
   private[meta] def parents(member: mapi.Member): Seq[mapi.Member] = {
     val gpre = member.require[m.Member].toGprefix
-    val lsym = member.require[m.Member].toGsymbol
+    val Seq(lsym) = member.require[m.Member].toGsymbols
     lsym.parents.map(_.toMmember(gpre)) // TODO: also instantiate type parameters when necessary
   }
 
   private[meta] def children(member: mapi.Member): Seq[mapi.Member] = {
     val gpre = member.require[m.Member].toGprefix
-    val lsym = member.require[m.Member].toGsymbol
+    val Seq(lsym) = member.require[m.Member].toGsymbols
     lsym.children.map(_.toMmember(gpre)) // TODO: also instantiate type parameters when necessary
   }
 }

@@ -299,7 +299,7 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
               case m.Defn.Var(_, List(m.Pat.Var.Term(name)), _, _) => Some(mname)
               case _ => None
             }
-            val sfield = mfield(mstat).map(_.denot.symbol).getOrElse(s.Symbol.Zero)
+            val sfield = mfield(mstat).map(_.denot.requireSymbol).getOrElse(s.Symbol.Zero)
             symbolTable.convert(sfield) match {
               case l.Val(gfield, _) => gfield.hasFlag(PRESUPER)
               case l.Var(gfield, _, _) => gfield.hasFlag(PRESUPER)

@@ -17,12 +17,12 @@ trait ToGsymbol extends GlobalToolkit with MetaToolkit {
   self: Api =>
 
   protected implicit class RichNameToGsymbol(mname: m.Name) {
-    def toGsymbol: l.Symbol = {
-      symbolTable.convert(mname.denot.symbol)
+    def toGsymbols: Seq[l.Symbol] = {
+      mname.denot.symbols.map(symbolTable.convert)
     }
   }
 
   protected implicit class RichMemberToGsymbol(mmember: m.Member) {
-    def toGsymbol: l.Symbol = mmember.name.require[m.Name].toGsymbol
+    def toGsymbols: Seq[l.Symbol] = mmember.name.require[m.Name].toGsymbols
   }
 }
