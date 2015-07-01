@@ -51,12 +51,12 @@ private[meta] object Helpers {
         case Ctor.Ref.Name(value) => Type.Name(value)
         case Ctor.Ref.Select(qual, name) => Type.Select(qual, Type.Name(name.value))
         case Ctor.Ref.Project(qual, name) => Type.Project(qual, Type.Name(name.value))
-        case Ctor.Ref.Function(_) => unreachable(debug(XtensionTermOps.this.tree, XtensionTermOps.this.tree.show[Raw]))
+        case Ctor.Ref.Function(_) => unreachable(debug(XtensionTermOps.this.tree, XtensionTermOps.this.tree.show[Structure]))
         case Term.ApplyType(Ctor.Ref.Function(_), targs) => Type.Function(targs.init, targs.last)
         case Term.ApplyType(callee, targs) => Type.Apply(loop(callee), targs)
         case Term.Apply(callee, _) => callee.ctorTpe
         case Term.Annotate(annottee, annots) => Type.Annotate(loop(annottee), annots)
-        case _ => unreachable(debug(XtensionTermOps.this.tree, XtensionTermOps.this.tree.show[Raw], tree, tree.show[Raw]))
+        case _ => unreachable(debug(XtensionTermOps.this.tree, XtensionTermOps.this.tree.show[Structure], tree, tree.show[Structure]))
       }
       loop(tree)
     }
@@ -66,7 +66,7 @@ private[meta] object Helpers {
         case Term.ApplyType(callee, _) => callee.ctorArgss
         case Term.Apply(callee, args) => callee.ctorArgss :+ args
         case Term.Annotate(annottee, _) => annottee.ctorArgss
-        case _ => unreachable(debug(XtensionTermOps.this.tree, XtensionTermOps.this.tree.show[Raw]))
+        case _ => unreachable(debug(XtensionTermOps.this.tree, XtensionTermOps.this.tree.show[Structure]))
       }
       loop(tree)
     }

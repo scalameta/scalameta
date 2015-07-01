@@ -4,7 +4,7 @@ import scala.meta.dialects.Scala211
 
 class ShowTokenSuite extends ParseSuite {
   test("showCode without comments - simple") {
-    assert(tokenize("class C  {\t val x = 2}\n\n").map(_.show[Code]).mkString === "class C  {\t val x = 2}\n\n")
+    assert(tokenize("class C  {\t val x = 2}\n\n").map(_.show[Syntax]).mkString === "class C  {\t val x = 2}\n\n")
   }
 
   test("showcode without comments - hard") {
@@ -38,7 +38,7 @@ class ShowTokenSuite extends ParseSuite {
       |  val hello = 42
       |  val `world` = 42
       |}
-    """.trim.stripMargin.replace("QQQ", "\"\"\"")).map(_.show[Code]).mkString === """
+    """.trim.stripMargin.replace("QQQ", "\"\"\"")).map(_.show[Syntax]).mkString === """
       |class C {
       |  val x1a = 2
       |  val x1b = 0x002
@@ -85,7 +85,7 @@ class ShowTokenSuite extends ParseSuite {
       |  qQQQclass $YQQQ
       |  qQQQclass ${Y}QQQ
       |}
-    """.trim.stripMargin.replace("QQQ", "\"\"\"")).map(_.show[Code]).mkString === """
+    """.trim.stripMargin.replace("QQQ", "\"\"\"")).map(_.show[Syntax]).mkString === """
       |class C {
       |  q""
       |  q"$b + 2"
@@ -102,15 +102,15 @@ class ShowTokenSuite extends ParseSuite {
   }
 
   test("showCode with comments - easy") {
-    assert(tokenize("class C  /*hello world*/{\t val x = 2}\n//bye-bye world\n").map(_.show[Code]).mkString === "class C  /*hello world*/{\t val x = 2}\n//bye-bye world\n")
+    assert(tokenize("class C  /*hello world*/{\t val x = 2}\n//bye-bye world\n").map(_.show[Syntax]).mkString === "class C  /*hello world*/{\t val x = 2}\n//bye-bye world\n")
   }
 
   test("showCode with comments - tricky") {
-    assert(tokenize("x ~/**/y").map(_.show[Code]).mkString === "x ~/**/y")
+    assert(tokenize("x ~/**/y").map(_.show[Syntax]).mkString === "x ~/**/y")
   }
 
   test("showRaw without comments - easy") {
-    assert(tokenize("class C  {\t val x = 2}\n\n").map(_.show[Raw]).mkString("\n") === """
+    assert(tokenize("class C  {\t val x = 2}\n\n").map(_.show[Structure]).mkString("\n") === """
       |BOF (0..0)
       |class (0..5)
       |  (5..6)
@@ -165,7 +165,7 @@ class ShowTokenSuite extends ParseSuite {
       |  val hello = 42
       |  val `world` = 42
       |}
-    """.trim.stripMargin.replace("QQQ", "\"\"\"")).map(_.show[Raw]).mkString("\n") === """
+    """.trim.stripMargin.replace("QQQ", "\"\"\"")).map(_.show[Structure]).mkString("\n") === """
       |BOF (0..0)
       |class (0..5)
       |  (5..6)
@@ -462,7 +462,7 @@ class ShowTokenSuite extends ParseSuite {
       |  qQQQclass $YQQQ
       |  qQQQclass ${Y}QQQ
       |}
-    """.trim.stripMargin.replace("QQQ", "\"\"\"")).map(_.show[Raw]).mkString("\n") === """
+    """.trim.stripMargin.replace("QQQ", "\"\"\"")).map(_.show[Structure]).mkString("\n") === """
       |BOF (0..0)
       |class (0..5)
       |  (5..6)
@@ -586,7 +586,7 @@ class ShowTokenSuite extends ParseSuite {
   }
 
   test("showRaw with comments - easy") {
-    assert(tokenize("class C  /*hello world*/{\t val x = 2}\n//bye-bye world\n").map(_.show[Raw]).mkString("\n") === """
+    assert(tokenize("class C  /*hello world*/{\t val x = 2}\n//bye-bye world\n").map(_.show[Structure]).mkString("\n") === """
       |BOF (0..0)
       |class (0..5)
       |  (5..6)
@@ -613,7 +613,7 @@ class ShowTokenSuite extends ParseSuite {
   }
 
   test("showRaw with comments - tricky") {
-    assert(tokenize("x ~/**/y").map(_.show[Raw]).mkString("\n") === """
+    assert(tokenize("x ~/**/y").map(_.show[Structure]).mkString("\n") === """
       |BOF (0..0)
       |x (0..1)
       |  (1..2)
@@ -625,7 +625,7 @@ class ShowTokenSuite extends ParseSuite {
   }
 
   test("interpolation start & end - episode 01") {
-    assert(tokenize("q\"\"").map(_.show[Raw]).mkString("\n") === """
+    assert(tokenize("q\"\"").map(_.show[Structure]).mkString("\n") === """
       |BOF (0..0)
       |q (0..1)
       |" (1..2)
@@ -636,7 +636,7 @@ class ShowTokenSuite extends ParseSuite {
   }
 
   test("interpolation start & end - episode 02") {
-    assert(tokenize("q\"\";").map(_.show[Raw]).mkString("\n") === """
+    assert(tokenize("q\"\";").map(_.show[Structure]).mkString("\n") === """
       |BOF (0..0)
       |q (0..1)
       |" (1..2)
@@ -648,7 +648,7 @@ class ShowTokenSuite extends ParseSuite {
   }
 
   test("interpolation start & end - episode 03") {
-    assert(tokenize("q\"a\"").map(_.show[Raw]).mkString("\n") === """
+    assert(tokenize("q\"a\"").map(_.show[Structure]).mkString("\n") === """
       |BOF (0..0)
       |q (0..1)
       |" (1..2)
@@ -659,7 +659,7 @@ class ShowTokenSuite extends ParseSuite {
   }
 
   test("interpolation start & end - episode 04") {
-    assert(tokenize("q\"a\";").map(_.show[Raw]).mkString("\n") === """
+    assert(tokenize("q\"a\";").map(_.show[Structure]).mkString("\n") === """
       |BOF (0..0)
       |q (0..1)
       |" (1..2)
@@ -671,7 +671,7 @@ class ShowTokenSuite extends ParseSuite {
   }
 
   test("interpolation start & end - episode 05") {
-    assert(tokenize("q\"\"\"\"\"\"").map(_.show[Raw]).mkString("\n") === """
+    assert(tokenize("q\"\"\"\"\"\"").map(_.show[Structure]).mkString("\n") === """
       |BOF (0..0)
       |q (0..1)
       |QQQ (1..4)
@@ -682,7 +682,7 @@ class ShowTokenSuite extends ParseSuite {
   }
 
   test("interpolation start & end - episode 06") {
-    assert(tokenize("q\"\"\"\"\"\";").map(_.show[Raw]).mkString("\n") === """
+    assert(tokenize("q\"\"\"\"\"\";").map(_.show[Structure]).mkString("\n") === """
       |BOF (0..0)
       |q (0..1)
       |QQQ (1..4)
@@ -694,7 +694,7 @@ class ShowTokenSuite extends ParseSuite {
   }
 
   test("interpolation start & end - episode 07") {
-    assert(tokenize("q\"\"\"a\"\"\"").map(_.show[Raw]).mkString("\n") === """
+    assert(tokenize("q\"\"\"a\"\"\"").map(_.show[Structure]).mkString("\n") === """
       |BOF (0..0)
       |q (0..1)
       |QQQ (1..4)
@@ -705,7 +705,7 @@ class ShowTokenSuite extends ParseSuite {
   }
 
   test("interpolation start & end - episode 08") {
-    assert(tokenize("q\"\"\"a\"\"\";").map(_.show[Raw]).mkString("\n") === """
+    assert(tokenize("q\"\"\"a\"\"\";").map(_.show[Structure]).mkString("\n") === """
       |BOF (0..0)
       |q (0..1)
       |QQQ (1..4)
@@ -717,7 +717,7 @@ class ShowTokenSuite extends ParseSuite {
   }
 
   test("$this") {
-    assert(tokenize("q\"$this\"").map(_.show[Raw]).mkString("\n") === """
+    assert(tokenize("q\"$this\"").map(_.show[Structure]).mkString("\n") === """
       |BOF (0..0)
       |q (0..1)
       |" (1..2)
@@ -732,7 +732,7 @@ class ShowTokenSuite extends ParseSuite {
   }
 
   test("monocle") {
-    assert(tokenize("x => x").map(_.show[Raw]).mkString("\n") === """
+    assert(tokenize("x => x").map(_.show[Structure]).mkString("\n") === """
       |BOF (0..0)
       |x (0..1)
       |  (1..2)
@@ -741,7 +741,7 @@ class ShowTokenSuite extends ParseSuite {
       |x (5..6)
       |EOF (6..6)
     """.trim.stripMargin)
-    assert(tokenize("x ⇒ x").map(_.show[Raw]).mkString("\n") === """
+    assert(tokenize("x ⇒ x").map(_.show[Structure]).mkString("\n") === """
       |BOF (0..0)
       |x (0..1)
       |  (1..2)
@@ -750,7 +750,7 @@ class ShowTokenSuite extends ParseSuite {
       |x (4..5)
       |EOF (5..5)
     """.trim.stripMargin)
-    assert(tokenize("for (x <- xs) println(x)").map(_.show[Raw]).mkString("\n") === """
+    assert(tokenize("for (x <- xs) println(x)").map(_.show[Structure]).mkString("\n") === """
       |BOF (0..0)
       |for (0..3)
       |  (3..4)
@@ -768,7 +768,7 @@ class ShowTokenSuite extends ParseSuite {
       |) (23..24)
       |EOF (24..24)
     """.trim.stripMargin)
-    assert(tokenize("for (x ← xs) println(x)").map(_.show[Raw]).mkString("\n") === """
+    assert(tokenize("for (x ← xs) println(x)").map(_.show[Structure]).mkString("\n") === """
       |BOF (0..0)
       |for (0..3)
       |  (3..4)
@@ -789,7 +789,7 @@ class ShowTokenSuite extends ParseSuite {
   }
 
   test("-2147483648") {
-    assert(tokenize("-2147483648").map(_.show[Raw]).mkString("\n") === """
+    assert(tokenize("-2147483648").map(_.show[Structure]).mkString("\n") === """
       |BOF (0..0)
       |- (0..1)
       |2147483648 (1..11)
@@ -798,7 +798,7 @@ class ShowTokenSuite extends ParseSuite {
   }
 
   test("simple xml literal - 1") {
-    assert(tokenize("<foo>bar</foo>").map(_.show[Raw]).mkString("\n") === """
+    assert(tokenize("<foo>bar</foo>").map(_.show[Structure]).mkString("\n") === """
       |BOF (0..0)
       |xml start (0..0)
       |<foo>bar</foo> (0..14)
@@ -809,7 +809,7 @@ class ShowTokenSuite extends ParseSuite {
 
   test("simple xml literal - 2") {
     // TODO: the whitespace shouldn't be included here - looks like a bug in scalac's MarkupParser
-    assert(tokenize("<foo>bar</foo> ").map(_.show[Raw]).mkString("\n") === """
+    assert(tokenize("<foo>bar</foo> ").map(_.show[Structure]).mkString("\n") === """
       |BOF (0..0)
       |xml start (0..0)
       |<foo>bar</foo> (0..14)

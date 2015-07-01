@@ -199,7 +199,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
       implicit val parsingDialect: MetaDialect = scala.meta.dialects.Quasiquote(metaDialect)
       if (sys.props("quasiquote.debug") != null) println(tokens)
       val syntax = metaParse(tokens, metaDialect)
-      if (sys.props("quasiquote.debug") != null) { println(syntax.show[Code]); println(syntax.show[Raw]) }
+      if (sys.props("quasiquote.debug") != null) { println(syntax.show[Syntax]); println(syntax.show[Structure]) }
       (syntax, mode)
     } catch {
       case ParseException(position, message) => c.abort(position, message)
@@ -326,7 +326,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
     }
     val denotDebug = sys.props("denot.debug") != null
     val denotWarn = sys.props("denot.warn") != null
-    if (denotDebug) { println("meta = " + meta); println(meta.show[Raw]) }
+    if (denotDebug) { println("meta = " + meta); println(meta.show[Structure]) }
     try {
       def typecheckTerm(tree: ReflectTree) = {
         val result = c.typecheck(tree, mode = c.TERMmode, silent = true)

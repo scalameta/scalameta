@@ -49,7 +49,7 @@ private[meta] object inferTokens {
   private def mineIdentTk(value: String)(implicit dialect: Dialect): Tokens = Tokens(Token.Ident(Input.String(value), dialect, 0, value.length))
 
   /* Checking if a token is a potential indentation */
-  val isIndent = (t: Token) => t.show[Code] == " " || t.show[Code] == "\t" || t.show[Code] == "\r"
+  val isIndent = (t: Token) => t.show[Syntax] == " " || t.show[Syntax] == "\t" || t.show[Syntax] == "\r"
 
   /* Global infering function */
   private def infer(tree: Tree, proto: Option[Tree])(implicit dialect: Dialect): Tokens = {
@@ -157,17 +157,17 @@ private[meta] object inferTokens {
 
     /* Append a name, but takes care of adding a space if one is needed with what follows (e.g. bind with a name ending with "_"). */
     def apndBindedName(name: Name): Tokens = name.tks match {
-      case nm if nm.last.show[Code] endsWith "_" => toks"$nm " // NOTE: adding a space if the name ends with _
+      case nm if nm.last.show[Syntax] endsWith "_" => toks"$nm " // NOTE: adding a space if the name ends with _
       case nm => nm
     }
 
     /* Generate tokens for Pats, adding a space if one is needed */
     def apndDefnDeclPats(pats: Seq[Pat]) = pats.`o,o` match {
-          case ps if ps.last.show[Code] endsWith "_" => toks"$ps " // NOTE: adding a space if the name ends with _
+          case ps if ps.last.show[Syntax] endsWith "_" => toks"$ps " // NOTE: adding a space if the name ends with _
           case ps => ps
         }
 
-    /* The helpers below are heavily based on the ones used for the original show[Code] implementation. */
+    /* The helpers below are heavily based on the ones used for the original show[Syntax] implementation. */
     def guessIsBackquoted(t: Name): Boolean = {
       def cantBeWrittenWithoutBackquotes(t: Name): Boolean = {
         t.value != "this" && (keywords.contains(t.value) || t.value.contains(" "))
@@ -573,7 +573,7 @@ private[meta] object inferTokens {
             else toks""
           }
           val pbody = {
-            val isOneLiner = t.stats.map(stats => stats.length == 0 || (stats.length == 1 && !stats.head.tokens.map(_.show[Code]).mkString.contains(EOL))).getOrElse(true)
+            val isOneLiner = t.stats.map(stats => stats.length == 0 || (stats.length == 1 && !stats.head.tokens.map(_.show[Syntax]).mkString.contains(EOL))).getOrElse(true)
             (isSelfNonEmpty, t.stats.nonEmpty, t.stats.getOrElse(Nil)) match {
               case (false, false, _) =>                      toks""
               case (true, false, _) =>                       toks"{ ${t.self.tks} => }"
@@ -634,7 +634,7 @@ private[meta] object inferTokens {
         val ppat = t.pat.tks
         val pcond = t.cond.map(cond => toks" if ${cond.tks}").getOrElse(toks"")
         val isOneLiner = {
-          def isOneLiner(t: Case) = t.stats.length == 0 || (t.stats.length == 1 && !t.stats.head.tokens.map(_.show[Code]).mkString.contains(EOL))
+          def isOneLiner(t: Case) = t.stats.length == 0 || (t.stats.length == 1 && !t.stats.head.tokens.map(_.show[Syntax]).mkString.contains(EOL))
           t.parent match {
             case Some(Term.Match(_, cases)) => cases.forall(isOneLiner)
             case Some(Term.PartialFunction(cases)) => cases.forall(isOneLiner)
@@ -690,9 +690,9 @@ private[meta] object inferTokens {
     def onLines = {
       @tailrec def loop(in: Seq[Token], out: Seq[Seq[Token]]): Seq[Seq[Token]] = in match {
         case Nil => out
-        case _ if !in.exists(_.show[Code] == "\n") => out :+ in
+        case _ if !in.exists(_.show[Syntax] == "\n") => out :+ in
         case _ =>
-          val (bf, af) = in.span(_.show[Code] != "\n")
+          val (bf, af) = in.span(_.show[Syntax] != "\n")
           loop(af.tail, out :+ (bf :+ af.head))
       }
       loop(tks.repr, Seq())
