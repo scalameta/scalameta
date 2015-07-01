@@ -133,8 +133,8 @@ package scala.meta.internal.ast {
     @ast class Throw(expr: Term) extends Term
     @ast class Ascribe(expr: Term, decltpe: Type) extends Term
     @ast class Annotate(expr: Term, annots: Seq[Mod.Annot] @nonEmpty) extends Term
-    @ast class Tuple(elements: Seq[Term] @nonEmpty) extends Term {
-      require(elements.length > 1)
+    @ast class Tuple(elements: Seq[Term]) extends Term {
+      require(elements.length > 1 || (elements.length == 1 && elements.head.isInstanceOf[impl.Quasi]))
     }
     @ast class Block(stats: Seq[Stat]) extends Term with Scope {
       require(stats.forall(_.isBlockStat))
@@ -185,8 +185,8 @@ package scala.meta.internal.ast {
     @ast class Apply(tpe: Type, args: Seq[Type] @nonEmpty) extends Type
     @ast class ApplyInfix(lhs: Type, op: Name, rhs: Type) extends Type
     @ast class Function(params: Seq[Type.Arg], res: Type) extends Type
-    @ast class Tuple(elements: Seq[Type] @nonEmpty) extends Type {
-      require(elements.length > 1)
+    @ast class Tuple(elements: Seq[Type]) extends Type {
+      require(elements.length > 1 || (elements.length == 1 && elements.head.isInstanceOf[impl.Quasi]))
     }
     @ast class Compound(tpes: Seq[Type], refinement: Seq[Stat]) extends Type {
       // TODO: revisit this once we have trivia in place
@@ -257,7 +257,9 @@ package scala.meta.internal.ast {
     @ast class Wildcard() extends Pat
     @ast class Bind(lhs: Pat.Var.Term, rhs: Pat.Arg) extends Pat
     @ast class Alternative(lhs: Pat, rhs: Pat) extends Pat
-    @ast class Tuple(elements: Seq[Pat] @nonEmpty) extends Pat
+    @ast class Tuple(elements: Seq[Pat]) extends Pat {
+      require(elements.length > 1 || (elements.length == 1 && elements.head.isInstanceOf[impl.Quasi]))
+    }
     @ast class Extract(ref: Term.Ref, targs: Seq[impl.Type], args: Seq[Pat.Arg]) extends Pat {
       require(ref.isStableId)
     }
@@ -282,8 +284,8 @@ package scala.meta.internal.ast {
       @ast class Apply(tpe: Pat.Type, args: Seq[Pat.Type] @nonEmpty) extends Pat.Type
       @ast class ApplyInfix(lhs: Pat.Type, op: impl.Type.Name, rhs: Pat.Type) extends Pat.Type
       @ast class Function(params: Seq[Pat.Type], res: Pat.Type) extends Pat.Type
-      @ast class Tuple(elements: Seq[Pat.Type] @nonEmpty) extends Pat.Type {
-        require(elements.length > 1)
+      @ast class Tuple(elements: Seq[Pat.Type]) extends Pat.Type {
+        require(elements.length > 1 || (elements.length == 1 && elements.head.isInstanceOf[impl.Quasi]))
       }
       @ast class Compound(tpes: Seq[Pat.Type], refinement: Seq[Stat]) extends Pat.Type {
         // TODO: revisit this once we have trivia in place
