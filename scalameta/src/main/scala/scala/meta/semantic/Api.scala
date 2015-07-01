@@ -34,7 +34,7 @@ private[meta] trait Api {
 
   implicit class XtensionSemanticMemberTpe(tree: Member) {
     @hosted private def SeqRef: impl.Type.Name = {
-      val iScala = s.Symbol.Global(s.Symbol.Root, "scala", s.Signature.Term)
+      val iScala = s.Symbol.Global(s.Symbol.RootPackage, "scala", s.Signature.Term)
       val iCollection = s.Symbol.Global(iScala, "collection", s.Signature.Term)
       val iSeq = s.Symbol.Global(iCollection, "Seq", s.Signature.Type)
       impl.Type.Name("Seq", s.Denotation.Single(s.Prefix.Zero, iSeq))

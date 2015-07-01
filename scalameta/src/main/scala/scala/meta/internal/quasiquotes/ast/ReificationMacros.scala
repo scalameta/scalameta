@@ -289,8 +289,8 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
       }
       def convertSymbol(sym: ReflectSymbol): MetaSymbol = {
         if (sym.isModuleClass) convertSymbol(sym.asClass.module)
-        else if (sym == c.mirror.RootPackage) MetaSymbol.Root
-        else if (sym == c.mirror.EmptyPackage) MetaSymbol.Empty
+        else if (sym == c.mirror.RootPackage) MetaSymbol.RootPackage
+        else if (sym == c.mirror.EmptyPackage) MetaSymbol.EmptyPackage
         else MetaSymbol.Global(convertSymbol(sym.owner), sym.name.decodedName.toString, signature(sym))
       }
       require(isGlobal(sym) && debug(pre, sym))
