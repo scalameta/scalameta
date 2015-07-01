@@ -60,7 +60,6 @@ private[meta] object inferTokens {
     val indentation =        toks"  " // In the future, this could be inferred
     val singleDoubleQuotes = Tokens(Token.Literal.String(Input.String("\""), dialect, 0, 1, "\""))
     val tripleDoubleQuotes = Tokens(Token.Literal.String(Input.String("\"\"\""), dialect, 0, 3, "\"\"\""))
-    val dot =                Tokens(Token.`.`(Input.String("."), dialect, 0))
     val newline =            Tokens(Token.`\n`(Input.String("\n"), dialect, 0))
 
     /* Enrichments for token manipulation */
@@ -296,12 +295,17 @@ private[meta] object inferTokens {
     /* Infer tokens for a given tree, making use of the helpers above. */
     def tkz(tree: Tree): Tokens = tree match {
       // Bottom
-      case t: Quasi if t.rank > 0 =>
-        val rank = Tokens((0 to t.rank) map (dot): _*)
-        if (!t.tree.isInstanceOf[Quasi]) toks"$rank{${t.tree.asInstanceOf[Tree].tks}}"
-        else rank
+      case t: Quasi if t.rank > 1 =>
+        // TODO: quasis with higher ranks aren't implemented yet
+        unreachable
+      case t: Quasi if t.rank == 1 =>
+        val ellipsis = Tokens(Token.Ellipsis(Input.String("." * (t.rank + 1)), dialect, 0, t.rank + 1, t.rank))
+        val repr = t.tree.toString.tokens // NOTE: here our token-bound prettyprinting abstraction leaks really hard
+        val prefix = if (!t.tree.isInstanceOf[Quasi]) toks"{" else toks""
+        val suffix = if (!t.tree.isInstanceOf[Quasi]) toks"}" else toks""
+        ellipsis ++ prefix ++ repr ++ suffix
       case t: Quasi if t.rank == 0 =>
-        val innerTreeTks = t.tree.asInstanceOf[Tree].tks
+        val innerTreeTks = t.tree.toString.tokens // NOTE: here our token-bound prettyprinting abstraction leaks really hard
         val name = mineIdentTk(t.pt.getName.stripPrefix("scala.meta.").stripPrefix("internal.ast."))
         toks"$${$innerTreeTks @ $name}"
 
