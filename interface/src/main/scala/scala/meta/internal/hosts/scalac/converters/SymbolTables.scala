@@ -42,8 +42,8 @@ trait SymbolTables extends GlobalToolkit with MetaToolkit {
       val gsym = lsym.gsymbol
       require(!gsym.isModuleClass && !gsym.isPackageClass)
       if (gsym == g.NoSymbol) s.Symbol.Zero
-      else if (gsym == g.rootMirror.RootPackage) s.Symbol.Root
-      else if (gsym == g.rootMirror.EmptyPackage) s.Symbol.Empty
+      else if (gsym == g.rootMirror.RootPackage) s.Symbol.RootPackage
+      else if (gsym == g.rootMirror.EmptyPackage) s.Symbol.EmptyPackage
       else if (isGlobal(gsym)) s.Symbol.Global(convert(gsym.owner.toLogical), gsym.name.decodedName.toString, signature(gsym))
       else s.Symbol.Local(randomUUID().toString)
     })
@@ -64,8 +64,8 @@ trait SymbolTables extends GlobalToolkit with MetaToolkit {
       }
       ssym match {
         case s.Symbol.Zero => l.None
-        case s.Symbol.Root => l.Package(g.rootMirror.RootPackage, g.rootMirror.RootClass)
-        case s.Symbol.Empty => l.Package(g.rootMirror.EmptyPackage, g.rootMirror.EmptyPackageClass)
+        case s.Symbol.RootPackage => l.Package(g.rootMirror.RootPackage, g.rootMirror.RootClass)
+        case s.Symbol.EmptyPackage => l.Package(g.rootMirror.EmptyPackage, g.rootMirror.EmptyPackageClass)
         case s.Symbol.Global(howner, name, hsig) => resolve(convert(howner), name, hsig)
         case s.Symbol.Local(id) => throw new ConvertException(ssym, s"implementation restriction: internal cache has no symbol associated with $ssym")
       }

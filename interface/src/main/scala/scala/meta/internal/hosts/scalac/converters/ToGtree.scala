@@ -28,7 +28,7 @@ trait ToGtree extends GlobalToolkit with MetaToolkit {
         // TODO: HAHAHA
         val scode = {
           import scala.meta.dialects.Scala211
-          mtree.show[Code]
+          mtree.show[Syntax]
         }
         val gcode = {
           val newReporter = new StoreReporter()
@@ -37,7 +37,7 @@ trait ToGtree extends GlobalToolkit with MetaToolkit {
             g.reporter = newReporter
             val gparser = g.newUnitParser(new g.CompilationUnit(g.newSourceFile(scode, "<scalahost>")))
             val gtree = gparser.expr()
-            def fail(msg: String) = sys.error(s"implementation restriction: error converting from ${mtree.show[Summary]} to g.Tree:$EOL$msg$EOL${mtree.show[Code]}")
+            def fail(msg: String) = sys.error(s"implementation restriction: error converting from ${mtree.show[Summary]} to g.Tree:$EOL$msg$EOL${mtree.show[Syntax]}")
             newReporter.infos.foreach { case newReporter.Info(pos, msg, newReporter.ERROR) => fail(msg) }
             gtree
           } finally g.reporter = oldReporter

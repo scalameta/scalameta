@@ -99,10 +99,10 @@ trait Expansion extends scala.reflect.internal.show.Printers {
             }
             val gresult: Any = mresult match {
               case mtree: m.Tree =>
-                if (sys.props("macro.debug") != null) println(mtree.show[Raw])
+                if (sys.props("macro.debug") != null) println(mtree.show[Structure])
                 val gtree: g.Tree = mc.toGtree(mtree)
                 if (sys.props("macro.debug") != null) println(g.showRaw(gtree))
-                attachExpansionString(expandee, gtree, mtree.show[Code])
+                attachExpansionString(expandee, gtree, mtree.show[Syntax])
                 gtree
               case other =>
                 fail("scala.meta macros must return a scala.meta.Term; returned value is " + (if (other == null) "null" else "of " + other.getClass))

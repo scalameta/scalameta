@@ -26,10 +26,10 @@ trait Caches extends GlobalToolkit with MetaToolkit {
     def cache(x: m.Member): Unit = {
       val denot = x.name.require[m.Name].denot
       if (x.name.isBinder && !x.isInstanceOf[m.Ctor.Primary] && !x.name.isInstanceOf[m.Name.Anonymous]) {
-        require(denot != s.Denotation.Zero && debug(x, x.show[Raw]))
-        require(denot.symbol != s.Symbol.Zero && debug(x, x.show[Raw]))
+        require(denot != s.Denotation.Zero && debug(x, x.show[Structure]))
+        require(denot.symbol != s.Symbol.Zero && debug(x, x.show[Structure]))
         // TODO: it seems that we can't have this yet
-        // require(!ssymToNativeMmemberCache.contains(denot.symbol) && debug(x, x.show[Raw]))
+        // require(!ssymToNativeMmemberCache.contains(denot.symbol) && debug(x, x.show[Structure]))
         ssymToNativeMmemberCache(denot.symbol) = x
       }
     }
