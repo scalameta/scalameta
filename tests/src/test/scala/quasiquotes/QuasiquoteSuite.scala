@@ -161,6 +161,12 @@ class QuasiquoteSuite extends FunSuite {
     assert(expr2.show[Syntax] === "bar")
   }
 
+  test("val q\"f($q, y: Y) = $r\" = q\"f(x: X, y: Y) = 1\"") {
+    val q"f($q, y: Y) = $r" = q"f(x: X, y: Y) = 1"
+    assert(q.show[Syntax] === "x: X")
+    assert(r.show[Syntax] === "1")
+  }
+
   test("q\"return $expropt\"") {
     val q"return $expropt" = q"return foo == bar"
     assert(expropt.show[Syntax] === "foo == bar")
@@ -227,6 +233,10 @@ class QuasiquoteSuite extends FunSuite {
 //
 //  test("q\"(..$params) => $expr\"") {
 //    val q"(..$params) => $expr" = q"(x: Int, y: String) => 42"
+//  }
+
+//  test("val q\"($q, y: Y, ..$e) => $r\" = q\"(x: X, y: Y, z: Z) => 1\"") {
+//    val q"($q, y: Y, ..$e) => $r" = q"(x: X, y: Y, z: Z) => 1"
 //  }
 
   test("q\"{ ..case $cases }\"") {

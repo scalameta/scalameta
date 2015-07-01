@@ -121,19 +121,12 @@ private[meta] trait Api {
     // Even though this design looks more principled and arguably more elegant that eager recalculation,
     // I ended up not going for it, because it is much less straightforward implementation-wise,
     // and any time savings are worth very much at this stage of the project.
-    @hosted def source: Member = {
-      def stripPrefix(denot: s.Denotation) = denot match {
-        case s.Denotation.Zero => s.Denotation.Zero
-        case denot: s.Denotation.Single => denot.copy(prefix = s.Prefix.Zero)
-      }
-      val prefixlessName = tree.name match {
-        case name: impl.Name.Anonymous => name
-        case name: impl.Name.Indeterminate => name
-        case name: impl.Term.Name => name.copy(denot = stripPrefix(name.denot))
-        case name: impl.Type.Name => name.copy(denot = stripPrefix(name.denot))
-        case name: impl.Ctor.Name => name.copy(denot = stripPrefix(name.denot))
-      }
-      prefixlessName.defn
+    @hosted def source: Member = tree.name match {
+      case name: impl.Name.Anonymous => name.defn
+      case name: impl.Name.Indeterminate => name.defn
+      case name: impl.Term.Name => name.copy(denot = name.denot.stripPrefix).defn
+      case name: impl.Type.Name => name.copy(denot = name.denot.stripPrefix).defn
+      case name: impl.Ctor.Name => name.copy(denot = name.denot.stripPrefix).defn
     }
     @hosted def name: Name = {
       tree.require[impl.Member] match {
@@ -324,6 +317,14 @@ private[meta] trait Api {
     @hosted def hi: Type = tree.require[impl.Type.Param].hi
   }
 
+  private implicit class XtensionDenotationStripPrefix(denot: s.Denotation) {
+    def stripPrefix = denot match {
+      case s.Denotation.Zero => s.Denotation.Zero
+      case denot: s.Denotation.Single => denot.copy(prefix = s.Prefix.Zero)
+      case denot: s.Denotation.Multi => denot.copy(prefix = s.Prefix.Zero)
+    }
+  }
+
   // ===========================
   // PART 4: SCOPES
   // ===========================
@@ -499,9 +500,11 @@ private[meta] trait Api {
         member.name match {
           case thisName: impl.Name =>
             internalFilter[T](that => {
-              def thisDenot = thisName.denot.require[s.Denotation.Single]
-              def thatDenot = that.require[impl.Member].name.require[impl.Name].denot.require[s.Denotation.Single]
-              scala.util.Try(thisDenot.symbol == thatDenot.symbol).getOrElse(false)
+              val thisDenot = thisName.denot
+              val thatDenot = that.require[impl.Member].name.require[impl.Name].denot
+              val bothNonEmpty = thisDenot != s.Denotation.Zero && thatDenot != s.Denotation.Zero
+              val bothMeanTheSameThing = thisDenot.symbols == thatDenot.symbols
+              bothNonEmpty && bothMeanTheSameThing
             }) match {
               case Seq() => throw new SemanticException(s"no prototype for $member found in ${showSummary(tree)}")
               case Seq(single) => single.require[U]
