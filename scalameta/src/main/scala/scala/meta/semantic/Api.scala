@@ -72,7 +72,7 @@ private[meta] trait Api {
       defns match {
         case Seq(single) => single
         case Seq(_, _*) => throw new SemanticException(s"multiple definitions found for ${showSummary(tree)}")
-        case Seq() => unreachable(debug(tree, tree.show[Raw]))
+        case Seq() => unreachable(debug(tree, tree.show[Structure]))
       }
     }
   }
@@ -117,7 +117,7 @@ private[meta] trait Api {
     // Much like we plan to remember lexical contexts, we could also remember type parameters to be instantiated.
     // For example, `t"List[Int]".defs("head")` would give us `def head: A = ...`,
     // with A carrying information about the fact that it should be substituted for Int.
-    // My only immediate concern here is what to do with `show[Code]`, but that we can figure out.
+    // My only immediate concern here is what to do with `show[Syntax]`, but that we can figure out.
     // Even though this design looks more principled and arguably more elegant that eager recalculation,
     // I ended up not going for it, because it is much less straightforward implementation-wise,
     // and any time savings are worth very much at this stage of the project.
@@ -168,7 +168,7 @@ private[meta] trait Api {
       candidates match {
         case Seq(companion) => companion
         case Seq() => throw new SemanticException(s"no companions for ${showSummary(tree)}")
-        case _ => unreachable(debug(tree, tree.show[Raw]))
+        case _ => unreachable(debug(tree, tree.show[Structure]))
       }
     }
     @hosted def mods: Seq[Mod] = {
@@ -505,7 +505,7 @@ private[meta] trait Api {
             }) match {
               case Seq() => throw new SemanticException(s"no prototype for $member found in ${showSummary(tree)}")
               case Seq(single) => single.require[U]
-              case _ => unreachable(debug(member, member.show[Raw]))
+              case _ => unreachable(debug(member, member.show[Structure]))
             }
         }
       case _ =>
@@ -672,7 +672,7 @@ private[meta] trait Api {
           case impl.Type.Annotate(tpe, annots) => impl.Term.Annotate(loop(tpe, ctor), annots)
           case impl.Type.Apply(tpe, args) => impl.Term.ApplyType(loop(tpe, ctor), args)
           case impl.Type.ApplyInfix(lhs, op, rhs) => impl.Term.ApplyType(loop(op, ctor), List(lhs, rhs))
-          case _ => unreachable(debug(tree, tree.show[Raw], tpe, tpe.show[Raw]))
+          case _ => unreachable(debug(tree, tree.show[Structure], tpe, tpe.show[Structure]))
         }
       }
       // TODO: if we uncomment this, that'll lead to a stackoverflow in scalahost

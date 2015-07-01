@@ -30,11 +30,11 @@
 //         val content = scala.io.Source.fromFile(src)(codec).mkString
 //         val parsed = src.parse[Source]
 //         val transformed = forceInferAll(parsed)
-//         val newCode = transformed.tokens.map(_.show[Code]).mkString
+//         val newCode = transformed.tokens.map(_.show[Syntax]).mkString
 //         Try(newCode.parse[Source]) match {
 //           case Success(reparsed) =>
 //             /* Parsing and re-comparing output. It should have reached a fixed point. */
-//             val newNewCode = forceInferAll(reparsed).tokens.map(_.show[Code]).mkString
+//             val newNewCode = forceInferAll(reparsed).tokens.map(_.show[Syntax]).mkString
 //             if (newCode != newNewCode) printCodes(content, newCode, newNewCode)(None)
 //             assert(newCode == newNewCode)
 //           case Failure(err) =>

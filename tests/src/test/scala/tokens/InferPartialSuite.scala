@@ -12,7 +12,7 @@ class InferPartialSuite extends FunSuite {
         |case class Test(string: String)
         |// TODO: this is a second high-level comment.
         |object Test {
-        |  val string = "This is a string"  
+        |  val string = "This is a string"
         |  def funToReplace(x: Int, y: String) {
         |    val myString = x.toString + ":" + y + string
         |    val res = {
@@ -27,16 +27,16 @@ class InferPartialSuite extends FunSuite {
     // Forcing synthetic tokens using TQL
     val trans = (transform {
       case t: impl.Defn.Def if t.name.value == "funToReplace" =>
-        t.copy(name = impl.Term.Name("aNewName")) 
+        t.copy(name = impl.Term.Name("aNewName"))
       case t: impl.Defn.Val =>
-        t.copy() 
+        t.copy()
       case t: impl.Defn.Object if t.name.value == "Test" =>
-        t.copy(name = impl.Term.Name("Test2")) 
+        t.copy(name = impl.Term.Name("Test2"))
     }).topDown
 
     val transformed = trans(testTree)
-    val newCode = transformed.tree.get.tokens.map(_.show[Code]).mkString
-    
+    val newCode = transformed.tree.get.tokens.map(_.show[Syntax]).mkString
+
     /* Cheking that highl-level comments are persisted */
     assert(newCode.contains("/* This high-level comment should be persisted */"))
     assert(newCode.contains("// TODO: this is a second high-level comment."))

@@ -390,7 +390,7 @@ class PublicSuite extends FunSuite {
     assert(typecheckError("""
       import scala.meta._
       (??? : Tree).show[Code]
-    """) === "don't know how to show[Code] for scala.meta.Tree (if you're prettyprinting a tree, be sure to import a dialect, e.g. scala.meta.dialects.Scala211)")
+    """) === "don't know how to show[Syntax] for scala.meta.Tree (if you're prettyprinting a tree, be sure to import a dialect, e.g. scala.meta.dialects.Scala211)")
   }
 
   test("show[Code] when everything's correct (static dialect)") {
@@ -409,6 +409,35 @@ class PublicSuite extends FunSuite {
     """) === "")
   }
 
+  test("show[Syntax] without import") {
+    assert(typecheckError("""
+      (??? : scala.meta.Tree).show[Syntax]
+    """) === "not found: type Syntax")
+  }
+
+  test("show[Syntax] without dialect") {
+    assert(typecheckError("""
+      import scala.meta._
+      (??? : Tree).show[Syntax]
+    """) === "don't know how to show[Syntax] for scala.meta.Tree (if you're prettyprinting a tree, be sure to import a dialect, e.g. scala.meta.dialects.Scala211)")
+  }
+
+  test("show[Syntax] when everything's correct (static dialect)") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      (??? : Tree).show[Syntax]
+    """) === "")
+  }
+
+  test("show[Syntax] when everything's correct (dynamic dialect)") {
+    assert(typecheckError("""
+      import scala.meta._
+      implicit val dialect: scala.meta.Dialect = ???
+      (??? : Tree).show[Syntax]
+    """) === "")
+  }
+
   test("show[Raw] without import") {
     assert(typecheckError("""
       (??? : scala.meta.Tree).show[Raw]
@@ -419,6 +448,19 @@ class PublicSuite extends FunSuite {
     assert(typecheckError("""
       import scala.meta._
       (??? : Tree).show[Raw]
+    """) === "")
+  }
+
+  test("show[Structure] without import") {
+    assert(typecheckError("""
+      (??? : scala.meta.Tree).show[Structure]
+    """) === "not found: type Structure")
+  }
+
+  test("show[Structure] when everything's correct") {
+    assert(typecheckError("""
+      import scala.meta._
+      (??? : Tree).show[Structure]
     """) === "")
   }
 
