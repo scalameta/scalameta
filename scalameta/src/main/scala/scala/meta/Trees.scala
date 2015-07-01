@@ -503,17 +503,17 @@ package scala.meta.internal.ast {
   // has a corresponding quasi, e.g. Term.Quasi or Type.Arg.Quasi.
   //
   // Here's how quasis represent quasiquotes:
-  // * q"$x" => Term.Quasi(<scala.reflect tree representing x>, 0)
-  // * q"..$xs" => Term.Quasi(Term.Quasi(<scala.reflect tree representing xs>, 0), 1)
-  // * q"..{$fs($args)}" => Term.Quasi(Term.Apply(Term.Quasi(<fs>, 0), List(Term.Quasi(<args>, 0))), 1)
+  // * q"$x" => Term.Quasi(0, <scala.reflect tree representing x>)
+  // * q"..$xs" => Term.Quasi(1, Term.Quasi(0, <scala.reflect tree representing xs>))
+  // * q"..{$fs($args)}" => Term.Quasi(1, Term.Apply(Term.Quasi(0, <fs>), List(Term.Quasi(0, <args>))))
   // * q"...$xss" => not sure, because we don't support ... yet
   //
   // TODO: After we bootstrap, Quasi.tree will become scala.meta.Tree.
   // However, for now, we will keep it at Any in order implement quasiquotes via scala.reflect macros
   // (because in that case, Quasi.tree has to store scala.reflect trees).
   @branch trait Quasi extends Tree {
-    def tree: Any
     def rank: Int
+    def tree: Any
     def pt: Class[_]
   }
 

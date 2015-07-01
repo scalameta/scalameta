@@ -5,8 +5,10 @@ import scala.language.higherKinds
 import org.scalameta.show._
 
 private[meta] trait Api {
-  type Code[T] = scala.meta.ui.Code[T]
-  type Raw[T] = scala.meta.ui.Raw[T]
+  @deprecated("use show[Syntax] instead", "0.1.0-SNAPSHOT") type Code[T] = scala.meta.ui.Syntax[T]
+  type Syntax[T] = scala.meta.ui.Syntax[T]
+  @deprecated("use show[Structure] instead", "0.1.0-SNAPSHOT") type Raw[T] = scala.meta.ui.Structure[T]
+  type Structure[T] = scala.meta.ui.Structure[T]
   type Semantics[T] = scala.meta.ui.Semantics[T]
   type Positions[T] = scala.meta.ui.Positions[T]
 

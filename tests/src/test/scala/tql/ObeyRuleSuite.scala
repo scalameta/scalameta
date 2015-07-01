@@ -39,6 +39,6 @@ class ObeyRuleSuite extends FunSuite {
   test("listToSetBool") {
     val rewrittenResult = listToSetBool(propagandaTree)
     val rewrittenTree = rewrittenResult.tree.get
-    assert(rewrittenTree.show[Raw] != propagandaTree.show[Raw])
+    assert(rewrittenTree.show[Structure] != propagandaTree.show[Structure])
   }
 }

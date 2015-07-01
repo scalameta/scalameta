@@ -4,36 +4,36 @@ import scala.meta.dialects.Scala211
 
 class QuasiquoteSuite extends FunSuite {
   test("rank-0 liftables") {
-    assert(q"foo[${42}]".show[Code] === "foo[42]")
-    assert(q"${42}".show[Code] === "42")
+    assert(q"foo[${42}]".show[Syntax] === "foo[42]")
+    assert(q"${42}".show[Syntax] === "42")
   }
 
   test("rank-1 liftables") {
     implicit def custom[U >: List[Term]]: Lift[List[Int], U] = Lift(_.map(x => q"$x"))
-    assert(q"foo(..${List(1, 2, 3)})".show[Code] === "foo(1, 2, 3)")
+    assert(q"foo(..${List(1, 2, 3)})".show[Syntax] === "foo(1, 2, 3)")
   }
 
   test("p\"case $x: T => \"") {
     val x = p"x"
-    assert(p"case $x: T => ".show[Code] === "case x: T =>")
+    assert(p"case $x: T => ".show[Syntax] === "case x: T =>")
   }
 
   test("p\"case $x @ $y => \"") {
     val x = p"x"
     val y = p"List(1, 2, 3)"
-    assert(p"case $x @ $y => ".show[Code] === "case x @ List(1, 2, 3) =>")
+    assert(p"case $x @ $y => ".show[Syntax] === "case x @ List(1, 2, 3) =>")
   }
 
   test("q\"foo($term, ..$terms, $term)\"") {
     val term = q"x"
     val terms = List(q"y", q"z")
-    assert(q"foo($term, ..$terms, $term)".show[Code] === "foo(x, y, z, x)")
+    assert(q"foo($term, ..$terms, $term)".show[Syntax] === "foo(x, y, z, x)")
   }
 
   test("case q\"$foo(${x: Int})\"") {
     q"foo(42)" match {
       case q"$foo(${x: Int})" =>
-        assert(foo.show[Code] === "foo")
+        assert(foo.show[Syntax] === "foo")
         assert(x == 42)
     }
   }
@@ -42,8 +42,8 @@ class QuasiquoteSuite extends FunSuite {
     q"foo(1, 2, 3)" match {
       case q"$_(${x: Int}, ..$y, $z)" =>
         assert(x === 1)
-        assert(y.map(_.show[Code]) === List("2"))
-        assert(z.show[Code] === "3")
+        assert(y.map(_.show[Syntax]) === List("2"))
+        assert(z.show[Syntax] === "3")
     }
   }
 
@@ -52,13 +52,13 @@ class QuasiquoteSuite extends FunSuite {
     val ys = List(q"2")
     val z = q"3"
     val ts = Nil
-    assert(q"foo($x, ..$ys, $z, ..$ts)".show[Code] === "foo(1, 2, 3)")
+    assert(q"foo($x, ..$ys, $z, ..$ts)".show[Syntax] === "foo(1, 2, 3)")
   }
 
   test("val q\"type $name[$_] = $_\"") {
     val member = q"type List[+A] = List[A]"
     val q"type $name[$_] = $_" = member
-    assert(name.show[Code] === "List")
+    assert(name.show[Syntax] === "List")
   }
 
   test("val q\"def x = ${body: Int}\"") {
@@ -68,7 +68,7 @@ class QuasiquoteSuite extends FunSuite {
 
   test("q\"... match { ..$cases }\"") {
     val cases = List(p"case foo => bar")
-    assert(q"x match { ..$cases }".show[Code] === """
+    assert(q"x match { ..$cases }".show[Syntax] === """
       |x match {
       |  case foo => bar
       |}
@@ -77,31 +77,31 @@ class QuasiquoteSuite extends FunSuite {
 
 //  test("q\"$qname.this\"") { // fixme test is broken, so even does not compile
 //    val q"$qname.this" = q"QuasiquoteSuite.this"
-//    assert(qname.show[Code] === "QuasiquoteSuite")
+//    assert(qname.show[Syntax] === "QuasiquoteSuite")
 //  }
 
 //  test("q\"$qname.super[$qname]\"") { // fixme test is broken, so even does not compile
 //    val q"$clazz.super[$tpe].$id" = q"A.super[B].x"
-//    assert(clazz.show[Code] === "A")
-//    assert(tpe.show[Code] === "B")
-//    assert(method.show[Code] === "x")
+//    assert(clazz.show[Syntax] === "A")
+//    assert(tpe.show[Syntax] === "B")
+//    assert(method.show[Syntax] === "x")
 //  }
 
   test("q\"$expr.$name\"") {
     val expr = q"foo"
     val name = q"bar"
-    assert(q"$expr.$name".show[Code] === "foo.bar")
+    assert(q"$expr.$name".show[Syntax] === "foo.bar")
   }
 
   test("q\"$expr($name)\"") {
     val expr = q"foo"
     val name = q"bar"
-    assert(q"$expr($name)".show[Code] === "foo(bar)")
+    assert(q"$expr($name)".show[Syntax] === "foo(bar)")
   }
 
   test("q\"foo[..$tpes]\"") {
     val types = List(t"T", t"U")
-    assert(q"foo[..$types]".show[Code] === "foo[T, U]")
+    assert(q"foo[..$types]".show[Syntax] === "foo[T, U]")
   }
 
 //  test("q\"$expr $name[..$tpes] (..$aexprs)\"") {
@@ -109,72 +109,72 @@ class QuasiquoteSuite extends FunSuite {
 //    val name = q"method"
 //    val tpes = List(t"T", t"U")
 //    val aexprs = List(q"1", q"b")
-//    assert(q"$expr $name[..$tpes] (..$aexprs)".show[Code] === "x method[T, U](1, b)") // fixme test is broken, so even does not compile
+//    assert(q"$expr $name[..$tpes] (..$aexprs)".show[Syntax] === "x method[T, U](1, b)") // fixme test is broken, so even does not compile
 //  }
 
 //  test("q\"$a $b $c\"") {
 //    val a = q"x"
 //    val b = q"y"
 //    val c = q"z"
-//    assert(q"$a $b $c".show[Code] === "x y z") // fixme test is broken, so even does not compile
+//    assert(q"$a $b $c".show[Syntax] === "x y z") // fixme test is broken, so even does not compile
 //  }
 
   test("q\"!$expr\"") {
     val q"!$x" = q"!foo"
-    assert(x.show[Code] === "foo")
+    assert(x.show[Syntax] === "foo")
   }
 
   test("q\"~$expr\"") {
     val expr = q"foo"
-    assert(q"~$expr".show[Code] === "~foo")
+    assert(q"~$expr".show[Syntax] === "~foo")
   }
 
   test("q\"-$expr\"") {
     val q"-$x" = q"-foo"
-    assert(x.show[Code] === "foo")
+    assert(x.show[Syntax] === "foo")
   }
 
   test("q\"+$expr\"") {
     val q"+$x" = q"+foo"
-    assert(x.show[Code] === "foo")
+    assert(x.show[Syntax] === "foo")
   }
 
   test("q\"$ref = $expr\"") {
     val q"$ref = $expr" = q"a = b"
-    assert(ref.show[Code] === "a")
-    assert(expr.show[Code] === "b")
+    assert(ref.show[Syntax] === "a")
+    assert(expr.show[Syntax] === "b")
   }
 
   test(""" val q"$x.$y = $z.$w" = q"a.b = c.d"""") {
     val q"$x.$y = $z.$w" = q"a.b = c.d"
-    assert(x.show[Code] === "a")
-    assert(y.show[Code] === "b")
-    assert(z.show[Code] === "c")
-    assert(w.show[Code] === "d")
+    assert(x.show[Syntax] === "a")
+    assert(y.show[Syntax] === "b")
+    assert(z.show[Syntax] === "c")
+    assert(w.show[Syntax] === "d")
   }
 
   test("q\"$expr(..$aexprs) = $expr\"") {
     val q"$expr1(..$aexprs) = $expr2" = q"foo(a, b) = bar"
-    assert(expr1.show[Code] === "foo")
-    assert(aexprs(0).show[Code] === "a")
-    assert(aexprs(1).show[Code] === "b")
-    assert(expr2.show[Code] === "bar")
+    assert(expr1.show[Syntax] === "foo")
+    assert(aexprs(0).show[Syntax] === "a")
+    assert(aexprs(1).show[Syntax] === "b")
+    assert(expr2.show[Syntax] === "bar")
   }
 
   test("q\"return $expropt\"") {
     val q"return $expropt" = q"return foo == bar"
-    assert(expropt.show[Code] === "foo == bar")
+    assert(expropt.show[Syntax] === "foo == bar")
   }
 
   test("q\"throw $expr\"") {
     val q"throw $expr" = q"throw new RuntimeException"
-    assert(expr.show[Code] === "new RuntimeException")
+    assert(expr.show[Syntax] === "new RuntimeException")
   }
 
   test("q\"$expr: $tpe\"") {
     val q"$exp: $tpe" = q"1: Double"
-    assert(exp.show[Code] === "1")
-    assert(tpe.show[Code] === "Double")
+    assert(exp.show[Syntax] === "1")
+    assert(tpe.show[Syntax] === "Double")
   }
 
 //  test("q\"$expr: ..@$expr\"") {
@@ -183,7 +183,7 @@ class QuasiquoteSuite extends FunSuite {
 
 //  test("q\"(..$exprs)\"") {
 //    val terms = List(q"y", q"z")
-//    assert(q"(..$terms)".show[Code] === "(y, z)") // fixme test is broken, so even does not compile
+//    assert(q"(..$terms)".show[Syntax] === "(y, z)") // fixme test is broken, so even does not compile
 //  }
 
   //  test("""val q"(..$params)" = q"(x: Int, y: String)" """) {
@@ -198,9 +198,9 @@ class QuasiquoteSuite extends FunSuite {
 
   test("q\"if ($expr) $expr else $expr\"") {
     val q"if ($expr1) $expr2 else $expr3" = q"if (1 > 2) a else b"
-    assert(expr1.show[Code] === "1 > 2")
-    assert(expr2.show[Code] === "a")
-    assert(expr3.show[Code] === "b")
+    assert(expr1.show[Syntax] === "1 > 2")
+    assert(expr2.show[Syntax] === "a")
+    assert(expr3.show[Syntax] === "b")
   }
 
 //  test("q\"$expr match { ..case $cases }\"") {
@@ -228,19 +228,19 @@ class QuasiquoteSuite extends FunSuite {
 
   test("q\"{ ..case $cases }\"") {
     val q"{ case ..$cases }" = q"{ case i: Int => i + 1 }"
-    assert(cases(0).show[Code] === "case i: Int => i + 1")
+    assert(cases(0).show[Syntax] === "case i: Int => i + 1")
   }
 
   test("q\"while ($expr) $expr\"") {
     val q"while ($expr1) $expr2" = q"while (foo) bar"
-    assert(expr1.show[Code] === "foo")
-    assert(expr2.show[Code] === "bar")
+    assert(expr1.show[Syntax] === "foo")
+    assert(expr2.show[Syntax] === "bar")
   }
 
   test("q\"do $expr while($expr)\"") {
     val q"do $expr1 while($expr2)" = q"do foo while (bar)"
-    assert(expr1.show[Code] === "foo")
-    assert(expr2.show[Code] === "bar")
+    assert(expr1.show[Syntax] === "foo")
+    assert(expr2.show[Syntax] === "bar")
   }
 
 //  test("q\"for (..$enumerators) $expr\"") {
@@ -256,21 +256,21 @@ class QuasiquoteSuite extends FunSuite {
 //  }
 
   test("q\"_\"") {
-    assert(q"_".show[Code] === "_")
+    assert(q"_".show[Syntax] === "_")
   }
 
   test("q\"$expr _\"") {
     val q"$expr _" = q"foo _"
-    assert(expr.show[Code] === "foo")
+    assert(expr.show[Syntax] === "foo")
   }
 
   test("q\"$lit\"") {
     val lit = q"42"
-    assert(q"$lit".show[Code] === "42")
+    assert(q"$lit".show[Syntax] === "42")
   }
 
   test("val q\"$x\" = ...") {
     val q"$x" = q"42"
-    assert(x.show[Code] === "42")
+    assert(x.show[Syntax] === "42")
   }
 }

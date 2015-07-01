@@ -26,8 +26,8 @@ object Signature {
 @root trait Symbol
 object Symbol {
   @leaf object Zero extends Symbol
-  @leaf object Root extends Symbol
-  @leaf object Empty extends Symbol
+  @leaf object RootPackage extends Symbol
+  @leaf object EmptyPackage extends Symbol
   @leaf class Global(owner: Symbol, name: String, signature: Signature) extends Symbol
   @leaf class Local(id: String) extends Symbol
 }

@@ -260,7 +260,7 @@ class AstMacros(val c: Context) {
       mstats1 += q"implicit def interfaceToApi(interface: $iname): $aname = macro $AstInternal.Macros.interfaceToApi[$iname, $aname]"
       mstats1 += q"trait $aname[..$tparams] extends ..$aparents1 { $aself => ..$astats1 }"
       mstats1 += q"private[${mname.toTypeName}] final class $name[..$tparams] $ctorMods(...${bparams1 +: paramss1}) extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
-      if (!isQuasi) mstats1 += q"$qmods1 class $qname(tree: _root_.scala.Any, rank: _root_.scala.Int) extends ..$qparents1 { ..$qstats1 }"
+      if (!isQuasi) mstats1 += q"$qmods1 class $qname(rank: _root_.scala.Int, tree: _root_.scala.Any) extends ..$qparents1 { ..$qstats1 }"
       val cdef1 = q"$imods1 trait $iname extends ..$iparents1 { $iself => ..$istats1 }"
       val mdef1 = q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
       if (c.compilerSettings.contains("-Xprint:typer")) { println(cdef1); println(mdef1) }
