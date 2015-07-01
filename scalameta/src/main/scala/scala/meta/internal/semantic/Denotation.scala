@@ -50,10 +50,11 @@ object Prefix {
 // Also, hopefully, it's only necessary to define denotations for all names in a tree
 // to guarantee hygienic comparisons and name lookups.
 
-@root trait Denotation { def prefix: Prefix; def symbol: Symbol }
+@root trait Denotation { def prefix: Prefix; def symbols: List[Symbol] }
 object Denotation {
-  @leaf object Zero extends Denotation { def prefix = Prefix.Zero; def symbol = Symbol.Zero; }
-  @leaf class Single(prefix: Prefix, symbol: Symbol) extends Denotation
+  @leaf object Zero extends Denotation { def prefix = Prefix.Zero; def symbols = Nil; }
+  @leaf class Single(prefix: Prefix, symbol: Symbol) extends Denotation { def symbols = List(symbol) }
+  @leaf class Multi(prefix: Prefix, symbols: List[Symbol]) extends Denotation { require(symbols.length > 1) }
 }
 
 // TODO: This unrelated code is here because of the limitation of knownDirectSubclasses.
