@@ -536,12 +536,12 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
                 // For example, in `new { ..$stats }`, ellipsis's pt is Seq[Stat], but quasi's pt is Term.
                 // This is an artifact of the current implementation, so we just need to keep it mind and work around it.
                 require(classTag[T].runtimeClass.isAssignableFrom(quasi.pt) && debug(ellipsis, result, result.show[Structure]))
-                atPos(quasi, quasi)(implicitly[AstMetadata[T]].quasi(quasi.tree, quasi.rank))
+                atPos(quasi, quasi)(implicitly[AstMetadata[T]].quasi(quasi.rank, quasi.tree))
               case other =>
                 other
             }
           }
-          implicitly[AstMetadata[T]].quasi(tree, rank)
+          implicitly[AstMetadata[T]].quasi(rank, tree)
         }
       case _ =>
         unreachable(debug(token))
@@ -552,7 +552,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     token match {
       case unquote: Unquote =>
         next()
-        implicitly[AstMetadata[T]].quasi(unquote.tree, 0)
+        implicitly[AstMetadata[T]].quasi(0, unquote.tree)
       case _ =>
         unreachable(debug(token))
     }
@@ -582,7 +582,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
 
   def convertToTypeId(ref: Term.Ref): Option[Type] = ref match {
     case ref: Quasi =>
-      Some(atPos(ref, ref)(Type.Quasi(ref.tree, ref.rank)))
+      Some(atPos(ref, ref)(Type.Quasi(ref.rank, ref.tree)))
     case Term.Select(qual: Term.Ref, name) =>
       Some(atPos(ref, ref)(Type.Select(qual, atPos(name, name)(Type.Name(name.value)))))
     case name: Term.Name =>
@@ -919,7 +919,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         case _ => loop(tpe)
       }
       def loop(tpe: Type): Pat.Type = tpe match {
-        case q: impl.Quasi => atPos(q, q)(Pat.Type.Quasi(q.tree, q.rank))
+        case q: impl.Quasi => atPos(q, q)(Pat.Type.Quasi(q.rank, q.tree))
         case tpe: Type.Name => tpe
         case tpe: Type.Select => tpe
         case Type.Project(qual, name) => atPos(tpe, tpe)(Pat.Type.Project(loop(qual), name))
@@ -1336,7 +1336,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
             t = atPos(core, auto)(Term.Update(core, argss, expr()))
           case q: Term.Quasi =>
             next()
-            t = atPos(q, auto)(Term.Assign(atPos(q, q)(Term.Ref.Quasi(q.tree, q.rank)), expr()))
+            t = atPos(q, auto)(Term.Assign(atPos(q, q)(Term.Ref.Quasi(q.rank, q.tree)), expr()))
           case _ =>
         }
       } else if (token.is[`:`]) {
@@ -1537,7 +1537,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   def argumentExpr(): Term.Arg = {
     expr() match {
       case q: impl.Quasi =>
-        atPos(q, q)(Term.Arg.Quasi(q.tree, q.rank))
+        atPos(q, q)(Term.Arg.Quasi(q.rank, q.tree))
       case Term.Ascribe(t, Type.Placeholder(Type.Bounds(None, None))) if isIdentOf("*") =>
         next()
         atPos(t, auto)(Term.Arg.Repeated(t))
@@ -1759,7 +1759,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       else p match {
         case p: Pat.Quasi =>
           next()
-          val p1 = atPos(p, p)(Pat.Var.Term.Quasi(p.tree, p.rank))
+          val p1 = atPos(p, p)(Pat.Var.Term.Quasi(p.rank, p.tree))
           Pat.Bind(p1, pattern3())
         case p: Term.Name =>
           syntaxError("Pattern variables must start with a lower-case letter. (SLS 8.1.1.)", at = p)
