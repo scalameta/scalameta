@@ -12,9 +12,9 @@ class InferParensSuite extends InferSuite {
 
   private def compareTokenCodes(a: Tree, b: Tree): Unit = {
     def trimTokens(tks: Tokens) = tks.filterNot(tk => tk.isInstanceOf[Token.BOF] || tk.isInstanceOf[Token.EOF])
-    val (t1, t2) = (trimTokens(a.tokens).map(_.show[Code]), trimTokens(b.tokens).map(_.show[Code]))
+    val (t1, t2) = (trimTokens(a.tokens).map(_.show[Syntax]), trimTokens(b.tokens).map(_.show[Syntax]))
     if (t1 != t2) {
-      println(a.show[Code] + "\n" + b.show[Code])
+      println(a.show[Syntax] + "\n" + b.show[Syntax])
     }
     assert(t1 == t2)
   }

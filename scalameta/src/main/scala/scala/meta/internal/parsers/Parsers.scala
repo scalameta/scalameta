@@ -439,7 +439,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     implicit class XtensionTree(tree: Tree) {
       // NOTE: if a tree has synthetic tokens produced by inferTokens,
       // then their input will be synthetic as well, and here we verify that it's not the case
-      private def requirePositioned() = require(tree.tokens.isAuthentic && debug(tree.show[Code], tree.show[Raw]))
+      private def requirePositioned() = require(tree.tokens.isAuthentic && debug(tree.show[Syntax], tree.show[Structure]))
       def startTokenPos: Int = { requirePositioned(); tree.tokens.require[Tokens.Slice].from }
       def endTokenPos: Int = { requirePositioned(); tree.tokens.require[Tokens.Slice].until - 1 }
     }
@@ -535,13 +535,13 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
                 // Unquote's pt may not be directly equal unwrapped ellipsis's pt, but be its refinement instead.
                 // For example, in `new { ..$stats }`, ellipsis's pt is Seq[Stat], but quasi's pt is Term.
                 // This is an artifact of the current implementation, so we just need to keep it mind and work around it.
-                require(classTag[T].runtimeClass.isAssignableFrom(quasi.pt) && debug(ellipsis, result, result.show[Raw]))
-                atPos(quasi, quasi)(implicitly[AstMetadata[T]].quasi(quasi.tree, quasi.rank))
+                require(classTag[T].runtimeClass.isAssignableFrom(quasi.pt) && debug(ellipsis, result, result.show[Structure]))
+                atPos(quasi, quasi)(implicitly[AstMetadata[T]].quasi(quasi.rank, quasi.tree))
               case other =>
                 other
             }
           }
-          implicitly[AstMetadata[T]].quasi(tree, rank)
+          implicitly[AstMetadata[T]].quasi(rank, tree)
         }
       case _ =>
         unreachable(debug(token))
@@ -552,7 +552,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     token match {
       case unquote: Unquote =>
         next()
-        implicitly[AstMetadata[T]].quasi(unquote.tree, 0)
+        implicitly[AstMetadata[T]].quasi(0, unquote.tree)
       case _ =>
         unreachable(debug(token))
     }
@@ -582,7 +582,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
 
   def convertToTypeId(ref: Term.Ref): Option[Type] = ref match {
     case ref: Quasi =>
-      Some(atPos(ref, ref)(Type.Quasi(ref.tree, ref.rank)))
+      Some(atPos(ref, ref)(Type.Quasi(ref.rank, ref.tree)))
     case Term.Select(qual: Term.Ref, name) =>
       Some(atPos(ref, ref)(Type.Select(qual, atPos(name, name)(Type.Name(name.value)))))
     case name: Term.Name =>
@@ -673,7 +673,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       def binop(opinfo: OpInfo[List[Term.Arg]], rhs: List[Term.Arg], endPos: Pos): List[Term.Arg] = {
         val lhs = atPos(opinfo.startPos, opinfo.endPos)(makeTupleTerm(opinfo.lhs map {
           case t: Term => t
-          case other   => unreachable(debug(other, other.show[Raw]))
+          case other   => unreachable(debug(other, other.show[Structure]))
         }))
         atPos(opinfo.startPos, endPos)(Term.ApplyInfix(lhs, opinfo.operator, opinfo.targs, rhs)) :: Nil
       }
@@ -919,7 +919,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         case _ => loop(tpe)
       }
       def loop(tpe: Type): Pat.Type = tpe match {
-        case q: impl.Quasi => atPos(q, q)(Pat.Type.Quasi(q.tree, q.rank))
+        case q: impl.Quasi => atPos(q, q)(Pat.Type.Quasi(q.rank, q.tree))
         case tpe: Type.Name => tpe
         case tpe: Type.Select => tpe
         case Type.Project(qual, name) => atPos(tpe, tpe)(Pat.Type.Project(loop(qual), name))
@@ -1135,7 +1135,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       case _: Interpolation.End | _: Xml.End =>
         next(); // simply return
       case _ =>
-        unreachable(debug(token, token.show[Raw]))
+        unreachable(debug(token, token.show[Structure]))
     }
     loop()
     result(interpolator, partsBuf.toList, argsBuf.toList)
@@ -1336,7 +1336,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
             t = atPos(core, auto)(Term.Update(core, argss, expr()))
           case q: Term.Quasi =>
             next()
-            t = atPos(q, auto)(Term.Assign(atPos(q, q)(Term.Ref.Quasi(q.tree, q.rank)), expr()))
+            t = atPos(q, auto)(Term.Assign(atPos(q, q)(Term.Ref.Quasi(q.rank, q.tree)), expr()))
           case _ =>
         }
       } else if (token.is[`:`]) {
@@ -1537,7 +1537,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   def argumentExpr(): Term.Arg = {
     expr() match {
       case q: impl.Quasi =>
-        atPos(q, q)(Term.Arg.Quasi(q.tree, q.rank))
+        atPos(q, q)(Term.Arg.Quasi(q.rank, q.tree))
       case Term.Ascribe(t, Type.Placeholder(Type.Bounds(None, None))) if isIdentOf("*") =>
         next()
         atPos(t, auto)(Term.Arg.Repeated(t))
@@ -1759,7 +1759,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       else p match {
         case p: Pat.Quasi =>
           next()
-          val p1 = atPos(p, p)(Pat.Var.Term.Quasi(p.tree, p.rank))
+          val p1 = atPos(p, p)(Pat.Var.Term.Quasi(p.rank, p.tree))
           Pat.Bind(p1, pattern3())
         case p: Term.Name =>
           syntaxError("Pattern variables must start with a lower-case letter. (SLS 8.1.1.)", at = p)
@@ -1870,7 +1870,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
           case (_, name: Term.Name) if isVarPattern => Pat.Var.Term(name)
           case (_, name: Term.Name)                 => name
           case (_, select: Term.Select)             => select
-          case _                                    => unreachable(debug(token, token.show[Raw], sid, sid.show[Raw]))
+          case _                                    => unreachable(debug(token, token.show[Structure], sid, sid.show[Structure]))
         }
       case _: `_ ` =>
         next()
@@ -1933,7 +1933,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     val mod = in.token match {
       case _: `private` => (name: Name.Qualifier) => Mod.Private(name)
       case _: `protected` => (name: Name.Qualifier) => Mod.Protected(name)
-      case other => unreachable(debug(other, other.show[Raw]))
+      case other => unreachable(debug(other, other.show[Structure]))
     }
     next()
     if (in.token.isNot[`[`]) mod(autoPos(Name.Anonymous()))
@@ -2238,7 +2238,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         importWildcardOrName() match {
           case to: Import.Selector.Name     => Import.Selector.Rename(from.value, to.value)
           case to: Import.Selector.Wildcard => Import.Selector.Unimport(from.value)
-          case other                        => unreachable(debug(other, other.show[Raw]))
+          case other                        => unreachable(debug(other, other.show[Structure]))
         }
       case other => other
     }

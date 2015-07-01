@@ -50,7 +50,7 @@ class BranchMacros(val c: Context) {
         var qstats = List(q"def pt: _root_.java.lang.Class[_] = _root_.org.scalameta.runtime.arrayClass(_root_.scala.Predef.classOf[$name], this.rank)")
         if (is("Name") || is("Term.Param.Name") || is("Type.Param.Name")) qstats ++= List("value", "denot").map(quasigetter)
         if (is("Term") || is("Lit") || is("Term.Ref") || is("Ctor.Ref")) qstats ++= List("typing", "expansion").map(quasigetter)
-        mstats1 += q"$qmods class $qname(tree: _root_.scala.Any, rank: _root_.scala.Int) extends ..$qparents { ..$qstats }"
+        mstats1 += q"$qmods class $qname(rank: _root_.scala.Int, tree: _root_.scala.Any) extends ..$qparents { ..$qstats }"
       }
 
       val cdef1 = ClassDef(Modifiers(flags1, privateWithin, anns1), name, tparams, Template(parents, self, stats1.toList))

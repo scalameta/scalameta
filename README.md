@@ -67,13 +67,13 @@ res0: meta.internal.ast.Defn.Class = class C { def x = 2 }
 In the meanwhile, if our rudimentary quasiquotes end up not working for your scenario,
 you will have to assemble and take apart syntax trees by hand.
 For that, you might want to enlist the help of good old friends showCode and showRaw from scala.reflect,
-which are now generalized and called `show[Code]` and `show[Raw]`:
+which are now generalized and called `show[Syntax]` and `show[Structure]`:
 
 ```
-scala> res0.show[Code]
+scala> res0.show[Syntax]
 res1: String = class C { def x = 2 }
 
-scala> res0.show[Raw]
+scala> res0.show[Structure]
 res2: String = Defn.Class(Nil, Type.Name("C"), Nil, Ctor.Primary(Nil, Ctor.Ref.Name("this"), Nil), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), Some(List(Defn.Def(Nil, Term.Name("x"), Nil, Nil, None, Lit.Int(2))))))
 ```
 
@@ -137,7 +137,7 @@ class C {
   def y = new C().x
 }
 
-scala> res6.show[Raw]
+scala> res6.show[Structure]
 res7: String = Defn.Class(
   Nil, Type.Name("C"), Nil,
   Ctor.Primary(Nil, Ctor.Ref.Name("this"), Nil),
@@ -315,11 +315,11 @@ member: scala.meta.Member = type List[+A] = List[A]
 ```
 
 The member that we obtain is nothing magical - it's just the syntax of the definition provided in the `scala` package object.
-We can inspect this syntax via usual means (currently, we have to use manual pattern matching and/or show[Raw], but soon
+We can inspect this syntax via usual means (currently, we have to use manual pattern matching and/or show[Structure], but soon
 we'll implement quasiquotes to fill this role).
 
 ```
-scala> member.show[Raw]
+scala> member.show[Structure]
 res18: String = Defn.Type(Nil, Type.Name("List"), List(Type.Param(List(Mod.Covariant()), Type.Name("A"), Nil, Type.Bounds(None, None), Nil, Nil)), Type.Apply(Type.Name("List"), List(Type.Name("A"))))
 ```
 

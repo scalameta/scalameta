@@ -36,11 +36,11 @@ class BootstrapSuite extends ParseSuite {
           })
           bitmap.zipWithIndex.filter(!_._1).foreach{ case (_, i) => fail("TOKENS DON'T COVER " + i) }
           // check #2: tostring works
-          if (!isFail && content != toks.map(_.show[Code]).mkString) {
+          if (!isFail && content != toks.map(_.show[Syntax]).mkString) {
             isFail = true
             println("CORRELATION FAILED")
             println("EXPECTED: \n" + content)
-            println("ACTUAL: \n" + toks.map(_.show[Code]).mkString)
+            println("ACTUAL: \n" + toks.map(_.show[Syntax]).mkString)
           }
           assert(!isFail)
         }

@@ -23,7 +23,7 @@ object Positions {
   def apply[T](f: T => Show.Result): Positions[T] = new Positions[T] { def apply(input: T) = f(input) }
   implicit val Colorful: PositionStyle = PositionStyle.Colorful
 
-  implicit def positionsTree[T <: Tree : Code](implicit style: PositionStyle): Positions[T] = Positions { x =>
+  implicit def positionsTree[T <: Tree : Syntax](implicit style: PositionStyle): Positions[T] = Positions { x =>
     def loopTree(x: Tree): Show.Result = {
       implicit class XtensionString(s: String) {
         def colored(color: String) = if (style == PositionStyle.Colorful) (color + s + RESET) else s

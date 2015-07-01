@@ -12,21 +12,21 @@ class InferSimpleSuite extends FunSuite {
 
   private def compareTokenCodes(a: Tree, b: Tree, ignoreSpaces: Boolean = false): Unit = {
     def getCodes(t: Tree) = {
-      val codes = trimTokens(t.tokens).map(_.show[Code])
+      val codes = trimTokens(t.tokens).map(_.show[Syntax])
       if (ignoreSpaces) codes.filter(_ != " ")
       else codes
     }
     val t1 = getCodes(a)
     val t2 = getCodes(b)
     if (t1 != t2) {
-      println(a.show[Raw] + "\n" + b.show[Raw])
+      println(a.show[Structure] + "\n" + b.show[Structure])
       println(t1 + "\n" + t2)
     }
     assert(t1 == t2)
   }
 
   private def inferedShouldEqual(t: Tree, s: String): Unit = {
-    val t1 = trimTokens(t.tokens).map(_.show[Code]).mkString
+    val t1 = trimTokens(t.tokens).map(_.show[Syntax]).mkString
     if (t1 != s)
       println(t1 + "\n" + s)
     assert(t1 == s)
@@ -45,7 +45,7 @@ class InferSimpleSuite extends FunSuite {
   private def debug(trees: Tree*): Unit = {
     trees.foreach { tree =>
       println
-      println(tree.show[Raw])
+      println(tree.show[Structure])
       println(tree.tokens)
     }
   }
@@ -586,12 +586,12 @@ class InferSimpleSuite extends FunSuite {
     compareTokenCodes(tree, tree.copy())
   }
   /* TODO: Those test pass properly, but add a character at the end of each name. */
-  /*test("inferPatInterpolate1") { 
+  /*test("inferPatInterpolate1") {
     val tree = """ mys"$something is blue like $an $orange." """.trim
       .parse[Pat].asInstanceOf[scala.meta.internal.ast.Pat.Interpolate]
     compareTokenCodes(tree, tree.copy())
   }
-  test("inferPatInterpolate2") { 
+  test("inferPatInterpolate2") {
     val tree = """ mys"$something is blue like ${an.orange}." """.trim
       .parse[Pat].asInstanceOf[scala.meta.internal.ast.Pat.Interpolate]
     compareTokenCodes(tree, tree.copy())
@@ -926,7 +926,7 @@ class InferSimpleSuite extends FunSuite {
   }
   test("inferDefnDef8") {
     val tree = """private[test] def aaa[T, B, E](b: T, a: String)(c: Int = 0): (T => B) = {
-                 |  def yy = "hi" // new comment 
+                 |  def yy = "hi" // new comment
                  |}"""
       .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Defn.Def]
     compareTokenCodes(tree, tree.copy())
@@ -996,8 +996,8 @@ class InferSimpleSuite extends FunSuite {
   /* -----------------------------------------------------------------------*/
 
   test("inferDefnDefnClass1") {
-    val tree = """class Test { 
-                 |  def test = 1234 
+    val tree = """class Test {
+                 |  def test = 1234
                  |}"""
       .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Defn.Class]
     val treeCp =
@@ -1005,8 +1005,8 @@ class InferSimpleSuite extends FunSuite {
   }
 
   test("inferDefnDefnClass2") {
-    val tree = """@ast class Test { 
-                 |  def test = 1234 
+    val tree = """@ast class Test {
+                 |  def test = 1234
                  |}"""
       .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Defn.Class]
     val treeCp = tree.copy()
@@ -1014,8 +1014,8 @@ class InferSimpleSuite extends FunSuite {
   }
 
   test("inferDefnDefnClass3") {
-    val tree = """class Test extends Any { 
-                 |  def test = 1234 
+    val tree = """class Test extends Any {
+                 |  def test = 1234
                  |}"""
       .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Defn.Class]
     val treeCp = tree.copy()
@@ -1023,60 +1023,60 @@ class InferSimpleSuite extends FunSuite {
   }
 
   test("inferDefnDefnClass4") {
-    val tree = """@test class Test extends (A => B) with C { 
-                 |  def test = 1234 
+    val tree = """@test class Test extends (A => B) with C {
+                 |  def test = 1234
                  |}"""
       .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Defn.Class]
     compareTokenCodes(tree, tree.copy())
   }
 
   test("inferDefnDefnClass5") {
-    val tree = """@test case class Test() extends (A => B) with C { 
-                 |  def test = 1234 
+    val tree = """@test case class Test() extends (A => B) with C {
+                 |  def test = 1234
                  |}"""
       .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Defn.Class]
     compareTokenCodes(tree, tree.copy())
   }
 
   test("inferDefnDefnClass6") {
-    val tree = """@test case class Test(a: Int) extends (A => B) with C { 
-                 |  def test = 1234 
+    val tree = """@test case class Test(a: Int) extends (A => B) with C {
+                 |  def test = 1234
                  |}"""
       .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Defn.Class]
     compareTokenCodes(tree, tree.copy())
   }
 
   test("inferDefnDefnClass7") {
-    val tree = """@test case class Test(a: Int, b: String) extends (A => B) with C { 
-                 |  def test = 1234 
+    val tree = """@test case class Test(a: Int, b: String) extends (A => B) with C {
+                 |  def test = 1234
                  |}"""
       .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Defn.Class]
     compareTokenCodes(tree, tree.copy())
   }
   test("inferDefnDefnClass8") {
-    val tree = """@test case class Test(var a: Int, val b: String) extends (A => B) with C { 
-                 |  def test = 1234 
+    val tree = """@test case class Test(var a: Int, val b: String) extends (A => B) with C {
+                 |  def test = 1234
                  |}"""
       .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Defn.Class]
     compareTokenCodes(tree, tree.copy())
   }
   test("inferDefnDefnClass9") {
-    val tree = """@test case class Test[B](var a: Int, val b: String) extends (A => B) with C { 
-                 |  def test = 1234 
+    val tree = """@test case class Test[B](var a: Int, val b: String) extends (A => B) with C {
+                 |  def test = 1234
                  |}"""
       .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Defn.Class]
     compareTokenCodes(tree, tree.copy())
   }
   test("inferDefnDefnClass10") {
-    val tree = """@test case class Test[A, B](var a: Int, val b: String) extends (A => B) with C { 
-                 |  def test = 1234 
+    val tree = """@test case class Test[A, B](var a: Int, val b: String) extends (A => B) with C {
+                 |  def test = 1234
                  |}"""
       .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Defn.Class]
     compareTokenCodes(tree, tree.copy())
   }
   test("inferDefnDefnClass11") {
-    val tree = """@test @abc case class Test[A, B](var a: Int, val b: String) extends (A => B) with C { 
-               |  def test = 1234 
+    val tree = """@test @abc case class Test[A, B](var a: Int, val b: String) extends (A => B) with C {
+               |  def test = 1234
                |}"""
       .stripMargin.parse[Stat].asInstanceOf[scala.meta.internal.ast.Defn.Class]
     compareTokenCodes(tree, tree.copy())
@@ -1126,7 +1126,7 @@ class InferSimpleSuite extends FunSuite {
   /* -----------------------------------------------------------------------*/
 
   test("inferDefnDefnObject1") {
-    val tree = """object Test { 
+    val tree = """object Test {
                  |  def test = 1234
                  |  case object AA
                  |}"""
@@ -1134,7 +1134,7 @@ class InferSimpleSuite extends FunSuite {
     compareTokenCodes(tree, tree.copy())
   }
   test("inferDefnDefnObject2") {
-    val tree = """@ast @tt object Test { 
+    val tree = """@ast @tt object Test {
                  |  def test = 1234
                  |  case object AA
                  |}"""
@@ -1142,7 +1142,7 @@ class InferSimpleSuite extends FunSuite {
     compareTokenCodes(tree, tree.copy())
   }
   test("inferDefnDefnObject3") {
-    val tree = """@ast @tt case object Test { 
+    val tree = """@ast @tt case object Test {
                  |  def test = 1234
                  |  case object AA
                  |}"""
@@ -1170,7 +1170,7 @@ class InferSimpleSuite extends FunSuite {
   /* -----------------------------------------------------------------------*/
 
   test("inferPkgObject1") {
-    val tree = """package object Test { 
+    val tree = """package object Test {
                  |  def test = 1234
                  |  case object AA
                  |}"""
@@ -1300,8 +1300,8 @@ class InferSimpleSuite extends FunSuite {
   /* -----------------------------------------------------------------------*/
 
   test("inferSource") {
-    val tree = """class Test { 
-                 |  def test = 1234 
+    val tree = """class Test {
+                 |  def test = 1234
                  |  case object AA
                  |}"""
       .stripMargin.parse[Source].asInstanceOf[scala.meta.internal.ast.Source]

@@ -47,14 +47,14 @@ object Semantics {
             def prettyprintPrefix(pre: Prefix): String = {
               pre match {
                 case Prefix.Zero => "0"
-                case Prefix.Type(tpe) => if (style == Style.Deep) body(tpe) else tpe.show[Raw]
+                case Prefix.Type(tpe) => if (style == Style.Deep) body(tpe) else tpe.show[Structure]
               }
             }
             def prettyprintSymbol(sym: Symbol): String = {
               def loop(sym: Symbol): String = sym match {
                 case Symbol.Zero => "0"
-                case Symbol.Root => "_root_"
-                case Symbol.Empty => "_empty_"
+                case Symbol.RootPackage => "_root_"
+                case Symbol.EmptyPackage => "_empty_"
                 case Symbol.Global(owner, name, Signature.Type) => loop(owner) + "#" + name
                 case Symbol.Global(owner, name, Signature.Term) => loop(owner) + "." + name
                 case Symbol.Global(owner, name, Signature.Method(jvmSignature)) => loop(owner) + "." + name + jvmSignature
@@ -74,7 +74,7 @@ object Semantics {
           def tag = classOf[Typing]
           def prettyprint() = typing match {
             case Typing.Unknown => unreachable
-            case Typing.Known(tpe) => if (style == Style.Deep) body(tpe) else tpe.show[Raw]
+            case Typing.Known(tpe) => if (style == Style.Deep) body(tpe) else tpe.show[Structure]
           }
         }
         implicit def statusExpansion(expansion: Expansion): Footnote = new Footnote {
@@ -82,7 +82,7 @@ object Semantics {
           def tag = classOf[Expansion]
           def prettyprint() = expansion match {
             case Expansion.Identity => unreachable
-            case Expansion.Desugaring(term) => if (style == Style.Deep) body(term) else term.show[Raw]
+            case Expansion.Desugaring(term) => if (style == Style.Deep) body(term) else term.show[Structure]
           }
         }
       }
@@ -125,7 +125,7 @@ object Semantics {
       }
       def contents(x: api.Tree): String = x match {
         case x: Lit.String => enquote(x.value, DoubleQuotes)
-        case x: Lit => import scala.meta.dialects.Scala211; x.show[Code]
+        case x: Lit => import scala.meta.dialects.Scala211; x.show[Syntax]
         case x => x.productIterator.map(whole).mkString(", ")
       }
       val syntax = x.productPrefix + "(" + contents(x) + ")"
