@@ -66,7 +66,7 @@ trait Attributes extends GlobalToolkit with MetaToolkit {
         // in these cases, our lsym is going to be a symbol of the trait in question
         // we need to account for that in `symbolTable.convert` and create a constructor symbol of our own
         case ptree: m.Ctor.Name => ptree.copy(denot = denot(gpre, lsym), typing = ptree.typing)
-        case _ => unreachable(debug(ptree, ptree.show[Raw]))
+        case _ => unreachable(debug(ptree, ptree.show[Structure]))
       }
       ptree1.require[T]
     }

@@ -87,7 +87,7 @@ class SemanticSuite extends FunSuite {
   // }
 
   test("t\"List[Int]\".dealias") {
-    assert(t"List[Int]".dealias.show[Code] == "List[Int]")
+    assert(t"List[Int]".dealias.show[Syntax] == "List[Int]")
     assert(t"List[Int]".dealias.show[Semantics] == """
       |Type.Apply(Type.Name("List")[1], List(Type.Name("Int")[2]))
       |[1] Type.Singleton(Term.Name("immutable")[3])::scala.collection.immutable#List
