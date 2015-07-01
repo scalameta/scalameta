@@ -33,7 +33,7 @@ package invariants {
         lazy val temp = c.freshName(TermName("temp"))
         def emit: Tree
       }
-      trait Simple extends Prop {
+      sealed trait Simple extends Prop {
         def diagnostic: String
         def tree: Tree
         override def emit = {
