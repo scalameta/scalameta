@@ -107,6 +107,7 @@ class SemanticSuite extends FunSuite {
     }
   }
 
+  // FIXME: uncomment this once https://github.com/scalameta/scalameta/issues/171 is fixed
   // test("t\"List\".members") {
   //   assert(t"List".members.map(_.show[Code]).mkString(EOL) === """
   //     |@ffi("jvmMethod(Lscala/collection/immutable/List;, $lessinit$greater, ()Lscala/collection/immutable/List;)") ()

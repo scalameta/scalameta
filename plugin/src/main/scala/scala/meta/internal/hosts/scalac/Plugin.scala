@@ -5,16 +5,13 @@ import scala.tools.nsc.Global
 import scala.tools.nsc.plugins.{Plugin => NscPlugin, PluginComponent => NscPluginComponent}
 import convert.ConvertPhase
 import backend.HijackBackend
-import macros.{MacroPlugin => ScalahostMacroPlugin}
 import org.scalameta.reflection._
 
 trait PluginBase extends NscPlugin
                     with ConvertPhase
                     with HijackBackend
-                    with ScalahostMacroPlugin
                     with PluginSettings
                     with GlobalToolkit {
-  global.analyzer.addMacroPlugin(scalahostMacroPlugin)
   val (newBackend, oldBackend) = hijackBackend()
   // TODO: looks like it doesn't get hijacked cleanly...
   // if (global.genBCode ne newBackend) sys.error("failed to hijack backend")
