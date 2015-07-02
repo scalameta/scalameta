@@ -58,6 +58,11 @@ trait Expansion extends scala.reflect.internal.show.Printers {
             MacroArgs(context, Nil)
           }
           // NOTE: magic name. essential for detailed and sane stack traces for exceptions in macro expansion logic
+          // NOTE: usage of toMtree for macro arguments and macro bodies means that we won't see syntactically precise trees
+          // because unlike the previous implementation toMtree doesn't aim to resugar input trees
+          // TODO: this means that barely working scala.meta-based macros will probably have even less chances to work now
+          // we recognize this as a problem and it will have to be fixed (in fact, after a discussion with Denys,
+          // I think that I know how to restore syntactic precision), but that's definitely not 0.1 material
           private def macroExpandWithRuntime(rc: ScalareflectMacroContext): Any = {
             def fail(errorMessage: String) = throw new AbortMacroException(rc.macroApplication.pos, errorMessage)
             implicit val mc = Scalahost.mkMacroContext[global.type](rc)
@@ -65,9 +70,9 @@ trait Expansion extends scala.reflect.internal.show.Printers {
               if (sys.props("macro.debug") != null) println(rc.macroApplication)
               val q"$_[..$gtargs](...$gargss)" = rc.macroApplication
               val mtargs = gtargs.map(gtarg => mc.toMtype(gtarg.tpe))
-              val margss = mmap(gargss)(mc.toMtree(_, classOf[m.Term]))
+              val margss = mmap(gargss)(garg => mc.toMtree(garg).require[m.Term])
               if (currentRun.compiles(rc.macroApplication.symbol)) {
-                val mMacroBody = mc.toMtree(implDdef, classOf[m.Defn.Def])
+                val mMacroBody = mc.toMtree(implDdef).require[m.Defn.Def]
                 val mMacroEnv = scala.collection.mutable.Map[Term.Name, Any]()
                 val mMacroArgss = List(mtargs, List(mc)) // TODO: accommodate margss
                 val mMacroApplication = mMacroArgss.foldLeft(mMacroBody.name: Term)((curr, args) => {

@@ -32,6 +32,8 @@ import scala.meta.semantic.{Context => ScalametaSemanticContext}
 //
 // 3) The conversion not only supports lookup within scala.meta ASTs (i.e. AST persistence),
 // but it can also operate in legacy mode, where it rebuilds scala.meta-compliant metadata from g.Symbols.
+//
+// 4) See comments to ToMtree to learn more about how this conversion preserves the original syntax of those types.
 trait ToMmember extends GlobalToolkit with MetaToolkit {
   self: Api =>
 
@@ -257,7 +259,7 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
           lsym match {
             case l.Macro(gsym) =>
               gsym.macroBody match {
-                case MacroBody.Meta(body) => { val _ = toMtree.computeConverters; toMtree(body, classOf[m.Term]) }
+                case MacroBody.Meta(body) => toMtree(body).require[m.Term]
                 case _ => munknownTerm
               }
             case l.SecondaryCtor(gsym) =>

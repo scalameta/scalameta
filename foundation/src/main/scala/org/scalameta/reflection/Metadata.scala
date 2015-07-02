@@ -40,8 +40,6 @@ trait Metadata {
     def appendMetadata(kvps: (String, Any)*): T = { kvps.foreach(kvp => carrier.metadata += kvp); carrier }
     def removeMetadata(keys: String*): T = { keys.foreach(key => carrier.metadata -= key); carrier }
     def hasMetadata(key: String): Boolean = metadata.get(key).isDefined
-    def scratchpad: List[Any] = carrier.metadata.get("scratchpad").map(_.require[List[Any]]).getOrElse(Nil)
-    def appendScratchpad(datum: Any): T = carrier.appendMetadata("scratchpad" -> (carrier.scratchpad :+ datum))
   }
 
   class Metadata[T: Attachable](carrier: T) {

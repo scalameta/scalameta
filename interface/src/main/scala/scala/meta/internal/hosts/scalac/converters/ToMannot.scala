@@ -16,6 +16,7 @@ import scala.meta.internal.{ast => m}
 // There's not much to say about this conversion except that it's a really lossy one:
 // not only we have to deal with desugared trees in annotation arguments,
 // but we also have to tolerate the loss of the constructor symbol (because g.AnnotationInfos only have a type).
+// See comments to ToMtree to learn more about preserving original syntax.
 trait ToMannot extends GlobalToolkit with MetaToolkit {
   self: Api =>
 
@@ -44,9 +45,8 @@ trait ToMannot extends GlobalToolkit with MetaToolkit {
               m.Term.Arg.Named(mname, loop(garg))
             })
           } else {
-            def loop(garg: g.Tree): m.Term = { val _ = toMtree.computeConverters; toMtree(garg, classOf[m.Term]) }
             if (gannot.atp.typeSymbol == g.definitions.ThrowsClass) Nil
-            else gargs.map(loop)
+            else gargs.map(garg => toMtree(garg).require[m.Term])
           }
         }
         val mctor = m.Ctor.Name(gatp.typeSymbolDirect.name.decoded).withDenot(gatp, gctor)

@@ -15,13 +15,7 @@ import scala.meta.internal.{semantic => s}
 import java.util.UUID.randomUUID
 
 // This module exposes a method that can convert scala.reflect types into equivalent scala.meta types.
-// It is impossible to attach custom information to types, so we can't guarantee high-fidelity
-// of the conversion in the sense that toMtree guarantees.
-//
-// Nevertheless, this shouldn't be a problem for us, because our representation doesn't care about
-// particularities of short names, fully-qualified names, etc. The only potentially negative effect here
-// is aesthetics (and prettyprinting, which we'll need to adapt to account for hygiene - but even before that
-// we have show[Semantics], so it's relatively fine).
+// See comments to ToMtree to learn more about how this conversion preserves the original syntax of those types.
 trait ToMtype extends GlobalToolkit with MetaToolkit {
   self: Api =>
 

@@ -8,9 +8,10 @@ import scala.meta.dialects.Scala211
 import scala.meta.internal.hosts.scalac.{PluginBase => ScalahostPlugin}
 import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
-import scala.meta.internal.hosts.scalac.converters.MergeTrees
+import scala.meta.internal.hosts.scalac.perfect.mergeTrees
 import scala.reflect.io.AbstractFile
 import org.scalameta.reflection._
+import org.scalameta.invariants._
 
 trait ConvertPhase {
   self: ScalahostPlugin =>
@@ -34,16 +35,10 @@ trait ConvertPhase {
 
     override def newPhase(prev: Phase): StdPhase = new StdPhase(prev) {
       override def apply(unit: CompilationUnit) {
-        val parsedTree = unit.source.content.parse[mapi.Source].asInstanceOf[m.Source]
-        val convertedTree = c.toMtree(unit.body, classOf[mapi.Source]).asInstanceOf[m.Source]
-        val mergedTree = MergeTrees(parsedTree, convertedTree)
-
-        // TODO: once the converter is rewritten to produce syntax-aware trees,
-        // we can delete MergeTrees and do just use convertedTree for everything
-        unit.body
-            .appendMetadata("scalameta" -> convertedTree)
-            .appendMetadata("scalametaSemantic" -> convertedTree)
-            .appendMetadata("scalametaSyntactic" -> mergedTree)
+        val syntacticTree = unit.source.content.parse[mapi.Source].require[m.Source]
+        val semanticTree = c.toMtree(unit.body).require[m.Source]
+        val perfectTree = mergeTrees(syntacticTree, semanticTree)
+        unit.body.appendMetadata("scalameta" -> perfectTree)
       }
     }
   }

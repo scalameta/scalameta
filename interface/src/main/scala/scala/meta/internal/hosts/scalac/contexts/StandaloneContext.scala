@@ -7,6 +7,7 @@ import org.scalameta.invariants._
 import scala.meta.semantic.{Context => ScalametaSemanticContext}
 import scala.meta.semantic.{Context => ScalametaMacroContext}
 import scala.meta.internal.hosts.scalac.contexts.{SemanticContext => ScalahostSemanticContext}
+import scala.meta.internal.hosts.scalac.perfect.{mergeTrees => mmergeTrees}
 import scala.compat.Platform.EOL
 import org.scalameta.internal.mkGlobal
 import scala.tools.nsc.reporters.StoreReporter
@@ -38,8 +39,10 @@ class StandaloneContext(options: String) extends ScalahostSemanticContext(mkGlob
       if (reporter.hasErrors) throw new StandaloneException("typecheck has failed:" + EOL + (reporter.infos map (_.msg) mkString EOL))
       typedpkg.require[PackageDef]
     }
-    val _ = toMtree.computeConverters // TODO: necessary because of macro expansion order
-    toMtree(gtypedtree, classOf[mapi.Source])
+    import scala.meta.dialects.Scala211
+    val msyntacticTree = code.parse[mapi.Source].require[m.Source]
+    val msemanticTree = toMtree(gtypedtree).require[m.Source]
+    mmergeTrees(msyntacticTree, msemanticTree).require[m.Source]
   }
   val reporter = new StoreReporter()
 }
