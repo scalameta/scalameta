@@ -21,7 +21,7 @@ abstract class ScalahostGenBCode(override val global: NscGlobal) extends scala.t
   import bTypes._
   import coreBTypes._
 
-  override val phaseName = "jvm (with tasty support)"
+  override val phaseName = "jvm"
 
   override def newPhase(prev: Phase) = new ScalahostBCodePhase(prev)
 
@@ -158,7 +158,7 @@ abstract class ScalahostGenBCode(override val global: NscGlobal) extends scala.t
         // -------------- TASTY attr --------------
         import scala.tools.asm.CustomAttr
         if (claszSymbol.isClass) // @DarkDimius is this test needed here?
-          for (meta <- cunit.body.metadata.get("scalametaSyntactic")) {
+          for (meta <- cunit.body.metadata.get("scalameta")) {
             val binary = {
               if (cunit.body.hasMetadata("tastyWritten")) new Array[Byte](0)
               else meta.asInstanceOf[Source].toTasty

@@ -30,7 +30,7 @@ trait HijackBackend {
         def subcomponentNamed(name: String) = phasesSet.find(_.phaseName == name).head
         val oldScs @ List(_) = List(subcomponentNamed("jvm"))
         val newScs = List(newBackend)
-        def hijackDescription(pt: SubComponent, sc: SubComponent) = phasesDescMap(sc) = phasesDescMap(pt) + " with tasty support"
+        def hijackDescription(pt: SubComponent, sc: SubComponent) = phasesDescMap(sc) = phasesDescMap(pt) + " with TASTY support"
         oldScs zip newScs foreach { case (pt, sc) => hijackDescription(pt, sc) }
         phasesSet --= oldScs
         phasesSet ++= newScs
