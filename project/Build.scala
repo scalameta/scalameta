@@ -44,9 +44,7 @@ object ScalaHostBuild extends Build {
   lazy val plugin = Project(
     id   = "scalahost",
     base = file("plugin"),
-    settings = publishableSettings ++ commonDependencies ++ mergeDependencies ++ Seq(
-      libraryDependencies += interpreter
-    )
+    settings = publishableSettings ++ commonDependencies ++ mergeDependencies
   ) dependsOn (foundation % "optional", interface % "optional") // not really optional, used for fatjar
 
   lazy val sandbox = Project(

@@ -1,6 +1,5 @@
 import org.scalatest._
 import scala.tools.nsc.Settings
-import scala.tools.nsc.interpreter._
 
 class ReplSuite extends FunSuite {
   private def repl(code: String): String = {
