@@ -8,7 +8,6 @@ class ReplSuite extends FunSuite {
     s.Xnojline.value = true
     s.usejavacp.value = false
     s.classpath.value = sys.props("sbt.paths.tests.classpath")
-    s.plugin.value = List(sys.props("sbt.paths.plugin.jar"))
     val lines = ILoop.runForTranscript(code, s).lines.toList
     lines.drop(3).map(_.replaceAll("\\s+$","")).mkString("\n").trim.stripSuffix("scala>").trim
   }

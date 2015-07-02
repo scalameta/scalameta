@@ -61,7 +61,6 @@ object ScalaHostBuild extends Build {
     id   = "tests",
     base = file("tests"),
     settings = sharedSettings ++ commonDependencies ++ Seq(
-      usePlugin(plugin),
       libraryDependencies ++= Seq(scalatest, scalacheck),
       dontPackage
     ) ++ exposeClasspaths("tests")

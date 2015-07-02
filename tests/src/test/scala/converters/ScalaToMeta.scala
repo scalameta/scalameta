@@ -1,5 +1,3 @@
-FIXME: multiple failures after I merged the new implementation of show[Code]
-
 import org.scalatest._
 import java.net._
 import java.io._
@@ -17,7 +15,7 @@ class ScalaToMeta extends FunSuite {
     val m = c.define(code)
     if (debug) println(m.show[Syntax])
     if (debug) println(m.show[Structure])
-    m.show[Code]
+    m.show[Syntax]
   }
 
   def runScalaToMetaTest(dirPath: String): Unit = {
