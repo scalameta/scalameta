@@ -230,14 +230,14 @@ class QuasiquoteSuite extends FunSuite {
     q"(i: Int) => 42" // should compile
   }
 
-//
+
 //  test("q\"(..$params) => $expr\"") {
 //    val q"(..$params) => $expr" = q"(x: Int, y: String) => 42"
 //  }
 
-//  test("val q\"($q, y: Y, ..$e) => $r\" = q\"(x: X, y: Y, z: Z) => 1\"") {
-//    val q"($q, y: Y, ..$e) => $r" = q"(x: X, y: Y, z: Z) => 1"
-//  }
+  test("val q\"($q, y: Y, ..$e) => $r\" = q\"(x: X, y: Y, z: Z) => 1\"") {
+    val q"($q, y: Y, ..$e) => $r" = q"(x: X, y: Y, z: Z) => 1"
+  }
 
   test("q\"{ ..case $cases }\"") {
     val q"{ case ..$cases }" = q"{ case i: Int => i + 1 }"
