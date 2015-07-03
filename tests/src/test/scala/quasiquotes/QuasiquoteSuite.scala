@@ -235,7 +235,7 @@ class QuasiquoteSuite extends FunSuite {
     val q"(..$paramz) => $expr" = q"(x: Int, y: String) => 42"
     assert(paramz.toString === "List(x: Int, y: String)")
     assert(paramz(0).show[Syntax] === "x: Int")
-    assert(paramz(1).show[Syntax] === "x: String")
+    assert(paramz(1).show[Syntax] === "y: String")
     assert(expr.show[Syntax] === "42")
   }
 
