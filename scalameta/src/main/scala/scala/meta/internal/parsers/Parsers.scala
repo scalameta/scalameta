@@ -1360,8 +1360,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
 
       t = t match {
         case q1 @ Term.Quasi(r1, q2 @ Term.Quasi(r2, tree)) =>
-          val res = atPos(q1, auto)(Term.Tuple(List(Term.Quasi(q1.rank, q1.tree))))
-          res
+          atPos(q1, q1)(Term.Tuple(List(atPos(q2, q2)(Term.Quasi(q1.rank, q1.tree)))))
         case _ => t
       }
 

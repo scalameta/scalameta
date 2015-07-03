@@ -231,9 +231,13 @@ class QuasiquoteSuite extends FunSuite {
   }
 
 
-//  test("q\"(..$params) => $expr\"") {
-//    val q"(..$params) => $expr" = q"(x: Int, y: String) => 42"
-//  }
+  test("q\"(..$params) => $expr\"") {
+    val q"(..$paramz) => $expr" = q"(x: Int, y: String) => 42"
+    assert(paramz.toString === "List(x: Int, y: String)")
+    assert(paramz(0).show[Syntax] === "x: Int")
+    assert(paramz(1).show[Syntax] === "y: String")
+    assert(expr.show[Syntax] === "42")
+  }
 
 //  test("val q\"($q, y, ..$e) => $r\" = q\"(x: X, y, z: Z) => 1\"") {
 //    val q"($q, y, ..$e) => $r" = q"(x: X, y, z: Z) => 1"
