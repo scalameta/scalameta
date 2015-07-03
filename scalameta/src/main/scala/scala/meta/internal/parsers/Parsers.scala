@@ -566,6 +566,8 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
 
   /** Convert tree to formal parameter. */
   def convertToParam(tree: Term): Option[Term.Param] = tree match {
+    case q: Term.Quasi =>
+      Some(atPos(tree, tree)(Term.Param.Quasi(q.rank, q.tree)))
     case name: Term.Name =>
       Some(atPos(tree, tree)(Term.Param(Nil, name, None, None)))
     case name: Term.Placeholder =>
@@ -1365,7 +1367,8 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
 
       lazy val isInBraces = t.tokens.nonEmpty && t.tokens.head.is[`(`] && t.tokens.last.is[`)`]
       def lhsIsTypedParamList() = t match {
-        case Term.Tuple(xs) if xs.forall(_.isInstanceOf[Term.Ascribe]) => true // (x: Int, y: Int) is typed Tuple
+        case Term.Tuple(xs) if xs.forall{case x => x.isInstanceOf[Term.Ascribe] || // (x: Int, y: Int) is typed Tuple
+                                                   x.isInstanceOf[Term.Quasi]} => true // for unquotings
         case _: Term.Ascribe if isInBraces => true // (x: Int) is not Tuple, but is typed
         case _: Lit.Unit if isInBraces => true // () is not Tuple, but is considered as typed
         case _ => false

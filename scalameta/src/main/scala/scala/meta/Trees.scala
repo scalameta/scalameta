@@ -144,8 +144,8 @@ package scala.meta.internal.ast {
     @ast class TryWithCases(expr: Term, catchp: Seq[Case], finallyp: Option[Term]) extends Term
     @ast class TryWithTerm(expr: Term, catchp: Term, finallyp: Option[Term]) extends Term
     @ast class Function(params: Seq[Term.Param], body: Term) extends Term with Scope {
-      require(params.forall(param => (param.name.isInstanceOf[impl.Name.Anonymous] ==> param.default.isEmpty)))
-      require(params.exists(_.mods.exists(_.isInstanceOf[Mod.Implicit])) ==> (params.length == 1))
+      require(params.forall(param => param.isInstanceOf[Term.Param.Quasi] || (param.name.isInstanceOf[impl.Name.Anonymous] ==> param.default.isEmpty)))
+      require(params.exists(param => param.isInstanceOf[Term.Param.Quasi] || (param.mods.exists(_.isInstanceOf[Mod.Implicit])) ==> (params.length == 1)))
     }
     @ast class PartialFunction(cases: Seq[Case] @nonEmpty) extends Term
     @ast class While(expr: Term, body: Term) extends Term
