@@ -439,7 +439,12 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     implicit class XtensionTree(tree: Tree) {
       // NOTE: if a tree has synthetic tokens produced by inferTokens,
       // then their input will be synthetic as well, and here we verify that it's not the case
-      private def requirePositioned() = require(tree.tokens.isAuthentic && debug(tree.show[Syntax], tree.show[Structure]))
+      private def requirePositioned() = {
+        def fail() = throw new Exception(
+          s"internal error: unpositioned prototype tree " +
+            s"${tree.show[Syntax]}: ${tree.show[Structure]}")
+        if (!tree.tokens.isAuthentic) fail()
+      }
       def startTokenPos: Int = { requirePositioned(); tree.tokens.require[Tokens.Slice].from }
       def endTokenPos: Int = { requirePositioned(); tree.tokens.require[Tokens.Slice].until - 1 }
     }
