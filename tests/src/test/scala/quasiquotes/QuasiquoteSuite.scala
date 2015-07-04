@@ -227,9 +227,8 @@ class QuasiquoteSuite extends FunSuite {
 //  }
 
   test("""q"(i: Int) => 42" """) {
-    q"(i: Int) => 42" // should compile
+    assert(q"(i: Int) => 42".show[Syntax] === "(i: Int) => 42")
   }
-
 
   test("q\"(..$params) => $expr\"") {
     val q"(..$paramz) => $expr" = q"(x: Int, y: String) => 42"

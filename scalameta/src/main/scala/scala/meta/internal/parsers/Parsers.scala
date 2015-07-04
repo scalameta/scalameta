@@ -1363,13 +1363,16 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         t = atPos(t, auto)(Term.Match(t, inBracesOrNil(caseClauses())))
       }
 
-      t = t match {
-        case q1 @ Term.Quasi(r1, q2 @ Term.Quasi(r2, tree)) =>
-          atPos(q1, q1)(Term.Tuple(List(atPos(q2, q2)(Term.Quasi(q1.rank, q1.tree)))))
-        case _ => t
+      val isInBraces = t.tokens.nonEmpty && t.tokens.head.is[`(`] && t.tokens.last.is[`)`]
+
+      if (isInBraces) {
+        t = t match {
+          case q1 @ Term.Quasi(r1, q2 @ Term.Quasi(r2, tree)) =>
+            atPos(q1, q1)(Term.Tuple(List(atPos(q2, q2)(Term.Quasi(q1.rank, q1.tree)))))
+          case _ => t
+        }
       }
 
-      lazy val isInBraces = t.tokens.nonEmpty && t.tokens.head.is[`(`] && t.tokens.last.is[`)`]
       def lhsIsTypedParamList() = t match {
         case Term.Tuple(xs) if xs.forall{case x => x.isInstanceOf[Term.Ascribe] || // (x: Int, y: Int) is typed Tuple
                                                    x.isInstanceOf[Term.Quasi]} => true // for unquotings
