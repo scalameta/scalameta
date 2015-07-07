@@ -156,6 +156,21 @@ class ErrorSuite extends FunSuite {
     // """.trim.stripMargin)
   }
 
+  test("tuple unquoting does not work without parentheses") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val l = List(q"x: Int", q"y: Y")
+      q"..$l"
+    """) === """
+      |<macro>:5: type mismatch;
+      | found   : List[scala.meta.Term]
+      | required: scala.meta.Stat
+      |      q"..$l"
+      |      ^
+    """.trim.stripMargin)
+  }
+
   test("q\"foo($x, ..$ys, $z, ..$ts)\"") {
     assert(typecheckError("""
       import scala.meta._

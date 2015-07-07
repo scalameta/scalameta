@@ -439,7 +439,12 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     implicit class XtensionTree(tree: Tree) {
       // NOTE: if a tree has synthetic tokens produced by inferTokens,
       // then their input will be synthetic as well, and here we verify that it's not the case
-      private def requirePositioned() = require(tree.tokens.isAuthentic && debug(tree.show[Syntax], tree.show[Structure]))
+      private def requirePositioned() = {
+        def fail() = throw new Exception(
+          s"internal error: unpositioned prototype tree " +
+            s"${tree.show[Syntax]}: ${tree.show[Structure]}")
+        if (!tree.tokens.isAuthentic) fail()
+      }
       def startTokenPos: Int = { requirePositioned(); tree.tokens.require[Tokens.Slice].from }
       def endTokenPos: Int = { requirePositioned(); tree.tokens.require[Tokens.Slice].until - 1 }
     }
@@ -566,6 +571,8 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
 
   /** Convert tree to formal parameter. */
   def convertToParam(tree: Term): Option[Term.Param] = tree match {
+    case q: Term.Quasi =>
+      Some(atPos(tree, tree)(Term.Param.Quasi(q.rank, q.tree)))
     case name: Term.Name =>
       Some(atPos(tree, tree)(Term.Param(Nil, name, None, None)))
     case name: Term.Placeholder =>
@@ -1355,14 +1362,30 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         next()
         t = atPos(t, auto)(Term.Match(t, inBracesOrNil(caseClauses())))
       }
-      // in order to allow anonymous functions as statements (as opposed to expressions) inside
-      // templates, we have to disambiguate them from self type declarations - bug #1565
-      // The case still missed is unparenthesized single argument, like "x: Int => x + 1", which
-      // may be impossible to distinguish from a self-type and so remains an error.  (See #1564)
+
+      val isInBraces = t.tokens.nonEmpty && t.tokens.head.is[`(`] && t.tokens.last.is[`)`]
+
+      // at the moment, t is some Term. To correctly use Term.Function(...) few lines below, we need to
+      // apply some checks in `lhsIsTypedParamList` to ensure that `t` indeed can represent params to some Function.
+
+      if (isInBraces) {
+        t = t match {
+          case q1 @ Term.Quasi(r1, q2 @ Term.Quasi(r2, tree)) =>
+            // if t looks like q"..$xs" (which is almost a tuple), convert it to Term.Tuple
+            atPos(q1, q1)(Term.Tuple(List(atPos(q2, q2)(Term.Quasi(q1.rank, q1.tree)))))
+          case _ => t
+        }
+      }
+
+      // handle all possible options when `t` can be used as function's params
       def lhsIsTypedParamList() = t match {
-        case Term.Tuple(xs) if xs.forall(_.isInstanceOf[Term.Ascribe]) => true
+        case Term.Tuple(xs) if xs.forall{case x => x.isInstanceOf[Term.Ascribe] || // (x: Int, y: Int) is Tuple of typed parameters
+                                                   x.isInstanceOf[Term.Quasi]} => true // for unquotings
+        case _: Term.Ascribe if isInBraces => true // (x: Int) is not a tuple, but looks like a typed parameter list
+        case _: Lit.Unit if isInBraces => true // () is not a tuple, but is considered as valid option for function's params
         case _ => false
       }
+
       if (token.is[`=>`] && (location != InTemplate || lhsIsTypedParamList)) {
         next()
         t = atPos(t, auto)(Term.Function(convertToParams(t), if (location != InBlock) expr() else block()))
