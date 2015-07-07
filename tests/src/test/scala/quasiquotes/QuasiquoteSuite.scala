@@ -161,6 +161,17 @@ class QuasiquoteSuite extends FunSuite {
     assert(expr2.show[Syntax] === "bar")
   }
 
+  test("q\"($x, y: Int)\"") {
+    val x = q"x: X"
+    assert(q"($x, y: Int)".show[Syntax] === "(x: X, y: Int)")
+  }
+
+  test("val q\"f($q, y: Y) = $r\" = q\"f(x: X, y: Y) = 1\"") {
+    val q"f($q, y: Y) = $r" = q"f(x: X, y: Y) = 1"
+    assert(q.show[Syntax] === "x: X")
+    assert(r.show[Syntax] === "1")
+  }
+
   test("q\"return $expropt\"") {
     val q"return $expropt" = q"return foo == bar"
     assert(expropt.show[Syntax] === "foo == bar")
@@ -181,15 +192,17 @@ class QuasiquoteSuite extends FunSuite {
 //    val q"$a: ..@$b" = q"foo: @bar @baz"
 //  }
 
-//  test("q\"(..$exprs)\"") {
-//    val terms = List(q"y", q"z")
-//    assert(q"(..$terms)".show[Syntax] === "(y, z)") // fixme test is broken, so even does not compile
-//  }
+  test("q\"(..$exprs)\"") {
+    val terms = List(q"y", q"z")
+    assert(q"(..$terms)".show[Syntax] === "(y, z)")
+  }
 
-  //  test("""val q"(..$params)" = q"(x: Int, y: String)" """) {
-  //    val q"(..$params)" = q"(x: Int, y: String)" // fixme test is broken, so even does not compile
-  //    assert
-  //  }
+  test("""val q"(..$params)" = q"(x: Int, y: String)" """) {
+    val q"(..$params)" = q"(x: Int, y: String)"
+    assert(params.toString === "List(x: Int, y: String)")
+    assert(params(0).show[Syntax] === "x: Int")
+    assert(params(1).show[Syntax] === "y: String")
+  }
 
 //  test("q\"{ ..$stats }\"") {
 //    val stats = List(q"val x = 1", q"val y = 2")
@@ -218,13 +231,29 @@ class QuasiquoteSuite extends FunSuite {
 //      q"try foo catch { case _ => } finally bar" // fixme test is broken, so even does not compile
 //  }
 
-//  test("""q"(i: Int) => 42" """) {
-//    q"(i: Int) => 42"
+  test("""q"(i: Int) => 42" """) {
+    assert(q"(i: Int) => 42".show[Syntax] === "(i: Int) => 42")
+  }
+
+  test("q\"(..$params) => $expr\"") {
+    val q"(..$paramz) => $expr" = q"(x: Int, y: String) => 42"
+    assert(paramz.toString === "List(x: Int, y: String)")
+    assert(paramz(0).show[Syntax] === "x: Int")
+    assert(paramz(1).show[Syntax] === "y: String")
+    assert(expr.show[Syntax] === "42")
+  }
+
+//  test("val q\"($q, y, ..$e) => $r\" = q\"(x: X, y, z: Z) => 1\"") {
+//    val q"($q, y, ..$e) => $r" = q"(x: X, y, z: Z) => 1"
 //  }
-//
-//  test("q\"(..$params) => $expr\"") {
-//    val q"(..$params) => $expr" = q"(x: Int, y: String) => 42"
-//  }
+
+  test("val q\"(..$q, y: Y, $e) => $r\" = q\"(x: X, y: Y, z: Z) => 1\"") {
+    val q"(..$q, y: Y, $e) => $r" = q"(x: X, y: Y, z: Z) => 1"
+    assert(q.toString === "List(x: X)")
+    assert(q(0).show[Syntax] === "x: X")
+    assert(e.show[Syntax] === "z: Z")
+    assert(r.show[Syntax] === "1")
+  }
 
   test("q\"{ ..case $cases }\"") {
     val q"{ case ..$cases }" = q"{ case i: Int => i + 1 }"
