@@ -75,17 +75,20 @@ class QuasiquoteSuite extends FunSuite {
     """.trim.stripMargin)
   }
 
-//  test("q\"$qname.this\"") { // fixme test is broken, so even does not compile
-//    val q"$qname.this" = q"QuasiquoteSuite.this"
-//    assert(qname.show[Syntax] === "QuasiquoteSuite")
-//  }
+  test("q\"$qname.this\"") {
+    val q"$qname.this.$x" = q"QuasiquoteSuite.this.x"
+    assert(qname.show[Syntax] === "QuasiquoteSuite")
+    assert(x.show[Syntax] === "x")
+    assert(q"$qname.this".show[Syntax] === "QuasiquoteSuite.this")
+  }
 
-//  test("q\"$qname.super[$qname]\"") { // fixme test is broken, so even does not compile
-//    val q"$clazz.super[$tpe].$id" = q"A.super[B].x"
-//    assert(clazz.show[Syntax] === "A")
-//    assert(tpe.show[Syntax] === "B")
-//    assert(method.show[Syntax] === "x")
-//  }
+  test("q\"$qname.super[$qname]\"") {
+    val q"$clazz.super[$tpe].$id" = q"A.super[B].x"
+    assert(clazz.show[Syntax] === "A")
+    assert(tpe.show[Syntax] === "B")
+    assert(id.show[Syntax] === "x")
+    assert(q"$clazz.super[$tpe].m".show[Syntax] === "A.super[B].m")
+  }
 
   test("q\"$expr.$name\"") {
     val expr = q"foo"
