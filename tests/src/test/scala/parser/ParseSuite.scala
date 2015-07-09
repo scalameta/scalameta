@@ -11,6 +11,7 @@ class ParseSuite extends FunSuite with CommonTrees {
   def tpe(code: String)(implicit dialect: Dialect) = code.parseRule(_.typ())
   def topStat(code: String)(implicit dialect: Dialect) = code.parseRule(_.topStatSeq().head)
   def templStat(code: String)(implicit dialect: Dialect) = code.parseRule(_.templateStats().head)
+  def blockStat(code: String)(implicit dialect: Dialect) = code.parseRule(_.blockStatSeq().head)
   def source(code: String)(implicit dialect: Dialect) = code.parseRule(_.compilationUnit())
   def tokenize(code: String)(implicit dialect: Dialect) = code.tokens
 }
