@@ -43,7 +43,16 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
 
   // Entry points for Parse[T]
   // Used for quasiquotes as well as for ad-hoc parsing
-  def parseStat(): Stat = parseRule(parser => parser.statSeq(parser.templateStat.orElse(parser.topStat)) match {
+  // parseStat is used to implement q"..." and surprisingly can't be reduced to anything that's already in the parser,
+  // because it needs to support a wide range of constructs, from expressions to top-level definitions.
+  // Note the expr(Local) part, which means that we're going to parse lambda expressions in the mode that
+  // precludes ambiguities with self-type annotations.
+  def parseStat(): Stat = parseRule(parser => parser.statSeq[Stat] {
+    case token if token.is[`import`] => importStmt()
+    case token if token.is[`package `] => packageOrPackageObjectDef()
+    case token if token.is[TokenClass.DefIntro] => nonLocalDefOrDcl()
+    case token if token.is[TokenClass.ExprIntro] => expr(Local)
+  } match {
     case Nil => reporter.syntaxError("unexpected end of input", at = token)
     case stat :: Nil => stat
     case stats if stats.forall(_.isBlockStat) => Term.Block(stats)
@@ -2277,7 +2286,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     }
   }
 
-  def nonLocalDefOrDcl: Stat = {
+  def nonLocalDefOrDcl(): Stat = {
     val anns = annots(skipNewLines = true)
     val mods = anns ++ modifiers()
     defOrDclOrSecondaryCtor(mods) match {
