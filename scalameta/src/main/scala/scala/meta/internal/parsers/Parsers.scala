@@ -997,7 +997,10 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         next()
         if (token.is[`this`]) {
           next()
-          val qual = atPos(name, name)(Name.Indeterminate(name.value))
+          val qual = name match {
+            case q: Term.Name.Quasi => atPos(q, q)(Name.Qualifier.Quasi(q.rank, q.tree))
+            case name => atPos(name, name)(Name.Indeterminate(name.value))
+          }
           val thisp = atPos(name, auto)(Term.This(qual))
           if (stop && thisOK) thisp
           else {
@@ -1006,7 +1009,10 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
           }
         } else if (token.is[`super`]) {
           next()
-          val qual = atPos(name, name)(Name.Indeterminate(name.value))
+          val qual = name match {
+            case q: Term.Name.Quasi => atPos(q, q)(Name.Qualifier.Quasi(q.rank, q.tree))
+            case name => atPos(name, name)(Name.Indeterminate(name.value))
+          }
           val superp = atPos(name, auto)(Term.Super(qual, mixinQualifier()))
           accept[`.`]
           val supersel = atPos(superp, auto)(Term.Select(superp, termName()))
@@ -1039,8 +1045,11 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   def mixinQualifier(): Name.Qualifier = {
     if (token.is[`[`]) {
       inBrackets {
-        val name = typeName()
-        atPos(name, name)(Name.Indeterminate(name.value))
+        typeName() match {
+          case q: Type.Name.Quasi => atPos(q, q)(Name.Qualifier.Quasi(q.rank, q.tree))
+          case name => atPos(name, name)(Name.Indeterminate(name.value))
+        }
+
       }
     } else {
       atPos(in.tokenPos, in.prevTokenPos)(Name.Anonymous())
@@ -1482,8 +1491,11 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
           interpolateTerm()
         case _: Xml.Start =>
           xmlTerm()
-        case _: Ident | _: `this` | _: `super` =>
-          path()
+        case _: Ident | _: `this` | _: `super` | _: Unquote =>
+          path() match {
+            case q: Term.Ref.Quasi => atPos(q, q)(Term.Quasi(q.rank, q.tree))
+            case path => path
+          }
         case _: `_ ` =>
           next()
           atPos(in.prevTokenPos, in.prevTokenPos)(Term.Placeholder())
@@ -1496,8 +1508,6 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
           canApply = false
           next()
           atPos(in.prevTokenPos, auto)(Term.New(template()))
-        case token: Unquote =>
-          unquote[Term]
         case _ =>
           syntaxError(s"illegal start of simple expression", at = token)
       }
