@@ -207,7 +207,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
   }
 
   private lazy val wholeFileSource = c.macroApplication.pos.source
-  private lazy val whileFileContent = {
+  private lazy val wholeFileContent = {
     if (wholeFileSource.file.file != null) Input.File(wholeFileSource.file.file)
     else Input.String(new String(wholeFileSource.content)) // NOTE: can happen in REPL or in custom Global
   }
@@ -216,10 +216,10 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
     require(-1 <= end && end < content.chars.length)
     lazy val chars = content.chars.slice(start, end + 1)
   }
-  private def sliceFileContent(start: Int, end: Int) = SliceContent(whileFileContent, start, end)
+  private def sliceFileContent(start: Int, end: Int) = SliceContent(wholeFileContent, start, end)
   implicit def metaPositionToReflectPosition(pos: MetaPosition): ReflectPosition = {
     val SliceContent(content, start, end) = pos.point.input
-    require(content == whileFileContent && debug(pos))
+    require(content == wholeFileContent && debug(pos))
     val sourceOffset = start + pos.point.offset
     c.macroApplication.pos.focus.withPoint(sourceOffset)
   }
