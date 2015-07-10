@@ -107,20 +107,21 @@ class QuasiquoteSuite extends FunSuite {
     assert(q"foo[..$types]".show[Syntax] === "foo[T, U]")
   }
 
-//  test("q\"$expr $name[..$tpes] (..$aexprs)\"") {
-//    val expr = q"x"
-//    val name = q"method"
-//    val tpes = List(t"T", t"U")
-//    val aexprs = List(q"1", q"b")
-//    assert(q"$expr $name[..$tpes] (..$aexprs)".show[Syntax] === "x method[T, U](1, b)") // fixme test is broken, so even does not compile
-//  }
+  test("q\"$expr $name[..$tpes] (..$aexprs)\"") {
+    val expr = q"x"
+    val name = q"method"
+    val tpes = List(t"T", t"U")
+    val aexprs = List(q"1", q"b")
+    assert(q"$expr $name[..$tpes] (..$aexprs)".show[Structure] // show[Syntax] does not show types
+      === """Term.ApplyInfix(Term.Name("x"), Term.Name("method"), List(Type.Name("T"), Type.Name("U")), List(Lit.Int(1), Term.Name("b")))""")
+  }
 
-//  test("q\"$a $b $c\"") {
-//    val a = q"x"
-//    val b = q"y"
-//    val c = q"z"
-//    assert(q"$a $b $c".show[Syntax] === "x y z") // fixme test is broken, so even does not compile
-//  }
+  test("q\"$a $b $c\"") {
+    val a = q"x"
+    val b = q"y"
+    val c = q"z"
+    assert(q"$a $b $c".show[Syntax] === "x y z")
+  }
 
   test("q\"!$expr\"") {
     val q"!$x" = q"!foo"
