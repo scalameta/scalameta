@@ -43,7 +43,16 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
 
   // Entry points for Parse[T]
   // Used for quasiquotes as well as for ad-hoc parsing
-  def parseStat(): Stat = parseRule(parser => parser.statSeq(parser.templateStat.orElse(parser.topStat)) match {
+  // parseStat is used to implement q"..." and surprisingly can't be reduced to anything that's already in the parser,
+  // because it needs to support a wide range of constructs, from expressions to top-level definitions.
+  // Note the expr(Local) part, which means that we're going to parse lambda expressions in the mode that
+  // precludes ambiguities with self-type annotations.
+  def parseStat(): Stat = parseRule(parser => parser.statSeq[Stat] {
+    case token if token.is[`import`] => importStmt()
+    case token if token.is[`package `] => packageOrPackageObjectDef()
+    case token if token.is[TokenClass.DefIntro] => nonLocalDefOrDcl()
+    case token if token.is[TokenClass.ExprIntro] => expr(Local)
+  } match {
     case Nil => reporter.syntaxError("unexpected end of input", at = token)
     case stat :: Nil => stat
     case stats if stats.forall(_.isBlockStat) => Term.Block(stats)
@@ -629,7 +638,10 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   def makeTupleTerm(body: List[Term]): Term = {
     // NOTE: we can't make this autoPos, unlike makeTupleTermParens
     // see comments to makeTupleType for discussion
-    makeTuple[Term](body, () => Lit.Unit(), Term.Tuple(_))
+    body match {
+      case Seq(q @ Term.Quasi(1, _)) => atPos(q, q)(Term.Tuple(body))
+      case _ => makeTuple[Term](body, () => Lit.Unit(), Term.Tuple(_))
+    }
   }
 
   def makeTupleTermParens(bodyf: => List[Term]) = autoPos {
@@ -642,7 +654,10 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     // because, by the time control reaches this method, we're already past the closing parenthesis
     // therefore, we'll rely on our callers to assign positions to the tuple we return
     // we can't do atPos(body.first, body.last) either, because that wouldn't account for parentheses
-    makeTuple[Type](body, () => unreachable, Type.Tuple(_))
+    body match {
+      case Seq(q @ Type.Quasi(1, _)) => atPos(q, q)(Type.Tuple(body))
+      case _ => makeTuple[Type](body, () => unreachable, Type.Tuple(_))
+    }
   }
 
   def makeTuplePatParens(bodyf: => List[Pat.Arg]): Pat = autoPos {
@@ -1363,32 +1378,61 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         t = atPos(t, auto)(Term.Match(t, inBracesOrNil(caseClauses())))
       }
 
-      val isInBraces = t.tokens.nonEmpty && t.tokens.head.is[`(`] && t.tokens.last.is[`)`]
-
-      // at the moment, t is some Term. To correctly use Term.Function(...) few lines below, we need to
-      // apply some checks in `lhsIsTypedParamList` to ensure that `t` indeed can represent params to some Function.
-
-      if (isInBraces) {
-        t = t match {
-          case q1 @ Term.Quasi(r1, q2 @ Term.Quasi(r2, tree)) =>
-            // if t looks like q"..$xs" (which is almost a tuple), convert it to Term.Tuple
-            atPos(q1, q1)(Term.Tuple(List(atPos(q2, q2)(Term.Quasi(q1.rank, q1.tree)))))
-          case _ => t
+      // Note the absense of `else if` here!!
+      if (token.is[`=>`]) {
+        // This is a tricky one. In order to parse lambdas, we need to recognize token sequences
+        // like `(...) => ...`, `id | _ => ...` and `implicit id | _ => ...`.
+        //
+        // If we exclude `implicit` (which is parsed elsewhere anyway), then we can see that
+        // these sequences are non-trivially ambiguous with tuples and self-type annotations
+        // (i.e. are not resolvable with static lookahead).
+        //
+        // Therefore, when we encounter `=>`, the part in parentheses is already parsed into a Term,
+        // and we need to figure out whether that term represents what we expect from a lambda's param list
+        // in order to disambiguate. The term that we have at hand might wildly differ from the param list that one would expect.
+        // For example, when parsing `() => x`, we arrive at `=>` having `Lit.Unit` as the parsed term.
+        // That's why we later need `convertToParams` to make sense of what the parser has produced.
+        //
+        // Rules:
+        // 1) `() => ...` means lambda
+        // 2) `x => ...` means self-type annotation, but only in template position
+        // 3) `(x) => ...` means self-type annotation, but only in template position
+        // 4a) `x: Int => ...` means self-type annotation in template position
+        // 4b) `x: Int => ...` means lambda in block position
+        // 4c) `x: Int => ...` means ascription, i.e. `x: (Int => ...)`, in expression position
+        // 5) `(x: Int) => ...` means lambda
+        // 6) `(x, y) => ...` or `(x: Int, y: Int) => ...` or with more entries means lambda
+        //
+        // A funny thing is that scalac's parser tries to disambiguate between self-type annotations and lambdas
+        // even if it's not parsing the first statement in the template. E.g. `class C { foo; x => x }` will be
+        // a parse error, because `x => x` will be deemed a self-type annotation, which ends up being inapplicable there.
+        val looksLikeLambda = {
+          val inParens = t.tokens.nonEmpty && t.tokens.head.is[`(`] && t.tokens.last.is[`)`]
+          object NameLike { def unapply(tree: Tree): Boolean = tree.isInstanceOf[Term.Name] || tree.isInstanceOf[Term.Placeholder] }
+          object ParamLike {
+            def unapply(tree: Tree): Boolean = tree match {
+              case Term.Quasi(0, _) => true
+              case Term.Quasi(1, ParamLike()) => true
+              case NameLike() => true
+              case Term.Ascribe(NameLike(), _) => true
+              case _ => false
+            }
+          }
+          t match {
+            case _: Lit.Unit => true // 1
+            case NameLike() => location != InTemplate // 2-3
+            case ParamLike() => inParens || location == InBlock // 4-5
+            case Term.Tuple(xs) => xs.forall(ParamLike.unapply) // 6
+            case _ => false
+          }
         }
-      }
-
-      // handle all possible options when `t` can be used as function's params
-      def lhsIsTypedParamList() = t match {
-        case Term.Tuple(xs) if xs.forall{case x => x.isInstanceOf[Term.Ascribe] || // (x: Int, y: Int) is Tuple of typed parameters
-                                                   x.isInstanceOf[Term.Quasi]} => true // for unquotings
-        case _: Term.Ascribe if isInBraces => true // (x: Int) is not a tuple, but looks like a typed parameter list
-        case _: Lit.Unit if isInBraces => true // () is not a tuple, but is considered as valid option for function's params
-        case _ => false
-      }
-
-      if (token.is[`=>`] && (location != InTemplate || lhsIsTypedParamList)) {
-        next()
-        t = atPos(t, auto)(Term.Function(convertToParams(t), if (location != InBlock) expr() else block()))
+        if (looksLikeLambda) {
+          next()
+          t = atPos(t, auto)(Term.Function(convertToParams(t), if (location != InBlock) expr() else block()))
+        } else {
+          // do nothing, which will either allow self-type annotation parsing to kick in
+          // or will trigger an unexpected token error down the line
+        }
       }
       t
   })
@@ -2267,7 +2311,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     }
   }
 
-  def nonLocalDefOrDcl: Stat = {
+  def nonLocalDefOrDcl(): Stat = {
     val anns = annots(skipNewLines = true)
     val mods = anns ++ modifiers()
     defOrDclOrSecondaryCtor(mods) match {
