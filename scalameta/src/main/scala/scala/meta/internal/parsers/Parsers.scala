@@ -638,7 +638,10 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   def makeTupleTerm(body: List[Term]): Term = {
     // NOTE: we can't make this autoPos, unlike makeTupleTermParens
     // see comments to makeTupleType for discussion
-    makeTuple[Term](body, () => Lit.Unit(), Term.Tuple(_))
+    body match {
+      case Seq(q @ Term.Quasi(1, _)) => atPos(q, q)(Term.Tuple(body))
+      case _ => makeTuple[Term](body, () => Lit.Unit(), Term.Tuple(_))
+    }
   }
 
   def makeTupleTermParens(bodyf: => List[Term]) = autoPos {
@@ -651,7 +654,10 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     // because, by the time control reaches this method, we're already past the closing parenthesis
     // therefore, we'll rely on our callers to assign positions to the tuple we return
     // we can't do atPos(body.first, body.last) either, because that wouldn't account for parentheses
-    makeTuple[Type](body, () => unreachable, Type.Tuple(_))
+    body match {
+      case Seq(q @ Type.Quasi(1, _)) => atPos(q, q)(Type.Tuple(body))
+      case _ => makeTuple[Type](body, () => unreachable, Type.Tuple(_))
+    }
   }
 
   def makeTuplePatParens(bodyf: => List[Pat.Arg]): Pat = autoPos {
