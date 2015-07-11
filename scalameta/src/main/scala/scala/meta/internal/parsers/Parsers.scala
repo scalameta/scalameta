@@ -1037,14 +1037,17 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
             selectors(supersel)
           }
         } else {
-          selectors(name)
+          selectors(name match {
+            case q: Term.Name.Quasi => atPos(q, q)(Term.Quasi(q.rank, q.tree)) // force typing according to spec
+            case name => name
+          })
         }
       }
     }
   }
 
   def selector(t: Term): Term.Select = atPos(t, auto)(Term.Select(t, termName()))
-  def selectors(t: Term.Ref): Term.Ref = {
+  def selectors(t: Term): Term.Ref = {
     val t1 = selector(t)
     if (token.is[`.`] && ahead { token.is[Ident] }) {
       next()
