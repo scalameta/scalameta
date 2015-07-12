@@ -16,6 +16,7 @@ object Scalahost {
     new ScalahostSemanticContext[G](g)
   def mkMacroContext[G <: ScalaGlobal](rc: ScalareflectMacroContext): ScalametaMacroContext with ScalahostMacroContext[G] =
     new ScalahostMacroContext[G](rc.universe.asInstanceOf[G])
+  // TODO: replace all usages of mkStandaloneContext with mkProjectContext and then delete it
   def mkStandaloneContext(options: String = ""): ScalametaStandaloneContext =
     new ScalahostStandaloneContext(options)
   def mkProjectContext(sourcepath: String, classpath: String): ScalametaProjectContext with ScalametaSemanticContext with ScalahostProjectContext =
