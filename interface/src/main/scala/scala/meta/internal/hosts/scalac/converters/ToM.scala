@@ -18,8 +18,8 @@ trait ToM extends GlobalToolkit with MetaToolkit {
 
   protected implicit class RichToScalametaSymbol(gsym: g.Symbol) {
     private def dumbcvt(in: g.Tree): m.Name = {
-      if (gsym.isTerm) m.Term.Name(in.alias)
-      else if (gsym.isType) m.Type.Name(in.alias)
+      if (gsym.isTerm) m.Term.Name(in.displayName)
+      else if (gsym.isType) m.Type.Name(in.displayName)
       else unreachable(debug(gsym, gsym.flags, gsym.getClass, gsym.owner))
     }
     def precvt(pre: g.Type, in: g.Tree): m.Name = dumbcvt(in).withDenot(pre, gsym)

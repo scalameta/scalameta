@@ -32,16 +32,16 @@ trait ToMtype extends GlobalToolkit with MetaToolkit {
         case g.SuperType(thistpe, supertpe) =>
           require(thistpe.isInstanceOf[g.ThisType] && thistpe.typeSymbol.isType && supertpe.typeSymbol.isType)
           val supersym = if (supertpe.isInstanceOf[g.RefinedType]) g.NoSymbol else supertpe.typeSymbol
-          val superqual = m.Name.Indeterminate(g.Ident(thistpe.typeSymbol).alias).withDenot(thistpe.typeSymbol)
+          val superqual = m.Name.Indeterminate(g.Ident(thistpe.typeSymbol).displayName).withDenot(thistpe.typeSymbol)
           val supermix = ({
             if (supersym == g.NoSymbol) m.Name.Anonymous()
-            else m.Name.Indeterminate(g.Ident(supertpe.typeSymbol).alias)
+            else m.Name.Indeterminate(g.Ident(supertpe.typeSymbol).displayName)
           }).withDenot(thistpe, supersym)
           m.Type.Singleton(m.Term.Super(superqual, supermix))
         case g.ThisType(sym) =>
           require(sym.isClass)
           if (sym.isModuleClass) m.Type.Singleton(sym.module.asTerm.rawcvt(g.Ident(sym.module)).withTpe(gtpe))
-          else m.Type.Singleton(m.Term.This(m.Name.Indeterminate(g.Ident(sym).alias).withDenot(sym)).withTpe(gtpe))
+          else m.Type.Singleton(m.Term.This(m.Name.Indeterminate(g.Ident(sym).displayName).withDenot(sym)).withTpe(gtpe))
         case g.SingleType(pre, sym) =>
           require(sym.isTerm)
           val ref = (pre match {
@@ -54,7 +54,7 @@ trait ToMtype extends GlobalToolkit with MetaToolkit {
               m.Term.Select(preref, sym.asTerm.precvt(pre, g.Ident(sym)).withTpe(gtpe))
             case pre @ g.TypeRef(g.NoPrefix, quant, Nil) if quant.hasFlag(DEFERRED | EXISTENTIAL) =>
               require(quant.name.endsWith(g.nme.SINGLETON_SUFFIX))
-              val prename = g.Ident(quant.name.toString.stripSuffix(g.nme.SINGLETON_SUFFIX)).alias
+              val prename = g.Ident(quant.name.toString.stripSuffix(g.nme.SINGLETON_SUFFIX)).displayName
               val preref = m.Term.Name(prename).withDenot(quant).withTpe(quant.tpe)
               m.Term.Select(preref, sym.asTerm.precvt(pre, g.Ident(sym)).withTpe(gtpe))
             case pre: g.TypeRef =>
