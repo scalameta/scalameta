@@ -32,34 +32,35 @@ import scala.meta.internal.parsers.Helpers.{XtensionTermOps => _, _}
 trait ToMtree extends GlobalToolkit with MetaToolkit {
   self: Api =>
 
-  def toMtree(gtree: g.Tree): m.Tree = mtree(gtree, g.EmptyTree)
+  def toMtree(gtree: g.Tree): m.Tree = mtree(gtree, Nil)
 
-  private def mtree(gtree: g.Tree, gparent: g.Tree): m.Tree = {
+  private def mtree(gtree: g.Tree, gparents: List[g.Tree]): m.Tree = {
+    val gparents1 = gtree :: gparents
     val mresult = gtree match {
       case g.PackageDef(gpid, gstats) =>
         if (gpid.name == g.nme.EMPTY_PACKAGE_NAME) {
-          require(gparent.isEmpty)
-          m.Source(mtrees(gstats, gtree).require[Seq[m.Stat]])
+          require(gparents.isEmpty)
+          m.Source(mtrees(gstats, gparents1).require[Seq[m.Stat]])
         } else {
           val mroot = gstats match {
             case List(gstat: g.ModuleDef) if gstat.name == g.nme.PACKAGE =>
-              mtree(gstat, gparent).require[m.Pkg.Object]
+              mtree(gstat, gparents1).require[m.Pkg.Object]
             case _ =>
-              val mpid = mname(gpid, gtree).require[m.Term.Name]
-              val mstats = mtrees(gstats, gparent).require[Seq[m.Stat]]
+              val mpid = mname(gpid, gparents1).require[m.Term.Name]
+              val mstats = mtrees(gstats, gparents1).require[Seq[m.Stat]]
               m.Pkg(mpid, mstats)
           }
           m.Source(List(mroot))
         }
       case gtree @ g.ClassDef(gmods, gname, gtparams, gimpl) =>
-        val mmods = this.mmods(gmods, gtree)
-        val mname = this.mname(g.Ident(gname), gtree).require[m.Type.Name]
+        val mmods = this.mmods(gmods, gparents1)
+        val mname = this.mname(g.Ident(gname), gparents1).require[m.Type.Name]
         val gctor = gimpl.body.collectFirst{ case gctor: g.DefDef if gctor.name == g.nme.CONSTRUCTOR => gctor }
         val gvparamss = gctor.map(_.vparamss).getOrElse(Nil)
-        val (mtparams, mvparamss) = mparams(gtparams, gvparamss)
-        val mctormods = gctor.map(gctor => this.mmods(gctor.mods, gtree)).getOrElse(Nil)
-        val mctor = m.Ctor.Primary(mctormods, mctorname(gctor.getOrElse(g.EmptyTree), gtree), mvparamss)
-        val mimpl = mtree(gimpl, gtree).require[m.Template]
+        val (mtparams, mvparamss) = mparams(gtparams, gvparamss, gparents1)
+        val mctormods = gctor.map(gctor => this.mmods(gctor.mods, gparents1)).getOrElse(Nil)
+        val mctor = m.Ctor.Primary(mctormods, mctorname(gctor.getOrElse(g.EmptyTree), gparents1), mvparamss)
+        val mimpl = mtree(gimpl, gparents1).require[m.Template]
         m.Defn.Class(mmods, mname, mtparams, mctor, mimpl)
       case _ =>
         unreachable(debug(gtree, g.showRaw(gtree)))
@@ -73,16 +74,16 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
     mresult
   }
 
-  private def mtrees(gtrees: List[g.Tree], gparent: g.Tree): Seq[m.Tree] = {
-    gtrees.map(gtree => mtree(gtree, gparent))
+  private def mtrees(gtrees: List[g.Tree], gparents: List[g.Tree]): Seq[m.Tree] = {
+    gtrees.map(gtree => mtree(gtree, gparents))
   }
 
-  private def mtreess(gtreess: List[List[g.Tree]], gparent: g.Tree): Seq[Seq[m.Tree]] = {
-    gtreess.map(gtrees => mtrees(gtrees, gparent))
+  private def mtreess(gtreess: List[List[g.Tree]], gparents: List[g.Tree]): Seq[Seq[m.Tree]] = {
+    gtreess.map(gtrees => mtrees(gtrees, gparents))
   }
 
-  private def mname(gtree: g.NameTree, gparent: g.Tree): m.Name = {
-    val sname = gtree.displayName(gparent)
+  private def mname(gtree: g.NameTree, gparents: List[g.Tree]): m.Name = {
+    val sname = gtree.displayName(gparents.headOption.getOrElse(g.EmptyTree))
     val mname = {
       if (sname == "_") m.Name.Anonymous()
       else if (gtree.name.isTermName) m.Term.Name(sname)
@@ -93,8 +94,8 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
     mname
   }
 
-  private def mctorname(gtree: g.Tree, gparent: g.ImplDef): m.Ctor.Name = {
-    val mname = m.Ctor.Name(this.mname(gparent, g.EmptyTree).value)
+  private def mctorname(gtree: g.Tree, gparents: List[g.Tree]): m.Ctor.Name = {
+    val mname = m.Ctor.Name(this.mname(gparents.head.require[g.NameTree], gparents.tail).value)
     // TODO: attach denotations here
     // if gtree.nonEmpty, then it's a class ctor - should be quite simple
     // if gtree.isEmpty, then gparent is a trait or a module
@@ -103,11 +104,11 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
     mname
   }
 
-  private def mmods(gmods: g.Modifiers, gparent: g.Tree): Seq[m.Mod] = {
+  private def mmods(gmods: g.Modifiers, gparents: List[g.Tree]): Seq[m.Mod] = {
     ???
   }
 
-  private def mparams(gtparams: List[g.TypeDef], gvparamss: List[List[g.ValDef]]): (List[m.Type.Param], List[List[m.Term.Param]]) = {
+  private def mparams(gtparams: List[g.TypeDef], gvparamss: List[List[g.ValDef]], gparents: List[g.Tree]): (Seq[m.Type.Param], Seq[Seq[m.Term.Param]]) = {
     def referencedTparam(gtarg: g.Tree): Option[g.TypeDef] = gtparams.filter(gtparam => {
       if (gtparam.symbol != g.NoSymbol) gtparam.symbol == gtarg.symbol
       else gtarg match { case g.Ident(gname) => gname == gtparam.name; case _ => false }
@@ -155,6 +156,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
       val gcontextBounds = gbounds.flatMap(ContextBound.unapply).filter(_._1.name == gtparam.name)
       gtparam.appendMetadata("viewBounds" -> gviewBounds, "contextBounds" -> gcontextBounds)
     })
-    ???
+    val gvparamss1 = gexplicitss ++ (if (gimplicits.isEmpty) Nil else List(gimplicits))
+    (mtrees(gtparams1, gparents).require[Seq[m.Type.Param]], mtreess(gvparamss1, gparents).require[Seq[Seq[m.Term.Param]]])
   }
 }
