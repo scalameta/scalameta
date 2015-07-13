@@ -95,7 +95,8 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
   }
 
   private def mctorname(gtree: g.Tree, gparents: List[g.Tree]): m.Ctor.Name = {
-    val mname = m.Ctor.Name(this.mname(gparents.head.require[g.NameTree], gparents.tail).value)
+    val (gmdef: g.NameTree) :: ggparents = gparents
+    val mname = m.Ctor.Name(this.mname(gmdef, ggparents).value)
     // TODO: attach denotations here
     // if gtree.nonEmpty, then it's a class ctor - should be quite simple
     // if gtree.isEmpty, then gparent is a trait or a module
@@ -105,6 +106,104 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
   }
 
   private def mmods(gmods: g.Modifiers, gparents: List[g.Tree]): Seq[m.Mod] = {
+    val gmdef = gparents.head.require[g.MemberDef]
+
+    case class ClassParameter(gparam: g.ValDef, gfield: Option[g.ValDef], gctor: g.DefDef, gclass: g.ClassDef)
+    val gclassparam: Option[ClassParameter] = {
+      val syntactically = {
+        gparents match {
+          case
+            (gparam @ g.ValDef(_, _, _, _)) ::
+            (gctor @ g.DefDef(_, g.nme.CONSTRUCTOR, _, _, _, _)) ::
+            (gclass @ g.ClassDef(_, _, _, g.Template(_, _, gsiblings))) :: _ =>
+              import g.TermNameOps
+              val gfield = gsiblings.collectFirst { case gfield: g.ValDef if gfield.name == gparam.name.localName => gfield }
+              val gprim = gsiblings.collectFirst { case gprim: g.DefDef if gprim.name == g.nme.CONSTRUCTOR => gprim }
+              val isClassParameter = gprim.map(gprim => gctor == gprim).getOrElse(false)
+              if (isClassParameter) Some(ClassParameter(gparam, gfield, gctor, gclass))
+              else None
+          case _ =>
+            None
+        }
+      }
+      val semantically = {
+        if (gmdef.symbol.owner.isPrimaryConstructor) {
+          val gparam = gmdef.require[g.ValDef]
+          val gctorSym = gmdef.symbol.owner
+          val gctor = g.DefDef(gctorSym, g.EmptyTree)
+          val gclassSym = gctorSym.owner
+          val gclass = g.ClassDef(gclassSym, g.Template(Nil, g.noSelfType, Nil))
+          val ggetterSym = gclassSym.info.member(gmdef.name)
+          val gfieldSym = ggetterSym.map(_.owner.info.member(ggetterSym.localName))
+          val gfield = if (gfieldSym != g.NoSymbol) Some(g.ValDef(gfieldSym)) else None
+          Some(ClassParameter(gparam, gfield, gctor, gclass))
+        } else None
+      }
+      syntactically.orElse(semantically)
+    }
+
+    val annotationMods: Seq[m.Mod] = {
+      val gsyntacticAnnots = gmods.annotations
+      val gsemanticAnnots = gparents.head.symbol.annotations
+      mannots(gsyntacticAnnots, gsemanticAnnots, gparents)
+    }
+    val accessQualifierMods: Seq[m.Mod] = {
+      if (gmods.hasFlag(SYNTHETIC) && gmods.hasFlag(ARTIFACT)) {
+        // NOTE: some sick artifact vals produced by mkPatDef can be private to method (whatever that means)
+        Nil
+      } else if (gmods.hasFlag(LOCAL)) {
+        // TODO: attach denotations here
+        if (gmods.hasFlag(PROTECTED)) List(m.Mod.Protected(m.Term.This(m.Name.Anonymous())))
+        else if (gmods.hasFlag(PRIVATE)) List(m.Mod.Private(m.Term.This(m.Name.Anonymous())))
+        else unreachable(debug(gmods))
+      } else if (gmods.hasAccessBoundary && gmods.privateWithin != g.tpnme.EMPTY) {
+        // TODO: attach denotations here
+        // TODO: `private[pkg] class C` doesn't have PRIVATE in its flags
+        // so we need to account for that!
+        val mqualifier = m.Name.Indeterminate(gmods.privateWithin.displayName)
+        if (gmods.hasFlag(PROTECTED)) List(m.Mod.Protected(mqualifier))
+        else List(m.Mod.Private(mqualifier))
+      } else {
+        // TODO: attach denotations here
+        if (gmods.hasFlag(PROTECTED)) List(m.Mod.Protected(m.Name.Anonymous()))
+        else if (gmods.hasFlag(PRIVATE)) List(m.Mod.Private(m.Name.Anonymous()))
+        else Nil
+      }
+    }
+    val otherMods: Seq[m.Mod] = {
+      val mmods = scala.collection.mutable.ListBuffer[m.Mod]()
+      val gmods = gmdef.mods
+      if (gmods.hasFlag(IMPLICIT)) mmods += m.Mod.Implicit()
+      if (gmods.hasFlag(FINAL)) mmods += m.Mod.Final()
+      if (gmods.hasFlag(SEALED)) mmods += m.Mod.Sealed()
+      if (gmods.hasFlag(OVERRIDE)) mmods += m.Mod.Override()
+      if (gmods.hasFlag(CASE)) mmods += m.Mod.Case()
+      if (gmods.hasFlag(ABSTRACT) && gmdef.isInstanceOf[g.ClassDef] && !gmods.hasFlag(TRAIT)) mmods += m.Mod.Abstract()
+      if (gmods.hasFlag(ABSOVERRIDE)) { mmods += m.Mod.Abstract(); mmods += m.Mod.Override() }
+      if (gmods.hasFlag(COVARIANT) && gmdef.isInstanceOf[g.TypeDef]) mmods += m.Mod.Covariant()
+      if (gmods.hasFlag(CONTRAVARIANT) && gmdef.isInstanceOf[g.TypeDef]) mmods += m.Mod.Contravariant()
+      if (gmods.hasFlag(LAZY)) mmods += m.Mod.Lazy()
+      mmods.toList
+    }
+    val valVarParamMods: Seq[m.Mod] = {
+      val mmods = scala.collection.mutable.ListBuffer[m.Mod]()
+      val gfield = gclassparam.flatMap(_.gfield)
+      val isImmutableField = gfield.map(!_.mods.hasFlag(MUTABLE)).getOrElse(false)
+      val isMutableField = gfield.map(_.mods.hasFlag(MUTABLE)).getOrElse(false)
+      val inCaseClass = gclassparam.map(_.gclass).map(_.mods.hasFlag(CASE)).getOrElse(false)
+      if (isMutableField) mmods += m.Mod.VarParam()
+      if (isImmutableField && !inCaseClass) mmods += m.Mod.ValParam()
+      mmods.toList
+    }
+    val result = annotationMods ++ accessQualifierMods ++ otherMods ++ valVarParamMods
+
+    // NOTE: we can't discern `class C(x: Int)` and `class C(private[this] val x: Int)`
+    // so let's err on the side of the more popular option
+    if (gclassparam.nonEmpty) result.filter({ case m.Mod.Private(m.Term.This(_)) => false; case _ => true })
+    else result
+  }
+
+  private def mannots(gannots1: List[g.Tree], gannots2: List[g.AnnotationInfo], gparents: List[g.Tree]): Seq[m.Mod.Annot] = {
     ???
   }
 

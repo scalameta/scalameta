@@ -17,7 +17,6 @@ trait TreeHelpers {
 
   implicit class RichFoundationHelperTree(tree: Tree) {
     // NOTE: scala.reflect's tree don't have parent links, so we have to approximate if we encounter an unattributed package object
-    // NOTE: "<empty>", the internal name for empty package, isn't a valid Scala identifier, so we hack around
     def displayName: String = displayName(EmptyTree)
     def displayName(parent: Tree): String = {
       def packageName(tree: ModuleDef): Name = {
@@ -27,16 +26,13 @@ trait TreeHelpers {
           case _ => TermName("package")
         }
       }
-      val name = tree match {
-        case tree: ModuleDef if tree.name == nme.PACKAGE => packageName(tree)
-        case tree: NameTree if tree.name == rootMirror.EmptyPackage.name => TermName("_empty_")
-        case tree: NameTree if tree.name == rootMirror.EmptyPackageClass.name => TypeName("_empty_")
-        case tree: NameTree => tree.name
-        case This(name) => name
-        case Super(_, name) => name
+      tree match {
+        case tree: ModuleDef if tree.name == nme.PACKAGE => packageName(tree).displayName
+        case tree: NameTree => tree.name.displayName
+        case This(name) => name.displayName
+        case Super(_, name) => name.displayName
         case _ => unreachable(debug(tree, showRaw(tree)))
       }
-      if (name.isAnonymous) "_" else name.decodedName.toString
     }
   }
 
@@ -52,6 +48,13 @@ trait TreeHelpers {
       val hasSymbolicName = !name.decoded.forall(c => Character.isLetter(c) || Character.isDigit(c) || c == '_')
       val idiomaticallyUsedAsInfix = name == nme.eq || name == nme.ne
       hasSymbolicName || idiomaticallyUsedAsInfix
+    }
+    def displayName = {
+      // NOTE: "<empty>", the internal name for empty package, isn't a valid Scala identifier, so we hack around
+      if (name == rootMirror.EmptyPackage.name) "_empty_"
+      else if (name == rootMirror.EmptyPackageClass.name) "_empty_"
+      else if (name.isAnonymous) "_"
+      else name.decodedName.toString
     }
   }
 }
