@@ -37,7 +37,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
   private def mtree(gtree: g.Tree, gparents: List[g.Tree]): m.Tree = {
     val gparents1 = gtree :: gparents
     val mresult = gtree match {
-      case g.PackageDef(gpid, gstats) =>
+      case gtree @ g.PackageDef(gpid, gstats) =>
         if (gpid.name == g.nme.EMPTY_PACKAGE_NAME) {
           require(gparents.isEmpty)
           m.Source(mtrees(gstats, gparents1).require[Seq[m.Stat]])
@@ -203,7 +203,12 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
     else result
   }
 
-  private def mannots(gannots1: List[g.Tree], gannots2: List[g.AnnotationInfo], gparents: List[g.Tree]): Seq[m.Mod.Annot] = {
+  private def mannots(gannotsSyn: List[g.Tree], gannotsSem: List[g.AnnotationInfo], gparents: List[g.Tree]): Seq[m.Mod.Annot] = {
+    if (gannotsSem.nonEmpty) gannotsSem.map(gannotSem => mannot(g.EmptyTree, gannotSem, gparents))
+    else gannotsSyn.map(gannotSyn => mannot(gannotSyn, g.ErroneousAnnotation, gparents))
+  }
+
+  private def mannot(gannotSyn: g.Tree, gannotSem: g.AnnotationInfo, gparents: List[g.Tree]): m.Mod.Annot = {
     ???
   }
 
