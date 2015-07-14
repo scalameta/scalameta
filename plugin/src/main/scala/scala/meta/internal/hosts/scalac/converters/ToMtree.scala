@@ -62,6 +62,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
         val mctor = m.Ctor.Primary(mctormods, mctorname(gctor.getOrElse(g.EmptyTree), gparents1), mvparamss)
         val mimpl = mtree(gimpl, gparents1).require[m.Template]
         m.Defn.Class(mmods, mname, mtparams, mctor, mimpl)
+      case gtree @ g.Template(_, _, _) =>
       case _ =>
         unreachable(debug(gtree, g.showRaw(gtree)))
     }
@@ -108,6 +109,9 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
   private def mmods(gmods: g.Modifiers, gparents: List[g.Tree]): Seq[m.Mod] = {
     val gmdef = gparents.head.require[g.MemberDef]
 
+    val ops = new ClassParameterOps(gmdef, gparents.tail)
+    val isClassParameter =
+
     case class ClassParameter(gparam: g.ValDef, gfield: Option[g.ValDef], gctor: g.DefDef, gclass: g.ClassDef)
     val gclassparam: Option[ClassParameter] = {
       val syntactically = {
@@ -147,6 +151,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
       val gsemanticAnnots = gparents.head.symbol.annotations
       mannots(gsyntacticAnnots, gsemanticAnnots, gparents)
     }
+
     val accessQualifierMods: Seq[m.Mod] = {
       if (gmods.hasFlag(SYNTHETIC) && gmods.hasFlag(ARTIFACT)) {
         // NOTE: some sick artifact vals produced by mkPatDef can be private to method (whatever that means)
@@ -170,6 +175,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
         else Nil
       }
     }
+
     val otherMods: Seq[m.Mod] = {
       val mmods = scala.collection.mutable.ListBuffer[m.Mod]()
       val gmods = gmdef.mods
@@ -185,6 +191,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
       if (gmods.hasFlag(LAZY)) mmods += m.Mod.Lazy()
       mmods.toList
     }
+
     val valVarParamMods: Seq[m.Mod] = {
       val mmods = scala.collection.mutable.ListBuffer[m.Mod]()
       val gfield = gclassparam.flatMap(_.gfield)
@@ -195,10 +202,10 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
       if (isImmutableField && !inCaseClass) mmods += m.Mod.ValParam()
       mmods.toList
     }
-    val result = annotationMods ++ accessQualifierMods ++ otherMods ++ valVarParamMods
 
     // NOTE: we can't discern `class C(x: Int)` and `class C(private[this] val x: Int)`
     // so let's err on the side of the more popular option
+    val result = annotationMods ++ accessQualifierMods ++ otherMods ++ valVarParamMods
     if (gclassparam.nonEmpty) result.filter({ case m.Mod.Private(m.Term.This(_)) => false; case _ => true })
     else result
   }
@@ -213,54 +220,18 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
   }
 
   private def mparams(gtparams: List[g.TypeDef], gvparamss: List[List[g.ValDef]], gparents: List[g.Tree]): (Seq[m.Type.Param], Seq[Seq[m.Term.Param]]) = {
-    def referencedTparam(gtarg: g.Tree): Option[g.TypeDef] = gtparams.filter(gtparam => {
-      if (gtparam.symbol != g.NoSymbol) gtparam.symbol == gtarg.symbol
-      else gtarg match { case g.Ident(gname) => gname == gtparam.name; case _ => false }
-    }).headOption
-    object ViewBound {
-      def unapply(gtree: g.ValDef): Option[(g.TypeDef, g.Tree)] = gtree match {
-        case g.ValDef(_, _, gtpt @ g.TypeTree(), _) =>
-          val gtycon = if (gtpt.tpe != null) gtpt.tpe.typeSymbolDirect else g.NoSymbol
-          val gtargs = if (gtpt.tpe != null) gtpt.tpe.typeArgs else Nil
-          val gfrom = gtargs.map(_.typeSymbol) match { case List(sym, _) => sym; case _ => g.NoSymbol }
-          val tyconMatches = gtycon == g.definitions.FunctionClass(1)
-          if (tyconMatches) referencedTparam(g.Ident(gfrom)).map(gtparam => (gtparam, g.Ident(gtycon)))
-          else None
-        case g.ValDef(_, _, g.AppliedTypeTree(gtycon, gfrom :: _ :: Nil), _) =>
-          val tyconMatches = gtycon match {
-            // NOTE: this doesn't handle every possible case (e.g. a g.Ident binding to renamed import),
-            // but it should be good enough for 95% of the situations
-            case g.Select(gpre, g.TermName("Function1")) => gpre.symbol == g.definitions.ScalaPackage
-            case gtycon: g.RefTree => gtycon.symbol == g.definitions.FunctionClass(1)
-            case _ => false
-          }
-          if (tyconMatches) referencedTparam(gfrom).map(gtparam => (gtparam, gtycon))
-          else None
-        case _ =>
-          None
-      }
-    }
-    object ContextBound {
-      def unapply(gtree: g.ValDef): Option[(g.TypeDef, g.Tree)] = gtree match {
-        case g.ValDef(_, _, gtpt @ g.TypeTree(), _) =>
-          val gtycon = if (gtpt.tpe != null) gtpt.tpe.typeSymbolDirect else g.NoSymbol
-          val gtargs = if (gtpt.tpe != null) gtpt.tpe.typeArgs else Nil
-          val gtarg = gtargs.map(_.typeSymbol) match { case List(sym) => sym; case _ => g.NoSymbol }
-          referencedTparam(g.Ident(gtarg)).map(gtparam => (gtparam, g.Ident(gtycon)))
-        case g.ValDef(_, _, g.AppliedTypeTree(gtycon, gtarg :: Nil), _) =>
-          referencedTparam(gtarg).map(gtparam => (gtparam, gtycon))
-        case _ =>
-          None
-      }
-    }
     val (gexplicitss, gimplicitss) = gvparamss.partition(_.exists(_.mods.hasFlag(IMPLICIT)))
     val (gbounds, gimplicits) = gimplicitss.flatten.partition(_.name.startsWith(g.nme.EVIDENCE_PARAM_PREFIX))
+    val ops = new ParameterOps(gtparams, gvparamss)
+    import ops._
     val gtparams1 = gtparams.map(gtparam => {
-      val gviewBounds = gbounds.flatMap(ViewBound.unapply).filter(_._1.name == gtparam.name)
-      val gcontextBounds = gbounds.flatMap(ContextBound.unapply).filter(_._1.name == gtparam.name)
+      val gviewBounds = gbounds.flatMap(ViewBound.unapply).filter(_._1.name == gtparam.name).map(_._2)
+      val gcontextBounds = gbounds.flatMap(ContextBound.unapply).filter(_._1.name == gtparam.name).map(_._2)
       gtparam.appendMetadata("viewBounds" -> gviewBounds, "contextBounds" -> gcontextBounds)
     })
     val gvparamss1 = gexplicitss ++ (if (gimplicits.isEmpty) Nil else List(gimplicits))
-    (mtrees(gtparams1, gparents).require[Seq[m.Type.Param]], mtreess(gvparamss1, gparents).require[Seq[Seq[m.Term.Param]]])
+    val mtparams = mtrees(gtparams1, gparents).require[Seq[m.Type.Param]]
+    val mvparamss = mtreess(gvparamss1, gparents).require[Seq[Seq[m.Term.Param]]]
+    (mtparams, mvparamss)
   }
 }
