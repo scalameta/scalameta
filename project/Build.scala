@@ -22,7 +22,7 @@ object ScalaHostBuild extends Build {
       usePlugin(plugin),
       replIntegration
     )
-  ) aggregate (plugin, tests) dependsOn (plugin, foundation, interface)
+  ) aggregate (plugin, tests) dependsOn (plugin, foundation)
 
   lazy val foundation = Project(
     id   = "scalahost-foundation",
@@ -33,19 +33,11 @@ object ScalaHostBuild extends Build {
     )
   )
 
-  lazy val interface = Project(
-    id   = "scalahost-interface",
-    base = file("interface"),
-    settings = publishableSettings ++ commonDependencies ++ Seq(
-      dontPackage
-    )
-  ) dependsOn (foundation)
-
   lazy val plugin = Project(
     id   = "scalahost",
     base = file("plugin"),
     settings = publishableSettings ++ commonDependencies ++ mergeDependencies
-  ) dependsOn (foundation % "optional", interface % "optional") // not really optional, used for fatjar
+  ) dependsOn (foundation % "optional") // TODO: not really optional, used for fatjar
 
   lazy val sandbox = Project(
     id   = "sandbox",
@@ -62,5 +54,5 @@ object ScalaHostBuild extends Build {
       libraryDependencies ++= Seq(scalatest, scalacheck),
       dontPackage
     ) ++ exposeClasspaths("tests")
-  ) dependsOn (plugin, foundation, interface)
+  ) dependsOn (plugin, foundation)
 }

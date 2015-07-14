@@ -1,14 +1,13 @@
 package scala.meta
 package internal.hosts.scalac
-package convert
 
 import scala.tools.nsc.{Global, Phase, SubComponent}
 import scala.tools.nsc.plugins.{Plugin => NscPlugin, PluginComponent => NscPluginComponent}
 import scala.meta.dialects.Scala211
 import scala.meta.internal.hosts.scalac.{PluginBase => ScalahostPlugin}
+import scala.meta.internal.hosts.scalac.converters.mergeTrees
 import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
-import scala.meta.internal.hosts.scalac.perfect.mergeTrees
 import scala.reflect.io.AbstractFile
 import org.scalameta.reflection._
 import org.scalameta.invariants._

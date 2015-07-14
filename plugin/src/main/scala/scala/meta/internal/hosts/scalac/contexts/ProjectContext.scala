@@ -10,7 +10,7 @@ import scala.collection.mutable
 import scala.meta.semantic.{Context => ScalametaSemanticContext}
 import scala.meta.projects.{Context => ScalametaProjectContext}
 import scala.meta.internal.{ast => impl}
-import scala.meta.internal.hosts.scalac.converters.MergeTrees
+import scala.meta.internal.hosts.scalac.converters.mergeTrees
 
 @context(translateExceptions = false)
 class ProjectContext(sourcepath: String, classpath: String) extends ScalametaSemanticContext with ScalametaProjectContext {
@@ -72,6 +72,12 @@ class ProjectContext(sourcepath: String, classpath: String) extends ScalametaSem
       })
       entrySources.toList
     })
-    sourcepathSources.zip(classpathSources).map({ case (ss, cs) => MergeTrees(ss.asInstanceOf[impl.Source], cs.asInstanceOf[impl.Source]) })
+    def mergeSources(trees: (Source, Source)) = {
+      val syntactic = trees._1.require[impl.Source]
+      val semantic = trees._2.require[impl.Source]
+      val merged = scala.meta.internal.hosts.scalac.converters.mergeTrees(syntactic, semantic)
+      merged.require[Source]
+    }
+    sourcepathSources.zip(classpathSources).map(mergeSources)
   }
 }

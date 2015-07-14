@@ -3,8 +3,6 @@ package internal.hosts.scalac
 
 import scala.tools.nsc.Global
 import scala.tools.nsc.plugins.{Plugin => NscPlugin, PluginComponent => NscPluginComponent}
-import convert.ConvertPhase
-import backend.HijackBackend
 import org.scalameta.reflection._
 
 trait PluginBase extends NscPlugin

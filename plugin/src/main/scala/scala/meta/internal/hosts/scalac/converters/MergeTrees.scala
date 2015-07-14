@@ -1,6 +1,6 @@
 package scala.meta
 package internal.hosts.scalac
-package perfect
+package converters
 
 import scala.{Seq => _}
 import scala.collection.immutable.Seq

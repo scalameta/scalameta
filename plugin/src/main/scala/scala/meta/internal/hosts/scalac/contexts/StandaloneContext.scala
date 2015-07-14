@@ -7,7 +7,7 @@ import org.scalameta.invariants._
 import scala.meta.semantic.{Context => ScalametaSemanticContext}
 import scala.meta.semantic.{Context => ScalametaMacroContext}
 import scala.meta.internal.hosts.scalac.contexts.{SemanticContext => ScalahostSemanticContext}
-import scala.meta.internal.hosts.scalac.perfect.{mergeTrees => mmergeTrees}
+import scala.meta.internal.hosts.scalac.converters.{mergeTrees => mmergeTrees}
 import scala.compat.Platform.EOL
 import org.scalameta.internal.mkGlobal
 import scala.tools.nsc.reporters.StoreReporter

@@ -1,6 +1,5 @@
 package scala.meta
 package internal.hosts.scalac
-package backend
 
 import scala.collection.mutable
 import scala.reflect.internal.util.Statistics
