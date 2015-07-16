@@ -31,11 +31,12 @@ trait ConvertPhase {
     val phaseName = "convert"
     override def description = "convert compiler trees to scala.meta"
     implicit val c = Scalahost.mkGlobalContext[global.type](global)
+    import c.decorators._
 
     override def newPhase(prev: Phase): StdPhase = new StdPhase(prev) {
       override def apply(unit: CompilationUnit) {
         val syntacticTree = unit.source.content.parse[mapi.Source].require[m.Source]
-        val semanticTree = c.toMtree(unit.body).require[m.Source]
+        val semanticTree = unit.body.toMtree[m.Source]
         val perfectTree = mergeTrees(syntacticTree, semanticTree)
         unit.body.appendMetadata("scalameta" -> perfectTree)
       }

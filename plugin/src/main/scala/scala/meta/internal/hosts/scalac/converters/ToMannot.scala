@@ -46,7 +46,7 @@ trait ToMannot extends GlobalToolkit with MetaToolkit {
             })
           } else {
             if (gannot.atp.typeSymbol == g.definitions.ThrowsClass) Nil
-            else gargs.map(garg => toMtree(garg).require[m.Term])
+            else gargs.map(_.toMtree[m.Term])
           }
         }
         val mctor = m.Ctor.Name(gatp.typeSymbolDirect.name.decoded).withDenot(gatp, gctor)

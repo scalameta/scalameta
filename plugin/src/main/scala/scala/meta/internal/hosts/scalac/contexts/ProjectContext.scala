@@ -7,13 +7,12 @@ import org.scalameta.invariants._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.collection.mutable
-import scala.meta.semantic.{Context => ScalametaSemanticContext}
-import scala.meta.projects.{Context => ScalametaProjectContext}
+import scala.meta.{ScalahostProjectContext => ProjectContextApi}
 import scala.meta.internal.{ast => impl}
 import scala.meta.internal.hosts.scalac.converters.mergeTrees
 
 @context(translateExceptions = false)
-class ProjectContext(sourcepath: String, classpath: String) extends ScalametaSemanticContext with ScalametaProjectContext {
+class ProjectContext(sourcepath: String, classpath: String) extends ProjectContextApi {
   private val c = new StandaloneContext(s"-classpath $classpath")
   private implicit val d: Dialect = c.dialect
   def dialect: Dialect = c.dialect

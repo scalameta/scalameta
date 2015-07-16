@@ -7,7 +7,7 @@ import org.scalameta.invariants._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.meta.semantic.{Context => ScalametaSemanticContext}
-import scala.meta.internal.hosts.scalac.contexts.{SemanticContext => ScalahostSemanticContext}
+import scala.meta.{ScalahostGlobalContext => GlobalContextApi}
 import scala.meta.internal.hosts.scalac.converters.{Api => ConverterApi}
 import scala.tools.nsc.{Global => ScalaGlobal}
 import scala.meta.dialects.Scala211
@@ -16,7 +16,7 @@ import scala.meta.internal.{ast => m}
 import scala.meta.internal.{semantic => s}
 
 @context(translateExceptions = true)
-class SemanticContext[G <: ScalaGlobal](val global: G) extends ConverterApi(global) with ScalametaSemanticContext {
+class GlobalContext[G <: ScalaGlobal](val global: G) extends ConverterApi(global) with GlobalContextApi[G] {
   implicit val c: ScalametaSemanticContext = this
 
   def dialect: scala.meta.dialects.Scala211.type = {

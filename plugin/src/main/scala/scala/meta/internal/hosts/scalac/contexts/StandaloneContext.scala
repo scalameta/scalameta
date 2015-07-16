@@ -4,9 +4,7 @@ package contexts
 
 import org.scalameta.contexts._
 import org.scalameta.invariants._
-import scala.meta.semantic.{Context => ScalametaSemanticContext}
-import scala.meta.semantic.{Context => ScalametaMacroContext}
-import scala.meta.internal.hosts.scalac.contexts.{SemanticContext => ScalahostSemanticContext}
+import scala.meta.{ScalahostStandaloneContext => StandaloneContextApi}
 import scala.meta.internal.hosts.scalac.converters.{mergeTrees => mmergeTrees}
 import scala.compat.Platform.EOL
 import org.scalameta.internal.mkGlobal
@@ -16,7 +14,7 @@ import scala.meta.internal.{ast => m}
 import scala.reflect.macros.runtime.AbortMacroException
 
 @context(translateExceptions = false)
-class StandaloneContext(options: String) extends ScalahostSemanticContext(mkGlobal(options)) with ScalametaMacroContext {
+class StandaloneContext(options: String) extends GlobalContext(mkGlobal(options)) with StandaloneContextApi {
   def define(code: String): mapi.Source = {
     val reporter: StoreReporter = g.reporter.require[StoreReporter]
     reporter.reset()
@@ -41,7 +39,7 @@ class StandaloneContext(options: String) extends ScalahostSemanticContext(mkGlob
     }
     import scala.meta.dialects.Scala211
     val msyntacticTree = code.parse[mapi.Source].require[m.Source]
-    val msemanticTree = toMtree(gtypedtree).require[m.Source]
+    val msemanticTree = gtypedtree.toMtree[m.Source]
     mmergeTrees(msyntacticTree, msemanticTree).require[m.Source]
   }
   val reporter = new StoreReporter()

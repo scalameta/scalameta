@@ -10,6 +10,7 @@ import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.collection.mutable
 import scala.tools.nsc.{Global => ScalaGlobal}
+import scala.reflect.ClassTag
 import scala.reflect.internal.Flags._
 import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
@@ -32,206 +33,92 @@ import scala.meta.internal.parsers.Helpers.{XtensionTermOps => _, _}
 trait ToMtree extends GlobalToolkit with MetaToolkit {
   self: Api =>
 
-  def toMtree(gtree: g.Tree): m.Tree = mtree(gtree, Nil)
+  protected def toMtree[T <: Tree : ClassTag](gtree: g.Tree): T = gtree.toMtree
 
-  private def mtree(gtree: g.Tree, gparents: List[g.Tree]): m.Tree = {
-    val gparents1 = gtree :: gparents
-    val mresult = gtree match {
-      case gtree @ g.PackageDef(gpid, gstats) =>
-        if (gpid.name == g.nme.EMPTY_PACKAGE_NAME) {
-          require(gparents.isEmpty)
-          m.Source(mtrees(gstats, gparents1).require[Seq[m.Stat]])
-        } else {
-          val mroot = gstats match {
-            case List(gstat: g.ModuleDef) if gstat.name == g.nme.PACKAGE =>
-              mtree(gstat, gparents1).require[m.Pkg.Object]
-            case _ =>
-              val mpid = mname(gpid, gparents1).require[m.Term.Name]
-              val mstats = mtrees(gstats, gparents1).require[Seq[m.Stat]]
-              m.Pkg(mpid, mstats)
-          }
-          m.Source(List(mroot))
-        }
-      case gtree @ g.ClassDef(gmods, gname, gtparams, gimpl) =>
-        val mmods = this.mmods(gmods, gparents1)
-        val mname = this.mname(g.Ident(gname), gparents1).require[m.Type.Name]
-        val gctor = gimpl.body.collectFirst{ case gctor: g.DefDef if gctor.name == g.nme.CONSTRUCTOR => gctor }
-        val gvparamss = gctor.map(_.vparamss).getOrElse(Nil)
-        val (mtparams, mvparamss) = mparams(gtparams, gvparamss, gparents1)
-        val mctormods = gctor.map(gctor => this.mmods(gctor.mods, gparents1)).getOrElse(Nil)
-        val mctor = m.Ctor.Primary(mctormods, mctorname(gctor.getOrElse(g.EmptyTree), gparents1), mvparamss)
-        val mimpl = mtree(gimpl, gparents1).require[m.Template]
-        m.Defn.Class(mmods, mname, mtparams, mctor, mimpl)
-      case gtree @ g.Template(_, _, _) =>
-      case _ =>
-        unreachable(debug(gtree, g.showRaw(gtree)))
-    }
-    if (sys.props("convert.debug") != null) {
-      println(gtree)
-      println(mresult)
-      println(g.showRaw(gtree, printIds = true))
-      println(mresult.show[Semantics])
-    }
-    mresult
-  }
-
-  private def mtrees(gtrees: List[g.Tree], gparents: List[g.Tree]): Seq[m.Tree] = {
-    gtrees.map(gtree => mtree(gtree, gparents))
-  }
-
-  private def mtreess(gtreess: List[List[g.Tree]], gparents: List[g.Tree]): Seq[Seq[m.Tree]] = {
-    gtreess.map(gtrees => mtrees(gtrees, gparents))
-  }
-
-  private def mname(gtree: g.NameTree, gparents: List[g.Tree]): m.Name = {
-    val sname = gtree.displayName(gparents.headOption.getOrElse(g.EmptyTree))
-    val mname = {
-      if (sname == "_") m.Name.Anonymous()
-      else if (gtree.name.isTermName) m.Term.Name(sname)
-      else if (gtree.name.isTypeName) m.Type.Name(sname)
-      else unreachable(debug(gtree, g.showRaw(gtree)))
-    }
-    // TODO: attach denotations here
-    mname
-  }
-
-  private def mctorname(gtree: g.Tree, gparents: List[g.Tree]): m.Ctor.Name = {
-    val (gmdef: g.NameTree) :: ggparents = gparents
-    val mname = m.Ctor.Name(this.mname(gmdef, ggparents).value)
-    // TODO: attach denotations here
-    // if gtree.nonEmpty, then it's a class ctor - should be quite simple
-    // if gtree.isEmpty, then gparent is a trait or a module
-    // check out how this is handled in the earlier version of scalahost:
-    // https://github.com/scalameta/scalahost/blob/master/interface/src/main/scala/scala/meta/internal/hosts/scalac/converters/ToMtree.scala#L50
-    mname
-  }
-
-  private def mmods(gmods: g.Modifiers, gparents: List[g.Tree]): Seq[m.Mod] = {
-    val gmdef = gparents.head.require[g.MemberDef]
-
-    val ops = new ClassParameterOps(gmdef, gparents.tail)
-    val isClassParameter =
-
-    case class ClassParameter(gparam: g.ValDef, gfield: Option[g.ValDef], gctor: g.DefDef, gclass: g.ClassDef)
-    val gclassparam: Option[ClassParameter] = {
-      val syntactically = {
-        gparents match {
-          case
-            (gparam @ g.ValDef(_, _, _, _)) ::
-            (gctor @ g.DefDef(_, g.nme.CONSTRUCTOR, _, _, _, _)) ::
-            (gclass @ g.ClassDef(_, _, _, g.Template(_, _, gsiblings))) :: _ =>
-              import g.TermNameOps
-              val gfield = gsiblings.collectFirst { case gfield: g.ValDef if gfield.name == gparam.name.localName => gfield }
-              val gprim = gsiblings.collectFirst { case gprim: g.DefDef if gprim.name == g.nme.CONSTRUCTOR => gprim }
-              val isClassParameter = gprim.map(gprim => gctor == gprim).getOrElse(false)
-              if (isClassParameter) Some(ClassParameter(gparam, gfield, gctor, gclass))
-              else None
-          case _ =>
-            None
-        }
+  protected implicit class RichTreeToMtree(gtree: g.Tree) {
+    def toMtree[T <: m.Tree : ClassTag]: T = {
+      // TODO: figure out a mechanism to automatically remove these parent links once we're done
+      // in order to cut down memory consumption of the further compilation pipeline
+      // TODO: another performance consideration is the fact that install/remove
+      // are currently implemented as standalone tree traversal, and it would be faster
+      // to integrate them into the transforming traversal
+      gtree.installParentLinks()
+      val mtree = gtree match {
+        case l.EmptyPackageDef(lstats) =>
+          val mstats = lstats.toMtrees[m.Stat]
+          m.Source(mstats)
+        case l.ToplevelPackageDef(lname, lstats) =>
+          val mname = lname.toMtree[m.Term.Name]
+          val mstats = lstats.toMtrees[m.Stat]
+          m.Source(List(m.Pkg(mname, mstats)))
+        case l.NestedPackageDef(lname, lstats) =>
+          val mname = lname.toMtree[m.Term.Name]
+          val mstats = lstats.toMtrees[m.Stat]
+          m.Pkg(mname, mstats)
+        case l.ClassDef(lmods, lname, ltparams, lctor, limpl) =>
+          val mmods = lmods.toMtrees[m.Mod]
+          val mname = lname.toMtree[m.Type.Name]
+          val mtparams = ltparams.toMtrees[m.Type.Param]
+          val mctor = lctor.toMtree[m.Ctor.Primary]
+          val mimpl = limpl.toMtree[m.Template]
+          m.Defn.Class(mmods, mname, mtparams, mctor, mimpl)
+        case l.PrimaryCtorDef(lmods, lname, lparamss) =>
+          val mmods = lmods.toMtrees[m.Mod]
+          val mname = lname.toMtree[m.Ctor.Name]
+          val mparamss = lparamss.toMtreess[m.Term.Param]
+          m.Ctor.Primary(mmods, mname, mparamss)
+        case l.Template(learly, lparents, lself, lstats) =>
+          val mearly = learly.toMtrees[m.Stat]
+          val mparents = lparents.toMtrees[m.Term]
+          val mself = lself.toMtree[m.Term.Param]
+          val mstats = lstats.toMtrees[m.Stat]
+          m.Template(mearly, mparents, mself, Some(mstats))
+        case l.Parent(ltpt, lctor, largss) =>
+          // TODO: how do we assign tpes to mctor and also to successive results of the foldLeft below?
+          val mtpt = ltpt.toMtree[m.Type]
+          val mctor = mtpt.ctorRef(lctor.toMtree[m.Ctor.Name]).require[m.Term]
+          val margss = largss.toMtreess[m.Term.Arg]
+          margss.foldLeft(mctor)((mcurr, margs) => m.Term.Apply(mcurr, margs))
+        case l.SelfDef(lmods, lname, ltpt) =>
+          val mname = lname.toMtree[m.Term.Name]
+          val mtpt = if (ltpt.nonEmpty) Some(ltpt.toMtree[m.Type]) else None
+          m.Term.Param(Nil, mname, mtpt, None)
+        case l.DefDef(lmods, lname, ltparams, lparamss, ltpt, lrhs) =>
+          val mmods = lmods.toMtrees[m.Mod]
+          val mname = lname.toMtree[m.Term.Name]
+          val mtparams = ltparams.toMtrees[m.Type.Param]
+          val mparamss = lparamss.toMtreess[m.Term.Param]
+          val mtpt = if (ltpt.nonEmpty) Some(ltpt.toMtree[m.Type]) else None
+          val mrhs = lrhs.toMtree[m.Term]
+          m.Defn.Def(mmods, mname, mtparams, mparamss, mtpt, mrhs)
+        case l.ParamDef(lmods, lname, ltpt, ldefault) =>
+          val mmods = lmods.toMtrees[m.Mod]
+          val mname = lname.toMtree[m.Term.Param.Name]
+          val mtpt = if (ltpt.nonEmpty) Some(ltpt.toMtree[m.Type]) else None
+          val mdefault = if (ldefault.nonEmpty) Some(ldefault.toMtree[m.Term]) else None
+          m.Term.Param(mmods, mname, mtpt, mdefault)
+        case _ =>
+          unreachable(debug(gtree, g.showRaw(gtree)))
       }
-      val semantically = {
-        if (gmdef.symbol.owner.isPrimaryConstructor) {
-          val gparam = gmdef.require[g.ValDef]
-          val gctorSym = gmdef.symbol.owner
-          val gctor = g.DefDef(gctorSym, g.EmptyTree)
-          val gclassSym = gctorSym.owner
-          val gclass = g.ClassDef(gclassSym, g.Template(Nil, g.noSelfType, Nil))
-          val ggetterSym = gclassSym.info.member(gmdef.name)
-          val gfieldSym = ggetterSym.map(_.owner.info.member(ggetterSym.localName))
-          val gfield = if (gfieldSym != g.NoSymbol) Some(g.ValDef(gfieldSym)) else None
-          Some(ClassParameter(gparam, gfield, gctor, gclass))
-        } else None
+      if (sys.props("convert.debug") != null) {
+        println(gtree)
+        println(mtree)
+        println(g.showRaw(gtree, printIds = true))
+        println(mtree.show[Semantics])
       }
-      syntactically.orElse(semantically)
+      mtree.require[T]
     }
-
-    val annotationMods: Seq[m.Mod] = {
-      val gsyntacticAnnots = gmods.annotations
-      val gsemanticAnnots = gparents.head.symbol.annotations
-      mannots(gsyntacticAnnots, gsemanticAnnots, gparents)
-    }
-
-    val accessQualifierMods: Seq[m.Mod] = {
-      if (gmods.hasFlag(SYNTHETIC) && gmods.hasFlag(ARTIFACT)) {
-        // NOTE: some sick artifact vals produced by mkPatDef can be private to method (whatever that means)
-        Nil
-      } else if (gmods.hasFlag(LOCAL)) {
-        // TODO: attach denotations here
-        if (gmods.hasFlag(PROTECTED)) List(m.Mod.Protected(m.Term.This(m.Name.Anonymous())))
-        else if (gmods.hasFlag(PRIVATE)) List(m.Mod.Private(m.Term.This(m.Name.Anonymous())))
-        else unreachable(debug(gmods))
-      } else if (gmods.hasAccessBoundary && gmods.privateWithin != g.tpnme.EMPTY) {
-        // TODO: attach denotations here
-        // TODO: `private[pkg] class C` doesn't have PRIVATE in its flags
-        // so we need to account for that!
-        val mqualifier = m.Name.Indeterminate(gmods.privateWithin.displayName)
-        if (gmods.hasFlag(PROTECTED)) List(m.Mod.Protected(mqualifier))
-        else List(m.Mod.Private(mqualifier))
-      } else {
-        // TODO: attach denotations here
-        if (gmods.hasFlag(PROTECTED)) List(m.Mod.Protected(m.Name.Anonymous()))
-        else if (gmods.hasFlag(PRIVATE)) List(m.Mod.Private(m.Name.Anonymous()))
-        else Nil
-      }
-    }
-
-    val otherMods: Seq[m.Mod] = {
-      val mmods = scala.collection.mutable.ListBuffer[m.Mod]()
-      val gmods = gmdef.mods
-      if (gmods.hasFlag(IMPLICIT)) mmods += m.Mod.Implicit()
-      if (gmods.hasFlag(FINAL)) mmods += m.Mod.Final()
-      if (gmods.hasFlag(SEALED)) mmods += m.Mod.Sealed()
-      if (gmods.hasFlag(OVERRIDE)) mmods += m.Mod.Override()
-      if (gmods.hasFlag(CASE)) mmods += m.Mod.Case()
-      if (gmods.hasFlag(ABSTRACT) && gmdef.isInstanceOf[g.ClassDef] && !gmods.hasFlag(TRAIT)) mmods += m.Mod.Abstract()
-      if (gmods.hasFlag(ABSOVERRIDE)) { mmods += m.Mod.Abstract(); mmods += m.Mod.Override() }
-      if (gmods.hasFlag(COVARIANT) && gmdef.isInstanceOf[g.TypeDef]) mmods += m.Mod.Covariant()
-      if (gmods.hasFlag(CONTRAVARIANT) && gmdef.isInstanceOf[g.TypeDef]) mmods += m.Mod.Contravariant()
-      if (gmods.hasFlag(LAZY)) mmods += m.Mod.Lazy()
-      mmods.toList
-    }
-
-    val valVarParamMods: Seq[m.Mod] = {
-      val mmods = scala.collection.mutable.ListBuffer[m.Mod]()
-      val gfield = gclassparam.flatMap(_.gfield)
-      val isImmutableField = gfield.map(!_.mods.hasFlag(MUTABLE)).getOrElse(false)
-      val isMutableField = gfield.map(_.mods.hasFlag(MUTABLE)).getOrElse(false)
-      val inCaseClass = gclassparam.map(_.gclass).map(_.mods.hasFlag(CASE)).getOrElse(false)
-      if (isMutableField) mmods += m.Mod.VarParam()
-      if (isImmutableField && !inCaseClass) mmods += m.Mod.ValParam()
-      mmods.toList
-    }
-
-    // NOTE: we can't discern `class C(x: Int)` and `class C(private[this] val x: Int)`
-    // so let's err on the side of the more popular option
-    val result = annotationMods ++ accessQualifierMods ++ otherMods ++ valVarParamMods
-    if (gclassparam.nonEmpty) result.filter({ case m.Mod.Private(m.Term.This(_)) => false; case _ => true })
-    else result
   }
 
-  private def mannots(gannotsSyn: List[g.Tree], gannotsSem: List[g.AnnotationInfo], gparents: List[g.Tree]): Seq[m.Mod.Annot] = {
-    if (gannotsSem.nonEmpty) gannotsSem.map(gannotSem => mannot(g.EmptyTree, gannotSem, gparents))
-    else gannotsSyn.map(gannotSyn => mannot(gannotSyn, g.ErroneousAnnotation, gparents))
+  protected implicit class RichTreesToMtrees(gtrees: List[g.Tree]) {
+    def toMtrees[T <: m.Tree : ClassTag]: Seq[T] = gtrees.map(_.toMtree[T])
   }
 
-  private def mannot(gannotSyn: g.Tree, gannotSem: g.AnnotationInfo, gparents: List[g.Tree]): m.Mod.Annot = {
-    ???
+  protected implicit class RichModifiersToMtrees(lmods: l.Modifiers) {
+    def toMtrees[T <: m.Tree : ClassTag]: Seq[T] = ???
   }
 
-  private def mparams(gtparams: List[g.TypeDef], gvparamss: List[List[g.ValDef]], gparents: List[g.Tree]): (Seq[m.Type.Param], Seq[Seq[m.Term.Param]]) = {
-    val (gexplicitss, gimplicitss) = gvparamss.partition(_.exists(_.mods.hasFlag(IMPLICIT)))
-    val (gbounds, gimplicits) = gimplicitss.flatten.partition(_.name.startsWith(g.nme.EVIDENCE_PARAM_PREFIX))
-    val ops = new ParameterOps(gtparams, gvparamss)
-    import ops._
-    val gtparams1 = gtparams.map(gtparam => {
-      val gviewBounds = gbounds.flatMap(ViewBound.unapply).filter(_._1.name == gtparam.name).map(_._2)
-      val gcontextBounds = gbounds.flatMap(ContextBound.unapply).filter(_._1.name == gtparam.name).map(_._2)
-      gtparam.appendMetadata("viewBounds" -> gviewBounds, "contextBounds" -> gcontextBounds)
-    })
-    val gvparamss1 = gexplicitss ++ (if (gimplicits.isEmpty) Nil else List(gimplicits))
-    val mtparams = mtrees(gtparams1, gparents).require[Seq[m.Type.Param]]
-    val mvparamss = mtreess(gvparamss1, gparents).require[Seq[Seq[m.Term.Param]]]
-    (mtparams, mvparamss)
+  protected implicit class RichTreessToMtreess(gtreess: List[List[g.Tree]]) {
+    def toMtreess[T <: m.Tree : ClassTag]: Seq[Seq[T]] = gtreess.map(_.toMtrees[T])
   }
 }

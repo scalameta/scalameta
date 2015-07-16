@@ -15,14 +15,13 @@ trait TreeHelpers {
   import treeInfo._
   import build._
 
-  implicit class RichFoundationHelperTree(tree: Tree) {
+  implicit class RichFoundationNameTree(tree: Tree) {
     // NOTE: scala.reflect's tree don't have parent links, so we have to approximate if we encounter an unattributed package object
-    def displayName: String = displayName(EmptyTree)
-    def displayName(parent: Tree): String = {
+    def displayName: String = {
       def packageName(tree: ModuleDef): Name = {
         if (tree.symbol != NoSymbol) tree.symbol.owner.name
-        else parent match {
-          case _: PackageDef => TermName(parent.displayName)
+        else tree.parent match {
+          case _: PackageDef => TermName(tree.parent.displayName)
           case _ => TermName("package")
         }
       }
@@ -36,7 +35,7 @@ trait TreeHelpers {
     }
   }
 
-  protected implicit class RichFoundationHelperName(name: Name) {
+  implicit class RichFoundationHelperName(name: Name) {
     def isAnonymous = {
       val isTermPlaceholder = name.isTermName && name.startsWith(nme.FRESH_TERM_NAME_PREFIX)
       val isTypePlaceholder = name.isTypeName && name.startsWith("_$")
@@ -56,55 +55,5 @@ trait TreeHelpers {
       else if (name.isAnonymous) "_"
       else name.decodedName.toString
     }
-  }
-
-  class ParameterOps(tparams: List[TypeDef], vparamss: List[List[ValDef]]) {
-    private def referencedTparam(targ: Tree): Option[TypeDef] = tparams.filter(tparam => {
-      if (tparam.symbol != NoSymbol) tparam.symbol == targ.symbol
-      else targ match { case Ident(name) => name == tparam.name; case _ => false }
-    }).headOption
-
-    object ViewBound {
-      def unapply(tree: ValDef): Option[(TypeDef, Tree)] = tree match {
-        case ValDef(_, _, tpt @ TypeTree(), _) =>
-          val tycon = if (tpt.tpe != null) tpt.tpe.typeSymbolDirect else NoSymbol
-          val targs = if (tpt.tpe != null) tpt.tpe.typeArgs else Nil
-          val (fromTpe, toTpe) = targs match { case List(from, to) => (from, to); case _ => (NoType, NoType) }
-          val fromSym = fromTpe.typeSymbol
-          val tyconMatches = tycon == definitions.FunctionClass(1)
-          if (tyconMatches) referencedTparam(Ident(fromSym)).map(tparam => (tparam, TypeTree(toTpe)))
-          else None
-        case ValDef(_, _, AppliedTypeTree(tycon, from :: to :: Nil), _) =>
-          val tyconMatches = tycon match {
-            // NOTE: this doesn't handle every possible case (e.g. an Ident binding to renamed import),
-            // but it should be ood enough for 95% of the situations
-            case Select(pre, TermName("Function1")) => pre.symbol == definitions.ScalaPackage
-            case tycon: RefTree => tycon.symbol == definitions.FunctionClass(1)
-            case _ => false
-          }
-          if (tyconMatches) referencedTparam(from).map(tparam => (tparam, to))
-          else None
-        case _ =>
-          None
-      }
-    }
-
-    object ContextBound {
-      def unapply(tree: ValDef): Option[(TypeDef, Tree)] = tree match {
-        case ValDef(_, _, tpt @ TypeTree(), _) =>
-          val tycon = if (tpt.tpe != null) tpt.tpe.typeSymbolDirect else NoSymbol
-          val targs = if (tpt.tpe != null) tpt.tpe.typeArgs else Nil
-          val targ = targs.map(_.typeSymbol) match { case List(sym) => sym; case _ => NoSymbol }
-          referencedTparam(Ident(targ)).map(tparam => (tparam, Ident(tycon)))
-        case ValDef(_, _, AppliedTypeTree(tycon, targ :: Nil), _) =>
-          referencedTparam(targ).map(tparam => (tparam, tycon))
-        case _ =>
-          None
-      }
-    }
-  }
-
-  class ClassParameterOps(tree: Tree, parents: List[Tree]) {
-    def isClassParameter = ???
   }
 }
