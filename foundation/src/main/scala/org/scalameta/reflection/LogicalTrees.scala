@@ -16,18 +16,32 @@ trait LogicalTrees {
   import treeInfo._
   import build._
 
-  implicit class RichFoundationParentTree(tree: Tree) {
+  implicit class RichFoundationParentTree[T <: Tree](tree: T) {
+    def parent: Tree = tree.metadata.get("parent").map(_.require[Tree]).getOrElse(EmptyTree)
+    def parents: List[Tree] = {
+      def loop(tree: Tree, acc: List[Tree]): List[Tree] = {
+        val parent = tree.metadata.get("parent").map(_.require[Tree])
+        val recursion = parent.map(parent => loop(parent, acc :+ parent))
+        recursion.getOrElse(acc)
+      }
+      loop(tree, Nil)
+    }
+    def setParent(parent: Tree): T = tree.appendMetadata("parent" -> parent).asInstanceOf[T]
     def installParentLinks(): Unit = {
       object installParentLinks extends Traverser {
         private var parents = List[Tree]()
         override def traverse(tree: Tree): Unit = {
           if (tree.hasMetadata("parent")) return
-          tree.appendMetadata("parent" -> parents.headOption.getOrElse(EmptyTree))
+          tree.setParent(parents.headOption.getOrElse(EmptyTree))
           parents = tree :: parents
           super.traverse(tree)
           parents = parents.tail
         }
       }
+      // NOTE: If you get a MatchError in xtraverse here,
+      // it means that one of the custom logical trees declared below in this file
+      // was created without its parent set (i.e. its tree.hasMetadata("parent") is false).
+      // This should be fixed at the point where the logical tree is created, not here.
       installParentLinks.traverse(tree)
     }
     def removeParentLinks(): Unit = {
@@ -37,16 +51,12 @@ trait LogicalTrees {
           tree.removeMetadata("parent")
         }
       }
+      // NOTE: If you get a MatchError in xtraverse here,
+      // it means that one of the custom logical trees declared below in this file
+      // has escaped the confines of the scala.reflect > scala.meta converter
+      // and tries to become part of the compilation pipeline.
+      // This should be fixed at the point where the logical tree ends up in the output, not here
       removeParentLinks.traverse(tree)
-    }
-    def parent: Tree = tree.metadata.get("parent").map(_.require[Tree]).getOrElse(EmptyTree)
-    def parents: List[Tree] = {
-      def loop(tree: Tree, acc: List[Tree]): List[Tree] = {
-        val parent = tree.metadata.get("parent").map(_.require[Tree])
-        val recursion = parent.map(parent => loop(parent, acc :+ parent))
-        recursion.getOrElse(acc)
-      }
-      loop(tree, Nil)
     }
   }
 
@@ -264,6 +274,7 @@ trait LogicalTrees {
     case class Annotation(val tree: g.Tree) extends Tree
     object Annotation {
       def apply(info: g.AnnotationInfo): l.Annotation = {
+        // TODO: set Annotation.tree's parent to g.EmptyTree
         ???
       }
     }
@@ -275,10 +286,21 @@ trait LogicalTrees {
     object CtorNamespace extends Namespace
     object IndeterminateNamespace extends Namespace
 
-    case class Name(namespace: l.Namespace, pre: g.Type, sym: g.Symbol, value: Predef.String) extends Tree
+    case class Name(namespace: l.Namespace, pre: g.Type, sym: g.Symbol, value: String) extends Tree
     object Name {
       def apply(tree: g.NameTree): l.Name = {
-        ???
+        val result = tree match {
+          case g.DefDef(_, g.nme.CONSTRUCTOR, _, _, _, _) =>
+            val mparentname = Name(tree.parent.require[g.MemberDef])
+            Name(CtorNamespace, g.NoType, g.NoSymbol, mparentname.value)
+          case _ =>
+            val sname = tree.displayName
+            if (sname == "_") Name(AnonymousNamespace, g.NoType, g.NoSymbol, sname)
+            else if (tree.name.isTermName) Name(TermNamespace, g.NoType, g.NoSymbol, sname)
+            else if (tree.name.isTypeName) Name(TypeNamespace, g.NoType, g.NoSymbol, sname)
+            else unreachable(debug(tree, g.showRaw(tree)))
+        }
+        result.setParent(tree)
       }
     }
   }
