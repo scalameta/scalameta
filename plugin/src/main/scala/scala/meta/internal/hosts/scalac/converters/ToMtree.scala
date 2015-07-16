@@ -37,12 +37,12 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
 
   protected implicit class RichTreeToMtree(gtree: g.Tree) {
     def toMtree[T <: m.Tree : ClassTag]: T = {
-      // TODO: figure out a mechanism to automatically remove these parent links once we're done
+      // TODO: figure out a mechanism to automatically remove navigation links once we're done
       // in order to cut down memory consumption of the further compilation pipeline
       // TODO: another performance consideration is the fact that install/remove
       // are currently implemented as standalone tree traversal, and it would be faster
       // to integrate them into the transforming traversal
-      gtree.installParentLinks()
+      gtree.installNavigationLinks()
       val mtree = gtree match {
         case l.EmptyPackageDef(lstats) =>
           val mstats = lstats.toMtrees[m.Stat]

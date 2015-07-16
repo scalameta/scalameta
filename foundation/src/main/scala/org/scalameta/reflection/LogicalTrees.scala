@@ -16,50 +16,6 @@ trait LogicalTrees {
   import treeInfo._
   import build._
 
-  implicit class RichFoundationParentTree[T <: Tree](tree: T) {
-    def parent: Tree = tree.metadata.get("parent").map(_.require[Tree]).getOrElse(EmptyTree)
-    def parents: List[Tree] = {
-      def loop(tree: Tree, acc: List[Tree]): List[Tree] = {
-        val parent = tree.metadata.get("parent").map(_.require[Tree])
-        val recursion = parent.map(parent => loop(parent, acc :+ parent))
-        recursion.getOrElse(acc)
-      }
-      loop(tree, Nil)
-    }
-    def setParent(parent: Tree): T = tree.appendMetadata("parent" -> parent).asInstanceOf[T]
-    def installParentLinks(): Unit = {
-      object installParentLinks extends Traverser {
-        private var parents = List[Tree]()
-        override def traverse(tree: Tree): Unit = {
-          if (tree.hasMetadata("parent")) return
-          tree.setParent(parents.headOption.getOrElse(EmptyTree))
-          parents = tree :: parents
-          super.traverse(tree)
-          parents = parents.tail
-        }
-      }
-      // NOTE: If you get a MatchError in xtraverse here,
-      // it means that one of the custom logical trees declared below in this file
-      // was created without its parent set (i.e. its tree.hasMetadata("parent") is false).
-      // This should be fixed at the point where the logical tree is created, not here.
-      installParentLinks.traverse(tree)
-    }
-    def removeParentLinks(): Unit = {
-      object removeParentLinks extends Traverser {
-        override def traverse(tree: Tree): Unit = {
-          if (!tree.hasMetadata("parent")) return
-          tree.removeMetadata("parent")
-        }
-      }
-      // NOTE: If you get a MatchError in xtraverse here,
-      // it means that one of the custom logical trees declared below in this file
-      // has escaped the confines of the scala.reflect > scala.meta converter
-      // and tries to become part of the compilation pipeline.
-      // This should be fixed at the point where the logical tree ends up in the output, not here
-      removeParentLinks.traverse(tree)
-    }
-  }
-
   // NOTE: The idea behind LogicalTrees is to provide a layer that undoes
   // anti-syntactic ensugarings and encodings of scalac (i.e. ones that make scala.reflect trees
   // lose resemblance to the original syntax of the program that they are modeling).
@@ -78,7 +34,7 @@ trait LogicalTrees {
   // so the only thing that we have to do is to write Something.unapply methods and that's it
   // (later on, we might optimize them to use name-based pattern matching ala Dmitry's backend interface).
   //
-  // Guidelines for creating new extractors:
+  // Guidelines for creating extractors:
   //
   // 1) Most m.Something nodes will need one or, much more rarely, more l.Something extractors that
   //    should mirror the fields that m.Something accepts. For instance, the l.ClassDef extractor
@@ -95,6 +51,23 @@ trait LogicalTrees {
   //
   // 3) Since we generally don't create intermediate data structures, the unapply methods in extractors
   //    should have comments that explain the fields that they are extracting.
+  //
+  // Source code that one might find helpful in implementing extractors:
+  //
+  // 1) Ensugar.scala (the resugaring module of the previous implementation of scalahost).
+  //    Contains several dozen clearly modularized recipes for resugarings.
+  //    Want to know what synthetic members are generated for lazy abstract vals?
+  //    What about default parameters on class constructors? It's all there.
+  //    https://github.com/scalameta/scalahost/blob/92b65b841685871b4401f00456a25de2b7a177b6/foundation/src/main/scala/org/scalameta/reflection/Ensugar.scala
+  //
+  // 2) ToMtree.scala (the converter module of the previous implementation of scalahost).
+  //    Transforms scala.reflect's encodings of Scala syntax into scala.meta.
+  //    Contains knowledge how to collapse multipart val/var definitions and other related stuff.
+  //    https://github.com/scalameta/scalahost/blob/92b65b841685871b4401f00456a25de2b7a177b6/interface/src/main/scala/scala/meta/internal/hosts/scalac/converters/ToMtree.scala
+  //
+  // 3) ReificationSupport.scala (the quasiquote support module of scala/scala)
+  //    Contains various SyntacticXXX extractors that do things similar to our l.XXX extractors.
+  //    https://github.com/scala/scala/blob/1fbce4612c21a4d0c553ea489b4765494828c09f/src/reflect/scala/reflect/internal/ReificationSupport.scala
   trait LogicalTrees { l =>
     object EmptyPackageDef {
       // stats
@@ -135,7 +108,7 @@ trait LogicalTrees {
       def unapply(tree: g.PackageDef): Option[(l.Modifiers, l.Name, g.DefDef, g.Template)] = tree match {
         case PackageDef(pid, List(pkgobj: ModuleDef))
         if pid.name != nme.EMPTY_PACKAGE_NAME && pkgobj.name == nme.PACKAGE =>
-          Some(???)
+          ???
         case _ =>
           None
       }
@@ -146,14 +119,53 @@ trait LogicalTrees {
       def unapply(tree: g.ClassDef): Option[(l.Modifiers, l.Name, List[g.TypeDef], g.DefDef, g.Template)] = {
         val g.ClassDef(gmods, gname, gtparams, gtempl) = tree
         if (gmods.hasFlag(TRAIT)) return None
-        else Some((Modifiers(tree), Name(tree), tree.tparams, ???, tree.impl))
+        else {
+          val primaryCtor = tree.impl.body.collectFirst { case ctor @ l.PrimaryCtorDef(_, _, _) => ctor }.get
+          Some((Modifiers(tree), Name(tree), tree.tparams, primaryCtor, tree.impl))
+        }
       }
+    }
+
+    private def removeSyntheticDefinitions(stats: List[g.Tree]): List[g.Tree] = {
+      // TODO: relevant synthetics are described in:
+      // * subclasses of MultiEnsugarer: DefaultGetter, VanillaAccessor, AbstractAccessor, LazyAccessor
+      // * ToMtree.mstats: PatDef, InlinableHoistedTemporaryVal
+      val result = mutable.ListBuffer[g.Tree]()
+      var i = 0
+      while (i < stats.length) {
+        val stat = stats(i)
+        i += 1
+        stat match {
+          case PrimaryCtorDef(_, _, _) => // skip this
+          case _ => result += stat
+        }
+      }
+      result.toList
     }
 
     object Template {
       // early, parents, self, stats
-      def unapply(tree: g.Template): Option[(List[g.Tree], List[g.Tree], g.ValDef, List[g.Tree])] = {
-        ???
+      def unapply(tree: g.Template): Some[(List[g.Tree], List[g.Tree], g.ValDef, List[g.Tree])] = {
+        def indexOfFirstCtor(trees: List[Tree]) = trees.indexWhere { case LowlevelCtor(_, _) => true; case _ => false }
+        object LowlevelCtor {
+          def unapply(tree: Tree): Option[(List[List[ValDef]], List[Tree])] = tree match {
+            case DefDef(mods, nme.MIXIN_CONSTRUCTOR, _, _, _, SyntacticBlock(lvdefs :+ _)) =>
+              Some((Nil, lvdefs))
+            case DefDef(mods, nme.CONSTRUCTOR, Nil, vparamss, _, SyntacticBlock(lvdefs :+ _ :+ _)) =>
+              Some((vparamss, lvdefs))
+            case _ => None
+          }
+        }
+        val g.Template(parents, self, stats) = tree
+        val (rawEdefs, rest) = stats.span(isEarlyDef)
+        val (gvdefs, etdefs) = rawEdefs.partition(isEarlyValDef)
+        val (fieldDefs, LowlevelCtor(_, lvdefs) :: body) = rest.splitAt(indexOfFirstCtor(rest))
+        val evdefs = gvdefs.zip(lvdefs).map {
+          case (gvdef @ g.ValDef(_, _, tpt, _), ValDef(_, _, _, rhs)) =>
+            copyValDef(gvdef)(tpt = tpt, rhs = rhs)
+        }
+        val edefs = evdefs ::: etdefs
+        Some((edefs, parents, self, removeSyntheticDefinitions(stats)))
       }
     }
 
@@ -302,6 +314,66 @@ trait LogicalTrees {
         }
         result.setParent(tree)
       }
+    }
+  }
+
+  // NOTE: This is a mandatory piece of infrastructure that enriches scala.reflect trees
+  // with information about parents and positions within their siblings.
+  // As noted in ToMtree, it would be nice to figure out a mechanism to make this performance-neutral,
+  // because currently we need two traversals (one to add stuff and one to remove stuff)
+  // in order to transparently provide this functionality.
+  implicit class RichFoundationNavigableTree[T <: Tree](tree: T) {
+    def parent: Tree = tree.metadata.get("parent").map(_.require[Tree]).getOrElse(EmptyTree)
+    def parents: List[Tree] = {
+      def loop(tree: Tree, acc: List[Tree]): List[Tree] = {
+        val parent = tree.metadata.get("parent").map(_.require[Tree])
+        val recursion = parent.map(parent => loop(parent, acc :+ parent))
+        recursion.getOrElse(acc)
+      }
+      loop(tree, Nil)
+    }
+    def setParent(parent: Tree): T = tree.appendMetadata("parent" -> parent).asInstanceOf[T]
+    def index: Int = tree.metadata.get("index").map(_.require[Int]).getOrElse(-1)
+    def setIndex(index: Int): T = tree.appendMetadata("index" -> index).asInstanceOf[T]
+    def installNavigationLinks(): Unit = {
+      object installNavigationLinks extends Traverser {
+        private var parents = List[Tree]()
+        override def traverse(tree: Tree): Unit = {
+          if (tree.hasMetadata("parent")) return
+          tree.setParent(parents.headOption.getOrElse(EmptyTree))
+          parents = tree :: parents
+          super.traverse(tree)
+          parents = parents.tail
+        }
+        override def traverseStats(stats: List[Tree], exprOwner: Symbol): Unit = {
+          var i = 0
+          while (i < stats.length) {
+            stats(i).setIndex(i)
+            i += 1
+          }
+          super.traverseStats(stats, exprOwner)
+        }
+      }
+      // NOTE: If you get a MatchError in xtraverse here,
+      // it means that one of the custom logical trees declared below in this file
+      // was created without its parent set (i.e. its tree.hasMetadata("parent") is false).
+      // This should be fixed at the point where the logical tree is created, not here.
+      installNavigationLinks.traverse(tree)
+    }
+    def removeNavigationLinks(): Unit = {
+      object removeNavigationLinks extends Traverser {
+        override def traverse(tree: Tree): Unit = {
+          if (!tree.hasMetadata("parent") && !tree.hasMetadata("index")) return
+          tree.removeMetadata("parent")
+          tree.removeMetadata("index")
+        }
+      }
+      // NOTE: If you get a MatchError in xtraverse here,
+      // it means that one of the custom logical trees declared below in this file
+      // has escaped the confines of the scala.reflect > scala.meta converter
+      // and tries to become part of the compilation pipeline.
+      // This should be fixed at the point where the logical tree ends up in the output, not here
+      removeNavigationLinks.traverse(tree)
     }
   }
 }
