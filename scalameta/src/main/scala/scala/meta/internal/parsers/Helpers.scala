@@ -15,7 +15,9 @@ private[meta] object Helpers {
   private[meta] def isUnaryOp(s: String): Boolean = unaryOps contains s
   implicit class XtensionSyntacticTermName(name: Term.Name) {
     import name._
-    def isLeftAssoc: Boolean = value.last != ':'
+    // some heuristic is needed to govern associativity and precedence of unquoted operators
+    def isLeftAssoc: Boolean = if (name.isInstanceOf[Term.Name.Quasi]) true
+                               else value.last != ':'
     def isUnaryOp: Boolean = Helpers.isUnaryOp(value)
     def isAssignmentOp = value match {
       case "!=" | "<=" | ">=" | "" => false
@@ -24,7 +26,8 @@ private[meta] object Helpers {
     }
     // opPrecedence?
     def precedence: Int =
-      if (isAssignmentOp) 0
+      if (name.isInstanceOf[Term.Name.Quasi]) 1
+      else if (isAssignmentOp) 0
       else if (isScalaLetter(value.head)) 1
       else (value.head: @scala.annotation.switch) match {
         case '|'             => 2

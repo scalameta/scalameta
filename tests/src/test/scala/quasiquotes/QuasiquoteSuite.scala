@@ -75,17 +75,20 @@ class QuasiquoteSuite extends FunSuite {
     """.trim.stripMargin)
   }
 
-//  test("q\"$qname.this\"") { // fixme test is broken, so even does not compile
-//    val q"$qname.this" = q"QuasiquoteSuite.this"
-//    assert(qname.show[Syntax] === "QuasiquoteSuite")
-//  }
+  test("q\"$qname.this\"") {
+    val q"$qname.this.$x" = q"QuasiquoteSuite.this.x"
+    assert(qname.show[Syntax] === "QuasiquoteSuite")
+    assert(x.show[Syntax] === "x")
+    assert(q"$qname.this".show[Syntax] === "QuasiquoteSuite.this")
+  }
 
-//  test("q\"$qname.super[$qname]\"") { // fixme test is broken, so even does not compile
-//    val q"$clazz.super[$tpe].$id" = q"A.super[B].x"
-//    assert(clazz.show[Syntax] === "A")
-//    assert(tpe.show[Syntax] === "B")
-//    assert(method.show[Syntax] === "x")
-//  }
+  test("q\"$qname.super[$qname]\"") {
+    val q"$clazz.super[$tpe].$id" = q"A.super[B].x"
+    assert(clazz.show[Syntax] === "A")
+    assert(tpe.show[Syntax] === "B")
+    assert(id.show[Syntax] === "x")
+    assert(q"$clazz.super[$tpe].m".show[Syntax] === "A.super[B].m")
+  }
 
   test("q\"$expr.$name\"") {
     val expr = q"foo"
@@ -104,20 +107,21 @@ class QuasiquoteSuite extends FunSuite {
     assert(q"foo[..$types]".show[Syntax] === "foo[T, U]")
   }
 
-//  test("q\"$expr $name[..$tpes] (..$aexprs)\"") {
-//    val expr = q"x"
-//    val name = q"method"
-//    val tpes = List(t"T", t"U")
-//    val aexprs = List(q"1", q"b")
-//    assert(q"$expr $name[..$tpes] (..$aexprs)".show[Syntax] === "x method[T, U](1, b)") // fixme test is broken, so even does not compile
-//  }
+  test("q\"$expr $name[..$tpes] (..$aexprs)\"") {
+    val expr = q"x"
+    val name = q"method"
+    val tpes = List(t"T", t"U")
+    val aexprs = List(q"1", q"b")
+    assert(q"$expr $name[..$tpes] (..$aexprs)".show[Structure] // show[Syntax] does not show types
+      === """Term.ApplyInfix(Term.Name("x"), Term.Name("method"), List(Type.Name("T"), Type.Name("U")), List(Lit.Int(1), Term.Name("b")))""")
+  }
 
-//  test("q\"$a $b $c\"") {
-//    val a = q"x"
-//    val b = q"y"
-//    val c = q"z"
-//    assert(q"$a $b $c".show[Syntax] === "x y z") // fixme test is broken, so even does not compile
-//  }
+  test("q\"$a $b $c\"") {
+    val a = q"x"
+    val b = q"y"
+    val c = q"z"
+    assert(q"$a $b $c".show[Syntax] === "x y z")
+  }
 
   test("q\"!$expr\"") {
     val q"!$x" = q"!foo"
