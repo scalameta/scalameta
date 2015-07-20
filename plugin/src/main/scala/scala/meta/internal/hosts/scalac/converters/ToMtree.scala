@@ -44,6 +44,69 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
       // to integrate them into the transforming traversal
       gtree.installNavigationLinks()
       val denotedMtree = gtree match {
+        // ============ NAMES ============
+
+        case l.AnonymousName(ldenot) =>
+          m.Name.Anonymous().tryDenot(ldenot)
+        case l.IndeterminateName(ldenot, lvalue) =>
+          m.Name.Indeterminate(lvalue).tryDenot(ldenot)
+
+        // ============ TERMS ============
+
+        case l.TermThis(lname) =>
+          val mname = lname.toMtree[m.Name.Qualifier]
+          m.Term.This(mname)
+        case l.TermName(ldenot, lvalue) =>
+          m.Term.Name(lvalue).tryDenot(ldenot)
+        case l.TermIdent(lname) =>
+          lname.toMtree[m.Term.Name]
+        case l.TermParamDef(lmods, lname, ltpt, ldefault) =>
+          val mmods = lmods.toMtrees[m.Mod]
+          val mname = lname.toMtree[m.Term.Param.Name]
+          val mtpt = if (ltpt.nonEmpty) Some(ltpt.toMtree[m.Type]) else None
+          val mdefault = if (ldefault.nonEmpty) Some(ldefault.toMtree[m.Term]) else None
+          m.Term.Param(mmods, mname, mtpt, mdefault)
+
+        // ============ TYPES ============
+
+        case l.TypeTree(gtpe) =>
+          gtpe.toMtype
+        case l.TypeName(ldenot, lvalue) =>
+          m.Type.Name(lvalue).tryDenot(ldenot)
+        case l.TypeIdent(lname) =>
+          lname.toMtree[m.Type.Name]
+        case l.TypeSelect(lpre, lname) =>
+          val mpre = lpre.toMtree[m.Term.Ref]
+          val mname = lname.toMtree[m.Type.Name]
+          m.Type.Select(mpre, mname)
+
+        // ============ PATTERNS ============
+
+        // ============ LITERALS ============
+
+        // ============ DECLS ============
+
+        // ============ DEFNS ============
+
+        case l.DefDef(lmods, lname, ltparams, lparamss, ltpt, lrhs) =>
+          val mmods = lmods.toMtrees[m.Mod]
+          val mname = lname.toMtree[m.Term.Name]
+          val mtparams = ltparams.toMtrees[m.Type.Param]
+          val mparamss = lparamss.toMtreess[m.Term.Param]
+          val mtpt = if (ltpt.nonEmpty) Some(ltpt.toMtree[m.Type]) else None
+          val mrhs = lrhs.toMtree[m.Term]
+          m.Defn.Def(mmods, mname, mtparams, mparamss, mtpt, mrhs)
+
+        case l.ClassDef(lmods, lname, ltparams, lctor, limpl) =>
+          val mmods = lmods.toMtrees[m.Mod]
+          val mname = lname.toMtree[m.Type.Name]
+          val mtparams = ltparams.toMtrees[m.Type.Param]
+          val mctor = lctor.toMtree[m.Ctor.Primary]
+          val mimpl = limpl.toMtree[m.Template]
+          m.Defn.Class(mmods, mname, mtparams, mctor, mimpl)
+
+        // ============ PKGS ============
+
         case l.EmptyPackageDef(lstats) =>
           val mstats = lstats.toMtrees[m.Stat]
           m.Source(mstats)
@@ -55,18 +118,21 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
           val mname = lname.toMtree[m.Term.Name]
           val mstats = lstats.toMtrees[m.Stat]
           m.Pkg(mname, mstats)
-        case l.ClassDef(lmods, lname, ltparams, lctor, limpl) =>
-          val mmods = lmods.toMtrees[m.Mod]
-          val mname = lname.toMtree[m.Type.Name]
-          val mtparams = ltparams.toMtrees[m.Type.Param]
-          val mctor = lctor.toMtree[m.Ctor.Primary]
-          val mimpl = limpl.toMtree[m.Template]
-          m.Defn.Class(mmods, mname, mtparams, mctor, mimpl)
+
+        // ============ CTORS ============
+
         case l.PrimaryCtorDef(lmods, lname, lparamss) =>
           val mmods = lmods.toMtrees[m.Mod]
           val mname = lname.toMtree[m.Ctor.Name]
           val mparamss = lparamss.toMtreess[m.Term.Param]
           m.Ctor.Primary(mmods, mname, mparamss)
+        case l.CtorName(ldenot, lvalue) =>
+          m.Ctor.Name(lvalue).tryDenot(ldenot)
+        case l.CtorIdent(lname) =>
+          lname.toMtree[m.Ctor.Name]
+
+        // ============ TEMPLATES ============
+
         case l.Template(learly, lparents, lself, lstats) =>
           val mearly = learly.toMtrees[m.Stat]
           val mparents = lparents.toMtrees[m.Term]
@@ -83,42 +149,11 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
           val mname = lname.toMtree[m.Term.Param.Name]
           val mtpt = if (ltpt.nonEmpty) Some(ltpt.toMtree[m.Type]) else None
           m.Term.Param(Nil, mname, mtpt, None)
-        case l.DefDef(lmods, lname, ltparams, lparamss, ltpt, lrhs) =>
-          val mmods = lmods.toMtrees[m.Mod]
-          val mname = lname.toMtree[m.Term.Name]
-          val mtparams = ltparams.toMtrees[m.Type.Param]
-          val mparamss = lparamss.toMtreess[m.Term.Param]
-          val mtpt = if (ltpt.nonEmpty) Some(ltpt.toMtree[m.Type]) else None
-          val mrhs = lrhs.toMtree[m.Term]
-          m.Defn.Def(mmods, mname, mtparams, mparamss, mtpt, mrhs)
-        case l.ParamDef(lmods, lname, ltpt, ldefault) =>
-          val mmods = lmods.toMtrees[m.Mod]
-          val mname = lname.toMtree[m.Term.Param.Name]
-          val mtpt = if (ltpt.nonEmpty) Some(ltpt.toMtree[m.Type]) else None
-          val mdefault = if (ldefault.nonEmpty) Some(ldefault.toMtree[m.Term]) else None
-          m.Term.Param(mmods, mname, mtpt, mdefault)
-        case l.TermIdent(lname) =>
-          lname.toMtree[m.Term.Name]
-        case l.TermName(ldenot, lvalue) =>
-          m.Term.Name(lvalue).tryDenot(ldenot)
-        case l.TypeTree(gtpe) =>
-          gtpe.toMtype
-        case l.TypeIdent(lname) =>
-          lname.toMtree[m.Type.Name]
-        case l.TypeName(ldenot, lvalue) =>
-          m.Type.Name(lvalue).tryDenot(ldenot)
-        case l.TypeSelect(lpre, lname) =>
-          val mpre = lpre.toMtree[m.Term.Ref]
-          val mname = lname.toMtree[m.Type.Name]
-          m.Type.Select(mpre, mname)
-        case l.CtorIdent(lname) =>
-          lname.toMtree[m.Ctor.Name]
-        case l.CtorName(ldenot, lvalue) =>
-          m.Ctor.Name(lvalue).tryDenot(ldenot)
-        case l.AnonymousName(ldenot) =>
-          m.Name.Anonymous().tryDenot(ldenot)
-        case l.IndeterminateName(ldenot, lvalue) =>
-          m.Name.Indeterminate(lvalue).tryDenot(ldenot)
+
+        // ============ MODIFIERS ============
+
+        // ============ ODDS & ENDS ============
+
         case _ =>
           unreachable(debug(gtree, g.showRaw(gtree)))
       }
