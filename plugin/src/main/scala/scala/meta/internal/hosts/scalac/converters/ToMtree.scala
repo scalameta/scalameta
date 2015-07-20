@@ -33,17 +33,17 @@ import scala.meta.internal.parsers.Helpers.{XtensionTermOps => _, _}
 trait ToMtree extends GlobalToolkit with MetaToolkit {
   self: Api =>
 
-  protected def toMtree[T <: Tree : ClassTag](gtree: g.Tree): T = gtree.toMtree
+  protected def toMtree[T <: mapi.Tree : ClassTag](gtree: g.Tree): T = gtree.toMtree[T]
 
   protected implicit class RichTreeToMtree(gtree: g.Tree) {
-    def toMtree[T <: m.Tree : ClassTag]: T = {
+    def toMtree[T <: mapi.Tree : ClassTag]: T = {
       // TODO: figure out a mechanism to automatically remove navigation links once we're done
       // in order to cut down memory consumption of the further compilation pipeline
       // TODO: another performance consideration is the fact that install/remove
       // are currently implemented as standalone tree traversal, and it would be faster
       // to integrate them into the transforming traversal
       gtree.installNavigationLinks()
-      val mtree = gtree match {
+      val denotedMtree = gtree match {
         case l.EmptyPackageDef(lstats) =>
           val mstats = lstats.toMtrees[m.Stat]
           m.Source(mstats)
@@ -74,13 +74,13 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
           val mstats = lstats.toMtrees[m.Stat]
           m.Template(mearly, mparents, mself, Some(mstats))
         case l.Parent(ltpt, lctor, largss) =>
-          // TODO: how do we assign tpes to mctor and also to successive results of the foldLeft below?
+          // TODO: how do we assign tpes to mctor and also to the successive results of the foldLeft below?
           val mtpt = ltpt.toMtree[m.Type]
           val mctor = mtpt.ctorRef(lctor.toMtree[m.Ctor.Name]).require[m.Term]
           val margss = largss.toMtreess[m.Term.Arg]
           margss.foldLeft(mctor)((mcurr, margs) => m.Term.Apply(mcurr, margs))
-        case l.SelfDef(lmods, lname, ltpt) =>
-          val mname = lname.toMtree[m.Term.Name]
+        case l.SelfDef(lname, ltpt) =>
+          val mname = lname.toMtree[m.Term.Param.Name]
           val mtpt = if (ltpt.nonEmpty) Some(ltpt.toMtree[m.Type]) else None
           m.Term.Param(Nil, mname, mtpt, None)
         case l.DefDef(lmods, lname, ltparams, lparamss, ltpt, lrhs) =>
@@ -97,14 +97,45 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
           val mtpt = if (ltpt.nonEmpty) Some(ltpt.toMtree[m.Type]) else None
           val mdefault = if (ldefault.nonEmpty) Some(ldefault.toMtree[m.Term]) else None
           m.Term.Param(mmods, mname, mtpt, mdefault)
+        case l.TermIdent(lname) =>
+          lname.toMtree[m.Term.Name]
+        case l.TermName(ldenot, lvalue) =>
+          m.Term.Name(lvalue).tryDenot(ldenot)
+        case l.TypeTree(gtpe) =>
+          gtpe.toMtype
+        case l.TypeIdent(lname) =>
+          lname.toMtree[m.Type.Name]
+        case l.TypeName(ldenot, lvalue) =>
+          m.Type.Name(lvalue).tryDenot(ldenot)
+        case l.TypeSelect(lpre, lname) =>
+          val mpre = lpre.toMtree[m.Term.Ref]
+          val mname = lname.toMtree[m.Type.Name]
+          m.Type.Select(mpre, mname)
+        case l.CtorIdent(lname) =>
+          lname.toMtree[m.Ctor.Name]
+        case l.CtorName(ldenot, lvalue) =>
+          m.Ctor.Name(lvalue).tryDenot(ldenot)
+        case l.AnonymousName(ldenot) =>
+          m.Name.Anonymous().tryDenot(ldenot)
+        case l.IndeterminateName(ldenot, lvalue) =>
+          m.Name.Indeterminate(lvalue).tryDenot(ldenot)
         case _ =>
           unreachable(debug(gtree, g.showRaw(gtree)))
       }
-      if (sys.props("convert.debug") != null) {
+      val typedMtree = denotedMtree match {
+        case denotedMtree: m.Term => denotedMtree.tryTyping(gtree.tpe)
+        case denotedMtree: m.Term.Param => denotedMtree.tryTyping(gtree.symbol.tpe)
+        case denotedMtree => denotedMtree
+      }
+      val mtree = typedMtree // desugarings are taken care of in mergeTrees
+      if (sys.props("convert.debug") != null && gtree.parent.isEmpty) {
+        println("======= SCALA.REFLECT TREE =======")
         println(gtree)
-        println(mtree)
         println(g.showRaw(gtree, printIds = true))
+        println("======== SCALA.META TREE ========")
+        println(mtree)
         println(mtree.show[Semantics])
+        println("=================================")
       }
       mtree.require[T]
     }
@@ -112,10 +143,6 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
 
   protected implicit class RichTreesToMtrees(gtrees: List[g.Tree]) {
     def toMtrees[T <: m.Tree : ClassTag]: Seq[T] = gtrees.map(_.toMtree[T])
-  }
-
-  protected implicit class RichModifiersToMtrees(lmods: l.Modifiers) {
-    def toMtrees[T <: m.Tree : ClassTag]: Seq[T] = ???
   }
 
   protected implicit class RichTreessToMtreess(gtreess: List[List[g.Tree]]) {

@@ -38,7 +38,6 @@ trait SymbolTables extends GlobalToolkit with MetaToolkit {
         else if (gsym.isType) s.Signature.Type
         else unreachable(debug(gsym, gsym.flags, gsym.getClass, gsym.owner))
       }
-      if (sys.props("convert.debug") != null) println(lsym)
       val gsym = lsym.gsymbol
       require(!gsym.isModuleClass && !gsym.isPackageClass)
       if (gsym == g.NoSymbol) s.Symbol.Zero
@@ -51,7 +50,6 @@ trait SymbolTables extends GlobalToolkit with MetaToolkit {
     def lookupOrElseUpdate(lsym: l.Symbol, ssym: => s.Symbol): s.Symbol = symCache.getOrElseUpdate(lsym, ssym)
 
     def convert(ssym: s.Symbol): l.Symbol = symCache.getOrElseUpdate(ssym, {
-      if (sys.props("convert.debug") != null) println(ssym)
       def resolve(lsym: l.Symbol, name: String, hsig: s.Signature): l.Symbol = {
         val gsym = hsig match {
           case s.Signature.Type => lsym.gsymbol.info.decl(g.TypeName(name)).asType

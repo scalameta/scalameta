@@ -2,6 +2,7 @@ package org.scalameta.reflection
 
 import scala.tools.nsc.Global
 import scala.reflect.internal.Flags
+import scala.reflect.internal.Flags._
 import scala.collection.mutable
 import org.scalameta.invariants._
 import org.scalameta.unreachable
@@ -86,6 +87,13 @@ trait SymbolHelpers {
                                                  Object_notify, Object_notifyAll) ++ ObjectClass.info.member(nme.wait_).asTerm.alternatives.map(_.asMethod)
       if (isGetClass(sym) || isStringConcat(sym) || sym.owner.isPrimitiveValueClass || sym == runDefinitions.Predef_classOf || sym.isMacro) return true
       bytecodelessMethodOwners(sym.owner) && !bytecodefulObjectMethods(sym)
+    }
+
+    def prefix: Type = {
+      if (sym.hasFlag(EXISTENTIAL | PARAM)) NoPrefix
+      else if (sym.isLocalToBlock) NoPrefix
+      else if (sym.isConstructor) sym.owner.prefix
+      else sym.owner.thisType
     }
   }
 }

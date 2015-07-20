@@ -11,7 +11,7 @@ import scala.meta.internal.hosts.scalac.contexts.{ProjectContext => ScalahostPro
 
 trait ScalahostGlobalContext[G <: ScalaGlobal] extends ScalametaSemanticContext { self =>
   val g: G
-  protected def toMtree[T <: Tree : ClassTag](gtree: g.Tree): T
+  protected def toMtree[T <: m.Tree : ClassTag](gtree: g.Tree): T
   object decorators {
     implicit class ScalahostGlobalContextTree(gtree: g.Tree) {
       def toMtree[T <: m.Tree : ClassTag]: T = self.toMtree[T](gtree)

@@ -31,7 +31,7 @@ trait Attributes extends GlobalToolkit with MetaToolkit {
     implicit def Weird[T <: mapi.Term with mapi.Term.Param]: CanHaveTpe[T] = null
   }
 
-  protected implicit class RichAttributesTree[T <: m.Tree : ClassTag](ptree: T) {
+  protected implicit class RichAttributesTree[T <: m.Tree : ClassTag](mtree: T) {
     private def denot(gpre: g.Type, lsym: l.Symbol): s.Denotation = {
       require(gpre != g.NoType)
       val hpre = {
@@ -42,49 +42,65 @@ trait Attributes extends GlobalToolkit with MetaToolkit {
       s.Denotation.Single(hpre, ssym)
     }
     def withDenot(gsym: g.Symbol)(implicit ev: CanHaveDenot[T]): T = {
-      ptree.withDenot(gsym.toLogical)
+      mtree.withDenot(gsym.toLogical)
+    }
+    def tryDenot(gsym: g.Symbol)(implicit ev: CanHaveDenot[T]): T = {
+      if (gsym == null || gsym == g.NoSymbol) mtree
+      else mtree.withDenot(gsym)
     }
     def withDenot(lsym: l.Symbol)(implicit ev: CanHaveDenot[T]): T = {
-      def defaultpre(gsym: g.Symbol): g.Type = {
-        if (gsym.hasFlag(EXISTENTIAL | PARAM)) g.NoPrefix
-        else if (gsym.isConstructor) defaultpre(gsym.owner)
-        else gsym.owner.thisType
-      }
-      ptree.withDenot(defaultpre(lsym.gsymbol), lsym)
+      mtree.withDenot(lsym.gsymbol.prefix, lsym)
     }
     def withDenot(gpre: g.Type, gsym: g.Symbol)(implicit ev: CanHaveDenot[T]): T = {
-      ptree.withDenot(gpre, gsym.toLogical)
+      mtree.withDenot(gpre, gsym.toLogical)
+    }
+    def tryDenot(gpre: g.Type, gsym: g.Symbol)(implicit ev: CanHaveDenot[T]): T = {
+      if (gpre == null || gpre == g.NoType) mtree
+      else if (gsym == null || gsym == g.NoSymbol) mtree
+      else mtree.withDenot(gsym)
     }
     def withDenot(gpre: g.Type, lsym: l.Symbol)(implicit ev: CanHaveDenot[T]): T = {
-      require(((lsym == l.None) ==> (ptree.isInstanceOf[m.Name.Anonymous])) && debug(ptree, gpre, lsym))
-      val ptree1 = ptree match {
-        case ptree: m.Name.Anonymous => ptree.copy(denot = denot(gpre, lsym))
-        case ptree: m.Name.Indeterminate => ptree.copy(denot = denot(gpre, lsym))
-        case ptree: m.Term.Name => ptree.copy(denot = denot(gpre, lsym), typing = ptree.typing)
-        case ptree: m.Type.Name => ptree.copy(denot = denot(gpre, lsym))
+      require(((lsym == l.None) ==> (mtree.isInstanceOf[m.Name.Anonymous])) && debug(mtree, gpre, lsym))
+      val ptree1 = mtree match {
+        case mtree: m.Name.Anonymous => mtree.copy(denot = denot(gpre, lsym))
+        case mtree: m.Name.Indeterminate => mtree.copy(denot = denot(gpre, lsym))
+        case mtree: m.Term.Name => mtree.copy(denot = denot(gpre, lsym), typing = mtree.typing)
+        case mtree: m.Type.Name => mtree.copy(denot = denot(gpre, lsym))
         // TODO: some ctor refs don't have corresponding constructor symbols in Scala (namely, ones for traits)
         // in these cases, our lsym is going to be a symbol of the trait in question
         // we need to account for that in `symbolTable.convert` and create a constructor symbol of our own
-        case ptree: m.Ctor.Name => ptree.copy(denot = denot(gpre, lsym), typing = ptree.typing)
-        case _ => unreachable(debug(ptree, ptree.show[Structure]))
+        case mtree: m.Ctor.Name => mtree.copy(denot = denot(gpre, lsym), typing = mtree.typing)
+        case _ => unreachable(debug(mtree, mtree.show[Structure]))
       }
       ptree1.require[T]
+    }
+    def withDenot(ldenot: l.Denotation)(implicit ev: CanHaveDenot[T]): T = {
+      require(ldenot.nonEmpty)
+      mtree.withDenot(ldenot.pre, ldenot.sym)
+    }
+    def tryDenot(ldenot: l.Denotation)(implicit ev: CanHaveDenot[T]): T = {
+      if (ldenot.isEmpty) mtree
+      else mtree.withDenot(ldenot)
     }
     private def typing(gtpe: g.Type): s.Typing = {
       s.Typing.Known(gtpe.toMtypeArg)
     }
-    def withTpe(gtpe: g.Type)(implicit ev: CanHaveTpe[T]): T = {
+    def withTyping(gtpe: g.Type)(implicit ev: CanHaveTpe[T]): T = {
       // TODO: m.Term doesn't have copy, which is reasonable, because it's a branch trait
       // TODO: m.Term.Param doesn't have copy, which is totally unreasonable
-      val ptree1 = ptree match {
-      //   case ptree: m.Term.Name => ptree.copy(denot = ptree.denot, typing = typing(gtpe))
-      //   case ptree: m.Term => ptree.copy(typing = typing(gtpe))
-      //   case ptree: m.Term.Param => ptree.copy(typing = typing(gtpe))
-      //   case _ => unreachable(debug(ptree, ptree.show[Raw]))
-        case ptree: m.Ctor.Name => ptree.copy(denot = ptree.denot, typing = typing(gtpe))
-        case _ => ptree
+      val ptree1 = mtree match {
+      //   case mtree: m.Term.Name => mtree.copy(denot = mtree.denot, typing = typing(gtpe))
+      //   case mtree: m.Term => mtree.copy(typing = typing(gtpe))
+      //   case mtree: m.Term.Param => mtree.copy(typing = typing(gtpe))
+      //   case _ => unreachable(debug(mtree, mtree.show[Raw]))
+        case mtree: m.Ctor.Name => mtree.copy(denot = mtree.denot, typing = typing(gtpe))
+        case _ => mtree
       }
       ptree1.require[T]
+    }
+    def tryTyping(gtpe: g.Type)(implicit ev: CanHaveTpe[T]): T = {
+      if (gtpe == null || gtpe == g.NoType) mtree
+      else mtree.withTyping(gtpe)
     }
   }
 }

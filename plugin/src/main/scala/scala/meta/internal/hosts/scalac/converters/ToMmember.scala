@@ -255,7 +255,7 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
             m.Type.Bounds(mlo, mhi)
         }
         lazy val mbody: m.Term = {
-          val munknownTerm = m.Term.Name("???").withDenot(g.definitions.Predef_???).withTpe(g.definitions.NothingTpe)
+          val munknownTerm = m.Term.Name("???").withDenot(g.definitions.Predef_???).withTyping(g.definitions.NothingTpe)
           lsym match {
             case l.Macro(gsym) =>
               gsym.macroBody match {
@@ -264,7 +264,7 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
               }
             case l.SecondaryCtor(gsym) =>
               val gctor = gsym.owner.primaryConstructor
-              val mctorref = m.Ctor.Name(g.Ident(gsym.owner).displayName).withDenot(gpre, gctor).withTpe(gctor.infoIn(gpre).finalResultType)
+              val mctorref = m.Ctor.Name(g.Ident(gsym.owner).displayName).withDenot(gpre, gctor).withTyping(gctor.infoIn(gpre).finalResultType)
               m.Term.Apply(mctorref, List(munknownTerm))
             case _ =>
               munknownTerm
