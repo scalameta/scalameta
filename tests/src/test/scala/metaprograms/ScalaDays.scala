@@ -56,7 +56,7 @@ object ScalaDays {
             } else if (defn.isTrait) {
               val refined = Pat.fresh("input")
               val clauses = defn.children.map(leaf => p"case $refined: ${leaf.tpe.pat} => ${serializer(leaf, refined.name, tagged = true)}")
-              q"$input match { ..$clauses }"
+              q"$input match { ..case $clauses }"
             } else {
               abort(s"unsupported ref to ${defn.name}")
             }

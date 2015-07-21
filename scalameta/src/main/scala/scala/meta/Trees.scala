@@ -76,7 +76,12 @@ package scala.meta {
   }
 
   @branch trait Template extends Tree
+
   @branch trait Mod extends Tree
+  object Mod {
+    @branch trait Annot extends Mod
+  }
+
   @branch trait Enumerator extends Tree
   @branch trait Importee extends Tree with Ref
   @branch trait Case extends Tree with Scope
@@ -472,7 +477,7 @@ package scala.meta.internal.ast {
 
   @branch trait Mod extends api.Mod with Tree
   object Mod {
-    @ast class Annot(body: Term) extends Mod {
+    @ast class Annot(body: Term) extends Mod with api.Mod.Annot {
       require(body.isCtorCall)
     }
     @ast class Private(within: Name.Qualifier) extends Mod
