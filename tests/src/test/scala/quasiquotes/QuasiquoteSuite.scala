@@ -66,15 +66,6 @@ class QuasiquoteSuite extends FunSuite {
     assert(body === 42)
   }
 
-  test("q\"... match { ..$cases }\"") {
-    val cases = List(p"case foo => bar")
-    assert(q"x match { ..$cases }".show[Syntax] === """
-      |x match {
-      |  case foo => bar
-      |}
-    """.trim.stripMargin)
-  }
-
   test("q\"$qname.this\"") {
     val q"$qname.this.$x" = q"QuasiquoteSuite.this.x"
     assert(qname.show[Syntax] === "QuasiquoteSuite")
@@ -176,9 +167,9 @@ class QuasiquoteSuite extends FunSuite {
     assert(r.show[Syntax] === "1")
   }
 
-  test("q\"return $expropt\"") {
-    val q"return $expropt" = q"return foo == bar"
-    assert(expropt.show[Syntax] === "foo == bar")
+  test("q\"return $expr\"") {
+    val q"return $exp" = q"return foo == bar"
+    assert(exp.show[Syntax] === "foo == bar")
   }
 
   test("q\"throw $expr\"") {
@@ -208,10 +199,17 @@ class QuasiquoteSuite extends FunSuite {
     assert(params(1).show[Syntax] === "y: String")
   }
 
-//  test("q\"{ ..$stats }\"") {
-//    val stats = List(q"val x = 1", q"val y = 2")
-//    q"{ ..$stats }"
-//  }
+  test("1 q\"{ ..$stats }\"") {
+    val stats = List(q"val x = 1", q"val y = 2")
+    assert(q"{ ..$stats }".show[Syntax].replace("\n","") === "{  val x = 1  val y = 2}")
+  }
+
+  test("2 q\"{ ..$stats }\"") {
+    val q"{foo; ..$stats; val c = z}" = q"{foo; val a = x; val b = y; val c = z}"
+    assert(stats.toString === "List(val a = x, val b = y)")
+    assert(stats(0).show[Syntax] === "val a = x")
+    assert(stats(1).show[Syntax] === "val b = y")
+  }
 
   test("q\"if ($expr) $expr else $expr\"") {
     val q"if ($expr1) $expr2 else $expr3" = q"if (1 > 2) a else b"
@@ -220,20 +218,42 @@ class QuasiquoteSuite extends FunSuite {
     assert(expr3.show[Syntax] === "b")
   }
 
-//  test("q\"$expr match { ..case $cases }\"") {
-//    val q"$expr match { ..case $cases }" =
-//      q"foo match { case bar => baz; case _ => foo }" // fixme test is broken, so even does not compile
-//  }
+  test("1 q\"$expr match { ..case $cases }\"") {
+    val q"$expr match { case bar => baz; ..case $casez; case q => w}" = q"foo match { case bar => baz; case _ => foo ; case q => w }"
+    assert(expr.show[Syntax] === "foo")
+    assert(casez.toString === "List(case _ => foo)")
+    assert(casez(0).show[Syntax] === "case _ => foo")
+  }
 
-//  test("q\"try $expr catch { ..case $cases } finally $expropt\"") {
-//    val q"try $expr catch { ..case $cases } finally $expropt" = // fixme test is broken, so even does not compile
-//      q"try foo catch { case _ => bar} finally baz"
-//  }
+  test("2 q\"$expr match { ..case $cases }\"") {
+    val q"$expr match { case bar => baz; ..case $casez; case _ => foo }" = q"foo match { case bar => baz; case _ => foo }"
+    assert(expr.show[Syntax] === "foo")
+    assert(casez.isEmpty)
+  }
 
-//  test("q\"try $expr catch $expr finally $expropt\"") {
-//    val q"try $expr catch $expr finally $expropt" =
-//      q"try foo catch { case _ => } finally bar" // fixme test is broken, so even does not compile
-//  }
+  test("3 q\"$expr match { ..case $cases }\"") {
+    val q"$expr match { ..case $casez }" = q"foo match { case bar => baz; case _ => foo }"
+    assert(expr.show[Syntax] === "foo")
+    assert(casez.toString === "List(case bar => baz, case _ => foo)")
+    assert(casez(0).show[Syntax] === "case bar => baz")
+    assert(casez(1).show[Syntax] === "case _ => foo")
+  }
+
+  test("q\"try $expr catch { ..case $cases } finally $expr\"") {
+    val q"try $exp catch { case a => b; ..case $cases; case q => w } finally $exprr" = q"try foo catch { case a => b; case _ => bar; case 1 => 2; case q => w} finally baz"
+    assert(exp.show[Syntax] === "foo")
+    assert(cases.toString === "List(case _ => bar, case 1 => 2)")
+    assert(cases(0).show[Syntax] === "case _ => bar")
+    assert(cases(1).show[Syntax] === "case 1 => 2")
+    assert(exprr.show[Syntax] === "baz")
+  }
+
+  test("q\"try $expr catch $expr finally $expr\"") {
+    val q"try $exp catch $exprr finally $exprrr" = q"try { foo } catch { pf } finally { bar }"
+    assert(exp.show[Syntax].replace("\n", "") === "{  foo}")
+    assert(exprr.show[Syntax] === "pf")
+    assert(exprrr.show[Syntax].replace("\n", "") === "{  bar}")
+  }
 
   test("""q"(i: Int) => 42" """) {
     assert(q"(i: Int) => 42".show[Syntax] === "(i: Int) => 42")
@@ -247,10 +267,6 @@ class QuasiquoteSuite extends FunSuite {
     assert(expr.show[Syntax] === "42")
   }
 
-//  test("val q\"($q, y, ..$e) => $r\" = q\"(x: X, y, z: Z) => 1\"") {
-//    val q"($q, y, ..$e) => $r" = q"(x: X, y, z: Z) => 1"
-//  }
-
   test("val q\"(..$q, y: Y, $e) => $r\" = q\"(x: X, y: Y, z: Z) => 1\"") {
     val q"(..$q, y: Y, $e) => $r" = q"(x: X, y: Y, z: Z) => 1"
     assert(q.toString === "List(x: X)")
@@ -260,7 +276,7 @@ class QuasiquoteSuite extends FunSuite {
   }
 
   test("q\"{ ..case $cases }\"") {
-    val q"{ case ..$cases }" = q"{ case i: Int => i + 1 }"
+    val q"{ ..case $cases }" = q"{ case i: Int => i + 1 }"
     assert(cases(0).show[Syntax] === "case i: Int => i + 1")
   }
 
@@ -276,13 +292,35 @@ class QuasiquoteSuite extends FunSuite {
     assert(expr2.show[Syntax] === "bar")
   }
 
-//  test("q\"for (..$enumerators) $expr\"") {
-//    val q"for (..$enumerators) $expr" = q"for (x <- xs; y <- ys) foo(x, y)" // fixme test is broken, so even does not compile
-//  }
+  test("1 q\"for (..$enumerators) $expr\"") {
+    val q"for (a <- as; ..$enumerators; b <- bs) $expr" = q"for (a <- as; x <- xs; y <- ys; b <- bs) foo(x, y)"
+    assert(enumerators.toString === "List(x <- xs, y <- ys)")
+    assert(enumerators(0).show[Syntax] === "x <- xs")
+    assert(enumerators(1).show[Syntax] === "y <- ys")
+    assert(expr.show[Syntax] === "foo(x, y)")
+  }
 
-//  test("q\"for (..$enumerators) yield $expr\"") {
-//    val q"for (..$enumerators) yield $expr" =  q"for (x <- xs; y <- ys) yield foo(x, y)" // fixme test is broken, so even does not compile
-//  }
+  test("2 q\"for (..$enumerators) $expr\"") {
+    val a = enumerator"a <- as"
+    val b = enumerator"b <- bs"
+    val ab = List(a,b)
+    assert(q"for (..$ab) foo".show[Syntax] === "for (a <- as; b <- bs) foo")
+  }
+
+  test("1 q\"for (..$enumerators) yield $expr\"") {
+    val q"for (a <- as; ..$enumerators; b <- bs) yield $expr" = q"for (a <- as; x <- xs; y <- ys; b <- bs) yield foo(x, y)"
+    assert(enumerators.toString === "List(x <- xs, y <- ys)")
+    assert(enumerators(0).show[Syntax] === "x <- xs")
+    assert(enumerators(1).show[Syntax] === "y <- ys")
+    assert(expr.show[Syntax] === "foo(x, y)")
+  }
+
+  test("2 q\"for (..$enumerators) yield $expr\"") {
+    val a = enumerator"a <- as"
+    val b = enumerator"b <- bs"
+    val ab = List(a,b)
+    assert(q"for (..$ab) yield foo".show[Syntax] === "for (a <- as; b <- bs) yield foo")
+  }
 
 //  test("q\"new $template\"") {
 //    val q"new $template" = q"new Foo" // fixme test is broken, so even does not compile

@@ -562,6 +562,18 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     }
   }
 
+  // corresponding quasiquote (rank 1) for expressions like `{..$smth}`
+  def constructR1Quasi[T <: Tree : AstMetadata](ctor: => Tree): List[T] = {
+    val tree = {  
+      val q = ctor match {
+        case q: Quasi if q.rank == 0 => q
+        case _ => syntaxError("impossible to construct rank-1 quasiquote", at = token)
+      }
+      atPos(q, q)(implicitly[AstMetadata[T]].quasi(q.rank, q.tree))
+    }
+    implicitly[AstMetadata[T]].quasi(1, tree) :: Nil
+  }
+
   def unquote[T <: Tree : AstMetadata]: T = autoPos {
     token match {
       case unquote: Unquote =>
@@ -1301,7 +1313,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
           next()
           if (token.isNot[`{`]) Some(expr())
           else inBraces {
-            if (token.is[CaseIntro]) Some(caseClauses())
+            if (token.is[CaseIntro] || token.is[Ellipsis]) Some(caseClauses())
             else Some(expr())
           }
         }
@@ -1645,7 +1657,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
    */
   def blockExpr(): Term = autoPos {
     inBraces {
-      if (token.is[CaseIntro]) Term.PartialFunction(caseClauses())
+      if (token.is[CaseIntro] || (token.is[Ellipsis] && ahead(token.is[`case`]))) Term.PartialFunction(caseClauses())
       else block()
     }
   }
@@ -1661,19 +1673,14 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
 
   def caseClause(): Case = atPos(in.prevTokenPos, auto) {
     require(token.isNot[`case`] && debug(token))
-    token match {
-      case token: Unquote if token.prev.is[Ellipsis] =>
-        unquote[Case]
-      case token =>
-        Case(pattern().require[Pat], guard(), {
-          accept[`=>`]
-          autoPos(blockStatSeq() match {
-            case List(q: impl.Quasi) => Term.Block(List(q))
-            case List(blk: Term.Block) => blk
-            case stats => Term.Block(stats)
-          })
-        })
-    }
+    Case(pattern().require[Pat], guard(), {
+      accept[`=>`]
+      autoPos(blockStatSeq() match {
+        case List(q: impl.Quasi) => Term.Block(List(q))
+        case List(blk: Term.Block) => blk
+        case stats => Term.Block(stats)
+      })
+    })
   }
 
   /** {{{
@@ -1682,10 +1689,20 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
    *  }}}
    */
   def caseClauses(): List[Case] = {
-    val cases = caseSeparated { caseClause() }
+    val cases = new ListBuffer[Case]
+    while (token.is[CaseIntro] || token.is[Ellipsis]) {
+      if (token.is[Ellipsis]) {
+        nextTwice()
+        cases ++= constructR1Quasi[Case](expr())
+        if (token.is[StatSep]) next()
+      } else {
+        next()
+        cases += caseClause()
+      }
+    }
     if (cases.isEmpty)  // trigger error if there are no cases
       accept[`case`]
-    cases
+    cases.toList
   }
 
   /** {{{
@@ -1715,6 +1732,10 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
 
   def enumerator(isFirst: Boolean, allowNestedIf: Boolean = true): List[Enumerator] =
     if (token.is[`if`] && !isFirst) autoPos(Enumerator.Guard(guard().get)) :: Nil
+    else if (token.is[Ellipsis]) {
+      next()
+      constructR1Quasi[Enumerator.Generator](expr())
+    }
     else generator(!isFirst, allowNestedIf)
 
   /** {{{
@@ -2912,7 +2933,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
    */
   def blockStatSeq(): List[Stat] = {
     val stats = new ListBuffer[Stat]
-    while (!token.is[StatSeqEnd] && !token.is[CaseDefEnd]) {
+    while (!token.is[StatSeqEnd] && !token.is[CaseDefEnd] && !ahead(token.is[`case`])) {
       if (token.is[`import`]) {
         stats += importStmt()
         acceptStatSepOpt()
@@ -2934,6 +2955,10 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       }
       else if (token.is[StatSep]) {
         next()
+      }
+      else if (token.is[Ellipsis]) {
+        next()
+        stats ++= constructR1Quasi[Stat](expr())
       }
       else {
         syntaxError("illegal start of statement", at = token)
