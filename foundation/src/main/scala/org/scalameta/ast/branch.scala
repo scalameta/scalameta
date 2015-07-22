@@ -14,6 +14,7 @@ class BranchMacros(val c: Context) {
   import Flag._
   val AdtInternal = q"_root_.org.scalameta.adt.Internal"
   val AstInternal = q"_root_.org.scalameta.ast.internal"
+  val SemanticInternal = q"_root_.scala.meta.internal.semantic"
   def impl(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       def is(abbrev: String) = c.internal.enclosingOwner.fullName.toString + "." + cdef.name.toString == "scala.meta.internal.ast." + abbrev
@@ -47,9 +48,23 @@ class BranchMacros(val c: Context) {
           val impl = q"throw new _root_.scala.`package`.UnsupportedOperationException($message)"
           q"override def ${TermName(name)}: _root_.scala.Nothing = $impl"
         }
+        def quasisetter(name: String, param: ValDef) = {
+          val DefDef(mods, termName, tparams, _, tpt, rhs) = quasigetter(name)
+          DefDef(mods, termName, tparams, List(List(param)), tpt, rhs)
+        }
         var qstats = List(q"def pt: _root_.java.lang.Class[_] = _root_.org.scalameta.runtime.arrayClass(_root_.scala.Predef.classOf[$name], this.rank)")
-        if (is("Name") || is("Term.Param.Name") || is("Type.Param.Name")) qstats ++= List("value", "denot").map(quasigetter)
-        if (is("Term") || is("Lit") || is("Term.Ref") || is("Ctor.Ref")) qstats ++= List("typing", "expansion").map(quasigetter)
+        if (is("Name") || is("Term.Param.Name") || is("Type.Param.Name")) {
+          qstats ++= List("value", "denot").map(quasigetter)
+          qstats :+= quasisetter("withDenot", q"val denot: $SemanticInternal.Denotation")
+        }
+        if (is("Term") || is("Lit") || is("Term.Ref") || is("Ctor.Ref")) {
+          qstats ++= List("typing", "expansion").map(quasigetter)
+          qstats :+= quasisetter("withTyping", q"val typing: $SemanticInternal.Typing")
+          qstats :+= quasisetter("withExpansion", q"val expansion: $SemanticInternal.Expansion")
+        }
+        qstats :+= q"protected def internalDenot: $SemanticInternal.Denotation = null"
+        qstats :+= q"protected def internalTyping: $SemanticInternal.Typing = null"
+        qstats :+= q"protected def internalExpansion: $SemanticInternal.Expansion = null"
         mstats1 += q"$qmods class $qname(rank: _root_.scala.Int, tree: _root_.scala.Any) extends ..$qparents { ..$qstats }"
       }
 

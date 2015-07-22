@@ -19,9 +19,14 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
   lazy val CtorRefNameClass = c.mirror.staticModule("scala.meta.internal.ast.Ctor").info.member(TermName("Ref")).asModule.info.member(TypeName("Name")).asClass
   lazy val NameClass = c.mirror.staticClass("scala.meta.internal.ast.Name")
   lazy val TermClass = c.mirror.staticClass("scala.meta.internal.ast.Term")
+  lazy val TermParamClass = c.mirror.staticModule("scala.meta.internal.ast.Term").info.member(TypeName("Param")).asClass
   lazy val DefnValClass = c.mirror.staticModule("scala.meta.internal.ast.Defn").info.member(TypeName("Val")).asClass
   lazy val DefnVarClass = c.mirror.staticModule("scala.meta.internal.ast.Defn").info.member(TypeName("Var")).asClass
   lazy val PatTypedClass = c.mirror.staticModule("scala.meta.internal.ast.Pat").info.member(TypeName("Typed")).asClass
+  lazy val TokensClass = c.mirror.staticClass("scala.meta.syntactic.Tokens")
+  lazy val DenotClass = c.mirror.staticClass("scala.meta.internal.semantic.Denotation")
+  lazy val TypingClass = c.mirror.staticClass("scala.meta.internal.semantic.Typing")
+  lazy val ExpansionClass = c.mirror.staticClass("scala.meta.internal.semantic.Expansion")
   override def customAdts(root: Root): Option[List[Adt]] = {
     val nonQuasis = root.allLeafs.filter(leaf => !(leaf.tpe <:< QuasiClass.toType))
     Some(QuasiClass.asBranch +: nonQuasis)
@@ -30,23 +35,35 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
     // TODO: it should be possible to customize liftable codegen by providing implicit instances on the outside
     // we can't just do `inferImplicitValue(adt.tpe)`, because that'll lead to a stack overflow
     // we need to do something pickling-like, but I just don't have time to implement that right now
-    def reifyAuxiliaryFields(body: Tree, fields: String*): Tree = {
-      // TODO: so far we don't reify auxiliary fields during pattern matching
+    def reifyCoreFields(body: Tree, fields: String*): Tree = {
+      // TODO: so far we don't reify core fields during pattern matching
       // because I've no idea how to do that:
-      // * denots and sigmas should somehow be hygienically matched, but we don't have the technology for that
-      // * statuses and expansions are transient caches anyway, so probably we should ignore them, but I'm not sure
-      def copyAuxiliaryFields(body: Tree, fields: String*): Tree = {
-        def argName(field: String) = q"c.universe.Ident(c.universe.TermName($field))"
-        def argValue(field: String) = {
-          val fieldTpe = adt.asInstanceOf[Leaf].allFields.find(_.name.toString == field).map(_.tpe).get
-          q"_root_.scala.Predef.implicitly[c.universe.Liftable[$fieldTpe]].apply($localName.${TermName(field)})"
-        }
-        val copyArgs = fields.map(field => q"c.universe.AssignOrNamedArg(${argName(field)}, ${argValue(field)})").toList
-        q"""c.universe.Apply(c.universe.Select($body, c.universe.TermName("copy")), _root_.scala.List(..$copyArgs))"""
+      // * tokens should probably be ignored anyway
+      // * denots should somehow be hygienically matched, but we don't have the technology for that
+      // * typings and expansions are transient caches anyway, so probably we should ignore them, but I'm not sure
+      val coreTypes = Map(
+        "denot" -> DenotClass.toType,
+        "typing" -> TypingClass.toType,
+        "expansion" -> ExpansionClass.toType)
+      val coreDefaults = Map(
+        "denot" -> q"_root_.scala.meta.internal.semantic.Denotation.Zero",
+        "typing" -> q"_root_.scala.meta.internal.semantic.Typing.Unknown",
+        "expansion" -> q"_root_.scala.meta.internal.semantic.Expansion.Identity")
+      def withCoreFields(body: Tree, fields: String*): Tree = {
+        fields.foldLeft(body)((curr, field) => {
+          val fieldSelector = q"$localName.${TermName(field)}"
+          val fieldDefault = coreDefaults(field)
+          val fieldLifter = q"_root_.scala.Predef.implicitly[c.universe.Liftable[${coreTypes(field)}]]"
+          val withMethod = q"c.universe.Select($curr, c.universe.TermName(${"with" + field.capitalize}))"
+          q"""
+            if ($fieldSelector == $fieldDefault) $curr
+            else c.universe.Apply($withMethod, _root_.scala.List($fieldLifter.apply($fieldSelector)))
+          """
+        })
       }
       q"""
         val tempBody = $body
-        if (mode.isTerm) ${copyAuxiliaryFields(q"tempBody", fields: _*)} else tempBody
+        if (mode.isTerm) ${withCoreFields(q"tempBody", fields: _*)} else tempBody
       """
     }
     def prohibitLowercasePat(pat: Tree): Tree = {
@@ -63,11 +80,13 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
         prohibitLowercasePat($pat)
       """
     }
+    // NOTE: we ignore tokens here for the time being
     if (adt.tpe <:< QuasiClass.toType) Some(q"Lifts.liftQuasi($localName)")
-    else if (adt.tpe <:< TermNameClass.toType) Some(reifyAuxiliaryFields(body, "denot", "typing", "expansion"))
-    else if (adt.tpe <:< CtorRefNameClass.toType) Some(reifyAuxiliaryFields(body, "denot", "typing", "expansion"))
-    else if (adt.tpe <:< NameClass.toType) Some(reifyAuxiliaryFields(body, "denot"))
-    else if (adt.tpe <:< TermClass.toType) Some(reifyAuxiliaryFields(body, "typing", "expansion"))
+    else if (adt.tpe <:< TermNameClass.toType) Some(reifyCoreFields(body, "denot", "typing", "expansion"))
+    else if (adt.tpe <:< CtorRefNameClass.toType) Some(reifyCoreFields(body, "denot", "typing", "expansion"))
+    else if (adt.tpe <:< NameClass.toType) Some(reifyCoreFields(body, "denot"))
+    else if (adt.tpe <:< TermClass.toType) Some(reifyCoreFields(body, "typing", "expansion"))
+    else if (adt.tpe <:< TermParamClass.toType) Some(reifyCoreFields(body, "typing"))
     else if (adt.tpe <:< DefnValClass.toType) Some(q"{ $localName.pats.foreach(pat => ${prohibitLowercasePat(q"pat")}); $body }")
     else if (adt.tpe <:< DefnVarClass.toType) Some(q"{ $localName.pats.foreach(pat => ${prohibitLowercasePat(q"pat")}); $body }")
     else if (adt.tpe <:< PatTypedClass.toType) Some(q"{ ${prohibitLowercasePat(q"$localName.lhs")}; $body }")

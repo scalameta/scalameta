@@ -6,10 +6,7 @@ import scala.meta.dialects.Scala211
 class SyntheticSuite extends ParseSuite {
   test("comprehensive show[Semantics]") {
     val tree1 = q"List".asInstanceOf[scala.meta.internal.ast.Term.Name]
-    val tree2 = tree1.copy(
-      denot = tree1.denot,
-      expansion = s.Expansion.Desugaring(q"scala.collection.immutable.List"),
-      typing = s.Typing.Known(t"List.type"))
+    val tree2 = tree1.withDenot(tree1.denot).withExpansion(q"scala.collection.immutable.List").withTyping(t"List.type")
     assert(tree2.show[Semantics] === """
       |Term.Name("List")[1]{1}<1>
       |[1] Type.Singleton(Term.Name("package")[2])::scala.package.List
