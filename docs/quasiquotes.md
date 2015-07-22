@@ -33,13 +33,13 @@
  Return            | `q"return $expr"`
  Throw             | `q"throw $expr"`
  Ascribe           | `q"$expr: $tpe"`
- Annotate          | `q"$expr: ..@$expr"`
+ Annotate          | `q"$expr: ..@$annots"`
  Tuple             | `q"(..$exprs)"`
  Block             | `q"{ ..$stats }"`
  If                | `q"if ($expr) $expr else $expr"`
  Match             | `q"$expr match { ..case $cases }"`
- Try Catch Cases   | `q"try $expr catch { ..case $cases } finally $expropt"`
- Try Catch Expr    | `q"try $expr catch $expr finally $expropt" `
+ Try Catch Cases   | `q"try $expr catch { ..case $cases } finally expr"`
+ Try Catch Expr    | `q"try $expr catch $expr finally expr" `
  Function          | `q"(..$params) => $expr"`
  Partial Function  | `q"{ ..case $cases }"`
  While             | `q"while ($expr) $expr"`
@@ -73,7 +73,7 @@
  Tuple             | `t"(..$tpes)"`
  Compound          | `t"..$tpes { ..$stats }"`
  Existential       | `t"$tpe forSome { ..$stats }"`
- Annotate          | `t"$tpe ..@$expr"`
+ Annotate          | `t"$tpe ..@$annots"`
  Placeholder       | `t"_ >: $tpeopt <: tpeopt"`
  Literal           | `t"$lit"`
 
@@ -250,6 +250,7 @@
  meta.Enumerator          | `$enumerator` | `enumerator`
  meta.Member              | `$member`     | `q`
  meta.Mod                 | `$mod`        | `mod`
+ meta.Mod.Annot           | `$annot`      | `mod`
  meta.Name.Indeterminate  | `$iname`      | Can't be constructed, only extracted from `importee"..."` and `mod"..."`
  meta.Name.Qualifier      | `$qname`      | `q`, `t`, anonymous names can't be constructed, only extracted from `mod"..."`
  meta.Pat                 | `$pat`        | `p`
