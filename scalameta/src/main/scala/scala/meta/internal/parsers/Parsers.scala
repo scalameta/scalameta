@@ -635,12 +635,6 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   @inline final def commaSeparated[T <: Tree : AstMetadata](part: => T): List[T] =
     tokenSeparated[`,`, T](sepFirst = false, part)
 
-  @inline final def caseSeparated[T <: Tree : AstMetadata](part: => T): List[T] =
-    tokenSeparated[`case`, T](sepFirst = true, part)
-
-  def readAnnots(part: => Mod.Annot): List[Mod.Annot] =
-    tokenSeparated[`@`, Mod.Annot](sepFirst = true, part)
-
   def makeTuple[T <: Tree](body: List[T], zero: () => T, tuple: List[T] => T): T = body match {
     case Nil         => zero()
     case only :: Nil => only
@@ -1387,7 +1381,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         }
       } else if (token.is[`:`]) {
         next()
-        if (token.is[`@`]) {
+        if (token.is[`@`] || (token.is[Ellipsis] && ahead(token.is[`@`]))) {
           t = atPos(t, auto)(Term.Annotate(t, annots(skipNewLines = false)))
         } else {
           t = {
@@ -2114,17 +2108,22 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
    *  ConsrAnnotations ::= {`@' SimpleType ArgumentExprs}
    *  }}}
    */
-  def annots(skipNewLines: Boolean): List[Mod.Annot] = readAnnots {
-    require(token.isNot[`@`] && debug(token))
-    val t = atPos(in.prevTokenPos, auto)(Mod.Annot(constructorCall(exprSimpleType, allowArgss = true)))
-    if (skipNewLines) newLineOpt()
-    t
+  def annots(skipNewLines: Boolean, allowArgss: Boolean = true): List[Mod.Annot] = {
+    val annots = new ListBuffer[Mod.Annot]
+    while (token.is[`@`] || token.is[Ellipsis]) {
+      if (token.is[Ellipsis]) {
+        nextTwice()
+        annots ++= constructR1Quasi[Mod.Annot](expr())
+      } else {
+        next()
+        annots += atPos(in.prevTokenPos, auto)(Mod.Annot(constructorCall(exprSimpleType(), allowArgss)))
+      }
+      if (skipNewLines) newLineOpt()
+    }
+    annots.toList
   }
 
-  def constructorAnnots(): List[Mod.Annot] = readAnnots {
-    require(token.isNot[`@`] && debug(token))
-    atPos(in.prevTokenPos, auto)(Mod.Annot(constructorCall(exprSimpleType(), allowArgss = false)))
-  }
+  def constructorAnnots(): List[Mod.Annot] = annots(skipNewLines = false, allowArgss = false)
 
 /* -------- PARAMETERS ------------------------------------------- */
 
