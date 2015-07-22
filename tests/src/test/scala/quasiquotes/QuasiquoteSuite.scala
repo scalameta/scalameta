@@ -183,9 +183,18 @@ class QuasiquoteSuite extends FunSuite {
     assert(tpe.show[Syntax] === "Double")
   }
 
-//  test("q\"$expr: ..@$expr\"") {
-//    val q"$a: ..@$b" = q"foo: @bar @baz"
-//  }
+  test("1 q\"$expr: ..@annots\"") {
+    val q"$exprr: @q ..@$annotz @r" = q"foo: @q @w @e @r"
+    assert(exprr.show[Syntax] === "foo")
+    assert(annotz.toString === "List(@w, @e)")
+    assert(annotz(0).show[Syntax] === "@w")
+    assert(annotz(1).show[Syntax] === "@e")
+  }
+
+  test("2 q\"$expr: ..@annots\"") {
+    val mods = List(mod"@w", mod"@e")
+    assert(q"foo: @q ..@$mods @r".show[Syntax] === "foo: @q @w @e @r")
+  }
 
   test("q\"(..$exprs)\"") {
     val terms = List(q"y", q"z")
