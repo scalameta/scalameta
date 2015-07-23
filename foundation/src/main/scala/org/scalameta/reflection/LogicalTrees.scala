@@ -120,8 +120,11 @@ trait LogicalTrees {
 
     object TermIdent {
       def unapply(tree: g.Ident): Option[l.TermName] = tree match {
-        case tree @ g.Ident(g.TermName(value)) => Some(l.TermName(l.Denotation(g.NoPrefix, tree.symbol), value).setParent(tree))
-        case _ => None
+        case tree @ g.Ident(g.TermName(value)) =>
+          val ldenot = l.Denotation(tree.symbol.prefix, tree.symbol)
+          Some(l.TermName(ldenot, value).setParent(tree))
+        case _ =>
+          None
       }
     }
 
