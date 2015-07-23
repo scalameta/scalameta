@@ -58,14 +58,14 @@ trait Attributes extends GlobalToolkit with MetaToolkit {
     def withDenot(gpre: g.Type, lsym: l.Symbol)(implicit ev: CanHaveDenot[T]): T = {
       require(((lsym == l.None) ==> (ptree.isInstanceOf[m.Name.Anonymous])) && debug(ptree, gpre, lsym))
       val ptree1 = ptree match {
-        case ptree: m.Name.Anonymous => ptree.copy(denot = denot(gpre, lsym))
-        case ptree: m.Name.Indeterminate => ptree.copy(denot = denot(gpre, lsym))
-        case ptree: m.Term.Name => ptree.copy(denot = denot(gpre, lsym), typing = ptree.typing)
-        case ptree: m.Type.Name => ptree.copy(denot = denot(gpre, lsym))
+        case ptree: m.Name.Anonymous => ptree.withDenot(denot(gpre, lsym))
+        case ptree: m.Name.Indeterminate => ptree.withDenot(denot(gpre, lsym))
+        case ptree: m.Term.Name => ptree.withDenot(denot(gpre, lsym))
+        case ptree: m.Type.Name => ptree.withDenot(denot(gpre, lsym))
         // TODO: some ctor refs don't have corresponding constructor symbols in Scala (namely, ones for traits)
         // in these cases, our lsym is going to be a symbol of the trait in question
         // we need to account for that in `symbolTable.convert` and create a constructor symbol of our own
-        case ptree: m.Ctor.Name => ptree.copy(denot = denot(gpre, lsym), typing = ptree.typing)
+        case ptree: m.Ctor.Name => ptree.withDenot(denot(gpre, lsym))
         case _ => unreachable(debug(ptree, ptree.show[Structure]))
       }
       ptree1.require[T]
@@ -81,7 +81,7 @@ trait Attributes extends GlobalToolkit with MetaToolkit {
       //   case ptree: m.Term => ptree.copy(typing = typing(gtpe))
       //   case ptree: m.Term.Param => ptree.copy(typing = typing(gtpe))
       //   case _ => unreachable(debug(ptree, ptree.show[Raw]))
-        case ptree: m.Ctor.Name => ptree.copy(denot = ptree.denot, typing = typing(gtpe))
+        case ptree: m.Ctor.Name => ptree.withTyping(typing(gtpe))
         case _ => ptree
       }
       ptree1.require[T]
