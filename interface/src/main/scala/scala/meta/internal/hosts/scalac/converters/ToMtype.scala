@@ -146,7 +146,7 @@ trait ToMtype extends GlobalToolkit with MetaToolkit {
               // because otherwise, when repeatedly faced with the same polytype, we'd keep on churning out new ssymbols
               // and those would not compare equal on the scala.meta side
               val ssymbol = s.Symbol.Local(randomUUID().toString)
-              val mname = m.Type.Name("λ", s.Denotation.Single(s.Prefix.Zero, ssymbol))
+              val mname = m.Type.Name("λ").withDenot(s.Prefix.Zero, ssymbol)
               val mtparams = tparams.toLogical.map(_.toMmember(g.NoPrefix).require[m.Type.Param])
               val mlambda = m.Defn.Type(Nil, mname, mtparams, ret.toMtype)
               m.Type.Project(m.Type.Compound(Nil, List(mlambda)), mname)
