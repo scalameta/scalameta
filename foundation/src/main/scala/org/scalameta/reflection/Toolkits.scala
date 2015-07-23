@@ -2,8 +2,9 @@ package org.scalameta.reflection
 
 import scala.reflect.macros.{Universe => MacroUniverse}
 import scala.tools.nsc.Global
-import scala.org.scalameta.reflection.TreeHelpers
 import org.scalameta.ast.{Reflection => AstReflection}
+import scala.org.scalameta.reflection.TreeHelpers
+import scala.org.scalameta.reflection.LogicalTrees
 
 trait MacroToolkit extends Metadata with AstReflection {
   val global: MacroUniverse
@@ -18,10 +19,9 @@ trait GlobalToolkit extends MacroToolkit
                        with TreeHelpers
                        with TypeHelpers
                        with SymbolHelpers
-                       with Ensugar
-                       with Syntaxize
-                       with Attributed
                        with Platform
-                       with LogicalSymbols {
+                       with LogicalSymbols
+                       with LogicalTrees {
   val global: Global
+  object l extends LogicalSymbols with LogicalTrees
 }
