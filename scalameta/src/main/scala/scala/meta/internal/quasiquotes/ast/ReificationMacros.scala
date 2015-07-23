@@ -276,7 +276,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
             else if (sym == c.mirror.EmptyPackageClass || sym == c.mirror.EmptyPackage) "_empty_"
             else sym.name.toString
           }
-          impl.Type.Singleton(impl.Term.Name(name, denot(pre, sym)))
+          impl.Type.Singleton(impl.Term.Name(name).withDenot(denot(pre, sym)))
         }
         val pre1 = pre.orElse(defaultPrefix(sym))
         pre1 match {
@@ -300,9 +300,9 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
       case (meta, reflect: TypeTree) =>
         correlate(meta, reflect.original)
       case (meta: impl.Term.Name, reflect: RefTree) =>
-        impl.Term.Name(meta.value, denot(reflect.qualifier.tpe, reflect.symbol))
+        impl.Term.Name(meta.value).withDenot(denot(reflect.qualifier.tpe, reflect.symbol))
       case (meta: impl.Type.Name, reflect: RefTree) =>
-        impl.Type.Name(meta.value, denot(reflect.qualifier.tpe, reflect.symbol))
+        impl.Type.Name(meta.value).withDenot(denot(reflect.qualifier.tpe, reflect.symbol))
       case (meta: impl.Ref, reflect: Ident) =>
         val fakePrefix = Ident(reflect.symbol.owner).setType(reflect.symbol.owner.asInstanceOf[scala.reflect.internal.Symbols#Symbol].tpe.asInstanceOf[ReflectType])
         correlate(meta, Select(fakePrefix, reflect.symbol.name).setSymbol(reflect.symbol).setType(reflect.tpe))

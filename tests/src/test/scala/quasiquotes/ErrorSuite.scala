@@ -72,7 +72,7 @@ class ErrorSuite extends FunSuite {
       q"foo($xs)"
     """) === """
       |<macro>:5: type mismatch when unquoting;
-      | found   : List[scala.meta.internal.ast.Term.Name]
+      | found   : List[scala.meta.Term.Name]
       | required: scala.meta.Term.Arg
       |      q"foo($xs)"
       |            ^
@@ -87,7 +87,7 @@ class ErrorSuite extends FunSuite {
       q"$xs"
     """) === """
       |<macro>:5: type mismatch when unquoting;
-      | found   : List[scala.meta.internal.ast.Term.Name]
+      | found   : List[scala.meta.Term.Name]
       | required: scala.meta.Term
       |      q"$xs"
       |        ^
@@ -117,7 +117,7 @@ class ErrorSuite extends FunSuite {
       q"..$xss"
     """) === """
       |<macro>:5: type mismatch when unquoting;
-      | found   : List[List[scala.meta.internal.ast.Term.Name]]
+      | found   : List[List[scala.meta.Term.Name]]
       | required: scala.collection.immutable.Seq[scala.meta.Stat]
       |      q"..$xss"
       |          ^
@@ -132,7 +132,7 @@ class ErrorSuite extends FunSuite {
       q"$xss"
     """) === """
       |<macro>:5: type mismatch when unquoting;
-      | found   : List[List[scala.meta.internal.ast.Term.Name]]
+      | found   : List[List[scala.meta.Term.Name]]
       | required: scala.meta.Term
       |      q"$xss"
       |        ^
@@ -253,7 +253,7 @@ class ErrorSuite extends FunSuite {
       q"$name"
     """) === """
       |<macro>:5: type mismatch when unquoting;
-      | found   : scala.meta.internal.ast.Type.Name
+      | found   : scala.meta.Type.Name
       | required: scala.meta.Term
       |      q"$name"
       |        ^
@@ -268,7 +268,7 @@ class ErrorSuite extends FunSuite {
       q"expr: $tpe"
     """) === """
       |<macro>:5: type mismatch when unquoting;
-      | found   : scala.meta.internal.ast.Term.Name
+      | found   : scala.meta.Term.Name
       | required: scala.meta.Type
       |      q"expr: $tpe"
       |              ^
@@ -283,7 +283,7 @@ class ErrorSuite extends FunSuite {
       q"$expr: tpe"
     """) === """
       |<macro>:5: type mismatch when unquoting;
-      | found   : scala.meta.internal.ast.Type.Name
+      | found   : scala.meta.Type.Name
       | required: scala.meta.Term
       |      q"$expr: tpe"
       |        ^
@@ -311,7 +311,7 @@ class ErrorSuite extends FunSuite {
       q"expr.$name"
     """) === """
       |<macro>:5: type mismatch when unquoting;
-      | found   : scala.meta.internal.ast.Type.Name
+      | found   : scala.meta.Type.Name
       | required: scala.meta.Term.Name
       |      q"expr.$name"
       |             ^
@@ -326,7 +326,7 @@ class ErrorSuite extends FunSuite {
       q"$expr.name"
     """) === """
       |<macro>:5: type mismatch when unquoting;
-      | found   : scala.meta.internal.ast.Type.Name
+      | found   : scala.meta.Type.Name
       | required: scala.meta.Term
       |      q"$expr.name"
       |        ^

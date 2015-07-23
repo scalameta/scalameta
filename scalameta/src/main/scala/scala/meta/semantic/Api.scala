@@ -37,7 +37,7 @@ private[meta] trait Api {
       val iScala = s.Symbol.Global(s.Symbol.RootPackage, "scala", s.Signature.Term)
       val iCollection = s.Symbol.Global(iScala, "collection", s.Signature.Term)
       val iSeq = s.Symbol.Global(iCollection, "Seq", s.Signature.Type)
-      impl.Type.Name("Seq", s.Denotation.Single(s.Prefix.Zero, iSeq))
+      impl.Type.Name("Seq").withDenot(s.Prefix.Zero, iSeq)
     }
     @hosted private def dearg(tpe: Type.Arg): Type = tpe.require[impl.Type.Arg] match {
       case impl.Type.Arg.ByName(tpe) => impl.Type.Apply(SeqRef, List(tpe))
@@ -124,9 +124,9 @@ private[meta] trait Api {
     @hosted def source: Member = tree.name match {
       case name: impl.Name.Anonymous => name.defn
       case name: impl.Name.Indeterminate => name.defn
-      case name: impl.Term.Name => name.copy(denot = name.denot.stripPrefix).defn
-      case name: impl.Type.Name => name.copy(denot = name.denot.stripPrefix).defn
-      case name: impl.Ctor.Name => name.copy(denot = name.denot.stripPrefix).defn
+      case name: impl.Term.Name => name.withDenot(name.denot.stripPrefix).defn
+      case name: impl.Type.Name => name.withDenot(name.denot.stripPrefix).defn
+      case name: impl.Ctor.Name => name.withDenot(name.denot.stripPrefix).defn
     }
     @hosted def name: Name = {
       tree.require[impl.Member] match {
@@ -666,7 +666,7 @@ private[meta] trait Api {
             else None
           }
         }
-        def adjustValue(ctor: impl.Ctor.Name, value: String) = impl.Ctor.Name(value, ctor.denot)
+        def adjustValue(ctor: impl.Ctor.Name, value: String) = impl.Ctor.Name(value).withDenot(ctor.denot)
         tpe match {
           case impl.Type.Name(value) => adjustValue(ctor, value)
           case impl.Type.Select(qual, impl.Type.Name(value)) => impl.Ctor.Ref.Select(qual, adjustValue(ctor, value))
