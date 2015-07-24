@@ -39,9 +39,19 @@ trait Attributes extends GlobalToolkit with MetaToolkit {
       def withTyping(tree: T, typing: s.Typing): T = tree.require[m.Term].withTyping(typing).asInstanceOf[T]
     }
     implicit def TermParam[T <: mapi.Term.Param]: CanHaveTyping[T] = new CanHaveTyping[T] {
-      // TODO: uncomment this once Term.Param correctly gets the withTyping method
-      // def withTyping(tree: T, typing: s.Typing): T = tree.require[m.Term.Param].withTyping(typing).asInstanceOf[T]
-      def withTyping(tree: T, typing: s.Typing): T = tree
+      // NOTE: Here we cast the tree to Term.Param.Api, not to Term.Param,
+      // because `withTyping` is actually not a method on Term.Param,
+      // but is instead pimped onto it via an implicit conversion from Term.Param to Term.Param.Api.
+      // Typically this works well, but here we have another `withTyping` extension method
+      // and things go awry.
+      // TODO: Now the question is why I separated XXX and XXX.Api,
+      // and why on Earth I decided that there should be an implicit conversion between them.
+      // We should really revise the @ast codegen before the 0.1 release.
+      // TODO: Another thing that I'd like to change in the @ast codegen is ThisType.
+      // It looks like it's not really necessary, but it only creates complications.
+      // We can remove it from everywhere, and just generate overriding methods
+      // for places where there'll be a loss of static safety.
+      def withTyping(tree: T, typing: s.Typing): T = tree.require[m.Term.Param.Api].withTyping(typing).asInstanceOf[T]
     }
   }
 
