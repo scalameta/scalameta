@@ -22,13 +22,27 @@ import scala.reflect.internal.Flags._
 trait Attributes extends GlobalToolkit with MetaToolkit {
   self: Api =>
 
-  protected trait CanHaveDenot[T <: Tree]
-  protected object CanHaveDenot { implicit def Name[T <: mapi.Name]: CanHaveDenot[T] = null }
-  protected trait CanHaveTpe[T <: Tree]
-  protected object CanHaveTpe {
-    implicit def Term[T <: mapi.Term]: CanHaveTpe[T] = null
-    implicit def TermParam[T <: mapi.Term.Param]: CanHaveTpe[T] = null
-    implicit def Weird[T <: mapi.Term with mapi.Term.Param]: CanHaveTpe[T] = null
+  protected trait CanHaveDenot[T <: Tree] {
+    def withDenot(tree: T, denot: s.Denotation): T
+  }
+  protected object CanHaveDenot {
+    implicit def Name[T <: mapi.Name]: CanHaveDenot[T] = new CanHaveDenot[T] {
+      def withDenot(tree: T, denot: s.Denotation): T = tree.require[m.Name].withDenot(denot).asInstanceOf[T]
+    }
+  }
+
+  protected trait CanHaveTyping[T <: Tree] {
+    def withTyping(tree: T, typing: s.Typing): T
+  }
+  protected object CanHaveTyping {
+    implicit def Term[T <: mapi.Term]: CanHaveTyping[T] = new CanHaveTyping[T] {
+      def withTyping(tree: T, typing: s.Typing): T = tree.require[m.Term].withTyping(typing).asInstanceOf[T]
+    }
+    implicit def TermParam[T <: mapi.Term.Param]: CanHaveTyping[T] = new CanHaveTyping[T] {
+      // TODO: uncomment this once Term.Param correctly gets the withTyping method
+      // def withTyping(tree: T, typing: s.Typing): T = tree.require[m.Term.Param].withTyping(typing).asInstanceOf[T]
+      def withTyping(tree: T, typing: s.Typing): T = tree
+    }
   }
 
   protected implicit class RichAttributesTree[T <: m.Tree : ClassTag](mtree: T) {
@@ -61,18 +75,7 @@ trait Attributes extends GlobalToolkit with MetaToolkit {
     }
     def withDenot(gpre: g.Type, lsym: l.Symbol)(implicit ev: CanHaveDenot[T]): T = {
       require(((lsym == l.None) ==> (mtree.isInstanceOf[m.Name.Anonymous])) && debug(mtree, gpre, lsym))
-      val ptree1 = mtree match {
-        case mtree: m.Name.Anonymous => mtree.withDenot(denot(gpre, lsym))
-        case mtree: m.Name.Indeterminate => mtree.withDenot(denot(gpre, lsym))
-        case mtree: m.Term.Name => mtree.withDenot(denot(gpre, lsym))
-        case mtree: m.Type.Name => mtree.withDenot(denot(gpre, lsym))
-        // TODO: some ctor refs don't have corresponding constructor symbols in Scala (namely, ones for traits)
-        // in these cases, our lsym is going to be a symbol of the trait in question
-        // we need to account for that in `symbolTable.convert` and create a constructor symbol of our own
-        case mtree: m.Ctor.Name => mtree.withDenot(denot(gpre, lsym))
-        case _ => unreachable(debug(mtree, mtree.show[Structure]))
-      }
-      ptree1.require[T]
+      ev.withDenot(mtree, denot(gpre, lsym))
     }
     def withDenot(ldenot: l.Denotation)(implicit ev: CanHaveDenot[T]): T = {
       require(ldenot.nonEmpty)
@@ -85,15 +88,11 @@ trait Attributes extends GlobalToolkit with MetaToolkit {
     private def typing(gtpe: g.Type): s.Typing = {
       s.Typing.Known(gtpe.toMtypeArg)
     }
-    def withTyping(gtpe: g.Type)(implicit ev: CanHaveTpe[T]): T = {
-      val ptree1 = mtree match {
-        // TODO: implement this using the new facilities provided by scalameta/scalameta
-        case mtree: m.Ctor.Name => mtree.withTyping(typing(gtpe))
-        case _ => mtree
-      }
-      ptree1.require[T]
+    def withTyping(gtpe: g.Type)(implicit ev: CanHaveTyping[T]): T = {
+      require(gtpe != null && gtpe != g.NoType)
+      ev.withTyping(mtree, typing(gtpe))
     }
-    def tryTyping(gtpe: g.Type)(implicit ev: CanHaveTpe[T]): T = {
+    def tryTyping(gtpe: g.Type)(implicit ev: CanHaveTyping[T]): T = {
       if (gtpe == null || gtpe == g.NoType) mtree
       else mtree.withTyping(gtpe)
     }

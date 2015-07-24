@@ -166,7 +166,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
       if (sys.props("convert.debug") != null && gtree.parent.isEmpty) {
         println("======= SCALA.REFLECT TREE =======")
         println(gtree)
-        println(g.showRaw(gtree, printIds = true))
+        println(g.showRaw(gtree, printIds = true, printTypes = true))
         println("======== SCALA.META TREE ========")
         println(mtree)
         println(mtree.show[Semantics])

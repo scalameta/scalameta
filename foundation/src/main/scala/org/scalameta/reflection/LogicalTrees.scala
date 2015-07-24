@@ -114,7 +114,7 @@ trait LogicalTrees {
     object TermName {
       def apply(tree: g.NameTree): l.TermName = {
         require(tree.name.isTermName && tree.name != nme.WILDCARD && tree.name != nme.CONSTRUCTOR && debug(tree, showRaw(tree)))
-        new l.TermName(tree.denot, tree.displayName)
+        new l.TermName(tree.denot, tree.displayName).setType(tree.tpe)
       }
     }
 
@@ -122,7 +122,7 @@ trait LogicalTrees {
       def unapply(tree: g.Ident): Option[l.TermName] = tree match {
         case tree @ g.Ident(g.TermName(value)) =>
           val ldenot = l.Denotation(tree.symbol.prefix, tree.symbol)
-          Some(l.TermName(ldenot, value).setParent(tree))
+          Some(l.TermName(ldenot, value).setParent(tree).setType(tree.tpe))
         case _ =>
           None
       }
@@ -355,7 +355,8 @@ trait LogicalTrees {
     object CtorName {
       def apply(ctorDef: g.DefDef, classDef: g.ImplDef): l.CtorName = {
         require(ctorDef.name == nme.CONSTRUCTOR)
-        l.CtorName(ctorDef.denot, classDef.displayName)
+        val gtpe = ctorDef.symbol.info.finalResultType
+        l.CtorName(ctorDef.denot, classDef.displayName).setType(gtpe)
       }
     }
 
@@ -372,7 +373,9 @@ trait LogicalTrees {
         // Hence here we actually have to disregard the prefix (i.e. inheritance and type aliases) and
         // simply go for the owner of the symbol.
         // val lpre = ctorRef.qualifier.tpe.prefix.orElse(g.NoPrefix)
-        val lname = l.CtorName(l.Denotation(ctorSym.owner.prefix, ctorSym), classRef.displayName)
+        val ldenot = l.Denotation(ctorSym.owner.prefix, ctorSym)
+        val gtpe = ctorSym.info.finalResultType
+        val lname = l.CtorName(ldenot, classRef.displayName).setType(gtpe)
         val lresult = l.CtorIdent(lname)
         lname.setParent(lresult)
         lresult
