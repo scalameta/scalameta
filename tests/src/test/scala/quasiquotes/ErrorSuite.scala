@@ -164,7 +164,7 @@ class ErrorSuite extends FunSuite {
       q"..$l"
     """) === """
       |<macro>:5: type mismatch;
-      | found   : List[scala.meta.Term]
+      | found   : scala.collection.immutable.Seq[scala.meta.Stat]
       | required: scala.meta.Stat
       |      q"..$l"
       |      ^

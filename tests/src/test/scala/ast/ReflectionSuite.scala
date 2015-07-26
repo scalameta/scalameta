@@ -11,8 +11,8 @@ class ReflectionSuite extends AstSuite {
   // but please deal with that (or come up with a more effective way of testing AstReflection)
   test("root") {
     assert(symbolOf[scala.meta.Tree].isRoot)
-    assert(symbolOf[scala.meta.Tree].asRoot.allBranches.length === 69)
-    assert(symbolOf[scala.meta.Tree].asRoot.allLeafs.length === 329)
+    assert(symbolOf[scala.meta.Tree].asRoot.allBranches.length === 70)
+    assert(symbolOf[scala.meta.Tree].asRoot.allLeafs.length === 330)
   }
 
   test("If") {
@@ -50,6 +50,7 @@ class ReflectionSuite extends AstSuite {
       |scala.meta.Member.Term                           => scala.meta.Member.Term
       |scala.meta.Member.Type                           => scala.meta.Member.Type
       |scala.meta.Mod                                   => scala.meta.Mod
+      |scala.meta.Mod.Annot                             => scala.meta.Mod.Annot
       |scala.meta.Name                                  => scala.meta.Name
       |scala.meta.Name.Anonymous                        => scala.meta.Name.Anonymous
       |scala.meta.Name.Indeterminate                    => scala.meta.Name.Indeterminate
@@ -131,7 +132,7 @@ class ReflectionSuite extends AstSuite {
       |scala.meta.internal.ast.Member.Type              => scala.meta.Member.Type
       |scala.meta.internal.ast.Mod                      => scala.meta.Mod
       |scala.meta.internal.ast.Mod.Abstract             => scala.meta.Mod
-      |scala.meta.internal.ast.Mod.Annot                => scala.meta.Mod
+      |scala.meta.internal.ast.Mod.Annot                => scala.meta.Mod.Annot
       |scala.meta.internal.ast.Mod.Case                 => scala.meta.Mod
       |scala.meta.internal.ast.Mod.Contravariant        => scala.meta.Mod
       |scala.meta.internal.ast.Mod.Covariant            => scala.meta.Mod
@@ -351,11 +352,6 @@ class ReflectionSuite extends AstSuite {
       |scala.meta.internal.ast.Lit.String -> scala.meta.Lit
       |field Pat.Interpolate.parts: scala.collection.immutable.Seq[scala.meta.internal.ast.Lit.String] @org.scalameta.invariants.nonEmpty
       |field Term.Interpolate.parts: scala.collection.immutable.Seq[scala.meta.internal.ast.Lit.String] @org.scalameta.invariants.nonEmpty
-      |
-      |scala.meta.internal.ast.Mod.Annot -> scala.meta.Mod
-      |field Pat.Type.Annotate.annots: scala.collection.immutable.Seq[scala.meta.internal.ast.Mod.Annot] @org.scalameta.invariants.nonEmpty
-      |field Term.Annotate.annots: scala.collection.immutable.Seq[scala.meta.internal.ast.Mod.Annot] @org.scalameta.invariants.nonEmpty
-      |field Type.Annotate.annots: scala.collection.immutable.Seq[scala.meta.internal.ast.Mod.Annot] @org.scalameta.invariants.nonEmpty
       |
     """.trim.stripMargin)
   }
