@@ -248,6 +248,8 @@ class QuasiquoteSuite extends FunSuite {
     assert(casez(1).show[Syntax] === "case _ => foo")
   }
 
+  // todo change to expropt (and test it) after issue #199 resolved
+
   test("q\"try $expr catch { ..case $cases } finally $expr\"") {
     val q"try $exp catch { case a => b; ..case $cases; case q => w } finally $exprr" = q"try foo catch { case a => b; case _ => bar; case 1 => 2; case q => w} finally baz"
     assert(exp.show[Syntax] === "foo")
@@ -331,8 +333,28 @@ class QuasiquoteSuite extends FunSuite {
     assert(q"for (..$ab) yield foo".show[Syntax] === "for (a <- as; b <- bs) yield foo")
   }
 
-//  test("q\"new $template\"") {
-//    val q"new $template" = q"new Foo" // fixme test is broken, so even does not compile
+  test("1 q\"new { ..$stat } with ..$exprs { $param => ..$stats }\"") {
+    val q"new $x" = q"new Foo"
+    assert(x.show[Structure] === "Ctor.Ref.Name(\"Foo\")")
+  }
+
+  test("2 q\"new { ..$stat } with ..$exprs { $param => ..$stats }\"") {
+    val q"new {..$stats; val b = 4} with $a {$selff => ..$statz}" = q"new {val a = 2; val b = 4} with A { self => val b = 3 }"
+    assert(stats.toString === "List(val a = 2)")
+    assert(stats(0).show[Syntax] === "val a = 2")
+    assert(a.show[Structure] === "Ctor.Ref.Name(\"A\")")
+    assert(selff.show[Structure] === "Term.Param(Nil, Term.Name(\"self\"), None, None)")
+    assert(statz.toString === "List(val b = 3)")
+    assert(statz(0).show[Syntax] === "val b = 3")
+  }
+
+  test("3 q\"new { ..$stat } with ..$exprs { $param => ..$stats }\"") {
+    val q"new X with T { $self => def m = 42}" = q"new X with T { def m = 42 }"
+    assert(self.show[Structure] === "Term.Param(Nil, Name.Anonymous(), None, None)")
+  }
+
+//  test("4 q\"new { ..$stat } with ..$exprs { $param => ..$stats }\"") {
+//    val q"new {..$stats; val b = 4} with $a {$selff => ..$statz}" = q"new {val a = 2; val b = 4}" // todo fails to compile, uncomment after issue #199 resolved
 //  }
 
   test("q\"_\"") {
