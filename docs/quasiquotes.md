@@ -38,15 +38,15 @@
  Block             | `q"{ ..$stats }"`
  If                | `q"if ($expr) $expr else $expr"`
  Match             | `q"$expr match { ..case $cases }"`
- Try Catch Cases   | `q"try $expr catch { ..case $cases } finally expr"`
- Try Catch Expr    | `q"try $expr catch $expr finally expr" `
+ Try Catch Cases   | `q"try $expr catch { ..case $cases } finally $expropt"`
+ Try Catch Expr    | `q"try $expr catch $expr finally $expropt"`
  Function          | `q"(..$params) => $expr"`
  Partial Function  | `q"{ ..case $cases }"`
  While             | `q"while ($expr) $expr"`
  Do While          | `q"do $expr while($expr)"`
  For               | `q"for (..$enumerators) $expr"`
  For Yield         | `q"for (..$enumerators) yield $expr"`
- New               | `q"new $template"`
+ New               | `q"new { ..$stat } with ..$exprs { $param => ..$stats }`
  Placeholder       | `q"_"`
  Eta Expansion     | `q"$expr _"`
  Literal           | `q"$lit"`
