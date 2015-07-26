@@ -2656,6 +2656,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         atPos(arrow, arrow)(Ctor.Ref.Function(atPos(arrow, arrow)(Ctor.Name("=>"))))
       }
       atPos(tpe, tpe)(tpe match {
+        case q: Type.Quasi => atPos(q, q)(Ctor.Ref.Name.Quasi(q.rank, q.tree))
         case Type.Name(value) => Ctor.Name(value)
         case Type.Select(qual, name) => Ctor.Ref.Select(qual, atPos(name, name)(Ctor.Name(name.value)))
         case Type.Project(qual, name) => Ctor.Ref.Project(qual, atPos(name, name)(Ctor.Name(name.value)))
@@ -2729,6 +2730,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   }
 
   def ensureEarlyDef(tree: Stat): Stat = tree match {
+    case v: Stat.Quasi => v
     case v: Defn.Val => v
     case v: Defn.Var => v
     case t: Defn.Type =>
@@ -2835,6 +2837,8 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       val first = expr(InTemplate) // @S: first statement is potentially converted so cannot be stubbed.
       if (token.is[`=>`]) {
         first match {
+          case q @ Term.Quasi(rank, tree) =>
+            self = atPos(q, q)(Term.Param.Quasi(rank, tree))
           case name: Term.Placeholder =>
             self = atPos(first, first)(Term.Param(Nil, atPos(name, name)(Name.Anonymous()), None, None))
           case name @ Term.This(Name.Anonymous()) =>
