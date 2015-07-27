@@ -529,7 +529,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
 
 /* ---------- TREE CONSTRUCTION ------------------------------------------- */
 
-  def ellipsis[T <: Tree : AstMetadata](rank: Int, body: => T): T = autoPos {
+  def ellipsis[T <: Tree : AstMetadata](rank: Int, body: => T, extraSkip: => Unit = {}): T = autoPos {
     token match {
       case ellipsis: Ellipsis =>
         if (ellipsis.rank != rank) {
@@ -537,6 +537,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
           syntaxError(errorMessage, at = ellipsis)
         } else {
           next()
+          extraSkip
           val tree = {
             val result = token match {
               case _: `(` => inParens(body)
@@ -560,18 +561,6 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       case _ =>
         unreachable(debug(token))
     }
-  }
-
-  // corresponding quasiquote (rank 1) for expressions like `{..$smth}`
-  def constructR1Quasi[T <: Tree : AstMetadata](ctor: => Tree): List[T] = {
-    val tree = {  
-      val q = ctor match {
-        case q: Quasi if q.rank == 0 => q
-        case _ => syntaxError("impossible to construct rank-1 quasiquote", at = token)
-      }
-      atPos(q, q)(implicitly[AstMetadata[T]].quasi(q.rank, q.tree))
-    }
-    implicitly[AstMetadata[T]].quasi(1, tree) :: Nil
   }
 
   def unquote[T <: Tree : AstMetadata]: T = autoPos {
@@ -1686,8 +1675,11 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     val cases = new ListBuffer[Case]
     while (token.is[CaseIntro] || token.is[Ellipsis]) {
       if (token.is[Ellipsis]) {
-        nextTwice()
-        cases ++= constructR1Quasi[Case](expr())
+        cases += ellipsis(1, unquote[Case], accept[`case`])
+        if (token.is[StatSep]) next()
+      } else if (token.is[`case`] && ahead(token.is[Unquote])) {
+        next()
+        cases += unquote[Case]
         if (token.is[StatSep]) next()
       } else {
         next()
@@ -1727,8 +1719,9 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   def enumerator(isFirst: Boolean, allowNestedIf: Boolean = true): List[Enumerator] =
     if (token.is[`if`] && !isFirst) autoPos(Enumerator.Guard(guard().get)) :: Nil
     else if (token.is[Ellipsis]) {
-      next()
-      constructR1Quasi[Enumerator.Generator](expr())
+      ellipsis(1, unquote[Enumerator.Generator]) :: Nil
+    } else if (token.is[Unquote]) {
+      unquote[Enumerator.Generator] :: Nil
     }
     else generator(!isFirst, allowNestedIf)
 
@@ -2112,11 +2105,11 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     val annots = new ListBuffer[Mod.Annot]
     while (token.is[`@`] || token.is[Ellipsis]) {
       if (token.is[Ellipsis]) {
-        nextTwice()
-        annots ++= constructR1Quasi[Mod.Annot](expr())
+        annots += ellipsis(1, unquote[Mod.Annot], accept[`@`])
       } else {
         next()
-        annots += atPos(in.prevTokenPos, auto)(Mod.Annot(constructorCall(exprSimpleType(), allowArgss)))
+        if (token.is[Unquote]) annots += unquote[Mod.Annot]
+        else annots += atPos(in.prevTokenPos, auto)(Mod.Annot(constructorCall(exprSimpleType(), allowArgss)))
       }
       if (skipNewLines) newLineOpt()
     }
@@ -2960,8 +2953,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         next()
       }
       else if (token.is[Ellipsis]) {
-        next()
-        stats ++= constructR1Quasi[Stat](expr())
+        stats += ellipsis(1, unquote[Stat])
       }
       else {
         syntaxError("illegal start of statement", at = token)
