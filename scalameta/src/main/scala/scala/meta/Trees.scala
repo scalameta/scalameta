@@ -76,7 +76,12 @@ package scala.meta {
   }
 
   @branch trait Template extends Tree
+
   @branch trait Mod extends Tree
+  object Mod {
+    @branch trait Annot extends Mod
+  }
+
   @branch trait Enumerator extends Tree
   @branch trait Importee extends Tree with Ref
   @branch trait Case extends Tree with Scope
@@ -170,7 +175,7 @@ package scala.meta.internal.ast {
     @ast class While(expr: Term, body: Term) extends Term
     @ast class Do(body: Term, expr: Term) extends Term
     @ast class For(enums: Seq[Enumerator] @nonEmpty, body: Term) extends Term with Scope {
-      require(enums.head.isInstanceOf[Enumerator.Generator])
+      require(enums.head.isInstanceOf[Enumerator.Generator] || enums.head.isInstanceOf[Enumerator.Generator.Quasi])
     }
     @ast class ForYield(enums: Seq[Enumerator] @nonEmpty, body: Term) extends Term with Scope
     @ast class New(templ: Template) extends Term
@@ -470,7 +475,7 @@ package scala.meta.internal.ast {
 
   @branch trait Mod extends api.Mod with Tree
   object Mod {
-    @ast class Annot(body: Term) extends Mod {
+    @ast class Annot(body: Term) extends Mod with api.Mod.Annot {
       require(body.isCtorCall)
     }
     @ast class Private(within: Name.Qualifier) extends Mod
