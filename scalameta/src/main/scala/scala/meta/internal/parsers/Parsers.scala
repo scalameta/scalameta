@@ -563,15 +563,21 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     }
   }
 
-  def unquote[T <: Tree : AstMetadata]: T = autoPos {
+  def unquote[T <: Tree : AstMetadata](advance: Boolean = true): T = autoPos {
     token match {
       case unquote: Unquote =>
-        next()
-        implicitly[AstMetadata[T]].quasi(0, unquote.tree)
+        if (advance) {
+          next()
+          implicitly[AstMetadata[T]].quasi(0, unquote.tree)
+        } else ahead {
+          implicitly[AstMetadata[T]].quasi(0, unquote.tree)
+        }
       case _ =>
         unreachable(debug(token))
     }
   }
+
+  def unquote[T <: Tree : AstMetadata]: T = unquote[T](advance = true) // to write `unquote[T]` without round braces
 
   /** Convert tree to formal parameter list. */
   def convertToParams(tree: Term): List[Term.Param] = tree match {
@@ -600,8 +606,13 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   def convertToTypeId(ref: Term.Ref): Option[Type] = ref match {
     case ref: Quasi =>
       Some(atPos(ref, ref)(Type.Quasi(ref.rank, ref.tree)))
+    case Term.Select(qual: Term.Quasi, name: Term.Name.Quasi) =>
+      val newQual = atPos(qual, qual)(Term.Ref.Quasi(qual.rank, qual.tree))
+      val newName = atPos(name, name)(Type.Name.Quasi(name.rank, name.tree))
+      Some(atPos(ref, ref)(Type.Select(newQual, newName)))
     case Term.Select(qual: Term.Ref, name) =>
-      Some(atPos(ref, ref)(Type.Select(qual, atPos(name, name)(Type.Name(name.value)))))
+      val newName = atPos(name, name)(Type.Name(name.value))
+      Some(atPos(ref, ref)(Type.Select(qual, newName)))
     case name: Term.Name =>
       Some(atPos(name, name)(Type.Name(name.value)))
     case _ =>
@@ -899,7 +910,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     }
 
     def infixTypeRest(t: Type, mode: InfixMode.Value): Type = atPos(t, auto) {
-      if (isIdentExcept("*")) {
+      if (isIdentExcept("*") || token.is[Unquote]) {
         val name = termName(advance = false)
         val leftAssoc = name.isLeftAssoc
         if (mode != InfixMode.FirstOp) checkAssoc(name, leftAssoc = mode == InfixMode.LeftOp)
@@ -964,7 +975,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       if (advance) next()
       res
     case token: Unquote =>
-      unquote[T]
+      unquote[T](advance)
     case _ =>
       syntaxErrorExpected[Ident]
   }
@@ -979,7 +990,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
    */
   // TODO: this has to be rewritten
   def path(thisOK: Boolean = true): Term.Ref = {
-    def stop = token.isNot[`.`] || ahead { token.isNot[`this`] && token.isNot[`super`] && !token.is[Ident] }
+    def stop = token.isNot[`.`] || ahead { token.isNot[`this`] && token.isNot[`super`] && !token.is[Ident] && !token.is[Unquote] }
     if (token.is[`this`]) {
       val anonqual = atPos(in.tokenPos, in.prevTokenPos)(Name.Anonymous())
       next()
@@ -1033,7 +1044,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
           }
         } else {
           selectors(name match {
-            case q: Term.Name.Quasi => atPos(q, q)(Term.Quasi(q.rank, q.tree)) // force typing according to spec
+            case q: Term.Name.Quasi => atPos(q, q)(Term.Quasi(q.rank, q.tree)) // force typing according to spec ($name is Term)
             case name => name
           })
         }

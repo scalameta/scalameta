@@ -409,11 +409,11 @@ class QuasiquoteSuite extends FunSuite {
     assert(q"$expr".show[Syntax] === "foo")
   }
 
-//  test("t\"$ref.$tname\"") {
-//    val ref = q"X"
-//    val tname = t"Y"
-//    assert(t"$ref.$tname".show[Syntax] === "X.Y")
-//  }
+  test("t\"$ref.$tname\"") {
+    val ref = q"X"
+    val tname = t"Y"
+    assert(t"$ref.$tname".show[Structure] === "Type.Select(Term.Name(\"X\"), Type.Name(\"Y\"))")
+  }
 
   test("t\"$tpe#$tname\"") {
     val tpe = t"X"
@@ -432,12 +432,12 @@ class QuasiquoteSuite extends FunSuite {
     assert(t"$tpe[..$tpes]".show[Syntax] === "X[Y, Z]")
   }
 
-//  test("t\"$tpe $tname $tpe\"") {
-//    val tpe1 = t"X"
-//    val tname = t"Y"
-//    val tpe2 = t"Z"
-//    assert(t"$tpe1 $tname $tpe2".show[Syntax] === "X Y Z")
-//  }
+  test("t\"$tpe $tname $tpe\"") {
+    val tpe1 = t"X"
+    val tname = t"Y"
+    val tpe2 = t"Z"
+    assert(t"$tpe1 $tname $tpe2".show[Syntax] === "X Y Z")
+  }
 
   test("t\"(..$atpes) => $tpe\"") {
     val atpes = List(t"X", t"Y")
