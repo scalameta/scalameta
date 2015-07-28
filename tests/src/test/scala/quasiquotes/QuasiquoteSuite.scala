@@ -392,4 +392,105 @@ class QuasiquoteSuite extends FunSuite {
     val q"$x" = q"42"
     assert(x.show[Syntax] === "42")
   }
+
+  test("arg\"$name = $expr\"") {
+    val name = q"x"
+    val expr = q"foo"
+    assert(arg"$name = $expr".show[Syntax] === "x = foo")
+  }
+
+  test("arg\"$expr: _*\"") {
+    val expr = q"foo"
+    assert(arg"$expr: _*".show[Syntax] === "foo: _*")
+  }
+
+  test("arg\"$expr\"") {
+    val expr = q"foo"
+    assert(q"$expr".show[Syntax] === "foo")
+  }
+
+//  test("t\"$ref.$tname\"") {
+//    val ref = q"X"
+//    val tname = t"Y"
+//    assert(t"$ref.$tname".show[Syntax] === "X.Y")
+//  }
+
+  test("t\"$tpe#$tname\"") {
+    val tpe = t"X"
+    val tname = t"Y"
+    assert(t"$tpe#$tname".show[Syntax] === "X#Y")
+  }
+
+  test("t\"$ref.type\"") {
+    val ref = q"X"
+    assert(t"$ref.type".show[Syntax] === "X.type")
+  }
+
+  test("t\"$tpe[..$tpes]") {
+    val tpe = t"X"
+    val tpes = List(t"Y", t"Z")
+    assert(t"$tpe[..$tpes]".show[Syntax] === "X[Y, Z]")
+  }
+
+//  test("t\"$tpe $tname $tpe\"") {
+//    val tpe1 = t"X"
+//    val tname = t"Y"
+//    val tpe2 = t"Z"
+//    assert(t"$tpe1 $tname $tpe2".show[Syntax] === "X Y Z")
+//  }
+
+  test("t\"(..$atpes) => $tpe\"") {
+    val atpes = List(t"X", t"Y")
+    val tpe = t"Z"
+    assert(t"(..$atpes) => $tpe".show[Syntax] === "(X, Y) => Z")
+  }
+
+//  test("t\"(..$tpes)\"") {
+//    val tpes = List(t"X", t"Y")
+//    assert(t"(..$tpes)".show[Syntax] === "(X, Y)")
+//  }
+
+//  test("t\"..$tpes { ..$stats }\"") {
+//    val tpes = List(t"X", t"Y")
+//    val stats = List(q"val a = 1; val b = 2")
+//    assert(t"..$tpes { ..$stats }".show[Syntax] === "...")
+//  }
+
+//  test("t\"$tpe forSome { ..$stats }\"") {
+//    val tpe = t"X"
+//    val stats = List(q"val a = 1; val b = 2")
+//    assert(t"$tpe forSome { ..$stats }".show[Syntax] === "...")
+//  }
+
+  test("t\"$tpe ..@$annots\"") {
+    val tpe = t"X"
+    val annots = List(mod"@a", mod"@b")
+    assert(t"$tpe ..@$annots".show[Syntax] === "X @a @b")
+  }
+
+  test("t\"_ >: $tpeopt <: $tpeopt\"") {
+    val tpe1 = t"X"
+    val tpe2 = t"Y"
+    assert(t"_ >: $tpe1 <: $tpe2".show[Syntax] === "_ >: X <: Y")
+  }
+
+  test("t\"$lit\"") {
+    val lit = q"1"
+    assert(t"$lit".show[Syntax] === "1")
+  }
+
+  test("t\"=> $tpe\"") {
+    val tpe = t"X"
+    assert(t"=> $tpe".show[Syntax] === "=> X")
+  }
+
+  test("t\"$tpe *\"") {
+    val tpe = t"X"
+    assert(t"$tpe*".show[Syntax] === "X*")
+  }
+
+  test("t\"$tpe\"") {
+    val tpe = t"X"
+    assert(t"$tpe".show[Syntax] === "X")
+  }
 }
