@@ -200,7 +200,7 @@ package scala.meta.internal.ast {
       // require(keywords.contains(value) ==> isBackquoted)
     }
     @ast class Select(qual: Term.Ref, name: Type.Name) extends Type.Ref with Pat.Type.Ref {
-      require(qual.isPath || qual.isInstanceOf[Term.Super])
+      require(qual.isPath || qual.isInstanceOf[Term.Super] || qual.isInstanceOf[Term.Quasi])
     }
     @ast class Project(qual: Type, name: Type.Name) extends Type.Ref
     @ast class Singleton(ref: Term.Ref) extends Type.Ref with Pat.Type.Ref {
