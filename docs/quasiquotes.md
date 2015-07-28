@@ -74,7 +74,7 @@
  Compound          | `t"..$tpes { ..$stats }"`
  Existential       | `t"$tpe forSome { ..$stats }"`
  Annotate          | `t"$tpe ..@$annots"`
- Placeholder       | `t"_ >: $tpeopt <: tpeopt"`
+ Placeholder       | `t"_ >: $tpeopt <: $tpeopt"`
  Literal           | `t"$lit"`
 
 ## Argument Types (meta.Type.Arg)
