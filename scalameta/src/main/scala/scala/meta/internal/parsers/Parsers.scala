@@ -900,8 +900,12 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       val types = ts.toList
       if (token.is[`{`]) {
         val refinements = refinement()
+        val hasQuasi = t match {
+          case q @ Some(Type.Quasi(1, _)) => true
+          case _ => false
+        }
         (types, refinements) match {
-          case (typ :: Nil, Nil) => typ
+          case (typ :: Nil, Nil) if !hasQuasi => typ
           case _  => Type.Compound(types, refinements)
         }
       } else {
@@ -977,6 +981,8 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       res
     case token: Unquote =>
       unquote[T](advance)
+    case token: Ellipsis =>
+      ellipsis(1, unquote[T](advance))
     case _ =>
       syntaxErrorExpected[Ident]
   }
@@ -2903,7 +2909,9 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   }
 
   def refineStat(): Option[Stat] =
-    if (token.is[DclIntro]) {
+    if (token.is[Ellipsis]) {
+      Some(ellipsis(1, unquote[Stat]))
+    } else if (token.is[DclIntro]) {
       defOrDclOrSecondaryCtor(Nil) match {
         case stat if stat.isRefineStat => Some(stat)
         case other                     => syntaxError("is not a valid refinement declaration", at = other)

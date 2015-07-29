@@ -450,9 +450,20 @@ class QuasiquoteSuite extends FunSuite {
     assert(t"(..$tpes)".show[Syntax] === "(X, Y)")
   }
 
-//  test("t\"..$tpes { ..$stats }\"") {
+  test("1 t\"..$tpes { ..$stats }\"") {
+    val t"..$tpes {..$stats}" = t"A with B with C { val a: A; val b: B }"
+    assert(tpes.toString === "List(A, B, C)")
+    assert(tpes(0).show[Syntax] === "A")
+    assert(tpes(1).show[Syntax] === "B")
+    assert(tpes(2).show[Syntax] === "C")
+    assert(stats.toString === "List(val a: A, val b: B)")
+    assert(stats(0).show[Syntax] === "val a: A")
+    assert(stats(1).show[Syntax] === "val b: B")
+  }
+
+//  test("2 t\"..$tpes { ..$stats }\"") {
 //    val tpes = List(t"X", t"Y")
-//    val stats = List(q"val a = 1; val b = 2")
+//    val stats = List(q"val a: A; val b: B")
 //    assert(t"..$tpes { ..$stats }".show[Syntax] === "...")
 //  }
 
