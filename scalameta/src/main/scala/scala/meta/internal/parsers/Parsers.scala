@@ -799,6 +799,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
           Type.Function(ts, typ())
         } else {
           val tuple = atPos(openParenPos, closeParenPos)(makeTupleType(ts map {
+            case q: Type.Arg.Quasi    => atPos(q, q)(Type.Quasi(q.rank, q.tree))
             case t: Type              => t
             case p: Type.Arg.ByName   => syntaxError("by name type not allowed here", at = p)
             case p: Type.Arg.Repeated => syntaxError("repeated type not allowed here", at = p)
