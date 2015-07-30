@@ -666,7 +666,9 @@ private[meta] trait Api {
             else None
           }
         }
-        def adjustValue(ctor: impl.Ctor.Name, value: String) = impl.Ctor.Name(value).withDenot(ctor.denot)
+        def adjustValue(ctor: impl.Ctor.Name, value: String) = {
+          impl.Ctor.Name(value).withDenot(ctor.denot).withTyping(ctor.typing)
+        }
         tpe match {
           case impl.Type.Name(value) => adjustValue(ctor, value)
           case impl.Type.Select(qual, impl.Type.Name(value)) => impl.Ctor.Ref.Select(qual, adjustValue(ctor, value))
