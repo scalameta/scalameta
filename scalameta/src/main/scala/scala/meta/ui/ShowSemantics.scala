@@ -74,15 +74,15 @@ object Semantics {
           def entity = typing
           def tag = classOf[Typing]
           def prettyprint() = typing match {
-            case Typing.Unknown => unreachable
-            case Typing.Known(tpe) => if (style == Style.Deep) body(tpe) else tpe.show[Structure]
+            case Typing.Zero => unreachable
+            case Typing.Specified(tpe) => if (style == Style.Deep) body(tpe) else tpe.show[Structure]
           }
         }
         implicit def statusExpansion(expansion: Expansion): Footnote = new Footnote {
           def entity = expansion
           def tag = classOf[Expansion]
           def prettyprint() = expansion match {
-            case Expansion.Identity => unreachable
+            case Expansion.Zero => unreachable
             case Expansion.Desugaring(term) => if (style == Style.Deep) body(term) else term.show[Structure]
           }
         }
@@ -147,8 +147,8 @@ object Semantics {
         val statusPart = x match {
           case x: Term =>
             x.typing match {
-              case Typing.Unknown => ""
-              case typing @ Typing.Known(tpe) => s"{${footnotes.insert(typing)}}"
+              case Typing.Zero => ""
+              case typing @ Typing.Specified(tpe) => s"{${footnotes.insert(typing)}}"
             }
           case _ =>
             ""
@@ -156,7 +156,7 @@ object Semantics {
         val expansionPart = x match {
           case x: Term =>
             x.expansion match {
-              case Expansion.Identity => ""
+              case Expansion.Zero => ""
               case expansion @ Expansion.Desugaring(term) => s"<${footnotes.insert(expansion)}>"
             }
           case _ =>

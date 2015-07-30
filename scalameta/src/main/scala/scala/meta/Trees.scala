@@ -114,7 +114,7 @@ package scala.meta.internal.ast {
   @branch trait Term extends api.Term with Stat with Term.Arg {
     def typing: Typing
     def withTyping(typing: Typing): ThisType
-    def withTyping(known: api.Type.Arg): ThisType = withTyping(Typing.Known(known))
+    def withTyping(known: api.Type.Arg): ThisType = withTyping(Typing.Specified(known))
     def expansion: Expansion
     def withExpansion(expansion: Expansion): ThisType
     def withExpansion(desugaring: api.Term): ThisType = withExpansion(Expansion.Desugaring(desugaring))
