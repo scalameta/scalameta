@@ -73,8 +73,8 @@ trait Attributed {
     }
     def requireTyped(): Type.Arg = {
       def requireTyped(typing: Typing) = typing match {
-        case Typing.Unknown => throw new SemanticException(s"implementation restriction: internal cache has no type associated with $tree")
-        case Typing.Known(tpe) => tpe
+        case Typing.Zero => throw new SemanticException(s"implementation restriction: internal cache has no type associated with $tree")
+        case Typing.Specified(tpe) => tpe
       }
       tree match {
         case tree: impl.Term => requireTyped(tree.typing)
