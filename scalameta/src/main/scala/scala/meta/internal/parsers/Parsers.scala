@@ -636,9 +636,12 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     tokenSeparated[`,`, T](sepFirst = false, part)
 
   def makeTuple[T <: Tree](body: List[T], zero: () => T, tuple: List[T] => T): T = body match {
-    case Nil         => zero()
-    case only :: Nil => only
-    case _           => tuple(body)
+    case Nil => zero()
+    case only :: Nil => only match {
+      case q: Quasi if q.rank == 1 => tuple(body)
+      case _ => only
+    }
+    case _ => tuple(body)
   }
 
   def makeTupleTerm(body: List[Term]): Term = {
@@ -666,9 +669,12 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     }
   }
 
-  def makeTuplePatParens(bodyf: => List[Pat.Arg]): Pat = autoPos {
-    val body = inParens(if (token.is[`)`]) Nil else bodyf.map(_.require[Pat]))
-    makeTuple[Pat](body, () => Lit.Unit(), Pat.Tuple(_))
+  def makeTuplePatParens(): Pat = {
+    val patterns = inParens(noSeq.patterns()).map {
+      case q: Pat.Arg.Quasi => atPos(q, q)(Pat.Quasi(q.rank, q.tree))
+      case p => p.require[Pat]
+    }
+    makeTuple[Pat](patterns, () => Lit.Unit(), Pat.Tuple(_))
   }
 
 /* --------- OPERAND/OPERATOR STACK --------------------------------------- */
@@ -1988,7 +1994,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       case _: Xml.Start =>
         xmlPat()
       case _: `(` =>
-        makeTuplePatParens(noSeq.patterns())
+        makeTuplePatParens()
       case _: Unquote =>
         unquote[Pat]
       case _ =>
