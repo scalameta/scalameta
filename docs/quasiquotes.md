@@ -101,7 +101,7 @@
  Name          | ``p"`name`"``
  Selection     | `p"$expr.$name"`
  Literal       | `p"$lit"`
- Case          | `p"case $pat if $condopt => $expr"`
+ Case          | `p"case $pat if $expropt => $expr"`
 
 ## Argument Patterns (meta.Pat.Arg)
 
@@ -126,8 +126,8 @@
  Tuple             | `pt"(..$ptpes)"`
  Compound          | `pt"..$ptpes { ..$stats }"`
  Existential       | `pt"$ptpe forSome { ..$stats }"`
- Annotate          | `pt"$ptpe ..@$expr"`
- Placeholder       | `pt"_ >: $tpeopt <: tpeopt"`
+ Annotate          | `pt"$ptpe ..@$annots"`
+ Placeholder       | `pt"_ >: $tpeopt <: $tpeopt"`
  Literal           | `pt"$lit"`
 
 ## Statements (meta.Stat)
