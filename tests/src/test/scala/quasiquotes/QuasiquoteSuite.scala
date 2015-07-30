@@ -505,7 +505,7 @@ class QuasiquoteSuite extends FunSuite {
     assert(t"$tpe".show[Syntax] === "X")
   }
 
-//  test("p\"$name @ $pat\"") {
+//  test("p\"$name @ $pat\"") { // same wtf as test("2 t\"..$tpes { ..$stats }\"")
 //    val name = q"x"
 //    val pat = p"y"
 //    assert(p"$name @ $pat".show[Syntax] === "x @ y")
@@ -517,10 +517,11 @@ class QuasiquoteSuite extends FunSuite {
     assert(p"$pat1 | $pat2".show[Syntax] === "X | Y")
   }
 
-//  test("p\"(..$pats)\"") {
-//    val pats = List(p"X", p"Y")
-//    assert(p"(..$pats)".show[Syntax] === "(X, Y)")
-//  }
+  test("p\"(..$pats)\"") {
+    val pats = List(p"X", p"Y")
+    assert(p"(..$pats)".show[Syntax] === "(X, Y)")
+    assert(p"${pats.head}".show[Syntax] === "X")
+  }
 
 //  test("p\"$ref[..$tpes](..$apats)\"") {
 //    val ref = q"x"
