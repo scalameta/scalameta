@@ -8,7 +8,7 @@ import org.scalameta.invariants._
 
 @root trait Expansion
 object Expansion {
-  @leaf object Identity extends Expansion
+  @leaf object Zero extends Expansion
   @leaf class Desugaring(term: Term) extends Expansion
 }
 

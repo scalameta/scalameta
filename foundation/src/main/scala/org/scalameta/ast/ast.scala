@@ -148,7 +148,7 @@ class AstMacros(val c: Context) {
         stats1 += q"""
           def typing: _root_.scala.meta.internal.semantic.Typing = {
             if (internalTyping != null) internalTyping
-            else $SemanticInternal.Typing.Unknown
+            else $SemanticInternal.Typing.Zero
           }
         """
       } else {
@@ -165,7 +165,7 @@ class AstMacros(val c: Context) {
         stats1 += q"""
           def expansion: _root_.scala.meta.internal.semantic.Expansion = {
             if (internalExpansion != null) internalExpansion
-            else $SemanticInternal.Expansion.Identity
+            else $SemanticInternal.Expansion.Zero
           }
         """
       } else {
