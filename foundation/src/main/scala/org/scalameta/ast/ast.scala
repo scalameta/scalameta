@@ -384,8 +384,8 @@ class AstMacros(val c: Context) {
           // astats1 += q"@_root_.scala.inline final def get = $getBody"
           // unapplyParams.zipWithIndex.foreach({ case (p, i) => astats1 += q"@_root_.scala.inline final def ${TermName("_" + (i + 1))} = this.${p.name}" })
           // mstats1 += q"@_root_.scala.inline final def unapply(x: $name): $name = x"
-          val successTargs = tq"(..${unapplyParamss.head.map(p => p.tpt)})"
-          val successArgs = q"(..${unapplyParamss.head.map(p => q"x.${p.name}")})"
+          val successTargs = tq"(..${unapplyParams.map(p => p.tpt)})"
+          val successArgs = q"(..${unapplyParams.map(p => q"x.${p.name}")})"
           mstats1 += q"@_root_.scala.inline final def unapply(x: $iname): Option[$successTargs] = if (x == null) _root_.scala.None else _root_.scala.Some($successArgs)"
         } else {
           mstats1 += q"@_root_.scala.inline final def unapply(x: $iname): Boolean = true"

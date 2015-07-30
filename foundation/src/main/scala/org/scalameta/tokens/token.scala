@@ -39,7 +39,7 @@ class TokenMacros(val c: Context) {
       def mmods1 = mmods.mapAnnotations(_ => manns1.toList)
 
       // step 1: generate boilerplate required by the @adt infrastructure
-      anns1 += q"new $Adt.leaf"
+      anns1 += q"new $Adt.leaf(toString = false)"
       anns1 += q"new $TokenInternal.tokenClass"
       manns1 += q"new $TokenInternal.tokenCompanion"
 
