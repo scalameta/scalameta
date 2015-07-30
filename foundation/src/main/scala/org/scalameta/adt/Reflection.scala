@@ -27,13 +27,14 @@ trait Reflection {
     }
     def isPayload: Boolean = sym.isField && !sym.isAuxiliary
     def isAuxiliary: Boolean = sym.isField && hasAnnotation[AstInternal.auxiliary]
+    def isDelayed: Boolean = sym.isField && hasAnnotation[AdtInternal.delayedField]
     def asAdt: Adt = if (isRoot) sym.asRoot else if (isBranch) sym.asBranch else if (isLeaf) sym.asLeaf else sys.error("not an adt")
     def asRoot: Root = new Root(sym)
     def asBranch: Branch = new Branch(sym)
     def asLeaf: Leaf = new Leaf(sym)
     def asField: Field = new Field(sym)
   }
-  
+
   protected def figureOutDirectSubclasses(sym: ClassSymbol): List[Symbol] = {
     if (sym.isSealed) sym.knownDirectSubclasses.toList.sortBy(_.fullName)
     else sys.error(s"failed to figure out direct subclasses for ${sym.fullName}")
@@ -90,6 +91,7 @@ trait Reflection {
     def tpe: Type = sym.info.finalResultType
     def isPayload: Boolean = sym.isPayload
     def isAuxiliary: Boolean = sym.isAuxiliary
+    def isDelayed: Boolean = sym.isDelayed
     override def toString = s"field ${owner.prefix}.$name: $tpe" + (if (isAuxiliary) " (auxiliary)" else "")
   }
 }

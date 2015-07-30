@@ -9,7 +9,7 @@ import org.scalameta.invariants._
 @root trait Typing
 object Typing {
   @leaf object Unknown extends Typing
-  @leaf class Known(tpe: Type.Arg) extends Typing
+  @leaf class Known(tpe: Type.Arg @delayed) extends Typing
 }
 
 // TODO: This unrelated code is here because of the limitation of knownDirectSubclasses.
