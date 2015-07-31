@@ -418,6 +418,7 @@ private[meta] trait Api {
         case impl.Pat.Type.Compound(tpes, _) => tpes.flatMap(membersOfPatType)
         case impl.Pat.Type.Existential(tpe, _) => membersOfPatType(tpe)
         case impl.Pat.Type.Annotate(tpe, _) => membersOfPatType(tpe)
+        case impl.Pat.Type.Lambda(_, tpe) => membersOfPatType(tpe)
         case impl.Type.Placeholder(_) => Nil
         case _: impl.Lit => Nil
       }
@@ -624,6 +625,7 @@ private[meta] trait Api {
         case impl.Type.Existential(tpe, quants) => impl.Pat.Type.Existential(loop(tpe), quants)
         case impl.Type.Annotate(tpe, annots) => impl.Pat.Type.Annotate(loop(tpe), annots)
         case tpe: impl.Type.Placeholder => tpe
+        case impl.Type.Lambda(tparams, tpe) => impl.Pat.Type.Lambda(tparams, loop(tpe))
         case tpe: impl.Lit => tpe
       }
       loop(tree.require[impl.Type])
@@ -647,6 +649,7 @@ private[meta] trait Api {
         case impl.Pat.Type.Compound(tpes, refinement) => impl.Type.Compound(tpes.map(loop), refinement)
         case impl.Pat.Type.Existential(tpe, quants) => impl.Type.Existential(loop(tpe), quants)
         case impl.Pat.Type.Annotate(tpe, annots) => impl.Type.Annotate(loop(tpe), annots)
+        case impl.Pat.Type.Lambda(tparams, tpe) => impl.Type.Lambda(tparams, loop(tpe))
         case tpe: impl.Lit => tpe
       }
       loop(tree.require[impl.Pat.Type])
