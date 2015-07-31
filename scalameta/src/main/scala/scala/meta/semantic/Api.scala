@@ -28,10 +28,6 @@ private[meta] trait Api {
     @hosted def tpe: Type = implicitly[SemanticContext].tpe(tree)
   }
 
-  implicit class XtensionSemanticTypeTpe(tree: Type) {
-    @hosted def tpe: Type = tree
-  }
-
   implicit class XtensionSemanticMemberTpe(tree: Member) {
     @hosted private def SeqRef: impl.Type.Name = {
       val iScala = s.Symbol.Global(s.Symbol.RootPackage, "scala", s.Signature.Term)
