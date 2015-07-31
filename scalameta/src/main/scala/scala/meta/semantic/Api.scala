@@ -40,13 +40,22 @@ private[meta] trait Api {
       case impl.Type.Arg.Repeated(tpe) => tpe
       case tpe: impl.Type => tpe
     }
+    @hosted private def methodType(tparams: Seq[Type.Param], paramss: Seq[Seq[Term.Param]], ret: Type): Type = {
+      if (tparams.nonEmpty) {
+        val monoret = methodType(Nil, paramss, ret.require[impl.Type]).require[impl.Type]
+        impl.Type.Lambda(tparams.require[Seq[impl.Type.Param]], monoret)
+      } else paramss.foldRight(ret.require[impl.Type])((params, acc) => {
+        val paramtypes = params.map(p => implicitly[SemanticContext].tpe(p).require[impl.Type.Arg])
+        impl.Type.Function(paramtypes, acc)
+      })
+    }
     @hosted def tpe: Type = tree.require[impl.Member] match {
       case tree: impl.Pat.Var.Term => tree.name.tpe
       case tree: impl.Pat.Var.Type => tree.name
-      case tree: impl.Decl.Def => tree.decltpe
+      case tree: impl.Decl.Def => methodType(tree.tparams, tree.paramss, tree.decltpe)
       case tree: impl.Decl.Type => tree.name
-      case tree: impl.Defn.Def => tree.decltpe.getOrElse(tree.body.tpe)
-      case tree: impl.Defn.Macro => tree.tpe
+      case tree: impl.Defn.Def => methodType(tree.tparams, tree.paramss, tree.decltpe.getOrElse(tree.body.tpe))
+      case tree: impl.Defn.Macro => methodType(tree.tparams, tree.paramss, tree.decltpe)
       case tree: impl.Defn.Type => tree.name
       case tree: impl.Defn.Class => tree.name
       case tree: impl.Defn.Trait => tree.name
