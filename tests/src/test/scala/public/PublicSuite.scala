@@ -124,7 +124,7 @@ class PublicSuite extends FunSuite {
       import scala.meta.internal.{ast => impl}
       t"List".tpe: api.Type
       t"List[Int]".tpe: api.Type
-    """) === "")
+    """) === "value tpe is not a member of scala.meta.Type")
   }
 
   test("Term.tpe") {

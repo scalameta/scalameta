@@ -217,6 +217,7 @@ package scala.meta.internal.ast {
     }
     @ast class Annotate(tpe: Type, annots: Seq[Mod.Annot] @nonEmpty) extends Type
     @ast class Placeholder(bounds: Bounds) extends Type with Pat.Type
+    @ast class Lambda(quants: Seq[Type.Param], tpe: Type) extends Type
     @ast class Bounds(lo: Option[Type], hi: Option[Type]) extends Tree
     @branch trait Arg extends api.Type.Arg with Tree
     object Arg {
@@ -315,6 +316,7 @@ package scala.meta.internal.ast {
         require(quants.forall(_.isExistentialStat))
       }
       @ast class Annotate(tpe: Pat.Type, annots: Seq[Mod.Annot] @nonEmpty) extends Pat.Type
+      @ast class Lambda(quants: Seq[impl.Type.Param], tpe: Pat.Type) extends Pat.Type
     }
   }
 

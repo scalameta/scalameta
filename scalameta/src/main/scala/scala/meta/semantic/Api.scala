@@ -28,10 +28,6 @@ private[meta] trait Api {
     @hosted def tpe: Type = implicitly[SemanticContext].tpe(tree)
   }
 
-  implicit class XtensionSemanticTypeTpe(tree: Type) {
-    @hosted def tpe: Type = tree
-  }
-
   implicit class XtensionSemanticMemberTpe(tree: Member) {
     @hosted private def SeqRef: impl.Type.Name = {
       val iScala = s.Symbol.Global(s.Symbol.RootPackage, "scala", s.Signature.Term)
@@ -44,13 +40,22 @@ private[meta] trait Api {
       case impl.Type.Arg.Repeated(tpe) => tpe
       case tpe: impl.Type => tpe
     }
+    @hosted private def methodType(tparams: Seq[Type.Param], paramss: Seq[Seq[Term.Param]], ret: Type): Type = {
+      if (tparams.nonEmpty) {
+        val monoret = methodType(Nil, paramss, ret.require[impl.Type]).require[impl.Type]
+        impl.Type.Lambda(tparams.require[Seq[impl.Type.Param]], monoret)
+      } else paramss.foldRight(ret.require[impl.Type])((params, acc) => {
+        val paramtypes = params.map(p => implicitly[SemanticContext].tpe(p).require[impl.Type.Arg])
+        impl.Type.Function(paramtypes, acc)
+      })
+    }
     @hosted def tpe: Type = tree.require[impl.Member] match {
       case tree: impl.Pat.Var.Term => tree.name.tpe
       case tree: impl.Pat.Var.Type => tree.name
-      case tree: impl.Decl.Def => tree.decltpe
+      case tree: impl.Decl.Def => methodType(tree.tparams, tree.paramss, tree.decltpe)
       case tree: impl.Decl.Type => tree.name
-      case tree: impl.Defn.Def => tree.decltpe.getOrElse(tree.body.tpe)
-      case tree: impl.Defn.Macro => tree.tpe
+      case tree: impl.Defn.Def => methodType(tree.tparams, tree.paramss, tree.decltpe.getOrElse(tree.body.tpe))
+      case tree: impl.Defn.Macro => methodType(tree.tparams, tree.paramss, tree.decltpe)
       case tree: impl.Defn.Type => tree.name
       case tree: impl.Defn.Class => tree.name
       case tree: impl.Defn.Trait => tree.name
@@ -418,6 +423,7 @@ private[meta] trait Api {
         case impl.Pat.Type.Compound(tpes, _) => tpes.flatMap(membersOfPatType)
         case impl.Pat.Type.Existential(tpe, _) => membersOfPatType(tpe)
         case impl.Pat.Type.Annotate(tpe, _) => membersOfPatType(tpe)
+        case impl.Pat.Type.Lambda(_, tpe) => membersOfPatType(tpe)
         case impl.Type.Placeholder(_) => Nil
         case _: impl.Lit => Nil
       }
@@ -624,6 +630,7 @@ private[meta] trait Api {
         case impl.Type.Existential(tpe, quants) => impl.Pat.Type.Existential(loop(tpe), quants)
         case impl.Type.Annotate(tpe, annots) => impl.Pat.Type.Annotate(loop(tpe), annots)
         case tpe: impl.Type.Placeholder => tpe
+        case impl.Type.Lambda(tparams, tpe) => impl.Pat.Type.Lambda(tparams, loop(tpe))
         case tpe: impl.Lit => tpe
       }
       loop(tree.require[impl.Type])
@@ -647,6 +654,7 @@ private[meta] trait Api {
         case impl.Pat.Type.Compound(tpes, refinement) => impl.Type.Compound(tpes.map(loop), refinement)
         case impl.Pat.Type.Existential(tpe, quants) => impl.Type.Existential(loop(tpe), quants)
         case impl.Pat.Type.Annotate(tpe, annots) => impl.Type.Annotate(loop(tpe), annots)
+        case impl.Pat.Type.Lambda(tparams, tpe) => impl.Type.Lambda(tparams, loop(tpe))
         case tpe: impl.Lit => tpe
       }
       loop(tree.require[impl.Pat.Type])
