@@ -140,11 +140,13 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
           val mstats = lstats.toMtrees[m.Stat]
           m.Template(mearly, mparents, mself, Some(mstats))
         case l.Parent(ltpt, lctor, largss) =>
-          // TODO: how do we assign tpes to mctor and also to the successive results of the foldLeft below?
           val mtpt = ltpt.toMtree[m.Type]
           val mctor = mtpt.ctorRef(lctor.toMtree[m.Ctor.Name]).require[m.Term]
           val margss = largss.toMtreess[m.Term.Arg]
-          margss.foldLeft(mctor)((mcurr, margs) => m.Term.Apply(mcurr, margs))
+          margss.foldLeft(mctor)((mcurr, margs) => {
+            val app = m.Term.Apply(mcurr, margs)
+            app.withTyping(mcurr.typing.map{ case m.Type.Function(_, ret) => ret })
+          })
         case l.SelfDef(lname, ltpt) =>
           val mname = lname.toMtree[m.Term.Param.Name]
           val mtpt = if (ltpt.nonEmpty) Some(ltpt.toMtree[m.Type]) else None

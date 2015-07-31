@@ -25,7 +25,7 @@ trait LogicalTrees {
   // It turns out that it's really easy to turn the converter into spaghetti,
   // so we need to be vigilant towards this danger. The approach that I like the most for now
   // is to split the converter into: 1) LogicalTrees, 2) ToMtree.
-  // The former is this later, the latter is a trivial pattern match of the form:
+  // The former is this file, the latter is a trivial pattern match of the form:
   // `case l.Something(a, b, c) => m.Something(convert(a), convert(b), convert(c))`.
   //
   // Now there can be multiple ways of exposing the extractors for ToMtree,
@@ -355,8 +355,7 @@ trait LogicalTrees {
     object CtorName {
       def apply(ctorDef: g.DefDef, classDef: g.ImplDef): l.CtorName = {
         require(ctorDef.name == nme.CONSTRUCTOR)
-        val gtpe = ctorDef.symbol.info.finalResultType
-        l.CtorName(ctorDef.denot, classDef.displayName).setType(gtpe)
+        l.CtorName(ctorDef.denot, classDef.displayName).setType(ctorDef.symbol.info)
       }
     }
 
@@ -374,8 +373,7 @@ trait LogicalTrees {
         // simply go for the owner of the symbol.
         // val lpre = ctorRef.qualifier.tpe.prefix.orElse(g.NoPrefix)
         val ldenot = l.Denotation(ctorSym.owner.prefix, ctorSym)
-        val gtpe = ctorSym.info.finalResultType
-        val lname = l.CtorName(ldenot, classRef.displayName).setType(gtpe)
+        val lname = l.CtorName(ldenot, classRef.displayName).setType(ctorSym.info)
         val lresult = l.CtorIdent(lname)
         lname.setParent(lresult)
         lresult

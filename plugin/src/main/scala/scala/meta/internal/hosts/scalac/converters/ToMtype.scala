@@ -135,16 +135,11 @@ trait ToMtype extends GlobalToolkit with MetaToolkit {
             case EtaReduce(tpe) =>
               tpe.toMtype
             case _ =>
-              // NOTE: `[A]T` is represented as `({ type λ[A] = T })#λ`
-              // NOTE: it's good that we cache the gtpe => ptpe conversion
-              // because otherwise, when repeatedly faced with the same polytype, we'd keep on churning out new ssymbols
-              // and those would not compare equal on the scala.meta side
-              val ssymbol = s.Symbol.Local(randomUUID().toString)
-              val mname = m.Type.Name("λ").withDenot(s.Prefix.Zero, ssymbol)
-              val mtparams = tparams.toLogical.map(_.toMmember(g.NoPrefix).require[m.Type.Param])
-              val mlambda = m.Defn.Type(Nil, mname, mtparams, ret.toMtype)
-              m.Type.Project(m.Type.Compound(Nil, List(mlambda)), mname)
+              val mquants = tparams.toLogical.map(_.toMmember(g.NoPrefix).require[m.Type.Param])
+              m.Type.Lambda(mquants, ret.toMtype)
           }
+        case tpe @ g.MethodType(params, ret) =>
+          m.Type.Function(params.map(_.tpe.toMtypeArg), ret.toMtype)
         case _ =>
           throw new ConvertException(gtpe, s"unsupported type $gtpe, designation = ${gtpe.getClass}, structure = ${g.showRaw(gtpe, printIds = true, printTypes = true)}")
       }
