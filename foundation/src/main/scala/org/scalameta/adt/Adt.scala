@@ -149,14 +149,16 @@ class AdtMacros(val c: Context) {
       def delay(mods: Modifiers) = Modifiers(mods.flags, mods.privateWithin, mods.annotations :+ q"new $Internal.delayedField")
       def finalize(mods: Modifiers) = Modifiers(mods.flags | FINAL, mods.privateWithin, mods.annotations)
       def varify(mods: Modifiers) = Modifiers(mods.flags | MUTABLE, mods.privateWithin, mods.annotations)
-      def needs(name: String) = {
+      def needs(name: Name) = {
         val q"new $_(...$argss).macroTransform(..$_)" = c.macroApplication
         val banIndicator = argss.flatten.find {
-          case AssignOrNamedArg(Ident(TermName(`name`)), Literal(Constant(false))) => true
+          case AssignOrNamedArg(Ident(TermName(param)), Literal(Constant(false))) => param == name.toString
           case _ => false
         }
         val ban = banIndicator.map(_ => true).getOrElse(false)
-        !ban
+        val presenceIndicator = stats.collectFirst { case mdef: MemberDef if mdef.name == name => mdef }
+        val present = presenceIndicator.map(_ => true).getOrElse(false)
+        !ban && !present
       }
 
       object VanillaParam {
@@ -232,13 +234,13 @@ class AdtMacros(val c: Context) {
       parents1 += tq"_root_.scala.Product"
 
       // step 4: implement Object
-      if (needs("toString")) {
+      if (needs(TermName("toString"))) {
         stats1 += q"override def toString: _root_.scala.Predef.String = _root_.scala.runtime.ScalaRunTime._toString(this)"
       }
-      if (needs("hashCode")) {
+      if (needs(TermName("hashCode"))) {
         stats1 += q"override def hashCode: _root_.scala.Int = _root_.scala.runtime.ScalaRunTime._hashCode(this)"
       }
-      if (needs("equals")) {
+      if (needs(TermName("equals"))) {
         stats1 += q"override def canEqual(other: _root_.scala.Any): _root_.scala.Boolean = other.isInstanceOf[$name]"
         stats1 += q"""
           override def equals(other: _root_.scala.Any): _root_.scala.Boolean = (
@@ -248,7 +250,7 @@ class AdtMacros(val c: Context) {
       }
 
       // step 5: implement Product
-      if (needs("product")) {
+      if (needs(TermName("product"))) {
         val productParamss = paramss.map(_.map(_.duplicate))
         stats1 += q"override def productPrefix: _root_.scala.Predef.String = ${name.toString}"
         stats1 += q"override def productArity: _root_.scala.Int = ${paramss.head.length}"
@@ -260,7 +262,7 @@ class AdtMacros(val c: Context) {
       }
 
       // step 6: generate copy
-      if (needs("copy")) {
+      if (needs(TermName("copy"))) {
         val copyParamss = paramss.map(_.map({
           case VanillaParam(mods, name, tpt, default) => q"$mods val $name: $tpt = this.$name"
           // TODO: This doesn't compile, producing nonsensical errors
@@ -278,7 +280,7 @@ class AdtMacros(val c: Context) {
       }
 
       // step 7: generate Companion.apply
-      if (needs("apply")) {
+      if (needs(TermName("apply"))) {
         val applyParamss = paramss.map(_.map({
           case VanillaParam(mods, name, tpt, default) => q"$mods val $name: $tpt = $default"
           case DelayedParam(mods, name, tpt, default) => q"$mods val $name: ${bynameTpt(tpt)} = $default"
@@ -292,7 +294,7 @@ class AdtMacros(val c: Context) {
 
       // step 8: generate Companion.unapply
       // TODO: go for name-based pattern matching once blocking bugs (e.g. SI-9029) are fixed
-      if (needs("unapply")) {
+      if (needs(TermName("unapply"))) {
         val unapplyParamss = paramss.map(_.map(undelay))
         val unapplyParams = unapplyParamss.head
         if (unapplyParams.length != 0) {
