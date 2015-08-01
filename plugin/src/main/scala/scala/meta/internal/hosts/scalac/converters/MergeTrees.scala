@@ -103,7 +103,8 @@ object mergeTrees {
               //    * Convert it to AnyRef, if it's Any
               //    * Prepend tpe.firstParent to the list, otherwise
               val meparents = (sy.parents, se.parents) match {
-                case (Seq(), Seq(m.Term.Apply(anyRef: m.Term.Ref, Nil))) if anyRef.defn == t"AnyRef".ctor =>
+                case (Seq(), Seq(m.Term.Apply(anyRef: m.Term.Ref, Nil)))
+                if anyRef.source == t"AnyRef".ctor.source =>
                   Seq()
                 case _ =>
                   apply(sy.parents, se.parents)
