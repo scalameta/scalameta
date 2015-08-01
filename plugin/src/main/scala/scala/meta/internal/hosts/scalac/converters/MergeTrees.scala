@@ -109,7 +109,11 @@ object mergeTrees {
                 case _ =>
                   apply(sy.parents, se.parents)
               }
-              sy.copy(apply(sy.early, se.early), meparents, apply(sy.self, se.self), apply(sy.stats, se.stats))
+              val mestats = (sy.stats, se.stats) match {
+                case (None, Some(Nil)) => None
+                case (sys, ses) => apply(sys, ses)
+              }
+              sy.copy(apply(sy.early, se.early), meparents, apply(sy.self, se.self), mestats)
 
             // ============ MODIFIERS ============
 
