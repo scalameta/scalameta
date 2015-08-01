@@ -112,13 +112,13 @@ object DenotationMapResult {
   implicit object SymbolIsResult extends DenotationMapResult[Symbol] {
     def extract(x: Symbol) = (None, Some(List(x)))
   }
-  implicit object SymbolsIsResult extends DenotationMapResult[Seq[Symbol]] {
-    def extract(x: Seq[Symbol]) = (None, Some(x))
+  implicit def SymbolsIsResult[T <: Seq[Symbol]] = new DenotationMapResult[T] {
+    def extract(x: T) = (None, Some(x))
   }
   implicit object PrefixSymbolIsResult extends DenotationMapResult[(Prefix, Symbol)] {
     def extract(x: (Prefix, Symbol)) = (Some(x._1), Some(List(x._2)))
   }
-  implicit object PrefixSymbolsIsResult extends DenotationMapResult[(Prefix, Seq[Symbol])] {
-    def extract(x: (Prefix, Seq[Symbol])) = (Some(x._1), Some(x._2))
+  implicit def PrefixSymbolsIsResult[T <: Seq[Symbol]] = new DenotationMapResult[(Prefix, T)] {
+    def extract(x: (Prefix, T)) = (Some(x._1), Some(x._2))
   }
 }
