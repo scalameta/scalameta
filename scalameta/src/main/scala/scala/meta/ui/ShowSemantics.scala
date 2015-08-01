@@ -119,6 +119,7 @@ object Semantics {
         case x: String => enquote(x, DoubleQuotes)
         case x: api.Tree => body(x)
         case x: Nil.type => "Nil"
+        case el @ List(List()) => "List(List())"
         case x: List[_] => "List(" + x.map(whole).mkString(", ") + ")"
         case x: None.type => "None"
         case x: Some[_] => "Some(" + whole(x.get) + ")"

@@ -32,6 +32,7 @@ object Positions {
         case el: String => s(enquote(el, DoubleQuotes).colored(color))
         case el: Tree => loopTree(el)
         case el: Nil.type => s("Nil".colored(color))
+        case el @ List(List()) => s("List(List())".colored(color))
         case el: ::[_] => s("List(".colored(color), r(el.map(el => loopField(el, color)), ", ".colored(color)), ")".colored(color))
         case el: None.type => s("None".colored(color))
         case el: Some[_] => s("Some(".colored(color), loopField(el.get, color), ")".colored(color))
