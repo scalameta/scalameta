@@ -43,20 +43,20 @@ object mergeTrees {
             // ============ TERMS ============
 
             case (sy: m.Term.This, se: m.Term.This) =>
-              sy.copy(apply(sy.qual, se.qual))
+              sy.copy(loop(sy.qual, se.qual))
             case (sy: m.Term.Name, se: m.Term.Name) =>
               sy.copy()
             case (sy: m.Term.Apply, se: m.Term.Apply) =>
-              sy.copy(apply(sy.fun, se.fun), apply(sy.args, se.args))
+              sy.copy(loop(sy.fun, se.fun), loop(sy.args, se.args))
             case (sy: m.Term.Param, se: m.Term.Param) =>
-              sy.copy(apply(sy.mods, se.mods), apply(sy.name, se.name), apply(sy.decltpe, se.decltpe), apply(sy.default, se.default))
+              sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), loop(sy.decltpe, se.decltpe), loop(sy.default, se.default))
 
             // ============ TYPES ============
 
             case (sy: m.Type.Name, se: m.Type.Name) =>
               sy.copy()
             case (sy: m.Type.Select, se: m.Type.Select) =>
-              sy.copy(apply(sy.qual, se.qual), apply(sy.name, se.name))
+              sy.copy(loop(sy.qual, se.qual), loop(sy.name, se.name))
 
             // ============ PATTERNS ============
 
@@ -67,16 +67,16 @@ object mergeTrees {
             // ============ DEFNS ============
 
             case (sy: m.Defn.Def, se: m.Defn.Def) =>
-              sy.copy(apply(sy.mods, se.mods), apply(sy.name, se.name), apply(sy.tparams, se.tparams), apply(sy.paramss, se.paramss), apply(sy.decltpe, se.decltpe), apply(sy.body, se.body))
+              sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), loop(sy.tparams, se.tparams), loop(sy.paramss, se.paramss), loop(sy.decltpe, se.decltpe), loop(sy.body, se.body))
             case (sy: m.Defn.Class, se: m.Defn.Class) =>
-              sy.copy(apply(sy.mods, se.mods), apply(sy.name, se.name), apply(sy.tparams, se.tparams), apply(sy.ctor, se.ctor), apply(sy.templ, se.templ))
+              sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), loop(sy.tparams, se.tparams), loop(sy.ctor, se.ctor), loop(sy.templ, se.templ))
 
             // ============ PKGS ============
 
             case (sy: m.Source, se: m.Source) =>
-              sy.copy(apply(sy.stats, se.stats))
+              sy.copy(loop(sy.stats, se.stats))
             case (sy: m.Pkg, se: m.Pkg) =>
-              sy.copy(apply(sy.ref, se.ref), apply(sy.stats, se.stats))
+              sy.copy(loop(sy.ref, se.ref), loop(sy.stats, se.stats))
 
             // ============ CTORS ============
 
@@ -84,13 +84,13 @@ object mergeTrees {
               // NOTE: scala.reflect irreversibly desugars nullary constructors into empty-arglist ones
               val meparamss = {
                 if (sy.paramss == Seq() && se.paramss == Seq(Seq())) Seq()
-                else apply(sy.paramss, se.paramss)
+                else loop(sy.paramss, se.paramss)
               }
-              sy.copy(apply(sy.mods, se.mods), apply(sy.name, se.name), meparamss)
+              sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), meparamss)
             case (sy: m.Ctor.Ref.Name, se: m.Ctor.Ref.Name) =>
               sy.copy()
             case (sy: m.Ctor.Ref.Select, se: m.Ctor.Ref.Select) =>
-              sy.copy(apply(sy.qual, se.qual), apply(sy.name, se.name))
+              sy.copy(loop(sy.qual, se.qual), loop(sy.name, se.name))
 
             // ============ TEMPLATES ============
 
@@ -107,13 +107,13 @@ object mergeTrees {
                 if anyRef.source == t"AnyRef".ctor.source =>
                   Seq()
                 case _ =>
-                  apply(sy.parents, se.parents)
+                  loop(sy.parents, se.parents)
               }
               val mestats = (sy.stats, se.stats) match {
                 case (None, Some(Nil)) => None
-                case (sys, ses) => apply(sys, ses)
+                case (sys, ses) => loop(sys, ses)
               }
-              sy.copy(apply(sy.early, se.early), meparents, apply(sy.self, se.self), mestats)
+              sy.copy(loop(sy.early, se.early), meparents, loop(sy.self, se.self), mestats)
 
             // ============ MODIFIERS ============
 
