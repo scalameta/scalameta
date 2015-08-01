@@ -682,10 +682,8 @@ private[meta] trait Api {
             else None
           }
         }
-        def adjustValue(ctor: impl.Ctor.Name, value: String) = {
-          impl.Ctor.Name(value).withDenot(ctor.denot).withTyping(ctor.typing)
-        }
-        tpe match {
+        def adjustValue(ctor: impl.Ctor.Name, value: String) = impl.Ctor.Name(value).withDenot(ctor.denot)
+        val result = tpe match {
           case impl.Type.Name(value) => adjustValue(ctor, value)
           case impl.Type.Select(qual, impl.Type.Name(value)) => impl.Ctor.Ref.Select(qual, adjustValue(ctor, value))
           case impl.Type.Project(qual, impl.Type.Name(value)) => impl.Ctor.Ref.Project(qual, adjustValue(ctor, value))
@@ -695,6 +693,7 @@ private[meta] trait Api {
           case impl.Type.ApplyInfix(lhs, op, rhs) => impl.Term.ApplyType(loop(op, ctor), List(lhs, rhs))
           case _ => unreachable(debug(tree, tree.show[Structure], tpe, tpe.show[Structure]))
         }
+        result.withTyping(scala.util.Try(s.Typing.Specified(tpe.members(ctor.defn).tpe)).getOrElse(s.Typing.Zero))
       }
       // TODO: if we uncomment this, that'll lead to a stackoverflow in scalahost
       // it's okay, but at least we could verify that ctor's prefix is coherent with tree
