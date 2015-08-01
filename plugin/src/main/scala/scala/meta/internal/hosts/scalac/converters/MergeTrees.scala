@@ -79,7 +79,12 @@ object mergeTrees {
             // ============ CTORS ============
 
             case (sy: m.Ctor.Primary, se: m.Ctor.Primary) =>
-              sy.copy(apply(sy.mods, se.mods), apply(sy.name, se.name), apply(sy.paramss, se.paramss))
+              // NOTE: scala.reflect irreversibly desugars nullary constructors into empty-arglist ones
+              val meparamss = {
+                if (sy.paramss == Nil && se.paramss == List(List())) Nil
+                else apply(sy.paramss, se.paramss)
+              }
+              sy.copy(apply(sy.mods, se.mods), apply(sy.name, se.name), meparamss)
             case (sy: m.Ctor.Ref.Name, se: m.Ctor.Ref.Name) =>
               sy.copy()
             case (sy: m.Ctor.Ref.Select, se: m.Ctor.Ref.Select) =>
