@@ -83,10 +83,14 @@ class AdtMacros(val c: Context) {
         if anns.exists({ case q"new someLeaf" => true; case _ => false }) =>
           tpt
       }
-      val contentType = contentTypes match {
+      var contentType = contentTypes match {
         case Nil => c.abort(cdef.pos, s"no @someLeaf classes found in $name's companion object")
         case List(contentType) => contentType
         case _ => c.abort(cdef.pos, s"multiple @someLeaf classes found in $name's companion object")
+      }
+      contentType = contentType match {
+        case Annotated(_, contentType) => contentType
+        case contentType => contentType
       }
       stats1 += q"type ContentType = $mname.ContentType"
       mstats1 += q"type ContentType = $contentType"
