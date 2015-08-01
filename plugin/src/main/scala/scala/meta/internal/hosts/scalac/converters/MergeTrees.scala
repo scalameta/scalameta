@@ -102,12 +102,20 @@ object mergeTrees {
               // 4) If the first parent in the list is a trait, then:
               //    * Convert it to AnyRef, if it's Any
               //    * Prepend tpe.firstParent to the list, otherwise
+              // 5) If a parent is applied to a nullary argument list, make it empty argument list.
+              def mergeParents(syps: Seq[m.Term], seps: Seq[m.Term]): Seq[m.Term] = {
+                if (syps.length != seps.length) fails(sy, se, syps, seps)
+                syps.zip(seps).map({
+                  case (syp, m.Term.Apply(sep, Nil)) => loop(syp, sep)
+                  case (syp, sep) => loop(syp, sep)
+                })
+              }
               val meparents = (sy.parents, se.parents) match {
                 case (Seq(), Seq(m.Term.Apply(anyRef: m.Term.Ref, Nil)))
                 if anyRef.source == t"AnyRef".ctor.source =>
                   Seq()
                 case _ =>
-                  loop(sy.parents, se.parents)
+                  mergeParents(sy.parents, se.parents)
               }
               val mestats = (sy.stats, se.stats) match {
                 case (None, Some(Nil)) => None
