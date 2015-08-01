@@ -30,10 +30,10 @@ private[meta] trait Api {
 
   implicit class XtensionSemanticMemberTpe(tree: Member) {
     @hosted private def SeqRef: impl.Type.Name = {
-      val iScala = s.Symbol.Global(s.Symbol.RootPackage, "scala", s.Signature.Term)
-      val iCollection = s.Symbol.Global(iScala, "collection", s.Signature.Term)
-      val iSeq = s.Symbol.Global(iCollection, "Seq", s.Signature.Type)
-      impl.Type.Name("Seq").withDenot(s.Prefix.Zero, iSeq)
+      val sScala = s.Symbol.Global(s.Symbol.RootPackage, "scala", s.Signature.Term)
+      val sCollection = s.Symbol.Global(sScala, "collection", s.Signature.Term)
+      val sSeq = s.Symbol.Global(sCollection, "Seq", s.Signature.Type)
+      impl.Type.Name("Seq").withDenot(s.Prefix.Zero, sSeq)
     }
     @hosted private def dearg(tpe: Type.Arg): Type = tpe.require[impl.Type.Arg] match {
       case impl.Type.Arg.ByName(tpe) => impl.Type.Apply(SeqRef, List(tpe))
@@ -48,6 +48,14 @@ private[meta] trait Api {
         val paramtypes = params.map(p => implicitly[SemanticContext].tpe(p).require[impl.Type.Arg])
         impl.Type.Function(paramtypes, acc)
       })
+    }
+    @hosted private def ctorType(owner: Member, paramss: Seq[Seq[Term.Param]]): Type = {
+      val tparams = owner.tparams
+      val ret = {
+        if (tparams.nonEmpty) impl.Type.Apply(owner.tpe.require[impl.Type], tparams.map(_.name.require[impl.Type.Name]))
+        else owner.tpe
+      }
+      methodType(tparams, paramss, ret)
     }
     @hosted def tpe: Type = tree.require[impl.Member] match {
       case tree: impl.Pat.Var.Term => tree.name.tpe
@@ -66,8 +74,8 @@ private[meta] trait Api {
       case tree: impl.Term.Param if tree.parent.map(_.isInstanceOf[impl.Template]).getOrElse(false) => ??? // TODO: don't forget to intersect with the owner type
       case tree: impl.Term.Param => dearg(implicitly[SemanticContext].tpe(tree))
       case tree: impl.Type.Param => tree.name.require[Type.Name]
-      case tree: impl.Ctor.Primary => tree.owner.require[meta.Member].tpe
-      case tree: impl.Ctor.Secondary => tree.owner.require[meta.Member].tpe
+      case tree: impl.Ctor.Primary => ctorType(tree.owner.require[Member], tree.paramss)
+      case tree: impl.Ctor.Secondary => ctorType(tree.owner.require[Member], tree.paramss)
     }
   }
 
