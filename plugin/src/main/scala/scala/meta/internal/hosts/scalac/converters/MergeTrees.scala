@@ -67,7 +67,11 @@ object mergeTrees {
             // ============ DEFNS ============
 
             case (sy: m.Defn.Def, se: m.Defn.Def) =>
-              sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), loop(sy.tparams, se.tparams), loop(sy.paramss, se.paramss), loop(sy.decltpe, se.decltpe), loop(sy.body, se.body))
+              val medecltpe = (sy.decltpe, se.decltpe) match {
+                case (None, Some(se)) => None
+                case (sy, se) => loop(sy, se)
+              }
+              sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), loop(sy.tparams, se.tparams), loop(sy.paramss, se.paramss), medecltpe, loop(sy.body, se.body))
             case (sy: m.Defn.Class, se: m.Defn.Class) =>
               sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), loop(sy.tparams, se.tparams), loop(sy.ctor, se.ctor), loop(sy.templ, se.templ))
 
@@ -82,9 +86,9 @@ object mergeTrees {
 
             case (sy: m.Ctor.Primary, se: m.Ctor.Primary) =>
               // NOTE: scala.reflect irreversibly desugars nullary constructors into empty-arglist ones
-              val meparamss = {
-                if (sy.paramss == Seq() && se.paramss == Seq(Seq())) Seq()
-                else loop(sy.paramss, se.paramss)
+              val meparamss = (sy.paramss, se.paramss) match {
+                case (Seq(), Seq(Seq())) => Seq()
+                case (syss, sess) => loop(syss, sess)
               }
               sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), meparamss)
             case (sy: m.Ctor.Ref.Name, se: m.Ctor.Ref.Name) =>
@@ -103,19 +107,19 @@ object mergeTrees {
               //    * Convert it to AnyRef, if it's Any
               //    * Prepend tpe.firstParent to the list, otherwise
               // 5) If a parent is applied to a nullary argument list, make it empty argument list.
-              def mergeParents(syps: Seq[m.Term], seps: Seq[m.Term]): Seq[m.Term] = {
-                if (syps.length != seps.length) fails(sy, se, syps, seps)
-                syps.zip(seps).map({
-                  case (syp, m.Term.Apply(sep, Nil)) => loop(syp, sep)
-                  case (syp, sep) => loop(syp, sep)
+              def mergeParents(sys: Seq[m.Term], ses: Seq[m.Term]): Seq[m.Term] = {
+                if (sys.length != ses.length) fails(sy, se, sys, ses)
+                sys.zip(ses).map({
+                  case (sy, m.Term.Apply(se, Nil)) => loop(sy, se)
+                  case (sy, se) => loop(sy, se)
                 })
               }
               val meparents = (sy.parents, se.parents) match {
                 case (Seq(), Seq(m.Term.Apply(anyRef: m.Term.Ref, Nil)))
                 if anyRef.source == t"AnyRef".ctor.source =>
                   Seq()
-                case _ =>
-                  mergeParents(sy.parents, se.parents)
+                case (syss, sess) =>
+                  mergeParents(syss, sess)
               }
               val mestats = (sy.stats, se.stats) match {
                 case (None, Some(Nil)) => None
@@ -213,9 +217,9 @@ object mergeTrees {
         s"($prefix) $details"
       }
       val tail = (sy.parent, se.parent) match {
-        case (Some(syp), Some(sep)) => traceback(syp.require[Tree], sep.require[Tree])
-        case (Some(syp), None) => List("<-...$EOL->")
-        case (None, Some(sep)) => List("<-$EOL->...")
+        case (Some(sy), Some(se)) => traceback(sy.require[Tree], se.require[Tree])
+        case (Some(sy), None) => List("<-...$EOL->")
+        case (None, Some(se)) => List("<-$EOL->...")
         case (None, None) => Nil
       }
       s"<-${summary(sy)}$EOL->${summary(se)}" +: tail
