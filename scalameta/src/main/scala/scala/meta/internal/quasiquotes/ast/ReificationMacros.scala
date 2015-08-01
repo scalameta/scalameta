@@ -355,10 +355,15 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
           else symbol
         }
         val untypedResult = reflectParse(meta.toString)
-        var result = reflectTypecheck(untypedResult)
-        if (result match { case _: SingletonTypeTree => true; case _ => false }) result = SingletonTypeTree(Ident(undealias(result.tpe.termSymbol)))
-        if (result.symbol != undealias(result.symbol)) result = Ident(undealias(result.symbol))
-        result
+        untypedResult match {
+          case Ident(TermName("_empty_")) =>
+            untypedResult.setSymbol(c.mirror.EmptyPackage)
+          case _ =>
+            var result = reflectTypecheck(untypedResult)
+            if (result match { case _: SingletonTypeTree => true; case _ => false }) result = SingletonTypeTree(Ident(undealias(result.tpe.termSymbol)))
+            if (result.symbol != undealias(result.symbol)) result = Ident(undealias(result.symbol))
+            result
+        }
       }
       if (denotDebug) { println("reflect = " + reflect); println(showRaw(reflect, printIds = true)) }
       val meta1 = correlate(meta, reflect)
