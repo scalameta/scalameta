@@ -7,6 +7,7 @@ import scala.collection.immutable.Seq
 import org.scalameta.adt
 import org.scalameta.adt._
 import org.scalameta.invariants._
+import org.scalameta.unreachable
 
 // In our sketch, symbols are split into global and local. Global symbols can be observed from multiple
 // compilation units, so we need a scheme to make observers arrive at the same representation for them.
@@ -39,10 +40,10 @@ object Symbol {
 // However, when comparing trees, we don't have a typechecker, so we need to figure out what else is necessary.
 // Another essential thing apart from symbols is prefixes. Let's hope that this is it.
 
-@root trait Prefix
+@monadicRoot trait Prefix
 object Prefix {
-  @leaf object Zero extends Prefix
-  @leaf class Type(tpe: scala.meta.Type) extends Prefix
+  @noneLeaf object Zero extends Prefix
+  @someLeaf class Type(tpe: scala.meta.Type) extends Prefix
 }
 
 // upd. The bunch of information that should be enough for hygienic comparison?
@@ -50,11 +51,46 @@ object Prefix {
 // Also, hopefully, it's only necessary to define denotations for all names in a tree
 // to guarantee hygienic comparisons and name lookups.
 
-@root trait Denotation { def prefix: Prefix; def symbols: List[Symbol] }
+@root trait Denotation {
+  def prefix: Prefix
+  def symbols: List[Symbol]
+  def map[Result: DenotationMapResult](fn: (Prefix, Symbol) => Result): Denotation
+  def flatMap(fn: (Prefix, Symbol) => Denotation): Denotation
+}
 object Denotation {
-  @leaf object Zero extends Denotation { def prefix = Prefix.Zero; def symbols = Nil; }
-  @leaf class Single(prefix: Prefix, symbol: Symbol) extends Denotation { def symbols = List(symbol) }
-  @leaf class Multi(prefix: Prefix, symbols: List[Symbol]) extends Denotation { require(symbols.length > 1) }
+  @leaf object Zero extends Denotation {
+    def prefix = Prefix.Zero
+    def symbols = Nil
+    def map[Result: DenotationMapResult](fn: (Prefix, Symbol) => Result) = Zero
+    def flatMap(fn: (Prefix, Symbol) => Denotation) = Zero
+  }
+  @branch trait CommonMonadicOps extends Denotation {
+    private def merge(extracts: Seq[(Option[Prefix], Option[Seq[Symbol]])]): Denotation = {
+      val prefixes = extracts.foldLeft(List[Prefix]())((acc, curr) => acc ++ curr._1)
+      val prefix = prefixes.filter(_ != this.prefix) match {
+        case Nil => this.prefix
+        case _ => throw new SemanticException("internal error: don't know how to merge prefixes: $prefixes")
+      }
+      var symbols = extracts.foldLeft(List[Symbol]())((acc, curr) => acc ++ curr._2.getOrElse(Nil))
+      if (symbols.isEmpty) symbols = this.symbols
+      symbols match {
+        case Nil => unreachable
+        case Seq(symbol) => Single(prefix, symbol)
+        case symbols => Multi(prefix, symbols)
+      }
+    }
+    def map[Result: DenotationMapResult](fn: (Prefix, Symbol) => Result) = {
+      val results = this.symbols.map(symbol => fn(this.prefix, symbol))
+      merge(results.map(implicitly[DenotationMapResult[Result]].extract))
+    }
+    def flatMap(fn: (Prefix, Symbol) => Denotation) = {
+      var results = this.symbols.map(symbol => fn(this.prefix, symbol))
+      results = results.filter(_ != Denotation.Zero)
+      merge(results.map(result => (Some(result.prefix), Some(result.symbols))))
+    }
+  }
+  @leaf class Single(prefix: Prefix, symbol: Symbol) extends Denotation with CommonMonadicOps { def symbols = List(symbol) }
+  @leaf class Multi(prefix: Prefix, symbols: List[Symbol]) extends Denotation with CommonMonadicOps { require(symbols.length > 1) }
 }
 
 // TODO: This unrelated code is here because of the limitation of knownDirectSubclasses.
@@ -63,4 +99,26 @@ object Denotation {
 trait DenotationLiftables extends adt.Liftables {
   implicit def liftableSubTree[T <: Tree]: u.Liftable[T]
   lazy implicit val liftableDenotation: u.Liftable[Denotation] = materializeAdt[Denotation]
+}
+
+// TODO: I wish there was a leaner way to achieve static safety for advanced type signatures.
+trait DenotationMapResult[T] {
+  def extract(x: T): (Option[Prefix], Option[Seq[Symbol]])
+}
+object DenotationMapResult {
+  implicit object PrefixIsResult extends DenotationMapResult[Prefix] {
+    def extract(x: Prefix) = (Some(x), None)
+  }
+  implicit object SymbolIsResult extends DenotationMapResult[Symbol] {
+    def extract(x: Symbol) = (None, Some(List(x)))
+  }
+  implicit object SymbolsIsResult extends DenotationMapResult[Seq[Symbol]] {
+    def extract(x: Seq[Symbol]) = (None, Some(x))
+  }
+  implicit object PrefixSymbolIsResult extends DenotationMapResult[(Prefix, Symbol)] {
+    def extract(x: (Prefix, Symbol)) = (Some(x._1), Some(List(x._2)))
+  }
+  implicit object PrefixSymbolsIsResult extends DenotationMapResult[(Prefix, Seq[Symbol])] {
+    def extract(x: (Prefix, Seq[Symbol])) = (Some(x._1), Some(x._2))
+  }
 }
