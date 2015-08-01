@@ -7,10 +7,12 @@ import scala.collection.immutable.Seq
 import scala.compat.Platform.EOL
 import scala.reflect.{classTag, ClassTag}
 import scala.meta.internal.ast._
+import scala.meta.semantic.{Context => SemanticContext}
 import org.scalameta.collections._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
 import scala.meta.internal.{ast => m}
+import scala.meta.dialects.Scala211
 
 object mergeTrees {
   // NOTE: "sy-" stands for "syntactic", "se-" stands for "semantic", "me-" stands for "merged".s
@@ -18,7 +20,7 @@ object mergeTrees {
   // to the order of appearance of the corresponding AST nodes in Trees.scala.
   // TODO: I think we could hardcode this traversal into the @ast infrastructure.
   // That will let us save time on: 1) eager recreation of entire trees, 2) eager computation of tokens for withTokens.
-  def apply[T <: Tree : ClassTag](sy: T, se: Tree): T = {
+  def apply[T <: Tree : ClassTag](sy: T, se: Tree)(implicit c: SemanticContext): T = {
     object loop {
       def apply[T <: Tree : ClassTag](sy1: T, se1: Tree): T = {
         // NOTE: This roundabout way of recursing is here only for error reporting.
@@ -81,7 +83,7 @@ object mergeTrees {
             case (sy: m.Ctor.Primary, se: m.Ctor.Primary) =>
               // NOTE: scala.reflect irreversibly desugars nullary constructors into empty-arglist ones
               val meparamss = {
-                if (sy.paramss == Nil && se.paramss == List(List())) Nil
+                if (sy.paramss == Seq() && se.paramss == Seq(Seq())) Seq()
                 else apply(sy.paramss, se.paramss)
               }
               sy.copy(apply(sy.mods, se.mods), apply(sy.name, se.name), meparamss)
@@ -93,7 +95,20 @@ object mergeTrees {
             // ============ TEMPLATES ============
 
             case (sy: m.Template, se: m.Template) =>
-              sy.copy(apply(sy.early, se.early), apply(sy.parents, se.parents), apply(sy.self, se.self), apply(sy.stats, se.stats))
+              // NOTE: ensugaring rules for parent lists, as per Scala 2.11.7
+              // 1) If the parent list is empty, make it List(AnyRef)
+              // 2) If parsing a case class, append Product and Serializable to the end of the parent list
+              // 3) During typechecking filter out all subsequent repeated occurrences of ProductN, Product and Serializable
+              // 4) If the first parent in the list is a trait, then:
+              //    * Convert it to AnyRef, if it's Any
+              //    * Prepend tpe.firstParent to the list, otherwise
+              val meparents = (sy.parents, se.parents) match {
+                case (Seq(), Seq(m.Term.Apply(anyRef: m.Term.Ref, Nil))) if anyRef.defn == t"AnyRef".ctor =>
+                  Seq()
+                case _ =>
+                  apply(sy.parents, se.parents)
+              }
+              sy.copy(apply(sy.early, se.early), meparents, apply(sy.self, se.self), apply(sy.stats, se.stats))
 
             // ============ MODIFIERS ============
 

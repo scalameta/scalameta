@@ -13,7 +13,7 @@ import scala.meta.internal.hosts.scalac.converters.mergeTrees
 
 @context(translateExceptions = false)
 class ProjectContext(sourcepath: String, classpath: String) extends ProjectContextApi {
-  private val c = new StandaloneContext(s"-classpath $classpath")
+  private implicit val c = new StandaloneContext(s"-classpath $classpath")
   private implicit val d: Dialect = c.dialect
   def dialect: Dialect = c.dialect
   def desugar(term: Term): Term = c.desugar(term)
