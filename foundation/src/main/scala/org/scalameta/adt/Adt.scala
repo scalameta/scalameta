@@ -75,20 +75,17 @@ class AdtMacros(val c: Context) {
       val mstats1 = ListBuffer[Tree]() ++ mstats
 
       val anns1 = anns :+ q"new $Public.root" :+ q"new $Internal.monadicRoot"
-      stats1 += q"def map[T: $mname.ContentType](fn: T => T): $name"
-      stats1 += q"def flatMap[T: $mname.ContentType](fn: T => $name): $name"
+      stats1 += q"def map(fn: $mname.Metadata.ContentType => $mname.Metadata.ContentType): $name"
+      stats1 += q"def flatMap(fn: $mname.Metadata.ContentType => $name): $name"
       mstats1 += q"""
-        trait ContentType[T] {
-          def extract(x: $name): T
-          def inject(x: T): $name
+        trait Metadata {
+          type ContentType
+          def extract(x: $name): ContentType
+          def inject(x: ContentType): $name
         }
       """
-      mstats1 += q"""
-        object ContentType {
-          import scala.language.experimental.macros
-          implicit def instance = macro $Public.AdtMacros.contentType[$name]
-        }
-      """
+      mstats1 += q"import scala.language.experimental.macros"
+      mstats1 += q"def Metadata = macro $Public.AdtMacros.metadata[$name]"
 
       val cdef1 = ClassDef(Modifiers(flags, privateWithin, anns1), name, tparams, Template(parents, self, stats1.toList))
       val mdef1 = ModuleDef(mmods, mname, Template(mparents, mself, mstats1.toList))
@@ -349,8 +346,8 @@ class AdtMacros(val c: Context) {
       if (paramss.flatten.nonEmpty) c.abort(cdef.pos, "noneLeafs can't have parameters")
       anns1 += q"new $Public.leaf"
       anns1 += q"new $Internal.noneLeaf"
-      stats1 += q"override def map[T: $rmname.ContentType](fn: T => T): $rname = $mname()"
-      stats1 += q"override def flatMap[T: $rmname.ContentType](fn: T => $rname): $rname = $mname()"
+      stats1 += q"override def map(fn: $rmname.Metadata.ContentType => $rmname.Metadata.ContentType): $rname = $mname()"
+      stats1 += q"override def flatMap(fn: $rmname.Metadata.ContentType => $rname): $rname = $mname()"
 
       val cdef1 = q"$mods1 class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats1 }"
       List(cdef1, mdef)
@@ -366,8 +363,8 @@ class AdtMacros(val c: Context) {
 
       manns1 += q"new $Public.leaf"
       manns1 += q"new $Internal.noneLeaf"
-      mstats1 += q"override def map[T: $rmname.ContentType](fn: T => T): $rname = $mname"
-      mstats1 += q"override def flatMap[T: $rmname.ContentType](fn: T => $rname): $rname = $mname"
+      mstats1 += q"override def map(fn: $rmname.Metadata.ContentType => $rmname.Metadata.ContentType): $rname = $mname"
+      mstats1 += q"override def flatMap(fn: $rmname.Metadata.ContentType => $rname): $rname = $mname"
 
       q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
     }
@@ -394,15 +391,15 @@ class AdtMacros(val c: Context) {
       anns1 += q"new $Public.leaf"
       anns1 += q"new $Internal.someLeaf"
       stats1 += q"""
-        override def map[T: $rmname.ContentType](fn: T => T): $rname = {
-          val content = implicitly[$rmname.ContentType[T]].extract(this)
+        override def map(fn: $rmname.Metadata.ContentType => $rmname.Metadata.ContentType): $rname = {
+          val content = $rmname.Metadata.extract(this)
           val content1 = fn(content)
-          implicitly[$rmname.ContentType[T]].inject(content1)
+          $rmname.Metadata.inject(content1)
         }
       """
       stats1 += q"""
-        override def flatMap[T: $rmname.ContentType](fn: T => $rname): $rname = {
-          val content = implicitly[$rmname.ContentType[T]].extract(this)
+        override def flatMap(fn: $rmname.Metadata.ContentType => $rname): $rname = {
+          val content = $rmname.Metadata.extract(this)
           fn(content)
         }
       """
@@ -420,8 +417,9 @@ class AdtMacros(val c: Context) {
     q"{ ..$expanded; () }"
   }
 
-  def contentType[T](implicit T: c.WeakTypeTag[T]) = {
+  def metadata[T](implicit T: c.WeakTypeTag[T]) = {
     println(T)
+    println(T.tpe.typeSymbol.asClass.knownDirectSubclasses)
     ???
   }
 }
