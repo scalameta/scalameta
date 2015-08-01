@@ -75,17 +75,21 @@ class AdtMacros(val c: Context) {
       val mstats1 = ListBuffer[Tree]() ++ mstats
 
       val anns1 = anns :+ q"new $Public.root" :+ q"new $Internal.monadicRoot"
-      stats1 += q"def map(fn: $mname.Metadata.ContentType => $mname.Metadata.ContentType): $name"
-      stats1 += q"def flatMap(fn: $mname.Metadata.ContentType => $name): $name"
-      mstats1 += q"""
-        trait Metadata {
-          type ContentType
-          def extract(x: $name): ContentType
-          def inject(x: ContentType): $name
-        }
-      """
-      mstats1 += q"import scala.language.experimental.macros"
-      mstats1 += q"def Metadata = macro $Public.AdtMacros.metadata[$name]"
+      stats1 += q"def map(fn: this.ContentType => this.ContentType): $name"
+      stats1 += q"def flatMap(fn: this.ContentType => $name): $name"
+
+      val contentTypes = mstats.collect {
+        case q"${Modifiers(_, _, anns)} class $_[..$_] $_($_: $tpt) extends { ..$_ } with ..$_ { $_ => ..$_ }"
+        if anns.exists({ case q"new someLeaf" => true; case _ => false }) =>
+          tpt
+      }
+      val contentType = contentTypes match {
+        case Nil => c.abort(cdef.pos, s"no @someLeaf classes found in $name's companion object")
+        case List(contentType) => contentType
+        case _ => c.abort(cdef.pos, s"multiple @someLeaf classes found in $name's companion object")
+      }
+      stats1 += q"type ContentType = $mname.ContentType"
+      mstats1 += q"type ContentType = $contentType"
 
       val cdef1 = ClassDef(Modifiers(flags, privateWithin, anns1), name, tparams, Template(parents, self, stats1.toList))
       val mdef1 = ModuleDef(mmods, mname, Template(mparents, mself, mstats1.toList))
@@ -346,8 +350,8 @@ class AdtMacros(val c: Context) {
       if (paramss.flatten.nonEmpty) c.abort(cdef.pos, "noneLeafs can't have parameters")
       anns1 += q"new $Public.leaf"
       anns1 += q"new $Internal.noneLeaf"
-      stats1 += q"override def map(fn: $rmname.Metadata.ContentType => $rmname.Metadata.ContentType): $rname = $mname()"
-      stats1 += q"override def flatMap(fn: $rmname.Metadata.ContentType => $rname): $rname = $mname()"
+      stats1 += q"override def map(fn: this.ContentType => this.ContentType): $rname = $mname()"
+      stats1 += q"override def flatMap(fn: this.ContentType => $rname): $rname = $mname()"
 
       val cdef1 = q"$mods1 class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats1 }"
       List(cdef1, mdef)
@@ -363,8 +367,8 @@ class AdtMacros(val c: Context) {
 
       manns1 += q"new $Public.leaf"
       manns1 += q"new $Internal.noneLeaf"
-      mstats1 += q"override def map(fn: $rmname.Metadata.ContentType => $rmname.Metadata.ContentType): $rname = $mname"
-      mstats1 += q"override def flatMap(fn: $rmname.Metadata.ContentType => $rname): $rname = $mname"
+      mstats1 += q"override def map(fn: this.ContentType => this.ContentType): $rname = $mname"
+      mstats1 += q"override def flatMap(fn: this.ContentType => $rname): $rname = $mname"
 
       q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
     }
@@ -388,21 +392,12 @@ class AdtMacros(val c: Context) {
       def mods1 = mods.mapAnnotations(_ => anns1.toList)
       val stats1 = ListBuffer[Tree]() ++ stats
 
+      if (paramss.flatten.length != 1) c.abort(cdef.pos, "someLeafs must have exactly one parameter")
+      val param = paramss.flatten.head
       anns1 += q"new $Public.leaf"
       anns1 += q"new $Internal.someLeaf"
-      stats1 += q"""
-        override def map(fn: $rmname.Metadata.ContentType => $rmname.Metadata.ContentType): $rname = {
-          val content = $rmname.Metadata.extract(this)
-          val content1 = fn(content)
-          $rmname.Metadata.inject(content1)
-        }
-      """
-      stats1 += q"""
-        override def flatMap(fn: $rmname.Metadata.ContentType => $rname): $rname = {
-          val content = $rmname.Metadata.extract(this)
-          fn(content)
-        }
-      """
+      stats1 += q"override def map(fn: this.ContentType => this.ContentType): $rname = $mname(fn(this.${param.name}))"
+      stats1 += q"override def flatMap(fn: this.ContentType => $rname): $rname = fn(this.${param.name})"
 
       val cdef1 = q"$mods1 class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats1 }"
       List(cdef1, mdef)
@@ -415,12 +410,6 @@ class AdtMacros(val c: Context) {
       case annottee :: rest => c.abort(annottee.pos, "only classes and objects can be @leaf")
     }
     q"{ ..$expanded; () }"
-  }
-
-  def metadata[T](implicit T: c.WeakTypeTag[T]) = {
-    println(T)
-    println(T.tpe.typeSymbol.asClass.knownDirectSubclasses)
-    ???
   }
 }
 
