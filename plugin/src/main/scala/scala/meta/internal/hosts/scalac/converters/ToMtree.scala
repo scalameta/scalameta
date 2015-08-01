@@ -9,8 +9,9 @@ import org.scalameta.unreachable
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.collection.mutable
+import scala.compat.Platform.EOL
 import scala.tools.nsc.{Global => ScalaGlobal}
-import scala.reflect.ClassTag
+import scala.reflect.{classTag, ClassTag}
 import scala.reflect.internal.Flags._
 import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
@@ -157,7 +158,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
         // ============ ODDS & ENDS ============
 
         case _ =>
-          unreachable(debug(gtree, g.showRaw(gtree)))
+          fail(gtree, s"encountered an unexpected tree during scala.reflect -> scala.meta conversion:$EOL${g.showRaw(gtree)}")
       }
       val typedMtree = denotedMtree match {
         case denotedMtree: m.Term => denotedMtree.tryTyping(gtree.tpe)
@@ -174,7 +175,29 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
         println(mtree.show[Semantics])
         println("=================================")
       }
-      mtree.require[T]
+      // TODO: fix duplication wrt MergeTrees.scala
+      if (classTag[T].runtimeClass.isAssignableFrom(mtree.getClass)) {
+        mtree.asInstanceOf[T]
+      } else {
+        var expected = classTag[T].runtimeClass.getName
+        expected = expected.stripPrefix("scala.meta.internal.ast.").stripPrefix("scala.meta.")
+        expected = expected.stripSuffix("$Impl")
+        expected = expected.replace("$", ".")
+        val actual = mtree.productPrefix
+        val summary = s"expected = $expected, actual = $actual"
+        val details = s"${g.showRaw(gtree)}$EOL${mtree.show[Structure]}"
+        fail(gtree, s"obtained an unexpected result during scala.reflect -> scala.meta conversion: $summary$EOL$details")
+      }
+    }
+
+    private def fail(culprit: g.Tree, diagnostics: String): Nothing = {
+      val traceback = culprit.parents.map(gtree => {
+        val prefix = gtree.productPrefix
+        var details = gtree.toString.replace("\n", " ")
+        if (details.length > 60) details = details.take(60) + "..."
+        s"($prefix) $details"
+      }).mkString(EOL)
+      throw new ConvertException(culprit, s"$diagnostics$EOL$traceback")
     }
   }
 

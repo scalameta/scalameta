@@ -682,7 +682,10 @@ trait LogicalTrees {
     def parents: List[Tree] = {
       def loop(tree: Tree, acc: List[Tree]): List[Tree] = {
         val parent = tree.metadata.get("parent").map(_.require[Tree])
-        val recursion = parent.map(parent => loop(parent, acc :+ parent))
+        val recursion = parent.map(parent => {
+          if (parent.nonEmpty) loop(parent, acc :+ parent)
+          else acc
+        })
         recursion.getOrElse(acc)
       }
       loop(tree, Nil)
