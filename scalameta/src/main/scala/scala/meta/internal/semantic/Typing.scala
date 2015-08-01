@@ -9,7 +9,21 @@ import org.scalameta.invariants._
 @monadicRoot trait Typing
 object Typing {
   @noneLeaf object Zero extends Typing
-  @someLeaf class Specified(tpe: Type.Arg @delayed) extends Typing
+  @someLeaf class Specified(tpe: Type.Arg @delayed) extends Typing {
+    protected def writeReplace(): AnyRef = new Specified.SerializationProxy(this)
+  }
+  object Specified {
+    @SerialVersionUID(1L) private class SerializationProxy(@transient private var orig: Specified) extends Serializable {
+      private def writeObject(out: java.io.ObjectOutputStream): Unit = {
+        out.writeObject(orig.tpe)
+      }
+      private def readObject(in: java.io.ObjectInputStream): Unit = {
+        val tpe = in.readObject.asInstanceOf[Type.Arg]
+        orig = Specified(tpe)
+      }
+      private def readResolve(): AnyRef = orig
+    }
+  }
 }
 
 // TODO: This unrelated code is here because of the limitation of knownDirectSubclasses.
