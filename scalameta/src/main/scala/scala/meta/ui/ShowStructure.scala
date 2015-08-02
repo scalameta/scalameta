@@ -23,6 +23,7 @@ object Structure {
         case el: String => enquote(el, DoubleQuotes)
         case el: api.Tree => el.show[Structure]
         case el: Nil.type => "Nil"
+        case el @ List(List()) => "List(List())"
         case el: List[_] => "List(" + el.map(showRaw).mkString(", ") + ")"
         case el: None.type => "None"
         case el: Some[_] => "Some(" + showRaw(el.get) + ")"

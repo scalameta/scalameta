@@ -671,7 +671,9 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
 
   def makeTuplePatParens(): Pat = {
     val patterns = inParens(noSeq.patterns()).map {
-      case q: Pat.Arg.Quasi => atPos(q, q)(Pat.Quasi(q.rank, q.tree))
+      case q1 @ Pat.Arg.Quasi(1, q0 @ Pat.Arg.Quasi(0, tree)) =>
+        val inner = atPos(q0, q0)(Pat.Quasi(0, tree))
+        atPos(q1, q1)(Pat.Quasi(1, inner))
       case p => p.require[Pat]
     }
     makeTuple[Pat](patterns, () => Lit.Unit(), Pat.Tuple(_))
@@ -805,7 +807,9 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
           Type.Function(ts, typ())
         } else {
           val tuple = atPos(openParenPos, closeParenPos)(makeTupleType(ts map {
-            case q: Type.Arg.Quasi    => atPos(q, q)(Type.Quasi(q.rank, q.tree))
+            case q1 @ Type.Arg.Quasi(1, q0 @ Type.Arg.Quasi(0, tree)) =>
+              val inner = atPos(q0, q0)(Type.Quasi(0, tree))
+              atPos(q1, q1)(Type.Quasi(1, inner))
             case t: Type              => t
             case p: Type.Arg.ByName   => syntaxError("by name type not allowed here", at = p)
             case p: Type.Arg.Repeated => syntaxError("repeated type not allowed here", at = p)
@@ -958,6 +962,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         case _ => loop(tpe)
       }
       def loop(tpe: Type): Pat.Type = tpe match {
+        case q1 @ Type.Quasi(1, q0 @ Type.Quasi(0, tree)) => atPos(q1, q1)(Pat.Type.Quasi(1, atPos(q0, q0)(Pat.Type.Quasi(0, tree))))
         case q: impl.Quasi => atPos(q, q)(Pat.Type.Quasi(q.rank, q.tree))
         case tpe: Type.Name => tpe
         case tpe: Type.Select => tpe

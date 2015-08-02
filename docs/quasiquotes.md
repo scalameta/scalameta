@@ -75,6 +75,7 @@
  Existential       | `t"$tpe forSome { ..$stats }"`
  Annotate          | `t"$tpe ..@$annots"`
  Placeholder       | `t"_ >: $tpeopt <: $tpeopt"`
+ Lambda            | `t"[..$tparams] => $tpe"`
  Literal           | `t"$lit"`
 
 ## Argument Types (meta.Type.Arg)
@@ -128,6 +129,7 @@
  Existential       | `pt"$ptpe forSome { ..$stats }"`
  Annotate          | `pt"$ptpe ..@$annots"`
  Placeholder       | `pt"_ >: $tpeopt <: $tpeopt"`
+ Lambda            | `pt"[..$tparams] => $tpe"`
  Literal           | `pt"$lit"`
 
 ## Statements (meta.Stat)

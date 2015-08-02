@@ -8,6 +8,7 @@ package scala.meta {
     type ThisType <: Tree
     def parent: Option[Tree]
     def tokens: Tokens
+    def withTokens(tokens: Tokens): ThisType
     final override def canEqual(that: Any): Boolean = that.isInstanceOf[Tree]
     final override def equals(that: Any): Boolean = that match { case that: Tree => scala.meta.internal.semantic.equals(this, that); case _ => false }
     final override def hashCode: Int = scala.meta.internal.semantic.hashcode(this)
@@ -98,7 +99,13 @@ package scala.meta.internal.ast {
 
   @branch trait Tree extends api.Tree
 
-  @branch trait Name extends api.Name with Ref { def value: String; def denot: Denotation }
+  @branch trait Name extends api.Name with Ref {
+    def value: String
+    def denot: Denotation
+    def withDenot(denot: Denotation): ThisType
+    def withDenot(prefix: Prefix, symbol: Symbol): ThisType = withDenot(Denotation.Single(prefix, symbol))
+    def withDenot(prefix: Prefix, symbols: List[Symbol]): ThisType = withDenot(Denotation.Multi(prefix, symbols))
+  }
   object Name {
     @ast class Anonymous extends api.Name.Anonymous with Name with Term.Param.Name with Type.Param.Name with Qualifier { def value = "_" }
     @ast class Indeterminate(value: Predef.String @nonEmpty) extends api.Name.Indeterminate with Name with Qualifier
@@ -109,7 +116,14 @@ package scala.meta.internal.ast {
   @branch trait Stat extends api.Stat with Tree
   @branch trait Scope extends api.Scope with Tree
 
-  @branch trait Term extends api.Term with Stat with Term.Arg { def typing: Typing; def expansion: Expansion }
+  @branch trait Term extends api.Term with Stat with Term.Arg {
+    def typing: Typing
+    def withTyping(typing: Typing): ThisType
+    def withTyping(known: api.Type.Arg): ThisType = withTyping(Typing.Specified(known))
+    def expansion: Expansion
+    def withExpansion(expansion: Expansion): ThisType
+    def withExpansion(desugaring: api.Term): ThisType = withExpansion(Expansion.Desugaring(desugaring))
+  }
   object Term {
     @branch trait Ref extends api.Term.Ref with Term with impl.Ref
     @ast class This(qual: impl.Name.Qualifier) extends Term.Ref with impl.Name.Qualifier {
@@ -208,6 +222,7 @@ package scala.meta.internal.ast {
     }
     @ast class Annotate(tpe: Type, annots: Seq[Mod.Annot] @nonEmpty) extends Type
     @ast class Placeholder(bounds: Bounds) extends Type with Pat.Type
+    @ast class Lambda(quants: Seq[Type.Param], tpe: Type) extends Type
     @ast class Bounds(lo: Option[Type], hi: Option[Type]) extends Tree
     @branch trait Arg extends api.Type.Arg with Tree
     object Arg {
@@ -306,6 +321,7 @@ package scala.meta.internal.ast {
         require(quants.forall(_.isExistentialStat))
       }
       @ast class Annotate(tpe: Pat.Type, annots: Seq[Mod.Annot] @nonEmpty) extends Pat.Type
+      @ast class Lambda(quants: Seq[impl.Type.Param], tpe: Pat.Type) extends Pat.Type
     }
   }
 

@@ -66,6 +66,19 @@ class HygieneSuite extends FunSuite {
       |Type.Compound(List(Type.Apply(Type.Name("List"), List(Type.Name("Int")))), List(Decl.Def(Nil, Term.Name("head"), Nil, Nil, Type.Name("Int"))))
     """.stripMargin.trim)
   }
+  test("q\"_root_\"") {
+    assert(q"_root_".show[Semantics] === """
+      |Term.Name("_root_")[1]
+      |[1] 0::_root_
+    """.stripMargin.trim)
+  }
+  test("q\"_empty_\"") {
+    assert(q"_empty_".show[Semantics] === """
+      |Term.Name("_empty_")[1]
+      |[1] Type.Singleton(Term.Name("_root_")[2])::_empty_
+      |[2] 0::_root_
+    """.stripMargin.trim)
+  }
   test("equality - 1") {
     val unqualified = {
       import scala.collection.mutable.Map

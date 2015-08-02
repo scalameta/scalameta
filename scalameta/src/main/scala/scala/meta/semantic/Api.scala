@@ -28,29 +28,42 @@ private[meta] trait Api {
     @hosted def tpe: Type = implicitly[SemanticContext].tpe(tree)
   }
 
-  implicit class XtensionSemanticTypeTpe(tree: Type) {
-    @hosted def tpe: Type = tree
-  }
-
   implicit class XtensionSemanticMemberTpe(tree: Member) {
     @hosted private def SeqRef: impl.Type.Name = {
-      val iScala = s.Symbol.Global(s.Symbol.RootPackage, "scala", s.Signature.Term)
-      val iCollection = s.Symbol.Global(iScala, "collection", s.Signature.Term)
-      val iSeq = s.Symbol.Global(iCollection, "Seq", s.Signature.Type)
-      impl.Type.Name("Seq", s.Denotation.Single(s.Prefix.Zero, iSeq))
+      val sScala = s.Symbol.Global(s.Symbol.RootPackage, "scala", s.Signature.Term)
+      val sCollection = s.Symbol.Global(sScala, "collection", s.Signature.Term)
+      val sSeq = s.Symbol.Global(sCollection, "Seq", s.Signature.Type)
+      impl.Type.Name("Seq").withDenot(s.Prefix.Zero, sSeq)
     }
     @hosted private def dearg(tpe: Type.Arg): Type = tpe.require[impl.Type.Arg] match {
       case impl.Type.Arg.ByName(tpe) => impl.Type.Apply(SeqRef, List(tpe))
       case impl.Type.Arg.Repeated(tpe) => tpe
       case tpe: impl.Type => tpe
     }
+    @hosted private def methodType(tparams: Seq[Type.Param], paramss: Seq[Seq[Term.Param]], ret: Type): Type = {
+      if (tparams.nonEmpty) {
+        val monoret = methodType(Nil, paramss, ret.require[impl.Type]).require[impl.Type]
+        impl.Type.Lambda(tparams.require[Seq[impl.Type.Param]], monoret)
+      } else paramss.foldRight(ret.require[impl.Type])((params, acc) => {
+        val paramtypes = params.map(p => implicitly[SemanticContext].tpe(p).require[impl.Type.Arg])
+        impl.Type.Function(paramtypes, acc)
+      })
+    }
+    @hosted private def ctorType(owner: Member, paramss: Seq[Seq[Term.Param]]): Type = {
+      val tparams = owner.tparams
+      val ret = {
+        if (tparams.nonEmpty) impl.Type.Apply(owner.tpe.require[impl.Type], tparams.map(_.name.require[impl.Type.Name]))
+        else owner.tpe
+      }
+      methodType(tparams, paramss, ret)
+    }
     @hosted def tpe: Type = tree.require[impl.Member] match {
       case tree: impl.Pat.Var.Term => tree.name.tpe
       case tree: impl.Pat.Var.Type => tree.name
-      case tree: impl.Decl.Def => tree.decltpe
+      case tree: impl.Decl.Def => methodType(tree.tparams, tree.paramss, tree.decltpe)
       case tree: impl.Decl.Type => tree.name
-      case tree: impl.Defn.Def => tree.decltpe.getOrElse(tree.body.tpe)
-      case tree: impl.Defn.Macro => tree.tpe
+      case tree: impl.Defn.Def => methodType(tree.tparams, tree.paramss, tree.decltpe.getOrElse(tree.body.tpe))
+      case tree: impl.Defn.Macro => methodType(tree.tparams, tree.paramss, tree.decltpe)
       case tree: impl.Defn.Type => tree.name
       case tree: impl.Defn.Class => tree.name
       case tree: impl.Defn.Trait => tree.name
@@ -61,8 +74,8 @@ private[meta] trait Api {
       case tree: impl.Term.Param if tree.parent.map(_.isInstanceOf[impl.Template]).getOrElse(false) => ??? // TODO: don't forget to intersect with the owner type
       case tree: impl.Term.Param => dearg(implicitly[SemanticContext].tpe(tree))
       case tree: impl.Type.Param => tree.name.require[Type.Name]
-      case tree: impl.Ctor.Primary => tree.owner.require[meta.Member].tpe
-      case tree: impl.Ctor.Secondary => tree.owner.require[meta.Member].tpe
+      case tree: impl.Ctor.Primary => ctorType(tree.owner.require[Member], tree.paramss)
+      case tree: impl.Ctor.Secondary => ctorType(tree.owner.require[Member], tree.paramss)
     }
   }
 
@@ -124,9 +137,9 @@ private[meta] trait Api {
     @hosted def source: Member = tree.name match {
       case name: impl.Name.Anonymous => name.defn
       case name: impl.Name.Indeterminate => name.defn
-      case name: impl.Term.Name => name.copy(denot = name.denot.stripPrefix).defn
-      case name: impl.Type.Name => name.copy(denot = name.denot.stripPrefix).defn
-      case name: impl.Ctor.Name => name.copy(denot = name.denot.stripPrefix).defn
+      case name: impl.Term.Name => name.withDenot(name.denot.stripPrefix).defn
+      case name: impl.Type.Name => name.withDenot(name.denot.stripPrefix).defn
+      case name: impl.Ctor.Name => name.withDenot(name.denot.stripPrefix).defn
     }
     @hosted def name: Name = {
       tree.require[impl.Member] match {
@@ -418,6 +431,7 @@ private[meta] trait Api {
         case impl.Pat.Type.Compound(tpes, _) => tpes.flatMap(membersOfPatType)
         case impl.Pat.Type.Existential(tpe, _) => membersOfPatType(tpe)
         case impl.Pat.Type.Annotate(tpe, _) => membersOfPatType(tpe)
+        case impl.Pat.Type.Lambda(_, tpe) => membersOfPatType(tpe)
         case impl.Type.Placeholder(_) => Nil
         case _: impl.Lit => Nil
       }
@@ -624,6 +638,7 @@ private[meta] trait Api {
         case impl.Type.Existential(tpe, quants) => impl.Pat.Type.Existential(loop(tpe), quants)
         case impl.Type.Annotate(tpe, annots) => impl.Pat.Type.Annotate(loop(tpe), annots)
         case tpe: impl.Type.Placeholder => tpe
+        case impl.Type.Lambda(tparams, tpe) => impl.Pat.Type.Lambda(tparams, loop(tpe))
         case tpe: impl.Lit => tpe
       }
       loop(tree.require[impl.Type])
@@ -647,6 +662,7 @@ private[meta] trait Api {
         case impl.Pat.Type.Compound(tpes, refinement) => impl.Type.Compound(tpes.map(loop), refinement)
         case impl.Pat.Type.Existential(tpe, quants) => impl.Type.Existential(loop(tpe), quants)
         case impl.Pat.Type.Annotate(tpe, annots) => impl.Type.Annotate(loop(tpe), annots)
+        case impl.Pat.Type.Lambda(tparams, tpe) => impl.Type.Lambda(tparams, loop(tpe))
         case tpe: impl.Lit => tpe
       }
       loop(tree.require[impl.Pat.Type])
@@ -666,8 +682,10 @@ private[meta] trait Api {
             else None
           }
         }
-        def adjustValue(ctor: impl.Ctor.Name, value: String) = impl.Ctor.Name(value, ctor.denot)
-        tpe match {
+        def adjustValue(ctor: impl.Ctor.Name, value: String) = {
+          impl.Ctor.Name(value).withDenot(ctor.denot).withTyping(ctor.typing)
+        }
+        val result = tpe match {
           case impl.Type.Name(value) => adjustValue(ctor, value)
           case impl.Type.Select(qual, impl.Type.Name(value)) => impl.Ctor.Ref.Select(qual, adjustValue(ctor, value))
           case impl.Type.Project(qual, impl.Type.Name(value)) => impl.Ctor.Ref.Project(qual, adjustValue(ctor, value))
@@ -677,6 +695,7 @@ private[meta] trait Api {
           case impl.Type.ApplyInfix(lhs, op, rhs) => impl.Term.ApplyType(loop(op, ctor), List(lhs, rhs))
           case _ => unreachable(debug(tree, tree.show[Structure], tpe, tpe.show[Structure]))
         }
+        result.withTyping(scala.util.Try(s.Typing.Specified(tpe.members(ctor.defn).tpe)).getOrElse(s.Typing.Zero))
       }
       // TODO: if we uncomment this, that'll lead to a stackoverflow in scalahost
       // it's okay, but at least we could verify that ctor's prefix is coherent with tree

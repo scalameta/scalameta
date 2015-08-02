@@ -4,7 +4,6 @@ package quasiquotes.ast
 
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
-import scala.compat.Platform.EOL
 import org.scalameta.ast.{Reflection => AstReflection}
 import org.scalameta.invariants._
 import org.scalameta.unreachable
@@ -34,6 +33,11 @@ private[meta] class ConversionMacros(val c: Context) extends AstReflection {
   val MetaLift = symbolOf[scala.meta.Lift[_, _]]
   val MetaUnlift = symbolOf[scala.meta.Unlift[_, _]]
 
+  private def foundReqMsg(found: c.Type, req: c.Type): String = {
+    val g = c.universe.asInstanceOf[scala.tools.nsc.Global]
+    g.analyzer.foundReqMsg(found.asInstanceOf[g.Type], req.asInstanceOf[g.Type])
+  }
+
   def liftApply[I](outside: c.Tree)(implicit I: c.WeakTypeTag[I]): c.Tree = {
     val outsideTpe = outside.tpe
     val insideTpe = I.tpe
@@ -49,7 +53,7 @@ private[meta] class ConversionMacros(val c: Context) extends AstReflection {
         if (needsCast) q"$lifted.asInstanceOf[$insideTpe]"
         else lifted
       } else {
-        val errorMessage = s"type mismatch when unquoting;$EOL found   : $outsideTpe$EOL required: ${insideTpe.publish}"
+        val errorMessage = "type mismatch when unquoting" + foundReqMsg(outsideTpe, insideTpe.publish)
         c.abort(c.enclosingPosition, errorMessage)
       }
     }
@@ -79,7 +83,7 @@ private[meta] class ConversionMacros(val c: Context) extends AstReflection {
       if (unliftable.nonEmpty) {
         q"$unliftable.apply($inside)"
       } else {
-        val errorMessage = s"type mismatch when unquoting;$EOL found   : ${insideTpe.publish}$EOL required: ${outsideTpe}"
+        val errorMessage = "type mismatch when unquoting" + foundReqMsg(insideTpe.publish, outsideTpe)
         c.abort(c.enclosingPosition, errorMessage)
       }
     }

@@ -6,10 +6,10 @@ import org.scalameta.adt
 import org.scalameta.adt._
 import org.scalameta.invariants._
 
-@root trait Expansion
+@monadicRoot trait Expansion
 object Expansion {
-  @leaf object Identity extends Expansion
-  @leaf class Desugaring(term: Term) extends Expansion
+  @noneLeaf object Zero extends Expansion
+  @someLeaf class Desugaring(term: Term) extends Expansion
 }
 
 // TODO: This unrelated code is here because of the limitation of knownDirectSubclasses.
