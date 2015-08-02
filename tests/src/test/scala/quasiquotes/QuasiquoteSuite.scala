@@ -485,6 +485,20 @@ class QuasiquoteSuite extends FunSuite {
     assert(t"_ >: $tpe1 <: $tpe2".show[Syntax] === "_ >: X <: Y")
   }
 
+  test("1 t\"[..$tparams] => $tpe\"") {
+    val t"[..$tparams] => $tpe" = t"[X, Y] => (X, Int) => Y"
+    assert(tparams.toString === "List(X, Y)")
+    assert(tparams(0).show[Syntax] === "X")
+    assert(tparams(1).show[Syntax] === "Y")
+    assert(tpe.show[Syntax] === "(X, Int) => Y")
+  }
+
+  test("2 t\"[..$tparams] => $tpe\"") {
+    val tparams = List(tparam"X", tparam"Y")
+    val tpe = t"Z"
+    assert(t"[..$tparams] => $tpe".show[Syntax] === "[X, Y] => Z")
+  }
+
   test("t\"$lit\"") {
     val lit = q"1"
     assert(t"$lit".show[Syntax] === "1")
