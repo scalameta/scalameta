@@ -821,9 +821,20 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       }
     }
 
+    private def typeLambda(): Type =
+      if (dialect.allowTypeLambdas) {
+        val quants = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
+        accept[`=>`]
+        val tpe = typ()
+        Type.Lambda(quants, tpe)
+      } else {
+        syntaxError("type lambdas are not allowed for this dialect", at = token)
+      }
+
     /** {{{
      *  Type ::= InfixType `=>' Type
      *         | `(' [`=>' Type] `)' `=>' Type
+     *         | `[' [`=>' Type] `]' `=>' Type
      *         | InfixType [ExistentialClause]
      *  ExistentialClause ::= forSome `{' ExistentialDcl {semi ExistentialDcl}} `}'
      *  ExistentialDcl    ::= type TypeDcl | val ValDcl
@@ -832,6 +843,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     def typ(): Type = autoPos {
       val t: Type =
         if (token.is[`(`]) tupleInfixType()
+        else if (token.is[`[`]) typeLambda()
         else infixType(InfixMode.FirstOp)
 
       token match {
