@@ -198,7 +198,7 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
     try {
       implicit val parsingDialect: MetaDialect = scala.meta.dialects.Quasiquote(metaDialect)
       if (sys.props("quasiquote.debug") != null) { println(tokens); println(parsingDialect) }
-      val syntax = metaParse(tokens, metaDialect)
+      val syntax = metaParse(tokens, parsingDialect)
       if (sys.props("quasiquote.debug") != null) { println(syntax.show[Syntax]); println(syntax.show[Structure]) }
       (syntax, mode)
     } catch {
