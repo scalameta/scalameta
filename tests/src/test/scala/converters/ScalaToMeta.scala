@@ -18,8 +18,8 @@ class ScalaToMeta extends FunSuite {
     m.show[Syntax]
   }
 
-  def runScalaToMetaTest(dirPath: String): Unit = {
-    def resource(label: String) = dirPath + File.separatorChar + label + ".scala"
+  def runScalaToMetaTest(testDir: File): Unit = {
+    def resource(label: String) = testDir.getAbsolutePath + File.separatorChar + label + ".scala"
     def slurp(label: String) = scala.io.Source.fromFile(new File(resource(label))).mkString.trim
     def dump(label: String, content: String) = {
       val w = new BufferedWriter(new FileWriter(resource(label)))
@@ -32,18 +32,24 @@ class ScalaToMeta extends FunSuite {
       if (f.exists) f.delete
     }
     delete("Actual")
-    val actualResult = typecheckConvertAndPrettyprint(slurp("Original"), debug = false)
-    if (!exists("Expected")) dump("Expected", "")
-    val expectedResult = slurp("Expected")
-    // TODO: would also be nice to test structural equivalence of reflect -> meta converted trees and meta parsed trees
-    // unfortunately much of the trivia is lost during reflect parsing, so we can only dream of structural equivalence...
-    if (actualResult != expectedResult) {
-      dump("Actual", actualResult)
-      fail(s"see ${resource("Actual")} for details")
+    if (exists("Original")) {
+      test(testDir.getName) {
+        val actualResult = typecheckConvertAndPrettyprint(slurp("Original"), debug = false)
+        if (!exists("Expected")) dump("Expected", "")
+        val expectedResult = slurp("Expected")
+        // TODO: would also be nice to test structural equivalence of reflect -> meta converted trees and meta parsed trees
+        // unfortunately much of the trivia is lost during reflect parsing, so we can only dream of structural equivalence...
+        if (actualResult != expectedResult) {
+          dump("Actual", actualResult)
+          fail(s"see ${resource("Actual")} for details")
+        }
+      }
+    } else {
+      ignore(testDir.getName){}
     }
   }
 
   val resourceDir = new File(System.getProperty("sbt.paths.tests.resources") + File.separatorChar + "ScalaToMeta")
   val testDirs = resourceDir.listFiles().filter(_.listFiles().nonEmpty).filter(!_.getName().endsWith("_disabled"))
-  testDirs.foreach(testDir => test(testDir.getName)(runScalaToMetaTest(testDir.getAbsolutePath)))
+  testDirs.foreach(runScalaToMetaTest)
 }
