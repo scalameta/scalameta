@@ -90,12 +90,15 @@ class SemanticSuite extends FunSuite {
     assert(t"List[Int]".dealias.show[Syntax] == "List[Int]")
     assert(t"List[Int]".dealias.show[Semantics] == """
       |Type.Apply(Type.Name("List")[1], List(Type.Name("Int")[2]))
-      |[1] Type.Singleton(Term.Name("immutable")[3])::scala.collection.immutable#List
+      |[1] Type.Singleton(Term.Name("immutable")[3]{1})::scala.collection.immutable#List
       |[2] Type.Singleton(Term.Name("scala")[4])::scala#Int
-      |[3] Type.Singleton(Term.Name("collection")[5])::scala.collection.immutable
+      |[3] Type.Singleton(Term.Name("collection")[5]{2})::scala.collection.immutable
       |[4] Type.Singleton(Term.Name("_root_")[6])::scala
-      |[5] Type.Singleton(Term.Name("scala")[4])::scala.collection
+      |[5] Type.Singleton(Term.Name("scala")[4]{3})::scala.collection
       |[6] 0::_root_
+      |{1} Type.Singleton(Term.Name("immutable")[3]{1})
+      |{2} Type.Singleton(Term.Name("collection")[5]{2})
+      |{3} Type.Singleton(Term.Name("scala")[4]{3})
     """.trim.stripMargin)
   }
 
