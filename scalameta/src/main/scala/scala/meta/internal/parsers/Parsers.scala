@@ -604,7 +604,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   }
 
   def convertToTypeId(ref: Term.Ref): Option[Type] = ref match {
-    case ref: Quasi =>
+    case ref: Term.Ref.Quasi =>
       Some(ref.become[Type.Quasi])
     case Term.Select(qual: Term.Quasi, name: Term.Name.Quasi) =>
       val newQual = qual.become[Term.Ref.Quasi]
@@ -828,7 +828,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         val tpe = typ()
         Type.Lambda(quants, tpe)
       } else {
-        syntaxError("type lambdas are not allowed for this dialect", at = token)
+        syntaxError(s"type lambdas are not allowed for the $dialect dialect", at = token)
       }
 
     /** {{{
@@ -970,7 +970,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         case _ => loop(tpe)
       }
       def loop(tpe: Type): Pat.Type = tpe match {
-        case q: Quasi => q.become[Pat.Type.Quasi]
+        case q: Type.Quasi => q.become[Pat.Type.Quasi]
         case tpe: Type.Name => tpe
         case tpe: Type.Select => tpe
         case Type.Project(qual, name) => atPos(tpe, tpe)(Pat.Type.Project(loop(qual), name))
