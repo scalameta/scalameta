@@ -35,6 +35,14 @@ trait ConvertPhase {
 
     override def newPhase(prev: Phase): StdPhase = new StdPhase(prev) {
       override def apply(unit: CompilationUnit) {
+        // NOTE: We don't have to persist perfect trees, because tokens are transient anyway.
+        // Therefore, if noone uses perfect trees in a compiler plugin, then we can avoid merging altogether.
+        // Alternatively, if we hardcode merging into the core of scalameta/scalameta
+        // (e.g. by making it lazy, coinciding with the first traversal of the perfect tree),
+        // then we can keep mergeTrees and expose its results only to those who need perfectTrees
+        // (e.g. to compiler plugins that want to work with scala.meta trees).
+        // TODO: For now, I'm going to keep mergeTrees here, but in the 0.1 release,
+        // we might want to turn merging off if it turns out being a big performance hit.
         val syntacticTree = unit.source.content.parse[mapi.Source].require[m.Source]
         val semanticTree = unit.body.toMtree[m.Source]
         val perfectTree = mergeTrees(syntacticTree, semanticTree)
