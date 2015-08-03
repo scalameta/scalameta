@@ -157,15 +157,17 @@ private[meta] object inferTokens {
 
     /* Append a name, but takes care of adding a space if one is needed with what follows (e.g. bind with a name ending with "_"). */
     def apndBindedName(name: Name): Tokens = name.tks match {
+      case nm if nm.length == 0 => nm
       case nm if nm.last.show[Syntax] endsWith "_" => toks"$nm " // NOTE: adding a space if the name ends with _
       case nm => nm
     }
 
     /* Generate tokens for Pats, adding a space if one is needed */
     def apndDefnDeclPats(pats: Seq[Pat]) = pats.`o,o` match {
-          case ps if ps.last.show[Syntax] endsWith "_" => toks"$ps " // NOTE: adding a space if the name ends with _
-          case ps => ps
-        }
+      case nm if nm.length == 0 => nm
+      case ps if ps.last.show[Syntax] endsWith "_" => toks"$ps " // NOTE: adding a space if the name ends with _
+      case ps => ps
+    }
 
     /* The helpers below are heavily based on the ones used for the original show[Syntax] implementation. */
     def guessIsBackquoted(t: Name): Boolean = {
