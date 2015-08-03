@@ -66,15 +66,6 @@ class QuasiquoteSuite extends FunSuite {
     assert(body === 42)
   }
 
-  test("q\"... match { ..$cases }\"") {
-    val cases = List(p"case foo => bar")
-    assert(q"x match { ..$cases }".show[Syntax] === """
-      |x match {
-      |  case foo => bar
-      |}
-    """.trim.stripMargin)
-  }
-
   test("q\"$qname.this\"") {
     val q"$qname.this.$x" = q"QuasiquoteSuite.this.x"
     assert(qname.show[Syntax] === "QuasiquoteSuite")
@@ -176,9 +167,9 @@ class QuasiquoteSuite extends FunSuite {
     assert(r.show[Syntax] === "1")
   }
 
-  test("q\"return $expropt\"") {
-    val q"return $expropt" = q"return foo == bar"
-    assert(expropt.show[Syntax] === "foo == bar")
+  test("q\"return $expr\"") {
+    val q"return $exp" = q"return foo == bar"
+    assert(exp.show[Syntax] === "foo == bar")
   }
 
   test("q\"throw $expr\"") {
@@ -192,9 +183,19 @@ class QuasiquoteSuite extends FunSuite {
     assert(tpe.show[Syntax] === "Double")
   }
 
-//  test("q\"$expr: ..@$expr\"") {
-//    val q"$a: ..@$b" = q"foo: @bar @baz"
-//  }
+  test("1 q\"$expr: ..@annots\"") {
+    val q"$exprr: @q ..@$annotz @$ar" = q"foo: @q @w @e @r"
+    assert(exprr.show[Syntax] === "foo")
+    assert(annotz.toString === "List(@w, @e)")
+    assert(annotz(0).show[Syntax] === "@w")
+    assert(annotz(1).show[Syntax] === "@e")
+    assert(ar.show[Syntax] === "@r")
+  }
+
+  test("2 q\"$expr: ..@annots\"") {
+    val mods = List(mod"@w", mod"@e")
+    assert(q"foo: @q ..@$mods @r".show[Syntax] === "foo: @q @w @e @r")
+  }
 
   test("q\"(..$exprs)\"") {
     val terms = List(q"y", q"z")
@@ -208,10 +209,24 @@ class QuasiquoteSuite extends FunSuite {
     assert(params(1).show[Syntax] === "y: String")
   }
 
-//  test("q\"{ ..$stats }\"") {
-//    val stats = List(q"val x = 1", q"val y = 2")
-//    q"{ ..$stats }"
-//  }
+  test("1 q\"{ ..$stats }\"") {
+    val stats = List(q"val x = 1", q"val y = 2")
+    assert(q"{ ..$stats }".show[Syntax] ===
+      """
+        |{
+        |  val x = 1
+        |  val y = 2
+        |}
+      """.stripMargin.trim)
+  }
+
+  test("2 q\"{ ..$stats }\"") {
+    val q"{foo; ..$statz; $astat}" = q"{foo; val a = x; val b = y; val c = z}"
+    assert(statz.toString === "List(val a = x, val b = y)")
+    assert(statz(0).show[Syntax] === "val a = x")
+    assert(statz(1).show[Syntax] === "val b = y")
+    assert(astat.show[Syntax] === "val c = z")
+  }
 
   test("q\"if ($expr) $expr else $expr\"") {
     val q"if ($expr1) $expr2 else $expr3" = q"if (1 > 2) a else b"
@@ -220,20 +235,46 @@ class QuasiquoteSuite extends FunSuite {
     assert(expr3.show[Syntax] === "b")
   }
 
-//  test("q\"$expr match { ..case $cases }\"") {
-//    val q"$expr match { ..case $cases }" =
-//      q"foo match { case bar => baz; case _ => foo }" // fixme test is broken, so even does not compile
-//  }
+  test("1 q\"$expr match { ..case $cases }\"") {
+    val q"$expr match { case bar => baz; ..case $casez; case q => w}" = q"foo match { case bar => baz; case _ => foo ; case q => w }"
+    assert(expr.show[Syntax] === "foo")
+    assert(casez.toString === "List(case _ => foo)")
+    assert(casez(0).show[Syntax] === "case _ => foo")
+  }
 
-//  test("q\"try $expr catch { ..case $cases } finally $expropt\"") {
-//    val q"try $expr catch { ..case $cases } finally $expropt" = // fixme test is broken, so even does not compile
-//      q"try foo catch { case _ => bar} finally baz"
-//  }
+  test("2 q\"$expr match { ..case $cases }\"") {
+    val q"$expr match { case bar => baz; ..case $casez; case _ => foo }" = q"foo match { case bar => baz; case _ => foo }"
+    assert(expr.show[Syntax] === "foo")
+    assert(casez.isEmpty)
+  }
 
-//  test("q\"try $expr catch $expr finally $expropt\"") {
-//    val q"try $expr catch $expr finally $expropt" =
-//      q"try foo catch { case _ => } finally bar" // fixme test is broken, so even does not compile
-//  }
+  test("3 q\"$expr match { ..case $cases }\"") {
+    val q"$expr match { ..case $casez }" = q"foo match { case bar => baz; case _ => foo }"
+    assert(expr.show[Syntax] === "foo")
+    assert(casez.toString === "List(case bar => baz, case _ => foo)")
+    assert(casez(0).show[Syntax] === "case bar => baz")
+    assert(casez(1).show[Syntax] === "case _ => foo")
+  }
+
+  // todo change to expropt (and test it) after issue #199 resolved
+
+  test("q\"try $expr catch { ..case $cases } finally $expr\"") {
+    val q"try $exp catch { case $case1 ..case $cases; case $case2 } finally $exprr" = q"try foo catch { case a => b; case _ => bar; case 1 => 2; case q => w} finally baz"
+    assert(exp.show[Syntax] === "foo")
+    assert(cases.toString === "List(case _ => bar, case 1 => 2)")
+    assert(cases(0).show[Syntax] === "case _ => bar")
+    assert(cases(1).show[Syntax] === "case 1 => 2")
+    assert(case1.show[Syntax] === "case a => b")
+    assert(case2.show[Syntax] === "case q => w")
+    assert(exprr.show[Syntax] === "baz")
+  }
+
+  test("q\"try $expr catch $expr finally $expr\"") {
+    val q"try $exp catch $exprr finally $exprrr" = q"try { foo } catch { pf } finally { bar }"
+    assert(exp.show[Syntax].replace("\n", "") === "{  foo}")
+    assert(exprr.show[Syntax] === "pf")
+    assert(exprrr.show[Syntax].replace("\n", "") === "{  bar}")
+  }
 
   test("""q"(i: Int) => 42" """) {
     assert(q"(i: Int) => 42".show[Syntax] === "(i: Int) => 42")
@@ -247,10 +288,6 @@ class QuasiquoteSuite extends FunSuite {
     assert(expr.show[Syntax] === "42")
   }
 
-//  test("val q\"($q, y, ..$e) => $r\" = q\"(x: X, y, z: Z) => 1\"") {
-//    val q"($q, y, ..$e) => $r" = q"(x: X, y, z: Z) => 1"
-//  }
-
   test("val q\"(..$q, y: Y, $e) => $r\" = q\"(x: X, y: Y, z: Z) => 1\"") {
     val q"(..$q, y: Y, $e) => $r" = q"(x: X, y: Y, z: Z) => 1"
     assert(q.toString === "List(x: X)")
@@ -260,7 +297,7 @@ class QuasiquoteSuite extends FunSuite {
   }
 
   test("q\"{ ..case $cases }\"") {
-    val q"{ case ..$cases }" = q"{ case i: Int => i + 1 }"
+    val q"{ ..case $cases }" = q"{ case i: Int => i + 1 }"
     assert(cases(0).show[Syntax] === "case i: Int => i + 1")
   }
 
@@ -276,16 +313,65 @@ class QuasiquoteSuite extends FunSuite {
     assert(expr2.show[Syntax] === "bar")
   }
 
-//  test("q\"for (..$enumerators) $expr\"") {
-//    val q"for (..$enumerators) $expr" = q"for (x <- xs; y <- ys) foo(x, y)" // fixme test is broken, so even does not compile
+  test("1 q\"for (..$enumerators) $expr\"") {
+    val q"for ($enum1; ..$enumerators; if $cond; $enum2) $exprr" = q"for (a <- as; x <- xs; y <- ys; if bar; b <- bs) foo(x, y)"
+    assert(enumerators.toString === "List(x <- xs, y <- ys)")
+    assert(enumerators(0).show[Syntax] === "x <- xs")
+    assert(enumerators(1).show[Syntax] === "y <- ys")
+    assert(cond.show[Syntax] === "bar")
+    assert(enum1.show[Syntax] === "a <- as")
+    assert(enum2.show[Syntax] === "b <- bs")
+    assert(exprr.show[Syntax] === "foo(x, y)")
+  }
+
+  test("2 q\"for (..$enumerators) $expr\"") {
+    val a = enumerator"a <- as"
+    val b = enumerator"b <- bs"
+    val ab = List(a,b)
+    assert(q"for (..$ab) foo".show[Syntax] === "for (a <- as; b <- bs) foo")
+  }
+
+//  test("3 q\"for (..$enumerators) $expr\"") {
+//    val q"for (a <- as; if $cond; ..$enums) bar" = q"for (a <- as; if foo; b <- bs) bar" // fixme does not compile
 //  }
 
-//  test("q\"for (..$enumerators) yield $expr\"") {
-//    val q"for (..$enumerators) yield $expr" =  q"for (x <- xs; y <- ys) yield foo(x, y)" // fixme test is broken, so even does not compile
-//  }
+  test("1 q\"for (..$enumerators) yield $expr\"") {
+    val q"for (a <- as; ..$enumerators; b <- bs) yield $expr" = q"for (a <- as; x <- xs; y <- ys; b <- bs) yield foo(x, y)"
+    assert(enumerators.toString === "List(x <- xs, y <- ys)")
+    assert(enumerators(0).show[Syntax] === "x <- xs")
+    assert(enumerators(1).show[Syntax] === "y <- ys")
+    assert(expr.show[Syntax] === "foo(x, y)")
+  }
 
-//  test("q\"new $template\"") {
-//    val q"new $template" = q"new Foo" // fixme test is broken, so even does not compile
+  test("2 q\"for (..$enumerators) yield $expr\"") {
+    val a = enumerator"a <- as"
+    val b = enumerator"b <- bs"
+    val ab = List(a,b)
+    assert(q"for (..$ab) yield foo".show[Syntax] === "for (a <- as; b <- bs) yield foo")
+  }
+
+  test("1 q\"new { ..$stat } with ..$exprs { $param => ..$stats }\"") {
+    val q"new $x" = q"new Foo"
+    assert(x.show[Structure] === "Ctor.Ref.Name(\"Foo\")")
+  }
+
+  test("2 q\"new { ..$stat } with ..$exprs { $param => ..$stats }\"") {
+    val q"new {..$stats; val b = 4} with $a {$selff => ..$statz}" = q"new {val a = 2; val b = 4} with A { self => val b = 3 }"
+    assert(stats.toString === "List(val a = 2)")
+    assert(stats(0).show[Syntax] === "val a = 2")
+    assert(a.show[Structure] === "Ctor.Ref.Name(\"A\")")
+    assert(selff.show[Structure] === "Term.Param(Nil, Term.Name(\"self\"), None, None)")
+    assert(statz.toString === "List(val b = 3)")
+    assert(statz(0).show[Syntax] === "val b = 3")
+  }
+
+  test("3 q\"new { ..$stat } with ..$exprs { $param => ..$stats }\"") {
+    val q"new X with T { $self => def m = 42}" = q"new X with T { def m = 42 }"
+    assert(self.show[Structure] === "Term.Param(Nil, Name.Anonymous(), None, None)")
+  }
+
+//  test("4 q\"new { ..$stat } with ..$exprs { $param => ..$stats }\"") {
+//    val q"new {..$stats; val b = 4} with $a {$selff => ..$statz}" = q"new {val a = 2; val b = 4}" // todo fails to compile, uncomment after issue #199 resolved
 //  }
 
   test("q\"_\"") {
@@ -306,4 +392,286 @@ class QuasiquoteSuite extends FunSuite {
     val q"$x" = q"42"
     assert(x.show[Syntax] === "42")
   }
+
+  test("arg\"$name = $expr\"") {
+    val name = q"x"
+    val expr = q"foo"
+    assert(arg"$name = $expr".show[Syntax] === "x = foo")
+  }
+
+  test("arg\"$expr: _*\"") {
+    val expr = q"foo"
+    assert(arg"$expr: _*".show[Syntax] === "foo: _*")
+  }
+
+  test("arg\"$expr\"") {
+    val expr = q"foo"
+    assert(q"$expr".show[Syntax] === "foo")
+  }
+
+  test("t\"$ref.$tname\"") {
+    val ref = q"X"
+    val tname = t"Y"
+    assert(t"$ref.$tname".show[Structure] === "Type.Select(Term.Name(\"X\"), Type.Name(\"Y\"))")
+  }
+
+  test("t\"$tpe#$tname\"") {
+    val tpe = t"X"
+    val tname = t"Y"
+    assert(t"$tpe#$tname".show[Syntax] === "X#Y")
+  }
+
+  test("t\"$ref.type\"") {
+    val ref = q"X"
+    assert(t"$ref.type".show[Syntax] === "X.type")
+  }
+
+  test("t\"$tpe[..$tpes]") {
+    val tpe = t"X"
+    val tpes = List(t"Y", t"Z")
+    assert(t"$tpe[..$tpes]".show[Syntax] === "X[Y, Z]")
+  }
+
+  test("t\"$tpe $tname $tpe\"") {
+    val tpe1 = t"X"
+    val tname = t"Y"
+    val tpe2 = t"Z"
+    assert(t"$tpe1 $tname $tpe2".show[Syntax] === "X Y Z")
+  }
+
+  test("t\"(..$atpes) => $tpe\"") {
+    val atpes = List(t"X", t"Y")
+    val tpe = t"Z"
+    assert(t"(..$atpes) => $tpe".show[Syntax] === "(X, Y) => Z")
+  }
+
+  test("t\"(..$tpes)\"") {
+    val tpes = List(t"X", t"Y")
+    assert(t"(..$tpes)".show[Syntax] === "(X, Y)")
+  }
+
+  test("1 t\"..$tpes { ..$stats }\"") {
+    val t"..$tpes {..$stats}" = t"A with B with C { val a: A; val b: B }"
+    assert(tpes.toString === "List(A, B, C)")
+    assert(tpes(0).show[Syntax] === "A")
+    assert(tpes(1).show[Syntax] === "B")
+    assert(tpes(2).show[Syntax] === "C")
+    assert(stats.toString === "List(val a: A, val b: B)")
+    assert(stats(0).show[Syntax] === "val a: A")
+    assert(stats(1).show[Syntax] === "val b: B")
+  }
+
+  test("2 t\"..$tpes { ..$stats }\"") {
+    val tpes = List(t"X", t"Y")
+    val stats = List(q"val a: A", q"val b: B")
+    assert(t"..$tpes { ..$stats }".show[Syntax] === "X with Y { val a: A; val b: B }")
+  }
+
+  test("t\"$tpe forSome { ..$stats }\"") {
+    val tpe = t"X"
+    val stats = List(q"val a:A", q"val b:B")
+    assert(t"$tpe forSome { ..$stats }".show[Syntax] === "X forSome { val a: A; val b: B }")
+  }
+
+  test("t\"$tpe ..@$annots\"") {
+    val tpe = t"X"
+    val annots = List(mod"@a", mod"@b")
+    assert(t"$tpe ..@$annots".show[Syntax] === "X @a @b")
+  }
+
+  test("t\"_ >: $tpeopt <: $tpeopt\"") {
+    val tpe1 = t"X"
+    val tpe2 = t"Y"
+    assert(t"_ >: $tpe1 <: $tpe2".show[Syntax] === "_ >: X <: Y")
+  }
+
+  test("1 t\"[..$tparams] => $tpe\"") {
+    val t"[..$tparams] => $tpe" = t"[X, Y] => (X, Int) => Y"
+    assert(tparams.toString === "List(X, Y)")
+    assert(tparams(0).show[Syntax] === "X")
+    assert(tparams(1).show[Syntax] === "Y")
+    assert(tpe.show[Syntax] === "(X, Int) => Y")
+  }
+
+  test("2 t\"[..$tparams] => $tpe\"") {
+    val tparams = List(tparam"X", tparam"Y")
+    val tpe = t"Z"
+    assert(t"[..$tparams] => $tpe".show[Syntax] === "[X, Y] => Z")
+  }
+
+  test("t\"$lit\"") {
+    val lit = q"1"
+    assert(t"$lit".show[Syntax] === "1")
+  }
+
+  test("t\"=> $tpe\"") {
+    val tpe = t"X"
+    assert(t"=> $tpe".show[Syntax] === "=> X")
+  }
+
+  test("t\"$tpe *\"") {
+    val tpe = t"X"
+    assert(t"$tpe*".show[Syntax] === "X*")
+  }
+
+  test("t\"$tpe\"") {
+    val tpe = t"X"
+    assert(t"$tpe".show[Syntax] === "X")
+  }
+
+//  test("p\"$name @ $pat\"") {
+//    val name = q"x"
+//    val pat = p"y"
+//    assert(p"$name @ $pat".show[Syntax] === "x @ y")
+//  }
+
+  test("p\"$pat | $pat\"") {
+    val pat1 = p"X"
+    val pat2 = p"Y"
+    assert(p"$pat1 | $pat2".show[Syntax] === "X | Y")
+  }
+
+  test("p\"(..$pats)\"") {
+    val pats = List(p"X", p"Y")
+    assert(p"(..$pats)".show[Syntax] === "(X, Y)")
+    assert(p"${pats.head}".show[Syntax] === "X")
+  }
+
+//  test("p\"$ref[..$tpes](..$apats)\"") {
+//    val ref = q"x"
+//    val tpes = List(t"A", t"B")
+//    val apats = List(p"Q", p"W")
+//    assert(p"$ref[..$tpes](..$apats)".show[Syntax] === "...")
+//  }
+
+//  test("p\"$pat $name (..$apats)\"") {
+//    val pat = p"x"
+//    val name = q"y"
+//    val apats = List(p"Q", p"W")
+//    assert(p"$pat $name (..$apats)".show[Syntax] === "...")
+//  }
+
+//  test("p\"\"\" $name\"$${..$pats}\" \"\"\"") {
+//    val name = q"x"
+//    val pats = List(p"X", p"Y")
+//    assert(p""" $name"$${..$pats}" """.show[Syntax] === "...")
+//  }
+
+  test("p\"$pat: $ptpe\"") {
+    val pat = p"x"
+    val ptpe = pt"Y"
+    assert(p"$pat: $ptpe".show[Syntax] === "x: Y")
+  }
+
+//  test("p\"$expr.$name\"") {
+//    val expr = q"foo(bar)"
+//    val name = q"x"
+//    assert(p"$expr.$name".show[Syntax] === "foo(bar).x")
+//  }
+
+  test("p\"$lit\"") {
+    val lit = q"1"
+    assert(p"$lit".show[Syntax] === "1")
+  }
+
+  test("p\"case $pat if $expropt => $expr\"") {
+    val pat = p"X"
+    val expropt = q"foo"
+    val expr = q"bar"
+    assert(p"case $pat if $expropt => $expr".show[Syntax] === "case X if foo => bar")
+  }
+
+  test("p\"$pat\"") {
+    val pat = p"X"
+    assert(p"$pat".show[Syntax] === "X")
+  }
+
+  test("pt\"$ref.$tname\"") {
+    val ref = q"x"
+    val tname = t"A"
+    assert(pt"$ref.$tname".show[Syntax] === "x.A")
+  }
+
+//  test("pt\"$ref#$tname\"") {
+//    val ref = q"x"
+//    val tname = t"A"
+//    assert(pt"$ref#$tname".show[Syntax] === "x#A")
+//  }
+
+  test("pt\"$ref.type\"") {
+    val ref = q"x"
+    assert(pt"$ref.type".show[Syntax] === "x.type")
+  }
+
+  test("pt\"$ptpe[..$ptpes]") {
+    val ptpe = pt"X"
+    val ptpes = List(pt"Y", pt"Z")
+    assert(pt"$ptpe[..$ptpes]".show[Syntax] === "X[Y, Z]")
+  }
+
+//  test("pt\"$ptpe $tname $ptpe\"") {
+//    val ptpe1 = pt"X"
+//    val tname = t"Y"
+//    val ptpe2 = pt"Z"
+//    assert(pt"$ptpe $tname $ptpe")
+//  }
+
+//  test("pt\"(..$ptpes) => $ptpe\"") {
+//    val ptpes = List(pt"X", pt"Y")
+//    val ptpe = pt"Z"
+//    assert(pt"(..$ptpes).show[Syntax] => $ptpe" === "...")
+//  }
+
+  test("pt\"(..$ptpes)\"") {
+    val ptpes = List(pt"X", pt"Y")
+    assert(pt"(..$ptpes)".show[Syntax] === "(X, Y)")
+  }
+
+  test("1 pt\"..$ptpes { ..$stats }\"") {
+    val ptpes = List(pt"X", pt"Y")
+    val stats = List(q"val a: A", q"val b: B")
+    assert(pt"..$ptpes { ..$stats }".show[Syntax] === "X with Y { val a: A; val b: B }")
+  }
+
+  test("2 pt\"..$ptpes { ..$stats }\"") {
+    val pt"..$ptpes { ..$stats }" = pt"X with Y { val a: A }"
+    assert(ptpes.toString === "List(X, Y)")
+    assert(ptpes(0).show[Syntax] === "X")
+    assert(ptpes(1).show[Syntax] === "Y")
+    assert(stats.toString === "List(val a: A)")
+    assert(stats(0).show[Syntax] === "val a: A")
+  }
+
+//  test("pt\"$ptpe forSome { ..$stats }\"") {
+//    val ptpe = pt"X"
+//    val stats = List(q"val a: A")
+//    assert(pt"$ptpe forSome { ..$stats }".show[Syntax] === "X forSome { val a: A }")
+//  }
+
+  test("pt\"$ptpe ..@annots\"") {
+    val ptpe = pt"X"
+    val annots = List(mod"@q", mod"@w")
+    assert(pt"$ptpe ..@$annots".show[Syntax] === "X @q @w")
+  }
+
+  test("t\"_ >: $tpeopt <: tpeopt\"") {
+    val tpe1 = t"X"
+    val tpe2 = t"Y"
+    assert(pt"_ >: $tpe1 <: $tpe2".show[Syntax] === "_ >: X <: Y")
+  }
+
+  test("pt\"$lit\"") {
+    val lit = q"1"
+    assert(pt"$lit".show[Syntax] === "1")
+  }
+
+//  test("1 q\"import ..($ref.{..$importees})\"") {
+//    val ref = q"x"
+//    val importees = List(importee"A", importee"B")
+//    assert(q"import ..($ref.{..$importees})".show[Syntax] === "")
+//  }
+
+//  test("2 q\"import ..($ref.{..$importees})\"") {
+//    val q"import ..(x.{..$importees})" = q"import a.A"
+//  }
 }

@@ -529,7 +529,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
 
 /* ---------- TREE CONSTRUCTION ------------------------------------------- */
 
-  def ellipsis[T <: Tree : AstMetadata](rank: Int, body: => T): T = autoPos {
+  def ellipsis[T <: Tree : AstMetadata](rank: Int, body: => T, extraSkip: => Unit = {}): T = autoPos {
     token match {
       case ellipsis: Ellipsis =>
         if (ellipsis.rank != rank) {
@@ -537,6 +537,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
           syntaxError(errorMessage, at = ellipsis)
         } else {
           next()
+          extraSkip
           val tree = {
             val result = token match {
               case _: `(` => inParens(body)
@@ -562,15 +563,21 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     }
   }
 
-  def unquote[T <: Tree : AstMetadata]: T = autoPos {
+  def unquote[T <: Tree : AstMetadata](advance: Boolean = true): T = autoPos {
     token match {
       case unquote: Unquote =>
-        next()
-        implicitly[AstMetadata[T]].quasi(0, unquote.tree)
+        if (advance) {
+          next()
+          implicitly[AstMetadata[T]].quasi(0, unquote.tree)
+        } else ahead {
+          implicitly[AstMetadata[T]].quasi(0, unquote.tree)
+        }
       case _ =>
         unreachable(debug(token))
     }
   }
+
+  def unquote[T <: Tree : AstMetadata]: T = unquote[T](advance = true) // to write `unquote[T]` without round braces
 
   /** Convert tree to formal parameter list. */
   def convertToParams(tree: Term): List[Term.Param] = tree match {
@@ -597,10 +604,15 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   }
 
   def convertToTypeId(ref: Term.Ref): Option[Type] = ref match {
-    case ref: Quasi =>
+    case ref: Term.Ref.Quasi =>
       Some(ref.become[Type.Quasi])
+    case Term.Select(qual: Term.Quasi, name: Term.Name.Quasi) =>
+      val newQual = qual.become[Term.Ref.Quasi]
+      val newName = name.become[Type.Name.Quasi]
+      Some(atPos(ref, ref)(Type.Select(newQual, newName)))
     case Term.Select(qual: Term.Ref, name) =>
-      Some(atPos(ref, ref)(Type.Select(qual, atPos(name, name)(Type.Name(name.value)))))
+      val newName = atPos(name, name)(Type.Name(name.value))
+      Some(atPos(ref, ref)(Type.Select(qual, newName)))
     case name: Term.Name =>
       Some(atPos(name, name)(Type.Name(name.value)))
     case _ =>
@@ -623,16 +635,13 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   @inline final def commaSeparated[T <: Tree : AstMetadata](part: => T): List[T] =
     tokenSeparated[`,`, T](sepFirst = false, part)
 
-  @inline final def caseSeparated[T <: Tree : AstMetadata](part: => T): List[T] =
-    tokenSeparated[`case`, T](sepFirst = true, part)
-
-  def readAnnots(part: => Mod.Annot): List[Mod.Annot] =
-    tokenSeparated[`@`, Mod.Annot](sepFirst = true, part)
-
   def makeTuple[T <: Tree](body: List[T], zero: () => T, tuple: List[T] => T): T = body match {
-    case Nil         => zero()
-    case only :: Nil => only
-    case _           => tuple(body)
+    case Nil => zero()
+    case only :: Nil => only match {
+      case q: Quasi if q.rank == 1 => tuple(body)
+      case _ => only
+    }
+    case _ => tuple(body)
   }
 
   def makeTupleTerm(body: List[Term]): Term = {
@@ -660,9 +669,12 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     }
   }
 
-  def makeTuplePatParens(bodyf: => List[Pat.Arg]): Pat = autoPos {
-    val body = inParens(if (token.is[`)`]) Nil else bodyf.map(_.require[Pat]))
-    makeTuple[Pat](body, () => Lit.Unit(), Pat.Tuple(_))
+  def makeTuplePatParens(): Pat = {
+    val patterns = inParens(noSeq.patterns()).map {
+      case q: Pat.Arg.Quasi => q.become[Pat.Quasi]
+      case p => p.require[Pat]
+    }
+    makeTuple[Pat](patterns, () => Lit.Unit(), Pat.Tuple(_))
   }
 
 /* --------- OPERAND/OPERATOR STACK --------------------------------------- */
@@ -793,6 +805,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
           Type.Function(ts, typ())
         } else {
           val tuple = atPos(openParenPos, closeParenPos)(makeTupleType(ts map {
+            case q: Type.Arg.Quasi    => q.become[Type.Quasi]
             case t: Type              => t
             case p: Type.Arg.ByName   => syntaxError("by name type not allowed here", at = p)
             case p: Type.Arg.Repeated => syntaxError("repeated type not allowed here", at = p)
@@ -808,9 +821,20 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       }
     }
 
+    private def typeLambda(): Type =
+      if (dialect.allowTypeLambdas) {
+        val quants = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
+        accept[`=>`]
+        val tpe = typ()
+        Type.Lambda(quants, tpe)
+      } else {
+        syntaxError(s"type lambdas are not allowed for the $dialect dialect", at = token)
+      }
+
     /** {{{
      *  Type ::= InfixType `=>' Type
      *         | `(' [`=>' Type] `)' `=>' Type
+     *         | `[' [`=>' Type] `]' `=>' Type
      *         | InfixType [ExistentialClause]
      *  ExistentialClause ::= forSome `{' ExistentialDcl {semi ExistentialDcl}} `}'
      *  ExistentialDcl    ::= type TypeDcl | val ValDcl
@@ -819,6 +843,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     def typ(): Type = autoPos {
       val t: Type =
         if (token.is[`(`]) tupleInfixType()
+        else if (token.is[`[`]) typeLambda()
         else infixType(InfixMode.FirstOp)
 
       token match {
@@ -893,8 +918,12 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       val types = ts.toList
       if (token.is[`{`]) {
         val refinements = refinement()
+        val hasQuasi = t match {
+          case q @ Some(Type.Quasi(1, _)) => true
+          case _ => false
+        }
         (types, refinements) match {
-          case (typ :: Nil, Nil) => typ
+          case (typ :: Nil, Nil) if !hasQuasi => typ
           case _  => Type.Compound(types, refinements)
         }
       } else {
@@ -904,7 +933,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     }
 
     def infixTypeRest(t: Type, mode: InfixMode.Value): Type = atPos(t, auto) {
-      if (isIdentExcept("*")) {
+      if (isIdentExcept("*") || token.is[Unquote]) {
         val name = termName(advance = false)
         val leftAssoc = name.isLeftAssoc
         if (mode != InfixMode.FirstOp) checkAssoc(name, leftAssoc = mode == InfixMode.LeftOp)
@@ -941,7 +970,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         case _ => loop(tpe)
       }
       def loop(tpe: Type): Pat.Type = tpe match {
-        case q: impl.Quasi => q.become[Pat.Type.Quasi]
+        case q: Type.Quasi => q.become[Pat.Type.Quasi]
         case tpe: Type.Name => tpe
         case tpe: Type.Select => tpe
         case Type.Project(qual, name) => atPos(tpe, tpe)(Pat.Type.Project(loop(qual), name))
@@ -969,7 +998,9 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       if (advance) next()
       res
     case token: Unquote =>
-      unquote[T]
+      unquote[T](advance)
+    case token: Ellipsis =>
+      ellipsis(1, unquote[T](advance))
     case _ =>
       syntaxErrorExpected[Ident]
   }
@@ -984,7 +1015,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
    */
   // TODO: this has to be rewritten
   def path(thisOK: Boolean = true): Term.Ref = {
-    def stop = token.isNot[`.`] || ahead { token.isNot[`this`] && token.isNot[`super`] && !token.is[Ident] }
+    def stop = token.isNot[`.`] || ahead { token.isNot[`this`] && token.isNot[`super`] && !token.is[Ident] && !token.is[Unquote] }
     if (token.is[`this`]) {
       val anonqual = atPos(in.tokenPos, in.prevTokenPos)(Name.Anonymous())
       next()
@@ -1301,7 +1332,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
           next()
           if (token.isNot[`{`]) Some(expr())
           else inBraces {
-            if (token.is[CaseIntro]) Some(caseClauses())
+            if (token.is[CaseIntro] || token.is[Ellipsis]) Some(caseClauses())
             else Some(expr())
           }
         }
@@ -1375,7 +1406,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         }
       } else if (token.is[`:`]) {
         next()
-        if (token.is[`@`]) {
+        if (token.is[`@`] || (token.is[Ellipsis] && ahead(token.is[`@`]))) {
           t = atPos(t, auto)(Term.Annotate(t, annots(skipNewLines = false)))
         } else {
           t = {
@@ -1645,7 +1676,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
    */
   def blockExpr(): Term = autoPos {
     inBraces {
-      if (token.is[CaseIntro]) Term.PartialFunction(caseClauses())
+      if (token.is[CaseIntro] || (token.is[Ellipsis] && ahead(token.is[`case`]))) Term.PartialFunction(caseClauses())
       else block()
     }
   }
@@ -1661,19 +1692,14 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
 
   def caseClause(): Case = atPos(in.prevTokenPos, auto) {
     require(token.isNot[`case`] && debug(token))
-    token match {
-      case token: Unquote if token.prev.is[Ellipsis] =>
-        unquote[Case]
-      case token =>
-        Case(pattern().require[Pat], guard(), {
-          accept[`=>`]
-          autoPos(blockStatSeq() match {
-            case List(q: impl.Quasi) => Term.Block(List(q))
-            case List(blk: Term.Block) => blk
-            case stats => Term.Block(stats)
-          })
-        })
-    }
+    Case(pattern().require[Pat], guard(), {
+      accept[`=>`]
+      autoPos(blockStatSeq() match {
+        case List(q: impl.Quasi) => Term.Block(List(q))
+        case List(blk: Term.Block) => blk
+        case stats => Term.Block(stats)
+      })
+    })
   }
 
   /** {{{
@@ -1682,10 +1708,23 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
    *  }}}
    */
   def caseClauses(): List[Case] = {
-    val cases = caseSeparated { caseClause() }
+    val cases = new ListBuffer[Case]
+    while (token.is[CaseIntro] || token.is[Ellipsis]) {
+      if (token.is[Ellipsis]) {
+        cases += ellipsis(1, unquote[Case], accept[`case`])
+        if (token.is[StatSep]) next()
+      } else if (token.is[`case`] && ahead(token.is[Unquote])) {
+        next()
+        cases += unquote[Case]
+        if (token.is[StatSep]) next()
+      } else {
+        next()
+        cases += caseClause()
+      }
+    }
     if (cases.isEmpty)  // trigger error if there are no cases
       accept[`case`]
-    cases
+    cases.toList
   }
 
   /** {{{
@@ -1715,6 +1754,11 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
 
   def enumerator(isFirst: Boolean, allowNestedIf: Boolean = true): List[Enumerator] =
     if (token.is[`if`] && !isFirst) autoPos(Enumerator.Guard(guard().get)) :: Nil
+    else if (token.is[Ellipsis]) {
+      ellipsis(1, unquote[Enumerator.Generator]) :: Nil
+    } else if (token.is[Unquote]) {
+      unquote[Enumerator.Generator] :: Nil
+    }
     else generator(!isFirst, allowNestedIf)
 
   /** {{{
@@ -1961,7 +2005,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       case _: Xml.Start =>
         xmlPat()
       case _: `(` =>
-        makeTuplePatParens(noSeq.patterns())
+        makeTuplePatParens()
       case _: Unquote =>
         unquote[Pat]
       case _ =>
@@ -2092,17 +2136,22 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
    *  ConsrAnnotations ::= {`@' SimpleType ArgumentExprs}
    *  }}}
    */
-  def annots(skipNewLines: Boolean): List[Mod.Annot] = readAnnots {
-    require(token.isNot[`@`] && debug(token))
-    val t = atPos(in.prevTokenPos, auto)(Mod.Annot(constructorCall(exprSimpleType, allowArgss = true)))
-    if (skipNewLines) newLineOpt()
-    t
+  def annots(skipNewLines: Boolean, allowArgss: Boolean = true): List[Mod.Annot] = {
+    val annots = new ListBuffer[Mod.Annot]
+    while (token.is[`@`] || token.is[Ellipsis]) {
+      if (token.is[Ellipsis]) {
+        annots += ellipsis(1, unquote[Mod.Annot], accept[`@`])
+      } else {
+        next()
+        if (token.is[Unquote]) annots += unquote[Mod.Annot]
+        else annots += atPos(in.prevTokenPos, auto)(Mod.Annot(constructorCall(exprSimpleType(), allowArgss)))
+      }
+      if (skipNewLines) newLineOpt()
+    }
+    annots.toList
   }
 
-  def constructorAnnots(): List[Mod.Annot] = readAnnots {
-    require(token.isNot[`@`] && debug(token))
-    atPos(in.prevTokenPos, auto)(Mod.Annot(constructorCall(exprSimpleType(), allowArgss = false)))
-  }
+  def constructorAnnots(): List[Mod.Annot] = annots(skipNewLines = false, allowArgss = false)
 
 /* -------- PARAMETERS ------------------------------------------- */
 
@@ -2635,6 +2684,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         atPos(arrow, arrow)(Ctor.Ref.Function(atPos(arrow, arrow)(Ctor.Name("=>"))))
       }
       atPos(tpe, tpe)(tpe match {
+        case q: Type.Quasi => q.become[Ctor.Ref.Name.Quasi]
         case Type.Name(value) => Ctor.Name(value)
         case Type.Select(qual, name) => Ctor.Ref.Select(qual, atPos(name, name)(Ctor.Name(name.value)))
         case Type.Project(qual, name) => Ctor.Ref.Project(qual, atPos(name, name)(Ctor.Name(name.value)))
@@ -2708,6 +2758,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   }
 
   def ensureEarlyDef(tree: Stat): Stat = tree match {
+    case v: Stat.Quasi => v
     case v: Defn.Val => v
     case v: Defn.Var => v
     case t: Defn.Type =>
@@ -2814,6 +2865,8 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       val first = expr(InTemplate) // @S: first statement is potentially converted so cannot be stubbed.
       if (token.is[`=>`]) {
         first match {
+          case q: Term.Quasi =>
+            self = q.become[Term.Param.Quasi]
           case name: Term.Placeholder =>
             self = atPos(first, first)(Term.Param(Nil, atPos(name, name)(Name.Anonymous()), None, None))
           case name @ Term.This(Name.Anonymous()) =>
@@ -2874,7 +2927,9 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   }
 
   def refineStat(): Option[Stat] =
-    if (token.is[DclIntro]) {
+    if (token.is[Ellipsis]) {
+      Some(ellipsis(1, unquote[Stat]))
+    } else if (token.is[DclIntro]) {
       defOrDclOrSecondaryCtor(Nil) match {
         case stat if stat.isRefineStat => Some(stat)
         case other                     => syntaxError("is not a valid refinement declaration", at = other)
@@ -2911,7 +2966,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
    */
   def blockStatSeq(): List[Stat] = {
     val stats = new ListBuffer[Stat]
-    while (!token.is[StatSeqEnd] && !token.is[CaseDefEnd]) {
+    while (!token.is[StatSeqEnd] && !token.is[CaseDefEnd] && !ahead(token.is[`case`])) {
       if (token.is[`import`]) {
         stats += importStmt()
         acceptStatSepOpt()
@@ -2933,6 +2988,9 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       }
       else if (token.is[StatSep]) {
         next()
+      }
+      else if (token.is[Ellipsis]) {
+        stats += ellipsis(1, unquote[Stat])
       }
       else {
         syntaxError("illegal start of statement", at = token)
