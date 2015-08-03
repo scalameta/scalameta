@@ -36,6 +36,7 @@ object Input {
         orig = File(f, charset)
       }
       private def readResolve(): AnyRef = orig
+      override def toString = s"Proxy($orig)"
     }
   }
   implicit val charsToInput: Convert[Array[Char], Input] = Convert.apply(chars => Input.String(new scala.Predef.String(chars)))

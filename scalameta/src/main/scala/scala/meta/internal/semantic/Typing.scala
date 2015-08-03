@@ -22,6 +22,7 @@ object Typing {
         orig = Specified(tpe)
       }
       private def readResolve(): AnyRef = orig
+      override def toString = s"Proxy($orig)"
     }
   }
 }
