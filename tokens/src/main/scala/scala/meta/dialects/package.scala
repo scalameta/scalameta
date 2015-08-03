@@ -21,7 +21,9 @@ trait Dialect extends Serializable {
   // Necessary to support quasiquotes, e.g. `q"foo(..$args)"`.
   def allowEllipses: Boolean
 
-  // https://github.com/scalameta/scalameta/commit/e2317e8655ead8a2a391355ed91bccf98eadb2c7
+  // Are type lambdas supported in this dialect?
+  // At the moment, this is exclusive for quasiquotes.
+  // For more info, see https://github.com/scalameta/scalameta/commit/e2317e8655ead8a2a391355ed91bccf98eadb2c7
   def allowTypeLambdas: Boolean
 }
 

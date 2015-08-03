@@ -543,6 +543,7 @@ package scala.meta.internal.ast {
     def rank: Int
     def tree: Any
     def pt: Class[_]
+    def become[T <: Quasi : AstMetadata]: T
   }
 
   // TODO: since trees are no longer sealed, we need a mechanism that would keep track of all of them

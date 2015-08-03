@@ -47,6 +47,7 @@ class AstMacros(val c: Context) {
       val aname = TypeName("Api")
       val name = TypeName("Impl")
       val qname = TypeName("Quasi")
+      val qmname = TermName("Quasi")
       val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" = mdef
       val bparams1 = ListBuffer[ValDef]() // boilerplate params
       val paramss1 = ListBuffer[List[ValDef]]() // payload params
@@ -394,6 +395,20 @@ class AstMacros(val c: Context) {
 
       // step 13: finish codegen for Quasi
       qstats1 += q"def pt: _root_.java.lang.Class[_] = _root_.org.scalameta.runtime.arrayClass(_root_.scala.Predef.classOf[$iname], this.rank)"
+      if (isQuasi) {
+        stats1 += q"""
+          def become[T <: _root_.scala.meta.internal.ast.Quasi](implicit ev: _root_.org.scalameta.ast.AstMetadata[T]): T = {
+            this match {
+              case $mname(0, tree) =>
+                ev.quasi(0, tree).withTokens(this.tokens).asInstanceOf[T]
+              case $mname(1, nested @ $mname(0, tree)) =>
+                ev.quasi(1, nested.become[T]).withTokens(this.tokens).asInstanceOf[T]
+              case _ =>
+                throw new Exception("complex ellipses are not supported yet")
+            }
+          }
+        """
+      }
       if (is("Term.Block.Quasi") || is("Type.Bounds.Quasi") || is("Ctor.Primary.Quasi") ||
           is("Import.Clause.Quasi") || is("Lit.String.Quasi")) {
         // NOTE: before you remove one or all of these throws, you must know what's going on in the "allFields.unquote" test
