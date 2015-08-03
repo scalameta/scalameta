@@ -461,11 +461,11 @@ class QuasiquoteSuite extends FunSuite {
     assert(stats(1).show[Syntax] === "val b: B")
   }
 
-//  test("2 t\"..$tpes { ..$stats }\"") {
-//    val tpes = List(t"X", t"Y")
-//    val stats = List(q"val a: A; val b: B")
-//    assert(t"..$tpes { ..$stats }".show[Syntax] === "...")
-//  }
+  test("2 t\"..$tpes { ..$stats }\"") {
+    val tpes = List(t"X", t"Y")
+    val stats = List(q"val a: A", q"val b: B")
+    assert(t"..$tpes { ..$stats }".show[Syntax] === "X with Y { val a: A; val b: B }")
+  }
 
   test("t\"$tpe forSome { ..$stats }\"") {
     val tpe = t"X"
@@ -519,7 +519,7 @@ class QuasiquoteSuite extends FunSuite {
     assert(t"$tpe".show[Syntax] === "X")
   }
 
-//  test("p\"$name @ $pat\"") { // same wtf as test("2 t\"..$tpes { ..$stats }\"")
+//  test("p\"$name @ $pat\"") {
 //    val name = q"x"
 //    val pat = p"y"
 //    assert(p"$name @ $pat".show[Syntax] === "x @ y")
@@ -545,7 +545,7 @@ class QuasiquoteSuite extends FunSuite {
 //  }
 
 //  test("p\"$pat $name (..$apats)\"") {
-//    val pat = p"X"
+//    val pat = p"x"
 //    val name = q"y"
 //    val apats = List(p"Q", p"W")
 //    assert(p"$pat $name (..$apats)".show[Syntax] === "...")
@@ -557,11 +557,11 @@ class QuasiquoteSuite extends FunSuite {
 //    assert(p""" $name"$${..$pats}" """.show[Syntax] === "...")
 //  }
 
-//  test(" \tp\"$pat: $ptpe\"") {
-//    val pat = p"X"
-//    val ptpe = pt"Y"
-//    assert(p"$pat: $ptpe".show[Syntax] === "...")
-//  }
+  test("p\"$pat: $ptpe\"") {
+    val pat = p"x"
+    val ptpe = pt"Y"
+    assert(p"$pat: $ptpe".show[Syntax] === "x: Y")
+  }
 
 //  test("p\"$expr.$name\"") {
 //    val expr = q"foo(bar)"
@@ -627,11 +627,11 @@ class QuasiquoteSuite extends FunSuite {
     assert(pt"(..$ptpes)".show[Syntax] === "(X, Y)")
   }
 
-//  test("1 pt\"..$ptpes { ..$stats }\"") {
-//    val ptpes = List(pt"X", pt"Y")
-//    val stats = List(q"val a: A", q"val b: B")
-//    assert(pt"..$ptpes { ..$stats }")
-//  }
+  test("1 pt\"..$ptpes { ..$stats }\"") {
+    val ptpes = List(pt"X", pt"Y")
+    val stats = List(q"val a: A", q"val b: B")
+    assert(pt"..$ptpes { ..$stats }".show[Syntax] === "X with Y { val a: A; val b: B }")
+  }
 
   test("2 pt\"..$ptpes { ..$stats }\"") {
     val pt"..$ptpes { ..$stats }" = pt"X with Y { val a: A }"

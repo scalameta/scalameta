@@ -588,7 +588,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   /** Convert tree to formal parameter. */
   def convertToParam(tree: Term): Option[Term.Param] = tree match {
     case q: Term.Quasi =>
-      Some(atPos(tree, tree)(Term.Param.Quasi(q.rank, q.tree)))
+      Some(q.become[Term.Param.Quasi])
     case name: Term.Name =>
       Some(atPos(tree, tree)(Term.Param(Nil, name, None, None)))
     case name: Term.Placeholder =>
@@ -604,11 +604,11 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   }
 
   def convertToTypeId(ref: Term.Ref): Option[Type] = ref match {
-    case ref: Quasi =>
-      Some(atPos(ref, ref)(Type.Quasi(ref.rank, ref.tree)))
+    case ref: Term.Ref.Quasi =>
+      Some(ref.become[Type.Quasi])
     case Term.Select(qual: Term.Quasi, name: Term.Name.Quasi) =>
-      val newQual = atPos(qual, qual)(Term.Ref.Quasi(qual.rank, qual.tree))
-      val newName = atPos(name, name)(Type.Name.Quasi(name.rank, name.tree))
+      val newQual = qual.become[Term.Ref.Quasi]
+      val newName = name.become[Type.Name.Quasi]
       Some(atPos(ref, ref)(Type.Select(newQual, newName)))
     case Term.Select(qual: Term.Ref, name) =>
       val newName = atPos(name, name)(Type.Name(name.value))
@@ -671,9 +671,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
 
   def makeTuplePatParens(): Pat = {
     val patterns = inParens(noSeq.patterns()).map {
-      case q1 @ Pat.Arg.Quasi(1, q0 @ Pat.Arg.Quasi(0, tree)) =>
-        val inner = atPos(q0, q0)(Pat.Quasi(0, tree))
-        atPos(q1, q1)(Pat.Quasi(1, inner))
+      case q: Pat.Arg.Quasi => q.become[Pat.Quasi]
       case p => p.require[Pat]
     }
     makeTuple[Pat](patterns, () => Lit.Unit(), Pat.Tuple(_))
@@ -807,9 +805,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
           Type.Function(ts, typ())
         } else {
           val tuple = atPos(openParenPos, closeParenPos)(makeTupleType(ts map {
-            case q1 @ Type.Arg.Quasi(1, q0 @ Type.Arg.Quasi(0, tree)) =>
-              val inner = atPos(q0, q0)(Type.Quasi(0, tree))
-              atPos(q1, q1)(Type.Quasi(1, inner))
+            case q: Type.Arg.Quasi    => q.become[Type.Quasi]
             case t: Type              => t
             case p: Type.Arg.ByName   => syntaxError("by name type not allowed here", at = p)
             case p: Type.Arg.Repeated => syntaxError("repeated type not allowed here", at = p)
@@ -832,7 +828,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         val tpe = typ()
         Type.Lambda(quants, tpe)
       } else {
-        syntaxError("type lambdas are not allowed for this dialect", at = token)
+        syntaxError(s"type lambdas are not allowed for the $dialect dialect", at = token)
       }
 
     /** {{{
@@ -974,8 +970,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         case _ => loop(tpe)
       }
       def loop(tpe: Type): Pat.Type = tpe match {
-        case q1 @ Type.Quasi(1, q0 @ Type.Quasi(0, tree)) => atPos(q1, q1)(Pat.Type.Quasi(1, atPos(q0, q0)(Pat.Type.Quasi(0, tree))))
-        case q: impl.Quasi => atPos(q, q)(Pat.Type.Quasi(q.rank, q.tree))
+        case q: Type.Quasi => q.become[Pat.Type.Quasi]
         case tpe: Type.Name => tpe
         case tpe: Type.Select => tpe
         case Type.Project(qual, name) => atPos(tpe, tpe)(Pat.Type.Project(loop(qual), name))
@@ -1049,7 +1044,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         if (token.is[`this`]) {
           next()
           val qual = name match {
-            case q: Term.Name.Quasi => atPos(q, q)(Name.Qualifier.Quasi(q.rank, q.tree))
+            case q: Term.Name.Quasi => q.become[Name.Qualifier.Quasi]
             case name => atPos(name, name)(Name.Indeterminate(name.value))
           }
           val thisp = atPos(name, auto)(Term.This(qual))
@@ -1061,7 +1056,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         } else if (token.is[`super`]) {
           next()
           val qual = name match {
-            case q: Term.Name.Quasi => atPos(q, q)(Name.Qualifier.Quasi(q.rank, q.tree))
+            case q: Term.Name.Quasi => q.become[Name.Qualifier.Quasi]
             case name => atPos(name, name)(Name.Indeterminate(name.value))
           }
           val superp = atPos(name, auto)(Term.Super(qual, mixinQualifier()))
@@ -1074,7 +1069,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
           }
         } else {
           selectors(name match {
-            case q: Term.Name.Quasi => atPos(q, q)(Term.Quasi(q.rank, q.tree)) // force typing according to spec ($name is Term)
+            case q: Term.Name.Quasi => q.become[Term.Quasi]
             case name => name
           })
         }
@@ -1100,7 +1095,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     if (token.is[`[`]) {
       inBrackets {
         typeName() match {
-          case q: Type.Name.Quasi => atPos(q, q)(Name.Qualifier.Quasi(q.rank, q.tree))
+          case q: Type.Name.Quasi => q.become[Name.Qualifier.Quasi]
           case name => atPos(name, name)(Name.Indeterminate(name.value))
         }
 
@@ -1406,7 +1401,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
             t = atPos(core, auto)(Term.Update(core, argss, expr()))
           case q: Term.Quasi =>
             next()
-            t = atPos(q, auto)(Term.Assign(atPos(q, q)(Term.Ref.Quasi(q.rank, q.tree)), expr()))
+            t = atPos(q, auto)(Term.Assign(q.become[Term.Ref.Quasi], expr()))
           case _ =>
         }
       } else if (token.is[`:`]) {
@@ -1576,7 +1571,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
           xmlTerm()
         case _: Ident | _: `this` | _: `super` | _: Unquote =>
           path() match {
-            case q: Term.Ref.Quasi => atPos(q, q)(Term.Quasi(q.rank, q.tree))
+            case q: Term.Ref.Quasi => q.become[Term.Quasi]
             case path => path
           }
         case _: `_ ` =>
@@ -1653,7 +1648,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   def argumentExpr(): Term.Arg = {
     expr() match {
       case q: impl.Quasi =>
-        atPos(q, q)(Term.Arg.Quasi(q.rank, q.tree))
+        q.become[Term.Arg.Quasi]
       case Term.Ascribe(t, Type.Placeholder(Type.Bounds(None, None))) if isIdentOf("*") =>
         next()
         atPos(t, auto)(Term.Arg.Repeated(t))
@@ -1888,8 +1883,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       else p match {
         case p: Pat.Quasi =>
           next()
-          val p1 = atPos(p, p)(Pat.Var.Term.Quasi(p.rank, p.tree))
-          Pat.Bind(p1, pattern3())
+          Pat.Bind(p.become[Pat.Var.Term.Quasi], pattern3())
         case p: Term.Name =>
           syntaxError("Pattern variables must start with a lower-case letter. (SLS 8.1.1.)", at = p)
         case p: Pat.Var.Term =>
@@ -2690,7 +2684,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         atPos(arrow, arrow)(Ctor.Ref.Function(atPos(arrow, arrow)(Ctor.Name("=>"))))
       }
       atPos(tpe, tpe)(tpe match {
-        case q: Type.Quasi => atPos(q, q)(Ctor.Ref.Name.Quasi(q.rank, q.tree))
+        case q: Type.Quasi => q.become[Ctor.Ref.Name.Quasi]
         case Type.Name(value) => Ctor.Name(value)
         case Type.Select(qual, name) => Ctor.Ref.Select(qual, atPos(name, name)(Ctor.Name(name.value)))
         case Type.Project(qual, name) => Ctor.Ref.Project(qual, atPos(name, name)(Ctor.Name(name.value)))
@@ -2871,8 +2865,8 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       val first = expr(InTemplate) // @S: first statement is potentially converted so cannot be stubbed.
       if (token.is[`=>`]) {
         first match {
-          case q @ Term.Quasi(rank, tree) =>
-            self = atPos(q, q)(Term.Param.Quasi(rank, tree))
+          case q: Term.Quasi =>
+            self = q.become[Term.Param.Quasi]
           case name: Term.Placeholder =>
             self = atPos(first, first)(Term.Param(Nil, atPos(name, name)(Name.Anonymous()), None, None))
           case name @ Term.This(Name.Anonymous()) =>
