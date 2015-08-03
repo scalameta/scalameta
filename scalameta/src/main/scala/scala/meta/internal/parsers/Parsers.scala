@@ -605,10 +605,10 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
 
   def convertToTypeId(ref: Term.Ref): Option[Type] = ref match {
     case ref: Quasi =>
-      Some(atPos(ref, ref)(Type.Quasi(ref.rank, ref.tree)))
+      Some(ref.become[Type.Quasi])
     case Term.Select(qual: Term.Quasi, name: Term.Name.Quasi) =>
-      val newQual = atPos(qual, qual)(Term.Ref.Quasi(qual.rank, qual.tree))
-      val newName = atPos(name, name)(Type.Name.Quasi(name.rank, name.tree))
+      val newQual = qual.become[Term.Ref.Quasi]
+      val newName = name.become[Type.Name.Quasi]
       Some(atPos(ref, ref)(Type.Select(newQual, newName)))
     case Term.Select(qual: Term.Ref, name) =>
       val newName = atPos(name, name)(Type.Name(name.value))
@@ -671,7 +671,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
 
   def makeTuplePatParens(): Pat = {
     val patterns = inParens(noSeq.patterns()).map {
-      case q: Pat.Arg.Quasi => atPos(q, q)(Pat.Quasi(q.rank, q.tree))
+      case q: Pat.Arg.Quasi => q.become[Pat.Quasi]
       case p => p.require[Pat]
     }
     makeTuple[Pat](patterns, () => Lit.Unit(), Pat.Tuple(_))
@@ -805,7 +805,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
           Type.Function(ts, typ())
         } else {
           val tuple = atPos(openParenPos, closeParenPos)(makeTupleType(ts map {
-            case q: Type.Arg.Quasi    => atPos(q, q)(Type.Quasi(q.rank, q.tree))
+            case q: Type.Arg.Quasi    => q.become[Type.Quasi]
             case t: Type              => t
             case p: Type.Arg.ByName   => syntaxError("by name type not allowed here", at = p)
             case p: Type.Arg.Repeated => syntaxError("repeated type not allowed here", at = p)
@@ -958,7 +958,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         case _ => loop(tpe)
       }
       def loop(tpe: Type): Pat.Type = tpe match {
-        case q: impl.Quasi => q.become[Pat.Type.Quasi]
+        case q: Quasi => q.become[Pat.Type.Quasi]
         case tpe: Type.Name => tpe
         case tpe: Type.Select => tpe
         case Type.Project(qual, name) => atPos(tpe, tpe)(Pat.Type.Project(loop(qual), name))
@@ -1635,7 +1635,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
 
   def argumentExpr(): Term.Arg = {
     expr() match {
-      case q: impl.Quasi =>
+      case q: Quasi =>
         q.become[Term.Arg.Quasi]
       case Term.Ascribe(t, Type.Placeholder(Type.Bounds(None, None))) if isIdentOf("*") =>
         next()
@@ -1683,7 +1683,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     Case(pattern().require[Pat], guard(), {
       accept[`=>`]
       autoPos(blockStatSeq() match {
-        case List(q: impl.Quasi) => Term.Block(List(q))
+        case List(q: Quasi) => Term.Block(List(q))
         case List(blk: Term.Block) => blk
         case stats => Term.Block(stats)
       })
@@ -2672,7 +2672,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         atPos(arrow, arrow)(Ctor.Ref.Function(atPos(arrow, arrow)(Ctor.Name("=>"))))
       }
       atPos(tpe, tpe)(tpe match {
-        case q: Type.Quasi => atPos(q, q)(Ctor.Ref.Name.Quasi(q.rank, q.tree))
+        case q: Type.Quasi => q.become[Ctor.Ref.Name.Quasi]
         case Type.Name(value) => Ctor.Name(value)
         case Type.Select(qual, name) => Ctor.Ref.Select(qual, atPos(name, name)(Ctor.Name(name.value)))
         case Type.Project(qual, name) => Ctor.Ref.Project(qual, atPos(name, name)(Ctor.Name(name.value)))
@@ -2853,8 +2853,8 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       val first = expr(InTemplate) // @S: first statement is potentially converted so cannot be stubbed.
       if (token.is[`=>`]) {
         first match {
-          case q @ Term.Quasi(rank, tree) =>
-            self = atPos(q, q)(Term.Param.Quasi(rank, tree))
+          case q: Term.Quasi =>
+            self = q.become[Term.Param.Quasi]
           case name: Term.Placeholder =>
             self = atPos(first, first)(Term.Param(Nil, atPos(name, name)(Name.Anonymous()), None, None))
           case name @ Term.This(Name.Anonymous()) =>
