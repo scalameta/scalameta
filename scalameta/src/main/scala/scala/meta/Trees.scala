@@ -175,7 +175,7 @@ package scala.meta.internal.ast {
     @ast class While(expr: Term, body: Term) extends Term
     @ast class Do(body: Term, expr: Term) extends Term
     @ast class For(enums: Seq[Enumerator] @nonEmpty, body: Term) extends Term with Scope {
-      require(enums.head.isInstanceOf[Enumerator.Generator] || enums.head.isInstanceOf[Enumerator.Generator.Quasi])
+      require(enums.head.isInstanceOf[Enumerator.Generator])
     }
     @ast class ForYield(enums: Seq[Enumerator] @nonEmpty, body: Term) extends Term with Scope
     @ast class New(templ: Template) extends Term
@@ -200,7 +200,7 @@ package scala.meta.internal.ast {
       // require(keywords.contains(value) ==> isBackquoted)
     }
     @ast class Select(qual: Term.Ref, name: Type.Name) extends Type.Ref with Pat.Type.Ref {
-      require(qual.isPath || qual.isInstanceOf[Term.Super] || qual.isInstanceOf[Term.Quasi])
+      require(qual.isPath || qual.isInstanceOf[Term.Super] || qual.isInstanceOf[Term.Ref.Quasi])
     }
     @ast class Project(qual: Type, name: Type.Name) extends Type.Ref
     @ast class Singleton(ref: Term.Ref) extends Type.Ref with Pat.Type.Ref {

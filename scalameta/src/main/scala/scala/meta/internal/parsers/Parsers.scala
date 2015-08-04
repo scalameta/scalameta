@@ -163,7 +163,8 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     })
     class CaseDefEnd extends TokenClass(token => {
       token.isInstanceOf[`}`] || token.isInstanceOf[EOF] ||
-      (token.isInstanceOf[`case`] && !token.isCaseClassOrObject)
+      (token.isInstanceOf[`case`] && !token.isCaseClassOrObject) ||
+      (token.is[Ellipsis] && token.next.is[`case`])
     })
     class CantStartStat extends TokenClass(token => {
       token.isInstanceOf[`catch`] || token.isInstanceOf[`else`] || token.isInstanceOf[`extends`] ||
@@ -526,6 +527,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   def isRawStar: Boolean            = isIdentOf("*")
   def isRawBar: Boolean             = isIdentOf("|")
   def isColonWildcardStar: Boolean  = token.is[`:`] && ahead(token.is[`_ `] && ahead(isIdentOf("*")))
+  def isSpliceFollowedBy(check: => Boolean): Boolean = token.is[Ellipsis] && ahead(token.is[Unquote] && ahead(token.is[Ident] || check))
 
 /* ---------- TREE CONSTRUCTION ------------------------------------------- */
 
@@ -667,14 +669,6 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       case Seq(q @ Type.Quasi(1, _)) => atPos(q, q)(Type.Tuple(body))
       case _ => makeTuple[Type](body, () => unreachable, Type.Tuple(_))
     }
-  }
-
-  def makeTuplePatParens(): Pat = {
-    val patterns = inParens(noSeq.patterns()).map {
-      case q: Pat.Arg.Quasi => q.become[Pat.Quasi]
-      case p => p.require[Pat]
-    }
-    makeTuple[Pat](patterns, () => Lit.Unit(), Pat.Tuple(_))
   }
 
 /* --------- OPERAND/OPERATOR STACK --------------------------------------- */
@@ -902,17 +896,22 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
      *                |  Refinement
      *  }}}
      */
-    def compoundType(): Type = compoundTypeRest(
-      if (token.is[`{`]) None
-      else Some(annotType())
-    )
+    def compoundType(): Type = compoundTypeRest {
+      if (token.is[`{`])
+        None
+      else if (isSpliceFollowedBy(token.is[`with`] || token.is[`{`] || (token.is[`\n`] && ahead (token.is[`{`]))))
+        Some(ellipsis(1, unquote[Type]))
+      else
+        Some(annotType())
+    }
 
     // TODO: warn about def f: Unit { } case?
     def compoundTypeRest(t: Option[Type]): Type = atPos(t, auto) {
       val ts = new ListBuffer[Type] ++ t
       while (token.is[`with`]) {
         next()
-        ts += annotType()
+        if (token.is[Ellipsis]) ts += ellipsis(1, unquote[Type])
+        else ts += annotType()
       }
       newLineOptWhenFollowedBy[`{`]
       val types = ts.toList
@@ -999,8 +998,6 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       res
     case token: Unquote =>
       unquote[T](advance)
-    case token: Ellipsis =>
-      ellipsis(1, unquote[T](advance))
     case _ =>
       syntaxErrorExpected[Ident]
   }
@@ -1355,7 +1352,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     case _: `do` =>
       next()
       val body = expr()
-      if (token.is[StatSep]) next()
+      while (token.is[StatSep]) next()
       accept[`while`]
       val cond = condExpr()
       Term.Do(body, cond)
@@ -1712,11 +1709,11 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     while (token.is[CaseIntro] || token.is[Ellipsis]) {
       if (token.is[Ellipsis]) {
         cases += ellipsis(1, unquote[Case], accept[`case`])
-        if (token.is[StatSep]) next()
+        while (token.is[StatSep]) next()
       } else if (token.is[`case`] && ahead(token.is[Unquote])) {
         next()
         cases += unquote[Case]
-        if (token.is[StatSep]) next()
+        while (token.is[StatSep]) next()
       } else {
         next()
         cases += caseClause()
@@ -2005,7 +2002,11 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       case _: Xml.Start =>
         xmlPat()
       case _: `(` =>
-        makeTuplePatParens()
+        val patterns = inParens(noSeq.patterns()).map {
+          case q: Pat.Arg.Quasi => q.become[Pat.Quasi]
+          case p => p.require[Pat]
+        }
+        makeTuple[Pat](patterns, () => Lit.Unit(), Pat.Tuple(_))
       case _: Unquote =>
         unquote[Pat]
       case _ =>
@@ -2966,7 +2967,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
    */
   def blockStatSeq(): List[Stat] = {
     val stats = new ListBuffer[Stat]
-    while (!token.is[StatSeqEnd] && !token.is[CaseDefEnd] && !ahead(token.is[`case`])) {
+    while (!token.is[StatSeqEnd] && !token.is[CaseDefEnd]) {
       if (token.is[`import`]) {
         stats += importStmt()
         acceptStatSepOpt()

@@ -297,11 +297,9 @@ class ErrorSuite extends FunSuite {
       val tpes = List(q"T")
       q"expr: ..$tpes"
     """) === """
-      |<macro>:5: type mismatch when unquoting;
-      | found   : List[scala.meta.Term.Name]
-      | required: scala.collection.immutable.Seq[scala.meta.Type]
+      |<macro>:5: identifier expected but ellipsis found
       |      q"expr: ..$tpes"
-      |                ^
+      |              ^
     """.trim.stripMargin)
   }
 
@@ -342,11 +340,9 @@ class ErrorSuite extends FunSuite {
       val names = List(q"T")
       q"expr. ..$names"
     """) === """
-      |<macro>:5: type mismatch;
-      | found   : scala.collection.immutable.Seq[scala.meta.internal.ast.Term.Name]
-      | required: scala.meta.internal.ast.Term.Name
+      |<macro>:5: identifier expected but ellipsis found
       |      q"expr. ..$names"
-      |                ^
+      |              ^
     """.trim.stripMargin)
   }
 }

@@ -183,7 +183,7 @@ class QuasiquoteSuite extends FunSuite {
     assert(tpe.show[Syntax] === "Double")
   }
 
-  test("1 q\"$expr: ..@annots\"") {
+  test("1 q\"$expr: ..$@annots\"") {
     val q"$exprr: @q ..@$annotz @$ar" = q"foo: @q @w @e @r"
     assert(exprr.show[Syntax] === "foo")
     assert(annotz.toString === "List(@w, @e)")
@@ -192,7 +192,7 @@ class QuasiquoteSuite extends FunSuite {
     assert(ar.show[Syntax] === "@r")
   }
 
-  test("2 q\"$expr: ..@annots\"") {
+  test("2 q\"$expr: ..$@annots\"") {
     val mods = List(mod"@w", mod"@e")
     assert(q"foo: @q ..@$mods @r".show[Syntax] === "foo: @q @w @e @r")
   }
@@ -256,7 +256,7 @@ class QuasiquoteSuite extends FunSuite {
     assert(casez(1).show[Syntax] === "case _ => foo")
   }
 
-  // todo change to expropt (and test it) after issue #199 resolved
+  // TODO change to expropt (and test it) after issue #199 resolved
 
   test("q\"try $expr catch { ..case $cases } finally $expr\"") {
     val q"try $exp catch { case $case1 ..case $cases; case $case2 } finally $exprr" = q"try foo catch { case a => b; case _ => bar; case 1 => 2; case q => w} finally baz"
@@ -332,7 +332,7 @@ class QuasiquoteSuite extends FunSuite {
   }
 
 //  test("3 q\"for (..$enumerators) $expr\"") {
-//    val q"for (a <- as; if $cond; ..$enums) bar" = q"for (a <- as; if foo; b <- bs) bar" // fixme does not compile
+//    val q"for (a <- as; if $cond; ..$enums) bar" = q"for (a <- as; if foo; b <- bs) bar" // fixme does not compile, see #203
 //  }
 
   test("1 q\"for (..$enumerators) yield $expr\"") {
@@ -370,8 +370,10 @@ class QuasiquoteSuite extends FunSuite {
     assert(self.show[Structure] === "Term.Param(Nil, Name.Anonymous(), None, None)")
   }
 
+  // TODO fails to compile, uncomment after issue #199 resolved
+
 //  test("4 q\"new { ..$stat } with ..$exprs { $param => ..$stats }\"") {
-//    val q"new {..$stats; val b = 4} with $a {$selff => ..$statz}" = q"new {val a = 2; val b = 4}" // todo fails to compile, uncomment after issue #199 resolved
+//    val q"new {..$stats; val b = 4} with $a {$selff => ..$statz}" = q"new {val a = 2; val b = 4}"
 //  }
 
   test("q\"_\"") {
@@ -406,7 +408,7 @@ class QuasiquoteSuite extends FunSuite {
 
   test("arg\"$expr\"") {
     val expr = q"foo"
-    assert(q"$expr".show[Syntax] === "foo")
+    assert(arg"$expr".show[Syntax] === "foo")
   }
 
   test("t\"$ref.$tname\"") {
@@ -440,7 +442,7 @@ class QuasiquoteSuite extends FunSuite {
   }
 
   test("t\"(..$atpes) => $tpe\"") {
-    val atpes = List(t"X", t"Y")
+    val atpes: List[Type.Arg] = List(t"X", t"Y")
     val tpe = t"Z"
     assert(t"(..$atpes) => $tpe".show[Syntax] === "(X, Y) => Z")
   }
@@ -478,6 +480,8 @@ class QuasiquoteSuite extends FunSuite {
     val annots = List(mod"@a", mod"@b")
     assert(t"$tpe ..@$annots".show[Syntax] === "X @a @b")
   }
+
+  // TODO test for 'opt' after issue #199 resolved
 
   test("t\"_ >: $tpeopt <: $tpeopt\"") {
     val tpe1 = t"X"
@@ -648,7 +652,7 @@ class QuasiquoteSuite extends FunSuite {
 //    assert(pt"$ptpe forSome { ..$stats }".show[Syntax] === "X forSome { val a: A }")
 //  }
 
-  test("pt\"$ptpe ..@annots\"") {
+  test("pt\"$ptpe ..$@annots\"") {
     val ptpe = pt"X"
     val annots = List(mod"@q", mod"@w")
     assert(pt"$ptpe ..@$annots".show[Syntax] === "X @q @w")
