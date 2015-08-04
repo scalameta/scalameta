@@ -1,10 +1,9 @@
-package org.scalameta.reflection
+package scala.meta.internal.hosts.scalac
+package reflect
 
 import scala.reflect.macros.{Universe => MacroUniverse}
 import scala.tools.nsc.Global
 import org.scalameta.ast.{Reflection => AstReflection}
-import scala.org.scalameta.reflection.TreeHelpers
-import scala.org.scalameta.reflection.LogicalTrees
 
 trait MacroToolkit extends Metadata with AstReflection {
   val global: MacroUniverse

@@ -7,7 +7,8 @@ import org.scalameta.invariants._
 import scala.meta.{ScalahostStandaloneContext => StandaloneContextApi}
 import scala.meta.internal.hosts.scalac.converters.{mergeTrees => mmergeTrees}
 import scala.compat.Platform.EOL
-import org.scalameta.internal.mkGlobal
+import scala.tools.cmd.CommandLineParser
+import scala.tools.nsc.{Global, CompilerCommand, Settings}
 import scala.tools.nsc.reporters.StoreReporter
 import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
@@ -43,4 +44,31 @@ class StandaloneContext(options: String) extends GlobalContext(mkGlobal(options)
     mmergeTrees(msyntacticTree, msemanticTree).require[m.Source]
   }
   val reporter = new StoreReporter()
+}
+
+object mkGlobal {
+  def apply(options: String): Global = {
+    var compilerOptions = options
+    if (!compilerOptions.contains("-Xplugin-require:scalahost")) {
+      val scalahostJar = {
+        try getClass.getProtectionDomain().getCodeSource().getLocation().getFile()
+        catch { case ex: Throwable => throw new scala.Exception("failed to auto-load the scalahost plugin", ex) }
+      }
+      val scalahostOptions = " -Xplugin:" + scalahostJar + " -Xplugin-require:scalahost"
+      compilerOptions += scalahostOptions
+    }
+    val customGlobal = {
+      val args = CommandLineParser.tokenize(compilerOptions)
+      val emptySettings = new Settings(error => sys.error("compilation has failed: " + error))
+      val reporter = new StoreReporter()
+      val command = new CompilerCommand(args, emptySettings)
+      val settings = command.settings
+      val global = new Global(settings, reporter)
+      val run = new global.Run
+      global.phase = run.parserPhase
+      global.globalPhase = run.parserPhase
+      global
+    }
+    customGlobal
+  }
 }

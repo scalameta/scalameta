@@ -2,8 +2,6 @@ package scala.meta
 package internal.hosts.scalac
 package converters
 
-import org.scalameta.meta.{Toolkit => MetaToolkit}
-import org.scalameta.reflection._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
 import scala.{Seq => _}
@@ -11,6 +9,7 @@ import scala.collection.immutable.Seq
 import scala.tools.nsc.{Global => ScalaGlobal}
 import scala.meta.semantic.{Context => ScalametaSemanticContext}
 import scala.meta.internal.{ast => m}
+import scala.meta.internal.hosts.scalac.reflect._
 
 // This module exposes a method that can convert scala.reflect annotations into equivalent scala.meta mods.
 // There's not much to say about this conversion except that it's a really lossy one:

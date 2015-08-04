@@ -1,4 +1,5 @@
-package org.scalameta.reflection
+package scala.meta.internal.hosts.scalac
+package reflect
 
 import scala.tools.nsc.Global
 import scala.reflect.internal.Flags

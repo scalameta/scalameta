@@ -3,8 +3,6 @@ package internal.hosts.scalac
 package converters
 
 import org.scalameta.collections._
-import org.scalameta.meta.{Toolkit => MetaToolkit}
-import org.scalameta.reflection._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
 import scala.{Seq => _}
@@ -13,6 +11,7 @@ import scala.reflect.internal.Flags._
 import scala.tools.nsc.{Global => ScalaGlobal}
 import scala.meta.internal.{ast => m}
 import scala.meta.internal.{semantic => s}
+import scala.meta.internal.hosts.scalac.reflect._
 import java.util.UUID.randomUUID
 
 // This module tracks the correspondence between scala.reflect and scala.meta symbols.

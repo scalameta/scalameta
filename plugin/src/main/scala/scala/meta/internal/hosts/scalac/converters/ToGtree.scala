@@ -2,8 +2,6 @@ package scala.meta
 package internal.hosts.scalac
 package converters
 
-import org.scalameta.meta.{Toolkit => MetaToolkit}
-import org.scalameta.reflection._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
 import scala.{Seq => _}
@@ -14,6 +12,7 @@ import scala.tools.nsc.reporters.StoreReporter
 import scala.meta.dialects.Scala211
 import scala.meta.internal.{ast => m}
 import scala.meta.internal.ui.Summary
+import scala.meta.internal.hosts.scalac.reflect._
 
 // This module exposes a method to convert from scala.meta trees to scala.reflect trees.
 // Nothing is implemented yet, but we'll have to at least take a stab at it to enable scala.meta macros.

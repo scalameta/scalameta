@@ -3,7 +3,7 @@ package internal.hosts.scalac
 
 import scala.tools.nsc.Global
 import scala.tools.nsc.plugins.{Plugin => NscPlugin, PluginComponent => NscPluginComponent}
-import org.scalameta.reflection._
+import scala.meta.internal.hosts.scalac.reflect._
 
 trait PluginBase extends NscPlugin
                     with ConvertPhase

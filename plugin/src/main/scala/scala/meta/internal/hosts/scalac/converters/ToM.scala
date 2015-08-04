@@ -2,8 +2,6 @@ package scala.meta
 package internal.hosts.scalac
 package converters
 
-import org.scalameta.meta.{Toolkit => MetaToolkit}
-import org.scalameta.reflection._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
 import scala.{Seq => _}
@@ -11,6 +9,7 @@ import scala.collection.immutable.Seq
 import scala.tools.nsc.{Global => ScalaGlobal}
 import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
+import scala.meta.internal.hosts.scalac.reflect._
 
 // This module provides utilities shared between scala.reflect -> scala.meta converters
 trait ToM extends GlobalToolkit with MetaToolkit {

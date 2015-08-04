@@ -2,8 +2,6 @@ package scala.meta
 package internal.hosts.scalac
 package converters
 
-import org.scalameta.meta.{Toolkit => MetaToolkit}
-import org.scalameta.reflection._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
 import scala.{Seq => _}
@@ -13,6 +11,7 @@ import scala.reflect.internal.Flags._
 import scala.meta.internal.{ast => m}
 import scala.meta.internal.{semantic => s}
 import scala.meta.internal.parsers.Helpers.XtensionTermOps
+import scala.meta.internal.hosts.scalac.reflect._
 
 // This module exposes a method to convert from scala.meta types to scala.reflect types.
 // The logic is mostly straightforward except for when we need to create symbols for compound and existential types.

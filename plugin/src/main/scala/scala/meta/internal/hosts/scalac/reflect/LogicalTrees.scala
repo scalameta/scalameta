@@ -1,15 +1,15 @@
-package scala
-package org.scalameta.reflection
+package scala.meta.internal.hosts.scalac
+package reflect
 
 import scala.tools.nsc.Global
 import scala.reflect.internal.{Flags, HasFlags}
 import scala.reflect.internal.Flags._
 import scala.collection.mutable
-import _root_.org.scalameta.invariants._
-import _root_.org.scalameta.unreachable
+import org.scalameta.invariants._
+import org.scalameta.unreachable
 
 trait LogicalTrees {
-  self: _root_.org.scalameta.reflection.GlobalToolkit =>
+  self: GlobalToolkit =>
 
   import global.{require => _, _}
   import definitions._

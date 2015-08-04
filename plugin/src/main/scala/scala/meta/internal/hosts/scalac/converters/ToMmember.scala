@@ -3,8 +3,6 @@ package internal.hosts.scalac
 package converters
 
 import org.scalameta.collections._
-import org.scalameta.meta.{Toolkit => MetaToolkit}
-import org.scalameta.reflection._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
 import scala.{Seq => _}
@@ -15,6 +13,7 @@ import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
 import scala.meta.internal.{semantic => s}
 import scala.meta.semantic.{Context => ScalametaSemanticContext}
+import scala.meta.internal.hosts.scalac.reflect._
 
 // This module exposes a method that can convert scala.reflect symbols into equivalent scala.meta members.
 // There are some peculiarities that you'll need to know about it:

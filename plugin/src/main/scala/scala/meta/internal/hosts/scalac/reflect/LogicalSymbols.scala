@@ -1,4 +1,5 @@
-package org.scalameta.reflection
+package scala.meta.internal.hosts.scalac
+package reflect
 
 import scala.{Seq => _}
 import scala.collection.immutable.Seq

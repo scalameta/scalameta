@@ -1,5 +1,6 @@
-package scala.meta
-package internal.hosts.scalac
+package scala.meta.internal.hosts.scalac
+
+import scala.meta.Source
 
 package object tasty {
   implicit class XtensionTastyWriteTree(source: Source) {

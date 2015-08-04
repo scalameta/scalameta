@@ -1,7 +1,6 @@
 // NOTE: copy/pasted from https://github.com/lampepfl/dotty/tree/1962ada58fcd2333a2e40179ab0ac6efb6167ed2
 
-package scala.meta
-package internal.hosts.scalac
+package scala.meta.internal.hosts.scalac
 package tasty
 
 import TastyFormat._
