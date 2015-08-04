@@ -10,6 +10,7 @@ trait HijackBackend {
   self: ScalahostPlugin =>
 
   // NOTE: mostly copy/pasted from https://github.com/VladimirNik/tasty/blob/7b45111d066ddbc43d859c9f6c0a81978111cf90/plugin/src/main/scala/scala/tasty/internal/scalac/Plugin.scala
+  // TODO: some hopes for making this hijacking unnecessary: https://groups.google.com/forum/#!topic/scala-internals/VYAi-9_qf80
   def hijackBackend(): (global.genBCode.type, NscGenBCode) = {
     if (self.global.settings.Ybackend.value == "GenBCode") {
       val oldBackend = global.genBCode
