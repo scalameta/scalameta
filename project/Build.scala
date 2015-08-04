@@ -1,7 +1,7 @@
 import sbt._
 import Keys._
 
-object ScalaHostBuild extends Build {
+object ScalahostBuild extends Build {
   import Dependencies._
   import Settings._
 
@@ -19,33 +19,24 @@ object ScalaHostBuild extends Build {
     base = file("root"),
     settings = sharedSettings ++ commonDependencies ++ Seq(
       dontPackage,
-      usePlugin(plugin),
+      usePlugin(scalahost),
       replIntegration
     )
-  ) aggregate (plugin, tests) dependsOn (plugin, foundation)
+  ) aggregate (scalahost, tests)
 
-  lazy val foundation = Project(
-    id   = "scalahost-foundation",
-    base = file("foundation"),
-    settings = publishableSettings ++ commonDependencies ++ Seq(
-      libraryDependencies += metafoundation,
-      dontPackage
-    )
-  )
-
-  lazy val plugin = Project(
+  lazy val scalahost = Project(
     id   = "scalahost",
-    base = file("plugin"),
+    base = file("scalahost"),
     settings = publishableSettings ++ commonDependencies ++ mergeDependencies
-  ) dependsOn (foundation % "optional") // TODO: not really optional, used for fatjar
+  )
 
   lazy val sandbox = Project(
     id   = "sandbox",
     base = file("sandbox"),
     settings = sharedSettings ++ commonDependencies ++ Seq(
-      usePlugin(plugin)
+      usePlugin(scalahost)
     )
-  ) dependsOn(plugin)
+  ) dependsOn(scalahost)
 
   lazy val tests = Project(
     id   = "tests",
@@ -54,5 +45,5 @@ object ScalaHostBuild extends Build {
       libraryDependencies ++= Seq(scalatest, scalacheck),
       dontPackage
     ) ++ exposeClasspaths("tests")
-  ) dependsOn (plugin, foundation)
+  ) dependsOn (scalahost)
 }
