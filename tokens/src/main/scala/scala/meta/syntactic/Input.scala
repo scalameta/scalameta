@@ -19,12 +19,25 @@ object Input {
   }
   final case class File(f: java.io.File, charset: Charset) extends Content {
     lazy val chars = scala.io.Source.fromFile(f)(scala.io.Codec(charset)).mkString.toArray
-    private def writeObject(out: java.io.ObjectOutputStream) = { out.writeObject(f); out.writeObject(charset.name) }
-    private def readObject(in: java.io.ObjectInputStream) = { File(in.readObject.asInstanceOf[java.io.File], Charset.forName(in.readObject.asInstanceOf[Predef.String])) }
+    protected def writeReplace(): AnyRef = new File.SerializationProxy(this)
   }
   object File {
     def apply(path: Predef.String): Input.File = Input.File(new java.io.File(path))
     def apply(f: java.io.File): Input.File = Input.File(f, Charset.forName("UTF-8"))
+
+    @SerialVersionUID(1L) private class SerializationProxy(@transient private var orig: File) extends Serializable {
+      private def writeObject(out: java.io.ObjectOutputStream): Unit = {
+        out.writeObject(orig.f)
+        out.writeObject(orig.charset.name)
+      }
+      private def readObject(in: java.io.ObjectInputStream): Unit = {
+        val f = in.readObject.asInstanceOf[java.io.File]
+        val charset = Charset.forName(in.readObject.asInstanceOf[Predef.String])
+        orig = File(f, charset)
+      }
+      private def readResolve(): AnyRef = orig
+      override def toString = s"Proxy($orig)"
+    }
   }
   implicit val charsToInput: Convert[Array[Char], Input] = Convert.apply(chars => Input.String(new scala.Predef.String(chars)))
   implicit val stringToInput: Convert[scala.Predef.String, Input] = Convert.apply(Input.String(_))

@@ -97,7 +97,7 @@ class AstMacros(val c: Context) {
       val paramss = rawparamss
 
       // step 4: create internal bookkeeping parameters
-      bparams1 += q"protected val internalPrototype: $iname"
+      bparams1 += q"@_root_.scala.transient protected val internalPrototype: $iname"
       locally {
         bparams1 += q"protected val internalParent: _root_.scala.meta.Tree"
         stats1 += q"""
@@ -320,7 +320,11 @@ class AstMacros(val c: Context) {
       astats1 += q"override def productElement(n: _root_.scala.Int): Any = n match { case ..$pelClauses }"
       astats1 += q"override def productIterator: _root_.scala.Iterator[_root_.scala.Any] = _root_.scala.runtime.ScalaRunTime.typedProductIterator(this)"
 
-      // step 11: generate Companion.apply
+      // step 11: generate serialization logic
+      val fieldInits = fieldParamss.flatten.map(p => q"$AstInternal.loadField(this.${internalize(p.name)})")
+      stats1 += q"protected def writeReplace(): _root_.scala.AnyRef = { ..$fieldInits; this }"
+
+      // step 12: generate Companion.apply
       val applyParamss = paramss.map(_.map(_.duplicate))
       val internalParamss = paramss.map(_.map(p => q"@..${p.mods.annotations} val ${p.name}: ${p.tpt}"))
       val internalBody = ListBuffer[Tree]()
@@ -372,7 +376,7 @@ class AstMacros(val c: Context) {
         }
       """
 
-      // step 12: generate Companion.unapply
+      // step 13: generate Companion.unapply
       val unapplyParamss = rawparamss.map(_.map(_.duplicate))
       val unapplyParams = unapplyParamss.head
       val needsUnapply = !mstats.exists(stat => stat match { case DefDef(_, TermName("unapply"), _, _, _, _) => true; case _ => false })
@@ -393,7 +397,7 @@ class AstMacros(val c: Context) {
         }
       }
 
-      // step 13: finish codegen for Quasi
+      // step 14: finish codegen for Quasi
       qstats1 += q"def pt: _root_.java.lang.Class[_] = _root_.org.scalameta.runtime.arrayClass(_root_.scala.Predef.classOf[$iname], this.rank)"
       if (isQuasi) {
         stats1 += q"""
