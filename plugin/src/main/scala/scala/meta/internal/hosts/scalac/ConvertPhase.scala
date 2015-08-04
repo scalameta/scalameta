@@ -43,6 +43,10 @@ trait ConvertPhase {
         // (e.g. to compiler plugins that want to work with scala.meta trees).
         // TODO: For now, I'm going to keep mergeTrees here, but in the 0.1 release,
         // we might want to turn merging off if it turns out being a big performance hit.
+        // NOTE: In fact, it's more complicated than that. When we index the converted trees
+        // (i.e. we add them to lsymToMmemberCache), it'd make sense to work with resugared trees,
+        // because that's what users ultimately want to see when they do `t"...".members` or something.
+        // So, it seems that it's still necessary to eagerly merge the trees, so that we can index them correctly.
         val syntacticTree = unit.source.content.parse[mapi.Source].require[m.Source]
         val semanticTree = unit.body.toMtree[m.Source]
         val perfectTree = mergeTrees(syntacticTree, semanticTree)
