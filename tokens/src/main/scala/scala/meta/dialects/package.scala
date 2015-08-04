@@ -20,6 +20,11 @@ trait Dialect extends Serializable {
   // Permission to tokenize repeated dots as ellipses.
   // Necessary to support quasiquotes, e.g. `q"foo(..$args)"`.
   def allowEllipses: Boolean
+
+  // Are type lambdas supported in this dialect?
+  // At the moment, this is exclusive for quasiquotes.
+  // For more info, see https://github.com/scalameta/scalameta/commit/e2317e8655ead8a2a391355ed91bccf98eadb2c7
+  def allowTypeLambdas: Boolean
 }
 
 package object dialects {
@@ -28,6 +33,7 @@ package object dialects {
     def bindToSeqWildcardDesignator = "@" // List(1, 2, 3) match { case List(xs @ _*) => ... }
     def allowXmlLiterals = true // Not even deprecated yet, so we need to support xml literals
     def allowEllipses = false // Vanilla Scala doesn't support ellipses, somewhat similar concept is varargs and _*
+    def allowTypeLambdas = false // Vanilla Scala doesn't support type lambdas
   }
 
   implicit object Dotty extends Dialect {
@@ -35,6 +41,7 @@ package object dialects {
     def bindToSeqWildcardDesignator = ":" // // List(1, 2, 3) match { case List(xs: _*) => ... }
     def allowXmlLiterals = false // Dotty parser doesn't have the corresponding code, so it can't really support xml literals
     def allowEllipses = false // Vanilla Dotty doesn't support ellipses, somewhat similar concept is varargs and _*
+    def allowTypeLambdas = false // Vanilla Scala doesn't support type lambdas
   }
 
   def Quasiquote(dialect: Dialect): Dialect = new Dialect {
@@ -42,5 +49,6 @@ package object dialects {
     def bindToSeqWildcardDesignator = dialect.bindToSeqWildcardDesignator
     def allowXmlLiterals = dialect.allowXmlLiterals
     def allowEllipses = true
+    def allowTypeLambdas = true
   }
 }
