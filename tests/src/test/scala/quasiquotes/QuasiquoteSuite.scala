@@ -523,11 +523,11 @@ class QuasiquoteSuite extends FunSuite {
     assert(t"$tpe".show[Syntax] === "X")
   }
 
-//  test("p\"$name @ $pat\"") {
-//    val name = q"x"
-//    val pat = p"y"
-//    assert(p"$name @ $pat".show[Syntax] === "x @ y")
-//  }
+  test("p\"$pname @ $apat\"") {
+    val pname = p"x"
+    val apat = p"y"
+    assert(p"$pname @ $apat".show[Syntax] === "x @ y")
+  }
 
   test("p\"$pat | $pat\"") {
     val pat1 = p"X"

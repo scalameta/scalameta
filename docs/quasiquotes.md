@@ -92,7 +92,7 @@
 ---------------|----------------------------
  Wildcard      | `p"_"`
  Var           | `p"name"`
- Bind          | `p"$name @ $pat"`
+ Bind          | `p"$pname @ $apat"`
  Alternative   | `p"$pat | $pat"`
  Tuple         | `p"(..$pats)"`
  Extract       | `p"$ref[..$tpes](..$apats)"`
@@ -257,6 +257,7 @@
  meta.Name.Qualifier      | `$qname`      | `q`, `t`, anonymous names can't be constructed, only extracted from `mod"..."`
  meta.Pat                 | `$pat`        | `p`
  meta.Pat.Arg             | `$apat`       | `p`
+ meta.Pat.Var.Term        | `$pname`      | `p`, name should be lower-case
  meta.Pat.Type            | `$ptpe`       | `pt`
  meta.Importee            | `$importee`   | `importee`
  meta.Stat                | `$stat`       | `q`

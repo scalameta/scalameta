@@ -345,4 +345,20 @@ class ErrorSuite extends FunSuite {
       |              ^
     """.trim.stripMargin)
   }
+
+  test("""p"$pname @ $apat"""") { // TODO would be ideal to show warning about upper-cased lhs
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val pname = p"X"
+      val apat = p"y"
+      p"$pname @ $apat"
+    """) === """
+      |<macro>:6: type mismatch when unquoting;
+      | found   : scala.meta.Term.Name
+      | required: scala.meta.Pat.Var.Term
+      |      p"$pname @ $apat"
+      |        ^
+    """.trim.stripMargin)
+  }
 }
