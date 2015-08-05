@@ -1880,7 +1880,12 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       else p match {
         case p: Pat.Quasi =>
           next()
-          Pat.Bind(p.become[Pat.Var.Term.Quasi], pattern3())
+          val lhs = p.become[Pat.Var.Term.Quasi]
+          val rhs = pattern3() match {
+            case q @ Pat.Quasi(0, _) => q.become[Pat.Arg.Quasi]
+            case p => p
+          }
+          Pat.Bind(lhs, rhs)
         case p: Term.Name =>
           syntaxError("Pattern variables must start with a lower-case letter. (SLS 8.1.1.)", at = p)
         case p: Pat.Var.Term =>
