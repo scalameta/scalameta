@@ -521,6 +521,7 @@ private[meta] object inferTokens {
         else tpes
       case t: Pat.Type.Existential => toks"${t.tpe.tks} forSome { ${t.quants.`o;o`} }"
       case t: Pat.Type.Annotate =>    toks"${t.tpe.tks} ${t.annots.`o_o`}"
+      case t: Pat.Type.Placeholder => toks"_ ${t.bounds.tks}"
       case t: Pat.Type.Lambda =>
         val params = {
           if (t.quants.isEmpty) toks"[]"
