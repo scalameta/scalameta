@@ -523,30 +523,49 @@ class QuasiquoteSuite extends FunSuite {
     assert(t"$tpe".show[Syntax] === "X")
   }
 
-  test("p\"$pname @ $apat\"") {
+  test("1 p\"$pname @ $apat\"") {
+    val p"$pname @ $apat" = p"x @ y"
+    assert(pname.show[Syntax] === "x")
+    assert(apat.show[Syntax] === "y")
+  }
+
+  test("2 p\"$pname @ $apat\"") {
     val pname = p"x"
     val apat = p"y"
     assert(p"$pname @ $apat".show[Syntax] === "x @ y")
   }
 
-  test("p\"$pat | $pat\"") {
+  test("1 p\"$pat | $pat\"") {
+    val p"$pat1 | $pat2" = p"x | y"
+    assert(pat1.show[Syntax] === "x")
+    assert(pat2.show[Syntax] === "y")
+  }
+
+  test("2 p\"$pat | $pat\"") {
     val pat1 = p"X"
     val pat2 = p"Y"
     assert(p"$pat1 | $pat2".show[Syntax] === "X | Y")
   }
 
-  test("p\"(..$pats)\"") {
+  test("1 p\"(..$pats)\"") {
+    val p"(..$pats)" = p"(X, Y)"
+    assert(pats.toString === "List(X, Y)")
+    assert(pats(0).show[Syntax] === "X")
+    assert(pats(1).show[Syntax] === "Y")
+  }
+
+  test("2 p\"(..$pats)\"") {
     val pats = List(p"X", p"Y")
     assert(p"(..$pats)".show[Syntax] === "(X, Y)")
     assert(p"${pats.head}".show[Syntax] === "X")
   }
 
-//  test("p\"$ref[..$tpes](..$apats)\"") {
-//    val ref = q"x"
-//    val tpes = List(t"A", t"B")
-//    val apats = List(p"Q", p"W")
-//    assert(p"$ref[..$tpes](..$apats)".show[Syntax] === "...")
-//  }
+  test("p\"$ref[..$tpes](..$apats)\"") {
+    val ref = q"x"
+    val tpes = List(t"A", t"B")
+    val apats = List(p"Q", p"W")
+    assert(p"$ref[..$tpes](..$apats)".show[Syntax] === "x[A, B](Q, W)")
+  }
 
 //  test("p\"$pat $name (..$apats)\"") {
 //    val pat = p"x"
@@ -561,17 +580,29 @@ class QuasiquoteSuite extends FunSuite {
 //    assert(p""" $name"$${..$pats}" """.show[Syntax] === "...")
 //  }
 
-  test("p\"$pat: $ptpe\"") {
+  test("1 p\"$pat: $ptpe\"") {
+    val p"$pat: $ptpe" = p"x: Y"
+    assert(pat.show[Syntax] === "x")
+    assert(ptpe.show[Syntax] === "Y")
+  }
+
+  test("2 p\"$pat: $ptpe\"") {
     val pat = p"x"
     val ptpe = pt"Y"
     assert(p"$pat: $ptpe".show[Syntax] === "x: Y")
   }
 
-//  test("p\"$expr.$name\"") {
-//    val expr = q"foo(bar)"
-//    val name = q"x"
-//    assert(p"$expr.$name".show[Syntax] === "foo(bar).x")
-//  }
+  test("1 p\"$expr.$name\"") {
+    val p"$expr.$name" = p"x.y"
+    assert(p"$expr".show[Syntax] === "x")
+    assert(p"$name".show[Syntax] === "y")
+  }
+
+  test("2 p\"$expr.$name\"") {
+    val expr = q"foo(bar)"
+    val name = q"x"
+    assert(p"$expr.$name".show[Syntax] === "foo(bar).x")
+  }
 
   test("p\"$lit\"") {
     val lit = q"1"
