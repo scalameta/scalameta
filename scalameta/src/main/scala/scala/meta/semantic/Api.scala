@@ -432,7 +432,7 @@ private[meta] trait Api {
         case impl.Pat.Type.Existential(tpe, _) => membersOfPatType(tpe)
         case impl.Pat.Type.Annotate(tpe, _) => membersOfPatType(tpe)
         case impl.Pat.Type.Lambda(_, tpe) => membersOfPatType(tpe)
-        case impl.Type.Placeholder(_) => Nil
+        case impl.Pat.Type.Placeholder(_) => Nil
         case _: impl.Lit => Nil
       }
       def membersOfPat(pat: impl.Pat.Arg): Seq[impl.Member] = pat match {
@@ -637,7 +637,7 @@ private[meta] trait Api {
         case impl.Type.Compound(tpes, refinement) => impl.Pat.Type.Compound(tpes.map(loop), refinement)
         case impl.Type.Existential(tpe, quants) => impl.Pat.Type.Existential(loop(tpe), quants)
         case impl.Type.Annotate(tpe, annots) => impl.Pat.Type.Annotate(loop(tpe), annots)
-        case tpe: impl.Type.Placeholder => tpe
+        case impl.Type.Placeholder(bounds) => impl.Pat.Type.Placeholder(bounds)
         case impl.Type.Lambda(tparams, tpe) => impl.Pat.Type.Lambda(tparams, loop(tpe))
         case tpe: impl.Lit => tpe
       }
@@ -651,7 +651,6 @@ private[meta] trait Api {
         case tpe: impl.Type.Name => tpe
         case tpe: impl.Type.Select => tpe
         case tpe: impl.Type.Singleton => tpe
-        case tpe: impl.Type.Placeholder => tpe
         case tpe: impl.Pat.Var.Type => ???
         case tpe: impl.Pat.Type.Wildcard => impl.Type.Placeholder(impl.Type.Bounds(None, None))
         case impl.Pat.Type.Project(qual, name) => impl.Type.Project(loop(qual), name)
@@ -662,6 +661,7 @@ private[meta] trait Api {
         case impl.Pat.Type.Compound(tpes, refinement) => impl.Type.Compound(tpes.map(loop), refinement)
         case impl.Pat.Type.Existential(tpe, quants) => impl.Type.Existential(loop(tpe), quants)
         case impl.Pat.Type.Annotate(tpe, annots) => impl.Type.Annotate(loop(tpe), annots)
+        case impl.Pat.Type.Placeholder(bounds) => impl.Type.Placeholder(bounds)
         case impl.Pat.Type.Lambda(tparams, tpe) => impl.Type.Lambda(tparams, loop(tpe))
         case tpe: impl.Lit => tpe
       }

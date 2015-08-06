@@ -981,7 +981,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         case Type.Compound(tpes, refinement) => atPos(tpe, tpe)(Pat.Type.Compound(tpes.map(loop), refinement))
         case Type.Existential(underlying, quants) => atPos(tpe, tpe)(Pat.Type.Existential(loop(underlying), quants))
         case Type.Annotate(underlying, annots) => atPos(tpe, tpe)(Pat.Type.Annotate(loop(underlying), annots))
-        case tpe: Type.Placeholder => tpe
+        case Type.Placeholder(bounds) => atPos(tpe, tpe)(Pat.Type.Placeholder(bounds))
         case tpe: Lit => tpe
       }
       loop(compoundType())

@@ -221,7 +221,7 @@ package scala.meta.internal.ast {
       require(quants.forall(_.isExistentialStat))
     }
     @ast class Annotate(tpe: Type, annots: Seq[Mod.Annot] @nonEmpty) extends Type
-    @ast class Placeholder(bounds: Bounds) extends Type with Pat.Type
+    @ast class Placeholder(bounds: Bounds) extends Type
     @ast class Lambda(quants: Seq[Type.Param], tpe: Type) extends Type
     @ast class Bounds(lo: Option[Type], hi: Option[Type]) extends Tree
     @branch trait Arg extends api.Type.Arg with Tree
@@ -305,8 +305,12 @@ package scala.meta.internal.ast {
     object Type {
       @branch trait Ref extends api.Pat.Type.Ref with Pat.Type with impl.Ref
       @ast class Wildcard() extends Pat.Type
-      @ast class Project(qual: Pat.Type, name: impl.Type.Name) extends Pat.Type with Pat.Type.Ref
-      @ast class Apply(tpe: Pat.Type, args: Seq[Pat.Type] @nonEmpty) extends Pat.Type
+      @ast class Project(qual: Pat.Type, name: impl.Type.Name) extends Pat.Type with Pat.Type.Ref {
+        require(!qual.isInstanceOf[Pat.Var.Type] && !qual.isInstanceOf[Pat.Type.Wildcard])
+      }
+      @ast class Apply(tpe: Pat.Type, args: Seq[Pat.Type] @nonEmpty) extends Pat.Type {
+        require(!tpe.isInstanceOf[Pat.Var.Type] && !tpe.isInstanceOf[Pat.Type.Wildcard])
+      }
       @ast class ApplyInfix(lhs: Pat.Type, op: impl.Type.Name, rhs: Pat.Type) extends Pat.Type
       @ast class Function(params: Seq[Pat.Type], res: Pat.Type) extends Pat.Type
       @ast class Tuple(elements: Seq[Pat.Type]) extends Pat.Type {
@@ -316,12 +320,21 @@ package scala.meta.internal.ast {
         // TODO: revisit this once we have trivia in place
         // require(tpes.length == 1 ==> hasRefinement)
         require(refinement.forall(_.isRefineStat))
+        require(tpes.forall(tpe => !tpe.isInstanceOf[Pat.Var.Type] && !tpe.isInstanceOf[Pat.Type.Wildcard]))
       }
       @ast class Existential(tpe: Pat.Type, quants: Seq[Stat] @nonEmpty) extends Pat.Type {
+        require(!tpe.isInstanceOf[Pat.Var.Type] && !tpe.isInstanceOf[Pat.Type.Wildcard])
         require(quants.forall(_.isExistentialStat))
       }
-      @ast class Annotate(tpe: Pat.Type, annots: Seq[Mod.Annot] @nonEmpty) extends Pat.Type
-      @ast class Lambda(quants: Seq[impl.Type.Param], tpe: Pat.Type) extends Pat.Type
+      @ast class Annotate(tpe: Pat.Type, annots: Seq[Mod.Annot] @nonEmpty) extends Pat.Type {
+        require(!tpe.isInstanceOf[Pat.Var.Type] && !tpe.isInstanceOf[Pat.Type.Wildcard])
+      }
+      @ast class Placeholder(bounds: impl.Type.Bounds) extends Pat.Type {
+        require(bounds.lo.nonEmpty || bounds.hi.nonEmpty)
+      }
+      @ast class Lambda(quants: Seq[impl.Type.Param], tpe: Pat.Type) extends Pat.Type {
+        require(!tpe.isInstanceOf[Pat.Var.Type] && !tpe.isInstanceOf[Pat.Type.Wildcard])
+      }
     }
   }
 
