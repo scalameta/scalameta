@@ -5,32 +5,32 @@ import org.scalatest._
 import org.scalameta.tests._
 
 class PublicSuite extends FunSuite {
-  test("project APIs without import") {
+  test("taxonomic APIs without import") {
     assert(typecheckError("""
-      project
-    """) === "not found: value project")
+      domain
+    """) === "not found: value domain")
   }
 
-  test("project APIs without context") {
+  test("taxonomic APIs without context") {
     assert(typecheckError("""
       import scala.meta._
-      project
-    """) === "this method requires an implicit scala.meta.projects.Context")
+      domain
+    """) === "this method requires an implicit scala.meta.taxonomic.Context")
   }
 
-  test("project APIs when everything's correct") {
+  test("taxonomic APIs when everything's correct") {
     assert(typecheckError("""
       import scala.meta._
-      implicit val c: scala.meta.projects.Context = ???
-      project
+      implicit val c: scala.meta.taxonomic.Context = ???
+      domain
     """) === "")
   }
 
   // TODO: this error is somewhat confusing
-  test("project context APIs") {
+  test("taxonomic context APIs") {
     assert(typecheckError("""
-      (??? : scala.meta.projects.Context).project
-    """) === "method project in trait Context cannot be accessed in scala.meta.projects.Context")
+      (??? : scala.meta.taxonomic.Context).domain
+    """) === "method domain in trait Context cannot be accessed in scala.meta.taxonomic.Context")
   }
 
   test("quasiquotes without import") {
