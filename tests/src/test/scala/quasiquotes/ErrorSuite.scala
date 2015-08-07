@@ -346,11 +346,11 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin)
   }
 
-  test("""p"$pname @ $apat"""") { // TODO would be ideal to show warning about upper-cased lhs
+  test("""p"$pname @ $apat"""") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
-      val pname = p"X"
+      val pname = p"`x`"
       val apat = p"y"
       p"$pname @ $apat"
     """) === """
@@ -359,6 +359,18 @@ class ErrorSuite extends FunSuite {
       | required: scala.meta.Pat.Var.Term
       |      p"$pname @ $apat"
       |        ^
+    """.trim.stripMargin)
+  }
+
+  test("""p"$ref[..$tpes](..$apats)""") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val p"$ref[..$tpes](..$apats)" = p"x[A, B]"
+    """) === """
+      |<macro>:4: pattern must be a value
+      |      val p"$ref[..$tpes](..$apats)" = p"x[A, B]"
+      |                                                ^
     """.trim.stripMargin)
   }
 }

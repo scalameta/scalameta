@@ -523,48 +523,109 @@ class QuasiquoteSuite extends FunSuite {
     assert(t"$tpe".show[Syntax] === "X")
   }
 
+  test("p\"_\"") {
+    assert(p"_".show[Structure] === "Pat.Wildcard()")
+  }
+
+  test("p\"name\"") {
+    assert(p"name".show[Structure] === "Pat.Var.Term(Term.Name(\"name\"))")
+  }
+
+  test("p\"x\"") {
+    assert(p"x".show[Structure] === "Pat.Var.Term(Term.Name(\"x\"))")
+  }
+
+  test("p\"X\"") {
+    assert(p"X".show[Structure] === "Pat.Var.Term(Term.Name(\"X\"))")
+  }
+
+  test("p\"`x`\"") {
+    assert(p"`x`".show[Structure] === "Term.Name(\"x\")")
+  }
+
+  test("p\"`X`\"") {
+    assert(p"`X`".show[Structure] === "Term.Name(\"X\")")
+  }
+
   test("1 p\"$pname @ $apat\"") {
     val p"$pname @ $apat" = p"x @ y"
-    assert(pname.show[Syntax] === "x")
-    assert(apat.show[Syntax] === "y")
+    assert(pname.show[Structure] === "Pat.Var.Term(Term.Name(\"x\"))")
+    assert(apat.show[Structure] === "Pat.Var.Term(Term.Name(\"y\"))")
   }
 
   test("2 p\"$pname @ $apat\"") {
     val pname = p"x"
     val apat = p"y"
-    assert(p"$pname @ $apat".show[Syntax] === "x @ y")
+    assert(p"$pname @ $apat".show[Structure] === "Pat.Bind(Pat.Var.Term(Term.Name(\"x\")), Pat.Var.Term(Term.Name(\"y\")))")
   }
 
   test("1 p\"$pat | $pat\"") {
     val p"$pat1 | $pat2" = p"x | y"
-    assert(pat1.show[Syntax] === "x")
-    assert(pat2.show[Syntax] === "y")
+    assert(pat1.show[Structure] === "Pat.Var.Term(Term.Name(\"x\"))")
+    assert(pat2.show[Structure] === "Pat.Var.Term(Term.Name(\"y\"))")
   }
 
   test("2 p\"$pat | $pat\"") {
     val pat1 = p"X"
     val pat2 = p"Y"
-    assert(p"$pat1 | $pat2".show[Syntax] === "X | Y")
+    assert(p"$pat1 | $pat2".show[Structure] === "Pat.Alternative(Pat.Var.Term(Term.Name(\"X\")), Pat.Var.Term(Term.Name(\"Y\")))")
+  }
+
+  test("3 p\"$pat | $pat\"") {
+    val pat1 = p"`X`"
+    val pat2 = p"Y"
+    assert(p"$pat1 | $pat2".show[Structure] === "Pat.Alternative(Term.Name(\"X\"), Pat.Var.Term(Term.Name(\"Y\")))")
   }
 
   test("1 p\"(..$pats)\"") {
     val p"(..$pats)" = p"(X, Y)"
     assert(pats.toString === "List(X, Y)")
-    assert(pats(0).show[Syntax] === "X")
-    assert(pats(1).show[Syntax] === "Y")
+    assert(pats(0).show[Structure] === "Pat.Var.Term(Term.Name(\"X\"))")
+    assert(pats(1).show[Structure] === "Pat.Var.Term(Term.Name(\"Y\"))")
   }
 
   test("2 p\"(..$pats)\"") {
     val pats = List(p"X", p"Y")
-    assert(p"(..$pats)".show[Syntax] === "(X, Y)")
-    assert(p"${pats.head}".show[Syntax] === "X")
+    assert(p"(..$pats)".show[Structure] === "Pat.Tuple(List(Pat.Var.Term(Term.Name(\"X\")), Pat.Var.Term(Term.Name(\"Y\"))))")
   }
 
-  test("p\"$ref[..$tpes](..$apats)\"") {
+  test("3 p\"(..$pats)\"") {
+    val pats = List(p"`X`", p"Y")
+    assert(p"(..$pats)".show[Structure] === "Pat.Tuple(List(Term.Name(\"X\"), Pat.Var.Term(Term.Name(\"Y\"))))")
+  }
+
+  test("p\"1 $ref[..$tpes](..$apats)\"") {
+    val p"$ref[..$tpes](..$apats)" = p"x[A, B](Q, W)"
+    assert(ref.show[Structure] === "Term.Name(\"x\")")
+    assert(tpes.toString === "List(A, B)")
+    assert(tpes(0).show[Structure] === "Type.Name(\"A\")")
+    assert(tpes(1).show[Structure] === "Type.Name(\"B\")")
+    assert(apats.toString === "List(Q, W)")
+    assert(apats(0).show[Structure] === "Pat.Var.Term(Term.Name(\"Q\"))")
+    assert(apats(1).show[Structure] === "Pat.Var.Term(Term.Name(\"W\"))")
+  }
+
+  test("p\"2 $ref[..$tpes](..$apats)\"") {
+    val p"$ref[..$tpes](..$apats)" = p"x(Q, W)"
+    assert(ref.show[Structure] === "Term.Name(\"x\")")
+    assert(tpes.toString === "List()")
+    assert(apats.toString === "List(Q, W)")
+    assert(apats(0).show[Structure] === "Pat.Var.Term(Term.Name(\"Q\"))")
+    assert(apats(1).show[Structure] === "Pat.Var.Term(Term.Name(\"W\"))")
+  }
+
+  test("p\"3 $ref[..$tpes](..$apats)\"") {
     val ref = q"x"
     val tpes = List(t"A", t"B")
     val apats = List(p"Q", p"W")
-    assert(p"$ref[..$tpes](..$apats)".show[Syntax] === "x[A, B](Q, W)")
+    assert(p"$ref[..$tpes](..$apats)".show[Structure] === "Pat.Extract(Term.Name(\"x\"), List(Type.Name(\"A\"), Type.Name(\"B\")), List(Pat.Var.Term(Term.Name(\"Q\")), Pat.Var.Term(Term.Name(\"W\"))))")
+  }
+
+  test("p\"4 $ref[..$tpes](..$apats)\"") {
+    val ref = q"`x`"
+    val tpes = List(t"`A`", t"B")
+    val apats = List(p"`Q`", p"W")
+    assert(p"$ref[..$tpes](..$apats)".show[Structure] === "Pat.Extract(Term.Name(\"x\"), List(Type.Name(\"A\"), Type.Name(\"B\")), List(Term.Name(\"Q\"), Pat.Var.Term(Term.Name(\"W\"))))")
   }
 
 //  test("p\"$pat $name (..$apats)\"") {
@@ -580,28 +641,34 @@ class QuasiquoteSuite extends FunSuite {
 //    assert(p""" $name"$${..$pats}" """.show[Syntax] === "...")
 //  }
 
-  test("1 p\"$pat: $ptpe\"") {
-    val p"$pat: $ptpe" = p"x: Y"
-    assert(pat.show[Syntax] === "x")
-    assert(ptpe.show[Syntax] === "Y")
-  }
-
-  test("2 p\"$pat: $ptpe\"") {
-    val pat = p"x"
-    val ptpe = pt"Y"
-    assert(p"$pat: $ptpe".show[Syntax] === "x: Y")
-  }
+//  test("1 p\"$pat: $ptpe\"") {
+//    val p"$pat: $ptpe" = p"x: Y"
+//    assert(pat.show[Syntax] === "x")
+//    assert(ptpe.show[Syntax] === "Y")
+//  }
+//
+//  test("2 p\"$pat: $ptpe\"") {
+//    val pat = p"x"
+//    val ptpe = pt"Y"
+//    assert(p"$pat: $ptpe".show[Syntax] === "x: Y")
+//  }
 
   test("1 p\"$expr.$name\"") {
     val p"$expr.$name" = p"x.y"
-    assert(p"$expr".show[Syntax] === "x")
-    assert(p"$name".show[Syntax] === "y")
+    assert(expr.show[Structure] === "Term.Name(\"x\")")
+    assert(name.show[Structure] === "Term.Name(\"y\")")
   }
 
   test("2 p\"$expr.$name\"") {
-    val expr = q"foo(bar)"
-    val name = q"x"
-    assert(p"$expr.$name".show[Syntax] === "foo(bar).x")
+    val expr = q"x"
+    val name = q"y"
+    assert(p"$expr.$name".show[Structure] === "Term.Select(Term.Name(\"x\"), Term.Name(\"y\"))")
+  }
+
+  test("3 p\"$expr.$name\"") {
+    val expr = q"`x`"
+    val name = q"y"
+    assert(p"$expr.$name".show[Structure] === "Term.Select(Term.Name(\"x\"), Term.Name(\"y\"))")
   }
 
   test("p\"$lit\"") {
@@ -609,24 +676,67 @@ class QuasiquoteSuite extends FunSuite {
     assert(p"$lit".show[Syntax] === "1")
   }
 
-  test("p\"case $pat if $expropt => $expr\"") {
+  test("1 p\"case $pat if $expropt => $expr\"") {
+    val p"case $pat if $expropt => $expr" = p"case X if foo => bar"
+    assert(pat.show[Structure] === "Pat.Var.Term(Term.Name(\"X\"))")
+    assert(expropt.show[Structure] === "Term.Name(\"foo\")")
+    assert(expr.show[Structure] === "Term.Name(\"bar\")")
+  }
+
+  test("2 p\"case $pat if $expropt => $expr\"") {
     val pat = p"X"
     val expropt = q"foo"
     val expr = q"bar"
     assert(p"case $pat if $expropt => $expr".show[Syntax] === "case X if foo => bar")
   }
 
-  test("p\"$pat\"") {
+  test("3 p\"case $pat if $expropt => $expr\"") {
+    val pat = p"`X`"
+    val expropt = q"`foo`"
+    val expr = q"`bar`"
+    assert(p"case $pat if $expropt => $expr".show[Syntax] === "case X if foo => bar")
+  }
+
+  test("1 p\"$pat\"") {
     val pat = p"X"
-    assert(p"$pat".show[Syntax] === "X")
+    assert(p"$pat".show[Structure] === "Pat.Var.Term(Term.Name(\"X\"))")
   }
 
-  test("pt\"$ref.$tname\"") {
-    val ref = q"x"
-    val tname = t"A"
-    assert(pt"$ref.$tname".show[Syntax] === "x.A")
+  test("2 p\"$pat\"") {
+    val pat = p"`X`"
+    assert(p"$pat".show[Structure] === "Term.Name(\"X\")")
   }
 
+//  test("pt\"_\"") {
+//    assert(pt"_".show[Structure] === "Pat.Wildcard()") // todo move to errors, this should be placeholder
+//  }
+//
+//  test("pt\"name\"") {
+//    assert(pt"name".show[Structure] === "Pat.Var.Type(Type.Name(\"name\"))")
+//  }
+//
+//  test("pt\"x\"") {
+//    assert(p"x".show[Structure] === "Pat.Var.Type(Type.Name(\"x\"))")
+//  }
+//
+//  test("pt\"X\"") {
+//    assert(pt"X".show[Structure] === "Pat.Var.Type(Type.Name(\"X\"))")
+//  }
+//
+//  test("pt\"`x`\"") {
+//    assert(pt"`x`".show[Structure] === "Type.Name(\"x\")")
+//  }
+//
+//  test("pt\"X\"") {
+//    assert(pt"`X`".show[Structure] === "Type.Name(\"X\")")
+//  }
+
+//  test("pt\"$ref.$tname\"") {
+//    val ref = q"x"
+//    val tname = t"A"
+//    assert(pt"$ref.$tname".show[Syntax] === "x.A")
+//  }
+//
 //  test("pt\"$ref#$tname\"") {
 //    val ref = q"x"
 //    val tname = t"A"

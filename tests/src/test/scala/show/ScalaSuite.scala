@@ -325,10 +325,10 @@ class ScalaSuite extends InferSuite {
     assert(tree2.show[Structure] === "Pat.Extract(Term.Name(\"f\"), Nil, List(Term.Name(\"x\")))")
     assert(tree2.show[Syntax] === "f(`x`)")
     val tree3 = pat("X")
-    assert(tree3.show[Structure] === "Term.Name(\"X\")")
+    assert(tree3.show[Structure] === "Pat.Var.Term(Term.Name(\"X\"))")
     assert(tree3.show[Syntax] === "X")
     val tree4 = pat("f(X)")
-    assert(tree4.show[Structure] === "Pat.Extract(Term.Name(\"f\"), Nil, List(Term.Name(\"X\")))")
+    assert(tree4.show[Structure] === "Pat.Extract(Term.Name(\"f\"), Nil, List(Pat.Var.Term(Term.Name(\"X\"))))")
     assert(tree4.show[Syntax] === "f(X)")
   }
 
