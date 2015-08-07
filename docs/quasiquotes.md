@@ -172,13 +172,13 @@
 
                 | Quasiquote
 ----------------|-------------------------------------------------
- Term Param     | `param"..$mods $pname: $atpeopt = $defaultopt"`
+ Term Param     | `param"..$mods $paramname: $atpeopt = $defaultopt"`
 
 ### Type Parameters (meta.Type.Param)
 
                 | Quasiquote
 ----------------|-------------------------------------------------
- Type Param     | `tparam"..$mods $tpname[..$tparams] >: $tpeopt <: $tpeopt <% ..$tpes : ..$tpes"`
+ Type Param     | `tparam"..$mods $tparamname[..$tparams] >: $tpeopt <: $tpeopt <% ..$tpes : ..$tpes"`
 
 ## Constructor References (meta.Ctor.Ref and meta.Term)
 
@@ -257,7 +257,7 @@
  meta.Name.Qualifier      | `$qname`      | `q`, `t`, anonymous names can't be constructed, only extracted from `mod"..."`
  meta.Pat                 | `$pat`        | `p`
  meta.Pat.Arg             | `$apat`       | `p`
- meta.Pat.Var.Term        | `$pname`      | `p`, name should be lower-case
+ meta.Pat.Var.Term        | `$pname`      | `p`
  meta.Pat.Type            | `$ptpe`       | `pt`
  meta.Importee            | `$importee`   | `importee`
  meta.Stat                | `$stat`       | `q`
@@ -267,12 +267,12 @@
  meta.Term.Name           | `$name`       | `q`
  meta.Term.Ref            | `$ref`        | `q`
  meta.Term.Param          | `$param`      | `param`
- meta.Term.Param.Name     | `$pname`      | `q`, anonymous names can't be constructed, only extracted from `param`
+ meta.Term.Param.Name     | `$paramname`  | `q`, anonymous names can't be constructed, only extracted from `param`
  meta.Type                | `$tpe`        | `t`
  meta.Type.Arg            | `$atpe`       | `t`
  meta.Type.Name           | `$tname`      | `t`
  meta.Type.Param          | `$tparam`     | `tparam`
- meta.Type.Param.Name     | `$tpname`     | `t`, anonymous names can't be constructed, only extracted from `tparam`
+ meta.Type.Param.Name     | `$tparamname` | `t`, anonymous names can't be constructed, only extracted from `tparam`
                           | `$lit`        | `q`
 
 ### Suffix name modifiers

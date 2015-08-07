@@ -1972,10 +1972,10 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       simplePattern(token => syntaxError("illegal start of simple pattern", at = token))
     def simplePattern(onError: Token => Nothing): Pat = autoPos(token match {
       case _: Ident | _: `this` =>
-        val isBackquoted = token.code.endsWith("`")
+        val isBackquoted = token.code.startsWith("`") && token.code.endsWith("`")
         val sid = stableId()
         val isVarPattern = sid match {
-          case Term.Name(value) => !isBackquoted && value.head.isLower && value.head.isLetter
+          case Term.Name(value) => !isBackquoted && value.head.isLetter
           case _ => false
         }
         if (token.is[NumericLiteral]) {
@@ -2013,7 +2013,18 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         }
         makeTuple[Pat](patterns, () => Lit.Unit(), Pat.Tuple(_))
       case _: Unquote =>
-        unquote[Pat]
+        val sid = stableId()
+        val targs = token match {
+          case _: `[` => typeArgs()
+          case _        => Nil
+        }
+        (token, sid) match {
+          case (_: `(`, _)                          => Pat.Extract(sid, targs, argumentPatterns())
+          case (_, _) if targs.nonEmpty             => syntaxError("pattern must be a value", at = token)
+          case (_, select: Term.Select)             => select
+          case (_, name: Term.Name.Quasi)           => name.become[Pat.Quasi]
+          case _                                    => unreachable(debug(token, token.show[Structure], sid, sid.show[Structure]))
+        }
       case _ =>
         onError(token)
     })
