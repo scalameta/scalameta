@@ -373,4 +373,18 @@ class ErrorSuite extends FunSuite {
       |                                                ^
     """.trim.stripMargin)
   }
+
+  test("""p"$pat: $ptpe"""") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val pat = p"`x`"
+      val ptpe = pt"Y"
+      p"$pat: $ptpe"
+    """) === """
+      |<macro>:6: can't unquote a name here, use a variable pattern instead
+      |      p"$pat: $ptpe"
+      |        ^
+    """.trim.stripMargin)
+  }
 }
