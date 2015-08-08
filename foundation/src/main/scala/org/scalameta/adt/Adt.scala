@@ -164,13 +164,21 @@ class AdtMacros(val c: Context) {
       object VanillaParam {
         def unapply(tree: ValDef): Option[(Modifiers, TermName, Tree, Tree)] = tree match {
           case DelayedParam(_, _, _, _) => None
+          case VarargParam(_, _, _, _) => None
           case _ => Some((tree.mods, tree.name, tree.tpt, tree.rhs))
+        }
+      }
+      object VarargParam {
+        def unapply(tree: ValDef): Option[(Modifiers, TermName, Tree, Tree)] = tree.tpt match {
+          case Vararg(_) => Some((tree.mods, tree.name, tree.tpt, tree.rhs))
+          case _ => None
         }
       }
       object DelayedParam {
         def unapply(tree: ValDef): Option[(Modifiers, TermName, Tree, Tree)] = tree.tpt match {
           case Annotated(Apply(Select(New(Ident(TypeName("delayed"))), termNames.CONSTRUCTOR), List()), tpt) =>
-            Some((tree.mods, tree.name, tpt, tree.rhs))
+            if (Vararg.unapply(tree.tpt).nonEmpty) c.abort(cdef.pos, "vararg parameters cannot be delayed")
+            else Some((tree.mods, tree.name, tpt, tree.rhs))
           case _ =>
             None
         }
@@ -183,6 +191,18 @@ class AdtMacros(val c: Context) {
         val DefDef(_, _, _, List(List(ValDef(_, _, bynameTpt, _))), _, _) = q"def dummy(dummy: => $tpt) = ???"
         bynameTpt
       }
+      object Vararg {
+        def unapply(tpt: Tree): Option[Tree] = tpt match {
+          case Annotated(_, arg) =>
+            unapply(arg)
+          case AppliedTypeTree(Select(Select(Ident(root), scala), repeated), List(arg))
+          if root == termNames.ROOTPKG && scala == TermName("scala") && repeated == definitions.RepeatedParamClass.name.decodedName =>
+            Some(arg)
+          case _ =>
+            None
+        }
+      }
+      val isVararg = paramss.flatten.lastOption.flatMap(p => Vararg.unapply(p.tpt)).nonEmpty
 
       // step 1: validate the shape of the class
       if (mods.hasFlag(SEALED)) c.abort(cdef.pos, "sealed is redundant for @leaf classes")
@@ -195,6 +215,10 @@ class AdtMacros(val c: Context) {
       // step 2: create parameters, generate getters and validation checks
       val paramss1 = paramss.map(_.map{
         case VanillaParam(mods, name, tpt, default) =>
+          stats1 += q"$Internal.nullCheck(this.$name)"
+          stats1 += q"$Internal.emptyCheck(this.$name)"
+          q"${unprivatize(mods)} val $name: $tpt = $default"
+        case VarargParam(mods, name, tpt, default) =>
           stats1 += q"$Internal.nullCheck(this.$name)"
           stats1 += q"$Internal.emptyCheck(this.$name)"
           q"${unprivatize(mods)} val $name: $tpt = $default"
@@ -262,9 +286,10 @@ class AdtMacros(val c: Context) {
       }
 
       // step 6: generate copy
-      if (needs(TermName("copy"))) {
+      if (needs(TermName("copy")) && !isVararg) {
         val copyParamss = paramss.map(_.map({
           case VanillaParam(mods, name, tpt, default) => q"$mods val $name: $tpt = this.$name"
+          case VarargParam(mods, name, tpt, default) => q"$mods val $name: $tpt = this.$name"
           // TODO: This doesn't compile, producing nonsensical errors
           // about incompatibility between the default value and the type of the parameter
           // e.g. "expected: => T, actual: T"
@@ -274,6 +299,7 @@ class AdtMacros(val c: Context) {
         }))
         val copyArgss = paramss.map(_.map({
           case VanillaParam(mods, name, tpt, default) => q"$name"
+          case VarargParam(mods, name, tpt, default) => q"$name: _*"
           case DelayedParam(mods, name, tpt, default) => q"(() => $name)"
         }))
         stats1 += q"def copy(...$copyParamss): $name = new $name(...$copyArgss)"
@@ -283,10 +309,12 @@ class AdtMacros(val c: Context) {
       if (needs(TermName("apply"))) {
         val applyParamss = paramss.map(_.map({
           case VanillaParam(mods, name, tpt, default) => q"$mods val $name: $tpt = $default"
+          case VarargParam(mods, name, tpt, default) => q"$mods val $name: $tpt = $default"
           case DelayedParam(mods, name, tpt, default) => q"$mods val $name: ${bynameTpt(tpt)} = $default"
         }))
         val applyArgss = paramss.map(_.map({
           case VanillaParam(mods, name, tpt, default) => q"$name"
+          case VarargParam(mods, name, tpt, default) => q"$name: _*"
           case DelayedParam(mods, name, tpt, default) => q"(() => $name)"
         }))
         mstats1 += q"def apply(...$applyParamss): $name = new $name(...$applyArgss)"
@@ -294,15 +322,26 @@ class AdtMacros(val c: Context) {
 
       // step 8: generate Companion.unapply
       // TODO: go for name-based pattern matching once blocking bugs (e.g. SI-9029) are fixed
-      if (needs(TermName("unapply"))) {
+      val unapplyName = if (isVararg) TermName("unapplySeq") else TermName("unapply")
+      if (needs(unapplyName)) {
         val unapplyParamss = paramss.map(_.map(undelay))
         val unapplyParams = unapplyParamss.head
         if (unapplyParams.length != 0) {
-          val successTargs = tq"(..${unapplyParams.map(p => p.tpt)})"
+          val successTargs = unapplyParams.map({
+            case VanillaParam(mods, name, tpt, default) => tpt
+            case VarargParam(mods, name, Vararg(tpt), default) => tq"_root_.scala.Seq[$tpt]"
+            case DelayedParam(mods, name, tpt, default) => tpt
+          })
+          val successTpe = tq"(..$successTargs)"
           val successArgs = q"(..${unapplyParams.map(p => q"x.${p.name}")})"
-          mstats1 += q"def unapply(x: $name): Option[$successTargs] = if (x == null) _root_.scala.None else _root_.scala.Some($successArgs)"
+          mstats1 += q"""
+            def $unapplyName(x: $name): Option[$successTpe] = {
+              if (x == null) _root_.scala.None
+              else _root_.scala.Some($successArgs)
+            }
+          """
         } else {
-          mstats1 += q"def unapply(x: $name): Boolean = true"
+          mstats1 += q"def $unapplyName(x: $name): Boolean = true"
         }
       }
 
