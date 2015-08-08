@@ -22,7 +22,6 @@ private[meta] trait Api extends MavenDsl {
   implicit class XtensionTaxonomicModule(module: Module) {
     @hosted def sources: Seq[Source] = implicitly[TaxonomicContext].sources(module)
     @hosted def resources: Seq[Resource] = implicitly[TaxonomicContext].resources(module)
-    @hosted def dependencies: Seq[Module] = implicitly[TaxonomicContext].dependencies(module)
   }
 
   type Artifact = scala.meta.taxonomic.Artifact
