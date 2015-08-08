@@ -55,4 +55,4 @@ object Project {
 // Worksheets are modules that are mutable, which is a scenario that is often required
 // to support dynamic code evaluation, runtime code generation and the like.
 
-@leaf class Worksheet(dependencies: Module*) extends Module
+@leaf class Worksheet() extends Module

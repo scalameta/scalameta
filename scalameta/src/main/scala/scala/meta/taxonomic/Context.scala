@@ -9,10 +9,7 @@ import scala.collection.immutable.Seq
 @opaque
 @implicitNotFound("this method requires an implicit scala.meta.taxonomic.Context")
 trait Context {
-  def domain: Domain
-
   def sources(module: Module): Seq[Source]
   def resources(module: Module): Seq[Resource]
-
-  def append(worksheet: Worksheet, source: Source): Unit
+  def dependencies(module: Module): Seq[Module]
 }
