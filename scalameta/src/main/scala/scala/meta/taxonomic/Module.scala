@@ -31,5 +31,3 @@ object Project {
 }
 
 @leaf class Worksheet(dependencies: Module*) extends Module
-
-@leaf class Domain(modules: Module*) extends Module

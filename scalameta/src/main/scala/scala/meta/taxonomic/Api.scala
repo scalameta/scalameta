@@ -6,6 +6,16 @@ import org.scalameta.annotations._
 import scala.meta.taxonomic.{Context => TaxonomicContext}
 
 private[meta] trait Api extends MavenIdDsl {
+  type Domain = scala.meta.taxonomic.Domain
+  val Domain = scala.meta.taxonomic.Domain
+
+  @hosted def domain: Domain = implicitly[TaxonomicContext].domain
+
+  implicit class XtensionTaxonomicDomain(domain: Domain) {
+    @hosted def sources: Seq[Source] = domain.modules.flatMap(_.sources)
+    @hosted def resources: Seq[Resource] = domain.modules.flatMap(_.resources)
+  }
+
   type Module = scala.meta.taxonomic.Module
   // val Module = scala.meta.taxonomic.Module
 
@@ -24,13 +34,8 @@ private[meta] trait Api extends MavenIdDsl {
   type Worksheet = scala.meta.taxonomic.Worksheet
   val Worksheet = scala.meta.taxonomic.Worksheet
 
-  type Domain = scala.meta.taxonomic.Domain
-  val Domain = scala.meta.taxonomic.Domain
-
   type Resource = scala.meta.taxonomic.Resource
   // val Resource = scala.meta.taxonomic.Resource
-
-  @hosted def domain: Domain = implicitly[TaxonomicContext].domain
 
   implicit class XtensionTaxonomicModule(module: Module) {
     @hosted def sources: Seq[Source] = implicitly[TaxonomicContext].sources(module)
