@@ -641,17 +641,17 @@ class QuasiquoteSuite extends FunSuite {
 //    assert(p""" $name"$${..$pats}" """.show[Syntax] === "...")
 //  }
 
-//  test("1 p\"$pat: $ptpe\"") {
-//    val p"$pat: $ptpe" = p"x: Y"
-//    assert(pat.show[Syntax] === "x")
-//    assert(ptpe.show[Syntax] === "Y")
-//  }
-//
-//  test("2 p\"$pat: $ptpe\"") {
-//    val pat = p"x"
-//    val ptpe = pt"Y"
-//    assert(p"$pat: $ptpe".show[Syntax] === "x: Y")
-//  }
+  test("1 p\"$pat: $ptpe\"") {
+    val p"$pat: $ptpe" = p"x: Y"
+    assert(pat.show[Structure] === "Pat.Var.Term(Term.Name(\"x\"))")
+    assert(ptpe.show[Structure] === "Type.Name(\"Y\")")
+  }
+
+  test("2 p\"$pat: $ptpe\"") {
+    val pat = p"x"
+    val ptpe = pt"Y"
+    assert(p"$pat: $ptpe".show[Structure] === "Pat.Typed(Pat.Var.Term(Term.Name(\"x\")), Type.Name(\"Y\"))")
+  }
 
   test("1 p\"$expr.$name\"") {
     val p"$expr.$name" = p"x.y"

@@ -70,10 +70,12 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
       q"""
         def prohibitLowercasePat(pat: scala.meta.Tree): _root_.scala.Unit = {
           pat match {
-            case q: scala.meta.internal.ast.Quasi
-            if q.tree.asInstanceOf[c.universe.Tree].tpe <:< typeOf[scala.meta.Term.Name] =>
-              val action = if (q.rank == 0) "unquote" else "splice"
-              c.abort(q.position, "can't " + action + " a name here, use a variable pattern instead")
+            case q: scala.meta.internal.ast.Quasi =>
+              val utree = q.tree.asInstanceOf[c.universe.Tree]
+              if (utree.tpe != null && utree.tpe <:< typeOf[scala.meta.Term.Name]) {
+                val action = if (q.rank == 0) "unquote" else "splice"
+                c.abort(q.position, "can't " + action + " a name here, use a variable pattern instead")
+              }
             case _ =>
           }
         }
