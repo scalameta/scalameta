@@ -69,7 +69,8 @@ In scala.reflect, the metaprogramming API behaves differently depending on the s
 
 | Method                                                    | Notes
 |-----------------------------------------------------------|-----------------------------------------------------------------
-| `def dialect: Dialect`                                    | See [dialects/Dialect.scala](/scalameta/src/main/scala/scala/meta/dialects/Dialect.scala)
+| `def dialect: Dialect`                                    | See [dialects/Dialect.scala](/tokens/src/main/scala/scala/meta/dialects/package.scala)
+| `def domain: Domain`                                      | See [taxonomic/Domain.scala](/scalameta/src/main/scala/scala/meta/taxonomic/Domain.scala)
 | `def desugar(term: Term): Term`                           | Expands a given term into its full form, introducing inferred term and type arguments, calls to magic methods, such as `apply` or `update`, etc. Language features to be supported: implicit conversion/argument inference, type argument inference, apply insertion, empty argument list insertion, assignment desugaring (`_=`, `update`), string interpolation desugaring, for loop desugaring, dynamic desugaring.
 | `def tpe(term: Term): Type`                               | Type of a given term.
 | `def tpe(param: Term.Param): Type.Arg`                    | Type of a given term parameter, possibly inferred.

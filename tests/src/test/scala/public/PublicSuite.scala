@@ -5,16 +5,46 @@ import org.scalatest._
 import org.scalameta.tests._
 
 class PublicSuite extends FunSuite {
+  test("interactive APIs without import") {
+    assert(typecheckError("""
+      load(???)
+    """) === "not found: value load")
+  }
+
+  test("interactive APIs without context") {
+    assert(typecheckError("""
+      import scala.meta._
+      load(???)
+    """) === "this method requires an implicit scala.meta.interactive.Context")
+  }
+
+  test("interactive APIs when everything's correct") {
+    assert(typecheckError("""
+      import scala.meta._
+      implicit val c: scala.meta.interactive.Context = ???
+      load(???)
+    """) === "")
+  }
+
+  // TODO: this error is somewhat confusing
+  test("interactive context APIs") {
+    assert(typecheckError("""
+      (??? : scala.meta.interactive.Context).load(???)
+    """) === "method load in trait Context cannot be accessed in scala.meta.interactive.Context")
+  }
+
   test("taxonomic APIs without import") {
     assert(typecheckError("""
-      domain
-    """) === "not found: value domain")
+      val domain: scala.meta.taxonomic.Domain = ???
+      domain.sources
+    """) === "this method requires an implicit scala.meta.taxonomic.Context")
   }
 
   test("taxonomic APIs without context") {
     assert(typecheckError("""
       import scala.meta._
-      domain
+      val domain: scala.meta.taxonomic.Domain = ???
+      domain.sources
     """) === "this method requires an implicit scala.meta.taxonomic.Context")
   }
 
@@ -22,15 +52,16 @@ class PublicSuite extends FunSuite {
     assert(typecheckError("""
       import scala.meta._
       implicit val c: scala.meta.taxonomic.Context = ???
-      domain
+      val domain: scala.meta.taxonomic.Domain = ???
+      domain.sources
     """) === "")
   }
 
   // TODO: this error is somewhat confusing
   test("taxonomic context APIs") {
     assert(typecheckError("""
-      (??? : scala.meta.taxonomic.Context).domain
-    """) === "method domain in trait Context cannot be accessed in scala.meta.taxonomic.Context")
+      (??? : scala.meta.taxonomic.Context).sources(???)
+    """) === "method sources in trait Context cannot be accessed in scala.meta.taxonomic.Context")
   }
 
   test("quasiquotes without import") {

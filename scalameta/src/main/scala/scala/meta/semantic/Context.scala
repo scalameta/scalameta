@@ -10,6 +10,7 @@ import scala.annotation._
 @implicitNotFound("this method requires an implicit scala.meta.semantic.Context")
 trait Context {
   def dialect: Dialect
+  def domain: Domain
 
   def desugar(term: Term): Term
   def tpe(term: Term): Type

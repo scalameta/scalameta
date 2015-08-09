@@ -17,7 +17,15 @@ import scala.reflect.runtime.{universe => ru} // necessary only for a very hacky
 
 private[meta] trait Api {
   // ===========================
-  // PART 1: ATTRIBUTES
+  // PART 1: CONFIGURATION
+  // ===========================
+
+  @hosted def dialect: Dialect = implicitly[SemanticContext].dialect
+
+  @hosted def domain: Domain = implicitly[SemanticContext].domain
+
+  // ===========================
+  // PART 2: ATTRIBUTES
   // ===========================
 
   implicit class XtensionSemanticTermDesugar(tree: Term) {
@@ -103,7 +111,7 @@ private[meta] trait Api {
   }
 
   // ===========================
-  // PART 2: TYPES
+  // PART 3: TYPES
   // ===========================
 
   implicit class XtensionSemanticType(tree: Type) {
@@ -120,7 +128,7 @@ private[meta] trait Api {
   @hosted def glb(tpes: Seq[Type]): Type = implicitly[SemanticContext].glb(tpes)
 
   // ===========================
-  // PART 3: MEMBERS
+  // PART 4: MEMBERS
   // ===========================
 
   trait XtensionSemanticMemberLike {
@@ -339,7 +347,7 @@ private[meta] trait Api {
   }
 
   // ===========================
-  // PART 4: SCOPES
+  // PART 5: SCOPES
   // ===========================
 
   // TODO: so what I wanted to do with Scope.members is to have three overloads:
@@ -586,7 +594,7 @@ private[meta] trait Api {
   }
 
   // ===========================
-  // PART 5: BINDINGS
+  // PART 6: BINDINGS
   // ===========================
 
   implicit class XtensionSemanticName(tree: Name) {

@@ -18,41 +18,39 @@ import org.scalameta.adt._
 // we know exactly what comprises a dialect.
 
 @root trait Module
+object Module {
+  @leaf class Adhoc(sources: Seq[Source], resources: Seq[Resource] = Nil, dependencies: Seq[Module] = Nil) extends Module
+  def apply(sources: Source*): Module = Adhoc(sources.toList, Nil, Nil)
+  def apply(sources: Seq[Source], resources: Seq[Resource] = Nil, dependencies: Seq[Module] = Nil): Module = Adhoc(sources, resources, dependencies)
+}
 
 // Artifacts are modules that are: 1) immutable, 2) already compiled.
-// They can be either managed, i.e. belong to some dependency management system like Maven or Ivy,
-// or adhoc, i.e. thrown together manually from a classpath and (optionally) a sourcepath.
-//
-// NOTE: As a notational convenience, we provide multiple Artifact.apply methods that let users
-// avoid writing Artifact.XXX(...) or Artifact.YYY(...). This is possible arguments used to instantiate
-// this or that artifact unambiguously determine the type of the artifact. Later on, when we add more types
-// or artifacts, the situation may change. upd. On a second thought, I find these methods to be confusing
-// and going to comment them out.
+// They can be either adhoc, i.e. thrown together manually from a classpath and (optionally) a sourcepath.
+// or managed, i.e. belong to some dependency management system like Maven or Ivy,
 
 @branch trait Artifact extends Module
 object Artifact {
+  @leaf class Unmanaged(classpath: Multipath, sourcepath: Multipath) extends Artifact
   @leaf class Maven(id: MavenId) extends Artifact
-  @leaf class Adhoc(classes: Multipath, sources: Multipath) extends Artifact
-
-  // def apply(mavenId: MavenId): Artifact = Maven(mavenId)
-  // def apply(classes: Multipath, sources: Multipath = Nil): Artifact = Adhoc(classes, sources)
+  def apply(classes: Multipath, sources: Multipath): Artifact = Unmanaged(classes, sources)
+  def apply(mavenId: MavenId): Artifact = Maven(mavenId)
 }
 
 // Projects are modules that are: 1) immutable, 2) may or may not be compiled.
-// They can be either managed, i.e. belong to some build system like Sbt or Maven,
-// or adhoc, i.e. thrown together manually from a list of sources and compiler options.
-//
-// NOTE: Unfortunately, we can't define a single Project.apply method whose overloads would be enough
-// for all types of supported projects. Even if we have only adhoc and sbt projects, passing a directory
-// is already going to be ambiguous (is it a directory where the sources live or is it the root directory of a build?).
+// They can be either adhoc, i.e. thrown together manually from a list of sources and compiler options.
+// or managed, i.e. belong to some build system like Sbt or Maven,
 
-@branch trait Project extends Module
-object Project {
-  @leaf class Sbt(name: String, root: Path) extends Project
-  @leaf class Adhoc(sources: Multipath, options: String) extends Project
-}
+// NOTE: For a short period of time, scalameta/scalameta used to support projects.
+// However, a few days after projects were introduced, I decided to remove them, because:
+// a) I don't want to support different build systems, especially given that some of them (e.g. sbt)
+// don't have a simple way to be invoked programmatically, b) the notion of "maybe compiled"
+// is a completely new concept that needs to be explored and modelled adequately in order not to be a gimmick.
 
-// Worksheets are modules that are mutable, which is a scenario that is often required
+// Worksheet are modules that are mutable, which is a scenario that is often required
 // to support dynamic code evaluation, runtime code generation and the like.
 
-@leaf class Worksheet() extends Module
+// NOTE: For a short period of time, scalameta/scalameta used to support projects.
+// However, they have suffered the same fate as projects did.
+// The notions of: a) being standalone, i.e. stateless, and b) being mutable didn't coexist very well.
+// Ultimately, I couldn't find a design that would combine the two.
+// What was supposed to be expressed via worksheets is now moved to a separate flavor of Context.

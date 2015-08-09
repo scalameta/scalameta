@@ -1,12 +1,11 @@
 package scala.meta
 package taxonomic
 
+import java.io._
 import java.net.URI
-import java.io.InputStream
 import org.scalameta.adt._
 import org.scalameta.invariants._
 
-trait Resource {
-  def uri: URI
-  def stream: InputStream
+final case class Resource(name: String, uri: URI) {
+  def open(): InputStream = uri.toURL.openStream()
 }
