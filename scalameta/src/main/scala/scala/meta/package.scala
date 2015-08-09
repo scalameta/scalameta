@@ -1,6 +1,5 @@
 package scala
 
-import scala.annotation.`implicit`
 import scala.meta.interactive.{Api => InteractiveApi}
 import scala.meta.semantic.{Api => SemanticApi}
 import scala.meta.syntactic.{Api => SyntacticApi}
@@ -15,8 +14,4 @@ package object meta extends InteractiveApi
                        with TaxonomicApi
                        with TQLApi
                        with UIApi
-                       with QuasiquoteApi {
-
-  @scala.annotation.compileTimeOnly("meta expression has not been expanded")
-  def apply[T, R](body: scala.meta.semantic.Context @`implicit` => T)(implicit ev: Lift[T, scala.meta.Term]): R = ???
-}
+                       with QuasiquoteApi
