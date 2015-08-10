@@ -6,7 +6,7 @@ import scala.collection.immutable.Seq
 import org.scalameta.annotations._
 import scala.annotation._
 
-@opaque(exclude = "dialect")
+@opaque(exclude = "dialect|domain")
 @implicitNotFound("this method requires an implicit scala.meta.semantic.Context")
 trait Context {
   def dialect: Dialect
