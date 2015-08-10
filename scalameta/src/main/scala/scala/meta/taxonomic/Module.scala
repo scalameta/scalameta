@@ -20,10 +20,10 @@ import scala.meta.taxonomic.{Context => TaxonomicContext}
 
 @root trait Module
 object Module {
-  @leaf class Adhoc(sources: Seq[Source], resources: Seq[Resource] = Nil, dependencies: Seq[Module] = Nil) extends Module
+  @leaf class Adhoc(sources: Seq[Source], resources: Seq[Resource] = Nil, deps: Seq[Module] = Nil) extends Module
   def apply(sources: Source*): Module = Adhoc(sources.toList, Nil, Nil)
-  def apply(sources: Seq[Source], resources: Seq[Resource] = Nil, dependencies: Seq[Module] = Nil): Module = Adhoc(sources, resources, dependencies)
-  def unapply(module: Module)(implicit c: TaxonomicContext): Some[(Seq[Source], Seq[Resource], Seq[Module])] = Some((module.sources, module.resources, module.dependencies))
+  def apply(sources: Seq[Source], resources: Seq[Resource] = Nil, deps: Seq[Module] = Nil): Module = Adhoc(sources, resources, deps)
+  def unapply(module: Module)(implicit c: TaxonomicContext): Some[(Seq[Source], Seq[Resource], Seq[Module])] = Some((module.sources, module.resources, module.deps))
 }
 
 // Artifacts are modules that are: 1) immutable, 2) already compiled.

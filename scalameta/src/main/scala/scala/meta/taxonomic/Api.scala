@@ -13,8 +13,8 @@ private[meta] trait Api extends MavenDsl {
   val Domain = scala.meta.taxonomic.Domain
 
   implicit class XtensionTaxonomicDomain(domain: Domain) {
-    @hosted def sources: Seq[Source] = domain.modules.flatMap(_.sources)
-    @hosted def resources: Seq[Resource] = domain.modules.flatMap(_.resources)
+    @hosted def sources: Seq[Source] = domain.modules.flatMap(_.sources).toList
+    @hosted def resources: Seq[Resource] = domain.modules.flatMap(_.resources).toList
   }
 
   type Module = scala.meta.taxonomic.Module
@@ -32,6 +32,6 @@ private[meta] trait Api extends MavenDsl {
   implicit class XtensionTaxonomicModule(module: Module) {
     @hosted def sources: Seq[Source] = implicitly[TaxonomicContext].sources(module)
     @hosted def resources: Seq[Resource] = implicitly[TaxonomicContext].resources(module)
-    @hosted def dependencies: Seq[Module] = implicitly[TaxonomicContext].dependencies(module)
+    @hosted def deps: Seq[Module] = implicitly[TaxonomicContext].deps(module)
   }
 }

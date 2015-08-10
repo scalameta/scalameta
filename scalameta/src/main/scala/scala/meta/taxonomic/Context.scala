@@ -11,5 +11,5 @@ import scala.collection.immutable.Seq
 trait Context {
   def sources(module: Module): Seq[Source]
   def resources(module: Module): Seq[Resource]
-  def dependencies(module: Module): Seq[Module]
+  def deps(module: Module): Seq[Module]
 }
