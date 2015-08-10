@@ -32,8 +32,12 @@ class Proxy[G <: ScalaGlobal](val global: G) extends ConverterApi(global) with M
     scala.meta.dialects.Scala211
   }
 
-  private[meta] def domain: mapi.Domain = {
-    ???
+  def domain: mapi.Domain = {
+    // TODO: Do something smarter, e.g.:
+    // 1) Compute dependencies from global.classPath
+    // 2) Figure out resources somehow, e.g. remember them when we create a proxy from a list of modules
+    val sources = global.currentRun.units.map(_.body.metadata("scalameta").require[m.Source]).toList
+    Domain(Module(sources, Nil, Nil))
   }
 
   private[meta] def desugar(term: mapi.Term): mapi.Term = {
