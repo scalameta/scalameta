@@ -124,8 +124,8 @@ private[meta] trait Api {
     @hosted def parents: Seq[Type] = implicitly[SemanticContext].parents(tree)
   }
 
-  @hosted def lub(tpes: Seq[Type]): Type = implicitly[SemanticContext].lub(tpes)
-  @hosted def glb(tpes: Seq[Type]): Type = implicitly[SemanticContext].glb(tpes)
+  @hosted def lub(tpes: Type*): Type = implicitly[SemanticContext].lub(tpes.toList)
+  @hosted def glb(tpes: Type*): Type = implicitly[SemanticContext].glb(tpes.toList)
 
   // ===========================
   // PART 4: MEMBERS
