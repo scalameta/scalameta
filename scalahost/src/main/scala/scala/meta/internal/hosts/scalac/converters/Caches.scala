@@ -21,23 +21,30 @@ trait Caches extends GlobalToolkit with MetaToolkit {
   protected lazy val tpeCache = TwoWayCache[g.Type, m.Type.Arg]()
   protected lazy val ssymToNativeMmemberCache = mutable.Map[s.Symbol, m.Member]()
 
-  def cacheAllMembers[T <: m.Tree](x: T): T = {
-    def cache(x: m.Member): Unit = {
-      if (x.name.isBinder && !x.isInstanceOf[m.Ctor.Primary] && !x.name.isInstanceOf[m.Name.Anonymous]) {
-        val denot = x.name.require[m.Name].denot.require[s.Denotation.Single]
-        require(denot.symbol != s.Symbol.Zero && debug(x, x.show[Structure]))
-        // TODO: it seems that we can't have this yet
-        // require(!ssymToNativeMmemberCache.contains(denot.symbol) && debug(x, x.show[Structure]))
-        ssymToNativeMmemberCache(denot.symbol) = x
-      }
+  def indexOne[T <: m.Tree](x: T): T = {
+    x match {
+      case x: m.Member =>
+        if (x.name.isBinder && !x.isInstanceOf[m.Ctor.Primary] && !x.name.isInstanceOf[m.Name.Anonymous]) {
+          val denot = x.name.require[m.Name].denot.require[s.Denotation.Single]
+          require(denot.symbol != s.Symbol.Zero && debug(x, x.show[Structure]))
+          // TODO: it seems that we can't have this yet
+          // require(!ssymToNativeMmemberCache.contains(denot.symbol) && debug(x, x.show[Structure]))
+          ssymToNativeMmemberCache(denot.symbol) = x
+        }
+      case _ =>
+        x
     }
+    x
+  }
+
+  def indexAll[T <: m.Tree](x: T): T = {
     def loop(x: Any): Unit = x match {
-      case x: m.Tree => cacheAllMembers(x)
+      case x: m.Tree => indexAll(x)
       case x: List[_] => x.foreach(loop)
       case x: Some[_] => loop(x.get)
       case x => // do nothing
     }
-    x match { case x: m.Member => cache(x); case _ => }
+    x match { case x: m.Member => indexOne(x); case _ => }
     x.productIterator.foreach(loop)
     x
   }

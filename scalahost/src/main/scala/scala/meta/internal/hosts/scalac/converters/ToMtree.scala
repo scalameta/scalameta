@@ -162,7 +162,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
         case denotedMtree: m.Term.Param => denotedMtree.tryTyping(gtree.symbol.tpe)
         case denotedMtree => denotedMtree
       }
-      val mtree = typedMtree // desugarings are taken care of in mergeTrees
+      val mtree = indexOne(typedMtree) // desugarings are taken care of in mergeTrees
       if (sys.props("convert.debug") != null && gtree.parent.isEmpty) {
         println("======= SCALA.REFLECT TREE =======")
         println(gtree)

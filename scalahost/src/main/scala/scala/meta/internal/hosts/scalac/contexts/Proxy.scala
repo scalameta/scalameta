@@ -12,6 +12,7 @@ import scala.meta.hosts.scalac.{Mirror => MirrorApi}
 import scala.meta.hosts.scalac.{Toolbox => ToolboxApi}
 import scala.meta.hosts.scalac.{Proxy => ProxyApi}
 import scala.meta.internal.hosts.scalac.converters.{Api => ConverterApi}
+import scala.meta.internal.hosts.scalac.converters.mergeTrees
 import scala.tools.nsc.{Global => ScalaGlobal}
 import scala.meta.dialects.Scala211
 import scala.{meta => mapi}
@@ -20,7 +21,12 @@ import scala.meta.internal.{semantic => s}
 
 @context(translateExceptions = true)
 class Proxy[G <: ScalaGlobal](val global: G) extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
-  implicit val c: ScalametaSemanticContext = this
+  if (!global.isPastTyper) throw new InfrastructureException("can't initialize semantic context until everything has been typechecked")
+  convertAndIndexCompilationUnits()
+
+  // ======= SEMANTIC CONTEXT =======
+
+  implicit lazy val c: ScalametaSemanticContext = this
 
   def dialect: scala.meta.dialects.Scala211.type = {
     scala.meta.dialects.Scala211
@@ -114,9 +120,13 @@ class Proxy[G <: ScalaGlobal](val global: G) extends ConverterApi(global) with M
     lsym.children.map(_.toMmember(gpre)) // TODO: also instantiate type parameters when necessary
   }
 
+  // ======= INTERACTIVE CONTEXT =======
+
   private[meta] def load(module: mapi.Module): mapi.Module = {
     ???
   }
+
+  // ============== PROXY ==============
 
   private[meta] def toMtree[T <: mapi.Tree : ClassTag](gtree: g.Tree): T = {
     XtensionGtreeToMtree(gtree).toMtree[T]
@@ -152,5 +162,32 @@ class Proxy[G <: ScalaGlobal](val global: G) extends ConverterApi(global) with M
 
   private[meta] def toGsymbols(mmember: mapi.Member): Seq[g.Symbol] = {
     XtensionMmemberToLsymbols(mmember.require[m.Member]).toLsymbols.flatMap(_.gsymbols)
+  }
+
+  // ======= INTERNAL BOOKKEEPING =======
+
+  private[meta] def convertAndIndexCompilationUnits(): Unit = {
+    val sources = global.currentRun.units.map(unit => {
+      unit.body.metadata.getOrElseUpdate("scalameta", {
+        // NOTE: We don't have to persist perfect trees, because tokens are transient anyway.
+        // Therefore, if noone uses perfect trees in a compiler plugin, then we can avoid merging altogether.
+        // Alternatively, if we hardcode merging into the core of scalameta/scalameta
+        // (e.g. by making it lazy, coinciding with the first traversal of the perfect tree),
+        // then we can keep mergeTrees and expose its results only to those who need perfectTrees
+        // (e.g. to compiler plugins that want to work with scala.meta trees).
+        // TODO: For now, I'm going to keep mergeTrees here, but in the 0.1 release,
+        // we might want to turn merging off if it turns out being a big performance hit.
+        // NOTE: In fact, it's more complicated than that. When we index the converted trees
+        // (i.e. we add them to lsymToMmemberCache), it'd make sense to work with resugared trees,
+        // because that's what users ultimately want to see when they do `t"...".members` or something.
+        // So, it seems that it's still necessary to eagerly merge the trees, so that we can index them correctly.
+        val syntacticTree = unit.source.content.parse[mapi.Source].require[m.Source]
+        val semanticTree = unit.body.toMtree[m.Source]
+        val perfectTree = mergeTrees(syntacticTree, semanticTree)
+        indexAll(perfectTree)
+      })
+    }).toList
+    // NOTE: Resulting sources have already been indexed within this context
+    // during the time when they were being converted.
   }
 }

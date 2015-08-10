@@ -5,7 +5,7 @@ import scala.tools.nsc.{Global, Phase, SubComponent}
 import scala.tools.nsc.plugins.{Plugin => NscPlugin, PluginComponent => NscPluginComponent}
 import scala.meta.dialects.Scala211
 import scala.meta.internal.hosts.scalac.{PluginBase => ScalahostPlugin}
-import scala.meta.internal.hosts.scalac.converters.mergeTrees
+import scala.meta.internal.hosts.scalac.contexts.{Proxy => ProxyImpl}
 import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
 import scala.reflect.io.AbstractFile
@@ -16,7 +16,7 @@ trait ConvertPhase {
   self: ScalahostPlugin =>
 
   object ConvertComponent extends NscPluginComponent {
-    val global: self.global.type = self.global
+    lazy val global: self.global.type = self.global
     import global._
 
     // TODO: ideally we would like to save everything after the very end of typechecking, which is after refchecks
@@ -28,29 +28,14 @@ trait ConvertPhase {
     // so that delayed typechecks come right after typer, not intermingled with other logic
     override val runsAfter = List("typer")
     override val runsRightAfter = None
-    val phaseName = "convert"
+    override val phaseName = "convert"
     override def description = "convert compiler trees to scala.meta"
-    implicit val c = Proxy[global.type](global)
-    import c.conversions._
 
-    override def newPhase(prev: Phase): StdPhase = new StdPhase(prev) {
-      override def apply(unit: CompilationUnit) {
-        // NOTE: We don't have to persist perfect trees, because tokens are transient anyway.
-        // Therefore, if noone uses perfect trees in a compiler plugin, then we can avoid merging altogether.
-        // Alternatively, if we hardcode merging into the core of scalameta/scalameta
-        // (e.g. by making it lazy, coinciding with the first traversal of the perfect tree),
-        // then we can keep mergeTrees and expose its results only to those who need perfectTrees
-        // (e.g. to compiler plugins that want to work with scala.meta trees).
-        // TODO: For now, I'm going to keep mergeTrees here, but in the 0.1 release,
-        // we might want to turn merging off if it turns out being a big performance hit.
-        // NOTE: In fact, it's more complicated than that. When we index the converted trees
-        // (i.e. we add them to lsymToMmemberCache), it'd make sense to work with resugared trees,
-        // because that's what users ultimately want to see when they do `t"...".members` or something.
-        // So, it seems that it's still necessary to eagerly merge the trees, so that we can index them correctly.
-        val syntacticTree = unit.source.content.parse[mapi.Source].require[m.Source]
-        val semanticTree = unit.body.toMeta.require[m.Source]
-        val perfectTree = mergeTrees(syntacticTree, semanticTree)
-        unit.body.appendMetadata("scalameta" -> perfectTree)
+    override def newPhase(prev: Phase): Phase = new Phase(prev) {
+      override def name = "convert"
+      override def run(): Unit = {
+        val proxy = new ProxyImpl[global.type](global)
+        proxy.convertAndIndexCompilationUnits()
       }
     }
   }

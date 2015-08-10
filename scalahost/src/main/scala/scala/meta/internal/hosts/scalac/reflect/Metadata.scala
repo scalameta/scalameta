@@ -51,7 +51,13 @@ trait Metadata {
     def contains(key: String): Boolean = toMap.contains(key)
     def apply(key: String): Any = toMap(key)
     def get(key: String): Option[Any] = toMap.get(key)
-    def getOrElse[T: ClassTag](key: String, value: T): T = toMap.get(key).map(_.require[T]).getOrElse(value)
+    def getOrElse[T: ClassTag](key: String, value: => T): T = toMap.get(key).map(_.require[T]).getOrElse(value)
+    def getOrElseUpdate[T: ClassTag](key: String, default: => T): T = {
+      val valueopt = toMap.get(key).map(_.require[T])
+      val value = valueopt.getOrElse(default)
+      if (valueopt.isEmpty) update(key, value)
+      value
+    }
     def update(key: String, value: Any): Unit = transform(_ + (key -> value))
     def +=(kvp: (String, Any)): Unit = update(kvp._1, kvp._2)
     def ++=(other: Map[String, Any]): Unit = transform(_ ++ other)

@@ -5,6 +5,11 @@ import org.scalameta.unreachable
 
 @root trait ScalahostException extends ScalametaException
 
+@leaf class InfrastructureException(message: String, cause: Option[Throwable] = None)
+extends Exception(message, cause.orNull) with ScalahostException {
+  override def toString = super.toString
+}
+
 @leaf class ConvertException(culprit: Any, message: String, cause: Option[Throwable] = None)
 extends Exception(message, cause.orNull) with ScalahostException {
   override def toString = super.toString
