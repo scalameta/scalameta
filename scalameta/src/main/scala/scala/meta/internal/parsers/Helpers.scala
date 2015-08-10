@@ -94,6 +94,7 @@ private[meta] object Helpers {
     }
     def isStableId: Boolean = tree match {
       case _: Term.Name | Term.Select(_: Term.Super, _) => true
+      case Term.Select(qual: Term.Quasi, _)             => true
       case Term.Select(qual: Term.Ref, _)               => qual.isPath
       case _                                            => false
     }
