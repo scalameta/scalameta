@@ -5,32 +5,29 @@ import org.scalatest._
 import org.scalameta.tests._
 
 class PublicSuite extends FunSuite {
+  // TODO: figure out how scalac manages to find the `load` extension method
+  // without scala.meta._ or scala.meta.interactive._ being imported
   test("interactive APIs without import") {
     assert(typecheckError("""
-      load(???)
-    """) === "not found: value load")
-  }
-
-  test("interactive APIs without context") {
-    assert(typecheckError("""
-      import scala.meta._
-      load(???)
-    """) === "this method requires an implicit scala.meta.interactive.Context")
+      implicit val c: scala.meta.interactive.Context = ???
+      c.load(??? : scala.meta.taxonomic.Module)
+    """) === "")
   }
 
   test("interactive APIs when everything's correct") {
     assert(typecheckError("""
       import scala.meta._
       implicit val c: scala.meta.interactive.Context = ???
-      load(???)
+      c.load(??? : scala.meta.taxonomic.Module)
     """) === "")
   }
 
-  // TODO: this error is somewhat confusing
+  // TODO: figure out how scalac manages to find the `load` extension method
+  // without scala.meta._ or scala.meta.interactive._ being imported
   test("interactive context APIs") {
     assert(typecheckError("""
-      (??? : scala.meta.interactive.Context).load(???)
-    """) === "method load in trait Context cannot be accessed in scala.meta.interactive.Context")
+      (??? : scala.meta.interactive.Context).load(??? : scala.meta.taxonomic.Module)
+    """) === "")
   }
 
   test("taxonomic APIs without import") {

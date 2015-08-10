@@ -4,6 +4,8 @@ package taxonomic
 import java.io._
 import org.scalameta.adt._
 import org.scalameta.annotations._
+import scala.{Seq => _}
+import scala.collection.immutable.Seq
 import scala.meta.taxonomic.{Context => TaxonomicContext}
 
 private[meta] trait Api extends MavenDsl {

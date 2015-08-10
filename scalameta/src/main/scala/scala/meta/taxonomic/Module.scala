@@ -5,6 +5,7 @@ import java.net.URI
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import org.scalameta.adt._
+import scala.meta.taxonomic.{Context => TaxonomicContext}
 
 // Modules are taxonomic units that group together scala.meta sources (along with resources, for that matter).
 // The purpose for the concept of modules is to serve as a building block that defines environments.
@@ -22,6 +23,7 @@ object Module {
   @leaf class Adhoc(sources: Seq[Source], resources: Seq[Resource] = Nil, dependencies: Seq[Module] = Nil) extends Module
   def apply(sources: Source*): Module = Adhoc(sources.toList, Nil, Nil)
   def apply(sources: Seq[Source], resources: Seq[Resource] = Nil, dependencies: Seq[Module] = Nil): Module = Adhoc(sources, resources, dependencies)
+  def unapply(module: Module)(implicit c: TaxonomicContext): Some[(Seq[Source], Seq[Resource], Seq[Module])] = Some((module.sources, module.resources, module.dependencies))
 }
 
 // Artifacts are modules that are: 1) immutable, 2) already compiled.
