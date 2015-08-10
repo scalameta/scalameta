@@ -1923,8 +1923,11 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         case _ => None
       }
       def loop(top: Pat): Pat = reduceStack(base, top, top.pos) match {
-        case next if isIdentExcept("|") => ctx.push(next.pos, next, next.pos); loop(simplePattern(badPattern3))
-        case next                       => next
+        case next if isIdentExcept("|") || token.is[Unquote] =>
+          ctx.push(next.pos, next, next.pos)
+          loop(simplePattern(badPattern3))
+        case next =>
+          next
       }
       checkWildStar getOrElse loop(top)
     }
@@ -1971,10 +1974,11 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       // simple diagnostics for this entry point
       simplePattern(token => syntaxError("illegal start of simple pattern", at = token))
     def simplePattern(onError: Token => Nothing): Pat = autoPos(token match {
-      case _: Ident | _: `this` =>
+      case _: Ident | _: `this` | _: Unquote =>
         val isBackquoted = token.code.startsWith("`") && token.code.endsWith("`")
         val sid = stableId()
         val isVarPattern = sid match {
+          case _: Term.Name.Quasi => false
           case Term.Name(value) => !isBackquoted && value.head.isLetter
           case _ => false
         }
@@ -1992,6 +1996,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         (token, sid) match {
           case (_: `(`, _)                          => Pat.Extract(sid, targs, argumentPatterns())
           case (_, _) if targs.nonEmpty             => syntaxError("pattern must be a value", at = token)
+          case (_, name: Term.Name.Quasi)           => name.become[Pat.Quasi]
           case (_, name: Term.Name) if isVarPattern => Pat.Var.Term(name)
           case (_, name: Term.Name)                 => name
           case (_, select: Term.Select)             => select
@@ -2012,19 +2017,6 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
           case p => p.require[Pat]
         }
         makeTuple[Pat](patterns, () => Lit.Unit(), Pat.Tuple(_))
-      case _: Unquote =>
-        val sid = stableId()
-        val targs = token match {
-          case _: `[` => typeArgs()
-          case _        => Nil
-        }
-        (token, sid) match {
-          case (_: `(`, _)                          => Pat.Extract(sid, targs, argumentPatterns())
-          case (_, _) if targs.nonEmpty             => syntaxError("pattern must be a value", at = token)
-          case (_, select: Term.Select)             => select
-          case (_, name: Term.Name.Quasi)           => name.become[Pat.Quasi]
-          case _                                    => unreachable(debug(token, token.show[Structure], sid, sid.show[Structure]))
-        }
       case _ =>
         onError(token)
     })
