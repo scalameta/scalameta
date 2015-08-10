@@ -30,8 +30,8 @@ trait ConvertPhase {
     override val runsRightAfter = None
     val phaseName = "convert"
     override def description = "convert compiler trees to scala.meta"
-    implicit val c = Scalahost.mkGlobalContext[global.type](global)
-    import c.decorators._
+    implicit val c = Proxy[global.type](global)
+    import c.conversions._
 
     override def newPhase(prev: Phase): StdPhase = new StdPhase(prev) {
       override def apply(unit: CompilationUnit) {
@@ -48,7 +48,7 @@ trait ConvertPhase {
         // because that's what users ultimately want to see when they do `t"...".members` or something.
         // So, it seems that it's still necessary to eagerly merge the trees, so that we can index them correctly.
         val syntacticTree = unit.source.content.parse[mapi.Source].require[m.Source]
-        val semanticTree = unit.body.toMtree[m.Source]
+        val semanticTree = unit.body.toMeta.require[m.Source]
         val perfectTree = mergeTrees(syntacticTree, semanticTree)
         unit.body.appendMetadata("scalameta" -> perfectTree)
       }

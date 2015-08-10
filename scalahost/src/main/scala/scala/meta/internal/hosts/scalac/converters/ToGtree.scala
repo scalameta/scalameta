@@ -19,9 +19,7 @@ import scala.meta.internal.hosts.scalac.reflect._
 trait ToGtree extends GlobalToolkit with MetaToolkit {
   self: Api =>
 
-  def toGtree(mtree: m.Tree): g.Tree = mtree.toGtree
-
-  protected implicit class RichToGtree(mtree: m.Tree) {
+  protected implicit class XtensionMtreeToGtree(mtree: m.Tree) {
     def toGtree: g.Tree = mtree match {
       case mtree: m.Term =>
         // TODO: HAHAHA

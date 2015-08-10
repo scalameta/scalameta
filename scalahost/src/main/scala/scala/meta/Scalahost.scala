@@ -1,29 +1,29 @@
 package scala.meta
 
-import scala.reflect.ClassTag
-import scala.tools.nsc.{Global => ScalaGlobal}
-import scala.{meta => m}
-import scala.meta.semantic.{Context => ScalametaSemanticContext}
-import scala.meta.projects.{Context => ScalametaProjectContext}
-import scala.meta.internal.hosts.scalac.contexts.{GlobalContext => ScalahostGlobalContextImpl}
-import scala.meta.internal.hosts.scalac.contexts.{ProjectContext => ScalahostProjectContextImpl}
+import scala.{Seq => _}
+import scala.collection.immutable.Seq
+import scala.tools.nsc.Global
+import scala.meta.hosts.{scalac => impl}
+import scala.meta.taxonomic.{Context => TaxonomicContext}
 
-trait ScalahostGlobalContext[G <: ScalaGlobal] extends ScalametaSemanticContext { self =>
-  val g: G
-  protected def toMtree[T <: m.Tree : ClassTag](gtree: g.Tree): T
-  object decorators {
-    implicit class ScalahostGlobalContextTree(gtree: g.Tree) {
-      def toMtree[T <: m.Tree : ClassTag]: T = self.toMtree[T](gtree)
-    }
+object Mirror {
+  def apply(modules: Module*)(implicit taxonomy: TaxonomicContext): impl.Mirror = {
+    impl.Mirror(modules: _*)
   }
 }
 
-trait ScalahostProjectContext extends ScalametaProjectContext with ScalametaSemanticContext {
+object Toolbox {
+  def apply(modules: Module*)(implicit taxonomy: TaxonomicContext): impl.Toolbox = {
+    impl.Toolbox(modules: _*)
+  }
+
+  def apply(options: String, modules: Module*)(implicit taxonomy: TaxonomicContext): impl.Toolbox = {
+    impl.Toolbox(options, modules: _*)
+  }
 }
 
-object Scalahost {
-  def mkGlobalContext[G <: ScalaGlobal](g: G): ScalahostGlobalContext[G] =
-    new ScalahostGlobalContextImpl[G](g)
-  def mkProjectContext(sourcepath: String, classpath: String): ScalahostProjectContext =
-    new ScalahostProjectContextImpl(sourcepath, classpath)
+object Proxy {
+  def apply[G <: Global](global: G): impl.Proxy[G] = {
+    impl.Proxy[G](global)
+  }
 }

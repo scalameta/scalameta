@@ -18,9 +18,7 @@ import java.util.UUID.randomUUID
 trait ToMtype extends GlobalToolkit with MetaToolkit {
   self: Api =>
 
-  def toMtype(gtpe: g.Type) = gtpe.toMtype
-
-  protected implicit class RichToMtype(gtpe: g.Type) {
+  protected implicit class XtensionGtypeToMtype(gtpe: g.Type) {
     def toMtype: m.Type = gtpe.toMtypeArg.require[m.Type]
     def toMtypeArg: m.Type.Arg = tpeCache.getOrElseUpdate(gtpe, {
       val result = gtpe match {

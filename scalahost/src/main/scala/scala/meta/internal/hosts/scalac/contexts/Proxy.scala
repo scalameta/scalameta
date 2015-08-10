@@ -6,8 +6,11 @@ import org.scalameta.contexts._
 import org.scalameta.invariants._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
+import scala.reflect.{classTag, ClassTag}
 import scala.meta.semantic.{Context => ScalametaSemanticContext}
-import scala.meta.{ScalahostGlobalContext => GlobalContextApi}
+import scala.meta.hosts.scalac.{Mirror => MirrorApi}
+import scala.meta.hosts.scalac.{Toolbox => ToolboxApi}
+import scala.meta.hosts.scalac.{Proxy => ProxyApi}
 import scala.meta.internal.hosts.scalac.converters.{Api => ConverterApi}
 import scala.tools.nsc.{Global => ScalaGlobal}
 import scala.meta.dialects.Scala211
@@ -16,11 +19,15 @@ import scala.meta.internal.{ast => m}
 import scala.meta.internal.{semantic => s}
 
 @context(translateExceptions = true)
-class GlobalContext[G <: ScalaGlobal](val global: G) extends ConverterApi(global) with GlobalContextApi[G] {
+class Proxy[G <: ScalaGlobal](val global: G) extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
   implicit val c: ScalametaSemanticContext = this
 
   def dialect: scala.meta.dialects.Scala211.type = {
     scala.meta.dialects.Scala211
+  }
+
+  private[meta] def domain: mapi.Domain = {
+    ???
   }
 
   private[meta] def desugar(term: mapi.Term): mapi.Term = {
@@ -40,7 +47,7 @@ class GlobalContext[G <: ScalaGlobal](val global: G) extends ConverterApi(global
   private[meta] def defns(ref: mapi.Ref): Seq[mapi.Member] = {
     ref.requireDenoted()
     ref match {
-      case pname: m.Name => pname.toGsymbols.map(_.toMmember(pname.toGprefix))
+      case pname: m.Name => pname.toLsymbols.map(_.toMmember(pname.toGprefix))
       case m.Term.Select(_, pname) => defns(pname)
       case m.Type.Select(_, pname) => defns(pname)
       case m.Type.Project(_, pname) => defns(pname)
@@ -97,13 +104,53 @@ class GlobalContext[G <: ScalaGlobal](val global: G) extends ConverterApi(global
 
   private[meta] def parents(member: mapi.Member): Seq[mapi.Member] = {
     val gpre = member.require[m.Member].toGprefix
-    val Seq(lsym) = member.require[m.Member].toGsymbols
+    val Seq(lsym) = member.require[m.Member].toLsymbols
     lsym.parents.map(_.toMmember(gpre)) // TODO: also instantiate type parameters when necessary
   }
 
   private[meta] def children(member: mapi.Member): Seq[mapi.Member] = {
     val gpre = member.require[m.Member].toGprefix
-    val Seq(lsym) = member.require[m.Member].toGsymbols
+    val Seq(lsym) = member.require[m.Member].toLsymbols
     lsym.children.map(_.toMmember(gpre)) // TODO: also instantiate type parameters when necessary
+  }
+
+  private[meta] def load(module: mapi.Module): mapi.Module = {
+    ???
+  }
+
+  private[meta] def toMtree[T <: mapi.Tree : ClassTag](gtree: g.Tree): T = {
+    XtensionGtreeToMtree(gtree).toMtree[T]
+  }
+
+  private[meta] def toMtype(gtpe: g.Type): m.Type = {
+    XtensionGtypeToMtype(gtpe).toMtype
+  }
+
+  private[meta] def toMtypeArg(gtpe: g.Type): m.Type.Arg = {
+    XtensionGtypeToMtype(gtpe).toMtypeArg
+  }
+
+  private[meta] def toMmember(gsym: g.Symbol, gpre: g.Type): m.Member = {
+    XtensionLsymbolToMmember(gsym.toLogical).toMmember(gpre)
+  }
+
+  private[meta] def toMannot(gannot: g.AnnotationInfo): m.Mod.Annot = {
+    XtensionGannotToMannot(gannot).toMannot
+  }
+
+  private[meta] def toGtree(mtree: mapi.Tree): g.Tree = {
+    XtensionMtreeToGtree(mtree.require[m.Tree]).toGtree
+  }
+
+  private[meta] def toGtype(mtpe: mapi.Type.Arg): g.Type = {
+    XtensionMtypeToGtype(mtpe.require[m.Type.Arg]).toGtype
+  }
+
+  private[meta] def toGsymbols(mname: mapi.Name): Seq[g.Symbol] = {
+    XtensionMnameToLsymbols(mname.require[m.Name]).toLsymbols.flatMap(_.gsymbols)
+  }
+
+  private[meta] def toGsymbols(mmember: mapi.Member): Seq[g.Symbol] = {
+    XtensionMmemberToLsymbols(mmember.require[m.Member]).toLsymbols.flatMap(_.gsymbols)
   }
 }

@@ -15,13 +15,13 @@ import scala.meta.internal.hosts.scalac.reflect._
 trait ToGsymbol extends GlobalToolkit with MetaToolkit {
   self: Api =>
 
-  protected implicit class RichNameToGsymbol(mname: m.Name) {
-    def toGsymbols: Seq[l.Symbol] = {
+  protected implicit class XtensionMnameToLsymbols(mname: m.Name) {
+    def toLsymbols: Seq[l.Symbol] = {
       mname.denot.symbols.map(symbolTable.convert)
     }
   }
 
-  protected implicit class RichMemberToGsymbol(mmember: m.Member) {
-    def toGsymbols: Seq[l.Symbol] = mmember.name.require[m.Name].toGsymbols
+  protected implicit class XtensionMmemberToLsymbols(mmember: m.Member) {
+    def toLsymbols: Seq[l.Symbol] = mmember.name.require[m.Name].toLsymbols
   }
 }

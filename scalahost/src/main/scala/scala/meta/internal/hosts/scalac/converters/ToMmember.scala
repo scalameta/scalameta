@@ -36,7 +36,7 @@ import scala.meta.internal.hosts.scalac.reflect._
 trait ToMmember extends GlobalToolkit with MetaToolkit {
   self: Api =>
 
-  protected implicit class RichToMmember(lsym: l.Symbol) {
+  protected implicit class XtensionLsymbolToMmember(lsym: l.Symbol) {
     private def mmods(lsym: l.Symbol): Seq[m.Mod] = {
       def annotationMods(lsym: l.Symbol): Seq[m.Mod] = {
         // TODO: collect annotations scattered over synthetic members

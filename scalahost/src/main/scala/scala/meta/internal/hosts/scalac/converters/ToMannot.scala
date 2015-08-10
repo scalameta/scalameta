@@ -19,7 +19,7 @@ import scala.meta.internal.hosts.scalac.reflect._
 trait ToMannot extends GlobalToolkit with MetaToolkit {
   self: Api =>
 
-  protected implicit class RichToMannot(gannot: g.AnnotationInfo) {
+  protected implicit class XtensionGannotToMannot(gannot: g.AnnotationInfo) {
     def toMannot: m.Mod.Annot = {
       def mannotcore(gannot: g.AnnotationInfo): m.Term = {
         val g.AnnotationInfo(gatp, gargs, gassocs) = gannot

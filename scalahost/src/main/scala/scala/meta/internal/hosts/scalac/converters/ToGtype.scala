@@ -18,7 +18,7 @@ import scala.meta.internal.hosts.scalac.reflect._
 trait ToGtype extends GlobalToolkit with MetaToolkit {
   self: Api =>
 
-  protected implicit class ToGtype(mtpe: m.Type.Arg) {
+  protected implicit class XtensionMtypeToGtype(mtpe: m.Type.Arg) {
     private def gannotinfo(mannot: m.Mod.Annot): g.AnnotationInfo = {
       val gtpe = mannot.body.tpe.require[m.Type].toGtype
       val gargss = mannot.body.ctorArgss.map(_.map(_.toGtree))

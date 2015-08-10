@@ -33,9 +33,7 @@ import scala.meta.internal.hosts.scalac.reflect._
 trait ToMtree extends GlobalToolkit with MetaToolkit {
   self: Api =>
 
-  protected def toMtree[T <: mapi.Tree : ClassTag](gtree: g.Tree): T = gtree.toMtree[T]
-
-  protected implicit class RichTreeToMtree(gtree: g.Tree) {
+  protected implicit class XtensionGtreeToMtree(gtree: g.Tree) {
     def toMtree[T <: mapi.Tree : ClassTag]: T = {
       // TODO: figure out a mechanism to automatically remove navigation links once we're done
       // in order to cut down memory consumption of the further compilation pipeline
