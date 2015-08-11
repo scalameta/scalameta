@@ -276,26 +276,49 @@ package scala.meta.internal.ast {
     // However the benefits of the first approach are definitely tangible, and we will need to revisit this choice later.
     @branch trait Var extends Tree with api.Pat.Var
     object Var {
-      @ast class Term(name: impl.Term.Name) extends api.Pat.Var.Term with Var with Pat with Member.Term
-      @ast class Type(name: impl.Type.Name) extends api.Pat.Var.Type with Var with Pat.Type with Member.Type
+      @ast class Term(name: impl.Term.Name) extends api.Pat.Var.Term with Var with Pat with Member.Term {
+        // NOTE: Unlike in Pat.Var.Term, we can't say `require(name.value(0).isLower)` here,
+        // because we model things like `val X = 2` with abstract syntax nodes
+        // like `Defn.Val(Nil, List(Pat.Var.Term(Term.Name("X"))), None, Lit.Int(2))`.
+        //
+        // This is a very annoying inconsistency, because capitalized Pat.Var.Terms
+        // are only allowed at the top level of left-hand sides in vals and vars.
+        // As a result, we have to externalize this require to every use site of Pat.Var.Terms
+        // except for those vals/vars.
+        //
+        // TODO: It might be nice to avoid this inconsistency by redesigning this whole Pat.Var.XXX approach.
+        // However, that will imply significant changes in our tree structure, and I'd like to avoid that before 0.1.
+      }
+      @ast class Type(name: impl.Type.Name) extends api.Pat.Var.Type with Var with Pat.Type with Member.Type {
+        require(name.value(0).isLower)
+      }
     }
     @ast class Wildcard() extends Pat
-    @ast class Bind(lhs: Pat.Var.Term, rhs: Pat.Arg) extends Pat
-    @ast class Alternative(lhs: Pat, rhs: Pat) extends Pat
+    @ast class Bind(lhs: Pat.Var.Term, rhs: Pat.Arg) extends Pat {
+      require(lhs.isLegal && rhs.isLegal)
+    }
+    @ast class Alternative(lhs: Pat, rhs: Pat) extends Pat {
+      require(lhs.isLegal && rhs.isLegal)
+    }
     @ast class Tuple(elements: Seq[Pat]) extends Pat {
       require(elements.length > 1 || (elements.length == 1 && elements.head.isInstanceOf[impl.Quasi]))
+      require(elements.forall(_.isLegal))
     }
     @ast class Extract(ref: Term.Ref, targs: Seq[impl.Type], args: Seq[Pat.Arg]) extends Pat {
       require(ref.isStableId)
+      require(args.forall(_.isLegal))
     }
     @ast class ExtractInfix(lhs: Pat, ref: Term.Name, rhs: Seq[Pat.Arg] @nonEmpty) extends Pat {
       require(ref.isStableId)
+      require(lhs.isLegal && rhs.forall(_.isLegal))
     }
     @ast class Interpolate(prefix: Term.Name, parts: Seq[Lit.String] @nonEmpty, args: Seq[Pat]) extends Pat {
       require(parts.length == args.length + 1)
+      require(args.forall(_.isLegal))
     }
     @ast class Typed(lhs: Pat, rhs: Pat.Type) extends Pat {
       require(lhs.isInstanceOf[Pat.Wildcard] || lhs.isInstanceOf[Pat.Var.Term] || lhs.isInstanceOf[Pat.Quasi])
+      require(lhs.isLegal)
     }
     @branch trait Arg extends api.Pat.Arg with Tree
     object Arg {
@@ -533,7 +556,9 @@ package scala.meta.internal.ast {
     }
   }
 
-  @ast class Case(pat: Pat, cond: Option[Term], body: Term.Block) extends api.Case with Tree with Scope
+  @ast class Case(pat: Pat, cond: Option[Term], body: Term.Block) extends api.Case with Tree with Scope {
+    require(pat.isLegal)
+  }
 
   @ast class Source(stats: Seq[Stat]) extends api.Source with Tree with Stat {
     require(stats.forall(_.isTopLevelStat))
