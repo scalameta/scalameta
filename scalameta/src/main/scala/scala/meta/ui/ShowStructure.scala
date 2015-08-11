@@ -43,4 +43,8 @@ object Structure {
     val prefix = (x: Token) match { case x: BOF => "BOF"; case x: EOF => "EOF"; case x: Dynamic => x.code; case x: Static => x.name }
     s(prefix, " (", x.start.toString, "..", x.end.toString, ")")
   }
+
+  implicit def structureSeq[T: Structure]: Structure[Seq[T]] = Structure { xs =>
+    s("Seq(", r(xs.map(x => implicitly[Structure[T]].apply(x)), ", "), ")")
+  }
 }

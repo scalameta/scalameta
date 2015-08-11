@@ -7,7 +7,7 @@ import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import org.scalameta.collections._
 
-final case class Path(path: String)
+final case class Path(path: String) { override def toString = "Path(\"" + path + "\")" }
 object Path {
   implicit def stringIsPath(s: String): Path = apply(s)
   implicit def fileIsPath(file: File): Path = apply(file)
@@ -15,7 +15,7 @@ object Path {
   def apply(file: File): Path = apply(file.toString)
 }
 
-final case class Multipath(paths: Path*)
+final case class Multipath(paths: Path*) { override def toString = "Multipath(\"" + paths.map(_.path).mkString(":") + "\")" }
 object Multipath {
   implicit def stringIsMultipath(s: String): Multipath = apply(s)
   implicit def fileIsMultipath(file: File): Multipath = apply(file)

@@ -1,6 +1,7 @@
 package scala.meta
 package taxonomic
 
+import java.io.File
 import java.net.URI
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
@@ -20,7 +21,13 @@ import scala.meta.taxonomic.{Context => TaxonomicContext}
 
 @root trait Module
 object Module {
-  @leaf class Adhoc(sources: Seq[Source], resources: Seq[Resource] = Nil, deps: Seq[Module] = Nil) extends Module
+  @leaf class Adhoc(sources: Seq[Source], resources: Seq[Resource] = Nil, deps: Seq[Module] = Nil) extends Module {
+    override def toString = {
+      if (resources.isEmpty && deps.isEmpty) s"Module(${sources.mkString(", ")})"
+      else s"Module($sources, $resources, $deps)"
+    }
+  }
+
   def apply(sources: Source*): Module = Adhoc(sources.toList, Nil, Nil)
   def apply(sources: Seq[Source], resources: Seq[Resource] = Nil, deps: Seq[Module] = Nil): Module = Adhoc(sources, resources, deps)
   def unapply(module: Module)(implicit c: TaxonomicContext): Some[(Seq[Source], Seq[Resource], Seq[Module])] = Some((module.sources, module.resources, module.deps))
@@ -32,8 +39,17 @@ object Module {
 
 @branch trait Artifact extends Module
 object Artifact {
-  @leaf class Unmanaged(classpath: Multipath, sourcepath: Multipath) extends Artifact
-  @leaf class Maven(id: MavenId) extends Artifact
+  @leaf class Unmanaged(classpath: Multipath, sourcepath: Multipath) extends Artifact {
+    override def toString = {
+      def s_multipath(multipath: Multipath) = "\"" + multipath.paths.map(_.path).mkString(File.pathSeparatorChar.toString) + "\""
+      s"Artifact(${s_multipath(classpath)}, ${s_multipath(sourcepath)})"
+    }
+  }
+
+  @leaf class Maven(id: MavenId) extends Artifact {
+    override def toString = s"Artifact($id)"
+  }
+
   def apply(classes: Multipath, sources: Multipath): Artifact = Unmanaged(classes, sources)
   def apply(mavenId: MavenId): Artifact = Maven(mavenId)
 }

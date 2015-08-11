@@ -5,19 +5,31 @@ import org.scalameta.adt._
 
 @root trait CrossVersion
 object CrossVersion {
-  @leaf object None extends CrossVersion
-  @leaf object Binary extends CrossVersion
-  @leaf object Full extends CrossVersion
+  @leaf object none extends CrossVersion
+  @leaf object binary extends CrossVersion
+  @leaf object full extends CrossVersion
 }
 
-final case class IncompleteMavenId(groupId: String, artifactId: String, crossVersion: CrossVersion)
+final case class IncompleteMavenId(groupId: String, artifactId: String, crossVersion: CrossVersion) {
+  override def toString = crossVersion match {
+    case CrossVersion.none => "\"" + groupId + "\" % \"" + artifactId + "\""
+    case CrossVersion.binary => "\"" + groupId + "\" %% \"" + artifactId + "\""
+    case CrossVersion.full => s"IncompleteMavenId($groupId, $artifactId, $crossVersion)"
+  }
+}
 
-final case class MavenId(groupId: String, artifactId: String, crossVersion: CrossVersion, version: String)
+final case class MavenId(groupId: String, artifactId: String, crossVersion: CrossVersion, version: String) {
+  override def toString = crossVersion match {
+    case CrossVersion.none => "\"" + groupId + "\" % \"" + artifactId + "\" % \"" + version + "\""
+    case CrossVersion.binary => "\"" + groupId + "\" %% \"" + artifactId + "\" % \"" + version + "\""
+    case CrossVersion.full => "\"" + groupId + "\" % \"" + artifactId + "\" % \"" + version + "\" cross CrossVersion.full"
+  }
+}
 
 trait MavenDsl {
   implicit class XtensionMavenDslGroupId(groupId: String){
-    def %(artifactId: String) = IncompleteMavenId(groupId, artifactId, CrossVersion.None)
-    def %%(artifactId: String) = IncompleteMavenId(groupId, artifactId, CrossVersion.Binary)
+    def %(artifactId: String) = IncompleteMavenId(groupId, artifactId, CrossVersion.none)
+    def %%(artifactId: String) = IncompleteMavenId(groupId, artifactId, CrossVersion.binary)
   }
 
   implicit class XtensionMavenDslIncompleteMavenId(mavenId: IncompleteMavenId){
