@@ -388,19 +388,11 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin)
   }
 
-  test("""pt"$ptpe#$tname"""") {
-    assert(typecheckError("""
-      import scala.meta._
-      import scala.meta.dialects.Scala211
-      val pt"$ptpe#$tname" = pt"x#a"
-    """).contains("found that qual.isInstanceOf[Pat.Var.Type].`unary_!` is true"))
-  }
-
   test("""pt"$ptpe[..$ptpes]""") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
-      val pt"$ptpe[..$ptpes]" = pt"x[Y, Z]"
+      val pt"$ptpe[..$ptpes]" = pt"x[y, z]"
     """).contains("found that tpe.isInstanceOf[Pat.Var.Type].`unary_!` is true"))
   }
 

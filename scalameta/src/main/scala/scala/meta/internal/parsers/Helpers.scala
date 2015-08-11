@@ -166,4 +166,13 @@ private[meta] object Helpers {
       case body => List(body)
     }
   }
+  implicit class XtensionPatArg(tree: Pat.Arg) {
+    // NOTE: see comments to Pat.Var.Term for explanation why this method is necessary
+    def isIllegal: Boolean = tree match {
+      case _: Pat.Var.Term.Quasi => false
+      case Pat.Var.Term(Term.Name(value)) => value(0).isUpper
+      case _ => false
+    }
+    def isLegal: Boolean = !isIllegal
+  }
 }

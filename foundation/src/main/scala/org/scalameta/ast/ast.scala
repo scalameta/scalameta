@@ -334,7 +334,18 @@ class AstMacros(val c: Context) {
       internalBody ++= internalLocalss.flatten.map{ case (local, internal) => q"$AdtInternal.nullCheck($local)" }
       internalBody ++= internalLocalss.flatten.map{ case (local, internal) => q"$AdtInternal.emptyCheck($local)" }
       internalBody ++= aimports
-      internalBody ++= requires
+      internalBody ++= requires.map(require => {
+        var hasErrors = false
+        object errorChecker extends Traverser {
+          override def traverse(tree: Tree): Unit = tree match {
+            case _: This => hasErrors = true; c.error(tree.pos, "cannot refer to this in @ast requires")
+            case _ => super.traverse(tree)
+          }
+        }
+        errorChecker.traverse(require)
+        if (hasErrors) q"()"
+        else require
+      })
       var internalInitCount = 2 // internalPrototype, internalParent
       if (hasTokens) internalInitCount += 1
       if (hasDenot) internalInitCount += 1

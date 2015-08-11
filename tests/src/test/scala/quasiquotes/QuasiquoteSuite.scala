@@ -13,6 +13,21 @@ class QuasiquoteSuite extends FunSuite {
     assert(q"foo(..${List(1, 2, 3)})".show[Syntax] === "foo(1, 2, 3)")
   }
 
+  test("1 Pat.Type or Type.Name") {
+    val q"1 match { case _: List[..$tpes] => }" = q"1 match { case _: List[t] => }"
+    assert(tpes(0).show[Structure] === "Pat.Var.Type(Type.Name(\"t\"))")
+  }
+
+  test("2 Pat.Type or Type.Name") {
+    val q"1 match {case x: $tpe =>}" = q"1 match {case x: T =>}"
+    assert(tpe.show[Structure] === "Type.Name(\"T\")")
+  }
+
+  test("3 Pat.Type or Type.Name") {
+    val q"1 match {case x: $tpe =>}" = q"1 match {case x: t =>}"
+    assert(tpe.show[Structure] === "Type.Name(\"t\")")
+  }
+
   test("p\"case $x: T => \"") {
     val x = p"x"
     assert(p"case $x: T => ".show[Syntax] === "case x: T =>")
@@ -536,7 +551,7 @@ class QuasiquoteSuite extends FunSuite {
   }
 
   test("p\"X\"") {
-    assert(p"X".show[Structure] === "Pat.Var.Term(Term.Name(\"X\"))")
+    assert(p"X".show[Structure] === "Term.Name(\"X\")")
   }
 
   test("p\"`x`\"") {
@@ -568,30 +583,30 @@ class QuasiquoteSuite extends FunSuite {
   test("2 p\"$pat | $pat\"") {
     val pat1 = p"X"
     val pat2 = p"Y"
-    assert(p"$pat1 | $pat2".show[Structure] === "Pat.Alternative(Pat.Var.Term(Term.Name(\"X\")), Pat.Var.Term(Term.Name(\"Y\")))")
+    assert(p"$pat1 | $pat2".show[Structure] === "Pat.Alternative(Term.Name(\"X\"), Term.Name(\"Y\"))")
   }
 
   test("3 p\"$pat | $pat\"") {
     val pat1 = p"`X`"
     val pat2 = p"Y"
-    assert(p"$pat1 | $pat2".show[Structure] === "Pat.Alternative(Term.Name(\"X\"), Pat.Var.Term(Term.Name(\"Y\")))")
+    assert(p"$pat1 | $pat2".show[Structure] === "Pat.Alternative(Term.Name(\"X\"), Term.Name(\"Y\"))")
   }
 
   test("1 p\"(..$pats)\"") {
     val p"(..$pats)" = p"(X, Y)"
     assert(pats.toString === "List(X, Y)")
-    assert(pats(0).show[Structure] === "Pat.Var.Term(Term.Name(\"X\"))")
-    assert(pats(1).show[Structure] === "Pat.Var.Term(Term.Name(\"Y\"))")
+    assert(pats(0).show[Structure] === "Term.Name(\"X\")")
+    assert(pats(1).show[Structure] === "Term.Name(\"Y\")")
   }
 
   test("2 p\"(..$pats)\"") {
-    val pats = List(p"X", p"Y")
-    assert(p"(..$pats)".show[Structure] === "Pat.Tuple(List(Pat.Var.Term(Term.Name(\"X\")), Pat.Var.Term(Term.Name(\"Y\"))))")
+    val pats = List(p"x", p"y")
+    assert(p"(..$pats)".show[Structure] === "Pat.Tuple(List(Pat.Var.Term(Term.Name(\"x\")), Pat.Var.Term(Term.Name(\"y\"))))")
   }
 
   test("3 p\"(..$pats)\"") {
     val pats = List(p"`X`", p"Y")
-    assert(p"(..$pats)".show[Structure] === "Pat.Tuple(List(Term.Name(\"X\"), Pat.Var.Term(Term.Name(\"Y\"))))")
+    assert(p"(..$pats)".show[Structure] === "Pat.Tuple(List(Term.Name(\"X\"), Term.Name(\"Y\")))")
   }
 
   test("1 p\"$ref[..$tpes](..$apats)\"") {
@@ -601,8 +616,8 @@ class QuasiquoteSuite extends FunSuite {
     assert(tpes(0).show[Structure] === "Type.Name(\"A\")")
     assert(tpes(1).show[Structure] === "Type.Name(\"B\")")
     assert(apats.toString === "List(Q, W)")
-    assert(apats(0).show[Structure] === "Pat.Var.Term(Term.Name(\"Q\"))")
-    assert(apats(1).show[Structure] === "Pat.Var.Term(Term.Name(\"W\"))")
+    assert(apats(0).show[Structure] === "Term.Name(\"Q\")")
+    assert(apats(1).show[Structure] === "Term.Name(\"W\")")
   }
 
   test("2 p\"$ref[..$tpes](..$apats)\"") {
@@ -610,22 +625,22 @@ class QuasiquoteSuite extends FunSuite {
     assert(ref.show[Structure] === "Term.Name(\"x\")")
     assert(tpes.toString === "List()")
     assert(apats.toString === "List(Q, W)")
-    assert(apats(0).show[Structure] === "Pat.Var.Term(Term.Name(\"Q\"))")
-    assert(apats(1).show[Structure] === "Pat.Var.Term(Term.Name(\"W\"))")
+    assert(apats(0).show[Structure] === "Term.Name(\"Q\")")
+    assert(apats(1).show[Structure] === "Term.Name(\"W\")")
   }
 
   test("3 p\"$ref[..$tpes](..$apats)\"") {
     val ref = q"x"
     val tpes = List(t"A", t"B")
     val apats = List(p"Q", p"W")
-    assert(p"$ref[..$tpes](..$apats)".show[Structure] === "Pat.Extract(Term.Name(\"x\"), List(Type.Name(\"A\"), Type.Name(\"B\")), List(Pat.Var.Term(Term.Name(\"Q\")), Pat.Var.Term(Term.Name(\"W\"))))")
+    assert(p"$ref[..$tpes](..$apats)".show[Structure] === "Pat.Extract(Term.Name(\"x\"), List(Type.Name(\"A\"), Type.Name(\"B\")), List(Term.Name(\"Q\"), Term.Name(\"W\")))")
   }
 
   test("4 p\"$ref[..$tpes](..$apats)\"") {
     val ref = q"`x`"
     val tpes = List(t"`A`", t"B")
     val apats = List(p"`Q`", p"W")
-    assert(p"$ref[..$tpes](..$apats)".show[Structure] === "Pat.Extract(Term.Name(\"x\"), List(Type.Name(\"A\"), Type.Name(\"B\")), List(Term.Name(\"Q\"), Pat.Var.Term(Term.Name(\"W\"))))")
+    assert(p"$ref[..$tpes](..$apats)".show[Structure] === "Pat.Extract(Term.Name(\"x\"), List(Type.Name(\"A\"), Type.Name(\"B\")), List(Term.Name(\"Q\"), Term.Name(\"W\")))")
   }
 
   test("1 p\"$pat $name (..$apats)\"") {
@@ -633,22 +648,22 @@ class QuasiquoteSuite extends FunSuite {
     assert(pat.show[Structure] === "Pat.Var.Term(Term.Name(\"x\"))")
     assert(name.show[Structure] === "Term.Name(\"y\")")
     assert(apats.toString === "List(Q, W)")
-    assert(apats(0).show[Structure] === "Pat.Var.Term(Term.Name(\"Q\"))")
-    assert(apats(1).show[Structure] === "Pat.Var.Term(Term.Name(\"W\"))")
+    assert(apats(0).show[Structure] === "Term.Name(\"Q\")")
+    assert(apats(1).show[Structure] === "Term.Name(\"W\")")
   }
 
   test("2 p\"$pat $name (..$apats)\"") {
     val pat = p"x"
     val name = q"y"
     val apats = List(p"Q", p"W")
-    assert(p"$pat $name (..$apats)".show[Structure] === "Pat.ExtractInfix(Pat.Var.Term(Term.Name(\"x\")), Term.Name(\"y\"), List(Pat.Var.Term(Term.Name(\"Q\")), Pat.Var.Term(Term.Name(\"W\"))))")
+    assert(p"$pat $name (..$apats)".show[Structure] === "Pat.ExtractInfix(Pat.Var.Term(Term.Name(\"x\")), Term.Name(\"y\"), List(Term.Name(\"Q\"), Term.Name(\"W\")))")
   }
 
   test("3 p\"$pat $name (..$apats)\"") {
     val pat = p"`x`"
     val name = q"y"
     val apats = List(p"Q", p"W")
-    assert(p"$pat $name (..$apats)".show[Structure] === "Pat.ExtractInfix(Term.Name(\"x\"), Term.Name(\"y\"), List(Pat.Var.Term(Term.Name(\"Q\")), Pat.Var.Term(Term.Name(\"W\"))))")
+    assert(p"$pat $name (..$apats)".show[Structure] === "Pat.ExtractInfix(Term.Name(\"x\"), Term.Name(\"y\"), List(Term.Name(\"Q\"), Term.Name(\"W\")))")
   }
 
   test("1 p\"$pat: $ptpe\"") {
@@ -683,12 +698,12 @@ class QuasiquoteSuite extends FunSuite {
 
   test("p\"$lit\"") {
     val lit = q"1"
-    assert(p"$lit".show[Syntax] === "1")
+    assert(p"$lit".show[Structure] === "Lit.Int(1)")
   }
 
   test("1 p\"case $pat if $expropt => $expr\"") {
     val p"case $pat if $expropt => $expr" = p"case X if foo => bar"
-    assert(pat.show[Structure] === "Pat.Var.Term(Term.Name(\"X\"))")
+    assert(pat.show[Structure] === "Term.Name(\"X\")")
     assert(expropt.show[Structure] === "Term.Name(\"foo\")")
     assert(expr.show[Structure] === "Term.Name(\"bar\")")
   }
@@ -697,19 +712,19 @@ class QuasiquoteSuite extends FunSuite {
     val pat = p"X"
     val expropt = q"foo"
     val expr = q"bar"
-    assert(p"case $pat if $expropt => $expr".show[Syntax] === "case X if foo => bar")
+    assert(p"case $pat if $expropt => $expr".show[Structure] === "Case(Term.Name(\"X\"), Some(Term.Name(\"foo\")), Term.Block(List(Term.Name(\"bar\"))))")
   }
 
   test("3 p\"case $pat if $expropt => $expr\"") {
     val pat = p"`X`"
     val expropt = q"`foo`"
     val expr = q"`bar`"
-    assert(p"case $pat if $expropt => $expr".show[Syntax] === "case X if foo => bar")
+    assert(p"case $pat if $expropt => $expr".show[Structure] === "Case(Term.Name(\"X\"), Some(Term.Name(\"foo\")), Term.Block(List(Term.Name(\"bar\"))))")
   }
 
   test("1 p\"$pat\"") {
     val pat = p"X"
-    assert(p"$pat".show[Structure] === "Pat.Var.Term(Term.Name(\"X\"))")
+    assert(p"$pat".show[Structure] === "Term.Name(\"X\")")
   }
 
   test("2 p\"$pat\"") {
@@ -726,7 +741,7 @@ class QuasiquoteSuite extends FunSuite {
   }
 
   test("pt\"X\"") {
-    assert(pt"X".show[Structure] === "Type.Name(\"X\")") // todo review me
+    assert(pt"X".show[Structure] === "Type.Name(\"X\")")
   }
 
   test("pt\"`x`\"") {
@@ -746,13 +761,13 @@ class QuasiquoteSuite extends FunSuite {
   test("2 pt\"$ref.$tname\"") {
     val ref = q"x"
     val tname = t"a"
-    assert(pt"$ref.$tname".show[Syntax] === "x.a")
+    assert(pt"$ref.$tname".show[Structure] === "Type.Select(Term.Name(\"x\"), Type.Name(\"a\"))")
   }
 
   test("3 pt\"$ref.$tname\"") {
     val ref = q"`x`"
     val tname = t"`a`"
-    assert(pt"$ref.$tname".show[Syntax] === "x.a")
+    assert(pt"$ref.$tname".show[Structure] === "Type.Select(Term.Name(\"x\"), Type.Name(\"a\"))")
   }
 
   test("1 pt\"$ptpe#$tname\"") {
@@ -769,6 +784,12 @@ class QuasiquoteSuite extends FunSuite {
 
   test("3 pt\"$ptpe#$tname\"") {
     val ptpe = pt"`x`"
+    val tname = t"a"
+    assert(pt"$ptpe#$tname".show[Structure] === "Pat.Type.Project(Type.Name(\"x\"), Type.Name(\"a\"))")
+  }
+
+  test("4 pt\"$ptpe#$tname\"") {
+    val ptpe = pt"x"
     val tname = t"a"
     assert(pt"$ptpe#$tname".show[Structure] === "Pat.Type.Project(Type.Name(\"x\"), Type.Name(\"a\"))")
   }
@@ -792,8 +813,8 @@ class QuasiquoteSuite extends FunSuite {
     val pt"$ptpe[..$ptpes]" = pt"X[Y, Z]"
     assert(ptpe.show[Structure] === "Type.Name(\"X\")")
     assert(ptpes.toString === "List(Y, Z)")
-    assert(ptpes(0).show[Structure] === "Pat.Var.Type(Type.Name(\"Y\"))")
-    assert(ptpes(1).show[Structure] === "Pat.Var.Type(Type.Name(\"Z\"))")
+    assert(ptpes(0).show[Structure] === "Type.Name(\"Y\")")
+    assert(ptpes(1).show[Structure] === "Type.Name(\"Z\")")
   }
 
   test("2 pt\"$ptpe[..$ptpes]") {
@@ -806,6 +827,12 @@ class QuasiquoteSuite extends FunSuite {
     val ptpe = pt"`X`"
     val ptpes = List(pt"`Y`", pt"`Z`")
     assert(pt"$ptpe[..$ptpes]".show[Structure] === "Pat.Type.Apply(Type.Name(\"X\"), List(Type.Name(\"Y\"), Type.Name(\"Z\")))")
+  }
+
+  test("4 pt\"$ptpe[..$ptpes]") {
+    val ptpe = pt"`X`"
+    val ptpes = List(pt"y", pt"z")
+    assert(pt"$ptpe[..$ptpes]".show[Structure] === "Pat.Type.Apply(Type.Name(\"X\"), List(Pat.Var.Type(Type.Name(\"y\")), Pat.Var.Type(Type.Name(\"z\"))))")
   }
 
   test("1 pt\"$ptpe $tname $ptpe\"") {
@@ -863,22 +890,22 @@ class QuasiquoteSuite extends FunSuite {
 
   test("3 pt\"(..$ptpes)\"") {
     val ptpes = List(pt"x", pt"y")
-    assert(pt"(..$ptpes)".show[Structure] === "Pat.Type.Tuple(List(Pat.Var.Type(Type.Name(\"x\")), Pat.Var.Type(Type.Name(\"y\"))))")
+    assert(pt"(..$ptpes)".show[Structure] === "Pat.Type.Tuple(List(Type.Name(\"x\"), Type.Name(\"y\")))")
   }
 
   test("1 pt\"..$ptpes { ..$stats }\"") {
     val pt"..$ptpes { ..$stats }" = pt"X with Y { val a: A }"
     assert(ptpes.toString === "List(X, Y)")
-    assert(ptpes(0).show[Syntax] === "X")
-    assert(ptpes(1).show[Syntax] === "Y")
+    assert(ptpes(0).show[Structure] === "Type.Name(\"X\")")
+    assert(ptpes(1).show[Structure] === "Type.Name(\"Y\")")
     assert(stats.toString === "List(val a: A)")
-    assert(stats(0).show[Syntax] === "val a: A")
+    assert(stats(0).show[Structure] === "Decl.Val(Nil, List(Pat.Var.Term(Term.Name(\"a\"))), Type.Name(\"A\"))")
   }
 
   test("2 pt\"..$ptpes { ..$stats }\"") {
     val ptpes = List(pt"`X`", pt"`Y`")
     val stats = List(q"val `a`: `A`", q"val `b`: `B`")
-    assert(pt"..$ptpes { ..$stats }".show[Syntax] === "Pat.Type.Compound(List(Type.Name(\"X\"), Type.Name(\"Y\")), List(Decl.Val(Nil, List(Pat.Var.Term(Term.Name(\"a\"))), Type.Name(\"A\")), Decl.Val(Nil, List(Pat.Var.Term(Term.Name(\"b\"))), Type.Name(\"B\"))))")
+    assert(pt"..$ptpes { ..$stats }".show[Structure] === "Pat.Type.Compound(List(Type.Name(\"X\"), Type.Name(\"Y\")), List(Decl.Val(Nil, List(Pat.Var.Term(Term.Name(\"a\"))), Type.Name(\"A\")), Decl.Val(Nil, List(Pat.Var.Term(Term.Name(\"b\"))), Type.Name(\"B\"))))")
   }
 
   test("1 pt\"$ptpe forSome { ..$stats }\"") {
@@ -928,7 +955,7 @@ class QuasiquoteSuite extends FunSuite {
 
   test("pt\"$lit\"") {
     val lit = q"1"
-    assert(pt"$lit".show[Syntax] === "1")
+    assert(pt"$lit".show[Structure] === "Lit.Int(1)")
   }
 
 //  test("1 q\"import ..($ref.{..$importees})\"") {
