@@ -964,7 +964,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     // now that we have Pat.Type separate from Type
     def patternTyp() = {
       def convert(tpe: Type): Pat.Type = tpe match {
-        case tpe: Type.Name => atPos(tpe, tpe)(Pat.Var.Type(tpe))
+        case tpe @ Type.Name(value) if value(0).isLower => atPos(tpe, tpe)(Pat.Var.Type(tpe))
         case Type.Placeholder(Type.Bounds(None, None)) => atPos(tpe, tpe)(Pat.Type.Wildcard())
         case _ => loop(tpe)
       }
