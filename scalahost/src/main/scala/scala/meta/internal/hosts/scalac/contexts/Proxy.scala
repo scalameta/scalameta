@@ -21,7 +21,7 @@ import scala.meta.internal.{semantic => s}
 
 @context(translateExceptions = true)
 class Proxy[G <: ScalaGlobal](val global: G) extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
-  if (!global.isPastTyper) throw new InfrastructureException("can't initialize semantic context until everything has been typechecked")
+  if (!global.isPastTyper) throw new InfrastructureException("can't create a semantic context from a Global until after typer")
   convertAndIndexCompilationUnits()
 
   // ======= SEMANTIC CONTEXT =======

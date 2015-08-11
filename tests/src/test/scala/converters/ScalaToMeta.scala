@@ -9,7 +9,7 @@ import scala.meta.dialects.Scala211
 class ScalaToMeta extends FunSuite {
   def typecheckConvertAndPrettyprint(code: String, debug: Boolean): String = {
     val pluginJar = System.getProperty("sbt.paths.plugin.jar")
-    val compilationClasspath = System.getProperty("sbt.paths.tests.classpath").split(File.pathSeparatorChar.toString).map(path => new URL("file://" + path))
+    val compilationClasspath = System.getProperty("sbt.paths.tests.classpath").split(File.pathSeparator).map(path => new URL("file://" + path))
     val options = "-cp " + System.getProperty("sbt.paths.tests.classpath") + " -Xplugin:" + pluginJar + " -Xplugin-require:scalahost"
     implicit val c = Scalahost.mkStandaloneContext(options)
     val m = c.define(code)

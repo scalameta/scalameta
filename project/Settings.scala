@@ -164,7 +164,7 @@ object Settings {
       val classpath = defaultValue.files.map(_.getAbsolutePath)
       val scalaLibrary = classpath.map(_.toString).find(_.contains("scala-library")).get
       System.setProperty("sbt.paths.scala-library.jar", scalaLibrary)
-      System.setProperty("sbt.paths.tests.classpath", classpath.mkString(java.io.File.pathSeparatorChar.toString))
+      System.setProperty("sbt.paths.tests.classpath", classpath.mkString(java.io.File.pathSeparator))
       defaultValue
     },
     resourceDirectory in Test := {
