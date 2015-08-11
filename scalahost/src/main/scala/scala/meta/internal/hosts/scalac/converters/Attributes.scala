@@ -95,7 +95,9 @@ trait Attributes extends GlobalToolkit with MetaToolkit {
       else mtree.withDenot(ldenot)
     }
     private def typing(gtpe: g.Type): s.Typing = {
-      s.Typing.Specified(gtpe.toMtypeArg)
+      // NOTE: s.Typing.Specified is lazy, so we need to make sure
+      // that we're at the right phase when running this code
+      s.Typing.Specified(g.enteringTyper(gtpe.toMtypeArg))
     }
     def withTyping(gtpe: g.Type)(implicit ev: CanHaveTyping[T]): T = {
       require(gtpe != null && gtpe != g.NoType)
