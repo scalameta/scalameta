@@ -387,4 +387,44 @@ class ErrorSuite extends FunSuite {
       |        ^
     """.trim.stripMargin)
   }
+
+  test("""pt"$ptpe#$tname"""") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val pt"$ptpe#$tname" = pt"x#a"
+    """).contains("found that qual.isInstanceOf[Pat.Var.Type].`unary_!` is true"))
+  }
+
+  test("""pt"$ptpe[..$ptpes]""") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val pt"$ptpe[..$ptpes]" = pt"x[Y, Z]"
+    """).contains("found that tpe.isInstanceOf[Pat.Var.Type].`unary_!` is true"))
+  }
+
+  test("""pt"..$ptpes { ..$stats }"""") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val pt"..$ptpes { ..$stats }" = pt"x with y { val a: A; val b: B }"
+    """).contains("found that tpes.forall(((tpe: scala.meta.internal.ast.Pat.Type) => tpe.isInstanceOf[Pat.Var.Type].`unary_!`.&&(tpe.isInstanceOf[Pat.Type.Wildcard].`unary_!`))) is false"))
+  }
+
+  test("""pt"$ptpe forSome { ..$stats }"""") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val pt"$ptpe forSome { ..$stats }" = pt"x forSome { val a: A }"
+    """).contains("found that tpe.isInstanceOf[Pat.Var.Type].`unary_!` is true"))
+  }
+
+  test("""pt"$ptpe ..@$annots"""") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val pt"$ptpe ..@$annots" = pt"x @q @w"
+    """).contains("found that tpe.isInstanceOf[Pat.Var.Type].`unary_!` is true"))
+  }
 }

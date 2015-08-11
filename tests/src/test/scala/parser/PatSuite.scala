@@ -27,7 +27,7 @@ class PatSuite extends ParseSuite {
   }
 
   test("_: t") {
-    val Typed(Wildcard(), Type.Name("t")) = pat("_: t")
+    val Typed(Wildcard(), Pat.Var.Type(Type.Name("t"))) = pat("_: t")
   }
 
   test("_: F[t]") {
@@ -39,7 +39,7 @@ class PatSuite extends ParseSuite {
   }
 
   test("_: (t Map u)") {
-    val Typed(Wildcard(), Pat.Type.ApplyInfix(Type.Name("t"), Type.Name("Map"), Type.Name("u"))) = pat("_: (t Map u)")
+    val Typed(Wildcard(), Pat.Type.ApplyInfix(Pat.Var.Type(Type.Name("t")), Type.Name("Map"), Pat.Var.Type(Type.Name("u")))) = pat("_: (t Map u)")
   }
 
   test("foo(x)") {
