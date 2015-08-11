@@ -527,7 +527,9 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   def isRawStar: Boolean            = isIdentOf("*")
   def isRawBar: Boolean             = isIdentOf("|")
   def isColonWildcardStar: Boolean  = token.is[`:`] && ahead(token.is[`_ `] && ahead(isIdentOf("*")))
-  def isSpliceFollowedBy(check: => Boolean): Boolean = token.is[Ellipsis] && ahead(token.is[Unquote] && ahead(token.is[Ident] || check))
+  def isSpliceFollowedBy(check: => Boolean): Boolean
+                                    = token.is[Ellipsis] && ahead(token.is[Unquote] && ahead(token.is[Ident] || check))
+  def isBackquoted: Boolean         = token.code.startsWith("`") && token.code.endsWith("`")
 
 /* ---------- TREE CONSTRUCTION ------------------------------------------- */
 
@@ -963,28 +965,55 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     // TODO: I have a feeling that we no longer need PatternContextSensitive
     // now that we have Pat.Type separate from Type
     def patternTyp() = {
-      def convert(tpe: Type): Pat.Type = tpe match {
-        case tpe @ Type.Name(value) if value(0).isLower => atPos(tpe, tpe)(Pat.Var.Type(tpe))
-        case Type.Placeholder(Type.Bounds(None, None)) => atPos(tpe, tpe)(Pat.Type.Wildcard())
-        case _ => loop(tpe)
+      val isBackquoted = parser.isBackquoted
+      def convert(tpe: Type): Pat.Type = {
+        tpe match {
+          case tpe @ Type.Name(value) if value(0).isLower => atPos(tpe, tpe)(Pat.Var.Type(tpe))
+          case Type.Placeholder(Type.Bounds(None, None)) => atPos(tpe, tpe)(Pat.Type.Wildcard())
+          case _ => loop(tpe)
+        }
       }
       def loop(tpe: Type): Pat.Type = tpe match {
         case q: Type.Quasi => q.become[Pat.Type.Quasi]
+        case tpe: Type.Name if isVarPattern(tpe, isBackquoted) => Pat.Var.Type(tpe)
         case tpe: Type.Name => tpe
         case tpe: Type.Select => tpe
         case Type.Project(qual, name) => atPos(tpe, tpe)(Pat.Type.Project(loop(qual), name))
         case tpe: Type.Singleton => tpe
         case Type.Apply(underlying, args) => atPos(tpe, tpe)(Pat.Type.Apply(loop(underlying), args.map(convert)))
         case Type.ApplyInfix(lhs, op, rhs) => atPos(tpe, tpe)(Pat.Type.ApplyInfix(loop(lhs), op, loop(rhs)))
-        case Type.Function(params, res) => atPos(tpe, tpe)(Pat.Type.Function(params.map(p => loop(p.require[Type])), loop(res)))
+        case Type.Function(params, res) => atPos(tpe, tpe)(Pat.Type.Function(params.map {
+          case q @ Type.Arg.Quasi(1, Type.Arg.Quasi(0, _)) => q.become[Pat.Type.Quasi]
+          case p => loop(p.require[Type])
+        }, loop(res)))
         case Type.Tuple(elements) => atPos(tpe, tpe)(Pat.Type.Tuple(elements.map(loop)))
         case Type.Compound(tpes, refinement) => atPos(tpe, tpe)(Pat.Type.Compound(tpes.map(loop), refinement))
         case Type.Existential(underlying, quants) => atPos(tpe, tpe)(Pat.Type.Existential(loop(underlying), quants))
         case Type.Annotate(underlying, annots) => atPos(tpe, tpe)(Pat.Type.Annotate(loop(underlying), annots))
+        case Type.Placeholder(Type.Bounds(None, None)) => convert(tpe)
         case Type.Placeholder(bounds) => atPos(tpe, tpe)(Pat.Type.Placeholder(bounds))
         case tpe: Lit => tpe
       }
-      loop(compoundType())
+      val t: Type = {
+        val t = if (token.is[`(`]) tupleInfixType() else compoundType()
+        def mkOp(t1: Type) = atPos(t, t1)(Type.ApplyInfix(t, typeName(), t1))
+        token match {
+          case _: `forSome` => next(); atPos(t, t)(Type.Existential(t, existentialStats()))
+          case _: Unquote | _: Ident if !isRawBar => infixTypeRest(mkOp(compoundType()), InfixMode.LeftOp)
+          case _ => t
+        }
+      }
+      loop(t)
+    }
+  }
+
+  def isVarPattern(r: Ref, isBackquoted: Boolean) = {
+    def isValidPatVar(value: String, isBackquoted: Boolean) = !isBackquoted && value.head.isLetter
+    r match {
+      case _: Term.Name.Quasi | _: Type.Name.Quasi => false
+      case Term.Name(value) => isValidPatVar(value, isBackquoted) && value.head.isLower
+      case Type.Name(value) => isValidPatVar(value, isBackquoted) && value.head.isLower
+      case _ => false
     }
   }
 
@@ -1975,13 +2004,9 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       simplePattern(token => syntaxError("illegal start of simple pattern", at = token))
     def simplePattern(onError: Token => Nothing): Pat = autoPos(token match {
       case _: Ident | _: `this` | _: Unquote =>
-        val isBackquoted = token.code.startsWith("`") && token.code.endsWith("`")
+        val isBackquoted = parser.isBackquoted
         val sid = stableId()
-        val isVarPattern = sid match {
-          case _: Term.Name.Quasi => false
-          case Term.Name(value) => !isBackquoted && value.head.isLetter
-          case _ => false
-        }
+        val isVarPattern = parser.isVarPattern(sid, isBackquoted)
         if (token.is[NumericLiteral]) {
           sid match {
             case Term.Name("-") =>
