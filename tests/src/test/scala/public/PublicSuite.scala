@@ -34,7 +34,7 @@ class PublicSuite extends FunSuite {
     assert(typecheckError("""
       val domain: scala.meta.taxonomic.Domain = ???
       domain.sources
-    """) === "this method requires an implicit scala.meta.taxonomic.Context")
+    """) === "")
   }
 
   test("taxonomic APIs without context") {
@@ -42,7 +42,7 @@ class PublicSuite extends FunSuite {
       import scala.meta._
       val domain: scala.meta.taxonomic.Domain = ???
       domain.sources
-    """) === "this method requires an implicit scala.meta.taxonomic.Context")
+    """) === "")
   }
 
   test("taxonomic APIs when everything's correct") {

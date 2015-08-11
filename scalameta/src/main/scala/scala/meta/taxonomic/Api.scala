@@ -9,6 +9,9 @@ import scala.collection.immutable.Seq
 import scala.meta.taxonomic.{Context => TaxonomicContext}
 
 private[meta] trait Api extends MavenDsl {
+  type Taxonomy = scala.meta.taxonomic.Taxonomy
+  val Taxonomy = scala.meta.taxonomic.Taxonomy
+
   type Domain = scala.meta.taxonomic.Domain
   val Domain = scala.meta.taxonomic.Domain
 
@@ -30,6 +33,7 @@ private[meta] trait Api extends MavenDsl {
   val Resource = scala.meta.taxonomic.Resource
 
   implicit class XtensionTaxonomicModule(module: Module) {
+    @hosted def binaries: Seq[Path] = implicitly[TaxonomicContext].binaries(module)
     @hosted def sources: Seq[Source] = implicitly[TaxonomicContext].sources(module)
     @hosted def resources: Seq[Resource] = implicitly[TaxonomicContext].resources(module)
     @hosted def deps: Seq[Module] = implicitly[TaxonomicContext].deps(module)

@@ -34,15 +34,15 @@ object Module {
 }
 
 // Artifacts are modules that are: 1) immutable, 2) already compiled.
-// They can be either adhoc, i.e. thrown together manually from a classpath and (optionally) a sourcepath.
+// They can be either adhoc, i.e. thrown together manually from binaries and sources.
 // or managed, i.e. belong to some dependency management system like Maven or Ivy,
 
 @branch trait Artifact extends Module
 object Artifact {
-  @leaf class Unmanaged(classpath: Multipath, sourcepath: Multipath) extends Artifact {
+  @leaf class Unmanaged(binaries: Multipath, sources: Multipath) extends Artifact {
     override def toString = {
       def s_multipath(multipath: Multipath) = "\"" + multipath.paths.map(_.path).mkString(File.pathSeparatorChar.toString) + "\""
-      s"Artifact(${s_multipath(classpath)}, ${s_multipath(sourcepath)})"
+      s"Artifact(${s_multipath(binaries)}, ${s_multipath(sources)})"
     }
   }
 
@@ -50,7 +50,7 @@ object Artifact {
     override def toString = s"Artifact($id)"
   }
 
-  def apply(classes: Multipath, sources: Multipath): Artifact = Unmanaged(classes, sources)
+  def apply(binaries: Multipath, sources: Multipath): Artifact = Unmanaged(binaries, sources)
   def apply(mavenId: MavenId): Artifact = Maven(mavenId)
 }
 
