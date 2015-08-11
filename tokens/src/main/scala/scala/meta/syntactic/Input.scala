@@ -2,7 +2,7 @@ package scala.meta
 package syntactic
 
 import java.nio.charset.Charset
-import org.scalameta.adt._
+import org.scalameta.data._
 import org.scalameta.convert._
 import org.scalameta.invariants._
 import scala.collection.{immutable, mutable}
@@ -14,11 +14,11 @@ trait Input extends Serializable {
 }
 
 object Input {
-  final case class String(s: scala.Predef.String) extends Content {
+  @data class String(s: scala.Predef.String) extends Content {
     lazy val chars = s.toArray
     override def toString = "Input.Content(\"" + s + "\")"
   }
-  final case class File(f: java.io.File, charset: Charset) extends Content {
+  @data class File(f: java.io.File, charset: Charset) extends Content {
     lazy val chars = scala.io.Source.fromFile(f)(scala.io.Codec(charset)).mkString.toArray
     protected def writeReplace(): AnyRef = new File.SerializationProxy(this)
     override def toString = {

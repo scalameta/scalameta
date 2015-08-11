@@ -9,6 +9,7 @@ import scala.language.implicitConversions
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 import scala.collection.{immutable, mutable}
+import org.scalameta.data._
 import org.scalameta.adt.{Liftables => AdtLiftables, Reflection => AdtReflection}
 import org.scalameta.ast.{Liftables => AstLiftables, Reflection => AstReflection}
 import org.scalameta.invariants._

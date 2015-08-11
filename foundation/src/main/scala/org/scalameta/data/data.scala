@@ -147,6 +147,7 @@ class DataMacros(val c: Context) {
       }
 
       // step 4: implement Product
+      parents1 += tq"_root_.scala.Product"
       if (needs(TermName("product"))) {
         val productParamss = paramss.map(_.map(_.duplicate))
         stats1 += q"override def productPrefix: _root_.scala.Predef.String = ${name.toString}"

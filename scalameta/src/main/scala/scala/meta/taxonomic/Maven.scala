@@ -2,6 +2,7 @@ package scala.meta
 package taxonomic
 
 import org.scalameta.adt._
+import org.scalameta.data._
 
 @root trait CrossVersion
 object CrossVersion {
@@ -10,7 +11,7 @@ object CrossVersion {
   @leaf object full extends CrossVersion
 }
 
-final case class IncompleteMavenId(groupId: String, artifactId: String, crossVersion: CrossVersion) {
+@data class IncompleteMavenId(groupId: String, artifactId: String, crossVersion: CrossVersion) {
   override def toString = crossVersion match {
     case CrossVersion.none => "\"" + groupId + "\" % \"" + artifactId + "\""
     case CrossVersion.binary => "\"" + groupId + "\" %% \"" + artifactId + "\""
@@ -18,7 +19,7 @@ final case class IncompleteMavenId(groupId: String, artifactId: String, crossVer
   }
 }
 
-final case class MavenId(groupId: String, artifactId: String, crossVersion: CrossVersion, version: String) {
+@data class MavenId(groupId: String, artifactId: String, crossVersion: CrossVersion, version: String) {
   override def toString = crossVersion match {
     case CrossVersion.none => "\"" + groupId + "\" % \"" + artifactId + "\" % \"" + version + "\""
     case CrossVersion.binary => "\"" + groupId + "\" %% \"" + artifactId + "\" % \"" + version + "\""
