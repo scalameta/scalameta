@@ -146,7 +146,7 @@ class AdtMacros(val c: Context) {
       val mstats1 = ListBuffer[Tree]() ++ mstats
       def unprivatize(mods: Modifiers) = Modifiers((mods.flags.asInstanceOf[Long] & (~scala.reflect.internal.Flags.LOCAL) & (~scala.reflect.internal.Flags.PRIVATE)).asInstanceOf[FlagSet], mods.privateWithin, mods.annotations)
       def privatize(mods: Modifiers) = Modifiers((mods.flags.asInstanceOf[Long] | scala.reflect.internal.Flags.LOCAL & scala.reflect.internal.Flags.PRIVATE).asInstanceOf[FlagSet], mods.privateWithin, mods.annotations)
-      def delay(mods: Modifiers) = Modifiers(mods.flags, mods.privateWithin, mods.annotations :+ q"new $Internal.delayedField")
+      def byNeed(mods: Modifiers) = Modifiers(mods.flags, mods.privateWithin, mods.annotations :+ q"new $Internal.byNeedField")
       def finalize(mods: Modifiers) = Modifiers(mods.flags | FINAL, mods.privateWithin, mods.annotations)
       def varify(mods: Modifiers) = Modifiers(mods.flags | MUTABLE, mods.privateWithin, mods.annotations)
       def needs(name: Name) = {
@@ -163,7 +163,7 @@ class AdtMacros(val c: Context) {
 
       object VanillaParam {
         def unapply(tree: ValDef): Option[(Modifiers, TermName, Tree, Tree)] = tree match {
-          case DelayedParam(_, _, _, _) => None
+          case ByNeedParam(_, _, _, _) => None
           case VarargParam(_, _, _, _) => None
           case _ => Some((tree.mods, tree.name, tree.tpt, tree.rhs))
         }
@@ -174,22 +174,22 @@ class AdtMacros(val c: Context) {
           case _ => None
         }
       }
-      object DelayedParam {
+      object ByNeedParam {
         def unapply(tree: ValDef): Option[(Modifiers, TermName, Tree, Tree)] = tree.tpt match {
-          case Annotated(Apply(Select(New(Ident(TypeName("delayed"))), termNames.CONSTRUCTOR), List()), tpt) =>
-            if (Vararg.unapply(tree.tpt).nonEmpty) c.abort(cdef.pos, "vararg parameters cannot be delayed")
+          case Annotated(Apply(Select(New(Ident(TypeName("byNeed"))), termNames.CONSTRUCTOR), List()), tpt) =>
+            if (Vararg.unapply(tree.tpt).nonEmpty) c.abort(cdef.pos, "vararg parameters cannot be by-need")
             else Some((tree.mods, tree.name, tpt, tree.rhs))
           case _ =>
             None
         }
       }
-      def undelay(tree: ValDef): ValDef = tree match {
-        case DelayedParam(mods, name, tpt, default) => ValDef(mods, name, tpt, default)
+      def unByNeed(tree: ValDef): ValDef = tree match {
+        case ByNeedParam(mods, name, tpt, default) => ValDef(mods, name, tpt, default)
         case _ => tree.duplicate
       }
-      def bynameTpt(tpt: Tree): Tree = {
-        val DefDef(_, _, _, List(List(ValDef(_, _, bynameTpt, _))), _, _) = q"def dummy(dummy: => $tpt) = ???"
-        bynameTpt
+      def byNameTpt(tpt: Tree): Tree = {
+        val DefDef(_, _, _, List(List(ValDef(_, _, byNameTpt, _))), _, _) = q"def dummy(dummy: => $tpt) = ???"
+        byNameTpt
       }
       object Vararg {
         def unapply(tpt: Tree): Option[Tree] = tpt match {
@@ -222,15 +222,15 @@ class AdtMacros(val c: Context) {
           stats1 += q"$Internal.nullCheck(this.$name)"
           stats1 += q"$Internal.emptyCheck(this.$name)"
           q"${unprivatize(mods)} val $name: $tpt = $default"
-        case DelayedParam(mods, name, tpt, default) =>
+        case ByNeedParam(mods, name, tpt, default) =>
           val flagName = TermName(name + "Flag")
           val valueName = TermName(name + "Value")
           val storageName = TermName(name + "Storage")
           val getterName = name
           val paramName = TermName("_" + name)
           val paramTpt = tq"_root_.scala.Function0[$tpt]"
-          stats1 += q"@$Internal.delayedField private[this] var $flagName: _root_.scala.Boolean = false"
-          stats1 += q"@$Internal.delayedField private[this] var $storageName: $tpt = _"
+          stats1 += q"@$Internal.byNeedField private[this] var $flagName: _root_.scala.Boolean = false"
+          stats1 += q"@$Internal.byNeedField private[this] var $storageName: $tpt = _"
           stats1 += q"""
             def $getterName = {
               if (!this.$flagName) {
@@ -244,7 +244,7 @@ class AdtMacros(val c: Context) {
               this.$storageName
             }
           """
-          q"${varify(delay(privatize(mods)))} val $paramName: $paramTpt = $default"
+          q"${varify(byNeed(privatize(mods)))} val $paramName: $paramTpt = $default"
       })
 
       // step 3: generate boilerplate required by the @adt infrastructure
@@ -294,13 +294,13 @@ class AdtMacros(val c: Context) {
           // about incompatibility between the default value and the type of the parameter
           // e.g. "expected: => T, actual: T"
           // Therefore, I'm making the parameter of copy eager, even though I'd like it to be lazy.
-          // case DelayedParam(mods, name, tpt, default) => q"$mods val $name: ${bynameTpt(tpt)} = this.$name"
-          case DelayedParam(mods, name, tpt, default) => q"$mods val $name: $tpt = this.$name"
+          // case ByNeedParam(mods, name, tpt, default) => q"$mods val $name: ${byNameTpt(tpt)} = this.$name"
+          case ByNeedParam(mods, name, tpt, default) => q"$mods val $name: $tpt = this.$name"
         }))
         val copyArgss = paramss.map(_.map({
           case VanillaParam(mods, name, tpt, default) => q"$name"
           case VarargParam(mods, name, tpt, default) => q"$name: _*"
-          case DelayedParam(mods, name, tpt, default) => q"(() => $name)"
+          case ByNeedParam(mods, name, tpt, default) => q"(() => $name)"
         }))
         stats1 += q"def copy(...$copyParamss): $name = new $name(...$copyArgss)"
       }
@@ -310,12 +310,12 @@ class AdtMacros(val c: Context) {
         val applyParamss = paramss.map(_.map({
           case VanillaParam(mods, name, tpt, default) => q"$mods val $name: $tpt = $default"
           case VarargParam(mods, name, tpt, default) => q"$mods val $name: $tpt = $default"
-          case DelayedParam(mods, name, tpt, default) => q"$mods val $name: ${bynameTpt(tpt)} = $default"
+          case ByNeedParam(mods, name, tpt, default) => q"$mods val $name: ${byNameTpt(tpt)} = $default"
         }))
         val applyArgss = paramss.map(_.map({
           case VanillaParam(mods, name, tpt, default) => q"$name"
           case VarargParam(mods, name, tpt, default) => q"$name: _*"
-          case DelayedParam(mods, name, tpt, default) => q"(() => $name)"
+          case ByNeedParam(mods, name, tpt, default) => q"(() => $name)"
         }))
         mstats1 += q"def apply(...$applyParamss): $name = new $name(...$applyArgss)"
       }
@@ -324,13 +324,13 @@ class AdtMacros(val c: Context) {
       // TODO: go for name-based pattern matching once blocking bugs (e.g. SI-9029) are fixed
       val unapplyName = if (isVararg) TermName("unapplySeq") else TermName("unapply")
       if (needs(unapplyName)) {
-        val unapplyParamss = paramss.map(_.map(undelay))
+        val unapplyParamss = paramss.map(_.map(unByNeed))
         val unapplyParams = unapplyParamss.head
         if (unapplyParams.length != 0) {
           val successTargs = unapplyParams.map({
             case VanillaParam(mods, name, tpt, default) => tpt
             case VarargParam(mods, name, Vararg(tpt), default) => tq"_root_.scala.Seq[$tpt]"
-            case DelayedParam(mods, name, tpt, default) => tpt
+            case ByNeedParam(mods, name, tpt, default) => tpt
           })
           val successTpe = tq"(..$successTargs)"
           val successArgs = q"(..${unapplyParams.map(p => q"x.${p.name}")})"
@@ -467,7 +467,7 @@ object Internal {
   class leafCompanion extends StaticAnnotation
   class noneLeaf extends StaticAnnotation
   class someLeaf extends StaticAnnotation
-  class delayedField extends StaticAnnotation
+  class byNeedField extends StaticAnnotation
   case class TagAttachment(counter: Int)
   def calculateTag[T]: Int = macro AdtHelperMacros.calculateTag[T]
   def nullCheck[T](x: T): Unit = macro AdtHelperMacros.nullCheck
@@ -547,7 +547,7 @@ class AdtHelperMacros(val c: Context) extends AdtReflection {
   def immutabilityCheck[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
     def check(sym: Symbol): Unit = {
       var vars = sym.info.members.collect { case x: TermSymbol if !x.isMethod && x.isVar => x }
-      vars = vars.filter(!_.annotations.exists(_.tree.tpe =:= typeOf[Internal.delayedField]))
+      vars = vars.filter(!_.annotations.exists(_.tree.tpe =:= typeOf[Internal.byNeedField]))
       vars.foreach(v => c.abort(c.enclosingPosition, "leafs can't have mutable state: " + v.owner.fullName + "." + v.name))
       val vals = sym.info.members.collect { case x: TermSymbol if !x.isMethod && !x.isVar => x }
       vals.foreach(v => ()) // TODO: deep immutability check

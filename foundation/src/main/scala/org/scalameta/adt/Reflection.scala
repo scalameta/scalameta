@@ -27,7 +27,7 @@ trait Reflection {
     }
     def isPayload: Boolean = sym.isField && !sym.isAuxiliary
     def isAuxiliary: Boolean = sym.isField && hasAnnotation[AstInternal.auxiliary]
-    def isDelayed: Boolean = sym.isField && hasAnnotation[AdtInternal.delayedField]
+    def isByNeed: Boolean = sym.isField && hasAnnotation[AdtInternal.byNeedField]
     def asAdt: Adt = if (isRoot) sym.asRoot else if (isBranch) sym.asBranch else if (isLeaf) sym.asLeaf else sys.error("not an adt")
     def asRoot: Root = new Root(sym)
     def asBranch: Branch = new Branch(sym)
@@ -91,7 +91,7 @@ trait Reflection {
     def tpe: Type = sym.info.finalResultType
     def isPayload: Boolean = sym.isPayload
     def isAuxiliary: Boolean = sym.isAuxiliary
-    def isDelayed: Boolean = sym.isDelayed
+    def isByNeed: Boolean = sym.isByNeed
     override def toString = s"field ${owner.prefix}.$name: $tpe" + (if (isAuxiliary) " (auxiliary)" else "")
   }
 }

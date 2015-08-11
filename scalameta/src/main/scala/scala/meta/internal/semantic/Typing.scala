@@ -9,7 +9,7 @@ import org.scalameta.invariants._
 @monadicRoot trait Typing
 object Typing {
   @noneLeaf object Zero extends Typing
-  @someLeaf class Specified(tpe: Type.Arg @delayed) extends Typing {
+  @someLeaf class Specified(tpe: Type.Arg @byNeed) extends Typing {
     protected def writeReplace(): AnyRef = new Specified.SerializationProxy(this)
   }
   object Specified {
