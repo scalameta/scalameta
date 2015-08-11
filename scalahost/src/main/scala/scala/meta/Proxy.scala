@@ -1,5 +1,4 @@
 package scala.meta
-package hosts.scalac
 
 import scala.reflect.{classTag, ClassTag}
 import scala.{Seq => _}
@@ -7,7 +6,7 @@ import scala.collection.immutable.Seq
 import scala.{meta => m}
 import scala.meta.semantic.{Context => SemanticContext}
 import scala.meta.interactive.{Context => InteractiveContext}
-import scala.meta.internal.hosts.scalac.contexts.{Compiler => CompilerImpl}
+import scala.meta.internal.hosts.scalac.contexts.{Compiler => Compiler}
 import scala.meta.internal.hosts.scalac.contexts.{Proxy => ProxyImpl}
 import scala.tools.nsc.Global
 

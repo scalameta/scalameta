@@ -9,7 +9,6 @@ object Dependencies {
 
   lazy val meta = "org.scalameta" %% "scalameta" % metaVersion
   lazy val foundation = "org.scalameta" %% "foundation" % metaVersion
-  lazy val ivy = "org.apache.ivy" % "ivy" % "2.4.0"
 
   lazy val scalatest = "org.scalatest" %% "scalatest" % "2.1.3" % "test"
   lazy val scalacheck = "org.scalacheck" %% "scalacheck" % "1.11.3" % "test"

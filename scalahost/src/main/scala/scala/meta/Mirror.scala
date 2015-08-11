@@ -1,9 +1,8 @@
 package scala.meta
-package hosts.scalac
 
 import scala.meta.semantic.{Context => SemanticContext}
 import scala.meta.taxonomic.{Context => TaxonomicContext}
-import scala.meta.internal.hosts.scalac.contexts.{Compiler => CompilerImpl}
+import scala.meta.internal.hosts.scalac.contexts.{Compiler => Compiler}
 import scala.meta.internal.hosts.scalac.contexts.{Proxy => ProxyImpl}
 
 object Mirror {
@@ -12,7 +11,7 @@ object Mirror {
     // because a mirror can theoretically be built on top of scala.reflect.runtime.universe
     // that supposedly starts up faster.
     val DefaultTaxonomy = "shadow scalahost's default taxonomy"
-    new ProxyImpl(CompilerImpl(modules: _*))
+    new ProxyImpl(Compiler(modules: _*), Domain(modules: _*))
   }
 }
 

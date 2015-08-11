@@ -13,13 +13,19 @@ object Compiler {
     apply("", modules: _*)
   }
 
-  // TODO: Theoretically, here we could just do `modules.flatMap(_.sources)`,
-  // then do `modules.flatMap(_.deps)`, then put the dependencies on the compilation classpath,
-  // convert all sources to scala.reflect, load them into the compiler and live happily ever after.
-  // However, as things currently stand, it is going to be quite wasteful performance-wise
-  // to load meta trees and convert them to reflect trees eagerly.
-  // Also, the meta => reflect converter doesn't work yet. Therefore, we will have to think of something smarter.
   def apply(options: String, modules: Module*)(implicit taxonomy: TaxonomicContext): Global = {
-    ???
+    def fail(reason: String) = throw new InfrastructureException("can't initialize a semantic proxy: " + reason)
+    val args = CommandLineParser.tokenize(options)
+    val emptySettings = new Settings(error => fail("invalid compiler options: $error"))
+    val reporter = new StoreReporter()
+    val command = new CompilerCommand(args, emptySettings)
+    val settings = command.settings
+    if (settings.classpath.isDefault) settings.classpath.value = ""
+    if (settings.usejavacp.isDefault) settings.usejavacp.value = false
+    val global = new Global(settings, reporter)
+    val run = new global.Run
+    global.phase = run.picklerPhase // NOTE: need to set to something post-typer
+    global.globalPhase = run.picklerPhase
+    global
   }
 }

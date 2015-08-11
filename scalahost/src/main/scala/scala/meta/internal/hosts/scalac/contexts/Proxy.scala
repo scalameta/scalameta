@@ -7,10 +7,10 @@ import org.scalameta.invariants._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.reflect.{classTag, ClassTag}
+import scala.meta.{Mirror => MirrorApi}
+import scala.meta.{Toolbox => ToolboxApi}
+import scala.meta.{Proxy => ProxyApi}
 import scala.meta.semantic.{Context => ScalametaSemanticContext}
-import scala.meta.hosts.scalac.{Mirror => MirrorApi}
-import scala.meta.hosts.scalac.{Toolbox => ToolboxApi}
-import scala.meta.hosts.scalac.{Proxy => ProxyApi}
 import scala.meta.internal.hosts.scalac.converters.{Api => ConverterApi}
 import scala.meta.internal.hosts.scalac.converters.mergeTrees
 import scala.tools.nsc.{Global => ScalaGlobal}
@@ -20,9 +20,9 @@ import scala.meta.internal.{ast => m}
 import scala.meta.internal.{semantic => s}
 
 @context(translateExceptions = true)
-class Proxy[G <: ScalaGlobal](val global: G) extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
-  if (!global.isPastTyper) throw new InfrastructureException("can't create a semantic context from a Global until after typer")
-  convertAndIndexCompilationUnits()
+class Proxy[G <: ScalaGlobal](val global: G, initialDomain: Domain = Domain())
+extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
+  indexCompilationUnits()
 
   // ======= SEMANTIC CONTEXT =======
 
@@ -33,11 +33,7 @@ class Proxy[G <: ScalaGlobal](val global: G) extends ConverterApi(global) with M
   }
 
   def domain: mapi.Domain = {
-    // TODO: Do something smarter, e.g.:
-    // 1) Compute dependencies from global.classPath
-    // 2) Figure out resources somehow, e.g. remember them when we create a proxy from a list of modules
-    val sources = global.currentRun.units.map(_.body.metadata("scalameta").require[m.Source]).toList
-    Domain(Module(sources, Nil, Nil))
+    currentDomain
   }
 
   private[meta] def desugar(term: mapi.Term): mapi.Term = {
@@ -170,9 +166,17 @@ class Proxy[G <: ScalaGlobal](val global: G) extends ConverterApi(global) with M
 
   // ======= INTERNAL BOOKKEEPING =======
 
-  private[meta] def convertAndIndexCompilationUnits(): Unit = {
-    val sources = global.currentRun.units.map(unit => {
-      unit.body.metadata.getOrElseUpdate("scalameta", {
+  private var currentDomain: Domain = _
+
+  private[meta] def indexCompilationUnits(): Unit = {
+    def fail(reason: String) = throw new InfrastructureException("can't initialize a semantic proxy: " + reason)
+    if (!global.isPastTyper) fail("unexpected compilation phase " + global.globalPhase)
+
+    // TODO: Do something smarter when assigning the initial domain, e.g.:
+    // 1) Compute dependencies from settings.classpath
+    // 2) Figure out resources somehow
+    val globalSources = global.currentRun.units.map(unit => {
+      val source = unit.body.metadata.getOrElseUpdate("scalameta", {
         // NOTE: We don't have to persist perfect trees, because tokens are transient anyway.
         // Therefore, if noone uses perfect trees in a compiler plugin, then we can avoid merging altogether.
         // Alternatively, if we hardcode merging into the core of scalameta/scalameta
@@ -188,10 +192,21 @@ class Proxy[G <: ScalaGlobal](val global: G) extends ConverterApi(global) with M
         val syntacticTree = unit.source.content.parse[mapi.Source].require[m.Source]
         val semanticTree = unit.body.toMtree[m.Source]
         val perfectTree = mergeTrees(syntacticTree, semanticTree)
-        indexAll(perfectTree)
+        perfectTree
       })
+      indexAll(source)
     }).toList
-    // NOTE: Resulting sources have already been indexed within this context
-    // during the time when they were being converted.
+    currentDomain = Domain(Module(globalSources, Nil, Nil))
+
+    // NOTE: This is necessary for semantic APIs to work correctly,
+    // because otherwise the underlying global isn't going to have its symtab populated.
+    // It would probably be possible to avoid this by creating completers that
+    // lazily read scala.meta trees and then lazily convert them to symtab entries,
+    // but that's way beyond our technological level at the moment.
+    val domainClasspath = initialDomain.modules.flatMap(_.binaries).map(p => new java.io.File(p.path).toURI.toURL)
+    val domainSources = initialDomain.modules.flatMap(_.sources)
+    global.extendCompilerClassPath(domainClasspath: _*)
+    domainSources.foreach(source => indexAll(source.require[m.Source]))
+    currentDomain = Domain(initialDomain.modules ++ currentDomain.modules: _*)
   }
 }

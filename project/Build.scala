@@ -27,9 +27,7 @@ object ScalahostBuild extends Build {
   lazy val scalahost = Project(
     id   = "scalahost",
     base = file("scalahost"),
-    settings = publishableSettings ++ commonDependencies ++ Seq(
-      libraryDependencies += ivy
-    ) ++ mergeDependencies
+    settings = publishableSettings ++ commonDependencies ++ mergeDependencies
   )
 
   lazy val sandbox = Project(
