@@ -1,12 +1,17 @@
 package scala.meta
 package taxonomic
 
+import java.io._
+import java.net.URI
+import java.util.zip._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
+import scala.collection.immutable.ListMap
 import scala.collection.{immutable, mutable}
 import scala.meta.taxonomic.{Context => TaxonomicContext}
 import org.apache.ivy.plugins.resolver._
 import org.scalameta.contexts._
+import org.scalameta.invariants._
 
 // NOTE: I've been thinking a lot whether I can put this class here, effectively proclaiming
 // that classpath-based modules, possibly hosted via maven, are the standard.
@@ -35,8 +40,69 @@ import org.scalameta.contexts._
   private val cache = mutable.Map[Module, ResolvedModule]()
 
   private def resolveUnmanaged(module: Artifact.Unmanaged): ResolvedModule = cache.getOrElseUpdate(module, {
-    // TODO: we'll have to implement this for the demo
-    ???
+    implicit class XtensionPath(path: Path) {
+      def explode: ListMap[String, URI] = {
+        val root = new File(path.path)
+        val result = mutable.ListMap[String, URI]()
+        def addFile(file: File): Unit = {
+          val relativePath = {
+            require(file.getPath.startsWith(root.getPath) && debug(file, root))
+            var result = file.getPath.stripPrefix(root.getPath)
+            if (result.startsWith("/")) result = result.substring(1)
+            result
+          }
+          result(relativePath) = file.toURI
+        }
+        def addZipEntry(file: File, entry: ZipEntry): Unit = {
+          var relativePath = entry.getName
+          if (relativePath.startsWith("/")) relativePath = relativePath.substring(1)
+          if (relativePath.endsWith("/")) return
+          result(relativePath) = new URI("jar:" + file.toURI.toURL + "!" + entry.getName)
+        }
+        def explore(file: File): Unit = {
+          if (file.isDirectory) {
+            val files = file.listFiles
+            if (files != null) {
+              files.filter(_.isFile).foreach(addFile)
+              files.filter(_.isDirectory).foreach(explore)
+            }
+          } else if (file.getName.endsWith(".jar")) {
+            val stream = new FileInputStream(file)
+            try {
+              val zip = new ZipInputStream(stream)
+              var result = ListMap[String, URI]()
+              var entry = zip.getNextEntry()
+              while (entry != null) {
+                addZipEntry(file, entry)
+                entry = zip.getNextEntry()
+              }
+            } finally {
+              stream.close()
+            }
+          } else {
+            addFile(file)
+          }
+        }
+        explore(root)
+        ListMap(result.toList: _*)
+      }
+    }
+    implicit class XtensionMultipath(multipath: Multipath) {
+      def explode: ListMap[String, URI] = ListMap(multipath.paths.flatMap(_.explode): _*)
+    }
+    val binaries @ (mainBinary +: depBinaries) = module.binpath.paths.toList
+    val sources = {
+      val classfiles = mainBinary.explode.filter(x => x._2.toString.endsWith(".class") && !x._2.toString.contains("$"))
+      val sourcefiles = module.sourcepath.explode.filter(_._2.toString.endsWith(".scala"))
+      if (sys.props("tasty.debug") != null) {
+        println(classfiles)
+        println(sourcefiles)
+      }
+      ???
+    }
+    val resources = Nil // TODO: we can definitely do better, e.g. by indexing all non-class files
+    val deps = depBinaries.map(bin => Artifact(Multipath(bin), module.sourcepath)).toList // TODO: better heuristic?
+    ResolvedModule(binaries, sources, resources, deps)
   })
 
   private def resolveMaven(module: Artifact.Maven): ResolvedModule = cache.getOrElseUpdate(module, {
