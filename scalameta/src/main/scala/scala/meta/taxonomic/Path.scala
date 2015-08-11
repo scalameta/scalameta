@@ -2,41 +2,31 @@ package scala.meta
 package taxonomic
 
 import java.io.File
-import java.net.URI
-import scala.{Seq => _}
 import scala.language.implicitConversions
+import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import org.scalameta.collections._
 
-final case class Path(uri: URI)
+final case class Path(path: String)
 object Path {
   implicit def stringIsPath(s: String): Path = apply(s)
   implicit def fileIsPath(file: File): Path = apply(file)
-  implicit def uriIsPath(uri: URI): Path = apply(uri)
 
-  def apply(s: String): Path = apply(new URI(s))
-  def apply(file: File): Path = apply(file.toURI)
+  def apply(file: File): Path = apply(file.toString)
 }
 
-final case class Multipath(paths: Seq[Path])
+final case class Multipath(paths: Path*)
 object Multipath {
   implicit def stringIsMultipath(s: String): Multipath = apply(s)
   implicit def fileIsMultipath(file: File): Multipath = apply(file)
-  implicit def uriIsMultipath(uri: URI): Multipath = apply(uri)
   implicit def nilIsMultipath(nil: Nil.type): Multipath = apply(Nil)
-  implicit def stringsIsMultipath(ss: Seq[String])(implicit hack1: OverloadHack1): Multipath = apply(ss)
-  implicit def filesIsMultipath(files: Seq[File])(implicit hack2: OverloadHack2): Multipath = apply(files)
-  implicit def urisIsMultipath(uris: Seq[URI])(implicit hack3: OverloadHack3): Multipath = apply(uris)
+  implicit def stringsIsMultipath(ss: Seq[String])(implicit hack1: OverloadHack1): Multipath = apply(ss: _*)
+  implicit def filesIsMultipath(files: Seq[File])(implicit hack2: OverloadHack2): Multipath = apply(files: _*)
 
-  def apply(s: String): Multipath = parse(s)
-  def apply(file: File): Multipath = parse(file.getAbsolutePath)
-  def apply(uri: URI): Multipath = parse(uri.toString)
-  def apply(nil: Nil.type): Multipath = parse("")
-  def apply(ss: Seq[String])(implicit hack1: OverloadHack1): Multipath = parse(ss.mkString(File.pathSeparator))
-  def apply(files: Seq[File])(implicit hack2: OverloadHack2): Multipath = parse(files.map(_.getAbsolutePath).mkString(File.pathSeparator))
-  def apply(uris: Seq[URI])(implicit hack3: OverloadHack3): Multipath = parse(uris.map(_.toString).mkString(File.pathSeparator))
-
-  private def parse(s: String): Multipath = {
-    ???
-  }
+  def apply(s: String): Multipath = Multipath(s.split(File.pathSeparatorChar): _*)
+  def apply(file: File): Multipath = Multipath(Seq(Path(file)): _*)
+  def apply(): Multipath = Multipath(Seq[Path](): _*)
+  def apply(nil: Nil.type): Multipath = Multipath(Seq[Path](): _*)
+  def apply(ss: String*)(implicit hack1: OverloadHack1): Multipath = Multipath(ss.map(Path.apply): _*)
+  def apply(files: File*)(implicit hack2: OverloadHack2): Multipath = Multipath(files.map(Path.apply): _*)
 }
