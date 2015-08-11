@@ -965,7 +965,6 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     // TODO: I have a feeling that we no longer need PatternContextSensitive
     // now that we have Pat.Type separate from Type
     def patternTyp() = {
-      val isBackquoted = parser.isBackquoted
       def convert(tpe: Type): Pat.Type = {
         tpe match {
           case tpe @ Type.Name(value) if value(0).isLower => atPos(tpe, tpe)(Pat.Var.Type(tpe))
@@ -975,7 +974,6 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       }
       def loop(tpe: Type): Pat.Type = tpe match {
         case q: Type.Quasi => q.become[Pat.Type.Quasi]
-        case tpe: Type.Name if isVarPattern(tpe, isBackquoted) => Pat.Var.Type(tpe)
         case tpe: Type.Name => tpe
         case tpe: Type.Select => tpe
         case Type.Project(qual, name) => atPos(tpe, tpe)(Pat.Type.Project(loop(qual), name))
@@ -1004,16 +1002,6 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         }
       }
       loop(t)
-    }
-  }
-
-  def isVarPattern(r: Ref, isBackquoted: Boolean) = {
-    def isValidPatVar(value: String, isBackquoted: Boolean) = !isBackquoted && value.head.isLetter
-    r match {
-      case _: Term.Name.Quasi | _: Type.Name.Quasi => false
-      case Term.Name(value) => isValidPatVar(value, isBackquoted) && value.head.isLower
-      case Type.Name(value) => isValidPatVar(value, isBackquoted) && value.head.isLower
-      case _ => false
     }
   }
 
@@ -2006,7 +1994,11 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       case _: Ident | _: `this` | _: Unquote =>
         val isBackquoted = parser.isBackquoted
         val sid = stableId()
-        val isVarPattern = parser.isVarPattern(sid, isBackquoted)
+        val isVarPattern = sid match {
+          case _: Term.Name.Quasi => false
+          case Term.Name(value) => !isBackquoted && value.head.isLetter && value.head.isLower
+          case _ => false
+        }
         if (token.is[NumericLiteral]) {
           sid match {
             case Term.Name("-") =>
