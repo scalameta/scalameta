@@ -3,12 +3,17 @@ package taxonomic
 
 import java.io._
 import java.net.URI
+import java.nio.charset.Charset
+import java.security.MessageDigest
 import java.util.zip._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.collection.immutable.ListMap
 import scala.collection.{immutable, mutable}
+import scala.meta.internal.{ast => m}
 import scala.meta.taxonomic.{Context => TaxonomicContext}
+import scala.tools.asm._
+import scala.meta.internal.tasty._
 import org.apache.ivy.plugins.resolver._
 import org.scalameta.contexts._
 import org.scalameta.invariants._
@@ -40,6 +45,7 @@ import org.scalameta.invariants._
   private val cache = mutable.Map[Module, ResolvedModule]()
 
   private def resolveUnmanaged(module: Artifact.Unmanaged): ResolvedModule = cache.getOrElseUpdate(module, {
+    def failResolve(message: String, ex: Option[Throwable] = None) = throw new ModuleException(module, message, ex)
     implicit class XtensionPath(path: Path) {
       def explode: ListMap[String, URI] = {
         val root = new File(path.path)
@@ -90,18 +96,102 @@ import org.scalameta.invariants._
     implicit class XtensionMultipath(multipath: Multipath) {
       def explode: ListMap[String, URI] = ListMap(multipath.paths.flatMap(_.explode): _*)
     }
-    val binaries @ (mainBinary +: depBinaries) = module.binpath.paths.toList
+    val binaries = module.binpath.paths.toList
     val sources = {
-      val classfiles = mainBinary.explode.filter(x => x._2.toString.endsWith(".class") && !x._2.toString.contains("$"))
+      val binfiles = module.binpath.explode.filter(x => x._2.toString.endsWith(".class") && !x._2.toString.contains("$"))
       val sourcefiles = module.sourcepath.explode.filter(_._2.toString.endsWith(".scala"))
       if (sys.props("tasty.debug") != null) {
-        println(classfiles)
+        println(binfiles)
         println(sourcefiles)
       }
-      ???
+      sourcefiles.map({ case (_, sourceuri) =>
+        // NOTE: sy- and se- prefixes mean the same as in MergeTrees.scala, namely "syntactic" and "semantic".
+        val charset = Charset.forName("UTF-8")
+        val sourcefile = new File(sourceuri.getPath)
+        val content = scala.io.Source.fromFile(sourcefile)(scala.io.Codec(charset)).mkString
+        val sha1 = MessageDigest.getInstance("SHA-1")
+        sha1.reset()
+        sha1.update(content.getBytes("UTF-8"))
+        val sydigest = sha1.digest().map(b => "%2X".format(b)).mkString
+
+        val sysource = sourcefile.parse[Source]
+        def toplevelClasses(tree: Tree): List[String] = {
+          def loop(prefix: String, tree: Tree): List[String] = tree match {
+            case m.Source(stats) => stats.flatMap(stat => loop(prefix, stat))
+            case m.Pkg(ref, stats) => stats.flatMap(stat => loop(prefix + "." + ref.toString.replace(".", "/"), stat))
+            case m.Defn.Class(_, m.Type.Name(value), _, _, _) => List(prefix + "." + value)
+            case m.Defn.Trait(_, m.Type.Name(value), _, _, _) => List(prefix + "." + value)
+            case m.Defn.Object(_, m.Term.Name(value), _, _) => List(prefix + "." + value + "$")
+            case m.Pkg.Object(_, m.Term.Name(value), _, _) => List(prefix + "." + value + "/package$")
+            case _ => Nil
+          }
+          loop("", tree).map(_.stripPrefix("."))
+        }
+        val expectedrelatives = toplevelClasses(sysource).map(_.replace(".", "/") + ".class")
+        val binuris = expectedrelatives.flatMap(binfiles.get)
+        val sesources = binuris.flatMap(binuri => {
+          val conn = binuri.toURL.openConnection
+          val in = conn.getInputStream
+          try {
+            var sesource: Source = _
+            val classReader = new ClassReader(in)
+            classReader.accept(new ClassVisitor(Opcodes.ASM4) {
+              override def visitAttribute(attr: Attribute) {
+                if (attr.`type` == "TASTY") {
+                  val valueField = attr.getClass.getDeclaredField("value")
+                  valueField.setAccessible(true)
+                  val value = valueField.get(attr).asInstanceOf[Array[Byte]]
+                  val (source, sedigest) = {
+                    try Source.fromTasty(value)
+                    catch { case ex: Exception => failResolve(s"deserialization from $binuri was unsuccessful") }
+                  }
+                  if (sydigest != sedigest) failResolve("source digests of $sourceuri and $binuri are different")
+                  sesource = source
+                }
+                super.visitAttribute(attr)
+              }
+            }, 0)
+            if (sesource != null) Some(sesource) else None
+          } finally {
+            in.close()
+          }
+        })
+
+        def failCorrelate(message: String) = failResolve(s"$message when correlating $sourceuri and $binuris")
+        val systats = sysource.stats
+        val sestatss = sesources.map(_.stats)
+        var matches = mutable.AnyRefMap[Tree, Tree]()
+        val mestats = systats.map(sy => {
+          def correlatePkg(sy: m.Pkg, sess: Seq[Seq[Stat]]): m.Pkg = {
+            val ses1 = sess.flatMap(_.collect{ case se: m.Pkg if sy.name.toString == se.name.toString => se })
+            ses1.foreach(se1 => matches(se1) = null)
+            apply(sy, ses1)
+          }
+          def correlateLeaf[T <: m.Member](sy: T, sess: Seq[Seq[Stat]], fn: PartialFunction[Tree, Boolean]): T = {
+            val ses1 = sess.flatMap(_.collect{ case tree if fn.lift(tree).getOrElse(false) => tree })
+            ses1.foreach(se1 => matches(se1) = null)
+            def message(adjective: String) = s"$adjective syntactic ${sy.productPrefix} named ${sy.name} was found"
+            if (ses1.isEmpty) failCorrelate(message("undermatched"))
+            else if (ses1.length > 1) failCorrelate(message("overmatched"))
+            else apply(sy, se1)
+          }
+          sy match {
+            case sy: m.Pkg => correlatePackage(sy, sestatss)
+            case sy: m.Defn.Class => correlateLeaf(sy, sestatss, { case se: m.Defn.Class => sy.name.toString == se.name.toString })
+            case sy: m.Defn.Trait => correlateLeaf(sy, sestatss, { case se: m.Defn.Trait => sy.name.toString == se.name.toString })
+            case sy: m.Defn.Object => correlateLeaf(sy, sestatss, { case se: m.Defn.Object => sy.name.toString == se.name.toString })
+            case sy: m.Pkg.Object => correlateLeaf(sy, sestatss, { case se: m.Pkg.Object => sy.name.toString == se.name.toString })
+          }
+        })
+        if (matches.size < sestatss.flatten.length) failCorrelate("undermatched semantic definitions were found")
+        sysource.copy(stats = mestats)
+      })
     }
     val resources = Nil // TODO: we can definitely do better, e.g. by indexing all non-class files
-    val deps = depBinaries.map(bin => Artifact(Multipath(bin), module.sourcepath)).toList // TODO: better heuristic?
+    val deps = { // TODO: better heuristic?
+      if (module.sourcepath.paths.isEmpty) Nil
+      else module.binpath.paths.map(p => Artifact(Multipath(p), "")).toList
+    }
     ResolvedModule(binaries, sources, resources, deps)
   })
 

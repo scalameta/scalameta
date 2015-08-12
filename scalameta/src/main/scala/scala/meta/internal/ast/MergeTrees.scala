@@ -13,7 +13,6 @@ import org.scalameta.collections._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
 import scala.meta.internal.{ast => m}
-import scala.meta.dialects.Scala211
 
 object mergeTrees {
   // NOTE: "sy-" stands for "syntactic", "se-" stands for "semantic", "me-" stands for "merged".s

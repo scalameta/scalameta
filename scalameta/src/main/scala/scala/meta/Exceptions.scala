@@ -22,6 +22,11 @@ extends Exception(message, cause.orNull) with ScalametaException {
   override def toString = super.toString
 }
 
+@data class ModuleException(module: Module, message: String, cause: Option[Throwable] = None)
+extends Exception(s"failed to load $module because $message", cause.orNull) with ScalametaException {
+  override def toString = super.toString
+}
+
 @data class AbortException(pos: Option[Position], message: String, cause: Option[Throwable])
 extends Exception(message, cause.orNull) with ScalametaException {
   def this(message: String) = this(None, message, None)

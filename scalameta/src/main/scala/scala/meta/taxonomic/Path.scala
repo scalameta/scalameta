@@ -16,7 +16,7 @@ object Path {
   def apply(file: File): Path = apply(file.toString)
 }
 
-@data class Multipath(paths: Path*) { override def toString = "Multipath(\"" + paths.map(_.path).mkString(":") + "\")" }
+@data class Multipath(paths: Path*) { override def toString = "Multipath(\"" + paths.map(_.path).mkString(File.pathSeparator) + "\")" }
 object Multipath {
   implicit def stringIsMultipath(s: String): Multipath = apply(s)
   implicit def fileIsMultipath(file: File): Multipath = apply(file)
