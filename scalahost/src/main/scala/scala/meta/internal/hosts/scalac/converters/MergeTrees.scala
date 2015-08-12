@@ -67,12 +67,14 @@ object mergeTrees {
             // ============ DEFNS ============
 
             case (sy: m.Defn.Def, se: m.Defn.Def) =>
+              if (sy.name.toString != se.name.toString) failCorrelate(sy, se, "incompatible methods")
               val medecltpe = (sy.decltpe, se.decltpe) match {
                 case (None, Some(se)) => None
                 case (sy, se) => loop(sy, se)
               }
               sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), loop(sy.tparams, se.tparams), loop(sy.paramss, se.paramss), medecltpe, loop(sy.body, se.body))
             case (sy: m.Defn.Class, se: m.Defn.Class) =>
+              if (sy.name.toString != se.name.toString) failCorrelate(sy, se, "incompatible classes")
               sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), loop(sy.tparams, se.tparams), loop(sy.ctor, se.ctor), loop(sy.templ, se.templ))
 
             // ============ PKGS ============
@@ -80,6 +82,7 @@ object mergeTrees {
             case (sy: m.Source, se: m.Source) =>
               sy.copy(loop(sy.stats, se.stats))
             case (sy: m.Pkg, se: m.Pkg) =>
+              if (sy.ref.toString != se.ref.toString) failCorrelate(sy, se, "incompatible packages")
               sy.copy(loop(sy.ref, se.ref), loop(sy.stats, se.stats))
 
             // ============ CTORS ============
@@ -108,7 +111,7 @@ object mergeTrees {
               //    * Prepend tpe.firstParent to the list, otherwise
               // 5) If a parent is applied to a nullary argument list, make it empty argument list.
               def mergeParents(sys: Seq[m.Term], ses: Seq[m.Term]): Seq[m.Term] = {
-                if (sys.length != ses.length) fails(sy, se, sys, ses)
+                if (sys.length != ses.length) failCorrelate(sy, se, sys, ses)
                 sys.zip(ses).map({
                   case (sy, m.Term.Apply(se, Nil)) => loop(sy, se)
                   case (sy, se) => loop(sy, se)
@@ -132,8 +135,7 @@ object mergeTrees {
             // ============ ODDS & ENDS ============
 
             case _ =>
-              val details = s"${sy.show[Structure]}$EOL${se.show[Structure]}"
-              fail(sy, se, s"encountered unexpected trees during syntactic + semantic merge:$EOL$details")
+              failCorrelate(sy, se, "unexpected trees")
           }
 
           val tokenizedMetree = expandedMetree.withTokens(sy.tokens)
@@ -168,47 +170,37 @@ object mergeTrees {
             println("=================================")
           }
           // TODO: fix duplication wrt ToMtree.scala
-          if (classTag[T].runtimeClass.isAssignableFrom(metree.getClass)) {
-            metree.asInstanceOf[T]
-          } else {
-            var expected = classTag[T].runtimeClass.getName
-            expected = expected.stripPrefix("scala.meta.internal.ast.").stripPrefix("scala.meta.")
-            expected = expected.stripSuffix("$Impl")
-            expected = expected.replace("$", ".")
-            val actual = metree.productPrefix
-            val summary = s"expected = $expected, actual = $actual"
-            val details = metree.show[Structure]
-            fail(sy, se, s"obtained an unexpected result during syntactic + semantic merge: $summary$EOL$details")
-          }
+          if (classTag[T].runtimeClass.isAssignableFrom(metree.getClass)) metree.asInstanceOf[T]
+          else failExpected(sy, se, classTag[T].runtimeClass, metree)
         }
       }
 
       def apply[T <: Tree : ClassTag](syopt: Option[T], seopt: Option[Tree])(implicit hack1: OverloadHack1): Option[T] = (syopt, seopt) match {
         case (Some(sy), Some(se)) => Some(loop(sy, se))
         case (None, None) => None
-        case _ => fails(sy, se, syopt.toList, seopt.toList)
+        case _ => failCorrelate(sy, se, syopt.toList, seopt.toList)
       }
 
       def apply[T <: Tree : ClassTag](sysopt: Option[Seq[T]], sesopt: Option[Seq[Tree]])(implicit hack2: OverloadHack2): Option[Seq[T]] = (sysopt, sesopt) match {
         case (Some(sys), Some(ses)) => Some(loop(sys, ses))
         case (None, None) => None
-        case _ => fails(sy, se, sysopt.toList, sesopt.toList)
+        case _ => failCorrelate(sy, se, sysopt.toList, sesopt.toList)
       }
 
       def apply[T <: Tree : ClassTag](sys: Seq[T], ses: Seq[Tree])(implicit hack1: OverloadHack1): Seq[T] = {
-        if (sys.length != ses.length) fails(sy, se, sys, ses)
+        if (sys.length != ses.length) failCorrelate(sy, se, sys, ses)
         sys.zip(ses).map({ case (sy, se) => loop(sy, se) })
       }
 
       def apply[T <: Tree : ClassTag](syss: Seq[Seq[T]], sess: Seq[Seq[Tree]])(implicit hack2: OverloadHack2): Seq[Seq[T]] = {
-        if (syss.length != sess.length) fails(sy, se, syss, sess)
+        if (syss.length != sess.length) failCorrelate(sy, se, syss, sess)
         syss.zip(sess).map({ case (sys, ses) => loop(sys, ses) })
       }
     }
     loop(sy, se)
   }
 
-  private def fail(syculprit: Tree, seculprit: Tree, diagnostics: String): Nothing = {
+  private def fail(sy: Tree, se: Tree, diagnostics: String): Nothing = {
     def traceback(sy: Tree, se: Tree): List[String] = {
       def summary(tree: Tree): String = {
         val prefix = tree.productPrefix
@@ -224,11 +216,27 @@ object mergeTrees {
       }
       s"<-${summary(sy)}$EOL->${summary(se)}" +: tail
     }
-    throw new ConvertException(syculprit, s"$diagnostics$EOL${traceback(syculprit, seculprit).mkString(EOL)}")
+    throw new ConvertException(sy, s"$diagnostics$EOL${traceback(sy, se).mkString(EOL)}")
   }
 
-  private def fails(syparent: Tree, separent: Tree, syculprits: Seq[_], seculprits: Seq[_]): Nothing = {
-    val summary = s"syntactic = ${syculprits.length} element(s), semantic = ${seculprits.length} element(s)"
+  private def failCorrelate(sy: Tree, se: Tree, diagnostics: String): Nothing = {
+    val details = s"${sy.show[Structure]}$EOL${se.show[Structure]}"
+    fail(sy, se, s"encountered $diagnostics during syntactic + semantic merge:$EOL$details")
+  }
+
+  private def failCorrelate(syparent: Tree, separent: Tree, sys: Seq[_], ses: Seq[_]): Nothing = {
+    val summary = s"syntactic = ${sys.length} element(s), semantic = ${ses.length} element(s)"
     fail(syparent, separent, s"encountered incompatible collections during syntactic + semantic merge: $summary")
+  }
+
+  private def failExpected(sy: Tree, se: Tree, expected: Class[_], actual: Tree): Nothing = {
+    var expectedAbbrev = expected.getName
+    expectedAbbrev = expectedAbbrev.stripPrefix("scala.meta.internal.ast.").stripPrefix("scala.meta.")
+    expectedAbbrev = expectedAbbrev.stripSuffix("$Impl")
+    expectedAbbrev = expectedAbbrev.replace("$", ".")
+    val actualAbbrev = actual.productPrefix
+    val summary = s"expected = $expectedAbbrev, actual = $actualAbbrev"
+    val details = actual.show[Structure]
+    fail(sy, se, s"obtained an unexpected result during syntactic + semantic merge: $summary$EOL$details")
   }
 }
