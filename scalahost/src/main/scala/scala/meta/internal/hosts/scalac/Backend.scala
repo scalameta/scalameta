@@ -10,8 +10,8 @@ import scala.tools.nsc.{Global => NscGlobal}
 import scala.tools.asm
 import scala.tools.asm.tree.ClassNode
 import scala.tools.nsc.backend.jvm.opt.LocalOpt
-import scala.meta.internal.hosts.scalac.tasty._
 import scala.tools.nsc.backend.jvm._
+import scala.meta.internal.tasty._
 import scala.meta.internal.hosts.scalac.{PluginBase => ScalahostPlugin}
 import scala.meta.internal.hosts.scalac.reflect._
 import scala.meta.internal.{ast => m}
