@@ -12,7 +12,7 @@ import scala.meta.{Toolbox => ToolboxApi}
 import scala.meta.{Proxy => ProxyApi}
 import scala.meta.semantic.{Context => ScalametaSemanticContext}
 import scala.meta.internal.hosts.scalac.converters.{Api => ConverterApi}
-import scala.meta.internal.hosts.scalac.converters.mergeTrees
+import scala.meta.internal.ast.mergeTrees
 import scala.tools.nsc.{Global => ScalaGlobal}
 import scala.meta.dialects.Scala211
 import scala.{meta => mapi}
