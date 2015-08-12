@@ -4,6 +4,18 @@ import org.scalameta.tests._
 class ErrorSuite extends FunSuite {
   implicit val errorsWithPositionsPlease = Style.WithPositions
 
+  test("val q\"type $name[$A] = $B\"") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val q"type $name[$X] = $Y" = q"type List[+A] = List[A]"
+    """) === """
+      |<macro>:4: not found: value X
+      |      val q"type $name[$X] = $Y" = q"type List[+A] = List[A]"
+      |                        ^
+    """.trim.stripMargin)
+  }
+
   test("q\"foo + class\"") {
     assert(typecheckError("""
       import scala.meta._
@@ -385,6 +397,18 @@ class ErrorSuite extends FunSuite {
       |<macro>:6: can't unquote a name here, use a variable pattern instead
       |      p"$pat: $ptpe"
       |        ^
+    """.trim.stripMargin)
+  }
+
+  test("p\"case $X: T =>\"") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val p"case $X: T => " = p"case x: T =>"
+    """) === """
+      |<macro>:4: not found: value X
+      |      val p"case $X: T => " = p"case x: T =>"
+      |                  ^
     """.trim.stripMargin)
   }
 

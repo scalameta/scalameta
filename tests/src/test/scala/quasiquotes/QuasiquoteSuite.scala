@@ -4,13 +4,13 @@ import scala.meta.dialects.Scala211
 
 class QuasiquoteSuite extends FunSuite {
   test("rank-0 liftables") {
-    assert(q"foo[${42}]".show[Syntax] === "foo[42]")
-    assert(q"${42}".show[Syntax] === "42")
+    assert(q"foo[${42}]".show[Structure] === "Term.ApplyType(Term.Name(\"foo\"), List(Lit.Int(42)))")
+    assert(q"${42}".show[Structure] === "Lit.Int(42)")
   }
 
   test("rank-1 liftables") {
     implicit def custom[U >: List[Term]]: Lift[List[Int], U] = Lift(_.map(x => q"$x"))
-    assert(q"foo(..${List(1, 2, 3)})".show[Syntax] === "foo(1, 2, 3)")
+    assert(q"foo(..${List(1, 2, 3)})".show[Structure] === "Term.Apply(Term.Name(\"foo\"), List(Lit.Int(1), Lit.Int(2), Lit.Int(3)))")
   }
 
   test("1 Pat.Type or Type.Name") {
@@ -28,27 +28,47 @@ class QuasiquoteSuite extends FunSuite {
     assert(tpe.show[Structure] === "Type.Name(\"t\")")
   }
 
-  test("p\"case $x: T => \"") {
-    val x = p"x"
-    assert(p"case $x: T => ".show[Syntax] === "case x: T =>")
+  test("1 p\"case $x: T => \"") {
+    val p"case $x: T => " = p"case x: T =>"
+    assert(x.show[Structure] === "Pat.Var.Term(Term.Name(\"x\"))")
   }
 
-  test("p\"case $x @ $y => \"") {
+  test("2 p\"case $x: T => \"") {
+    val x = p"x"
+    assert(p"case $x: T => ".show[Structure] === "Case(Pat.Typed(Pat.Var.Term(Term.Name(\"x\")), Type.Name(\"T\")), None, Term.Block(Nil))")
+  }
+
+  test("1 p\"case $x @ $y => \"") {
+    val p"case $x @ $y => " = p"case x @ List(1, 2, 3) =>"
+    assert(x.show[Structure] === "Pat.Var.Term(Term.Name(\"x\"))")
+    assert(y.show[Structure] === "Pat.Extract(Term.Name(\"List\"), Nil, List(Lit.Int(1), Lit.Int(2), Lit.Int(3)))")
+  }
+
+  test("2 p\"case $x @ $y => \"") {
     val x = p"x"
     val y = p"List(1, 2, 3)"
-    assert(p"case $x @ $y => ".show[Syntax] === "case x @ List(1, 2, 3) =>")
+    assert(p"case $x @ $y => ".show[Structure] === "Case(Pat.Bind(Pat.Var.Term(Term.Name(\"x\")), Pat.Extract(Term.Name(\"List\"), Nil, List(Lit.Int(1), Lit.Int(2), Lit.Int(3)))), None, Term.Block(Nil))")
   }
 
-  test("q\"foo($term, ..$terms, $term)\"") {
+  test("1 q\"foo($term, ..$terms, $term)\"") {
+    val q"foo($term1, ..$terms, $term2)" = q"foo(x, y, z, q)"
+    assert(term1.show[Structure] === "Term.Name(\"x\")")
+    assert(terms.toString === "List(y, z)")
+    assert(terms(0).show[Structure] === "Term.Name(\"y\")")
+    assert(terms(1).show[Structure] === "Term.Name(\"z\")")
+    assert(term2.show[Structure] === "Term.Name(\"q\")")
+  }
+
+  test("2 q\"foo($term, ..$terms, $term)\"") {
     val term = q"x"
     val terms = List(q"y", q"z")
-    assert(q"foo($term, ..$terms, $term)".show[Syntax] === "foo(x, y, z, x)")
+    assert(q"foo($term, ..$terms, $term)".show[Structure] === "Term.Apply(Term.Name(\"foo\"), List(Term.Name(\"x\"), Term.Name(\"y\"), Term.Name(\"z\"), Term.Name(\"x\")))")
   }
 
   test("case q\"$foo(${x: Int})\"") {
     q"foo(42)" match {
       case q"$foo(${x: Int})" =>
-        assert(foo.show[Syntax] === "foo")
+        assert(foo.show[Structure] === "Term.Name(\"foo\")")
         assert(x == 42)
     }
   }
@@ -57,293 +77,503 @@ class QuasiquoteSuite extends FunSuite {
     q"foo(1, 2, 3)" match {
       case q"$_(${x: Int}, ..$y, $z)" =>
         assert(x === 1)
-        assert(y.map(_.show[Syntax]) === List("2"))
-        assert(z.show[Syntax] === "3")
+        assert(y.map(_.show[Structure]) === List("Lit.Int(2)"))
+        assert(z.show[Structure] === "Lit.Int(3)")
     }
   }
 
-  test("q\"foo($x, ..$ys, $z, ..$ts)\"") {
+  test("1 q\"foo($x, ..$ys, $z)\"") {
+    val q"foo($x, ..$ys, $z)" = q"foo(1, 2, 3)"
+    assert(x.show[Structure] === "Lit.Int(1)")
+    assert(ys.toString === "List(2)")
+    assert(ys(0).show[Structure] === "Lit.Int(2)")
+    assert(z.show[Structure] === "Lit.Int(3)")
+  }
+
+  test("2 q\"foo($x, ..$ys, $z, ..$ts)\"") {
     val x = q"1"
     val ys = List(q"2")
     val z = q"3"
     val ts = Nil
-    assert(q"foo($x, ..$ys, $z, ..$ts)".show[Syntax] === "foo(1, 2, 3)")
+    assert(q"foo($x, ..$ys, $z, ..$ts)".show[Structure] === "Term.Apply(Term.Name(\"foo\"), List(Lit.Int(1), Lit.Int(2), Lit.Int(3)))")
   }
 
-  test("val q\"type $name[$_] = $_\"") {
-    val member = q"type List[+A] = List[A]"
-    val q"type $name[$_] = $_" = member
-    assert(name.show[Syntax] === "List")
+  test("1 val q\"type $name[$_] = $_\"") {
+    val q"type $name[$_] = $_" = q"type List[+A] = List[A]"
+    assert(name.show[Structure] === "Type.Name(\"List\")")
   }
 
-  test("val q\"def x = ${body: Int}\"") {
+  test("2 val q\"type $name[$a] = $b\"") {
+    val q"type $name[$a] = $b" = q"type List[+A] = List[A]"
+    assert(name.show[Structure] === "Type.Name(\"List\")")
+    assert(a.show[Structure] === "Type.Param(List(Mod.Covariant()), Type.Name(\"A\"), Nil, Type.Bounds(None, None), Nil, Nil)")
+    assert(b.show[Structure] === "Type.Apply(Type.Name(\"List\"), List(Type.Name(\"A\")))")
+  }
+
+  test("3 val q\"type $name[$a] = $b\"") {
+    val name = t"List"
+    val a = tparam"+A"
+    val b = t"B"
+    assert(q"type $name[$a] = $b".show[Structure] === "Defn.Type(Nil, Type.Name(\"List\"), List(Type.Param(List(Mod.Covariant()), Type.Name(\"A\"), Nil, Type.Bounds(None, None), Nil, Nil)), Type.Name(\"B\"))")
+  }
+
+  test("1 val q\"def x = ${body: Int}\"") {
     val q"def x = ${body: Int}" = q"def x = 42"
     assert(body === 42)
   }
 
-  test("q\"$qname.this\"") {
+  test("2 val q\"def x = ${body: Int}\"") {
+    val body = 42
+    assert(q"def x = ${body: Int}".show[Structure] === "Defn.Def(Nil, Term.Name(\"x\"), Nil, Nil, None, Lit.Int(42))")
+  }
+
+  test("1 q\"$qname.this\"") {
     val q"$qname.this.$x" = q"QuasiquoteSuite.this.x"
-    assert(qname.show[Syntax] === "QuasiquoteSuite")
-    assert(x.show[Syntax] === "x")
-    assert(q"$qname.this".show[Syntax] === "QuasiquoteSuite.this")
+    assert(qname.show[Structure] === "Name.Indeterminate(\"QuasiquoteSuite\")")
+    assert(x.show[Structure] === "Term.Name(\"x\")")
   }
 
-  test("q\"$qname.super[$qname]\"") {
+  test("2 q\"$qname.this\"") {
+    val qname = q"A"
+    val x = q"B"
+    // inconsistency with the test above planned, since Name.Indeterminate can't be constructed directly
+    assert(q"$qname.this.$x".show[Structure] === "Term.Select(Term.This(Term.Name(\"A\")), Term.Name(\"B\"))")
+  }
+
+  test("1 q\"$qname.super[$qname]\"") {
     val q"$clazz.super[$tpe].$id" = q"A.super[B].x"
-    assert(clazz.show[Syntax] === "A")
-    assert(tpe.show[Syntax] === "B")
-    assert(id.show[Syntax] === "x")
-    assert(q"$clazz.super[$tpe].m".show[Syntax] === "A.super[B].m")
+    assert(clazz.show[Structure] === "Name.Indeterminate(\"A\")")
+    assert(tpe.show[Structure] === "Name.Indeterminate(\"B\")")
+    assert(id.show[Structure] === "Term.Name(\"x\")")
   }
 
-  test("q\"$expr.$name\"") {
+  test("2 q\"$qname.super[$qname]\"") {
+    val clazz = q"A"
+    val tpe = t"B"
+    val id = q"x"
+    // inconsistency with the test above planned, since Name.Indeterminate can't be constructed directly
+    assert(q"$clazz.super[$tpe].m".show[Structure] === "Term.Select(Term.Super(Term.Name(\"A\"), Type.Name(\"B\")), Term.Name(\"m\"))")
+  }
+
+  test("1 q\"$expr.$name\"") {
+    val q"$expr.$name" = q"foo.bar"
+    assert(expr.show[Structure] === "Term.Name(\"foo\")")
+    assert(name.show[Structure] === "Term.Name(\"bar\")")
+  }
+
+  test("2 q\"$expr.$name\"") {
     val expr = q"foo"
     val name = q"bar"
-    assert(q"$expr.$name".show[Syntax] === "foo.bar")
+    assert(q"$expr.$name".show[Structure] === "Term.Select(Term.Name(\"foo\"), Term.Name(\"bar\"))")
   }
 
-  test("q\"$expr($name)\"") {
+  test("1 q\"$expr($name)\"") {
+    val q"$expr($name)" = q"foo(bar)"
+    assert(expr.show[Structure] === "Term.Name(\"foo\")")
+    assert(name.show[Structure] === "Term.Name(\"bar\")")
+  }
+
+  test("2 q\"$expr($name)\"") {
     val expr = q"foo"
     val name = q"bar"
-    assert(q"$expr($name)".show[Syntax] === "foo(bar)")
+    assert(q"$expr($name)".show[Structure] === "Term.Apply(Term.Name(\"foo\"), List(Term.Name(\"bar\")))")
   }
 
-  test("q\"foo[..$tpes]\"") {
+  test("1 q\"foo[..$tpes]\"") {
+    val q"foo[..$types]" = q"foo[T, U]"
+    assert(types.toString === "List(T, U)")
+    assert(types(0).show[Structure] === "Type.Name(\"T\")")
+    assert(types(1).show[Structure] === "Type.Name(\"U\")")
+  }
+
+  test("2 q\"foo[..$tpes]\"") {
     val types = List(t"T", t"U")
-    assert(q"foo[..$types]".show[Syntax] === "foo[T, U]")
+    assert(q"foo[..$types]".show[Structure] === "Term.ApplyType(Term.Name(\"foo\"), List(Type.Name(\"T\"), Type.Name(\"U\")))")
   }
 
-  test("q\"$expr $name[..$tpes] (..$aexprs)\"") {
+  test("1 q\"$expr $name[..$tpes] (..$aexprs)\"") {
+    val q"$expr $name[..$tpes] (..$aexprs)" = q"x method[T, U] (1, b)"
+    assert(expr.show[Structure] === "Term.Name(\"x\")")
+    assert(name.show[Structure] === "Term.Name(\"method\")")
+    assert(tpes.toString === "List(T, U)")
+    assert(tpes(0).show[Structure] === "Type.Name(\"T\")")
+    assert(tpes(1).show[Structure] === "Type.Name(\"U\")")
+    assert(aexprs.toString === "List(1, b)")
+    assert(aexprs(0).show[Structure] === "Lit.Int(1)")
+    assert(aexprs(1).show[Structure] === "Term.Name(\"b\")")
+  }
+
+  test("2 q\"$expr $name[..$tpes] (..$aexprs)\"") {
     val expr = q"x"
     val name = q"method"
     val tpes = List(t"T", t"U")
     val aexprs = List(q"1", q"b")
-    assert(q"$expr $name[..$tpes] (..$aexprs)".show[Structure] // show[Syntax] does not show types
-      === """Term.ApplyInfix(Term.Name("x"), Term.Name("method"), List(Type.Name("T"), Type.Name("U")), List(Lit.Int(1), Term.Name("b")))""")
+    assert(q"$expr $name[..$tpes] (..$aexprs)".show[Structure] === """Term.ApplyInfix(Term.Name("x"), Term.Name("method"), List(Type.Name("T"), Type.Name("U")), List(Lit.Int(1), Term.Name("b")))""")
   }
 
-  test("q\"$a $b $c\"") {
+  test("1 q\"$a $b $c\"") {
+    val q"$a $b $c" = q"x y z"
+    assert(a.show[Structure] === "Term.Name(\"x\")")
+    assert(b.show[Structure] === "Term.Name(\"y\")")
+    assert(c.show[Structure] === "Term.Name(\"z\")")
+  }
+
+  test("2 q\"$a $b $c\"") {
     val a = q"x"
     val b = q"y"
     val c = q"z"
-    assert(q"$a $b $c".show[Syntax] === "x y z")
+    assert(q"$a $b $c".show[Structure] === "Term.ApplyInfix(Term.Name(\"x\"), Term.Name(\"y\"), Nil, List(Term.Name(\"z\")))")
   }
 
-  test("q\"!$expr\"") {
+  test("1 q\"!$expr\"") {
     val q"!$x" = q"!foo"
-    assert(x.show[Syntax] === "foo")
+    assert(x.show[Structure] === "Term.Name(\"foo\")")
   }
 
-  test("q\"~$expr\"") {
+  test("2 q\"!$expr\"") {
+    val x = q"foo"
+    assert(q"!$x".show[Structure] === "Term.ApplyUnary(Term.Name(\"!\"), Term.Name(\"foo\"))")
+  }
+
+  test("1 q\"~$expr\"") {
+    val q"~$x" = q"~foo"
+    assert(x.show[Structure] === "Term.Name(\"foo\")")
+  }
+
+  test("2 q\"~$expr\"") {
     val expr = q"foo"
-    assert(q"~$expr".show[Syntax] === "~foo")
+    assert(q"~$expr".show[Structure] === "Term.ApplyUnary(Term.Name(\"~\"), Term.Name(\"foo\"))")
   }
 
-  test("q\"-$expr\"") {
+  test("1 q\"-$expr\"") {
     val q"-$x" = q"-foo"
-    assert(x.show[Syntax] === "foo")
+    assert(x.show[Structure] === "Term.Name(\"foo\")")
   }
 
-  test("q\"+$expr\"") {
+  test("2 q\"-$expr\"") {
+    val x = q"foo"
+    assert(q"-$x".show[Structure] === "Term.ApplyUnary(Term.Name(\"-\"), Term.Name(\"foo\"))")
+  }
+
+  test("1 q\"+$expr\"") {
     val q"+$x" = q"+foo"
-    assert(x.show[Syntax] === "foo")
+    assert(x.show[Structure] === "Term.Name(\"foo\")")
   }
 
-  test("q\"$ref = $expr\"") {
+  test("2 q\"+$expr\"") {
+    val x = q"foo"
+    assert(q"+$x".show[Structure] === "Term.ApplyUnary(Term.Name(\"+\"), Term.Name(\"foo\"))")
+  }
+
+  test("1 q\"$ref = $expr\"") {
     val q"$ref = $expr" = q"a = b"
-    assert(ref.show[Syntax] === "a")
-    assert(expr.show[Syntax] === "b")
+    assert(ref.show[Structure] === "Term.Name(\"a\")")
+    assert(expr.show[Structure] === "Term.Name(\"b\")")
   }
 
-  test(""" val q"$x.$y = $z.$w" = q"a.b = c.d"""") {
+  test("2 q\"$ref = $expr\"") {
+    val ref = q"a"
+    val expr = q"b"
+    assert(q"$ref = $expr".show[Structure] === "Term.Assign(Term.Name(\"a\"), Term.Name(\"b\"))")
+  }
+
+  test("""1 val q"$x.$y = $z.$w" = q"a.b = c.d"""") {
     val q"$x.$y = $z.$w" = q"a.b = c.d"
-    assert(x.show[Syntax] === "a")
-    assert(y.show[Syntax] === "b")
-    assert(z.show[Syntax] === "c")
-    assert(w.show[Syntax] === "d")
+    assert(x.show[Structure] === "Term.Name(\"a\")")
+    assert(y.show[Structure] === "Term.Name(\"b\")")
+    assert(z.show[Structure] === "Term.Name(\"c\")")
+    assert(w.show[Structure] === "Term.Name(\"d\")")
   }
 
-  test("q\"$expr(..$aexprs) = $expr\"") {
+  test("""2 val q"$x.$y = $z.$w" = q"a.b = c.d"""") {
+    val x = q"a"
+    val y = q"b"
+    val z = q"c"
+    val w = q"d"
+    assert(q"$x.$y = $z.$w".show[Structure] === "Term.Assign(Term.Select(Term.Name(\"a\"), Term.Name(\"b\")), Term.Select(Term.Name(\"c\"), Term.Name(\"d\")))")
+  }
+
+  test("q\"1 $expr(..$aexprs) = $expr\"") {
     val q"$expr1(..$aexprs) = $expr2" = q"foo(a, b) = bar"
-    assert(expr1.show[Syntax] === "foo")
-    assert(aexprs(0).show[Syntax] === "a")
-    assert(aexprs(1).show[Syntax] === "b")
-    assert(expr2.show[Syntax] === "bar")
+    assert(expr1.show[Structure] === "Term.Name(\"foo\")")
+    assert(aexprs.toString === "List(a, b)")
+    assert(aexprs(0).show[Structure] === "Term.Name(\"a\")")
+    assert(aexprs(1).show[Structure] === "Term.Name(\"b\")")
+    assert(expr2.show[Structure] === "Term.Name(\"bar\")")
   }
 
-  test("q\"($x, y: Int)\"") {
+  test("2 q\"$expr(..$aexprs) = $expr\"") {
+    val expr1 = q"foo"
+    val aexprs = List(q"a", q"b")
+    val expr2 = q"bar"
+    assert(q"$expr1(..$aexprs) = $expr2".show[Structure] === "Term.Update(Term.Name(\"foo\"), List(List(Term.Name(\"a\"), Term.Name(\"b\"))), Term.Name(\"bar\"))")
+  }
+
+  test("1 q\"($x, y: Int)\"") {
+    val q"($x, y: Int)" = q"(x: X, y: Int)"
+    assert(x.show[Structure] === "Term.Ascribe(Term.Name(\"x\"), Type.Name(\"X\"))")
+  }
+
+  test("2 q\"($x, y: Int)\"") {
     val x = q"x: X"
-    assert(q"($x, y: Int)".show[Syntax] === "(x: X, y: Int)")
+    assert(q"($x, y: Int)".show[Structure] === "Term.Tuple(List(Term.Ascribe(Term.Name(\"x\"), Type.Name(\"X\")), Term.Ascribe(Term.Name(\"y\"), Type.Name(\"Int\"))))")
   }
 
-  test("val q\"f($q, y: Y) = $r\" = q\"f(x: X, y: Y) = 1\"") {
+  test("1 q\"f($q, y: Y)") {
     val q"f($q, y: Y) = $r" = q"f(x: X, y: Y) = 1"
-    assert(q.show[Syntax] === "x: X")
-    assert(r.show[Syntax] === "1")
+    assert(q.show[Structure] === "Term.Ascribe(Term.Name(\"x\"), Type.Name(\"X\"))")
+    assert(r.show[Structure] === "Lit.Int(1)")
   }
 
-  test("q\"return $expr\"") {
-    val q"return $exp" = q"return foo == bar"
-    assert(exp.show[Syntax] === "foo == bar")
+  test("2 q\"f($q, y: Y)") {
+    val q = q"x: X"
+    val r = q"1"
+    assert(q"f($q, y: Y) = $r".show[Structure] === "Term.Update(Term.Name(\"f\"), List(List(Term.Ascribe(Term.Name(\"x\"), Type.Name(\"X\")), Term.Ascribe(Term.Name(\"y\"), Type.Name(\"Y\")))), Lit.Int(1))")
   }
 
-  test("q\"throw $expr\"") {
+  test("1 q\"return $expr\"") {
+    val q"return $expr" = q"return foo == bar"
+    assert(expr.show[Structure] === "Term.ApplyInfix(Term.Name(\"foo\"), Term.Name(\"==\"), Nil, List(Term.Name(\"bar\")))")
+  }
+
+  test("2 q\"return $expr\"") {
+    val expr = q"foo == bar"
+    assert(q"return $expr".show[Structure] === "Term.Return(Term.ApplyInfix(Term.Name(\"foo\"), Term.Name(\"==\"), Nil, List(Term.Name(\"bar\"))))")
+  }
+
+  test("1 q\"throw $expr\"") {
     val q"throw $expr" = q"throw new RuntimeException"
-    assert(expr.show[Syntax] === "new RuntimeException")
+    assert(expr.show[Structure] === "Term.New(Template(Nil, List(Ctor.Ref.Name(\"RuntimeException\")), Term.Param(Nil, Name.Anonymous(), None, None), None))")
   }
 
-  test("q\"$expr: $tpe\"") {
+  test("2 q\"throw $expr\"") {
+    val expr = q"new RuntimeException"
+    assert(q"throw $expr".show[Structure] === "Term.Throw(Term.New(Template(Nil, List(Ctor.Ref.Name(\"RuntimeException\")), Term.Param(Nil, Name.Anonymous(), None, None), None)))")
+  }
+
+  test("1 q\"$expr: $tpe\"") {
     val q"$exp: $tpe" = q"1: Double"
-    assert(exp.show[Syntax] === "1")
-    assert(tpe.show[Syntax] === "Double")
+    assert(exp.show[Structure] === "Lit.Int(1)")
+    assert(tpe.show[Structure] === "Type.Name(\"Double\")")
+  }
+
+  test("2 q\"$expr: $tpe\"") {
+    val exp = q"1"
+    val tpe = t"Double"
+    assert(q"$exp: $tpe".show[Structure] === "Term.Ascribe(Lit.Int(1), Type.Name(\"Double\"))")
   }
 
   test("1 q\"$expr: ..$@annots\"") {
     val q"$exprr: @q ..@$annotz @$ar" = q"foo: @q @w @e @r"
-    assert(exprr.show[Syntax] === "foo")
+    assert(exprr.show[Structure] === "Term.Name(\"foo\")")
     assert(annotz.toString === "List(@w, @e)")
-    assert(annotz(0).show[Syntax] === "@w")
-    assert(annotz(1).show[Syntax] === "@e")
-    assert(ar.show[Syntax] === "@r")
+    assert(annotz(0).show[Structure] === "Mod.Annot(Ctor.Ref.Name(\"w\"))")
+    assert(annotz(1).show[Structure] === "Mod.Annot(Ctor.Ref.Name(\"e\"))")
+    assert(ar.show[Structure] === "Mod.Annot(Ctor.Ref.Name(\"r\"))")
   }
 
   test("2 q\"$expr: ..$@annots\"") {
     val mods = List(mod"@w", mod"@e")
-    assert(q"foo: @q ..@$mods @r".show[Syntax] === "foo: @q @w @e @r")
+    assert(q"foo: @q ..@$mods @r".show[Structure] === "Term.Annotate(Term.Name(\"foo\"), List(Mod.Annot(Ctor.Ref.Name(\"q\")), Mod.Annot(Ctor.Ref.Name(\"w\")), Mod.Annot(Ctor.Ref.Name(\"e\")), Mod.Annot(Ctor.Ref.Name(\"r\"))))")
   }
 
   test("q\"(..$exprs)\"") {
-    val terms = List(q"y", q"z")
-    assert(q"(..$terms)".show[Syntax] === "(y, z)")
+    val q"(..$terms)" = q"(y, z)"
+    assert(terms.toString === "List(y, z)")
+    assert(terms(0).show[Structure] === "Term.Name(\"y\")")
+    assert(terms(1).show[Structure] === "Term.Name(\"z\")")
   }
 
-  test("""val q"(..$params)" = q"(x: Int, y: String)" """) {
+  test("2 q\"(..$exprs)\"") {
+    val terms = List(q"y", q"z")
+    assert(q"(..$terms)".show[Structure] === "Term.Tuple(List(Term.Name(\"y\"), Term.Name(\"z\")))")
+  }
+
+  test("""1 val q"(..$params)" = q"(x: Int, y: String)" """) {
     val q"(..$params)" = q"(x: Int, y: String)"
     assert(params.toString === "List(x: Int, y: String)")
-    assert(params(0).show[Syntax] === "x: Int")
-    assert(params(1).show[Syntax] === "y: String")
+    assert(params(0).show[Structure] === "Term.Ascribe(Term.Name(\"x\"), Type.Name(\"Int\"))")
+    assert(params(1).show[Structure] === "Term.Ascribe(Term.Name(\"y\"), Type.Name(\"String\"))")
+  }
+
+  test("""2 val q"(..$params)" = q"(x: Int, y: String)" """) {
+    val params = List(q"x: Int", q"y: String")
+    assert(q"(..$params)".show[Structure] === "Term.Tuple(List(Term.Ascribe(Term.Name(\"x\"), Type.Name(\"Int\")), Term.Ascribe(Term.Name(\"y\"), Type.Name(\"String\"))))")
   }
 
   test("1 q\"{ ..$stats }\"") {
-    val stats = List(q"val x = 1", q"val y = 2")
-    assert(q"{ ..$stats }".show[Syntax] ===
-      """
-        |{
-        |  val x = 1
-        |  val y = 2
-        |}
-      """.stripMargin.trim)
+    val q"{foo; ..$statz; $astat}" = q"{foo; val a = x; val b = y; val c = z}"
+    assert(statz.toString === "List(val a = x, val b = y)")
+    assert(statz(0).show[Structure] === "Defn.Val(Nil, List(Pat.Var.Term(Term.Name(\"a\"))), None, Term.Name(\"x\"))")
+    assert(statz(1).show[Structure] === "Defn.Val(Nil, List(Pat.Var.Term(Term.Name(\"b\"))), None, Term.Name(\"y\"))")
+    assert(astat.show[Structure] === "Defn.Val(Nil, List(Pat.Var.Term(Term.Name(\"c\"))), None, Term.Name(\"z\"))")
   }
 
   test("2 q\"{ ..$stats }\"") {
-    val q"{foo; ..$statz; $astat}" = q"{foo; val a = x; val b = y; val c = z}"
-    assert(statz.toString === "List(val a = x, val b = y)")
-    assert(statz(0).show[Syntax] === "val a = x")
-    assert(statz(1).show[Syntax] === "val b = y")
-    assert(astat.show[Syntax] === "val c = z")
+    val stats = List(q"val x = 1", q"val y = 2")
+    assert(q"{ ..$stats }".show[Structure] === "Term.Block(List(Defn.Val(Nil, List(Pat.Var.Term(Term.Name(\"x\"))), None, Lit.Int(1)), Defn.Val(Nil, List(Pat.Var.Term(Term.Name(\"y\"))), None, Lit.Int(2))))")
   }
 
-  test("q\"if ($expr) $expr else $expr\"") {
+  test("1 q\"if ($expr) $expr else $expr\"") {
     val q"if ($expr1) $expr2 else $expr3" = q"if (1 > 2) a else b"
-    assert(expr1.show[Syntax] === "1 > 2")
-    assert(expr2.show[Syntax] === "a")
-    assert(expr3.show[Syntax] === "b")
+    assert(expr1.show[Structure] === "Term.ApplyInfix(Lit.Int(1), Term.Name(\">\"), Nil, List(Lit.Int(2)))")
+    assert(expr2.show[Structure] === "Term.Name(\"a\")")
+    assert(expr3.show[Structure] === "Term.Name(\"b\")")
+  }
+
+  test("2 q\"if ($expr) $expr else $expr\"") {
+    val expr1 = q"1 > 2"
+    val expr2 = q"a"
+    val expr3 = q"b"
+    assert(q"if ($expr1) $expr2 else $expr3".show[Structure] === "Term.If(Term.ApplyInfix(Lit.Int(1), Term.Name(\">\"), Nil, List(Lit.Int(2))), Term.Name(\"a\"), Term.Name(\"b\"))")
   }
 
   test("1 q\"$expr match { ..case $cases }\"") {
     val q"$expr match { case bar => baz; ..case $casez; case q => w}" = q"foo match { case bar => baz; case _ => foo ; case q => w }"
-    assert(expr.show[Syntax] === "foo")
+    assert(expr.show[Structure] === "Term.Name(\"foo\")")
     assert(casez.toString === "List(case _ => foo)")
-    assert(casez(0).show[Syntax] === "case _ => foo")
+    assert(casez(0).show[Structure] === "Case(Pat.Wildcard(), None, Term.Block(List(Term.Name(\"foo\"))))")
   }
 
   test("2 q\"$expr match { ..case $cases }\"") {
     val q"$expr match { case bar => baz; ..case $casez; case _ => foo }" = q"foo match { case bar => baz; case _ => foo }"
-    assert(expr.show[Syntax] === "foo")
+    assert(expr.show[Structure] === "Term.Name(\"foo\")")
     assert(casez.isEmpty)
   }
 
   test("3 q\"$expr match { ..case $cases }\"") {
     val q"$expr match { ..case $casez }" = q"foo match { case bar => baz; case _ => foo }"
-    assert(expr.show[Syntax] === "foo")
+    assert(expr.show[Structure] === "Term.Name(\"foo\")")
     assert(casez.toString === "List(case bar => baz, case _ => foo)")
-    assert(casez(0).show[Syntax] === "case bar => baz")
-    assert(casez(1).show[Syntax] === "case _ => foo")
+    assert(casez(0).show[Structure] === "Case(Pat.Var.Term(Term.Name(\"bar\")), None, Term.Block(List(Term.Name(\"baz\"))))")
+    assert(casez(1).show[Structure] === "Case(Pat.Wildcard(), None, Term.Block(List(Term.Name(\"foo\"))))")
+  }
+
+  test("4 q\"$expr match { ..case $cases }\"") {
+    val expr = q"foo"
+    val casez = List(p"case a => b", p"case q => w")
+    assert(q"$expr match { ..case $casez }".show[Structure] === "Term.Match(Term.Name(\"foo\"), List(Case(Pat.Var.Term(Term.Name(\"a\")), None, Term.Block(List(Term.Name(\"b\")))), Case(Pat.Var.Term(Term.Name(\"q\")), None, Term.Block(List(Term.Name(\"w\"))))))")
   }
 
   // TODO change to expropt (and test it) after issue #199 resolved
 
-  test("q\"try $expr catch { ..case $cases } finally $expr\"") {
-    val q"try $exp catch { case $case1 ..case $cases; case $case2 } finally $exprr" = q"try foo catch { case a => b; case _ => bar; case 1 => 2; case q => w} finally baz"
-    assert(exp.show[Syntax] === "foo")
+  test("1 q\"try $expr catch { ..case $cases } finally $expr\"") {
+    val q"try $expr catch { case $case1 ..case $cases; case $case2 } finally $exprr" = q"try foo catch { case a => b; case _ => bar; case 1 => 2; case q => w} finally baz"
+    assert(expr.show[Structure] === "Term.Name(\"foo\")")
     assert(cases.toString === "List(case _ => bar, case 1 => 2)")
-    assert(cases(0).show[Syntax] === "case _ => bar")
-    assert(cases(1).show[Syntax] === "case 1 => 2")
-    assert(case1.show[Syntax] === "case a => b")
-    assert(case2.show[Syntax] === "case q => w")
-    assert(exprr.show[Syntax] === "baz")
+    assert(cases(0).show[Structure] === "Case(Pat.Wildcard(), None, Term.Block(List(Term.Name(\"bar\"))))")
+    assert(cases(1).show[Structure] === "Case(Lit.Int(1), None, Term.Block(List(Lit.Int(2))))")
+    assert(case1.show[Structure] === "Case(Pat.Var.Term(Term.Name(\"a\")), None, Term.Block(List(Term.Name(\"b\"))))")
+    assert(case2.show[Structure] === "Case(Pat.Var.Term(Term.Name(\"q\")), None, Term.Block(List(Term.Name(\"w\"))))")
+    assert(exprr.show[Structure] === "Term.Name(\"baz\")")
   }
 
-  test("q\"try $expr catch $expr finally $expr\"") {
+  test("2 q\"try $expr catch { ..case $cases } finally $expr\"") {
+    val expr = q"foo"
+    val cases = List(p"case _ => bar", p"case 1 => 2")
+    val case1 = p"case a => b"
+    val case2 = p"case q => w"
+    val exprr = q"baz"
+    assert(q"try $expr catch { case $case1 ..case $cases; case $case2 } finally $exprr".show[Structure] === "Term.TryWithCases(Term.Name(\"foo\"), List(Case(Pat.Var.Term(Term.Name(\"a\")), None, Term.Block(List(Term.Name(\"b\")))), Case(Pat.Wildcard(), None, Term.Block(List(Term.Name(\"bar\")))), Case(Lit.Int(1), None, Term.Block(List(Lit.Int(2)))), Case(Pat.Var.Term(Term.Name(\"q\")), None, Term.Block(List(Term.Name(\"w\"))))), Some(Term.Name(\"baz\")))")
+  }
+
+  test("1 q\"try $expr catch $expr finally $expr\"") {
     val q"try $exp catch $exprr finally $exprrr" = q"try { foo } catch { pf } finally { bar }"
-    assert(exp.show[Syntax].replace("\n", "") === "{  foo}")
-    assert(exprr.show[Syntax] === "pf")
-    assert(exprrr.show[Syntax].replace("\n", "") === "{  bar}")
+    assert(exp.show[Structure] === "Term.Block(List(Term.Name(\"foo\")))")
+    assert(exprr.show[Structure] === "Term.Name(\"pf\")")
+    assert(exprrr.show[Structure] === "Term.Block(List(Term.Name(\"bar\")))")
+  }
+
+  test("2 q\"try $expr catch $expr finally $expr\"") {
+    val exp = q"{ foo }"
+    val exprr = q"pf"
+    val exprrr = q"{ bar }"
+    assert(q"try $exp catch $exprr finally $exprrr".show[Structure] === "Term.TryWithTerm(Term.Block(List(Term.Name(\"foo\"))), Term.Name(\"pf\"), Some(Term.Block(List(Term.Name(\"bar\")))))")
   }
 
   test("""q"(i: Int) => 42" """) {
-    assert(q"(i: Int) => 42".show[Syntax] === "(i: Int) => 42")
+    assert(q"(i: Int) => 42".show[Structure] === "Term.Function(List(Term.Param(Nil, Term.Name(\"i\"), Some(Type.Name(\"Int\")), None)), Lit.Int(42))")
   }
 
-  test("q\"(..$params) => $expr\"") {
+  test("1 q\"(..$params) => $expr\"") {
     val q"(..$paramz) => $expr" = q"(x: Int, y: String) => 42"
     assert(paramz.toString === "List(x: Int, y: String)")
-    assert(paramz(0).show[Syntax] === "x: Int")
-    assert(paramz(1).show[Syntax] === "y: String")
-    assert(expr.show[Syntax] === "42")
+    assert(paramz(0).show[Structure] === "Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"Int\")), None)")
+    assert(paramz(1).show[Structure] === "Term.Param(Nil, Term.Name(\"y\"), Some(Type.Name(\"String\")), None)")
+    assert(expr.show[Structure] === "Lit.Int(42)")
   }
 
-  test("val q\"(..$q, y: Y, $e) => $r\" = q\"(x: X, y: Y, z: Z) => 1\"") {
+  test("2 q\"(..$params) => $expr\"") {
+    val paramz = List(param"x: Int", param"y: String")
+    val expr = q"42"
+    assert(q"(..$paramz) => $expr".show[Structure] === "Term.Function(List(Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"Int\")), None), Term.Param(Nil, Term.Name(\"y\"), Some(Type.Name(\"String\")), None)), Lit.Int(42))")
+  }
+
+  test("1 val q\"(..$q, y: Y, $e) => $r\" = q\"(x: X, y: Y, z: Z) => 1\"") {
     val q"(..$q, y: Y, $e) => $r" = q"(x: X, y: Y, z: Z) => 1"
     assert(q.toString === "List(x: X)")
-    assert(q(0).show[Syntax] === "x: X")
-    assert(e.show[Syntax] === "z: Z")
-    assert(r.show[Syntax] === "1")
+    assert(q(0).show[Structure] === "Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"X\")), None)")
+    assert(e.show[Structure] === "Term.Param(Nil, Term.Name(\"z\"), Some(Type.Name(\"Z\")), None)")
+    assert(r.show[Structure] === "Lit.Int(1)")
   }
 
-  test("q\"{ ..case $cases }\"") {
+  test("2 val q\"(..$q, y: Y, $e) => $r\" = q\"(x: X, y: Y, z: Z) => 1\"") {
+    val q = List(param"x: X")
+    val e = param"z: Z"
+    val r = q"1"
+    assert(q"(..$q, y: Y, $e) => $r".show[Structure] === "Term.Function(List(Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"X\")), None), Term.Param(Nil, Term.Name(\"y\"), Some(Type.Name(\"Y\")), None), Term.Param(Nil, Term.Name(\"z\"), Some(Type.Name(\"Z\")), None)), Lit.Int(1))")
+  }
+
+  test("1 q\"{ ..case $cases }\"") {
     val q"{ ..case $cases }" = q"{ case i: Int => i + 1 }"
-    assert(cases(0).show[Syntax] === "case i: Int => i + 1")
+    assert(cases(0).show[Structure] === "Case(Pat.Typed(Pat.Var.Term(Term.Name(\"i\")), Type.Name(\"Int\")), None, Term.Block(List(Term.ApplyInfix(Term.Name(\"i\"), Term.Name(\"+\"), Nil, List(Lit.Int(1))))))")
   }
 
-  test("q\"while ($expr) $expr\"") {
+  test("2 q\"{ ..case $cases }\"") {
+    val cases = List(p"case i: Int => i + 1")
+    assert(q"{ ..case $cases }".show[Structure] === "Term.PartialFunction(List(Case(Pat.Typed(Pat.Var.Term(Term.Name(\"i\")), Type.Name(\"Int\")), None, Term.Block(List(Term.ApplyInfix(Term.Name(\"i\"), Term.Name(\"+\"), Nil, List(Lit.Int(1))))))))")
+  }
+
+  test("1 q\"while ($expr) $expr\"") {
     val q"while ($expr1) $expr2" = q"while (foo) bar"
-    assert(expr1.show[Syntax] === "foo")
-    assert(expr2.show[Syntax] === "bar")
+    assert(expr1.show[Structure] === "Term.Name(\"foo\")")
+    assert(expr2.show[Structure] === "Term.Name(\"bar\")")
   }
 
-  test("q\"do $expr while($expr)\"") {
+  test("2 q\"while ($expr) $expr\"") {
+    val expr1 = q"foo"
+    val expr2 = q"bar"
+    assert(q"while ($expr1) $expr2".show[Structure] === "Term.While(Term.Name(\"foo\"), Term.Name(\"bar\"))")
+  }
+
+  test("1 q\"do $expr while($expr)\"") {
     val q"do $expr1 while($expr2)" = q"do foo while (bar)"
-    assert(expr1.show[Syntax] === "foo")
-    assert(expr2.show[Syntax] === "bar")
+    assert(expr1.show[Structure] === "Term.Name(\"foo\")")
+    assert(expr2.show[Structure] === "Term.Name(\"bar\")")
+  }
+
+  test("2 q\"do $expr while($expr)\"") {
+    val expr1 = q"foo"
+    val expr2 = q"bar"
+    assert(q"do $expr1 while($expr2)".show[Structure] === "Term.Do(Term.Name(\"foo\"), Term.Name(\"bar\"))")
   }
 
   test("1 q\"for (..$enumerators) $expr\"") {
     val q"for ($enum1; ..$enumerators; if $cond; $enum2) $exprr" = q"for (a <- as; x <- xs; y <- ys; if bar; b <- bs) foo(x, y)"
     assert(enumerators.toString === "List(x <- xs, y <- ys)")
-    assert(enumerators(0).show[Syntax] === "x <- xs")
-    assert(enumerators(1).show[Syntax] === "y <- ys")
-    assert(cond.show[Syntax] === "bar")
-    assert(enum1.show[Syntax] === "a <- as")
-    assert(enum2.show[Syntax] === "b <- bs")
-    assert(exprr.show[Syntax] === "foo(x, y)")
+    assert(enumerators(0).show[Structure] === "Enumerator.Generator(Pat.Var.Term(Term.Name(\"x\")), Term.Name(\"xs\"))")
+    assert(enumerators(1).show[Structure] === "Enumerator.Generator(Pat.Var.Term(Term.Name(\"y\")), Term.Name(\"ys\"))")
+    assert(cond.show[Structure] === "Term.Name(\"bar\")")
+    assert(enum1.show[Structure] === "Enumerator.Generator(Pat.Var.Term(Term.Name(\"a\")), Term.Name(\"as\"))")
+    assert(enum2.show[Structure] === "Enumerator.Generator(Pat.Var.Term(Term.Name(\"b\")), Term.Name(\"bs\"))")
+    assert(exprr.show[Structure] === "Term.Apply(Term.Name(\"foo\"), List(Term.Name(\"x\"), Term.Name(\"y\")))")
   }
 
   test("2 q\"for (..$enumerators) $expr\"") {
     val a = enumerator"a <- as"
     val b = enumerator"b <- bs"
     val ab = List(a,b)
-    assert(q"for (..$ab) foo".show[Syntax] === "for (a <- as; b <- bs) foo")
+    assert(q"for (..$ab) foo".show[Structure] === "Term.For(List(Enumerator.Generator(Pat.Var.Term(Term.Name(\"a\")), Term.Name(\"as\")), Enumerator.Generator(Pat.Var.Term(Term.Name(\"b\")), Term.Name(\"bs\"))), Term.Name(\"foo\"))")
   }
 
 //  test("3 q\"for (..$enumerators) $expr\"") {
@@ -353,16 +583,16 @@ class QuasiquoteSuite extends FunSuite {
   test("1 q\"for (..$enumerators) yield $expr\"") {
     val q"for (a <- as; ..$enumerators; b <- bs) yield $expr" = q"for (a <- as; x <- xs; y <- ys; b <- bs) yield foo(x, y)"
     assert(enumerators.toString === "List(x <- xs, y <- ys)")
-    assert(enumerators(0).show[Syntax] === "x <- xs")
-    assert(enumerators(1).show[Syntax] === "y <- ys")
-    assert(expr.show[Syntax] === "foo(x, y)")
+    assert(enumerators(0).show[Structure] === "Enumerator.Generator(Pat.Var.Term(Term.Name(\"x\")), Term.Name(\"xs\"))")
+    assert(enumerators(1).show[Structure] === "Enumerator.Generator(Pat.Var.Term(Term.Name(\"y\")), Term.Name(\"ys\"))")
+    assert(expr.show[Structure] === "Term.Apply(Term.Name(\"foo\"), List(Term.Name(\"x\"), Term.Name(\"y\")))")
   }
 
   test("2 q\"for (..$enumerators) yield $expr\"") {
     val a = enumerator"a <- as"
     val b = enumerator"b <- bs"
     val ab = List(a,b)
-    assert(q"for (..$ab) yield foo".show[Syntax] === "for (a <- as; b <- bs) yield foo")
+    assert(q"for (..$ab) yield foo".show[Structure] === "Term.ForYield(List(Enumerator.Generator(Pat.Var.Term(Term.Name(\"a\")), Term.Name(\"as\")), Enumerator.Generator(Pat.Var.Term(Term.Name(\"b\")), Term.Name(\"bs\"))), Term.Name(\"foo\"))")
   }
 
   test("1 q\"new { ..$stat } with ..$exprs { $param => ..$stats }\"") {
@@ -373,17 +603,26 @@ class QuasiquoteSuite extends FunSuite {
   test("2 q\"new { ..$stat } with ..$exprs { $param => ..$stats }\"") {
     val q"new {..$stats; val b = 4} with $a {$selff => ..$statz}" = q"new {val a = 2; val b = 4} with A { self => val b = 3 }"
     assert(stats.toString === "List(val a = 2)")
-    assert(stats(0).show[Syntax] === "val a = 2")
+    assert(stats(0).show[Structure] === "Defn.Val(Nil, List(Pat.Var.Term(Term.Name(\"a\"))), None, Lit.Int(2))")
     assert(a.show[Structure] === "Ctor.Ref.Name(\"A\")")
     assert(selff.show[Structure] === "Term.Param(Nil, Term.Name(\"self\"), None, None)")
     assert(statz.toString === "List(val b = 3)")
-    assert(statz(0).show[Syntax] === "val b = 3")
+    assert(statz(0).show[Structure] === "Defn.Val(Nil, List(Pat.Var.Term(Term.Name(\"b\"))), None, Lit.Int(3))")
   }
 
   test("3 q\"new { ..$stat } with ..$exprs { $param => ..$stats }\"") {
     val q"new X with T { $self => def m = 42}" = q"new X with T { def m = 42 }"
     assert(self.show[Structure] === "Term.Param(Nil, Name.Anonymous(), None, None)")
   }
+
+  //todo return after ctor fixed
+  //  test("4 q\"new { ..$stat } with ..$exprs { $param => ..$stats }\"") {
+  //    val stats = List(q"val a = 2")
+  //    val a = ctor"A"
+  //    val selff = param"self: A"
+  //    val statz = List(q"val b = 3")
+  //    assert(q"new {..$stats; val b = 4} with $a {$selff => ..$statz}".show[Structure] === "Defn.Val(Nil, List(Pat.Var.Term(Term.Name(\"b\"))), None, Lit.Int(3))")
+  //  }
 
   // TODO fails to compile, uncomment after issue #199 resolved
 
@@ -392,150 +631,251 @@ class QuasiquoteSuite extends FunSuite {
 //  }
 
   test("q\"_\"") {
-    assert(q"_".show[Syntax] === "_")
+    assert(q"_".show[Structure] === "Term.Placeholder()")
   }
 
-  test("q\"$expr _\"") {
+  test("1 q\"$expr _\"") {
     val q"$expr _" = q"foo _"
-    assert(expr.show[Syntax] === "foo")
+    assert(expr.show[Structure] === "Term.Name(\"foo\")")
   }
 
-  test("q\"$lit\"") {
-    val lit = q"42"
-    assert(q"$lit".show[Syntax] === "42")
+  test("2 q\"$expr _\"") {
+    val expr = q"foo"
+    assert(q"$expr _".show[Structure] === "Term.Eta(Term.Name(\"foo\"))")
   }
 
-  test("val q\"$x\" = ...") {
+  test("1 q\"$lit\"") {
     val q"$x" = q"42"
-    assert(x.show[Syntax] === "42")
+    assert(x.show[Structure] === "Lit.Int(42)")
   }
 
-  test("arg\"$name = $expr\"") {
+  test("2 q\"$lit\"") {
+    val lit = q"42"
+    assert(q"$lit".show[Structure] === "Lit.Int(42)")
+  }
+
+  test("1 arg\"$name = $expr\"") {
+    val arg"$name = $expr" = q"x = foo"
+    assert(name.show[Structure] === "Term.Name(\"x\")")
+    assert(expr.show[Structure] === "Term.Name(\"foo\")")
+  }
+
+  test("2 arg\"$name = $expr\"") {
     val name = q"x"
     val expr = q"foo"
-    assert(arg"$name = $expr".show[Syntax] === "x = foo")
+    assert(arg"$name = $expr".show[Structure] === "Term.Assign(Term.Name(\"x\"), Term.Name(\"foo\"))")
   }
 
-  test("arg\"$expr: _*\"") {
+//  test("1 arg\"$expr: _*\"") {
+//    val arg"$expr: _*" = q"foo: _*" // todo review me
+//    assert(arg"$expr: _*".show[Structure] === "foo: _*")
+//  }
+
+  test("2 arg\"$expr: _*\"") {
     val expr = q"foo"
-    assert(arg"$expr: _*".show[Syntax] === "foo: _*")
+    assert(arg"$expr: _*".show[Structure] === "Term.Arg.Repeated(Term.Name(\"foo\"))")
   }
 
   test("arg\"$expr\"") {
     val expr = q"foo"
-    assert(arg"$expr".show[Syntax] === "foo")
+    assert(arg"$expr".show[Structure] === "Term.Name(\"foo\")")
   }
 
-  test("t\"$ref.$tname\"") {
+  test("1 t\"$ref.$tname\"") {
+    val t"$ref.$tname" = t"X.Y"
+    assert(ref.show[Structure] === "Term.Name(\"X\")")
+    assert(tname.show[Structure] === "Type.Name(\"Y\")")
+  }
+
+  test("2 t\"$ref.$tname\"") {
     val ref = q"X"
     val tname = t"Y"
     assert(t"$ref.$tname".show[Structure] === "Type.Select(Term.Name(\"X\"), Type.Name(\"Y\"))")
   }
 
-  test("t\"$tpe#$tname\"") {
+  test("1 t\"$tpe#$tname\"") {
+    val t"$tpe#$tname" = t"X#Y"
+    assert(tpe.show[Structure] === "Type.Name(\"X\")")
+    assert(tname.show[Structure] === "Type.Name(\"Y\")")
+  }
+
+  test("2 t\"$tpe#$tname\"") {
     val tpe = t"X"
     val tname = t"Y"
-    assert(t"$tpe#$tname".show[Syntax] === "X#Y")
+    assert(t"$tpe#$tname".show[Structure] === "Type.Project(Type.Name(\"X\"), Type.Name(\"Y\"))")
   }
 
-  test("t\"$ref.type\"") {
+  test("1 t\"$ref.type\"") {
+    val t"$ref.type" = t"X.type"
+    assert(ref.show[Structure] === "Term.Name(\"X\")")
+  }
+
+  test("2 t\"$ref.type\"") {
     val ref = q"X"
-    assert(t"$ref.type".show[Syntax] === "X.type")
+    assert(t"$ref.type".show[Structure] === "Type.Singleton(Term.Name(\"X\"))")
   }
 
-  test("t\"$tpe[..$tpes]") {
+  test("1 t\"$tpe[..$tpes]") {
+    val t"$tpe[..$tpes]" = t"X[Y, Z]"
+    assert(tpe.show[Structure] === "Type.Name(\"X\")")
+    assert(tpes.toString === "List(Y, Z)")
+    assert(tpes(0).show[Structure] === "Type.Name(\"Y\")")
+    assert(tpes(1).show[Structure] === "Type.Name(\"Z\")")
+  }
+
+  test("2 t\"$tpe[..$tpes]") {
     val tpe = t"X"
     val tpes = List(t"Y", t"Z")
-    assert(t"$tpe[..$tpes]".show[Syntax] === "X[Y, Z]")
+    assert(t"$tpe[..$tpes]".show[Structure] === "Type.Apply(Type.Name(\"X\"), List(Type.Name(\"Y\"), Type.Name(\"Z\")))")
   }
 
-  test("t\"$tpe $tname $tpe\"") {
+  test("1 t\"$tpe $tname $tpe\"") {
+    val t"$tpe1 $tname $tpe2" = t"X Y Z"
+    assert(tpe1.show[Structure] === "Type.Name(\"X\")")
+    assert(tname.show[Structure] === "Type.Name(\"Y\")")
+    assert(tpe2.show[Structure] === "Type.Name(\"Z\")")
+  }
+
+  test("2 t\"$tpe $tname $tpe\"") {
     val tpe1 = t"X"
     val tname = t"Y"
     val tpe2 = t"Z"
-    assert(t"$tpe1 $tname $tpe2".show[Syntax] === "X Y Z")
+    assert(t"$tpe1 $tname $tpe2".show[Structure] === "Type.ApplyInfix(Type.Name(\"X\"), Type.Name(\"Y\"), Type.Name(\"Z\"))")
   }
 
-  test("t\"(..$atpes) => $tpe\"") {
+  test("1 t\"(..$atpes) => $tpe\"") {
+    val t"(..$atpes) => $tpe" = t"(X, Y) => Z"
+    assert(atpes.toString === "List(X, Y)")
+    assert(atpes(0).show[Structure] === "Type.Name(\"X\")")
+    assert(atpes(1).show[Structure] === "Type.Name(\"Y\")")
+    assert(tpe.show[Structure] === "Type.Name(\"Z\")")
+  }
+
+  test("2 t\"(..$atpes) => $tpe\"") {
     val atpes: List[Type.Arg] = List(t"X", t"Y")
     val tpe = t"Z"
-    assert(t"(..$atpes) => $tpe".show[Syntax] === "(X, Y) => Z")
+    assert(t"(..$atpes) => $tpe".show[Structure] === "Type.Function(List(Type.Name(\"X\"), Type.Name(\"Y\")), Type.Name(\"Z\"))")
+  }
+
+  test("1 t\"(..$tpes)\"") {
+    val t"(..$tpes)" = t"(X, Y)"
+    assert(tpes.toString === "List(X, Y)")
+    assert(tpes(0).show[Structure] === "Type.Name(\"X\")")
+    assert(tpes(1).show[Structure] === "Type.Name(\"Y\")")
   }
 
   test("t\"(..$tpes)\"") {
     val tpes = List(t"X", t"Y")
-    assert(t"(..$tpes)".show[Syntax] === "(X, Y)")
+    assert(t"(..$tpes)".show[Structure] === "Type.Tuple(List(Type.Name(\"X\"), Type.Name(\"Y\")))")
   }
 
   test("1 t\"..$tpes { ..$stats }\"") {
     val t"..$tpes {..$stats}" = t"A with B with C { val a: A; val b: B }"
     assert(tpes.toString === "List(A, B, C)")
-    assert(tpes(0).show[Syntax] === "A")
-    assert(tpes(1).show[Syntax] === "B")
-    assert(tpes(2).show[Syntax] === "C")
+    assert(tpes(0).show[Structure] === "Type.Name(\"A\")")
+    assert(tpes(1).show[Structure] === "Type.Name(\"B\")")
+    assert(tpes(2).show[Structure] === "Type.Name(\"C\")")
     assert(stats.toString === "List(val a: A, val b: B)")
-    assert(stats(0).show[Syntax] === "val a: A")
-    assert(stats(1).show[Syntax] === "val b: B")
+    assert(stats(0).show[Structure] === "Decl.Val(Nil, List(Pat.Var.Term(Term.Name(\"a\"))), Type.Name(\"A\"))")
+    assert(stats(1).show[Structure] === "Decl.Val(Nil, List(Pat.Var.Term(Term.Name(\"b\"))), Type.Name(\"B\"))")
   }
 
   test("2 t\"..$tpes { ..$stats }\"") {
     val tpes = List(t"X", t"Y")
     val stats = List(q"val a: A", q"val b: B")
-    assert(t"..$tpes { ..$stats }".show[Syntax] === "X with Y { val a: A; val b: B }")
+    assert(t"..$tpes { ..$stats }".show[Structure] === "Type.Compound(List(Type.Name(\"X\"), Type.Name(\"Y\")), List(Decl.Val(Nil, List(Pat.Var.Term(Term.Name(\"a\"))), Type.Name(\"A\")), Decl.Val(Nil, List(Pat.Var.Term(Term.Name(\"b\"))), Type.Name(\"B\"))))")
   }
 
-  test("t\"$tpe forSome { ..$stats }\"") {
+  test("1 t\"$tpe forSome { ..$stats }\"") {
+    import scala.language.existentials
+    val t"$tpe forSome { ..$stats }" = t"X forSome { val a: A; val b: B }"
+    assert(tpe.show[Structure] === "Type.Name(\"X\")")
+    assert(stats.toString === "List(val a: A, val b: B)")
+    assert(stats(0).show[Structure] === "Decl.Val(Nil, List(Pat.Var.Term(Term.Name(\"a\"))), Type.Name(\"A\"))")
+    assert(stats(1).show[Structure] === "Decl.Val(Nil, List(Pat.Var.Term(Term.Name(\"b\"))), Type.Name(\"B\"))")
+  }
+
+  test("2 t\"$tpe forSome { ..$stats }\"") {
     val tpe = t"X"
     val stats = List(q"val a:A", q"val b:B")
-    assert(t"$tpe forSome { ..$stats }".show[Syntax] === "X forSome { val a: A; val b: B }")
+    assert(t"$tpe forSome { ..$stats }".show[Structure] === "Type.Existential(Type.Name(\"X\"), List(Decl.Val(Nil, List(Pat.Var.Term(Term.Name(\"a\"))), Type.Name(\"A\")), Decl.Val(Nil, List(Pat.Var.Term(Term.Name(\"b\"))), Type.Name(\"B\"))))")
   }
 
-  test("t\"$tpe ..@$annots\"") {
+  test("1 t\"$tpe ..@$annots\"") {
+    val t"$tpe ..@$annots" = t"X @a @b"
+    assert(tpe.show[Structure] === "Type.Name(\"X\")")
+    assert(annots.toString === "List(@a, @b)")
+    assert(annots(0).show[Structure] === "Mod.Annot(Ctor.Ref.Name(\"a\"))")
+    assert(annots(1).show[Structure] === "Mod.Annot(Ctor.Ref.Name(\"b\"))")
+  }
+
+  test("2 t\"$tpe ..@$annots\"") {
     val tpe = t"X"
     val annots = List(mod"@a", mod"@b")
-    assert(t"$tpe ..@$annots".show[Syntax] === "X @a @b")
+    assert(t"$tpe ..@$annots".show[Structure] === "Type.Annotate(Type.Name(\"X\"), List(Mod.Annot(Ctor.Ref.Name(\"a\")), Mod.Annot(Ctor.Ref.Name(\"b\"))))")
   }
 
   // TODO test for 'opt' after issue #199 resolved
 
-  test("t\"_ >: $tpeopt <: $tpeopt\"") {
+  test("1 t\"_ >: $tpeopt <: $tpeopt\"") {
+    val t"_ >: $tpe1 <: $tpe2" = t"_ >: X <: Y"
+    assert(tpe1.show[Structure] === "Type.Name(\"X\")")
+    assert(tpe2.show[Structure] === "Type.Name(\"Y\")")
+  }
+
+  test("2 t\"_ >: $tpeopt <: $tpeopt\"") {
     val tpe1 = t"X"
     val tpe2 = t"Y"
-    assert(t"_ >: $tpe1 <: $tpe2".show[Syntax] === "_ >: X <: Y")
+    assert(t"_ >: $tpe1 <: $tpe2".show[Structure] === "Type.Placeholder(Type.Bounds(Some(Type.Name(\"X\")), Some(Type.Name(\"Y\"))))")
   }
 
   test("1 t\"[..$tparams] => $tpe\"") {
     val t"[..$tparams] => $tpe" = t"[X, Y] => (X, Int) => Y"
     assert(tparams.toString === "List(X, Y)")
-    assert(tparams(0).show[Syntax] === "X")
-    assert(tparams(1).show[Syntax] === "Y")
-    assert(tpe.show[Syntax] === "(X, Int) => Y")
+    assert(tparams(0).show[Structure] === "Type.Param(Nil, Type.Name(\"X\"), Nil, Type.Bounds(None, None), Nil, Nil)")
+    assert(tparams(1).show[Structure] === "Type.Param(Nil, Type.Name(\"Y\"), Nil, Type.Bounds(None, None), Nil, Nil)")
+    assert(tpe.show[Structure] === "Type.Function(List(Type.Name(\"X\"), Type.Name(\"Int\")), Type.Name(\"Y\"))")
   }
 
   test("2 t\"[..$tparams] => $tpe\"") {
     val tparams = List(tparam"X", tparam"Y")
     val tpe = t"Z"
-    assert(t"[..$tparams] => $tpe".show[Syntax] === "[X, Y] => Z")
+    assert(t"[..$tparams] => $tpe".show[Structure] === "Type.Lambda(List(Type.Param(Nil, Type.Name(\"X\"), Nil, Type.Bounds(None, None), Nil, Nil), Type.Param(Nil, Type.Name(\"Y\"), Nil, Type.Bounds(None, None), Nil, Nil)), Type.Name(\"Z\"))")
   }
 
   test("t\"$lit\"") {
     val lit = q"1"
-    assert(t"$lit".show[Syntax] === "1")
+    assert(t"$lit".show[Structure] === "Lit.Int(1)")
   }
 
-  test("t\"=> $tpe\"") {
-    val tpe = t"X"
-    assert(t"=> $tpe".show[Syntax] === "=> X")
+  test("1 t\"=> $tpe\"") {
+    val t"=> $tpe" = t"=> X"
+    assert(tpe.show[Structure] === "Type.Name(\"X\")")
   }
 
-  test("t\"$tpe *\"") {
+  test("2 t\"=> $tpe\"") {
     val tpe = t"X"
-    assert(t"$tpe*".show[Syntax] === "X*")
+    assert(t"=> $tpe".show[Structure] === "Type.Arg.ByName(Type.Name(\"X\"))")
   }
 
-  test("t\"$tpe\"") {
+  test("1 t\"$tpe *\"") {
+    val t"$tpe*" = t"X*"
+    assert(tpe.show[Structure] === "Type.Name(\"X\")")
+  }
+
+  test("2 t\"$tpe *\"") {
     val tpe = t"X"
-    assert(t"$tpe".show[Syntax] === "X")
+    assert(t"$tpe*".show[Structure] === "Type.Arg.Repeated(Type.Name(\"X\"))")
+  }
+
+  test("1 t\"$tpe\"") {
+    val t"$tpe" = t"X"
+    assert(tpe.show[Structure] === "Type.Name(\"X\")")
+  }
+
+  test("2 t\"$tpe\"") {
+    val tpe = t"X"
+    assert(t"$tpe".show[Structure] === "Type.Name(\"X\")")
   }
 
   test("p\"_\"") {
