@@ -10,8 +10,7 @@ object Mirror {
     // TODO: In the future, we may avoid instantiating the entire compiler here,
     // because a mirror can theoretically be built on top of scala.reflect.runtime.universe
     // that supposedly starts up faster.
-    val DefaultTaxonomy = "shadow scalahost's default taxonomy"
-    new ProxyImpl(Compiler(modules: _*), Domain(modules: _*))
+    new ProxyImpl(Compiler(), Domain(modules: _*))
   }
 }
 

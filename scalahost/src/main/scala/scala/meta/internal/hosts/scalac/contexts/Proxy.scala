@@ -170,7 +170,7 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
 
   private[meta] def indexCompilationUnits(): Unit = {
     def fail(reason: String) = throw new InfrastructureException("can't initialize a semantic proxy: " + reason)
-    if (!global.isPastTyper) fail("unexpected compilation phase " + global.globalPhase)
+    if (!global.isPastTyper) fail("unsupported compilation phase " + global.globalPhase + " (only phases after typer are supported)")
 
     // TODO: Do something smarter when assigning the initial domain, e.g.:
     // 1) Compute dependencies from settings.classpath

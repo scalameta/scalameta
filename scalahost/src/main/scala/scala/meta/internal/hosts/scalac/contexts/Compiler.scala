@@ -9,11 +9,11 @@ import scala.tools.nsc.reporters.StoreReporter
 import scala.meta.taxonomic.{Context => TaxonomicContext}
 
 object Compiler {
-  def apply(modules: Module*)(implicit taxonomy: TaxonomicContext): Global = {
-    apply("", modules: _*)
+  def apply()(implicit taxonomy: TaxonomicContext): Global = {
+    apply("")
   }
 
-  def apply(options: String, modules: Module*)(implicit taxonomy: TaxonomicContext): Global = {
+  def apply(options: String)(implicit taxonomy: TaxonomicContext): Global = {
     def fail(reason: String) = throw new InfrastructureException("can't initialize a semantic proxy: " + reason)
     val args = CommandLineParser.tokenize(options)
     val emptySettings = new Settings(error => fail("invalid compiler options: $error"))

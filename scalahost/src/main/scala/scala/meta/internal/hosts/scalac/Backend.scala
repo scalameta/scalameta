@@ -1,6 +1,8 @@
 package scala.meta
 package internal.hosts.scalac
 
+import scala.{Seq => _}
+import scala.collection.immutable.Seq
 import scala.collection.mutable
 import scala.reflect.internal.util.Statistics
 import scala.tools.nsc.Phase
@@ -12,10 +14,14 @@ import scala.meta.internal.hosts.scalac.tasty._
 import scala.tools.nsc.backend.jvm._
 import scala.meta.internal.hosts.scalac.{PluginBase => ScalahostPlugin}
 import scala.meta.internal.hosts.scalac.reflect._
+import scala.meta.internal.{ast => m}
+import org.scalameta.invariants._
+import org.scalameta.unreachable
 
 // NOTE: mostly copy/pasted from https://github.com/VladimirNik/tasty/blob/7b45111d066ddbc43d859c9f6c0a81978111cf90/plugin/src/main/scala/scala/tasty/internal/scalac/Plugin.scala
 abstract class ScalahostGenBCode(override val global: NscGlobal) extends scala.tools.nsc.Global$genBCode$(global) with GlobalToolkit {
   import global._
+  import definitions._
 
   import bTypes._
   import coreBTypes._
@@ -157,14 +163,91 @@ abstract class ScalahostGenBCode(override val global: NscGlobal) extends scala.t
         // -------------- TASTY attr --------------
         import scala.tools.asm.CustomAttr
         if (claszSymbol.isClass) // @DarkDimius is this test needed here?
-          for (meta <- cunit.body.metadata.get("scalameta")) {
-            val binary = {
-              if (cunit.body.hasMetadata("tastyWritten")) new Array[Byte](0)
-              else meta.asInstanceOf[Source].toTasty
+          for (meta <- cunit.body.metadata.get("scalameta").map(_.require[m.Source])) {
+            enteringTyper {
+              if (claszSymbol.owner.isPackageClass) {
+                def fail(message: String) = abort(s"internal error when serializing TASTY: $message")
+                def relevantPart[T <: m.Tree](tree: T, chain: List[g.Symbol]): T = {
+                  object loop {
+                    private def correlatePackage(tree: m.Pkg, chain: List[g.Symbol]): Option[m.Pkg] = {
+                      def loop(ref: m.Term.Ref, chain: List[g.Symbol]): Option[List[g.Symbol]] = {
+                        chain.headOption.flatMap(symbol => {
+                          ref match {
+                            case m.Term.Name(name) =>
+                              val matches = symbol.isPackageClass && symbol.name.decoded == name
+                              if (matches) Some(chain.tail) else None
+                            case m.Term.Select(qual: m.Term.Ref, name) =>
+                              val chain1 = loop(qual, chain)
+                              chain1.flatMap(chain1 => loop(name, chain1))
+                            case _ =>
+                              unreachable(debug(ref, ref.show[Structure]))
+                          }
+                        })
+                      }
+                      loop(tree.ref, chain).flatMap(chain => {
+                        val stats1 = apply(tree.stats, chain)
+                        if (stats1.nonEmpty) Some(tree.copy(stats = stats1.require[Seq[m.Stat]])) else None
+                      })
+                    }
+                    private def correlateLeaf(tree: m.Member, name: m.Name, chain: List[g.Symbol]): Option[m.Member] = {
+                      chain.headOption.flatMap(symbol => {
+                        val matchesType = {
+                          if (tree.isInstanceOf[m.Defn.Class]) symbol.isClass && !symbol.isTrait && !symbol.isModuleClass
+                          else if (tree.isInstanceOf[m.Defn.Trait]) symbol.isTrait
+                          else if (tree.isInstanceOf[m.Defn.Object]) symbol.isModuleClass && !symbol.isPackageClass
+                          else if (tree.isInstanceOf[m.Pkg.Object]) symbol.isPackageClass
+                          else unreachable(debug(tree, showRaw(symbol)))
+                        }
+                        val matchesName = symbol.name.decoded == name.value
+                        val matchesRest = chain.tail match {
+                          case symbol :: Nil => tree.isInstanceOf[m.Pkg.Object] && symbol.isPackageObjectClass
+                          case Nil => !tree.isInstanceOf[m.Pkg.Object]
+                          case _ => false
+                        }
+                        if (matchesType && matchesName && matchesRest) Some(tree) else None
+                      })
+                    }
+                    def apply(tree: m.Tree, chain: List[g.Symbol]): Option[m.Tree] = {
+                      tree match {
+                        case tree @ m.Source(stats) =>
+                          val stats1 = apply(stats, chain)
+                          if (stats1.nonEmpty) Some(tree.copy(stats = stats1.require[Seq[m.Stat]])) else None
+                        case tree: m.Pkg =>
+                          correlatePackage(tree, chain)
+                        case tree: m.Defn.Class =>
+                          correlateLeaf(tree, tree.name, chain)
+                        case tree: m.Defn.Trait =>
+                          correlateLeaf(tree, tree.name, chain)
+                        case tree: m.Defn.Object =>
+                          correlateLeaf(tree, tree.name, chain)
+                        case tree: m.Pkg.Object =>
+                          correlateLeaf(tree, tree.name, chain)
+                        case _ =>
+                          abort(s"couldn't find representation for $claszSymbol")
+                      }
+                    }
+                    def apply(mtrees: Seq[m.Tree], chain: List[g.Symbol]): Seq[m.Tree] = {
+                      mtrees.flatMap(apply(_, chain))
+                    }
+                  }
+                  val relevantSubchain = chain.filter(!_.isEffectiveRoot)
+                  val slice = loop(tree, relevantSubchain)
+                  slice match {
+                    case Some(slice) => slice.asInstanceOf[T]
+                    case None => fail(s"couldn't find representation for $claszSymbol")
+                  }
+                }
+                val slice = relevantPart(meta, claszSymbol.ownerChain.reverse)
+                if (sys.props("tasty.debug") != null) {
+                  val headline = claszSymbol.fullName + " (" + claszSymbol.toString + ")"
+                  println("======= " + headline + " =======")
+                  println(slice)
+                  println(slice.show[Structure])
+                }
+                val dataAttr = new CustomAttr("TASTY", slice.toTasty)
+                plainC.visitAttribute(dataAttr)
+              }
             }
-            val dataAttr = new CustomAttr("TASTY", binary)
-            plainC.visitAttribute(dataAttr)
-            cunit.body.appendMetadata("tastyWritten" -> true)
           }
 
         // -------------- bean info class, if needed --------------
