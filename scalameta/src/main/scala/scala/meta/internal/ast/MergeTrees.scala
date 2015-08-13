@@ -209,25 +209,6 @@ object mergeTrees {
     Type.Name("AnyRef").withDenot(Denotation.Single(anyRefPrefix, anyRefSymbol))
   }
 
-  private def fail(sy: Tree, se: Tree, diagnostics: String): Nothing = {
-    def traceback(sy: Tree, se: Tree): List[String] = {
-      def summary(tree: Tree): String = {
-        val prefix = tree.productPrefix
-        var details = tree.toString.replace("\n", " ")
-        if (details.length > 60) details = details.take(60) + "..."
-        s"($prefix) $details"
-      }
-      val tail = (sy.parent, se.parent) match {
-        case (Some(sy), Some(se)) => traceback(sy.require[Tree], se.require[Tree])
-        case (Some(sy), None) => List("<-...$EOL->")
-        case (None, Some(se)) => List("<-$EOL->...")
-        case (None, None) => Nil
-      }
-      s"<-${summary(sy)}$EOL->${summary(se)}" +: tail
-    }
-    throw new MergeException(List(sy, se), s"$diagnostics$EOL${traceback(sy, se).mkString(EOL)}")
-  }
-
   private def failCorrelate(sy: Tree, se: Tree, diagnostics: String): Nothing = {
     val details = s"${sy.show[Structure]}$EOL${se.show[Structure]}"
     fail(sy, se, s"encountered $diagnostics during syntactic + semantic merge:$EOL$details")
@@ -247,5 +228,24 @@ object mergeTrees {
     val summary = s"expected = $expectedAbbrev, actual = $actualAbbrev"
     val details = actual.show[Structure]
     fail(sy, se, s"obtained an unexpected result during syntactic + semantic merge: $summary$EOL$details")
+  }
+
+  private def fail(sy: Tree, se: Tree, diagnostics: String): Nothing = {
+    def traceback(sy: Tree, se: Tree): List[String] = {
+      def summary(tree: Tree): String = {
+        val prefix = tree.productPrefix
+        var details = tree.toString.replace("\n", " ")
+        if (details.length > 60) details = details.take(60) + "..."
+        s"($prefix) $details"
+      }
+      val tail = (sy.parent, se.parent) match {
+        case (Some(sy), Some(se)) => traceback(sy.require[Tree], se.require[Tree])
+        case (Some(sy), None) => List("<-...$EOL->")
+        case (None, Some(se)) => List("<-$EOL->...")
+        case (None, None) => Nil
+      }
+      s"<-${summary(sy)}$EOL->${summary(se)}" +: tail
+    }
+    throw new MergeException(List(sy, se), s"$diagnostics$EOL${traceback(sy, se).mkString(EOL)}")
   }
 }

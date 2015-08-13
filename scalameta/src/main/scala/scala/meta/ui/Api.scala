@@ -3,6 +3,7 @@ package ui
 
 import scala.language.higherKinds
 import org.scalameta.show._
+import scala.meta.internal.ui.AbortException
 
 private[meta] trait Api {
   @deprecated("use show[Syntax] instead", "0.1.0-SNAPSHOT") type Code[T] = scala.meta.ui.Syntax[T]

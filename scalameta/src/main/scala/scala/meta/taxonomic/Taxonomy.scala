@@ -10,10 +10,12 @@ import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.collection.immutable.ListMap
 import scala.collection.{immutable, mutable}
+import scala.reflect.{classTag, ClassTag}
 import scala.meta.internal.{ast => m}
 import scala.meta.taxonomic.{Context => TaxonomicContext}
 import scala.tools.asm._
 import scala.meta.internal.tasty._
+import scala.meta.internal.ast.mergeTrees
 import org.apache.ivy.plugins.resolver._
 import org.scalameta.contexts._
 import org.scalameta.invariants._
@@ -114,11 +116,11 @@ import org.scalameta.invariants._
         sha1.update(content.getBytes("UTF-8"))
         val sydigest = sha1.digest().map(b => "%2X".format(b)).mkString
 
-        val sysource = sourcefile.parse[Source]
+        val sysource = sourcefile.parse[Source].require[m.Source]
         def toplevelClasses(tree: Tree): List[String] = {
           def loop(prefix: String, tree: Tree): List[String] = tree match {
-            case m.Source(stats) => stats.flatMap(stat => loop(prefix, stat))
-            case m.Pkg(ref, stats) => stats.flatMap(stat => loop(prefix + "." + ref.toString.replace(".", "/"), stat))
+            case m.Source(stats) => stats.flatMap(stat => loop(prefix, stat)).toList
+            case m.Pkg(ref, stats) => stats.flatMap(stat => loop(prefix + "." + ref.toString.replace(".", "/"), stat)).toList
             case m.Defn.Class(_, m.Type.Name(value), _, _, _) => List(prefix + "." + value)
             case m.Defn.Trait(_, m.Type.Name(value), _, _, _) => List(prefix + "." + value)
             case m.Defn.Object(_, m.Term.Name(value), _, _) => List(prefix + "." + value + "$")
@@ -133,21 +135,21 @@ import org.scalameta.invariants._
           val conn = binuri.toURL.openConnection
           val in = conn.getInputStream
           try {
-            var sesource: Source = _
+            var sesource: m.Source = null
             val classReader = new ClassReader(in)
             classReader.accept(new ClassVisitor(Opcodes.ASM4) {
               override def visitAttribute(attr: Attribute) {
                 if (attr.`type` == "TASTY") {
                   val valueField = attr.getClass.getDeclaredField("value")
                   valueField.setAccessible(true)
-                  val value = valueField.get(attr).asInstanceOf[Array[Byte]]
-                  val (SyntacticDigest(tdialect, tdigest), tsource) = {
-                    try Source.fromTasty(value)
-                    catch { case ex: Exception => failResolve(s"deserialization from $binuri was unsuccessful") }
+                  val tastyBlob = valueField.get(attr).asInstanceOf[Array[Byte]]
+                  val (SyntacticDigest(tastyDialect, tastyDigest), tastySource) = {
+                    try Source.fromTasty(tastyBlob)
+                    catch { case ex: UntastyException => failResolve(s"deserialization of TASTY from $binuri was unsuccessful") }
                   }
-                  if (dialect != tdialect) failResolve("dialects of $sourceuri ($dialect) and $binuri ($tdialect) are different")
-                  if (sydigest != tdigest) failResolve("source digests of $sourceuri and $binuri are different")
-                  sesource = tsource
+                  if (dialect != tastyDialect) failResolve("dialects of $sourceuri ($dialect) and $binuri ($tdialect) are different")
+                  if (sydigest != tastyDigest) failResolve("source digests of $sourceuri and $binuri are different")
+                  sesource = tastySource.require[m.Source]
                 }
                 super.visitAttribute(attr)
               }
@@ -160,33 +162,37 @@ import org.scalameta.invariants._
 
         def failCorrelate(message: String) = failResolve(s"$message when correlating $sourceuri and $binuris")
         val systats = sysource.stats
-        val sestatss = sesources.map(_.stats)
+        val sestats = sesources.map(_.stats).flatten
         var matches = mutable.AnyRefMap[Tree, Tree]()
-        val mestats = systats.map(sy => {
-          def correlatePkg(sy: m.Pkg, sess: Seq[Seq[Stat]]): m.Pkg = {
-            val ses1 = sess.flatMap(_.collect{ case se: m.Pkg if sy.name.toString == se.name.toString => se })
-            ses1.foreach(se1 => matches(se1) = null)
-            apply(sy, ses1)
+        val mestats = {
+          def correlate(sy: m.Stat, ses: Seq[m.Stat]): m.Stat = {
+            def correlatePackage(sy: m.Pkg, ses: Seq[m.Stat]): m.Pkg = {
+              val ses1 = ses.collect{ case se: m.Pkg if sy.ref.toString == se.ref.toString => se }
+              ses1.foreach(se1 => matches(se1) = null)
+              val mestats = sy.stats.map(sy => correlate(sy, ses1.flatMap(se => se.stats)))
+              sy.copy(stats = mestats)
+            }
+            def correlateLeaf[T <: m.Member : ClassTag](sy: T, name: m.Name, ses: Seq[m.Stat], fn: PartialFunction[Tree, Boolean]): T = {
+              val ses1 = ses.collect{ case tree if fn.lift(tree).getOrElse(false) => tree }
+              ses1.foreach(se1 => matches(se1) = null)
+              def message(adjective: String) = s"$adjective syntactic ${sy.productPrefix} named $name was found"
+              if (ses1.isEmpty) failCorrelate(message("undermatched"))
+              else if (ses1.length > 1) failCorrelate(message("overmatched"))
+              else mergeTrees(sy, ses1.head)
+            }
+            sy match {
+              case sy: m.Pkg => correlatePackage(sy, ses)
+              case sy: m.Defn.Class => correlateLeaf(sy, sy.name, ses, { case se: m.Defn.Class => sy.name.toString == se.name.toString })
+              case sy: m.Defn.Trait => correlateLeaf(sy, sy.name, ses, { case se: m.Defn.Trait => sy.name.toString == se.name.toString })
+              case sy: m.Defn.Object => correlateLeaf(sy, sy.name, ses, { case se: m.Defn.Object => sy.name.toString == se.name.toString })
+              case sy: m.Pkg.Object => correlateLeaf(sy, sy.name, ses, { case se: m.Pkg.Object => sy.name.toString == se.name.toString })
+            }
           }
-          def correlateLeaf[T <: m.Member](sy: T, sess: Seq[Seq[Stat]], fn: PartialFunction[Tree, Boolean]): T = {
-            val ses1 = sess.flatMap(_.collect{ case tree if fn.lift(tree).getOrElse(false) => tree })
-            ses1.foreach(se1 => matches(se1) = null)
-            def message(adjective: String) = s"$adjective syntactic ${sy.productPrefix} named ${sy.name} was found"
-            if (ses1.isEmpty) failCorrelate(message("undermatched"))
-            else if (ses1.length > 1) failCorrelate(message("overmatched"))
-            else apply(sy, se1)
-          }
-          sy match {
-            case sy: m.Pkg => correlatePackage(sy, sestatss)
-            case sy: m.Defn.Class => correlateLeaf(sy, sestatss, { case se: m.Defn.Class => sy.name.toString == se.name.toString })
-            case sy: m.Defn.Trait => correlateLeaf(sy, sestatss, { case se: m.Defn.Trait => sy.name.toString == se.name.toString })
-            case sy: m.Defn.Object => correlateLeaf(sy, sestatss, { case se: m.Defn.Object => sy.name.toString == se.name.toString })
-            case sy: m.Pkg.Object => correlateLeaf(sy, sestatss, { case se: m.Pkg.Object => sy.name.toString == se.name.toString })
-          }
-        })
-        if (matches.size < sestatss.flatten.length) failCorrelate("undermatched semantic definitions were found")
+          systats.map(sy => correlate(sy, sestats))
+        }
+        if (matches.size < sestats.length) failCorrelate("undermatched semantic definitions were found")
         sysource.copy(stats = mestats)
-      })
+      }).toList
     }
     val resources = Nil // TODO: we can definitely do better, e.g. by indexing all non-class files
     val deps = { // TODO: better heuristic?

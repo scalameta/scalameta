@@ -6,6 +6,8 @@ import scala.meta.syntactic._
 
 trait ScalametaException extends Exception
 
+trait ScalametaError extends Exception
+
 @data class DialectException(name: String, message: String)
 extends Exception(message) with ScalametaException {
   override def toString = super.toString
