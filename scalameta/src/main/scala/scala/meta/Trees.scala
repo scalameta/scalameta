@@ -167,9 +167,6 @@ package scala.meta.internal.ast {
     @ast class Function(params: Seq[Term.Param], body: Term) extends Term with Scope {
       require(params.forall(param => param.isInstanceOf[Term.Param.Quasi] || (param.name.isInstanceOf[impl.Name.Anonymous] ==> param.default.isEmpty)))
       require(params.exists(_.isInstanceOf[Term.Param.Quasi]) || params.exists(_.mods.exists(_.isInstanceOf[Mod.Implicit])) ==> (params.length == 1))
-      // mixed style like `(x: X, y, z: Z) => ...` is not allowed
-      require(params.forall(p => p.isInstanceOf[Term.Param.Quasi] || p.decltpe.isEmpty) ||
-              params.forall(p => p.isInstanceOf[Term.Param.Quasi] || !p.decltpe.isEmpty))
     }
     @ast class PartialFunction(cases: Seq[Case] @nonEmpty) extends Term
     @ast class While(expr: Term, body: Term) extends Term
