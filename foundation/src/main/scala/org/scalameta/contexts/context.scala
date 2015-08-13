@@ -24,7 +24,8 @@ class ContextMacros(val c: Context) {
           val body1 = q"""
             try $body
             catch {
-              case ex: _root_.scala.meta.SemanticException => throw ex
+              case ex: _root_.scala.meta.ScalametaException => throw ex
+              case ex: _root_.scala.meta.ScalametaError => throw ex
               case other: _root_.scala.Exception => throw new _root_.scala.meta.SemanticException(other.getMessage, other)
             }
           """
