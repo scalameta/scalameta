@@ -11,13 +11,7 @@ import scala.meta.taxonomic.{Context => TaxonomicContext}
 // Modules are taxonomic units that group together scala.meta sources (along with resources, for that matter).
 // The purpose for the concept of modules is to serve as a building block that defines environments.
 // Without modules, there wouldn't exist a standalone entry point to scala.meta's semantic APIs.
-//
-// NOTE: Until we are sure that we've figured out a contract between modules and contexts
-// (i.e. what exactly does a context need from a module to initialize its internal data structures,
-// e.g. a list of TASTY sections or maybe even something infrastructural like caching its content),
-// modules are going to be sealed, and their handling is going to be hardcoded on per-host basis.
-// An example of where I'd like modules to evolve is dialects, which are open to inheritance, because
-// we know exactly what comprises a dialect.
+// NOTE: See Taxonomy.scala for an explanation of why Module is sealed.
 
 @root trait Module
 object Module {

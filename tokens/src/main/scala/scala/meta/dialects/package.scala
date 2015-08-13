@@ -2,12 +2,17 @@ package scala.meta
 
 import scala.language.experimental.{macros => prettyPlease}
 import scala.annotation.implicitNotFound
+import org.scalameta.adt._
 
 // NOTE: can't put Dialect into scala.meta.Dialects
 // because then implicit scope for Dialect lookups will contain members of the package object
 // i.e. both Scala211 and Dotty, which is definitely not what we want
 @implicitNotFound("don't know what dialect to use here (to fix this, import something from scala.dialects, e.g. scala.meta.dialects.Scala211)")
-trait Dialect extends Serializable {
+@root trait Dialect extends Serializable {
+  // Canonical name for the dialect.
+  // Can be used to uniquely identify the dialect, e.g. during serialization/deserialization.
+  def name: String
+
   // The sequence of characters that's used to express a bind
   // to a sequence wildcard pattern.
   def bindToSeqWildcardDesignator: String
@@ -28,27 +33,53 @@ trait Dialect extends Serializable {
 }
 
 package object dialects {
-  implicit object Scala211 extends Dialect {
-    override def toString = "Scala211"
+  @leaf implicit object Scala211 extends Dialect {
+    def name = "Scala211"
     def bindToSeqWildcardDesignator = "@" // List(1, 2, 3) match { case List(xs @ _*) => ... }
     def allowXmlLiterals = true // Not even deprecated yet, so we need to support xml literals
     def allowEllipses = false // Vanilla Scala doesn't support ellipses, somewhat similar concept is varargs and _*
     def allowTypeLambdas = false // Vanilla Scala doesn't support type lambdas
+    private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
-  implicit object Dotty extends Dialect {
-    override def toString = "Dotty"
+  @leaf implicit object Dotty extends Dialect {
+    def name = "Dotty"
     def bindToSeqWildcardDesignator = ":" // // List(1, 2, 3) match { case List(xs: _*) => ... }
     def allowXmlLiterals = false // Dotty parser doesn't have the corresponding code, so it can't really support xml literals
     def allowEllipses = false // Vanilla Dotty doesn't support ellipses, somewhat similar concept is varargs and _*
     def allowTypeLambdas = false // Vanilla Scala doesn't support type lambdas
+    private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
-  def Quasiquote(dialect: Dialect): Dialect = new Dialect {
-    override def toString = s"Quasiquotes(${dialect.toString})"
+  @leaf class Quasiquote(dialect: Dialect) extends Dialect {
+    def name = s"Quasiquote(${dialect.name})"
     def bindToSeqWildcardDesignator = dialect.bindToSeqWildcardDesignator
     def allowXmlLiterals = dialect.allowXmlLiterals
     def allowEllipses = true
     def allowTypeLambdas = true
+    private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
+  }
+}
+
+object Dialect {
+  private val QuasiquoteRx = "^Quasiquote\\((.*?)\\)$".r
+
+  def forName(name: String): Dialect = name match {
+    case "Scala211" => scala.meta.dialects.Scala211
+    case "Dotty" => scala.meta.dialects.Dotty
+    case QuasiquoteRx(name) => Dialect.forName(name)
+    case _ => throw new DialectException(name, s"unknown dialect $name")
+  }
+
+  @SerialVersionUID(1L) private[meta] class SerializationProxy(@transient private var orig: Dialect) extends Serializable {
+    private def writeObject(out: java.io.ObjectOutputStream): Unit = {
+      out.writeObject(orig.name)
+    }
+    private def readObject(in: java.io.ObjectInputStream): Unit = {
+      val name = in.readObject.asInstanceOf[String]
+      orig = Dialect.forName(name)
+    }
+    private def readResolve(): AnyRef = orig
+    override def toString = s"Proxy($orig)"
   }
 }
