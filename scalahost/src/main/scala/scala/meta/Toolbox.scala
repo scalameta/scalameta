@@ -7,12 +7,12 @@ import scala.meta.internal.hosts.scalac.contexts.{Compiler => Compiler}
 import scala.meta.internal.hosts.scalac.contexts.{Proxy => ProxyImpl}
 
 object Toolbox {
-  def apply(modules: Module*)(implicit taxonomy: TaxonomicContext): Toolbox = {
-    new ProxyImpl(Compiler(), Domain(modules: _*))
+  def apply(artifacts: Artifact*)(implicit taxonomy: TaxonomicContext): Toolbox = {
+    new ProxyImpl(Compiler(), Domain(artifacts: _*))
   }
 
-  def apply(options: String, modules: Module*)(implicit taxonomy: TaxonomicContext): Toolbox = {
-    new ProxyImpl(Compiler(options), Domain(modules: _*))
+  def apply(options: String, artifacts: Artifact*)(implicit taxonomy: TaxonomicContext): Toolbox = {
+    new ProxyImpl(Compiler(options), Domain(artifacts: _*))
   }
 }
 

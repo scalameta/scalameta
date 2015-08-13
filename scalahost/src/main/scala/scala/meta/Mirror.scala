@@ -6,11 +6,11 @@ import scala.meta.internal.hosts.scalac.contexts.{Compiler => Compiler}
 import scala.meta.internal.hosts.scalac.contexts.{Proxy => ProxyImpl}
 
 object Mirror {
-  def apply(modules: Module*)(implicit taxonomy: TaxonomicContext): Mirror = {
+  def apply(artifacts: Artifact*)(implicit taxonomy: TaxonomicContext): Mirror = {
     // TODO: In the future, we may avoid instantiating the entire compiler here,
     // because a mirror can theoretically be built on top of scala.reflect.runtime.universe
     // that supposedly starts up faster.
-    new ProxyImpl(Compiler(), Domain(modules: _*))
+    new ProxyImpl(Compiler(), Domain(artifacts: _*))
   }
 }
 

@@ -122,7 +122,7 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
 
   // ======= INTERACTIVE CONTEXT =======
 
-  private[meta] def load(module: mapi.Module): mapi.Module = {
+  private[meta] def load(artifact: mapi.Artifact): mapi.Artifact = {
     ???
   }
 
@@ -196,17 +196,17 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
       })
       indexAll(source)
     }).toList
-    currentDomain = Domain(Module(globalSources, Nil, Nil))
+    currentDomain = Domain(Artifact(globalSources, Nil, Nil))
 
     // NOTE: This is necessary for semantic APIs to work correctly,
     // because otherwise the underlying global isn't going to have its symtab populated.
     // It would probably be possible to avoid this by creating completers that
     // lazily read scala.meta trees and then lazily convert them to symtab entries,
     // but that's way beyond our technological level at the moment.
-    val domainClasspath = initialDomain.modules.flatMap(_.binaries).map(p => new java.io.File(p.path).toURI.toURL)
-    val domainSources = initialDomain.modules.flatMap(_.sources)
+    val domainClasspath = initialDomain.artifacts.flatMap(_.binaries).map(p => new java.io.File(p.path).toURI.toURL)
+    val domainSources = initialDomain.artifacts.flatMap(_.sources)
     global.extendCompilerClassPath(domainClasspath: _*)
     domainSources.foreach(source => indexAll(source.require[m.Source]))
-    currentDomain = Domain(initialDomain.modules ++ currentDomain.modules: _*)
+    currentDomain = Domain(initialDomain.artifacts ++ currentDomain.artifacts: _*)
   }
 }
