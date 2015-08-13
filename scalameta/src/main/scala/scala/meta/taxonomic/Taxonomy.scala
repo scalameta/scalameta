@@ -42,7 +42,7 @@ import org.scalameta.invariants._
 // that's hasn't even materialized yet. Therefore, I've decided to hardcode the JVM-based reality for now
 // and deal with the possible future once it actually happens.
 
-@context(translateExceptions = true) case class Taxonomy(resolvers: DependencyResolver*)(implicit dialect: Dialect) extends TaxonomicContext {
+@context(translateExceptions = true) case class Taxonomy(resolvers: DependencyResolver*) extends TaxonomicContext {
   private case class ResolvedModule(binaries: Seq[Path], sources: Seq[Source], resources: Seq[Resource], deps: Seq[Module])
   private val cache = mutable.Map[Module, ResolvedModule]()
 
@@ -98,6 +98,7 @@ import org.scalameta.invariants._
     implicit class XtensionMultipath(multipath: Multipath) {
       def explode: ListMap[String, URI] = ListMap(multipath.paths.flatMap(_.explode): _*)
     }
+    implicit val dialect = module.dialect
     val binaries = module.binpath.paths.toList
     val sources = {
       val binfiles = module.binpath.explode.filter(x => x._2.toString.endsWith(".class") && !x._2.toString.contains("$"))

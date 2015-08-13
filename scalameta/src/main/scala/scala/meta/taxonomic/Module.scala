@@ -33,10 +33,12 @@ object Module {
 
 @branch trait Artifact extends Module
 object Artifact {
-  @leaf class Unmanaged(binpath: Multipath, sourcepath: Multipath) extends Artifact {
+  @leaf class Unmanaged(binpath: Multipath, sourcepath: Multipath, dialect: Dialect) extends Artifact {
     override def toString = {
       def s_multipath(multipath: Multipath) = "\"" + multipath.paths.map(_.path).mkString(File.pathSeparatorChar.toString) + "\""
-      s"Artifact(${s_multipath(binpath)}, ${s_multipath(sourcepath)})"
+      def s_dialect(dialect: Dialect) = dialect.name
+      if (sourcepath.paths.isEmpty) s"Artifact(${s_multipath(binpath)})"
+      else s"Artifact(${s_multipath(binpath)}, ${s_multipath(sourcepath)}, ${s_dialect(dialect)})"
     }
   }
 
@@ -44,7 +46,8 @@ object Artifact {
     override def toString = s"Artifact($id)"
   }
 
-  def apply(binpath: Multipath, sourcepath: Multipath): Artifact = Unmanaged(binpath, sourcepath)
+  def apply(binpath: Multipath): Artifact = Unmanaged(binpath, "", scala.meta.dialects.Scala211) // NOTE: don't care about the dialect here
+  def apply(binpath: Multipath, sourcepath: Multipath)(implicit dialect: Dialect): Artifact = Unmanaged(binpath, sourcepath, dialect)
   def apply(mavenId: MavenId): Artifact = Maven(mavenId)
 }
 
