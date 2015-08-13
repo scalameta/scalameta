@@ -16,6 +16,18 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin)
   }
 
+  test("q\"foo: _*\"") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      q"foo: _*"
+    """) === """
+      |<macro>:4: ; expected but identifier found
+      |      q"foo: _*"
+      |              ^
+    """.trim.stripMargin)
+  }
+
   test("q\"foo + class\"") {
     assert(typecheckError("""
       import scala.meta._
