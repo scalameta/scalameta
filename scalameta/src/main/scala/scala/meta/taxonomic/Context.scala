@@ -36,5 +36,5 @@ object Context {
     //errors
     Seq(resolver("central"), resolver("sbt-chain"), resolver("null"))
   }
-  implicit lazy val DefaultTaxonomy = new Taxonomy(defaultResolvers: _*)
+  implicit def DefaultTaxonomy(implicit dialect: Dialect): Taxonomy = new Taxonomy(defaultResolvers: _*)
 }

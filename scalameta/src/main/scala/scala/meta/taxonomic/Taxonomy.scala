@@ -40,7 +40,7 @@ import org.scalameta.invariants._
 // that's hasn't even materialized yet. Therefore, I've decided to hardcode the JVM-based reality for now
 // and deal with the possible future once it actually happens.
 
-@context(translateExceptions = true) case class Taxonomy(resolvers: DependencyResolver*) extends TaxonomicContext {
+@context(translateExceptions = true) case class Taxonomy(resolvers: DependencyResolver*)(implicit dialect: Dialect) extends TaxonomicContext {
   private case class ResolvedModule(binaries: Seq[Path], sources: Seq[Source], resources: Seq[Resource], deps: Seq[Module])
   private val cache = mutable.Map[Module, ResolvedModule]()
 
@@ -141,12 +141,13 @@ import org.scalameta.invariants._
                   val valueField = attr.getClass.getDeclaredField("value")
                   valueField.setAccessible(true)
                   val value = valueField.get(attr).asInstanceOf[Array[Byte]]
-                  val (source, sedigest) = {
+                  val (SyntacticDigest(tdialect, tdigest), tsource) = {
                     try Source.fromTasty(value)
                     catch { case ex: Exception => failResolve(s"deserialization from $binuri was unsuccessful") }
                   }
-                  if (sydigest != sedigest) failResolve("source digests of $sourceuri and $binuri are different")
-                  sesource = source
+                  if (dialect != tdialect) failResolve("dialects of $sourceuri ($dialect) and $binuri ($tdialect) are different")
+                  if (sydigest != tdigest) failResolve("source digests of $sourceuri and $binuri are different")
+                  sesource = tsource
                 }
                 super.visitAttribute(attr)
               }
