@@ -20,5 +20,5 @@ import scala.annotation._
 @opaque
 @implicitNotFound("this method requires an implicit scala.meta.interactive.Context")
 trait Context {
-  def load(module: Module): Module
+  def load(artifact: Artifact): Artifact
 }

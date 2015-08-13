@@ -12,10 +12,10 @@ extends Exception(s"$message at ${pos.start.offset}..${pos.end.offset}") with Sc
   override def toString = super.toString
 }
 
-@data class ModuleException(module: Module, message: String, cause: Option[Throwable])
-extends Exception(s"failed to resolve $module because $message", cause.orNull) with ScalametaException {
-  def this(module: Module, message: String) = this(module, message, None)
-  def this(module: Module, message: String, cause: Throwable) = this(module, message, Some(cause))
+@data class ArtifactException(artifact: Artifact, message: String, cause: Option[Throwable])
+extends Exception(s"failed to resolve $artifact because $message", cause.orNull) with ScalametaException {
+  def this(artifact: Artifact, message: String) = this(artifact, message, None)
+  def this(artifact: Artifact, message: String, cause: Throwable) = this(artifact, message, Some(cause))
   override def toString = super.toString
 }
 

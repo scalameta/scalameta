@@ -8,17 +8,17 @@ import scala.meta.interactive.{Context => InteractiveContext}
 
 private[meta] trait Api {
   implicit class XtensionInteractiveContext(c: InteractiveContext) {
-    def load(module: Module): Module = c.load(module)
+    def load(artifact: Artifact): Artifact = c.load(artifact)
 
     def load(source: Source): Source = {
-      val module = Module.Adhoc(Seq(source))
-      val scala.meta.taxonomic.Module.Adhoc(Seq(source1), _, _) = c.load(module)
+      val artifact = Artifact.Adhoc(Seq(source))
+      val scala.meta.taxonomic.Artifact.Adhoc(Seq(source1), _, _) = c.load(artifact)
       source1
     }
 
     def load(sources: Source*): Seq[Source] = {
-      val module = Module.Adhoc(sources.toList)
-      val scala.meta.taxonomic.Module.Adhoc(sources1, _, _) = c.load(module)
+      val artifact = Artifact.Adhoc(sources.toList)
+      val scala.meta.taxonomic.Artifact.Adhoc(sources1, _, _) = c.load(artifact)
       sources1
     }
   }

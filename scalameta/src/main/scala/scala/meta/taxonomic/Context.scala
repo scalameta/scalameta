@@ -10,10 +10,10 @@ import org.apache.ivy.plugins.resolver._
 @opaque
 @implicitNotFound("this method requires an implicit scala.meta.taxonomic.Context")
 trait Context {
-  def binaries(module: Module): Seq[Path]
-  def sources(module: Module): Seq[Source]
-  def resources(module: Module): Seq[Resource]
-  def deps(module: Module): Seq[Module]
+  def binaries(artifact: Artifact): Seq[Path]
+  def sources(artifact: Artifact): Seq[Source]
+  def resources(artifact: Artifact): Seq[Resource]
+  def deps(artifact: Artifact): Seq[Artifact]
 }
 
 // NOTE: "Ivy contexts? In the platform-independent part of scala.meta? Blasphemy!".

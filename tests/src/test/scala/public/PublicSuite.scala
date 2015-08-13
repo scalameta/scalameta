@@ -10,7 +10,7 @@ class PublicSuite extends FunSuite {
   test("interactive APIs without import") {
     assert(typecheckError("""
       implicit val c: scala.meta.interactive.Context = ???
-      c.load(??? : scala.meta.taxonomic.Module)
+      c.load(??? : scala.meta.taxonomic.Artifact)
     """) === "")
   }
 
@@ -18,7 +18,7 @@ class PublicSuite extends FunSuite {
     assert(typecheckError("""
       import scala.meta._
       implicit val c: scala.meta.interactive.Context = ???
-      c.load(??? : scala.meta.taxonomic.Module)
+      c.load(??? : scala.meta.taxonomic.Artifact)
     """) === "")
   }
 
@@ -26,7 +26,7 @@ class PublicSuite extends FunSuite {
   // without scala.meta._ or scala.meta.interactive._ being imported
   test("interactive context APIs") {
     assert(typecheckError("""
-      (??? : scala.meta.interactive.Context).load(??? : scala.meta.taxonomic.Module)
+      (??? : scala.meta.interactive.Context).load(??? : scala.meta.taxonomic.Artifact)
     """) === "")
   }
 

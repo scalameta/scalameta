@@ -21,7 +21,7 @@ import org.scalameta.contexts._
 import org.scalameta.invariants._
 
 // NOTE: I've been thinking a lot whether I can put this class here, effectively proclaiming
-// that classpath-based modules, possibly hosted via maven, are the standard.
+// that classpath-based artifacts, possibly hosted via maven, are the standard.
 // It is the standard now, but obviously once we have new and exciting language dialects
 // or maybe additional backends, the situation may change.
 //
@@ -32,10 +32,10 @@ import org.scalameta.invariants._
 // instantiate a platform-dependent semantic context. All was fine until I realized that one may
 // erroneously mix taxonomic and semantic contexts from different platforms, which will lead to fail.
 //
-// 2) Taxonomic contexts are removed, and Module becomes a plain data structure that carries around
+// 2) Taxonomic contexts are removed, and Artifact becomes a plain data structure that carries around
 // everything that might be needed from it (path to binaries, sequence of sources, etc).
-// With enough pressure, it is possible to even make such modules lazy, but then the data model
-// becomes so bland that it's just stupid - there's no way to create different kinds of modules,
+// With enough pressure, it is possible to even make such artifacts lazy, but then the data model
+// becomes so bland that it's just stupid - there's no way to create different kinds of artifacts,
 // there's no way to encapsulate anything, there's even no way to create custom platform-dependent tostrings!
 //
 // All in all, I was left really unsatisfied after all these attempts to abstract away something
@@ -43,11 +43,11 @@ import org.scalameta.invariants._
 // and deal with the possible future once it actually happens.
 
 @context(translateExceptions = true) case class Taxonomy(resolvers: DependencyResolver*) extends TaxonomicContext {
-  private case class ResolvedModule(binaries: Seq[Path], sources: Seq[Source], resources: Seq[Resource], deps: Seq[Module])
-  private val cache = mutable.Map[Module, ResolvedModule]()
+  private case class ResolvedArtifact(binaries: Seq[Path], sources: Seq[Source], resources: Seq[Resource], deps: Seq[Artifact])
+  private val cache = mutable.Map[Artifact, ResolvedArtifact]()
 
-  private def resolveUnmanaged(module: Artifact.Unmanaged): ResolvedModule = cache.getOrElseUpdate(module, {
-    def failResolve(message: String, ex: Option[Throwable] = None) = throw new ModuleException(module, message, ex)
+  private def resolveUnmanaged(artifact: Artifact.Unmanaged): ResolvedArtifact = cache.getOrElseUpdate(artifact, {
+    def failResolve(message: String, ex: Option[Throwable] = None) = throw new ArtifactException(artifact, message, ex)
     implicit class XtensionPath(path: Path) {
       def explode: ListMap[String, URI] = {
         val root = new File(path.path)
@@ -98,11 +98,11 @@ import org.scalameta.invariants._
     implicit class XtensionMultipath(multipath: Multipath) {
       def explode: ListMap[String, URI] = ListMap(multipath.paths.flatMap(_.explode): _*)
     }
-    implicit val dialect = module.dialect
-    val binaries = module.binpath.paths.toList
+    implicit val dialect = artifact.dialect
+    val binaries = artifact.binpath.paths.toList
     val sources = {
-      val binfiles = module.binpath.explode.filter(x => x._2.toString.endsWith(".class") && !x._2.toString.contains("$"))
-      val sourcefiles = module.sourcepath.explode.filter(_._2.toString.endsWith(".scala"))
+      val binfiles = artifact.binpath.explode.filter(x => x._2.toString.endsWith(".class") && !x._2.toString.contains("$"))
+      val sourcefiles = artifact.sourcepath.explode.filter(_._2.toString.endsWith(".scala"))
       if (sys.props("tasty.debug") != null) {
         println(binfiles)
         println(sourcefiles)
@@ -197,51 +197,51 @@ import org.scalameta.invariants._
     }
     val resources = Nil // TODO: we can definitely do better, e.g. by indexing all non-class files
     val deps = { // TODO: better heuristic?
-      if (module.sourcepath.paths.isEmpty) Nil
-      else module.binpath.paths.map(p => Artifact(Multipath(p), "")).toList
+      if (artifact.sourcepath.paths.isEmpty) Nil
+      else artifact.binpath.paths.map(p => Artifact(Multipath(p), "")).toList
     }
-    ResolvedModule(binaries, sources, resources, deps)
+    ResolvedArtifact(binaries, sources, resources, deps)
   })
 
-  private def resolveMaven(module: Artifact.Maven): ResolvedModule = cache.getOrElseUpdate(module, {
+  private def resolveMaven(artifact: Artifact.Maven): ResolvedArtifact = cache.getOrElseUpdate(artifact, {
     // NOTE: Parts of this file are originally taken from lihaoyi/ammonite:
     // https://github.com/lihaoyi/Ammonite/blob/cd5de73b5601735093f4f80a775423b7a0102b37/repl/src/main/scala/ammonite/repl/IvyThing.scala
     ???
   })
 
-  def binaries(module: Module): Seq[Path] = module match {
-    case Module.Adhoc(_, _, _) =>
+  def binaries(artifact: Artifact): Seq[Path] = artifact match {
+    case Artifact.Adhoc(_, _, _) =>
       Nil
-    case module: Artifact.Unmanaged =>
-      resolveUnmanaged(module).binaries
-    case module: Artifact.Maven =>
-      resolveMaven(module).binaries
+    case artifact: Artifact.Unmanaged =>
+      resolveUnmanaged(artifact).binaries
+    case artifact: Artifact.Maven =>
+      resolveMaven(artifact).binaries
   }
 
-  def sources(module: Module): Seq[Source] = module match {
-    case Module.Adhoc(sources, _, _) =>
+  def sources(artifact: Artifact): Seq[Source] = artifact match {
+    case Artifact.Adhoc(sources, _, _) =>
       sources
-    case module: Artifact.Unmanaged =>
-      resolveUnmanaged(module).sources
-    case module: Artifact.Maven =>
-      resolveMaven(module).sources
+    case artifact: Artifact.Unmanaged =>
+      resolveUnmanaged(artifact).sources
+    case artifact: Artifact.Maven =>
+      resolveMaven(artifact).sources
   }
 
-  def resources(module: Module): Seq[Resource] = module match {
-    case Module.Adhoc(_, resources, _) =>
+  def resources(artifact: Artifact): Seq[Resource] = artifact match {
+    case Artifact.Adhoc(_, resources, _) =>
       resources
-    case module: Artifact.Unmanaged =>
-      resolveUnmanaged(module).resources
-    case module: Artifact.Maven =>
-      resolveMaven(module).resources
+    case artifact: Artifact.Unmanaged =>
+      resolveUnmanaged(artifact).resources
+    case artifact: Artifact.Maven =>
+      resolveMaven(artifact).resources
   }
 
-  def deps(module: Module): Seq[Module] = module match {
-    case Module.Adhoc(_, _, deps) =>
+  def deps(artifact: Artifact): Seq[Artifact] = artifact match {
+    case Artifact.Adhoc(_, _, deps) =>
       deps
-    case module: Artifact.Unmanaged =>
-      resolveUnmanaged(module).deps
-    case module: Artifact.Maven =>
-      resolveMaven(module).deps
+    case artifact: Artifact.Unmanaged =>
+      resolveUnmanaged(artifact).deps
+    case artifact: Artifact.Maven =>
+      resolveMaven(artifact).deps
   }
 }
