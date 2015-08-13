@@ -666,10 +666,11 @@ class QuasiquoteSuite extends FunSuite {
     assert(arg"$name = $expr".show[Structure] === "Term.Assign(Term.Name(\"x\"), Term.Name(\"foo\"))")
   }
 
-//  test("1 arg\"$expr: _*\"") {
-//    val arg"$expr: _*" = q"foo: _*" // todo review me
-//    assert(arg"$expr: _*".show[Structure] === "foo: _*")
-//  }
+  test("1 arg\"$expr: _*\"") {
+    // q"foo: _*" should not parse, so wrap into apply
+    val arg"f($expr: _*)" = q"f(foo: _*)"
+    assert(expr.show[Structure] === "Term.Name(\"foo\")")
+  }
 
   test("2 arg\"$expr: _*\"") {
     val expr = q"foo"
@@ -1060,6 +1061,10 @@ class QuasiquoteSuite extends FunSuite {
     val expropt = q"`foo`"
     val expr = q"`bar`"
     assert(p"case $pat if $expropt => $expr".show[Structure] === "Case(Term.Name(\"X\"), Some(Term.Name(\"foo\")), Term.Block(List(Term.Name(\"bar\"))))")
+  }
+
+  test("p\"_*\"") {
+    assert(p"case List(_*) =>".show[Structure] === "Case(Pat.Extract(Term.Name(\"List\"), Nil, List(Pat.Arg.SeqWildcard())), None, Term.Block(Nil))")
   }
 
   test("1 p\"$pat\"") {
