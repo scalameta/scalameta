@@ -17,7 +17,7 @@ import org.scalameta.unreachable
 import scala.meta.{Token => MetaToken, Tokens => MetaTokens}
 import scala.meta.internal.dialects.InstantiateDialect
 import scala.meta.internal.{semantic => s}
-import scala.meta.internal.semantic.{Denotation => MetaDenotation, _}
+import scala.meta.internal.semantic.{Denotation => MetaDenotation, Converters => SemanticConverters, _}
 import scala.meta.internal.semantic.{Symbol => MetaSymbol, Prefix => MetaPrefix, Signature => MetaSignature, _}
 import scala.meta.internal.parsers.Helpers._
 import scala.meta.internal.tokenizers.{LegacyScanner, LegacyToken}
@@ -25,7 +25,8 @@ import scala.compat.Platform.EOL
 
 // TODO: ideally, we would like to bootstrap these macros on top of scala.meta
 // so that quasiquotes can be interpreted by any host, not just scalac
-private[meta] class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialect {
+private[meta] class ReificationMacros(val c: Context)
+extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialect with SemanticConverters {
   lazy val u: c.universe.type = c.universe
   lazy val mirror: u.Mirror = c.mirror
   import c.internal._
@@ -227,76 +228,6 @@ private[meta] class ReificationMacros(val c: Context) extends AstReflection with
 
   // TODO: this is a very naive approach to hygiene, and it will be replaced as soon as possible
   private def attributeSkeleton(meta: MetaTree): MetaTree = {
-    def denot(pre: ReflectType, sym: ReflectSymbol): Denotation = {
-      def isGlobal(sym: ReflectSymbol): Boolean = {
-        def definitelyLocal = sym == NoSymbol || sym.name.toString.startsWith("<local ") || (sym.owner.isMethod && !sym.isParameter)
-        def isParentGlobal = sym.isPackage || sym.isPackageClass || isGlobal(sym.owner)
-        !definitelyLocal && isParentGlobal
-      }
-      def signature(sym: ReflectSymbol): MetaSignature = {
-        if (sym.isMethod && !sym.asMethod.isGetter) {
-          val jvmSignature = {
-            // NOTE: unfortunately, this simple-looking facility generates side effects that corrupt the state of the compiler
-            // in particular, mixin composition stops working correctly, at least for `object Main extends App`
-            // val g = c.universe.asInstanceOf[scala.tools.nsc.Global]
-            // g.exitingDelambdafy(new g.genASM.JPlainBuilder(null, false).descriptor(gsym))
-            def jvmSignature(tpe: ReflectType): String = {
-              val TypeRef(_, sym, args) = tpe
-              require(args.nonEmpty ==> (sym == definitions.ArrayClass))
-              if (sym == definitions.UnitClass || sym == c.mirror.staticClass("scala.runtime.BoxedUnit")) "V"
-              else if (sym == definitions.BooleanClass) "Z"
-              else if (sym == definitions.CharClass) "C"
-              else if (sym == definitions.ByteClass) "B"
-              else if (sym == definitions.ShortClass) "S"
-              else if (sym == definitions.IntClass) "I"
-              else if (sym == definitions.FloatClass) "F"
-              else if (sym == definitions.LongClass) "J"
-              else if (sym == definitions.DoubleClass) "D"
-              else if (sym == definitions.ArrayClass) "[" + jvmSignature(args.head)
-              else "L" + sym.fullName.replace(".", "/") + ";"
-            }
-            val MethodType(params, ret) = sym.info.erasure
-            val jvmRet = if (!sym.isConstructor) ret else definitions.UnitClass.toType
-            s"(" + params.map(param => jvmSignature(param.info)).mkString("") + ")" + jvmSignature(jvmRet)
-          }
-          MetaSignature.Method(jvmSignature)
-        }
-        else if (sym.isTerm) MetaSignature.Term
-        else if (sym.isType) MetaSignature.Type
-        else unreachable(debug(sym, sym.flags, sym.getClass, sym.owner))
-      }
-      def convertPrefix(pre: ReflectType): MetaPrefix = {
-        def defaultPrefix(sym: ReflectSymbol): ReflectType = {
-          if (sym.isType && sym.asType.isExistential && sym.asType.isParameter) NoPrefix
-          else if (sym.isConstructor) defaultPrefix(sym.owner)
-          else sym.owner.asInstanceOf[scala.reflect.internal.Symbols#Symbol].thisType.asInstanceOf[ReflectType]
-        }
-        def singletonType(pre: ReflectType, sym: ReflectSymbol): MetaType = {
-          val name = {
-            if (sym == c.mirror.RootClass || sym == c.mirror.RootPackage) "_root_"
-            else if (sym == c.mirror.EmptyPackageClass || sym == c.mirror.EmptyPackage) "_empty_"
-            else sym.name.toString
-          }
-          impl.Type.Singleton(impl.Term.Name(name).withDenot(denot(pre, sym)))
-        }
-        val pre1 = pre.orElse(defaultPrefix(sym))
-        pre1 match {
-          case NoPrefix => MetaPrefix.Zero
-          case ThisType(sym) => MetaPrefix.Type(singletonType(NoType, sym))
-          case SingleType(pre, sym) => MetaPrefix.Type(singletonType(pre, sym))
-          case TypeRef(pre, sym, Nil) if sym.isModule || sym.isModuleClass => MetaPrefix.Type(singletonType(pre, sym))
-          case _ => sys.error(s"unsupported type ${pre1}, designation = ${pre1.getClass}, structure = ${showRaw(pre1, printIds = true, printTypes = true)}")
-        }
-      }
-      def convertSymbol(sym: ReflectSymbol): MetaSymbol = {
-        if (sym.isModuleClass) convertSymbol(sym.asClass.module)
-        else if (sym == c.mirror.RootPackage) MetaSymbol.RootPackage
-        else if (sym == c.mirror.EmptyPackage) MetaSymbol.EmptyPackage
-        else MetaSymbol.Global(convertSymbol(sym.owner), sym.name.decodedName.toString, signature(sym))
-      }
-      require(isGlobal(sym) && debug(pre, sym))
-      Denotation.Single(convertPrefix(pre), convertSymbol(sym))
-    }
     def correlate(meta: MetaTree, reflect: ReflectTree): MetaTree = (meta, reflect) match {
       case (meta, reflect: TypeTree) =>
         correlate(meta, reflect.original)

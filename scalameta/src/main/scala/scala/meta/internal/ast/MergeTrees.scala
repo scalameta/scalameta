@@ -9,6 +9,7 @@ import scala.reflect.{classTag, ClassTag}
 import scala.meta.internal.ast._
 import scala.meta.semantic.{Context => SemanticContext}
 import scala.meta.internal.semantic._
+import scala.meta.internal.semantic.RuntimeConverters._
 import org.scalameta.collections._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
@@ -20,7 +21,7 @@ object mergeTrees {
   // to the order of appearance of the corresponding AST nodes in Trees.scala.
   // TODO: I think we could hardcode this traversal into the @ast infrastructure.
   // That will let us save time on: 1) eager recreation of entire trees, 2) eager computation of tokens for withTokens.
-  def apply[T <: Tree : ClassTag](sy: T, se: Tree)(implicit c: SemanticContext): T = {
+  def apply[T <: Tree : ClassTag](sy: T, se: Tree): T = {
     object loop {
       def apply[T <: Tree : ClassTag](sy1: T, se1: Tree): T = {
         // NOTE: This roundabout way of recursing is here only for error reporting.
@@ -118,8 +119,7 @@ object mergeTrees {
                 })
               }
               val meparents = (sy.parents, se.parents) match {
-                case (Seq(), Seq(m.Term.Apply(anyRef: m.Term.Ref, Nil)))
-                if anyRef.source == AnyRefTpe.ctor.source =>
+                case (Seq(), Seq(m.Term.Apply(anyRef: m.Term.Ref, Nil))) if anyRef == Object_init =>
                   Seq()
                 case (syss, sess) =>
                   mergeParents(syss, sess)
@@ -200,14 +200,8 @@ object mergeTrees {
     loop(sy, se)
   }
 
-  private lazy val AnyRefTpe = {
-    // TODO: It would be nice if `t"AnyRef"` worked here...
-    val scalaPrefix = Prefix.Type(Type.Singleton(Term.This(Name.Indeterminate("_root_").withDenot(Denotation.Single(Prefix.Zero, Symbol.RootPackage)))))
-    val scalaSymbol = Symbol.Global(Symbol.RootPackage, "scala", Signature.Term)
-    val anyRefPrefix = Prefix.Type(Type.Singleton(Term.This(Name.Indeterminate("scala").withDenot(Denotation.Single(scalaPrefix, scalaSymbol)))))
-    val anyRefSymbol = Symbol.Global(scalaSymbol, "AnyRef", Signature.Type)
-    Type.Name("AnyRef").withDenot(Denotation.Single(anyRefPrefix, anyRefSymbol))
-  }
+  // NOTE: This contraption is only necessary because we can't use quasiquotes in the same project they're defined in.
+  private lazy val Object_init = Ctor.Name("Object").withDenot(denot(typeOf[Object].member(u.TermName("<init>"))))
 
   private def failCorrelate(sy: Tree, se: Tree, diagnostics: String): Nothing = {
     val details = s"${sy.show[Structure]}$EOL${se.show[Structure]}"
