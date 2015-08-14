@@ -4,6 +4,7 @@ package contexts
 
 import org.scalameta.contexts._
 import org.scalameta.invariants._
+import java.io.File
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.reflect.{classTag, ClassTag}
@@ -174,9 +175,24 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
     def fail(reason: String) = throw new InfrastructureException("can't initialize a semantic proxy: " + reason)
     if (!global.isPastTyper) fail("unsupported compilation phase " + global.globalPhase + " (only phases after typer are supported)")
 
-    // TODO: Do something smarter when assigning the initial domain, e.g.:
-    // 1) Compute dependencies from settings.classpath
-    // 2) Figure out resources somehow
+    // NOTE: Make sure that the internal classpath cache hasn't been initialized yet.
+    // If it has, we're in trouble, because our modifications to settings.classpath.value
+    // aren't going to get propagated. Of course, I tried to sidestep this problem
+    // by using something like `global.extendCompilerClassPath(domainClasspath: _*)`,
+    // but unfortunately it throws an obscure assertion error, so I just gave up.
+    val m_currentClassPath = global.platform.getClass.getDeclaredMethod("currentClassPath")
+    m_currentClassPath.setAccessible(true)
+    val currentClassPath = m_currentClassPath.invoke(global.platform).asInstanceOf[Option[_]]
+    require(currentClassPath.isEmpty)
+
+    // NOTE: This is necessary for semantic APIs to work correctly,
+    // because otherwise the underlying global isn't going to have its symtab populated.
+    // It would probably be possible to avoid this by creating completers that
+    // lazily read scala.meta trees and then lazily convert them to symtab entries,
+    // but that's way beyond our technological level at the moment.
+    val domainClasspath = initialDomain.artifacts.flatMap(_.binaries).map(p => new File(p.path).toURI.toURL)
+    global.settings.classpath.value = domainClasspath.map(_.getPath).mkString(File.pathSeparator)
+
     val globalSources = global.currentRun.units.map(unit => {
       val source = unit.body.metadata.getOrElseUpdate("scalameta", {
         // NOTE: We don't have to persist perfect trees, because tokens are transient anyway.
@@ -215,17 +231,14 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
       })
       indexAll(source)
     }).toList
-    currentDomain = Domain(Artifact(globalSources, Nil, Nil))
-
-    // NOTE: This is necessary for semantic APIs to work correctly,
-    // because otherwise the underlying global isn't going to have its symtab populated.
-    // It would probably be possible to avoid this by creating completers that
-    // lazily read scala.meta trees and then lazily convert them to symtab entries,
-    // but that's way beyond our technological level at the moment.
-    val domainClasspath = initialDomain.artifacts.flatMap(_.binaries).map(p => new java.io.File(p.path).toURI.toURL)
     val domainSources = initialDomain.artifacts.flatMap(_.sources)
-    global.extendCompilerClassPath(domainClasspath: _*)
     domainSources.foreach(source => indexAll(source.require[m.Source]))
-    currentDomain = Domain(initialDomain.artifacts ++ currentDomain.artifacts: _*)
+
+    // TODO: Do something smarter when assigning the initial domain, e.g.:
+    // 1) Compute dependencies from settings.classpath
+    // 2) Figure out resources somehow
+    val globalArtifacts = List(Artifact(globalSources, Nil, Nil))
+    val domainArtifacts = initialDomain.artifacts
+    currentDomain = Domain(globalArtifacts ++ domainArtifacts: _*)
   }
 }

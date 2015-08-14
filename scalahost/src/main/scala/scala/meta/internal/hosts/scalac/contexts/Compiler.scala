@@ -22,6 +22,8 @@ object Compiler {
     val settings = command.settings
     if (settings.classpath.isDefault) settings.classpath.value = ""
     if (settings.usejavacp.isDefault) settings.usejavacp.value = false
+    if (settings.nobootcp.isDefault) settings.nobootcp.value = true
+    // settings.Ylogcp.value = true
     val global = new Global(settings, reporter)
     val run = new global.Run
     global.phase = run.picklerPhase // NOTE: need to set to something post-typer
