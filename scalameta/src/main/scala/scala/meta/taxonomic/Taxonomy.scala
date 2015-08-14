@@ -117,7 +117,7 @@ import org.scalameta.invariants._
         val sha1 = MessageDigest.getInstance("SHA-1")
         sha1.reset()
         sha1.update(content.getBytes("UTF-8"))
-        val sydigest = sha1.digest().map(b => "%2X".format(b)).mkString
+        val sydigest = sha1.digest().map(b => "%02X".format(b)).mkString
 
         val sysource = sourcefile.parse[Source].require[m.Source]
         def toplevelClasses(tree: Tree): List[String] = {

@@ -55,7 +55,7 @@ package object tasty {
           val dialect = Dialect.forName(dialectName)
           val hashLength = reader.readNat()
           val hashBytes = reader.readBytes(hashLength)
-          val hash = hashBytes.map(b => "%2X".format(b)).mkString
+          val hash = hashBytes.map(b => "%02X".format(b)).mkString
           SyntacticDigest(dialect, hash)
         }
       }
