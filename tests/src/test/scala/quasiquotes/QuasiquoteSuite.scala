@@ -1350,4 +1350,98 @@ class QuasiquoteSuite extends FunSuite {
   test("importee\"_\"") {
     assert(importee"_".show[Structure] === "Import.Selector.Wildcard()")
   }
+
+  test("1 mod\"@$expr\"") {
+    val mod"@$expr" = mod"@a"
+    assert(expr.show[Structure] === "Mod.Annot(Ctor.Ref.Name(\"a\"))")
+  }
+
+  test("2 mod\"@$expr\"") {
+    val expr = mod"@a"
+    assert(mod"@$expr".show[Structure] === "Mod.Annot(Ctor.Ref.Name(\"a\"))")
+  }
+
+  test("1 mod\"private[$qname]\"") {
+    val mod"private[$qname]" = mod"private[X]"
+    assert(qname.show[Structure] === "Name.Indeterminate(\"X\")")
+  }
+
+  test("2 mod\"private[$qname]\"") {
+    val mod"private[$qname]" = mod"private"
+    assert(qname.show[Structure] === "Name.Anonymous()")
+  }
+
+  test("3 mod\"private[$qname]\"") {
+    val mod"private[$qname]" = mod"private[this]"
+    assert(qname.show[Structure] === "Term.This(Name.Anonymous())")
+  }
+
+  test("4 mod\"private[$qname]\"") {
+    val qname = q"q"
+    assert(mod"private[$qname]".show[Structure] === "Mod.Private(Term.Name(\"q\"))")
+  }
+
+  test("1 mod\"protected[$qname]\"") {
+    val mod"protected[$qname]" = mod"protected[X]"
+    assert(qname.show[Structure] === "Name.Indeterminate(\"X\")")
+  }
+
+  test("2 mod\"protected[$qname]\"") {
+    val mod"protected[$qname]" = mod"protected"
+    assert(qname.show[Structure] === "Name.Anonymous()")
+  }
+
+  test("3 mod\"protected[$qname]\"") {
+    val mod"protected[$qname]" = mod"protected[this]"
+    assert(qname.show[Structure] === "Term.This(Name.Anonymous())")
+  }
+
+  test("4 mod\"protected[$qname]\"") {
+    val qname = q"q"
+    assert(mod"protected[$qname]".show[Structure] === "Mod.Protected(Term.Name(\"q\"))")
+  }
+
+  test("mod\"implicit\"") {
+    assert(mod"implicit".show[Structure] === "Mod.Implicit()")
+  }
+
+  test("mod\"final\"") {
+    assert(mod"final".show[Structure] === "Mod.Final()")
+  }
+
+  test("mod\"sealed\"") {
+    assert(mod"sealed".show[Structure] === "Mod.Sealed()")
+  }
+
+  test("mod\"override\"") {
+    assert(mod"override".show[Structure] === "Mod.Override()")
+  }
+
+  test("mod\"case\"") {
+    assert(mod"case".show[Structure] === "Mod.Case()")
+  }
+
+  test("mod\"abstract\"") {
+    assert(mod"abstract".show[Structure] === "Mod.Abstract()")
+  }
+
+  test("mod\"+\"") {
+    assert(mod"+".show[Structure] === "Mod.Covariant()")
+  }
+
+  test("mod\"-\"") {
+    assert(mod"-".show[Structure] === "Mod.Contravariant()")
+  }
+
+  test("mod\"lazy\"") {
+    assert(mod"lazy".show[Structure] === "Mod.Lazy()")
+  }
+
+  test("mod\"val\"") {
+    assert(mod"val".show[Structure] === "Mod.ValParam()")
+  }
+
+  test("mod\"var\"") {
+    assert(mod"var".show[Structure] === "Mod.VarParam()")
+  }
 }

@@ -85,6 +85,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       }
     }
     parseRule(parser => parser.autoPos(parser.token match {
+      case _: Unquote          => unquote[Mod.Quasi]
       case _: `@`              => parser.annot()
       case _: `private`        => parser.accessModifier()
       case _: `protected`      => parser.accessModifier()
@@ -2097,6 +2098,8 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
           val qual = atPos(in.tokenPos, in.prevTokenPos)(Name.Anonymous())
           next()
           mod(atPos(in.prevTokenPos, auto)(Term.This(qual)))
+        } else if (in.token.is[Unquote]) {
+          mod(unquote[Name.Qualifier.Quasi])
         } else {
           val name = termName()
           mod(atPos(name, name)(Name.Indeterminate(name.value)))
