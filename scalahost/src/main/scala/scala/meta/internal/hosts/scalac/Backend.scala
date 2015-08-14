@@ -245,7 +245,7 @@ abstract class ScalahostGenBCode(override val global: NscGlobal) extends scala.t
                   println(slice)
                   println(slice.show[Structure])
                 }
-                val dataAttr = new CustomAttr("TASTY", slice.toTasty)
+                val dataAttr = new CustomAttr("TASTY", toTasty(meta.syntacticDigest, slice))
                 plainC.visitAttribute(dataAttr)
               }
             }
