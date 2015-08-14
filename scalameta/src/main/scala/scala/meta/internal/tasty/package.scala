@@ -7,6 +7,7 @@ import scala.meta.Dialect
 import scala.meta.Source
 import scala.meta.syntactic.Content
 import org.scalameta.data._
+import org.scalameta.debug._
 
 package object tasty {
   implicit class XtensionTastyWrite(source: SemanticSource) {
@@ -16,12 +17,14 @@ package object tasty {
 
         val syntacticBuf = new TastyBuffer(20)
         pickler.newSection("ScalametaSyntactic", syntacticBuf)
-        val dialectBytes = source.dialect.name.getBytes("UTF-8")
+        val dialect = source.dialect
+        val dialectBytes = dialect.name.getBytes("UTF-8")
         val text = source.position.input match { case input: Content => new String(input.chars); case _ => "" }
         val sha1 = MessageDigest.getInstance("SHA-1")
         sha1.reset()
         sha1.update(text.getBytes("UTF-8"))
         val hashBytes = sha1.digest()
+        val hash = hashBytes.map(b => "%02X".format(b)).mkString
         syntacticBuf.writeNat(dialectBytes.length)
         syntacticBuf.writeBytes(dialectBytes, dialectBytes.length)
         syntacticBuf.writeNat(hashBytes.length)
@@ -38,6 +41,7 @@ package object tasty {
         semanticBuf.writeNat(semanticBlob.length)
         semanticBuf.writeBytes(semanticBlob, semanticBlob.length)
 
+        if (Debug.tasty) println(s"successfully written TASTY: $dialect, $hash, Source(...)")
         pickler.assembleParts()
       } catch {
         case ex: TastyException => throw ex
@@ -83,6 +87,7 @@ package object tasty {
           case Some(semanticSource) => semanticSource
           case _ => throw new UntastyException("no ScalametaSemantic section was found")
         }
+        if (Debug.tasty) println(s"successfully loaded TASTY: ${syntacticDigest.dialect}, $${syntacticDigest.hash}, Source(...)")
         (syntacticDigest, semanticSource)
       } catch {
         case ex: UntastyException => throw ex

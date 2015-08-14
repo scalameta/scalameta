@@ -151,7 +151,6 @@ import org.scalameta.debug._
                     try Source.fromTasty(tastyBlob)
                     catch { case ex: UntastyException => failResolve(s"deserialization of TASTY from $binuri was unsuccessful", Some(ex)) }
                   }
-                  if (Debug.artifact) println(s"successfully loaded TASTY: $tastyDialect, $tastyDigest, Source(...)")
                   if (dialect != tastyDialect) failResolve(s"dialects of $sourceuri ($dialect) and $binuri ($tastyDialect) are different")
                   if (sydigest != tastyDigest) failResolve(s"source digests of $sourceuri ($sydigest) and $binuri ($tastyDigest) are different")
                   sesource = tastySource.require[m.Source]
