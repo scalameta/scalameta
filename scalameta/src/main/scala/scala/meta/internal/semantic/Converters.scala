@@ -25,10 +25,27 @@ import scala.meta.internal.{semantic => s}
 
 trait Converters {
   val u: Universe
-  val mirror: u.Mirror
 
-  // NOTE: need a blanket import for class tags to avoid patmat warnings
+  // NOTE: If you want to uncomment this, think twice.
+  // This trait is supposed to be usable with runtime reflection,
+  // and at runtime some mirror-based stuff might behave really weirdly
+  // (e.g you can have multiple root symbols).
+  // val mirror: u.Mirror
+
+  // NOTE: Need a blanket import for class tags to avoid patmat warnings.
   import u.{Type => _, Symbol => _, definitions => _, _}
+  private implicit class XtensionConverterSymbol(sym: u.Symbol) {
+    def isRootPackage: Boolean = {
+      if (sym.isModuleClass) return sym.asClass.module.isRootPackage
+      def isProperRoot = sym == u.rootMirror.RootPackage
+      def isChildRoot = sym.isPackage && sym.name == termNames.ROOTPKG && sym.owner.isRootPackage
+      isProperRoot || isChildRoot
+    }
+    def isEmptyPackage: Boolean = {
+      if (sym.isModuleClass) return sym.asClass.module.isEmptyPackage
+      sym.isPackage && sym.name == termNames.EMPTY_PACKAGE_NAME && sym.owner.isRootPackage
+    }
+  }
 
   def denot(sym: u.Symbol): s.Denotation = {
     denot(u.NoType, sym)
@@ -50,7 +67,7 @@ trait Converters {
           def jvmSignature(tpe: u.Type): String = {
             val u.TypeRef(_, sym, args) = tpe
             require(args.nonEmpty ==> (sym == u.definitions.ArrayClass))
-            if (sym == u.definitions.UnitClass || sym == mirror.staticClass("scala.runtime.BoxedUnit")) "V"
+            if (sym == u.definitions.UnitClass) "V"
             else if (sym == u.definitions.BooleanClass) "Z"
             else if (sym == u.definitions.CharClass) "C"
             else if (sym == u.definitions.ByteClass) "B"
@@ -75,8 +92,8 @@ trait Converters {
     def convertPrefix(pre: u.Type): s.Prefix = {
       def singletonType(pre: u.Type, sym: u.Symbol): m.Type = {
         val name = {
-          if (sym == mirror.RootClass || sym == mirror.RootPackage) "_root_"
-          else if (sym == mirror.EmptyPackageClass || sym == mirror.EmptyPackage) "_empty_"
+          if (sym.isRootPackage) "_root_"
+          else if (sym.isEmptyPackage) "_empty_"
           else sym.name.toString
         }
         m.Type.Singleton(m.Term.Name(name).withDenot(denot(pre, sym)))
@@ -91,9 +108,10 @@ trait Converters {
       }
     }
     def convertSymbol(sym: u.Symbol): s.Symbol = {
+      require(sym != u.NoSymbol)
       if (sym.isModuleClass) convertSymbol(sym.asClass.module)
-      else if (sym == mirror.RootPackage) s.Symbol.RootPackage
-      else if (sym == mirror.EmptyPackage) s.Symbol.EmptyPackage
+      else if (sym.isRootPackage) s.Symbol.RootPackage
+      else if (sym.isEmptyPackage) s.Symbol.EmptyPackage
       else s.Symbol.Global(convertSymbol(sym.owner), sym.name.decodedName.toString, signature(sym))
     }
     require(isGlobal(sym) && debug(pre, sym))
@@ -117,7 +135,6 @@ trait Converters {
 
 object RuntimeConverters extends {
   val u: scala.reflect.runtime.universe.type = scala.reflect.runtime.universe
-  val mirror: u.Mirror = u.runtimeMirror(classOf[scala.meta.Tree].getClassLoader)
 } with Converters {
   def typeOf[T: u.TypeTag]: u.Type = u.typeOf[T]
   def symbolOf[T: u.TypeTag]: u.TypeSymbol = u.symbolOf[T]
