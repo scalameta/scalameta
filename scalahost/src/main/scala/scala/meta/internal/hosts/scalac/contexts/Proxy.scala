@@ -7,6 +7,8 @@ import org.scalameta.invariants._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.reflect.{classTag, ClassTag}
+import scala.reflect.internal.util.BatchSourceFile
+import scala.reflect.io.PlainFile
 import scala.meta.{Mirror => MirrorApi}
 import scala.meta.{Toolbox => ToolboxApi}
 import scala.meta.{Proxy => ProxyApi}
@@ -189,7 +191,24 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
         // (i.e. we add them to lsymToMmemberCache), it'd make sense to work with resugared trees,
         // because that's what users ultimately want to see when they do `t"...".members` or something.
         // So, it seems that it's still necessary to eagerly merge the trees, so that we can index them correctly.
-        val syntacticTree = unit.source.content.parse[mapi.Source].require[m.Source]
+        val syntacticTree = {
+          val content = unit.source match {
+            // NOTE: We need this hackaround because BatchSourceFile distorts the source code
+            // by appending newlines as it sees fit. This is going to become a problem wrt TASTY,
+            // because we write a sourcecode hash when serializing TASTY and verify it when deserializing.
+            //
+            // This is going to work just fine with real-world batchsourcefiles, but if someone creates
+            // a batchsourcefile from a virtual file without a newline at the end and then will expect
+            // its hash to match some other file without a newline at the end, they're in for a treat.
+            //
+            // Let's see whether this is going to become a problem. If it is, we'll have to distort
+            // the sources everywhere in scala.meta where we compute hashes. It's so ugly that I can't
+            // bring myself to doing it right now.
+            case batch: BatchSourceFile if batch.file.isInstanceOf[PlainFile] => batch.file.toCharArray
+            case other => other.content
+          }
+          content.parse[mapi.Source].require[m.Source]
+        }
         val semanticTree = unit.body.toMtree[m.Source]
         val perfectTree = mergeTrees(syntacticTree, semanticTree)
         perfectTree
