@@ -46,6 +46,9 @@ package object tasty {
     }
   }
 
+  @data class SyntacticDigest(dialect: Dialect, hash: String)
+  type SemanticSource = Source
+
   implicit class XtensionTastyRead(dummy: Source.type) {
     def fromTasty(tastyBlob: Array[Byte]): (SyntacticDigest, SemanticSource) = {
       class SyntacticUnpickler extends TastyUnpickler.SectionUnpickler[SyntacticDigest]("ScalametaSyntactic") {
@@ -88,6 +91,7 @@ package object tasty {
     }
   }
 
-  @data class SyntacticDigest(dialect: Dialect, hash: String)
-  type SemanticSource = Source
+  implicit class XtensionTastyDebug(debug: org.scalameta.debug.Debug.type) {
+    def tasty = sys.props("tasty.debug") != null || sys.props("artifact.debug") != null
+  }
 }

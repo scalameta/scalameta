@@ -6,6 +6,8 @@ import scala.reflect.macros.blackbox.Context
 import org.scalameta.unreachable
 import org.scalameta.adt.Internal.Adt
 import org.scalameta.adt.{Reflection => AdtReflection}
+import org.scalameta.debug._
+import org.scalameta.ast.XtensionAstDebug
 
 trait Liftables {
   val u: scala.reflect.macros.Universe
@@ -94,7 +96,7 @@ class LiftableMacros(val c: Context) extends AdtReflection {
         $mainModule.$mainMethod.apply($mainParam)
       })
     """
-    if (sys.props("adt.debug") != null || sys.props("ast.debug") != null) println(result)
+    if (Debug.adt || Debug.ast) println(result)
     result
   }
 }

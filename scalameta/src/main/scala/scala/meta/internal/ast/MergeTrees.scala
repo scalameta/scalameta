@@ -13,6 +13,7 @@ import scala.meta.internal.semantic.RuntimeConverters._
 import org.scalameta.collections._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
+import org.scalameta.debug._
 import scala.meta.internal.{ast => m}
 
 object mergeTrees {
@@ -157,7 +158,7 @@ object mergeTrees {
               denotedMetree
           }
           val metree = typedMetree
-          if (sys.props("convert.debug") != null && sy.parent.isEmpty) {
+          if (Debug.convert && sy.parent.isEmpty) {
             println("======= SYNTACTIC TREE =======")
             println(sy)
             println(sy.show[Structure])

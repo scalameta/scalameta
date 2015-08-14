@@ -14,6 +14,7 @@ import org.scalameta.adt.{Liftables => AdtLiftables, Reflection => AdtReflection
 import org.scalameta.ast.{Liftables => AstLiftables, Reflection => AstReflection}
 import org.scalameta.invariants._
 import org.scalameta.unreachable
+import org.scalameta.debug._
 import scala.meta.{Token => MetaToken, Tokens => MetaTokens}
 import scala.meta.internal.dialects.InstantiateDialect
 import scala.meta.internal.{semantic => s}
@@ -99,7 +100,7 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
         }
       } catch {
         case ex: Exception =>
-          if (sys.props("quasiquote.debug") != null) println(ex.toString)
+          if (Debug.quasiquote) println(ex.toString)
           c.abort(c.macroApplication.pos, s"fatal error initializing quasiquote macro: ${showRaw(c.macroApplication)}")
       }
     }
@@ -196,12 +197,12 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
       part ++ unquote
     }
     val tokens: Tokens = parttokenss.zip(args :+ EmptyTree).zipWithIndex.flatMap({ case ((ts, a), i) => merge(i, ts, a) }).toTokens
-    if (sys.props("quasiquote.debug") != null) println(tokens)
+    if (Debug.quasiquote) println(tokens)
     try {
       implicit val parsingDialect: MetaDialect = scala.meta.dialects.Quasiquote(metaDialect)
-      if (sys.props("quasiquote.debug") != null) { println(tokens); println(parsingDialect) }
+      if (Debug.quasiquote) { println(tokens); println(parsingDialect) }
       val syntax = metaParse(tokens, parsingDialect)
-      if (sys.props("quasiquote.debug") != null) { println(syntax.show[Syntax]); println(syntax.show[Structure]) }
+      if (Debug.quasiquote) { println(syntax.show[Syntax]); println(syntax.show[Structure]) }
       (syntax, mode)
     } catch {
       case ParseException(position, message) => c.abort(position, message)
@@ -256,9 +257,7 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
       case _ =>
         sys.error("correlation of " + meta.productPrefix + " and " + reflect.productPrefix + " is not supported yet")
     }
-    val denotDebug = sys.props("denot.debug") != null
-    val denotWarn = sys.props("denot.warn") != null
-    if (denotDebug) { println("meta = " + meta); println(meta.show[Structure]) }
+    if (Debug.hygiene) { println("meta = " + meta); println(meta.show[Structure]) }
     try {
       def typecheckTerm(tree: ReflectTree) = {
         val result = c.typecheck(tree, mode = c.TERMmode, silent = true)
@@ -297,14 +296,14 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
             result
         }
       }
-      if (denotDebug) { println("reflect = " + reflect); println(showRaw(reflect, printIds = true)) }
+      if (Debug.hygiene) { println("reflect = " + reflect); println(showRaw(reflect, printIds = true)) }
       val meta1 = correlate(meta, reflect)
-      if (denotDebug) { println("result = " + meta1.show[Semantics]) }
+      if (Debug.hygiene) { println("result = " + meta1.show[Semantics]) }
       meta1
     } catch {
       case ex: Throwable =>
-        if (denotDebug) ex.printStackTrace()
-        if (denotWarn) c.warning(c.enclosingPosition, "implementation restriction: failed to attribute the quasiquote, proceeding in unhygienic mode")
+        if (Debug.hygiene) ex.printStackTrace()
+        if (Debug.hygiene) c.warning(c.enclosingPosition, "implementation restriction: failed to attribute the quasiquote, proceeding in unhygienic mode")
         throw ex
     }
   }

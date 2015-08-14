@@ -16,9 +16,11 @@ import scala.meta.taxonomic.{Context => TaxonomicContext}
 import scala.tools.asm._
 import scala.meta.internal.tasty._
 import scala.meta.internal.ast.mergeTrees
+import scala.meta.internal.taxonomic._
 import org.apache.ivy.plugins.resolver._
 import org.scalameta.contexts._
 import org.scalameta.invariants._
+import org.scalameta.debug._
 
 // NOTE: I've been thinking a lot whether I can put this class here, effectively proclaiming
 // that classpath-based artifacts, possibly hosted via maven, are the standard.
@@ -99,16 +101,14 @@ import org.scalameta.invariants._
       def explode: ListMap[String, URI] = ListMap(multipath.paths.flatMap(_.explode): _*)
     }
     implicit val dialect = artifact.dialect
+    if (Debug.artifact) println(s"resolving $artifact")
     val binaries = artifact.binpath.paths.toList
     val sources = {
       var binfiles = artifact.binpath.explode.filter(_._2.toString.endsWith(".class"))
       binfiles = binfiles.filter(!_._2.toString.contains("$")) // NOTE: exclude inner classes
       binfiles = binfiles.filter(!_._2.toString.contains("scala-library.jar!")) // NOTE: exclude stdlib
       val sourcefiles = artifact.sourcepath.explode.filter(_._2.toString.endsWith(".scala"))
-      if (sys.props("tasty.debug") != null) {
-        println(binfiles)
-        println(sourcefiles)
-      }
+      if (Debug.artifact) { println(binfiles); println(sourcefiles) }
       sourcefiles.map({ case (_, sourceuri) =>
         // NOTE: sy- and se- prefixes mean the same as in MergeTrees.scala, namely "syntactic" and "semantic".
         val charset = Charset.forName("UTF-8")
@@ -143,7 +143,7 @@ import org.scalameta.invariants._
             classReader.accept(new ClassVisitor(Opcodes.ASM4) {
               override def visitAttribute(attr: Attribute) {
                 if (attr.`type` == "TASTY") {
-                  if (sys.props("tasty.debug") != null) println(s"found TASTY section in $binuri")
+                  if (Debug.artifact) println(s"found TASTY section in $binuri")
                   val valueField = attr.getClass.getDeclaredField("value")
                   valueField.setAccessible(true)
                   val tastyBlob = valueField.get(attr).asInstanceOf[Array[Byte]]
@@ -151,7 +151,7 @@ import org.scalameta.invariants._
                     try Source.fromTasty(tastyBlob)
                     catch { case ex: UntastyException => failResolve(s"deserialization of TASTY from $binuri was unsuccessful", Some(ex)) }
                   }
-                  if (sys.props("tasty.debug") != null) println(s"successfully loaded TASTY: $tastyDialect, $tastyDigest, Source(...)")
+                  if (Debug.artifact) println(s"successfully loaded TASTY: $tastyDialect, $tastyDigest, Source(...)")
                   if (dialect != tastyDialect) failResolve(s"dialects of $sourceuri ($dialect) and $binuri ($tastyDialect) are different")
                   if (sydigest != tastyDigest) failResolve(s"source digests of $sourceuri ($sydigest) and $binuri ($tastyDigest) are different")
                   sesource = tastySource.require[m.Source]
