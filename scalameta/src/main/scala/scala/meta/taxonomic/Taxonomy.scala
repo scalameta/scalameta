@@ -146,7 +146,7 @@ import org.scalameta.invariants._
                   val tastyBlob = valueField.get(attr).asInstanceOf[Array[Byte]]
                   val (SyntacticDigest(tastyDialect, tastyDigest), tastySource) = {
                     try Source.fromTasty(tastyBlob)
-                    catch { case ex: UntastyException => failResolve(s"deserialization of TASTY from $binuri was unsuccessful") }
+                    catch { case ex: UntastyException => failResolve(s"deserialization of TASTY from $binuri was unsuccessful", Some(ex)) }
                   }
                   if (dialect != tastyDialect) failResolve("dialects of $sourceuri ($dialect) and $binuri ($tdialect) are different")
                   if (sydigest != tastyDigest) failResolve("source digests of $sourceuri and $binuri are different")
