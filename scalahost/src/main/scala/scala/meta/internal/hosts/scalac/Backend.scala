@@ -17,6 +17,7 @@ import scala.meta.internal.hosts.scalac.reflect._
 import scala.meta.internal.{ast => m}
 import org.scalameta.invariants._
 import org.scalameta.unreachable
+import org.scalameta.debug._
 
 // NOTE: mostly copy/pasted from https://github.com/VladimirNik/tasty/blob/7b45111d066ddbc43d859c9f6c0a81978111cf90/plugin/src/main/scala/scala/tasty/internal/scalac/Plugin.scala
 abstract class ScalahostGenBCode(override val global: NscGlobal) extends scala.tools.nsc.Global$genBCode$(global) with GlobalToolkit {
@@ -238,7 +239,7 @@ abstract class ScalahostGenBCode(override val global: NscGlobal) extends scala.t
                   }
                 }
                 val slice = relevantPart(meta, claszSymbol.ownerChain.reverse)
-                if (sys.props("tasty.debug") != null) {
+                if (Debug.tasty) {
                   val headline = claszSymbol.fullName + " (" + claszSymbol.toString + ")"
                   println("======= " + headline + " =======")
                   println(slice)

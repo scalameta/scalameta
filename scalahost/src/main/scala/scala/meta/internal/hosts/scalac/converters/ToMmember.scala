@@ -93,7 +93,6 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
       }) else result
     }
     def toMmember(gpre: g.Type): m.Member = lsymToMmemberCache.getOrElseUpdate((gpre, lsym), {
-      if (sys.props("member.debug") != null) println((gpre, lsym))
       def approximateSymbol(lsym: l.Symbol): m.Member = {
         // NOTE: we don't need to clear the LOCAL_SUFFIX_STRING from the name of `lsym.gsymbol`
         // because it's always guaranteed not to end with LOCAL_SUFFIX_STRING
