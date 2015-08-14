@@ -1312,4 +1312,42 @@ class QuasiquoteSuite extends FunSuite {
 //  test("2 q\"import ..($ref.{..$importees})\"") {
 //    val q"import ..(x.{..$importees})" = q"import a.A"
 //  }
+
+  test("1 importee\"$iname\"") {
+    val importee"$iname" = importee"x"
+    assert(iname.show[Structure] === "Name.Indeterminate(\"x\")")
+  }
+
+  test("2 importee\"$iname\"") {
+    // $iname can't be constructed, only extracted from importee"..." and mod"..."
+    val importee"$iname" = importee"x"
+    assert(importee"$iname".show[Structure] === "Import.Selector.Name(Name.Indeterminate(\"x\"))")
+  }
+
+  test("1 importee\"$iname => $iname\"") {
+    val importee"$iname1 => $iname2" = importee"x => y"
+    assert(iname1.show[Structure] === "Name.Indeterminate(\"x\")")
+    assert(iname2.show[Structure] === "Name.Indeterminate(\"y\")")
+  }
+
+  test("2 importee\"$iname => $iname\"") {
+    // $iname can't be constructed, only extracted from importee"..." and mod"..."
+    val importee"$iname1 => $iname2" = importee"x => y"
+    assert(importee"$iname1 => $iname2".show[Structure] === "Import.Selector.Rename(Name.Indeterminate(\"x\"), Name.Indeterminate(\"y\"))")
+  }
+
+  test("1 importee\"$iname => _\"") {
+    val importee"$iname => _" = importee"x => _"
+    assert(iname.show[Structure] === "Name.Indeterminate(\"x\")")
+  }
+
+  test("2 importee\"$iname => _\"") { // TODO review after #219 solved
+    // $iname can't be constructed, only extracted from importee"..." and mod"..."
+    val importee"$iname => _" = importee"x => _"
+    assert(importee"$iname => _".show[Structure] === "Import.Selector.Unimport(Name.Indeterminate(\"x\"))")
+  }
+
+  test("importee\"_\"") {
+    assert(importee"_".show[Structure] === "Import.Selector.Wildcard()")
+  }
 }

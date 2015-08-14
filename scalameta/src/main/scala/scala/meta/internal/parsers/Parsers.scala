@@ -108,7 +108,11 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       case other => unreachable(debug(input, dialect, other))
     })
   }
-  def parseImportee(): Importee = parseRule(_.importSelector())
+  def parseImportee(): Importee = {
+    val r =  parseRule(_.importSelector())
+    println(s"result = ${r.show[Raw]}")
+    r
+  }
   def parseSource(): Source = parseRule(_.compilationUnit())
 
 /* ------------- PARSER-SPECIFIC TOKEN CLASSIFIERS -------------------------------------------- */
@@ -2378,6 +2382,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
 
   def importWildcardOrName(): Import.Selector = autoPos {
     if (token.is[`_ `]) { next(); Import.Selector.Wildcard() }
+    else if (token.is[Unquote]) Import.Selector.Name(unquote[Name.Indeterminate.Quasi])
     else { val name = termName(); Import.Selector.Name(atPos(name, name)(Name.Indeterminate(name.value))) }
   }
 
