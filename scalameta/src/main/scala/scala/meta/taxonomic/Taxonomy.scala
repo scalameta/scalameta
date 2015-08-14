@@ -141,6 +141,7 @@ import org.scalameta.invariants._
             classReader.accept(new ClassVisitor(Opcodes.ASM4) {
               override def visitAttribute(attr: Attribute) {
                 if (attr.`type` == "TASTY") {
+                  if (sys.props("tasty.debug") != null) println(s"found TASTY section in $binuri")
                   val valueField = attr.getClass.getDeclaredField("value")
                   valueField.setAccessible(true)
                   val tastyBlob = valueField.get(attr).asInstanceOf[Array[Byte]]
@@ -148,8 +149,9 @@ import org.scalameta.invariants._
                     try Source.fromTasty(tastyBlob)
                     catch { case ex: UntastyException => failResolve(s"deserialization of TASTY from $binuri was unsuccessful", Some(ex)) }
                   }
-                  if (dialect != tastyDialect) failResolve("dialects of $sourceuri ($dialect) and $binuri ($tdialect) are different")
-                  if (sydigest != tastyDigest) failResolve("source digests of $sourceuri and $binuri are different")
+                  if (sys.props("tasty.debug") != null) println(s"successfully loaded TASTY: $tastyDialect, $tastyDigest, Source(...)")
+                  if (dialect != tastyDialect) failResolve(s"dialects of $sourceuri ($dialect) and $binuri ($tastyDialect) are different")
+                  if (sydigest != tastyDigest) failResolve(s"source digests of $sourceuri ($sydigest) and $binuri ($tastyDigest) are different")
                   sesource = tastySource.require[m.Source]
                 }
                 super.visitAttribute(attr)
