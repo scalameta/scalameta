@@ -113,13 +113,9 @@ import org.scalameta.debug._
         // NOTE: sy- and se- prefixes mean the same as in MergeTrees.scala, namely "syntactic" and "semantic".
         val charset = Charset.forName("UTF-8")
         val sourcefile = new File(sourceuri.getPath)
-        val content = scala.io.Source.fromFile(sourcefile)(scala.io.Codec(charset)).mkString
-        val sha1 = MessageDigest.getInstance("SHA-1")
-        sha1.reset()
-        sha1.update(content.getBytes("UTF-8"))
-        val sydigest = sha1.digest().map(b => "%02X".format(b)).mkString
-
         val sysource = sourcefile.parse[Source].require[m.Source]
+        val SyntacticDigest(sydialect, syhash) = sysource.syntacticDigest
+
         def toplevelClasses(tree: Tree): List[String] = {
           def loop(prefix: String, tree: Tree): List[String] = tree match {
             case m.Source(stats) => stats.flatMap(stat => loop(prefix, stat)).toList
@@ -147,12 +143,12 @@ import org.scalameta.debug._
                   val valueField = attr.getClass.getDeclaredField("value")
                   valueField.setAccessible(true)
                   val tastyBlob = valueField.get(attr).asInstanceOf[Array[Byte]]
-                  val (SyntacticDigest(tastyDialect, tastyDigest), tastySource) = {
+                  val (SyntacticDigest(tastyDialect, tastyHash), tastySource) = {
                     try fromTasty(tastyBlob)
                     catch { case ex: UntastyException => failResolve(s"deserialization of TASTY from $binuri was unsuccessful", Some(ex)) }
                   }
-                  if (dialect != tastyDialect) failResolve(s"dialects of $sourceuri ($dialect) and $binuri ($tastyDialect) are different")
-                  if (sydigest != tastyDigest) failResolve(s"source digests of $sourceuri ($sydigest) and $binuri ($tastyDigest) are different")
+                  if (sydialect != tastyDialect) failResolve(s"dialects of $sourceuri ($sydialect) and $binuri ($tastyDialect) are different")
+                  if (syhash != tastyHash) failResolve(s"source digests of $sourceuri ($syhash) and $binuri ($tastyHash) are different")
                   sesource = tastySource.require[m.Source]
                 }
                 super.visitAttribute(attr)

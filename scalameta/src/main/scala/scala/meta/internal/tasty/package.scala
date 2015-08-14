@@ -4,6 +4,7 @@ import java.io._
 import java.nio.charset.Charset
 import java.security.MessageDigest
 import scala.meta.{Dialect, Content, Source}
+import scala.meta.internal.ui.TopLevel
 import org.scalameta.data._
 import org.scalameta.debug._
 
@@ -11,8 +12,8 @@ package object tasty {
   @data class SyntacticDigest(dialect: Dialect, hash: String)
   type SemanticSource = Source
 
-  implicit class XtensionDigestTree(source: Source) {
-    def digest: SyntacticDigest = {
+  implicit class XtensionSyntacticDigestTree(source: Source) {
+    def syntacticDigest: SyntacticDigest = {
       val dialect = source.dialect
       val text = source.position match {
         case scala.meta.syntactic.Position.Range(content, _, _, _) => new String(content.chars)
@@ -50,7 +51,7 @@ package object tasty {
       semanticBuf.writeNat(semanticBlob.length)
       semanticBuf.writeBytes(semanticBlob, semanticBlob.length)
 
-      if (Debug.tasty) println(s"successfully written TASTY: ${digest.dialect}, ${digest.hash}, Source(...)")
+      if (Debug.tasty) println(s"successfully written TASTY: ${digest.dialect}, ${digest.hash}, ${source.show[TopLevel]}")
       pickler.assembleParts()
     } catch {
       case ex: TastyException => throw ex
@@ -90,7 +91,7 @@ package object tasty {
         case Some(source) => source
         case _ => throw new UntastyException("no ScalametaSemantic section was found")
       }
-      if (Debug.tasty) println(s"successfully loaded TASTY: ${digest.dialect}, ${digest.hash}, Source(...)")
+      if (Debug.tasty) println(s"successfully loaded TASTY: ${digest.dialect}, ${digest.hash}, ${source.show[TopLevel]}")
       (digest, source)
     } catch {
       case ex: UntastyException => throw ex
