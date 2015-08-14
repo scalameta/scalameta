@@ -19,7 +19,7 @@ import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
 import scala.meta.internal.{semantic => s}
 
-@context(translateExceptions = true)
+@context(translateExceptions = false)
 class Proxy[G <: ScalaGlobal](val global: G, initialDomain: Domain = Domain())
 extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
   indexCompilationUnits()
