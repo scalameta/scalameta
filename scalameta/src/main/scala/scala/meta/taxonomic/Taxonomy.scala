@@ -101,7 +101,9 @@ import org.scalameta.invariants._
     implicit val dialect = artifact.dialect
     val binaries = artifact.binpath.paths.toList
     val sources = {
-      val binfiles = artifact.binpath.explode.filter(x => x._2.toString.endsWith(".class") && !x._2.toString.contains("$"))
+      var binfiles = artifact.binpath.explode.filter(_._2.toString.endsWith(".class"))
+      binfiles = binfiles.filter(!_._2.toString.contains("$")) // NOTE: exclude inner classes
+      binfiles = binfiles.filter(!_._2.toString.contains("scala-library.jar!")) // NOTE: exclude stdlib
       val sourcefiles = artifact.sourcepath.explode.filter(_._2.toString.endsWith(".scala"))
       if (sys.props("tasty.debug") != null) {
         println(binfiles)
