@@ -148,7 +148,7 @@ import org.scalameta.debug._
                   valueField.setAccessible(true)
                   val tastyBlob = valueField.get(attr).asInstanceOf[Array[Byte]]
                   val (SyntacticDigest(tastyDialect, tastyDigest), tastySource) = {
-                    try Source.fromTasty(tastyBlob)
+                    try fromTasty(tastyBlob)
                     catch { case ex: UntastyException => failResolve(s"deserialization of TASTY from $binuri was unsuccessful", Some(ex)) }
                   }
                   if (dialect != tastyDialect) failResolve(s"dialects of $sourceuri ($dialect) and $binuri ($tastyDialect) are different")
