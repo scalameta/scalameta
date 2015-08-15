@@ -109,11 +109,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       case other => unreachable(debug(input, dialect, other))
     })
   }
-  def parseImportee(): Importee = {
-    val r =  parseRule(_.importSelector())
-    println(s"result = ${r.show[Raw]}")
-    r
-  }
+  def parseImportee(): Importee = parseRule(_.importSelector())
   def parseSource(): Source = parseRule(_.compilationUnit())
 
 /* ------------- PARSER-SPECIFIC TOKEN CLASSIFIERS -------------------------------------------- */
@@ -1775,7 +1771,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     if (token.is[`if`] && !isFirst) autoPos(Enumerator.Guard(guard().get)) :: Nil
     else if (token.is[Ellipsis]) {
       ellipsis(1, unquote[Enumerator.Generator]) :: Nil
-    } else if (token.is[Unquote]) {
+    } else if (token.is[Unquote] && ahead(!token.is[`=`] && !token.is[`<-`])) { // support for q"for ($enum1; ..$enums; $enum2)"
       unquote[Enumerator.Generator] :: Nil
     }
     else generator(!isFirst, allowNestedIf)
