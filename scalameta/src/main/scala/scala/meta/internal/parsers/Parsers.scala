@@ -2875,6 +2875,8 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
    */
   def topStatSeq(): List[Stat] = statSeq(topStat, errorMsg = "expected class or object definition")
   def topStat: PartialFunction[Token, Stat] = {
+    case token if token.is[Unquote] =>
+      unquote[Stat]
     case token if token.is[`package `]  =>
       packageOrPackageObjectDef()
     case token if token.is[`import`] =>

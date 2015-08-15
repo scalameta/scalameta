@@ -1476,4 +1476,21 @@ class QuasiquoteSuite extends FunSuite {
     val expr = q"x"
     assert(enumerator"if $expr".show[Structure] === "Enumerator.Guard(Term.Name(\"x\"))")
   }
+
+  test("1 source\"..$stats\"") {
+    val source"..$stats" = source"class A { val a = 'a'}"
+    assert(stats.toString === "List(class A { val a = 'a' })")
+    assert(stats(0).show[Structure] === "Defn.Class(Nil, Type.Name(\"A\"), Nil, Ctor.Primary(Nil, Ctor.Ref.Name(\"this\"), Nil), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), Some(List(Defn.Val(Nil, List(Pat.Var.Term(Term.Name(\"a\"))), None, Lit.Char('a'))))))")
+  }
+
+  test("2 source\"..$stats\"") {
+    val source"class B { val b = 'b'}; ..$stats" = source"class B { val b = 'b'}; class A { val a = 'a'}"
+    assert(stats.toString === "List(class A { val a = 'a' })")
+    assert(stats(0).show[Structure] === "Defn.Class(Nil, Type.Name(\"A\"), Nil, Ctor.Primary(Nil, Ctor.Ref.Name(\"this\"), Nil), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), Some(List(Defn.Val(Nil, List(Pat.Var.Term(Term.Name(\"a\"))), None, Lit.Char('a'))))))")
+  }
+
+  test("3 source\"..$stats\"") {
+    val stats = List(q"class A { val x = 1 }", q"object B")
+    assert(source"..$stats".show[Structure] === "Source(List(Defn.Class(Nil, Type.Name(\"A\"), Nil, Ctor.Primary(Nil, Ctor.Ref.Name(\"this\"), Nil), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), Some(List(Defn.Val(Nil, List(Pat.Var.Term(Term.Name(\"x\"))), None, Lit.Int(1)))))), Defn.Object(Nil, Term.Name(\"B\"), Ctor.Primary(Nil, Ctor.Ref.Name(\"this\"), Nil), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), None))))")
+  }
 }
