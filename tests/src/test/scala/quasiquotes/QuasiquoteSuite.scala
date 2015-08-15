@@ -1444,4 +1444,36 @@ class QuasiquoteSuite extends FunSuite {
   test("mod\"var\"") {
     assert(mod"var".show[Structure] === "Mod.VarParam()")
   }
+
+  test("1 enumerator\"$pat <- $expr\"") {
+    val enumerator"$pat <- $expr" = enumerator"x <- xs"
+    assert(pat.show[Structure] === "Pat.Var.Term(Term.Name(\"x\"))")
+  }
+
+  test("2 enumerator\"$pat <- $expr\"") {
+    val pat = p"x"
+    val expr = q"xs"
+    assert(enumerator"$pat <- $expr".show[Structure] === "Enumerator.Generator(Pat.Var.Term(Term.Name(\"x\")), Term.Name(\"xs\"))")
+  }
+
+  test("1 enumerator\"$pat = $expr\"") {
+    val enumerator"$pat = $expr" = enumerator"x = xs"
+    assert(pat.show[Structure] === "Pat.Var.Term(Term.Name(\"x\"))")
+  }
+
+  test("2 enumerator\"$pat = $expr\"") {
+    val pat = p"x"
+    val expr = q"xs"
+    assert(enumerator"$pat = $expr".show[Structure] === "Enumerator.Val(Pat.Var.Term(Term.Name(\"x\")), Term.Name(\"xs\"))")
+  }
+
+  test("1 enumerator\"if $expr\"") {
+    val enumerator"if $expr" = enumerator"if x"
+    assert(expr.show[Structure] === "Term.Name(\"x\")")
+  }
+
+  test("2 enumerator\"if $expr\"") {
+    val expr = q"x"
+    assert(enumerator"if $expr".show[Structure] === "Enumerator.Guard(Term.Name(\"x\"))")
+  }
 }
