@@ -43,7 +43,7 @@ object Compiler {
     settings.nobootcp.value = true // NOTE: has no effect, but I'm still writing it down here for the future
     settings.usejavacp.value = false
     settings.classpath.value = ""
-    settings.Ylogcp.value = true
+    // settings.Ylogcp.value = true
   }
 
   // TODO: I've tried to figure out how to programmatically obtain the default bootclasspath
