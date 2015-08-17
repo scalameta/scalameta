@@ -9,6 +9,7 @@ import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.reflect.{classTag, ClassTag}
 import scala.reflect.internal.NoPhase
+import scala.reflect.internal.MissingRequirementError
 import scala.reflect.internal.util.BatchSourceFile
 import scala.reflect.io.PlainFile
 import scala.meta.{Mirror => MirrorApi}
@@ -174,39 +175,50 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
 
   private[meta] def indexCompilationUnits(): Unit = {
     val fromScratch = global.currentRun == null
-    def fail(reason: String) = {
+    def fail(reason: String, ex: Option[Exception]) = {
       val status = if (fromScratch) "scratch" else "a pre-existing compiler"
-      throw new InfrastructureException(s"can't initialize a semantic proxy from $status: " + reason)
+      throw new InfrastructureException(s"can't initialize a semantic proxy from $status: " + reason, ex)
     }
 
-    // NOTE: This is necessary for semantic APIs to work correctly,
-    // because otherwise the underlying global isn't going to have its symtab populated.
-    // It would probably be possible to avoid this by creating completers that
-    // lazily read scala.meta trees and then lazily convert them to symtab entries,
-    // but that's way beyond our technological level at the moment.
-    val domainClasspath = initialDomain.artifacts.flatMap(_.binaries).map(p => new File(p.path).toURI.toURL)
-    if (fromScratch) {
-      // NOTE: Make sure that the internal classpath cache hasn't been initialized yet.
-      // If it has, we're in trouble, because our modifications to settings.classpath.value
-      // aren't going to get propagated. Of course, I tried to sidestep this problem
-      // by using something like `global.extendCompilerClassPath(domainClasspath: _*)`,
-      // but unfortunately it throws an obscure assertion error, so I just gave up.
-      val m_currentClassPath = global.platform.getClass.getDeclaredMethod("currentClassPath")
-      m_currentClassPath.setAccessible(true)
-      val currentClassPath = m_currentClassPath.invoke(global.platform).asInstanceOf[Option[_]]
-      require(currentClassPath.isEmpty)
-      global.settings.classpath.value = domainClasspath.map(_.getPath).mkString(File.pathSeparator)
+    try {
+      // NOTE: This is necessary for semantic APIs to work correctly,
+      // because otherwise the underlying global isn't going to have its symtab populated.
+      // It would probably be possible to avoid this by creating completers that
+      // lazily read scala.meta trees and then lazily convert them to symtab entries,
+      // but that's way beyond our technological level at the moment.
+      val domainClasspath = initialDomain.artifacts.flatMap(_.binaries).map(p => new File(p.path).toURI.toURL)
+      if (fromScratch) {
+        // NOTE: Make sure that the internal classpath cache hasn't been initialized yet.
+        // If it has, we're in trouble, because our modifications to settings.classpath.value
+        // aren't going to get propagated. Of course, I tried to sidestep this problem
+        // by using something like `global.extendCompilerClassPath(domainClasspath: _*)`,
+        // but unfortunately it throws an obscure assertion error, so I just gave up.
+        val m_currentClassPath = global.platform.getClass.getDeclaredMethod("currentClassPath")
+        m_currentClassPath.setAccessible(true)
+        val currentClassPath = m_currentClassPath.invoke(global.platform).asInstanceOf[Option[_]]
+        require(currentClassPath.isEmpty)
+        global.settings.classpath.value = domainClasspath.map(_.getPath).mkString(File.pathSeparator)
 
-      // NOTE: This is mandatory, because this is going to: a) finish necessary initialization of the compiler,
-      // b) force computation of the classpath that we have just set.
-      val run = new global.Run
-      global.phase = run.picklerPhase
-      global.globalPhase = run.picklerPhase
-    } else {
-      // NOTE: Probably won't work, it's a very mysterious method.
-      // This scenario isn't on our immediate roadmap, so I'll just leave this line of code here
-      // and accompany it by a warning comment.
-      global.extendCompilerClassPath(domainClasspath: _*)
+        // NOTE: This is mandatory, because this is going to: a) finish necessary initialization of the compiler,
+        // b) force computation of the classpath that we have just set.
+        val run = new global.Run
+        global.phase = run.picklerPhase
+        global.globalPhase = run.picklerPhase
+      } else {
+        // NOTE: Probably won't work, it's a very mysterious method.
+        // This scenario isn't on our immediate roadmap, so I'll just leave this line of code here
+        // and accompany it by a warning comment.
+        global.extendCompilerClassPath(domainClasspath: _*)
+      }
+    } catch {
+      case ex: Exception =>
+        var message = ex.getMessage
+        if (ex.isInstanceOf[MissingRequirementError]) {
+          message = message.stripSuffix(".")
+          message += " (have you forgotten to reference the standard library"
+          message += " when creating a mirror or a toolbox?)"
+        }
+        fail(message, Some(ex))
     }
 
     val globalSources = global.currentRun.units.map(unit => {
