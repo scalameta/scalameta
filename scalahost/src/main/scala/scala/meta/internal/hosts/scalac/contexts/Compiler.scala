@@ -23,7 +23,11 @@ object Compiler {
     val reporter = new StoreReporter()
     val command = new CompilerCommand(args, emptySettings)
     val settings = command.settings
+    initializeJreClasspath(settings)
+    new Global(settings, reporter)
+  }
 
+  private def initializeJreClasspath(settings: Settings): Unit = {
     // NOTE: The task of setting a classpath of the compiler to a blank slate is surprisingly difficult.
     // 1) Not specifying any -classpath will actually lead to scalac magically
     //    selecting either CLASSPATH or current dir as the compilation classpath.
@@ -35,22 +39,16 @@ object Compiler {
     // 4) -Dscala.usejavacp (why on Earth would we need a separate option to double -usejavacp??)
     //    can still mess things up, and we can't just temporarily set sys.props("scala.usejavacp") to false,
     //    because classpath initialization happens elsewhere, lazily. TODO: I'll get to that later.
-    settings.javabootclasspath.value = computeStandardBootClasspath()
+    settings.javabootclasspath.value = computeJreClasspath()
     settings.nobootcp.value = true // NOTE: has no effect, but I'm still writing it down here for the future
     settings.usejavacp.value = false
     settings.classpath.value = ""
     settings.Ylogcp.value = true
-
-    val global = new Global(settings, reporter)
-    val run = new global.Run
-    global.phase = run.picklerPhase // NOTE: need to set to something post-typer
-    global.globalPhase = run.picklerPhase
-    global
   }
 
   // TODO: I've tried to figure out how to programmatically obtain the default bootclasspath
-  // (i.e. the one with rj.jar and the like), but failed and has to resort to workarounds.
-  private def computeStandardBootClasspath(): String = {
+  // (i.e. the one just with rj.jar and the like), but failed and has to resort to workarounds.
+  private def computeJreClasspath(): String = {
     def parse(classpath: String): List[String] = classpath.split(File.pathSeparatorChar).toList
 
     def unparse(classpath: List[String]): String = classpath.mkString(File.pathSeparator)
