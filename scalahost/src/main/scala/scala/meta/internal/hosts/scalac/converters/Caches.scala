@@ -25,11 +25,14 @@ trait Caches extends GlobalToolkit with MetaToolkit {
     x match {
       case x: m.Member =>
         if (x.name.isBinder && !x.isInstanceOf[m.Ctor.Primary] && !x.name.isInstanceOf[m.Name.Anonymous]) {
-          val denot = x.name.require[m.Name].denot.require[s.Denotation.Single]
-          require(denot.symbol != s.Symbol.Zero && debug(x, x.show[Structure]))
-          // TODO: it seems that we can't have this yet
-          // require(!ssymToNativeMmemberCache.contains(denot.symbol) && debug(x, x.show[Structure]))
-          ssymToNativeMmemberCache(denot.symbol) = x
+          x.name.require[m.Name].denot match {
+            case s.Denotation.Single(_, symbol) if symbol != s.Symbol.Zero =>
+              // TODO: it seems that we can't have this yet
+              // require(!ssymToNativeMmemberCache.contains(symbol) && debug(x, x.show[Semantics]))
+              ssymToNativeMmemberCache(symbol) = x
+            case _ =>
+              require(false && debug(x, x.show[Semantics]))
+          }
         }
       case _ =>
         x
