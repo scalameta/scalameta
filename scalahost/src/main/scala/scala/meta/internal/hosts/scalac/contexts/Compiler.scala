@@ -17,7 +17,7 @@ object Compiler {
   }
 
   def apply(options: String)(implicit taxonomy: TaxonomicContext): Global = {
-    def fail(reason: String) = throw new InfrastructureException("can't initialize a semantic proxy: " + reason)
+    def fail(reason: String) = throw new InfrastructureException("can't initialize a semantic proxy from scratch: " + reason)
     val args = CommandLineParser.tokenize(options)
     val emptySettings = new Settings(error => fail("invalid compiler options: $error"))
     val reporter = new StoreReporter()
@@ -66,7 +66,7 @@ object Compiler {
         case arg :: rest if arg.startsWith("-Xbootclasspath/p:") =>
           loop(subtract(classpath, parse(arg.stripPrefix("-Xbootclasspath/p:"))), rest)
         case arg :: rest if arg.startsWith("-Xbootclasspath") =>
-          throw new InfrastructureException(s"can't initialize a semantic proxy: classpath infrastructure doesn't support $arg")
+          throw new InfrastructureException(s"can't initialize a semantic proxy from scratch: classpath infrastructure doesn't support $arg")
         case arg :: rest =>
           loop(classpath, rest)
         case Nil =>
