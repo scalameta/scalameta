@@ -12,6 +12,7 @@ import scala.collection.immutable.ListMap
 import scala.collection.{immutable, mutable}
 import scala.reflect.{classTag, ClassTag}
 import scala.meta.internal.{ast => m}
+import scala.meta.internal.{semantic => s}
 import scala.meta.taxonomic.{Context => TaxonomicContext}
 import scala.tools.asm._
 import scala.meta.internal.tasty._
@@ -166,11 +167,23 @@ import org.scalameta.debug._
         var matches = mutable.AnyRefMap[Tree, Tree]()
         val mestats = {
           def correlate(sy: m.Stat, ses: Seq[m.Stat]): m.Stat = {
+            implicit class XtensionPkgDenot(tree: m.Pkg) {
+              def denot = tree.ref match {
+                case ref: m.Term.Name => ref.denot
+                case ref: m.Term.Select => ref.name.denot
+              }
+              def withDenot(denot: s.Denotation) = tree.ref match {
+                case ref: m.Term.Name => tree.copy(ref = ref.withDenot(denot))
+                case ref: m.Term.Select => tree.copy(ref = ref.copy(name = ref.name.withDenot(denot)))
+              }
+            }
             def correlatePackage(sy: m.Pkg, ses: Seq[m.Stat]): m.Pkg = {
               val ses1 = ses.collect{ case se: m.Pkg if sy.ref.toString == se.ref.toString => se }
               ses1.foreach(se1 => matches(se1) = null)
+              val sedenot = ses1.head.denot
+              ses1.foreach(se1 => require(se1.denot == sedenot && debug(se1)))
               val mestats = sy.stats.map(sy => correlate(sy, ses1.flatMap(se => se.stats)))
-              sy.copy(stats = mestats)
+              sy.copy(stats = mestats).withDenot(sedenot)
             }
             def correlateLeaf[T <: m.Member : ClassTag](sy: T, name: m.Name, ses: Seq[m.Stat], fn: PartialFunction[Tree, Boolean]): T = {
               val ses1 = ses.collect{ case tree if fn.lift(tree).getOrElse(false) => tree }
