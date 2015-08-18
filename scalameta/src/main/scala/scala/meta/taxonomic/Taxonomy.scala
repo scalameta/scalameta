@@ -103,15 +103,49 @@ import org.scalameta.debug._
     }
     implicit val dialect = artifact.dialect
     if (Debug.artifact) println(s"resolving $artifact")
-    val binaries = artifact.binpath.paths.toList
-    val sources = {
+    val binaries: Seq[Path] = artifact.binpath.paths.toList
+    val sources: Seq[Source] = {
+      def loadTasty(uri: URI): Option[(SyntacticDigest, m.Source)] = {
+        val conn = uri.toURL.openConnection
+        val in = conn.getInputStream
+        try {
+          var digest: SyntacticDigest = null
+          var source: m.Source = null
+          val classReader = new ClassReader(in)
+          classReader.accept(new ClassVisitor(Opcodes.ASM4) {
+            override def visitAttribute(attr: Attribute) {
+              if (attr.`type` == "TASTY") {
+                if (Debug.artifact) println(s"found TASTY section in $uri")
+                val valueField = attr.getClass.getDeclaredField("value")
+                valueField.setAccessible(true)
+                val tastyBlob = valueField.get(attr).asInstanceOf[Array[Byte]]
+                val (tastyDigest, tastySource) = {
+                  try fromTasty(tastyBlob)
+                  catch { case ex: UntastyException => failResolve(s"deserialization of TASTY from $uri was unsuccessful", Some(ex)) }
+                }
+                digest = tastyDigest
+                source = tastySource.require[m.Source]
+              }
+              super.visitAttribute(attr)
+            }
+          }, 0)
+          require(!(digest != null ^ source != null))
+          if (digest != null && source != null) Some((digest, source)) else None
+        } finally {
+          in.close()
+        }
+      }
+
       var binfiles = artifact.binpath.explode.filter(_._2.toString.endsWith(".class"))
       binfiles = binfiles.filter(!_._2.toString.contains("$")) // NOTE: exclude inner classes
       binfiles = binfiles.filter(!_._2.toString.contains("scala-library.jar!")) // NOTE: exclude stdlib
       val sourcefiles = artifact.sourcepath.explode.filter(_._2.toString.endsWith(".scala"))
       if (Debug.artifact) { println(binfiles); println(sourcefiles) }
-      sourcefiles.map({ case (_, sourceuri) =>
+
+      val perfectParts = mutable.HashSet[URI]()
+      val perfectSources = sourcefiles.map({ case (_, sourceuri) =>
         // NOTE: sy- and se- prefixes mean the same as in MergeTrees.scala, namely "syntactic" and "semantic".
+        if (Debug.tasty) println(s"considering sourcefile at $sourceuri")
         val charset = Charset.forName("UTF-8")
         val sourcefile = new File(sourceuri.getPath)
         val sysource = sourcefile.parse[Source].require[m.Source]
@@ -131,37 +165,18 @@ import org.scalameta.debug._
         }
         val expectedrelatives = toplevelClasses(sysource).map(_.replace(".", "/") + ".class")
         val binuris = expectedrelatives.flatMap(binfiles.get)
-        val sesources = binuris.flatMap(binuri => {
-          val conn = binuri.toURL.openConnection
-          val in = conn.getInputStream
-          try {
-            var sesource: m.Source = null
-            val classReader = new ClassReader(in)
-            classReader.accept(new ClassVisitor(Opcodes.ASM4) {
-              override def visitAttribute(attr: Attribute) {
-                if (attr.`type` == "TASTY") {
-                  if (Debug.artifact) println(s"found TASTY section in $binuri")
-                  val valueField = attr.getClass.getDeclaredField("value")
-                  valueField.setAccessible(true)
-                  val tastyBlob = valueField.get(attr).asInstanceOf[Array[Byte]]
-                  val (SyntacticDigest(tastyDialect, tastyHash), tastySource) = {
-                    try fromTasty(tastyBlob)
-                    catch { case ex: UntastyException => failResolve(s"deserialization of TASTY from $binuri was unsuccessful", Some(ex)) }
-                  }
-                  if (sydialect != tastyDialect) failResolve(s"dialects of $sourceuri ($sydialect) and $binuri ($tastyDialect) are different")
-                  if (syhash != tastyHash) failResolve(s"source digests of $sourceuri ($syhash) and $binuri ($tastyHash) are different")
-                  sesource = tastySource.require[m.Source]
-                }
-                super.visitAttribute(attr)
-              }
-            }, 0)
-            if (sesource != null) Some(sesource) else None
-          } finally {
-            in.close()
-          }
-        })
+        perfectParts ++= binuris
+        if (Debug.tasty) println(s"found matching classfiles at: ${binuris.mkString(", ")}")
+        val sesources = binuris.flatMap(binuri => loadTasty(binuri).map({
+          case (SyntacticDigest(tastyDialect, tastyHash), sesource) =>
+            def failDigest(what: String) = failResolve(s"$what of $sourceuri ($sydialect) and $binuri ($tastyDialect) are different")
+            if (sydialect != tastyDialect) failDigest("dialects")
+            if (syhash != tastyHash) failDigest("source digests")
+            sesource
+        }))
 
-        def failCorrelate(message: String) = failResolve(s"$message when correlating $sourceuri and $binuris")
+        if (Debug.tasty) println(s"correlating $sourceuri and matching classfiles")
+        def failCorrelate(message: String) = failResolve(s"$message when correlating $sourceuri and matching classfiles")
         val systats = sysource.stats
         val sestats = sesources.map(_.stats).flatten
         var matches = mutable.AnyRefMap[Tree, Tree]()
@@ -204,11 +219,19 @@ import org.scalameta.debug._
           systats.map(sy => correlate(sy, sestats))
         }
         if (matches.size < sestats.length) failCorrelate("undermatched semantic definitions were found")
-        sysource.copy(stats = mestats)
+
+        val mesource = sysource.copy(stats = mestats)
+        if (Debug.tasty) println(s"created a perfect source from $sourceuri and matching classfiles")
+        mesource
       }).toList
+      val otherSources = binfiles.map(_._2).flatMap(binuri => {
+        if (perfectParts(binuri)) None
+        else loadTasty(binuri).map(_._2)
+      })
+      perfectSources ++ otherSources
     }
-    val resources = Nil // TODO: we can definitely do better, e.g. by indexing all non-class files
-    val deps = { // TODO: better heuristic?
+    val resources: Seq[Resource] = Nil // TODO: we can definitely do better, e.g. by indexing all non-class files
+    val deps: Seq[Artifact] = { // TODO: better heuristic?
       if (artifact.sourcepath.paths.isEmpty) Nil
       else artifact.binpath.paths.map(p => Artifact(Multipath(p), "")).toList
     }
