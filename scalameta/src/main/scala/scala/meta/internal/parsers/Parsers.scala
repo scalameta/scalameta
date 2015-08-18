@@ -2155,8 +2155,10 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       validate()
       mods :+ mod
     }
+    def continueLoop = ahead(token.is[`:`] || token.is[`=`] || token.is[EOF])
     def loop(mods: List[Mod]): List[Mod] = token match {
-      case _: Modifier | _: Unquote | _: Ellipsis => loop(appendMod(mods, modifier()))
+      case _: Unquote => if (continueLoop) mods else loop(appendMod(mods, modifier()))
+      case _: Modifier | _: Ellipsis => loop(appendMod(mods, modifier()))
       case _: `\n` if !isLocal => next(); loop(mods)
       case _                   => mods
     }
@@ -2258,27 +2260,30 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     if (isValParam) { mods :+= atPos(in.tokenPos, in.tokenPos)(Mod.ValParam()); next() }
     if (isVarParam) { mods :+= atPos(in.tokenPos, in.tokenPos)(Mod.VarParam()); next() }
     val name = termName()
-    val tpt = {
-      accept[`:`]
-      val tpt = paramType()
-      if (tpt.isInstanceOf[Type.Arg.ByName]) {
-        def mayNotBeByName(subj: String) =
-          syntaxError(s"$subj parameters may not be call-by-name", at = name)
-        val isLocalToThis: Boolean = {
-          val isExplicitlyLocal = mods.accessBoundary.exists(_.isInstanceOf[Term.This])
-          if (ownerIsCase) isExplicitlyLocal
-          else isExplicitlyLocal || (!isValParam && !isVarParam)
+    val tpt =
+      if (token.isNot[`:`])
+        None
+      else {
+        accept[`:`]
+        val tpt = paramType()
+        if (tpt.isInstanceOf[Type.Arg.ByName]) {
+          def mayNotBeByName(subj: String) =
+            syntaxError(s"$subj parameters may not be call-by-name", at = name)
+          val isLocalToThis: Boolean = {
+            val isExplicitlyLocal = mods.accessBoundary.exists(_.isInstanceOf[Term.This])
+            if (ownerIsCase) isExplicitlyLocal
+            else isExplicitlyLocal || (!isValParam && !isVarParam)
+          }
+          if (ownerIsType && !isLocalToThis) {
+            if (isVarParam)
+              mayNotBeByName("`var'")
+            else
+              mayNotBeByName("`val'")
+          } else if (isImplicit)
+            mayNotBeByName("implicit")
         }
-        if (ownerIsType && !isLocalToThis) {
-          if (isVarParam)
-            mayNotBeByName("`var'")
-          else
-            mayNotBeByName("`val'")
-        } else if (isImplicit)
-          mayNotBeByName("implicit")
+        Some(tpt)
       }
-      tpt
-    }
     val default = {
       if (token.isNot[`=`]) None
       else {
@@ -2286,7 +2291,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         Some(expr())
       }
     }
-    Term.Param(mods, name, Some(tpt), default)
+    Term.Param(mods, name, tpt, default)
   }
 
   /** {{{
@@ -2306,7 +2311,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
 
   def typeParam(ownerIsType: Boolean, ctxBoundsAllowed: Boolean): Type.Param = autoPos {
     if (token.is[Unquote]) return unquote[Type.Param]
-    var mods: List[Mod] = annots(skipNewLines = true)
+    var mods: List[Mod] = if (token.is[Ellipsis]) List(ellipsis(1, unquote[Mod])) else annots(skipNewLines = true)
     if (ownerIsType && token.is[Ident]) {
       if (isIdentOf("+")) {
         next()
@@ -2318,6 +2323,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     }
     val nameopt =
       if (token.is[Ident]) typeName()
+      else if (token.is[Unquote]) unquote[Type.Name]
       else if (token.is[`_ `]) { next(); atPos(in.prevTokenPos, in.prevTokenPos)(Name.Anonymous()) }
       else syntaxError("identifier or `_' expected", at = token)
     val tparams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
@@ -2334,11 +2340,13 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         //   deprecationWarning(s"View bounds are deprecated. $msg")
         // }
         next()
-        viewBounds += typ()
+        if (token.is[Ellipsis]) viewBounds += ellipsis(1, unquote[Type])
+        else viewBounds += typ()
       }
       while (token.is[`:`]) {
         next()
-        contextBounds += typ()
+        if (token.is[Ellipsis]) contextBounds += ellipsis(1, unquote[Type])
+        else contextBounds += typ()
       }
     }
     Type.Param(mods, nameopt, tparams, typeBounds, viewBounds.toList, contextBounds.toList)
@@ -2766,7 +2774,9 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
    */
   def templateParents(): List[Term] = {
     val parents = new ListBuffer[Term]
-    def readAppliedParent() = parents += constructorCall(startModType())
+    def readAppliedParent() =
+      if (token.is[Ellipsis]) parents += ellipsis(1, unquote[Term])
+      else parents += constructorCall(startModType())
     readAppliedParent()
     while (token.is[`with`]) { next(); readAppliedParent() }
     parents.toList

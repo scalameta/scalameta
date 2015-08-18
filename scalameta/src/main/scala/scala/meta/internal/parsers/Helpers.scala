@@ -43,6 +43,7 @@ private[meta] object Helpers {
   }
   implicit class XtensionTermOps(tree: Term) {
     def isCtorCall: Boolean = tree match {
+      case _: Term.Quasi => true
       case _: Ctor.Ref => true
       case Term.ApplyType(callee, _) => callee.isCtorCall
       case Term.Apply(callee, _) => callee.isCtorCall
