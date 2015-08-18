@@ -66,20 +66,24 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
         if (mode.isTerm) ${withCoreFields(q"tempBody", fields: _*)} else tempBody
       """
     }
-    def prohibitLowercasePat(pat: Tree): Tree = {
+    // NOTE: We have this check as a special case here, in addition to requires in Trees.scala,
+    // because I think this is going to be a very common mistake that new users are going to make,
+    // so I'd like that potential mistake to receive extra attention in form of quality error reporting.
+    def prohibitName(pat: Tree): Tree = {
       q"""
-        def prohibitLowercasePat(pat: scala.meta.Tree): _root_.scala.Unit = {
+        def prohibitName(pat: scala.meta.Tree): _root_.scala.Unit = {
+          def unquotesName(q: scala.meta.internal.ast.Quasi): Boolean = q.tree match {
+            case tree: c.universe.Tree => tree.tpe != null && tree.tpe <:< typeOf[scala.meta.Term.Name]
+            case tree: scala.meta.internal.ast.Quasi => unquotesName(tree)
+          }
           pat match {
-            case q: scala.meta.internal.ast.Quasi =>
-              val utree = q.tree.asInstanceOf[c.universe.Tree]
-              if (utree.tpe != null && utree.tpe <:< typeOf[scala.meta.Term.Name]) {
-                val action = if (q.rank == 0) "unquote" else "splice"
-                c.abort(q.position, "can't " + action + " a name here, use a variable pattern instead")
-              }
+            case q: scala.meta.internal.ast.Quasi if unquotesName(q) =>
+              val action = if (q.rank == 0) "unquote" else "splice"
+              c.abort(q.position, "can't " + action + " a name here, use a pattern instead")
             case _ =>
           }
         }
-        prohibitLowercasePat($pat)
+        prohibitName($pat)
       """
     }
     // NOTE: we ignore tokens here for the time being
@@ -89,9 +93,9 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
     else if (adt.tpe <:< NameClass.toType) Some(reifyCoreFields(body, "denot"))
     else if (adt.tpe <:< TermClass.toType) Some(reifyCoreFields(body, "typing", "expansion"))
     else if (adt.tpe <:< TermParamClass.toType) Some(reifyCoreFields(body, "typing"))
-    else if (adt.tpe <:< DefnValClass.toType) Some(q"{ $localName.pats.foreach(pat => ${prohibitLowercasePat(q"pat")}); $body }")
-    else if (adt.tpe <:< DefnVarClass.toType) Some(q"{ $localName.pats.foreach(pat => ${prohibitLowercasePat(q"pat")}); $body }")
-    else if (adt.tpe <:< PatTypedClass.toType) Some(q"{ ${prohibitLowercasePat(q"$localName.lhs")}; $body }")
+    else if (adt.tpe <:< DefnValClass.toType) Some(q"{ $localName.pats.foreach(pat => ${prohibitName(q"pat")}); $body }")
+    else if (adt.tpe <:< DefnVarClass.toType) Some(q"{ $localName.pats.foreach(pat => ${prohibitName(q"pat")}); $body }")
+    else if (adt.tpe <:< PatTypedClass.toType) Some(q"{ ${prohibitName(q"$localName.lhs")}; $body }")
     else None
   }
 }

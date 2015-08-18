@@ -140,11 +140,9 @@ class ErrorSuite extends FunSuite {
       val xss = List(List(q"x"))
       q"..$xss"
     """) === """
-      |<macro>:5: type mismatch when unquoting;
-      | found   : List[List[scala.meta.Term.Name]]
-      | required: scala.collection.immutable.Seq[scala.meta.Stat]
+      |<macro>:5: expected start of definition
       |      q"..$xss"
-      |          ^
+      |              ^
     """.trim.stripMargin)
   }
 
@@ -187,11 +185,9 @@ class ErrorSuite extends FunSuite {
       val l = List(q"x: Int", q"y: Y")
       q"..$l"
     """) === """
-      |<macro>:5: type mismatch;
-      | found   : scala.collection.immutable.Seq[scala.meta.Stat]
-      | required: scala.meta.Stat
+      |<macro>:5: expected start of definition
       |      q"..$l"
-      |      ^
+      |            ^
     """.trim.stripMargin)
   }
 
@@ -237,7 +233,7 @@ class ErrorSuite extends FunSuite {
       val name = q"x"
       q"val $name = foo"
     """) === """
-      |<macro>:5: can't unquote a name here, use a variable pattern instead
+      |<macro>:5: can't unquote a name here, use a pattern instead
       |      q"val $name = foo"
       |            ^
     """.trim.stripMargin)
@@ -250,7 +246,7 @@ class ErrorSuite extends FunSuite {
       val name = q"x"
       q"var $name = foo"
     """) === """
-      |<macro>:5: can't unquote a name here, use a variable pattern instead
+      |<macro>:5: can't unquote a name here, use a pattern instead
       |      q"var $name = foo"
       |            ^
     """.trim.stripMargin)
@@ -263,7 +259,7 @@ class ErrorSuite extends FunSuite {
       val name = q"x"
       p"$name: T"
     """) === """
-      |<macro>:5: can't unquote a name here, use a variable pattern instead
+      |<macro>:5: can't unquote a name here, use a pattern instead
       |      p"$name: T"
       |        ^
     """.trim.stripMargin)
@@ -406,7 +402,7 @@ class ErrorSuite extends FunSuite {
       val ptpe = pt"Y"
       p"$pat: $ptpe"
     """) === """
-      |<macro>:6: can't unquote a name here, use a variable pattern instead
+      |<macro>:6: can't unquote a name here, use a pattern instead
       |      p"$pat: $ptpe"
       |        ^
     """.trim.stripMargin)
@@ -454,5 +450,17 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val pt"$ptpe ..@$annots" = pt"x @q @w"
     """).contains("found that tpe.isInstanceOf[Pat.Var.Type].`unary_!` is true"))
+  }
+
+  test("""q"..$mods def this(...$paramss) = $expr"""") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      q"private final def this(x: X, y: Y) = foo"
+    """) === """
+      |<macro>:4: this expected but identifier found
+      |      q"private final def this(x: X, y: Y) = foo"
+      |                                             ^
+    """.trim.stripMargin)
   }
 }
