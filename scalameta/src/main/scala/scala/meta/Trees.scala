@@ -231,7 +231,13 @@ package scala.meta.internal.ast {
                      tparams: Seq[impl.Type.Param],
                      typeBounds: impl.Type.Bounds,
                      viewBounds: Seq[impl.Type],
-                     contextBounds: Seq[impl.Type]) extends api.Type.Param with Member
+                     contextBounds: Seq[impl.Type]) extends api.Type.Param with Member {
+      // TODO @Eugene some restrictions on mods here?
+      // whether it can contain private/final/etc mods, have both covariant and contravariant mods, and so on
+      // and mb better mods -> mod ?
+      // and same questions for typeBounds, viewBounds (at the moment they have single compound type, not list of types)
+      // also in plain scala smth like class C[T with Y] is not allowed, so that may cause additional restrictions
+    }
     object Param {
       @branch trait Name extends impl.Name with api.Type.Param.Name
     }

@@ -172,7 +172,7 @@
 
                 | Quasiquote
 ----------------|-------------------------------------------------
- Term Param     | `param"..$mods $paramname: $atpeopt = $defaultopt"`
+ Term Param     | `param"..$mods $paramname: $atpeopt = $expropt"`
 
 ### Type Parameters (meta.Type.Param)
 
@@ -196,7 +196,7 @@
 
            | Quasiquote
 -----------|--------------------
- Template  | `template"{ ..$stat } with ..$exprs { $param => ..$stats }"`
+ Template  | `template"{ ..$stats } with ..$exprs { $param => ..$stats }"`
 
 ## Modifiers (meta.Mod)
 

@@ -1842,4 +1842,71 @@ class QuasiquoteSuite extends FunSuite {
     val expr = q"this(foo, bar)"
     assert(q"..$mods def this(..$paramss) = $expr".show[Structure] === "Ctor.Secondary(List(Mod.Private(Name.Anonymous()), Mod.Final()), Ctor.Ref.Name(\"this\"), List(List(Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"X\")), None), Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"Y\")), None))), Term.Apply(Term.This(Name.Anonymous()), List(Term.Name(\"foo\"), Term.Name(\"bar\"))))")
   }
+
+  test("1 param\"..$mods $paramname: $atpeopt = $expropt\"") {
+    val param"..$mods $paramname: $atpeopt = $expropt" = param"private final x: X = 42"
+    assert(mods.toString === "List(private, final)")
+    assert(mods(0).show[Structure] === "Mod.Private(Name.Anonymous())")
+    assert(mods(1).show[Structure] === "Mod.Final()")
+    assert(paramname.show[Structure] === "Term.Name(\"x\")")
+    assert(atpeopt.show[Structure] === "Type.Name(\"X\")")
+    assert(expropt.show[Structure] === "Lit.Int(42)")
+  }
+
+  test("2 param\"..$mods $paramname: $atpeopt = $expropt\"") {
+    val mods = List(mod"private", mod"final")
+    val paramname = q"x"
+    val atpeopt = t"X"
+    val expropt = q"42"
+    assert(param"..$mods $paramname: $atpeopt = $expropt".show[Structure] === "Term.Param(List(Mod.Private(Name.Anonymous()), Mod.Final()), Term.Name(\"x\"), Some(Type.Name(\"X\")), Some(Lit.Int(42)))")
+  }
+
+  test("1 tparam\"..$mods $tparamname[..$tparams] >: $tpeopt <: $tpeopt <% ..$tpes : ..$tpes\"") {
+    val tparam"..$mods $tparamname[..$tparams] >: $tpeopt1 <: $tpeopt2 <% ..$tpes1 : ..$tpes2" = tparam"+Z[Q,W] >: E <: R <% T with Y : U with I"
+    assert(mods.toString === "List(+)")
+    assert(mods(0).show[Structure] === "Mod.Covariant()")
+    assert(tparamname.show[Structure] === "Type.Name(\"Z\")")
+    assert(tparams.toString === "List(Q, W)")
+    assert(tparams(0).show[Structure] === "Type.Param(Nil, Type.Name(\"Q\"), Nil, Type.Bounds(None, None), Nil, Nil)")
+    assert(tparams(1).show[Structure] === "Type.Param(Nil, Type.Name(\"W\"), Nil, Type.Bounds(None, None), Nil, Nil)")
+    assert(tpeopt1.show[Structure] === "Type.Name(\"E\")")
+    assert(tpeopt2.show[Structure] === "Type.Name(\"R\")")
+    assert(tpes1.toString === "List(T with Y)")
+    assert(tpes1(0).show[Structure] === "Type.Compound(List(Type.Name(\"T\"), Type.Name(\"Y\")), Nil)")
+    assert(tpes2.toString === "List(U with I)")
+    assert(tpes2(0).show[Structure] === "Type.Compound(List(Type.Name(\"U\"), Type.Name(\"I\")), Nil)")
+  }
+
+  test("2 tparam\"..$mods $tparamname[..$tparams] >: $tpeopt <: $tpeopt <% ..$tpes : ..$tpes\"") {
+    val mods = List(mod"+")
+    val tparamname = t"Z"
+    val tparams = List(tparam"Q", tparam"W")
+    val tpeopt1 = t"E"
+    val tpeopt2 = t"R"
+    val tpes1 = List(t"T with Y")
+    val tpes2 = List(t"U with I")
+    assert(tparam"..$mods $tparamname[..$tparams] >: $tpeopt1 <: $tpeopt2 <% ..$tpes1 : ..$tpes2".show[Structure] === "Type.Param(List(Mod.Covariant()), Type.Name(\"Z\"), List(Type.Param(Nil, Type.Name(\"Q\"), Nil, Type.Bounds(None, None), Nil, Nil), Type.Param(Nil, Type.Name(\"W\"), Nil, Type.Bounds(None, None), Nil, Nil)), Type.Bounds(Some(Type.Name(\"E\")), Some(Type.Name(\"R\"))), List(Type.Compound(List(Type.Name(\"T\"), Type.Name(\"Y\")), Nil)), List(Type.Compound(List(Type.Name(\"U\"), Type.Name(\"I\")), Nil)))")
+  }
+
+  test("1 template\"{ ..$stats } with ..$exprs { $param => ..$stats }\"") {
+    val template"{ ..$stats1 } with ..$exprs { $param => ..$stats2 }" = template"{ val a = 2; val b = 2 } with T with U { self: Z => def m = 2; def n = 2 }"
+    assert(stats1.toString === "List(val a = 2, val b = 2)")
+    assert(stats1(0).show[Structure] === "Defn.Val(Nil, List(Pat.Var.Term(Term.Name(\"a\"))), None, Lit.Int(2))")
+    assert(stats1(1).show[Structure] === "Defn.Val(Nil, List(Pat.Var.Term(Term.Name(\"b\"))), None, Lit.Int(2))")
+    assert(exprs.toString === "List(T, U)")
+    assert(exprs(0).show[Structure] === "Ctor.Ref.Name(\"T\")")
+    assert(exprs(1).show[Structure] === "Ctor.Ref.Name(\"U\")")
+    assert(param.show[Structure] === "Term.Param(Nil, Term.Name(\"self\"), Some(Type.Name(\"Z\")), None)")
+    assert(stats2.toString === "List(def m = 2, def n = 2)")
+    assert(stats2(0).show[Structure] === "Defn.Def(Nil, Term.Name(\"m\"), Nil, Nil, None, Lit.Int(2))")
+    assert(stats2(1).show[Structure] === "Defn.Def(Nil, Term.Name(\"n\"), Nil, Nil, None, Lit.Int(2))")
+  }
+
+//  test("2 template\"{ ..$stats } with ..$exprs { $param => ..$stats }\"") { // TODO review after parseCtorRef implemented (exprs)
+//    val stats1 = List(q"val a = 2", q"val b = 2")
+//    val exprs = List(q"T", q"U")
+//    val param = param"self: S"
+//    val stats2 = List(q"def m = 2", q"def n = 2")
+//    assert(template"{ ..$stats1 } with ..$exprs { $param => ..$stats2 }".show[Structure] === "")
+//  }
 }
