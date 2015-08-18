@@ -115,7 +115,7 @@ class AstMacros(val c: Context) {
           def tokens: _root_.scala.meta.Tokens = {
             internalTokens = internalTokens match {
               case null => _root_.scala.meta.internal.ui.inferTokens(this, None)
-              case _root_.scala.meta.internal.ui.PrototypeTokens(proto) => _root_.scala.meta.internal.ui.inferTokens(this, Some(proto))
+              case _root_.scala.meta.internal.ui.TransformedTokens(proto) => _root_.scala.meta.internal.ui.inferTokens(this, Some(proto))
               case other => other
             }
             internalTokens
@@ -265,7 +265,7 @@ class AstMacros(val c: Context) {
       val copyParamss = fieldParamss.zip(fieldDefaultss).map{ case (f, d) => f.zip(d).map { case (p, default) => q"val ${p.name}: ${p.tpt} = $default" } }
       val copyArgss = fieldParamss.map(_.map(p => q"${p.name}"))
       val copyCore = q"$mname.apply(...$copyArgss)"
-      val copyBody = q"$copyCore.withTokens(tokens = _root_.scala.meta.internal.ui.PrototypeTokens(this))"
+      val copyBody = q"$copyCore.withTokens(tokens = _root_.scala.meta.internal.ui.TransformedTokens(this))"
       // TODO: would be useful to turn copy into a macro, so that its calls are guaranteed to be inlined
       astats1 += q"def copy(...$copyParamss): $iname = $copyBody"
 
