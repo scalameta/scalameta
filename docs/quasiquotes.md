@@ -146,10 +146,10 @@
 
            | Quasiquote
 -----------|------------------------------
- Val       | `q"..$mods val ..$names: $tpe"`
- Var       | `q"..$mods var ..$names: $tpe"`
+ Val       | `q"..$mods val ..$pnames: $tpe"`
+ Var       | `q"..$mods var ..$pnames: $tpe"`
  Def       | `q"..$mods def $name[..$tparams](...$paramss): $tpe"`
- Type      | `q"..$mods type $tname[..$tparams] >: $tpeopt <: tpeopt"`
+ Type      | `q"..$mods type $tname[..$tparams] >: $tpeopt <: $tpeopt"`
 
 ### Definitions
 
@@ -160,13 +160,13 @@
  Def            | `q"..$mods def $name[..$tparams](...$paramss): $tpeopt = $expr"`
  Macro          | `q"..$mods def $name[..$tparams](...$paramss): $tpe = macro $expr"`
  Type           | `q"..$mods type $tname[..$tparams] = $tpe"`
- Class          | `q"..$mods class $tname[..$tparams] $member extends $template"`
+ Class          | `q"..$mods class $tname[..$tparams] $mod (...$paramss) extends $template"`
  Trait          | `q"..$mods trait $tname[..$tparams] extends $template"`
  Object         | `q"..$mods object $name extends $template"`
  Package Object | `q"package object $name extends $template"`
  Package        | `q"package $ref { ..$stats }"`
- Primary Ctor   | `q"..$mods def this(..$paramss)"`
- Secondary Ctor | `q"..$mods def this(..$paramss) = $expr"`
+ Primary Ctor   | `q"..$mods def this(...$paramss)"`
+ Secondary Ctor | `q"..$mods def this(...$paramss) = $expr"`
 
 ### Value Parameters (meta.Term.Param)
 
