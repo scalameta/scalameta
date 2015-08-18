@@ -205,7 +205,6 @@ import org.scalameta.debug._
               ses1.foreach(se1 => matches(se1) = null)
               def message(adjective: String) = s"$adjective syntactic ${sy.productPrefix} named $name was found"
               if (ses1.isEmpty) failCorrelate(message("undermatched"))
-              else if (ses1.length > 1) failCorrelate(message("overmatched"))
               else mergeTrees(sy, ses1.head)
             }
             sy match {
