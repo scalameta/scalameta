@@ -2259,13 +2259,19 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     val (isValParam, isVarParam) = (ownerIsType && token.is[`val`], ownerIsType && token.is[`var`])
     if (isValParam) { mods :+= atPos(in.tokenPos, in.tokenPos)(Mod.ValParam()); next() }
     if (isVarParam) { mods :+= atPos(in.tokenPos, in.tokenPos)(Mod.VarParam()); next() }
-    val name = termName()
+    val name = termName() match {
+      case q: Term.Name.Quasi => q.become[Term.Param.Name.Quasi]
+      case x => x
+    }
     val tpt =
       if (token.isNot[`:`])
         None
       else {
         accept[`:`]
-        val tpt = paramType()
+        val tpt = paramType() match {
+          case q: Type.Quasi => q.become[Type.Arg.Quasi]
+          case x => x
+        }
         if (tpt.isInstanceOf[Type.Arg.ByName]) {
           def mayNotBeByName(subj: String) =
             syntaxError(s"$subj parameters may not be call-by-name", at = name)
@@ -2284,13 +2290,12 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         }
         Some(tpt)
       }
-    val default = {
+    val default =
       if (token.isNot[`=`]) None
       else {
         next()
         Some(expr())
       }
-    }
     Term.Param(mods, name, tpt, default)
   }
 
@@ -2323,7 +2328,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     }
     val nameopt =
       if (token.is[Ident]) typeName()
-      else if (token.is[Unquote]) unquote[Type.Name]
+      else if (token.is[Unquote]) unquote[Type.Param.Name]
       else if (token.is[`_ `]) { next(); atPos(in.prevTokenPos, in.prevTokenPos)(Name.Anonymous()) }
       else syntaxError("identifier or `_' expected", at = token)
     val tparams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
