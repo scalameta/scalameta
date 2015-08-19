@@ -198,7 +198,7 @@ import org.scalameta.debug._
               val sedenot = ses1.head.denot
               ses1.foreach(se1 => require(se1.denot == sedenot && debug(se1)))
               val mestats = sy.stats.map(sy => correlate(sy, ses1.flatMap(se => se.stats)))
-              sy.copy(stats = mestats).withDenot(sedenot)
+              sy.copy(stats = mestats).withTokens(sy.tokens).withDenot(sedenot)
             }
             def correlateLeaf[T <: m.Member : ClassTag](sy: T, name: m.Name, ses: Seq[m.Stat], fn: PartialFunction[Tree, Boolean]): T = {
               val ses1 = ses.collect{ case tree if fn.lift(tree).getOrElse(false) => tree }
@@ -219,7 +219,7 @@ import org.scalameta.debug._
         }
         if (matches.size < sestats.length) failCorrelate("undermatched semantic definitions were found")
 
-        val mesource = sysource.copy(stats = mestats)
+        val mesource = sysource.copy(stats = mestats).withTokens(sysource.tokens)
         if (Debug.tasty) println(s"created a perfect source from $sourceuri and matching classfiles")
         mesource
       }).toList
