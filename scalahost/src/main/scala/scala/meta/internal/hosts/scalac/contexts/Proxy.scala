@@ -42,7 +42,8 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
   }
 
   private[meta] def desugar(term: mapi.Term): mapi.Term = {
-    ???
+    val mexpansion = term.requireExpanded()
+    mexpansion.require[m.Term]
   }
 
   private[meta] def tpe(term: mapi.Term): mapi.Type = {

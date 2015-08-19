@@ -82,6 +82,17 @@ trait MetaToolkit {
         case _ => unreachable(debug(tree))
       }
     }
+    def requireExpanded(): mapi.Term = {
+      def requireExpanded(expansion: Expansion) = expansion match {
+        case Expansion.Zero => throw new SemanticException(s"implementation restriction: internal cache has no expansion associated with $tree")
+        case Expansion.Identity => tree.require[Term]
+        case Expansion.Desugaring(term) => term
+      }
+      tree match {
+        case tree: Term => requireExpanded(tree.expansion)
+        case _ => unreachable(debug(tree))
+      }
+    }
   }
 
   implicit class RichMetaToolkitDenotation(denot: Denotation) {
