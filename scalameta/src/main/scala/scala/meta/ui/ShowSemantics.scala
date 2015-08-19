@@ -83,6 +83,7 @@ object Semantics {
           def tag = classOf[Expansion]
           def prettyprint() = expansion match {
             case Expansion.Zero => unreachable
+            case Expansion.Identity => unreachable
             case Expansion.Desugaring(term) => if (style == Style.Deep) body(term) else term.show[Structure]
           }
         }
@@ -158,6 +159,7 @@ object Semantics {
           case x: Term =>
             x.expansion match {
               case Expansion.Zero => ""
+              case expansion @ Expansion.Identity => s"<=>"
               case expansion @ Expansion.Desugaring(term) => s"<${footnotes.insert(expansion)}>"
             }
           case _ =>

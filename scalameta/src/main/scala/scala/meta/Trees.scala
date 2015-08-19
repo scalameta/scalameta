@@ -106,6 +106,7 @@ package scala.meta.internal.ast {
     def withDenot(denot: Denotation): ThisType
     def withDenot(prefix: Prefix, symbol: Symbol): ThisType = withDenot(Denotation.Single(prefix, symbol))
     def withDenot(prefix: Prefix, symbols: List[Symbol]): ThisType = withDenot(Denotation.Multi(prefix, symbols))
+    def resetDenot: ThisType = withDenot(Denotation.Zero)
   }
   object Name {
     @ast class Anonymous extends api.Name.Anonymous with Name with Term.Param.Name with Type.Param.Name with Qualifier { def value = "_" }
@@ -121,9 +122,12 @@ package scala.meta.internal.ast {
     def typing: Typing
     def withTyping(typing: Typing): ThisType
     def withTyping(known: api.Type.Arg): ThisType = withTyping(Typing.Specified(known))
+    def resetTyping: ThisType = withTyping(Typing.Zero)
     def expansion: Expansion
     def withExpansion(expansion: Expansion): ThisType
     def withExpansion(desugaring: api.Term): ThisType = withExpansion(Expansion.Desugaring(desugaring))
+    // TODO: think of a name for a method to shortcut withExpansion(Expansion.Identity)
+    def resetExpansion: ThisType = withExpansion(Expansion.Zero)
   }
   object Term {
     @branch trait Ref extends api.Term.Ref with Term with impl.Ref
