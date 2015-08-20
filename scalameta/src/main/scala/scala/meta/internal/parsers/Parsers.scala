@@ -74,7 +74,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   def parsePatArg(): Pat.Arg = parseRule(_.pattern())
   def parsePatType(): Pat.Type = parseRule(_.patternTyp())
   def parseCase(): Case = parseRule{parser => parser.accept[`case`]; parser.caseClause()}
-  def parseCtorRef(): Ctor.Ref = ???
+  def parseCtorCall(): Ctor.Call = parseRule(_.constructorCall(typ(), allowArgss = true))
   def parseTemplate(): Template = parseRule(_.template())
   def parseMod(): Mod = {
     implicit class XtensionParser(parser: this.type) {
@@ -2724,14 +2724,17 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       result
     }
 
-  def constructorCall(tpe: Type, allowArgss: Boolean = true): Term = {
+  def constructorCall(tpe: Type, allowArgss: Boolean = true): Ctor.Call = {
     object Types {
       def unapply(tpes: Seq[Type.Arg]): Option[Seq[Type]] = {
-        if (tpes.forall(_.isInstanceOf[Type])) Some(tpes.map(_.require[Type]))
+        if (tpes.forall(t => t.isInstanceOf[Type] || t.isInstanceOf[Type.Arg.Quasi])) Some(tpes.map {
+          case q: Type.Arg.Quasi => q.become[Type.Quasi]
+          case t: Type => t.require[Type]
+        })
         else None
       }
     }
-    def convert(tpe: Type): Term = {
+    def convert(tpe: Type): Ctor.Call = {
       // TODO: we should really think of a different representation for constructor invocations...
       // if anything, this mkCtorRefFunction is a testament to how problematic our current encoding is
       // the Type.ApplyInfix => Term.ApplyType conversion is weird as well
@@ -2742,7 +2745,9 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       atPos(tpe, tpe)(tpe match {
         case q: Type.Quasi => q.become[Ctor.Ref.Name.Quasi]
         case Type.Name(value) => Ctor.Name(value)
+        case Type.Select(qual, name: Type.Name.Quasi) => Ctor.Ref.Select(qual, atPos(name, name)(name.become[Ctor.Name.Quasi]))
         case Type.Select(qual, name) => Ctor.Ref.Select(qual, atPos(name, name)(Ctor.Name(name.value)))
+        case Type.Project(qual, name: Type.Name.Quasi) => Ctor.Ref.Project(qual, atPos(name, name)(name.become[Ctor.Name.Quasi]))
         case Type.Project(qual, name) => Ctor.Ref.Project(qual, atPos(name, name)(Ctor.Name(name.value)))
         case Type.Function(Types(params), ret) => Term.ApplyType(mkCtorRefFunction(tpe), params :+ ret)
         case Type.Annotate(tpe, annots) => Term.Annotate(convert(tpe), annots)
@@ -2751,7 +2756,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         case _ => syntaxError("this type can't be used in a constructor call", at = tpe)
       })
     }
-    var result: Term = convert(tpe)
+    var result = convert(tpe)
     var done = false
     while (token.is[`(`] && !done) {
       result = atPos(result, auto)(Term.Apply(result, argumentExprs()))

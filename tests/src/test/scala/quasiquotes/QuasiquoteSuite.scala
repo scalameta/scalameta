@@ -615,18 +615,15 @@ class QuasiquoteSuite extends FunSuite {
     assert(self.show[Structure] === "Term.Param(Nil, Name.Anonymous(), None, None)")
   }
 
-  //todo return after ctor fixed
-  //  test("4 q\"new { ..$stat } with ..$exprs { $param => ..$stats }\"") {
-  //    val stats = List(q"val a = 2")
-  //    val a = ctor"A"
-  //    val selff = param"self: A"
-  //    val statz = List(q"val b = 3")
-  //    assert(q"new {..$stats; val b = 4} with $a {$selff => ..$statz}".show[Structure] === "Defn.Val(Nil, List(Pat.Var.Term(Term.Name(\"b\"))), None, Lit.Int(3))")
-  //  }
+  test("4 q\"new { ..$stat } with ..$exprs { $param => ..$stats }\"") {
+    val stats = List(q"val a = 2")
+    val a = ctor"A"
+    val selff = param"self: A"
+    val statz = List(q"val b = 3")
+    assert(q"new {..$stats; val b = 4} with $a {$selff => ..$statz}".show[Structure] === "Term.New(Template(List(Defn.Val(Nil, List(Pat.Var.Term(Term.Name(\"a\"))), None, Lit.Int(2)), Defn.Val(Nil, List(Pat.Var.Term(Term.Name(\"b\"))), None, Lit.Int(4))), List(Ctor.Ref.Name(\"A\")), Term.Param(Nil, Term.Name(\"self\"), Some(Type.Name(\"A\")), None), Some(List(Defn.Val(Nil, List(Pat.Var.Term(Term.Name(\"b\"))), None, Lit.Int(3))))))")
+  }
 
-  // TODO fails to compile, uncomment after issue #199 resolved
-
-//  test("4 q\"new { ..$stat } with ..$exprs { $param => ..$stats }\"") {
+//  test("4 q\"new { ..$stat } with ..$exprs { $param => ..$stats }\"") { // TODO fails to compile, review after issue #199 resolved
 //    val q"new {..$stats; val b = 4} with $a {$selff => ..$statz}" = q"new {val a = 2; val b = 4}"
 //  }
 
@@ -1081,9 +1078,9 @@ class QuasiquoteSuite extends FunSuite {
     assert(pt"_".show[Structure] === "Pat.Type.Wildcard()")
   }
 
-  test("pt\"x\"") {
-    assert(pt"x".show[Structure] === "Pat.Var.Type(Type.Name(\"x\"))")
-  }
+//  test("pt\"x\"") { // TODO review after #216 resolved
+//    assert(pt"x".show[Structure] === "Pat.Var.Type(Type.Name(\"x\"))")
+//  }
 
   test("pt\"X\"") {
     assert(pt"X".show[Structure] === "Type.Name(\"X\")")
@@ -1174,11 +1171,11 @@ class QuasiquoteSuite extends FunSuite {
     assert(pt"$ptpe[..$ptpes]".show[Structure] === "Pat.Type.Apply(Type.Name(\"X\"), List(Type.Name(\"Y\"), Type.Name(\"Z\")))")
   }
 
-  test("4 pt\"$ptpe[..$ptpes]") {
-    val ptpe = pt"`X`"
-    val ptpes = List(pt"y", pt"z")
-    assert(pt"$ptpe[..$ptpes]".show[Structure] === "Pat.Type.Apply(Type.Name(\"X\"), List(Pat.Var.Type(Type.Name(\"y\")), Pat.Var.Type(Type.Name(\"z\"))))")
-  }
+//  test("4 pt\"$ptpe[..$ptpes]") { // TODO review after #216 resolved
+//    val ptpe = pt"`X`"
+//    val ptpes = List(pt"y", pt"z")
+//    assert(pt"$ptpe[..$ptpes]".show[Structure] === "Pat.Type.Apply(Type.Name(\"X\"), List(Pat.Var.Type(Type.Name(\"y\")), Pat.Var.Type(Type.Name(\"z\"))))")
+//  }
 
   test("1 pt\"$ptpe $tname $ptpe\"") {
     val pt"$ptpe1 $tname $ptpe2" = pt"X Y Z"
@@ -1902,11 +1899,100 @@ class QuasiquoteSuite extends FunSuite {
     assert(stats2(1).show[Structure] === "Defn.Def(Nil, Term.Name(\"n\"), Nil, Nil, None, Lit.Int(2))")
   }
 
-//  test("2 template\"{ ..$stats } with ..$exprs { $param => ..$stats }\"") { // TODO review after parseCtorRef implemented (exprs)
+//  test("2 template\"{ ..$stats } with ..$exprs { $param => ..$stats }\"") { // TODO review after #227 resolved
 //    val stats1 = List(q"val a = 2", q"val b = 2")
 //    val exprs = List(q"T", q"U")
 //    val param = param"self: S"
 //    val stats2 = List(q"def m = 2", q"def n = 2")
 //    assert(template"{ ..$stats1 } with ..$exprs { $param => ..$stats2 }".show[Structure] === "")
 //  }
+
+  test("1 ctor\"$ctorname\"") {
+    val ctor"$ctorname" = ctor"x" // TODO after #227 types should be precise (Ctor.Call)
+    assert(ctorname.show[Structure] === "Ctor.Ref.Name(\"x\")")
+  }
+
+  test("2 ctor\"$ctorname\"") {
+    val ctorname = ctor"x"
+    assert(ctor"$ctorname".show[Structure] === "Ctor.Ref.Name(\"x\")")
+  }
+
+  test("1 ctor\"$ref.$ctorname\"") {
+    val ctor"$ref.$ctorname" = ctor"x.y" // TODO after #227 types should be precise (Ctor.Call)
+    assert(ref.show[Structure] === "Term.Name(\"x\")")
+    assert(ctorname.show[Structure] === "Ctor.Ref.Name(\"y\")")
+  }
+
+  test("2 ctor\"$ref.$ctorname\"") {
+    val ref = q"x"
+    val ctorname = ctor"y"
+    assert(ctor"$ref.$ctorname".show[Structure] === "Ctor.Ref.Select(Term.Name(\"x\"), Ctor.Ref.Name(\"y\"))")
+  }
+
+  test("1 ctor\"tpe#$ctorname\"") {
+    val ctor"$tpe#$ctorname" = ctor"x#y" // TODO after #227 types should be precise (Ctor.Call)
+    assert(tpe.show[Structure] === "Type.Name(\"x\")")
+    assert(ctorname.show[Structure] === "Ctor.Ref.Name(\"y\")")
+  }
+
+  test("2 ctor\"$tpe#$ctorname\"") {
+    val tpe = t"x"
+    val ctorname = ctor"y"
+    assert(ctor"$tpe#$ctorname".show[Structure] === "Ctor.Ref.Project(Type.Name(\"x\"), Ctor.Ref.Name(\"y\"))")
+  }
+
+  test("1 ctor\"(..$tpes) => $tpe\"") {
+    val ctor"(x, ..$tpes) => $tpe" = ctor"(x, y) => z" // TODO after #227 types should be precise (Ctor.Call)
+    assert(tpes.toString === "List(y)")
+    assert(tpes(0).show[Structure] === "Type.Name(\"y\")")
+    assert(tpe.show[Structure] === "Type.Name(\"z\")")
+  }
+
+  test("2 ctor\"(..$tpes) => $tpe\"") {
+    val tpes = List(t"x", t"y")
+    val tpe = t"z"
+    assert(ctor"(x, ..$tpes) => $tpe".show[Structure] === "Term.ApplyType(Ctor.Ref.Function(Ctor.Ref.Name(\"=>\")), List(Type.Name(\"x\"), Type.Name(\"x\"), Type.Name(\"y\"), Type.Name(\"z\")))")
+  }
+
+  test("1 ctor\"$ctorname ..@annots\"") {
+    val ctor"$ctorname ..@$annots" = ctor"x @q @w" // TODO after #227 types should be precise (Ctor.Call)
+    assert(ctorname.show[Structure] === "Ctor.Ref.Name(\"x\")")
+    assert(annots.toString === "List(@q, @w)")
+    assert(annots(0).show[Structure] === "Mod.Annot(Ctor.Ref.Name(\"q\"))")
+    assert(annots(1).show[Structure] === "Mod.Annot(Ctor.Ref.Name(\"w\"))")
+  }
+
+  test("2 ctor\"$ctorname ..@annots\"") {
+    val ctorname = ctor"x"
+    val annots = List(mod"@q", mod"@w")
+    assert(ctor"$ctorname ..@$annots".show[Structure] === "Term.Annotate(Ctor.Ref.Name(\"x\"), List(Mod.Annot(Ctor.Ref.Name(\"q\")), Mod.Annot(Ctor.Ref.Name(\"w\"))))")
+  }
+
+  test("1 ctor\"$ctorref(...$aexprss)\"") { // TODO check for ... when #221 resolved
+    val ctor"$ctorref(..$aexprss)" = ctor"x(y, z)" // TODO after #227 types should be precise (Ctor.Call)
+    assert(ctorref.show[Structure] === "Ctor.Ref.Name(\"x\")")
+    assert(aexprss.toString === "List(y, z)")
+    assert(aexprss(0).show[Structure] === "Term.Name(\"y\")")
+    assert(aexprss(1).show[Structure] === "Term.Name(\"z\")")
+  }
+
+  test("2 ctor\"$ctorref(...$aexprss)\"") {
+    val ctorref = ctor"x"
+    val aexprss = List(arg"y", arg"z")
+    assert(ctor"$ctorref(..$aexprss)".show[Structure] === "Term.Apply(Ctor.Ref.Name(\"x\"), List(Term.Name(\"y\"), Term.Name(\"z\")))")
+  }
+
+  test("1 ctor\"$ctorref[..$atpes]\"") {
+    val ctor"$ctorref[..$atpes]" = ctor"x[y, z]" // TODO after #227 types should be precise (Ctor.Call)
+    assert(ctorref.show[Structure] === "Ctor.Ref.Name(\"x\")")
+    assert(atpes.toString === "List(y, z)")
+    assert(atpes(0).show[Structure] === "Type.Name(\"y\")")
+    assert(atpes(1).show[Structure] === "Type.Name(\"z\")")
+  }
+
+  test("2 ctor\"$ctorref[..$atpes]\"") {
+    val ctorref = ctor"x"
+    val atpes = List(t"y", t"z")
+    assert(ctor"$ctorref[..$atpes]".show[Structure] === "Term.ApplyType(Ctor.Ref.Name(\"x\"), List(Type.Name(\"y\"), Type.Name(\"z\")))")
+  }
 }

@@ -57,7 +57,7 @@ class BranchMacros(val c: Context) {
           qstats ++= List("value", "denot").map(quasigetter)
           qstats :+= quasisetter("withDenot", q"val denot: $SemanticInternal.Denotation")
         }
-        if (is("Term") || is("Lit") || is("Term.Ref") || is("Ctor.Ref")) {
+        if (is("Term") || is("Lit") || is("Term.Ref") || is("Ctor.Ref") || is("Ctor.Call")) {
           qstats ++= List("typing", "expansion").map(quasigetter)
           qstats :+= quasisetter("withTyping", q"val typing: $SemanticInternal.Typing")
           qstats :+= quasisetter("withExpansion", q"val expansion: $SemanticInternal.Expansion")

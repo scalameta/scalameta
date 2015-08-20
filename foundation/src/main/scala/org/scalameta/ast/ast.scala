@@ -24,8 +24,9 @@ class AstMacros(val c: Context) {
       def isName = is("Name.Anonymous") || is("Name.Indeterminate") || is("Term.Name") || is("Type.Name") || is("Ctor.Ref.Name")
       def isLit = !isQuasi && fullName.startsWith("scala.meta.internal.ast.Lit")
       def isCtorRef = !isQuasi && fullName.startsWith("scala.meta.internal.ast.Ctor.Ref")
+      def isCtorCall = !isQuasi && fullName.startsWith("scala.meta.internal.ast.Ctor.Call")
       def looksLikeTermButNotTerm = is("Term.Param") || is("Term.Arg.Named") || is("Term.Arg.Repeated")
-      def isTerm = !isQuasi && (fullName.startsWith("scala.meta.internal.ast.Term") || isLit || isCtorRef) && !looksLikeTermButNotTerm
+      def isTerm = !isQuasi && (fullName.startsWith("scala.meta.internal.ast.Term") || isLit || isCtorRef || isCtorCall) && !looksLikeTermButNotTerm
       def isTermParam = is("Term.Param")
       def hasTokens = true
       def hasDenot = isName

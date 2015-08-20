@@ -11,8 +11,8 @@ class ReflectionSuite extends AstSuite {
   // but please deal with that (or come up with a more effective way of testing AstReflection)
   test("root") {
     assert(symbolOf[scala.meta.Tree].isRoot)
-    assert(symbolOf[scala.meta.Tree].asRoot.allBranches.length === 70)
-    assert(symbolOf[scala.meta.Tree].asRoot.allLeafs.length === 336)
+    assert(symbolOf[scala.meta.Tree].asRoot.allBranches.length === 72)
+    assert(symbolOf[scala.meta.Tree].asRoot.allLeafs.length === 338)
   }
 
   test("If") {
@@ -41,6 +41,7 @@ class ReflectionSuite extends AstSuite {
     val columnSize = published.map(_._1.typeSymbol.fullName.length).max
     assert(published.map(kvp => s"%-${columnSize}s => %s".format(kvp._1, kvp._2)).mkString(EOL) === """
       |scala.meta.Case                                  => scala.meta.Case
+      |scala.meta.Ctor.Call                             => scala.meta.Ctor.Call
       |scala.meta.Ctor.Name                             => scala.meta.Ctor.Name
       |scala.meta.Ctor.Ref                              => scala.meta.Ctor.Ref
       |scala.meta.Enumerator                            => scala.meta.Enumerator
@@ -82,12 +83,13 @@ class ReflectionSuite extends AstSuite {
       |scala.meta.Type.Ref                              => scala.meta.Type.Ref
       |scala.meta.internal.ast.Case                     => scala.meta.Case
       |scala.meta.internal.ast.Ctor                     => scala.meta.Member.Term
+      |scala.meta.internal.ast.Ctor.Call                => scala.meta.Ctor.Call
       |scala.meta.internal.ast.Ctor.Primary             => scala.meta.Member.Term
-      |scala.meta.internal.ast.Ctor.Ref                 => scala.meta.Ctor.Ref
-      |scala.meta.internal.ast.Ctor.Ref.Function        => scala.meta.Ctor.Ref
-      |scala.meta.internal.ast.Ctor.Ref.Name            => scala.meta.Ctor.Name
-      |scala.meta.internal.ast.Ctor.Ref.Project         => scala.meta.Ctor.Ref
-      |scala.meta.internal.ast.Ctor.Ref.Select          => scala.meta.Ctor.Ref
+      |scala.meta.internal.ast.Ctor.Ref                 => scala.meta.Ctor.Call with scala.meta.Ctor.Ref
+      |scala.meta.internal.ast.Ctor.Ref.Function        => scala.meta.Ctor.Call with scala.meta.Ctor.Ref
+      |scala.meta.internal.ast.Ctor.Ref.Name            => scala.meta.Ctor.Call with scala.meta.Ctor.Name
+      |scala.meta.internal.ast.Ctor.Ref.Project         => scala.meta.Ctor.Call with scala.meta.Ctor.Ref
+      |scala.meta.internal.ast.Ctor.Ref.Select          => scala.meta.Ctor.Call with scala.meta.Ctor.Ref
       |scala.meta.internal.ast.Ctor.Secondary           => scala.meta.Member.Term with scala.meta.Stat
       |scala.meta.internal.ast.Decl                     => scala.meta.Stat
       |scala.meta.internal.ast.Decl.Def                 => scala.meta.Member.Term with scala.meta.Stat
@@ -185,10 +187,10 @@ class ReflectionSuite extends AstSuite {
       |scala.meta.internal.ast.Stat                     => scala.meta.Stat
       |scala.meta.internal.ast.Template                 => scala.meta.Template
       |scala.meta.internal.ast.Term                     => scala.meta.Term
-      |scala.meta.internal.ast.Term.Annotate            => scala.meta.Term
-      |scala.meta.internal.ast.Term.Apply               => scala.meta.Term
+      |scala.meta.internal.ast.Term.Annotate            => scala.meta.Ctor.Call
+      |scala.meta.internal.ast.Term.Apply               => scala.meta.Ctor.Call
       |scala.meta.internal.ast.Term.ApplyInfix          => scala.meta.Term
-      |scala.meta.internal.ast.Term.ApplyType           => scala.meta.Term
+      |scala.meta.internal.ast.Term.ApplyType           => scala.meta.Ctor.Call
       |scala.meta.internal.ast.Term.ApplyUnary          => scala.meta.Term
       |scala.meta.internal.ast.Term.Arg                 => scala.meta.Term.Arg
       |scala.meta.internal.ast.Term.Arg.Named           => scala.meta.Term.Arg
@@ -287,6 +289,7 @@ class ReflectionSuite extends AstSuite {
       |scala.collection.immutable.Seq[scala.meta.internal.ast.Type.Arg]
       |scala.collection.immutable.Seq[scala.meta.internal.ast.Type.Param]
       |scala.collection.immutable.Seq[scala.meta.internal.ast.Type]
+      |scala.meta.internal.ast.Ctor.Name
       |scala.meta.internal.ast.Ctor.Primary
       |scala.meta.internal.ast.Ctor.Ref.Name
       |scala.meta.internal.ast.Name.Indeterminate
