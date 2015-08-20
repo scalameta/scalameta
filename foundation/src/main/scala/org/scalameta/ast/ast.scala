@@ -15,6 +15,7 @@ class AstMacros(val c: Context) {
   import Flag._
   val AdtInternal = q"_root_.org.scalameta.adt.Internal"
   val AstInternal = q"_root_.org.scalameta.ast.internal"
+  val Semantic = q"_root_.scala.meta.semantic"
   val SemanticInternal = q"_root_.scala.meta.internal.semantic"
   def impl(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
@@ -22,6 +23,7 @@ class AstMacros(val c: Context) {
       def is(abbrev: String) = fullName == "scala.meta.internal.ast." + abbrev
       def isQuasi = cdef.name.toString == "Quasi"
       def isName = is("Name.Anonymous") || is("Name.Indeterminate") || is("Term.Name") || is("Type.Name") || is("Ctor.Ref.Name")
+      def isApplyLike = is("Term.Apply") || is("Term.ApplyInfix") || is("Term.ApplyType") || is("Term.ApplyUnary") || is("Term.Assign") || is("Term.Update") || is("Term.Interpolate")
       def isLit = !isQuasi && fullName.startsWith("scala.meta.internal.ast.Lit")
       def isCtorRef = !isQuasi && fullName.startsWith("scala.meta.internal.ast.Ctor.Ref")
       def isCtorCall = !isQuasi && fullName.startsWith("scala.meta.internal.ast.Ctor.Call")
@@ -29,6 +31,7 @@ class AstMacros(val c: Context) {
       def isTerm = !isQuasi && (fullName.startsWith("scala.meta.internal.ast.Term") || isLit || isCtorRef || isCtorCall) && !looksLikeTermButNotTerm
       def isTermParam = is("Term.Param")
       def hasTokens = true
+      def hasEnv = isName || isApplyLike
       def hasDenot = isName
       def hasTyping = isTerm || isTermParam
       def hasExpansion = isTerm
@@ -124,14 +127,29 @@ class AstMacros(val c: Context) {
       } else {
         // NOTE: never happens
         // stats1 += q"protected def internalTokens: $SemanticInternal.Denotation = null"
-        // if (!isQuasi) stats1 += q"def tokens: _root_.scala.meta.Tokens = null"
         ???
+      }
+      if (hasEnv) {
+        bparams1 += q"protected val internalEnv: $Semantic.Environment"
+        astats1 += q"def env: $Semantic.Environment"
+        stats1 += q"""
+          def env: $Semantic.Environment = {
+            if (internalEnv != null) internalEnv
+            else $Semantic.Environment.Zero
+          }
+        """
+      } else {
+        if (!isQuasi) {
+          stats1 += q"protected def internalEnv: $Semantic.Environment = null"
+        } else {
+          // NOTE: generated elsewhere, grep for `quasigetter`
+        }
       }
       if (hasDenot) {
         bparams1 += q"protected val internalDenot: $SemanticInternal.Denotation"
-        astats1 += q"def denot: _root_.scala.meta.internal.semantic.Denotation"
+        astats1 += q"def denot: $SemanticInternal.Denotation"
         stats1 += q"""
-          def denot: _root_.scala.meta.internal.semantic.Denotation = {
+          def denot: $SemanticInternal.Denotation = {
             if (internalDenot != null) internalDenot
             else $SemanticInternal.Denotation.Zero
           }
@@ -139,16 +157,15 @@ class AstMacros(val c: Context) {
       } else {
         if (!isQuasi) {
           stats1 += q"protected def internalDenot: $SemanticInternal.Denotation = null"
-          stats1 += q"def denot: _root_.scala.meta.internal.semantic.Denotation = null"
         } else {
           // NOTE: generated elsewhere, grep for `quasigetter`
         }
       }
       if (hasTyping) {
         bparams1 += q"protected val internalTyping: $SemanticInternal.Typing"
-        astats1 += q"def typing: _root_.scala.meta.internal.semantic.Typing"
+        astats1 += q"def typing: $SemanticInternal.Typing"
         stats1 += q"""
-          def typing: _root_.scala.meta.internal.semantic.Typing = {
+          def typing: $SemanticInternal.Typing = {
             if (internalTyping != null) internalTyping
             else $SemanticInternal.Typing.Zero
           }
@@ -156,16 +173,15 @@ class AstMacros(val c: Context) {
       } else {
         if (!isQuasi) {
           stats1 += q"protected def internalTyping: $SemanticInternal.Typing = null"
-          stats1 += q"def typing: _root_.scala.meta.internal.semantic.Typing = null"
         } else {
           // NOTE: generated elsewhere, grep for `quasigetter`
         }
       }
       if (hasExpansion) {
         bparams1 += q"protected val internalExpansion: $SemanticInternal.Expansion"
-        astats1 += q"def expansion: _root_.scala.meta.internal.semantic.Expansion"
+        astats1 += q"def expansion: $SemanticInternal.Expansion"
         stats1 += q"""
-          def expansion: _root_.scala.meta.internal.semantic.Expansion = {
+          def expansion: $SemanticInternal.Expansion = {
             if (internalExpansion != null) internalExpansion
             else $SemanticInternal.Expansion.Zero
           }
@@ -173,7 +189,6 @@ class AstMacros(val c: Context) {
       } else {
         if (!isQuasi) {
           stats1 += q"protected def internalExpansion: $SemanticInternal.Expansion = null"
-          stats1 += q"def expansion: _root_.scala.meta.internal.semantic.Expansion = null"
         } else {
           // NOTE: generated elsewhere, grep for `quasigetter`
         }
@@ -206,7 +221,7 @@ class AstMacros(val c: Context) {
         val impl = q"throw new _root_.scala.`package`.UnsupportedOperationException($message)"
         var flags = NoFlags
         if (name.startsWith("internal")) flags |= PROTECTED
-        if (!isTermParam) flags |= OVERRIDE // NOTE: crazy, I know...
+        if (!isTermParam && !isApplyLike) flags |= OVERRIDE // NOTE: crazy, I know...
         q"$flags def ${TermName(name)}: _root_.scala.Nothing = $impl"
       }
       def quasisetter(name: String, param: ValDef) = {
@@ -217,6 +232,8 @@ class AstMacros(val c: Context) {
       // here we have a weird mix of metalevels, because unlike denot, typing and others
       // `Quasi.tokens` may reasonably mean two different things:
       // 1) tokens of a tree that a quasi stands for, 2) quasi's own tokens
+      if (hasEnv) qstats1 += quasigetter("env")
+      qstats1 += q"override protected def internalEnv: $Semantic.Environment = null"
       if (hasDenot) qstats1 += quasigetter("denot")
       qstats1 += q"override protected def internalDenot: $SemanticInternal.Denotation = null"
       if (hasTyping) qstats1 += quasigetter("typing")
@@ -240,6 +257,7 @@ class AstMacros(val c: Context) {
       internalCopyInternals += q"prototype.asInstanceOf[ThisType]"
       internalCopyInternals += q"parent"
       if (hasTokens) internalCopyInternals += q"tokens"
+      if (hasEnv) internalCopyInternals += q"env"
       if (hasDenot) internalCopyInternals += q"denot"
       if (hasTyping) internalCopyInternals += q"typing"
       if (hasExpansion) internalCopyInternals += q"expansion"
@@ -250,9 +268,10 @@ class AstMacros(val c: Context) {
             prototype: _root_.scala.meta.Tree = this,
             parent: _root_.scala.meta.Tree = internalParent,
             tokens: _root_.scala.meta.Tokens = internalTokens,
-            denot: _root_.scala.meta.internal.semantic.Denotation = internalDenot,
-            typing: _root_.scala.meta.internal.semantic.Typing = internalTyping,
-            expansion: _root_.scala.meta.internal.semantic.Expansion = internalExpansion): ThisType = {
+            env: $Semantic.Environment = internalEnv,
+            denot: $SemanticInternal.Denotation = internalDenot,
+            typing: $SemanticInternal.Typing = internalTyping,
+            expansion: $SemanticInternal.Expansion = internalExpansion): ThisType = {
           $internalCopyBody
         }
       """
@@ -283,18 +302,23 @@ class AstMacros(val c: Context) {
         // NOTE: much like we don't create a quasigetter for tokens,
         // we don't create a quasisetter for withTokens
       }
+      if (hasEnv) {
+        val param = q"val env: $Semantic.Environment"
+        astats1 += withMethod("withEnv", param)
+        qstats1 += quasisetter("withEnv", param)
+      }
       if (hasDenot) {
-        val param = q"val denot: _root_.scala.meta.internal.semantic.Denotation"
+        val param = q"val denot: $SemanticInternal.Denotation"
         astats1 += withMethod("withDenot", param)
         qstats1 += quasisetter("withDenot", param)
       }
       if (hasTyping) {
-        val param = q"val typing: _root_.scala.meta.internal.semantic.Typing"
+        val param = q"val typing: $SemanticInternal.Typing"
         astats1 += withMethod("withTyping", param)
         qstats1 += quasisetter("withTyping", param)
       }
       if (hasExpansion) {
-        val param = q"val expansion: _root_.scala.meta.internal.semantic.Expansion"
+        val param = q"val expansion: $SemanticInternal.Expansion"
         astats1 += withMethod("withExpansion", param)
         qstats1 += quasisetter("withExpansion", param)
       }
@@ -349,6 +373,7 @@ class AstMacros(val c: Context) {
       })
       var internalInitCount = 2 // internalPrototype, internalParent
       if (hasTokens) internalInitCount += 1
+      if (hasEnv) internalInitCount += 1
       if (hasDenot) internalInitCount += 1
       if (hasTyping) internalInitCount += 1
       if (hasExpansion) internalInitCount += 1

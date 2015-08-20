@@ -40,6 +40,14 @@ object Semantics {
         final override def hashCode: Int = entity.hashCode()
       }
       object Footnote {
+        implicit def envFootnote(env: Environment): Footnote = new Footnote {
+          def entity = env
+          def tag = classOf[Environment]
+          def prettyprint() = env match {
+            case scala.meta.semantic.Environment.Zero => unreachable
+            case scala.meta.semantic.Environment.Dynamic(c) => env.toString
+          }
+        }
         implicit def denotFootnote(denot: Denotation): Footnote = new Footnote {
           def entity = denot
           def tag = classOf[Denotation]
@@ -112,7 +120,12 @@ object Semantics {
           val sortedMiniCache = miniRepr.toList.sortBy{ case (_, (id, footnote)) => id }
           sortedMiniCache.map{ case (_, (id, footnote)) => s"$bracket1$id$bracket2 ${footnote.prettyprint()}" }
         }
-        (byType(classOf[Denotation], "[", "]") ++ byType(classOf[Typing], "{", "}") ++ byType(classOf[Expansion], "<", ">")).mkString(EOL)
+        (
+          byType(classOf[Environment], "[", "]") ++
+          byType(classOf[Denotation], "[", "]") ++
+          byType(classOf[Typing], "{", "}") ++
+          byType(classOf[Expansion], "<", ">")
+        ).mkString(EOL)
       }
     }
     def body(x: api.Tree): String = {
@@ -133,16 +146,38 @@ object Semantics {
       }
       val syntax = x.productPrefix + "(" + contents(x) + ")"
       val semantics = {
+        def envPart(env: Environment) = {
+          env match {
+            case env @ scala.meta.semantic.Environment.Zero =>
+              ""
+            case env @ scala.meta.semantic.Environment.Dynamic(c) =>
+              s"[?${footnotes.insert(env)}]"
+          }
+        }
         val denotPart = x match {
           case x: Name =>
             x.denot match {
               case Denotation.Zero =>
-                ""
+                envPart(x.env)
               case denot @ Denotation.Single(prefix, symbol) =>
                 s"[${footnotes.insert(denot)}]"
               case denot @ Denotation.Multi(prefix, symbols) =>
                 s"[${symbols.map(symbol => footnotes.insert(Denotation.Single(prefix, symbol))).mkString(", ")}]"
             }
+          case x: Term.Apply =>
+            envPart(x.env)
+          case x: Term.ApplyInfix =>
+            envPart(x.env)
+          case x: Term.ApplyType =>
+            envPart(x.env)
+          case x: Term.ApplyUnary =>
+            envPart(x.env)
+          case x: Term.Assign =>
+            envPart(x.env)
+          case x: Term.Update =>
+            envPart(x.env)
+          case x: Term.Interpolate =>
+            envPart(x.env)
           case _ =>
             ""
         }

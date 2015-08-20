@@ -93,6 +93,7 @@ package scala.meta.internal.ast {
   import org.scalameta.invariants._
   import org.scalameta.annotations._
   import org.scalameta.unreachable
+  import scala.meta.semantic.Environment
   import scala.meta.internal.{ast => impl}
   import scala.meta.internal.semantic._
   import scala.meta.internal.parsers.Helpers._
@@ -102,6 +103,8 @@ package scala.meta.internal.ast {
 
   @branch trait Name extends api.Name with Ref {
     def value: String
+    def env: Environment
+    def withEnv(env: Environment): ThisType
     def denot: Denotation
     def withDenot(denot: Denotation): ThisType
     def withDenot(prefix: Prefix, symbol: Symbol): ThisType = withDenot(Denotation.Single(prefix, symbol))

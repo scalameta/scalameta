@@ -16,6 +16,7 @@ class RootMacros(val c: Context) {
   lazy val Datum = tq"_root_.scala.Any"
   lazy val Data = tq"_root_.scala.collection.immutable.Seq[$Datum]"
   lazy val Tokens = tq"_root_.scala.meta.Tokens"
+  lazy val Environment = tq"_root_.scala.meta.semantic.Environment"
   lazy val Denotation = tq"_root_.scala.meta.internal.semantic.Denotation"
   lazy val Typing = tq"_root_.scala.meta.internal.semantic.Typing"
   lazy val Expansion = tq"_root_.scala.meta.internal.semantic.Expansion"
@@ -51,6 +52,7 @@ class RootMacros(val c: Context) {
         protected def internalPrototype: ThisType
         protected def internalParent: $Tree
         protected def internalTokens: $Tokens
+        protected def internalEnv: $Environment
         protected def internalDenot: $Denotation
         protected def internalTyping: $Typing
         protected def internalExpansion: $Expansion
@@ -58,6 +60,7 @@ class RootMacros(val c: Context) {
           prototype: $Tree = this,
           parent: $Tree = internalParent,
           tokens: $Tokens = internalTokens,
+          env: $Environment = internalEnv,
           denot: $Denotation = internalDenot,
           typing: $Typing = internalTyping,
           expansion: $Expansion = internalExpansion): ThisType
@@ -68,9 +71,10 @@ class RootMacros(val c: Context) {
       val qname = TypeName("Quasi")
       val qparents = List(tq"_root_.scala.meta.internal.ast.Quasi")
       var qstats = List(q"def pt: _root_.java.lang.Class[_] = _root_.org.scalameta.runtime.arrayClass(_root_.scala.Predef.classOf[$name], this.rank)")
-      qstats :+= q"protected def internalDenot: $SemanticInternal.Denotation = null"
-      qstats :+= q"protected def internalTyping: $SemanticInternal.Typing = null"
-      qstats :+= q"protected def internalExpansion: $SemanticInternal.Expansion = null"
+      qstats :+= q"protected def internalEnv: $Environment = null"
+      qstats :+= q"protected def internalDenot: $Denotation = null"
+      qstats :+= q"protected def internalTyping: $Typing = null"
+      qstats :+= q"protected def internalExpansion: $Expansion = null"
       mstats1 += q"$qmods class $qname(rank: _root_.scala.Int, tree: _root_.scala.Any) extends ..$qparents { ..$qstats }"
 
       val cdef1 = q"${Modifiers(flags1, privateWithin, anns1)} trait $name[..$tparams] extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"

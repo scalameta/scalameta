@@ -14,6 +14,7 @@ class BranchMacros(val c: Context) {
   import Flag._
   val AdtInternal = q"_root_.org.scalameta.adt.Internal"
   val AstInternal = q"_root_.org.scalameta.ast.internal"
+  val Semantic = q"_root_.scala.meta.semantic"
   val SemanticInternal = q"_root_.scala.meta.internal.semantic"
   def impl(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
@@ -54,7 +55,8 @@ class BranchMacros(val c: Context) {
         }
         var qstats = List(q"def pt: _root_.java.lang.Class[_] = _root_.org.scalameta.runtime.arrayClass(_root_.scala.Predef.classOf[$name], this.rank)")
         if (is("Name") || is("Term.Param.Name") || is("Type.Param.Name")) {
-          qstats ++= List("value", "denot").map(quasigetter)
+          qstats ++= List("value", "env", "denot").map(quasigetter)
+          qstats :+= quasisetter("withEnv", q"val env: $Semantic.Environment")
           qstats :+= quasisetter("withDenot", q"val denot: $SemanticInternal.Denotation")
         }
         if (is("Term") || is("Lit") || is("Term.Ref") || is("Ctor.Ref") || is("Ctor.Call")) {
@@ -62,6 +64,7 @@ class BranchMacros(val c: Context) {
           qstats :+= quasisetter("withTyping", q"val typing: $SemanticInternal.Typing")
           qstats :+= quasisetter("withExpansion", q"val expansion: $SemanticInternal.Expansion")
         }
+        qstats :+= q"protected def internalEnv: $Semantic.Environment = null"
         qstats :+= q"protected def internalDenot: $SemanticInternal.Denotation = null"
         qstats :+= q"protected def internalTyping: $SemanticInternal.Typing = null"
         qstats :+= q"protected def internalExpansion: $SemanticInternal.Expansion = null"

@@ -28,6 +28,9 @@ private[meta] trait Api {
   // PART 2: ATTRIBUTES
   // ===========================
 
+  type Environment = scala.meta.semantic.Environment
+  val Environment = scala.meta.semantic.Environment
+
   implicit class XtensionSemanticTermDesugar(tree: Term) {
     @hosted def desugar: Term = implicitly[SemanticContext].desugar(tree)
   }
