@@ -188,7 +188,7 @@
  Select Reference    | `ctor"$ref.$ctorname"`
  Project Reference   | `ctor"$tpe#$ctorname"`
  Function Reference  | `ctor"(..$tpes) => $tpe"`
- Annotated Reference | `ctor"$ctorname ..@$expr"`
+ Annotated Reference | `ctor"$ctorname ..@annots"`
  Applied Reference   | `ctor"$ctorref(...$aexprss)"`
  Tapplied Reference  | `ctor"$ctorref[..$atpes]"`
 

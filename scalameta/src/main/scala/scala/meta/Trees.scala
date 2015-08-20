@@ -71,6 +71,7 @@ package scala.meta {
   }
 
   object Ctor {
+    @branch trait Call extends Term
     @branch trait Ref extends Term.Ref
     @branch trait Name extends api.Name with Ref with Term
   }
@@ -140,8 +141,8 @@ package scala.meta.internal.ast {
     @ast class Interpolate(prefix: Name, parts: Seq[Lit.String] @nonEmpty, args: Seq[Term]) extends Term {
       require(parts.length == args.length + 1)
     }
-    @ast class Apply(fun: Term, args: Seq[Arg]) extends Term
-    @ast class ApplyType(fun: Term, targs: Seq[Type] @nonEmpty) extends Term
+    @ast class Apply(fun: Term, args: Seq[Arg]) extends Term with Ctor.Call
+    @ast class ApplyType(fun: Term, targs: Seq[Type] @nonEmpty) extends Term with Ctor.Call
     @ast class ApplyInfix(lhs: Term, op: Name, targs: Seq[Type], args: Seq[Arg]) extends Term
     @ast class ApplyUnary(op: Name, arg: Term) extends Term {
       require(op.isUnaryOp)
@@ -151,7 +152,7 @@ package scala.meta.internal.ast {
     @ast class Return(expr: Term) extends Term
     @ast class Throw(expr: Term) extends Term
     @ast class Ascribe(expr: Term, decltpe: Type) extends Term
-    @ast class Annotate(expr: Term, annots: Seq[Mod.Annot] @nonEmpty) extends Term
+    @ast class Annotate(expr: Term, annots: Seq[Mod.Annot] @nonEmpty) extends Term with Ctor.Call
     @ast class Tuple(elements: Seq[Term]) extends Term {
       // tuple must have more than one element
       // however, this element may be impl.Quasi with "hidden" list of elements inside
@@ -472,6 +473,7 @@ package scala.meta.internal.ast {
 
   @branch trait Ctor extends Tree with Member.Term
   object Ctor {
+    @branch trait Call extends impl.Term with api.Ctor.Call
     @ast class Primary(mods: Seq[Mod],
                        name: Ctor.Name,
                        paramss: Seq[Seq[Term.Param]]) extends Ctor
@@ -481,9 +483,9 @@ package scala.meta.internal.ast {
                          body: Term) extends Ctor with Stat {
       require(body.isCtorBody)
     }
-    @branch trait Ref extends api.Ctor.Ref with impl.Term.Ref
+    @branch trait Ref extends api.Ctor.Ref with impl.Term.Ref with impl.Ctor.Call
     val Name = Ref.Name
-    type Name = Ref.Name
+    type Name = Ref.Name with Ctor.Call
     object Ref {
       // TODO: current design with Ctor.Name(value) has a problem of sometimes meaningless `value`
       // for example, q"def this() = ..." is going to have Ctor.Name("this"), because we're parsing

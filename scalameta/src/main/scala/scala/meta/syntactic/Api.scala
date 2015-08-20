@@ -48,7 +48,7 @@ private[meta] trait Api {
     implicit def parsePatArg(implicit dialect: Dialect): Parse[Pat.Arg] = apply(input => new Parser(input).parsePatArg())
     implicit def parsePatType(implicit dialect: Dialect): Parse[Pat.Type] = apply(input => new Parser(input).parsePatType())
     implicit def parseCase(implicit dialect: Dialect): Parse[Case] = apply(input => new Parser(input).parseCase())
-    implicit def parseCtorRef(implicit dialect: Dialect): Parse[Ctor.Ref] = apply(input => new Parser(input).parseCtorRef())
+    implicit def parseCtorCall(implicit dialect: Dialect): Parse[Ctor.Call] = apply(input => new Parser(input).parseCtorCall())
     implicit def parseTemplate(implicit dialect: Dialect): Parse[Template] = apply(input => new Parser(input).parseTemplate())
     implicit def parseMod(implicit dialect: Dialect): Parse[Mod] = apply(input => new Parser(input).parseMod())
     implicit def parseEnumerator(implicit dialect: Dialect): Parse[Enumerator] = apply(input => new Parser(input).parseEnumerator())
