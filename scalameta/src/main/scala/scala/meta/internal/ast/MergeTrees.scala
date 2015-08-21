@@ -112,7 +112,7 @@ object mergeTrees {
               //    * Convert it to AnyRef, if it's Any
               //    * Prepend tpe.firstParent to the list, otherwise
               // 5) If a parent is applied to a nullary argument list, make it empty argument list.
-              def mergeParents(sys: Seq[m.Term], ses: Seq[m.Term]): Seq[m.Term] = {
+              def mergeParents(sys: Seq[m.Ctor.Call], ses: Seq[m.Ctor.Call]): Seq[m.Ctor.Call] = {
                 if (sys.length != ses.length) failCorrelate(sy, se, sys, ses)
                 sys.zip(ses).map({
                   case (sy, m.Term.Apply(se, Nil)) => loop(sy, se)
