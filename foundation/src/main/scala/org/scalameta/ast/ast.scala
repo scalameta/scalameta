@@ -24,8 +24,9 @@ class AstMacros(val c: Context) {
       def isName = is("Name.Anonymous") || is("Name.Indeterminate") || is("Term.Name") || is("Type.Name") || is("Ctor.Ref.Name")
       def isLit = !isQuasi && fullName.startsWith("scala.meta.internal.ast.Lit")
       def isCtorRef = !isQuasi && fullName.startsWith("scala.meta.internal.ast.Ctor.Ref")
+      def isCtorCall = !isQuasi && fullName.startsWith("scala.meta.internal.ast.Ctor.Call")
       def looksLikeTermButNotTerm = is("Term.Param") || is("Term.Arg.Named") || is("Term.Arg.Repeated")
-      def isTerm = !isQuasi && (fullName.startsWith("scala.meta.internal.ast.Term") || isLit || isCtorRef) && !looksLikeTermButNotTerm
+      def isTerm = !isQuasi && (fullName.startsWith("scala.meta.internal.ast.Term") || isLit || isCtorRef || isCtorCall) && !looksLikeTermButNotTerm
       def isTermParam = is("Term.Param")
       def hasTokens = true
       def hasDenot = isName
@@ -363,7 +364,7 @@ class AstMacros(val c: Context) {
             (validators, q"$local.map($validateLocal)")
           } else if ((is("Defn.Trait") || is("Defn.Object") || is("Pkg.Object")) && local.toString == "templ") {
             val validators = List(q"def $validateLocal(stats: Seq[Stat]) = stats.map(stat => { require(!stat.isInstanceOf[Ctor]); stat })")
-            (validators, q"{ $local.stats.map($validateLocal); $local }")
+            (validators, q"{ if (!$local.isInstanceOf[impl.Quasi]) $local.stats.map($validateLocal); $local }")
           } else if (is("Template") && local.toString == "early") {
             val validators = List(q"def $validateLocal(stat: Stat) = { require(stat.isEarlyStat && parents.nonEmpty); stat }")
             (validators, q"$local.map($validateLocal)")

@@ -92,7 +92,7 @@
 ---------------|----------------------------
  Wildcard      | `p"_"`
  Var           | `p"name"`
- Bind          | `p"$name @ $pat"`
+ Bind          | `p"$pname @ $apat"`
  Alternative   | `p"$pat | $pat"`
  Tuple         | `p"(..$pats)"`
  Extract       | `p"$ref[..$tpes](..$apats)"`
@@ -146,10 +146,10 @@
 
            | Quasiquote
 -----------|------------------------------
- Val       | `q"..$mods val ..$names: $tpe"`
- Var       | `q"..$mods var ..$names: $tpe"`
+ Val       | `q"..$mods val ..$pnames: $tpe"`
+ Var       | `q"..$mods var ..$pnames: $tpe"`
  Def       | `q"..$mods def $name[..$tparams](...$paramss): $tpe"`
- Type      | `q"..$mods type $tname[..$tparams] >: $tpeopt <: tpeopt"`
+ Type      | `q"..$mods type $tname[..$tparams] >: $tpeopt <: $tpeopt"`
 
 ### Definitions
 
@@ -160,25 +160,25 @@
  Def            | `q"..$mods def $name[..$tparams](...$paramss): $tpeopt = $expr"`
  Macro          | `q"..$mods def $name[..$tparams](...$paramss): $tpe = macro $expr"`
  Type           | `q"..$mods type $tname[..$tparams] = $tpe"`
- Class          | `q"..$mods class $tname[..$tparams] $member extends $template"`
+ Class          | `q"..$mods class $tname[..$tparams] $mod (...$paramss) extends $template"`
  Trait          | `q"..$mods trait $tname[..$tparams] extends $template"`
  Object         | `q"..$mods object $name extends $template"`
  Package Object | `q"package object $name extends $template"`
  Package        | `q"package $ref { ..$stats }"`
- Primary Ctor   | `q"..$mods def this(..$paramss)"`
- Secondary Ctor | `q"..$mods def this(..$paramss) = $expr"`
+ Primary Ctor   | `q"..$mods def this(...$paramss)"`
+ Secondary Ctor | `q"..$mods def this(...$paramss) = $expr"`
 
 ### Value Parameters (meta.Term.Param)
 
                 | Quasiquote
 ----------------|-------------------------------------------------
- Term Param     | `param"..$mods $pname: $atpeopt = $defaultopt"`
+ Term Param     | `param"..$mods $paramname: $atpeopt = $expropt"`
 
 ### Type Parameters (meta.Type.Param)
 
                 | Quasiquote
 ----------------|-------------------------------------------------
- Type Param     | `tparam"..$mods $tpname[..$tparams] >: $tpeopt <: $tpeopt <% ..$tpes : ..$tpes"`
+ Type Param     | `tparam"..$mods $tparamname[..$tparams] >: $tpeopt <: $tpeopt <% ..$tpes : ..$tpes"`
 
 ## Constructor References (meta.Ctor.Ref and meta.Term)
 
@@ -188,7 +188,7 @@
  Select Reference    | `ctor"$ref.$ctorname"`
  Project Reference   | `ctor"$tpe#$ctorname"`
  Function Reference  | `ctor"(..$tpes) => $tpe"`
- Annotated Reference | `ctor"$ctorname ..@$expr"`
+ Annotated Reference | `ctor"$ctorname ..@annots"`
  Applied Reference   | `ctor"$ctorref(...$aexprss)"`
  Tapplied Reference  | `ctor"$ctorref[..$atpes]"`
 
@@ -196,7 +196,7 @@
 
            | Quasiquote
 -----------|--------------------
- Template  | `template"{ ..$stat } with ..$exprs { $param => ..$stats }"`
+ Template  | `template"{ ..$stats } with ..$ctorcalls { $param => ..$stats }"`
 
 ## Modifiers (meta.Mod)
 
@@ -257,6 +257,7 @@
  meta.Name.Qualifier      | `$qname`      | `q`, `t`, anonymous names can't be constructed, only extracted from `mod"..."`
  meta.Pat                 | `$pat`        | `p`
  meta.Pat.Arg             | `$apat`       | `p`
+ meta.Pat.Var.Term        | `$pname`      | `p`
  meta.Pat.Type            | `$ptpe`       | `pt`
  meta.Importee            | `$importee`   | `importee`
  meta.Stat                | `$stat`       | `q`
@@ -266,12 +267,12 @@
  meta.Term.Name           | `$name`       | `q`
  meta.Term.Ref            | `$ref`        | `q`
  meta.Term.Param          | `$param`      | `param`
- meta.Term.Param.Name     | `$pname`      | `q`, anonymous names can't be constructed, only extracted from `param`
+ meta.Term.Param.Name     | `$paramname`  | `q`, anonymous names can't be constructed, only extracted from `param`
  meta.Type                | `$tpe`        | `t`
  meta.Type.Arg            | `$atpe`       | `t`
  meta.Type.Name           | `$tname`      | `t`
  meta.Type.Param          | `$tparam`     | `tparam`
- meta.Type.Param.Name     | `$tpname`     | `t`, anonymous names can't be constructed, only extracted from `tparam`
+ meta.Type.Param.Name     | `$tparamname` | `t`, anonymous names can't be constructed, only extracted from `tparam`
                           | `$lit`        | `q`
 
 ### Suffix name modifiers

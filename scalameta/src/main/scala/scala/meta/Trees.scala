@@ -71,7 +71,8 @@ package scala.meta {
   }
 
   object Ctor {
-    @branch trait Ref extends Term.Ref
+    @branch trait Call extends Term
+    @branch trait Ref extends Term.Ref with Ctor.Call
     @branch trait Name extends api.Name with Ref with Term
   }
 
@@ -140,8 +141,8 @@ package scala.meta.internal.ast {
     @ast class Interpolate(prefix: Name, parts: Seq[Lit.String] @nonEmpty, args: Seq[Term]) extends Term {
       require(parts.length == args.length + 1)
     }
-    @ast class Apply(fun: Term, args: Seq[Arg]) extends Term
-    @ast class ApplyType(fun: Term, targs: Seq[Type] @nonEmpty) extends Term
+    @ast class Apply(fun: Term, args: Seq[Arg]) extends Term with Ctor.Call
+    @ast class ApplyType(fun: Term, targs: Seq[Type] @nonEmpty) extends Term with Ctor.Call
     @ast class ApplyInfix(lhs: Term, op: Name, targs: Seq[Type], args: Seq[Arg]) extends Term
     @ast class ApplyUnary(op: Name, arg: Term) extends Term {
       require(op.isUnaryOp)
@@ -151,7 +152,7 @@ package scala.meta.internal.ast {
     @ast class Return(expr: Term) extends Term
     @ast class Throw(expr: Term) extends Term
     @ast class Ascribe(expr: Term, decltpe: Type) extends Term
-    @ast class Annotate(expr: Term, annots: Seq[Mod.Annot] @nonEmpty) extends Term
+    @ast class Annotate(expr: Term, annots: Seq[Mod.Annot] @nonEmpty) extends Term with Ctor.Call
     @ast class Tuple(elements: Seq[Term]) extends Term {
       // tuple must have more than one element
       // however, this element may be impl.Quasi with "hidden" list of elements inside
@@ -167,9 +168,6 @@ package scala.meta.internal.ast {
     @ast class Function(params: Seq[Term.Param], body: Term) extends Term with Scope {
       require(params.forall(param => param.isInstanceOf[Term.Param.Quasi] || (param.name.isInstanceOf[impl.Name.Anonymous] ==> param.default.isEmpty)))
       require(params.exists(_.isInstanceOf[Term.Param.Quasi]) || params.exists(_.mods.exists(_.isInstanceOf[Mod.Implicit])) ==> (params.length == 1))
-      // mixed style like `(x: X, y, z: Z) => ...` is not allowed
-      require(params.forall(p => p.isInstanceOf[Term.Param.Quasi] || p.decltpe.isEmpty) ||
-              params.forall(p => p.isInstanceOf[Term.Param.Quasi] || !p.decltpe.isEmpty))
     }
     @ast class PartialFunction(cases: Seq[Case] @nonEmpty) extends Term
     @ast class While(expr: Term, body: Term) extends Term
@@ -475,6 +473,7 @@ package scala.meta.internal.ast {
 
   @branch trait Ctor extends Tree with Member.Term
   object Ctor {
+    @branch trait Call extends impl.Term with api.Ctor.Call
     @ast class Primary(mods: Seq[Mod],
                        name: Ctor.Name,
                        paramss: Seq[Seq[Term.Param]]) extends Ctor
@@ -484,7 +483,7 @@ package scala.meta.internal.ast {
                          body: Term) extends Ctor with Stat {
       require(body.isCtorBody)
     }
-    @branch trait Ref extends api.Ctor.Ref with impl.Term.Ref
+    @branch trait Ref extends api.Ctor.Ref with impl.Term.Ref with impl.Ctor.Call
     val Name = Ref.Name
     type Name = Ref.Name
     object Ref {
@@ -502,7 +501,7 @@ package scala.meta.internal.ast {
   }
 
   @ast class Template(early: Seq[Stat],
-                      parents: Seq[Term],
+                      parents: Seq[Ctor.Call],
                       self: Term.Param,
                       stats: Option[Seq[Stat]]) extends api.Template with Tree {
     require(parents.forall(_.isCtorCall))

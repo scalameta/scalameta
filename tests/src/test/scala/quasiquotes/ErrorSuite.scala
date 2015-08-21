@@ -4,6 +4,30 @@ import org.scalameta.tests._
 class ErrorSuite extends FunSuite {
   implicit val errorsWithPositionsPlease = Style.WithPositions
 
+  test("val q\"type $name[$A] = $B\"") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val q"type $name[$X] = $Y" = q"type List[+A] = List[A]"
+    """) === """
+      |<macro>:4: not found: value X
+      |      val q"type $name[$X] = $Y" = q"type List[+A] = List[A]"
+      |                        ^
+    """.trim.stripMargin)
+  }
+
+  test("q\"foo: _*\"") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      q"foo: _*"
+    """) === """
+      |<macro>:4: ; expected but identifier found
+      |      q"foo: _*"
+      |              ^
+    """.trim.stripMargin)
+  }
+
   test("q\"foo + class\"") {
     assert(typecheckError("""
       import scala.meta._
@@ -116,11 +140,9 @@ class ErrorSuite extends FunSuite {
       val xss = List(List(q"x"))
       q"..$xss"
     """) === """
-      |<macro>:5: type mismatch when unquoting;
-      | found   : List[List[scala.meta.Term.Name]]
-      | required: scala.collection.immutable.Seq[scala.meta.Stat]
+      |<macro>:5: expected start of definition
       |      q"..$xss"
-      |          ^
+      |              ^
     """.trim.stripMargin)
   }
 
@@ -163,11 +185,9 @@ class ErrorSuite extends FunSuite {
       val l = List(q"x: Int", q"y: Y")
       q"..$l"
     """) === """
-      |<macro>:5: type mismatch;
-      | found   : scala.collection.immutable.Seq[scala.meta.Stat]
-      | required: scala.meta.Stat
+      |<macro>:5: expected start of definition
       |      q"..$l"
-      |      ^
+      |            ^
     """.trim.stripMargin)
   }
 
@@ -213,7 +233,7 @@ class ErrorSuite extends FunSuite {
       val name = q"x"
       q"val $name = foo"
     """) === """
-      |<macro>:5: can't unquote a name here, use a variable pattern instead
+      |<macro>:5: can't unquote a name here, use a pattern instead
       |      q"val $name = foo"
       |            ^
     """.trim.stripMargin)
@@ -226,7 +246,7 @@ class ErrorSuite extends FunSuite {
       val name = q"x"
       q"var $name = foo"
     """) === """
-      |<macro>:5: can't unquote a name here, use a variable pattern instead
+      |<macro>:5: can't unquote a name here, use a pattern instead
       |      q"var $name = foo"
       |            ^
     """.trim.stripMargin)
@@ -239,7 +259,7 @@ class ErrorSuite extends FunSuite {
       val name = q"x"
       p"$name: T"
     """) === """
-      |<macro>:5: can't unquote a name here, use a variable pattern instead
+      |<macro>:5: can't unquote a name here, use a pattern instead
       |      p"$name: T"
       |        ^
     """.trim.stripMargin)
@@ -343,6 +363,104 @@ class ErrorSuite extends FunSuite {
       |<macro>:5: identifier expected but ellipsis found
       |      q"expr. ..$names"
       |              ^
+    """.trim.stripMargin)
+  }
+
+  test("""p"$pname @ $apat"""") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val pname = p"`x`"
+      val apat = p"y"
+      p"$pname @ $apat"
+    """) === """
+      |<macro>:6: type mismatch when unquoting;
+      | found   : scala.meta.Term.Name
+      | required: scala.meta.Pat.Var.Term
+      |      p"$pname @ $apat"
+      |        ^
+    """.trim.stripMargin)
+  }
+
+  test("""p"$ref[..$tpes](..$apats)""") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val p"$ref[..$tpes](..$apats)" = p"x[A, B]"
+    """) === """
+      |<macro>:4: pattern must be a value
+      |      val p"$ref[..$tpes](..$apats)" = p"x[A, B]"
+      |                                                ^
+    """.trim.stripMargin)
+  }
+
+  test("""p"$pat: $ptpe"""") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val pat = p"`x`"
+      val ptpe = pt"Y"
+      p"$pat: $ptpe"
+    """) === """
+      |<macro>:6: can't unquote a name here, use a pattern instead
+      |      p"$pat: $ptpe"
+      |        ^
+    """.trim.stripMargin)
+  }
+
+  test("p\"case $X: T =>\"") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val p"case $X: T => " = p"case x: T =>"
+    """) === """
+      |<macro>:4: not found: value X
+      |      val p"case $X: T => " = p"case x: T =>"
+      |                  ^
+    """.trim.stripMargin)
+  }
+
+//  test("""pt"$ptpe[..$ptpes]""") { // TODO review after #216 resolved
+//    assert(typecheckError("""
+//      import scala.meta._
+//      import scala.meta.dialects.Scala211
+//      val pt"$ptpe[..$ptpes]" = pt"x[y, z]"
+//    """).contains("found that tpe.isInstanceOf[Pat.Var.Type].`unary_!` is true"))
+//  }
+
+//  test("""pt"..$ptpes { ..$stats }"""") { // TODO review after #216 resolved
+//    assert(typecheckError("""
+//      import scala.meta._
+//      import scala.meta.dialects.Scala211
+//      val pt"..$ptpes { ..$stats }" = pt"x with y { val a: A; val b: B }"
+//    """).contains("found that tpes.forall(((tpe: scala.meta.internal.ast.Pat.Type) => tpe.isInstanceOf[Pat.Var.Type].`unary_!`.&&(tpe.isInstanceOf[Pat.Type.Wildcard].`unary_!`))) is false"))
+//  }
+
+//  test("""pt"$ptpe forSome { ..$stats }"""") { // TODO review after #216 resolved
+//    assert(typecheckError("""
+//      import scala.meta._
+//      import scala.meta.dialects.Scala211
+//      val pt"$ptpe forSome { ..$stats }" = pt"x forSome { val a: A }"
+//    """).contains("found that tpe.isInstanceOf[Pat.Var.Type].`unary_!` is true"))
+//  }
+
+//  test("""pt"$ptpe ..@$annots"""") { // TODO review after #216 resolved
+//    assert(typecheckError("""
+//      import scala.meta._
+//      import scala.meta.dialects.Scala211
+//      val pt"$ptpe ..@$annots" = pt"x @q @w"
+//    """).contains("found that tpe.isInstanceOf[Pat.Var.Type].`unary_!` is true"))
+//  }
+
+  test("""q"..$mods def this(...$paramss) = $expr"""") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      q"private final def this(x: X, y: Y) = foo"
+    """) === """
+      |<macro>:4: this expected but identifier found
+      |      q"private final def this(x: X, y: Y) = foo"
+      |                                             ^
     """.trim.stripMargin)
   }
 }

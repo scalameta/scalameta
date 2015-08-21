@@ -43,6 +43,7 @@ private[meta] object Helpers {
   }
   implicit class XtensionTermOps(tree: Term) {
     def isCtorCall: Boolean = tree match {
+      case _: Term.Quasi => true
       case _: Ctor.Ref => true
       case Term.ApplyType(callee, _) => callee.isCtorCall
       case Term.Apply(callee, _) => callee.isCtorCall
@@ -80,6 +81,7 @@ private[meta] object Helpers {
         case _ => false // you can't write `this[...](...)`
       }
       tree match {
+        case _: Term.Quasi => true
         case Term.Block(superCall +: _) => isSuperCall(superCall)
         case superCall => isSuperCall(superCall)
       }
@@ -94,6 +96,7 @@ private[meta] object Helpers {
     }
     def isStableId: Boolean = tree match {
       case _: Term.Name | Term.Select(_: Term.Super, _) => true
+      case Term.Select(qual: Term.Quasi, _)             => true
       case Term.Select(qual: Term.Ref, _)               => qual.isPath
       case _                                            => false
     }

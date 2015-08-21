@@ -20,7 +20,7 @@ private[meta] trait Quasiquotes {
   @astQuasiquote[Type.Param]('tparam)     implicit class XtensionQuasiquoteTypeParam(ctx: StringContext)
   @astQuasiquote[Case, Pat.Arg]('p)       implicit class XtensionQuasiquoteCaseOrPattern(ctx: StringContext)
   @astQuasiquote[Pat.Type]('pt)           implicit class XtensionQuasiquotePatternType(ctx: StringContext)
-  @astQuasiquote[Ctor.Ref, Term]('ctor)   implicit class XtensionQuasiquoteCtor(ctx: StringContext)
+  @astQuasiquote[Ctor.Call]('ctor)        implicit class XtensionQuasiquoteCtor(ctx: StringContext)
   @astQuasiquote[Template]('template)     implicit class XtensionQuasiquoteTemplate(ctx: StringContext)
   @astQuasiquote[Mod]('mod)               implicit class XtensionQuasiquoteMod(ctx: StringContext)
   @astQuasiquote[Enumerator]('enumerator) implicit class XtensionQuasiquoteEnumerator(ctx: StringContext)
