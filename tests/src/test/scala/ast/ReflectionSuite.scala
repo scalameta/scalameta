@@ -85,11 +85,11 @@ class ReflectionSuite extends AstSuite {
       |scala.meta.internal.ast.Ctor                     => scala.meta.Member.Term
       |scala.meta.internal.ast.Ctor.Call                => scala.meta.Ctor.Call
       |scala.meta.internal.ast.Ctor.Primary             => scala.meta.Member.Term
-      |scala.meta.internal.ast.Ctor.Ref                 => scala.meta.Ctor.Call with scala.meta.Ctor.Ref
-      |scala.meta.internal.ast.Ctor.Ref.Function        => scala.meta.Ctor.Call with scala.meta.Ctor.Ref
-      |scala.meta.internal.ast.Ctor.Ref.Name            => scala.meta.Ctor.Call with scala.meta.Ctor.Name
-      |scala.meta.internal.ast.Ctor.Ref.Project         => scala.meta.Ctor.Call with scala.meta.Ctor.Ref
-      |scala.meta.internal.ast.Ctor.Ref.Select          => scala.meta.Ctor.Call with scala.meta.Ctor.Ref
+      |scala.meta.internal.ast.Ctor.Ref                 => scala.meta.Ctor.Ref
+      |scala.meta.internal.ast.Ctor.Ref.Function        => scala.meta.Ctor.Ref
+      |scala.meta.internal.ast.Ctor.Ref.Name            => scala.meta.Ctor.Name
+      |scala.meta.internal.ast.Ctor.Ref.Project         => scala.meta.Ctor.Ref
+      |scala.meta.internal.ast.Ctor.Ref.Select          => scala.meta.Ctor.Ref
       |scala.meta.internal.ast.Ctor.Secondary           => scala.meta.Member.Term with scala.meta.Stat
       |scala.meta.internal.ast.Decl                     => scala.meta.Stat
       |scala.meta.internal.ast.Decl.Def                 => scala.meta.Member.Term with scala.meta.Stat
@@ -272,6 +272,7 @@ class ReflectionSuite extends AstSuite {
       |scala.collection.immutable.Seq[scala.collection.immutable.Seq[scala.meta.internal.ast.Term.Arg]]
       |scala.collection.immutable.Seq[scala.collection.immutable.Seq[scala.meta.internal.ast.Term.Param]]
       |scala.collection.immutable.Seq[scala.meta.internal.ast.Case]
+      |scala.collection.immutable.Seq[scala.meta.internal.ast.Ctor.Call]
       |scala.collection.immutable.Seq[scala.meta.internal.ast.Enumerator]
       |scala.collection.immutable.Seq[scala.meta.internal.ast.Import.Clause]
       |scala.collection.immutable.Seq[scala.meta.internal.ast.Import.Selector]
@@ -289,7 +290,6 @@ class ReflectionSuite extends AstSuite {
       |scala.collection.immutable.Seq[scala.meta.internal.ast.Type.Arg]
       |scala.collection.immutable.Seq[scala.meta.internal.ast.Type.Param]
       |scala.collection.immutable.Seq[scala.meta.internal.ast.Type]
-      |scala.meta.internal.ast.Ctor.Name
       |scala.meta.internal.ast.Ctor.Primary
       |scala.meta.internal.ast.Ctor.Ref.Name
       |scala.meta.internal.ast.Name.Indeterminate

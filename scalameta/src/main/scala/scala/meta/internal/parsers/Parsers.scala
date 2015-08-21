@@ -627,12 +627,9 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
   /** {{{ part { `sep` part } }}}, or if sepFirst is true, {{{ { `sep` part } }}}.
     * if useUnquoteForEllipsis = true, uses direct unquote instead of `part`
     * */
-  final def tokenSeparated[Sep <: Token : TokenMetadata, T <: Tree : AstMetadata](sepFirst: Boolean, part: => T, useUnquoteForEllipsis: Boolean = false): List[T] = {
+  final def tokenSeparated[Sep <: Token : TokenMetadata, T <: Tree : AstMetadata](sepFirst: Boolean, part: => T): List[T] = {
     def partOrEllipsis =
-      if (token.is[Ellipsis]) {
-        if (useUnquoteForEllipsis) ellipsis(1, unquote[T])
-        else ellipsis(1, part)
-      }
+      if (token.is[Ellipsis]) ellipsis(1, unquote[T])
       else part
     val ts = new ListBuffer[T]
     if (!sepFirst)
@@ -644,8 +641,8 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     ts.toList
   }
 
-  @inline final def commaSeparated[T <: Tree : AstMetadata](part: => T, useUnquoteForEllipsis: Boolean = false): List[T] =
-    tokenSeparated[`,`, T](sepFirst = false, part, useUnquoteForEllipsis)
+  @inline final def commaSeparated[T <: Tree : AstMetadata](part: => T): List[T] =
+    tokenSeparated[`,`, T](sepFirst = false, part)
 
   def makeTuple[T <: Tree](body: List[T], zero: () => T, tuple: List[T] => T): T = body match {
     case Nil => zero()
@@ -972,7 +969,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
 
     // TODO: I have a feeling that we no longer need PatternContextSensitive
     // now that we have Pat.Type separate from Type
-    def patternTyp() = {
+    def patternTyp(): Pat.Type = {
       def convert(tpe: Type): Pat.Type = {
         tpe match {
           case tpe @ Type.Name(value) if value(0).isLower => atPos(tpe, tpe)(Pat.Var.Type(tpe))
@@ -996,7 +993,6 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         case Type.Compound(tpes, refinement) => atPos(tpe, tpe)(Pat.Type.Compound(tpes.map(loop), refinement))
         case Type.Existential(underlying, quants) => atPos(tpe, tpe)(Pat.Type.Existential(loop(underlying), quants))
         case Type.Annotate(underlying, annots) => atPos(tpe, tpe)(Pat.Type.Annotate(loop(underlying), annots))
-        case Type.Placeholder(Type.Bounds(None, None)) => convert(tpe)
         case Type.Placeholder(bounds) => atPos(tpe, tpe)(Pat.Type.Placeholder(bounds))
         case tpe: Lit => tpe
       }
@@ -2004,7 +2000,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         val sid = stableId()
         val isVarPattern = sid match {
           case _: Term.Name.Quasi => false
-          case Term.Name(value) => !isBackquoted && value.head.isLetter && value.head.isLower
+          case Term.Name(value) => !isBackquoted && value.head.isLower && value.head.isLetter
           case _ => false
         }
         if (token.is[NumericLiteral]) {
@@ -2155,7 +2151,9 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       validate()
       mods :+ mod
     }
-    def continueLoop = ahead(token.is[`:`] || token.is[`=`] || token.is[EOF])
+    // the only things that can come after $mod or $mods are either keywords or $pname/$tpname; the former is easy,
+    // but in the case of the latter, we need to take care to not hastily parse those names as modifiers
+    def continueLoop = ahead(token.is[`:`] || token.is[`=`] || token.is[EOF] || token.is[`[`] || token.is[`<:`] || token.is[`>:`] || token.is[`<%`])
     def loop(mods: List[Mod]): List[Mod] = token match {
       case _: Unquote => if (continueLoop) mods else loop(appendMod(mods, modifier()))
       case _: Modifier | _: Ellipsis => loop(appendMod(mods, modifier()))
@@ -2217,7 +2215,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
         next()
         parsedImplicits = true
       }
-      commaSeparated(param(ownerIsCase, ownerIsType, isImplicit = parsedImplicits), useUnquoteForEllipsis = true)
+      commaSeparated(param(ownerIsCase, ownerIsType, isImplicit = parsedImplicits))
     }
     val paramss = new ListBuffer[List[Term.Param]]
     newLineOptWhenFollowedBy[`(`]
@@ -2264,7 +2262,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       case x => x
     }
     val tpt =
-      if (token.isNot[`:`])
+      if (token.isNot[`:`] && name.isInstanceOf[Term.Param.Name.Quasi])
         None
       else {
         accept[`:`]
@@ -2782,10 +2780,10 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
    *  TraitParents       ::= ModType {with ModType}
    *  }}}
    */
-  def templateParents(): List[Term] = {
-    val parents = new ListBuffer[Term]
+  def templateParents(): List[Ctor.Call] = {
+    val parents = new ListBuffer[Ctor.Call]
     def readAppliedParent() =
-      if (token.is[Ellipsis]) parents += ellipsis(1, unquote[Term])
+      if (token.is[Ellipsis]) parents += ellipsis(1, unquote[Ctor.Call])
       else parents += constructorCall(startModType())
     readAppliedParent()
     while (token.is[`with`]) { next(); readAppliedParent() }

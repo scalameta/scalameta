@@ -196,7 +196,7 @@
 
            | Quasiquote
 -----------|--------------------
- Template  | `template"{ ..$stats } with ..$exprs { $param => ..$stats }"`
+ Template  | `template"{ ..$stats } with ..$ctorcalls { $param => ..$stats }"`
 
 ## Modifiers (meta.Mod)
 
