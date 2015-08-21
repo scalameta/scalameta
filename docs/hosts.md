@@ -32,7 +32,7 @@ Hosts are, however, required to create instances of scala.meta trees to be retur
 
 One of the main design goals of scala.meta is to provide a purely functional API to metaprogramming.
 
-Native scala.meta services (parsing, quasiquotes - essentially, everything syntactic) either don't have mutable state at all or have it localized to areas that can't affect publicly observable behavior. The same level of robustness is expected from hosts, i.e. all semantic operations provided by hosts must be thread-safe.
+Native scala.meta services (parsing, quasiquotes - essentially, everything syntactic) either don't have mutable state at all or have it localized to areas that can't affect publicly observable behavior. The same level of robustness is expected from hosts, e.g. all semantic operations provided by hosts must be thread-safe.
 
 ### Semantics
 
@@ -57,11 +57,15 @@ In order to implement semantic operations on scala.meta trees (e.g. resolving re
 
   1. Typings are exclusive to terms (i.e. to trees that inherit from `Term`) and provide types for these terms. This piece of information is not mandatory, because it is possible to recompute all typings that have been done during typechecking having denotations and expansions at hand, but you may find it useful to precache type information when converting your native representation of terms to scala.meta trees.
 
-  1. Expansions are also exclusive to terms (i.e. to trees that inherit from `Term`) and specify expanded forms for these terms. Such forms may include, but are not limited to: method applications with fully inferred type arguments and implicit arguments, low-level representations of language features (applications, string interpolations, dynamics, etc), macro expansions and so son.
+  1. Expansions are also exclusive to terms (i.e. to trees that inherit from `Term`) and specify expanded forms for these terms. Such forms may include, but are not limited to: method applications with fully inferred type arguments and implicit arguments, low-level representations of language features (applications, string interpolations, dynamics, etc), macro expansions and so on.
 
-When processing a semantic request from a user, you may receive a tree that is in one of three states: A) fully attributed (i.e. every name has a filled-in denotation and every term has a filled-in type - this is most likely a consequence of the tree coming completely from your host), B) unattributed (this can happen when a tree is created by the user, e.g. in a quasiquote), C) a mix of A and B.
+When processing a semantic request from a user, you may receive a tree that is in one of three states: A) fully attributed (i.e. every name has a filled-in denotation and every term has a filled-in typing and expansion - this is most likely a consequence of the tree coming completely from your host), B) unattributed (this can happen when a tree is created by the user, e.g. in a quasiquote), C) a mix of A and B.
 
-In scala.reflect, the metaprogramming API behaves differently depending on the state of input trees (with some functionality only working in state A and some functionality failing in incomprehensible ways for B), so the user has to have a detailed understanding of what's going and to possibly patch the their trees to upgrade to status A. In order to address this problem, scala.meta requires hosts to gracefully handle any combination of A, B and C. Your implementation must be able to produce correct results regardless of the state that input trees are in, doing its best to infer missing semantic information taking into account the lexical context where the tree came from.
+In scala.reflect, the metaprogramming API behaves differently depending on the state of input trees (with some functionality only working in state A and some functionality failing in incomprehensible ways for B), so the user has to have a detailed understanding of what's going and to possibly patch the their trees to upgrade to status A. In order to address this problem, scala.meta requires hosts to gracefully handle any combination of A, B and C.
+
+Your implementation must be able to produce correct results regardless of the state that input trees are in, taking into account: I) pre-existing semantic information (i.e. denotations for names, typings and expansions for terms), II) pre-existing environment information (i.e. environments for names and apply-like nodes), III) your own scope (e.g. classpath of the underlying context, etc).
+
+The concept of an environment needs further explanation. All names and all nodes that can desugar to method invocations (`Term.Apply`, `Term.ApplyInfix`, `Term.ApplyType`, `Term.ApplyUnary`, `Term.Assign`, `Term.Update`, `Term.Interpolate`) carry an environment that is there to remember definitions in scope of the quasiquote that created these nodes. Currently, this functionality is in a prototypical state, so you don't have to worry about it at all, behaving as if it wasn't there at all. In the future, the situation will change, so you will need to account for environments when attributing yet not attributed trees.
 
 ### Context API
 
