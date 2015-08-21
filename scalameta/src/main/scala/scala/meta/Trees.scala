@@ -72,7 +72,7 @@ package scala.meta {
 
   object Ctor {
     @branch trait Call extends Term
-    @branch trait Ref extends Term.Ref
+    @branch trait Ref extends Term.Ref with Ctor.Call
     @branch trait Name extends api.Name with Ref with Term
   }
 
@@ -485,7 +485,7 @@ package scala.meta.internal.ast {
     }
     @branch trait Ref extends api.Ctor.Ref with impl.Term.Ref with impl.Ctor.Call
     val Name = Ref.Name
-    type Name = Ref.Name with Ctor.Call
+    type Name = Ref.Name
     object Ref {
       // TODO: current design with Ctor.Name(value) has a problem of sometimes meaningless `value`
       // for example, q"def this() = ..." is going to have Ctor.Name("this"), because we're parsing
@@ -501,7 +501,7 @@ package scala.meta.internal.ast {
   }
 
   @ast class Template(early: Seq[Stat],
-                      parents: Seq[Term],
+                      parents: Seq[Ctor.Call],
                       self: Term.Param,
                       stats: Option[Seq[Stat]]) extends api.Template with Tree {
     require(parents.forall(_.isCtorCall))

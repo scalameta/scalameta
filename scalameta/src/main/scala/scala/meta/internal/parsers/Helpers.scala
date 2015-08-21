@@ -76,7 +76,6 @@ private[meta] object Helpers {
     }
     def isCtorBody: Boolean = {
       def isSuperCall(tree: Tree): Boolean = tree match {
-        case _: Term.This => true
         case _: Ctor.Name => true
         case Term.Apply(fn, _) => isSuperCall(fn)
         case _ => false // you can't write `this[...](...)`
