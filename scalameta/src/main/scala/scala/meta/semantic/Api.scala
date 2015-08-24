@@ -5,6 +5,7 @@ import org.scalameta.adt._
 import org.scalameta.annotations._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
+import scala.language.experimental.macros
 import scala.{Seq => _}
 import scala.annotation.compileTimeOnly
 import scala.collection.immutable.Seq
@@ -17,7 +18,31 @@ import scala.reflect.runtime.{universe => ru} // necessary only for a very hacky
 
 private[meta] trait Api {
   // ===========================
-  // PART 1: CONFIGURATION
+  // PART 1: COMPARISON
+  // ===========================
+
+  trait AllowedEquality[T1, T2]
+  implicit object AllowedEquality {
+    implicit def materialize[T1, T2]: AllowedEquality[T1, T2] = macro s.EqualityMacros.allow[T1, T2]
+  }
+
+  implicit class XtensionSemanticEquality[T1 <: Tree](tree1: T1) {
+    @hosted def ===[T2 <: Tree](tree2: T2)(implicit ev: AllowedEquality[T1, T2]): Boolean = s.Equality.equals(tree1, tree2)
+    @hosted def =/=[T2 <: Tree](tree2: T2)(implicit ev: AllowedEquality[T1, T2]): Boolean = !(tree1 === tree2)
+  }
+
+  trait AllowedEquivalence[T1, T2]
+  implicit object AllowedEquivalence {
+    implicit def materialize[T1, T2]: AllowedEquivalence[T1, T2] = macro s.EquivalenceMacros.allow[T1, T2]
+  }
+
+  implicit class XtensionSemanticEquivalence[T1 <: Tree](tree1: T1) {
+    @hosted def =:=[T2 <: Tree](tree2: T2)(implicit ev: AllowedEquivalence[T1, T2]): Boolean = s.Equivalence.equals(tree1, tree2)
+    // TODO: what would be the symbol to express negation of =:=?
+  }
+
+  // ===========================
+  // PART 2: CONFIGURATION
   // ===========================
 
   @hosted def dialect: Dialect = implicitly[SemanticContext].dialect
@@ -25,7 +50,7 @@ private[meta] trait Api {
   @hosted def domain: Domain = implicitly[SemanticContext].domain
 
   // ===========================
-  // PART 2: ATTRIBUTES
+  // PART 3: ATTRIBUTES
   // ===========================
 
   type Environment = scala.meta.semantic.Environment
@@ -33,19 +58,19 @@ private[meta] trait Api {
 
   implicit class XtensionSemanticTermDesugar(tree: Term) {
     @hosted def desugar: Term = {
-      val tree1 = implicitly[SemanticContext].typecheck(tree).require[impl.Term]
-      tree1.expansion match {
+      val ttree = implicitly[SemanticContext].typecheck(tree).require[impl.Term]
+      ttree.expansion match {
         case s.Expansion.Zero => unreachable
-        case s.Expansion.Identity => tree1
-        case s.Expansion.Desugaring(tree2) => tree2
+        case s.Expansion.Identity => ttree
+        case s.Expansion.Desugaring(desugaring) => desugaring
       }
     }
   }
 
   implicit class XtensionSemanticTermTpe(tree: Term) {
     @hosted def tpe: Type = {
-      val tree1 = implicitly[SemanticContext].typecheck(tree).require[impl.Term]
-      tree1.typing match {
+      val ttree = implicitly[SemanticContext].typecheck(tree).require[impl.Term]
+      ttree.typing match {
         case s.Typing.Zero => unreachable
         case s.Typing.Specified(tpe) => tpe.require[impl.Type]
       }
@@ -60,8 +85,8 @@ private[meta] trait Api {
       impl.Type.Name("Seq").withDenot(s.Prefix.Zero, sSeq)
     }
     @hosted private def paramType(tree: impl.Term.Param): Type = {
-      val tree1 = implicitly[SemanticContext].typecheck(tree).require[impl.Term.Param]
-      tree1.typing match {
+      val ttree = implicitly[SemanticContext].typecheck(tree).require[impl.Term.Param]
+      ttree.typing match {
         case s.Typing.Zero => unreachable
         case s.Typing.Specified(impl.Type.Arg.ByName(tpe)) => impl.Type.Apply(SeqRef, List(tpe))
         case s.Typing.Specified(impl.Type.Arg.Repeated(tpe)) => tpe
@@ -131,7 +156,7 @@ private[meta] trait Api {
   }
 
   // ===========================
-  // PART 3: TYPES
+  // PART 4: TYPES
   // ===========================
 
   implicit class XtensionSemanticType(tree: Type) {
@@ -148,7 +173,7 @@ private[meta] trait Api {
   @hosted def glb(tpes: Type*): Type = implicitly[SemanticContext].glb(tpes.toList)
 
   // ===========================
-  // PART 4: MEMBERS
+  // PART 5: MEMBERS
   // ===========================
 
   trait XtensionSemanticMemberLike {
@@ -367,7 +392,7 @@ private[meta] trait Api {
   }
 
   // ===========================
-  // PART 5: SCOPES
+  // PART 6: SCOPES
   // ===========================
 
   // TODO: so what I wanted to do with Scope.members is to have three overloads:
@@ -614,7 +639,7 @@ private[meta] trait Api {
   }
 
   // ===========================
-  // PART 6: BINDINGS
+  // PART 7: BINDINGS
   // ===========================
 
   implicit class XtensionSemanticName(tree: Name) {
@@ -648,7 +673,7 @@ private[meta] trait Api {
   }
 
   // ===========================
-  // PART 6: REPRESENTATION CONVERSIONS
+  // PART 8: REPRESENTATION CONVERSIONS
   // ===========================
 
   implicit class XtensionTypeToPatType(tree: Type) {

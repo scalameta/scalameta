@@ -7,6 +7,8 @@ import org.scalameta.unreachable
 import scala.{meta => api}
 import scala.meta.internal.{ast => impl}
 import impl._
+import scala.meta.semantic.{Context => SemanticContext}
+import scala.reflect.macros.blackbox.{Context => BlackboxContext}
 
 // NOTE: Hygienic comparison operates exactly like structural comparison
 // with a single exception of refs being treated differently, namely:
@@ -27,12 +29,10 @@ import impl._
 // 2) Term.This, Term.Super, as well as all PrivateXXX/ProtectedXXX are compared equal to themselves if they refer to the same defn
 // 3) YYY.ZZZ vs YYY.ZZZ for the rest of the refs are compared structurally
 
-// TODO: we should also use our compiler plugin powers to warn on Ref/Def comparisons
-// because those indicate mistakes like `case q"foo.$bar" if bar == t"Foo".defs("bar") => ...`
-// TODO: we should really generate bodies of those `equals` and `hashcode` with macros
-// and check whether that would be faster that doing productPrefix/productElements
+// TODO: We should really generate bodies of those `equals` and `hashcode` with macros
+// and check whether that would be faster that doing productPrefix/productElements.
 
-private[meta] object equals {
+object Equality {
   private def refersToSameDefn(name1: Name, name2: Name): Boolean = {
     refersToSameDefn(name1.denot, name2.denot)
   }
@@ -65,15 +65,16 @@ private[meta] object equals {
     }
   }
 
-  def apply(tree1: api.Tree, tree2: api.Tree): Boolean = {
-    if (tree1 == null || tree2 == null) tree1 == null && tree2 == null
-    else semanticEquals(tree1.require[impl.Tree], tree2.require[impl.Tree])
+  def equals(tree1: api.Tree, tree2: api.Tree)(implicit c: SemanticContext): Boolean = {
+    if (tree1 == null || tree2 == null) {
+      tree1 == null && tree2 == null
+    } else {
+      val ttree1 = c.typecheck(tree1).require[impl.Tree]
+      val ttree2 = c.typecheck(tree2).require[impl.Tree]
+      semanticEquals(ttree1, ttree2)
+    }
   }
-}
 
-// TODO: no idea how to generate good hashcodes, but for now it doesn't matter much, I guess
-// therefore I just took a random advice from StackOverflow: http://stackoverflow.com/questions/113511/hash-code-implementation
-private[meta] object hashcode {
   private def structuralHashcode(tree: Tree): Int = {
     // NOTE: for an exhaustive list of tree field types see
     // see /foundation/src/main/scala/org/scalameta/ast/internal.scala
@@ -97,10 +98,24 @@ private[meta] object hashcode {
     }
   }
 
-  def apply(tree: api.Tree): Int = {
-    if (tree == null) return 0
-    val semanticPart = semanticHashcode(tree.require[impl.Tree])
-    val flavorPart = tree match { case _: Ctor.Ref => 3; case _: Term.Ref => 1; case _: Type.Ref => 2; case _ => 0 }
-    semanticPart * 37 + flavorPart
+  def hashCode(tree: api.Tree)(implicit c: SemanticContext): Int = {
+    // TODO: no idea how to generate good hashcodes, but for now it doesn't matter much, I guess
+    // therefore I just took a random advice from StackOverflow: http://stackoverflow.com/questions/113511/hash-code-implementation
+    if (tree == null) {
+      return 0
+    } else {
+      val ttree = c.typecheck(tree).require[impl.Tree]
+      val semanticPart = semanticHashcode(ttree)
+      val flavorPart = ttree match { case _: Ctor.Ref => 3; case _: Term.Ref => 1; case _: Type.Ref => 2; case _ => 0 }
+      semanticPart * 37 + flavorPart
+    }
+  }
+}
+
+class EqualityMacros(val c: BlackboxContext) {
+  import c.universe._
+
+  def allow[T1, T2](implicit T1: WeakTypeTag[T1], T2: WeakTypeTag[T2]): Tree = {
+    ???
   }
 }

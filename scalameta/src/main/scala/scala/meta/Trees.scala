@@ -9,9 +9,9 @@ package scala.meta {
     def parent: Option[Tree]
     def tokens: Tokens
     def withTokens(tokens: Tokens): ThisType
-    final override def canEqual(that: Any): Boolean = that.isInstanceOf[Tree]
-    final override def equals(that: Any): Boolean = that match { case that: Tree => scala.meta.internal.semantic.equals(this, that); case _ => false }
-    final override def hashCode: Int = scala.meta.internal.semantic.hashcode(this)
+    final override def canEqual(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
+    final override def equals(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
+    final override def hashCode: Int = System.identityHashCode(this)
     final override def toString = scala.meta.internal.ui.toString(this)
   }
 
