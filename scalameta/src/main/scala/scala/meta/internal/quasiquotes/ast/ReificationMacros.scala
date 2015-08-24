@@ -65,8 +65,8 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
   def unapply(scrutinee: ReflectTree)(dialect: ReflectTree): ReflectTree = expand(dialect)
   def expand(dialect: ReflectTree): ReflectTree = {
     val (skeleton, mode) = parseSkeleton(instantiateDialect(dialect), instantiateParser(c.macroApplication.symbol))
-    val maybeAttributedSkeleton = scala.util.Try(attributeSkeleton(skeleton)).getOrElse(skeleton)
-    reifySkeleton(maybeAttributedSkeleton, mode)
+    val hygienicSkeleton = hygienifySkeleton(skeleton)
+    reifySkeleton(hygienicSkeleton, mode)
   }
 
   private def instantiateParser(interpolator: ReflectSymbol): MetaParser = {
@@ -227,85 +227,12 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
     c.macroApplication.pos.focus.withPoint(sourceOffset)
   }
 
-  // TODO: this is a very naive approach to hygiene, and it will be replaced as soon as possible
-  private def attributeSkeleton(meta: MetaTree): MetaTree = {
-    def correlate(meta: MetaTree, reflect: ReflectTree): MetaTree = (meta, reflect) match {
-      case (meta, reflect: TypeTree) =>
-        correlate(meta, reflect.original)
-      case (meta: impl.Term.Name, reflect: RefTree) =>
-        impl.Term.Name(meta.value).withDenot(denot(reflect.qualifier.tpe, reflect.symbol))
-      case (meta: impl.Type.Name, reflect: RefTree) =>
-        impl.Type.Name(meta.value).withDenot(denot(reflect.qualifier.tpe, reflect.symbol))
-      case (meta: impl.Ref, reflect: Ident) =>
-        val fakePrefix = Ident(reflect.symbol.owner).setType(reflect.symbol.owner.asInstanceOf[scala.reflect.internal.Symbols#Symbol].tpe.asInstanceOf[ReflectType])
-        correlate(meta, Select(fakePrefix, reflect.symbol.name).setSymbol(reflect.symbol).setType(reflect.tpe))
-      case (meta: impl.Term.Select, reflect: RefTree) =>
-        val qual = correlate(meta.qual, reflect.qualifier).require[impl.Term]
-        val name = correlate(meta.name, reflect).require[impl.Term.Name]
-        impl.Term.Select(qual, name)
-      case (meta: impl.Type.Select, reflect: RefTree) =>
-        val qual = correlate(meta.qual, reflect.qualifier).require[impl.Term.Ref]
-        val name = correlate(meta.name, reflect).require[impl.Type.Name]
-        impl.Type.Select(qual, name)
-      case (meta: impl.Type.Singleton, reflect: SingletonTypeTree) =>
-        val qual = correlate(meta.ref, reflect.ref).require[impl.Term.Ref]
-        impl.Type.Singleton(qual)
-      case (meta: impl.Type.Apply, reflect: AppliedTypeTree) =>
-        val tpe = correlate(meta.tpe, reflect.tpt).require[impl.Type]
-        val args = meta.args.zip(reflect.args).map{ case (meta, reflect) => correlate(meta, reflect).require[impl.Type] }
-        impl.Type.Apply(tpe, args)
-      case _ =>
-        sys.error("correlation of " + meta.productPrefix + " and " + reflect.productPrefix + " is not supported yet")
-    }
-    if (Debug.hygiene) { println("meta = " + meta); println(meta.show[Structure]) }
-    try {
-      def typecheckTerm(tree: ReflectTree) = {
-        val result = c.typecheck(tree, mode = c.TERMmode, silent = true)
-        if (result != EmptyTree) result
-        else {
-          import scala.reflect.internal.Mode
-          import scala.reflect.internal.Mode._
-          val TERMQUALmode = EXPRmode | QUALmode
-          c.typecheck(tree, mode = TERMQUALmode.asInstanceOf[c.TypecheckMode], silent = false)
-        }
-      }
-      def typecheckType(tree: ReflectTree) = c.typecheck(tree, mode = c.TYPEmode, silent = false)
-      val (reflectParse, reflectTypecheck) = meta match {
-        case _: scala.meta.Term => ((code: String) => c.parse(code), (tree: ReflectTree) => typecheckTerm(tree))
-        case _: scala.meta.Type => ((code: String) => c.parse(s"type T = $code").asInstanceOf[TypeDef].rhs, (tree: ReflectTree) => typecheckType(tree))
-        case _ => sys.error("attribution of " + meta.productPrefix + " is not supported yet")
-      }
-      val reflect = {
-        // NOTE: please don't ask me about the hacks that you see below
-        // even on three simple tests, scalac's typecheck has managed to screw me up multiple times
-        // requiring crazy workarounds for really trivial situations
-        def undealias(symbol: ReflectSymbol): ReflectSymbol = {
-          if (symbol == ListModule && !meta.toString.contains(".List")) ScalaList
-          else if (symbol == NilModule && !meta.toString.contains(".Nil")) ScalaNil
-          else if (symbol == SeqModule && !meta.toString.contains(".Seq")) ScalaSeq
-          else symbol
-        }
-        val untypedResult = reflectParse(meta.toString)
-        untypedResult match {
-          case Ident(TermName("_empty_")) =>
-            untypedResult.setSymbol(c.mirror.EmptyPackage)
-          case _ =>
-            var result = reflectTypecheck(untypedResult)
-            if (result match { case _: SingletonTypeTree => true; case _ => false }) result = SingletonTypeTree(Ident(undealias(result.tpe.termSymbol)))
-            if (result.symbol != undealias(result.symbol)) result = Ident(undealias(result.symbol))
-            result
-        }
-      }
-      if (Debug.hygiene) { println("reflect = " + reflect); println(showRaw(reflect, printIds = true)) }
-      val meta1 = correlate(meta, reflect)
-      if (Debug.hygiene) { println("result = " + meta1.show[Semantics]) }
-      meta1
-    } catch {
-      case ex: Throwable =>
-        if (Debug.hygiene) ex.printStackTrace()
-        if (Debug.hygiene) c.warning(c.enclosingPosition, "implementation restriction: failed to attribute the quasiquote, proceeding in unhygienic mode")
-        throw ex
-    }
+  private def hygienifySkeleton(meta: MetaTree): MetaTree = {
+    // TODO: Implement this (https://github.com/scalameta/scalameta/issues/156)
+    // by setting Tree.env of appropriate trees (names, apply-like nodes) to appropriate values.
+    // So far, we don't have to set anything to anything,
+    // because Environment.Zero (the only possible value for environments at the moment) is the default.
+    meta
   }
 
   private def reifySkeleton(meta: MetaTree, mode: Mode): ReflectTree = {
