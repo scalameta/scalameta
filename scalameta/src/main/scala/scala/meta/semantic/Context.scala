@@ -12,9 +12,7 @@ trait Context {
   def dialect: Dialect
   def domain: Domain
 
-  def desugar(term: Term): Term
-  def tpe(term: Term): Type
-  def tpe(param: Term.Param): Type.Arg
+  def typecheck(tree: Tree): Tree
   def defns(ref: Ref): Seq[Member]
   def members(tpe: Type): Seq[Member]
 

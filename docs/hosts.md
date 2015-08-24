@@ -2,7 +2,7 @@
 
 scala.meta provides foundational data structures for metaprogramming defined in [Trees.scala](/scalameta/src/main/scala/scala/meta/Trees.scala) along with several levels of APIs (syntactic and semantic).
 
-While syntactic services are implemented in scala.meta itself, semantic services require external implementations called hosts, because it would be unreasonable for us to, say, implement Scala's type inference or implicit resolution algorithms from scratch. In [semantic/Context.scala](/scalameta/src/main/scala/scala/meta/semantic/Context.scala) and  [macros/Context.scala](/scalameta/src/main/scala/scala/meta/macros/Context.scala) we have encapsulated a minimalistic API surface that's required from hosts.
+While syntactic services are implemented in scala.meta itself, semantic services require external implementations called hosts, because it would be unreasonable for us to, say, implement Scala's type inference or implicit resolution algorithms from scratch. In [semantic/Context.scala](/scalameta/src/main/scala/scala/meta/semantic/Context.scala) and [interactive/Context.scala](/scalameta/src/main/scala/scala/meta/interactive/Context.scala) we have encapsulated a minimalistic API surface that's required from hosts.
 
 Here is some preliminary documentation on the functionality expected from hosts along with certain background information about scala.meta's data structures.
 
@@ -12,11 +12,11 @@ scala.meta trees provide comprehensive coverage of syntactic structures that com
 
 Hosts are, however, required to create instances of scala.meta trees to be returned from various host APIs, so here we will outline the guidelines that were used to design scala.meta trees in order to allude to expected usage scenarios:
 
-  1. Trees are fully immutable in the sense that they: a) don't contain any observationally mutable fields, b) aren't supposed contain any references to anything that might be mutable. This means that after creation trees can never change and as such can be easily reasoned about. In order to "modify" an existing tree, one is supposed to use either `copy` or one of the tree transformers (at the moment, tree transformer functionality isn't designed yet). Both of these approaches create a copy of an original tree with fields changed appropriately.
+  1. Trees are fully immutable in the sense that they: a) don't contain any observationally mutable fields, b) aren't supposed contain any references to anything that might be mutable. This means that after creation trees can never change and as such can be easily reasoned about. In order to "modify" an existing tree, one is supposed to use either `copy` or one of the tree transformers (e.g. `Tree.transform` or other, more advanced, functionality of the TQL framework). Both of these approaches create a copy of an original tree with fields changed appropriately.
 
   NB! Since trees can't be mutated in-place, reference equality (`Tree.eq` and `Tree.ne`) should not be used to work with trees. The only reliable way of comparing trees for equality is `Tree.==` and `Tree.!=`.
 
-  1. Trees strongly emphasize safety by construction in the sense that they disallow creation of syntactically invalid language constructs (e.g. it's impossible to create trees that represent classes without primary constructors or applications of types to terms). As much validation as possible is pushed to compile time via precise types of tree fields, and some leftovers whose validation was too heavyweight to encode in types are verified at runtime. For you as a host implementor this means that you'll have to be really precise in arguments that you provide to our tree creation facilities.
+  1. Trees strongly emphasize safety by construction in the sense that they disallow creation of syntactically invalid language constructs (e.g. it's impossible to create trees that represent classes without primary constructors or applications of types to terms). As much validation as possible is pushed to compile time via precise types of tree fields, and some leftovers whose validation was too heavyweight to encode in types are verified at runtime. For you as a host implementor this means that you'll have to be really precise in arguments that you provide to our tree creation facilities. Don't worry though. Even if you make a mistake, it'll manifest itself by a compilation error or a crash immediately upon creation of the malformed tree, not by corrupting some internal state and crashing mysteriously afterwards.
 
   1. scala.meta strives for fully faithful representation of language concepts in its reflection API. Among other things, this means that our trees comprehensively describe all syntactic sugar defined by Scala spec. For instance, `(x, y)` in `val (x, y) = 2` remains `(x, y)`, not a pair of `x` and `y` split over two vals, and `List[_]` is actually represented as a type application to `Type.Placeholder`, not as a `Type.Existential`. Depending on the amount of desugarings performed by your host, this aspect of scala.meta might be either trivial or extremely challenging.
 
@@ -26,7 +26,7 @@ Hosts are, however, required to create instances of scala.meta trees to be retur
 
     1. Again, if we look into existing reflection facilities of Scala, we'll observe that trees begin their lives naked (just syntax) and then get attributed by the typechecker (i.e. have their `var tpe: Type` and `var symbol: Symbol` fields assigned, typically in place). Semantic operations are only available for attributed trees, and there are some operations that are only available on unattributed trees, which means that the users need to be aware of the distinction. scala.meta unifies these concepts, exposing semantic methods like `Type.<:<` or `Scope.members` that take care of attribution transparently from the user.
 
-  1. Finally, trees are aware of their context. First of all, there's the `Tree.parent` method that can go up the tree structure if the given tree is a part of a bigger tree (as a host implementor, you don't need to worry about maintaining `parent` at all - it is maintained automatically by scala.meta's infrastructure: when a tree is inserted into another tree, it is cloned and gets its `parent` updated accordingly). Also, there's the notion of hygiene (not yet fully implemented) that postulates that trees should generally remember the lexical context of their creation site and respect that context even when they are put into parent that comes from a different context. At this point, the only thing that you need to do to support hygiene is to set denotations in the trees that you return to users (see the "Semantics" section for more information about denotations).
+  1. Finally, trees are aware of their context. First of all, there's the `Tree.parent` method that can go up the tree structure if the given tree is a part of a bigger tree (as a host implementor, you don't need to worry about maintaining `parent` at all - it is maintained automatically by scala.meta's infrastructure: when a tree is inserted into another tree, it is cloned and gets its `parent` updated accordingly). Also, there's the notion of hygiene that postulates that trees should remember the environment of their creation site and respect that environment even when they are put into parent that comes from a different context (again, as a host implementor, you don't have to do anything about this - everything is filled in automatically by scala.meta).
 
 ### Immutability
 
@@ -34,11 +34,34 @@ One of the main design goals of scala.meta is to provide a purely functional API
 
 Native scala.meta services (parsing, quasiquotes - essentially, everything syntactic) either don't have mutable state at all or have it localized to areas that can't affect publicly observable behavior. The same level of robustness is expected from hosts, e.g. all semantic operations provided by hosts must be thread-safe.
 
+### Syntax
+
+One of the important goals of scala.meta is providing a representation of Scala that accommodates all syntactic peculiarities without introducing desugarings. As a result, the structure of scala.meta trees might look a bit extravagant and not always obvious if you're used to metaprogramming APIs designed in a different way.
+
+The ultimate way of learning about the shape of scala.meta trees is experimentation with: a) building trees manually or via `"...".parse[...]"`, b) exploring trees via `Tree.show[Syntax]` and `Tree.show[Structure]`:
+
+```
+scala> "class C { def x = 2 }".parse[Stat]
+res0: scala.meta.Stat = class C { def x = 2 }
+
+scala> res0.show[Syntax]
+res1: String = class C { def x = 2 }
+
+scala> res0.show[Structure]
+res2: String = Defn.Class(Nil, Type.Name("C"), Nil, Ctor.Primary(Nil, Ctor.Ref.Name("this"), Nil), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), Some(List(Defn.Def(Nil, Term.Name("x"), Nil, Nil, None, Lit.Int(2))))))
+```
+
+scala.meta also supports quasiquotes, e.g. `"class C { def x = 2 }".parse[Stat]` from the above snippet can be equivalently rewritten as `q"class C { def x = 2 }"`. Take a look at [the documentation](/docs/quasiquotes.md) to learn more about different kinds of supported quasiquoting interpolators and rules of unquoting and splicing. Like any complicated feature, quasiquotes  may have bugs. If you notice quasiquotes misbehaving, the most robust way of constructing trees would be using `"...".parse[...]"`.
+
 ### Semantics
 
-In order to implement semantic operations on scala.meta trees (e.g. resolving references, computing supertypes, etc), you will need to correlate them with your native metaprogramming artifacts such as e.g. scala.reflect symbols or types. To accommodate this need, we provide three facilities to store semantic information in scala.meta trees: 1) denotations, 2) typings, 3) expansions.
+Another important goal of scala.meta is making typechecking transparent. For the users, the API simply exposes things like hygienic tree comparison, `Term.tpe` or `Ref.defn`, and it's the goal of the underlying infrastructure to magically make things work without having the user to understand and manage internal compiler state.
 
-  1. Denotations are exclusive to names (i.e. to trees that inherit from `Name`: Term.Name, Type.Name, Ctor.Name, Name.Anonymous and Name.Indeterminate) and represent definitions that are referenced by those names. More concretely, every name tree has a `private[meta]` field: `val denot: Denotation`. A `Denotation` consists of a prefix and one or more symbols. A prefix is a type of a term from which a name is selected (`Prefix.Type`) or nothing in case when a name is local to a block (`Prefix.Zero`). A symbol is a unique identifier of a definition referenced by a name (check out the [sources](/scalameta/src/main/scala/scala/meta/internal/semantic/Denotations.scala) to learn more about the structure of symbols). There can be `Denotation.Zero` that stands for an unknown denotation, `Denotation.Single` to express unambiguously resolved references and `Denotation.Multi` for imports and overloaded methods.
+Of course, at the lowest level there's no magic, and internally scala.meta trees feature three private fields equipped with getters and copy-on-write setters that carry semantic attributes: denotations (`.denot` and `.withDenot`), typings (`.typing` and `.withTyping`) and expansions (`.expansion` and `.withExpansion`).
+
+  1. Denotations are exclusive to names (i.e. to trees that inherit from `Name`: Term.Name, Type.Name, Ctor.Name, Name.Anonymous and Name.Indeterminate) and represent definitions that are referenced by those names.
+
+    There can be `Denotation.Zero` that stands for an unknown denotation, `Denotation.Single` to express unambiguously resolved references and `Denotation.Multi` for imports and overloaded methods. A `Denotation` consists of a prefix and one or more symbols. A prefix is a type of a term from which a name is selected (`Prefix.Type`) or nothing in case when a name is local to a block (`Prefix.Zero`). A symbol is a unique identifier of a definition referenced by a name. Check out the [sources](/scalameta/src/main/scala/scala/meta/internal/semantic/Denotation.scala) to learn more.
 
     In the example below, we can see a tree that represents List[Int], with denotations filled in correctly. The numbers in square brackets next to name trees refer to denotations that are printed below, with the parts before :: standing for prefixes and the parts after :: standing for symbols (dots in fully-qualified names are term selections and hashes are type selections).
 
@@ -53,19 +76,15 @@ In order to implement semantic operations on scala.meta trees (e.g. resolving re
         [5] 0::_root_
         ```
 
-    While global symbols (i.e. the ones that are visible from other files) are more or less straightforward (you represent them with data structures equivalent to fully-qualified names, with a slight complication for overloaded methods), local symbols require more effort. The tricky thing here is generating unique identifiers for local definitions that symbols refer to and then making sure that you return the same identifier if the same local definition is converted more than once.
+    While global symbols (i.e. the ones that are visible from other files) are more or less straightforward (you represent them with data structures equivalent to fully-qualified names, with a slight complication for overloaded methods), local symbols require more effort. The tricky thing here is generating unique identifiers for local definitions that symbols refer to and then making sure that you return the same identifier if the same local definition is referred to from different places.
 
-  1. Typings are exclusive to terms (i.e. to trees that inherit from `Term`) and provide types for these terms. This piece of information is not mandatory, because it is possible to recompute all typings that have been done during typechecking having denotations and expansions at hand, but you may find it useful to precache type information when converting your native representation of terms to scala.meta trees.
+  1. Typings are exclusive to terms and term parameters (i.e. to trees that inherit from `Term` and `Term.Param`) and provide types for these trees. scala.meta does not have a notion of typings for types, definitions or nodes from other syntactic categories, because we haven't found a way for such typings to convey useful information to the users.
 
-  1. Expansions are also exclusive to terms (i.e. to trees that inherit from `Term`) and specify expanded forms for these terms. Such forms may include, but are not limited to: method applications with fully inferred type arguments and implicit arguments, low-level representations of language features (applications, string interpolations, dynamics, etc), macro expansions and so on.
+    There can be `Typing.Zero` that stands for an unknown typing and `Typing.Specified` that wraps a fully calculated  `Type` assigned to the associated tree. Check out the [sources](/scalameta/src/main/scala/scala/meta/internal/semantic/Typing.scala) to learn more.
 
-When processing a semantic request from a user, you may receive a tree that is in one of three states: A) fully attributed (i.e. every name has a filled-in denotation and every term has a filled-in typing and expansion - this is most likely a consequence of the tree coming completely from your host), B) unattributed (this can happen when a tree is created by the user, e.g. in a quasiquote), C) a mix of A and B.
+  1. Expansions are exclusive to terms (i.e. to trees that inherit from `Term`) and specify expanded forms for these terms. Language features that are supported by expansions are: implicit conversion/argument inference, type argument inference, apply insertion, empty argument list insertion, assignment desugaring (`_=`, `update`), string interpolation desugaring, for loop desugaring, `Dynamic` desugaring, macro expansions. scala.meta does not have a notion of expansions for definitions (even though the language specification explicitly talks about canonical desugarings for some definitions), because we consider them to be too low-level to be exposed publicly.
 
-In scala.reflect, the metaprogramming API behaves differently depending on the state of input trees (with some functionality only working in state A and some functionality failing in incomprehensible ways for B), so the user has to have a detailed understanding of what's going and to possibly patch the their trees to upgrade to status A. In order to address this problem, scala.meta requires hosts to gracefully handle any combination of A, B and C.
-
-Your implementation must be able to produce correct results regardless of the state that input trees are in, taking into account: I) pre-existing semantic information (i.e. denotations for names, typings and expansions for terms), II) pre-existing environment information (i.e. environments for names and apply-like nodes), III) your own scope (e.g. classpath of the underlying context, etc).
-
-The concept of an environment needs further explanation. All names and all nodes that can desugar to method invocations (`Term.Apply`, `Term.ApplyInfix`, `Term.ApplyType`, `Term.ApplyUnary`, `Term.Assign`, `Term.Update`, `Term.Interpolate`) carry an environment that is there to remember definitions in scope of the quasiquote that created these nodes. Currently, this functionality is in a prototypical state, so you don't have to worry about it at all, behaving as if it wasn't there at all. In the future, the situation will change, so you will need to account for environments when attributing yet not attributed trees.
+    There can be `Expansion.Zero` that stands for an unknown expansion, `Expansion.Identity` that stands for absence of a desugaring and `Expansion.Desugaring` that wraps a `Term` that represents a desugaring of the associated tree.  Check out the [sources](/scalameta/src/main/scala/scala/meta/internal/semantic/Expansion.scala) to learn more.
 
 ### Context API
 
@@ -73,11 +92,9 @@ The concept of an environment needs further explanation. All names and all nodes
 
 | Method                                                    | Notes
 |-----------------------------------------------------------|-----------------------------------------------------------------
-| `def dialect: Dialect`                                    | See [dialects/Dialect.scala](/tokens/src/main/scala/scala/meta/dialects/package.scala)
+| `def dialect: Dialect`                                    | See [dialects/package.scala](/tokens/src/main/scala/scala/meta/dialects/package.scala)
 | `def domain: Domain`                                      | See [taxonomic/Domain.scala](/scalameta/src/main/scala/scala/meta/taxonomic/Domain.scala)
-| `def desugar(term: Term): Term`                           | Expands a given term into its full form, introducing inferred term and type arguments, calls to magic methods, such as `apply` or `update`, etc. Language features to be supported: implicit conversion/argument inference, type argument inference, apply insertion, empty argument list insertion, assignment desugaring (`_=`, `update`), string interpolation desugaring, for loop desugaring, dynamic desugaring.
-| `def tpe(term: Term): Type`                               | Type of a given term.
-| `def tpe(param: Term.Param): Type.Arg`                    | Type of a given term parameter, possibly inferred.
+| `def typecheck(tree: Tree): Tree`                         | Checks wellformedness of the input tree, computes semantic attributes (denotations, typings and expansions) for it and all its subnodes, and returns a copy of the tree with the attributes assigned. See subsequent sections for implementation tips.
 | `def defns(ref: Ref): Seq[Member]`                        | Definitions that a given reference refers to. Can return multiple results if a reference resolves to several overloaded members.
 | `def owner(member: Member): Scope`                        | This isn't actually a method in `Context`, and it's here only to emphasize a peculiarity of our API. <br/><br/> The reason for that is that scala.meta trees always track their parents, so with a tree in hand it's very easy to navigate its enclosures up until an owning scope.
 | `def stats(scope: Scope): Seq[Member]`                    | This isn't actually a method in `Context`, and it's here only to emphasize a peculiarity of our API. <br/><br/> The thing is that trees returned by `def members(tpe: Type): Seq[Member]` must have their contents prepopulated, which makes this method unnecessary. All lists in our API (e.g. the list of statements in a block or a list of declarations in a package or a class) are actually `Seq`'s, which means that prepopulation of contents isn't going to incur prohibitive performance costs.
@@ -90,10 +107,24 @@ The concept of an environment needs further explanation. All names and all nodes
 | `def dealias(tpe: Type): Type`                            | If a given type is a type alias or an application thereof, resolve it. Otherwise, return the input type back.
 | `def parents(member: Member): Seq[Member]`                | Direct parents (i.e. superclasses or overriddens) of a given member. If the provided member has been obtained using `members` via some prefix or by instantiating some type parameters, then the results of this method should also have corresponding type parameters instantiated.
 | `def children(member: Member): Seq[Member]`               | Direct children (i.e. subclasses or overriders) of a given member in the closed world reflected by the host. If the provided member has been obtained using `members` via some prefix by instantiating some type parameters, then the results of this method should also have corresponding type parameters instantiated.
-| `def project: Project`                                    | Returns an instance of [scala.meta.projects.Project](/scalameta/src/main/scala/scala/meta/projects/Project.scala) describing the project that's underlying the host. Hosts are advised to strive for compatibility between each other. If the same project is compiled, say, by SBT and then by Intellij IDEA plugin, then it is mandatory for the sequence of urls emitted by `Project.resources` to be the same.
+
+### Implementing Context APIs
+
+The first two methods of Context don't involve anything too tricky and just provide metadata about your host - the language profile that you're supporting (pick from a list in [dialects/package.scala](/tokens/src/main/scala/scala/meta/dialects/package.scala)) and the environment that you're reflecting (create one or more artifacts from a list in [taxonomic/Artifact.scala](/scalameta/src/main/scala/scala/meta/taxonomic/Artifact.scala) and wrap then in a [taxonomic/Domain.scala](/scalameta/src/main/scala/scala/meta/taxonomic/Domain.scala)).
+
+In order to implement other methods that involve semantic operations on scala.meta trees (e.g. resolving references, computing supertypes, etc), you need to be able to do three things:
+
+  1. Read semantic attributes, i.e. understand denotations, typings and expansions, as described above, and correlate them with your native metaprogramming artifacts such as e.g. scala.reflect symbols or types. Note that scala.meta's representations for such attributes is platform-independent, so you can't expect that attributes on input trees will originate from your host or even from your compilation run or the current JVM instance.
+
+  2. Write semantic attributes, i.e. emit denotations, typings and expansions based on your native metaprogramming artifacts. Again it is worth noting that scala.meta's data structures are platform-independent, which means that you can't sneak your native, platform-dependent data structures in there.
+
+  3. Generate semantic attributes, i.e. typecheck trees that are possibly partially attributed. Your implementation must be able to produce correct results regardless of the state that input trees are in, taking into account: I) pre-existing semantic information (i.e. denotations for names, typings for terms and parameters, and expansions for terms), II) pre-existing environment information (i.e. environments for names and apply-like nodes), III) your own scope (e.g. classpath of the underlying context, etc).
+
+  At the moment, you don't have to worry about environments at all, behaving as if they weren't there. In the future, the situation will change, and we will provide details of how to account for environments when attributing not yet attributed trees.
+
 
 ### Error handling
 
 scala.meta expects hosts to signal errors by throwing exceptions of type [scala.meta.SemanticException](/scalameta/src/main/scala/scala/meta/Exceptions.scala). Users of scala.meta might be shielded from these exceptions by an additional error handling layer inside scala.meta, but that shouldn't be a concern for host implementors. At the moment, we don't expose any exception hierarchy, and the only way for the host to elaborate on the details of emitted errors is passing a custom error message. This might change later.
 
-Hosts must expect scala.meta to signal fatal errors by throwing exceptions of type [scala.meta.AbortException](/scalameta/src/main/scala/scala/meta/Exceptions.scala). If a metaprogram that throws such an exception is run within a host, the host might want to handle the situation in a special way. For instance, it would make sense for an aborted macro expansion tp result in a diagnostic message at a given location.
+Hosts must expect scala.meta to signal fatal errors by throwing exceptions of type [scala.meta.AbortException](/scalameta/src/main/scala/scala/meta/Exceptions.scala). If a metaprogram that throws such an exception is run within a host, the host might want to handle the situation in a special way. For instance, it would make sense for an aborted macro expansion to result in a diagnostic message or UI element at a given location.

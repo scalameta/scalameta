@@ -32,11 +32,24 @@ private[meta] trait Api {
   val Environment = scala.meta.semantic.Environment
 
   implicit class XtensionSemanticTermDesugar(tree: Term) {
-    @hosted def desugar: Term = implicitly[SemanticContext].desugar(tree)
+    @hosted def desugar: Term = {
+      val tree1 = implicitly[SemanticContext].typecheck(tree).require[impl.Term]
+      tree1.expansion match {
+        case s.Expansion.Zero => unreachable
+        case s.Expansion.Identity => tree1
+        case s.Expansion.Desugaring(tree2) => tree2
+      }
+    }
   }
 
   implicit class XtensionSemanticTermTpe(tree: Term) {
-    @hosted def tpe: Type = implicitly[SemanticContext].tpe(tree)
+    @hosted def tpe: Type = {
+      val tree1 = implicitly[SemanticContext].typecheck(tree).require[impl.Term]
+      tree1.typing match {
+        case s.Typing.Zero => unreachable
+        case s.Typing.Specified(tpe) => tpe.require[impl.Type]
+      }
+    }
   }
 
   implicit class XtensionSemanticMemberTpe(tree: Member) {
@@ -46,17 +59,21 @@ private[meta] trait Api {
       val sSeq = s.Symbol.Global(sCollection, "Seq", s.Signature.Type)
       impl.Type.Name("Seq").withDenot(s.Prefix.Zero, sSeq)
     }
-    @hosted private def dearg(tpe: Type.Arg): Type = tpe.require[impl.Type.Arg] match {
-      case impl.Type.Arg.ByName(tpe) => impl.Type.Apply(SeqRef, List(tpe))
-      case impl.Type.Arg.Repeated(tpe) => tpe
-      case tpe: impl.Type => tpe
+    @hosted private def paramType(tree: impl.Term.Param): Type = {
+      val tree1 = implicitly[SemanticContext].typecheck(tree).require[impl.Term.Param]
+      tree1.typing match {
+        case s.Typing.Zero => unreachable
+        case s.Typing.Specified(impl.Type.Arg.ByName(tpe)) => impl.Type.Apply(SeqRef, List(tpe))
+        case s.Typing.Specified(impl.Type.Arg.Repeated(tpe)) => tpe
+        case s.Typing.Specified(tpe: impl.Type) => tpe
+      }
     }
     @hosted private def methodType(tparams: Seq[Type.Param], paramss: Seq[Seq[Term.Param]], ret: Type): Type = {
       if (tparams.nonEmpty) {
         val monoret = methodType(Nil, paramss, ret.require[impl.Type]).require[impl.Type]
         impl.Type.Lambda(tparams.require[Seq[impl.Type.Param]], monoret)
       } else paramss.foldRight(ret.require[impl.Type])((params, acc) => {
-        val paramtypes = params.map(p => implicitly[SemanticContext].tpe(p).require[impl.Type.Arg])
+        val paramtypes = params.map(p => paramType(p.require[impl.Term.Param]).require[impl.Type.Arg])
         impl.Type.Function(paramtypes, acc)
       })
     }
@@ -83,7 +100,7 @@ private[meta] trait Api {
       case       impl.Pkg(impl.Term.Select(_, name: impl.Term.Name), _) => impl.Type.Singleton(name)
       case tree: impl.Pkg.Object => impl.Type.Singleton(tree.name)
       case tree: impl.Term.Param if tree.parent.map(_.isInstanceOf[impl.Template]).getOrElse(false) => ??? // TODO: don't forget to intersect with the owner type
-      case tree: impl.Term.Param => dearg(implicitly[SemanticContext].tpe(tree))
+      case tree: impl.Term.Param => paramType(tree)
       case tree: impl.Type.Param => tree.name.require[Type.Name]
       case tree: impl.Ctor.Primary => ctorType(tree.owner.require[Member], tree.paramss)
       case tree: impl.Ctor.Secondary => ctorType(tree.owner.require[Member], tree.paramss)
