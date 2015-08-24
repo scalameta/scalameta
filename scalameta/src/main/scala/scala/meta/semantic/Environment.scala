@@ -12,5 +12,4 @@ import scala.meta.semantic.{Context => SemanticContext}
 @root trait Environment
 object Environment {
   @leaf object Zero extends Environment
-  @leaf class Dynamic(context: SemanticContext) extends Environment
 }

@@ -45,7 +45,6 @@ object Semantics {
           def tag = classOf[Environment]
           def prettyprint() = env match {
             case scala.meta.semantic.Environment.Zero => unreachable
-            case scala.meta.semantic.Environment.Dynamic(c) => env.toString
           }
         }
         implicit def denotFootnote(denot: Denotation): Footnote = new Footnote {
@@ -150,8 +149,6 @@ object Semantics {
           env match {
             case env @ scala.meta.semantic.Environment.Zero =>
               ""
-            case env @ scala.meta.semantic.Environment.Dynamic(c) =>
-              s"[?${footnotes.insert(env)}]"
           }
         }
         val denotPart = x match {
