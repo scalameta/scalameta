@@ -317,7 +317,7 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
             var gctor = gparent.typeSymbol.primaryConstructor.orElse(gparent.typeSymbol)
             if (gctor.name == g.nme.MIXIN_CONSTRUCTOR) gctor = gparent.typeSymbol
             val mctor = m.Ctor.Name(gparent.typeSymbolDirect.name.decoded).withDenot(gparent, gctor)
-            mtpe.ctorRef(mctor).require[m.Term]
+            mtpe.ctorRef(mctor).require[m.Ctor.Call]
           })
           // TODO: apply gpre to mselftpe
           val mselftpe = if (gsym.thisSym != gsym) Some(gsym.thisSym.tpe.toMtype) else None

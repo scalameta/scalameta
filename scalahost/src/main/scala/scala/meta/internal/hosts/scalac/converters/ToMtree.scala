@@ -133,7 +133,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
 
         case l.Template(learly, lparents, lself, lstats) =>
           val mearly = learly.toMtrees[m.Stat]
-          val mparents = lparents.toMtrees[m.Term]
+          val mparents = lparents.toMtrees[m.Ctor.Call]
           val mself = lself.toMtree[m.Term.Param]
           val mstats = lstats.toMtrees[m.Stat]
           m.Template(mearly, mparents, mself, Some(mstats))
