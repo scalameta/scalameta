@@ -727,8 +727,8 @@ private[meta] trait Api {
   }
 
   implicit class XtensionTypeToCtorRef(tree: Type) {
-    @hosted def ctorRef(ctor: Ctor.Name): Term = {
-      def loop(tpe: impl.Type, ctor: impl.Ctor.Name): impl.Term = {
+    @hosted def ctorRef(ctor: Ctor.Name): Ctor.Call = {
+      def loop(tpe: impl.Type, ctor: impl.Ctor.Name): impl.Ctor.Call = {
         object Types {
           def unapply(tpes: Seq[impl.Type.Arg]): Option[Seq[impl.Type]] = {
             if (tpes.forall(_.isInstanceOf[impl.Type])) Some(tpes.map(_.require[impl.Type]))
