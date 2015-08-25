@@ -5,6 +5,7 @@ import java.nio.charset.Charset
 import java.security.MessageDigest
 import scala.meta.{Dialect, Content, Source}
 import scala.meta.internal.ui.TopLevel
+import scala.meta.internal.semantic._
 import org.scalameta.data._
 import org.scalameta.debug._
 
@@ -39,6 +40,8 @@ package object tasty {
       syntacticBuf.writeBytes(dialectBytes, dialectBytes.length)
       syntacticBuf.writeNat(hashBytes.length)
       syntacticBuf.writeBytes(hashBytes, hashBytes.length)
+
+      source.requireAttributed()
 
       val baos = new ByteArrayOutputStream()
       val oos = new ObjectOutputStream(baos)
@@ -91,6 +94,7 @@ package object tasty {
         case Some(source) => source
         case _ => throw new UntastyException("no ScalametaSemantic section was found")
       }
+      source.requireAttributed()
       if (Debug.tasty) println(s"successfully loaded TASTY: ${digest.dialect}, ${digest.hash}, ${source.show[TopLevel]}")
       (digest, source)
     } catch {
