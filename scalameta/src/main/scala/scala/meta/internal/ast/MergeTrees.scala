@@ -120,7 +120,7 @@ object mergeTrees {
                 })
               }
               val meparents = (sy.parents, se.parents) match {
-                case (Seq(), Seq(m.Term.Apply(anyRef: m.Term.Ref, Nil))) if anyRef == Object_init =>
+                case (Seq(), Seq(m.Term.Apply(anyRef: m.Ctor.Ref, Nil))) if anyRef.refersTo(Object_init) =>
                   Seq()
                 case (syss, sess) =>
                   mergeParents(syss, sess)
@@ -201,8 +201,26 @@ object mergeTrees {
     loop(sy, se)
   }
 
-  // NOTE: This contraption is only necessary because we can't use quasiquotes in the same project they're defined in.
-  private lazy val Object_init = Ctor.Name("Object").withDenot(denot(typeOf[Object].member(u.TermName("<init>"))))
+  private lazy val Object_init = denot(typeOf[Object].member(u.TermName("<init>")))
+
+  // NOTE: We can't use === here, because it requires a semantic context,
+  // and we can't have a semantic context in MergeTrees.
+  // Why's that? Because merging trees is an essential part of deserializing from TASTY,
+  // and deserializing from TASTY is a prerequisite for building a semantic context.
+  private implicit class XtensionRefersTo(ref: Ref) {
+    def refersTo(denot: Denotation): Boolean = ref match {
+      case name: m.Name => name.denot == denot
+      case tree: m.Term.Select => tree.name.refersTo(denot)
+      case tree: m.Type.Select => tree.name.refersTo(denot)
+      case tree: m.Type.Project => tree.name.refersTo(denot)
+      case tree: m.Type.Singleton => tree.ref.refersTo(denot)
+      case tree: m.Pat.Type.Project => tree.name.refersTo(denot)
+      case tree: m.Ctor.Ref.Select => tree.name.refersTo(denot)
+      case tree: m.Ctor.Ref.Project => tree.name.refersTo(denot)
+      case tree: m.Ctor.Ref.Function => tree.name.refersTo(denot)
+      case _ => false
+    }
+  }
 
   private def failCorrelate(sy: Tree, se: Tree, diagnostics: String): Nothing = {
     val details = s"${sy.show[Structure]}$EOL${se.show[Structure]}"
