@@ -23,7 +23,7 @@ class LiftableMacros(val c: Context) extends AdtReflection {
   def customWrapper(adt: Adt, defName: TermName, localName: TermName, body: Tree): Option[Tree] = None
   def impl[T: WeakTypeTag]: c.Tree = {
     val root = weakTypeOf[T].typeSymbol.asAdt.root
-    val unsortedAdts = customAdts(root).getOrElse(weakTypeOf[T].typeSymbol.asAdt.root.allLeafs)
+    val unsortedAdts = customAdts(root).getOrElse(root.allLeafs)
     val adts = {
       // TODO: This doesn't quite work, because we can have `A` and `B`, none of which inherits each other,
       // but then at runtime we get `C` which inherits both and then execution suddenly takes the wrong path.

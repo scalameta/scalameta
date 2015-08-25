@@ -111,6 +111,51 @@ class PublicSuite extends FunSuite {
     """) === "")
   }
 
+  test("=== without import") {
+    assert(typecheckError("""
+      (??? : scala.meta.Tree) === (??? : scala.meta.Tree);
+    """) === "")
+  }
+
+  test("=== without context") {
+    assert(typecheckError("""
+      import scala.meta._
+      (??? : Tree) === (??? : Tree);
+    """) === "this method requires an implicit scala.meta.semantic.Context")
+  }
+
+  test("=== when everything's correct") {
+    assert(typecheckError("""
+      import scala.meta._
+      implicit val c: scala.meta.semantic.Context = ???
+      (??? : Tree) === (??? : Tree);
+    """) === "")
+  }
+
+  test("=== with insufficient precision - 1") {
+    assert(typecheckError("""
+      import scala.meta._
+      implicit val c: scala.meta.semantic.Context = ???
+      (??? : Scope) === (??? : Tree);
+    """) === "can't compare scala.meta.Scope and scala.meta.Tree")
+  }
+
+  test("=== with insufficient precision - 2") {
+    assert(typecheckError("""
+      import scala.meta._
+      implicit val c: scala.meta.semantic.Context = ???
+      (??? : Stat) === (??? : Term);
+    """) === "can't compare scala.meta.Stat and scala.meta.Term")
+  }
+
+  test("=== with unrelated nodes") {
+    assert(typecheckError("""
+      import scala.meta._
+      implicit val c: scala.meta.semantic.Context = ???
+      (??? : Ref) === (??? : Member);
+    """) === "can't compare scala.meta.Ref and scala.meta.Member")
+  }
+
   test("Tree.desugar") {
     assert(typecheckError("""
       import scala.meta._
