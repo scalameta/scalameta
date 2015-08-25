@@ -8,20 +8,10 @@ import scala.reflect.api.Universe
 import scala.meta.internal.{ast => m}
 import scala.meta.internal.{semantic => s}
 
-// NOTE: This functionality is here not by design, but rather by necessity:
-// 1) To provide an easy notation to create denotations for mergeTrees
-// 2) To power our eager "hygiene" in the current prototype of quasiquotes
-//
-// This is the little brother of scalahost's Tree.withDenot, doing exactly the same,
+// NOTE: This is the little brother of scalahost's Tree.withDenot, doing exactly the same,
 // but bailing on local symbols and supporting only a subset of prefixes.
-// In principle, I would be in favor of merging these two guys, but that'll require
-// moving a significant chunk of scalahost into scalameta as well as perpetuating the adhocness in scalameta.
-//
-// Luckily, both reasons for existence of this trait will go away in the future:
-// 1) Once we modularize scalameta, mergeTrees and quasiquotes will likely end up in different modules
-//    so we'll be able to quasiquotes in mergeTrees, which will solve the problem completely.
-// 2) Once a better mechanism for hygiene, based on runtime resolution of names, shows up,
-//    we will no longer need to compute denotations from scala.reflect artifacts.
+// In principle, I would be in favor of merging these two guys if that was possible,
+// but that'll require moving a significant chunk of scalahost into scalameta.
 
 trait Converters {
   val u: Universe
