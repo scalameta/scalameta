@@ -12,7 +12,9 @@ import scala.tools.nsc.Global
 
 object Proxy {
   def apply[G <: Global](global: G): Proxy[G] = {
-    new ProxyImpl[G](global)
+    new ProxyImpl[G](global) {
+      override def toString = s"Proxy($global)"
+    }
   }
 }
 
