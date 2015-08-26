@@ -166,7 +166,10 @@ import org.scalameta.debug._
         val expectedrelatives = toplevelClasses(sysource).map(_.replace(".", "/") + ".class")
         val binuris = expectedrelatives.flatMap(binfiles.get)
         perfectParts ++= binuris
-        if (Debug.tasty) println(s"found matching classfiles at: ${binuris.mkString(", ")}")
+        if (Debug.tasty) {
+          if (binuris.isEmpty) println("no matching classfiles found")
+          else println(s"found matching classfiles at: ${binuris.mkString(", ")}")
+        }
         val sesources = binuris.flatMap(binuri => loadTasty(binuri).map({
           case (SyntacticDigest(tastyDialect, tastyHash), sesource) =>
             def failDigest(what: String) = failResolve(s"$what of $sourceuri ($sydialect) and $binuri ($tastyDialect) are different")
@@ -176,7 +179,10 @@ import org.scalameta.debug._
         }))
 
         if (Debug.tasty) println(s"correlating $sourceuri and matching classfiles")
-        def failCorrelate(message: String) = failResolve(s"$message when correlating $sourceuri and matching classfiles")
+        def failCorrelate(message: String) = {
+          if (binuris.isEmpty) failResolve(s"no classfiles match definitions in $sourceuri")
+          else failResolve(s"$message when correlating $sourceuri and ${binuris.mkString(", ")}")
+        }
         val systats = sysource.stats
         val sestats = sesources.map(_.stats).flatten
         var matches = mutable.AnyRefMap[Tree, Tree]()
@@ -195,6 +201,8 @@ import org.scalameta.debug._
             def correlatePackage(sy: m.Pkg, ses: Seq[m.Stat]): m.Pkg = {
               val ses1 = ses.collect{ case se: m.Pkg if sy.ref.toString == se.ref.toString => se }
               ses1.foreach(se1 => matches(se1) = null)
+              def message(adjective: String) = s"$adjective syntactic ${sy.productPrefix} named ${sy.ref.toString} was found"
+              if (ses1.isEmpty) failCorrelate(message("undermatched"))
               val sedenot = ses1.head.denot
               ses1.foreach(se1 => require(se1.denot == sedenot && debug(se1)))
               val mestats = sy.stats.map(sy => correlate(sy, ses1.flatMap(se => se.stats)))
