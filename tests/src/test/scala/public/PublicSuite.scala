@@ -543,9 +543,17 @@ class PublicSuite extends FunSuite {
     """) === "not found: type Semantics")
   }
 
+  test("show[Semantics] without context") {
+    assert(typecheckError("""
+      import scala.meta._
+      (??? : Tree).show[Semantics]
+    """) === "don't know how to show[Semantics] for scala.meta.Tree (be sure to have an implicit scala.meta.semantic.Context in scope)")
+  }
+
   test("show[Semantics] when everything's correct") {
     assert(typecheckError("""
       import scala.meta._
+      implicit val c: scala.meta.semantic.Context = ???
       (??? : Tree).show[Semantics]
     """) === "")
   }

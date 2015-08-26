@@ -5,6 +5,7 @@ import org.scalameta.unreachable
 import org.scalameta.invariants._
 import scala.collection.mutable
 import scala.meta.internal.ast._
+import scala.meta.internal.ui.Attributes
 
 package object semantic {
   implicit class XtensionHygieneDebug(debug: org.scalameta.debug.Debug.type) {
@@ -92,7 +93,7 @@ package object semantic {
           |$offenderPrintout
           |The tree that has caused problems is printed out below in its entirety:
           |$tree
-          |${tree.show[Semantics]}
+          |${tree.show[Attributes]}
         """.stripMargin)
       }
     }

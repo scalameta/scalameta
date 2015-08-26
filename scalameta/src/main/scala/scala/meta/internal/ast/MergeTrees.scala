@@ -10,6 +10,7 @@ import scala.meta.internal.ast._
 import scala.meta.semantic.{Context => SemanticContext}
 import scala.meta.internal.semantic._
 import scala.meta.internal.semantic.RuntimeConverters._
+import scala.meta.internal.ui.Attributes
 import org.scalameta.collections._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
@@ -161,13 +162,13 @@ object mergeTrees {
           if (Debug.convert && sy.parent.isEmpty) {
             println("======= SYNTACTIC TREE =======")
             println(sy)
-            println(sy.show[Structure])
+            println(sy.show[Attributes])
             println("======== SEMANTIC TREE ========")
             println(se)
-            println(se.show[Semantics])
+            println(se.show[Attributes])
             println("======== MERGED TREE ========")
             println(metree)
-            println(metree.show[Semantics])
+            println(metree.show[Attributes])
             println("=================================")
           }
           // TODO: fix duplication wrt ToMtree.scala
