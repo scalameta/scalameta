@@ -17,6 +17,7 @@ class AstMacros(val c: Context) {
   val AstInternal = q"_root_.org.scalameta.ast.internal"
   val Semantic = q"_root_.scala.meta.semantic"
   val SemanticInternal = q"_root_.scala.meta.internal.semantic"
+  val FlagsPackage = q"_root_.scala.meta.internal.flags.`package`"
   def impl(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       def fullName = c.internal.enclosingOwner.fullName.toString + "." + cdef.name.toString
@@ -101,6 +102,10 @@ class AstMacros(val c: Context) {
       val paramss = rawparamss
 
       // step 4: create internal bookkeeping parameters
+      locally {
+        bparams1 += q"protected val internalFlags: $FlagsPackage.Flags"
+        stats1 += q"private[meta] def flags: $FlagsPackage.Flags = internalFlags"
+      }
       bparams1 += q"@_root_.scala.transient protected val internalPrototype: $iname"
       locally {
         bparams1 += q"protected val internalParent: _root_.scala.meta.Tree"
@@ -254,6 +259,7 @@ class AstMacros(val c: Context) {
       // This method is private[meta] because the state that it's managing is not supposed to be touched
       // by the users of the framework.
       val internalCopyInternals = ListBuffer[Tree]()
+      internalCopyInternals += q"flags"
       internalCopyInternals += q"prototype.asInstanceOf[ThisType]"
       internalCopyInternals += q"parent"
       if (hasTokens) internalCopyInternals += q"tokens"
@@ -265,6 +271,7 @@ class AstMacros(val c: Context) {
       val internalCopyBody = q"new $name(..$internalCopyInternals)(...$internalCopyInitss)"
       stats1 += q"""
         private[meta] def internalCopy(
+            flags: $FlagsPackage.Flags = internalFlags,
             prototype: _root_.scala.meta.Tree = this,
             parent: _root_.scala.meta.Tree = internalParent,
             tokens: _root_.scala.meta.Tokens = internalTokens,
@@ -294,7 +301,15 @@ class AstMacros(val c: Context) {
       // However we definitely need withTokens, withDenot, withTyping and withExpansion
       // in order not to go mad when writing the converter.
       def withMethod(name: String, param: ValDef) = {
-        q"def ${TermName(name)}($param): $iname = this.internalCopy(${param.name} = ${Ident(param.name)})"
+        val semanticSetters = Set("withEnv", "withDenot", "withTyping", "withExpansion")
+        val mods = if (name == "withFlags") Modifiers(NoFlags, TypeName("meta"), Nil) else NoMods
+        var args = List(q"${param.name} = ${Ident(param.name)}")
+        if (semanticSetters(name)) args = args :+ q"flags = this.internalFlags & ~$FlagsPackage.TYPECHECKED"
+        q"$mods def ${TermName(name)}($param): $iname = this.internalCopy(..$args)"
+      }
+      locally {
+        val param = q"val flags: $FlagsPackage.Flags"
+        astats1 += withMethod("withFlags", param)
       }
       if (hasTokens) {
         val param = q"val tokens: _root_.scala.meta.Tokens"
@@ -379,7 +394,7 @@ class AstMacros(val c: Context) {
       if (hasExpansion) internalInitCount += 1
       val internalInitss = 1.to(internalInitCount).map(_ => q"null")
       val paramInitss = internalLocalss.map(_.map{ case (local, internal) => q"$AstInternal.initParam($local)" })
-      internalBody += q"val node = new $name(..$internalInitss)(...$paramInitss)"
+      internalBody += q"val node = new $name($FlagsPackage.ZERO, ..$internalInitss)(...$paramInitss)"
       internalBody ++= internalLocalss.flatten.flatMap{ case (local, internal) =>
         val (validators, assignee) = {
           // TODO: this is totally ugly. we need to come up with a way to express this in a sane way.

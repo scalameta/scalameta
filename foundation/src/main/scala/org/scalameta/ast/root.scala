@@ -15,6 +15,7 @@ class RootMacros(val c: Context) {
   lazy val Tree = tq"_root_.scala.meta.Tree"
   lazy val Datum = tq"_root_.scala.Any"
   lazy val Data = tq"_root_.scala.collection.immutable.Seq[$Datum]"
+  lazy val Flags = tq"_root_.scala.meta.internal.flags.`package`.Flags"
   lazy val Tokens = tq"_root_.scala.meta.Tokens"
   lazy val Environment = tq"_root_.scala.meta.semantic.Environment"
   lazy val Denotation = tq"_root_.scala.meta.internal.semantic.Denotation"
@@ -45,10 +46,12 @@ class RootMacros(val c: Context) {
       // TODO: think of better ways to abstract this away from the public API
       // See comments in ast.scala to see the idea behind internalCopy.
       val q"..$boilerplate" = q"""
+        private[meta] def flags: $Flags
+        private[meta] def withFlags(flags: $Flags): ThisType
+
         // NOTE: these are internal APIs that are meant to be used only in the implementation of the scala.meta framework
         // host implementors should not utilize these APIs
-        // TODO: turn the prototype argument of internalCopy into ThisType
-        // if done naively, this isn't going to compile for prototypes of @branch traits as ThisType there is abstract
+        protected def internalFlags: $Flags
         protected def internalPrototype: ThisType
         protected def internalParent: $Tree
         protected def internalTokens: $Tokens
@@ -56,7 +59,11 @@ class RootMacros(val c: Context) {
         protected def internalDenot: $Denotation
         protected def internalTyping: $Typing
         protected def internalExpansion: $Expansion
+
+        // TODO: turn the prototype argument of internalCopy into ThisType
+        // if done naively, this isn't going to compile for prototypes of @branch traits as ThisType there is abstract
         private[meta] def internalCopy(
+          flags: $Flags = _root_.scala.meta.internal.flags.`package`.ZERO,
           prototype: $Tree = this,
           parent: $Tree = internalParent,
           tokens: $Tokens = internalTokens,
