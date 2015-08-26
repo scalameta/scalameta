@@ -4,6 +4,7 @@ package contexts
 
 import org.scalameta.contexts._
 import org.scalameta.invariants._
+import org.scalameta.unreachable
 import java.io.File
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
@@ -41,29 +42,47 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
     currentDomain
   }
 
-  private[meta] def desugar(term: mapi.Term): mapi.Term = {
-    val mexpansion = term.requireExpanded()
-    mexpansion.require[m.Term]
+  private[meta] def typecheck(tree: mapi.Tree): mapi.Tree = {
+    // TODO: implement this
+    // 1) respect tree.parent
+    // 2) don't retypecheck if that's unnecessary
+    ???
   }
 
-  private[meta] def tpe(term: mapi.Term): mapi.Type = {
-    val mtpe = term.requireTyped()
-    mtpe.require[m.Type]
+  private[meta] def desugar(untypedTerm: mapi.Term): mapi.Term = {
+    val term = typecheck(untypedTerm).require[m.Term]
+    term.expansion match {
+      case s.Expansion.Zero => unreachable
+      case s.Expansion.Identity => term
+      case s.Expansion.Desugaring(tdesugaring) => tdesugaring
+    }
   }
 
-  private[meta] def tpe(param: mapi.Term.Param): mapi.Type.Arg = {
-    val mtpe = param.name.requireTyped()
-    mtpe.require[m.Type.Arg]
+  private[meta] def tpe(untypedTerm: mapi.Term): mapi.Type = {
+    val term = typecheck(untypedTerm).require[m.Term]
+    term.typing match {
+      case s.Typing.Zero => unreachable
+      case s.Typing.Specified(tpe) => tpe.require[m.Type]
+    }
   }
 
-  private[meta] def defns(ref: mapi.Ref): Seq[mapi.Member] = {
-    ref.requireDenoted()
+  private[meta] def tpe(untypedParam: mapi.Term.Param): mapi.Type.Arg = {
+    val param = typecheck(untypedParam).require[m.Term.Param]
+    param.typing match {
+      case s.Typing.Zero => unreachable
+      case s.Typing.Specified(tpe) => tpe
+    }
+  }
+
+  private[meta] def defns(untypedRef: mapi.Ref): Seq[mapi.Member] = {
+    val ref = typecheck(untypedRef).require[m.Ref]
     ref match {
       case pname: m.Name => pname.toLsymbols.map(_.toMmember(pname.toGprefix))
       case m.Term.Select(_, pname) => defns(pname)
       case m.Type.Select(_, pname) => defns(pname)
       case m.Type.Project(_, pname) => defns(pname)
       case m.Type.Singleton(pref) => defns(pref)
+      case m.Pat.Type.Project(_, pname) => defns(pname)
       case m.Ctor.Ref.Select(_, pname) => defns(pname)
       case m.Ctor.Ref.Project(_, pname) => defns(pname)
       case m.Ctor.Ref.Function(pname) => defns(pname)
@@ -71,8 +90,9 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
     }
   }
 
-  private[meta] def members(tpe: mapi.Type): Seq[mapi.Member] = {
-    val gtpe = tpe.require[m.Type].toGtype
+  private[meta] def members(untypedTpe: mapi.Type): Seq[mapi.Member] = {
+    val tpe = typecheck(untypedTpe).require[m.Type]
+    val gtpe = tpe.toGtype
     val gmembers = gtpe.members.filter(_ != g.rootMirror.RootPackage)
     val pmembers = gmembers.toLogical.map(_.toMmember(gtpe))
     val pfakectors = {
@@ -83,46 +103,55 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
     pfakectors ++ pmembers
   }
 
-  private[meta] def isSubType(tpe1: mapi.Type, tpe2: mapi.Type): Boolean = {
-    val gtpe1 = tpe1.require[m.Type].toGtype
-    val gtpe2 = tpe2.require[m.Type].toGtype
+  private[meta] def isSubType(untypedTpe1: mapi.Type, untypedTpe2: mapi.Type): Boolean = {
+    val tpe1 = typecheck(untypedTpe1).require[m.Type]
+    val tpe2 = typecheck(untypedTpe2).require[m.Type]
+    val gtpe1 = tpe1.toGtype
+    val gtpe2 = tpe2.toGtype
     gtpe1 <:< gtpe2
   }
 
-  private[meta] def lub(tpes: Seq[mapi.Type]): mapi.Type = {
-    val gtpes = tpes.map(_.require[m.Type].toGtype).toList
+  private[meta] def lub(untypedTpes: Seq[mapi.Type]): mapi.Type = {
+    val tpes = untypedTpes.map(untypedTpe => typecheck(untypedTpe).require[m.Type])
+    val gtpes = tpes.map(_.toGtype).toList
     g.lub(gtpes).toMtype
   }
 
-  private[meta] def glb(tpes: Seq[mapi.Type]): mapi.Type = {
-    val gtpes = tpes.map(_.require[m.Type].toGtype).toList
+  private[meta] def glb(untypedTpes: Seq[mapi.Type]): mapi.Type = {
+    val tpes = untypedTpes.map(untypedTpe => typecheck(untypedTpe).require[m.Type])
+    val gtpes = tpes.map(_.toGtype).toList
     g.glb(gtpes).toMtype
   }
 
-  private[meta] def parents(tpe: mapi.Type): Seq[mapi.Type] = {
-    val gtpe = tpe.require[m.Type].toGtype
+  private[meta] def parents(untypedTpe: mapi.Type): Seq[mapi.Type] = {
+    val tpe = typecheck(untypedTpe).require[m.Type]
+    val gtpe = tpe.toGtype
     gtpe.directBaseTypes.map(_.toMtype)
   }
 
-  private[meta] def widen(tpe: mapi.Type): mapi.Type = {
-    val gtpe = tpe.require[m.Type].toGtype
+  private[meta] def widen(untypedTpe: mapi.Type): mapi.Type = {
+    val tpe = typecheck(untypedTpe).require[m.Type]
+    val gtpe = tpe.toGtype
     gtpe.widen.toMtype
   }
 
-  private[meta] def dealias(tpe: mapi.Type): mapi.Type = {
-    val gtpe = tpe.require[m.Type].toGtype
+  private[meta] def dealias(untypedTpe: mapi.Type): mapi.Type = {
+    val tpe = typecheck(untypedTpe).require[m.Type]
+    val gtpe = tpe.toGtype
     gtpe.dealias.toMtype
   }
 
-  private[meta] def parents(member: mapi.Member): Seq[mapi.Member] = {
-    val gpre = member.require[m.Member].toGprefix
-    val Seq(lsym) = member.require[m.Member].toLsymbols
+  private[meta] def parents(untypedMember: mapi.Member): Seq[mapi.Member] = {
+    val member = typecheck(untypedMember).require[m.Member]
+    val gpre = member.toGprefix
+    val Seq(lsym) = member.toLsymbols
     lsym.parents.map(_.toMmember(gpre)) // TODO: also instantiate type parameters when necessary
   }
 
-  private[meta] def children(member: mapi.Member): Seq[mapi.Member] = {
-    val gpre = member.require[m.Member].toGprefix
-    val Seq(lsym) = member.require[m.Member].toLsymbols
+  private[meta] def children(untypedMember: mapi.Member): Seq[mapi.Member] = {
+    val member = typecheck(untypedMember).require[m.Member]
+    val gpre = member.toGprefix
+    val Seq(lsym) = member.toLsymbols
     lsym.children.map(_.toMmember(gpre)) // TODO: also instantiate type parameters when necessary
   }
 

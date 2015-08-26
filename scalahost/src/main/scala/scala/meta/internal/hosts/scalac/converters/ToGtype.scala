@@ -237,7 +237,6 @@ trait ToGtype extends GlobalToolkit with MetaToolkit {
             case m.Lit.Unit() => g.ConstantType(g.Constant(()))
           }
       }
-      mtpe.requireDenoted()
       loop(mtpe)
     })
   }
