@@ -11,6 +11,7 @@ import scala.tools.nsc.{Global => ScalaGlobal}
 import scala.meta.internal.{ast => m}
 import scala.meta.internal.{semantic => s}
 import scala.meta.internal.hosts.scalac.reflect._
+import scala.meta.internal.flags._
 import java.util.UUID.randomUUID
 
 // This module exposes a method that can convert scala.reflect types into equivalent scala.meta types.
@@ -140,7 +141,7 @@ trait ToMtype extends GlobalToolkit with MetaToolkit {
         case _ =>
           throw new ConvertException(gtpe, s"unsupported type $gtpe, designation = ${gtpe.getClass}, structure = ${g.showRaw(gtpe, printIds = true, printTypes = true)}")
       }
-      result
+      result.setTypechecked
     })
   }
 }

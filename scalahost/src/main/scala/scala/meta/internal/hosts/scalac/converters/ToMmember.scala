@@ -14,6 +14,7 @@ import scala.meta.internal.{ast => m}
 import scala.meta.internal.{semantic => s}
 import scala.meta.semantic.{Context => ScalametaSemanticContext}
 import scala.meta.internal.hosts.scalac.reflect._
+import scala.meta.internal.flags._
 
 // This module exposes a method that can convert scala.reflect symbols into equivalent scala.meta members.
 // There are some peculiarities that you'll need to know about it:
@@ -350,7 +351,7 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
           }).filter(_ != g.NoSymbol)
           gcontextBounds.map(gbound => gbound.asType.rawcvt(g.Ident(gbound)))
         }
-        lsym match {
+        val result = lsym match {
           case l.None => unreachable(debug(lsym.gsymbol, lsym.gsymbol.flags, lsym.gsymbol.getClass, lsym.gsymbol.owner))
           case _: l.AbstractVal => m.Decl.Val(mmods, List(m.Pat.Var.Term(mname.require[m.Term.Name])), mtpe).member
           case _: l.AbstractVar => m.Decl.Var(mmods, List(m.Pat.Var.Term(mname.require[m.Term.Name])), mtpe).member
@@ -375,6 +376,7 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
           case _: l.TypeParameter => m.Type.Param(mmods, mname.require[m.Type.Param.Name], mtparams, mtpebounds, mviewbounds, mcontextbounds)
           case _ => throw new ConvertException(lsym, s"unsupported symbol $lsym, designation = ${gsym.getClass}, flags = ${gsym.flags}")
         }
+        result.setTypechecked
       }
       def applyPrefix(gpre: g.Type, mmem: m.Member): m.Member = {
         if (gpre == g.NoPrefix) mmem

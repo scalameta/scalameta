@@ -10,6 +10,7 @@ import scala.tools.nsc.{Global => ScalaGlobal}
 import scala.meta.semantic.{Context => ScalametaSemanticContext}
 import scala.meta.internal.{ast => m}
 import scala.meta.internal.hosts.scalac.reflect._
+import scala.meta.internal.flags._
 
 // This module exposes a method that can convert scala.reflect annotations into equivalent scala.meta mods.
 // There's not much to say about this conversion except that it's a really lossy one:
@@ -53,7 +54,7 @@ trait ToMannot extends GlobalToolkit with MetaToolkit {
         if (margs.isEmpty) mcore
         else m.Term.Apply(mcore, margs).withTyping(gannot.atp)
       }
-      m.Mod.Annot(mannotcore(gannot))
+      m.Mod.Annot(mannotcore(gannot)).setTypechecked
     }
   }
 

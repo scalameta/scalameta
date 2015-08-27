@@ -24,6 +24,7 @@ import scala.meta.dialects.Scala211
 import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
 import scala.meta.internal.{semantic => s}
+import scala.meta.internal.flags._
 
 @context(translateExceptions = false)
 class Proxy[G <: ScalaGlobal](val global: G, initialDomain: Domain = Domain())
@@ -46,6 +47,7 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
     // TODO: implement this
     // 1) respect tree.parent
     // 2) don't retypecheck if that's unnecessary
+    if (tree.isTypechecked) return tree
     ???
   }
 
@@ -283,7 +285,7 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
           }
           content.parse[mapi.Source].require[m.Source]
         }
-        val semanticTree = unit.body.toMtree[m.Source]
+        val semanticTree = unit.body.toMtree[m.Source].setTypechecked
         val perfectTree = mergeTrees(syntacticTree, semanticTree)
         perfectTree
       })
