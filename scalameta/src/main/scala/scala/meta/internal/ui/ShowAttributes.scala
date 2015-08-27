@@ -17,20 +17,27 @@ import scala.collection.mutable
 import scala.meta.internal.semantic._
 import scala.compat.Platform.EOL
 import scala.language.implicitConversions
+import scala.meta.internal.flags._
 
 @implicitNotFound(msg = "don't know how to show[Attributes] for ${T}")
 trait Attributes[T] extends Show[T]
 object Attributes {
   def apply[T](f: T => Show.Result): Attributes[T] = new Attributes[T] { def apply(input: T) = f(input) }
 
-  @root trait Style
-  object Style {
-    @leaf object Shallow extends Style
-    @leaf implicit object Deep extends Style
+  @root trait Recursion
+  object Recursion {
+    @leaf object Shallow extends Recursion
+    @leaf implicit object Deep extends Recursion
+  }
+
+  @root trait Detalization
+  object Detalization {
+    @leaf object ExcludeFlags extends Detalization
+    @leaf implicit object IncludeFlags extends Detalization
   }
 
   // TODO: would be nice to generate this with a macro for all tree nodes that we have
-  implicit def attributesTree[T <: api.Tree](implicit style: Style): Attributes[T] = new Attributes[T] {
+  implicit def attributesTree[T <: api.Tree](implicit recursion: Recursion, detalization: Detalization): Attributes[T] = new Attributes[T] {
     object footnotes {
       trait Footnote {
         def entity: Any
@@ -55,7 +62,7 @@ object Attributes {
             def prettyprintPrefix(pre: Prefix): String = {
               pre match {
                 case Prefix.Zero => "0"
-                case Prefix.Type(tpe) => if (style == Style.Deep) body(tpe) else tpe.show[Structure]
+                case Prefix.Type(tpe) => if (recursion == Recursion.Deep) body(tpe) else tpe.show[Structure]
               }
             }
             def prettyprintSymbol(sym: Symbol): String = {
@@ -83,7 +90,7 @@ object Attributes {
           def tag = classOf[Typing]
           def prettyprint() = typing match {
             case Typing.Zero => unreachable
-            case Typing.Specified(tpe) => if (style == Style.Deep) body(tpe) else tpe.show[Structure]
+            case Typing.Specified(tpe) => if (recursion == Recursion.Deep) body(tpe) else tpe.show[Structure]
           }
         }
         implicit def statusExpansion(expansion: Expansion): Footnote = new Footnote {
@@ -92,7 +99,7 @@ object Attributes {
           def prettyprint() = expansion match {
             case Expansion.Zero => unreachable
             case Expansion.Identity => unreachable
-            case Expansion.Desugaring(term) => if (style == Style.Deep) body(term) else term.show[Structure]
+            case Expansion.Desugaring(term) => if (recursion == Recursion.Deep) body(term) else term.show[Structure]
           }
         }
       }
@@ -106,7 +113,7 @@ object Attributes {
         miniRepr.getOrElseUpdate(x, (maxId + 1, footnote))._1
       }
       override def toString: String = {
-        if (style == Style.Deep) {
+        if (recursion == Recursion.Deep) {
           var prevSize = 0 // NOTE: prettyprint may side-effect on footnotes
           do {
             prevSize = size
@@ -198,7 +205,11 @@ object Attributes {
           case _ =>
             ""
         }
-        denotPart + statusPart + expansionPart
+        val typecheckedPart = {
+          if (x.isTypechecked && detalization == Detalization.IncludeFlags) "*"
+          else ""
+        }
+        denotPart + statusPart + expansionPart + typecheckedPart
       }
       syntax + Attributes
     }
