@@ -5,12 +5,14 @@ package semantic
 import org.scalameta.adt
 import org.scalameta.adt._
 import org.scalameta.invariants._
+import scala.meta.internal.flags._
 
 @monadicRoot trait Typing
 object Typing {
   @noneLeaf object Zero extends Typing
   @noneLeaf object Recursive extends Typing
   @someLeaf class Nonrecursive(tpe: Type.Arg @byNeed) extends Typing {
+    require(tpe.isTypechecked)
     protected def writeReplace(): AnyRef = new Nonrecursive.SerializationProxy(this)
   }
   object Nonrecursive {
