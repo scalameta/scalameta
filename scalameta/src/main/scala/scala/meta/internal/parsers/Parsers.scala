@@ -453,7 +453,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       private def requirePositioned() = {
         def fail() = throw new Exception(
           s"internal error: unpositioned prototype tree " +
-            s"${tree.show[Syntax]}: ${tree.show[Structure]}")
+          s"${tree.show[Syntax]}: ${tree.show[Structure]}")
         if (!tree.tokens.isAuthentic) fail()
       }
       def startTokenPos: Int = { requirePositioned(); tree.tokens.require[Tokens.Slice].from }
