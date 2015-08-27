@@ -72,7 +72,8 @@ private[meta] trait Api {
       val ttree = implicitly[SemanticContext].typecheck(tree).require[impl.Term]
       ttree.typing match {
         case s.Typing.Zero => unreachable
-        case s.Typing.Specified(tpe) => tpe.require[impl.Type]
+        case s.Typing.Recursive => impl.Type.Singleton(tree.require[impl.Term.Ref])
+        case s.Typing.Nonrecursive(tpe) => tpe.require[impl.Type]
       }
     }
   }
@@ -88,9 +89,10 @@ private[meta] trait Api {
       val ttree = implicitly[SemanticContext].typecheck(tree).require[impl.Term.Param]
       ttree.typing match {
         case s.Typing.Zero => unreachable
-        case s.Typing.Specified(impl.Type.Arg.ByName(tpe)) => impl.Type.Apply(SeqRef, List(tpe))
-        case s.Typing.Specified(impl.Type.Arg.Repeated(tpe)) => tpe
-        case s.Typing.Specified(tpe: impl.Type) => tpe
+        case s.Typing.Recursive => unreachable
+        case s.Typing.Nonrecursive(impl.Type.Arg.ByName(tpe)) => impl.Type.Apply(SeqRef, List(tpe))
+        case s.Typing.Nonrecursive(impl.Type.Arg.Repeated(tpe)) => tpe
+        case s.Typing.Nonrecursive(tpe: impl.Type) => tpe
       }
     }
     @hosted private def methodType(tparams: Seq[Type.Param], paramss: Seq[Seq[Term.Param]], ret: Type): Type = {
@@ -748,7 +750,7 @@ private[meta] trait Api {
           case impl.Type.ApplyInfix(lhs, op, rhs) => impl.Term.ApplyType(loop(op, ctor), List(lhs, rhs))
           case _ => unreachable(debug(tree, tree.show[Structure], tpe, tpe.show[Structure]))
         }
-        result.withTyping(scala.util.Try(s.Typing.Specified(tpe.members(ctor.defn).tpe)).getOrElse(s.Typing.Zero))
+        result.withTyping(scala.util.Try(s.Typing.Nonrecursive(tpe.members(ctor.defn).tpe)).getOrElse(s.Typing.Zero))
       }
       // TODO: if we uncomment this, that'll lead to a stackoverflow in scalahost
       // it's okay, but at least we could verify that ctor's prefix is coherent with tree

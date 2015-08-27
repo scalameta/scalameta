@@ -80,7 +80,7 @@ Of course, at the lowest level there's no magic, and internally scala.meta trees
 
   1. Typings are exclusive to terms and term parameters (i.e. to trees that inherit from `Term` and `Term.Param`) and provide types for these trees. scala.meta does not have a notion of typings for types, definitions or nodes from other syntactic categories, because we haven't found a way for such typings to convey useful information to the users.
 
-    There can be `Typing.Zero` that stands for an unknown typing and `Typing.Specified` that wraps a fully calculated  `Type` assigned to the associated tree. Check out the [sources](/scalameta/src/main/scala/scala/meta/internal/semantic/Typing.scala) to learn more.
+    There can be `Typing.Zero` that stands for an unknown typing, `Typing.Nonrecursive` that wraps a plain `Type` assigned to the associated tree and `Typing.Recursive` that is used to express types of modules. Check out the [sources](/scalameta/src/main/scala/scala/meta/internal/semantic/Typing.scala) to learn more.
 
   1. Expansions are exclusive to terms (i.e. to trees that inherit from `Term`) and specify expanded forms for these terms. Language features that are supported by expansions are: implicit conversion/argument inference, type argument inference, apply insertion, empty argument list insertion, assignment desugaring (`_=`, `update`), string interpolation desugaring, for loop desugaring, `Dynamic` desugaring, macro expansions. scala.meta does not have a notion of expansions for definitions (even though the language specification explicitly talks about canonical desugarings for some definitions), because we consider them to be too low-level to be exposed publicly.
 

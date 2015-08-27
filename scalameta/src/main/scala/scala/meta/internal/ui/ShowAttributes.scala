@@ -38,6 +38,15 @@ object Attributes {
 
   // TODO: would be nice to generate this with a macro for all tree nodes that we have
   implicit def attributesTree[T <: api.Tree](implicit recursion: Recursion, detalization: Detalization): Attributes[T] = new Attributes[T] {
+    private def includeFlags = detalization == Detalization.IncludeFlags
+    private def deep = recursion == Recursion.Deep
+
+    def apply(x: T): Show.Result = {
+      val bodyPart = body(x) // NOTE: body may side-effect on footnotes
+      val footnotePart = footnotes.toString
+      s(bodyPart, if (footnotePart.nonEmpty) EOL + footnotePart else footnotePart)
+    }
+
     object footnotes {
       trait Footnote {
         def entity: Any
@@ -47,6 +56,7 @@ object Attributes {
         final override def equals(that: Any): Boolean = entity.equals(that)
         final override def hashCode: Int = entity.hashCode()
       }
+
       object Footnote {
         implicit def envFootnote(env: Environment): Footnote = new Footnote {
           def entity = env
@@ -62,7 +72,7 @@ object Attributes {
             def prettyprintPrefix(pre: Prefix): String = {
               pre match {
                 case Prefix.Zero => "0"
-                case Prefix.Type(tpe) => if (recursion == Recursion.Deep) body(tpe) else tpe.show[Structure]
+                case Prefix.Type(tpe) => if (deep) body(tpe) else tpe.show[Structure]
               }
             }
             def prettyprintSymbol(sym: Symbol): String = {
@@ -90,7 +100,8 @@ object Attributes {
           def tag = classOf[Typing]
           def prettyprint() = typing match {
             case Typing.Zero => unreachable
-            case Typing.Specified(tpe) => if (recursion == Recursion.Deep) body(tpe) else tpe.show[Structure]
+            case Typing.Recursive => unreachable
+            case Typing.Nonrecursive(tpe) => if (deep) body(tpe) else tpe.show[Structure]
           }
         }
         implicit def statusExpansion(expansion: Expansion): Footnote = new Footnote {
@@ -99,21 +110,29 @@ object Attributes {
           def prettyprint() = expansion match {
             case Expansion.Zero => unreachable
             case Expansion.Identity => unreachable
-            case Expansion.Desugaring(term) => if (recursion == Recursion.Deep) body(term) else term.show[Structure]
+            case Expansion.Desugaring(term) => if (deep) body(term) else term.show[Structure]
           }
         }
       }
+
       private var size = 0
-      private val repr = mutable.Map[Class[_], mutable.Map[Any, (Int, Footnote)]]()
-      def insert[T <% Footnote](x: T): Int = {
+      private val repr = mutable.Map[Class[_], CustomMap[Any, (Int, Footnote)]]()
+      def previewInsert[T <% Footnote](x: T): Int = {
         val footnote = implicitly[T => Footnote].apply(x)
-        val miniRepr = repr.getOrElseUpdate(footnote.tag, mutable.Map[Any, (Int, Footnote)]())
-        if (!miniRepr.contains(x)) size += 1
+        val miniRepr = repr.getOrElseUpdate(footnote.tag, CustomMap[Any, (Int, Footnote)]())
         val maxId = (miniRepr.values.map(_._1) ++ List(0)).max
-        miniRepr.getOrElseUpdate(x, (maxId + 1, footnote))._1
+        maxId + 1
       }
+      def insert[T <% Footnote](x: T): Int = {
+        val id = previewInsert(x)
+        val footnote = implicitly[T => Footnote].apply(x)
+        val miniRepr = repr.getOrElseUpdate(footnote.tag, CustomMap[Any, (Int, Footnote)]())
+        if (!miniRepr.contains(new CustomWrapper(x))) size += 1
+        miniRepr.getOrElseUpdate(new CustomWrapper(x), (id, footnote))._1
+      }
+
       override def toString: String = {
-        if (recursion == Recursion.Deep) {
+        if (deep) {
           var prevSize = 0 // NOTE: prettyprint may side-effect on footnotes
           do {
             prevSize = size
@@ -123,7 +142,7 @@ object Attributes {
           } while (size != prevSize)
         }
         def byType(tag: Class[_], bracket1: String, bracket2: String): List[String] = {
-          val miniRepr = repr.getOrElseUpdate(tag, mutable.Map[Any, (Int, Footnote)]())
+          val miniRepr = repr.getOrElseUpdate(tag, CustomMap[Any, (Int, Footnote)]())
           val sortedMiniCache = miniRepr.toList.sortBy{ case (_, (id, footnote)) => id }
           sortedMiniCache.map{ case (_, (id, footnote)) => s"$bracket1$id$bracket2 ${footnote.prettyprint()}" }
         }
@@ -135,6 +154,8 @@ object Attributes {
         ).mkString(EOL)
       }
     }
+
+    val recursions = CustomMap[Term, Int]()
     def body(x: api.Tree): String = {
       def whole(x: Any): String = x match {
         case x: String => enquote(x, DoubleQuotes)
@@ -152,71 +173,147 @@ object Attributes {
         case x => x.productIterator.map(whole).mkString(", ")
       }
       val syntax = x.productPrefix + "(" + contents(x) + ")"
-      val Attributes = {
-        def envPart(env: Environment) = {
-          env match {
-            case env @ scala.meta.semantic.Environment.Zero =>
-              ""
-          }
-        }
-        val denotPart = x match {
-          case x: Name =>
-            x.denot match {
-              case Denotation.Zero =>
-                envPart(x.env)
-              case denot @ Denotation.Single(prefix, symbol) =>
-                s"[${footnotes.insert(denot)}]"
-              case denot @ Denotation.Multi(prefix, symbols) =>
-                s"[${symbols.map(symbol => footnotes.insert(Denotation.Single(prefix, symbol))).mkString(", ")}]"
-            }
-          case x: Term.Apply =>
-            envPart(x.env)
-          case x: Term.ApplyInfix =>
-            envPart(x.env)
-          case x: Term.ApplyType =>
-            envPart(x.env)
-          case x: Term.ApplyUnary =>
-            envPart(x.env)
-          case x: Term.Assign =>
-            envPart(x.env)
-          case x: Term.Update =>
-            envPart(x.env)
-          case x: Term.Interpolate =>
-            envPart(x.env)
-          case _ =>
+      val attributes = {
+        val envPart = x.maybeEnv.map({
+          case env @ scala.meta.semantic.Environment.Zero =>
             ""
-        }
-        val statusPart = x match {
-          case x: Term =>
-            x.typing match {
-              case Typing.Zero => ""
-              case typing @ Typing.Specified(tpe) => s"{${footnotes.insert(typing)}}"
-            }
-          case _ =>
+        }).getOrElse("")
+
+        val denotPart = x.maybeDenot.map({
+          case Denotation.Zero =>
             ""
-        }
-        val expansionPart = x match {
-          case x: Term =>
-            x.expansion match {
-              case Expansion.Zero => ""
-              case expansion @ Expansion.Identity => s"<=>"
-              case expansion @ Expansion.Desugaring(term) => s"<${footnotes.insert(expansion)}>"
-            }
-          case _ =>
+          case denot @ Denotation.Single(prefix, symbol) =>
+            s"[${footnotes.insert(denot)}]"
+          case denot @ Denotation.Multi(prefix, symbols) =>
+            val symbolFootnotes = symbols.map(symbol => footnotes.insert(Denotation.Single(prefix, symbol)))
+            s"[${symbolFootnotes.mkString(", ")}]"
+        }).getOrElse("")
+
+        val typingPart = x.maybeTyping.map({
+          case Typing.Zero =>
             ""
-        }
+          case Typing.Recursive =>
+            val xkey = new CustomWrapper(x.require[Term])
+            if (recursions.contains(xkey)) {
+              s"{${recursions(xkey)}}"
+            } else {
+              val typing = Typing.Nonrecursive(Type.Singleton(x.require[Term.Ref]))
+              recursions(xkey) = footnotes.previewInsert(typing)
+              s"{${footnotes.insert(typing)}}"
+            }
+          case typing @ Typing.Nonrecursive(tpe) =>
+            s"{${footnotes.insert(typing)}}"
+        }).getOrElse("")
+
+        val expansionPart = x.maybeExpansion.map({
+          case Expansion.Zero => ""
+          case expansion @ Expansion.Identity => s"<=>"
+          case expansion @ Expansion.Desugaring(term) => s"<${footnotes.insert(expansion)}>"
+        }).getOrElse("")
+
         val typecheckedPart = {
-          if (x.isTypechecked && detalization == Detalization.IncludeFlags) "*"
+          if (x.isTypechecked && includeFlags) "*"
           else ""
         }
-        denotPart + statusPart + expansionPart + typecheckedPart
+
+        envPart + denotPart + typingPart + expansionPart + typecheckedPart
       }
-      syntax + Attributes
+      syntax + attributes
     }
-    def apply(x: T): Show.Result = {
-      val bodyPart = body(x) // NOTE: body may side-effect on footnotes
-      val footnotePart = footnotes.toString
-      s(bodyPart, if (footnotePart.nonEmpty) EOL + footnotePart else footnotePart)
+
+    // NOTE: This is a map that does semantic comparisons of its keys.
+    // Since we can't plug custom equality and hashcode implementations into the standard map,
+    // we have to use custom keys instead.
+    private type CustomMap[T, U] = mutable.Map[CustomWrapper[T], U]
+    private def CustomMap[T, U]() = mutable.Map[CustomWrapper[T], U]()
+
+    private class CustomWrapper[+T](val x: T) {
+      override def equals(that: Any): Boolean = that match {
+        case that: CustomWrapper[_] => customEquals(x, that.x)
+        case _ => false
+      }
+
+      private def customEquals(x: Any, y: Any): Boolean = (x, y) match {
+        case (x: Some[_], y: Some[_]) =>
+          customEquals(x.get, y.get)
+        case (x: None.type, y: None.type) =>
+          true
+        case (xs: Seq[_], ys: Seq[_]) =>
+          xs.length == ys.length && xs.zip(ys).forall{ case (x, y) => customEquals(x, y) }
+        case (x: Environment, y: Environment) =>
+          x == y
+        case (x: Prefix, y: Prefix) =>
+          (x, y) match {
+            case (Prefix.Type(x), Prefix.Type(y)) => customEquals(x, y)
+            case _ => x == y
+          }
+        case (x: Denotation, y: Denotation) =>
+          customEquals(x.prefix, y.prefix) && customEquals(x.symbols, y.symbols)
+        case (x: Typing, y: Typing) =>
+          (x, y) match {
+            case (Typing.Nonrecursive(x), Typing.Nonrecursive(y)) => customEquals(x, y)
+            case _ => x == y
+          }
+        case (x: Expansion, y: Expansion) =>
+          (x, y) match {
+            case (Expansion.Desugaring(x), Expansion.Desugaring(y)) => customEquals(x, y)
+            case _ => x == y
+          }
+        case (x: Tree, y: Tree) =>
+          def syntaxPart = x.productPrefix == y.productPrefix && customEquals(x.productIterator.toList, y.productIterator.toList)
+          def envPart = customEquals(x.maybeEnv, y.maybeEnv)
+          def denotPart = customEquals(x.maybeDenot, y.maybeDenot)
+          def typingPart = customEquals(x.maybeTyping, y.maybeTyping)
+          def expansionPart = customEquals(x.maybeExpansion, y.maybeExpansion)
+          def typecheckedPart = includeFlags ==> customEquals(x.isTypechecked, y.isTypechecked)
+          syntaxPart && envPart && denotPart && typingPart && expansionPart && typecheckedPart
+        case _ =>
+          x == y
+      }
+
+      override def hashCode: Int = customHashcode(x)
+
+      def customHashcode(x: Any): Int = x match {
+        case x: Option[_] =>
+          x.map(customHashcode).getOrElse(0)
+        case xs: Seq[_] =>
+          xs.foldLeft(0)((acc, curr) => acc * 37 + customHashcode(curr))
+        case x: Environment =>
+          x.hashCode
+        case x: Prefix =>
+          x match {
+            case Prefix.Zero => 0
+            case Prefix.Type(tpe) => customHashcode(tpe)
+          }
+        case x: Denotation =>
+          x match {
+            case Denotation.Zero => 0
+            case Denotation.Single(prefix, symbol) => customHashcode(prefix) * 37 + customHashcode(symbol)
+            case Denotation.Multi(prefix, symbols) => customHashcode(prefix) * 37 + customHashcode(symbols)
+          }
+        case x: Typing =>
+          x match {
+            case Typing.Zero => 0
+            case Typing.Recursive => 1
+            case Typing.Nonrecursive(tpe) => customHashcode(tpe)
+          }
+        case x: Expansion =>
+          x match {
+            case Expansion.Zero => 0
+            case Expansion.Identity => 1
+            case Expansion.Desugaring(term) => customHashcode(term)
+          }
+        case x: Tree =>
+          def syntaxPart = customHashcode(x.productPrefix) * customHashcode(x.productIterator.toList)
+          def envPart = customHashcode(x.maybeEnv)
+          def denotPart = customHashcode(x.maybeDenot)
+          def typingPart = customHashcode(x.maybeTyping)
+          def expansionPart = customHashcode(x.maybeExpansion)
+          def typecheckedPart = x.isTypechecked.hashCode * (if (includeFlags) 1 else 0)
+          customHashcode(List(syntaxPart, envPart, denotPart, typingPart, expansionPart, typecheckedPart))
+        case _ =>
+          x.hashCode
+      }
     }
   }
 }
