@@ -473,7 +473,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       case AutoPos => in.prevTokenPos
     }
     if (endTokenPos < startTokenPos) endTokenPos = startTokenPos - 1
-    result.internalCopy(tokens = scannerTokens.slice(startTokenPos, endTokenPos + 1)).asInstanceOf[T]
+    result.withTokens(scannerTokens.slice(startTokenPos, endTokenPos + 1)).asInstanceOf[T]
   }
   def autoPos[T <: Tree](body: => T): T = atPos(start = auto, end = auto)(body)
 
