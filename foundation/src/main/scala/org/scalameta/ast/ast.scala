@@ -64,6 +64,7 @@ class AstMacros(val c: Context) {
       val qstats1 = ListBuffer[Tree]()
       val ianns1 = ListBuffer[Tree]() ++ imods.annotations
       def imods1 = imods.mapAnnotations(_ => ianns1.toList)
+      def cmods1 = Modifiers(FINAL, mname.toTypeName, List(q"new _root_.scala.SerialVersionUID(1L)"))
       def qmods1 = Modifiers(NoFlags, TypeName("meta"), List(q"new _root_.org.scalameta.ast.ast"))
       val iparents1 = ListBuffer[Tree]() ++ iparents
       def aparents1 = List(tq"$iname")
@@ -475,7 +476,7 @@ class AstMacros(val c: Context) {
       mstats1 += q"import _root_.scala.language.implicitConversions"
       mstats1 += q"implicit def interfaceToApi(interface: $iname): $aname = macro $AstInternal.Macros.interfaceToApi[$iname, $aname]"
       mstats1 += q"trait $aname[..$tparams] extends ..$aparents1 { $aself => ..$astats1 }"
-      mstats1 += q"private[${mname.toTypeName}] final class $name[..$tparams] $ctorMods(...${bparams1 +: paramss1}) extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
+      mstats1 += q"$cmods1 class $name[..$tparams] $ctorMods(...${bparams1 +: paramss1}) extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
       if (!isQuasi) mstats1 += q"$qmods1 class $qname(rank: _root_.scala.Int, tree: _root_.scala.Any) extends ..$qparents1 { ..$qstats1 }"
       val cdef1 = q"$imods1 trait $iname extends ..$iparents1 { $iself => ..$istats1 }"
       val mdef1 = q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
