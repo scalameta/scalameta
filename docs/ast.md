@@ -192,34 +192,34 @@ Here's the same code after typechecking with helper def macros expanded:
     def internal(cond: scala.meta.internal.ast.Term, thenp: scala.meta.internal.ast.Term, elsep: scala.meta.internal.ast.Term): scala.meta.internal.ast.Term.If = {
       ((): Unit);
       ({
-        val result$macro$292: Boolean = cond.!=(null);
-        if (result$macro$292)
+        val result$macro$354: Boolean = cond.!=(null);
+        if (result$macro$354)
           scala.Tuple2.apply[Boolean, collection.immutable.Nil.type](true, scala.collection.immutable.Nil)
         else
           scala.Tuple2.apply[Boolean, List[String]](false, scala.collection.immutable.List.apply[String]("cond is equal to null"))
       } match {
         case (_1: Boolean, _2: List[String])(Boolean, List[String])(true, _) => ()
-        case (_1: Boolean, _2: List[String])(Boolean, List[String])(false, (failures$macro$291 @ _)) => org.scalameta.invariants.InvariantFailedException.raise("cond.!=(null)", failures$macro$291, scala.collection.immutable.Map.apply[String, scala.meta.internal.ast.Term](scala.Tuple2.apply[String, scala.meta.internal.ast.Term]("cond", cond)))
+        case (_1: Boolean, _2: List[String])(Boolean, List[String])(false, (failures$macro$353 @ _)) => org.scalameta.invariants.InvariantFailedException.raise("cond.!=(null)", failures$macro$353, scala.collection.immutable.Map.apply[String, scala.meta.internal.ast.Term](scala.Tuple2.apply[String, scala.meta.internal.ast.Term]("cond", cond)))
       }: Unit);
       ({
-        val result$macro$294: Boolean = thenp.!=(null);
-        if (result$macro$294)
+        val result$macro$356: Boolean = thenp.!=(null);
+        if (result$macro$356)
           scala.Tuple2.apply[Boolean, collection.immutable.Nil.type](true, scala.collection.immutable.Nil)
         else
           scala.Tuple2.apply[Boolean, List[String]](false, scala.collection.immutable.List.apply[String]("thenp is equal to null"))
       } match {
         case (_1: Boolean, _2: List[String])(Boolean, List[String])(true, _) => ()
-        case (_1: Boolean, _2: List[String])(Boolean, List[String])(false, (failures$macro$293 @ _)) => org.scalameta.invariants.InvariantFailedException.raise("thenp.!=(null)", failures$macro$293, scala.collection.immutable.Map.apply[String, scala.meta.internal.ast.Term](scala.Tuple2.apply[String, scala.meta.internal.ast.Term]("thenp", thenp)))
+        case (_1: Boolean, _2: List[String])(Boolean, List[String])(false, (failures$macro$355 @ _)) => org.scalameta.invariants.InvariantFailedException.raise("thenp.!=(null)", failures$macro$355, scala.collection.immutable.Map.apply[String, scala.meta.internal.ast.Term](scala.Tuple2.apply[String, scala.meta.internal.ast.Term]("thenp", thenp)))
       }: Unit);
       ({
-        val result$macro$296: Boolean = elsep.!=(null);
-        if (result$macro$296)
+        val result$macro$358: Boolean = elsep.!=(null);
+        if (result$macro$358)
           scala.Tuple2.apply[Boolean, collection.immutable.Nil.type](true, scala.collection.immutable.Nil)
         else
           scala.Tuple2.apply[Boolean, List[String]](false, scala.collection.immutable.List.apply[String]("elsep is equal to null"))
       } match {
         case (_1: Boolean, _2: List[String])(Boolean, List[String])(true, _) => ()
-        case (_1: Boolean, _2: List[String])(Boolean, List[String])(false, (failures$macro$295 @ _)) => org.scalameta.invariants.InvariantFailedException.raise("elsep.!=(null)", failures$macro$295, scala.collection.immutable.Map.apply[String, scala.meta.internal.ast.Term](scala.Tuple2.apply[String, scala.meta.internal.ast.Term]("elsep", elsep)))
+        case (_1: Boolean, _2: List[String])(Boolean, List[String])(false, (failures$macro$357 @ _)) => org.scalameta.invariants.InvariantFailedException.raise("elsep.!=(null)", failures$macro$357, scala.collection.immutable.Map.apply[String, scala.meta.internal.ast.Term](scala.Tuple2.apply[String, scala.meta.internal.ast.Term]("elsep", elsep)))
       }: Unit);
       ();
       ();
@@ -381,16 +381,23 @@ Here's the same code after typechecking with helper def macros expanded:
         {
           scala.Predef.require(this.internalPrototype.!=(null), "internal error when initializing Impl.cond");
           this._cond_=({
-            <artifact> val qual$43: scala.meta.internal.ast.Term = this.internalPrototype.cond;
-            <artifact> val x$1886: scala.meta.internal.ast.Term = this.internalPrototype.cond;
-            <artifact> val x$1887: scala.meta.internal.ast.Term.If.Impl = this;
-            <artifact> val x$1888: meta.internal.flags.Flags = qual$43.internalCopy$default$1;
-            <artifact> val x$1889: meta.Tokens = qual$43.internalCopy$default$4;
-            <artifact> val x$1890: scala.meta.semantic.Environment = qual$43.internalCopy$default$5;
-            <artifact> val x$1891: scala.meta.internal.semantic.Denotation = qual$43.internalCopy$default$6;
-            <artifact> val x$1892: scala.meta.internal.semantic.Typing = qual$43.internalCopy$default$7;
-            <artifact> val x$1893: scala.meta.internal.semantic.Expansion = qual$43.internalCopy$default$8;
-            qual$43.internalCopy(x$1888, x$1886, x$1887, x$1889, x$1890, x$1891, x$1892, x$1893)
+            import scala.meta.internal.flags._;
+            val copyCond$macro$359: scala.meta.internal.ast.Term#ThisType = {
+              <artifact> val qual$43: scala.meta.internal.ast.Term = this.internalPrototype.cond;
+              <artifact> val x$1886: scala.meta.internal.ast.Term = this.internalPrototype.cond;
+              <artifact> val x$1887: scala.meta.internal.ast.Term.If.Impl = this;
+              <artifact> val x$1888: meta.internal.flags.Flags = qual$43.internalCopy$default$1;
+              <artifact> val x$1889: meta.Tokens = qual$43.internalCopy$default$4;
+              <artifact> val x$1890: scala.meta.semantic.Environment = qual$43.internalCopy$default$5;
+              <artifact> val x$1891: scala.meta.internal.semantic.Denotation = qual$43.internalCopy$default$6;
+              <artifact> val x$1892: scala.meta.internal.semantic.Typing = qual$43.internalCopy$default$7;
+              <artifact> val x$1893: scala.meta.internal.semantic.Expansion = qual$43.internalCopy$default$8;
+              qual$43.internalCopy(x$1888, x$1886, x$1887, x$1889, x$1890, x$1891, x$1892, x$1893)
+            };
+            if (scala.meta.internal.flags.`package`.XtensionFlags[scala.meta.internal.ast.Term.If](this.internalPrototype).isTypechecked.!=(scala.meta.internal.flags.`package`.XtensionFlags[scala.meta.internal.ast.Term.If.Impl](this).isTypechecked))
+              scala.meta.internal.flags.`package`.XtensionFlags[scala.meta.internal.ast.Term#ThisType](copyCond$macro$359).withTypechecked(scala.meta.internal.flags.`package`.XtensionFlags[scala.meta.internal.ast.Term.If.Impl](this).isTypechecked)
+            else
+              copyCond$macro$359
           })
         }
       else
@@ -402,16 +409,23 @@ Here's the same code after typechecking with helper def macros expanded:
         {
           scala.Predef.require(this.internalPrototype.!=(null), "internal error when initializing Impl.thenp");
           this._thenp_=({
-            <artifact> val qual$44: scala.meta.internal.ast.Term = this.internalPrototype.thenp;
-            <artifact> val x$1894: scala.meta.internal.ast.Term = this.internalPrototype.thenp;
-            <artifact> val x$1895: scala.meta.internal.ast.Term.If.Impl = this;
-            <artifact> val x$1896: meta.internal.flags.Flags = qual$44.internalCopy$default$1;
-            <artifact> val x$1897: meta.Tokens = qual$44.internalCopy$default$4;
-            <artifact> val x$1898: scala.meta.semantic.Environment = qual$44.internalCopy$default$5;
-            <artifact> val x$1899: scala.meta.internal.semantic.Denotation = qual$44.internalCopy$default$6;
-            <artifact> val x$1900: scala.meta.internal.semantic.Typing = qual$44.internalCopy$default$7;
-            <artifact> val x$1901: scala.meta.internal.semantic.Expansion = qual$44.internalCopy$default$8;
-            qual$44.internalCopy(x$1896, x$1894, x$1895, x$1897, x$1898, x$1899, x$1900, x$1901)
+            import scala.meta.internal.flags._;
+            val copyThenp$macro$360: scala.meta.internal.ast.Term#ThisType = {
+              <artifact> val qual$44: scala.meta.internal.ast.Term = this.internalPrototype.thenp;
+              <artifact> val x$1894: scala.meta.internal.ast.Term = this.internalPrototype.thenp;
+              <artifact> val x$1895: scala.meta.internal.ast.Term.If.Impl = this;
+              <artifact> val x$1896: meta.internal.flags.Flags = qual$44.internalCopy$default$1;
+              <artifact> val x$1897: meta.Tokens = qual$44.internalCopy$default$4;
+              <artifact> val x$1898: scala.meta.semantic.Environment = qual$44.internalCopy$default$5;
+              <artifact> val x$1899: scala.meta.internal.semantic.Denotation = qual$44.internalCopy$default$6;
+              <artifact> val x$1900: scala.meta.internal.semantic.Typing = qual$44.internalCopy$default$7;
+              <artifact> val x$1901: scala.meta.internal.semantic.Expansion = qual$44.internalCopy$default$8;
+              qual$44.internalCopy(x$1896, x$1894, x$1895, x$1897, x$1898, x$1899, x$1900, x$1901)
+            };
+            if (scala.meta.internal.flags.`package`.XtensionFlags[scala.meta.internal.ast.Term.If](this.internalPrototype).isTypechecked.!=(scala.meta.internal.flags.`package`.XtensionFlags[scala.meta.internal.ast.Term.If.Impl](this).isTypechecked))
+              scala.meta.internal.flags.`package`.XtensionFlags[scala.meta.internal.ast.Term#ThisType](copyThenp$macro$360).withTypechecked(scala.meta.internal.flags.`package`.XtensionFlags[scala.meta.internal.ast.Term.If.Impl](this).isTypechecked)
+            else
+              copyThenp$macro$360
           })
         }
       else
@@ -423,16 +437,23 @@ Here's the same code after typechecking with helper def macros expanded:
         {
           scala.Predef.require(this.internalPrototype.!=(null), "internal error when initializing Impl.elsep");
           this._elsep_=({
-            <artifact> val qual$45: scala.meta.internal.ast.Term = this.internalPrototype.elsep;
-            <artifact> val x$1902: scala.meta.internal.ast.Term = this.internalPrototype.elsep;
-            <artifact> val x$1903: scala.meta.internal.ast.Term.If.Impl = this;
-            <artifact> val x$1904: meta.internal.flags.Flags = qual$45.internalCopy$default$1;
-            <artifact> val x$1905: meta.Tokens = qual$45.internalCopy$default$4;
-            <artifact> val x$1906: scala.meta.semantic.Environment = qual$45.internalCopy$default$5;
-            <artifact> val x$1907: scala.meta.internal.semantic.Denotation = qual$45.internalCopy$default$6;
-            <artifact> val x$1908: scala.meta.internal.semantic.Typing = qual$45.internalCopy$default$7;
-            <artifact> val x$1909: scala.meta.internal.semantic.Expansion = qual$45.internalCopy$default$8;
-            qual$45.internalCopy(x$1904, x$1902, x$1903, x$1905, x$1906, x$1907, x$1908, x$1909)
+            import scala.meta.internal.flags._;
+            val copyElsep$macro$361: scala.meta.internal.ast.Term#ThisType = {
+              <artifact> val qual$45: scala.meta.internal.ast.Term = this.internalPrototype.elsep;
+              <artifact> val x$1902: scala.meta.internal.ast.Term = this.internalPrototype.elsep;
+              <artifact> val x$1903: scala.meta.internal.ast.Term.If.Impl = this;
+              <artifact> val x$1904: meta.internal.flags.Flags = qual$45.internalCopy$default$1;
+              <artifact> val x$1905: meta.Tokens = qual$45.internalCopy$default$4;
+              <artifact> val x$1906: scala.meta.semantic.Environment = qual$45.internalCopy$default$5;
+              <artifact> val x$1907: scala.meta.internal.semantic.Denotation = qual$45.internalCopy$default$6;
+              <artifact> val x$1908: scala.meta.internal.semantic.Typing = qual$45.internalCopy$default$7;
+              <artifact> val x$1909: scala.meta.internal.semantic.Expansion = qual$45.internalCopy$default$8;
+              qual$45.internalCopy(x$1904, x$1902, x$1903, x$1905, x$1906, x$1907, x$1908, x$1909)
+            };
+            if (scala.meta.internal.flags.`package`.XtensionFlags[scala.meta.internal.ast.Term.If](this.internalPrototype).isTypechecked.!=(scala.meta.internal.flags.`package`.XtensionFlags[scala.meta.internal.ast.Term.If.Impl](this).isTypechecked))
+              scala.meta.internal.flags.`package`.XtensionFlags[scala.meta.internal.ast.Term#ThisType](copyElsep$macro$361).withTypechecked(scala.meta.internal.flags.`package`.XtensionFlags[scala.meta.internal.ast.Term.If.Impl](this).isTypechecked)
+            else
+              copyElsep$macro$361
           })
         }
       else
@@ -453,16 +474,23 @@ Here's the same code after typechecking with helper def macros expanded:
         {
           scala.Predef.require(this.internalPrototype.!=(null), "internal error when initializing Impl.cond");
           this._cond_=({
-            <artifact> val qual$46: scala.meta.internal.ast.Term = this.internalPrototype.cond;
-            <artifact> val x$1910: scala.meta.internal.ast.Term = this.internalPrototype.cond;
-            <artifact> val x$1911: scala.meta.internal.ast.Term.If.Impl = this;
-            <artifact> val x$1912: meta.internal.flags.Flags = qual$46.internalCopy$default$1;
-            <artifact> val x$1913: meta.Tokens = qual$46.internalCopy$default$4;
-            <artifact> val x$1914: scala.meta.semantic.Environment = qual$46.internalCopy$default$5;
-            <artifact> val x$1915: scala.meta.internal.semantic.Denotation = qual$46.internalCopy$default$6;
-            <artifact> val x$1916: scala.meta.internal.semantic.Typing = qual$46.internalCopy$default$7;
-            <artifact> val x$1917: scala.meta.internal.semantic.Expansion = qual$46.internalCopy$default$8;
-            qual$46.internalCopy(x$1912, x$1910, x$1911, x$1913, x$1914, x$1915, x$1916, x$1917)
+            import scala.meta.internal.flags._;
+            val copyCond$macro$362: scala.meta.internal.ast.Term#ThisType = {
+              <artifact> val qual$46: scala.meta.internal.ast.Term = this.internalPrototype.cond;
+              <artifact> val x$1910: scala.meta.internal.ast.Term = this.internalPrototype.cond;
+              <artifact> val x$1911: scala.meta.internal.ast.Term.If.Impl = this;
+              <artifact> val x$1912: meta.internal.flags.Flags = qual$46.internalCopy$default$1;
+              <artifact> val x$1913: meta.Tokens = qual$46.internalCopy$default$4;
+              <artifact> val x$1914: scala.meta.semantic.Environment = qual$46.internalCopy$default$5;
+              <artifact> val x$1915: scala.meta.internal.semantic.Denotation = qual$46.internalCopy$default$6;
+              <artifact> val x$1916: scala.meta.internal.semantic.Typing = qual$46.internalCopy$default$7;
+              <artifact> val x$1917: scala.meta.internal.semantic.Expansion = qual$46.internalCopy$default$8;
+              qual$46.internalCopy(x$1912, x$1910, x$1911, x$1913, x$1914, x$1915, x$1916, x$1917)
+            };
+            if (scala.meta.internal.flags.`package`.XtensionFlags[scala.meta.internal.ast.Term.If](this.internalPrototype).isTypechecked.!=(scala.meta.internal.flags.`package`.XtensionFlags[scala.meta.internal.ast.Term.If.Impl](this).isTypechecked))
+              scala.meta.internal.flags.`package`.XtensionFlags[scala.meta.internal.ast.Term#ThisType](copyCond$macro$362).withTypechecked(scala.meta.internal.flags.`package`.XtensionFlags[scala.meta.internal.ast.Term.If.Impl](this).isTypechecked)
+            else
+              copyCond$macro$362
           })
         }
       else
@@ -471,16 +499,23 @@ Here's the same code after typechecking with helper def macros expanded:
         {
           scala.Predef.require(this.internalPrototype.!=(null), "internal error when initializing Impl.thenp");
           this._thenp_=({
-            <artifact> val qual$47: scala.meta.internal.ast.Term = this.internalPrototype.thenp;
-            <artifact> val x$1918: scala.meta.internal.ast.Term = this.internalPrototype.thenp;
-            <artifact> val x$1919: scala.meta.internal.ast.Term.If.Impl = this;
-            <artifact> val x$1920: meta.internal.flags.Flags = qual$47.internalCopy$default$1;
-            <artifact> val x$1921: meta.Tokens = qual$47.internalCopy$default$4;
-            <artifact> val x$1922: scala.meta.semantic.Environment = qual$47.internalCopy$default$5;
-            <artifact> val x$1923: scala.meta.internal.semantic.Denotation = qual$47.internalCopy$default$6;
-            <artifact> val x$1924: scala.meta.internal.semantic.Typing = qual$47.internalCopy$default$7;
-            <artifact> val x$1925: scala.meta.internal.semantic.Expansion = qual$47.internalCopy$default$8;
-            qual$47.internalCopy(x$1920, x$1918, x$1919, x$1921, x$1922, x$1923, x$1924, x$1925)
+            import scala.meta.internal.flags._;
+            val copyThenp$macro$363: scala.meta.internal.ast.Term#ThisType = {
+              <artifact> val qual$47: scala.meta.internal.ast.Term = this.internalPrototype.thenp;
+              <artifact> val x$1918: scala.meta.internal.ast.Term = this.internalPrototype.thenp;
+              <artifact> val x$1919: scala.meta.internal.ast.Term.If.Impl = this;
+              <artifact> val x$1920: meta.internal.flags.Flags = qual$47.internalCopy$default$1;
+              <artifact> val x$1921: meta.Tokens = qual$47.internalCopy$default$4;
+              <artifact> val x$1922: scala.meta.semantic.Environment = qual$47.internalCopy$default$5;
+              <artifact> val x$1923: scala.meta.internal.semantic.Denotation = qual$47.internalCopy$default$6;
+              <artifact> val x$1924: scala.meta.internal.semantic.Typing = qual$47.internalCopy$default$7;
+              <artifact> val x$1925: scala.meta.internal.semantic.Expansion = qual$47.internalCopy$default$8;
+              qual$47.internalCopy(x$1920, x$1918, x$1919, x$1921, x$1922, x$1923, x$1924, x$1925)
+            };
+            if (scala.meta.internal.flags.`package`.XtensionFlags[scala.meta.internal.ast.Term.If](this.internalPrototype).isTypechecked.!=(scala.meta.internal.flags.`package`.XtensionFlags[scala.meta.internal.ast.Term.If.Impl](this).isTypechecked))
+              scala.meta.internal.flags.`package`.XtensionFlags[scala.meta.internal.ast.Term#ThisType](copyThenp$macro$363).withTypechecked(scala.meta.internal.flags.`package`.XtensionFlags[scala.meta.internal.ast.Term.If.Impl](this).isTypechecked)
+            else
+              copyThenp$macro$363
           })
         }
       else
@@ -489,16 +524,23 @@ Here's the same code after typechecking with helper def macros expanded:
         {
           scala.Predef.require(this.internalPrototype.!=(null), "internal error when initializing Impl.elsep");
           this._elsep_=({
-            <artifact> val qual$48: scala.meta.internal.ast.Term = this.internalPrototype.elsep;
-            <artifact> val x$1926: scala.meta.internal.ast.Term = this.internalPrototype.elsep;
-            <artifact> val x$1927: scala.meta.internal.ast.Term.If.Impl = this;
-            <artifact> val x$1928: meta.internal.flags.Flags = qual$48.internalCopy$default$1;
-            <artifact> val x$1929: meta.Tokens = qual$48.internalCopy$default$4;
-            <artifact> val x$1930: scala.meta.semantic.Environment = qual$48.internalCopy$default$5;
-            <artifact> val x$1931: scala.meta.internal.semantic.Denotation = qual$48.internalCopy$default$6;
-            <artifact> val x$1932: scala.meta.internal.semantic.Typing = qual$48.internalCopy$default$7;
-            <artifact> val x$1933: scala.meta.internal.semantic.Expansion = qual$48.internalCopy$default$8;
-            qual$48.internalCopy(x$1928, x$1926, x$1927, x$1929, x$1930, x$1931, x$1932, x$1933)
+            import scala.meta.internal.flags._;
+            val copyElsep$macro$364: scala.meta.internal.ast.Term#ThisType = {
+              <artifact> val qual$48: scala.meta.internal.ast.Term = this.internalPrototype.elsep;
+              <artifact> val x$1926: scala.meta.internal.ast.Term = this.internalPrototype.elsep;
+              <artifact> val x$1927: scala.meta.internal.ast.Term.If.Impl = this;
+              <artifact> val x$1928: meta.internal.flags.Flags = qual$48.internalCopy$default$1;
+              <artifact> val x$1929: meta.Tokens = qual$48.internalCopy$default$4;
+              <artifact> val x$1930: scala.meta.semantic.Environment = qual$48.internalCopy$default$5;
+              <artifact> val x$1931: scala.meta.internal.semantic.Denotation = qual$48.internalCopy$default$6;
+              <artifact> val x$1932: scala.meta.internal.semantic.Typing = qual$48.internalCopy$default$7;
+              <artifact> val x$1933: scala.meta.internal.semantic.Expansion = qual$48.internalCopy$default$8;
+              qual$48.internalCopy(x$1928, x$1926, x$1927, x$1929, x$1930, x$1931, x$1932, x$1933)
+            };
+            if (scala.meta.internal.flags.`package`.XtensionFlags[scala.meta.internal.ast.Term.If](this.internalPrototype).isTypechecked.!=(scala.meta.internal.flags.`package`.XtensionFlags[scala.meta.internal.ast.Term.If.Impl](this).isTypechecked))
+              scala.meta.internal.flags.`package`.XtensionFlags[scala.meta.internal.ast.Term#ThisType](copyElsep$macro$364).withTypechecked(scala.meta.internal.flags.`package`.XtensionFlags[scala.meta.internal.ast.Term.If.Impl](this).isTypechecked)
+            else
+              copyElsep$macro$364
           })
         }
       else

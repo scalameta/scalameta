@@ -62,7 +62,6 @@ object internal {
     }
     def loadField(f: c.Tree): c.Tree = {
       val q"this.$finternalName" = f
-      def uncapitalize(s: String) = if (s.length == 0) "" else { val chars = s.toCharArray; chars(0) = chars(0).toLower; new String(chars) }
       val fname = TermName(finternalName.toString.stripPrefix("_"))
       def lazyLoad(fn: c.Tree => c.Tree) = {
         val assertionMessage = s"internal error when initializing ${c.internal.enclosingOwner.owner.name}.$fname"
@@ -76,25 +75,37 @@ object internal {
           }
         """
       }
+      def copySubtree(subtree: c.Tree) = {
+        val tempName = c.freshName(TermName("copy" + fname.toString.capitalize))
+        q"""
+          import scala.meta.internal.flags._
+          val $tempName = $subtree.internalCopy(prototype = $subtree, parent = this)
+          if (this.internalPrototype.isTypechecked != this.isTypechecked) $tempName.withTypechecked(this.isTypechecked)
+          else $tempName
+        """
+      }
       f.tpe.finalResultType match {
         case Any(tpe) => q"()"
         case Primitive(tpe) => q"()"
-        case Tree(tpe) => lazyLoad(pf => q"$pf.internalCopy(prototype = $pf, parent = this)")
-        case OptionTree(tpe) => lazyLoad(pf => q"$pf.map(el => el.internalCopy(prototype = el, parent = this))")
-        case OptionSeqTree(tpe) => lazyLoad(pf => q"$pf.map(_.map(el => el.internalCopy(prototype = el, parent = this)))")
-        case SeqTree(tpe) => lazyLoad(pf => q"$pf.map(el => el.internalCopy(prototype = el, parent = this))")
-        case SeqSeqTree(tpe) => lazyLoad(pf => q"$pf.map(_.map(el => el.internalCopy(prototype = el, parent = this)))")
+        case Tree(tpe) => lazyLoad(pf => q"${copySubtree(pf)}")
+        case OptionTree(tpe) => lazyLoad(pf => q"$pf.map(el => ${copySubtree(q"el")})")
+        case OptionSeqTree(tpe) => lazyLoad(pf => q"$pf.map(_.map(el => ${copySubtree(q"el")}))")
+        case SeqTree(tpe) => lazyLoad(pf => q"$pf.map(el => ${copySubtree(q"el")})")
+        case SeqSeqTree(tpe) => lazyLoad(pf => q"$pf.map(_.map(el => ${copySubtree(q"el")}))")
       }
     }
     def storeField(f: c.Tree, v: c.Tree): c.Tree = {
+      def copySubtree(subtree: c.Tree) = {
+        q"$subtree.internalCopy(prototype = $subtree, parent = node)"
+      }
       f.tpe.finalResultType match {
         case Any(tpe) => q"()"
         case Primitive(tpe) => q"()"
-        case Tree(tpe) => q"$f = $v.internalCopy(prototype = $v, parent = node)"
-        case OptionTree(tpe) => q"$f = $v.map(el => el.internalCopy(prototype = el, parent = node))"
-        case OptionSeqTree(tpe) => q"$f = $v.map(_.map(el => el.internalCopy(prototype = el, parent = node)))"
-        case SeqTree(tpe) => q"$f = $v.map(el => el.internalCopy(prototype = el, parent = node))"
-        case SeqSeqTree(tpe) => q"$f = $v.map(_.map(el => el.internalCopy(prototype = el, parent = node)))"
+        case Tree(tpe) => q"$f = ${copySubtree(v)}"
+        case OptionTree(tpe) => q"$f = $v.map(el => ${copySubtree(q"el")})"
+        case OptionSeqTree(tpe) => q"$f = $v.map(_.map(el => ${copySubtree(q"el")}))"
+        case SeqTree(tpe) => q"$f = $v.map(el => ${copySubtree(q"el")})"
+        case SeqSeqTree(tpe) => q"$f = $v.map(_.map(el => ${copySubtree(q"el")}))"
         case tpe => c.abort(c.enclosingPosition, s"unsupported field type $tpe")
       }
     }

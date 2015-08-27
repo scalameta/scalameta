@@ -36,36 +36,56 @@ class InfrastructureSuite extends FunSuite {
   }
 
   test("TYPECHECKED doesn't reset when tokens are touched") {
-    val y1 = Term.Name("foo").setTypechecked
-    val y2 = y1.withTokens(Tokens())
-    assert(y1.isTypechecked == true)
-    assert(y2.isTypechecked == true)
+    val x1 = Term.Name("foo").setTypechecked
+    val x2 = x1.withTokens(Tokens())
+    assert(x1.isTypechecked == true)
+    assert(x2.isTypechecked == true)
   }
 
   test("TYPECHECKED resets when attributes are touched") {
-    val y1 = Term.Name("foo").setTypechecked
-    val y2 = y1.withDenot(Denotation.Zero)
-    val y3 = y1.withTyping(Typing.Zero)
-    val y4 = y1.withExpansion(Expansion.Zero)
-    assert(y1.isTypechecked == true)
-    assert(y2.isTypechecked == false)
-    assert(y3.isTypechecked == false)
-    assert(y4.isTypechecked == false)
+    val x1 = Term.Name("foo").setTypechecked
+    val x2 = x1.withDenot(Denotation.Zero)
+    val x3 = x1.withTyping(Typing.Zero)
+    val x4 = x1.withExpansion(Expansion.Zero)
+    assert(x1.isTypechecked == true)
+    assert(x2.isTypechecked == false)
+    assert(x3.isTypechecked == false)
+    assert(x4.isTypechecked == false)
   }
 
   test("TYPECHECKED resets when the tree is copied") {
-    val z1 = Term.Name("foo").setTypechecked
-    val z2 = z1.copy(value = "bar")
-    assert(z1.isTypechecked == true)
-    assert(z2.isTypechecked == false)
+    val x1 = Term.Name("foo").setTypechecked
+    val x2 = x1.copy(value = "bar")
+    assert(x1.isTypechecked == true)
+    assert(x2.isTypechecked == false)
   }
 
   test("TYPECHECKED doesn't reset when the tree is unquoted") {
-    val z1 = Term.Name("foo").setTypechecked
-    val z2 = Term.Select(z1, Term.Name("bar"))
-    assert(z1.isTypechecked == true)
-    assert(z2.isTypechecked == false)
-    assert(z2.qual.isTypechecked == true)
-    assert(z2.name.isTypechecked == false)
+    val x1 = Term.Name("foo").setTypechecked
+    val x2 = Term.Select(x1, Term.Name("bar"))
+    assert(x1.isTypechecked == true)
+    assert(x2.isTypechecked == false)
+    assert(x2.qual.isTypechecked == true)
+    assert(x2.name.isTypechecked == false)
+  }
+
+  test("TYPECHECKED sets children when set") {
+    val x1 = Term.Name("foo")
+    val x2 = Term.Name("bar")
+    val x3 = Term.Select(x1, x2)
+    val y3 @ Term.Select(y1, y2) = x3.setTypechecked
+    assert(y1.isTypechecked === true)
+    assert(y2.isTypechecked === true)
+    assert(y3.isTypechecked === true)
+  }
+
+  test("TYPECHECKED resets children when reset") {
+    val x1 = Term.Name("foo").setTypechecked
+    val x2 = Term.Name("bar").setTypechecked
+    val x3 = Term.Select(x1, x2).setTypechecked
+    val y3 @ Term.Select(y1, y2) = x3.resetTypechecked
+    assert(y1.isTypechecked === false)
+    assert(y2.isTypechecked === false)
+    assert(y3.isTypechecked === false)
   }
 }
