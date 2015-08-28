@@ -71,8 +71,8 @@ object Attributes {
           def prettyprint() = {
             def prettyprintPrefix(pre: Prefix): String = {
               pre match {
-                case Prefix.Zero => "0"
-                case Prefix.Type(tpe) => if (deep) body(tpe) else tpe.show[Structure]
+                case Prefix.Zero => "{0}"
+                case Prefix.Type(tpe) => s"{${footnotes.insert(Typing.Nonrecursive(tpe))}}"
               }
             }
             def prettyprintSymbol(sym: Symbol): String = {
@@ -197,7 +197,8 @@ object Attributes {
             if (recursions.contains(xkey)) {
               s"{${recursions(xkey)}}"
             } else {
-              val typing = Typing.Nonrecursive(Type.Singleton(x.require[Term.Ref]))
+              val xsub = Type.Singleton(x.require[Term.Ref]).withTypechecked(x.isTypechecked)
+              val typing = Typing.Nonrecursive(xsub)
               recursions(xkey) = footnotes.previewInsert(typing)
               s"{${footnotes.insert(typing)}}"
             }
@@ -207,12 +208,12 @@ object Attributes {
 
         val expansionPart = x.maybeExpansion.map({
           case Expansion.Zero => ""
-          case expansion @ Expansion.Identity => s"<=>"
+          case expansion @ Expansion.Identity => s"<>"
           case expansion @ Expansion.Desugaring(term) => s"<${footnotes.insert(expansion)}>"
         }).getOrElse("")
 
         val typecheckedPart = {
-          if (x.isTypechecked && includeFlags) "*"
+          if (!x.isTypechecked && includeFlags) "*"
           else ""
         }
 
