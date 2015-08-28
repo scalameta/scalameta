@@ -120,6 +120,7 @@ class DataMacros(val c: Context) {
                 val $valueName = this.$paramName()
                 $Internal.nullCheck($valueName)
                 $Internal.emptyCheck($valueName)
+                $Internal.onFieldLoaded(${name.toString}, $valueName)
                 this.$paramName = null
                 this.$storageName = $valueName
                 this.$flagName = true

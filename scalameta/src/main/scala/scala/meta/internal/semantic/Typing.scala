@@ -12,7 +12,7 @@ object Typing {
   @noneLeaf object Zero extends Typing
   @noneLeaf object Recursive extends Typing
   @someLeaf class Nonrecursive(tpe: Type.Arg @byNeed) extends Typing {
-    require(tpe.isTypechecked)
+    protected def onTpeLoaded(tpe: Type.Arg) = require(tpe.isTypechecked)
     protected def writeReplace(): AnyRef = new Nonrecursive.SerializationProxy(this)
   }
   object Nonrecursive {

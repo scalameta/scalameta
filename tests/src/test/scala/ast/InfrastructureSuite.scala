@@ -88,4 +88,9 @@ class InfrastructureSuite extends FunSuite {
     assert(y2.isTypechecked === false)
     assert(y3.isTypechecked === false)
   }
+
+  test("Typing.Nonrecursive is really lazy") {
+    val x1 = Typing.Nonrecursive(???)
+    val x2 = x1.map(_ => ???)
+  }
 }

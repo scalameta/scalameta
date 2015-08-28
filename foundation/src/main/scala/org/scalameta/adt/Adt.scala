@@ -288,6 +288,7 @@ object Internal {
   def emptyCheck[T](x: T): Unit = macro AdtHelperMacros.emptyCheck
   def hierarchyCheck[T]: Unit = macro AdtHelperMacros.hierarchyCheck[T]
   def immutabilityCheck[T]: Unit = macro AdtHelperMacros.immutabilityCheck[T]
+  def onFieldLoaded[T](name: String, value: T): Unit = macro AdtHelperMacros.onFieldLoaded
 }
 
 class AdtHelperMacros(val c: Context) extends AdtReflection {
@@ -368,5 +369,13 @@ class AdtHelperMacros(val c: Context) extends AdtReflection {
     }
     check(T.tpe.typeSymbol.asClass)
     q"()"
+  }
+
+  def onFieldLoaded(name: c.Tree, value: c.Tree): c.Tree = {
+    val q"${s_name: String}" = name
+    val onLoadedMethod = c.typecheck(q"this").tpe.member(TermName("on" + s_name.capitalize + "Loaded"))
+    val onLoadedReference = Ident(onLoadedMethod.name).setSymbol(onLoadedMethod)
+    if (onLoadedMethod != NoSymbol) q"$onLoadedReference($value)"
+    else q"()"
   }
 }
