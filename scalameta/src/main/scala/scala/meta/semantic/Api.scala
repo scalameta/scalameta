@@ -12,6 +12,7 @@ import scala.collection.immutable.Seq
 import scala.reflect.{ClassTag, classTag}
 import scala.meta.semantic.{Context => SemanticContext}
 import scala.meta.internal.{ast => impl} // necessary only to implement APIs, not to define them
+import scala.meta.internal.flags._ // necessary only to implement APIs, not to define them
 import scala.meta.internal.{semantic => s} // necessary only to implement APIs, not to define them
 import scala.meta.internal.ui.Summary // necessary only to implement APIs, not to define them
 import scala.reflect.runtime.{universe => ru} // necessary only for a very hacky approximation of hygiene
@@ -72,7 +73,7 @@ private[meta] trait Api {
       val ttree = implicitly[SemanticContext].typecheck(tree).require[impl.Term]
       ttree.typing match {
         case s.Typing.Zero => unreachable
-        case s.Typing.Recursive => impl.Type.Singleton(tree.require[impl.Term.Ref])
+        case s.Typing.Recursive => impl.Type.Singleton(tree.require[impl.Term.Ref]).setTypechecked
         case s.Typing.Nonrecursive(tpe) => tpe.require[impl.Type]
       }
     }
@@ -83,14 +84,14 @@ private[meta] trait Api {
       val sScala = s.Symbol.Global(s.Symbol.RootPackage, "scala", s.Signature.Term)
       val sCollection = s.Symbol.Global(sScala, "collection", s.Signature.Term)
       val sSeq = s.Symbol.Global(sCollection, "Seq", s.Signature.Type)
-      impl.Type.Name("Seq").withDenot(s.Prefix.Zero, sSeq)
+      impl.Type.Name("Seq").withDenot(s.Prefix.Zero, sSeq).setTypechecked
     }
     @hosted private def paramType(tree: impl.Term.Param): Type = {
       val ttree = implicitly[SemanticContext].typecheck(tree).require[impl.Term.Param]
       ttree.typing match {
         case s.Typing.Zero => unreachable
         case s.Typing.Recursive => unreachable
-        case s.Typing.Nonrecursive(impl.Type.Arg.ByName(tpe)) => impl.Type.Apply(SeqRef, List(tpe))
+        case s.Typing.Nonrecursive(impl.Type.Arg.ByName(tpe)) => impl.Type.Apply(SeqRef, List(tpe)).setTypechecked
         case s.Typing.Nonrecursive(impl.Type.Arg.Repeated(tpe)) => tpe
         case s.Typing.Nonrecursive(tpe: impl.Type) => tpe
       }
@@ -98,10 +99,10 @@ private[meta] trait Api {
     @hosted private def methodType(tparams: Seq[Type.Param], paramss: Seq[Seq[Term.Param]], ret: Type): Type = {
       if (tparams.nonEmpty) {
         val monoret = methodType(Nil, paramss, ret.require[impl.Type]).require[impl.Type]
-        impl.Type.Lambda(tparams.require[Seq[impl.Type.Param]], monoret)
+        impl.Type.Lambda(tparams.require[Seq[impl.Type.Param]], monoret).setTypechecked
       } else paramss.foldRight(ret.require[impl.Type])((params, acc) => {
         val paramtypes = params.map(p => paramType(p.require[impl.Term.Param]).require[impl.Type.Arg])
-        impl.Type.Function(paramtypes, acc)
+        impl.Type.Function(paramtypes, acc).setTypechecked
       })
     }
     @hosted private def ctorType(owner: Member, paramss: Seq[Seq[Term.Param]]): Type = {
@@ -109,7 +110,7 @@ private[meta] trait Api {
       val ret = {
         if (tparams.nonEmpty) impl.Type.Apply(owner.tpe.require[impl.Type], tparams.map(_.name.require[impl.Type.Name]))
         else owner.tpe
-      }
+      }.setTypechecked
       methodType(tparams, paramss, ret)
     }
     @hosted def tpe: Type = tree.require[impl.Member] match {
@@ -122,10 +123,10 @@ private[meta] trait Api {
       case tree: impl.Defn.Type => tree.name
       case tree: impl.Defn.Class => tree.name
       case tree: impl.Defn.Trait => tree.name
-      case tree: impl.Defn.Object => impl.Type.Singleton(tree.name)
-      case       impl.Pkg(name: impl.Term.Name, _) => impl.Type.Singleton(name)
-      case       impl.Pkg(impl.Term.Select(_, name: impl.Term.Name), _) => impl.Type.Singleton(name)
-      case tree: impl.Pkg.Object => impl.Type.Singleton(tree.name)
+      case tree: impl.Defn.Object => impl.Type.Singleton(tree.name).setTypechecked
+      case       impl.Pkg(name: impl.Term.Name, _) => impl.Type.Singleton(name).setTypechecked
+      case       impl.Pkg(impl.Term.Select(_, name: impl.Term.Name), _) => impl.Type.Singleton(name).setTypechecked
+      case tree: impl.Pkg.Object => impl.Type.Singleton(tree.name).setTypechecked
       case tree: impl.Term.Param if tree.parent.map(_.isInstanceOf[impl.Template]).getOrElse(false) => ??? // TODO: don't forget to intersect with the owner type
       case tree: impl.Term.Param => paramType(tree)
       case tree: impl.Type.Param => tree.name.require[Type.Name]
@@ -450,7 +451,7 @@ private[meta] trait Api {
         //    so far we strip off all desugarings and, hence, all inferred implicit arguments, so that's not a problem for us, but it will be
         // NOTE: potential solution would involve having the symbol of the parameter to be of a special, new kind
         // Symbol.Synthetic(origin: Symbol, generator: ???)
-        impl.Term.Param(List(impl.Mod.Implicit()), impl.Name.Anonymous(), Some(evidenceTpe.require[impl.Type]), None)
+        impl.Term.Param(List(impl.Mod.Implicit()), impl.Name.Anonymous(), Some(evidenceTpe.require[impl.Type]), None).setTypechecked
       }
       def deriveViewEvidence(tpe: Type) = deriveEvidence(impl.Type.Function(List(tparam.name.require[impl.Type]), tpe.require[impl.Type]))
       def deriveContextEvidence(tpe: Type) = deriveEvidence(impl.Type.Apply(tpe.require[impl.Type], List(tparam.name.require[impl.Type])))
@@ -696,7 +697,7 @@ private[meta] trait Api {
         case impl.Type.Lambda(tparams, tpe) => impl.Pat.Type.Lambda(tparams, loop(tpe))
         case tpe: impl.Lit => tpe
       }
-      loop(tree.require[impl.Type])
+      loop(tree.require[impl.Type]).withTypechecked(tree.isTypechecked)
     }
   }
 
@@ -720,7 +721,7 @@ private[meta] trait Api {
         case impl.Pat.Type.Lambda(tparams, tpe) => impl.Type.Lambda(tparams, loop(tpe))
         case tpe: impl.Lit => tpe
       }
-      loop(tree.require[impl.Pat.Type])
+      loop(tree.require[impl.Pat.Type]).withTypechecked(tree.isTypechecked)
     }
   }
 
@@ -755,7 +756,7 @@ private[meta] trait Api {
       // TODO: if we uncomment this, that'll lead to a stackoverflow in scalahost
       // it's okay, but at least we could verify that ctor's prefix is coherent with tree
       // val prefixedCtor = tree.members(ctor.defn).name.require[Ctor.Name]
-      loop(tree.require[impl.Type], ctor.require[impl.Ctor.Name])
+      loop(tree.require[impl.Type], ctor.require[impl.Ctor.Name]).withTypechecked(tree.isTypechecked)
     }
   }
 
