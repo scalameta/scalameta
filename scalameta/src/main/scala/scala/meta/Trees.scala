@@ -122,6 +122,8 @@ package scala.meta.internal.ast {
   @branch trait Scope extends api.Scope with Tree
 
   @branch trait Term extends api.Term with Stat with Term.Arg {
+    def env: Environment
+    def withEnv(env: Environment): ThisType
     def typing: Typing
     def withTyping(typing: Typing): ThisType
     def withRecursiveTyping: ThisType = withTyping(Typing.Recursive)

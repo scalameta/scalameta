@@ -21,6 +21,8 @@ class BranchMacros(val c: Context) {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       def is(abbrev: String) = c.internal.enclosingOwner.fullName.toString + "." + cdef.name.toString == "scala.meta.internal.ast." + abbrev
       def isQuasi = cdef.name.toString == "Quasi"
+      def isName = is("Name") || is("Term.Param.Name") || is("Type.Param.Name")
+      def isTerm = is("Term") || is("Lit") || is("Term.Ref") || is("Ctor.Ref") || is("Ctor.Call")
       val ClassDef(mods @ Modifiers(flags, privateWithin, anns), name, tparams, Template(parents, self, stats)) = cdef
       val ModuleDef(mmods, mname, Template(mparents, mself, mstats)) = mdef
       val stats1 = ListBuffer[Tree]() ++ stats
@@ -55,13 +57,14 @@ class BranchMacros(val c: Context) {
           DefDef(mods, termName, tparams, List(List(param)), tpt, rhs)
         }
         var qstats = List(q"def pt: _root_.java.lang.Class[_] = _root_.org.scalameta.runtime.arrayClass(_root_.scala.Predef.classOf[$name], this.rank)")
-        if (is("Name") || is("Term.Param.Name") || is("Type.Param.Name")) {
+        if (isName) {
           qstats ++= List("value", "env", "denot").map(quasigetter)
           qstats :+= quasisetter("withEnv", q"val env: $Semantic.Environment")
           qstats :+= quasisetter("withDenot", q"val denot: $SemanticInternal.Denotation")
         }
-        if (is("Term") || is("Lit") || is("Term.Ref") || is("Ctor.Ref") || is("Ctor.Call")) {
-          qstats ++= List("typing", "expansion").map(quasigetter)
+        if (isTerm) {
+          qstats ++= List("env", "typing", "expansion").map(quasigetter)
+          qstats :+= quasisetter("withEnv", q"val env: $Semantic.Environment")
           qstats :+= quasisetter("withTyping", q"val typing: $SemanticInternal.Typing")
           qstats :+= quasisetter("withExpansion", q"val expansion: $SemanticInternal.Expansion")
         }

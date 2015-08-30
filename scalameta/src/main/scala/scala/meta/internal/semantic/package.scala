@@ -14,14 +14,7 @@ package object semantic {
 
   implicit class XtensionAttributedTree(tree: scala.meta.Tree) {
     def maybeEnv: Option[Environment] = tree match {
-      case tree: Name => Some(tree.env)
-      case tree: Term.Apply => Some(tree.env)
-      case tree: Term.ApplyInfix => Some(tree.env)
-      case tree: Term.ApplyType => Some(tree.env)
-      case tree: Term.ApplyUnary => Some(tree.env)
-      case tree: Term.Assign => Some(tree.env)
-      case tree: Term.Update => Some(tree.env)
-      case tree: Term.Interpolate => Some(tree.env)
+      case tree: Term => Some(tree.env)
       case _ => None
     }
 

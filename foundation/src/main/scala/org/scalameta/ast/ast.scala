@@ -24,7 +24,6 @@ class AstMacros(val c: Context) {
       def is(abbrev: String) = fullName == "scala.meta.internal.ast." + abbrev
       def isQuasi = cdef.name.toString == "Quasi"
       def isName = is("Name.Anonymous") || is("Name.Indeterminate") || is("Term.Name") || is("Type.Name") || is("Ctor.Ref.Name")
-      def isApplyLike = is("Term.Apply") || is("Term.ApplyInfix") || is("Term.ApplyType") || is("Term.ApplyUnary") || is("Term.Assign") || is("Term.Update") || is("Term.Interpolate")
       def isLit = !isQuasi && fullName.startsWith("scala.meta.internal.ast.Lit")
       def isCtorRef = !isQuasi && fullName.startsWith("scala.meta.internal.ast.Ctor.Ref")
       def isCtorCall = !isQuasi && fullName.startsWith("scala.meta.internal.ast.Ctor.Call")
@@ -32,7 +31,7 @@ class AstMacros(val c: Context) {
       def isTerm = !isQuasi && (fullName.startsWith("scala.meta.internal.ast.Term") || isLit || isCtorRef || isCtorCall) && !looksLikeTermButNotTerm
       def isTermParam = is("Term.Param")
       def hasTokens = true
-      def hasEnv = isName || isApplyLike
+      def hasEnv = isName || isTerm
       def hasDenot = isName
       def hasTyping = isTerm || isTermParam
       def hasExpansion = isTerm
@@ -227,7 +226,7 @@ class AstMacros(val c: Context) {
         val impl = q"throw new _root_.scala.`package`.UnsupportedOperationException($message)"
         var flags = NoFlags
         if (name.startsWith("internal")) flags |= PROTECTED
-        if (!isTermParam && !isApplyLike) flags |= OVERRIDE // NOTE: crazy, I know...
+        if (!isTermParam) flags |= OVERRIDE // NOTE: crazy, I know...
         q"$flags def ${TermName(name)}: _root_.scala.Nothing = $impl"
       }
       def quasisetter(name: String, param: ValDef) = {
