@@ -51,31 +51,6 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
     ???
   }
 
-  private[meta] def desugar(untypedTerm: mapi.Term): mapi.Term = {
-    val term = typecheck(untypedTerm).require[m.Term]
-    term.expansion match {
-      case s.Expansion.Zero => unreachable
-      case s.Expansion.Identity => term
-      case s.Expansion.Desugaring(tdesugaring) => tdesugaring
-    }
-  }
-
-  private[meta] def tpe(untypedTerm: mapi.Term): mapi.Type = {
-    val term = typecheck(untypedTerm).require[m.Term]
-    term.typing match {
-      case s.Typing.Zero => unreachable
-      case s.Typing.Specified(tpe) => tpe.require[m.Type]
-    }
-  }
-
-  private[meta] def tpe(untypedParam: mapi.Term.Param): mapi.Type.Arg = {
-    val param = typecheck(untypedParam).require[m.Term.Param]
-    param.typing match {
-      case s.Typing.Zero => unreachable
-      case s.Typing.Specified(tpe) => tpe
-    }
-  }
-
   private[meta] def defns(untypedRef: mapi.Ref): Seq[mapi.Member] = {
     val ref = typecheck(untypedRef).require[m.Ref]
     ref match {
