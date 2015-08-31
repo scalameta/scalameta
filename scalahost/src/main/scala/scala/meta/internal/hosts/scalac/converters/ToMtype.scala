@@ -141,7 +141,13 @@ trait ToMtype extends GlobalToolkit with MetaToolkit {
               m.Type.Lambda(mquants, ret.toMtype)
           }
         case tpe @ g.MethodType(params, ret) =>
-          m.Type.Function(params.map(_.tpe.toMtypeArg), ret.toMtype)
+          def extractParamss(paramss: List[List[g.Symbol]], tpe: g.Type): List[List[g.Symbol]] = tpe match {
+            case g.MethodType(params1, ret1) => extractParamss(paramss :+ params1, ret1)
+            case _ => paramss
+          }
+          val gparamss = extractParamss(Nil, tpe)
+          val mparamss = gparamss.toLogical.map(_.map(_.toMmember(g.NoPrefix).require[m.Term.Param]))
+          m.Type.Method(mparamss, ret.toMtype)
         case _ =>
           throw new ConvertException(gtpe, s"unsupported type $gtpe, designation = ${gtpe.getClass}, structure = ${g.showRaw(gtpe, printIds = true, printTypes = true)}")
       }

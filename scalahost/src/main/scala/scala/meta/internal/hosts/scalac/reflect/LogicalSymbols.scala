@@ -32,6 +32,10 @@ trait LogicalSymbols {
     def toLogical: Seq[l.Symbol] = logicalSymbols(gsyms)
   }
 
+  implicit class RichLogicalSymbolss(gsymss: Seq[Seq[g.Symbol]]) {
+    def toLogical: Seq[Seq[l.Symbol]] = gsymss.map(_.toLogical)
+  }
+
   sealed trait LogicalSymbol extends Product {
     def name: String
     def symbol: g.Symbol
