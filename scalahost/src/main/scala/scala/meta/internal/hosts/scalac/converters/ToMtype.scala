@@ -38,10 +38,14 @@ trait ToMtype extends GlobalToolkit with MetaToolkit {
           m.Type.Singleton(m.Term.Super(superqual, supermix))
         case g.ThisType(sym) =>
           require(sym.isClass)
-          if (sym.isModuleClass) m.Type.Singleton(sym.module.asTerm.rawcvt(g.Ident(sym.module)).withTyping(gtpe))
-          else m.Type.Singleton(m.Term.This(m.Name.Indeterminate(g.Ident(sym).displayName).withDenot(sym)).withTyping(gtpe))
+          if (sym.isModuleClass) m.Type.Singleton(sym.module.asTerm.rawcvt(g.Ident(sym.module)).withRecursiveTyping)
+          else m.Type.Singleton(m.Term.This(m.Name.Indeterminate(g.Ident(sym).displayName).withDenot(sym)).withTyping(gtpe.widen))
         case g.SingleType(pre, sym) =>
           require(sym.isTerm)
+          val refTyping = {
+            if (sym.isModuleClass) s.Typing.Recursive
+            else s.Typing.Nonrecursive(g.enteringTyper(gtpe.widen.toMtypeArg))
+          }
           val ref = (pre match {
             case g.NoPrefix =>
               sym.asTerm.precvt(pre, g.Ident(sym))
@@ -49,12 +53,12 @@ trait ToMtype extends GlobalToolkit with MetaToolkit {
               sym.asTerm.precvt(pre, g.Ident(sym))
             case pre: g.SingletonType =>
               val m.Type.Singleton(preref) = pre.toMtype
-              m.Term.Select(preref, sym.asTerm.precvt(pre, g.Ident(sym)).withTyping(gtpe))
+              m.Term.Select(preref, sym.asTerm.precvt(pre, g.Ident(sym)).withTyping(refTyping))
             case pre @ g.TypeRef(g.NoPrefix, quant, Nil) if quant.hasFlag(DEFERRED | EXISTENTIAL) =>
               require(quant.name.endsWith(g.nme.SINGLETON_SUFFIX))
               val prename = g.Ident(quant.name.toString.stripSuffix(g.nme.SINGLETON_SUFFIX)).displayName
               val preref = m.Term.Name(prename).withDenot(quant).withTyping(quant.tpe)
-              m.Term.Select(preref, sym.asTerm.precvt(pre, g.Ident(sym)).withTyping(gtpe))
+              m.Term.Select(preref, sym.asTerm.precvt(pre, g.Ident(sym)).withTyping(refTyping))
             case pre: g.TypeRef =>
               // TODO: wow, so much for the hypothesis that all post-typer types are representable with syntax
               // here's one for you: take a look at `context.unit.synthetics.get` in Typers.scala
@@ -67,7 +71,7 @@ trait ToMtype extends GlobalToolkit with MetaToolkit {
               sym.asTerm.precvt(pre, g.Ident(sym))
             case _ =>
               throw new ConvertException(gtpe, s"unsupported type $gtpe, prefix = ${pre.getClass}, structure = ${g.showRaw(gtpe, printIds = true, printTypes = true)}")
-          }).withTyping(gtpe)
+          }).withTyping(refTyping)
           // NOTE: we can't just emit m.Type.Singleton(m.Term.Name(...).withDenot(pre, sym))
           // because in some situations (when the prefix is not stable) that will be a lie
           // because naked names are supposed to be usable without a prefix
