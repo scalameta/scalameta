@@ -231,6 +231,7 @@ package scala.meta.internal.ast {
     @ast class Annotate(tpe: Type, annots: Seq[Mod.Annot] @nonEmpty) extends Type
     @ast class Placeholder(bounds: Bounds) extends Type
     @ast class Lambda(quants: Seq[Type.Param], tpe: Type) extends Type
+    @ast class Method(paramss: Seq[Seq[Term.Param]], tpe: Type) extends Type
     @ast class Bounds(lo: Option[Type], hi: Option[Type]) extends Tree
     @branch trait Arg extends api.Type.Arg with Tree
     object Arg {
