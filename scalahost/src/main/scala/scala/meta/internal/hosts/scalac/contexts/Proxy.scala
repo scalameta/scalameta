@@ -315,7 +315,7 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
       val domainArtifacts = initialDomain.artifacts
       currentDomain = Domain(globalArtifacts ++ domainArtifacts: _*)
 
-      println(s"initialized semantic proxy from $global and $initialDomain")
+      if (Debug.scalahost) println(s"initialized semantic proxy from $global and $initialDomain")
     } finally {
       disallowApisThatReturnMembers = false
     }
