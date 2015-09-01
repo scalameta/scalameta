@@ -43,7 +43,7 @@ trait ToMtype extends GlobalToolkit with MetaToolkit {
         case g.SingleType(pre, sym) =>
           require(sym.isTerm)
           val refTyping = {
-            if (sym.isModuleClass) s.Typing.Recursive
+            if (sym.isModule) s.Typing.Recursive
             else s.Typing.Nonrecursive(g.enteringTyper(gtpe.widen.toMtypeArg))
           }
           val ref = (pre match {
