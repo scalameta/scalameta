@@ -3,7 +3,7 @@ package org.scalameta.ast
 import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
 import scala.reflect.macros.whitebox.Context
-import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.{ListBuffer, ListMap}
 import org.scalameta.unreachable
 
 class ast extends StaticAnnotation {
@@ -300,12 +300,33 @@ class AstMacros(val c: Context) {
       // I've been avoiding that for a long time, because the associated codegen logic might be quite tough.
       // However we definitely need withTokens, withDenot, withTyping and withExpansion
       // in order not to go mad when writing the converter.
+      def withValidator(name: String, param: ValDef) = {
+        if (name == "withFlags") {
+          var attrs = ListMap[Tree, Tree]()
+          if (hasDenot) attrs(q"this.denot") = q"$SemanticInternal.Denotation.Zero"
+          if (hasTyping) attrs(q"this.typing") = q"$SemanticInternal.Typing.Zero"
+          if (hasExpansion) attrs(q"this.expansion") = q"$SemanticInternal.Expansion.Zero"
+          if (attrs.nonEmpty) {
+            val checks = attrs.map({ case (k, v) =>
+              val enablesTypechecked = q"(${param.name} & $FlagsPackage.TYPECHECKED) == $FlagsPackage.TYPECHECKED"
+              val attrEmpty = q"$k == $v"
+              val message = q"${"failed to enable TYPECHECKED for "} + this.show[_root_.scala.meta.internal.ui.Attributes]"
+              q"if ($enablesTypechecked && $attrEmpty) throw new _root_.scala.`package`.UnsupportedOperationException($message)"
+            })
+            q"..$checks"
+          } else {
+            EmptyTree
+          }
+        } else {
+          EmptyTree
+        }
+      }
       def withMethod(name: String, param: ValDef) = {
         val semanticSetters = Set("withEnv", "withDenot", "withTyping", "withExpansion")
         val mods = if (name == "withFlags") Modifiers(NoFlags, TypeName("meta"), Nil) else NoMods
         var args = List(q"${param.name} = ${Ident(param.name)}")
         if (semanticSetters(name)) args = args :+ q"flags = this.internalFlags & ~$FlagsPackage.TYPECHECKED"
-        q"$mods def ${TermName(name)}($param): $iname = this.internalCopy(..$args)"
+        q"$mods def ${TermName(name)}($param): $iname = { ${withValidator(name, param)}; this.internalCopy(..$args) }"
       }
       locally {
         val param = q"val flags: $FlagsPackage.Flags"
