@@ -1,6 +1,6 @@
 package scala.meta
 package internal
-package semantic
+package equality
 
 import scala.{meta => api}
 import scala.meta.internal.{ast => impl}

@@ -14,32 +14,33 @@ import scala.meta.semantic.{Context => SemanticContext}
 import scala.meta.internal.{ast => impl} // necessary only to implement APIs, not to define them
 import scala.meta.internal.flags._ // necessary only to implement APIs, not to define them
 import scala.meta.internal.{semantic => s} // necessary only to implement APIs, not to define them
+import scala.meta.internal.{equality => e} // necessary only to implement APIs, not to define them
 import scala.meta.internal.ui.Summary // necessary only to implement APIs, not to define them
 import scala.reflect.runtime.{universe => ru} // necessary only for a very hacky approximation of hygiene
 
 private[meta] trait Api {
   // ===========================
-  // PART 1: COMPARISON
+  // PART 1: EQUALITY
   // ===========================
 
-  trait AllowedEquality[T1, T2]
-  implicit object AllowedEquality {
-    implicit def materialize[T1, T2]: AllowedEquality[T1, T2] = macro s.EqualityMacros.allow[T1, T2]
+  trait AllowEquality[T1, T2]
+  implicit object AllowEquality {
+    implicit def materialize[T1, T2]: AllowEquality[T1, T2] = macro e.Macros.allow[T1, T2]
   }
 
   implicit class XtensionSemanticEquality[T1 <: Tree](tree1: T1) {
-    @hosted def ===[T2 <: Tree](tree2: T2)(implicit ev: AllowedEquality[T1, T2]): Boolean = s.Equality.equals(tree1, tree2)
-    @hosted def =/=[T2 <: Tree](tree2: T2)(implicit ev: AllowedEquality[T1, T2]): Boolean = !(tree1 === tree2)
+    @hosted def ===[T2 <: Tree](tree2: T2)(implicit ev: AllowEquality[T1, T2]): Boolean = e.Semantic.equals(tree1, tree2)
+    @hosted def =/=[T2 <: Tree](tree2: T2)(implicit ev: AllowEquality[T1, T2]): Boolean = !e.Semantic.equals(tree1, tree2)
   }
 
-  trait AllowedEquivalence[T1, T2]
-  implicit object AllowedEquivalence {
-    implicit def materialize[T1, T2]: AllowedEquivalence[T1, T2] = macro s.EquivalenceMacros.allow[T1, T2]
+  implicit class XtensionTypecheckingEquality[T1 <: Tree](tree1: T1) {
+    @hosted def =:=[T2 <: Tree](tree2: T2)(implicit ev: AllowEquality[T1, T2]): Boolean = e.Typechecking.equals(tree1, tree2)
+    @hosted def =!=[T2 <: Tree](tree2: T2)(implicit ev: AllowEquality[T1, T2]): Boolean = !e.Typechecking.equals(tree1, tree2)
   }
 
-  implicit class XtensionSemanticEquivalence[T1 <: Tree](tree1: T1) {
-    @hosted def =:=[T2 <: Tree](tree2: T2)(implicit ev: AllowedEquivalence[T1, T2]): Boolean = s.Equivalence.equals(tree1, tree2)
-    // TODO: what would be the symbol to express negation of =:=?
+  implicit class XtensionNormalizingEquality[T1 <: Tree](tree1: T1) {
+    @hosted def =~=[T2 <: Tree](tree2: T2)(implicit ev: AllowEquality[T1, T2]): Boolean = e.Normalizing.equals(tree1, tree2)
+    // TODO: what would be the symbol to express negation of =~=?
   }
 
   // ===========================

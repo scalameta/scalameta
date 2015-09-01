@@ -204,7 +204,7 @@ object mergeTrees {
 
   private lazy val Object_init = denot(typeOf[Object].member(u.TermName("<init>")))
 
-  // NOTE: We can't use === here, because it requires a semantic context,
+  // NOTE: We can't use =:= here, because it requires a semantic context,
   // and we can't have a semantic context in MergeTrees.
   // Why's that? Because merging trees is an essential part of deserializing from TASTY,
   // and deserializing from TASTY is a prerequisite for building a semantic context.

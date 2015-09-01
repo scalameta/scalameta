@@ -15,6 +15,7 @@ import scala.meta.syntactic.Token
 import scala.annotation.implicitNotFound
 import scala.collection.mutable
 import scala.meta.internal.semantic._
+import scala.meta.internal.{equality => e}
 import scala.compat.Platform.EOL
 import scala.language.implicitConversions
 import scala.meta.internal.flags._
@@ -30,15 +31,8 @@ object Attributes {
     @leaf implicit object Deep extends Recursion
   }
 
-  @root trait Detalization
-  object Detalization {
-    @leaf object ExcludeFlags extends Detalization
-    @leaf implicit object IncludeFlags extends Detalization
-  }
-
   // TODO: would be nice to generate this with a macro for all tree nodes that we have
-  implicit def attributesTree[T <: api.Tree](implicit recursion: Recursion, detalization: Detalization): Attributes[T] = new Attributes[T] {
-    private def includeFlags = detalization == Detalization.IncludeFlags
+  implicit def attributesTree[T <: api.Tree](implicit recursion: Recursion): Attributes[T] = new Attributes[T] {
     private def deep = recursion == Recursion.Deep
 
     def apply(x: T): Show.Result = {
@@ -213,7 +207,7 @@ object Attributes {
         }).getOrElse("")
 
         val typecheckedPart = {
-          if (!x.isTypechecked && includeFlags) "*"
+          if (!x.isTypechecked) "*"
           else ""
         }
 
@@ -230,91 +224,10 @@ object Attributes {
 
     private class CustomWrapper[+T](val x: T) {
       override def equals(that: Any): Boolean = that match {
-        case that: CustomWrapper[_] => customEquals(x, that.x)
+        case that: CustomWrapper[_] => e.Semantic.equals(x, that.x)
         case _ => false
       }
-
-      private def customEquals(x: Any, y: Any): Boolean = (x, y) match {
-        case (x: Some[_], y: Some[_]) =>
-          customEquals(x.get, y.get)
-        case (x: None.type, y: None.type) =>
-          true
-        case (xs: Seq[_], ys: Seq[_]) =>
-          xs.length == ys.length && xs.zip(ys).forall{ case (x, y) => customEquals(x, y) }
-        case (x: Environment, y: Environment) =>
-          x == y
-        case (x: Prefix, y: Prefix) =>
-          (x, y) match {
-            case (Prefix.Type(x), Prefix.Type(y)) => customEquals(x, y)
-            case _ => x == y
-          }
-        case (x: Denotation, y: Denotation) =>
-          customEquals(x.prefix, y.prefix) && customEquals(x.symbols, y.symbols)
-        case (x: Typing, y: Typing) =>
-          (x, y) match {
-            case (Typing.Nonrecursive(x), Typing.Nonrecursive(y)) => customEquals(x, y)
-            case _ => x == y
-          }
-        case (x: Expansion, y: Expansion) =>
-          (x, y) match {
-            case (Expansion.Desugaring(x), Expansion.Desugaring(y)) => customEquals(x, y)
-            case _ => x == y
-          }
-        case (x: Tree, y: Tree) =>
-          def syntaxPart = x.productPrefix == y.productPrefix && customEquals(x.productIterator.toList, y.productIterator.toList)
-          def envPart = customEquals(x.maybeEnv, y.maybeEnv)
-          def denotPart = customEquals(x.maybeDenot, y.maybeDenot)
-          def typingPart = customEquals(x.maybeTyping, y.maybeTyping)
-          def expansionPart = customEquals(x.maybeExpansion, y.maybeExpansion)
-          def typecheckedPart = includeFlags ==> customEquals(x.isTypechecked, y.isTypechecked)
-          syntaxPart && envPart && denotPart && typingPart && expansionPart && typecheckedPart
-        case _ =>
-          x == y
-      }
-
-      override def hashCode: Int = customHashcode(x)
-
-      def customHashcode(x: Any): Int = x match {
-        case x: Option[_] =>
-          x.map(customHashcode).getOrElse(0)
-        case xs: Seq[_] =>
-          xs.foldLeft(0)((acc, curr) => acc * 37 + customHashcode(curr))
-        case x: Environment =>
-          x.hashCode
-        case x: Prefix =>
-          x match {
-            case Prefix.Zero => 0
-            case Prefix.Type(tpe) => customHashcode(tpe)
-          }
-        case x: Denotation =>
-          x match {
-            case Denotation.Zero => 0
-            case Denotation.Single(prefix, symbol) => customHashcode(prefix) * 37 + customHashcode(symbol)
-            case Denotation.Multi(prefix, symbols) => customHashcode(prefix) * 37 + customHashcode(symbols)
-          }
-        case x: Typing =>
-          x match {
-            case Typing.Zero => 0
-            case Typing.Recursive => 1
-            case Typing.Nonrecursive(tpe) => customHashcode(tpe)
-          }
-        case x: Expansion =>
-          x match {
-            case Expansion.Zero => 0
-            case Expansion.Identity => 1
-            case Expansion.Desugaring(term) => customHashcode(term)
-          }
-        case x: Tree =>
-          def syntaxPart = customHashcode(x.productPrefix) * customHashcode(x.productIterator.toList)
-          def envPart = customHashcode(x.maybeEnv)
-          def denotPart = customHashcode(x.maybeDenot)
-          def typingPart = customHashcode(x.maybeTyping)
-          def expansionPart = customHashcode(x.maybeExpansion)
-          def typecheckedPart = x.isTypechecked.hashCode * (if (includeFlags) 1 else 0)
-          customHashcode(List(syntaxPart, envPart, denotPart, typingPart, expansionPart, typecheckedPart))
-        case _ =>
-          x.hashCode
-      }
+      override def hashCode: Int = e.Semantic.hashCode(x)
     }
   }
 }

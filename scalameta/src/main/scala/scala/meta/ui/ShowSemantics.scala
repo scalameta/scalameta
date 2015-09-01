@@ -4,7 +4,6 @@ package ui
 import org.scalameta.show._
 import scala.annotation.implicitNotFound
 import scala.meta.internal.ui.Attributes
-import Attributes.{Recursion, Detalization}
 import scala.meta.semantic.{Context => SemanticContext}
 
 @implicitNotFound(msg = "don't know how to show[Semantics] for ${T} (be sure to have an implicit scala.meta.semantic.Context in scope)")
@@ -16,7 +15,7 @@ object Semantics {
   implicit def semanticsTree[T <: scala.meta.Tree](implicit c: SemanticContext): Semantics[T] = new Semantics[T] {
     def apply(untypedTree: T): Show.Result = {
       val tree = c.typecheck(untypedTree).asInstanceOf[T]
-      val prettyprinter = Attributes.attributesTree[T](Recursion.Deep, Detalization.ExcludeFlags)
+      val prettyprinter = Attributes.attributesTree[T](Attributes.Recursion.Deep)
       prettyprinter(tree)
     }
   }
