@@ -751,7 +751,7 @@ private[meta] trait Api {
           case impl.Type.ApplyInfix(lhs, op, rhs) => impl.Term.ApplyType(loop(op, ctor), List(lhs, rhs))
           case _ => unreachable(debug(tree, tree.show[Structure], tpe, tpe.show[Structure]))
         }
-        result.withTyping(scala.util.Try(s.Typing.Nonrecursive(tpe.members(ctor.defn).tpe)).getOrElse(s.Typing.Zero))
+        result.withTyping(ctor.typing)
       }
       // TODO: if we uncomment this, that'll lead to a stackoverflow in scalahost
       // it's okay, but at least we could verify that ctor's prefix is coherent with tree
