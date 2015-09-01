@@ -28,9 +28,9 @@ private[meta] trait Api {
     implicit def materialize[T1, T2]: AllowEquality[T1, T2] = macro e.Macros.allow[T1, T2]
   }
 
-  implicit class XtensionSemanticEquality[T1 <: Tree](tree1: T1) {
-    @hosted def ===[T2 <: Tree](tree2: T2)(implicit ev: AllowEquality[T1, T2]): Boolean = e.Semantic.equals(tree1, tree2)
-    @hosted def =/=[T2 <: Tree](tree2: T2)(implicit ev: AllowEquality[T1, T2]): Boolean = !e.Semantic.equals(tree1, tree2)
+  private[meta] implicit class XtensionSemanticEquality[T1 <: Tree](tree1: T1) {
+    def ===[T2 <: Tree](tree2: T2)(implicit ev: AllowEquality[T1, T2]): Boolean = e.Semantic.equals(tree1, tree2)
+    def =/=[T2 <: Tree](tree2: T2)(implicit ev: AllowEquality[T1, T2]): Boolean = !e.Semantic.equals(tree1, tree2)
   }
 
   implicit class XtensionTypecheckingEquality[T1 <: Tree](tree1: T1) {
