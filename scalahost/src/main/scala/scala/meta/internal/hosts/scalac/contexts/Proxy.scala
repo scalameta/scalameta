@@ -5,6 +5,7 @@ package contexts
 import org.scalameta.contexts._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
+import org.scalameta.debug._
 import java.io.File
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
@@ -25,6 +26,7 @@ import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
 import scala.meta.internal.{semantic => s}
 import scala.meta.internal.flags._
+import scala.meta.internal.ui.Summary
 
 @context(translateExceptions = false)
 class Proxy[G <: ScalaGlobal](val global: G, initialDomain: Domain = Domain())
@@ -187,6 +189,11 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
       throw new InfrastructureException(s"can't initialize a semantic proxy from $status: " + reason, ex)
     }
 
+    if (Debug.scalahost) {
+      println(s"initializing semantic proxy from $global and $initialDomain")
+      if (fromScratch) println("starting from scratch") else println("wrapping a pre-existing global")
+    }
+
     try {
       // NOTE: This is necessary for semantic APIs to work correctly,
       // because otherwise the underlying global isn't going to have its symtab populated.
@@ -194,6 +201,7 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
       // lazily read scala.meta trees and then lazily convert them to symtab entries,
       // but that's way beyond our technological level at the moment.
       val domainClasspath = initialDomain.artifacts.flatMap(_.binaries).map(p => new File(p.path).toURI.toURL)
+      if (Debug.scalahost) println(s"indexing domain classpath: $domainClasspath")
       if (fromScratch) {
         // NOTE: Make sure that the internal classpath cache hasn't been initialized yet.
         // If it has, we're in trouble, because our modifications to settings.classpath.value
@@ -228,7 +236,13 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
         fail(message, Some(ex))
     }
 
+    if (Debug.scalahost) println(s"indexing global sources: all ${global.currentRun.units.toList.length} of them")
     val globalSources = global.currentRun.units.map(unit => {
+      val unitId = unit.source.file.path
+      if (Debug.scalahost) {
+        if (unit.body.metadata.contains("scalameta")) println(s"found cached scala.meta tree for $unitId")
+        else println(s"computing scala.meta tree for $unitId")
+      }
       val source = unit.body.metadata.getOrElseUpdate("scalameta", {
         // NOTE: We don't have to persist perfect trees, because tokens are transient anyway.
         // Therefore, if noone uses perfect trees in a compiler plugin, then we can avoid merging altogether.
@@ -243,6 +257,7 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
         // because that's what users ultimately want to see when they do `t"...".members` or something.
         // So, it seems that it's still necessary to eagerly merge the trees, so that we can index them correctly.
         val syntacticTree = {
+          if (Debug.scalahost) println(s"parsing $unitId")
           val content = unit.source match {
             // NOTE: We need this hackaround because BatchSourceFile distorts the source code
             // by appending newlines as it sees fit. This is going to become a problem wrt TASTY,
@@ -260,20 +275,34 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
           }
           content.parse[mapi.Source].require[m.Source]
         }
-        val semanticTree = unit.body.toMtree[m.Source].setTypechecked
+        val semanticTree = {
+          if (Debug.scalahost) println(s"converting $unitId")
+          unit.body.toMtree[m.Source].setTypechecked
+        }
+        if (Debug.scalahost) println(s"merging $unitId")
         val perfectTree = mergeTrees(syntacticTree, semanticTree)
         perfectTree
       })
+      if (Debug.scalahost) println(s"indexing $unitId")
       indexAll(source)
     }).toList
+
     val domainSources = initialDomain.artifacts.flatMap(_.sources)
-    domainSources.foreach(source => indexAll(source.require[m.Source]))
+    if (Debug.scalahost) println(s"indexing domain sources: all ${domainSources.length} of them")
+    domainSources.foreach(source => {
+      // TODO: looks like we really need some kind of a Source.id
+      if (Debug.scalahost) println(s"indexing ${source.show[Summary]}")
+      indexAll(source.require[m.Source])
+    })
 
     // TODO: Do something smarter when assigning the initial domain, e.g.:
     // 1) Compute dependencies from settings.classpath
     // 2) Figure out resources somehow
+    if (Debug.scalahost) println(s"merging global and initial domains")
     val globalArtifacts = List(Artifact(globalSources, Nil, Nil))
     val domainArtifacts = initialDomain.artifacts
     currentDomain = Domain(globalArtifacts ++ domainArtifacts: _*)
+
+    println(s"initialized semantic proxy from $global and $initialDomain")
   }
 }

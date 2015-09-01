@@ -35,7 +35,8 @@ trait ConvertPhase {
       override def name = "convert"
       override def run(): Unit = {
         val proxy = new ProxyImpl[global.type](global)
-        proxy.indexCompilationUnits()
+        // NOTE: no need to call this explicitly - the constructor will do that for us
+        // proxy.indexCompilationUnits()
       }
     }
   }
