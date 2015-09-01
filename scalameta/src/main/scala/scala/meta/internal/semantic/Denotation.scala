@@ -46,6 +46,12 @@ object Prefix {
   @noneLeaf object Zero extends Prefix
   @someLeaf class Type(tpe: scala.meta.Type) extends Prefix {
     require(tpe.isTypechecked)
+    override def canEqual(other: Any): Boolean = other.isInstanceOf[Type]
+    override def equals(that: Any): Boolean = that match {
+      case that: Type => equality.Semantic.equals(this.tpe, that.tpe)
+      case _ => false
+    }
+    override def hashCode: Int = equality.Semantic.hashCode(tpe)
   }
 }
 
@@ -59,6 +65,12 @@ object Prefix {
   def symbols: List[Symbol]
   def map[Result: DenotationMapResult](fn: (Prefix, Symbol) => Result): Denotation
   def flatMap(fn: (Prefix, Symbol) => Denotation): Denotation
+  override def canEqual(that: Any): Boolean = that.isInstanceOf[Denotation]
+  override def equals(that: Any): Boolean = that match {
+    case that: Denotation => equality.Semantic.equals(this.prefix, that.prefix) && this.symbols == that.symbols
+    case _ => false
+  }
+  override def hashCode: Int = equality.Semantic.hashCode(prefix) * 37 + symbols.hashCode
 }
 object Denotation {
   @leaf object Zero extends Denotation {
@@ -66,6 +78,8 @@ object Denotation {
     def symbols = Nil
     def map[Result: DenotationMapResult](fn: (Prefix, Symbol) => Result) = Zero
     def flatMap(fn: (Prefix, Symbol) => Denotation) = Zero
+    override def equals(that: Any): Boolean = super.equals(that)
+    override def hashCode: Int = super.hashCode
   }
   @branch trait CommonMonadicOps extends Denotation {
     private def merge(extracts: Seq[(Option[Prefix], Option[Seq[Symbol]])]): Denotation = {
@@ -92,8 +106,16 @@ object Denotation {
       merge(results.map(result => (Some(result.prefix), Some(result.symbols))))
     }
   }
-  @leaf class Single(prefix: Prefix, symbol: Symbol) extends Denotation with CommonMonadicOps { def symbols = List(symbol) }
-  @leaf class Multi(prefix: Prefix, symbols: List[Symbol]) extends Denotation with CommonMonadicOps { require(symbols.length > 1) }
+  @leaf class Single(prefix: Prefix, symbol: Symbol) extends Denotation with CommonMonadicOps {
+    def symbols = List(symbol)
+    override def equals(that: Any): Boolean = super.equals(that)
+    override def hashCode: Int = super.hashCode
+  }
+  @leaf class Multi(prefix: Prefix, symbols: List[Symbol]) extends Denotation with CommonMonadicOps {
+    require(symbols.length > 1)
+    override def equals(that: Any): Boolean = super.equals(that)
+    override def hashCode: Int = super.hashCode
+  }
 }
 
 // TODO: This unrelated code is here because of the limitation of knownDirectSubclasses.

@@ -14,6 +14,12 @@ object Typing {
   @someLeaf class Nonrecursive(tpe: Type.Arg @byNeed) extends Typing {
     protected def onTpeLoaded(tpe: Type.Arg) = require(tpe.isTypechecked)
     protected def writeReplace(): AnyRef = new Nonrecursive.SerializationProxy(this)
+    override def canEqual(other: Any): Boolean = other.isInstanceOf[Nonrecursive]
+    override def equals(that: Any): Boolean = that match {
+      case that: Nonrecursive => equality.Semantic.equals(this.tpe, that.tpe)
+      case _ => false
+    }
+    override def hashCode: Int = equality.Semantic.hashCode(tpe)
   }
   object Nonrecursive {
     @SerialVersionUID(1L) private class SerializationProxy(@transient private var orig: Nonrecursive) extends Serializable {
