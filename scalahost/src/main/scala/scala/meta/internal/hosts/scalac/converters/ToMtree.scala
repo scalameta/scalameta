@@ -14,6 +14,7 @@ import scala.reflect.internal.Flags._
 import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
 import scala.meta.internal.{semantic => s}
+import scala.meta.internal.flags._
 import scala.meta.internal.parsers.Helpers.{XtensionTermOps => _, _}
 import scala.meta.internal.hosts.scalac.reflect._
 
@@ -162,7 +163,14 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
         case denotedMtree: m.Term.Param => denotedMtree.tryTyping(gtree.symbol.tpe)
         case denotedMtree => denotedMtree
       }
-      val mtree = indexOne(typedMtree) // desugarings are taken care of in mergeTrees
+      // NOTE: Desugarings are handled in mergeTrees, but sometimes we don't merge,
+      // e.g. when the source code is unavailable, and we still need to be TYPECHECKED even then.
+      val expandedMtree = typedMtree match {
+        case typedMtree: m.Term => typedMtree.withIdentityExpansion
+        case typedMtree => typedMtree
+      }
+      val typecheckedMtree = expandedMtree.setTypechecked
+      val mtree = indexOne(typecheckedMtree)
       if (sys.props("convert.debug") != null && gtree.parent.isEmpty) {
         println("======= SCALA.REFLECT TREE =======")
         println(gtree)
