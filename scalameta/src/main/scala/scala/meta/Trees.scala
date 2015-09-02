@@ -105,12 +105,10 @@ package scala.meta.internal.ast {
     def value: String
     def env: Environment
     def withEnv(env: Environment): ThisType
-    def resetEnv: ThisType = withEnv(Environment.Zero)
     def denot: Denotation
     def withDenot(denot: Denotation): ThisType
     def withDenot(prefix: Prefix, symbol: Symbol): ThisType = withDenot(Denotation.Single(prefix, symbol))
     def withDenot(prefix: Prefix, symbols: List[Symbol]): ThisType = withDenot(Denotation.Multi(prefix, symbols))
-    def resetDenot: ThisType = withDenot(Denotation.Zero)
   }
   object Name {
     @ast class Anonymous extends api.Name.Anonymous with Name with Term.Param.Name with Type.Param.Name with Qualifier { def value = "_" }
@@ -125,17 +123,14 @@ package scala.meta.internal.ast {
   @branch trait Term extends api.Term with Stat with Term.Arg {
     def env: Environment
     def withEnv(env: Environment): ThisType
-    def resetEnv: ThisType = withEnv(Environment.Zero)
     def typing: Typing
     def withTyping(typing: Typing): ThisType
     def withRecursiveTyping: ThisType = withTyping(Typing.Recursive)
     def withTyping(known: api.Type.Arg): ThisType = withTyping(Typing.Nonrecursive(known))
-    def resetTyping: ThisType = withTyping(Typing.Zero)
     def expansion: Expansion
     def withExpansion(expansion: Expansion): ThisType
     def withIdentityExpansion: ThisType = withExpansion(Expansion.Identity)
     def withExpansion(desugaring: api.Term): ThisType = withExpansion(Expansion.Desugaring(desugaring))
-    def resetExpansion: ThisType = withExpansion(Expansion.Zero)
   }
   object Term {
     @branch trait Ref extends api.Term.Ref with Term with impl.Ref
@@ -202,7 +197,6 @@ package scala.meta.internal.ast {
       // def withTyping(typing: Typing): ThisType
       def withRecursiveTyping: ThisType = withTyping(Typing.Recursive)
       def withTyping(known: api.Type.Arg): ThisType = withTyping(Typing.Nonrecursive(known))
-      def resetTyping: ThisType = withTyping(Typing.Zero)
     }
     object Param {
       @branch trait Name extends impl.Name with api.Term.Param.Name

@@ -98,17 +98,17 @@ class InfrastructureSuite extends FunSuite {
   }
 
   test("TYPECHECKED crashes when denot is zero") {
-    val x1 = foo.resetDenot
+    val x1 = foo.internalCopy(denot = Denotation.Zero)
     intercept[UnsupportedOperationException] { x1.setTypechecked }
   }
 
   test("TYPECHECKED crashes when typing is zero") {
-    val x1 = foo.resetTyping
+    val x1 = foo.internalCopy(typing = Typing.Zero)
     intercept[UnsupportedOperationException] { x1.setTypechecked }
   }
 
   test("TYPECHECKED crashes when expansion is zero") {
-    val x1 = foo.resetExpansion
+    val x1 = foo.internalCopy(expansion = Expansion.Zero)
     intercept[UnsupportedOperationException] { x1.setTypechecked }
   }
 
