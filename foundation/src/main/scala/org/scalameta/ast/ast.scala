@@ -342,6 +342,7 @@ class AstMacros(val c: Context) {
         val param = q"val env: $Semantic.Environment"
         astats1 += withMethod("withEnv", param)
         qstats1 += quasisetter("withEnv", param)
+        if (is("Term.Name") || is("Ctor.Ref.Name")) istats1 += q"override def resetEnv: ThisType = this.withEnv($Semantic.Environment.Zero)"
       }
       if (hasDenot) {
         val param = q"val denot: $SemanticInternal.Denotation"

@@ -14,6 +14,7 @@ import scala.meta.semantic.{Context => SemanticContext}
 import scala.meta.internal.{ast => impl} // necessary only to implement APIs, not to define them
 import scala.meta.internal.flags._ // necessary only to implement APIs, not to define them
 import scala.meta.internal.{semantic => s} // necessary only to implement APIs, not to define them
+import scala.meta.internal.semantic.{XtensionAttributeName, XtensionAttributeTerm, XtensionAttributeCtorName}
 import scala.meta.internal.{equality => e} // necessary only to implement APIs, not to define them
 import scala.meta.internal.ui.Summary // necessary only to implement APIs, not to define them
 import scala.reflect.runtime.{universe => ru} // necessary only for a very hacky approximation of hygiene
@@ -85,7 +86,7 @@ private[meta] trait Api {
       val sScala = s.Symbol.Global(s.Symbol.RootPackage, "scala", s.Signature.Term)
       val sCollection = s.Symbol.Global(sScala, "collection", s.Signature.Term)
       val sSeq = s.Symbol.Global(sCollection, "Seq", s.Signature.Type)
-      impl.Type.Name("Seq").withDenot(s.Prefix.Zero, sSeq).setTypechecked
+      impl.Type.Name("Seq").withAttrs(s.Denotation.Single(s.Prefix.Zero, sSeq)).setTypechecked
     }
     @hosted private def paramType(tree: impl.Term.Param): Type = {
       val ttree = implicitly[SemanticContext].typecheck(tree).require[impl.Term.Param]
@@ -739,9 +740,7 @@ private[meta] trait Api {
             else None
           }
         }
-        def adjustValue(ctor: impl.Ctor.Name, value: String) = {
-          impl.Ctor.Name(value).withDenot(ctor.denot).withTyping(ctor.typing)
-        }
+        def adjustValue(ctor: impl.Ctor.Name, value: String) = impl.Ctor.Name(value).inheritAttrs(ctor)
         val result = tpe match {
           case impl.Type.Name(value) => adjustValue(ctor, value)
           case impl.Type.Select(qual, impl.Type.Name(value)) => impl.Ctor.Ref.Select(qual, adjustValue(ctor, value))
@@ -752,7 +751,7 @@ private[meta] trait Api {
           case impl.Type.ApplyInfix(lhs, op, rhs) => impl.Term.ApplyType(loop(op, ctor), List(lhs, rhs))
           case _ => unreachable(debug(tree, tree.show[Structure], tpe, tpe.show[Structure]))
         }
-        result.withTyping(ctor.typing)
+        result.withAttrs(ctor.typing)
       }
       // TODO: if we uncomment this, that'll lead to a stackoverflow in scalahost
       // it's okay, but at least we could verify that ctor's prefix is coherent with tree

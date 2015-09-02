@@ -57,7 +57,7 @@ scala.meta also supports quasiquotes, e.g. `"class C { def x = 2 }".parse[Stat]`
 
 Another important goal of scala.meta is making typechecking transparent. For the users, the API simply exposes things like hygienic tree comparison, `Term.tpe` or `Ref.defn`, and it's the goal of the underlying infrastructure to magically make things work without having the user to understand and manage internal compiler state.
 
-Of course, at the lowest level there's no magic, and internally scala.meta trees feature three private fields equipped with getters and copy-on-write setters that carry semantic attributes: denotations (`.denot` and `.withDenot`), typings (`.typing` and `.withTyping`) and expansions (`.expansion` and `.withExpansion`).
+Of course, at the lowest level there's no magic, and internally scala.meta trees feature three private fields equipped with getters and copy-on-write setters that carry semantic attributes: denotations (`.denot` and `.withDenot`), typings (`.typing` and `.withTyping`) and expansions (`.expansion` and `.withExpansion`). In order to set attributes in bulk, you can use `.withAttrs` that has multiple overloads which call into individual setters.
 
   1. Denotations are exclusive to names (i.e. to trees that inherit from `Name`: Term.Name, Type.Name, Ctor.Name, Name.Anonymous and Name.Indeterminate) and represent definitions that are referenced by those names.
 

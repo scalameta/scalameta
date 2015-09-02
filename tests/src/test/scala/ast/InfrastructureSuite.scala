@@ -22,9 +22,9 @@ class InfrastructureSuite extends FunSuite {
     assert(q.become[Type.Quasi].tokens.toString === "Synthetic(Vector(HelloOuter (0..10)))")
   }
 
-  private def attributeName(name: Term.Name): Term.Name = attributeTerm(name.withDenot(Denotation.Single(Prefix.Zero, Symbol.RootPackage))).asInstanceOf[Term.Name]
-  private def attributeName(name: Type.Name): Type.Name = name.withDenot(Denotation.Single(Prefix.Zero, Symbol.RootPackage))
-  private def attributeTerm(term: Term): Term = term.withTyping(Foo.setTypechecked).withIdentityExpansion
+  private def attributeName(name: Term.Name): Term.Name = name.withAttrs(Denotation.Single(Prefix.Zero, Symbol.RootPackage), Foo.setTypechecked)
+  private def attributeName(name: Type.Name): Type.Name = name.withAttrs(Denotation.Single(Prefix.Zero, Symbol.RootPackage))
+  private def attributeTerm(term: Term): Term = term.withAttrs(Foo.setTypechecked)
   private def Foo = attributeName(Type.Name("Foo"))
   private def foo = attributeName(Term.Name("foo"))
   private def bar = attributeName(Term.Name("bar"))
@@ -113,7 +113,9 @@ class InfrastructureSuite extends FunSuite {
   }
 
   test("Typing.Nonrecursive is really lazy") {
-    val x1 = Typing.Nonrecursive(???)
-    val x2 = x1.map(_ => ???)
+    val x1 = Typing.Nonrecursive(??? : Type)
+    val x2 = x1.map(_ => ??? : Type)
+    val x3 = foo.withAttrs(foo.denot, ??? : Type, foo.expansion)
+    assert(x3.isTypechecked === false)
   }
 }

@@ -7,6 +7,7 @@ import org.scalameta.unreachable
 import scala.reflect.api.Universe
 import scala.meta.internal.{ast => m}
 import scala.meta.internal.{semantic => s}
+import scala.meta.internal.semantic.Typing.Recursive
 import scala.meta.internal.flags._
 
 // NOTE: This is the little brother of scalahost's Tree.withDenot, doing exactly the same,
@@ -87,9 +88,7 @@ trait Converters {
           else if (sym.isEmptyPackage) "_empty_"
           else sym.name.toString
         }
-        val denotedName = m.Term.Name(name).withDenot(denot(pre, sym))
-        val attributedName = denotedName.withRecursiveTyping.withIdentityExpansion
-        m.Type.Singleton(attributedName).setTypechecked
+        m.Type.Singleton(m.Term.Name(name).withAttrs(denot(pre, sym), Recursive)).setTypechecked
       }
       val pre1 = pre.orElse(sym.prefix)
       pre1 match {

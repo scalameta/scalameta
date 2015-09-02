@@ -1,10 +1,14 @@
 package scala.meta
 package internal
 
+import scala.language.implicitConversions
+import org.scalameta.default._
 import org.scalameta.unreachable
 import org.scalameta.invariants._
 import scala.collection.mutable
+import scala.{meta => api}
 import scala.meta.internal.ast._
+import scala.meta.internal.flags._
 import scala.meta.internal.ui.Attributes
 
 package object semantic {
@@ -108,5 +112,82 @@ package object semantic {
         """.stripMargin)
       }
     }
+  }
+
+  // NOTE: There are two ideas behind withAttrs/inheritAttrs:
+  // 1) Simplify long chains of foo.withDenot(...).withTyping(...).withExpansion(...)
+  // 2) Make sure that we don't accidentally miss semantic attributes in these chains (this is easier than it looks).
+  //
+  // TODO: As a result, we crash if Term.Name.withAttrs is called with just a Denotation argument.
+  // This sort of violates LSP, which I can't say that I like, but I don't have an immediate idea how to fix it.
+
+  trait TypingLike { def typing: Typing }
+  object TypingLike {
+    implicit def typeIsTypingLike(tpe: => api.Type): TypingLike = new TypingLike { def typing = Typing.Nonrecursive(tpe) }
+    implicit def typingIsTypingLike(typing0: Typing): TypingLike = new TypingLike { def typing = typing0 }
+  }
+
+  trait ExpansionLike { def expansion: Expansion }
+  object ExpansionLike {
+    implicit def termIsExpansionLike(term: api.Term): ExpansionLike = new ExpansionLike { def expansion = Expansion.Desugaring(term) }
+    implicit def expansionIsExpansionLike(expansion0: Expansion): ExpansionLike = new ExpansionLike { def expansion = expansion0 }
+  }
+
+  implicit class XtensionAttributeName[T <: api.Name](tree: T) {
+    def withAttrs(denot: Denotation): T = {
+      require(!tree.isInstanceOf[Term.Name] && !tree.isInstanceOf[Ctor.Ref.Name])
+      tree.require[Name].withDenot(denot).asInstanceOf[T]
+    }
+    def inheritAttrs(other: api.Name): T = {
+      require(!tree.isInstanceOf[Term.Name] && !tree.isInstanceOf[Ctor.Ref.Name])
+      tree.withAttrs(other.require[Name].denot).asInstanceOf[T]
+    }
+  }
+
+  implicit class XtensionAttributeTerm[T <: api.Term](tree: T) {
+    def withAttrs[E <% ExpansionLike](typingLike: TypingLike, term: Param[E] = Param.Default): T = {
+      require(!tree.isInstanceOf[Term.Name] && !tree.isInstanceOf[Ctor.Ref.Name])
+      val internal = tree.require[Term]
+      val typing = typingLike.typing
+      val expansion = term.toOption.map(implicitly[E => ExpansionLike]).map(_.expansion).getOrElse(Expansion.Identity)
+      val attributed = internal.withTyping(typing).withExpansion(expansion)
+      attributed.asInstanceOf[T]
+    }
+    def inheritAttrs(other: api.Term): T = {
+      require(!tree.isInstanceOf[Term.Name] && !tree.isInstanceOf[Ctor.Ref.Name])
+      tree.withAttrs(other.require[Term].typing, other.require[Term].expansion)
+    }
+  }
+
+  implicit class XtensionAttributeTermParam(tree: api.Term.Param) {
+    def withAttrs(typingLike: TypingLike): Term.Param = {
+      val internal = tree.require[Term.Param]
+      val typing = typingLike.typing
+      val attributed = internal.withTyping(typing)
+      attributed
+    }
+    def inheritAttrs(other: api.Term.Param): Term.Param = tree.withAttrs(other.require[Term.Param].typing)
+  }
+
+  implicit class XtensionAttributeTermName(tree: api.Term.Name) {
+    def withAttrs[E <% ExpansionLike](denot: Denotation, typingLike: TypingLike, term: Param[E] = Param.Default): Term.Name = {
+      val internal = tree.require[Term.Name]
+      val typing = typingLike.typing
+      val expansion = term.toOption.map(implicitly[E => ExpansionLike]).map(_.expansion).getOrElse(Expansion.Identity)
+      val attributed = internal.withDenot(denot).withTyping(typing).withExpansion(expansion)
+      attributed
+    }
+    def inheritAttrs(other: api.Term.Name): Term.Name = tree.withAttrs(other.require[Term.Name].denot, other.require[Term.Name].typing, other.require[Term.Name].expansion)
+  }
+
+  implicit class XtensionAttributeCtorName(tree: api.Ctor.Name) {
+    def withAttrs[E <% ExpansionLike](denot: Denotation, typingLike: TypingLike, term: Param[E] = Param.Default): Ctor.Name = {
+      val internal = tree.require[Ctor.Name]
+      val typing = typingLike.typing
+      val expansion = term.toOption.map(implicitly[E => ExpansionLike]).map(_.expansion).getOrElse(Expansion.Identity)
+      val attributed = internal.withDenot(denot).withTyping(typing).withExpansion(expansion)
+      attributed
+    }
+    def inheritAttrs(other: api.Ctor.Name): Ctor.Name = tree.withAttrs(other.require[Ctor.Name].denot, other.require[Ctor.Name].typing, other.require[Ctor.Name].expansion)
   }
 }
