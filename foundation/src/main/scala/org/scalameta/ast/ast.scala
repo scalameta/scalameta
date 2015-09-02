@@ -325,7 +325,16 @@ class AstMacros(val c: Context) {
         val semanticSetters = Set("withEnv", "withDenot", "withTyping", "withExpansion")
         val mods = if (name == "withFlags") Modifiers(NoFlags, TypeName("meta"), Nil) else NoMods
         var args = List(q"${param.name} = ${Ident(param.name)}")
-        if (semanticSetters(name)) args = args :+ q"flags = this.internalFlags & ~$FlagsPackage.TYPECHECKED"
+        if (semanticSetters(name)) {
+          args = args :+ q"flags = this.internalFlags & ~$FlagsPackage.TYPECHECKED"
+          if (name == "withEnv") {
+            args = args :+ q"denot = $SemanticInternal.Denotation.Zero"
+            args = args :+ q"typing = $SemanticInternal.Typing.Zero"
+            args = args :+ q"expansion = $SemanticInternal.Expansion.Zero"
+          } else {
+            args = args :+ q"env = $Semantic.Environment.Zero"
+          }
+        }
         q"$mods def ${TermName(name)}($param): $iname = { ${withValidator(name, param)}; this.internalCopy(..$args) }"
       }
       locally {
