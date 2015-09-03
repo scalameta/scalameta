@@ -26,7 +26,7 @@ Hosts are, however, required to create instances of scala.meta trees to be retur
 
     1. Again, if we look into existing reflection facilities of Scala, we'll observe that trees begin their lives naked (just syntax) and then get attributed by the typechecker (i.e. have their `var tpe: Type` and `var symbol: Symbol` fields assigned, typically in place). Semantic operations are only available for attributed trees, and there are some operations that are only available on unattributed trees, which means that the users need to be aware of the distinction. scala.meta unifies these concepts, exposing semantic methods like `Type.<:<` or `Scope.members` that take care of attribution transparently from the user.
 
-  1. Finally, trees are aware of their context. First of all, there's the `Tree.parent` method that can go up the tree structure if the given tree is a part of a bigger tree (as a host implementor, you don't need to worry about maintaining `parent` at all - it is maintained automatically by scala.meta's infrastructure: when a tree is inserted into another tree, it is cloned and gets its `parent` updated accordingly). Also, there's the notion of hygiene that postulates that trees should remember the environment of their creation site and respect that environment even when they are put into parent that comes from a different context (again, as a host implementor, you don't have to do anything about this - everything is filled in automatically by scala.meta).
+  1. Finally, trees are aware of their context. First of all, there's the `Tree.parent` method that can go up the tree structure if the given tree is a part of a bigger tree (as a host implementor, you don't need to worry about maintaining `parent` at all - it is maintained automatically by scala.meta's infrastructure: when a tree is inserted into another tree, it is cloned and gets its `parent` updated accordingly).
 
 ### Immutability
 
@@ -118,10 +118,7 @@ In order to implement other methods that involve semantic operations on scala.me
 
   2. Write semantic attributes, i.e. emit denotations, typings and expansions based on your native metaprogramming artifacts. Again it is worth noting that scala.meta's data structures are platform-independent, which means that you can't sneak your native, platform-dependent data structures in there.
 
-  3. Generate semantic attributes, i.e. typecheck trees that are possibly partially attributed. Your implementation must be able to produce correct results regardless of the state that input trees are in, taking into account: I) pre-existing semantic information (i.e. denotations for names, typings for terms and parameters, and expansions for terms), II) pre-existing environment information (i.e. environments for names and apply-like nodes), III) your own scope (e.g. classpath of the underlying context, etc).
-
-  At the moment, you don't have to worry about environments at all, behaving as if they weren't there. In the future, the situation will change, and we will provide details of how to account for environments when attributing not yet attributed trees.
-
+  3. Generate semantic attributes, i.e. typecheck trees that are possibly partially attributed. Your implementation must be able to produce correct results regardless of the state that input trees are in, taking into account: I) pre-existing semantic information (i.e. denotations for names, typings for terms and parameters, and expansions for terms), II) your own scope (e.g. classpath of the underlying context, etc).
 
 ### Error handling
 
