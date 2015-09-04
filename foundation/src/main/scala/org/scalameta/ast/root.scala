@@ -50,10 +50,7 @@ class RootMacros(val c: Context) {
       val q"..$boilerplate" = q"""
         protected def internalFlags: $Flags
         protected def withFlags(flags: $Flags): ThisType
-        private[meta] def isTypechecked: _root_.scala.Boolean = (internalFlags & $TYPECHECKED) == $TYPECHECKED
-        private[meta] def setTypechecked: ThisType = withFlags(internalFlags | $TYPECHECKED)
-        private[meta] def resetTypechecked: ThisType = withFlags(internalFlags & ~$TYPECHECKED)
-        private[meta] def withTypechecked(value: _root_.scala.Boolean): ThisType = if (value) setTypechecked else resetTypechecked
+        // NOTE: isTypechecked, setTypechecked, resetTypechecked and withTypechecked are defined in mstats1
 
         // NOTE: these are internal APIs that are meant to be used only in the implementation of the scala.meta framework
         // host implementors should not utilize these APIs
@@ -78,6 +75,19 @@ class RootMacros(val c: Context) {
           expansion: $Expansion = internalExpansion): ThisType
       """
       stats1 ++= boilerplate
+
+      // TODO: This is a really weird workaround for a compiler crash.
+      // If I put xxxTypechecked methods as instance methods on Tree (by adding them to stats1),
+      // then compilation of SyntheticSuite.scala in tests crashes with a StackOverflowError.
+      // If I had a bit more time, I'd debug this, but Scala World is really close.
+      mstats1 += q"""
+        implicit class XtensionFlagsTree[T <: _root_.scala.meta.Tree](tree: T) {
+          def isTypechecked: Boolean = (tree.internalFlags & $TYPECHECKED) == $TYPECHECKED
+          def setTypechecked: T = tree.withFlags(tree.internalFlags | $TYPECHECKED).asInstanceOf[T]
+          def resetTypechecked: T = tree.withFlags(tree.internalFlags & ~$TYPECHECKED).asInstanceOf[T]
+          def withTypechecked(value: _root_.scala.Boolean): T = if (value) tree.setTypechecked else tree.resetTypechecked
+        }
+      """
 
       val qmods = Modifiers(NoFlags, TypeName("meta"), List(q"new _root_.org.scalameta.ast.ast"))
       val qname = TypeName("Quasi")
