@@ -13,7 +13,6 @@ import scala.reflect.{ClassTag, classTag}
 import scala.meta.semantic.{Context => SemanticContext}
 import scala.meta.internal.{ast => impl} // necessary only to implement APIs, not to define them
 import scala.meta.internal.{semantic => s} // necessary only to implement APIs, not to define them
-import scala.meta.internal.semantic.{XtensionAttributeName, XtensionAttributeTerm, XtensionAttributeCtorName}
 import scala.meta.internal.{equality => e} // necessary only to implement APIs, not to define them
 import scala.meta.internal.ui.Summary // necessary only to implement APIs, not to define them
 import scala.reflect.runtime.{universe => ru} // necessary only for a very hacky approximation of hygiene
@@ -194,9 +193,9 @@ private[meta] trait Api {
     @hosted def source: Member = tree.name match {
       case name: impl.Name.Anonymous => name.defn
       case name: impl.Name.Indeterminate => name.defn
-      case name: impl.Term.Name => name.withDenot(name.denot.stripPrefix).defn
-      case name: impl.Type.Name => name.withDenot(name.denot.stripPrefix).defn
-      case name: impl.Ctor.Name => name.withDenot(name.denot.stripPrefix).defn
+      case name: impl.Term.Name => name.withAttrs(name.denot.stripPrefix, s.Typing.Zero).defn
+      case name: impl.Type.Name => name.withAttrs(name.denot.stripPrefix).defn
+      case name: impl.Ctor.Name => name.withAttrs(name.denot.stripPrefix, s.Typing.Zero).defn
     }
     @hosted def name: Name = {
       tree.require[impl.Member] match {

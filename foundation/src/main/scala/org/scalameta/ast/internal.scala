@@ -70,16 +70,16 @@ object internal {
             // there's not much sense in using org.scalameta.invariants.require here
             // because when the assertion trips, the tree is most likely in inconsistent state
             // which will either lead to useless printouts or maybe even worse errors
-            _root_.scala.Predef.require(this.internalPrototype != null, $assertionMessage)
-            $f = ${fn(q"this.internalPrototype.$fname")}
+            _root_.scala.Predef.require(this.privatePrototype != null, $assertionMessage)
+            $f = ${fn(q"this.privatePrototype.$fname")}
           }
         """
       }
       def copySubtree(subtree: c.Tree) = {
         val tempName = c.freshName(TermName("copy" + fname.toString.capitalize))
         q"""
-          val $tempName = $subtree.internalCopy(prototype = $subtree, parent = this)
-          if (this.internalPrototype.isTypechecked != this.isTypechecked) $tempName.withTypechecked(this.isTypechecked)
+          val $tempName = $subtree.privateCopy(prototype = $subtree, parent = this)
+          if (this.privatePrototype.isTypechecked != this.isTypechecked) $tempName.withTypechecked(this.isTypechecked)
           else $tempName
         """
       }
@@ -95,7 +95,7 @@ object internal {
     }
     def storeField(f: c.Tree, v: c.Tree): c.Tree = {
       def copySubtree(subtree: c.Tree) = {
-        q"$subtree.internalCopy(prototype = $subtree, parent = node)"
+        q"$subtree.privateCopy(prototype = $subtree, parent = node)"
       }
       f.tpe.finalResultType match {
         case Any(tpe) => q"()"

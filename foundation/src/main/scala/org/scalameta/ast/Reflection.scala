@@ -11,6 +11,11 @@ trait Reflection extends AdtReflection {
   import internal._
   import decorators._
   import definitions._
+  import Flag._
+
+  def Protected: Modifiers = Modifiers(PROTECTED)
+  def PrivateMeta: Modifiers = PrivateMeta(NoFlags)
+  def PrivateMeta(flags: FlagSet): Modifiers = Modifiers(flags, TypeName("meta"), Nil)
 
   lazy val ApiTreeClass = mirror.staticClass("scala.meta.Tree")
   lazy val ImplTreeClass = mirror.staticClass("scala.meta.internal.ast.Tree")
@@ -36,7 +41,7 @@ trait Reflection extends AdtReflection {
       else 0
     }
   }
-  
+
   override protected def figureOutDirectSubclasses(sym: ClassSymbol): List[Symbol] = {
     def fail = sys.error(s"failed to figure out direct subclasses for ${sym.fullName}")
     if (sym.isSealed) sym.knownDirectSubclasses.toList.sortBy(_.fullName)
@@ -90,7 +95,7 @@ trait Reflection extends AdtReflection {
         tpe
     })
   }
-  
+
   implicit class XtensionAstTree(tree: Tree) {
     def detectAst: List[String] = {
       object astClassDetector extends Traverser {

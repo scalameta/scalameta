@@ -193,20 +193,16 @@ import org.scalameta.debug._
                 case ref: m.Term.Name => ref.denot
                 case ref: m.Term.Select => ref.name.denot
               }
-              def withDenot(denot: s.Denotation) = tree.ref match {
-                case ref: m.Term.Name => tree.copy(ref = ref.withDenot(denot))
-                case ref: m.Term.Select => tree.copy(ref = ref.copy(name = ref.name.withDenot(denot)))
-              }
+              def deepInheritAttrs(other: m.Pkg) = tree.copy(ref = tree.ref.inheritAttrs(other.ref))
             }
             def correlatePackage(sy: m.Pkg, ses: Seq[m.Stat]): m.Pkg = {
               val ses1 = ses.collect{ case se: m.Pkg if sy.ref.toString == se.ref.toString => se }
               ses1.foreach(se1 => matches(se1) = null)
               def message(adjective: String) = s"$adjective syntactic ${sy.productPrefix} named ${sy.ref.toString} was found"
               if (ses1.isEmpty) failCorrelate(message("undermatched"))
-              val sedenot = ses1.head.denot
-              ses1.foreach(se1 => require(se1.denot == sedenot && debug(se1)))
+              ses1.foreach(se1 => require(se1.denot == ses1.head.denot && debug(se1)))
               val mestats = sy.stats.map(sy => correlate(sy, ses1.flatMap(se => se.stats)))
-              sy.copy(stats = mestats).withTokens(sy.tokens).withDenot(sedenot)
+              sy.copy(stats = mestats).deepInheritAttrs(ses1.head).withTokens(sy.tokens)
             }
             def correlateLeaf[T <: m.Member : ClassTag](sy: T, name: m.Name, ses: Seq[m.Stat], fn: PartialFunction[Tree, Boolean]): T = {
               val ses1 = ses.collect{ case tree if fn.lift(tree).getOrElse(false) => tree }

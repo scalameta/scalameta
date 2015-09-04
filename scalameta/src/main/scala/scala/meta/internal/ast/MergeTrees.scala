@@ -140,25 +140,7 @@ object mergeTrees {
               failCorrelate(sy, se, "unexpected trees")
           }
 
-          val tokenizedMetree = expandedMetree.withTokens(sy.tokens)
-          val denotedMetree = tokenizedMetree match {
-            case tokenizedMename: m.Name =>
-              val sename = se.require[m.Name]
-              tokenizedMename.withDenot(sename.denot)
-            case tokenizedMetree =>
-              tokenizedMetree
-          }
-          val typedMetree = denotedMetree match {
-            case denotedMeterm: m.Term =>
-              val seterm = se.require[m.Term]
-              denotedMeterm.withTyping(seterm.typing)
-            case denotedMeparam: m.Term.Param =>
-              val separam = se.require[m.Term.Param]
-              denotedMeparam.withTyping(separam.typing)
-            case denotedMetree =>
-              denotedMetree
-          }
-          val metree = typedMetree
+          val metree = expandedMetree.withTokens(sy.tokens).inheritAttrs(se)
           if (Debug.convert && sy.parent.isEmpty) {
             println("======= SYNTACTIC TREE =======")
             println(sy)

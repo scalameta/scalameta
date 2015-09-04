@@ -167,12 +167,12 @@ object Attributes {
       }
       val syntax = x.productPrefix + "(" + contents(x) + ")"
       val attributes = {
-        val envPart = x.maybeEnv.map({
+        val envPart = x.internalEnv.map({
           case env @ scala.meta.semantic.Environment.Zero =>
             ""
         }).getOrElse("")
 
-        val denotPart = x.maybeDenot.map({
+        val denotPart = x.internalDenot.map({
           case Denotation.Zero =>
             ""
           case denot @ Denotation.Single(prefix, symbol) =>
@@ -182,7 +182,7 @@ object Attributes {
             s"[${symbolFootnotes.mkString(", ")}]"
         }).getOrElse("")
 
-        val typingPart = x.maybeTyping.map({
+        val typingPart = x.internalTyping.map({
           case Typing.Zero =>
             ""
           case Typing.Recursive =>
@@ -199,7 +199,7 @@ object Attributes {
             s"{${footnotes.insert(typing)}}"
         }).getOrElse("")
 
-        val expansionPart = x.maybeExpansion.map({
+        val expansionPart = x.internalExpansion.map({
           case Expansion.Zero => ""
           case expansion @ Expansion.Identity => s"<>"
           case expansion @ Expansion.Desugaring(term) => s"<${footnotes.insert(expansion)}>"

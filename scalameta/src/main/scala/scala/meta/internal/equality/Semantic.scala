@@ -80,10 +80,10 @@ object Semantic {
           case _ => false
         }
       }
-      def envPart = customEquals(x.maybeEnv, y.maybeEnv)
-      def denotPart = customEquals(x.maybeDenot, y.maybeDenot)
-      def typingPart = customEquals(x.maybeTyping, y.maybeTyping)
-      def expansionPart = customEquals(x.maybeExpansion, y.maybeExpansion)
+      def envPart = customEquals(x.internalEnv, y.internalEnv)
+      def denotPart = customEquals(x.internalDenot, y.internalDenot)
+      def typingPart = customEquals(x.internalTyping, y.internalTyping)
+      def expansionPart = customEquals(x.internalExpansion, y.internalExpansion)
       syntaxPart && envPart && denotPart && typingPart && expansionPart
     case _ =>
       x == y
@@ -131,10 +131,10 @@ object Semantic {
           case _ => hashStructure(x)
         }
       }
-      def envPart = customHashcode(x.maybeEnv)
-      def denotPart = customHashcode(x.maybeDenot)
-      def typingPart = customHashcode(x.maybeTyping)
-      def expansionPart = customHashcode(x.maybeExpansion)
+      def envPart = customHashcode(x.internalEnv)
+      def denotPart = customHashcode(x.internalDenot)
+      def typingPart = customHashcode(x.internalTyping)
+      def expansionPart = customHashcode(x.internalExpansion)
       customHashcode(List(syntaxPart, envPart, denotPart, typingPart, expansionPart))
     case _ =>
       x.hashCode
