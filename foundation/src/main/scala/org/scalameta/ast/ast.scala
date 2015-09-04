@@ -328,7 +328,10 @@ class AstMacros(val c: Context) {
         if (semanticSetters(name)) {
           args = args :+ q"flags = this.internalFlags & ~$FlagsPackage.TYPECHECKED"
           if (name == "withEnv") {
-            args = args :+ q"denot = $SemanticInternal.Denotation.Zero"
+            // NOTE: Shouldn't clean up denots when setting env,
+            // because that would destroy links between defs and refs,
+            // which may irreversibly hamper subsequent retypechecks.
+            // args = args :+ q"denot = $SemanticInternal.Denotation.Zero"
             args = args :+ q"typing = $SemanticInternal.Typing.Zero"
             args = args :+ q"expansion = $SemanticInternal.Expansion.Zero"
           } else {
