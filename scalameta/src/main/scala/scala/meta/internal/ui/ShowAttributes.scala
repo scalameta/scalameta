@@ -18,7 +18,6 @@ import scala.meta.internal.semantic._
 import scala.meta.internal.{equality => e}
 import scala.compat.Platform.EOL
 import scala.language.implicitConversions
-import scala.meta.internal.flags._
 
 @implicitNotFound(msg = "don't know how to show[Attributes] for ${T}")
 trait Attributes[T] extends Show[T]

@@ -104,7 +104,6 @@ class AstMacros(val c: Context) {
       // step 4: create internal bookkeeping parameters
       locally {
         bparams1 += q"protected val internalFlags: $FlagsPackage.Flags"
-        stats1 += q"private[meta] def flags: $FlagsPackage.Flags = internalFlags"
       }
       bparams1 += q"@_root_.scala.transient protected val internalPrototype: $iname"
       locally {
@@ -323,7 +322,7 @@ class AstMacros(val c: Context) {
       }
       def withMethod(name: String, param: ValDef) = {
         val semanticSetters = Set("withEnv", "withDenot", "withTyping", "withExpansion")
-        val mods = if (name == "withFlags") Modifiers(NoFlags, TypeName("meta"), Nil) else NoMods
+        val mods = if (name == "withFlags") Modifiers(PROTECTED) else NoMods
         var args = List(q"${param.name} = ${Ident(param.name)}")
         if (semanticSetters(name)) {
           args = args :+ q"flags = this.internalFlags & ~$FlagsPackage.TYPECHECKED"

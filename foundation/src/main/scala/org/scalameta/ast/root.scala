@@ -16,6 +16,8 @@ class RootMacros(val c: Context) {
   lazy val Datum = tq"_root_.scala.Any"
   lazy val Data = tq"_root_.scala.collection.immutable.Seq[$Datum]"
   lazy val Flags = tq"_root_.scala.meta.internal.flags.`package`.Flags"
+  lazy val TYPECHECKED = q"_root_.scala.meta.internal.flags.`package`.TYPECHECKED"
+  lazy val ZERO = q"_root_.scala.meta.internal.flags.`package`.ZERO"
   lazy val Tokens = tq"_root_.scala.meta.Tokens"
   lazy val Environment = tq"_root_.scala.meta.semantic.Environment"
   lazy val Denotation = tq"_root_.scala.meta.internal.semantic.Denotation"
@@ -46,12 +48,15 @@ class RootMacros(val c: Context) {
       // TODO: think of better ways to abstract this away from the public API
       // See comments in ast.scala to see the idea behind internalCopy.
       val q"..$boilerplate" = q"""
-        private[meta] def flags: $Flags
-        private[meta] def withFlags(flags: $Flags): ThisType
+        protected def internalFlags: $Flags
+        protected def withFlags(flags: $Flags): ThisType
+        private[meta] def isTypechecked: _root_.scala.Boolean = (internalFlags & $TYPECHECKED) == $TYPECHECKED
+        private[meta] def setTypechecked: ThisType = withFlags(internalFlags | $TYPECHECKED)
+        private[meta] def resetTypechecked: ThisType = withFlags(internalFlags & ~$TYPECHECKED)
+        private[meta] def withTypechecked(value: _root_.scala.Boolean): ThisType = if (value) setTypechecked else resetTypechecked
 
         // NOTE: these are internal APIs that are meant to be used only in the implementation of the scala.meta framework
         // host implementors should not utilize these APIs
-        protected def internalFlags: $Flags
         protected def internalPrototype: ThisType
         protected def internalParent: $Tree
         protected def internalTokens: $Tokens
@@ -63,7 +68,7 @@ class RootMacros(val c: Context) {
         // TODO: turn the prototype argument of internalCopy into ThisType
         // if done naively, this isn't going to compile for prototypes of @branch traits as ThisType there is abstract
         private[meta] def internalCopy(
-          flags: $Flags = _root_.scala.meta.internal.flags.`package`.ZERO,
+          flags: $Flags = $ZERO,
           prototype: $Tree = this,
           parent: $Tree = internalParent,
           tokens: $Tokens = internalTokens,

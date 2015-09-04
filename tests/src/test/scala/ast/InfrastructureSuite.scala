@@ -5,7 +5,6 @@ import scala.meta.XtensionQuasiquoteTokens
 import scala.meta.Structure
 import scala.meta.Tokens
 import scala.meta.internal.ast._
-import scala.meta.internal.flags._
 import scala.meta.internal.semantic._
 import scala.meta.dialects.Scala211
 

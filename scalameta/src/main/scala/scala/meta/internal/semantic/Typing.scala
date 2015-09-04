@@ -5,7 +5,6 @@ package semantic
 import org.scalameta.adt
 import org.scalameta.adt._
 import org.scalameta.invariants._
-import scala.meta.internal.flags._
 
 @monadicRoot trait Typing
 object Typing {

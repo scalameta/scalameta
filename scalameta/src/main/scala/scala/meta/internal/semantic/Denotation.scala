@@ -8,7 +8,6 @@ import org.scalameta.adt
 import org.scalameta.adt._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
-import scala.meta.internal.flags._
 
 // In our sketch, symbols are split into global and local. Global symbols can be observed from multiple
 // compilation units, so we need a scheme to make observers arrive at the same representation for them.

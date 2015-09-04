@@ -78,7 +78,6 @@ object internal {
       def copySubtree(subtree: c.Tree) = {
         val tempName = c.freshName(TermName("copy" + fname.toString.capitalize))
         q"""
-          import scala.meta.internal.flags._
           val $tempName = $subtree.internalCopy(prototype = $subtree, parent = this)
           if (this.internalPrototype.isTypechecked != this.isTypechecked) $tempName.withTypechecked(this.isTypechecked)
           else $tempName

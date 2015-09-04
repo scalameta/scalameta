@@ -8,7 +8,6 @@ import scala.reflect.api.Universe
 import scala.meta.internal.{ast => m}
 import scala.meta.internal.{semantic => s}
 import scala.meta.internal.semantic.Typing.Recursive
-import scala.meta.internal.flags._
 
 // NOTE: This is the little brother of scalahost's Tree.withDenot, doing exactly the same,
 // but bailing on local symbols and supporting only a subset of prefixes.

@@ -8,7 +8,6 @@ import org.scalameta.invariants._
 import scala.collection.mutable
 import scala.{meta => api}
 import scala.meta.internal.ast._
-import scala.meta.internal.flags._
 import scala.meta.internal.ui.Attributes
 
 package object semantic {
