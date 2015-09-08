@@ -738,18 +738,24 @@ private[meta] trait Api {
             else None
           }
         }
-        def adjustValue(ctor: impl.Ctor.Name, value: String) = impl.Ctor.Name(value).inheritAttrs(ctor)
-        val result = tpe match {
-          case impl.Type.Name(value) => adjustValue(ctor, value)
-          case impl.Type.Select(qual, impl.Type.Name(value)) => impl.Ctor.Ref.Select(qual, adjustValue(ctor, value))
-          case impl.Type.Project(qual, impl.Type.Name(value)) => impl.Ctor.Ref.Project(qual, adjustValue(ctor, value))
-          case impl.Type.Function(Types(params), ret) => impl.Term.ApplyType(impl.Ctor.Ref.Function(ctor), params :+ ret)
-          case impl.Type.Annotate(tpe, annots) => impl.Term.Annotate(loop(tpe, ctor), annots)
-          case impl.Type.Apply(tpe, args) => impl.Term.ApplyType(loop(tpe, ctor), args)
-          case impl.Type.ApplyInfix(lhs, op, rhs) => impl.Term.ApplyType(loop(op, ctor), List(lhs, rhs))
-          case _ => unreachable(debug(tree, tree.show[Structure], tpe, tpe.show[Structure]))
+        def merge(tpe: impl.Type.Name, ctor: impl.Ctor.Name) = {
+          ctor.copy(value = tpe.value).withTokens(tpe.tokens).inheritAttrs(ctor)
         }
-        result.withAttrs(ctor.typing)
+        tpe match {
+          case tpe @ impl.Type.Name(value) =>
+            merge(tpe, ctor)
+          case tpe =>
+            val result = tpe match {
+              case impl.Type.Select(qual, tpe @ impl.Type.Name(value)) => impl.Ctor.Ref.Select(qual, merge(tpe, ctor))
+              case impl.Type.Project(qual, tpe @ impl.Type.Name(value)) => impl.Ctor.Ref.Project(qual, merge(tpe, ctor))
+              case impl.Type.Function(Types(params), ret) => impl.Term.ApplyType(impl.Ctor.Ref.Function(ctor), params :+ ret)
+              case impl.Type.Annotate(tpe, annots) => impl.Term.Annotate(loop(tpe, ctor), annots)
+              case impl.Type.Apply(tpe, args) => impl.Term.ApplyType(loop(tpe, ctor), args)
+              case impl.Type.ApplyInfix(lhs, op, rhs) => impl.Term.ApplyType(loop(op, ctor), List(lhs, rhs))
+              case _ => unreachable(debug(tree, tree.show[Structure], tpe, tpe.show[Structure]))
+            }
+            result.withAttrs(ctor.typing)
+        }
       }
       // TODO: if we uncomment this, that'll lead to a stackoverflow in scalahost
       // it's okay, but at least we could verify that ctor's prefix is coherent with tree
