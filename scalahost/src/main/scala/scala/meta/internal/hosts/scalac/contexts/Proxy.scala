@@ -56,7 +56,7 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
   private[meta] def defns(untypedRef: mapi.Ref): Seq[mapi.Member] = {
     require(!disallowApisThatReturnMembers)
     val ref = typecheck(untypedRef).require[m.Ref]
-    ref match {
+    val result = ref match {
       case pname: m.Name => pname.toLsymbols.map(_.toMmember(pname.toGprefix))
       case m.Term.Select(_, pname) => defns(pname)
       case m.Type.Select(_, pname) => defns(pname)
@@ -68,6 +68,7 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
       case m.Ctor.Ref.Function(pname) => defns(pname)
       case _: m.Import.Selector => ???
     }
+    result.map(_.forceTypechecked)
   }
 
   private[meta] def members(untypedTpe: mapi.Type): Seq[mapi.Member] = {
@@ -75,13 +76,10 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
     val tpe = typecheck(untypedTpe).require[m.Type]
     val gtpe = tpe.toGtype
     val gmembers = gtpe.members.filter(_ != g.rootMirror.RootPackage)
-    val pmembers = gmembers.toLogical.map(_.toMmember(gtpe))
-    val pfakectors = {
-      val gpresym = gtpe.typeSymbol
-      if (gpresym.isTrait) List(m.Ctor.Primary(Nil, m.Ctor.Name(gpresym.name.toString).withDenot(gpresym), List(List())))
-      else Nil
-    }
-    pfakectors ++ pmembers
+    val mmembers = gmembers.toLogical.map(_.toMmember(gtpe))
+    val mfakectors = if (gtpe.typeSymbol.isTrait) List(mfakector(gtpe)) else Nil
+    val members = mfakectors ++ mmembers
+    members.map(_.forceTypechecked)
   }
 
   private[meta] def isSubType(untypedTpe1: mapi.Type, untypedTpe2: mapi.Type): Boolean = {
@@ -95,31 +93,36 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
   private[meta] def lub(untypedTpes: Seq[mapi.Type]): mapi.Type = {
     val tpes = untypedTpes.map(untypedTpe => typecheck(untypedTpe).require[m.Type])
     val gtpes = tpes.map(_.toGtype).toList
-    g.lub(gtpes).toMtype
+    val lub = g.lub(gtpes).toMtype
+    lub.forceTypechecked
   }
 
   private[meta] def glb(untypedTpes: Seq[mapi.Type]): mapi.Type = {
     val tpes = untypedTpes.map(untypedTpe => typecheck(untypedTpe).require[m.Type])
     val gtpes = tpes.map(_.toGtype).toList
-    g.glb(gtpes).toMtype
+    val glb = g.glb(gtpes).toMtype
+    glb.forceTypechecked
   }
 
   private[meta] def parents(untypedTpe: mapi.Type): Seq[mapi.Type] = {
     val tpe = typecheck(untypedTpe).require[m.Type]
     val gtpe = tpe.toGtype
-    gtpe.directBaseTypes.map(_.toMtype)
+    val parents = gtpe.directBaseTypes.map(_.toMtype)
+    parents.map(_.forceTypechecked)
   }
 
   private[meta] def widen(untypedTpe: mapi.Type): mapi.Type = {
     val tpe = typecheck(untypedTpe).require[m.Type]
     val gtpe = tpe.toGtype
-    gtpe.widen.toMtype
+    val widened = gtpe.widen.toMtype
+    widened.forceTypechecked
   }
 
   private[meta] def dealias(untypedTpe: mapi.Type): mapi.Type = {
     val tpe = typecheck(untypedTpe).require[m.Type]
     val gtpe = tpe.toGtype
-    gtpe.dealias.toMtype
+    val dealiased = gtpe.dealias.toMtype
+    dealiased.forceTypechecked
   }
 
   private[meta] def parents(untypedMember: mapi.Member): Seq[mapi.Member] = {
@@ -127,7 +130,8 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
     val member = typecheck(untypedMember).require[m.Member]
     val gpre = member.toGprefix
     val Seq(lsym) = member.toLsymbols
-    lsym.parents.map(_.toMmember(gpre)) // TODO: also instantiate type parameters when necessary
+    val parents = lsym.parents.map(_.toMmember(gpre)) // TODO: also instantiate type parameters when necessary
+    parents.map(_.forceTypechecked)
   }
 
   private[meta] def children(untypedMember: mapi.Member): Seq[mapi.Member] = {
@@ -135,7 +139,8 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
     val member = typecheck(untypedMember).require[m.Member]
     val gpre = member.toGprefix
     val Seq(lsym) = member.toLsymbols
-    lsym.children.map(_.toMmember(gpre)) // TODO: also instantiate type parameters when necessary
+    val children = lsym.children.map(_.toMmember(gpre)) // TODO: also instantiate type parameters when necessary
+    children.map(_.forceTypechecked)
   }
 
   // ======= INTERACTIVE CONTEXT =======
@@ -289,7 +294,7 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
           }
           val semanticTree = {
             if (Debug.scalahost) println(s"converting $unitId")
-            unit.body.toMtree[m.Source].setTypechecked
+            unit.body.toMtree[m.Source]
           }
           if (Debug.scalahost) println(s"merging $unitId")
           val perfectTree = mergeTrees(syntacticTree, semanticTree)

@@ -20,7 +20,9 @@ object Proxy {
 
 // TODO: We can probably expand this to interface with any Universe
 // not just with scala.tools.nsc.Global. How necessary is this, though?
-trait Proxy[G <: Global] extends Mirror with Toolbox with SemanticContext with InteractiveContext { self =>
+trait Proxy[G <: Global] extends Mirror with Toolbox with SemanticContext with InteractiveContext {
+  self: ProxyImpl[G] =>
+
   val g: G
 
   object conversions {
@@ -30,7 +32,7 @@ trait Proxy[G <: Global] extends Mirror with Toolbox with SemanticContext with I
       //   implicit val tag: ClassTag[ev.T] = ev.tag
       //   self.toMtree[ev.T](gtree)
       // }
-      def toMeta: m.Tree = self.toMtree[m.Tree](gtree)
+      def toMeta: m.Tree = self.toMtree[m.Tree](gtree).forceTypechecked
     }
     implicit class ScalahostProxyReflectType(gtype: g.Type) {
       // TODO: make this work
@@ -39,7 +41,7 @@ trait Proxy[G <: Global] extends Mirror with Toolbox with SemanticContext with I
       //   if (classOf[m.Type].isAssignableFrom(tag.runtimeClass)) self.toMtype(gtype).require[ev.T]
       //   else self.toMtypeArg(gtype).require[ev.T]
       // }
-      def toMeta: m.Type.Arg = self.toMtypeArg(gtype)
+      def toMeta: m.Type.Arg = self.toMtypeArg(gtype).forceTypechecked
     }
     implicit class ScalahostProxyReflectSymbol(gsym: g.Symbol) {
       // TODO: make this work
@@ -47,10 +49,10 @@ trait Proxy[G <: Global] extends Mirror with Toolbox with SemanticContext with I
       //   implicit val tag: ClassTag[ev.T] = ev.tag
       //   self.toMmember(gsym, gpre).require[ev.T]
       // }
-      def toMeta(gpre: g.Type): m.Member = self.toMmember(gsym, gpre)
+      def toMeta(gpre: g.Type): m.Member = self.toMmember(gsym, gpre).forceTypechecked
     }
     implicit class ScalahostProxyReflectAnnotation(gannot: g.AnnotationInfo) {
-      def toMeta: m.Mod.Annot = self.toMannot(gannot)
+      def toMeta: m.Mod.Annot = self.toMannot(gannot).forceTypechecked
     }
     implicit class ScalahostProxyMetaTree(mtree: m.Tree) {
       def toReflect: g.Tree = self.toGtree(mtree).asInstanceOf[g.Tree]

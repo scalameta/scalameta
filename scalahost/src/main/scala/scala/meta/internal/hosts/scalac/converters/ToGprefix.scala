@@ -12,7 +12,7 @@ import scala.meta.internal.{ast => m}
 import scala.meta.internal.{semantic => s}
 import scala.meta.internal.hosts.scalac.reflect._
 
-trait ToG extends GlobalToolkit with MetaToolkit {
+trait ToGprefix extends GlobalToolkit with MetaToolkit {
   self: Api =>
 
   protected implicit class XtensionNamePrefix(mname: m.Name) {

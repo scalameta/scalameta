@@ -38,7 +38,7 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
   self: Api =>
 
   protected implicit class XtensionLsymbolToMmember(lsym: l.Symbol) {
-    private def mmods(lsym: l.Symbol): Seq[m.Mod] = {
+    private def mmods(gpre: g.Type, lsym: l.Symbol): Seq[m.Mod] = {
       def annotationMods(lsym: l.Symbol): Seq[m.Mod] = {
         // TODO: collect annotations scattered over synthetic members
         lsym.gsymbol.annotations.toMannots
@@ -47,17 +47,21 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
         val gsym = lsym.gsymbol
         val gpriv = gsym.privateWithin.orElse(gsym.owner)
         if (gsym.hasFlag(LOCAL)) {
-          if (gsym.hasFlag(PROTECTED)) List(m.Mod.Protected(m.Term.This(m.Name.Anonymous().withDenot(gpriv))))
-          else if (gsym.hasFlag(PRIVATE)) List(m.Mod.Private(m.Term.This(m.Name.Anonymous().withDenot(gpriv))))
+          val maccessBoundary = m.Term.This(m.Name.Anonymous().withMattrs(gpre, gpriv))
+          if (gsym.hasFlag(PROTECTED)) List(m.Mod.Protected(maccessBoundary))
+          else if (gsym.hasFlag(PRIVATE)) List(m.Mod.Private(maccessBoundary))
           else unreachable(debug(gsym, gsym.flags, gsym.getClass, gsym.owner))
         } else if (gsym.hasAccessBoundary && gpriv != g.NoSymbol) {
           // TODO: `private[pkg] class C` doesn't have PRIVATE in its flags
           // so we need to account for that!
-          if (gsym.hasFlag(PROTECTED)) List(m.Mod.Protected(gpriv.rawcvt(g.Ident(gpriv)).require[m.Name.Qualifier]))
-          else List(m.Mod.Private(gpriv.rawcvt(g.Ident(gpriv)).require[m.Name.Qualifier]))
+          // TODO: we probably need to account for gpre instead of blindly using g.DefaultPrefix
+          val maccessBoundary = gpriv.toMname(g.DefaultPrefix).require[m.Name.Qualifier]
+          if (gsym.hasFlag(PROTECTED)) List(m.Mod.Protected(maccessBoundary))
+          else List(m.Mod.Private(maccessBoundary))
         } else {
-          if (gsym.hasFlag(PROTECTED)) List(m.Mod.Protected(m.Name.Anonymous().withDenot(gsym.owner)))
-          else if (gsym.hasFlag(PRIVATE)) List(m.Mod.Private(m.Name.Anonymous().withDenot(gsym.owner)))
+          val maccessBoundary = m.Name.Anonymous().withMattrs(gpre, gsym.owner)
+          if (gsym.hasFlag(PROTECTED)) List(m.Mod.Protected(maccessBoundary))
+          else if (gsym.hasFlag(PRIVATE)) List(m.Mod.Private(maccessBoundary))
           else Nil
         }
       }
@@ -209,28 +213,35 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
                 Nil
             }
           }
-          mffi ++ this.mmods(lsym)
+          mffi ++ this.mmods(gpre, lsym)
         }
-        lazy val mname = lsym match {
-          case l.AbstractVal(gsym) if gsym.hasFlag(EXISTENTIAL) =>
-            val name = g.Ident(gsym.name.toString.stripSuffix(g.nme.SINGLETON_SUFFIX)).displayName
-            m.Term.Name(name).withDenot(gpre, gsym)
-          case l.AbstractVal(gsym) =>
-            gsym.precvt(gpre, g.Ident(gsym))
-          case l.PackageObject(gmodule, gmoduleClass) =>
-            m.Term.Name(g.Ident(gmodule.owner).displayName).withDenot(gpre, gmodule)
-          case l.PrimaryCtor(gsym) =>
-            m.Ctor.Name(g.Ident(gsym.owner).displayName).withDenot(gpre, gsym)
-          case l.SecondaryCtor(gsym) =>
-            m.Ctor.Name(g.Ident(gsym.owner).displayName).withDenot(gpre, gsym)
-          case l.TermParameter(gsym) if !gsym.owner.isMethod =>
-            gsym.anoncvt(g.Ident(gsym))
-          case l.TermParameter(gsym) =>
-            gsym.asTerm.rawcvt(g.Ident(gsym))
-          case l.TypeParameter(gsym) =>
-            gsym.anoncvt(g.Ident(gsym))
-          case _ =>
-            gsym.precvt(gpre, g.Ident(gsym))
+        lazy val mname = {
+          def ctorName(gsym: g.Symbol) = {
+            m.Ctor.Name(gsym.owner.displayName).withMattrs(gpre, gsym)
+          }
+          def paramName(gsym: g.Symbol) = {
+            if (gsym.name.isAnonymous) m.Name.Anonymous().withMattrs(g.DefaultPrefix, gsym)
+            else gsym.toMname(g.DefaultPrefix)
+          }
+          lsym match {
+            case l.AbstractVal(gsym) if gsym.hasFlag(EXISTENTIAL) =>
+              val name = g.Ident(gsym.name.toString.stripSuffix(g.nme.SINGLETON_SUFFIX)).displayName
+              m.Term.Name(name).withMattrs(gpre, gsym)
+            case l.AbstractVal(gsym) =>
+              gsym.toMname(gpre)
+            case l.PackageObject(gmodule, gmoduleClass) =>
+              m.Term.Name(gmodule.owner.displayName).withMattrs(gpre, gmodule)
+            case l.PrimaryCtor(gsym) =>
+              ctorName(gsym)
+            case l.SecondaryCtor(gsym) =>
+              ctorName(gsym)
+            case l.TermParameter(gsym) =>
+              paramName(gsym)
+            case l.TypeParameter(gsym) =>
+              paramName(gsym)
+            case _ =>
+              gsym.toMname(gpre)
+          }
         }
         lazy val mtparams = gtparams.map(gtparam => l.TypeParameter(gtparam).toMmember(g.NoPrefix).require[m.Type.Param])
         lazy val mvparamss = gvparamss.map(_.map(gvparam => l.TermParameter(gvparam).toMmember(g.NoPrefix).require[m.Term.Param]))
@@ -254,7 +265,7 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
             m.Type.Bounds(mlo, mhi)
         }
         lazy val mbody: m.Term = {
-          val munknownTerm = m.Term.Name("???").withDenot(g.definitions.Predef_???).withTyping(g.definitions.NothingTpe)
+          val munknownTerm = m.Term.Name("???").withMattrs(g.DefaultPrefix, g.definitions.Predef_???)
           lsym match {
             case l.Macro(gsym) =>
               gsym.macroBody match {
@@ -263,29 +274,26 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
               }
             case l.SecondaryCtor(gsym) =>
               val gctor = gsym.owner.primaryConstructor
-              val mctorref = m.Ctor.Name(g.Ident(gsym.owner).displayName).withDenot(gpre, gctor).withTyping(gctor.infoIn(gpre).finalResultType)
+              val mctorref = m.Ctor.Name(gsym.owner.displayName).withMattrs(gpre, gctor)
               m.Term.Apply(mctorref, List(munknownTerm))
             case _ =>
               munknownTerm
           }
         }
         lazy val mmaybeBody = if (gsym.hasFlag(DEFAULTINIT)) None else Some(mbody)
-        lazy val mfakector = {
-          val mname = m.Ctor.Name(g.Ident(gsym).displayName).withDenot(gpre, gsym)
-          m.Ctor.Primary(Nil, mname, Nil)
-        }
+        lazy val mfakector = self.mfakector(gtpe)
         lazy val mctor = {
           if (lsym.isInstanceOf[l.Clazz] || lsym.isInstanceOf[l.Object]) {
             val gctorsym = lsym.gsymbol.moduleClass.orElse(lsym.gsymbol).primaryConstructor
             if (gctorsym != g.NoSymbol) {
               val gctorinfo = gctorsym.infoIn(gpre)
-              val mctorname = m.Ctor.Name(g.Ident(gsym).displayName).withDenot(gpre, gctorsym)
+              val mctorname = m.Ctor.Name(gsym.displayName).withMattrs(gpre, gctorsym)
               var mctorparamss = {
                 if (lsym.isInstanceOf[l.Clazz]) gctorinfo.paramss.map(_.map(gvparam => l.TermParameter(gvparam).toMmember(g.NoPrefix).require[m.Term.Param]))
                 else Nil // NOTE: synthetic constructors for modules have a fake List(List()) parameter list
               }
               if (mctorparamss.length == 1 && mctorparamss.flatten.length == 0) mctorparamss = Nil
-              m.Ctor.Primary(this.mmods(l.PrimaryCtor(gctorsym)), mctorname, mctorparamss)
+              m.Ctor.Primary(this.mmods(gpre, l.PrimaryCtor(gctorsym)), mctorname, mctorparamss)
             } else {
               mfakector
             }
@@ -317,7 +325,7 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
             val mtpe = gparent.toMtype
             var gctor = gparent.typeSymbol.primaryConstructor.orElse(gparent.typeSymbol)
             if (gctor.name == g.nme.MIXIN_CONSTRUCTOR) gctor = gparent.typeSymbol
-            val mctor = m.Ctor.Name(gparent.typeSymbolDirect.name.decoded).withDenot(gparent, gctor)
+            val mctor = m.Ctor.Name(gparent.typeSymbolDirect.name.decoded).withMattrs(gparent, gctor)
             mtpe.ctorRef(mctor).require[m.Ctor.Call]
           })
           // TODO: apply gpre to mselftpe
@@ -340,7 +348,7 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
             case List(gfrom, gto) if gfrom.typeSymbol.name == gsym.name => gto.typeSymbol
             case _ => g.NoSymbol
           }).filter(_ != g.NoSymbol)
-          gviewBounds.map(gbound => gbound.asType.rawcvt(g.Ident(gbound)))
+          gviewBounds.map(gbound => gbound.asType.toMname(g.DefaultPrefix))
         }
         lazy val mcontextbounds = {
           val gevidences = gsym.owner.paramss.flatten.filter(_.name.startsWith(g.nme.EVIDENCE_PARAM_PREFIX))
@@ -349,9 +357,9 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
             case List(gtarg) if gtarg.typeSymbol.name == gsym.name => gev.tpe.typeSymbol
             case _ => g.NoSymbol
           }).filter(_ != g.NoSymbol)
-          gcontextBounds.map(gbound => gbound.asType.rawcvt(g.Ident(gbound)))
+          gcontextBounds.map(gbound => gbound.asType.toMname(g.DefaultPrefix))
         }
-        val result = lsym match {
+        lsym match {
           case l.None => unreachable(debug(lsym.gsymbol, lsym.gsymbol.flags, lsym.gsymbol.getClass, lsym.gsymbol.owner))
           case _: l.AbstractVal => m.Decl.Val(mmods, List(m.Pat.Var.Term(mname.require[m.Term.Name])), mtpe).member
           case _: l.AbstractVar => m.Decl.Var(mmods, List(m.Pat.Var.Term(mname.require[m.Term.Name])), mtpe).member
@@ -376,7 +384,6 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
           case _: l.TypeParameter => m.Type.Param(mmods, mname.require[m.Type.Param.Name], mtparams, mtpebounds, mviewbounds, mcontextbounds)
           case _ => throw new ConvertException(lsym, s"unsupported symbol $lsym, designation = ${gsym.getClass}, flags = ${gsym.flags}")
         }
-        result.setTypechecked
       }
       def applyPrefix(gpre: g.Type, mmem: m.Member): m.Member = {
         if (gpre == g.NoPrefix) mmem

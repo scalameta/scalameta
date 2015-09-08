@@ -89,8 +89,9 @@ trait LogicalTrees {
 
     trait Name extends Tree { def denot: l.Denotation }
 
-    case class AnonymousName(sym: g.Symbol) extends Name with TermParamName with TypeParamName with QualifierName {
-      def denot = l.Denotation(sym.prefix, sym)
+    case class AnonymousName(denot: l.Denotation) extends Name with TermParamName with TypeParamName with QualifierName
+    object AnonymousName {
+      def apply(sym: g.Symbol): l.AnonymousName = apply(l.Denotation(sym.prefix, sym))
     }
 
     case class IndeterminateName(denot: l.Denotation, value: String) extends Name with QualifierName

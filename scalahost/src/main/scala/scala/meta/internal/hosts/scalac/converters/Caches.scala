@@ -31,7 +31,7 @@ trait Caches extends GlobalToolkit with MetaToolkit {
               // require(!ssymToNativeMmemberCache.contains(symbol) && debug(x, x.show[Semantics]))
               ssymToNativeMmemberCache(symbol) = x
             case _ =>
-              require(false && debug(x, x.show[Semantics]))
+              abort(debug(x, x.show[Semantics]))
           }
         }
       case _ =>

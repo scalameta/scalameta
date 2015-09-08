@@ -46,9 +46,9 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
         // ============ NAMES ============
 
         case l.AnonymousName(ldenot) =>
-          m.Name.Anonymous().tryDenot(ldenot)
+          m.Name.Anonymous().tryMattrs(ldenot)
         case l.IndeterminateName(ldenot, lvalue) =>
-          m.Name.Indeterminate(lvalue).tryDenot(ldenot)
+          m.Name.Indeterminate(lvalue).tryMattrs(ldenot)
 
         // ============ TERMS ============
 
@@ -56,7 +56,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
           val mname = lname.toMtree[m.Name.Qualifier]
           m.Term.This(mname)
         case l.TermName(ldenot, lvalue) =>
-          m.Term.Name(lvalue).tryDenot(ldenot)
+          m.Term.Name(lvalue).tryMattrs(ldenot)
         case l.TermIdent(lname) =>
           lname.toMtree[m.Term.Name]
         case l.TermParamDef(lmods, lname, ltpt, ldefault) =>
@@ -71,7 +71,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
         case l.TypeTree(gtpe) =>
           gtpe.toMtype
         case l.TypeName(ldenot, lvalue) =>
-          m.Type.Name(lvalue).tryDenot(ldenot)
+          m.Type.Name(lvalue).tryMattrs(ldenot)
         case l.TypeIdent(lname) =>
           lname.toMtree[m.Type.Name]
         case l.TypeSelect(lpre, lname) =>
@@ -126,7 +126,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
           val mparamss = lparamss.toMtreess[m.Term.Param]
           m.Ctor.Primary(mmods, mname, mparamss)
         case l.CtorName(ldenot, lvalue) =>
-          m.Ctor.Name(lvalue).tryDenot(ldenot)
+          m.Ctor.Name(lvalue).tryMattrs(ldenot)
         case l.CtorIdent(lname) =>
           lname.toMtree[m.Ctor.Name]
 
@@ -144,7 +144,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
           val margss = largss.toMtreess[m.Term.Arg]
           margss.foldLeft(mctor)((mcurr, margs) => {
             val app = m.Term.Apply(mcurr, margs)
-            app.withTyping(mcurr.typing.map{ case m.Type.Function(_, ret) => ret })
+            app.withMattrs(mcurr.typing.map{ case m.Type.Function(_, ret) => ret })
           })
         case l.SelfDef(lname, ltpt) =>
           val mname = lname.toMtree[m.Term.Param.Name]
@@ -159,18 +159,13 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
           fail(gtree, s"encountered an unexpected tree during scala.reflect -> scala.meta conversion:$EOL${g.showRaw(gtree)}")
       }
       val typedMtree = denotedMtree match {
-        case denotedMtree: m.Term => denotedMtree.tryTyping(gtree.tpe)
-        case denotedMtree: m.Term.Param => denotedMtree.tryTyping(gtree.symbol.tpe)
+        case denotedMtree: m.Term.Name => denotedMtree // do nothing, typing already inferred from denotation
+        case denotedMtree: m.Ctor.Name => denotedMtree // do nothing, typing already inferred from denotation
+        case denotedMtree: m.Term => denotedMtree.withMattrs(gtree.tpe)
+        case denotedMtree: m.Term.Param => denotedMtree.withMattrs(gtree.symbol.tpe)
         case denotedMtree => denotedMtree
       }
-      // NOTE: Desugarings are handled in mergeTrees, but sometimes we don't merge,
-      // e.g. when the source code is unavailable, and we still need to be TYPECHECKED even then.
-      val expandedMtree = typedMtree match {
-        case typedMtree: m.Term => typedMtree.withIdentityExpansion
-        case typedMtree => typedMtree
-      }
-      val typecheckedMtree = expandedMtree.setTypechecked
-      val mtree = indexOne(typecheckedMtree)
+      val mtree = indexOne(typedMtree)
       if (sys.props("convert.debug") != null && gtree.parent.isEmpty) {
         println("======= SCALA.REFLECT TREE =======")
         println(gtree)

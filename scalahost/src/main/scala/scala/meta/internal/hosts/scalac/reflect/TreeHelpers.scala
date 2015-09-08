@@ -15,6 +15,10 @@ trait TreeHelpers {
   import treeInfo._
   import build._
 
+  implicit class RichFoundationSymbol(sym: Symbol) {
+    def displayName: String = Ident(sym).displayName
+  }
+
   implicit class RichFoundationNameTree(tree: Tree) {
     // NOTE: scala.reflect's tree don't have parent links, so we have to approximate if we encounter an unattributed package object
     def displayName: String = {

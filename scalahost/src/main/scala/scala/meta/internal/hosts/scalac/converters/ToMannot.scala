@@ -30,9 +30,9 @@ trait ToMannot extends GlobalToolkit with MetaToolkit {
           if (gassocs.nonEmpty) {
             def loop(garg: g.ClassfileAnnotArg): m.Term = garg match {
               case g.LiteralAnnotArg(gconst) =>
-                gconst.rawcvt.withTyping(g.ConstantType(gconst))
+                gconst.toMlit
               case g.ArrayAnnotArg(gargs) =>
-                val marray = g.definitions.ArrayModule.rawcvt(g.Ident(g.definitions.ArrayModule))
+                val marray = g.definitions.ArrayModule.toMname(g.DefaultPrefix)
                 m.Term.Apply(marray, gargs.map(loop).toList)
               case g.NestedAnnotArg(gannot: g.AnnotationInfo) =>
                 mannotcore(gannot)
@@ -41,7 +41,7 @@ trait ToMannot extends GlobalToolkit with MetaToolkit {
             }
             gassocs.map({ case (gname, garg) =>
               val gparam = gctor.paramss.flatten.find(_.name == gname).get.asTerm
-              val mname = gparam.rawcvt(g.Ident(gparam))
+              val mname = gparam.toMname(g.DefaultPrefix)
               m.Term.Arg.Named(mname, loop(garg))
             })
           } else {
@@ -49,12 +49,14 @@ trait ToMannot extends GlobalToolkit with MetaToolkit {
             else gargs.map(_.toMtree[m.Term])
           }
         }
-        val mctor = m.Ctor.Name(gatp.typeSymbolDirect.name.decoded).withDenot(gatp, gctor)
-        val mcore = matp.ctorRef(mctor).require[m.Term]
-        if (margs.isEmpty) mcore
-        else m.Term.Apply(mcore, margs).withTyping(gannot.atp)
+        val msyctor = m.Ctor.Name(gatp.typeSymbolDirect.name.decoded)
+        val msector = msyctor.withMattrs(gatp, gctor)
+        val mctorname = matp.ctorRef(msector).require[m.Term]
+        val mannot = m.Term.Apply(mctorname, margs).withMattrs(gannot.atp)
+        if (margs.isEmpty) mctorname.withExpansion(mannot)
+        else mannot
       }
-      m.Mod.Annot(mannotcore(gannot)).setTypechecked
+      m.Mod.Annot(mannotcore(gannot))
     }
   }
 

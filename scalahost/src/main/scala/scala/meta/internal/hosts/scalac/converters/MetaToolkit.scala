@@ -19,7 +19,7 @@ trait MetaToolkit {
     }
   }
 
-  implicit class RichMetaToolkitStat(stat: Stat) {
+  implicit class RichMetaToolkitStat(stat: mapi.Stat) {
     def binders: Seq[Name] = stat match {
       case tree: Decl.Val => tree.pats.map(_.name)
       case tree: Decl.Var => tree.pats.map(_.name)
@@ -49,7 +49,7 @@ trait MetaToolkit {
     }
   }
 
-  implicit class RichMetaToolkitMember(member: Member) {
+  implicit class RichMetaToolkitMember(member: mapi.Member) {
     private def firstNonPatParent(pat: Pat): Option[Tree] = {
       pat.parent.collect{case pat: Pat => pat}.flatMap(firstNonPatParent).orElse(pat.parent.map(_.require[Tree]))
     }
@@ -57,6 +57,23 @@ trait MetaToolkit {
       case tree: Pat.Var.Term => firstNonPatParent(tree).get.require[Stat]
       case stat: Stat => stat
       case _ => sys.error(s"unsupported member ${member.productPrefix}: $member")
+    }
+  }
+
+  implicit class RichForceTree[T <: mapi.Tree](tree: T) {
+    def forceTypechecked: T = {
+      def traverse(tree: Tree): Unit = {
+        def process(field: Any): Unit = field match {
+          case x: Tree => traverse(tree)
+          case x: Seq[_] => x.foreach(process)
+          case x: Some[_] => process(x.get)
+          case x => // do nothing
+        }
+        val _ = tree.setTypechecked
+        tree.productIterator.foreach(process)
+      }
+      traverse(tree.asInstanceOf[Tree])
+      tree.setTypechecked.asInstanceOf[T]
     }
   }
 }

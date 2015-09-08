@@ -8,14 +8,16 @@ import scala.meta.semantic.{Context => ScalametaSemanticContext}
 abstract class Api(global: ScalaGlobal)
 extends ToM
    with ToMannot
+   with ToMattrs
+   with ToMlit
    with ToMmember
+   with ToMname
    with ToMtree
    with ToMtype
-   with ToG
+   with ToGprefix
    with ToGsymbol
    with ToGtree
    with ToGtype
-   with Attributes
    with SymbolTables
    with Caches {
   implicit val c: ScalametaSemanticContext
