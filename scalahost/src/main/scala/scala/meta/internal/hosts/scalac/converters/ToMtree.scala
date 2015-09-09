@@ -36,169 +36,176 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
 
   protected implicit class XtensionGtreeToMtree(gtree: g.Tree) {
     def toMtree[T <: mapi.Tree : ClassTag]: T = {
-      // TODO: figure out a mechanism to automatically remove navigation links once we're done
-      // in order to cut down memory consumption of the further compilation pipeline
-      // TODO: another performance consideration is the fact that install/remove
-      // are currently implemented as standalone tree traversal, and it would be faster
-      // to integrate them into the transforming traversal
-      gtree.installNavigationLinks()
-      val denotedMtree = gtree match {
-        // ============ NAMES ============
+      try {
+        // TODO: figure out a mechanism to automatically remove navigation links once we're done
+        // in order to cut down memory consumption of the further compilation pipeline
+        // TODO: another performance consideration is the fact that install/remove
+        // are currently implemented as standalone tree traversal, and it would be faster
+        // to integrate them into the transforming traversal
+        gtree.installNavigationLinks()
+        val denotedMtree = gtree match {
+          // ============ NAMES ============
 
-        case l.AnonymousName(ldenot) =>
-          m.Name.Anonymous().tryMattrs(ldenot)
-        case l.IndeterminateName(ldenot, lvalue) =>
-          m.Name.Indeterminate(lvalue).tryMattrs(ldenot)
+          case l.AnonymousName(ldenot) =>
+            m.Name.Anonymous().tryMattrs(ldenot)
+          case l.IndeterminateName(ldenot, lvalue) =>
+            m.Name.Indeterminate(lvalue).tryMattrs(ldenot)
 
-        // ============ TERMS ============
+          // ============ TERMS ============
 
-        case l.TermThis(lname) =>
-          val mname = lname.toMtree[m.Name.Qualifier]
-          m.Term.This(mname)
-        case l.TermName(ldenot, lvalue) =>
-          m.Term.Name(lvalue).tryMattrs(ldenot)
-        case l.TermIdent(lname) =>
-          lname.toMtree[m.Term.Name]
-        case l.TermParamDef(lmods, lname, ltpt, ldefault) =>
-          val mmods = lmods.toMtrees[m.Mod]
-          val mname = lname.toMtree[m.Term.Param.Name]
-          val mtpt = if (ltpt.nonEmpty) Some(ltpt.toMtree[m.Type]) else None
-          val mdefault = if (ldefault.nonEmpty) Some(ldefault.toMtree[m.Term]) else None
-          m.Term.Param(mmods, mname, mtpt, mdefault)
+          case l.TermThis(lname) =>
+            val mname = lname.toMtree[m.Name.Qualifier]
+            m.Term.This(mname)
+          case l.TermName(ldenot, lvalue) =>
+            m.Term.Name(lvalue).tryMattrs(ldenot)
+          case l.TermIdent(lname) =>
+            lname.toMtree[m.Term.Name]
+          case l.TermParamDef(lmods, lname, ltpt, ldefault) =>
+            val mmods = lmods.toMtrees[m.Mod]
+            val mname = lname.toMtree[m.Term.Param.Name]
+            val mtpt = if (ltpt.nonEmpty) Some(ltpt.toMtree[m.Type]) else None
+            val mdefault = if (ldefault.nonEmpty) Some(ldefault.toMtree[m.Term]) else None
+            m.Term.Param(mmods, mname, mtpt, mdefault)
 
-        // ============ TYPES ============
+          // ============ TYPES ============
 
-        case l.TypeTree(gtpe) =>
-          gtpe.toMtype
-        case l.TypeName(ldenot, lvalue) =>
-          m.Type.Name(lvalue).tryMattrs(ldenot)
-        case l.TypeIdent(lname) =>
-          lname.toMtree[m.Type.Name]
-        case l.TypeSelect(lpre, lname) =>
-          val mpre = lpre.toMtree[m.Term.Ref]
-          val mname = lname.toMtree[m.Type.Name]
-          m.Type.Select(mpre, mname)
+          case l.TypeTree(gtpe) =>
+            gtpe.toMtype
+          case l.TypeName(ldenot, lvalue) =>
+            m.Type.Name(lvalue).tryMattrs(ldenot)
+          case l.TypeIdent(lname) =>
+            lname.toMtree[m.Type.Name]
+          case l.TypeSelect(lpre, lname) =>
+            val mpre = lpre.toMtree[m.Term.Ref]
+            val mname = lname.toMtree[m.Type.Name]
+            m.Type.Select(mpre, mname)
 
-        // ============ PATTERNS ============
+          // ============ PATTERNS ============
 
-        // ============ LITERALS ============
+          // ============ LITERALS ============
 
-        // ============ DECLS ============
+          // ============ DECLS ============
 
-        // ============ DEFNS ============
+          // ============ DEFNS ============
 
-        case l.DefDef(lmods, lname, ltparams, lparamss, ltpt, lrhs) =>
-          val mmods = lmods.toMtrees[m.Mod]
-          val mname = lname.toMtree[m.Term.Name]
-          val mtparams = ltparams.toMtrees[m.Type.Param]
-          val mparamss = lparamss.toMtreess[m.Term.Param]
-          val mtpt = if (ltpt.nonEmpty) Some(ltpt.toMtree[m.Type]) else None
-          val mrhs = lrhs.toMtree[m.Term]
-          m.Defn.Def(mmods, mname, mtparams, mparamss, mtpt, mrhs)
+          case l.DefDef(lmods, lname, ltparams, lparamss, ltpt, lrhs) =>
+            val mmods = lmods.toMtrees[m.Mod]
+            val mname = lname.toMtree[m.Term.Name]
+            val mtparams = ltparams.toMtrees[m.Type.Param]
+            val mparamss = lparamss.toMtreess[m.Term.Param]
+            val mtpt = if (ltpt.nonEmpty) Some(ltpt.toMtree[m.Type]) else None
+            val mrhs = lrhs.toMtree[m.Term]
+            m.Defn.Def(mmods, mname, mtparams, mparamss, mtpt, mrhs)
 
-        case l.ClassDef(lmods, lname, ltparams, lctor, limpl) =>
-          val mmods = lmods.toMtrees[m.Mod]
-          val mname = lname.toMtree[m.Type.Name]
-          val mtparams = ltparams.toMtrees[m.Type.Param]
-          val mctor = lctor.toMtree[m.Ctor.Primary]
-          val mimpl = limpl.toMtree[m.Template]
-          m.Defn.Class(mmods, mname, mtparams, mctor, mimpl)
+          case l.ClassDef(lmods, lname, ltparams, lctor, limpl) =>
+            val mmods = lmods.toMtrees[m.Mod]
+            val mname = lname.toMtree[m.Type.Name]
+            val mtparams = ltparams.toMtrees[m.Type.Param]
+            val mctor = lctor.toMtree[m.Ctor.Primary]
+            val mimpl = limpl.toMtree[m.Template]
+            m.Defn.Class(mmods, mname, mtparams, mctor, mimpl)
 
-        // ============ PKGS ============
+          // ============ PKGS ============
 
-        case l.EmptyPackageDef(lstats) =>
-          val mstats = lstats.toMtrees[m.Stat]
-          m.Source(mstats)
-        case l.ToplevelPackageDef(lname, lstats) =>
-          val mname = lname.toMtree[m.Term.Name]
-          val mstats = lstats.toMtrees[m.Stat]
-          m.Source(List(m.Pkg(mname, mstats)))
-        case l.NestedPackageDef(lname, lstats) =>
-          val mname = lname.toMtree[m.Term.Name]
-          val mstats = lstats.toMtrees[m.Stat]
-          m.Pkg(mname, mstats)
+          case l.EmptyPackageDef(lstats) =>
+            val mstats = lstats.toMtrees[m.Stat]
+            m.Source(mstats)
+          case l.ToplevelPackageDef(lname, lstats) =>
+            val mname = lname.toMtree[m.Term.Name]
+            val mstats = lstats.toMtrees[m.Stat]
+            m.Source(List(m.Pkg(mname, mstats)))
+          case l.NestedPackageDef(lname, lstats) =>
+            val mname = lname.toMtree[m.Term.Name]
+            val mstats = lstats.toMtrees[m.Stat]
+            m.Pkg(mname, mstats)
 
-        // ============ CTORS ============
+          // ============ CTORS ============
 
-        case l.PrimaryCtorDef(lmods, lname, lparamss) =>
-          val mmods = lmods.toMtrees[m.Mod]
-          val mname = lname.toMtree[m.Ctor.Name]
-          val mparamss = lparamss.toMtreess[m.Term.Param]
-          m.Ctor.Primary(mmods, mname, mparamss)
-        case l.CtorName(ldenot, lvalue) =>
-          m.Ctor.Name(lvalue).tryMattrs(ldenot)
-        case l.CtorIdent(lname) =>
-          lname.toMtree[m.Ctor.Name]
+          case l.PrimaryCtorDef(lmods, lname, lparamss) =>
+            val mmods = lmods.toMtrees[m.Mod]
+            val mname = lname.toMtree[m.Ctor.Name]
+            val mparamss = lparamss.toMtreess[m.Term.Param]
+            m.Ctor.Primary(mmods, mname, mparamss)
+          case l.CtorName(ldenot, lvalue) =>
+            m.Ctor.Name(lvalue).tryMattrs(ldenot)
+          case l.CtorIdent(lname) =>
+            lname.toMtree[m.Ctor.Name]
 
-        // ============ TEMPLATES ============
+          // ============ TEMPLATES ============
 
-        case l.Template(learly, lparents, lself, lstats) =>
-          val mearly = learly.toMtrees[m.Stat]
-          val mparents = lparents.toMtrees[m.Ctor.Call]
-          val mself = lself.toMtree[m.Term.Param]
-          val mstats = lstats.toMtrees[m.Stat]
-          m.Template(mearly, mparents, mself, Some(mstats))
-        case l.Parent(ltpt, lctor, largss) =>
-          val mtpt = ltpt.toMtree[m.Type]
-          val mctor = mtpt.ctorRef(lctor.toMtree[m.Ctor.Name]).require[m.Term]
-          val margss = largss.toMtreess[m.Term.Arg]
-          margss.foldLeft(mctor)((mcurr, margs) => {
-            val app = m.Term.Apply(mcurr, margs)
-            app.withMattrs(mcurr.typing.map{ case m.Type.Function(_, ret) => ret })
-          })
-        case l.SelfDef(lname, ltpt) =>
-          val mname = lname.toMtree[m.Term.Param.Name]
-          val mtpt = if (ltpt.nonEmpty) Some(ltpt.toMtree[m.Type]) else None
-          m.Term.Param(Nil, mname, mtpt, None)
+          case l.Template(learly, lparents, lself, lstats) =>
+            val mearly = learly.toMtrees[m.Stat]
+            val mparents = lparents.toMtrees[m.Ctor.Call]
+            val mself = lself.toMtree[m.Term.Param]
+            val mstats = lstats.toMtrees[m.Stat]
+            m.Template(mearly, mparents, mself, Some(mstats))
+          case l.Parent(ltpt, lctor, largss) =>
+            val mtpt = ltpt.toMtree[m.Type]
+            val mctor = mtpt.ctorRef(lctor.toMtree[m.Ctor.Name]).require[m.Term]
+            val margss = largss.toMtreess[m.Term.Arg]
+            margss.foldLeft(mctor)((mcurr, margs) => {
+              val app = m.Term.Apply(mcurr, margs)
+              app.withMattrs(mcurr.typing.map{ case m.Type.Function(_, ret) => ret })
+            })
+          case l.SelfDef(lname, ltpt) =>
+            val mname = lname.toMtree[m.Term.Param.Name]
+            val mtpt = if (ltpt.nonEmpty) Some(ltpt.toMtree[m.Type]) else None
+            m.Term.Param(Nil, mname, mtpt, None)
 
-        // ============ MODIFIERS ============
+          // ============ MODIFIERS ============
 
-        // ============ ODDS & ENDS ============
+          // ============ ODDS & ENDS ============
 
-        case _ =>
-          fail(gtree, s"encountered an unexpected tree during scala.reflect -> scala.meta conversion:$EOL${g.showRaw(gtree)}")
-      }
-      val typedMtree = denotedMtree match {
-        case denotedMtree: m.Term.Name => denotedMtree // do nothing, typing already inferred from denotation
-        case denotedMtree: m.Ctor.Name => denotedMtree // do nothing, typing already inferred from denotation
-        case denotedMtree: m.Term => denotedMtree.withMattrs(gtree.tpe)
-        case denotedMtree: m.Term.Param => denotedMtree.withMattrs(gtree.symbol.tpe)
-        case denotedMtree => denotedMtree
-      }
-      val typecheckedMtree = typedMtree.forceTypechecked
-      val mtree = indexOne(typecheckedMtree)
-      if (sys.props("convert.debug") != null && gtree.parent.isEmpty) {
-        println("======= SCALA.REFLECT TREE =======")
-        println(gtree)
-        println(g.showRaw(gtree, printIds = true, printTypes = true))
-        println("======== SCALA.META TREE ========")
-        println(mtree)
-        println(mtree.show[Semantics])
-        println("=================================")
-      }
-      // TODO: fix duplication wrt MergeTrees.scala
-      if (classTag[T].runtimeClass.isAssignableFrom(mtree.getClass)) {
-        mtree.asInstanceOf[T]
-      } else {
-        var expected = classTag[T].runtimeClass.getName
-        expected = expected.stripPrefix("scala.meta.internal.ast.").stripPrefix("scala.meta.")
-        expected = expected.stripSuffix("$Impl")
-        expected = expected.replace("$", ".")
-        val actual = mtree.productPrefix
-        val summary = s"expected = $expected, actual = $actual"
-        val details = s"${g.showRaw(gtree)}$EOL${mtree.show[Structure]}"
-        fail(gtree, s"obtained an unexpected result during scala.reflect -> scala.meta conversion: $summary$EOL$details")
+          case _ =>
+            fail(gtree, s"unexpected tree during scala.reflect -> scala.meta conversion:$EOL${g.showRaw(gtree)}", None)
+        }
+        val typedMtree = denotedMtree match {
+          case denotedMtree: m.Term.Name => denotedMtree // do nothing, typing already inferred from denotation
+          case denotedMtree: m.Ctor.Name => denotedMtree // do nothing, typing already inferred from denotation
+          case denotedMtree: m.Term => denotedMtree.tryMattrs(gtree.tpe)
+          case denotedMtree: m.Term.Param => denotedMtree.tryMattrs(gtree.symbol.tpe)
+          case denotedMtree => denotedMtree
+        }
+        val typecheckedMtree = typedMtree.forceTypechecked
+        val mtree = indexOne(typecheckedMtree)
+        if (sys.props("convert.debug") != null && gtree.parent.isEmpty) {
+          println("======= SCALA.REFLECT TREE =======")
+          println(gtree)
+          println(g.showRaw(gtree, printIds = true, printTypes = true))
+          println("======== SCALA.META TREE ========")
+          println(mtree)
+          println(mtree.show[Semantics])
+          println("=================================")
+        }
+        // TODO: fix duplication wrt MergeTrees.scala
+        if (classTag[T].runtimeClass.isAssignableFrom(mtree.getClass)) {
+          mtree.asInstanceOf[T]
+        } else {
+          var expected = classTag[T].runtimeClass.getName
+          expected = expected.stripPrefix("scala.meta.internal.ast.").stripPrefix("scala.meta.")
+          expected = expected.stripSuffix("$Impl")
+          expected = expected.replace("$", ".")
+          val actual = mtree.productPrefix
+          val summary = s"expected = $expected, actual = $actual"
+          val details = s"${g.showRaw(gtree)}$EOL${mtree.show[Structure]}"
+          fail(gtree, s"unexpected result during scala.reflect -> scala.meta conversion: $summary$EOL$details", None)
+        }
+      } catch {
+        case ex: ConvertException =>
+          throw ex
+        case ex: Exception =>
+          fail(gtree, s"unexpected error during scala.reflect -> scala.meta conversion (scroll down the stacktrace to see the cause):", Some(ex))
       }
     }
 
-    private def fail(culprit: g.Tree, diagnostics: String): Nothing = {
+    private def fail(culprit: g.Tree, diagnostics: String, ex: Option[Throwable]): Nothing = {
       val traceback = culprit.parents.map(gtree => {
         val prefix = gtree.productPrefix
         var details = gtree.toString.replace("\n", " ")
         if (details.length > 60) details = details.take(60) + "..."
         s"($prefix) $details"
       }).mkString(EOL)
-      throw new ConvertException(culprit, s"$diagnostics$EOL$traceback")
+      throw new ConvertException(culprit, s"$diagnostics$EOL$traceback", ex)
     }
   }
 
