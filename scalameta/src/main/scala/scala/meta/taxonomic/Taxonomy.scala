@@ -223,7 +223,7 @@ import org.scalameta.debug._
         }
         if (matches.size < sestats.length) failCorrelate("undermatched semantic definitions were found")
 
-        val mesource = sysource.copy(stats = mestats).withTokens(sysource.tokens)
+        val mesource = sysource.copy(stats = mestats).withTokens(sysource.tokens).setTypechecked
         if (Debug.tasty) println(s"created a perfect source from $sourceuri and matching classfiles")
         mesource
       }).toList
