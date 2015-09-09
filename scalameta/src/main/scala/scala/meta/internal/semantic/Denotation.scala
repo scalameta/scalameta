@@ -23,6 +23,7 @@ object Signature {
   @leaf class Method(jvmSignature: String) extends Signature
   @leaf object TypeParameter extends Signature
   @leaf object TermParameter extends Signature
+  @leaf object Self extends Signature
 }
 
 @root trait Symbol

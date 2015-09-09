@@ -78,6 +78,7 @@ object Attributes {
                 case Symbol.Global(owner, name, Signature.Method(jvmSignature)) => loop(owner) + "." + name + jvmSignature
                 case Symbol.Global(owner, name, Signature.TypeParameter) => loop(owner) + "[" + name + "]"
                 case Symbol.Global(owner, name, Signature.TermParameter) => loop(owner) + "(" + name + ")"
+                case Symbol.Global(owner, name, Signature.Self) => loop(owner) + ".this"
                 case Symbol.Local(id) => "local#" + id
               }
               var result = loop(sym)
