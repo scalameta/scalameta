@@ -9,6 +9,7 @@ import scala.meta.internal.{ast => impl}
 import scala.meta.internal.ast._
 import scala.meta.internal.semantic._
 import scala.meta.{SemanticException, Semantics}
+import scala.meta.internal.ui.Attributes
 
 trait MetaToolkit {
   implicit class RichMetaToolkitDenotation(denot: Denotation) {
@@ -62,19 +63,24 @@ trait MetaToolkit {
 
   implicit class RichForceTree[T <: mapi.Tree](tree: T) {
     def forceTypechecked: T = {
-      def traverse(tree: Tree): Unit = {
-        def process(field: Any): Unit = field match {
-          case x: Tree => traverse(tree)
-          case x: Seq[_] => x.foreach(process)
-          case x: Some[_] => process(x.get)
-          case x => // do nothing
+      try {
+        def traverse(tree: Tree): Unit = {
+          def process(field: Any): Unit = field match {
+            case x: Tree => traverse(x)
+            case Seq(xs @ _*) => xs.foreach(x => process(x))
+            case Some(x) => process(x)
+            case x => // do nothing
+          }
+          if (tree.isTypechecked) return
+          val _ = tree.setTypechecked
+          tree.productIterator.foreach(process)
         }
-        if (tree.isTypechecked) return
-        val _ = tree.setTypechecked
-        tree.productIterator.foreach(process)
+        traverse(tree.asInstanceOf[Tree])
+        tree.setTypechecked.asInstanceOf[T]
+      } catch {
+        case ex: UnsupportedOperationException =>
+          throw new UnsupportedOperationException("failed to force TYPECHECKED for " + tree.show[Attributes], ex)
       }
-      traverse(tree.asInstanceOf[Tree])
-      tree.setTypechecked.asInstanceOf[T]
     }
   }
 }
