@@ -190,10 +190,17 @@ object Attributes {
             if (recursions.contains(xkey)) {
               s"{${recursions(xkey)}}"
             } else {
-              val xsub = Type.Singleton(x.require[Term.Ref]).withTypechecked(x.isTypechecked)
-              val typing = Typing.Nonrecursive(xsub)
-              recursions(xkey) = footnotes.previewInsert(typing)
-              s"{${footnotes.insert(typing)}}"
+              if (x.isTypechecked) {
+                val xsub = Type.Singleton(x.require[Term.Ref]).setTypechecked
+                val typing = Typing.Nonrecursive(xsub)
+                recursions(xkey) = footnotes.previewInsert(typing)
+                s"{${footnotes.insert(typing)}}"
+              } else {
+                // NOTE: if x is not TYPECHECKED, then trying to insert it into a typing will crash.
+                // It would be ideal if we could just print the type as is in typing footnotes,
+                // but there's no easy way of doing that, so I'm going for something real simple.
+                s"{}"
+              }
             }
           case typing @ Typing.Nonrecursive(tpe) =>
             s"{${footnotes.insert(typing)}}"
