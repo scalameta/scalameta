@@ -100,7 +100,7 @@ trait ToMattrs extends GlobalToolkit with MetaToolkit {
   // ======= IMPLEMENTATION OF THE DSL =======
 
   private def denot(gpre0: g.Type, lsym: l.Symbol): s.Denotation = {
-    if (lsym == l.None) s.Denotation.Zero
+    if (lsym == l.Zero) s.Denotation.Zero
     else {
       require(gpre0 != g.NoType)
       val gpre = if (gpre0 == g.DefaultPrefix) lsym.gsymbol.prefix else gpre0

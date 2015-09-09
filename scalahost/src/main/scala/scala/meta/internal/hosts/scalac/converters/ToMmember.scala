@@ -360,7 +360,7 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
           gcontextBounds.map(gbound => gbound.asType.toMname(g.DefaultPrefix))
         }
         lsym match {
-          case l.None => unreachable(debug(lsym.gsymbol, lsym.gsymbol.flags, lsym.gsymbol.getClass, lsym.gsymbol.owner))
+          case l.Zero => unreachable(debug(lsym.gsymbol, lsym.gsymbol.flags, lsym.gsymbol.getClass, lsym.gsymbol.owner))
           case _: l.AbstractVal => m.Decl.Val(mmods, List(m.Pat.Var.Term(mname.require[m.Term.Name])), mtpe).member
           case _: l.AbstractVar => m.Decl.Var(mmods, List(m.Pat.Var.Term(mname.require[m.Term.Name])), mtpe).member
           case _: l.AbstractDef if lsym.gsymbol.isIntrinsic => m.Defn.Def(mmods, mname.require[m.Term.Name], mtparams, mvparamss, Some(mtpe), mbody)

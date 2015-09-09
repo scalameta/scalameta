@@ -65,7 +65,7 @@ trait SymbolTables extends GlobalToolkit with MetaToolkit {
         case s.Signature.Self => l.Self(lsym.gsymbol)
       }
       ssym match {
-        case s.Symbol.Zero => l.None
+        case s.Symbol.Zero => l.Zero
         case s.Symbol.RootPackage => l.Package(g.rootMirror.RootPackage, g.rootMirror.RootClass)
         case s.Symbol.EmptyPackage => l.Package(g.rootMirror.EmptyPackage, g.rootMirror.EmptyPackageClass)
         case s.Symbol.Global(howner, name, hsig) => resolve(convert(howner), name, hsig)

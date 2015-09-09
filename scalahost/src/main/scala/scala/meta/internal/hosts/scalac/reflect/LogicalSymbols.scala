@@ -46,12 +46,12 @@ trait LogicalSymbols {
     def isIncomplete: Boolean = symbol == g.NoSymbol
   }
 
-  trait LogicalSymbols { l =>
+  trait LogicalSymbols { l: self.l.type =>
     type Symbol = LogicalSymbol
 
     // not representable with syntax
     // is here simply to provide an encoding for compiler's NoSymbol
-    case object None extends LogicalSymbol {
+    case object Zero extends LogicalSymbol {
       def name = g.nme.NO_NAME.toString
       def symbol = g.NoSymbol
       override def isComplete = true
@@ -269,7 +269,7 @@ trait LogicalSymbols {
       if (allowSymbol(gsym)) {
         val lsym = {
           if (gsym == g.NoSymbol) {
-            l.None
+            l.Zero
           } else if (gsym.isTerm && !gsym.isMethod && !gsym.isModule) {
             require(!gsym.owner.isRefinementClass)
             if (gsym.hasFlag(PARAM)) l.TermParameter(gsym)

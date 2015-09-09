@@ -71,7 +71,7 @@ trait LogicalTrees {
   // 3) ReificationSupport.scala (the quasiquote support module of scala/scala)
   //    Contains various SyntacticXXX extractors that do things similar to our l.XXX extractors.
   //    https://github.com/scala/scala/blob/1fbce4612c21a4d0c553ea489b4765494828c09f/src/reflect/scala/reflect/internal/ReificationSupport.scala
-  trait LogicalTrees { l =>
+  trait LogicalTrees { l: self.l.type =>
     // ============ NAMES ============
 
     case class Denotation(pre: g.Type, sym: g.Symbol) {

@@ -150,7 +150,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
           case l.SelfDef(lname, ltpt) =>
             val mname = {
               val lmdef = gtree.parent.parent.require[g.MemberDef]
-              val lsym = if (lmdef.symbol != g.NoSymbol) l.Self(lmdef.symbol) else l.None
+              val lsym = if (lmdef.symbol != g.NoSymbol) l.Self(lmdef.symbol) else l.Zero
               m.Name.Anonymous().tryMattrs(lmdef.symbol.thisPrefix, lsym)
             }
             val mtpt = if (ltpt.nonEmpty) Some(ltpt.toMtree[m.Type]) else None
