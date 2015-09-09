@@ -31,8 +31,8 @@ trait ToMname extends GlobalToolkit with MetaToolkit {
     }
   }
 
-  private val dummySymbol = g.rootMirror.RootClass.newTermSymbol(g.TermName("<defaultPrefix>"))
-  protected val DefaultPrefix = g.TypeRef(g.NoPrefix, dummySymbol, Nil)
+  private lazy val dummySymbol = g.rootMirror.RootClass.newTermSymbol(g.TermName("<defaultPrefix>"))
+  protected lazy val DefaultPrefix = g.TypeRef(g.NoPrefix, dummySymbol, Nil)
   protected implicit class XtensionDefaultPrefix(_g: g.type) { def DefaultPrefix = self.DefaultPrefix }
 
   protected trait GsymbolToMname[T, U]
