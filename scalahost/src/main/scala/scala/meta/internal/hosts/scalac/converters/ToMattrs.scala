@@ -116,7 +116,8 @@ trait ToMattrs extends GlobalToolkit with MetaToolkit {
   private def typing(gtpe: g.Type): s.Typing = {
     // NOTE: s.Typing.Nonrecursive is lazy, so we need to make sure
     // that we're at the right phase when running this code
-    if (gtpe.typeSymbol.isModuleClass) s.Typing.Recursive
+    if (gtpe == null || gtpe == g.NoType) s.Typing.Zero
+    else if (gtpe.typeSymbol.isModuleClass) s.Typing.Recursive
     else s.Typing.Nonrecursive(g.enteringTyper(gtpe.toMtypeArg))
   }
 

@@ -47,19 +47,19 @@ trait ToMtype extends GlobalToolkit with MetaToolkit {
         case g.SingleType(pre, sym) =>
           require(sym.isTerm)
           val name = sym.asTerm.toMname(pre)
-          val ref = (pre match {
+          val ref = pre match {
             case g.NoPrefix =>
               name
             case pre if pre.typeSymbol.isStaticOwner =>
               name
             case pre: g.SingletonType =>
               val m.Type.Singleton(preref) = pre.toMtype
-              m.Term.Select(preref, name)
+              m.Term.Select(preref, name).inheritAttrs(name)
             case pre @ g.TypeRef(g.NoPrefix, quant, Nil) if quant.hasFlag(DEFERRED | EXISTENTIAL) =>
               require(quant.name.endsWith(g.nme.SINGLETON_SUFFIX))
               val prename = g.Ident(quant.name.toString.stripSuffix(g.nme.SINGLETON_SUFFIX)).displayName
               val preref = m.Term.Name(prename).withMattrs(g.DefaultPrefix, quant)
-              m.Term.Select(preref, name)
+              m.Term.Select(preref, name).inheritAttrs(name)
             case pre: g.TypeRef =>
               // TODO: wow, so much for the hypothesis that all post-typer types are representable with syntax
               // here's one for you: take a look at `context.unit.synthetics.get` in Typers.scala
@@ -72,7 +72,7 @@ trait ToMtype extends GlobalToolkit with MetaToolkit {
               name
             case _ =>
               throw new ConvertException(gtpe, s"unsupported type $gtpe, prefix = ${pre.getClass}, structure = ${g.showRaw(gtpe, printIds = true, printTypes = true)}")
-          }).inheritAttrs(name)
+          }
           // NOTE: we can't just emit m.Type.Singleton(m.Term.Name(...).withDenot(pre, sym))
           // because in some situations (when the prefix is not stable) that will be a lie
           // because naked names are supposed to be usable without a prefix
