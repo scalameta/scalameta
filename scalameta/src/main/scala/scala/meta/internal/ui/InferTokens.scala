@@ -712,7 +712,7 @@ private[meta] object inferTokens {
           val (bf, af) = in.span(_.show[Syntax] != "\n")
           loop(af.tail, out :+ (bf :+ af.head))
       }
-      loop(tks.repr, Seq())
+      loop(tks.repr, List())
     }
   }
 

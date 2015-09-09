@@ -93,7 +93,7 @@ object mergeTrees {
             case (sy: m.Ctor.Primary, se: m.Ctor.Primary) =>
               // NOTE: scala.reflect irreversibly desugars nullary constructors into empty-arglist ones
               val meparamss = (sy.paramss, se.paramss) match {
-                case (Seq(), Seq(Seq())) => Seq()
+                case (Seq(), Seq(Seq())) => List()
                 case (syss, sess) => loop(syss, sess)
               }
               sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), meparamss)
@@ -122,7 +122,7 @@ object mergeTrees {
               }
               val meparents = (sy.parents, se.parents) match {
                 case (Seq(), Seq(m.Term.Apply(anyRef: m.Ctor.Ref, Nil))) if anyRef.refersTo(Object_init) =>
-                  Seq()
+                  List()
                 case (syss, sess) =>
                   mergeParents(syss, sess)
               }
