@@ -65,7 +65,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
             val mname = lname.toMtree[m.Term.Param.Name]
             val mtpt = if (ltpt.nonEmpty) Some(ltpt.toMtree[m.Type]) else None
             val mdefault = if (ldefault.nonEmpty) Some(ldefault.toMtree[m.Term]) else None
-            m.Term.Param(mmods, mname, mtpt, mdefault)
+            m.Term.Param(mmods, mname, mtpt, mdefault).tryMattrs(gtree.symbol.tpe)
 
           // ============ TYPES ============
 
@@ -150,7 +150,8 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
           case l.SelfDef(lname, ltpt) =>
             val mname = lname.toMtree[m.Term.Param.Name]
             val mtpt = if (ltpt.nonEmpty) Some(ltpt.toMtree[m.Type]) else None
-            m.Term.Param(Nil, mname, mtpt, None)
+            val gtpe = lname.denot.sym match { case l.Self(owner) => owner.thisType; case _ => g.NoType }
+            m.Term.Param(Nil, mname, mtpt, None).tryMattrs(gtpe)
 
           // ============ MODIFIERS ============
 
@@ -163,7 +164,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
           case denotedMtree: m.Term.Name => denotedMtree // do nothing, typing already inferred from denotation
           case denotedMtree: m.Ctor.Name => denotedMtree // do nothing, typing already inferred from denotation
           case denotedMtree: m.Term => denotedMtree.tryMattrs(gtree.tpe)
-          case denotedMtree: m.Term.Param => denotedMtree.tryMattrs(gtree.symbol.tpe)
+          case denotedMtree: m.Term.Param => denotedMtree // do nothing, typing already assigned during conversion
           case denotedMtree => denotedMtree
         }
         val typecheckedMtree = typedMtree.forceTypechecked
