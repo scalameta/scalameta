@@ -74,15 +74,15 @@ trait LogicalTrees {
   trait LogicalTrees { l: self.l.type =>
     // ============ NAMES ============
 
-    case class Denotation(pre: g.Type, sym: g.Symbol) {
-      def isEmpty = pre == g.NoType || sym == g.NoSymbol
+    case class Denotation(pre: g.Type, sym: l.Symbol) {
+      def isEmpty = pre == g.NoType || sym == l.Zero
       def nonEmpty = !isEmpty
     }
     implicit class RichDenotationTree(tree: g.NameTree) {
       def denot = tree match {
-        case tree @ g.RefTree(g.EmptyTree, _) => l.Denotation(tree.symbol.prefix, tree.symbol)
-        case tree @ g.RefTree(qual, _) => l.Denotation(if (qual.tpe != null) qual.tpe else g.NoType, tree.symbol)
-        case tree: g.DefTree => l.Denotation(tree.symbol.prefix, tree.symbol)
+        case tree @ g.RefTree(g.EmptyTree, _) => l.Denotation(tree.symbol.prefix, tree.symbol.toLogical)
+        case tree @ g.RefTree(qual, _) => l.Denotation(if (qual.tpe != null) qual.tpe else g.NoType, tree.symbol.toLogical)
+        case tree: g.DefTree => l.Denotation(tree.symbol.prefix, tree.symbol.toLogical)
         case _ => unreachable(debug(tree, showRaw(tree)))
       }
     }
@@ -91,13 +91,13 @@ trait LogicalTrees {
 
     case class AnonymousName(denot: l.Denotation) extends Name with TermParamName with TypeParamName with QualifierName
     object AnonymousName {
-      def apply(sym: g.Symbol): l.AnonymousName = apply(l.Denotation(sym.prefix, sym))
+      def apply(pre: g.Type, sym: l.Symbol): l.AnonymousName = apply(l.Denotation(pre, sym))
     }
 
     case class IndeterminateName(denot: l.Denotation, value: String) extends Name with QualifierName
     object IndeterminateName {
-      def apply(sym: g.Symbol, value: String): l.IndeterminateName = {
-        l.IndeterminateName(l.Denotation(sym.prefix, sym), value)
+      def apply(pre: g.Type, sym: l.Symbol, value: String): l.IndeterminateName = {
+        l.IndeterminateName(l.Denotation(pre, sym), value)
       }
     }
 
@@ -122,7 +122,7 @@ trait LogicalTrees {
     object TermIdent {
       def unapply(tree: g.Ident): Option[l.TermName] = tree match {
         case tree @ g.Ident(g.TermName(value)) =>
-          val ldenot = l.Denotation(tree.symbol.prefix, tree.symbol)
+          val ldenot = l.Denotation(tree.symbol.prefix, tree.symbol.toLogical)
           Some(l.TermName(ldenot, value).setParent(tree).setType(tree.tpe))
         case _ =>
           None
@@ -158,8 +158,11 @@ trait LogicalTrees {
 
     object TypeIdent {
       def unapply(tree: g.Tree): Option[l.TypeName] = tree match {
-        case tree @ g.Ident(g.TypeName(value)) => Some(l.TypeName(l.Denotation(g.NoPrefix, tree.symbol), value).setParent(tree))
-        case _ => None
+        case tree @ g.Ident(g.TypeName(value)) =>
+          val ldenot = l.Denotation(g.NoPrefix, tree.symbol.toLogical)
+          Some(l.TypeName(ldenot, value).setParent(tree))
+        case _ =>
+          None
       }
     }
 
@@ -362,7 +365,7 @@ trait LogicalTrees {
 
     case class CtorIdent(name: l.CtorName) extends Tree
     object CtorIdent {
-      def apply(ctorSym: g.Symbol, classRef: g.RefTree): l.CtorIdent = {
+      def apply(ctorSym: l.Symbol, classRef: g.RefTree): l.CtorIdent = {
         // NOTE: We can't use the commented snippet of code,
         // because then we'll end up in a really strange place when type aliases are involved.
         // Consider the `AnyRef` ctorident in `class C extends scala.AnyRef`.
@@ -373,8 +376,9 @@ trait LogicalTrees {
         // Hence here we actually have to disregard the prefix (i.e. inheritance and type aliases) and
         // simply go for the owner of the symbol.
         // val lpre = ctorRef.qualifier.tpe.prefix.orElse(g.NoPrefix)
-        val ldenot = l.Denotation(ctorSym.owner.prefix, ctorSym)
-        val lname = l.CtorName(ldenot, classRef.displayName).setType(ctorSym.info)
+        val gctor = ctorSym.gsymbol
+        val ldenot = l.Denotation(gctor.owner.prefix, ctorSym)
+        val lname = l.CtorName(ldenot, classRef.displayName).setType(gctor.info)
         val lresult = l.CtorIdent(lname)
         lname.setParent(lresult)
         lresult
@@ -417,7 +421,7 @@ trait LogicalTrees {
           var argss = if (syntacticArgss.nonEmpty) semanticArgss else syntacticArgss
           if (argss.isEmpty) argss = List(List())
           val lparent = argss.foldLeft(parent)((curr, args) => g.Apply(curr, args))
-          lparent.appendMetadata("superCtor" -> superCtor).setParent(tree)
+          lparent.appendMetadata("superCtor" -> superCtor.toLogical).setParent(tree)
         }
         val lstats = removeSyntheticDefinitions(stats)
         Some((edefs, lparents, lself, lstats))
@@ -430,7 +434,7 @@ trait LogicalTrees {
         val applied = dissectApplied(tree)
         (applied.callee, applied.core, applied.argss) match {
           case (tpt, classRef: g.RefTree, argss) =>
-            val ctorSym = tree.metadata.get("superCtor").map(_.require[g.Symbol]).getOrElse(g.NoSymbol)
+            val ctorSym = tree.metadata.get("superCtor").map(_.require[l.Symbol]).getOrElse(l.Zero)
             val ctor = l.CtorIdent(ctorSym, classRef).setParent(tree.parent)
             Some((tpt, ctor, argss))
           case _ =>
@@ -444,7 +448,16 @@ trait LogicalTrees {
       def unapply(tree: g.ValDef): Option[(l.TermParamName, g.Tree)] = {
         if (tree.parent.isInstanceOf[g.Template] && tree.index == -1) {
           val isAnonymous = tree.name == g.nme.WILDCARD || tree.name.startsWith(g.nme.FRESH_TERM_NAME_PREFIX)
-          val lname = if (isAnonymous) l.AnonymousName(tree.symbol).setParent(tree) else l.TermName(tree).setParent(tree)
+          val ldenot = {
+            val lmdef = tree.parent.parent.require[g.MemberDef]
+            val lsym = if (lmdef.symbol != g.NoSymbol) l.Self(lmdef.symbol) else l.Zero
+            l.Denotation(lmdef.symbol.thisPrefix, lsym)
+          }
+          val lvalue = if (isAnonymous) "this" else tree.displayName
+          val lname = {
+            if (isAnonymous) l.AnonymousName(ldenot).setParent(tree)
+            else l.TermName(ldenot, lvalue).setParent(tree)
+          }
           Some((lname, tree.tpt))
         } else {
           None
@@ -525,11 +538,12 @@ trait LogicalTrees {
           } else if (mods.hasAccessBoundary && privateWithin != g.tpnme.EMPTY) {
             // TODO: `private[pkg] class C` doesn't have PRIVATE in its flags
             // so we need to account for that!
-            val lprivateWithin = l.IndeterminateName(privateWithinSym, privateWithin.toString)
+            val lprivateWithin = l.IndeterminateName(privateWithinSym.prefix, privateWithinSym.toLogical, privateWithin.toString)
             if (mods.hasFlag(PROTECTED)) List(l.Protected(lprivateWithin))
             else List(l.Private(lprivateWithin))
           } else {
-            val lprivateWithin = l.AnonymousName(tree.symbol.owner)
+            val privateWithinSym = tree.symbol.owner
+            val lprivateWithin = l.AnonymousName(privateWithinSym.prefix, privateWithinSym.toLogical)
             if (mods.hasFlag(PROTECTED)) List(l.Protected(lprivateWithin))
             else if (mods.hasFlag(PRIVATE)) List(l.Private(lprivateWithin))
             else Nil

@@ -148,11 +148,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
               app.withMattrs(mcurr.typing.map{ case m.Type.Function(_, ret) => ret })
             })
           case l.SelfDef(lname, ltpt) =>
-            val mname = {
-              val lmdef = gtree.parent.parent.require[g.MemberDef]
-              val lsym = if (lmdef.symbol != g.NoSymbol) l.Self(lmdef.symbol) else l.Zero
-              m.Name.Anonymous().tryMattrs(lmdef.symbol.thisPrefix, lsym)
-            }
+            val mname = lname.toMtree[m.Term.Param.Name]
             val mtpt = if (ltpt.nonEmpty) Some(ltpt.toMtree[m.Type]) else None
             m.Term.Param(Nil, mname, mtpt, None)
 

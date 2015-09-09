@@ -31,7 +31,7 @@ trait ToMattrs extends GlobalToolkit with MetaToolkit {
       implicitly[YesDenotNoTyping[T]].withMattrs(mtree, denot)
     }
     def withMattrs(gpre: g.Type, symlike: SymLike): T = {
-      withMattrs(denot(gpre, symlike.lsym))
+      withMattrs(l.Denotation(gpre, symlike.lsym))
     }
     def tryMattrs(denotlike: DenotLike): T = {
       val denot = denotlike.sdenot
@@ -39,7 +39,7 @@ trait ToMattrs extends GlobalToolkit with MetaToolkit {
       else mtree
     }
     def tryMattrs(gpre: g.Type, symlike: SymLike): T = {
-      tryMattrs(denot(gpre, symlike.lsym))
+      tryMattrs(l.Denotation(gpre, symlike.lsym))
     }
   }
 
@@ -65,7 +65,7 @@ trait ToMattrs extends GlobalToolkit with MetaToolkit {
       withMattrs(denot, typing)
     }
     def withMattrs(gpre: g.Type, symlike: SymLike): T = {
-      withMattrs(denot(gpre, symlike.lsym))
+      withMattrs(l.Denotation(gpre, symlike.lsym))
     }
     def tryMattrs(denotlike: DenotLike): T = {
       val denot = denotlike.sdenot
@@ -73,7 +73,7 @@ trait ToMattrs extends GlobalToolkit with MetaToolkit {
       else abort(debug(denot))
     }
     def tryMattrs(gpre: g.Type, symlike: SymLike): T = {
-      tryMattrs(denot(gpre, symlike.lsym))
+      tryMattrs(l.Denotation(gpre, symlike.lsym))
     }
 
     def withMattrs(denotlike: DenotLike, tpelike: TypingLike): T = {
@@ -83,7 +83,7 @@ trait ToMattrs extends GlobalToolkit with MetaToolkit {
       implicitly[YesDenotYesTyping[T]].withMattrs(mtree, denot, typing)
     }
     def withMattrs(gpre: g.Type, symlike: SymLike, tpelike: TypingLike): T = {
-      withMattrs(denot(gpre, symlike.lsym), tpelike)
+      withMattrs(l.Denotation(gpre, symlike.lsym), tpelike)
     }
     def tryMattrs(denotlike: DenotLike, tpelike: TypingLike): T = {
       val denot = denotlike.sdenot
@@ -93,7 +93,7 @@ trait ToMattrs extends GlobalToolkit with MetaToolkit {
       else abort(debug(denot, typing))
     }
     def tryMattrs(gpre: g.Type, symlike: SymLike, tpelike: TypingLike): T = {
-      tryMattrs(denot(gpre, symlike.lsym), tpelike)
+      tryMattrs(l.Denotation(gpre, symlike.lsym), tpelike)
     }
   }
 
@@ -174,7 +174,7 @@ trait ToMattrs extends GlobalToolkit with MetaToolkit {
 
   protected trait DenotLike { def sdenot: s.Denotation }
   protected object DenotLike {
-    implicit def ldenotIsDenotLike(ldenot: l.Denotation): DenotLike = new DenotLike { def sdenot = denot(ldenot.pre, ldenot.sym.toLogical) }
+    implicit def ldenotIsDenotLike(ldenot: l.Denotation): DenotLike = new DenotLike { def sdenot = denot(ldenot.pre, ldenot.sym) }
     implicit def sdenotIsDenotLike(sdenot0: s.Denotation): DenotLike = new DenotLike { def sdenot = sdenot0 }
   }
 
