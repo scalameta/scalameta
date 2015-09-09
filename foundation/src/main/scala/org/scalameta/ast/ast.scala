@@ -6,6 +6,7 @@ import scala.reflect.macros.whitebox.Context
 import scala.collection.mutable.{ListBuffer, ListMap}
 import org.scalameta.unreachable
 import org.scalameta.ast.{Reflection => AstReflection}
+import scala.compat.Platform.EOL
 
 class ast extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro AstMacros.impl
@@ -361,8 +362,9 @@ class AstMacros(val c: Context) extends AstReflection {
         val dandtMods = PrivateMeta
         val termOrCtorName = q"this.isInstanceOf[_root_.scala.meta.Term.Name] || this.isInstanceOf[_root_.scala.meta.Ctor.Name]"
         val termOrCtorNameCheck = q"""if ($termOrCtorName) throw new UnsupportedOperationException("need to simultaneously set both denotation and typing for a " + this.productPrefix)"""
-        val stateMessage = "can only call withAttrs on unattributed trees, if necessary call .copy() to unattribute and then do .withAttrs(...)"
-        val stateCheck = q"if (!isUnattributed) throw new UnsupportedOperationException($stateMessage)"
+        val stateMessage = "can only call withAttrs on unattributed trees; if necessary, call .copy() to unattribute and then do .withAttrs(...)"
+        val stateDetails = q"this.show[_root_.scala.meta.internal.ui.Attributes]"
+        val stateCheck = q"if (!isUnattributed) throw new UnsupportedOperationException($stateMessage + $EOL + $stateDetails)"
         val withAttrsD = q"""
           $dortMods def withAttrs($paramDenot): $iname = {
             $termOrCtorNameCheck
@@ -419,7 +421,8 @@ class AstMacros(val c: Context) extends AstReflection {
       if (hasExpansion) {
         val paramExpansionLike = q"val expansionLike: $SemanticInternal.ExpansionLike"
         val stateMessage = "can only call withExpansion on partially attributed trees, call .withAttrs first and only then .withExpansion(...)"
-        val stateCheck = q"if (!isPartiallyAttributed) throw new UnsupportedOperationException($stateMessage)"
+        val stateDetails = q"this.show[_root_.scala.meta.internal.ui.Attributes]"
+        val stateCheck = q"if (!isPartiallyAttributed) throw new UnsupportedOperationException($stateMessage + $EOL + $stateDetails)"
         astats1 += q"""
           private[meta] def withExpansion($paramExpansionLike): $iname = {
             $stateCheck
