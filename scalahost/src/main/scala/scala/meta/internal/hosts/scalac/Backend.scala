@@ -234,7 +234,7 @@ abstract class ScalahostGenBCode(override val global: NscGlobal) extends scala.t
                   val relevantSubchain = chain.filter(!_.isEffectiveRoot)
                   val slice = loop(tree, relevantSubchain)
                   slice match {
-                    case Some(slice) => slice.asInstanceOf[T]
+                    case Some(slice) => slice.setTypechecked.asInstanceOf[T]
                     case None => fail(s"couldn't find representation for $claszSymbol")
                   }
                 }
