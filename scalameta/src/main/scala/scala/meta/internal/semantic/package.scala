@@ -103,7 +103,7 @@ package object semantic {
         case tree: Name => tree.withAttrs(other.internalDenot.get)
         case tree: Term => tree.withAttrs(other.internalTyping.get)
         case tree: Term.Param => tree.withAttrs(other.internalTyping.get)
-        case _ => // do nothing
+        case _ => tree // do nothing
       }
       result.asInstanceOf[T]
     }
