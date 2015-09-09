@@ -55,6 +55,16 @@ trait LogicalSymbols {
       def name = g.nme.NO_NAME.toString
       def symbol = g.NoSymbol
       override def isComplete = true
+      override def isIncomplete = false
+    }
+
+    // can be a synthetic symbol called "this" if it was specified by the user (the name gets lost during typechecking)
+    // can be NoSymbol if it wasn't explicitly specified by the user (i.e. when we have g.noSelfType)
+    case class Self(owner: g.Symbol) extends LogicalSymbol {
+      def name = "this"
+      def symbol = throw new UnsupportedOperationException("l.Self symbols don't have adequate equivalents in scala.reflect")
+      override def isComplete = true
+      override def isIncomplete = false
     }
 
     // > val x: Int

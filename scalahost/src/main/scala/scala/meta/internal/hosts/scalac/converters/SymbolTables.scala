@@ -25,39 +25,44 @@ trait SymbolTables extends GlobalToolkit with MetaToolkit {
 
     // TODO: `convert` is somewhat copy/pasted from core/quasiquotes/Macros.scala
     // however, there's no way for us to share those implementations until we bootstrap
-    def convert(lsym: l.Symbol): s.Symbol = symCache.getOrElseUpdate(lsym, {
-      def isGlobal(gsym: g.Symbol): Boolean = {
-        def definitelyLocal = gsym == g.NoSymbol || gsym.name.toString.startsWith("<local ") || (gsym.owner.isMethod && !gsym.isParameter)
-        def isParentGlobal = gsym.hasPackageFlag || isGlobal(gsym.owner)
-        !definitelyLocal && isParentGlobal
-      }
-      def signature(gsym: g.Symbol): s.Signature = {
-        if (gsym.isMethod && !gsym.asMethod.isGetter) s.Signature.Method(gsym.jvmsig)
-        else if (gsym.isTerm || (gsym.hasFlag(DEFERRED | EXISTENTIAL) && gsym.name.endsWith(g.nme.SINGLETON_SUFFIX))) s.Signature.Term
-        else if (gsym.isType) s.Signature.Type
-        else unreachable(debug(gsym, gsym.flags, gsym.getClass, gsym.owner))
-      }
-      val gsym = lsym.gsymbol
-      require(!gsym.isModuleClass && !gsym.isPackageClass)
-      if (gsym == g.NoSymbol) s.Symbol.Zero
-      else if (gsym == g.rootMirror.RootPackage) s.Symbol.RootPackage
-      else if (gsym == g.rootMirror.EmptyPackage) s.Symbol.EmptyPackage
-      else if (isGlobal(gsym)) s.Symbol.Global(convert(gsym.owner.toLogical), gsym.name.decodedName.toString, signature(gsym))
-      else s.Symbol.Local(randomUUID().toString)
+    def convert(lsym: l.Symbol): s.Symbol = symCache.getOrElseUpdate(lsym, lsym match {
+      case l.Self(gowner) =>
+        val sowner = convert(gowner.toLogical)
+        sowner match {
+          case sowner: s.Symbol.Global => s.Symbol.Global(sowner, "this", s.Signature.Self)
+          case _ => s.Symbol.Local(randomUUID().toString)
+        }
+      case lsym =>
+        def isGlobal(gsym: g.Symbol): Boolean = {
+          def definitelyLocal = gsym == g.NoSymbol || gsym.name.toString.startsWith("<local ") || (gsym.owner.isMethod && !gsym.isParameter)
+          def isParentGlobal = gsym.hasPackageFlag || isGlobal(gsym.owner)
+          !definitelyLocal && isParentGlobal
+        }
+        def signature(gsym: g.Symbol): s.Signature = {
+          if (gsym.isMethod && !gsym.asMethod.isGetter) s.Signature.Method(gsym.jvmsig)
+          else if (gsym.isTerm || (gsym.hasFlag(DEFERRED | EXISTENTIAL) && gsym.name.endsWith(g.nme.SINGLETON_SUFFIX))) s.Signature.Term
+          else if (gsym.isType) s.Signature.Type
+          else unreachable(debug(gsym, gsym.flags, gsym.getClass, gsym.owner))
+        }
+        val gsym = lsym.gsymbol
+        require(!gsym.isModuleClass && !gsym.isPackageClass)
+        if (gsym == g.NoSymbol) s.Symbol.Zero
+        else if (gsym == g.rootMirror.RootPackage) s.Symbol.RootPackage
+        else if (gsym == g.rootMirror.EmptyPackage) s.Symbol.EmptyPackage
+        else if (isGlobal(gsym)) s.Symbol.Global(convert(gsym.owner.toLogical), gsym.name.decodedName.toString, signature(gsym))
+        else s.Symbol.Local(randomUUID().toString)
     })
 
     def lookupOrElseUpdate(lsym: l.Symbol, ssym: => s.Symbol): s.Symbol = symCache.getOrElseUpdate(lsym, ssym)
 
     def convert(ssym: s.Symbol): l.Symbol = symCache.getOrElseUpdate(ssym, {
-      def resolve(lsym: l.Symbol, name: String, hsig: s.Signature): l.Symbol = {
-        val gsym = hsig match {
-          case s.Signature.Type => lsym.gsymbol.info.decl(g.TypeName(name)).asType
-          case s.Signature.Term => lsym.gsymbol.info.decl(g.TermName(name)).suchThat(galt => galt.isGetter || !galt.isMethod).asTerm
-          case s.Signature.Method(jvmsig) => lsym.gsymbol.info.decl(g.TermName(name)).suchThat(galt => galt.isMethod && galt.jvmsig == jvmsig).asTerm
-          case s.Signature.TypeParameter => lsym.gsymbol.typeParams.filter(_.name.toString == name).head
-          case s.Signature.TermParameter => lsym.gsymbol.paramss.flatten.filter(_.name.toString == name).head
-        }
-        gsym.toLogical
+      def resolve(lsym: l.Symbol, name: String, hsig: s.Signature): l.Symbol = hsig match {
+        case s.Signature.Type => lsym.gsymbol.info.decl(g.TypeName(name)).asType.toLogical
+        case s.Signature.Term => lsym.gsymbol.info.decl(g.TermName(name)).suchThat(galt => galt.isGetter || !galt.isMethod).asTerm.toLogical
+        case s.Signature.Method(jvmsig) => lsym.gsymbol.info.decl(g.TermName(name)).suchThat(galt => galt.isMethod && galt.jvmsig == jvmsig).asTerm.toLogical
+        case s.Signature.TypeParameter => lsym.gsymbol.typeParams.filter(_.name.toString == name).head.toLogical
+        case s.Signature.TermParameter => lsym.gsymbol.paramss.flatten.filter(_.name.toString == name).head.toLogical
+        case s.Signature.Self => l.Self(lsym.gsymbol)
       }
       ssym match {
         case s.Symbol.Zero => l.None
