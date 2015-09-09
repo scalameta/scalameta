@@ -5,13 +5,14 @@ package semantic
 import org.scalameta.adt
 import org.scalameta.adt._
 import org.scalameta.invariants._
+import scala.meta.internal.ui.Attributes
 
 @monadicRoot trait Typing
 object Typing {
   @noneLeaf object Zero extends Typing
   @noneLeaf object Recursive extends Typing
   @someLeaf class Nonrecursive(tpe: Type.Arg @byNeed) extends Typing {
-    protected def onTpeLoaded(tpe: Type.Arg) = require(tpe.isTypechecked)
+    protected def onTpeLoaded(tpe: Type.Arg) = require(tpe.isTypechecked && debug(tpe.show[Attributes]))
     protected def writeReplace(): AnyRef = new Nonrecursive.SerializationProxy(this)
     override def canEqual(other: Any): Boolean = other.isInstanceOf[Nonrecursive]
     override def equals(that: Any): Boolean = that match {

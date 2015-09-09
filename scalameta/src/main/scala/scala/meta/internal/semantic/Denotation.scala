@@ -8,6 +8,7 @@ import org.scalameta.adt
 import org.scalameta.adt._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
+import scala.meta.internal.ui.Attributes
 
 // In our sketch, symbols are split into global and local. Global symbols can be observed from multiple
 // compilation units, so we need a scheme to make observers arrive at the same representation for them.
@@ -44,7 +45,7 @@ object Symbol {
 object Prefix {
   @noneLeaf object Zero extends Prefix
   @someLeaf class Type(tpe: scala.meta.Type) extends Prefix {
-    require(tpe.isTypechecked)
+    require(tpe.isTypechecked && debug(tpe.show[Attributes]))
     override def canEqual(other: Any): Boolean = other.isInstanceOf[Type]
     override def equals(that: Any): Boolean = that match {
       case that: Type => equality.Semantic.equals(this.tpe, that.tpe)

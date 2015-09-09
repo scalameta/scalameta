@@ -111,7 +111,7 @@ package object semantic {
 
   trait TypingLike { def typing: Typing }
   object TypingLike {
-    implicit def typeIsTypingLike(tpe: => api.Type): TypingLike = new TypingLike { def typing = Typing.Nonrecursive(tpe) }
+    implicit def typeIsTypingLike(tpe: => api.Type.Arg): TypingLike = new TypingLike { def typing = Typing.Nonrecursive(tpe) }
     implicit def typingIsTypingLike(typing0: Typing): TypingLike = new TypingLike { def typing = typing0 }
   }
 

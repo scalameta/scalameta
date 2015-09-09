@@ -5,13 +5,14 @@ package semantic
 import org.scalameta.adt
 import org.scalameta.adt._
 import org.scalameta.invariants._
+import scala.meta.internal.ui.Attributes
 
 @monadicRoot trait Expansion
 object Expansion {
   @noneLeaf object Zero extends Expansion
   @noneLeaf object Identity extends Expansion
   @someLeaf class Desugaring(term: Term) extends Expansion {
-    require(term.isTypechecked)
+    require(term.isTypechecked && debug(term.show[Attributes]))
     override def canEqual(other: Any): Boolean = other.isInstanceOf[Desugaring]
     override def equals(that: Any): Boolean = that match {
       case that: Desugaring => equality.Semantic.equals(this.term, that.term)
