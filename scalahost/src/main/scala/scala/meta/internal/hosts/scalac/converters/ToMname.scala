@@ -22,9 +22,12 @@ trait ToMname extends GlobalToolkit with MetaToolkit {
       // TODO: account for ctornames?
       // TODO: what about anonymous names?
       val gpre = if (gpre0 == DefaultPrefix) gsym.prefix else gpre0
-      if (gsym.isTerm) m.Term.Name(value).withMattrs(gpre, gsym).asInstanceOf[U]
-      else if (gsym.isType) m.Type.Name(value).withMattrs(gpre, gsym).asInstanceOf[U]
-      else abort()
+      val mname = {
+        if (gsym.isTerm) m.Term.Name(value).withMattrs(gpre, gsym).asInstanceOf[U]
+        else if (gsym.isType) m.Type.Name(value).withMattrs(gpre, gsym).asInstanceOf[U]
+        else abort(gsym)
+      }
+      mname.forceTypechecked
     }
   }
 

@@ -397,7 +397,7 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
       val ssym = symbolTable.convert(lsym)
       val maybeSourceNativePmember = ssymToNativeMmemberCache.get(ssym)
       val maybeNativePmember = maybeSourceNativePmember.map(applyPrefix(gpre, _))
-      maybeNativePmember.getOrElse(approximateSymbol(lsym))
+      maybeNativePmember.getOrElse(approximateSymbol(lsym)).forceTypechecked
     })
   }
 }

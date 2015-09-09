@@ -56,7 +56,7 @@ trait ToMannot extends GlobalToolkit with MetaToolkit {
         if (margs.isEmpty) mctorname.withExpansion(mannot)
         else mannot
       }
-      m.Mod.Annot(mannotcore(gannot))
+      m.Mod.Annot(mannotcore(gannot)).forceTypechecked
     }
   }
 

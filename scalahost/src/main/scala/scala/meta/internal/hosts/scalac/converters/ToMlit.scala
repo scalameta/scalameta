@@ -31,7 +31,7 @@ trait ToMlit extends GlobalToolkit with MetaToolkit {
         case v: g.Type => unreachable(debug(gconst))
         case v: g.Symbol => unreachable(debug(gconst))
       }
-      msytree.withMattrs(gconst.tpe)
+      msytree.withMattrs(gconst.tpe).forceTypechecked
     }
   }
 }

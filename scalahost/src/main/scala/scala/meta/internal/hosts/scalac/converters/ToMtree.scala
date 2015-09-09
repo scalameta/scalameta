@@ -165,7 +165,8 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
         case denotedMtree: m.Term.Param => denotedMtree.withMattrs(gtree.symbol.tpe)
         case denotedMtree => denotedMtree
       }
-      val mtree = indexOne(typedMtree)
+      val typecheckedMtree = typedMtree.forceTypechecked
+      val mtree = indexOne(typecheckedMtree)
       if (sys.props("convert.debug") != null && gtree.parent.isEmpty) {
         println("======= SCALA.REFLECT TREE =======")
         println(gtree)

@@ -69,6 +69,7 @@ trait MetaToolkit {
           case x: Some[_] => process(x.get)
           case x => // do nothing
         }
+        if (tree.isTypechecked) return
         val _ = tree.setTypechecked
         tree.productIterator.foreach(process)
       }
