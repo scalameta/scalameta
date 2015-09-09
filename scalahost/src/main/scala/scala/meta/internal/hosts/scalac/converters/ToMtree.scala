@@ -145,7 +145,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
             val margss = largss.toMtreess[m.Term.Arg]
             margss.foldLeft(mctor)((mcurr, margs) => {
               val app = m.Term.Apply(mcurr, margs)
-              app.withMattrs(mcurr.typing.map{ case m.Type.Function(_, ret) => ret })
+              app.withMattrs(mcurr.typing.map{ case m.Type.Method(_, ret) => ret })
             })
           case l.SelfDef(lname, ltpt) =>
             val mname = lname.toMtree[m.Term.Param.Name]
