@@ -114,8 +114,8 @@ object Attributes {
       def previewInsert[T <% Footnote](x: T): Int = {
         val footnote = implicitly[T => Footnote].apply(x)
         val miniRepr = repr.getOrElseUpdate(footnote.tag, CustomMap[Any, (Int, Footnote)]())
-        val maxId = (miniRepr.values.map(_._1) ++ List(0)).max
-        maxId + 1
+        val existingId = miniRepr.get(new CustomWrapper(x)).map(_._1)
+        existingId.getOrElse((miniRepr.values.map(_._1) ++ List(0)).max + 1)
       }
       def insert[T <% Footnote](x: T): Int = {
         val id = previewInsert(x)
