@@ -235,6 +235,7 @@ object Attributes {
         case _ => false
       }
       override def hashCode: Int = e.Semantic.hashCode(x)
+      override def toString: String = s"CustomWrapper($x)"
     }
   }
 }
