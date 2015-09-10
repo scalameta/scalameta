@@ -11,7 +11,7 @@ private[meta] trait Api {
     def load(artifact: Artifact): Artifact = c.load(artifact)
 
     def load(source: Source): Source = {
-      val artifact = Artifact.Adhoc(Seq(source))
+      val artifact = Artifact.Adhoc(List(source))
       val scala.meta.taxonomic.Artifact.Adhoc(Seq(source1), _, _) = c.load(artifact)
       source1
     }

@@ -25,9 +25,9 @@ object Multipath {
   implicit def filesIsMultipath(files: Seq[File])(implicit hack2: OverloadHack2): Multipath = apply(files: _*)
 
   def apply(s: String): Multipath = Multipath(s.split(File.pathSeparatorChar): _*)
-  def apply(file: File): Multipath = Multipath(Seq(Path(file)): _*)
-  def apply(): Multipath = Multipath(Seq[Path](): _*)
-  def apply(nil: Nil.type): Multipath = Multipath(Seq[Path](): _*)
+  def apply(file: File): Multipath = Multipath(List(Path(file)): _*)
+  def apply(): Multipath = Multipath(List[Path](): _*)
+  def apply(nil: Nil.type): Multipath = Multipath(List[Path](): _*)
   def apply(ss: String*)(implicit hack1: OverloadHack1): Multipath = Multipath(ss.map(Path.apply): _*)
   def apply(files: File*)(implicit hack2: OverloadHack2): Multipath = Multipath(files.map(Path.apply): _*)
 }
