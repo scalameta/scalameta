@@ -31,7 +31,7 @@ import scala.meta.internal.ui.Summary
 @context(translateExceptions = false)
 class Proxy[G <: ScalaGlobal](val global: G, initialDomain: Domain = Domain())
 extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
-  indexCompilationUnits()
+  initializeFromDomain(initialDomain)
 
   // ======= SEMANTIC CONTEXT =======
 
@@ -54,7 +54,6 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
   }
 
   private[meta] def defns(untypedRef: mapi.Ref): Seq[mapi.Member] = {
-    require(!disallowApisThatReturnMembers)
     val ref = typecheck(untypedRef).require[m.Ref]
     val result = ref match {
       case pname: m.Name => pname.toLsymbols.map(_.toMmember(pname.toGprefix))
@@ -72,7 +71,6 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
   }
 
   private[meta] def members(untypedTpe: mapi.Type): Seq[mapi.Member] = {
-    require(!disallowApisThatReturnMembers)
     val tpe = typecheck(untypedTpe).require[m.Type]
     val gtpe = tpe.toGtype
     val gmembers = gtpe.members.filter(_ != g.rootMirror.RootPackage)
@@ -126,7 +124,6 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
   }
 
   private[meta] def parents(untypedMember: mapi.Member): Seq[mapi.Member] = {
-    require(!disallowApisThatReturnMembers)
     val member = typecheck(untypedMember).require[m.Member]
     val gpre = member.toGprefix
     val Seq(lsym) = member.toLsymbols
@@ -135,7 +132,6 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
   }
 
   private[meta] def children(untypedMember: mapi.Member): Seq[mapi.Member] = {
-    require(!disallowApisThatReturnMembers)
     val member = typecheck(untypedMember).require[m.Member]
     val gpre = member.toGprefix
     val Seq(lsym) = member.toLsymbols
@@ -145,8 +141,33 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
 
   // ======= INTERACTIVE CONTEXT =======
 
-  private[meta] def load(artifact: mapi.Artifact): mapi.Artifact = {
-    ???
+  private[meta] def load(artifacts: Seq[mapi.Artifact]): Seq[mapi.Artifact] = {
+    if (Debug.scalahost) println(s"loading ${artifacts.length} artifacts from $artifacts")
+
+    val artifactClasspath = artifacts.flatMap(_.binaries).map(p => new File(p.path).toURI.toURL)
+    if (Debug.scalahost) println(s"indexing artifact classpath: $artifactClasspath")
+    // TODO: extend compiler classpath if necessary
+
+    val artifactSources = artifacts.flatMap(_.sources)
+    val (typedSources, untypedSources) = artifactSources.partition(_.isTypechecked)
+    if (Debug.scalahost) println(s"indexing ${artifactSources.length} artifact sources (${typedSources.length} out of ${artifactSources.length} are TYPECHECKED)")
+    typedSources.foreach(source => {
+      // TODO: looks like we really need some kind of a Source.id
+      if (Debug.scalahost) println(s"indexing ${source.show[Summary]}")
+      indexAll(source.require[m.Source])
+    })
+
+    if (Debug.scalahost) untypedSources.foreach(source => println(s"typechecking ${source.show[Summary]}"))
+    // TODO: typecheck untypedSources together via something similar to compileLate
+    // TODO: don't forget to indexAll
+    val typedUntypedSources = Map[Source, Source]()
+
+    def ensureTypechecked(source: Source) = typedUntypedSources.getOrElse(source, source)
+    artifacts.map {
+      case taxonomic.Artifact.Adhoc(sources, resources, deps) => taxonomic.Artifact.Adhoc(sources.map(ensureTypechecked), resources, deps)
+      case artifact: taxonomic.Artifact.Unmanaged => artifact
+      case artifact: taxonomic.Artifact.Maven => artifact
+    }
   }
 
   // ============== PROXY ==============
@@ -190,139 +211,121 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
   // ======= INTERNAL BOOKKEEPING =======
 
   private var currentDomain: Domain = _
-  private var disallowApisThatReturnMembers: Boolean = false
+  private def initializeFromDomain(initialDomain: Domain): Unit = withWriteOnlyIndices {
+    val fromScratch = global.currentRun == null
+    def fail(reason: String, ex: Option[Exception]) = {
+      val status = if (fromScratch) "scratch" else "a pre-existing compiler"
+      throw new InfrastructureException(s"can't initialize a semantic proxy from $status: " + reason, ex)
+    }
 
-  private[meta] def indexCompilationUnits(): Unit = {
-    // NOTE: We disable certain semantic operations when the compilation units are being indexed.
-    // Otherwise, we could run into problems when we, say, resolve a reference during indexing
-    // and the result of the resolution is an object that is reconstructed from a symbol,
-    // not loaded directly from a source that hasn't been indexed yet.
-    disallowApisThatReturnMembers = true
+    if (Debug.scalahost) {
+      println(s"initializing semantic proxy from $global and $initialDomain")
+      if (fromScratch) println("starting from scratch") else println("wrapping a pre-existing global")
+    }
 
     try {
-      val fromScratch = global.currentRun == null
-      def fail(reason: String, ex: Option[Exception]) = {
-        val status = if (fromScratch) "scratch" else "a pre-existing compiler"
-        throw new InfrastructureException(s"can't initialize a semantic proxy from $status: " + reason, ex)
+      // NOTE: This is necessary for semantic APIs to work correctly,
+      // because otherwise the underlying global isn't going to have its symtab populated.
+      // It would probably be possible to avoid this by creating completers that
+      // lazily read scala.meta trees and then lazily convert them to symtab entries,
+      // but that's way beyond our technological level at the moment.
+      val domainClasspath = initialDomain.artifacts.flatMap(_.binaries).map(p => new File(p.path).toURI.toURL)
+      if (Debug.scalahost) println(s"indexing domain classpath: $domainClasspath")
+      if (fromScratch) {
+        // NOTE: Make sure that the internal classpath cache hasn't been initialized yet.
+        // If it has, we're in trouble, because our modifications to settings.classpath.value
+        // aren't going to get propagated. Of course, I tried to sidestep this problem
+        // by using something like `global.extendCompilerClassPath(domainClasspath: _*)`,
+        // but unfortunately it throws an obscure assertion error, so I just gave up.
+        val m_currentClassPath = global.platform.getClass.getDeclaredMethod("currentClassPath")
+        m_currentClassPath.setAccessible(true)
+        val currentClassPath = m_currentClassPath.invoke(global.platform).asInstanceOf[Option[_]]
+        require(currentClassPath.isEmpty)
+        global.settings.classpath.value = domainClasspath.map(_.getPath).mkString(File.pathSeparator)
+
+        // NOTE: This is mandatory, because this is going to: a) finish necessary initialization of the compiler,
+        // b) force computation of the classpath that we have just set.
+        val run = new global.Run
+        global.phase = run.picklerPhase
+        global.globalPhase = run.picklerPhase
+      } else {
+        // NOTE: Probably won't work, it's a very mysterious method.
+        // This scenario isn't on our immediate roadmap, so I'll just leave this line of code here
+        // and accompany it by a warning comment.
+        global.extendCompilerClassPath(domainClasspath: _*)
       }
-
-      if (Debug.scalahost) {
-        println(s"initializing semantic proxy from $global and $initialDomain")
-        if (fromScratch) println("starting from scratch") else println("wrapping a pre-existing global")
-      }
-
-      try {
-        // NOTE: This is necessary for semantic APIs to work correctly,
-        // because otherwise the underlying global isn't going to have its symtab populated.
-        // It would probably be possible to avoid this by creating completers that
-        // lazily read scala.meta trees and then lazily convert them to symtab entries,
-        // but that's way beyond our technological level at the moment.
-        val domainClasspath = initialDomain.artifacts.flatMap(_.binaries).map(p => new File(p.path).toURI.toURL)
-        if (Debug.scalahost) println(s"indexing domain classpath: $domainClasspath")
-        if (fromScratch) {
-          // NOTE: Make sure that the internal classpath cache hasn't been initialized yet.
-          // If it has, we're in trouble, because our modifications to settings.classpath.value
-          // aren't going to get propagated. Of course, I tried to sidestep this problem
-          // by using something like `global.extendCompilerClassPath(domainClasspath: _*)`,
-          // but unfortunately it throws an obscure assertion error, so I just gave up.
-          val m_currentClassPath = global.platform.getClass.getDeclaredMethod("currentClassPath")
-          m_currentClassPath.setAccessible(true)
-          val currentClassPath = m_currentClassPath.invoke(global.platform).asInstanceOf[Option[_]]
-          require(currentClassPath.isEmpty)
-          global.settings.classpath.value = domainClasspath.map(_.getPath).mkString(File.pathSeparator)
-
-          // NOTE: This is mandatory, because this is going to: a) finish necessary initialization of the compiler,
-          // b) force computation of the classpath that we have just set.
-          val run = new global.Run
-          global.phase = run.picklerPhase
-          global.globalPhase = run.picklerPhase
-        } else {
-          // NOTE: Probably won't work, it's a very mysterious method.
-          // This scenario isn't on our immediate roadmap, so I'll just leave this line of code here
-          // and accompany it by a warning comment.
-          global.extendCompilerClassPath(domainClasspath: _*)
+    } catch {
+      case ex: Exception =>
+        var message = ex.getMessage
+        if (ex.isInstanceOf[MissingRequirementError]) {
+          message = message.stripSuffix(".")
+          message += " (have you forgotten to reference the standard library"
+          message += " when creating a mirror or a toolbox?)"
         }
-      } catch {
-        case ex: Exception =>
-          var message = ex.getMessage
-          if (ex.isInstanceOf[MissingRequirementError]) {
-            message = message.stripSuffix(".")
-            message += " (have you forgotten to reference the standard library"
-            message += " when creating a mirror or a toolbox?)"
-          }
-          fail(message, Some(ex))
-      }
-
-      if (Debug.scalahost) println(s"indexing global sources: all ${global.currentRun.units.toList.length} of them")
-      val globalSources = global.currentRun.units.map(unit => {
-        val unitId = unit.source.file.path
-        if (Debug.scalahost) {
-          if (unit.body.metadata.contains("scalameta")) println(s"found cached scala.meta tree for $unitId")
-          else println(s"computing scala.meta tree for $unitId")
-        }
-        val source = unit.body.metadata.getOrElseUpdate("scalameta", {
-          // NOTE: We don't have to persist perfect trees, because tokens are transient anyway.
-          // Therefore, if noone uses perfect trees in a compiler plugin, then we can avoid merging altogether.
-          // Alternatively, if we hardcode merging into the core of scalameta/scalameta
-          // (e.g. by making it lazy, coinciding with the first traversal of the perfect tree),
-          // then we can keep mergeTrees and expose its results only to those who need perfectTrees
-          // (e.g. to compiler plugins that want to work with scala.meta trees).
-          // TODO: For now, I'm going to keep mergeTrees here, but in the 0.1 release,
-          // we might want to turn merging off if it turns out being a big performance hit.
-          // NOTE: In fact, it's more complicated than that. When we index the converted trees
-          // (i.e. we add them to lsymToMmemberCache), it'd make sense to work with resugared trees,
-          // because that's what users ultimately want to see when they do `t"...".members` or something.
-          // So, it seems that it's still necessary to eagerly merge the trees, so that we can index them correctly.
-          val syntacticTree = {
-            if (Debug.scalahost) println(s"parsing $unitId")
-            val content = unit.source match {
-              // NOTE: We need this hackaround because BatchSourceFile distorts the source code
-              // by appending newlines as it sees fit. This is going to become a problem wrt TASTY,
-              // because we write a sourcecode hash when serializing TASTY and verify it when deserializing.
-              //
-              // This is going to work just fine with real-world batchsourcefiles, but if someone creates
-              // a batchsourcefile from a virtual file without a newline at the end and then will expect
-              // its hash to match some other file without a newline at the end, they're in for a treat.
-              //
-              // Let's see whether this is going to become a problem. If it is, we'll have to distort
-              // the sources everywhere in scala.meta where we compute hashes. It's so ugly that I can't
-              // bring myself to doing it right now.
-              case batch: BatchSourceFile if batch.file.isInstanceOf[PlainFile] => batch.file.toCharArray
-              case other => other.content
-            }
-            content.parse[mapi.Source].require[m.Source]
-          }
-          val semanticTree = {
-            if (Debug.scalahost) println(s"converting $unitId")
-            unit.body.toMtree[m.Source]
-          }
-          if (Debug.scalahost) println(s"merging $unitId")
-          val perfectTree = mergeTrees(syntacticTree, semanticTree)
-          perfectTree
-        })
-        if (Debug.scalahost) println(s"indexing $unitId")
-        indexAll(source)
-      }).toList
-
-      val domainSources = initialDomain.artifacts.flatMap(_.sources)
-      if (Debug.scalahost) println(s"indexing domain sources: all ${domainSources.length} of them")
-      domainSources.foreach(source => {
-        // TODO: looks like we really need some kind of a Source.id
-        if (Debug.scalahost) println(s"indexing ${source.show[Summary]}")
-        indexAll(source.require[m.Source])
-      })
-
-      // TODO: Do something smarter when assigning the initial domain, e.g.:
-      // 1) Compute dependencies from settings.classpath
-      // 2) Figure out resources somehow
-      if (Debug.scalahost) println(s"merging global and initial domains")
-      val globalArtifacts = List(Artifact(globalSources, Nil, Nil))
-      val domainArtifacts = initialDomain.artifacts
-      currentDomain = Domain(globalArtifacts ++ domainArtifacts: _*)
-
-      if (Debug.scalahost) println(s"initialized semantic proxy from $global and $initialDomain")
-    } finally {
-      disallowApisThatReturnMembers = false
+        fail(message, Some(ex))
     }
+
+    if (Debug.scalahost) println(s"indexing ${global.currentRun.units.toList.length} global sources")
+    val globalSources = global.currentRun.units.map(unit => {
+      val unitId = unit.source.file.path
+      if (Debug.scalahost) {
+        if (unit.body.metadata.contains("scalameta")) println(s"found cached scala.meta tree for $unitId")
+        else println(s"computing scala.meta tree for $unitId")
+      }
+      val source = unit.body.metadata.getOrElseUpdate("scalameta", {
+        // NOTE: We don't have to persist perfect trees, because tokens are transient anyway.
+        // Therefore, if noone uses perfect trees in a compiler plugin, then we can avoid merging altogether.
+        // Alternatively, if we hardcode merging into the core of scalameta/scalameta
+        // (e.g. by making it lazy, coinciding with the first traversal of the perfect tree),
+        // then we can keep mergeTrees and expose its results only to those who need perfectTrees
+        // (e.g. to compiler plugins that want to work with scala.meta trees).
+        // TODO: For now, I'm going to keep mergeTrees here, but in the 0.1 release,
+        // we might want to turn merging off if it turns out being a big performance hit.
+        // NOTE: In fact, it's more complicated than that. When we index the converted trees
+        // (i.e. we add them to ssymToMmemberCache), it'd make sense to work with resugared trees,
+        // because that's what users ultimately want to see when they do `t"...".members` or something.
+        // So, it seems that it's still necessary to eagerly merge the trees, so that we can index them correctly.
+        val syntacticTree = {
+          if (Debug.scalahost) println(s"parsing $unitId")
+          val content = unit.source match {
+            // NOTE: We need this hackaround because BatchSourceFile distorts the source code
+            // by appending newlines as it sees fit. This is going to become a problem wrt TASTY,
+            // because we write a sourcecode hash when serializing TASTY and verify it when deserializing.
+            //
+            // This is going to work just fine with real-world batchsourcefiles, but if someone creates
+            // a batchsourcefile from a virtual file without a newline at the end and then will expect
+            // its hash to match some other file without a newline at the end, they're in for a treat.
+            //
+            // Let's see whether this is going to become a problem. If it is, we'll have to distort
+            // the sources everywhere in scala.meta where we compute hashes. It's so ugly that I can't
+            // bring myself to doing it right now.
+            case batch: BatchSourceFile if batch.file.isInstanceOf[PlainFile] => batch.file.toCharArray
+            case other => other.content
+          }
+          content.parse[mapi.Source].require[m.Source]
+        }
+        val semanticTree = {
+          if (Debug.scalahost) println(s"converting $unitId")
+          unit.body.toMtree[m.Source]
+        }
+        if (Debug.scalahost) println(s"merging $unitId")
+        val perfectTree = mergeTrees(syntacticTree, semanticTree)
+        perfectTree
+      })
+      if (Debug.scalahost) println(s"indexing $unitId")
+      indexAll(source)
+    }).toList
+
+    // TODO: Do something smarter when assigning the initial domain, e.g.:
+    // 1) Compute dependencies from settings.classpath
+    // 2) Figure out resources somehow
+    val globalArtifacts = List(Artifact(globalSources, Nil, Nil))
+    currentDomain = Domain(globalArtifacts: _*)
+
+    if (Debug.scalahost) println(s"indexing ${initialDomain.artifacts.length} domain artifacts")
+    val domainArtifacts1 = load(initialDomain.artifacts.toList)
+    currentDomain = Domain(currentDomain.artifacts ++ domainArtifacts1: _*)
+
+    if (Debug.scalahost) println(s"initialized semantic proxy from $global and $initialDomain")
   }
 }

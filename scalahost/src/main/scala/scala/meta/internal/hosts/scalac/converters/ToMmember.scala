@@ -97,7 +97,7 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
         case _ => true
       }) else result
     }
-    def toMmember(gpre: g.Type): m.Member = lsymToMmemberCache.getOrElseUpdate((gpre, lsym), {
+    def toMmember(gpre: g.Type): m.Member = ldenotToMmemberIndex.getOrElseUpdate(l.Denotation(gpre, lsym), {
       def approximateSymbol(lsym: l.Symbol): m.Member = {
         // NOTE: we don't need to clear the LOCAL_SUFFIX_STRING from the name of `lsym.gsymbol`
         // because it's always guaranteed not to end with LOCAL_SUFFIX_STRING
@@ -395,9 +395,13 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
         }
       }
       val ssym = symbolTable.convert(lsym)
-      val maybeSourceNativePmember = ssymToNativeMmemberCache.get(ssym)
-      val maybeNativePmember = maybeSourceNativePmember.map(applyPrefix(gpre, _))
-      maybeNativePmember.getOrElse(approximateSymbol(lsym)).forceTypechecked
+      val maybeCachedMmember = ssymToMmemberIndex.get(ssym)
+      val maybePrefixedCachedMmember = maybeCachedMmember.map(applyPrefix(gpre, _))
+      maybePrefixedCachedMmember.getOrElse(approximateSymbol(lsym)).forceTypechecked
     })
+  }
+
+  protected implicit class XtensionLdenotationToMmember(ldenot: l.Denotation) {
+    def toMmember: m.Member = ldenot.sym.toMmember(ldenot.pre)
   }
 }

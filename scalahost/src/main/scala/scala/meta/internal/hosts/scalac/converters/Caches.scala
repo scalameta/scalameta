@@ -18,20 +18,51 @@ import scala.meta.internal.hosts.scalac.reflect._
 trait Caches extends GlobalToolkit with MetaToolkit {
   self: Api =>
 
-  protected lazy val symbolTable = new SymbolTable()
-  protected lazy val lsymToMmemberCache = mutable.Map[(g.Type, l.Symbol), m.Member]()
+  // NOTE: These maps are mutable, but every mapping there is immutable,
+  // i.e. won't change regardless of the mutations happening in the underlying compiler.
+  //
+  // E.g. a signature of a symbol might evolve over time (as we load additional sources),
+  // but the symbol itself isn't going to be recreated or something.
+  // Also, the meaning of a type might change as well (as the signatures of the underlying symbols change),
+  // but the type itself is just a combination of the underlying symbols, so it's going to remain there.
+  //
+  // Therefore, the maps below are called "caches".
+  protected lazy val symbolTable = new SymbolTable() // TwoWayCache[s.Symbol, l.Symbol]
   protected lazy val tpeCache = TwoWayCache[g.Type, m.Type.Arg]()
-  protected lazy val ssymToNativeMmemberCache = mutable.Map[s.Symbol, m.Member]()
+
+  // NOTE: These maps are mutable, and all their mapping are mutable.
+  // E.g. if we load new sources into the compiler, it is possible that they will take over
+  // the previously existing symbols, so we'll need to update the maps.
+  // Therefore, the maps below are called "indices".
+  private lazy val _ssymToMmemberIndex = mutable.Map[s.Symbol, m.Member]()
+  protected def ssymToMmemberIndex = { require(!indicesWriteOnly); _ssymToMmemberIndex }
+  private lazy val _ldenotToMmemberIndex = mutable.Map[l.Denotation, m.Member]()
+  protected def ldenotToMmemberIndex = { require(!indicesWriteOnly); _ldenotToMmemberIndex }
+
+  // NOTE: Since indices are mutable, sometimes we want to ensure
+  // that a given subsystem of scala.meta has exclusive access to them.
+  // Otherwise, we could run into problems when we, say, resolve a reference during indexing
+  // and the result of the resolution is an object that is reconstructed from a symbol,
+  // not loaded directly from a source that hasn't been indexed yet.
+  private var indicesWriteOnly = false
+  protected def withWriteOnlyIndices[T](body: => T): T = {
+    val old = indicesWriteOnly
+    indicesWriteOnly = true
+    try body
+    finally indicesWriteOnly = old
+  }
 
   def indexOne[T <: m.Tree](x: T): T = {
+    require(x.isTypechecked)
     x match {
       case x: m.Member =>
         if (x.name.isBinder && !x.isInstanceOf[m.Ctor.Primary] && !x.name.isInstanceOf[m.Name.Anonymous]) {
           x.name.require[m.Name].denot match {
-            case s.Denotation.Single(_, symbol) if symbol != s.Symbol.Zero =>
+            case s.Denotation.Single(_, ssym) if ssym != s.Symbol.Zero =>
               // TODO: it seems that we can't have this yet
-              // require(!ssymToNativeMmemberCache.contains(symbol) && debug(x, x.show[Semantics]))
-              ssymToNativeMmemberCache(symbol) = x
+              // require(!_ssymToMmemberIndex.contains(symbol) && debug(x, x.show[Semantics]))
+              _ssymToMmemberIndex(ssym) = x
+              _ldenotToMmemberIndex.retain((ldenot, _) => ldenot.sym != symbolTable.convert(ssym))
             case _ =>
               abort(debug(x, x.show[Semantics]))
           }
@@ -43,6 +74,7 @@ trait Caches extends GlobalToolkit with MetaToolkit {
   }
 
   def indexAll[T <: m.Tree](x: T): T = {
+    require(x.isTypechecked)
     def loop(x: Any): Unit = x match {
       case x: m.Tree => indexAll(x)
       case x: Seq[_] => x.foreach(loop)
