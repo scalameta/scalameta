@@ -150,7 +150,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
           case l.SelfDef(lname, ltpt) =>
             val mname = lname.toMtree[m.Term.Param.Name]
             val mtpt = if (ltpt.nonEmpty) Some(ltpt.toMtree[m.Type]) else None
-            val gtpe = lname.denot.sym match { case l.Self(owner) => owner.thisType; case _ => g.NoType }
+            val gtpe = lname.denot.sym match { case l.Self(owner) => owner.typeOfThis; case _ => g.NoType }
             m.Term.Param(Nil, mname, mtpt, None).tryMattrs(gtpe)
 
           // ============ MODIFIERS ============
