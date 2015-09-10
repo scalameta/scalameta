@@ -11,7 +11,7 @@ class ScalaSuite extends InferSuite {
 
   test("val x: Int (raw)") {
     val tree = templStatForceInfer("val x: Int")
-    assert(forceInferAll(tree).show[Structure] === "Decl.Val(Nil, List(Pat.Var.Term(Term.Name(\"x\"))), Type.Name(\"Int\"))")
+    assert(forceInferAll(tree).show[Structure] === "Decl.Val(Nil, Seq(Pat.Var.Term(Term.Name(\"x\"))), Type.Name(\"Int\"))")
   }
 
   test("val x: Int (code)") {
@@ -41,7 +41,7 @@ class ScalaSuite extends InferSuite {
       QQQ
       val y = "\""
     }""".replace("QQQ", "\"\"\""))
-    assert(tree.show[Structure] === """Term.Block(List(Defn.Val(Nil, List(Pat.Var.Term(Term.Name("x"))), None, Lit.String("%n        x%n      ")), Defn.Val(Nil, List(Pat.Var.Term(Term.Name("y"))), None, Lit.String("\""))))""".replace("%n", escapedEOL))
+    assert(tree.show[Structure] === """Term.Block(Seq(Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name("x"))), None, Lit.String("%n        x%n      ")), Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name("y"))), None, Lit.String("\""))))""".replace("%n", escapedEOL))
     assert(forceInferAll(tree).show[Syntax] === """
     |{
     |  val x = QQQ
@@ -61,7 +61,7 @@ class ScalaSuite extends InferSuite {
         ..$z
       QQQ
     }""".replace("QQQ", "\"\"\""))
-    assert(tree.show[Structure] === """Term.Block(List(Defn.Val(Nil, List(Pat.Var.Term(Term.Name("x"))), None, Term.Interpolate(Term.Name("q"), List(Lit.String("123 + "), Lit.String(" + "), Lit.String(" + 456")), List(Term.Name("x"), Term.Apply(Term.Name("foo"), List(Lit.Int(123)))))), Defn.Val(Nil, List(Pat.Var.Term(Term.Name("y"))), None, Lit.String("%n        $x%n        $y%n        ..$z%n      "))))""".replace("%n", escapedEOL))
+    assert(tree.show[Structure] === """Term.Block(Seq(Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name("x"))), None, Term.Interpolate(Term.Name("q"), Seq(Lit.String("123 + "), Lit.String(" + "), Lit.String(" + 456")), Seq(Term.Name("x"), Term.Apply(Term.Name("foo"), Seq(Lit.Int(123)))))), Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name("y"))), None, Lit.String("%n        $x%n        $y%n        ..$z%n      "))))""".replace("%n", escapedEOL))
     assert(forceInferAll(tree).show[Syntax] === """
     |{
     |  val x = q"123 + $x + ${foo(123)} + 456"
@@ -308,13 +308,13 @@ class ScalaSuite extends InferSuite {
 
   test("case List(xs @ _*)") {
     val tree = pat("List(xs @ _*)")
-    assert(tree.show[Structure] === "Pat.Extract(Term.Name(\"List\"), Nil, List(Pat.Bind(Pat.Var.Term(Term.Name(\"xs\")), Pat.Arg.SeqWildcard())))")
+    assert(tree.show[Structure] === "Pat.Extract(Term.Name(\"List\"), Nil, Seq(Pat.Bind(Pat.Var.Term(Term.Name(\"xs\")), Pat.Arg.SeqWildcard())))")
     assert(tree.show[Syntax] === "List(xs @ _*)")
   }
 
   test("package foo; class C; package baz { class D }") {
     val tree = source("package foo; class C; package baz { class D }")
-    assert(tree.show[Structure] === "Source(List(Pkg(Term.Name(\"foo\"), List(Defn.Class(Nil, Type.Name(\"C\"), Nil, Ctor.Primary(Nil, Ctor.Ref.Name(\"this\"), Nil), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), None)), Pkg(Term.Name(\"baz\"), List(Defn.Class(Nil, Type.Name(\"D\"), Nil, Ctor.Primary(Nil, Ctor.Ref.Name(\"this\"), Nil), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), None))))))))")
+    assert(tree.show[Structure] === "Source(Seq(Pkg(Term.Name(\"foo\"), Seq(Defn.Class(Nil, Type.Name(\"C\"), Nil, Ctor.Primary(Nil, Ctor.Ref.Name(\"this\"), Nil), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), None)), Pkg(Term.Name(\"baz\"), Seq(Defn.Class(Nil, Type.Name(\"D\"), Nil, Ctor.Primary(Nil, Ctor.Ref.Name(\"this\"), Nil), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), None))))))))")
     assert(forceInferAll(tree).show[Syntax] === "package foo\nclass C\npackage baz {\n  class D\n}")
   }
 
@@ -322,13 +322,13 @@ class ScalaSuite extends InferSuite {
     val tree1 = pat("`x`")
     assert(tree1.show[Structure] === "Term.Name(\"x\")")
     val tree2 = pat("f(`x`)")
-    assert(tree2.show[Structure] === "Pat.Extract(Term.Name(\"f\"), Nil, List(Term.Name(\"x\")))")
+    assert(tree2.show[Structure] === "Pat.Extract(Term.Name(\"f\"), Nil, Seq(Term.Name(\"x\")))")
     assert(tree2.show[Syntax] === "f(`x`)")
     val tree3 = pat("X")
     assert(tree3.show[Structure] === "Term.Name(\"X\")")
     assert(tree3.show[Syntax] === "X")
     val tree4 = pat("f(X)")
-    assert(tree4.show[Structure] === "Pat.Extract(Term.Name(\"f\"), Nil, List(Term.Name(\"X\")))")
+    assert(tree4.show[Structure] === "Pat.Extract(Term.Name(\"f\"), Nil, Seq(Term.Name(\"X\")))")
     assert(tree4.show[Syntax] === "f(X)")
   }
 
@@ -403,7 +403,7 @@ class ScalaSuite extends InferSuite {
 
   test("xml literals") {
     val tree = term("<foo>{bar}</foo>")
-    assert(tree.show[Structure] === """Term.Interpolate(Term.Name("xml"), List(Lit.String("<foo>{bar}</foo>")), Nil)""")
+    assert(tree.show[Structure] === """Term.Interpolate(Term.Name("xml"), Seq(Lit.String("<foo>{bar}</foo>")), Nil)""")
     assert(forceInferAll(tree).show[Syntax] === """ xml"<foo>{bar}</foo>" """.trim)
   }
 }

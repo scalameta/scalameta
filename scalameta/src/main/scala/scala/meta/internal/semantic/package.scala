@@ -6,6 +6,8 @@ import org.scalameta.default._
 import org.scalameta.unreachable
 import org.scalameta.invariants._
 import scala.collection.mutable
+import scala.{Seq => _}
+import scala.collection.immutable.Seq
 import scala.{meta => api}
 import scala.meta.internal.ast._
 import scala.meta.internal.ui.Attributes
@@ -56,7 +58,7 @@ package object semantic {
         }
         def loop(x: Any): Unit = x match {
           case x: Tree => traverse(x, path :+ tree.productPrefix)
-          case x: List[_] => x.foreach(loop)
+          case x: Seq[_] => x.foreach(loop)
           case x: Some[_] => loop(x.get)
           case x => // do nothing
         }
