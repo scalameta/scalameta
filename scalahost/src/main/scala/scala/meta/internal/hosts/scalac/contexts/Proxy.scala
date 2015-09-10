@@ -10,8 +10,9 @@ import java.io.File
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.reflect.{classTag, ClassTag}
-import scala.reflect.internal.NoPhase
 import scala.reflect.internal.MissingRequirementError
+import scala.reflect.internal.NoPhase
+import scala.reflect.internal.Phase
 import scala.reflect.internal.util.BatchSourceFile
 import scala.reflect.io.PlainFile
 import scala.meta.{Mirror => MirrorApi}
@@ -150,7 +151,7 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
     val deltaClasspath = artifactClasspath.filter(entry => !globalClasspath(entry))
     if (deltaClasspath.nonEmpty) global.extendCompilerClassPath(deltaClasspath: _*)
 
-    val artifactSources = artifacts.flatMap(_.sources)
+    val artifactSources = artifacts.flatMap(_.sources.map(_.require[m.Source]))
     val (typedSources, untypedSources) = artifactSources.partition(_.isTypechecked)
     if (Debug.scalahost) println(s"indexing ${artifactSources.length} artifact sources (${typedSources.length} out of ${artifactSources.length} are TYPECHECKED)")
     typedSources.foreach(source => {
@@ -160,16 +161,49 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
     })
 
     if (Debug.scalahost) untypedSources.foreach(source => println(s"typechecking ${source.show[Summary]}"))
-    // TODO: typecheck untypedSources together via something similar to compileLate
-    // TODO: don't forget to indexAll
-    val typedUntypedSources = Map[Source, Source]()
+    val typedUntypedSources: Map[Source, Source] = {
+      import global._
+      val units = untypedSources.map(source => {
+        val unit = new CompilationUnit(newSourceFile("", "<scalahost>"))
+        unit.body = source.toGtree
+        val m_addUnit = currentRun.getClass.getDeclaredMethods().find(_.getName.endsWith("$addUnit")).get
+        m_addUnit.setAccessible(true)
+        m_addUnit.invoke(currentRun, unit)
+        unit
+      })
+
+      val m_firstPhase = currentRun.getClass.getDeclaredMethods().find(_.getName == "firstPhase").get
+      m_firstPhase.setAccessible(true)
+      val firstPhase = m_firstPhase.invoke(currentRun).asInstanceOf[Phase]
+      val relevantPhases = firstPhase.iterator.takeWhile(_.id < math.max(globalPhase.id, currentRun.typerPhase.id))
+      def applyPhase(ph: Phase, unit: CompilationUnit) = enteringPhase(ph)(ph.asInstanceOf[GlobalPhase].applyPhase(unit))
+      relevantPhases.foreach(ph => units.foreach(applyPhase(ph, _)))
+
+      val m_refreshProgress = currentRun.getClass.getDeclaredMethods().find(_.getName == "refreshProgress").get
+      m_refreshProgress.setAccessible(true)
+      m_refreshProgress.invoke(currentRun)
+
+      untypedSources.zip(units).map({ case (sysource, unit) =>
+        val sesource = {
+          if (Debug.scalahost) println(s"converting ${sysource.show[Summary]}")
+          unit.body.toMtree[m.Source]
+        }
+        if (Debug.scalahost) println(s"merging ${sysource.show[Summary]}")
+        val mesource = mergeTrees(sysource, sesource)
+        if (Debug.scalahost) println(s"indexing ${sysource.show[Summary]}")
+        (sysource, indexAll(mesource))
+      }).toMap
+    }
 
     def ensureTypechecked(source: Source) = typedUntypedSources.getOrElse(source, source)
-    artifacts.map {
+    val artifacts1 = artifacts.map {
       case taxonomic.Artifact.Adhoc(sources, resources, deps) => taxonomic.Artifact.Adhoc(sources.map(ensureTypechecked), resources, deps)
       case artifact: taxonomic.Artifact.Unmanaged => artifact
       case artifact: taxonomic.Artifact.Maven => artifact
     }
+
+    currentDomain = Domain(currentDomain.artifacts ++ artifacts1: _*)
+    artifacts1
   }
 
   // ============== PROXY ==============
