@@ -130,7 +130,6 @@ class RootMacros(val c: Context) extends AstReflection {
           private[meta] def setTypechecked: T = tree.privateWithFlags(tree.privateFlags | $TYPECHECKED).asInstanceOf[T]
           private[meta] def resetTypechecked: T = tree.privateWithFlags(tree.privateFlags & ~$TYPECHECKED).asInstanceOf[T]
           private[meta] def withTypechecked(value: _root_.scala.Boolean): T = if (value) tree.setTypechecked else tree.resetTypechecked
-          private[meta] def typecheck(implicit c: _root_.scala.meta.semantic.Context): Tree = c.typecheck(tree)
         }
       """
 
