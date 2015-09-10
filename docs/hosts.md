@@ -87,47 +87,50 @@ The aforementioned three private fields that store semantic attributes give rise
 
 Here's the exhaustive list of scala.meta APIs that can be used to produce trees:
 
-| API                                 | Notes
-|-------------------------------------|------------------------------------------------------
-| Manual tree construction            | U<br/><br/>Using case class factories from `scala.meta.internal.ast._` creates trees with empty attributes.
-| Quasiquotes                         | U<br/><br/>At the moment, quasiquotes desugar into calls to case class factories, so they also create trees without attributes.
-| Parsing                             | U<br/><br/>Scala.meta's parser doesn't do any semantic analysis, so its outputs end up being in their default state - unattributed.
-| Deserialization from TASTY          | PA<br/><br/>TASTY trees have all their names resolved, which translates to correctly filled-in denotations. Having all the names resolved, the TASTY deserializer computes all the necessary typings. However, TASTY doesn't care about original code as written in Scala sources, but only cares about desugared code as seen by the Dotty typechecker, so it is impossible to calculate expansions just from TASTY alone.
-| Domain.sources                      | FA or PA<br/><br/>Domains are comprised of artifacts, and every artifact that involves TASTY also has a way to load corresponding sources, so its contents will most likely be fully attributed. If the sources are missing, then the best that we can get is partially attributed trees.
-| Semantic APIs                       | FA or PA<br/><br/>A host is typically built on top of a domain, so the state of the results that it provides to the users is exactly the same as the state of the trees that are provided to it by the domain.
+| API                                 | State    | Notes
+|-------------------------------------|----------|------------------------------------------------------
+| Manual tree construction            | U        | Using case class factories from `scala.meta.internal.ast._` creates trees with empty attributes.
+| Quasiquotes                         | U        | At the moment, quasiquotes desugar into calls to case class factories, so they also create trees without attributes.
+| Parsing                             | U        | Scala.meta's parser doesn't do any semantic analysis, so its outputs end up being in their default state - unattributed.
+| Deserialization from TASTY          | PA       | TASTY trees have all their names resolved, which translates to correctly filled-in denotations. Having all the names resolved, the TASTY deserializer computes all the necessary typings. However, TASTY doesn't care about original code as written in Scala sources, but only cares about desugared code as seen by the Dotty typechecker, so it is impossible to calculate expansions just from TASTY alone.
+| Domain.sources                      | FA or PA | Domains are comprised of artifacts, and every artifact that involves TASTY also has a way to load corresponding sources, so its contents will most likely be fully attributed. If the sources are missing, then the best that we can get is partially attributed trees.
+| Semantic APIs                       | FA or PA | A host is typically built on top of a domain, so the state of the results that it provides to the users is exactly the same as the state of the trees that are provided to it by the domain.
 
 Here's the exhaustive list of scala.meta APIs that can be used to transition between states:
 
-| API                                 | Notes
-|-------------------------------------|------------------------------------------------------
-| Unquoting                           | U -> U, PA -> PA, FA -> FA<br/><br/>Inserting a tree into a bigger tree (either via using it in another tree's constructor or via unquoting it in a quasiquote), creates a deep clone of the tree. Following the principle of hygiene, this shouldn't change the semantics of the original tree, so its attributes don't change.
-| `Tree.copy`                         | U -> U, PA -> U, FA -> U<br/><br/>Explicit calls to `copy` create a deep clone of the input tree. Unlike in the case of unquoting, copy can change some or all subtrees of the input trees, so we reset the attributes of the original tree to be safe. Children of the input tree are left untouched.
-| `Context.typecheck`                 | U -> FA, PA -> FA, FA -> FA<br/><br/>Typechecking a tree returns a fully attributed deep clone of the input tree, regardless of the state that the tree was in originally (or produces an error if the tree can't be typechecked). This notion is elaborated in a dedicated section.
-| `.withAttrs`                        | U -> PA<br/><br/>withAttrs produces a deep clone of the tree with denot (if applicable) and typing (if applicable) attributes assigned to the specified values, also assigning expansion (if applicable) to `Expansion.Identity`. For consistency, withAttrs is disallowed for PA and FA trees - if it's necessary to change attributes of an existing tree, call `.copy()` first.
-| `.withExpansion`                    | PA -> FA<br/><br/>withExpansion deeply clones a partially attributed input tree and assigns the expansion attribute to the provided value. Again, for consistency reasons it's disallowed for U and FA - call withAttrs first, and only then withExpansion. If this scheme of things proves too restrictive, it will be changed.
-| `.setTypechecked`                   | PA -> PA, FA -> FA<br/><br/>setTypechecked validates that the tree and all its subtrees are attributed (partially or fully) and then sets the TYPECHECKED flag, which indicates that the tree's state is final, and that it is okay for `Context.typecheck` to skip typechecking for this tree.
+| API                                 | State                             | Notes
+|-------------------------------------|-----------------------------------|------------------------------------------
+| Unquoting                           | U -> U<br/>PA -> PA<br/>FA -> FA  | Inserting a tree into a bigger tree (either via using it in another tree's constructor or via unquoting it in a quasiquote), creates a deep clone of the tree. Following the principle of hygiene, this shouldn't change the semantics of the original tree, so its attributes don't change.
+| `Tree.copy`                         | U -> U<br/>PA -> U<br/>FA -> U    | Explicit calls to `copy` create a deep clone of the input tree. Unlike in the case of unquoting, copy can change some or all subtrees of the input trees, so we reset the attributes of the original tree to be safe. Children of the input tree are left untouched.
+| `Context.typecheck`                 | U -> FA<br/>PA -> FA<br/>FA -> FA | Typechecking a tree returns a fully attributed deep clone of the input tree, regardless of the state that the tree was in originally (or produces an error if the tree can't be typechecked). This notion is elaborated in a dedicated section.
+| `.withAttrs`                        | U -> PA                           | withAttrs produces a deep clone of the tree with denot (if applicable) and typing (if applicable) attributes assigned to the specified values, also assigning expansion (if applicable) to `Expansion.Identity`. For consistency, withAttrs is disallowed for PA and FA trees - if it's necessary to change attributes of an existing tree, call `.copy()` first.
+| `.withExpansion`                    | PA -> FA                          | withExpansion deeply clones a partially attributed input tree and assigns the expansion attribute to the provided value. Again, for consistency reasons it's disallowed for U and FA - call withAttrs first, and only then withExpansion. If this scheme of things proves too restrictive, it will be changed.
+| `.setTypechecked`                   | PA -> PA<br/>FA -> FA             | setTypechecked validates that the tree and all its subtrees are attributed (partially or fully) and then sets the TYPECHECKED flag, which indicates that the tree's state is final, and that it is okay for `Context.typecheck` to skip typechecking for this tree.
 
-### Context API
+### Context APIs
+
+Here's an exhaustive list of methods that belong to scala.meta context APIs. Information on how to implement them can be found in subsequent sections. S means [semantic/Context.scala](/scalameta/src/main/scala/scala/meta/semantic/Context.scala), I means [interactive/Context.scala](/scalameta/src/main/scala/scala/meta/interactive/Context.scala).
+
+| Method                                                    | Context | Notes
+|-----------------------------------------------------------|---------|-------------------------------------------------------
+| `def dialect: Dialect`                                    | S       | See [dialects/package.scala](/tokens/src/main/scala/scala/meta/dialects/package.scala)
+| `def domain: Domain`                                      | S       | See [taxonomic/Domain.scala](/scalameta/src/main/scala/scala/meta/taxonomic/Domain.scala)
+| `def typecheck(tree: Tree): Tree`                         | S       | Checks wellformedness of the input tree, computes semantic attributes (denotations, typings and expansions) for it and all its subnodes, and returns a copy of the tree with the attributes assigned. See subsequent sections for implementation advice.
+| `def defns(ref: Ref): Seq[Member]`                        | S       | Definitions that a given reference refers to. Can return multiple results if a reference resolves to several overloaded members.
+| `def owner(member: Member): Scope`                        | S       | This isn't actually a method in `Context`, and it's here only to emphasize a peculiarity of our API. <br/><br/> The reason for that is that scala.meta trees always track their parents, so with a tree in hand it's very easy to navigate its enclosures up until an owning scope.
+| `def stats(scope: Scope): Seq[Member]`                    | S       | This isn't actually a method in `Context`, and it's here only to emphasize a peculiarity of our API. <br/><br/> The thing is that trees returned by `def members(tpe: Type): Seq[Member]` must have their contents prepopulated, which makes this method unnecessary. All lists in our API (e.g. the list of statements in a block or a list of declarations in a package or a class) are actually `Seq`'s, which means that prepopulation of contents isn't going to incur prohibitive performance costs.
+| `def members(tpe: Type): Seq[Member]`                     | S       | Returns all members defined by a given type. This method should return members that are adjusted to the type arguments and the self type of the provided type. E.g. `t"List".members` should return `List(q"def head: A = ...", ...)`, whereas `t"List[Int]".members` should return `List(q"def head: Int = ...", ...)`.
+| `def parents(member: Member): Seq[Member]`                | S       | Direct parents (i.e. superclasses or overriddens) of a given member. If the provided member has been obtained using `members` via some prefix or by instantiating some type parameters, then the results of this method should also have corresponding type parameters instantiated.
+| `def children(member: Member): Seq[Member]`               | S       | Direct children (i.e. subclasses or overriders) of a given member in the closed world reflected by the host. If the provided member has been obtained using `members` via some prefix by instantiating some type parameters, then the results of this method should also have corresponding type parameters instantiated.
+| `def isSubType(tpe1: Type, tpe2: Type): Boolean`          | S       | Subtyping check.
+| `def lub(tpes: Seq[Type]): Type`                          | S       | Least upper bound.
+| `def glb(tpes: Seq[Type]): Type`                          | S       | Greatest lower bound.
+| `def parents(tpe: Type): Seq[Type]`                       | S       | Direct supertypes of a given type. If the given type has some type parameters instantiated, then the results of this method should also have corresponding type parameters instantiated.
+| `def widen(tpe: Type): Type`                              | S       | If a given type is a singleton type, widen it. Otherwise, return the input type back.
+| `def dealias(tpe: Type): Type`                            | S       | If a given type is a type alias or an application thereof, resolve it. Otherwise, return the input type back.
+| `def load(artifacts: Seq[Artifact]): Seq[Artifact]`       | I       | Append given artifacts to the domain underlying the context, typechecking them if necessary.
 
 <!-- TODO: explain ordering guarantees for all Seq[T] results both in Host and in all our APIs -->
-
-| Method                                                    | Notes
-|-----------------------------------------------------------|-----------------------------------------------------------------
-| `def dialect: Dialect`                                    | See [dialects/package.scala](/tokens/src/main/scala/scala/meta/dialects/package.scala)
-| `def domain: Domain`                                      | See [taxonomic/Domain.scala](/scalameta/src/main/scala/scala/meta/taxonomic/Domain.scala)
-| `def typecheck(tree: Tree): Tree`                         | Checks wellformedness of the input tree, computes semantic attributes (denotations, typings and expansions) for it and all its subnodes, and returns a copy of the tree with the attributes assigned. See subsequent sections for implementation advice.
-| `def defns(ref: Ref): Seq[Member]`                        | Definitions that a given reference refers to. Can return multiple results if a reference resolves to several overloaded members.
-| `def owner(member: Member): Scope`                        | This isn't actually a method in `Context`, and it's here only to emphasize a peculiarity of our API. <br/><br/> The reason for that is that scala.meta trees always track their parents, so with a tree in hand it's very easy to navigate its enclosures up until an owning scope.
-| `def stats(scope: Scope): Seq[Member]`                    | This isn't actually a method in `Context`, and it's here only to emphasize a peculiarity of our API. <br/><br/> The thing is that trees returned by `def members(tpe: Type): Seq[Member]` must have their contents prepopulated, which makes this method unnecessary. All lists in our API (e.g. the list of statements in a block or a list of declarations in a package or a class) are actually `Seq`'s, which means that prepopulation of contents isn't going to incur prohibitive performance costs.
-| `def members(tpe: Type): Seq[Member]`                     | Returns all members defined by a given type. This method should return members that are adjusted to the type arguments and the self type of the provided type. E.g. `t"List".members` should return `List(q"def head: A = ...", ...)`, whereas `t"List[Int]".members` should return `List(q"def head: Int = ...", ...)`.
-| `def parents(member: Member): Seq[Member]`                | Direct parents (i.e. superclasses or overriddens) of a given member. If the provided member has been obtained using `members` via some prefix or by instantiating some type parameters, then the results of this method should also have corresponding type parameters instantiated.
-| `def children(member: Member): Seq[Member]`               | Direct children (i.e. subclasses or overriders) of a given member in the closed world reflected by the host. If the provided member has been obtained using `members` via some prefix by instantiating some type parameters, then the results of this method should also have corresponding type parameters instantiated.
-| `def isSubType(tpe1: Type, tpe2: Type): Boolean`          | Subtyping check.
-| `def lub(tpes: Seq[Type]): Type`                          | Least upper bound.
-| `def glb(tpes: Seq[Type]): Type`                          | Greatest lower bound.
-| `def parents(tpe: Type): Seq[Type]`                       | Direct supertypes of a given type. If the given type has some type parameters instantiated, then the results of this method should also have corresponding type parameters instantiated.
-| `def widen(tpe: Type): Type`                              | If a given type is a singleton type, widen it. Otherwise, return the input type back.
-| `def dealias(tpe: Type): Type`                            | If a given type is a type alias or an application thereof, resolve it. Otherwise, return the input type back.
 
 ### Implementing Context APIs (dialect and domain)
 
@@ -169,7 +172,11 @@ In order to implement methods that involve semantic queries on scala.meta trees 
 
   5. Convert the native definition into a platform-independent representation using the converter from the third step of `Context.typecheck`. Nothing else has to be done in this step, and it yields the final result.
 
-### Error handling and reporting.
+### Implementing Context APIs (load)
+
+In comparison with typechecking, `Context.load` not only makes sure that the inputs are well-typed and populated with semantic attributes, but also adds them to the underlying state of the context, so that future calls to typecheck and load can refer definitions from the inputs. The necessity to integrate with the list of the compilation units or something else that you might have internally in your metaprogramming framework is the only twist in comparison with `Context.typecheck`.
+
+### Error handling and reporting
 
 scala.meta expects hosts to signal errors by throwing exceptions of type [scala.meta.SemanticException](/scalameta/src/main/scala/scala/meta/Exceptions.scala). Users of scala.meta might be shielded from these exceptions by an additional error handling layer inside scala.meta, but that shouldn't be a concern for host implementors. At the moment, we don't expose any exception hierarchy, and the only way for the host to elaborate on the details of emitted errors is passing a custom error message. This might change later.
 
