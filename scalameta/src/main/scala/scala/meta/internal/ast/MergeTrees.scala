@@ -60,6 +60,8 @@ object mergeTrees {
               sy.copy()
             case (sy: m.Type.Select, se: m.Type.Select) =>
               sy.copy(loop(sy.qual, se.qual), loop(sy.name, se.name))
+            case (sy: m.Type.Apply, se: m.Type.Apply) =>
+              sy.copy(loop(sy.tpe, se.tpe), loop(sy.args, se.args))
 
             // ============ PATTERNS ============
 
