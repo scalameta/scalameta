@@ -20,28 +20,32 @@ trait ToGtree extends GlobalToolkit with MetaToolkit {
   self: Api =>
 
   protected implicit class XtensionMtreeToGtree(mtree: m.Tree) {
-    def toGtree: g.Tree = mtree match {
-      case mtree: m.Term =>
-        // TODO: HAHAHA
-        val scode = {
-          import scala.meta.dialects.Scala211
-          mtree.show[Syntax]
-        }
-        val gcode = {
-          val newReporter = new StoreReporter()
-          val oldReporter = g.reporter
-          try {
-            g.reporter = newReporter
-            val gparser = g.newUnitParser(new g.CompilationUnit(g.newSourceFile(scode, "<scalahost>")))
-            val gtree = gparser.expr()
-            def fail(msg: String) = sys.error(s"implementation restriction: error converting from ${mtree.show[Summary]} to g.Tree:$EOL$msg$EOL${mtree.show[Syntax]}")
-            newReporter.infos.foreach { case newReporter.Info(pos, msg, newReporter.ERROR) => fail(msg) }
-            gtree
-          } finally g.reporter = oldReporter
-        }
-        gcode
-      case _ =>
-        ???
+    def toGtree: g.Tree = {
+      // TODO: LOLOLOL
+      def fail(msg: String) = {
+        val details = s"$EOL$msg$EOL${mtree.show[Syntax]}$EOL${mtree.show[Structure]}"
+        sys.error(s"implementation restriction: error converting from ${mtree.show[Summary]} to g.Tree:$details")
+      }
+      val scode = {
+        import scala.meta.dialects.Scala211
+        mtree.show[Syntax]
+      }
+      val gcode = {
+        val newReporter = new StoreReporter()
+        val oldReporter = g.reporter
+        try {
+          g.reporter = newReporter
+          val gparser = g.newUnitParser(new g.CompilationUnit(g.newSourceFile(scode, "<scalahost>")))
+          val gtree = mtree match {
+            case _: m.Source => gparser.compilationUnit()
+            case _: m.Term => gparser.expr()
+            case _ => fail(s"scala.meta trees of type ${mtree.productPrefix} are unsupported")
+          }
+          newReporter.infos.foreach { case newReporter.Info(pos, msg, newReporter.ERROR) => fail(msg) }
+          gtree
+        } finally g.reporter = oldReporter
+      }
+      gcode
     }
   }
 }
