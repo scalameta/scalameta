@@ -140,7 +140,7 @@ object mergeTrees {
               failCorrelate(sy, se, "unexpected trees")
           }
 
-          val metree = expandedMetree.withTokens(sy.tokens).inheritAttrs(se)
+          val metree = expandedMetree.withTokens(sy.tokens).inheritAttrs(se).withTypechecked(se.isTypechecked)
           if (Debug.convert && sy.parent.isEmpty) {
             println("======= SYNTACTIC TREE =======")
             println(sy)
