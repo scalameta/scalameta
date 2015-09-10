@@ -1,3 +1,0 @@
-object XmlLiterals {
-  <foo bar=""/>
-}
