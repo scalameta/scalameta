@@ -146,7 +146,9 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
 
     val artifactClasspath = artifacts.flatMap(_.binaries).map(p => new File(p.path).toURI.toURL)
     if (Debug.scalahost) println(s"indexing artifact classpath: $artifactClasspath")
-    // TODO: extend compiler classpath if necessary
+    val globalClasspath = global.classPath.asURLs.toSet
+    val deltaClasspath = artifactClasspath.filter(entry => !globalClasspath(entry))
+    if (deltaClasspath.nonEmpty) global.extendCompilerClassPath(deltaClasspath: _*)
 
     val artifactSources = artifacts.flatMap(_.sources)
     val (typedSources, untypedSources) = artifactSources.partition(_.isTypechecked)
