@@ -6,6 +6,8 @@ import org.scalameta.collections._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
 import scala.collection.mutable
+import scala.{Seq => _}
+import scala.collection.immutable.Seq
 import scala.tools.nsc.{Global => ScalaGlobal}
 import scala.meta.internal.{ast => m}
 import scala.meta.internal.{semantic => s}
@@ -43,7 +45,7 @@ trait Caches extends GlobalToolkit with MetaToolkit {
   def indexAll[T <: m.Tree](x: T): T = {
     def loop(x: Any): Unit = x match {
       case x: m.Tree => indexAll(x)
-      case x: List[_] => x.foreach(loop)
+      case x: Seq[_] => x.foreach(loop)
       case x: Some[_] => loop(x.get)
       case x => // do nothing
     }
