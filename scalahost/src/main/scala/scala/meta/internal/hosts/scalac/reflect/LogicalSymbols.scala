@@ -334,7 +334,7 @@ trait LogicalSymbols {
         rawResult += lsym
       }
     }
-    val result = rawResult.toVector.distinct
+    val result = rawResult.toList.distinct
     if (result.exists(_.isIncomplete)) {
       // this situation can probably occur when we are converting a scope with a getter and a setter
       // and their owners are dummy symbols that don't track their children
