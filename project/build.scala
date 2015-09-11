@@ -183,7 +183,7 @@ object build extends Build {
     packagedArtifacts := Map.empty,
     sourceDirectory in Test := {
       val defaultValue = (sourceDirectory in Test).value
-      System.setProperty("sbt.paths.tests.source", defaultValue.getAbsolutePath)
+      System.setProperty("sbt.paths.tests.sources", defaultValue.getAbsolutePath)
       defaultValue
     }
   ) dependsOn (scalameta)
