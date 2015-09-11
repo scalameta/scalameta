@@ -18,9 +18,7 @@ object ScalahostBuild extends Build {
     id = "root",
     base = file("root"),
     settings = sharedSettings ++ commonDependencies ++ Seq(
-      dontPackage,
-      usePlugin(scalahost),
-      replIntegration
+      dontPackage
     )
   ) aggregate (scalahost, tests)
 
