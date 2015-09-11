@@ -126,7 +126,6 @@ class ScalaToMeta extends FunSuite {
         // NOTE: We can't merge the results of #2 and #3, because #2, having been obtained from a desugared tree,
         // is not a faithful representation of the source code (something which is expected from the 1st argument to mergeTrees).
         val mmergedTree = {
-          // NOTE: can't merge
           try mergeTrees(moriginalTree.asInstanceOf[scala.meta.internal.ast.Tree], msemanticTree.asInstanceOf[scala.meta.internal.ast.Tree])
           catch { case ex: MergeException => fail("error merging syntactic and semantic Original.scala", ex) }
         }
