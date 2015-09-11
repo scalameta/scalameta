@@ -49,7 +49,6 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
   private[meta] def typecheck(tree: mapi.Tree): mapi.Tree = {
     // TODO: implement this
     // 1) respect tree.parent
-    // 2) don't retypecheck if that's unnecessary
     if (tree.isTypechecked) return tree
     ???
   }
