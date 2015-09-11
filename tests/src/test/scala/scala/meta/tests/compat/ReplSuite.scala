@@ -1,3 +1,6 @@
+// package scala.meta.tests
+// package compat
+
 // import org.scalatest._
 // import scala.tools.nsc.Settings
 // import scala.tools.nsc.interpreter._

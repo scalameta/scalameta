@@ -1,3 +1,6 @@
+package scala.meta.tests
+package compat
+
 import org.scalatest._
 
 class ParadiseSuite extends FunSuite {

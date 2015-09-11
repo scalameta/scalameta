@@ -1,3 +1,6 @@
+package scala.meta.tests
+package converters
+
 import org.scalatest._
 import java.io._
 import scala.compat.Platform.EOL

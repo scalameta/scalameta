@@ -1,3 +1,6 @@
+// package scala.meta.tests
+// package semantic
+
 // import org.scalatest._
 // import scala.compat.Platform.EOL
 // import scala.meta._

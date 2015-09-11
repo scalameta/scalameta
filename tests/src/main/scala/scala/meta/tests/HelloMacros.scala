@@ -1,3 +1,5 @@
+package scala.meta.tests
+
 import scala.reflect.macros.whitebox.Context
 import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
