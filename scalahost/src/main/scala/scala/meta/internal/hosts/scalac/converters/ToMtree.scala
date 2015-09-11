@@ -43,7 +43,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
         // are currently implemented as standalone tree traversal, and it would be faster
         // to integrate them into the transforming traversal
         gtree.installNavigationLinks()
-        val denotedMtree = gtree match {
+        val maybeDenotedMtree = gtree match {
           // ============ NAMES ============
 
           case l.AnonymousName(ldenot) =>
@@ -145,7 +145,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
             val margss = largss.toMtreess[m.Term.Arg]
             margss.foldLeft(mctor)((mcurr, margs) => {
               val app = m.Term.Apply(mcurr, margs)
-              app.withMattrs(mcurr.typing.map{ case m.Type.Method(_, ret) => ret })
+              app.tryMattrs(mcurr.typing.map{ case m.Type.Method(_, ret) => ret })
             })
           case l.SelfDef(lname, ltpt) =>
             val mname = lname.toMtree[m.Term.Param.Name]
@@ -160,35 +160,44 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
           case _ =>
             fail(gtree, s"unexpected tree during scala.reflect -> scala.meta conversion:$EOL${g.showRaw(gtree)}", None)
         }
-        val typedMtree = denotedMtree match {
-          case denotedMtree: m.Term.Name => denotedMtree // do nothing, typing already inferred from denotation
-          case denotedMtree: m.Ctor.Name => denotedMtree // do nothing, typing already inferred from denotation
-          case denotedMtree: m.Term => denotedMtree.tryMattrs(gtree.tpe)
-          case denotedMtree: m.Term.Param => denotedMtree // do nothing, typing already assigned during conversion
-          case denotedMtree => denotedMtree
+        val maybeTypedMtree = maybeDenotedMtree match {
+          case maybeDenotedMtree: m.Term.Name => maybeDenotedMtree // do nothing, typing already inferred from denotation
+          case maybeDenotedMtree: m.Ctor.Name => maybeDenotedMtree // do nothing, typing already inferred from denotation
+          case maybeDenotedMtree: m.Term => maybeDenotedMtree.tryMattrs(gtree.tpe)
+          case maybeDenotedMtree: m.Term.Param => maybeDenotedMtree // do nothing, typing already assigned during conversion
+          case maybeDenotedMtree => maybeDenotedMtree
         }
-        val typecheckedMtree = typedMtree.forceTypechecked
-        val mtree = indexOne(typecheckedMtree)
+        val maybeTypecheckedMtree = {
+          // TODO: Trying to force our way in is kinda lame.
+          // In the future, we could remember whether any nested toMtree calls failed to attribute itself,
+          // and then, based on that, decide whether we need to call setTypechecked or not.
+          try maybeTypedMtree.forceTypechecked
+          catch { case ex: Exception => maybeTypedMtree }
+        }
+        val maybeIndexedMtree = {
+          if (maybeTypecheckedMtree.isTypechecked) indexOne(maybeTypecheckedMtree)
+          else maybeTypecheckedMtree
+        }
         if (sys.props("convert.debug") != null && gtree.parent.isEmpty) {
           println("======= SCALA.REFLECT TREE =======")
           println(gtree)
           println(g.showRaw(gtree, printIds = true, printTypes = true))
           println("======== SCALA.META TREE ========")
-          println(mtree)
-          println(mtree.show[Semantics])
+          println(maybeIndexedMtree)
+          println(maybeIndexedMtree.show[Semantics])
           println("=================================")
         }
         // TODO: fix duplication wrt MergeTrees.scala
-        if (classTag[T].runtimeClass.isAssignableFrom(mtree.getClass)) {
-          mtree.asInstanceOf[T]
+        if (classTag[T].runtimeClass.isAssignableFrom(maybeIndexedMtree.getClass)) {
+          maybeIndexedMtree.asInstanceOf[T]
         } else {
           var expected = classTag[T].runtimeClass.getName
           expected = expected.stripPrefix("scala.meta.internal.ast.").stripPrefix("scala.meta.")
           expected = expected.stripSuffix("$Impl")
           expected = expected.replace("$", ".")
-          val actual = mtree.productPrefix
+          val actual = maybeIndexedMtree.productPrefix
           val summary = s"expected = $expected, actual = $actual"
-          val details = s"${g.showRaw(gtree)}$EOL${mtree.show[Structure]}"
+          val details = s"${g.showRaw(gtree)}$EOL${maybeIndexedMtree.show[Structure]}"
           fail(gtree, s"unexpected result during scala.reflect -> scala.meta conversion: $summary$EOL$details", None)
         }
       } catch {

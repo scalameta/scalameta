@@ -70,7 +70,7 @@ trait ToMattrs extends GlobalToolkit with MetaToolkit {
     def tryMattrs(denotlike: DenotLike): T = {
       val denot = denotlike.sdenot
       if (denot != s.Denotation.Zero) withMattrs(denot)
-      else abort(debug(denot))
+      else mtree
     }
     def tryMattrs(gpre: g.Type, symlike: SymLike): T = {
       tryMattrs(l.Denotation(gpre, symlike.lsym))
