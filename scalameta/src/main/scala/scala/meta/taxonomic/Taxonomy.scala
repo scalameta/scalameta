@@ -140,12 +140,12 @@ import org.scalameta.debug._
       binfiles = binfiles.filter(!_._2.toString.contains("$")) // NOTE: exclude inner classes
       binfiles = binfiles.filter(!_._2.toString.contains("scala-library.jar!")) // NOTE: exclude stdlib
       val sourcefiles = artifact.sourcepath.explode.filter(_._2.toString.endsWith(".scala"))
-      if (Debug.artifact) { println(binfiles); println(sourcefiles) }
+      if (Debug.artifact && Debug.verbose) { println(s"binfiles = $binfiles"); println(s"sourcefiles = $sourcefiles") }
 
       val perfectParts = mutable.HashSet[URI]()
-      val perfectSources = sourcefiles.map({ case (_, sourceuri) =>
+      val perfectSources = sourcefiles.map({ case (relativepath, sourceuri) =>
         // NOTE: sy- and se- prefixes mean the same as in MergeTrees.scala, namely "syntactic" and "semantic".
-        if (Debug.tasty) println(s"considering sourcefile at $sourceuri")
+        if (Debug.tasty) println(s"considering sourcefile at $sourceuri ($relativepath)")
         val charset = Charset.forName("UTF-8")
         val sourcefile = new File(sourceuri.getPath)
         val sysource = sourcefile.parse[Source].require[m.Source]
@@ -227,9 +227,14 @@ import org.scalameta.debug._
         if (Debug.tasty) println(s"created a perfect source from $sourceuri and matching classfiles")
         mesource
       }).toList
-      val otherSources = binfiles.map(_._2).flatMap(binuri => {
-        if (perfectParts(binuri)) None
-        else loadTasty(binuri).map(_._2)
+      val otherSources = binfiles.flatMap({ case (relativepath, binuri) =>
+        if (Debug.tasty) println(s"considering binfile at $binuri ($relativepath)")
+        if (perfectParts(binuri)) {
+          if (Debug.tasty) println(s"already loaded into a perfect tree")
+          None
+        } else {
+          loadTasty(binuri).map(_._2)
+        }
       })
       perfectSources ++ otherSources
     }
