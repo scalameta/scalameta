@@ -154,7 +154,6 @@ object Settings {
   // main after editing the plugin. (Otherwise a 'clean' is needed.)
   def usePlugin(plugin: ProjectReference) =
     scalacOptions <++= (Keys.`package` in (plugin, Compile)) map { (jar: File) =>
-      System.setProperty("sbt.paths.plugin.jar", jar.getAbsolutePath)
       Seq("-Xplugin:" + jar.getAbsolutePath, "-Jdummy=" + jar.lastModified)
     }
 
@@ -163,8 +162,8 @@ object Settings {
       val defaultValue = (fullClasspath in Test).value
       val classpath = defaultValue.files.map(_.getAbsolutePath)
       val scalaLibrary = classpath.map(_.toString).find(_.contains("scala-library")).get
-      System.setProperty("sbt.paths.scala-library.jar", scalaLibrary)
-      System.setProperty("sbt.paths.tests.classpath", classpath.mkString(java.io.File.pathSeparator))
+      System.setProperty("sbt.paths.scalalibrary.classes", scalaLibrary)
+      System.setProperty("sbt.paths.tests.classes", classpath.mkString(java.io.File.pathSeparator))
       defaultValue
     },
     resourceDirectory in Test := {

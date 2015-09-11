@@ -19,8 +19,8 @@ import scala.tools.nsc.reporters.StoreReporter
 class ScalaToMeta extends FunSuite {
   val g: Global = {
     def fail(msg: String) = sys.error("ScalaToMeta initialization failed: $msg")
-    val classpath = System.getProperty("sbt.paths.tests.classpath")
-    if (classpath == null) fail("-Dsbt.paths.tests.classpath is not set")
+    val classpath = System.getProperty("sbt.paths.tests.classes")
+    if (classpath == null) fail("-Dsbt.paths.tests.classes is not set")
     val options = "-cp " + classpath
     val args = CommandLineParser.tokenize(options)
     val emptySettings = new Settings(error => fail(s"couldn't apply settings because $error"))

@@ -1,56 +1,47 @@
-// package scala.meta.tests
-// package compat
+package scala.meta.tests
+package compat
 
-// import org.scalatest._
-// import scala.tools.nsc.Settings
-// import scala.tools.nsc.interpreter._
+import org.scalatest._
+import scala.tools.nsc.Settings
+import scala.tools.nsc.interpreter._
 
-// class ReplSuite extends FunSuite {
-//   private def repl(code: String): String = {
-//     val s = new Settings
-//     s.Xnojline.value = true
-//     s.usejavacp.value = false
-//     s.classpath.value = sys.props("sbt.paths.tests.classpath")
-//     val lines = ILoop.runForTranscript(code, s).lines.toList
-//     lines.drop(3).map(_.replaceAll("\\s+$","")).mkString("\n").trim.stripSuffix("scala>").trim
-//   }
+class ReplSuite extends FunSuite {
+  private def repl(code: String): String = {
+    val s = new Settings
+    s.Xnojline.value = true
+    s.usejavacp.value = false
+    s.classpath.value = sys.props("sbt.paths.tests.classes")
+    val lines = ILoop.runForTranscript(code, s).lines.toList
+    lines.drop(3).map(_.replaceAll("\\s+$","")).mkString("\n").trim.stripSuffix("scala>").trim
+  }
 
-//   test("semantic APIs") {
-//     assert(repl("""
-//       |import scala.meta._
-//       |import scala.meta.dialects.Scala211
-//       |val classpathOptions = "-cp " + sys.props("sbt.paths.scala-library.jar")
-//       |val pluginOptions = "-Xplugin:" + sys.props("sbt.paths.plugin.jar") + " -Xplugin-require:scalahost"
-//       |val options = classpathOptions + " " + pluginOptions
-//       |implicit val c = Scalahost.mkStandaloneContext(options)
-//       |t"List[Int]" <:< t"List[Any]"
-//     """.stripMargin.trim)
-//     .replace(sys.props("sbt.paths.scala-library.jar"), "<path/to/scala-library.jar>")
-//     .replace(sys.props("sbt.paths.plugin.jar"), "<path/to/plugin.jar>")
-//     .replaceAll("StandaloneContext@[0-9a-fA-F]+", "StandaloneContext@<memoryAddress>")
-//     === """
-//       |scala> import scala.meta._
-//       |import scala.meta._
-//       |
-//       |scala> import scala.meta.dialects.Scala211
-//       |import scala.meta.dialects.Scala211
-//       |
-//       |scala> val classpathOptions = "-cp " + sys.props("sbt.paths.scala-library.jar")
-//       |classpathOptions: String = -cp <path/to/scala-library.jar>
-//       |
-//       |scala> val pluginOptions = "-Xplugin:" + sys.props("sbt.paths.plugin.jar") + " -Xplugin-require:scalahost"
-//       |pluginOptions: String = -Xplugin:<path/to/plugin.jar> -Xplugin-require:scalahost
-//       |
-//       |scala> val options = classpathOptions + " " + pluginOptions
-//       |options: String = -cp <path/to/scala-library.jar> -Xplugin:<path/to/plugin.jar> -Xplugin-require:scalahost
-//       |
-//       |scala> implicit val c = Scalahost.mkStandaloneContext(options)
-//       |c: scala.meta.ScalahostStandaloneContext = scala.meta.internal.hosts.scalac.contexts.StandaloneContext@<memoryAddress>
-//       |
-//       |scala> t"List[Int]" <:< t"List[Any]"
-//       |res0: Boolean = true
-//       |
-//       |scala> :quit
-//     """.stripMargin.trim)
-//   }
-// }
+  test("semantic APIs") {
+    assert(repl("""
+      |import scala.meta._
+      |import scala.meta.dialects.Scala211
+      |implicit val mirror = Mirror(Artifact(sys.props("sbt.paths.scalalibrary.classes")))
+      |t"List[Int]" <:< t"List[Any]"
+    """.stripMargin.trim)
+    .replace(sys.props("sbt.paths.scalalibrary.classes"), "<path/to/scala-library.jar>")
+    === """
+      |scala> import scala.meta._
+      |import scala.meta._
+      |
+      |scala> import scala.meta.dialects.Scala211
+      |import scala.meta.dialects.Scala211
+      |
+      |scala> implicit val mirror = Mirror(Artifact(sys.props("sbt.paths.scalalibrary.classes")))
+      |mirror: scala.meta.Mirror = Mirror(Artifact("<path/to/scala-library.jar>", "", Scala211))
+      |
+      |scala> t"List[Int]" <:< t"List[Any]"
+      |scala.NotImplementedError: an implementation is missing
+      |  at scala.Predef$.$qmark$qmark$qmark(Predef.scala:225)
+      |  at scala.meta.internal.hosts.scalac.contexts.Proxy.typecheck(Proxy.scala:54)
+      |  at scala.meta.internal.hosts.scalac.contexts.Proxy.isSubType(Proxy.scala:85)
+      |  at scala.meta.semantic.Api$XtensionSemanticType.$less$colon$less(Api.scala:166)
+      |  ... 103 elided
+      |
+      |scala> :quit
+    """.stripMargin.trim)
+  }
+}

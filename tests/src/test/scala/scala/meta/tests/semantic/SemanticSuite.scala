@@ -14,8 +14,8 @@
 // }
 
 // class SemanticSuite extends FunSuite {
-//   private val classpathOptions = s"-cp ${sys.props("sbt.paths.tests.classpath")}"
-//   private val pluginOptions = s"-Xplugin:${sys.props("sbt.paths.plugin.jar")} -Xplugin-require:scalahost"
+//   private val classpathOptions = s"-cp ${sys.props("sbt.paths.tests.classes")}"
+//   private val pluginOptions = s"-Xplugin:${sys.props("sbt.paths.plugin.classes")} -Xplugin-require:scalahost"
 //   private val options = classpathOptions + " " + pluginOptions
 //   implicit val c = Scalahost.mkStandaloneContext(options)
 
