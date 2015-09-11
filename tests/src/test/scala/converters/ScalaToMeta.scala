@@ -116,6 +116,7 @@ class ScalaToMeta extends FunSuite {
           try gsemanticTree.toMeta
           catch { case ex: ConvertException => fail("error converting semantic Original.scala", ex) }
         }
+        require(msemanticTree.isTypechecked)
         diff("Semantic", msemanticTree.show[Syntax])
 
         // Subtest #4: Making sure that merging the results of subtest #1 and subtest #3 works as expected.
@@ -126,6 +127,7 @@ class ScalaToMeta extends FunSuite {
           try mergeTrees(moriginalTree.asInstanceOf[scala.meta.internal.ast.Tree], msemanticTree.asInstanceOf[scala.meta.internal.ast.Tree])
           catch { case ex: MergeException => fail("error merging syntactic and semantic Original.scala", ex) }
         }
+        require(mmergedTree.isTypechecked)
         diff("Merged", mmergedTree.show[Syntax])
       }
     } else {
