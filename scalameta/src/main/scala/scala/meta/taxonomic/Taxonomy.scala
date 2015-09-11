@@ -136,9 +136,12 @@ import org.scalameta.debug._
         }
       }
 
+      // TODO: Find ways to quickly check that a given binfile has a TASTY section.
+      // We could probably require a manifest entry in a directory/JAR or something,
+      // but I don't have time to think this over right now.
       var binfiles = artifact.binpath.explode.filter(_._2.toString.endsWith(".class"))
       binfiles = binfiles.filter(!_._2.toString.contains("$")) // NOTE: exclude inner classes
-      binfiles = binfiles.filter(!_._2.toString.contains("scala-library.jar!")) // NOTE: exclude stdlib
+      binfiles = binfiles.filter(!_._2.toString.matches(""".*scala-library(-\d+\.\d+\.\d+)?.jar!.*""")) // NOTE: exclude stdlib
       val sourcefiles = artifact.sourcepath.explode.filter(_._2.toString.endsWith(".scala"))
       if (Debug.artifact && Debug.verbose) { println(s"binfiles = $binfiles"); println(s"sourcefiles = $sourcefiles") }
 
