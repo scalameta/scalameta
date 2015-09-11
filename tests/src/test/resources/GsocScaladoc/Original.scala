@@ -1,4 +1,4 @@
-package test
+package GsocScaladoc
 
 /** scaladoc for bar */
 class Bar

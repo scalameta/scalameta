@@ -28,7 +28,7 @@ trait Proxy[G <: Global] extends Mirror with Toolbox with SemanticContext with I
   object conversions {
     implicit class ScalahostProxyReflectTree(gtree: g.Tree) {
       // TODO: make this work
-      // def toMeta[T <: m.Tree : ClassTag](implicit ev: T OrElse m.Tree]): ev.T = {
+      // def toMeta[T <: m.Tree : ClassTag](implicit ev: T OrElse m.Tree): ev.T = {
       //   implicit val tag: ClassTag[ev.T] = ev.tag
       //   self.toMtree[ev.T](gtree)
       // }

@@ -35,7 +35,7 @@ trait ToGtree extends GlobalToolkit with MetaToolkit {
         val oldReporter = g.reporter
         try {
           g.reporter = newReporter
-          val gparser = g.newUnitParser(new g.CompilationUnit(g.newSourceFile(scode, "<scalahost>")))
+          val gparser = g.newUnitParser(new g.CompilationUnit(g.newSourceFile(scode, "<toGtree>")))
           val gtree = mtree match {
             case _: m.Source => gparser.compilationUnit()
             case _: m.Term => gparser.expr()
