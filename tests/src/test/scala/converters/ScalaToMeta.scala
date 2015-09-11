@@ -56,7 +56,7 @@ class ScalaToMeta extends FunSuite {
 
   def scheduleScalaToMetaTest(testDir: File): Unit = {
     def resource(label: String) = testDir.getAbsolutePath + File.separatorChar + label
-    def slurp(label: String) = scala.io.Source.fromFile(new File(resource(label))).mkString.trim
+    def slurp(label: String) = scala.io.Source.fromFile(new File(resource(label))).mkString
     def dump(label: String, content: String) = {
       val w = new BufferedWriter(new FileWriter(resource(label)))
       w.write(content)
