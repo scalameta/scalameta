@@ -106,7 +106,9 @@ trait Converters {
       else s.Symbol.Global(convertSymbol(sym.owner), sym.name.decodedName.toString, signature(sym))
     }
     require(isGlobal(sym) && debug(pre, sym))
-    s.Denotation.Single(convertPrefix(pre), convertSymbol(sym))
+    val spre = if (sym.isRootPackage || sym.isEmptyPackage) s.Prefix.Zero else convertPrefix(pre)
+    val ssym = convertSymbol(sym)
+    s.Denotation.Single(spre, ssym)
   }
 
   implicit class XtensionConvertersSymbol(sym: u.Symbol) {
