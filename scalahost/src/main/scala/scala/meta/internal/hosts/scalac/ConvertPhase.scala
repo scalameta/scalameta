@@ -37,6 +37,7 @@ trait ConvertPhase {
         // TODO: awkwardly enough, ProxyImpl's constructor side-effects on compilation units
         // by converting them to scala.meta and attaching the results to unit bodies.
         // at the moment, I have no idea how to express this in a better way
+        if (sys.props("scalahost.disable") != null) return
         val proxy = new ProxyImpl[global.type](global)
       }
     }
