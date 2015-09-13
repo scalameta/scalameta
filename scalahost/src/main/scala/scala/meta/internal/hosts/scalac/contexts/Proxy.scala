@@ -11,6 +11,8 @@ import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.reflect.{classTag, ClassTag}
 import scala.reflect.internal.MissingRequirementError
+import scala.reflect.internal.Mode
+import scala.reflect.internal.Mode._
 import scala.reflect.internal.NoPhase
 import scala.reflect.internal.Phase
 import scala.reflect.internal.util.BatchSourceFile
@@ -47,10 +49,69 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
   }
 
   private[meta] def typecheck(tree: mapi.Tree): mapi.Tree = {
-    // TODO: implement this
-    // 1) respect tree.parent
     if (tree.isTypechecked) return tree
-    ???
+    def loop(tree: m.Tree): m.Tree = {
+      def nativeTypecheck(tree: g.Tree, mode: Mode): Either[String, g.Tree] = {
+        import global._
+        import definitions._
+        import analyzer._
+        val ownerClass = rootMirror.EmptyPackageClass.newClassSymbol(newTypeName("<ScalahostTypecheck>"))
+        build.setInfo(ownerClass, ClassInfoType(List(ObjectTpe), newScope, ownerClass))
+        val owner = ownerClass.newLocalDummy(NoPosition)
+        val typer = newTyper(rootContext(NoCompilationUnit, EmptyTree).make(tree, owner))
+        typer.context.initRootContext() // need to manually set context mode, otherwise typer.silent will throw exceptions
+        enteringTyper({
+          typer.silent(_.typed(tree, mode, WildcardType), reportAmbiguousErrors = false) match {
+            case SilentResultValue(result) => Right(result)
+            case error @ SilentTypeError(_) => Left(error.err.errMsg)
+          }
+        })
+      }
+      def convertingTypecheck(tree: m.Tree, mode: Mode): m.Tree = {
+        import conversions._
+        nativeTypecheck(tree.toGtree, mode) match {
+          case Right(gtree1) => gtree1.toMeta.require[m.Tree]
+          case Left(error) => throw new TypecheckException(tree, error)
+        }
+      }
+      tree.parent match {
+        case Some(parent) =>
+          // NOTE: This works because typechecking in scala.meta doesn't change the shape of the tree.
+          val index = parent.children.indexOf(tree)
+          val parent1 = loop(parent.require[m.Tree])
+          parent.children(index).require[m.Tree]
+        case None =>
+          val sytree = tree
+          val setree = tree match {
+            case tree: m.Term =>
+              convertingTypecheck(tree, EXPRmode)
+            case tree: m.Type =>
+              convertingTypecheck(tree, TYPEmode)
+            case _ =>
+              // TODO: It would be nice to be able to typecheck m.Source, but I've no idea how to do that.
+              // The thing is that in order to have scalac typecheck top-level definitions, we have to enter them globally,
+              // and that brings troubles.
+              //
+              // The first trouble is the fact that we have to undo all those enters afterwards.
+              // That's actually doable, because we can compute the paths to the symbols that are to be entered in advance,
+              // simply by analyzing the syntactic input. Then, we could back up the signatures of the corresponding
+              // scala.reflect symbols before typechecking and restore the signatures afterwards.
+              //
+              // The second trouble, and that one I don't yet know how to fix, is that we actually must not clean up
+              // the global symbols from the symbol table right after typechecking, because then we won't be able
+              // to answer semantic requests about the resulting typechecked scala.meta tree.
+              //
+              // This seems to be a hard-to-solve conflict of interests. On the one hand, we don't want typechecking
+              // to pollute the symbol table, but on the other hand, we have to allow that, because otherwise semantic ops
+              // won't work. Luckily, this is only a problem for global definitions, and it doesn't prevent us from typchecking
+              // terms and types, which is what we need the most at the moment.
+              val message = s"don't yet know how to typecheck ${tree.productPrefix}"
+              throw new UnsupportedOperationException(s"implementation restriction: $message")
+          }
+          mergeTrees(sytree, setree)
+      }
+    }
+    loop(tree.require[m.Tree])
   }
 
   private[meta] def defns(untypedRef: mapi.Ref): Seq[mapi.Member] = {
