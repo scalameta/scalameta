@@ -2100,7 +2100,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       case _: Xml.Start =>
         xmlPat()
       case _: `(` =>
-        val patterns = inParens(noSeq.patterns()).map {
+        val patterns = inParens(if (token.is[`)`]) Nil else noSeq.patterns()).map {
           case q: Pat.Arg.Quasi => q.become[Pat.Quasi]
           case p => p.require[Pat]
         }
