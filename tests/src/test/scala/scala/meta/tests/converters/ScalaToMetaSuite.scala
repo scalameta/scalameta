@@ -16,7 +16,7 @@ import scala.tools.cmd.CommandLineParser
 import scala.tools.nsc.{Global, CompilerCommand, Settings}
 import scala.tools.nsc.reporters.StoreReporter
 
-class ScalaToMeta extends FunSuite {
+class ScalaToMetaSuite extends FunSuite {
   val g: Global = {
     def fail(msg: String) = sys.error("ScalaToMeta initialization failed: $msg")
     val classpath = System.getProperty("sbt.paths.tests.classes")
