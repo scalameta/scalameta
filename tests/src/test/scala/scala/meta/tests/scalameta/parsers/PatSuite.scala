@@ -67,6 +67,10 @@ class PatSuite extends ParseSuite {
     val Alternative(Lit.Int(1), Alternative(Lit.Int(2), Lit.Int(3))) = pat("1 | 2 | 3")
   }
 
+  test("()") {
+    val Lit.Unit() = pat("()")
+  }
+
   test("(true, false)") {
     val Tuple(Lit.Bool(true) :: Lit.Bool(false) :: Nil) = pat("(true, false)")
   }

@@ -5,6 +5,7 @@ package ui
 import org.scalatest._
 import scala.meta._
 import scala.meta.dialects.Dotty
+import parsers.ParseSuite
 
 class DottySuite extends ParseSuite {
   test("case List(xs: _*)") {

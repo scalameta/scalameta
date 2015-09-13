@@ -1,3 +1,7 @@
+package scala.meta.tests
+package scalameta
+package parsers
+
 import scala.meta.internal.ast.{Name => _, _}, Import._, Selector._, Term.{This, Name => TermName, Select, Super}
 import scala.meta.internal.ast.Name.{Anonymous, Indeterminate}
 import scala.meta.dialects.Scala211

@@ -1,6 +1,7 @@
 import sbt._
 import Keys._
-import sbtassembly.AssemblyPlugin.autoImport._
+import sbtassembly.Plugin._
+import AssemblyKeys._
 
 object build extends Build {
   lazy val ScalaVersion = "2.11.7"
@@ -73,9 +74,9 @@ object build extends Build {
     packagedArtifacts := Map.empty
   ) settings (
     exposeClasspaths("tests"): _*
-  ) dependsOn (scalameta)
+  ) dependsOn (foundation, scalameta, scalahost)
 
-  lazy val sharedSettings = Seq(
+  lazy val sharedSettings = Defaults.defaultSettings ++ Seq(
     scalaVersion := ScalaVersion,
     crossVersion := CrossVersion.binary,
     version := LibraryVersion,
@@ -193,7 +194,7 @@ object build extends Build {
     }
   }
 
-  lazy val mergeSettings: Seq[sbt.Def.Setting[_]] = Seq(
+  lazy val mergeSettings: Seq[sbt.Def.Setting[_]] = assemblySettings ++ Seq(
     test in assembly := {},
     logLevel in assembly := Level.Error,
     jarName in assembly := name.value + "_" + scalaVersion.value + "-" + version.value + "-assembly.jar",

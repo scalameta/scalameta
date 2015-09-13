@@ -5,6 +5,7 @@ package parsers
 import org.scalatest._
 import java.net._
 import java.io._
+import scala.meta._
 
 class BootstrapSuite extends ParseSuite {
   var dir = new File(new File(System.getProperty("sbt.paths.tests.sources")).getAbsolutePath)

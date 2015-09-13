@@ -6,6 +6,7 @@ import org.scalatest._
 import scala.meta._
 import scala.meta.internal.{ ast => impl }
 import scala.meta.dialects.Scala211
+import tokens.InferSuite
 
 class ScalaSuite extends InferSuite {
 
