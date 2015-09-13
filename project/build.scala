@@ -1,13 +1,85 @@
 import sbt._
 import Keys._
+import sbtassembly.AssemblyPlugin.autoImport._
 
 object build extends Build {
-  lazy val sharedSettings = Defaults.defaultSettings ++ Seq(
-    scalaVersion := "2.11.7",
-    crossVersion := CrossVersion.binary,
-    version := "0.1.0-SNAPSHOT",
-    organization := "org.scalameta",
+  lazy val ScalaVersion = "2.11.7"
+  lazy val LibraryVersion = "0.1.0-SNAPSHOT"
+
+  lazy val root = Project(
+    id = "root",
+    base = file("root")
+  ) settings (
+    sharedSettings : _*
+  ) settings (
+    test in Test := (test in tests in Test).value,
+    packagedArtifacts := Map.empty
+  ) aggregate (foundation, tokens, scalameta, scalahost, tests)
+
+  lazy val foundation = Project(
+    id   = "foundation",
+    base = file("foundation")
+  ) settings (
+    publishableSettings: _*
+  ) settings (
+    description := "Fundamental helpers and utilities of scala.meta",
+    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided")
+  )
+
+  lazy val tokens = Project(
+    id   = "tokens",
+    base = file("tokens")
+  ) settings (
+    publishableSettings: _*
+  ) settings (
+    description := "Tokenization and token quasiquotes of scala.meta",
+    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided"),
+    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _)
+  ) dependsOn (foundation)
+
+  lazy val scalameta = Project(
+    id   = "scalameta",
+    base = file("scalameta")
+  ) settings (
+    publishableSettings: _*
+  ) settings (
     description := "Metaprogramming and hosting APIs of scala.meta",
+    libraryDependencies += "org.apache.ivy" % "ivy" % "2.4.0",
+    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided")
+  ) dependsOn (foundation, tokens)
+
+  lazy val scalahost = Project(
+    id   = "scalahost",
+    base = file("scalahost")
+  ) settings (
+    publishableSettings: _*
+  ) settings (
+    mergeSettings: _*
+  ) settings (
+    crossVersion := CrossVersion.full,
+    description := "Scalac-based host of scala.meta",
+    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _ % "provided")
+  ) dependsOn (scalameta)
+
+  lazy val tests = Project(
+    id   = "tests",
+    base = file("tests")
+  ) settings (
+    sharedSettings: _*
+  ) settings (
+    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _),
+    libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.3" % "test",
+    libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
+    packagedArtifacts := Map.empty
+  ) settings (
+    exposeClasspaths("tests"): _*
+  ) dependsOn (scalameta)
+
+  lazy val sharedSettings = Seq(
+    scalaVersion := ScalaVersion,
+    crossVersion := CrossVersion.binary,
+    version := LibraryVersion,
+    organization := "org.scalameta",
     resolvers += Resolver.sonatypeRepo("snapshots"),
     resolvers += Resolver.sonatypeRepo("releases"),
     publishMavenStyle := true,
@@ -43,7 +115,7 @@ object build extends Build {
       <licenses>
         <license>
           <name>BSD-like</name>
-          <url>http://www.scala-lang.org/downloads/license.html</url>
+          <url>https://github.com/scalameta/scalameta/blob/master/LICENSE.md</url>
           <distribution>repo</distribution>
         </license>
       </licenses>
@@ -70,20 +142,6 @@ object build extends Build {
     ),
     addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0-M5" cross CrossVersion.full)
   )
-
-  // http://stackoverflow.com/questions/20665007/how-to-publish-only-when-on-master-branch-under-travis-and-sbt-0-13
-  val publishOnlyWhenOnMaster = taskKey[Unit]("publish task for Travis (don't publish when building pull requests, only publish when the build is triggered by merge into master)")
-  def publishOnlyWhenOnMasterImpl = Def.taskDyn {
-    import scala.util.Try
-    val travis   = Try(sys.env("TRAVIS")).getOrElse("false") == "true"
-    val pr       = Try(sys.env("TRAVIS_PULL_REQUEST")).getOrElse("false") != "false"
-    val branch   = Try(sys.env("TRAVIS_BRANCH")).getOrElse("??")
-    val snapshot = version.value.trim.endsWith("SNAPSHOT")
-    (travis, pr, branch, snapshot) match {
-      case (true, false, "master", true) => publish
-      case _                             => Def.task ()
-    }
-  }
 
   lazy val publishableSettings = sharedSettings ++ Seq(
     publishArtifact in Compile := true,
@@ -121,70 +179,60 @@ object build extends Build {
     }.toList
   )
 
-  lazy val root = Project(
-    id = "root",
-    base = file("root")
-  ) settings (
-    sharedSettings : _*
-  ) settings (
-    test in Test := (test in tests in Test).value,
-    packagedArtifacts := Map.empty
-  ) aggregate (scalameta, tokens, foundation, tests)
+  // http://stackoverflow.com/questions/20665007/how-to-publish-only-when-on-master-branch-under-travis-and-sbt-0-13
+  lazy val publishOnlyWhenOnMaster = taskKey[Unit]("publish task for Travis (don't publish when building pull requests, only publish when the build is triggered by merge into master)")
+  def publishOnlyWhenOnMasterImpl = Def.taskDyn {
+    import scala.util.Try
+    val travis   = Try(sys.env("TRAVIS")).getOrElse("false") == "true"
+    val pr       = Try(sys.env("TRAVIS_PULL_REQUEST")).getOrElse("false") != "false"
+    val branch   = Try(sys.env("TRAVIS_BRANCH")).getOrElse("??")
+    val snapshot = version.value.trim.endsWith("SNAPSHOT")
+    (travis, pr, branch, snapshot) match {
+      case (true, false, "master", true) => publish
+      case _                             => Def.task ()
+    }
+  }
 
-  lazy val foundation = Project(
-    id   = "foundation",
-    base = file("foundation")
-  ) settings (
-    publishableSettings: _*
-  ) settings (
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided")
+  lazy val mergeSettings: Seq[sbt.Def.Setting[_]] = Seq(
+    test in assembly := {},
+    logLevel in assembly := Level.Error,
+    jarName in assembly := name.value + "_" + scalaVersion.value + "-" + version.value + "-assembly.jar",
+    assemblyOption in assembly ~= { _.copy(includeScala = false) },
+    Keys.`package` in Compile := {
+      val slimJar = (Keys.`package` in Compile).value
+      val fatJar = new File(crossTarget.value + "/" + (jarName in assembly).value)
+      val _ = assembly.value
+      IO.copy(List(fatJar -> slimJar), overwrite = true)
+      slimJar
+    },
+    packagedArtifact in Compile in packageBin := {
+      val temp = (packagedArtifact in Compile in packageBin).value
+      val (art, slimJar) = temp
+      val fatJar = new File(crossTarget.value + "/" + (jarName in assembly).value)
+      val _ = assembly.value
+      IO.copy(List(fatJar -> slimJar), overwrite = true)
+      (art, slimJar)
+    }
   )
 
-  lazy val tokens = Project(
-    id   = "tokens",
-    base = file("tokens")
-  ) settings (
-    publishableSettings: _*
-  ) settings (
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided"),
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _ % "provided")
-  ) dependsOn (foundation)
-
-  lazy val scalameta = Project(
-    id   = "scalameta",
-    base = file("scalameta")
-  ) settings (
-    publishableSettings: _*
-  ) settings (
-    libraryDependencies += "org.apache.ivy" % "ivy" % "2.4.0",
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided"),
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _ % "provided")
-  ) dependsOn (foundation, tokens)
-
-  lazy val sandbox = Project(
-    id   = "sandbox",
-    base = file("sandbox")
-  ) settings (
-    sharedSettings: _*
-  ) settings (
-    scalaSource in Compile <<= (baseDirectory in Compile)(base => base)
-  ) dependsOn (scalameta)
-
-  lazy val tests = Project(
-    id   = "tests",
-    base = file("tests")
-  ) settings (
-    sharedSettings: _*
-  ) settings (
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _),
-    libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.3" % "test",
-    libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
-    scalacOptions += "-Xfatal-warnings",
-    packagedArtifacts := Map.empty,
+  def exposeClasspaths(projectName: String) = Seq(
     sourceDirectory in Test := {
       val defaultValue = (sourceDirectory in Test).value
       System.setProperty("sbt.paths.tests.sources", defaultValue.getAbsolutePath)
       defaultValue
+    },
+    resourceDirectory in Test := {
+      val defaultValue = (resourceDirectory in Test).value
+      System.setProperty("sbt.paths.tests.resources", defaultValue.getAbsolutePath)
+      defaultValue
+    },
+    fullClasspath in Test := {
+      val defaultValue = (fullClasspath in Test).value
+      val classpath = defaultValue.files.map(_.getAbsolutePath)
+      val scalaLibrary = classpath.map(_.toString).find(_.contains("scala-library")).get
+      System.setProperty("sbt.paths.scalalibrary.classes", scalaLibrary)
+      System.setProperty("sbt.paths.tests.classes", classpath.mkString(java.io.File.pathSeparator))
+      defaultValue
     }
-  ) dependsOn (scalameta)
+  )
 }
