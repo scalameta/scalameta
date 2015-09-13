@@ -1,5 +1,5 @@
 This is the hall of fame for our colleagues and students from EPFL as well as external hackers
-who contributed to the design, prototypes or implementations of projects related to scala.meta. 
+who contributed to the design, prototypes or implementations of projects related to scala.meta.
 Big thanks to everyone who helped turning scala.meta into reality!
 
   * Uladzimir Abramchuk ([@uabramchuk](https://github.com/u-abramchuk))
@@ -17,6 +17,7 @@ Big thanks to everyone who helped turning scala.meta into reality!
   * Artem Nikiforov ([@lnxmnx](https://github.com/lnxmnx))
   * Vladimir Nikolaev ([@VladimirNik](https://github.com/VladimirNik))
   * Martin Odersky ([@odersky](https://github.com/odersky))
+  * Oleksandr Olgashko ([@dveim](https://github.com/Dveim))
   * Alexander Podkhalyuzin ([@alefas](https://github.com/alefas))
   * Jatin Puri ([@purijatin](https://github.com/purijatin))
   * Dmitry Petrashko ([@darkdimius](https://github.com/darkdimius))
