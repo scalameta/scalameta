@@ -3,6 +3,8 @@ package org.scalameta.ast
 import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
 import scala.annotation.meta.getter
+import scala.{Seq => _}
+import scala.collection.immutable.Seq
 import scala.reflect.macros.blackbox.Context
 import org.scalameta.adt.{Reflection => AdtReflection}
 
@@ -22,6 +24,7 @@ object internal {
   def storeField[T](f: T, v: T): Unit = macro Macros.storeField
   def initField[T](f: T): T = macro Macros.initField
   def initParam[T](f: T): T = macro Macros.initField
+  def children[T, U]: Seq[U] = macro Macros.children[T]
 
   class Macros(val c: Context) extends AdtReflection {
     lazy val u: c.universe.type = c.universe
@@ -181,6 +184,31 @@ object internal {
           }
         } else None
       }
+    }
+    def children[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
+      var streak = List[Tree]()
+      def flushStreak(acc: Tree): Tree = {
+        val result = if (acc.isEmpty) q"$streak" else q"$acc ++ $streak"
+        streak = Nil
+        result
+      }
+      val acc = T.tpe.typeSymbol.asLeaf.fields.foldLeft(q"": Tree)((acc, f) => f.tpe match {
+        case Tree(_) =>
+          streak :+= q"this.${f.sym}"
+          acc
+        case SeqTree(_) =>
+          val acc1 = flushStreak(acc)
+          q"$acc1 ++ this.${f.sym}"
+        case SeqSeqTree(_) =>
+          val acc1 = flushStreak(acc)
+          q"$acc1 ++ this.${f.sym}.flatten"
+        case OptionTree(_) =>
+          val acc1 = flushStreak(acc)
+          q"$acc1 ++ this.${f.sym}.toList"
+        case _ =>
+          acc
+      })
+      flushStreak(acc)
     }
   }
 }

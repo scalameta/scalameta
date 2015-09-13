@@ -118,6 +118,7 @@ class AstMacros(val c: Context) extends AstReflection {
             else _root_.scala.None
           }
         """
+        stats1 += q"def children: Seq[_root_.scala.meta.Tree] = $AstInternal.children[ThisType, _root_.scala.meta.Tree]"
       }
       if (hasTokens) {
         bparams1 += q"@_root_.scala.transient protected var privateTokens: _root_.scala.meta.Tokens"

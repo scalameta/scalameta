@@ -7,6 +7,7 @@ package scala.meta {
   @root trait Tree extends Product with Serializable {
     type ThisType <: Tree
     def parent: Option[Tree]
+    def children: Seq[Tree]
     def tokens: Tokens
     def withTokens(tokens: Tokens): ThisType
     final override def canEqual(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
