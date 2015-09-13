@@ -10,6 +10,7 @@ import scala.meta._
 import scala.meta.dialects.Scala211
 import scala.meta.internal.{ ast => impl }
 import scala.meta.tql._
+import parsers.ParseSuite
 
 import org.scalatest.FunSuite
 

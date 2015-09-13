@@ -4,6 +4,7 @@ package ui
 
 import org.scalatest._
 import scala.reflect.runtime.universe._
+import scala.meta.ui.Syntax
 import scala.meta.internal.ast._
 import scala.meta.dialects.Scala211
 

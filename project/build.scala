@@ -74,7 +74,7 @@ object build extends Build {
     packagedArtifacts := Map.empty
   ) settings (
     exposeClasspaths("tests"): _*
-  ) dependsOn (scalameta)
+  ) dependsOn (foundation, scalameta, scalahost)
 
   lazy val sharedSettings = Defaults.defaultSettings ++ Seq(
     scalaVersion := ScalaVersion,
