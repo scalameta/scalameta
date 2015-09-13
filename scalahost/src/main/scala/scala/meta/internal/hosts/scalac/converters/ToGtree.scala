@@ -39,6 +39,7 @@ trait ToGtree extends GlobalToolkit with MetaToolkit {
           val gtree = mtree match {
             case _: m.Source => gparser.compilationUnit()
             case _: m.Term => gparser.expr()
+            case _: m.Type => gparser.typ()
             case _ => fail(s"scala.meta trees of type ${mtree.productPrefix} are unsupported")
           }
           newReporter.infos.foreach { case newReporter.Info(pos, msg, newReporter.ERROR) => fail(msg) }
