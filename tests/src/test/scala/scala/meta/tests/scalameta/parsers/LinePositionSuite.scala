@@ -24,7 +24,10 @@ class LinePositionSuite extends ParseSuite {
     "Api.scala",
     "package.scala",
     "Parsers.scala",
-    "TastyName.scala"
+    "TastyName.scala",
+    "Original.scala",
+    "Backend.scala",
+    "Proxy.scala"
   )
 
   val findAllDefn = topDown(collect {
