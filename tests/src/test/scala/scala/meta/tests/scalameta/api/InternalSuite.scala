@@ -1,6 +1,6 @@
-package scala.meta.tests
-package scalameta
-package api
+// package scala.meta.tests
+// package scalameta
+// package api
 
 import org.scalatest._
 import org.scalameta.tests._
