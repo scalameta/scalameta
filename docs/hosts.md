@@ -73,6 +73,25 @@ Of course, at the lowest level there's no magic, and internally scala.meta trees
 
     There can be `Expansion.Zero` that stands for an unknown expansion, `Expansion.Identity` that stands for absence of a desugaring and `Expansion.Desugaring` that wraps a `Term` that represents a desugaring of the associated tree.  Check out the [sources](/scalameta/src/main/scala/scala/meta/internal/semantic/Expansion.scala) to learn more.
 
+In the example below, we can see a tree that represents `List[Int]`, with attributes exposed via `show[Semantics]`. The numbers in square brackets next to name trees refer to denotations that are printed below, with the parts before :: standing for prefixes and the parts after :: standing for symbols (dots in fully-qualified names are term selections and hashes are type selections). The numbers in curly braces next to terms refer to typings that are also printed below. Finally, the numbers in angle brackets next to terms represent expansions and since there are no desugarings involved in this example, they are all identities denoted by empty angle brackets.
+
+```
+scala> implicit val mirror = Mirror(Artifact("~/.ivy2/cache/org.scala-lang/scala-library/jars/scala-library-2.11.7.jar"))
+mirror: scala.meta.Mirror = Mirror(Artifact(...))
+
+scala> t"List[Int]".show[Semantics]
+res1: String =
+Type.Apply(Type.Name("List")[1], Seq(Type.Name("Int")[2]))
+[1] {1}::scala.package#List
+[2] {2}::scala#Int
+[3] {2}::scala.package
+[4] {3}::scala
+[5] {0}::_root_
+{1} Type.Singleton(Term.Name("package")[3]{1}<>)
+{2} Type.Singleton(Term.Name("scala")[4]{2}<>)
+{3} Type.Singleton(Term.Name("_root_")[5]{3}<>)
+```
+
 ### Internals
 
 In scala.meta, trees have three fields that are pertinent to typechecking: `privateDenot` (declared only in subclasses of `Name`), `privateTyping` (declared only in subclasses of `Term` and `Term.Param`) and `privateExpansion` (declared only in subclasses of `Term`). You will never be working with these fields directly, always going through getters (`denot`, `typing`, `expansion`) and copy-on-write setters (`withAttrs` to set the former two and `withExpansion` to set the latter one). However, it is necessary to understand the existence of these fields and possible combinations of their state.
