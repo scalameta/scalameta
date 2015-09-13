@@ -361,7 +361,7 @@ trait LogicalSymbols {
   }
 
   implicit class RichHelperLogicalSymbol(lsym: l.Symbol) {
-    def parents: List[l.Symbol] = {
+    def supermembers: List[l.Symbol] = {
       def overridees = {
         lsym.symbol.allOverriddenSymbols.take(1).map(_.toLogical)
       }
@@ -395,7 +395,7 @@ trait LogicalSymbols {
       }
     }
 
-    def children: List[l.Symbol] = {
+    def submembers: List[l.Symbol] = {
       def overriders = {
         // TODO: look up children of the owner and then search in their decls
         ???

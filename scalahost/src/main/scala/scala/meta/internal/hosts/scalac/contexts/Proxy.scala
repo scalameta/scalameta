@@ -80,7 +80,23 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
     members.map(_.forceTypechecked)
   }
 
-  private[meta] def isSubType(untypedTpe1: mapi.Type, untypedTpe2: mapi.Type): Boolean = {
+  private[meta] def supermembers(untypedMember: mapi.Member): Seq[mapi.Member] = {
+    val member = typecheck(untypedMember).require[m.Member]
+    val gpre = member.toGprefix
+    val Seq(lsym) = member.toLsymbols
+    val supermembers = lsym.supermembers.map(_.toMmember(gpre)) // TODO: also instantiate type parameters when necessary
+    supermembers.map(_.forceTypechecked)
+  }
+
+  private[meta] def submembers(untypedMember: mapi.Member): Seq[mapi.Member] = {
+    val member = typecheck(untypedMember).require[m.Member]
+    val gpre = member.toGprefix
+    val Seq(lsym) = member.toLsymbols
+    val submembers = lsym.submembers.map(_.toMmember(gpre)) // TODO: also instantiate type parameters when necessary
+    submembers.map(_.forceTypechecked)
+  }
+
+  private[meta] def isSubtype(untypedTpe1: mapi.Type, untypedTpe2: mapi.Type): Boolean = {
     val tpe1 = typecheck(untypedTpe1).require[m.Type]
     val tpe2 = typecheck(untypedTpe2).require[m.Type]
     val gtpe1 = tpe1.toGtype
@@ -102,7 +118,7 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
     glb.forceTypechecked
   }
 
-  private[meta] def parents(untypedTpe: mapi.Type): Seq[mapi.Type] = {
+  private[meta] def supertypes(untypedTpe: mapi.Type): Seq[mapi.Type] = {
     val tpe = typecheck(untypedTpe).require[m.Type]
     val gtpe = tpe.toGtype
     val parents = gtpe.directBaseTypes.map(_.toMtype)
@@ -121,22 +137,6 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
     val gtpe = tpe.toGtype
     val dealiased = gtpe.dealias.toMtype
     dealiased.forceTypechecked
-  }
-
-  private[meta] def parents(untypedMember: mapi.Member): Seq[mapi.Member] = {
-    val member = typecheck(untypedMember).require[m.Member]
-    val gpre = member.toGprefix
-    val Seq(lsym) = member.toLsymbols
-    val parents = lsym.parents.map(_.toMmember(gpre)) // TODO: also instantiate type parameters when necessary
-    parents.map(_.forceTypechecked)
-  }
-
-  private[meta] def children(untypedMember: mapi.Member): Seq[mapi.Member] = {
-    val member = typecheck(untypedMember).require[m.Member]
-    val gpre = member.toGprefix
-    val Seq(lsym) = member.toLsymbols
-    val children = lsym.children.map(_.toMmember(gpre)) // TODO: also instantiate type parameters when necessary
-    children.map(_.forceTypechecked)
   }
 
   // ======= INTERACTIVE CONTEXT =======
