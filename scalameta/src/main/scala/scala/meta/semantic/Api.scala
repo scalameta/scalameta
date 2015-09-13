@@ -163,13 +163,13 @@ private[meta] trait Api {
   // ===========================
 
   implicit class XtensionSemanticType(tree: Type) {
-    @hosted def <:<(other: Type): Boolean = implicitly[SemanticContext].isSubType(tree, other)
+    @hosted def <:<(other: Type): Boolean = implicitly[SemanticContext].isSubtype(tree, other)
     @hosted def weak_<:<(other: Type): Boolean = ???
     @hosted def =:=(other: Type): Boolean = (tree =:= other) && (other =:= tree)
     @hosted def widen: Type = implicitly[SemanticContext].widen(tree)
     @hosted def dealias: Type = implicitly[SemanticContext].dealias(tree)
     @hosted def companion: Type.Ref = ???
-    @hosted def parents: Seq[Type] = implicitly[SemanticContext].parents(tree)
+    @hosted def supertypes: Seq[Type] = implicitly[SemanticContext].supertypes(tree)
   }
 
   @hosted def lub(tpes: Type*): Type = implicitly[SemanticContext].lub(tpes.toList)
@@ -218,8 +218,8 @@ private[meta] trait Api {
         case tree: impl.Ctor.Secondary => tree.name
       }
     }
-    @hosted def parents: Seq[Member] = implicitly[SemanticContext].parents(tree)
-    @hosted def children: Seq[Member] = implicitly[SemanticContext].children(tree)
+    @hosted def supermembers: Seq[Member] = implicitly[SemanticContext].supermembers(tree)
+    @hosted def submembers: Seq[Member] = implicitly[SemanticContext].submembers(tree)
     @hosted def companion: Member = {
       val candidates = {
         if (tree.isClass || tree.isTrait) tree.owner.members.filter(m => m.isObject && m.name.toString == tree.name.toString)
@@ -298,7 +298,7 @@ private[meta] trait Api {
       def isSyntacticOverride = !isAbstract && tree.mods.exists(_.isInstanceOf[impl.Mod.Override])
       def isSemanticOverride = {
         def isEligible = isVal || isVar || isDef || isMacro || isAbstractType || isAliasType
-        def overridesSomething = parents.nonEmpty
+        def overridesSomething = supermembers.nonEmpty
         isEligible && overridesSomething
       }
       isSyntacticOverride || isSemanticOverride
@@ -345,24 +345,24 @@ private[meta] trait Api {
   implicit class XtensionSemanticTermMember(tree: Member.Term) {
     @hosted def source: Member.Term = new XtensionSemanticMember(tree).source.require[Member.Term]
     @hosted def name: Term.Name = new XtensionSemanticMember(tree).name.require[Term.Name]
-    @hosted def parents: Seq[Member.Term] = new XtensionSemanticMember(tree).parents.require[Seq[Member.Term]]
-    @hosted def children: Seq[Member.Term] = new XtensionSemanticMember(tree).children.require[Seq[Member.Term]]
+    @hosted def supermembers: Seq[Member.Term] = new XtensionSemanticMember(tree).supermembers.require[Seq[Member.Term]]
+    @hosted def submembers: Seq[Member.Term] = new XtensionSemanticMember(tree).submembers.require[Seq[Member.Term]]
     @hosted def companion: Member.Type = new XtensionSemanticMember(tree).companion.require[Member.Type]
   }
 
   implicit class XtensionSemanticTermRefMemberLike(tree: Term.Ref) {
     @hosted def source: Member.Term = new XtensionSemanticRefMemberLike(tree).source.require[Member.Term]
     @hosted def name: Term.Name = new XtensionSemanticRefMemberLike(tree).name.require[Term.Name]
-    @hosted def parents: Seq[Member.Term] = new XtensionSemanticRefMemberLike(tree).parents.require[Seq[Member.Term]]
-    @hosted def children: Seq[Member.Term] = new XtensionSemanticRefMemberLike(tree).children.require[Seq[Member.Term]]
+    @hosted def supermembers: Seq[Member.Term] = new XtensionSemanticRefMemberLike(tree).supermembers.require[Seq[Member.Term]]
+    @hosted def submembers: Seq[Member.Term] = new XtensionSemanticRefMemberLike(tree).submembers.require[Seq[Member.Term]]
     @hosted def companion: Member.Type = new XtensionSemanticRefMemberLike(tree).companion.require[Member.Type]
   }
 
   implicit class XtensionSemanticTypeMember(tree: Member.Type) {
     @hosted def source: Member.Type = new XtensionSemanticMember(tree).source.require[Member.Type]
     @hosted def name: Type.Name = new XtensionSemanticMember(tree).name.require[Type.Name]
-    @hosted def parents: Seq[Member.Type] = new XtensionSemanticMember(tree).parents.require[Seq[Member.Type]]
-    @hosted def children: Seq[Member.Type] = new XtensionSemanticMember(tree).children.require[Seq[Member.Type]]
+    @hosted def supermembers: Seq[Member.Type] = new XtensionSemanticMember(tree).supermembers.require[Seq[Member.Type]]
+    @hosted def submembers: Seq[Member.Type] = new XtensionSemanticMember(tree).submembers.require[Seq[Member.Type]]
     @hosted def companion: Member.Term = new XtensionSemanticMember(tree).companion.require[Member.Term]
   }
 

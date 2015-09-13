@@ -15,7 +15,7 @@ object ScalaDays {
         if (defn.isClass || defn.isObject) {
           validateLeaf(defn)
         } else if (defn.isTrait) {
-          if (defn.isSealed) defn.children.foreach(validateLeaf)
+          if (defn.isSealed) defn.submembers.foreach(validateLeaf)
           else abort(s"${defn.name} is not sealed")
         } else {
           abort(s"unsupported ref to ${defn.name}")
@@ -40,7 +40,7 @@ object ScalaDays {
                 q""" "\"" + ${field.name.toString} + "\": " + serialize($input.${field.name}) """
               }
               if (tagged) {
-                val tag = defn.parents.head.children.sortBy(_.name.toString).indexOf(defn).toString
+                val tag = defn.supermembers.head.submembers.sortBy(_.name.toString).indexOf(defn).toString
                 entries :+= q""" "$$tag: " + $tag """
               }
               val unwrappedResult = entries.foldLeft(None: Option[Term]) { (acc, curr) =>
@@ -55,7 +55,7 @@ object ScalaDays {
               serializer(defn, input, tagged = false)
             } else if (defn.isTrait) {
               val refined = Pat.fresh("input")
-              val clauses = defn.children.map(leaf => p"case $refined: ${leaf.tpe.pat} => ${serializer(leaf, refined.name, tagged = true)}")
+              val clauses = defn.submembers.map(leaf => p"case $refined: ${leaf.tpe.pat} => ${serializer(leaf, refined.name, tagged = true)}")
               q"$input match { ..case $clauses }"
             } else {
               abort(s"unsupported ref to ${defn.name}")
