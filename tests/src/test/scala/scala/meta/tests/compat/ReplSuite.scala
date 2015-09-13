@@ -34,12 +34,7 @@ class ReplSuite extends FunSuite {
       |mirror: scala.meta.Mirror = Mirror(Artifact("<path/to/scala-library.jar>", "", Scala211))
       |
       |scala> t"List[Int]" <:< t"List[Any]"
-      |scala.NotImplementedError: an implementation is missing
-      |  at scala.Predef$.$qmark$qmark$qmark(Predef.scala:225)
-      |  at scala.meta.internal.hosts.scalac.contexts.Proxy.typecheck(Proxy.scala:54)
-      |  at scala.meta.internal.hosts.scalac.contexts.Proxy.isSubType(Proxy.scala:85)
-      |  at scala.meta.semantic.Api$XtensionSemanticType.$less$colon$less(Api.scala:166)
-      |  ... 103 elided
+      |res0: Boolean = true
       |
       |scala> :quit
     """.stripMargin.trim)
