@@ -23,8 +23,8 @@ object Structure {
         case el: String => enquote(el, DoubleQuotes)
         case el: api.Tree => el.show[Structure]
         case el: Nil.type => "Nil"
-        case el @ List(List()) => "List(List())"
-        case el: List[_] => "List(" + el.map(showRaw).mkString(", ") + ")"
+        case el @ Seq(Seq()) => "Seq(Seq())"
+        case el: Seq[_] => "Seq(" + el.map(showRaw).mkString(", ") + ")"
         case el: None.type => "None"
         case el: Some[_] => "Some(" + showRaw(el.get) + ")"
         case el => el.toString
@@ -42,5 +42,9 @@ object Structure {
   implicit def structureToken[T <: Token]: Structure[T] = Structure { x =>
     val prefix = (x: Token) match { case x: BOF => "BOF"; case x: EOF => "EOF"; case x: Dynamic => x.code; case x: Static => x.name }
     s(prefix, " (", x.start.toString, "..", x.end.toString, ")")
+  }
+
+  implicit def structureSeq[T: Structure]: Structure[Seq[T]] = Structure { xs =>
+    s("Seq(", r(xs.map(x => implicitly[Structure[T]].apply(x)), ", "), ")")
   }
 }

@@ -3,19 +3,25 @@ package org.scalameta.ast
 import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
 import scala.reflect.macros.whitebox.Context
-import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.{ListBuffer, ListMap}
 import org.scalameta.unreachable
+import org.scalameta.ast.{Reflection => AstReflection}
+import scala.compat.Platform.EOL
 
 class ast extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro AstMacros.impl
 }
 
-class AstMacros(val c: Context) {
+class AstMacros(val c: Context) extends AstReflection {
+  lazy val u: c.universe.type = c.universe
+  lazy val mirror = c.mirror
   import c.universe._
   import Flag._
   val AdtInternal = q"_root_.org.scalameta.adt.Internal"
   val AstInternal = q"_root_.org.scalameta.ast.internal"
+  val Semantic = q"_root_.scala.meta.semantic"
   val SemanticInternal = q"_root_.scala.meta.internal.semantic"
+  val FlagsPackage = q"_root_.scala.meta.internal.flags.`package`"
   def impl(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       def fullName = c.internal.enclosingOwner.fullName.toString + "." + cdef.name.toString
@@ -29,6 +35,7 @@ class AstMacros(val c: Context) {
       def isTerm = !isQuasi && (fullName.startsWith("scala.meta.internal.ast.Term") || isLit || isCtorRef || isCtorCall) && !looksLikeTermButNotTerm
       def isTermParam = is("Term.Param")
       def hasTokens = true
+      def hasEnv = isName || isTerm
       def hasDenot = isName
       def hasTyping = isTerm || isTermParam
       def hasExpansion = isTerm
@@ -60,6 +67,7 @@ class AstMacros(val c: Context) {
       val qstats1 = ListBuffer[Tree]()
       val ianns1 = ListBuffer[Tree]() ++ imods.annotations
       def imods1 = imods.mapAnnotations(_ => ianns1.toList)
+      def cmods1 = Modifiers(FINAL, mname.toTypeName, List(q"new _root_.scala.SerialVersionUID(1L)"))
       def qmods1 = Modifiers(NoFlags, TypeName("meta"), List(q"new _root_.org.scalameta.ast.ast"))
       val iparents1 = ListBuffer[Tree]() ++ iparents
       def aparents1 = List(tq"$iname")
@@ -98,82 +106,98 @@ class AstMacros(val c: Context) {
       val paramss = rawparamss
 
       // step 4: create internal bookkeeping parameters
-      bparams1 += q"@_root_.scala.transient protected val internalPrototype: $iname"
       locally {
-        bparams1 += q"protected val internalParent: _root_.scala.meta.Tree"
+        bparams1 += q"protected val privateFlags: $FlagsPackage.Flags"
+      }
+      bparams1 += q"@_root_.scala.transient protected val privatePrototype: $iname"
+      locally {
+        bparams1 += q"protected val privateParent: _root_.scala.meta.Tree"
         stats1 += q"""
           def parent: _root_.scala.Option[_root_.scala.meta.Tree] = {
-            if (internalParent != null) _root_.scala.Some(internalParent)
+            if (privateParent != null) _root_.scala.Some(privateParent)
             else _root_.scala.None
           }
         """
+        stats1 += q"def children: Seq[_root_.scala.meta.Tree] = $AstInternal.children[ThisType, _root_.scala.meta.Tree]"
       }
       if (hasTokens) {
-        bparams1 += q"@_root_.scala.transient protected var internalTokens: _root_.scala.meta.Tokens"
+        bparams1 += q"@_root_.scala.transient protected var privateTokens: _root_.scala.meta.Tokens"
         astats1 += q"def tokens: _root_.scala.meta.Tokens"
         stats1 += q"""
           def tokens: _root_.scala.meta.Tokens = {
-            internalTokens = internalTokens match {
+            privateTokens = privateTokens match {
               case null => _root_.scala.meta.internal.ui.inferTokens(this, None)
-              case _root_.scala.meta.internal.ui.PrototypeTokens(proto) => _root_.scala.meta.internal.ui.inferTokens(this, Some(proto))
+              case _root_.scala.meta.internal.ui.TransformedTokens(proto) => _root_.scala.meta.internal.ui.inferTokens(this, Some(proto))
               case other => other
             }
-            internalTokens
+            privateTokens
           }
         """
       } else {
         // NOTE: never happens
-        // stats1 += q"protected def internalTokens: $SemanticInternal.Denotation = null"
-        // if (!isQuasi) stats1 += q"def tokens: _root_.scala.meta.Tokens = null"
+        // stats1 += q"protected def privateTokens: $SemanticInternal.Denotation = null"
         ???
       }
-      if (hasDenot) {
-        bparams1 += q"protected val internalDenot: $SemanticInternal.Denotation"
-        astats1 += q"def denot: _root_.scala.meta.internal.semantic.Denotation"
+      if (hasEnv) {
+        bparams1 += q"protected val privateEnv: $Semantic.Environment"
+        astats1 += q"private[meta] def env: $Semantic.Environment"
         stats1 += q"""
-          def denot: _root_.scala.meta.internal.semantic.Denotation = {
-            if (internalDenot != null) internalDenot
+          private[meta] def env: $Semantic.Environment = {
+            if (privateEnv != null) privateEnv
+            else $Semantic.Environment.Zero
+          }
+        """
+      } else {
+        if (!isQuasi) {
+          stats1 += q"protected def privateEnv: $Semantic.Environment = null"
+        } else {
+          // NOTE: generated elsewhere, grep for `quasigetter`
+        }
+      }
+      if (hasDenot) {
+        bparams1 += q"protected val privateDenot: $SemanticInternal.Denotation"
+        astats1 += q"private[meta] def denot: $SemanticInternal.Denotation"
+        stats1 += q"""
+          private[meta] def denot: $SemanticInternal.Denotation = {
+            if (privateDenot != null) privateDenot
             else $SemanticInternal.Denotation.Zero
           }
         """
       } else {
         if (!isQuasi) {
-          stats1 += q"protected def internalDenot: $SemanticInternal.Denotation = null"
-          stats1 += q"def denot: _root_.scala.meta.internal.semantic.Denotation = null"
+          stats1 += q"protected def privateDenot: $SemanticInternal.Denotation = null"
         } else {
           // NOTE: generated elsewhere, grep for `quasigetter`
         }
       }
       if (hasTyping) {
-        bparams1 += q"protected val internalTyping: $SemanticInternal.Typing"
-        astats1 += q"def typing: _root_.scala.meta.internal.semantic.Typing"
+        bparams1 += q"protected val privateTyping: $SemanticInternal.Typing"
+        astats1 += q"private[meta] def typing: $SemanticInternal.Typing"
         stats1 += q"""
-          def typing: _root_.scala.meta.internal.semantic.Typing = {
-            if (internalTyping != null) internalTyping
+          private[meta] def typing: $SemanticInternal.Typing = {
+            if (privateTyping != null) privateTyping
             else $SemanticInternal.Typing.Zero
           }
         """
       } else {
         if (!isQuasi) {
-          stats1 += q"protected def internalTyping: $SemanticInternal.Typing = null"
-          stats1 += q"def typing: _root_.scala.meta.internal.semantic.Typing = null"
+          stats1 += q"protected def privateTyping: $SemanticInternal.Typing = null"
         } else {
           // NOTE: generated elsewhere, grep for `quasigetter`
         }
       }
       if (hasExpansion) {
-        bparams1 += q"protected val internalExpansion: $SemanticInternal.Expansion"
-        astats1 += q"def expansion: _root_.scala.meta.internal.semantic.Expansion"
+        bparams1 += q"protected val privateExpansion: $SemanticInternal.Expansion"
+        astats1 += q"private[meta] def expansion: $SemanticInternal.Expansion"
         stats1 += q"""
-          def expansion: _root_.scala.meta.internal.semantic.Expansion = {
-            if (internalExpansion != null) internalExpansion
+          private[meta] def expansion: $SemanticInternal.Expansion = {
+            if (privateExpansion != null) privateExpansion
             else $SemanticInternal.Expansion.Zero
           }
         """
       } else {
         if (!isQuasi) {
-          stats1 += q"protected def internalExpansion: $SemanticInternal.Expansion = null"
-          stats1 += q"def expansion: _root_.scala.meta.internal.semantic.Expansion = null"
+          stats1 += q"protected def privateExpansion: $SemanticInternal.Expansion = null"
         } else {
           // NOTE: generated elsewhere, grep for `quasigetter`
         }
@@ -199,61 +223,68 @@ class AstMacros(val c: Context) {
           }
         """
       })
-      def quasigetter(name: String) = {
+      def quasigetter(mods: Modifiers, name: String) = {
         val unsupportedUnquotingPosition = "unsupported unquoting position"
         val unsupportedSplicingPosition = "unsupported splicing position"
         val message = q"if (this.rank == 0) $unsupportedUnquotingPosition else $unsupportedSplicingPosition"
         val impl = q"throw new _root_.scala.`package`.UnsupportedOperationException($message)"
-        var flags = NoFlags
-        if (name.startsWith("internal")) flags |= PROTECTED
-        if (!isTermParam) flags |= OVERRIDE // NOTE: crazy, I know...
-        q"$flags def ${TermName(name)}: _root_.scala.Nothing = $impl"
+        val Modifiers(flags, privateWithin, anns) = mods
+        var flags1 = flags
+        if (!isTermParam) flags1 |= OVERRIDE // NOTE: crazy, I know...
+        val mods1 = Modifiers(flags1, privateWithin, anns)
+        q"$mods1 def ${TermName(name)}: _root_.scala.Nothing = $impl"
       }
-      def quasisetter(name: String, param: ValDef) = {
-        val DefDef(mods, termName, tparams, _, tpt, rhs) = quasigetter(name)
-        DefDef(mods, termName, tparams, List(List(param)), tpt, rhs)
+      def quasisetter(mods: Modifiers, name: String, params: ValDef*) = {
+        val DefDef(mods1, termName, tparams, _, tpt, rhs) = quasigetter(mods, name)
+        DefDef(mods1, termName, tparams, List(params.toList), tpt, rhs)
       }
       // NOTE: we don't create quasigetters for tokens, because those are used for prettyprinting
       // here we have a weird mix of metalevels, because unlike denot, typing and others
       // `Quasi.tokens` may reasonably mean two different things:
       // 1) tokens of a tree that a quasi stands for, 2) quasi's own tokens
-      if (hasDenot) qstats1 += quasigetter("denot")
-      qstats1 += q"override protected def internalDenot: $SemanticInternal.Denotation = null"
-      if (hasTyping) qstats1 += quasigetter("typing")
-      qstats1 += q"override protected def internalTyping: $SemanticInternal.Typing = null"
-      if (hasExpansion) qstats1 += quasigetter("expansion")
-      qstats1 += q"override protected def internalExpansion: $SemanticInternal.Expansion = null"
-      qstats1 ++= fieldParamss.flatten.map(p => quasigetter(p.name.toString))
-      if (is("Name.Anonymous")) qstats1 += quasigetter("value")
+      if (hasEnv) qstats1 += quasigetter(PrivateMeta, "env")
+      qstats1 += q"override protected def privateEnv: $Semantic.Environment = null"
+      if (hasDenot) qstats1 += quasigetter(PrivateMeta, "denot")
+      qstats1 += q"override protected def privateDenot: $SemanticInternal.Denotation = null"
+      if (hasTyping) qstats1 += quasigetter(PrivateMeta, "typing")
+      qstats1 += q"override protected def privateTyping: $SemanticInternal.Typing = null"
+      if (hasExpansion) qstats1 += quasigetter(PrivateMeta, "expansion")
+      qstats1 += q"override protected def privateExpansion: $SemanticInternal.Expansion = null"
+      qstats1 ++= fieldParamss.flatten.map(p => quasigetter(NoMods, p.name.toString))
+      if (is("Name.Anonymous")) qstats1 += quasigetter(NoMods, "value")
 
-      // step 6: create the internalCopy method
+      // step 6: create the privateCopy method
       // The purpose of this method is to provide extremely cheap cloning
       // in the case when a tree changes its parent (because that happens often in our framework,
       // e.g. when we create a quasiquote and then insert it into a bigger quasiquote,
       // or when we parse something and build the trees from the ground up).
-      // In such a situation, we copy all the internal state verbatim (tokens, denotations, etc)
+      // In such a situation, we copy all private state verbatim (tokens, denotations, etc)
       // and create lazy initializers that will take care of recursively copying the children.
-      // Compare this with the `copy` method (described below), which additionally flushes the internal state.
+      // Compare this with the `copy` method (described below), which additionally flushes the private state.
       // This method is private[meta] because the state that it's managing is not supposed to be touched
       // by the users of the framework.
-      val internalCopyInternals = ListBuffer[Tree]()
-      internalCopyInternals += q"prototype.asInstanceOf[ThisType]"
-      internalCopyInternals += q"parent"
-      if (hasTokens) internalCopyInternals += q"tokens"
-      if (hasDenot) internalCopyInternals += q"denot"
-      if (hasTyping) internalCopyInternals += q"typing"
-      if (hasExpansion) internalCopyInternals += q"expansion"
-      val internalCopyInitss = paramss.map(_.map(p => q"$AstInternal.initField(this.${internalize(p.name)})"))
-      val internalCopyBody = q"new $name(..$internalCopyInternals)(...$internalCopyInitss)"
+      val privateCopyInternals = ListBuffer[Tree]()
+      privateCopyInternals += q"flags"
+      privateCopyInternals += q"prototype.asInstanceOf[ThisType]"
+      privateCopyInternals += q"parent"
+      if (hasTokens) privateCopyInternals += q"tokens"
+      if (hasEnv) privateCopyInternals += q"env"
+      if (hasDenot) privateCopyInternals += q"denot"
+      if (hasTyping) privateCopyInternals += q"typing"
+      if (hasExpansion) privateCopyInternals += q"expansion"
+      val privateCopyInitss = paramss.map(_.map(p => q"$AstInternal.initField(this.${internalize(p.name)})"))
+      val privateCopyBody = q"new $name(..$privateCopyInternals)(...$privateCopyInitss)"
       stats1 += q"""
-        private[meta] def internalCopy(
+        private[meta] def privateCopy(
+            flags: $FlagsPackage.Flags = privateFlags,
             prototype: _root_.scala.meta.Tree = this,
-            parent: _root_.scala.meta.Tree = internalParent,
-            tokens: _root_.scala.meta.Tokens = internalTokens,
-            denot: _root_.scala.meta.internal.semantic.Denotation = internalDenot,
-            typing: _root_.scala.meta.internal.semantic.Typing = internalTyping,
-            expansion: _root_.scala.meta.internal.semantic.Expansion = internalExpansion): ThisType = {
-          $internalCopyBody
+            parent: _root_.scala.meta.Tree = privateParent,
+            tokens: _root_.scala.meta.Tokens = privateTokens,
+            env: $Semantic.Environment = privateEnv,
+            denot: $SemanticInternal.Denotation = privateDenot,
+            typing: $SemanticInternal.Typing = privateTyping,
+            expansion: $SemanticInternal.Expansion = privateExpansion): ThisType = {
+          $privateCopyBody
         }
       """
 
@@ -265,45 +296,155 @@ class AstMacros(val c: Context) {
       val copyParamss = fieldParamss.zip(fieldDefaultss).map{ case (f, d) => f.zip(d).map { case (p, default) => q"val ${p.name}: ${p.tpt} = $default" } }
       val copyArgss = fieldParamss.map(_.map(p => q"${p.name}"))
       val copyCore = q"$mname.apply(...$copyArgss)"
-      val copyBody = q"$copyCore.withTokens(tokens = _root_.scala.meta.internal.ui.PrototypeTokens(this))"
+      val copyBody = q"$copyCore.withTokens(tokens = _root_.scala.meta.internal.ui.TransformedTokens(this))"
       // TODO: would be useful to turn copy into a macro, so that its calls are guaranteed to be inlined
       astats1 += q"def copy(...$copyParamss): $iname = $copyBody"
 
       // step 8: create the withXXX methods
-      // TODO: We should maybe consistently reintroduce the withXXX family of methods for all kinds of fields
-      // I've been avoiding that for a long time, because the associated codegen logic might be quite tough.
-      // However we definitely need withTokens, withDenot, withTyping and withExpansion
-      // in order not to go mad when writing the converter.
-      def withMethod(name: String, param: ValDef) = {
-        q"def ${TermName(name)}($param): $iname = this.internalCopy(${param.name} = ${Ident(param.name)})"
+      // TODO: We should maybe consistently reintroduce the withXXX family of methods for all kinds of fields.
+      locally {
+        val attributeValidator = {
+          var attrs = ListMap[Tree, Tree]()
+          if (hasDenot) attrs(q"this.denot") = q"$SemanticInternal.Denotation.Zero"
+          if (hasTyping) attrs(q"this.typing") = q"$SemanticInternal.Typing.Zero"
+          if (hasExpansion) attrs(q"this.expansion") = q"$SemanticInternal.Expansion.Zero"
+          if (attrs.nonEmpty) {
+            val checks = attrs.map({ case (k, v) =>
+              val enablesTypechecked = q"(flags & $FlagsPackage.TYPECHECKED) == $FlagsPackage.TYPECHECKED"
+              val attrEmpty = q"$k == $v"
+              val message = q"${"failed to enable TYPECHECKED for "} + this.show[_root_.scala.meta.internal.ui.Attributes]"
+              q"if ($enablesTypechecked && $attrEmpty) throw new _root_.scala.`package`.UnsupportedOperationException($message)"
+            })
+            q"..$checks"
+          } else {
+            EmptyTree
+          }
+        }
+        astats1 += q"""
+          protected def privateWithFlags(flags: $FlagsPackage.Flags): $iname = {
+            $attributeValidator
+            this.privateCopy(flags = flags)
+          }
+        """
       }
       if (hasTokens) {
-        val param = q"val tokens: _root_.scala.meta.Tokens"
-        astats1 += withMethod("withTokens", param)
-        // NOTE: much like we don't create a quasigetter for tokens,
-        // we don't create a quasisetter for withTokens
+        astats1 += q"""
+          def withTokens(tokens: _root_.scala.meta.Tokens): $iname = {
+            this.privateCopy(tokens = tokens)
+          }
+        """
+        // NOTE: Much like we don't create a quasigetter for tokens,
+        // we don't create a quasisetter for withTokens.
       }
-      if (hasDenot) {
-        val param = q"val denot: _root_.scala.meta.internal.semantic.Denotation"
-        astats1 += withMethod("withDenot", param)
-        qstats1 += quasisetter("withDenot", param)
+      if (hasEnv) {
+        // NOTE: We shouldn't clean up denots when setting env,
+        // because that would destroy links between defs and refs,
+        // which may irreversibly hamper subsequent retypechecks.
+        val paramEnv = q"val env: $Semantic.Environment"
+        // NOTE: No state validation here, because withEnv can be called on U, PA and FA.
+        // Hygiene (embodied by envs in scala.meta) applies to unattributed and attributed trees alike.
+        astats1 += q"""
+          private[meta] def withEnv($paramEnv): $iname = {
+            this.privateCopy(
+              flags = this.privateFlags & ~$FlagsPackage.TYPECHECKED,
+              env = env,
+              denot = this.privateDenot,
+              typing = $SemanticInternal.Typing.Zero,
+              expansion = $SemanticInternal.Expansion.Zero
+            )
+          }
+        """
+        qstats1 += quasisetter(PrivateMeta, "withEnv", paramEnv)
       }
-      if (hasTyping) {
-        val param = q"val typing: _root_.scala.meta.internal.semantic.Typing"
-        astats1 += withMethod("withTyping", param)
-        qstats1 += quasisetter("withTyping", param)
+      if (hasDenot || hasTyping) {
+        val paramDenot = q"val denot: $SemanticInternal.Denotation"
+        val paramTypingLike = q"val typingLike: $SemanticInternal.TypingLike"
+        val dortMods = if (!isTermParam) PrivateMeta(OVERRIDE) else PrivateMeta
+        val dandtMods = PrivateMeta
+        val termOrCtorName = q"this.isInstanceOf[_root_.scala.meta.Term.Name] || this.isInstanceOf[_root_.scala.meta.Ctor.Name]"
+        val termOrCtorNameCheck = q"""if ($termOrCtorName) throw new UnsupportedOperationException("need to simultaneously set both denotation and typing for a " + this.productPrefix)"""
+        val stateMessage = "can only call withAttrs on unattributed trees; if necessary, call .copy() to unattribute and then do .withAttrs(...)"
+        val stateDetails = q"this.show[_root_.scala.meta.internal.ui.Attributes]"
+        val stateCheck = q"if (!isUnattributed) throw new UnsupportedOperationException($stateMessage + $EOL + $stateDetails)"
+        val withAttrsD = q"""
+          $dortMods def withAttrs($paramDenot): $iname = {
+            $termOrCtorNameCheck
+            $stateCheck
+            this.privateCopy(
+              flags = this.privateFlags & ~$FlagsPackage.TYPECHECKED,
+              env = $Semantic.Environment.Zero,
+              denot = denot,
+              typing = this.privateTyping,
+              expansion = $SemanticInternal.Expansion.Identity
+            )
+          }
+        """
+        val withAttrsT = q"""
+          $dortMods def withAttrs($paramTypingLike): $iname = {
+            $termOrCtorNameCheck
+            $stateCheck
+            val typing = typingLike.typing
+            this.privateCopy(
+              flags = this.privateFlags & ~$FlagsPackage.TYPECHECKED,
+              env = $Semantic.Environment.Zero,
+              denot = this.privateDenot,
+              typing = typing,
+              expansion = $SemanticInternal.Expansion.Identity
+            )
+          }
+        """
+        val withAttrsDT = q"""
+          $dandtMods def withAttrs($paramDenot, $paramTypingLike): $iname = {
+            $stateCheck
+            val typing = typingLike.typing
+            this.privateCopy(
+              flags = this.privateFlags & ~$FlagsPackage.TYPECHECKED,
+              env = $Semantic.Environment.Zero,
+              denot = denot,
+              typing = typing,
+              expansion = $SemanticInternal.Expansion.Identity
+            )
+          }
+        """
+        if (hasDenot) {
+          astats1 += withAttrsD
+          qstats1 += quasisetter(PrivateMeta, "withAttrs", paramDenot)
+        }
+        if (hasTyping) {
+          astats1 += withAttrsT
+          qstats1 += quasisetter(PrivateMeta, "withAttrs", paramTypingLike)
+        }
+        if (hasDenot && hasTyping) {
+          istats1 += withAttrsDT
+          qstats1 += quasisetter(PrivateMeta, "withAttrs", paramDenot, paramTypingLike)
+        }
       }
       if (hasExpansion) {
-        val param = q"val expansion: _root_.scala.meta.internal.semantic.Expansion"
-        astats1 += withMethod("withExpansion", param)
-        qstats1 += quasisetter("withExpansion", param)
+        val paramExpansionLike = q"val expansionLike: $SemanticInternal.ExpansionLike"
+        val stateMessage = "can only call withExpansion on partially attributed trees, call .withAttrs first and only then .withExpansion(...)"
+        val stateDetails = q"this.show[_root_.scala.meta.internal.ui.Attributes]"
+        val stateCheck = q"if (!isPartiallyAttributed) throw new UnsupportedOperationException($stateMessage + $EOL + $stateDetails)"
+        astats1 += q"""
+          private[meta] def withExpansion($paramExpansionLike): $iname = {
+            $stateCheck
+            val expansion = expansionLike.expansion
+            this.privateCopy(
+              flags = this.privateFlags & ~$FlagsPackage.TYPECHECKED,
+              env = this.privateEnv,
+              denot = this.privateDenot,
+              typing = this.privateTyping,
+              expansion = expansion
+            )
+          }
+        """
+        qstats1 += quasisetter(PrivateMeta, "withExpansion", paramExpansionLike)
       }
 
       // step 9: generate boilerplate required by the @ast infrastructure
       istats1 += q"override type ThisType <: $iname"
       astats1 += q"override type ThisType = $iname"
-      astats1 += q"override def internalTag: _root_.scala.Int = $mname.internalTag"
-      mstats1 += q"def internalTag: _root_.scala.Int = $AdtInternal.calculateTag[$iname]"
+      astats1 += q"override def privateTag: _root_.scala.Int = $mname.privateTag"
+      mstats1 += q"def privateTag: _root_.scala.Int = $AdtInternal.calculateTag[$iname]"
       // TODO: remove leafClass and leafCompanion from here
       ianns1 += q"new $AstInternal.astClass"
       ianns1 += q"new $AdtInternal.leafClass"
@@ -347,14 +488,15 @@ class AstMacros(val c: Context) {
         if (hasErrors) q"()"
         else require
       })
-      var internalInitCount = 2 // internalPrototype, internalParent
+      var internalInitCount = 2 // privatePrototype, privateParent
       if (hasTokens) internalInitCount += 1
+      if (hasEnv) internalInitCount += 1
       if (hasDenot) internalInitCount += 1
       if (hasTyping) internalInitCount += 1
       if (hasExpansion) internalInitCount += 1
       val internalInitss = 1.to(internalInitCount).map(_ => q"null")
       val paramInitss = internalLocalss.map(_.map{ case (local, internal) => q"$AstInternal.initParam($local)" })
-      internalBody += q"val node = new $name(..$internalInitss)(...$paramInitss)"
+      internalBody += q"val node = new $name($FlagsPackage.ZERO, ..$internalInitss)(...$paramInitss)"
       internalBody ++= internalLocalss.flatten.flatMap{ case (local, internal) =>
         val (validators, assignee) = {
           // TODO: this is totally ugly. we need to come up with a way to express this in a sane way.
@@ -435,7 +577,7 @@ class AstMacros(val c: Context) {
       mstats1 += q"import _root_.scala.language.implicitConversions"
       mstats1 += q"implicit def interfaceToApi(interface: $iname): $aname = macro $AstInternal.Macros.interfaceToApi[$iname, $aname]"
       mstats1 += q"trait $aname[..$tparams] extends ..$aparents1 { $aself => ..$astats1 }"
-      mstats1 += q"private[${mname.toTypeName}] final class $name[..$tparams] $ctorMods(...${bparams1 +: paramss1}) extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
+      mstats1 += q"$cmods1 class $name[..$tparams] $ctorMods(...${bparams1 +: paramss1}) extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
       if (!isQuasi) mstats1 += q"$qmods1 class $qname(rank: _root_.scala.Int, tree: _root_.scala.Any) extends ..$qparents1 { ..$qstats1 }"
       val cdef1 = q"$imods1 trait $iname extends ..$iparents1 { $iself => ..$istats1 }"
       val mdef1 = q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"

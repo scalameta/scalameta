@@ -3,6 +3,8 @@ package org.scalameta.ast
 import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
 import scala.annotation.meta.getter
+import scala.{Seq => _}
+import scala.collection.immutable.Seq
 import scala.reflect.macros.blackbox.Context
 import org.scalameta.adt.{Reflection => AdtReflection}
 
@@ -22,6 +24,7 @@ object internal {
   def storeField[T](f: T, v: T): Unit = macro Macros.storeField
   def initField[T](f: T): T = macro Macros.initField
   def initParam[T](f: T): T = macro Macros.initField
+  def children[T, U]: Seq[U] = macro Macros.children[T]
 
   class Macros(val c: Context) extends AdtReflection {
     lazy val u: c.universe.type = c.universe
@@ -62,7 +65,6 @@ object internal {
     }
     def loadField(f: c.Tree): c.Tree = {
       val q"this.$finternalName" = f
-      def uncapitalize(s: String) = if (s.length == 0) "" else { val chars = s.toCharArray; chars(0) = chars(0).toLower; new String(chars) }
       val fname = TermName(finternalName.toString.stripPrefix("_"))
       def lazyLoad(fn: c.Tree => c.Tree) = {
         val assertionMessage = s"internal error when initializing ${c.internal.enclosingOwner.owner.name}.$fname"
@@ -71,30 +73,41 @@ object internal {
             // there's not much sense in using org.scalameta.invariants.require here
             // because when the assertion trips, the tree is most likely in inconsistent state
             // which will either lead to useless printouts or maybe even worse errors
-            _root_.scala.Predef.require(this.internalPrototype != null, $assertionMessage)
-            $f = ${fn(q"this.internalPrototype.$fname")}
+            _root_.scala.Predef.require(this.privatePrototype != null, $assertionMessage)
+            $f = ${fn(q"this.privatePrototype.$fname")}
           }
+        """
+      }
+      def copySubtree(subtree: c.Tree) = {
+        val tempName = c.freshName(TermName("copy" + fname.toString.capitalize))
+        q"""
+          val $tempName = $subtree.privateCopy(prototype = $subtree, parent = this)
+          if (this.privatePrototype.isTypechecked != this.isTypechecked) $tempName.withTypechecked(this.isTypechecked)
+          else $tempName
         """
       }
       f.tpe.finalResultType match {
         case Any(tpe) => q"()"
         case Primitive(tpe) => q"()"
-        case Tree(tpe) => lazyLoad(pf => q"$pf.internalCopy(prototype = $pf, parent = this)")
-        case OptionTree(tpe) => lazyLoad(pf => q"$pf.map(el => el.internalCopy(prototype = el, parent = this))")
-        case OptionSeqTree(tpe) => lazyLoad(pf => q"$pf.map(_.map(el => el.internalCopy(prototype = el, parent = this)))")
-        case SeqTree(tpe) => lazyLoad(pf => q"$pf.map(el => el.internalCopy(prototype = el, parent = this))")
-        case SeqSeqTree(tpe) => lazyLoad(pf => q"$pf.map(_.map(el => el.internalCopy(prototype = el, parent = this)))")
+        case Tree(tpe) => lazyLoad(pf => q"${copySubtree(pf)}")
+        case OptionTree(tpe) => lazyLoad(pf => q"$pf.map(el => ${copySubtree(q"el")})")
+        case OptionSeqTree(tpe) => lazyLoad(pf => q"$pf.map(_.map(el => ${copySubtree(q"el")}))")
+        case SeqTree(tpe) => lazyLoad(pf => q"$pf.map(el => ${copySubtree(q"el")})")
+        case SeqSeqTree(tpe) => lazyLoad(pf => q"$pf.map(_.map(el => ${copySubtree(q"el")}))")
       }
     }
     def storeField(f: c.Tree, v: c.Tree): c.Tree = {
+      def copySubtree(subtree: c.Tree) = {
+        q"$subtree.privateCopy(prototype = $subtree, parent = node)"
+      }
       f.tpe.finalResultType match {
         case Any(tpe) => q"()"
         case Primitive(tpe) => q"()"
-        case Tree(tpe) => q"$f = $v.internalCopy(prototype = $v, parent = node)"
-        case OptionTree(tpe) => q"$f = $v.map(el => el.internalCopy(prototype = el, parent = node))"
-        case OptionSeqTree(tpe) => q"$f = $v.map(_.map(el => el.internalCopy(prototype = el, parent = node)))"
-        case SeqTree(tpe) => q"$f = $v.map(el => el.internalCopy(prototype = el, parent = node))"
-        case SeqSeqTree(tpe) => q"$f = $v.map(_.map(el => el.internalCopy(prototype = el, parent = node)))"
+        case Tree(tpe) => q"$f = ${copySubtree(v)}"
+        case OptionTree(tpe) => q"$f = $v.map(el => ${copySubtree(q"el")})"
+        case OptionSeqTree(tpe) => q"$f = $v.map(_.map(el => ${copySubtree(q"el")}))"
+        case SeqTree(tpe) => q"$f = $v.map(el => ${copySubtree(q"el")})"
+        case SeqSeqTree(tpe) => q"$f = $v.map(_.map(el => ${copySubtree(q"el")}))"
         case tpe => c.abort(c.enclosingPosition, s"unsupported field type $tpe")
       }
     }
@@ -171,6 +184,31 @@ object internal {
           }
         } else None
       }
+    }
+    def children[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
+      var streak = List[Tree]()
+      def flushStreak(acc: Tree): Tree = {
+        val result = if (acc.isEmpty) q"$streak" else q"$acc ++ $streak"
+        streak = Nil
+        result
+      }
+      val acc = T.tpe.typeSymbol.asLeaf.fields.foldLeft(q"": Tree)((acc, f) => f.tpe match {
+        case Tree(_) =>
+          streak :+= q"this.${f.sym}"
+          acc
+        case SeqTree(_) =>
+          val acc1 = flushStreak(acc)
+          q"$acc1 ++ this.${f.sym}"
+        case SeqSeqTree(_) =>
+          val acc1 = flushStreak(acc)
+          q"$acc1 ++ this.${f.sym}.flatten"
+        case OptionTree(_) =>
+          val acc1 = flushStreak(acc)
+          q"$acc1 ++ this.${f.sym}.toList"
+        case _ =>
+          acc
+      })
+      flushStreak(acc)
     }
   }
 }

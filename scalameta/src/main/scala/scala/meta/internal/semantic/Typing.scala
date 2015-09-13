@@ -5,21 +5,30 @@ package semantic
 import org.scalameta.adt
 import org.scalameta.adt._
 import org.scalameta.invariants._
+import scala.meta.internal.ui.Attributes
 
 @monadicRoot trait Typing
 object Typing {
   @noneLeaf object Zero extends Typing
-  @someLeaf class Specified(tpe: Type.Arg @delayed) extends Typing {
-    protected def writeReplace(): AnyRef = new Specified.SerializationProxy(this)
+  @noneLeaf object Recursive extends Typing
+  @someLeaf class Nonrecursive(tpe: Type.Arg @byNeed) extends Typing {
+    protected def onTpeLoaded(tpe: Type.Arg) = require(tpe.isTypechecked && debug(tpe.show[Attributes]))
+    protected def writeReplace(): AnyRef = new Nonrecursive.SerializationProxy(this)
+    override def canEqual(other: Any): Boolean = other.isInstanceOf[Nonrecursive]
+    override def equals(that: Any): Boolean = that match {
+      case that: Nonrecursive => equality.Semantic.equals(this.tpe, that.tpe)
+      case _ => false
+    }
+    override def hashCode: Int = equality.Semantic.hashCode(tpe)
   }
-  object Specified {
-    @SerialVersionUID(1L) private class SerializationProxy(@transient private var orig: Specified) extends Serializable {
+  object Nonrecursive {
+    @SerialVersionUID(1L) private class SerializationProxy(@transient private var orig: Nonrecursive) extends Serializable {
       private def writeObject(out: java.io.ObjectOutputStream): Unit = {
         out.writeObject(orig.tpe)
       }
       private def readObject(in: java.io.ObjectInputStream): Unit = {
         val tpe = in.readObject.asInstanceOf[Type.Arg]
-        orig = Specified(tpe)
+        orig = Nonrecursive(tpe)
       }
       private def readResolve(): AnyRef = orig
       override def toString = s"Proxy($orig)"

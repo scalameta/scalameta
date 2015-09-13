@@ -1,6 +1,6 @@
 package scala.meta
 package internal
-package semantic
+package equality
 
 import scala.{meta => api}
 import scala.meta.internal.{ast => impl}
@@ -15,13 +15,13 @@ private[meta] object NonRef {
 private[meta] object NameRef {
   def unapply(tree: Tree): Option[(Name, Int)] = {
     tree match {
-      case name: Term.Name => Some((name, Term.Name.internalTag))
-      case name: Type.Name => Some((name, Type.Name.internalTag))
-      case name: Ctor.Name => Some((name, Ctor.Name.internalTag))
-      case Term.Select(NameRef(_, _), name) => Some((name, Term.Name.internalTag))
-      case Type.Select(NameRef(_, _), name) => Some((name, Type.Name.internalTag))
-      case Type.Project(NameRef(_, _), name) => Some((name, Type.Name.internalTag))
-      case Ctor.Ref.Select(NameRef(_, _), name) => Some((name, Ctor.Name.internalTag))
+      case name: Term.Name => Some((name, Term.Name.privateTag))
+      case name: Type.Name => Some((name, Type.Name.privateTag))
+      case name: Ctor.Name => Some((name, Ctor.Name.privateTag))
+      case Term.Select(NameRef(_, _), name) => Some((name, Term.Name.privateTag))
+      case Type.Select(NameRef(_, _), name) => Some((name, Type.Name.privateTag))
+      case Type.Project(NameRef(_, _), name) => Some((name, Type.Name.privateTag))
+      case Ctor.Ref.Select(NameRef(_, _), name) => Some((name, Ctor.Name.privateTag))
       case _ => None
     }
   }
@@ -30,7 +30,7 @@ private[meta] object NameRef {
 private[meta] object OpaqueRef {
   def unapply(tree: Tree): Option[(Name, Int)] = {
     tree match {
-      case tree: Name.Indeterminate => Some((tree, Name.Indeterminate.internalTag))
+      case tree: Name.Indeterminate => Some((tree, Name.Indeterminate.privateTag))
       case _ => None
     }
   }

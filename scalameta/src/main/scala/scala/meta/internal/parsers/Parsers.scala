@@ -453,7 +453,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       private def requirePositioned() = {
         def fail() = throw new Exception(
           s"internal error: unpositioned prototype tree " +
-            s"${tree.show[Syntax]}: ${tree.show[Structure]}")
+          s"${tree.show[Syntax]}: ${tree.show[Structure]}")
         if (!tree.tokens.isAuthentic) fail()
       }
       def startTokenPos: Int = { requirePositioned(); tree.tokens.require[Tokens.Slice].from }
@@ -473,7 +473,7 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
       case AutoPos => in.prevTokenPos
     }
     if (endTokenPos < startTokenPos) endTokenPos = startTokenPos - 1
-    result.internalCopy(tokens = scannerTokens.slice(startTokenPos, endTokenPos + 1)).asInstanceOf[T]
+    result.withTokens(scannerTokens.slice(startTokenPos, endTokenPos + 1)).asInstanceOf[T]
   }
   def autoPos[T <: Tree](body: => T): T = atPos(start = auto, end = auto)(body)
 
@@ -791,41 +791,104 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
     private def tupleInfixType(): Type = autoPos {
       require(token.is[`(`] && debug(token))
       val openParenPos = in.tokenPos
-      next()
-      if (token.is[`)`]) {
-        next()
-        accept[`=>`]
-        Type.Function(Nil, typ())
-      }
-      else {
-        val ts = functionTypes()
-        val closeParenPos = in.tokenPos
-        accept[`)`]
-        if (token.is[`=>`]) {
-          next()
-          Type.Function(ts, typ())
-        } else {
-          val tuple = atPos(openParenPos, closeParenPos)(makeTupleType(ts map {
-            case q: Type.Arg.Quasi    => q.become[Type.Quasi]
-            case t: Type              => t
-            case p: Type.Arg.ByName   => syntaxError("by name type not allowed here", at = p)
-            case p: Type.Arg.Repeated => syntaxError("repeated type not allowed here", at = p)
-          }))
-          infixTypeRest(
-            compoundTypeRest(Some(
-              annotTypeRest(
-                simpleTypeRest(
-                  tuple)))),
-            InfixMode.FirstOp
-          )
+
+      // NOTE: This is a really hardcore disambiguation caused by introduction of Type.Method.
+      // We need to accept `(T, U) => W`, `(x: T): x.U` and also support unquoting.
+      // Maybe it was not the best idea to introduce method types or to have this syntax for them...
+      var hasParams = false
+      var hasImplicits = false
+      var hasTypes = false
+      var secondOpenParenPos = -1
+      var closeParenPos = -1
+      val rawtss: List[List[Tree]] = {
+        def paramOrType() = {
+          def looksLikeParam = token.is[`implicit`] || (token.isInstanceOf[Ident] && ahead(token.is[`:`]))
+          if (token.is[Ellipsis]) {
+            ellipsis(1, unquote[Tree])
+          } else if (token.is[Unquote]) {
+            unquote[Tree]
+          } else if (looksLikeParam) {
+            if (hasTypes) syntaxError("can't mix function type and method type syntaxes", at = token)
+            if (hasImplicits) accept[Ident]
+            hasParams = true
+            hasImplicits |= token.is[`implicit`]
+            param(ownerIsCase = false, ownerIsType = false, isImplicit = hasImplicits)
+          } else {
+            if (hasParams) syntaxError("can't mix function type and method type syntaxes", at = token)
+            hasTypes = true
+            functionArgType()
+          }
         }
+
+        val rawtss = new ListBuffer[List[Tree]]
+        while (!hasTypes && !hasImplicits && token.is[`(`]) {
+          if (openParenPos != in.tokenPos && secondOpenParenPos == 0) secondOpenParenPos = in.tokenPos
+          accept[`(`]
+          val rawts = new ListBuffer[Tree]
+          if (!token.is[`)`]) {
+            rawts += paramOrType()
+            while (token.is[`,`] || token.is[Ellipsis]) {
+              if (token.is[`,`]) next()
+              rawts += paramOrType()
+            }
+          }
+          closeParenPos = in.tokenPos
+          accept[`)`]
+          newLineOptWhenFollowedBy[`(`]
+          rawtss += rawts.toList
+        }
+        rawtss.toList
+      }
+      def ts: List[Type.Arg] = {
+        if (hasParams) require(false && debug(hasParams, hasImplicits, hasTypes))
+        if (rawtss.length != 1) {
+          val message = "can't have multiple parameter lists in function types"
+          syntaxError(message, at = scannerTokens(secondOpenParenPos))
+        }
+        rawtss.head.map({
+          case q: Tree.Quasi => q.become[Type.Arg.Quasi]
+          case t: Type.Arg => t
+          case other => unreachable(debug(other.show[Syntax], other.show[Structure]))
+        })
+      }
+      def pss: List[List[Term.Param]] = {
+        if (hasTypes) require(false && debug(hasParams, hasImplicits, hasTypes))
+        rawtss.map(_.map({
+          case q: Tree.Quasi => q.become[Term.Param.Quasi]
+          case t: Term.Param => t
+          case other => unreachable(debug(other.show[Syntax], other.show[Structure]))
+        }))
+      }
+
+      if (hasParams && !token.is[`:`]) syntaxError("can't mix function type and method type syntaxes", at = token)
+      if (hasTypes && token.is[`:`]) accept[`=>`]
+
+      if (token.is[`:`]) {
+        next()
+        Type.Method(pss, typ())
+      } else if (token.is[`=>`]) {
+        next()
+        Type.Function(ts, typ())
+      } else {
+        val tuple = atPos(openParenPos, closeParenPos)(makeTupleType(ts map {
+          case q: Type.Arg.Quasi    => q.become[Type.Quasi]
+          case t: Type              => t
+          case p: Type.Arg.ByName   => syntaxError("by name type not allowed here", at = p)
+          case p: Type.Arg.Repeated => syntaxError("repeated type not allowed here", at = p)
+        }))
+        infixTypeRest(
+          compoundTypeRest(Some(
+            annotTypeRest(
+              simpleTypeRest(
+                tuple)))),
+          InfixMode.FirstOp
+        )
       }
     }
 
     private def typeLambda(): Type =
       if (dialect.allowTypeLambdas) {
         val quants = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
-        accept[`=>`]
         val tpe = typ()
         Type.Lambda(quants, tpe)
       } else {
@@ -842,15 +905,20 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
      *  }}}
      */
     def typ(): Type = autoPos {
-      val t: Type =
-        if (token.is[`(`]) tupleInfixType()
-        else if (token.is[`[`]) typeLambda()
-        else infixType(InfixMode.FirstOp)
+      if (token.is[`:`]) {
+        next()
+        Type.Method(Nil, typ())
+      } else {
+        val t: Type =
+          if (token.is[`(`]) tupleInfixType()
+          else if (token.is[`[`]) typeLambda()
+          else infixType(InfixMode.FirstOp)
 
-      token match {
-        case _: `=>`      => next(); Type.Function(List(t), typ())
-        case _: `forSome` => next(); Type.Existential(t, existentialStats())
-        case _            => t
+        token match {
+          case _: `=>`      => next(); Type.Function(List(t), typ())
+          case _: `forSome` => next(); Type.Existential(t, existentialStats())
+          case _            => t
+        }
       }
     }
 
@@ -965,7 +1033,6 @@ private[meta] class Parser(val input: Input)(implicit val dialect: Dialect) { pa
      *  }}}
      */
     def types(): List[Type] = commaSeparated(argType())
-    def functionTypes(): List[Type.Arg] = commaSeparated(functionArgType())
 
     // TODO: I have a feeling that we no longer need PatternContextSensitive
     // now that we have Pat.Type separate from Type

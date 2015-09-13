@@ -5,6 +5,7 @@ import org.scalameta.adt._
 import org.scalameta.annotations._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
+import scala.language.experimental.macros
 import scala.{Seq => _}
 import scala.annotation.compileTimeOnly
 import scala.collection.immutable.Seq
@@ -12,20 +13,70 @@ import scala.reflect.{ClassTag, classTag}
 import scala.meta.semantic.{Context => SemanticContext}
 import scala.meta.internal.{ast => impl} // necessary only to implement APIs, not to define them
 import scala.meta.internal.{semantic => s} // necessary only to implement APIs, not to define them
+import scala.meta.internal.{equality => e} // necessary only to implement APIs, not to define them
 import scala.meta.internal.ui.Summary // necessary only to implement APIs, not to define them
 import scala.reflect.runtime.{universe => ru} // necessary only for a very hacky approximation of hygiene
 
 private[meta] trait Api {
   // ===========================
-  // PART 1: ATTRIBUTES
+  // PART 1: EQUALITY
   // ===========================
 
+  trait AllowEquality[T1, T2]
+  implicit object AllowEquality {
+    implicit def materialize[T1, T2]: AllowEquality[T1, T2] = macro e.Macros.allow[T1, T2]
+  }
+
+  private[meta] implicit class XtensionSemanticEquality[T1 <: Tree](tree1: T1) {
+    def ===[T2 <: Tree](tree2: T2)(implicit ev: AllowEquality[T1, T2]): Boolean = e.Semantic.equals(tree1, tree2)
+    def =/=[T2 <: Tree](tree2: T2)(implicit ev: AllowEquality[T1, T2]): Boolean = !e.Semantic.equals(tree1, tree2)
+  }
+
+  implicit class XtensionTypecheckingEquality[T1 <: Tree](tree1: T1) {
+    @hosted def =:=[T2 <: Tree](tree2: T2)(implicit ev: AllowEquality[T1, T2]): Boolean = e.Typechecking.equals(tree1, tree2)
+    @hosted def =!=[T2 <: Tree](tree2: T2)(implicit ev: AllowEquality[T1, T2]): Boolean = !e.Typechecking.equals(tree1, tree2)
+  }
+
+  implicit class XtensionNormalizingEquality[T1 <: Tree](tree1: T1) {
+    @hosted def =~=[T2 <: Tree](tree2: T2)(implicit ev: AllowEquality[T1, T2]): Boolean = e.Normalizing.equals(tree1, tree2)
+    // TODO: what would be the symbol to express negation of =~=?
+  }
+
+  // ===========================
+  // PART 2: CONFIGURATION
+  // ===========================
+
+  @hosted def dialect: Dialect = implicitly[SemanticContext].dialect
+
+  @hosted def domain: Domain = implicitly[SemanticContext].domain
+
+  // ===========================
+  // PART 3: ATTRIBUTES
+  // ===========================
+
+  type Environment = scala.meta.semantic.Environment
+  val Environment = scala.meta.semantic.Environment
+
   implicit class XtensionSemanticTermDesugar(tree: Term) {
-    @hosted def desugar: Term = implicitly[SemanticContext].desugar(tree)
+    @hosted def desugar: Term = {
+      val ttree = implicitly[SemanticContext].typecheck(tree).require[impl.Term]
+      ttree.expansion match {
+        case s.Expansion.Zero => unreachable
+        case s.Expansion.Identity => ttree
+        case s.Expansion.Desugaring(desugaring) => desugaring
+      }
+    }
   }
 
   implicit class XtensionSemanticTermTpe(tree: Term) {
-    @hosted def tpe: Type = implicitly[SemanticContext].tpe(tree)
+    @hosted def tpe: Type = {
+      val ttree = implicitly[SemanticContext].typecheck(tree).require[impl.Term]
+      ttree.typing match {
+        case s.Typing.Zero => unreachable
+        case s.Typing.Recursive => impl.Type.Singleton(tree.require[impl.Term.Ref]).setTypechecked
+        case s.Typing.Nonrecursive(tpe) => tpe.require[impl.Type]
+      }
+    }
   }
 
   implicit class XtensionSemanticMemberTpe(tree: Member) {
@@ -33,20 +84,25 @@ private[meta] trait Api {
       val sScala = s.Symbol.Global(s.Symbol.RootPackage, "scala", s.Signature.Term)
       val sCollection = s.Symbol.Global(sScala, "collection", s.Signature.Term)
       val sSeq = s.Symbol.Global(sCollection, "Seq", s.Signature.Type)
-      impl.Type.Name("Seq").withDenot(s.Prefix.Zero, sSeq)
+      impl.Type.Name("Seq").withAttrs(s.Denotation.Single(s.Prefix.Zero, sSeq)).setTypechecked
     }
-    @hosted private def dearg(tpe: Type.Arg): Type = tpe.require[impl.Type.Arg] match {
-      case impl.Type.Arg.ByName(tpe) => impl.Type.Apply(SeqRef, List(tpe))
-      case impl.Type.Arg.Repeated(tpe) => tpe
-      case tpe: impl.Type => tpe
+    @hosted private def paramType(tree: impl.Term.Param): Type = {
+      val ttree = implicitly[SemanticContext].typecheck(tree).require[impl.Term.Param]
+      ttree.typing match {
+        case s.Typing.Zero => unreachable
+        case s.Typing.Recursive => unreachable
+        case s.Typing.Nonrecursive(impl.Type.Arg.ByName(tpe)) => impl.Type.Apply(SeqRef, List(tpe)).setTypechecked
+        case s.Typing.Nonrecursive(impl.Type.Arg.Repeated(tpe)) => tpe
+        case s.Typing.Nonrecursive(tpe: impl.Type) => tpe
+      }
     }
     @hosted private def methodType(tparams: Seq[Type.Param], paramss: Seq[Seq[Term.Param]], ret: Type): Type = {
       if (tparams.nonEmpty) {
         val monoret = methodType(Nil, paramss, ret.require[impl.Type]).require[impl.Type]
-        impl.Type.Lambda(tparams.require[Seq[impl.Type.Param]], monoret)
+        impl.Type.Lambda(tparams.require[Seq[impl.Type.Param]], monoret).setTypechecked
       } else paramss.foldRight(ret.require[impl.Type])((params, acc) => {
-        val paramtypes = params.map(p => implicitly[SemanticContext].tpe(p).require[impl.Type.Arg])
-        impl.Type.Function(paramtypes, acc)
+        val paramtypes = params.map(p => paramType(p.require[impl.Term.Param]).require[impl.Type.Arg])
+        impl.Type.Function(paramtypes, acc).setTypechecked
       })
     }
     @hosted private def ctorType(owner: Member, paramss: Seq[Seq[Term.Param]]): Type = {
@@ -54,7 +110,7 @@ private[meta] trait Api {
       val ret = {
         if (tparams.nonEmpty) impl.Type.Apply(owner.tpe.require[impl.Type], tparams.map(_.name.require[impl.Type.Name]))
         else owner.tpe
-      }
+      }.setTypechecked
       methodType(tparams, paramss, ret)
     }
     @hosted def tpe: Type = tree.require[impl.Member] match {
@@ -67,12 +123,12 @@ private[meta] trait Api {
       case tree: impl.Defn.Type => tree.name
       case tree: impl.Defn.Class => tree.name
       case tree: impl.Defn.Trait => tree.name
-      case tree: impl.Defn.Object => impl.Type.Singleton(tree.name)
-      case       impl.Pkg(name: impl.Term.Name, _) => impl.Type.Singleton(name)
-      case       impl.Pkg(impl.Term.Select(_, name: impl.Term.Name), _) => impl.Type.Singleton(name)
-      case tree: impl.Pkg.Object => impl.Type.Singleton(tree.name)
+      case tree: impl.Defn.Object => impl.Type.Singleton(tree.name).setTypechecked
+      case       impl.Pkg(name: impl.Term.Name, _) => impl.Type.Singleton(name).setTypechecked
+      case       impl.Pkg(impl.Term.Select(_, name: impl.Term.Name), _) => impl.Type.Singleton(name).setTypechecked
+      case tree: impl.Pkg.Object => impl.Type.Singleton(tree.name).setTypechecked
       case tree: impl.Term.Param if tree.parent.map(_.isInstanceOf[impl.Template]).getOrElse(false) => ??? // TODO: don't forget to intersect with the owner type
-      case tree: impl.Term.Param => dearg(implicitly[SemanticContext].tpe(tree))
+      case tree: impl.Term.Param => paramType(tree)
       case tree: impl.Type.Param => tree.name.require[Type.Name]
       case tree: impl.Ctor.Primary => ctorType(tree.owner.require[Member], tree.paramss)
       case tree: impl.Ctor.Secondary => ctorType(tree.owner.require[Member], tree.paramss)
@@ -103,24 +159,24 @@ private[meta] trait Api {
   }
 
   // ===========================
-  // PART 2: TYPES
+  // PART 4: TYPES
   // ===========================
 
   implicit class XtensionSemanticType(tree: Type) {
-    @hosted def <:<(other: Type): Boolean = implicitly[SemanticContext].isSubType(tree, other)
+    @hosted def <:<(other: Type): Boolean = implicitly[SemanticContext].isSubtype(tree, other)
     @hosted def weak_<:<(other: Type): Boolean = ???
     @hosted def =:=(other: Type): Boolean = (tree =:= other) && (other =:= tree)
     @hosted def widen: Type = implicitly[SemanticContext].widen(tree)
     @hosted def dealias: Type = implicitly[SemanticContext].dealias(tree)
     @hosted def companion: Type.Ref = ???
-    @hosted def parents: Seq[Type] = implicitly[SemanticContext].parents(tree)
+    @hosted def supertypes: Seq[Type] = implicitly[SemanticContext].supertypes(tree)
   }
 
-  @hosted def lub(tpes: Seq[Type]): Type = implicitly[SemanticContext].lub(tpes)
-  @hosted def glb(tpes: Seq[Type]): Type = implicitly[SemanticContext].glb(tpes)
+  @hosted def lub(tpes: Type*): Type = implicitly[SemanticContext].lub(tpes.toList)
+  @hosted def glb(tpes: Type*): Type = implicitly[SemanticContext].glb(tpes.toList)
 
   // ===========================
-  // PART 3: MEMBERS
+  // PART 5: MEMBERS
   // ===========================
 
   trait XtensionSemanticMemberLike {
@@ -137,9 +193,9 @@ private[meta] trait Api {
     @hosted def source: Member = tree.name match {
       case name: impl.Name.Anonymous => name.defn
       case name: impl.Name.Indeterminate => name.defn
-      case name: impl.Term.Name => name.withDenot(name.denot.stripPrefix).defn
-      case name: impl.Type.Name => name.withDenot(name.denot.stripPrefix).defn
-      case name: impl.Ctor.Name => name.withDenot(name.denot.stripPrefix).defn
+      case name: impl.Term.Name => name.withAttrs(name.denot.stripPrefix, s.Typing.Zero).defn
+      case name: impl.Type.Name => name.withAttrs(name.denot.stripPrefix).defn
+      case name: impl.Ctor.Name => name.withAttrs(name.denot.stripPrefix, s.Typing.Zero).defn
     }
     @hosted def name: Name = {
       tree.require[impl.Member] match {
@@ -162,8 +218,8 @@ private[meta] trait Api {
         case tree: impl.Ctor.Secondary => tree.name
       }
     }
-    @hosted def parents: Seq[Member] = implicitly[SemanticContext].parents(tree)
-    @hosted def children: Seq[Member] = implicitly[SemanticContext].children(tree)
+    @hosted def supermembers: Seq[Member] = implicitly[SemanticContext].supermembers(tree)
+    @hosted def submembers: Seq[Member] = implicitly[SemanticContext].submembers(tree)
     @hosted def companion: Member = {
       val candidates = {
         if (tree.isClass || tree.isTrait) tree.owner.members.filter(m => m.isObject && m.name.toString == tree.name.toString)
@@ -242,7 +298,7 @@ private[meta] trait Api {
       def isSyntacticOverride = !isAbstract && tree.mods.exists(_.isInstanceOf[impl.Mod.Override])
       def isSemanticOverride = {
         def isEligible = isVal || isVar || isDef || isMacro || isAbstractType || isAliasType
-        def overridesSomething = parents.nonEmpty
+        def overridesSomething = supermembers.nonEmpty
         isEligible && overridesSomething
       }
       isSyntacticOverride || isSemanticOverride
@@ -289,24 +345,24 @@ private[meta] trait Api {
   implicit class XtensionSemanticTermMember(tree: Member.Term) {
     @hosted def source: Member.Term = new XtensionSemanticMember(tree).source.require[Member.Term]
     @hosted def name: Term.Name = new XtensionSemanticMember(tree).name.require[Term.Name]
-    @hosted def parents: Seq[Member.Term] = new XtensionSemanticMember(tree).parents.require[Seq[Member.Term]]
-    @hosted def children: Seq[Member.Term] = new XtensionSemanticMember(tree).children.require[Seq[Member.Term]]
+    @hosted def supermembers: Seq[Member.Term] = new XtensionSemanticMember(tree).supermembers.require[Seq[Member.Term]]
+    @hosted def submembers: Seq[Member.Term] = new XtensionSemanticMember(tree).submembers.require[Seq[Member.Term]]
     @hosted def companion: Member.Type = new XtensionSemanticMember(tree).companion.require[Member.Type]
   }
 
   implicit class XtensionSemanticTermRefMemberLike(tree: Term.Ref) {
     @hosted def source: Member.Term = new XtensionSemanticRefMemberLike(tree).source.require[Member.Term]
     @hosted def name: Term.Name = new XtensionSemanticRefMemberLike(tree).name.require[Term.Name]
-    @hosted def parents: Seq[Member.Term] = new XtensionSemanticRefMemberLike(tree).parents.require[Seq[Member.Term]]
-    @hosted def children: Seq[Member.Term] = new XtensionSemanticRefMemberLike(tree).children.require[Seq[Member.Term]]
+    @hosted def supermembers: Seq[Member.Term] = new XtensionSemanticRefMemberLike(tree).supermembers.require[Seq[Member.Term]]
+    @hosted def submembers: Seq[Member.Term] = new XtensionSemanticRefMemberLike(tree).submembers.require[Seq[Member.Term]]
     @hosted def companion: Member.Type = new XtensionSemanticRefMemberLike(tree).companion.require[Member.Type]
   }
 
   implicit class XtensionSemanticTypeMember(tree: Member.Type) {
     @hosted def source: Member.Type = new XtensionSemanticMember(tree).source.require[Member.Type]
     @hosted def name: Type.Name = new XtensionSemanticMember(tree).name.require[Type.Name]
-    @hosted def parents: Seq[Member.Type] = new XtensionSemanticMember(tree).parents.require[Seq[Member.Type]]
-    @hosted def children: Seq[Member.Type] = new XtensionSemanticMember(tree).children.require[Seq[Member.Type]]
+    @hosted def supermembers: Seq[Member.Type] = new XtensionSemanticMember(tree).supermembers.require[Seq[Member.Type]]
+    @hosted def submembers: Seq[Member.Type] = new XtensionSemanticMember(tree).submembers.require[Seq[Member.Type]]
     @hosted def companion: Member.Term = new XtensionSemanticMember(tree).companion.require[Member.Term]
   }
 
@@ -339,7 +395,7 @@ private[meta] trait Api {
   }
 
   // ===========================
-  // PART 4: SCOPES
+  // PART 6: SCOPES
   // ===========================
 
   // TODO: so what I wanted to do with Scope.members is to have three overloads:
@@ -395,7 +451,7 @@ private[meta] trait Api {
         //    so far we strip off all desugarings and, hence, all inferred implicit arguments, so that's not a problem for us, but it will be
         // NOTE: potential solution would involve having the symbol of the parameter to be of a special, new kind
         // Symbol.Synthetic(origin: Symbol, generator: ???)
-        impl.Term.Param(List(impl.Mod.Implicit()), impl.Name.Anonymous(), Some(evidenceTpe.require[impl.Type]), None)
+        impl.Term.Param(List(impl.Mod.Implicit()), impl.Name.Anonymous(), Some(evidenceTpe.require[impl.Type]), None).setTypechecked
       }
       def deriveViewEvidence(tpe: Type) = deriveEvidence(impl.Type.Function(List(tparam.name.require[impl.Type]), tpe.require[impl.Type]))
       def deriveContextEvidence(tpe: Type) = deriveEvidence(impl.Type.Apply(tpe.require[impl.Type], List(tparam.name.require[impl.Type])))
@@ -586,7 +642,7 @@ private[meta] trait Api {
   }
 
   // ===========================
-  // PART 5: BINDINGS
+  // PART 7: BINDINGS
   // ===========================
 
   implicit class XtensionSemanticName(tree: Name) {
@@ -620,7 +676,7 @@ private[meta] trait Api {
   }
 
   // ===========================
-  // PART 6: REPRESENTATION CONVERSIONS
+  // PART 8: REPRESENTATION CONVERSIONS
   // ===========================
 
   implicit class XtensionTypeToPatType(tree: Type) {
@@ -641,7 +697,7 @@ private[meta] trait Api {
         case impl.Type.Lambda(tparams, tpe) => impl.Pat.Type.Lambda(tparams, loop(tpe))
         case tpe: impl.Lit => tpe
       }
-      loop(tree.require[impl.Type])
+      loop(tree.require[impl.Type]).withTypechecked(tree.isTypechecked)
     }
   }
 
@@ -665,7 +721,7 @@ private[meta] trait Api {
         case impl.Pat.Type.Lambda(tparams, tpe) => impl.Type.Lambda(tparams, loop(tpe))
         case tpe: impl.Lit => tpe
       }
-      loop(tree.require[impl.Pat.Type])
+      loop(tree.require[impl.Pat.Type]).withTypechecked(tree.isTypechecked)
     }
   }
 
@@ -674,33 +730,37 @@ private[meta] trait Api {
   }
 
   implicit class XtensionTypeToCtorRef(tree: Type) {
-    @hosted def ctorRef(ctor: Ctor.Name): Term = {
-      def loop(tpe: impl.Type, ctor: impl.Ctor.Name): impl.Term = {
+    @hosted def ctorRef(ctor: Ctor.Name): Ctor.Call = {
+      def loop(tpe: impl.Type, ctor: impl.Ctor.Name): impl.Ctor.Call = {
         object Types {
           def unapply(tpes: Seq[impl.Type.Arg]): Option[Seq[impl.Type]] = {
             if (tpes.forall(_.isInstanceOf[impl.Type])) Some(tpes.map(_.require[impl.Type]))
             else None
           }
         }
-        def adjustValue(ctor: impl.Ctor.Name, value: String) = {
-          impl.Ctor.Name(value).withDenot(ctor.denot).withTyping(ctor.typing)
+        def merge(tpe: impl.Type.Name, ctor: impl.Ctor.Name) = {
+          ctor.copy(value = tpe.value).withTokens(tpe.tokens).inheritAttrs(ctor)
         }
-        val result = tpe match {
-          case impl.Type.Name(value) => adjustValue(ctor, value)
-          case impl.Type.Select(qual, impl.Type.Name(value)) => impl.Ctor.Ref.Select(qual, adjustValue(ctor, value))
-          case impl.Type.Project(qual, impl.Type.Name(value)) => impl.Ctor.Ref.Project(qual, adjustValue(ctor, value))
-          case impl.Type.Function(Types(params), ret) => impl.Term.ApplyType(impl.Ctor.Ref.Function(ctor), params :+ ret)
-          case impl.Type.Annotate(tpe, annots) => impl.Term.Annotate(loop(tpe, ctor), annots)
-          case impl.Type.Apply(tpe, args) => impl.Term.ApplyType(loop(tpe, ctor), args)
-          case impl.Type.ApplyInfix(lhs, op, rhs) => impl.Term.ApplyType(loop(op, ctor), List(lhs, rhs))
-          case _ => unreachable(debug(tree, tree.show[Structure], tpe, tpe.show[Structure]))
+        tpe match {
+          case tpe @ impl.Type.Name(value) =>
+            merge(tpe, ctor)
+          case tpe =>
+            val result = tpe match {
+              case impl.Type.Select(qual, tpe @ impl.Type.Name(value)) => impl.Ctor.Ref.Select(qual, merge(tpe, ctor))
+              case impl.Type.Project(qual, tpe @ impl.Type.Name(value)) => impl.Ctor.Ref.Project(qual, merge(tpe, ctor))
+              case impl.Type.Function(Types(params), ret) => impl.Term.ApplyType(impl.Ctor.Ref.Function(ctor), params :+ ret)
+              case impl.Type.Annotate(tpe, annots) => impl.Term.Annotate(loop(tpe, ctor), annots)
+              case impl.Type.Apply(tpe, args) => impl.Term.ApplyType(loop(tpe, ctor), args)
+              case impl.Type.ApplyInfix(lhs, op, rhs) => impl.Term.ApplyType(loop(op, ctor), List(lhs, rhs))
+              case _ => unreachable(debug(tree, tree.show[Structure], tpe, tpe.show[Structure]))
+            }
+            result.withAttrs(ctor.typing)
         }
-        result.withTyping(scala.util.Try(s.Typing.Specified(tpe.members(ctor.defn).tpe)).getOrElse(s.Typing.Zero))
       }
       // TODO: if we uncomment this, that'll lead to a stackoverflow in scalahost
       // it's okay, but at least we could verify that ctor's prefix is coherent with tree
       // val prefixedCtor = tree.members(ctor.defn).name.require[Ctor.Name]
-      loop(tree.require[impl.Type], ctor.require[impl.Ctor.Name])
+      loop(tree.require[impl.Type], ctor.require[impl.Ctor.Name]).withTypechecked(tree.isTypechecked)
     }
   }
 

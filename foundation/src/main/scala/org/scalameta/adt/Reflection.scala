@@ -14,7 +14,11 @@ trait Reflection {
   import decorators._
 
   implicit class XtensionAdtSymbol(sym: Symbol) {
-    def isAdt: Boolean = sym.isClass && (sym.asClass.toType <:< typeOf[AdtInternal.Adt])
+    def isAdt: Boolean = {
+      def inheritsFromAdt = sym.isClass && (sym.asClass.toType <:< typeOf[AdtInternal.Adt])
+      def isBookkeeping = sym.asClass == symbolOf[AdtInternal.Adt] || sym.asClass == symbolOf[AstInternal.Ast]
+      inheritsFromAdt && !isBookkeeping
+    }
     private def hasAnnotation[T: ClassTag] = { sym.initialize; sym.annotations.exists(_.tree.tpe.typeSymbol.fullName == classTag[T].runtimeClass.getCanonicalName) }
     def isRoot: Boolean = hasAnnotation[AdtInternal.root]
     def isBranch: Boolean = hasAnnotation[AdtInternal.branch]
@@ -27,8 +31,8 @@ trait Reflection {
     }
     def isPayload: Boolean = sym.isField && !sym.isAuxiliary
     def isAuxiliary: Boolean = sym.isField && hasAnnotation[AstInternal.auxiliary]
-    def isDelayed: Boolean = sym.isField && hasAnnotation[AdtInternal.delayedField]
-    def asAdt: Adt = if (isRoot) sym.asRoot else if (isBranch) sym.asBranch else if (isLeaf) sym.asLeaf else sys.error("not an adt")
+    def isByNeed: Boolean = sym.isField && hasAnnotation[AdtInternal.byNeedField]
+    def asAdt: Adt = if (isRoot) sym.asRoot else if (isBranch) sym.asBranch else if (isLeaf) sym.asLeaf else sys.error("not an adt: " + sym)
     def asRoot: Root = new Root(sym)
     def asBranch: Branch = new Branch(sym)
     def asLeaf: Leaf = new Leaf(sym)
@@ -62,6 +66,13 @@ trait Reflection {
       loop(sym)
     }
     def root = sym.root.asRoot
+    def parents = sym.asClass.baseClasses.filter(sym1 => sym1 != sym && sym1.isAdt).map(_.asAdt)
+    def <:< (other: Adt) = sym.asClass.toType <:< other.sym.asClass.toType
+    override def equals(that: Any) = that match {
+      case that: Adt => this.sym == that.sym
+      case _ => false
+    }
+    override def hashCode = sym.hashCode
   }
   trait NonLeafApi extends Adt {
     def all: List[Adt] = List(this) ++ this.allBranches ++ this.allLeafs
@@ -71,27 +82,27 @@ trait Reflection {
     def allLeafs: List[Leaf] = sym.allLeafs.map(_.asLeaf)
   }
   class Root(sym: Symbol) extends Adt(sym) with NonLeafApi {
-    require(sym.isRoot)
+    if (!sym.isRoot) sys.error(s"$sym is not a root")
     override def toString = s"root $prefix"
   }
   class Branch(sym: Symbol) extends Adt(sym) with NonLeafApi {
-    require(sym.isBranch)
+    if (!sym.isBranch) sys.error(s"$sym is not a branch")
     override def toString = s"branch $prefix"
   }
   class Leaf(sym: Symbol) extends Adt(sym) {
-    require(sym.isLeaf)
+    if (!sym.isLeaf) sys.error(s"$sym is not a leaf")
     def fields: List[Field] = sym.fields.map(_.asField)
     def allFields: List[Field] = sym.allFields.map(_.asField)
     override def toString = s"leaf $prefix"
   }
   class Field(val sym: Symbol) {
-    require(sym.isField)
+    if (!sym.isField) sys.error(s"$sym is not a field")
     def owner: Leaf = sym.owner.asLeaf
     def name: TermName = TermName(sym.name.toString.stripPrefix("_"))
     def tpe: Type = sym.info.finalResultType
     def isPayload: Boolean = sym.isPayload
     def isAuxiliary: Boolean = sym.isAuxiliary
-    def isDelayed: Boolean = sym.isDelayed
+    def isByNeed: Boolean = sym.isByNeed
     override def toString = s"field ${owner.prefix}.$name: $tpe" + (if (isAuxiliary) " (auxiliary)" else "")
   }
 }

@@ -12,7 +12,7 @@ class ReflectionSuite extends AstSuite {
   test("root") {
     assert(symbolOf[scala.meta.Tree].isRoot)
     assert(symbolOf[scala.meta.Tree].asRoot.allBranches.length === 72)
-    assert(symbolOf[scala.meta.Tree].asRoot.allLeafs.length === 338)
+    assert(symbolOf[scala.meta.Tree].asRoot.allLeafs.length === 340)
   }
 
   test("If") {
@@ -236,6 +236,7 @@ class ReflectionSuite extends AstSuite {
       |scala.meta.internal.ast.Type.Existential         => scala.meta.Type
       |scala.meta.internal.ast.Type.Function            => scala.meta.Type
       |scala.meta.internal.ast.Type.Lambda              => scala.meta.Type
+      |scala.meta.internal.ast.Type.Method              => scala.meta.Type
       |scala.meta.internal.ast.Type.Name                => scala.meta.Type.Name
       |scala.meta.internal.ast.Type.Param               => scala.meta.Type.Param
       |scala.meta.internal.ast.Type.Param.Name          => scala.meta.Type.Param.Name

@@ -5,32 +5,60 @@ import org.scalatest._
 import org.scalameta.tests._
 
 class PublicSuite extends FunSuite {
-  test("project APIs without import") {
+  // TODO: figure out how scalac manages to find the `load` extension method
+  // without scala.meta._ or scala.meta.interactive._ being imported
+  test("interactive APIs without import") {
     assert(typecheckError("""
-      project
-    """) === "not found: value project")
+      implicit val c: scala.meta.interactive.Context = ???
+      c.load(??? : scala.meta.taxonomic.Artifact)
+    """) === "")
   }
 
-  test("project APIs without context") {
+  test("interactive APIs when everything's correct") {
     assert(typecheckError("""
       import scala.meta._
-      project
-    """) === "this method requires an implicit scala.meta.projects.Context")
+      implicit val c: scala.meta.interactive.Context = ???
+      c.load(??? : scala.meta.taxonomic.Artifact)
+    """) === "")
   }
 
-  test("project APIs when everything's correct") {
+  // TODO: figure out how scalac manages to find the `load` extension method
+  // without scala.meta._ or scala.meta.interactive._ being imported
+  test("interactive context APIs") {
+    assert(typecheckError("""
+      (??? : scala.meta.interactive.Context).load(??? : scala.meta.taxonomic.Artifact)
+    """) === "")
+  }
+
+  test("taxonomic APIs without import") {
+    assert(typecheckError("""
+      val domain: scala.meta.taxonomic.Domain = ???
+      domain.sources
+    """) === "")
+  }
+
+  test("taxonomic APIs without context") {
     assert(typecheckError("""
       import scala.meta._
-      implicit val c: scala.meta.projects.Context = ???
-      project
+      val domain: scala.meta.taxonomic.Domain = ???
+      domain.sources
+    """) === "")
+  }
+
+  test("taxonomic APIs when everything's correct") {
+    assert(typecheckError("""
+      import scala.meta._
+      implicit val c: scala.meta.taxonomic.Context = ???
+      val domain: scala.meta.taxonomic.Domain = ???
+      domain.sources
     """) === "")
   }
 
   // TODO: this error is somewhat confusing
-  test("project context APIs") {
+  test("taxonomic context APIs") {
     assert(typecheckError("""
-      (??? : scala.meta.projects.Context).project
-    """) === "method project in trait Context cannot be accessed in scala.meta.projects.Context")
+      (??? : scala.meta.taxonomic.Context).sources(???)
+    """) === "method sources in trait Context cannot be accessed in scala.meta.taxonomic.Context")
   }
 
   test("quasiquotes without import") {
@@ -81,6 +109,51 @@ class PublicSuite extends FunSuite {
       implicit val c: scala.meta.semantic.Context = ???
       (??? : Ref).defn
     """) === "")
+  }
+
+  test("=:= without import") {
+    assert(typecheckError("""
+      (??? : scala.meta.Tree) =:= (??? : scala.meta.Tree)
+    """) === "this method requires an implicit scala.meta.semantic.Context")
+  }
+
+  test("=:= without context") {
+    assert(typecheckError("""
+      import scala.meta._
+      (??? : Tree) =:= (??? : Tree)
+    """) === "this method requires an implicit scala.meta.semantic.Context")
+  }
+
+  test("=:= when everything's correct") {
+    assert(typecheckError("""
+      import scala.meta._
+      implicit val c: scala.meta.semantic.Context = ???
+      (??? : Tree) =:= (??? : Tree)
+    """) === "")
+  }
+
+  test("=:= with insufficient precision - 1") {
+    assert(typecheckError("""
+      import scala.meta._
+      implicit val c: scala.meta.semantic.Context = ???
+      (??? : Scope) =:= (??? : Tree)
+    """) === "can't compare scala.meta.Scope and scala.meta.Tree")
+  }
+
+  test("=:=with insufficient precision - 2") {
+    assert(typecheckError("""
+      import scala.meta._
+      implicit val c: scala.meta.semantic.Context = ???
+      (??? : Stat) =:= (??? : Term)
+    """) === "can't compare scala.meta.Stat and scala.meta.Term")
+  }
+
+  test("=:= with unrelated nodes") {
+    assert(typecheckError("""
+      import scala.meta._
+      implicit val c: scala.meta.semantic.Context = ???
+      (??? : Ref) =:= (??? : Member)
+    """) === "can't compare scala.meta.Ref and scala.meta.Member")
   }
 
   test("Tree.desugar") {
@@ -266,8 +339,8 @@ class PublicSuite extends FunSuite {
   // TODO: this error is somewhat confusing
   test("semantic context APIs (opaque)") {
     assert(typecheckError("""
-      (??? : scala.meta.semantic.Context).isSubType(???, ???)
-    """) === "method isSubType in trait Context cannot be accessed in scala.meta.semantic.Context")
+      (??? : scala.meta.semantic.Context).isSubtype(???, ???)
+    """) === "method isSubtype in trait Context cannot be accessed in scala.meta.semantic.Context")
   }
 
   test("semantic context APIs (the only transparent one)") {
@@ -470,9 +543,17 @@ class PublicSuite extends FunSuite {
     """) === "not found: type Semantics")
   }
 
+  test("show[Semantics] without context") {
+    assert(typecheckError("""
+      import scala.meta._
+      (??? : Tree).show[Semantics]
+    """) === "don't know how to show[Semantics] for scala.meta.Tree (be sure to have an implicit scala.meta.semantic.Context in scope)")
+  }
+
   test("show[Semantics] when everything's correct") {
     assert(typecheckError("""
       import scala.meta._
+      implicit val c: scala.meta.semantic.Context = ???
       (??? : Tree).show[Semantics]
     """) === "")
   }

@@ -37,6 +37,7 @@ class AdtMacros(val c: Context) {
   import Flag._
   val Public = q"_root_.org.scalameta.adt"
   val Internal = q"_root_.org.scalameta.adt.Internal"
+  val Data = q"_root_.org.scalameta.data"
 
   def root(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
@@ -50,7 +51,7 @@ class AdtMacros(val c: Context) {
       val flags1 = flags | SEALED
       val needsThisType = stats.collect{ case TypeDef(_, TypeName("ThisType"), _, _) => () }.isEmpty
       if (needsThisType) stats1 += q"type ThisType <: $name"
-      stats1 += q"def internalTag: _root_.scala.Int"
+      stats1 += q"def privateTag: _root_.scala.Int"
       mstats1 += q"$Internal.hierarchyCheck[$name]"
       val anns1 = anns :+ q"new $Internal.root"
       val parents1 = parents :+ tq"$Internal.Adt" :+ tq"_root_.scala.Product" :+ tq"_root_.scala.Serializable"
@@ -135,6 +136,7 @@ class AdtMacros(val c: Context) {
 
   def leaf(annottees: Tree*): Tree = {
     def transformLeafClass(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
+      val q"new $_(...$argss).macroTransform(..$_)" = c.macroApplication
       val q"$mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
       val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" = mdef
       val parents1 = ListBuffer[Tree]() ++ parents
@@ -144,194 +146,45 @@ class AdtMacros(val c: Context) {
       val manns1 = ListBuffer[Tree]() ++ mmods.annotations
       def mmods1 = mmods.mapAnnotations(_ => manns1.toList)
       val mstats1 = ListBuffer[Tree]() ++ mstats
-      def unprivatize(mods: Modifiers) = Modifiers((mods.flags.asInstanceOf[Long] & (~scala.reflect.internal.Flags.LOCAL) & (~scala.reflect.internal.Flags.PRIVATE)).asInstanceOf[FlagSet], mods.privateWithin, mods.annotations)
-      def privatize(mods: Modifiers) = Modifiers((mods.flags.asInstanceOf[Long] | scala.reflect.internal.Flags.LOCAL & scala.reflect.internal.Flags.PRIVATE).asInstanceOf[FlagSet], mods.privateWithin, mods.annotations)
-      def delay(mods: Modifiers) = Modifiers(mods.flags, mods.privateWithin, mods.annotations :+ q"new $Internal.delayedField")
-      def finalize(mods: Modifiers) = Modifiers(mods.flags | FINAL, mods.privateWithin, mods.annotations)
-      def varify(mods: Modifiers) = Modifiers(mods.flags | MUTABLE, mods.privateWithin, mods.annotations)
-      def needs(name: Name) = {
-        val q"new $_(...$argss).macroTransform(..$_)" = c.macroApplication
-        val banIndicator = argss.flatten.find {
-          case AssignOrNamedArg(Ident(TermName(param)), Literal(Constant(false))) => param == name.toString
-          case _ => false
-        }
-        val ban = banIndicator.map(_ => true).getOrElse(false)
-        val presenceIndicator = stats.collectFirst { case mdef: MemberDef if mdef.name == name => mdef }
-        val present = presenceIndicator.map(_ => true).getOrElse(false)
-        !ban && !present
-      }
 
-      object VanillaParam {
-        def unapply(tree: ValDef): Option[(Modifiers, TermName, Tree, Tree)] = tree match {
-          case DelayedParam(_, _, _, _) => None
-          case _ => Some((tree.mods, tree.name, tree.tpt, tree.rhs))
-        }
-      }
-      object DelayedParam {
-        def unapply(tree: ValDef): Option[(Modifiers, TermName, Tree, Tree)] = tree.tpt match {
-          case Annotated(Apply(Select(New(Ident(TypeName("delayed"))), termNames.CONSTRUCTOR), List()), tpt) =>
-            Some((tree.mods, tree.name, tpt, tree.rhs))
-          case _ =>
-            None
-        }
-      }
-      def undelay(tree: ValDef): ValDef = tree match {
-        case DelayedParam(mods, name, tpt, default) => ValDef(mods, name, tpt, default)
-        case _ => tree.duplicate
-      }
-      def bynameTpt(tpt: Tree): Tree = {
-        val DefDef(_, _, _, List(List(ValDef(_, _, bynameTpt, _))), _, _) = q"def dummy(dummy: => $tpt) = ???"
-        bynameTpt
-      }
-
-      // step 1: validate the shape of the class
-      if (mods.hasFlag(SEALED)) c.abort(cdef.pos, "sealed is redundant for @leaf classes")
-      if (mods.hasFlag(FINAL)) c.abort(cdef.pos, "final is redundant for @leaf classes")
-      if (mods.hasFlag(CASE)) c.abort(cdef.pos, "case is redundant for @leaf classes")
-      if (mods.hasFlag(ABSTRACT)) c.abort(cdef.pos, "@leaf classes cannot be abstract")
-      if (ctorMods.flags != NoFlags) c.abort(cdef.pos, "@leaf classes must define a public primary constructor")
-      if (paramss.length == 0) c.abort(cdef.pos, "@leaf classes must define a non-empty parameter list")
-
-      // step 2: create parameters, generate getters and validation checks
-      val paramss1 = paramss.map(_.map{
-        case VanillaParam(mods, name, tpt, default) =>
-          stats1 += q"$Internal.nullCheck(this.$name)"
-          stats1 += q"$Internal.emptyCheck(this.$name)"
-          q"${unprivatize(mods)} val $name: $tpt = $default"
-        case DelayedParam(mods, name, tpt, default) =>
-          val flagName = TermName(name + "Flag")
-          val valueName = TermName(name + "Value")
-          val storageName = TermName(name + "Storage")
-          val getterName = name
-          val paramName = TermName("_" + name)
-          val paramTpt = tq"_root_.scala.Function0[$tpt]"
-          stats1 += q"@$Internal.delayedField private[this] var $flagName: _root_.scala.Boolean = false"
-          stats1 += q"@$Internal.delayedField private[this] var $storageName: $tpt = _"
-          stats1 += q"""
-            def $getterName = {
-              if (!this.$flagName) {
-                val $valueName = this.$paramName()
-                $Internal.nullCheck($valueName)
-                $Internal.emptyCheck($valueName)
-                this.$paramName = null
-                this.$storageName = $valueName
-                this.$flagName = true
-              }
-              this.$storageName
-            }
-          """
-          q"${varify(delay(privatize(mods)))} val $paramName: $paramTpt = $default"
-      })
-
-      // step 3: generate boilerplate required by the @adt infrastructure
+      // step 1: generate boilerplate required by the @adt infrastructure
       stats1 += q"override type ThisType = $name"
-      stats1 += q"override def internalTag: _root_.scala.Int = $mname.internalTag"
-      mstats1 += q"def internalTag: _root_.scala.Int = $Internal.calculateTag[$name]"
+      stats1 += q"override def privateTag: _root_.scala.Int = $mname.privateTag"
+      mstats1 += q"def privateTag: _root_.scala.Int = $Internal.calculateTag[$name]"
       mstats1 += q"$Internal.hierarchyCheck[$name]"
       mstats1 += q"$Internal.immutabilityCheck[$name]"
       anns1 += q"new $Internal.leafClass"
       manns1 += q"new $Internal.leafCompanion"
       parents1 += tq"_root_.scala.Product"
 
-      // step 4: implement Object
-      if (needs(TermName("toString"))) {
-        stats1 += q"override def toString: _root_.scala.Predef.String = _root_.scala.runtime.ScalaRunTime._toString(this)"
-      }
-      if (needs(TermName("hashCode"))) {
-        stats1 += q"override def hashCode: _root_.scala.Int = _root_.scala.runtime.ScalaRunTime._hashCode(this)"
-      }
-      if (needs(TermName("equals"))) {
-        stats1 += q"override def canEqual(other: _root_.scala.Any): _root_.scala.Boolean = other.isInstanceOf[$name]"
-        stats1 += q"""
-          override def equals(other: _root_.scala.Any): _root_.scala.Boolean = (
-            this.canEqual(other) && _root_.scala.runtime.ScalaRunTime._equals(this, other)
-          )
-        """
-      }
+      // step 2: do everything else via @data
+      anns1 += q"new $Data.data(...$argss)"
 
-      // step 5: implement Product
-      if (needs(TermName("product"))) {
-        val productParamss = paramss.map(_.map(_.duplicate))
-        stats1 += q"override def productPrefix: _root_.scala.Predef.String = ${name.toString}"
-        stats1 += q"override def productArity: _root_.scala.Int = ${paramss.head.length}"
-        val pelClauses = ListBuffer[Tree]()
-        pelClauses ++= 0.to(productParamss.head.length - 1).map(i => cq"$i => this.${productParamss.head(i).name}")
-        pelClauses += cq"_ => throw new _root_.scala.IndexOutOfBoundsException(n.toString)"
-        stats1 += q"override def productElement(n: _root_.scala.Int): Any = n match { case ..$pelClauses }"
-        stats1 += q"override def productIterator: _root_.scala.Iterator[_root_.scala.Any] = _root_.scala.runtime.ScalaRunTime.typedProductIterator(this)"
-      }
-
-      // step 6: generate copy
-      if (needs(TermName("copy"))) {
-        val copyParamss = paramss.map(_.map({
-          case VanillaParam(mods, name, tpt, default) => q"$mods val $name: $tpt = this.$name"
-          // TODO: This doesn't compile, producing nonsensical errors
-          // about incompatibility between the default value and the type of the parameter
-          // e.g. "expected: => T, actual: T"
-          // Therefore, I'm making the parameter of copy eager, even though I'd like it to be lazy.
-          // case DelayedParam(mods, name, tpt, default) => q"$mods val $name: ${bynameTpt(tpt)} = this.$name"
-          case DelayedParam(mods, name, tpt, default) => q"$mods val $name: $tpt = this.$name"
-        }))
-        val copyArgss = paramss.map(_.map({
-          case VanillaParam(mods, name, tpt, default) => q"$name"
-          case DelayedParam(mods, name, tpt, default) => q"(() => $name)"
-        }))
-        stats1 += q"def copy(...$copyParamss): $name = new $name(...$copyArgss)"
-      }
-
-      // step 7: generate Companion.apply
-      if (needs(TermName("apply"))) {
-        val applyParamss = paramss.map(_.map({
-          case VanillaParam(mods, name, tpt, default) => q"$mods val $name: $tpt = $default"
-          case DelayedParam(mods, name, tpt, default) => q"$mods val $name: ${bynameTpt(tpt)} = $default"
-        }))
-        val applyArgss = paramss.map(_.map({
-          case VanillaParam(mods, name, tpt, default) => q"$name"
-          case DelayedParam(mods, name, tpt, default) => q"(() => $name)"
-        }))
-        mstats1 += q"def apply(...$applyParamss): $name = new $name(...$applyArgss)"
-      }
-
-      // step 8: generate Companion.unapply
-      // TODO: go for name-based pattern matching once blocking bugs (e.g. SI-9029) are fixed
-      if (needs(TermName("unapply"))) {
-        val unapplyParamss = paramss.map(_.map(undelay))
-        val unapplyParams = unapplyParamss.head
-        if (unapplyParams.length != 0) {
-          val successTargs = tq"(..${unapplyParams.map(p => p.tpt)})"
-          val successArgs = q"(..${unapplyParams.map(p => q"x.${p.name}")})"
-          mstats1 += q"def unapply(x: $name): Option[$successTargs] = if (x == null) _root_.scala.None else _root_.scala.Some($successArgs)"
-        } else {
-          mstats1 += q"def unapply(x: $name): Boolean = true"
-        }
-      }
-
-      val cdef1 = q"${finalize(mods1)} class $name[..$tparams] $ctorMods(...$paramss1) extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
+      val cdef1 = q"$mods1 class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
       val mdef1 = q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
       List(cdef1, mdef1)
     }
 
     def transformLeafModule(mdef: ModuleDef): ModuleDef = {
+      val q"new $_(...$argss).macroTransform(..$_)" = c.macroApplication
       val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" = mdef
       val manns1 = ListBuffer[Tree]() ++ mmods.annotations
       def mmods1 = mmods.mapAnnotations(_ => manns1.toList)
       val mparents1 = ListBuffer[Tree]() ++ mparents
       val mstats1 = ListBuffer[Tree]() ++ mstats
-      def casify(mods: Modifiers) = Modifiers(mods.flags | CASE, mods.privateWithin, mods.annotations)
 
-      // step 1: validate the shape of the module
-      if (mmods.hasFlag(FINAL)) c.abort(mdef.pos, "final is redundant for @leaf classes")
-      if (mmods.hasFlag(CASE)) c.abort(mdef.pos, "case is redundant for @leaf classes")
-
-      // step 2: generate boilerplate required by the @adt infrastructure
+      // step 1: generate boilerplate required by the @adt infrastructure
       mstats1 += q"override type ThisType = $mname.type"
-      mstats1 += q"override def internalTag: _root_.scala.Int = $Internal.calculateTag[ThisType]"
+      mstats1 += q"override def privateTag: _root_.scala.Int = $Internal.calculateTag[ThisType]"
       mstats1 += q"$Internal.hierarchyCheck[ThisType]"
       mstats1 += q"$Internal.immutabilityCheck[ThisType]"
       manns1 += q"new $Internal.leafClass"
       mparents1 += tq"_root_.scala.Product"
 
-      q"${casify(mmods1)} object $mname extends { ..$mearlydefns } with ..$mparents1 { $mself => ..$mstats1 }"
+      // step 2: do everything else via @data
+      manns1 += q"new $Data.data(...$argss)"
+
+      q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents1 { $mself => ..$mstats1 }"
     }
 
     val expanded = annottees match {
@@ -428,13 +281,14 @@ object Internal {
   class leafCompanion extends StaticAnnotation
   class noneLeaf extends StaticAnnotation
   class someLeaf extends StaticAnnotation
-  class delayedField extends StaticAnnotation
+  class byNeedField extends StaticAnnotation
   case class TagAttachment(counter: Int)
   def calculateTag[T]: Int = macro AdtHelperMacros.calculateTag[T]
   def nullCheck[T](x: T): Unit = macro AdtHelperMacros.nullCheck
   def emptyCheck[T](x: T): Unit = macro AdtHelperMacros.emptyCheck
   def hierarchyCheck[T]: Unit = macro AdtHelperMacros.hierarchyCheck[T]
   def immutabilityCheck[T]: Unit = macro AdtHelperMacros.immutabilityCheck[T]
+  def onFieldLoaded[T](name: String, value: T): Unit = macro AdtHelperMacros.onFieldLoaded
 }
 
 class AdtHelperMacros(val c: Context) extends AdtReflection {
@@ -508,12 +362,20 @@ class AdtHelperMacros(val c: Context) extends AdtReflection {
   def immutabilityCheck[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
     def check(sym: Symbol): Unit = {
       var vars = sym.info.members.collect { case x: TermSymbol if !x.isMethod && x.isVar => x }
-      vars = vars.filter(!_.annotations.exists(_.tree.tpe =:= typeOf[Internal.delayedField]))
+      vars = vars.filter(!_.annotations.exists(_.tree.tpe =:= typeOf[Internal.byNeedField]))
       vars.foreach(v => c.abort(c.enclosingPosition, "leafs can't have mutable state: " + v.owner.fullName + "." + v.name))
       val vals = sym.info.members.collect { case x: TermSymbol if !x.isMethod && !x.isVar => x }
       vals.foreach(v => ()) // TODO: deep immutability check
     }
     check(T.tpe.typeSymbol.asClass)
     q"()"
+  }
+
+  def onFieldLoaded(name: c.Tree, value: c.Tree): c.Tree = {
+    val q"${s_name: String}" = name
+    val onLoadedMethod = c.typecheck(q"this").tpe.member(TermName("on" + s_name.capitalize + "Loaded"))
+    val onLoadedReference = Ident(onLoadedMethod.name).setSymbol(onLoadedMethod)
+    if (onLoadedMethod != NoSymbol) q"$onLoadedReference($value)"
+    else q"()"
   }
 }

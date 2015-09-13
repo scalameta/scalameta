@@ -457,7 +457,9 @@ private[meta] object inferTokens {
           if (t.quants.isEmpty) toks"[]"
           else t.quants.`[o,o]`
         }
-        toks"$params => ${t.tpe.tks}"
+        toks"$params${t.tpe.tks}"
+      case t: Type.Method =>
+        toks"${apndTermParamss(t.paramss)}: ${t.tpe.tks}"
       case t: Type.Bounds =>
         val loOpt = t.lo.map(lo => toks">: ${lo.tks}")
         val hiOpt = t.hi.map(hi => toks"<: ${hi.tks}")
@@ -710,7 +712,7 @@ private[meta] object inferTokens {
           val (bf, af) = in.span(_.show[Syntax] != "\n")
           loop(af.tail, out :+ (bf :+ af.head))
       }
-      loop(tks.repr, Seq())
+      loop(tks.repr, List())
     }
   }
 

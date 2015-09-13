@@ -7,11 +7,12 @@ package scala.meta {
   @root trait Tree extends Product with Serializable {
     type ThisType <: Tree
     def parent: Option[Tree]
+    def children: Seq[Tree]
     def tokens: Tokens
     def withTokens(tokens: Tokens): ThisType
-    final override def canEqual(that: Any): Boolean = that.isInstanceOf[Tree]
-    final override def equals(that: Any): Boolean = that match { case that: Tree => scala.meta.internal.semantic.equals(this, that); case _ => false }
-    final override def hashCode: Int = scala.meta.internal.semantic.hashcode(this)
+    final override def canEqual(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
+    final override def equals(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
+    final override def hashCode: Int = System.identityHashCode(this)
     final override def toString = scala.meta.internal.ui.toString(this)
   }
 
@@ -93,6 +94,7 @@ package scala.meta.internal.ast {
   import org.scalameta.invariants._
   import org.scalameta.annotations._
   import org.scalameta.unreachable
+  import scala.meta.semantic.Environment
   import scala.meta.internal.{ast => impl}
   import scala.meta.internal.semantic._
   import scala.meta.internal.parsers.Helpers._
@@ -102,10 +104,10 @@ package scala.meta.internal.ast {
 
   @branch trait Name extends api.Name with Ref {
     def value: String
-    def denot: Denotation
-    def withDenot(denot: Denotation): ThisType
-    def withDenot(prefix: Prefix, symbol: Symbol): ThisType = withDenot(Denotation.Single(prefix, symbol))
-    def withDenot(prefix: Prefix, symbols: List[Symbol]): ThisType = withDenot(Denotation.Multi(prefix, symbols))
+    private[meta] def env: Environment
+    private[meta] def denot: Denotation
+    private[meta] def withEnv(env: Environment): ThisType
+    private[meta] def withAttrs(denot: Denotation): ThisType
   }
   object Name {
     @ast class Anonymous extends api.Name.Anonymous with Name with Term.Param.Name with Type.Param.Name with Qualifier { def value = "_" }
@@ -118,12 +120,12 @@ package scala.meta.internal.ast {
   @branch trait Scope extends api.Scope with Tree
 
   @branch trait Term extends api.Term with Stat with Term.Arg {
-    def typing: Typing
-    def withTyping(typing: Typing): ThisType
-    def withTyping(known: api.Type.Arg): ThisType = withTyping(Typing.Specified(known))
-    def expansion: Expansion
-    def withExpansion(expansion: Expansion): ThisType
-    def withExpansion(desugaring: api.Term): ThisType = withExpansion(Expansion.Desugaring(desugaring))
+    private[meta] def env: Environment
+    private[meta] def typing: Typing
+    private[meta] def expansion: Expansion
+    private[meta] def withEnv(env: Environment): ThisType
+    private[meta] def withAttrs(typingLike: TypingLike): ThisType
+    private[meta] def withExpansion(expansionLike: ExpansionLike): ThisType
   }
   object Term {
     @branch trait Ref extends api.Term.Ref with Term with impl.Ref
@@ -221,6 +223,7 @@ package scala.meta.internal.ast {
     @ast class Annotate(tpe: Type, annots: Seq[Mod.Annot] @nonEmpty) extends Type
     @ast class Placeholder(bounds: Bounds) extends Type
     @ast class Lambda(quants: Seq[Type.Param], tpe: Type) extends Type
+    @ast class Method(paramss: Seq[Seq[Term.Param]], tpe: Type) extends Type
     @ast class Bounds(lo: Option[Type], hi: Option[Type]) extends Tree
     @branch trait Arg extends api.Type.Arg with Tree
     object Arg {

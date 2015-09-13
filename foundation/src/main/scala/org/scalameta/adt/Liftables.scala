@@ -6,6 +6,8 @@ import scala.reflect.macros.blackbox.Context
 import org.scalameta.unreachable
 import org.scalameta.adt.Internal.Adt
 import org.scalameta.adt.{Reflection => AdtReflection}
+import org.scalameta.debug._
+import org.scalameta.ast.XtensionAstDebug
 
 trait Liftables {
   val u: scala.reflect.macros.Universe
@@ -21,7 +23,7 @@ class LiftableMacros(val c: Context) extends AdtReflection {
   def customWrapper(adt: Adt, defName: TermName, localName: TermName, body: Tree): Option[Tree] = None
   def impl[T: WeakTypeTag]: c.Tree = {
     val root = weakTypeOf[T].typeSymbol.asAdt.root
-    val unsortedAdts = customAdts(root).getOrElse(weakTypeOf[T].typeSymbol.asAdt.root.allLeafs)
+    val unsortedAdts = customAdts(root).getOrElse(root.allLeafs)
     val adts = {
       // TODO: This doesn't quite work, because we can have `A` and `B`, none of which inherits each other,
       // but then at runtime we get `C` which inherits both and then execution suddenly takes the wrong path.
@@ -94,7 +96,7 @@ class LiftableMacros(val c: Context) extends AdtReflection {
         $mainModule.$mainMethod.apply($mainParam)
       })
     """
-    if (sys.props("adt.debug") != null || sys.props("ast.debug") != null) println(result)
+    if (Debug.adt || Debug.ast) println(result)
     result
   }
 }

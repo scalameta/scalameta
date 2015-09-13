@@ -6,6 +6,7 @@ import scala.reflect.{ClassTag, classTag}
 
 package object invariants {
   def require(x: Boolean): Unit = macro Macros.require
+  def abort(xs: Any*): Nothing = macro Macros.abort
   def debug(xs: Any*): Boolean = true
   // TODO: add pretty printed support for implication
   implicit class XtensionImplication(left: Boolean) {
@@ -225,6 +226,10 @@ package invariants {
           case (false, $failures) => _root_.org.scalameta.invariants.InvariantFailedException.raise(${showCode(x)}, $failures, $allDebuggees)
         }
       """
+    }
+    def abort(xs: Tree*): Tree = {
+      val debug = q"_root_.org.scalameta.invariants.`package`.debug(..$xs)"
+      q"_root_.org.scalameta.invariants.`package`.require(false && $debug).asInstanceOf[_root_.scala.Nothing]"
     }
     def requireCast[U](ev: c.Tree)(U: c.WeakTypeTag[U]): c.Tree = {
       val q"$_($x)" = c.prefix.tree

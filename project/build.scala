@@ -156,6 +156,7 @@ object build extends Build {
   ) settings (
     publishableSettings: _*
   ) settings (
+    libraryDependencies += "org.apache.ivy" % "ivy" % "2.4.0",
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided"),
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _ % "provided")
   ) dependsOn (foundation, tokens)
@@ -182,7 +183,7 @@ object build extends Build {
     packagedArtifacts := Map.empty,
     sourceDirectory in Test := {
       val defaultValue = (sourceDirectory in Test).value
-      System.setProperty("sbt.paths.tests.source", defaultValue.getAbsolutePath)
+      System.setProperty("sbt.paths.tests.sources", defaultValue.getAbsolutePath)
       defaultValue
     }
   ) dependsOn (scalameta)

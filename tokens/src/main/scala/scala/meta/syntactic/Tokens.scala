@@ -10,7 +10,7 @@ import scala.collection.immutable.VectorBuilder
 // because it doesn't give us a good way to load the elements lazily, which is necessary for Tokens.Slice
 // and would obviate the need for the very existence of Tokens.Prototype.
 // TODO: https://www.dropbox.com/s/5xmjr755tnlqcwk/2015-05-04%2013.50.48.jpg?dl=0
-// TODO: not sealed because PrototypeTokens is declared in a different project
+// TODO: not sealed because TransformedTokens is declared in a different project
 abstract class Tokens(repr: Token*) extends Tokens.Projection(repr: _*) with Input {
   def input: Input
   def dialect: Dialect
