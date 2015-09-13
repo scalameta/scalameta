@@ -1,0 +1,3 @@
+package GsocScaladoc
+class Bar() extends scala.AnyRef() {}
+class Foo() extends Bar() { def bar(a: Int) = a }
