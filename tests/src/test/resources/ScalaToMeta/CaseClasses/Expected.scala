@@ -1,1 +1,0 @@
-case class C(x: Int)
