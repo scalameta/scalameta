@@ -1,0 +1,18 @@
+language: scala
+script:
+  - sbt ++$TRAVIS_SCALA_VERSION clean update compile test package
+scala:
+  - 2.11.7
+jdk:
+  - openjdk6
+  - openjdk7
+  - oraclejdk8
+notifications:
+  email:
+    - eugene.burmako@epfl.ch
+env:
+  global:
+   - SCALAMETA_MAVEN_REALM="Sonatype Nexus Repository Manager"
+   - SCALAMETA_MAVEN_DOMAIN="oss.sonatype.org"
+   - secure: "AZt4zVfLnieNnUV904Nh2Xn3HripBKZ6YZEOl4OiNoz6eX421JxVZkCx5pXQ6FxS/rfaxsiAKBzRi8TjEQ6MfyE25mXApVhzEgmGoUF/2uHaYMRaslttQlHVu9Vj0vMqs4Cchi1hhRE+Jrd6tdNBGm3e7O9TS1ixoMBh3OISoXA="
+   - secure: "BuaTxLI877saLUQwicXATcthWyI4h+Oqpf6j7axshvdXfdmJIYnqjXcfTBBqn7M+fttFttxW4DIa/NxGkaEuFNRkd0kMwovxzJRfxuq4n2F1DdrWnpPX9HHRQ3g8cZ8wAIRFpTCGIUFDPyE+BsP1HzSflsszAeMXJ0J5EsdZ8g0="
