@@ -30,8 +30,8 @@ private[meta] class ConversionMacros(val c: Context) extends AstReflection {
   import u._
   import definitions._
 
-  val MetaLift = symbolOf[scala.meta.Lift[_, _]]
-  val MetaUnlift = symbolOf[scala.meta.Unlift[_, _]]
+  val MetaLift = symbolOf[scala.meta.quasiquotes.Lift[_, _]]
+  val MetaUnlift = symbolOf[scala.meta.quasiquotes.Unlift[_, _]]
 
   private def foundReqMsg(found: c.Type, req: c.Type): String = {
     val g = c.universe.asInstanceOf[scala.tools.nsc.Global]

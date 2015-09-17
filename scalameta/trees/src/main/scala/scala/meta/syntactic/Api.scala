@@ -1,6 +1,8 @@
 package scala.meta
 package syntactic
 
+import org.scalameta.convert._
+
 private[meta] trait SyntacticApi {
   implicit class XtensionSyntacticTree(tree: Tree) {
     def input: Input = tree.tokens.input
@@ -39,3 +41,5 @@ private[meta] trait GenericParseApi {
     }
   }
 }
+
+object api extends SyntacticApi

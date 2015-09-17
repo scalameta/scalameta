@@ -3,11 +3,15 @@ package scala.meta.internal
 import java.io._
 import java.nio.charset.Charset
 import java.security.MessageDigest
-import scala.meta.{Dialect, Content, Source}
+import scala.meta.Dialect
+import scala.meta.Source
+import scala.meta.syntactic.Content
+import scala.meta.syntactic.api._
 import scala.meta.internal.ui.TopLevel
 import scala.meta.internal.semantic._
 import org.scalameta.data._
 import org.scalameta.debug._
+import org.scalameta.show._
 
 package object tasty {
   @data class SyntacticDigest(dialect: Dialect, hash: String)

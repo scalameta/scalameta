@@ -3,6 +3,8 @@ import scala.collection.immutable.Seq
 import org.scalameta.ast._
 import scala.{meta => api}
 import scala.meta.ui._
+import scala.meta.syntactic.Tokens
+import scala.meta.internal.{equality => e}
 
 package scala.meta {
   @root trait Tree extends Product with Serializable {
@@ -16,10 +18,16 @@ package scala.meta {
     final override def hashCode: Int = System.identityHashCode(this)
     final override def toString = scala.meta.internal.ui.toString(this)
   }
+
   object Tree {
-    implicit def showStructure[T <: Tree]: Syntax[T] = scala.meta.internal.ui.TreeStructure.apply[T]
+    implicit def showStructure[T <: Tree]: Structure[T] = scala.meta.internal.ui.TreeStructure.apply[T]
     implicit def showSyntax[T <: Tree](implicit dialect: Dialect): Syntax[T] = scala.meta.internal.ui.TreeSyntax.apply[T](dialect)
     // implicit def showSemantics[T <: Tree](implicit c: SemanticContext): Semantics[T] = scala.meta.internal.ui.TreeSemantics.apply[T](c)
+
+    private[meta] implicit class XtensionSemanticEquality[T1 <: Tree](tree1: T1) {
+      def ===[T2 <: Tree](tree2: T2)(implicit ev: e.AllowEquality[T1, T2]): Boolean = e.Semantic.equals(tree1, tree2)
+      def =/=[T2 <: Tree](tree2: T2)(implicit ev: e.AllowEquality[T1, T2]): Boolean = !e.Semantic.equals(tree1, tree2)
+    }
   }
 
   @branch trait Name extends Ref
@@ -100,11 +108,9 @@ package scala.meta.internal.ast {
   import org.scalameta.invariants._
   import org.scalameta.annotations._
   import org.scalameta.unreachable
-  import scala.meta.semantic.Environment
   import scala.meta.internal.{ast => impl}
   import scala.meta.internal.semantic._
   import scala.meta.internal.parsers.Helpers._
-  import scala.meta.internal.tokenizers.keywords
 
   @branch trait Tree extends api.Tree
 

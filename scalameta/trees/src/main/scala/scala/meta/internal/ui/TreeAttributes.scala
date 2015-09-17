@@ -18,6 +18,7 @@ import scala.meta.internal.semantic._
 import scala.meta.internal.{equality => e}
 import scala.compat.Platform.EOL
 import scala.language.implicitConversions
+import scala.meta.ui.{Syntax, Structure}
 
 @implicitNotFound(msg = "don't know how to show[Attributes] for ${T}")
 trait Attributes[T] extends Show[T]
@@ -55,7 +56,7 @@ object Attributes {
           def entity = env
           def tag = classOf[Environment]
           def prettyprint() = env match {
-            case scala.meta.semantic.Environment.Zero => unreachable
+            case Environment.Zero => unreachable
           }
         }
         implicit def denotFootnote(denot: Denotation): Footnote = new Footnote {
@@ -169,7 +170,7 @@ object Attributes {
       val syntax = x.productPrefix + "(" + contents(x) + ")"
       val attributes = {
         val envPart = x.internalEnv.map({
-          case env @ scala.meta.semantic.Environment.Zero =>
+          case env @ Environment.Zero =>
             ""
         }).getOrElse("")
 

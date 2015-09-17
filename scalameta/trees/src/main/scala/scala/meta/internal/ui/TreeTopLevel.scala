@@ -8,6 +8,7 @@ import Show.{sequence => s, repeat => r, indent => i, newline => n}
 import scala.meta.internal.{ast => m}
 import org.scalameta.invariants._
 import org.scalameta.unreachable
+import scala.meta.ui.Structure
 
 @implicitNotFound(msg = "don't know how to show[TopLevel] for ${T}")
 private[meta] trait TopLevel[T] extends Show[T]

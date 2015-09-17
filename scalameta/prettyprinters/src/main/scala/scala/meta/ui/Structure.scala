@@ -4,6 +4,7 @@ package ui
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import org.scalameta.show._
+import Show.{ sequence => s, repeat => r, indent => i, newline => n }
 import scala.annotation.implicitNotFound
 
 @implicitNotFound(msg = "don't know how to show[Structure] for ${T}")

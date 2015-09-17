@@ -19,7 +19,6 @@ class AstMacros(val c: Context) extends AstReflection {
   import Flag._
   val AdtInternal = q"_root_.org.scalameta.adt.Internal"
   val AstInternal = q"_root_.org.scalameta.ast.internal"
-  val Semantic = q"_root_.scala.meta.semantic"
   val SemanticInternal = q"_root_.scala.meta.internal.semantic"
   val FlagsPackage = q"_root_.scala.meta.internal.flags.`package`"
   def impl(annottees: Tree*): Tree = {
@@ -121,13 +120,13 @@ class AstMacros(val c: Context) extends AstReflection {
         stats1 += q"def children: Seq[_root_.scala.meta.Tree] = $AstInternal.children[ThisType, _root_.scala.meta.Tree]"
       }
       if (hasTokens) {
-        bparams1 += q"@_root_.scala.transient protected var privateTokens: _root_.scala.meta.Tokens"
-        astats1 += q"def tokens: _root_.scala.meta.Tokens"
+        bparams1 += q"@_root_.scala.transient protected var privateTokens: _root_.scala.meta.syntactic.Tokens"
+        astats1 += q"def tokens: _root_.scala.meta.syntactic.Tokens"
         stats1 += q"""
-          def tokens: _root_.scala.meta.Tokens = {
+          def tokens: _root_.scala.meta.syntactic.Tokens = {
             privateTokens = privateTokens match {
               case null => _root_.scala.meta.internal.ui.inferTokens(this, None)
-              case _root_.scala.meta.internal.ui.TransformedTokens(proto) => _root_.scala.meta.internal.ui.inferTokens(this, Some(proto))
+              case _root_.scala.meta.internal.syntactic.TransformedTokens(proto) => _root_.scala.meta.internal.ui.inferTokens(this, Some(proto))
               case other => other
             }
             privateTokens
@@ -139,17 +138,17 @@ class AstMacros(val c: Context) extends AstReflection {
         ???
       }
       if (hasEnv) {
-        bparams1 += q"protected val privateEnv: $Semantic.Environment"
-        astats1 += q"private[meta] def env: $Semantic.Environment"
+        bparams1 += q"protected val privateEnv: $SemanticInternal.Environment"
+        astats1 += q"private[meta] def env: $SemanticInternal.Environment"
         stats1 += q"""
-          private[meta] def env: $Semantic.Environment = {
+          private[meta] def env: $SemanticInternal.Environment = {
             if (privateEnv != null) privateEnv
-            else $Semantic.Environment.Zero
+            else $SemanticInternal.Environment.Zero
           }
         """
       } else {
         if (!isQuasi) {
-          stats1 += q"protected def privateEnv: $Semantic.Environment = null"
+          stats1 += q"protected def privateEnv: $SemanticInternal.Environment = null"
         } else {
           // NOTE: generated elsewhere, grep for `quasigetter`
         }
@@ -243,7 +242,7 @@ class AstMacros(val c: Context) extends AstReflection {
       // `Quasi.tokens` may reasonably mean two different things:
       // 1) tokens of a tree that a quasi stands for, 2) quasi's own tokens
       if (hasEnv) qstats1 += quasigetter(PrivateMeta, "env")
-      qstats1 += q"override protected def privateEnv: $Semantic.Environment = null"
+      qstats1 += q"override protected def privateEnv: $SemanticInternal.Environment = null"
       if (hasDenot) qstats1 += quasigetter(PrivateMeta, "denot")
       qstats1 += q"override protected def privateDenot: $SemanticInternal.Denotation = null"
       if (hasTyping) qstats1 += quasigetter(PrivateMeta, "typing")
@@ -279,8 +278,8 @@ class AstMacros(val c: Context) extends AstReflection {
             flags: $FlagsPackage.Flags = privateFlags,
             prototype: _root_.scala.meta.Tree = this,
             parent: _root_.scala.meta.Tree = privateParent,
-            tokens: _root_.scala.meta.Tokens = privateTokens,
-            env: $Semantic.Environment = privateEnv,
+            tokens: _root_.scala.meta.syntactic.Tokens = privateTokens,
+            env: $SemanticInternal.Environment = privateEnv,
             denot: $SemanticInternal.Denotation = privateDenot,
             typing: $SemanticInternal.Typing = privateTyping,
             expansion: $SemanticInternal.Expansion = privateExpansion): ThisType = {
@@ -296,7 +295,7 @@ class AstMacros(val c: Context) extends AstReflection {
       val copyParamss = fieldParamss.zip(fieldDefaultss).map{ case (f, d) => f.zip(d).map { case (p, default) => q"val ${p.name}: ${p.tpt} = $default" } }
       val copyArgss = fieldParamss.map(_.map(p => q"${p.name}"))
       val copyCore = q"$mname.apply(...$copyArgss)"
-      val copyBody = q"$copyCore.withTokens(tokens = _root_.scala.meta.internal.ui.TransformedTokens(this))"
+      val copyBody = q"$copyCore.withTokens(tokens = _root_.scala.meta.internal.syntactic.TransformedTokens(this))"
       // TODO: would be useful to turn copy into a macro, so that its calls are guaranteed to be inlined
       astats1 += q"def copy(...$copyParamss): $iname = $copyBody"
 
@@ -312,7 +311,8 @@ class AstMacros(val c: Context) extends AstReflection {
             val checks = attrs.map({ case (k, v) =>
               val enablesTypechecked = q"(flags & $FlagsPackage.TYPECHECKED) == $FlagsPackage.TYPECHECKED"
               val attrEmpty = q"$k == $v"
-              val message = q"${"failed to enable TYPECHECKED for "} + this.show[_root_.scala.meta.internal.ui.Attributes]"
+              val attrShow = q"_root_.scala.meta.internal.ui.Attributes.attributesTree[_root_.scala.meta.Tree].apply(this).toString"
+              val message = q"${"failed to enable TYPECHECKED for "} + $attrShow"
               q"if ($enablesTypechecked && $attrEmpty) throw new _root_.scala.`package`.UnsupportedOperationException($message)"
             })
             q"..$checks"
@@ -329,7 +329,7 @@ class AstMacros(val c: Context) extends AstReflection {
       }
       if (hasTokens) {
         astats1 += q"""
-          def withTokens(tokens: _root_.scala.meta.Tokens): $iname = {
+          def withTokens(tokens: _root_.scala.meta.syntactic.Tokens): $iname = {
             this.privateCopy(tokens = tokens)
           }
         """
@@ -340,7 +340,7 @@ class AstMacros(val c: Context) extends AstReflection {
         // NOTE: We shouldn't clean up denots when setting env,
         // because that would destroy links between defs and refs,
         // which may irreversibly hamper subsequent retypechecks.
-        val paramEnv = q"val env: $Semantic.Environment"
+        val paramEnv = q"val env: $SemanticInternal.Environment"
         // NOTE: No state validation here, because withEnv can be called on U, PA and FA.
         // Hygiene (embodied by envs in scala.meta) applies to unattributed and attributed trees alike.
         astats1 += q"""
@@ -364,7 +364,7 @@ class AstMacros(val c: Context) extends AstReflection {
         val termOrCtorName = q"this.isInstanceOf[_root_.scala.meta.Term.Name] || this.isInstanceOf[_root_.scala.meta.Ctor.Name]"
         val termOrCtorNameCheck = q"""if ($termOrCtorName) throw new UnsupportedOperationException("need to simultaneously set both denotation and typing for a " + this.productPrefix)"""
         val stateMessage = "can only call withAttrs on unattributed trees; if necessary, call .copy() to unattribute and then do .withAttrs(...)"
-        val stateDetails = q"this.show[_root_.scala.meta.internal.ui.Attributes]"
+        val stateDetails = q"_root_.scala.meta.internal.ui.Attributes.attributesTree[_root_.scala.meta.Tree].apply(this).toString"
         val stateCheck = q"if (!isUnattributed) throw new UnsupportedOperationException($stateMessage + $EOL + $stateDetails)"
         val withAttrsD = q"""
           $dortMods def withAttrs($paramDenot): $iname = {
@@ -372,7 +372,7 @@ class AstMacros(val c: Context) extends AstReflection {
             $stateCheck
             this.privateCopy(
               flags = this.privateFlags & ~$FlagsPackage.TYPECHECKED,
-              env = $Semantic.Environment.Zero,
+              env = $SemanticInternal.Environment.Zero,
               denot = denot,
               typing = this.privateTyping,
               expansion = $SemanticInternal.Expansion.Identity
@@ -386,7 +386,7 @@ class AstMacros(val c: Context) extends AstReflection {
             val typing = typingLike.typing
             this.privateCopy(
               flags = this.privateFlags & ~$FlagsPackage.TYPECHECKED,
-              env = $Semantic.Environment.Zero,
+              env = $SemanticInternal.Environment.Zero,
               denot = this.privateDenot,
               typing = typing,
               expansion = $SemanticInternal.Expansion.Identity
@@ -399,7 +399,7 @@ class AstMacros(val c: Context) extends AstReflection {
             val typing = typingLike.typing
             this.privateCopy(
               flags = this.privateFlags & ~$FlagsPackage.TYPECHECKED,
-              env = $Semantic.Environment.Zero,
+              env = $SemanticInternal.Environment.Zero,
               denot = denot,
               typing = typing,
               expansion = $SemanticInternal.Expansion.Identity
@@ -422,7 +422,7 @@ class AstMacros(val c: Context) extends AstReflection {
       if (hasExpansion) {
         val paramExpansionLike = q"val expansionLike: $SemanticInternal.ExpansionLike"
         val stateMessage = "can only call withExpansion on partially attributed trees, call .withAttrs first and only then .withExpansion(...)"
-        val stateDetails = q"this.show[_root_.scala.meta.internal.ui.Attributes]"
+        val stateDetails = q"_root_.scala.meta.internal.ui.Attributes.attributesTree[_root_.scala.meta.Tree].apply(this).toString"
         val stateCheck = q"if (!isPartiallyAttributed) throw new UnsupportedOperationException($stateMessage + $EOL + $stateDetails)"
         astats1 += q"""
           private[meta] def withExpansion($paramExpansionLike): $iname = {

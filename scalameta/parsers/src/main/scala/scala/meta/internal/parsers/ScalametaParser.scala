@@ -15,7 +15,10 @@ import scala.{meta => api}
 import scala.meta.internal.{ast => impl}
 import scala.meta.internal.parsers.Location._
 import scala.meta.internal.parsers.Helpers._
+import scala.meta.syntactic.{Input, Content, Token, Tokens}
 import scala.meta.syntactic.Token._
+import scala.meta.syntactic.tokenizeApi._
+import scala.meta.ui.api._
 import org.scalameta.ast.AstMetadata
 import org.scalameta.tokens._
 import org.scalameta.unreachable
@@ -336,7 +339,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
             next != null && next.isNot[CantStartStat] &&
             (sepRegions.isEmpty || sepRegions.head == '}')) {
           var token = scannerTokens(lastNewlinePos)
-          if (newlines) token = `\n\n`(token.input, token.dialect, token.start)
+          if (newlines) token = `\n\n`(token.content, token.dialect, token.start)
           parserTokens += token
           parserTokenPositions += lastNewlinePos
           loop(lastNewlinePos, currPos + 1, sepRegions)

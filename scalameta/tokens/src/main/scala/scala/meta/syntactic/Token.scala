@@ -5,6 +5,7 @@ import org.scalameta.tokens // NOTE: no underscore import!
 import org.scalameta.tokens._
 import org.scalameta.default._
 import org.scalameta.default.Param._
+import scala.meta.ui.{Structure, Syntax}
 
 @root trait Token {
   def name: String
@@ -161,8 +162,8 @@ object Token {
     def end = content.chars.length
   }
 
-  implicit def showStructure[T <: Token]: Syntax[T] = scala.meta.internal.ui.TokenStructure.apply[T] }
-  implicit def showSyntax[T <: Token](implicit dialect: Dialect): Syntax[T] = scala.meta.internal.ui.TokenSyntax.apply[T](dialect) }
+  implicit def showStructure[T <: Token]: Structure[T] = scala.meta.internal.ui.TokenStructure.apply[T]
+  implicit def showSyntax[T <: Token](implicit dialect: Dialect): Syntax[T] = scala.meta.internal.ui.TokenSyntax.apply[T](dialect)
 }
 
 // NOTE: We have this unrelated code here, because of how materializeAdt works.
@@ -184,7 +185,7 @@ trait TokenLiftables extends tokens.Liftables {
   private val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
 
   implicit lazy val liftContent: Liftable[Content] = Liftable[Content] { content =>
-    q"_root_.scala.meta.Input.String(${new String(content.chars)})"
+    q"_root_.scala.meta.syntactic.Input.String(${new String(content.chars)})"
   }
 
   implicit lazy val liftDialect: Liftable[Dialect] = Liftable[Dialect] { dialect =>

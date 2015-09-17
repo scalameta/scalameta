@@ -24,7 +24,7 @@ abstract class Tokens(repr: Token*) extends Tokens.Projection(repr: _*) with Inp
   // Unfortunately, this runs into performance problems - we really can't afford
   // to clone an entire token stream every time when a tree undergoes a slight change.
   // Therefore, I'm letting this inconsistency alone, and we'll see how it pans out.
-  def tokens(implicit dialect: Dialect, tokenizer: Tokenizer) = this
+  def tokens(implicit dialect: Dialect, tokenize: Tokenize) = this
 
   // TODO: having to override all these methods just to change the return type feels kind of stupid
   // why weren't they implemented on top of CanBuildFrom as well?

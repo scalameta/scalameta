@@ -4,9 +4,12 @@ package ui
 
 import org.scalameta.show._
 import Show.{ sequence => s, repeat => r, indent => i, newline => n }
+import scala.meta.ui.Structure
+import scala.meta.syntactic.Token
+import scala.meta.syntactic.Token._
 
 object TokenStructure {
-  def apply[T <: Tree]: Structure[T] = {
+  def apply[T <: Token]: Structure[T] = {
     Structure(x => {
       val prefix = (x: Token) match {
         case x: BOF => "BOF"

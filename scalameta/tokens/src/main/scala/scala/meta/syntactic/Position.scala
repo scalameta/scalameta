@@ -22,9 +22,10 @@ object Position {
   }
   object Range {
     def apply(token: Token): Position = {
+      val content = token.content
       val start = Point.Offset(token.content, token.start)
       val point = start
-      val end = Point.Offset(token.content, token.env)
+      val end = Point.Offset(token.content, token.end)
       Position.Range(content, start, point, end)
     }
   }

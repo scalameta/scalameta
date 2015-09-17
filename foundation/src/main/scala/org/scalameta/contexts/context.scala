@@ -21,12 +21,17 @@ class ContextMacros(val c: Context) {
       val q"$mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
       val stats1 = stats.map {
         case stat @ DefDef(mods, name, tparams, vparamss, tpt, body) if translateExceptions =>
+          val rethrow = {
+            val isSemantic = !c.internal.enclosingOwner.fullName.contains(".taxonomic")
+            if (isSemantic) q"throw new _root_.scala.meta.semantic.SemanticException(other.getMessage, other)"
+            else q"throw new _root_.scala.meta.taxonomic.TaxonomicException(artifact, other.getMessage, other)"
+          }
           val body1 = q"""
             try $body
             catch {
               case ex: _root_.scala.meta.ScalametaException => throw ex
               case ex: _root_.scala.meta.ScalametaError => throw ex
-              case other: _root_.scala.Exception => throw new _root_.scala.meta.SemanticException(other.getMessage, other)
+              case other: _root_.scala.Exception => $rethrow
             }
           """
           treeCopy.DefDef(stat, mods, name, tparams, vparamss, tpt, body1)

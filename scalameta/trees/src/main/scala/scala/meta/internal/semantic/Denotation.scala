@@ -6,6 +6,7 @@ import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import org.scalameta.adt
 import org.scalameta.adt._
+import org.scalameta.show._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
 import scala.meta.internal.ui.Attributes
@@ -87,7 +88,7 @@ object Denotation {
       val prefixes = extracts.foldLeft(List[Prefix]())((acc, curr) => acc ++ curr._1)
       val prefix = prefixes.filter(_ != this.prefix) match {
         case Nil => this.prefix
-        case _ => throw new SemanticException("internal error: don't know how to merge prefixes: $prefixes")
+        case _ => sys.error("internal error: don't know how to merge prefixes: $prefixes")
       }
       var symbols = extracts.foldLeft(List[Symbol]())((acc, curr) => acc ++ curr._2.getOrElse(Nil))
       if (symbols.isEmpty) symbols = this.symbols

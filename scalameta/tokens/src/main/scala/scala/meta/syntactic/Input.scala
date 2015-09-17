@@ -10,7 +10,7 @@ import scala.collection.{immutable, mutable}
 // TODO: Input is really sealed, with the only two direct subclasses being Content and Tokens
 // however, I don't really feel like mixing all the three concepts in a single file
 trait Input extends Serializable {
-  def tokens(implicit dialect: Dialect, tokenizer: Tokenizer): Tokens
+  def tokens(implicit dialect: Dialect, tokenize: Tokenize): Tokens
 }
 
 object Input {
@@ -44,7 +44,7 @@ object Input {
       override def toString = s"Proxy($orig)"
     }
   }
-  implicit val charsToInput: Convert[Array[Char], Input] = Convert.apply(chars => Input.String(new scala.Predef.String(chars)))
-  implicit val stringToInput: Convert[scala.Predef.String, Input] = Convert.apply(Input.String(_))
-  implicit val fileToInput: Convert[java.io.File, Input] = Convert.apply(f => Input.File(f, Charset.forName("UTF-8")))
+  implicit val charsToInput: Convert[Array[Char], Input] = Convert(chars => Input.String(new scala.Predef.String(chars)))
+  implicit val stringToInput: Convert[scala.Predef.String, Input] = Convert(Input.String(_))
+  implicit val fileToInput: Convert[java.io.File, Input] = Convert(f => Input.File(f, Charset.forName("UTF-8")))
 }

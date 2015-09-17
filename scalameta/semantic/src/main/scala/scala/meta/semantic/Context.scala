@@ -5,6 +5,7 @@ import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import org.scalameta.annotations._
 import scala.annotation._
+import scala.meta.taxonomic.Domain
 
 @opaque(exclude = "dialect|domain")
 @implicitNotFound("this method requires an implicit scala.meta.semantic.Context")

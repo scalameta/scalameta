@@ -9,25 +9,9 @@ import scala.meta.internal.{ast => impl}
 // TODO: The current incarnation of the traversal/transformation API is very generic (that is interesting)
 // but also contains a lot of moving parts, e.g. see things like EvaluatorMetaCollector (that is daunting).
 // We need to study how accessible this is for the users and see where to go from there.
-private[meta] trait BaseTqlApi {
+private[meta] trait BasicTqlApi {
   implicit def collectionLikeUI[V <: Tree](v: V): Evaluator[V] = new Evaluator[V](v)
   implicit def forceResultUI[V, A : Monoid, R](x: EvaluatorAndThen[V, A]): ForceResult[V, A, R] = new ForceResult[V, A, R](x)
 }
 
-private[meta] trait ExtendedTqlApi extends Traverser[Tree]
-                                      with Combinators[Tree]
-                                      with SyntaxEnhancer[Tree]
-                                      with CollectionLikeUI[Tree] {
-  def traverse[A : Monoid](tree: Tree, f: Matcher[A]): MatchResult[A] = {
-    TraverserBuilder.buildFromTopSymbolDelegate[Tree, A](f,
-      impl.Term.Name,
-      impl.Lit.Char,
-      impl.Term.Apply,
-      impl.Lit.Int,
-      impl.Type.Name,
-      impl.Term.Param,
-      impl.Type.Apply,
-      impl.Term.ApplyInfix
-    )
-  }
-}
+object basicApi extends BasicTqlApi

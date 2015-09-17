@@ -8,9 +8,11 @@ import scala.reflect.macros.blackbox.Context
 import scala.reflect.macros.Universe
 import scala.meta.internal.parsers.Helpers._
 import scala.compat.Platform.EOL
-import scala.meta.internal.tokenizers.keywords
 import scala.language.implicitConversions
 import scala.annotation.tailrec
+import scala.meta.syntactic._
+import scala.meta.ui._
+import scala.meta.dialects.Scala211
 
 // TODO: this infers tokens for the Scala211 dialect due to token quasiquotes (the dialect needs to be explicitly imported). It should be changed in the future.
 // TODO: fix occasional incorrectness when semicolons are omitted
@@ -54,7 +56,8 @@ private[meta] object inferTokens {
   /* Global infering function */
   private def infer(tree: Tree, proto: Option[Tree])(implicit dialect: Dialect): Tokens = {
     import scala.meta.internal.ast._
-    import scala.meta.dialects.Scala211 // as explained above, forcing dialect.
+    import scala.meta.syntactic.tokenizeApi._
+    import scala.meta.tokenquasiquotes.api._
 
     /* partial token vectors used in various constructions */
     val indentation =        toks"  " // In the future, this could be inferred
@@ -171,6 +174,15 @@ private[meta] object inferTokens {
 
     /* The helpers below are heavily based on the ones used for the original show[Syntax] implementation. */
     def guessIsBackquoted(t: Name): Boolean = {
+      // TODO: deduplicate wrt package.scala in tokenizers
+      val keywords = Set(
+        "abstract", "case", "do", "else", "finally", "for", "import", "lazy",
+        "object", "override", "return", "sealed", "trait", "try", "var", "while",
+        "catch", "class", "extends", "false", "forSome", "if", "match", "new",
+        "package", "private", "super", "this", "true", "type", "with", "yield",
+        "def", "final", "implicit", "null", "protected", "throw", "val", "_",
+        ":", "=", "=>", "<-", "<:", "<%", ">:", "#", "@", "\u21D2", "\u2190"
+      )
       def cantBeWrittenWithoutBackquotes(t: Name): Boolean = {
         t.value != "this" && (keywords.contains(t.value) || t.value.contains(" "))
       }

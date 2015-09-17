@@ -2,13 +2,16 @@ package scala.meta
 package internal
 package parsers
 
+import java.lang.{ Character => JCharacter }
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.reflect.ClassTag
+import org.scalameta.show._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
+import scala.annotation.switch
 import scala.meta.internal.ast._
-import scala.meta.internal.tokenizers.Chars.{isOperatorPart, isScalaLetter}
+import scala.meta.ui._
 
 private[meta] object Helpers {
   private[meta] val unaryOps = Set("-", "+", "~", "!")
@@ -40,6 +43,29 @@ private[meta] object Helpers {
         case '*' | '/' | '%' => 9
         case _               => 10
       }
+
+    // TODO: deduplicate with Chars.scala in tokenizers
+    private final val otherLetters = Set[Char]('\u0024', '\u005F')  // '$' and '_'
+    private final val letterGroups = {
+      import JCharacter._
+      Set[Byte](LOWERCASE_LETTER, UPPERCASE_LETTER, OTHER_LETTER, TITLECASE_LETTER, LETTER_NUMBER)
+    }
+    private def isScalaLetter(ch: Char) = letterGroups(JCharacter.getType(ch).toByte) || otherLetters(ch)
+
+    /** Is character a math or other symbol in Unicode?  */
+    private def isSpecial(c: Char) = {
+      val chtp = Character.getType(c)
+      chtp == Character.MATH_SYMBOL.toInt || chtp == Character.OTHER_SYMBOL.toInt
+    }
+
+    /** Can character form part of a Scala operator name? */
+    private def isOperatorPart(c : Char) : Boolean = (c: @switch) match {
+      case '~' | '!' | '@' | '#' | '%' |
+           '^' | '*' | '+' | '-' | '<' |
+           '>' | '?' | ':' | '=' | '&' |
+           '|' | '/' | '\\' => true
+      case c => isSpecial(c)
+    }
   }
   implicit class XtensionTermOps(tree: Term) {
     def isCtorCall: Boolean = tree match {

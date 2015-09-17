@@ -10,7 +10,9 @@ import scala.{Seq => _}
 import scala.annotation.compileTimeOnly
 import scala.collection.immutable.Seq
 import scala.reflect.{ClassTag, classTag}
+import scala.meta.taxonomic.Domain
 import scala.meta.semantic.{Context => SemanticContext}
+import scala.meta.ui.api._
 import scala.meta.internal.{ast => impl} // necessary only to implement APIs, not to define them
 import scala.meta.internal.{semantic => s} // necessary only to implement APIs, not to define them
 import scala.meta.internal.{equality => e} // necessary only to implement APIs, not to define them
@@ -27,23 +29,18 @@ private[meta] trait SemanticApi {
   // PART 2: EQUALITY
   // ===========================
 
-  trait AllowEquality[T1, T2]
-  implicit object AllowEquality {
-    implicit def materialize[T1, T2]: AllowEquality[T1, T2] = macro e.Macros.allow[T1, T2]
-  }
-
   private[meta] implicit class XtensionSemanticEquality[T1 <: Tree](tree1: T1) {
-    def ===[T2 <: Tree](tree2: T2)(implicit ev: AllowEquality[T1, T2]): Boolean = e.Semantic.equals(tree1, tree2)
-    def =/=[T2 <: Tree](tree2: T2)(implicit ev: AllowEquality[T1, T2]): Boolean = !e.Semantic.equals(tree1, tree2)
+    def ===[T2 <: Tree](tree2: T2)(implicit ev: e.AllowEquality[T1, T2]): Boolean = e.Semantic.equals(tree1, tree2)
+    def =/=[T2 <: Tree](tree2: T2)(implicit ev: e.AllowEquality[T1, T2]): Boolean = !e.Semantic.equals(tree1, tree2)
   }
 
   implicit class XtensionTypecheckingEquality[T1 <: Tree](tree1: T1) {
-    @hosted def =:=[T2 <: Tree](tree2: T2)(implicit ev: AllowEquality[T1, T2]): Boolean = e.Typechecking.equals(tree1, tree2)
-    @hosted def =!=[T2 <: Tree](tree2: T2)(implicit ev: AllowEquality[T1, T2]): Boolean = !e.Typechecking.equals(tree1, tree2)
+    @hosted def =:=[T2 <: Tree](tree2: T2)(implicit ev: e.AllowEquality[T1, T2]): Boolean = e.Typechecking.equals(tree1, tree2)
+    @hosted def =!=[T2 <: Tree](tree2: T2)(implicit ev: e.AllowEquality[T1, T2]): Boolean = !e.Typechecking.equals(tree1, tree2)
   }
 
   implicit class XtensionNormalizingEquality[T1 <: Tree](tree1: T1) {
-    @hosted def =~=[T2 <: Tree](tree2: T2)(implicit ev: AllowEquality[T1, T2]): Boolean = e.Normalizing.equals(tree1, tree2)
+    @hosted def =~=[T2 <: Tree](tree2: T2)(implicit ev: e.AllowEquality[T1, T2]): Boolean = e.Normalizing.equals(tree1, tree2)
     // TODO: what would be the symbol to express negation of =~=?
   }
 
@@ -58,9 +55,6 @@ private[meta] trait SemanticApi {
   // ===========================
   // PART 4: ATTRIBUTES
   // ===========================
-
-  type Environment = scala.meta.semantic.Environment
-  val Environment = scala.meta.semantic.Environment
 
   implicit class XtensionSemanticTermDesugar(tree: Term) {
     @hosted def desugar: Term = {
@@ -787,3 +781,5 @@ private[meta] trait SemanticApi {
   type SemanticException = scala.meta.semantic.SemanticException
   val SemanticException = scala.meta.semantic.SemanticException
 }
+
+object api extends SemanticApi

@@ -10,6 +10,8 @@ import scala.compat.Platform.EOL
 import scala.annotation.implicitNotFound
 import scala.collection.mutable.StringBuilder
 import scala.Console._
+import scala.meta.ui.Syntax
+import scala.meta.syntactic.api._
 
 @root trait PositionStyle
 object PositionStyle {

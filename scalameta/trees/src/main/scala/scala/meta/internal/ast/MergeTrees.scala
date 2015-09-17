@@ -7,7 +7,6 @@ import scala.collection.immutable.Seq
 import scala.compat.Platform.EOL
 import scala.reflect.{classTag, ClassTag}
 import scala.meta.internal.ast._
-import scala.meta.semantic.{Context => SemanticContext}
 import scala.meta.internal.semantic._
 import scala.meta.internal.semantic.RuntimeConverters._
 import scala.meta.internal.ui.Attributes
@@ -15,7 +14,9 @@ import org.scalameta.collections._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
 import org.scalameta.debug._
+import org.scalameta.show._
 import scala.meta.internal.{ast => m}
+import scala.meta.ui._
 
 object mergeTrees {
   // NOTE: "sy-" stands for "syntactic", "se-" stands for "semantic", "me-" stands for "merged".s

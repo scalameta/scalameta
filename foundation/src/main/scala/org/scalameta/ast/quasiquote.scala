@@ -11,7 +11,7 @@ class quasiquote[T](qname: scala.Symbol) extends StaticAnnotation {
 class QuasiquoteMacros(val c: Context) {
   import c.universe._
   import Flag._
-  val ReificationMacros = q"_root_.scala.meta.internal.quasiquotes.ast.ReificationMacros"
+  val ReificationMacros = q"_root_.scala.meta.internal.tokenquasiquotes.ReificationMacros"
   def impl(annottees: c.Tree*): c.Tree = {
     val q"new $_[..$qtypes](scala.Symbol(${qname: String})).macroTransform(..$_)" = c.macroApplication
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
@@ -32,7 +32,11 @@ class QuasiquoteMacros(val c: Context) {
         """
       }
       val qparser = {
-        val qunsafeResults = qtypes.map(qtype => q"_root_.scala.meta.`package`.XtensionInputLike(input).parse[$qtype]")
+        val qunsafeResults = qtypes.map(qtype => q"""
+          // TODO: Explicitly spell out the desugaring
+          import _root_.scala.meta.syntactic.parseApi._
+          input.parse[$qtype]
+        """)
         val qsafeResults = qunsafeResults.map(qunsafeParser => q"_root_.scala.util.Try($qunsafeParser)")
         val gsafeResultsWithLogging = qsafeResults.map(qsafeResult => q"""
           $qsafeResult.recover({
@@ -43,7 +47,7 @@ class QuasiquoteMacros(val c: Context) {
         """)
         var qsafeResult = gsafeResultsWithLogging.reduce((acc, curr) => q"$acc.orElse($curr)")
         val qparseResult = if (qunsafeResults.length == 1) qunsafeResults.head else q"$qsafeResult.get"
-        q"private[meta] def parse(input: _root_.scala.meta.`package`.Input)(implicit dialect: _root_.scala.meta.Dialect) = $qparseResult"
+        q"private[meta] def parse(input: _root_.scala.meta.syntactic.Input)(implicit dialect: _root_.scala.meta.Dialect) = $qparseResult"
       }
       val stats1 = stats :+ qmodule
       val mstats1 = mstats :+ qparser

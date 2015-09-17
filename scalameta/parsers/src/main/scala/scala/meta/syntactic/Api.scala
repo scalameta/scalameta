@@ -1,6 +1,8 @@
 package scala.meta
 package syntactic
 
+import scala.meta.internal.parsers.ScalametaParser
+
 private[meta] trait ScalametaParseApi {
   implicit def parseStat(implicit dialect: Dialect): Parse[Stat] = Parse(input => new ScalametaParser(input).parseStat())
   implicit def parseTerm(implicit dialect: Dialect): Parse[Term] = Parse(input => new ScalametaParser(input).parseTerm())
@@ -20,3 +22,5 @@ private[meta] trait ScalametaParseApi {
   implicit def parseImportee(implicit dialect: Dialect): Parse[Importee] = Parse(input => new ScalametaParser(input).parseImportee())
   implicit def parseSource(implicit dialect: Dialect): Parse[Source] = Parse(input => new ScalametaParser(input).parseSource())
 }
+
+object parseApi extends GenericParseApi with ScalametaParseApi

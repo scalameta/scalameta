@@ -18,3 +18,5 @@ private[meta] trait PrettyprintApi {
 
   type Semantics[T] = scala.meta.ui.Semantics[T]
 }
+
+object api extends PrettyprintApi

@@ -4,6 +4,7 @@ package interactive
 import org.scalameta.annotations._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
+import scala.meta.taxonomic.Artifact
 
 private[meta] trait InteractiveApi {
   type InteractiveContext = scala.meta.interactive.Context
@@ -33,3 +34,5 @@ private[meta] trait InteractiveApi {
     }
   }
 }
+
+object api extends InteractiveApi

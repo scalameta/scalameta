@@ -1,11 +1,13 @@
 package scala.meta
 package quasiquotes
 
+import org.scalameta.ast._
+
 private[meta] trait QuasiquoteApi {
-  type Lift = scala.meta.quasiquotes.Lift
+  type Lift[O, I] = scala.meta.quasiquotes.Lift[O, I]
   val Lift = scala.meta.quasiquotes.Lift
 
-  type Unlift = scala.meta.quasiquotes.Unlift
+  type Unlift[I, O] = scala.meta.quasiquotes.Unlift[I, O]
   val Unlift = scala.meta.quasiquotes.Unlift
 
   // TODO: it would be ideal to have these as annotations on corresponding AST nodes
@@ -30,3 +32,5 @@ private[meta] trait QuasiquoteApi {
   @quasiquote[Importee]('importee)     implicit class XtensionQuasiquoteImportee(ctx: StringContext)
   @quasiquote[Source]('source)         implicit class XtensionQuasiquoteSource(ctx: StringContext)
 }
+
+object api extends QuasiquoteApi

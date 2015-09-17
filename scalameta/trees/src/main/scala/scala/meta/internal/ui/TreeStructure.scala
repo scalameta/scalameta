@@ -5,6 +5,7 @@ package ui
 import org.scalameta.show._
 import Show.{ sequence => s, repeat => r, indent => i, newline => n }
 import scala.meta.internal.{ast => impl}
+import scala.meta.ui.{Syntax, Structure}
 
 object TreeStructure {
   def apply[T <: Tree]: Structure[T] = {
@@ -12,7 +13,7 @@ object TreeStructure {
       def default = {
         def showRaw(x: Any): String = x match {
           case el: String => enquote(el, DoubleQuotes)
-          case el: api.Tree => el.show[Structure]
+          case el: Tree => el.show[Structure]
           case el: Nil.type => "Nil"
           case el @ Seq(Seq()) => "Seq(Seq())"
           case el: Seq[_] => "Seq(" + el.map(showRaw).mkString(", ") + ")"
@@ -24,7 +25,7 @@ object TreeStructure {
       }
       x match {
         case x: impl.Quasi => default
-        case x: Lit.String => s(enquote(x.value, DoubleQuotes))
+        case x: impl.Lit.String => s(enquote(x.value, DoubleQuotes))
         case x: Lit => import scala.meta.dialects.Scala211; s(x.show[Syntax])
         case x => default
       }

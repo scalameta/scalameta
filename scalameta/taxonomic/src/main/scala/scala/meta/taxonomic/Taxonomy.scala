@@ -18,6 +18,7 @@ import scala.tools.asm._
 import scala.meta.internal.tasty._
 import scala.meta.internal.ast.mergeTrees
 import scala.meta.internal.taxonomic._
+import scala.meta.syntactic.parseApi._
 import org.apache.ivy.plugins.resolver._
 import org.scalameta.contexts._
 import org.scalameta.invariants._
@@ -50,7 +51,7 @@ import org.scalameta.debug._
   private val cache = mutable.Map[Artifact, ResolvedArtifact]()
 
   private def resolveUnmanaged(artifact: Artifact.Unmanaged): ResolvedArtifact = cache.getOrElseUpdate(artifact, {
-    def failResolve(message: String, ex: Option[Throwable] = None) = throw new ArtifactException(artifact, message, ex)
+    def failResolve(message: String, ex: Option[Throwable] = None) = throw new TaxonomicException(artifact, message, ex)
     implicit class XtensionPath(path: Path) {
       def explode: ListMap[String, URI] = {
         val root = new File(path.path)

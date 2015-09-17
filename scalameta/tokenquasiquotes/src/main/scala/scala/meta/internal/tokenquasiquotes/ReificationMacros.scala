@@ -8,6 +8,7 @@ import scala.meta.syntactic.TokenLiftables
 import scala.meta.internal.dialects.InstantiateDialect
 import scala.meta.syntactic.{Token, Tokens, Input}
 import scala.meta.syntactic.{Token => MetaToken}
+import scala.meta.syntactic.tokenizeApi._
 
 /**
  * Object used to extract the underlying code for each token.
@@ -39,10 +40,6 @@ class ReificationMacros(val c: Context) extends TokenLiftables
     case TermName("unapply") =>
       val name = bindingName(i)
       pq"$name @ _"
-  }
-
-  implicit class XtensionInputLike[T](inputLike: T) {
-    def tokens(implicit convert: Convert[T, Input], dialect: Dialect): Tokens = convert(inputLike).tokens
   }
 
   /**
@@ -181,7 +178,7 @@ class ReificationMacros(val c: Context) extends TokenLiftables
 
         q"""
           new {
-            def unapply(in: _root_.scala.meta.Tokens) = $cases
+            def unapply(in: _root_.scala.meta.syntactic.Tokens) = $cases
           }.unapply(..$args)
         """
     }

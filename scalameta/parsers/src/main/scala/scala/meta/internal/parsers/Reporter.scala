@@ -2,6 +2,9 @@ package scala.meta
 package internal
 package parsers
 
+import scala.meta.syntactic.{Position, Token, ParseException}
+import scala.meta.syntactic.api._
+
 // TODO: when I grow up I want to become a monad, just like my daddy
 private[meta] trait Reporter {
   def deprecationWarning(msg: String, at: Position): Unit = ()

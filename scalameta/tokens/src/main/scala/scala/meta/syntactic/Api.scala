@@ -1,7 +1,11 @@
 package scala.meta
 package syntactic
 
-private[meta] trait TokenApi {
+import org.scalameta.convert._
+
+// TODO: find a better name
+// TokenApi doesn't work because of a name clash with tokenApi
+private[meta] trait BasicTokenApi {
   type Input = scala.meta.syntactic.Input
   val Input = scala.meta.syntactic.Input
 
@@ -28,9 +32,11 @@ private[meta] trait GenericTokenizeApi {
   type TokenizeException = scala.meta.syntactic.TokenizeException
   val TokenizeException = scala.meta.syntactic.TokenizeException
 
-  implicit class XtensionTokenizeInputLike[T](inputLike: T) {
-    def tokens(implicit convert: Convert[T, Input], tokenize: Tokenize): Tokens = {
-      tokenize(convert(inputLike))
+  implicit class XtensionTokenizeContentLike[T](contentLike: T) {
+    def tokens(implicit convert: Convert[T, Content], tokenize: Tokenize): Tokens = {
+      tokenize(convert(contentLike))
     }
   }
 }
+
+object tokenApi extends BasicTokenApi

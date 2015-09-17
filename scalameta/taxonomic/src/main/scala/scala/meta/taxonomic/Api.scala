@@ -11,8 +11,8 @@ private[meta] trait TaxonomicApi extends MavenDsl {
   type TaxonomicContext = scala.meta.taxonomic.Context
   val TaxonomicContext = scala.meta.taxonomic.Context
 
-  type ArtifactException = scala.meta.taxonomic.ArtifactException
-  val ArtifactException = scala.meta.taxonomic.ArtifactException
+  type TaxonomicException = scala.meta.taxonomic.TaxonomicException
+  val TaxonomicException = scala.meta.taxonomic.TaxonomicException
 
   type Taxonomy = scala.meta.taxonomic.Taxonomy
   val Taxonomy = scala.meta.taxonomic.Taxonomy
@@ -41,3 +41,5 @@ private[meta] trait TaxonomicApi extends MavenDsl {
     @hosted def deps: Seq[Artifact] = implicitly[TaxonomicContext].deps(artifact)
   }
 }
+
+object api extends TaxonomicApi

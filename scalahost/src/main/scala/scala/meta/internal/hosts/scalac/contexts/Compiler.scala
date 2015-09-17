@@ -9,7 +9,6 @@ import scala.tools.cmd.CommandLineParser
 import scala.tools.nsc.{Global, CompilerCommand, Settings}
 import scala.tools.nsc.reporters.StoreReporter
 import scala.tools.reflect.WrappedProperties.AccessControl._
-import scala.meta.taxonomic.{Context => TaxonomicContext}
 
 object Compiler {
   def apply()(implicit taxonomy: TaxonomicContext): Global = {

@@ -15,13 +15,15 @@ import org.scalameta.ast.{Liftables => AstLiftables, Reflection => AstReflection
 import org.scalameta.invariants._
 import org.scalameta.unreachable
 import org.scalameta.debug._
-import scala.meta.{Token => MetaToken, Tokens => MetaTokens}
+import scala.meta.syntactic.api._
+import scala.meta.syntactic.parseApi._
+import scala.meta.syntactic.tokenizeApi._
+import scala.meta.ui.api._
 import scala.meta.internal.dialects.InstantiateDialect
 import scala.meta.internal.{semantic => s}
 import scala.meta.internal.semantic.{Denotation => MetaDenotation, Converters => SemanticConverters, _}
 import scala.meta.internal.semantic.{Symbol => MetaSymbol, Prefix => MetaPrefix, Signature => MetaSignature, _}
 import scala.meta.internal.parsers.Helpers._
-import scala.meta.internal.tokenizers.{LegacyScanner, LegacyToken}
 import scala.compat.Platform.EOL
 
 // TODO: ideally, we would like to bootstrap these macros on top of scala.meta
@@ -34,7 +36,8 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
   import decorators._
   import c.universe.{Tree => _, Symbol => _, Type => _, Position => _, _}
   import c.universe.{Tree => ReflectTree, Symbol => ReflectSymbol, Type => ReflectType, Position => ReflectPosition, Bind => ReflectBind}
-  import scala.meta.{Tree => MetaTree, Type => MetaType, Input => MetaInput, Dialect => MetaDialect, Position => MetaPosition}
+  import scala.meta.{Tree => MetaTree, Type => MetaType, Dialect => MetaDialect}
+  import scala.meta.syntactic.{Input => MetaInput, Content => MetaContent, Position => MetaPosition, Token => MetaToken, Tokens => MetaTokens}
   import scala.meta.Term.{Name => MetaTermName}
   type MetaParser = (MetaInput, MetaDialect) => MetaTree
   import scala.{meta => api}
@@ -75,7 +78,7 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
     val parserModuleGetter = metaPackageClass.getDeclaredMethod(parserModule.name.toString)
     val parserModuleInstance = parserModuleGetter.invoke(null)
     val parserMethod = parserModuleInstance.getClass.getDeclaredMethods().find(_.getName == "parse").head
-    (input: Input, dialect: Dialect) => {
+    (input: MetaInput, dialect: MetaDialect) => {
       try parserMethod.invoke(parserModuleInstance, input, dialect).asInstanceOf[MetaTree]
       catch { case ex: java.lang.reflect.InvocationTargetException => throw ex.getTargetException }
     }
@@ -175,28 +178,28 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
         c.abort(part.pos, "quasiquotes can only be used with literal strings")
     }
     def merge(index: Int, parttokens: MetaTokens, arg: ReflectTree): MetaTokens = {
-      implicit class RichToken(token: Token) { def absoluteStart = token.start + token.content.require[SliceContent].start }
-      val part: Tokens = {
+      implicit class RichMetaToken(token: MetaToken) { def absoluteStart = token.start + token.content.require[SliceContent].start }
+      val part: MetaTokens = {
         val bof +: payload :+ eof = parttokens
-        require(bof.isInstanceOf[Token.BOF] && eof.isInstanceOf[Token.EOF] && debug(parttokens))
-        val prefix = if (index == 0) Tokens(bof) else Tokens()
-        val suffix = if (index == parttokenss.length - 1) Tokens(eof) else Tokens()
+        require(bof.isInstanceOf[MetaToken.BOF] && eof.isInstanceOf[MetaToken.EOF] && debug(parttokens))
+        val prefix = if (index == 0) MetaTokens(bof) else MetaTokens()
+        val suffix = if (index == parttokenss.length - 1) MetaTokens(eof) else MetaTokens()
         prefix ++ payload ++ suffix
       }
-      val unquote: Tokens = {
+      val unquote: MetaTokens = {
         if (arg.isEmpty) {
-          Tokens()
+          MetaTokens()
         } else {
           val unquoteStart = parttokens.last.absoluteStart
           val unquoteEnd = parttokenss(index + 1).head.absoluteStart - 1
           val unquoteContent = sliceFileContent(unquoteStart, unquoteEnd)
           val unquoteDialect = scala.meta.dialects.Quasiquote(metaDialect)
-          Tokens(MetaToken.Unquote(unquoteContent, unquoteDialect, 0, unquoteEnd - unquoteStart + 1, arg))
+          MetaTokens(MetaToken.Unquote(unquoteContent, unquoteDialect, 0, unquoteEnd - unquoteStart + 1, arg))
         }
       }
       part ++ unquote
     }
-    val tokens: Tokens = parttokenss.zip(args :+ EmptyTree).zipWithIndex.flatMap({ case ((ts, a), i) => merge(i, ts, a) }).toTokens
+    val tokens: MetaTokens = MetaTokens(parttokenss.zip(args :+ EmptyTree).zipWithIndex.flatMap({ case ((ts, a), i) => merge(i, ts, a) }): _*)
     if (Debug.quasiquote) println(tokens)
     try {
       implicit val parsingDialect: MetaDialect = scala.meta.dialects.Quasiquote(metaDialect)
@@ -211,10 +214,10 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
 
   private lazy val wholeFileSource = c.macroApplication.pos.source
   private lazy val wholeFileContent = {
-    if (wholeFileSource.file.file != null) Input.File(wholeFileSource.file.file)
-    else Input.String(new String(wholeFileSource.content)) // NOTE: can happen in REPL or in custom Global
+    if (wholeFileSource.file.file != null) MetaInput.File(wholeFileSource.file.file)
+    else MetaInput.String(new String(wholeFileSource.content)) // NOTE: can happen in REPL or in custom Global
   }
-  private final case class SliceContent(content: Content, start: Int, end: Int) extends Content {
+  private final case class SliceContent(content: MetaContent, start: Int, end: Int) extends MetaContent {
     require(0 <= start && start <= content.chars.length)
     require(-1 <= end && end < content.chars.length)
     lazy val chars = content.chars.slice(start, end + 1)

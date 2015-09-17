@@ -8,3 +8,5 @@ private[meta] trait DialectApi {
   type DialectException = scala.meta.dialects.DialectException
   val DialectException = scala.meta.dialects.DialectException
 }
+
+object api extends DialectApi

@@ -5,6 +5,7 @@ import scala.language.implicitConversions
 import org.scalameta.default._
 import org.scalameta.unreachable
 import org.scalameta.invariants._
+import org.scalameta.show._
 import scala.collection.mutable
 import scala.{Seq => _}
 import scala.collection.immutable.Seq

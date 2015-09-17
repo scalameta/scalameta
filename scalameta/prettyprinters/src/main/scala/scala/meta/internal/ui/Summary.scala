@@ -2,10 +2,11 @@ package scala.meta
 package internal
 package ui
 
-import org.scalameta.show.Show
+import org.scalameta.show._
 import Show.{ sequence => s, repeat => r, indent => i, newline => n }
 import scala.compat.Platform.EOL
 import scala.annotation.implicitNotFound
+import scala.meta.ui.Syntax
 
 @implicitNotFound(msg = "don't know how to show[Summary] for ${T} (if you're prettyprinting a tree, be sure to import a dialect, e.g. scala.meta.dialects.Scala211)")
 private[meta] trait Summary[T] extends Show[T]
