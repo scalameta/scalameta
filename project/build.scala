@@ -23,20 +23,127 @@ object build extends Build {
   ) settings (
     publishableSettings: _*
   ) settings (
-    description := "Fundamental helpers and utilities of scala.meta",
+    description := "Scala.meta's fundamental helpers and utilities",
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided")
   )
 
-  lazy val tokens = Project(
-    id   = "tokens",
-    base = file("tokens")
+  lazy val dialects = Project(
+    id   = "dialects",
+    base = file("scalameta/dialects")
   ) settings (
     publishableSettings: _*
   ) settings (
-    description := "Tokenization and token quasiquotes of scala.meta",
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided"),
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _)
+    description := "Scala.meta's dialects"
+  ) dependsOn (foundation, exceptions)
+
+  lazy val exceptions = Project(
+    id   = "dialects",
+    base = file("scalameta/exceptions")
+  ) settings (
+    publishableSettings: _*
+  ) settings (
+    description := "Scala.meta's baseline exceptions"
   ) dependsOn (foundation)
+
+  lazy val interactive = Project(
+    id   = "interactive",
+    base = file("scalameta/interactive")
+  ) settings (
+    publishableSettings: _*
+  ) settings (
+    description := "Scala.meta's APIs for interactive environments (REPLs, IDEs, ...)"
+  ) dependsOn (foundation, exceptions, taxonomic)
+
+  lazy val parsers = Project(
+    id   = "parsers",
+    base = file("scalameta/parsers")
+  ) settings (
+    publishableSettings: _*
+  ) settings (
+    description := "Scala.meta's default implementation of the Parse[T] typeclass"
+  ) dependsOn (foundation, exceptions, trees, tokens)
+
+  lazy val prettyprinters = Project(
+    id   = "prettyprinters",
+    base = file("scalameta/prettyprinters")
+  ) settings (
+    publishableSettings: _*
+  ) settings (
+    description := "Scala.meta's baseline prettyprinters"
+  ) dependsOn (foundation, exceptions)
+
+  lazy val quasiquotes = Project(
+    id   = "quasiquotes",
+    base = file("scalameta/quasiquotes")
+  ) settings (
+    publishableSettings: _*
+  ) settings (
+    description := "Scala.meta's quasiquotes for abstract syntax trees"
+  ) dependsOn (foundation, exceptions, trees, parsers)
+
+  lazy val semantic = Project(
+    id   = "semantic",
+    base = file("scalameta/semantic")
+  ) settings (
+    publishableSettings: _*
+  ) settings (
+    description := "Scala.meta's APIs for traversing semantic structure of Scala programs"
+  ) dependsOn (foundation, exceptions, trees)
+
+  lazy val taxonomic = Project(
+    id   = "taxonomic",
+    base = file("scalameta/taxonomic")
+  ) settings (
+    publishableSettings: _*
+  ) settings (
+    description := "Scala.meta's APIs for traversing organizational structure of the Scala ecosystem",
+    libraryDependencies += "org.apache.ivy" % "ivy" % "2.4.0"
+  ) dependsOn (foundation, exceptions, trees)
+
+  lazy val tokenizers = Project(
+    id   = "tokenizers",
+    base = file("scalameta/tokenizers")
+  ) settings (
+    publishableSettings: _*
+  ) settings (
+    description := "Scala.meta's default implementation of the Tokenize typeclass"
+  ) dependsOn (foundation, exceptions, tokens)
+
+  lazy val tokenquasiquotes = Project(
+    id   = "tokenquasiquotes",
+    base = file("scalameta/tokenquasiquotes")
+  ) settings (
+    publishableSettings: _*
+  ) settings (
+    description := "Scala.meta's quasiquotes for tokens"
+  ) dependsOn (foundation, exceptions, tokens, tokenizers)
+
+  lazy val tokens = Project(
+    id   = "tokens",
+    base = file("scalameta/tokens")
+  ) settings (
+    publishableSettings: _*
+  ) settings (
+    description := "Scala.meta's tokens and token-based abstractions (inputs and positions)"
+  ) dependsOn (foundation, exceptions)
+
+  lazy val tql = Project(
+    id   = "tql",
+    base = file("scalameta/tql")
+  ) settings (
+    publishableSettings: _*
+  ) settings (
+    description := "Scala.meta's tree query language (basic and extended APIs)"
+  ) dependsOn (foundation, exceptions, trees)
+
+  lazy val trees = Project(
+    id   = "trees",
+    base = file("scalameta/trees")
+  ) settings (
+    publishableSettings: _*
+  ) settings (
+    description := "Scala.meta's abstract syntax trees"
+  ) dependsOn (foundation, exceptions, tokens)
 
   lazy val scalameta = Project(
     id   = "scalameta",
@@ -44,10 +151,8 @@ object build extends Build {
   ) settings (
     publishableSettings: _*
   ) settings (
-    description := "Metaprogramming and hosting APIs of scala.meta",
-    libraryDependencies += "org.apache.ivy" % "ivy" % "2.4.0",
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided")
-  ) dependsOn (foundation, tokens)
+    description := "Scala.meta's metaprogramming and hosting APIs"
+  ) dependsOn (foundation, exceptions, dialects, interactive, parsers, prettyprinters, quasiquotes, semantic, taxonomic, tokenizers, tokenquasiquotes, tql, trees)
 
   lazy val scalahost = Project(
     id   = "scalahost",
@@ -58,7 +163,7 @@ object build extends Build {
     mergeSettings: _*
   ) settings (
     crossVersion := CrossVersion.full,
-    description := "Scalac-based host of scala.meta",
+    description := "Scalac-based host that implements scala.meta's hosting APIs",
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _ % "provided")
   ) dependsOn (scalameta)
 
@@ -74,7 +179,7 @@ object build extends Build {
     packagedArtifacts := Map.empty
   ) settings (
     exposeClasspaths("tests"): _*
-  ) dependsOn (foundation, scalameta, scalahost)
+  ) dependsOn (scalameta, scalahost)
 
   lazy val sharedSettings = Defaults.defaultSettings ++ Seq(
     scalaVersion := ScalaVersion,
