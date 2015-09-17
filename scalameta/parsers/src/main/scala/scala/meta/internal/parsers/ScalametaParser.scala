@@ -15,7 +15,7 @@ import scala.{meta => api}
 import scala.meta.internal.{ast => impl}
 import scala.meta.internal.parsers.Location._
 import scala.meta.internal.parsers.Helpers._
-import scala.meta.syntactic.{Input, Content, Token, Tokens}
+import scala.meta.syntactic.{Input, Content, Parse, Token, Tokens}
 import scala.meta.syntactic.Token._
 import scala.meta.syntactic.tokenizeApi._
 import scala.meta.ui.api._
@@ -3192,6 +3192,15 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
       Source(List(atPos(startPos, auto)(Pkg(qualId(), bracelessPackageStats()))))
     } else {
       Source(topStatSeq())
+    }
+  }
+}
+
+object ScalametaParser {
+  def toParse[T](fn: ScalametaParser => T): Parse[T] = new Parse[T] {
+    def apply(input: Input)(implicit dialect: Dialect): T = {
+      val parser = new ScalametaParser(input)(dialect)
+      fn(parser)
     }
   }
 }

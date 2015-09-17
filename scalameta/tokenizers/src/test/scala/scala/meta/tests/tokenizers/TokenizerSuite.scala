@@ -8,7 +8,10 @@ import scala.meta.syntactic.tokenizeApi._
 import scala.meta.ui.api._
 
 class TokenizerSuite extends FunSuite {
-  def tokenize(code: String): Tokens = code.tokens
+  def tokenize(code: String): Tokens = {
+    val tokenize = scala.meta.syntactic.tokenizeApi.tokenize(Scala211)
+    Input.String(code).tokens(Scala211, tokenize)
+  }
 
   test("showCode without comments - simple") {
     assert(tokenize("class C  {\t val x = 2}\n\n").map(_.show[Syntax]).mkString === "class C  {\t val x = 2}\n\n")

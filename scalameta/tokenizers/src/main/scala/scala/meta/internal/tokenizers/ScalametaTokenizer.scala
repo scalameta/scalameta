@@ -9,8 +9,8 @@ import Chars.{CR, LF, FF}
 import LegacyToken._
 import scala.meta.syntactic._
 
-private[meta] class ScalametaTokenizer(val content: Content)(implicit dialect: Dialect) {
-  def tokenize: Tokens = {
+private[meta] class ScalametaTokenizer(val content: Content)(implicit val dialect: Dialect) {
+  def tokenize(): Tokens = {
     def legacyTokenToToken(curr: LegacyTokenData): Token = {
       (curr.token: @scala.annotation.switch) match {
         case IDENTIFIER       => Token.Ident(content, dialect, curr.offset, curr.endOffset + 1)
@@ -267,5 +267,14 @@ private[meta] class ScalametaTokenizer(val content: Content)(implicit dialect: D
 
     loop(startingFrom = 0)
     Tokens.Tokenized(content, dialect, tokens.result: _*)
+  }
+}
+
+object ScalametaTokenizer {
+  def toTokenize: Tokenize = new Tokenize {
+    def apply(content: Content)(implicit dialect: Dialect): Tokens = {
+      val tokenizer = new ScalametaTokenizer(content)(dialect)
+      tokenizer.tokenize()
+    }
   }
 }
