@@ -33,7 +33,7 @@ private[meta] trait GenericTokenizeApi {
   val TokenizeException = scala.meta.syntactic.TokenizeException
 
   implicit class XtensionTokenizeContentLike[T](contentLike: T) {
-    def tokens(implicit convert: Convert[T, Content], tokenize: Tokenize): Tokens = {
+    def tokens(implicit convert: Convert[T, Content], dialect: Dialect, tokenize: Tokenize): Tokens = {
       tokenize(convert(contentLike))
     }
   }

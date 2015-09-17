@@ -15,7 +15,7 @@ import org.scalameta.ast.{Liftables => AstLiftables, Reflection => AstReflection
 import org.scalameta.invariants._
 import org.scalameta.unreachable
 import org.scalameta.debug._
-import scala.meta.syntactic.api._
+import scala.meta.syntactic.treeApi._
 import scala.meta.syntactic.parseApi._
 import scala.meta.syntactic.tokenizeApi._
 import scala.meta.ui.api._
@@ -60,8 +60,8 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
   val ScalaNil = ScalaPackageObjectClass.info.decl(TermName("Nil"))
   val ScalaSeq = ScalaPackageObjectClass.info.decl(TermName("Seq"))
   val ImmutableSeq = mirror.staticClass("scala.collection.immutable.Seq")
-  val InternalLift = c.mirror.staticModule("scala.meta.internal.quasiquotes.ast.Lift")
-  val InternalUnlift = c.mirror.staticModule("scala.meta.internal.quasiquotes.ast.Unlift")
+  val InternalLift = c.mirror.staticModule("scala.meta.internal.quasiquotes.Lift")
+  val InternalUnlift = c.mirror.staticModule("scala.meta.internal.quasiquotes.Unlift")
   val QuasiquotePrefix = c.freshName("quasiquote")
 
   def apply(args: ReflectTree*)(dialect: ReflectTree): ReflectTree = expand(dialect)
@@ -74,7 +74,7 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
 
   private def instantiateParser(interpolator: ReflectSymbol): MetaParser = {
     val parserModule = interpolator.owner.owner.companion
-    val metaPackageClass = Class.forName("scala.meta.package", true, classOf[scala.meta.Tree].getClassLoader)
+    val metaPackageClass = Class.forName("scala.meta.quasiquotes.api", true, this.getClass.getClassLoader)
     val parserModuleGetter = metaPackageClass.getDeclaredMethod(parserModule.name.toString)
     val parserModuleInstance = parserModuleGetter.invoke(null)
     val parserMethod = parserModuleInstance.getClass.getDeclaredMethods().find(_.getName == "parse").head

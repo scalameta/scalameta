@@ -36,10 +36,10 @@ private[meta] trait GenericParseApi {
   val ParseException = scala.meta.syntactic.ParseException
 
   implicit class XtensionParseInputLike[T](inputLike: T) {
-    def parse[U](implicit convert: Convert[T, Input], parse: Parse[U]): U = {
+    def parse[U](implicit convert: Convert[T, Input], dialect: Dialect, parse: Parse[U]): U = {
       parse(convert(inputLike))
     }
   }
 }
 
-object api extends SyntacticApi
+object treeApi extends SyntacticApi

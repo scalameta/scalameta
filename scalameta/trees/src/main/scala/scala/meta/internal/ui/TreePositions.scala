@@ -11,7 +11,7 @@ import scala.annotation.implicitNotFound
 import scala.collection.mutable.StringBuilder
 import scala.Console._
 import scala.meta.ui.Syntax
-import scala.meta.syntactic.api._
+import scala.meta.syntactic.treeApi._
 
 @root trait PositionStyle
 object PositionStyle {

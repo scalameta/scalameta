@@ -6,7 +6,7 @@ import java.security.MessageDigest
 import scala.meta.Dialect
 import scala.meta.Source
 import scala.meta.syntactic.Content
-import scala.meta.syntactic.api._
+import scala.meta.syntactic.treeApi._
 import scala.meta.internal.ui.TopLevel
 import scala.meta.internal.semantic._
 import org.scalameta.data._

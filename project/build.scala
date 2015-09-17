@@ -13,9 +13,24 @@ object build extends Build {
   ) settings (
     sharedSettings : _*
   ) settings (
-    test in Test := (test in tests in Test).value,
     packagedArtifacts := Map.empty
-  ) aggregate (foundation, exceptions, dialects, interactive, parsers, prettyprinters, quasiquotes, scalameta, semantic, taxonomic, tokenizers, tokenquasiquotes, tql, trees, scalahost, tests)
+  ) aggregate (
+    foundation,
+    dialects,
+    exceptions,
+    interactive,
+    parsers,
+    prettyprinters,
+    quasiquotes,
+    scalameta,
+    semantic,
+    taxonomic,
+    tokenizers,
+    tokenquasiquotes,
+    tql,
+    trees,
+    scalahost
+  )
 
   lazy val foundation = Project(
     id   = "foundation",
@@ -62,7 +77,7 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     description := "Scala.meta's default implementation of the Parse[T] typeclass"
-  ) dependsOn (foundation, exceptions, trees, tokens)
+  ) dependsOn (foundation, exceptions, trees, tokens, tokenizers % "test")
 
   lazy val prettyprinters = Project(
     id   = "prettyprinters",
@@ -141,7 +156,7 @@ object build extends Build {
   ) settings (
     description := "Scala.meta's tree query language (basic and extended APIs)",
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided")
-  ) dependsOn (foundation, exceptions, trees)
+  ) dependsOn (foundation, exceptions, trees, parsers % "test", quasiquotes % "test")
 
   lazy val trees = Project(
     id   = "trees",
@@ -175,20 +190,6 @@ object build extends Build {
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _)
   ) dependsOn (scalameta)
 
-  lazy val tests = Project(
-    id   = "tests",
-    base = file("tests")
-  ) settings (
-    sharedSettings: _*
-  ) settings (
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _),
-    libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.3" % "test",
-    libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
-    packagedArtifacts := Map.empty
-  ) settings (
-    exposeClasspaths("tests"): _*
-  ) dependsOn (foundation, scalameta, scalahost)
-
   lazy val sharedSettings = Defaults.defaultSettings ++ Seq(
     scalaVersion := ScalaVersion,
     crossVersion := CrossVersion.binary,
@@ -196,6 +197,9 @@ object build extends Build {
     organization := "org.scalameta",
     resolvers += Resolver.sonatypeRepo("snapshots"),
     resolvers += Resolver.sonatypeRepo("releases"),
+    addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0-M5" cross CrossVersion.full),
+    libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.3" % "test",
+    libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
     publishMavenStyle := true,
     publishArtifact in Compile := false,
     publishArtifact in Test := false,
@@ -253,8 +257,7 @@ object build extends Build {
           <url>http://den.sh</url>
         </developer>
       </developers>
-    ),
-    addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0-M5" cross CrossVersion.full)
+    )
   )
 
   lazy val publishableSettings = sharedSettings ++ Seq(
