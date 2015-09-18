@@ -38,14 +38,12 @@ package scala.meta {
         // 1) a tree can have no tokens (e.g. a synthetic primary constructor), but we still need to compute a position from it
         // 2) if a tree is parsed from Input.Virtual, then we can't really say that it has any position
         // TODO: compute something sensible for Position.point
-        // TODO: WorkaroundTokens is necessary, because otherwise we get a patmat warning
-        import scala.meta.tokens.{Tokens => WorkaroundTokens}
         tree.tokens match {
-          case WorkaroundTokens.Slice(WorkaroundTokens.Tokenized(content, _, tokens @ _*), from, until) =>
+          case Tokens.Slice(Tokens.Tokenized(content, _, tokens @ _*), from, until) =>
             Position.Range(content, tokens(from).position.start, tokens(from).position.start, tokens(until - 1).position.end)
-          case other @ WorkaroundTokens.Slice(basis, from, _) =>
+          case other @ Tokens.Slice(basis, from, _) =>
             Position.Assorted(other, basis(from).position.start)
-          case WorkaroundTokens.Tokenized(content, _, tokens @ _*) =>
+          case Tokens.Tokenized(content, _, tokens @ _*) =>
             Position.Range(content, tokens.head.position.start, tokens.head.position.start, tokens.last.position.end)
           case other =>
             Position.Assorted(other, other.head.position.start)
