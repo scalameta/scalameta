@@ -21,7 +21,7 @@ class RootMacros(val c: Context) extends AstReflection {
   lazy val Flags = tq"_root_.scala.meta.internal.flags.`package`.Flags"
   lazy val TYPECHECKED = q"_root_.scala.meta.internal.flags.`package`.TYPECHECKED"
   lazy val ZERO = q"_root_.scala.meta.internal.flags.`package`.ZERO"
-  lazy val Tokens = tq"_root_.scala.meta.syntactic.Tokens"
+  lazy val Tokens = tq"_root_.scala.meta.tokens.Tokens"
   lazy val Environment = tq"_root_.scala.meta.internal.semantic.Environment"
   lazy val Denotation = tq"_root_.scala.meta.internal.semantic.Denotation"
   lazy val Typing = tq"_root_.scala.meta.internal.semantic.Typing"

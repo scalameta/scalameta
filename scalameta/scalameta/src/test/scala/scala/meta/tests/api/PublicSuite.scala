@@ -5,13 +5,11 @@ import org.scalatest._
 import org.scalameta.tests._
 
 class PublicSuite extends FunSuite {
-  // TODO: figure out how scalac manages to find the `load` extension method
-  // without scala.meta._ or scala.meta.interactive._ being imported
   test("interactive APIs without import") {
     assert(typecheckError("""
       implicit val c: scala.meta.interactive.Context = ???
       c.load(??? : scala.meta.taxonomic.Artifact)
-    """) === "")
+    """) === "method load in trait Context cannot be accessed in scala.meta.interactive.Context")
   }
 
   test("interactive APIs when everything's correct") {
@@ -22,19 +20,26 @@ class PublicSuite extends FunSuite {
     """) === "")
   }
 
-  // TODO: figure out how scalac manages to find the `load` extension method
-  // without scala.meta._ or scala.meta.interactive._ being imported
   test("interactive context APIs") {
     assert(typecheckError("""
       (??? : scala.meta.interactive.Context).load(??? : scala.meta.taxonomic.Artifact)
-    """) === "")
+    """) === "method load in trait Context cannot be accessed in scala.meta.interactive.Context")
   }
 
+  // TODO: wat is this?!
   test("taxonomic APIs without import") {
     assert(typecheckError("""
       val domain: scala.meta.taxonomic.Domain = ???
       domain.sources
-    """) === "")
+    """) === """
+      |type mismatch;
+      | found   : domain.type (with underlying type scala.meta.taxonomic.Domain)
+      | required: ?{def sources: ?}
+      |Note that implicit conversions are not applicable because they are ambiguous:
+      | both method XtensionTaxonomicDomain in trait Api of type (domain: scala.meta.taxonomic.Domain)Api.this.XtensionTaxonomicDomain
+      | and method XtensionTaxonomicDomain in trait Api of type (domain: scala.meta.taxonomic.Domain)Api.this.XtensionTaxonomicDomain
+      | are possible conversion functions from domain.type to ?{def sources: ?}
+    """.trim.stripMargin)
   }
 
   test("taxonomic APIs without context") {
@@ -359,7 +364,7 @@ class PublicSuite extends FunSuite {
     assert(typecheckError("""
       import scala.meta._
       1.parse[Term]
-    """) === "don't know how to convert Int to scala.meta.syntactic.Input")
+    """) === "don't know how to convert Int to scala.meta.inputs.Input")
   }
 
   test("parse without dialect") {
@@ -415,7 +420,7 @@ class PublicSuite extends FunSuite {
     assert(typecheckError("""
       import scala.meta._
       1.tokens
-    """) === "don't know how to convert Int to scala.meta.syntactic.Content")
+    """) === "don't know how to convert Int to scala.meta.inputs.Content")
   }
 
   test("tokens without dialect") {

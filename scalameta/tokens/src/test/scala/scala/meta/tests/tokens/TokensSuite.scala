@@ -1,7 +1,7 @@
 package scala.meta.tests
 package tokens
 
-import scala.meta.syntactic.{Token, Tokens}
+import scala.meta.tokens._
 
 // NOTE: don't run anything, just make sure that stuff compiles
 class TokensSuite {

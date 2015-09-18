@@ -18,7 +18,7 @@ import scala.tools.asm._
 import scala.meta.internal.tasty._
 import scala.meta.internal.ast.mergeTrees
 import scala.meta.internal.taxonomic._
-import scala.meta.syntactic.parseApi._
+import scala.meta.parsers._
 import org.apache.ivy.plugins.resolver._
 import org.scalameta.contexts._
 import org.scalameta.invariants._

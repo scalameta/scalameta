@@ -29,7 +29,7 @@ import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
 import scala.meta.internal.{semantic => s}
 import scala.meta.internal.flags._
-import scala.meta.internal.ui.Summary
+import scala.meta.internal.prettyprinters._
 
 @context(translateExceptions = false)
 class Proxy[G <: ScalaGlobal](val global: G, initialDomain: Domain = Domain())

@@ -11,7 +11,8 @@ import scala.meta.internal.{ast => impl}
 package object tql extends Traverser[Tree]
                       with Combinators[Tree]
                       with SyntaxEnhancer[Tree]
-                      with CollectionLikeUI[Tree] {
+                      with CollectionLikeUI[Tree]
+                      with tql.Api {
   def traverse[A : Monoid](tree: Tree, f: Matcher[A]): MatchResult[A] = {
     TraverserBuilder.buildFromTopSymbolDelegate[Tree, A](f,
       impl.Term.Name,

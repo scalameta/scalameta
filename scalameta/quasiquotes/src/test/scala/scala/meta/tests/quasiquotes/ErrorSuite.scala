@@ -9,7 +9,7 @@ class ErrorSuite extends FunSuite {
 
   test("val q\"type $name[$A] = $B\"") {
     assert(typecheckError("""
-      import scala.meta.quasiquotes.api._
+      import scala.meta.quasiquotes._
       import scala.meta.dialects.Scala211
       val q"type $name[$X] = $Y" = q"type List[+A] = List[A]"
     """) === """
@@ -21,7 +21,7 @@ class ErrorSuite extends FunSuite {
 
   test("q\"foo: _*\"") {
     assert(typecheckError("""
-      import scala.meta.quasiquotes.api._
+      import scala.meta.quasiquotes._
       import scala.meta.dialects.Scala211
       q"foo: _*"
     """) === """
@@ -33,7 +33,7 @@ class ErrorSuite extends FunSuite {
 
   test("q\"foo + class\"") {
     assert(typecheckError("""
-      import scala.meta.quasiquotes.api._
+      import scala.meta.quasiquotes._
       import scala.meta.dialects.Scala211
       q"foo + class"
     """) === """
@@ -45,7 +45,7 @@ class ErrorSuite extends FunSuite {
 
   test("q\"foo($x)\" when x has incompatible type") {
     assert(typecheckError("""
-      import scala.meta.quasiquotes.api._
+      import scala.meta.quasiquotes._
       import scala.meta.dialects.Scala211
       class Dummy
       val x = new Dummy
@@ -61,7 +61,7 @@ class ErrorSuite extends FunSuite {
 
   test("q\"$x\" when x has incompatible type") {
     assert(typecheckError("""
-      import scala.meta.quasiquotes.api._
+      import scala.meta.quasiquotes._
       import scala.meta.dialects.Scala211
       class Dummy
       val x = new Dummy
@@ -77,7 +77,7 @@ class ErrorSuite extends FunSuite {
 
   test("q\"foo(..$xs)\" when xs has incompatible type") {
     assert(typecheckError("""
-      import scala.meta.quasiquotes.api._
+      import scala.meta.quasiquotes._
       import scala.meta.dialects.Scala211
       class Dummy
       val xs = List(new Dummy)
@@ -93,7 +93,7 @@ class ErrorSuite extends FunSuite {
 
   test("q\"foo($xs)\" when xs has incompatible type") {
     assert(typecheckError("""
-      import scala.meta.quasiquotes.api._
+      import scala.meta.quasiquotes._
       import scala.meta.dialects.Scala211
       val xs = List(q"x")
       q"foo($xs)"
@@ -108,7 +108,7 @@ class ErrorSuite extends FunSuite {
 
   test("q\"$xs\" when xs has incompatible type") {
     assert(typecheckError("""
-      import scala.meta.quasiquotes.api._
+      import scala.meta.quasiquotes._
       import scala.meta.dialects.Scala211
       val xs = List(q"x")
       q"$xs"
@@ -123,7 +123,7 @@ class ErrorSuite extends FunSuite {
 
   test("q\"...$xss\"") {
     assert(typecheckError("""
-      import scala.meta.quasiquotes.api._
+      import scala.meta.quasiquotes._
       import scala.meta.dialects.Scala211
       val xss = List(List(q"x"))
       q"...$xss"
@@ -138,7 +138,7 @@ class ErrorSuite extends FunSuite {
 
   test("q\"..$xss\"") {
     assert(typecheckError("""
-      import scala.meta.quasiquotes.api._
+      import scala.meta.quasiquotes._
       import scala.meta.dialects.Scala211
       val xss = List(List(q"x"))
       q"..$xss"
@@ -151,7 +151,7 @@ class ErrorSuite extends FunSuite {
 
   test("q\"$xss\"") {
     assert(typecheckError("""
-      import scala.meta.quasiquotes.api._
+      import scala.meta.quasiquotes._
       import scala.meta.dialects.Scala211
       val xss = List(List(q"x"))
       q"$xss"
@@ -168,7 +168,7 @@ class ErrorSuite extends FunSuite {
     // FIXME: looks our new scheme of ast reification breaks quasiquote error reporting
     // the failure doesn't look severe, so I'm just going to comment out this test for the time being
     // assert(typecheckError("""
-    //   import scala.meta.quasiquotes.api._
+    //   import scala.meta.quasiquotes._
     //   import scala.meta.dialects.Scala211
     //   val terms = List(q"T", q"U")
     //   q"foo[..$terms]"
@@ -183,7 +183,7 @@ class ErrorSuite extends FunSuite {
 
   test("tuple unquoting does not work without parentheses") {
     assert(typecheckError("""
-      import scala.meta.quasiquotes.api._
+      import scala.meta.quasiquotes._
       import scala.meta.dialects.Scala211
       val l = List(q"x: Int", q"y: Y")
       q"..$l"
@@ -196,7 +196,7 @@ class ErrorSuite extends FunSuite {
 
   test("q\"foo($x, ..$ys, $z, ..$ts)\"") {
     assert(typecheckError("""
-      import scala.meta.quasiquotes.api._
+      import scala.meta.quasiquotes._
       import scala.meta.dialects.Scala211
       val tree = q"foo(1, 2, 3)"
       tree match {
@@ -218,7 +218,7 @@ class ErrorSuite extends FunSuite {
 
   test("q\"\"\" \"$x\" \"\"\"\"") {
     assert(typecheckError("""
-      import scala.meta.quasiquotes.api._
+      import scala.meta.quasiquotes._
       import scala.meta.dialects.Scala211
       val x = "hello"
       qQQQ "$x" QQQ
@@ -231,7 +231,7 @@ class ErrorSuite extends FunSuite {
 
   test("q\"val $name = foo\"") {
     assert(typecheckError("""
-      import scala.meta.quasiquotes.api._
+      import scala.meta.quasiquotes._
       import scala.meta.dialects.Scala211
       val name = q"x"
       q"val $name = foo"
@@ -244,7 +244,7 @@ class ErrorSuite extends FunSuite {
 
   test("q\"var $name = foo\"") {
     assert(typecheckError("""
-      import scala.meta.quasiquotes.api._
+      import scala.meta.quasiquotes._
       import scala.meta.dialects.Scala211
       val name = q"x"
       q"var $name = foo"
@@ -257,7 +257,7 @@ class ErrorSuite extends FunSuite {
 
   test("p\"$name: T\"") {
     assert(typecheckError("""
-      import scala.meta.quasiquotes.api._
+      import scala.meta.quasiquotes._
       import scala.meta.dialects.Scala211
       val name = q"x"
       p"$name: T"
@@ -270,7 +270,7 @@ class ErrorSuite extends FunSuite {
 
   test("""q"$qname" when qname has incompatible type """) {
     assert(typecheckError("""
-      import scala.meta.quasiquotes.api._
+      import scala.meta.quasiquotes._
       import scala.meta.dialects.Scala211
       val name = t"x"
       q"$name"
@@ -285,7 +285,7 @@ class ErrorSuite extends FunSuite {
 
   test("""q"expr: $tpe" when tpe has incompatible type """) {
     assert(typecheckError("""
-      import scala.meta.quasiquotes.api._
+      import scala.meta.quasiquotes._
       import scala.meta.dialects.Scala211
       val tpe = q"T"
       q"expr: $tpe"
@@ -300,7 +300,7 @@ class ErrorSuite extends FunSuite {
 
   test("""q"$expr: tpe" when expr has incompatible type """) {
     assert(typecheckError("""
-      import scala.meta.quasiquotes.api._
+      import scala.meta.quasiquotes._
       import scala.meta.dialects.Scala211
       val expr = t"x"
       q"$expr: tpe"
@@ -315,7 +315,7 @@ class ErrorSuite extends FunSuite {
 
   test("""q"expr: tpes" """) {
     assert(typecheckError("""
-      import scala.meta.quasiquotes.api._
+      import scala.meta.quasiquotes._
       import scala.meta.dialects.Scala211
       val tpes = List(q"T")
       q"expr: ..$tpes"
@@ -328,7 +328,7 @@ class ErrorSuite extends FunSuite {
 
   test("""q"expr.$name" when name has incompatible type """) {
     assert(typecheckError("""
-      import scala.meta.quasiquotes.api._
+      import scala.meta.quasiquotes._
       import scala.meta.dialects.Scala211
       val name = t"T"
       q"expr.$name"
@@ -343,7 +343,7 @@ class ErrorSuite extends FunSuite {
 
   test("""q"$expr.name" when expr has incompatible type """) {
     assert(typecheckError("""
-      import scala.meta.quasiquotes.api._
+      import scala.meta.quasiquotes._
       import scala.meta.dialects.Scala211
       val expr = t"T"
       q"$expr.name"
@@ -358,7 +358,7 @@ class ErrorSuite extends FunSuite {
 
   test("""q"expr.names" """) {
     assert(typecheckError("""
-      import scala.meta.quasiquotes.api._
+      import scala.meta.quasiquotes._
       import scala.meta.dialects.Scala211
       val names = List(q"T")
       q"expr. ..$names"
@@ -371,7 +371,7 @@ class ErrorSuite extends FunSuite {
 
   test("""p"$pname @ $apat"""") {
     assert(typecheckError("""
-      import scala.meta.quasiquotes.api._
+      import scala.meta.quasiquotes._
       import scala.meta.dialects.Scala211
       val pname = p"`x`"
       val apat = p"y"
@@ -387,7 +387,7 @@ class ErrorSuite extends FunSuite {
 
   test("""p"$ref[..$tpes](..$apats)""") {
     assert(typecheckError("""
-      import scala.meta.quasiquotes.api._
+      import scala.meta.quasiquotes._
       import scala.meta.dialects.Scala211
       val p"$ref[..$tpes](..$apats)" = p"x[A, B]"
     """) === """
@@ -399,7 +399,7 @@ class ErrorSuite extends FunSuite {
 
   test("""p"$pat: $ptpe"""") {
     assert(typecheckError("""
-      import scala.meta.quasiquotes.api._
+      import scala.meta.quasiquotes._
       import scala.meta.dialects.Scala211
       val pat = p"`x`"
       val ptpe = pt"Y"
@@ -413,7 +413,7 @@ class ErrorSuite extends FunSuite {
 
   test("p\"case $X: T =>\"") {
     assert(typecheckError("""
-      import scala.meta.quasiquotes.api._
+      import scala.meta.quasiquotes._
       import scala.meta.dialects.Scala211
       val p"case $X: T => " = p"case x: T =>"
     """) === """
@@ -425,7 +425,7 @@ class ErrorSuite extends FunSuite {
 
 //  test("""pt"$ptpe[..$ptpes]""") { // TODO review after #216 resolved
 //    assert(typecheckError("""
-//      import scala.meta.quasiquotes.api._
+//      import scala.meta.quasiquotes._
 //      import scala.meta.dialects.Scala211
 //      val pt"$ptpe[..$ptpes]" = pt"x[y, z]"
 //    """).contains("found that tpe.isInstanceOf[Pat.Var.Type].`unary_!` is true"))
@@ -433,7 +433,7 @@ class ErrorSuite extends FunSuite {
 
 //  test("""pt"..$ptpes { ..$stats }"""") { // TODO review after #216 resolved
 //    assert(typecheckError("""
-//      import scala.meta.quasiquotes.api._
+//      import scala.meta.quasiquotes._
 //      import scala.meta.dialects.Scala211
 //      val pt"..$ptpes { ..$stats }" = pt"x with y { val a: A; val b: B }"
 //    """).contains("found that tpes.forall(((tpe: scala.meta.internal.ast.Pat.Type) => tpe.isInstanceOf[Pat.Var.Type].`unary_!`.&&(tpe.isInstanceOf[Pat.Type.Wildcard].`unary_!`))) is false"))
@@ -441,7 +441,7 @@ class ErrorSuite extends FunSuite {
 
 //  test("""pt"$ptpe forSome { ..$stats }"""") { // TODO review after #216 resolved
 //    assert(typecheckError("""
-//      import scala.meta.quasiquotes.api._
+//      import scala.meta.quasiquotes._
 //      import scala.meta.dialects.Scala211
 //      val pt"$ptpe forSome { ..$stats }" = pt"x forSome { val a: A }"
 //    """).contains("found that tpe.isInstanceOf[Pat.Var.Type].`unary_!` is true"))
@@ -449,7 +449,7 @@ class ErrorSuite extends FunSuite {
 
 //  test("""pt"$ptpe ..@$annots"""") { // TODO review after #216 resolved
 //    assert(typecheckError("""
-//      import scala.meta.quasiquotes.api._
+//      import scala.meta.quasiquotes._
 //      import scala.meta.dialects.Scala211
 //      val pt"$ptpe ..@$annots" = pt"x @q @w"
 //    """).contains("found that tpe.isInstanceOf[Pat.Var.Type].`unary_!` is true"))
@@ -457,7 +457,7 @@ class ErrorSuite extends FunSuite {
 
   test("""q"..$mods def this(...$paramss) = $expr"""") {
     assert(typecheckError("""
-      import scala.meta.quasiquotes.api._
+      import scala.meta.quasiquotes._
       import scala.meta.dialects.Scala211
       q"private final def this(x: X, y: Y) = foo"
     """) === """

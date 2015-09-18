@@ -10,7 +10,7 @@ import scala.tools.nsc.{Global => ScalaGlobal}
 import scala.reflect.internal.Flags._
 import scala.meta.internal.{ast => m}
 import scala.meta.internal.{semantic => s}
-import scala.meta.internal.parsers.Helpers.XtensionTermOps
+import scala.meta.internal.ast.Helpers.XtensionTermOps
 import scala.meta.internal.hosts.scalac.reflect._
 
 // This module exposes a method to convert from scala.meta types to scala.reflect types.

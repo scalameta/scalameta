@@ -3,9 +3,9 @@ package parsers
 
 import org.scalatest._
 import scala.meta._
-import scala.meta.syntactic.Input
+import scala.meta.inputs._
 import scala.meta.internal.{ast => impl}
-import scala.meta.internal.parsers.ScalametaParser
+import scala.meta.internal.parsers._
 import MoreHelpers._
 
 class ParseSuite extends FunSuite with CommonTrees {

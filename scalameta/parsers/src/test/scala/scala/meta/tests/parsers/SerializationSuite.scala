@@ -5,7 +5,7 @@ import org.scalatest._
 import java.io._
 import scala.meta._
 import scala.meta.dialects.Scala211
-import scala.meta.syntactic.parseApi._
+import scala.meta.parsers._
 
 // TODO: find a way to move this test back to trees
 class SerializationSuite extends FunSuite {

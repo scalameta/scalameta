@@ -6,7 +6,7 @@ import org.scalameta.adt
 import org.scalameta.adt._
 import org.scalameta.show._
 import org.scalameta.invariants._
-import scala.meta.internal.ui.Attributes
+import scala.meta.internal.prettyprinters._
 
 @monadicRoot trait Expansion
 object Expansion {

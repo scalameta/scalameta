@@ -3,8 +3,9 @@ package tokenquasiquotes
 
 import org.scalameta.tokens._
 
-private[meta] trait TokenQuasiquoteApi {
+private[meta] trait Api {
   @quasiquote('toks) implicit class XtensionQuasiquoteTokens(ctx: StringContext)
 }
 
-object api extends TokenQuasiquoteApi
+private[meta] trait Aliases {
+}

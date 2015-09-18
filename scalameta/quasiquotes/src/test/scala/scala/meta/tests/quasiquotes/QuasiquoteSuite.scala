@@ -4,8 +4,8 @@ package quasiquotes
 import org.scalatest._
 import scala.meta._
 import scala.meta.dialects.Scala211
-import scala.meta.quasiquotes.api._
-import scala.meta.ui.api._
+import scala.meta.quasiquotes._
+import scala.meta.prettyprinters._
 
 class QuasiquoteSuite extends FunSuite {
   test("rank-0 liftables") {

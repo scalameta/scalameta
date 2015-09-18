@@ -34,7 +34,7 @@ class QuasiquoteMacros(val c: Context) {
       val qparser = {
         val qunsafeResults = qtypes.map(qtype => q"""
           // TODO: Explicitly spell out the desugaring
-          import _root_.scala.meta.syntactic.parseApi._
+          import _root_.scala.meta.parsers._
           input.parse[$qtype]
         """)
         val qsafeResults = qunsafeResults.map(qunsafeParser => q"_root_.scala.util.Try($qunsafeParser)")
@@ -47,7 +47,7 @@ class QuasiquoteMacros(val c: Context) {
         """)
         var qsafeResult = gsafeResultsWithLogging.reduce((acc, curr) => q"$acc.orElse($curr)")
         val qparseResult = if (qunsafeResults.length == 1) qunsafeResults.head else q"$qsafeResult.get"
-        q"private[meta] def parse(input: _root_.scala.meta.syntactic.Input)(implicit dialect: _root_.scala.meta.Dialect) = $qparseResult"
+        q"private[meta] def parse(input: _root_.scala.meta.inputs.Input)(implicit dialect: _root_.scala.meta.Dialect) = $qparseResult"
       }
       val stats1 = stats :+ qmodule
       val mstats1 = mstats :+ qparser

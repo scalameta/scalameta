@@ -14,7 +14,7 @@ class QuasiquoteMacros(val c: Context) {
   val Any = tq"_root_.scala.Any"
   val ReificationMacros = q"_root_.scala.meta.internal.tokenquasiquotes.ReificationMacros"
   val Dialect = tq"_root_.scala.meta.Dialect"
-  val Tokens = tq"_root_.scala.meta.syntactic.Tokens"
+  val Tokens = tq"_root_.scala.meta.tokens.Tokens"
   def impl(annottees: c.Tree*): c.Tree = {
     val q"new $_[..$qtypes](scala.Symbol(${qname: String})).macroTransform(..$_)" = c.macroApplication
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {

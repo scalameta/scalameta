@@ -4,12 +4,12 @@ package tokens
 import scala.meta._
 import org.scalatest._
 
-import scala.meta.internal.ui.inferTokens
 import scala.meta.dialects.Scala211
-import scala.meta.syntactic.parseApi._
-import scala.meta.syntactic.tokenApi._
-import scala.meta.syntactic.tokenizeApi._
-import scala.meta.ui.api._
+import scala.meta.parsers._
+import scala.meta.tokens._
+import scala.meta.tokenizers._
+import scala.meta.prettyprinters._
+import scala.meta.internal.prettyprinters.inferTokens
 
 import org.scalatest.FunSuite
 

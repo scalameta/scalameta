@@ -6,7 +6,7 @@ import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.meta.taxonomic.Artifact
 
-private[meta] trait InteractiveApi {
+private[meta] trait Api {
   type InteractiveContext = scala.meta.interactive.Context
 
   implicit class XtensionInteractiveContextLoadArtifacts(c: InteractiveContext) {
@@ -35,4 +35,5 @@ private[meta] trait InteractiveApi {
   }
 }
 
-object api extends InteractiveApi
+private[meta] trait Aliases {
+}

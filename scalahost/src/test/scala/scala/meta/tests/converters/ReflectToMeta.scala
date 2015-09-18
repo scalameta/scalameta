@@ -5,9 +5,9 @@ import org.scalatest._
 import java.io._
 import scala.compat.Platform.EOL
 import scala.{meta => m}
-import scala.meta.syntactic.parseApi._
 import scala.meta.dialects.Scala211
-import scala.meta.ui.Syntax
+import scala.meta.parsers._
+import scala.meta.prettyprinters._
 import scala.meta.internal.ast.mergeTrees
 import scala.meta.internal.ast.MergeException
 import scala.meta.internal.hosts.scalac.converters.ConvertException

@@ -3,7 +3,7 @@ package parsers
 
 import scala.meta.internal.ast._, Term.{Name => TermName, _}, Type.{Name => TypeName}, Name.{Anonymous, Indeterminate}
 import scala.meta.dialects.Scala211
-import scala.meta.syntactic.ParseException
+import scala.meta.parsers.common.ParseException
 
 class TermSuite extends ParseSuite {
   test("x") {

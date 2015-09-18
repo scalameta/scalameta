@@ -14,8 +14,11 @@ package object internal {
 
   class Macros(val c: Context) {
     import c.universe._
-    lazy val StaticTokenClass = rootMirror.staticModule("scala.meta.syntactic.Token").info.decl(TypeName("Static")).asClass
-    lazy val DynamicTokenClass = rootMirror.staticModule("scala.meta.syntactic.Token").info.decl(TypeName("Dynamic")).asClass
+
+    lazy val TokenModule = rootMirror.staticModule("scala.meta.tokens.Token")
+    lazy val StaticTokenClass = TokenModule.info.decl(TypeName("Static")).asClass
+    lazy val DynamicTokenClass = TokenModule.info.decl(TypeName("Dynamic")).asClass
+
     def staticDynamicCheck[T](implicit T: c.WeakTypeTag[T]) = {
       if ((T.tpe <:< StaticTokenClass.toType) && (T.tpe <:< DynamicTokenClass.toType)) c.abort(c.enclosingPosition, s"${T.tpe} is classified as both static and dynamic token")
       if (!(T.tpe <:< StaticTokenClass.toType) && !(T.tpe <:< DynamicTokenClass.toType)) c.abort(c.enclosingPosition, s"${T.tpe} is classified as neither static nor dynamic token")

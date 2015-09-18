@@ -2,10 +2,10 @@ package scala.meta.tests
 package mergetrees
 
 import org.scalatest._
-import scala.meta.ui.api._
+import scala.meta.prettyprinters._
 import scala.meta.internal.semantic._
 import scala.meta.internal.semantic.RuntimeConverters._
-import scala.meta.internal.ui.Attributes
+import scala.meta.internal.prettyprinters._
 
 class InternalSuite extends FunSuite {
   test("RuntimeConverters work correctly in weird classloader configurations") {

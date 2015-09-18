@@ -15,15 +15,16 @@ import org.scalameta.ast.{Liftables => AstLiftables, Reflection => AstReflection
 import org.scalameta.invariants._
 import org.scalameta.unreachable
 import org.scalameta.debug._
-import scala.meta.syntactic.treeApi._
-import scala.meta.syntactic.parseApi._
-import scala.meta.syntactic.tokenizeApi._
-import scala.meta.ui.api._
+import scala.meta.parsers._
+import scala.meta.parsers.common.ParseException
+import scala.meta.tokenizers._
+import scala.meta.tokenizers.common.TokenizeException
+import scala.meta.prettyprinters._
 import scala.meta.internal.dialects.InstantiateDialect
 import scala.meta.internal.{semantic => s}
 import scala.meta.internal.semantic.{Denotation => MetaDenotation, Converters => SemanticConverters, _}
 import scala.meta.internal.semantic.{Symbol => MetaSymbol, Prefix => MetaPrefix, Signature => MetaSignature, _}
-import scala.meta.internal.parsers.Helpers._
+import scala.meta.internal.ast.Helpers._
 import scala.compat.Platform.EOL
 
 // TODO: ideally, we would like to bootstrap these macros on top of scala.meta
@@ -37,7 +38,8 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
   import c.universe.{Tree => _, Symbol => _, Type => _, Position => _, _}
   import c.universe.{Tree => ReflectTree, Symbol => ReflectSymbol, Type => ReflectType, Position => ReflectPosition, Bind => ReflectBind}
   import scala.meta.{Tree => MetaTree, Type => MetaType, Dialect => MetaDialect}
-  import scala.meta.syntactic.{Input => MetaInput, Content => MetaContent, Position => MetaPosition, Token => MetaToken, Tokens => MetaTokens}
+  import scala.meta.inputs.{Input => MetaInput, Content => MetaContent, Position => MetaPosition}
+  import scala.meta.tokens.{Token => MetaToken, Tokens => MetaTokens}
   import scala.meta.Term.{Name => MetaTermName}
   type MetaParser = (MetaInput, MetaDialect) => MetaTree
   import scala.{meta => api}
@@ -74,8 +76,8 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
 
   private def instantiateParser(interpolator: ReflectSymbol): MetaParser = {
     val parserModule = interpolator.owner.owner.companion
-    val metaPackageClass = Class.forName("scala.meta.quasiquotes.api", true, this.getClass.getClassLoader)
-    val parserModuleGetter = metaPackageClass.getDeclaredMethod(parserModule.name.toString)
+    val parsersModule = Class.forName("scala.meta.quasiquotes.package", true, this.getClass.getClassLoader)
+    val parserModuleGetter = parsersModule.getDeclaredMethod(parserModule.name.toString)
     val parserModuleInstance = parserModuleGetter.invoke(null)
     val parserMethod = parserModuleInstance.getClass.getDeclaredMethods().find(_.getName == "parse").head
     (input: MetaInput, dialect: MetaDialect) => {

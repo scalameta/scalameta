@@ -2,8 +2,9 @@ import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import org.scalameta.ast._
 import scala.{meta => api}
-import scala.meta.ui._
-import scala.meta.syntactic.Tokens
+import scala.meta.inputs._
+import scala.meta.tokens._
+import scala.meta.prettyprinters._
 import scala.meta.internal.{equality => e}
 
 package scala.meta {
@@ -16,17 +17,43 @@ package scala.meta {
     final override def canEqual(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
     final override def equals(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
     final override def hashCode: Int = System.identityHashCode(this)
-    final override def toString = scala.meta.internal.ui.toString(this)
+    final override def toString = scala.meta.internal.prettyprinters.toString(this)
   }
 
   object Tree {
-    implicit def showStructure[T <: Tree]: Structure[T] = scala.meta.internal.ui.TreeStructure.apply[T]
-    implicit def showSyntax[T <: Tree](implicit dialect: Dialect): Syntax[T] = scala.meta.internal.ui.TreeSyntax.apply[T](dialect)
-    // implicit def showSemantics[T <: Tree](implicit c: SemanticContext): Semantics[T] = scala.meta.internal.ui.TreeSemantics.apply[T](c)
+    implicit def showStructure[T <: Tree]: Structure[T] = scala.meta.internal.prettyprinters.TreeStructure.apply[T]
+    implicit def showSyntax[T <: Tree](implicit dialect: Dialect): Syntax[T] = scala.meta.internal.prettyprinters.TreeSyntax.apply[T](dialect)
+    // implicit def showSemantics[T <: Tree](implicit c: SemanticContext): Semantics[T] = scala.meta.internal.prettyprinters.TreeSemantics.apply[T](c)
 
     private[meta] implicit class XtensionSemanticEquality[T1 <: Tree](tree1: T1) {
       def ===[T2 <: Tree](tree2: T2)(implicit ev: e.AllowEquality[T1, T2]): Boolean = e.Semantic.equals(tree1, tree2)
       def =/=[T2 <: Tree](tree2: T2)(implicit ev: e.AllowEquality[T1, T2]): Boolean = !e.Semantic.equals(tree1, tree2)
+    }
+
+    implicit class XtensionSyntacticTree(tree: Tree) {
+      def input: Input = tree.tokens.input
+      def dialect: Dialect = tree.tokens.dialect
+      def position: Position = {
+        // NOTE: can't do Position(tree.tokens.head, tree.tokens.last) because of two reasons:
+        // 1) a tree can have no tokens (e.g. a synthetic primary constructor), but we still need to compute a position from it
+        // 2) if a tree is parsed from Input.Virtual, then we can't really say that it has any position
+        // TODO: compute something sensible for Position.point
+        // TODO: WorkaroundTokens is necessary, because otherwise we get a patmat warning
+        import scala.meta.tokens.{Tokens => WorkaroundTokens}
+        tree.tokens match {
+          case WorkaroundTokens.Slice(WorkaroundTokens.Tokenized(content, _, tokens @ _*), from, until) =>
+            Position.Range(content, tokens(from).position.start, tokens(from).position.start, tokens(until - 1).position.end)
+          case other @ WorkaroundTokens.Slice(basis, from, _) =>
+            Position.Assorted(other, basis(from).position.start)
+          case WorkaroundTokens.Tokenized(content, _, tokens @ _*) =>
+            Position.Range(content, tokens.head.position.start, tokens.head.position.start, tokens.last.position.end)
+          case other =>
+            Position.Assorted(other, other.head.position.start)
+        }
+      }
+      def start: Point = tree.position.start
+      def point: Point = tree.position.point
+      def end: Point = tree.position.end
     }
   }
 
@@ -110,7 +137,7 @@ package scala.meta.internal.ast {
   import org.scalameta.unreachable
   import scala.meta.internal.{ast => impl}
   import scala.meta.internal.semantic._
-  import scala.meta.internal.parsers.Helpers._
+  import scala.meta.internal.ast.Helpers._
 
   @branch trait Tree extends api.Tree
 

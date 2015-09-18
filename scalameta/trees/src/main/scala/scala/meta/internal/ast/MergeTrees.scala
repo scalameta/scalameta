@@ -9,14 +9,13 @@ import scala.reflect.{classTag, ClassTag}
 import scala.meta.internal.ast._
 import scala.meta.internal.semantic._
 import scala.meta.internal.semantic.RuntimeConverters._
-import scala.meta.internal.ui.Attributes
+import scala.meta.internal.prettyprinters._
 import org.scalameta.collections._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
 import org.scalameta.debug._
-import org.scalameta.show._
 import scala.meta.internal.{ast => m}
-import scala.meta.ui._
+import scala.meta.prettyprinters._
 
 object mergeTrees {
   // NOTE: "sy-" stands for "syntactic", "se-" stands for "semantic", "me-" stands for "merged".s

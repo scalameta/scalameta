@@ -2,9 +2,9 @@ package scala.meta.tests
 package ast
 
 import org.scalatest._
-import scala.meta.syntactic.tokenApi._
-import scala.meta.tokenquasiquotes.api._
-import scala.meta.ui.api._
+import scala.meta.tokens._
+import scala.meta.tokenquasiquotes._
+import scala.meta.prettyprinters._
 import scala.meta.internal.ast._
 import scala.meta.internal.semantic._
 import scala.meta.dialects.Scala211

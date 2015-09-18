@@ -4,8 +4,7 @@ package equality
 
 import org.scalameta.invariants._
 import org.scalameta.unreachable
-import scala.meta.semantic.{Context => SemanticContext}
-import scala.meta.semantic.api._
+import scala.meta.semantic._
 
 // TODO: I really don't like what I'm doing here.
 // See Semantic.scala for an explanation and future work.

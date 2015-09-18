@@ -4,9 +4,9 @@ package quasiquotes
 import org.scalatest._
 import scala.meta._
 import scala.meta.dialects.Scala211
-import scala.meta.syntactic.{Token, Tokens}
-import scala.meta.syntactic.Token._
-import scala.meta.tokenquasiquotes.api._
+import scala.meta.tokens._
+import scala.meta.tokens.Token._
+import scala.meta.tokenquasiquotes._
 
 class TokenQuasiquoteSuite extends FunSuite {
   test("`hello world` is correctly tokenized") {

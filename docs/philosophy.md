@@ -86,13 +86,13 @@ scala.meta.ParseException: illegal start of simple expression at class (0..4)
 ```
 
 The full list of tokens returned by the tokenizer can be found in
-[Token.scala](/scalameta/tokens/src/main/scala/scala/meta/syntactic/Token.scala).
+[Token.scala](/scalameta/tokens/src/main/scala/scala/meta/tokens/Token.scala).
 The full list of non-terminals that can be used as targets for the parser is provided
 as a list of implicit instances of the Parse[T] typeclass
-in [syntactic/Api.scala](/scalameta/parsers/src/main/scala/scala/meta/syntactic/Api.scala).
+in [syntactic/Api.scala](/scalameta/parsers/src/main/scala/scala/meta/parsers/Api.scala).
 
 As a quick remark, you can tokenize and parse anything that can be converted to
-an [Input](/scalameta/tokens/src/main/scala/scala/meta/syntactic/Input.scala) by the means of
+an [Input](/scalameta/tokens/src/main/scala/scala/meta/inputs/Input.scala) by the means of
 the [Convert](/foundation/src/main/scala/org/scalameta/convert/Convert.scala) typeclass.
 At the moment, it's just strings and files, but you can provide your own instances
 that will then seamlessly work with the existing API.

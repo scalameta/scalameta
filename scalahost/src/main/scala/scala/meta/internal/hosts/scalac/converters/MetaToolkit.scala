@@ -9,7 +9,7 @@ import scala.meta.internal.{ast => impl}
 import scala.meta.internal.ast._
 import scala.meta.internal.semantic._
 import scala.meta.{SemanticException, Semantics}
-import scala.meta.internal.ui.Attributes
+import scala.meta.internal.prettyprinters._
 
 trait MetaToolkit {
   implicit class RichMetaToolkitDenotation(denot: Denotation) {

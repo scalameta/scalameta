@@ -5,7 +5,7 @@ import scala.meta._
 import scala.meta.dialects.Scala211
 import scala.meta.internal.{ast => impl}
 import org.scalatest.FunSuite
-import scala.meta.tql.basicApi._
+import scala.meta.tql._
 
 class CollectionLikeUISuite extends FunSuite {
   // TODO: fixme

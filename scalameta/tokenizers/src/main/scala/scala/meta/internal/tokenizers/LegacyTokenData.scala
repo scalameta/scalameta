@@ -5,7 +5,7 @@ package tokenizers
 import scala.util.Try
 import LegacyToken._
 import Chars._
-import scala.meta.syntactic._
+import scala.meta.inputs._
 
 private[meta] trait LegacyTokenData {
   /** the input that is currently being tokenized */

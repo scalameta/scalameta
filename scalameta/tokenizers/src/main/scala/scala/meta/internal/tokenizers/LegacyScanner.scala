@@ -9,7 +9,7 @@ import scala.language.postfixOps
 import mutable.{ ListBuffer, ArrayBuffer }
 import Chars._
 import LegacyToken._
-import scala.meta.syntactic._
+import scala.meta.inputs._
 
 private[meta] class LegacyScanner(val content: Content, decodeUni: Boolean = true)(implicit val dialect: Dialect) {
   val curr: LegacyTokenData   = new LegacyTokenData {}

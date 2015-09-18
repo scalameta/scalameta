@@ -3,13 +3,7 @@ package quasiquotes
 
 import org.scalameta.ast._
 
-private[meta] trait QuasiquoteApi {
-  type Lift[O, I] = scala.meta.quasiquotes.Lift[O, I]
-  val Lift = scala.meta.quasiquotes.Lift
-
-  type Unlift[I, O] = scala.meta.quasiquotes.Unlift[I, O]
-  val Unlift = scala.meta.quasiquotes.Unlift
-
+private[meta] trait Api {
   // TODO: it would be ideal to have these as annotations on corresponding AST nodes
   // e.g. instead of `@branch trait Stat extends Tree`
   // we will have `@quasiquote('q) @branch trait Stat extends Tree`
@@ -33,4 +27,10 @@ private[meta] trait QuasiquoteApi {
   @quasiquote[Source]('source)         implicit class XtensionQuasiquoteSource(ctx: StringContext)
 }
 
-object api extends QuasiquoteApi
+private[meta] trait Aliases {
+  type Lift[O, I] = scala.meta.quasiquotes.Lift[O, I]
+  val Lift = scala.meta.quasiquotes.Lift
+
+  type Unlift[I, O] = scala.meta.quasiquotes.Unlift[I, O]
+  val Unlift = scala.meta.quasiquotes.Unlift
+}

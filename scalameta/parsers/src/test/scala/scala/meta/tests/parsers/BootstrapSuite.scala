@@ -9,7 +9,7 @@
 // import scala.meta.syntactic.parseApi._
 // import scala.meta.syntactic.tokenApi._
 // import scala.meta.syntactic.tokenizeApi._
-// import scala.meta.ui.api._
+// import scala.meta.prettyprinters._
 // import scala.meta.internal.ui.Positions
 //
 // class BootstrapSuite extends ParseSuite {

@@ -3,8 +3,8 @@ package parsers
 
 import scala.meta._
 import scala.meta.dialects.Scala211
-import scala.meta.ui.api._
-import scala.meta.internal.ui.Positions
+import scala.meta.prettyprinters._
+import scala.meta.internal.prettyprinters._
 
 class PositionSuite extends ParseSuite {
   test("1 + (2 / 3) * 4") {

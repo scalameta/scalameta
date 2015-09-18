@@ -11,7 +11,7 @@ import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.{meta => api}
 import scala.meta.internal.ast._
-import scala.meta.internal.ui.Attributes
+import scala.meta.internal.prettyprinters._
 
 package object semantic {
   implicit class XtensionHygieneDebug(debug: org.scalameta.debug.Debug.type) {

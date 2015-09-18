@@ -14,11 +14,13 @@ import scala.meta.internal.ast._
 import scala.{meta => api}
 import scala.meta.internal.{ast => impl}
 import scala.meta.internal.parsers.Location._
-import scala.meta.internal.parsers.Helpers._
-import scala.meta.syntactic.{Input, Content, Parse, Token, Tokens}
-import scala.meta.syntactic.Token._
-import scala.meta.syntactic.tokenizeApi._
-import scala.meta.ui.api._
+import scala.meta.internal.ast.Helpers._
+import scala.meta.inputs._
+import scala.meta.tokens._
+import scala.meta.tokens.Token._
+import scala.meta.parsers._
+import scala.meta.parsers.common._
+import scala.meta.prettyprinters._
 import org.scalameta.ast.AstMetadata
 import org.scalameta.tokens._
 import org.scalameta.unreachable

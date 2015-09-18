@@ -11,7 +11,7 @@ import scala.tools.nsc.{Global => ScalaGlobal}
 import scala.tools.nsc.reporters.StoreReporter
 import scala.meta.dialects.Scala211
 import scala.meta.internal.{ast => m}
-import scala.meta.internal.ui.Summary
+import scala.meta.internal.prettyprinters._
 import scala.meta.internal.hosts.scalac.reflect._
 
 // This module exposes a method to convert from scala.meta trees to scala.reflect trees.

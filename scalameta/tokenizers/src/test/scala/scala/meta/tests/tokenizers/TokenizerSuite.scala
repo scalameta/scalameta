@@ -3,13 +3,14 @@ package tokenizers
 
 import org.scalatest._
 import scala.meta.dialects.Scala211
-import scala.meta.syntactic.tokenApi._
-import scala.meta.syntactic.tokenizeApi._
-import scala.meta.ui.api._
+import scala.meta.inputs._
+import scala.meta.tokens._
+import scala.meta.tokenizers._
+import scala.meta.prettyprinters._
 
 class TokenizerSuite extends FunSuite {
   def tokenize(code: String): Tokens = {
-    val tokenize = scala.meta.syntactic.tokenizeApi.scalametaTokenize
+    val tokenize = scala.meta.tokenizers.scalametaTokenize
     Input.String(code).tokens(Scala211, tokenize)
   }
 
@@ -830,7 +831,6 @@ class TokenizerSuite extends FunSuite {
   }
 
   test("prettyprinting for Token.Unquote") {
-    import scala.meta.syntactic.{Token, Input}
     val arg = "$x"
     val token = Token.Unquote(Input.String(arg), Scala211, 0, arg.length, arg)
     assert(token.toString === "$x (0..2)")

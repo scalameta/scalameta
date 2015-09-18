@@ -11,28 +11,22 @@ import scala.annotation.compileTimeOnly
 import scala.collection.immutable.Seq
 import scala.reflect.{ClassTag, classTag}
 import scala.meta.taxonomic.Domain
-import scala.meta.semantic.{Context => SemanticContext}
-import scala.meta.ui.api._
+import scala.meta.prettyprinters._
 import scala.meta.internal.{ast => impl} // necessary only to implement APIs, not to define them
 import scala.meta.internal.{semantic => s} // necessary only to implement APIs, not to define them
 import scala.meta.internal.{equality => e} // necessary only to implement APIs, not to define them
-import scala.meta.internal.ui.Summary // necessary only to implement APIs, not to define them
+import scala.meta.internal.prettyprinters.Summary // necessary only to implement APIs, not to define them
 import scala.reflect.runtime.{universe => ru} // necessary only for a very hacky approximation of hygiene
 
-private[meta] trait SemanticApi {
+private[meta] trait Api {
   // ===========================
   // PART 1: PRETTYPRINTING
   // ===========================
-  implicit def showSemantics[T <: Tree](implicit c: SemanticContext): Semantics[T] = scala.meta.internal.ui.TreeSemantics.apply[T](c)
+  implicit def showSemantics[T <: Tree](implicit c: SemanticContext): Semantics[T] = scala.meta.internal.prettyprinters.TreeSemantics.apply[T](c)
 
   // ===========================
   // PART 2: EQUALITY
   // ===========================
-
-  private[meta] implicit class XtensionSemanticEquality[T1 <: Tree](tree1: T1) {
-    def ===[T2 <: Tree](tree2: T2)(implicit ev: e.AllowEquality[T1, T2]): Boolean = e.Semantic.equals(tree1, tree2)
-    def =/=[T2 <: Tree](tree2: T2)(implicit ev: e.AllowEquality[T1, T2]): Boolean = !e.Semantic.equals(tree1, tree2)
-  }
 
   implicit class XtensionTypecheckingEquality[T1 <: Tree](tree1: T1) {
     @hosted def =:=[T2 <: Tree](tree2: T2)(implicit ev: e.AllowEquality[T1, T2]): Boolean = e.Typechecking.equals(tree1, tree2)
@@ -775,11 +769,10 @@ private[meta] trait SemanticApi {
   // ===========================
   // PART 9: ALIASES
   // ===========================
-
   type SemanticContext = scala.meta.semantic.Context
+}
 
+private[meta] trait Aliases {
   type SemanticException = scala.meta.semantic.SemanticException
   val SemanticException = scala.meta.semantic.SemanticException
 }
-
-object api extends SemanticApi

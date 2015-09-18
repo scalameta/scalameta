@@ -2,8 +2,9 @@ package scala.meta
 package internal
 package parsers
 
-import scala.meta.syntactic.{Position, Token, ParseException}
-import scala.meta.syntactic.treeApi._
+import scala.meta.inputs._
+import scala.meta.tokens._
+import scala.meta.parsers.common._
 
 // TODO: when I grow up I want to become a monad, just like my daddy
 private[meta] trait Reporter {

@@ -3,7 +3,7 @@ package semantic
 
 import org.scalameta.data._
 import org.scalameta.unreachable
-import scala.meta.syntactic.Position
+import scala.meta.inputs._
 
 @data class SemanticException(pos: Option[Position], message: String, cause: Option[Throwable])
 extends Exception(message, cause.orNull) with ScalametaException {

@@ -5,9 +5,8 @@ import java.nio.charset.Charset
 import java.security.MessageDigest
 import scala.meta.Dialect
 import scala.meta.Source
-import scala.meta.syntactic.Content
-import scala.meta.syntactic.treeApi._
-import scala.meta.internal.ui.TopLevel
+import scala.meta.inputs._
+import scala.meta.internal.prettyprinters._
 import scala.meta.internal.semantic._
 import org.scalameta.data._
 import org.scalameta.debug._
@@ -21,7 +20,7 @@ package object tasty {
     def syntacticDigest: SyntacticDigest = {
       val dialect = source.dialect
       val text = source.position match {
-        case scala.meta.syntactic.Position.Range(content, _, _, _) => new String(content.chars)
+        case Position.Range(content, _, _, _) => new String(content.chars)
         case _ => throw new TastyException("syntactically adhoc trees are not supported")
       }
       val sha1 = MessageDigest.getInstance("SHA-1")
