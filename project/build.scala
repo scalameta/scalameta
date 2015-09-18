@@ -27,6 +27,7 @@ object build extends Build {
     taxonomic,
     tokenizers,
     tokenquasiquotes,
+    tokens,
     tql,
     trees,
     scalahost
