@@ -2,6 +2,8 @@ import sbt._
 import Keys._
 import sbtassembly.Plugin._
 import AssemblyKeys._
+import sbtunidoc.Plugin._
+import UnidocKeys._
 
 object build extends Build {
   lazy val ScalaVersion = "2.11.7"
@@ -13,7 +15,10 @@ object build extends Build {
   ) settings (
     sharedSettings : _*
   ) settings (
-    packagedArtifacts := Map.empty
+    unidocSettings : _*
+  ) settings (
+    packagedArtifacts := Map.empty,
+    unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject -- inProjects(foundation)
   ) aggregate (
     foundation,
     dialects,
