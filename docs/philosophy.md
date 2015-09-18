@@ -58,7 +58,7 @@ scala> res0.show[Structure]
 res2: String = Defn.Class(Nil, Type.Name("C"), Nil, Ctor.Primary(Nil, Ctor.Ref.Name("this"), Nil), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), Some(List(Defn.Def(Nil, Term.Name("x"), Nil, Nil, None, Lit.Int(2))))))
 ```
 
-The full list of nodes that comprise scala.meta syntax trees can be found in [Trees.scala](/scalameta/src/main/scala/scala/meta/Trees.scala),
+The full list of nodes that comprise scala.meta syntax trees can be found in [Trees.scala](/scalameta/trees/src/main/scala/scala/meta/Trees.scala),
 and it is quite involved, because we have to model the entire wealth of Scala's syntax.
 However, most of the classes there are just an implementation detail that will be hidden
 once we implement full-fledged support for quasiquotes.
@@ -86,13 +86,13 @@ scala.meta.ParseException: illegal start of simple expression at class (0..4)
 ```
 
 The full list of tokens returned by the tokenizer can be found in
-[Token.scala](/scalameta/src/main/scala/scala/meta/syntactic/Token.scala).
+[Token.scala](/scalameta/tokens/src/main/scala/scala/meta/syntactic/Token.scala).
 The full list of non-terminals that can be used as targets for the parser is provided
 as a list of implicit instances of the Parse[T] typeclass
-in [syntactic/Api.scala](/scalameta/src/main/scala/scala/meta/syntactic/Api.scala).
+in [syntactic/Api.scala](/scalameta/parsers/src/main/scala/scala/meta/syntactic/Api.scala).
 
 As a quick remark, you can tokenize and parse anything that can be converted to
-an [Input](tokens/src/main/scala/scala/meta/syntactic/Input.scala) by the means of
+an [Input](/scalameta/tokens/src/main/scala/scala/meta/syntactic/Input.scala) by the means of
 the [Convert](/foundation/src/main/scala/org/scalameta/convert/Convert.scala) typeclass.
 At the moment, it's just strings and files, but you can provide your own instances
 that will then seamlessly work with the existing API.
@@ -102,7 +102,7 @@ that will then seamlessly work with the existing API.
 Central to the semantic API of scala.meta are the notions of `Name`, `Member` and `Type`.
 This area of scala.meta is just freshly implemented and is barely tested, so,
 in this section, we will only briefly explain the fundamental notions and their interactions.
-The full list of semantic APIs can be found in [semantic/Api.scala](/scalameta/src/main/scala/scala/meta/semantic/Api.scala).
+The full list of semantic APIs can be found in [semantic/Api.scala](/scalameta/semantic/src/main/scala/scala/meta/semantic/Api.scala).
 
 ### Names
 
