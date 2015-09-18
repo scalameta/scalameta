@@ -6,6 +6,8 @@ import scala.meta.dialects.Scala211
 import scala.meta.tql._
 import scala.meta.internal.{ ast => impl }
 import org.scalatest.FunSuite
+import scala.meta.ui.api._
+import scala.meta.syntactic.parseApi._
 
 class InferPartialSuite extends FunSuite {
   test("TransformAndInferDef") {

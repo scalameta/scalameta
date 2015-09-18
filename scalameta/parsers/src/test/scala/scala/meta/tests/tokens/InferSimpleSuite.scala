@@ -6,6 +6,10 @@ import org.scalatest._
 
 import scala.meta.internal.ui.inferTokens
 import scala.meta.dialects.Scala211
+import scala.meta.syntactic.parseApi._
+import scala.meta.syntactic.tokenApi._
+import scala.meta.syntactic.tokenizeApi._
+import scala.meta.ui.api._
 
 import org.scalatest.FunSuite
 
