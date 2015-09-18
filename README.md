@@ -23,3 +23,7 @@ We have been lucky to receive a number of important contributions from a lot of 
 both internally at EPFL and externally over the internet. If you are interested in leaving your mark
 in the design and implementation of the metaprogramming toolkit of the future, check out
 [the list of available issues](https://github.com/scalameta/scalameta/issues?q=is%3Aopen+is%3Aissue+label%3A%22Contributor+alert%22) and start hacking!
+
+### Scaladoc
+* [scalameta snapshot](https://oss.sonatype.org/service/local/repositories/snapshots/archive/org/scalameta/scalameta_2.11/0.1.0-SNAPSHOT/scalameta_2.11-0.1.0-SNAPSHOT-javadoc.jar/!/index.html#package)
+* [scalahost snapshot](https://oss.sonatype.org/service/local/repositories/snapshots/archive/org/scalameta/scalahost_2.11.7/0.1.0-SNAPSHOT/scalahost_2.11.7-0.1.0-SNAPSHOT-javadoc.jar/!/index.html#package)
