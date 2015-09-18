@@ -4,9 +4,6 @@ import sbtassembly.Plugin._
 import AssemblyKeys._
 
 object build extends Build {
-  lazy val ScalaVersion = "2.11.7"
-  lazy val LibraryVersion = "0.1.0-SNAPSHOT"
-
   lazy val root = Project(
     id = "root",
     base = file("root")
@@ -24,7 +21,7 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     description := "Fundamental helpers and utilities of scala.meta",
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided")
+    libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided"
   )
 
   lazy val tokens = Project(
@@ -34,8 +31,10 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     description := "Tokenization and token quasiquotes of scala.meta",
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided"),
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _)
+    libraryDependencies ++= Seq(
+      "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided",
+      "org.scala-lang" % "scala-compiler" % scalaVersion.value
+    )
   ) dependsOn (foundation)
 
   lazy val scalameta = Project(
@@ -45,8 +44,10 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     description := "Metaprogramming and hosting APIs of scala.meta",
-    libraryDependencies += "org.apache.ivy" % "ivy" % "2.4.0",
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided")
+    libraryDependencies ++= Seq(
+      "org.apache.ivy" % "ivy" % "2.4.0",
+      "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided"
+    )
   ) dependsOn (foundation, tokens)
 
   lazy val scalahost = Project(
@@ -59,8 +60,25 @@ object build extends Build {
   ) settings (
     crossVersion := CrossVersion.full,
     description := "Scalac-based host of scala.meta",
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _ % "provided")
+    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided"
   ) dependsOn (scalameta)
+
+  lazy val exampleCompiletime = Project(
+    id   = "example-compiletime",
+    base = file("example-compiletime"),
+    settings = publishableSettings ++ mergeSettings ++ Seq(
+      libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
+    ) 
+  ) dependsOn(scalameta, scalahost)
+
+  lazy val exampleTests = Project(
+    id   = "example-tests",
+    base = file("example-tests"),
+    settings = sharedSettings ++ Seq(
+      usePlugin(exampleCompiletime),
+      dontPackage
+    ) ++ exposeClasspaths("tests")
+  ) dependsOn (exampleCompiletime)
 
   lazy val tests = Project(
     id   = "tests",
@@ -68,18 +86,20 @@ object build extends Build {
   ) settings (
     sharedSettings: _*
   ) settings (
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _),
-    libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.3" % "test",
-    libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
+    libraryDependencies ++= Seq(
+      "org.scala-lang" % "scala-reflect" % scalaVersion.value,
+      "org.scalatest" %% "scalatest" % "2.1.3" % "test",
+      "org.scalacheck" %% "scalacheck" % "1.11.3" % "test"
+    ),
     packagedArtifacts := Map.empty
   ) settings (
     exposeClasspaths("tests"): _*
   ) dependsOn (foundation, scalameta, scalahost)
 
   lazy val sharedSettings = Defaults.defaultSettings ++ Seq(
-    scalaVersion := ScalaVersion,
+    scalaVersion := "2.11.7",
     crossVersion := CrossVersion.binary,
-    version := LibraryVersion,
+    version := "0.1.0-SNAPSHOT",
     organization := "org.scalameta",
     resolvers += Resolver.sonatypeRepo("snapshots"),
     resolvers += Resolver.sonatypeRepo("releases"),
@@ -143,6 +163,8 @@ object build extends Build {
     ),
     addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0-M5" cross CrossVersion.full)
   )
+
+  lazy val dontPackage = packagedArtifacts := Map.empty
 
   lazy val publishableSettings = sharedSettings ++ Seq(
     publishArtifact in Compile := true,
@@ -236,4 +258,10 @@ object build extends Build {
       defaultValue
     }
   )
+
+  def usePlugin(plugin: ProjectReference) =
+    scalacOptions <++= (Keys.`package` in (plugin, Compile)) map { (jar: File) =>
+      System.setProperty("sbt.paths.plugin.jar", jar.getAbsolutePath)
+      Seq("-Xplugin:" + jar.getAbsolutePath, "-Jdummy=" + jar.lastModified)
+    }
 }
