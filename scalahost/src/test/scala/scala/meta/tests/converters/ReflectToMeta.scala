@@ -19,8 +19,8 @@ import scala.tools.nsc.reporters.StoreReporter
 class ReflectToMetaSuite extends FunSuite {
   val g: Global = {
     def fail(msg: String) = sys.error(s"ReflectToMeta initialization failed: $msg")
-    val classpath = System.getProperty("sbt.paths.tests.classes")
-    if (classpath == null) fail("-Dsbt.paths.tests.classes is not set")
+    val classpath = System.getProperty("sbt.paths.scalahost.classes")
+    if (classpath == null) fail("-Dsbt.paths.scalahost.classes is not set")
     val options = "-cp " + classpath
     val args = CommandLineParser.tokenize(options)
     val emptySettings = new Settings(error => fail(s"couldn't apply settings because $error"))
@@ -137,8 +137,8 @@ class ReflectToMetaSuite extends FunSuite {
     }
   }
 
-  val resourceDir = new File(System.getProperty("sbt.paths.tests.resources"))
-  if (!resourceDir.exists) sys.error(s"ReflectToMeta initialization failed: -Dsbt.paths.tests.resources is not set")
+  val resourceDir = new File(System.getProperty("sbt.paths.scalahost.resources"))
+  if (!resourceDir.exists) sys.error(s"ReflectToMeta initialization failed: -Dsbt.paths.scalahost.resources is not set")
   val testDirs = resourceDir.listFiles().filter(_.listFiles().nonEmpty)
   testDirs.foreach(scheduleReflectToMetaTest)
 }

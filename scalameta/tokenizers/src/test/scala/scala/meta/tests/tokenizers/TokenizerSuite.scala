@@ -9,7 +9,7 @@ import scala.meta.ui.api._
 
 class TokenizerSuite extends FunSuite {
   def tokenize(code: String): Tokens = {
-    val tokenize = scala.meta.syntactic.tokenizeApi.tokenize(Scala211)
+    val tokenize = scala.meta.syntactic.tokenizeApi.scalametaTokenize
     Input.String(code).tokens(Scala211, tokenize)
   }
 

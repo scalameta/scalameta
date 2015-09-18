@@ -10,7 +10,7 @@ class ReplSuite extends FunSuite {
     val s = new Settings
     s.Xnojline.value = true
     s.usejavacp.value = false
-    s.classpath.value = sys.props("sbt.paths.tests.classes")
+    s.classpath.value = sys.props("sbt.paths.scalahost.classes")
     val lines = ILoop.runForTranscript(code, s).lines.toList
     lines.drop(3).map(_.replaceAll("\\s+$","")).mkString("\n").trim.stripSuffix("scala>").trim
   }

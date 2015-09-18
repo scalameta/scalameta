@@ -77,7 +77,7 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     description := "Scala.meta's default implementation of the Parse[T] typeclass"
-  ) dependsOn (foundation, exceptions, trees, tokens, tokenizers % "test")
+  ) dependsOn (foundation, exceptions, trees, tokens, tokenizers % "test", tql % "test")
 
   lazy val prettyprinters = Project(
     id   = "prettyprinters",
@@ -156,7 +156,7 @@ object build extends Build {
   ) settings (
     description := "Scala.meta's tree query language (basic and extended APIs)",
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided")
-  ) dependsOn (foundation, exceptions, trees, parsers % "test", quasiquotes % "test")
+  ) dependsOn (foundation, exceptions, trees)
 
   lazy val trees = Project(
     id   = "trees",
@@ -188,6 +188,8 @@ object build extends Build {
     crossVersion := CrossVersion.full,
     description := "Scalac-based host that implements scala.meta's hosting APIs",
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _)
+  ) settings (
+    exposeClasspaths("scalahost"): _*
   ) dependsOn (scalameta)
 
   lazy val sharedSettings = Defaults.defaultSettings ++ Seq(
@@ -335,12 +337,12 @@ object build extends Build {
   def exposeClasspaths(projectName: String) = Seq(
     sourceDirectory in Test := {
       val defaultValue = (sourceDirectory in Test).value
-      System.setProperty("sbt.paths.tests.sources", defaultValue.getAbsolutePath)
+      System.setProperty("sbt.paths." + projectName + ".sources", defaultValue.getAbsolutePath)
       defaultValue
     },
     resourceDirectory in Test := {
       val defaultValue = (resourceDirectory in Test).value
-      System.setProperty("sbt.paths.tests.resources", defaultValue.getAbsolutePath)
+      System.setProperty("sbt.paths." + projectName + ".resources", defaultValue.getAbsolutePath)
       defaultValue
     },
     fullClasspath in Test := {
@@ -348,7 +350,7 @@ object build extends Build {
       val classpath = defaultValue.files.map(_.getAbsolutePath)
       val scalaLibrary = classpath.map(_.toString).find(_.contains("scala-library")).get
       System.setProperty("sbt.paths.scalalibrary.classes", scalaLibrary)
-      System.setProperty("sbt.paths.tests.classes", classpath.mkString(java.io.File.pathSeparator))
+      System.setProperty("sbt.paths." + projectName + ".classes", classpath.mkString(java.io.File.pathSeparator))
       defaultValue
     }
   )

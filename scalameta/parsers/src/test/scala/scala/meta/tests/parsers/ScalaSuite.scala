@@ -7,10 +7,8 @@ import scala.meta.ui.api._
 import scala.meta.internal.{ ast => impl }
 import scala.meta.dialects.Scala211
 
-class ScalaSuite extends ParseSuite {
+class ScalaSuite extends InferSuite {
 
-  // TODO: figure out why the original author used functions from InferSuite
-  def forceInferAll(t: Tree): Tree = t
   def templStatForceInfer(code: String)(implicit dialect: Dialect) = forceInferAll(super.templStat(code))
   def tpeForceInfer(code: String)(implicit dialect: Dialect) = forceInferAll(super.tpe(code))
   def sourceForceInfer(code: String)(implicit dialect: Dialect) = forceInferAll(super.source(code))

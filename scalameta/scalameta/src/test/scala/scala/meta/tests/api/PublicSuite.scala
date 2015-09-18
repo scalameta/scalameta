@@ -374,7 +374,7 @@ class PublicSuite extends FunSuite {
       import scala.meta._
       import scala.meta.dialects.Scala211
       "".parse[Int]
-    """) === "don't know how to parse Int (if you're sure that Int is parseable, double-check that you've imported a dialect, e.g. scala.meta.dialects.Scala211)")
+    """) === "don't know how to parse into Int")
   }
 
   test("parse when everything's correct (static dialect)") {
