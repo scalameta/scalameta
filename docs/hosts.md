@@ -1,14 +1,14 @@
 ### Host implementor notes
 
-scala.meta provides foundational data structures for metaprogramming defined in [Trees.scala](/scalameta/src/main/scala/scala/meta/Trees.scala) along with several levels of APIs (syntactic and semantic).
+scala.meta provides foundational data structures for metaprogramming defined in [Trees.scala](/scalameta/trees/src/main/scala/scala/meta/Trees.scala) along with several levels of APIs (syntactic and semantic).
 
-While syntactic services are implemented in scala.meta itself, semantic services require external implementations called hosts, because it would be unreasonable for us to, say, implement Scala's type inference or implicit resolution algorithms from scratch. In [semantic/Context.scala](/scalameta/src/main/scala/scala/meta/semantic/Context.scala) and [interactive/Context.scala](/scalameta/src/main/scala/scala/meta/interactive/Context.scala) we have encapsulated a minimalistic API surface that's required from hosts.
+While syntactic services are implemented in scala.meta itself, semantic services require external implementations called hosts, because it would be unreasonable for us to, say, implement Scala's type inference or implicit resolution algorithms from scratch. In [semantic/Context.scala](/scalameta/semantic/src/main/scala/scala/meta/semantic/Context.scala) and [interactive/Context.scala](/scalameta/interactive/src/main/scala/scala/meta/interactive/Context.scala) we have encapsulated a minimalistic API surface that's required from hosts.
 
 Here is some preliminary documentation on the functionality expected from hosts along with certain background information about scala.meta's data structures.
 
 ### Trees
 
-scala.meta trees provide comprehensive coverage of syntactic structures that comprise Scala. They are predefined in [Trees.scala](/scalameta/src/main/scala/scala/meta/Trees.scala) in the form of a sealed hierarchy, which means that hosts neither need nor can create custom subclasses of `Tree`.
+scala.meta trees provide comprehensive coverage of syntactic structures that comprise Scala. They are predefined in [Trees.scala](/scalameta/trees/src/main/scala/scala/meta/Trees.scala) in the form of a sealed hierarchy, which means that hosts neither need nor can create custom subclasses of `Tree`.
 
 Hosts are, however, required to create instances of scala.meta trees to be returned from various host APIs, so here we will outline the guidelines that were used to design scala.meta trees in order to allude to expected usage scenarios:
 
@@ -61,17 +61,17 @@ Of course, at the lowest level there's no magic, and internally scala.meta trees
 
   1. Denotations are exclusive to names (i.e. to trees that inherit from `Name`: Term.Name, Type.Name, Ctor.Name, Name.Anonymous and Name.Indeterminate) and represent definitions that are referenced by those names.
 
-    There can be `Denotation.Zero` that stands for an unknown denotation, `Denotation.Single` to express unambiguously resolved references and `Denotation.Multi` for imports and overloaded methods. A `Denotation` consists of a prefix and one or more symbols. A prefix is a type of a term from which a name is selected (`Prefix.Type`) or nothing in case when a name is local to a block (`Prefix.Zero`). A symbol is a unique identifier of a definition referenced by a name. Check out the [sources](/scalameta/src/main/scala/scala/meta/internal/semantic/Denotation.scala) to learn more.
+    There can be `Denotation.Zero` that stands for an unknown denotation, `Denotation.Single` to express unambiguously resolved references and `Denotation.Multi` for imports and overloaded methods. A `Denotation` consists of a prefix and one or more symbols. A prefix is a type of a term from which a name is selected (`Prefix.Type`) or nothing in case when a name is local to a block (`Prefix.Zero`). A symbol is a unique identifier of a definition referenced by a name. Check out the [sources](/scalameta/trees/src/main/scala/scala/meta/internal/semantic/Denotation.scala) to learn more.
 
     While global symbols (i.e. the ones that are visible from other files) are more or less straightforward (you represent them with data structures equivalent to fully-qualified names, with a slight complication for overloaded methods), local symbols require more effort. The tricky thing here is generating unique identifiers for local definitions that symbols refer to and then making sure that you return the same identifier if the same local definition is referred to from different places.
 
   1. Typings are exclusive to terms and term parameters (i.e. to trees that inherit from `Term` and `Term.Param`) and provide types for these trees. scala.meta does not have a notion of typings for types, definitions or nodes from other syntactic categories, because we haven't found a way for such typings to convey useful information to the users.
 
-    There can be `Typing.Zero` that stands for an unknown typing, `Typing.Nonrecursive` that wraps a plain `Type` assigned to the associated tree and `Typing.Recursive` that is used to express types of modules. Check out the [sources](/scalameta/src/main/scala/scala/meta/internal/semantic/Typing.scala) to learn more.
+    There can be `Typing.Zero` that stands for an unknown typing, `Typing.Nonrecursive` that wraps a plain `Type` assigned to the associated tree and `Typing.Recursive` that is used to express types of modules. Check out the [sources](/scalameta/trees/src/main/scala/scala/meta/internal/semantic/Typing.scala) to learn more.
 
   1. Expansions are exclusive to terms (i.e. to trees that inherit from `Term`) and specify expanded forms for these terms. Language features that are supported by expansions are: implicit conversion/argument inference, type argument inference, apply insertion, empty argument list insertion, assignment desugaring (`_=`, `update`), string interpolation desugaring, for loop desugaring, `Dynamic` desugaring, macro expansions. scala.meta does not have a notion of expansions for definitions (even though the language specification explicitly talks about canonical desugarings for some definitions), because we consider them to be too low-level to be exposed publicly.
 
-    There can be `Expansion.Zero` that stands for an unknown expansion, `Expansion.Identity` that stands for absence of a desugaring and `Expansion.Desugaring` that wraps a `Term` that represents a desugaring of the associated tree.  Check out the [sources](/scalameta/src/main/scala/scala/meta/internal/semantic/Expansion.scala) to learn more.
+    There can be `Expansion.Zero` that stands for an unknown expansion, `Expansion.Identity` that stands for absence of a desugaring and `Expansion.Desugaring` that wraps a `Term` that represents a desugaring of the associated tree.  Check out the [sources](/scalameta/trees/src/main/scala/scala/meta/internal/semantic/Expansion.scala) to learn more.
 
 In the example below, we can see a tree that represents `List[Int]`, with attributes exposed via `show[Semantics]`. The numbers in square brackets next to name trees refer to denotations that are printed below, with the parts before :: standing for prefixes and the parts after :: standing for symbols (dots in fully-qualified names are term selections and hashes are type selections). The numbers in curly braces next to terms refer to typings that are also printed below. Finally, the numbers in angle brackets next to terms represent expansions and since there are no desugarings involved in this example, they are all identities denoted by empty angle brackets.
 
@@ -128,12 +128,12 @@ Here's the exhaustive list of scala.meta APIs that can be used to transition bet
 
 ### Context APIs
 
-Here's an exhaustive list of methods that belong to scala.meta context APIs. Information on how to implement them can be found in subsequent sections. S means [semantic/Context.scala](/scalameta/src/main/scala/scala/meta/semantic/Context.scala), I means [interactive/Context.scala](/scalameta/src/main/scala/scala/meta/interactive/Context.scala).
+Here's an exhaustive list of methods that belong to scala.meta context APIs. Information on how to implement them can be found in subsequent sections. S means [semantic/Context.scala](/scalameta/semantic/src/main/scala/scala/meta/semantic/Context.scala), I means [interactive/Context.scala](/scalameta/interactive/src/main/scala/scala/meta/interactive/Context.scala).
 
 | Method                                                    | Context | Notes
 |-----------------------------------------------------------|---------|-------------------------------------------------------
-| `def dialect: Dialect`                                    | S       | See [dialects/package.scala](/tokens/src/main/scala/scala/meta/dialects/package.scala)
-| `def domain: Domain`                                      | S       | See [taxonomic/Domain.scala](/scalameta/src/main/scala/scala/meta/taxonomic/Domain.scala)
+| `def dialect: Dialect`                                    | S       | See [dialects/package.scala](/scalameta/tokens/src/main/scala/scala/meta/dialects/package.scala)
+| `def domain: Domain`                                      | S       | See [taxonomic/Domain.scala](/scalameta/taxonomic/src/main/scala/scala/meta/taxonomic/Domain.scala)
 | `def typecheck(tree: Tree): Tree`                         | S       | Checks wellformedness of the input tree, computes semantic attributes (denotations, typings and expansions) for it and all its subnodes, and returns a copy of the tree with the attributes assigned. See subsequent sections for implementation advice.
 | `def defns(ref: Ref): Seq[Member]`                        | S       | Definitions that a given reference refers to. Can return multiple results if a reference resolves to several overloaded members.
 | `def owner(member: Member): Scope`                        | S       | This isn't actually a method in `Context`, and it's here only to emphasize a peculiarity of our API. <br/><br/> The reason for that is that scala.meta trees always track their parents, so with a tree in hand it's very easy to navigate its enclosures up until an owning scope.
@@ -153,7 +153,7 @@ Here's an exhaustive list of methods that belong to scala.meta context APIs. Inf
 
 ### Implementing Context APIs (dialect and domain)
 
-The first two methods of Context don't involve anything too tricky and just provide metadata about your host - the language profile that you're supporting (pick from a list in [dialects/package.scala](/tokens/src/main/scala/scala/meta/dialects/package.scala)) and the environment that you're reflecting (create one or more artifacts from a list in [taxonomic/Artifact.scala](/scalameta/src/main/scala/scala/meta/taxonomic/Artifact.scala) and wrap then in a [taxonomic/Domain.scala](/scalameta/src/main/scala/scala/meta/taxonomic/Domain.scala)).
+The first two methods of Context don't involve anything too tricky and just provide metadata about your host - the language profile that you're supporting (pick from a list in [dialects/package.scala](/scalameta/tokens/src/main/scala/scala/meta/dialects/package.scala)) and the environment that you're reflecting (create one or more artifacts from a list in [taxonomic/Artifact.scala](/scalameta/taxonomic/src/main/scala/scala/meta/taxonomic/Artifact.scala) and wrap then in a [taxonomic/Domain.scala](/scalameta/taxonomic/src/main/scala/scala/meta/taxonomic/Domain.scala)).
 
 ### Implementing Context APIs (typecheck)
 
@@ -197,6 +197,6 @@ In comparison with typechecking, `Context.load` not only makes sure that the inp
 
 ### Error handling and reporting
 
-scala.meta expects hosts to signal errors by throwing exceptions of type [scala.meta.SemanticException](/scalameta/src/main/scala/scala/meta/Exceptions.scala). Users of scala.meta might be shielded from these exceptions by an additional error handling layer inside scala.meta, but that shouldn't be a concern for host implementors. At the moment, we don't expose any exception hierarchy, and the only way for the host to elaborate on the details of emitted errors is passing a custom error message. This might change later.
+scala.meta expects hosts to signal errors by throwing exceptions of type [scala.meta.SemanticException](/scalameta/semantic/src/main/scala/scala/meta/semantic/Exceptions.scala). Users of scala.meta might be shielded from these exceptions by an additional error handling layer inside scala.meta, but that shouldn't be a concern for host implementors. At the moment, we don't expose any exception hierarchy, and the only way for the host to elaborate on the details of emitted errors is passing a custom error message. This might change later.
 
-Hosts must expect scala.meta to signal fatal errors by throwing exceptions of type [scala.meta.AbortException](/scalameta/src/main/scala/scala/meta/Exceptions.scala). If a metaprogram that throws such an exception is run within a host, the host might want to handle the situation in a special way. For instance, it would make sense for an aborted macro expansion to result in a diagnostic message or UI element at a given location.
+Hosts must expect scala.meta to signal fatal errors by throwing exceptions of type [scala.meta.AbortException](/scalameta/exceptions/src/main/scala/scala/internal/Exceptions.scala). If a metaprogram that throws such an exception is run within a host, the host might want to handle the situation in a special way. For instance, it would make sense for an aborted macro expansion to result in a diagnostic message or UI element at a given location.

@@ -15,7 +15,7 @@ import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
 import scala.meta.internal.{semantic => s}
 import scala.meta.internal.flags._
-import scala.meta.internal.parsers.Helpers.{XtensionTermOps => _, _}
+import scala.meta.internal.ast.Helpers.{XtensionTermOps => _, _}
 import scala.meta.internal.hosts.scalac.reflect._
 
 // This module exposes a method that can convert scala.reflect trees

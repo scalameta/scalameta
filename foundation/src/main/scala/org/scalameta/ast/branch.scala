@@ -17,7 +17,6 @@ class BranchMacros(val c: Context) extends AstReflection {
   import Flag._
   val AdtInternal = q"_root_.org.scalameta.adt.Internal"
   val AstInternal = q"_root_.org.scalameta.ast.internal"
-  val Semantic = q"_root_.scala.meta.semantic"
   val SemanticInternal = q"_root_.scala.meta.internal.semantic"
   val FlagsPackage = q"_root_.scala.meta.internal.flags.`package`"
   def impl(annottees: Tree*): Tree = {
@@ -66,18 +65,18 @@ class BranchMacros(val c: Context) extends AstReflection {
           qstats :+= quasigetter(NoMods, "value")
           qstats :+= quasigetter(PrivateMeta, "env")
           qstats :+= quasigetter(PrivateMeta, "denot")
-          qstats :+= quasisetter(PrivateMeta, "withEnv", q"val env: $Semantic.Environment")
+          qstats :+= quasisetter(PrivateMeta, "withEnv", q"val env: $SemanticInternal.Environment")
           qstats :+= quasisetter(PrivateMeta, "withAttrs", q"val denot: $SemanticInternal.Denotation")
         }
         if (isTerm) {
           qstats :+= quasigetter(PrivateMeta, "env")
           qstats :+= quasigetter(PrivateMeta, "typing")
           qstats :+= quasigetter(PrivateMeta, "expansion")
-          qstats :+= quasisetter(PrivateMeta, "withEnv", q"val env: $Semantic.Environment")
+          qstats :+= quasisetter(PrivateMeta, "withEnv", q"val env: $SemanticInternal.Environment")
           qstats :+= quasisetter(PrivateMeta, "withAttrs", q"val typingLike: $SemanticInternal.TypingLike")
           qstats :+= quasisetter(PrivateMeta, "withExpansion", q"val expansionLike: $SemanticInternal.ExpansionLike")
         }
-        qstats :+= q"protected def privateEnv: $Semantic.Environment = null"
+        qstats :+= q"protected def privateEnv: $SemanticInternal.Environment = null"
         qstats :+= q"protected def privateDenot: $SemanticInternal.Denotation = null"
         qstats :+= q"protected def privateTyping: $SemanticInternal.Typing = null"
         qstats :+= q"protected def privateExpansion: $SemanticInternal.Expansion = null"

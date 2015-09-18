@@ -29,7 +29,7 @@ import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
 import scala.meta.internal.{semantic => s}
 import scala.meta.internal.flags._
-import scala.meta.internal.ui.Summary
+import scala.meta.internal.prettyprinters._
 
 @context(translateExceptions = false)
 class Proxy[G <: ScalaGlobal](val global: G, initialDomain: Domain = Domain())
@@ -208,6 +208,7 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
     val artifactClasspath = artifacts.flatMap(_.binaries).map(p => new File(p.path).toURI.toURL)
     if (Debug.scalahost) println(s"indexing artifact classpath: $artifactClasspath")
     val globalClasspath = global.classPath.asURLs.toSet
+    if (Debug.scalahost) println(s"global classpath: ${global.classPath.asURLs}")
     val deltaClasspath = artifactClasspath.filter(entry => !globalClasspath(entry))
     if (deltaClasspath.nonEmpty) global.extendCompilerClassPath(deltaClasspath: _*)
 

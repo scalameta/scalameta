@@ -23,7 +23,7 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
   lazy val DefnValClass = c.mirror.staticModule("scala.meta.internal.ast.Defn").info.member(TypeName("Val")).asClass
   lazy val DefnVarClass = c.mirror.staticModule("scala.meta.internal.ast.Defn").info.member(TypeName("Var")).asClass
   lazy val PatTypedClass = c.mirror.staticModule("scala.meta.internal.ast.Pat").info.member(TypeName("Typed")).asClass
-  lazy val TokensClass = c.mirror.staticClass("scala.meta.syntactic.Tokens")
+  lazy val TokensClass = c.mirror.staticClass("scala.meta.tokens.Tokens")
   lazy val DenotClass = c.mirror.staticClass("scala.meta.internal.semantic.Denotation")
   lazy val TypingClass = c.mirror.staticClass("scala.meta.internal.semantic.Typing")
   lazy val ExpansionClass = c.mirror.staticClass("scala.meta.internal.semantic.Expansion")

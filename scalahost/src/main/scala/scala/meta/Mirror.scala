@@ -1,7 +1,5 @@
 package scala.meta
 
-import scala.meta.semantic.{Context => SemanticContext}
-import scala.meta.taxonomic.{Context => TaxonomicContext}
 import scala.meta.internal.hosts.scalac.contexts.{Compiler => Compiler}
 import scala.meta.internal.hosts.scalac.contexts.{Proxy => ProxyImpl}
 

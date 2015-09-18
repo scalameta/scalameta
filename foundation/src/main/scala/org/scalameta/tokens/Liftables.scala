@@ -13,7 +13,7 @@ trait Liftables {
 
 class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) {
   import c.universe._
-  lazy val UnquoteClass = c.mirror.staticModule("scala.meta.syntactic.Token").asModule.info.member(TypeName("Unquote")).asClass
+  lazy val UnquoteClass = c.mirror.staticModule("scala.meta.tokens.Token").asModule.info.member(TypeName("Unquote")).asClass
   override def customMatcher(adt: Adt, defName: TermName, localName: TermName): Option[DefDef] = {
     // TODO: see comments to ast.LiftableMacros
     def redirectTo(methodName: String) = q"def $defName($localName: ${adt.tpe}): ${c.prefix}.u.Tree = ${TermName(methodName)}.apply($localName)"

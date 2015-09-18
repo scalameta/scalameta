@@ -18,14 +18,14 @@ object TokenMetadata {
 class TokenMetadataMacros(val c: Context) {
   import c.universe._
   import c.internal._
-  lazy val TokenClass = rootMirror.staticClass("scala.meta.syntactic.Token")
+  lazy val TokenClass = rootMirror.staticClass("scala.meta.tokens.Token")
   lazy val TokenMarkerClass = rootMirror.staticModule("org.scalameta.tokens.internal.package").info.decl(TypeName("tokenClass")).asClass
   def materialize[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
     if ((T.tpe <:< TokenClass.toType) && T.tpe.typeSymbol.annotations.exists(_.tree.tpe.typeSymbol == TokenMarkerClass)) {
       val nameBody = {
         val ctor = T.tpe.typeSymbol.info.decls.collect{case m: MethodSymbol if m.isPrimaryConstructor => m}.head
         val argss = ctor.paramLists.map(_.map(p => {
-          if (p.name == TermName("content")) q"""_root_.scala.meta.syntactic.Input.String("")"""
+          if (p.name == TermName("content")) q"""_root_.scala.meta.inputs.Input.String("")"""
           else if (p.name == TermName("dialect")) q"""_root_.scala.meta.dialects.Scala211"""
           else if (p.name == TermName("start")) q"0"
           else if (p.name == TermName("end")) q"-1"
