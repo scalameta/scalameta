@@ -1852,13 +1852,13 @@ class QuasiquoteSuite extends FunSuite {
     assert(stats2(1).show[Structure] === "Defn.Def(Nil, Term.Name(\"n\"), Nil, Nil, None, Lit.Int(2))")
   }
 
-  //  test("2 template\"{ ..$stats } with ..$exprs { $param => ..$stats }\"") { // TODO review after #227 resolved
-  //    val stats1 = List(q"val a = 2", q"val b = 2")
-  //    val exprs = List(q"T", q"U")
-  //    val param = param"self: S"
-  //    val stats2 = List(q"def m = 2", q"def n = 2")
-  //    assert(template"{ ..$stats1 } with ..$exprs { $param => ..$stats2 }".show[Structure] === "")
-  //  }
+   test("2 template\"{ ..$stats } with ..$exprs { $param => ..$stats }\"") {
+     val stats1 = List(q"val a = 2", q"val b = 2")
+     val exprs = List(ctor"T", ctor"U")
+     val param = param"self: S"
+     val stats2 = List(q"def m = 2", q"def n = 2")
+     assert(template"{ ..$stats1 } with ..$exprs { $param => ..$stats2 }".show[Structure] === "Template(Seq(Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name(\"a\"))), None, Lit.Int(2)), Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name(\"b\"))), None, Lit.Int(2))), Seq(Ctor.Ref.Name(\"T\"), Ctor.Ref.Name(\"U\")), Term.Param(Nil, Term.Name(\"self\"), Some(Type.Name(\"S\")), None), Some(Seq(Defn.Def(Nil, Term.Name(\"m\"), Nil, Nil, None, Lit.Int(2)), Defn.Def(Nil, Term.Name(\"n\"), Nil, Nil, None, Lit.Int(2)))))")
+   }
 
   test("1 mod\"@$expr\"") {
     val mod"@$expr" = mod"@a"
