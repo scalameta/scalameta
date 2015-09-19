@@ -117,8 +117,7 @@
                    | Quasiquote
 -------------------|------------------------------
  Wildcard          | `pt"_"`
- Var               | `pt"name"`
- Name              | ``pt"`name`"``
+ Var               | `pt"name"` (lower-case only)
  Selection         | `pt"$ref.$tname"`
  Projection        | `pt"$ptpe#$tname"`
  Singleton         | `pt"$ref.type"`

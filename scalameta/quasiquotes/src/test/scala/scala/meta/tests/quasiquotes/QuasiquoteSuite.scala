@@ -925,7 +925,7 @@ class QuasiquoteSuite extends FunSuite {
   }
 
   test("p\"X\"") {
-    assert(p"X".show[Structure] === "Term.Name(\"X\")")
+    assert(p"X".show[Structure] ===  "Pat.Var.Term(Term.Name(\"X\"))")
   }
 
   test("p\"`x`\"") {
@@ -955,14 +955,14 @@ class QuasiquoteSuite extends FunSuite {
   }
 
   test("2 p\"$pat | $pat\"") {
-    val pat1 = p"X"
-    val pat2 = p"Y"
+    val pat1 = q"X"
+    val pat2 = q"Y"
     assert(p"$pat1 | $pat2".show[Structure] === "Pat.Alternative(Term.Name(\"X\"), Term.Name(\"Y\"))")
   }
 
   test("3 p\"$pat | $pat\"") {
     val pat1 = p"`X`"
-    val pat2 = p"Y"
+    val pat2 = q"Y"
     assert(p"$pat1 | $pat2".show[Structure] === "Pat.Alternative(Term.Name(\"X\"), Term.Name(\"Y\"))")
   }
 
@@ -979,7 +979,7 @@ class QuasiquoteSuite extends FunSuite {
   }
 
   test("3 p\"(..$pats)\"") {
-    val pats = List(p"`X`", p"Y")
+    val pats = List(p"`X`", q"Y")
     assert(p"(..$pats)".show[Structure] === "Pat.Tuple(Seq(Term.Name(\"X\"), Term.Name(\"Y\")))")
   }
 
@@ -1006,14 +1006,14 @@ class QuasiquoteSuite extends FunSuite {
   test("3 p\"$ref[..$tpes](..$apats)\"") {
     val ref = q"x"
     val tpes = List(t"A", t"B")
-    val apats = List(p"Q", p"W")
+    val apats = List(q"Q", q"W")
     assert(p"$ref[..$tpes](..$apats)".show[Structure] === "Pat.Extract(Term.Name(\"x\"), Seq(Type.Name(\"A\"), Type.Name(\"B\")), Seq(Term.Name(\"Q\"), Term.Name(\"W\")))")
   }
 
   test("4 p\"$ref[..$tpes](..$apats)\"") {
     val ref = q"`x`"
     val tpes = List(t"`A`", t"B")
-    val apats = List(p"`Q`", p"W")
+    val apats = List(p"`Q`", q"W")
     assert(p"$ref[..$tpes](..$apats)".show[Structure] === "Pat.Extract(Term.Name(\"x\"), Seq(Type.Name(\"A\"), Type.Name(\"B\")), Seq(Term.Name(\"Q\"), Term.Name(\"W\")))")
   }
 
@@ -1029,14 +1029,14 @@ class QuasiquoteSuite extends FunSuite {
   test("2 p\"$pat $name (..$apats)\"") {
     val pat = p"x"
     val name = q"y"
-    val apats = List(p"Q", p"W")
+    val apats = List(q"Q", q"W")
     assert(p"$pat $name (..$apats)".show[Structure] === "Pat.ExtractInfix(Pat.Var.Term(Term.Name(\"x\")), Term.Name(\"y\"), Seq(Term.Name(\"Q\"), Term.Name(\"W\")))")
   }
 
   test("3 p\"$pat $name (..$apats)\"") {
     val pat = p"`x`"
     val name = q"y"
-    val apats = List(p"Q", p"W")
+    val apats = List(q"Q", q"W")
     assert(p"$pat $name (..$apats)".show[Structure] === "Pat.ExtractInfix(Term.Name(\"x\"), Term.Name(\"y\"), Seq(Term.Name(\"Q\"), Term.Name(\"W\")))")
   }
 
@@ -1048,7 +1048,7 @@ class QuasiquoteSuite extends FunSuite {
 
   test("2 p\"$pat: $ptpe\"") {
     val pat = p"x"
-    val ptpe = pt"Y"
+    val ptpe = t"Y"
     assert(p"$pat: $ptpe".show[Structure] === "Pat.Typed(Pat.Var.Term(Term.Name(\"x\")), Type.Name(\"Y\"))")
   }
 
@@ -1083,7 +1083,7 @@ class QuasiquoteSuite extends FunSuite {
   }
 
   test("2 p\"case $pat if $expropt => $expr\"") {
-    val pat = p"X"
+    val pat = q"X"
     val expropt = q"foo"
     val expr = q"bar"
     assert(p"case $pat if $expropt => $expr".show[Structure] === "Case(Term.Name(\"X\"), Some(Term.Name(\"foo\")), Term.Block(Seq(Term.Name(\"bar\"))))")
@@ -1102,7 +1102,7 @@ class QuasiquoteSuite extends FunSuite {
 
   test("1 p\"$pat\"") {
     val pat = p"X"
-    assert(p"$pat".show[Structure] === "Term.Name(\"X\")")
+    assert(p"$pat".show[Structure] === "Pat.Var.Term(Term.Name(\"X\"))")
   }
 
   test("2 p\"$pat\"") {
@@ -1110,25 +1110,28 @@ class QuasiquoteSuite extends FunSuite {
     assert(p"$pat".show[Structure] === "Term.Name(\"X\")")
   }
 
-//  test("pt\"_\"") { // TODO review after #216 resolved
-//    assert(pt"_".show[Structure] === "Pat.Type.Wildcard()")
-//  }
-
-//  test("pt\"x\"") { // TODO review after #216 resolved
-//    assert(pt"x".show[Structure] === "Pat.Var.Type(Type.Name(\"x\"))")
-//  }
-
-  test("pt\"X\"") {
-    assert(pt"X".show[Structure] === "Type.Name(\"X\")")
+  test("pt\"_\"") {
+    assert(pt"_".show[Structure] === "Pat.Type.Wildcard()")
   }
 
-  test("pt\"`x`\"") {
-    assert(pt"`x`".show[Structure] === "Type.Name(\"x\")")
+  test("pt\"x\"") {
+    assert(pt"x".show[Structure] === "Pat.Var.Type(Type.Name(\"x\"))")
   }
 
-  test("pt\"`X`\"") {
-    assert(pt"`X`".show[Structure] === "Type.Name(\"X\")")
-  }
+  // NOTE: compilation error
+  // test("pt\"X\"") {
+  //   assert(pt"X".show[Structure] === "Pat.Var.Type(Type.Name(\"X\"))")
+  // }
+
+  // NOTE: compilation error
+  // test("pt\"`x`\"") {
+  //   assert(pt"`x`".show[Structure] === "Type.Name(\"x\")")
+  // }
+
+  // NOTE: compilation error
+  // test("pt\"`X`\"") {
+  //   assert(pt"`X`".show[Structure] === "Type.Name(\"X\")")
+  // }
 
   test("1 pt\"$ref.$tname\"") {
     val pt"$ref.$tname" = pt"x.a"
@@ -1155,19 +1158,19 @@ class QuasiquoteSuite extends FunSuite {
   }
 
   test("2 pt\"$ptpe#$tname\"") {
-    val ptpe = pt"X"
+    val ptpe = t"X"
     val tname = t"a"
     assert(pt"$ptpe#$tname".show[Structure] === "Pat.Type.Project(Type.Name(\"X\"), Type.Name(\"a\"))")
   }
 
   test("3 pt\"$ptpe#$tname\"") {
-    val ptpe = pt"`x`"
+    val ptpe = t"`x`"
     val tname = t"a"
     assert(pt"$ptpe#$tname".show[Structure] === "Pat.Type.Project(Type.Name(\"x\"), Type.Name(\"a\"))")
   }
 
   test("4 pt\"$ptpe#$tname\"") {
-    val ptpe = pt"x"
+    val ptpe = t"x"
     val tname = t"a"
     assert(pt"$ptpe#$tname".show[Structure] === "Pat.Type.Project(Type.Name(\"x\"), Type.Name(\"a\"))")
   }
@@ -1196,22 +1199,18 @@ class QuasiquoteSuite extends FunSuite {
   }
 
   test("2 pt\"$ptpe[..$ptpes]") {
-    val ptpe = pt"X"
-    val ptpes = List(pt"Y", pt"Z")
-    assert(pt"$ptpe[..$ptpes]".show[Structure] === "Pat.Type.Apply(Type.Name(\"X\"), Seq(Type.Name(\"Y\"), Type.Name(\"Z\")))")
+    val pt"$ptpe[..$ptpes]" = pt"x[y, z]"
+    assert(ptpe.show[Structure] === "Type.Name(\"x\")")
+    assert(ptpes.toString === "List(y, z)")
+    assert(ptpes(0).show[Structure] === "Pat.Var.Type(Type.Name(\"y\"))")
+    assert(ptpes(1).show[Structure] === "Pat.Var.Type(Type.Name(\"z\"))")
   }
 
   test("3 pt\"$ptpe[..$ptpes]") {
-    val ptpe = pt"`X`"
-    val ptpes = List(pt"`Y`", pt"`Z`")
-    assert(pt"$ptpe[..$ptpes]".show[Structure] === "Pat.Type.Apply(Type.Name(\"X\"), Seq(Type.Name(\"Y\"), Type.Name(\"Z\")))")
+    val ptpe = t"x"
+    val ptpes = List(pt"y", pt"z")
+    assert(pt"$ptpe[..$ptpes]".show[Structure] === "Pat.Type.Apply(Type.Name(\"x\"), Seq(Pat.Var.Type(Type.Name(\"y\")), Pat.Var.Type(Type.Name(\"z\"))))")
   }
-
-//  test("4 pt\"$ptpe[..$ptpes]") { // TODO review after #216 resolved
-//    val ptpe = pt"`X`"
-//    val ptpes = List(pt"y", pt"z")
-//    assert(pt"$ptpe[..$ptpes]".show[Structure] === "Pat.Type.Apply(Type.Name(\"X\"), Seq(Pat.Var.Type(Type.Name(\"y\")), Pat.Var.Type(Type.Name(\"z\"))))")
-//  }
 
   test("1 pt\"$ptpe $tname $ptpe\"") {
     val pt"$ptpe1 $tname $ptpe2" = pt"X Y Z"
@@ -1221,18 +1220,19 @@ class QuasiquoteSuite extends FunSuite {
   }
 
   test("2 pt\"$ptpe $tname $ptpe\"") {
-    val ptpe1 = pt"x"
-    val tname = t"y"
-    val ptpe2 = pt"z"
-    assert(pt"$ptpe1 $tname $ptpe2".show[Structure] === "Pat.Type.ApplyInfix(Type.Name(\"x\"), Type.Name(\"z\"), Type.Name(\"y\"))")
+    val pt"$ptpe1 $tname $ptpe2" = pt"x y z"
+    assert(ptpe1.show[Structure] === "Type.Name(\"x\")")
+    assert(tname.show[Structure] === "Type.Name(\"y\")")
+    assert(ptpe2.show[Structure] === "Type.Name(\"z\")")
   }
 
-  test("3 pt\"$ptpe $tname $ptpe\"") {
-    val ptpe1 = pt"`X`"
-    val tname = t"`Y`"
-    val ptpe2 = pt"`Z`"
-    assert(pt"$ptpe1 $tname $ptpe2".show[Structure] === "Pat.Type.ApplyInfix(Type.Name(\"X\"), Type.Name(\"Z\"), Type.Name(\"Y\"))")
-  }
+  // TODO: compilation error
+  // test("3 pt\"$ptpe $tname $ptpe\"") {
+  //   val ptpe1 = pt"x"
+  //   val tname = pt"y"
+  //   val ptpe2 = pt"z"
+  //   assert(pt"$ptpe1 $tname $ptpe2".show[Structure] === "")
+  // }
 
   test("1 pt\"(..$ptpes) => $ptpe\"") {
     val pt"(..$ptpes) => $ptpe" = pt"(X, Y) => Z"
@@ -1243,75 +1243,82 @@ class QuasiquoteSuite extends FunSuite {
   }
 
   test("2 pt\"(..$ptpes) => $ptpe\"") {
-    val ptpes = List(pt"`X`", pt"`Y`")
-    val ptpe = pt"`Z`"
-    assert(pt"(..$ptpes) => $ptpe".show[Structure] === "Pat.Type.Function(Seq(Type.Name(\"X\"), Type.Name(\"Y\")), Type.Name(\"Z\"))")
+    val pt"(..$ptpes) => $ptpe" = pt"(x, y) => z"
+    assert(ptpes.toString === "List(x, y)")
+    assert(ptpes(0).show[Structure] === "Pat.Var.Type(Type.Name(\"x\"))")
+    assert(ptpes(1).show[Structure] === "Pat.Var.Type(Type.Name(\"y\"))")
+    assert(ptpe.show[Structure] === "Type.Name(\"z\")")
   }
 
   test("3 pt\"(..$ptpes) => $ptpe\"") {
     val ptpes = List(pt"x", pt"y")
     val ptpe = pt"z"
-    assert(pt"(..$ptpes) => $ptpe".show[Structure] === "Pat.Type.Function(Seq(Type.Name(\"x\"), Type.Name(\"y\")), Type.Name(\"z\"))")
+    assert(pt"(..$ptpes) => $ptpe".show[Structure] === "Pat.Type.Function(Seq(Pat.Var.Type(Type.Name(\"x\")), Pat.Var.Type(Type.Name(\"y\"))), Pat.Var.Type(Type.Name(\"z\")))")
   }
 
+  // TODO: compilation error
+  // test("3 pt\"(..$ptpes) => $ptpe\"") {
+  //   val ptpes = List(pt"x", pt"y")
+  //   val ptpe = pt"z"
+  //   assert(pt"(..$ptpes) => $ptpe".show[Structure] === "")
+  // }
+
   test("1 pt\"(..$ptpes)\"") {
-    val pt"(..$ptpes)" = pt"(X, Y)"
-    assert(ptpes.toString === "List(X, Y)")
-    assert(ptpes(0).show[Structure] === "Type.Name(\"X\")")
-    assert(ptpes(1).show[Structure] === "Type.Name(\"Y\")")
+    val pt"(..$ptpes)" = pt"(x, y)"
+    assert(ptpes.toString === "List(x, y)")
+    assert(ptpes(0).show[Structure] === "Pat.Var.Type(Type.Name(\"x\"))")
+    assert(ptpes(1).show[Structure] === "Pat.Var.Type(Type.Name(\"y\"))")
   }
 
   test("2 pt\"(..$ptpes)\"") {
-    val ptpes = List(pt"`X`", pt"`Y`")
-    assert(pt"(..$ptpes)".show[Structure] === "Pat.Type.Tuple(Seq(Type.Name(\"X\"), Type.Name(\"Y\")))")
-  }
-
-  test("3 pt\"(..$ptpes)\"") {
     val ptpes = List(pt"x", pt"y")
-    assert(pt"(..$ptpes)".show[Structure] === "Pat.Type.Tuple(Seq(Type.Name(\"x\"), Type.Name(\"y\")))")
+    assert(pt"(..$ptpes)".show[Structure] === "Pat.Type.Tuple(Seq(Pat.Var.Type(Type.Name(\"x\")), Pat.Var.Type(Type.Name(\"y\"))))")
   }
 
   test("1 pt\"..$ptpes { ..$stats }\"") {
-    val pt"..$ptpes { ..$stats }" = pt"X with Y { val a: A }"
-    assert(ptpes.toString === "List(X, Y)")
-    assert(ptpes(0).show[Structure] === "Type.Name(\"X\")")
-    assert(ptpes(1).show[Structure] === "Type.Name(\"Y\")")
+    val pt"..$ptpes { ..$stats }" = pt"x with y { val a: A }"
+    assert(ptpes.toString === "List(x, y)")
+    assert(ptpes(0).show[Structure] === "Type.Name(\"x\")")
+    assert(ptpes(1).show[Structure] === "Type.Name(\"y\")")
     assert(stats.toString === "List(val a: A)")
     assert(stats(0).show[Structure] === "Decl.Val(Nil, Seq(Pat.Var.Term(Term.Name(\"a\"))), Type.Name(\"A\"))")
   }
 
-  test("2 pt\"..$ptpes { ..$stats }\"") {
-    val ptpes = List(pt"`X`", pt"`Y`")
-    val stats = List(q"val `a`: `A`", q"val `b`: `B`")
-    assert(pt"..$ptpes { ..$stats }".show[Structure] === "Pat.Type.Compound(Seq(Type.Name(\"X\"), Type.Name(\"Y\")), Seq(Decl.Val(Nil, Seq(Pat.Var.Term(Term.Name(\"a\"))), Type.Name(\"A\")), Decl.Val(Nil, Seq(Pat.Var.Term(Term.Name(\"b\"))), Type.Name(\"B\"))))")
-  }
+  // TODO: compilation error
+  // test("2 pt\"..$ptpes { ..$stats }\"") {
+  //   val ptpes = List(pt"x", pt"y")
+  //   val stats = List(q"val `a`: `A`", q"val `b`: `B`")
+  //   assert(pt"..$ptpes { ..$stats }".show[Structure] === "")
+  // }
 
   test("1 pt\"$ptpe forSome { ..$stats }\"") {
-    val pt"$ptpe forSome { ..$stats }" = pt"X forSome { val a: A }"
-    assert(ptpe.show[Structure] === "Type.Name(\"X\")")
+    val pt"$ptpe forSome { ..$stats }" = pt"x forSome { val a: A }"
+    assert(ptpe.show[Structure] === "Type.Name(\"x\")")
     assert(stats.toString === "List(val a: A)")
     assert(stats(0).show[Structure] === "Decl.Val(Nil, Seq(Pat.Var.Term(Term.Name(\"a\"))), Type.Name(\"A\"))")
   }
 
-  test("2 pt\"$ptpe forSome { ..$stats }\"") {
-    val ptpe = pt"X"
-    val stats = List(q"val a: A")
-    assert(pt"$ptpe forSome { ..$stats }".show[Structure] === "Pat.Type.Existential(Type.Name(\"X\"), Seq(Decl.Val(Nil, Seq(Pat.Var.Term(Term.Name(\"a\"))), Type.Name(\"A\"))))")
-  }
+  // TODO: compilation error
+  // test("2 pt\"$ptpe forSome { ..$stats }\"") {
+  //   val ptpe = pt"x"
+  //   val stats = List(q"val a: A")
+  //   assert(pt"$ptpe forSome { ..$stats }".show[Structure] === "")
+  // }
 
   test("1 pt\"$ptpe ..$@annots\"") {
-    val pt"$ptpe ..@$annots" = pt"X @q @w"
-    assert(ptpe.show[Structure] === "Type.Name(\"X\")")
+    val pt"$ptpe ..@$annots" = pt"x @q @w"
+    assert(ptpe.show[Structure] === "Type.Name(\"x\")")
     assert(annots.toString === "List(@q, @w)")
     assert(annots(0).show[Structure] === "Mod.Annot(Ctor.Ref.Name(\"q\"))")
     assert(annots(1).show[Structure] === "Mod.Annot(Ctor.Ref.Name(\"w\"))")
   }
 
-  test("2 pt\"$ptpe ..$@annots\"") {
-    val ptpe = pt"X"
-    val annots = List(mod"@q", mod"@w")
-    assert(pt"$ptpe ..@$annots".show[Structure] === "Pat.Type.Annotate(Type.Name(\"X\"), Seq(Mod.Annot(Ctor.Ref.Name(\"q\")), Mod.Annot(Ctor.Ref.Name(\"w\"))))")
-  }
+  // TODO: compilation error
+  // test("2 pt\"$ptpe ..$@annots\"") {
+  //   val ptpe = pt"x"
+  //   val annots = List(mod"@q", mod"@w")
+  //   assert(pt"$ptpe ..@$annots".show[Structure] === "")
+  // }
 
   test("1 t\"_ >: $tpeopt <: tpeopt\"") {
     val pt"_ >: $tpe1 <: $tpe2" = pt"_ >: X <: Y"
@@ -1965,11 +1972,11 @@ class QuasiquoteSuite extends FunSuite {
     assert(enumerator"$pat <- $expr".show[Structure] === "Enumerator.Generator(Pat.Var.Term(Term.Name(\"x\")), Term.Name(\"xs\"))")
   }
 
-//  test("3 enumerator\"$pat <- $expr\"") { // TODO review after #216 solved
-//    val pat = p"X"
-//    val expr = q"xs"
-//    assert(enumerator"$pat <- $expr".show[Structure] === "Enumerator.Generator(Pat.Var.Term(Term.Name(\"X\")), Term.Name(\"xs\"))")
-//  }
+  test("3 enumerator\"$pat <- $expr\"") {
+    val pat = p"X"
+    val expr = q"xs"
+    assert(enumerator"$pat <- $expr".show[Structure] === "Enumerator.Generator(Pat.Var.Term(Term.Name(\"X\")), Term.Name(\"xs\"))")
+  }
 
   test("1 enumerator\"$pat = $expr\"") {
     val enumerator"$pat = $expr" = enumerator"x = xs"

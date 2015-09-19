@@ -1063,9 +1063,9 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
         case Type.ApplyInfix(lhs, op, rhs) => atPos(tpe, tpe)(Pat.Type.ApplyInfix(loop(lhs), op, loop(rhs)))
         case Type.Function(params, res) => atPos(tpe, tpe)(Pat.Type.Function(params.map {
           case q @ Type.Arg.Quasi(1, Type.Arg.Quasi(0, _)) => q.become[Pat.Type.Quasi]
-          case p => loop(p.require[Type])
+          case p => convert(p.require[Type])
         }, loop(res)))
-        case Type.Tuple(elements) => atPos(tpe, tpe)(Pat.Type.Tuple(elements.map(loop)))
+        case Type.Tuple(elements) => atPos(tpe, tpe)(Pat.Type.Tuple(elements.map(convert)))
         case Type.Compound(tpes, refinement) => atPos(tpe, tpe)(Pat.Type.Compound(tpes.map(loop), refinement))
         case Type.Existential(underlying, quants) => atPos(tpe, tpe)(Pat.Type.Existential(loop(underlying), quants))
         case Type.Annotate(underlying, annots) => atPos(tpe, tpe)(Pat.Type.Annotate(loop(underlying), annots))
@@ -1084,8 +1084,31 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
       loop(t)
     }
 
-    def quasiquotePatternTyp(): Pat.Type = {
-      patternTyp()
+    def quasiquotePatternTyp(): Pat.Type = autoPos {
+      // NOTE: As per quasiquotes.md
+      // * pt"_" => Pat.Type.Wildcard (doesn't parse)
+      // * pt"x" => Pat.Var.Type (needs postprocessing, parsed as Type.Name)
+      // * pt"X" => error
+      // * pt"`x`" => Type.Name (ok)
+      // * pt"`X`" => Type.Name (ok)
+      token match {
+        case _: `_ ` if ahead(token.is[EOF]) =>
+          next()
+          Pat.Type.Wildcard()
+        case _ =>
+          val bqIdent = isIdent && isBackquoted
+          val nonbqIdent = isIdent && !isBackquoted
+          val ptpe = patternTyp()
+          ptpe match {
+            case ptpe: Type.Name if nonbqIdent =>
+              if (ptpe.value.head.isLower) atPos(ptpe, ptpe)(Pat.Var.Type(ptpe))
+              else syntaxError("Pattern type variables must start with a lower-case letter", at = ptpe)
+            case ptpe: Type.Name if bqIdent =>
+              syntaxError("Pattern type variables must not be enclosed in backquotes", at = ptpe)
+            case _ =>
+              ptpe
+          }
+      }
     }
   }
 
@@ -1933,7 +1956,17 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     }
 
     def quasiquotePattern(): Pat.Arg = {
-      pattern()
+      // NOTE: As per quasiquotes.md
+      // * p"x" => Pat.Var.Term (ok)
+      // * p"X" => Pat.Var.Term (needs postprocessing, parsed as Term.Name)
+      // * p"`x`" => Term.Name (ok)
+      // * p"`X`" => Term.Name (ok)
+      val nonbqIdent = isIdent && !isBackquoted
+      val pat = pattern()
+      pat match {
+        case pat: Term.Name if nonbqIdent => atPos(pat, pat)(Pat.Var.Term(pat))
+        case _ => pat
+      }
     }
 
     /** {{{

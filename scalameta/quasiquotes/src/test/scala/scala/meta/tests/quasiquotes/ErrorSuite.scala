@@ -402,7 +402,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta.quasiquotes._
       import scala.meta.dialects.Scala211
       val pat = p"`x`"
-      val ptpe = pt"Y"
+      val ptpe = pt"y"
       p"$pat: $ptpe"
     """) === """
       |<macro>:6: can't unquote a name here, use a pattern instead
@@ -421,6 +421,30 @@ class ErrorSuite extends FunSuite {
       |      val p"case $X: T => " = p"case x: T =>"
       |                  ^
     """.trim.stripMargin)
+  }
+
+  test("pt\"X\"") {
+   assert(typecheckError("""
+     import scala.meta.quasiquotes._
+     import scala.meta.dialects.Scala211
+     pt"X"
+   """).contains("Pattern type variables must start with a lower-case letter"))
+  }
+
+  test("pt\"`x`\"") {
+   assert(typecheckError("""
+     import scala.meta.quasiquotes._
+     import scala.meta.dialects.Scala211
+     pt"`x`"
+   """).contains("Pattern type variables must not be enclosed in backquotes"))
+  }
+
+  test("pt\"`X`\"") {
+   assert(typecheckError("""
+     import scala.meta.quasiquotes._
+     import scala.meta.dialects.Scala211
+     pt"`X`"
+   """).contains("Pattern type variables must not be enclosed in backquotes"))
   }
 
 //  test("""pt"$ptpe[..$ptpes]""") { // TODO review after #216 resolved
