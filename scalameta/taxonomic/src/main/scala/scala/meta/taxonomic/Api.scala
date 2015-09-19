@@ -35,7 +35,6 @@ private[meta] trait Aliases {
   type Domain = scala.meta.taxonomic.Domain
   val Domain = scala.meta.taxonomic.Domain
 
-
   type Artifact = scala.meta.taxonomic.Artifact
   val Artifact = scala.meta.taxonomic.Artifact
 
