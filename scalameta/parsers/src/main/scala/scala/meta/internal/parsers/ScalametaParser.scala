@@ -71,14 +71,10 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   def parseType(): Type = parseRule(_.typ())
   def parseTypeArg(): Type.Arg = parseRule(_.paramType())
   def parseTypeParam(): Type.Param = parseRule(_.typeParam(ownerIsType = true, ctxBoundsAllowed = true))
-  def parsePat(): Pat = {
-    parseRule(_.pattern()) match {
-      case pat: Pat => pat
-      case other => reporter.syntaxError("argument patterns are not allowed here", at = other)
-    }
-  }
-  def parseQuasiquotePat(): Pat.Arg = parseRule(_.quasiquotePattern())
-  def parsePatArg(): Pat.Arg = parseRule(_.pattern())
+  def parsePat(): Pat = parseRule(_.pattern()).require[Pat]
+  def parseQuasiquotePat(): Pat = parseRule(_.quasiquotePattern()).require[Pat]
+  def parsePatArg(): Pat.Arg = parseRule(_.argumentPattern())
+  def parseQuasiquotePatArg(): Pat.Arg = parseRule(_.quasiquotePatternArg())
   def parsePatType(): Pat.Type = parseRule(_.patternTyp())
   def parseQuasiquotePatType(): Pat.Type = parseRule(_.quasiquotePatternTyp())
   def parseCase(): Case = parseRule{parser => parser.accept[`case`]; parser.caseClause()}
@@ -1955,18 +1951,26 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
       loop(pattern1())
     }
 
-    def quasiquotePattern(): Pat.Arg = {
+    private def topLevelNamesToPats[T >: Pat](op: => T): T = {
       // NOTE: As per quasiquotes.md
       // * p"x" => Pat.Var.Term (ok)
       // * p"X" => Pat.Var.Term (needs postprocessing, parsed as Term.Name)
       // * p"`x`" => Term.Name (ok)
       // * p"`X`" => Term.Name (ok)
       val nonbqIdent = isIdent && !isBackquoted
-      val pat = pattern()
+      val pat = op
       pat match {
         case pat: Term.Name if nonbqIdent => atPos(pat, pat)(Pat.Var.Term(pat))
         case _ => pat
       }
+    }
+
+    def quasiquotePattern(): Pat.Arg = {
+      topLevelNamesToPats(pattern())
+    }
+
+    def quasiquotePatternArg(): Pat.Arg = {
+      topLevelNamesToPats(argumentPattern())
     }
 
     /** {{{
@@ -2191,8 +2195,10 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   /** Default entry points into some pattern contexts. */
   def pattern(): Pat.Arg = noSeq.pattern()
   def quasiquotePattern(): Pat.Arg = noSeq.quasiquotePattern()
+  def quasiquotePatternArg(): Pat.Arg = seqOK.quasiquotePatternArg()
   def seqPatterns(): List[Pat.Arg] = seqOK.patterns()
   def xmlSeqPatterns(): List[Pat.Arg] = xmlSeqOK.patterns() // Called from xml parser
+  def argumentPattern(): Pat.Arg = seqOK.pattern()
   def argumentPatterns(): List[Pat.Arg] = inParens {
     if (token.is[`)`]) Nil
     else seqPatterns()

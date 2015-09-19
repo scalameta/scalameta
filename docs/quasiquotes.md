@@ -55,9 +55,9 @@
 
             | Quasiquote
 ------------|------------------------------
- Named      | `arg"$name = $expr"`
- Repeated   | `arg"$expr: _*"`
- Expression | `arg"$expr"`
+ Named      | `qarg"$name = $expr"`
+ Repeated   | `qarg"$expr: _*"`
+ Expression | `qarg"$expr"`
 
 ## Types (meta.Type)
 
@@ -83,9 +83,9 @@
 
           | Quasiquote
 ----------|-----------------
- By Name  | `t"=> $tpe"`
- Repeated | `t"$tpe *"`
- Type     | `t"$tpe"`
+ By Name  | `targ"=> $tpe"`
+ Repeated | `targ"$tpe *"`
+ Type     | `targ"$tpe"`
 
 ## Patterns (meta.Pat) and Cases (meta.Case)
 
@@ -109,8 +109,8 @@
 
                    | Quasiquote
 -------------------|----------------------------
- Sequence Wildcard | `p"_*"`
- Pattern           | `p"$pat"`
+ Sequence Wildcard | `parg"_*"`
+ Pattern           | `parg"$pat"`
 
 ## Type Patterns (meta.Pat.Type)
 
@@ -257,20 +257,20 @@
  meta.Name.Indeterminate  | `$iname`      | Can't be constructed, only extracted from `importee"..."` and `mod"..."`
  meta.Name.Qualifier      | `$qname`      | `q`, `t`, anonymous names can't be constructed, only extracted from `mod"..."`
  meta.Pat                 | `$pat`        | `p`
- meta.Pat.Arg             | `$apat`       | `p`
+ meta.Pat.Arg             | `$apat`       | `parg`
  meta.Pat.Var.Term        | `$pname`      | `p`
  meta.Pat.Type            | `$ptpe`       | `pt`
  meta.Importee            | `$importee`   | `importee`
  meta.Stat                | `$stat`       | `q`
  meta.Template            | `$template`   | `template`
  meta.Term                | `$expr`       | `q`
- meta.Term.Arg            | `$aexpr`      | `arg`
+ meta.Term.Arg            | `$aexpr`      | `qarg`
  meta.Term.Name           | `$name`       | `q`
  meta.Term.Ref            | `$ref`        | `q`
  meta.Term.Param          | `$param`      | `param`
  meta.Term.Param.Name     | `$paramname`  | `q`, anonymous names can't be constructed, only extracted from `param`
  meta.Type                | `$tpe`        | `t`
- meta.Type.Arg            | `$atpe`       | `t`
+ meta.Type.Arg            | `$atpe`       | `targ`
  meta.Type.Name           | `$tname`      | `t`
  meta.Type.Param          | `$tparam`     | `tparam`
  meta.Type.Param.Name     | `$tparamname` | `t`, anonymous names can't be constructed, only extracted from `tparam`

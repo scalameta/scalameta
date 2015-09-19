@@ -490,4 +490,40 @@ class ErrorSuite extends FunSuite {
       |                                             ^
     """.trim.stripMargin)
   }
+
+  test("t\"T*\"") {
+    assert(typecheckError("""
+      import scala.meta.quasiquotes._
+      import scala.meta.dialects.Scala211
+      t"T*"
+    """) === """
+      |<macro>:4: end of file expected but identifier found
+      |      t"T*"
+      |         ^
+    """.trim.stripMargin)
+  }
+
+  test("t\"=> T\"") {
+    assert(typecheckError("""
+      import scala.meta.quasiquotes._
+      import scala.meta.dialects.Scala211
+      t"=> T"
+    """) === """
+      |<macro>:4: identifier expected but right arrow found
+      |      t"=> T"
+      |        ^
+    """.trim.stripMargin)
+  }
+
+  test("p\"_*\"") {
+    assert(typecheckError("""
+      import scala.meta.quasiquotes._
+      import scala.meta.dialects.Scala211
+      p"_*"
+    """) === """
+      |<macro>:4: illegal start of simple pattern
+      |      p"_*"
+      |          ^
+    """.trim.stripMargin)
+  }
 }

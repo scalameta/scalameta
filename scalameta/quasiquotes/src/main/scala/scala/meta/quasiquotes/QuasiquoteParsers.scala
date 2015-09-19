@@ -9,6 +9,7 @@ import scala.meta.internal.parsers.ScalametaParser._
 // so we have to work around a bit. Maybe in the future we discover a better approach.
 trait QuasiquoteParsers extends scala.meta.parsers.Api {
   implicit lazy val parseQuasiquoteCtor: Parse[Ctor] = toParse(_.parseQuasiquoteCtor())
-  implicit lazy val parseQuasiquotePat: Parse[Pat.Arg] = toParse(_.parseQuasiquotePat())
+  implicit lazy val parseQuasiquotePat: Parse[Pat] = toParse(_.parseQuasiquotePat())
+  implicit lazy val parseQuasiquotePatArg: Parse[Pat.Arg] = toParse(_.parseQuasiquotePatArg())
   implicit lazy val parseQuasiquotePatType: Parse[Pat.Type] = toParse(_.parseQuasiquotePatType())
 }
