@@ -248,6 +248,7 @@
  Type                     | Shorthand     | Interpolator
 --------------------------|---------------|--------------
  meta.Case                | `$case`       | `p`
+ meta.Ctor                | `$ctor`       | `q`
  meta.Ctor.Name           | `$ctorname`   | `ctor`
  meta.Ctor.Ref            | `$ctorref`    | `ctor`
  meta.Enumerator          | `$enumerator` | `enumerator`

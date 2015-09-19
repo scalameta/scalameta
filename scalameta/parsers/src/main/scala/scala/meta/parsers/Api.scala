@@ -2,7 +2,6 @@ package scala.meta
 package parsers
 
 import scala.meta.parsers.common._
-import scala.meta.internal.parsers.ScalametaParser
 import scala.meta.internal.parsers.ScalametaParser._
 
 private[meta] trait Api extends common.Api {

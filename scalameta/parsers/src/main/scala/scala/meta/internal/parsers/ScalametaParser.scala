@@ -64,6 +64,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     case stats if stats.forall(_.isTopLevelStat) => Source(stats)
     case other => reporter.syntaxError("these statements can't be mixed together", at = parserTokens.head)
   })
+  def parseQuasiquoteCtor(): Ctor = parseRule(_.quasiquoteCtor())
   def parseTerm(): Term = parseRule(_.expr())
   def parseTermArg(): Term.Arg = parseRule(_.argumentExpr())
   def parseTermParam(): Term.Param = parseRule(_.param(ownerIsCase = false, ownerIsType = true, isImplicit = false))
@@ -76,8 +77,10 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
       case other => reporter.syntaxError("argument patterns are not allowed here", at = other)
     }
   }
+  def parseQuasiquotePat(): Pat.Arg = parseRule(_.quasiquotePattern())
   def parsePatArg(): Pat.Arg = parseRule(_.pattern())
   def parsePatType(): Pat.Type = parseRule(_.patternTyp())
+  def parseQuasiquotePatType(): Pat.Type = parseRule(_.quasiquotePatternTyp())
   def parseCase(): Case = parseRule{parser => parser.accept[`case`]; parser.caseClause()}
   def parseCtorCall(): Ctor.Call = parseRule(_.constructorCall(typ(), allowArgss = true))
   def parseTemplate(): Template = parseRule(_.template())
@@ -530,6 +533,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   def isUnaryOp: Boolean            = isIdentAnd(Helpers.isUnaryOp)
   def isIdentExcept(except: String) = isIdentAnd(_ != except)
   def isIdentOf(name: String)       = isIdentAnd(_ == name)
+  def isIdent: Boolean              = isIdentAnd(_ => true)
   def isRawStar: Boolean            = isIdentOf("*")
   def isRawBar: Boolean             = isIdentOf("|")
   def isColonWildcardStar: Boolean  = token.is[`:`] && ahead(token.is[`_ `] && ahead(isIdentOf("*")))
@@ -1078,6 +1082,10 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
         }
       }
       loop(t)
+    }
+
+    def quasiquotePatternTyp(): Pat.Type = {
+      patternTyp()
     }
   }
 
@@ -1924,6 +1932,10 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
       loop(pattern1())
     }
 
+    def quasiquotePattern(): Pat.Arg = {
+      pattern()
+    }
+
     /** {{{
      *  Pattern1    ::= varid `:' TypePat
      *                |  `_' `:' TypePat
@@ -2135,15 +2147,17 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   /** These are default entry points into the pattern context sensitive methods:
    *  they are all initiated from non-pattern context.
    */
-  def typ(): Type      = outPattern.typ()
-  def patternTyp()     = outPattern.patternTyp()
+  def typ() = outPattern.typ()
+  def patternTyp() = outPattern.patternTyp()
+  def quasiquotePatternTyp() = outPattern.quasiquotePatternTyp()
   def startInfixType() = outPattern.infixType(InfixMode.FirstOp)
-  def startModType()   = outPattern.annotType()
-  def exprTypeArgs()   = outPattern.typeArgs()
+  def startModType() = outPattern.annotType()
+  def exprTypeArgs() = outPattern.typeArgs()
   def exprSimpleType() = outPattern.simpleType()
 
   /** Default entry points into some pattern contexts. */
   def pattern(): Pat.Arg = noSeq.pattern()
+  def quasiquotePattern(): Pat.Arg = noSeq.quasiquotePattern()
   def seqPatterns(): List[Pat.Arg] = seqOK.patterns()
   def xmlSeqPatterns(): List[Pat.Arg] = xmlSeqOK.patterns() // Called from xml parser
   def argumentPatterns(): List[Pat.Arg] = inParens {
@@ -2751,6 +2765,10 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
       case _      => accept[`=`]; constrExpr()
     }
     Ctor.Secondary(mods, atPos(thisPos, thisPos)(Ctor.Name("this")), paramss, body)
+  }
+
+  def quasiquoteCtor(): Ctor = {
+    ???
   }
 
   /** {{{
