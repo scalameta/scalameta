@@ -1671,8 +1671,23 @@ class QuasiquoteSuite extends FunSuite {
     assert(q"package $ref { ..$stats }".show[Structure] === "Pkg(Term.Name(\"p\"), Seq(Defn.Class(Nil, Type.Name(\"A\"), Nil, Ctor.Primary(Nil, Ctor.Ref.Name(\"this\"), Nil), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), None)), Defn.Object(Nil, Term.Name(\"B\"), Ctor.Primary(Nil, Ctor.Ref.Name(\"this\"), Nil), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), None))))")
   }
 
+  test("1 q\"..$mods def this(...$paramss)\"") { // TODO check for ... when #221 resolved
+    val q"..$mods def this(..$paramss)" = q"private def this(x: X, y: Y)"
+    assert(mods.toString === "List(private)")
+    assert(mods(0).show[Structure] === "Mod.Private(Name.Anonymous())")
+    assert(paramss.toString === "List(x: X, y: Y)")
+    assert(paramss(0).show[Structure] === "Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"X\")), None)")
+    assert(paramss(1).show[Structure] === "Term.Param(Nil, Term.Name(\"y\"), Some(Type.Name(\"Y\")), None)")
+  }
+
+   test("2 q\"..$mods def this(...$paramss)\"") { // TODO check for ... when #221 resolved
+     val mods = List(mod"private")
+     val paramss = List(param"x: X", param"x: Y")
+     assert(q"..$mods def this(..$paramss)".show[Structure] === "Ctor.Primary(Seq(Mod.Private(Name.Anonymous())), Ctor.Ref.Name(\"this\"), Seq(Seq(Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"X\")), None), Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"Y\")), None))))")
+   }
+
   test("1 q\"..$mods def this(...$paramss) = $expr\"") { // TODO check for ... when #221 resolved
-  val q"..$mods def this(..$paramss) = $expr" = q"private final def this(x: X, y: Y) = this(foo, bar)"
+    val q"..$mods def this(..$paramss) = $expr" = q"private final def this(x: X, y: Y) = this(foo, bar)"
     assert(mods.toString === "List(private, final)")
     assert(mods(0).show[Structure] === "Mod.Private(Name.Anonymous())")
     assert(mods(1).show[Structure] === "Mod.Final()")
@@ -1682,12 +1697,12 @@ class QuasiquoteSuite extends FunSuite {
     assert(expr.show[Structure] === "Term.Apply(Ctor.Ref.Name(\"this\"), Seq(Term.Name(\"foo\"), Term.Name(\"bar\")))")
   }
 
-  //  test("2 q\"..$mods def this(...$paramss) = $expr\"") { // TODO check for ... when #221 resolved
-  //    val mods = List(mod"private", mod"final")
-  //    val paramss = List(param"x: X", param"x: Y")
-  //    val expr = q"foo(foo, bar)" // TODO review after #227 resolved
-  //    assert(q"..$mods def this(..$paramss) = $expr".show[Structure] === "Ctor.Secondary(Seq(Mod.Private(Name.Anonymous()), Mod.Final()), Ctor.Ref.Name(\"this\"), Seq(Seq(Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"X\")), None), Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"Y\")), None))), Term.Apply(Term.This(Name.Anonymous()), Seq(Term.Name(\"foo\"), Term.Name(\"bar\"))))")
-  //  }
+   test("2 q\"..$mods def this(...$paramss) = $expr\"") { // TODO check for ... when #221 resolved
+     val mods = List(mod"private", mod"final")
+     val paramss = List(param"x: X", param"x: Y")
+     val expr = ctor"C(foo, bar)"
+     assert(q"..$mods def this(..$paramss) = $expr".show[Structure] === "Ctor.Secondary(Seq(Mod.Private(Name.Anonymous()), Mod.Final()), Ctor.Ref.Name(\"this\"), Seq(Seq(Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"X\")), None), Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"Y\")), None))), Term.Apply(Ctor.Ref.Name(\"C\"), Seq(Term.Name(\"foo\"), Term.Name(\"bar\"))))")
+   }
 
   test("1 param\"..$mods $paramname: $atpeopt = $expropt\"") {
     val param"..$mods $paramname: $atpeopt = $expropt" = param"private final x: X = 42"

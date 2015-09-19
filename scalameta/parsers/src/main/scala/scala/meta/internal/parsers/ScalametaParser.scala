@@ -2758,7 +2758,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     accept[`this`]
     // TODO: ownerIsType = true is most likely a bug here
     // secondary constructors can't have val/var parameters
-    val paramss = paramClauses(ownerIsType = true).require[Seq[Seq[Term.Param]]]
+    val paramss = paramClauses(ownerIsType = true)
     newLineOptWhenFollowedBy[`{`]
     val body = token match {
       case _: `{` => constrBlock()
@@ -2767,8 +2767,23 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     Ctor.Secondary(mods, atPos(thisPos, thisPos)(Ctor.Name("this")), paramss, body)
   }
 
-  def quasiquoteCtor(): Ctor = {
-    ???
+  def quasiquoteCtor(): Ctor = autoPos {
+    val anns = annots(skipNewLines = true)
+    val mods = anns ++ modifiers()
+    accept[`def`]
+    val name = atPos(in.tokenPos, in.tokenPos)(Ctor.Name("this"))
+    accept[`this`]
+    val paramss = paramClauses(ownerIsType = true)
+    newLineOptWhenFollowedBy[`{`]
+    if (token.is[EOF]) {
+      Ctor.Primary(mods, name, paramss)
+    } else {
+      val body = token match {
+        case _: `{` => constrBlock()
+        case _      => accept[`=`]; constrExpr()
+      }
+      Ctor.Secondary(mods, name, paramss, body)
+    }
   }
 
   /** {{{
