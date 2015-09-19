@@ -17,6 +17,7 @@ class QuasiquoteMacros(val c: Context) {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       val q"$mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
       val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" = mdef
+      val mparents1 = mparents ++ parents // TODO: this is kinda weird
       if (stats.nonEmpty) c.abort(cdef.pos, "@quasiquote classes must have empty bodies")
       val qmodule = {
         val qtypesLub = lub(qtypes.map(_.duplicate).map(qtype => {
@@ -33,9 +34,9 @@ class QuasiquoteMacros(val c: Context) {
       }
       val qparser = {
         val qunsafeResults = qtypes.map(qtype => q"""
-          // TODO: Explicitly spell out the desugaring
-          import _root_.scala.meta.parsers._
-          input.parse[$qtype]
+          type Parse[T] = _root_.scala.meta.parsers.common.Parse[T]
+          val parse = _root_.scala.Predef.implicitly[Parse[$qtype]]
+          parse(input)(dialect)
         """)
         val qsafeResults = qunsafeResults.map(qunsafeParser => q"_root_.scala.util.Try($qunsafeParser)")
         val gsafeResultsWithLogging = qsafeResults.map(qsafeResult => q"""
@@ -52,7 +53,7 @@ class QuasiquoteMacros(val c: Context) {
       val stats1 = stats :+ qmodule
       val mstats1 = mstats :+ qparser
       val cdef1 = q"$mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats1 }"
-      val mdef1 = q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
+      val mdef1 = q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents1 { $mself => ..$mstats1 }"
       List(cdef1, mdef1)
     }
     val expanded = annottees match {

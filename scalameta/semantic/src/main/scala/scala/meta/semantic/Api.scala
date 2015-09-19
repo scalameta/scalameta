@@ -10,7 +10,7 @@ import scala.{Seq => _}
 import scala.annotation.compileTimeOnly
 import scala.collection.immutable.Seq
 import scala.reflect.{ClassTag, classTag}
-import scala.meta.taxonomic.Domain
+import scala.meta.taxonomic._
 import scala.meta.prettyprinters._
 import scala.meta.internal.{ast => impl} // necessary only to implement APIs, not to define them
 import scala.meta.internal.{semantic => s} // necessary only to implement APIs, not to define them
@@ -45,6 +45,11 @@ private[meta] trait Api {
   @hosted def dialect: Dialect = implicitly[SemanticContext].dialect
 
   @hosted def domain: Domain = implicitly[SemanticContext].domain
+
+  implicit class XtensionDomainLikeContext(c: SemanticContext) {
+    def sources: Seq[Source] = c.domain.sources
+    def resources: Seq[Resource] = c.domain.resources
+  }
 
   // ===========================
   // PART 4: ATTRIBUTES

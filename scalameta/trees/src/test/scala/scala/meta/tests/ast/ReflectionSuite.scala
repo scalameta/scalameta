@@ -14,8 +14,8 @@ class ReflectionSuite extends AstSuite {
   // but please deal with that (or come up with a more effective way of testing AstReflection)
   test("root") {
     assert(symbolOf[scala.meta.Tree].isRoot)
-    assert(symbolOf[scala.meta.Tree].asRoot.allBranches.length === 72)
-    assert(symbolOf[scala.meta.Tree].asRoot.allLeafs.length === 340)
+    assert(symbolOf[scala.meta.Tree].asRoot.allBranches.length === 73)
+    assert(symbolOf[scala.meta.Tree].asRoot.allLeafs.length === 341)
   }
 
   test("If") {
@@ -44,6 +44,7 @@ class ReflectionSuite extends AstSuite {
     val columnSize = published.map(_._1.typeSymbol.fullName.length).max
     assert(published.map(kvp => s"%-${columnSize}s => %s".format(kvp._1, kvp._2)).mkString(EOL) === """
       |scala.meta.Case                                  => scala.meta.Case
+      |scala.meta.Ctor                                  => scala.meta.Ctor
       |scala.meta.Ctor.Call                             => scala.meta.Ctor.Call
       |scala.meta.Ctor.Name                             => scala.meta.Ctor.Name
       |scala.meta.Ctor.Ref                              => scala.meta.Ctor.Ref
@@ -85,15 +86,15 @@ class ReflectionSuite extends AstSuite {
       |scala.meta.Type.Param.Name                       => scala.meta.Type.Param.Name
       |scala.meta.Type.Ref                              => scala.meta.Type.Ref
       |scala.meta.internal.ast.Case                     => scala.meta.Case
-      |scala.meta.internal.ast.Ctor                     => scala.meta.Member.Term
+      |scala.meta.internal.ast.Ctor                     => scala.meta.Ctor
       |scala.meta.internal.ast.Ctor.Call                => scala.meta.Ctor.Call
-      |scala.meta.internal.ast.Ctor.Primary             => scala.meta.Member.Term
+      |scala.meta.internal.ast.Ctor.Primary             => scala.meta.Ctor
       |scala.meta.internal.ast.Ctor.Ref                 => scala.meta.Ctor.Ref
       |scala.meta.internal.ast.Ctor.Ref.Function        => scala.meta.Ctor.Ref
       |scala.meta.internal.ast.Ctor.Ref.Name            => scala.meta.Ctor.Name
       |scala.meta.internal.ast.Ctor.Ref.Project         => scala.meta.Ctor.Ref
       |scala.meta.internal.ast.Ctor.Ref.Select          => scala.meta.Ctor.Ref
-      |scala.meta.internal.ast.Ctor.Secondary           => scala.meta.Member.Term with scala.meta.Stat
+      |scala.meta.internal.ast.Ctor.Secondary           => scala.meta.Ctor with scala.meta.Stat
       |scala.meta.internal.ast.Decl                     => scala.meta.Stat
       |scala.meta.internal.ast.Decl.Def                 => scala.meta.Member.Term with scala.meta.Stat
       |scala.meta.internal.ast.Decl.Type                => scala.meta.Member.Type with scala.meta.Stat
@@ -351,7 +352,7 @@ class ReflectionSuite extends AstSuite {
       |field Type.Param.typeBounds: scala.meta.internal.ast.Type.Bounds
       |field Type.Placeholder.bounds: scala.meta.internal.ast.Type.Bounds
       |
-      |scala.meta.internal.ast.Ctor.Primary -> scala.meta.Member.Term
+      |scala.meta.internal.ast.Ctor.Primary -> scala.meta.Ctor
       |field Defn.Class.ctor: scala.meta.internal.ast.Ctor.Primary
       |field Defn.Object.ctor: scala.meta.internal.ast.Ctor.Primary
       |field Defn.Trait.ctor: scala.meta.internal.ast.Ctor.Primary

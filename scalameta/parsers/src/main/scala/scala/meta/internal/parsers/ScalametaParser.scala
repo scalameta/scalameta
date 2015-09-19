@@ -64,20 +64,19 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     case stats if stats.forall(_.isTopLevelStat) => Source(stats)
     case other => reporter.syntaxError("these statements can't be mixed together", at = parserTokens.head)
   })
+  def parseQuasiquoteCtor(): Ctor = parseRule(_.quasiquoteCtor())
   def parseTerm(): Term = parseRule(_.expr())
   def parseTermArg(): Term.Arg = parseRule(_.argumentExpr())
   def parseTermParam(): Term.Param = parseRule(_.param(ownerIsCase = false, ownerIsType = true, isImplicit = false))
   def parseType(): Type = parseRule(_.typ())
   def parseTypeArg(): Type.Arg = parseRule(_.paramType())
   def parseTypeParam(): Type.Param = parseRule(_.typeParam(ownerIsType = true, ctxBoundsAllowed = true))
-  def parsePat(): Pat = {
-    parseRule(_.pattern()) match {
-      case pat: Pat => pat
-      case other => reporter.syntaxError("argument patterns are not allowed here", at = other)
-    }
-  }
-  def parsePatArg(): Pat.Arg = parseRule(_.pattern())
+  def parsePat(): Pat = parseRule(_.pattern()).require[Pat]
+  def parseQuasiquotePat(): Pat = parseRule(_.quasiquotePattern()).require[Pat]
+  def parsePatArg(): Pat.Arg = parseRule(_.argumentPattern())
+  def parseQuasiquotePatArg(): Pat.Arg = parseRule(_.quasiquotePatternArg())
   def parsePatType(): Pat.Type = parseRule(_.patternTyp())
+  def parseQuasiquotePatType(): Pat.Type = parseRule(_.quasiquotePatternTyp())
   def parseCase(): Case = parseRule{parser => parser.accept[`case`]; parser.caseClause()}
   def parseCtorCall(): Ctor.Call = parseRule(_.constructorCall(typ(), allowArgss = true))
   def parseTemplate(): Template = parseRule(_.template())
@@ -530,6 +529,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   def isUnaryOp: Boolean            = isIdentAnd(Helpers.isUnaryOp)
   def isIdentExcept(except: String) = isIdentAnd(_ != except)
   def isIdentOf(name: String)       = isIdentAnd(_ == name)
+  def isIdent: Boolean              = isIdentAnd(_ => true)
   def isRawStar: Boolean            = isIdentOf("*")
   def isRawBar: Boolean             = isIdentOf("|")
   def isColonWildcardStar: Boolean  = token.is[`:`] && ahead(token.is[`_ `] && ahead(isIdentOf("*")))
@@ -1059,9 +1059,9 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
         case Type.ApplyInfix(lhs, op, rhs) => atPos(tpe, tpe)(Pat.Type.ApplyInfix(loop(lhs), op, loop(rhs)))
         case Type.Function(params, res) => atPos(tpe, tpe)(Pat.Type.Function(params.map {
           case q @ Type.Arg.Quasi(1, Type.Arg.Quasi(0, _)) => q.become[Pat.Type.Quasi]
-          case p => loop(p.require[Type])
+          case p => convert(p.require[Type])
         }, loop(res)))
-        case Type.Tuple(elements) => atPos(tpe, tpe)(Pat.Type.Tuple(elements.map(loop)))
+        case Type.Tuple(elements) => atPos(tpe, tpe)(Pat.Type.Tuple(elements.map(convert)))
         case Type.Compound(tpes, refinement) => atPos(tpe, tpe)(Pat.Type.Compound(tpes.map(loop), refinement))
         case Type.Existential(underlying, quants) => atPos(tpe, tpe)(Pat.Type.Existential(loop(underlying), quants))
         case Type.Annotate(underlying, annots) => atPos(tpe, tpe)(Pat.Type.Annotate(loop(underlying), annots))
@@ -1078,6 +1078,33 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
         }
       }
       loop(t)
+    }
+
+    def quasiquotePatternTyp(): Pat.Type = autoPos {
+      // NOTE: As per quasiquotes.md
+      // * pt"_" => Pat.Type.Wildcard (doesn't parse)
+      // * pt"x" => Pat.Var.Type (needs postprocessing, parsed as Type.Name)
+      // * pt"X" => error
+      // * pt"`x`" => Type.Name (ok)
+      // * pt"`X`" => Type.Name (ok)
+      token match {
+        case _: `_ ` if ahead(token.is[EOF]) =>
+          next()
+          Pat.Type.Wildcard()
+        case _ =>
+          val bqIdent = isIdent && isBackquoted
+          val nonbqIdent = isIdent && !isBackquoted
+          val ptpe = patternTyp()
+          ptpe match {
+            case ptpe: Type.Name if nonbqIdent =>
+              if (ptpe.value.head.isLower) atPos(ptpe, ptpe)(Pat.Var.Type(ptpe))
+              else syntaxError("Pattern type variables must start with a lower-case letter", at = ptpe)
+            case ptpe: Type.Name if bqIdent =>
+              syntaxError("Pattern type variables must not be enclosed in backquotes", at = ptpe)
+            case _ =>
+              ptpe
+          }
+      }
     }
   }
 
@@ -1924,6 +1951,28 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
       loop(pattern1())
     }
 
+    private def topLevelNamesToPats[T >: Pat](op: => T): T = {
+      // NOTE: As per quasiquotes.md
+      // * p"x" => Pat.Var.Term (ok)
+      // * p"X" => Pat.Var.Term (needs postprocessing, parsed as Term.Name)
+      // * p"`x`" => Term.Name (ok)
+      // * p"`X`" => Term.Name (ok)
+      val nonbqIdent = isIdent && !isBackquoted
+      val pat = op
+      pat match {
+        case pat: Term.Name if nonbqIdent => atPos(pat, pat)(Pat.Var.Term(pat))
+        case _ => pat
+      }
+    }
+
+    def quasiquotePattern(): Pat.Arg = {
+      topLevelNamesToPats(pattern())
+    }
+
+    def quasiquotePatternArg(): Pat.Arg = {
+      topLevelNamesToPats(argumentPattern())
+    }
+
     /** {{{
      *  Pattern1    ::= varid `:' TypePat
      *                |  `_' `:' TypePat
@@ -2135,17 +2184,21 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   /** These are default entry points into the pattern context sensitive methods:
    *  they are all initiated from non-pattern context.
    */
-  def typ(): Type      = outPattern.typ()
-  def patternTyp()     = outPattern.patternTyp()
+  def typ() = outPattern.typ()
+  def patternTyp() = outPattern.patternTyp()
+  def quasiquotePatternTyp() = outPattern.quasiquotePatternTyp()
   def startInfixType() = outPattern.infixType(InfixMode.FirstOp)
-  def startModType()   = outPattern.annotType()
-  def exprTypeArgs()   = outPattern.typeArgs()
+  def startModType() = outPattern.annotType()
+  def exprTypeArgs() = outPattern.typeArgs()
   def exprSimpleType() = outPattern.simpleType()
 
   /** Default entry points into some pattern contexts. */
   def pattern(): Pat.Arg = noSeq.pattern()
+  def quasiquotePattern(): Pat.Arg = noSeq.quasiquotePattern()
+  def quasiquotePatternArg(): Pat.Arg = seqOK.quasiquotePatternArg()
   def seqPatterns(): List[Pat.Arg] = seqOK.patterns()
   def xmlSeqPatterns(): List[Pat.Arg] = xmlSeqOK.patterns() // Called from xml parser
+  def argumentPattern(): Pat.Arg = seqOK.pattern()
   def argumentPatterns(): List[Pat.Arg] = inParens {
     if (token.is[`)`]) Nil
     else seqPatterns()
@@ -2744,13 +2797,32 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     accept[`this`]
     // TODO: ownerIsType = true is most likely a bug here
     // secondary constructors can't have val/var parameters
-    val paramss = paramClauses(ownerIsType = true).require[Seq[Seq[Term.Param]]]
+    val paramss = paramClauses(ownerIsType = true)
     newLineOptWhenFollowedBy[`{`]
     val body = token match {
       case _: `{` => constrBlock()
       case _      => accept[`=`]; constrExpr()
     }
     Ctor.Secondary(mods, atPos(thisPos, thisPos)(Ctor.Name("this")), paramss, body)
+  }
+
+  def quasiquoteCtor(): Ctor = autoPos {
+    val anns = annots(skipNewLines = true)
+    val mods = anns ++ modifiers()
+    accept[`def`]
+    val name = atPos(in.tokenPos, in.tokenPos)(Ctor.Name("this"))
+    accept[`this`]
+    val paramss = paramClauses(ownerIsType = true)
+    newLineOptWhenFollowedBy[`{`]
+    if (token.is[EOF]) {
+      Ctor.Primary(mods, name, paramss)
+    } else {
+      val body = token match {
+        case _: `{` => constrBlock()
+        case _      => accept[`=`]; constrExpr()
+      }
+      Ctor.Secondary(mods, name, paramss, body)
+    }
   }
 
   /** {{{

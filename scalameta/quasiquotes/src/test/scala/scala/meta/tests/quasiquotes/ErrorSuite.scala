@@ -402,7 +402,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta.quasiquotes._
       import scala.meta.dialects.Scala211
       val pat = p"`x`"
-      val ptpe = pt"Y"
+      val ptpe = pt"y"
       p"$pat: $ptpe"
     """) === """
       |<macro>:6: can't unquote a name here, use a pattern instead
@@ -421,6 +421,30 @@ class ErrorSuite extends FunSuite {
       |      val p"case $X: T => " = p"case x: T =>"
       |                  ^
     """.trim.stripMargin)
+  }
+
+  test("pt\"X\"") {
+   assert(typecheckError("""
+     import scala.meta.quasiquotes._
+     import scala.meta.dialects.Scala211
+     pt"X"
+   """).contains("Pattern type variables must start with a lower-case letter"))
+  }
+
+  test("pt\"`x`\"") {
+   assert(typecheckError("""
+     import scala.meta.quasiquotes._
+     import scala.meta.dialects.Scala211
+     pt"`x`"
+   """).contains("Pattern type variables must not be enclosed in backquotes"))
+  }
+
+  test("pt\"`X`\"") {
+   assert(typecheckError("""
+     import scala.meta.quasiquotes._
+     import scala.meta.dialects.Scala211
+     pt"`X`"
+   """).contains("Pattern type variables must not be enclosed in backquotes"))
   }
 
 //  test("""pt"$ptpe[..$ptpes]""") { // TODO review after #216 resolved
@@ -464,6 +488,42 @@ class ErrorSuite extends FunSuite {
       |<macro>:4: this expected but identifier found
       |      q"private final def this(x: X, y: Y) = foo"
       |                                             ^
+    """.trim.stripMargin)
+  }
+
+  test("t\"T*\"") {
+    assert(typecheckError("""
+      import scala.meta.quasiquotes._
+      import scala.meta.dialects.Scala211
+      t"T*"
+    """) === """
+      |<macro>:4: end of file expected but identifier found
+      |      t"T*"
+      |         ^
+    """.trim.stripMargin)
+  }
+
+  test("t\"=> T\"") {
+    assert(typecheckError("""
+      import scala.meta.quasiquotes._
+      import scala.meta.dialects.Scala211
+      t"=> T"
+    """) === """
+      |<macro>:4: identifier expected but right arrow found
+      |      t"=> T"
+      |        ^
+    """.trim.stripMargin)
+  }
+
+  test("p\"_*\"") {
+    assert(typecheckError("""
+      import scala.meta.quasiquotes._
+      import scala.meta.dialects.Scala211
+      p"_*"
+    """) === """
+      |<macro>:4: illegal start of simple pattern
+      |      p"_*"
+      |          ^
     """.trim.stripMargin)
   }
 }
