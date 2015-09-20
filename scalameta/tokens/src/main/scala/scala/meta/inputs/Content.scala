@@ -25,5 +25,6 @@ object Content {
   //  [error]  match expected type org.scalameta.convert.Convert[String,scala.meta.syntactic.Content]
   implicit val charsToInput: Convert[Array[Char], Content] = Convert(chars => Input.String(new scala.Predef.String(chars)))
   implicit val stringToInput: Convert[scala.Predef.String, Content] = Convert(Input.String(_))
+  implicit def streamToInput[T <: java.io.InputStream]: Convert[T, Input] = Convert(is => Input.Stream(is, Charset.forName("UTF-8")))
   implicit val fileToInput: Convert[java.io.File, Content] = Convert(f => Input.File(f, Charset.forName("UTF-8")))
 }

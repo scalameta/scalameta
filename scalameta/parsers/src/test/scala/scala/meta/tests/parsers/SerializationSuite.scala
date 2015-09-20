@@ -2,6 +2,7 @@ package scala.meta.tests
 package ast
 
 import org.scalatest._
+import java.nio.charset.Charset
 import java.io._
 import scala.meta._
 import scala.meta.dialects.Scala211
@@ -27,6 +28,12 @@ class SerializationSuite extends FunSuite {
 
   test("Input.String-based trees are serializable") {
     val source = "class C".parse[Source]
+    tryRoundtrip(source)
+  }
+
+  test("Input.Stream-based trees are serializable") {
+    val stream = new java.io.ByteArrayInputStream("class C".getBytes(Charset.forName("UTF-8")))
+    val source = stream.parse[Source]
     tryRoundtrip(source)
   }
 
