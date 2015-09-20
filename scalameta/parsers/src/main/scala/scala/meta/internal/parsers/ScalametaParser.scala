@@ -41,7 +41,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     val t = rule(this)
     // NOTE: can't have in.prevTokenPos here
     // because we need to subsume all the trailing trivia
-    val end = in.tokenPos - 1
+    val end = in.tokenPos
     accept[EOF]
     atPos(start, end)(t)
   }
