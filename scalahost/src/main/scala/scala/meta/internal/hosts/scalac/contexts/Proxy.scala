@@ -420,8 +420,7 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
     currentDomain = Domain(globalArtifacts: _*)
 
     if (Debug.scalahost) println(s"indexing ${initialDomain.artifacts.length} domain artifacts")
-    val domainArtifacts1 = load(initialDomain.artifacts.toList)
-    currentDomain = Domain(currentDomain.artifacts ++ domainArtifacts1: _*)
+    load(initialDomain.artifacts.toList)
 
     if (Debug.scalahost) println(s"initialized semantic proxy from $global and $initialDomain")
   }
