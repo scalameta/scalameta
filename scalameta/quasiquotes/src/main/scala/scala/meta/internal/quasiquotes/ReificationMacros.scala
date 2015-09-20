@@ -280,6 +280,13 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
       def liftTree(tree: api.Tree): u.Tree = {
         Liftables.liftableSubTree(tree)
       }
+      def liftOptionTree(maybeTree: Option[api.Tree]): u.Tree = {
+        maybeTree match {
+          case Some(tree: impl.Quasi) => liftQuasi(tree, optional = true)
+          case Some(otherTree) => q"_root_.scala.Some(${liftTree(otherTree)})"
+          case None => q"_root_.scala.None"
+        }
+      }
       def liftTrees(trees: Seq[api.Tree]): u.Tree = {
         def loop(trees: List[api.Tree], acc: u.Tree, prefix: List[api.Tree]): u.Tree = trees match {
           // TODO: instead of checking against 1, we should also take pendingQuasis into account
@@ -322,16 +329,29 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
         }
         loop(trees.toList, EmptyTree, Nil)
       }
+      def liftOptionTrees(maybeTrees: Option[Seq[api.Tree]]): u.Tree = {
+        maybeTrees match {
+          case Some(Seq(quasi: impl.Quasi)) if quasi.rank == 0 =>
+            q"_root_.scala.Some(${liftTrees(Seq(quasi))})"
+          case Some(Seq(quasi: impl.Quasi)) if quasi.rank > 0 =>
+            liftQuasi(quasi, optional = true)
+          case Some(otherTrees) =>
+            q"_root_.scala.Some(${liftTrees(otherTrees)})"
+          case None =>
+            q"_root_.scala.None"
+        }
+      }
       def liftTreess(treess: Seq[Seq[api.Tree]]): u.Tree = {
         // TODO: implement support for construction and deconstruction with ...
         Liftable.liftList[Seq[api.Tree]](Liftables.liftableSubTrees).apply(treess.toList)
       }
-      def liftQuasi(quasi: impl.Quasi): u.Tree = {
+      def liftQuasi(quasi: impl.Quasi, optional: Boolean = false): u.Tree = {
         try {
           pendingQuasis.push(quasi)
           if (quasi.rank == 0) {
             val tree = quasi.tree.asInstanceOf[u.Tree]
-            val pt = quasi.pt.wrap(pendingQuasis.map(_.rank).sum).toTpe
+            var pt = quasi.pt.wrap(pendingQuasis.map(_.rank).sum).toTpe
+            if (optional) pt = appliedType(typeOf[Option[_]], pt)
             val idealReifier = if (mode.isTerm) q"$InternalLift[$pt]($tree)" else q"$InternalUnlift[$pt]($tree)"
             val realWorldReifier = mode match {
               case Mode.Term =>
@@ -344,15 +364,52 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
                 // b) call Unlift.unapply as a normal method in the right-hand side part of the pattern matching clause.
                 val hole = holes.find(hole => tree.equalsStructure(pq"${hole.name}")).getOrElse(sys.error(s"fatal error reifying pattern quasiquote: $quasi, $holes"))
                 val unrankedPt = hole.arg match { case pq"_: $pt" => pt; case pq"$_: $pt" => pt; case _ => tq"_root_.scala.meta.Tree" }
-                val rankedPt = unrankedPt.wrap(pendingQuasis.map(_.rank).sum)
+                var rankedPt = unrankedPt.wrap(pendingQuasis.map(_.rank).sum)
+                if (optional) rankedPt = tq"_root_.scala.Option[$rankedPt]"
                 hole.reifier = atPos(quasi.position)(q"$InternalUnlift.unapply[$rankedPt](${hole.name})") // TODO: make reifier immutable somehow
                 pq"${hole.name}"
             }
             atPos(quasi.position)(realWorldReifier)
           } else {
             quasi.tree match {
-              case quasi: impl.Quasi if quasi.rank == 0 => liftQuasi(quasi)
-              case _ => c.abort(quasi.position, "complex ellipses are not supported yet")
+              case quasi: impl.Quasi if quasi.rank == 0 =>
+                // NOTE: Option[Seq[T]] exists only in one instance in our tree API: Template.stats.
+                // Unfortunately, there is a semantic difference between an empty template and a template
+                // without any stats, so we can't just replace it with Seq[T] and rely on tokens
+                // (because tokens may be lost, e.g. a TASTY roundtrip).
+                //
+                // Strictly speaking, we shouldn't be allowing ..$stats in Template.stats,
+                // because the pt is Option[Seq[T]], not a Seq[T], but given the fact that Template.stats
+                // is very common, I'm willing to bend the rules here and flatten Option[Seq[T]],
+                // capturing 0 trees if we have None and working as usual if we have Some.
+                //
+                // This is definitely loss of information, but if someone wants to discern Some and None,
+                // they are welcome to write $stats, which will correctly capture an Option.
+                // TODO: Well, they aren't welcome, because $stats will insert or capture just one stat.
+                // This is the same problem as with `q"new $x"`, where x is ambiguous between a template and a ctorcall.
+                if (optional) {
+                  mode match {
+                    case Mode.Term =>
+                      q"_root_.scala.Some(${liftQuasi(quasi)})"
+                    case Mode.Pattern(_, holes) =>
+                      val reified = liftQuasi(quasi)
+                      val hole = holes.find(hole => reified.equalsStructure(pq"${hole.name}")).get
+                      require(hole.reifier.nonEmpty)
+                      val flattened = q"_root_.scala.meta.internal.quasiquotes.Flatten.unapply(${hole.name})"
+                      val unlifted = (new Transformer {
+                        override def transform(tree: ReflectTree): ReflectTree = tree match {
+                          case Ident(name) if name == hole.name => Ident(TermName("tree"))
+                          case tree => super.transform(tree)
+                        }
+                      }).transform(hole.reifier)
+                      hole.reifier = atPos(quasi.position)(q"$flattened.flatMap(tree => $unlifted)")
+                      reified
+                  }
+                } else {
+                  liftQuasi(quasi)
+                }
+              case _ =>
+                c.abort(quasi.position, "complex ellipses are not supported yet")
             }
           }
         } finally {
@@ -369,6 +426,8 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
       implicit def liftableSubTree[T <: api.Tree]: Liftable[T] = Liftable((tree: T) => materializeAst[api.Tree].apply(tree))
       implicit def liftableSubTrees[T <: api.Tree]: Liftable[Seq[T]] = Liftable((trees: Seq[T]) => Lifts.liftTrees(trees))
       implicit def liftableSubTreess[T <: api.Tree]: Liftable[Seq[Seq[T]]] = Liftable((treess: Seq[Seq[T]]) => Lifts.liftTreess(treess))
+      implicit def liftableOptionSubTree[T <: api.Tree]: Liftable[Option[T]] = Liftable((x: Option[T]) => Lifts.liftOptionTree(x))
+      implicit def liftableOptionSubTrees[T <: api.Tree]: Liftable[Option[Seq[T]]] = Liftable((x: Option[Seq[T]]) => Lifts.liftOptionTrees(x))
     }
     mode match {
       case Mode.Term =>

@@ -23,4 +23,7 @@ object Lift {
   implicit def liftSymbol[I >: Lit]: Lift[Symbol, I]         = Lift{ x => impl.Lit.Symbol(x) }
   implicit def liftNull[I >: Lit]: Lift[Null, I]             = Lift{ x => impl.Lit.Null() }
   implicit def liftUnit[I >: Lit]: Lift[Unit, I]             = Lift{ x => impl.Lit.Unit() }
+
+  implicit def liftIdentity[O, I >: O]: Lift[O, I] = Lift { x => x }
+  implicit def liftOption[O, I](implicit lift: Lift[O, I]): Lift[O, Option[I]] = Lift { x => Some(lift(x)) }
 }

@@ -23,4 +23,6 @@ object Unlift {
   implicit def unliftSymbol[I >: Lit]: Unlift[I, Symbol] = Unlift{ case impl.Lit.Symbol(x) => x }
   implicit def unliftNull[I >: Lit]: Unlift[I, Null]     = Unlift{ case impl.Lit.Null() => null }
   implicit def unliftUnit[I >: Lit]: Unlift[I, Unit]     = Unlift{ case impl.Lit.Unit() => () }
+
+  // TODO: what are the duals of liftIdentity and liftOption?
 }

@@ -15,4 +15,9 @@ object Structure {
   implicit def structureSeq[T: Structure]: Structure[Seq[T]] = Structure { xs =>
     s("Seq(", r(xs.map(x => implicitly[Structure[T]].apply(x)), ", "), ")")
   }
+
+  implicit def structureOption[T: Structure]: Structure[Option[T]] = Structure {
+    case Some(x) => s("Some(", implicitly[Structure[T]].apply(x), ")")
+    case None => s("None")
+  }
 }
