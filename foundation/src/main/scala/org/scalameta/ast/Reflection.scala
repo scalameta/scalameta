@@ -86,7 +86,7 @@ trait Reflection extends AdtReflection {
     def publish: Type = tpe.map({
       case TypeRef(_, sym, Nil) if sym.isBottomTree =>
         // TODO: I've no idea what this thing was for, so I'm putting a crasher here to figure it out
-        ???
+        NothingTpe
       case TypeRef(_, sym, Nil) if sym.isInternalTree =>
         val publicParents = sym.asClass.baseClasses.filter(_.isPublicTree)
         val minimalParents = publicParents.filter(p1 => !publicParents.exists(p2 => p1 != p2 && p2.asClass.toType <:< p1.asClass.toType))

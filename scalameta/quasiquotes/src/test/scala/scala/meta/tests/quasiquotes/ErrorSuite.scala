@@ -526,4 +526,34 @@ class ErrorSuite extends FunSuite {
       |          ^
     """.trim.stripMargin)
   }
+
+  test("unquote Seq[T] into Option[Seq[T]]") {
+    assert(typecheckError("""
+      import scala.meta.quasiquotes._
+      import scala.meta.dialects.Scala211
+      val stats = List(q"def x = 42")
+      q"class C { $stats }"
+    """) === """
+      |<macro>:5: type mismatch when unquoting;
+      | found   : List[scala.meta.Member.Term with scala.meta.Stat]
+      | required: scala.meta.Stat
+      |      q"class C { $stats }"
+      |                  ^
+    """.trim.stripMargin)
+  }
+
+  test("unquote Option[Seq[T]] into Option[Seq[T]]") {
+    assert(typecheckError("""
+      import scala.meta.quasiquotes._
+      import scala.meta.dialects.Scala211
+      val stats = Some(List(q"def x = 42"))
+      q"class C { $stats }"
+    """) === """
+      |<macro>:5: type mismatch when unquoting;
+      | found   : Some[List[scala.meta.Member.Term with scala.meta.Stat]]
+      | required: scala.meta.Stat
+      |      q"class C { $stats }"
+      |                  ^
+    """.trim.stripMargin)
+  }
 }

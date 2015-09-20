@@ -3072,7 +3072,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
    */
   def templateStatSeq(isPre : Boolean): (Term.Param, List[Stat]) = {
     var self: Term.Param = autoPos(Term.Param(Nil, autoPos(Name.Anonymous()), None, None))
-    var firstOpt: Option[Term] = None
+    var firstOpt: Option[Stat] = None
     if (token.is[ExprIntro]) {
       val first = expr(InTemplate) // @S: first statement is potentially converted so cannot be stubbed.
       if (token.is[`=>`]) {
@@ -3095,7 +3095,10 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
         }
         next()
       } else {
-        firstOpt = Some(first)
+        firstOpt = Some(first match {
+          case q: Term.Quasi => q.become[Stat.Quasi]
+          case other => other
+        })
         acceptStatSepOpt()
       }
     }
