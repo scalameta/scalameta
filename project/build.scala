@@ -161,7 +161,7 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     description := "Scala.meta's tree query language (basic and extended APIs)",
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided")
+    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _ % "provided")
   ) dependsOn (foundation, exceptions, trees)
 
   lazy val trees = Project(

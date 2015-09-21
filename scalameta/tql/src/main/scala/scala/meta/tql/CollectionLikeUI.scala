@@ -5,6 +5,8 @@ import scala.language.higherKinds
 import scala.language.reflectiveCalls
 import scala.language.experimental.macros
 import scala.reflect.ClassTag
+import scala.{Seq => _}
+import scala.collection.immutable.Seq
 import org.scalameta.algebra._
 import org.scalameta.typelevel._
 import scala.meta.internal.tql._
@@ -73,8 +75,8 @@ trait CollectionLikeUI[T] { self: Combinators[T] with Traverser[T] with SyntaxEn
    * Make it possible to use the collection like ui api inside different structures
    * A := Result of the Matcher
    * R := Some anonymous type which represents the result of a transformation on each MatchResult
-   * V := T | Option[T] | List[T]
-   * L := R | Option[R] | List[R]
+   * V := T | Option[T] | Seq[T]
+   * L := R | Option[R] | Seq[R]
    * */
   trait MatcherApply[A, R, V, L] {
     def apply(value: V)(m: Matcher[A])(f: (T, MatchResult[A]) => R): L
@@ -86,17 +88,44 @@ trait CollectionLikeUI[T] { self: Combinators[T] with Traverser[T] with SyntaxEn
       def apply(value: U)(m: Matcher[A])(f: (T, MatchResult[A]) => R): R = f(value, m.apply(value))
     }
 
-    //Make generic to Monad, Functor, Applicative, Monoid.. ?
-    implicit def toOpt[A, R, U <: T, L] = new MatcherApply[A, R, Option[U], Option[R]] {
+    //TODO: make generic to Monad, Functor, Applicative, Monoid.. ?
+    implicit def toOptNotTuple[A, R, U <: T, L](implicit ev: NotTuple[R]) = new MatcherApply[A, R, Option[U], Option[R]] {
       def apply(value: Option[U])(m: Matcher[A])(f: (T, MatchResult[A]) => R): Option[R] =
         value.map(x => f(x, m.apply(x)))
     }
 
-    //TODO make more generic (if needed?) to take into account, Set, Seq, Vector..
-    implicit def toList[A, R, U <: T, L] = new MatcherApply[A, R, List[U], List[R]] {
-      def apply(value: List[U])(m: Matcher[A])(f: (T, MatchResult[A]) => R): List[R] =
-        value.map(x => f(x, m.apply(x)))
+    implicit def toOptTuple[A, R1, R2: Monoid, U <: T, L] = new MatcherApply[A, (R1, R2), Option[U], (Option[R1], R2)] {
+      def apply(value: Option[U])(m: Matcher[A])(f: (T, MatchResult[A]) => (R1, R2)): (Option[R1], R2) = {
+        var r2s = implicitly[Monoid[R2]].zero
+        val r1s = value.map(x => {
+          val (r1, r2) = f(x, m.apply(x))
+          r2s = implicitly[Monoid[R2]].append(r2s, r2)
+          r1
+        })
+        (r1s, r2s)
+      }
     }
+
+    //TODO: make more generic (if needed?) to take into account, Set, List, Vector..
+    implicit def toSeqNotTuple[A, R, U <: T, L](implicit ev: NotTuple[R]) = new MatcherApply[A, R, Seq[U], Seq[R]] {
+      def apply(value: Seq[U])(m: Matcher[A])(f: (T, MatchResult[A]) => R): Seq[R] = {
+        value.map(x => f(x, m.apply(x)))
+      }
+    }
+
+    implicit def toSeqTuple[A, R1, R2: Monoid, U <: T, L] = new MatcherApply[A, (R1, R2), Seq[U], (Seq[R1], R2)] {
+      def apply(value: Seq[U])(m: Matcher[A])(f: (T, MatchResult[A]) => (R1, R2)): (Seq[R1], R2) = {
+        var r2s = implicitly[Monoid[R2]].zero
+        val r1s = value.map(x => {
+          val (r1, r2) = f(x, m.apply(x))
+          r2s = implicitly[Monoid[R2]].append(r2s, r2)
+          r1
+        })
+        (r1s, r2s)
+      }
+    }
+
+    // TODO: support Seq[Seq[...]]
   }
 
   /**

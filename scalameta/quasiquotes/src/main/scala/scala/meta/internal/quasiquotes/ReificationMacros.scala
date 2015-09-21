@@ -273,7 +273,7 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
     implicit class XtensionRankedTree(tree: u.Tree) {
       def wrap(rank: Int): u.Tree = {
         if (rank == 0) tree
-        else AppliedTypeTree(tq"$ImmutableSeq", List(tree))
+        else AppliedTypeTree(tq"$ImmutableSeq", List(tree.wrap(rank - 1)))
       }
     }
     object Lifts {
@@ -342,8 +342,13 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
         }
       }
       def liftTreess(treess: Seq[Seq[api.Tree]]): u.Tree = {
-        // TODO: implement support for construction and deconstruction with ...
-        Liftable.liftList[Seq[api.Tree]](Liftables.liftableSubTrees).apply(treess.toList)
+        // TODO: implement support for ... mixed with .., $ and normal code
+        treess match {
+          case Seq(Seq(quasi: impl.Quasi)) if quasi.rank == 2 =>
+            liftQuasi(quasi)
+          case _ =>
+            Liftable.liftList[Seq[api.Tree]](Liftables.liftableSubTrees).apply(treess.toList)
+        }
       }
       def liftQuasi(quasi: impl.Quasi, optional: Boolean = false): u.Tree = {
         try {

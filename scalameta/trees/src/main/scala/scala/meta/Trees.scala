@@ -1,11 +1,14 @@
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import org.scalameta.ast._
+import org.scalameta.invariants._
 import scala.{meta => api}
+import scala.meta.internal.{ast => impl}
 import scala.meta.inputs._
 import scala.meta.tokens._
 import scala.meta.prettyprinters._
 import scala.meta.internal.{equality => e}
+import scala.meta.internal.ast.Fresh
 
 package scala.meta {
   @root trait Tree extends Product with Serializable {
@@ -75,6 +78,8 @@ package scala.meta {
     object Param {
       @branch trait Name extends api.Name
     }
+    def fresh(): Term.Name = fresh("fresh")
+    def fresh(prefix: String): Term.Name = impl.Term.Name(prefix + Fresh.nextId())
   }
 
   @branch trait Type extends Tree with Type.Arg with Scope
@@ -86,6 +91,8 @@ package scala.meta {
     object Param {
       @branch trait Name extends api.Name
     }
+    def fresh(): Type.Name = fresh("fresh")
+    def fresh(prefix: String): Type.Name = impl.Type.Name(prefix + Fresh.nextId())
   }
 
   @branch trait Pat extends Tree with Pat.Arg
@@ -99,7 +106,11 @@ package scala.meta {
     @branch trait Type extends Tree
     object Type {
       @branch trait Ref extends Type with api.Ref
+      def fresh(): Pat.Var.Type = impl.Pat.Var.Type(Type.fresh().require[impl.Type.Name])
+      def fresh(prefix: String): Pat.Var.Type = impl.Pat.Var.Type(Type.fresh(prefix).require[impl.Type.Name])
     }
+    def fresh(): Pat.Var.Term = impl.Pat.Var.Term(Term.fresh().require[impl.Term.Name])
+    def fresh(prefix: String): Pat.Var.Term = impl.Pat.Var.Term(Term.fresh(prefix).require[impl.Term.Name])
   }
 
   @branch trait Lit extends Term with Pat with Type with Pat.Type
@@ -134,7 +145,6 @@ package scala.meta.internal.ast {
   import org.scalameta.invariants._
   import org.scalameta.annotations._
   import org.scalameta.unreachable
-  import scala.meta.internal.{ast => impl}
   import scala.meta.internal.semantic._
   import scala.meta.internal.ast.Helpers._
 

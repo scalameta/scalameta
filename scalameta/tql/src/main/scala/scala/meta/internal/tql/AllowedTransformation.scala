@@ -17,6 +17,7 @@ private[meta] class AllowedTransformationMacros(val c: Context) extends AstRefle
     val Tout = u.symbolOf[O].asType
     //c.abort(c.enclosingPosition, show(Tout) + " : " + show(brlhs.filter(x => Tout.toType <:< x.info.typeSymbol.asType.toType)))
 
+    // TODO: this seems to allow Tree => Tree. is that intentional?
     if (brlhs.exists(x => Tout.toType <:< x.info.typeSymbol.asType.toType))
       c.Expr(q"new _root_.scala.meta.tql.AllowedTransformation[${implicitly[c.WeakTypeTag[I]]}, ${implicitly[c.WeakTypeTag[O]]}] {}")
     else
@@ -29,12 +30,12 @@ private[meta] class AllowedTransformationMacros(val c: Context) extends AstRefle
 
   private def getBranch[A : c.WeakTypeTag]: List[TypeSymbol] = {
     val Asym = u.symbolOf[A]
-    if (Asym.isBranch) List(Asym.asType)
+    if (Asym.isBranch || Asym.isRoot) List(Asym.asType)
     else if (Asym.isLeaf)
       Asym.asLeaf.sym.asClass.baseClasses
         .filter(_.isBranch)
         //.filter(_.asBranch.leafs.exists(x => x.sym.fullName == Asym.asLeaf.sym.fullName))//gotta find a better solution
         .map(_.asType)
-    else c.abort(c.enclosingPosition, show("impossible to get branch from  "  + show(implicitly[c.WeakTypeTag[A]])))
+    else c.abort(c.enclosingPosition, show("impossible to get branch from "  + show(implicitly[c.WeakTypeTag[A]].tpe)))
   }
 }
