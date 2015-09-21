@@ -1782,9 +1782,19 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
    *  }}}
    */
   def argumentExprs(): List[Term.Arg] = token match {
-    case _: `{` => List(blockExpr())
-    case _: `(` => inParens(if (token.is[`)`]) Nil else commaSeparated(argumentExpr))
-    case _      => Nil
+    case _: `{` =>
+      List(blockExpr())
+    case _: `(` =>
+      inParens(token match {
+        case _: `)` =>
+          Nil
+        case tok: Ellipsis if tok.rank == 2 =>
+          List(ellipsis(2, unquote[Term.Arg]))
+        case _ =>
+          commaSeparated(argumentExpr)
+      })
+    case _ =>
+      Nil
   }
 
   /** {{{
@@ -2332,15 +2342,17 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
    */
   def paramClauses(ownerIsType: Boolean, ownerIsCase: Boolean = false): List[List[Term.Param]] = {
     var parsedImplicits = false
-    def paramClause(): List[Term.Param] = {
-      if (token.is[`)`])
-        return Nil
-
-      if (token.is[`implicit`]) {
-        next()
-        parsedImplicits = true
-      }
-      commaSeparated(param(ownerIsCase, ownerIsType, isImplicit = parsedImplicits))
+    def paramClause(): List[Term.Param] = token match {
+      case _: `)` =>
+        Nil
+      case tok: Ellipsis if tok.rank == 2 =>
+        List(ellipsis(2, unquote[Term.Param]))
+      case _ =>
+        if (token.is[`implicit`]) {
+          next()
+          parsedImplicits = true
+        }
+        commaSeparated(param(ownerIsCase, ownerIsType, isImplicit = parsedImplicits))
     }
     val paramss = new ListBuffer[List[Term.Param]]
     newLineOptWhenFollowedBy[`(`]

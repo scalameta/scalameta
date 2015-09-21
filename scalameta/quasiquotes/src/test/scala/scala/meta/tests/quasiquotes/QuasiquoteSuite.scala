@@ -2094,4 +2094,10 @@ class QuasiquoteSuite extends FunSuite {
     val q"class $_ { ..$stats }" = q"class C"
     assert(stats.show[Structure] === "Seq()")
   }
+
+  test("initial support for ...") {
+    val q"..$mods def $name[..$tparams](...$paramss): $tpe = $rhs" = q"def f(x: Int) = ???"
+    assert(paramss.show[Structure] === "Seq(Seq(Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"Int\")), None)))")
+    assert(q"..$mods def $name[..$tparams](...$paramss): $tpe = $rhs".show[Structure] === "Defn.Def(Nil, Term.Name(\"f\"), Nil, Seq(Seq(Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"Int\")), None))), None, Term.Name(\"???\"))")
+  }
 }
