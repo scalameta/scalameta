@@ -12,6 +12,7 @@ import scala.meta.tql._
  * */
 private[meta] class CombinatorMacros(val c: Context) {
   import c.universe._
+  import definitions._
   val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
 
   /**
@@ -66,9 +67,9 @@ private[meta] class CombinatorMacros(val c: Context) {
     val Ttpe = implicitly[c.WeakTypeTag[T]].tpe
 
     def setTuplesForEveryOne(clauses: List[CaseDef]): List[CaseDef] = {
-      def setTupleTo(rhs: c.Tree) = rhs.tpe match {
-        case TypeRef(_, sym, _) if sym.fullName != "scala.Tuple2" => q"($rhs, _root_.org.scalameta.algebra.Monoid.Void)"
-        case _ => rhs
+      def setTupleTo(rhs: c.Tree) = {
+        if (rhs.tpe.typeSymbol != TupleClass(2)) q"($rhs, _root_.org.scalameta.algebra.Monoid.Void)"
+        else rhs
       }
       clauses.map{_ match {
         case cq"${lhs: c.Tree} => ${rhs:  c.Tree}" => cq"$lhs => ${setTupleTo(rhs)}"
