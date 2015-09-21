@@ -6,7 +6,7 @@ package org.scalameta.typelevel
  * */
 //thanks to http://stackoverflow.com/questions/6909053/enforce-type-difference/17047288#17047288
 @annotation.implicitNotFound(msg = "Cannot prove that ${A} =!= ${B}.")
-trait =!=[A,B]
+trait =!=[A, B]
 
 object =!= {
   class Impl[A, B]
@@ -16,5 +16,5 @@ object =!= {
     implicit def neqAmbig2[A] : A Impl A = null
   }
 
-  implicit def foo[A,B]( implicit e: A Impl B ): A =!= B = null
+  implicit def materialize[A, B](implicit e: A Impl B): A =!= B = null
 }
