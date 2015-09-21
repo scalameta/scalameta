@@ -35,6 +35,6 @@ private[meta] class AllowedTransformationMacros(val c: Context) extends AstRefle
         .filter(_.isBranch)
         //.filter(_.asBranch.leafs.exists(x => x.sym.fullName == Asym.asLeaf.sym.fullName))//gotta find a better solution
         .map(_.asType)
-    else c.abort(c.enclosingPosition, show("impossible to get branch from  "  + show(implicitly[c.WeakTypeTag[A]])))
+    else c.abort(c.enclosingPosition, show("impossible to get branch from "  + show(implicitly[c.WeakTypeTag[A]].tpe)))
   }
 }
