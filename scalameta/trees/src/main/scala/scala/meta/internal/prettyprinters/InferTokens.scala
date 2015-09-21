@@ -144,16 +144,17 @@ private[meta] object inferTokens {
     /* Append a list of parameters wit implicit modifer properly added */
     def apndTermParamss(trees: Seq[Seq[Term.Param]]): Tokens = {
       def apndTermParams(ts: Seq[Term.Param]): Tokens = ts match {
-        case Nil => toks""
+        case Nil =>
+          toks"()"
         case x :: Nil if x.mods.exists(_.isInstanceOf[Mod.Implicit]) =>
           toks"(implicit ${x.tks})"
         case x :: xs if x.mods.exists(_.isInstanceOf[Mod.Implicit]) =>
           toks"(implicit ${x.tks}, ${xs.`o,o`})"
-        case _ => ts.`(o,o)`
+        case _ =>
+          ts.`(o,o)`
       }
       val sq = trees match {
         case Nil => toks""
-        case _ if trees.length == 1 && trees.head.length == 0 => toks"()"
         case _ => trees.flatMap(apndTermParams(_))
       }
       Tokens(sq: _*)
