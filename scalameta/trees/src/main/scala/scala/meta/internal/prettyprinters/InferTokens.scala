@@ -745,25 +745,27 @@ private[meta] object inferTokens {
    * the top indentation and re-infer it, to be sure that we have something looking good in the
    * end. A drawback on this is that we don't fully keep the original indentation. */
   private def deindent(tks: Tokens): Tokens = {
-    val lines = tks.onLines
-    if (tks.isSynthetic || tks.repr.isEmpty || lines.length == 1) tks
-    else {
-      /* In many cases, the start of a stat is not on a newline, while the end is.
-       * As an outcome, we "de-indent" based on the original indentation of the last line. This is
-       * mainly used for block, partial function, etc. and covers the cases that require such
-       * re-indentation. */
-      val lastIndent = lines.last.dropWhile(t => isIndent(t))
-      val toDrop = lines.last.length - lastIndent.length
-      def dropWhileWithMax[T](seq: Seq[T])(f: T => Boolean, max: Int): Seq[T] = {
-        def loop(seq: Seq[T], count: Int = 0): Seq[T] = seq match {
-          case tss if !tss.isEmpty && f(tss.head) && count < max => loop(tss.tail, count + 1)
-          case _ => seq
-        }
-        loop(seq)
-      }
-      val deindented = lines.init map (l => dropWhileWithMax(l)(t => isIndent(t), toDrop))
-      Tokens((deindented :+ lastIndent).flatten: _*)
-    }
+    // TODO: disabled because it doesn't play well with layout reinference for Source/Pkg/Template
+    // val lines = tks.onLines
+    // if (tks.isSynthetic || tks.repr.isEmpty || lines.length == 1) tks
+    // else {
+    //   /* In many cases, the start of a stat is not on a newline, while the end is.
+    //    * As an outcome, we "de-indent" based on the original indentation of the last line. This is
+    //    * mainly used for block, partial function, etc. and covers the cases that require such
+    //    * re-indentation. */
+    //   val lastIndent = lines.last.dropWhile(t => isIndent(t))
+    //   val toDrop = lines.last.length - lastIndent.length
+    //   def dropWhileWithMax[T](seq: Seq[T])(f: T => Boolean, max: Int): Seq[T] = {
+    //     def loop(seq: Seq[T], count: Int = 0): Seq[T] = seq match {
+    //       case tss if !tss.isEmpty && f(tss.head) && count < max => loop(tss.tail, count + 1)
+    //       case _ => seq
+    //     }
+    //     loop(seq)
+    //   }
+    //   val deindented = lines.init map (l => dropWhileWithMax(l)(t => isIndent(t), toDrop))
+    //   Tokens((deindented :+ lastIndent).flatten: _*)
+    // }
+    tks
   }
 
   /* Adding proper indentation to the token stream */
