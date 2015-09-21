@@ -307,6 +307,33 @@ private[meta] object inferTokens {
       if (withParents) toks"(${deindent(tree.tokens)})" else deindent(tree.tokens)
     }
 
+    def reconstructTokens(toks0: Tokens, stats0: Seq[Stat], stats1: Seq[Stat]): Tokens = {
+      /* If the proto is defined, we can then extract the top-level comments the root contains and re-insert them
+       * between the proper statements. We have no guarantee however that the indentation in a stat will correspond
+       * to the indentation in the source token stream. As an outcome, we filter all indentation out prior to the
+       * comparison. We then do the assumption that the correspondence between the stats from the original tree and
+       * the new one are equivalent, i.e. that if a class A was before a class B, the class A is still before the
+       * class B in the modified tree, even if this one or the other might contain more stats (in which case, they
+       * are either added or removed at the end). By doing so, we are guaranteed to preserve top-level comments. */
+      val oStatsTokens = stats0.map(_.tokens).repr
+      val zipped = (oStatsTokens zip stats1.map(_.tokens.repr))
+      val oStatsTail = oStatsTokens.drop(zipped.length).map(ts => (ts, Seq[Token]()))
+      /* Loop and replace the original token streams from Source.stats the new ones */
+      def loop(stream: Seq[Token], toReplace: Seq[(Seq[Token], Seq[Token])]): Seq[Token] = toReplace match {
+        case Seq() => stream
+        case tss =>
+          val sliceIndex = stream.indexOfSlice(tss.head._1)
+          loop(stream.patch(sliceIndex, tss.head._2, tss.head._1.length), tss.tail)
+      }
+      /* Keeping BOF */
+      val patchedTokens =
+        if (!toks0.repr.isEmpty && toks0.head.isInstanceOf[Token.BOF])
+          toks0.repr.head +: loop(toks0.repr.tail, zipped ++ oStatsTail)
+        else loop(toks0.repr, zipped ++ oStatsTail)
+      val newStats = stats1.drop(zipped.length).`->o->`
+      Tokens(patchedTokens ++ newStats: _*)
+    }
+
     /* Infer tokens for a given tree, making use of the helpers above. */
     def tkz(tree: Tree): Tokens = tree match {
       // Bottom
@@ -575,8 +602,13 @@ private[meta] object inferTokens {
       case t: Defn.Def =>      toks"${t.mods.`o_o_`}def ${t.name.tks}${t.tparams.`[o,o]`}${apndTermParamss(t.paramss)}${apndDeclTpe(t.decltpe)} = ${t.body.tks}"
       case t: Defn.Macro =>    toks"${t.mods.`o_o_`}def ${t.name.tks}${t.tparams.`[o,o]`}${apndTermParamss(t.paramss)}: ${t.decltpe.tks} = macro ${t.body.tks}"
       case t: Pkg =>
-        if (guessHasBraces(t)) toks"package ${t.ref.tks} {${t.stats.`[->o->`}}"
-        else toks"package ${t.ref.tks}${t.stats.`->o`}"
+        proto match {
+          case Some(original: Pkg) =>
+            reconstructTokens(original.tokens, original.stats, t.stats)
+          case _ =>
+            if (guessHasBraces(t)) toks"package ${t.ref.tks} {${t.stats.`[->o->`}}"
+            else toks"package ${t.ref.tks}${t.stats.`->o`}"
+        }
       case t: Pkg.Object =>    toks"package ${t.mods.`o_o_`}object ${t.name.tks}${apndTempl(t.templ)}"
       case t: Ctor.Primary =>
         val cmods = t.mods.`o_o`
@@ -591,33 +623,38 @@ private[meta] object inferTokens {
 
       // Template
       case t: Template =>
-        val isSelfEmpty = t.self.name.isInstanceOf[Name.Anonymous] && t.self.decltpe.isEmpty
-        val isSelfNonEmpty = !isSelfEmpty
-        val isBodyEmpty = isSelfEmpty && t.stats.isEmpty
-        val isTemplateEmpty = t.early.isEmpty && t.parents.isEmpty && isBodyEmpty
-        if (isTemplateEmpty) toks""
-        else {
-          val pearly = if (!t.early.isEmpty) toks"{ ${t.early.`o;o`} } with " else toks""
-          val pparents = {
-            if (!t.parents.isEmpty) t.parents.flattks()(toks" with ")()
-            else toks""
-          }
-          val pbody = {
-            val isOneLiner = t.stats.map(stats => stats.length == 0 || (stats.length == 1 && !stats.head.tokens.map(_.show[Syntax]).mkString.contains(EOL))).getOrElse(true)
-            (isSelfNonEmpty, t.stats.nonEmpty, t.stats.getOrElse(Nil)) match {
-              case (false, false, _) =>                      toks""
-              case (true, false, _) =>                       toks"{ ${t.self.tks} => }"
-              case (false, true, Seq()) if isOneLiner =>     toks"{}"
-              case (false, true, Seq(stat)) if isOneLiner => toks"{ ${stat.tks} }"
-              case (false, true, stats) =>                   toks"{${stats.`[->o->`}}"
-              case (true, true, Seq()) if isOneLiner =>      toks"{ ${t.self.tks} => }"
-              case (true, true, Seq(stat)) if isOneLiner =>  toks"{ ${t.self.tks} => ${stat.tks} }"
-              case (true, true, stats) =>                    toks"{ ${t.self.tks} =>${stats.`[->o->`}}"
+        proto match {
+          case Some(original: Template) =>
+            reconstructTokens(original.tokens, original.stats.getOrElse(Nil), t.stats.getOrElse(Nil))
+          case _ =>
+            val isSelfEmpty = t.self.name.isInstanceOf[Name.Anonymous] && t.self.decltpe.isEmpty
+            val isSelfNonEmpty = !isSelfEmpty
+            val isBodyEmpty = isSelfEmpty && t.stats.isEmpty
+            val isTemplateEmpty = t.early.isEmpty && t.parents.isEmpty && isBodyEmpty
+            if (isTemplateEmpty) toks""
+            else {
+              val pearly = if (!t.early.isEmpty) toks"{ ${t.early.`o;o`} } with " else toks""
+              val pparents = {
+                if (!t.parents.isEmpty) t.parents.flattks()(toks" with ")()
+                else toks""
+              }
+              val pbody = {
+                val isOneLiner = t.stats.map(stats => stats.length == 0 || (stats.length == 1 && !stats.head.tokens.map(_.show[Syntax]).mkString.contains(EOL))).getOrElse(true)
+                (isSelfNonEmpty, t.stats.nonEmpty, t.stats.getOrElse(Nil)) match {
+                  case (false, false, _) =>                      toks""
+                  case (true, false, _) =>                       toks"{ ${t.self.tks} => }"
+                  case (false, true, Seq()) if isOneLiner =>     toks"{}"
+                  case (false, true, Seq(stat)) if isOneLiner => toks"{ ${stat.tks} }"
+                  case (false, true, stats) =>                   toks"{${stats.`[->o->`}}"
+                  case (true, true, Seq()) if isOneLiner =>      toks"{ ${t.self.tks} => }"
+                  case (true, true, Seq(stat)) if isOneLiner =>  toks"{ ${t.self.tks} => ${stat.tks} }"
+                  case (true, true, stats) =>                    toks"{ ${t.self.tks} =>${stats.`[->o->`}}"
+                }
+              }
+              if ((!t.early.isEmpty || !t.parents.isEmpty) && !pbody.isEmpty) toks"$pearly$pparents $pbody"
+              else if (!t.early.isEmpty || !t.parents.isEmpty) pearly ++ pparents
+              else pbody
             }
-          }
-          if ((!t.early.isEmpty || !t.parents.isEmpty) && !pbody.isEmpty) toks"$pearly$pparents $pbody"
-          else if (!t.early.isEmpty || !t.parents.isEmpty) pearly ++ pparents
-          else pbody
         }
 
       // Mod
@@ -681,33 +718,7 @@ private[meta] object inferTokens {
       // Source
       case t: Source =>
         proto match {
-          /* If the proto is defined, we can then extract the top-level comments the root contains and re-insert them
-           * between the proper statements. We have no guarantee however that the indentation in a stat will correspond
-           * to the indentation in the source token stream. As an outcome, we filter all indentation out prior to the
-           * comparison. We then do the assumption that the correspondence between the stats from the original tree and
-           * the new one are equivalent, i.e. that if a class A was before a class B, the class A is still before the
-           * class B in the modified tree, even if this one or the other might contain more stats (in which case, they
-           * are either added or removed at the end). By doing so, we are guaranteed to preserve top-level comments. */
-          case Some(original: Source) =>
-            val originalTokens = original.tokens
-            val oStatsTokens = original.stats.map(_.tokens).repr
-            val zipped = (oStatsTokens zip t.stats.map(_.tokens.repr))
-            val oStatsTail = oStatsTokens.drop(zipped.length).map(ts => (ts, Seq[Token]()))
-            /* Loop and replace the original token streams from Source.stats the new ones */
-            def loop(stream: Seq[Token], toReplace: Seq[(Seq[Token], Seq[Token])]): Seq[Token] = toReplace match {
-              case Seq() => stream
-              case tss =>
-                val sliceIndex = stream.indexOfSlice(tss.head._1)
-                loop(stream.patch(sliceIndex, tss.head._2, tss.head._1.length), tss.tail)
-            }
-            /* Keeping BOF */
-            val patchedTokens =
-              if (!originalTokens.repr.isEmpty && originalTokens.head.isInstanceOf[Token.BOF])
-                originalTokens.repr.head +: loop(originalTokens.repr.tail, zipped ++ oStatsTail)
-              else loop(originalTokens.repr, zipped ++ oStatsTail)
-            val newStats = t.stats.drop(zipped.length).`->o->`
-            Tokens(patchedTokens ++ newStats: _*)
-          /* If the proto is not defined, we simply put all statements line per line */
+          case Some(original: Source) => reconstructTokens(original.tokens, original.stats, t.stats)
           case _ => t.stats.`o->o`
         }
     }
