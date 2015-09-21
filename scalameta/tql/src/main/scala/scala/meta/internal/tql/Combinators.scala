@@ -143,7 +143,31 @@ private[meta] class CombinatorMacros(val c: Context) {
    * To solve this problem we have to remonve the <unapply-selector> ourselves, and here is the solution:
    * thanks Eugene : https://gist.github.com/xeno-by/7fbd422c6789299140a7*/
   protected object betterUntypecheck extends Transformer {
+    private object ExpandedQuasiquotePattern {
+      def unapply(tree: Tree): Option[Tree] = tree match {
+        case UnApply(app @ Apply(Select(qual, TermName("unapply")), List(Ident(TermName("<unapply-selector>")))), args) =>
+          import scala.tools.nsc.Global
+          val global = c.universe.asInstanceOf[Global]
+          import global.analyzer._
+          val expandee = app.asInstanceOf[global.Tree].attachments.get[MacroExpansionAttachment].map(_.expandee.asInstanceOf[Tree])
+          expandee.flatMap({
+            case Apply(
+                Apply(Select(qual, TermName("unapply")), List(Ident(TermName("<unapply-selector>")))),
+                List(dialect)) =>
+              qual match {
+                case Select(Apply(_, List(realQual)), interp) =>  Some(Apply(Select(realQual, interp), args))
+                case _ => None
+              }
+            case _ =>
+              None
+          })
+        case _ =>
+          None
+      }
+    }
     override def transform(tree: Tree): Tree = tree match {
+      case ExpandedQuasiquotePattern(tree) =>
+        super.transform(tree)
       case UnApply(Apply(Select(qual, TermName("unapply")), List(Ident(TermName("<unapply-selector>")))), args) =>
         Apply(transform(qual), transformTrees(args))
       case UnApply(Apply(TypeApply(Select(qual, TermName("unapplySeq")),List(TypeTree())), List(Ident(TermName("<unapply-selector>")))), args) =>
@@ -151,6 +175,6 @@ private[meta] class CombinatorMacros(val c: Context) {
         Apply(transform(qual), transformTrees(args))
       case _ => super.transform(tree)
     }
-    def apply(tree: Tree): Tree =  c.untypecheck(transform(tree))
+    def apply(tree: Tree): Tree = c.untypecheck(transform(tree))
   }
 }
