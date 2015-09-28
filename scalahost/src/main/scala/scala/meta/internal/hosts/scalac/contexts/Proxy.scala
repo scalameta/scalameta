@@ -24,6 +24,7 @@ import scala.meta.semantic.{Context => ScalametaSemanticContext}
 import scala.meta.internal.hosts.scalac.converters.{Api => ConverterApi}
 import scala.meta.internal.ast.mergeTrees
 import scala.tools.nsc.{Global => ScalaGlobal}
+import scala.tools.nsc.backend.JavaPlatform
 import scala.meta.dialects.Scala211
 import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
@@ -233,14 +234,14 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
         unit
       })
 
-      val m_firstPhase = currentRun.getClass.getDeclaredMethods().find(_.getName == "firstPhase").get
+      val m_firstPhase = classOf[Run].getDeclaredMethods().find(_.getName == "firstPhase").get
       m_firstPhase.setAccessible(true)
       val firstPhase = m_firstPhase.invoke(currentRun).asInstanceOf[Phase]
       val relevantPhases = firstPhase.iterator.takeWhile(_.id < math.max(globalPhase.id, currentRun.typerPhase.id))
       def applyPhase(ph: Phase, unit: CompilationUnit) = enteringPhase(ph)(ph.asInstanceOf[GlobalPhase].applyPhase(unit))
       relevantPhases.foreach(ph => units.foreach(applyPhase(ph, _)))
 
-      val m_refreshProgress = currentRun.getClass.getDeclaredMethods().find(_.getName == "refreshProgress").get
+      val m_refreshProgress = classOf[Run].getDeclaredMethods().find(_.getName == "refreshProgress").get
       m_refreshProgress.setAccessible(true)
       m_refreshProgress.invoke(currentRun)
 
@@ -334,7 +335,7 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
         // aren't going to get propagated. Of course, I tried to sidestep this problem
         // by using something like `global.extendCompilerClassPath(domainClasspath: _*)`,
         // but unfortunately it throws an obscure assertion error, so I just gave up.
-        val m_currentClassPath = global.platform.getClass.getDeclaredMethod("currentClassPath")
+        val m_currentClassPath = classOf[JavaPlatform].getDeclaredMethod("currentClassPath")
         m_currentClassPath.setAccessible(true)
         val currentClassPath = m_currentClassPath.invoke(global.platform).asInstanceOf[Option[_]]
         require(currentClassPath.isEmpty)
