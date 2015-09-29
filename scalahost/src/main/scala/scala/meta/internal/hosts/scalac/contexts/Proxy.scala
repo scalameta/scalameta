@@ -62,9 +62,15 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
         val typer = newTyper(rootContext(NoCompilationUnit, EmptyTree).make(tree, owner))
         typer.context.initRootContext() // need to manually set context mode, otherwise typer.silent will throw exceptions
         enteringTyper({
-          typer.silent(_.typed(tree, mode, WildcardType), reportAmbiguousErrors = false) match {
-            case SilentResultValue(result) => Right(result)
-            case error @ SilentTypeError(_) => Left(error.err.errMsg)
+          val old = settings.exposeEmptyPackage.value
+          try {
+            if (!tree.isInstanceOf[g.PackageDef]) settings.exposeEmptyPackage.value = true
+            typer.silent(_.typed(tree, mode, WildcardType), reportAmbiguousErrors = false) match {
+              case SilentResultValue(result) => Right(result)
+              case error @ SilentTypeError(_) => Left(error.err.errMsg)
+            }
+          } finally {
+            settings.exposeEmptyPackage.value = old
           }
         })
       }
