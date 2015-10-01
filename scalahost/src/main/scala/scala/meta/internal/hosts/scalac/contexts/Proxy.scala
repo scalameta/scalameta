@@ -86,7 +86,7 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
           // NOTE: This works because typechecking in scala.meta doesn't change the shape of the tree.
           val index = parent.children.indexOf(tree)
           val parent1 = loop(parent.require[m.Tree])
-          parent.children(index).require[m.Tree]
+          parent1.children(index).require[m.Tree]
         case None =>
           val sytree = tree
           val setree = tree match {
