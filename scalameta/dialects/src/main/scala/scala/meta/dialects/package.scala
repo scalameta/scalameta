@@ -2,12 +2,13 @@ package scala.meta
 
 import scala.annotation.implicitNotFound
 import org.scalameta.adt._
+import org.scalameta.dialects._
 import scala.meta.dialects._
+import scala.language.experimental.macros
 
 // NOTE: can't put Dialect into scala.meta.Dialects
 // because then implicit scope for Dialect lookups will contain members of the package object
 // i.e. both Scala211 and Dotty, which is definitely not what we want
-@implicitNotFound("don't know what dialect to use here (to fix this, import something from scala.dialects, e.g. scala.meta.dialects.Scala211)")
 @root trait Dialect extends Serializable {
   // Canonical name for the dialect.
   // Can be used to uniquely identify the dialect, e.g. during serialization/deserialization.
@@ -73,8 +74,10 @@ package object dialects {
 }
 
 object Dialect {
-  private val QuasiquoteRx = "^Quasiquote\\((.*?)\\)$".r
+  // NOTE: See https://github.com/scalameta/scalameta/issues/253 for discussion.
+  implicit def currentDialect: Dialect = macro CurrentDialect.impl
 
+  private val QuasiquoteRx = "^Quasiquote\\((.*?)\\)$".r
   def forName(name: String): Dialect = name match {
     case "Scala211" => scala.meta.dialects.Scala211
     case "Dotty" => scala.meta.dialects.Dotty

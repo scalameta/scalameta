@@ -8,7 +8,7 @@ import scala.compat.Platform.EOL
 import scala.annotation.implicitNotFound
 import scala.meta.prettyprinters.Syntax
 
-@implicitNotFound(msg = "don't know how to show[Summary] for ${T} (if you're prettyprinting a tree, be sure to import a dialect, e.g. scala.meta.dialects.Scala211)")
+@implicitNotFound(msg = "don't know how to show[Summary] for ${T}")
 private[meta] trait Summary[T] extends Show[T]
 private[meta] object Summary {
   def apply[T](f: T => Show.Result): Summary[T] = new Summary[T] { def apply(input: T) = f(input) }

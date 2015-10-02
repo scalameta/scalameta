@@ -72,13 +72,6 @@ class PublicSuite extends FunSuite {
     """) === "value q is not a member of StringContext")
   }
 
-  test("quasiquotes without any dialect") {
-    assert(typecheckError("""
-      import scala.meta._
-      q"hello"
-    """) === "don't know what dialect to use here (to fix this, import something from scala.dialects, e.g. scala.meta.dialects.Scala211)")
-  }
-
   test("quasiquotes without static dialect") {
     assert(typecheckError("""
       import scala.meta._
@@ -367,13 +360,6 @@ class PublicSuite extends FunSuite {
     """) === "don't know how to convert Int to scala.meta.inputs.Input")
   }
 
-  test("parse without dialect") {
-    assert(typecheckError("""
-      import scala.meta._
-      "".parse[Term]
-    """) === "don't know what dialect to use here (to fix this, import something from scala.dialects, e.g. scala.meta.dialects.Scala211)")
-  }
-
   test("parse without parseability") {
     assert(typecheckError("""
       import scala.meta._
@@ -423,13 +409,6 @@ class PublicSuite extends FunSuite {
     """) === "don't know how to convert Int to scala.meta.inputs.Content")
   }
 
-  test("tokens without dialect") {
-    assert(typecheckError("""
-      import scala.meta._
-      "".tokens
-    """) === "don't know what dialect to use here (to fix this, import something from scala.dialects, e.g. scala.meta.dialects.Scala211)")
-  }
-
   test("tokens when everything's correct (static dialect)") {
     assert(typecheckError("""
       import scala.meta._
@@ -464,13 +443,6 @@ class PublicSuite extends FunSuite {
     """) === "not found: type Code")
   }
 
-  test("show[Code] without dialect") {
-    assert(typecheckError("""
-      import scala.meta._
-      (??? : Tree).show[Code]
-    """) === "don't know how to show[Syntax] for scala.meta.Tree (if you're prettyprinting a tree, be sure to import a dialect, e.g. scala.meta.dialects.Scala211)")
-  }
-
   test("show[Code] when everything's correct (static dialect)") {
     assert(typecheckError("""
       import scala.meta._
@@ -491,13 +463,6 @@ class PublicSuite extends FunSuite {
     assert(typecheckError("""
       (??? : scala.meta.Tree).show[Syntax]
     """) === "not found: type Syntax")
-  }
-
-  test("show[Syntax] without dialect") {
-    assert(typecheckError("""
-      import scala.meta._
-      (??? : Tree).show[Syntax]
-    """) === "don't know how to show[Syntax] for scala.meta.Tree (if you're prettyprinting a tree, be sure to import a dialect, e.g. scala.meta.dialects.Scala211)")
   }
 
   test("show[Syntax] when everything's correct (static dialect)") {
