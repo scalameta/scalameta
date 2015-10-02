@@ -1,5 +1,5 @@
 package scala.meta
-package taxonomic
+package artifacts
 
 import org.scalameta.adt._
 import org.scalameta.data._

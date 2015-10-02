@@ -22,9 +22,9 @@ class ContextMacros(val c: Context) {
       val stats1 = stats.map {
         case stat @ DefDef(mods, name, tparams, vparamss, tpt, body) if translateExceptions =>
           val rethrow = {
-            val isSemantic = !c.internal.enclosingOwner.fullName.contains(".taxonomic")
+            val isSemantic = !c.internal.enclosingOwner.fullName.contains(".artifacts")
             if (isSemantic) q"throw new _root_.scala.meta.semantic.SemanticException(other.getMessage, other)"
-            else q"throw new _root_.scala.meta.taxonomic.TaxonomicException(artifact, other.getMessage, other)"
+            else q"throw new _root_.scala.meta.artifacts.ArtifactException(artifact, other.getMessage, other)"
           }
           val body1 = q"""
             try $body

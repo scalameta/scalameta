@@ -52,15 +52,15 @@
 <path fill="none" stroke="black" d="M78.6947,-685.947C106.887,-728.236 163.944,-813.822 195.589,-861.289"/>
 <polygon fill="black" stroke="black" points="192.73,-863.31 201.19,-869.689 198.555,-859.427 192.73,-863.31"/>
 </g>
-<!-- org.scalameta:taxonomic_2.11:0.1.0&#45;SNAPSHOT -->
-<g id="node5" class="node"><title>org.scalameta:taxonomic_2.11:0.1.0&#45;SNAPSHOT</title>
+<!-- org.scalameta:artifacts_2.11:0.1.0&#45;SNAPSHOT -->
+<g id="node5" class="node"><title>org.scalameta:artifacts_2.11:0.1.0&#45;SNAPSHOT</title>
 <polygon fill="none" stroke="black" points="316,-790.905 316,-840.905 438,-840.905 438,-790.905 316,-790.905"/>
 <text text-anchor="start" x="338" y="-826.705" font-family="Times,serif" font-size="14.00">org.scalameta</text>
-<text text-anchor="start" x="330" y="-812.705" font-family="Times,serif" font-weight="bold" font-size="14.00">taxonomic_2.11</text>
+<text text-anchor="start" x="330" y="-812.705" font-family="Times,serif" font-weight="bold" font-size="14.00">artifacts_2.11</text>
 <text text-anchor="start" x="324" y="-798.705" font-family="Times,serif" font-size="14.00">0.1.0&#45;SNAPSHOT</text>
 </g>
-<!-- org.scalameta:scalameta_2.11:0.1.0&#45;SNAPSHOT&#45;&gt;org.scalameta:taxonomic_2.11:0.1.0&#45;SNAPSHOT -->
-<g id="edge5" class="edge"><title>org.scalameta:scalameta_2.11:0.1.0&#45;SNAPSHOT&#45;&gt;org.scalameta:taxonomic_2.11:0.1.0&#45;SNAPSHOT</title>
+<!-- org.scalameta:scalameta_2.11:0.1.0&#45;SNAPSHOT&#45;&gt;org.scalameta:artifacts_2.11:0.1.0&#45;SNAPSHOT -->
+<g id="edge5" class="edge"><title>org.scalameta:scalameta_2.11:0.1.0&#45;SNAPSHOT&#45;&gt;org.scalameta:artifacts_2.11:0.1.0&#45;SNAPSHOT</title>
 <path fill="none" stroke="black" d="M84.1504,-686.263C102.275,-705.602 129.49,-731.608 158,-747.905 204.078,-774.246 261.581,-791.633 305.958,-802.228"/>
 <polygon fill="black" stroke="black" points="305.258,-805.658 315.791,-804.516 306.845,-798.841 305.258,-805.658"/>
 </g>
@@ -172,8 +172,8 @@
 <path fill="none" stroke="black" d="M62.7078,-685.993C65.6387,-749.808 80.6949,-921.288 158,-1034.91 225.313,-1133.84 256.34,-1192.91 376,-1192.91 376,-1192.91 376,-1192.91 1395,-1192.91 1510.53,-1192.91 1559.9,-1223.65 1652,-1153.91 1709.32,-1110.5 1733.34,-1025.01 1742.65,-976.91"/>
 <polygon fill="black" stroke="black" points="1746.12,-977.423 1744.47,-966.957 1739.23,-976.164 1746.12,-977.423"/>
 </g>
-<!-- org.scalameta:semantic_2.11:0.1.0&#45;SNAPSHOT&#45;&gt;org.scalameta:taxonomic_2.11:0.1.0&#45;SNAPSHOT -->
-<g id="edge6" class="edge"><title>org.scalameta:semantic_2.11:0.1.0&#45;SNAPSHOT&#45;&gt;org.scalameta:taxonomic_2.11:0.1.0&#45;SNAPSHOT</title>
+<!-- org.scalameta:semantic_2.11:0.1.0&#45;SNAPSHOT&#45;&gt;org.scalameta:artifacts_2.11:0.1.0&#45;SNAPSHOT -->
+<g id="edge6" class="edge"><title>org.scalameta:semantic_2.11:0.1.0&#45;SNAPSHOT&#45;&gt;org.scalameta:artifacts_2.11:0.1.0&#45;SNAPSHOT</title>
 <path fill="none" stroke="black" d="M228.238,-458.187C243.828,-505.346 279.381,-609.669 316,-694.905 328.828,-724.765 345.354,-757.76 357.812,-781.743"/>
 <polygon fill="black" stroke="black" points="354.806,-783.548 362.54,-790.789 361.01,-780.305 354.806,-783.548"/>
 </g>
@@ -234,8 +234,8 @@
 <path fill="none" stroke="black" d="M392.024,-686.115C408.548,-713.901 438.321,-758.426 474,-786.905 534.027,-834.82 715.943,-906.544 790,-926.905 1108.66,-1014.52 1199.55,-995.006 1530,-999.905 1584.22,-1000.71 1599.77,-1014.46 1652,-999.905 1671.81,-994.386 1691.61,-983.552 1708.04,-972.727"/>
 <polygon fill="black" stroke="black" points="1710.01,-975.618 1716.3,-967.095 1706.07,-969.833 1710.01,-975.618"/>
 </g>
-<!-- org.scalameta:interactive_2.11:0.1.0&#45;SNAPSHOT&#45;&gt;org.scalameta:taxonomic_2.11:0.1.0&#45;SNAPSHOT -->
-<g id="edge4" class="edge"><title>org.scalameta:interactive_2.11:0.1.0&#45;SNAPSHOT&#45;&gt;org.scalameta:taxonomic_2.11:0.1.0&#45;SNAPSHOT</title>
+<!-- org.scalameta:interactive_2.11:0.1.0&#45;SNAPSHOT&#45;&gt;org.scalameta:artifacts_2.11:0.1.0&#45;SNAPSHOT -->
+<g id="edge4" class="edge"><title>org.scalameta:interactive_2.11:0.1.0&#45;SNAPSHOT&#45;&gt;org.scalameta:artifacts_2.11:0.1.0&#45;SNAPSHOT</title>
 <path fill="none" stroke="black" d="M269.788,-869.692C284.92,-862.029 301.688,-853.537 317.347,-845.608"/>
 <polygon fill="black" stroke="black" points="319.077,-848.655 326.417,-841.014 315.915,-842.41 319.077,-848.655"/>
 </g>
@@ -256,28 +256,28 @@
 <text text-anchor="start" x="526" y="-895.705" font-family="Times,serif" font-weight="bold" font-size="14.00">ivy</text>
 <text text-anchor="start" x="520.5" y="-881.705" font-family="Times,serif" font-size="14.00">2.4.0</text>
 </g>
-<!-- org.scalameta:taxonomic_2.11:0.1.0&#45;SNAPSHOT&#45;&gt;org.apache.ivy:ivy:2.4.0 -->
-<g id="edge7" class="edge"><title>org.scalameta:taxonomic_2.11:0.1.0&#45;SNAPSHOT&#45;&gt;org.apache.ivy:ivy:2.4.0</title>
+<!-- org.scalameta:artifacts_2.11:0.1.0&#45;SNAPSHOT&#45;&gt;org.apache.ivy:ivy:2.4.0 -->
+<g id="edge7" class="edge"><title>org.scalameta:artifacts_2.11:0.1.0&#45;SNAPSHOT&#45;&gt;org.apache.ivy:ivy:2.4.0</title>
 <path fill="none" stroke="black" d="M425.228,-841.033C441.876,-849.891 460.751,-859.933 478.05,-869.137"/>
 <polygon fill="black" stroke="black" points="476.46,-872.255 486.932,-873.863 479.748,-866.076 476.46,-872.255"/>
 </g>
-<!-- org.scalameta:taxonomic_2.11:0.1.0&#45;SNAPSHOT&#45;&gt;org.scalameta:parsers_2.11:0.1.0&#45;SNAPSHOT -->
-<g id="edge8" class="edge"><title>org.scalameta:taxonomic_2.11:0.1.0&#45;SNAPSHOT&#45;&gt;org.scalameta:parsers_2.11:0.1.0&#45;SNAPSHOT</title>
+<!-- org.scalameta:artifacts_2.11:0.1.0&#45;SNAPSHOT&#45;&gt;org.scalameta:parsers_2.11:0.1.0&#45;SNAPSHOT -->
+<g id="edge8" class="edge"><title>org.scalameta:artifacts_2.11:0.1.0&#45;SNAPSHOT&#45;&gt;org.scalameta:parsers_2.11:0.1.0&#45;SNAPSHOT</title>
 <path fill="none" stroke="black" d="M438.314,-791.548C446.877,-788.09 455.74,-784.51 464.461,-780.988"/>
 <polygon fill="black" stroke="black" points="465.885,-784.188 473.847,-777.198 463.264,-777.697 465.885,-784.188"/>
 </g>
-<!-- org.scalameta:taxonomic_2.11:0.1.0&#45;SNAPSHOT&#45;&gt;org.scalameta:trees_2.11:0.1.0&#45;SNAPSHOT -->
-<g id="edge14" class="edge"><title>org.scalameta:taxonomic_2.11:0.1.0&#45;SNAPSHOT&#45;&gt;org.scalameta:trees_2.11:0.1.0&#45;SNAPSHOT</title>
+<!-- org.scalameta:artifacts_2.11:0.1.0&#45;SNAPSHOT&#45;&gt;org.scalameta:trees_2.11:0.1.0&#45;SNAPSHOT -->
+<g id="edge14" class="edge"><title>org.scalameta:artifacts_2.11:0.1.0&#45;SNAPSHOT&#45;&gt;org.scalameta:trees_2.11:0.1.0&#45;SNAPSHOT</title>
 <path fill="none" stroke="black" d="M395.501,-790.743C412.751,-767.978 441.231,-735.417 474,-717.905 499.128,-704.476 568.035,-692.874 621.72,-685.473"/>
 <polygon fill="black" stroke="black" points="622.454,-688.906 631.894,-684.095 621.515,-681.969 622.454,-688.906"/>
 </g>
-<!-- org.scalameta:taxonomic_2.11:0.1.0&#45;SNAPSHOT&#45;&gt;org.scalameta:exceptions_2.11:0.1.0&#45;SNAPSHOT -->
-<g id="edge37" class="edge"><title>org.scalameta:taxonomic_2.11:0.1.0&#45;SNAPSHOT&#45;&gt;org.scalameta:exceptions_2.11:0.1.0&#45;SNAPSHOT</title>
+<!-- org.scalameta:artifacts_2.11:0.1.0&#45;SNAPSHOT&#45;&gt;org.scalameta:exceptions_2.11:0.1.0&#45;SNAPSHOT -->
+<g id="edge37" class="edge"><title>org.scalameta:artifacts_2.11:0.1.0&#45;SNAPSHOT&#45;&gt;org.scalameta:exceptions_2.11:0.1.0&#45;SNAPSHOT</title>
 <path fill="none" stroke="black" d="M438.221,-815.057C581,-812.514 951.1,-802.811 1258,-767.905 1363.78,-755.874 1402.36,-781.094 1494,-726.905 1528.46,-706.53 1555.5,-668.818 1571.98,-641.09"/>
 <polygon fill="black" stroke="black" points="1575.2,-642.52 1577.16,-632.109 1569.14,-639.022 1575.2,-642.52"/>
 </g>
-<!-- org.scalameta:taxonomic_2.11:0.1.0&#45;SNAPSHOT&#45;&gt;org.scalameta:foundation_2.11:0.1.0&#45;SNAPSHOT -->
-<g id="edge50" class="edge"><title>org.scalameta:taxonomic_2.11:0.1.0&#45;SNAPSHOT&#45;&gt;org.scalameta:foundation_2.11:0.1.0&#45;SNAPSHOT</title>
+<!-- org.scalameta:artifacts_2.11:0.1.0&#45;SNAPSHOT&#45;&gt;org.scalameta:foundation_2.11:0.1.0&#45;SNAPSHOT -->
+<g id="edge50" class="edge"><title>org.scalameta:artifacts_2.11:0.1.0&#45;SNAPSHOT&#45;&gt;org.scalameta:foundation_2.11:0.1.0&#45;SNAPSHOT</title>
 <path fill="none" stroke="black" d="M381.894,-840.983C390.336,-887.022 414.575,-985.38 474,-1040.91 548.973,-1110.96 589.392,-1116.91 692,-1116.91 692,-1116.91 692,-1116.91 1395,-1116.91 1510.16,-1116.91 1553.94,-1144.3 1652,-1083.91 1692.47,-1058.98 1719.81,-1009.87 1734.65,-976.469"/>
 <polygon fill="black" stroke="black" points="1737.96,-977.644 1738.68,-967.074 1731.52,-974.884 1737.96,-977.644"/>
 </g>

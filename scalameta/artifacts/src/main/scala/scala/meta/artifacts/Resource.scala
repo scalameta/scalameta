@@ -1,5 +1,5 @@
 package scala.meta
-package taxonomic
+package artifacts
 
 import java.io._
 import java.net.URI

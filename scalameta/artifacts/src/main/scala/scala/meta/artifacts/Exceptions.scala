@@ -1,10 +1,10 @@
 package scala.meta
-package taxonomic
+package artifacts
 
 import org.scalameta.data._
 import org.scalameta.unreachable
 
-@data class TaxonomicException(artifact: Artifact, message: String, cause: Option[Throwable])
+@data class ArtifactException(artifact: Artifact, message: String, cause: Option[Throwable])
 extends Exception(s"failed to resolve $artifact because $message", cause.orNull) with ScalametaException {
   def this(artifact: Artifact, message: String) = this(artifact, message, None)
   def this(artifact: Artifact, message: String, cause: Throwable) = this(artifact, message, Some(cause))

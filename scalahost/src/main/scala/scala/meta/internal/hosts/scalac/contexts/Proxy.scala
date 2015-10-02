@@ -265,9 +265,9 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
 
     def ensureTypechecked(source: Source) = typedUntypedSources.getOrElse(source, source)
     val artifacts1 = artifacts.map {
-      case taxonomic.Artifact.Adhoc(sources, resources, deps) => taxonomic.Artifact.Adhoc(sources.map(ensureTypechecked), resources, deps)
-      case artifact: taxonomic.Artifact.Unmanaged => artifact
-      case artifact: taxonomic.Artifact.Maven => artifact
+      case Artifact.Adhoc(sources, resources, deps) => Artifact.Adhoc(sources.map(ensureTypechecked), resources, deps)
+      case artifact: Artifact.Unmanaged => artifact
+      case artifact: Artifact.Maven => artifact
     }
 
     currentDomain = Domain(currentDomain.artifacts ++ artifacts1: _*)

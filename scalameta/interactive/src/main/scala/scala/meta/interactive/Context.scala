@@ -5,7 +5,7 @@ import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import org.scalameta.annotations._
 import scala.annotation._
-import scala.meta.taxonomic.Artifact
+import scala.meta.artifacts.Artifact
 
 // TODO: This API needs to be expanded, and I think it might be a really good idea to do that,
 // because then we could potentially unite the currently disparate IDE and REPL mechanisms,

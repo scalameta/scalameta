@@ -133,7 +133,7 @@ Here's an exhaustive list of methods that belong to scala.meta context APIs. Inf
 | Method                                                    | Context | Notes
 |-----------------------------------------------------------|---------|-------------------------------------------------------
 | `def dialect: Dialect`                                    | S       | See [dialects/package.scala](/scalameta/tokens/src/main/scala/scala/meta/dialects/package.scala)
-| `def domain: Domain`                                      | S       | See [taxonomic/Domain.scala](/scalameta/taxonomic/src/main/scala/scala/meta/taxonomic/Domain.scala)
+| `def domain: Domain`                                      | S       | See [artifacts/Domain.scala](/scalameta/artifacts/src/main/scala/scala/meta/artifacts/Domain.scala)
 | `def typecheck(tree: Tree): Tree`                         | S       | Checks wellformedness of the input tree, computes semantic attributes (denotations, typings and expansions) for it and all its subnodes, and returns a copy of the tree with the attributes assigned. See subsequent sections for implementation advice.
 | `def defns(ref: Ref): Seq[Member]`                        | S       | Definitions that a given reference refers to. Can return multiple results if a reference resolves to several overloaded members.
 | `def owner(member: Member): Scope`                        | S       | This isn't actually a method in `Context`, and it's here only to emphasize a peculiarity of our API. <br/><br/> The reason for that is that scala.meta trees always track their parents, so with a tree in hand it's very easy to navigate its enclosures up until an owning scope.
@@ -153,7 +153,7 @@ Here's an exhaustive list of methods that belong to scala.meta context APIs. Inf
 
 ### Implementing Context APIs (dialect and domain)
 
-The first two methods of Context don't involve anything too tricky and just provide metadata about your host - the language profile that you're supporting (pick from a list in [dialects/package.scala](/scalameta/tokens/src/main/scala/scala/meta/dialects/package.scala)) and the environment that you're reflecting (create one or more artifacts from a list in [taxonomic/Artifact.scala](/scalameta/taxonomic/src/main/scala/scala/meta/taxonomic/Artifact.scala) and wrap then in a [taxonomic/Domain.scala](/scalameta/taxonomic/src/main/scala/scala/meta/taxonomic/Domain.scala)).
+The first two methods of Context don't involve anything too tricky and just provide metadata about your host - the language profile that you're supporting (pick from a list in [dialects/package.scala](/scalameta/tokens/src/main/scala/scala/meta/dialects/package.scala)) and the environment that you're reflecting (create one or more artifacts from a list in [artifacts/Artifact.scala](/scalameta/artifacts/src/main/scala/scala/meta/artifacts/Artifact.scala) and wrap then in a [artifacts/Domain.scala](/scalameta/artifacts/src/main/scala/scala/meta/artifacts/Domain.scala)).
 
 ### Implementing Context APIs (typecheck)
 

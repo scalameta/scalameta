@@ -1,5 +1,5 @@
 package scala.meta
-package taxonomic
+package artifacts
 
 import java.io.File
 import scala.language.implicitConversions

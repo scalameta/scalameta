@@ -8,7 +8,7 @@ class PublicSuite extends FunSuite {
   test("interactive APIs without import") {
     assert(typecheckError("""
       implicit val c: scala.meta.interactive.Context = ???
-      c.load(??? : scala.meta.taxonomic.Artifact)
+      c.load(??? : scala.meta.artifacts.Artifact)
     """) === "method load in trait Context cannot be accessed in scala.meta.interactive.Context")
   }
 
@@ -16,54 +16,54 @@ class PublicSuite extends FunSuite {
     assert(typecheckError("""
       import scala.meta._
       implicit val c: scala.meta.interactive.Context = ???
-      c.load(??? : scala.meta.taxonomic.Artifact)
+      c.load(??? : scala.meta.artifacts.Artifact)
     """) === "")
   }
 
   test("interactive context APIs") {
     assert(typecheckError("""
-      (??? : scala.meta.interactive.Context).load(??? : scala.meta.taxonomic.Artifact)
+      (??? : scala.meta.interactive.Context).load(??? : scala.meta.artifacts.Artifact)
     """) === "method load in trait Context cannot be accessed in scala.meta.interactive.Context")
   }
 
   // TODO: wat is this?!
-  test("taxonomic APIs without import") {
+  test("artifact APIs without import") {
     assert(typecheckError("""
-      val domain: scala.meta.taxonomic.Domain = ???
+      val domain: scala.meta.artifacts.Domain = ???
       domain.sources
     """) === """
       |type mismatch;
-      | found   : domain.type (with underlying type scala.meta.taxonomic.Domain)
+      | found   : domain.type (with underlying type scala.meta.artifacts.Domain)
       | required: ?{def sources: ?}
       |Note that implicit conversions are not applicable because they are ambiguous:
-      | both method XtensionTaxonomicDomain in trait Api of type (domain: scala.meta.taxonomic.Domain)Api.this.XtensionTaxonomicDomain
-      | and method XtensionTaxonomicDomain in trait Api of type (domain: scala.meta.taxonomic.Domain)Api.this.XtensionTaxonomicDomain
+      | both method XtensionDomain in trait Api of type (domain: scala.meta.artifacts.Domain)Api.this.XtensionDomain
+      | and method XtensionDomain in trait Api of type (domain: scala.meta.artifacts.Domain)Api.this.XtensionDomain
       | are possible conversion functions from domain.type to ?{def sources: ?}
     """.trim.stripMargin)
   }
 
-  test("taxonomic APIs without context") {
+  test("artifact APIs without context") {
     assert(typecheckError("""
       import scala.meta._
-      val domain: scala.meta.taxonomic.Domain = ???
+      val domain: scala.meta.artifacts.Domain = ???
       domain.sources
     """) === "")
   }
 
-  test("taxonomic APIs when everything's correct") {
+  test("artifact APIs when everything's correct") {
     assert(typecheckError("""
       import scala.meta._
-      implicit val c: scala.meta.taxonomic.Context = ???
-      val domain: scala.meta.taxonomic.Domain = ???
+      implicit val c: scala.meta.artifacts.Context = ???
+      val domain: scala.meta.artifacts.Domain = ???
       domain.sources
     """) === "")
   }
 
   // TODO: this error is somewhat confusing
-  test("taxonomic context APIs") {
+  test("artifact context APIs") {
     assert(typecheckError("""
-      (??? : scala.meta.taxonomic.Context).sources(???)
-    """) === "method sources in trait Context cannot be accessed in scala.meta.taxonomic.Context")
+      (??? : scala.meta.artifacts.Context).sources(???)
+    """) === "method sources in trait Context cannot be accessed in scala.meta.artifacts.Context")
   }
 
   test("quasiquotes without import") {

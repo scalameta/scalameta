@@ -21,6 +21,7 @@ object build extends Build {
     unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject -- inProjects(foundation)
   ) aggregate (
     foundation,
+    artifacts,
     dialects,
     exceptions,
     interactive,
@@ -29,7 +30,6 @@ object build extends Build {
     quasiquotes,
     scalameta,
     semantic,
-    taxonomic,
     tokenizers,
     tokenquasiquotes,
     tokens,
@@ -47,6 +47,16 @@ object build extends Build {
     description := "Scala.meta's fundamental helpers and utilities",
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided")
   )
+
+  lazy val artifacts = Project(
+    id   = "artifacts",
+    base = file("scalameta/artifacts")
+  ) settings (
+    publishableSettings: _*
+  ) settings (
+    description := "Scala.meta's APIs for reflecting artifacts of Scala ecosystem",
+    libraryDependencies += "org.apache.ivy" % "ivy" % "2.4.0"
+  ) dependsOn (foundation, exceptions, trees, parsers)
 
   lazy val dialects = Project(
     id   = "dialects",
@@ -74,7 +84,7 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     description := "Scala.meta's APIs for interactive environments (REPLs, IDEs, ...)"
-  ) dependsOn (foundation, exceptions, taxonomic)
+  ) dependsOn (foundation, exceptions, artifacts)
 
   lazy val parsers = Project(
     id   = "parsers",
@@ -110,17 +120,7 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     description := "Scala.meta's APIs for traversing semantic structure of Scala programs"
-  ) dependsOn (foundation, exceptions, prettyprinters, tokens, trees, taxonomic)
-
-  lazy val taxonomic = Project(
-    id   = "taxonomic",
-    base = file("scalameta/taxonomic")
-  ) settings (
-    publishableSettings: _*
-  ) settings (
-    description := "Scala.meta's APIs for traversing organizational structure of the Scala ecosystem",
-    libraryDependencies += "org.apache.ivy" % "ivy" % "2.4.0"
-  ) dependsOn (foundation, exceptions, trees, parsers)
+  ) dependsOn (foundation, exceptions, prettyprinters, tokens, trees, artifacts)
 
   lazy val tokenizers = Project(
     id   = "tokenizers",
@@ -181,7 +181,7 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     description := "Scala.meta's metaprogramming and hosting APIs"
-  ) dependsOn (foundation, exceptions, dialects, interactive, parsers, prettyprinters, quasiquotes, semantic, taxonomic, tokenizers, tokenquasiquotes, tql, trees)
+  ) dependsOn (foundation, exceptions, dialects, interactive, parsers, prettyprinters, quasiquotes, semantic, artifacts, tokenizers, tokenquasiquotes, tql, trees)
 
   lazy val scalahost = Project(
     id   = "scalahost",
