@@ -55,9 +55,9 @@
 
             | Quasiquote
 ------------|------------------------------
- Named      | `qarg"$name = $expr"`
- Repeated   | `qarg"$expr: _*"`
- Expression | `qarg"$expr"`
+ Named      | `arg"$name = $expr"`
+ Repeated   | `arg"$expr: _*"`
+ Expression | `arg"$expr"`
 
 ## Types (meta.Type)
 
@@ -264,7 +264,7 @@
  meta.Stat                | `$stat`       | `q`
  meta.Template            | `$template`   | `template`
  meta.Term                | `$expr`       | `q`
- meta.Term.Arg            | `$aexpr`      | `qarg`
+ meta.Term.Arg            | `$aexpr`      | `arg`
  meta.Term.Name           | `$name`       | `q`
  meta.Term.Ref            | `$ref`        | `q`
  meta.Term.Param          | `$param`      | `param`
