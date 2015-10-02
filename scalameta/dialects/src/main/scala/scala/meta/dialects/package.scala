@@ -78,7 +78,7 @@ object Dialect {
   def forName(name: String): Dialect = name match {
     case "Scala211" => scala.meta.dialects.Scala211
     case "Dotty" => scala.meta.dialects.Dotty
-    case QuasiquoteRx(name) => Dialect.forName(name)
+    case QuasiquoteRx(name) => Quasiquote(Dialect.forName(name))
     case _ => throw new DialectException(name, s"unknown dialect $name")
   }
 
