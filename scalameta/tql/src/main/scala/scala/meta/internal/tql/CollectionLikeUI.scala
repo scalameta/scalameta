@@ -40,11 +40,21 @@ private[meta] class CollectionLikeUIMacros(override val c: Context) extends Comb
     val T = c.weakTypeOf[T]
     val V = unwrap(c.prefix.actualType.typeArgs.head)
     q"""
-      implicit val unitRes = new _root_.scala.meta.tql.TransformResultTr[Unit, $T] {
-        def get(t: $T, x: _root_.scala.meta.tql.MatchResult[Unit]): $T  = x.tree.getOrElse(t)
+      implicit val unitRes: _root_.scala.meta.tql.TransformResultTr[Unit, $T] = {
+        new _root_.scala.meta.tql.TransformResultTr[Unit, $T] {
+          def get(t: $T, x: _root_.scala.meta.tql.MatchResult[Unit]): $T = {
+            val richX = _root_.scala.meta.tql.`package`.MatcherResultEnhancer[Unit](x)
+            richX.tree.getOrElse(t)
+          }
+        }
       }
-      implicit def withRes[A: _root_.org.scalameta.algebra.Monoid](implicit ev: _root_.org.scalameta.typelevel.=!=[A, Unit]) = new _root_.scala.meta.tql.TransformResultTr[A, ($V, A)] {
-        def get(t: $T, x: _root_.scala.meta.tql.MatchResult[A]): ($V, A)  = (x.tree.getOrElse(t).asInstanceOf[$V], x.result)
+      implicit def withRes[A: _root_.org.scalameta.algebra.Monoid](implicit ev: _root_.org.scalameta.typelevel.=!=[A, Unit]): _root_.scala.meta.tql.TransformResultTr[A, ($V, A)] = {
+        new _root_.scala.meta.tql.TransformResultTr[A, ($V, A)] {
+          def get(t: $T, x: _root_.scala.meta.tql.MatchResult[A]): ($V, A) = {
+            val richX = _root_.scala.meta.tql.`package`.MatcherResultEnhancer[A](x)
+            (richX.tree.getOrElse(t).asInstanceOf[$V], richX.result)
+          }
+        }
       }
       ${c.prefix}.transforms(${transformSugarImpl[T](f)})
     """

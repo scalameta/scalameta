@@ -19,7 +19,7 @@ object PositionStyle {
   implicit val default: PositionStyle = BlackAndWhite
 }
 
-@implicitNotFound(msg = "don't know how to show[Positions] for ${T} (if you're prettyprinting a tree, be sure to import a dialect, e.g. scala.meta.dialects.Scala211)")
+@implicitNotFound(msg = "don't know how to show[Positions] for ${T}")
 trait Positions[T] extends Show[T]
 object Positions {
   def apply[T](f: T => Show.Result): Positions[T] = new Positions[T] { def apply(input: T) = f(input) }

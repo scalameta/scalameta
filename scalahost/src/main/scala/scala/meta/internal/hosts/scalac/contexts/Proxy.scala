@@ -17,13 +17,14 @@ import scala.reflect.internal.NoPhase
 import scala.reflect.internal.Phase
 import scala.reflect.internal.util.BatchSourceFile
 import scala.reflect.io.PlainFile
-import scala.meta.{Mirror => MirrorApi}
-import scala.meta.{Toolbox => ToolboxApi}
-import scala.meta.{Proxy => ProxyApi}
+import scala.meta.artifacts.Artifact.Adhoc
 import scala.meta.semantic.{Context => ScalametaSemanticContext}
+import scala.meta.{Context => ContextApi}
+import scala.meta.internal.hosts.scalac.{Proxy => ProxyApi}
 import scala.meta.internal.hosts.scalac.converters.{Api => ConverterApi}
 import scala.meta.internal.ast.mergeTrees
 import scala.tools.nsc.{Global => ScalaGlobal}
+import scala.tools.nsc.backend.JavaPlatform
 import scala.meta.dialects.Scala211
 import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
@@ -33,7 +34,7 @@ import scala.meta.internal.prettyprinters._
 
 @context(translateExceptions = false)
 class Proxy[G <: ScalaGlobal](val global: G, initialDomain: Domain = Domain())
-extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
+extends ConverterApi(global) with ContextApi with ProxyApi[G] {
   initializeFromDomain(initialDomain)
 
   // ======= SEMANTIC CONTEXT =======
@@ -61,9 +62,15 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
         val typer = newTyper(rootContext(NoCompilationUnit, EmptyTree).make(tree, owner))
         typer.context.initRootContext() // need to manually set context mode, otherwise typer.silent will throw exceptions
         enteringTyper({
-          typer.silent(_.typed(tree, mode, WildcardType), reportAmbiguousErrors = false) match {
-            case SilentResultValue(result) => Right(result)
-            case error @ SilentTypeError(_) => Left(error.err.errMsg)
+          val old = settings.exposeEmptyPackage.value
+          try {
+            if (!tree.isInstanceOf[g.PackageDef]) settings.exposeEmptyPackage.value = true
+            typer.silent(_.typed(tree, mode, WildcardType), reportAmbiguousErrors = false) match {
+              case SilentResultValue(result) => Right(result)
+              case error @ SilentTypeError(_) => Left(error.err.errMsg)
+            }
+          } finally {
+            settings.exposeEmptyPackage.value = old
           }
         })
       }
@@ -79,7 +86,7 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
           // NOTE: This works because typechecking in scala.meta doesn't change the shape of the tree.
           val index = parent.children.indexOf(tree)
           val parent1 = loop(parent.require[m.Tree])
-          parent.children(index).require[m.Tree]
+          parent1.children(index).require[m.Tree]
         case None =>
           val sytree = tree
           val setree = tree match {
@@ -233,14 +240,14 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
         unit
       })
 
-      val m_firstPhase = currentRun.getClass.getDeclaredMethods().find(_.getName == "firstPhase").get
+      val m_firstPhase = classOf[Run].getDeclaredMethods().find(_.getName == "firstPhase").get
       m_firstPhase.setAccessible(true)
       val firstPhase = m_firstPhase.invoke(currentRun).asInstanceOf[Phase]
       val relevantPhases = firstPhase.iterator.takeWhile(_.id < math.max(globalPhase.id, currentRun.typerPhase.id))
       def applyPhase(ph: Phase, unit: CompilationUnit) = enteringPhase(ph)(ph.asInstanceOf[GlobalPhase].applyPhase(unit))
       relevantPhases.foreach(ph => units.foreach(applyPhase(ph, _)))
 
-      val m_refreshProgress = currentRun.getClass.getDeclaredMethods().find(_.getName == "refreshProgress").get
+      val m_refreshProgress = classOf[Run].getDeclaredMethods().find(_.getName == "refreshProgress").get
       m_refreshProgress.setAccessible(true)
       m_refreshProgress.invoke(currentRun)
 
@@ -258,9 +265,8 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
 
     def ensureTypechecked(source: Source) = typedUntypedSources.getOrElse(source, source)
     val artifacts1 = artifacts.map {
-      case taxonomic.Artifact.Adhoc(sources, resources, deps) => taxonomic.Artifact.Adhoc(sources.map(ensureTypechecked), resources, deps)
-      case artifact: taxonomic.Artifact.Unmanaged => artifact
-      case artifact: taxonomic.Artifact.Maven => artifact
+      case artifact @ Adhoc(sources, _, _) => artifact.copy(sources = sources.map(ensureTypechecked))
+      case artifact => artifact
     }
 
     currentDomain = Domain(currentDomain.artifacts ++ artifacts1: _*)
@@ -334,7 +340,7 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
         // aren't going to get propagated. Of course, I tried to sidestep this problem
         // by using something like `global.extendCompilerClassPath(domainClasspath: _*)`,
         // but unfortunately it throws an obscure assertion error, so I just gave up.
-        val m_currentClassPath = global.platform.getClass.getDeclaredMethod("currentClassPath")
+        val m_currentClassPath = classOf[JavaPlatform].getDeclaredMethod("currentClassPath")
         m_currentClassPath.setAccessible(true)
         val currentClassPath = m_currentClassPath.invoke(global.platform).asInstanceOf[Option[_]]
         require(currentClassPath.isEmpty)
@@ -357,7 +363,7 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
         if (ex.isInstanceOf[MissingRequirementError]) {
           message = message.stripSuffix(".")
           message += " (have you forgotten to reference the standard library"
-          message += " when creating a mirror or a toolbox?)"
+          message += " when creating a scala.meta context?)"
         }
         fail(message, Some(ex))
     }

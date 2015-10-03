@@ -1,5 +1,5 @@
 package scala.meta
-package taxonomic
+package artifacts
 
 import java.io._
 import java.net.URI
@@ -13,11 +13,10 @@ import scala.collection.{immutable, mutable}
 import scala.reflect.{classTag, ClassTag}
 import scala.meta.internal.{ast => m}
 import scala.meta.internal.{semantic => s}
-import scala.meta.taxonomic.{Context => TaxonomicContext}
 import scala.tools.asm._
 import scala.meta.internal.tasty._
 import scala.meta.internal.ast.mergeTrees
-import scala.meta.internal.taxonomic._
+import scala.meta.internal.artifacts._
 import scala.meta.parsers._
 import org.apache.ivy.plugins.resolver._
 import org.scalameta.contexts._
@@ -32,11 +31,11 @@ import org.scalameta.debug._
 // Over the last week, I've made a few design attempts that involved abstracting
 // all kinds of details that may be deemed platform-specific. I'll mention two prominent results here.
 //
-// 1) Taxonomic contexts are implemented in hosts, and every host requires a taxonomic context to
+// 1) Artifact contexts are implemented in hosts, and every host requires an artifact context to
 // instantiate a platform-dependent semantic context. All was fine until I realized that one may
-// erroneously mix taxonomic and semantic contexts from different platforms, which will lead to fail.
+// erroneously mix artifact and semantic contexts from different platforms, which will lead to fail.
 //
-// 2) Taxonomic contexts are removed, and Artifact becomes a plain data structure that carries around
+// 2) Artifact contexts are removed, and Artifact becomes a plain data structure that carries around
 // everything that might be needed from it (path to binaries, sequence of sources, etc).
 // With enough pressure, it is possible to even make such artifacts lazy, but then the data model
 // becomes so bland that it's just stupid - there's no way to create different kinds of artifacts,
@@ -46,12 +45,12 @@ import org.scalameta.debug._
 // that's hasn't even materialized yet. Therefore, I've decided to hardcode the JVM-based reality for now
 // and deal with the possible future once it actually happens.
 
-@context(translateExceptions = true) case class Taxonomy(resolvers: DependencyResolver*) extends TaxonomicContext {
+@context(translateExceptions = true) case class Ecosystem(resolvers: DependencyResolver*) extends Resolver {
   private case class ResolvedArtifact(binaries: Seq[Path], sources: Seq[Source], resources: Seq[Resource], deps: Seq[Artifact])
   private val cache = mutable.Map[Artifact, ResolvedArtifact]()
 
   private def resolveUnmanaged(artifact: Artifact.Unmanaged): ResolvedArtifact = cache.getOrElseUpdate(artifact, {
-    def failResolve(message: String, ex: Option[Throwable] = None) = throw new TaxonomicException(artifact, message, ex)
+    def failResolve(message: String, ex: Option[Throwable] = None) = throw new ArtifactException(artifact, message, ex)
     implicit class XtensionPath(path: Path) {
       def explode: ListMap[String, URI] = {
         val root = new File(path.path)

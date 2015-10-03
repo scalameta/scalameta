@@ -8,7 +8,7 @@ import scala.meta.internal.{ast => m}
 import scala.meta.dialects.Scala211
 
 class SemanticSuite extends FunSuite {
-  implicit val mirror = Mirror(Artifact(sys.props("sbt.paths.scalalibrary.classes")))
+  implicit val c = Context(Artifact(sys.props("sbt.paths.scalalibrary.classes")))
 
   test("simple") {
     assert(t"List[Int]".show[Semantics] === """

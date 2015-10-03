@@ -1,5 +1,5 @@
 package scala.meta
-package taxonomic
+package artifacts
 
 import org.scalameta.data._
 import scala.{Seq => _}

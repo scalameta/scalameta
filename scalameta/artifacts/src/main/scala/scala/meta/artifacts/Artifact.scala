@@ -1,17 +1,16 @@
 package scala.meta
-package taxonomic
+package artifacts
 
 import java.io.File
 import java.net.URI
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import org.scalameta.adt._
-import scala.meta.taxonomic.{Context => TaxonomicContext}
 
 // Artifacts are taxonomic units that group together scala.meta sources (along with resources, for that matter).
 // The purpose for the concept of artifacts is to serve as a building block that defines environments.
 // Without artifacts, there wouldn't exist a standalone entry point to scala.meta's semantic APIs.
-// NOTE: See Taxonomy.scala for an explanation of why Artifact is sealed.
+// NOTE: See Ecosystem.scala for an explanation of why Artifact is sealed.
 
 @root trait Artifact
 object Artifact {

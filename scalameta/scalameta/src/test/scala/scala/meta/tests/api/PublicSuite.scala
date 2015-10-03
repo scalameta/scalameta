@@ -8,7 +8,7 @@ class PublicSuite extends FunSuite {
   test("interactive APIs without import") {
     assert(typecheckError("""
       implicit val c: scala.meta.interactive.Context = ???
-      c.load(??? : scala.meta.taxonomic.Artifact)
+      c.load(??? : scala.meta.artifacts.Artifact)
     """) === "method load in trait Context cannot be accessed in scala.meta.interactive.Context")
   }
 
@@ -16,67 +16,53 @@ class PublicSuite extends FunSuite {
     assert(typecheckError("""
       import scala.meta._
       implicit val c: scala.meta.interactive.Context = ???
-      c.load(??? : scala.meta.taxonomic.Artifact)
+      c.load(??? : scala.meta.artifacts.Artifact)
     """) === "")
   }
 
   test("interactive context APIs") {
     assert(typecheckError("""
-      (??? : scala.meta.interactive.Context).load(??? : scala.meta.taxonomic.Artifact)
+      (??? : scala.meta.interactive.Context).load(??? : scala.meta.artifacts.Artifact)
     """) === "method load in trait Context cannot be accessed in scala.meta.interactive.Context")
   }
 
   // TODO: wat is this?!
-  test("taxonomic APIs without import") {
+  test("artifact APIs without import") {
     assert(typecheckError("""
-      val domain: scala.meta.taxonomic.Domain = ???
+      val domain: scala.meta.artifacts.Domain = ???
       domain.sources
     """) === """
       |type mismatch;
-      | found   : domain.type (with underlying type scala.meta.taxonomic.Domain)
+      | found   : domain.type (with underlying type scala.meta.artifacts.Domain)
       | required: ?{def sources: ?}
       |Note that implicit conversions are not applicable because they are ambiguous:
-      | both method XtensionTaxonomicDomain in trait Api of type (domain: scala.meta.taxonomic.Domain)Api.this.XtensionTaxonomicDomain
-      | and method XtensionTaxonomicDomain in trait Api of type (domain: scala.meta.taxonomic.Domain)Api.this.XtensionTaxonomicDomain
+      | both method XtensionDomain in trait Api of type (domain: scala.meta.artifacts.Domain)Api.this.XtensionDomain
+      | and method XtensionDomain in trait Api of type (domain: scala.meta.artifacts.Domain)Api.this.XtensionDomain
       | are possible conversion functions from domain.type to ?{def sources: ?}
     """.trim.stripMargin)
   }
 
-  test("taxonomic APIs without context") {
+  test("artifact APIs without resolver") {
     assert(typecheckError("""
       import scala.meta._
-      val domain: scala.meta.taxonomic.Domain = ???
+      val domain: scala.meta.artifacts.Domain = ???
       domain.sources
     """) === "")
   }
 
-  test("taxonomic APIs when everything's correct") {
+  test("artifact APIs with resolver") {
     assert(typecheckError("""
       import scala.meta._
-      implicit val c: scala.meta.taxonomic.Context = ???
-      val domain: scala.meta.taxonomic.Domain = ???
+      implicit val r: scala.meta.artifacts.Resolver = ???
+      val domain: scala.meta.artifacts.Domain = ???
       domain.sources
     """) === "")
-  }
-
-  // TODO: this error is somewhat confusing
-  test("taxonomic context APIs") {
-    assert(typecheckError("""
-      (??? : scala.meta.taxonomic.Context).sources(???)
-    """) === "method sources in trait Context cannot be accessed in scala.meta.taxonomic.Context")
   }
 
   test("quasiquotes without import") {
     assert(typecheckError("""
       q"hello"
     """) === "value q is not a member of StringContext")
-  }
-
-  test("quasiquotes without any dialect") {
-    assert(typecheckError("""
-      import scala.meta._
-      q"hello"
-    """) === "don't know what dialect to use here (to fix this, import something from scala.dialects, e.g. scala.meta.dialects.Scala211)")
   }
 
   test("quasiquotes without static dialect") {
@@ -367,13 +353,6 @@ class PublicSuite extends FunSuite {
     """) === "don't know how to convert Int to scala.meta.inputs.Input")
   }
 
-  test("parse without dialect") {
-    assert(typecheckError("""
-      import scala.meta._
-      "".parse[Term]
-    """) === "don't know what dialect to use here (to fix this, import something from scala.dialects, e.g. scala.meta.dialects.Scala211)")
-  }
-
   test("parse without parseability") {
     assert(typecheckError("""
       import scala.meta._
@@ -423,13 +402,6 @@ class PublicSuite extends FunSuite {
     """) === "don't know how to convert Int to scala.meta.inputs.Content")
   }
 
-  test("tokens without dialect") {
-    assert(typecheckError("""
-      import scala.meta._
-      "".tokens
-    """) === "don't know what dialect to use here (to fix this, import something from scala.dialects, e.g. scala.meta.dialects.Scala211)")
-  }
-
   test("tokens when everything's correct (static dialect)") {
     assert(typecheckError("""
       import scala.meta._
@@ -464,13 +436,6 @@ class PublicSuite extends FunSuite {
     """) === "not found: type Code")
   }
 
-  test("show[Code] without dialect") {
-    assert(typecheckError("""
-      import scala.meta._
-      (??? : Tree).show[Code]
-    """) === "don't know how to show[Syntax] for scala.meta.Tree (if you're prettyprinting a tree, be sure to import a dialect, e.g. scala.meta.dialects.Scala211)")
-  }
-
   test("show[Code] when everything's correct (static dialect)") {
     assert(typecheckError("""
       import scala.meta._
@@ -491,13 +456,6 @@ class PublicSuite extends FunSuite {
     assert(typecheckError("""
       (??? : scala.meta.Tree).show[Syntax]
     """) === "not found: type Syntax")
-  }
-
-  test("show[Syntax] without dialect") {
-    assert(typecheckError("""
-      import scala.meta._
-      (??? : Tree).show[Syntax]
-    """) === "don't know how to show[Syntax] for scala.meta.Tree (if you're prettyprinting a tree, be sure to import a dialect, e.g. scala.meta.dialects.Scala211)")
   }
 
   test("show[Syntax] when everything's correct (static dialect)") {

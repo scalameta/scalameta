@@ -650,32 +650,32 @@ class QuasiquoteSuite extends FunSuite {
     assert(q"$lit".show[Structure] === "Lit.Int(42)")
   }
 
-  test("1 qarg\"$name = $expr\"") {
-    val qarg"$name = $expr" = q"x = foo"
+  test("1 arg\"$name = $expr\"") {
+    val arg"$name = $expr" = q"x = foo"
     assert(name.show[Structure] === "Term.Name(\"x\")")
     assert(expr.show[Structure] === "Term.Name(\"foo\")")
   }
 
-  test("2 qarg\"$name = $expr\"") {
+  test("2 arg\"$name = $expr\"") {
     val name = q"x"
     val expr = q"foo"
-    assert(qarg"$name = $expr".show[Structure] === "Term.Assign(Term.Name(\"x\"), Term.Name(\"foo\"))")
+    assert(arg"$name = $expr".show[Structure] === "Term.Assign(Term.Name(\"x\"), Term.Name(\"foo\"))")
   }
 
-  test("1 qarg\"$expr: _*\"") {
+  test("1 arg\"$expr: _*\"") {
     // q"foo: _*" should not parse, so wrap into apply
-    val qarg"f($expr: _*)" = q"f(foo: _*)"
+    val arg"f($expr: _*)" = q"f(foo: _*)"
     assert(expr.show[Structure] === "Term.Name(\"foo\")")
   }
 
   test("2 arg\"$expr: _*\"") {
     val expr = q"foo"
-    assert(qarg"$expr: _*".show[Structure] === "Term.Arg.Repeated(Term.Name(\"foo\"))")
+    assert(arg"$expr: _*".show[Structure] === "Term.Arg.Repeated(Term.Name(\"foo\"))")
   }
 
   test("arg\"$expr\"") {
     val expr = q"foo"
-    assert(qarg"$expr".show[Structure] === "Term.Name(\"foo\")")
+    assert(arg"$expr".show[Structure] === "Term.Name(\"foo\")")
   }
 
   test("1 t\"$ref.$tname\"") {
@@ -1823,7 +1823,7 @@ class QuasiquoteSuite extends FunSuite {
 
   test("2 ctor\"$ctorref(...$aexprss)\"") {
     val ctorref = ctor"x"
-    val aexprss = List(qarg"y", qarg"z")
+    val aexprss = List(arg"y", arg"z")
     assert(ctor"$ctorref(..$aexprss)".show[Structure] === "Term.Apply(Ctor.Ref.Name(\"x\"), Seq(Term.Name(\"y\"), Term.Name(\"z\")))")
   }
 

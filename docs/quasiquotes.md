@@ -23,7 +23,7 @@
  Super             | `q"super"`, `q"$qname.super"`, `q"super[$qname]"`, `q"$qname.super[$qname]"`
  Name              | `q"name"`
  Selection         | `q"$expr.$name"`
- Interpolation     | `q""" $name"$${..$exprs}" """`
+ Interpolation     | Not supported [(#251)](https://github.com/scalameta/scalameta/issues/251)
  Application       | `q"$expr(..$aexprs)"`
  Type Application  | `q"$expr[..$tpes]"`
  Infix Application | `q"$expr $name[..$tpes] (..$aexprs)"`
@@ -55,9 +55,9 @@
 
             | Quasiquote
 ------------|------------------------------
- Named      | `qarg"$name = $expr"`
- Repeated   | `qarg"$expr: _*"`
- Expression | `qarg"$expr"`
+ Named      | `arg"$name = $expr"`
+ Repeated   | `arg"$expr: _*"`
+ Expression | `arg"$expr"`
 
 ## Types (meta.Type)
 
@@ -98,7 +98,7 @@
  Tuple         | `p"(..$pats)"`
  Extract       | `p"$ref[..$tpes](..$apats)"`
  Infix Extract | `p"$pat $name (..$apats)"`
- Interpolation | `p""" $name"$${..$pats}" """`
+ Interpolation | Not supported [(#251)](https://github.com/scalameta/scalameta/issues/251)
  Typed         | `p"$pat: $ptpe"`
  Name          | ``p"`name`"``
  Selection     | `p"$expr.$name"`
@@ -264,7 +264,7 @@
  meta.Stat                | `$stat`       | `q`
  meta.Template            | `$template`   | `template`
  meta.Term                | `$expr`       | `q`
- meta.Term.Arg            | `$aexpr`      | `qarg`
+ meta.Term.Arg            | `$aexpr`      | `arg`
  meta.Term.Name           | `$name`       | `q`
  meta.Term.Ref            | `$ref`        | `q`
  meta.Term.Param          | `$param`      | `param`
