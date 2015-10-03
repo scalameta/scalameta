@@ -11,10 +11,4 @@ object Context {
       override def toString = s"""Context(${artifacts.mkString(", ")})"""
     }
   }
-
-  def apply(options: String, artifacts: Artifact*)(implicit resolver: Resolver): Context = {
-    new ProxyImpl(Compiler(options), Domain(artifacts: _*)) {
-      override def toString = s"""Context("$options", ${artifacts.mkString(", ")})"""
-    }
-  }
 }
