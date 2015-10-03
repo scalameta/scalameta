@@ -13,7 +13,6 @@ import scala.collection.{immutable, mutable}
 import scala.reflect.{classTag, ClassTag}
 import scala.meta.internal.{ast => m}
 import scala.meta.internal.{semantic => s}
-import scala.meta.artifacts.{Context => ArtifactContext}
 import scala.tools.asm._
 import scala.meta.internal.tasty._
 import scala.meta.internal.ast.mergeTrees
@@ -46,7 +45,7 @@ import org.scalameta.debug._
 // that's hasn't even materialized yet. Therefore, I've decided to hardcode the JVM-based reality for now
 // and deal with the possible future once it actually happens.
 
-@context(translateExceptions = true) case class Ecosystem(resolvers: DependencyResolver*) extends ArtifactContext {
+@context(translateExceptions = true) case class Ecosystem(resolvers: DependencyResolver*) extends Resolver {
   private case class ResolvedArtifact(binaries: Seq[Path], sources: Seq[Source], resources: Seq[Resource], deps: Seq[Artifact])
   private val cache = mutable.Map[Artifact, ResolvedArtifact]()
 

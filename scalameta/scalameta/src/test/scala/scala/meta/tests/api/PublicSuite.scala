@@ -42,7 +42,7 @@ class PublicSuite extends FunSuite {
     """.trim.stripMargin)
   }
 
-  test("artifact APIs without context") {
+  test("artifact APIs without resolver") {
     assert(typecheckError("""
       import scala.meta._
       val domain: scala.meta.artifacts.Domain = ???
@@ -50,20 +50,13 @@ class PublicSuite extends FunSuite {
     """) === "")
   }
 
-  test("artifact APIs when everything's correct") {
+  test("artifact APIs with resolver") {
     assert(typecheckError("""
       import scala.meta._
-      implicit val c: scala.meta.artifacts.Context = ???
+      implicit val r: scala.meta.artifacts.Resolver = ???
       val domain: scala.meta.artifacts.Domain = ???
       domain.sources
     """) === "")
-  }
-
-  // TODO: this error is somewhat confusing
-  test("artifact context APIs") {
-    assert(typecheckError("""
-      (??? : scala.meta.artifacts.Context).sources(???)
-    """) === "method sources in trait Context cannot be accessed in scala.meta.artifacts.Context")
   }
 
   test("quasiquotes without import") {

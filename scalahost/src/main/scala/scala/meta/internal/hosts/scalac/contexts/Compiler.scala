@@ -11,11 +11,11 @@ import scala.tools.nsc.reporters.StoreReporter
 import scala.tools.reflect.WrappedProperties.AccessControl._
 
 object Compiler {
-  def apply()(implicit context: ArtifactContext): Global = {
+  def apply()(implicit resolver: Resolver): Global = {
     apply("")
   }
 
-  def apply(options: String)(implicit context: ArtifactContext): Global = {
+  def apply(options: String)(implicit resolver: Resolver): Global = {
     def fail(reason: String) = throw new InfrastructureException("can't initialize a semantic proxy from scratch: " + reason)
     val args = CommandLineParser.tokenize(options)
     val emptySettings = new Settings(error => fail("invalid compiler options: $error"))

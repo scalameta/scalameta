@@ -6,7 +6,6 @@ import java.net.URI
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import org.scalameta.adt._
-import scala.meta.artifacts.{Context => ArtifactContext}
 
 // Artifacts are taxonomic units that group together scala.meta sources (along with resources, for that matter).
 // The purpose for the concept of artifacts is to serve as a building block that defines environments.
