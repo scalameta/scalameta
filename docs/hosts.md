@@ -76,8 +76,8 @@ Of course, at the lowest level there's no magic, and internally scala.meta trees
 In the example below, we can see a tree that represents `List[Int]`, with attributes exposed via `show[Semantics]`. The numbers in square brackets next to name trees refer to denotations that are printed below, with the parts before :: standing for prefixes and the parts after :: standing for symbols (dots in fully-qualified names are term selections and hashes are type selections). The numbers in curly braces next to terms refer to typings that are also printed below. Finally, the numbers in angle brackets next to terms represent expansions and since there are no desugarings involved in this example, they are all identities denoted by empty angle brackets.
 
 ```
-scala> implicit val mirror = Mirror(Artifact("~/.ivy2/cache/org.scala-lang/scala-library/jars/scala-library-2.11.7.jar"))
-mirror: scala.meta.Mirror = Mirror(Artifact(...))
+scala> implicit val c = Context(Artifact("~/.ivy2/cache/org.scala-lang/scala-library/jars/scala-library-2.11.7.jar"))
+c: scala.meta.Context = Context(Artifact(...))
 
 scala> t"List[Int]".show[Semantics]
 res1: String =

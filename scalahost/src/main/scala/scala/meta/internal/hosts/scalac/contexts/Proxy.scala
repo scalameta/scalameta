@@ -17,10 +17,10 @@ import scala.reflect.internal.NoPhase
 import scala.reflect.internal.Phase
 import scala.reflect.internal.util.BatchSourceFile
 import scala.reflect.io.PlainFile
-import scala.meta.{Mirror => MirrorApi}
-import scala.meta.{Toolbox => ToolboxApi}
-import scala.meta.{Proxy => ProxyApi}
+import scala.meta.artifacts.Artifact.Adhoc
 import scala.meta.semantic.{Context => ScalametaSemanticContext}
+import scala.meta.{Context => ContextApi}
+import scala.meta.internal.hosts.scalac.{Proxy => ProxyApi}
 import scala.meta.internal.hosts.scalac.converters.{Api => ConverterApi}
 import scala.meta.internal.ast.mergeTrees
 import scala.tools.nsc.{Global => ScalaGlobal}
@@ -34,7 +34,7 @@ import scala.meta.internal.prettyprinters._
 
 @context(translateExceptions = false)
 class Proxy[G <: ScalaGlobal](val global: G, initialDomain: Domain = Domain())
-extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
+extends ConverterApi(global) with ContextApi with ProxyApi[G] {
   initializeFromDomain(initialDomain)
 
   // ======= SEMANTIC CONTEXT =======
@@ -363,7 +363,7 @@ extends ConverterApi(global) with MirrorApi with ToolboxApi with ProxyApi[G] {
         if (ex.isInstanceOf[MissingRequirementError]) {
           message = message.stripSuffix(".")
           message += " (have you forgotten to reference the standard library"
-          message += " when creating a mirror or a toolbox?)"
+          message += " when creating a scala.meta context?)"
         }
         fail(message, Some(ex))
     }

@@ -1,4 +1,5 @@
 package scala.meta
+package internal.hosts.scalac
 
 import scala.reflect.{classTag, ClassTag}
 import scala.{Seq => _}
@@ -18,7 +19,7 @@ object Proxy {
 
 // TODO: We can probably expand this to interface with any Universe
 // not just with scala.tools.nsc.Global. How necessary is this, though?
-trait Proxy[G <: Global] extends Mirror with Toolbox with SemanticContext with InteractiveContext {
+trait Proxy[G <: Global] extends Context {
   self: ProxyImpl[G] =>
 
   val g: G

@@ -19,7 +19,7 @@ class ReplSuite extends FunSuite {
     assert(repl("""
       |import scala.meta._
       |import scala.meta.dialects.Scala211
-      |implicit val mirror = Mirror(Artifact(sys.props("sbt.paths.scalalibrary.classes")))
+      |implicit val c = Context(Artifact(sys.props("sbt.paths.scalalibrary.classes")))
       |t"List[Int]" <:< t"List[Any]"
     """.stripMargin.trim)
     .replace(sys.props("sbt.paths.scalalibrary.classes"), "<path/to/scala-library.jar>")
@@ -30,8 +30,8 @@ class ReplSuite extends FunSuite {
       |scala> import scala.meta.dialects.Scala211
       |import scala.meta.dialects.Scala211
       |
-      |scala> implicit val mirror = Mirror(Artifact(sys.props("sbt.paths.scalalibrary.classes")))
-      |mirror: scala.meta.Mirror = Mirror(Artifact("<path/to/scala-library.jar>", "", Scala211))
+      |scala> implicit val c = Context(Artifact(sys.props("sbt.paths.scalalibrary.classes")))
+      |c: scala.meta.Context = Context(Artifact("<path/to/scala-library.jar>", "", Scala211))
       |
       |scala> t"List[Int]" <:< t"List[Any]"
       |res0: Boolean = true
