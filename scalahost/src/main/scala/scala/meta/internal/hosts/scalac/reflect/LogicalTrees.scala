@@ -217,6 +217,16 @@ trait LogicalTrees {
 
     // ============ LITERALS ============
 
+    object Literal {
+      // value
+      def unapply(tree: g.Literal): Option[Any] = tree match {
+        case g.Literal(g.Constant(_: g.Type)) => None
+        case g.Literal(g.Constant(_: g.Symbol)) => None
+        case g.Literal(g.Constant(value)) => Some(value)
+        case _ => None
+      }
+    }
+
     // ============ DEFNS ============
 
     object ValDef {

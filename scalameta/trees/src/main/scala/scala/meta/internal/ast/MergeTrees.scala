@@ -65,6 +65,31 @@ object mergeTrees {
 
             // ============ PATTERNS ============
 
+            case (sy: m.Lit.Bool, se: m.Lit.Bool) =>
+              sy.copy()
+            case (sy: m.Lit.Byte, se: m.Lit.Byte) =>
+              sy.copy()
+            case (sy: m.Lit.Short, se: m.Lit.Short) =>
+              sy.copy()
+            case (sy: m.Lit.Int, se: m.Lit.Int) =>
+              sy.copy()
+            case (sy: m.Lit.Long, se: m.Lit.Long) =>
+              sy.copy()
+            case (sy: m.Lit.Float, se: m.Lit.Float) =>
+              sy.copy()
+            case (sy: m.Lit.Double, se: m.Lit.Double) =>
+              sy.copy()
+            case (sy: m.Lit.Char, se: m.Lit.Char) =>
+              sy.copy()
+            case (sy: m.Lit.String, se: m.Lit.String) =>
+              sy.copy()
+            case (sy: m.Lit.Symbol, se: m.Lit.Symbol) =>
+              sy.copy()
+            case (sy: m.Lit.Null, se: m.Lit.Null) =>
+              sy.copy()
+            case (sy: m.Lit.Unit, se: m.Lit.Unit) =>
+              sy.copy()
+
             // ============ LITERALS ============
 
             // ============ DECLS ============
