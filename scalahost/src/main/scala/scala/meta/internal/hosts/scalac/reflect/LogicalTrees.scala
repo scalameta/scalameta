@@ -431,7 +431,7 @@ trait LogicalTrees {
           var argss = if (syntacticArgss.nonEmpty) semanticArgss else syntacticArgss
           if (argss.isEmpty) argss = List(List())
           val lparent = argss.foldLeft(parent)((curr, args) => g.Apply(curr, args))
-          lparent.appendMetadata("superCtor" -> superCtor.toLogical).setParent(tree)
+          lparent.appendMetadata("isLparent" -> true, "superCtor" -> superCtor.toLogical).setParent(tree)
         }
         val lstats = removeSyntheticDefinitions(stats)
         Some((edefs, lparents, lself, lstats))
@@ -441,14 +441,18 @@ trait LogicalTrees {
     object Parent {
       // tpt, ctor, argss
       def unapply(tree: g.Tree): Option[(g.Tree, l.CtorIdent, List[List[g.Tree]])] = {
-        val applied = dissectApplied(tree)
-        (applied.callee, applied.core, applied.argss) match {
-          case (tpt, classRef: g.RefTree, argss) =>
-            val ctorSym = tree.metadata.get("superCtor").map(_.require[l.Symbol]).getOrElse(l.Zero)
-            val ctor = l.CtorIdent(ctorSym, classRef).setParent(tree.parent)
-            Some((tpt, ctor, argss))
-          case _ =>
-            None
+        if (tree.hasMetadata("isLparent")) {
+          val applied = dissectApplied(tree)
+          (applied.callee, applied.core, applied.argss) match {
+            case (tpt, classRef: g.RefTree, argss) =>
+              val ctorSym = tree.metadata.get("superCtor").map(_.require[l.Symbol]).getOrElse(l.Zero)
+              val ctor = l.CtorIdent(ctorSym, classRef).setParent(tree.parent)
+              Some((tpt, ctor, argss))
+            case _ =>
+              None
+          }
+        } else {
+          None
         }
       }
     }
