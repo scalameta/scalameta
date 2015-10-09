@@ -107,12 +107,14 @@ class DataMacros(val c: Context) {
           q"${unprivatize(mods)} val $name: $tpt = $default"
         case ByNeedParam(mods, name, tpt, default) =>
           val flagName = TermName(name + "Flag")
+          val statusName = TermName("is" + name.toString.capitalize + "Loaded")
           val valueName = TermName(name + "Value")
           val storageName = TermName(name + "Storage")
           val getterName = name
           val paramName = TermName("_" + name)
           val paramTpt = tq"_root_.scala.Function0[$tpt]"
           stats1 += q"@$Internal.byNeedField private[this] var $flagName: _root_.scala.Boolean = false"
+          stats1 += q"def $statusName: _root_.scala.Boolean = this.$flagName"
           stats1 += q"@$Internal.byNeedField private[this] var $storageName: $tpt = _"
           stats1 += q"""
             def $getterName = {

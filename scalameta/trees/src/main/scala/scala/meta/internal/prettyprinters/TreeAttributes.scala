@@ -31,9 +31,16 @@ object Attributes {
     @leaf implicit object Deep extends Recursion
   }
 
+  @root trait Force
+  object Force {
+    @leaf object Never extends Force
+    @leaf implicit object Always extends Force
+  }
+
   // TODO: would be nice to generate this with a macro for all tree nodes that we have
-  implicit def attributesTree[T <: api.Tree](implicit recursion: Recursion): Attributes[T] = new Attributes[T] {
+  implicit def attributesTree[T <: api.Tree](implicit recursion: Recursion, force: Force): Attributes[T] = new Attributes[T] {
     private def deep = recursion == Recursion.Deep
+    private def forceTypes = force == Force.Always
 
     def apply(x: T): Show.Result = {
       val bodyPart = body(x) // NOTE: body may side-effect on footnotes
@@ -204,8 +211,9 @@ object Attributes {
                 s"{}"
               }
             }
-          case typing @ Typing.Nonrecursive(tpe) =>
-            s"{${footnotes.insert(typing)}}"
+          case typing: Typing.Nonrecursive =>
+            if (typing.isTpeLoaded) s"{${footnotes.insert(typing)}}"
+            else s"{...}"
         }).getOrElse("")
 
         val expansionPart = x.internalExpansion.map({
