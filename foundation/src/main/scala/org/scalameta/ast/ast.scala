@@ -427,7 +427,10 @@ class AstMacros(val c: Context) extends AstReflection {
       }
       if (hasExpansion) {
         val paramExpansionLike = q"val expansionLike: $InternalSemantic.ExpansionLike"
-        val stateMessage = "can only call withExpansion on partially attributed trees, call .withAttrs first and only then .withExpansion(...)"
+        val commonMessage = "can only call withExpansion on partially attributed trees"
+        val unattributedMessage = commonMessage + ", call .withAttrs first and only then .withExpansion(...)"
+        val fullyAttributedMessage = commonMessage + ", if necessary, call .copy() to unattribute, then .withAttrs(...) and only then .withExpansion(...)"
+        val stateMessage = q"if (isUnattributed) $unattributedMessage else $fullyAttributedMessage"
         var attrPrinter = q"$Prettyprinters.Attributes.attributesTree[_root_.scala.meta.Tree]"
         attrPrinter = q"$attrPrinter($Prettyprinters.Attributes.Recursion.Deep, $Prettyprinters.Attributes.Force.Never)"
         val stateDetails = q"$attrPrinter.apply(this).toString"
