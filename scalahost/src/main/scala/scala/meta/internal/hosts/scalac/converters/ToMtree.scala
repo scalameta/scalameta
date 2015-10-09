@@ -67,6 +67,14 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
             m.Term.Name(lvalue).tryMattrs(ldenot)
           case l.TermIdent(lname) =>
             lname.toMtree[m.Term.Name]
+          case l.TermSelect(lpre, lname) =>
+            val mpre = lpre.toMtree[m.Term]
+            val mname = lname.toMtree[m.Term.Name]
+            m.Term.Select(mpre, mname)
+          case l.TermApply(lfun, largs) =>
+            val mfun = lfun.toMtree[m.Term]
+            val margs = largs.toMtrees[m.Term]
+            m.Term.Apply(mfun, margs)
           case l.TermParamDef(lmods, lname, ltpt, ldefault) =>
             val mmods = lmods.toMtrees[m.Mod]
             val mname = lname.toMtree[m.Term.Param.Name]

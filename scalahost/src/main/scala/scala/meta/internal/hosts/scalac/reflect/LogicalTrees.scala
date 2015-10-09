@@ -129,6 +129,21 @@ trait LogicalTrees {
       }
     }
 
+    object TermSelect {
+      def unapply(tree: g.Select): Option[(g.Tree, l.TermName)] = {
+        val g.Select(qual, name) = tree
+        if (name.isTypeName) return None
+        Some((qual, l.TermName(tree).setParent(tree)))
+      }
+    }
+
+    object TermApply {
+      def unapply(tree: g.Apply): Option[(g.Tree, List[g.Tree])] = {
+        if (tree.hasMetadata("isLparent")) return None
+        Some((tree.fun, tree.args))
+      }
+    }
+
     trait TermParamName extends Name
 
     object TermParamDef {
