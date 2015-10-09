@@ -7,6 +7,7 @@ import scala.collection.immutable.Seq
 import scala.compat.Platform.EOL
 import scala.reflect.{classTag, ClassTag}
 import scala.meta.internal.ast._
+import scala.meta.internal.ast.Helpers._
 import scala.meta.internal.semantic._
 import scala.meta.internal.semantic.RuntimeConverters._
 import scala.meta.internal.prettyprinters._
@@ -51,6 +52,13 @@ object mergeTrees {
               sy.copy()
             case (sy: m.Term.Apply, se: m.Term.Apply) =>
               sy.copy(loop(sy.fun, se.fun), loop(sy.args, se.args))
+            case (sy: m.Term.ApplyInfix, se @ m.Term.Apply(sefun, seargs)) =>
+              val (selhs, seop, setargs) = sefun match {
+                case m.Term.Select(selhs, seop) => (selhs, seop, Nil)
+                case m.Type.Apply(m.Term.Select(selhs, seop), setargs) => (selhs, seop, setargs)
+              }
+              require(seop.isLeftAssoc && debug(sy, se))
+              sy.copy(loop(sy.lhs, selhs), loop(sy.op, seop), loop(sy.targs, setargs), loop(sy.args, seargs))
             case (sy: m.Term.Param, se: m.Term.Param) =>
               sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), loop(sy.decltpe, se.decltpe), loop(sy.default, se.default))
 
