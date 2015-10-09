@@ -4,6 +4,8 @@ package converters
 
 import org.scalameta.invariants._
 import org.scalameta.unreachable
+import org.scalameta.default.Param
+import org.scalameta.default.Param._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.collection.mutable
@@ -34,21 +36,21 @@ import scala.meta.internal.hosts.scalac.reflect._
 trait ToMtree extends GlobalToolkit with MetaToolkit {
   self: Api =>
 
-  protected implicit class XtensionGtreeToMtree(gtree: g.Tree) {
+  protected implicit class XtensionGtreeToMtree(gtree0: g.Tree) {
+    // TODO: figure out a mechanism to automatically remove navigation links once we're done
+    // in order to cut down memory consumption of the further compilation pipeline
+    // TODO: another performance consideration is the fact that install/remove
+    // are currently implemented as standalone tree traversal, and it would be faster
+    // to integrate them into the transforming traversal
+    private lazy val gtree: g.Tree = {
+      val original = gtree0.original
+      original.installNavigationLinks()
+      original.setParent(gtree0.parent)
+      original
+    }
     def toMtree[T <: mapi.Tree : ClassTag]: T = {
       try {
-        // TODO: figure out a mechanism to automatically remove navigation links once we're done
-        // in order to cut down memory consumption of the further compilation pipeline
-        // TODO: another performance consideration is the fact that install/remove
-        // are currently implemented as standalone tree traversal, and it would be faster
-        // to integrate them into the transforming traversal
-        val originalGtree = {
-          val original = gtree.original
-          original.installNavigationLinks()
-          original.setParent(gtree.parent)
-          original
-        }
-        val maybeDenotedMtree = originalGtree match {
+        val maybeDenotedMtree = gtree match {
           // ============ NAMES ============
 
           case l.AnonymousName(ldenot) =>
@@ -103,7 +105,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
               case lvalue: Double => m.Lit.Double(lvalue)
               case lvalue: String => m.Lit.String(lvalue)
               case lvalue: Char => m.Lit.Char(lvalue)
-              case _ => fail(gtree, s"unexpected literal $lvalue of class ${lvalue.getClass}", None)
+              case _ => fail(s"unexpected literal $lvalue of class ${lvalue.getClass}")
             }
 
           // ============ DECLS ============
@@ -180,7 +182,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
           // ============ ODDS & ENDS ============
 
           case _ =>
-            fail(gtree, s"unexpected tree during scala.reflect -> scala.meta conversion:$EOL${g.showRaw(gtree)}", None)
+            fail(s"unsupported tree ${g.showRaw(gtree)}")
         }
         val maybeTypedMtree = maybeDenotedMtree match {
           case maybeDenotedMtree: m.Term.Name => maybeDenotedMtree // do nothing, typing already inferred from denotation
@@ -190,7 +192,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
           case maybeDenotedMtree => maybeDenotedMtree
         }
         val maybeExpandedMtree = {
-          if (originalGtree == gtree) maybeTypedMtree
+          if (gtree0 == gtree) maybeTypedMtree
           else maybeTypedMtree match {
             case maybeTypedMtree: m.Term =>
               val (obliviousGtree, memento) = gtree.forgetOriginal
@@ -198,9 +200,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
               try maybeTypedMtree.withExpansion(obliviousGtree.toMtree[m.Term])
               finally gtree.rememberOriginal(memento)
             case _ =>
-              val message = "unexpected original for a non-term"
-              val diagnostics = "${g.showRaw(gtree)}$EOL$originalGtree$EOL${g.showRaw(originalGtree)}"
-              fail(gtree, s"$message:$EOL$diagnostics", None)
+              fail("unsupported original")
           }
         }
         val maybeTypecheckedMtree = {
@@ -234,24 +234,34 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
           val actual = maybeIndexedMtree.productPrefix
           val summary = s"expected = $expected, actual = $actual"
           val details = s"${g.showRaw(gtree)}$EOL${maybeIndexedMtree.show[Structure]}"
-          fail(gtree, s"unexpected result during scala.reflect -> scala.meta conversion: $summary$EOL$details", None)
+          fail(s"unexpected result: $summary$EOL$details")
         }
       } catch {
         case ex: ConvertException =>
           throw ex
         case ex: Exception =>
-          fail(gtree, s"unexpected error during scala.reflect -> scala.meta conversion (scroll down the stacktrace to see the cause):", Some(ex))
+          fail(s"unexpected error (scroll down the stacktrace to see the cause):", ex)
       }
     }
 
-    private def fail(culprit: g.Tree, diagnostics: String, ex: Option[Throwable]): Nothing = {
-      val traceback = culprit.parents.map(gtree => {
+    private def fail(diagnostics: String, ex: Param[Throwable] = Default): Nothing = {
+      val culprit = gtree0 // NOTE: I tried making culprit a parameter of fail, but fail is always called with gtree0 anyway
+      val culprits = culprit +: culprit.parents
+      val traceback = culprits.map(gtree => {
+        def briefPrettyprint(gtree: g.Tree): String = {
+          var result = gtree.toString.replace("\n", " ")
+          if (result.length > 60) result = result.take(60) + "..."
+          result
+        }
         val prefix = gtree.productPrefix
-        var details = gtree.toString.replace("\n", " ")
-        if (details.length > 60) details = details.take(60) + "..."
+        var details = briefPrettyprint(gtree)
+        if (gtree.original != gtree) {
+          details = details + " that desugars into "
+          details = details + briefPrettyprint(gtree.original)
+        }
         s"($prefix) $details"
       }).mkString(EOL)
-      throw new ConvertException(culprit, s"$diagnostics$EOL$traceback", ex)
+      throw new ConvertException(culprit, s"$diagnostics$EOL$traceback", ex.toOption)
     }
   }
 
