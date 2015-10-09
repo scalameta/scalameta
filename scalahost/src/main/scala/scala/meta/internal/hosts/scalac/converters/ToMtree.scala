@@ -42,8 +42,13 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
         // TODO: another performance consideration is the fact that install/remove
         // are currently implemented as standalone tree traversal, and it would be faster
         // to integrate them into the transforming traversal
-        gtree.installNavigationLinks()
-        val maybeDenotedMtree = gtree match {
+        val originalGtree = {
+          val original = gtree.original
+          original.installNavigationLinks()
+          original.setParent(gtree.parent)
+          original
+        }
+        val maybeDenotedMtree = originalGtree match {
           // ============ NAMES ============
 
           case l.AnonymousName(ldenot) =>
@@ -184,12 +189,26 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
           case maybeDenotedMtree: m.Term.Param => maybeDenotedMtree // do nothing, typing already assigned during conversion
           case maybeDenotedMtree => maybeDenotedMtree
         }
+        val maybeExpandedMtree = {
+          if (originalGtree == gtree) maybeTypedMtree
+          else maybeTypedMtree match {
+            case maybeTypedMtree: m.Term =>
+              val (obliviousGtree, memento) = gtree.forgetOriginal
+              gtree.installNavigationLinks()
+              try maybeTypedMtree.withExpansion(obliviousGtree.toMtree[m.Term])
+              finally gtree.rememberOriginal(memento)
+            case _ =>
+              val message = "unexpected original for a non-term"
+              val diagnostics = "${g.showRaw(gtree)}$EOL$originalGtree$EOL${g.showRaw(originalGtree)}"
+              fail(gtree, s"$message:$EOL$diagnostics", None)
+          }
+        }
         val maybeTypecheckedMtree = {
           // TODO: Trying to force our way in is kinda lame.
           // In the future, we could remember whether any nested toMtree calls failed to attribute itself,
           // and then, based on that, decide whether we need to call setTypechecked or not.
-          try maybeTypedMtree.forceTypechecked
-          catch { case ex: Exception => maybeTypedMtree }
+          try maybeExpandedMtree.forceTypechecked
+          catch { case ex: Exception => maybeExpandedMtree }
         }
         val maybeIndexedMtree = {
           if (maybeTypecheckedMtree.isTypechecked) indexOne(maybeTypecheckedMtree)

@@ -59,10 +59,11 @@ trait Metadata {
       value
     }
     def update(key: String, value: Any): Unit = transform(_ + (key -> value))
+    def remove(key: String): Unit = transform(_ - key)
     def +=(kvp: (String, Any)): Unit = update(kvp._1, kvp._2)
     def ++=(other: Map[String, Any]): Unit = transform(_ ++ other)
     def ++=(other: Metadata[T]): Unit = transform(_ ++ other.toMap)
-    def -=(key: String): Unit = transform(_ - key)
+    def -=(key: String): Unit = remove(key)
     def --=(other: List[String]): Unit = transform(_ -- other)
     def --=(other: Metadata[T]): Unit = transform(_ -- other.toMap.keys)
     override def toString = toMap.toString
