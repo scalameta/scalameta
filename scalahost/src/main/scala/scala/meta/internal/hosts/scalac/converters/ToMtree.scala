@@ -4,6 +4,7 @@ package converters
 
 import org.scalameta.invariants._
 import org.scalameta.unreachable
+import org.scalameta.debug._
 import org.scalameta.default.Param
 import org.scalameta.default.Param._
 import scala.{Seq => _}
@@ -19,6 +20,8 @@ import scala.meta.internal.{semantic => s}
 import scala.meta.internal.flags._
 import scala.meta.internal.ast.Helpers.{XtensionTermOps => _, _}
 import scala.meta.internal.hosts.scalac.reflect._
+import scala.meta.internal.prettyprinters.Attributes
+import scala.meta.internal.ast.XtensionConvertDebug
 
 // This module exposes a method that can convert scala.reflect trees
 // into equivalent scala.meta trees.
@@ -222,16 +225,15 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
           if (maybeTypecheckedMtree.isTypechecked) indexOne(maybeTypecheckedMtree)
           else maybeTypecheckedMtree
         }
-        if (sys.props("convert.debug") != null && gtree.parent.isEmpty) {
+        if (Debug.convert && gtree.parent.isEmpty) {
           println("======= SCALA.REFLECT TREE =======")
           println(gtree)
           println(g.showRaw(gtree, printIds = true, printTypes = true))
           println("======== SCALA.META TREE ========")
           println(maybeIndexedMtree)
-          println(maybeIndexedMtree.show[Semantics])
+          println(maybeIndexedMtree.show[Attributes])
           println("=================================")
         }
-        // TODO: fix duplication wrt MergeTrees.scala
         if (classTag[T].runtimeClass.isAssignableFrom(maybeIndexedMtree.getClass)) {
           maybeIndexedMtree.asInstanceOf[T]
         } else {

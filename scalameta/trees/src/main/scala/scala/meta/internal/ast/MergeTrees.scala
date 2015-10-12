@@ -176,7 +176,7 @@ object mergeTrees {
           }
 
           val metree = expandedMetree.withTokens(sy.tokens).inheritAttrs(se).withTypechecked(se.isTypechecked)
-          if (Debug.convert && sy.parent.isEmpty) {
+          if (Debug.merge && sy.parent.isEmpty) {
             println("======= SYNTACTIC TREE =======")
             println(sy)
             println(sy.show[Attributes])
@@ -188,7 +188,6 @@ object mergeTrees {
             println(metree.show[Attributes])
             println("=================================")
           }
-          // TODO: fix duplication wrt ToMtree.scala
           if (classTag[T].runtimeClass.isAssignableFrom(metree.getClass)) metree.asInstanceOf[T]
           else failExpected(sy, se, classTag[T].runtimeClass, metree)
         }

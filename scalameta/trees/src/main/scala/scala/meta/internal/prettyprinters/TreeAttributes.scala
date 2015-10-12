@@ -212,14 +212,22 @@ object Attributes {
               }
             }
           case typing: Typing.Nonrecursive =>
-            if (typing.isTpeLoaded) s"{${footnotes.insert(typing)}}"
+            if (forceTypes || typing.isTpeLoaded) s"{${footnotes.insert(typing)}}"
             else s"{...}"
         }).getOrElse("")
 
         val expansionPart = x.internalExpansion.map({
-          case Expansion.Zero => ""
-          case expansion @ Expansion.Identity => s"<>"
-          case expansion @ Expansion.Desugaring(term) => s"<${footnotes.insert(expansion)}>"
+          case Expansion.Zero =>
+            ""
+          case expansion @ Expansion.Identity =>
+            s"<>"
+          case expansion @ Expansion.Desugaring(term: Term) =>
+            val isTpeLoaded = term.typing match {
+              case typing: Typing.Nonrecursive => typing.isTpeLoaded
+              case _ => true
+            }
+            if (forceTypes || isTpeLoaded) s"<${footnotes.insert(expansion)}>"
+            else s"<...>"
         }).getOrElse("")
 
         val typecheckedPart = {
