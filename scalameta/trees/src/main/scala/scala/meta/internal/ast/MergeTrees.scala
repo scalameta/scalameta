@@ -176,17 +176,19 @@ object mergeTrees {
           }
 
           val metree = expandedMetree.withTokens(sy.tokens).inheritAttrs(se).withTypechecked(se.isTypechecked)
-          if (Debug.merge && sy.parent.isEmpty) {
-            println("======= SYNTACTIC TREE =======")
-            println(sy)
-            println(sy.show[Attributes])
-            println("======== SEMANTIC TREE ========")
-            println(se)
-            println(se.show[Attributes])
-            println("======== MERGED TREE ========")
-            println(metree)
-            println(metree.show[Attributes])
-            println("=================================")
+          if (sy.parent.isEmpty) {
+            Debug.logMerge {
+              println("======= SYNTACTIC TREE =======")
+              println(sy)
+              println(sy.show[Attributes])
+              println("======== SEMANTIC TREE ========")
+              println(se)
+              println(se.show[Attributes])
+              println("======== MERGED TREE ========")
+              println(metree)
+              println(metree.show[Attributes])
+              println("=================================")
+            }
           }
           if (classTag[T].runtimeClass.isAssignableFrom(metree.getClass)) metree.asInstanceOf[T]
           else failExpected(sy, se, classTag[T].runtimeClass, metree)

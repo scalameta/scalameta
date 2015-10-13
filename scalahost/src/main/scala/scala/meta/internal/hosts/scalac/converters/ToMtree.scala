@@ -225,14 +225,16 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
           if (maybeTypecheckedMtree.isTypechecked) indexOne(maybeTypecheckedMtree)
           else maybeTypecheckedMtree
         }
-        if (Debug.convert && gtree.parent.isEmpty) {
-          println("======= SCALA.REFLECT TREE =======")
-          println(gtree)
-          println(g.showRaw(gtree, printIds = true, printTypes = true))
-          println("======== SCALA.META TREE ========")
-          println(maybeIndexedMtree)
-          println(maybeIndexedMtree.show[Attributes])
-          println("=================================")
+        if (gtree.parent.isEmpty) {
+          Debug.logConvert {
+            println("======= SCALA.REFLECT TREE =======")
+            println(gtree)
+            println(g.showRaw(gtree, printIds = true, printTypes = true))
+            println("======== SCALA.META TREE ========")
+            println(maybeIndexedMtree)
+            println(maybeIndexedMtree.show[Attributes])
+            println("=================================")
+          }
         }
         if (classTag[T].runtimeClass.isAssignableFrom(maybeIndexedMtree.getClass)) {
           maybeIndexedMtree.asInstanceOf[T]

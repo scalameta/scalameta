@@ -3,8 +3,14 @@ package internal
 
 package object ast {
   implicit class XtensionConvertDebug(debug: org.scalameta.debug.Debug.type) {
-    def convert = sys.props("convert.debug") != null
+    def logConvert(op: => Unit): Unit = {
+      if (sys.props("convert.debug") != null) debug.log(op)
+    }
+  }
 
-    def merge = sys.props("merge.debug") != null
+  implicit class XtensionMergeDebug(debug: org.scalameta.debug.Debug.type) {
+    def logMerge(op: => Unit): Unit = {
+      if (sys.props("merge.debug") != null) debug.log(op)
+    }
   }
 }

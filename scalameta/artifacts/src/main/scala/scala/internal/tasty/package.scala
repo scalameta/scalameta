@@ -57,7 +57,7 @@ package object tasty {
       semanticBuf.writeNat(semanticBlob.length)
       semanticBuf.writeBytes(semanticBlob, semanticBlob.length)
 
-      if (Debug.tasty) println(s"successfully written TASTY: ${digest.dialect}, ${digest.hash}, ${source.show[TopLevel]}")
+      Debug.logTasty(println(s"successfully written TASTY: ${digest.dialect}, ${digest.hash}, ${source.show[TopLevel]}"))
       pickler.assembleParts()
     } catch {
       case ex: TastyException => throw ex
@@ -98,7 +98,7 @@ package object tasty {
         case _ => throw new UntastyException("no ScalametaSemantic section was found")
       }
       source.requireAttributed()
-      if (Debug.tasty) println(s"successfully loaded TASTY: ${digest.dialect}, ${digest.hash}, ${source.show[TopLevel]}")
+      Debug.logTasty(println(s"successfully loaded TASTY: ${digest.dialect}, ${digest.hash}, ${source.show[TopLevel]}"))
       (digest, source)
     } catch {
       case ex: UntastyException => throw ex
@@ -107,6 +107,8 @@ package object tasty {
   }
 
   implicit class XtensionTastyDebug(debug: org.scalameta.debug.Debug.type) {
-    def tasty = sys.props("tasty.debug") != null || sys.props("artifact.debug") != null
+    def logTasty(op: => Unit): Unit = {
+      if (sys.props("tasty.debug") != null || sys.props("artifact.debug") != null) debug.log(op)
+    }
   }
 }

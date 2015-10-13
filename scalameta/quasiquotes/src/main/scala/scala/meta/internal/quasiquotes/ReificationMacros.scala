@@ -105,7 +105,7 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
         }
       } catch {
         case ex: Exception =>
-          if (Debug.quasiquote) println(ex.toString)
+          Debug.logQuasiquote(println(ex.toString))
           c.abort(c.macroApplication.pos, s"fatal error initializing quasiquote macro: ${showRaw(c.macroApplication)}")
       }
     }
@@ -202,12 +202,12 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
       part ++ unquote
     }
     val tokens: MetaTokens = MetaTokens(parttokenss.zip(args :+ EmptyTree).zipWithIndex.flatMap({ case ((ts, a), i) => merge(i, ts, a) }): _*)
-    if (Debug.quasiquote) println(tokens)
+    Debug.logQuasiquote(println(tokens))
     try {
       implicit val parsingDialect: MetaDialect = scala.meta.dialects.Quasiquote(metaDialect)
-      if (Debug.quasiquote) { println(tokens); println(parsingDialect) }
+      Debug.logQuasiquote({ println(tokens); println(parsingDialect) })
       val syntax = metaParse(tokens, parsingDialect)
-      if (Debug.quasiquote) { println(syntax.show[Syntax]); println(syntax.show[Structure]) }
+      Debug.logQuasiquote({ println(syntax.show[Syntax]); println(syntax.show[Structure]) })
       (syntax, mode)
     } catch {
       case ParseException(position, message) => c.abort(position, message)

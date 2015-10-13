@@ -3,6 +3,7 @@ package internal.hosts.scalac
 package converters
 
 import org.scalameta.collections._
+import org.scalameta.debug._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
 import scala.collection.mutable
@@ -47,10 +48,12 @@ trait Caches extends GlobalToolkit with MetaToolkit {
   // not loaded directly from a source that hasn't been indexed yet.
   private var indicesWriteOnly = false
   protected def withWriteOnlyIndices[T](body: => T): T = {
-    val old = indicesWriteOnly
-    indicesWriteOnly = true
-    try body
-    finally indicesWriteOnly = old
+    Debug.delayingSensitiveLogs {
+      val old = indicesWriteOnly
+      indicesWriteOnly = true
+      try body
+      finally indicesWriteOnly = old
+    }
   }
 
   def indexOne[T <: m.Tree](x: T): T = {
