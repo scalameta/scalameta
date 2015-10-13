@@ -20,7 +20,7 @@ import scala.reflect.io.PlainFile
 import scala.meta.artifacts.Artifact.Adhoc
 import scala.meta.semantic.{Context => ScalametaSemanticContext}
 import scala.meta.{Context => ContextApi}
-import scala.meta.internal.hosts.scalac.{Proxy => ProxyApi}
+import scala.meta.internal.hosts.scalac.{Adapter => AdapterApi}
 import scala.meta.internal.hosts.scalac.converters.{Api => ConverterApi}
 import scala.meta.internal.ast.mergeTrees
 import scala.tools.nsc.{Global => ScalaGlobal}
@@ -33,8 +33,8 @@ import scala.meta.internal.flags._
 import scala.meta.internal.prettyprinters._
 
 @context(translateExceptions = false)
-class Proxy[G <: ScalaGlobal](val global: G, initialDomain: Domain = Domain())
-extends ConverterApi(global) with ContextApi with ProxyApi[G] {
+class Adapter[G <: ScalaGlobal](val global: G, initialDomain: Domain = Domain())
+extends ConverterApi(global) with ContextApi with AdapterApi[G] {
   initializeFromDomain(initialDomain)
 
   // ======= SEMANTIC CONTEXT =======
@@ -273,7 +273,7 @@ extends ConverterApi(global) with ContextApi with ProxyApi[G] {
     artifacts1
   }
 
-  // ============== PROXY ==============
+  // ============== Adapter ==============
 
   private[meta] def toMtree[T <: mapi.Tree : ClassTag](gtree: g.Tree): T = {
     XtensionGtreeToMtree(gtree).toMtree[T]
@@ -318,11 +318,11 @@ extends ConverterApi(global) with ContextApi with ProxyApi[G] {
     val fromScratch = global.currentRun == null
     def fail(reason: String, ex: Option[Exception]) = {
       val status = if (fromScratch) "scratch" else "a pre-existing compiler"
-      throw new InfrastructureException(s"can't initialize a semantic proxy from $status: " + reason, ex)
+      throw new InfrastructureException(s"can't initialize a semantic Adapter from $status: " + reason, ex)
     }
 
     Debug.logScalahost({
-      println(s"initializing semantic proxy from $global and $initialDomain")
+      println(s"initializing semantic Adapter from $global and $initialDomain")
       if (fromScratch) println("starting from scratch") else println("wrapping a pre-existing global")
     })
 
@@ -428,6 +428,6 @@ extends ConverterApi(global) with ContextApi with ProxyApi[G] {
     Debug.logScalahost(println(s"indexing ${initialDomain.artifacts.length} domain artifacts"))
     load(initialDomain.artifacts.toList)
 
-    Debug.logScalahost(println(s"initialized semantic proxy from $global and $initialDomain"))
+    Debug.logScalahost(println(s"initialized semantic Adapter from $global and $initialDomain"))
   }
 }

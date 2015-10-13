@@ -11,7 +11,7 @@ import scala.meta.prettyprinters._
 import scala.meta.internal.ast.mergeTrees
 import scala.meta.internal.ast.MergeException
 import scala.meta.internal.hosts.scalac.converters.ConvertException
-import scala.meta.internal.hosts.scalac.Proxy
+import scala.meta.internal.hosts.scalac.Adapter
 import scala.reflect.internal.Phase
 import scala.tools.cmd.CommandLineParser
 import scala.tools.nsc.{Global, CompilerCommand, Settings}
@@ -55,8 +55,8 @@ class ReflectToMetaSuite extends FunSuite {
     unit.body
   }
 
-  val proxy: Proxy[g.type] = Proxy[g.type](g)
-  import proxy.conversions._
+  val adapter: Adapter[g.type] = Adapter[g.type](g)
+  import adapter.conversions._
 
   def scheduleReflectToMetaTest(testDir: File): Unit = {
     def resource(label: String) = testDir.getAbsolutePath + File.separatorChar + label

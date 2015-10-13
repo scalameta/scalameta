@@ -6,26 +6,26 @@ import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.{meta => m}
 import scala.meta.internal.hosts.scalac.contexts.{Compiler => Compiler}
-import scala.meta.internal.hosts.scalac.contexts.{Proxy => ProxyImpl}
+import scala.meta.internal.hosts.scalac.contexts.{Adapter => AdapterImpl}
 import scala.tools.nsc.Global
 
-object Proxy {
-  def apply[G <: Global](global: G): Proxy[G] = {
-    new ProxyImpl[G](global) {
-      override def toString = s"Proxy($global)"
+object Adapter {
+  def apply[G <: Global](global: G): Adapter[G] = {
+    new AdapterImpl[G](global) {
+      override def toString = s"Adapter($global)"
     }
   }
 }
 
 // TODO: We can probably expand this to interface with any Universe
 // not just with scala.tools.nsc.Global. How necessary is this, though?
-trait Proxy[G <: Global] extends Context {
-  self: ProxyImpl[G] =>
+trait Adapter[G <: Global] extends Context {
+  self: AdapterImpl[G] =>
 
   val g: G
 
   object conversions {
-    implicit class ScalahostProxyReflectTree(gtree: g.Tree) {
+    implicit class ScalahostAdapterReflectTree(gtree: g.Tree) {
       // TODO: make this work
       // def toMeta[T <: m.Tree : ClassTag](implicit ev: T OrElse m.Tree): ev.T = {
       //   implicit val tag: ClassTag[ev.T] = ev.tag
@@ -35,7 +35,7 @@ trait Proxy[G <: Global] extends Context {
       // and then mtree will end up unattributed as well
       def toMeta: m.Tree = self.toMtree[m.Tree](gtree)
     }
-    implicit class ScalahostProxyReflectType(gtype: g.Type) {
+    implicit class ScalahostAdapterReflectType(gtype: g.Type) {
       // TODO: make this work
       // def toMeta[T <: m.Type.Arg : ClassTag](implicit ev: T OrElse m.Type.Arg): ev.T = {
       //   implicit val tag: ClassTag[ev.T] = ev.tag
@@ -44,7 +44,7 @@ trait Proxy[G <: Global] extends Context {
       // }
       def toMeta: m.Type.Arg = self.toMtypeArg(gtype).forceTypechecked
     }
-    implicit class ScalahostProxyReflectSymbol(gsym: g.Symbol) {
+    implicit class ScalahostAdapterReflectSymbol(gsym: g.Symbol) {
       // TODO: make this work
       // def toMeta[T <: m.Member](gpre: g.Type)(implicit ev: T OrElse m.Member): ev.T = {
       //   implicit val tag: ClassTag[ev.T] = ev.tag
@@ -52,19 +52,19 @@ trait Proxy[G <: Global] extends Context {
       // }
       def toMeta(gpre: g.Type): m.Member = self.toMmember(gsym, gpre).forceTypechecked
     }
-    implicit class ScalahostProxyReflectAnnotation(gannot: g.AnnotationInfo) {
+    implicit class ScalahostAdapterReflectAnnotation(gannot: g.AnnotationInfo) {
       def toMeta: m.Mod.Annot = self.toMannot(gannot).forceTypechecked
     }
-    implicit class ScalahostProxyMetaTree(mtree: m.Tree) {
+    implicit class ScalahostAdapterMetaTree(mtree: m.Tree) {
       def toReflect: g.Tree = self.toGtree(mtree).asInstanceOf[g.Tree]
     }
-    implicit class ScalahostProxyMetaType(mtpe: m.Type.Arg) {
+    implicit class ScalahostAdapterMetaType(mtpe: m.Type.Arg) {
       def toReflect: g.Type = self.toGtype(mtpe).asInstanceOf[g.Type]
     }
-    implicit class ScalahostProxyMetaName(mname: m.Name) {
+    implicit class ScalahostAdapterMetaName(mname: m.Name) {
       def toReflect: Seq[g.Symbol] = self.toGsymbols(mname).asInstanceOf[Seq[g.Symbol]]
     }
-    implicit class ScalahostProxyMetaMember(mmember: m.Member) {
+    implicit class ScalahostAdapterMetaMember(mmember: m.Member) {
       def toReflect: Seq[g.Symbol] = self.toGsymbols(mmember).asInstanceOf[Seq[g.Symbol]]
     }
   }

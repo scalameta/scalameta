@@ -5,7 +5,7 @@ import scala.tools.nsc.{Global, Phase, SubComponent}
 import scala.tools.nsc.plugins.{Plugin => NscPlugin, PluginComponent => NscPluginComponent}
 import scala.meta.dialects.Scala211
 import scala.meta.internal.hosts.scalac.{PluginBase => ScalahostPlugin}
-import scala.meta.internal.hosts.scalac.contexts.{Proxy => ProxyImpl}
+import scala.meta.internal.hosts.scalac.contexts.{Adapter => AdapterImpl}
 import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
 import scala.reflect.io.AbstractFile
@@ -34,11 +34,11 @@ trait ConvertPhase {
     override def newPhase(prev: Phase): Phase = new Phase(prev) {
       override def name = "convert"
       override def run(): Unit = {
-        // TODO: awkwardly enough, ProxyImpl's constructor side-effects on compilation units
+        // TODO: awkwardly enough, AdapterImpl's constructor side-effects on compilation units
         // by converting them to scala.meta and attaching the results to unit bodies.
         // at the moment, I have no idea how to express this in a better way
         if (sys.props("scalahost.disable") != null) return
-        val proxy = new ProxyImpl[global.type](global)
+        val adapter = new AdapterImpl[global.type](global)
       }
     }
   }
