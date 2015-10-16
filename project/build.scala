@@ -193,9 +193,16 @@ object build extends Build {
   ) settings (
     crossVersion := CrossVersion.full,
     description := "Scalac-based host that implements scala.meta's hosting APIs",
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _)
+    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _),
+    scalacOptions in Test := {
+      val defaultValue = (scalacOptions in Test).value
+      val scalahostJar = (Keys.`package` in Compile).value
+      System.setProperty("sbt.paths.scalahost.compile.jar", scalahostJar.getAbsolutePath)
+      val addPlugin = "-Xplugin:" + scalahostJar.getAbsolutePath
+      defaultValue ++ Seq("-Jdummy=" + scalahostJar.lastModified)
+    }
   ) settings (
-    exposeClasspaths("scalahost"): _*
+    exposePaths("scalahost", Test): _*
   ) dependsOn (scalameta)
 
   lazy val sharedSettings = Defaults.defaultSettings ++ Seq(
@@ -340,24 +347,28 @@ object build extends Build {
     }
   )
 
-  def exposeClasspaths(projectName: String) = Seq(
-    sourceDirectory in Test := {
-      val defaultValue = (sourceDirectory in Test).value
-      System.setProperty("sbt.paths." + projectName + ".sources", defaultValue.getAbsolutePath)
-      defaultValue
-    },
-    resourceDirectory in Test := {
-      val defaultValue = (resourceDirectory in Test).value
-      System.setProperty("sbt.paths." + projectName + ".resources", defaultValue.getAbsolutePath)
-      defaultValue
-    },
-    fullClasspath in Test := {
-      val defaultValue = (fullClasspath in Test).value
-      val classpath = defaultValue.files.map(_.getAbsolutePath)
-      val scalaLibrary = classpath.map(_.toString).find(_.contains("scala-library")).get
-      System.setProperty("sbt.paths.scalalibrary.classes", scalaLibrary)
-      System.setProperty("sbt.paths." + projectName + ".classes", classpath.mkString(java.io.File.pathSeparator))
-      defaultValue
-    }
-  )
+  def exposePaths(projectName: String, config: Configuration) = {
+    def uncapitalize(s: String) = if (s.length == 0) "" else { val chars = s.toCharArray; chars(0) = chars(0).toLower; new String(chars) }
+    val prefix = "sbt.paths." + projectName + "." + uncapitalize(config.name) + "."
+    Seq(
+      sourceDirectory in config := {
+        val defaultValue = (sourceDirectory in config).value
+        System.setProperty(prefix + "sources", defaultValue.getAbsolutePath)
+        defaultValue
+      },
+      resourceDirectory in config := {
+        val defaultValue = (resourceDirectory in config).value
+        System.setProperty(prefix + "resources", defaultValue.getAbsolutePath)
+        defaultValue
+      },
+      fullClasspath in config := {
+        val defaultValue = (fullClasspath in config).value
+        val classpath = defaultValue.files.map(_.getAbsolutePath)
+        val scalaLibrary = classpath.map(_.toString).find(_.contains("scala-library")).get
+        System.setProperty("sbt.paths.scalalibrary.classes", scalaLibrary)
+        System.setProperty(prefix + "classes", classpath.mkString(java.io.File.pathSeparator))
+        defaultValue
+      }
+    )
+  }
 }

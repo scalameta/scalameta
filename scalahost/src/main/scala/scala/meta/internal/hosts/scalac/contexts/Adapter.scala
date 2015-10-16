@@ -385,6 +385,8 @@ extends ConverterApi(global) with ContextApi with AdapterApi[G] {
         if (scalahostPlugin.isEmpty) fail("the underlying compiler should have the scalahost plugin enabled", None)
       }
     } catch {
+      case ex: InfrastructureException =>
+        throw ex
       case ex: Exception =>
         var message = ex.getMessage
         if (ex.isInstanceOf[MissingRequirementError]) {
