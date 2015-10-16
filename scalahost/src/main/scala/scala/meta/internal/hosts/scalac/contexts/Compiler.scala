@@ -16,14 +16,14 @@ object Compiler {
   }
 
   def apply(options: String)(implicit resolver: Resolver): Global = {
-    def fail(reason: String) = throw new InfrastructureException("can't initialize a semantic proxy from scratch: " + reason)
+    def fail(reason: String) = throw new InfrastructureException("can't initialize a semantic adapter from scratch: " + reason)
     val args = CommandLineParser.tokenize(options)
-    val emptySettings = new Settings(error => fail("invalid compiler options: $error"))
+    val emptySettings = new Settings(error => fail(s"invalid compiler options: $error"))
     val reporter = new StoreReporter()
     val command = new CompilerCommand(args, emptySettings)
     val settings = command.settings
     initializeJreClasspath(settings)
-    new Global(settings, reporter)
+    Global(settings, reporter)
   }
 
   private def initializeJreClasspath(settings: Settings): Unit = {
@@ -65,7 +65,7 @@ object Compiler {
         case arg :: rest if arg.startsWith("-Xbootclasspath/p:") =>
           loop(subtract(classpath, parse(arg.stripPrefix("-Xbootclasspath/p:"))), rest)
         case arg :: rest if arg.startsWith("-Xbootclasspath") =>
-          throw new InfrastructureException(s"can't initialize a semantic proxy from scratch: classpath infrastructure doesn't support $arg")
+          throw new InfrastructureException(s"can't initialize a semantic adapter from scratch: classpath infrastructure doesn't support $arg")
         case arg :: rest =>
           loop(classpath, rest)
         case Nil =>

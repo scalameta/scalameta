@@ -3,6 +3,7 @@ package internal.hosts.scalac
 package converters
 
 import org.scalameta.collections._
+import org.scalameta.debug._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
 import scala.collection.mutable
@@ -12,6 +13,7 @@ import scala.tools.nsc.{Global => ScalaGlobal}
 import scala.meta.internal.{ast => m}
 import scala.meta.internal.{semantic => s}
 import scala.meta.internal.hosts.scalac.reflect._
+import scala.meta.internal.prettyprinters.Attributes
 
 // This module explicitly lists caches that are used by the conversions.
 // Some of them are here to improve performance, but some of them are necessary for uniqueness and/or correctness.
@@ -46,10 +48,12 @@ trait Caches extends GlobalToolkit with MetaToolkit {
   // not loaded directly from a source that hasn't been indexed yet.
   private var indicesWriteOnly = false
   protected def withWriteOnlyIndices[T](body: => T): T = {
-    val old = indicesWriteOnly
-    indicesWriteOnly = true
-    try body
-    finally indicesWriteOnly = old
+    Debug.delayingSensitiveLogs {
+      val old = indicesWriteOnly
+      indicesWriteOnly = true
+      try body
+      finally indicesWriteOnly = old
+    }
   }
 
   def indexOne[T <: m.Tree](x: T): T = {
@@ -60,11 +64,11 @@ trait Caches extends GlobalToolkit with MetaToolkit {
           x.name.require[m.Name].denot match {
             case s.Denotation.Single(_, ssym) if ssym != s.Symbol.Zero =>
               // TODO: it seems that we can't have this yet
-              // require(!_ssymToMmemberIndex.contains(symbol) && debug(x, x.show[Semantics]))
+              // require(!_ssymToMmemberIndex.contains(symbol) && debug(x, x.show[Attributes]))
               _ssymToMmemberIndex(ssym) = x
               _ldenotToMmemberIndex.retain((ldenot, _) => ldenot.sym != symbolTable.convert(ssym))
             case _ =>
-              abort(debug(x, x.show[Semantics]))
+              abort(debug(x, x.show[Attributes]))
           }
         }
       case _ =>

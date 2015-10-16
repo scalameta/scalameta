@@ -4,6 +4,9 @@ package converters
 
 import org.scalameta.invariants._
 import org.scalameta.unreachable
+import org.scalameta.debug._
+import org.scalameta.default.Param
+import org.scalameta.default.Param._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.collection.mutable
@@ -17,6 +20,8 @@ import scala.meta.internal.{semantic => s}
 import scala.meta.internal.flags._
 import scala.meta.internal.ast.Helpers.{XtensionTermOps => _, _}
 import scala.meta.internal.hosts.scalac.reflect._
+import scala.meta.internal.prettyprinters.Attributes
+import scala.meta.internal.ast.XtensionConvertDebug
 
 // This module exposes a method that can convert scala.reflect trees
 // into equivalent scala.meta trees.
@@ -34,15 +39,20 @@ import scala.meta.internal.hosts.scalac.reflect._
 trait ToMtree extends GlobalToolkit with MetaToolkit {
   self: Api =>
 
-  protected implicit class XtensionGtreeToMtree(gtree: g.Tree) {
+  protected implicit class XtensionGtreeToMtree(gtree0: g.Tree) {
+    // TODO: figure out a mechanism to automatically remove navigation links once we're done
+    // in order to cut down memory consumption of the further compilation pipeline
+    // TODO: another performance consideration is the fact that install/remove
+    // are currently implemented as standalone tree traversal, and it would be faster
+    // to integrate them into the transforming traversal
+    private lazy val gtree: g.Tree = {
+      val original = gtree0.original
+      original.installNavigationLinks()
+      original.setParent(gtree0.parent)
+      original
+    }
     def toMtree[T <: mapi.Tree : ClassTag]: T = {
       try {
-        // TODO: figure out a mechanism to automatically remove navigation links once we're done
-        // in order to cut down memory consumption of the further compilation pipeline
-        // TODO: another performance consideration is the fact that install/remove
-        // are currently implemented as standalone tree traversal, and it would be faster
-        // to integrate them into the transforming traversal
-        gtree.installNavigationLinks()
         val maybeDenotedMtree = gtree match {
           // ============ NAMES ============
 
@@ -60,6 +70,14 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
             m.Term.Name(lvalue).tryMattrs(ldenot)
           case l.TermIdent(lname) =>
             lname.toMtree[m.Term.Name]
+          case l.TermSelect(lpre, lname) =>
+            val mpre = lpre.toMtree[m.Term]
+            val mname = lname.toMtree[m.Term.Name]
+            m.Term.Select(mpre, mname)
+          case l.TermApply(lfun, largs) =>
+            val mfun = lfun.toMtree[m.Term]
+            val margs = largs.toMtrees[m.Term]
+            m.Term.Apply(mfun, margs)
           case l.TermParamDef(lmods, lname, ltpt, ldefault) =>
             val mmods = lmods.toMtrees[m.Mod]
             val mname = lname.toMtree[m.Term.Param.Name]
@@ -83,6 +101,23 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
           // ============ PATTERNS ============
 
           // ============ LITERALS ============
+
+          case l.Literal(lvalue) =>
+            lvalue match {
+              case null => m.Lit.Null()
+              case () => m.Lit.Unit()
+              case true => m.Lit.Bool(true)
+              case false => m.Lit.Bool(false)
+              case lvalue: Byte => m.Lit.Byte(lvalue)
+              case lvalue: Short => m.Lit.Short(lvalue)
+              case lvalue: Int => m.Lit.Int(lvalue)
+              case lvalue: Long => m.Lit.Long(lvalue)
+              case lvalue: Float => m.Lit.Float(lvalue)
+              case lvalue: Double => m.Lit.Double(lvalue)
+              case lvalue: String => m.Lit.String(lvalue)
+              case lvalue: Char => m.Lit.Char(lvalue)
+              case _ => fail(s"unexpected literal $lvalue of class ${lvalue.getClass}")
+            }
 
           // ============ DECLS ============
 
@@ -158,7 +193,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
           // ============ ODDS & ENDS ============
 
           case _ =>
-            fail(gtree, s"unexpected tree during scala.reflect -> scala.meta conversion:$EOL${g.showRaw(gtree)}", None)
+            fail(s"unsupported tree ${g.showRaw(gtree)}")
         }
         val maybeTypedMtree = maybeDenotedMtree match {
           case maybeDenotedMtree: m.Term.Name => maybeDenotedMtree // do nothing, typing already inferred from denotation
@@ -167,27 +202,40 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
           case maybeDenotedMtree: m.Term.Param => maybeDenotedMtree // do nothing, typing already assigned during conversion
           case maybeDenotedMtree => maybeDenotedMtree
         }
+        val maybeExpandedMtree = {
+          if (gtree0 == gtree) maybeTypedMtree
+          else maybeTypedMtree match {
+            case maybeTypedMtree: m.Term =>
+              val (obliviousGtree, memento) = gtree.forgetOriginal
+              gtree.installNavigationLinks()
+              try maybeTypedMtree.withExpansion(obliviousGtree.toMtree[m.Term])
+              finally gtree.rememberOriginal(memento)
+            case _ =>
+              fail("unsupported original")
+          }
+        }
         val maybeTypecheckedMtree = {
           // TODO: Trying to force our way in is kinda lame.
           // In the future, we could remember whether any nested toMtree calls failed to attribute itself,
           // and then, based on that, decide whether we need to call setTypechecked or not.
-          try maybeTypedMtree.forceTypechecked
-          catch { case ex: Exception => maybeTypedMtree }
+          try maybeExpandedMtree.forceTypechecked
+          catch { case ex: Exception => maybeExpandedMtree }
         }
         val maybeIndexedMtree = {
           if (maybeTypecheckedMtree.isTypechecked) indexOne(maybeTypecheckedMtree)
           else maybeTypecheckedMtree
         }
-        if (sys.props("convert.debug") != null && gtree.parent.isEmpty) {
-          println("======= SCALA.REFLECT TREE =======")
-          println(gtree)
-          println(g.showRaw(gtree, printIds = true, printTypes = true))
-          println("======== SCALA.META TREE ========")
-          println(maybeIndexedMtree)
-          println(maybeIndexedMtree.show[Semantics])
-          println("=================================")
+        if (gtree.parent.isEmpty) {
+          Debug.logConvert {
+            println("======= SCALA.REFLECT TREE =======")
+            println(gtree)
+            println(g.showRaw(gtree, printIds = true, printTypes = true))
+            println("======== SCALA.META TREE ========")
+            println(maybeIndexedMtree)
+            println(maybeIndexedMtree.show[Attributes])
+            println("=================================")
+          }
         }
-        // TODO: fix duplication wrt MergeTrees.scala
         if (classTag[T].runtimeClass.isAssignableFrom(maybeIndexedMtree.getClass)) {
           maybeIndexedMtree.asInstanceOf[T]
         } else {
@@ -198,24 +246,34 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
           val actual = maybeIndexedMtree.productPrefix
           val summary = s"expected = $expected, actual = $actual"
           val details = s"${g.showRaw(gtree)}$EOL${maybeIndexedMtree.show[Structure]}"
-          fail(gtree, s"unexpected result during scala.reflect -> scala.meta conversion: $summary$EOL$details", None)
+          fail(s"unexpected result: $summary$EOL$details")
         }
       } catch {
         case ex: ConvertException =>
           throw ex
         case ex: Exception =>
-          fail(gtree, s"unexpected error during scala.reflect -> scala.meta conversion (scroll down the stacktrace to see the cause):", Some(ex))
+          fail(s"unexpected error (scroll down the stacktrace to see the cause):", ex)
       }
     }
 
-    private def fail(culprit: g.Tree, diagnostics: String, ex: Option[Throwable]): Nothing = {
-      val traceback = culprit.parents.map(gtree => {
+    private def fail(diagnostics: String, ex: Param[Throwable] = Default): Nothing = {
+      val culprit = gtree0 // NOTE: I tried making culprit a parameter of fail, but fail is always called with gtree0 anyway
+      val culprits = culprit +: culprit.parents
+      val traceback = culprits.map(gtree => {
+        def briefPrettyprint(gtree: g.Tree): String = {
+          var result = gtree.toString.replace("\n", " ")
+          if (result.length > 60) result = result.take(60) + "..."
+          result
+        }
         val prefix = gtree.productPrefix
-        var details = gtree.toString.replace("\n", " ")
-        if (details.length > 60) details = details.take(60) + "..."
+        var details = briefPrettyprint(gtree)
+        if (gtree.original != gtree) {
+          details = details + " that desugars into "
+          details = details + briefPrettyprint(gtree.original)
+        }
         s"($prefix) $details"
       }).mkString(EOL)
-      throw new ConvertException(culprit, s"$diagnostics$EOL$traceback", ex)
+      throw new ConvertException(culprit, s"$diagnostics$EOL$traceback", ex.toOption)
     }
   }
 

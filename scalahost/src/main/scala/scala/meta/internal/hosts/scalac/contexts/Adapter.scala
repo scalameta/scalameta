@@ -20,21 +20,23 @@ import scala.reflect.io.PlainFile
 import scala.meta.artifacts.Artifact.Adhoc
 import scala.meta.semantic.{Context => ScalametaSemanticContext}
 import scala.meta.{Context => ContextApi}
-import scala.meta.internal.hosts.scalac.{Proxy => ProxyApi}
+import scala.meta.internal.hosts.scalac.{Adapter => AdapterApi}
 import scala.meta.internal.hosts.scalac.converters.{Api => ConverterApi}
 import scala.meta.internal.ast.mergeTrees
 import scala.tools.nsc.{Global => ScalaGlobal}
 import scala.tools.nsc.backend.JavaPlatform
+import scala.tools.nsc.plugins.Plugin
 import scala.meta.dialects.Scala211
 import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
 import scala.meta.internal.{semantic => s}
 import scala.meta.internal.flags._
 import scala.meta.internal.prettyprinters._
+import scala.meta.internal.hosts.scalac.{Plugin => ScalahostPlugin}
 
 @context(translateExceptions = false)
-class Proxy[G <: ScalaGlobal](val global: G, initialDomain: Domain = Domain())
-extends ConverterApi(global) with ContextApi with ProxyApi[G] {
+class Adapter[G <: ScalaGlobal](val global: G, initialDomain: Domain = Domain())
+extends ConverterApi(global) with ContextApi with AdapterApi[G] {
   initializeFromDomain(initialDomain)
 
   // ======= SEMANTIC CONTEXT =======
@@ -210,25 +212,25 @@ extends ConverterApi(global) with ContextApi with ProxyApi[G] {
   // ======= INTERACTIVE CONTEXT =======
 
   private[meta] def load(artifacts: Seq[mapi.Artifact]): Seq[mapi.Artifact] = {
-    if (Debug.scalahost) println(s"loading ${artifacts.length} artifacts from $artifacts")
+    Debug.logScalahost(println(s"loading ${artifacts.length} artifacts from $artifacts"))
 
     val artifactClasspath = artifacts.flatMap(_.binaries).map(p => new File(p.path).toURI.toURL)
-    if (Debug.scalahost) println(s"indexing artifact classpath: $artifactClasspath")
+    Debug.logScalahost(println(s"indexing artifact classpath: $artifactClasspath"))
     val globalClasspath = global.classPath.asURLs.toSet
-    if (Debug.scalahost) println(s"global classpath: ${global.classPath.asURLs}")
+    Debug.logScalahost(println(s"global classpath: ${global.classPath.asURLs}"))
     val deltaClasspath = artifactClasspath.filter(entry => !globalClasspath(entry))
     if (deltaClasspath.nonEmpty) global.extendCompilerClassPath(deltaClasspath: _*)
 
     val artifactSources = artifacts.flatMap(_.sources.map(_.require[m.Source]))
     val (typedSources, untypedSources) = artifactSources.partition(_.isTypechecked)
-    if (Debug.scalahost) println(s"indexing ${artifactSources.length} artifact sources (${typedSources.length} out of ${artifactSources.length} are TYPECHECKED)")
+    Debug.logScalahost(println(s"indexing ${artifactSources.length} artifact sources (${typedSources.length} out of ${artifactSources.length} are TYPECHECKED)"))
     typedSources.foreach(source => {
       // TODO: looks like we really need some kind of a Source.id
-      if (Debug.scalahost) println(s"indexing ${source.show[Summary]}")
+      Debug.logScalahost(println(s"indexing ${source.show[Summary]}"))
       indexAll(source.require[m.Source])
     })
 
-    if (Debug.scalahost) untypedSources.foreach(source => println(s"typechecking ${source.show[Summary]}"))
+    Debug.logScalahost(untypedSources.foreach(source => println(s"typechecking ${source.show[Summary]}")))
     val typedUntypedSources: Map[Source, Source] = {
       import global._
       val units = untypedSources.map(source => {
@@ -253,12 +255,12 @@ extends ConverterApi(global) with ContextApi with ProxyApi[G] {
 
       untypedSources.zip(units).map({ case (sysource, unit) =>
         val sesource = {
-          if (Debug.scalahost) println(s"converting ${sysource.show[Summary]}")
+          Debug.logScalahost(println(s"converting ${sysource.show[Summary]}"))
           unit.body.toMtree[m.Source]
         }
-        if (Debug.scalahost) println(s"merging ${sysource.show[Summary]}")
+        Debug.logScalahost(println(s"merging ${sysource.show[Summary]}"))
         val mesource = mergeTrees(sysource, sesource)
-        if (Debug.scalahost) println(s"indexing ${sysource.show[Summary]}")
+        Debug.logScalahost(println(s"indexing ${sysource.show[Summary]}"))
         (sysource, indexAll(mesource))
       }).toMap
     }
@@ -273,7 +275,7 @@ extends ConverterApi(global) with ContextApi with ProxyApi[G] {
     artifacts1
   }
 
-  // ============== PROXY ==============
+  // ============== Adapter ==============
 
   private[meta] def toMtree[T <: mapi.Tree : ClassTag](gtree: g.Tree): T = {
     XtensionGtreeToMtree(gtree).toMtree[T]
@@ -318,13 +320,13 @@ extends ConverterApi(global) with ContextApi with ProxyApi[G] {
     val fromScratch = global.currentRun == null
     def fail(reason: String, ex: Option[Exception]) = {
       val status = if (fromScratch) "scratch" else "a pre-existing compiler"
-      throw new InfrastructureException(s"can't initialize a semantic proxy from $status: " + reason, ex)
+      throw new InfrastructureException(s"can't initialize a semantic Adapter from $status: " + reason, ex)
     }
 
-    if (Debug.scalahost) {
-      println(s"initializing semantic proxy from $global and $initialDomain")
+    Debug.logScalahost({
+      println(s"initializing semantic Adapter from $global and $initialDomain")
       if (fromScratch) println("starting from scratch") else println("wrapping a pre-existing global")
-    }
+    })
 
     try {
       // NOTE: This is necessary for semantic APIs to work correctly,
@@ -333,21 +335,41 @@ extends ConverterApi(global) with ContextApi with ProxyApi[G] {
       // lazily read scala.meta trees and then lazily convert them to symtab entries,
       // but that's way beyond our technological level at the moment.
       val domainClasspath = initialDomain.artifacts.flatMap(_.binaries).map(p => new File(p.path).toURI.toURL)
-      if (Debug.scalahost) println(s"indexing domain classpath: $domainClasspath")
+      Debug.logScalahost(println(s"indexing domain classpath: $domainClasspath"))
       if (fromScratch) {
         // NOTE: Make sure that the internal classpath cache hasn't been initialized yet.
         // If it has, we're in trouble, because our modifications to settings.classpath.value
         // aren't going to get propagated. Of course, I tried to sidestep this problem
         // by using something like `global.extendCompilerClassPath(domainClasspath: _*)`,
         // but unfortunately it throws an obscure assertion error, so I just gave up.
+        Debug.logScalahost(println(s"setting the classpath..."))
         val m_currentClassPath = classOf[JavaPlatform].getDeclaredMethod("currentClassPath")
         m_currentClassPath.setAccessible(true)
         val currentClassPath = m_currentClassPath.invoke(global.platform).asInstanceOf[Option[_]]
         require(currentClassPath.isEmpty)
         global.settings.classpath.value = domainClasspath.map(_.getPath).mkString(File.pathSeparator)
 
+        // NOTE: Install the scalahost plugin, because we need its analyzer hijacks.
+        // In order to do that, we need to force the initialization of `Global.plugins` to hijack it afterwards.
+        // Alternatively, we could try to register scalahost in compiler.settings in Compiler.scala,
+        // but for that we need to know our classpath, and I don't know how to do that.
+        Debug.logScalahost(println(s"ensuring the scalahost plugin..."))
+        val _ = global.plugins
+        if (!global.plugins.exists(_.name == "scalahost")) {
+          val f_plugins = global.getClass.getDeclaredField("plugins")
+          f_plugins.setAccessible(true)
+          val plugins = f_plugins.get(global).asInstanceOf[List[Plugin]]
+          val f_roughPluginsList = global.getClass.getDeclaredField("roughPluginsList")
+          f_roughPluginsList.setAccessible(true)
+          val roughPluginsList = f_roughPluginsList.get(global).asInstanceOf[List[Plugin]]
+          val scalahostPlugin = new ScalahostPlugin(global)
+          f_roughPluginsList.set(global, roughPluginsList :+ scalahostPlugin)
+          f_plugins.set(global, plugins :+ scalahostPlugin)
+        }
+
         // NOTE: This is mandatory, because this is going to: a) finish necessary initialization of the compiler,
         // b) force computation of the classpath that we have just set.
+        Debug.logScalahost(println(s"starting the compilation pipeline from pickler..."))
         val run = new global.Run
         global.phase = run.picklerPhase
         global.globalPhase = run.picklerPhase
@@ -355,9 +377,16 @@ extends ConverterApi(global) with ContextApi with ProxyApi[G] {
         // NOTE: Probably won't work, it's a very mysterious method.
         // This scenario isn't on our immediate roadmap, so I'll just leave this line of code here
         // and accompany it by a warning comment.
+        Debug.logScalahost(println(s"setting the classpath..."))
         global.extendCompilerClassPath(domainClasspath: _*)
+
+        Debug.logScalahost(println(s"ensuring the scalahost plugin..."))
+        val scalahostPlugin = global.plugins.find(_.name == "scalahost")
+        if (scalahostPlugin.isEmpty) fail("the underlying compiler should have the scalahost plugin enabled", None)
       }
     } catch {
+      case ex: InfrastructureException =>
+        throw ex
       case ex: Exception =>
         var message = ex.getMessage
         if (ex.isInstanceOf[MissingRequirementError]) {
@@ -368,13 +397,13 @@ extends ConverterApi(global) with ContextApi with ProxyApi[G] {
         fail(message, Some(ex))
     }
 
-    if (Debug.scalahost) println(s"indexing ${global.currentRun.units.toList.length} global sources")
+    Debug.logScalahost(println(s"indexing ${global.currentRun.units.toList.length} global sources"))
     val globalSources = global.currentRun.units.map(unit => {
       val unitId = unit.source.file.path
-      if (Debug.scalahost) {
+      Debug.logScalahost({
         if (unit.body.metadata.contains("scalameta")) println(s"found cached scala.meta tree for $unitId")
         else println(s"computing scala.meta tree for $unitId")
-      }
+      })
       val source = unit.body.metadata.getOrElseUpdate("scalameta", {
         // NOTE: We don't have to persist perfect trees, because tokens are transient anyway.
         // Therefore, if noone uses perfect trees in a compiler plugin, then we can avoid merging altogether.
@@ -389,7 +418,7 @@ extends ConverterApi(global) with ContextApi with ProxyApi[G] {
         // because that's what users ultimately want to see when they do `t"...".members` or something.
         // So, it seems that it's still necessary to eagerly merge the trees, so that we can index them correctly.
         val syntacticTree = {
-          if (Debug.scalahost) println(s"parsing $unitId")
+          Debug.logScalahost(println(s"parsing $unitId"))
           val content = unit.source match {
             // NOTE: We need this hackaround because BatchSourceFile distorts the source code
             // by appending newlines as it sees fit. This is going to become a problem wrt TASTY,
@@ -408,14 +437,14 @@ extends ConverterApi(global) with ContextApi with ProxyApi[G] {
           content.parse[mapi.Source].require[m.Source]
         }
         val semanticTree = {
-          if (Debug.scalahost) println(s"converting $unitId")
+          Debug.logScalahost(println(s"converting $unitId"))
           unit.body.toMtree[m.Source]
         }
-        if (Debug.scalahost) println(s"merging $unitId")
+        Debug.logScalahost(println(s"merging $unitId"))
         val perfectTree = mergeTrees(syntacticTree, semanticTree)
         perfectTree
       })
-      if (Debug.scalahost) println(s"indexing $unitId")
+      Debug.logScalahost(println(s"indexing $unitId"))
       indexAll(source)
     }).toList
 
@@ -425,9 +454,9 @@ extends ConverterApi(global) with ContextApi with ProxyApi[G] {
     val globalArtifacts = List(Artifact(globalSources, Nil, Nil))
     currentDomain = Domain(globalArtifacts: _*)
 
-    if (Debug.scalahost) println(s"indexing ${initialDomain.artifacts.length} domain artifacts")
+    Debug.logScalahost(println(s"indexing ${initialDomain.artifacts.length} domain artifacts"))
     load(initialDomain.artifacts.toList)
 
-    if (Debug.scalahost) println(s"initialized semantic proxy from $global and $initialDomain")
+    Debug.logScalahost(println(s"initialized semantic Adapter from $global and $initialDomain"))
   }
 }

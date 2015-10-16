@@ -129,6 +129,21 @@ trait LogicalTrees {
       }
     }
 
+    object TermSelect {
+      def unapply(tree: g.Select): Option[(g.Tree, l.TermName)] = {
+        val g.Select(qual, name) = tree
+        if (name.isTypeName) return None
+        Some((qual, l.TermName(tree).setParent(tree)))
+      }
+    }
+
+    object TermApply {
+      def unapply(tree: g.Apply): Option[(g.Tree, List[g.Tree])] = {
+        if (tree.hasMetadata("isLparent")) return None
+        Some((tree.fun, tree.args))
+      }
+    }
+
     trait TermParamName extends Name
 
     object TermParamDef {
@@ -216,6 +231,16 @@ trait LogicalTrees {
     // ============ PATTERNS ============
 
     // ============ LITERALS ============
+
+    object Literal {
+      // value
+      def unapply(tree: g.Literal): Option[Any] = tree match {
+        case g.Literal(g.Constant(_: g.Type)) => None
+        case g.Literal(g.Constant(_: g.Symbol)) => None
+        case g.Literal(g.Constant(value)) => Some(value)
+        case _ => None
+      }
+    }
 
     // ============ DEFNS ============
 
@@ -421,7 +446,7 @@ trait LogicalTrees {
           var argss = if (syntacticArgss.nonEmpty) semanticArgss else syntacticArgss
           if (argss.isEmpty) argss = List(List())
           val lparent = argss.foldLeft(parent)((curr, args) => g.Apply(curr, args))
-          lparent.appendMetadata("superCtor" -> superCtor.toLogical).setParent(tree)
+          lparent.appendMetadata("isLparent" -> true, "superCtor" -> superCtor.toLogical).setParent(tree)
         }
         val lstats = removeSyntheticDefinitions(stats)
         Some((edefs, lparents, lself, lstats))
@@ -431,14 +456,18 @@ trait LogicalTrees {
     object Parent {
       // tpt, ctor, argss
       def unapply(tree: g.Tree): Option[(g.Tree, l.CtorIdent, List[List[g.Tree]])] = {
-        val applied = dissectApplied(tree)
-        (applied.callee, applied.core, applied.argss) match {
-          case (tpt, classRef: g.RefTree, argss) =>
-            val ctorSym = tree.metadata.get("superCtor").map(_.require[l.Symbol]).getOrElse(l.Zero)
-            val ctor = l.CtorIdent(ctorSym, classRef).setParent(tree.parent)
-            Some((tpt, ctor, argss))
-          case _ =>
-            None
+        if (tree.hasMetadata("isLparent")) {
+          val applied = dissectApplied(tree)
+          (applied.callee, applied.core, applied.argss) match {
+            case (tpt, classRef: g.RefTree, argss) =>
+              val ctorSym = tree.metadata.get("superCtor").map(_.require[l.Symbol]).getOrElse(l.Zero)
+              val ctor = l.CtorIdent(ctorSym, classRef).setParent(tree.parent)
+              Some((tpt, ctor, argss))
+            case _ =>
+              None
+          }
+        } else {
+          None
         }
       }
     }

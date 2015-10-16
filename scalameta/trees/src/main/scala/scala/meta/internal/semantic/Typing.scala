@@ -30,6 +30,8 @@ object Typing {
       private def readObject(in: java.io.ObjectInputStream): Unit = {
         val tpe = in.readObject.asInstanceOf[Type.Arg]
         orig = Nonrecursive(tpe)
+        val _ = orig.tpe
+        require(orig.isTpeLoaded)
       }
       private def readResolve(): AnyRef = orig
       override def toString = s"Proxy($orig)"

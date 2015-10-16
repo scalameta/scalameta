@@ -7,6 +7,7 @@ import scala.collection.immutable.Seq
 import scala.compat.Platform.EOL
 import scala.reflect.{classTag, ClassTag}
 import scala.meta.internal.ast._
+import scala.meta.internal.ast.Helpers._
 import scala.meta.internal.semantic._
 import scala.meta.internal.semantic.RuntimeConverters._
 import scala.meta.internal.prettyprinters._
@@ -51,6 +52,13 @@ object mergeTrees {
               sy.copy()
             case (sy: m.Term.Apply, se: m.Term.Apply) =>
               sy.copy(loop(sy.fun, se.fun), loop(sy.args, se.args))
+            case (sy: m.Term.ApplyInfix, se @ m.Term.Apply(sefun, seargs)) =>
+              val (selhs, seop, setargs) = sefun match {
+                case m.Term.Select(selhs, seop) => (selhs, seop, Nil)
+                case m.Type.Apply(m.Term.Select(selhs, seop), setargs) => (selhs, seop, setargs)
+              }
+              require(seop.isLeftAssoc && debug(sy, se))
+              sy.copy(loop(sy.lhs, selhs), loop(sy.op, seop), loop(sy.targs, setargs), loop(sy.args, seargs))
             case (sy: m.Term.Param, se: m.Term.Param) =>
               sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), loop(sy.decltpe, se.decltpe), loop(sy.default, se.default))
 
@@ -64,6 +72,31 @@ object mergeTrees {
               sy.copy(loop(sy.tpe, se.tpe), loop(sy.args, se.args))
 
             // ============ PATTERNS ============
+
+            case (sy: m.Lit.Bool, se: m.Lit.Bool) =>
+              sy.copy()
+            case (sy: m.Lit.Byte, se: m.Lit.Byte) =>
+              sy.copy()
+            case (sy: m.Lit.Short, se: m.Lit.Short) =>
+              sy.copy()
+            case (sy: m.Lit.Int, se: m.Lit.Int) =>
+              sy.copy()
+            case (sy: m.Lit.Long, se: m.Lit.Long) =>
+              sy.copy()
+            case (sy: m.Lit.Float, se: m.Lit.Float) =>
+              sy.copy()
+            case (sy: m.Lit.Double, se: m.Lit.Double) =>
+              sy.copy()
+            case (sy: m.Lit.Char, se: m.Lit.Char) =>
+              sy.copy()
+            case (sy: m.Lit.String, se: m.Lit.String) =>
+              sy.copy()
+            case (sy: m.Lit.Symbol, se: m.Lit.Symbol) =>
+              sy.copy()
+            case (sy: m.Lit.Null, se: m.Lit.Null) =>
+              sy.copy()
+            case (sy: m.Lit.Unit, se: m.Lit.Unit) =>
+              sy.copy()
 
             // ============ LITERALS ============
 
@@ -143,19 +176,20 @@ object mergeTrees {
           }
 
           val metree = expandedMetree.withTokens(sy.tokens).inheritAttrs(se).withTypechecked(se.isTypechecked)
-          if (Debug.convert && sy.parent.isEmpty) {
-            println("======= SYNTACTIC TREE =======")
-            println(sy)
-            println(sy.show[Attributes])
-            println("======== SEMANTIC TREE ========")
-            println(se)
-            println(se.show[Attributes])
-            println("======== MERGED TREE ========")
-            println(metree)
-            println(metree.show[Attributes])
-            println("=================================")
+          if (sy.parent.isEmpty) {
+            Debug.logMerge {
+              println("======= SYNTACTIC TREE =======")
+              println(sy)
+              println(sy.show[Attributes])
+              println("======== SEMANTIC TREE ========")
+              println(se)
+              println(se.show[Attributes])
+              println("======== MERGED TREE ========")
+              println(metree)
+              println(metree.show[Attributes])
+              println("=================================")
+            }
           }
-          // TODO: fix duplication wrt ToMtree.scala
           if (classTag[T].runtimeClass.isAssignableFrom(metree.getClass)) metree.asInstanceOf[T]
           else failExpected(sy, se, classTag[T].runtimeClass, metree)
         }

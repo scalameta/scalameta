@@ -14,10 +14,6 @@ import scala.meta.internal.ast._
 import scala.meta.internal.prettyprinters._
 
 package object semantic {
-  implicit class XtensionHygieneDebug(debug: org.scalameta.debug.Debug.type) {
-    def hygiene = sys.props("hygiene.debug") != null
-  }
-
   implicit class XtensionAttributedTree[T <: api.Tree](tree: T) {
     def requireAttributed(): Unit = {
       val offenders = mutable.ListBuffer[(Tree, List[String])]()

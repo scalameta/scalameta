@@ -2,6 +2,7 @@ package scala.meta.internal.hosts.scalac
 package reflect
 
 import scala.tools.nsc.Global
+import scala.reflect.macros.Attachments
 import scala.reflect.internal.Flags
 import scala.collection.mutable
 import org.scalameta.invariants._
@@ -14,6 +15,7 @@ trait TreeHelpers {
   import definitions._
   import treeInfo._
   import build._
+  import analyzer._
 
   implicit class RichFoundationSymbol(sym: Symbol) {
     def displayName: String = Ident(sym).displayName
@@ -58,6 +60,41 @@ trait TreeHelpers {
       else if (name == rootMirror.EmptyPackageClass.name) "_empty_"
       else if (name.isAnonymous) "_"
       else name.decodedName.toString
+    }
+  }
+
+  case class Memento(metadata: Metadata[Tree], attachments: Attachments)
+
+  implicit class RichFoundationOriginalTree(tree: Tree) {
+    def original: Tree = {
+      def desugaringOriginal: Option[Tree] = tree.metadata.get("original").map(_.asInstanceOf[Tree])
+      def macroExpandee: Option[Tree] = {
+        def loop(tree: g.Tree): g.Tree = {
+          val maybeAttachment = tree.attachments.get[MacroExpansionAttachment]
+          val maybeExpandee = maybeAttachment.map(_.expandee.asInstanceOf[Tree])
+          val maybeRecursiveExpandee = maybeExpandee.map(loop)
+          maybeRecursiveExpandee.getOrElse(tree)
+        }
+        val result = loop(tree)
+        if (tree != result) Some(result)
+        else None
+      }
+      desugaringOriginal.orElse(macroExpandee).getOrElse(tree)
+    }
+
+    def forgetOriginal: (Tree, Memento) = {
+      val memento = Memento(tree.metadata, tree.attachments)
+      val tree1 = { tree.metadata.remove("original"); tree }
+      val tree2 = { tree1.attachments.remove[MacroExpansionAttachment]; tree1 }
+      (tree2, memento)
+    }
+
+    def rememberOriginal(memento: Memento): Tree = {
+      val tree05 = memento.metadata.get("original").map(original => { tree.metadata.update("original", original); tree })
+      val tree1 = tree05.getOrElse(tree)
+      val tree15 = memento.attachments.get[MacroExpansionAttachment].map(tree1.updateAttachment)
+      val tree2 = tree15.getOrElse(tree1)
+      tree2
     }
   }
 }

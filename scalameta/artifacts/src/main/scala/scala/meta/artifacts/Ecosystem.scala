@@ -102,7 +102,7 @@ import org.scalameta.debug._
       def explode: ListMap[String, URI] = ListMap(multipath.paths.flatMap(_.explode): _*)
     }
     implicit val dialect = artifact.dialect
-    if (Debug.artifact) println(s"resolving $artifact")
+    Debug.logArtifact(println(s"resolving $artifact"))
     val binaries: Seq[Path] = artifact.binpath.paths.toList
     val sources: Seq[Source] = {
       def loadTasty(uri: URI): Option[(SyntacticDigest, m.Source)] = {
@@ -115,7 +115,7 @@ import org.scalameta.debug._
           classReader.accept(new ClassVisitor(Opcodes.ASM4) {
             override def visitAttribute(attr: Attribute) {
               if (attr.`type` == "TASTY") {
-                if (Debug.artifact) println(s"found TASTY section in $uri")
+                Debug.logArtifact(println(s"found TASTY section in $uri"))
                 val valueField = attr.getClass.getDeclaredField("value")
                 valueField.setAccessible(true)
                 val tastyBlob = valueField.get(attr).asInstanceOf[Array[Byte]]
@@ -143,12 +143,12 @@ import org.scalameta.debug._
       binfiles = binfiles.filter(!_._2.toString.contains("$")) // NOTE: exclude inner classes
       binfiles = binfiles.filter(!_._2.toString.matches(""".*scala-library(-\d+\.\d+\.\d+)?.jar!.*""")) // NOTE: exclude stdlib
       val sourcefiles = artifact.sourcepath.explode.filter(_._2.toString.endsWith(".scala"))
-      if (Debug.artifact && Debug.verbose) { println(s"binfiles = $binfiles"); println(s"sourcefiles = $sourcefiles") }
+      Debug.logArtifact(if (Debug.verbose) { println(s"binfiles = $binfiles"); println(s"sourcefiles = $sourcefiles") })
 
       val perfectParts = mutable.HashSet[URI]()
       val perfectSources = sourcefiles.map({ case (relativepath, sourceuri) =>
         // NOTE: sy- and se- prefixes mean the same as in MergeTrees.scala, namely "syntactic" and "semantic".
-        if (Debug.tasty) println(s"considering sourcefile at $sourceuri ($relativepath)")
+        Debug.logTasty(println(s"considering sourcefile at $sourceuri ($relativepath)"))
         val charset = Charset.forName("UTF-8")
         val sourcefile = new File(sourceuri.getPath)
         val sysource = sourcefile.parse[Source].require[m.Source]
@@ -169,10 +169,10 @@ import org.scalameta.debug._
         val expectedrelatives = toplevelClasses(sysource).map(_.replace(".", "/") + ".class")
         val binuris = expectedrelatives.flatMap(binfiles.get)
         perfectParts ++= binuris
-        if (Debug.tasty) {
+        Debug.logTasty({
           if (binuris.isEmpty) println("no matching classfiles found")
           else println(s"found matching classfiles at: ${binuris.mkString(", ")}")
-        }
+        })
         val sesources = binuris.flatMap(binuri => loadTasty(binuri).map({
           case (SyntacticDigest(tastyDialect, tastyHash), sesource) =>
             def failDigest(what: String) = failResolve(s"$what of $sourceuri ($sydialect) and $binuri ($tastyDialect) are different")
@@ -181,7 +181,7 @@ import org.scalameta.debug._
             sesource
         }))
 
-        if (Debug.tasty) println(s"correlating $sourceuri and matching classfiles")
+        Debug.logTasty(println(s"correlating $sourceuri and matching classfiles"))
         def failCorrelate(message: String) = {
           if (binuris.isEmpty) failResolve(s"no classfiles match definitions in $sourceuri")
           else failResolve(s"$message when correlating $sourceuri and ${binuris.mkString(", ")}")
@@ -227,13 +227,13 @@ import org.scalameta.debug._
         if (matches.size < sestats.length) failCorrelate("undermatched semantic definitions were found")
 
         val mesource = sysource.copy(stats = mestats).withTokens(sysource.tokens).setTypechecked
-        if (Debug.tasty) println(s"created a perfect source from $sourceuri and matching classfiles")
+        Debug.logTasty(println(s"created a perfect source from $sourceuri and matching classfiles"))
         mesource
       }).toList
       val otherSources = binfiles.flatMap({ case (relativepath, binuri) =>
-        if (Debug.tasty) println(s"considering binfile at $binuri ($relativepath)")
+        Debug.logTasty(println(s"considering binfile at $binuri ($relativepath)"))
         if (perfectParts(binuri)) {
-          if (Debug.tasty) println(s"already loaded into a perfect tree")
+          Debug.logTasty(println(s"already loaded into a perfect tree"))
           None
         } else {
           loadTasty(binuri).map(_._2)

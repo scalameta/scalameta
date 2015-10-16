@@ -22,6 +22,7 @@ class AstMacros(val c: Context) extends AstReflection {
   val InternalSemantic = q"_root_.scala.meta.internal.semantic"
   val FlagsPackage = q"_root_.scala.meta.internal.flags.`package`"
   val Tokens = q"_root_.scala.meta.tokens"
+  val Prettyprinters = q"_root_.scala.meta.internal.prettyprinters"
   def impl(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       def fullName = c.internal.enclosingOwner.fullName.toString + "." + cdef.name.toString
@@ -126,8 +127,8 @@ class AstMacros(val c: Context) extends AstReflection {
         stats1 += q"""
           def tokens: $Tokens.Tokens = {
             privateTokens = privateTokens match {
-              case null => _root_.scala.meta.internal.prettyprinters.inferTokens(this, None)
-              case _root_.scala.meta.internal.tokens.TransformedTokens(proto) => _root_.scala.meta.internal.prettyprinters.inferTokens(this, Some(proto))
+              case null => $Prettyprinters.inferTokens(this, None)
+              case _root_.scala.meta.internal.tokens.TransformedTokens(proto) => $Prettyprinters.inferTokens(this, Some(proto))
               case other => other
             }
             privateTokens
@@ -312,7 +313,9 @@ class AstMacros(val c: Context) extends AstReflection {
             val checks = attrs.map({ case (k, v) =>
               val enablesTypechecked = q"(flags & $FlagsPackage.TYPECHECKED) == $FlagsPackage.TYPECHECKED"
               val attrEmpty = q"$k == $v"
-              val attrShow = q"_root_.scala.meta.internal.prettyprinters.Attributes.attributesTree[_root_.scala.meta.Tree].apply(this).toString"
+              var attrPrinter = q"$Prettyprinters.Attributes.attributesTree[_root_.scala.meta.Tree]"
+              attrPrinter = q"$attrPrinter($Prettyprinters.Attributes.Recursion.Deep, $Prettyprinters.Attributes.Force.Never)"
+              val attrShow = q"$attrPrinter.apply(this).toString"
               val message = q"${"failed to enable TYPECHECKED for "} + $attrShow"
               q"if ($enablesTypechecked && $attrEmpty) throw new _root_.scala.`package`.UnsupportedOperationException($message)"
             })
@@ -365,7 +368,9 @@ class AstMacros(val c: Context) extends AstReflection {
         val termOrCtorName = q"this.isInstanceOf[_root_.scala.meta.Term.Name] || this.isInstanceOf[_root_.scala.meta.Ctor.Name]"
         val termOrCtorNameCheck = q"""if ($termOrCtorName) throw new UnsupportedOperationException("need to simultaneously set both denotation and typing for a " + this.productPrefix)"""
         val stateMessage = "can only call withAttrs on unattributed trees; if necessary, call .copy() to unattribute and then do .withAttrs(...)"
-        val stateDetails = q"_root_.scala.meta.internal.prettyprinters.Attributes.attributesTree[_root_.scala.meta.Tree].apply(this).toString"
+        var attrPrinter = q"$Prettyprinters.Attributes.attributesTree[_root_.scala.meta.Tree]"
+        attrPrinter = q"$attrPrinter($Prettyprinters.Attributes.Recursion.Deep, $Prettyprinters.Attributes.Force.Never)"
+        val stateDetails = q"$attrPrinter.apply(this).toString"
         val stateCheck = q"if (!isUnattributed) throw new UnsupportedOperationException($stateMessage + $EOL + $stateDetails)"
         val withAttrsD = q"""
           $dortMods def withAttrs($paramDenot): $iname = {
@@ -422,8 +427,13 @@ class AstMacros(val c: Context) extends AstReflection {
       }
       if (hasExpansion) {
         val paramExpansionLike = q"val expansionLike: $InternalSemantic.ExpansionLike"
-        val stateMessage = "can only call withExpansion on partially attributed trees, call .withAttrs first and only then .withExpansion(...)"
-        val stateDetails = q"_root_.scala.meta.internal.prettyprinters.Attributes.attributesTree[_root_.scala.meta.Tree].apply(this).toString"
+        val commonMessage = "can only call withExpansion on partially attributed trees"
+        val unattributedMessage = commonMessage + ", call .withAttrs first and only then .withExpansion(...)"
+        val fullyAttributedMessage = commonMessage + ", if necessary, call .copy() to unattribute, then .withAttrs(...) and only then .withExpansion(...)"
+        val stateMessage = q"if (isUnattributed) $unattributedMessage else $fullyAttributedMessage"
+        var attrPrinter = q"$Prettyprinters.Attributes.attributesTree[_root_.scala.meta.Tree]"
+        attrPrinter = q"$attrPrinter($Prettyprinters.Attributes.Recursion.Deep, $Prettyprinters.Attributes.Force.Never)"
+        val stateDetails = q"$attrPrinter.apply(this).toString"
         val stateCheck = q"if (!isPartiallyAttributed) throw new UnsupportedOperationException($stateMessage + $EOL + $stateDetails)"
         astats1 += q"""
           private[meta] def withExpansion($paramExpansionLike): $iname = {

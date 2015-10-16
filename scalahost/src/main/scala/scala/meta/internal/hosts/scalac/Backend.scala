@@ -239,12 +239,12 @@ abstract class ScalahostGenBCode(override val global: NscGlobal) extends scala.t
                   }
                 }
                 val slice = relevantPart(meta, claszSymbol.ownerChain.reverse)
-                if (Debug.tasty) {
+                Debug.logTasty({
                   val headline = claszSymbol.fullName + " (" + claszSymbol.toString + ")"
                   println("======= " + headline + " =======")
                   println(slice)
                   println(slice.show[Structure])
-                }
+                })
                 val dataAttr = new CustomAttr("TASTY", toTasty(meta.syntacticDigest, slice))
                 plainC.visitAttribute(dataAttr)
               }
