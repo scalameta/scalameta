@@ -25,12 +25,14 @@ import scala.meta.internal.hosts.scalac.converters.{Api => ConverterApi}
 import scala.meta.internal.ast.mergeTrees
 import scala.tools.nsc.{Global => ScalaGlobal}
 import scala.tools.nsc.backend.JavaPlatform
+import scala.tools.nsc.plugins.Plugin
 import scala.meta.dialects.Scala211
 import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
 import scala.meta.internal.{semantic => s}
 import scala.meta.internal.flags._
 import scala.meta.internal.prettyprinters._
+import scala.meta.internal.hosts.scalac.{Plugin => ScalahostPlugin}
 
 @context(translateExceptions = false)
 class Adapter[G <: ScalaGlobal](val global: G, initialDomain: Domain = Domain())
@@ -340,14 +342,34 @@ extends ConverterApi(global) with ContextApi with AdapterApi[G] {
         // aren't going to get propagated. Of course, I tried to sidestep this problem
         // by using something like `global.extendCompilerClassPath(domainClasspath: _*)`,
         // but unfortunately it throws an obscure assertion error, so I just gave up.
+        Debug.logScalahost(println(s"setting the classpath..."))
         val m_currentClassPath = classOf[JavaPlatform].getDeclaredMethod("currentClassPath")
         m_currentClassPath.setAccessible(true)
         val currentClassPath = m_currentClassPath.invoke(global.platform).asInstanceOf[Option[_]]
         require(currentClassPath.isEmpty)
         global.settings.classpath.value = domainClasspath.map(_.getPath).mkString(File.pathSeparator)
 
+        // NOTE: Install the scalahost plugin, because we need its analyzer hijacks.
+        // In order to do that, we need to force the initialization of `Global.plugins` to hijack it afterwards.
+        // Alternatively, we could try to register scalahost in compiler.settings in Compiler.scala,
+        // but for that we need to know our classpath, and I don't know how to do that.
+        Debug.logScalahost(println(s"ensuring the scalahost plugin..."))
+        val _ = global.plugins
+        if (!global.plugins.exists(_.name == "scalahost")) {
+          val f_plugins = global.getClass.getDeclaredField("plugins")
+          f_plugins.setAccessible(true)
+          val plugins = f_plugins.get(global).asInstanceOf[List[Plugin]]
+          val f_roughPluginsList = global.getClass.getDeclaredField("roughPluginsList")
+          f_roughPluginsList.setAccessible(true)
+          val roughPluginsList = f_roughPluginsList.get(global).asInstanceOf[List[Plugin]]
+          val scalahostPlugin = new ScalahostPlugin(global)
+          f_roughPluginsList.set(global, roughPluginsList :+ scalahostPlugin)
+          f_plugins.set(global, plugins :+ scalahostPlugin)
+        }
+
         // NOTE: This is mandatory, because this is going to: a) finish necessary initialization of the compiler,
         // b) force computation of the classpath that we have just set.
+        Debug.logScalahost(println(s"starting the compilation pipeline from pickler..."))
         val run = new global.Run
         global.phase = run.picklerPhase
         global.globalPhase = run.picklerPhase
@@ -355,7 +377,12 @@ extends ConverterApi(global) with ContextApi with AdapterApi[G] {
         // NOTE: Probably won't work, it's a very mysterious method.
         // This scenario isn't on our immediate roadmap, so I'll just leave this line of code here
         // and accompany it by a warning comment.
+        Debug.logScalahost(println(s"setting the classpath..."))
         global.extendCompilerClassPath(domainClasspath: _*)
+
+        Debug.logScalahost(println(s"ensuring the scalahost plugin..."))
+        val scalahostPlugin = global.plugins.find(_.name == "scalahost")
+        if (scalahostPlugin.isEmpty) fail("the underlying compiler should have the scalahost plugin enabled", None)
       }
     } catch {
       case ex: Exception =>

@@ -23,7 +23,7 @@ object Compiler {
     val command = new CompilerCommand(args, emptySettings)
     val settings = command.settings
     initializeJreClasspath(settings)
-    new Global(settings, reporter)
+    Global(settings, reporter)
   }
 
   private def initializeJreClasspath(settings: Settings): Unit = {
