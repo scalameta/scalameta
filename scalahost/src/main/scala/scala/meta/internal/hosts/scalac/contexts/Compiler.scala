@@ -18,7 +18,7 @@ object Compiler {
   def apply(options: String)(implicit resolver: Resolver): Global = {
     def fail(reason: String) = throw new InfrastructureException("can't initialize a semantic adapter from scratch: " + reason)
     val args = CommandLineParser.tokenize(options)
-    val emptySettings = new Settings(error => fail("invalid compiler options: $error"))
+    val emptySettings = new Settings(error => fail(s"invalid compiler options: $error"))
     val reporter = new StoreReporter()
     val command = new CompilerCommand(args, emptySettings)
     val settings = command.settings
