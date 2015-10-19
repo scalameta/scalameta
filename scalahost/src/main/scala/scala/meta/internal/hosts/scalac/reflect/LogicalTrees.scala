@@ -770,6 +770,7 @@ trait LogicalTrees {
           if (!tree.hasMetadata("parent") && !tree.hasMetadata("index")) return
           tree.removeMetadata("parent")
           tree.removeMetadata("index")
+          super.traverse(tree)
         }
       }
       // NOTE: If you get a MatchError in xtraverse here,
