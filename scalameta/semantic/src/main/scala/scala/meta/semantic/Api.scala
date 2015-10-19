@@ -16,6 +16,7 @@ import scala.meta.internal.{ast => impl} // necessary only to implement APIs, no
 import scala.meta.internal.{semantic => s} // necessary only to implement APIs, not to define them
 import scala.meta.internal.{equality => e} // necessary only to implement APIs, not to define them
 import scala.meta.internal.prettyprinters.Summary // necessary only to implement APIs, not to define them
+import scala.meta.internal.ast.Helpers._ // necessary only to implement APIs, not to define them
 import scala.reflect.runtime.{universe => ru} // necessary only for a very hacky approximation of hygiene
 
 private[meta] trait Api {
@@ -195,27 +196,7 @@ private[meta] trait Api {
       case name: impl.Type.Name => name.withAttrs(name.denot.stripPrefix).defn
       case name: impl.Ctor.Name => name.withAttrs(name.denot.stripPrefix, s.Typing.Zero).defn
     }
-    @hosted def name: Name = {
-      tree.require[impl.Member] match {
-        case tree: impl.Pat.Var.Term => tree.name
-        case tree: impl.Pat.Var.Type => tree.name
-        case tree: impl.Decl.Def => tree.name
-        case tree: impl.Decl.Type => tree.name
-        case tree: impl.Defn.Def => tree.name
-        case tree: impl.Defn.Macro => tree.name
-        case tree: impl.Defn.Type => tree.name
-        case tree: impl.Defn.Class => tree.name
-        case tree: impl.Defn.Trait => tree.name
-        case tree: impl.Defn.Object => tree.name
-        case       impl.Pkg(name: impl.Term.Name, _) => name
-        case       impl.Pkg(impl.Term.Select(_, name: impl.Term.Name), _) => name
-        case tree: impl.Pkg.Object => tree.name
-        case tree: impl.Term.Param => tree.name
-        case tree: impl.Type.Param => tree.name
-        case tree: impl.Ctor.Primary => tree.name
-        case tree: impl.Ctor.Secondary => tree.name
-      }
-    }
+    @hosted def name: Name = tree.name
     @hosted def supermembers: Seq[Member] = implicitly[SemanticContext].supermembers(tree)
     @hosted def submembers: Seq[Member] = implicitly[SemanticContext].submembers(tree)
     @hosted def companion: Member = {
@@ -233,7 +214,7 @@ private[meta] trait Api {
     }
     @hosted def mods: Seq[Mod] = {
       def fieldMods(tree: impl.Pat.Var.Term): Seq[Mod] = {
-        firstNonPatParent(tree) match {
+        tree.firstNonPatParent match {
           case Some(parent: impl.Decl.Val) => parent.mods
           case Some(parent: impl.Decl.Var) => parent.mods
           case Some(parent: impl.Defn.Val) => parent.mods
@@ -261,17 +242,14 @@ private[meta] trait Api {
       }
     }
     @hosted def annots: Seq[Term] = tree.mods.collect{ case impl.Mod.Annot(ref) => ref }
-    @hosted private def firstNonPatParent(pat: Pat): Option[Tree] = {
-      pat.parent.collect{case pat: Pat => pat}.flatMap(firstNonPatParent).orElse(pat.parent)
-    }
     @hosted def isVal: Boolean = {
       val patVarTerm = Some(tree).collect{case tree: impl.Pat.Var.Term => tree}
-      val relevantParent = patVarTerm.flatMap(firstNonPatParent)
+      val relevantParent = patVarTerm.flatMap(_.firstNonPatParent)
       relevantParent.map(s => s.isInstanceOf[impl.Decl.Val] || s.isInstanceOf[impl.Defn.Val]).getOrElse(false)
     }
     @hosted def isVar: Boolean = {
       val patVarTerm = Some(tree).collect{case tree: impl.Pat.Var.Term => tree}
-      val relevantParent = patVarTerm.flatMap(firstNonPatParent)
+      val relevantParent = patVarTerm.flatMap(_.firstNonPatParent)
       relevantParent.map(s => s.isInstanceOf[impl.Decl.Var] || s.isInstanceOf[impl.Defn.Var]).getOrElse(false)
     }
     @hosted def isDef: Boolean = tree.isInstanceOf[impl.Decl.Def] || tree.isInstanceOf[impl.Defn.Def]

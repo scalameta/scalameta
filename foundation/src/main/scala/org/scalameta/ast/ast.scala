@@ -564,6 +564,9 @@ class AstMacros(val c: Context) extends AstReflection {
 
       // step 14: finish codegen for Quasi
       qstats1 += q"def pt: _root_.java.lang.Class[_] = _root_.org.scalameta.runtime.arrayClass(_root_.scala.Predef.classOf[$iname], this.rank)"
+      if (is("Pkg")) {
+        qstats1 += quasigetter(NoMods, "name")
+      }
       if (isQuasi) {
         stats1 += q"""
           def become[T <: _root_.scala.meta.internal.ast.Quasi](implicit ev: _root_.org.scalameta.ast.AstMetadata[T]): T = {

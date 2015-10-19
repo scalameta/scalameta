@@ -74,7 +74,7 @@ package scala.meta {
     @branch trait Ref extends Term with api.Ref
     @branch trait Name extends api.Name with Term.Ref with Pat with Param.Name with api.Name.Qualifier
     @branch trait Arg extends Tree
-    @branch trait Param extends Member
+    @branch trait Param extends Member { def name: Term.Param.Name }
     object Param {
       @branch trait Name extends api.Name
     }
@@ -87,7 +87,7 @@ package scala.meta {
     @branch trait Ref extends Type with api.Ref
     @branch trait Name extends api.Name with Type.Ref with Pat.Type.Ref with Param.Name with api.Name.Qualifier
     @branch trait Arg extends Tree
-    @branch trait Param extends Member
+    @branch trait Param extends Member { def name: Type.Param.Name }
     object Param {
       @branch trait Name extends api.Name
     }
@@ -115,13 +115,13 @@ package scala.meta {
 
   @branch trait Lit extends Term with Pat with Type with Pat.Type
 
-  @branch trait Member extends Tree with Scope
+  @branch trait Member extends Tree with Scope { def name: Name }
   object Member {
-    @branch trait Term extends Member
-    @branch trait Type extends Member
+    @branch trait Term extends Member { def name: api.Term.Name }
+    @branch trait Type extends Member { def name: api.Type.Name }
   }
 
-  @branch trait Ctor extends Tree with Member
+  @branch trait Ctor extends Tree with Member { def name: Ctor.Name }
   object Ctor {
     @branch trait Call extends Term
     @branch trait Ref extends Term.Ref with Ctor.Call
@@ -513,6 +513,10 @@ package scala.meta.internal.ast {
     require(ref.isQualId)
     // TODO: hardcoded in the @ast macro, find out a better way
     // require(stats.forall(_.isTopLevelStat))
+    def name: Term.Name = ref match {
+      case name: Term.Name => name
+      case Term.Select(_, name: Term.Name) => name
+    }
   }
   object Pkg {
     @ast class Object(mods: Seq[Mod], name: Term.Name, ctor: Ctor.Primary, templ: Template)
