@@ -121,7 +121,7 @@ package scala.meta {
     @branch trait Type extends Member
   }
 
-  @branch trait Ctor extends Tree with Member.Term
+  @branch trait Ctor extends Tree with Member
   object Ctor {
     @branch trait Call extends Term
     @branch trait Ref extends Term.Ref with Ctor.Call
@@ -522,7 +522,7 @@ package scala.meta.internal.ast {
     }
   }
 
-  @branch trait Ctor extends Tree with Member.Term with api.Ctor
+  @branch trait Ctor extends Tree with Member with api.Ctor
   object Ctor {
     @branch trait Call extends impl.Term with api.Ctor.Call
     @ast class Primary(mods: Seq[Mod],

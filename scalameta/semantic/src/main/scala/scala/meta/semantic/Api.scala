@@ -364,6 +364,14 @@ private[meta] trait Api {
     @hosted def companion: Member.Term = new XtensionSemanticMember(tree).companion.require[Member.Term]
   }
 
+  implicit class XtensionSemanticCtor(tree: Ctor) {
+    @hosted def source: Ctor = new XtensionSemanticMember(tree).source.require[Ctor]
+    @hosted def name: Ctor.Name = new XtensionSemanticMember(tree).name.require[Ctor.Name]
+    @hosted def supermembers: Seq[Ctor] = new XtensionSemanticMember(tree).supermembers.require[Seq[Ctor]]
+    @hosted def submembers: Seq[Ctor] = new XtensionSemanticMember(tree).submembers.require[Seq[Ctor]]
+    @hosted def companion: Member = new XtensionSemanticMember(tree).companion.require[Member]
+  }
+
   // NOTE: no additional methods here unlike in SemanticTermRefMemberLikeOps
   // because Type.Refs can refer to both type members (obviously) and term members (singleton types)
   implicit class XtensionSemanticTypeRefMemberLike(tree: Type.Ref)
