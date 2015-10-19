@@ -30,7 +30,7 @@ This specification describes quasiquote syntax using a markedly condensed notati
  Interpolation     | Not supported yet [(#251)](https://github.com/scalameta/scalameta/issues/251)
  Application       | `q"$expr(...$aexprssnel)"`
  Type Application  | `q"$expr[..$tpesnel]"`
- Infix Application | `q"$expr $name[..$tpes] $expr"`, `q"$expr $name[..$tpes] (..$aexprsnel)"`
+ Infix Application | `q"$expr $name[..$tpes] $expr"`, `q"$expr $name[..$tpes] (..$aexprs)"`
  Unary Application | `q"!$expr", q"~$expr", q"-$expr", "+$expr"`
  Assign            | `q"$ref = $expr"`
  Update            | `q"$expr(...$aexprssnel) = $expr"`
@@ -133,6 +133,7 @@ This specification describes quasiquote syntax using a markedly condensed notati
  Existential       | `pt"$ptpe forSome { ..$statsnel }"`
  Annotate          | `pt"$ptpe ..@$annotsnel"`
  Placeholder       | `pt"_ >: $tpeopt <: $tpeopt"`
+ Lambda            | `pt"[..$tparamsnel] => $tpe"`
  Literal           | `pt"$lit"` (construction only), `pt"${lit: Lit}"` (also deconstruction)
 
 ## Statements (meta.Stat)

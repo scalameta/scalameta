@@ -191,9 +191,9 @@ package scala.meta.internal.ast {
     @ast class Interpolate(prefix: Name, parts: Seq[Lit.String] @nonEmpty, args: Seq[Term]) extends Term {
       require(parts.length == args.length + 1)
     }
-    @ast class Apply(fun: Term, args: Seq[Arg] @nonEmpty) extends Term with Ctor.Call
+    @ast class Apply(fun: Term, args: Seq[Arg]) extends Term with Ctor.Call
     @ast class ApplyType(fun: Term, targs: Seq[Type] @nonEmpty) extends Term with Ctor.Call
-    @ast class ApplyInfix(lhs: Term, op: Name, targs: Seq[Type], args: Seq[Arg] @nonEmpty) extends Term
+    @ast class ApplyInfix(lhs: Term, op: Name, targs: Seq[Type], args: Seq[Arg]) extends Term
     @ast class ApplyUnary(op: Name, arg: Term) extends Term {
       require(op.isUnaryOp)
     }
@@ -404,6 +404,9 @@ package scala.meta.internal.ast {
       }
       @ast class Placeholder(bounds: impl.Type.Bounds) extends Pat.Type {
         require(bounds.lo.nonEmpty || bounds.hi.nonEmpty)
+      }
+      @ast class Lambda(quants: Seq[impl.Type.Param], tpe: Pat.Type) extends Pat.Type {
+        require(!tpe.isInstanceOf[Pat.Var.Type] && !tpe.isInstanceOf[Pat.Type.Wildcard])
       }
     }
   }

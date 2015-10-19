@@ -74,6 +74,10 @@ class TermSuite extends ParseSuite {
     val Apply(TermName("f"), Arg.Repeated(TermName("x")) :: Nil) = term("f(x: _*)")
   }
 
+  test("a + ()") {
+    val ApplyInfix(TermName("a"), TermName("+"), Nil, Nil) = term("a + ()")
+  }
+
   test("a + b") {
     val ApplyInfix(TermName("a"), TermName("+"), Nil, TermName("b") :: Nil) = term("a + b")
   }
