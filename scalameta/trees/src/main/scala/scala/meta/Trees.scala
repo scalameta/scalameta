@@ -191,7 +191,7 @@ package scala.meta.internal.ast {
     @ast class Interpolate(prefix: Name, parts: Seq[Lit.String] @nonEmpty, args: Seq[Term]) extends Term {
       require(parts.length == args.length + 1)
     }
-    @ast class Apply(fun: Term, args: Seq[Arg] @nonEmpty) extends Term with Ctor.Call
+    @ast class Apply(fun: Term, args: Seq[Arg]) extends Term with Ctor.Call
     @ast class ApplyType(fun: Term, targs: Seq[Type] @nonEmpty) extends Term with Ctor.Call
     @ast class ApplyInfix(lhs: Term, op: Name, targs: Seq[Type], args: Seq[Arg] @nonEmpty) extends Term
     @ast class ApplyUnary(op: Name, arg: Term) extends Term {
