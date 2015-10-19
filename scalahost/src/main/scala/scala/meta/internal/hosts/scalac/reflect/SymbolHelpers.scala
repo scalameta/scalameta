@@ -10,7 +10,7 @@ import org.scalameta.unreachable
 import org.scalameta.adt._
 
 trait SymbolHelpers {
-  self: GlobalToolkit =>
+  self: ReflectToolkit =>
 
   import global.{require => _, _}
   import definitions._

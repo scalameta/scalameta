@@ -2,7 +2,7 @@ package scala.meta.internal.hosts.scalac
 package reflect
 
 trait Metadata {
-  self: MacroToolkit =>
+  self: ReflectToolkit =>
 
   import global._
   import internal._

@@ -9,7 +9,7 @@ import org.scalameta.invariants._
 import org.scalameta.unreachable
 
 trait TreeHelpers {
-  self: GlobalToolkit =>
+  self: ReflectToolkit =>
 
   import global.{require => _, _}
   import definitions._

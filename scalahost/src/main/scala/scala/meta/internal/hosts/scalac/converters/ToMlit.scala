@@ -11,7 +11,7 @@ import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
 import scala.meta.internal.hosts.scalac.reflect._
 
-trait ToMlit extends GlobalToolkit with MetaToolkit {
+trait ToMlit extends ReflectToolkit with MetaToolkit {
   self: Api =>
 
   protected implicit class XtensionGconstToMlit(gconst: g.Constant) {

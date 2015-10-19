@@ -11,7 +11,7 @@ trait PluginBase extends NscPlugin
                     with HijackAnalyzer
                     with ParadiseCompat
                     with PluginSettings
-                    with GlobalToolkit {
+                    with ReflectToolkit {
   val (newAnalyzer, oldAnalyzer) = hijackAnalyzer()
   if (global.analyzer ne newAnalyzer) sys.error("failed to hijack analyzer")
   ifNecessaryReenableMacroParadise(oldAnalyzer)

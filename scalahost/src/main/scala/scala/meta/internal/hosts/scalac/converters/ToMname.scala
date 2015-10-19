@@ -14,7 +14,7 @@ import scala.meta.internal.{semantic => s}
 import scala.meta.internal.hosts.scalac.reflect._
 import scala.meta.internal.flags._
 
-trait ToMname extends GlobalToolkit with MetaToolkit {
+trait ToMname extends ReflectToolkit with MetaToolkit {
   self: Api =>
 
   protected implicit class XtensionGsymbolToMname[T <: g.Symbol, U <: m.Name](gsym: T)(implicit ev: GsymbolToMname[T, U]) {

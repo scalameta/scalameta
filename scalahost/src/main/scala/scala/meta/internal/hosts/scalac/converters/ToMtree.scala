@@ -36,7 +36,7 @@ import scala.meta.internal.ast.XtensionConvertDebug
 // you will need to use a dedicated module called `mergeTrees`
 // that is capable of merging syntactically precise trees (obtained from parsing)
 // and semantically precise trees (obtain from converting).
-trait ToMtree extends GlobalToolkit with MetaToolkit {
+trait ToMtree extends ReflectToolkit with MetaToolkit {
   self: Api =>
 
   protected implicit class XtensionGtreeToMtree(gtree0: g.Tree) {

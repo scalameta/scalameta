@@ -4,7 +4,7 @@ package reflect
 import org.scalameta.invariants._
 
 trait Platform {
-  self: GlobalToolkit =>
+  self: ReflectToolkit =>
 
   import global._
   import definitions._

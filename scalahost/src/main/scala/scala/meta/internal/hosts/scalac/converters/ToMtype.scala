@@ -16,7 +16,7 @@ import java.util.UUID.randomUUID
 
 // This module exposes a method that can convert scala.reflect types into equivalent scala.meta types.
 // See comments to ToMtree to learn more about how this conversion preserves the original syntax of those types.
-trait ToMtype extends GlobalToolkit with MetaToolkit {
+trait ToMtype extends ReflectToolkit with MetaToolkit {
   self: Api =>
 
   protected implicit class XtensionGtypeToMtype(gtpe: g.Type) {

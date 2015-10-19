@@ -17,7 +17,7 @@ import scala.meta.internal.flags._
 // not only we have to deal with desugared trees in annotation arguments,
 // but we also have to tolerate the loss of the constructor symbol (because g.AnnotationInfos only have a type).
 // See comments to ToMtree to learn more about preserving original syntax.
-trait ToMannot extends GlobalToolkit with MetaToolkit {
+trait ToMannot extends ReflectToolkit with MetaToolkit {
   self: Api =>
 
   protected implicit class XtensionGannotToMannot(gannot: g.AnnotationInfo) {

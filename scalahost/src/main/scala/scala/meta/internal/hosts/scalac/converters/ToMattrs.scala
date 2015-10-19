@@ -19,7 +19,7 @@ import scala.meta.internal.hosts.scalac.reflect._
 // to keep track of scala.reflect attributes.
 // We have to work hard in order to provide a DSL that allows us to use .withMattrs with scala.reflect artifacts,
 // but the end result is worth it, I think.
-trait ToMattrs extends GlobalToolkit with MetaToolkit {
+trait ToMattrs extends ReflectToolkit with MetaToolkit {
   self: Api =>
 
   // ======= DEFINITION OF THE DSL =======

@@ -17,7 +17,7 @@ import scala.meta.internal.prettyprinters.Attributes
 
 // This module explicitly lists caches that are used by the conversions.
 // Some of them are here to improve performance, but some of them are necessary for uniqueness and/or correctness.
-trait Caches extends GlobalToolkit with MetaToolkit {
+trait Caches extends ReflectToolkit with MetaToolkit {
   self: Api =>
 
   // NOTE: These maps are mutable, but every mapping there is immutable,

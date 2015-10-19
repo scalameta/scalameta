@@ -15,7 +15,7 @@ import scala.meta.internal.flags._
 
 // This a random grab bag of utilities.
 // Ideally, we'd find better places for them than this file.
-trait ToM extends GlobalToolkit with MetaToolkit {
+trait ToM extends ReflectToolkit with MetaToolkit {
   self: Api =>
 
   protected def mfakector(gtpe: g.Type): m.Ctor.Primary = {

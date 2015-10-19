@@ -15,7 +15,7 @@ import scala.meta.internal.hosts.scalac.reflect._
 
 // This module exposes a method to convert from scala.meta types to scala.reflect types.
 // The logic is mostly straightforward except for when we need to create symbols for compound and existential types.
-trait ToGtype extends GlobalToolkit with MetaToolkit {
+trait ToGtype extends ReflectToolkit with MetaToolkit {
   self: Api =>
 
   protected implicit class XtensionMtypeToGtype(mtpe: m.Type.Arg) {
