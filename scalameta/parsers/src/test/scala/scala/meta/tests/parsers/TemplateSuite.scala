@@ -32,7 +32,7 @@ class TemplateSuite extends ParseSuite {
 
   test("trait A extends { val x: Int } with B") {
     val Trait(Nil, Type.Name("A"), Nil, EmptyCtor(),
-              Template(Defn.Val(Nil, List(Pat.Var.Term(Term.Name("x"))), Some(Type.Name("Int")), Lit.Int(2)) :: Nil,
+              Template(Defn.Val(Nil, List(Pat.Var.Term(Term.Name("x"))), Some(Type.Name("Int")), Lit(2)) :: Nil,
                        Ctor.Name("B") :: Nil, EmptySelf(), None)) =
       templStat("trait A extends { val x: Int = 2 } with B")
   }
@@ -69,7 +69,7 @@ class TemplateSuite extends ParseSuite {
 
   test("class A extends { val x: Int } with B") {
     val Class(Nil, Type.Name("A"), Nil, EmptyCtor(),
-              Template(Defn.Val(Nil, List(Pat.Var.Term(Term.Name("x"))), Some(Type.Name("Int")), Lit.Int(2)) :: Nil,
+              Template(Defn.Val(Nil, List(Pat.Var.Term(Term.Name("x"))), Some(Type.Name("Int")), Lit(2)) :: Nil,
                        Ctor.Name("B") :: Nil, EmptySelf(), None)) =
       templStat("class A extends { val x: Int = 2 } with B")
   }
@@ -156,7 +156,7 @@ class TemplateSuite extends ParseSuite {
 
   test("object A extends { val x: Int } with B") {
     val Object(Nil, Term.Name("A"), EmptyCtor(),
-              Template(Defn.Val(Nil, List(Pat.Var.Term(Term.Name("x"))), Some(Type.Name("Int")), Lit.Int(2)) :: Nil,
+              Template(Defn.Val(Nil, List(Pat.Var.Term(Term.Name("x"))), Some(Type.Name("Int")), Lit(2)) :: Nil,
                        Ctor.Name("B") :: Nil, EmptySelf(), None)) =
       templStat("object A extends { val x: Int = 2 } with B")
   }

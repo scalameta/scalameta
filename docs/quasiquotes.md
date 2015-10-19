@@ -6,18 +6,7 @@ This specification describes quasiquote syntax using a markedly condensed notati
 
          | Quasiquote
 ---------|------------------------------
- Boolean | `q"true"`, `q"false"`, `q"$bool"` (construction only), `q"${bool: Boolean}"` (also deconstruction)
- Byte    | `q"$byte"` (construction only), `q"${byte: Byte}"` (also deconstruction)
- Short   | `q"$short"` (construction only), `q"${short: Short}"` (also deconstruction)
- Int     | `q"1"`, `q"$int"` (construction only), `q"${int: Int}"` (also deconstruction)
- Long    | `q"1L"`, `q"$long"` (construction only), `q"${long: Long}"` (also deconstruction)
- Float   | `q"1.0f"`, `q"$float"` (construction only), `q"${float: Float}"` (also deconstruction)
- Double  | `q"1.0"`, `q"1.0d"`, `q"$double"` (construction only), `q"${double: Double}"` (also deconstruction)
- Char    | `q" 'c' "`, `q"$char"` (construction only), `q"${char: Char}"` (also deconstruction)
- String  | `q""" "s" """`, `q"$string"` (construction only), `q"${string: String}"` (also deconstruction)
- Symbol  | `q" 's "`, `q"$symbol"` (construction only), `q"${symbol: Symbol}"` (also deconstruction)
- Null    | `q"null"`
- Unit    | `q"()"`
+Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
 
 ## Expressions (meta.Term)
 
@@ -350,16 +339,6 @@ The tables above define quasiquote syntax using a notation called *quasiquote te
 
  Type                     | Shorthand     | Interpolator
 --------------------------|---------------|--------------
- scala.Boolean            | `$bool`       | -
- scala.Byte               | `$byte`       | -
- scala.Char               | `$char`       | -
- scala.Double             | `$double`     | -
- scala.Float              | `$float`      | -
- scala.Int                | `$int`        | -
- scala.Long               | `$long`       | -
- scala.Short              | `$short`      | -
- scala.String             | `$string`     | -
- scala.Symbol             | `$symbol`     | -
  meta.Case                | `$case`       | `p`
  meta.Ctor                | `$ctor`       | `q`
  meta.Ctor.Name           | `$ctorname`   | `ctor`

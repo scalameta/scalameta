@@ -680,37 +680,37 @@ class InferSimpleSuite extends FunSuite {
 
   test("InferLit1") {
     val tree = """42"""
-      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Lit.Int]
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Lit]
     compareTokenCodes(tree, tree.copy())
   }
   test("InferLit2") {
     val tree = """2121421L"""
-      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Lit.Long]
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Lit]
     compareTokenCodes(tree, tree.copy())
   }
   test("InferLit3") {
     val tree = """23.231F"""
-      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Lit.Float]
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Lit]
     compareTokenCodes(tree, tree.copy())
   }
   test("InferLit4") {
     val tree = """23.231"""
-      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Lit.Double]
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Lit]
     compareTokenCodes(tree, tree.copy())
   }
   test("InferLit5") {
     val tree = """'c'"""
-      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Lit.Char]
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Lit]
     compareTokenCodes(tree, tree.copy())
   }
   test("InferLit6") {
     val tree = """'aabbs"""
-      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Lit.Symbol]
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Lit]
     compareTokenCodes(tree, tree.copy())
   }
   test("InferLit7") {
     val tree = "\"Hello world\""
-      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Lit.String]
+      .stripMargin.parse[Term].asInstanceOf[scala.meta.internal.ast.Lit]
     compareTokenCodes(tree, tree.copy())
   }
 

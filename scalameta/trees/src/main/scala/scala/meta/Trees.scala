@@ -9,6 +9,7 @@ import scala.meta.tokens._
 import scala.meta.prettyprinters._
 import scala.meta.internal.{equality => e}
 import scala.meta.internal.ast.Fresh
+import scala.runtime.ScalaRunTime.isAnyVal
 
 package scala.meta {
   @root trait Tree extends Product with Serializable {
@@ -113,7 +114,7 @@ package scala.meta {
     def fresh(prefix: String): Pat.Var.Term = impl.Pat.Var.Term(Term.fresh(prefix).require[impl.Term.Name])
   }
 
-  @branch trait Lit extends Term with Pat with Type with Pat.Type
+  @branch trait Lit extends Term with Pat with Type with Pat.Type { def value: Any }
 
   @branch trait Member extends Tree with Scope { def name: Name }
   object Member {
@@ -188,7 +189,7 @@ package scala.meta.internal.ast {
       // require(keywords.contains(value) ==> isBackquoted)
     }
     @ast class Select(qual: Term, name: Term.Name) extends Term.Ref with Pat
-    @ast class Interpolate(prefix: Name, parts: Seq[Lit.String] @nonEmpty, args: Seq[Term]) extends Term {
+    @ast class Interpolate(prefix: Name, parts: Seq[Lit] @nonEmpty, args: Seq[Term]) extends Term {
       require(parts.length == args.length + 1)
     }
     @ast class Apply(fun: Term, args: Seq[Arg]) extends Term with Ctor.Call
@@ -361,7 +362,7 @@ package scala.meta.internal.ast {
       require(ref.isStableId)
       require(lhs.isLegal && rhs.forall(_.isLegal))
     }
-    @ast class Interpolate(prefix: Term.Name, parts: Seq[Lit.String] @nonEmpty, args: Seq[Pat]) extends Pat {
+    @ast class Interpolate(prefix: Term.Name, parts: Seq[Lit] @nonEmpty, args: Seq[Pat]) extends Pat {
       require(parts.length == args.length + 1)
       require(args.forall(_.isLegal))
     }
@@ -411,20 +412,8 @@ package scala.meta.internal.ast {
     }
   }
 
-  @branch trait Lit extends Term with Pat with Type with Pat.Type with api.Lit
-  object Lit {
-    @ast class Bool(value: scala.Boolean) extends Lit
-    @ast class Byte(value: scala.Byte) extends Lit
-    @ast class Short(value: scala.Short) extends Lit
-    @ast class Int(value: scala.Int) extends Lit
-    @ast class Long(value: scala.Long) extends Lit
-    @ast class Float(value: scala.Float) extends Lit
-    @ast class Double(value: scala.Double) extends Lit
-    @ast class Char(value: scala.Char) extends Lit
-    @ast class String(value: Predef.String) extends Lit
-    @ast class Symbol(value: scala.Symbol) extends Lit
-    @ast class Null() extends Lit
-    @ast class Unit() extends Lit
+  @ast class Lit(value: Any) extends Term with Pat with Type with Pat.Type with api.Lit {
+    require(value == null || isAnyVal(value) || value.isInstanceOf[String] || value.isInstanceOf[scala.Symbol])
   }
 
   @branch trait Member extends api.Member with Tree with Scope

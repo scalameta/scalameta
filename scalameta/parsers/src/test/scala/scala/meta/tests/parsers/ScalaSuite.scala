@@ -45,7 +45,7 @@ class ScalaSuite extends InferSuite {
       QQQ
       val y = "\""
     }""".replace("QQQ", "\"\"\""))
-    assert(tree.show[Structure] === """Term.Block(Seq(Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name("x"))), None, Lit.String("%n        x%n      ")), Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name("y"))), None, Lit.String("\""))))""".replace("%n", escapedEOL))
+    assert(tree.show[Structure] === """Term.Block(Seq(Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name("x"))), None, Lit("%n        x%n      ")), Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name("y"))), None, Lit("\""))))""".replace("%n", escapedEOL))
     assert(forceInferAll(tree).show[Syntax] === """
     |{
     |  val x = QQQ
@@ -65,7 +65,7 @@ class ScalaSuite extends InferSuite {
         ..$z
       QQQ
     }""".replace("QQQ", "\"\"\""))
-    assert(tree.show[Structure] === """Term.Block(Seq(Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name("x"))), None, Term.Interpolate(Term.Name("q"), Seq(Lit.String("123 + "), Lit.String(" + "), Lit.String(" + 456")), Seq(Term.Name("x"), Term.Apply(Term.Name("foo"), Seq(Lit.Int(123)))))), Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name("y"))), None, Lit.String("%n        $x%n        $y%n        ..$z%n      "))))""".replace("%n", escapedEOL))
+    assert(tree.show[Structure] === """Term.Block(Seq(Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name("x"))), None, Term.Interpolate(Term.Name("q"), Seq(Lit("123 + "), Lit(" + "), Lit(" + 456")), Seq(Term.Name("x"), Term.Apply(Term.Name("foo"), Seq(Lit(123)))))), Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name("y"))), None, Lit("%n        $x%n        $y%n        ..$z%n      "))))""".replace("%n", escapedEOL))
     assert(forceInferAll(tree).show[Syntax] === """
     |{
     |  val x = q"123 + $x + ${foo(123)} + 456"
@@ -412,7 +412,7 @@ class ScalaSuite extends InferSuite {
 
   test("xml literals") {
     val tree = term("<foo>{bar}</foo>")
-    assert(tree.show[Structure] === """Term.Interpolate(Term.Name("xml"), Seq(Lit.String("<foo>{bar}</foo>")), Nil)""")
+    assert(tree.show[Structure] === """Term.Interpolate(Term.Name("xml"), Seq(Lit("<foo>{bar}</foo>")), Nil)""")
     assert(forceInferAll(tree).show[Syntax] === """ xml"<foo>{bar}</foo>" """.trim)
   }
 }

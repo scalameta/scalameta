@@ -224,18 +224,8 @@ trait ToGtype extends ReflectToolkit with MetaToolkit {
         case m.Type.Arg.Repeated(mtpe) =>
           g.appliedType(g.definitions.RepeatedParamClass, List(loop(mtpe)))
         case mlit: m.Lit =>
-          mlit match {
-            case m.Lit.Bool(value) => g.ConstantType(g.Constant(value))
-            case m.Lit.Int(value) => g.ConstantType(g.Constant(value))
-            case m.Lit.Long(value) => g.ConstantType(g.Constant(value))
-            case m.Lit.Float(value) => g.ConstantType(g.Constant(value))
-            case m.Lit.Double(value) => g.ConstantType(g.Constant(value))
-            case m.Lit.Char(value) => g.ConstantType(g.Constant(value))
-            case m.Lit.String(value) => g.ConstantType(g.Constant(value))
-            case m.Lit.Symbol(value) => unreachable
-            case m.Lit.Null() => g.ConstantType(g.Constant(null))
-            case m.Lit.Unit() => g.ConstantType(g.Constant(()))
-          }
+          require(!mlit.value.isInstanceOf[scala.Symbol])
+          g.ConstantType(g.Constant(mlit.value))
       }
       loop(mtpe)
     })

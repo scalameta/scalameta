@@ -62,27 +62,27 @@ class PatSuite extends ParseSuite {
   }
 
   test("1 | 2 | 3") {
-    val Alternative(Lit.Int(1), Lit.Int(2)) = pat("1 | 2")
-    val Alternative(Lit.Int(1), Alternative(Lit.Int(2), Lit.Int(3))) = pat("1 | 2 | 3")
+    val Alternative(Lit(1), Lit(2)) = pat("1 | 2")
+    val Alternative(Lit(1), Alternative(Lit(2), Lit(3))) = pat("1 | 2 | 3")
   }
 
   test("()") {
-    val Lit.Unit() = pat("()")
+    val Lit(()) = pat("()")
   }
 
   test("(true, false)") {
-    val Tuple(Lit.Bool(true) :: Lit.Bool(false) :: Nil) = pat("(true, false)")
+    val Tuple(Lit(true) :: Lit(false) :: Nil) = pat("(true, false)")
   }
 
   test("foo\"bar\"") {
-    val Interpolate(Term.Name("foo"), Lit.String("bar") :: Nil, Nil) = pat("foo\"bar\"")
+    val Interpolate(Term.Name("foo"), Lit("bar") :: Nil, Nil) = pat("foo\"bar\"")
   }
 
   test("foo\"a $b c\"") {
-    val Interpolate(Term.Name("foo"), Lit.String("a ") :: Lit.String(" c") :: Nil, Var.Term(Term.Name("b")) :: Nil) = pat("foo\"a $b c\"")
+    val Interpolate(Term.Name("foo"), Lit("a ") :: Lit(" c") :: Nil, Var.Term(Term.Name("b")) :: Nil) = pat("foo\"a $b c\"")
   }
 
   test("foo\"${b @ foo()}\"") {
-    val Interpolate(Term.Name("foo"), Lit.String("") :: Lit.String("") :: Nil, Bind(Var.Term(Term.Name("b")), Extract(Term.Name("foo"), Nil, Nil)) :: Nil) = pat("foo\"${b @ foo()}\"")
+    val Interpolate(Term.Name("foo"), Lit("") :: Lit("") :: Nil, Bind(Var.Term(Term.Name("b")), Extract(Term.Name("foo"), Nil, Nil)) :: Nil) = pat("foo\"${b @ foo()}\"")
   }
 }

@@ -24,20 +24,20 @@ class CollectionLikeUISuite extends FunSuite {
   //   5
   // """
   lazy val x: Term = ???
-  lazy val t1: List[Int] = x.collect{case impl.Lit.Int(a) if a > 10 => a}
-  lazy val t2: List[Int] = x.focus({case impl.Term.If(_,_,_) => true}).topDown.collect{case impl.Lit.Int(a) => a}
+  lazy val t1: List[Int] = x.collect{case impl.Lit(a: Int) if a > 10 => a}
+  lazy val t2: List[Int] = x.focus({case impl.Term.If(_,_,_) => true}).topDown.collect{case impl.Lit(a: Int) => a}
   lazy val t3: (Tree, List[String]) = {
     import scala.meta.tql._
     x.transform{case impl.Defn.Val(a, b, c, d) => impl.Defn.Var(a,b,c,Some(d)) andCollect(b.toString)}
   }
-  lazy val t4: Tree = x.transform{case impl.Lit.Int(x) => impl.Lit.Int(x * 2)}
+  lazy val t4: Tree = x.transform{case impl.Lit(x: Int) => impl.Lit(x * 2)}
   lazy val t5: Set[String] = x.bottomUp.collect[Set]{case x: impl.Defn.Val => x.pats.head.toString}
   lazy val t6: List[Int] = {
     import scala.meta.tql._
-    x.focus({case impl.Term.If(_,_,_) => true}).combine(topDown(collect{case impl.Lit.Int(a) => a})).result
+    x.focus({case impl.Term.If(_,_,_) => true}).combine(topDown(collect{case impl.Lit(a: Int) => a})).result
   }
   lazy val t7: scala.meta.Tree = x.transform {
-    case impl.Lit.Int(a) => impl.Lit.Int(a * 3)
+    case impl.Lit(a: Int) => impl.Lit(a * 3)
     case impl.Defn.Val(a, b, c, d) => impl.Defn.Var(a,b,c,Some(d))
   }
 }

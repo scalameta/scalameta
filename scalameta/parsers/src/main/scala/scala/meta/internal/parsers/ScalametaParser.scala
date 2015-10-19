@@ -408,7 +408,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     if (token.is[`(`]) inParens(body)
     else { accept[`(`]; alt }
 
-  @inline final def inParensOrUnit[T, Ret >: Lit](body: => Ret): Ret = inParensOrError(body, Lit.Unit())
+  @inline final def inParensOrUnit[T, Ret >: Lit](body: => Ret): Ret = inParensOrError(body, Lit(()))
   @inline final def inParensOrNil[T](body: => List[T]): List[T] = inParensOrError(body, Nil)
 
   @inline final def inBraces[T](body: => T): T = {
@@ -422,7 +422,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     else { accept[`{`]; alt }
 
   @inline final def inBracesOrNil[T](body: => List[T]): List[T] = inBracesOrError(body, Nil)
-  @inline final def inBracesOrUnit[T](body: => Term): Term = inBracesOrError(body, Lit.Unit())
+  @inline final def inBracesOrUnit[T](body: => Term): Term = inBracesOrError(body, Lit(()))
   @inline final def dropAnyBraces[T](body: => T): T =
     if (token.is[`{`]) inBraces(body)
     else body
@@ -607,7 +607,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
       Some(atPos(tree, tree)(Term.Param(Nil, name, Some(tpt), None)))
     case Term.Ascribe(name: Term.Placeholder, tpt) =>
       Some(atPos(tree, tree)(Term.Param(Nil, atPos(name, name)(Name.Anonymous()), Some(tpt), None)))
-    case Lit.Unit() =>
+    case Lit(()) =>
       None
     case other =>
       syntaxError(s"not a legal formal parameter", at = other)
@@ -663,7 +663,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     // see comments to makeTupleType for discussion
     body match {
       case Seq(q @ Term.Quasi(1, _)) => atPos(q, q)(Term.Tuple(body))
-      case _ => makeTuple[Term](body, () => Lit.Unit(), Term.Tuple(_))
+      case _ => makeTuple[Term](body, () => Lit(()), Term.Tuple(_))
     }
   }
 
@@ -1253,37 +1253,37 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   def literal(isNegated: Boolean = false): Lit = autoPos {
     val res = token match {
       case token: Literal.Char =>
-        Lit.Char(token.value)
+        Lit(token.value)
       case token: Literal.Int =>
         val value = if (isNegated) -token.value else token.value
         if (value > Int.MaxValue) syntaxError("integer number too large", at = token)
         else if (value < Int.MinValue) syntaxError("integer number too small", at = token)
-        else Lit.Int(value.toInt)
+        else Lit(value.toInt)
       case token: Literal.Long =>
         val value = if (isNegated) -token.value else token.value
         if (value > Long.MaxValue) syntaxError("integer number too large", at = token)
         else if (value < Long.MinValue) syntaxError("integer number too small", at = token)
-        else Lit.Long(value.toLong)
+        else Lit(value.toLong)
       case token: Literal.Float =>
         val value = if (isNegated) -token.value else token.value
         if (value > Float.MaxValue) syntaxError("floating point number too large", at = token)
         else if (value < Float.MinValue) syntaxError("floating point number too small", at = token)
-        else Lit.Float(value.toFloat)
+        else Lit(value.toFloat)
       case token: Literal.Double  =>
         val value = if (isNegated) -token.value else token.value
         if (value > Double.MaxValue) syntaxError("floating point number too large", at = token)
         else if (value < Double.MinValue) syntaxError("floating point number too small", at = token)
-        else Lit.Double(value.toDouble)
+        else Lit(value.toDouble)
       case token: Literal.String =>
-        Lit.String(token.value)
+        Lit(token.value)
       case token: Literal.Symbol =>
-        Lit.Symbol(token.value)
+        Lit(token.value)
       case token: Literal.`true` =>
-        Lit.Bool(true)
+        Lit(true)
       case token: Literal.`false` =>
-        Lit.Bool(false)
+        Lit(false)
       case token: Literal.`null` =>
-        Lit.Null()
+        Lit(null)
       case _ =>
         unreachable(debug(token))
     }
@@ -1291,20 +1291,20 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     res
   }
 
-  def interpolate[Ctx <: Tree, Ret <: Tree](arg: () => Ctx, result: (Term.Name, List[Lit.String], List[Ctx]) => Ret): Ret = autoPos {
+  def interpolate[Ctx <: Tree, Ret <: Tree](arg: () => Ctx, result: (Term.Name, List[Lit], List[Ctx]) => Ret): Ret = autoPos {
     val interpolator = {
       if (token.is[Xml.Start]) atPos(in.tokenPos, in.tokenPos)(Term.Name("xml"))
       else atPos(in.prevTokenPos, in.prevTokenPos)(Term.Name(token.require[Interpolation.Id].code)) // termName() for INTERPOLATIONID
     }
     if (token.is[Interpolation.Id]) next()
-    val partsBuf = new ListBuffer[Lit.String]
+    val partsBuf = new ListBuffer[Lit]
     val argsBuf = new ListBuffer[Ctx]
     def loop(): Unit = token match {
       case _: Interpolation.Start | _: Xml.Start =>
         next()
         loop()
       case _: Interpolation.Part | _: Xml.Part =>
-        partsBuf += atPos(in.tokenPos, in.tokenPos)(Lit.String(token.code))
+        partsBuf += atPos(in.tokenPos, in.tokenPos)(Lit(token.code))
         next()
         loop()
       case _: Interpolation.SpliceStart | _: Xml.SpliceStart =>
@@ -1435,7 +1435,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
       val thenp = expr()
       if (token.is[`else`]) { next(); Term.If(cond, thenp, expr()) }
       else if (token.is[`;`] && ahead { token.is[`else`] }) { next(); next(); Term.If(cond, thenp, expr()) }
-      else { Term.If(cond, thenp, atPos(in.tokenPos, in.prevTokenPos)(Lit.Unit())) }
+      else { Term.If(cond, thenp, atPos(in.tokenPos, in.prevTokenPos)(Lit(()))) }
     case _: `try` =>
       next()
       val body: Term = token match {
@@ -1491,7 +1491,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     case _: `return` =>
       next()
       if (token.is[ExprIntro]) Term.Return(expr())
-      else Term.Return(atPos(in.tokenPos, auto)(Lit.Unit()))
+      else Term.Return(atPos(in.tokenPos, auto)(Lit(())))
     case _: `throw` =>
       next()
       Term.Throw(expr())
@@ -1579,7 +1579,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
             }
           }
           t match {
-            case _: Lit.Unit => true // 1
+            case Lit(()) => true // 1
             case NameLike() => location != InTemplate // 2-3
             case ParamLike() => inParens || location == InBlock // 4-5
             case Term.Tuple(xs) => xs.forall(ParamLike.unapply) // 6
@@ -2168,7 +2168,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
           case q: Pat.Arg.Quasi => q.become[Pat.Quasi]
           case p => p.require[Pat]
         }
-        makeTuple[Pat](patterns, () => Lit.Unit(), Pat.Tuple(_))
+        makeTuple[Pat](patterns, () => Lit(()), Pat.Tuple(_))
       case _ =>
         onError(token)
     })

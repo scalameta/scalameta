@@ -25,8 +25,8 @@ object TreeStructure {
       }
       x match {
         case x: impl.Quasi => default
-        case x: impl.Lit.String => s(enquote(x.value, DoubleQuotes))
-        case x: Lit => import scala.meta.dialects.Scala211; s(x.show[Syntax])
+        case x @ impl.Lit(value: String) => s(enquote(value, DoubleQuotes))
+        case x @ impl.Lit(_) => import scala.meta.dialects.Scala211; s(x.show[Syntax])
         case x => default
       }
     }, ")"))

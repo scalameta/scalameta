@@ -26,6 +26,7 @@ class BranchMacros(val c: Context) extends AstReflection {
       def isInternal = fullName.startsWith("scala.meta.internal.ast.")
       def is(abbrev: String) = abbrevName == abbrev
       def isQuasi = cdef.name.toString == "Quasi"
+      def isLit = is("Lit")
       def isName = isInternal && (is("Name") || is("Term.Param.Name") || is("Type.Param.Name"))
       def isTerm = isInternal && (is("Term") || is("Lit") || is("Term.Ref") || is("Ctor.Ref") || is("Ctor.Call"))
       def isMember = is("Term.Param") || is("Type.Param") || is("Pat.Var.Term") || is("Pat.Var.Type") ||
@@ -67,6 +68,9 @@ class BranchMacros(val c: Context) extends AstReflection {
           DefDef(mods1, termName, tparams, List(params.toList), tpt, rhs)
         }
         var qstats = List(q"def pt: _root_.java.lang.Class[_] = _root_.org.scalameta.runtime.arrayClass(_root_.scala.Predef.classOf[$name], this.rank)")
+        if (isLit) {
+          qstats :+= quasigetter(NoMods, "value")
+        }
         if (isMember) {
           qstats :+= quasigetter(NoMods, "name")
         }

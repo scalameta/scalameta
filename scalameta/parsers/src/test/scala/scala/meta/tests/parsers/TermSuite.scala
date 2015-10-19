@@ -58,16 +58,16 @@ class TermSuite extends ParseSuite {
   }
 
   test("s\"a $b c\"") {
-    val Interpolate(TermName("s"), Lit.String("a ") :: Lit.String(" c") :: Nil,
+    val Interpolate(TermName("s"), Lit("a ") :: Lit(" c") :: Nil,
                     TermName("b") :: Nil) = term("s\"a $b c\"")
   }
 
   test("f(0)") {
-    val Apply(TermName("f"), Lit.Int(0) :: Nil) = term("f(0)")
+    val Apply(TermName("f"), Lit(0) :: Nil) = term("f(0)")
   }
 
   test("f(x = 0)") {
-    val Apply(TermName("f"), Arg.Named(TermName("x"), Lit.Int(0)) :: Nil) = term("f(x = 0)")
+    val Apply(TermName("f"), Arg.Named(TermName("x"), Lit(0)) :: Nil) = term("f(x = 0)")
   }
 
   test("f(x: _*)") {
@@ -101,63 +101,63 @@ class TermSuite extends ParseSuite {
   }
 
   test("a = true") {
-    val Assign(TermName("a"), Lit.Bool(true)) = term("a = true")
+    val Assign(TermName("a"), Lit(true)) = term("a = true")
   }
 
   test("a(0) = true") {
-    val Update(TermName("a"), (Lit.Int(0) :: Nil) :: Nil, Lit.Bool(true)) = term("a(0) = true")
+    val Update(TermName("a"), (Lit(0) :: Nil) :: Nil, Lit(true)) = term("a(0) = true")
   }
 
   test("return") {
-    val ret @ Return(Lit.Unit()) = term("return")
+    val ret @ Return(Lit(())) = term("return")
     // TODO: revisit this once we have trivia in place
     // assert(ret.hasExpr === false)
   }
 
   test("return 1") {
-    val ret @ Return(Lit.Int(1)) = term("return 1")
+    val ret @ Return(Lit(1)) = term("return 1")
     // TODO: revisit this once we have trivia in place
     // assert(ret.hasExpr === true)
   }
 
   test("throw 1") {
-    val Throw(Lit.Int(1)) = term("throw 1")
+    val Throw(Lit(1)) = term("throw 1")
   }
 
   test("1: Int") {
-    val Ascribe(Lit.Int(1), TypeName("Int")) = term("1: Int")
+    val Ascribe(Lit(1), TypeName("Int")) = term("1: Int")
   }
 
   test("1: @foo") {
-    val Annotate(Lit.Int(1), Mod.Annot(Ctor.Name("foo")) :: Nil) = term("1: @foo")
+    val Annotate(Lit(1), Mod.Annot(Ctor.Name("foo")) :: Nil) = term("1: @foo")
   }
 
   test("(true, false)") {
-    val Tuple(Lit.Bool(true) :: Lit.Bool(false) :: Nil) = term("(true, false)")
+    val Tuple(Lit(true) :: Lit(false) :: Nil) = term("(true, false)")
   }
 
   test("{ true; false }") {
-    val Block(Lit.Bool(true) :: Lit.Bool(false) :: Nil) = term("{ true; false }")
+    val Block(Lit(true) :: Lit(false) :: Nil) = term("{ true; false }")
   }
 
   test("{ true }") {
-    val Block(Lit.Bool(true) :: Nil) = term("{ true }")
+    val Block(Lit(true) :: Nil) = term("{ true }")
   }
 
   test("if (true) true else false") {
-    val iff @ If(Lit.Bool(true), Lit.Bool(true), Lit.Bool(false)) = term("if (true) true else false")
+    val iff @ If(Lit(true), Lit(true), Lit(false)) = term("if (true) true else false")
     // TODO: revisit this once we have trivia in place
     // assert(iff.hasElsep === true)
   }
 
   test("if (true) true; else false") {
-    val iff @ If(Lit.Bool(true), Lit.Bool(true), Lit.Bool(false)) = term("if (true) true; else false")
+    val iff @ If(Lit(true), Lit(true), Lit(false)) = term("if (true) true; else false")
     // TODO: revisit this once we have trivia in place
     // assert(iff.hasElsep === true)
   }
 
   test("if (true) true") {
-    val iff @ If(Lit.Bool(true), Lit.Bool(true), Lit.Unit()) = term("if (true) true")
+    val iff @ If(Lit(true), Lit(true), Lit(())) = term("if (true) true")
     // TODO: revisit this once we have trivia in place
     // assert(iff.hasElsep === false)
   }
@@ -237,52 +237,52 @@ class TermSuite extends ParseSuite {
 
   test("{ implicit x => () }") {
     val Block(Function(Term.Param(Mod.Implicit() :: Nil, TermName("x"), None, None) :: Nil,
-                       Block(Lit.Unit() :: Nil)) :: Nil) = term("{ implicit x => () }")
+                       Block(Lit(()) :: Nil)) :: Nil) = term("{ implicit x => () }")
   }
 
   test("1 match { case 1 => true }") {
-    val Match(Lit.Int(1), Case(Lit.Int(1), None, Term.Block(Lit.Bool(true) :: Nil)) :: Nil) =
+    val Match(Lit(1), Case(Lit(1), None, Term.Block(Lit(true) :: Nil)) :: Nil) =
       term("1 match { case 1 => true }")
   }
 
   test("1 match { case 1 => }") {
-    val Match(Lit.Int(1), Case(Lit.Int(1), None, Term.Block(Nil)) :: Nil) =
+    val Match(Lit(1), Case(Lit(1), None, Term.Block(Nil)) :: Nil) =
       term("1 match { case 1 => }")
   }
 
   test("1 match { case 1 if true => }") {
-    val Match(Lit.Int(1), Case(Lit.Int(1), Some(Lit.Bool(true)), Term.Block(Nil)) :: Nil) =
+    val Match(Lit(1), Case(Lit(1), Some(Lit(true)), Term.Block(Nil)) :: Nil) =
       term("1 match { case 1 if true => }")
   }
 
   test("try 1") {
-    val TryWithCases(Lit.Int(1), Nil, None) = term("try 1")
+    val TryWithCases(Lit(1), Nil, None) = term("try 1")
   }
 
   test("try 1 catch 1") {
-    val TryWithTerm(Lit.Int(1), Lit.Int(1), None) = term("try 1 catch 1")
+    val TryWithTerm(Lit(1), Lit(1), None) = term("try 1 catch 1")
   }
 
   test("try 1 catch { case _ => }") {
-    val TryWithCases(Lit.Int(1), Case(Pat.Wildcard(), None, Term.Block(Nil)) :: Nil, None) =
+    val TryWithCases(Lit(1), Case(Pat.Wildcard(), None, Term.Block(Nil)) :: Nil, None) =
       term("try 1 catch { case _ => }")
   }
 
   test("try 1 finally 1") {
-    val TryWithCases(Lit.Int(1), Nil, Some(Lit.Int(1))) = term("try 1 finally 1")
+    val TryWithCases(Lit(1), Nil, Some(Lit(1))) = term("try 1 finally 1")
   }
 
   test("{ case 1 => () }") {
-    val PartialFunction(Case(Lit.Int(1), None, Term.Block(Lit.Unit() :: Nil)) :: Nil) =
+    val PartialFunction(Case(Lit(1), None, Term.Block(Lit(()) :: Nil)) :: Nil) =
       term("{ case 1 => () }")
   }
 
   test("while (true) false") {
-    val While(Lit.Bool(true), Lit.Bool(false)) = term("while (true) false")
+    val While(Lit(true), Lit(false)) = term("while (true) false")
   }
 
   test("do false while(true)") {
-    val Do(Lit.Bool(false), Lit.Bool(true)) = term("do false while(true)")
+    val Do(Lit(false), Lit(true)) = term("do false while(true)")
   }
 
   test("for (a <- b; if c; x = a) x") {
@@ -304,11 +304,11 @@ class TermSuite extends ParseSuite {
   }
 
   test("_ + 1") {
-    val ApplyInfix(Placeholder(), TermName("+"), Nil, Lit.Int(1) :: Nil) = term("_ + 1")
+    val ApplyInfix(Placeholder(), TermName("+"), Nil, Lit(1) :: Nil) = term("_ + 1")
   }
 
   test("1 + _") {
-    val ApplyInfix(Lit.Int(1), TermName("+"), Nil, Placeholder() :: Nil) = term("1 + _")
+    val ApplyInfix(Lit(1), TermName("+"), Nil, Placeholder() :: Nil) = term("1 + _")
   }
 
   test("f _") {
@@ -341,7 +341,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("new { val x: Int = 1 } with A") {
-    val New(Template(Defn.Val(Nil, List(Pat.Var.Term(TermName("x"))), Some(TypeName("Int")), Lit.Int(1)) :: Nil,
+    val New(Template(Defn.Val(Nil, List(Pat.Var.Term(TermName("x"))), Some(TypeName("Int")), Lit(1)) :: Nil,
                      Ctor.Name("A") :: Nil, EmptySelf(), None)) =
       term("new { val x: Int = 1 } with A")
   }
@@ -382,7 +382,7 @@ class TermSuite extends ParseSuite {
 
   test("xml literal - 1") {
     val Term.Block(List(
-      Defn.Val(Nil, List(Pat.Var.Term(Term.Name("x"))), None, Term.Interpolate(Term.Name("xml"), List(Lit.String("<p/>")), Nil)),
+      Defn.Val(Nil, List(Pat.Var.Term(Term.Name("x"))), None, Term.Interpolate(Term.Name("xml"), List(Lit("<p/>")), Nil)),
       Defn.Val(Nil, List(Pat.Var.Term(Term.Name("y"))), None, Term.Name("x")))) =
     term("""{
       val x = <p/>

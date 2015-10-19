@@ -2,6 +2,7 @@ package scala.meta
 package internal
 package prettyprinters
 
+import org.scalameta.invariants._
 import org.scalameta.show.{enquote, SingleQuotes, DoubleQuotes, TripleQuotes}
 import org.scalameta.unreachable
 import scala.reflect.macros.blackbox.Context
@@ -28,8 +29,9 @@ private[meta] object inferTokens {
 
   /* Generate a single token for a literal */
   private def mineLitTk(value: Any)(implicit dialect: Dialect): Tokens = {
+    if (value.isInstanceOf[Unit]) return toks"()"
     implicit def stringToInput(str: String) = Input.String(str)
-    val str = value.toString
+    val str = if (value != null) value.toString else "null"
     val newTok = value match {
       case y: Int =>     Token.Literal.Int(str, dialect, 0, str.length, y)
       case y: Long =>    Token.Literal.Long(str + "L", dialect, 0, str.length + 1, y)
@@ -45,6 +47,9 @@ private[meta] object inferTokens {
           else enquote(str, DoubleQuotes)
         }
         Token.Literal.String(newStr, dialect, 0, newStr.length, newStr)
+      case null =>       Token.Literal.`null`(str, dialect, 0)
+      case true =>       Token.Literal.`true`(str, dialect, 0)
+      case false =>      Token.Literal.`false`(str, dialect, 0)
     }
     Tokens(newTok)
   }
@@ -228,8 +233,8 @@ private[meta] object inferTokens {
     }
     def guessHasRefinement(t: Type.Compound): Boolean = t.refinement.nonEmpty
     def guessPatHasRefinement(t: Pat.Type.Compound): Boolean = t.refinement.nonEmpty
-    def guessHasExpr(t: Term.Return): Boolean = t.expr match { case Lit.Unit() => false; case _ => true }
-    def guessHasElsep(t: Term.If): Boolean = t.elsep match { case Lit.Unit() => false; case _ => true }
+    def guessHasExpr(t: Term.Return): Boolean = t.expr match { case Lit(_: Unit) => false; case _ => true }
+    def guessHasElsep(t: Term.If): Boolean = t.elsep match { case Lit(_: Unit) => false; case _ => true }
     def guessHasBraces(t: Pkg): Boolean = {
       def isOnlyChildOfOnlyChild(t: Pkg): Boolean = t.parent match {
         case Some(pkg: Pkg) =>       isOnlyChildOfOnlyChild(pkg) && pkg.stats.length == 1
@@ -375,11 +380,12 @@ private[meta] object inferTokens {
       case t: Term.Select => toks"${t.qual.tks}.${t.name.tks}"
       case t: Term.Interpolate =>
         val zipped = (t.parts zip t.args) map {
-          case (part, id: Name) if !guessIsBackquoted(id) => toks"${mineIdentTk(part.value)}$$${mineIdentTk(id.value)}"
-          case (part, args) => toks"${mineIdentTk(part.value)}$${${args.tks}}"
+          case (part, id: Name) if !guessIsBackquoted(id) => toks"${mineIdentTk(part.value.require[String])}$$${mineIdentTk(id.value)}"
+          case (part, args) => toks"${mineIdentTk(part.value.require[String])}$${${args.tks}}"
         }
-        val quote: Tokens = if (t.parts.map(_.value).exists(s => s.contains(EOL) || s.contains("\""))) tripleDoubleQuotes else singleDoubleQuotes
-        toks"${mineIdentTk(t.prefix.value)}$quote${zipped.`oo`}${mineIdentTk(t.parts.last.value)}$quote"
+        val multiline = t.parts.map(_.value.require[String]).exists(s => s.contains(EOL) || s.contains("\""))
+        val quote: Tokens = if (multiline) tripleDoubleQuotes else singleDoubleQuotes
+        toks"${mineIdentTk(t.prefix.value)}$quote${zipped.`oo`}${mineIdentTk(t.parts.last.value.require[String])}$quote"
       case t: Term.Apply =>
         if (t.args.size == 1 && t.args.head.isInstanceOf[Term.PartialFunction]) toks"${t.fun.tks} ${t.args.head.tks}"
         else if (t.args.size == 1 && t.args.head.isInstanceOf[Term.Block]) toks"${t.fun.tks} ${t.args.head.tks}"
@@ -540,11 +546,11 @@ private[meta] object inferTokens {
       case t: Pat.Interpolate =>
         val zipped = (t.parts zip t.args) map {
           case (part, Pat.Var.Term(id: Name)) if !guessIsBackquoted(id) =>
-            toks"${mineIdentTk(part.value)}$$${mineIdentTk(id.value)}"
+            toks"${mineIdentTk(part.value.require[String])}$$${mineIdentTk(id.value)}"
           case (part, args) =>
-            toks"${mineIdentTk(part.value)}$${${args.tks}}"
+            toks"${mineIdentTk(part.value.require[String])}$${${args.tks}}"
         }
-        toks"${mineIdentTk(t.prefix.value)}$singleDoubleQuotes${zipped.`oo`}${mineIdentTk(t.parts.last.value)}$singleDoubleQuotes"
+        toks"${mineIdentTk(t.prefix.value)}$singleDoubleQuotes${zipped.`oo`}${mineIdentTk(t.parts.last.value.require[String])}$singleDoubleQuotes"
       case t: Pat.Typed =>           toks"${t.lhs.tks}: ${t.rhs.tks}"
       case _: Pat.Arg.SeqWildcard => toks"_*"
 
@@ -573,19 +579,7 @@ private[meta] object inferTokens {
         toks"$params => ${t.tpe.tks}"
 
       // Lit
-      case t: Lit.Bool if t.value =>  toks"true"
-      case t: Lit.Bool if !t.value => toks"false"
-      case t: Lit.Byte =>             mineLitTk(t.value)
-      case t: Lit.Short =>            mineLitTk(t.value)
-      case t: Lit.Int =>              mineLitTk(t.value)
-      case t: Lit.Long =>             mineLitTk(t.value)
-      case t: Lit.Float =>            mineLitTk(t.value)
-      case t: Lit.Double =>           mineLitTk(t.value)
-      case t: Lit.Char =>             mineLitTk(t.value)
-      case t: Lit.String =>           mineLitTk(t.value)
-      case t: Lit.Symbol =>           mineLitTk(t.value)
-      case _: Lit.Null =>             toks"null"
-      case _: Lit.Unit =>             toks"()"
+      case t: Lit => mineLitTk(t.value)
 
       // Member
       case t: Decl.Val =>      toks"${t.mods.`o_o_`}val ${apndDefnDeclPats(t.pats)}: ${t.decltpe.tks}"
