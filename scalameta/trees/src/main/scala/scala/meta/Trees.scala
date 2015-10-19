@@ -193,7 +193,7 @@ package scala.meta.internal.ast {
     }
     @ast class Apply(fun: Term, args: Seq[Arg]) extends Term with Ctor.Call
     @ast class ApplyType(fun: Term, targs: Seq[Type] @nonEmpty) extends Term with Ctor.Call
-    @ast class ApplyInfix(lhs: Term, op: Name, targs: Seq[Type], args: Seq[Arg] @nonEmpty) extends Term
+    @ast class ApplyInfix(lhs: Term, op: Name, targs: Seq[Type], args: Seq[Arg]) extends Term
     @ast class ApplyUnary(op: Name, arg: Term) extends Term {
       require(op.isUnaryOp)
     }
