@@ -4,7 +4,7 @@ package internal.hosts.scalac
 import scala.collection.mutable
 import scala.tools.nsc.{Global, SubComponent}
 import scala.tools.nsc.backend.jvm.{GenBCode => NscGenBCode}
-import scala.meta.internal.hosts.scalac.{PluginBase => ScalahostPlugin}
+import scala.meta.internal.hosts.scalac.{Plugin => ScalahostPlugin}
 
 trait HijackBackend {
   self: ScalahostPlugin =>

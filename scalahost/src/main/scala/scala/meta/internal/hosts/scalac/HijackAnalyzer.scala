@@ -7,7 +7,7 @@ import scala.tools.nsc.plugins.{Plugin => NscPlugin, PluginComponent => NscPlugi
 import scala.collection.mutable
 import scala.tools.nsc.typechecker.{Analyzer => NscAnalyzer}
 import scala.tools.nsc.typechecker.ScalahostAnalyzer
-import scala.meta.internal.hosts.scalac.{PluginBase => ScalahostPlugin}
+import scala.meta.internal.hosts.scalac.{Plugin => ScalahostPlugin}
 import scala.tools.nsc.interpreter.{ReplGlobal => NscReplGlobal}
 import scala.tools.nsc.interactive.{Global => NscInteractiveGlobal, InteractiveAnalyzer => NscInteractiveAnalyzer}
 
