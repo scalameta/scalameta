@@ -133,6 +133,7 @@ This specification describes quasiquote syntax using a markedly condensed notati
  Existential       | `pt"$ptpe forSome { ..$statsnel }"`
  Annotate          | `pt"$ptpe ..@$annotsnel"`
  Placeholder       | `pt"_ >: $tpeopt <: $tpeopt"`
+ Lambda            | `pt"[..$tparamsnel] => $tpe"`
  Literal           | `pt"$lit"` (construction only), `pt"${lit: Lit}"` (also deconstruction)
 
 ## Statements (meta.Stat)

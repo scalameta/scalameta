@@ -405,6 +405,9 @@ package scala.meta.internal.ast {
       @ast class Placeholder(bounds: impl.Type.Bounds) extends Pat.Type {
         require(bounds.lo.nonEmpty || bounds.hi.nonEmpty)
       }
+      @ast class Lambda(quants: Seq[impl.Type.Param], tpe: Pat.Type) extends Pat.Type {
+        require(!tpe.isInstanceOf[Pat.Var.Type] && !tpe.isInstanceOf[Pat.Type.Wildcard])
+      }
     }
   }
 
