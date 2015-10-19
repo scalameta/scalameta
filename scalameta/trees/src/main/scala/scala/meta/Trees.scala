@@ -74,7 +74,7 @@ package scala.meta {
     @branch trait Ref extends Term with api.Ref
     @branch trait Name extends api.Name with Term.Ref with Pat with Param.Name with api.Name.Qualifier
     @branch trait Arg extends Tree
-    @branch trait Param extends Member
+    @branch trait Param extends Member { def name: Term.Param.Name }
     object Param {
       @branch trait Name extends api.Name
     }
@@ -87,7 +87,7 @@ package scala.meta {
     @branch trait Ref extends Type with api.Ref
     @branch trait Name extends api.Name with Type.Ref with Pat.Type.Ref with Param.Name with api.Name.Qualifier
     @branch trait Arg extends Tree
-    @branch trait Param extends Member
+    @branch trait Param extends Member { def name: Type.Param.Name }
     object Param {
       @branch trait Name extends api.Name
     }
@@ -115,13 +115,13 @@ package scala.meta {
 
   @branch trait Lit extends Term with Pat with Type with Pat.Type
 
-  @branch trait Member extends Tree with Scope
+  @branch trait Member extends Tree with Scope { def name: Name }
   object Member {
-    @branch trait Term extends Member
-    @branch trait Type extends Member
+    @branch trait Term extends Member { def name: api.Term.Name }
+    @branch trait Type extends Member { def name: api.Type.Name }
   }
 
-  @branch trait Ctor extends Tree with Member.Term
+  @branch trait Ctor extends Tree with Member { def name: Ctor.Name }
   object Ctor {
     @branch trait Call extends Term
     @branch trait Ref extends Term.Ref with Ctor.Call
@@ -191,19 +191,19 @@ package scala.meta.internal.ast {
     @ast class Interpolate(prefix: Name, parts: Seq[Lit.String] @nonEmpty, args: Seq[Term]) extends Term {
       require(parts.length == args.length + 1)
     }
-    @ast class Apply(fun: Term, args: Seq[Arg]) extends Term with Ctor.Call
+    @ast class Apply(fun: Term, args: Seq[Arg] @nonEmpty) extends Term with Ctor.Call
     @ast class ApplyType(fun: Term, targs: Seq[Type] @nonEmpty) extends Term with Ctor.Call
-    @ast class ApplyInfix(lhs: Term, op: Name, targs: Seq[Type], args: Seq[Arg]) extends Term
+    @ast class ApplyInfix(lhs: Term, op: Name, targs: Seq[Type], args: Seq[Arg] @nonEmpty) extends Term
     @ast class ApplyUnary(op: Name, arg: Term) extends Term {
       require(op.isUnaryOp)
     }
     @ast class Assign(lhs: Term.Ref, rhs: Term) extends Term
-    @ast class Update(fun: Term, argss: Seq[Seq[Arg]], rhs: Term) extends Term
+    @ast class Update(fun: Term, argss: Seq[Seq[Arg]] @nonEmpty, rhs: Term) extends Term
     @ast class Return(expr: Term) extends Term
     @ast class Throw(expr: Term) extends Term
     @ast class Ascribe(expr: Term, decltpe: Type) extends Term
     @ast class Annotate(expr: Term, annots: Seq[Mod.Annot] @nonEmpty) extends Term with Ctor.Call
-    @ast class Tuple(elements: Seq[Term]) extends Term {
+    @ast class Tuple(elements: Seq[Term] @nonEmpty) extends Term {
       // tuple must have more than one element
       // however, this element may be impl.Quasi with "hidden" list of elements inside
       require(elements.length > 1 || (elements.length == 1 && elements.head.isInstanceOf[impl.Quasi]))
@@ -257,7 +257,7 @@ package scala.meta.internal.ast {
     @ast class Apply(tpe: Type, args: Seq[Type] @nonEmpty) extends Type
     @ast class ApplyInfix(lhs: Type, op: Name, rhs: Type) extends Type
     @ast class Function(params: Seq[Type.Arg], res: Type) extends Type
-    @ast class Tuple(elements: Seq[Type]) extends Type {
+    @ast class Tuple(elements: Seq[Type] @nonEmpty) extends Type {
       require(elements.length > 1 || (elements.length == 1 && elements.head.isInstanceOf[impl.Quasi]))
     }
     @ast class Compound(tpes: Seq[Type], refinement: Seq[Stat]) extends Type {
@@ -270,7 +270,7 @@ package scala.meta.internal.ast {
     }
     @ast class Annotate(tpe: Type, annots: Seq[Mod.Annot] @nonEmpty) extends Type
     @ast class Placeholder(bounds: Bounds) extends Type
-    @ast class Lambda(quants: Seq[Type.Param], tpe: Type) extends Type
+    @ast class Lambda(quants: Seq[Type.Param] @nonEmpty, tpe: Type) extends Type
     @ast class Method(paramss: Seq[Seq[Term.Param]], tpe: Type) extends Type
     @ast class Bounds(lo: Option[Type], hi: Option[Type]) extends Tree
     @branch trait Arg extends api.Type.Arg with Tree
@@ -349,7 +349,7 @@ package scala.meta.internal.ast {
     @ast class Alternative(lhs: Pat, rhs: Pat) extends Pat {
       require(lhs.isLegal && rhs.isLegal)
     }
-    @ast class Tuple(elements: Seq[Pat]) extends Pat {
+    @ast class Tuple(elements: Seq[Pat] @nonEmpty) extends Pat {
       require(elements.length > 1 || (elements.length == 1 && elements.head.isInstanceOf[impl.Quasi]))
       require(elements.forall(_.isLegal))
     }
@@ -386,7 +386,7 @@ package scala.meta.internal.ast {
       }
       @ast class ApplyInfix(lhs: Pat.Type, op: impl.Type.Name, rhs: Pat.Type) extends Pat.Type
       @ast class Function(params: Seq[Pat.Type], res: Pat.Type) extends Pat.Type
-      @ast class Tuple(elements: Seq[Pat.Type]) extends Pat.Type {
+      @ast class Tuple(elements: Seq[Pat.Type] @nonEmpty) extends Pat.Type {
         require(elements.length > 1 || (elements.length == 1 && elements.head.isInstanceOf[impl.Quasi]))
       }
       @ast class Compound(tpes: Seq[Pat.Type], refinement: Seq[Stat]) extends Pat.Type {
@@ -404,9 +404,6 @@ package scala.meta.internal.ast {
       }
       @ast class Placeholder(bounds: impl.Type.Bounds) extends Pat.Type {
         require(bounds.lo.nonEmpty || bounds.hi.nonEmpty)
-      }
-      @ast class Lambda(quants: Seq[impl.Type.Param], tpe: Pat.Type) extends Pat.Type {
-        require(!tpe.isInstanceOf[Pat.Var.Type] && !tpe.isInstanceOf[Pat.Type.Wildcard])
       }
     }
   }
@@ -513,6 +510,10 @@ package scala.meta.internal.ast {
     require(ref.isQualId)
     // TODO: hardcoded in the @ast macro, find out a better way
     // require(stats.forall(_.isTopLevelStat))
+    def name: Term.Name = ref match {
+      case name: Term.Name => name
+      case Term.Select(_, name: Term.Name) => name
+    }
   }
   object Pkg {
     @ast class Object(mods: Seq[Mod], name: Term.Name, ctor: Ctor.Primary, templ: Template)
@@ -522,7 +523,7 @@ package scala.meta.internal.ast {
     }
   }
 
-  @branch trait Ctor extends Tree with Member.Term with api.Ctor
+  @branch trait Ctor extends Tree with Member with api.Ctor
   object Ctor {
     @branch trait Call extends impl.Term with api.Ctor.Call
     @ast class Primary(mods: Seq[Mod],

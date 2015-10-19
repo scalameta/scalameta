@@ -11,7 +11,7 @@ import scala.meta.prettyprinters._
 import scala.meta.internal.ast.mergeTrees
 import scala.meta.internal.ast.MergeException
 import scala.meta.internal.hosts.scalac.converters.ConvertException
-import scala.meta.internal.hosts.scalac.Proxy
+import scala.meta.internal.hosts.scalac.Adapter
 import scala.reflect.internal.Phase
 import scala.tools.cmd.CommandLineParser
 import scala.tools.nsc.{Global, CompilerCommand, Settings}
@@ -20,9 +20,11 @@ import scala.tools.nsc.reporters.StoreReporter
 class ReflectToMetaSuite extends FunSuite {
   val g: Global = {
     def fail(msg: String) = sys.error(s"ReflectToMeta initialization failed: $msg")
-    val classpath = System.getProperty("sbt.paths.scalahost.classes")
-    if (classpath == null) fail("-Dsbt.paths.scalahost.classes is not set")
-    val options = "-cp " + classpath
+    val classpath = System.getProperty("sbt.paths.scalahost.test.classes")
+    if (classpath == null) fail("-Dsbt.paths.scalahost.test.classes is not set")
+    val pluginpath = System.getProperty("sbt.paths.scalahost.compile.jar")
+    if (pluginpath == null) fail("-Dsbt.paths.scalahost.compile.jar is not set")
+    val options = "-cp " + classpath + " -Xplugin:" + pluginpath + ":" + classpath + " -Xplugin-require:scalahost"
     val args = CommandLineParser.tokenize(options)
     val emptySettings = new Settings(error => fail(s"couldn't apply settings because $error"))
     val reporter = new StoreReporter()
@@ -55,8 +57,8 @@ class ReflectToMetaSuite extends FunSuite {
     unit.body
   }
 
-  val proxy: Proxy[g.type] = Proxy[g.type](g)
-  import proxy.conversions._
+  val adapter: Adapter[g.type] = Adapter[g.type](g)
+  import adapter.conversions._
 
   def scheduleReflectToMetaTest(testDir: File): Unit = {
     def resource(label: String) = testDir.getAbsolutePath + File.separatorChar + label
@@ -138,8 +140,8 @@ class ReflectToMetaSuite extends FunSuite {
     }
   }
 
-  val resourceDir = new File(System.getProperty("sbt.paths.scalahost.resources"))
-  if (!resourceDir.exists) sys.error(s"ReflectToMeta initialization failed: -Dsbt.paths.scalahost.resources is not set")
+  val resourceDir = new File(System.getProperty("sbt.paths.scalahost.test.resources"))
+  if (!resourceDir.exists) sys.error(s"ReflectToMeta initialization failed: -Dsbt.paths.scalahost.test.resources is not set")
   val testDirs = resourceDir.listFiles().filter(_.listFiles().nonEmpty)
   testDirs.foreach(scheduleReflectToMetaTest)
 }

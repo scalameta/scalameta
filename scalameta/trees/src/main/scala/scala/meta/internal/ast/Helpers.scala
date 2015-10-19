@@ -201,5 +201,11 @@ private[meta] object Helpers {
       case _ => false
     }
     def isLegal: Boolean = !isIllegal
+    def firstNonPatParent: Option[Tree] = {
+      tree.parent match {
+        case Some(pat: Pat) => pat.firstNonPatParent
+        case other => other.map(_.require[Tree])
+      }
+    }
   }
 }

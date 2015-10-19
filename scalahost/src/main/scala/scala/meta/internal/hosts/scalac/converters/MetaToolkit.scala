@@ -7,6 +7,7 @@ import scala.collection.mutable
 import scala.{meta => mapi}
 import scala.meta.internal.{ast => impl}
 import scala.meta.internal.ast._
+import scala.meta.internal.ast.Helpers._
 import scala.meta.internal.semantic._
 import scala.meta.{SemanticException, Semantics}
 import scala.meta.internal.prettyprinters._
@@ -51,11 +52,8 @@ trait MetaToolkit {
   }
 
   implicit class RichMetaToolkitMember(member: mapi.Member) {
-    private def firstNonPatParent(pat: Pat): Option[Tree] = {
-      pat.parent.collect{case pat: Pat => pat}.flatMap(firstNonPatParent).orElse(pat.parent.map(_.require[Tree]))
-    }
     def stat: Stat = member match {
-      case tree: Pat.Var.Term => firstNonPatParent(tree).get.require[Stat]
+      case tree: Pat.Var.Term => tree.firstNonPatParent.get.require[Stat]
       case stat: Stat => stat
       case _ => sys.error(s"unsupported member ${member.productPrefix}: $member")
     }

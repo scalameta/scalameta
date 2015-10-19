@@ -21,10 +21,16 @@ class BranchMacros(val c: Context) extends AstReflection {
   val FlagsPackage = q"_root_.scala.meta.internal.flags.`package`"
   def impl(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
-      def is(abbrev: String) = c.internal.enclosingOwner.fullName.toString + "." + cdef.name.toString == "scala.meta.internal.ast." + abbrev
+      def fullName = c.internal.enclosingOwner.fullName.toString + "." + cdef.name.toString
+      def abbrevName = fullName.stripPrefix("scala.meta.internal.ast.").stripPrefix("scala.meta.")
+      def isInternal = fullName.startsWith("scala.meta.internal.ast.")
+      def is(abbrev: String) = abbrevName == abbrev
       def isQuasi = cdef.name.toString == "Quasi"
-      def isName = is("Name") || is("Term.Param.Name") || is("Type.Param.Name")
-      def isTerm = is("Term") || is("Lit") || is("Term.Ref") || is("Ctor.Ref") || is("Ctor.Call")
+      def isName = isInternal && (is("Name") || is("Term.Param.Name") || is("Type.Param.Name"))
+      def isTerm = isInternal && (is("Term") || is("Lit") || is("Term.Ref") || is("Ctor.Ref") || is("Ctor.Call"))
+      def isMember = is("Term.Param") || is("Type.Param") || is("Pat.Var.Term") || is("Pat.Var.Type") ||
+                     is("Member") || is("Member.Term") || is("Member.Type") ||
+                     is("Ctor") || is("Ctor.Primary") || is("Ctor.Secondary")
       val ClassDef(mods @ Modifiers(flags, privateWithin, anns), name, tparams, Template(parents, self, stats)) = cdef
       val ModuleDef(mmods, mname, Template(mparents, mself, mstats)) = mdef
       val stats1 = ListBuffer[Tree]() ++ stats
@@ -61,6 +67,9 @@ class BranchMacros(val c: Context) extends AstReflection {
           DefDef(mods1, termName, tparams, List(params.toList), tpt, rhs)
         }
         var qstats = List(q"def pt: _root_.java.lang.Class[_] = _root_.org.scalameta.runtime.arrayClass(_root_.scala.Predef.classOf[$name], this.rank)")
+        if (isMember) {
+          qstats :+= quasigetter(NoMods, "name")
+        }
         if (isName) {
           qstats :+= quasigetter(NoMods, "value")
           qstats :+= quasigetter(PrivateMeta, "env")

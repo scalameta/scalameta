@@ -3,6 +3,8 @@ package internal
 
 package object quasiquotes {
   implicit class XtensionQuasiquoteDebug(debug: org.scalameta.debug.Debug.type) {
-    def quasiquote = sys.props("quasiquote.debug") != null
+    def logQuasiquote(op: => Unit): Unit = {
+      if (sys.props("quasiquote.debug") != null) debug.log(op)
+    }
   }
 }

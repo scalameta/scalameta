@@ -96,7 +96,7 @@ class LiftableMacros(val c: Context) extends AdtReflection {
         $mainModule.$mainMethod.apply($mainParam)
       })
     """
-    if (Debug.adt || Debug.ast) println(result)
+    Debug.logAst(println(result))
     result
   }
 }

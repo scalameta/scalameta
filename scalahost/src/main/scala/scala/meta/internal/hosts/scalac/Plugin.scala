@@ -8,8 +8,13 @@ import scala.meta.internal.hosts.scalac.reflect._
 trait PluginBase extends NscPlugin
                     with ConvertPhase
                     with HijackBackend
+                    with HijackAnalyzer
+                    with ParadiseCompat
                     with PluginSettings
                     with GlobalToolkit {
+  val (newAnalyzer, oldAnalyzer) = hijackAnalyzer()
+  if (global.analyzer ne newAnalyzer) sys.error("failed to hijack analyzer")
+  ifNecessaryReenableMacroParadise(oldAnalyzer)
   val (newBackend, oldBackend) = hijackBackend()
   // TODO: looks like it doesn't get hijacked cleanly...
   // if (global.genBCode ne newBackend) sys.error("failed to hijack backend")

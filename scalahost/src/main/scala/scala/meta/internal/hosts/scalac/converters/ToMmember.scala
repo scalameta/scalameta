@@ -380,7 +380,7 @@ trait ToMmember extends GlobalToolkit with MetaToolkit {
           case _: l.SecondaryCtor => m.Ctor.Secondary(mmods, mname.require[m.Ctor.Name], mvparamss, mbody)
           case _: l.TermBind => m.Pat.Var.Term(mname.require[m.Term.Name])
           case _: l.TypeBind => m.Pat.Var.Type(mname.require[m.Type.Name])
-          case _: l.TermParameter => m.Term.Param(mmods, mname.require[m.Term.Param.Name], Some(mtpearg), mmaybeDefault)
+          case _: l.TermParameter => m.Term.Param(mmods, mname.require[m.Term.Param.Name], Some(mtpearg), mmaybeDefault).withAttrs(mtpearg)
           case _: l.TypeParameter => m.Type.Param(mmods, mname.require[m.Type.Param.Name], mtparams, mtpebounds, mviewbounds, mcontextbounds)
           case _ => throw new ConvertException(lsym, s"unsupported symbol $lsym, designation = ${gsym.getClass}, flags = ${gsym.flags}")
         }

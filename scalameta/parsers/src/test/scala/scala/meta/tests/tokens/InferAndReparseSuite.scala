@@ -17,7 +17,7 @@ package tokens
 // import scala.util.{ Try, Failure, Success }
 //
 // class InferAndReparseSuite extends InferSuite {
-//   var dir = new File(new File(System.getProperty("sbt.paths.tests.sources")).getAbsolutePath)
+//   var dir = new File(new File(System.getProperty("???")).getAbsolutePath)
 //   def isProjectRoot(dir: File) = dir != null && new File(dir.getAbsolutePath + File.separatorChar + "project" + File.separatorChar + "build.scala").exists
 //   while (dir != null && !isProjectRoot(dir)) dir = dir.getParentFile
 //   test("ProjectDir (" + dir.getAbsolutePath + ")")(assert(isProjectRoot(dir)))

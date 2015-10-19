@@ -13,7 +13,7 @@
 // import scala.meta.internal.ui.Positions
 //
 // class BootstrapSuite extends ParseSuite {
-//   var dir = new File(new File(System.getProperty("sbt.paths.scalameta.sources")).getAbsolutePath)
+//   var dir = new File(new File(System.getProperty("???")).getAbsolutePath)
 //   def isProjectRoot(dir: File) = dir != null && new File(dir.getAbsolutePath + File.separatorChar + "project" + File.separatorChar + "build.scala").exists
 //   while (dir != null && !isProjectRoot(dir)) dir = dir.getParentFile
 //   test("ProjectDir (" + dir.getAbsolutePath + ")")(assert(isProjectRoot(dir)))
