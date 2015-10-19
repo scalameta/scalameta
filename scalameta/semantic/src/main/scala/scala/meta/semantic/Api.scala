@@ -163,7 +163,6 @@ private[meta] trait Api {
 
   implicit class XtensionSemanticType(tree: Type) {
     @hosted def <:<(other: Type): Boolean = implicitly[SemanticContext].isSubtype(tree, other)
-    @hosted def weak_<:<(other: Type): Boolean = ???
     @hosted def =:=(other: Type): Boolean = (tree =:= other) && (other =:= tree)
     @hosted def widen: Type = implicitly[SemanticContext].widen(tree)
     @hosted def dealias: Type = implicitly[SemanticContext].dealias(tree)
