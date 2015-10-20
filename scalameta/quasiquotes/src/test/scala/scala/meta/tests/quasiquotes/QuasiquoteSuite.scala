@@ -2018,11 +2018,11 @@ class QuasiquoteSuite extends FunSuite {
   }
 
   test("mod\"val\"") {
-    assert(mod"val".show[Structure] === "Mod.ValParam()")
+    assert(mod"valparam".show[Structure] === "Mod.ValParam()")
   }
 
   test("mod\"var\"") {
-    assert(mod"var".show[Structure] === "Mod.VarParam()")
+    assert(mod"varparam".show[Structure] === "Mod.VarParam()")
   }
 
   test("1 enumerator\"$pat <- $expr\"") {

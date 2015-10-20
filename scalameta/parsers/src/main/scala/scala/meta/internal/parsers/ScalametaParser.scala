@@ -90,25 +90,29 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
         case Nil => unreachable(debug(input, dialect))
       }
     }
+    def fail() = parser.reporter.syntaxError(s"modifier expected but ${parser.token.name} found", at = parser.token)
     parseRule(parser => parser.autoPos(parser.token match {
-      case _: Unquote          => unquote[Mod.Quasi]
-      case _: `@`              => parser.annot()
-      case _: `private`        => parser.accessModifier()
-      case _: `protected`      => parser.accessModifier()
-      case _: `implicit`       => parser.next(); Mod.Implicit()
-      case _: `final`          => parser.next(); Mod.Final()
-      case _: `sealed`         => parser.next(); Mod.Sealed()
-      case _: `override`       => parser.next(); Mod.Override()
-      case _: `case`           => parser.next(); Mod.Case()
-      case _: `abstract`       => parser.next(); Mod.Abstract()
-      case _ if isIdentOf("+") => parser.next(); Mod.Covariant()
-      case _ if isIdentOf("-") => parser.next(); Mod.Contravariant()
-      case _: `lazy`           => parser.next(); Mod.Lazy()
-      case _: `val`            => parser.next(); Mod.ValParam()
-      case _: `var`            => parser.next(); Mod.VarParam()
-      case _                   => parser.reporter.syntaxError(s"modifier expected but ${parser.token.name} found", at = parser.token)
+      case _: Unquote                                 => unquote[Mod.Quasi]
+      case _: `@`                                     => parser.annot()
+      case _: `private`                               => parser.accessModifier()
+      case _: `protected`                             => parser.accessModifier()
+      case _: `implicit`                              => parser.next(); Mod.Implicit()
+      case _: `final`                                 => parser.next(); Mod.Final()
+      case _: `sealed`                                => parser.next(); Mod.Sealed()
+      case _: `override`                              => parser.next(); Mod.Override()
+      case _: `case`                                  => parser.next(); Mod.Case()
+      case _: `abstract`                              => parser.next(); Mod.Abstract()
+      case _ if isIdentOf("+")                        => parser.next(); Mod.Covariant()
+      case _ if isIdentOf("-")                        => parser.next(); Mod.Contravariant()
+      case _: `lazy`                                  => parser.next(); Mod.Lazy()
+      case _: `val` if !inQuasiquote                  => parser.next(); Mod.ValParam()
+      case _: `var` if !inQuasiquote                  => parser.next(); Mod.VarParam()
+      case _ if isIdentOf("valparam") && inQuasiquote => parser.next(); Mod.ValParam()
+      case _ if isIdentOf("varparam") && inQuasiquote => parser.next(); Mod.VarParam()
+      case _                                          => fail()
     }))
   }
+  def parseQuasiquoteMod(): Mod = parseMod() // NOTE: special treatment for mod"valparam" and likes is implemented directly in `parseMod`
   def parseEnumerator(): Enumerator = {
     parseRule(_.enumerator(isFirst = false, allowNestedIf = false) match {
       case enumerator :: Nil => enumerator

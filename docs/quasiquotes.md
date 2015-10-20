@@ -207,8 +207,8 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
  Covariant        | `mod"+"`
  Contravariant    | `mod"-"`
  Lazy             | `mod"lazy"`
- Val              | `mod"val"`
- Var              | `mod"var"`
+ Val Param        | `mod"valparam"`
+ Var Param        | `mod"varparam"`
 
 ## Enumerators (meta.Enum)
 
