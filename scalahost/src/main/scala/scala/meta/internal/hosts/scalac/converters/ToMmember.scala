@@ -116,8 +116,7 @@ trait ToMmember extends ReflectToolkit with MetaToolkit {
               if (gvparams.forall(gsym => gvparamss.flatten.exists(_ == gsym))) loop(gret)
               else gtpe
             case g.PolyType(gtparams, gret) =>
-              if (gtparams.forall(gsym => gtparams.exists(_ == gsym))) loop(gret)
-              else gret
+              loop(gret)
             case g.ExistentialType(quants, gtpe) =>
               // NOTE: apparently, sometimes we can get stuff like `ExistentialType(..., NullaryMethodType(...))`
               // see Enumeration.vmap for an example
