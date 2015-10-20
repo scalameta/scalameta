@@ -320,6 +320,18 @@ class ScalaSuite extends InferSuite {
     assert(tree.show[Syntax] === "List(xs @ _*)")
   }
 
+  test("case List[t](xs @ _*)") {
+    val tree = pat("List[t](xs @ _*)")
+    assert(tree.show[Structure] === "Pat.Extract(Term.Name(\"List\"), Seq(Pat.Var.Type(Type.Name(\"t\"))), Seq(Pat.Bind(Pat.Var.Term(Term.Name(\"xs\")), Pat.Arg.SeqWildcard())))")
+    assert(tree.show[Syntax] === "List[t](xs @ _*)")
+  }
+
+  test("case List[_](xs @ _*)") {
+    val tree = pat("List[_](xs @ _*)")
+    assert(tree.show[Structure] === "Pat.Extract(Term.Name(\"List\"), Seq(Pat.Type.Wildcard()), Seq(Pat.Bind(Pat.Var.Term(Term.Name(\"xs\")), Pat.Arg.SeqWildcard())))")
+    assert(tree.show[Syntax] === "List[_](xs @ _*)")
+  }
+
   // TODO: fixme
   // test("package foo; class C; package baz { class D }") {
   //   val tree = source("package foo; class C; package baz { class D }")

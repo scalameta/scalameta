@@ -14,8 +14,8 @@ class ReflectionSuite extends AstSuite {
   // but please deal with that (or come up with a more effective way of testing AstReflection)
   test("root") {
     assert(symbolOf[scala.meta.Tree].isRoot)
-    assert(symbolOf[scala.meta.Tree].asRoot.allBranches.length === 72)
-    assert(symbolOf[scala.meta.Tree].asRoot.allLeafs.length === 318)
+    assert(symbolOf[scala.meta.Tree].asRoot.allBranches.length === 73)
+    assert(symbolOf[scala.meta.Tree].asRoot.allLeafs.length === 319)
   }
 
   test("If") {
@@ -50,6 +50,7 @@ class ReflectionSuite extends AstSuite {
       |scala.meta.Ctor.Ref                              => scala.meta.Ctor.Ref
       |scala.meta.Enumerator                            => scala.meta.Enumerator
       |scala.meta.Importee                              => scala.meta.Importee
+      |scala.meta.Importer                              => scala.meta.Importer
       |scala.meta.Lit                                   => scala.meta.Lit
       |scala.meta.Member                                => scala.meta.Member
       |scala.meta.Member.Term                           => scala.meta.Member.Term
@@ -114,7 +115,7 @@ class ReflectionSuite extends AstSuite {
       |scala.meta.internal.ast.Enumerator.Guard         => scala.meta.Enumerator
       |scala.meta.internal.ast.Enumerator.Val           => scala.meta.Enumerator
       |scala.meta.internal.ast.Import                   => scala.meta.Stat
-      |scala.meta.internal.ast.Import.Clause            => scala.meta.Tree
+      |scala.meta.internal.ast.Import.Clause            => scala.meta.Importer
       |scala.meta.internal.ast.Import.Selector          => scala.meta.Importee
       |scala.meta.internal.ast.Import.Selector.Name     => scala.meta.Importee
       |scala.meta.internal.ast.Import.Selector.Rename   => scala.meta.Importee
@@ -337,9 +338,6 @@ class ReflectionSuite extends AstSuite {
       |field Defn.Object.ctor: scala.meta.internal.ast.Ctor.Primary
       |field Defn.Trait.ctor: scala.meta.internal.ast.Ctor.Primary
       |field Pkg.Object.ctor: scala.meta.internal.ast.Ctor.Primary
-      |
-      |scala.meta.internal.ast.Import.Clause -> scala.meta.Tree
-      |field Import.clauses: scala.collection.immutable.Seq[scala.meta.internal.ast.Import.Clause] @org.scalameta.invariants.nonEmpty
       |
     """.trim.stripMargin)
   }

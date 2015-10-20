@@ -25,6 +25,7 @@ private[meta] trait Api {
   @quasiquote[Template]('template)     implicit class XtensionQuasiquoteTemplate(ctx: StringContext) extends QuasiquoteParsers
   @quasiquote[Mod]('mod)               implicit class XtensionQuasiquoteMod(ctx: StringContext) extends QuasiquoteParsers
   @quasiquote[Enumerator]('enumerator) implicit class XtensionQuasiquoteEnumerator(ctx: StringContext) extends QuasiquoteParsers
+  @quasiquote[Importer]('importer)     implicit class XtensionQuasiquoteImporter(ctx: StringContext) extends QuasiquoteParsers
   @quasiquote[Importee]('importee)     implicit class XtensionQuasiquoteImportee(ctx: StringContext) extends QuasiquoteParsers
   @quasiquote[Source]('source)         implicit class XtensionQuasiquoteSource(ctx: StringContext) extends QuasiquoteParsers
 }

@@ -131,7 +131,7 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
 ------------|----------------------------
  Expression | `q"$expr"` (construction only), `q"${expr: Term}"` (also deconstruction)
  Member     | `q"$member"` (construction only), `q"${member: Member}"` (also deconstruction)
- Import     | `q"import ..($ref.{..$importeesnel})nel"`
+ Import     | `q"import ..$importersnel"`
 
 ## Members (meta.Member)
 
@@ -207,8 +207,8 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
  Covariant        | `mod"+"`
  Contravariant    | `mod"-"`
  Lazy             | `mod"lazy"`
- Val              | `mod"val"`
- Var              | `mod"var"`
+ Val Param        | `mod"valparam"`
+ Var Param        | `mod"varparam"`
 
 ## Enumerators (meta.Enum)
 
@@ -217,6 +217,12 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
  Generator | `enumerator"$pat <- $expr"`
  Value     | `enumerator"$pat = $expr"`
  Guard     | `enumerator"if $expr"`
+
+## Importer (meta.Importer)
+
+           | Quasiquote
+-----------|---------------------------
+ Importer  | `importer"$ref.{..$importeesnel}"`
 
 ## Importees (meta.Importee)
 
@@ -355,6 +361,7 @@ The tables above define quasiquote syntax using a notation called *quasiquote te
  meta.Pat.Var.Type        | `$ptname`     | `pt`
  meta.Pat.Type            | `$ptpe`       | `pt`
  meta.Importee            | `$importee`   | `importee`
+ meta.Importer            | `$importer`   | `importer`
  meta.Stat                | `$stat`       | `q`
  meta.Template            | `$template`   | `template`
  meta.Term                | `$expr`       | `q`
