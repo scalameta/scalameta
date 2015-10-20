@@ -132,32 +132,64 @@ class QuasiquoteSuite extends FunSuite {
     assert(q"def x = ${body: Int}".show[Structure] === "Defn.Def(Nil, Term.Name(\"x\"), Nil, Nil, None, Lit(42))")
   }
 
-  test("1 q\"$qname.this\"") {
+  test("1 q\"$qname.this.$id\"") {
     val q"$qname.this.$x" = q"QuasiquoteSuite.this.x"
     assert(qname.show[Structure] === "Name.Indeterminate(\"QuasiquoteSuite\")")
     assert(x.show[Structure] === "Term.Name(\"x\")")
   }
 
-  test("2 q\"$qname.this\"") {
+  test("2 q\"$qname.this.$id\"") {
     val qname = q"A"
     val x = q"B"
     // inconsistency with the test above planned, since Name.Indeterminate can't be constructed directly
     assert(q"$qname.this.$x".show[Structure] === "Term.Select(Term.This(Term.Name(\"A\")), Term.Name(\"B\"))")
   }
 
-  test("1 q\"$qname.super[$qname]\"") {
+  test("1 this variants") {
+    val q"this" = q"this"
+    val q"$clazz.this" = q"C.this"
+    assert(clazz.show[Structure] === "Name.Indeterminate(\"C\")")
+  }
+
+  test("2 this variants") {
+    val clazz = t"C"
+    assert(q"this".show[Structure] === "Term.This(Name.Anonymous())")
+    assert(q"$clazz.this".show[Structure] === "Term.This(Type.Name(\"C\"))")
+  }
+
+  test("1 q\"$qname.super[$qname].$id\"") {
     val q"$clazz.super[$tpe].$id" = q"A.super[B].x"
     assert(clazz.show[Structure] === "Name.Indeterminate(\"A\")")
     assert(tpe.show[Structure] === "Name.Indeterminate(\"B\")")
     assert(id.show[Structure] === "Term.Name(\"x\")")
   }
 
-  test("2 q\"$qname.super[$qname]\"") {
+  test("2 q\"$qname.super[$qname].$id\"") {
     val clazz = q"A"
     val tpe = t"B"
     val id = q"x"
     // inconsistency with the test above planned, since Name.Indeterminate can't be constructed directly
     assert(q"$clazz.super[$tpe].m".show[Structure] === "Term.Select(Term.Super(Term.Name(\"A\"), Type.Name(\"B\")), Term.Name(\"m\"))")
+  }
+
+  test("1 super variants") {
+    val q"super" = q"super"
+    val q"super[$tpe1]" = q"super[M]"
+    val q"$clazz1.super" = q"C.super"
+    val q"$clazz2.super[$tpe2]" = q"C.super[M]"
+    assert(tpe1.show[Structure] === "Name.Indeterminate(\"M\")")
+    assert(tpe2.show[Structure] === "Name.Indeterminate(\"M\")")
+    assert(clazz1.show[Structure] === "Name.Indeterminate(\"C\")")
+    assert(clazz2.show[Structure] === "Name.Indeterminate(\"C\")")
+  }
+
+  test("2 super variants") {
+    val clazz = t"C"
+    val tpe = t"M"
+    assert(q"super".show[Structure] === "Term.Super(Name.Anonymous(), Name.Anonymous())")
+    assert(q"super[$tpe]".show[Structure] === "Term.Super(Name.Anonymous(), Type.Name(\"M\"))")
+    assert(q"$clazz.super".show[Structure] === "Term.Super(Type.Name(\"C\"), Name.Anonymous())")
+    assert(q"$clazz.super[$tpe]".show[Structure] === "Term.Super(Type.Name(\"C\"), Type.Name(\"M\"))")
   }
 
   test("1 q\"$expr.$name\"") {

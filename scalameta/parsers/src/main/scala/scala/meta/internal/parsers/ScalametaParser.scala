@@ -30,6 +30,7 @@ import org.scalameta.reflection._
 private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dialect) { parser =>
   // implementation restrictions wrt various dialect properties
   require(Set("@", ":").contains(dialect.bindToSeqWildcardDesignator))
+  def inQuasiquote = dialect.isInstanceOf[scala.meta.dialects.Quasiquote]
 
 /* ------------- PARSER ENTRY POINTS -------------------------------------------- */
 
@@ -64,6 +65,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     case stats if stats.forall(_.isTopLevelStat) => Source(stats)
     case other => reporter.syntaxError("these statements can't be mixed together", at = parserTokens.head)
   })
+  def parseQuasiquoteStat(): Stat = parseStat() // NOTE: special treatment for q"super" and likes is implemented directly in `path`
   def parseQuasiquoteCtor(): Ctor = parseRule(_.quasiquoteCtor())
   def parseTerm(): Term = parseRule(_.expr())
   def parseTermArg(): Term.Arg = parseRule(_.argumentExpr())
@@ -542,31 +544,35 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   def ellipsis[T <: Tree : AstMetadata](rank: Int, body: => T, extraSkip: => Unit = {}): T = autoPos {
     token match {
       case ellipsis: Ellipsis =>
-        if (ellipsis.rank != rank) {
-          val errorMessage = s"rank mismatch when unquoting;$EOL found   : ${"." * (ellipsis.rank + 1)}$EOL required: ${"." * (rank + 1)}"
-          syntaxError(errorMessage, at = ellipsis)
-        } else {
-          next()
-          extraSkip
-          val tree = {
-            val result = token match {
-              case _: `(` => inParens(body)
-              case _: `{` => inBraces(body)
-              case _ => body
+        if (inQuasiquote) {
+          if (ellipsis.rank != rank) {
+            val errorMessage = s"rank mismatch when unquoting;$EOL found   : ${"." * (ellipsis.rank + 1)}$EOL required: ${"." * (rank + 1)}"
+            syntaxError(errorMessage, at = ellipsis)
+          } else {
+            next()
+            extraSkip
+            val tree = {
+              val result = token match {
+                case _: `(` => inParens(body)
+                case _: `{` => inBraces(body)
+                case _ => body
+              }
+              result match {
+                case quasi: Quasi =>
+                  // NOTE: In the case of an unquote nested directly under ellipsis, we get a bit of a mixup.
+                  // Unquote's pt may not be directly equal unwrapped ellipsis's pt, but be its refinement instead.
+                  // For example, in `new { ..$stats }`, ellipsis's pt is Seq[Stat], but quasi's pt is Term.
+                  // This is an artifact of the current implementation, so we just need to keep it mind and work around it.
+                  require(classTag[T].runtimeClass.isAssignableFrom(quasi.pt) && debug(ellipsis, result, result.show[Structure]))
+                  atPos(quasi, quasi)(implicitly[AstMetadata[T]].quasi(quasi.rank, quasi.tree))
+                case other =>
+                  other
+              }
             }
-            result match {
-              case quasi: Quasi =>
-                // NOTE: In the case of an unquote nested directly under ellipsis, we get a bit of a mixup.
-                // Unquote's pt may not be directly equal unwrapped ellipsis's pt, but be its refinement instead.
-                // For example, in `new { ..$stats }`, ellipsis's pt is Seq[Stat], but quasi's pt is Term.
-                // This is an artifact of the current implementation, so we just need to keep it mind and work around it.
-                require(classTag[T].runtimeClass.isAssignableFrom(quasi.pt) && debug(ellipsis, result, result.show[Structure]))
-                atPos(quasi, quasi)(implicitly[AstMetadata[T]].quasi(quasi.rank, quasi.tree))
-              case other =>
-                other
-            }
+            implicitly[AstMetadata[T]].quasi(rank, tree)
           }
-          implicitly[AstMetadata[T]].quasi(rank, tree)
+        } else {
+          syntaxError(s"unexpected token for $dialect", at = ellipsis)
         }
       case _ =>
         unreachable(debug(token))
@@ -576,11 +582,15 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   def unquote[T <: Tree : AstMetadata](advance: Boolean = true): T = autoPos {
     token match {
       case unquote: Unquote =>
-        if (advance) {
-          next()
-          implicitly[AstMetadata[T]].quasi(0, unquote.tree)
-        } else ahead {
-          implicitly[AstMetadata[T]].quasi(0, unquote.tree)
+        if (inQuasiquote) {
+          if (advance) {
+            next()
+            implicitly[AstMetadata[T]].quasi(0, unquote.tree)
+          } else ahead {
+            implicitly[AstMetadata[T]].quasi(0, unquote.tree)
+          }
+        } else {
+          syntaxError(s"unexpected token for $dialect", at = unquote)
         }
       case _ =>
         unreachable(debug(token))
@@ -1132,6 +1142,8 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
    */
   // TODO: this has to be rewritten
   def path(thisOK: Boolean = true): Term.Ref = {
+    val startsAtBof = token.prev.isInstanceOf[BOF]
+    def endsAtEof = token.isInstanceOf[EOF]
     def stop = token.isNot[`.`] || ahead { token.isNot[`this`] && token.isNot[`super`] && !token.is[Ident] && !token.is[Unquote] }
     if (token.is[`this`]) {
       val anonqual = atPos(in.tokenPos, in.prevTokenPos)(Name.Anonymous())
@@ -1146,6 +1158,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
       val anonqual = atPos(in.tokenPos, in.prevTokenPos)(Name.Anonymous())
       next()
       val superp = atPos(in.prevTokenPos, auto)(Term.Super(anonqual, mixinQualifier()))
+      if (startsAtBof && endsAtEof && inQuasiquote) return superp
       accept[`.`]
       val supersel = atPos(superp, auto)(Term.Select(superp, termName()))
       if (stop) supersel
@@ -1177,6 +1190,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
             case name => atPos(name, name)(Name.Indeterminate(name.value))
           }
           val superp = atPos(name, auto)(Term.Super(qual, mixinQualifier()))
+          if (startsAtBof && endsAtEof && inQuasiquote) return superp
           accept[`.`]
           val supersel = atPos(superp, auto)(Term.Select(superp, termName()))
           if (stop) supersel
