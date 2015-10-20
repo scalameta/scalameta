@@ -366,7 +366,7 @@ package scala.meta.internal.ast {
       require(elements.length > 1 || (elements.length == 1 && elements.head.isInstanceOf[impl.Quasi]))
       require(elements.forall(_.isLegal))
     }
-    @ast class Extract(ref: Term.Ref, targs: Seq[impl.Type], args: Seq[Pat.Arg]) extends Pat {
+    @ast class Extract(ref: Term.Ref, targs: Seq[impl.Pat.Type], args: Seq[Pat.Arg]) extends Pat {
       require(ref.isStableId)
       require(args.forall(_.isLegal))
     }

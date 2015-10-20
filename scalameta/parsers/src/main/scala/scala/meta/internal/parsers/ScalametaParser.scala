@@ -1056,32 +1056,60 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
 
     // TODO: I have a feeling that we no longer need PatternContextSensitive
     // now that we have Pat.Type separate from Type
-    def patternTyp(): Pat.Type = {
-      def convert(tpe: Type): Pat.Type = {
-        tpe match {
-          case tpe @ Type.Name(value) if value(0).isLower => atPos(tpe, tpe)(Pat.Var.Type(tpe))
-          case Type.Placeholder(Type.Bounds(None, None)) => atPos(tpe, tpe)(Pat.Type.Wildcard())
-          case _ => loop(tpe)
-        }
-      }
-      def loop(tpe: Type): Pat.Type = tpe match {
-        case q: Type.Quasi => q.become[Pat.Type.Quasi]
-        case tpe: Type.Name => tpe
-        case tpe: Type.Select => tpe
-        case Type.Project(qual, name) => atPos(tpe, tpe)(Pat.Type.Project(loop(qual), name))
-        case tpe: Type.Singleton => tpe
-        case Type.Apply(underlying, args) => atPos(tpe, tpe)(Pat.Type.Apply(loop(underlying), args.map(convert)))
-        case Type.ApplyInfix(lhs, op, rhs) => atPos(tpe, tpe)(Pat.Type.ApplyInfix(loop(lhs), op, loop(rhs)))
-        case Type.Function(params, res) => atPos(tpe, tpe)(Pat.Type.Function(params.map {
-          case q @ Type.Arg.Quasi(1, Type.Arg.Quasi(0, _)) => q.become[Pat.Type.Quasi]
-          case p => convert(p.require[Type])
-        }, loop(res)))
-        case Type.Tuple(elements) => atPos(tpe, tpe)(Pat.Type.Tuple(elements.map(convert)))
-        case Type.Compound(tpes, refinement) => atPos(tpe, tpe)(Pat.Type.Compound(tpes.map(loop), refinement))
-        case Type.Existential(underlying, quants) => atPos(tpe, tpe)(Pat.Type.Existential(loop(underlying), quants))
-        case Type.Annotate(underlying, annots) => atPos(tpe, tpe)(Pat.Type.Annotate(loop(underlying), annots))
-        case Type.Placeholder(bounds) => atPos(tpe, tpe)(Pat.Type.Placeholder(bounds))
-        case tpe: Lit => tpe
+    def patternTyp(allowImmediateTypevars: Boolean): Pat.Type = {
+      def loop(tpe: Type, convertTypevars: Boolean): Pat.Type = tpe match {
+        case q: Type.Quasi =>
+          q.become[Pat.Type.Quasi]
+        case tpe @ Type.Name(value) if convertTypevars && value(0).isLower =>
+          atPos(tpe, tpe)(Pat.Var.Type(tpe))
+        case tpe: Type.Name =>
+          tpe
+        case tpe: Type.Select =>
+          tpe
+        case Type.Project(qual, name) =>
+          val qual1 = loop(qual, convertTypevars = false)
+          val name1 = name
+          atPos(tpe, tpe)(Pat.Type.Project(qual1, name1))
+        case tpe: Type.Singleton =>
+          tpe
+        case Type.Apply(underlying, args) =>
+          val underlying1 = loop(underlying, convertTypevars = false)
+          val args1 = args.map(arg => loop(arg, convertTypevars = true))
+          atPos(tpe, tpe)(Pat.Type.Apply(underlying1, args1))
+        case Type.ApplyInfix(lhs, op, rhs) =>
+          val lhs1 = loop(lhs, convertTypevars = false)
+          val op1 = op
+          val rhs1 = loop(rhs, convertTypevars = false)
+          atPos(tpe, tpe)(Pat.Type.ApplyInfix(lhs1, op1, rhs1))
+        case Type.Function(params, res) =>
+          val params1 = params.map {
+            case q @ Type.Arg.Quasi(1, Type.Arg.Quasi(0, _)) => q.become[Pat.Type.Quasi]
+            case p => loop(p.require[Type], convertTypevars = true)
+          }
+          val res1 = loop(res, convertTypevars = false)
+          atPos(tpe, tpe)(Pat.Type.Function(params1, res1))
+        case Type.Tuple(elements) =>
+          val elements1 = elements.map(el => loop(el, convertTypevars = true))
+          atPos(tpe, tpe)(Pat.Type.Tuple(elements1))
+        case Type.Compound(tpes, refinement) =>
+          val tpes1 = tpes.map(tpe => loop(tpe, convertTypevars = false))
+          val refinement1 = refinement
+          atPos(tpe, tpe)(Pat.Type.Compound(tpes1, refinement1))
+        case Type.Existential(underlying, quants) =>
+          val underlying1 = loop(underlying, convertTypevars = false)
+          val quants1 = quants
+          atPos(tpe, tpe)(Pat.Type.Existential(underlying1, quants1))
+        case Type.Annotate(underlying, annots) =>
+          val underlying1 = loop(underlying, convertTypevars = false)
+          val annots1 = annots
+          atPos(tpe, tpe)(Pat.Type.Annotate(underlying1, annots1))
+        case Type.Placeholder(Type.Bounds(None, None)) if convertTypevars =>
+          atPos(tpe, tpe)(Pat.Type.Wildcard())
+        case Type.Placeholder(bounds) =>
+          val bounds1 = bounds
+          atPos(tpe, tpe)(Pat.Type.Placeholder(bounds1))
+        case tpe: Lit =>
+          tpe
       }
       val t: Type = {
         val t = if (token.is[`(`]) tupleInfixType() else compoundType()
@@ -1092,10 +1120,10 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
           case _ => t
         }
       }
-      loop(t)
+      loop(t, convertTypevars = allowImmediateTypevars)
     }
 
-    def quasiquotePatternTyp(): Pat.Type = autoPos {
+    def quasiquotePatternTyp(allowImmediateTypevars: Boolean): Pat.Type = autoPos {
       // NOTE: As per quasiquotes.md
       // * pt"_" => Pat.Type.Wildcard (doesn't parse)
       // * pt"x" => Pat.Var.Type (needs postprocessing, parsed as Type.Name)
@@ -1109,7 +1137,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
         case _ =>
           val bqIdent = isIdent && isBackquoted
           val nonbqIdent = isIdent && !isBackquoted
-          val ptpe = patternTyp()
+          val ptpe = patternTyp(allowImmediateTypevars)
           ptpe match {
             case ptpe: Type.Name if nonbqIdent =>
               if (ptpe.value.head.isLower) atPos(ptpe, ptpe)(Pat.Var.Type(ptpe))
@@ -1121,6 +1149,8 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
           }
       }
     }
+
+    def patternTypeArgs() = inBrackets(commaSeparated(patternTyp(allowImmediateTypevars = true)))
   }
 
   private trait AllowedName[T]
@@ -2018,20 +2048,20 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
         p match {
           case p: Pat.Quasi =>
             nextOnce()
-            Pat.Typed(p, patternTyp())
+            Pat.Typed(p, patternTyp(allowImmediateTypevars = false))
           case p: Pat.Var.Term if dialect.bindToSeqWildcardDesignator == ":" && isColonWildcardStar =>
             nextOnce()
             val wildcard = autoPos({ nextTwice(); Pat.Arg.SeqWildcard() })
             Pat.Bind(p, wildcard)
           case p: Pat.Var.Term =>
             nextOnce()
-            Pat.Typed(p, patternTyp())
+            Pat.Typed(p, patternTyp(allowImmediateTypevars = false))
           case p: Pat.Wildcard if dialect.bindToSeqWildcardDesignator == ":" && isColonWildcardStar =>
             nextThrice()
             Pat.Arg.SeqWildcard()
           case p: Pat.Wildcard =>
             nextOnce()
-            Pat.Typed(p, patternTyp())
+            Pat.Typed(p, patternTyp(allowImmediateTypevars = false))
           case p =>
             p
         }
@@ -2161,7 +2191,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
           }
         }
         val targs = token match {
-          case _: `[` => typeArgs()
+          case _: `[` => patternTypeArgs()
           case _        => Nil
         }
         (token, sid) match {
@@ -2214,8 +2244,6 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
    *  they are all initiated from non-pattern context.
    */
   def typ() = outPattern.typ()
-  def patternTyp() = outPattern.patternTyp()
-  def quasiquotePatternTyp() = outPattern.quasiquotePatternTyp()
   def startInfixType() = outPattern.infixType(InfixMode.FirstOp)
   def startModType() = outPattern.annotType()
   def exprTypeArgs() = outPattern.typeArgs()
@@ -2233,6 +2261,9 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     else seqPatterns()
   }
   def xmlLiteralPattern(): Pat = syntaxError("XML literals are not supported", at = in.token)
+  def patternTyp() = noSeq.patternTyp(allowImmediateTypevars = false)
+  def quasiquotePatternTyp() = noSeq.quasiquotePatternTyp(allowImmediateTypevars = false)
+  def patternTypeArgs() = noSeq.patternTypeArgs()
 
 /* -------- MODIFIERS and ANNOTATIONS ------------------------------------------- */
 
