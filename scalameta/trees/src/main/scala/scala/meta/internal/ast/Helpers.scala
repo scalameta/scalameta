@@ -11,6 +11,7 @@ import org.scalameta.unreachable
 import scala.annotation.switch
 import scala.meta.internal.ast._
 import scala.meta.prettyprinters._
+import scala.{meta => api}
 
 private[meta] object Helpers {
   private[meta] val unaryOps = Set("-", "+", "~", "!")
@@ -207,5 +208,75 @@ private[meta] object Helpers {
         case other => other.map(_.require[Tree])
       }
     }
+  }
+  def tpeToPattpe(tpe: api.Type): api.Pat.Type = {
+    def loop(tpe: Type): Pat.Type = tpe match {
+      case tpe: Type.Name => tpe
+      case tpe: Type.Select => tpe
+      case Type.Project(qual, name) => Pat.Type.Project(loop(qual), name)
+      case tpe: Type.Singleton => tpe
+      case Type.Apply(tpe, args) => Pat.Type.Apply(loop(tpe), args.map(loop))
+      case Type.ApplyInfix(lhs, op, rhs) => Pat.Type.ApplyInfix(loop(lhs), op, loop(rhs))
+      case Type.Function(params, res) => Pat.Type.Function(params.map(param => loop(param.require[Type])), loop(res))
+      case Type.Tuple(elements) => Pat.Type.Tuple(elements.map(loop))
+      case Type.Compound(tpes, refinement) => Pat.Type.Compound(tpes.map(loop), refinement)
+      case Type.Existential(tpe, quants) => Pat.Type.Existential(loop(tpe), quants)
+      case Type.Annotate(tpe, annots) => Pat.Type.Annotate(loop(tpe), annots)
+      case Type.Placeholder(bounds) => Pat.Type.Placeholder(bounds)
+      case Type.Lambda(tparams, tpe) => Pat.Type.Lambda(tparams, loop(tpe))
+      case tpe: Lit => tpe
+    }
+    loop(tpe.require[Type]).withTypechecked(tpe.isTypechecked)
+  }
+  def pattpeToTpe(pattpe: api.Pat.Type): api.Type = {
+    def loop(tpe: Pat.Type): Type = tpe match {
+      case tpe: Type.Name => tpe
+      case tpe: Type.Select => tpe
+      case tpe: Type.Singleton => tpe
+      case tpe: Pat.Var.Type => ???
+      case tpe: Pat.Type.Wildcard => Type.Placeholder(Type.Bounds(None, None))
+      case Pat.Type.Project(qual, name) => Type.Project(loop(qual), name)
+      case Pat.Type.Apply(tpe, args) => Type.Apply(loop(tpe), args.map(loop))
+      case Pat.Type.ApplyInfix(lhs, op, rhs) => Type.ApplyInfix(loop(lhs), op, loop(rhs))
+      case Pat.Type.Function(params, res) => Type.Function(params.map(loop), loop(res))
+      case Pat.Type.Tuple(elements) => Type.Tuple(elements.map(loop))
+      case Pat.Type.Compound(tpes, refinement) => Type.Compound(tpes.map(loop), refinement)
+      case Pat.Type.Existential(tpe, quants) => Type.Existential(loop(tpe), quants)
+      case Pat.Type.Annotate(tpe, annots) => Type.Annotate(loop(tpe), annots)
+      case Pat.Type.Placeholder(bounds) => Type.Placeholder(bounds)
+      case Pat.Type.Lambda(tparams, tpe) => Type.Lambda(tparams, loop(tpe))
+      case tpe: Lit => tpe
+    }
+    loop(pattpe.require[Pat.Type]).withTypechecked(pattpe.isTypechecked)
+  }
+  def tpeToCtorref(tpe: api.Type, ctor: api.Ctor.Name): api.Ctor.Call = {
+    val tpe0 = tpe
+    def loop(tpe: Type, ctor: Ctor.Name): Ctor.Call = {
+      object Types {
+        def unapply(tpes: Seq[Type.Arg]): Option[Seq[Type]] = {
+          if (tpes.forall(_.isInstanceOf[Type])) Some(tpes.map(_.require[Type]))
+          else None
+        }
+      }
+      def merge(tpe: Type.Name, ctor: Ctor.Name) = {
+        ctor.copy(value = tpe.value).withTokens(tpe.tokens).inheritAttrs(ctor)
+      }
+      tpe match {
+        case tpe @ Type.Name(value) =>
+          merge(tpe, ctor)
+        case tpe =>
+          val result = tpe match {
+            case Type.Select(qual, tpe @ Type.Name(value)) => Ctor.Ref.Select(qual, merge(tpe, ctor))
+            case Type.Project(qual, tpe @ Type.Name(value)) => Ctor.Ref.Project(qual, merge(tpe, ctor))
+            case Type.Function(Types(params), ret) => Term.ApplyType(Ctor.Ref.Function(ctor), params :+ ret)
+            case Type.Annotate(tpe, annots) => Term.Annotate(loop(tpe, ctor), annots)
+            case Type.Apply(tpe, args) => Term.ApplyType(loop(tpe, ctor), args)
+            case Type.ApplyInfix(lhs, op, rhs) => Term.ApplyType(loop(op, ctor), List(lhs, rhs))
+            case _ => unreachable(debug(tpe0, tpe0.show[Structure], tpe, tpe.show[Structure]))
+          }
+          result.withAttrs(ctor.typing)
+      }
+    }
+    loop(tpe.require[Type], ctor.require[Ctor.Name]).withTypechecked(tpe.isTypechecked)
   }
 }

@@ -9,6 +9,7 @@ import scala.meta.tokens._
 import scala.meta.prettyprinters._
 import scala.meta.internal.{equality => e}
 import scala.meta.internal.ast.Fresh
+import scala.meta.internal.ast.Helpers
 import scala.runtime.ScalaRunTime.isAnyVal
 
 package scala.meta {
@@ -94,6 +95,10 @@ package scala.meta {
     }
     def fresh(): Type.Name = fresh("fresh")
     def fresh(prefix: String): Type.Name = impl.Type.Name(prefix + Fresh.nextId())
+    implicit class XtensionType(tpe: api.Type) {
+      def pat: api.Pat.Type = Helpers.tpeToPattpe(tpe)
+      def ctorRef(ctor: Ctor.Name): Ctor.Call = Helpers.tpeToCtorref(tpe, ctor)
+    }
   }
 
   @branch trait Pat extends Tree with Pat.Arg
@@ -109,6 +114,9 @@ package scala.meta {
       @branch trait Ref extends Type with api.Ref
       def fresh(): Pat.Var.Type = impl.Pat.Var.Type(Type.fresh().require[impl.Type.Name])
       def fresh(prefix: String): Pat.Var.Type = impl.Pat.Var.Type(Type.fresh(prefix).require[impl.Type.Name])
+      implicit class XtensionPatType(pattpe: api.Pat.Type) {
+        def tpe: api.Type = Helpers.pattpeToTpe(pattpe)
+      }
     }
     def fresh(): Pat.Var.Term = impl.Pat.Var.Term(Term.fresh().require[impl.Term.Name])
     def fresh(prefix: String): Pat.Var.Term = impl.Pat.Var.Term(Term.fresh(prefix).require[impl.Term.Name])
