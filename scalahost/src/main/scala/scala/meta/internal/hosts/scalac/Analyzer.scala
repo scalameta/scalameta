@@ -14,7 +14,7 @@ import scala.reflect.internal.Flags
 import scala.reflect.internal.Flags._
 import scala.collection.mutable
 
-trait ScalahostAnalyzer extends NscAnalyzer with GlobalToolkit {
+trait ScalahostAnalyzer extends NscAnalyzer with ReflectToolkit {
   val global: Global
   import global._
   import definitions._

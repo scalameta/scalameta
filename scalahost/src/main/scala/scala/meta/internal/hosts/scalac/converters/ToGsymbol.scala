@@ -12,7 +12,7 @@ import scala.meta.internal.hosts.scalac.reflect._
 
 // This module exposes methods to convert from scala.meta members to scala.reflect symbols.
 // To be more precise, it returns logical symbols instead of scala.reflect ones, but that's almost the same.
-trait ToGsymbol extends GlobalToolkit with MetaToolkit {
+trait ToGsymbol extends ReflectToolkit with MetaToolkit {
   self: Api =>
 
   protected implicit class XtensionMnameToLsymbols(mname: m.Name) {

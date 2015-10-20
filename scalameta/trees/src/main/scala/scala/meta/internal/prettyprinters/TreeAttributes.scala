@@ -170,8 +170,8 @@ object Attributes {
         case x => x.toString
       }
       def contents(x: api.Tree): String = x match {
-        case x: Lit.String => enquote(x.value, DoubleQuotes)
-        case x: Lit => import scala.meta.dialects.Scala211; x.show[Syntax]
+        case x @ Lit(s: String) => enquote(s, DoubleQuotes)
+        case x @ Lit(_) => import scala.meta.dialects.Scala211; x.show[Syntax]
         case x => x.productIterator.map(whole).mkString(", ")
       }
       val syntax = x.productPrefix + "(" + contents(x) + ")"

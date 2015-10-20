@@ -7,7 +7,7 @@ import scala.collection.mutable
 import org.scalameta.invariants._
 
 trait TypeHelpers {
-  self: GlobalToolkit =>
+  self: ReflectToolkit =>
 
   import global.{require => _, _}
   import definitions._

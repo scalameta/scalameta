@@ -23,6 +23,7 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
   lazy val DefnValClass = c.mirror.staticModule("scala.meta.internal.ast.Defn").info.member(TypeName("Val")).asClass
   lazy val DefnVarClass = c.mirror.staticModule("scala.meta.internal.ast.Defn").info.member(TypeName("Var")).asClass
   lazy val PatTypedClass = c.mirror.staticModule("scala.meta.internal.ast.Pat").info.member(TypeName("Typed")).asClass
+  lazy val LitClass = c.mirror.staticClass("scala.meta.internal.ast.Lit")
   lazy val TokensClass = c.mirror.staticClass("scala.meta.tokens.Tokens")
   lazy val DenotClass = c.mirror.staticClass("scala.meta.internal.semantic.Denotation")
   lazy val TypingClass = c.mirror.staticClass("scala.meta.internal.semantic.Typing")
@@ -86,16 +87,44 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
         prohibitName($pat)
       """
     }
+    def customize(body: Tree): Option[Tree] = {
+      if (adt.tpe <:< QuasiClass.toType) Some(q"Lifts.liftQuasi($localName)")
+      else if (adt.tpe <:< TermNameClass.toType) Some(reifyCoreFields(body, "denot", "typing", "expansion"))
+      else if (adt.tpe <:< CtorRefNameClass.toType) Some(reifyCoreFields(body, "denot", "typing", "expansion"))
+      else if (adt.tpe <:< NameClass.toType) Some(reifyCoreFields(body, "denot"))
+      else if (adt.tpe <:< TermClass.toType) Some(reifyCoreFields(body, "typing", "expansion"))
+      else if (adt.tpe <:< TermParamClass.toType) Some(reifyCoreFields(body, "typing"))
+      else if (adt.tpe <:< DefnValClass.toType) Some(q"{ $localName.pats.foreach(pat => ${prohibitName(q"pat")}); $body }")
+      else if (adt.tpe <:< DefnVarClass.toType) Some(q"{ $localName.pats.foreach(pat => ${prohibitName(q"pat")}); $body }")
+      else if (adt.tpe <:< PatTypedClass.toType) Some(q"{ ${prohibitName(q"$localName.lhs")}; $body }")
+      else None
+    }
     // NOTE: we ignore tokens here for the time being
-    if (adt.tpe <:< QuasiClass.toType) Some(q"Lifts.liftQuasi($localName)")
-    else if (adt.tpe <:< TermNameClass.toType) Some(reifyCoreFields(body, "denot", "typing", "expansion"))
-    else if (adt.tpe <:< CtorRefNameClass.toType) Some(reifyCoreFields(body, "denot", "typing", "expansion"))
-    else if (adt.tpe <:< NameClass.toType) Some(reifyCoreFields(body, "denot"))
-    else if (adt.tpe <:< TermClass.toType) Some(reifyCoreFields(body, "typing", "expansion"))
-    else if (adt.tpe <:< TermParamClass.toType) Some(reifyCoreFields(body, "typing"))
-    else if (adt.tpe <:< DefnValClass.toType) Some(q"{ $localName.pats.foreach(pat => ${prohibitName(q"pat")}); $body }")
-    else if (adt.tpe <:< DefnVarClass.toType) Some(q"{ $localName.pats.foreach(pat => ${prohibitName(q"pat")}); $body }")
-    else if (adt.tpe <:< PatTypedClass.toType) Some(q"{ ${prohibitName(q"$localName.lhs")}; $body }")
-    else None
+    val body1 = {
+      if (adt.tpe <:< LitClass.toType) {
+        q"""
+          implicit object LiftableAny extends c.universe.Liftable[_root_.scala.Any] {
+            def apply(value: _root_.scala.Any): c.universe.Tree = value match {
+              case value: _root_.scala.Boolean => _root_.scala.Predef.implicitly[c.universe.Liftable[_root_.scala.Boolean]].apply(value)
+              case value: _root_.scala.Byte => _root_.scala.Predef.implicitly[c.universe.Liftable[_root_.scala.Byte]].apply(value)
+              case value: _root_.scala.Short => _root_.scala.Predef.implicitly[c.universe.Liftable[_root_.scala.Short]].apply(value)
+              case value: _root_.scala.Int => _root_.scala.Predef.implicitly[c.universe.Liftable[_root_.scala.Int]].apply(value)
+              case value: _root_.scala.Long => _root_.scala.Predef.implicitly[c.universe.Liftable[_root_.scala.Long]].apply(value)
+              case value: _root_.scala.Float => _root_.scala.Predef.implicitly[c.universe.Liftable[_root_.scala.Float]].apply(value)
+              case value: _root_.scala.Double => _root_.scala.Predef.implicitly[c.universe.Liftable[_root_.scala.Double]].apply(value)
+              case value: _root_.scala.Char => _root_.scala.Predef.implicitly[c.universe.Liftable[_root_.scala.Char]].apply(value)
+              case value: _root_.scala.Predef.String => _root_.scala.Predef.implicitly[c.universe.Liftable[_root_.scala.Predef.String]].apply(value)
+              case value: _root_.scala.Symbol => _root_.scala.Predef.implicitly[c.universe.Liftable[_root_.scala.Symbol]].apply(value)
+              case null => c.universe.Literal(c.universe.Constant(null))
+              case value: _root_.scala.Unit => _root_.scala.Predef.implicitly[c.universe.Liftable[_root_.scala.Unit]].apply(value)
+            }
+          }
+          $body
+        """
+      } else {
+        body
+      }
+    }
+    customize(body1)
   }
 }

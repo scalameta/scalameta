@@ -1,7 +1,7 @@
 package scala.meta
 package internal.hosts.scalac
 
-import scala.meta.internal.hosts.scalac.{PluginBase => ScalahostPlugin}
+import scala.meta.internal.hosts.scalac.{Plugin => ScalahostPlugin}
 import scala.tools.nsc.{Global => NscGlobal}
 import scala.tools.nsc.typechecker.{Analyzer => NscAnalyzer}
 

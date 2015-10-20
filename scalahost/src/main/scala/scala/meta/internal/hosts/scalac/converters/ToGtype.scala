@@ -15,7 +15,7 @@ import scala.meta.internal.hosts.scalac.reflect._
 
 // This module exposes a method to convert from scala.meta types to scala.reflect types.
 // The logic is mostly straightforward except for when we need to create symbols for compound and existential types.
-trait ToGtype extends GlobalToolkit with MetaToolkit {
+trait ToGtype extends ReflectToolkit with MetaToolkit {
   self: Api =>
 
   protected implicit class XtensionMtypeToGtype(mtpe: m.Type.Arg) {
@@ -224,18 +224,8 @@ trait ToGtype extends GlobalToolkit with MetaToolkit {
         case m.Type.Arg.Repeated(mtpe) =>
           g.appliedType(g.definitions.RepeatedParamClass, List(loop(mtpe)))
         case mlit: m.Lit =>
-          mlit match {
-            case m.Lit.Bool(value) => g.ConstantType(g.Constant(value))
-            case m.Lit.Int(value) => g.ConstantType(g.Constant(value))
-            case m.Lit.Long(value) => g.ConstantType(g.Constant(value))
-            case m.Lit.Float(value) => g.ConstantType(g.Constant(value))
-            case m.Lit.Double(value) => g.ConstantType(g.Constant(value))
-            case m.Lit.Char(value) => g.ConstantType(g.Constant(value))
-            case m.Lit.String(value) => g.ConstantType(g.Constant(value))
-            case m.Lit.Symbol(value) => unreachable
-            case m.Lit.Null() => g.ConstantType(g.Constant(null))
-            case m.Lit.Unit() => g.ConstantType(g.Constant(()))
-          }
+          require(!mlit.value.isInstanceOf[scala.Symbol])
+          g.ConstantType(g.Constant(mlit.value))
       }
       loop(mtpe)
     })

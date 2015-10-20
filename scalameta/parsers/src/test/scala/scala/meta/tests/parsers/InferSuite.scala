@@ -90,17 +90,7 @@ abstract class InferSuite extends ParseSuite {
     case t: impl.Pat.Type.Existential => t.copy()
     case t: impl.Pat.Type.Annotate => t.copy()
 
-    case t: impl.Lit.Bool => t.copy()
-    case t: impl.Lit.Byte => t.copy()
-    case t: impl.Lit.Short => t.copy()
-    case t: impl.Lit.Int => t.copy()
-    case t: impl.Lit.Long => t.copy()
-    case t: impl.Lit.Float => t.copy()
-    case t: impl.Lit.Double => t.copy()
-    case t: impl.Lit.Char => t.copy()
-    case t: impl.Lit.String => t.copy()
-    case t: impl.Lit.Symbol => t.copy()
-    case t: impl.Lit.Null => t.copy()
+    case t: impl.Lit => t.copy()
 
     case t: impl.Decl.Val => t.copy()
     case t: impl.Decl.Var => t.copy()

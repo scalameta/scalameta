@@ -355,9 +355,12 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
           pendingQuasis.push(quasi)
           if (quasi.rank == 0) {
             val tree = quasi.tree.asInstanceOf[u.Tree]
-            var pt = quasi.pt.wrap(pendingQuasis.map(_.rank).sum).toTpe
-            if (optional) pt = appliedType(typeOf[Option[_]], pt)
-            val idealReifier = if (mode.isTerm) q"$InternalLift[$pt]($tree)" else q"$InternalUnlift[$pt]($tree)"
+            var inferredPt = quasi.pt.wrap(pendingQuasis.map(_.rank).sum).toTpe
+            if (optional) inferredPt = appliedType(typeOf[Option[_]], inferredPt)
+            val idealReifier = {
+              if (mode.isTerm) q"$InternalLift[$inferredPt]($tree)"
+              else q"$InternalUnlift[$inferredPt]($tree)"
+            }
             val realWorldReifier = mode match {
               case Mode.Term =>
                 idealReifier
@@ -368,10 +371,15 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
                 // Therefore, we're forced to take a two-step unquoting scheme: a) match everything in the corresponding hole,
                 // b) call Unlift.unapply as a normal method in the right-hand side part of the pattern matching clause.
                 val hole = holes.find(hole => tree.equalsStructure(pq"${hole.name}")).getOrElse(sys.error(s"fatal error reifying pattern quasiquote: $quasi, $holes"))
-                val unrankedPt = hole.arg match { case pq"_: $pt" => pt; case pq"$_: $pt" => pt; case _ => tq"_root_.scala.meta.Tree" }
-                var rankedPt = unrankedPt.wrap(pendingQuasis.map(_.rank).sum)
-                if (optional) rankedPt = tq"_root_.scala.Option[$rankedPt]"
-                hole.reifier = atPos(quasi.position)(q"$InternalUnlift.unapply[$rankedPt](${hole.name})") // TODO: make reifier immutable somehow
+                val inferredPt = hole.arg match {
+                  case pq"_: $pt" => pt
+                  case pq"$_: $pt" => pt
+                  case _ =>
+                    var inferredPt = tq"_root_.scala.meta.Tree".wrap(pendingQuasis.map(_.rank).sum)
+                    if (optional) inferredPt = tq"_root_.scala.Option[$inferredPt]"
+                    inferredPt
+                }
+                hole.reifier = atPos(quasi.position)(q"$InternalUnlift.unapply[$inferredPt](${hole.name})") // TODO: make `reifier`a immutable somehow
                 pq"${hole.name}"
             }
             atPos(quasi.position)(realWorldReifier)

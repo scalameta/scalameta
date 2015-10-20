@@ -36,7 +36,7 @@ import scala.meta.internal.ast.XtensionConvertDebug
 // you will need to use a dedicated module called `mergeTrees`
 // that is capable of merging syntactically precise trees (obtained from parsing)
 // and semantically precise trees (obtain from converting).
-trait ToMtree extends GlobalToolkit with MetaToolkit {
+trait ToMtree extends ReflectToolkit with MetaToolkit {
   self: Api =>
 
   protected implicit class XtensionGtreeToMtree(gtree0: g.Tree) {
@@ -103,21 +103,7 @@ trait ToMtree extends GlobalToolkit with MetaToolkit {
           // ============ LITERALS ============
 
           case l.Literal(lvalue) =>
-            lvalue match {
-              case null => m.Lit.Null()
-              case () => m.Lit.Unit()
-              case true => m.Lit.Bool(true)
-              case false => m.Lit.Bool(false)
-              case lvalue: Byte => m.Lit.Byte(lvalue)
-              case lvalue: Short => m.Lit.Short(lvalue)
-              case lvalue: Int => m.Lit.Int(lvalue)
-              case lvalue: Long => m.Lit.Long(lvalue)
-              case lvalue: Float => m.Lit.Float(lvalue)
-              case lvalue: Double => m.Lit.Double(lvalue)
-              case lvalue: String => m.Lit.String(lvalue)
-              case lvalue: Char => m.Lit.Char(lvalue)
-              case _ => fail(s"unexpected literal $lvalue of class ${lvalue.getClass}")
-            }
+            m.Lit(lvalue)
 
           // ============ DECLS ============
 

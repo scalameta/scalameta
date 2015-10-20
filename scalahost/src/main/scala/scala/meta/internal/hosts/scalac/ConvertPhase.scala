@@ -4,7 +4,7 @@ package internal.hosts.scalac
 import scala.tools.nsc.{Global, Phase, SubComponent}
 import scala.tools.nsc.plugins.{Plugin => NscPlugin, PluginComponent => NscPluginComponent}
 import scala.meta.dialects.Scala211
-import scala.meta.internal.hosts.scalac.{PluginBase => ScalahostPlugin}
+import scala.meta.internal.hosts.scalac.{Plugin => ScalahostPlugin}
 import scala.meta.internal.hosts.scalac.contexts.{Adapter => AdapterImpl}
 import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}

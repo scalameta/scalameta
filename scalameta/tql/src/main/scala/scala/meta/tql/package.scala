@@ -16,9 +16,8 @@ package object tql extends Traverser[Tree]
   def traverse[A : Monoid](tree: Tree, f: Matcher[A]): MatchResult[A] = {
     TraverserBuilder.buildFromTopSymbolDelegate[Tree, A](f,
       impl.Term.Name,
-      impl.Lit.Char,
       impl.Term.Apply,
-      impl.Lit.Int,
+      impl.Lit,
       impl.Type.Name,
       impl.Term.Param,
       impl.Type.Apply,

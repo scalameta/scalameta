@@ -14,8 +14,8 @@ class ReflectionSuite extends AstSuite {
   // but please deal with that (or come up with a more effective way of testing AstReflection)
   test("root") {
     assert(symbolOf[scala.meta.Tree].isRoot)
-    assert(symbolOf[scala.meta.Tree].asRoot.allBranches.length === 73)
-    assert(symbolOf[scala.meta.Tree].asRoot.allLeafs.length === 341)
+    assert(symbolOf[scala.meta.Tree].asRoot.allBranches.length === 72)
+    assert(symbolOf[scala.meta.Tree].asRoot.allLeafs.length === 318)
   }
 
   test("If") {
@@ -121,18 +121,6 @@ class ReflectionSuite extends AstSuite {
       |scala.meta.internal.ast.Import.Selector.Unimport => scala.meta.Importee
       |scala.meta.internal.ast.Import.Selector.Wildcard => scala.meta.Importee
       |scala.meta.internal.ast.Lit                      => scala.meta.Lit
-      |scala.meta.internal.ast.Lit.Bool                 => scala.meta.Lit
-      |scala.meta.internal.ast.Lit.Byte                 => scala.meta.Lit
-      |scala.meta.internal.ast.Lit.Char                 => scala.meta.Lit
-      |scala.meta.internal.ast.Lit.Double               => scala.meta.Lit
-      |scala.meta.internal.ast.Lit.Float                => scala.meta.Lit
-      |scala.meta.internal.ast.Lit.Int                  => scala.meta.Lit
-      |scala.meta.internal.ast.Lit.Long                 => scala.meta.Lit
-      |scala.meta.internal.ast.Lit.Null                 => scala.meta.Lit
-      |scala.meta.internal.ast.Lit.Short                => scala.meta.Lit
-      |scala.meta.internal.ast.Lit.String               => scala.meta.Lit
-      |scala.meta.internal.ast.Lit.Symbol               => scala.meta.Lit
-      |scala.meta.internal.ast.Lit.Unit                 => scala.meta.Lit
       |scala.meta.internal.ast.Member                   => scala.meta.Member
       |scala.meta.internal.ast.Member.Term              => scala.meta.Member.Term
       |scala.meta.internal.ast.Member.Type              => scala.meta.Member.Type
@@ -261,19 +249,11 @@ class ReflectionSuite extends AstSuite {
     duplicateRelevantFieldTpes.foreach(tpe => if (!distinctRelevantFieldTpes.exists(_ =:= tpe)) distinctRelevantFieldTpes += tpe)
     assert(distinctRelevantFieldTpes.sortBy(_.toString).mkString(EOL) === """
       |String
-      |scala.Boolean
-      |scala.Byte
-      |scala.Char
-      |scala.Double
-      |scala.Float
-      |scala.Int
-      |scala.Long
+      |scala.Any
       |scala.Option[scala.collection.immutable.Seq[scala.meta.internal.ast.Stat]]
       |scala.Option[scala.meta.internal.ast.Term]
       |scala.Option[scala.meta.internal.ast.Type.Arg]
       |scala.Option[scala.meta.internal.ast.Type]
-      |scala.Short
-      |scala.Symbol
       |scala.collection.immutable.Seq[scala.collection.immutable.Seq[scala.meta.internal.ast.Term.Arg]]
       |scala.collection.immutable.Seq[scala.collection.immutable.Seq[scala.meta.internal.ast.Term.Param]]
       |scala.collection.immutable.Seq[scala.meta.internal.ast.Case]
@@ -281,7 +261,7 @@ class ReflectionSuite extends AstSuite {
       |scala.collection.immutable.Seq[scala.meta.internal.ast.Enumerator]
       |scala.collection.immutable.Seq[scala.meta.internal.ast.Import.Clause]
       |scala.collection.immutable.Seq[scala.meta.internal.ast.Import.Selector]
-      |scala.collection.immutable.Seq[scala.meta.internal.ast.Lit.String]
+      |scala.collection.immutable.Seq[scala.meta.internal.ast.Lit]
       |scala.collection.immutable.Seq[scala.meta.internal.ast.Mod.Annot]
       |scala.collection.immutable.Seq[scala.meta.internal.ast.Mod]
       |scala.collection.immutable.Seq[scala.meta.internal.ast.Pat.Arg]
@@ -360,10 +340,6 @@ class ReflectionSuite extends AstSuite {
       |
       |scala.meta.internal.ast.Import.Clause -> scala.meta.Tree
       |field Import.clauses: scala.collection.immutable.Seq[scala.meta.internal.ast.Import.Clause] @org.scalameta.invariants.nonEmpty
-      |
-      |scala.meta.internal.ast.Lit.String -> scala.meta.Lit
-      |field Pat.Interpolate.parts: scala.collection.immutable.Seq[scala.meta.internal.ast.Lit.String] @org.scalameta.invariants.nonEmpty
-      |field Term.Interpolate.parts: scala.collection.immutable.Seq[scala.meta.internal.ast.Lit.String] @org.scalameta.invariants.nonEmpty
       |
     """.trim.stripMargin)
   }

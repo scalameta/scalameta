@@ -30,6 +30,7 @@ import org.scalameta.reflection._
 private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dialect) { parser =>
   // implementation restrictions wrt various dialect properties
   require(Set("@", ":").contains(dialect.bindToSeqWildcardDesignator))
+  def inQuasiquote = dialect.isInstanceOf[scala.meta.dialects.Quasiquote]
 
 /* ------------- PARSER ENTRY POINTS -------------------------------------------- */
 
@@ -64,6 +65,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     case stats if stats.forall(_.isTopLevelStat) => Source(stats)
     case other => reporter.syntaxError("these statements can't be mixed together", at = parserTokens.head)
   })
+  def parseQuasiquoteStat(): Stat = parseStat() // NOTE: special treatment for q"super" and likes is implemented directly in `path`
   def parseQuasiquoteCtor(): Ctor = parseRule(_.quasiquoteCtor())
   def parseTerm(): Term = parseRule(_.expr())
   def parseTermArg(): Term.Arg = parseRule(_.argumentExpr())
@@ -408,7 +410,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     if (token.is[`(`]) inParens(body)
     else { accept[`(`]; alt }
 
-  @inline final def inParensOrUnit[T, Ret >: Lit](body: => Ret): Ret = inParensOrError(body, Lit.Unit())
+  @inline final def inParensOrUnit[T, Ret >: Lit](body: => Ret): Ret = inParensOrError(body, Lit(()))
   @inline final def inParensOrNil[T](body: => List[T]): List[T] = inParensOrError(body, Nil)
 
   @inline final def inBraces[T](body: => T): T = {
@@ -422,7 +424,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     else { accept[`{`]; alt }
 
   @inline final def inBracesOrNil[T](body: => List[T]): List[T] = inBracesOrError(body, Nil)
-  @inline final def inBracesOrUnit[T](body: => Term): Term = inBracesOrError(body, Lit.Unit())
+  @inline final def inBracesOrUnit[T](body: => Term): Term = inBracesOrError(body, Lit(()))
   @inline final def dropAnyBraces[T](body: => T): T =
     if (token.is[`{`]) inBraces(body)
     else body
@@ -542,31 +544,35 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   def ellipsis[T <: Tree : AstMetadata](rank: Int, body: => T, extraSkip: => Unit = {}): T = autoPos {
     token match {
       case ellipsis: Ellipsis =>
-        if (ellipsis.rank != rank) {
-          val errorMessage = s"rank mismatch when unquoting;$EOL found   : ${"." * (ellipsis.rank + 1)}$EOL required: ${"." * (rank + 1)}"
-          syntaxError(errorMessage, at = ellipsis)
-        } else {
-          next()
-          extraSkip
-          val tree = {
-            val result = token match {
-              case _: `(` => inParens(body)
-              case _: `{` => inBraces(body)
-              case _ => body
+        if (inQuasiquote) {
+          if (ellipsis.rank != rank) {
+            val errorMessage = s"rank mismatch when unquoting;$EOL found   : ${"." * (ellipsis.rank + 1)}$EOL required: ${"." * (rank + 1)}"
+            syntaxError(errorMessage, at = ellipsis)
+          } else {
+            next()
+            extraSkip
+            val tree = {
+              val result = token match {
+                case _: `(` => inParens(body)
+                case _: `{` => inBraces(body)
+                case _ => body
+              }
+              result match {
+                case quasi: Quasi =>
+                  // NOTE: In the case of an unquote nested directly under ellipsis, we get a bit of a mixup.
+                  // Unquote's pt may not be directly equal unwrapped ellipsis's pt, but be its refinement instead.
+                  // For example, in `new { ..$stats }`, ellipsis's pt is Seq[Stat], but quasi's pt is Term.
+                  // This is an artifact of the current implementation, so we just need to keep it mind and work around it.
+                  require(classTag[T].runtimeClass.isAssignableFrom(quasi.pt) && debug(ellipsis, result, result.show[Structure]))
+                  atPos(quasi, quasi)(implicitly[AstMetadata[T]].quasi(quasi.rank, quasi.tree))
+                case other =>
+                  other
+              }
             }
-            result match {
-              case quasi: Quasi =>
-                // NOTE: In the case of an unquote nested directly under ellipsis, we get a bit of a mixup.
-                // Unquote's pt may not be directly equal unwrapped ellipsis's pt, but be its refinement instead.
-                // For example, in `new { ..$stats }`, ellipsis's pt is Seq[Stat], but quasi's pt is Term.
-                // This is an artifact of the current implementation, so we just need to keep it mind and work around it.
-                require(classTag[T].runtimeClass.isAssignableFrom(quasi.pt) && debug(ellipsis, result, result.show[Structure]))
-                atPos(quasi, quasi)(implicitly[AstMetadata[T]].quasi(quasi.rank, quasi.tree))
-              case other =>
-                other
-            }
+            implicitly[AstMetadata[T]].quasi(rank, tree)
           }
-          implicitly[AstMetadata[T]].quasi(rank, tree)
+        } else {
+          syntaxError(s"unexpected token for $dialect", at = ellipsis)
         }
       case _ =>
         unreachable(debug(token))
@@ -576,11 +582,15 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   def unquote[T <: Tree : AstMetadata](advance: Boolean = true): T = autoPos {
     token match {
       case unquote: Unquote =>
-        if (advance) {
-          next()
-          implicitly[AstMetadata[T]].quasi(0, unquote.tree)
-        } else ahead {
-          implicitly[AstMetadata[T]].quasi(0, unquote.tree)
+        if (inQuasiquote) {
+          if (advance) {
+            next()
+            implicitly[AstMetadata[T]].quasi(0, unquote.tree)
+          } else ahead {
+            implicitly[AstMetadata[T]].quasi(0, unquote.tree)
+          }
+        } else {
+          syntaxError(s"unexpected token for $dialect", at = unquote)
         }
       case _ =>
         unreachable(debug(token))
@@ -607,7 +617,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
       Some(atPos(tree, tree)(Term.Param(Nil, name, Some(tpt), None)))
     case Term.Ascribe(name: Term.Placeholder, tpt) =>
       Some(atPos(tree, tree)(Term.Param(Nil, atPos(name, name)(Name.Anonymous()), Some(tpt), None)))
-    case Lit.Unit() =>
+    case Lit(()) =>
       None
     case other =>
       syntaxError(s"not a legal formal parameter", at = other)
@@ -663,7 +673,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     // see comments to makeTupleType for discussion
     body match {
       case Seq(q @ Term.Quasi(1, _)) => atPos(q, q)(Term.Tuple(body))
-      case _ => makeTuple[Term](body, () => Lit.Unit(), Term.Tuple(_))
+      case _ => makeTuple[Term](body, () => Lit(()), Term.Tuple(_))
     }
   }
 
@@ -1132,6 +1142,8 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
    */
   // TODO: this has to be rewritten
   def path(thisOK: Boolean = true): Term.Ref = {
+    val startsAtBof = token.prev.isInstanceOf[BOF]
+    def endsAtEof = token.isInstanceOf[EOF]
     def stop = token.isNot[`.`] || ahead { token.isNot[`this`] && token.isNot[`super`] && !token.is[Ident] && !token.is[Unquote] }
     if (token.is[`this`]) {
       val anonqual = atPos(in.tokenPos, in.prevTokenPos)(Name.Anonymous())
@@ -1146,6 +1158,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
       val anonqual = atPos(in.tokenPos, in.prevTokenPos)(Name.Anonymous())
       next()
       val superp = atPos(in.prevTokenPos, auto)(Term.Super(anonqual, mixinQualifier()))
+      if (startsAtBof && endsAtEof && inQuasiquote) return superp
       accept[`.`]
       val supersel = atPos(superp, auto)(Term.Select(superp, termName()))
       if (stop) supersel
@@ -1177,6 +1190,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
             case name => atPos(name, name)(Name.Indeterminate(name.value))
           }
           val superp = atPos(name, auto)(Term.Super(qual, mixinQualifier()))
+          if (startsAtBof && endsAtEof && inQuasiquote) return superp
           accept[`.`]
           val supersel = atPos(superp, auto)(Term.Select(superp, termName()))
           if (stop) supersel
@@ -1253,37 +1267,37 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   def literal(isNegated: Boolean = false): Lit = autoPos {
     val res = token match {
       case token: Literal.Char =>
-        Lit.Char(token.value)
+        Lit(token.value)
       case token: Literal.Int =>
         val value = if (isNegated) -token.value else token.value
         if (value > Int.MaxValue) syntaxError("integer number too large", at = token)
         else if (value < Int.MinValue) syntaxError("integer number too small", at = token)
-        else Lit.Int(value.toInt)
+        else Lit(value.toInt)
       case token: Literal.Long =>
         val value = if (isNegated) -token.value else token.value
         if (value > Long.MaxValue) syntaxError("integer number too large", at = token)
         else if (value < Long.MinValue) syntaxError("integer number too small", at = token)
-        else Lit.Long(value.toLong)
+        else Lit(value.toLong)
       case token: Literal.Float =>
         val value = if (isNegated) -token.value else token.value
         if (value > Float.MaxValue) syntaxError("floating point number too large", at = token)
         else if (value < Float.MinValue) syntaxError("floating point number too small", at = token)
-        else Lit.Float(value.toFloat)
+        else Lit(value.toFloat)
       case token: Literal.Double  =>
         val value = if (isNegated) -token.value else token.value
         if (value > Double.MaxValue) syntaxError("floating point number too large", at = token)
         else if (value < Double.MinValue) syntaxError("floating point number too small", at = token)
-        else Lit.Double(value.toDouble)
+        else Lit(value.toDouble)
       case token: Literal.String =>
-        Lit.String(token.value)
+        Lit(token.value)
       case token: Literal.Symbol =>
-        Lit.Symbol(token.value)
+        Lit(token.value)
       case token: Literal.`true` =>
-        Lit.Bool(true)
+        Lit(true)
       case token: Literal.`false` =>
-        Lit.Bool(false)
+        Lit(false)
       case token: Literal.`null` =>
-        Lit.Null()
+        Lit(null)
       case _ =>
         unreachable(debug(token))
     }
@@ -1291,20 +1305,20 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     res
   }
 
-  def interpolate[Ctx <: Tree, Ret <: Tree](arg: () => Ctx, result: (Term.Name, List[Lit.String], List[Ctx]) => Ret): Ret = autoPos {
+  def interpolate[Ctx <: Tree, Ret <: Tree](arg: () => Ctx, result: (Term.Name, List[Lit], List[Ctx]) => Ret): Ret = autoPos {
     val interpolator = {
       if (token.is[Xml.Start]) atPos(in.tokenPos, in.tokenPos)(Term.Name("xml"))
       else atPos(in.prevTokenPos, in.prevTokenPos)(Term.Name(token.require[Interpolation.Id].code)) // termName() for INTERPOLATIONID
     }
     if (token.is[Interpolation.Id]) next()
-    val partsBuf = new ListBuffer[Lit.String]
+    val partsBuf = new ListBuffer[Lit]
     val argsBuf = new ListBuffer[Ctx]
     def loop(): Unit = token match {
       case _: Interpolation.Start | _: Xml.Start =>
         next()
         loop()
       case _: Interpolation.Part | _: Xml.Part =>
-        partsBuf += atPos(in.tokenPos, in.tokenPos)(Lit.String(token.code))
+        partsBuf += atPos(in.tokenPos, in.tokenPos)(Lit(token.code))
         next()
         loop()
       case _: Interpolation.SpliceStart | _: Xml.SpliceStart =>
@@ -1435,7 +1449,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
       val thenp = expr()
       if (token.is[`else`]) { next(); Term.If(cond, thenp, expr()) }
       else if (token.is[`;`] && ahead { token.is[`else`] }) { next(); next(); Term.If(cond, thenp, expr()) }
-      else { Term.If(cond, thenp, atPos(in.tokenPos, in.prevTokenPos)(Lit.Unit())) }
+      else { Term.If(cond, thenp, atPos(in.tokenPos, in.prevTokenPos)(Lit(()))) }
     case _: `try` =>
       next()
       val body: Term = token match {
@@ -1491,7 +1505,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     case _: `return` =>
       next()
       if (token.is[ExprIntro]) Term.Return(expr())
-      else Term.Return(atPos(in.tokenPos, auto)(Lit.Unit()))
+      else Term.Return(atPos(in.tokenPos, auto)(Lit(())))
     case _: `throw` =>
       next()
       Term.Throw(expr())
@@ -1579,7 +1593,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
             }
           }
           t match {
-            case _: Lit.Unit => true // 1
+            case Lit(()) => true // 1
             case NameLike() => location != InTemplate // 2-3
             case ParamLike() => inParens || location == InBlock // 4-5
             case Term.Tuple(xs) => xs.forall(ParamLike.unapply) // 6
@@ -1718,7 +1732,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
         simpleExprRest(selector(t), canApply = true)
       case _: `[` =>
         t match {
-          case _: Term.Name | _: Term.Select | _: Term.Apply =>
+          case _: Term.Quasi | _: Term.Name | _: Term.Select | _: Term.Apply =>
             var app: Term = t
             while (token.is[`[`])
               app = atPos(t, auto)(Term.ApplyType(app, exprTypeArgs()))
@@ -2168,7 +2182,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
           case q: Pat.Arg.Quasi => q.become[Pat.Quasi]
           case p => p.require[Pat]
         }
-        makeTuple[Pat](patterns, () => Lit.Unit(), Pat.Tuple(_))
+        makeTuple[Pat](patterns, () => Lit(()), Pat.Tuple(_))
       case _ =>
         onError(token)
     })

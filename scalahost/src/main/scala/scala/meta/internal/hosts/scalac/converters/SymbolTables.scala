@@ -17,7 +17,7 @@ import java.util.UUID.randomUUID
 // This module tracks the correspondence between scala.reflect and scala.meta symbols.
 // It can also do automatic conversion between globally visible symbols,
 // but it needs help when dealing with local symbols.
-trait SymbolTables extends GlobalToolkit with MetaToolkit {
+trait SymbolTables extends ReflectToolkit with MetaToolkit {
   self: Api =>
 
   protected class SymbolTable {

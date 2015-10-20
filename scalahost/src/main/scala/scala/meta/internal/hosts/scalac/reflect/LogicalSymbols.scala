@@ -9,7 +9,7 @@ import org.scalameta.unreachable
 import scala.reflect.internal.Flags._
 
 trait LogicalSymbols {
-  self: GlobalToolkit =>
+  self: ReflectToolkit =>
 
   import g.AnyNameOps
 

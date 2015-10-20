@@ -16,7 +16,7 @@ import scala.meta.internal.hosts.scalac.reflect._
 
 // This module exposes a method to convert from scala.meta trees to scala.reflect trees.
 // Nothing is implemented yet, but we'll have to at least take a stab at it to enable scala.meta macros.
-trait ToGtree extends GlobalToolkit with MetaToolkit {
+trait ToGtree extends ReflectToolkit with MetaToolkit {
   self: Api =>
 
   protected implicit class XtensionMtreeToGtree(mtree: m.Tree) {

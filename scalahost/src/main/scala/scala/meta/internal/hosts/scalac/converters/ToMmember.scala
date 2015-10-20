@@ -34,7 +34,7 @@ import scala.meta.internal.flags._
 // but it can also operate in legacy mode, where it rebuilds scala.meta-compliant metadata from g.Symbols.
 //
 // 4) See comments to ToMtree to learn more about how this conversion preserves the original syntax of those types.
-trait ToMmember extends GlobalToolkit with MetaToolkit {
+trait ToMmember extends ReflectToolkit with MetaToolkit {
   self: Api =>
 
   protected implicit class XtensionLsymbolToMmember(lsym: l.Symbol) {
