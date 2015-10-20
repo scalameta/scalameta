@@ -6,6 +6,8 @@ import scala.meta._
 import scala.meta.dialects.Scala211
 import scala.meta.quasiquotes._
 import scala.meta.prettyprinters._
+import scala.{Seq => _}
+import scala.collection.immutable.Seq
 
 class QuasiquoteSuite extends FunSuite {
   test("rank-0 liftables") {
@@ -16,6 +18,24 @@ class QuasiquoteSuite extends FunSuite {
   test("rank-1 liftables") {
     implicit def custom[U >: List[Term]]: Lift[List[Int], U] = Lift(_.map(x => q"$x"))
     assert(q"foo(..${List(1, 2, 3)})".show[Structure] === "Term.Apply(Term.Name(\"foo\"), Seq(Lit(1), Lit(2), Lit(3)))")
+  }
+
+  test("construction ascriptions") {
+    val xs = List(q"x", q"y")
+    assert(q"foo(..${xs: List[Term]})".show[Syntax] === "foo(x, y)")
+    // val xss = List(List(q"x", q"y"))
+    // assert(q"foo(...${xss: List[List[Term]]})".show[Syntax] === "foo(x, y)")
+    val rhs = Some(q"x")
+    assert(q"var foo = ${rhs : Option[Term]}".show[Syntax] === "var foo = x")
+  }
+
+  test("deconstruction ascriptions") {
+    val q"foo(..${xs: Seq[Term.Arg]})" = q"foo(x, y)"
+    assert(xs.toString === "List(x, y)")
+    // val q"foo(...${xss: Seq[Seq[Term.Arg]]})" = q"foo(x, y)"
+    // assert(xss.toString === "List(List(x, y))")
+    val q"var foo = ${x: Option[Term]}" = q"var foo = x"
+    assert(x.toString === "Some(x)")
   }
 
   test("1 Pat.Type or Type.Name") {
