@@ -63,6 +63,7 @@ package scala.meta {
   @branch trait Name extends Ref
   object Name {
     @branch trait Anonymous extends Name with Term.Param.Name with Type.Param.Name with Qualifier
+    object Anonymous { def apply = impl.Name.Anonymous() }
     @branch trait Indeterminate extends Name with Qualifier
     @branch trait Qualifier extends Ref
   }
@@ -135,6 +136,8 @@ package scala.meta {
     @branch trait Call extends Term
     @branch trait Ref extends Term.Ref with Ctor.Call
     @branch trait Name extends api.Name with Ref with Term
+    def fresh(): Ctor.Name = fresh("fresh")
+    def fresh(prefix: String): Ctor.Name = impl.Ctor.Name(prefix + Fresh.nextId())
   }
 
   @branch trait Template extends Tree
