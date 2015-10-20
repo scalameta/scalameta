@@ -1407,16 +1407,6 @@ class QuasiquoteSuite extends FunSuite {
     assert(pt"$lit".show[Structure] === "Lit(1)")
   }
 
-  //  test("1 q\"import ..($ref.{..$importees})\"") {
-  //    val ref = q"x"
-  //    val importees = List(importee"A", importee"B")
-  //    assert(q"import ..($ref.{..$importees})".show[Syntax] === "")
-  //  }
-
-  //  test("2 q\"import ..($ref.{..$importees})\"") {
-  //    val q"import ..(x.{..$importees})" = q"import a.A"
-  //  }
-
   test("1 q\"..$mods val ..$pnames: $tpe\"") {
     val q"..$mods val ..$pnames: $tpe" = q"private final val x, y: T"
     assert(mods.toString === "List(private, final)")
@@ -2061,6 +2051,31 @@ class QuasiquoteSuite extends FunSuite {
   test("2 enumerator\"if $expr\"") {
     val expr = q"x"
     assert(enumerator"if $expr".show[Structure] === "Enumerator.Guard(Term.Name(\"x\"))")
+  }
+
+  test("1 q\"import ..$importers\"") {
+    val importers = List(importer"foo.bar", importer"bar.{baz, _}")
+    assert(q"import ..$importers".show[Syntax] === "import foo.bar, bar.{ baz, _ }")
+  }
+
+  test("2 q\"import ..$importers\"") {
+    val q"import ..$importers" = q"import a.A"
+    assert(importers.length == 1)
+    assert(importers(0).show[Syntax] === "a.A")
+  }
+
+  test("1 importer\"$ref.{..$importees}\"") {
+    val ref = q"bar"
+    val importees = List(importee"baz", importee"_")
+    assert(importer"$ref.{..$importees}".show[Syntax] === "bar.{ baz, _ }")
+  }
+
+  test("2 importer\"$ref. ..$importees\"") {
+    val importer"$ref.{..$importees}" = importer"bar.{baz, _}"
+    assert(ref.show[Syntax] === "bar")
+    assert(importees.length == 2)
+    assert(importees(0).show[Syntax] === "baz")
+    assert(importees(1).show[Syntax] === "_")
   }
 
   test("1 importee\"$iname\"") {

@@ -581,8 +581,7 @@ class AstMacros(val c: Context) extends AstReflection {
           }
         """
       }
-      if (is("Term.Block.Quasi") || is("Type.Bounds.Quasi") || is("Ctor.Primary.Quasi") ||
-          is("Import.Clause.Quasi") || is("Lit.String.Quasi")) {
+      if (is("Term.Block.Quasi") || is("Type.Bounds.Quasi") || is("Ctor.Primary.Quasi")) {
         // NOTE: before you remove one or all of these throws, you must know what's going on in the "allFields.unquote" test
         stats1 += q"""throw new _root_.scala.NotImplementedError("implementation restriction: dangerous quasi, see the sources of @ast for more information")"""
       }

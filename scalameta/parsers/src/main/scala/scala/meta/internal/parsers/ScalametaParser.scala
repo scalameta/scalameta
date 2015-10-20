@@ -119,6 +119,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
       case other => unreachable(debug(input, dialect, other))
     })
   }
+  def parseImporter(): Importer = parseRule(_.importClause())
   def parseImportee(): Importee = parseRule(_.importSelector())
   def parseSource(): Source = parseRule(_.compilationUnit())
 
@@ -1148,7 +1149,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   def path(thisOK: Boolean = true): Term.Ref = {
     val startsAtBof = token.prev.isInstanceOf[BOF]
     def endsAtEof = token.isInstanceOf[EOF]
-    def stop = token.isNot[`.`] || ahead { token.isNot[`this`] && token.isNot[`super`] && !token.is[Ident] && !token.is[Unquote] }
+    def stop = token.isNot[`.`] || ahead { token.isNot[`this`] && token.isNot[`super`] && token.isNot[Ident] && token.isNot[Unquote] }
     if (token.is[`this`]) {
       val anonqual = atPos(in.tokenPos, in.prevTokenPos)(Name.Anonymous())
       next()
@@ -2543,7 +2544,8 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
       case Term.Select(sid: Term.Ref, name: Term.Name) if sid.isStableId =>
         if (token.is[`.`]) dotselectors
         else Import.Clause(sid, atPos(name, name)(Import.Selector.Name(atPos(name, name)(Name.Indeterminate(name.value)))) :: Nil)
-      case _ => dotselectors
+      case _ =>
+        dotselectors
     }
   }
 

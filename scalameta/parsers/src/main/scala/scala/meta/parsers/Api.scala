@@ -20,6 +20,7 @@ private[meta] trait Api extends common.Api {
   implicit lazy val parseTemplate: Parse[Template] = toParse(_.parseTemplate())
   implicit lazy val parseMod: Parse[Mod] = toParse(_.parseMod())
   implicit lazy val parseEnumerator: Parse[Enumerator] = toParse(_.parseEnumerator())
+  implicit lazy val parseImporter: Parse[Importer] = toParse(_.parseImporter())
   implicit lazy val parseImportee: Parse[Importee] = toParse(_.parseImportee())
   implicit lazy val parseSource: Parse[Source] = toParse(_.parseSource())
 }
