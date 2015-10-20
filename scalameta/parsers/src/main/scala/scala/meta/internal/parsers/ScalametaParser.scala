@@ -1718,7 +1718,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
         simpleExprRest(selector(t), canApply = true)
       case _: `[` =>
         t match {
-          case _: Term.Name | _: Term.Select | _: Term.Apply =>
+          case _: Term.Quasi | _: Term.Name | _: Term.Select | _: Term.Apply =>
             var app: Term = t
             while (token.is[`[`])
               app = atPos(t, auto)(Term.ApplyType(app, exprTypeArgs()))

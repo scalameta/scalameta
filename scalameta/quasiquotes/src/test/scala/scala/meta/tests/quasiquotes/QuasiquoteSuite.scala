@@ -196,6 +196,20 @@ class QuasiquoteSuite extends FunSuite {
     assert(q"foo[..$types]".show[Structure] === "Term.ApplyType(Term.Name(\"foo\"), Seq(Type.Name(\"T\"), Type.Name(\"U\")))")
   }
 
+  test("1 q\"$foo[..$tpes]\"") {
+    val q"$foo[..$types]" = q"foo[T, U]"
+    assert(foo.toString == "foo")
+    assert(types.toString === "List(T, U)")
+    assert(types(0).show[Structure] === "Type.Name(\"T\")")
+    assert(types(1).show[Structure] === "Type.Name(\"U\")")
+  }
+
+  test("2 q\"$foo[..$tpes]\"") {
+    val foo = q"foo"
+    val types = List(t"T", t"U")
+    assert(q"$foo[..$types]".show[Structure] === "Term.ApplyType(Term.Name(\"foo\"), Seq(Type.Name(\"T\"), Type.Name(\"U\")))")
+  }
+
   test("1 q\"$expr $name[..$tpes] (..$aexprs)\"") {
     val q"$expr $name[..$tpes] (..$aexprs)" = q"x method[T, U] (1, b)"
     assert(expr.show[Structure] === "Term.Name(\"x\")")
