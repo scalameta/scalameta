@@ -23,6 +23,7 @@ class QuasiquoteSuite extends FunSuite {
   test("construction ascriptions") {
     val xs = List(q"x", q"y")
     assert(q"foo(..${xs: List[Term]})".show[Syntax] === "foo(x, y)")
+    // TODO: uncomment after #277 is fixed
     // val xss = List(List(q"x", q"y"))
     // assert(q"foo(...${xss: List[List[Term]]})".show[Syntax] === "foo(x, y)")
     val rhs = Some(q"x")
@@ -32,6 +33,7 @@ class QuasiquoteSuite extends FunSuite {
   test("deconstruction ascriptions") {
     val q"foo(..${xs: Seq[Term.Arg]})" = q"foo(x, y)"
     assert(xs.toString === "List(x, y)")
+    // TODO: uncomment after #277 is fixed
     // val q"foo(...${xss: Seq[Seq[Term.Arg]]})" = q"foo(x, y)"
     // assert(xss.toString === "List(List(x, y))")
     val q"var foo = ${x: Option[Term]}" = q"var foo = x"
