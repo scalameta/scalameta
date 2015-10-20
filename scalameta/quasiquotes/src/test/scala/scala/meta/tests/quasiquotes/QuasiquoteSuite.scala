@@ -2168,4 +2168,15 @@ class QuasiquoteSuite extends FunSuite {
     assert(paramss.show[Structure] === "Seq(Seq(Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"Int\")), None)))")
     assert(q"..$mods def $name[..$tparams](...$paramss): $tpe = $rhs".show[Structure] === "Defn.Def(Nil, Term.Name(\"f\"), Nil, Seq(Seq(Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"Int\")), None))), None, Term.Name(\"???\"))")
   }
+
+  test("1 identity") {
+    val arg"${expr: Term}" = q"x"
+    assert(expr.show[Structure] === "Term.Name(\"x\")")
+  }
+
+  test("2 identity") {
+    val expr = q"x"
+    val arg = arg"${expr: Term}"
+    assert(arg.show[Structure] === "Term.Name(\"x\")")
+  }
 }

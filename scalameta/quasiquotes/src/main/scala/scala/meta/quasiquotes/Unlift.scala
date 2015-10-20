@@ -4,6 +4,7 @@ package quasiquotes
 import org.scalameta.convert._
 import scala.annotation.implicitNotFound
 import scala.meta.internal.{ast => impl}
+import scala.reflect.ClassTag
 
 @implicitNotFound(msg = "don't know how to unlift ${I} into ${O}")
 trait Unlift[I, O] extends Convert[I, Option[O]]
@@ -24,5 +25,6 @@ object Unlift {
   implicit def unliftNull[I >: Lit]: Unlift[I, Null]     = Unlift{ case impl.Lit(null) => null }
   implicit def unliftUnit[I >: Lit]: Unlift[I, Unit]     = Unlift{ case impl.Lit(()) => () }
 
-  // TODO: what are the duals of liftIdentity and liftOption?
+  // TODO: what are the dual of liftOption?
+  implicit def unliftIdentity[I, O <: I : ClassTag]: Unlift[I, O] = Unlift { case x: O => x }
 }
