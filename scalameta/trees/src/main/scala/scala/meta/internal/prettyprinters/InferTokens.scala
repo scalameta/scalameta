@@ -16,6 +16,7 @@ import scala.meta.tokens._
 import scala.meta.tokenquasiquotes._
 import scala.meta.prettyprinters._
 import scala.meta.dialects.Scala211
+import scala.meta.internal.{ffi => f}
 
 // TODO: this infers tokens for the Scala211 dialect due to token quasiquotes (the dialect needs to be explicitly imported). It should be changed in the future.
 // TODO: fix occasional incorrectness when semicolons are omitted
@@ -338,6 +339,15 @@ private[meta] object inferTokens {
         else loop(toks0.repr, zipped ++ oStatsTail)
       val newStats = stats1.drop(zipped.length).`->o->`
       Tokens(patchedTokens ++ newStats: _*)
+    }
+
+    def ffi(tree: Tree): Tokens = tree match {
+      case tree: scala.meta.internal.ast.Member if tree.ffi != f.Ffi.Zero =>
+        val str = "/* " + tree.ffi + " */ "
+        val input = Input.String(str)
+        Tokens(Token.Comment(input, dialect, 0, str.length - 1), Token.` `(input, dialect, str.length - 1))
+      case _ =>
+        toks""
     }
 
     /* Infer tokens for a given tree, making use of the helpers above. */
@@ -715,7 +725,9 @@ private[meta] object inferTokens {
         }
     }
 
-    tkz(tree.asInstanceOf[scala.meta.internal.ast.Tree])
+    val ffiTokens = ffi(tree.asInstanceOf[scala.meta.internal.ast.Tree])
+    val payloadTokens = tkz(tree.asInstanceOf[scala.meta.internal.ast.Tree])
+    ffiTokens ++ payloadTokens
   }
 
   implicit class RichTokens(tks: Tokens) {
