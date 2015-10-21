@@ -15,7 +15,7 @@ class ReflectionSuite extends AstSuite {
   test("root") {
     assert(symbolOf[scala.meta.Tree].isRoot)
     assert(symbolOf[scala.meta.Tree].asRoot.allBranches.length === 73)
-    assert(symbolOf[scala.meta.Tree].asRoot.allLeafs.length === 319)
+    assert(symbolOf[scala.meta.Tree].asRoot.allLeafs.length === 317)
   }
 
   test("If") {
@@ -131,7 +131,6 @@ class ReflectionSuite extends AstSuite {
       |scala.meta.internal.ast.Mod.Case                 => scala.meta.Mod
       |scala.meta.internal.ast.Mod.Contravariant        => scala.meta.Mod
       |scala.meta.internal.ast.Mod.Covariant            => scala.meta.Mod
-      |scala.meta.internal.ast.Mod.Ffi                  => scala.meta.Mod
       |scala.meta.internal.ast.Mod.Final                => scala.meta.Mod
       |scala.meta.internal.ast.Mod.Implicit             => scala.meta.Mod
       |scala.meta.internal.ast.Mod.Lazy                 => scala.meta.Mod

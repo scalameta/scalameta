@@ -20,26 +20,33 @@ class AstMacros(val c: Context) extends AstReflection {
   val AdtInternal = q"_root_.org.scalameta.adt.Internal"
   val AstInternal = q"_root_.org.scalameta.ast.internal"
   val InternalSemantic = q"_root_.scala.meta.internal.semantic"
+  val InternalFfi = q"_root_.scala.meta.internal.ffi"
   val FlagsPackage = q"_root_.scala.meta.internal.flags.`package`"
   val Tokens = q"_root_.scala.meta.tokens"
   val Prettyprinters = q"_root_.scala.meta.internal.prettyprinters"
   def impl(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       def fullName = c.internal.enclosingOwner.fullName.toString + "." + cdef.name.toString
-      def is(abbrev: String) = fullName == "scala.meta.internal.ast." + abbrev
+      def abbrevName = fullName.stripPrefix("scala.meta.internal.ast.")
+      def is(abbrev: String) = abbrevName == abbrev
       def isQuasi = cdef.name.toString == "Quasi"
       def isName = is("Name.Anonymous") || is("Name.Indeterminate") || is("Term.Name") || is("Type.Name") || is("Ctor.Ref.Name")
-      def isLit = !isQuasi && fullName.startsWith("scala.meta.internal.ast.Lit")
-      def isCtorRef = !isQuasi && fullName.startsWith("scala.meta.internal.ast.Ctor.Ref")
-      def isCtorCall = !isQuasi && fullName.startsWith("scala.meta.internal.ast.Ctor.Call")
+      def isLit = !isQuasi && abbrevName.startsWith("Lit")
+      def isCtorRef = !isQuasi && abbrevName.startsWith("Ctor.Ref")
+      def isCtorCall = !isQuasi && abbrevName.startsWith("Ctor.Call")
       def looksLikeTermButNotTerm = is("Term.Param") || is("Term.Arg.Named") || is("Term.Arg.Repeated")
-      def isTerm = !isQuasi && (fullName.startsWith("scala.meta.internal.ast.Term") || isLit || isCtorRef || isCtorCall) && !looksLikeTermButNotTerm
+      def isTerm = !isQuasi && (abbrevName.startsWith("Term") || isLit || isCtorRef || isCtorCall) && !looksLikeTermButNotTerm
       def isTermParam = is("Term.Param")
+      def isMember = !isQuasi && !is("Decl.Val") && !is("Decl.Var") && !is("Defn.Val") && !is("Defn.Var") && {
+        abbrevName.startsWith("Decl.") || abbrevName.startsWith("Defn.") || is("Ctor.Primary") || is("Ctor.Secondary") ||
+        abbrevName.startsWith("Pkg") || abbrevName.startsWith("Pat.Var.") || is("Term.Param") || is("Type.Param")
+      }
       def hasTokens = true
       def hasEnv = isName || isTerm
       def hasDenot = isName
       def hasTyping = isTerm || isTermParam
       def hasExpansion = isTerm
+      def hasFfi = isMember
       val q"$imods class $iname[..$tparams] $ctorMods(...$rawparamss) extends { ..$earlydefns } with ..$iparents { $aself => ..$astats }" = cdef
       // TODO: For stack traces, we'd like to have short class names, because stack traces print full names anyway.
       // However debugging macro expansion errors is much-much easier with full names for Api and Impl classes
@@ -203,6 +210,22 @@ class AstMacros(val c: Context) extends AstReflection {
           // NOTE: generated elsewhere, grep for `quasigetter`
         }
       }
+      if (hasFfi) {
+        bparams1 += q"protected val privateFfi: $InternalFfi.Ffi"
+        astats1 += q"private[meta] def ffi: $InternalFfi.Ffi"
+        stats1 += q"""
+          private[meta] def ffi: $InternalFfi.Ffi = {
+            if (privateFfi != null) privateFfi
+            else $InternalFfi.Ffi.Zero
+          }
+        """
+      } else {
+        if (!isQuasi) {
+          stats1 += q"protected def privateFfi: $InternalFfi.Ffi = null"
+        } else {
+          // NOTE: generated elsewhere, grep for `quasigetter`
+        }
+      }
 
       // step 5: turn all parameters into vars, create getters and setters
       def internalize(name: TermName) = TermName("_" + name.toString)
@@ -251,6 +274,8 @@ class AstMacros(val c: Context) extends AstReflection {
       qstats1 += q"override protected def privateTyping: $InternalSemantic.Typing = null"
       if (hasExpansion) qstats1 += quasigetter(PrivateMeta, "expansion")
       qstats1 += q"override protected def privateExpansion: $InternalSemantic.Expansion = null"
+      if (hasFfi) qstats1 += quasigetter(PrivateMeta, "ffi")
+      qstats1 += q"override protected def privateFfi: $InternalFfi.Ffi = null"
       qstats1 ++= fieldParamss.flatten.map(p => quasigetter(NoMods, p.name.toString))
       if (is("Name.Anonymous")) qstats1 += quasigetter(NoMods, "value")
 
@@ -273,6 +298,7 @@ class AstMacros(val c: Context) extends AstReflection {
       if (hasDenot) privateCopyInternals += q"denot"
       if (hasTyping) privateCopyInternals += q"typing"
       if (hasExpansion) privateCopyInternals += q"expansion"
+      if (hasFfi) privateCopyInternals += q"ffi"
       val privateCopyInitss = paramss.map(_.map(p => q"$AstInternal.initField(this.${internalize(p.name)})"))
       val privateCopyBody = q"new $name(..$privateCopyInternals)(...$privateCopyInitss)"
       stats1 += q"""
@@ -284,7 +310,8 @@ class AstMacros(val c: Context) extends AstReflection {
             env: $InternalSemantic.Environment = privateEnv,
             denot: $InternalSemantic.Denotation = privateDenot,
             typing: $InternalSemantic.Typing = privateTyping,
-            expansion: $InternalSemantic.Expansion = privateExpansion): ThisType = {
+            expansion: $InternalSemantic.Expansion = privateExpansion,
+            ffi: $InternalFfi.Ffi = privateFfi): ThisType = {
           $privateCopyBody
         }
       """
@@ -450,6 +477,15 @@ class AstMacros(val c: Context) extends AstReflection {
         """
         qstats1 += quasisetter(PrivateMeta, "withExpansion", paramExpansionLike)
       }
+      if (hasFfi) {
+        val paramFfi = q"val ffi: $InternalFfi.Ffi"
+        astats1 += q"""
+          private[meta] def withFfi($paramFfi): $iname = {
+            this.privateCopy(ffi = ffi)
+          }
+        """
+        qstats1 += quasisetter(PrivateMeta, "withFfi", paramFfi)
+      }
 
       // step 9: generate boilerplate required by the @ast infrastructure
       istats1 += q"override type ThisType <: $iname"
@@ -505,6 +541,7 @@ class AstMacros(val c: Context) extends AstReflection {
       if (hasDenot) internalInitCount += 1
       if (hasTyping) internalInitCount += 1
       if (hasExpansion) internalInitCount += 1
+      if (hasFfi) internalInitCount += 1
       val internalInitss = 1.to(internalInitCount).map(_ => q"null")
       val paramInitss = internalLocalss.map(_.map{ case (local, internal) => q"$AstInternal.initParam($local)" })
       internalBody += q"val node = new $name($FlagsPackage.ZERO, ..$internalInitss)(...$paramInitss)"

@@ -671,9 +671,6 @@ private[meta] object inferTokens {
       case _: Mod.Lazy =>                     toks"lazy"
       case _: Mod.ValParam =>                 toks"val"
       case _: Mod.VarParam =>                 toks"var"
-      case Mod.Ffi(signature) =>
-        val quote = if (signature.contains(EOL)) tripleDoubleQuotes else singleDoubleQuotes
-        toks"@ffi($quote${mineLitTk(signature)}$quote)"
 
       // Enumerator
       case t: Enumerator.Val =>       toks"${t.pat.tks} = ${t.rhs.tks}"

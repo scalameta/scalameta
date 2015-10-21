@@ -10,7 +10,6 @@ import scala.meta.prettyprinters._
 import scala.meta.internal.{equality => e}
 import scala.meta.internal.ast.Fresh
 import scala.meta.internal.ast.Helpers
-import scala.runtime.ScalaRunTime.isAnyVal
 
 package scala.meta {
   @root trait Tree extends Product with Serializable {
@@ -158,7 +157,9 @@ package scala.meta.internal.ast {
   import org.scalameta.invariants._
   import org.scalameta.annotations._
   import org.scalameta.unreachable
+  import scala.runtime.ScalaRunTime.isAnyVal
   import scala.meta.internal.semantic._
+  import scala.meta.internal.ffi._
   import scala.meta.internal.ast.Helpers._
 
   @branch trait Tree extends api.Tree
@@ -428,7 +429,10 @@ package scala.meta.internal.ast {
     require(value == null || isAnyVal(value) || value.isInstanceOf[String] || value.isInstanceOf[scala.Symbol])
   }
 
-  @branch trait Member extends api.Member with Tree with Scope
+  @branch trait Member extends api.Member with Tree with Scope {
+    private[meta] def ffi: Ffi
+    private[meta] def withFfi(ffi: Ffi): ThisType
+  }
   object Member {
     @branch trait Term extends api.Member.Term with Member
     @branch trait Type extends api.Member.Type with Member
@@ -588,7 +592,6 @@ package scala.meta.internal.ast {
     // and that has proven to be very clunky (e.g. such XXX.Param type has to be a supertype for Term.Param)
     @ast class ValParam() extends Mod
     @ast class VarParam() extends Mod
-    @ast class Ffi(signature: String) extends Mod
   }
 
   @branch trait Enumerator extends api.Enumerator with Tree

@@ -306,7 +306,6 @@ private[meta] trait Api {
     @hosted def isVarargParam: Boolean = tree match { case impl.Term.Param(_, _, Some(impl.Type.Arg.Repeated(_)), _) => true; case _ => false }
     @hosted def isValParam: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.ValParam])
     @hosted def isVarParam: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.VarParam])
-    @hosted def ffi: Option[String] = tree.mods.collectFirst { case impl.Mod.Ffi(signature) => signature }
   }
 
   implicit class XtensionSemanticMember(member: Member) extends XtensionSemanticMemberLike {

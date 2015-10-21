@@ -146,6 +146,7 @@ else
       privateExpansion
     else
       _root_.scala.meta.internal.semantic.Expansion.Zero;
+    protected def privateFfi: _root_.scala.meta.internal.ffi.Ffi = null;
     def cond: Term = {
       _root_.org.scalameta.ast.internal.loadField(this._cond);
       this._cond
@@ -158,7 +159,7 @@ else
       _root_.org.scalameta.ast.internal.loadField(this._elsep);
       this._elsep
     };
-    private[meta] def privateCopy(flags: _root_.scala.meta.internal.flags.`package`.Flags = privateFlags, prototype: _root_.scala.meta.Tree = this, parent: _root_.scala.meta.Tree = privateParent, tokens: _root_.scala.meta.tokens.Tokens = privateTokens, env: _root_.scala.meta.internal.semantic.Environment = privateEnv, denot: _root_.scala.meta.internal.semantic.Denotation = privateDenot, typing: _root_.scala.meta.internal.semantic.Typing = privateTyping, expansion: _root_.scala.meta.internal.semantic.Expansion = privateExpansion): ThisType = new Impl(flags, prototype.asInstanceOf[ThisType], parent, tokens, env, typing, expansion)(_root_.org.scalameta.ast.internal.initField(this._cond), _root_.org.scalameta.ast.internal.initField(this._thenp), _root_.org.scalameta.ast.internal.initField(this._elsep));
+    private[meta] def privateCopy(flags: _root_.scala.meta.internal.flags.`package`.Flags = privateFlags, prototype: _root_.scala.meta.Tree = this, parent: _root_.scala.meta.Tree = privateParent, tokens: _root_.scala.meta.tokens.Tokens = privateTokens, env: _root_.scala.meta.internal.semantic.Environment = privateEnv, denot: _root_.scala.meta.internal.semantic.Denotation = privateDenot, typing: _root_.scala.meta.internal.semantic.Typing = privateTyping, expansion: _root_.scala.meta.internal.semantic.Expansion = privateExpansion, ffi: _root_.scala.meta.internal.ffi.Ffi = privateFfi): ThisType = new Impl(flags, prototype.asInstanceOf[ThisType], parent, tokens, env, typing, expansion)(_root_.org.scalameta.ast.internal.initField(this._cond), _root_.org.scalameta.ast.internal.initField(this._thenp), _root_.org.scalameta.ast.internal.initField(this._elsep));
     protected def writeReplace(): _root_.scala.AnyRef = {
       _root_.org.scalameta.ast.internal.loadField(this._cond);
       _root_.org.scalameta.ast.internal.loadField(this._thenp);
@@ -189,6 +190,7 @@ else
     else
       "unsupported splicing position");
     override protected def privateExpansion: _root_.scala.meta.internal.semantic.Expansion = null;
+    override protected def privateFfi: _root_.scala.meta.internal.ffi.Ffi = null;
     override def cond: _root_.scala.Nothing = throw new _root_.scala.`package`.UnsupportedOperationException(if (this.rank.$eq$eq(0))
       "unsupported unquoting position"
     else
@@ -213,8 +215,8 @@ else
       "unsupported unquoting position"
     else
       "unsupported splicing position");
-    def pt: _root_.java.lang.Class[_$63] forSome {
-      <synthetic> type _$63
+    def pt: _root_.java.lang.Class[_$64] forSome {
+      <synthetic> type _$64
     } = _root_.org.scalameta.runtime.arrayClass(_root_.scala.Predef.classOf[If], this.rank)
   }
 }
@@ -234,76 +236,79 @@ Here's the same code after typechecking with helper def macros expanded:
     If.super.<init>();
     ()
   };
-  def privateTag: Int = 88;
+  def privateTag: Int = 89;
   def apply(cond: scala.meta.internal.ast.Term, thenp: scala.meta.internal.ast.Term, elsep: scala.meta.internal.ast.Term): scala.meta.internal.ast.Term.If = {
     def internal(cond: scala.meta.internal.ast.Term, thenp: scala.meta.internal.ast.Term, elsep: scala.meta.internal.ast.Term): scala.meta.internal.ast.Term.If = {
       ((): Unit);
       ({
-        val result$macro$198: Boolean = cond.!=(null);
-        if (result$macro$198)
+        val result$macro$208: Boolean = cond.!=(null);
+        if (result$macro$208)
           scala.Tuple2.apply[Boolean, collection.immutable.Nil.type](true, scala.collection.immutable.Nil)
         else
           scala.Tuple2.apply[Boolean, List[String]](false, scala.collection.immutable.List.apply[String]("cond is equal to null"))
       } match {
         case (_1: Boolean, _2: List[String])(Boolean, List[String])(true, _) => ()
-        case (_1: Boolean, _2: List[String])(Boolean, List[String])(false, (failures$macro$197 @ _)) => org.scalameta.invariants.InvariantFailedException.raise("cond.!=(null)", failures$macro$197, scala.collection.immutable.Map.apply[String, scala.meta.internal.ast.Term](scala.Tuple2.apply[String, scala.meta.internal.ast.Term]("cond", cond)))
+        case (_1: Boolean, _2: List[String])(Boolean, List[String])(false, (failures$macro$207 @ _)) => org.scalameta.invariants.InvariantFailedException.raise("cond.!=(null)", failures$macro$207, scala.collection.immutable.Map.apply[String, scala.meta.internal.ast.Term](scala.Tuple2.apply[String, scala.meta.internal.ast.Term]("cond", cond)))
       }: Unit);
       ({
-        val result$macro$200: Boolean = thenp.!=(null);
-        if (result$macro$200)
+        val result$macro$210: Boolean = thenp.!=(null);
+        if (result$macro$210)
           scala.Tuple2.apply[Boolean, collection.immutable.Nil.type](true, scala.collection.immutable.Nil)
         else
           scala.Tuple2.apply[Boolean, List[String]](false, scala.collection.immutable.List.apply[String]("thenp is equal to null"))
       } match {
         case (_1: Boolean, _2: List[String])(Boolean, List[String])(true, _) => ()
-        case (_1: Boolean, _2: List[String])(Boolean, List[String])(false, (failures$macro$199 @ _)) => org.scalameta.invariants.InvariantFailedException.raise("thenp.!=(null)", failures$macro$199, scala.collection.immutable.Map.apply[String, scala.meta.internal.ast.Term](scala.Tuple2.apply[String, scala.meta.internal.ast.Term]("thenp", thenp)))
+        case (_1: Boolean, _2: List[String])(Boolean, List[String])(false, (failures$macro$209 @ _)) => org.scalameta.invariants.InvariantFailedException.raise("thenp.!=(null)", failures$macro$209, scala.collection.immutable.Map.apply[String, scala.meta.internal.ast.Term](scala.Tuple2.apply[String, scala.meta.internal.ast.Term]("thenp", thenp)))
       }: Unit);
       ({
-        val result$macro$202: Boolean = elsep.!=(null);
-        if (result$macro$202)
+        val result$macro$212: Boolean = elsep.!=(null);
+        if (result$macro$212)
           scala.Tuple2.apply[Boolean, collection.immutable.Nil.type](true, scala.collection.immutable.Nil)
         else
           scala.Tuple2.apply[Boolean, List[String]](false, scala.collection.immutable.List.apply[String]("elsep is equal to null"))
       } match {
         case (_1: Boolean, _2: List[String])(Boolean, List[String])(true, _) => ()
-        case (_1: Boolean, _2: List[String])(Boolean, List[String])(false, (failures$macro$201 @ _)) => org.scalameta.invariants.InvariantFailedException.raise("elsep.!=(null)", failures$macro$201, scala.collection.immutable.Map.apply[String, scala.meta.internal.ast.Term](scala.Tuple2.apply[String, scala.meta.internal.ast.Term]("elsep", elsep)))
+        case (_1: Boolean, _2: List[String])(Boolean, List[String])(false, (failures$macro$211 @ _)) => org.scalameta.invariants.InvariantFailedException.raise("elsep.!=(null)", failures$macro$211, scala.collection.immutable.Map.apply[String, scala.meta.internal.ast.Term](scala.Tuple2.apply[String, scala.meta.internal.ast.Term]("elsep", elsep)))
       }: Unit);
       ();
       ();
       ();
       val node: scala.meta.internal.ast.Term.If.Impl = new If.this.Impl(scala.meta.internal.flags.`package`.ZERO, null, null, null, null, null, null)((null: scala.meta.internal.ast.Term), (null: scala.meta.internal.ast.Term), (null: scala.meta.internal.ast.Term));
       (node._cond_=({
-        <artifact> val x$1930: scala.meta.internal.ast.Term = cond;
-        <artifact> val x$1931: scala.meta.internal.ast.Term.If.Impl = node;
-        <artifact> val x$1932: meta.internal.flags.Flags = cond.privateCopy$default$1;
-        <artifact> val x$1933: scala.meta.tokens.Tokens = cond.privateCopy$default$4;
-        <artifact> val x$1934: scala.meta.internal.semantic.Environment = cond.privateCopy$default$5;
-        <artifact> val x$1935: scala.meta.internal.semantic.Denotation = cond.privateCopy$default$6;
-        <artifact> val x$1936: scala.meta.internal.semantic.Typing = cond.privateCopy$default$7;
-        <artifact> val x$1937: scala.meta.internal.semantic.Expansion = cond.privateCopy$default$8;
-        cond.privateCopy(x$1932, x$1930, x$1931, x$1933, x$1934, x$1935, x$1936, x$1937)
+        <artifact> val x$2178: scala.meta.internal.ast.Term = cond;
+        <artifact> val x$2179: scala.meta.internal.ast.Term.If.Impl = node;
+        <artifact> val x$2180: meta.internal.flags.Flags = cond.privateCopy$default$1;
+        <artifact> val x$2181: scala.meta.tokens.Tokens = cond.privateCopy$default$4;
+        <artifact> val x$2182: scala.meta.internal.semantic.Environment = cond.privateCopy$default$5;
+        <artifact> val x$2183: scala.meta.internal.semantic.Denotation = cond.privateCopy$default$6;
+        <artifact> val x$2184: scala.meta.internal.semantic.Typing = cond.privateCopy$default$7;
+        <artifact> val x$2185: scala.meta.internal.semantic.Expansion = cond.privateCopy$default$8;
+        <artifact> val x$2186: scala.meta.internal.ffi.Ffi = cond.privateCopy$default$9;
+        cond.privateCopy(x$2180, x$2178, x$2179, x$2181, x$2182, x$2183, x$2184, x$2185, x$2186)
       }): Unit);
       (node._thenp_=({
-        <artifact> val x$1938: scala.meta.internal.ast.Term = thenp;
-        <artifact> val x$1939: scala.meta.internal.ast.Term.If.Impl = node;
-        <artifact> val x$1940: meta.internal.flags.Flags = thenp.privateCopy$default$1;
-        <artifact> val x$1941: scala.meta.tokens.Tokens = thenp.privateCopy$default$4;
-        <artifact> val x$1942: scala.meta.internal.semantic.Environment = thenp.privateCopy$default$5;
-        <artifact> val x$1943: scala.meta.internal.semantic.Denotation = thenp.privateCopy$default$6;
-        <artifact> val x$1944: scala.meta.internal.semantic.Typing = thenp.privateCopy$default$7;
-        <artifact> val x$1945: scala.meta.internal.semantic.Expansion = thenp.privateCopy$default$8;
-        thenp.privateCopy(x$1940, x$1938, x$1939, x$1941, x$1942, x$1943, x$1944, x$1945)
+        <artifact> val x$2187: scala.meta.internal.ast.Term = thenp;
+        <artifact> val x$2188: scala.meta.internal.ast.Term.If.Impl = node;
+        <artifact> val x$2189: meta.internal.flags.Flags = thenp.privateCopy$default$1;
+        <artifact> val x$2190: scala.meta.tokens.Tokens = thenp.privateCopy$default$4;
+        <artifact> val x$2191: scala.meta.internal.semantic.Environment = thenp.privateCopy$default$5;
+        <artifact> val x$2192: scala.meta.internal.semantic.Denotation = thenp.privateCopy$default$6;
+        <artifact> val x$2193: scala.meta.internal.semantic.Typing = thenp.privateCopy$default$7;
+        <artifact> val x$2194: scala.meta.internal.semantic.Expansion = thenp.privateCopy$default$8;
+        <artifact> val x$2195: scala.meta.internal.ffi.Ffi = thenp.privateCopy$default$9;
+        thenp.privateCopy(x$2189, x$2187, x$2188, x$2190, x$2191, x$2192, x$2193, x$2194, x$2195)
       }): Unit);
       (node._elsep_=({
-        <artifact> val x$1946: scala.meta.internal.ast.Term = elsep;
-        <artifact> val x$1947: scala.meta.internal.ast.Term.If.Impl = node;
-        <artifact> val x$1948: meta.internal.flags.Flags = elsep.privateCopy$default$1;
-        <artifact> val x$1949: scala.meta.tokens.Tokens = elsep.privateCopy$default$4;
-        <artifact> val x$1950: scala.meta.internal.semantic.Environment = elsep.privateCopy$default$5;
-        <artifact> val x$1951: scala.meta.internal.semantic.Denotation = elsep.privateCopy$default$6;
-        <artifact> val x$1952: scala.meta.internal.semantic.Typing = elsep.privateCopy$default$7;
-        <artifact> val x$1953: scala.meta.internal.semantic.Expansion = elsep.privateCopy$default$8;
-        elsep.privateCopy(x$1948, x$1946, x$1947, x$1949, x$1950, x$1951, x$1952, x$1953)
+        <artifact> val x$2196: scala.meta.internal.ast.Term = elsep;
+        <artifact> val x$2197: scala.meta.internal.ast.Term.If.Impl = node;
+        <artifact> val x$2198: meta.internal.flags.Flags = elsep.privateCopy$default$1;
+        <artifact> val x$2199: scala.meta.tokens.Tokens = elsep.privateCopy$default$4;
+        <artifact> val x$2200: scala.meta.internal.semantic.Environment = elsep.privateCopy$default$5;
+        <artifact> val x$2201: scala.meta.internal.semantic.Denotation = elsep.privateCopy$default$6;
+        <artifact> val x$2202: scala.meta.internal.semantic.Typing = elsep.privateCopy$default$7;
+        <artifact> val x$2203: scala.meta.internal.semantic.Expansion = elsep.privateCopy$default$8;
+        <artifact> val x$2204: scala.meta.internal.ffi.Ffi = elsep.privateCopy$default$9;
+        elsep.privateCopy(x$2198, x$2196, x$2197, x$2199, x$2200, x$2201, x$2202, x$2203, x$2204)
       }): Unit);
       node
     };
@@ -339,29 +344,31 @@ Here's the same code after typechecking with helper def macros expanded:
         else
           ()
       };
-      this.privateCopy(flags, this.privateCopy$default$2, this.privateCopy$default$3, this.privateCopy$default$4, this.privateCopy$default$5, this.privateCopy$default$6, this.privateCopy$default$7, this.privateCopy$default$8)
+      this.privateCopy(flags, this.privateCopy$default$2, this.privateCopy$default$3, this.privateCopy$default$4, this.privateCopy$default$5, this.privateCopy$default$6, this.privateCopy$default$7, this.privateCopy$default$8, this.privateCopy$default$9)
     };
     def withTokens(tokens: scala.meta.tokens.Tokens): scala.meta.internal.ast.Term.If = {
-      <artifact> val x$1954: scala.meta.tokens.Tokens = tokens;
-      <artifact> val x$1955: meta.internal.flags.Flags = this.privateCopy$default$1;
-      <artifact> val x$1956: scala.meta.Tree = this.privateCopy$default$2;
-      <artifact> val x$1957: scala.meta.Tree = this.privateCopy$default$3;
-      <artifact> val x$1958: scala.meta.internal.semantic.Environment = this.privateCopy$default$5;
-      <artifact> val x$1959: scala.meta.internal.semantic.Denotation = this.privateCopy$default$6;
-      <artifact> val x$1960: scala.meta.internal.semantic.Typing = this.privateCopy$default$7;
-      <artifact> val x$1961: scala.meta.internal.semantic.Expansion = this.privateCopy$default$8;
-      this.privateCopy(x$1955, x$1956, x$1957, x$1954, x$1958, x$1959, x$1960, x$1961)
+      <artifact> val x$2205: scala.meta.tokens.Tokens = tokens;
+      <artifact> val x$2206: meta.internal.flags.Flags = this.privateCopy$default$1;
+      <artifact> val x$2207: scala.meta.Tree = this.privateCopy$default$2;
+      <artifact> val x$2208: scala.meta.Tree = this.privateCopy$default$3;
+      <artifact> val x$2209: scala.meta.internal.semantic.Environment = this.privateCopy$default$5;
+      <artifact> val x$2210: scala.meta.internal.semantic.Denotation = this.privateCopy$default$6;
+      <artifact> val x$2211: scala.meta.internal.semantic.Typing = this.privateCopy$default$7;
+      <artifact> val x$2212: scala.meta.internal.semantic.Expansion = this.privateCopy$default$8;
+      <artifact> val x$2213: scala.meta.internal.ffi.Ffi = this.privateCopy$default$9;
+      this.privateCopy(x$2206, x$2207, x$2208, x$2205, x$2209, x$2210, x$2211, x$2212, x$2213)
     };
     private[meta] def withEnv(env: scala.meta.internal.semantic.Environment): scala.meta.internal.ast.Term.If = {
-      <artifact> val x$1962: Int = this.privateFlags.&(scala.meta.internal.flags.`package`.TYPECHECKED.unary_~);
-      <artifact> val x$1963: scala.meta.internal.semantic.Environment = env;
-      <artifact> val x$1964: scala.meta.internal.semantic.Denotation = this.privateDenot;
-      <artifact> val x$1965: meta.internal.semantic.Typing.Zero.type = scala.meta.internal.semantic.Typing.Zero;
-      <artifact> val x$1966: meta.internal.semantic.Expansion.Zero.type = scala.meta.internal.semantic.Expansion.Zero;
-      <artifact> val x$1967: scala.meta.Tree = this.privateCopy$default$2;
-      <artifact> val x$1968: scala.meta.Tree = this.privateCopy$default$3;
-      <artifact> val x$1969: scala.meta.tokens.Tokens = this.privateCopy$default$4;
-      this.privateCopy(x$1962, x$1967, x$1968, x$1969, x$1963, x$1964, x$1965, x$1966)
+      <artifact> val x$2214: Int = this.privateFlags.&(scala.meta.internal.flags.`package`.TYPECHECKED.unary_~);
+      <artifact> val x$2215: scala.meta.internal.semantic.Environment = env;
+      <artifact> val x$2216: scala.meta.internal.semantic.Denotation = this.privateDenot;
+      <artifact> val x$2217: meta.internal.semantic.Typing.Zero.type = scala.meta.internal.semantic.Typing.Zero;
+      <artifact> val x$2218: meta.internal.semantic.Expansion.Zero.type = scala.meta.internal.semantic.Expansion.Zero;
+      <artifact> val x$2219: scala.meta.Tree = this.privateCopy$default$2;
+      <artifact> val x$2220: scala.meta.Tree = this.privateCopy$default$3;
+      <artifact> val x$2221: scala.meta.tokens.Tokens = this.privateCopy$default$4;
+      <artifact> val x$2222: scala.meta.internal.ffi.Ffi = this.privateCopy$default$9;
+      this.privateCopy(x$2214, x$2219, x$2220, x$2221, x$2215, x$2216, x$2217, x$2218, x$2222)
     };
     override private[meta] def withAttrs(typingLike: meta.internal.semantic.TypingLike): scala.meta.internal.ast.Term.If = {
       if (this.isInstanceOf[meta.Term.Name].||(this.isInstanceOf[meta.Ctor.Name]))
@@ -374,15 +381,16 @@ Here's the same code after typechecking with helper def macros expanded:
         ();
       val typing: scala.meta.internal.semantic.Typing = typingLike.typing;
       {
-        <artifact> val x$1970: Int = this.privateFlags.&(scala.meta.internal.flags.`package`.TYPECHECKED.unary_~);
-        <artifact> val x$1971: meta.internal.semantic.Environment.Zero.type = scala.meta.internal.semantic.Environment.Zero;
-        <artifact> val x$1972: scala.meta.internal.semantic.Denotation = this.privateDenot;
-        <artifact> val x$1973: scala.meta.internal.semantic.Typing = typing;
-        <artifact> val x$1974: meta.internal.semantic.Expansion.Identity.type = scala.meta.internal.semantic.Expansion.Identity;
-        <artifact> val x$1975: scala.meta.Tree = this.privateCopy$default$2;
-        <artifact> val x$1976: scala.meta.Tree = this.privateCopy$default$3;
-        <artifact> val x$1977: scala.meta.tokens.Tokens = this.privateCopy$default$4;
-        this.privateCopy(x$1970, x$1975, x$1976, x$1977, x$1971, x$1972, x$1973, x$1974)
+        <artifact> val x$2223: Int = this.privateFlags.&(scala.meta.internal.flags.`package`.TYPECHECKED.unary_~);
+        <artifact> val x$2224: meta.internal.semantic.Environment.Zero.type = scala.meta.internal.semantic.Environment.Zero;
+        <artifact> val x$2225: scala.meta.internal.semantic.Denotation = this.privateDenot;
+        <artifact> val x$2226: scala.meta.internal.semantic.Typing = typing;
+        <artifact> val x$2227: meta.internal.semantic.Expansion.Identity.type = scala.meta.internal.semantic.Expansion.Identity;
+        <artifact> val x$2228: scala.meta.Tree = this.privateCopy$default$2;
+        <artifact> val x$2229: scala.meta.Tree = this.privateCopy$default$3;
+        <artifact> val x$2230: scala.meta.tokens.Tokens = this.privateCopy$default$4;
+        <artifact> val x$2231: scala.meta.internal.ffi.Ffi = this.privateCopy$default$9;
+        this.privateCopy(x$2223, x$2228, x$2229, x$2230, x$2224, x$2225, x$2226, x$2227, x$2231)
       }
     };
     private[meta] def withExpansion(expansionLike: meta.internal.semantic.ExpansionLike): scala.meta.internal.ast.Term.If = {
@@ -395,15 +403,16 @@ else
         ();
       val expansion: scala.meta.internal.semantic.Expansion = expansionLike.expansion;
       {
-        <artifact> val x$1978: Int = this.privateFlags.&(scala.meta.internal.flags.`package`.TYPECHECKED.unary_~);
-        <artifact> val x$1979: scala.meta.internal.semantic.Environment = this.privateEnv;
-        <artifact> val x$1980: scala.meta.internal.semantic.Denotation = this.privateDenot;
-        <artifact> val x$1981: scala.meta.internal.semantic.Typing = this.privateTyping;
-        <artifact> val x$1982: scala.meta.internal.semantic.Expansion = expansion;
-        <artifact> val x$1983: scala.meta.Tree = this.privateCopy$default$2;
-        <artifact> val x$1984: scala.meta.Tree = this.privateCopy$default$3;
-        <artifact> val x$1985: scala.meta.tokens.Tokens = this.privateCopy$default$4;
-        this.privateCopy(x$1978, x$1983, x$1984, x$1985, x$1979, x$1980, x$1981, x$1982)
+        <artifact> val x$2232: Int = this.privateFlags.&(scala.meta.internal.flags.`package`.TYPECHECKED.unary_~);
+        <artifact> val x$2233: scala.meta.internal.semantic.Environment = this.privateEnv;
+        <artifact> val x$2234: scala.meta.internal.semantic.Denotation = this.privateDenot;
+        <artifact> val x$2235: scala.meta.internal.semantic.Typing = this.privateTyping;
+        <artifact> val x$2236: scala.meta.internal.semantic.Expansion = expansion;
+        <artifact> val x$2237: scala.meta.Tree = this.privateCopy$default$2;
+        <artifact> val x$2238: scala.meta.Tree = this.privateCopy$default$3;
+        <artifact> val x$2239: scala.meta.tokens.Tokens = this.privateCopy$default$4;
+        <artifact> val x$2240: scala.meta.internal.ffi.Ffi = this.privateCopy$default$9;
+        this.privateCopy(x$2232, x$2237, x$2238, x$2239, x$2233, x$2234, x$2235, x$2236, x$2240)
       }
     };
     override type ThisType = scala.meta.internal.ast.Term.If;
@@ -473,27 +482,29 @@ else
       Impl.this.privateExpansion
     else
       scala.meta.internal.semantic.Expansion.Zero;
+    protected def privateFfi: scala.meta.internal.ffi.Ffi = null;
     def cond: scala.meta.internal.ast.Term = {
       (if (this._cond.==(null))
         {
           scala.Predef.require(this.privatePrototype.!=(null), "internal error when initializing Impl.cond");
           this._cond_=({
-            val copyCond$macro$203: scala.meta.internal.ast.Term#ThisType = {
+            val copyCond$macro$213: scala.meta.internal.ast.Term#ThisType = {
               <artifact> val qual$43: scala.meta.internal.ast.Term = this.privatePrototype.cond;
-              <artifact> val x$1986: scala.meta.internal.ast.Term = this.privatePrototype.cond;
-              <artifact> val x$1987: scala.meta.internal.ast.Term.If.Impl = this;
-              <artifact> val x$1988: meta.internal.flags.Flags = qual$43.privateCopy$default$1;
-              <artifact> val x$1989: scala.meta.tokens.Tokens = qual$43.privateCopy$default$4;
-              <artifact> val x$1990: scala.meta.internal.semantic.Environment = qual$43.privateCopy$default$5;
-              <artifact> val x$1991: scala.meta.internal.semantic.Denotation = qual$43.privateCopy$default$6;
-              <artifact> val x$1992: scala.meta.internal.semantic.Typing = qual$43.privateCopy$default$7;
-              <artifact> val x$1993: scala.meta.internal.semantic.Expansion = qual$43.privateCopy$default$8;
-              qual$43.privateCopy(x$1988, x$1986, x$1987, x$1989, x$1990, x$1991, x$1992, x$1993)
+              <artifact> val x$2241: scala.meta.internal.ast.Term = this.privatePrototype.cond;
+              <artifact> val x$2242: scala.meta.internal.ast.Term.If.Impl = this;
+              <artifact> val x$2243: meta.internal.flags.Flags = qual$43.privateCopy$default$1;
+              <artifact> val x$2244: scala.meta.tokens.Tokens = qual$43.privateCopy$default$4;
+              <artifact> val x$2245: scala.meta.internal.semantic.Environment = qual$43.privateCopy$default$5;
+              <artifact> val x$2246: scala.meta.internal.semantic.Denotation = qual$43.privateCopy$default$6;
+              <artifact> val x$2247: scala.meta.internal.semantic.Typing = qual$43.privateCopy$default$7;
+              <artifact> val x$2248: scala.meta.internal.semantic.Expansion = qual$43.privateCopy$default$8;
+              <artifact> val x$2249: scala.meta.internal.ffi.Ffi = qual$43.privateCopy$default$9;
+              qual$43.privateCopy(x$2243, x$2241, x$2242, x$2244, x$2245, x$2246, x$2247, x$2248, x$2249)
             };
             if (meta.this.Tree.XtensionTypecheckableTree[scala.meta.internal.ast.Term.If](this.privatePrototype).isTypechecked.!=(meta.this.Tree.XtensionTypecheckableTree[scala.meta.internal.ast.Term.If.Impl](this).isTypechecked))
-              meta.this.Tree.XtensionTypecheckableTree[scala.meta.internal.ast.Term#ThisType](copyCond$macro$203).withTypechecked(meta.this.Tree.XtensionTypecheckableTree[scala.meta.internal.ast.Term.If.Impl](this).isTypechecked)
+              meta.this.Tree.XtensionTypecheckableTree[scala.meta.internal.ast.Term#ThisType](copyCond$macro$213).withTypechecked(meta.this.Tree.XtensionTypecheckableTree[scala.meta.internal.ast.Term.If.Impl](this).isTypechecked)
             else
-              copyCond$macro$203
+              copyCond$macro$213
           })
         }
       else
@@ -505,22 +516,23 @@ else
         {
           scala.Predef.require(this.privatePrototype.!=(null), "internal error when initializing Impl.thenp");
           this._thenp_=({
-            val copyThenp$macro$204: scala.meta.internal.ast.Term#ThisType = {
+            val copyThenp$macro$214: scala.meta.internal.ast.Term#ThisType = {
               <artifact> val qual$44: scala.meta.internal.ast.Term = this.privatePrototype.thenp;
-              <artifact> val x$1994: scala.meta.internal.ast.Term = this.privatePrototype.thenp;
-              <artifact> val x$1995: scala.meta.internal.ast.Term.If.Impl = this;
-              <artifact> val x$1996: meta.internal.flags.Flags = qual$44.privateCopy$default$1;
-              <artifact> val x$1997: scala.meta.tokens.Tokens = qual$44.privateCopy$default$4;
-              <artifact> val x$1998: scala.meta.internal.semantic.Environment = qual$44.privateCopy$default$5;
-              <artifact> val x$1999: scala.meta.internal.semantic.Denotation = qual$44.privateCopy$default$6;
-              <artifact> val x$2000: scala.meta.internal.semantic.Typing = qual$44.privateCopy$default$7;
-              <artifact> val x$2001: scala.meta.internal.semantic.Expansion = qual$44.privateCopy$default$8;
-              qual$44.privateCopy(x$1996, x$1994, x$1995, x$1997, x$1998, x$1999, x$2000, x$2001)
+              <artifact> val x$2250: scala.meta.internal.ast.Term = this.privatePrototype.thenp;
+              <artifact> val x$2251: scala.meta.internal.ast.Term.If.Impl = this;
+              <artifact> val x$2252: meta.internal.flags.Flags = qual$44.privateCopy$default$1;
+              <artifact> val x$2253: scala.meta.tokens.Tokens = qual$44.privateCopy$default$4;
+              <artifact> val x$2254: scala.meta.internal.semantic.Environment = qual$44.privateCopy$default$5;
+              <artifact> val x$2255: scala.meta.internal.semantic.Denotation = qual$44.privateCopy$default$6;
+              <artifact> val x$2256: scala.meta.internal.semantic.Typing = qual$44.privateCopy$default$7;
+              <artifact> val x$2257: scala.meta.internal.semantic.Expansion = qual$44.privateCopy$default$8;
+              <artifact> val x$2258: scala.meta.internal.ffi.Ffi = qual$44.privateCopy$default$9;
+              qual$44.privateCopy(x$2252, x$2250, x$2251, x$2253, x$2254, x$2255, x$2256, x$2257, x$2258)
             };
             if (meta.this.Tree.XtensionTypecheckableTree[scala.meta.internal.ast.Term.If](this.privatePrototype).isTypechecked.!=(meta.this.Tree.XtensionTypecheckableTree[scala.meta.internal.ast.Term.If.Impl](this).isTypechecked))
-              meta.this.Tree.XtensionTypecheckableTree[scala.meta.internal.ast.Term#ThisType](copyThenp$macro$204).withTypechecked(meta.this.Tree.XtensionTypecheckableTree[scala.meta.internal.ast.Term.If.Impl](this).isTypechecked)
+              meta.this.Tree.XtensionTypecheckableTree[scala.meta.internal.ast.Term#ThisType](copyThenp$macro$214).withTypechecked(meta.this.Tree.XtensionTypecheckableTree[scala.meta.internal.ast.Term.If.Impl](this).isTypechecked)
             else
-              copyThenp$macro$204
+              copyThenp$macro$214
           })
         }
       else
@@ -532,29 +544,30 @@ else
         {
           scala.Predef.require(this.privatePrototype.!=(null), "internal error when initializing Impl.elsep");
           this._elsep_=({
-            val copyElsep$macro$205: scala.meta.internal.ast.Term#ThisType = {
+            val copyElsep$macro$215: scala.meta.internal.ast.Term#ThisType = {
               <artifact> val qual$45: scala.meta.internal.ast.Term = this.privatePrototype.elsep;
-              <artifact> val x$2002: scala.meta.internal.ast.Term = this.privatePrototype.elsep;
-              <artifact> val x$2003: scala.meta.internal.ast.Term.If.Impl = this;
-              <artifact> val x$2004: meta.internal.flags.Flags = qual$45.privateCopy$default$1;
-              <artifact> val x$2005: scala.meta.tokens.Tokens = qual$45.privateCopy$default$4;
-              <artifact> val x$2006: scala.meta.internal.semantic.Environment = qual$45.privateCopy$default$5;
-              <artifact> val x$2007: scala.meta.internal.semantic.Denotation = qual$45.privateCopy$default$6;
-              <artifact> val x$2008: scala.meta.internal.semantic.Typing = qual$45.privateCopy$default$7;
-              <artifact> val x$2009: scala.meta.internal.semantic.Expansion = qual$45.privateCopy$default$8;
-              qual$45.privateCopy(x$2004, x$2002, x$2003, x$2005, x$2006, x$2007, x$2008, x$2009)
+              <artifact> val x$2259: scala.meta.internal.ast.Term = this.privatePrototype.elsep;
+              <artifact> val x$2260: scala.meta.internal.ast.Term.If.Impl = this;
+              <artifact> val x$2261: meta.internal.flags.Flags = qual$45.privateCopy$default$1;
+              <artifact> val x$2262: scala.meta.tokens.Tokens = qual$45.privateCopy$default$4;
+              <artifact> val x$2263: scala.meta.internal.semantic.Environment = qual$45.privateCopy$default$5;
+              <artifact> val x$2264: scala.meta.internal.semantic.Denotation = qual$45.privateCopy$default$6;
+              <artifact> val x$2265: scala.meta.internal.semantic.Typing = qual$45.privateCopy$default$7;
+              <artifact> val x$2266: scala.meta.internal.semantic.Expansion = qual$45.privateCopy$default$8;
+              <artifact> val x$2267: scala.meta.internal.ffi.Ffi = qual$45.privateCopy$default$9;
+              qual$45.privateCopy(x$2261, x$2259, x$2260, x$2262, x$2263, x$2264, x$2265, x$2266, x$2267)
             };
             if (meta.this.Tree.XtensionTypecheckableTree[scala.meta.internal.ast.Term.If](this.privatePrototype).isTypechecked.!=(meta.this.Tree.XtensionTypecheckableTree[scala.meta.internal.ast.Term.If.Impl](this).isTypechecked))
-              meta.this.Tree.XtensionTypecheckableTree[scala.meta.internal.ast.Term#ThisType](copyElsep$macro$205).withTypechecked(meta.this.Tree.XtensionTypecheckableTree[scala.meta.internal.ast.Term.If.Impl](this).isTypechecked)
+              meta.this.Tree.XtensionTypecheckableTree[scala.meta.internal.ast.Term#ThisType](copyElsep$macro$215).withTypechecked(meta.this.Tree.XtensionTypecheckableTree[scala.meta.internal.ast.Term.If.Impl](this).isTypechecked)
             else
-              copyElsep$macro$205
+              copyElsep$macro$215
           })
         }
       else
         (): Unit);
       this._elsep
     };
-    private[meta] def privateCopy(flags: meta.internal.flags.Flags = Impl.this.privateFlags, prototype: scala.meta.Tree = this, parent: scala.meta.Tree = Impl.this.privateParent, tokens: scala.meta.tokens.Tokens = Impl.this.privateTokens, env: scala.meta.internal.semantic.Environment = Impl.this.privateEnv, denot: scala.meta.internal.semantic.Denotation = Impl.this.privateDenot, typing: scala.meta.internal.semantic.Typing = Impl.this.privateTyping, expansion: scala.meta.internal.semantic.Expansion = Impl.this.privateExpansion): Impl.this.ThisType = new If.this.Impl(flags, prototype.asInstanceOf[Impl.this.ThisType], parent, tokens, env, typing, expansion)((null: scala.meta.internal.ast.Term), (null: scala.meta.internal.ast.Term), (null: scala.meta.internal.ast.Term));
+    private[meta] def privateCopy(flags: meta.internal.flags.Flags = Impl.this.privateFlags, prototype: scala.meta.Tree = this, parent: scala.meta.Tree = Impl.this.privateParent, tokens: scala.meta.tokens.Tokens = Impl.this.privateTokens, env: scala.meta.internal.semantic.Environment = Impl.this.privateEnv, denot: scala.meta.internal.semantic.Denotation = Impl.this.privateDenot, typing: scala.meta.internal.semantic.Typing = Impl.this.privateTyping, expansion: scala.meta.internal.semantic.Expansion = Impl.this.privateExpansion, ffi: scala.meta.internal.ffi.Ffi = Impl.this.privateFfi): Impl.this.ThisType = new If.this.Impl(flags, prototype.asInstanceOf[Impl.this.ThisType], parent, tokens, env, typing, expansion)((null: scala.meta.internal.ast.Term), (null: scala.meta.internal.ast.Term), (null: scala.meta.internal.ast.Term));
     override <synthetic> def privateCopy$default$1: meta.internal.flags.Flags = Impl.this.privateFlags;
     override <synthetic> def privateCopy$default$2: scala.meta.Tree = this;
     override <synthetic> def privateCopy$default$3: scala.meta.Tree = Impl.this.privateParent;
@@ -563,27 +576,29 @@ else
     override <synthetic> def privateCopy$default$6: scala.meta.internal.semantic.Denotation = Impl.this.privateDenot;
     override <synthetic> def privateCopy$default$7: scala.meta.internal.semantic.Typing = Impl.this.privateTyping;
     override <synthetic> def privateCopy$default$8: scala.meta.internal.semantic.Expansion = Impl.this.privateExpansion;
+    override <synthetic> def privateCopy$default$9: scala.meta.internal.ffi.Ffi = Impl.this.privateFfi;
     protected def writeReplace(): AnyRef = {
       (if (this._cond.==(null))
         {
           scala.Predef.require(this.privatePrototype.!=(null), "internal error when initializing Impl.cond");
           this._cond_=({
-            val copyCond$macro$206: scala.meta.internal.ast.Term#ThisType = {
+            val copyCond$macro$216: scala.meta.internal.ast.Term#ThisType = {
               <artifact> val qual$46: scala.meta.internal.ast.Term = this.privatePrototype.cond;
-              <artifact> val x$2010: scala.meta.internal.ast.Term = this.privatePrototype.cond;
-              <artifact> val x$2011: scala.meta.internal.ast.Term.If.Impl = this;
-              <artifact> val x$2012: meta.internal.flags.Flags = qual$46.privateCopy$default$1;
-              <artifact> val x$2013: scala.meta.tokens.Tokens = qual$46.privateCopy$default$4;
-              <artifact> val x$2014: scala.meta.internal.semantic.Environment = qual$46.privateCopy$default$5;
-              <artifact> val x$2015: scala.meta.internal.semantic.Denotation = qual$46.privateCopy$default$6;
-              <artifact> val x$2016: scala.meta.internal.semantic.Typing = qual$46.privateCopy$default$7;
-              <artifact> val x$2017: scala.meta.internal.semantic.Expansion = qual$46.privateCopy$default$8;
-              qual$46.privateCopy(x$2012, x$2010, x$2011, x$2013, x$2014, x$2015, x$2016, x$2017)
+              <artifact> val x$2268: scala.meta.internal.ast.Term = this.privatePrototype.cond;
+              <artifact> val x$2269: scala.meta.internal.ast.Term.If.Impl = this;
+              <artifact> val x$2270: meta.internal.flags.Flags = qual$46.privateCopy$default$1;
+              <artifact> val x$2271: scala.meta.tokens.Tokens = qual$46.privateCopy$default$4;
+              <artifact> val x$2272: scala.meta.internal.semantic.Environment = qual$46.privateCopy$default$5;
+              <artifact> val x$2273: scala.meta.internal.semantic.Denotation = qual$46.privateCopy$default$6;
+              <artifact> val x$2274: scala.meta.internal.semantic.Typing = qual$46.privateCopy$default$7;
+              <artifact> val x$2275: scala.meta.internal.semantic.Expansion = qual$46.privateCopy$default$8;
+              <artifact> val x$2276: scala.meta.internal.ffi.Ffi = qual$46.privateCopy$default$9;
+              qual$46.privateCopy(x$2270, x$2268, x$2269, x$2271, x$2272, x$2273, x$2274, x$2275, x$2276)
             };
             if (meta.this.Tree.XtensionTypecheckableTree[scala.meta.internal.ast.Term.If](this.privatePrototype).isTypechecked.!=(meta.this.Tree.XtensionTypecheckableTree[scala.meta.internal.ast.Term.If.Impl](this).isTypechecked))
-              meta.this.Tree.XtensionTypecheckableTree[scala.meta.internal.ast.Term#ThisType](copyCond$macro$206).withTypechecked(meta.this.Tree.XtensionTypecheckableTree[scala.meta.internal.ast.Term.If.Impl](this).isTypechecked)
+              meta.this.Tree.XtensionTypecheckableTree[scala.meta.internal.ast.Term#ThisType](copyCond$macro$216).withTypechecked(meta.this.Tree.XtensionTypecheckableTree[scala.meta.internal.ast.Term.If.Impl](this).isTypechecked)
             else
-              copyCond$macro$206
+              copyCond$macro$216
           })
         }
       else
@@ -592,22 +607,23 @@ else
         {
           scala.Predef.require(this.privatePrototype.!=(null), "internal error when initializing Impl.thenp");
           this._thenp_=({
-            val copyThenp$macro$207: scala.meta.internal.ast.Term#ThisType = {
+            val copyThenp$macro$217: scala.meta.internal.ast.Term#ThisType = {
               <artifact> val qual$47: scala.meta.internal.ast.Term = this.privatePrototype.thenp;
-              <artifact> val x$2018: scala.meta.internal.ast.Term = this.privatePrototype.thenp;
-              <artifact> val x$2019: scala.meta.internal.ast.Term.If.Impl = this;
-              <artifact> val x$2020: meta.internal.flags.Flags = qual$47.privateCopy$default$1;
-              <artifact> val x$2021: scala.meta.tokens.Tokens = qual$47.privateCopy$default$4;
-              <artifact> val x$2022: scala.meta.internal.semantic.Environment = qual$47.privateCopy$default$5;
-              <artifact> val x$2023: scala.meta.internal.semantic.Denotation = qual$47.privateCopy$default$6;
-              <artifact> val x$2024: scala.meta.internal.semantic.Typing = qual$47.privateCopy$default$7;
-              <artifact> val x$2025: scala.meta.internal.semantic.Expansion = qual$47.privateCopy$default$8;
-              qual$47.privateCopy(x$2020, x$2018, x$2019, x$2021, x$2022, x$2023, x$2024, x$2025)
+              <artifact> val x$2277: scala.meta.internal.ast.Term = this.privatePrototype.thenp;
+              <artifact> val x$2278: scala.meta.internal.ast.Term.If.Impl = this;
+              <artifact> val x$2279: meta.internal.flags.Flags = qual$47.privateCopy$default$1;
+              <artifact> val x$2280: scala.meta.tokens.Tokens = qual$47.privateCopy$default$4;
+              <artifact> val x$2281: scala.meta.internal.semantic.Environment = qual$47.privateCopy$default$5;
+              <artifact> val x$2282: scala.meta.internal.semantic.Denotation = qual$47.privateCopy$default$6;
+              <artifact> val x$2283: scala.meta.internal.semantic.Typing = qual$47.privateCopy$default$7;
+              <artifact> val x$2284: scala.meta.internal.semantic.Expansion = qual$47.privateCopy$default$8;
+              <artifact> val x$2285: scala.meta.internal.ffi.Ffi = qual$47.privateCopy$default$9;
+              qual$47.privateCopy(x$2279, x$2277, x$2278, x$2280, x$2281, x$2282, x$2283, x$2284, x$2285)
             };
             if (meta.this.Tree.XtensionTypecheckableTree[scala.meta.internal.ast.Term.If](this.privatePrototype).isTypechecked.!=(meta.this.Tree.XtensionTypecheckableTree[scala.meta.internal.ast.Term.If.Impl](this).isTypechecked))
-              meta.this.Tree.XtensionTypecheckableTree[scala.meta.internal.ast.Term#ThisType](copyThenp$macro$207).withTypechecked(meta.this.Tree.XtensionTypecheckableTree[scala.meta.internal.ast.Term.If.Impl](this).isTypechecked)
+              meta.this.Tree.XtensionTypecheckableTree[scala.meta.internal.ast.Term#ThisType](copyThenp$macro$217).withTypechecked(meta.this.Tree.XtensionTypecheckableTree[scala.meta.internal.ast.Term.If.Impl](this).isTypechecked)
             else
-              copyThenp$macro$207
+              copyThenp$macro$217
           })
         }
       else
@@ -616,22 +632,23 @@ else
         {
           scala.Predef.require(this.privatePrototype.!=(null), "internal error when initializing Impl.elsep");
           this._elsep_=({
-            val copyElsep$macro$208: scala.meta.internal.ast.Term#ThisType = {
+            val copyElsep$macro$218: scala.meta.internal.ast.Term#ThisType = {
               <artifact> val qual$48: scala.meta.internal.ast.Term = this.privatePrototype.elsep;
-              <artifact> val x$2026: scala.meta.internal.ast.Term = this.privatePrototype.elsep;
-              <artifact> val x$2027: scala.meta.internal.ast.Term.If.Impl = this;
-              <artifact> val x$2028: meta.internal.flags.Flags = qual$48.privateCopy$default$1;
-              <artifact> val x$2029: scala.meta.tokens.Tokens = qual$48.privateCopy$default$4;
-              <artifact> val x$2030: scala.meta.internal.semantic.Environment = qual$48.privateCopy$default$5;
-              <artifact> val x$2031: scala.meta.internal.semantic.Denotation = qual$48.privateCopy$default$6;
-              <artifact> val x$2032: scala.meta.internal.semantic.Typing = qual$48.privateCopy$default$7;
-              <artifact> val x$2033: scala.meta.internal.semantic.Expansion = qual$48.privateCopy$default$8;
-              qual$48.privateCopy(x$2028, x$2026, x$2027, x$2029, x$2030, x$2031, x$2032, x$2033)
+              <artifact> val x$2286: scala.meta.internal.ast.Term = this.privatePrototype.elsep;
+              <artifact> val x$2287: scala.meta.internal.ast.Term.If.Impl = this;
+              <artifact> val x$2288: meta.internal.flags.Flags = qual$48.privateCopy$default$1;
+              <artifact> val x$2289: scala.meta.tokens.Tokens = qual$48.privateCopy$default$4;
+              <artifact> val x$2290: scala.meta.internal.semantic.Environment = qual$48.privateCopy$default$5;
+              <artifact> val x$2291: scala.meta.internal.semantic.Denotation = qual$48.privateCopy$default$6;
+              <artifact> val x$2292: scala.meta.internal.semantic.Typing = qual$48.privateCopy$default$7;
+              <artifact> val x$2293: scala.meta.internal.semantic.Expansion = qual$48.privateCopy$default$8;
+              <artifact> val x$2294: scala.meta.internal.ffi.Ffi = qual$48.privateCopy$default$9;
+              qual$48.privateCopy(x$2288, x$2286, x$2287, x$2289, x$2290, x$2291, x$2292, x$2293, x$2294)
             };
             if (meta.this.Tree.XtensionTypecheckableTree[scala.meta.internal.ast.Term.If](this.privatePrototype).isTypechecked.!=(meta.this.Tree.XtensionTypecheckableTree[scala.meta.internal.ast.Term.If.Impl](this).isTypechecked))
-              meta.this.Tree.XtensionTypecheckableTree[scala.meta.internal.ast.Term#ThisType](copyElsep$macro$208).withTypechecked(meta.this.Tree.XtensionTypecheckableTree[scala.meta.internal.ast.Term.If.Impl](this).isTypechecked)
+              meta.this.Tree.XtensionTypecheckableTree[scala.meta.internal.ast.Term#ThisType](copyElsep$macro$218).withTypechecked(meta.this.Tree.XtensionTypecheckableTree[scala.meta.internal.ast.Term.If.Impl](this).isTypechecked)
             else
-              copyElsep$macro$208
+              copyElsep$macro$218
           })
         }
       else
@@ -649,7 +666,7 @@ else
       Quasi.super.<init>();
       ()
     };
-    def privateTag: Int = 89;
+    def privateTag: Int = 90;
     def apply(rank: Int, tree: Any): scala.meta.internal.ast.Term.If.Quasi = {
       def internal(rank: Int, tree: Any): scala.meta.internal.ast.Term.If.Quasi = {
         ((): Unit);
@@ -691,6 +708,7 @@ else
       else
         "unsupported splicing position");
       override protected def privateExpansion: scala.meta.internal.semantic.Expansion = null;
+      override protected def privateFfi: scala.meta.internal.ffi.Ffi = null;
       override def cond: Nothing = throw new scala.`package`.UnsupportedOperationException(if (this.rank.==(0))
         "unsupported unquoting position"
       else
@@ -721,18 +739,19 @@ else
       <synthetic> def copy$default$1: Int = this.rank;
       <synthetic> def copy$default$2: Any = this.tree;
       protected def privateWithFlags(flags: meta.internal.flags.Flags): scala.meta.internal.ast.Term.If.Quasi = {
-        this.privateCopy(flags, this.privateCopy$default$2, this.privateCopy$default$3, this.privateCopy$default$4, this.privateCopy$default$5, this.privateCopy$default$6, this.privateCopy$default$7, this.privateCopy$default$8)
+        this.privateCopy(flags, this.privateCopy$default$2, this.privateCopy$default$3, this.privateCopy$default$4, this.privateCopy$default$5, this.privateCopy$default$6, this.privateCopy$default$7, this.privateCopy$default$8, this.privateCopy$default$9)
       };
       def withTokens(tokens: scala.meta.tokens.Tokens): scala.meta.internal.ast.Term.If.Quasi = {
-        <artifact> val x$2034: scala.meta.tokens.Tokens = tokens;
-        <artifact> val x$2035: meta.internal.flags.Flags = this.privateCopy$default$1;
-        <artifact> val x$2036: scala.meta.Tree = this.privateCopy$default$2;
-        <artifact> val x$2037: scala.meta.Tree = this.privateCopy$default$3;
-        <artifact> val x$2038: scala.meta.internal.semantic.Environment = this.privateCopy$default$5;
-        <artifact> val x$2039: scala.meta.internal.semantic.Denotation = this.privateCopy$default$6;
-        <artifact> val x$2040: scala.meta.internal.semantic.Typing = this.privateCopy$default$7;
-        <artifact> val x$2041: scala.meta.internal.semantic.Expansion = this.privateCopy$default$8;
-        this.privateCopy(x$2035, x$2036, x$2037, x$2034, x$2038, x$2039, x$2040, x$2041)
+        <artifact> val x$2295: scala.meta.tokens.Tokens = tokens;
+        <artifact> val x$2296: meta.internal.flags.Flags = this.privateCopy$default$1;
+        <artifact> val x$2297: scala.meta.Tree = this.privateCopy$default$2;
+        <artifact> val x$2298: scala.meta.Tree = this.privateCopy$default$3;
+        <artifact> val x$2299: scala.meta.internal.semantic.Environment = this.privateCopy$default$5;
+        <artifact> val x$2300: scala.meta.internal.semantic.Denotation = this.privateCopy$default$6;
+        <artifact> val x$2301: scala.meta.internal.semantic.Typing = this.privateCopy$default$7;
+        <artifact> val x$2302: scala.meta.internal.semantic.Expansion = this.privateCopy$default$8;
+        <artifact> val x$2303: scala.meta.internal.ffi.Ffi = this.privateCopy$default$9;
+        this.privateCopy(x$2296, x$2297, x$2298, x$2295, x$2299, x$2300, x$2301, x$2302, x$2303)
       };
       override type ThisType = scala.meta.internal.ast.Term.If.Quasi;
       override def privateTag: Int = If.this.Quasi.privateTag;
@@ -786,7 +805,7 @@ else
         ((): Unit);
         this._tree
       };
-      private[meta] def privateCopy(flags: meta.internal.flags.Flags = Impl.this.privateFlags, prototype: scala.meta.Tree = this, parent: scala.meta.Tree = Impl.this.privateParent, tokens: scala.meta.tokens.Tokens = Impl.this.privateTokens, env: scala.meta.internal.semantic.Environment = Impl.this.privateEnv, denot: scala.meta.internal.semantic.Denotation = Impl.this.privateDenot, typing: scala.meta.internal.semantic.Typing = Impl.this.privateTyping, expansion: scala.meta.internal.semantic.Expansion = Impl.this.privateExpansion): Impl.this.ThisType = new Quasi.this.Impl(flags, prototype.asInstanceOf[Impl.this.ThisType], parent, tokens)((this._rank: Int), (this._tree: Any));
+      private[meta] def privateCopy(flags: meta.internal.flags.Flags = Impl.this.privateFlags, prototype: scala.meta.Tree = this, parent: scala.meta.Tree = Impl.this.privateParent, tokens: scala.meta.tokens.Tokens = Impl.this.privateTokens, env: scala.meta.internal.semantic.Environment = Impl.this.privateEnv, denot: scala.meta.internal.semantic.Denotation = Impl.this.privateDenot, typing: scala.meta.internal.semantic.Typing = Impl.this.privateTyping, expansion: scala.meta.internal.semantic.Expansion = Impl.this.privateExpansion, ffi: scala.meta.internal.ffi.Ffi = Impl.this.privateFfi): Impl.this.ThisType = new Quasi.this.Impl(flags, prototype.asInstanceOf[Impl.this.ThisType], parent, tokens)((this._rank: Int), (this._tree: Any));
       override <synthetic> def privateCopy$default$1: meta.internal.flags.Flags = Impl.this.privateFlags;
       override <synthetic> def privateCopy$default$2: scala.meta.Tree = this;
       override <synthetic> def privateCopy$default$3: scala.meta.Tree = Impl.this.privateParent;
@@ -795,6 +814,7 @@ else
       override <synthetic> def privateCopy$default$6: scala.meta.internal.semantic.Denotation = Impl.this.privateDenot;
       override <synthetic> def privateCopy$default$7: scala.meta.internal.semantic.Typing = Impl.this.privateTyping;
       override <synthetic> def privateCopy$default$8: scala.meta.internal.semantic.Expansion = Impl.this.privateExpansion;
+      override <synthetic> def privateCopy$default$9: scala.meta.internal.ffi.Ffi = Impl.this.privateFfi;
       protected def writeReplace(): AnyRef = {
         ((): Unit);
         ((): Unit);
