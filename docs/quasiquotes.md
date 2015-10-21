@@ -16,13 +16,13 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
  Super             | `q"super"`, `q"$qname.super"`, `q"super[$qname]"`, `q"$qname.super[$qname]"`
  Name              | `q"$name"` (construction only), `q"${name: Term.Name}"` (also deconstruction)
  Selection         | `q"$expr.$name"`
- Interpolation     | Not supported yet [(#251)](https://github.com/scalameta/scalameta/issues/251)
- Application       | `q"$expr(...$aexprssnel)"`
+ Interpolation     | Not supported yet ([#251](https://github.com/scalameta/scalameta/issues/251))
+ Application       | `q"$expr(...$aexprssnel)"` ([#277](https://github.com/scalameta/scalameta/issues/277), [#248](https://github.com/scalameta/scalameta/issues/248))
  Type Application  | `q"$expr[..$tpesnel]"`
- Infix Application | `q"$expr $name[..$tpes] $expr"`, `q"$expr $name[..$tpes] (..$aexprs)"`
- Unary Application | `q"!$expr", q"~$expr", q"-$expr", "+$expr"` [(see #280)](https://github.com/scalameta/scalameta/issues/280)
+ Infix Application | `q"$expr $name[..$tpes] $expr"`, `q"$expr $name[..$tpes] (..$aexprs)"` ([#193](https://github.com/scalameta/scalameta/issues/193))
+ Unary Application | `q"!$expr", q"~$expr", q"-$expr", "+$expr"` ([#280](https://github.com/scalameta/scalameta/issues/280))
  Assign            | `q"$ref = $expr"`
- Update            | `q"$expr(...$aexprssnel) = $expr"`
+ Update            | `q"$expr(...$aexprssnel) = $expr"` ([#248](https://github.com/scalameta/scalameta/issues/248))
  Return            | `q"return $expr"`
  Throw             | `q"throw $expr"`
  Ascribe           | `q"$expr: $tpe"`
@@ -39,7 +39,7 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
  Do While          | `q"do $expr while($expr)"`
  For               | `q"for (..$enumeratorsnel) $expr"`
  For Yield         | `q"for (..$enumeratorsnel) yield $expr"`
- New               | `q"new { ..$stat } with ..$ctorcalls { $param => ..$stats }`
+ New               | `q"new { ..$stat } with ..$ctorcalls { $param => ..$stats }` ([#223](https://github.com/scalameta/scalameta/issues/223))
  Placeholder       | `q"_"`
  Eta Expansion     | `q"$expr _"`
  Literal           | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
@@ -69,7 +69,7 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
  Annotate          | `t"$tpe ..@$annotsnel"`
  Placeholder       | `t"_ >: $tpeopt <: $tpeopt"`
  Lambda            | `t"[..$tparamsnel]$tpe"`
- Method            | `t"(...$paramss): $tpe"`
+ Method            | `t"(...$paramss): $tpe"` ([#248](https://github.com/scalameta/scalameta/issues/248))
  Literal           | `t"$lit"` (construction only), `t"${lit: Lit}"` (also deconstruction)
 
 ## Argument Types (meta.Type.Arg)
@@ -91,7 +91,7 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
  Tuple         | `p"(..$patsnel)"`
  Extract       | `p"$ref[..$tpes](..$apats)"`
  Infix Extract | `p"$pat $name (..$apatsnel)"`
- Interpolation | Not supported yet [(#251)](https://github.com/scalameta/scalameta/issues/251)
+ Interpolation | Not supported yet ([#251](https://github.com/scalameta/scalameta/issues/251))
  Typed         | `p"$pat: $ptpe"`
  Name          | `p"$name"` (construction only), `p"${name: Term.Name}"` (also deconstruction)
  Selection     | `p"$expr.$name"`
@@ -141,7 +141,7 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
 -----------|------------------------------
  Val       | `q"..$mods val ..$pnamesnel: $tpe"`
  Var       | `q"..$mods var ..$pnamesnel: $tpe"`
- Def       | `q"..$mods def $name[..$tparams](...$paramss): $tpe"`
+ Def       | `q"..$mods def $name[..$tparams](...$paramss): $tpe"` ([#248](https://github.com/scalameta/scalameta/issues/248))
  Type      | `q"..$mods type $tname[..$tparams] >: $tpeopt <: $tpeopt"`
 
 ### Definitions
@@ -150,16 +150,16 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
 ----------------|------------------------------
  Val            | `q"..$mods val ..$patsnel: $tpeopt = $expr"`
  Var            | `q"..$mods var ..$patsnel: $tpeopt = $expropt"`
- Def            | `q"..$mods def $name[..$tparams](...$paramss): $tpeopt = $expr"`
- Macro          | `q"..$mods def $name[..$tparams](...$paramss): $tpe = macro $expr"`
+ Def            | `q"..$mods def $name[..$tparams](...$paramss): $tpeopt = $expr"` ([#248](https://github.com/scalameta/scalameta/issues/248))
+ Macro          | `q"..$mods def $name[..$tparams](...$paramss): $tpe = macro $expr"` ([#248](https://github.com/scalameta/scalameta/issues/248))
  Type           | `q"..$mods type $tname[..$tparams] = $tpe"`
- Class          | `q"..$mods class $tname[..$tparams] $mod (...$paramss) extends $template"`
+ Class          | `q"..$mods class $tname[..$tparams] $mod (...$paramss) extends $template"` ([#223](https://github.com/scalameta/scalameta/issues/223), [#248](https://github.com/scalameta/scalameta/issues/248))
  Trait          | `q"..$mods trait $tname[..$tparams] extends $template"`
  Object         | `q"..$mods object $name extends $template"`
  Package Object | `q"package object $name extends $template"`
  Package        | `q"package $ref { ..$stats }"`
- Primary Ctor   | `q"..$mods def this(...$paramss)"`
- Secondary Ctor | `q"..$mods def this(...$paramss) = $expr"`
+ Primary Ctor   | `q"..$mods def this(...$paramss)"` ([#248](https://github.com/scalameta/scalameta/issues/248))
+ Secondary Ctor | `q"..$mods def this(...$paramss) = $expr"` ([#248](https://github.com/scalameta/scalameta/issues/248))
 
 ### Value Parameters (meta.Term.Param)
 
@@ -171,7 +171,7 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
 
                 | Quasiquote
 ----------------|-------------------------------------------------
- Type Param     | `tparam"..$mods $tparamname[..$tparams] >: $tpeopt <: $tpeopt <% ..$tpes : ..$tpes"`
+ Type Param     | `tparam"..$mods $tparamname[..$tparams] >: $tpeopt <: $tpeopt <% ..$tpes : ..$tpes"` ([#230](https://github.com/scalameta/scalameta/issues/230))
 
 ## Constructor References (meta.Ctor.Ref and meta.Term)
 
@@ -182,7 +182,7 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
  Project Reference   | `ctor"$tpe#$ctorname"`
  Function Reference  | `ctor"(..$tpes) => $tpe"`
  Annotated Reference | `ctor"$ctorname ..@annots"`
- Applied Reference   | `ctor"$ctorref(...$aexprssnel)"`
+ Applied Reference   | `ctor"$ctorref(...$aexprssnel)"`  ([#277](https://github.com/scalameta/scalameta/issues/277), [#248](https://github.com/scalameta/scalameta/issues/248))
  Tapplied Reference  | `ctor"$ctorref[..$atpesnel]"`
 
 ## Template (meta.Template)
@@ -261,6 +261,7 @@ The tables above define quasiquote syntax using a notation called *quasiquote te
       1. `$smth` can not be replicated.
       1. `..$smth` means an arbitrary mix of `$smth` and `..$smth` unquote templates separated according to their location (e.g. an empty string, `[$tpe]`, `[..$tpes, $tpe]` all conform to `[..$tpes]`, and the separator is a comma, as appropriate for a list of type arguments).
       1. `...$smth` means an arbitrary mix of `$smth`, `..$smth` and  `...$smth` unquote templates, separated accordingly.
+        * Implementation restriction: at the moment, mixing `...$smth` and unquotes of smaller ranks is not supported because of [#248](https://github.com/scalameta/scalameta/issues/248).
       1. If a suffix of `smth` says that it's a non-empty sequence, then replication can't result in an empty list.
       1. If a quasiquote is used as a pattern, then some replications may be illegal (TODO: to be elaborated!).
 
