@@ -20,7 +20,7 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
  Application       | `q"$expr(...$aexprssnel)"`
  Type Application  | `q"$expr[..$tpesnel]"`
  Infix Application | `q"$expr $name[..$tpes] $expr"`, `q"$expr $name[..$tpes] (..$aexprs)"`
- Unary Application | `q"!$expr", q"~$expr", q"-$expr", "+$expr"`
+ Unary Application | `q"!$expr", q"~$expr", q"-$expr", "+$expr"` [(see #280)](https://github.com/scalameta/scalameta/issues/280)
  Assign            | `q"$ref = $expr"`
  Update            | `q"$expr(...$aexprssnel) = $expr"`
  Return            | `q"return $expr"`
