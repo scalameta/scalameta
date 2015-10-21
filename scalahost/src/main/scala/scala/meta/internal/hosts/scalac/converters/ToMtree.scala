@@ -239,6 +239,8 @@ trait ToMtree extends ReflectToolkit with MetaToolkit {
           throw ex
         case ex: Exception =>
           fail(s"unexpected error (scroll down the stacktrace to see the cause):", ex)
+        case ex: NotImplementedError =>
+          fail(s"unexpected error (scroll down the stacktrace to see the cause):", ex)
       }
     }
 
