@@ -57,7 +57,7 @@ object mergeTrees {
                 case m.Term.Select(selhs, seop) => (selhs, seop, Nil)
                 case m.Type.Apply(m.Term.Select(selhs, seop), setargs) => (selhs, seop, setargs)
               }
-              require(seop.isLeftAssoc && debug(sy, se))
+              require(seop.isLeftAssoc && debug(sy, se)) // TODO: right-associative operators aren't supported yet
               sy.copy(loop(sy.lhs, selhs), loop(sy.op, seop), loop(sy.targs, setargs), loop(sy.args, seargs))
             case (sy: m.Term.ApplyType, se: m.Term.ApplyType) =>
               sy.copy(loop(sy.fun, se.fun), loop(sy.targs, se.targs))
