@@ -18,8 +18,26 @@ import org.scalameta.debug._
 import scala.meta.internal.{ast => m}
 import scala.meta.prettyprinters._
 
+// NOTE: This facility is used to merge syntactic trees (carrying perfect syntactic information)
+// and semantic trees (carrying comprehensive set of semantic attributes for themselves and their subnodes).
+// "sy-" stands for "syntactic", "se-" stands for "semantic", "me-" stands for "merged".
+//
+// The main difficulty here is supporting different desugarings that Scala typecheckers may perform.
+// Since mergeTrees is an essential part of deserialization from TASTY, this needs to be platform-independent,
+// so we have to support both scalac and dotc (also, as discussed with @smarter, it's possible to make mergeTrees
+// platform-dependent, but we'll have to pay the price of user convenience).
+//
+// Here are the desugarings that we support
+// (S stands for Scala 2.11.x, D stands for Dotty):
+//   1) (S) Inference of method return types
+//   2) (S) Desugaring of nullary constructors to empty-paramlist constructors
+//   3) (S) Appending AnyRef to the end of an empty parent list
+//   4) (S) Appending Product and Serializable to the end of the parent list of a case class
+//   5) (S) Weeding out repeated occurrences of ProductN, Product and Serializable from the parent list
+//   6) (S) Converting Any to AnyRef in the parent list that starts with a Any
+//   7) (S) Prepending tpe.firstParent to the parent list that starts with a trait different from Any
+//   8) (S) Converting nullary parents to empty-arglist parents
 object mergeTrees {
-  // NOTE: "sy-" stands for "syntactic", "se-" stands for "semantic", "me-" stands for "merged".s
   // NOTE: Much like in LogicalTrees and in ToMtree, cases here must be ordered according
   // to the order of appearance of the corresponding AST nodes in Trees.scala.
   // TODO: I think we could hardcode this traversal into the @ast infrastructure.
@@ -36,6 +54,7 @@ object mergeTrees {
         // I tried #1, and it's way too much hassle, which is why I settled down on #2.
         if ((sy1 ne sy) || (se1 ne se)) mergeTrees(sy1, se1)
         else {
+          require(se.isTypechecked)
           val expandedMetree = (sy, se) match {
             // ============ NAMES ============
 
@@ -86,7 +105,7 @@ object mergeTrees {
 
             case (sy: m.Defn.Def, se: m.Defn.Def) =>
               if (sy.name.toString != se.name.toString) failCorrelate(sy, se, "incompatible methods")
-              val medecltpe = (sy.decltpe, se.decltpe) match {
+              val medecltpe = (sy.decltpe, se.decltpe) match { // (1)
                 case (None, Some(se)) => None
                 case (sy, se) => loop(sy, se)
               }
@@ -106,8 +125,7 @@ object mergeTrees {
             // ============ CTORS ============
 
             case (sy: m.Ctor.Primary, se: m.Ctor.Primary) =>
-              // NOTE: scala.reflect irreversibly desugars nullary constructors into empty-arglist ones
-              val meparamss = (sy.paramss, se.paramss) match {
+              val meparamss = (sy.paramss, se.paramss) match { // (2)
                 case (Seq(), Seq(Seq())) => List()
                 case (syss, sess) => loop(syss, sess)
               }
@@ -120,23 +138,15 @@ object mergeTrees {
             // ============ TEMPLATES ============
 
             case (sy: m.Template, se: m.Template) =>
-              // NOTE: ensugaring rules for parent lists, as per Scala 2.11.7
-              // 1) If the parent list is empty, make it List(AnyRef)
-              // 2) If parsing a case class, append Product and Serializable to the end of the parent list
-              // 3) During typechecking filter out all subsequent repeated occurrences of ProductN, Product and Serializable
-              // 4) If the first parent in the list is a trait, then:
-              //    * Convert it to AnyRef, if it's Any
-              //    * Prepend tpe.firstParent to the list, otherwise
-              // 5) If a parent is applied to a nullary argument list, make it empty argument list.
               def mergeParents(sys: Seq[m.Ctor.Call], ses: Seq[m.Ctor.Call]): Seq[m.Ctor.Call] = {
                 if (sys.length != ses.length) failCorrelate(sy, se, sys, ses)
-                sys.zip(ses).map({
+                sys.zip(ses).map({ // (8)
                   case (sy, m.Term.Apply(se, Nil)) => loop(sy, se)
                   case (sy, se) => loop(sy, se)
                 })
               }
               val meparents = (sy.parents, se.parents) match {
-                case (Seq(), Seq(m.Term.Apply(anyRef: m.Ctor.Ref, Nil))) if anyRef.refersTo(Object_init) =>
+                case (Seq(), Seq(m.Term.Apply(anyRef: m.Ctor.Ref, Nil))) if anyRef.refersTo(Object_init) => // (3)
                   List()
                 case (syss, sess) =>
                   mergeParents(syss, sess)
