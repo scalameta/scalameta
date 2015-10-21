@@ -107,7 +107,9 @@ trait LogicalTrees {
 
     object TermThis {
       def unapply(tree: g.This): Option[l.QualifierName] = {
-        ???
+        val ldenot = l.Denotation(tree.symbol.prefix, tree.symbol.toLogical)
+        if (tree.qual == tpnme.EMPTY) Some(l.AnonymousName(ldenot).setParent(tree))
+        else Some(l.IndeterminateName(ldenot, tree.displayName).setParent(tree))
       }
     }
 
@@ -122,8 +124,7 @@ trait LogicalTrees {
     object TermIdent {
       def unapply(tree: g.Ident): Option[l.TermName] = tree match {
         case tree @ g.Ident(g.TermName(value)) =>
-          val ldenot = l.Denotation(tree.symbol.prefix, tree.symbol.toLogical)
-          Some(l.TermName(ldenot, value).setParent(tree).setType(tree.tpe))
+          Some(l.TermName(tree.denot, value).setParent(tree).setType(tree.tpe))
         case _ =>
           None
       }
@@ -140,6 +141,12 @@ trait LogicalTrees {
     object TermApply {
       def unapply(tree: g.Apply): Option[(g.Tree, List[g.Tree])] = {
         if (tree.hasMetadata("isLparent")) return None
+        Some((tree.fun, tree.args))
+      }
+    }
+
+    object TermApplyType {
+      def unapply(tree: g.TypeApply): Option[(g.Tree, List[g.Tree])] = {
         Some((tree.fun, tree.args))
       }
     }
@@ -174,8 +181,7 @@ trait LogicalTrees {
     object TypeIdent {
       def unapply(tree: g.Tree): Option[l.TypeName] = tree match {
         case tree @ g.Ident(g.TypeName(value)) =>
-          val ldenot = l.Denotation(g.NoPrefix, tree.symbol.toLogical)
-          Some(l.TypeName(ldenot, value).setParent(tree))
+          Some(l.TypeName(tree.denot, value).setParent(tree))
         case _ =>
           None
       }

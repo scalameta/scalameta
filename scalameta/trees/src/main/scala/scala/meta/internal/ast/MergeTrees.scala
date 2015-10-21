@@ -59,6 +59,8 @@ object mergeTrees {
               }
               require(seop.isLeftAssoc && debug(sy, se))
               sy.copy(loop(sy.lhs, selhs), loop(sy.op, seop), loop(sy.targs, setargs), loop(sy.args, seargs))
+            case (sy: m.Term.ApplyType, se: m.Term.ApplyType) =>
+              sy.copy(loop(sy.fun, se.fun), loop(sy.targs, se.targs))
             case (sy: m.Term.Param, se: m.Term.Param) =>
               sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), loop(sy.decltpe, se.decltpe), loop(sy.default, se.default))
 
