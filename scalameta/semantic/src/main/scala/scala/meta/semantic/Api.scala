@@ -623,13 +623,9 @@ private[meta] trait Api {
   }
 
   // ===========================
-  // PART 8: BINDINGS
+  // PART 8: ALIASES
   // ===========================
-
-  implicit class XtensionSemanticName(tree: Name) {
-    def isBinder: Boolean = tree.parent.map(_.isInstanceOf[impl.Member]).getOrElse(false)
-    def isReference: Boolean = !isBinder
-  }
+  type SemanticContext = scala.meta.semantic.Context
 
   // TODO: Previously, we had a `dialectFromSemanticContext` implicit, which obviated the need in this method.
   // However, this dialect materializer was really half-hearted in the sense that it worked for prettyprinting
@@ -639,11 +635,6 @@ private[meta] trait Api {
     implicit val d: Dialect = c.dialect
     tree.show[Summary]
   }
-
-  // ===========================
-  // PART 9: ALIASES
-  // ===========================
-  type SemanticContext = scala.meta.semantic.Context
 }
 
 private[meta] trait Aliases {

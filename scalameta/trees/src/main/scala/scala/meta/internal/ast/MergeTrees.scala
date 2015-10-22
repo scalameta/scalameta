@@ -37,6 +37,7 @@ import scala.meta.prettyprinters._
 //   6) (S) Converting Any to AnyRef in the parent list that starts with a Any
 //   7) (S) Prepending tpe.firstParent to the parent list that starts with a trait different from Any
 //   8) (S) Converting nullary parents to empty-arglist parents
+//   9) (S) Desugaring names imported with renaming imports into their original form
 object mergeTrees {
   // NOTE: Much like in LogicalTrees and in ToMtree, cases here must be ordered according
   // to the order of appearance of the corresponding AST nodes in Trees.scala.
@@ -61,6 +62,7 @@ object mergeTrees {
             case (sy: m.Name.Anonymous, se: m.Name.Anonymous) =>
               sy.copy()
             case (sy: m.Name.Indeterminate, se: m.Name.Indeterminate) =>
+              if (sy.value != se.value) failCorrelate(sy, se, "incompatible names")
               sy.copy()
 
             // ============ TERMS ============
@@ -68,8 +70,10 @@ object mergeTrees {
             case (sy: m.Term.This, se: m.Term.This) =>
               sy.copy(loop(sy.qual, se.qual))
             case (sy: m.Term.Name, se: m.Term.Name) =>
-              sy.copy()
+              if (sy.value != se.value && sy.isBinder) failCorrelate(sy, se, "incompatible definitions")
+              sy.copy() // (9)
             case (sy: m.Term.Select, se: m.Term.Select) =>
+              if (sy.name.value != se.name.value) failCorrelate(sy, se, "incompatible names")
               sy.copy(loop(sy.qual, se.qual), loop(sy.name, se.name))
             case (sy: m.Term.Apply, se: m.Term.Apply) =>
               sy.copy(loop(sy.fun, se.fun), loop(sy.args, se.args))
@@ -90,7 +94,8 @@ object mergeTrees {
             // ============ TYPES ============
 
             case (sy: m.Type.Name, se: m.Type.Name) =>
-              sy.copy()
+              if (sy.value != se.value && sy.isBinder) failCorrelate(sy, se, "incompatible definitions")
+              sy.copy() // (9)
             case (sy: m.Type.Select, se: m.Type.Select) =>
               sy.copy(loop(sy.qual, se.qual), loop(sy.name, se.name))
             case (sy: m.Type.Apply, se: m.Type.Apply) =>
@@ -117,14 +122,12 @@ object mergeTrees {
               }
               sy.copy(loop(sy.mods, se.mods), loop(sy.pats, se.pats), medecltpe, loop(sy.rhs, se.rhs))
             case (sy: m.Defn.Def, se: m.Defn.Def) =>
-              if (sy.name.toString != se.name.toString) failCorrelate(sy, se, "incompatible methods")
               val medecltpe = (sy.decltpe, se.decltpe) match { // (1)
                 case (None, Some(se)) => None
                 case (sy, se) => loop(sy, se)
               }
               sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), loop(sy.tparams, se.tparams), loop(sy.paramss, se.paramss), medecltpe, loop(sy.body, se.body))
             case (sy: m.Defn.Class, se: m.Defn.Class) =>
-              if (sy.name.toString != se.name.toString) failCorrelate(sy, se, "incompatible classes")
               sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), loop(sy.tparams, se.tparams), loop(sy.ctor, se.ctor), loop(sy.templ, se.templ))
 
             // ============ PKGS ============
@@ -132,7 +135,7 @@ object mergeTrees {
             case (sy: m.Source, se: m.Source) =>
               sy.copy(loop(sy.stats, se.stats))
             case (sy: m.Pkg, se: m.Pkg) =>
-              if (sy.ref.toString != se.ref.toString) failCorrelate(sy, se, "incompatible packages")
+              if (sy.ref.toString != se.ref.toString) failCorrelate(sy, se, "incompatible definitions")
               sy.copy(loop(sy.ref, se.ref), loop(sy.stats, se.stats))
 
             // ============ CTORS ============
@@ -144,6 +147,10 @@ object mergeTrees {
               }
               sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), meparamss)
             case (sy: m.Ctor.Ref.Name, se: m.Ctor.Ref.Name) =>
+              // TODO: This is a weird corner case in how we represent constructors.
+              // In constructor definitions, we have Ctor.Name("this"),
+              // whereas in constructor references, we have Ctor.Name(<classname>).
+              if (sy.value != "this" && sy.value != se.value && sy.isBinder) failCorrelate(sy, se, "incompatible definitions")
               sy.copy()
             case (sy: m.Ctor.Ref.Select, se: m.Ctor.Ref.Select) =>
               sy.copy(loop(sy.qual, se.qual), loop(sy.name, se.name))
