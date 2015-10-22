@@ -340,7 +340,8 @@ trait LogicalTrees {
     object ObjectDef {
       // mods, name, tparams, template
       def unapply(tree: g.ModuleDef): Option[(List[l.Modifier], l.TermName, g.Template)] = {
-        val g.ModuleDef(_, _, templ) = tree
+        val g.ModuleDef(_, name, templ) = tree
+        if (name == nme.PACKAGE) return None
         Some((l.Modifiers(tree), l.TermName(tree).setParent(tree), templ))
       }
     }
