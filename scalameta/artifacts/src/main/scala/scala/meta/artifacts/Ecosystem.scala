@@ -160,8 +160,8 @@ import org.scalameta.debug._
             case m.Pkg(ref, stats) => stats.flatMap(stat => loop(prefix + "." + ref.toString.replace(".", "/"), stat)).toList
             case m.Defn.Class(_, m.Type.Name(value), _, _, _) => List(prefix + "." + value)
             case m.Defn.Trait(_, m.Type.Name(value), _, _, _) => List(prefix + "." + value)
-            case m.Defn.Object(_, m.Term.Name(value), _, _) => List(prefix + "." + value + "$")
-            case m.Pkg.Object(_, m.Term.Name(value), _, _) => List(prefix + "." + value + "/package$")
+            case m.Defn.Object(_, m.Term.Name(value), _) => List(prefix + "." + value + "$")
+            case m.Pkg.Object(_, m.Term.Name(value), _) => List(prefix + "." + value + "/package$")
             case _ => Nil
           }
           loop("", tree).map(_.stripPrefix("."))

@@ -1697,7 +1697,7 @@ class QuasiquoteSuite extends FunSuite {
     val mods = List(mod"private", mod"final")
     val name = q"Q"
     val template = template"F { def m = 42 }"
-    assert(q"..$mods object $name extends $template".show[Structure] === "Defn.Object(Seq(Mod.Private(Name.Anonymous()), Mod.Final()), Term.Name(\"Q\"), Ctor.Primary(Nil, Ctor.Ref.Name(\"this\"), Nil), Template(Nil, Seq(Ctor.Ref.Name(\"F\")), Term.Param(Nil, Name.Anonymous(), None, None), Some(Seq(Defn.Def(Nil, Term.Name(\"m\"), Nil, Nil, None, Lit(42))))))")
+    assert(q"..$mods object $name extends $template".show[Structure] === "Defn.Object(Seq(Mod.Private(Name.Anonymous()), Mod.Final()), Term.Name(\"Q\"), Template(Nil, Seq(Ctor.Ref.Name(\"F\")), Term.Param(Nil, Name.Anonymous(), None, None), Some(Seq(Defn.Def(Nil, Term.Name(\"m\"), Nil, Nil, None, Lit(42))))))")
   }
 
   test("1 q\"package object $name extends $template\"") {
@@ -1715,7 +1715,7 @@ class QuasiquoteSuite extends FunSuite {
   test("3 q\"package object $name extends $template\"") {
     val name = q"Q"
     val template = template"F { def m = 42 }"
-    assert(q"package object $name extends $template".show[Structure] === "Pkg.Object(Nil, Term.Name(\"Q\"), Ctor.Primary(Nil, Ctor.Ref.Name(\"this\"), Nil), Template(Nil, Seq(Ctor.Ref.Name(\"F\")), Term.Param(Nil, Name.Anonymous(), None, None), Some(Seq(Defn.Def(Nil, Term.Name(\"m\"), Nil, Nil, None, Lit(42))))))")
+    assert(q"package object $name extends $template".show[Structure] === "Pkg.Object(Nil, Term.Name(\"Q\"), Template(Nil, Seq(Ctor.Ref.Name(\"F\")), Term.Param(Nil, Name.Anonymous(), None, None), Some(Seq(Defn.Def(Nil, Term.Name(\"m\"), Nil, Nil, None, Lit(42))))))")
   }
 
   test("1 q\"package $ref { ..$stats }\"") {
@@ -1723,13 +1723,13 @@ class QuasiquoteSuite extends FunSuite {
     assert(ref.show[Structure] === "Term.Name(\"p\")")
     assert(stats.toString === "List(class A, object B)")
     assert(stats(0).show[Structure] === "Defn.Class(Nil, Type.Name(\"A\"), Nil, Ctor.Primary(Nil, Ctor.Ref.Name(\"this\"), Nil), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), None))")
-    assert(stats(1).show[Structure] === "Defn.Object(Nil, Term.Name(\"B\"), Ctor.Primary(Nil, Ctor.Ref.Name(\"this\"), Nil), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), None))")
+    assert(stats(1).show[Structure] === "Defn.Object(Nil, Term.Name(\"B\"), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), None))")
   }
 
   test("2 q\"package $ref { ..$stats }\"") {
     val ref = q"p"
     val stats = List(q"class A", q"object B")
-    assert(q"package $ref { ..$stats }".show[Structure] === "Pkg(Term.Name(\"p\"), Seq(Defn.Class(Nil, Type.Name(\"A\"), Nil, Ctor.Primary(Nil, Ctor.Ref.Name(\"this\"), Nil), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), None)), Defn.Object(Nil, Term.Name(\"B\"), Ctor.Primary(Nil, Ctor.Ref.Name(\"this\"), Nil), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), None))))")
+    assert(q"package $ref { ..$stats }".show[Structure] === "Pkg(Term.Name(\"p\"), Seq(Defn.Class(Nil, Type.Name(\"A\"), Nil, Ctor.Primary(Nil, Ctor.Ref.Name(\"this\"), Nil), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), None)), Defn.Object(Nil, Term.Name(\"B\"), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), None))))")
   }
 
   test("1 q\"..$mods def this(...$paramss)\"") { // TODO check for ... when #221 resolved
@@ -2130,7 +2130,7 @@ class QuasiquoteSuite extends FunSuite {
 
   test("3 source\"..$stats\"") {
     val stats = List(q"class A { val x = 1 }", q"object B")
-    assert(source"..$stats".show[Structure] === "Source(Seq(Defn.Class(Nil, Type.Name(\"A\"), Nil, Ctor.Primary(Nil, Ctor.Ref.Name(\"this\"), Nil), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), Some(Seq(Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name(\"x\"))), None, Lit(1)))))), Defn.Object(Nil, Term.Name(\"B\"), Ctor.Primary(Nil, Ctor.Ref.Name(\"this\"), Nil), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), None))))")
+    assert(source"..$stats".show[Structure] === "Source(Seq(Defn.Class(Nil, Type.Name(\"A\"), Nil, Ctor.Primary(Nil, Ctor.Ref.Name(\"this\"), Nil), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), Some(Seq(Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name(\"x\"))), None, Lit(1)))))), Defn.Object(Nil, Term.Name(\"B\"), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), None))))")
   }
 
   test("unquote T into Option[T]") {

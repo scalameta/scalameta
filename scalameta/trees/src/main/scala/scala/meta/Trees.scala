@@ -505,11 +505,9 @@ package scala.meta.internal.ast {
     }
     @ast class Object(mods: Seq[Mod],
                       name: Term.Name,
-                      ctor: Ctor.Primary,
                       templ: Template) extends Defn with Member.Term {
       // TODO: hardcoded in the @ast macro, find out a better way
       // require(templ.stats.getOrElse(Nil).forall(!_.isInstanceOf[Ctor]))
-      require(ctor.mods.isEmpty && ctor.paramss.isEmpty)
     }
   }
 
@@ -524,7 +522,7 @@ package scala.meta.internal.ast {
     }
   }
   object Pkg {
-    @ast class Object(mods: Seq[Mod], name: Term.Name, ctor: Ctor.Primary, templ: Template)
+    @ast class Object(mods: Seq[Mod], name: Term.Name, templ: Template)
          extends Member.Term with Stat {
       // TODO: hardcoded in the @ast macro, find out a better way
       // require(templ.stats.getOrElse(Nil).forall(!_.isInstanceOf[Ctor]))

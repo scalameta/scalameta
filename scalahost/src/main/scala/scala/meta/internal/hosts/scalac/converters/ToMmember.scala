@@ -284,20 +284,16 @@ trait ToMmember extends ReflectToolkit with MetaToolkit {
         lazy val mmaybeBody = if (gsym.hasFlag(DEFAULTINIT)) None else Some(mbody)
         lazy val mfakector = self.mfakector(gtpe)
         lazy val mctor = {
-          if (lsym.isInstanceOf[l.Clazz] || lsym.isInstanceOf[l.Object]) {
+          if (lsym.isInstanceOf[l.Clazz]) {
             val gctorsym = lsym.gsymbol.moduleClass.orElse(lsym.gsymbol).primaryConstructor
-            if (gctorsym != g.NoSymbol) {
-              val gctorinfo = gctorsym.infoIn(gpre)
-              val mctorname = m.Ctor.Name(gsym.displayName).withMattrs(gpre, gctorsym)
-              var mctorparamss = {
-                if (lsym.isInstanceOf[l.Clazz]) gctorinfo.paramss.map(_.map(gvparam => l.TermParameter(gvparam).toMmember(g.NoPrefix).require[m.Term.Param]))
-                else Nil // NOTE: synthetic constructors for modules have a fake List(List()) parameter list
-              }
-              if (mctorparamss.length == 1 && mctorparamss.flatten.length == 0) mctorparamss = Nil
-              m.Ctor.Primary(this.mmods(gpre, l.PrimaryCtor(gctorsym)), mctorname, mctorparamss)
-            } else {
-              mfakector
+            val gctorinfo = gctorsym.infoIn(gpre)
+            val mctorname = m.Ctor.Name(gsym.displayName).withMattrs(gpre, gctorsym)
+            var mctorparamss = {
+              if (lsym.isInstanceOf[l.Clazz]) gctorinfo.paramss.map(_.map(gvparam => l.TermParameter(gvparam).toMmember(g.NoPrefix).require[m.Term.Param]))
+              else Nil // NOTE: synthetic constructors for modules have a fake List(List()) parameter list
             }
+            if (mctorparamss.length == 1 && mctorparamss.flatten.length == 0) mctorparamss = Nil
+            m.Ctor.Primary(this.mmods(gpre, l.PrimaryCtor(gctorsym)), mctorname, mctorparamss)
           } else {
             mfakector
           }
@@ -374,9 +370,9 @@ trait ToMmember extends ReflectToolkit with MetaToolkit {
           case _: l.Type => m.Defn.Type(mmods, mname.require[m.Type.Name], mtparams, mtpe)
           case _: l.Clazz => m.Defn.Class(mmods, mname.require[m.Type.Name], mtparams, mctor, mtemplate)
           case _: l.Trait => m.Defn.Trait(mmods, mname.require[m.Type.Name], mtparams, mctor, mtemplate)
-          case _: l.Object => m.Defn.Object(mmods, mname.require[m.Term.Name], mctor, mtemplate)
+          case _: l.Object => m.Defn.Object(mmods, mname.require[m.Term.Name], mtemplate)
           case _: l.Package => m.Pkg(mname.require[m.Term.Name], mstats)
-          case _: l.PackageObject => m.Pkg.Object(mmods, mname.require[m.Term.Name], mctor, mtemplate)
+          case _: l.PackageObject => m.Pkg.Object(mmods, mname.require[m.Term.Name], mtemplate)
           case _: l.PrimaryCtor => m.Ctor.Primary(mmods, mname.require[m.Ctor.Name], mvparamss)
           case _: l.SecondaryCtor => m.Ctor.Secondary(mmods, mname.require[m.Ctor.Name], mvparamss, mbody)
           case _: l.TermBind => m.Pat.Var.Term(mname.require[m.Term.Name])

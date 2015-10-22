@@ -155,9 +155,8 @@ trait ToMtree extends ReflectToolkit with MetaToolkit {
           case l.ObjectDef(lmods, lname, limpl) =>
             val mmods = lmods.toMtrees[m.Mod]
             val mname = lname.toMtree[m.Term.Name]
-            val mctor = ???
             val mimpl = limpl.toMtree[m.Template]
-            m.Defn.Object(mmods, mname, mctor, mimpl)
+            m.Defn.Object(mmods, mname, mimpl)
 
           // ============ PKGS ============
 

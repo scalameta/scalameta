@@ -334,9 +334,7 @@ class ReflectionSuite extends AstSuite {
       |
       |scala.meta.internal.ast.Ctor.Primary -> scala.meta.Ctor
       |field Defn.Class.ctor: scala.meta.internal.ast.Ctor.Primary
-      |field Defn.Object.ctor: scala.meta.internal.ast.Ctor.Primary
       |field Defn.Trait.ctor: scala.meta.internal.ast.Ctor.Primary
-      |field Pkg.Object.ctor: scala.meta.internal.ast.Ctor.Primary
       |
     """.trim.stripMargin)
   }

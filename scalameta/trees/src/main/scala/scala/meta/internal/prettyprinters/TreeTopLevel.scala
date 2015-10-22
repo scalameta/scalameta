@@ -20,8 +20,8 @@ private[meta] object TopLevel {
     case m.Pkg(ref, stats) => s(s"package $ref { ", r(stats, "; "), " }")
     case m.Defn.Class(_, name, _, _, _) => s(s"class $name...")
     case m.Defn.Trait(_, name, _, _, _) => s(s"trait $name...")
-    case m.Defn.Object(_, name, _, _) => s(s"object $name...")
-    case m.Pkg.Object(_, name, _, _) => s(s"package object $name...")
+    case m.Defn.Object(_, name, _) => s(s"object $name...")
+    case m.Pkg.Object(_, name, _) => s(s"package object $name...")
     case _ => unreachable(debug(x, x.show[Structure]))
   })
 }
