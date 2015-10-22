@@ -34,7 +34,7 @@ trait TreeHelpers {
       tree match {
         case tree: ModuleDef if tree.name == nme.PACKAGE => packageName(tree).displayName
         case tree: NameTree => tree.name.displayName
-        case This(name) => name.displayName
+        case This(name) => name.displayName // NOTE: This(tpnme.EMPTY) is also accounted for
         case Super(_, name) => name.displayName
         case _ => unreachable(debug(tree, showRaw(tree)))
       }

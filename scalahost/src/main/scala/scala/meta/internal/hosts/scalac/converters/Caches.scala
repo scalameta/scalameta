@@ -11,6 +11,7 @@ import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.tools.nsc.{Global => ScalaGlobal}
 import scala.meta.internal.{ast => m}
+import scala.meta.internal.ast.Helpers._
 import scala.meta.internal.{semantic => s}
 import scala.meta.internal.hosts.scalac.reflect._
 import scala.meta.internal.prettyprinters.Attributes
@@ -60,8 +61,9 @@ trait Caches extends ReflectToolkit with MetaToolkit {
     require(x.isTypechecked)
     x match {
       case x: m.Member =>
-        if (x.name.isBinder && !x.isInstanceOf[m.Ctor.Primary] && !x.name.isInstanceOf[m.Name.Anonymous]) {
-          x.name.require[m.Name].denot match {
+        val name = x.name.require[m.Name]
+        if (name.isBinder && !x.isInstanceOf[m.Ctor.Primary] && !name.isInstanceOf[m.Name.Anonymous]) {
+          name.denot match {
             case s.Denotation.Single(_, ssym) if ssym != s.Symbol.Zero =>
               // TODO: it seems that we can't have this yet
               // require(!_ssymToMmemberIndex.contains(symbol) && debug(x, x.show[Attributes]))

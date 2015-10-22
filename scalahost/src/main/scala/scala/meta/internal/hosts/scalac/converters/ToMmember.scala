@@ -12,6 +12,7 @@ import scala.reflect.internal.Flags._
 import scala.{meta => mapi}
 import scala.meta.internal.{ast => m}
 import scala.meta.internal.{semantic => s}
+import scala.meta.internal.{ffi => f}
 import scala.meta.semantic.{Context => ScalametaSemanticContext}
 import scala.meta.internal.hosts.scalac.reflect._
 import scala.meta.internal.flags._
@@ -116,8 +117,7 @@ trait ToMmember extends ReflectToolkit with MetaToolkit {
               if (gvparams.forall(gsym => gvparamss.flatten.exists(_ == gsym))) loop(gret)
               else gtpe
             case g.PolyType(gtparams, gret) =>
-              if (gtparams.forall(gsym => gtparams.exists(_ == gsym))) loop(gret)
-              else gret
+              loop(gret)
             case g.ExistentialType(quants, gtpe) =>
               // NOTE: apparently, sometimes we can get stuff like `ExistentialType(..., NullaryMethodType(...))`
               // see Enumeration.vmap for an example
@@ -127,93 +127,94 @@ trait ToMmember extends ReflectToolkit with MetaToolkit {
           }
           loop(ginfo)
         }
-        lazy val mmods = {
-          val mffi: List[m.Mod.Ffi] = {
-            def ffiScalaIntrinsic(gmeth: g.Symbol) = {
-              val className = gmeth.owner.tpe.jvmsig
-              val methodName = gmeth.name.encoded
-              val methodSig = gmeth.tpe.jvmsig
-              List(m.Mod.Ffi(s"scalaIntrinsic($className, $methodName, $methodSig)"))
-            }
-            def ffiScalaReflectMacro(gmacro: g.Symbol) = {
-              List(m.Mod.Ffi("scalaReflectMacro"))
-            }
-            def ffiJvmField(gfield: g.Symbol) = {
-              val className = gfield.owner.tpe.jvmsig
-              val fieldName = gfield.name.encoded
-              val fieldSig = gfield.tpe.jvmsig
-              List(m.Mod.Ffi(s"jvmField($className, $fieldName, $fieldSig)"))
-            }
-            def ffiJvmMethod(gmeth: g.Symbol) = {
-              val className = gmeth.owner.tpe.jvmsig
-              val methodName = gmeth.name.encoded
-              val methodSig = gmeth.tpe.jvmsig
-              List(m.Mod.Ffi(s"jvmMethod($className, $methodName, $methodSig)"))
-            }
-            def ffiJvmErasure(gtpe: g.Type) = {
-              val className = gtpe.jvmsig
-              List(m.Mod.Ffi(s"jvmErasure($className)"))
-            }
-            def ffiJvmPackage(gsym: g.Symbol) = {
-              val packageName = gsym.fullName
-              List(m.Mod.Ffi(s"jvmPackage($packageName)"))
-            }
-            lsym match {
-              case l.AbstractVal(gget) =>
-                ffiJvmMethod(gget)
-              case l.AbstractVar(gget, gset) =>
-                ffiJvmMethod(gget)
-              case l.AbstractDef(gsym) =>
-                if (gsym.isIntrinsic) ffiScalaIntrinsic(gsym)
-                else ffiJvmMethod(gsym)
-              case l.AbstractType(gsym) =>
-                ffiJvmErasure(gsym.tpe)
-              case l.Val(gfield, gget) =>
-                if (gget == g.NoSymbol) ffiJvmField(gfield)
-                else ffiJvmMethod(gget)
-              case l.Var(gfield, gget, _) =>
-                if (gget == g.NoSymbol) ffiJvmField(gfield)
-                else ffiJvmMethod(gget)
-              case l.Def(gsym) =>
-                if (gsym.isIntrinsic) ffiScalaIntrinsic(gsym)
-                else ffiJvmMethod(gsym)
-              case l.Macro(gsym) =>
-                gsym.macroBody match {
-                  case MacroBody.None => unreachable(debug(gsym, gsym.flags, gsym.getClass, gsym.owner))
-                  case MacroBody.FastTrack(_) => ffiScalaReflectMacro(gsym)
-                  case MacroBody.Reflect(_) => ffiScalaReflectMacro(gsym)
-                  case MacroBody.Meta(body) => Nil
-                }
-              case l.Type(gsym) =>
-                ffiJvmErasure(gsym.tpe)
-              case l.Clazz(gsym) =>
-                ffiJvmErasure(gsym.tpe)
-              case l.Trait(gsym) =>
-                ffiJvmErasure(gsym.tpe)
-              case l.Object(gmodule, gmoduleClass) =>
-                ffiJvmErasure(gmodule.tpe)
-              case l.Package(gmodule, gmoduleClass) =>
-                ffiJvmPackage(gmodule)
-              case l.PackageObject(gmodule, gmoduleClass) =>
-                ffiJvmErasure(gmodule.tpe)
-              case l.PrimaryCtor(gsym) =>
-                ffiJvmMethod(gsym)
-              case l.SecondaryCtor(gsym) =>
-                ffiJvmMethod(gsym)
-              case l.TermParameter(gsym) if gsym.hasFlag(DEFAULTPARAM) =>
-                val paramPos = gsym.owner.paramss.flatten.indexWhere(_.name == gsym.name)
-                require(paramPos != -1)
-                val gdefaultGetterName = gsym.owner.name + "$default$" + (paramPos + 1)
-                var gdefaultGetterOwner = if (!gsym.owner.isConstructor) gsym.owner.owner else gsym.owner.owner.companion
-                val gdefaultGetter = gdefaultGetterOwner.info.decl(g.TermName(gdefaultGetterName).encodedName)
-                require(gdefaultGetter != g.NoSymbol && debug(gsym, gdefaultGetterOwner, gdefaultGetterName))
-                ffiJvmMethod(gdefaultGetter)
-              // TODO: should we also generate ffi information for type parameters? what should it look like?
-              case _ =>
-                Nil
-            }
+        lazy val mffi: f.Ffi = {
+          def ffiIntrinsic(gmeth: g.Symbol) = {
+            val className = gmeth.owner.tpe.jvmsig
+            val methodName = gmeth.name.encoded
+            val methodSig = gmeth.tpe.jvmsig
+            f.Ffi.Intrinsic(className, methodName, methodSig)
           }
-          mffi ++ this.mmods(gpre, lsym)
+          def ffiScalaReflectMacro(gmacro: g.Symbol) = {
+            // TODO: think what to do here
+            f.Ffi.Zero
+          }
+          def ffiJvmField(gfield: g.Symbol) = {
+            val className = gfield.owner.tpe.jvmsig
+            val fieldName = gfield.name.encoded
+            val fieldSig = gfield.tpe.jvmsig
+            f.Ffi.JvmField(className, fieldName, fieldSig)
+          }
+          def ffiJvmMethod(gmeth: g.Symbol) = {
+            val className = gmeth.owner.tpe.jvmsig
+            val methodName = gmeth.name.encoded
+            val methodSig = gmeth.tpe.jvmsig
+            f.Ffi.JvmMethod(className, methodName, methodSig)
+          }
+          def ffiJvmErasure(gtpe: g.Type) = {
+            val className = gtpe.jvmsig
+            f.Ffi.JvmErasure(className)
+          }
+          def ffiJvmPackage(gsym: g.Symbol) = {
+            val packageName = gsym.fullName
+            f.Ffi.JvmPackage(packageName)
+          }
+          lsym match {
+            case l.AbstractVal(gget) =>
+              ffiJvmMethod(gget)
+            case l.AbstractVar(gget, gset) =>
+              ffiJvmMethod(gget)
+            case l.AbstractDef(gsym) =>
+              if (gsym.isIntrinsic) ffiIntrinsic(gsym)
+              else ffiJvmMethod(gsym)
+            case l.AbstractType(gsym) =>
+              ffiJvmErasure(gsym.tpe)
+            case l.Val(gfield, gget) =>
+              if (gget == g.NoSymbol) ffiJvmField(gfield)
+              else ffiJvmMethod(gget)
+            case l.Var(gfield, gget, _) =>
+              if (gget == g.NoSymbol) ffiJvmField(gfield)
+              else ffiJvmMethod(gget)
+            case l.Def(gsym) =>
+              if (gsym.isIntrinsic) ffiIntrinsic(gsym)
+              else ffiJvmMethod(gsym)
+            case l.Macro(gsym) =>
+              gsym.macroBody match {
+                case MacroBody.None => unreachable(debug(gsym, gsym.flags, gsym.getClass, gsym.owner))
+                case MacroBody.FastTrack(_) => ffiScalaReflectMacro(gsym)
+                case MacroBody.Reflect(_) => ffiScalaReflectMacro(gsym)
+                case MacroBody.Meta(body) => f.Ffi.Zero
+              }
+            case l.Type(gsym) =>
+              ffiJvmErasure(gsym.tpe)
+            case l.Clazz(gsym) =>
+              ffiJvmErasure(gsym.tpe)
+            case l.Trait(gsym) =>
+              ffiJvmErasure(gsym.tpe)
+            case l.Object(gmodule, gmoduleClass) =>
+              ffiJvmErasure(gmodule.tpe)
+            case l.Package(gmodule, gmoduleClass) =>
+              ffiJvmPackage(gmodule)
+            case l.PackageObject(gmodule, gmoduleClass) =>
+              ffiJvmErasure(gmodule.tpe)
+            case l.PrimaryCtor(gsym) =>
+              ffiJvmMethod(gsym)
+            case l.SecondaryCtor(gsym) =>
+              ffiJvmMethod(gsym)
+            case l.TermParameter(gsym) if gsym.hasFlag(DEFAULTPARAM) =>
+              val paramPos = gsym.owner.paramss.flatten.indexWhere(_.name == gsym.name)
+              require(paramPos != -1)
+              val gdefaultGetterName = gsym.owner.name + "$default$" + (paramPos + 1)
+              var gdefaultGetterOwner = if (!gsym.owner.isConstructor) gsym.owner.owner else gsym.owner.owner.companion
+              val gdefaultGetter = gdefaultGetterOwner.info.decl(g.TermName(gdefaultGetterName).encodedName)
+              require(gdefaultGetter != g.NoSymbol && debug(gsym, gdefaultGetterOwner, gdefaultGetterName))
+              ffiJvmMethod(gdefaultGetter)
+            // TODO: should we also generate ffi information for type parameters? what should it look like?
+            case _ =>
+              f.Ffi.Zero
+          }
+        }
+        lazy val mmods = {
+          this.mmods(gpre, lsym)
         }
         lazy val mname = {
           def ctorName(gsym: g.Symbol) = {
@@ -283,20 +284,16 @@ trait ToMmember extends ReflectToolkit with MetaToolkit {
         lazy val mmaybeBody = if (gsym.hasFlag(DEFAULTINIT)) None else Some(mbody)
         lazy val mfakector = self.mfakector(gtpe)
         lazy val mctor = {
-          if (lsym.isInstanceOf[l.Clazz] || lsym.isInstanceOf[l.Object]) {
+          if (lsym.isInstanceOf[l.Clazz]) {
             val gctorsym = lsym.gsymbol.moduleClass.orElse(lsym.gsymbol).primaryConstructor
-            if (gctorsym != g.NoSymbol) {
-              val gctorinfo = gctorsym.infoIn(gpre)
-              val mctorname = m.Ctor.Name(gsym.displayName).withMattrs(gpre, gctorsym)
-              var mctorparamss = {
-                if (lsym.isInstanceOf[l.Clazz]) gctorinfo.paramss.map(_.map(gvparam => l.TermParameter(gvparam).toMmember(g.NoPrefix).require[m.Term.Param]))
-                else Nil // NOTE: synthetic constructors for modules have a fake List(List()) parameter list
-              }
-              if (mctorparamss.length == 1 && mctorparamss.flatten.length == 0) mctorparamss = Nil
-              m.Ctor.Primary(this.mmods(gpre, l.PrimaryCtor(gctorsym)), mctorname, mctorparamss)
-            } else {
-              mfakector
+            val gctorinfo = gctorsym.infoIn(gpre)
+            val mctorname = m.Ctor.Name(gsym.displayName).withMattrs(gpre, gctorsym)
+            var mctorparamss = {
+              if (lsym.isInstanceOf[l.Clazz]) gctorinfo.paramss.map(_.map(gvparam => l.TermParameter(gvparam).toMmember(g.NoPrefix).require[m.Term.Param]))
+              else Nil // NOTE: synthetic constructors for modules have a fake List(List()) parameter list
             }
+            if (mctorparamss.length == 1 && mctorparamss.flatten.length == 0) mctorparamss = Nil
+            m.Ctor.Primary(this.mmods(gpre, l.PrimaryCtor(gctorsym)), mctorname, mctorparamss)
           } else {
             mfakector
           }
@@ -359,7 +356,7 @@ trait ToMmember extends ReflectToolkit with MetaToolkit {
           }).filter(_ != g.NoSymbol)
           gcontextBounds.map(gbound => gbound.asType.toMname(g.DefaultPrefix))
         }
-        lsym match {
+        val mmember = lsym match {
           case l.Zero => unreachable(debug(lsym.gsymbol, lsym.gsymbol.flags, lsym.gsymbol.getClass, lsym.gsymbol.owner))
           case _: l.AbstractVal => m.Decl.Val(mmods, List(m.Pat.Var.Term(mname.require[m.Term.Name])), mtpe).member
           case _: l.AbstractVar => m.Decl.Var(mmods, List(m.Pat.Var.Term(mname.require[m.Term.Name])), mtpe).member
@@ -373,9 +370,9 @@ trait ToMmember extends ReflectToolkit with MetaToolkit {
           case _: l.Type => m.Defn.Type(mmods, mname.require[m.Type.Name], mtparams, mtpe)
           case _: l.Clazz => m.Defn.Class(mmods, mname.require[m.Type.Name], mtparams, mctor, mtemplate)
           case _: l.Trait => m.Defn.Trait(mmods, mname.require[m.Type.Name], mtparams, mctor, mtemplate)
-          case _: l.Object => m.Defn.Object(mmods, mname.require[m.Term.Name], mctor, mtemplate)
+          case _: l.Object => m.Defn.Object(mmods, mname.require[m.Term.Name], mtemplate)
           case _: l.Package => m.Pkg(mname.require[m.Term.Name], mstats)
-          case _: l.PackageObject => m.Pkg.Object(mmods, mname.require[m.Term.Name], mctor, mtemplate)
+          case _: l.PackageObject => m.Pkg.Object(mmods, mname.require[m.Term.Name], mtemplate)
           case _: l.PrimaryCtor => m.Ctor.Primary(mmods, mname.require[m.Ctor.Name], mvparamss)
           case _: l.SecondaryCtor => m.Ctor.Secondary(mmods, mname.require[m.Ctor.Name], mvparamss, mbody)
           case _: l.TermBind => m.Pat.Var.Term(mname.require[m.Term.Name])
@@ -384,6 +381,7 @@ trait ToMmember extends ReflectToolkit with MetaToolkit {
           case _: l.TypeParameter => m.Type.Param(mmods, mname.require[m.Type.Param.Name], mtparams, mtpebounds, mviewbounds, mcontextbounds)
           case _ => throw new ConvertException(lsym, s"unsupported symbol $lsym, designation = ${gsym.getClass}, flags = ${gsym.flags}")
         }
+        mmember.withFfi(mffi)
       }
       def applyPrefix(gpre: g.Type, mmem: m.Member): m.Member = {
         if (gpre == g.NoPrefix) mmem

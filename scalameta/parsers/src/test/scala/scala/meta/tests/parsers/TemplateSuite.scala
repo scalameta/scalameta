@@ -141,28 +141,27 @@ class TemplateSuite extends ParseSuite {
   }
 
   test("object O") {
-    val Object(Nil, Term.Name("O"), EmptyCtor(), EmptyTemplate()) = templStat("object O")
+    val Object(Nil, Term.Name("O"), EmptyTemplate()) = templStat("object O")
   }
 
   test("case object O") {
-    val Object(Mod.Case() :: Nil, Term.Name("O"), EmptyCtor(), EmptyTemplate()) = templStat("case object O")
+    val Object(Mod.Case() :: Nil, Term.Name("O"), EmptyTemplate()) = templStat("case object O")
   }
 
   test("object A extends B") {
-    val Object(Nil, Term.Name("A"), EmptyCtor(),
-              Template(Nil, Ctor.Name("B") :: Nil, EmptySelf(), None)) =
+    val Object(Nil, Term.Name("A"), Template(Nil, Ctor.Name("B") :: Nil, EmptySelf(), None)) =
       templStat("object A extends B")
   }
 
   test("object A extends { val x: Int } with B") {
-    val Object(Nil, Term.Name("A"), EmptyCtor(),
+    val Object(Nil, Term.Name("A"),
               Template(Defn.Val(Nil, List(Pat.Var.Term(Term.Name("x"))), Some(Type.Name("Int")), Lit(2)) :: Nil,
                        Ctor.Name("B") :: Nil, EmptySelf(), None)) =
       templStat("object A extends { val x: Int = 2 } with B")
   }
 
   test("object A extends { self: B => }") {
-    val Object(Nil, Term.Name("A"), EmptyCtor(),
+    val Object(Nil, Term.Name("A"),
                Template(Nil, Nil, Term.Param(Nil, Term.Name("self"), Some(Type.Name("B")), None), Some(Nil))) =
       templStat("object A { self: B => }")
   }

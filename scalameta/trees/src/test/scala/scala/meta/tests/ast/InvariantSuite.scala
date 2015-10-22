@@ -13,8 +13,8 @@ class InvariantSuite extends FunSuite {
     val template = impl.Template(Nil, Nil, impl.Term.Param(Nil, impl.Name.Anonymous(), None, None), Some(stats))
     impl.Defn.Class(Nil, impl.Type.Name("test"), Nil, primaryCtor, template)
     intercept[InvariantFailedException] { impl.Defn.Trait(Nil, impl.Type.Name("test"), Nil, primaryCtor, template) }
-    intercept[InvariantFailedException] { impl.Defn.Object(Nil, impl.Term.Name("test"), primaryCtor, template) }
+    intercept[InvariantFailedException] { impl.Defn.Object(Nil, impl.Term.Name("test"), template) }
     intercept[InvariantFailedException] { impl.Pkg(impl.Term.Name("test"), stats) }
-    intercept[InvariantFailedException] { impl.Pkg.Object(Nil, impl.Term.Name("test"), primaryCtor, template) }
+    intercept[InvariantFailedException] { impl.Pkg.Object(Nil, impl.Term.Name("test"), template) }
   }
 }

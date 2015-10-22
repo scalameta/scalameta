@@ -61,6 +61,7 @@ package object tasty {
       pickler.assembleParts()
     } catch {
       case ex: TastyException => throw ex
+      case ex: NotImplementedError => throw new TastyException("of a protocol error", ex)
       case ex: Exception => throw new TastyException("of a protocol error", ex)
     }
   }
@@ -102,6 +103,7 @@ package object tasty {
       (digest, source)
     } catch {
       case ex: UntastyException => throw ex
+      case ex: NotImplementedError => throw new UntastyException("of a protocol error", ex)
       case ex: Exception => throw new UntastyException("of a protocol error", ex)
     }
   }

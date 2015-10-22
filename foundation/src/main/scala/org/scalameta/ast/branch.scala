@@ -18,6 +18,7 @@ class BranchMacros(val c: Context) extends AstReflection {
   val AdtInternal = q"_root_.org.scalameta.adt.Internal"
   val AstInternal = q"_root_.org.scalameta.ast.internal"
   val SemanticInternal = q"_root_.scala.meta.internal.semantic"
+  val FfiInternal = q"_root_.scala.meta.internal.ffi"
   val FlagsPackage = q"_root_.scala.meta.internal.flags.`package`"
   def impl(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
@@ -74,6 +75,10 @@ class BranchMacros(val c: Context) extends AstReflection {
         if (isMember) {
           qstats :+= quasigetter(NoMods, "name")
         }
+        if (isMember && isInternal) {
+          qstats :+= quasigetter(PrivateMeta, "ffi")
+          qstats :+= quasisetter(PrivateMeta, "withFfi", q"val ffi: $FfiInternal.Ffi")
+        }
         if (isName) {
           qstats :+= quasigetter(NoMods, "value")
           qstats :+= quasigetter(PrivateMeta, "env")
@@ -93,6 +98,7 @@ class BranchMacros(val c: Context) extends AstReflection {
         qstats :+= q"protected def privateDenot: $SemanticInternal.Denotation = null"
         qstats :+= q"protected def privateTyping: $SemanticInternal.Typing = null"
         qstats :+= q"protected def privateExpansion: $SemanticInternal.Expansion = null"
+        qstats :+= q"protected def privateFfi: $FfiInternal.Ffi = null"
         mstats1 += q"$qmods class $qname(rank: _root_.scala.Int, tree: _root_.scala.Any) extends ..$qparents { ..$qstats }"
       }
 

@@ -16,6 +16,10 @@ import scala.{meta => api}
 private[meta] object Helpers {
   private[meta] val unaryOps = Set("-", "+", "~", "!")
   private[meta] def isUnaryOp(s: String): Boolean = unaryOps contains s
+  implicit class XtensionSyntacticName(name: Name) {
+    def isBinder: Boolean = name.parent.map(_.isInstanceOf[Member]).getOrElse(false)
+    def isReference: Boolean = !isBinder
+  }
   implicit class XtensionSyntacticTermName(name: Term.Name) {
     import name._
     // some heuristic is needed to govern associativity and precedence of unquoted operators

@@ -71,12 +71,12 @@ class PackageSuite extends ParseSuite {
   }
 
   test("package object foo") {
-    val Source(Pkg.Object(Nil, Term.Name("foo"), EmptyCtor(), EmptyTemplate()) :: Nil) = source("package object foo")
+    val Source(Pkg.Object(Nil, Term.Name("foo"), EmptyTemplate()) :: Nil) = source("package object foo")
   }
 
   test("import foo.bar; package object baz") {
     val Source(Import(Import.Clause(Term.Name("foo"), Import.Selector.Name(Name.Indeterminate("bar")) :: Nil) :: Nil) ::
-                 Pkg.Object(Nil, Term.Name("baz"), EmptyCtor(), EmptyTemplate()) :: Nil) =
+                 Pkg.Object(Nil, Term.Name("baz"), EmptyTemplate()) :: Nil) =
       source("import foo.bar; package object baz")
   }
 

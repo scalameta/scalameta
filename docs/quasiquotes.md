@@ -16,7 +16,7 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
  Super             | `q"super"`, `q"$qname.super"`, `q"super[$qname]"`, `q"$qname.super[$qname]"`
  Name              | `q"$name"` (construction only), `q"${name: Term.Name}"` (also deconstruction)
  Selection         | `q"$expr.$name"`
- Interpolation     | Not supported yet [(#251)](https://github.com/scalameta/scalameta/issues/251)
+ Interpolation     | Not supported yet
  Application       | `q"$expr(...$aexprssnel)"`
  Type Application  | `q"$expr[..$tpesnel]"`
  Infix Application | `q"$expr $name[..$tpes] $expr"`, `q"$expr $name[..$tpes] (..$aexprs)"`
@@ -91,7 +91,7 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
  Tuple         | `p"(..$patsnel)"`
  Extract       | `p"$ref[..$tpes](..$apats)"`
  Infix Extract | `p"$pat $name (..$apatsnel)"`
- Interpolation | Not supported yet [(#251)](https://github.com/scalameta/scalameta/issues/251)
+ Interpolation | Not supported yet
  Typed         | `p"$pat: $ptpe"`
  Name          | `p"$name"` (construction only), `p"${name: Term.Name}"` (also deconstruction)
  Selection     | `p"$expr.$name"`

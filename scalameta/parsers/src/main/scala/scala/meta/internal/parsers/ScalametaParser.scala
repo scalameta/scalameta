@@ -2832,7 +2832,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
    */
   def objectDef(mods: List[Mod]): Defn.Object = atPos(mods, auto) {
     accept[`object`]
-    Defn.Object(mods, termName(), primaryCtor(OwnedByObject), templateOpt(OwnedByObject))
+    Defn.Object(mods, termName(), templateOpt(OwnedByObject))
   }
 
 /* -------- CONSTRUCTORS ------------------------------------------- */
@@ -2849,8 +2849,10 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
       val name = atPos(in.tokenPos, in.prevTokenPos)(Ctor.Name("this"))
       val paramss = paramClauses(ownerIsType = true, owner == OwnedByCaseClass)
       Ctor.Primary(mods, name, paramss)
-    } else {
+    } else if (owner.isTrait) {
       Ctor.Primary(Nil, atPos(in.tokenPos, in.prevTokenPos)(Ctor.Name("this")), Nil)
+    } else {
+      unreachable(debug(owner))
     }
   }
 
@@ -3294,7 +3296,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   def packageObjectDef(): Pkg.Object = autoPos {
     accept[`package `]
     accept[`object`]
-    Pkg.Object(Nil, termName(), primaryCtor(OwnedByObject), templateOpt(OwnedByObject))
+    Pkg.Object(Nil, termName(), templateOpt(OwnedByObject))
   }
 
   /** {{{

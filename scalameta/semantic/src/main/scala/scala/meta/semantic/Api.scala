@@ -163,7 +163,6 @@ private[meta] trait Api {
 
   implicit class XtensionSemanticType(tree: Type) {
     @hosted def <:<(other: Type): Boolean = implicitly[SemanticContext].isSubtype(tree, other)
-    @hosted def =:=(other: Type): Boolean = (tree =:= other) && (other =:= tree)
     @hosted def widen: Type = implicitly[SemanticContext].widen(tree)
     @hosted def dealias: Type = implicitly[SemanticContext].dealias(tree)
     @hosted def companion: Type.Ref = ???
@@ -306,7 +305,6 @@ private[meta] trait Api {
     @hosted def isVarargParam: Boolean = tree match { case impl.Term.Param(_, _, Some(impl.Type.Arg.Repeated(_)), _) => true; case _ => false }
     @hosted def isValParam: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.ValParam])
     @hosted def isVarParam: Boolean = tree.mods.exists(_.isInstanceOf[impl.Mod.VarParam])
-    @hosted def ffi: Option[String] = tree.mods.collectFirst { case impl.Mod.Ffi(signature) => signature }
   }
 
   implicit class XtensionSemanticMember(member: Member) extends XtensionSemanticMemberLike {
@@ -625,13 +623,9 @@ private[meta] trait Api {
   }
 
   // ===========================
-  // PART 8: BINDINGS
+  // PART 8: ALIASES
   // ===========================
-
-  implicit class XtensionSemanticName(tree: Name) {
-    def isBinder: Boolean = tree.parent.map(_.isInstanceOf[impl.Member]).getOrElse(false)
-    def isReference: Boolean = !isBinder
-  }
+  type SemanticContext = scala.meta.semantic.Context
 
   // TODO: Previously, we had a `dialectFromSemanticContext` implicit, which obviated the need in this method.
   // However, this dialect materializer was really half-hearted in the sense that it worked for prettyprinting
@@ -641,11 +635,6 @@ private[meta] trait Api {
     implicit val d: Dialect = c.dialect
     tree.show[Summary]
   }
-
-  // ===========================
-  // PART 9: ALIASES
-  // ===========================
-  type SemanticContext = scala.meta.semantic.Context
 }
 
 private[meta] trait Aliases {

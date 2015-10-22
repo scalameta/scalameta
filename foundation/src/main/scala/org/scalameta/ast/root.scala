@@ -26,9 +26,11 @@ class RootMacros(val c: Context) extends AstReflection {
   lazy val Denotation = tq"_root_.scala.meta.internal.semantic.Denotation"
   lazy val Typing = tq"_root_.scala.meta.internal.semantic.Typing"
   lazy val Expansion = tq"_root_.scala.meta.internal.semantic.Expansion"
+  lazy val Ffi = tq"_root_.scala.meta.internal.ffi.Ffi"
   lazy val AdtInternal = q"_root_.org.scalameta.adt.Internal"
   lazy val AstInternal = q"_root_.org.scalameta.ast.internal"
   lazy val SemanticInternal = q"_root_.scala.meta.internal.semantic"
+  lazy val FfiInternal = q"_root_.scala.meta.internal.ffi"
   def impl(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       val q"${mods @ Modifiers(flags, privateWithin, anns)} trait $name[..$tparams] extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
@@ -98,6 +100,7 @@ class RootMacros(val c: Context) extends AstReflection {
         protected def privateDenot: $Denotation
         protected def privateTyping: $Typing
         protected def privateExpansion: $Expansion
+        protected def privateFfi: $Ffi
         private[meta] def privateCopy(
           flags: $Flags = $ZERO,
           prototype: $Tree = this,
@@ -106,7 +109,8 @@ class RootMacros(val c: Context) extends AstReflection {
           env: $Environment = privateEnv,
           denot: $Denotation = privateDenot,
           typing: $Typing = privateTyping,
-          expansion: $Expansion = privateExpansion): ThisType
+          expansion: $Expansion = privateExpansion,
+          ffi: $Ffi = privateFfi): ThisType
 
         private def isEnvEmpty: _root_.scala.Boolean = this.privateEnv == null || this.privateEnv == _root_.scala.meta.internal.semantic.Environment.Zero
         private def isDenotEmpty: _root_.scala.Boolean = this.privateDenot == null || this.privateDenot == _root_.scala.meta.internal.semantic.Denotation.Zero
@@ -161,6 +165,7 @@ class RootMacros(val c: Context) extends AstReflection {
       qstats :+= q"protected def privateDenot: $Denotation = null"
       qstats :+= q"protected def privateTyping: $Typing = null"
       qstats :+= q"protected def privateExpansion: $Expansion = null"
+      qstats :+= q"protected def privateFfi: $Ffi = null"
       mstats1 += q"$qmods class $qname(rank: _root_.scala.Int, tree: _root_.scala.Any) extends ..$qparents { ..$qstats }"
 
       val cdef1 = q"${Modifiers(flags1, privateWithin, anns1)} trait $name[..$tparams] extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"

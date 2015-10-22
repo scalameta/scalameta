@@ -129,8 +129,8 @@ trait ToMtype extends ReflectToolkit with MetaToolkit {
           m.Type.Annotate(underlying.toMtype, annots.toMannots)
         case g.ConstantType(const @ g.Constant(tpe: g.Type)) =>
           tpe.widen.toMtype
-        case g.ConstantType(const) =>
-          const.toMlit
+        case tpe @ g.ConstantType(const) =>
+          tpe.widen.toMtype // TODO: we'll have to see whether this makes sense
         case tpe @ g.PolyType(tparams, ret) =>
           // NOTE: it turns out that we can't avoid polytypes here
           // even though we never need to carry around type signatures of our members (those members are their own type signatures!)
@@ -142,6 +142,8 @@ trait ToMtype extends ReflectToolkit with MetaToolkit {
               val mquants = tparams.toLogical.map(_.toMmember(g.NoPrefix).require[m.Type.Param])
               m.Type.Lambda(mquants, ret.toMtype)
           }
+        case tpe @ g.NullaryMethodType(ret) =>
+          m.Type.Method(Nil, ret.toMtype)
         case tpe @ g.MethodType(params, ret) =>
           def extractParamss(paramss: List[List[g.Symbol]], tpe: g.Type): List[List[g.Symbol]] = tpe match {
             case g.MethodType(params1, ret1) => extractParamss(paramss :+ params1, ret1)

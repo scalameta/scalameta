@@ -16,6 +16,7 @@ import scala.meta.tokens._
 import scala.meta.tokenquasiquotes._
 import scala.meta.prettyprinters._
 import scala.meta.dialects.Scala211
+import scala.meta.internal.{ffi => f}
 
 // TODO: this infers tokens for the Scala211 dialect due to token quasiquotes (the dialect needs to be explicitly imported). It should be changed in the future.
 // TODO: fix occasional incorrectness when semicolons are omitted
@@ -340,6 +341,15 @@ private[meta] object inferTokens {
       Tokens(patchedTokens ++ newStats: _*)
     }
 
+    def ffi(tree: Tree): Tokens = tree match {
+      case tree: scala.meta.internal.ast.Member if tree.ffi != f.Ffi.Zero =>
+        val str = "/* " + tree.ffi + " */ "
+        val input = Input.String(str)
+        Tokens(Token.Comment(input, dialect, 0, str.length - 1), Token.` `(input, dialect, str.length - 1))
+      case _ =>
+        toks""
+    }
+
     /* Infer tokens for a given tree, making use of the helpers above. */
     def tkz(tree: Tree): Tokens = tree match {
       // Bottom
@@ -593,7 +603,7 @@ private[meta] object inferTokens {
       case t: Defn.Type =>     toks"${t.mods.`o_o_`}type ${t.name.tks}${t.tparams.`[o,o]`} = ${t.body.tks}"
       case t: Defn.Class =>    toks"${t.mods.`o_o_`}class ${t.name.tks}${t.tparams.`[o,o]`}${t.ctor.tks}${apndTempl(t.templ)}"
       case t: Defn.Trait =>    toks"${t.mods.`o_o_`}trait ${t.name.tks}${t.tparams.`[o,o]`}${t.ctor.tks}${apndTempl(t.templ)}"
-      case t: Defn.Object =>   toks"${t.mods.`o_o_`}object ${t.name.tks}${t.ctor.tks}${apndTempl(t.templ)}"
+      case t: Defn.Object =>   toks"${t.mods.`o_o_`}object ${t.name.tks}${apndTempl(t.templ)}"
       case t: Defn.Def =>      toks"${t.mods.`o_o_`}def ${t.name.tks}${t.tparams.`[o,o]`}${apndTermParamss(t.paramss)}${apndDeclTpe(t.decltpe)} = ${t.body.tks}"
       case t: Defn.Macro =>    toks"${t.mods.`o_o_`}def ${t.name.tks}${t.tparams.`[o,o]`}${apndTermParamss(t.paramss)}: ${t.decltpe.tks} = macro ${t.body.tks}"
       case t: Pkg =>
@@ -671,9 +681,6 @@ private[meta] object inferTokens {
       case _: Mod.Lazy =>                     toks"lazy"
       case _: Mod.ValParam =>                 toks"val"
       case _: Mod.VarParam =>                 toks"var"
-      case Mod.Ffi(signature) =>
-        val quote = if (signature.contains(EOL)) tripleDoubleQuotes else singleDoubleQuotes
-        toks"@ffi($quote${mineLitTk(signature)}$quote)"
 
       // Enumerator
       case t: Enumerator.Val =>       toks"${t.pat.tks} = ${t.rhs.tks}"
@@ -718,7 +725,9 @@ private[meta] object inferTokens {
         }
     }
 
-    tkz(tree.asInstanceOf[scala.meta.internal.ast.Tree])
+    val ffiTokens = ffi(tree.asInstanceOf[scala.meta.internal.ast.Tree])
+    val payloadTokens = tkz(tree.asInstanceOf[scala.meta.internal.ast.Tree])
+    ffiTokens ++ payloadTokens
   }
 
   implicit class RichTokens(tks: Tokens) {

@@ -107,11 +107,13 @@ trait LogicalTrees {
 
     object TermThis {
       def unapply(tree: g.This): Option[l.QualifierName] = {
-        ???
+        val ldenot = l.Denotation(tree.symbol.prefix, tree.symbol.toLogical)
+        if (tree.qual == tpnme.EMPTY) Some(l.AnonymousName(ldenot).setParent(tree))
+        else Some(l.IndeterminateName(ldenot, tree.displayName).setParent(tree))
       }
     }
 
-    case class TermName(val denot: l.Denotation, val value: String) extends Name with TermParamName
+    case class TermName(denot: l.Denotation, value: String) extends Name with TermParamName
     object TermName {
       def apply(tree: g.NameTree): l.TermName = {
         require(tree.name.isTermName && tree.name != nme.WILDCARD && tree.name != nme.CONSTRUCTOR && debug(tree, showRaw(tree)))
@@ -122,8 +124,7 @@ trait LogicalTrees {
     object TermIdent {
       def unapply(tree: g.Ident): Option[l.TermName] = tree match {
         case tree @ g.Ident(g.TermName(value)) =>
-          val ldenot = l.Denotation(tree.symbol.prefix, tree.symbol.toLogical)
-          Some(l.TermName(ldenot, value).setParent(tree).setType(tree.tpe))
+          Some(l.TermName(tree.denot, value).setParent(tree).setType(tree.tpe))
         case _ =>
           None
       }
@@ -144,13 +145,25 @@ trait LogicalTrees {
       }
     }
 
+    object TermApplyType {
+      def unapply(tree: g.TypeApply): Option[(g.Tree, List[g.Tree])] = {
+        Some((tree.fun, tree.args))
+      }
+    }
+
+    object TermBlock {
+      def unapply(tree: g.Block): Option[List[g.Tree]] = {
+        Some((tree.stats :+ tree.expr))
+      }
+    }
+
     trait TermParamName extends Name
 
     object TermParamDef {
       // mods, pats, tpt, default
       def unapply(tree: g.ValDef): Option[(List[l.Modifier], l.TermName, g.Tree, g.Tree)] = {
+        if (!tree.hasMetadata("isLparam")) return None
         val g.ValDef(_, _, tpt, default) = tree
-        if (tree.name == g.nme.WILDCARD || tree.name.startsWith(g.nme.EVIDENCE_PARAM_PREFIX)) return None
         Some((l.Modifiers(tree), l.TermName(tree).setParent(tree), tpt, default))
       }
     }
@@ -163,7 +176,7 @@ trait LogicalTrees {
       }
     }
 
-    case class TypeName(val denot: l.Denotation, val value: String) extends Name with TypeParamName
+    case class TypeName(denot: l.Denotation, value: String) extends Name with TypeParamName
     object TypeName {
       def apply(tree: g.NameTree): l.TypeName = {
         require(tree.name.isTypeName && tree.name != tpnme.WILDCARD && debug(tree, showRaw(tree)))
@@ -174,8 +187,7 @@ trait LogicalTrees {
     object TypeIdent {
       def unapply(tree: g.Tree): Option[l.TypeName] = tree match {
         case tree @ g.Ident(g.TypeName(value)) =>
-          val ldenot = l.Denotation(g.NoPrefix, tree.symbol.toLogical)
-          Some(l.TypeName(ldenot, value).setParent(tree))
+          Some(l.TypeName(tree.denot, value).setParent(tree))
         case _ =>
           None
       }
@@ -230,6 +242,15 @@ trait LogicalTrees {
 
     // ============ PATTERNS ============
 
+    object PatVarTerm {
+      // name
+      def unapply(tree: g.Bind): Option[l.TermName] = {
+        if (!tree.hasMetadata("isLpatvar")) return None
+        if (tree.name.isTypeName) return None
+        Some(l.TermName(tree).setParent(tree).setType(tree.tpe))
+      }
+    }
+
     // ============ LITERALS ============
 
     object Literal {
@@ -247,7 +268,16 @@ trait LogicalTrees {
     object ValDef {
       // mods, pats, tpt, rhs
       def unapply(tree: g.ValDef): Option[(List[l.Modifier], List[g.Tree], g.Tree, g.Tree)] = {
-        ???
+        val g.ValDef(_, name, tpt, rhs) = tree
+        if (tree.hasMetadata("isLself") || tree.hasMetadata("isLparam")) return None
+        if (tree.mods.hasFlag(MUTABLE)) return None
+        val lpats = {
+          // TODO: support multi-pat valdefs
+          val core = g.Bind(name, Ident(nme.WILDCARD)).setParent(tree)
+          core.setSymbol(tree.symbol).appendMetadata("isLpatvar" -> true)
+          List(core)
+        }
+        Some((l.Modifiers(tree), lpats, tpt, rhs))
       }
     }
 
@@ -264,8 +294,8 @@ trait LogicalTrees {
         val g.DefDef(_, _, tparams, paramss, tpt, rhs) = tree
         if (tree.name == g.nme.CONSTRUCTOR || rhs.isEmpty || tree.mods.hasFlag(MACRO)) return None
         val ltparams = applyBounds(tparams, paramss)
-        val lparamss = removeBounds(paramss)
-        Some((l.Modifiers(tree), l.TermName(tree).setParent(tree), ltparams, paramss, tpt, rhs))
+        val lparamss = removeBounds(paramss).map(_.map(_.appendMetadata("isLparam" -> true)))
+        Some((l.Modifiers(tree), l.TermName(tree).setParent(tree), ltparams, lparamss, tpt, rhs))
       }
     }
 
@@ -290,10 +320,29 @@ trait LogicalTrees {
         if (tree.mods.hasFlag(TRAIT)) return None
         else {
           // TODO: context bounds
-          val primaryCtor = body.collectFirst { case ctor @ g.DefDef(_, nme.CONSTRUCTOR, _, _, _, _) => ctor }.get
-          val ltparams = applyBounds(classTparams, primaryCtor.vparamss)
-          Some((l.Modifiers(tree), l.TypeName(tree).setParent(tree), ltparams, primaryCtor, templ))
+          val lprimaryctor = body.collectFirst { case ctor @ g.DefDef(_, nme.CONSTRUCTOR, _, _, _, _) => ctor }.get
+          lprimaryctor.appendMetadata("isLprimaryCtor" -> true)
+          val ltparams = applyBounds(classTparams, lprimaryctor.vparamss)
+          Some((l.Modifiers(tree), l.TypeName(tree).setParent(tree), ltparams, lprimaryctor, templ))
         }
+      }
+    }
+
+    object TraitDef {
+      // mods, name, tparams, template
+      def unapply(tree: g.ClassDef): Option[(List[l.Modifier], l.TypeName, List[g.TypeDef], g.Template)] = {
+        val g.ClassDef(_, _, tparams, templ) = tree
+        if (!tree.mods.hasFlag(TRAIT)) return None
+        else Some((l.Modifiers(tree), l.TypeName(tree).setParent(tree), tparams, templ))
+      }
+    }
+
+    object ObjectDef {
+      // mods, name, tparams, template
+      def unapply(tree: g.ModuleDef): Option[(List[l.Modifier], l.TermName, g.Template)] = {
+        val g.ModuleDef(_, name, templ) = tree
+        if (name == nme.PACKAGE) return None
+        Some((l.Modifiers(tree), l.TermName(tree).setParent(tree), templ))
       }
     }
 
@@ -350,14 +399,12 @@ trait LogicalTrees {
       // isPrimaryCtor, mods, name, paramss, supercall, rhs
       def unapply(tree: g.DefDef): Option[(Boolean, List[l.Modifier], l.CtorName, List[List[g.ValDef]], g.Tree, List[g.Tree])] = {
         (tree, tree.parent, tree.parent.parent) match {
-          case (g.DefDef(_, nme.CONSTRUCTOR, _, _, _, body), g.Template(_, _, stats), implDef: g.ImplDef) =>
+          case (g.DefDef(_, nme.CONSTRUCTOR, _, _, _, body), g.Template(_, _, _), implDef: g.ImplDef) =>
             val lname = l.CtorName(tree, implDef).setParent(tree)
-            val primaryCtor = stats.collectFirst { case ctor @ g.DefDef(_, nme.CONSTRUCTOR, _, _, _, _) => ctor }
-            val isPrimaryCtor = primaryCtor.map(_.index == tree.index).getOrElse(false)
             val lparamss = removeBounds(tree.vparamss)
             val g.Block(binit, g.Literal(g.Constant(()))) = body
             val lsupercall +: lstats = binit.dropWhile(_.isInstanceOf[ValDef])
-            Some((isPrimaryCtor, l.Modifiers(primaryCtor.get), lname, lparamss, lsupercall, lstats))
+            Some((tree.hasMetadata("isLprimaryCtor"), l.Modifiers(tree), lname, lparamss, lsupercall, lstats))
           case _ =>
             None
         }
@@ -428,12 +475,15 @@ trait LogicalTrees {
         }
         val g.Template(parents, self, stats) = tree
         val lself = {
-          if (self != noSelfType) self
-          else g.ValDef(g.Modifiers(), g.nme.WILDCARD, g.TypeTree(), g.EmptyTree).setParent(tree)
+          val result = {
+            if (self != noSelfType) self
+            else g.ValDef(g.Modifiers(), g.nme.WILDCARD, g.TypeTree(), g.EmptyTree).setParent(tree)
+          }
+          result.appendMetadata("isLself" -> true)
         }
         val (rawEdefs, rest) = stats.span(isEarlyDef)
         val (gvdefs, etdefs) = rawEdefs.partition(isEarlyValDef)
-        val (fieldDefs, LowlevelCtor(_, lvdefs, superCtor, superArgss) :: body) = rest.splitAt(indexOfFirstCtor(rest))
+        val (fieldDefs, ctor @ LowlevelCtor(_, lvdefs, superCtor, superArgss) :: body) = rest.splitAt(indexOfFirstCtor(rest))
         val evdefs = gvdefs.zip(lvdefs).map {
           case (gvdef @ g.ValDef(_, _, tpt, _), g.ValDef(_, _, _, rhs)) =>
             copyValDef(gvdef)(tpt = tpt, rhs = rhs)
@@ -475,22 +525,19 @@ trait LogicalTrees {
     object SelfDef {
       // name, tpt
       def unapply(tree: g.ValDef): Option[(l.TermParamName, g.Tree)] = {
-        if (tree.parent.isInstanceOf[g.Template] && tree.index == -1) {
-          val isAnonymous = tree.name == g.nme.WILDCARD || tree.name.startsWith(g.nme.FRESH_TERM_NAME_PREFIX)
-          val ldenot = {
-            val lmdef = tree.parent.parent.require[g.MemberDef]
-            val lsym = if (lmdef.symbol != g.NoSymbol) l.Self(lmdef.symbol) else l.Zero
-            l.Denotation(lmdef.symbol.thisPrefix, lsym)
-          }
-          val lvalue = if (isAnonymous) "this" else tree.displayName
-          val lname = {
-            if (isAnonymous) l.AnonymousName(ldenot).setParent(tree)
-            else l.TermName(ldenot, lvalue).setParent(tree)
-          }
-          Some((lname, tree.tpt))
-        } else {
-          None
+        if (!tree.hasMetadata("isLself")) return None
+        val isAnonymous = tree.name == g.nme.WILDCARD || tree.name.startsWith(g.nme.FRESH_TERM_NAME_PREFIX)
+        val ldenot = {
+          val lmdef = tree.parent.parent.require[g.MemberDef]
+          val lsym = if (lmdef.symbol != g.NoSymbol) l.Self(lmdef.symbol) else l.Zero
+          l.Denotation(lmdef.symbol.thisPrefix, lsym)
         }
+        val lvalue = if (isAnonymous) "this" else tree.displayName
+        val lname = {
+          if (isAnonymous) l.AnonymousName(ldenot).setParent(tree)
+          else l.TermName(ldenot, lvalue).setParent(tree)
+        }
+        Some((lname, tree.tpt))
       }
     }
 
@@ -623,7 +670,7 @@ trait LogicalTrees {
       else semanticAnnots.map(Annotation.apply)
     }
 
-    case class Annotation(val tree: g.Tree) extends Modifier
+    case class Annotation(tree: g.Tree) extends Modifier
     object Annotation {
       def apply(info: g.AnnotationInfo): l.Annotation = {
         // TODO: set Annotation.tree's parent to g.EmptyTree
@@ -690,6 +737,7 @@ trait LogicalTrees {
     }
 
     private def removeBounds(paramss: List[List[g.ValDef]]): List[List[g.ValDef]] = {
+      if (paramss.isEmpty) return Nil
       val init :+ last = paramss
       val hasImplicits = last.exists(_.mods.hasFlag(IMPLICIT))
       val explicitss = if (hasImplicits) init else init :+ last
@@ -736,8 +784,6 @@ trait LogicalTrees {
     }
     def hierarchy: List[Tree] = tree +: parents
     def setParent(parent: Tree): T = tree.appendMetadata("parent" -> parent).asInstanceOf[T]
-    def index: Int = tree.metadata.get("index").map(_.require[Int]).getOrElse(-1)
-    def setIndex(index: Int): T = tree.appendMetadata("index" -> index).asInstanceOf[T]
     def installNavigationLinks(): Unit = {
       object installNavigationLinks extends Traverser {
         private var parents = List[Tree]()
@@ -748,14 +794,6 @@ trait LogicalTrees {
           parents = tree :: parents
           super.traverse(tree)
           parents = parents.tail
-        }
-        override def traverseStats(stats: List[Tree], exprOwner: Symbol): Unit = {
-          var i = 0
-          while (i < stats.length) {
-            stats(i).setIndex(i)
-            i += 1
-          }
-          super.traverseStats(stats, exprOwner)
         }
       }
       // NOTE: If you get a MatchError in xtraverse here,
