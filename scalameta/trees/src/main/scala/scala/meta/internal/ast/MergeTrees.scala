@@ -29,7 +29,7 @@ import scala.meta.prettyprinters._
 //
 // Here are the desugarings that we support
 // (S stands for Scala 2.11.x, D stands for Dotty):
-//   1) (S) Inference of method return types
+//   1) (S) Inference of val, var and method return types
 //   2) (S) Desugaring of nullary constructors to empty-paramlist constructors
 //   3) (S) Appending AnyRef to the end of an empty parent list
 //   4) (S) Appending Product and Serializable to the end of the parent list of a case class
@@ -69,6 +69,8 @@ object mergeTrees {
               sy.copy(loop(sy.qual, se.qual))
             case (sy: m.Term.Name, se: m.Term.Name) =>
               sy.copy()
+            case (sy: m.Term.Select, se: m.Term.Select) =>
+              sy.copy(loop(sy.qual, se.qual), loop(sy.name, se.name))
             case (sy: m.Term.Apply, se: m.Term.Apply) =>
               sy.copy(loop(sy.fun, se.fun), loop(sy.args, se.args))
             case (sy: m.Term.ApplyInfix, se @ m.Term.Apply(sefun, seargs)) =>
@@ -80,6 +82,8 @@ object mergeTrees {
               sy.copy(loop(sy.lhs, selhs), loop(sy.op, seop), loop(sy.targs, setargs), loop(sy.args, seargs))
             case (sy: m.Term.ApplyType, se: m.Term.ApplyType) =>
               sy.copy(loop(sy.fun, se.fun), loop(sy.targs, se.targs))
+            case (sy: m.Term.Block, se: m.Term.Block) =>
+              sy.copy(loop(sy.stats, se.stats))
             case (sy: m.Term.Param, se: m.Term.Param) =>
               sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), loop(sy.decltpe, se.decltpe), loop(sy.default, se.default))
 
@@ -94,6 +98,9 @@ object mergeTrees {
 
             // ============ PATTERNS ============
 
+            case (sy: m.Pat.Var.Term, se: m.Pat.Var.Term) =>
+              sy.copy(loop(sy.name, se.name))
+
             // ============ LITERALS ============
 
             case (sy: m.Lit, se: m.Lit) =>
@@ -103,6 +110,12 @@ object mergeTrees {
 
             // ============ DEFNS ============
 
+            case (sy: m.Defn.Val, se: m.Defn.Val) =>
+              val medecltpe = (sy.decltpe, se.decltpe) match { // (1)
+                case (None, Some(se)) => None
+                case (sy, se) => loop(sy, se)
+              }
+              sy.copy(loop(sy.mods, se.mods), loop(sy.pats, se.pats), medecltpe, loop(sy.rhs, se.rhs))
             case (sy: m.Defn.Def, se: m.Defn.Def) =>
               if (sy.name.toString != se.name.toString) failCorrelate(sy, se, "incompatible methods")
               val medecltpe = (sy.decltpe, se.decltpe) match { // (1)

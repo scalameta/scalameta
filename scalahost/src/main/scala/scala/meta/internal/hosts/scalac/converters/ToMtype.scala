@@ -142,6 +142,8 @@ trait ToMtype extends ReflectToolkit with MetaToolkit {
               val mquants = tparams.toLogical.map(_.toMmember(g.NoPrefix).require[m.Type.Param])
               m.Type.Lambda(mquants, ret.toMtype)
           }
+        case tpe @ g.NullaryMethodType(ret) =>
+          m.Type.Method(Nil, ret.toMtype)
         case tpe @ g.MethodType(params, ret) =>
           def extractParamss(paramss: List[List[g.Symbol]], tpe: g.Type): List[List[g.Symbol]] = tpe match {
             case g.MethodType(params1, ret1) => extractParamss(paramss :+ params1, ret1)
