@@ -766,8 +766,6 @@ trait LogicalTrees {
     }
     def hierarchy: List[Tree] = tree +: parents
     def setParent(parent: Tree): T = tree.appendMetadata("parent" -> parent).asInstanceOf[T]
-    def index: Int = tree.metadata.get("index").map(_.require[Int]).getOrElse(-1)
-    def setIndex(index: Int): T = tree.appendMetadata("index" -> index).asInstanceOf[T]
     def installNavigationLinks(): Unit = {
       object installNavigationLinks extends Traverser {
         private var parents = List[Tree]()
@@ -778,14 +776,6 @@ trait LogicalTrees {
           parents = tree :: parents
           super.traverse(tree)
           parents = parents.tail
-        }
-        override def traverseStats(stats: List[Tree], exprOwner: Symbol): Unit = {
-          var i = 0
-          while (i < stats.length) {
-            stats(i).setIndex(i)
-            i += 1
-          }
-          super.traverseStats(stats, exprOwner)
         }
       }
       // NOTE: If you get a MatchError in xtraverse here,
