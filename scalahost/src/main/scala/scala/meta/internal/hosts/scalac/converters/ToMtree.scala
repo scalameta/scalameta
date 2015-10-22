@@ -144,6 +144,21 @@ trait ToMtree extends ReflectToolkit with MetaToolkit {
             val mimpl = limpl.toMtree[m.Template]
             m.Defn.Class(mmods, mname, mtparams, mctor, mimpl)
 
+          case l.TraitDef(lmods, lname, ltparams, limpl) =>
+            val mmods = lmods.toMtrees[m.Mod]
+            val mname = lname.toMtree[m.Type.Name]
+            val mtparams = ltparams.toMtrees[m.Type.Param]
+            val mctor = ???
+            val mimpl = limpl.toMtree[m.Template]
+            m.Defn.Trait(mmods, mname, mtparams, mctor, mimpl)
+
+          case l.ObjectDef(lmods, lname, limpl) =>
+            val mmods = lmods.toMtrees[m.Mod]
+            val mname = lname.toMtree[m.Term.Name]
+            val mctor = ???
+            val mimpl = limpl.toMtree[m.Template]
+            m.Defn.Object(mmods, mname, mctor, mimpl)
+
           // ============ PKGS ============
 
           case l.EmptyPackageDef(lstats) =>

@@ -129,6 +129,10 @@ object mergeTrees {
               sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), loop(sy.tparams, se.tparams), loop(sy.paramss, se.paramss), medecltpe, loop(sy.body, se.body))
             case (sy: m.Defn.Class, se: m.Defn.Class) =>
               sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), loop(sy.tparams, se.tparams), loop(sy.ctor, se.ctor), loop(sy.templ, se.templ))
+            case (sy: m.Defn.Trait, se: m.Defn.Trait) =>
+              sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), loop(sy.tparams, se.tparams), loop(sy.ctor, se.ctor), loop(sy.templ, se.templ))
+            case (sy: m.Defn.Object, se: m.Defn.Object) =>
+              sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), loop(sy.ctor, se.ctor), loop(sy.templ, se.templ))
 
             // ============ PKGS ============
 

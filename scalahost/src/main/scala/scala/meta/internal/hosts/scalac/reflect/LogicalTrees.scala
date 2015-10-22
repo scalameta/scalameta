@@ -328,6 +328,23 @@ trait LogicalTrees {
       }
     }
 
+    object TraitDef {
+      // mods, name, tparams, template
+      def unapply(tree: g.ClassDef): Option[(List[l.Modifier], l.TypeName, List[g.TypeDef], g.Template)] = {
+        val g.ClassDef(_, _, tparams, templ) = tree
+        if (!tree.mods.hasFlag(TRAIT)) return None
+        else Some((l.Modifiers(tree), l.TypeName(tree).setParent(tree), tparams, templ))
+      }
+    }
+
+    object ObjectDef {
+      // mods, name, tparams, template
+      def unapply(tree: g.ModuleDef): Option[(List[l.Modifier], l.TermName, g.Template)] = {
+        val g.ModuleDef(_, _, templ) = tree
+        Some((l.Modifiers(tree), l.TermName(tree).setParent(tree), templ))
+      }
+    }
+
     // ============ PKGS ============
 
     object EmptyPackageDef {
