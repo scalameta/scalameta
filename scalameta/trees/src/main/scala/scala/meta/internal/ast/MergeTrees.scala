@@ -29,15 +29,16 @@ import scala.meta.prettyprinters._
 //
 // Here are the desugarings that we support
 // (S stands for Scala 2.11.x, D stands for Dotty):
-//   1) (S) Inference of val, var and method return types
-//   2) (S) Desugaring of nullary constructors to empty-paramlist constructors
-//   3) (S) Appending AnyRef to the end of an empty parent list
-//   4) (S) Appending Product and Serializable to the end of the parent list of a case class
-//   5) (S) Weeding out repeated occurrences of ProductN, Product and Serializable from the parent list
-//   6) (S) Converting Any to AnyRef in the parent list that starts with a Any
-//   7) (S) Prepending tpe.firstParent to the parent list that starts with a trait different from Any
-//   8) (S) Converting nullary parents to empty-arglist parents
-//   9) (S) Desugaring names imported with renaming imports into their original form
+//   01) (S) Inference of val, var and method return types
+//   02) (S) Desugaring of nullary constructors to empty-paramlist constructors
+//   03) (S) Appending AnyRef to the end of an empty parent list
+//   04) (S) Appending Product and Serializable to the end of the parent list of a case class
+//   05) (S) Weeding out repeated occurrences of ProductN, Product and Serializable from the parent list
+//   06) (S) Converting Any to AnyRef in the parent list that starts with a Any
+//   07) (S) Prepending tpe.firstParent to the parent list that starts with a trait different from Any
+//   08) (S) Converting nullary parents to empty-arglist parents
+//   09) (S) Desugaring names imported with renaming imports into their original form
+//   10) (S) Unit insertion
 object mergeTrees {
   // NOTE: Much like in LogicalTrees and in ToMtree, cases here must be ordered according
   // to the order of appearance of the corresponding AST nodes in Trees.scala.
@@ -87,7 +88,11 @@ object mergeTrees {
             case (sy: m.Term.ApplyType, se: m.Term.ApplyType) =>
               sy.copy(loop(sy.fun, se.fun), loop(sy.targs, se.targs))
             case (sy: m.Term.Block, se: m.Term.Block) =>
-              sy.copy(loop(sy.stats, se.stats))
+              val mestats = (sy.stats, se.stats) match {
+                case (systats, sestats :+ m.Lit(())) if systats.length == sestats.length => loop(systats, sestats) // (10)
+                case _ => loop(sy.stats, se.stats)
+              }
+              sy.copy()
             case (sy: m.Term.Param, se: m.Term.Param) =>
               sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), loop(sy.decltpe, se.decltpe), loop(sy.default, se.default))
 
