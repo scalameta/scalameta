@@ -419,6 +419,20 @@ trait LogicalTrees {
       }
     }
 
+    private object SyntheticModuleCtorDef {
+      def unapply(tree: g.DefDef): Boolean = tree match {
+        case g.DefDef(_, nme.CONSTRUCTOR, _, _, _, _) if tree.parent.parent.isInstanceOf[g.ModuleDef] => true
+        case _ => false
+      }
+    }
+
+    private object SyntheticTraitCtorDef {
+      def unapply(tree: g.DefDef): Boolean = tree match {
+        case g.DefDef(_, nme.MIXIN_CONSTRUCTOR, _, _, _, _) => true
+        case _ => false
+      }
+    }
+
     object SecondaryCtorDef {
       // mods, name, paramss, stats
       def unapply(tree: g.DefDef): Option[(List[l.Modifier], l.CtorName, List[List[g.ValDef]], List[g.Tree])] = tree match {
@@ -757,6 +771,8 @@ trait LogicalTrees {
         i += 1
         stat match {
           case l.PrimaryCtorDef(_, _, _) => // skip this
+          case l.SyntheticModuleCtorDef() => // and this
+          case l.SyntheticTraitCtorDef() => // and this
           case _ => lresult += stat
         }
       }
