@@ -201,6 +201,13 @@ trait LogicalTrees {
       }
     }
 
+    object TypeApply {
+      def unapply(tree: g.AppliedTypeTree): Option[(g.Tree, List[g.Tree])] = {
+        val g.AppliedTypeTree(tpt, args) = tree
+        Some((tpt, args))
+      }
+    }
+
     trait TypeParamName extends Name
 
     object TypeParamDef {

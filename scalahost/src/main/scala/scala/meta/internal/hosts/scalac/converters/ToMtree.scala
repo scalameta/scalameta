@@ -104,6 +104,10 @@ trait ToMtree extends ReflectToolkit with MetaToolkit {
             val mpre = lpre.toMtree[m.Term.Ref]
             val mname = lname.toMtree[m.Type.Name]
             m.Type.Select(mpre, mname)
+          case l.TypeApply(ltpt, largs) =>
+            val mtpt = ltpt.toMtree[m.Type]
+            val margs = largs.toMtrees[m.Type]
+            m.Type.Apply(mtpt, margs)
 
           // ============ PATTERNS ============
 
