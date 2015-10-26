@@ -92,7 +92,7 @@ object mergeTrees {
                 case (systats, sestats :+ m.Lit(())) if systats.length == sestats.length => loop(systats, sestats) // (10)
                 case _ => loop(sy.stats, se.stats)
               }
-              sy.copy()
+              sy.copy(mestats)
             case (sy: m.Term.Param, se: m.Term.Param) =>
               sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), loop(sy.decltpe, se.decltpe), loop(sy.default, se.default))
 
