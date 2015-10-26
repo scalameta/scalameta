@@ -61,7 +61,13 @@ trait ToMattrs extends ReflectToolkit with MetaToolkit {
       val denot @ s.Denotation.Single(spre, ssym) = denotlike.sdenot
       val gpre = spre match { case s.Prefix.Zero => g.NoPrefix; case s.Prefix.Type(mtpe: m.Type.Arg) => mtpe.toGtype }
       val gsym = symbolTable.convert(ssym).gsymbol
-      val typing = self.typing(gsym.typeSignatureIn(gpre))
+      val gsig = {
+        // TODO: Because of some strange reasons, RootPackage.info is a NullaryMethodType.
+        // We need to account for that, otherwise we're going to expose a really weird type.
+        if (gsym == g.rootMirror.RootPackage) g.rootMirror.RootClass.tpe
+        else gsym.typeSignatureIn(gpre)
+      }
+      val typing = self.typing(gsig)
       withMattrs(denot, typing)
     }
     def withMattrs(gpre: g.Type, symlike: SymLike): T = {
