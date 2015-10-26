@@ -67,7 +67,7 @@ trait ToMattrs extends ReflectToolkit with MetaToolkit {
         if (gsym == g.rootMirror.RootPackage) g.rootMirror.RootClass.tpe
         else gsym.typeSignatureIn(gpre)
       }
-      val typing = self.typing(gsig)
+      val typing = if (gsym.isModule) s.Typing.Recursive else self.typing(gsig)
       withMattrs(denot, typing)
     }
     def withMattrs(gpre: g.Type, symlike: SymLike): T = {
@@ -123,7 +123,6 @@ trait ToMattrs extends ReflectToolkit with MetaToolkit {
     // NOTE: s.Typing.Nonrecursive is lazy, so we need to make sure
     // that we're at the right phase when running this code
     if (gtpe == null || gtpe == g.NoType) s.Typing.Zero
-    else if (gtpe.typeSymbol.isModuleClass) s.Typing.Recursive
     else s.Typing.Nonrecursive(g.enteringTyper(gtpe.toMtypeArg))
   }
 
