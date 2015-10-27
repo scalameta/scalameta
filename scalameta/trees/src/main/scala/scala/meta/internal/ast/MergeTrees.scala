@@ -39,6 +39,7 @@ import scala.meta.prettyprinters._
 //   08) (S) Converting nullary parents to empty-arglist parents
 //   09) (S) Desugaring names imported with renaming imports into their original form
 //   10) (S) Unit insertion
+//   11) (S) Desugaring names into fully-qualified paths
 object mergeTrees {
   // NOTE: Much like in LogicalTrees and in ToMtree, cases here must be ordered according
   // to the order of appearance of the corresponding AST nodes in Trees.scala.
@@ -57,7 +58,13 @@ object mergeTrees {
         if ((sy1 ne sy) || (se1 ne se)) mergeTrees(sy1, se1)
         else {
           require(se.isTypechecked)
-          val expandedMetree = (sy, se) match {
+
+          import scala.language.implicitConversions
+          case class PartialResult(structuralMe: Tree, expansion: Option[Term])
+          object PartialResult { implicit def treeToPartialResult(structuralMe: Tree) = PartialResult(structuralMe, None) }
+          implicit class XtensionTree(tree: Tree) { def andExpansion(expansion: Term) = PartialResult(tree, Some(expansion)) }
+
+          val PartialResult(structuralMe, inferredExpansion): PartialResult = (sy, se) match {
             // ============ NAMES ============
 
             case (sy: m.Name.Anonymous, se: m.Name.Anonymous) =>
@@ -194,7 +201,23 @@ object mergeTrees {
               failCorrelate(sy, se, "unexpected trees")
           }
 
-          val metree = expandedMetree.withTokens(sy.tokens).inheritAttrs(se).withTypechecked(se.isTypechecked)
+          // NOTE: Explicitly specified expansion (already present in the semantic tree) takes precedence,
+          // because the converter really knows better in cases like constant folding, macro expansion, etc.
+          val explicitExpansion = se.internalExpansion
+          val expansion = explicitExpansion match {
+            case Some(Expansion.Desugaring(explicitExpansion)) => Some(explicitExpansion)
+            case Some(Expansion.Zero | Expansion.Identity) => inferredExpansion
+            case None => require(inferredExpansion.isEmpty && debug(sy, se)); None
+          }
+
+          val syntacticMe = structuralMe.withTokens(sy.tokens)
+          val attributedMe = syntacticMe.inheritAttrs(se)
+          val expandedMe = (attributedMe, expansion) match {
+            case (attributedMe: Term, Some(expansion: Term)) => attributedMe.withExpansion(expansion)
+            case _ => attributedMe
+          }
+          val me = expandedMe.withTypechecked(se.isTypechecked)
+
           if (sy.parent.isEmpty) {
             Debug.logMerge {
               println("======= SYNTACTIC TREE =======")
@@ -204,13 +227,13 @@ object mergeTrees {
               println(se)
               println(se.show[Attributes])
               println("======== MERGED TREE ========")
-              println(metree)
-              println(metree.show[Attributes])
+              println(me)
+              println(me.show[Attributes])
               println("=================================")
             }
           }
-          if (classTag[T].runtimeClass.isAssignableFrom(metree.getClass)) metree.asInstanceOf[T]
-          else failExpected(sy, se, classTag[T].runtimeClass, metree)
+          if (classTag[T].runtimeClass.isAssignableFrom(me.getClass)) me.asInstanceOf[T]
+          else failExpected(sy, se, classTag[T].runtimeClass, me)
         }
       }
 
