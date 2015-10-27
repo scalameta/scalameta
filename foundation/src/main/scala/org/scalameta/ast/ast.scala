@@ -364,6 +364,12 @@ class AstMacros(val c: Context) extends AstReflection {
             this.privateCopy(tokens = tokens)
           }
         """
+        astats1 += q"""
+          def inheritTokens(other: _root_.scala.meta.Tree): $iname = {
+            // TODO: use other.privateTokens to avoid forcing tokens at all
+            this.privateCopy(tokens = other.tokens)
+          }
+        """
         // NOTE: Much like we don't create a quasigetter for tokens,
         // we don't create a quasisetter for withTokens.
       }
