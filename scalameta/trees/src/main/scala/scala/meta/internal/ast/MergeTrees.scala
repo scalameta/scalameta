@@ -201,6 +201,12 @@ object mergeTrees {
               failCorrelate(sy, se, "unexpected trees")
           }
 
+          // NOTE: We have just created a copy of sy, which means that we got no tokens now.
+          // Therefore we have to inherit sy's tokens explicitly.
+          val syntacticMe = structuralMe.inheritTokens(sy)
+
+          val attributedMe = syntacticMe.inheritAttrs(se)
+
           // NOTE: Explicitly specified expansion (already present in the semantic tree) takes precedence,
           // because the converter really knows better in cases like constant folding, macro expansion, etc.
           val explicitExpansion = se.internalExpansion
@@ -209,15 +215,12 @@ object mergeTrees {
             case Some(Expansion.Zero | Expansion.Identity) => inferredExpansion
             case None => require(inferredExpansion.isEmpty && debug(sy, se)); None
           }
-
-          val syntacticMe = structuralMe.withTokens(sy.tokens)
-          val attributedMe = syntacticMe.inheritAttrs(se)
           val expandedMe = (attributedMe, expansion) match {
             case (attributedMe: Term, Some(expansion: Term)) => attributedMe.withExpansion(expansion)
             case _ => attributedMe
           }
-          val me = expandedMe.withTypechecked(se.isTypechecked)
 
+          val me = expandedMe.withTypechecked(se.isTypechecked)
           if (sy.parent.isEmpty) {
             Debug.logMerge {
               println("======= SYNTACTIC TREE =======")
