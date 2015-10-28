@@ -41,6 +41,7 @@ import scala.meta.prettyprinters._
 //   10) (S) Unit insertion
 //   11) (S) Desugaring names into fully-qualified paths
 //   12) (S) Insertion of an empty argument list into nullary calls
+//   13) (S) Collapse of trivial blocks
 object mergeTrees {
   // NOTE: Much like in LogicalTrees and in ToMtree, cases here must be ordered according
   // to the order of appearance of the corresponding AST nodes in Trees.scala.
@@ -116,6 +117,9 @@ object mergeTrees {
                 case _ => loop(sy.stats, se.stats)
               }
               sy.copy(mestats)
+            case (sy @ m.Term.Block(Seq(syStat)), seStat: m.Stat) =>
+              val syTyping = seStat match { case seStat: Term => seStat.typing; case _ => typingUnit }
+              sy.copy(Seq(loop(syStat, seStat))).withAttrs(syTyping) // (13)
             case (sy: m.Term.If, se: m.Term.If) =>
               sy.copy(loop(sy.cond, se.cond), loop(sy.thenp, se.thenp), loop(se.thenp, se.thenp))
             case (sy: m.Term.Param, se: m.Term.Param) =>
@@ -200,7 +204,7 @@ object mergeTrees {
                 })
               }
               val meparents = (sy.parents, se.parents) match {
-                case (Seq(), Seq(m.Term.Apply(anyRef: m.Ctor.Ref, Nil))) if anyRef.refersTo(Object_init) => // (3)
+                case (Seq(), Seq(m.Term.Apply(anyRef: m.Ctor.Ref, Nil))) if anyRef.refersTo(denotObjectInit) => // (3)
                   List()
                 case (syss, sess) =>
                   mergeParents(syss, sess)
@@ -289,7 +293,9 @@ object mergeTrees {
     loop(sy, se)
   }
 
-  private lazy val Object_init = denot(typeOf[Object].member(u.TermName("<init>")))
+  private lazy val denotObjectInit = denot(typeOf[Object].member(u.TermName("<init>")))
+  private lazy val denotUnit = denot(symbolOf[Unit])
+  private lazy val typingUnit = Typing.Nonrecursive(Type.Name("Unit").withAttrs(denotUnit).setTypechecked)
 
   // NOTE: We can't use =:= here, because it requires a semantic context,
   // and we can't have a semantic context in MergeTrees.
