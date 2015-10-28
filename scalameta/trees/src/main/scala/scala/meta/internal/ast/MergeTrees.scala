@@ -96,6 +96,11 @@ object mergeTrees {
               sy.copy(loop(sy.lhs, selhs), loop(sy.op, seop), loop(sy.targs, setargs), loop(sy.args, seargs))
             case (sy: m.Term.ApplyInfix, se: m.Term.ApplyInfix) =>
               sy.copy(loop(sy.lhs, se.lhs), loop(sy.op, se.op), loop(sy.targs, se.targs), loop(sy.args, se.args))
+            case (sy: m.Term.ApplyUnary, se: m.Term.Select) =>
+              require(se.name.value.startsWith("unary_"))
+              sy.copy(loop(sy.op, se.name), loop(sy.arg, se.qual)) inferringExpansion se
+            case (sy: m.Term.ApplyUnary, se: m.Term.ApplyUnary) =>
+              sy.copy(loop(sy.op, se.op), loop(sy.arg, se.arg))
             case (sy: m.Term.ApplyType, se: m.Term.ApplyType) =>
               sy.copy(loop(sy.fun, se.fun), loop(sy.targs, se.targs))
             case (sy: m.Term.Block, se: m.Term.Block) =>
