@@ -94,6 +94,8 @@ object mergeTrees {
               }
               require(seop.isLeftAssoc && debug(sy, se)) // TODO: right-associative operators aren't supported yet
               sy.copy(loop(sy.lhs, selhs), loop(sy.op, seop), loop(sy.targs, setargs), loop(sy.args, seargs))
+            case (sy: m.Term.ApplyInfix, se: m.Term.ApplyInfix) =>
+              sy.copy(loop(sy.lhs, se.lhs), loop(sy.op, se.op), loop(sy.targs, se.targs), loop(sy.args, se.args))
             case (sy: m.Term.ApplyType, se: m.Term.ApplyType) =>
               sy.copy(loop(sy.fun, se.fun), loop(sy.targs, se.targs))
             case (sy: m.Term.Block, se: m.Term.Block) =>

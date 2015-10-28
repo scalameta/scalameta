@@ -96,6 +96,9 @@ extends ConverterApi(global) with ContextApi with AdapterApi[G] {
               convertingTypecheck(tree, EXPRmode)
             case tree: m.Type =>
               convertingTypecheck(tree, TYPEmode)
+            case tree: m.Defn =>
+              val m.Term.Block(Seq(tree1)) = typecheck(m.Term.Block(Seq(tree)))
+              tree1
             case _ =>
               // TODO: It would be nice to be able to typecheck m.Source, but I've no idea how to do that.
               // The thing is that in order to have scalac typecheck top-level definitions, we have to enter them globally,
