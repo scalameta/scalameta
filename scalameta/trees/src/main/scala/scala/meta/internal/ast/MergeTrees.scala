@@ -62,7 +62,7 @@ object mergeTrees {
           import scala.language.implicitConversions
           case class PartialResult(partialMe: Tree, expansion: Option[Term])
           object PartialResult { implicit def treeToPartialResult(partialMe: Tree) = PartialResult(partialMe, None) }
-          implicit class XtensionTree(tree: Tree) { def andExpansion(expansion: Term) = PartialResult(tree, Some(expansion)) }
+          implicit class XtensionTree(tree: Tree) { def inferringExpansion(expansion: Term) = PartialResult(tree, Some(expansion)) }
 
           val PartialResult(partialMe, inferredExpansion): PartialResult = (sy, se) match {
             // ============ NAMES ============
@@ -80,6 +80,8 @@ object mergeTrees {
             case (sy: m.Term.Name, se: m.Term.Name) =>
               if (sy.value != se.value && sy.isBinder) failCorrelate(sy, se, "incompatible definitions")
               sy.copy() // (9)
+            case (sy: m.Term.Name, se: m.Term.Select) =>
+              sy.copy().inheritAttrs(se.name) inferringExpansion se // (11)
             case (sy: m.Term.Select, se: m.Term.Select) =>
               if (sy.name.value != se.name.value) failCorrelate(sy, se, "incompatible names")
               sy.copy(loop(sy.qual, se.qual), loop(sy.name, se.name))
