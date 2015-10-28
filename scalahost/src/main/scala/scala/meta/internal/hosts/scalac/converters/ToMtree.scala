@@ -85,6 +85,11 @@ trait ToMtree extends ReflectToolkit with MetaToolkit {
           case l.TermBlock(lstats) =>
             val mstats = lstats.toMtrees[m.Stat]
             m.Term.Block(mstats)
+          case l.TermIf(lcond, lthen, lelse) =>
+            val mcond = lcond.toMtree[m.Term]
+            val mthen = lthen.toMtree[m.Term]
+            val melse = lelse.toMtree[m.Term]
+            m.Term.If(mcond, mthen, melse)
           case l.TermParamDef(lmods, lname, ltpt, ldefault) =>
             val mmods = lmods.toMtrees[m.Mod]
             val mname = lname.toMtree[m.Term.Param.Name]

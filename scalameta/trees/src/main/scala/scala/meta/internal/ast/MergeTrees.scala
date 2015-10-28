@@ -109,6 +109,8 @@ object mergeTrees {
                 case _ => loop(sy.stats, se.stats)
               }
               sy.copy(mestats)
+            case (sy: m.Term.If, se: m.Term.If) =>
+              sy.copy(loop(sy.cond, se.cond), loop(sy.thenp, se.thenp), loop(se.thenp, se.thenp))
             case (sy: m.Term.Param, se: m.Term.Param) =>
               sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), loop(sy.decltpe, se.decltpe), loop(sy.default, se.default))
 
