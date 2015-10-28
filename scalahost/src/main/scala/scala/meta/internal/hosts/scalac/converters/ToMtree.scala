@@ -217,12 +217,18 @@ trait ToMtree extends ReflectToolkit with MetaToolkit {
           case _ =>
             fail(s"unsupported tree ${g.showRaw(gtree)}")
         }
-        val maybeTypedMtree = maybeDenotedMtree match {
-          case maybeDenotedMtree: m.Term.Name => maybeDenotedMtree // do nothing, typing already inferred from denotation
-          case maybeDenotedMtree: m.Ctor.Name => maybeDenotedMtree // do nothing, typing already inferred from denotation
-          case maybeDenotedMtree: m.Term => maybeDenotedMtree.tryMattrs(gtree.tpe)
-          case maybeDenotedMtree: m.Term.Param => maybeDenotedMtree // do nothing, typing already assigned during conversion
-          case maybeDenotedMtree => maybeDenotedMtree
+        val maybeTypedMtree = {
+          if (maybeDenotedMtree.isUnattributed) {
+            maybeDenotedMtree match {
+              case maybeDenotedMtree: m.Term.Name => maybeDenotedMtree // do nothing, typing already inferred from denotation
+              case maybeDenotedMtree: m.Ctor.Name => maybeDenotedMtree // do nothing, typing already inferred from denotation
+              case maybeDenotedMtree: m.Term => maybeDenotedMtree.tryMattrs(gtree.tpe)
+              case maybeDenotedMtree: m.Term.Param => maybeDenotedMtree // do nothing, typing already assigned during conversion
+              case maybeDenotedMtree => maybeDenotedMtree
+            }
+          } else {
+            maybeDenotedMtree
+          }
         }
         val maybeExpandedMtree = {
           if (gtree0 == gtree) maybeTypedMtree

@@ -60,11 +60,11 @@ object mergeTrees {
           require(se.isTypechecked)
 
           import scala.language.implicitConversions
-          case class PartialResult(structuralMe: Tree, expansion: Option[Term])
-          object PartialResult { implicit def treeToPartialResult(structuralMe: Tree) = PartialResult(structuralMe, None) }
+          case class PartialResult(partialMe: Tree, expansion: Option[Term])
+          object PartialResult { implicit def treeToPartialResult(partialMe: Tree) = PartialResult(partialMe, None) }
           implicit class XtensionTree(tree: Tree) { def andExpansion(expansion: Term) = PartialResult(tree, Some(expansion)) }
 
-          val PartialResult(structuralMe, inferredExpansion): PartialResult = (sy, se) match {
+          val PartialResult(partialMe, inferredExpansion): PartialResult = (sy, se) match {
             // ============ NAMES ============
 
             case (sy: m.Name.Anonymous, se: m.Name.Anonymous) =>
@@ -203,9 +203,15 @@ object mergeTrees {
 
           // NOTE: We have just created a copy of sy, which means that we got no tokens now.
           // Therefore we have to inherit sy's tokens explicitly.
-          val syntacticMe = structuralMe.inheritTokens(sy)
+          val syntacticMe = partialMe.inheritTokens(sy)
 
-          val attributedMe = syntacticMe.inheritAttrs(se)
+          // NOTE: In most cases, the partial result will not be attributed and will be meant to inherit attrs from se.
+          // However, when we deal with desugarings, we might pre-attribute the result in advance,
+          // and therefore we should avoid calling inheritAttrs if that was the case.
+          val attributedMe = {
+            if (syntacticMe.isUnattributed) syntacticMe.inheritAttrs(se)
+            else syntacticMe
+          }
 
           // NOTE: Explicitly specified expansion (already present in the semantic tree) takes precedence,
           // because the converter really knows better in cases like constant folding, macro expansion, etc.
