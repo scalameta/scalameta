@@ -80,10 +80,11 @@ private[meta] object inferTokens {
     }
     implicit class RichTreeSeq(trees: Seq[Tree]) {
       /* Flatten tokens corresponding to a sequence of trees together. Can transform tokens corresponding to each tree using a first-order function. */
-      def flattks(start: Tokens = toks"")(sep: Tokens = toks"", op: (Tokens => Tokens) = (x: Tokens) => x)(end: Tokens = toks"") = {
-        val sq = trees match {
-          case Nil => toks""
-          case _ => start ++ trees.init.flatMap(v => op(v.tks) ++ sep) ++ op(trees.last.tks) ++ end
+      def flattks(start: Tokens = toks"")(sep: Tokens = toks"", op: (Tokens => Tokens) = (x: Tokens) => x, trimAffixes: Boolean = true)(end: Tokens = toks"") = {
+        val sq = {
+          if (trees.isEmpty && trimAffixes) toks""
+          else if (trees.isEmpty) start ++ end
+          else start ++ trees.init.flatMap(v => op(v.tks) ++ sep) ++ op(trees.last.tks) ++ end
         }
         Tokens(sq: _*)
       }
@@ -105,18 +106,20 @@ private[meta] object inferTokens {
       def `o,o` =      flattks()(toks", ")()
       def `o;o` =      flattks()(toks"; ")()
       def `o_o_` =     flattks()(toks" ")(toks" ")
-      def `[o,o]` =    flattks(toks"[")(toks", ")(toks"]")
-      def `{o,o}` =    flattks(toks"{ ")(toks", ")(toks" }")
-      def `(o,o)` =    flattks(toks"(")(toks", ")(toks")")
+      def `[o,o]` =    flattks(toks"[")(toks", ", trimAffixes = true)(toks"]")
+      def `[[o,o]]` =  flattks(toks"[")(toks", ", trimAffixes = false)(toks"]")
+      def `{o,o}` =    flattks(toks"{ ")(toks", ", trimAffixes = true)(toks" }")
+      def `{{o,o}}` =  flattks(toks"{ ")(toks", ", trimAffixes = false)(toks" }")
+      def `(o,o)` =    flattks(toks"(")(toks", ", trimAffixes = true)(toks")")
+      def `((o,o))` =  flattks(toks"(")(toks", ", trimAffixes = false)(toks")")
       def `[->o->` =   flattks(newline)(newline, avoidDoubleLineFun andThen indentFun)(newline)
       def `[->o` =     flattks(newline)(newline, avoidDoubleLineFun andThen indentFun)()
     }
     implicit class RichTreeSeqSeq(trees: Seq[Seq[Tree]]) {
-      def `(o,o)` = {
+      def `((o,o))` = {
         val sq = trees match {
           case Nil => toks""
-          case _ if trees.length == 1 && trees.head.length == 0 => toks"()"
-          case _ => trees.flatMap(_.`(o,o)`)
+          case _ => trees.flatMap(_.`((o,o))`)
         }
         Tokens(sq: _*)
       }
@@ -375,8 +378,8 @@ private[meta] object inferTokens {
 
       // Term
       case t: Term if t.isCtorCall =>
-        if (t.isInstanceOf[Ctor.Ref.Function]) toks"=>${t.ctorArgss.`(o,o)`}"
-        else toks"${t.ctorTpe.tks}${t.ctorArgss.`(o,o)`}"
+        if (t.isInstanceOf[Ctor.Ref.Function]) toks"=>${t.ctorArgss.`((o,o))`}"
+        else toks"${t.ctorTpe.tks}${t.ctorArgss.`((o,o))`}"
       case t: Term.This =>
         val qual = if (t.qual.isInstanceOf[Name.Anonymous]) toks"" else toks"${t.qual.tks}."
         toks"${qual}this"
@@ -399,24 +402,24 @@ private[meta] object inferTokens {
       case t: Term.Apply =>
         if (t.args.size == 1 && t.args.head.isInstanceOf[Term.PartialFunction]) toks"${t.fun.tks} ${t.args.head.tks}"
         else if (t.args.size == 1 && t.args.head.isInstanceOf[Term.Block]) toks"${t.fun.tks} ${t.args.head.tks}"
-        else toks"${t.fun.tks}${t.args.`(o,o)`}"
-      case t: Term.ApplyType => toks"${t.fun.tks}${t.targs.`[o,o]`}"
+        else toks"${t.fun.tks}${t.args.`((o,o))`}"
+      case t: Term.ApplyType => toks"${t.fun.tks}${t.targs.`[[o,o]]`}"
       case t: Term.ApplyInfix =>
         val rhs = t.args match {
           case (arg: Term) :: Nil => arg.tks
-          case args => args.`(o,o)`
+          case args => args.`((o,o))`
         }
         toks"${t.lhs.tks} ${t.op.tks} $rhs"
       case t: Term.ApplyUnary => toks"${t.op.tks}${t.arg.tks}"
       case t: Term.Assign =>     toks"${t.lhs.tks} = ${t.rhs.tks}"
-      case t: Term.Update =>     toks"${t.fun.tks}${t.argss.`(o,o)`} = ${t.rhs.tks}"
+      case t: Term.Update =>     toks"${t.fun.tks}${t.argss.`((o,o))`} = ${t.rhs.tks}"
       case t: Term.Return =>
         if (guessHasExpr(t)) toks"return ${t.expr.tks}"
         else toks"return"
       case t: Term.Throw =>      toks"throw ${t.expr.tks}"
       case t: Term.Ascribe =>    toks"${t.expr.tks}: ${t.decltpe.tks}"
       case t: Term.Annotate =>   toks"${t.expr.tks}: ${t.annots.`o_o`}"
-      case t: Term.Tuple =>      t.elements.`(o,o)`
+      case t: Term.Tuple =>      t.elements.`((o,o))`
       case t: Term.Block =>
         import Term.{ Block, Function }
         t match {
@@ -432,7 +435,7 @@ private[meta] object inferTokens {
           case Block(Function(params, Block(stats)) :: Nil) if params.length == 1 =>
             toks"{ ${params.`o,o`} =>${stats.`[->o->`}}"
           case Block(Function(params, Block(stats)) :: Nil) =>
-            toks"{ ${params.`(o,o)`} =>${stats.`[->o->`}}"
+            toks"{ ${params.`((o,o))`} =>${stats.`[->o->`}}"
           case _ =>
             if (t.stats.isEmpty) toks"{}"
             else toks"{${t.stats.`[->o->`}}"
@@ -466,7 +469,7 @@ private[meta] object inferTokens {
           case Term.Function(Nil, body) =>
             toks"() => $cbody"
           case Term.Function(params, body) =>
-            toks"${params.`(o,o)`} => $cbody"
+            toks"${params.`((o,o))`} => $cbody"
         }
       case t: Term.PartialFunction => toks"{${t.cases.`[->o->`}}"
       case t: Term.While =>           toks"while (${t.expr.tks}) ${t.body.tks}"
@@ -496,12 +499,11 @@ private[meta] object inferTokens {
       case t: Type.ApplyInfix => toks"${t.lhs.tks} ${t.op.tks} ${t.rhs.tks}"
       case t: Type.Function =>
         val params = {
-          if (t.params.isEmpty) toks"()"
-          else if (t.params.size == 1) t.params.head.tks
-          else t.params.`(o,o)`
+          if (t.params.size == 1) t.params.head.tks
+          else t.params.`((o,o))`
         }
         toks"$params => ${t.res.tks}"
-      case t: Type.Tuple =>      t.elements.`(o,o)`
+      case t: Type.Tuple =>      t.elements.`((o,o))`
       case t: Type.Compound =>
         val tpes = t.tpes.flattks()(toks" with ")()
         if (guessHasRefinement(t)) toks"$tpes { ${t.refinement.`o;o`} }"
@@ -509,14 +511,8 @@ private[meta] object inferTokens {
       case t: Type.Existential =>  toks"${t.tpe.tks} forSome { ${t.quants.`o;o`} }"
       case t: Type.Annotate =>     toks"${t.tpe.tks} ${t.annots.`o_o`}"
       case t: Type.Placeholder =>  toks"_ ${t.bounds.tks}"
-      case t: Type.Lambda =>
-        val params = {
-          if (t.quants.isEmpty) toks"[]"
-          else t.quants.`[o,o]`
-        }
-        toks"$params${t.tpe.tks}"
-      case t: Type.Method =>
-        toks"${apndTermParamss(t.paramss)}: ${t.tpe.tks}"
+      case t: Type.Lambda =>       toks"${t.quants.`[[o,o]]`}${t.tpe.tks}"
+      case t: Type.Method =>       toks"${apndTermParamss(t.paramss)}: ${t.tpe.tks}"
       case t: Type.Bounds =>
         val loOpt = t.lo.map(lo => toks">: ${lo.tks}")
         val hiOpt = t.hi.map(hi => toks"<: ${hi.tks}")
@@ -546,12 +542,12 @@ private[meta] object inferTokens {
         val designator: Tokens = if (t.rhs.isInstanceOf[Pat.Arg.SeqWildcard] && dialect.bindToSeqWildcardDesignator == ":") toks":" else toks"@"
         toks"${t.lhs.tks}$separator$designator ${t.rhs.tks}"
       case t: Pat.Alternative => toks"${t.lhs.tks} | ${t.rhs.tks}"
-      case t: Pat.Tuple =>       t.elements.`(o,o)`
-      case t: Pat.Extract =>     toks"${t.ref.tks}${t.targs.`[o,o]`}${t.args.`(o,o)`}"
+      case t: Pat.Tuple =>       t.elements.`((o,o))`
+      case t: Pat.Extract =>     toks"${t.ref.tks}${t.targs.`[o,o]`}${t.args.`((o,o))`}"
       case t: Pat.ExtractInfix =>
         t.rhs match {
           case x :: Nil => toks"${t.lhs.tks} ${t.ref.tks} ${x.tks}"
-          case _ => toks"${t.lhs.tks} ${t.ref.tks} ${t.rhs.`(o,o)`}"
+          case _ => toks"${t.lhs.tks} ${t.ref.tks} ${t.rhs.`((o,o))`}"
         }
       case t: Pat.Interpolate =>
         val zipped = (t.parts zip t.args) map {
@@ -568,12 +564,12 @@ private[meta] object inferTokens {
       case t: Pat.Type.Wildcard =>    toks"_"
       case t: Pat.Var.Type =>         mineIdentTk(t.name.value)
       case t: Pat.Type.Project =>     toks"${t.qual.tks}#${t.name.tks}"
-      case t: Pat.Type.Apply =>       toks"${t.tpe.tks}${t.args.`[o,o]`}"
+      case t: Pat.Type.Apply =>       toks"${t.tpe.tks}${t.args.`[[o,o]]`}"
       case t: Pat.Type.ApplyInfix =>  toks"${t.lhs.tks} ${t.op.tks} ${t.rhs.tks}"
       case t: Pat.Type.Function =>
-        val params = if (t.params.size == 1) t.params.head.tks else t.params.`(o,o)`
+        val params = if (t.params.size == 1) t.params.head.tks else t.params.`((o,o))`
         toks"$params => ${t.res.tks}"
-      case t: Pat.Type.Tuple =>       t.elements.`(o,o)`
+      case t: Pat.Type.Tuple =>       t.elements.`((o,o))`
       case t: Pat.Type.Compound =>
         val tpes = t.tpes.flattks()(toks" with ")()
         if (guessPatHasRefinement(t)) toks"$tpes { ${t.refinement.`o;o`} }"
@@ -581,12 +577,7 @@ private[meta] object inferTokens {
       case t: Pat.Type.Existential => toks"${t.tpe.tks} forSome { ${t.quants.`o;o`} }"
       case t: Pat.Type.Annotate =>    toks"${t.tpe.tks} ${t.annots.`o_o`}"
       case t: Pat.Type.Placeholder => toks"_ ${t.bounds.tks}"
-      case t: Pat.Type.Lambda =>
-        val params = {
-          if (t.quants.isEmpty) toks"[]"
-          else t.quants.`[o,o]`
-        }
-        toks"$params => ${t.tpe.tks}"
+      case t: Pat.Type.Lambda =>      toks"${t.quants.`[[o,o]]`} => ${t.tpe.tks}"
 
       // Lit
       case t: Lit => mineLitTk(t.value)
@@ -664,8 +655,8 @@ private[meta] object inferTokens {
 
       // Mod
       case Mod.Annot(tree) =>
-        if (tree.isInstanceOf[Term.Annotate]) toks"@(${tree.ctorTpe.tks})${tree.ctorArgss.`(o,o)`}"
-        else                                  toks"@${tree.ctorTpe.tks}${tree.ctorArgss.`(o,o)`}"
+        if (tree.isInstanceOf[Term.Annotate]) toks"@(${tree.ctorTpe.tks})${tree.ctorArgss.`((o,o))`}"
+        else                                  toks"@${tree.ctorTpe.tks}${tree.ctorArgss.`((o,o))`}"
       case Mod.Private(Name.Anonymous()) =>   toks"private"
       case Mod.Private(name) =>               toks"private[${name.tks}]"
       case Mod.Protected(Name.Anonymous()) => toks"protected"
@@ -695,7 +686,7 @@ private[meta] object inferTokens {
       case t: Import.Clause =>
         if (t.sels.size == 1 && !t.sels.head.isInstanceOf[Import.Selector.Rename]
           && !t.sels.head.isInstanceOf[Import.Selector.Unimport]) toks"${t.ref.tks}.${t.sels.`oo`}"
-        else toks"${t.ref.tks}.${t.sels.`{o,o}`}"
+        else toks"${t.ref.tks}.${t.sels.`{{o,o}}`}"
       case t: Import =>                   toks"import ${t.clauses.`o,o`}"
 
       // Case

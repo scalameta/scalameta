@@ -427,4 +427,10 @@ class ScalaSuite extends InferSuite {
     assert(tree.show[Structure] === """Term.Interpolate(Term.Name("xml"), Seq(Lit("<foo>{bar}</foo>")), Nil)""")
     assert(forceInferAll(tree).show[Syntax] === """ xml"<foo>{bar}</foo>" """.trim)
   }
+
+  test("empty-arglist application") {
+    val tree = term("foo.toString()")
+    assert(tree.show[Structure] === "Term.Apply(Term.Select(Term.Name(\"foo\"), Term.Name(\"toString\")), Nil)")
+    assert(forceInferAll(tree).show[Syntax] === "foo.toString()")
+  }
 }
