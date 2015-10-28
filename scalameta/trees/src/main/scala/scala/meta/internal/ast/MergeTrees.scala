@@ -40,6 +40,7 @@ import scala.meta.prettyprinters._
 //   09) (S) Desugaring names imported with renaming imports into their original form
 //   10) (S) Unit insertion
 //   11) (S) Desugaring names into fully-qualified paths
+//   12) (S) Insertion of an empty argument list into nullary calls
 object mergeTrees {
   // NOTE: Much like in LogicalTrees and in ToMtree, cases here must be ordered according
   // to the order of appearance of the corresponding AST nodes in Trees.scala.
@@ -82,9 +83,15 @@ object mergeTrees {
               sy.copy() // (9)
             case (sy: m.Term.Name, se: m.Term.Select) =>
               sy.copy().inheritAttrs(se.name) inferringExpansion se // (11)
+            case (sy: m.Term.Name, seOuter @ m.Term.Apply(seInner: m.Term.Name, Nil)) =>
+              loop(sy, seInner) inferringExpansion seOuter // (12)
+            case (sy: m.Term.Name, seOuter @ m.Term.Apply(m.Term.Select(_, seInner), Nil)) =>
+              loop(sy, seInner) inferringExpansion seOuter // (12)
             case (sy: m.Term.Select, se: m.Term.Select) =>
               if (sy.name.value != se.name.value) failCorrelate(sy, se, "incompatible names")
               sy.copy(loop(sy.qual, se.qual), loop(sy.name, se.name))
+            case (sy: m.Term.Select, seOuter @ m.Term.Apply(seInner: m.Term.Select, Nil)) =>
+              loop(sy, seInner) inferringExpansion seOuter // (12)
             case (sy: m.Term.Apply, se: m.Term.Apply) =>
               sy.copy(loop(sy.fun, se.fun), loop(sy.args, se.args))
             case (sy: m.Term.ApplyInfix, se @ m.Term.Apply(sefun, seargs)) =>
