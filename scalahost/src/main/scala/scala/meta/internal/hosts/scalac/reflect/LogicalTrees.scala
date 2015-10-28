@@ -201,6 +201,13 @@ trait LogicalTrees {
       }
     }
 
+    object TypeApply {
+      def unapply(tree: g.AppliedTypeTree): Option[(g.Tree, List[g.Tree])] = {
+        val g.AppliedTypeTree(tpt, args) = tree
+        Some((tpt, args))
+      }
+    }
+
     trait TypeParamName extends Name
 
     object TypeParamDef {
@@ -416,6 +423,20 @@ trait LogicalTrees {
       def unapply(tree: g.DefDef): Option[(List[l.Modifier], l.CtorName, List[List[g.ValDef]])] = tree match {
         case l.CtorDef(true, mods, name, paramss, _, _) => Some((mods, name, paramss))
         case _ => None
+      }
+    }
+
+    private object SyntheticModuleCtorDef {
+      def unapply(tree: g.DefDef): Boolean = tree match {
+        case g.DefDef(_, nme.CONSTRUCTOR, _, _, _, _) if tree.parent.parent.isInstanceOf[g.ModuleDef] => true
+        case _ => false
+      }
+    }
+
+    private object SyntheticTraitCtorDef {
+      def unapply(tree: g.DefDef): Boolean = tree match {
+        case g.DefDef(_, nme.MIXIN_CONSTRUCTOR, _, _, _, _) => true
+        case _ => false
       }
     }
 
@@ -757,6 +778,8 @@ trait LogicalTrees {
         i += 1
         stat match {
           case l.PrimaryCtorDef(_, _, _) => // skip this
+          case l.SyntheticModuleCtorDef() => // and this
+          case l.SyntheticTraitCtorDef() => // and this
           case _ => lresult += stat
         }
       }

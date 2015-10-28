@@ -29,15 +29,17 @@ import scala.meta.prettyprinters._
 //
 // Here are the desugarings that we support
 // (S stands for Scala 2.11.x, D stands for Dotty):
-//   1) (S) Inference of val, var and method return types
-//   2) (S) Desugaring of nullary constructors to empty-paramlist constructors
-//   3) (S) Appending AnyRef to the end of an empty parent list
-//   4) (S) Appending Product and Serializable to the end of the parent list of a case class
-//   5) (S) Weeding out repeated occurrences of ProductN, Product and Serializable from the parent list
-//   6) (S) Converting Any to AnyRef in the parent list that starts with a Any
-//   7) (S) Prepending tpe.firstParent to the parent list that starts with a trait different from Any
-//   8) (S) Converting nullary parents to empty-arglist parents
-//   9) (S) Desugaring names imported with renaming imports into their original form
+//   01) (S) Inference of val, var and method return types
+//   02) (S) Desugaring of nullary constructors to empty-paramlist constructors
+//   03) (S) Appending AnyRef to the end of an empty parent list
+//   04) (S) Appending Product and Serializable to the end of the parent list of a case class
+//   05) (S) Weeding out repeated occurrences of ProductN, Product and Serializable from the parent list
+//   06) (S) Converting Any to AnyRef in the parent list that starts with a Any
+//   07) (S) Prepending tpe.firstParent to the parent list that starts with a trait different from Any
+//   08) (S) Converting nullary parents to empty-arglist parents
+//   09) (S) Desugaring names imported with renaming imports into their original form
+//   10) (S) Unit insertion
+//   11) (S) Desugaring names into fully-qualified paths
 object mergeTrees {
   // NOTE: Much like in LogicalTrees and in ToMtree, cases here must be ordered according
   // to the order of appearance of the corresponding AST nodes in Trees.scala.
@@ -56,7 +58,13 @@ object mergeTrees {
         if ((sy1 ne sy) || (se1 ne se)) mergeTrees(sy1, se1)
         else {
           require(se.isTypechecked)
-          val expandedMetree = (sy, se) match {
+
+          import scala.language.implicitConversions
+          case class PartialResult(partialMe: Tree, expansion: Option[Term])
+          object PartialResult { implicit def treeToPartialResult(partialMe: Tree) = PartialResult(partialMe, None) }
+          implicit class XtensionTree(tree: Tree) { def inferringExpansion(expansion: Term) = PartialResult(tree, Some(expansion)) }
+
+          val PartialResult(partialMe, inferredExpansion): PartialResult = (sy, se) match {
             // ============ NAMES ============
 
             case (sy: m.Name.Anonymous, se: m.Name.Anonymous) =>
@@ -72,6 +80,8 @@ object mergeTrees {
             case (sy: m.Term.Name, se: m.Term.Name) =>
               if (sy.value != se.value && sy.isBinder) failCorrelate(sy, se, "incompatible definitions")
               sy.copy() // (9)
+            case (sy: m.Term.Name, se: m.Term.Select) =>
+              sy.copy().inheritAttrs(se.name) inferringExpansion se // (11)
             case (sy: m.Term.Select, se: m.Term.Select) =>
               if (sy.name.value != se.name.value) failCorrelate(sy, se, "incompatible names")
               sy.copy(loop(sy.qual, se.qual), loop(sy.name, se.name))
@@ -84,10 +94,16 @@ object mergeTrees {
               }
               require(seop.isLeftAssoc && debug(sy, se)) // TODO: right-associative operators aren't supported yet
               sy.copy(loop(sy.lhs, selhs), loop(sy.op, seop), loop(sy.targs, setargs), loop(sy.args, seargs))
+            case (sy: m.Term.ApplyInfix, se: m.Term.ApplyInfix) =>
+              sy.copy(loop(sy.lhs, se.lhs), loop(sy.op, se.op), loop(sy.targs, se.targs), loop(sy.args, se.args))
             case (sy: m.Term.ApplyType, se: m.Term.ApplyType) =>
               sy.copy(loop(sy.fun, se.fun), loop(sy.targs, se.targs))
             case (sy: m.Term.Block, se: m.Term.Block) =>
-              sy.copy(loop(sy.stats, se.stats))
+              val mestats = (sy.stats, se.stats) match {
+                case (systats, sestats :+ m.Lit(())) if systats.length == sestats.length => loop(systats, sestats) // (10)
+                case _ => loop(sy.stats, se.stats)
+              }
+              sy.copy(mestats)
             case (sy: m.Term.Param, se: m.Term.Param) =>
               sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), loop(sy.decltpe, se.decltpe), loop(sy.default, se.default))
 
@@ -189,7 +205,32 @@ object mergeTrees {
               failCorrelate(sy, se, "unexpected trees")
           }
 
-          val metree = expandedMetree.withTokens(sy.tokens).inheritAttrs(se).withTypechecked(se.isTypechecked)
+          // NOTE: We have just created a copy of sy, which means that we got no tokens now.
+          // Therefore we have to inherit sy's tokens explicitly.
+          val syntacticMe = partialMe.inheritTokens(sy)
+
+          // NOTE: In most cases, the partial result will not be attributed and will be meant to inherit attrs from se.
+          // However, when we deal with desugarings, we might pre-attribute the result in advance,
+          // and therefore we should avoid calling inheritAttrs if that was the case.
+          val attributedMe = {
+            if (syntacticMe.isUnattributed) syntacticMe.inheritAttrs(se)
+            else syntacticMe
+          }
+
+          // NOTE: Explicitly specified expansion (already present in the semantic tree) takes precedence,
+          // because the converter really knows better in cases like constant folding, macro expansion, etc.
+          val explicitExpansion = se.internalExpansion
+          val expansion = explicitExpansion match {
+            case Some(Expansion.Desugaring(explicitExpansion)) => Some(explicitExpansion)
+            case Some(Expansion.Zero | Expansion.Identity) => inferredExpansion
+            case None => require(inferredExpansion.isEmpty && debug(sy, se)); None
+          }
+          val expandedMe = (attributedMe, expansion) match {
+            case (attributedMe: Term, Some(expansion: Term)) => attributedMe.withExpansion(expansion)
+            case _ => attributedMe
+          }
+
+          val me = expandedMe.withTypechecked(se.isTypechecked)
           if (sy.parent.isEmpty) {
             Debug.logMerge {
               println("======= SYNTACTIC TREE =======")
@@ -199,13 +240,13 @@ object mergeTrees {
               println(se)
               println(se.show[Attributes])
               println("======== MERGED TREE ========")
-              println(metree)
-              println(metree.show[Attributes])
+              println(me)
+              println(me.show[Attributes])
               println("=================================")
             }
           }
-          if (classTag[T].runtimeClass.isAssignableFrom(metree.getClass)) metree.asInstanceOf[T]
-          else failExpected(sy, se, classTag[T].runtimeClass, metree)
+          if (classTag[T].runtimeClass.isAssignableFrom(me.getClass)) me.asInstanceOf[T]
+          else failExpected(sy, se, classTag[T].runtimeClass, me)
         }
       }
 

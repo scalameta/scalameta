@@ -26,14 +26,18 @@ object Attributes {
   def apply[T](f: T => Show.Result): Attributes[T] = new Attributes[T] { def apply(input: T) = f(input) }
 
   @root trait Recursion
-  object Recursion {
-    @leaf object Shallow extends Recursion
+  trait LowPriorityRecursion {
+    @leaf implicit object Shallow extends Recursion
+  }
+  object Recursion extends LowPriorityRecursion {
     @leaf implicit object Deep extends Recursion
   }
 
   @root trait Force
-  object Force {
-    @leaf object Never extends Force
+  trait LowPriorityForce {
+    @leaf implicit object Never extends Force
+  }
+  object Force extends LowPriorityForce {
     @leaf implicit object Always extends Force
   }
 

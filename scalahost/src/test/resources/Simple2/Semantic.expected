@@ -1,0 +1,7 @@
+object M extends scala.AnyRef() {
+  def main(args: Array[String]): Unit = {
+    val x: Int = 2
+    val y: Int = x.+(x)
+    ()
+  }
+}

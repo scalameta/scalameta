@@ -18,6 +18,7 @@ package scala.meta {
     def children: Seq[Tree]
     def tokens: Tokens
     def withTokens(tokens: Tokens): ThisType
+    def inheritTokens(other: Tree): ThisType
     final override def canEqual(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
     final override def equals(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
     final override def hashCode: Int = System.identityHashCode(this)
