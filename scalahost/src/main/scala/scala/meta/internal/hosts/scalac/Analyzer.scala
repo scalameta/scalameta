@@ -184,8 +184,7 @@ trait ScalahostAnalyzer extends NscAnalyzer with ReflectToolkit {
         // NOTE: this is a meaningful difference from the code in Typers.scala
         //-treeCopy.Literal(tree, value)
         val result = treeCopy.Literal(tree, value)
-        if (result.hasMetadata("original")) result
-        else result.appendMetadata("original" -> tree)
+        result.rememberConstantFoldingOf(tree)
       }
 
       // Ignore type errors raised in later phases that are due to mismatching types with existential skolems

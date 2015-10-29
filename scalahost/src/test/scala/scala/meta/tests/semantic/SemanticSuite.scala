@@ -96,7 +96,7 @@ class SemanticSuite extends FunSuite {
       |{11} Type.Singleton(Term.Name("x")[8]{4}<>)
       |{12} Type.Name("Any")[19]
       |{13} Type.Singleton(Term.Name("_root_")[20]{13}<>)
-      |<1> Term.Apply(Term.Select(Lit(2){4}<>, Term.Name("+")[9]{5}<>){5}<>, Seq(Lit(2){4}<>)){4}<>
+      |<1> Lit(4){4}<>
       |<2> Term.Select(Term.Select(Term.This(Name.Indeterminate("scala")[13]){9}<>, Term.Name("Predef")[14]{10}<>){10}<>, Term.Name("println")[12]{7}<>){7}<>
     """))
   }

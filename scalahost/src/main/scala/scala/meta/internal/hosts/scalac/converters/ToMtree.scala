@@ -40,17 +40,19 @@ trait ToMtree extends ReflectToolkit with MetaToolkit {
   self: Api =>
 
   protected implicit class XtensionGtreeToMtree(gtree0: g.Tree) {
+    private val (gtree, gexpansion) = gtree0 match {
+      case UninferrableDesugaring(goriginal, gexpansion) => (goriginal, gexpansion)
+      case _ => (gtree0, g.EmptyTree)
+    }
+
     // TODO: figure out a mechanism to automatically remove navigation links once we're done
     // in order to cut down memory consumption of the further compilation pipeline
     // TODO: another performance consideration is the fact that install/remove
     // are currently implemented as standalone tree traversal, and it would be faster
     // to integrate them into the transforming traversal
-    private lazy val gtree: g.Tree = {
-      val original = gtree0.original
-      original.installNavigationLinks()
-      original.setParent(gtree0.parent)
-      original
-    }
+    gtree.installNavigationLinks()
+    gtree.setParent(gtree0.parent)
+
     def toMtree[T <: mapi.Tree : ClassTag]: T = {
       try {
         val maybeDenotedMtree = gtree match {
@@ -236,13 +238,13 @@ trait ToMtree extends ReflectToolkit with MetaToolkit {
           }
         }
         val maybeExpandedMtree = {
-          if (gtree0 == gtree) maybeTypedMtree
+          if (gexpansion.isEmpty) maybeTypedMtree
           else maybeTypedMtree match {
             case maybeTypedMtree: m.Term =>
-              val (obliviousGtree, memento) = gtree.forgetOriginal
-              gtree.installNavigationLinks()
-              try maybeTypedMtree.withExpansion(obliviousGtree.toMtree[m.Term])
-              finally gtree.rememberOriginal(memento)
+              val (obliviousGexpansion, memento) = gexpansion.forgetOriginal
+              obliviousGexpansion.installNavigationLinks()
+              try maybeTypedMtree.withExpansion(obliviousGexpansion.toMtree[m.Term])
+              finally gexpansion.rememberOriginal(memento)
             case _ =>
               fail("unsupported original")
           }
@@ -302,9 +304,12 @@ trait ToMtree extends ReflectToolkit with MetaToolkit {
         }
         val prefix = gtree.productPrefix
         var details = briefPrettyprint(gtree)
-        if (gtree.original != gtree) {
-          details = details + " that desugars into "
-          details = details + briefPrettyprint(gtree.original)
+        gtree match {
+          case UninferrableDesugaring(goriginal, _) =>
+            details = details + " that desugars into "
+            details = details + briefPrettyprint(goriginal)
+          case _ =>
+            // do nothing
         }
         s"($prefix) $details"
       }).mkString(EOL)
