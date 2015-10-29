@@ -67,7 +67,9 @@ trait UninferrableDesugarings {
   // #1: Established by our compiler plugin, reached a preliminary agreement with Jason.
   // #2: Dotty doesn't constfold in typer, but the subsequent phase messes things up.
   // A conversation with Dmitry and Martin has concluded with an admission that this is a bug.
-  @leaf class ConstantFolding(original: Tree, expansion: Tree) extends UninferrableDesugaring
+  @leaf class ConstantFolding(original: Tree) extends UninferrableDesugaring {
+    def expansion = EmptyTree // NOTE: I don't think that this desugaring is useful for anything.
+  }
   object ConstantFolding {
     def read(maybeExpansion: Tree): Option[ConstantFolding] = {
       val untyped = UninferrableDesugaring.read(maybeExpansion, "ConstantFolding")
@@ -75,7 +77,7 @@ trait UninferrableDesugarings {
     }
     def write(original: Tree, expansion: Tree): Unit = {
       if (original == expansion) return
-      UninferrableDesugaring.write(expansion, ConstantFolding(original, expansion))
+      UninferrableDesugaring.write(expansion, ConstantFolding(original))
     }
   }
 
