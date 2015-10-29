@@ -27,24 +27,8 @@ import scala.meta.prettyprinters._
 // so we have to support both scalac and dotc (also, as discussed with @smarter, it's possible to make mergeTrees
 // platform-dependent, but we'll have to pay the price of user convenience).
 //
-// Here are the desugarings that we support
-// (S stands for Scala 2.11.x, D stands for Dotty, E stands for an expansion-generating desugaring):
-//   01) (S)  Inference of val, var and method return types
-//   02) (S)  Desugaring of nullary constructors to empty-paramlist constructors
-//   03) (S)  Appending AnyRef to the end of an empty parent list
-//   04) (S)  Appending Product and Serializable to the end of the parent list of a case class
-//   05) (S)  Weeding out repeated occurrences of ProductN, Product and Serializable from the parent list
-//   06) (S)  Converting Any to AnyRef in the parent list that starts with a Any
-//   07) (S)  Prepending tpe.firstParent to the parent list that starts with a trait different from Any
-//   08) (S)  Converting nullary parents to empty-arglist parents
-//   09) (S)  Desugaring names imported with renaming imports into their original form
-//   10) (S)  Unit insertion
-//   11) (ES) Desugaring names into fully-qualified paths
-//   12) (ES) Insertion of an empty argument list into nullary calls
-//   13) (S)  Collapse of trivial blocks
-//   14) (ES) Macro expansions (expected to be handled by the converter)
-//   15) (S)  Constant folding (expected to be handled by the converter)
-//   15) (ES) Desugaring unary calls into normal calls to unary_XXX methods
+// The list of supported desugarings can be found at:
+// https://github.com/scalameta/scalameta/blob/master/docs/converters.md.
 object mergeTrees {
   // NOTE: Much like in LogicalTrees and in ToMtree, cases here must be ordered according
   // to the order of appearance of the corresponding AST nodes in Trees.scala.
@@ -52,7 +36,7 @@ object mergeTrees {
   // That will let us save time on: 1) eager recreation of entire trees, 2) eager computation of tokens for withTokens.
   def apply[T <: Tree : ClassTag](sy: T, se: Tree): T = {
     object loop {
-      def apply[T <: Tree : ClassTag](sy1: T, se1: Tree): T = {
+      def apply[T <: Tree : ClassTag](sy1: T, sE2: Tree): T = {
         // NOTE: This roundabout way of recursing is here only for error reporting.
         // If we end up in, say, `apply(syss, sess)`, and we have `List()` vs `List(List())`,
         // then we will have troubles providing a nice traceback to the user (because we don't have parents at hand).
@@ -60,7 +44,7 @@ object mergeTrees {
         // 1) Pass parents explicitly to all calls to `loop` that deal with collections.
         // 2) Have `loop` definitions be nested within `mergeTrees.apply`, so that everyone can access `sy` and `se`.
         // I tried #1, and it's way too much hassle, which is why I settled down on #2.
-        if ((sy1 ne sy) || (se1 ne se)) mergeTrees(sy1, se1)
+        if ((sy1 ne sy) || (sE2 ne se)) mergeTrees(sy1, sE2)
         else {
           require(se.isTypechecked)
 
@@ -84,18 +68,18 @@ object mergeTrees {
               sy.copy(loop(sy.qual, se.qual))
             case (sy: m.Term.Name, se: m.Term.Name) =>
               if (sy.value != se.value && sy.isBinder) failCorrelate(sy, se, "incompatible definitions")
-              sy.copy() // (9)
+              sy.copy() // (E2)
             case (sy: m.Term.Name, se: m.Term.Select) =>
-              sy.copy().inheritAttrs(se.name) inferringExpansion se // (11)
+              sy.copy().inheritAttrs(se.name) inferringExpansion se // (E1, E2)
             case (sy: m.Term.Name, seOuter @ m.Term.Apply(seInner: m.Term.Name, Nil)) =>
-              loop(sy, seInner) inferringExpansion seOuter // (12)
+              loop(sy, seInner) inferringExpansion seOuter // (E7)
             case (sy: m.Term.Name, seOuter @ m.Term.Apply(m.Term.Select(_, seInner), Nil)) =>
-              loop(sy, seInner) inferringExpansion seOuter // (12)
+              loop(sy, seInner) inferringExpansion seOuter // (E7)
             case (sy: m.Term.Select, se: m.Term.Select) =>
               if (sy.name.value != se.name.value) failCorrelate(sy, se, "incompatible names")
               sy.copy(loop(sy.qual, se.qual), loop(sy.name, se.name))
             case (sy: m.Term.Select, seOuter @ m.Term.Apply(seInner: m.Term.Select, Nil)) =>
-              loop(sy, seInner) inferringExpansion seOuter // (12)
+              loop(sy, seInner) inferringExpansion seOuter // (E7)
             case (sy: m.Term.Apply, se: m.Term.Apply) =>
               sy.copy(loop(sy.fun, se.fun), loop(sy.args, se.args))
             case (sy: m.Term.ApplyInfix, se @ m.Term.Apply(sefun, seargs)) =>
@@ -109,20 +93,20 @@ object mergeTrees {
               sy.copy(loop(sy.lhs, se.lhs), loop(sy.op, se.op), loop(sy.targs, se.targs), loop(sy.args, se.args))
             case (sy: m.Term.ApplyUnary, se: m.Term.Select) =>
               require(se.name.value.startsWith("unary_"))
-              sy.copy(loop(sy.op, se.name), loop(sy.arg, se.qual)) inferringExpansion se // (16)
+              sy.copy(loop(sy.op, se.name), loop(sy.arg, se.qual)) inferringExpansion se // (E8)
             case (sy: m.Term.ApplyUnary, se: m.Term.ApplyUnary) =>
               sy.copy(loop(sy.op, se.op), loop(sy.arg, se.arg))
             case (sy: m.Term.ApplyType, se: m.Term.ApplyType) =>
               sy.copy(loop(sy.fun, se.fun), loop(sy.targs, se.targs))
             case (sy: m.Term.Block, se: m.Term.Block) =>
               val mestats = (sy.stats, se.stats) match {
-                case (systats, sestats :+ m.Lit(())) if systats.length == sestats.length => loop(systats, sestats) // (10)
+                case (systats, sestats :+ m.Lit(())) if systats.length == sestats.length => loop(systats, sestats) // (E4)
                 case _ => loop(sy.stats, se.stats)
               }
               sy.copy(mestats)
             case (sy @ m.Term.Block(Seq(syStat)), seStat: m.Stat) =>
               val syTyping = seStat match { case seStat: Term => seStat.typing; case _ => typingUnit }
-              sy.copy(Seq(loop(syStat, seStat))).withAttrs(syTyping) // (13)
+              sy.copy(Seq(loop(syStat, seStat))).withAttrs(syTyping) // (E3)
             case (sy: m.Term.If, se: m.Term.If) =>
               sy.copy(loop(sy.cond, se.cond), loop(sy.thenp, se.thenp), loop(se.thenp, se.thenp))
             case (sy: m.Term.Param, se: m.Term.Param) =>
@@ -132,7 +116,7 @@ object mergeTrees {
 
             case (sy: m.Type.Name, se: m.Type.Name) =>
               if (sy.value != se.value && sy.isBinder) failCorrelate(sy, se, "incompatible definitions")
-              sy.copy() // (9)
+              sy.copy() // (E2)
             case (sy: m.Type.Select, se: m.Type.Select) =>
               sy.copy(loop(sy.qual, se.qual), loop(sy.name, se.name))
             case (sy: m.Type.Apply, se: m.Type.Apply) =>
@@ -153,13 +137,13 @@ object mergeTrees {
             // ============ DEFNS ============
 
             case (sy: m.Defn.Val, se: m.Defn.Val) =>
-              val medecltpe = (sy.decltpe, se.decltpe) match { // (1)
+              val medecltpe = (sy.decltpe, se.decltpe) match { // (M1)
                 case (None, Some(se)) => None
                 case (sy, se) => loop(sy, se)
               }
               sy.copy(loop(sy.mods, se.mods), loop(sy.pats, se.pats), medecltpe, loop(sy.rhs, se.rhs))
             case (sy: m.Defn.Def, se: m.Defn.Def) =>
-              val medecltpe = (sy.decltpe, se.decltpe) match { // (1)
+              val medecltpe = (sy.decltpe, se.decltpe) match { // (M1)
                 case (None, Some(se)) => None
                 case (sy, se) => loop(sy, se)
               }
@@ -182,7 +166,7 @@ object mergeTrees {
             // ============ CTORS ============
 
             case (sy: m.Ctor.Primary, se: m.Ctor.Primary) =>
-              val meparamss = (sy.paramss, se.paramss) match { // (2)
+              val meparamss = (sy.paramss, se.paramss) match { // (M2)
                 case (Seq(), Seq(Seq())) => List()
                 case (syss, sess) => loop(syss, sess)
               }
@@ -201,13 +185,13 @@ object mergeTrees {
             case (sy: m.Template, se: m.Template) =>
               def mergeParents(sys: Seq[m.Ctor.Call], ses: Seq[m.Ctor.Call]): Seq[m.Ctor.Call] = {
                 if (sys.length != ses.length) failCorrelate(sy, se, sys, ses)
-                sys.zip(ses).map({ // (8)
+                sys.zip(ses).map({ // (M8)
                   case (sy, m.Term.Apply(se, Nil)) => loop(sy, se)
                   case (sy, se) => loop(sy, se)
                 })
               }
               val meparents = (sy.parents, se.parents) match {
-                case (Seq(), Seq(m.Term.Apply(anyRef: m.Ctor.Ref, Nil))) if anyRef.refersTo(denotObjectInit) => // (3)
+                case (Seq(), Seq(m.Term.Apply(anyRef: m.Ctor.Ref, Nil))) if anyRef.refersTo(denotObjectInit) => // (M3)
                   List()
                 case (syss, sess) =>
                   mergeParents(syss, sess)

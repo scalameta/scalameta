@@ -38,20 +38,14 @@ trait UninferrableDesugarings {
   // scala.meta trees, so #3 is of no practical concern for now. Later on, though,
   // when fixing #147, we'll have to worry about #3 as well.
   //
-  // Here are the uninferrable desugarings that we support:
-  //   01) Macro expansion
-  //   02) Constant folding
-  //
-  // IMPORTANT! If you add a new uninferrable desugaring here, don't forget
-  // to update the list of desugarings in MergeTrees.scala.
+  // The list of supported desugarings can be found at:
+  // https://github.com/scalameta/scalameta/blob/master/docs/converters.md.
   @root trait UninferrableDesugaring {
     def original: Tree // An attributed(!!) tree with this particular desugaring undone
     def expansion: Tree // An attributed desugared tree, may be EmptyTree if the desugaring isn't useful
     require(original.tpe != null && (expansion.isEmpty || expansion.tpe != null))
   }
 
-  // #1: Already supported by scalac since 2.10.x.
-  // #2: Dotty doesn't have macros, so this desugaring is irrelevant.
   @leaf class MacroExpansion(original: Tree, expansion: Tree) extends UninferrableDesugaring
   object MacroExpansion {
     def read(maybeExpansion: Tree): Option[MacroExpansion] = {
@@ -71,9 +65,6 @@ trait UninferrableDesugarings {
     // }
   }
 
-  // #1: Established by our compiler plugin, reached a preliminary agreement with Jason.
-  // #2: Dotty doesn't constfold in typer, but the subsequent phase messes things up.
-  // A conversation with Dmitry and Martin has concluded with an admission that this is a bug.
   @leaf class ConstantFolding(original: Tree) extends UninferrableDesugaring {
     def expansion = EmptyTree // NOTE: I don't think that this desugaring is useful for anything.
   }
