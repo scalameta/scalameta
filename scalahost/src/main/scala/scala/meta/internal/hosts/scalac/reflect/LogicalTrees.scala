@@ -157,6 +157,12 @@ trait LogicalTrees {
       }
     }
 
+    object TermIf {
+      def unapply(tree: g.If): Option[(g.Tree, g.Tree, g.Tree)] = {
+        Some((tree.cond, tree.thenp, tree.elsep))
+      }
+    }
+
     trait TermParamName extends Name
 
     object TermParamDef {

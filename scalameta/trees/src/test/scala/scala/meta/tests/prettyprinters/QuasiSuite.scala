@@ -9,7 +9,7 @@ import scala.meta.internal.ast._
 import scala.meta.dialects.Scala211
 
 class QuasiSuite extends FunSuite {
-  val XtensionQuasiquoteTerm = "shadow scala.metq quasiquotes"
+  val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
   test("$x") {
     assert(Term.Quasi(0, q"x").show[Syntax] === "${x @ Term}")
   }

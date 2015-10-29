@@ -1,3 +1,5 @@
+package Simple2
+
 object M {
   def main(args: Array[String]): Unit = {
     val x = 2

@@ -1,3 +1,4 @@
+package Simple2
 object M extends scala.AnyRef() {
   def main(args: Array[String]): Unit = {
     val x = 2

@@ -9,7 +9,8 @@ trait ReflectToolkit extends Metadata
                         with SymbolHelpers
                         with Platform
                         with LogicalSymbols
-                        with LogicalTrees {
+                        with LogicalTrees
+                        with UninferrableDesugarings {
   val global: Global
   lazy val g: global.type = global
   object l extends LogicalSymbols with LogicalTrees
