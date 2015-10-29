@@ -28,20 +28,23 @@ import scala.meta.prettyprinters._
 // platform-dependent, but we'll have to pay the price of user convenience).
 //
 // Here are the desugarings that we support
-// (S stands for Scala 2.11.x, D stands for Dotty):
-//   01) (S) Inference of val, var and method return types
-//   02) (S) Desugaring of nullary constructors to empty-paramlist constructors
-//   03) (S) Appending AnyRef to the end of an empty parent list
-//   04) (S) Appending Product and Serializable to the end of the parent list of a case class
-//   05) (S) Weeding out repeated occurrences of ProductN, Product and Serializable from the parent list
-//   06) (S) Converting Any to AnyRef in the parent list that starts with a Any
-//   07) (S) Prepending tpe.firstParent to the parent list that starts with a trait different from Any
-//   08) (S) Converting nullary parents to empty-arglist parents
-//   09) (S) Desugaring names imported with renaming imports into their original form
-//   10) (S) Unit insertion
-//   11) (S) Desugaring names into fully-qualified paths
-//   12) (S) Insertion of an empty argument list into nullary calls
-//   13) (S) Collapse of trivial blocks
+// (S stands for Scala 2.11.x, D stands for Dotty, E stands for an expansion-generating desugaring):
+//   01) (S)  Inference of val, var and method return types
+//   02) (S)  Desugaring of nullary constructors to empty-paramlist constructors
+//   03) (S)  Appending AnyRef to the end of an empty parent list
+//   04) (S)  Appending Product and Serializable to the end of the parent list of a case class
+//   05) (S)  Weeding out repeated occurrences of ProductN, Product and Serializable from the parent list
+//   06) (S)  Converting Any to AnyRef in the parent list that starts with a Any
+//   07) (S)  Prepending tpe.firstParent to the parent list that starts with a trait different from Any
+//   08) (S)  Converting nullary parents to empty-arglist parents
+//   09) (S)  Desugaring names imported with renaming imports into their original form
+//   10) (S)  Unit insertion
+//   11) (ES) Desugaring names into fully-qualified paths
+//   12) (ES) Insertion of an empty argument list into nullary calls
+//   13) (S)  Collapse of trivial blocks
+//   14) (ES) Macro expansions (expected to be handled by the converter)
+//   15) (S)  Constant folding (expected to be handled by the converter)
+//   15) (ES) Desugaring unary calls into normal calls to unary_XXX methods
 object mergeTrees {
   // NOTE: Much like in LogicalTrees and in ToMtree, cases here must be ordered according
   // to the order of appearance of the corresponding AST nodes in Trees.scala.
@@ -106,7 +109,7 @@ object mergeTrees {
               sy.copy(loop(sy.lhs, se.lhs), loop(sy.op, se.op), loop(sy.targs, se.targs), loop(sy.args, se.args))
             case (sy: m.Term.ApplyUnary, se: m.Term.Select) =>
               require(se.name.value.startsWith("unary_"))
-              sy.copy(loop(sy.op, se.name), loop(sy.arg, se.qual)) inferringExpansion se
+              sy.copy(loop(sy.op, se.name), loop(sy.arg, se.qual)) inferringExpansion se // (16)
             case (sy: m.Term.ApplyUnary, se: m.Term.ApplyUnary) =>
               sy.copy(loop(sy.op, se.op), loop(sy.arg, se.arg))
             case (sy: m.Term.ApplyType, se: m.Term.ApplyType) =>

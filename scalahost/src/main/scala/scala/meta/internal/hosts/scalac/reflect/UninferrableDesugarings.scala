@@ -37,6 +37,13 @@ trait UninferrableDesugarings {
   // understands our needs. At the moment, we use Java serialization to persist
   // scala.meta trees, so #3 is of no practical concern for now. Later on, though,
   // when fixing #147, we'll have to worry about #3 as well.
+  //
+  // Here are the uninferrable desugarings that we support:
+  //   01) Macro expansion
+  //   02) Constant folding
+  //
+  // IMPORTANT! If you add a new uninferrable desugaring here, don't forget
+  // to update the list of desugarings in MergeTrees.scala.
   @root trait UninferrableDesugaring {
     def original: Tree // An attributed(!!) tree with this particular desugaring undone
     def expansion: Tree // An attributed desugared tree, may be EmptyTree if the desugaring isn't useful
