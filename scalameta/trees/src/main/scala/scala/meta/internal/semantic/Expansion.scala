@@ -13,13 +13,15 @@ object Expansion {
   @noneLeaf object Zero extends Expansion
   @noneLeaf object Identity extends Expansion
   @someLeaf class Desugaring(term: Term) extends Expansion {
-    require(term.isTypechecked && debug(term.show[Attributes]))
     override def canEqual(other: Any): Boolean = other.isInstanceOf[Desugaring]
     override def equals(that: Any): Boolean = that match {
       case that: Desugaring => equality.Semantic.equals(this.term, that.term)
       case _ => false
     }
     override def hashCode: Int = equality.Semantic.hashCode(this.term)
+  }
+  object Desugaring {
+    def apply(term: Term): Expansion = new Desugaring(term.setTypechecked)
   }
 }
 

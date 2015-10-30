@@ -47,13 +47,15 @@ object Symbol {
 object Prefix {
   @noneLeaf object Zero extends Prefix
   @someLeaf class Type(tpe: scala.meta.Type) extends Prefix {
-    require(tpe.isTypechecked && debug(tpe.show[Attributes]))
     override def canEqual(other: Any): Boolean = other.isInstanceOf[Type]
     override def equals(that: Any): Boolean = that match {
       case that: Type => equality.Semantic.equals(this.tpe, that.tpe)
       case _ => false
     }
     override def hashCode: Int = equality.Semantic.hashCode(tpe)
+  }
+  object Type {
+    def apply(tpe: scala.meta.Type): Prefix = new Type(tpe.setTypechecked)
   }
 }
 

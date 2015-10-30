@@ -32,14 +32,17 @@ class DataMacros(val c: Context) {
       def byNeed(mods: Modifiers) = Modifiers(mods.flags, mods.privateWithin, mods.annotations :+ q"new $Internal.byNeedField")
       def finalize(mods: Modifiers) = Modifiers(mods.flags | FINAL, mods.privateWithin, mods.annotations)
       def varify(mods: Modifiers) = Modifiers(mods.flags | MUTABLE, mods.privateWithin, mods.annotations)
-      def needs(name: Name) = {
+      def needs(name: Name, companion: Boolean) = {
         val q"new $_(...$argss).macroTransform(..$_)" = c.macroApplication
         val banIndicator = argss.flatten.find {
           case AssignOrNamedArg(Ident(TermName(param)), Literal(Constant(false))) => param == name.toString
           case _ => false
         }
         val ban = banIndicator.map(_ => true).getOrElse(false)
-        val presenceIndicator = stats.collectFirst { case mdef: MemberDef if mdef.name == name => mdef }
+        val presenceIndicator = {
+          val where = if (companion) mstats else stats
+          where.collectFirst { case mdef: MemberDef if mdef.name == name => mdef }
+        }
         val present = presenceIndicator.map(_ => true).getOrElse(false)
         !ban && !present
       }
@@ -122,7 +125,6 @@ class DataMacros(val c: Context) {
                 val $valueName = this.$paramName()
                 $Internal.nullCheck($valueName)
                 $Internal.emptyCheck($valueName)
-                $Internal.onFieldLoaded(${name.toString}, $valueName)
                 this.$paramName = null
                 this.$storageName = $valueName
                 this.$flagName = true
@@ -134,13 +136,13 @@ class DataMacros(val c: Context) {
       })
 
       // step 3: implement Object
-      if (needs(TermName("toString"))) {
+      if (needs(TermName("toString"), companion = false)) {
         stats1 += q"override def toString: _root_.scala.Predef.String = _root_.scala.runtime.ScalaRunTime._toString(this)"
       }
-      if (needs(TermName("hashCode"))) {
+      if (needs(TermName("hashCode"), companion = false)) {
         stats1 += q"override def hashCode: _root_.scala.Int = _root_.scala.runtime.ScalaRunTime._hashCode(this)"
       }
-      if (needs(TermName("equals"))) {
+      if (needs(TermName("equals"), companion = false)) {
         stats1 += q"override def canEqual(other: _root_.scala.Any): _root_.scala.Boolean = other.isInstanceOf[$name]"
         stats1 += q"""
           override def equals(other: _root_.scala.Any): _root_.scala.Boolean = (
@@ -151,7 +153,7 @@ class DataMacros(val c: Context) {
 
       // step 4: implement Product
       parents1 += tq"_root_.scala.Product"
-      if (needs(TermName("product"))) {
+      if (needs(TermName("product"), companion = false)) {
         val productParamss = paramss.map(_.map(_.duplicate))
         stats1 += q"override def productPrefix: _root_.scala.Predef.String = ${name.toString}"
         stats1 += q"override def productArity: _root_.scala.Int = ${paramss.head.length}"
@@ -163,7 +165,7 @@ class DataMacros(val c: Context) {
       }
 
       // step 5: generate copy
-      if (needs(TermName("copy")) && !isVararg) {
+      if (needs(TermName("copy"), companion = false) && !isVararg) {
         val copyParamss = paramss.map(_.map({
           case VanillaParam(mods, name, tpt, default) => q"$mods val $name: $tpt = this.$name"
           case VarargParam(mods, name, tpt, default) => q"$mods val $name: $tpt = this.$name"
@@ -183,7 +185,7 @@ class DataMacros(val c: Context) {
       }
 
       // step 6: generate Companion.apply
-      if (needs(TermName("apply"))) {
+      if (needs(TermName("apply"), companion = true)) {
         val applyParamss = paramss.map(_.map({
           case VanillaParam(mods, name, tpt, default) => q"$mods val $name: $tpt = $default"
           case VarargParam(mods, name, tpt, default) => q"$mods val $name: $tpt = $default"
@@ -200,7 +202,7 @@ class DataMacros(val c: Context) {
       // step 7: generate Companion.unapply
       // TODO: go for name-based pattern matching once blocking bugs (e.g. SI-9029) are fixed
       val unapplyName = if (isVararg) TermName("unapplySeq") else TermName("unapply")
-      if (needs(unapplyName)) {
+      if (needs(unapplyName, companion = true)) {
         val unapplyParamss = paramss.map(_.map(unByNeed))
         val unapplyParams = unapplyParamss.head
         if (unapplyParams.length != 0) {
