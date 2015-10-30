@@ -48,12 +48,7 @@ object mergeTrees {
         else {
           require(se.isTypechecked)
 
-          import scala.language.implicitConversions
-          case class PartialResult(partialMe: Tree, expansion: Option[Term])
-          object PartialResult { implicit def treeToPartialResult(partialMe: Tree) = PartialResult(partialMe, None) }
-          implicit class XtensionTree(tree: Tree) { def inferringExpansion(expansion: Term) = PartialResult(tree, Some(expansion)) }
-
-          val PartialResult(partialMe, inferredExpansion): PartialResult = (sy, se) match {
+          val partialMe = (sy, se) match {
             // ============ NAMES ============
 
             case (sy: m.Name.Anonymous, se: m.Name.Anonymous) =>
@@ -70,16 +65,25 @@ object mergeTrees {
               if (sy.value != se.value && sy.isBinder) failCorrelate(sy, se, "incompatible definitions")
               sy.copy() // (E2)
             case (sy: m.Term.Name, se: m.Term.Select) =>
-              sy.copy().inheritAttrs(se.name) inferringExpansion se // (E1, E2)
+              val me = sy.copy().inheritAttrs(se.name)
+              val expansion = se.copy().inheritAttrs(se)
+              me.withExpansion(expansion) // (E1, E2)
             case (sy: m.Term.Name, seOuter @ m.Term.Apply(seInner: m.Term.Name, Nil)) =>
-              loop(sy, seInner) inferringExpansion seOuter // (E7)
-            case (sy: m.Term.Name, seOuter @ m.Term.Apply(m.Term.Select(_, seInner), Nil)) =>
-              loop(sy, seInner) inferringExpansion seOuter // (E7)
+              val me = loop(sy, seInner)
+              val expansionOuter = seOuter.copy(fun = me).inheritAttrs(seOuter)
+              me.withExpansion(expansionOuter) // (E7)
+            case (sy: m.Term.Name, seOuter @ m.Term.Apply(seMid @ m.Term.Select(_, seInner), Nil)) =>
+              val me = loop(sy, seInner)
+              val expansionMid = seMid.copy(name = me).inheritAttrs(seMid)
+              val expansionOuter = seOuter.copy(fun = expansionMid).inheritAttrs(seOuter)
+              me.withExpansion(expansionOuter) // (E7)
             case (sy: m.Term.Select, se: m.Term.Select) =>
               if (sy.name.value != se.name.value) failCorrelate(sy, se, "incompatible names")
               sy.copy(loop(sy.qual, se.qual), loop(sy.name, se.name))
             case (sy: m.Term.Select, seOuter @ m.Term.Apply(seInner: m.Term.Select, Nil)) =>
-              loop(sy, seInner) inferringExpansion seOuter // (E7)
+              val me = loop(sy, seInner)
+              val expansionOuter = seOuter.copy(fun = me).inheritAttrs(seOuter)
+              me.withExpansion(expansionOuter) // (E7)
             case (sy: m.Term.Apply, se: m.Term.Apply) =>
               sy.copy(loop(sy.fun, se.fun), loop(sy.args, se.args))
             case (sy: m.Term.ApplyInfix, se @ m.Term.Apply(sefun, seargs)) =>
@@ -93,7 +97,10 @@ object mergeTrees {
               sy.copy(loop(sy.lhs, se.lhs), loop(sy.op, se.op), loop(sy.targs, se.targs), loop(sy.args, se.args))
             case (sy: m.Term.ApplyUnary, se: m.Term.Select) =>
               require(se.name.value.startsWith("unary_"))
-              sy.copy(loop(sy.op, se.name), loop(sy.arg, se.qual)) inferringExpansion se // (E8)
+              val meArg = loop(sy.arg, se.qual)
+              val me = sy.copy(loop(sy.op, se.name), meArg).inheritAttrs(se)
+              val expansion = se.copy(qual = meArg).inheritAttrs(se)
+              me.withExpansion(expansion) // (E8)
             case (sy: m.Term.ApplyUnary, se: m.Term.ApplyUnary) =>
               sy.copy(loop(sy.op, se.op), loop(sy.arg, se.arg))
             case (sy: m.Term.ApplyType, se: m.Term.ApplyType) =>
@@ -224,14 +231,15 @@ object mergeTrees {
 
           // NOTE: Explicitly specified expansion (already present in the semantic tree) takes precedence,
           // because the converter really knows better in cases like constant folding, macro expansion, etc.
+          val inferredExpansion = attributedMe.internalExpansion
           val explicitExpansion = se.internalExpansion
           val expansion = explicitExpansion match {
-            case Some(Expansion.Desugaring(explicitExpansion)) => Some(explicitExpansion)
+            case Some(_: Expansion.Desugaring) => explicitExpansion
             case Some(Expansion.Zero | Expansion.Identity) => inferredExpansion
             case None => require(inferredExpansion.isEmpty && debug(sy, se)); None
           }
           val expandedMe = (attributedMe, expansion) match {
-            case (attributedMe: Term, Some(expansion: Term)) => attributedMe.withExpansion(expansion)
+            case (attributedMe: Term, Some(expansion: Expansion)) => attributedMe.withExpansion(expansion)
             case _ => attributedMe
           }
 
