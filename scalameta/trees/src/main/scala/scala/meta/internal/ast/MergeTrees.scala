@@ -126,6 +126,9 @@ object mergeTrees {
               sy.copy(loop(sy.qual, se.qual), loop(sy.name, se.name))
             case (sy: m.Type.Apply, se: m.Type.Apply) =>
               sy.copy(loop(sy.tpe, se.tpe), loop(sy.args, se.args))
+            case (sy: m.Type.Param, se: m.Type.Param) =>
+              sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), loop(sy.tparams, se.tparams),
+                loop(sy.typeBounds, se.typeBounds), loop(sy.viewBounds, se.viewBounds), loop(sy.contextBounds, se.contextBounds))
 
             // ============ PATTERNS ============
 

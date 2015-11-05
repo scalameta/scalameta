@@ -115,6 +115,18 @@ trait ToMtree extends ReflectToolkit with MetaToolkit {
             val mtpt = ltpt.toMtree[m.Type]
             val margs = largs.toMtrees[m.Type]
             m.Type.Apply(mtpt, margs)
+          case l.TypeBounds(llo, lhi) =>
+            val mlo = llo.toMtreeopt[m.Type]
+            val mhi = lhi.toMtreeopt[m.Type]
+            m.Type.Bounds(mlo, mhi)
+          case l.TypeParamDef(lmods, lname, ltparams, ltbounds, lvbounds, lcbounds) =>
+            val mmods = lmods.toMtrees[m.Mod]
+            val mname = lname.toMtree[m.Type.Param.Name]
+            val mtparams = ltparams.toMtrees[m.Type.Param]
+            val mtbounds = ltbounds.toMtree[m.Type.Bounds]
+            val mvbounds = lvbounds.toMtrees[m.Type]
+            val mcbounds = lcbounds.toMtrees[m.Type]
+            m.Type.Param(mmods, mname, mtparams, mtbounds, mvbounds, mcbounds)
 
           // ============ PATTERNS ============
 
@@ -315,6 +327,10 @@ trait ToMtree extends ReflectToolkit with MetaToolkit {
       }).mkString(EOL)
       throw new ConvertException(culprit, s"$diagnostics$EOL$traceback", ex.toOption)
     }
+  }
+
+  protected implicit class RichTreeoptToMtreeopt(gtreeopt: Option[g.Tree]) {
+    def toMtreeopt[T <: m.Tree : ClassTag]: Option[T] = gtreeopt.map(_.toMtree[T])
   }
 
   protected implicit class RichTreesToMtrees(gtrees: List[g.Tree]) {
