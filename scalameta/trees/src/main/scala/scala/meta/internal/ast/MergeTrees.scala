@@ -126,6 +126,16 @@ object mergeTrees {
               sy.copy(loop(sy.qual, se.qual), loop(sy.name, se.name))
             case (sy: m.Type.Apply, se: m.Type.Apply) =>
               sy.copy(loop(sy.tpe, se.tpe), loop(sy.args, se.args))
+            case (sy: m.Type.Bounds, se: m.Type.Bounds) =>
+              val melo = (sy.lo, se.lo) match {
+                case (None, Some(nothing: Type.Name)) if nothing.refersTo(denotNothing) => None // (M9)
+                case (sylo, selo) => loop(sylo, selo)
+              }
+              val mehi = (sy.hi, se.hi) match {
+                case (None, Some(any: Type.Name)) if any.refersTo(denotAny) => None // (M9)
+                case (syhi, sehi) => loop(syhi, sehi)
+              }
+              sy.copy(melo, mehi)
             case (sy: m.Type.Param, se: m.Type.Param) =>
               sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), loop(sy.tparams, se.tparams),
                 loop(sy.typeBounds, se.typeBounds), loop(sy.viewBounds, se.viewBounds), loop(sy.contextBounds, se.contextBounds))
@@ -293,6 +303,8 @@ object mergeTrees {
   private lazy val denotObjectInit = denot(typeOf[Object].member(u.TermName("<init>")))
   private lazy val denotUnit = denot(symbolOf[Unit])
   private lazy val typingUnit = Typing.Nonrecursive(Type.Name("Unit").withAttrs(denotUnit).setTypechecked)
+  private lazy val denotNothing = denot(symbolOf[Nothing])
+  private lazy val denotAny = denot(symbolOf[Any])
 
   // NOTE: We can't use =:= here, because it requires a semantic context,
   // and we can't have a semantic context in MergeTrees.

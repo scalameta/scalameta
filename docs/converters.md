@@ -146,6 +146,13 @@ scroll down to the "Theory" & "Practice" sections in the end of the document.
     <td valign="top">?</td>
     <td valign="top">Nullary parents get converted to empty-arglist parents.</td>
   </tr>
+  <tr>
+    <td valign="top">M9</td>
+    <td valign="top">N</td>
+    <td valign="top">+</td>
+    <td valign="top">?</td>
+    <td valign="top">Empty lower and upper bounds get converted to Nothing and Any respectively.</td>
+  </tr>
 </table>
 
 ### Notation
