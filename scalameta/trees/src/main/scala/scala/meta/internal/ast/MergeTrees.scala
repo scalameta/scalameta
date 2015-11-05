@@ -110,6 +110,10 @@ object mergeTrees {
               val me = sy.copy(loop(sy.op, se.name), meArg).inheritAttrs(se)
               val expansion = se.copy(qual = meArg).inheritAttrs(se)
               me.withExpansion(expansion) // (E8)
+            case (sy: m.Term, se @ m.Term.ApplyType(seInner, _)) =>
+               val me = loop(sy, seInner).resetTypechecked
+               val expansion = se.copy(fun = me).inheritAttrs(se)
+               me.withExpansion(expansion) // (E9)
 
             // ============ TYPES ============
 

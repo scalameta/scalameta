@@ -74,6 +74,13 @@ scroll down to the "Theory" & "Practice" sections in the end of the document.
     <td valign="top">?</td>
     <td valign="top">Unary calls get transformed into nullary calls to unary_XXX.</td>
   </tr>
+  <tr>
+    <td valign="top">E9</td>
+    <td valign="top">Y</td>
+    <td valign="top">+</td>
+    <td valign="top">?</td>
+    <td valign="top">Inference of type arguments.</td>
+  </tr>
 </table>
 
 <sup>1</sup> Original tracked by scalahost, reached a preliminary agreement with Jason to submit a pull request to scala/scala.<br/>
