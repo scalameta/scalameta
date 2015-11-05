@@ -19,7 +19,7 @@ Big thanks to everyone who helped turning scala.meta into reality!
   * Vladimir Nikolaev ([@VladimirNik](https://github.com/VladimirNik))
   * Martin Odersky ([@odersky](https://github.com/odersky))
   * Oleksandr Olgashko ([@dveim](https://github.com/Dveim))
+  * Dmitry Petrashko ([@darkdimius](https://github.com/darkdimius))
   * Alexander Podkhalyuzin ([@alefas](https://github.com/alefas))
   * Jatin Puri ([@purijatin](https://github.com/purijatin))
-  * Dmitry Petrashko ([@darkdimius](https://github.com/darkdimius))
   * Denys Shabalin ([@densh](https://github.com/densh))
