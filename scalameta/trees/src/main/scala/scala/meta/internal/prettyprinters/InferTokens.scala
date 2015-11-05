@@ -529,7 +529,7 @@ private[meta] object inferTokens {
         require(t.mods.length - mods.length <= 1)
         val variance = t.mods.foldLeft(toks"")((curr, m) => if (m.isInstanceOf[Mod.Covariant]) toks"+" else if (m.isInstanceOf[Mod.Contravariant]) toks"-" else curr)
         val tname = apndBindedName(t.name)
-        val tbounds = t.typeBounds.tks
+        val tbounds = if (t.typeBounds.lo.nonEmpty || t.typeBounds.hi.nonEmpty) toks" ${t.typeBounds.tks}" else toks""
         val vbounds = t.viewBounds.flattks(toks" <% ")(toks" <% ")()
         val cbounds = t.contextBounds.flattks(toks": ")(toks": ")()
         toks"${mods.o_o_}$variance$tname${t.tparams.`[o,o]`}$tbounds$vbounds$cbounds"
