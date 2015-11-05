@@ -1,5 +1,0 @@
-package Simple4
-object M extends scala.AnyRef() {
-  def foo[T >: Nothing <: Any](x: T): Nothing = scala.this.Predef.???
-  M.this.foo[Int](42)
-}
