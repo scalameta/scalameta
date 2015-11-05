@@ -11,6 +11,7 @@ Big thanks to everyone who helped turning scala.meta into reality!
   * Adrien Ghosn ([@aghosn](https://github.com/aghosn))
   * Zhivka Gucevska ([@zhi-g](https://github.com/zhi-g))
   * Vojin Jovanovic ([@vjovanov](https://github.com/vjovanov))
+  * Guillaume Martres ([@smarter](https://github.com/smarter))
   * Guillaume Massé ([@MasseGuillaume](https://github.com/MasseGuillaume))
   * Mikhail Mutcianko ([@dedoz](https://github.com/dedoz))
   * Dmitry Naydanov ([@lugzan](https://github.com/lugzan))
