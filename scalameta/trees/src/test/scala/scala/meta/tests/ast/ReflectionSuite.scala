@@ -329,7 +329,7 @@ class ReflectionSuite extends AstSuite {
       |scala.meta.internal.ast.Type.Bounds -> scala.meta.Tree
       |field Decl.Type.bounds: scala.meta.internal.ast.Type.Bounds
       |field Pat.Type.Placeholder.bounds: scala.meta.internal.ast.Type.Bounds
-      |field Type.Param.typeBounds: scala.meta.internal.ast.Type.Bounds
+      |field Type.Param.tbounds: scala.meta.internal.ast.Type.Bounds
       |field Type.Placeholder.bounds: scala.meta.internal.ast.Type.Bounds
       |
       |scala.meta.internal.ast.Ctor.Primary -> scala.meta.Ctor

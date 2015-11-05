@@ -296,9 +296,9 @@ package scala.meta.internal.ast {
     @ast class Param(mods: Seq[Mod],
                      name: Param.Name,
                      tparams: Seq[impl.Type.Param],
-                     typeBounds: impl.Type.Bounds,
-                     viewBounds: Seq[impl.Type],
-                     contextBounds: Seq[impl.Type]) extends api.Type.Param with Member
+                     tbounds: impl.Type.Bounds,
+                     vbounds: Seq[impl.Type],
+                     cbounds: Seq[impl.Type]) extends api.Type.Param with Member
     object Param {
       @branch trait Name extends impl.Name with api.Type.Param.Name
     }

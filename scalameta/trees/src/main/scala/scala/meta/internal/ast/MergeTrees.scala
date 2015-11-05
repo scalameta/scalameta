@@ -138,7 +138,7 @@ object mergeTrees {
               sy.copy(melo, mehi)
             case (sy: m.Type.Param, se: m.Type.Param) =>
               sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), loop(sy.tparams, se.tparams),
-                loop(sy.typeBounds, se.typeBounds), loop(sy.viewBounds, se.viewBounds), loop(sy.contextBounds, se.contextBounds))
+                loop(sy.tbounds, se.tbounds), loop(sy.vbounds, se.vbounds), loop(sy.cbounds, se.cbounds))
 
             // ============ PATTERNS ============
 

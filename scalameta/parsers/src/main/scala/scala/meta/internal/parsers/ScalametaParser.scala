@@ -2517,9 +2517,9 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
       else if (token.is[`_ `]) { next(); atPos(in.prevTokenPos, in.prevTokenPos)(Name.Anonymous()) }
       else syntaxError("identifier or `_' expected", at = token)
     val tparams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
-    val typeBounds = this.typeBounds()
-    val viewBounds = new ListBuffer[Type]
-    val contextBounds = new ListBuffer[Type]
+    val tbounds = this.typeBounds()
+    val vbounds = new ListBuffer[Type]
+    val cbounds = new ListBuffer[Type]
     if (ctxBoundsAllowed) {
       while (token.is[`<%`]) {
         // TODO: dialect?
@@ -2530,16 +2530,16 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
         //   deprecationWarning(s"View bounds are deprecated. $msg")
         // }
         next()
-        if (token.is[Ellipsis]) viewBounds += ellipsis(1, unquote[Type])
-        else viewBounds += typ()
+        if (token.is[Ellipsis]) vbounds += ellipsis(1, unquote[Type])
+        else vbounds += typ()
       }
       while (token.is[`:`]) {
         next()
-        if (token.is[Ellipsis]) contextBounds += ellipsis(1, unquote[Type])
-        else contextBounds += typ()
+        if (token.is[Ellipsis]) cbounds += ellipsis(1, unquote[Type])
+        else cbounds += typ()
       }
     }
-    Type.Param(mods, nameopt, tparams, typeBounds, viewBounds.toList, contextBounds.toList)
+    Type.Param(mods, nameopt, tparams, tbounds, vbounds.toList, cbounds.toList)
   }
 
   /** {{{

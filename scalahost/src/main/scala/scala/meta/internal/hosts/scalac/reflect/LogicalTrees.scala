@@ -226,7 +226,7 @@ trait LogicalTrees {
     trait TypeParamName extends Name
 
     object TypeParamDef {
-      // mods, name, tparams, typeBounds, viewBounds, contextBounds
+      // mods, name, tparams, tbounds, vbounds, cbounds
       def unapply(tree: g.TypeDef): Option[(List[l.Modifier], l.TypeName, List[g.TypeDef], g.TypeBoundsTree, List[g.Tree], List[g.Tree])] = {
         if (!tree.hasMetadata("isLtparam")) return None
         val g.TypeDef(_, name, tparams, rhs) = tree
@@ -240,8 +240,8 @@ trait LogicalTrees {
               g.TypeBoundsTree(g.TypeTree(lo), g.TypeTree(hi))
           }
         }
-        val lvbounds = tree.metadata.getOrElse("lviewBounds", Nil)
-        val lcbounds = tree.metadata.getOrElse("lcontextBounds", Nil)
+        val lvbounds = tree.metadata.getOrElse("lvbounds", Nil)
+        val lcbounds = tree.metadata.getOrElse("lcbounds", Nil)
         Some((l.Modifiers(tree), l.TypeName(tree).setParent(tree), ltparams, ltbounds, lvbounds, lcbounds))
       }
     }
@@ -270,7 +270,7 @@ trait LogicalTrees {
     }
 
     object AbstractTypeDef {
-      // mods, name, tparams, typeBounds
+      // mods, name, tparams, tbounds
       def unapply(tree: g.TypeDef): Option[(List[l.Modifier], l.TypeName, List[g.TypeDef], g.TypeBoundsTree)] = {
         ???
       }
@@ -780,9 +780,9 @@ trait LogicalTrees {
       val (explicitss, implicitss) = paramss.partition(_.exists(_.mods.hasFlag(IMPLICIT)))
       val (bounds, implicits) = implicitss.flatten.partition(_.name.startsWith(nme.EVIDENCE_PARAM_PREFIX))
       tparams.map(tparam => {
-        val viewBounds = bounds.flatMap(ViewBound.unapply).filter(_._1.name == tparam.name).map(_._2)
-        val contextBounds = bounds.flatMap(ContextBound.unapply).filter(_._1.name == tparam.name).map(_._2)
-        tparam.appendMetadata("lviewBounds" -> viewBounds, "lcontextBounds" -> contextBounds)
+        val vbounds = bounds.flatMap(ViewBound.unapply).filter(_._1.name == tparam.name).map(_._2)
+        val cbounds = bounds.flatMap(ContextBound.unapply).filter(_._1.name == tparam.name).map(_._2)
+        tparam.appendMetadata("lvbounds" -> vbounds, "lcbounds" -> cbounds)
       })
     }
 
