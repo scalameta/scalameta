@@ -57,31 +57,16 @@ object mergeTrees {
               if (sy.value != se.value) failCorrelate(sy, se, "incompatible names")
               sy.copy()
 
-            // ============ TERMS ============
+            // ============ STRUCTURALLY EQUAL TERMS ============
 
             case (sy: m.Term.This, se: m.Term.This) =>
               sy.copy(loop(sy.qual, se.qual))
             case (sy: m.Term.Name, se: m.Term.Name) =>
               if (sy.value != se.value && sy.isBinder) failCorrelate(sy, se, "incompatible definitions")
               sy.copy() // (E2)
-            case (sy: m.Term.Name, se: m.Term.Select) =>
-              sy.inheritAttrs(se.name).withExpansion(se) // (E1, E2)
-            case (sy: m.Term.Name, seOuter @ m.Term.Apply(seInner: m.Term.Name, Nil)) =>
-              val me = loop(sy, seInner).resetTypechecked
-              val expansionOuter = seOuter.copy(fun = me).inheritAttrs(seOuter)
-              me.withExpansion(expansionOuter) // (E7)
-            case (sy: m.Term.Name, seOuter @ m.Term.Apply(seMid @ m.Term.Select(_, seInner), Nil)) =>
-              val me = loop(sy, seInner).resetTypechecked
-              val expansionMid = seMid.copy(name = me).inheritAttrs(seMid)
-              val expansionOuter = seOuter.copy(fun = expansionMid).inheritAttrs(seOuter)
-              me.withExpansion(expansionOuter) // (E7)
             case (sy: m.Term.Select, se: m.Term.Select) =>
               if (sy.name.value != se.name.value) failCorrelate(sy, se, "incompatible names")
               sy.copy(loop(sy.qual, se.qual), loop(sy.name, se.name))
-            case (sy: m.Term.Select, seOuter @ m.Term.Apply(seInner: m.Term.Select, Nil)) =>
-              val me = loop(sy, seInner).resetTypechecked
-              val expansionOuter = seOuter.copy(fun = me).inheritAttrs(seOuter)
-              me.withExpansion(expansionOuter) // (E7)
             case (sy: m.Term.Apply, se: m.Term.Apply) =>
               sy.copy(loop(sy.fun, se.fun), loop(sy.args, se.args))
             case (sy: m.Term.ApplyInfix, se @ m.Term.Apply(sefun, seargs)) =>
@@ -93,12 +78,6 @@ object mergeTrees {
               sy.copy(loop(sy.lhs, selhs), loop(sy.op, seop), loop(sy.targs, setargs), loop(sy.args, seargs))
             case (sy: m.Term.ApplyInfix, se: m.Term.ApplyInfix) =>
               sy.copy(loop(sy.lhs, se.lhs), loop(sy.op, se.op), loop(sy.targs, se.targs), loop(sy.args, se.args))
-            case (sy: m.Term.ApplyUnary, se: m.Term.Select) =>
-              require(se.name.value.startsWith("unary_"))
-              val meArg = loop(sy.arg, se.qual).resetTypechecked
-              val me = sy.copy(loop(sy.op, se.name), meArg).inheritAttrs(se)
-              val expansion = se.copy(qual = meArg).inheritAttrs(se)
-              me.withExpansion(expansion) // (E8)
             case (sy: m.Term.ApplyUnary, se: m.Term.ApplyUnary) =>
               sy.copy(loop(sy.op, se.op), loop(sy.arg, se.arg))
             case (sy: m.Term.ApplyType, se: m.Term.ApplyType) =>
@@ -109,13 +88,28 @@ object mergeTrees {
                 case _ => loop(sy.stats, se.stats)
               }
               sy.copy(mestats)
-            case (sy @ m.Term.Block(Seq(syStat)), seStat: m.Stat) =>
-              val syTyping = seStat match { case seStat: Term => seStat.typing; case _ => typingUnit }
-              sy.copy(Seq(loop(syStat, seStat))).withAttrs(syTyping) // (E3)
             case (sy: m.Term.If, se: m.Term.If) =>
               sy.copy(loop(sy.cond, se.cond), loop(sy.thenp, se.thenp), loop(se.thenp, se.thenp))
             case (sy: m.Term.Param, se: m.Term.Param) =>
               sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), loop(sy.decltpe, se.decltpe), loop(sy.default, se.default))
+
+            // ============ STRUCTURALLY UNEQUAL TERMS ============
+
+            case (sy: m.Term.Name, se: m.Term.Select) =>
+               sy.inheritAttrs(se.name).withExpansion(se) // (E1, E2)
+            case (sy @ m.Term.Block(Seq(syStat)), seStat: m.Stat) =>
+              val syTyping = seStat match { case seStat: Term => seStat.typing; case _ => typingUnit }
+              sy.copy(Seq(loop(syStat, seStat))).withAttrs(syTyping) // (E3)
+            case (sy: m.Term, se @ m.Term.Apply(seInner, Nil)) =>
+               val me = loop(sy, seInner).resetTypechecked
+               val expansion = se.copy(fun = me).inheritAttrs(se)
+               me.withExpansion(expansion) // (E7)
+            case (sy: m.Term.ApplyUnary, se: m.Term.Select) =>
+              require(se.name.value.startsWith("unary_"))
+              val meArg = loop(sy.arg, se.qual).resetTypechecked
+              val me = sy.copy(loop(sy.op, se.name), meArg).inheritAttrs(se)
+              val expansion = se.copy(qual = meArg).inheritAttrs(se)
+              me.withExpansion(expansion) // (E8)
 
             // ============ TYPES ============
 
