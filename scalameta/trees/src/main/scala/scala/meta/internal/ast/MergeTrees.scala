@@ -65,15 +65,13 @@ object mergeTrees {
               if (sy.value != se.value && sy.isBinder) failCorrelate(sy, se, "incompatible definitions")
               sy.copy() // (E2)
             case (sy: m.Term.Name, se: m.Term.Select) =>
-              val me = sy.copy().inheritAttrs(se.name)
-              val expansion = se.copy().inheritAttrs(se)
-              me.withExpansion(expansion) // (E1, E2)
+              sy.inheritAttrs(se.name).withExpansion(se) // (E1, E2)
             case (sy: m.Term.Name, seOuter @ m.Term.Apply(seInner: m.Term.Name, Nil)) =>
-              val me = loop(sy, seInner)
+              val me = loop(sy, seInner).resetTypechecked
               val expansionOuter = seOuter.copy(fun = me).inheritAttrs(seOuter)
               me.withExpansion(expansionOuter) // (E7)
             case (sy: m.Term.Name, seOuter @ m.Term.Apply(seMid @ m.Term.Select(_, seInner), Nil)) =>
-              val me = loop(sy, seInner)
+              val me = loop(sy, seInner).resetTypechecked
               val expansionMid = seMid.copy(name = me).inheritAttrs(seMid)
               val expansionOuter = seOuter.copy(fun = expansionMid).inheritAttrs(seOuter)
               me.withExpansion(expansionOuter) // (E7)
@@ -81,7 +79,7 @@ object mergeTrees {
               if (sy.name.value != se.name.value) failCorrelate(sy, se, "incompatible names")
               sy.copy(loop(sy.qual, se.qual), loop(sy.name, se.name))
             case (sy: m.Term.Select, seOuter @ m.Term.Apply(seInner: m.Term.Select, Nil)) =>
-              val me = loop(sy, seInner)
+              val me = loop(sy, seInner).resetTypechecked
               val expansionOuter = seOuter.copy(fun = me).inheritAttrs(seOuter)
               me.withExpansion(expansionOuter) // (E7)
             case (sy: m.Term.Apply, se: m.Term.Apply) =>
@@ -97,7 +95,7 @@ object mergeTrees {
               sy.copy(loop(sy.lhs, se.lhs), loop(sy.op, se.op), loop(sy.targs, se.targs), loop(sy.args, se.args))
             case (sy: m.Term.ApplyUnary, se: m.Term.Select) =>
               require(se.name.value.startsWith("unary_"))
-              val meArg = loop(sy.arg, se.qual)
+              val meArg = loop(sy.arg, se.qual).resetTypechecked
               val me = sy.copy(loop(sy.op, se.name), meArg).inheritAttrs(se)
               val expansion = se.copy(qual = meArg).inheritAttrs(se)
               me.withExpansion(expansion) // (E8)
@@ -223,7 +221,8 @@ object mergeTrees {
 
           // NOTE: In most cases, the partial result will not be attributed and will be meant to inherit attrs from se.
           // However, when we deal with desugarings, we might pre-attribute the result in advance,
-          // and therefore we should avoid calling inheritAttrs if that was the case.
+          // and therefore we should avoid calling inheritAttrs if that was the case,
+          // because we might've decided to assign different attrs to the partial result.
           val attributedMe = {
             if (syntacticMe.isUnattributed) syntacticMe.inheritAttrs(se)
             else syntacticMe
@@ -243,7 +242,7 @@ object mergeTrees {
             case _ => attributedMe
           }
 
-          val me = expandedMe.withTypechecked(se.isTypechecked)
+          val me = expandedMe.setTypechecked
           if (sy.parent.isEmpty) {
             Debug.logMerge {
               println("======= SYNTACTIC TREE =======")

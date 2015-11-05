@@ -112,11 +112,10 @@ class RootMacros(val c: Context) extends AstReflection {
           expansion: $Expansion = privateExpansion,
           ffi: $Ffi = privateFfi): ThisType
 
-        private def isEnvEmpty: _root_.scala.Boolean = this.privateEnv == null || this.privateEnv == _root_.scala.meta.internal.semantic.Environment.Zero
-        private def isDenotEmpty: _root_.scala.Boolean = this.privateDenot == null || this.privateDenot == _root_.scala.meta.internal.semantic.Denotation.Zero
-        private def isTypingEmpty: _root_.scala.Boolean = this.privateTyping == null || this.privateTyping == _root_.scala.meta.internal.semantic.Denotation.Zero
-        private def isExpansionEmpty: _root_.scala.Boolean = this.privateExpansion == null || this.privateExpansion == _root_.scala.meta.internal.semantic.Expansion.Zero
-        private def isExpansionTrivial: _root_.scala.Boolean = privateExpansion == _root_.scala.meta.internal.semantic.Expansion.Identity
+        protected def isEnvEmpty: _root_.scala.Boolean = this.privateEnv == null || this.privateEnv == _root_.scala.meta.internal.semantic.Environment.Zero
+        protected def isDenotEmpty: _root_.scala.Boolean = this.privateDenot == null || this.privateDenot == _root_.scala.meta.internal.semantic.Denotation.Zero
+        protected def isTypingEmpty: _root_.scala.Boolean = this.privateTyping == null || this.privateTyping == _root_.scala.meta.internal.semantic.Denotation.Zero
+        protected def isExpansionEmpty: _root_.scala.Boolean = this.privateExpansion == null || this.privateExpansion == _root_.scala.meta.internal.semantic.Expansion.Zero
         private[meta] def isUnattributed: _root_.scala.Boolean = this match {
           case tree: Term.Name => isEnvEmpty && isDenotEmpty && isTypingEmpty && isExpansionEmpty
           case tree: Ctor.Name => isEnvEmpty && isDenotEmpty && isTypingEmpty && isExpansionEmpty
@@ -126,21 +125,14 @@ class RootMacros(val c: Context) extends AstReflection {
           case _ => true
         }
         private[meta] def isPartiallyAttributed: _root_.scala.Boolean = this match {
-          case tree: Term.Name => isEnvEmpty && !isDenotEmpty && !isTypingEmpty && isExpansionTrivial
-          case tree: Ctor.Name => isEnvEmpty && !isDenotEmpty && !isTypingEmpty && isExpansionTrivial
-          case tree: Term.Param => false
-          case tree: Term => isEnvEmpty && !isTypingEmpty && isExpansionTrivial
-          case tree: Name => false
+          case tree: Term.Name => !isUnattributed && !isAttributed
+          case tree: Ctor.Name => !isUnattributed && !isAttributed
+          case tree: Term.Param => !isUnattributed && !isAttributed
+          case tree: Term => !isUnattributed && !isAttributed
+          case tree: Name => !isUnattributed && !isAttributed
           case _ => false
         }
-        private[meta] def isFullyAttributed: _root_.scala.Boolean = this match {
-          case tree: Term.Name => isEnvEmpty && !isDenotEmpty && !isTypingEmpty && !isExpansionEmpty && !isExpansionTrivial
-          case tree: Ctor.Name => isEnvEmpty && !isDenotEmpty && isTypingEmpty && !isExpansionEmpty && !isExpansionTrivial
-          case tree: Term.Param => !isTypingEmpty
-          case tree: Term => isEnvEmpty && !isTypingEmpty && !isExpansionEmpty && !isExpansionTrivial
-          case tree: Name => isEnvEmpty && !isDenotEmpty
-          case _ => false
-        }
+        private[meta] def isAttributed: _root_.scala.Boolean = this.isTypechecked
       """
       stats1 ++= infrastructure
 
