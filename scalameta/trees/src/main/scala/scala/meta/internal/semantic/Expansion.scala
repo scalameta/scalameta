@@ -7,6 +7,7 @@ import org.scalameta.adt._
 import org.scalameta.show._
 import org.scalameta.invariants._
 import scala.meta.internal.prettyprinters._
+import scala.meta.internal.{ast => impl}
 
 @monadicRoot trait Expansion
 object Expansion {
@@ -21,7 +22,11 @@ object Expansion {
     override def hashCode: Int = equality.Semantic.hashCode(this.term)
   }
   object Desugaring {
-    def apply(term: Term): Expansion = new Desugaring(term.setTypechecked)
+    def apply(term: Term): Expansion = {
+      val expansionOfExpansion = term.asInstanceOf[impl.Term].expansion
+      require(!expansionOfExpansion.isInstanceOf[Desugaring])
+      new Desugaring(term.setTypechecked)
+    }
   }
 }
 
