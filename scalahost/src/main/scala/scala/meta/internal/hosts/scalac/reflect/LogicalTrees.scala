@@ -302,6 +302,21 @@ trait LogicalTrees {
       }
     }
 
+    object PatBind {
+      def unapply(tree: g.Bind): Option[(g.Tree, g.Tree)] = {
+        if (tree.hasMetadata("isLpatvar")) return None
+        if (tree.name.isTypeName) return None
+        val g.Bind(name, body) = tree
+        val llhs = {
+          val core = g.Bind(name, Ident(nme.WILDCARD)).setParent(tree)
+          core.setSymbol(tree.symbol).appendMetadata("isLpatvar" -> true)
+          core
+        }
+        val lrhs = body.appendMetadata("isLpat" -> true)
+        Some((llhs, lrhs))
+      }
+    }
+
     // ============ LITERALS ============
 
     object Literal {

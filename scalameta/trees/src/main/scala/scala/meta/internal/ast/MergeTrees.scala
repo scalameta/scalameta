@@ -144,6 +144,8 @@ object mergeTrees {
 
             case (sy: m.Pat.Var.Term, se: m.Pat.Var.Term) =>
               sy.copy(loop(sy.name, se.name))
+            case (sy: m.Pat.Var.Term, se @ m.Pat.Bind(seInner: m.Pat.Var.Term, Pat.Wildcard())) =>
+              loop(sy, seInner) // (X1)
             case (sy: m.Pat.Wildcard, se: m.Pat.Wildcard) =>
               sy.copy()
 

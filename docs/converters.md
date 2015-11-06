@@ -162,6 +162,23 @@ scroll down to the "Theory" & "Practice" sections in the end of the document.
   </tr>
 </table>
 
+### Extra desugarings
+
+<table>
+  <th>
+    <td width="50px">Meta</td>
+    <td width="50px">Scalac</td>
+    <td width="50px">Dotc</td>
+    <td>Description</td>
+  </th>
+  <tr>
+    <td valign="top">X1</td>
+    <td valign="top">N</td>
+    <td valign="top">+</td>
+    <td valign="top">?</td>
+    <td valign="top">Variable patterns are represented as binds to wildcard patterns.</td>
+  </tr>
+</table>
 ### Notation
 
 The `Meta` column indicates whether the desugaring manifests itself in scala.meta via Term.desugar (Y) or not (N). The `Scalac` column indicates whether scalac performs the desugaring (+) or not (-). The `Dotc` column has the same information for Dotty, with an additional possible value of ? (because I don't know Dotty well enough).
