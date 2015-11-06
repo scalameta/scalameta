@@ -240,7 +240,7 @@ trait ToMtree extends ReflectToolkit with MetaToolkit {
           case l.CaseDef(lpat, lguard, lbody) =>
             val mpat = lpat.toMtree[m.Pat]
             val mguard = lguard.toMtreeopt[m.Term]
-            val mbody = lbody.toMtree[m.Term.Block]
+            val mbody = lbody.toMtree[m.Term]
             m.Case(mpat, mguard, mbody)
 
           case _ =>

@@ -614,7 +614,7 @@ package scala.meta.internal.ast {
     }
   }
 
-  @ast class Case(pat: Pat, cond: Option[Term], body: Term.Block) extends api.Case with Tree with Scope {
+  @ast class Case(pat: Pat, cond: Option[Term], body: Term) extends api.Case with Tree with Scope {
     require(pat.isLegal)
   }
 

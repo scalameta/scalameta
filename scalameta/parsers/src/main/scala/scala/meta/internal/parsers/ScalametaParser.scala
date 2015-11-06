@@ -1871,7 +1871,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     Case(pattern().require[Pat], guard(), {
       accept[`=>`]
       autoPos(blockStatSeq() match {
-        case List(q: Quasi) => Term.Block(List(q))
+        case List(q: Stat.Quasi) => q.become[Term.Quasi]
         case List(blk: Term.Block) => blk
         case stats => Term.Block(stats)
       })
