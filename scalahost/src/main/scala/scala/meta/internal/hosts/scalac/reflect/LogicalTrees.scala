@@ -142,6 +142,7 @@ trait LogicalTrees {
     object TermApply {
       def unapply(tree: g.Apply): Option[(g.Tree, List[g.Tree])] = {
         if (tree.hasMetadata("isLparent")) return None
+        if (tree.hasMetadata("isLpat")) return None
         Some((tree.fun, tree.args))
       }
     }
@@ -314,6 +315,21 @@ trait LogicalTrees {
         }
         val lrhs = body.appendMetadata("isLpat" -> true)
         Some((llhs, lrhs))
+      }
+    }
+
+    object PatExtract {
+      def unapply(tree: g.Tree): Option[(g.Tree, List[g.Tree], List[g.Tree])] = {
+        if (!tree.hasMetadata("isLpat")) return None
+        val (fun, targs, args) = tree match {
+          case g.Apply(g.TypeApply(fun, targs), args) => (fun, targs, args)
+          case g.Apply(fun, args) => (fun, Nil, args)
+          case g.UnApply(g.Apply(g.TypeApply(fun, targs), List(unapplySelector)), args) => (fun, targs, args)
+          case g.UnApply(g.Apply(fun, List(unapplySelector)), args) => (fun, Nil, args)
+          case _ => return None
+        }
+        val largs = args.map(_.appendMetadata("isLpat" -> true))
+        Some((fun, targs, largs))
       }
     }
 

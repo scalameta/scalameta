@@ -70,12 +70,12 @@ object mergeTrees {
             case (sy: m.Term.Apply, se: m.Term.Apply) =>
               sy.copy(loop(sy.fun, se.fun), loop(sy.args, se.args))
             case (sy: m.Term.ApplyInfix, se @ m.Term.Apply(sefun, seargs)) =>
-              val (selhs, seop, setargs) = sefun match {
+              val (selhs, seop, seTargs) = sefun match {
                 case m.Term.Select(selhs, seop) => (selhs, seop, Nil)
-                case m.Type.Apply(m.Term.Select(selhs, seop), setargs) => (selhs, seop, setargs)
+                case m.Type.Apply(m.Term.Select(selhs, seop), seTargs) => (selhs, seop, seTargs)
               }
               require(seop.isLeftAssoc && debug(sy, se)) // TODO: right-associative operators aren't supported yet
-              sy.copy(loop(sy.lhs, selhs), loop(sy.op, seop), loop(sy.targs, setargs), loop(sy.args, seargs))
+              sy.copy(loop(sy.lhs, selhs), loop(sy.op, seop), loop(sy.targs, seTargs), loop(sy.args, seargs))
             case (sy: m.Term.ApplyInfix, se: m.Term.ApplyInfix) =>
               sy.copy(loop(sy.lhs, se.lhs), loop(sy.op, se.op), loop(sy.targs, se.targs), loop(sy.args, se.args))
             case (sy: m.Term.ApplyUnary, se: m.Term.ApplyUnary) =>
@@ -150,6 +150,12 @@ object mergeTrees {
               sy.copy()
             case (sy: m.Pat.Bind, se: m.Pat.Bind) =>
               sy.copy(loop(sy.lhs, se.lhs), loop(sy.rhs, se.rhs))
+            case (sy: m.Pat.Extract, se: m.Pat.Extract) =>
+              val metargs = (sy.targs, se.targs) match {
+                case (Nil, seTargs) => seTargs // (E9)
+                case (syTargs, seTargs) => loop(syTargs, seTargs)
+              }
+              sy.copy(loop(sy.ref, se.ref), metargs, loop(sy.args, se.args))
             case (sy: m.Pat.Typed, se: m.Pat.Typed) =>
               sy.copy(loop(sy.lhs, se.lhs), loop(sy.rhs, se.rhs))
             case (sy: m.Pat.Typed, se @ m.Pat.Bind(seLhs: m.Pat.Var.Term, Pat.Typed(Pat.Wildcard(), seRhs))) =>

@@ -143,6 +143,11 @@ trait ToMtree extends ReflectToolkit with MetaToolkit {
             val mlhs = llhs.toMtree[m.Pat.Var.Term]
             val mrhs = lrhs.toMtree[m.Pat.Arg]
             m.Pat.Bind(mlhs, mrhs)
+          case l.PatExtract(lref, ltargs, largs) =>
+            val mref = lref.toMtree[m.Term.Ref]
+            val mtargs = ltargs.toMtrees[m.Type].map(_.pat.require[m.Pat.Type]) // TODO: replace this with toMtrees[m.Pat.Type]
+            val margs = largs.toMtrees[m.Pat.Arg]
+            m.Pat.Extract(mref, mtargs, margs)
           case l.PatTyped(llhs, lrhs) =>
             val mlrhs = llhs.toMtree[m.Pat]
             val mrhs = lrhs.toMtree[m.Type].pat.require[m.Pat.Type] // TODO: replace this with toMtree[m.Pat.Type]
@@ -163,7 +168,6 @@ trait ToMtree extends ReflectToolkit with MetaToolkit {
             val mtpt = if (ltpt.nonEmpty) Some(ltpt.toMtree[m.Type]) else None
             val mrhs = lrhs.toMtree[m.Term]
             m.Defn.Val(mmods, mpats, mtpt, mrhs)
-
           case l.DefDef(lmods, lname, ltparams, lparamss, ltpt, lrhs) =>
             val mmods = lmods.toMtrees[m.Mod]
             val mname = lname.toMtree[m.Term.Name]
@@ -172,7 +176,6 @@ trait ToMtree extends ReflectToolkit with MetaToolkit {
             val mtpt = if (ltpt.nonEmpty) Some(ltpt.toMtree[m.Type]) else None
             val mrhs = lrhs.toMtree[m.Term]
             m.Defn.Def(mmods, mname, mtparams, mparamss, mtpt, mrhs)
-
           case l.ClassDef(lmods, lname, ltparams, lctor, limpl) =>
             val mmods = lmods.toMtrees[m.Mod]
             val mname = lname.toMtree[m.Type.Name]
@@ -180,7 +183,6 @@ trait ToMtree extends ReflectToolkit with MetaToolkit {
             val mctor = lctor.toMtree[m.Ctor.Primary]
             val mimpl = limpl.toMtree[m.Template]
             m.Defn.Class(mmods, mname, mtparams, mctor, mimpl)
-
           case l.TraitDef(lmods, lname, ltparams, limpl) =>
             val mmods = lmods.toMtrees[m.Mod]
             val mname = lname.toMtree[m.Type.Name]
@@ -188,7 +190,6 @@ trait ToMtree extends ReflectToolkit with MetaToolkit {
             val mctor = ???
             val mimpl = limpl.toMtree[m.Template]
             m.Defn.Trait(mmods, mname, mtparams, mctor, mimpl)
-
           case l.ObjectDef(lmods, lname, limpl) =>
             val mmods = lmods.toMtrees[m.Mod]
             val mname = lname.toMtree[m.Term.Name]
