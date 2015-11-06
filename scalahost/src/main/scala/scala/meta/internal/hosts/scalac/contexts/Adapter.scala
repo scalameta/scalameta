@@ -248,8 +248,8 @@ extends ConverterApi(global) with ContextApi with AdapterApi[G] {
       val m_firstPhase = classOf[Run].getDeclaredMethods().find(_.getName == "firstPhase").get
       m_firstPhase.setAccessible(true)
       val firstPhase = m_firstPhase.invoke(currentRun).asInstanceOf[Phase]
-      val relevantPhases = firstPhase.iterator.takeWhile(_.id < math.max(globalPhase.id, currentRun.typerPhase.id))
-      def applyPhase(ph: Phase, unit: CompilationUnit) = enteringPhase(ph)(ph.asInstanceOf[GlobalPhase].applyPhase(unit))
+      val relevantPhases = firstPhase.iterator.takeWhile(_.id < math.max(globalPhase.id, currentRun.typerPhase.id)).toList
+      def applyPhase(ph: Phase, unit: CompilationUnit) = enteringPhase(ph)(ph.run)
       relevantPhases.foreach(ph => units.foreach(applyPhase(ph, _)))
 
       val m_refreshProgress = classOf[Run].getDeclaredMethods().find(_.getName == "refreshProgress").get
