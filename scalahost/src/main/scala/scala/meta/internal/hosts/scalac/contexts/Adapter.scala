@@ -237,7 +237,7 @@ extends ConverterApi(global) with ContextApi with AdapterApi[G] {
     val typedUntypedSources: Map[Source, Source] = {
       import global._
       val units = untypedSources.map(source => {
-        val unit = new CompilationUnit(newSourceFile("", "<scalahost>"))
+        val unit = new CompilationUnit(newSourceFile(source.show[Syntax], "<scalahost>"))
         unit.body = source.toGtree
         val m_addUnit = currentRun.getClass.getDeclaredMethods().find(_.getName.endsWith("$addUnit")).get
         m_addUnit.setAccessible(true)
