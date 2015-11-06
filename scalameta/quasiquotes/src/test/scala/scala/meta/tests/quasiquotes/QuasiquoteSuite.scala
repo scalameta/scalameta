@@ -505,7 +505,7 @@ class QuasiquoteSuite extends FunSuite {
     val q"$expr match { case bar => baz; ..case $casez; case q => w}" = q"foo match { case bar => baz; case _ => foo ; case q => w }"
     assert(expr.show[Structure] === "Term.Name(\"foo\")")
     assert(casez.toString === "List(case _ => foo)")
-    assert(casez(0).show[Structure] === "Case(Pat.Wildcard(), None, Term.Block(Seq(Term.Name(\"foo\"))))")
+    assert(casez(0).show[Structure] === "Case(Pat.Wildcard(), None, Term.Name(\"foo\"))")
   }
 
   test("2 q\"$expr match { ..case $cases }\"") {
@@ -518,24 +518,24 @@ class QuasiquoteSuite extends FunSuite {
     val q"$expr match { ..case $casez }" = q"foo match { case bar => baz; case _ => foo }"
     assert(expr.show[Structure] === "Term.Name(\"foo\")")
     assert(casez.toString === "List(case bar => baz, case _ => foo)")
-    assert(casez(0).show[Structure] === "Case(Pat.Var.Term(Term.Name(\"bar\")), None, Term.Block(Seq(Term.Name(\"baz\"))))")
-    assert(casez(1).show[Structure] === "Case(Pat.Wildcard(), None, Term.Block(Seq(Term.Name(\"foo\"))))")
+    assert(casez(0).show[Structure] === "Case(Pat.Var.Term(Term.Name(\"bar\")), None, Term.Name(\"baz\"))")
+    assert(casez(1).show[Structure] === "Case(Pat.Wildcard(), None, Term.Name(\"foo\"))")
   }
 
   test("4 q\"$expr match { ..case $cases }\"") {
     val expr = q"foo"
     val casez = List(p"case a => b", p"case q => w")
-    assert(q"$expr match { ..case $casez }".show[Structure] === "Term.Match(Term.Name(\"foo\"), Seq(Case(Pat.Var.Term(Term.Name(\"a\")), None, Term.Block(Seq(Term.Name(\"b\")))), Case(Pat.Var.Term(Term.Name(\"q\")), None, Term.Block(Seq(Term.Name(\"w\"))))))")
+    assert(q"$expr match { ..case $casez }".show[Structure] === "Term.Match(Term.Name(\"foo\"), Seq(Case(Pat.Var.Term(Term.Name(\"a\")), None, Term.Name(\"b\")), Case(Pat.Var.Term(Term.Name(\"q\")), None, Term.Name(\"w\"))))")
   }
 
   test("1 q\"try $expr catch { ..case $cases } finally $expropt\"") {
     val q"try $expr catch { case $case1 ..case $cases; case $case2 } finally $expropt" = q"try foo catch { case a => b; case _ => bar; case 1 => 2; case q => w} finally baz"
     assert(expr.show[Structure] === "Term.Name(\"foo\")")
     assert(cases.toString === "List(case _ => bar, case 1 => 2)")
-    assert(cases(0).show[Structure] === "Case(Pat.Wildcard(), None, Term.Block(Seq(Term.Name(\"bar\"))))")
-    assert(cases(1).show[Structure] === "Case(Lit(1), None, Term.Block(Seq(Lit(2))))")
-    assert(case1.show[Structure] === "Case(Pat.Var.Term(Term.Name(\"a\")), None, Term.Block(Seq(Term.Name(\"b\"))))")
-    assert(case2.show[Structure] === "Case(Pat.Var.Term(Term.Name(\"q\")), None, Term.Block(Seq(Term.Name(\"w\"))))")
+    assert(cases(0).show[Structure] === "Case(Pat.Wildcard(), None, Term.Name(\"bar\"))")
+    assert(cases(1).show[Structure] === "Case(Lit(1), None, Lit(2))")
+    assert(case1.show[Structure] === "Case(Pat.Var.Term(Term.Name(\"a\")), None, Term.Name(\"b\"))")
+    assert(case2.show[Structure] === "Case(Pat.Var.Term(Term.Name(\"q\")), None, Term.Name(\"w\"))")
     assert(expropt.show[Structure] === "Some(Term.Name(\"baz\"))")
   }
 
@@ -545,7 +545,7 @@ class QuasiquoteSuite extends FunSuite {
     val case1 = p"case a => b"
     val case2 = p"case q => w"
     val expropt = q"baz"
-    assert(q"try $expr catch { case $case1 ..case $cases; case $case2 } finally $expropt".show[Structure] === "Term.TryWithCases(Term.Name(\"foo\"), Seq(Case(Pat.Var.Term(Term.Name(\"a\")), None, Term.Block(Seq(Term.Name(\"b\")))), Case(Pat.Wildcard(), None, Term.Block(Seq(Term.Name(\"bar\")))), Case(Lit(1), None, Term.Block(Seq(Lit(2)))), Case(Pat.Var.Term(Term.Name(\"q\")), None, Term.Block(Seq(Term.Name(\"w\"))))), Some(Term.Name(\"baz\")))")
+    assert(q"try $expr catch { case $case1 ..case $cases; case $case2 } finally $expropt".show[Structure] === "Term.TryWithCases(Term.Name(\"foo\"), Seq(Case(Pat.Var.Term(Term.Name(\"a\")), None, Term.Name(\"b\")), Case(Pat.Wildcard(), None, Term.Name(\"bar\")), Case(Lit(1), None, Lit(2)), Case(Pat.Var.Term(Term.Name(\"q\")), None, Term.Name(\"w\"))), Some(Term.Name(\"baz\")))")
   }
 
   test("1 q\"try $expr catch $expr finally $expropt\"") {
@@ -597,12 +597,12 @@ class QuasiquoteSuite extends FunSuite {
 
   test("1 q\"{ ..case $cases }\"") {
     val q"{ ..case $cases }" = q"{ case i: Int => i + 1 }"
-    assert(cases(0).show[Structure] === "Case(Pat.Typed(Pat.Var.Term(Term.Name(\"i\")), Type.Name(\"Int\")), None, Term.Block(Seq(Term.ApplyInfix(Term.Name(\"i\"), Term.Name(\"+\"), Nil, Seq(Lit(1))))))")
+    assert(cases(0).show[Structure] === "Case(Pat.Typed(Pat.Var.Term(Term.Name(\"i\")), Type.Name(\"Int\")), None, Term.ApplyInfix(Term.Name(\"i\"), Term.Name(\"+\"), Nil, Seq(Lit(1))))")
   }
 
   test("2 q\"{ ..case $cases }\"") {
     val cases = List(p"case i: Int => i + 1")
-    assert(q"{ ..case $cases }".show[Structure] === "Term.PartialFunction(Seq(Case(Pat.Typed(Pat.Var.Term(Term.Name(\"i\")), Type.Name(\"Int\")), None, Term.Block(Seq(Term.ApplyInfix(Term.Name(\"i\"), Term.Name(\"+\"), Nil, Seq(Lit(1))))))))")
+    assert(q"{ ..case $cases }".show[Structure] === "Term.PartialFunction(Seq(Case(Pat.Typed(Pat.Var.Term(Term.Name(\"i\")), Type.Name(\"Int\")), None, Term.ApplyInfix(Term.Name(\"i\"), Term.Name(\"+\"), Nil, Seq(Lit(1))))))")
   }
 
   test("1 q\"while ($expr) $expr\"") {
@@ -1146,14 +1146,14 @@ class QuasiquoteSuite extends FunSuite {
     val pat = q"X"
     val expropt = q"foo"
     val expr = q"bar"
-    assert(p"case $pat if $expropt => $expr".show[Structure] === "Case(Term.Name(\"X\"), Some(Term.Name(\"foo\")), Term.Block(Seq(Term.Name(\"bar\"))))")
+    assert(p"case $pat if $expropt => $expr".show[Structure] === "Case(Term.Name(\"X\"), Some(Term.Name(\"foo\")), Term.Name(\"bar\"))")
   }
 
   test("3 p\"case $pat if $expropt => $expr\"") {
     val pat = p"`X`"
     val expropt = q"`foo`"
     val expr = q"`bar`"
-    assert(p"case $pat if $expropt => $expr".show[Structure] === "Case(Term.Name(\"X\"), Some(Term.Name(\"foo\")), Term.Block(Seq(Term.Name(\"bar\"))))")
+    assert(p"case $pat if $expropt => $expr".show[Structure] === "Case(Term.Name(\"X\"), Some(Term.Name(\"foo\")), Term.Name(\"bar\"))")
   }
 
   test("p\"_*\"") {
