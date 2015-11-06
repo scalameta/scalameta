@@ -1,0 +1,11 @@
+package Simple6
+object M extends scala.AnyRef() {
+  def enclosingMethod: Unit = {
+    def foo[T](x: _root_.scala.Function1[T, T]) = $qmark$qmark$qmark
+    foo((x: Int) => x)
+    def bar(x: _root_.scala.Function1[Int, Int]) = $qmark$qmark$qmark
+    bar(x => x)
+    val fn: _root_.scala.Function1[String, String] = x => x
+    ()
+  }
+}

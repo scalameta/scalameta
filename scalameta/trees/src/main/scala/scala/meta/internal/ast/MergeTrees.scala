@@ -92,8 +92,14 @@ object mergeTrees {
               sy.copy(loop(sy.cond, se.cond), loop(sy.thenp, se.thenp), loop(se.thenp, se.thenp))
             case (sy: m.Term.Match, se: m.Term.Match) =>
               sy.copy(loop(sy.scrut, se.scrut), loop(sy.cases, se.cases))
+            case (sy: m.Term.Function, se: m.Term.Function) =>
+              sy.copy(loop(sy.params, se.params), loop(sy.body, se.body))
             case (sy: m.Term.Param, se: m.Term.Param) =>
-              sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), loop(sy.decltpe, se.decltpe), loop(sy.default, se.default))
+              val medecltpe = (sy.decltpe, se.decltpe) match { // (M1)
+                case (None, Some(se)) => None
+                case (sy, se) => loop(sy, se)
+              }
+              sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), medecltpe, loop(sy.default, se.default))
 
             // ============ STRUCTURALLY UNEQUAL TERMS ============
 
@@ -126,6 +132,8 @@ object mergeTrees {
               sy.copy(loop(sy.qual, se.qual), loop(sy.name, se.name))
             case (sy: m.Type.Apply, se: m.Type.Apply) =>
               sy.copy(loop(sy.tpe, se.tpe), loop(sy.args, se.args))
+            case (sy: m.Type.Function, se: m.Type.Function) =>
+              sy.copy(loop(sy.params, se.params), loop(sy.res, se.res))
             case (sy: m.Type.Bounds, se: m.Type.Bounds) =>
               val melo = (sy.lo, se.lo) match {
                 case (None, Some(nothing: Type.Name)) if nothing.refersTo(denotNothing) => None // (M9)

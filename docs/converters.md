@@ -102,7 +102,7 @@ scroll down to the "Theory" & "Practice" sections in the end of the document.
     <td valign="top">N</td>
     <td valign="top">+</td>
     <td valign="top">?</td>
-    <td valign="top">Vals, vars and methods with unspecified return type get the return type inferred.</td>
+    <td valign="top">Vals, vars, parameters and methods with unspecified type get the type inferred.</td>
   </tr>
   <tr>
     <td valign="top">M2</td>
