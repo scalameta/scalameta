@@ -143,6 +143,10 @@ trait ToMtree extends ReflectToolkit with MetaToolkit {
             val mlhs = llhs.toMtree[m.Pat.Var.Term]
             val mrhs = lrhs.toMtree[m.Pat.Arg]
             m.Pat.Bind(mlhs, mrhs)
+          case l.PatTyped(llhs, lrhs) =>
+            val mlrhs = llhs.toMtree[m.Pat]
+            val mrhs = lrhs.toMtree[m.Type].pat.require[m.Pat.Type] // TODO: replace this with toMtree[m.Pat.Type]
+            m.Pat.Typed(mlrhs, mrhs)
 
           // ============ LITERALS ============
 

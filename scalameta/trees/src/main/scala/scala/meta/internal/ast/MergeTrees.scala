@@ -150,6 +150,15 @@ object mergeTrees {
               sy.copy()
             case (sy: m.Pat.Bind, se: m.Pat.Bind) =>
               sy.copy(loop(sy.lhs, se.lhs), loop(sy.rhs, se.rhs))
+            case (sy: m.Pat.Typed, se: m.Pat.Typed) =>
+              sy.copy(loop(sy.lhs, se.lhs), loop(sy.rhs, se.rhs))
+            case (sy: m.Pat.Typed, se @ m.Pat.Bind(seLhs: m.Pat.Var.Term, Pat.Typed(Pat.Wildcard(), seRhs))) =>
+              sy.copy(loop(sy.lhs, seLhs), loop(sy.rhs, seRhs)) // (X2)
+
+            // ============ PATTERNS TYPES ============
+
+            case (sy: m.Pat.Type.Apply, se: m.Pat.Type.Apply) =>
+              sy.copy(loop(sy.tpe, se.tpe), loop(sy.args, se.args))
 
             // ============ LITERALS ============
 

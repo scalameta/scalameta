@@ -178,6 +178,13 @@ scroll down to the "Theory" & "Practice" sections in the end of the document.
     <td valign="top">?</td>
     <td valign="top">Variable patterns are represented as binds to wildcard patterns.</td>
   </tr>
+  <tr>
+    <td valign="top">X2</td>
+    <td valign="top">N</td>
+    <td valign="top">+</td>
+    <td valign="top">?</td>
+    <td valign="top">Typed patterns are represented as binds to wildcard typed patterns.</td>
+  </tr>
 </table>
 ### Notation
 

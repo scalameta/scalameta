@@ -317,6 +317,15 @@ trait LogicalTrees {
       }
     }
 
+    object PatTyped {
+      def unapply(tree: g.Typed): Option[(g.Tree, g.Tree)] = {
+        if (!tree.hasMetadata("isLpat")) return None
+        val g.Typed(lhs, rhs) = tree
+        val llhs = lhs.appendMetadata("isLpat" -> true)
+        Some((llhs, rhs))
+      }
+    }
+
     // ============ LITERALS ============
 
     object Literal {
