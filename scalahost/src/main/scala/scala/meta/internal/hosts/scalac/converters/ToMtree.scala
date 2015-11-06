@@ -92,6 +92,10 @@ trait ToMtree extends ReflectToolkit with MetaToolkit {
             val mthen = lthen.toMtree[m.Term]
             val melse = lelse.toMtree[m.Term]
             m.Term.If(mcond, mthen, melse)
+          case l.TermMatch(lscrut, lcases) =>
+            val mscrut = lscrut.toMtree[m.Term]
+            val mcases = lcases.toMtrees[m.Case]
+            m.Term.Match(mscrut, mcases)
           case l.TermParamDef(lmods, lname, ltpt, ldefault) =>
             val mmods = lmods.toMtrees[m.Mod]
             val mname = lname.toMtree[m.Term.Param.Name]
@@ -232,6 +236,12 @@ trait ToMtree extends ReflectToolkit with MetaToolkit {
           // ============ MODIFIERS ============
 
           // ============ ODDS & ENDS ============
+
+          case l.CaseDef(lpat, lguard, lbody) =>
+            val mpat = lpat.toMtree[m.Pat]
+            val mguard = lguard.toMtreeopt[m.Term]
+            val mbody = lbody.toMtree[m.Term.Block]
+            m.Case(mpat, mguard, mbody)
 
           case _ =>
             fail(s"unsupported tree ${g.showRaw(gtree)}")

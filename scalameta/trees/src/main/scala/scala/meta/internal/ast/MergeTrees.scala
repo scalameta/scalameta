@@ -90,6 +90,8 @@ object mergeTrees {
               sy.copy(mestats)
             case (sy: m.Term.If, se: m.Term.If) =>
               sy.copy(loop(sy.cond, se.cond), loop(sy.thenp, se.thenp), loop(se.thenp, se.thenp))
+            case (sy: m.Term.Match, se: m.Term.Match) =>
+              sy.copy(loop(sy.scrut, se.scrut), loop(sy.cases, se.cases))
             case (sy: m.Term.Param, se: m.Term.Param) =>
               sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), loop(sy.decltpe, se.decltpe), loop(sy.default, se.default))
 
@@ -221,6 +223,9 @@ object mergeTrees {
             // ============ MODIFIERS ============
 
             // ============ ODDS & ENDS ============
+
+            case (sy: m.Case, se: m.Case) =>
+              sy.copy(loop(sy.pat, se.pat), loop(sy.cond, se.cond), loop(sy.body, se.body))
 
             case _ =>
               failCorrelate(sy, se, "unexpected trees")

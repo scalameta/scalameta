@@ -163,6 +163,13 @@ trait LogicalTrees {
       }
     }
 
+    object TermMatch {
+      def unapply(tree: g.Match): Option[(g.Tree, List[g.Tree])] = {
+        val g.Match(scrut, cases) = tree
+        Some((scrut, cases))
+      }
+    }
+
     trait TermParamName extends Name
 
     object TermParamDef {
@@ -729,6 +736,14 @@ trait LogicalTrees {
     }
 
     // ============ ODDS & ENDS ============
+
+    object CaseDef {
+      def unapply(tree: g.CaseDef): Option[(g.Tree, Option[g.Tree], g.Tree)] = {
+        val g.CaseDef(pat, guard, body) = tree
+        val lguard = if (guard.nonEmpty) Some(guard) else None
+        Some((pat, lguard, body))
+      }
+    }
 
     // ============ HELPERS ============
 
